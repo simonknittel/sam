@@ -7,7 +7,7 @@ import {
   FlowNodeType,
   type Role,
 } from "@sam-monorepo/database/browser";
-import { applyNodeChanges } from "@xyflow/react";
+import { useReactFlow } from "@xyflow/react";
 import { useId, useState, type FormEventHandler } from "react";
 import toast from "react-hot-toast";
 import { useFlowContext } from "../../../components/FlowContext";
@@ -28,8 +28,8 @@ interface Props {
 }
 
 export const CreateOrUpdateForm = ({ initialData, onUpdate }: Props) => {
-  const { setIsCreateNodeModalOpen, setUnsaved, setNodes, additionalData } =
-    useFlowContext();
+  const { setIsCreateNodeModalOpen, additionalData } = useFlowContext();
+  const { addNodes } = useReactFlow();
   const [roleId, setRoleId] = useState<Role["id"]>(
     initialData?.roleId || (additionalData as AdditionalDataType).roles[0].id,
   );
@@ -69,40 +69,28 @@ export const CreateOrUpdateForm = ({ initialData, onUpdate }: Props) => {
       return;
     }
 
-    setUnsaved(true);
+    const data = result.data;
+    const role = (additionalData as AdditionalDataType).roles.find(
+      (role) => role.id === data.roleId,
+    );
 
-    setNodes((nds) => {
-      const data = result.data;
-      const role = (additionalData as AdditionalDataType).roles.find(
-        (role) => role.id === data.roleId,
-      );
-
-      return applyNodeChanges(
-        [
-          {
-            type: "add",
-            item: {
-              id: data.id,
-              type: FlowNodeType.ROLE_CITIZENS,
-              position: {
-                x: 0,
-                y: 0,
-              },
-              width: 100,
-              height: 100,
-              data: {
-                role,
-                roleCitizensAlignment: data.roleCitizensAlignment,
-                roleCitizensHideRole: data.roleCitizensHideRole,
-                backgroundColor: data.backgroundColor,
-                backgroundTransparency: data.backgroundTransparency,
-                showUnlocked: data.showUnlocked,
-              },
-            },
-          },
-        ],
-        nds,
-      );
+    addNodes({
+      id: data.id,
+      type: FlowNodeType.ROLE_CITIZENS,
+      position: {
+        x: 0,
+        y: 0,
+      },
+      width: 100,
+      height: 100,
+      data: {
+        role,
+        roleCitizensAlignment: data.roleCitizensAlignment,
+        roleCitizensHideRole: data.roleCitizensHideRole,
+        backgroundColor: data.backgroundColor,
+        backgroundTransparency: data.backgroundTransparency,
+        showUnlocked: data.showUnlocked,
+      },
     });
   };
 

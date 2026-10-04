@@ -6,11 +6,9 @@ import {
   FlowNodeType,
 } from "@sam-monorepo/database/browser";
 import {
-  applyNodeChanges,
   NodeResizer,
   NodeToolbar,
   Position,
-  useNodeId,
   useReactFlow,
   type NodeProps,
   type Node as NodeType,
@@ -43,8 +41,7 @@ export type Markdown = NodeType<
 
 export const Node: ComponentType<NodeProps<Markdown>> = (props) => {
   const { isUpdating } = useFlowContext();
-  const nodeId = useNodeId();
-  const { setNodes, setEdges } = useReactFlow();
+  const { updateNodeData, deleteElements } = useReactFlow<Markdown>();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const onEdit = useCallback(() => {
@@ -74,43 +71,23 @@ export const Node: ComponentType<NodeProps<Markdown>> = (props) => {
         return;
       }
 
-      setNodes((nds) => {
-        return applyNodeChanges(
-          [
-            {
-              type: "replace",
-              id: props.id,
-              item: {
-                id: props.id,
-                type: props.type,
-                position: {
-                  x: props.positionAbsoluteX,
-                  y: props.positionAbsoluteY,
-                },
-                width: props.width,
-                height: props.height,
-                data: {
-                  markdown: result.data.markdown,
-                  markdownPosition: result.data.markdownPosition,
-                  backgroundColor: result.data.backgroundColor,
-                  backgroundTransparency: result.data.backgroundTransparency,
-                },
-              },
-            },
-          ],
-          nds,
-        );
-      });
+      updateNodeData(
+        props.id,
+        {
+          markdown: result.data.markdown,
+          markdownPosition: result.data.markdownPosition,
+          backgroundColor: result.data.backgroundColor,
+          backgroundTransparency: result.data.backgroundTransparency,
+        },
+        { replace: true },
+      );
     },
-    [setNodes, props],
+    [updateNodeData, props.id],
   );
 
   const onDelete = useCallback(() => {
-    setNodes((nodes) => nodes.filter((node) => node.id !== nodeId));
-    setEdges((edges) =>
-      edges.filter((edge) => edge.source !== nodeId && edge.target !== nodeId),
-    );
-  }, [nodeId, setNodes, setEdges]);
+    void deleteElements({ nodes: [{ id: props.id }] });
+  }, [deleteElements, props.id]);
 
   const backgroundColor = getBackground(
     props.data.backgroundColor,

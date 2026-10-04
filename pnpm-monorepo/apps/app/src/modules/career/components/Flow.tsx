@@ -130,8 +130,6 @@ export const Flow = ({
     <FlowProvider
       isUpdating={isUpdating}
       setIsCreateNodeModalOpen={setIsCreateNodeModalOpen}
-      setUnsaved={setUnsaved}
-      setNodes={setNodes}
       additionalData={additionalData}
     >
       {unsaved && (
@@ -189,13 +187,14 @@ export const Flow = ({
             </>
           )}
         </Controls>
-      </ReactFlow>
 
-      {isCreateNodeModalOpen && (
-        <CreateOrUpdateNodeModal
-          onRequestClose={() => setIsCreateNodeModalOpen(false)}
-        />
-      )}
+        {/* A child of ReactFlow, thus its forms can use useReactFlow() */}
+        {isCreateNodeModalOpen && (
+          <CreateOrUpdateNodeModal
+            onRequestClose={() => setIsCreateNodeModalOpen(false)}
+          />
+        )}
+      </ReactFlow>
     </FlowProvider>
   );
 };

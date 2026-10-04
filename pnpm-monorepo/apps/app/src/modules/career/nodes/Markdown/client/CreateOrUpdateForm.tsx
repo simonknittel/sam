@@ -6,7 +6,7 @@ import {
   FlowNodeMarkdownPosition,
   FlowNodeType,
 } from "@sam-monorepo/database/browser";
-import { applyNodeChanges } from "@xyflow/react";
+import { useReactFlow } from "@xyflow/react";
 import { useId, useState, type FormEventHandler } from "react";
 import toast from "react-hot-toast";
 import { useFlowContext } from "../../../components/FlowContext";
@@ -24,7 +24,8 @@ interface Props {
 }
 
 export const CreateOrUpdateForm = ({ initialData, onUpdate }: Props) => {
-  const { setIsCreateNodeModalOpen, setUnsaved, setNodes } = useFlowContext();
+  const { setIsCreateNodeModalOpen } = useFlowContext();
+  const { addNodes } = useReactFlow();
   const [markdownPosition, setMarkdownPosition] = useState<
     keyof typeof FlowNodeMarkdownPosition
   >(initialData?.markdownPosition || FlowNodeMarkdownPosition.LEFT);
@@ -53,35 +54,21 @@ export const CreateOrUpdateForm = ({ initialData, onUpdate }: Props) => {
       return;
     }
 
-    setUnsaved(true);
-
-    setNodes((nds) => {
-      const data = result.data;
-
-      return applyNodeChanges(
-        [
-          {
-            type: "add",
-            item: {
-              id: data.id,
-              type: FlowNodeType.MARKDOWN,
-              position: {
-                x: 0,
-                y: 0,
-              },
-              width: 178,
-              height: 316,
-              data: {
-                markdown: data.markdown,
-                markdownPosition: data.markdownPosition,
-                backgroundColor: data.backgroundColor,
-                backgroundTransparency: data.backgroundTransparency,
-              },
-            },
-          },
-        ],
-        nds,
-      );
+    addNodes({
+      id: result.data.id,
+      type: FlowNodeType.MARKDOWN,
+      position: {
+        x: 0,
+        y: 0,
+      },
+      width: 178,
+      height: 316,
+      data: {
+        markdown: result.data.markdown,
+        markdownPosition: result.data.markdownPosition,
+        backgroundColor: result.data.backgroundColor,
+        backgroundTransparency: result.data.backgroundTransparency,
+      },
     });
   };
 

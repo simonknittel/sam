@@ -1,5 +1,5 @@
-import type { Page } from "@playwright/test";
-import type { PrismaClient } from "@sam-monorepo/database/client";
+import type { Locator, Page } from "@playwright/test";
+import { FlowNodeType, type PrismaClient } from "@sam-monorepo/database/client";
 import { expectAuditEvents } from "../fixtures/audit";
 import {
   assignRole,
@@ -15,6 +15,7 @@ import {
   NOT_FOUND_TEXT,
   SAVED_TEXT,
   sectionByHeading,
+  toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -56,6 +57,45 @@ const hasHorizontalPageOverflow = (page: Page) =>
       document.documentElement.scrollWidth >
       document.documentElement.clientWidth,
   );
+
+/** The notice of the flow editor until a save succeeds */
+const UNSAVED_TEXT = "Ungespeicherte Änderungen";
+
+/**
+ * React Flow marks its nodes and edges with these role descriptions. Nodes
+ * have no accessible name, thus a test finds a node by its text.
+ */
+const flowNodes = (page: Page) => page.locator('[aria-roledescription="node"]');
+const flowEdges = (page: Page) => page.locator('[aria-roledescription="edge"]');
+
+const enterEditMode = (page: Page) =>
+  clickUntilVisible(
+    page.getByRole("button", { name: "Bearbeiten de-/aktivieren" }),
+    page.getByRole("button", { name: "Element hinzufügen" }),
+  );
+
+/**
+ * Selects a node the way a keyboard user does. Only the selected node shows
+ * its toolbar with the edit and the delete button. The toolbar of the node
+ * that was selected before can still show until React Flow marks the new
+ * node, thus the test waits for that mark.
+ */
+const selectNode = async (page: Page, node: Locator) => {
+  await node.focus();
+  await page.keyboard.press("Enter");
+  await expect(node).toHaveClass(/\bselected\b/);
+};
+
+/**
+ * Only a successful save removes the notice. The toast of the previous save
+ * can still show, thus the notice is the signal. Call it after the dialogs
+ * closed: they have a "Speichern" button too.
+ */
+const saveFlow = async (page: Page) => {
+  await expect(page.getByText(UNSAVED_TEXT)).toBeVisible();
+  await page.getByRole("button", { name: "Speichern" }).click();
+  await expect(page.getByText(UNSAVED_TEXT)).toHaveCount(0);
+};
 
 test("a manager creates a flow, renames it, deletes it and restores it", async ({
   page,
@@ -523,6 +563,178 @@ test("read access opens a flow without an edit affordance, edit access saves it"
   await page.goto("/app/career/academy");
   await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible();
 });
+
+test("the editor edits, deletes and adds a node, and each save keeps the change", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createManager(prisma);
+  /**
+   * Two nodes with an edge between them, thus the delete must also remove
+   * the edge
+   */
+  const flow = await createFlow(prisma, {
+    name: "Academy",
+    slug: "academy",
+    markdownNodes: ["Erster Knoten", "Zweiter Knoten"],
+  });
+  const savedMarkdown = async () => {
+    const nodes = await prisma.flowNode.findMany({
+      where: { flowId: flow.id },
+      select: { markdown: true },
+    });
+    return nodes.map((node) => node.markdown).toSorted();
+  };
+  const savedEdgeCount = () =>
+    prisma.flowEdge.count({ where: { source: { flowId: flow.id } } });
+
+  await signIn(manager.user);
+  await page.goto("/app/career/academy");
+  await enterEditMode(page);
+  await expect(flowEdges(page)).toHaveCount(1);
+
+  /**
+   * Edit
+   */
+  await selectNode(page, flowNodes(page).filter({ hasText: "Erster Knoten" }));
+  const editDialog = modal(page, "Element bearbeiten");
+  await page.getByRole("button", { name: "Bearbeiten", exact: true }).click();
+  await editDialog
+    .getByRole("textbox", { name: "Markdown" })
+    .fill("Bearbeiteter Knoten");
+  await editDialog.getByRole("button", { name: "Speichern" }).click();
+  await expect(editDialog).toBeHidden();
+
+  await expect(
+    flowNodes(page).filter({ hasText: "Bearbeiteter Knoten" }),
+  ).toBeVisible();
+  await saveFlow(page);
+  await expect
+    .poll(savedMarkdown)
+    .toEqual(["Bearbeiteter Knoten", "Zweiter Knoten"]);
+  expect(await savedEdgeCount()).toBe(1);
+
+  /**
+   * Delete
+   */
+  await selectNode(page, flowNodes(page).filter({ hasText: "Zweiter Knoten" }));
+  await page.getByRole("button", { name: "Löschen", exact: true }).click();
+
+  await expect(flowNodes(page)).toHaveCount(1);
+  await expect(flowEdges(page)).toHaveCount(0);
+  /** The server refuses an edge to a node that the save does not include */
+  await saveFlow(page);
+  await expect.poll(savedMarkdown).toEqual(["Bearbeiteter Knoten"]);
+  expect(await savedEdgeCount()).toBe(0);
+
+  /**
+   * Add
+   */
+  const addDialog = modal(page, "Element hinzufügen");
+  await page.getByRole("button", { name: "Element hinzufügen" }).click();
+  await toggleLabel(
+    addDialog.getByRole("radiogroup", { name: "Typ" }),
+    "Markdown",
+  ).click();
+  await addDialog
+    .getByRole("textbox", { name: "Markdown" })
+    .fill("Neuer Knoten");
+  await addDialog.getByRole("button", { name: "Speichern" }).click();
+  await expect(addDialog).toBeHidden();
+
+  await expect(
+    flowNodes(page).filter({ hasText: "Neuer Knoten" }),
+  ).toBeVisible();
+  await saveFlow(page);
+  await expect
+    .poll(savedMarkdown)
+    .toEqual(["Bearbeiteter Knoten", "Neuer Knoten"]);
+
+  /** A reload shows what the database has */
+  await page.reload();
+  await expect(flowNodes(page)).toHaveCount(2);
+  await expect(page.getByText("Bearbeiteter Knoten")).toBeVisible();
+  await expect(page.getByText("Neuer Knoten")).toBeVisible();
+});
+
+/**
+ * The role node types have their own forms and node components. "Rolle" is
+ * also a part of "Citizen einer Rolle", thus a pattern matches the full label.
+ */
+const ROLE_NODE_TYPES = [
+  { label: /^Rolle$/, type: FlowNodeType.ROLE },
+  { label: "Citizen einer Rolle", type: FlowNodeType.ROLE_CITIZENS },
+] as const;
+
+for (const { label, type } of ROLE_NODE_TYPES) {
+  test(`the editor adds, edits and deletes a ${type} node`, async ({
+    page,
+    prisma,
+    signIn,
+  }) => {
+    /** The manager's role is the only role, thus the form selects it */
+    const manager = await createManager(prisma);
+    const flow = await createFlow(prisma, { name: "Academy", slug: "academy" });
+    const savedNodes = () =>
+      prisma.flowNode.findMany({
+        where: { flowId: flow.id },
+        select: { type: true, roleId: true, showUnlocked: true },
+      });
+
+    await signIn(manager.user);
+    await page.goto("/app/career/academy");
+    await enterEditMode(page);
+
+    /**
+     * Add
+     */
+    const addDialog = modal(page, "Element hinzufügen");
+    await page.getByRole("button", { name: "Element hinzufügen" }).click();
+    await toggleLabel(
+      addDialog.getByRole("radiogroup", { name: "Typ" }),
+      label,
+    ).click();
+    await addDialog.getByRole("button", { name: "Speichern" }).click();
+    await expect(addDialog).toBeHidden();
+
+    await expect(flowNodes(page)).toHaveCount(1);
+    await saveFlow(page);
+    await expect
+      .poll(savedNodes)
+      .toEqual([{ type, roleId: manager.role.id, showUnlocked: false }]);
+
+    /**
+     * Edit
+     */
+    await selectNode(page, flowNodes(page));
+    const editDialog = modal(page, "Element bearbeiten");
+    await page.getByRole("button", { name: "Bearbeiten", exact: true }).click();
+    await toggleLabel(
+      editDialog.getByRole("radiogroup", {
+        name: "Dauerhaft farbig anzeigen",
+      }),
+      "ja",
+    ).click();
+    await editDialog.getByRole("button", { name: "Speichern" }).click();
+    await expect(editDialog).toBeHidden();
+
+    await saveFlow(page);
+    await expect
+      .poll(savedNodes)
+      .toEqual([{ type, roleId: manager.role.id, showUnlocked: true }]);
+
+    /**
+     * Delete
+     */
+    await selectNode(page, flowNodes(page));
+    await page.getByRole("button", { name: "Löschen", exact: true }).click();
+
+    await expect(flowNodes(page)).toHaveCount(0);
+    await saveFlow(page);
+    await expect.poll(savedNodes).toEqual([]);
+  });
+}
 
 test("granting access in the management UI lets a role read the flow", async ({
   page,

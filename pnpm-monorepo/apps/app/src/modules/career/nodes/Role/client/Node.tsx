@@ -8,15 +8,11 @@ import { useRolesContext } from "@/modules/roles/components/RolesContext";
 import {
   FlowNodeRoleImage,
   FlowNodeType,
-  type Role,
-  type Upload,
 } from "@sam-monorepo/database/browser";
 import {
-  applyNodeChanges,
   NodeResizer,
   NodeToolbar,
   Position,
-  useNodeId,
   useReactFlow,
   type NodeProps,
   type Node as NodeType,
@@ -43,10 +39,7 @@ export type RoleNode = NodeType<
       redacted: true;
     }
   | {
-      role: Role & {
-        icon: Upload | null;
-        thumbnail: Upload | null;
-      };
+      role: AdditionalDataType["roles"][number];
       roleImage: FlowNodeRoleImage;
       backgroundColor: string;
       backgroundTransparency: number;
@@ -58,8 +51,7 @@ export type RoleNode = NodeType<
 
 export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
   const { isUpdating, additionalData } = useFlowContext();
-  const nodeId = useNodeId();
-  const { setNodes, setEdges } = useReactFlow();
+  const { updateNodeData, deleteElements } = useReactFlow<RoleNode>();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { roles } = useRolesContext();
   const authentication = useAuthentication();
@@ -104,44 +96,24 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
         return;
       }
 
-      setNodes((nds) => {
-        return applyNodeChanges(
-          [
-            {
-              type: "replace",
-              id: props.id,
-              item: {
-                id: props.id,
-                type: props.type,
-                position: {
-                  x: props.positionAbsoluteX,
-                  y: props.positionAbsoluteY,
-                },
-                width: props.width,
-                height: props.height,
-                data: {
-                  role,
-                  roleImage: result.data.roleImage,
-                  backgroundColor: result.data.backgroundColor,
-                  backgroundTransparency: result.data.backgroundTransparency,
-                  showUnlocked: result.data.showUnlocked,
-                },
-              },
-            },
-          ],
-          nds,
-        );
-      });
+      updateNodeData(
+        props.id,
+        {
+          role,
+          roleImage: result.data.roleImage,
+          backgroundColor: result.data.backgroundColor,
+          backgroundTransparency: result.data.backgroundTransparency,
+          showUnlocked: result.data.showUnlocked,
+        },
+        { replace: true },
+      );
     },
-    [additionalData, setNodes, props],
+    [additionalData, updateNodeData, props.id],
   );
 
   const onDelete = useCallback(() => {
-    setNodes((nodes) => nodes.filter((node) => node.id !== nodeId));
-    setEdges((edges) =>
-      edges.filter((edge) => edge.source !== nodeId && edge.target !== nodeId),
-    );
-  }, [nodeId, setNodes, setEdges]);
+    void deleteElements({ nodes: [{ id: props.id }] });
+  }, [deleteElements, props.id]);
 
   const role =
     "role" in props.data && props.data.role
