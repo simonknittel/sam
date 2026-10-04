@@ -1,6 +1,5 @@
 "use client";
 
-import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import type { ActionResponse } from "@/modules/actions/utils/createAction";
 import { useAction } from "@/modules/actions/utils/useAction";
 import Button from "@/modules/common/components/Button";
@@ -21,8 +20,7 @@ export const UpdateSettingsRecord = ({ className, action, record }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const inputId = useId();
 
-  const { state, formAction, getDefaultValueWithFallback } = useAction(action, {
-    errorToast: false,
+  const { formAction, getDefaultValueWithFallback } = useAction(action, {
     onSuccess: () => setIsOpen(false),
   });
 
@@ -62,8 +60,6 @@ export const UpdateSettingsRecord = ({ className, action, record }: Props) => {
           <div className="mt-8 flex justify-end">
             <SubmitButton icon={<FaSave />}>Speichern</SubmitButton>
           </div>
-
-          <ActionErrorNote className="mt-4" state={state} />
         </form>
       </Modal>
     </>

@@ -29,6 +29,8 @@ export const deleteClassificationLevel = createAuthenticatedAction(
       deletePermissionStringsReferencing("classificationLevelId", data.id),
     ]);
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.CLASSIFICATION_LEVEL_DELETED,
@@ -39,8 +41,6 @@ export const deleteClassificationLevel = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return {
       success: t("Common.successfullyDeleted"),

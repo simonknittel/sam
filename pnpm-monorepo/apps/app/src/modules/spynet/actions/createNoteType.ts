@@ -27,6 +27,8 @@ export const createNoteType = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.NOTE_TYPE_CREATED,
@@ -37,8 +39,6 @@ export const createNoteType = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return {
       success: "Erfolgreich hinzugefügt",

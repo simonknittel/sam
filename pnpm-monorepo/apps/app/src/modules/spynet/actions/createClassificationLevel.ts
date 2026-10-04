@@ -27,6 +27,8 @@ export const createClassificationLevel = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.CLASSIFICATION_LEVEL_CREATED,
@@ -37,8 +39,6 @@ export const createClassificationLevel = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return {
       success: "Erfolgreich hinzugefügt",

@@ -29,6 +29,8 @@ export const deleteNoteType = createAuthenticatedAction(
       deletePermissionStringsReferencing("noteTypeId", data.id),
     ]);
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.NOTE_TYPE_DELETED,
@@ -39,8 +41,6 @@ export const deleteNoteType = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return {
       success: t("Common.successfullyDeleted"),

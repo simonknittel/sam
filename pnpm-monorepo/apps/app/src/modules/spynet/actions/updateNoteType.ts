@@ -26,11 +26,14 @@ export const updateNoteType = createAuthenticatedAction(
       where: { id: data.id },
       select: { name: true },
     });
-    if (!existingNoteType)
+    if (!existingNoteType) {
+      /** A different user deleted the note type, and the page must show it */
+      refresh();
       return {
         error: t("Common.notFound"),
         requestPayload: formData,
       };
+    }
 
     const noteType = await prisma.noteType.update({
       where: { id: data.id },
@@ -38,6 +41,8 @@ export const updateNoteType = createAuthenticatedAction(
         name: data.name,
       },
     });
+
+    refresh();
 
     await createAuditEvents([
       {
@@ -50,8 +55,6 @@ export const updateNoteType = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return {
       success: "Erfolgreich bearbeitet",

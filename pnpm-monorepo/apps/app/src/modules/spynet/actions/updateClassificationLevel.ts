@@ -27,11 +27,17 @@ export const updateClassificationLevel = createAuthenticatedAction(
         where: { id: data.id },
         select: { name: true },
       });
-    if (!existingClassificationLevel)
+    if (!existingClassificationLevel) {
+      /**
+       * A different user deleted the classification level, and the page must
+       * show it.
+       */
+      refresh();
       return {
         error: t("Common.notFound"),
         requestPayload: formData,
       };
+    }
 
     const classificationLevel = await prisma.classificationLevel.update({
       where: { id: data.id },
@@ -39,6 +45,8 @@ export const updateClassificationLevel = createAuthenticatedAction(
         name: data.name,
       },
     });
+
+    refresh();
 
     await createAuditEvents([
       {
@@ -51,8 +59,6 @@ export const updateClassificationLevel = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return {
       success: "Erfolgreich bearbeitet",
