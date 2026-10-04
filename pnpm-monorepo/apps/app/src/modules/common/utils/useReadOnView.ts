@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, type RefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useRef,
+  type RefObject,
+} from "react";
 
 /**
  * An item counts as viewed once at least this share of it has been visible
@@ -57,10 +63,7 @@ export const useReadOnView = ({ enabled = true, rootRef, onRead }: Options) => {
   const registeredElements = useRef(new Set<Element>());
   const observersRef = useRef<IntersectionObserver[]>([]);
 
-  const onReadRef = useRef(onRead);
-  useEffect(() => {
-    onReadRef.current = onRead;
-  }, [onRead]);
+  const reportRead = useEffectEvent(onRead);
 
   const observeItem: ReadOnViewRef = useCallback((element) => {
     if (!element) return;
@@ -93,7 +96,7 @@ export const useReadOnView = ({ enabled = true, rootRef, onRead }: Options) => {
       if (pendingIds.size <= 0) return;
       const idsToReport = Array.from(pendingIds);
       pendingIds.clear();
-      onReadRef.current(idsToReport);
+      reportRead(idsToReport);
     };
 
     const reportViewed = (id: string, element: Element) => {

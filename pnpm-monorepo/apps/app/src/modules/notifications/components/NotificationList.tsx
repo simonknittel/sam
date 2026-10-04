@@ -5,7 +5,7 @@ import { useTabsContext } from "@/modules/common/components/tabs/TabsContext";
 import { useReadOnView } from "@/modules/common/utils/useReadOnView";
 import { api } from "@/trpc/react";
 import clsx from "clsx";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useRef } from "react";
 import { BsExclamationOctagonFill } from "react-icons/bs";
 import { useOnSiteNotificationMutations } from "../hooks/useOnSiteNotificationMutations";
 import { NotificationCenterTab } from "../utils/types";
@@ -60,16 +60,6 @@ export const NotificationList = ({
 
   const scrollContainerRef = useRef<HTMLUListElement>(null);
 
-  const markReadRef = useRef(markRead);
-  useEffect(() => {
-    markReadRef.current = markRead;
-  }, [markRead]);
-
-  const onRetainHighlightsRef = useRef(onRetainHighlights);
-  useEffect(() => {
-    onRetainHighlightsRef.current = onRetainHighlights;
-  }, [onRetainHighlights]);
-
   /**
    * Read-on-view marks an unread notification read once it has dwelled in the
    * scroll container, and retains its highlight so the user doesn't lose
@@ -77,10 +67,10 @@ export const NotificationList = ({
    * the list is rendered, because the observer needs the scroll container as
    * its root.
    */
-  const handleRead = useCallback((notificationIds: string[]) => {
-    onRetainHighlightsRef.current?.(notificationIds);
-    void markReadRef.current(notificationIds);
-  }, []);
+  const handleRead = (notificationIds: string[]) => {
+    onRetainHighlights?.(notificationIds);
+    void markRead(notificationIds);
+  };
 
   const observeNotification = useReadOnView({
     enabled:
@@ -93,10 +83,10 @@ export const NotificationList = ({
 
   const handleNavigateToTarget = useCallback(
     (notificationId: string, isUnread: boolean) => {
-      if (isUnread) void markReadRef.current([notificationId]);
+      if (isUnread) void markRead([notificationId]);
       onNavigate?.();
     },
-    [onNavigate],
+    [markRead, onNavigate],
   );
 
   if (isPending)

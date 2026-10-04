@@ -1,7 +1,7 @@
 "use client";
 
 import { api, type RouterOutputs } from "@/trpc/react";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useEffectEvent, useRef } from "react";
 import { useLogAnalyzerContext } from "../components/LogAnalyzerContext";
 import { deleteEntriesBefore, getWindowStart } from "../utils/entryWindow";
 import { LIVE_MODE_DOWNLOAD_INTERVAL_MS } from "../utils/liveMode";
@@ -114,14 +114,10 @@ export const useSharedEntries = () => {
     }
   }, [daysToLoad, setEntries, utils]);
 
-  /**
-   * The effects below read the newest function from a ref, so that a changed
-   * `daysToLoad` cannot restart the interval or cause a second load.
-   */
-  const fetchSharedEntriesRef = useRef(fetchSharedEntries);
-  useEffect(() => {
-    fetchSharedEntriesRef.current = fetchSharedEntries;
-  }, [fetchSharedEntries]);
+  /** A changed `daysToLoad` must not restart the interval or load again */
+  const fetchSharedEntriesFromEffect = useEffectEvent(() => {
+    void fetchSharedEntries();
+  });
 
   useEffect(() => {
     if (!isSharedViewEnabled) {
@@ -132,14 +128,14 @@ export const useSharedEntries = () => {
       return;
     }
 
-    void fetchSharedEntriesRef.current();
+    fetchSharedEntriesFromEffect();
   }, [isSharedViewEnabled]);
 
   useEffect(() => {
     if (!isSharedViewEnabled || !isLiveModeEnabled) return;
 
     const interval = window.setInterval(() => {
-      void fetchSharedEntriesRef.current();
+      fetchSharedEntriesFromEffect();
     }, LIVE_MODE_DOWNLOAD_INTERVAL_MS);
 
     return () => window.clearInterval(interval);
@@ -147,6 +143,6 @@ export const useSharedEntries = () => {
 
   return useCallback(() => {
     if (!isSharedViewEnabled) return;
-    void fetchSharedEntriesRef.current();
-  }, [isSharedViewEnabled]);
+    void fetchSharedEntries();
+  }, [fetchSharedEntries, isSharedViewEnabled]);
 };

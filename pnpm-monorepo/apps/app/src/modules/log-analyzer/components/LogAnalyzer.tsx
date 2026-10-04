@@ -12,6 +12,7 @@ import { get, set } from "idb-keyval";
 import {
   useCallback,
   useEffect,
+  useEffectEvent,
   useMemo,
   useRef,
   type MouseEvent,
@@ -214,21 +215,13 @@ export const LogAnalyzer = ({ className }: Props) => {
     [parseLogs],
   );
 
-  /**
-   * The interval reads the newest `parseLogs` from a ref. Reading it from the
-   * dependencies instead would restart the interval on every render — and
-   * every arrival of shared entries causes one.
-   */
-  const parseLogsRef = useRef(parseLogs);
-  useEffect(() => {
-    parseLogsRef.current = parseLogs;
-  }, [parseLogs]);
+  const parseNewLogLines = useEffectEvent(() => parseLogs(true));
 
   useEffect(() => {
     if (!isLiveModeEnabled) return;
 
     const interval = window.setInterval(() => {
-      parseLogsRef.current(true);
+      parseNewLogLines();
     }, LIVE_MODE_PARSE_INTERVAL_MS);
 
     return () => window.clearInterval(interval);
