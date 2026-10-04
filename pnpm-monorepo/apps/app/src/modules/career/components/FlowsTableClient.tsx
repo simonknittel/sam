@@ -6,14 +6,12 @@ import {
   TableTile,
   type TableColumn,
 } from "@/modules/common/components/TableTile";
+import { useSortableList } from "@/modules/common/utils/useSortableList";
 import {
   DndContext,
-  KeyboardSensor,
-  PointerSensor,
   closestCenter,
-  useSensor,
-  useSensors,
   type DragEndEvent,
+  type UniqueIdentifier,
 } from "@dnd-kit/core";
 import {
   restrictToParentElement,
@@ -22,10 +20,9 @@ import {
 import {
   SortableContext,
   arrayMove,
-  sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { useState, useTransition } from "react";
+import { useCallback, useState, useTransition } from "react";
 import { FaPlus } from "react-icons/fa";
 import { reorderFlows } from "../actions/reorderFlows";
 import type { ManageableFlow } from "../queries/getManageableFlows";
@@ -88,16 +85,12 @@ export const FlowsTableClient = ({
     useState<DuplicationSource | null>(null);
   const [, startTransition] = useTransition();
 
-  const sensors = useSensors(
-    /**
-     * A few pixels of travel before a drag starts, so the row's links and
-     * buttons stay clickable.
-     */
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
+  const getFlowName = useCallback(
+    (id: UniqueIdentifier) =>
+      orderedFlows.find((flow) => flow.id === id)?.name ?? "",
+    [orderedFlows],
   );
+  const { sensors, accessibility } = useSortableList(getFlowName);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -149,6 +142,7 @@ export const FlowsTableClient = ({
       <DndContext
         id="career-flows"
         sensors={sensors}
+        accessibility={accessibility}
         collisionDetection={closestCenter}
         modifiers={[restrictToVerticalAxis, restrictToParentElement]}
         onDragEnd={handleDragEnd}

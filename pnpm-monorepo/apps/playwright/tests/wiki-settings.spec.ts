@@ -14,6 +14,12 @@ import {
   sectionByHeading,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
+import {
+  dragNarration,
+  sortByKeyboard,
+  sortByMouse,
+  sortByTouch,
+} from "../fixtures/sortable-list";
 import { expect, test } from "../fixtures/test";
 
 test("the settings curate the featured pages, the dashboard page and the support link", async ({
@@ -111,95 +117,29 @@ const featuredPageHandle = (page: Page, title: string) =>
     name: `"${title}" verschieben`,
   });
 
-/**
- * dnd-kit tells each step of a drag in an aria-live region. The next key
- * must wait until the text changes, because a key before the library
- * processed the previous key does not move the row.
- */
-const dragNarration = async (page: Page) =>
-  (await page.getByRole("status").allTextContents()).join(" ");
-
-/** Moves the first page below the second page with the keyboard */
-const reorderByKeyboard = async (page: Page) => {
-  await featuredPageHandle(page, "Einsteigerguide").focus();
-
-  await page.keyboard.press("Space");
-  await expect.poll(() => dragNarration(page)).toContain("Draggable item");
-  const afterPickup = await dragNarration(page);
-
-  await page.keyboard.press("ArrowDown");
-  await expect.poll(() => dragNarration(page)).not.toBe(afterPickup);
-
-  await page.keyboard.press("Space");
-};
-
-/** The same move with the mouse */
-const reorderByMouse = async (page: Page) => {
-  const sourceBox = (await featuredPageHandle(
-    page,
-    "Einsteigerguide",
-  ).boundingBox())!;
-  const targetBox = (await featuredPageHandle(
-    page,
-    "Regelwerk",
-  ).boundingBox())!;
-
-  await page.mouse.move(
-    sourceBox.x + sourceBox.width / 2,
-    sourceBox.y + sourceBox.height / 2,
-  );
-  await page.mouse.down();
-  await page.mouse.move(
-    targetBox.x + targetBox.width / 2,
-    targetBox.y + targetBox.height,
-    { steps: 10 },
-  );
-  await page.mouse.up();
-};
-
-/**
- * The same move with a finger. Playwright has no touch drag, thus the
- * gesture goes through the Chrome DevTools Protocol. If the browser scrolls
- * the page instead, it cancels the drag and the order does not change.
- */
-const reorderByTouch = async (page: Page) => {
-  const sourceBox = (await featuredPageHandle(
-    page,
-    "Einsteigerguide",
-  ).boundingBox())!;
-  const targetBox = (await featuredPageHandle(
-    page,
-    "Regelwerk",
-  ).boundingBox())!;
-  const pointerX = sourceBox.x + sourceBox.width / 2;
-  const startY = sourceBox.y + sourceBox.height / 2;
-  const endY = targetBox.y + targetBox.height;
-
-  const session = await page.context().newCDPSession(page);
-  await session.send("Emulation.setTouchEmulationEnabled", { enabled: true });
-  await session.send("Input.dispatchTouchEvent", {
-    type: "touchStart",
-    touchPoints: [{ x: pointerX, y: startY }],
-  });
-  const stepCount = 10;
-  for (let step = 1; step <= stepCount; step++) {
-    await session.send("Input.dispatchTouchEvent", {
-      type: "touchMove",
-      touchPoints: [
-        { x: pointerX, y: startY + ((endY - startY) * step) / stepCount },
-      ],
-    });
-  }
-  await session.send("Input.dispatchTouchEvent", {
-    type: "touchEnd",
-    touchPoints: [],
-  });
-};
-
+/** Each gesture moves the first page below the second page */
 const REORDER_GESTURES = [
-  { name: "keyboard", drag: reorderByKeyboard },
-  { name: "mouse", drag: reorderByMouse },
-  { name: "touch", drag: reorderByTouch },
+  {
+    name: "keyboard",
+    drag: (page: Page) =>
+      sortByKeyboard(featuredPageHandle(page, "Einsteigerguide")),
+  },
+  {
+    name: "mouse",
+    drag: (page: Page) =>
+      sortByMouse(
+        featuredPageHandle(page, "Einsteigerguide"),
+        featuredPageHandle(page, "Regelwerk"),
+      ),
+  },
+  {
+    name: "touch",
+    drag: (page: Page) =>
+      sortByTouch(
+        featuredPageHandle(page, "Einsteigerguide"),
+        featuredPageHandle(page, "Regelwerk"),
+      ),
+  },
 ] as const;
 
 for (const { name, drag } of REORDER_GESTURES) {
@@ -233,7 +173,14 @@ for (const { name, drag } of REORDER_GESTURES) {
     await page.goto("/app/wiki/settings");
     await waitForAppShellHydration(page);
 
+    /** Screen readers get German texts with the title, not with the id */
+    await expect(
+      featuredPageHandle(page, "Einsteigerguide"),
+    ).toHaveAccessibleDescription(/Leertaste/);
     await drag(page);
+    await expect
+      .poll(() => dragNarration(page))
+      .toContain('"Einsteigerguide" auf Position 2 von 2 abgelegt.');
 
     const featuredTile = sectionByHeading(page, "Featured Seiten");
     await expect(featuredTile.getByRole("listitem")).toHaveText([

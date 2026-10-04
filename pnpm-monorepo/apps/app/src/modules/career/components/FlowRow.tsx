@@ -5,6 +5,7 @@ import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { Link } from "@/modules/common/components/Link";
 import { TRow } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
+import { SORTABLE_HANDLE_ATTRIBUTES } from "@/modules/common/utils/useSortableList";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { getCitizenDisplayName } from "@sam-monorepo/domain";
@@ -28,7 +29,11 @@ export const FlowRow = ({ flow, isSortable, onDuplicate }: Props) => {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: flow.id, disabled: !isSortable });
+  } = useSortable({
+    id: flow.id,
+    disabled: !isSortable,
+    attributes: SORTABLE_HANDLE_ATTRIBUTES,
+  });
 
   return (
     <TRow
@@ -41,9 +46,10 @@ export const FlowRow = ({ flow, isSortable, onDuplicate }: Props) => {
     >
       {isSortable && (
         <td>
+          {/* Without `touch-none` a touch on the handle scrolls the page */}
           <button
             type="button"
-            className="flex size-8 cursor-grab items-center justify-center rounded-secondary text-neutral-500 outline-interaction-700 hover:text-interaction-500 focus-visible:text-interaction-500 focus-visible:outline-2 active:cursor-grabbing"
+            className="flex size-8 cursor-grab touch-none items-center justify-center rounded-secondary text-neutral-500 outline-interaction-700 hover:text-interaction-500 focus-visible:text-interaction-500 focus-visible:outline-2 active:cursor-grabbing active:text-interaction-300"
             aria-label={`${flow.name} verschieben`}
             {...attributes}
             {...listeners}

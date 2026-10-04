@@ -6,13 +6,14 @@ import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Note from "@/modules/common/components/Note";
 import {
+  SORTABLE_HANDLE_ATTRIBUTES,
+  useSortableList,
+} from "@/modules/common/utils/useSortableList";
+import {
   DndContext,
-  KeyboardSensor,
-  PointerSensor,
   closestCenter,
-  useSensor,
-  useSensors,
   type DragEndEvent,
+  type UniqueIdentifier,
 } from "@dnd-kit/core";
 import {
   restrictToParentElement,
@@ -21,13 +22,12 @@ import {
 import {
   SortableContext,
   arrayMove,
-  sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import clsx from "clsx";
-import { useId, useState } from "react";
+import { useCallback, useId, useState } from "react";
 import { FaSave, FaTrash } from "react-icons/fa";
 import { MdDragIndicator } from "react-icons/md";
 import { updateWikiFeaturedPages } from "../actions/updateWikiFeaturedPages";
@@ -75,12 +75,11 @@ export const WikiFeaturedPagesSettings = ({ initialPages, targets }: Props) => {
     setSelectedPageId("");
   };
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
+  const getPageTitle = useCallback(
+    (id: UniqueIdentifier) => pages.find((page) => page.id === id)?.title ?? "",
+    [pages],
   );
+  const { sensors, accessibility } = useSortableList(getPageTitle);
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     if (!over || active.id === over.id) return;
@@ -100,6 +99,7 @@ export const WikiFeaturedPagesSettings = ({ initialPages, targets }: Props) => {
         <DndContext
           id="wiki-featured-pages"
           sensors={sensors}
+          accessibility={accessibility}
           collisionDetection={closestCenter}
           modifiers={[restrictToVerticalAxis, restrictToParentElement]}
           onDragEnd={handleDragEnd}
@@ -192,8 +192,7 @@ interface RowProps {
 
 /**
  * The row and its handle look like the rows of the sidebar tree. The handle
- * moves the row by pointer, by touch, or by keyboard: the space bar picks the
- * row up, the arrow keys move it, and the space bar drops it.
+ * moves the row (see `useSortableList`).
  */
 const WikiFeaturedPageRow = ({ page, onRemove }: RowProps) => {
   const {
@@ -203,7 +202,7 @@ const WikiFeaturedPageRow = ({ page, onRemove }: RowProps) => {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: page.id });
+  } = useSortable({ id: page.id, attributes: SORTABLE_HANDLE_ATTRIBUTES });
 
   return (
     <li
