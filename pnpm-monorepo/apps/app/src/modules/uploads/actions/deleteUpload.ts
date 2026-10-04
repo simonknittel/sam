@@ -71,6 +71,8 @@ export const deleteUpload = createAuthenticatedAction(
      */
     await prisma.upload.delete({ where: { id: upload.id } });
 
+    refresh();
+
     try {
       await createS3Client().send(
         new DeleteObjectCommand({
@@ -103,8 +105,6 @@ export const deleteUpload = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return {
       success: t("Common.successfullyDeleted"),

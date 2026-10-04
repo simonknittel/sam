@@ -54,6 +54,8 @@ export const unbanUserAction = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.USER_UNBANNED,
@@ -63,8 +65,6 @@ export const unbanUserAction = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

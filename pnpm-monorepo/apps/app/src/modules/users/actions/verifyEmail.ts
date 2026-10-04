@@ -41,6 +41,8 @@ export const verifyEmailAction = createAuthenticatedAction(
       }),
     ]);
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.EMAIL_VERIFIED,
@@ -50,8 +52,6 @@ export const verifyEmailAction = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

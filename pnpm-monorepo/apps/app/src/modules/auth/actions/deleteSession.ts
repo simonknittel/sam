@@ -43,6 +43,8 @@ export const deleteSession = createAuthenticatedAction(
         requestPayload: formData,
       };
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.USER_SESSION_DELETED,
@@ -53,8 +55,6 @@ export const deleteSession = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return {
       success: t("Common.successfullyDeleted"),

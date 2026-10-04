@@ -84,6 +84,8 @@ export const banUserAction = createAuthenticatedAction(
       }),
     ]);
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.USER_BANNED,
@@ -94,8 +96,6 @@ export const banUserAction = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result
