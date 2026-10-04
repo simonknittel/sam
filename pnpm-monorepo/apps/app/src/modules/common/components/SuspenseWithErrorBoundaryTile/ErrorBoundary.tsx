@@ -3,47 +3,25 @@
 import { wikiPageLinkHref } from "@/modules/wiki/utils/wikiPageLinks";
 import clsx from "clsx";
 import { useTranslations } from "next-intl";
-import { unstable_rethrow } from "next/navigation";
-import { type ReactNode } from "react";
-import { ErrorBoundary as _ErrorBoundary } from "react-error-boundary";
+import { catchError, type ErrorInfo } from "next/error";
 import { BsExclamationOctagonFill } from "react-icons/bs";
+import { Button2, Button2Variant } from "../Button2";
 import { Link } from "../Link";
 
 interface Props {
   readonly className?: string;
-  readonly children: ReactNode;
 }
 
-export const ErrorBoundary = ({ className, children }: Props) => {
-  return (
-    <_ErrorBoundary
-      fallbackRender={(props) => {
-        /**
-         * `notFound()`, `forbidden()` and `redirect()` reach a boundary as
-         * thrown errors. Rendering the generic tile for them would turn a
-         * 404 into "an unexpected error occurred" and swallow a redirect, so
-         * they are passed on to the framework's own handling.
-         */
-        unstable_rethrow(props.error);
+/** Next.js gives the errors of Server Components a digest for the server logs */
+const getDigest = (error: unknown) =>
+  typeof error === "object" &&
+  error !== null &&
+  "digest" in error &&
+  typeof error.digest === "string"
+    ? error.digest
+    : null;
 
-        // @ts-expect-error react-error-boundary's fallbackRender props don't match Fallback's stricter props
-        return <Fallback {...props} className={className} />;
-      }}
-    >
-      {children}
-    </_ErrorBoundary>
-  );
-};
-
-interface FallbackProps {
-  readonly className?: string;
-  readonly error: {
-    readonly message: string;
-    readonly digest: string;
-  };
-}
-
-const Fallback = ({ className, error }: FallbackProps) => {
+const Fallback = ({ className }: Props, { error, retry }: ErrorInfo) => {
   const t = useTranslations();
 
   return (
@@ -73,9 +51,25 @@ const Fallback = ({ className, error }: FallbackProps) => {
         </div>
 
         <p className="mt-2 text-sm text-neutral-500">
-          Digest: {error.digest ? error.digest : "unknown"}
+          Digest: {getDigest(error) ?? "unknown"}
         </p>
+
+        <Button2
+          type="button"
+          variant={Button2Variant.Secondary}
+          onClick={retry}
+          className="mt-4"
+        >
+          Erneut versuchen
+        </Button2>
       </div>
     </section>
   );
 };
+
+/**
+ * Unlike a plain React error boundary, `catchError` lets `notFound()`,
+ * `forbidden()` and `redirect()` through to the handling of Next.js, and it
+ * resets when the user goes to a different page.
+ */
+export const ErrorBoundary = catchError(Fallback);

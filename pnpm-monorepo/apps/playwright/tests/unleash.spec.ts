@@ -10,7 +10,10 @@ import { setUnleashFlag, UNLEASH_FLAG } from "../fixtures/unleash";
  * states are asserted, so a timeout here means the app did not pick up the
  * change from the stack's Unleash container — not that the default kicked in.
  */
-const expectFlagPropagation = expect.configure({ timeout: 30_000 });
+const FLAG_PROPAGATION_TIMEOUT = 30_000;
+const expectFlagPropagation = expect.configure({
+  timeout: FLAG_PROPAGATION_TIMEOUT,
+});
 /** Two polled flag states plus navigations per test */
 const FLAG_TEST_TIMEOUT = 120_000;
 
@@ -74,7 +77,7 @@ test("the care bear shooter is released by its feature flag", async ({
 test.describe(() => {
   test.describe.configure({ mode: "serial" });
 
-  test("the kill switch flag takes the log analyzer offline", async ({
+  test("the kill switch flag takes the log analyzer offline, and the retry of the error tile brings it back", async ({
     page,
     prisma,
     signIn,
@@ -87,14 +90,14 @@ test.describe(() => {
     });
     await signIn(citizen.user);
 
+    const introduction = page.getByText(
+      "Der Log Analyzer wertet die Game Logs von Star Citizen aus",
+    );
+
     await setUnleashFlag(UNLEASH_FLAG.CrashLogAnalyzer, false);
     await expectFlagPropagation
       .poll(() =>
-        pageShows(page, "/app/tools/log-analyzer", (currentPage) =>
-          currentPage.getByText(
-            "Der Log Analyzer wertet die Game Logs von Star Citizen aus",
-          ),
-        ),
+        pageShows(page, "/app/tools/log-analyzer", () => introduction),
       )
       .toBe(true);
 
@@ -107,8 +110,18 @@ test.describe(() => {
       )
       .toBe(true);
 
-    /** The tests which follow need the page in working order */
+    /**
+     * The retry loads the tile again from the server without a reload of the
+     * page. The tests which follow also need the page in working order.
+     */
     await setUnleashFlag(UNLEASH_FLAG.CrashLogAnalyzer, false);
+    const retryButton = page.getByRole("button", { name: "Erneut versuchen" });
+    await expect(async () => {
+      if (!(await introduction.isVisible()))
+        await retryButton.click({ timeout: 2_000 });
+      await expect(introduction).toBeVisible({ timeout: 5_000 });
+    }).toPass({ timeout: FLAG_PROPAGATION_TIMEOUT });
+    await expect(retryButton).toHaveCount(0);
   });
 
   enum SharingToolbarState {
