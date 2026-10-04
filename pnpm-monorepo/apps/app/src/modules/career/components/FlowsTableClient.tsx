@@ -22,7 +22,7 @@ import {
   arrayMove,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { useCallback, useState, useTransition } from "react";
+import { useCallback, useOptimistic, useState, useTransition } from "react";
 import { FaPlus } from "react-icons/fa";
 import { reorderFlows } from "../actions/reorderFlows";
 import type { ManageableFlow } from "../queries/getManageableFlows";
@@ -67,18 +67,11 @@ export const FlowsTableClient = ({
   emptyMessage,
 }: Props) => {
   /**
-   * Mirrors the server list so a drop can reorder before the action comes
-   * back, and steps aside whenever the server sends a different list.
+   * A drop shows the new order immediately. When the action ends, the list
+   * from the server replaces it: the new order after a save, the old order
+   * after an error.
    */
-  const [orderedFlows, setOrderedFlows] = useState<ManageableFlow[]>(() => [
-    ...flows,
-  ]);
-  const serverSignature = flows.map((flow) => flow.id).join(",");
-  const [renderedSignature, setRenderedSignature] = useState(serverSignature);
-  if (renderedSignature !== serverSignature) {
-    setRenderedSignature(serverSignature);
-    setOrderedFlows([...flows]);
-  }
+  const [optimisticFlows, setOptimisticFlows] = useOptimistic(flows);
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [duplicationSource, setDuplicationSource] =
@@ -87,8 +80,8 @@ export const FlowsTableClient = ({
 
   const getFlowName = useCallback(
     (id: UniqueIdentifier) =>
-      orderedFlows.find((flow) => flow.id === id)?.name ?? "",
-    [orderedFlows],
+      optimisticFlows.find((flow) => flow.id === id)?.name ?? "",
+    [optimisticFlows],
   );
   const { sensors, accessibility } = useSortableList(getFlowName);
 
@@ -96,27 +89,24 @@ export const FlowsTableClient = ({
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = orderedFlows.findIndex((flow) => flow.id === active.id);
-    const newIndex = orderedFlows.findIndex((flow) => flow.id === over.id);
+    const oldIndex = optimisticFlows.findIndex((flow) => flow.id === active.id);
+    const newIndex = optimisticFlows.findIndex((flow) => flow.id === over.id);
     if (oldIndex < 0 || newIndex < 0) return;
 
-    const previousFlows = orderedFlows;
-    const nextFlows = arrayMove(orderedFlows, oldIndex, newIndex);
-    setOrderedFlows(nextFlows);
+    const nextFlows = arrayMove([...optimisticFlows], oldIndex, newIndex);
 
     const formData = new FormData();
     for (const flow of nextFlows) formData.append("flowId[]", flow.id);
 
     startTransition(async () => {
-      const succeeded = await runAction(reorderFlows, formData);
-      /** Put the rows back where they were rather than lying about the order */
-      if (!succeeded) setOrderedFlows(previousFlows);
+      setOptimisticFlows(nextFlows);
+      await runAction(reorderFlows, formData);
     });
   };
 
   const columns = canReorder ? [HANDLE_COLUMN, ...COLUMNS] : COLUMNS;
 
-  const rows = orderedFlows.map((flow) => (
+  const rows = optimisticFlows.map((flow) => (
     <FlowRow
       key={flow.id}
       flow={flow}
@@ -156,11 +146,11 @@ export const FlowsTableClient = ({
             </Button2>
           }
           columns={columns}
-          isEmpty={orderedFlows.length === 0}
+          isEmpty={optimisticFlows.length === 0}
           emptyMessage={emptyMessage}
         >
           <SortableContext
-            items={orderedFlows.map((flow) => flow.id)}
+            items={optimisticFlows.map((flow) => flow.id)}
             strategy={verticalListSortingStrategy}
           >
             {rows}
