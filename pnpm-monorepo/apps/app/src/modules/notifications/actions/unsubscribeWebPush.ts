@@ -30,6 +30,8 @@ export const unsubscribeWebPush = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     if (count > 0)
       await createAuditEvents([
         {
@@ -41,8 +43,6 @@ export const unsubscribeWebPush = createAuthenticatedAction(
           createdById: authentication.session.user.id,
         },
       ]);
-
-    refresh();
 
     return {
       success: "Die Benachrichtigungen wurden auf allen Geräten deaktiviert.",

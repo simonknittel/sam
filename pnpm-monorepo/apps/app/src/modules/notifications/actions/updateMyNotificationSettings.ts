@@ -17,7 +17,17 @@ export interface Change {
   enabled: boolean;
 }
 
-const schema = z.record(z.string(), z.string());
+/**
+ * The form sends one key for each switched-on setting, thus a request never
+ * has more keys than there are combinations of a notification type and a
+ * channel. The limit keeps the loops of the action bounded.
+ */
+const MAXIMUM_FORM_KEY_COUNT =
+  NOTIFICATION_TYPES.length * Object.keys(NotificationChannel).length;
+
+const schema = z
+  .record(z.string(), z.string())
+  .refine((record) => Object.keys(record).length <= MAXIMUM_FORM_KEY_COUNT);
 
 export const updateMyNotificationSettings = createAuthenticatedAction(
   "updateMyNotificationSettings",
@@ -33,28 +43,17 @@ export const updateMyNotificationSettings = createAuthenticatedAction(
       };
 
     /**
-     * Further validate the request
-     */
-    if (Array.from(formData.keys()).length > 100)
-      return {
-        error: t("Common.badRequest"),
-        requestPayload: formData,
-      };
-
-    /**
      *
      */
     const myCurrentSettings = await getMyNotificationSettings();
 
-    const newlyEnabledSettings = Array.from(formData.keys()).filter(
-      (inputName) => {
-        for (const channelKey of Object.keys(NotificationChannel)) {
-          const channel = channelKey as NotificationChannel;
-          if (inputName.startsWith(`${channel}_`)) return true;
-        }
-        return false;
-      },
-    );
+    const newlyEnabledSettings = Object.keys(data).filter((inputName) => {
+      for (const channelKey of Object.keys(NotificationChannel)) {
+        const channel = channelKey as NotificationChannel;
+        if (inputName.startsWith(`${channel}_`)) return true;
+      }
+      return false;
+    });
 
     const changes: Change[] = [];
     for (const channelKey of Object.keys(NotificationChannel)) {
@@ -118,6 +117,8 @@ export const updateMyNotificationSettings = createAuthenticatedAction(
       }),
     );
 
+    refresh();
+
     if (changes.length > 0)
       await createAuditEvents([
         {
@@ -140,8 +141,6 @@ export const updateMyNotificationSettings = createAuthenticatedAction(
           createdById: authentication.session.user.id,
         },
       ]);
-
-    refresh();
 
     return {
       success: t("Common.successfullySaved"),

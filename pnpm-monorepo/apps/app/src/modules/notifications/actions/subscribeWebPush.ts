@@ -70,6 +70,9 @@ export const subscribeWebPush = createAuthenticatedAction(
         citizenId: true,
       },
     });
+
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.WEB_PUSH_SUBSCRIBED,
@@ -92,8 +95,6 @@ export const subscribeWebPush = createAuthenticatedAction(
         },
       },
     ]);
-
-    refresh();
 
     return {
       success: t("Common.successfullySaved"),
