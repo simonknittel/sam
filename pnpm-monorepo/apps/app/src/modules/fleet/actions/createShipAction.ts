@@ -38,6 +38,9 @@ export const createShipAction = createAuthenticatedAction(
         id: true,
       },
     });
+
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.SHIP_CREATED_V2,
@@ -49,8 +52,6 @@ export const createShipAction = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

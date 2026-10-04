@@ -94,9 +94,6 @@ export const createVariant = createAuthenticatedAction(
             },
           }),
       },
-      include: {
-        series: true,
-      },
     });
 
     const incomingLinks = data.linkServiceNames
@@ -112,6 +109,8 @@ export const createVariant = createAuthenticatedAction(
       authentication.session.entity.id,
     );
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.VARIANT_CREATED_V3,
@@ -126,8 +125,6 @@ export const createVariant = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

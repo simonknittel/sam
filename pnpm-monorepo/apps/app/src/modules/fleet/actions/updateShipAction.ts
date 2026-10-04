@@ -4,11 +4,12 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 const schema = z.object({
   id: z.cuid(),
-  name: z.string().trim(),
+  name: z.string().trim().max(255),
 });
 
 export const updateShipAction = createAuthenticatedAction(
@@ -60,6 +61,8 @@ export const updateShipAction = createAuthenticatedAction(
         name: true,
       },
     });
+
+    refresh();
 
     await createAuditEvents([
       {

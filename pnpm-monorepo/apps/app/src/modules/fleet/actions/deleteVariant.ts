@@ -33,10 +33,9 @@ export const deleteVariant = createAuthenticatedAction(
       where: {
         id: data.id,
       },
-      include: {
-        series: true,
-      },
     });
+
+    refresh();
 
     await createAuditEvents([
       {
@@ -49,8 +48,6 @@ export const deleteVariant = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

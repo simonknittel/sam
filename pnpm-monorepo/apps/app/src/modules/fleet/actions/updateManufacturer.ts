@@ -55,6 +55,8 @@ export const updateManufacturerAction = createAuthenticatedAction(
       data: updateData,
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.MANUFACTURER_UPDATED,
@@ -68,8 +70,6 @@ export const updateManufacturerAction = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

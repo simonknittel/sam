@@ -40,6 +40,8 @@ export const deleteSeries = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.SERIES_DELETED,
@@ -51,8 +53,6 @@ export const deleteSeries = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

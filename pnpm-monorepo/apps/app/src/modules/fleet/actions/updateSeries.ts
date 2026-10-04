@@ -53,6 +53,8 @@ export const updateSeries = createAuthenticatedAction(
       data: updateData,
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.SERIES_UPDATED,
@@ -65,8 +67,6 @@ export const updateSeries = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

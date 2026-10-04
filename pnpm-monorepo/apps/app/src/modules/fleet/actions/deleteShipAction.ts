@@ -57,6 +57,8 @@ export const deleteShipAction = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.SHIP_DELETED_V2,
@@ -69,8 +71,6 @@ export const deleteShipAction = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

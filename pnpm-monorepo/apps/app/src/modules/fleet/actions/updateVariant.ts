@@ -54,15 +54,6 @@ export const updateVariant = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    /**
-     * Update variant
-     */
-    const tagsToConnect = await createAndReturnTags(
-      data.tagKeys,
-      data.tagValues,
-      authentication.session.entity.id,
-    );
-
     const existingVariant = await prisma.variant.findUnique({
       where: {
         id: data.id,
@@ -113,6 +104,15 @@ export const updateVariant = createAuthenticatedAction(
         };
     }
 
+    /**
+     * Update variant
+     */
+    const tagsToConnect = await createAndReturnTags(
+      data.tagKeys,
+      data.tagValues,
+      authentication.session.entity.id,
+    );
+
     const updatedItem = await prisma.variant.update({
       where: {
         id: data.id,
@@ -124,9 +124,6 @@ export const updateVariant = createAuthenticatedAction(
         tags: {
           set: tagsToConnect.map((tagId) => ({ id: tagId })),
         },
-      },
-      include: {
-        series: true,
       },
     });
 
@@ -142,6 +139,8 @@ export const updateVariant = createAuthenticatedAction(
       incomingLinks,
       authentication.session.entity.id,
     );
+
+    refresh();
 
     await createAuditEvents([
       {
@@ -161,8 +160,6 @@ export const updateVariant = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

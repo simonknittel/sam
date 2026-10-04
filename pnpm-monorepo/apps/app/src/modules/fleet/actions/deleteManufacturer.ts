@@ -39,6 +39,8 @@ export const deleteManufacturer = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.MANUFACTURER_DELETED,
@@ -49,8 +51,6 @@ export const deleteManufacturer = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result
