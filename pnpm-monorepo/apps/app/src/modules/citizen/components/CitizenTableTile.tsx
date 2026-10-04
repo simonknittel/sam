@@ -1,5 +1,4 @@
 import { requireAuthentication } from "@/modules/auth/server";
-import { getFilterValues } from "@/modules/citizen/queries/getCitizenLogTablePage";
 import { getCitizensForTable } from "@/modules/citizen/queries/getCitizens";
 import {
   CitizenTableSort,
@@ -7,6 +6,7 @@ import {
   serializeCitizenTableSearchParams,
 } from "@/modules/citizen/utils/citizenTableSearchParams";
 import Pagination from "@/modules/common/components/Pagination";
+import { getFilterValues } from "@/modules/common/utils/filterCheckboxListParsers";
 import { limitRows, PER_PAGE } from "@/modules/common/utils/pagination";
 import {
   sortAscWithAndNullLast,
@@ -34,8 +34,8 @@ export const CitizenTableTile = async ({ className, searchParams }: Props) => {
       ...values,
     });
 
-  const unknownAttributes = getFilterValues(filters, "unknown-");
-  const roleIds = getFilterValues(filters, "role-");
+  const unknownAttributes = getFilterValues(filters, "unknown");
+  const roleIds = getFilterValues(filters, "role");
 
   const citizens = await getCitizensForTable();
 

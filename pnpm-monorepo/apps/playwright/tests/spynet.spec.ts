@@ -412,6 +412,9 @@ const citizenTableRows = (page: Page) =>
 const citizenTableHeaderLink = (page: Page, name: string) =>
   page.locator("thead").getByRole("link", { name, exact: true });
 
+const citizenTableColumnHeader = (page: Page, name: string) =>
+  page.locator("thead").getByRole("columnheader", { name });
+
 test("the citizen table sorts by its column headers and keeps the sort on the other pages", async ({
   page,
   prisma,
@@ -440,10 +443,24 @@ test("the citizen table sorts by its column headers and keeps the sort on the ot
   await page.goto("/app/spynet/citizen");
   await expect(rows.first()).toContainText("tabellen-sortierer");
   await expect(rows.nth(1)).toContainText("bewohner-01");
+  await expect(citizenTableColumnHeader(page, "Erstellt am")).toHaveAttribute(
+    "aria-sort",
+    "descending",
+  );
+  await expect(citizenTableColumnHeader(page, "Handle")).not.toHaveAttribute(
+    "aria-sort",
+  );
 
   await citizenTableHeaderLink(page, "Handle").click();
   await expect(page).toHaveURL(/sort=handle-asc/);
   await expect(rows.first()).toContainText("bewohner-01");
+  await expect(citizenTableColumnHeader(page, "Handle")).toHaveAttribute(
+    "aria-sort",
+    "ascending",
+  );
+  await expect(
+    citizenTableColumnHeader(page, "Erstellt am"),
+  ).not.toHaveAttribute("aria-sort");
 
   await page.getByRole("link", { name: "Nächste Seite" }).click();
   await expect(page).toHaveURL(/page=2/);
@@ -457,6 +474,10 @@ test("the citizen table sorts by its column headers and keeps the sort on the ot
   await expect(page).toHaveURL(/sort=handle-desc/);
   await expect(page).toHaveURL(/page=2/);
   await expect(rows.first()).toContainText("bewohner-02");
+  await expect(citizenTableColumnHeader(page, "Handle")).toHaveAttribute(
+    "aria-sort",
+    "descending",
+  );
 
   await page.getByRole("link", { name: "Vorherige Seite" }).click();
   await expect(page).toHaveURL(/\/app\/spynet\/citizen\?sort=handle-desc$/);
@@ -471,6 +492,40 @@ test("the citizen table sorts by its column headers and keeps the sort on the ot
   await citizenTableHeaderLink(page, "Erstellt am").click();
   await expect(page).toHaveURL(/sort=created-at-asc/);
   await expect(rows.first()).toContainText("bewohner-51");
+});
+
+test("the citizen table shows the first page for a page number that is not a page", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const viewer = await createCitizen(prisma, {
+    handle: "seiten-zaehler",
+    permissionStrings: ["citizen;read", "spynetCitizen;read"],
+  });
+
+  /** With the viewer, the table has 51 rows. The viewer is the newest. */
+  const now = Date.now();
+  await prisma.citizen.createMany({
+    data: Array.from({ length: 50 }, (unused, index) => ({
+      handle: `bewohner-${String(index + 1).padStart(2, "0")}`,
+      createdById: viewer.entity.id,
+      createdAt: new Date(now - (index + 1) * ONE_MINUTE_MS),
+    })),
+  });
+  const rows = citizenTableRows(page);
+
+  await signIn(viewer.user);
+
+  /** The last value is larger than Number.MAX_SAFE_INTEGER */
+  for (const pageParameter of ["0", "-1", "9007199254740993"]) {
+    await page.goto(`/app/spynet/citizen?page=${pageParameter}`);
+    await expect(
+      page.getByText("1 / 2").filter({ visible: true }),
+    ).toBeVisible();
+    await expect(rows).toHaveCount(50);
+    await expect(rows.first()).toContainText("seiten-zaehler");
+  }
 });
 
 test("an old bookmark with comma-separated filters still filters the citizen table", async ({

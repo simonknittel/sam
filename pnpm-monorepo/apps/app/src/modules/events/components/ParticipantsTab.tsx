@@ -3,6 +3,10 @@ import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import { RolesCell } from "@/modules/citizen/components/RolesCell";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { Link } from "@/modules/common/components/Link";
+import {
+  SortableColumnHeader,
+  SortDirection,
+} from "@/modules/common/components/SortableColumnHeader";
 import { Tile } from "@/modules/common/components/Tile";
 import { Tooltip } from "@/modules/common/components/Tooltip";
 import { formatDate } from "@/modules/common/utils/formatDate";
@@ -96,10 +100,8 @@ export const ParticipantsTab = async ({
   const resolvedParticipants = await getParticipants(event);
 
   const { sort } = await loadSearchParams(searchParams);
-  const getSortHref = (nextSort: ParticipantSort) =>
-    serializeSearchParams(`/app/events/${event.id}/participants`, {
-      sort: nextSort,
-    });
+  const getSortHref = (values: { readonly sort: ParticipantSort }) =>
+    serializeSearchParams(`/app/events/${event.id}/participants`, values);
 
   const sortedResolvedParticipants = resolvedParticipants.toSorted((a, b) => {
     switch (sort) {
@@ -228,49 +230,42 @@ export const ParticipantsTab = async ({
                   gridCols,
                 )}
               >
-                <th className="px-2">
-                  <Link
-                    href={getSortHref(
-                      sort === ParticipantSort.CitizenAscending
-                        ? ParticipantSort.CitizenDescending
-                        : ParticipantSort.CitizenAscending,
-                    )}
-                    className="flex cursor-pointer items-center gap-2 whitespace-nowrap select-none hover:text-neutral-300 focus-visible:text-neutral-300 active:text-neutral-200"
-                  >
-                    Citizen
-                    {sort === ParticipantSort.CitizenAscending && (
-                      <FaSortAlphaDown />
-                    )}
-                    {sort === ParticipantSort.CitizenDescending && (
-                      <FaSortAlphaUp />
-                    )}
-                  </Link>
-                </th>
+                <SortableColumnHeader
+                  className="px-2"
+                  sort={sort}
+                  ascending={ParticipantSort.CitizenAscending}
+                  descending={ParticipantSort.CitizenDescending}
+                  firstDirection={SortDirection.Ascending}
+                  getHref={getSortHref}
+                  icons={{
+                    ascending: <FaSortAlphaDown />,
+                    descending: <FaSortAlphaUp />,
+                  }}
+                >
+                  Citizen
+                </SortableColumnHeader>
 
-                <th className="flex items-center gap-2">
-                  <Link
-                    href={getSortHref(
-                      sort === ParticipantSort.JoinedAtAscending
-                        ? ParticipantSort.JoinedAtDescending
-                        : ParticipantSort.JoinedAtAscending,
-                    )}
-                    className="flex cursor-pointer items-center gap-2 whitespace-nowrap select-none hover:text-neutral-300 focus-visible:text-neutral-300 active:text-neutral-200"
-                  >
-                    Zugesagt am
-                    {sort === ParticipantSort.JoinedAtAscending && (
-                      <FaSortNumericDown />
-                    )}
-                    {sort === ParticipantSort.JoinedAtDescending && (
-                      <FaSortNumericUp />
-                    )}
-                  </Link>
-
-                  {!isAppEvent && (
-                    <Tooltip triggerChildren={<FaInfoCircle />}>
-                      Auf etwa 4 Minuten genau
-                    </Tooltip>
-                  )}
-                </th>
+                <SortableColumnHeader
+                  className="flex items-center gap-2"
+                  sort={sort}
+                  ascending={ParticipantSort.JoinedAtAscending}
+                  descending={ParticipantSort.JoinedAtDescending}
+                  firstDirection={SortDirection.Ascending}
+                  getHref={getSortHref}
+                  icons={{
+                    ascending: <FaSortNumericDown />,
+                    descending: <FaSortNumericUp />,
+                  }}
+                  addition={
+                    !isAppEvent && (
+                      <Tooltip triggerChildren={<FaInfoCircle />}>
+                        Auf etwa 4 Minuten genau
+                      </Tooltip>
+                    )
+                  }
+                >
+                  Zugesagt am
+                </SortableColumnHeader>
 
                 {isAppEvent && (
                   <th className="truncate" title="Kommentar">

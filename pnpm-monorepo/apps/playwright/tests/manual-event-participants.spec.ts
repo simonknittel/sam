@@ -529,22 +529,42 @@ test("the participant list sorts by the handle and by the time of the sign-up", 
   const rows = page.locator("tbody tr").filter({ visible: true });
   const headerLink = (name: string) =>
     page.locator("thead").getByRole("link", { name, exact: true });
+  const columnHeader = (name: string) =>
+    page.locator("thead").getByRole("columnheader", { name });
 
   await signIn(viewer.user);
   await page.goto(`/app/events/${event.id}/participants`);
   await expect(rows).toHaveText([/anton/, /berta/, /zora/]);
+  await expect(columnHeader("Citizen")).toHaveAttribute(
+    "aria-sort",
+    "ascending",
+  );
+  await expect(columnHeader("Zugesagt am")).not.toHaveAttribute("aria-sort");
 
   await headerLink("Citizen").click();
   await expect(page).toHaveURL(/sort=citizen-desc/);
   await expect(rows).toHaveText([/zora/, /berta/, /anton/]);
+  await expect(columnHeader("Citizen")).toHaveAttribute(
+    "aria-sort",
+    "descending",
+  );
 
   await headerLink("Zugesagt am").click();
   await expect(page).toHaveURL(/sort=joined-at-asc/);
   await expect(rows).toHaveText([/zora/, /anton/, /berta/]);
+  await expect(columnHeader("Zugesagt am")).toHaveAttribute(
+    "aria-sort",
+    "ascending",
+  );
+  await expect(columnHeader("Citizen")).not.toHaveAttribute("aria-sort");
 
   await headerLink("Zugesagt am").click();
   await expect(page).toHaveURL(/sort=joined-at-desc/);
   await expect(rows).toHaveText([/berta/, /anton/, /zora/]);
+  await expect(columnHeader("Zugesagt am")).toHaveAttribute(
+    "aria-sort",
+    "descending",
+  );
 
   // The default sort leaves no sort parameter in the URL
   await headerLink("Citizen").click();

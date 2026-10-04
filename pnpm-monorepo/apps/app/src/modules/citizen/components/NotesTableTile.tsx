@@ -3,7 +3,6 @@ import { requireAuthentication } from "@/modules/auth/server";
 import {
   getCitizenLogTablePage,
   getConfirmationFilterWhere,
-  getFilterValues,
   getReadableCitizenLogWhere,
 } from "@/modules/citizen/queries/getCitizenLogTablePage";
 import {
@@ -11,6 +10,7 @@ import {
   serializeCitizenLogTableSearchParams,
 } from "@/modules/citizen/utils/citizenLogTableSearchParams";
 import Pagination from "@/modules/common/components/Pagination";
+import { getFilterValues } from "@/modules/common/utils/filterCheckboxListParsers";
 import { getAllClassificationLevels } from "@/modules/spynet/queries/getAllClassificationLevels";
 import { getAllNoteTypes } from "@/modules/spynet/queries/getAllNoteTypes";
 import type { Prisma } from "@sam-monorepo/database/client";
@@ -43,10 +43,10 @@ export const NotesTableTile = async ({ className, searchParams }: Props) => {
     ],
   };
 
-  const noteTypeIds = getFilterValues(filters, "note-type-");
+  const noteTypeIds = getFilterValues(filters, "note-type");
   const classificationLevelIds = getFilterValues(
     filters,
-    "classification-level-",
+    "classification-level",
   );
   const filteredWhere: Prisma.CitizenLogWhereInput = {
     AND: [

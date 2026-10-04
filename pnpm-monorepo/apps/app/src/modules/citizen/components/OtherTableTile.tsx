@@ -3,7 +3,6 @@ import { requireAuthentication } from "@/modules/auth/server";
 import {
   getCitizenLogTablePage,
   getConfirmationFilterWhere,
-  getFilterValues,
   getReadableCitizenLogWhere,
   type CitizenLogTableType,
 } from "@/modules/citizen/queries/getCitizenLogTablePage";
@@ -12,6 +11,7 @@ import {
   serializeCitizenLogTableSearchParams,
 } from "@/modules/citizen/utils/citizenLogTableSearchParams";
 import Pagination from "@/modules/common/components/Pagination";
+import { getFilterValues } from "@/modules/common/utils/filterCheckboxListParsers";
 import type { CitizenLogType } from "@/types";
 import type { Prisma } from "@sam-monorepo/database/client";
 import clsx from "clsx";
@@ -48,7 +48,7 @@ const OtherTableTile = async ({ className, searchParams }: Props) => {
     authentication,
   );
 
-  const types = getFilterValues(filters, "type-");
+  const types = getFilterValues(filters, "type");
   const filteredWhere: Prisma.CitizenLogWhereInput = {
     AND: [
       visibleWhere,

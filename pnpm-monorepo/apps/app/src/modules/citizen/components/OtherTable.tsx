@@ -3,9 +3,11 @@ import { CitizenLogTableSort } from "@/modules/citizen/utils/citizenLogTableSear
 import { citizenLogTypeTranslations } from "@/modules/citizen/utils/citizenLogTypeTranslations";
 import { Actions } from "@/modules/common/components/Actions";
 import { CitizenCellLink } from "@/modules/common/components/CitizenCellLink";
-import { Link } from "@/modules/common/components/Link";
+import {
+  SortableColumnHeader,
+  SortDirection,
+} from "@/modules/common/components/SortableColumnHeader";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import { FaSortDown, FaSortUp } from "react-icons/fa";
 import { ConfirmationState } from "./ConfirmationState";
 import { OtherTableDelete } from "./OtherTableDelete";
 
@@ -30,45 +32,27 @@ export const OtherTable = ({ rows, sort, getHref }: Props) => {
 
           <th>Bestätigungsstatus</th>
 
-          <th>
-            <Link
-              href={getHref({
-                sort:
-                  sort === CitizenLogTableSort.ConfirmedAtDescending
-                    ? CitizenLogTableSort.ConfirmedAtAscending
-                    : CitizenLogTableSort.ConfirmedAtDescending,
-              })}
-              className="flex cursor-pointer items-center gap-2 whitespace-nowrap select-none hover:text-neutral-300 focus-visible:text-neutral-300 active:text-neutral-200"
-            >
-              Bestätigt am
-              {sort === CitizenLogTableSort.ConfirmedAtDescending && (
-                <FaSortDown />
-              )}
-              {sort === CitizenLogTableSort.ConfirmedAtAscending && (
-                <FaSortUp />
-              )}
-            </Link>
-          </th>
+          <SortableColumnHeader
+            sort={sort}
+            ascending={CitizenLogTableSort.ConfirmedAtAscending}
+            descending={CitizenLogTableSort.ConfirmedAtDescending}
+            firstDirection={SortDirection.Descending}
+            getHref={getHref}
+          >
+            Bestätigt am
+          </SortableColumnHeader>
 
           <th className="whitespace-nowrap">Bestätigt von</th>
 
-          <th>
-            <Link
-              href={getHref({
-                sort:
-                  sort === CitizenLogTableSort.CreatedAtDescending
-                    ? CitizenLogTableSort.CreatedAtAscending
-                    : CitizenLogTableSort.CreatedAtDescending,
-              })}
-              className="flex cursor-pointer items-center gap-2 whitespace-nowrap select-none hover:text-neutral-300 focus-visible:text-neutral-300 active:text-neutral-200"
-            >
-              Eingereicht am
-              {sort === CitizenLogTableSort.CreatedAtDescending && (
-                <FaSortDown />
-              )}
-              {sort === CitizenLogTableSort.CreatedAtAscending && <FaSortUp />}
-            </Link>
-          </th>
+          <SortableColumnHeader
+            sort={sort}
+            ascending={CitizenLogTableSort.CreatedAtAscending}
+            descending={CitizenLogTableSort.CreatedAtDescending}
+            firstDirection={SortDirection.Descending}
+            getHref={getHref}
+          >
+            Eingereicht am
+          </SortableColumnHeader>
 
           <th className="whitespace-nowrap">Eingereicht von</th>
         </tr>

@@ -1,5 +1,6 @@
 import { prisma } from "@/db";
 import type { requireAuthentication } from "@/modules/auth/server";
+import { getFilterValues } from "@/modules/common/utils/filterCheckboxListParsers";
 import { PER_PAGE } from "@/modules/common/utils/pagination";
 import type { GenericCitizenLogType } from "@/types";
 import { ConfirmationStatus, type Prisma } from "@sam-monorepo/database/client";
@@ -49,12 +50,6 @@ export const getReadableCitizenLogWhere = async (
   };
 };
 
-/** The values of the filters with the given prefix, for example "type-" */
-export const getFilterValues = (filters: readonly string[], prefix: string) =>
-  filters
-    .filter((filter) => filter.startsWith(prefix))
-    .map((filter) => filter.slice(prefix.length));
-
 const isConfirmationValue = (value: string): value is ConfirmationValue =>
   Object.values<string>(ConfirmationValue).includes(value);
 
@@ -65,7 +60,7 @@ const isConfirmationValue = (value: string): value is ConfirmationValue =>
 export const getConfirmationFilterWhere = (
   filters: readonly string[],
 ): Prisma.CitizenLogWhereInput | undefined => {
-  const values = getFilterValues(filters, "confirmation-");
+  const values = getFilterValues(filters, "confirmation");
   if (values.length === 0) return undefined;
 
   /**
@@ -114,7 +109,7 @@ export const getCitizenLogTablePage = async (
     prisma.citizenLog.findMany({
       where,
       orderBy: getOrderBy(sort),
-      skip: (Math.max(page, 1) - 1) * PER_PAGE,
+      skip: (page - 1) * PER_PAGE,
       take: PER_PAGE,
       select: CITIZEN_LOG_TABLE_SELECT,
     }),

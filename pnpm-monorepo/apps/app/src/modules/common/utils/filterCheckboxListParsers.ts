@@ -11,3 +11,18 @@ export const filterCheckboxListParsers = {
   filters: parseAsArrayOf(parseAsString).withDefault([]),
   page: pageParser,
 };
+
+/** The value in the `filters` parameter for an item of a list */
+export const getFilterValue = (prefix: string, itemId: string) =>
+  `${prefix}-${itemId}`;
+
+/**
+ * The item ids of a list in the `filters` parameter, for example the ids of
+ * the note types for the prefix "note-type"
+ */
+export const getFilterValues = (filters: readonly string[], prefix: string) => {
+  const listPrefix = getFilterValue(prefix, "");
+  return filters
+    .filter((filter) => filter.startsWith(listPrefix))
+    .map((filter) => filter.slice(listPrefix.length));
+};

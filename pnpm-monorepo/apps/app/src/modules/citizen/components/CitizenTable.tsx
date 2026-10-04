@@ -1,10 +1,14 @@
 import { CitizenTableSort } from "@/modules/citizen/utils/citizenTableSearchParams";
 import { Actions } from "@/modules/common/components/Actions";
 import { Link } from "@/modules/common/components/Link";
+import {
+  SortableColumnHeader,
+  SortDirection,
+} from "@/modules/common/components/SortableColumnHeader";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { type Citizen } from "@sam-monorepo/database/client";
 import type { CSSProperties } from "react";
-import { FaExternalLinkAlt, FaSortDown, FaSortUp } from "react-icons/fa";
+import { FaExternalLinkAlt } from "react-icons/fa";
 import { CitizenTableDelete } from "./CitizenTableDelete";
 import { HistoryModal } from "./generic-log-type/HistoryModal";
 
@@ -56,21 +60,15 @@ export const CitizenTable = ({
     >
       <thead>
         <tr className="grid grid-cols-(--table-columns) items-center gap-4 text-left text-neutral-500">
-          <th>
-            <Link
-              href={getHref({
-                sort:
-                  sort === CitizenTableSort.HandleAscending
-                    ? CitizenTableSort.HandleDescending
-                    : CitizenTableSort.HandleAscending,
-              })}
-              className="flex cursor-pointer items-center gap-2 select-none hover:text-neutral-300 focus-visible:text-neutral-300 active:text-neutral-200"
-            >
-              Handle
-              {sort === CitizenTableSort.HandleAscending && <FaSortUp />}
-              {sort === CitizenTableSort.HandleDescending && <FaSortDown />}
-            </Link>
-          </th>
+          <SortableColumnHeader
+            sort={sort}
+            ascending={CitizenTableSort.HandleAscending}
+            descending={CitizenTableSort.HandleDescending}
+            firstDirection={SortDirection.Ascending}
+            getHref={getHref}
+          >
+            Handle
+          </SortableColumnHeader>
 
           <th className="whitespace-nowrap">Spectrum ID</th>
 
@@ -82,40 +80,26 @@ export const CitizenTable = ({
             <th className="whitespace-nowrap">TeamSpeak ID</th>
           )}
 
-          <th>
-            <Link
-              href={getHref({
-                sort:
-                  sort === CitizenTableSort.CreatedAtDescending
-                    ? CitizenTableSort.CreatedAtAscending
-                    : CitizenTableSort.CreatedAtDescending,
-              })}
-              className="flex cursor-pointer items-center gap-2 whitespace-nowrap select-none hover:text-neutral-300 focus-visible:text-neutral-300 active:text-neutral-200"
-            >
-              Erstellt am
-              {sort === CitizenTableSort.CreatedAtDescending && <FaSortDown />}
-              {sort === CitizenTableSort.CreatedAtAscending && <FaSortUp />}
-            </Link>
-          </th>
+          <SortableColumnHeader
+            sort={sort}
+            ascending={CitizenTableSort.CreatedAtAscending}
+            descending={CitizenTableSort.CreatedAtDescending}
+            firstDirection={SortDirection.Descending}
+            getHref={getHref}
+          >
+            Erstellt am
+          </SortableColumnHeader>
 
           {showLastSeenAtColumn && (
-            <th>
-              <Link
-                href={getHref({
-                  sort:
-                    sort === CitizenTableSort.LastSeenAtDescending
-                      ? CitizenTableSort.LastSeenAtAscending
-                      : CitizenTableSort.LastSeenAtDescending,
-                })}
-                className="flex cursor-pointer items-center gap-2 whitespace-nowrap select-none hover:text-neutral-300 focus-visible:text-neutral-300 active:text-neutral-200"
-              >
-                Zuletzt gesehen
-                {sort === CitizenTableSort.LastSeenAtAscending && <FaSortUp />}
-                {sort === CitizenTableSort.LastSeenAtDescending && (
-                  <FaSortDown />
-                )}
-              </Link>
-            </th>
+            <SortableColumnHeader
+              sort={sort}
+              ascending={CitizenTableSort.LastSeenAtAscending}
+              descending={CitizenTableSort.LastSeenAtDescending}
+              firstDirection={SortDirection.Descending}
+              getHref={getHref}
+            >
+              Zuletzt gesehen
+            </SortableColumnHeader>
           )}
         </tr>
       </thead>

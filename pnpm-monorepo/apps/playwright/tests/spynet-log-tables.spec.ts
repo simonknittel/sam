@@ -192,6 +192,9 @@ test("the log table sorts by the confirmation time and keeps the sort and the fi
   await headerLink(page, "Bestätigt am").click();
   await expect(page).toHaveURL(/sort=confirmed-at-desc/);
   await expect(logContent(page, CONFIRMED_DISCORD_ID)).toBeVisible();
+  await expect(
+    page.locator("thead").getByRole("columnheader", { name: "Bestätigt am" }),
+  ).toHaveAttribute("aria-sort", "descending");
   await page.getByRole("link", { name: "Nächste Seite" }).click();
   await expect(page).toHaveURL(/page=2/);
   await expect(page).toHaveURL(/sort=confirmed-at-desc/);
@@ -221,6 +224,11 @@ test("the log table sorts by the confirmation time and keeps the sort and the fi
   await expect(page).toHaveURL(/filters=confirmation-confirmed/);
   await expect(tableRows(page)).toHaveCount(2);
   await expect(tableRows(page).last()).toContainText(OLDEST_CONFIRMED_HANDLE);
+
+  // A page number below 1 shows the first page
+  await page.goto("/app/spynet/other?page=-1");
+  await expect(page.getByText("1 / 2").filter({ visible: true })).toBeVisible();
+  await expect(tableRows(page)).toHaveCount(PER_PAGE);
 });
 
 test("the notes table keeps the note type filters of an old bookmark when it sorts", async ({
