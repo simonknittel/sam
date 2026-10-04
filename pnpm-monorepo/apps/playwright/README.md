@@ -59,7 +59,7 @@ can have no effect.
 - Make sure that a filter test can fail: also seed rows of a different type
   and of a different user.
 - `page.goto()` always loads the page again from the server. Thus it cannot
-  test `revalidatePath()` or the client router cache.
+  test `refresh()` or the client router cache.
 - The suite sets `reducedMotion: "reduce"`. A test of an animation must call
   `page.emulateMedia({ reducedMotion: "no-preference" })`.
 - The stack runs no Lambda functions and sends no EventBridge events. Test

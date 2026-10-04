@@ -50,6 +50,13 @@ export const markAsRead = createAuthenticatedAction(
       skipDuplicates: true,
     });
 
+    /**
+     * The "new" state shows in lists, tiles and the dot badges of the app
+     * layout. Only a change of that state is worth the render, also when a
+     * parallel request of a different tab wrote the marker first.
+     */
+    if (wasNew) refresh();
+
     if (count > 0)
       await createAuditEvents([
         {
@@ -62,12 +69,6 @@ export const markAsRead = createAuthenticatedAction(
           createdById: authentication.session.user.id,
         },
       ]);
-
-    /**
-     * The "new" state shows in lists, tiles and the dot badges of the app
-     * layout. Only a real change is worth the render.
-     */
-    if (count > 0 && wasNew) refresh();
 
     return { success: "Als gelesen markiert" };
   },

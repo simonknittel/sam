@@ -107,10 +107,10 @@ test("switching the active event off strips its theme and switching it on restor
   );
 
   /**
-   * The theme root lives in the layout of the app, and the action revalidates
-   * that layout: the answer of the action carries the shell without the
+   * The theme root lives in the layout of the app, and the action calls
+   * `refresh()`: the answer of the action carries the shell without the
    * theme, thus the assertion stays in the same page life. A reload could
-   * not tell a revalidated layout from a fresh request.
+   * not tell a refreshed layout from a fresh request.
    */
   await toggleEvent(page, "halloween");
   await expect(themeRoot(page)).toHaveCount(0);

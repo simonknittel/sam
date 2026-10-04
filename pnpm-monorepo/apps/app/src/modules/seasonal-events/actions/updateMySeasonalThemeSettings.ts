@@ -4,9 +4,8 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { LEADERBOARD_CACHE_TAG } from "@/modules/leaderboards/queries/getLeaderboard";
 import { SeasonalEventKey } from "@sam-monorepo/domain";
-import { refresh, revalidateTag } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { getMySeasonalThemeSettings } from "../queries/getMySeasonalThemeSettings";
 
@@ -106,6 +105,8 @@ export const updateMySeasonalThemeSettings = createAuthenticatedAction(
       }),
     );
 
+    refresh();
+
     if (changes.length > 0)
       await createAuditEvents([
         {
@@ -122,14 +123,6 @@ export const updateMySeasonalThemeSettings = createAuthenticatedAction(
           createdById: authentication.session.user.id,
         },
       ]);
-
-    refresh();
-
-    /**
-     * The layout-wide revalidation that this action had before also cleared
-     * the leaderboard cache. This keeps a purge of that cache.
-     */
-    revalidateTag(LEADERBOARD_CACHE_TAG, "max");
 
     return {
       success: t("Common.successfullySaved"),

@@ -10,8 +10,6 @@ import * as z from "zod";
  */
 const TOTAL_TIMEOUT_MILLISECONDS = 20_000;
 
-export const LEADERBOARD_CACHE_TAG = "leaderboard";
-
 const schema = z.object({
   data: z.object({
     resultset: z.array(
@@ -94,7 +92,6 @@ export const getLeaderboard = (mode: "SB", season: string, pages: number) => {
     [`mode=${mode}`, `season=${season}`],
     {
       revalidate: 60 * 60, // 1 hour
-      tags: [LEADERBOARD_CACHE_TAG],
     },
   )(mode, season);
 };
