@@ -42,9 +42,6 @@ export const updateMyNotificationSettings = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    /**
-     *
-     */
     const myCurrentSettings = await getMyNotificationSettings();
 
     const newlyEnabledSettings = Object.keys(data).filter((inputName) => {

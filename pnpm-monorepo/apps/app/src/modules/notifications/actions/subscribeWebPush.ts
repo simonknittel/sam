@@ -48,9 +48,6 @@ export const subscribeWebPush = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    /**
-     *
-     */
     const subscription = await prisma.webPushSubscription.upsert({
       where: {
         endpoint: data.subscription.endpoint,
