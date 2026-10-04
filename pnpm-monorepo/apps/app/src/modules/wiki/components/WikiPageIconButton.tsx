@@ -43,6 +43,7 @@ export const WikiPageIconButton = ({ pageId, iconId, canAdmin }: Props) => {
         resourceId: pageId,
         imageId: null,
       }),
+      signal: AbortSignal.timeout(10_000),
     })
       .then((response) => {
         if (!response.ok) throw new Error(response.statusText);
