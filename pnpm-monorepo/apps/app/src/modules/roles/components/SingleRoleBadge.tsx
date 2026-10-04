@@ -234,6 +234,7 @@ export const SingleRoleBadge = ({
                     <SubmitButton
                       variant={Button2Variant.Secondary}
                       icon={<FaMinus />}
+                      tooltip="Level verringern"
                     />
                   </form>
                 )}
@@ -245,6 +246,7 @@ export const SingleRoleBadge = ({
                     <SubmitButton
                       variant={Button2Variant.Secondary}
                       icon={<FaPlus />}
+                      tooltip="Level erhöhen"
                     />
                   </form>
                 )}
