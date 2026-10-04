@@ -22,7 +22,7 @@ import {
   arrayMove,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { useCallback, useOptimistic, useState, useTransition } from "react";
+import { startTransition, useCallback, useOptimistic, useState } from "react";
 import { FaPlus } from "react-icons/fa";
 import { reorderFlows } from "../actions/reorderFlows";
 import type { ManageableFlow } from "../queries/getManageableFlows";
@@ -76,7 +76,6 @@ export const FlowsTableClient = ({
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [duplicationSource, setDuplicationSource] =
     useState<DuplicationSource | null>(null);
-  const [, startTransition] = useTransition();
 
   const getFlowName = useCallback(
     (id: UniqueIdentifier) =>
