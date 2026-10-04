@@ -157,7 +157,7 @@ export const ProfileContent = ({
               (roleAssignment) => roleAssignment.roleId,
             )}
             className="mt-1"
-            onRequestClose={onRoleAssignmentsChanged}
+            onSaved={onRoleAssignmentsChanged}
           />
         )}
       </div>

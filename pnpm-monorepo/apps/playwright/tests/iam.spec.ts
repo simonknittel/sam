@@ -5,6 +5,7 @@ import {
   clickUntilVisible,
   FORBIDDEN_TEXT,
   modal,
+  NOT_FOUND_TEXT,
   SAVED_TEXT,
   sectionByHeading,
   toggleLabel,
@@ -103,6 +104,68 @@ test("a role created and assigned through the UI grants its permission", async (
   await expect(page.getByText(FORBIDDEN_TEXT)).not.toBeVisible();
 });
 
+test("a role ticked right before the role dialog closes is still saved", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "iam-admin",
+    permissionStrings: [
+      "citizen;read",
+      "otherRole;read;roleId=*",
+      "otherRole;assign;roleId=*",
+    ],
+  });
+  const member = await createCitizen(prisma, { handle: "task-worker" });
+  const firstRole = await createRole(prisma, { name: "Erste Rolle" });
+  const secondRole = await createRole(prisma, { name: "Zweite Rolle" });
+
+  await signIn(admin.user);
+  await page.goto(`/app/spynet/citizen/${member.entity.id}/roles`);
+
+  const rolesDialog = modal(page, "Rollen hinzufügen oder entfernen");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Bearbeiten" }),
+    rolesDialog,
+  );
+
+  /**
+   * The open dialog hides the page from the accessibility tree, thus the
+   * tile behind it is found by its markup.
+   */
+  const rolesTile = page
+    .locator("section")
+    .filter({ has: page.locator("h2", { hasText: /^Rollen$/ }) });
+
+  /** A save refreshes the page behind the dialog, and the dialog stays */
+  await rolesDialog.getByText("Erste Rolle").click();
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+  await expect(rolesTile.getByText("Erste Rolle")).toBeVisible();
+  await expect(
+    rolesDialog.getByRole("checkbox", { name: "Erste Rolle" }),
+  ).toBeChecked();
+
+  /** The dialog closes before the debounced save of the second role */
+  await rolesDialog.getByText("Zweite Rolle").click();
+  await rolesDialog.getByRole("button", { name: "Schließen" }).click();
+  await expect(rolesDialog).not.toBeVisible();
+
+  await expect(rolesTile.getByText("Zweite Rolle")).toBeVisible();
+  await expect
+    .poll(() =>
+      prisma.roleAssignment
+        .findMany({
+          where: { citizenId: member.entity.id },
+          select: { roleId: true },
+        })
+        .then((assignments) =>
+          assignments.map(({ roleId }) => roleId).toSorted(),
+        ),
+    )
+    .toEqual([member.role.id, firstRole.id, secondRole.id].toSorted());
+});
+
 test("deleting a role takes its permissions away from its members", async ({
   page,
   prisma,
@@ -139,6 +202,12 @@ test("deleting a role takes its permissions away from its members", async ({
   await expect
     .poll(() => prisma.role.count({ where: { id: member.role.id } }))
     .toBe(0);
+  await expect(page).toHaveURL("/app/iam/roles");
+
+  // The back/forward cache must not show the deleted role again
+  await page.goBack();
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
+  await expect(page).toHaveURL(`/app/roles/${member.role.id}`);
 
   /** Losing their only role costs them the login permission as well */
   await switchUser(member.user);

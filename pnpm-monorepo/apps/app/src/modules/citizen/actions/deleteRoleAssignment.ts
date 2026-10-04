@@ -61,6 +61,8 @@ export const deleteRoleAssignment = createAuthenticatedAction(
       }),
     ]);
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.ROLE_ASSIGNMENT_DELETED,
@@ -71,8 +73,6 @@ export const deleteRoleAssignment = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return {
       success: t("Common.successfullySaved"),

@@ -100,6 +100,8 @@ export const updateMyProfile = createAuthenticatedAction(
       select: { id: true },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.CITIZEN_PROFILE_UPDATED,
@@ -111,8 +113,6 @@ export const updateMyProfile = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return {
       success: t("Common.successfullySaved"),

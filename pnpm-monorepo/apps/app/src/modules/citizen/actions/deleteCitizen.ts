@@ -51,6 +51,13 @@ export const deleteCitizen = createAuthenticatedAction(
     ]);
 
     const deletedCitizen = deletedCitizens[0];
+
+    /**
+     * Also for the error below: then a different tab or user deleted the
+     * citizen before, and the page must show it.
+     */
+    refresh();
+
     if (!deletedCitizen)
       return {
         error: t("Common.notFound"),
@@ -67,8 +74,6 @@ export const deleteCitizen = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return {
       success: t("Common.successfullyDeleted"),
