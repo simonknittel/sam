@@ -71,6 +71,8 @@ export const updateEventPosition = createAuthenticatedAction(
       }),
     ]);
 
+    refresh();
+
     await createAuditEvents([
       buildPositionUpdatedAuditEvent(
         container,
@@ -88,8 +90,6 @@ export const updateEventPosition = createAuthenticatedAction(
         authentication.session.user.id,
       ),
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

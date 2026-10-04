@@ -288,6 +288,8 @@ export const createEvent = createAuthenticatedAction(
       { timeout: TRANSACTION_TIMEOUT_MS },
     );
 
+    refresh();
+
     if (data.coverImageId) probeUploadImageDimensions(data.coverImageId);
 
     const auditEvents: AuditEventInput[] = [
@@ -344,8 +346,6 @@ export const createEvent = createAuthenticatedAction(
         : null;
       publishFailed = result?.outcome !== DiscordSyncOutcome.Done;
     }
-
-    refresh();
 
     /**
      * Redirect to the created event; the form's success hook closes the

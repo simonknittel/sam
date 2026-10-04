@@ -78,22 +78,6 @@ export const getBriefingPath = (container: EventContainer) => {
   }
 };
 
-/** Where the container itself is rendered */
-export const getEventContainerPath = (container: EventContainer) => {
-  switch (container.kind) {
-    case EventContainerKind.Event:
-      return `/app/events/${container.id}`;
-
-    case EventContainerKind.Template:
-      return `/app/events/templates/${container.id}`;
-
-    default:
-      throw new Error(
-        `Unknown event container kind: ${container.kind satisfies never}`,
-      );
-  }
-};
-
 /** Where the container's lineup is rendered */
 export const getLineupPath = (container: EventContainer) => {
   switch (container.kind) {

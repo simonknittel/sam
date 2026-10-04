@@ -51,31 +51,35 @@ export const cancelEventParticipation = createAuthenticatedAction(
         id: true,
       },
     });
-    if (!participant)
-      return {
-        error: "Du bist nicht angemeldet.",
-        requestPayload: formData,
-      };
 
-    const isCancelled = await prisma.$transaction(async (transaction) => {
-      if (
-        !(await cancelParticipation(transaction, {
-          participantId: participant.id,
+    const isCancelled =
+      participant !== null &&
+      (await prisma.$transaction(async (transaction) => {
+        if (
+          !(await cancelParticipation(transaction, {
+            participantId: participant.id,
+            eventId: event.id,
+            citizenId,
+            cancelledById: citizenId,
+          }))
+        )
+          return false;
+
+        await createEventActivity(transaction, {
           eventId: event.id,
           citizenId,
-          cancelledById: citizenId,
-        }))
-      )
-        return false;
+          type: EventActivityType.PARTICIPATION_CANCELLED,
+          payload: null,
+        });
+        return true;
+      }));
 
-      await createEventActivity(transaction, {
-        eventId: event.id,
-        citizenId,
-        type: EventActivityType.PARTICIPATION_CANCELLED,
-        payload: null,
-      });
-      return true;
-    });
+    /**
+     * Also for the error below: then a different tab, a parallel request or a
+     * manager cancelled the participation before, and the page must show it.
+     */
+    refresh();
+
     if (!isCancelled)
       return {
         error: "Du bist nicht angemeldet.",
@@ -92,8 +96,6 @@ export const cancelEventParticipation = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

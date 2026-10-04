@@ -81,8 +81,11 @@ export const addEventParticipants = createAuthenticatedAction(
     const citizenIdsToAdd = requestedCitizenIds.filter(
       (citizenId) => !alreadyActive.has(citizenId),
     );
-    if (citizenIdsToAdd.length <= 0)
+    if (citizenIdsToAdd.length <= 0) {
+      /** The citizens signed up before, and the page must show it */
+      refresh();
       return { success: "Alle ausgewählten Citizen sind bereits angemeldet." };
+    }
 
     /**
      * Add the participants. One transaction, so a failure part-way through
@@ -118,6 +121,12 @@ export const addEventParticipants = createAuthenticatedAction(
       return citizenIds;
     });
 
+    /**
+     * Also for the message below: then the citizens signed up in the
+     * meantime, and the page must show it.
+     */
+    refresh();
+
     if (addedCitizenIds.length <= 0)
       return { success: "Alle ausgewählten Citizen sind bereits angemeldet." };
 
@@ -144,8 +153,6 @@ export const addEventParticipants = createAuthenticatedAction(
         },
       })),
     );
-
-    refresh();
 
     /**
      * Respond with the result

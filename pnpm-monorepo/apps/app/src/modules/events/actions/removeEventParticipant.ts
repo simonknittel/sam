@@ -50,11 +50,6 @@ export const removeEventParticipant = createAuthenticatedAction(
         id: true,
       },
     });
-    if (!participant)
-      return {
-        error: "Der Citizen ist nicht angemeldet.",
-        requestPayload: formData,
-      };
 
     /**
      * The manager as the canceller is the only thing on the row telling a
@@ -62,25 +57,34 @@ export const removeEventParticipant = createAuthenticatedAction(
      */
     const reason = data.reason || null;
 
-    const isCancelled = await prisma.$transaction(async (transaction) => {
-      if (
-        !(await cancelParticipation(transaction, {
-          participantId: participant.id,
-          eventId: event.id,
-          citizenId: data.citizenId,
-          cancelledById: managerId,
-        }))
-      )
-        return false;
+    const isCancelled =
+      participant !== null &&
+      (await prisma.$transaction(async (transaction) => {
+        if (
+          !(await cancelParticipation(transaction, {
+            participantId: participant.id,
+            eventId: event.id,
+            citizenId: data.citizenId,
+            cancelledById: managerId,
+          }))
+        )
+          return false;
 
-      await createEventActivity(transaction, {
-        eventId: event.id,
-        citizenId: managerId,
-        type: EventActivityType.PARTICIPATION_REMOVED_BY_MANAGER,
-        payload: { citizenId: data.citizenId, reason },
-      });
-      return true;
-    });
+        await createEventActivity(transaction, {
+          eventId: event.id,
+          citizenId: managerId,
+          type: EventActivityType.PARTICIPATION_REMOVED_BY_MANAGER,
+          payload: { citizenId: data.citizenId, reason },
+        });
+        return true;
+      }));
+
+    /**
+     * Also for the error below: then the citizen or a different manager
+     * cancelled the participation before, and the page must show it.
+     */
+    refresh();
+
     if (!isCancelled)
       return {
         error: "Der Citizen ist nicht angemeldet.",
@@ -111,8 +115,6 @@ export const removeEventParticipant = createAuthenticatedAction(
         },
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

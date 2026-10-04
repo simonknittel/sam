@@ -52,11 +52,14 @@ export const deleteManager = createAuthenticatedAction(
     const isManager = event.managers.some(
       (manager) => manager.id === data.managerId,
     );
-    if (!isManager)
+    if (!isManager) {
+      /** A different tab or manager removed the citizen before */
+      refresh();
       return {
         error: "Der Citizen ist kein Manager des Events.",
         requestPayload: formData,
       };
+    }
 
     /**
      * Delete manager. One transaction, so the activity entry cannot get lost
@@ -84,6 +87,8 @@ export const deleteManager = createAuthenticatedAction(
       });
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.EVENT_MANAGER_REMOVED,
@@ -94,8 +99,6 @@ export const deleteManager = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

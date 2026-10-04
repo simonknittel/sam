@@ -51,6 +51,8 @@ export const updateEventPositionCitizenId = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.EVENT_POSITION_CITIZEN_ASSIGNED,
@@ -62,8 +64,6 @@ export const updateEventPositionCitizenId = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

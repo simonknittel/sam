@@ -1,6 +1,5 @@
 "use client";
 
-import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { useSubmitConfirmation } from "@/modules/common/components/AlertDialog";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
@@ -169,9 +168,11 @@ const UnpublishedState = ({
   channels,
   defaultLocation,
 }: UnpublishedStateProps) => {
-  const { state, formAction } = useAction(publishEventToDiscord, {
-    errorToast: false,
-  });
+  /**
+   * The errors show as toasts, not in the form: the error "already
+   * published" refreshes the page, which then shows the published state.
+   */
+  const { formAction } = useAction(publishEventToDiscord);
   const restrictedConfirmation = useSubmitConfirmation(
     event.visibility === EventVisibility.RESTRICTED,
   );
@@ -210,8 +211,6 @@ const UnpublishedState = ({
           }
           confirmLabel="Trotzdem veröffentlichen"
         />
-
-        <ActionErrorNote className="mt-4" state={state} />
       </form>
     </Tile>
   );

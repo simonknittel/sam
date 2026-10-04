@@ -40,6 +40,8 @@ export const resetEventPositionCitizenId = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     if (position.citizenId) {
       await createAuditEvents([
         {
@@ -53,8 +55,6 @@ export const resetEventPositionCitizenId = createAuthenticatedAction(
         },
       ]);
     }
-
-    refresh();
 
     /**
      * Respond with the result

@@ -80,6 +80,8 @@ export const createManagers = createAuthenticatedAction(
         });
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.EVENT_MANAGERS_ASSIGNED,
@@ -90,8 +92,6 @@ export const createManagers = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

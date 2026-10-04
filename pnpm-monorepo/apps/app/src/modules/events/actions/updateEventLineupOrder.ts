@@ -136,14 +136,14 @@ export const updateEventLineupOrder = createAuthenticatedAction(
     loop(data.order);
     await prisma.$transaction(transactions);
 
+    refresh();
+
     await createAuditEvents([
       buildLineupOrderChangedAuditEvent(
         container,
         authentication.session.user.id,
       ),
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

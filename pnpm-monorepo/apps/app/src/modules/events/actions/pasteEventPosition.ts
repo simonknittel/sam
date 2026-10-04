@@ -188,6 +188,8 @@ export const pasteEventPosition = createAuthenticatedAction(
       });
     });
 
+    refresh();
+
     await createAuditEvents([
       buildPositionCopiedAuditEvent(
         { container: sourceContainer, positionId: sourcePosition.id },
@@ -199,8 +201,6 @@ export const pasteEventPosition = createAuthenticatedAction(
         authentication.session.user.id,
       ),
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

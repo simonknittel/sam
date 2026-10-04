@@ -51,11 +51,17 @@ export const updateEventParticipationComment = createAuthenticatedAction(
         id: true,
       },
     });
-    if (!participant)
+    if (!participant) {
+      /**
+       * A different tab or a manager cancelled the participation before, and
+       * the page must show it.
+       */
+      refresh();
       return {
         error: "Du bist nicht angemeldet.",
         requestPayload: formData,
       };
+    }
 
     /**
      * Update the comment
@@ -79,6 +85,8 @@ export const updateEventParticipationComment = createAuthenticatedAction(
       });
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.EVENT_PARTICIPATION_COMMENT_UPDATED,
@@ -89,8 +97,6 @@ export const updateEventParticipationComment = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

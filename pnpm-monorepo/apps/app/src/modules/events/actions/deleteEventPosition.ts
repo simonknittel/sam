@@ -35,6 +35,8 @@ export const deleteEventPosition = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       buildPositionDeletedAuditEvent(
         container,
@@ -45,8 +47,6 @@ export const deleteEventPosition = createAuthenticatedAction(
         authentication.session.user.id,
       ),
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

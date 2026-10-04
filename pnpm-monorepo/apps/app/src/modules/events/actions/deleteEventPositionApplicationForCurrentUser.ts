@@ -58,6 +58,8 @@ export const deleteEventPositionApplicationForCurrentUser =
         },
       });
 
+      refresh();
+
       await createAuditEvents([
         {
           type: AuditEventType.EVENT_POSITION_APPLICATION_DELETED,
@@ -70,8 +72,6 @@ export const deleteEventPositionApplicationForCurrentUser =
           createdById: authentication.session.user.id,
         },
       ]);
-
-      refresh();
 
       /**
        * Respond with the result

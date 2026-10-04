@@ -72,13 +72,18 @@ export const signUpForEvent = createAuthenticatedAction(
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === "P2002"
-      )
+      ) {
+        /** A different tab signed up before, and the page must show it */
+        refresh();
         return {
           error: "Du bist bereits angemeldet.",
           requestPayload: formData,
         };
+      }
       throw error;
     }
+
+    refresh();
 
     await createAuditEvents([
       {
@@ -90,8 +95,6 @@ export const signUpForEvent = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

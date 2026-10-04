@@ -77,6 +77,8 @@ export const updateEventLineupEnabled = createAuthenticatedAction(
         });
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.EVENT_LINEUP_STATUS_CHANGED,
@@ -101,8 +103,6 @@ export const updateEventLineupEnabled = createAuthenticatedAction(
         },
       ]);
     }
-
-    refresh();
 
     /**
      * Respond with the result

@@ -88,6 +88,8 @@ export const createEventPositionApplicationForCurrentUser =
         },
       });
 
+      refresh();
+
       await createAuditEvents([
         {
           type: AuditEventType.EVENT_POSITION_APPLICATION_CREATED,
@@ -100,8 +102,6 @@ export const createEventPositionApplicationForCurrentUser =
           createdById: authentication.session.user.id,
         },
       ]);
-
-      refresh();
 
       /**
        * Respond with the result

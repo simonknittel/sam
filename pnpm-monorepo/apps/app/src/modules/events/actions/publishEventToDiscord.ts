@@ -56,11 +56,14 @@ export const publishEventToDiscord = createAuthenticatedAction(
       };
     if (!(await isAllowedToManageEvent(event)))
       return { error: t("Common.forbidden"), requestPayload: formData };
-    if (event.discordPublishedId)
+    if (event.discordPublishedId) {
+      /** A different tab or manager published the event before */
+      refresh();
       return {
         error: "Das Event ist bereits auf Discord veröffentlicht.",
         requestPayload: formData,
       };
+    }
 
     /**
      * Validate the request

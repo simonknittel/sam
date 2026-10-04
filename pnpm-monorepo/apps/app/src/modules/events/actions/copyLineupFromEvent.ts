@@ -125,6 +125,8 @@ export const copyLineupFromEvent = createAuthenticatedAction(
       }),
     );
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.EVENT_LINEUP_COPIED,
@@ -135,8 +137,6 @@ export const copyLineupFromEvent = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return {
       success: t("Common.successfullySaved"),

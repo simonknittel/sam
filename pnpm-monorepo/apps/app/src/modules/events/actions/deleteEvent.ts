@@ -83,6 +83,8 @@ export const deleteEvent = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.EVENT_DELETED_IN_APP,
@@ -105,8 +107,6 @@ export const deleteEvent = createAuthenticatedAction(
         },
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

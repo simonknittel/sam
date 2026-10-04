@@ -193,6 +193,8 @@ export const updateEvent = createAuthenticatedAction(
         });
     });
 
+    refresh();
+
     const auditEvents: AuditEventInput[] = [];
     if (nameChanged || descriptionChanged || scheduleChanged) {
       auditEvents.push({
@@ -260,8 +262,6 @@ export const updateEvent = createAuthenticatedAction(
       (becameRestrictedWhilePublished
         ? "Das Event bleibt auf Discord für alle Mitglieder des Servers sichtbar. Entferne es dort, wenn das nicht gewollt ist."
         : null);
-
-    refresh();
 
     /**
      * Respond with the result
