@@ -63,6 +63,13 @@ export const deleteSilcTransaction = createAuthenticatedAction(
 
       return entry;
     });
+
+    /**
+     * Also for the error below: then a different tab or user deleted the
+     * transaction before, and the page must show it.
+     */
+    refresh();
+
     if (!deletedEntry)
       return {
         error: t("Common.notFound"),
@@ -81,8 +88,6 @@ export const deleteSilcTransaction = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

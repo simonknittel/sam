@@ -110,9 +110,16 @@ test("expiring all SILC zeroes every balance, and the refresh recomputes them", 
   await page.goto("/app/silc/settings");
   await waitForAppShellHydration(page);
 
+  /** The rate tile shows the label and the sum of all balances */
+  const silcSum = sectionByHeading(page, "aUEC Umrechnungskurs")
+    .getByText("SILC", { exact: true })
+    .locator("..");
+  await expect(silcSum).toHaveText("SILC120");
+
   const otherTile = sectionByHeading(page, "Other");
   await otherTile.getByRole("button", { name: "Expire all SILC" }).click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+  await expect(silcSum).toHaveText("SILC0");
 
   // Every positive balance is booked away, the untouched one stays as it is
   await expect
@@ -141,12 +148,16 @@ test("expiring all SILC zeroes every balance, and the refresh recomputes them", 
     where: { id: rich.entity.id },
     data: { silcBalance: 999 },
   });
+  await page.reload();
+  await waitForAppShellHydration(page);
+  await expect(silcSum).toHaveText("SILC999");
 
   await otherTile
     .getByRole("button", { name: "Refresh SILC balances" })
     .click();
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+  await expect(silcSum).toHaveText("SILC0");
 
-  /** The expiry above already left a success toast, so the balance is it */
   await expect
     .poll(() =>
       prisma.citizen.findUniqueOrThrow({

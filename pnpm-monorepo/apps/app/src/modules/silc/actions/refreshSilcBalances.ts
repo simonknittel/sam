@@ -37,6 +37,8 @@ export const refreshSilcBalances = createAuthenticatedAction(
       ),
     );
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.SILC_BALANCES_REFRESHED,
@@ -46,8 +48,6 @@ export const refreshSilcBalances = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

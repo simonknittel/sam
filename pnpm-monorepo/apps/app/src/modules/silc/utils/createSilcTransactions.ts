@@ -1,4 +1,3 @@
-import { prisma } from "@/db";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import type { Prisma, SilcTransaction } from "@sam-monorepo/database/client";
 import { lockSilcLedger, updateSilcBalances } from "@sam-monorepo/domain";
@@ -21,6 +20,9 @@ export interface NewSilcTransaction {
  * It takes the ledger lock (see `lockSilcLedger()`). A caller that does more
  * in the same transaction takes the lock first itself, before its other
  * statements.
+ *
+ * The lambda's salary disbursement performs the same sequence with its own
+ * EventBridge transport and cannot import this module.
  *
  * @returns The ids of the created transactions
  */
@@ -60,27 +62,4 @@ export const announceSilcTransactions = async (
       },
     ]);
   }
-};
-
-/**
- * Creates SILC transactions in their own transaction and maintains the
- * invariant every SILC path shares: create the rows, rebuild the receivers'
- * balances and notify the receivers. Callers write their own audit events
- * and call `refresh()` themselves.
- *
- * The lambda's salary disbursement performs the same sequence with its own
- * EventBridge transport and cannot import this module.
- *
- * @returns The ids of the created transactions
- */
-export const createSilcTransactions = async (
-  transactions: readonly NewSilcTransaction[],
-) => {
-  const transactionIds = await prisma.$transaction((transaction) =>
-    createSilcTransactionsInTransaction(transaction, transactions),
-  );
-
-  await announceSilcTransactions(transactionIds);
-
-  return transactionIds;
 };

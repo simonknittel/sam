@@ -55,6 +55,8 @@ export const updateSilcSetting = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.SILC_SETTING_UPDATED,
@@ -65,8 +67,6 @@ export const updateSilcSetting = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

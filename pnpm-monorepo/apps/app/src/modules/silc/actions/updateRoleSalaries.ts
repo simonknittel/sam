@@ -62,6 +62,8 @@ export const updateRoleSalaries = createAuthenticatedAction(
       }),
     ]);
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.SALARY_CONFIG_UPDATED,
@@ -71,8 +73,6 @@ export const updateRoleSalaries = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

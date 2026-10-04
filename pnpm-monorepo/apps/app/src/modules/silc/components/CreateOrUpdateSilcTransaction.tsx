@@ -1,6 +1,5 @@
 "use client";
 
-import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
@@ -36,17 +35,15 @@ type Props = CreateProps | UpdateProps;
 
 export const CreateOrUpdateSilcTransaction = (props: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { state, formAction, isPending, getDefaultValueWithFallback } =
-    useAction(
-      "transaction" in props ? updateSilcTransaction : createSilcTransaction,
-      {
-        errorToast: false,
-        onSuccess: (formData) => {
-          if (formData.has("createAnother")) return;
-          setIsOpen(false);
-        },
+  const { formAction, isPending, getDefaultValueWithFallback } = useAction(
+    "transaction" in props ? updateSilcTransaction : createSilcTransaction,
+    {
+      onSuccess: (formData) => {
+        if (formData.has("createAnother")) return;
+        setIsOpen(false);
       },
-    );
+    },
+  );
 
   return (
     <>
@@ -157,8 +154,6 @@ export const CreateOrUpdateSilcTransaction = (props: Props) => {
               </Button>
             )}
           </div>
-
-          <ActionErrorNote className="mt-4" state={state} />
         </form>
       </Modal>
     </>

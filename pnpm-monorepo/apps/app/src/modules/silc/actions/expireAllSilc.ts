@@ -37,6 +37,8 @@ export const expireAllSilc = createAuthenticatedAction(
       });
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.SILC_ALL_EXPIRED,
@@ -50,8 +52,6 @@ export const expireAllSilc = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

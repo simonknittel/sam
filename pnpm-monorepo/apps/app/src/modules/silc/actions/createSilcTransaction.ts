@@ -1,5 +1,6 @@
 "use server";
 
+import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
@@ -9,7 +10,10 @@ import {
   areActiveReceivers,
   INACTIVE_RECEIVER_ERROR,
 } from "../utils/activeReceivers";
-import { createSilcTransactions } from "../utils/createSilcTransactions";
+import {
+  announceSilcTransactions,
+  createSilcTransactionsInTransaction,
+} from "../utils/createSilcTransactions";
 import { MAX_SILC_VALUE } from "../utils/silcValueLimit";
 
 const schema = z.object({
@@ -37,23 +41,34 @@ export const createSilcTransaction = createAuthenticatedAction(
         error: t("Common.forbidden"),
         requestPayload: formData,
       };
-    if (!(await areActiveReceivers(data.receiverIds)))
+    if (!(await areActiveReceivers(data.receiverIds))) {
+      /** A different user deleted a receiver, and the page must show it */
+      refresh();
       return {
         error: INACTIVE_RECEIVER_ERROR,
         requestPayload: formData,
       };
+    }
 
     /**
      * Create transaction
      */
-    const transactionIds = await createSilcTransactions(
-      data.receiverIds.map((receiverId) => ({
-        receiverId,
-        value: data.value,
-        description: data.description,
-        createdById: authentication.session.entity!.id,
-      })),
+    const createdById = authentication.session.entity.id;
+    const transactionIds = await prisma.$transaction((transaction) =>
+      createSilcTransactionsInTransaction(
+        transaction,
+        data.receiverIds.map((receiverId) => ({
+          receiverId,
+          value: data.value,
+          description: data.description,
+          createdById,
+        })),
+      ),
     );
+
+    refresh();
+
+    await announceSilcTransactions(transactionIds);
 
     await createAuditEvents([
       {
@@ -67,8 +82,6 @@ export const createSilcTransaction = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result
