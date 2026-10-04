@@ -10,6 +10,7 @@ import {
   wikiContainerColumns,
 } from "@/modules/events/utils/eventContainer";
 import { log } from "@/modules/logging";
+import { refresh } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect, unstable_rethrow } from "next/navigation";
 import * as z from "zod";
@@ -20,7 +21,6 @@ import {
 import {
   getWikiPageScopedContext,
   isWikiScopeFrozen,
-  revalidateWikiScope,
   type WikiPageScopedContext,
 } from "../queries/getWikiPageScopedContext";
 import {
@@ -350,7 +350,7 @@ export const pasteWikiPages = createAuthenticatedAction(
       path: WIKI_CLIPBOARD_COOKIE_PATH,
     });
 
-    revalidateWikiScope(targetScoped);
+    refresh();
     redirect(redirectHref);
   },
 );

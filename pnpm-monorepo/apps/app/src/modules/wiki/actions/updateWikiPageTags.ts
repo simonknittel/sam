@@ -5,11 +5,11 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { getWikiPageContainer } from "@/modules/events/utils/eventContainer";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import {
   getWikiPageScopedContext,
   isWikiScopeFrozen,
-  revalidateWikiScope,
 } from "../queries/getWikiPageScopedContext";
 import { findOrCreateWikiTags } from "../utils/findOrCreateWikiTags";
 
@@ -141,7 +141,7 @@ export const updateWikiPageTags = createAuthenticatedAction(
       },
     ]);
 
-    revalidateWikiScope(scoped);
+    refresh();
 
     return { success: t("Common.successfullySaved") };
   },

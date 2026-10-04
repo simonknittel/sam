@@ -3,8 +3,8 @@
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { refresh } from "next/cache";
 import * as z from "zod";
-import { revalidateWikiScope } from "../queries/getWikiPageScopedContext";
 import { compareWikiPagesByOrder } from "../utils/compareWikiPagesByOrder";
 import { isEventWikiRootPage } from "../utils/isEventWikiRootPage";
 import { lockWikiPageTree } from "../utils/lockWikiPageTree";
@@ -133,7 +133,7 @@ export const updateWikiPagePosition = createAuthenticatedAction(
         ),
       );
 
-    revalidateWikiScope(scoped);
+    refresh();
 
     return {
       success: reset

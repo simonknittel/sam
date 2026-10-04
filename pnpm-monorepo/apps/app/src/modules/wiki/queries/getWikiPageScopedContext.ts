@@ -4,7 +4,6 @@ import {
   getWikiPageContainer,
 } from "@/modules/events/utils/eventContainer";
 import { WikiPageNamespace } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
 import { WikiScope } from "../utils/wikiPageHref";
 import {
   getEventWikiContext,
@@ -60,43 +59,17 @@ export const getWikiPageScopedContext = async (
   }
 };
 
-/** Layout path a mutation in this scope must revalidate */
-export const getWikiScopeRevalidationPath = (scoped: WikiPageScopedContext) => {
+/**
+ * The home of the scope: the global wiki, or the briefing of the event or
+ * the event template
+ */
+export const getWikiScopeHomePath = (scoped: WikiPageScopedContext) => {
   switch (scoped.scope) {
     case WikiScope.Event:
       return getBriefingPath(scoped.context.container);
 
     case WikiScope.Wiki:
       return "/app/wiki";
-
-    default:
-      throw new Error(`Unknown wiki scope: ${scoped satisfies never}`);
-  }
-};
-
-/**
- * The revalidations a WIKI-namespace mutation requires. Any WIKI page can
- * additionally be embedded on fleet variant pages — also deep inside a
- * linked subtree, and shared between variants — so this blanket-purges all
- * variant detail layouts instead of tracking which variants link one of the
- * page's ancestors: the pages are auth-dynamic, making revalidation a cheap
- * client-router-cache purge.
- */
-export const revalidateGlobalWikiScope = () => {
-  revalidatePath("/app/wiki", "layout");
-  revalidatePath("/app/fleet/variant/[variantId]", "layout");
-};
-
-/** Performs the cache revalidations a mutation in this scope requires */
-export const revalidateWikiScope = (scoped: WikiPageScopedContext) => {
-  switch (scoped.scope) {
-    case WikiScope.Event:
-      revalidatePath(getBriefingPath(scoped.context.container), "layout");
-      break;
-
-    case WikiScope.Wiki:
-      revalidateGlobalWikiScope();
-      break;
 
     default:
       throw new Error(`Unknown wiki scope: ${scoped satisfies never}`);

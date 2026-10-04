@@ -4,8 +4,8 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { refresh } from "next/cache";
 import * as z from "zod";
-import { revalidateWikiScope } from "../queries/getWikiPageScopedContext";
 import { collectWikiPageDescendants } from "../utils/collectWikiPageDescendants";
 import { requireAdminableWikiPage } from "../utils/requireAdminableWikiPage";
 
@@ -70,7 +70,7 @@ export const restoreWikiPage = createAuthenticatedAction(
       },
     ]);
 
-    revalidateWikiScope(scoped);
+    refresh();
 
     return { success: "Erfolgreich wiederhergestellt." };
   },

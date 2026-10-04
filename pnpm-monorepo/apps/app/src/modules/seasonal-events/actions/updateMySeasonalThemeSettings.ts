@@ -4,8 +4,9 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { LEADERBOARD_CACHE_TAG } from "@/modules/leaderboards/queries/getLeaderboard";
 import { SeasonalEventKey } from "@sam-monorepo/domain";
-import { revalidatePath } from "next/cache";
+import { refresh, revalidateTag } from "next/cache";
 import * as z from "zod";
 import { getMySeasonalThemeSettings } from "../queries/getMySeasonalThemeSettings";
 
@@ -122,13 +123,13 @@ export const updateMySeasonalThemeSettings = createAuthenticatedAction(
         },
       ]);
 
+    refresh();
+
     /**
-     * Revalidate cache(s)
+     * The layout-wide revalidation that this action had before also cleared
+     * the leaderboard cache. This keeps a purge of that cache.
      */
-    revalidatePath("/app/account/appearance");
-    // The theme root of the shell resolves the settings in the layout of
-    // the app, thus every page below it must render again.
-    revalidatePath("/app", "layout");
+    revalidateTag(LEADERBOARD_CACHE_TAG, "max");
 
     return {
       success: t("Common.successfullySaved"),

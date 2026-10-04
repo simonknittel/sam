@@ -10,6 +10,7 @@ import {
   WikiPageUploadability,
   WikiPageVisibility,
 } from "@sam-monorepo/database/client";
+import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import * as z from "zod";
 import {
@@ -19,7 +20,6 @@ import {
 import {
   getWikiPageScopedContext,
   isWikiScopeFrozen,
-  revalidateWikiScope,
   type WikiPageScopedContext,
 } from "../queries/getWikiPageScopedContext";
 import { copyWikiPageSubtree } from "../utils/copyWikiPageSubtree";
@@ -142,7 +142,7 @@ export const createWikiPage = createAuthenticatedAction(
         })),
       );
 
-      revalidateWikiScope(scoped);
+      refresh();
       const copyVariantHref = await resolveVariantWikiRedirectHref(
         scoped,
         data.variantId,
@@ -221,7 +221,7 @@ export const createWikiPage = createAuthenticatedAction(
       },
     ]);
 
-    revalidateWikiScope(scoped);
+    refresh();
     const variantHref = await resolveVariantWikiRedirectHref(
       scoped,
       data.variantId,

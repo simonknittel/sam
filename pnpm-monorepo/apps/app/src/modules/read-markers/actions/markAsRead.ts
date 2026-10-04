@@ -65,11 +65,7 @@ export const markAsRead = createAuthenticatedAction(
 
     /**
      * The "new" state shows in lists, tiles and the dot badges of the app
-     * layout. The refresh renders them again for the viewer only, and it
-     * also clears the client router cache, which would otherwise show the
-     * old state on a back navigation. Unlike `revalidatePath()`, it keeps the
-     * server caches which other users share. Only a real change is worth the
-     * render.
+     * layout. Only a real change is worth the render.
      */
     if (count > 0 && wasNew) refresh();
 

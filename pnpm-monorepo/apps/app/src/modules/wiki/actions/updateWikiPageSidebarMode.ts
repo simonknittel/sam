@@ -5,8 +5,8 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { WikiPageSidebarMode } from "@sam-monorepo/database/client";
+import { refresh } from "next/cache";
 import * as z from "zod";
-import { revalidateWikiScope } from "../queries/getWikiPageScopedContext";
 import { requireAdminableWikiPage } from "../utils/requireAdminableWikiPage";
 
 const schema = z.object({
@@ -23,7 +23,7 @@ export const updateWikiPageSidebarMode = createAuthenticatedAction(
   "updateWikiPageSidebarMode",
   schema,
   async (formData, authentication, data, t) => {
-    const { scoped, page, failure } = await requireAdminableWikiPage(
+    const { page, failure } = await requireAdminableWikiPage(
       data.id,
       formData,
       t,
@@ -55,7 +55,7 @@ export const updateWikiPageSidebarMode = createAuthenticatedAction(
       },
     ]);
 
-    revalidateWikiScope(scoped);
+    refresh();
 
     return { success: t("Common.successfullySaved") };
   },

@@ -4,12 +4,10 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import * as z from "zod";
-import {
-  getWikiScopeRevalidationPath,
-  revalidateWikiScope,
-} from "../queries/getWikiPageScopedContext";
+import { getWikiScopeHomePath } from "../queries/getWikiPageScopedContext";
 import { collectWikiPageDescendants } from "../utils/collectWikiPageDescendants";
 import { requireAdminableWikiPage } from "../utils/requireAdminableWikiPage";
 import { resolveVariantWikiRedirectHref } from "../utils/resolveVariantWikiRedirectHref";
@@ -64,7 +62,7 @@ export const deleteWikiPage = createAuthenticatedAction(
       },
     ]);
 
-    revalidateWikiScope(scoped);
+    refresh();
 
     /**
      * Deleting from inside a variant embed leads back to the variant page —
@@ -83,6 +81,6 @@ export const deleteWikiPage = createAuthenticatedAction(
       if (variantHref) redirect(getVariantWikiRootPath(data.variantId));
     }
 
-    redirect(getWikiScopeRevalidationPath(scoped));
+    redirect(getWikiScopeHomePath(scoped));
   },
 );

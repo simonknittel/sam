@@ -4,7 +4,8 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import { LEADERBOARD_CACHE_TAG } from "@/modules/leaderboards/queries/getLeaderboard";
+import { refresh, revalidateTag } from "next/cache";
 import * as z from "zod";
 import { getWikiContext } from "../queries/getWikiContext";
 import {
@@ -61,9 +62,13 @@ export const updateWikiPageLink = createAuthenticatedAction(
       },
     ]);
 
-    // Page links render in the root app layout (topbar, mobile action bar),
-    // not only under /app/wiki
-    revalidatePath("/app", "layout");
+    refresh();
+
+    /**
+     * The layout-wide revalidation that this action had before also cleared
+     * the leaderboard cache. This keeps a purge of that cache.
+     */
+    revalidateTag(LEADERBOARD_CACHE_TAG, "max");
 
     return { success: t("Common.successfullySaved") };
   },

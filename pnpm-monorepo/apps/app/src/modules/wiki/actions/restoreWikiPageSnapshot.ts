@@ -7,12 +7,12 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { log } from "@/modules/logging";
 import { getWikiEditorSchema } from "@sam-monorepo/wiki-editor";
 import { Node as ProseMirrorNode } from "@tiptap/pm/model";
+import { refresh } from "next/cache";
 import { unstable_rethrow } from "next/navigation";
 import * as z from "zod";
 import {
   getWikiPageScopedContext,
   isWikiScopeFrozen,
-  revalidateWikiScope,
 } from "../queries/getWikiPageScopedContext";
 import { createWikiPageSafetySnapshot } from "../utils/createWikiPageSafetySnapshot";
 import { replaceWikiPageContent } from "../utils/replaceWikiPageContent";
@@ -112,7 +112,7 @@ export const restoreWikiPageSnapshot = createAuthenticatedAction(
       },
     ]);
 
-    revalidateWikiScope(scoped);
+    refresh();
 
     return { success: "Snapshot wiederhergestellt." };
   },

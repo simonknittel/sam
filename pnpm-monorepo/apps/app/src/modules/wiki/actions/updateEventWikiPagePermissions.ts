@@ -4,13 +4,12 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { getEventContainerPath } from "@/modules/events/utils/eventContainer";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import {
   WikiPageEventScope,
   WikiPageUploadability,
 } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import {
   getWikiPageScopedContext,
@@ -241,11 +240,7 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
       ]);
     }
 
-    /**
-     * The container's layout (an ancestor of /briefing) revalidates so the
-     * tab and tile gates pick up a widened root scope immediately.
-     */
-    revalidatePath(getEventContainerPath(context.container), "layout");
+    refresh();
 
     return { success: t("Common.successfullySaved") };
   },

@@ -6,11 +6,9 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { decodeUploadFileName } from "@/modules/uploads/utils/decodeUploadFileName";
+import { refresh } from "next/cache";
 import * as z from "zod";
-import {
-  getWikiPageScopedContext,
-  revalidateWikiScope,
-} from "../queries/getWikiPageScopedContext";
+import { getWikiPageScopedContext } from "../queries/getWikiPageScopedContext";
 
 /** Simple abuse guard: at most this many unresolved reports per user */
 const MAX_OPEN_REPORTS_PER_USER = 5;
@@ -99,7 +97,7 @@ export const createWikiPageReport = createAuthenticatedAction(
       },
     ]);
 
-    revalidateWikiScope(scoped);
+    refresh();
 
     return { success: "Meldung gesendet." };
   },

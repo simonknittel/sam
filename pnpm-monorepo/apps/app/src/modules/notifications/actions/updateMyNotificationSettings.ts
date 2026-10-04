@@ -5,7 +5,7 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { NotificationChannel } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { NOTIFICATION_TYPES } from "../utils/NotificationTypes";
 import { getMyNotificationSettings } from "../utils/queries/getMyNotificationSettings";
@@ -141,10 +141,7 @@ export const updateMyNotificationSettings = createAuthenticatedAction(
         },
       ]);
 
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath("/app/account/notifications");
+    refresh();
 
     return {
       success: t("Common.successfullySaved"),
