@@ -21,9 +21,9 @@ export const WikiPagePermissionsOpenerProvider = ({
   children,
   onOpen,
 }: Props) => (
-  <WikiPagePermissionsOpenerContext.Provider value={onOpen}>
+  <WikiPagePermissionsOpenerContext value={onOpen}>
     {children}
-  </WikiPagePermissionsOpenerContext.Provider>
+  </WikiPagePermissionsOpenerContext>
 );
 
 /**

@@ -7,6 +7,8 @@ import { expectAuditEvents } from "../fixtures/audit";
 import { createCitizen } from "../fixtures/factories";
 import {
   clickUntilVisible,
+  fillUntilVisible,
+  FORBIDDEN_TEXT,
   modal,
   SAVED_TEXT,
   sectionByHeading,
@@ -275,4 +277,64 @@ test("a second confirmation of a reported membership changes nothing", async ({
       where: { type: "ORGANIZATION_MEMBERSHIP_CONFIRMED" },
     }),
   ).toBe(1);
+});
+
+/**
+ * This test pins the current behavior, it does not approve it (known defect
+ * 9, kept on purpose): the memberships tile calls `forbidden()`, and the
+ * error boundary of the tile lets it through to Next.js. Thus a viewer who
+ * can read the organization but not its memberships gets the 403 page for
+ * the full organization page, not the error fallback of one tile.
+ */
+test("without the membership permission the organization page is forbidden, not a failed tile", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const viewer = await createCitizen(prisma, {
+    handle: "org-betrachter",
+    permissionStrings: ["organization;read"],
+  });
+  const organization = await prisma.organization.create({
+    data: {
+      name: "Testorganisation",
+      spectrumId: "TESTORG",
+      createdById: viewer.entity.id,
+    },
+  });
+
+  await signIn(viewer.user);
+
+  const forbidden = page.getByText(FORBIDDEN_TEXT);
+  const retryButton = page.getByRole("button", { name: "Erneut versuchen" });
+
+  await page.goto(`/app/spynet/organization/${organization.id}`);
+  await expect(forbidden).toBeVisible();
+  await expect(retryButton).toHaveCount(0);
+
+  /**
+   * The Spynet search leads such a viewer to the page with a client
+   * navigation. A marker on `window` survives only a client navigation.
+   */
+  await page.goto("/app/dashboard");
+  const hit = page
+    .getByRole("listbox")
+    .getByRole("option")
+    .filter({ hasText: `Internal ID: ${organization.id}` });
+  await fillUntilVisible(
+    page.getByRole("combobox", { name: "Spynet durchsuchen" }),
+    "Testorganisation",
+    hit,
+  );
+  await page.evaluate(() => {
+    Object.assign(window, { clientNavigationMarker: true });
+  });
+  await hit.click();
+
+  await expect(forbidden).toBeVisible();
+  await expect(retryButton).toHaveCount(0);
+  await expect(page).toHaveURL(`/app/spynet/organization/${organization.id}`);
+  expect(await page.evaluate(() => "clientNavigationMarker" in window)).toBe(
+    true,
+  );
 });

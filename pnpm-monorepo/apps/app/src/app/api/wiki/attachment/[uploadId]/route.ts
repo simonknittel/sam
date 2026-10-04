@@ -11,10 +11,6 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextResponse } from "next/server";
 import * as z from "zod";
 
-type Params = Promise<{
-  uploadId: string;
-}>;
-
 const paramsSchema = z.object({ uploadId: z.cuid() });
 
 const PRESIGNED_GET_EXPIRY_SECONDS = 5 * 60;
@@ -30,11 +26,14 @@ const PRESIGNED_GET_EXPIRY_SECONDS = 5 * 60;
  * grants the download. A link of each kind counts, as with the former link
  * table, which also held the images.
  */
-export async function GET(_request: Request, props: { params: Params }) {
+export async function GET(
+  _request: Request,
+  context: RouteContext<"/api/wiki/attachment/[uploadId]">,
+) {
   try {
     await requireAuthenticationApi("/api/wiki/attachment/[uploadId]", "GET");
 
-    const paramsData = paramsSchema.parse(await props.params);
+    const paramsData = paramsSchema.parse(await context.params);
 
     const upload = await prisma.upload.findUnique({
       where: { id: paramsData.uploadId },

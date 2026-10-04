@@ -73,7 +73,7 @@ export const Popover = ({
   );
 
   return (
-    <PopoverContext.Provider value={value}>
+    <PopoverContext value={value}>
       <RadixPopover.Root open={isOpen} onOpenChange={setIsOpen}>
         <RadixPopover.Trigger
           asChild
@@ -114,7 +114,7 @@ export const Popover = ({
           </RadixPopover.Content>
         </RadixPopover.Portal>
       </RadixPopover.Root>
-    </PopoverContext.Provider>
+    </PopoverContext>
   );
 };
 

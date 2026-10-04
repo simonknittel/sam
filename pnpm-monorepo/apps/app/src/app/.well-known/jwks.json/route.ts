@@ -4,9 +4,6 @@ import {
 } from "@/modules/embed-authentication/utils/embedSigningKey";
 import { getEmbedSigningKey } from "@/modules/embed-authentication/utils/getEmbedSigningKey";
 
-/** The key set is read from the environment at request time, never prerendered. */
-export const dynamic = "force-dynamic";
-
 /**
  * Long enough to spare verifiers a fetch per token, short enough that a key
  * rotation (deploy the new key, retire the old one in a second deploy)

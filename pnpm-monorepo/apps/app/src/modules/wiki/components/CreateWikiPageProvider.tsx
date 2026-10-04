@@ -76,7 +76,7 @@ export const CreateWikiPageProvider = ({ children, allowTopLevel }: Props) => {
   };
 
   return (
-    <CreateWikiPageContext.Provider value={value}>
+    <CreateWikiPageContext value={value}>
       {children}
 
       <Modal
@@ -93,7 +93,7 @@ export const CreateWikiPageProvider = ({ children, allowTopLevel }: Props) => {
           onSuccess={() => setOpenState(null)}
         />
       </Modal>
-    </CreateWikiPageContext.Provider>
+    </CreateWikiPageContext>
   );
 };
 

@@ -2,11 +2,11 @@
 
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Link } from "@/modules/common/components/Link";
 import Modal from "@/modules/common/components/Modal";
 import Note from "@/modules/common/components/Note";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { api } from "@/trpc/react";
 import clsx from "clsx";
 import { useId, useState } from "react";
@@ -110,7 +110,7 @@ const TagsModal = ({
   const { container } = useWikiPageHrefMode();
   const inputId = useId();
   const [query, setQuery] = useState("");
-  const { state, formAction, isPending } = useAction(updateWikiPageTags, {
+  const { state, formAction } = useAction(updateWikiPageTags, {
     errorToast: false,
     onSuccess: onRequestClose,
   });
@@ -257,10 +257,9 @@ const TagsModal = ({
           </p>
         )}
 
-        <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
-          {isPending ? <AsciiSpinner /> : <FaSave />}
+        <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
           Speichern
-        </Button2>
+        </SubmitButton>
 
         <ActionErrorNote className="mt-4" state={state} />
       </form>

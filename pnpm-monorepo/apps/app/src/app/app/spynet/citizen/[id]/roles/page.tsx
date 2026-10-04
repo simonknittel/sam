@@ -6,14 +6,8 @@ import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/Suspe
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
 import { notFound } from "next/navigation";
 
-interface Props {
-  params: Promise<{
-    id: string;
-  }>;
-}
-
 export const generateMetadata = generateMetadataWithTryCatch(
-  async ({ params }: Props) => {
+  async ({ params }: PageProps<"/app/spynet/citizen/[id]/roles">) => {
     const entity = await getCitizenById((await params).id);
     if (!entity) return {};
 

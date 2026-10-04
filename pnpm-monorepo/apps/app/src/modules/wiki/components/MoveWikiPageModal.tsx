@@ -2,10 +2,10 @@
 
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import Note from "@/modules/common/components/Note";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { useState } from "react";
 import { FaFolderOpen, FaSave } from "react-icons/fa";
 import { moveWikiPage } from "../actions/moveWikiPage";
@@ -26,7 +26,7 @@ export const MoveWikiPageModal = ({
   currentParentId,
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { state, formAction, isPending } = useAction(moveWikiPage, {
+  const { state, formAction } = useAction(moveWikiPage, {
     errorToast: false,
     onSuccess: () => setIsOpen(false),
   });
@@ -75,14 +75,9 @@ export const MoveWikiPageModal = ({
                   message='Unterseiten und Einstellungen mit "Geerbt" übernehmen am neuen Ort die Berechtigungen der neuen übergeordneten Seiten. Dadurch kann sich die effektive Sichtbarkeit dieser Seite und ihrer Unterseiten ändern.'
                 />
 
-                <Button2
-                  type="submit"
-                  disabled={isPending}
-                  className="mt-4 ml-auto"
-                >
-                  {isPending ? <AsciiSpinner /> : <FaSave />}
+                <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
                   Verschieben
-                </Button2>
+                </SubmitButton>
 
                 <ActionErrorNote className="mt-4" state={state} />
               </form>

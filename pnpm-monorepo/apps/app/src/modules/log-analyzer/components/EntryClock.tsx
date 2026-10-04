@@ -20,7 +20,7 @@ interface Props {
 export const EntryClock = ({ children }: Props) => {
   const now = useNow({ updateInterval: TICK_INTERVAL_MS });
 
-  return <Context.Provider value={now}>{children}</Context.Provider>;
+  return <Context value={now}>{children}</Context>;
 };
 
 export const useEntryClock = () => {

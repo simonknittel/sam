@@ -1,14 +1,13 @@
 "use client";
 
 import { runAction } from "@/modules/actions/utils/runAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
-import { Button2 } from "@/modules/common/components/Button2";
 import { Select } from "@/modules/common/components/form/Select";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import Modal from "@/modules/common/components/Modal";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { OnboardingTargetId } from "@/modules/onboarding/utils/targets";
-import { useId, useState, useTransition } from "react";
+import { useId, useState } from "react";
 import { FaPlus, FaSave } from "react-icons/fa";
 import { createShipAction } from "../actions/createShipAction";
 import type {
@@ -25,12 +24,9 @@ export const AssignShip = ({ className, data = [] }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const selectId = useId();
   const inputId = useId();
-  const [isPending, startTransition] = useTransition();
 
-  const formAction = (formData: FormData) => {
-    startTransition(async () => {
-      if (await runAction(createShipAction, formData)) setIsOpen(false);
-    });
+  const formAction = async (formData: FormData) => {
+    if (await runAction(createShipAction, formData)) setIsOpen(false);
   };
 
   const options: {
@@ -95,10 +91,7 @@ export const AssignShip = ({ className, data = [] }: Props) => {
           />
 
           <div className="mt-8 flex justify-end">
-            <Button2 type="submit" disabled={isPending}>
-              {isPending ? <AsciiSpinner /> : <FaSave />}
-              Hinzufügen
-            </Button2>
+            <SubmitButton icon={<FaSave />}>Hinzufügen</SubmitButton>
           </div>
         </form>
       </Modal>

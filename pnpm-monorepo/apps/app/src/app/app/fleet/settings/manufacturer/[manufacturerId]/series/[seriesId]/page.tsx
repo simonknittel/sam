@@ -6,15 +6,10 @@ import { VariantsTile } from "@/modules/fleet/components/VariantsTile";
 import { getSeriesAndManufacturerById } from "@/modules/fleet/queries/getSeriesAndManufacturerById";
 import { notFound } from "next/navigation";
 
-type Params = Promise<
-  Readonly<{
-    manufacturerId: string;
-    seriesId: string;
-  }>
->;
-
 export const generateMetadata = generateMetadataWithTryCatch(
-  async (props: { params: Params }) => {
+  async (
+    props: PageProps<"/app/fleet/settings/manufacturer/[manufacturerId]/series/[seriesId]">,
+  ) => {
     const params = await props.params;
     const [series] = await getSeriesAndManufacturerById(
       params.seriesId,
@@ -29,11 +24,9 @@ export const generateMetadata = generateMetadataWithTryCatch(
   },
 );
 
-interface Props {
-  readonly params: Params;
-}
-
-export default async function Page(props: Props) {
+export default async function Page(
+  props: PageProps<"/app/fleet/settings/manufacturer/[manufacturerId]/series/[seriesId]">,
+) {
   const authentication = await requireAuthenticationPage(
     "/app/fleet/settings/manufacturer/[manufacturerId]/series/[seriesId]",
   );

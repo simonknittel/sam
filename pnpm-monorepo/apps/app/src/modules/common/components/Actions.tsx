@@ -39,9 +39,7 @@ const ActionsContextBridge = ({ children }: Readonly<Props>) => {
 
   const value = useMemo(() => ({ closePopover }), [closePopover]);
 
-  return (
-    <ActionContext.Provider value={value}>{children}</ActionContext.Provider>
-  );
+  return <ActionContext value={value}>{children}</ActionContext>;
 };
 
 interface ActionContextInterface {

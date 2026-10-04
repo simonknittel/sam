@@ -23,9 +23,7 @@ export const RolesContextProvider = ({ children, roles }: Props) => {
     [roles],
   );
 
-  return (
-    <RolesContext.Provider value={value}>{children}</RolesContext.Provider>
-  );
+  return <RolesContext value={value}>{children}</RolesContext>;
 };
 
 /**

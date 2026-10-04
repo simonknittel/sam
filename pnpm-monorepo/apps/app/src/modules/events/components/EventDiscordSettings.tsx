@@ -8,6 +8,7 @@ import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
 import { DiscordButton } from "@/modules/common/components/DiscordButton";
 import Note from "@/modules/common/components/Note";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { Tile } from "@/modules/common/components/Tile";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import {
@@ -168,7 +169,7 @@ const UnpublishedState = ({
   channels,
   defaultLocation,
 }: UnpublishedStateProps) => {
-  const { state, formAction, isPending } = useAction(publishEventToDiscord, {
+  const { state, formAction } = useAction(publishEventToDiscord, {
     errorToast: false,
   });
   const restrictedConfirmation = useSubmitConfirmation(
@@ -192,10 +193,9 @@ const UnpublishedState = ({
           className="mt-4"
         />
 
-        <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
-          {isPending ? <AsciiSpinner /> : <FaDiscord />}
+        <SubmitButton icon={<FaDiscord />} className="mt-4 ml-auto">
           Auf Discord veröffentlichen
-        </Button2>
+        </SubmitButton>
 
         <RestrictedDiscordPublishDialog
           isOpen={restrictedConfirmation.isOpen}

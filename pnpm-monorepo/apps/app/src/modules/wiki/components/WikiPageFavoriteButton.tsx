@@ -1,8 +1,8 @@
 "use client";
 
 import { useAction } from "@/modules/actions/utils/useAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import { Button2, Button2Variant } from "@/modules/common/components/Button2";
+import { Button2Variant } from "@/modules/common/components/Button2";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { FaRegStar, FaStar } from "react-icons/fa";
 import { toggleWikiPageFavorite } from "../actions/toggleWikiPageFavorite";
 
@@ -17,26 +17,19 @@ export const WikiPageFavoriteButton = ({
   pageId,
   isFavorite,
 }: Props) => {
-  const { formAction, isPending } = useAction(toggleWikiPageFavorite);
+  const { formAction } = useAction(toggleWikiPageFavorite);
 
   return (
     <form action={formAction} className={className}>
       <input type="hidden" name="pageId" value={pageId} />
 
-      <Button2
-        type="submit"
+      <SubmitButton
         variant={Button2Variant.IconOnly}
-        disabled={isPending}
         tooltip={isFavorite ? "Favorit entfernen" : "Als Favorit speichern"}
-      >
-        {isPending ? (
-          <AsciiSpinner />
-        ) : isFavorite ? (
-          <FaStar className="text-amber-400" />
-        ) : (
-          <FaRegStar />
-        )}
-      </Button2>
+        icon={
+          isFavorite ? <FaStar className="text-amber-400" /> : <FaRegStar />
+        }
+      />
     </form>
   );
 };

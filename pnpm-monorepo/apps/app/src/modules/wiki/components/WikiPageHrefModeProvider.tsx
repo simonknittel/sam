@@ -21,9 +21,7 @@ interface Props {
 
 export const WikiPageHrefModeProvider = ({ mode, children }: Props) => {
   return (
-    <WikiPageHrefModeContext.Provider value={mode}>
-      {children}
-    </WikiPageHrefModeContext.Provider>
+    <WikiPageHrefModeContext value={mode}>{children}</WikiPageHrefModeContext>
   );
 };
 

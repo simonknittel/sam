@@ -5,12 +5,12 @@ import {
   AlertDialog,
   useSubmitConfirmation,
 } from "@/modules/common/components/AlertDialog";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import { Button2, Button2Variant } from "@/modules/common/components/Button2";
+import { Button2Variant } from "@/modules/common/components/Button2";
 import { DateInput } from "@/modules/common/components/form/DateInput";
 import { NumberInputFormatted } from "@/modules/common/components/form/NumberInput";
 import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { StatisticTile } from "@/modules/common/components/StatisticTile";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { CyclePhase, getAuecPerSilc } from "@sam-monorepo/domain";
 import { useState } from "react";
 import { startPayout } from "../actions/startPayout";
@@ -25,7 +25,7 @@ interface Props {
 }
 
 export const PhaseManagementPayoutPreparation = ({ cycleData }: Props) => {
-  const { formAction, isPending } = useAction(startPayout);
+  const { formAction } = useAction(startPayout);
   const [auecProfit, setAuecProfit] = useState(
     Number(cycleData.cycle.auecProfit) || 0,
   );
@@ -109,17 +109,13 @@ export const PhaseManagementPayoutPreparation = ({ cycleData }: Props) => {
           </StatisticTile>
         </div>
 
-        <Button2
-          type="submit"
-          disabled={
-            cycleData.currentPhase !== CyclePhase.PayoutPreparation || isPending
-          }
+        <SubmitButton
+          disabled={cycleData.currentPhase !== CyclePhase.PayoutPreparation}
           variant={Button2Variant.Secondary}
           className="mx-auto mt-4"
         >
-          {isPending && <AsciiSpinner />}
           Auszahlungsphase starten
-        </Button2>
+        </SubmitButton>
 
         <AlertDialog
           isOpen={confirmation.isOpen}

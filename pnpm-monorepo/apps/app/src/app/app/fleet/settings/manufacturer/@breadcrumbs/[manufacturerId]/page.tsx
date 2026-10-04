@@ -1,17 +1,9 @@
 import { getManufacturerById } from "@/modules/fleet/queries/getManufacturerById";
 import { notFound } from "next/navigation";
 
-type Params = Promise<
-  Readonly<{
-    manufacturerId: string;
-  }>
->;
-
-interface Props {
-  readonly params: Params;
-}
-
-export default async function Page(props: Props) {
+export default async function Page(
+  props: PageProps<"/app/fleet/settings/manufacturer/[manufacturerId]">,
+) {
   const manufacturer = await getManufacturerById(
     (await props.params).manufacturerId,
   );

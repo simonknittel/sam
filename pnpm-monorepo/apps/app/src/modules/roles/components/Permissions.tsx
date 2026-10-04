@@ -2,8 +2,7 @@
 
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import { Button2 } from "@/modules/common/components/Button2";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import Tab from "@/modules/common/components/tabs/Tab";
 import TabList from "@/modules/common/components/tabs/TabList";
 import { TabsProvider } from "@/modules/common/components/tabs/TabsContext";
@@ -49,7 +48,7 @@ export const Permissions = ({
   classificationLevels,
   allRoles,
 }: Props) => {
-  const { state, formAction, isPending } = useAction(updateRolePermissions, {
+  const { state, formAction } = useAction(updateRolePermissions, {
     errorToast: false,
   });
 
@@ -115,10 +114,9 @@ export const Permissions = ({
         <OtherTab roles={allRoles} />
       </TabsProvider>
 
-      <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
-        {isPending ? <AsciiSpinner /> : <FaSave />}
+      <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
         Speichern
-      </Button2>
+      </SubmitButton>
 
       <ActionErrorNote className="mt-4" state={state} />
     </form>

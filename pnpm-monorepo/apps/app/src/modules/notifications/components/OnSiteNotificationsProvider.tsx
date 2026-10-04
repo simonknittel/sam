@@ -17,7 +17,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -64,11 +63,6 @@ export const OnSiteNotificationsProvider = ({
 }: Props) => {
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
 
-  const unreadCountRef = useRef(unreadCount);
-  useEffect(() => {
-    unreadCountRef.current = unreadCount;
-  }, [unreadCount]);
-
   const authentication = useAuthentication();
   const entityId = authentication ? authentication.session.entity?.id : null;
 
@@ -90,7 +84,7 @@ export const OnSiteNotificationsProvider = ({
     if (!titleElement) return;
 
     const observer = new MutationObserver(() => {
-      restoreDocumentTitleUnreadCount(unreadCountRef.current);
+      restoreDocumentTitleUnreadCount(unreadCount);
     });
     observer.observe(titleElement, { childList: true });
 
@@ -165,9 +159,9 @@ export const OnSiteNotificationsProvider = ({
   );
 
   return (
-    <OnSiteNotificationsContext.Provider value={value}>
+    <OnSiteNotificationsContext value={value}>
       {children}
-    </OnSiteNotificationsContext.Provider>
+    </OnSiteNotificationsContext>
   );
 };
 

@@ -2,12 +2,12 @@
 
 import { runAction } from "@/modules/actions/utils/runAction";
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import type { Event } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { FaPlus, FaSave } from "react-icons/fa";
 import { createManagers } from "../actions/createManagers";
 
@@ -18,7 +18,6 @@ interface Props {
 
 export const CreateManagers = (props: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [submitIsPending, startSubmitTransition] = useTransition();
 
   const handleClick = () => {
     setIsOpen(true);
@@ -28,10 +27,8 @@ export const CreateManagers = (props: Props) => {
     setIsOpen(false);
   };
 
-  const formAction = (formData: FormData) => {
-    startSubmitTransition(async () => {
-      if (await runAction(createManagers, formData)) setIsOpen(false);
-    });
+  const formAction = async (formData: FormData) => {
+    if (await runAction(createManagers, formData)) setIsOpen(false);
   };
 
   return (
@@ -58,10 +55,7 @@ export const CreateManagers = (props: Props) => {
           <CitizenInput name="managerId" multiple autoFocus />
 
           <div className="mt-4 flex flex-col gap-2">
-            <Button2 type="submit" disabled={submitIsPending}>
-              {submitIsPending ? <AsciiSpinner /> : <FaSave />}
-              Speichern
-            </Button2>
+            <SubmitButton icon={<FaSave />}>Speichern</SubmitButton>
           </div>
         </form>
       </Modal>

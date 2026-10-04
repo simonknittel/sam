@@ -16,12 +16,8 @@ import { EventSource } from "@sam-monorepo/database/client";
 import { instantToWallTime, ORGANIZATION_TIMEZONE } from "@sam-monorepo/domain";
 import { forbidden, notFound } from "next/navigation";
 
-type Params = Promise<{
-  id: string;
-}>;
-
 export const generateMetadata = generateMetadataWithTryCatch(
-  async (props: { params: Params }) => {
+  async (props: PageProps<"/app/events/[id]/settings">) => {
     const event = await getEventById((await props.params).id);
     if (!event) notFound();
 

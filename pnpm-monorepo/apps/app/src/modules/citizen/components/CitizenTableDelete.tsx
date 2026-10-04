@@ -4,7 +4,6 @@ import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
 import { type Citizen } from "@sam-monorepo/database/browser";
-import { useRouter } from "next/navigation";
 import { FaTrash } from "react-icons/fa";
 import { deleteCitizen } from "../actions/deleteCitizen";
 
@@ -13,8 +12,6 @@ interface Props {
 }
 
 export const CitizenTableDelete = ({ entity }: Props) => {
-  const router = useRouter();
-
   return (
     <ConfirmActionButton
       action={deleteCitizen}
@@ -27,7 +24,6 @@ export const CitizenTableDelete = ({ entity }: Props) => {
       title="Citizen löschen?"
       description="Willst du diesen Citizen löschen? Das lässt sich nicht rückgängig machen."
       confirmLabel="Löschen"
-      onSuccess={() => router.refresh()}
     />
   );
 };

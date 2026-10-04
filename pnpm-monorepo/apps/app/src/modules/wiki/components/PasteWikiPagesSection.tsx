@@ -2,9 +2,9 @@
 
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import clsx from "clsx";
 import { useState } from "react";
 import { FaPaste, FaTrashAlt } from "react-icons/fa";
@@ -65,7 +65,7 @@ export const PasteWikiPagesSection = ({
    * A successful insert redirects to the pasted page; onSuccess closes the
    * modal so it isn't still open after the navigation.
    */
-  const { state, formAction, isPending } = useAction(pasteWikiPages, {
+  const { state, formAction } = useAction(pasteWikiPages, {
     errorToast: false,
     onSuccess,
   });
@@ -152,10 +152,7 @@ export const PasteWikiPagesSection = ({
             Verwerfen
           </Button2>
 
-          <Button2 type="submit" disabled={isPending}>
-            {isPending ? <AsciiSpinner /> : <FaPaste />}
-            Einfügen
-          </Button2>
+          <SubmitButton icon={<FaPaste />}>Einfügen</SubmitButton>
         </div>
 
         <ActionErrorNote className="mt-4" state={state} />

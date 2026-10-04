@@ -26,7 +26,7 @@ export const FlowProvider = ({
     [isUpdating, additionalData],
   );
 
-  return <FlowContext.Provider value={value}>{children}</FlowContext.Provider>;
+  return <FlowContext value={value}>{children}</FlowContext>;
 };
 
 /**

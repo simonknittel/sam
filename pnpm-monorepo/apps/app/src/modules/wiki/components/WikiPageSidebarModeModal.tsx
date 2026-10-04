@@ -2,10 +2,10 @@
 
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import Note from "@/modules/common/components/Note";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import { WikiPageSidebarMode } from "@sam-monorepo/database/browser";
 import { useState } from "react";
@@ -25,13 +25,10 @@ export const WikiPageSidebarModeModal = ({
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedMode, setSelectedMode] = useState<string>(sidebarMode);
-  const { state, formAction, isPending } = useAction(
-    updateWikiPageSidebarMode,
-    {
-      errorToast: false,
-      onSuccess: () => setIsOpen(false),
-    },
-  );
+  const { state, formAction } = useAction(updateWikiPageSidebarMode, {
+    errorToast: false,
+    onSuccess: () => setIsOpen(false),
+  });
 
   return (
     <>
@@ -84,10 +81,9 @@ export const WikiPageSidebarModeModal = ({
             message="Hat keinen Einfluss auf Berechtigungen: Ausgeblendete Seiten bleiben über Links, Suche, Favoriten, Tags und Seitenverzeichnisse erreichbar."
           />
 
-          <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
-            {isPending ? <AsciiSpinner /> : <FaSave />}
+          <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
             Speichern
-          </Button2>
+          </SubmitButton>
 
           <ActionErrorNote className="mt-4" state={state} />
         </form>

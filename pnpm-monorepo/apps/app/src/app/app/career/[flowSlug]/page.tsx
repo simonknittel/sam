@@ -15,14 +15,8 @@ import {
 import { cookies } from "next/headers";
 import { forbidden, notFound } from "next/navigation";
 
-type Params = Promise<
-  Readonly<{
-    flowSlug: string;
-  }>
->;
-
 export const generateMetadata = generateMetadataWithTryCatch(
-  async (props: { params: Params }) => {
+  async (props: PageProps<"/app/career/[flowSlug]">) => {
     const flowSlug = (await props.params).flowSlug;
     const context = await getFlowContext();
     const flow = context?.flowsBySlug.get(flowSlug);

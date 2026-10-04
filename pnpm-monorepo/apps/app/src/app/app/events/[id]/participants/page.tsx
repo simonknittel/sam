@@ -5,12 +5,8 @@ import { ParticipantsTab } from "@/modules/events/components/ParticipantsTab";
 import { getEventById } from "@/modules/events/queries/getEventById";
 import { notFound } from "next/navigation";
 
-type Params = Promise<{
-  id: string;
-}>;
-
 export const generateMetadata = generateMetadataWithTryCatch(
-  async (props: { params: Params }) => {
+  async (props: PageProps<"/app/events/[id]/participants">) => {
     const event = await getEventById((await props.params).id);
     if (!event) notFound();
 

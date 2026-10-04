@@ -8,7 +8,6 @@ import { ActivityTile } from "@/modules/organizations/components/ActivityTile";
 import { MembershipsTile } from "@/modules/organizations/components/MembershipsTile";
 import { OverviewTile } from "@/modules/organizations/components/OverviewTile";
 import { notFound } from "next/navigation";
-import type { SearchParams } from "nuqs/server";
 import { cache } from "react";
 
 const getOrganization = cache(async (id: string) => {
@@ -22,14 +21,8 @@ const getOrganization = cache(async (id: string) => {
   });
 });
 
-type Params = Promise<
-  Readonly<{
-    id: string;
-  }>
->;
-
 export const generateMetadata = generateMetadataWithTryCatch(
-  async (props: { params: Params }) => {
+  async (props: PageProps<"/app/spynet/organization/[id]">) => {
     const organization = await getOrganization((await props.params).id);
     if (!organization) return {};
 
@@ -39,12 +32,9 @@ export const generateMetadata = generateMetadataWithTryCatch(
   },
 );
 
-interface Props {
-  readonly params: Params;
-  readonly searchParams: Promise<SearchParams>;
-}
-
-export default async function Page(props: Props) {
+export default async function Page(
+  props: PageProps<"/app/spynet/organization/[id]">,
+) {
   const authentication = await requireAuthenticationPage(
     "/app/spynet/organization/[id]",
   );

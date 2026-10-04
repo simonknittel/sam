@@ -6,12 +6,8 @@ import { notFound } from "next/navigation";
 import { FaHome, FaLock, FaUsers } from "react-icons/fa";
 import { TbHierarchy3 } from "react-icons/tb";
 
-type Params = Promise<{
-  id: string;
-}>;
-
 export const generateMetadata = generateMetadataWithTryCatch(
-  async (props: { params: Params }) => {
+  async (props: LayoutProps<"/app/roles/[id]">) => {
     const role = await getRoleById((await props.params).id);
     if (!role) notFound();
 

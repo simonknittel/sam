@@ -33,11 +33,7 @@ export const WikiEditModeProvider = ({ children }: Props) => {
 
   const value = useMemo(() => ({ isEditMode, setEditMode }), [isEditMode]);
 
-  return (
-    <WikiEditModeContext.Provider value={value}>
-      {children}
-    </WikiEditModeContext.Provider>
-  );
+  return <WikiEditModeContext value={value}>{children}</WikiEditModeContext>;
 };
 
 /**

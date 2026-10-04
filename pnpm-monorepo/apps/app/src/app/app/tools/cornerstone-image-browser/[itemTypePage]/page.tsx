@@ -17,12 +17,10 @@ const schema = z.array(
   }),
 );
 
-type Params = Promise<{
-  itemTypePage: string;
-}>;
-
 export const generateMetadata = generateMetadataWithTryCatch(
-  async (props: { params: Params }) => {
+  async (
+    props: PageProps<"/app/tools/cornerstone-image-browser/[itemTypePage]">,
+  ) => {
     const { itemTypePage } = await props.params;
     const itemTypeConfig = cornerstoneImageBrowserItemTypes.find(
       (itemType) => itemType.page === itemTypePage,

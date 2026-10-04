@@ -105,11 +105,7 @@ export const WikiPageDndProvider = ({ children }: ProviderProps) => {
     [draggedPageId, isPending, handleDragStart, handleDrop, submitPosition],
   );
 
-  return (
-    <WikiPageDndContext.Provider value={value}>
-      {children}
-    </WikiPageDndContext.Provider>
-  );
+  return <WikiPageDndContext value={value}>{children}</WikiPageDndContext>;
 };
 
 /**

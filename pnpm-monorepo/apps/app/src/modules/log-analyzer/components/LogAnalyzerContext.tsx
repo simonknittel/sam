@@ -227,7 +227,7 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
     ],
   );
 
-  return <Context.Provider value={value}>{children}</Context.Provider>;
+  return <Context value={value}>{children}</Context>;
 };
 
 /**

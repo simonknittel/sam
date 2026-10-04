@@ -4,12 +4,8 @@ import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMet
 import { getDocuments } from "@/modules/documents/utils/queries/getDocuments";
 import { notFound } from "next/navigation";
 
-type Params = Promise<{
-  slug: string[];
-}>;
-
 export const generateMetadata = generateMetadataWithTryCatch(
-  async (props: { params: Params }) => {
+  async (props: PageProps<"/app/documents/[...slug]">) => {
     const { slug } = await props.params;
 
     const categories = await getDocuments();

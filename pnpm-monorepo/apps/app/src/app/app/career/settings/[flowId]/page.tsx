@@ -13,14 +13,8 @@ import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
-type Params = Promise<
-  Readonly<{
-    flowId: string;
-  }>
->;
-
 export const generateMetadata = generateMetadataWithTryCatch(
-  async (props: { params: Params }) => {
+  async (props: PageProps<"/app/career/settings/[flowId]">) => {
     const { flowId } = await props.params;
     const flow = await getManageableFlow(flowId);
     if (!flow) return {};

@@ -6,12 +6,15 @@ import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { NextResponse, type NextRequest } from "next/server";
 import * as z from "zod";
 
-export const dynamic = "force-dynamic";
-
 const schema = z.object({
   token: z.cuid2(),
 });
 
+/**
+ * The `Referrer-Policy: no-referrer` header of this route is in
+ * `next.config.ts`. A header of a route handler cannot replace a header of
+ * the config.
+ */
 export async function GET(request: NextRequest) {
   try {
     /**
@@ -23,14 +26,7 @@ export async function GET(request: NextRequest) {
 
     const result = await getEmailConfirmationToken(paramsData.token);
     if (!result)
-      return NextResponse.redirect(
-        new URL("/email-confirmation", request.url),
-        {
-          headers: {
-            "Referrer-Policy": "no-referrer",
-          },
-        },
-      );
+      return NextResponse.redirect(new URL("/email-confirmation", request.url));
 
     /**
      * Confirm the email address
@@ -62,16 +58,8 @@ export async function GET(request: NextRequest) {
       },
     ]);
 
-    return NextResponse.redirect(new URL("/clearance", request.url), {
-      headers: {
-        "Referrer-Policy": "no-referrer",
-      },
-    });
+    return NextResponse.redirect(new URL("/clearance", request.url));
   } catch (error) {
-    return apiErrorHandler(error, {
-      headers: {
-        "Referrer-Policy": "no-referrer",
-      },
-    });
+    return apiErrorHandler(error);
   }
 }

@@ -1,7 +1,7 @@
 import { useAction } from "@/modules/actions/utils/useAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { type Event } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { useState } from "react";
@@ -19,7 +19,7 @@ export const CopyLineupFromEventButton = ({
   targetEvent,
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { isPending, formAction } = useAction(copyLineupFromEvent, {
+  const { formAction } = useAction(copyLineupFromEvent, {
     onSuccess: () => {
       setIsOpen(false);
     },
@@ -49,10 +49,7 @@ export const CopyLineupFromEventButton = ({
 
             <EventSelectionInput name="sourceEventId" autoFocus />
 
-            <Button2 type="submit" disabled={isPending} className="self-end">
-              {isPending ? <AsciiSpinner /> : null}
-              Kopieren
-            </Button2>
+            <SubmitButton className="self-end">Kopieren</SubmitButton>
           </form>
         </Modal>
       )}

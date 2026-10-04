@@ -2,9 +2,8 @@
 
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import { Button2 } from "@/modules/common/components/Button2";
 import { TextInput } from "@/modules/common/components/form/TextInput";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { SLUG_MAX_LENGTH, slugify } from "@/modules/common/utils/slugify";
 import { useId, useState } from "react";
 import { FaSave } from "react-icons/fa";
@@ -43,13 +42,10 @@ export const CreateFlowForm = ({ className, onSuccess, source }: Props) => {
   const nameInputId = useId();
   const slugInputId = useId();
 
-  const { state, formAction, isPending } = useAction(
-    source ? duplicateFlow : createFlow,
-    {
-      errorToast: false,
-      onSuccess: onSuccess ? () => onSuccess() : undefined,
-    },
-  );
+  const { state, formAction } = useAction(source ? duplicateFlow : createFlow, {
+    errorToast: false,
+    onSuccess: onSuccess ? () => onSuccess() : undefined,
+  });
 
   const handleNameChange = (value: string) => {
     setName(value);
@@ -99,10 +95,7 @@ export const CreateFlowForm = ({ className, onSuccess, source }: Props) => {
       <ActionErrorNote className="mt-4" state={state} />
 
       <div className="mt-8 flex justify-end">
-        <Button2 type="submit" disabled={isPending}>
-          {isPending ? <AsciiSpinner /> : <FaSave />}
-          Speichern
-        </Button2>
+        <SubmitButton icon={<FaSave />}>Speichern</SubmitButton>
       </div>
     </form>
   );

@@ -2,12 +2,11 @@
 
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import { Button2 } from "@/modules/common/components/Button2";
 import { NumberInput } from "@/modules/common/components/form/NumberInput";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import { ImageUpload } from "@/modules/common/components/ImageUpload";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { Tile } from "@/modules/common/components/Tile";
 import type { Role, Upload } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
@@ -23,13 +22,10 @@ interface Props {
 }
 
 export const OverviewTab = ({ className, role }: Props) => {
-  const {
-    state: updateState,
-    formAction: updateFormAction,
-    isPending: updateIsPending,
-  } = useAction(updateRole, {
-    errorToast: false,
-  });
+  const { state: updateState, formAction: updateFormAction } = useAction(
+    updateRole,
+    { errorToast: false },
+  );
 
   return (
     <div className={clsx("flex flex-col gap-2", className)}>
@@ -84,14 +80,9 @@ export const OverviewTab = ({ className, role }: Props) => {
             labelClassName="mt-4"
           />
 
-          <Button2
-            type="submit"
-            disabled={updateIsPending}
-            className="mt-4 ml-auto"
-          >
-            {updateIsPending ? <AsciiSpinner /> : <FaSave />}
+          <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
             Speichern
-          </Button2>
+          </SubmitButton>
 
           <ActionErrorNote className="mt-4" state={updateState} />
         </form>

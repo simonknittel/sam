@@ -171,6 +171,59 @@ test("a deleted citizen leaves the lists and its records name it as deleted", as
   await expect(page).toHaveURL("/clearance");
 });
 
+test("the delete in the citizen table removes the row without a reload", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "tabellen-admin",
+    permissionStrings: ["citizen;read", "citizen;delete", "spynetCitizen;read"],
+  });
+  const target = await createCitizen(prisma, { handle: "tabellen-ziel" });
+
+  await signIn(admin.user);
+  await page.goto("/app/spynet/citizen");
+
+  const rows = page.getByRole("row");
+  const targetRow = rows.filter({ hasText: "tabellen-ziel" });
+  await expect(targetRow).toBeVisible();
+
+  /** A marker on `window` survives only when the page does not load again */
+  await page.evaluate(() => {
+    Object.assign(window, { withoutReloadMarker: true });
+  });
+
+  const deleteButton = page
+    .getByRole("dialog", { name: "Aktionen" })
+    .getByRole("button", { name: "Löschen", exact: true });
+  await clickUntilVisible(
+    targetRow.getByRole("button", { name: "Aktionen" }),
+    deleteButton,
+  );
+  await deleteButton.click();
+
+  const deleteDialog = page.getByRole("alertdialog", {
+    name: "Citizen löschen?",
+  });
+  await deleteDialog.getByRole("button", { name: "Löschen" }).click();
+
+  await expect(page.getByText(DELETED_TEXT)).toBeVisible();
+  await expect(targetRow).toHaveCount(0);
+  await expect(rows.filter({ hasText: "tabellen-admin" })).toBeVisible();
+  expect(await page.evaluate(() => "withoutReloadMarker" in window)).toBe(true);
+
+  await expect
+    .poll(async () => {
+      const deleted = await prisma.citizen.findUniqueOrThrow({
+        where: { id: target.entity.id },
+        select: { deletedAt: true },
+      });
+      return deleted.deletedAt;
+    })
+    .not.toBeNull();
+});
+
 test("a citizen can be added again with the Spectrum ID of a deleted one", async ({
   page,
   prisma,

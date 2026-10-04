@@ -2,10 +2,10 @@
 
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import Note from "@/modules/common/components/Note";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { useState } from "react";
 import { FaTrash } from "react-icons/fa";
 import { deleteWikiPage } from "../actions/deleteWikiPage";
@@ -31,7 +31,7 @@ export const DeleteWikiPageModal = ({
    * On success the action redirects to the wiki root, so there is no
    * success toast and no need to close the modal.
    */
-  const { state, formAction, isPending } = useAction(deleteWikiPage, {
+  const { state, formAction } = useAction(deleteWikiPage, {
     errorToast: false,
   });
 
@@ -76,10 +76,9 @@ export const DeleteWikiPageModal = ({
             message="Gelöschte Seiten können 30 Tage lang aus dem Papierkorb wiederhergestellt werden."
           />
 
-          <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
-            {isPending ? <AsciiSpinner /> : <FaTrash />}
+          <SubmitButton icon={<FaTrash />} className="mt-4 ml-auto">
             Löschen
-          </Button2>
+          </SubmitButton>
 
           <ActionErrorNote className="mt-4" state={state} />
         </form>

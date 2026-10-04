@@ -6,14 +6,8 @@ import { EntriesOfCitizenTable } from "@/modules/penalty-points/components/Entri
 import { PenaltyPointsFilters } from "@/modules/penalty-points/components/PenaltyPointsFilters";
 import { forbidden, notFound } from "next/navigation";
 
-type Params = Promise<
-  Readonly<{
-    id: string;
-  }>
->;
-
 export const generateMetadata = generateMetadataWithTryCatch(
-  async (props: { params: Params }) => {
+  async (props: PageProps<"/app/spynet/citizen/[id]/penalty-points">) => {
     const entity = await getCitizenById((await props.params).id);
     if (!entity) return {};
 

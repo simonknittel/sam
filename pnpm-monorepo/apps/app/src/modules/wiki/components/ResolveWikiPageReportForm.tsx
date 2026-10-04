@@ -2,9 +2,8 @@
 
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import { Button2 } from "@/modules/common/components/Button2";
 import { Textarea } from "@/modules/common/components/form/Textarea";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { FaCheck } from "react-icons/fa";
 import { resolveWikiPageReport } from "../actions/resolveWikiPageReport";
 
@@ -15,7 +14,7 @@ interface Props {
 
 /** Inline resolve form on the report detail page. */
 export const ResolveWikiPageReportForm = ({ className, reportId }: Props) => {
-  const { state, formAction, isPending } = useAction(resolveWikiPageReport, {
+  const { state, formAction } = useAction(resolveWikiPageReport, {
     errorToast: false,
   });
 
@@ -34,10 +33,9 @@ export const ResolveWikiPageReportForm = ({ className, reportId }: Props) => {
         Bedarf separat anpassen.
       </p>
 
-      <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
-        {isPending ? <AsciiSpinner /> : <FaCheck />}
+      <SubmitButton icon={<FaCheck />} className="mt-4 ml-auto">
         Als bearbeitet markieren
-      </Button2>
+      </SubmitButton>
 
       <ActionErrorNote className="mt-4" state={state} />
     </form>

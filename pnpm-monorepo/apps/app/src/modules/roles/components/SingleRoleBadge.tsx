@@ -14,6 +14,7 @@ import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Link } from "@/modules/common/components/Link";
 import { Note } from "@/modules/common/components/Note";
 import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import { type Role } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
@@ -65,18 +66,14 @@ export const SingleRoleBadge = ({
   } = useAction(deleteRoleAssignment, {
     onSuccess,
   });
-  const {
-    formAction: increaseRoleAssignmentLevelFormAction,
-    isPending: isIncreaseRoleAssignmentLevelPending,
-  } = useAction(increaseRoleAssignmentLevel, {
-    onSuccess,
-  });
-  const {
-    formAction: decreaseRoleAssignmentLevelFormAction,
-    isPending: isDecreaseRoleAssignmentLevelPending,
-  } = useAction(decreaseRoleAssignmentLevel, {
-    onSuccess,
-  });
+  const { formAction: increaseRoleAssignmentLevelFormAction } = useAction(
+    increaseRoleAssignmentLevel,
+    { onSuccess },
+  );
+  const { formAction: decreaseRoleAssignmentLevelFormAction } = useAction(
+    decreaseRoleAssignmentLevel,
+    { onSuccess },
+  );
   const removeConfirmation = useSubmitConfirmation();
 
   const role = roles.find((role) => role.id === roleId);
@@ -234,16 +231,11 @@ export const SingleRoleBadge = ({
                   <form action={decreaseRoleAssignmentLevelFormAction}>
                     <input type="hidden" name="citizenId" value={citizenId} />
                     <input type="hidden" name="roleId" value={role.id} />
-                    <Button2
+                    <SubmitButton
                       variant={Button2Variant.Secondary}
-                      disabled={isDecreaseRoleAssignmentLevelPending}
-                    >
-                      {isDecreaseRoleAssignmentLevelPending ? (
-                        <AsciiSpinner />
-                      ) : (
-                        <FaMinus />
-                      )}
-                    </Button2>
+                      icon={<FaMinus />}
+                      tooltip="Level verringern"
+                    />
                   </form>
                 )}
 
@@ -251,16 +243,11 @@ export const SingleRoleBadge = ({
                   <form action={increaseRoleAssignmentLevelFormAction}>
                     <input type="hidden" name="citizenId" value={citizenId} />
                     <input type="hidden" name="roleId" value={role.id} />
-                    <Button2
+                    <SubmitButton
                       variant={Button2Variant.Secondary}
-                      disabled={isIncreaseRoleAssignmentLevelPending}
-                    >
-                      {isIncreaseRoleAssignmentLevelPending ? (
-                        <AsciiSpinner />
-                      ) : (
-                        <FaPlus />
-                      )}
-                    </Button2>
+                      icon={<FaPlus />}
+                      tooltip="Level erhöhen"
+                    />
                   </form>
                 )}
               </div>

@@ -16,10 +16,6 @@ const s3PublicUrl = new URL(
 );
 
 const nextConfig: NextConfig = {
-  reactStrictMode: true,
-
-  cleanDistDir: true,
-
   images: {
     remotePatterns: [
       {
@@ -85,6 +81,21 @@ const nextConfig: NextConfig = {
         {
           key: "Strict-Transport-Security",
           value: "max-age=31536000; includeSubDomains; preload",
+        },
+      ],
+    },
+    /**
+     * The confirmation link has a token in its query. Thus no page that the
+     * link leads to may send this URL as the referrer. This rule must come
+     * after the rule for all paths: when two rules set the same header, the
+     * last rule wins.
+     */
+    {
+      source: "/api/confirm-email",
+      headers: [
+        {
+          key: "Referrer-Policy",
+          value: "no-referrer",
         },
       ],
     },

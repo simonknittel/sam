@@ -3,10 +3,9 @@
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import { Button2 } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import Note from "@/modules/common/components/Note";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import {
@@ -100,10 +99,10 @@ export const WikiPagePermissionsProvider = ({
     page.ownerId ? "explicit" : "inherit",
   );
 
-  const { state, formAction, isPending } = useAction(
-    updateWikiPagePermissions,
-    { errorToast: false, onSuccess: () => setIsOpen(false) },
-  );
+  const { state, formAction } = useAction(updateWikiPagePermissions, {
+    errorToast: false,
+    onSuccess: () => setIsOpen(false),
+  });
 
   const inheritedHint = (sourceTitle: string | undefined) =>
     sourceTitle
@@ -460,10 +459,9 @@ export const WikiPagePermissionsProvider = ({
             )}
           </section>
 
-          <Button2 type="submit" disabled={isPending} className="mt-8 ml-auto">
-            {isPending ? <AsciiSpinner /> : <FaSave />}
+          <SubmitButton icon={<FaSave />} className="mt-8 ml-auto">
             Speichern
-          </Button2>
+          </SubmitButton>
 
           <ActionErrorNote className="mt-4" state={state} />
         </form>

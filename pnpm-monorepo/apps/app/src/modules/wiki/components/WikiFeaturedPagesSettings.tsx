@@ -2,9 +2,9 @@
 
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Note from "@/modules/common/components/Note";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import {
   SORTABLE_HANDLE_ATTRIBUTES,
   useSortableList,
@@ -56,7 +56,7 @@ export const WikiFeaturedPagesSettings = ({ initialPages, targets }: Props) => {
   const [pages, setPages] = useState<WikiFeaturedPage[]>([...initialPages]);
   const [selectedPageId, setSelectedPageId] = useState("");
 
-  const { state, formAction, isPending } = useAction(updateWikiFeaturedPages, {
+  const { state, formAction } = useAction(updateWikiFeaturedPages, {
     errorToast: false,
   });
 
@@ -174,10 +174,9 @@ export const WikiFeaturedPagesSettings = ({ initialPages, targets }: Props) => {
           message="Featured Seiten erscheinen ganz oben auf der Wiki-Startseite — allerdings nur für die Personen, die sie auch lesen dürfen."
         />
 
-        <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
-          {isPending ? <AsciiSpinner /> : <FaSave />}
+        <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
           Speichern
-        </Button2>
+        </SubmitButton>
 
         <ActionErrorNote className="mt-4" state={state} />
       </form>

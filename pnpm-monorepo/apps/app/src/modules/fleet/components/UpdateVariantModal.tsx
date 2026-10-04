@@ -1,16 +1,15 @@
 "use client";
 
 import { runAction } from "@/modules/actions/utils/runAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import { Button2 } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { api } from "@/trpc/react";
 import {
   type Variant,
   type VariantExternalLink,
   type VariantTag,
 } from "@sam-monorepo/database/browser";
-import { useId, useTransition } from "react";
+import { useId } from "react";
 import { FaSave } from "react-icons/fa";
 import { updateVariant } from "../actions/updateVariant";
 import { VariantExternalLinkFields } from "./VariantExternalLinkFields";
@@ -27,14 +26,11 @@ interface Props {
 
 export const UpdateVariantModal = ({ onRequestClose, variant }: Props) => {
   const _variant = api.variant.getById.useQuery({ id: variant.id });
-  const [isPending, startTransition] = useTransition();
   const nameId = useId();
   const statusId = useId();
 
-  const _action = (formData: FormData) => {
-    startTransition(async () => {
-      if (await runAction(updateVariant, formData)) onRequestClose();
-    });
+  const _action = async (formData: FormData) => {
+    if (await runAction(updateVariant, formData)) onRequestClose();
   };
 
   return (
@@ -105,10 +101,9 @@ export const UpdateVariantModal = ({ onRequestClose, variant }: Props) => {
         />
 
         <div className="mt-8 flex justify-end">
-          <Button2 disabled={isPending || _variant.isFetching} type="submit">
-            {isPending ? <AsciiSpinner /> : <FaSave />}
+          <SubmitButton icon={<FaSave />} disabled={_variant.isFetching}>
             Speichern
-          </Button2>
+          </SubmitButton>
         </div>
       </form>
     </Modal>

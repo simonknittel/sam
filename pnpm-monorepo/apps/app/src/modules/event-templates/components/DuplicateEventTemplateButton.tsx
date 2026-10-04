@@ -2,10 +2,10 @@
 
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import Modal from "@/modules/common/components/Modal";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { useState } from "react";
 import { FaRegCopy, FaSave } from "react-icons/fa";
 import { duplicateEventTemplate } from "../actions/duplicateEventTemplate";
@@ -76,7 +76,7 @@ const DuplicateEventTemplateForm = ({
   name,
   onSuccess,
 }: FormProps) => {
-  const { state, formAction, isPending } = useAction(duplicateEventTemplate, {
+  const { state, formAction } = useAction(duplicateEventTemplate, {
     errorToast: false,
     onSuccess,
   });
@@ -101,10 +101,7 @@ const DuplicateEventTemplateForm = ({
       <ActionErrorNote className="mt-4" state={state} />
 
       <div className="mt-8 flex justify-end">
-        <Button2 type="submit" disabled={isPending}>
-          {isPending ? <AsciiSpinner /> : <FaSave />}
-          Duplizieren
-        </Button2>
+        <SubmitButton icon={<FaSave />}>Duplizieren</SubmitButton>
       </div>
     </form>
   );

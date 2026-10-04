@@ -4,7 +4,6 @@ import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { DateTimeInput } from "@/modules/common/components/form/DateTimeInput";
 import { NumberInput } from "@/modules/common/components/form/NumberInput";
@@ -13,6 +12,7 @@ import { Textarea } from "@/modules/common/components/form/Textarea";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import { Link } from "@/modules/common/components/Link";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { createTask } from "@/modules/tasks/actions/createTask";
 import { TASK_DESCRIPTION_MAX_LENGTH } from "@/modules/tasks/utils/taskConstraints";
 import { TaskRewardType, TaskVisibility } from "@sam-monorepo/database/browser";
@@ -51,11 +51,13 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
   ]);
 
   const [step, setStep] = useState<Step>(Step.Description);
-  const { state, formAction, isPending, getDefaultValueWithFallback } =
-    useAction(createTask, {
+  const { state, formAction, getDefaultValueWithFallback } = useAction(
+    createTask,
+    {
       errorToast: false,
       onSuccess,
-    });
+    },
+  );
   const [visibility, setVisibility] = useState<string>(TaskVisibility.PUBLIC);
   const [rewardType, setRewardType] = useState<string>(TaskRewardType.TEXT);
 
@@ -356,10 +358,9 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
           labelClassName="mt-4"
         />
 
-        <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
-          {isPending ? <AsciiSpinner /> : <FaSave />}
+        <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
           Speichern
-        </Button2>
+        </SubmitButton>
       </div>
 
       <ActionErrorNote className="mt-4" state={state} />

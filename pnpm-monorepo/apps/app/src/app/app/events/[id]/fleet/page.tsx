@@ -5,12 +5,8 @@ import { FleetTab } from "@/modules/events/components/FleetTab";
 import { getEventById } from "@/modules/events/queries/getEventById";
 import { notFound } from "next/navigation";
 
-type Params = Promise<{
-  id: string;
-}>;
-
 export const generateMetadata = generateMetadataWithTryCatch(
-  async (props: { params: Params }) => {
+  async (props: PageProps<"/app/events/[id]/fleet">) => {
     const event = await getEventById((await props.params).id);
     if (!event) notFound();
 

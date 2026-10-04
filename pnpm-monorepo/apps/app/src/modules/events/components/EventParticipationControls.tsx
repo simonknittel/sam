@@ -6,6 +6,7 @@ import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
 import { Textarea } from "@/modules/common/components/form/Textarea";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { cancelEventParticipation } from "@/modules/events/actions/cancelEventParticipation";
 import { signUpForEvent } from "@/modules/events/actions/signUpForEvent";
 import { updateEventParticipationComment } from "@/modules/events/actions/updateEventParticipationComment";
@@ -125,14 +126,9 @@ export const EventParticipationControls = ({
             classNameTextarea="h-20"
           />
 
-          <Button2
-            type="submit"
-            disabled={signUp.isPending}
-            className="mt-2 ml-auto"
-          >
-            {signUp.isPending ? <AsciiSpinner /> : <FaSignInAlt />}
+          <SubmitButton icon={<FaSignInAlt />} className="mt-2 ml-auto">
             Anmelden
-          </Button2>
+          </SubmitButton>
 
           <ActionErrorNote className="mt-2" state={signUp.state} />
         </form>
@@ -155,14 +151,9 @@ export const EventParticipationControls = ({
               classNameTextarea="h-20"
             />
 
-            <Button2
-              type="submit"
-              disabled={updateComment.isPending}
-              className="mt-2 ml-auto"
-            >
-              {updateComment.isPending ? <AsciiSpinner /> : <FaSave />}
+            <SubmitButton icon={<FaSave />} className="mt-2 ml-auto">
               Kommentar speichern
-            </Button2>
+            </SubmitButton>
 
             <ActionErrorNote className="mt-2" state={updateComment.state} />
           </form>

@@ -414,6 +414,27 @@ test("duplicating copies the diagram but grants nobody access", async ({
 const flowHandle = (page: Page, name: string) =>
   page.getByRole("button", { name: `${name} verschieben` });
 
+/** The rows of the flows table, without its header row */
+const flowRows = (page: Page) =>
+  page
+    .getByRole("main")
+    .getByRole("row")
+    .filter({ has: page.getByRole("button", { name: /verschieben$/ }) });
+
+/** Each row starts with the name of its flow */
+const expectFlowOrder = (page: Page, names: readonly string[]) =>
+  expect(flowRows(page)).toHaveText(
+    names.map((name) => new RegExp(`^${name}`)),
+  );
+
+const flowSlugsByPosition = async (prisma: PrismaClient) => {
+  const flows = await prisma.flow.findMany({
+    orderBy: { position: "asc" },
+    select: { slug: true },
+  });
+  return flows.map((flow) => flow.slug);
+};
+
 /** Each gesture moves "Erster" below "Zweiter" */
 const REORDER_GESTURES = [
   {
@@ -462,21 +483,23 @@ for (const { name, drag } of REORDER_GESTURES) {
       .poll(() => dragNarration(page))
       .toContain('"Erster" auf Position 2 von 2 abgelegt.');
 
+    /** The new order shows at once after the drop … */
+    await expectFlowOrder(page, ["Zweiter", "Erster"]);
+
+    await expect(page.getByText(SAVED_TEXT)).toBeVisible();
     await expect
-      .poll(async () => {
-        const flows = await prisma.flow.findMany({
-          orderBy: { position: "asc" },
-          select: { slug: true },
-        });
-        return flows.map((flow) => flow.slug);
-      })
+      .poll(() => flowSlugsByPosition(prisma))
       .toEqual(["zweiter", "erster"]);
+
+    /**
+     * … and stays after the save. Then the order comes from the server render
+     * that the save refreshed, not from the drop.
+     */
+    await expectFlowOrder(page, ["Zweiter", "Erster"]);
 
     /** The new order survives a reload of the settings page … */
     await page.reload();
-    await expect(page.getByRole("main").getByRole("link").first()).toHaveText(
-      "Zweiter",
-    );
+    await expectFlowOrder(page, ["Zweiter", "Erster"]);
 
     /** … and reaches the career navigation */
     await page.goto("/app/career/erster");
@@ -487,6 +510,43 @@ for (const { name, drag } of REORDER_GESTURES) {
     await expectAuditEvents(prisma, ["CAREER_FLOWS_REORDERED"]);
   });
 }
+
+test("a reorder of a stale list fails and puts the rows back", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createManager(prisma);
+  await createFlow(prisma, { name: "Erster", slug: "erster", position: 0 });
+  await createFlow(prisma, { name: "Zweiter", slug: "zweiter", position: 1 });
+
+  await signIn(manager.user);
+  await page.goto("/app/career/settings");
+  await waitForAppShellHydration(page);
+  await expectFlowOrder(page, ["Erster", "Zweiter"]);
+
+  /** A flow that the page does not show makes the order of the page stale */
+  await createFlow(prisma, { name: "Dritter", slug: "dritter", position: 2 });
+
+  await sortByKeyboard(flowHandle(page, "Erster"));
+
+  await expect(
+    page.getByText(
+      "Die Reihenfolge ist veraltet. Bitte lade die Seite neu und versuche es erneut.",
+    ),
+  ).toBeVisible();
+  await expectFlowOrder(page, ["Erster", "Zweiter"]);
+  expect(await flowSlugsByPosition(prisma)).toEqual([
+    "erster",
+    "zweiter",
+    "dritter",
+  ]);
+  expect(
+    await prisma.auditEvent.count({
+      where: { type: "CAREER_FLOWS_REORDERED" },
+    }),
+  ).toBe(0);
+});
 
 test("read access opens a flow without an edit affordance, edit access saves it", async ({
   page,
