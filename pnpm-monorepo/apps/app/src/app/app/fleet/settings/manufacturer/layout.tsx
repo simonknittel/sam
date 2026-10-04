@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { type ReactNode } from "react";
 
 export const metadata: Metadata = {
   title: {
@@ -8,12 +7,10 @@ export const metadata: Metadata = {
   },
 };
 
-interface Props {
-  readonly children?: ReactNode;
-  readonly breadcrumbs?: ReactNode;
-}
-
-export default function Layout({ children, breadcrumbs }: Props) {
+export default function Layout({
+  children,
+  breadcrumbs,
+}: LayoutProps<"/app/fleet/settings/manufacturer">) {
   return (
     <>
       <div className="mb-4 text-xl">{breadcrumbs}</div>

@@ -1,7 +1,6 @@
 import { getNavigationItems } from "@/modules/career/utils/getNavigationItems";
 import { DefaultLayout } from "@/modules/common/components/layouts/DefaultLayout";
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
   title: {
@@ -10,11 +9,7 @@ export const metadata: Metadata = {
   },
 };
 
-interface Props {
-  readonly children?: ReactNode;
-}
-
-export default async function Layout({ children }: Props) {
+export default async function Layout({ children }: LayoutProps<"/app/career">) {
   const pages = await getNavigationItems();
 
   return (

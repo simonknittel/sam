@@ -19,13 +19,8 @@ const findAppPage = (app: ExternalApp, pageSlug: string[]) => {
   return page;
 };
 
-type Params = Promise<{
-  appSlug: string;
-  pageSlug: string[];
-}>;
-
 export const generateMetadata = generateMetadataWithTryCatch(
-  async (props: { params: Params }) => {
+  async (props: PageProps<"/app/external/[appSlug]/[...pageSlug]">) => {
     const { appSlug, pageSlug } = await props.params;
     const app = await getExternalAppBySlug(appSlug);
     if (!app) notFound();

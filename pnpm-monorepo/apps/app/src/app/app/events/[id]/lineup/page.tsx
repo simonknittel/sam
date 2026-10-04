@@ -11,12 +11,8 @@ import { isLineupVisible } from "@/modules/events/utils/isLineupVisible";
 import { getVariantCatalog } from "@/modules/fleet/queries/getVariantCatalog";
 import { forbidden, notFound } from "next/navigation";
 
-type Params = Promise<{
-  id: string;
-}>;
-
 export const generateMetadata = generateMetadataWithTryCatch(
-  async (props: { params: Params }) => {
+  async (props: PageProps<"/app/events/[id]/lineup">) => {
     const event = await getEventById((await props.params).id);
     if (!event) notFound();
 

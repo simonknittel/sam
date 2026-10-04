@@ -11,12 +11,8 @@ import { CyclePhase } from "@sam-monorepo/domain";
 import { notFound } from "next/navigation";
 import { FaCog } from "react-icons/fa";
 
-type Params = Promise<{
-  id: string;
-}>;
-
 export const generateMetadata = generateMetadataWithTryCatch(
-  async (props: { params: Params }) => {
+  async (props: PageProps<"/app/sincome/[id]">) => {
     const cycleData = await getProfitDistributionCycleById(
       (await props.params).id,
     );

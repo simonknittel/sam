@@ -11,12 +11,8 @@ import { CyclePhase } from "@sam-monorepo/domain";
 import { notFound } from "next/navigation";
 import { FaChevronLeft } from "react-icons/fa";
 
-type Params = Promise<{
-  id: string;
-}>;
-
 export const generateMetadata = generateMetadataWithTryCatch(
-  async (props: { params: Params }) => {
+  async (props: PageProps<"/app/sincome/[id]/management">) => {
     const cycleData = await getProfitDistributionCycleById(
       (await props.params).id,
     );
@@ -28,8 +24,12 @@ export const generateMetadata = generateMetadataWithTryCatch(
   },
 );
 
-export default async function Page({ params }: PageProps<"/app/sincome/[id]">) {
-  const authentication = await requireAuthenticationPage("/app/sincome/[id]");
+export default async function Page({
+  params,
+}: PageProps<"/app/sincome/[id]/management">) {
+  const authentication = await requireAuthenticationPage(
+    "/app/sincome/[id]/management",
+  );
   await authentication.authorizePage("profitDistributionCycle", "manage");
 
   const cycleData = await getProfitDistributionCycleById((await params).id);

@@ -9,12 +9,8 @@ import { getEventById } from "@/modules/events/queries/getEventById";
 import { EventSource } from "@sam-monorepo/database/client";
 import { notFound } from "next/navigation";
 
-type Params = Promise<{
-  id: string;
-}>;
-
 export const generateMetadata = generateMetadataWithTryCatch(
-  async (props: { params: Params }) => {
+  async (props: PageProps<"/app/events/[id]/activity">) => {
     const event = await getEventById((await props.params).id);
     if (!event) notFound();
 

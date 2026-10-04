@@ -8,14 +8,10 @@ import { getManufacturerById } from "@/modules/fleet/queries/getManufacturerById
 import clsx from "clsx";
 import { notFound } from "next/navigation";
 
-type Params = Promise<
-  Readonly<{
-    manufacturerId: string;
-  }>
->;
-
 export const generateMetadata = generateMetadataWithTryCatch(
-  async (props: { params: Params }) => {
+  async (
+    props: PageProps<"/app/fleet/settings/manufacturer/[manufacturerId]">,
+  ) => {
     const manufacturer = await getManufacturerById(
       (await props.params).manufacturerId,
     );
@@ -27,11 +23,9 @@ export const generateMetadata = generateMetadataWithTryCatch(
   },
 );
 
-interface Props {
-  readonly params: Params;
-}
-
-export default async function Page(props: Props) {
+export default async function Page(
+  props: PageProps<"/app/fleet/settings/manufacturer/[manufacturerId]">,
+) {
   const authentication = await requireAuthenticationPage(
     "/app/fleet/settings/manufacturer/[manufacturerId]",
   );

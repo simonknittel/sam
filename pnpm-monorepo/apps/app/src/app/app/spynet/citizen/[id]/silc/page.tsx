@@ -5,14 +5,8 @@ import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMet
 import { SilcTransactions } from "@/modules/silc/components/SilcTransactions";
 import { forbidden, notFound } from "next/navigation";
 
-type Params = Promise<
-  Readonly<{
-    id: string;
-  }>
->;
-
 export const generateMetadata = generateMetadataWithTryCatch(
-  async (props: { params: Params }) => {
+  async (props: PageProps<"/app/spynet/citizen/[id]/silc">) => {
     const entity = await getCitizenById((await props.params).id);
     if (!entity) return {};
 

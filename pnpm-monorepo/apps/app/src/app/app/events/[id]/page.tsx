@@ -8,12 +8,8 @@ import { DISCORD_PUBLISH_FAILED_PARAM } from "@/modules/events/utils/eventConstr
 import { isAllowedToManageEvent } from "@/modules/events/utils/isAllowedToManageEvent";
 import { notFound } from "next/navigation";
 
-type Params = Promise<{
-  id: string;
-}>;
-
 export const generateMetadata = generateMetadataWithTryCatch(
-  async (props: { params: Params }) => {
+  async (props: PageProps<"/app/events/[id]">) => {
     const event = await getEventById((await props.params).id);
     if (!event) notFound();
 

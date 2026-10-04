@@ -2,18 +2,9 @@ import { Link } from "@/modules/common/components/Link";
 import { getSeriesAndManufacturerById } from "@/modules/fleet/queries/getSeriesAndManufacturerById";
 import { notFound } from "next/navigation";
 
-type Params = Promise<
-  Readonly<{
-    manufacturerId: string;
-    seriesId: string;
-  }>
->;
-
-interface Props {
-  readonly params: Params;
-}
-
-export default async function Page(props: Props) {
+export default async function Page(
+  props: PageProps<"/app/fleet/settings/manufacturer/[manufacturerId]/series/[seriesId]">,
+) {
   const params = await props.params;
   const [series, manufacturer] = await getSeriesAndManufacturerById(
     params.seriesId,

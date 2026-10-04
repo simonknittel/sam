@@ -5,12 +5,8 @@ import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMet
 import { resolveEmbedUrl } from "@/modules/embed-authentication/utils/resolveEmbedUrl";
 import { notFound, redirect } from "next/navigation";
 
-type Params = Promise<{
-  appSlug: string;
-}>;
-
 export const generateMetadata = generateMetadataWithTryCatch(
-  async (props: { params: Params }) => {
+  async (props: PageProps<"/app/external/[appSlug]">) => {
     const { appSlug } = await props.params;
     const app = await getExternalAppBySlug(appSlug);
     if (!app) notFound();

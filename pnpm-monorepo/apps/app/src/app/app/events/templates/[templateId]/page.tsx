@@ -16,7 +16,7 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
 export const generateMetadata = generateMetadataWithTryCatch(
-  async (props: { params: Promise<{ templateId: string }> }) => {
+  async (props: PageProps<"/app/events/templates/[templateId]">) => {
     const { templateId } = await props.params;
     const context = await getEventTemplateById(templateId);
     if (!context) return {};

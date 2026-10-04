@@ -11,12 +11,8 @@ import { isTaskUpdatable } from "@/modules/tasks/utils/isTaskUpdatable";
 import { ReadMarkerSubject } from "@sam-monorepo/domain";
 import { notFound } from "next/navigation";
 
-type Params = Promise<{
-  id: string;
-}>;
-
 export const generateMetadata = generateMetadataWithTryCatch(
-  async (props: { params: Params }) => {
+  async (props: PageProps<"/app/tasks/[id]">) => {
     const task = await getTaskById((await props.params).id);
     if (!task) notFound();
 

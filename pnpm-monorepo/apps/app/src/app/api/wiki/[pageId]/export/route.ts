@@ -6,10 +6,6 @@ import { WikiScope } from "@/modules/wiki/utils/wikiPageHref";
 import { NextResponse } from "next/server";
 import * as z from "zod";
 
-type Params = Promise<{
-  pageId: string;
-}>;
-
 const paramsSchema = z.object({ pageId: z.cuid2() });
 
 /**
@@ -18,14 +14,17 @@ const paramsSchema = z.object({ pageId: z.cuid2() });
  * pages. Read-only, no audit event, and deliberately not frozen: exporting
  * an archived briefing stays possible.
  */
-export async function GET(_request: Request, props: { params: Params }) {
+export async function GET(
+  _request: Request,
+  context: RouteContext<"/api/wiki/[pageId]/export">,
+) {
   try {
     const authentication = await requireAuthenticationApi(
       "/api/wiki/[pageId]/export",
       "GET",
     );
 
-    const paramsData = paramsSchema.parse(await props.params);
+    const paramsData = paramsSchema.parse(await context.params);
 
     /**
      * 404 instead of 403 for missing permissions, matching the wiki's

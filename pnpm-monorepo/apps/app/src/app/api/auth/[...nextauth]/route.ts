@@ -7,7 +7,7 @@ import NextAuth from "next-auth";
  */
 const handler = NextAuth(authOptions) as (
   request: Request,
-  context: { params: Promise<{ nextauth: string[] }> },
+  context: RouteContext<"/api/auth/[...nextauth]">,
 ) => Promise<Response>;
 
 export { handler as GET, handler as POST };
