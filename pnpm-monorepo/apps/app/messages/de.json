@@ -5,6 +5,7 @@
     "internalServerError": "Ein unerwarteter Fehler ist aufgetreten. Bitte probiere es später erneut. Wenn der Fehler weiterhin auftritt, wende dich an den <link>Support</link>.",
     "badRequest": "Ungültige Anfrage",
     "successfullySaved": "Erfolgreich gespeichert",
-    "successfullyDeleted": "Erfolgreich gelöscht"
+    "successfullyDeleted": "Erfolgreich gelöscht",
+    "notificationsFailed": "Die Benachrichtigungen konnten nicht gesendet werden."
   }
 }

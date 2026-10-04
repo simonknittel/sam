@@ -5,6 +5,7 @@
     "internalServerError": "An unexpected error has occurred. Please try again later. If the error persists, contact <link>support</link>.",
     "badRequest": "Bad Request",
     "successfullySaved": "Successfully saved",
-    "successfullyDeleted": "Successfully deleted"
+    "successfullyDeleted": "Successfully deleted",
+    "notificationsFailed": "The notifications could not be sent."
   }
 }

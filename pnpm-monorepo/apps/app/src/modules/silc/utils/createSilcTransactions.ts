@@ -1,4 +1,4 @@
-import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import { triggerNotificationsAfterSave } from "@/modules/notifications/utils/triggerNotification";
 import type { Prisma, SilcTransaction } from "@sam-monorepo/database/client";
 import { lockSilcLedger, updateSilcBalances } from "@sam-monorepo/domain";
 
@@ -48,18 +48,23 @@ export const createSilcTransactionsInTransaction = async (
   return createdTransactions.map((created) => created.id);
 };
 
-/** Notifies the receivers */
+/**
+ * Notifies the receivers
+ *
+ * @returns `false` if the notifications failed (see
+ * `triggerNotificationsAfterSave()`)
+ */
 export const announceSilcTransactions = async (
   transactionIds: readonly string[],
 ) => {
-  if (transactionIds.length > 0) {
-    await triggerNotifications([
-      {
-        type: "SilcTransactionsCreated",
-        payload: {
-          transactionIds: [...transactionIds],
-        },
+  if (transactionIds.length <= 0) return true;
+
+  return triggerNotificationsAfterSave([
+    {
+      type: "SilcTransactionsCreated",
+      payload: {
+        transactionIds: [...transactionIds],
       },
-    ]);
-  }
+    },
+  ]);
 };
