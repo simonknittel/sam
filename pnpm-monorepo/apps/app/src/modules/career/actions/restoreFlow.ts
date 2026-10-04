@@ -70,6 +70,8 @@ export const restoreFlow = createAuthenticatedAction(
       throw error;
     }
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.CAREER_FLOW_RESTORED,
@@ -81,8 +83,6 @@ export const restoreFlow = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return {
       success: "Der Karrierebaum wurde wiederhergestellt.",

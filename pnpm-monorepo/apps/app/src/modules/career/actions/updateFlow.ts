@@ -130,6 +130,8 @@ export const updateFlow = createAuthenticatedAction(
       }),
     ]);
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.CAREER_FLOW_UPDATED,
@@ -141,8 +143,6 @@ export const updateFlow = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

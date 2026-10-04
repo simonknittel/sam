@@ -34,12 +34,16 @@ export const reorderFlows = createAuthenticatedAction(
       givenIds.size === data.flowIds.length &&
       givenIds.size === flows.length &&
       flows.every((flow) => givenIds.has(flow.id));
-    if (!isPermutation)
+    if (!isPermutation) {
+      /** The page then shows the current list */
+      refresh();
+
       return {
         error:
-          "Die Reihenfolge ist veraltet. Bitte lade die Seite neu und versuche es erneut.",
+          "Die Reihenfolge war veraltet. Die Liste ist jetzt aktuell, bitte versuche es erneut.",
         requestPayload: formData,
       };
+    }
 
     /**
      * Positions are not unique, so the whole list can be renumbered in one
@@ -54,6 +58,8 @@ export const reorderFlows = createAuthenticatedAction(
       ),
     );
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.CAREER_FLOWS_REORDERED,
@@ -63,8 +69,6 @@ export const reorderFlows = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return {
       success: t("Common.successfullySaved"),

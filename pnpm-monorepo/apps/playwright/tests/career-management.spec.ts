@@ -511,7 +511,7 @@ for (const { name, drag } of REORDER_GESTURES) {
   });
 }
 
-test("a reorder of a stale list fails and puts the rows back", async ({
+test("a reorder of a stale list fails and shows the current list", async ({
   page,
   prisma,
   signIn,
@@ -532,10 +532,11 @@ test("a reorder of a stale list fails and puts the rows back", async ({
 
   await expect(
     page.getByText(
-      "Die Reihenfolge ist veraltet. Bitte lade die Seite neu und versuche es erneut.",
+      "Die Reihenfolge war veraltet. Die Liste ist jetzt aktuell, bitte versuche es erneut.",
     ),
   ).toBeVisible();
-  await expectFlowOrder(page, ["Erster", "Zweiter"]);
+  // The refresh shows the flow that made the order stale
+  await expectFlowOrder(page, ["Erster", "Zweiter", "Dritter"]);
   expect(await flowSlugsByPosition(prisma)).toEqual([
     "erster",
     "zweiter",

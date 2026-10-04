@@ -62,6 +62,8 @@ export const renameFlow = createAuthenticatedAction(
       throw error;
     }
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.CAREER_FLOW_RENAMED,
@@ -75,8 +77,6 @@ export const renameFlow = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return {
       success: t("Common.successfullySaved"),

@@ -26,7 +26,7 @@ export const updateFlowRoleAccess = createAuthenticatedAction(
 
     const flow = await prisma.flow.findUnique({
       where: { id: data.flowId },
-      select: { id: true, slug: true, deletedAt: true },
+      select: { id: true, deletedAt: true },
     });
     if (!flow || flow.deletedAt)
       return { error: t("Common.notFound"), requestPayload: formData };
@@ -71,6 +71,8 @@ export const updateFlowRoleAccess = createAuthenticatedAction(
       }),
     ]);
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.CAREER_FLOW_ROLE_ACCESS_UPDATED,
@@ -82,8 +84,6 @@ export const updateFlowRoleAccess = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return {
       success: t("Common.successfullySaved"),

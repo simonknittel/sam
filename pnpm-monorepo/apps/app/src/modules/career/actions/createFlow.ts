@@ -67,6 +67,8 @@ export const createFlow = createAuthenticatedAction(
       throw error;
     }
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.CAREER_FLOW_CREATED,
@@ -78,8 +80,6 @@ export const createFlow = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return {
       success: t("Common.successfullySaved"),

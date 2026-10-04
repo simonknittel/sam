@@ -158,6 +158,8 @@ export const duplicateFlow = createAuthenticatedAction(
       throw error;
     }
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.CAREER_FLOW_DUPLICATED,
@@ -172,8 +174,6 @@ export const duplicateFlow = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return {
       success: t("Common.successfullySaved"),

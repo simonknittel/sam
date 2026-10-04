@@ -39,6 +39,8 @@ export const deleteFlow = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.CAREER_FLOW_DELETED,
@@ -50,8 +52,6 @@ export const deleteFlow = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /** The detail page is gone with the flow; the list is where a restore starts */
     redirect("/app/career/settings");
