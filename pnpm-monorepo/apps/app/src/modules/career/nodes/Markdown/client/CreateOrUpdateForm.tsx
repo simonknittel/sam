@@ -6,13 +6,14 @@ import {
   FlowNodeMarkdownPosition,
   FlowNodeType,
 } from "@sam-monorepo/database/browser";
-import { applyNodeChanges } from "@xyflow/react";
+import { useReactFlow } from "@xyflow/react";
 import { useId, useState, type FormEventHandler } from "react";
 import toast from "react-hot-toast";
-import { useFlowContext } from "../../../components/FlowContext";
+import type { Markdown } from "./Node";
 import { schema } from "./schema";
 
 interface Props {
+  /** Without it, the form adds a new node */
   readonly initialData?: {
     id: string;
     backgroundColor: string;
@@ -20,11 +21,11 @@ interface Props {
     markdown: string;
     markdownPosition: FlowNodeMarkdownPosition;
   };
-  onUpdate?: FormEventHandler<HTMLFormElement>;
+  readonly onDone: () => void;
 }
 
-export const CreateOrUpdateForm = ({ initialData, onUpdate }: Props) => {
-  const { setIsCreateNodeModalOpen, setUnsaved, setNodes } = useFlowContext();
+export const CreateOrUpdateForm = ({ initialData, onDone }: Props) => {
+  const { addNodes, updateNodeData } = useReactFlow<Markdown>();
   const [markdownPosition, setMarkdownPosition] = useState<
     keyof typeof FlowNodeMarkdownPosition
   >(initialData?.markdownPosition || FlowNodeMarkdownPosition.LEFT);
@@ -34,11 +35,9 @@ export const CreateOrUpdateForm = ({ initialData, onUpdate }: Props) => {
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
-    setIsCreateNodeModalOpen(false);
 
     const formData = new FormData(event.currentTarget);
     const result = schema.safeParse({
-      id: formData.get("id"),
       markdown: formData.get("markdown"),
       markdownPosition: formData.get("markdownPosition"),
       backgroundColor: formData.get("backgroundColor"),
@@ -53,47 +52,23 @@ export const CreateOrUpdateForm = ({ initialData, onUpdate }: Props) => {
       return;
     }
 
-    setUnsaved(true);
-
-    setNodes((nds) => {
-      const data = result.data;
-
-      return applyNodeChanges(
-        [
-          {
-            type: "add",
-            item: {
-              id: data.id,
-              type: FlowNodeType.MARKDOWN,
-              position: {
-                x: 0,
-                y: 0,
-              },
-              width: 178,
-              height: 316,
-              data: {
-                markdown: data.markdown,
-                markdownPosition: data.markdownPosition,
-                backgroundColor: data.backgroundColor,
-                backgroundTransparency: data.backgroundTransparency,
-              },
-            },
-          },
-        ],
-        nds,
-      );
-    });
+    if (initialData) {
+      updateNodeData(initialData.id, result.data, { replace: true });
+    } else {
+      addNodes({
+        id: createId(),
+        type: FlowNodeType.MARKDOWN,
+        position: { x: 0, y: 0 },
+        width: 178,
+        height: 316,
+        data: result.data,
+      });
+    }
+    onDone();
   };
 
   return (
-    <form onSubmit={initialData ? onUpdate : handleSubmit}>
-      <input
-        name="id"
-        type="hidden"
-        defaultValue={initialData?.id || createId()}
-      />
-      <input name="nodeType" type="hidden" value={FlowNodeType.MARKDOWN} />
-
+    <form onSubmit={handleSubmit}>
       <label htmlFor={markdownInputId} className="mt-6 block">
         Markdown
       </label>

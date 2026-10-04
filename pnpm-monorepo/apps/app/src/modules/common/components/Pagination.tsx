@@ -2,28 +2,20 @@ import { Link } from "@/modules/common/components/Link";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 interface Props {
-  totalPages: number;
-  currentPage: number;
-  searchParams: URLSearchParams;
+  readonly totalPages: number;
+  readonly currentPage: number;
+  /** The link to a page, with the other search parameters of the table */
+  readonly getHref: (searchParams: { readonly page: number }) => string;
 }
 
-const Pagination = ({
-  totalPages,
-  currentPage,
-  searchParams,
-}: Readonly<Props>) => {
-  const prevSearchParams = new URLSearchParams(searchParams);
-  prevSearchParams.set("page", (currentPage - 1).toString());
-
-  const nextSearchparams = new URLSearchParams(searchParams);
-  nextSearchparams.set("page", (currentPage + 1).toString());
-
+const Pagination = ({ totalPages, currentPage, getHref }: Props) => {
   return (
     <div className="flex h-11">
       {currentPage > 1 ? (
         <Link
-          href={`?${prevSearchParams.toString()}`}
-          className="flex w-11 items-center justify-center rounded-l border border-brand-red-500 text-brand-red-500 hover:border-brand-red-300 hover:text-brand-red-300"
+          href={getHref({ page: currentPage - 1 })}
+          aria-label="Vorherige Seite"
+          className="flex w-11 items-center justify-center rounded-l border border-brand-red-500 text-brand-red-500 hover:border-brand-red-300 hover:text-brand-red-300 focus-visible:border-brand-red-300 focus-visible:text-brand-red-300 active:border-brand-red-700 active:text-brand-red-700"
         >
           <FaChevronLeft />
         </Link>
@@ -39,8 +31,9 @@ const Pagination = ({
 
       {currentPage + 1 <= totalPages ? (
         <Link
-          href={`?${nextSearchparams.toString()}`}
-          className="flex w-11 items-center justify-center rounded-r border border-brand-red-500 text-brand-red-500 hover:border-brand-red-300 hover:text-brand-red-300"
+          href={getHref({ page: currentPage + 1 })}
+          aria-label="Nächste Seite"
+          className="flex w-11 items-center justify-center rounded-r border border-brand-red-500 text-brand-red-500 hover:border-brand-red-300 hover:text-brand-red-300 focus-visible:border-brand-red-300 focus-visible:text-brand-red-300 active:border-brand-red-700 active:text-brand-red-700"
         >
           <FaChevronRight />
         </Link>

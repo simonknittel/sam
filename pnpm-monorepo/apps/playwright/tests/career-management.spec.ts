@@ -1,5 +1,5 @@
-import type { Page } from "@playwright/test";
-import type { PrismaClient } from "@sam-monorepo/database/client";
+import type { Locator, Page } from "@playwright/test";
+import { FlowNodeType, type PrismaClient } from "@sam-monorepo/database/client";
 import { expectAuditEvents } from "../fixtures/audit";
 import {
   assignRole,
@@ -15,8 +15,15 @@ import {
   NOT_FOUND_TEXT,
   SAVED_TEXT,
   sectionByHeading,
+  toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
+import {
+  dragNarration,
+  sortByKeyboard,
+  sortByMouse,
+  sortByTouch,
+} from "../fixtures/sortable-list";
 import { expect, test } from "../fixtures/test";
 
 /**
@@ -38,15 +45,6 @@ const accessForm = (page: Page) =>
     .filter({ has: page.getByRole("button", { name: "Rolle hinzufügen" }) });
 
 /**
- * dnd-kit narrates every step of a drag in an aria-live region. Waiting for
- * the narration to change is what keeps a keyboard drag honest: pressing the
- * next key before the library processed the previous one leaves the row
- * where it was, which no real keyboard user could produce.
- */
-const dragNarration = async (page: Page) =>
-  (await page.getByRole("status").allTextContents()).join(" ");
-
-/**
  * Whether the page as a whole scrolls sideways. Wide content is supposed to
  * scroll inside its own container, never to drag the document with it.
  */
@@ -56,6 +54,45 @@ const hasHorizontalPageOverflow = (page: Page) =>
       document.documentElement.scrollWidth >
       document.documentElement.clientWidth,
   );
+
+/** The notice of the flow editor until a save succeeds */
+const UNSAVED_TEXT = "Ungespeicherte Änderungen";
+
+/**
+ * React Flow marks its nodes and edges with these role descriptions. Nodes
+ * have no accessible name, thus a test finds a node by its text.
+ */
+const flowNodes = (page: Page) => page.locator('[aria-roledescription="node"]');
+const flowEdges = (page: Page) => page.locator('[aria-roledescription="edge"]');
+
+const enterEditMode = (page: Page) =>
+  clickUntilVisible(
+    page.getByRole("button", { name: "Bearbeiten de-/aktivieren" }),
+    page.getByRole("button", { name: "Element hinzufügen" }),
+  );
+
+/**
+ * Selects a node the way a keyboard user does. Only the selected node shows
+ * its toolbar with the edit and the delete button. The toolbar of the node
+ * that was selected before can still show until React Flow marks the new
+ * node, thus the test waits for that mark.
+ */
+const selectNode = async (page: Page, node: Locator) => {
+  await node.focus();
+  await page.keyboard.press("Enter");
+  await expect(node).toHaveClass(/\bselected\b/);
+};
+
+/**
+ * Only a successful save removes the notice. The toast of the previous save
+ * can still show, thus the notice is the signal. Call it after the dialogs
+ * closed: they have a "Speichern" button too.
+ */
+const saveFlow = async (page: Page) => {
+  await expect(page.getByText(UNSAVED_TEXT)).toBeVisible();
+  await page.getByRole("button", { name: "Speichern" }).click();
+  await expect(page.getByText(UNSAVED_TEXT)).toHaveCount(0);
+};
 
 test("a manager creates a flow, renames it, deletes it and restores it", async ({
   page,
@@ -374,52 +411,32 @@ test("duplicating copies the diagram but grants nobody access", async ({
   await expectAuditEvents(prisma, ["CAREER_FLOW_DUPLICATED"]);
 });
 
-/** Moves "Erster" below "Zweiter" the way a keyboard user does. */
-const reorderByKeyboard = async (page: Page) => {
-  await page.getByRole("button", { name: "Erster verschieben" }).focus();
+const flowHandle = (page: Page, name: string) =>
+  page.getByRole("button", { name: `${name} verschieben` });
 
-  await page.keyboard.press("Space");
-  await expect.poll(() => dragNarration(page)).toContain("Draggable item");
-  const afterPickup = await dragNarration(page);
-
-  await page.keyboard.press("ArrowDown");
-  await expect.poll(() => dragNarration(page)).not.toBe(afterPickup);
-
-  await page.keyboard.press("Space");
-};
-
-/** The same move by pointer, which also exercises the drag overlay */
-const reorderByMouse = async (page: Page) => {
-  const source = page.getByRole("button", { name: "Erster verschieben" });
-  const target = page.getByRole("button", { name: "Zweiter verschieben" });
-  const sourceBox = (await source.boundingBox())!;
-  const targetBox = (await target.boundingBox())!;
-
-  await page.mouse.move(
-    sourceBox.x + sourceBox.width / 2,
-    sourceBox.y + sourceBox.height / 2,
-  );
-  await page.mouse.down();
-  /** The pointer sensor only starts a drag after a few pixels of travel */
-  await page.mouse.move(
-    sourceBox.x + sourceBox.width / 2,
-    sourceBox.y + sourceBox.height / 2 + 20,
-    { steps: 5 },
-  );
-  await page.mouse.move(
-    targetBox.x + targetBox.width / 2,
-    targetBox.y + targetBox.height,
-    { steps: 10 },
-  );
-  /** The dragged row is pinned to its column and its container mid-drag */
-  expect(await hasHorizontalPageOverflow(page)).toBe(false);
-
-  await page.mouse.up();
-};
-
+/** Each gesture moves "Erster" below "Zweiter" */
 const REORDER_GESTURES = [
-  { name: "keyboard", drag: reorderByKeyboard },
-  { name: "mouse", drag: reorderByMouse },
+  {
+    name: "keyboard",
+    drag: (page: Page) => sortByKeyboard(flowHandle(page, "Erster")),
+  },
+  {
+    name: "mouse",
+    drag: (page: Page) =>
+      sortByMouse(
+        flowHandle(page, "Erster"),
+        flowHandle(page, "Zweiter"),
+        async () => {
+          /** The dragged row is pinned to its column and its container */
+          expect(await hasHorizontalPageOverflow(page)).toBe(false);
+        },
+      ),
+  },
+  {
+    name: "touch",
+    drag: (page: Page) =>
+      sortByTouch(flowHandle(page, "Erster"), flowHandle(page, "Zweiter")),
+  },
 ] as const;
 
 for (const { name, drag } of REORDER_GESTURES) {
@@ -436,7 +453,14 @@ for (const { name, drag } of REORDER_GESTURES) {
     await page.goto("/app/career/settings");
     await waitForAppShellHydration(page);
 
+    /** Screen readers get German texts with the name, not with the id */
+    await expect(flowHandle(page, "Erster")).toHaveAccessibleDescription(
+      /Leertaste/,
+    );
     await drag(page);
+    await expect
+      .poll(() => dragNarration(page))
+      .toContain('"Erster" auf Position 2 von 2 abgelegt.');
 
     await expect
       .poll(async () => {
@@ -523,6 +547,232 @@ test("read access opens a flow without an edit affordance, edit access saves it"
   await page.goto("/app/career/academy");
   await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible();
 });
+
+test("the editor edits, deletes and adds a node, and each save keeps the change", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createManager(prisma);
+  /**
+   * Two nodes with an edge between them, thus the delete must also remove
+   * the edge
+   */
+  const flow = await createFlow(prisma, {
+    name: "Academy",
+    slug: "academy",
+    markdownNodes: ["Erster Knoten", "Zweiter Knoten"],
+  });
+  const savedMarkdown = async () => {
+    const nodes = await prisma.flowNode.findMany({
+      where: { flowId: flow.id },
+      select: { markdown: true },
+    });
+    return nodes.map((node) => node.markdown).toSorted();
+  };
+  const savedEdgeCount = () =>
+    prisma.flowEdge.count({ where: { source: { flowId: flow.id } } });
+
+  await signIn(manager.user);
+  await page.goto("/app/career/academy");
+  await enterEditMode(page);
+  await expect(flowEdges(page)).toHaveCount(1);
+
+  /**
+   * Edit
+   */
+  await selectNode(page, flowNodes(page).filter({ hasText: "Erster Knoten" }));
+  const editDialog = modal(page, "Element bearbeiten");
+  await page.getByRole("button", { name: "Bearbeiten", exact: true }).click();
+  await editDialog
+    .getByRole("textbox", { name: "Markdown" })
+    .fill("Bearbeiteter Knoten");
+  await editDialog.getByRole("button", { name: "Speichern" }).click();
+  await expect(editDialog).toBeHidden();
+
+  await expect(
+    flowNodes(page).filter({ hasText: "Bearbeiteter Knoten" }),
+  ).toBeVisible();
+  await saveFlow(page);
+  await expect
+    .poll(savedMarkdown)
+    .toEqual(["Bearbeiteter Knoten", "Zweiter Knoten"]);
+  expect(await savedEdgeCount()).toBe(1);
+
+  /**
+   * Delete
+   */
+  await selectNode(page, flowNodes(page).filter({ hasText: "Zweiter Knoten" }));
+  await page.getByRole("button", { name: "Löschen", exact: true }).click();
+
+  await expect(flowNodes(page)).toHaveCount(1);
+  await expect(flowEdges(page)).toHaveCount(0);
+  /** The server refuses an edge to a node that the save does not include */
+  await saveFlow(page);
+  await expect.poll(savedMarkdown).toEqual(["Bearbeiteter Knoten"]);
+  expect(await savedEdgeCount()).toBe(0);
+
+  /**
+   * Add
+   */
+  const addDialog = modal(page, "Element hinzufügen");
+  await page.getByRole("button", { name: "Element hinzufügen" }).click();
+  await toggleLabel(
+    addDialog.getByRole("radiogroup", { name: "Typ" }),
+    "Markdown",
+  ).click();
+  await addDialog
+    .getByRole("textbox", { name: "Markdown" })
+    .fill("Neuer Knoten");
+  await addDialog.getByRole("button", { name: "Speichern" }).click();
+  await expect(addDialog).toBeHidden();
+
+  await expect(
+    flowNodes(page).filter({ hasText: "Neuer Knoten" }),
+  ).toBeVisible();
+  await saveFlow(page);
+  await expect
+    .poll(savedMarkdown)
+    .toEqual(["Bearbeiteter Knoten", "Neuer Knoten"]);
+
+  /** A reload shows what the database has */
+  await page.reload();
+  await expect(flowNodes(page)).toHaveCount(2);
+  await expect(page.getByText("Bearbeiteter Knoten")).toBeVisible();
+  await expect(page.getByText("Neuer Knoten")).toBeVisible();
+});
+
+test("Backspace deletes the selected node only in edit mode and never from the node dialog", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createManager(prisma);
+  await createFlow(prisma, {
+    name: "Academy",
+    slug: "academy",
+    markdownNodes: ["Erster Knoten"],
+  });
+  const node = flowNodes(page).filter({ hasText: "Erster Knoten" });
+
+  await signIn(manager.user);
+  await page.goto("/app/career/academy");
+  await waitForAppShellHydration(page);
+
+  /**
+   * View mode: a click selects the node, but the node shows no resize
+   * handles and Backspace does not delete it
+   */
+  await node.click();
+  await expect(node).toHaveClass(/\bselected\b/);
+  await expect(page.locator(".react-flow__resize-control")).toHaveCount(0);
+  await page.keyboard.press("Backspace");
+
+  /** The page handled the key before the switch to edit mode */
+  await enterEditMode(page);
+  await expect(flowNodes(page)).toHaveCount(1);
+  await expect(page.getByText(UNSAVED_TEXT)).toHaveCount(0);
+
+  /**
+   * Edit mode: Backspace in the node dialog does not delete the node
+   */
+  await selectNode(page, node);
+  const editDialog = modal(page, "Element bearbeiten");
+  await page.getByRole("button", { name: "Bearbeiten", exact: true }).click();
+  await editDialog.getByRole("button", { name: "Speichern" }).focus();
+  await page.keyboard.press("Backspace");
+  await expect(editDialog).toBeVisible();
+  await expect(flowNodes(page)).toHaveCount(1);
+  await editDialog.getByRole("button", { name: "Schließen" }).click();
+  await expect(editDialog).toBeHidden();
+
+  /** Outside of the dialog, Backspace deletes the selected node */
+  await selectNode(page, node);
+  await page.keyboard.press("Backspace");
+  await expect(flowNodes(page)).toHaveCount(0);
+  await expect(page.getByText(UNSAVED_TEXT)).toBeVisible();
+});
+
+/**
+ * The role node types have their own forms and node components. "Rolle" is
+ * also a part of "Citizen einer Rolle", thus a pattern matches the full label.
+ */
+const ROLE_NODE_TYPES = [
+  { label: /^Rolle$/, type: FlowNodeType.ROLE },
+  { label: "Citizen einer Rolle", type: FlowNodeType.ROLE_CITIZENS },
+] as const;
+
+for (const { label, type } of ROLE_NODE_TYPES) {
+  test(`the editor adds, edits and deletes a ${type} node`, async ({
+    page,
+    prisma,
+    signIn,
+  }) => {
+    /** The manager's role is the only role, thus the form selects it */
+    const manager = await createManager(prisma);
+    const flow = await createFlow(prisma, { name: "Academy", slug: "academy" });
+    const savedNodes = () =>
+      prisma.flowNode.findMany({
+        where: { flowId: flow.id },
+        select: { type: true, roleId: true, showUnlocked: true },
+      });
+
+    await signIn(manager.user);
+    await page.goto("/app/career/academy");
+    await enterEditMode(page);
+
+    /**
+     * Add
+     */
+    const addDialog = modal(page, "Element hinzufügen");
+    await page.getByRole("button", { name: "Element hinzufügen" }).click();
+    await toggleLabel(
+      addDialog.getByRole("radiogroup", { name: "Typ" }),
+      label,
+    ).click();
+    await expect(
+      addDialog.getByRole("combobox", { name: "Rolle" }),
+    ).toHaveValue(manager.role.id);
+    await addDialog.getByRole("button", { name: "Speichern" }).click();
+    await expect(addDialog).toBeHidden();
+
+    await expect(flowNodes(page)).toHaveCount(1);
+    await saveFlow(page);
+    await expect
+      .poll(savedNodes)
+      .toEqual([{ type, roleId: manager.role.id, showUnlocked: false }]);
+
+    /**
+     * Edit
+     */
+    await selectNode(page, flowNodes(page));
+    const editDialog = modal(page, "Element bearbeiten");
+    await page.getByRole("button", { name: "Bearbeiten", exact: true }).click();
+    await toggleLabel(
+      editDialog.getByRole("radiogroup", {
+        name: "Dauerhaft farbig anzeigen",
+      }),
+      "ja",
+    ).click();
+    await editDialog.getByRole("button", { name: "Speichern" }).click();
+    await expect(editDialog).toBeHidden();
+
+    await saveFlow(page);
+    await expect
+      .poll(savedNodes)
+      .toEqual([{ type, roleId: manager.role.id, showUnlocked: true }]);
+
+    /**
+     * Delete
+     */
+    await selectNode(page, flowNodes(page));
+    await page.getByRole("button", { name: "Löschen", exact: true }).click();
+
+    await expect(flowNodes(page)).toHaveCount(0);
+    await saveFlow(page);
+    await expect.poll(savedNodes).toEqual([]);
+  });
+}
 
 test("granting access in the management UI lets a role read the flow", async ({
   page,

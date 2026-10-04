@@ -1,7 +1,6 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
-import { searchParamsNextjsToURLSearchParams } from "@/modules/common/utils/searchParamsNextjsToURLSearchParams";
 import { ParticipantsTab } from "@/modules/events/components/ParticipantsTab";
 import { getEventById } from "@/modules/events/queries/getEventById";
 import { notFound } from "next/navigation";
@@ -32,12 +31,9 @@ export default async function Page({
   const event = await getEventById(eventId);
   if (!event) notFound();
 
-  const urlSearchParams =
-    await searchParamsNextjsToURLSearchParams(searchParams);
-
   return (
     <SuspenseWithErrorBoundaryTile>
-      <ParticipantsTab event={event} urlSearchParams={urlSearchParams} />
+      <ParticipantsTab event={event} searchParams={searchParams} />
     </SuspenseWithErrorBoundaryTile>
   );
 }

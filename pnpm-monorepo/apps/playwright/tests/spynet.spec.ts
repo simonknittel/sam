@@ -3,7 +3,12 @@ import {
   ConfirmationStatus,
   type PrismaClient,
 } from "@sam-monorepo/database/client";
-import { createCitizen } from "../fixtures/factories";
+import {
+  assignRole,
+  createCitizen,
+  createRole,
+  ONE_MINUTE_MS,
+} from "../fixtures/factories";
 import {
   clickUntilUrl,
   clickUntilVisible,
@@ -395,4 +400,195 @@ test("the citizen table paginates and filters", async ({
     /filters=unknown-handle/,
   );
   await expect(page.locator("tbody tr")).toHaveCount(UNNAMED_CITIZENS);
+});
+
+/**
+ * Only the visible rows: while the page streams, React keeps a hidden copy of
+ * the table next to the visible one
+ */
+const citizenTableRows = (page: Page) =>
+  page.locator("tbody tr").filter({ visible: true });
+
+const citizenTableHeaderLink = (page: Page, name: string) =>
+  page.locator("thead").getByRole("link", { name, exact: true });
+
+const citizenTableColumnHeader = (page: Page, name: string) =>
+  page.locator("thead").getByRole("columnheader", { name });
+
+test("the citizen table sorts by its column headers and keeps the sort on the other pages", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const viewer = await createCitizen(prisma, {
+    handle: "tabellen-sortierer",
+    permissionStrings: ["citizen;read", "spynetCitizen;read"],
+  });
+
+  /**
+   * "bewohner-01" is the newest of them, "bewohner-51" the oldest. With the
+   * viewer, the table has 52 rows: two on the second page.
+   */
+  const now = Date.now();
+  await prisma.citizen.createMany({
+    data: Array.from({ length: 51 }, (unused, index) => ({
+      handle: `bewohner-${String(index + 1).padStart(2, "0")}`,
+      createdById: viewer.entity.id,
+      createdAt: new Date(now - (index + 1) * ONE_MINUTE_MS),
+    })),
+  });
+  const rows = citizenTableRows(page);
+
+  await signIn(viewer.user);
+  await page.goto("/app/spynet/citizen");
+  await expect(rows.first()).toContainText("tabellen-sortierer");
+  await expect(rows.nth(1)).toContainText("bewohner-01");
+  await expect(citizenTableColumnHeader(page, "Erstellt am")).toHaveAttribute(
+    "aria-sort",
+    "descending",
+  );
+  await expect(citizenTableColumnHeader(page, "Handle")).not.toHaveAttribute(
+    "aria-sort",
+  );
+
+  await citizenTableHeaderLink(page, "Handle").click();
+  await expect(page).toHaveURL(/sort=handle-asc/);
+  await expect(rows.first()).toContainText("bewohner-01");
+  await expect(citizenTableColumnHeader(page, "Handle")).toHaveAttribute(
+    "aria-sort",
+    "ascending",
+  );
+  await expect(
+    citizenTableColumnHeader(page, "Erstellt am"),
+  ).not.toHaveAttribute("aria-sort");
+
+  await page.getByRole("link", { name: "Nächste Seite" }).click();
+  await expect(page).toHaveURL(/page=2/);
+  await expect(page).toHaveURL(/sort=handle-asc/);
+  await expect(page.getByText("2 / 2")).toBeVisible();
+  await expect(rows).toHaveCount(2);
+  await expect(rows.first()).toContainText("bewohner-51");
+
+  // A second click changes the direction and keeps the page
+  await citizenTableHeaderLink(page, "Handle").click();
+  await expect(page).toHaveURL(/sort=handle-desc/);
+  await expect(page).toHaveURL(/page=2/);
+  await expect(rows.first()).toContainText("bewohner-02");
+  await expect(citizenTableColumnHeader(page, "Handle")).toHaveAttribute(
+    "aria-sort",
+    "descending",
+  );
+
+  await page.getByRole("link", { name: "Vorherige Seite" }).click();
+  await expect(page).toHaveURL(/\/app\/spynet\/citizen\?sort=handle-desc$/);
+  await expect(page.getByText("1 / 2")).toBeVisible();
+  await expect(rows.nth(1)).toContainText("bewohner-51");
+
+  // The default sort leaves no sort parameter in the URL
+  await citizenTableHeaderLink(page, "Erstellt am").click();
+  await expect(page).toHaveURL(/\/app\/spynet\/citizen$/);
+  await expect(rows.nth(1)).toContainText("bewohner-01");
+
+  await citizenTableHeaderLink(page, "Erstellt am").click();
+  await expect(page).toHaveURL(/sort=created-at-asc/);
+  await expect(rows.first()).toContainText("bewohner-51");
+});
+
+test("the citizen table shows the first page for a page number that is not a page", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const viewer = await createCitizen(prisma, {
+    handle: "seiten-zaehler",
+    permissionStrings: ["citizen;read", "spynetCitizen;read"],
+  });
+
+  /** With the viewer, the table has 51 rows. The viewer is the newest. */
+  const now = Date.now();
+  await prisma.citizen.createMany({
+    data: Array.from({ length: 50 }, (unused, index) => ({
+      handle: `bewohner-${String(index + 1).padStart(2, "0")}`,
+      createdById: viewer.entity.id,
+      createdAt: new Date(now - (index + 1) * ONE_MINUTE_MS),
+    })),
+  });
+  const rows = citizenTableRows(page);
+
+  await signIn(viewer.user);
+
+  /** The last value is larger than Number.MAX_SAFE_INTEGER */
+  for (const pageParameter of ["0", "-1", "9007199254740993"]) {
+    await page.goto(`/app/spynet/citizen?page=${pageParameter}`);
+    await expect(
+      page.getByText("1 / 2").filter({ visible: true }),
+    ).toBeVisible();
+    await expect(rows).toHaveCount(50);
+    await expect(rows.first()).toContainText("seiten-zaehler");
+  }
+});
+
+test("an old bookmark with comma-separated filters still filters the citizen table", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const miningRole = await createRole(prisma, { name: "Bergbau" });
+  const viewer = await createCitizen(prisma, {
+    handle: "lesezeichen-leser",
+    permissionStrings: [
+      "citizen;read",
+      "spynetCitizen;read",
+      `otherRole;read;roleId=${miningRole.id}`,
+    ],
+  });
+  const unnamedWithRole = await prisma.citizen.create({
+    data: { spectrumId: "OHNE-HANDLE-MIT-ROLLE" },
+  });
+  await assignRole(prisma, unnamedWithRole, miningRole);
+  await prisma.citizen.create({
+    data: { spectrumId: "OHNE-HANDLE-OHNE-ROLLE" },
+  });
+  const namedWithRole = await prisma.citizen.create({
+    data: { handle: "mit-handle-und-rolle" },
+  });
+  await assignRole(prisma, namedWithRole, miningRole);
+  const rows = citizenTableRows(page);
+
+  await signIn(viewer.user);
+
+  /**
+   * The format of the filter list before nuqs: URLSearchParams encoded the
+   * comma. Only the citizen without a handle and with the role matches both
+   * filters.
+   */
+  await page.goto(
+    `/app/spynet/citizen?filters=unknown-handle%2Crole-${miningRole.id}`,
+  );
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first()).toContainText("OHNE-HANDLE-MIT-ROLLE");
+
+  // The format of nuqs, on a page after the last one
+  await page.goto(
+    `/app/spynet/citizen?filters=unknown-handle,role-${miningRole.id}&page=2`,
+  );
+  await expect(page.getByText("2 / 1")).toBeVisible();
+  await expect(rows).toHaveCount(0);
+
+  // The checkboxes show the filters of the URL, and a change goes back to the first page
+  const roleFilter = page.getByRole("dialog", { name: "Rollen" });
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Rollen", exact: true }),
+    roleFilter,
+  );
+  await expect(
+    roleFilter.getByRole("checkbox", { name: "Bergbau" }),
+  ).toBeChecked();
+  await clickUntilUrl(
+    page,
+    toggleLabel(roleFilter, "Bergbau"),
+    /\/app\/spynet\/citizen\?filters=unknown-handle$/,
+  );
+  await expect(page.getByText("1 / 1")).toBeVisible();
+  await expect(rows).toHaveCount(2);
 });

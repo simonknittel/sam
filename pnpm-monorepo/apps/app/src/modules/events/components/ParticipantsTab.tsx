@@ -3,6 +3,10 @@ import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import { RolesCell } from "@/modules/citizen/components/RolesCell";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { Link } from "@/modules/common/components/Link";
+import {
+  SortableColumnHeader,
+  SortDirection,
+} from "@/modules/common/components/SortableColumnHeader";
 import { Tile } from "@/modules/common/components/Tile";
 import { Tooltip } from "@/modules/common/components/Tooltip";
 import { formatDate } from "@/modules/common/utils/formatDate";
@@ -10,7 +14,6 @@ import {
   sortAscWithAndNullLast,
   sortDescAndNullLast,
 } from "@/modules/common/utils/sorting";
-import { toggleSortParam } from "@/modules/common/utils/toggleSortParam";
 import type {
   EventCitizenReference,
   EventParticipantRow,
@@ -20,6 +23,12 @@ import { EventSource, type Event } from "@sam-monorepo/database/client";
 import { DELETED_CITIZEN_LABEL } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { forbidden } from "next/navigation";
+import {
+  createLoader,
+  createSerializer,
+  parseAsStringEnum,
+  type SearchParams,
+} from "nuqs/server";
 import { Suspense } from "react";
 import {
   FaInfoCircle,
@@ -36,6 +45,21 @@ import { CreateManagers } from "./CreateManagers";
 import { DeleteManager } from "./DeleteManager";
 import { RemoveEventParticipant } from "./RemoveEventParticipant";
 
+enum ParticipantSort {
+  CitizenAscending = "citizen-asc",
+  CitizenDescending = "citizen-desc",
+  JoinedAtAscending = "joined-at-asc",
+  JoinedAtDescending = "joined-at-desc",
+}
+
+const searchParamsParsers = {
+  sort: parseAsStringEnum(Object.values(ParticipantSort)).withDefault(
+    ParticipantSort.CitizenAscending,
+  ),
+};
+const loadSearchParams = createLoader(searchParamsParsers);
+const serializeSearchParams = createSerializer(searchParamsParsers);
+
 interface Props {
   readonly className?: string;
   readonly event: Event & {
@@ -43,13 +67,13 @@ interface Props {
     readonly managers: EventCitizenReference[];
     readonly createdBy?: EventCitizenReference | null;
   };
-  readonly urlSearchParams: URLSearchParams;
+  readonly searchParams: Promise<SearchParams>;
 }
 
 export const ParticipantsTab = async ({
   className,
   event,
-  urlSearchParams,
+  searchParams,
 }: Props) => {
   const authentication = await requireAuthentication();
   if (!authentication.session.entity) forbidden();
@@ -75,31 +99,30 @@ export const ParticipantsTab = async ({
 
   const resolvedParticipants = await getParticipants(event);
 
-  const citizenSearchParams = toggleSortParam(urlSearchParams, "citizen", {
-    treatMissingAs: "citizen-asc",
-  });
-  const joinedAtSearchParams = toggleSortParam(urlSearchParams, "joined-at");
+  const { sort } = await loadSearchParams(searchParams);
+  const getSortHref = (values: { readonly sort: ParticipantSort }) =>
+    serializeSearchParams(`/app/events/${event.id}/participants`, values);
 
   const sortedResolvedParticipants = resolvedParticipants.toSorted((a, b) => {
-    switch (urlSearchParams.get("sort")) {
-      case "citizen-asc":
+    switch (sort) {
+      case ParticipantSort.CitizenAscending:
         return sortAscWithAndNullLast(a.citizen.handle, b.citizen.handle);
-      case "citizen-desc":
+      case ParticipantSort.CitizenDescending:
         return sortDescAndNullLast(a.citizen.handle, b.citizen.handle);
 
-      case "joined-at-asc":
+      case ParticipantSort.JoinedAtAscending:
         return sortAscWithAndNullLast(
           a.participant?.createdAt?.getTime(),
           b.participant?.createdAt?.getTime(),
         );
-      case "joined-at-desc":
+      case ParticipantSort.JoinedAtDescending:
         return sortDescAndNullLast(
           a.participant?.createdAt?.getTime(),
           b.participant?.createdAt?.getTime(),
         );
 
       default:
-        return sortAscWithAndNullLast(a.citizen.handle, b.citizen.handle);
+        throw new Error(`Unknown sort: ${sort satisfies never}`);
     }
   });
 
@@ -207,42 +230,42 @@ export const ParticipantsTab = async ({
                   gridCols,
                 )}
               >
-                <th className="px-2">
-                  <Link
-                    href={`?${citizenSearchParams.toString()}`}
-                    className="flex cursor-pointer items-center gap-2 whitespace-nowrap select-none hover:text-neutral-300"
-                  >
-                    Citizen
-                    {(!urlSearchParams.has("sort") ||
-                      urlSearchParams.get("sort") === "citizen-asc") && (
-                      <FaSortAlphaDown />
-                    )}
-                    {urlSearchParams.get("sort") === "citizen-desc" && (
-                      <FaSortAlphaUp />
-                    )}
-                  </Link>
-                </th>
+                <SortableColumnHeader
+                  className="px-2"
+                  sort={sort}
+                  ascending={ParticipantSort.CitizenAscending}
+                  descending={ParticipantSort.CitizenDescending}
+                  firstDirection={SortDirection.Ascending}
+                  getHref={getSortHref}
+                  icons={{
+                    ascending: <FaSortAlphaDown />,
+                    descending: <FaSortAlphaUp />,
+                  }}
+                >
+                  Citizen
+                </SortableColumnHeader>
 
-                <th className="flex items-center gap-2">
-                  <Link
-                    href={`?${joinedAtSearchParams.toString()}`}
-                    className="flex cursor-pointer items-center gap-2 whitespace-nowrap select-none hover:text-neutral-300"
-                  >
-                    Zugesagt am
-                    {urlSearchParams.get("sort") === "joined-at-asc" && (
-                      <FaSortNumericDown />
-                    )}
-                    {urlSearchParams.get("sort") === "joined-at-desc" && (
-                      <FaSortNumericUp />
-                    )}
-                  </Link>
-
-                  {!isAppEvent && (
-                    <Tooltip triggerChildren={<FaInfoCircle />}>
-                      Auf etwa 4 Minuten genau
-                    </Tooltip>
-                  )}
-                </th>
+                <SortableColumnHeader
+                  className="flex items-center gap-2"
+                  sort={sort}
+                  ascending={ParticipantSort.JoinedAtAscending}
+                  descending={ParticipantSort.JoinedAtDescending}
+                  firstDirection={SortDirection.Ascending}
+                  getHref={getSortHref}
+                  icons={{
+                    ascending: <FaSortNumericDown />,
+                    descending: <FaSortNumericUp />,
+                  }}
+                  addition={
+                    !isAppEvent && (
+                      <Tooltip triggerChildren={<FaInfoCircle />}>
+                        Auf etwa 4 Minuten genau
+                      </Tooltip>
+                    )
+                  }
+                >
+                  Zugesagt am
+                </SortableColumnHeader>
 
                 {isAppEvent && (
                   <th className="truncate" title="Kommentar">

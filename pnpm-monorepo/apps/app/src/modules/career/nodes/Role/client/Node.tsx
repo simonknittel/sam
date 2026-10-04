@@ -8,45 +8,31 @@ import { useRolesContext } from "@/modules/roles/components/RolesContext";
 import {
   FlowNodeRoleImage,
   FlowNodeType,
-  type Role,
-  type Upload,
 } from "@sam-monorepo/database/browser";
 import {
-  applyNodeChanges,
   NodeResizer,
   NodeToolbar,
   Position,
-  useNodeId,
   useReactFlow,
   type NodeProps,
   type Node as NodeType,
 } from "@xyflow/react";
 import clsx from "clsx";
 import Image from "next/image";
-import {
-  useCallback,
-  useState,
-  type ComponentType,
-  type FormEventHandler,
-} from "react";
-import toast from "react-hot-toast";
+import { useCallback, useState, type ComponentType } from "react";
 import { FaPen } from "react-icons/fa";
 import { FaTrash } from "react-icons/fa6";
 import { CreateOrUpdateNodeModal } from "../../../components/CreateOrUpdateNodeModal";
 import { useFlowContext } from "../../../components/FlowContext";
 import { getBackground } from "../../../utils/getBackground";
 import type { AdditionalDataType } from "./additionalDataType";
-import { schema } from "./schema";
 
 export type RoleNode = NodeType<
   | {
       redacted: true;
     }
   | {
-      role: Role & {
-        icon: Upload | null;
-        thumbnail: Upload | null;
-      };
+      role: AdditionalDataType["roles"][number];
       roleImage: FlowNodeRoleImage;
       backgroundColor: string;
       backgroundTransparency: number;
@@ -57,9 +43,8 @@ export type RoleNode = NodeType<
 >;
 
 export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
-  const { isUpdating, additionalData } = useFlowContext();
-  const nodeId = useNodeId();
-  const { setNodes, setEdges } = useReactFlow();
+  const { isUpdating } = useFlowContext();
+  const { deleteElements } = useReactFlow<RoleNode>();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { roles } = useRolesContext();
   const authentication = useAuthentication();
@@ -70,78 +55,9 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
     setIsEditModalOpen((currentValue) => !currentValue);
   }, []);
 
-  const onUpdate: FormEventHandler<HTMLFormElement> = useCallback(
-    (event) => {
-      event.preventDefault();
-      setIsEditModalOpen(false);
-
-      const formData = new FormData(event.currentTarget);
-      const result = schema.safeParse({
-        id: formData.get("id"),
-        nodeType: formData.get("nodeType"),
-        roleId: formData.get("roleId"),
-        roleImage: formData.get("roleImage"),
-        backgroundColor: formData.get("backgroundColor"),
-        backgroundTransparency: formData.get("backgroundTransparency"),
-        showUnlocked: formData.get("showUnlocked"),
-      });
-
-      if (!result.success) {
-        toast.error(
-          "Beim Speichern ist ein unerwarteter Fehler aufgetreten. Bitte versuche es später erneut.",
-        );
-        console.error(result.error);
-        return;
-      }
-
-      const role = (additionalData as AdditionalDataType).roles.find(
-        (role) => role.id === result.data.roleId,
-      );
-      if (!role) {
-        toast.error(
-          "Beim Speichern ist ein unerwarteter Fehler aufgetreten. Bitte versuche es später erneut.",
-        );
-        return;
-      }
-
-      setNodes((nds) => {
-        return applyNodeChanges(
-          [
-            {
-              type: "replace",
-              id: props.id,
-              item: {
-                id: props.id,
-                type: props.type,
-                position: {
-                  x: props.positionAbsoluteX,
-                  y: props.positionAbsoluteY,
-                },
-                width: props.width,
-                height: props.height,
-                data: {
-                  role,
-                  roleImage: result.data.roleImage,
-                  backgroundColor: result.data.backgroundColor,
-                  backgroundTransparency: result.data.backgroundTransparency,
-                  showUnlocked: result.data.showUnlocked,
-                },
-              },
-            },
-          ],
-          nds,
-        );
-      });
-    },
-    [additionalData, setNodes, props],
-  );
-
   const onDelete = useCallback(() => {
-    setNodes((nodes) => nodes.filter((node) => node.id !== nodeId));
-    setEdges((edges) =>
-      edges.filter((edge) => edge.source !== nodeId && edge.target !== nodeId),
-    );
-  }, [nodeId, setNodes, setEdges]);
+    void deleteElements({ nodes: [{ id: props.id }] });
+  }, [deleteElements, props.id]);
 
   const role =
     "role" in props.data && props.data.role
@@ -211,7 +127,6 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
                 backgroundTransparency: props.data.backgroundTransparency,
                 showUnlocked: props.data.showUnlocked,
               }}
-              onUpdate={onUpdate}
             />
           )}
 
@@ -226,7 +141,9 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
         </NodeToolbar>
       )}
 
-      {props.selected && <NodeResizer minWidth={1} minHeight={1} />}
+      {isUpdating && props.selected && (
+        <NodeResizer minWidth={1} minHeight={1} />
+      )}
 
       <div
         className={clsx(

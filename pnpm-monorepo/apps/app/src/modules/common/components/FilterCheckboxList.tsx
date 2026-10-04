@@ -1,9 +1,19 @@
 "use client";
 
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
+import {
+  filterCheckboxListParsers,
+  getFilterValue,
+} from "@/modules/common/utils/filterCheckboxListParsers";
 import clsx from "clsx";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import type { ChangeEventHandler, ReactNode } from "react";
+import { useTopLoader } from "nextjs-toploader";
+import { useQueryStates } from "nuqs";
+import {
+  useEffect,
+  useTransition,
+  type ChangeEventHandler,
+  type ReactNode,
+} from "react";
 
 interface FilterCheckboxItem {
   readonly id: string;
@@ -13,9 +23,8 @@ interface FilterCheckboxItem {
 interface Props {
   readonly className?: string;
   /**
-   * Namespace of this list's entries inside the shared comma-joined
-   * `filters` query param, e.g. "note-type". The URL format predates the
-   * common nuqs filters and is kept for bookmark compatibility.
+   * Namespace of this list's entries inside the shared `filters` search
+   * parameter, e.g. "note-type"
    */
   readonly prefix: string;
   readonly items: FilterCheckboxItem[];
@@ -26,55 +35,59 @@ interface Props {
  * `filters` URL parameter, namespaced by prefix.
  */
 export const FilterCheckboxList = ({ className, prefix, items }: Props) => {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const [isLoading, startTransition] = useTransition();
 
-  const defaultValues =
-    searchParams
-      .get("filters")
-      ?.split(",")
-      .filter((filter) => filter.startsWith(`${prefix}-`)) || [];
+  const [{ filters }, setSearchParams] = useQueryStates(
+    filterCheckboxListParsers,
+    { shallow: false, history: "push", startTransition },
+  );
+
+  const loader = useTopLoader();
+
+  useEffect(() => {
+    if (isLoading) {
+      loader.start();
+    }
+  }, [loader, isLoading]);
 
   const handleChange: ChangeEventHandler<HTMLInputElement> = (event) => {
-    const newSearchParams = new URLSearchParams(window.location.search);
+    const { checked, value } = event.target;
 
-    let filters = newSearchParams.get("filters")?.split(",") || [];
-
-    if (event.target.checked) {
-      filters.push(event.target.value);
-    } else {
-      filters = filters.filter((filter) => filter !== event.target.value);
-    }
-
-    newSearchParams.set("filters", filters.join(","));
-
-    router.push(`${pathname}?${newSearchParams.toString()}`);
+    void setSearchParams((current) => ({
+      filters: checked
+        ? [...current.filters, value]
+        : current.filters.filter((filter) => filter !== value),
+      page: null,
+    }));
   };
 
   return (
     <div className={clsx("flex flex-col gap-2", className)}>
-      {items.map((item) => (
-        <div
-          key={item.id}
-          className="flex w-full items-center justify-between gap-4"
-        >
-          <label
-            className="flex cursor-pointer items-center gap-2 whitespace-nowrap"
-            htmlFor={`${prefix}-${item.id}`}
-          >
-            {item.label}
-          </label>
+      {items.map((item) => {
+        const value = getFilterValue(prefix, item.id);
 
-          <YesNoCheckbox
-            id={`${prefix}-${item.id}`}
-            value={`${prefix}-${item.id}`}
-            onChange={handleChange}
-            defaultChecked={defaultValues.includes(`${prefix}-${item.id}`)}
-            hideLabel
-          />
-        </div>
-      ))}
+        return (
+          <div
+            key={item.id}
+            className="flex w-full items-center justify-between gap-4"
+          >
+            <label
+              className="flex cursor-pointer items-center gap-2 whitespace-nowrap"
+              htmlFor={value}
+            >
+              {item.label}
+            </label>
+
+            <YesNoCheckbox
+              id={value}
+              value={value}
+              onChange={handleChange}
+              checked={filters.includes(value)}
+              hideLabel
+            />
+          </div>
+        );
+      })}
     </div>
   );
 };

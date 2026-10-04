@@ -10,6 +10,7 @@ import {
   EventSource,
   EventVisibility,
   futureEvent,
+  ONE_MINUTE_MS,
   type TestCitizen,
 } from "../fixtures/factories";
 import {
@@ -489,4 +490,86 @@ test("a Discord event keeps its participant list read-only", async ({
 
   await expect(page.getByText("Teilnehmer (0)")).toBeVisible();
   await expect(page.getByTitle("Teilnehmer hinzufügen")).toHaveCount(0);
+});
+
+test("the participant list sorts by the handle and by the time of the sign-up", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const creator = await createCitizen(prisma, { handle: "sortier-orga" });
+  const viewer = await createCitizen(prisma, {
+    handle: "sortier-zuschauer",
+    permissionStrings: ["event;read", "citizen;read"],
+  });
+  const event = await createAppEvent(
+    prisma,
+    appEvent("Operation Reihenfolge", creator.entity.id),
+  );
+
+  /** Zora signs up first, Berta last */
+  const now = Date.now();
+  for (const [handle, minutesAgo] of [
+    ["anton", 2],
+    ["berta", 1],
+    ["zora", 3],
+  ] as const) {
+    const citizen = await createCitizen(prisma, { handle });
+    const participant = await createParticipant(prisma, {
+      eventId: event.id,
+      citizen,
+      source: EventSource.APP,
+    });
+    await prisma.eventParticipant.update({
+      where: { id: participant.id },
+      data: { createdAt: new Date(now - minutesAgo * ONE_MINUTE_MS) },
+    });
+  }
+
+  const rows = page.locator("tbody tr").filter({ visible: true });
+  const headerLink = (name: string) =>
+    page.locator("thead").getByRole("link", { name, exact: true });
+  const columnHeader = (name: string) =>
+    page.locator("thead").getByRole("columnheader", { name });
+
+  await signIn(viewer.user);
+  await page.goto(`/app/events/${event.id}/participants`);
+  await expect(rows).toHaveText([/anton/, /berta/, /zora/]);
+  await expect(columnHeader("Citizen")).toHaveAttribute(
+    "aria-sort",
+    "ascending",
+  );
+  await expect(columnHeader("Zugesagt am")).not.toHaveAttribute("aria-sort");
+
+  await headerLink("Citizen").click();
+  await expect(page).toHaveURL(/sort=citizen-desc/);
+  await expect(rows).toHaveText([/zora/, /berta/, /anton/]);
+  await expect(columnHeader("Citizen")).toHaveAttribute(
+    "aria-sort",
+    "descending",
+  );
+
+  await headerLink("Zugesagt am").click();
+  await expect(page).toHaveURL(/sort=joined-at-asc/);
+  await expect(rows).toHaveText([/zora/, /anton/, /berta/]);
+  await expect(columnHeader("Zugesagt am")).toHaveAttribute(
+    "aria-sort",
+    "ascending",
+  );
+  await expect(columnHeader("Citizen")).not.toHaveAttribute("aria-sort");
+
+  await headerLink("Zugesagt am").click();
+  await expect(page).toHaveURL(/sort=joined-at-desc/);
+  await expect(rows).toHaveText([/berta/, /anton/, /zora/]);
+  await expect(columnHeader("Zugesagt am")).toHaveAttribute(
+    "aria-sort",
+    "descending",
+  );
+
+  // The default sort leaves no sort parameter in the URL
+  await headerLink("Citizen").click();
+  await expect(page).toHaveURL(
+    new RegExp(`/app/events/${event.id}/participants$`),
+  );
+  await expect(rows).toHaveText([/anton/, /berta/, /zora/]);
 });

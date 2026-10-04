@@ -1,17 +1,21 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import {
-  type CitizenLogTableType,
   getCitizenLogTablePage,
   getConfirmationFilterWhere,
-  getFilterValues,
   getReadableCitizenLogWhere,
+  type CitizenLogTableType,
 } from "@/modules/citizen/queries/getCitizenLogTablePage";
+import {
+  loadCitizenLogTableSearchParams,
+  serializeCitizenLogTableSearchParams,
+} from "@/modules/citizen/utils/citizenLogTableSearchParams";
 import Pagination from "@/modules/common/components/Pagination";
-import { getCurrentPageFromSearchParams } from "@/modules/common/utils/pagination";
+import { getFilterValues } from "@/modules/common/utils/filterCheckboxListParsers";
 import type { CitizenLogType } from "@/types";
 import type { Prisma } from "@sam-monorepo/database/client";
 import clsx from "clsx";
+import type { SearchParams } from "nuqs/server";
 import { OtherFilters } from "./OtherFilters";
 import { OtherTable } from "./OtherTable";
 
@@ -25,19 +29,26 @@ const IDENTITY_LOG_TYPES: readonly CitizenLogTableType[] = [
 
 interface Props {
   readonly className?: string;
-  readonly searchParams: URLSearchParams;
+  readonly searchParams: Promise<SearchParams>;
 }
 
 const OtherTableTile = async ({ className, searchParams }: Props) => {
   const authentication = await requireAuthentication();
+
+  const searchParameters = await loadCitizenLogTableSearchParams(searchParams);
+  const { filters, sort, page } = searchParameters;
+  const getHref = (values: Partial<typeof searchParameters>) =>
+    serializeCitizenLogTableSearchParams("/app/spynet/other", {
+      ...searchParameters,
+      ...values,
+    });
 
   const visibleWhere = await getReadableCitizenLogWhere(
     IDENTITY_LOG_TYPES,
     authentication,
   );
 
-  const filters = searchParams.get("filters")?.split(",") ?? [];
-  const types = getFilterValues(filters, "type-");
+  const types = getFilterValues(filters, "type");
   const filteredWhere: Prisma.CitizenLogWhereInput = {
     AND: [
       visibleWhere,
@@ -47,11 +58,7 @@ const OtherTableTile = async ({ className, searchParams }: Props) => {
   };
 
   const [{ logs, totalPages }, options] = await Promise.all([
-    getCitizenLogTablePage(
-      filteredWhere,
-      searchParams.get("sort"),
-      getCurrentPageFromSearchParams(searchParams),
-    ),
+    getCitizenLogTablePage(filteredWhere, sort, page),
     prisma.citizenLog.groupBy({
       by: ["type", "confirmed"],
       where: visibleWhere,
@@ -79,13 +86,13 @@ const OtherTableTile = async ({ className, searchParams }: Props) => {
         />
       </div>
 
-      <OtherTable rows={logs} searchParams={searchParams} />
+      <OtherTable rows={logs} sort={sort} getHref={getHref} />
 
       <div className="mt-6 flex justify-center">
         <Pagination
           totalPages={totalPages}
-          currentPage={getCurrentPageFromSearchParams(searchParams)}
-          searchParams={searchParams}
+          currentPage={page}
+          getHref={getHref}
         />
       </div>
     </section>

@@ -1,6 +1,9 @@
+import type { Page } from "@playwright/test";
 import {
   createCitizen,
   createWikiPage,
+  setWikiFeaturedPages,
+  WIKI_SETTING_FEATURED_PAGES,
   wikiDocument,
   wikiEmbed,
   WikiPageVisibility,
@@ -11,6 +14,12 @@ import {
   sectionByHeading,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
+import {
+  dragNarration,
+  sortByKeyboard,
+  sortByMouse,
+  sortByTouch,
+} from "../fixtures/sortable-list";
 import { expect, test } from "../fixtures/test";
 
 test("the settings curate the featured pages, the dashboard page and the support link", async ({
@@ -102,6 +111,106 @@ test("the settings curate the featured pages, the dashboard page and the support
   await page.goto("/app/wiki/link/support");
   await expect(page).toHaveURL("/app/wiki");
 });
+
+const featuredPageHandle = (page: Page, title: string) =>
+  sectionByHeading(page, "Featured Seiten").getByRole("button", {
+    name: `"${title}" verschieben`,
+  });
+
+/** Each gesture moves the first page below the second page */
+const REORDER_GESTURES = [
+  {
+    name: "keyboard",
+    drag: (page: Page) =>
+      sortByKeyboard(featuredPageHandle(page, "Einsteigerguide")),
+  },
+  {
+    name: "mouse",
+    drag: (page: Page) =>
+      sortByMouse(
+        featuredPageHandle(page, "Einsteigerguide"),
+        featuredPageHandle(page, "Regelwerk"),
+      ),
+  },
+  {
+    name: "touch",
+    drag: (page: Page) =>
+      sortByTouch(
+        featuredPageHandle(page, "Einsteigerguide"),
+        featuredPageHandle(page, "Regelwerk"),
+      ),
+  },
+] as const;
+
+for (const { name, drag } of REORDER_GESTURES) {
+  test(`reordering the featured pages by ${name} changes the stored order`, async ({
+    page,
+    prisma,
+    signIn,
+  }) => {
+    const manager = await createCitizen(prisma, {
+      handle: "wiki-verwalter",
+      permissionStrings: ["wiki;manage"],
+    });
+    const first = await createWikiPage(prisma, {
+      title: "Einsteigerguide",
+      visibility: WikiPageVisibility.PUBLIC,
+    });
+    const second = await createWikiPage(prisma, {
+      title: "Regelwerk",
+      visibility: WikiPageVisibility.PUBLIC,
+    });
+    await setWikiFeaturedPages(prisma, [first.id, second.id]);
+
+    const hydrationErrors: string[] = [];
+    page.on("console", (message) => {
+      if (message.type() === "error" && /hydrat/i.test(message.text())) {
+        hydrationErrors.push(message.text());
+      }
+    });
+
+    await signIn(manager.user);
+    await page.goto("/app/wiki/settings");
+    await waitForAppShellHydration(page);
+
+    /** Screen readers get German texts with the title, not with the id */
+    await expect(
+      featuredPageHandle(page, "Einsteigerguide"),
+    ).toHaveAccessibleDescription(/Leertaste/);
+    await drag(page);
+    await expect
+      .poll(() => dragNarration(page))
+      .toContain('"Einsteigerguide" auf Position 2 von 2 abgelegt.');
+
+    const featuredTile = sectionByHeading(page, "Featured Seiten");
+    await expect(featuredTile.getByRole("listitem")).toHaveText([
+      "Regelwerk",
+      "Einsteigerguide",
+    ]);
+
+    await featuredTile.getByRole("button", { name: "Speichern" }).click();
+    await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+    await expect
+      .poll(() =>
+        prisma.wikiSetting.findUnique({
+          where: { key: WIKI_SETTING_FEATURED_PAGES },
+        }),
+      )
+      .toMatchObject({ value: [second.id, first.id] });
+
+    /**
+     * Without a fixed id, the drag and drop context of the second server
+     * render does not agree with the browser (see FlowsTableClient).
+     */
+    await page.reload();
+    await waitForAppShellHydration(page);
+    await expect(featuredTile.getByRole("listitem")).toHaveText([
+      "Regelwerk",
+      "Einsteigerguide",
+    ]);
+    expect(hydrationErrors).toEqual([]);
+  });
+}
 
 /**
  * Reserved by RFC 2606, so neither the browser nor a resolver ever reaches

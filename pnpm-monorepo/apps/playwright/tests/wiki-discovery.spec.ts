@@ -60,9 +60,9 @@ test("search finds readable pages and never the others", async ({
   await searchUntilReaction(
     page,
     "Quantanium",
-    results.getByRole("link", { name: /Bergbau/ }),
+    results.getByRole("option", { name: /Bergbau/ }),
   );
-  await results.getByRole("link", { name: /Bergbau/ }).click();
+  await results.getByRole("option", { name: /Bergbau/ }).click();
   await expect(page).toHaveURL(`/app/wiki/${openPage.id}/${openPage.slug}`);
 
   // The role member finds the restricted page too …
@@ -70,7 +70,7 @@ test("search finds readable pages and never the others", async ({
   await searchUntilReaction(
     page,
     "Vorstandsprotokoll",
-    results.getByRole("link", { name: /Vorstandsprotokoll/ }),
+    results.getByRole("option", { name: /Vorstandsprotokoll/ }),
   );
 
   // … while everyone else gets nothing, not even a hint that it exists
@@ -124,11 +124,124 @@ test("search shows the tags of a page that match the query", async ({
   await page.goto("/app/wiki");
   const pageResult = page
     .getByRole("listbox", { name: "Suchergebnisse" })
-    .getByRole("link", { name: /Handelsrouten/ });
+    .getByRole("option", { name: /Handelsrouten/ });
   await searchUntilReaction(page, "Wirtschaft", pageResult);
   await expect(
     pageResult.getByText("Wirtschaft", { exact: true }),
   ).toBeVisible();
+});
+
+test("the keyboard opens search results, and Escape closes them", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, { handle: "reader" });
+  const wikiPage = await createWikiPage(prisma, {
+    title: "Handelsrouten",
+    visibility: WikiPageVisibility.PUBLIC,
+  });
+  const tag = await createWikiTag(prisma, wikiPage, "Wirtschaft");
+  await signIn(citizen.user);
+
+  /**
+   * A wiki page shows only the search of the sidebar. The sidebar stays
+   * during a navigation, thus the results must close by themselves.
+   */
+  const search = page.getByRole("combobox", { name: "Seiten durchsuchen" });
+  const results = page.getByRole("listbox", { name: "Suchergebnisse" });
+  const tagResult = results
+    .getByRole("group", { name: "Tags" })
+    .getByRole("option", { name: /Wirtschaft/ });
+  const pageResult = results
+    .getByRole("group", { name: "Seiten" })
+    .getByRole("option", { name: /Handelsrouten/ });
+
+  // The first result is highlighted without an arrow key
+  await page.goto(`/app/wiki/${wikiPage.id}/${wikiPage.slug}`);
+  await fillUntilVisible(search, "Wirtschaft", pageResult);
+  // The input keeps its name while the results are open
+  await expect(search).toHaveAttribute("aria-expanded", "true");
+  await expect(tagResult).toHaveAttribute("data-highlighted");
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(`/app/wiki/tags/${tag.id}`);
+  await expect(results).toBeHidden();
+
+  await fillUntilVisible(search, "Wirtschaft", pageResult);
+  await page.keyboard.press("ArrowDown");
+  await expect(pageResult).toHaveAttribute("data-highlighted");
+  await expect(tagResult).not.toHaveAttribute("data-highlighted");
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(`/app/wiki/${wikiPage.id}/${wikiPage.slug}`);
+  await expect(results).toBeHidden();
+
+  await fillUntilVisible(search, "Wirtschaft", pageResult);
+  await page.keyboard.press("Escape");
+  await expect(results).toBeHidden();
+  await expect(search).toBeFocused();
+});
+
+test("the search shows no results of an older query while the new results load", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, { handle: "reader" });
+  await createWikiPage(prisma, {
+    title: "Bergbau",
+    visibility: WikiPageVisibility.PUBLIC,
+  });
+  const tradePage = await createWikiPage(prisma, {
+    title: "Handelsrouten",
+    visibility: WikiPageVisibility.PUBLIC,
+  });
+  await signIn(citizen.user);
+
+  await page.goto("/app/wiki");
+  const results = page.getByRole("listbox", { name: "Suchergebnisse" });
+  const miningResult = results.getByRole("option", { name: /Bergbau/ });
+  const tradeResult = results.getByRole("option", { name: /Handelsrouten/ });
+  await searchUntilReaction(page, "Bergbau", miningResult);
+
+  /** While the results are open, Base UI hides the heading that finds the input */
+  await page.keyboard.press("Escape");
+  await expect(results).toBeHidden();
+
+  /** The test holds the response of the next search until it releases it */
+  let isRequested = false;
+  const response = Promise.withResolvers<void>();
+  await page.route(
+    (url) =>
+      url.pathname.startsWith("/api/trpc/") &&
+      url.pathname.includes("wiki.search"),
+    async (route) => {
+      isRequested = true;
+      await response.promise;
+      await route.continue();
+    },
+  );
+
+  /**
+   * Enter while the debounce runs and Enter while the new results load open
+   * nothing. Without a highlighted result, Enter closes the results.
+   */
+  const search = landingSearch(page);
+  await search.fill("Handelsrouten");
+  await page.keyboard.press("Enter");
+  await expect(miningResult).toBeHidden();
+  await expect.poll(() => isRequested).toBe(true);
+  await search.click();
+  await expect(page.getByText("Suche läuft …")).toBeAttached();
+  await expect(results.getByRole("option")).toHaveCount(0);
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL("/app/wiki");
+
+  // The new results open with the keyboard
+  response.resolve();
+  await search.click();
+  await expect(tradeResult).toHaveAttribute("data-highlighted");
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(`/app/wiki/${tradePage.id}/${tradePage.slug}`);
 });
 
 test("a tag name in other letter case uses the existing tag", async ({

@@ -127,13 +127,7 @@ export const Flow = ({
     }, [isUpdating, flow.id, router]);
 
   return (
-    <FlowProvider
-      isUpdating={isUpdating}
-      setIsCreateNodeModalOpen={setIsCreateNodeModalOpen}
-      setUnsaved={setUnsaved}
-      setNodes={setNodes}
-      additionalData={additionalData}
-    >
+    <FlowProvider isUpdating={isUpdating} additionalData={additionalData}>
       {unsaved && (
         <Note
           type="info"
@@ -153,6 +147,7 @@ export const Flow = ({
         className={className}
         defaultEdgeOptions={DEFAULT_EDGE_OPTIONS}
         snapToGrid
+        deleteKeyCode={isUpdating ? "Backspace" : null}
         nodesDraggable={isUpdating}
         nodesConnectable={isUpdating}
         nodesFocusable={isUpdating}
@@ -189,13 +184,14 @@ export const Flow = ({
             </>
           )}
         </Controls>
-      </ReactFlow>
 
-      {isCreateNodeModalOpen && (
-        <CreateOrUpdateNodeModal
-          onRequestClose={() => setIsCreateNodeModalOpen(false)}
-        />
-      )}
+        {/* A child of ReactFlow, thus its forms can use useReactFlow() */}
+        {isCreateNodeModalOpen && (
+          <CreateOrUpdateNodeModal
+            onRequestClose={() => setIsCreateNodeModalOpen(false)}
+          />
+        )}
+      </ReactFlow>
     </FlowProvider>
   );
 };

@@ -130,7 +130,7 @@ test("the embed search only finds subtree pages", async ({
   await fillUntilVisible(
     sidebarSearch(page),
     "nachladen",
-    results.getByRole("link", { name: new RegExp(childPage.title) }),
+    results.getByRole("option", { name: new RegExp(childPage.title) }),
   );
 
   // The outside page matches this term exclusively — no subtree hit exists

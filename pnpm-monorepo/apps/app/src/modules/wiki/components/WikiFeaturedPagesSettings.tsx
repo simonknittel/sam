@@ -5,8 +5,29 @@ import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Note from "@/modules/common/components/Note";
+import {
+  SORTABLE_HANDLE_ATTRIBUTES,
+  useSortableList,
+} from "@/modules/common/utils/useSortableList";
+import {
+  DndContext,
+  closestCenter,
+  type DragEndEvent,
+  type UniqueIdentifier,
+} from "@dnd-kit/core";
+import {
+  restrictToParentElement,
+  restrictToVerticalAxis,
+} from "@dnd-kit/modifiers";
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import clsx from "clsx";
-import { useId, useState, type KeyboardEvent, type MouseEvent } from "react";
+import { useCallback, useId, useState } from "react";
 import { FaSave, FaTrash } from "react-icons/fa";
 import { MdDragIndicator } from "react-icons/md";
 import { updateWikiFeaturedPages } from "../actions/updateWikiFeaturedPages";
@@ -18,8 +39,6 @@ interface WikiFeaturedPage {
   readonly id: string;
   readonly title: string;
 }
-
-type DropPosition = "before" | "after";
 
 interface Props {
   readonly initialPages: readonly WikiFeaturedPage[];
@@ -36,7 +55,6 @@ export const WikiFeaturedPagesSettings = ({ initialPages, targets }: Props) => {
   const selectId = useId();
   const [pages, setPages] = useState<WikiFeaturedPage[]>([...initialPages]);
   const [selectedPageId, setSelectedPageId] = useState("");
-  const [draggedPageId, setDraggedPageId] = useState<string | null>(null);
 
   const { state, formAction, isPending } = useAction(updateWikiFeaturedPages, {
     errorToast: false,
@@ -57,73 +75,52 @@ export const WikiFeaturedPagesSettings = ({ initialPages, targets }: Props) => {
     setSelectedPageId("");
   };
 
-  const movePage = (
-    pageId: string,
-    referenceId: string,
-    position: DropPosition,
-  ) => {
-    if (pageId === referenceId) return;
+  const getPageTitle = useCallback(
+    (id: UniqueIdentifier) => pages.find((page) => page.id === id)?.title ?? "",
+    [pages],
+  );
+  const { sensors, accessibility } = useSortableList(getPageTitle);
 
-    setPages((currentPages) => {
-      const movedPage = currentPages.find((page) => page.id === pageId);
-      if (!movedPage) return currentPages;
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
 
-      const remainingPages = currentPages.filter((page) => page.id !== pageId);
-      const referenceIndex = remainingPages.findIndex(
-        (page) => page.id === referenceId,
-      );
-      if (referenceIndex < 0) return currentPages;
-
-      const insertIndex =
-        position === "before" ? referenceIndex : referenceIndex + 1;
-
-      return remainingPages.toSpliced(insertIndex, 0, movedPage);
-    });
-  };
-
-  const handleDragStart = (
-    event: MouseEvent<HTMLButtonElement>,
-    pageId: string,
-  ) => {
-    if (event.button !== 0) return;
-    // Prevent text selection while dragging
-    event.preventDefault();
-    setDraggedPageId(pageId);
-    // Cancels drops outside any band
-    document.addEventListener("mouseup", () => setDraggedPageId(null), {
-      once: true,
-    });
-  };
-
-  const handleDrop = (referenceId: string, position: DropPosition) => {
-    if (!draggedPageId) return;
-    setDraggedPageId(null);
-    movePage(draggedPageId, referenceId, position);
+    const oldIndex = pages.findIndex((page) => page.id === active.id);
+    const newIndex = pages.findIndex((page) => page.id === over.id);
+    setPages(arrayMove(pages, oldIndex, newIndex));
   };
 
   return (
     <div>
       {pages.length > 0 ? (
-        <ul className="flex flex-col gap-1">
-          {pages.map((page, index) => (
-            <WikiFeaturedPageRow
-              key={page.id}
-              page={page}
-              isDragged={draggedPageId === page.id}
-              isDropTarget={draggedPageId !== null && draggedPageId !== page.id}
-              previousPageId={pages[index - 1]?.id}
-              nextPageId={pages[index + 1]?.id}
-              onDragStart={(event) => handleDragStart(event, page.id)}
-              onMove={(referenceId, position) =>
-                movePage(page.id, referenceId, position)
-              }
-              onDrop={(position) => handleDrop(page.id, position)}
-              onRemove={() =>
-                setPages(pages.filter((entry) => entry.id !== page.id))
-              }
-            />
-          ))}
-        </ul>
+        /**
+         * The `id` and the modifiers have the same reasons as in the list of
+         * the career flows (see `FlowsTableClient`).
+         */
+        <DndContext
+          id="wiki-featured-pages"
+          sensors={sensors}
+          accessibility={accessibility}
+          collisionDetection={closestCenter}
+          modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={pages.map((page) => page.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <ul className="flex flex-col gap-1">
+              {pages.map((page) => (
+                <WikiFeaturedPageRow
+                  key={page.id}
+                  page={page}
+                  onRemove={() =>
+                    setPages(pages.filter((entry) => entry.id !== page.id))
+                  }
+                />
+              ))}
+            </ul>
+          </SortableContext>
+        </DndContext>
       ) : (
         <p className="text-sm text-neutral-400">
           Keine Featured Seiten. Der Bereich erscheint dann nicht auf der
@@ -188,78 +185,44 @@ export const WikiFeaturedPagesSettings = ({ initialPages, targets }: Props) => {
   );
 };
 
-interface DropIndicatorLineProps {
-  /** Position within the surrounding `group/band` */
-  readonly className: string;
-}
-
-/** Line shown while the pointer is over the band containing it */
-const DropIndicatorLine = ({ className }: DropIndicatorLineProps) => (
-  <span
-    className={clsx(
-      "pointer-events-none absolute inset-x-0 hidden h-0.5 rounded-full bg-green-500 group-hover/band:block",
-      className,
-    )}
-  />
-);
-
 interface RowProps {
   readonly page: WikiFeaturedPage;
-  readonly isDragged: boolean;
-  /** Whether another row is being dragged, i.e. this row accepts drops */
-  readonly isDropTarget: boolean;
-  /** Previous entry, target of ArrowUp */
-  readonly previousPageId?: string;
-  /** Next entry, target of ArrowDown */
-  readonly nextPageId?: string;
-  readonly onDragStart: (event: MouseEvent<HTMLButtonElement>) => void;
-  /** Moves this page relative to one of its neighbours */
-  readonly onMove: (referenceId: string, position: DropPosition) => void;
-  /** Drops the dragged page relative to this row */
-  readonly onDrop: (position: DropPosition) => void;
   readonly onRemove: () => void;
 }
 
 /**
- * One entry of the featured list. Dragging its handle starts a drag, the
- * bands overlaying the other rows drop the dragged page before or after
- * them — same interaction as the sidebar tree (see WikiPageTreeDragAndDrop).
- * The arrow keys replace the drag gesture.
+ * The row and its handle look like the rows of the sidebar tree. The handle
+ * moves the row (see `useSortableList`).
  */
-const WikiFeaturedPageRow = ({
-  page,
-  isDragged,
-  isDropTarget,
-  previousPageId,
-  nextPageId,
-  onDragStart,
-  onMove,
-  onDrop,
-  onRemove,
-}: RowProps) => {
-  const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
-    if (event.key === "ArrowUp" && previousPageId) {
-      event.preventDefault();
-      onMove(previousPageId, "before");
-    } else if (event.key === "ArrowDown" && nextPageId) {
-      event.preventDefault();
-      onMove(nextPageId, "after");
-    }
-  };
+const WikiFeaturedPageRow = ({ page, onRemove }: RowProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: page.id, attributes: SORTABLE_HANDLE_ATTRIBUTES });
 
   return (
     <li
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+      }}
       className={clsx(
         "relative flex items-center gap-2 rounded-secondary border border-neutral-800 px-3 py-2",
-        { "opacity-50": isDragged },
+        { "z-10 bg-neutral-800": isDragging },
       )}
     >
+      {/* Without `touch-none` a touch on the handle scrolls the page */}
       <button
         type="button"
-        onMouseDown={onDragStart}
-        onKeyDown={handleKeyDown}
-        title={`"${page.title}" verschieben (ziehen oder Pfeiltasten)`}
-        className="cursor-grab p-1 text-neutral-500 hover:text-interaction-500 focus-visible:text-interaction-500 active:text-interaction-300"
+        title={`"${page.title}" verschieben (ziehen oder Leertaste und Pfeiltasten)`}
+        className="cursor-grab touch-none p-1 text-neutral-500 hover:text-interaction-500 focus-visible:text-interaction-500 active:cursor-grabbing active:text-interaction-300"
+        {...attributes}
+        {...listeners}
       >
         <MdDragIndicator />
       </button>
@@ -276,24 +239,6 @@ const WikiFeaturedPageRow = ({
       >
         <FaTrash />
       </Button2>
-
-      {isDropTarget && (
-        <span className="absolute inset-0 z-10 flex cursor-grabbing flex-col">
-          <span
-            className="group/band relative h-1/2"
-            onMouseUp={() => onDrop("before")}
-          >
-            {/* Half of the list's gap-1, i.e. centred between two rows */}
-            <DropIndicatorLine className="-top-0.5 -translate-y-1/2" />
-          </span>
-          <span
-            className="group/band relative h-1/2"
-            onMouseUp={() => onDrop("after")}
-          >
-            <DropIndicatorLine className="-bottom-0.5 translate-y-1/2" />
-          </span>
-        </span>
-      )}
     </li>
   );
 };

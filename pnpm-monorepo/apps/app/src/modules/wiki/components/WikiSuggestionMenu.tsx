@@ -150,6 +150,14 @@ export const WikiSuggestionMenu = <Item extends WikiSuggestionMenuItem>({
           <button
             type="button"
             data-suggestion-index={index}
+            /**
+             * A mouse press does not move the focus to the entry: the focus
+             * stays in the editor or in the filter input of the palette. If
+             * the entry gets the focus, the command focuses the editor again
+             * in the next frame, also when a dialog of the command already
+             * has the focus.
+             */
+            onMouseDown={(event) => event.preventDefault()}
             onClick={() => command(item)}
             title={item.title}
             disabled={item.disabled === true}

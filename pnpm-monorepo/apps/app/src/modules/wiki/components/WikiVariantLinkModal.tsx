@@ -5,9 +5,9 @@ import { TextInput } from "@/modules/common/components/form/TextInput";
 import Modal from "@/modules/common/components/Modal";
 import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
 import { api, type RouterOutputs } from "@/trpc/react";
+import { Autocomplete } from "@base-ui/react/autocomplete";
 import type { Editor } from "@tiptap/react";
-import clsx from "clsx";
-import { useId, useState } from "react";
+import { useState } from "react";
 import { getWikiImageUrl } from "../utils/uploadWikiPageFile";
 
 /**
@@ -42,8 +42,6 @@ export const WikiVariantLinkModal = ({
   onRequestClose,
 }: Props) => {
   const [query, setQuery] = useState("");
-  const [activeIndex, setActiveIndex] = useState(0);
-  const listboxId = useId();
 
   const { data, isPending } = api.variant.getAll.useQuery(undefined);
 
@@ -55,7 +53,6 @@ export const WikiVariantLinkModal = ({
       variant.manufacturerName.toLowerCase().includes(normalized),
   );
   const results = matches.slice(0, MAX_RESULTS);
-  const optionId = (index: number) => `${listboxId}-option-${index}`;
 
   /**
    * Inserting at the caret parks it behind the atom with a trailing space
@@ -105,30 +102,10 @@ export const WikiVariantLinkModal = ({
       .run();
   };
 
-  const pick = (variant: VariantOption | undefined) => {
-    if (!variant) return;
+  const pick = (variant: VariantOption) => {
     if (position === undefined) insertVariantLink(variant);
     else retargetVariantLink(variant, position);
     onRequestClose();
-  };
-
-  const moveActiveIndex = (next: number) => {
-    setActiveIndex(next);
-    document.getElementById(optionId(next))?.scrollIntoView({
-      block: "nearest",
-    });
-  };
-
-  const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (results.length === 0) return;
-
-    if (event.key === "ArrowDown") {
-      event.preventDefault();
-      moveActiveIndex(Math.min(activeIndex + 1, results.length - 1));
-    } else if (event.key === "ArrowUp") {
-      event.preventDefault();
-      moveActiveIndex(Math.max(activeIndex - 1, 0));
-    }
   };
 
   return (
@@ -138,29 +115,21 @@ export const WikiVariantLinkModal = ({
       className="w-120"
       heading={<h2>{position === undefined ? "Schiff" : "Schiff ändern"}</h2>}
     >
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          pick(results[activeIndex] ?? results[0]);
-        }}
+      <Autocomplete.Root
+        items={results}
+        // The modal filters by ship and manufacturer name itself
+        filter={null}
+        value={query}
+        onValueChange={setQuery}
+        inline
+        open
+        // Enter picks the highlighted ship, by default the first one
+        autoHighlight="always"
       >
-        <TextInput
+        <Autocomplete.Input
+          render={<TextInput hint="Nach Schiff oder Hersteller filtern" />}
           aria-label="Schiff suchen"
-          role="combobox"
-          aria-expanded
-          aria-controls={listboxId}
-          aria-autocomplete="list"
-          aria-activedescendant={
-            results.length > 0 ? optionId(activeIndex) : undefined
-          }
-          hint="Nach Schiff oder Hersteller filtern"
           placeholder="Carrack, Drake, …"
-          value={query}
-          onChange={(event) => {
-            setQuery(event.target.value);
-            setActiveIndex(0);
-          }}
-          onKeyDown={handleInputKeyDown}
           autoFocus
         />
 
@@ -170,53 +139,39 @@ export const WikiVariantLinkModal = ({
           </div>
         ) : results.length > 0 ? (
           <>
-            <ul
-              id={listboxId}
-              role="listbox"
+            <Autocomplete.List
               aria-label="Schiffe"
               className="mt-4 max-h-80 overflow-y-auto"
             >
-              {results.map((variant, index) => (
-                <li
+              {(variant: VariantOption) => (
+                <Autocomplete.Item
                   key={variant.id}
-                  id={optionId(index)}
-                  role="option"
-                  aria-selected={index === activeIndex}
-                  onMouseEnter={() => setActiveIndex(index)}
+                  value={variant}
+                  onClick={() => pick(variant)}
+                  className="flex cursor-pointer items-center gap-2 rounded-secondary p-1 hover:bg-neutral-700 active:bg-neutral-600 data-highlighted:bg-neutral-700"
                 >
-                  <button
-                    type="button"
-                    onClick={() => pick(variant)}
-                    className={clsx(
-                      "flex w-full cursor-pointer items-center gap-2 rounded-secondary p-1 text-left",
-                      { "bg-neutral-700": index === activeIndex },
-                    )}
-                  >
-                    <VariantWithLogo
-                      className="min-w-0 flex-1"
-                      variant={variant}
-                      manufacturer={{ name: variant.manufacturerName }}
-                      logo={
-                        variant.manufacturerImage
-                          ? {
-                              src: getWikiImageUrl(
-                                variant.manufacturerImage.id,
-                              ),
-                              mimeType: variant.manufacturerImage.mimeType,
-                            }
-                          : null
-                      }
-                      size={32}
-                      disableLink
-                    />
+                  <VariantWithLogo
+                    className="min-w-0 flex-1"
+                    variant={variant}
+                    manufacturer={{ name: variant.manufacturerName }}
+                    logo={
+                      variant.manufacturerImage
+                        ? {
+                            src: getWikiImageUrl(variant.manufacturerImage.id),
+                            mimeType: variant.manufacturerImage.mimeType,
+                          }
+                        : null
+                    }
+                    size={32}
+                    disableLink
+                  />
 
-                    <span className="flex-none text-xs text-neutral-400">
-                      {variant.manufacturerName}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+                  <span className="flex-none text-xs text-neutral-400">
+                    {variant.manufacturerName}
+                  </span>
+                </Autocomplete.Item>
+              )}
+            </Autocomplete.List>
 
             {matches.length > results.length && (
               <p className="mt-2 text-xs text-white/40">
@@ -228,7 +183,7 @@ export const WikiVariantLinkModal = ({
         ) : (
           <p className="mt-4 text-sm text-neutral-400">Keine Treffer.</p>
         )}
-      </form>
+      </Autocomplete.Root>
     </Modal>
   );
 };
