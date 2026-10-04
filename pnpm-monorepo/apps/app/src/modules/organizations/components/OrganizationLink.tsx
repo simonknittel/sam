@@ -32,7 +32,9 @@ export const OrganizationLink = ({ className, organization }: Props) => {
         </span>
       )}
 
-      <span className="truncate">{organization.name}</span>
+      <span className="truncate" title={organization.name}>
+        {organization.name}
+      </span>
     </Link>
   );
 };

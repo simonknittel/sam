@@ -7,6 +7,13 @@ import type { ReactNode } from "react";
 interface Props {
   readonly title: string;
   readonly isActive: boolean;
+  /**
+   * Marks a button that switches a state of the selection on or off (for
+   * example bold), so that `aria-pressed` tells `isActive`. An action button
+   * that only shows its context as active (for example "Tabelle einfügen"
+   * inside a table) is no toggle.
+   */
+  readonly isToggle?: boolean;
   /** Optional for type="submit" buttons inside forms */
   readonly onClick?: () => void;
   readonly type?: "button" | "submit";
@@ -17,6 +24,7 @@ interface Props {
 export const ToolbarButton = ({
   title,
   isActive,
+  isToggle = false,
   onClick,
   type = "button",
   disabled = false,
@@ -29,6 +37,7 @@ export const ToolbarButton = ({
         <button
           type={type}
           aria-label={title}
+          aria-pressed={isToggle ? isActive : undefined}
           onClick={onClick}
           disabled={disabled}
           className={clsx(

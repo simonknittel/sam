@@ -105,6 +105,7 @@ export const PasteWikiPagesSection = ({
         )}
 
         <RadioGroup
+          label="Art des Einfügens"
           className="mt-4"
           name="mode"
           value={mode}

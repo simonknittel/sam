@@ -1,7 +1,8 @@
 "use client";
 
 import type { Dispatch, ReactNode, SetStateAction } from "react";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 
 interface CmdKContext {
   readonly open: boolean;
@@ -30,17 +31,23 @@ export const CmdKProvider = ({ children, canReadCareer }: Props) => {
   const [search, setSearch] = useState("");
   const [pages, setPages] = useState<string[]>([]);
 
-  useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        setOpen((open) => !open);
-      }
-    };
-
-    document.addEventListener("keydown", down);
-    return () => document.removeEventListener("keydown", down);
-  }, [setOpen]);
+  /**
+   * Ctrl+K and Cmd+K on all platforms. With `useKey`, the K of the keyboard
+   * layout starts the shortcut, and the physical K key also starts it. The
+   * shortcut also works in form fields and in the wiki editor. Thus it also
+   * closes the menu from its own search field.
+   *
+   * The shortcut does not open the menu behind a native modal dialog (a
+   * confirmation, the tour): the menu then blocks the pointer events of the
+   * page, and the buttons of the dialog do not get clicks.
+   */
+  useHotkeys(["ctrl+k", "meta+k"], () => setOpen((isOpen) => !isOpen), {
+    useKey: true,
+    preventDefault: true,
+    enableOnFormTags: true,
+    enableOnContentEditable: true,
+    enabled: () => !document.querySelector("dialog:modal"),
+  });
 
   const value = useMemo(
     () => ({

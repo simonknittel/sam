@@ -110,6 +110,7 @@ export const EventSettings = ({
 
           <p className="mt-4">Sichtbarkeit</p>
           <RadioGroup
+            label="Sichtbarkeit"
             name="visibility"
             items={[
               {
@@ -156,7 +157,7 @@ export const EventSettings = ({
           action={deleteEvent}
           hiddenFields={[{ name: "eventId", value: event.id }]}
           trigger={(isDeletePending) => (
-            <Button2 type="button" disabled={isDeletePending}>
+            <Button2 type="submit" disabled={isDeletePending}>
               {isDeletePending ? <AsciiSpinner /> : <FaTrash />}
               Event löschen
             </Button2>

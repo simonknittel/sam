@@ -108,7 +108,10 @@ export const NotificationListItem = ({
       )}
 
       <div className="mt-0.5 flex min-h-6 items-center justify-between gap-2">
-        <span className="truncate font-mono text-xs text-neutral-500 uppercase">
+        <span
+          className="truncate font-mono text-xs text-neutral-500 uppercase"
+          title={rendering.appTitle ?? undefined}
+        >
           {rendering.appTitle}
         </span>
 

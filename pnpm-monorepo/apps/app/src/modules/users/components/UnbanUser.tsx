@@ -17,6 +17,7 @@ export const UnbanUser = ({ userId }: Props) => {
       hiddenFields={[{ name: "userId", value: userId }]}
       trigger={(isPending) => (
         <Button2
+          type="submit"
           variant={Button2Variant.IconOnly}
           disabled={isPending}
           tooltip="Benutzer entsperren"

@@ -22,7 +22,7 @@ export const DeleteRole = ({ className, role }: Props) => {
         action={deleteRole}
         hiddenFields={[{ name: "id", value: role.id }]}
         trigger={(isPending) => (
-          <Button2 disabled={isPending}>
+          <Button2 type="submit" disabled={isPending}>
             {isPending ? <AsciiSpinner /> : <FaTrash />}
             Löschen
           </Button2>

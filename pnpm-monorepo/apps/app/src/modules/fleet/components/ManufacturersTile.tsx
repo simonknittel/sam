@@ -70,7 +70,10 @@ export const ManufacturersTile = async () => {
                   </Link>
                 </td>
 
-                <td className="line-clamp-2">
+                <td
+                  className="line-clamp-2"
+                  title={row.series.map((series) => series.name).join(", ")}
+                >
                   {row.series.map((series, index) => (
                     <span key={series.id}>
                       {index > 0 && ", "}

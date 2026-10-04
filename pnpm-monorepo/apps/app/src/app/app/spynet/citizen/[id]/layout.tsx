@@ -35,7 +35,9 @@ export default async function Layout({
 
         <span className="text-neutral-500">/</span>
 
-        <h1 className="truncate">{citizen.handle || citizen.id}</h1>
+        <h1 className="truncate" title={citizen.handle || citizen.id}>
+          {citizen.handle || citizen.id}
+        </h1>
       </div>
 
       <CitizenNavigation citizenId={citizen.id} className="mt-2 mb-4" />

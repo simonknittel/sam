@@ -2,6 +2,7 @@
 
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
+import { useSubmitConfirmation } from "@/modules/common/components/AlertDialog";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
@@ -15,7 +16,6 @@ import {
 } from "@/modules/discord/utils/guildScheduledEventPayload";
 import { EventVisibility } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
-import { useId } from "react";
 import { FaDiscord, FaTrash } from "react-icons/fa";
 import { publishEventToDiscord } from "../actions/publishEventToDiscord";
 import { unpublishEventFromDiscord } from "../actions/unpublishEventFromDiscord";
@@ -132,7 +132,7 @@ const PublishedState = ({
           hiddenFields={[{ name: "eventId", value: event.id }]}
           trigger={(isPending) => (
             <Button2
-              type="button"
+              type="submit"
               variant={Button2Variant.Secondary}
               disabled={isPending}
             >
@@ -171,12 +171,13 @@ const UnpublishedState = ({
   const { state, formAction, isPending } = useAction(publishEventToDiscord, {
     errorToast: false,
   });
-  const formId = useId();
-  const isRestricted = event.visibility === EventVisibility.RESTRICTED;
+  const restrictedConfirmation = useSubmitConfirmation(
+    event.visibility === EventVisibility.RESTRICTED,
+  );
 
   return (
     <Tile heading="Discord" className={clsx(className)}>
-      <form action={formAction} id={formId}>
+      <form action={formAction} onSubmit={restrictedConfirmation.onSubmit}>
         <input type="hidden" name="eventId" value={event.id} />
 
         <p className="text-sm text-neutral-500">
@@ -191,35 +192,24 @@ const UnpublishedState = ({
           className="mt-4"
         />
 
-        {isRestricted ? (
-          <RestrictedDiscordPublishDialog
-            formId={formId}
-            trigger={
-              <Button2
-                type="button"
-                disabled={isPending}
-                className="mt-4 ml-auto"
-              >
-                {isPending ? <AsciiSpinner /> : <FaDiscord />}
-                Auf Discord veröffentlichen
-              </Button2>
-            }
-            description={
-              <>
-                Das Event <span className="font-bold">{event.name}</span> ist in
-                dieser App nur für ausgewählte Rollen sichtbar. Auf Discord
-                sehen es alle Mitglieder des Servers — inklusive Titel,
-                Beschreibung und Zeitraum.
-              </>
-            }
-            confirmLabel="Trotzdem veröffentlichen"
-          />
-        ) : (
-          <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
-            {isPending ? <AsciiSpinner /> : <FaDiscord />}
-            Auf Discord veröffentlichen
-          </Button2>
-        )}
+        <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
+          {isPending ? <AsciiSpinner /> : <FaDiscord />}
+          Auf Discord veröffentlichen
+        </Button2>
+
+        <RestrictedDiscordPublishDialog
+          isOpen={restrictedConfirmation.isOpen}
+          onClose={restrictedConfirmation.close}
+          description={
+            <>
+              Das Event <span className="font-bold">{event.name}</span> ist in
+              dieser App nur für ausgewählte Rollen sichtbar. Auf Discord sehen
+              es alle Mitglieder des Servers — inklusive Titel, Beschreibung und
+              Zeitraum.
+            </>
+          }
+          confirmLabel="Trotzdem veröffentlichen"
+        />
 
         <ActionErrorNote className="mt-4" state={state} />
       </form>

@@ -36,7 +36,7 @@ export const DeleteUploadButton = ({
       hiddenFields={[{ name: "id", value: uploadId }]}
       trigger={(isPending) => (
         <Button
-          type="button"
+          type="submit"
           variant="tertiary"
           disabled={isPending}
           aria-label={`"${fileName}" löschen`}

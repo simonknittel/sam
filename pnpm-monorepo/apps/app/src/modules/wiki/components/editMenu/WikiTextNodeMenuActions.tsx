@@ -78,6 +78,7 @@ export const WikiTextNodeMenuActions = ({ editor, menu }: Props) => {
               key={level}
               title={`Überschrift ${level}`}
               isActive={menu.headingLevel === level}
+              isToggle
               onClick={() => toggleTextHeading(level)}
             >
               <span className="text-xs font-bold">H{level}</span>
@@ -86,6 +87,7 @@ export const WikiTextNodeMenuActions = ({ editor, menu }: Props) => {
           <ToolbarButton
             title="Text"
             isActive={menu.headingLevel === null && menu.textSize === null}
+            isToggle
             onClick={() => setTextParagraph(null)}
           >
             <FaParagraph />
@@ -96,6 +98,7 @@ export const WikiTextNodeMenuActions = ({ editor, menu }: Props) => {
           <ToolbarButton
             title="Kleiner Text"
             isActive={menu.textSize === "small"}
+            isToggle
             onClick={() => setTextParagraph("small")}
           >
             <FaParagraph className="text-[0.6rem]" />
@@ -108,6 +111,7 @@ export const WikiTextNodeMenuActions = ({ editor, menu }: Props) => {
               key={value}
               title={title}
               isActive={menu.textAlign === value}
+              isToggle
               onClick={() => setTextAlignment(value)}
             >
               <Icon />

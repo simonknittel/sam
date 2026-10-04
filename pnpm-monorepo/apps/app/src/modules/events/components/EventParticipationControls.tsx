@@ -46,7 +46,7 @@ export const EventParticipationControls = ({
 
   /**
    * Adopt the stored comment when it changes (e.g. a fresh sign-up after a
-   * cancellation) — same render-time pattern as RadioGroup.
+   * cancellation) — adjusted during render, not in an effect.
    *
    * Only while the draft is untouched, though: those same background
    * refreshes arrive whenever anything revalidates the event, and adopting
@@ -82,7 +82,7 @@ export const EventParticipationControls = ({
             hiddenFields={[{ name: "eventId", value: eventId }]}
             trigger={(isPending) => (
               <Button2
-                type="button"
+                type="submit"
                 variant={Button2Variant.Secondary}
                 disabled={isPending}
               >

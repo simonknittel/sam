@@ -121,6 +121,7 @@ export const WikiPageIndexConfigModal = ({
         }}
       >
         <RadioGroup
+          label="Art des Verzeichnisses"
           name="mode"
           value={mode}
           onChange={setMode}
@@ -195,6 +196,7 @@ export const WikiPageIndexConfigModal = ({
 
             <div className="mt-4">
               <RadioGroup
+                label="Verknüpfung der Tags"
                 name="matchMode"
                 value={matchMode}
                 onChange={setMatchMode}

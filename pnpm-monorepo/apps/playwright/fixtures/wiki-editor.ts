@@ -20,11 +20,19 @@ export const focusEditor = async (page: Page) => {
   return editor;
 };
 
-/** Toggles a wiki page from the read view into the collab editor. */
+/**
+ * Toggles a wiki page from the read view into the collab editor. The toggle
+ * is found by its name: the buttons of the editor toolbar also carry
+ * `aria-pressed`.
+ */
 export const enterEditMode = (page: Page) =>
   clickUntilVisible(
-    page.locator('article button[aria-pressed="false"]'),
-    page.locator('article button[aria-pressed="true"]'),
+    page
+      .locator("article")
+      .getByRole("button", { name: "Bearbeiten", exact: true }),
+    page
+      .locator("article")
+      .getByRole("button", { name: "Bearbeitung beenden", exact: true }),
   );
 
 /**

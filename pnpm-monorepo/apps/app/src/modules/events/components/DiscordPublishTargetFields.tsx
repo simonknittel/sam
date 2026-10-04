@@ -50,6 +50,7 @@ export const DiscordPublishTargetFields = ({
   return (
     <div className={clsx(className)}>
       <RadioGroup
+        label="Ziel auf Discord"
         name="discordPublishTarget"
         items={[
           {

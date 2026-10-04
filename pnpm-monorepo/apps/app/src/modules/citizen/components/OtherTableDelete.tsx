@@ -39,7 +39,7 @@ export const OtherTableDelete = ({ log }: Props) => {
           title="Eintrag löschen"
           disabled={isPending}
           variant="tertiary"
-          type="button"
+          type="submit"
         >
           {isPending ? <AsciiSpinner /> : <FaTrash />} Löschen
         </Button>

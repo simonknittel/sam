@@ -18,6 +18,7 @@ export const DeleteTask = ({ className, task }: Props) => {
       hiddenFields={[{ name: "id", value: task.id }]}
       trigger={(isPending) => (
         <button
+          type="submit"
           disabled={isPending}
           className="flex h-full items-center px-2 text-brand-red-500 hover:text-brand-red-300 enabled:cursor-pointer"
           title="Task löschen"

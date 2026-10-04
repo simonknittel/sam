@@ -237,6 +237,7 @@ export const EventWikiPagePermissionsProvider = ({
             <h4 className="mt-4 font-bold">Bilder</h4>
             <UploadabilityRadioGroup
               name="imageUploadability"
+              label="Bilder hochladen"
               value={imageUploadability}
               onChange={setImageUploadability}
               allowInherit={!isRootPage}
@@ -246,6 +247,7 @@ export const EventWikiPagePermissionsProvider = ({
             <h4 className="mt-4 font-bold">Dateianhänge</h4>
             <UploadabilityRadioGroup
               name="attachmentUploadability"
+              label="Dateianhänge hochladen"
               value={attachmentUploadability}
               onChange={setAttachmentUploadability}
               allowInherit={!isRootPage}
@@ -351,6 +353,7 @@ const ScopeSection = ({
       <h3 className="font-mono text-lg font-bold uppercase">{legend}</h3>
 
       <RadioGroup
+        label={legend}
         name={name}
         className="mt-2"
         equalWidth
@@ -377,6 +380,7 @@ const ScopeSection = ({
 
 interface UploadabilityRadioGroupProps {
   readonly name: string;
+  readonly label: string;
   readonly value: WikiPageUploadability;
   readonly onChange: (value: WikiPageUploadability) => void;
   readonly allowInherit: boolean;
@@ -385,6 +389,7 @@ interface UploadabilityRadioGroupProps {
 
 const UploadabilityRadioGroup = ({
   name,
+  label,
   value,
   onChange,
   allowInherit,
@@ -392,6 +397,7 @@ const UploadabilityRadioGroup = ({
 }: UploadabilityRadioGroupProps) => {
   return (
     <RadioGroup
+      label={label}
       name={name}
       className="mt-2"
       equalWidth

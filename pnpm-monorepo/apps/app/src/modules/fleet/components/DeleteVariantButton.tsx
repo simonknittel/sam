@@ -25,7 +25,7 @@ export const DeleteVariantButton = ({
       action={deleteVariant}
       hiddenFields={[{ name: "id", value: variant.id }]}
       trigger={(isPending) => (
-        <Button variant="tertiary" disabled={isPending}>
+        <Button type="submit" variant="tertiary" disabled={isPending}>
           {isPending ? <AsciiSpinner /> : <FaTrash />} Löschen
         </Button>
       )}

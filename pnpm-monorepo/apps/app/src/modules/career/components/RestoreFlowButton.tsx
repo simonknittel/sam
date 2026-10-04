@@ -21,7 +21,7 @@ export const RestoreFlowButton = ({ flowId, name, slug }: Props) => {
       hiddenFields={[{ name: "flowId", value: flowId }]}
       trigger={(isPending) => (
         <Button2
-          type="button"
+          type="submit"
           variant={Button2Variant.IconOnly}
           tooltip="Wiederherstellen"
           disabled={isPending}
@@ -33,16 +33,13 @@ export const RestoreFlowButton = ({ flowId, name, slug }: Props) => {
       description={`„${name}“ erscheint mit seinen Knoten und Berechtigungen wieder am Ende der Liste. Da ein gelöschter Karrierebaum seinen Slug freigibt, kann dieser inzwischen vergeben sein — dann wähle hier einen anderen.`}
       confirmLabel="Wiederherstellen"
     >
-      {(formId) => (
-        <TextInput
-          form={formId}
-          name="slug"
-          label="Slug"
-          defaultValue={slug}
-          maxLength={SLUG_MAX_LENGTH}
-          required
-        />
-      )}
+      <TextInput
+        name="slug"
+        label="Slug"
+        defaultValue={slug}
+        maxLength={SLUG_MAX_LENGTH}
+        required
+      />
     </ConfirmActionButton>
   );
 };

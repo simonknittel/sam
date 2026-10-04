@@ -22,6 +22,7 @@ export const EndCollectionPhaseButton = ({ className, cycleData }: Props) => {
       hiddenFields={[{ name: "id", value: cycleData.cycle.id }]}
       trigger={(isPending) => (
         <Button2
+          type="submit"
           disabled={
             cycleData.currentPhase !== CyclePhase.Collection || isPending
           }

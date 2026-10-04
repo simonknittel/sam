@@ -18,6 +18,7 @@ export const BanUser = ({ userId }: Props) => {
       hiddenFields={[{ name: "userId", value: userId }]}
       trigger={(isPending) => (
         <Button2
+          type="submit"
           variant={Button2Variant.IconOnly}
           disabled={isPending}
           tooltip="Benutzer sperren"
@@ -29,17 +30,9 @@ export const BanUser = ({ userId }: Props) => {
       description="Der Benutzer wird sofort abgemeldet und kann sich nicht mehr anmelden."
       confirmLabel="Sperren"
     >
-      {(formId) => (
-        <div>
-          <Textarea
-            label="Grund (optional)"
-            name="reason"
-            maxLength={500}
-            form={formId}
-            autoFocus
-          />
-        </div>
-      )}
+      <div>
+        <Textarea label="Grund (optional)" name="reason" maxLength={500} />
+      </div>
     </ConfirmActionButton>
   );
 };

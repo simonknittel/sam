@@ -20,7 +20,7 @@ export const CitizenTableDelete = ({ entity }: Props) => {
       action={deleteCitizen}
       hiddenFields={[{ name: "id", value: entity.id }]}
       trigger={(isPending) => (
-        <Button disabled={isPending} variant="tertiary">
+        <Button type="submit" disabled={isPending} variant="tertiary">
           {isPending ? <AsciiSpinner /> : <FaTrash />} Löschen
         </Button>
       )}

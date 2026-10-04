@@ -17,7 +17,7 @@ export const DeleteFlowButton = ({ flowId, name }: Props) => {
       action={deleteFlow}
       hiddenFields={[{ name: "flowId", value: flowId }]}
       trigger={(isPending) => (
-        <Button2 type="button" disabled={isPending}>
+        <Button2 type="submit" disabled={isPending}>
           {isPending ? <AsciiSpinner /> : <FaTrash />}
           Löschen
         </Button2>

@@ -19,6 +19,7 @@ export const DeletePenaltyEntry = ({ className, entry }: Props) => {
       hiddenFields={[{ name: "id", value: entry.id }]}
       trigger={(isPending) => (
         <button
+          type="submit"
           disabled={isPending}
           className="flex items-center text-brand-red-500 hover:cursor-pointer hover:text-brand-red-300"
           title="Löschen"

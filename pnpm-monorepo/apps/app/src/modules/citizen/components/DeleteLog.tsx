@@ -48,7 +48,7 @@ export const DeleteLog = ({ log }: Props) => {
           className="h-auto self-center"
           disabled={isPending}
           variant="tertiary"
-          type="button"
+          type="submit"
         >
           {isPending ? <AsciiSpinner /> : <FaTrash />} Löschen
         </Button>

@@ -54,6 +54,7 @@ export const ListPicker = ({ editor }: Props) => {
           key={name}
           type="button"
           title={title}
+          aria-pressed={activeList === name}
           onClick={() => toggle(name)}
           className={clsx(
             "flex size-8 cursor-pointer items-center justify-center rounded-secondary hover:bg-neutral-800",

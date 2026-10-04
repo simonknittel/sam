@@ -3,14 +3,7 @@
 import { useAction } from "@/modules/actions/utils/useAction";
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+  useSubmitConfirmation,
 } from "@/modules/common/components/AlertDialog";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
@@ -19,7 +12,7 @@ import { NumberInputFormatted } from "@/modules/common/components/form/NumberInp
 import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { StatisticTile } from "@/modules/common/components/StatisticTile";
 import { CyclePhase, getAuecPerSilc } from "@sam-monorepo/domain";
-import { useId, useState, type KeyboardEventHandler } from "react";
+import { useState } from "react";
 import { startPayout } from "../actions/startPayout";
 import type { getProfitDistributionCycleById } from "../queries/getProfitDistributionCycleById";
 import { CitizenTable } from "./CitizenTable";
@@ -33,19 +26,12 @@ interface Props {
 
 export const PhaseManagementPayoutPreparation = ({ cycleData }: Props) => {
   const { formAction, isPending } = useAction(startPayout);
-  const id = useId();
   const [auecProfit, setAuecProfit] = useState(
     Number(cycleData.cycle.auecProfit) || 0,
   );
-  const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const confirmation = useSubmitConfirmation();
 
   const auecPerSilc = getAuecPerSilc(auecProfit, cycleData.totalSilc);
-
-  const handleKeyDown: KeyboardEventHandler = (event) => {
-    if (event.key !== "Enter") return;
-    event.preventDefault();
-    setIsAlertOpen(true);
-  };
 
   return (
     <Phase
@@ -53,17 +39,14 @@ export const PhaseManagementPayoutPreparation = ({ cycleData }: Props) => {
       currentPhase={cycleData.currentPhase}
       innerClassName="overflow-hidden"
     >
-      <form action={formAction} id={id}>
+      <form action={formAction} onSubmit={confirmation.onSubmit}>
         <input type="hidden" name="id" value={cycleData.cycle.id} />
 
         <h2 className="text-center font-mono font-bold uppercase">
           Vorbereitung der Auszahlung
         </h2>
 
-        <div
-          className="mt-4 flex border-t border-white/5 pt-4"
-          onKeyDown={handleKeyDown}
-        >
+        <div className="mt-4 flex border-t border-white/5 pt-4">
           <div className="mx-auto w-full max-w-80 text-center">
             <NumberInputFormatted
               label="Gesamter aUEC-Überschuss"
@@ -126,40 +109,31 @@ export const PhaseManagementPayoutPreparation = ({ cycleData }: Props) => {
           </StatisticTile>
         </div>
 
-        <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
-          <AlertDialogTrigger asChild>
-            <Button2
-              disabled={
-                cycleData.currentPhase !== CyclePhase.PayoutPreparation ||
-                isPending
-              }
-              variant={Button2Variant.Secondary}
-              className="mx-auto mt-4"
-            >
-              {isPending && <AsciiSpinner />}
-              Auszahlungsphase starten
-            </Button2>
-          </AlertDialogTrigger>
+        <Button2
+          type="submit"
+          disabled={
+            cycleData.currentPhase !== CyclePhase.PayoutPreparation || isPending
+          }
+          variant={Button2Variant.Secondary}
+          className="mx-auto mt-4"
+        >
+          {isPending && <AsciiSpinner />}
+          Auszahlungsphase starten
+        </Button2>
 
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Auszahlungsphase beenden?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Willst du die Auszahlungsphase von &ldquo;
-                {cycleData.cycle.title}
-                &rdquo; starten?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-
-            <AlertDialogFooter>
-              <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-
-              <AlertDialogAction type="submit" form={id}>
-                Starten
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <AlertDialog
+          isOpen={confirmation.isOpen}
+          onClose={confirmation.close}
+          title="Auszahlungsphase beenden?"
+          description={
+            <>
+              Willst du die Auszahlungsphase von &ldquo;
+              {cycleData.cycle.title}
+              &rdquo; starten?
+            </>
+          }
+          confirmLabel="Starten"
+        />
       </form>
 
       {cycleData.currentPhase === CyclePhase.PayoutPreparation && (

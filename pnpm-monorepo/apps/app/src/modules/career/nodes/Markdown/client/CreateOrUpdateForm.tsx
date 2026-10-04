@@ -106,6 +106,7 @@ export const CreateOrUpdateForm = ({ initialData, onUpdate }: Props) => {
 
       <p className="mt-6">Position</p>
       <RadioGroup
+        label="Position"
         name="markdownPosition"
         items={[
           {

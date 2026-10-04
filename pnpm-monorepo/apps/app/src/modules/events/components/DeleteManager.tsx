@@ -23,6 +23,7 @@ export const DeleteManager = ({ className, eventId, managerId }: Props) => {
       ]}
       trigger={(isPending) => (
         <button
+          type="submit"
           disabled={isPending}
           className="flex h-full items-center px-2 text-brand-red-500 hover:text-brand-red-300"
           title="Manager entfernen"

@@ -25,6 +25,7 @@ const TypeButton = ({
   <button
     type="button"
     title={title}
+    aria-pressed={isActive}
     onClick={onClick}
     className={clsx(
       "flex size-8 cursor-pointer items-center justify-center rounded-secondary hover:bg-neutral-800",

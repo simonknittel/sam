@@ -2,6 +2,7 @@
 
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
+import { useSubmitConfirmation } from "@/modules/common/components/AlertDialog";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
@@ -47,7 +48,6 @@ export const CreateEventForm = ({
       onSuccess,
     });
   const templateSelectId = useId();
-  const formId = useId();
   const [selectedTemplateId, setSelectedTemplateId] = useState(
     templateId ?? NO_TEMPLATE,
   );
@@ -72,11 +72,11 @@ export const CreateEventForm = ({
   const prefillKey = selectedTemplate?.id ?? NO_TEMPLATE;
 
   /**
-   * Visibility and publishing are read by the submit button (a restricted
+   * Visibility and publishing are read by the submission (a restricted
    * event published to Discord takes a confirmation), so unlike the other
    * prefilled fields they live here rather than in their own section. The
    * template switch resets them the way React documents it — adjusting
-   * state during render instead of an effect, like `RadioGroup` does.
+   * state during render instead of an effect.
    */
   const [visibility, setVisibility] = useState<string>(
     selectedTemplate?.visibility ?? EventVisibility.PUBLIC,
@@ -91,11 +91,16 @@ export const CreateEventForm = ({
     setIsPublishing(selectedTemplate?.discordPublishTarget != null);
   }
 
-  const needsRestrictedConfirmation =
-    visibility === EventVisibility.RESTRICTED && isPublishing;
+  const restrictedConfirmation = useSubmitConfirmation(
+    visibility === EventVisibility.RESTRICTED && isPublishing,
+  );
 
   return (
-    <form action={formAction} id={formId} className={clsx(className)}>
+    <form
+      action={formAction}
+      onSubmit={restrictedConfirmation.onSubmit}
+      className={clsx(className)}
+    >
       {templates && templates.length > 0 && (
         <div className="mb-4">
           <label htmlFor={templateSelectId} className="mb-1 block">
@@ -181,28 +186,17 @@ export const CreateEventForm = ({
         />
       </div>
 
-      {needsRestrictedConfirmation ? (
-        <RestrictedDiscordPublishDialog
-          formId={formId}
-          trigger={
-            <Button2
-              type="button"
-              disabled={isPending}
-              className="mt-4 ml-auto"
-            >
-              {isPending ? <AsciiSpinner /> : <FaSave />}
-              Speichern
-            </Button2>
-          }
-          description="Das Event ist in dieser App nur für ausgewählte Rollen sichtbar. Auf Discord sehen es alle Mitglieder des Servers — inklusive Titel, Beschreibung und Zeitraum."
-          confirmLabel="Erstellen und veröffentlichen"
-        />
-      ) : (
-        <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
-          {isPending ? <AsciiSpinner /> : <FaSave />}
-          Speichern
-        </Button2>
-      )}
+      <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
+        {isPending ? <AsciiSpinner /> : <FaSave />}
+        Speichern
+      </Button2>
+
+      <RestrictedDiscordPublishDialog
+        isOpen={restrictedConfirmation.isOpen}
+        onClose={restrictedConfirmation.close}
+        description="Das Event ist in dieser App nur für ausgewählte Rollen sichtbar. Auf Discord sehen es alle Mitglieder des Servers — inklusive Titel, Beschreibung und Zeitraum."
+        confirmLabel="Erstellen und veröffentlichen"
+      />
 
       <ActionErrorNote className="mt-4" state={state} />
     </form>
@@ -329,6 +323,7 @@ const VisibilityFields = ({
     <>
       <p className="mt-4">Sichtbarkeit</p>
       <RadioGroup
+        label="Sichtbarkeit"
         name="visibility"
         items={[
           {

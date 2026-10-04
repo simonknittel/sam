@@ -133,6 +133,7 @@ export const CreateOrUpdateForm = ({ initialData, onUpdate }: Props) => {
 
       <p className="mt-6">Ausrichtung</p>
       <RadioGroup
+        label="Ausrichtung"
         name="roleCitizensAlignment"
         items={[
           {
@@ -156,6 +157,7 @@ export const CreateOrUpdateForm = ({ initialData, onUpdate }: Props) => {
 
       <p className="mt-6">Badge verstecken</p>
       <RadioGroup
+        label="Badge verstecken"
         name="roleCitizensHideRole"
         items={[
           {
@@ -174,6 +176,7 @@ export const CreateOrUpdateForm = ({ initialData, onUpdate }: Props) => {
 
       <p className="mt-6">Dauerhaft farbig anzeigen</p>
       <RadioGroup
+        label="Dauerhaft farbig anzeigen"
         name="showUnlocked"
         items={[
           {

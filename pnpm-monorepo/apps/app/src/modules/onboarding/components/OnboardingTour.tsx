@@ -2,6 +2,7 @@
 
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
+import { useMediaQuery } from "@base-ui/react/unstable-use-media-query";
 import {
   autoUpdate,
   flip,
@@ -11,9 +12,8 @@ import {
 } from "@floating-ui/react-dom";
 import clsx from "clsx";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
 import { FaRegTimesCircle } from "react-icons/fa";
-import { useIsLargeViewport } from "../hooks/useIsLargeViewport";
 import { useOnboardingTarget } from "../hooks/useOnboardingTarget";
 import { useTargetRect } from "../hooks/useTargetRect";
 import { getOnboardingTaskByKey, type OnboardingStep } from "../utils/config";
@@ -70,17 +70,10 @@ const OnboardingTourView = ({ tour }: OnboardingTourViewProps) => {
     isOnRequiredRoute,
   );
 
-  useEffect(() => {
-    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
-      if (event.key === "Escape") exitTour();
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [exitTour]);
-
   /**
-   * When the tour ends, return the focus to the (visible) trigger — it
-   * would otherwise be dropped on the body behind the closed overlay.
+   * When the tour ends, return the focus to the (visible) trigger. The
+   * dialog cannot do this: the tour can end on a different page than the
+   * page where it started.
    */
   useEffect(() => {
     return () => {
@@ -98,25 +91,69 @@ const OnboardingTourView = ({ tour }: OnboardingTourViewProps) => {
 
   if (!step) return null;
 
-  if (!isOnRequiredRoute || (step.targetId && !element && !hasTimedOut))
-    return <TourWaitingOverlay />;
+  const isWaiting =
+    !isOnRequiredRoute || (Boolean(step.targetId) && !element && !hasTimedOut);
 
   return (
-    <OnboardingStepCard step={step} targetElement={element} onExit={exitTour}>
-      <TourStepControls
-        stepNumber={tour.stepIndex + 1}
-        stepCount={steps.length}
-        onBack={retreatTour}
-        onNext={advanceTour}
-      />
-    </OnboardingStepCard>
+    <TourDialog label={step.title} onClose={exitTour}>
+      {isWaiting ? (
+        <TourWaitingOverlay />
+      ) : (
+        <OnboardingStepCard
+          step={step}
+          targetElement={element}
+          onExit={exitTour}
+        >
+          <TourStepControls
+            stepNumber={tour.stepIndex + 1}
+            stepCount={steps.length}
+            onBack={retreatTour}
+            onNext={advanceTour}
+          />
+        </OnboardingStepCard>
+      )}
+    </TourDialog>
+  );
+};
+
+interface TourDialogProps {
+  readonly label: string;
+  readonly onClose: () => void;
+  readonly children: ReactNode;
+}
+
+/**
+ * A modal dialog over the full viewport. It is in the top layer, above
+ * everything else (including the mobile flyout). The browser makes the page
+ * inert also for the keyboard, and closes the dialog on Escape.
+ */
+const TourDialog = ({ label, onClose, children }: TourDialogProps) => {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  /**
+   * A layout effect, because the dialog must be open before the effect of
+   * the step card moves the focus into the dialog.
+   */
+  useLayoutEffect(() => {
+    dialogRef.current?.showModal();
+  }, []);
+
+  return (
+    <dialog
+      ref={dialogRef}
+      aria-label={label}
+      onClose={onClose}
+      className="fixed inset-0 size-full max-h-none max-w-none overflow-visible bg-transparent text-inherit outline-hidden backdrop:bg-transparent"
+    >
+      {children}
+    </dialog>
   );
 };
 
 /** Dims the page while a navigation or the target lookup is in flight */
 const TourWaitingOverlay = () => {
   return (
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-neutral-800/50 backdrop-blur-sm">
+    <div className="absolute inset-0 flex items-center justify-center bg-neutral-800/50 backdrop-blur-sm">
       <AsciiSpinner />
     </div>
   );
@@ -136,6 +173,9 @@ const OVERSIZED_TARGET_VIEWPORT_SHARE = 0.6;
 /** Scroll offset which keeps an oversized target below the fixed top bar */
 const OVERSIZED_TARGET_SCROLL_OFFSET_PIXELS = 128;
 
+/** Tailwind's `lg` breakpoint */
+const LARGE_VIEWPORT_QUERY = "(min-width: 1024px)";
+
 interface OnboardingStepCardProps {
   readonly step: OnboardingStep;
   /** Null renders the centered variant instead of the anchored one */
@@ -145,9 +185,8 @@ interface OnboardingStepCardProps {
 }
 
 /**
- * A tour step in a full-viewport layer above everything else (including the
- * mobile flyout): the page is dimmed and inert. With a target element, a
- * cutout frame highlights it and the step card floats next to it; without
+ * A tour step in the tour dialog: the page is dimmed. With a target element,
+ * a cutout frame highlights it and the step card floats next to it; without
  * one, the card is centered. On small viewports the card docks to the
  * bottom of the screen instead.
  */
@@ -157,7 +196,9 @@ const OnboardingStepCard = ({
   onExit,
   children,
 }: OnboardingStepCardProps) => {
-  const isLargeViewport = useIsLargeViewport();
+  const isLargeViewport = useMediaQuery(LARGE_VIEWPORT_QUERY, {
+    defaultMatches: false,
+  });
   const cardRef = useRef<HTMLDivElement | null>(null);
 
   const targetRect = useTargetRect(targetElement);
@@ -213,46 +254,8 @@ const OnboardingStepCard = ({
     cardRef.current?.focus();
   }, [step.key]);
 
-  /**
-   * Minimal focus trap: the page behind the overlay is inert for the
-   * pointer, so Tab must not wander off into it either.
-   */
-  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key !== "Tab") return;
-
-    const card = cardRef.current;
-    if (!card) return;
-
-    const focusableElements = Array.from(
-      card.querySelectorAll<HTMLElement>("button, [href]"),
-    );
-    if (focusableElements.length === 0) return;
-
-    const firstElement = focusableElements[0];
-    const lastElement = focusableElements.at(-1)!;
-    /**
-     * -1 means the focus sits on the card itself — the initial state of
-     * every step. Treat it like the first element, so Shift+Tab wraps to
-     * the end instead of escaping into the page behind the overlay.
-     */
-    const activeIndex = focusableElements.indexOf(
-      document.activeElement as HTMLElement,
-    );
-
-    if (event.shiftKey && activeIndex <= 0) {
-      event.preventDefault();
-      lastElement.focus();
-    } else if (
-      !event.shiftKey &&
-      activeIndex === focusableElements.length - 1
-    ) {
-      event.preventDefault();
-      firstElement.focus();
-    }
-  };
-
   return (
-    <div className="fixed inset-0 z-70">
+    <>
       {targetElement && targetRect ? (
         <div
           className="pointer-events-none absolute rounded-secondary shadow-[0_0_0_9999px_rgba(23,23,23,0.7)] ring-2 ring-amber-500/80"
@@ -289,11 +292,7 @@ const OnboardingStepCard = ({
               !isLargeViewport,
           },
         )}
-        role="dialog"
-        aria-modal="true"
-        aria-label={step.title}
         tabIndex={-1}
-        onKeyDown={handleKeyDown}
       >
         <div className="flex items-start justify-between gap-4">
           <p className="font-mono font-bold text-balance uppercase">
@@ -314,7 +313,7 @@ const OnboardingStepCard = ({
 
         {children}
       </div>
-    </div>
+    </>
   );
 };
 

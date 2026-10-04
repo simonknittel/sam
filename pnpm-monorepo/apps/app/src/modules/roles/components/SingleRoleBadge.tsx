@@ -7,14 +7,7 @@ import { deleteRoleAssignment } from "@/modules/citizen/actions/deleteRoleAssign
 import { increaseRoleAssignmentLevel } from "@/modules/citizen/actions/increaseRoleAssignmentLevel";
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+  useSubmitConfirmation,
 } from "@/modules/common/components/AlertDialog";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
@@ -26,7 +19,6 @@ import { type Role } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { useId } from "react";
 import { FaCog, FaMinus, FaPlus, FaTrash } from "react-icons/fa";
 import { useRolesContext } from "./RolesContext";
 
@@ -85,7 +77,7 @@ export const SingleRoleBadge = ({
   } = useAction(decreaseRoleAssignmentLevel, {
     onSuccess,
   });
-  const deleteRoleAssignmentFormId = useId();
+  const removeConfirmation = useSubmitConfirmation();
 
   const role = roles.find((role) => role.id === roleId);
   if (!role) return null;
@@ -140,7 +132,9 @@ export const SingleRoleBadge = ({
 
       {!role.iconId && showPlaceholder && <span className="size-6" />}
 
-      <span className="truncate font-mono text-sm">{role.name}</span>
+      <span className="truncate font-mono text-sm" title={role.name}>
+        {role.name}
+      </span>
 
       {showLevelProgress && (
         <span className="absolute right-0 bottom-0 left-0 block h-px bg-white/30">
@@ -278,48 +272,33 @@ export const SingleRoleBadge = ({
           <div className="mt-4 border-t border-white/10 pt-4">
             <form
               action={deleteRoleAssignmentFormAction}
-              id={deleteRoleAssignmentFormId}
+              onSubmit={removeConfirmation.onSubmit}
             >
               <input type="hidden" name="citizenId" value={citizenId} />
               <input type="hidden" name="roleId" value={role.id} />
 
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button2
-                    variant={Button2Variant.Secondary}
-                    disabled={isDeleteRoleAssignmentPending}
-                  >
-                    {isDeleteRoleAssignmentPending ? (
-                      <AsciiSpinner />
-                    ) : (
-                      <FaTrash />
-                    )}
-                    Entfernen
-                  </Button2>
-                </AlertDialogTrigger>
+              <Button2
+                type="submit"
+                variant={Button2Variant.Secondary}
+                disabled={isDeleteRoleAssignmentPending}
+              >
+                {isDeleteRoleAssignmentPending ? <AsciiSpinner /> : <FaTrash />}
+                Entfernen
+              </Button2>
 
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Rolle entfernen?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Willst du die Rolle{" "}
-                      <span className="font-bold">{role.name}</span> wirklich
-                      entfernen?
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-
-                    <AlertDialogAction
-                      type="submit"
-                      form={deleteRoleAssignmentFormId}
-                    >
-                      Entfernen
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <AlertDialog
+                isOpen={removeConfirmation.isOpen}
+                onClose={removeConfirmation.close}
+                title="Rolle entfernen?"
+                description={
+                  <>
+                    Willst du die Rolle{" "}
+                    <span className="font-bold">{role.name}</span> wirklich
+                    entfernen?
+                  </>
+                }
+                confirmLabel="Entfernen"
+              />
 
               {deleteRoleAssignmentState &&
                 "error" in deleteRoleAssignmentState && (

@@ -55,6 +55,7 @@ export const WikiPageSidebarModeModal = ({
           <input type="hidden" name="id" value={pageId} />
 
           <RadioGroup
+            label="Sichtbarkeit in der Seitenleiste"
             name="sidebarMode"
             value={selectedMode}
             onChange={setSelectedMode}

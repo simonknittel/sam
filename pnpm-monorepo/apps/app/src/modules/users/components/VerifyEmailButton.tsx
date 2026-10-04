@@ -19,6 +19,7 @@ export const VerifyEmailButton = ({ className, userId }: Props) => {
       hiddenFields={[{ name: "userId", value: userId }]}
       trigger={(isPending) => (
         <button
+          type="submit"
           disabled={isPending}
           className="flex items-center gap-2 py-2 text-brand-red-500 hover:underline"
           title="Datenschutzerklärung bestätigen"

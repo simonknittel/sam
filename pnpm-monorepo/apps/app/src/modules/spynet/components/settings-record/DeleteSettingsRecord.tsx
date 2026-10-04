@@ -18,7 +18,7 @@ export const DeleteSettingsRecord = ({ action, record }: Props) => {
       action={action}
       hiddenFields={[{ name: "id", value: record.id }]}
       trigger={(isPending) => (
-        <Button disabled={isPending} variant="tertiary">
+        <Button type="submit" disabled={isPending} variant="tertiary">
           {isPending ? <AsciiSpinner /> : <FaTrash />} Löschen
         </Button>
       )}

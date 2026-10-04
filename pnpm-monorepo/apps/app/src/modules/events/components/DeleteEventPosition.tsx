@@ -24,6 +24,7 @@ export const DeleteEventPosition = ({ className, position }: Props) => {
           asChild
           triggerChildren={
             <button
+              type="submit"
               disabled={isPending}
               className="flex items-center px-2 text-brand-red-500 hover:cursor-pointer hover:text-brand-red-300"
               aria-label={LABEL}

@@ -212,33 +212,35 @@ export const AvatarCreatorClient = ({ className }: Props) => {
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result !== "string") return;
-        const img = new Image();
-        img.src = reader.result;
-        img.decoding = "async";
-        img.onload = () => {
-          setUserImage(img);
-          hasUserAdjustedRef.current = false;
-          if (!canvasSize && frameImage) {
-            setCanvasSize({
-              width: frameImage.naturalWidth,
-              height: frameImage.naturalHeight,
-            });
-          }
-          if (!canvasSize && !frameImage) {
-            setCanvasSize({
-              width: img.naturalWidth,
-              height: img.naturalHeight,
-            });
-          }
+      const objectUrl = URL.createObjectURL(file);
+      const image = new Image();
+      image.decoding = "async";
+      image.onerror = () => URL.revokeObjectURL(objectUrl);
+      image.onload = () => {
+        /**
+         * The image keeps its data after it loads. Thus the canvas can still
+         * draw it after the release of the URL.
+         */
+        URL.revokeObjectURL(objectUrl);
+        setUserImage(image);
+        hasUserAdjustedRef.current = false;
+        if (!canvasSize && frameImage) {
+          setCanvasSize({
+            width: frameImage.naturalWidth,
+            height: frameImage.naturalHeight,
+          });
+        }
+        if (!canvasSize && !frameImage) {
+          setCanvasSize({
+            width: image.naturalWidth,
+            height: image.naturalHeight,
+          });
+        }
 
-          setScaleMultiplier(DEFAULT_SCALING_MULTIPLIER);
-          setImageOffset({ x: 0, y: 0 });
-        };
+        setScaleMultiplier(DEFAULT_SCALING_MULTIPLIER);
+        setImageOffset({ x: 0, y: 0 });
       };
-      reader.readAsDataURL(file);
+      image.src = objectUrl;
     },
     [canvasSize, frameImage],
   );
@@ -326,26 +328,17 @@ export const AvatarCreatorClient = ({ className }: Props) => {
       return;
     }
 
-    const triggerDownload = (dataUrl: string) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        return;
+      }
+      const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
-      link.href = dataUrl;
+      link.href = url;
       link.download = "avatar.png";
       link.click();
-    };
-
-    if (canvas.toBlob) {
-      canvas.toBlob((blob) => {
-        if (!blob) {
-          return;
-        }
-        const url = URL.createObjectURL(blob);
-        triggerDownload(url);
-        URL.revokeObjectURL(url);
-      }, "image/png");
-      return;
-    }
-
-    triggerDownload(canvas.toDataURL("image/png"));
+      URL.revokeObjectURL(url);
+    }, "image/png");
   }, []);
 
   return (

@@ -79,7 +79,7 @@ export const RoleCheckbox = ({
           </div>
         )}
 
-        <span className="truncate">
+        <span className="truncate" title={role.name}>
           {query && match
             ? underlineCharacters(role.name, match.indices)
             : role.name}
