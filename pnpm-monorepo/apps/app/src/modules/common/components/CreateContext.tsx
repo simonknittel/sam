@@ -179,7 +179,7 @@ export const CreateContextProvider = ({ children }: Props) => {
   );
 
   return (
-    <CreateContext.Provider value={value}>
+    <CreateContext value={value}>
       {children}
 
       {currentlyOpenForm && createForms[currentlyOpenForm.modalId] && (
@@ -189,7 +189,7 @@ export const CreateContextProvider = ({ children }: Props) => {
           onRequestClose={() => setCurrentlyOpenForm(null)}
         />
       )}
-    </CreateContext.Provider>
+    </CreateContext>
   );
 };
 

@@ -94,9 +94,7 @@ export function OverlayProvider({ children }: Props) {
     }
   }, [closePipWindow, isSupported, pipWindow, requestPipWindow]);
 
-  return (
-    <OverlayContext.Provider value={value}>{children}</OverlayContext.Provider>
-  );
+  return <OverlayContext value={value}>{children}</OverlayContext>;
 }
 
 export function useOverlay() {

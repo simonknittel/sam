@@ -111,7 +111,7 @@ export const AppsContextProvider = ({
     ],
   );
 
-  return <AppsContext.Provider value={value}>{children}</AppsContext.Provider>;
+  return <AppsContext value={value}>{children}</AppsContext>;
 };
 
 /**

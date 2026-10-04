@@ -81,11 +81,7 @@ export const UnseenEntriesProvider = ({ children }: Props) => {
     [retainedHighlightKeys, observeEntry],
   );
 
-  return (
-    <UnseenEntriesContext.Provider value={value}>
-      {children}
-    </UnseenEntriesContext.Provider>
-  );
+  return <UnseenEntriesContext value={value}>{children}</UnseenEntriesContext>;
 };
 
 /**

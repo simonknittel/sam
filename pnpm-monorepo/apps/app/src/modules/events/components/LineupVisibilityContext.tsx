@@ -90,9 +90,7 @@ export const LineupVisibilityProvider = ({ children, items }: Props) => {
   );
 
   return (
-    <LineupVisibilityContext.Provider value={value}>
-      {children}
-    </LineupVisibilityContext.Provider>
+    <LineupVisibilityContext value={value}>{children}</LineupVisibilityContext>
   );
 };
 

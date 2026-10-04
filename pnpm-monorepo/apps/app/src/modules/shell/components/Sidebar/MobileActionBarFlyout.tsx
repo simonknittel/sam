@@ -90,9 +90,9 @@ export const MobileActionBarFlyout = ({ children }: Props) => {
           },
         )}
       >
-        <MobileActionBarFlyoutVisibilityContext.Provider value={isVisible}>
+        <MobileActionBarFlyoutVisibilityContext value={isVisible}>
           {children}
-        </MobileActionBarFlyoutVisibilityContext.Provider>
+        </MobileActionBarFlyoutVisibilityContext>
       </div>
 
       {isVisible && (

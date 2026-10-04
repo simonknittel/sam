@@ -62,7 +62,7 @@ export const CmdKProvider = ({ children, canReadCareer }: Props) => {
     [open, setOpen, search, setSearch, pages, setPages, canReadCareer],
   );
 
-  return <CmdKContext.Provider value={value}>{children}</CmdKContext.Provider>;
+  return <CmdKContext value={value}>{children}</CmdKContext>;
 };
 
 /**

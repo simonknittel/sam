@@ -250,11 +250,7 @@ export const OnboardingProvider = ({ initialState, children }: Props) => {
     ],
   );
 
-  return (
-    <OnboardingContext.Provider value={value}>
-      {children}
-    </OnboardingContext.Provider>
-  );
+  return <OnboardingContext value={value}>{children}</OnboardingContext>;
 };
 
 /**

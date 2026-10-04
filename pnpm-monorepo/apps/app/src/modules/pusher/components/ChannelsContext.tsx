@@ -69,11 +69,7 @@ export const ChannelsProvider = ({ children, userId }: Props) => {
 
   const value = useMemo(() => ({ client }), [client]);
 
-  return (
-    <ChannelsContext.Provider value={value}>
-      {children}
-    </ChannelsContext.Provider>
-  );
+  return <ChannelsContext value={value}>{children}</ChannelsContext>;
 };
 
 /**

@@ -33,11 +33,11 @@ export const TabsProvider = ({
   );
 
   return (
-    <TabsContext.Provider value={value}>
+    <TabsContext value={value}>
       <Tabs.Root value={activeTab} onValueChange={setActiveTab}>
         {children}
       </Tabs.Root>
-    </TabsContext.Provider>
+    </TabsContext>
   );
 };
 

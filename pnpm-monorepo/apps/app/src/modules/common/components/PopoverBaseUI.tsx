@@ -177,7 +177,7 @@ export const PopoverBaseUI = ({
   );
 
   return (
-    <PopoverBaseUIContext.Provider value={value}>
+    <PopoverBaseUIContext value={value}>
       <Popover.Root open={!disabled && isOpen} onOpenChange={handleOpenChange}>
         <Popover.Trigger
           render={triggerRender}
@@ -211,7 +211,7 @@ export const PopoverBaseUI = ({
           </Popover.Positioner>
         </Popover.Portal>
       </Popover.Root>
-    </PopoverBaseUIContext.Provider>
+    </PopoverBaseUIContext>
   );
 };
 
@@ -265,7 +265,7 @@ export const PopoverBaseUIDetached = ({
   const value = useMemo(() => ({ closePopover }), [closePopover]);
 
   return (
-    <PopoverBaseUIContext.Provider value={value}>
+    <PopoverBaseUIContext value={value}>
       <Popover.Root open={open} onOpenChange={handleOpenChange}>
         <Popover.Portal>
           <Popover.Positioner
@@ -290,7 +290,7 @@ export const PopoverBaseUIDetached = ({
           </Popover.Positioner>
         </Popover.Portal>
       </Popover.Root>
-    </PopoverBaseUIContext.Provider>
+    </PopoverBaseUIContext>
   );
 };
 

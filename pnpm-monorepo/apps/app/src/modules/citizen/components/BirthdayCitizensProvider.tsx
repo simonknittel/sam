@@ -24,9 +24,7 @@ export const BirthdayCitizensProvider = ({ children, citizenIds }: Props) => {
   const value = useMemo(() => new Set(citizenIds), [citizenIds]);
 
   return (
-    <BirthdayCitizensContext.Provider value={value}>
-      {children}
-    </BirthdayCitizensContext.Provider>
+    <BirthdayCitizensContext value={value}>{children}</BirthdayCitizensContext>
   );
 };
 

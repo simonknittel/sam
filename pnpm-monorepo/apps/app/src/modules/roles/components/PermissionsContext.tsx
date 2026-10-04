@@ -53,11 +53,7 @@ export const PermissionsProvider = ({ children, role }: Props) => {
     [register, permissionStrings],
   );
 
-  return (
-    <PermissionsContext.Provider value={value}>
-      {children}
-    </PermissionsContext.Provider>
-  );
+  return <PermissionsContext value={value}>{children}</PermissionsContext>;
 };
 
 /**

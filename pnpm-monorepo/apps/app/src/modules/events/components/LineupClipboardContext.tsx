@@ -75,9 +75,7 @@ export const LineupClipboardProvider = ({ children }: Props) => {
   );
 
   return (
-    <LineupClipboardContext.Provider value={value}>
-      {children}
-    </LineupClipboardContext.Provider>
+    <LineupClipboardContext value={value}>{children}</LineupClipboardContext>
   );
 };
 

@@ -146,9 +146,9 @@ export const WikiPageTreeCollapseProvider = ({
   );
 
   return (
-    <WikiPageTreeCollapseContext.Provider value={value}>
+    <WikiPageTreeCollapseContext value={value}>
       {children}
-    </WikiPageTreeCollapseContext.Provider>
+    </WikiPageTreeCollapseContext>
   );
 };
 

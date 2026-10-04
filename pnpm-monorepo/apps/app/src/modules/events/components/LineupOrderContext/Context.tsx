@@ -208,7 +208,7 @@ export const LineupOrderProvider = ({
   );
 
   return (
-    <LineupOrderContext.Provider value={value}>
+    <LineupOrderContext value={value}>
       <div
         className={clsx(
           {
@@ -231,7 +231,7 @@ export const LineupOrderProvider = ({
           />
         ))}
       </div>
-    </LineupOrderContext.Provider>
+    </LineupOrderContext>
   );
 };
 
