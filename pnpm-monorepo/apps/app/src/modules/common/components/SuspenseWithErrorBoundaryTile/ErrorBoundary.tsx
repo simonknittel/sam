@@ -4,7 +4,9 @@ import { wikiPageLinkHref } from "@/modules/wiki/utils/wikiPageLinks";
 import clsx from "clsx";
 import { useTranslations } from "next-intl";
 import { catchError, type ErrorInfo } from "next/error";
+import { useTransition } from "react";
 import { BsExclamationOctagonFill } from "react-icons/bs";
+import { AsciiSpinner } from "../AsciiSpinner";
 import { Button2, Button2Variant } from "../Button2";
 import { Link } from "../Link";
 
@@ -23,6 +25,12 @@ const getDigest = (error: unknown) =>
 
 const Fallback = ({ className }: Props, { error, retry }: ErrorInfo) => {
   const t = useTranslations();
+  /**
+   * The retry refreshes the page in a transition. The pending state stays
+   * until the new server render shows, thus a second click cannot start a
+   * second refresh.
+   */
+  const [isRetrying, startRetry] = useTransition();
 
   return (
     <section
@@ -57,9 +65,11 @@ const Fallback = ({ className }: Props, { error, retry }: ErrorInfo) => {
         <Button2
           type="button"
           variant={Button2Variant.Secondary}
-          onClick={retry}
+          onClick={() => startRetry(retry)}
+          disabled={isRetrying}
           className="mt-4"
         >
+          {isRetrying && <AsciiSpinner />}
           Erneut versuchen
         </Button2>
       </div>
@@ -71,5 +81,8 @@ const Fallback = ({ className }: Props, { error, retry }: ErrorInfo) => {
  * Unlike a plain React error boundary, `catchError` lets `notFound()`,
  * `forbidden()` and `redirect()` through to the handling of Next.js, and it
  * resets when the user goes to a different page.
+ *
+ * A change of only the search parameters does not reset it, because
+ * `catchError` compares only the pathname. The retry resets it.
  */
 export const ErrorBoundary = catchError(Fallback);

@@ -18,6 +18,15 @@ const expectFlagPropagation = expect.configure({
 const FLAG_TEST_TIMEOUT = 120_000;
 
 /**
+ * One attempt of the retry loop after the crash flag went off. The click
+ * fails fast when the button is gone or still disabled. The new server
+ * render has some seconds to show the log analyzer. If it does not, the flag
+ * can still be on in the cache of the app, and the loop tries again.
+ */
+const RETRY_CLICK_TIMEOUT = 2_000;
+const RETRY_RENDER_TIMEOUT = 5_000;
+
+/**
  * Navigates and reports whether the element shows up. The wait covers
  * client-side-only components (next/dynamic with ssr: false) and server
  * redirects, which Next.js streams as a client-side navigation after the
@@ -69,6 +78,35 @@ test("the care bear shooter is released by its feature flag", async ({
 });
 
 /**
+ * Holds each `router.refresh()` of the page until `release()`. Next.js asks
+ * for the new server render with the RSC header, a prefetch also carries the
+ * prefetch header.
+ */
+const holdPageRefresh = async (page: Page, path: string) => {
+  let release = () => {};
+  const released = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const state = { requestCount: 0 };
+
+  const isPage = (url: URL) => url.pathname === path;
+  await page.route(isPage, async (route) => {
+    const headers = route.request().headers();
+    if (headers.rsc === "1" && !headers["next-router-prefetch"]) {
+      state.requestCount += 1;
+      await released;
+    }
+    await route.continue();
+  });
+
+  return {
+    requestCount: () => state.requestCount,
+    release,
+    stop: () => page.unroute(isPage),
+  };
+};
+
+/**
  * The tests of this group steer the same page with two different flags.
  * They must not overlap: the crash flag of one test would fail the toolbar
  * poll of the other, thus the group runs them one after the other on one
@@ -93,6 +131,7 @@ test.describe(() => {
     const introduction = page.getByText(
       "Der Log Analyzer wertet die Game Logs von Star Citizen aus",
     );
+    const tileError = page.getByText("Ein unerwarteter Fehler ist aufgetreten");
 
     await setUnleashFlag(UNLEASH_FLAG.CrashLogAnalyzer, false);
     await expectFlagPropagation
@@ -103,23 +142,36 @@ test.describe(() => {
 
     await setUnleashFlag(UNLEASH_FLAG.CrashLogAnalyzer, true);
     await expectFlagPropagation
-      .poll(() =>
-        pageShows(page, "/app/tools/log-analyzer", (currentPage) =>
-          currentPage.getByText("Ein unerwarteter Fehler ist aufgetreten"),
-        ),
-      )
+      .poll(() => pageShows(page, "/app/tools/log-analyzer", () => tileError))
       .toBe(true);
+
+    /**
+     * The retry button stays disabled until the refresh of the page ends,
+     * thus a second click cannot start a second refresh. The test holds the
+     * refresh, thus it cannot end before the assertion. The flag is still on,
+     * thus the tile fails again after the refresh.
+     */
+    const retryButton = page.getByRole("button", { name: "Erneut versuchen" });
+    const heldRefresh = await holdPageRefresh(page, "/app/tools/log-analyzer");
+    await retryButton.click();
+    await expect.poll(heldRefresh.requestCount).toBeGreaterThan(0);
+    await expect(retryButton).toBeDisabled();
+    heldRefresh.release();
+    await expect(retryButton).toBeEnabled();
+    await expect(tileError).toBeVisible();
+    await heldRefresh.stop();
 
     /**
      * The retry loads the tile again from the server without a reload of the
      * page. The tests which follow also need the page in working order.
      */
     await setUnleashFlag(UNLEASH_FLAG.CrashLogAnalyzer, false);
-    const retryButton = page.getByRole("button", { name: "Erneut versuchen" });
     await expect(async () => {
       if (!(await introduction.isVisible()))
-        await retryButton.click({ timeout: 2_000 });
-      await expect(introduction).toBeVisible({ timeout: 5_000 });
+        await retryButton.click({ timeout: RETRY_CLICK_TIMEOUT });
+      await expect(introduction).toBeVisible({
+        timeout: RETRY_RENDER_TIMEOUT,
+      });
     }).toPass({ timeout: FLAG_PROPAGATION_TIMEOUT });
     await expect(retryButton).toHaveCount(0);
   });
