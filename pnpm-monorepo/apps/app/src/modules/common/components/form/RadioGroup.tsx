@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import type { ReactNode } from "react";
+import { useLayoutEffect, useRef, type ReactNode } from "react";
 
 interface Props {
   readonly className?: string;
@@ -34,10 +34,24 @@ export const RadioGroup = ({
   equalWidth = false,
 }: Props) => {
   const hint = items.find((item) => item.value === value)?.hint;
+  const groupRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * React sets `defaultChecked` only when an input mounts. After a
+   * `<form action>`, React resets the form, and the reset restores
+   * `defaultChecked`. Thus `defaultChecked` follows the value: else the
+   * reset selects the value of the mount again, and the next submission
+   * sends that value.
+   */
+  useLayoutEffect(() => {
+    for (const input of groupRef.current?.querySelectorAll("input") ?? [])
+      input.defaultChecked = input.value === value;
+  }, [value]);
 
   return (
     <>
       <div
+        ref={groupRef}
         role="radiogroup"
         aria-label={label}
         className={clsx("flex", className)}
