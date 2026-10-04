@@ -219,9 +219,9 @@ export const WikiGutter = ({
           openOnHover={false}
           side="bottom"
           onOpenChange={handleOpenChange}
+          triggerTitle="Block darunter einfügen (Alt: darüber)"
           trigger={
             <span
-              title="Block darunter einfügen (Alt: darüber)"
               onClick={captureInsertAbove}
               className={clsx(BUTTON_CLASS_NAME, "cursor-pointer")}
             >
@@ -352,10 +352,16 @@ const InsertBlockActions = ({
     closePopover();
     onClosePalette();
 
+    /**
+     * The focus is in the filter input of the palette. The focus() command
+     * of tiptap (also in the entry) moves the focus to the editor only in
+     * the next frame, thus after a dialog of the entry took the focus. Thus
+     * the editor gets the focus now: then focus() does nothing.
+     */
+    editor.view.focus();
     const position = insertPosition();
     editor
       .chain()
-      .focus()
       .insertContentAt(position, { type: "paragraph" })
       .setTextSelection(position + 1)
       .run();
