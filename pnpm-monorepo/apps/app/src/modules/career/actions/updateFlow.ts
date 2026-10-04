@@ -5,7 +5,7 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { log } from "@/modules/logging";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { nodeDefinitions } from "../nodes/server";
 import { getFlowContext } from "../queries/getFlowContext";
@@ -142,10 +142,7 @@ export const updateFlow = createAuthenticatedAction(
       },
     ]);
 
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(`/app/career/${flow.slug}`);
+    refresh();
 
     /**
      * Respond with the result

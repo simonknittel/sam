@@ -13,7 +13,7 @@ import {
   type Prisma,
   type Task,
 } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { TASK_DESCRIPTION_MAX_LENGTH } from "../utils/taskConstraints";
 
@@ -213,10 +213,7 @@ export const createTask = createAuthenticatedAction(
       },
     ]);
 
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath("/app/tasks");
+    refresh();
 
     /**
      * Respond with the result

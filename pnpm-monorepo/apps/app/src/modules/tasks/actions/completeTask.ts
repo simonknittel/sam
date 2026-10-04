@@ -20,7 +20,7 @@ import {
   type Prisma,
 } from "@sam-monorepo/database/client";
 import { lockSilcLedger } from "@sam-monorepo/domain";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { getOpenTasksWhere } from "../queries/getOpenTasksWhere";
 import { getTaskById } from "../queries/getTaskById";
@@ -329,10 +329,7 @@ export const completeTask = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    if (silcTransactionIds.length > 0) {
-      await announceSilcTransactions(silcTransactionIds);
-      revalidatePath("/app/spynet/citizen/[id]/silc", "page");
-    }
+    await announceSilcTransactions(silcTransactionIds);
 
     await createAuditEvents([
       {
@@ -346,11 +343,7 @@ export const completeTask = createAuthenticatedAction(
       },
     ]);
 
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath("/app/tasks");
-    revalidatePath(`/app/tasks/${task.id}`);
+    refresh();
 
     /**
      * Respond with the result

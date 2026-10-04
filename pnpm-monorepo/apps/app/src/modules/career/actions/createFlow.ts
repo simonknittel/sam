@@ -6,7 +6,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { SLUG_MAX_LENGTH } from "@/modules/common/utils/slugify";
 import { Prisma } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import {
   FLOW_NAME_MAX_LENGTH,
@@ -79,11 +79,7 @@ export const createFlow = createAuthenticatedAction(
       },
     ]);
 
-    /**
-     * The navigation lives in the career layout, so every career page has to
-     * pick the new flow up.
-     */
-    revalidatePath("/app/career", "layout");
+    refresh();
 
     return {
       success: t("Common.successfullySaved"),

@@ -7,7 +7,7 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { SLUG_MAX_LENGTH } from "@/modules/common/utils/slugify";
 import { createId } from "@paralleldrive/cuid2";
 import { Prisma, type FlowEdge } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { getFlowContext } from "../queries/getFlowContext";
 import {
@@ -173,7 +173,7 @@ export const duplicateFlow = createAuthenticatedAction(
       },
     ]);
 
-    revalidatePath("/app/career", "layout");
+    refresh();
 
     return {
       success: t("Common.successfullySaved"),

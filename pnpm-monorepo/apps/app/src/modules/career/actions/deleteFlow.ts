@@ -4,7 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import * as z from "zod";
 
@@ -51,8 +51,7 @@ export const deleteFlow = createAuthenticatedAction(
       },
     ]);
 
-    revalidatePath("/app/career", "layout");
-    revalidatePath(`/app/career/${flow.slug}`);
+    refresh();
 
     /** The detail page is gone with the flow; the list is where a restore starts */
     redirect("/app/career/settings");

@@ -7,7 +7,7 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
 import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
 import { VariantStatus } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { ExternalService } from "../types";
 import { createAndReturnTags } from "../utils/createAndReturnTags";
@@ -127,18 +127,7 @@ export const createVariant = createAuthenticatedAction(
       },
     ]);
 
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(
-      `/app/fleet/settings/manufacturers/${createdVariant.series.manufacturerId}`,
-    );
-    revalidatePath(
-      `/app/fleet/settings/manufacturers/${createdVariant.series.manufacturerId}/series/${createdVariant.seriesId}`,
-    );
-    revalidatePath("/app/fleet/org");
-    revalidatePath("/app/fleet/my-ships");
-    revalidatePath(`/app/fleet/variant/${createdVariant.id}`, "layout");
+    refresh();
 
     /**
      * Respond with the result

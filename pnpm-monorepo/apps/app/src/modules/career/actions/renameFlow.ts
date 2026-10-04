@@ -6,7 +6,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { SLUG_MAX_LENGTH } from "@/modules/common/utils/slugify";
 import { Prisma } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import {
   FLOW_NAME_MAX_LENGTH,
@@ -76,10 +76,7 @@ export const renameFlow = createAuthenticatedAction(
       },
     ]);
 
-    /** The navigation and both the old and the new URL of the flow */
-    revalidatePath("/app/career", "layout");
-    revalidatePath(`/app/career/${flow.slug}`);
-    revalidatePath(`/app/career/${data.slug}`);
+    refresh();
 
     return {
       success: t("Common.successfullySaved"),

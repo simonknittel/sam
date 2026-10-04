@@ -6,7 +6,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { SLUG_MAX_LENGTH } from "@/modules/common/utils/slugify";
 import { Prisma } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { FLOW_SLUG_TAKEN_ERROR, validateFlowSlug } from "../utils/flowSlug";
 
@@ -82,8 +82,7 @@ export const restoreFlow = createAuthenticatedAction(
       },
     ]);
 
-    revalidatePath("/app/career", "layout");
-    revalidatePath(`/app/career/${data.slug}`);
+    refresh();
 
     return {
       success: "Der Karrierebaum wurde wiederhergestellt.",
