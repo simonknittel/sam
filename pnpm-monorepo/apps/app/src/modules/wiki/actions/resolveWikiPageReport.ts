@@ -29,25 +29,17 @@ export const resolveWikiPageReport = createAuthenticatedAction(
 
     const report = await prisma.wikiPageReport.findUnique({
       where: { id: data.reportId },
-      select: { id: true, pageId: true, resolvedAt: true },
+      select: { id: true, pageId: true },
     });
     if (!report)
       return { error: t("Common.notFound"), requestPayload: formData };
-    if (report.resolvedAt) {
-      /**
-       * A different manager resolved the report before, and the page must
-       * show it
-       */
-      refresh();
 
-      return {
-        error: "Diese Meldung wurde bereits bearbeitet.",
-        requestPayload: formData,
-      };
-    }
-
-    await prisma.wikiPageReport.update({
-      where: { id: report.id },
+    /**
+     * The condition on `resolvedAt` makes the check and the write one step:
+     * of two managers at the same time, only one resolves the report
+     */
+    const { count } = await prisma.wikiPageReport.updateMany({
+      where: { id: report.id, resolvedAt: null },
       data: {
         resolvedAt: new Date(),
         resolvedById: authentication.session.entity.id,
@@ -55,7 +47,17 @@ export const resolveWikiPageReport = createAuthenticatedAction(
       },
     });
 
+    /**
+     * Also when a different manager resolved the report before: the page
+     * must show it
+     */
     refresh();
+
+    if (count === 0)
+      return {
+        error: "Diese Meldung wurde bereits bearbeitet.",
+        requestPayload: formData,
+      };
 
     await createAuditEvents([
       {
