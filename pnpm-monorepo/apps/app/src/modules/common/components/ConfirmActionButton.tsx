@@ -2,17 +2,12 @@
 
 import type { ActionResponse } from "@/modules/actions/utils/createAction";
 import { useAction } from "@/modules/actions/utils/useAction";
-import { useState, type ReactElement, type ReactNode } from "react";
-import { AlertDialog } from "./AlertDialog";
+import { type ReactElement, type ReactNode } from "react";
+import { AlertDialog, useSubmitConfirmation } from "./AlertDialog";
 
 interface HiddenField {
   readonly name: string;
   readonly value: string;
-}
-
-interface TriggerRenderProps {
-  readonly isPending: boolean;
-  readonly openDialog: () => void;
 }
 
 interface Props {
@@ -24,11 +19,12 @@ interface Props {
   readonly action: (formData: FormData) => Promise<ActionResponse | void>;
   readonly hiddenFields?: readonly HiddenField[];
   /**
-   * Renders the button that opens the dialog. The button must have
-   * `type="button"` and `onClick={openDialog}`. While the action runs,
-   * `isPending` is true: the button can disable itself and show a spinner.
+   * Renders the submit button of the form (`type="submit"`). Its click opens
+   * the dialog, and the action runs only after the confirmation. While the
+   * action runs, `isPending` is true: the button can disable itself and show
+   * a spinner.
    */
-  readonly trigger: (renderProps: TriggerRenderProps) => ReactElement;
+  readonly trigger: (isPending: boolean) => ReactElement;
   readonly title: string;
   readonly description: ReactNode;
   readonly confirmLabel: string;
@@ -57,10 +53,14 @@ export const ConfirmActionButton = ({
   const { formAction, isPending } = useAction(action, {
     onSuccess: onSuccess ? () => onSuccess() : undefined,
   });
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const confirmation = useSubmitConfirmation();
 
   return (
-    <form action={formAction} className={className}>
+    <form
+      action={formAction}
+      onSubmit={confirmation.onSubmit}
+      className={className}
+    >
       {hiddenFields?.map((field) => (
         <input
           key={field.name}
@@ -70,11 +70,14 @@ export const ConfirmActionButton = ({
         />
       ))}
 
-      {trigger({ isPending, openDialog: () => setIsDialogOpen(true) })}
-
+      {/**
+       * The dialog comes before the trigger. Thus its confirm button is the
+       * default button of the form, and Enter in a field of the dialog
+       * submits only when the confirm button is enabled.
+       */}
       <AlertDialog
-        isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
+        isOpen={confirmation.isOpen}
+        onClose={confirmation.close}
         title={title}
         description={description}
         confirmLabel={confirmLabel}
@@ -82,6 +85,8 @@ export const ConfirmActionButton = ({
       >
         {children}
       </AlertDialog>
+
+      {trigger(isPending)}
     </form>
   );
 };

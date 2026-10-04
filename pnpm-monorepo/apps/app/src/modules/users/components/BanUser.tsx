@@ -16,10 +16,9 @@ export const BanUser = ({ userId }: Props) => {
     <ConfirmActionButton
       action={banUserAction}
       hiddenFields={[{ name: "userId", value: userId }]}
-      trigger={({ isPending, openDialog }) => (
+      trigger={(isPending) => (
         <Button2
-          type="button"
-          onClick={openDialog}
+          type="submit"
           variant={Button2Variant.IconOnly}
           disabled={isPending}
           tooltip="Benutzer sperren"

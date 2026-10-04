@@ -20,10 +20,9 @@ export const EndCollectionPhaseButton = ({ className, cycleData }: Props) => {
       className={className}
       action={endCollectionPhase}
       hiddenFields={[{ name: "id", value: cycleData.cycle.id }]}
-      trigger={({ isPending, openDialog }) => (
+      trigger={(isPending) => (
         <Button2
-          type="button"
-          onClick={openDialog}
+          type="submit"
           disabled={
             cycleData.currentPhase !== CyclePhase.Collection || isPending
           }

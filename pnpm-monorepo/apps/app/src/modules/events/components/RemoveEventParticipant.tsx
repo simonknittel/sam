@@ -34,10 +34,9 @@ export const RemoveEventParticipant = ({
         { name: "eventId", value: eventId },
         { name: "citizenId", value: citizen.id },
       ]}
-      trigger={({ isPending, openDialog }) => (
+      trigger={(isPending) => (
         <button
-          type="button"
-          onClick={openDialog}
+          type="submit"
           disabled={isPending}
           className="flex size-8 items-center justify-center rounded-secondary text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 active:text-brand-red-300 enabled:cursor-pointer disabled:opacity-50"
           title="Teilnehmer entfernen"

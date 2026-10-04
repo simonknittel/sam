@@ -19,10 +19,9 @@ export const RestoreFlowButton = ({ flowId, name, slug }: Props) => {
     <ConfirmActionButton
       action={restoreFlow}
       hiddenFields={[{ name: "flowId", value: flowId }]}
-      trigger={({ isPending, openDialog }) => (
+      trigger={(isPending) => (
         <Button2
-          type="button"
-          onClick={openDialog}
+          type="submit"
           variant={Button2Variant.IconOnly}
           tooltip="Wiederherstellen"
           disabled={isPending}

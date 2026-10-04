@@ -17,10 +17,9 @@ export const DeletePenaltyEntry = ({ className, entry }: Props) => {
       className={className}
       action={deletePenaltyEntry}
       hiddenFields={[{ name: "id", value: entry.id }]}
-      trigger={({ isPending, openDialog }) => (
+      trigger={(isPending) => (
         <button
-          type="button"
-          onClick={openDialog}
+          type="submit"
           disabled={isPending}
           className="flex items-center text-brand-red-500 hover:cursor-pointer hover:text-brand-red-300"
           title="Löschen"

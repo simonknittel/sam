@@ -38,10 +38,9 @@ export const DeleteSessionButton = ({
       className={className}
       action={deleteSession}
       hiddenFields={[{ name: "id", value: sessionId }]}
-      trigger={({ isPending, openDialog }) => (
+      trigger={(isPending) => (
         <Button
-          type="button"
-          onClick={openDialog}
+          type="submit"
           variant="tertiary"
           disabled={isPending}
           aria-label={LABEL}

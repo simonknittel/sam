@@ -1,13 +1,17 @@
 import type { Locator, Page } from "@playwright/test";
 import {
   assignRole,
+  createAppEvent,
   createCitizen,
   createFlow,
   createProfitDistributionCycle,
   createRole,
   createVariant,
+  EventVisibility,
+  futureEvent,
 } from "../fixtures/factories";
 import {
+  accessibilityTree,
   clickUntilVisible,
   DELETED_TEXT,
   fillUntilValue,
@@ -47,17 +51,13 @@ const tabStops = async (page: Page, dialog: Locator, presses: number) => {
 };
 
 /**
- * The names of the buttons in the accessibility tree of Chrome. The names
- * are in lower case: the tree applies the CSS `uppercase`.
+ * The names of the buttons in the accessibility tree. The names are in lower
+ * case: the tree applies the CSS `uppercase`.
  */
-const accessibleButtonNames = async (page: Page) => {
-  const session = await page.context().newCDPSession(page);
-  const { nodes } = await session.send("Accessibility.getFullAXTree");
-  await session.detach();
-  return nodes
-    .filter((node) => !node.ignored && node.role?.value === "button")
-    .map((node) => String(node.name?.value ?? "").toLowerCase());
-};
+const accessibleButtonNames = async (page: Page) =>
+  (await accessibilityTree(page))
+    .filter((node) => node.role === "button")
+    .map((node) => node.name.toLowerCase());
 
 test("the keyboard and the page behind an open confirmation dialog", async ({
   page,
@@ -215,6 +215,19 @@ test("a confirmation dialog in a popover keeps the popover open", async ({
   await expect(popover).toBeVisible();
   await expect(trigger).toBeFocused();
 
+  /** Also after a click on the backdrop or on the text of the dialog */
+  for (const clickInDialog of [
+    () => page.mouse.click(5, 5),
+    () => dialog.getByRole("heading").click(),
+  ]) {
+    await trigger.click();
+    await clickInDialog();
+    await expect(dialog).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+    await expect(popover).toBeVisible();
+  }
+
   await trigger.click();
   await dialog.getByRole("button", { name: "Entfernen" }).click();
   await expect
@@ -305,6 +318,93 @@ test("Escape in a confirmation dialog in a modal closes only the dialog", async 
   await expect(trigger).toBeFocused();
   await expect(page.getByLabel("Titel")).toHaveValue("Operation Escape");
   expect(await prisma.event.count()).toBe(0);
+});
+
+test("the browser validates the form before the confirmation dialog opens", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const creator = await createCitizen(prisma, {
+    handle: "pruef-ersteller",
+    permissionStrings: ["event;read", "event;create"],
+  });
+
+  await signIn(creator.user);
+  await page.goto("/app/events");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Event erstellen" }),
+    page.getByRole("heading", { name: "Neues Event" }),
+  );
+
+  await fillUntilValue(page.getByLabel("Start"), "2027-06-01T20:00");
+  await fillUntilValue(page.getByLabel("Ende"), "2027-06-01T22:00");
+  await toggleLabel(page, /^Auf Discord veröffentlichen$/).click();
+  await toggleLabel(page, /^Eingeschränkt$/).click();
+
+  /** The title is empty: the browser shows the error, the dialog stays closed */
+  const title = page.getByLabel("Titel");
+  await page.getByRole("button", { name: "Speichern" }).click();
+  await expect(title).toBeFocused();
+  expect(
+    await title.evaluate(
+      (input: HTMLInputElement) => input.validity.valueMissing,
+    ),
+  ).toBe(true);
+  await expect(page.getByRole("alertdialog")).toHaveCount(0);
+
+  await title.fill("Operation Pflichtfeld");
+  await page.getByRole("button", { name: "Speichern" }).click();
+  const dialog = page.getByRole("alertdialog");
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "Abbrechen" }).click();
+  await expect(dialog).toHaveCount(0);
+  expect(await prisma.event.count()).toBe(0);
+});
+
+test("Enter in a field of the Discord card asks for the confirmation of a restricted event", async ({
+  page,
+  prisma,
+  signIn,
+  discordMock,
+}) => {
+  const allowedRole = await createRole(prisma, { name: "eingeweihte" });
+  const creator = await createCitizen(prisma, {
+    handle: "enter-discord-orga",
+    permissionStrings: ["event;read"],
+  });
+  await assignRole(prisma, creator.entity, allowedRole);
+  const event = await createAppEvent(prisma, {
+    name: "Operation Eingabetaste",
+    createdById: creator.entity.id,
+    visibility: EventVisibility.RESTRICTED,
+    visibilityRoleIds: [allowedRole.id],
+    ...futureEvent(),
+  });
+
+  await signIn(creator.user);
+  await page.goto(`/app/events/${event.id}/settings`);
+  await waitForAppShellHydration(page);
+
+  const location = page.getByRole("textbox", { name: "Ort" });
+  await location.fill("Hangar 3");
+  await location.press("Enter");
+  const dialog = page.getByRole("alertdialog");
+  await expect(dialog).toBeVisible();
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(location).toBeFocused();
+  expect(discordMock.scheduledEvents.size).toBe(0);
+
+  await location.press("Enter");
+  await dialog
+    .getByRole("button", { name: "Trotzdem veröffentlichen" })
+    .click();
+  await expect(
+    page.getByText("Das Event wurde auf Discord veröffentlicht."),
+  ).toBeVisible();
+  expect(discordMock.scheduledEvents.size).toBe(1);
 });
 
 test("Enter in a field of the payout preparation asks for the confirmation", async ({

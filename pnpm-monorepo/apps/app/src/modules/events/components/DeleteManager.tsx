@@ -21,10 +21,9 @@ export const DeleteManager = ({ className, eventId, managerId }: Props) => {
         { name: "eventId", value: eventId },
         { name: "managerId", value: managerId },
       ]}
-      trigger={({ isPending, openDialog }) => (
+      trigger={(isPending) => (
         <button
-          type="button"
-          onClick={openDialog}
+          type="submit"
           disabled={isPending}
           className="flex h-full items-center px-2 text-brand-red-500 hover:text-brand-red-300"
           title="Manager entfernen"

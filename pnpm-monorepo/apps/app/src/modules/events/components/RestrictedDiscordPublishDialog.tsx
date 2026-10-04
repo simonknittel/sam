@@ -1,14 +1,11 @@
 "use client";
 
 import { AlertDialog } from "@/modules/common/components/AlertDialog";
-import { useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 
 interface Props {
-  /**
-   * Renders the button that opens the dialog. The button must have
-   * `type="button"` and `onClick={openDialog}`.
-   */
-  readonly trigger: (openDialog: () => void) => ReactNode;
+  readonly isOpen: boolean;
+  readonly onClose: () => void;
   readonly description: ReactNode;
   readonly confirmLabel: string;
 }
@@ -18,26 +15,19 @@ interface Props {
  * whole guild on Discord, so publishing one is never a single click. Shared
  * by the settings card and the create form — both publish, and both would
  * otherwise widen the audience without saying so. Render it inside the form
- * that it submits.
+ * that it submits, and open it with `useSubmitConfirmation`.
  */
 export const RestrictedDiscordPublishDialog = ({
-  trigger,
+  isOpen,
+  onClose,
   description,
   confirmLabel,
-}: Props) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <>
-      {trigger(() => setIsOpen(true))}
-
-      <AlertDialog
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        title="Eingeschränktes Event auf Discord veröffentlichen?"
-        description={description}
-        confirmLabel={confirmLabel}
-      />
-    </>
-  );
-};
+}: Props) => (
+  <AlertDialog
+    isOpen={isOpen}
+    onClose={onClose}
+    title="Eingeschränktes Event auf Discord veröffentlichen?"
+    description={description}
+    confirmLabel={confirmLabel}
+  />
+);

@@ -42,14 +42,13 @@ export const DeleteLog = ({ log }: Props) => {
   return (
     <ConfirmActionButton
       action={deleteLog}
-      trigger={({ isPending, openDialog }) => (
+      trigger={(isPending) => (
         <Button
           title="Eintrag löschen"
           className="h-auto self-center"
           disabled={isPending}
           variant="tertiary"
-          type="button"
-          onClick={openDialog}
+          type="submit"
         >
           {isPending ? <AsciiSpinner /> : <FaTrash />} Löschen
         </Button>

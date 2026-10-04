@@ -21,8 +21,8 @@ export const DeleteRole = ({ className, role }: Props) => {
       <ConfirmActionButton
         action={deleteRole}
         hiddenFields={[{ name: "id", value: role.id }]}
-        trigger={({ isPending, openDialog }) => (
-          <Button2 type="button" onClick={openDialog} disabled={isPending}>
+        trigger={(isPending) => (
+          <Button2 type="submit" disabled={isPending}>
             {isPending ? <AsciiSpinner /> : <FaTrash />}
             Löschen
           </Button2>

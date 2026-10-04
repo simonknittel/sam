@@ -5,7 +5,10 @@ import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { decreaseRoleAssignmentLevel } from "@/modules/citizen/actions/decreaseRoleAssignmentLevel";
 import { deleteRoleAssignment } from "@/modules/citizen/actions/deleteRoleAssignment";
 import { increaseRoleAssignmentLevel } from "@/modules/citizen/actions/increaseRoleAssignmentLevel";
-import { AlertDialog } from "@/modules/common/components/AlertDialog";
+import {
+  AlertDialog,
+  useSubmitConfirmation,
+} from "@/modules/common/components/AlertDialog";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Link } from "@/modules/common/components/Link";
@@ -16,7 +19,6 @@ import { type Role } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { useState } from "react";
 import { FaCog, FaMinus, FaPlus, FaTrash } from "react-icons/fa";
 import { useRolesContext } from "./RolesContext";
 
@@ -75,7 +77,7 @@ export const SingleRoleBadge = ({
   } = useAction(decreaseRoleAssignmentLevel, {
     onSuccess,
   });
-  const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false);
+  const removeConfirmation = useSubmitConfirmation();
 
   const role = roles.find((role) => role.id === roleId);
   if (!role) return null;
@@ -130,7 +132,9 @@ export const SingleRoleBadge = ({
 
       {!role.iconId && showPlaceholder && <span className="size-6" />}
 
-      <span className="truncate font-mono text-sm">{role.name}</span>
+      <span className="truncate font-mono text-sm" title={role.name}>
+        {role.name}
+      </span>
 
       {showLevelProgress && (
         <span className="absolute right-0 bottom-0 left-0 block h-px bg-white/30">
@@ -266,13 +270,15 @@ export const SingleRoleBadge = ({
 
         {citizenId && canDismiss && (
           <div className="mt-4 border-t border-white/10 pt-4">
-            <form action={deleteRoleAssignmentFormAction}>
+            <form
+              action={deleteRoleAssignmentFormAction}
+              onSubmit={removeConfirmation.onSubmit}
+            >
               <input type="hidden" name="citizenId" value={citizenId} />
               <input type="hidden" name="roleId" value={role.id} />
 
               <Button2
-                type="button"
-                onClick={() => setIsRemoveDialogOpen(true)}
+                type="submit"
                 variant={Button2Variant.Secondary}
                 disabled={isDeleteRoleAssignmentPending}
               >
@@ -281,8 +287,8 @@ export const SingleRoleBadge = ({
               </Button2>
 
               <AlertDialog
-                isOpen={isRemoveDialogOpen}
-                onClose={() => setIsRemoveDialogOpen(false)}
+                isOpen={removeConfirmation.isOpen}
+                onClose={removeConfirmation.close}
                 title="Rolle entfernen?"
                 description={
                   <>

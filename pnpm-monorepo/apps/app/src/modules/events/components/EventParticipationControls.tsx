@@ -80,10 +80,9 @@ export const EventParticipationControls = ({
           <ConfirmActionButton
             action={cancelEventParticipation}
             hiddenFields={[{ name: "eventId", value: eventId }]}
-            trigger={({ isPending, openDialog }) => (
+            trigger={(isPending) => (
               <Button2
-                type="button"
-                onClick={openDialog}
+                type="submit"
                 variant={Button2Variant.Secondary}
                 disabled={isPending}
               >

@@ -19,10 +19,9 @@ export const DeleteShip = ({ className, ship }: Props) => {
       className={className}
       action={deleteShipAction}
       hiddenFields={[{ name: "id", value: ship.id }]}
-      trigger={({ isPending, openDialog }) => (
+      trigger={(isPending) => (
         <button
-          type="button"
-          onClick={openDialog}
+          type="submit"
           disabled={isPending}
           className="px-2 py-2 text-neutral-500 hover:cursor-pointer hover:text-neutral-50"
           title="Löschen"
