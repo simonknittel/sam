@@ -45,6 +45,8 @@ export const cancelTask = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.TASK_CANCELLED,
@@ -55,8 +57,6 @@ export const cancelTask = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

@@ -25,14 +25,12 @@ import * as z from "zod";
 import { getOpenTasksWhere } from "../queries/getOpenTasksWhere";
 import { getTaskById } from "../queries/getTaskById";
 import { isAllowedToManageTask } from "../utils/isAllowedToTask";
-import { isTaskUpdatable } from "../utils/isTaskUpdatable";
+import { CLOSED_TASK_ERROR, rejectClosedTask } from "../utils/rejectClosedTask";
 
 const schema = z.object({
   id: z.union([z.cuid(), z.cuid2()]),
   completionistIds: z.array(z.cuid()).max(250), // Arbitrary (untested) limit to prevent DDoS
 });
-
-const ALREADY_COMPLETED_ERROR = "Der Task ist bereits abgeschlossen.";
 
 /** The columns of the claimed task that the completion copies or pays */
 const CLAIMED_TASK_INCLUDE = {
@@ -205,11 +203,8 @@ export const completeTask = createAuthenticatedAction(
     const task = await getTaskById(data.id);
     if (!task)
       return { error: "Task nicht gefunden", requestPayload: formData };
-    if (!isTaskUpdatable(task))
-      return {
-        error: ALREADY_COMPLETED_ERROR,
-        requestPayload: formData,
-      };
+    const closedTaskFailure = rejectClosedTask(task, formData);
+    if (closedTaskFailure) return closedTaskFailure;
     const isAllowedToManage = await isAllowedToManageTask(task);
     const isAllowedToSelfComplete =
       task.canSelfComplete &&
@@ -323,9 +318,16 @@ export const completeTask = createAuthenticatedAction(
         );
       },
     );
+
+    /**
+     * Also on the conflict: the page then shows the task that a different
+     * completion closed
+     */
+    refresh();
+
     if (!silcTransactionIds)
       return {
-        error: ALREADY_COMPLETED_ERROR,
+        error: CLOSED_TASK_ERROR,
         requestPayload: formData,
       };
 
@@ -342,8 +344,6 @@ export const completeTask = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

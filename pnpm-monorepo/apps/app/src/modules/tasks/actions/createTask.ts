@@ -189,6 +189,8 @@ export const createTask = createAuthenticatedAction(
         );
     }
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.TASK_CREATED,
@@ -212,8 +214,6 @@ export const createTask = createAuthenticatedAction(
         },
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

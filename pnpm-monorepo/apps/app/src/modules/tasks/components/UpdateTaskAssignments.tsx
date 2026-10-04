@@ -1,6 +1,5 @@
 "use client";
 
-import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
 import Button from "@/modules/common/components/Button";
@@ -22,10 +21,9 @@ interface Props {
 
 export const UpdateTaskAssignments = ({ className, task }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { state, formAction, getDefaultValueWithFallback } = useAction(
+  const { formAction, getDefaultValueWithFallback } = useAction(
     updateTaskAssignments,
     {
-      errorToast: false,
       onSuccess: () => setIsOpen(false),
     },
   );
@@ -74,8 +72,6 @@ export const UpdateTaskAssignments = ({ className, task }: Props) => {
           <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
             Speichern
           </SubmitButton>
-
-          <ActionErrorNote className="mt-4" state={state} />
         </form>
       </Modal>
     </>

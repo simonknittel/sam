@@ -8,7 +8,7 @@ import { TaskVisibility } from "@sam-monorepo/database/client";
 import { refresh } from "next/cache";
 import * as z from "zod";
 import { getTaskById } from "../queries/getTaskById";
-import { isTaskUpdatable } from "../utils/isTaskUpdatable";
+import { rejectClosedTask } from "../utils/rejectClosedTask";
 
 const schema = z.object({
   taskId: z.union([z.cuid(), z.cuid2()]),
@@ -27,11 +27,8 @@ export const createTaskAssignmentForCurrentUser = createAuthenticatedAction(
     const task = await getTaskById(data.taskId);
     if (!task)
       return { error: "Task nicht gefunden", requestPayload: formData };
-    if (!isTaskUpdatable(task))
-      return {
-        error: "Der Task ist bereits abgeschlossen.",
-        requestPayload: formData,
-      };
+    const closedTaskFailure = rejectClosedTask(task, formData);
+    if (closedTaskFailure) return closedTaskFailure;
 
     if (
       task.visibility === TaskVisibility.PERSONALIZED ||
@@ -43,11 +40,18 @@ export const createTaskAssignmentForCurrentUser = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    if (task.assignmentLimit && task.assignments.length >= task.assignmentLimit)
+    if (
+      task.assignmentLimit &&
+      task.assignments.length >= task.assignmentLimit
+    ) {
+      /** The page then shows the citizens who took the last places */
+      refresh();
+
       return {
         error: "Dieser Task kann nicht von Weiteren angenommen werden.",
         requestPayload: formData,
       };
+    }
 
     if (!task.hasCurrentUserRequiredRole)
       return {
@@ -73,6 +77,8 @@ export const createTaskAssignmentForCurrentUser = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.TASK_SELF_ASSIGNMENT_CREATED,
@@ -83,8 +89,6 @@ export const createTaskAssignmentForCurrentUser = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

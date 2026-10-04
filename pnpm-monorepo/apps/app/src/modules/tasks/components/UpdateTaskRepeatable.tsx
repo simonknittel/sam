@@ -3,7 +3,6 @@
 import { useAction } from "@/modules/actions/utils/useAction";
 import { NumberInput } from "@/modules/common/components/form/NumberInput";
 import Modal from "@/modules/common/components/Modal";
-import Note from "@/modules/common/components/Note";
 import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { type Task, type TaskAssignment } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
@@ -20,7 +19,7 @@ interface Props {
 
 export const UpdateTaskRepeatable = ({ className, task }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { state, formAction, getDefaultValueWithFallback } = useAction(
+  const { formAction, getDefaultValueWithFallback } = useAction(
     updateTaskRepeatable,
     {
       onSuccess: () => setIsOpen(false),
@@ -72,10 +71,6 @@ export const UpdateTaskRepeatable = ({ className, task }: Props) => {
           <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
             Speichern
           </SubmitButton>
-
-          {state && "error" in state && (
-            <Note type="error" message={state.error} className="mt-4" />
-          )}
         </form>
       </Modal>
     </>

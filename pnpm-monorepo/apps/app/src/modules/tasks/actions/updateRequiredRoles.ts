@@ -39,6 +39,8 @@ export const updateRequiredRoles = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.TASK_REQUIRED_ROLES_UPDATED,
@@ -48,8 +50,6 @@ export const updateRequiredRoles = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

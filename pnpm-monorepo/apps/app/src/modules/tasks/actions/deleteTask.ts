@@ -56,6 +56,8 @@ export const deleteTask = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.TASK_DELETED,
@@ -67,7 +69,6 @@ export const deleteTask = createAuthenticatedAction(
       },
     ]);
 
-    refresh();
     redirect("/app/tasks");
 
     /**

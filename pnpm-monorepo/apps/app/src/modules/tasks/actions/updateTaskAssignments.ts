@@ -63,6 +63,8 @@ export const updateTaskAssignments = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.TASK_ASSIGNMENTS_UPDATED,
@@ -84,8 +86,6 @@ export const updateTaskAssignments = createAuthenticatedAction(
         },
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result
