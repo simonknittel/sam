@@ -32,13 +32,21 @@ export const CmdKProvider = ({ children, canReadCareer }: Props) => {
   const [pages, setPages] = useState<string[]>([]);
 
   /**
-   * The shortcut also works in form fields and in the wiki editor. Thus it
-   * also closes the menu from its own search field.
+   * Ctrl+K and Cmd+K on all platforms. With `useKey`, the K of the keyboard
+   * layout starts the shortcut, and the physical K key also starts it. The
+   * shortcut also works in form fields and in the wiki editor. Thus it also
+   * closes the menu from its own search field.
+   *
+   * The shortcut does not open the menu behind a native modal dialog (a
+   * confirmation, the tour): the menu then blocks the pointer events of the
+   * page, and the buttons of the dialog do not get clicks.
    */
-  useHotkeys("mod+k", () => setOpen((isOpen) => !isOpen), {
+  useHotkeys(["ctrl+k", "meta+k"], () => setOpen((isOpen) => !isOpen), {
+    useKey: true,
     preventDefault: true,
     enableOnFormTags: true,
     enableOnContentEditable: true,
+    enabled: () => !document.querySelector("dialog:modal"),
   });
 
   const value = useMemo(
