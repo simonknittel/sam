@@ -181,6 +181,69 @@ test("the keyboard opens search results, and Escape closes them", async ({
   await expect(search).toBeFocused();
 });
 
+test("the search shows no results of an older query while the new results load", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, { handle: "reader" });
+  await createWikiPage(prisma, {
+    title: "Bergbau",
+    visibility: WikiPageVisibility.PUBLIC,
+  });
+  const tradePage = await createWikiPage(prisma, {
+    title: "Handelsrouten",
+    visibility: WikiPageVisibility.PUBLIC,
+  });
+  await signIn(citizen.user);
+
+  await page.goto("/app/wiki");
+  const results = page.getByRole("listbox", { name: "Suchergebnisse" });
+  const miningResult = results.getByRole("option", { name: /Bergbau/ });
+  const tradeResult = results.getByRole("option", { name: /Handelsrouten/ });
+  await searchUntilReaction(page, "Bergbau", miningResult);
+
+  /** While the results are open, Base UI hides the heading that finds the input */
+  await page.keyboard.press("Escape");
+  await expect(results).toBeHidden();
+
+  /** The test holds the response of the next search until it releases it */
+  let isRequested = false;
+  const response = Promise.withResolvers<void>();
+  await page.route(
+    (url) =>
+      url.pathname.startsWith("/api/trpc/") &&
+      url.pathname.includes("wiki.search"),
+    async (route) => {
+      isRequested = true;
+      await response.promise;
+      await route.continue();
+    },
+  );
+
+  /**
+   * Enter while the debounce runs and Enter while the new results load open
+   * nothing. Without a highlighted result, Enter closes the results.
+   */
+  const search = landingSearch(page);
+  await search.fill("Handelsrouten");
+  await page.keyboard.press("Enter");
+  await expect(miningResult).toBeHidden();
+  await expect.poll(() => isRequested).toBe(true);
+  await search.click();
+  await expect(page.getByText("Suche läuft …")).toBeAttached();
+  await expect(results.getByRole("option")).toHaveCount(0);
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL("/app/wiki");
+
+  // The new results open with the keyboard
+  response.resolve();
+  await search.click();
+  await expect(tradeResult).toHaveAttribute("data-highlighted");
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(`/app/wiki/${tradePage.id}/${tradePage.slug}`);
+});
+
 test("a tag name in other letter case uses the existing tag", async ({
   page,
   prisma,

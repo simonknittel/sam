@@ -48,13 +48,18 @@ export const WikiSearch = ({ className, compact }: Props) => {
       container: hrefMode.container ?? undefined,
       variantId: hrefMode.variantId ?? undefined,
     },
-    {
-      enabled,
-      placeholderData: (previous) => previous,
-    },
+    { enabled },
   );
-  const tags = data?.tags ?? [];
-  const pages = data?.pages ?? [];
+
+  /**
+   * The popup shows only the results of the query in the input. While the
+   * debounce runs or the results load, it shows the spinner, thus Enter
+   * cannot open a result of an older query.
+   */
+  const isQueryCurrent = query.trim() === debouncedQuery;
+  const results = isQueryCurrent ? data : undefined;
+  const tags = results?.tags ?? [];
+  const pages = results?.pages ?? [];
 
   /**
    * Base UI lets a link result navigate by itself and keeps the popup open.
@@ -111,13 +116,14 @@ export const WikiSearch = ({ className, compact }: Props) => {
           >
             <Autocomplete.Popup className="max-h-[min(var(--available-height),24rem)] w-(--anchor-width) max-w-(--available-width) overflow-y-auto overscroll-contain rounded-secondary border border-neutral-800 bg-neutral-900 p-1 shadow-lg">
               <Autocomplete.Status>
-                {isFetching && !data && (
+                {!results && (isFetching || !isQueryCurrent) && (
                   <div className="flex justify-center p-4">
                     <AsciiSpinner className="text-2xl text-neutral-500" />
+                    <span className="sr-only">Suche läuft …</span>
                   </div>
                 )}
 
-                {data && tags.length + pages.length === 0 && (
+                {results && tags.length + pages.length === 0 && (
                   <p className="p-2 text-sm text-neutral-400">Keine Treffer.</p>
                 )}
               </Autocomplete.Status>
