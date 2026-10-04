@@ -40,7 +40,8 @@ const HEADER_ROWS = 1;
 /**
  * Replaces the folder picker of the browser, which no test can answer. The
  * handle gives back one log file with the given lines, so a parse finds one
- * entry for each of them.
+ * entry for each of them. `appendLogLines` adds lines to the file, as the
+ * game does while it runs.
  *
  * The app also stores the handle in IndexedDB, which fails for this object
  * because it carries functions. That happens after the parse started and the
@@ -49,10 +50,12 @@ const HEADER_ROWS = 1;
 const stubDirectoryPicker = (page: Page, lines: readonly string[]) =>
   page.addInitScript(
     (fileLines: string[]) => {
-      const file = new File([fileLines.join("\n")], "Game.log", {
-        type: "text/plain",
-        lastModified: Date.now(),
-      });
+      const createFile = () =>
+        new File([fileLines.join("\n")], "Game.log", {
+          type: "text/plain",
+          lastModified: Date.now(),
+        });
+      let file = createFile();
 
       const fileHandle = {
         kind: "file",
@@ -71,8 +74,21 @@ const stubDirectoryPicker = (page: Page, lines: readonly string[]) =>
 
       Object.assign(window, {
         showDirectoryPicker: () => Promise.resolve(directoryHandle),
+        appendLogLines: (newLines: string[]) => {
+          fileLines.push(...newLines);
+          file = createFile();
+        },
       });
     },
+    [...lines],
+  );
+
+const appendLogLines = (page: Page, lines: readonly string[]) =>
+  page.evaluate(
+    (newLines) =>
+      (
+        window as unknown as { appendLogLines: (lines: string[]) => void }
+      ).appendLogLines(newLines),
     [...lines],
   );
 
@@ -360,6 +376,44 @@ test("sharing uploads the matched entries of the selected types exactly once", a
   ).toBeVisible();
   await expect.poll(sharedTypes).toEqual(allThreeTypes);
   expect(reloadUploads).toEqual([]);
+});
+
+/**
+ * Live mode reads the log files again at this interval
+ * (LIVE_MODE_PARSE_INTERVAL_MS in the app)
+ */
+const LIVE_MODE_PARSE_INTERVAL = 10_000;
+
+test("live mode reads the lines which the game adds to the log", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, {
+    handle: "log-live",
+    permissionStrings: LOG_ANALYZER_PERMISSIONS,
+  });
+
+  await signIn(citizen.user);
+  /** The test moves the time of the page forward instead of waiting */
+  await page.clock.install();
+  await stubDirectoryPicker(page, [joinPuLine(hoursAgo(2))]);
+  await page.goto(PAGE_PATH);
+
+  await selectFolder(page);
+  await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 1);
+
+  await toggleLabel(page, "Automatisch aktualisieren").click();
+  await expect(
+    page.getByRole("checkbox", { name: /Automatisch aktualisieren/ }),
+  ).toBeChecked();
+
+  /** Nothing but the interval of live mode reads the file again */
+  await appendLogLines(page, [blueprintLine(hoursAgo(1))]);
+  await page.clock.fastForward(LIVE_MODE_PARSE_INTERVAL);
+
+  await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 2);
+  await expect(rowOf(page, "Blueprint erhalten")).toBeVisible();
 });
 
 test("a user without a linked citizen cannot share", async ({
