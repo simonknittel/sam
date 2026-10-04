@@ -184,6 +184,12 @@ export const pasteWikiPages = createAuthenticatedAction(
         createdById: entity.id,
       });
 
+      /**
+       * The safety snapshot is a committed write: the snapshot list must show
+       * it also when the collab replace below fails
+       */
+      refresh();
+
       try {
         await replaceWikiPageContent({
           pageId: targetPageId,
@@ -307,6 +313,8 @@ export const pasteWikiPages = createAuthenticatedAction(
         createdByEntityId: entity.id,
       }));
 
+      refresh();
+
       const variantHref = await resolveVariantWikiRedirectHref(
         targetScoped,
         data.variantId,
@@ -322,8 +330,6 @@ export const pasteWikiPages = createAuthenticatedAction(
           ...wikiContainerColumns(targetContainer),
         });
     }
-
-    refresh();
 
     await createAuditEvents(
       copiedPages.map((page) => ({

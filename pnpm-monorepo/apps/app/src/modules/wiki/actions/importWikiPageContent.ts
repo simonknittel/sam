@@ -103,6 +103,12 @@ export const importWikiPageContent = createAuthenticatedAction(
       createdById: entityId,
     });
 
+    /**
+     * The safety snapshot is a committed write: the snapshot list must show
+     * it also when the collab replace below fails
+     */
+    refresh();
+
     try {
       await replaceWikiPageContent({
         pageId: page.id,
@@ -120,8 +126,6 @@ export const importWikiPageContent = createAuthenticatedAction(
         requestPayload: formData,
       };
     }
-
-    refresh();
 
     await createAuditEvents([
       {
