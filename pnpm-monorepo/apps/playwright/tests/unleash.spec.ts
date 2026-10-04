@@ -106,168 +106,161 @@ const holdPageRefresh = async (page: Page, path: string) => {
   };
 };
 
-/**
- * The tests of this group steer the same page with two different flags.
- * They must not overlap: the crash flag of one test would fail the toolbar
- * poll of the other, thus the group runs them one after the other on one
- * worker.
- */
-test.describe(() => {
-  test.describe.configure({ mode: "serial" });
+test("the kill switch flag takes the log analyzer offline, and the retry of the error tile brings it back", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  test.setTimeout(FLAG_TEST_TIMEOUT);
 
-  test("the kill switch flag takes the log analyzer offline, and the retry of the error tile brings it back", async ({
-    page,
-    prisma,
-    signIn,
-  }) => {
-    test.setTimeout(FLAG_TEST_TIMEOUT);
-
-    const citizen = await createCitizen(prisma, {
-      handle: "loganalyst",
-      permissionStrings: ["logAnalyzer;read"],
-    });
-    await signIn(citizen.user);
-
-    const introduction = page.getByText(
-      "Der Log Analyzer wertet die Game Logs von Star Citizen aus",
-    );
-    const tileError = page.getByText("Ein unerwarteter Fehler ist aufgetreten");
-
-    await setUnleashFlag(UNLEASH_FLAG.CrashLogAnalyzer, false);
-    await expectFlagPropagation
-      .poll(() =>
-        pageShows(page, "/app/tools/log-analyzer", () => introduction),
-      )
-      .toBe(true);
-
-    await setUnleashFlag(UNLEASH_FLAG.CrashLogAnalyzer, true);
-    await expectFlagPropagation
-      .poll(() => pageShows(page, "/app/tools/log-analyzer", () => tileError))
-      .toBe(true);
-
-    /**
-     * The retry button stays disabled until the refresh of the page ends,
-     * thus a second click cannot start a second refresh. The test holds the
-     * refresh, thus it cannot end before the assertion. The flag is still on,
-     * thus the tile fails again after the refresh.
-     */
-    const retryButton = page.getByRole("button", { name: "Erneut versuchen" });
-    const heldRefresh = await holdPageRefresh(page, "/app/tools/log-analyzer");
-    await retryButton.click();
-    await expect.poll(heldRefresh.requestCount).toBeGreaterThan(0);
-    await expect(retryButton).toBeDisabled();
-    heldRefresh.release();
-    await expect(retryButton).toBeEnabled();
-    await expect(tileError).toBeVisible();
-    await heldRefresh.stop();
-
-    /**
-     * The retry loads the tile again from the server without a reload of the
-     * page. The tests which follow also need the page in working order.
-     */
-    await setUnleashFlag(UNLEASH_FLAG.CrashLogAnalyzer, false);
-    await expect(async () => {
-      if (!(await introduction.isVisible()))
-        await retryButton.click({ timeout: RETRY_CLICK_TIMEOUT });
-      await expect(introduction).toBeVisible({
-        timeout: RETRY_RENDER_TIMEOUT,
-      });
-    }).toPass({ timeout: FLAG_PROPAGATION_TIMEOUT });
-    await expect(retryButton).toHaveCount(0);
+  const citizen = await createCitizen(prisma, {
+    handle: "loganalyst",
+    permissionStrings: ["logAnalyzer;read"],
   });
+  await signIn(citizen.user);
+  /** Tests on other workers open the log analyzer at the same time */
+  const userScope = { userId: citizen.user.id };
 
-  enum SharingToolbarState {
-    NoToolbar = "no toolbar",
-    WithSharing = "with sharing",
-    WithoutSharing = "without sharing",
-  }
+  const introduction = page.getByText(
+    "Der Log Analyzer wertet die Game Logs von Star Citizen aus",
+  );
+  const tileError = page.getByText("Ein unerwarteter Fehler ist aufgetreten");
+
+  await setUnleashFlag(UNLEASH_FLAG.CrashLogAnalyzer, false, userScope);
+  await expectFlagPropagation
+    .poll(() => pageShows(page, "/app/tools/log-analyzer", () => introduction))
+    .toBe(true);
+
+  await setUnleashFlag(UNLEASH_FLAG.CrashLogAnalyzer, true, userScope);
+  await expectFlagPropagation
+    .poll(() => pageShows(page, "/app/tools/log-analyzer", () => tileError))
+    .toBe(true);
 
   /**
-   * Navigates and reports which label the settings button of the log analyzer
-   * toolbar shows: "Filter & Teilen" with the sharing, "Filter" without it.
-   * The toolbar itself has to appear first — its absence stays a state of its
-   * own, so a page which did not render cannot pass for the removed sharing.
+   * The retry button stays disabled until the refresh of the page ends,
+   * thus a second click cannot start a second refresh. The test holds the
+   * refresh, thus it cannot end before the assertion. The flag is still on,
+   * thus the tile fails again after the refresh.
    */
-  const sharingToolbarState = async (page: Page) => {
-    await page.goto("/app/tools/log-analyzer");
-    const withSharing = page.getByRole("button", {
-      name: "Filter & Teilen",
-      exact: true,
+  const retryButton = page.getByRole("button", { name: "Erneut versuchen" });
+  const heldRefresh = await holdPageRefresh(page, "/app/tools/log-analyzer");
+  await retryButton.click();
+  await expect.poll(heldRefresh.requestCount).toBeGreaterThan(0);
+  await expect(retryButton).toBeDisabled();
+  heldRefresh.release();
+  await expect(retryButton).toBeEnabled();
+  await expect(tileError).toBeVisible();
+  await heldRefresh.stop();
+
+  /**
+   * The retry loads the tile again from the server without a reload of the
+   * page.
+   */
+  await setUnleashFlag(UNLEASH_FLAG.CrashLogAnalyzer, false, userScope);
+  await expect(async () => {
+    if (!(await introduction.isVisible()))
+      await retryButton.click({ timeout: RETRY_CLICK_TIMEOUT });
+    await expect(introduction).toBeVisible({
+      timeout: RETRY_RENDER_TIMEOUT,
     });
-    const withoutSharing = page.getByRole("button", {
-      name: "Filter",
-      exact: true,
-    });
-    try {
-      await withSharing
-        .or(withoutSharing)
-        .waitFor({ state: "visible", timeout: 5_000 });
-    } catch {
-      return SharingToolbarState.NoToolbar;
-    }
+  }).toPass({ timeout: FLAG_PROPAGATION_TIMEOUT });
+  await expect(retryButton).toHaveCount(0);
+});
 
-    return (await withSharing.isVisible())
-      ? SharingToolbarState.WithSharing
-      : SharingToolbarState.WithoutSharing;
-  };
+enum SharingToolbarState {
+  NoToolbar = "no toolbar",
+  WithSharing = "with sharing",
+  WithoutSharing = "without sharing",
+}
 
-  /** A shared entries query as the app would send it (superjson envelope) */
-  const sharedEntriesUrl = () => {
-    const queryParameters = new URLSearchParams({
-      input: JSON.stringify({ json: { daysToLoad: 14 } }),
-    });
-
-    return `/api/trpc/logAnalyzer.getSharedEntries?${queryParameters.toString()}`;
-  };
-
-  test("the kill switch flag removes the sharing of the log analyzer", async ({
-    page,
-    prisma,
-    signIn,
-  }) => {
-    test.setTimeout(FLAG_TEST_TIMEOUT);
-
-    const citizen = await createCitizen(prisma, {
-      handle: "sharing-flagged",
-      permissionStrings: ["logAnalyzer;read"],
-    });
-    await signIn(citizen.user);
-
-    await setUnleashFlag(UNLEASH_FLAG.DisableLogAnalyzerSharing, false);
-    await expectFlagPropagation
-      .poll(() => sharingToolbarState(page))
-      .toBe(SharingToolbarState.WithSharing);
-    /**
-     * The baseline of the request below: the query answers this session.
-     * The tRPC route holds its own cached copy of the flag definitions,
-     * separate from the one the pages above refreshed, and a request serves
-     * the stale copy while it starts the refresh — thus the two request
-     * assertions poll like the page assertions do.
-     */
-    await expectFlagPropagation
-      .poll(async () => {
-        const response = await page.request.get(sharedEntriesUrl());
-        return response.status();
-      })
-      .toBe(200);
-
-    await setUnleashFlag(UNLEASH_FLAG.DisableLogAnalyzerSharing, true);
-    await expectFlagPropagation
-      .poll(() => sharingToolbarState(page))
-      .toBe(SharingToolbarState.WithoutSharing);
-
-    /**
-     * The server refuses on its own, thus a client with a cached page or a
-     * handmade request cannot read shared entries either.
-     */
-    await expectFlagPropagation
-      .poll(async () => {
-        const response = await page.request.get(sharedEntriesUrl());
-        return response.status();
-      })
-      .toBe(403);
-
-    /** The other tests of the log analyzer rely on the sharing */
-    await setUnleashFlag(UNLEASH_FLAG.DisableLogAnalyzerSharing, false);
+/**
+ * Navigates and reports which label the settings button of the log analyzer
+ * toolbar shows: "Filter & Teilen" with the sharing, "Filter" without it.
+ * The toolbar itself has to appear first — its absence stays a state of its
+ * own, so a page which did not render cannot pass for the removed sharing.
+ */
+const sharingToolbarState = async (page: Page) => {
+  await page.goto("/app/tools/log-analyzer");
+  const withSharing = page.getByRole("button", {
+    name: "Filter & Teilen",
+    exact: true,
   });
+  const withoutSharing = page.getByRole("button", {
+    name: "Filter",
+    exact: true,
+  });
+  try {
+    await withSharing
+      .or(withoutSharing)
+      .waitFor({ state: "visible", timeout: 5_000 });
+  } catch {
+    return SharingToolbarState.NoToolbar;
+  }
+
+  return (await withSharing.isVisible())
+    ? SharingToolbarState.WithSharing
+    : SharingToolbarState.WithoutSharing;
+};
+
+/** A shared entries query as the app would send it (superjson envelope) */
+const sharedEntriesUrl = () => {
+  const queryParameters = new URLSearchParams({
+    input: JSON.stringify({ json: { daysToLoad: 14 } }),
+  });
+
+  return `/api/trpc/logAnalyzer.getSharedEntries?${queryParameters.toString()}`;
+};
+
+test("the kill switch flag removes the sharing of the log analyzer", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  test.setTimeout(FLAG_TEST_TIMEOUT);
+
+  const citizen = await createCitizen(prisma, {
+    handle: "sharing-flagged",
+    permissionStrings: ["logAnalyzer;read"],
+  });
+  await signIn(citizen.user);
+  /** Tests on other workers need the sharing at the same time */
+  const userScope = { userId: citizen.user.id };
+
+  await setUnleashFlag(
+    UNLEASH_FLAG.DisableLogAnalyzerSharing,
+    false,
+    userScope,
+  );
+  await expectFlagPropagation
+    .poll(() => sharingToolbarState(page))
+    .toBe(SharingToolbarState.WithSharing);
+  /**
+   * The baseline of the request below: the query answers this session.
+   * The tRPC route holds its own cached copy of the flag definitions,
+   * separate from the one the pages above refreshed, and a request serves
+   * the stale copy while it starts the refresh — thus the two request
+   * assertions poll like the page assertions do.
+   */
+  await expectFlagPropagation
+    .poll(async () => {
+      const response = await page.request.get(sharedEntriesUrl());
+      return response.status();
+    })
+    .toBe(200);
+
+  await setUnleashFlag(UNLEASH_FLAG.DisableLogAnalyzerSharing, true, userScope);
+  await expectFlagPropagation
+    .poll(() => sharingToolbarState(page))
+    .toBe(SharingToolbarState.WithoutSharing);
+
+  /**
+   * The server refuses on its own, thus a client with a cached page or a
+   * handmade request cannot read shared entries either.
+   */
+  await expectFlagPropagation
+    .poll(async () => {
+      const response = await page.request.get(sharedEntriesUrl());
+      return response.status();
+    })
+    .toBe(403);
 });
