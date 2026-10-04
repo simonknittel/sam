@@ -1,8 +1,9 @@
 "use client";
 
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
+import { filterCheckboxListParsers } from "@/modules/common/utils/filterCheckboxListParsers";
 import clsx from "clsx";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useQueryStates } from "nuqs";
 import type { ChangeEventHandler, ReactNode } from "react";
 
 interface FilterCheckboxItem {
@@ -13,9 +14,8 @@ interface FilterCheckboxItem {
 interface Props {
   readonly className?: string;
   /**
-   * Namespace of this list's entries inside the shared comma-joined
-   * `filters` query param, e.g. "note-type". The URL format predates the
-   * common nuqs filters and is kept for bookmark compatibility.
+   * Namespace of this list's entries inside the shared `filters` search
+   * parameter, e.g. "note-type"
    */
   readonly prefix: string;
   readonly items: FilterCheckboxItem[];
@@ -26,30 +26,20 @@ interface Props {
  * `filters` URL parameter, namespaced by prefix.
  */
 export const FilterCheckboxList = ({ className, prefix, items }: Props) => {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  const defaultValues =
-    searchParams
-      .get("filters")
-      ?.split(",")
-      .filter((filter) => filter.startsWith(`${prefix}-`)) || [];
+  const [{ filters }, setSearchParams] = useQueryStates(
+    filterCheckboxListParsers,
+    { shallow: false, history: "push" },
+  );
 
   const handleChange: ChangeEventHandler<HTMLInputElement> = (event) => {
-    const newSearchParams = new URLSearchParams(window.location.search);
+    const { checked, value } = event.target;
 
-    let filters = newSearchParams.get("filters")?.split(",") || [];
-
-    if (event.target.checked) {
-      filters.push(event.target.value);
-    } else {
-      filters = filters.filter((filter) => filter !== event.target.value);
-    }
-
-    newSearchParams.set("filters", filters.join(","));
-
-    router.push(`${pathname}?${newSearchParams.toString()}`);
+    void setSearchParams((current) => ({
+      filters: checked
+        ? [...current.filters, value]
+        : current.filters.filter((filter) => filter !== value),
+      page: null,
+    }));
   };
 
   return (
@@ -70,7 +60,7 @@ export const FilterCheckboxList = ({ className, prefix, items }: Props) => {
             id={`${prefix}-${item.id}`}
             value={`${prefix}-${item.id}`}
             onChange={handleChange}
-            defaultChecked={defaultValues.includes(`${prefix}-${item.id}`)}
+            checked={filters.includes(`${prefix}-${item.id}`)}
             hideLabel
           />
         </div>

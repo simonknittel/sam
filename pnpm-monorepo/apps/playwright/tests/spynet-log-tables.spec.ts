@@ -158,3 +158,143 @@ test("a viewer with the confirm and read permissions sees all logs of these type
   await expect(tableRows(page)).toHaveCount(1);
   await expect(logContent(page, FALSE_REPORT_HANDLE)).toBeVisible();
 });
+
+const headerLink = (page: Page, name: string) =>
+  page.locator("thead").getByRole("link", { name, exact: true });
+
+test("the log table sorts by the confirmation time and keeps the sort and the filters on the next page", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const viewer = await createCitizen(prisma, {
+    handle: "log-sortierer",
+    permissionStrings: [
+      ...OTHER_TABLE_PERMISSIONS,
+      "handle;read",
+      "handle;confirm",
+      "discord-id;read",
+    ],
+  });
+  await createLogs(prisma);
+
+  await signIn(viewer.user);
+  await page.goto("/app/spynet/other");
+
+  await headerLink(page, "Eingereicht am").click();
+  await expect(page).toHaveURL(/sort=created-at-asc/);
+  await expect(tableRows(page).first()).toContainText(OLDEST_CONFIRMED_HANDLE);
+
+  /**
+   * The newest confirmation first, and the log without a decision last: on
+   * the second page after the three oldest confirmed logs
+   */
+  await headerLink(page, "Bestätigt am").click();
+  await expect(page).toHaveURL(/sort=confirmed-at-desc/);
+  await expect(logContent(page, CONFIRMED_DISCORD_ID)).toBeVisible();
+  await page.getByRole("link", { name: "Nächste Seite" }).click();
+  await expect(page).toHaveURL(/page=2/);
+  await expect(page).toHaveURL(/sort=confirmed-at-desc/);
+  await expect(tableRows(page)).toHaveCount(4);
+  await expect(tableRows(page).last()).toContainText(UNCONFIRMED_HANDLE);
+
+  /** 51 confirmed handle logs and the confirmed Discord ID: two pages */
+  await page.goto("/app/spynet/other");
+  const confirmationFilter = page.getByRole("dialog", {
+    name: "Bestätigungsstatus",
+  });
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Bestätigungsstatus" }),
+    confirmationFilter,
+  );
+  await clickUntilUrl(
+    page,
+    toggleLabel(confirmationFilter, /^Bestätigt$/),
+    /filters=confirmation-confirmed$/,
+  );
+  await expect(page.getByText("1 / 2").filter({ visible: true })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(confirmationFilter).not.toBeVisible();
+
+  await page.getByRole("link", { name: "Nächste Seite" }).click();
+  await expect(page).toHaveURL(/page=2/);
+  await expect(page).toHaveURL(/filters=confirmation-confirmed/);
+  await expect(tableRows(page)).toHaveCount(2);
+  await expect(tableRows(page).last()).toContainText(OLDEST_CONFIRMED_HANDLE);
+});
+
+test("the notes table keeps the note type filters of an old bookmark when it sorts", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const viewer = await createCitizen(prisma, {
+    handle: "notiz-sortierer",
+    permissionStrings: ["citizen;read", "spynetNotes;read"],
+  });
+  const observation = await prisma.noteType.create({
+    data: { name: "Beobachtung" },
+  });
+  const rumour = await prisma.noteType.create({ data: { name: "Gerücht" } });
+  const sighting = await prisma.noteType.create({ data: { name: "Sichtung" } });
+  const classificationLevel = await prisma.classificationLevel.create({
+    data: { name: "Geheim" },
+  });
+  const citizen = await prisma.citizen.create({
+    data: { handle: "beobachteter" },
+  });
+
+  /** The note of the first note type is the newest */
+  const now = Date.now();
+  await prisma.citizenLog.createMany({
+    data: [observation, rumour, sighting].map((noteType, index) => {
+      const createdAt = new Date(now - (index + 1) * ONE_MINUTE_MS);
+
+      return {
+        citizenId: citizen.id,
+        type: "note",
+        content: `Notiz: ${noteType.name}`,
+        noteTypeId: noteType.id,
+        classificationLevelId: classificationLevel.id,
+        confirmed: ConfirmationStatus.CONFIRMED,
+        confirmedAt: createdAt,
+        createdAt,
+      };
+    }),
+  });
+
+  await signIn(viewer.user);
+
+  /** The format of the filter list before nuqs: URLSearchParams encoded the comma */
+  await page.goto(
+    `/app/spynet/notes?filters=note-type-${observation.id}%2Cnote-type-${rumour.id}`,
+  );
+  await expect(tableRows(page)).toHaveCount(2);
+  await expect(tableRows(page).first()).toContainText("Notiz: Beobachtung");
+  await expect(logContent(page, "Notiz: Sichtung")).toHaveCount(0);
+
+  const noteTypeFilter = page.getByRole("dialog", { name: "Notizarten" });
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Notizarten" }),
+    noteTypeFilter,
+  );
+  await expect(
+    noteTypeFilter.getByRole("checkbox", { name: "Beobachtung" }),
+  ).toBeChecked();
+  await expect(
+    noteTypeFilter.getByRole("checkbox", { name: "Gerücht" }),
+  ).toBeChecked();
+  await expect(
+    noteTypeFilter.getByRole("checkbox", { name: "Sichtung" }),
+  ).not.toBeChecked();
+  await page.keyboard.press("Escape");
+  await expect(noteTypeFilter).not.toBeVisible();
+
+  await headerLink(page, "Eingereicht am").click();
+  await expect(page).toHaveURL(/sort=created-at-asc/);
+  await expect(page).toHaveURL(
+    new RegExp(`filters=note-type-${observation.id},note-type-${rumour.id}`),
+  );
+  await expect(tableRows(page)).toHaveCount(2);
+  await expect(tableRows(page).first()).toContainText("Notiz: Gerücht");
+});

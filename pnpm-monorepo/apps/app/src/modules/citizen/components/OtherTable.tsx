@@ -1,35 +1,23 @@
 import type { CitizenLogTableRow } from "@/modules/citizen/queries/citizenLogTableSelect";
+import { CitizenLogTableSort } from "@/modules/citizen/utils/citizenLogTableSearchParams";
 import { citizenLogTypeTranslations } from "@/modules/citizen/utils/citizenLogTypeTranslations";
 import { Actions } from "@/modules/common/components/Actions";
 import { CitizenCellLink } from "@/modules/common/components/CitizenCellLink";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import {
-  SortDirection,
-  toggleSortParam,
-} from "@/modules/common/utils/toggleSortParam";
 import { FaSortDown, FaSortUp } from "react-icons/fa";
 import { ConfirmationState } from "./ConfirmationState";
 import { OtherTableDelete } from "./OtherTableDelete";
 
 interface Props {
   readonly rows: readonly CitizenLogTableRow[];
-  readonly searchParams: URLSearchParams;
+  readonly sort: CitizenLogTableSort;
+  readonly getHref: (searchParams: {
+    readonly sort: CitizenLogTableSort;
+  }) => string;
 }
 
-export const OtherTable = ({ rows, searchParams }: Props) => {
-  const createdAtSearchParams = toggleSortParam(searchParams, "created-at", {
-    initialDirection: SortDirection.Descending,
-    treatMissingAs: "created-at-desc",
-  });
-  const confirmedAtSearchParams = toggleSortParam(
-    searchParams,
-    "confirmed-at",
-    {
-      initialDirection: SortDirection.Descending,
-    },
-  );
-
+export const OtherTable = ({ rows, sort, getHref }: Props) => {
   return (
     <table className="w-full min-w-400">
       <thead>
@@ -44,15 +32,21 @@ export const OtherTable = ({ rows, searchParams }: Props) => {
 
           <th>
             <Link
-              href={`?${confirmedAtSearchParams.toString()}`}
-              className="flex cursor-pointer items-center gap-2 whitespace-nowrap select-none hover:text-neutral-300"
+              href={getHref({
+                sort:
+                  sort === CitizenLogTableSort.ConfirmedAtDescending
+                    ? CitizenLogTableSort.ConfirmedAtAscending
+                    : CitizenLogTableSort.ConfirmedAtDescending,
+              })}
+              className="flex cursor-pointer items-center gap-2 whitespace-nowrap select-none hover:text-neutral-300 focus-visible:text-neutral-300 active:text-neutral-200"
             >
               Bestätigt am
-              {(!searchParams.has("sort") ||
-                searchParams.get("sort") === "confirmed-at-desc") && (
+              {sort === CitizenLogTableSort.ConfirmedAtDescending && (
                 <FaSortDown />
               )}
-              {searchParams.get("sort") === "confirmed-at-asc" && <FaSortUp />}
+              {sort === CitizenLogTableSort.ConfirmedAtAscending && (
+                <FaSortUp />
+              )}
             </Link>
           </th>
 
@@ -60,15 +54,19 @@ export const OtherTable = ({ rows, searchParams }: Props) => {
 
           <th>
             <Link
-              href={`?${createdAtSearchParams.toString()}`}
-              className="flex cursor-pointer items-center gap-2 whitespace-nowrap select-none hover:text-neutral-300"
+              href={getHref({
+                sort:
+                  sort === CitizenLogTableSort.CreatedAtDescending
+                    ? CitizenLogTableSort.CreatedAtAscending
+                    : CitizenLogTableSort.CreatedAtDescending,
+              })}
+              className="flex cursor-pointer items-center gap-2 whitespace-nowrap select-none hover:text-neutral-300 focus-visible:text-neutral-300 active:text-neutral-200"
             >
               Eingereicht am
-              {(!searchParams.has("sort") ||
-                searchParams.get("sort") === "created-at-desc") && (
+              {sort === CitizenLogTableSort.CreatedAtDescending && (
                 <FaSortDown />
               )}
-              {searchParams.get("sort") === "created-at-asc" && <FaSortUp />}
+              {sort === CitizenLogTableSort.CreatedAtAscending && <FaSortUp />}
             </Link>
           </th>
 

@@ -10,7 +10,6 @@ import {
   sortAscWithAndNullLast,
   sortDescAndNullLast,
 } from "@/modules/common/utils/sorting";
-import { toggleSortParam } from "@/modules/common/utils/toggleSortParam";
 import type {
   EventCitizenReference,
   EventParticipantRow,
@@ -20,6 +19,12 @@ import { EventSource, type Event } from "@sam-monorepo/database/client";
 import { DELETED_CITIZEN_LABEL } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { forbidden } from "next/navigation";
+import {
+  createLoader,
+  createSerializer,
+  parseAsStringEnum,
+  type SearchParams,
+} from "nuqs/server";
 import { Suspense } from "react";
 import {
   FaInfoCircle,
@@ -36,6 +41,21 @@ import { CreateManagers } from "./CreateManagers";
 import { DeleteManager } from "./DeleteManager";
 import { RemoveEventParticipant } from "./RemoveEventParticipant";
 
+enum ParticipantSort {
+  CitizenAscending = "citizen-asc",
+  CitizenDescending = "citizen-desc",
+  JoinedAtAscending = "joined-at-asc",
+  JoinedAtDescending = "joined-at-desc",
+}
+
+const searchParamsParsers = {
+  sort: parseAsStringEnum(Object.values(ParticipantSort)).withDefault(
+    ParticipantSort.CitizenAscending,
+  ),
+};
+const loadSearchParams = createLoader(searchParamsParsers);
+const serializeSearchParams = createSerializer(searchParamsParsers);
+
 interface Props {
   readonly className?: string;
   readonly event: Event & {
@@ -43,13 +63,13 @@ interface Props {
     readonly managers: EventCitizenReference[];
     readonly createdBy?: EventCitizenReference | null;
   };
-  readonly urlSearchParams: URLSearchParams;
+  readonly searchParams: Promise<SearchParams>;
 }
 
 export const ParticipantsTab = async ({
   className,
   event,
-  urlSearchParams,
+  searchParams,
 }: Props) => {
   const authentication = await requireAuthentication();
   if (!authentication.session.entity) forbidden();
@@ -75,31 +95,32 @@ export const ParticipantsTab = async ({
 
   const resolvedParticipants = await getParticipants(event);
 
-  const citizenSearchParams = toggleSortParam(urlSearchParams, "citizen", {
-    treatMissingAs: "citizen-asc",
-  });
-  const joinedAtSearchParams = toggleSortParam(urlSearchParams, "joined-at");
+  const { sort } = await loadSearchParams(searchParams);
+  const getSortHref = (nextSort: ParticipantSort) =>
+    serializeSearchParams(`/app/events/${event.id}/participants`, {
+      sort: nextSort,
+    });
 
   const sortedResolvedParticipants = resolvedParticipants.toSorted((a, b) => {
-    switch (urlSearchParams.get("sort")) {
-      case "citizen-asc":
+    switch (sort) {
+      case ParticipantSort.CitizenAscending:
         return sortAscWithAndNullLast(a.citizen.handle, b.citizen.handle);
-      case "citizen-desc":
+      case ParticipantSort.CitizenDescending:
         return sortDescAndNullLast(a.citizen.handle, b.citizen.handle);
 
-      case "joined-at-asc":
+      case ParticipantSort.JoinedAtAscending:
         return sortAscWithAndNullLast(
           a.participant?.createdAt?.getTime(),
           b.participant?.createdAt?.getTime(),
         );
-      case "joined-at-desc":
+      case ParticipantSort.JoinedAtDescending:
         return sortDescAndNullLast(
           a.participant?.createdAt?.getTime(),
           b.participant?.createdAt?.getTime(),
         );
 
       default:
-        return sortAscWithAndNullLast(a.citizen.handle, b.citizen.handle);
+        throw new Error(`Unknown sort: ${sort satisfies never}`);
     }
   });
 
@@ -209,15 +230,18 @@ export const ParticipantsTab = async ({
               >
                 <th className="px-2">
                   <Link
-                    href={`?${citizenSearchParams.toString()}`}
-                    className="flex cursor-pointer items-center gap-2 whitespace-nowrap select-none hover:text-neutral-300"
+                    href={getSortHref(
+                      sort === ParticipantSort.CitizenAscending
+                        ? ParticipantSort.CitizenDescending
+                        : ParticipantSort.CitizenAscending,
+                    )}
+                    className="flex cursor-pointer items-center gap-2 whitespace-nowrap select-none hover:text-neutral-300 focus-visible:text-neutral-300 active:text-neutral-200"
                   >
                     Citizen
-                    {(!urlSearchParams.has("sort") ||
-                      urlSearchParams.get("sort") === "citizen-asc") && (
+                    {sort === ParticipantSort.CitizenAscending && (
                       <FaSortAlphaDown />
                     )}
-                    {urlSearchParams.get("sort") === "citizen-desc" && (
+                    {sort === ParticipantSort.CitizenDescending && (
                       <FaSortAlphaUp />
                     )}
                   </Link>
@@ -225,14 +249,18 @@ export const ParticipantsTab = async ({
 
                 <th className="flex items-center gap-2">
                   <Link
-                    href={`?${joinedAtSearchParams.toString()}`}
-                    className="flex cursor-pointer items-center gap-2 whitespace-nowrap select-none hover:text-neutral-300"
+                    href={getSortHref(
+                      sort === ParticipantSort.JoinedAtAscending
+                        ? ParticipantSort.JoinedAtDescending
+                        : ParticipantSort.JoinedAtAscending,
+                    )}
+                    className="flex cursor-pointer items-center gap-2 whitespace-nowrap select-none hover:text-neutral-300 focus-visible:text-neutral-300 active:text-neutral-200"
                   >
                     Zugesagt am
-                    {urlSearchParams.get("sort") === "joined-at-asc" && (
+                    {sort === ParticipantSort.JoinedAtAscending && (
                       <FaSortNumericDown />
                     )}
-                    {urlSearchParams.get("sort") === "joined-at-desc" && (
+                    {sort === ParticipantSort.JoinedAtDescending && (
                       <FaSortNumericUp />
                     )}
                   </Link>

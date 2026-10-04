@@ -7,6 +7,7 @@ import {
   ConfirmationValue,
   toConfirmationStatus,
 } from "../utils/citizenLogConfirmation";
+import { CitizenLogTableSort } from "../utils/citizenLogTableSearchParams";
 import { CITIZEN_LOG_TABLE_SELECT } from "./citizenLogTableSelect";
 
 type Authentication = Awaited<ReturnType<typeof requireAuthentication>>;
@@ -79,32 +80,34 @@ export const getConfirmationFilterWhere = (
 };
 
 const getOrderBy = (
-  sort: string | null,
+  sort: CitizenLogTableSort,
 ): Prisma.CitizenLogOrderByWithRelationInput[] => {
   switch (sort) {
-    case "confirmed-at-asc":
+    case CitizenLogTableSort.ConfirmedAtAscending:
       return [
         { confirmedAt: { sort: "asc", nulls: "last" } },
         { createdAt: "asc" },
         { id: "asc" },
       ];
-    case "confirmed-at-desc":
+    case CitizenLogTableSort.ConfirmedAtDescending:
       return [
         { confirmedAt: { sort: "desc", nulls: "last" } },
         { createdAt: "desc" },
         { id: "desc" },
       ];
-    case "created-at-asc":
+    case CitizenLogTableSort.CreatedAtAscending:
       return [{ createdAt: "asc" }, { id: "asc" }];
-    default:
+    case CitizenLogTableSort.CreatedAtDescending:
       return [{ createdAt: "desc" }, { id: "desc" }];
+    default:
+      throw new Error(`Unknown sort: ${sort satisfies never}`);
   }
 };
 
 /** One page of a Spynet log table, filtered and sorted in the database */
 export const getCitizenLogTablePage = async (
   where: Prisma.CitizenLogWhereInput,
-  sort: string | null,
+  sort: CitizenLogTableSort,
   page: number,
 ) => {
   const [logs, count] = await prisma.$transaction([

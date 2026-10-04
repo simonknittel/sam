@@ -1,6 +1,5 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
-import { searchParamsNextjsToURLSearchParams } from "@/modules/common/utils/searchParamsNextjsToURLSearchParams";
 import { type Metadata } from "next";
 import { CitizenTableTile } from "../../../../modules/citizen/components/CitizenTableTile";
 
@@ -17,13 +16,10 @@ export default async function Page({
     authentication.authorizePage("spynetCitizen", "read"),
   ]);
 
-  const urlSearchParams =
-    await searchParamsNextjsToURLSearchParams(searchParams);
-
   return (
     <div className="overflow-x-hidden">
       <SuspenseWithErrorBoundaryTile>
-        <CitizenTableTile searchParams={urlSearchParams} />
+        <CitizenTableTile searchParams={searchParams} />
       </SuspenseWithErrorBoundaryTile>
     </div>
   );

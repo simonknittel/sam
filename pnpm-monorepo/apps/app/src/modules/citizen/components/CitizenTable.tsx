@@ -1,10 +1,7 @@
+import { CitizenTableSort } from "@/modules/citizen/utils/citizenTableSearchParams";
 import { Actions } from "@/modules/common/components/Actions";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import {
-  SortDirection,
-  toggleSortParam,
-} from "@/modules/common/utils/toggleSortParam";
 import { type Citizen } from "@sam-monorepo/database/client";
 import type { CSSProperties } from "react";
 import { FaExternalLinkAlt, FaSortDown, FaSortUp } from "react-icons/fa";
@@ -25,7 +22,10 @@ interface Props {
   readonly showTeamspeakIdColumn?: boolean;
   readonly showLastSeenAtColumn?: boolean;
   readonly showDeleteEntityButton?: boolean;
-  readonly searchParams: URLSearchParams;
+  readonly sort: CitizenTableSort;
+  readonly getHref: (searchParams: {
+    readonly sort: CitizenTableSort;
+  }) => string;
 }
 
 export const CitizenTable = ({
@@ -34,17 +34,9 @@ export const CitizenTable = ({
   showTeamspeakIdColumn = false,
   showLastSeenAtColumn = false,
   showDeleteEntityButton = false,
-  searchParams,
+  sort,
+  getHref,
 }: Props) => {
-  const handleSearchParams = toggleSortParam(searchParams, "handle");
-  const createdAtSearchParams = toggleSortParam(searchParams, "created-at", {
-    initialDirection: SortDirection.Descending,
-    treatMissingAs: "created-at-desc",
-  });
-  const lastSeenAtSearchParams = toggleSortParam(searchParams, "last-seen-at", {
-    initialDirection: SortDirection.Descending,
-  });
-
   const columns = [
     "1fr",
     "100px",
@@ -66,12 +58,17 @@ export const CitizenTable = ({
         <tr className="grid grid-cols-(--table-columns) items-center gap-4 text-left text-neutral-500">
           <th>
             <Link
-              href={`?${handleSearchParams.toString()}`}
-              className="flex cursor-pointer items-center gap-2 select-none hover:text-neutral-300"
+              href={getHref({
+                sort:
+                  sort === CitizenTableSort.HandleAscending
+                    ? CitizenTableSort.HandleDescending
+                    : CitizenTableSort.HandleAscending,
+              })}
+              className="flex cursor-pointer items-center gap-2 select-none hover:text-neutral-300 focus-visible:text-neutral-300 active:text-neutral-200"
             >
               Handle
-              {searchParams.get("sort") === "handle-asc" && <FaSortUp />}
-              {searchParams.get("sort") === "handle-desc" && <FaSortDown />}
+              {sort === CitizenTableSort.HandleAscending && <FaSortUp />}
+              {sort === CitizenTableSort.HandleDescending && <FaSortDown />}
             </Link>
           </th>
 
@@ -87,29 +84,34 @@ export const CitizenTable = ({
 
           <th>
             <Link
-              href={`?${createdAtSearchParams.toString()}`}
-              className="flex cursor-pointer items-center gap-2 whitespace-nowrap select-none hover:text-neutral-300"
+              href={getHref({
+                sort:
+                  sort === CitizenTableSort.CreatedAtDescending
+                    ? CitizenTableSort.CreatedAtAscending
+                    : CitizenTableSort.CreatedAtDescending,
+              })}
+              className="flex cursor-pointer items-center gap-2 whitespace-nowrap select-none hover:text-neutral-300 focus-visible:text-neutral-300 active:text-neutral-200"
             >
               Erstellt am
-              {(!searchParams.has("sort") ||
-                searchParams.get("sort") === "created-at-desc") && (
-                <FaSortDown />
-              )}
-              {searchParams.get("sort") === "created-at-asc" && <FaSortUp />}
+              {sort === CitizenTableSort.CreatedAtDescending && <FaSortDown />}
+              {sort === CitizenTableSort.CreatedAtAscending && <FaSortUp />}
             </Link>
           </th>
 
           {showLastSeenAtColumn && (
             <th>
               <Link
-                href={`?${lastSeenAtSearchParams.toString()}`}
-                className="flex cursor-pointer items-center gap-2 whitespace-nowrap select-none hover:text-neutral-300"
+                href={getHref({
+                  sort:
+                    sort === CitizenTableSort.LastSeenAtDescending
+                      ? CitizenTableSort.LastSeenAtAscending
+                      : CitizenTableSort.LastSeenAtDescending,
+                })}
+                className="flex cursor-pointer items-center gap-2 whitespace-nowrap select-none hover:text-neutral-300 focus-visible:text-neutral-300 active:text-neutral-200"
               >
                 Zuletzt gesehen
-                {searchParams.get("sort") === "last-seen-at-asc" && (
-                  <FaSortUp />
-                )}
-                {searchParams.get("sort") === "last-seen-at-desc" && (
+                {sort === CitizenTableSort.LastSeenAtAscending && <FaSortUp />}
+                {sort === CitizenTableSort.LastSeenAtDescending && (
                   <FaSortDown />
                 )}
               </Link>
