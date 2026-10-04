@@ -14,20 +14,13 @@ import {
   type Node as NodeType,
 } from "@xyflow/react";
 import clsx from "clsx";
-import {
-  useCallback,
-  useState,
-  type ComponentType,
-  type FormEventHandler,
-} from "react";
-import toast from "react-hot-toast";
+import { useCallback, useState, type ComponentType } from "react";
 import { FaPen } from "react-icons/fa";
 import { FaTrash } from "react-icons/fa6";
 import Markdown from "react-markdown";
 import { CreateOrUpdateNodeModal } from "../../../components/CreateOrUpdateNodeModal";
 import { useFlowContext } from "../../../components/FlowContext";
 import { getBackground } from "../../../utils/getBackground";
-import { schema } from "./schema";
 
 export type Markdown = NodeType<
   {
@@ -41,49 +34,12 @@ export type Markdown = NodeType<
 
 export const Node: ComponentType<NodeProps<Markdown>> = (props) => {
   const { isUpdating } = useFlowContext();
-  const { updateNodeData, deleteElements } = useReactFlow<Markdown>();
+  const { deleteElements } = useReactFlow<Markdown>();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const onEdit = useCallback(() => {
     setIsEditModalOpen((currentValue) => !currentValue);
   }, []);
-
-  const onUpdate: FormEventHandler<HTMLFormElement> = useCallback(
-    (event) => {
-      event.preventDefault();
-      setIsEditModalOpen(false);
-
-      const formData = new FormData(event.currentTarget);
-      const result = schema.safeParse({
-        id: formData.get("id"),
-        nodeType: formData.get("nodeType"),
-        markdown: formData.get("markdown"),
-        markdownPosition: formData.get("markdownPosition"),
-        backgroundColor: formData.get("backgroundColor"),
-        backgroundTransparency: formData.get("backgroundTransparency"),
-      });
-
-      if (!result.success) {
-        toast.error(
-          "Beim Speichern ist ein unerwarteter Fehler aufgetreten. Bitte versuche es später erneut.",
-        );
-        console.error(result.error);
-        return;
-      }
-
-      updateNodeData(
-        props.id,
-        {
-          markdown: result.data.markdown,
-          markdownPosition: result.data.markdownPosition,
-          backgroundColor: result.data.backgroundColor,
-          backgroundTransparency: result.data.backgroundTransparency,
-        },
-        { replace: true },
-      );
-    },
-    [updateNodeData, props.id],
-  );
 
   const onDelete = useCallback(() => {
     void deleteElements({ nodes: [{ id: props.id }] });
@@ -122,7 +78,6 @@ export const Node: ComponentType<NodeProps<Markdown>> = (props) => {
                 backgroundColor: props.data.backgroundColor,
                 backgroundTransparency: props.data.backgroundTransparency,
               }}
-              onUpdate={onUpdate}
             />
           )}
 
@@ -137,7 +92,9 @@ export const Node: ComponentType<NodeProps<Markdown>> = (props) => {
         </NodeToolbar>
       )}
 
-      {props.selected && <NodeResizer minWidth={1} minHeight={1} />}
+      {isUpdating && props.selected && (
+        <NodeResizer minWidth={1} minHeight={1} />
+      )}
 
       <div
         className={clsx(

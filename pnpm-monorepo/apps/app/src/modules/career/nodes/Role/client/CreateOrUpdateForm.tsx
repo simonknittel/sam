@@ -13,10 +13,13 @@ import Image from "next/image";
 import { useId, useState, type FormEventHandler } from "react";
 import toast from "react-hot-toast";
 import { useFlowContext } from "../../../components/FlowContext";
+import { isUnlocked } from "../../shared/isUnlocked";
 import type { AdditionalDataType } from "./additionalDataType";
+import type { RoleNode } from "./Node";
 import { schema } from "./schema";
 
 interface Props {
+  /** Without it, the form adds a new node */
   readonly initialData?: {
     id: string;
     backgroundColor: string;
@@ -25,14 +28,15 @@ interface Props {
     roleImage: FlowNodeRoleImage;
     showUnlocked?: boolean;
   };
-  onUpdate?: FormEventHandler<HTMLFormElement>;
+  readonly onDone: () => void;
 }
 
-export const CreateOrUpdateForm = ({ initialData, onUpdate }: Props) => {
-  const { setIsCreateNodeModalOpen, additionalData } = useFlowContext();
-  const { addNodes } = useReactFlow();
+export const CreateOrUpdateForm = ({ initialData, onDone }: Props) => {
+  const { additionalData } = useFlowContext();
+  const { roles, assignedRoles } = additionalData as AdditionalDataType;
+  const { addNodes, updateNodeData } = useReactFlow<RoleNode>();
   const [roleId, setRoleId] = useState<Role["id"]>(
-    initialData?.roleId || (additionalData as AdditionalDataType).roles[0].id,
+    initialData?.roleId ?? roles.at(0)?.id ?? "",
   );
   const [roleImage, setRoleImage] = useState<keyof typeof FlowNodeRoleImage>(
     initialData?.roleImage || FlowNodeRoleImage.ICON,
@@ -44,14 +48,13 @@ export const CreateOrUpdateForm = ({ initialData, onUpdate }: Props) => {
   const backgroundColorInputId = useId();
   const backgroundTransparencyInputId = useId();
 
+  const role = roles.find((candidate) => candidate.id === roleId);
+
   const handleSubmit: FormEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
-    setIsCreateNodeModalOpen(false);
 
     const formData = new FormData(event.currentTarget);
     const result = schema.safeParse({
-      id: formData.get("id"),
-      roleId: formData.get("roleId"),
       roleImage: formData.get("roleImage"),
       backgroundColor: formData.get("backgroundColor"),
       backgroundTransparency: formData.get("backgroundTransparency"),
@@ -66,53 +69,43 @@ export const CreateOrUpdateForm = ({ initialData, onUpdate }: Props) => {
       return;
     }
 
-    const data = result.data;
-    const role = (additionalData as AdditionalDataType).roles.find(
-      (role) => role.id === data.roleId,
-    );
+    if (!role) {
+      toast.error("Bitte wähle eine Rolle aus.");
+      return;
+    }
 
-    addNodes({
-      id: data.id,
-      type: FlowNodeType.ROLE,
-      position: {
-        x: 0,
-        y: 0,
-      },
-      width: data.roleImage === FlowNodeRoleImage.THUMBNAIL ? 178 : 100,
-      height: 100,
-      data: {
-        role,
-        roleImage: data.roleImage,
-        backgroundColor: data.backgroundColor,
-        backgroundTransparency: data.backgroundTransparency,
-        showUnlocked: data.showUnlocked,
-      },
-    });
+    const data = {
+      ...result.data,
+      role,
+      unlocked: isUnlocked(role, assignedRoles),
+    };
+    if (initialData) {
+      updateNodeData(initialData.id, data, { replace: true });
+    } else {
+      addNodes({
+        id: createId(),
+        type: FlowNodeType.ROLE,
+        position: { x: 0, y: 0 },
+        width: data.roleImage === FlowNodeRoleImage.THUMBNAIL ? 178 : 100,
+        height: 100,
+        data,
+      });
+    }
+    onDone();
   };
 
-  const role = (additionalData as AdditionalDataType).roles.find(
-    (role) => role.id === roleId,
-  );
-
   return (
-    <form onSubmit={initialData ? onUpdate : handleSubmit}>
-      <input
-        name="id"
-        type="hidden"
-        defaultValue={initialData?.id || createId()}
-      />
-      <input name="nodeType" type="hidden" value={FlowNodeType.ROLE} />
-
+    <form onSubmit={handleSubmit}>
       <label htmlFor={roleInputId} className="mt-6 block">
         Rolle
       </label>
       <Select
-        name="roleId"
+        id={roleInputId}
         className="mt-2"
         value={roleId}
-        onChange={(e) => setRoleId(e.target.value)}
+        onChange={(event) => setRoleId(event.target.value)}
       >
-        {(additionalData as AdditionalDataType).roles.map((role) => (
+        {roles.map((role) => (
           <option key={role.id} value={role.id}>
             {role.name}
           </option>

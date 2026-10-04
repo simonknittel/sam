@@ -16,20 +16,13 @@ import {
   type Node as NodeType,
 } from "@xyflow/react";
 import clsx from "clsx";
-import {
-  useCallback,
-  useState,
-  type ComponentType,
-  type FormEventHandler,
-} from "react";
-import toast from "react-hot-toast";
+import { useCallback, useState, type ComponentType } from "react";
 import { FaPen } from "react-icons/fa";
 import { FaTrash } from "react-icons/fa6";
 import { CreateOrUpdateNodeModal } from "../../../components/CreateOrUpdateNodeModal";
 import { useFlowContext } from "../../../components/FlowContext";
 import { getBackground } from "../../../utils/getBackground";
 import type { AdditionalDataType } from "./additionalDataType";
-import { schema } from "./schema";
 
 export type RoleNode = NodeType<
   | {
@@ -49,63 +42,12 @@ export type RoleNode = NodeType<
 
 export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
   const { isUpdating, additionalData } = useFlowContext();
-  const { updateNodeData, deleteElements } = useReactFlow<RoleNode>();
+  const { deleteElements } = useReactFlow<RoleNode>();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const onEdit = useCallback(() => {
     setIsEditModalOpen((currentValue) => !currentValue);
   }, []);
-
-  const onUpdate: FormEventHandler<HTMLFormElement> = useCallback(
-    (event) => {
-      event.preventDefault();
-      setIsEditModalOpen(false);
-
-      const formData = new FormData(event.currentTarget);
-      const result = schema.safeParse({
-        id: formData.get("id"),
-        nodeType: formData.get("nodeType"),
-        roleId: formData.get("roleId"),
-        roleCitizensAlignment: formData.get("roleCitizensAlignment"),
-        roleCitizensHideRole: formData.get("roleCitizensHideRole"),
-        backgroundColor: formData.get("backgroundColor"),
-        backgroundTransparency: formData.get("backgroundTransparency"),
-        showUnlocked: formData.get("showUnlocked"),
-      });
-
-      if (!result.success) {
-        toast.error(
-          "Beim Speichern ist ein unerwarteter Fehler aufgetreten. Bitte versuche es später erneut.",
-        );
-        console.error(result.error);
-        return;
-      }
-
-      const role = (additionalData as AdditionalDataType).roles.find(
-        (role) => role.id === result.data.roleId,
-      );
-      if (!role) {
-        toast.error(
-          "Beim Speichern ist ein unerwarteter Fehler aufgetreten. Bitte versuche es später erneut.",
-        );
-        return;
-      }
-
-      updateNodeData(
-        props.id,
-        {
-          role,
-          roleCitizensAlignment: result.data.roleCitizensAlignment,
-          roleCitizensHideRole: result.data.roleCitizensHideRole,
-          backgroundColor: result.data.backgroundColor,
-          backgroundTransparency: result.data.backgroundTransparency,
-          showUnlocked: result.data.showUnlocked,
-        },
-        { replace: true },
-      );
-    },
-    [additionalData, updateNodeData, props.id],
-  );
 
   const onDelete = useCallback(() => {
     void deleteElements({ nodes: [{ id: props.id }] });
@@ -153,7 +95,6 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
                 backgroundTransparency: props.data.backgroundTransparency,
                 showUnlocked: props.data.showUnlocked,
               }}
-              onUpdate={onUpdate}
             />
           )}
 
@@ -168,7 +109,9 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
         </NodeToolbar>
       )}
 
-      {props.selected && <NodeResizer minWidth={1} minHeight={1} />}
+      {isUpdating && props.selected && (
+        <NodeResizer minWidth={1} minHeight={1} />
+      )}
 
       <div
         className={clsx("h-full rounded-secondary bg-neutral-800 p-4", {

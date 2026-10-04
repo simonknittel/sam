@@ -1,11 +1,10 @@
 "use client";
 
-import type { Dispatch, ReactNode, SetStateAction } from "react";
+import type { ReactNode } from "react";
 import { createContext, useContext, useMemo } from "react";
 
 interface FlowContext {
   isUpdating: boolean;
-  setIsCreateNodeModalOpen: Dispatch<SetStateAction<boolean>>;
   additionalData: Record<string, unknown>;
 }
 
@@ -14,23 +13,17 @@ const FlowContext = createContext<FlowContext | undefined>(undefined);
 interface Props {
   readonly children: ReactNode;
   readonly isUpdating: boolean;
-  readonly setIsCreateNodeModalOpen: Dispatch<SetStateAction<boolean>>;
   readonly additionalData: Record<string, unknown>;
 }
 
 export const FlowProvider = ({
   children,
   isUpdating,
-  setIsCreateNodeModalOpen,
   additionalData,
 }: Props) => {
   const value = useMemo(
-    () => ({
-      isUpdating,
-      setIsCreateNodeModalOpen,
-      additionalData,
-    }),
-    [isUpdating, setIsCreateNodeModalOpen, additionalData],
+    () => ({ isUpdating, additionalData }),
+    [isUpdating, additionalData],
   );
 
   return <FlowContext.Provider value={value}>{children}</FlowContext.Provider>;
