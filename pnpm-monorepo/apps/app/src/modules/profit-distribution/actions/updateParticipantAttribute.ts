@@ -15,7 +15,16 @@ export interface Change {
   enabled: boolean;
 }
 
-const schema = z.record(z.string(), z.string());
+/**
+ * The form sends the cycle id and one key for each ticked attribute of a
+ * citizen. The number of citizens has no fixed maximum, thus the limit is an
+ * arbitrary number. It keeps the loops of the action bounded.
+ */
+const MAXIMUM_FORM_KEY_COUNT = 100;
+
+const schema = z
+  .record(z.string(), z.string())
+  .refine((record) => Object.keys(record).length <= MAXIMUM_FORM_KEY_COUNT);
 
 export const updateParticipantAttribute = createAuthenticatedAction(
   "updateParticipantAttribute",
@@ -32,15 +41,6 @@ export const updateParticipantAttribute = createAuthenticatedAction(
     if (!(await authentication.authorize("profitDistributionCycle", "update")))
       return {
         error: t("Common.forbidden"),
-        requestPayload: formData,
-      };
-
-    /**
-     * Further validate the request
-     */
-    if (Array.from(formData.keys()).length > 100)
-      return {
-        error: t("Common.badRequest"),
         requestPayload: formData,
       };
 
@@ -80,7 +80,7 @@ export const updateParticipantAttribute = createAuthenticatedAction(
 
     const changes: Change[] = [];
     for (const participant of cycle.participants) {
-      const enabledAttributes = Array.from(formData.keys())
+      const enabledAttributes = Object.keys(data)
         .filter((key) => {
           const [, , citizenId] = key.split("_");
           return citizenId === participant.citizenId;
@@ -156,6 +156,8 @@ export const updateParticipantAttribute = createAuthenticatedAction(
       ),
     );
 
+    refresh();
+
     if (changes.length > 0) {
       await createAuditEvents([
         {
@@ -181,8 +183,6 @@ export const updateParticipantAttribute = createAuthenticatedAction(
         },
       },
     ]);
-
-    refresh();
 
     return {
       success: t("Common.successfullySaved"),

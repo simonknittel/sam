@@ -58,11 +58,17 @@ export const createToggleMyParticipationAction = (
           requestPayload: formData,
         };
       const currentPhase = getCurrentPhase(cycle);
-      if (currentPhase !== configuration.requiredPhase)
+      if (currentPhase !== configuration.requiredPhase) {
+        /**
+         * A manager or the midnight job changed the phase, and the page must
+         * show it.
+         */
+        refresh();
         return {
           error: t("Common.badRequest"),
           requestPayload: formData,
         };
+      }
 
       const participantData = configuration.participantData(
         data.value,
@@ -84,6 +90,8 @@ export const createToggleMyParticipationAction = (
         },
       });
 
+      refresh();
+
       await createAuditEvents([
         {
           type: configuration.auditEventType,
@@ -95,8 +103,6 @@ export const createToggleMyParticipationAction = (
           createdById: authentication.session.user.id,
         },
       ]);
-
-      refresh();
 
       return {
         success: t("Common.successfullySaved"),

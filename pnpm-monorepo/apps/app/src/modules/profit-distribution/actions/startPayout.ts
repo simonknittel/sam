@@ -54,6 +54,13 @@ export const startPayout = createAuthenticatedAction(
         payoutEndsAt: data.payoutEndsAt,
       },
     });
+
+    /**
+     * Also for the error below: then a different tab or a different manager
+     * started the payout before, and the page must show it.
+     */
+    refresh();
+
     if (count === 0)
       return {
         error: t("Common.badRequest"),
@@ -81,8 +88,6 @@ export const startPayout = createAuthenticatedAction(
         },
       },
     ]);
-
-    refresh();
 
     return {
       success: t("Common.successfullySaved"),

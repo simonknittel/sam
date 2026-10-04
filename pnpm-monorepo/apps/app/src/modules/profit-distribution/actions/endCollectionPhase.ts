@@ -43,6 +43,13 @@ export const endCollectionPhase = createAuthenticatedAction(
         endedAt: new Date(),
       }),
     );
+
+    /**
+     * Also for the error below: then a different tab, a different manager or
+     * the midnight job ended the phase before, and the page must show it.
+     */
+    refresh();
+
     if (transactionIds === null)
       return {
         error: t("Common.badRequest"),
@@ -60,8 +67,6 @@ export const endCollectionPhase = createAuthenticatedAction(
     ]);
 
     await announceSilcTransactions(transactionIds);
-
-    refresh();
 
     return {
       success: t("Common.successfullySaved"),

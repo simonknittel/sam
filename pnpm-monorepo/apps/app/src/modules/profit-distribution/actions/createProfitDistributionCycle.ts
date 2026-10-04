@@ -61,6 +61,8 @@ export const createProfitDistributionCycle = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.PROFIT_CYCLE_CREATED,
@@ -74,7 +76,6 @@ export const createProfitDistributionCycle = createAuthenticatedAction(
       },
     ]);
 
-    refresh();
     redirect(`/app/sincome/${created.id}`);
   },
 );

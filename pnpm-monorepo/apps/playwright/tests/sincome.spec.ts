@@ -215,12 +215,13 @@ test("a manager runs a cycle from its creation to a closed payout", async ({
     .getByRole("button", { name: "Beenden" })
     .click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Vorbereitung der Auszahlung" }),
+  ).toBeVisible();
 
   /**
    * Payout preparation: the surplus is entered and the phase started
    */
-  await page.reload();
-  await waitForAppShellHydration(page);
   await page.getByLabel("Gesamter aUEC-Überschuss").fill("500.000");
   await page
     .getByLabel("Auszahlungsphase endet am")
@@ -235,6 +236,9 @@ test("a manager runs a cycle from its creation to a closed payout", async ({
     .getByRole("button", { name: "Starten" })
     .click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Auszahlung", exact: true }),
+  ).toBeVisible();
 
   await expect
     .poll(async () => {
@@ -312,8 +316,9 @@ test("a manager runs a cycle from its creation to a closed payout", async ({
     .toBe(true);
 
   /**
-   * The attribute form saves debounced and revalidates the page behind the
-   * scenes; a reload keeps that re-render out of the next interaction.
+   * The attribute form saves debounced, and its action refreshes the page
+   * behind the scenes; a reload keeps that re-render out of the next
+   * interaction.
    */
   await page.reload();
   await waitForAppShellHydration(page);

@@ -24,9 +24,13 @@ export const CitizenTableForm = ({ children, className, cycleId }: Props) => {
     [cycleId],
   );
 
+  /**
+   * A change that waits for the debounce is saved when the form unmounts (for
+   * example on a navigation), and not lost.
+   */
   useEffect(() => {
     return () => {
-      submit.cancel();
+      submit.flush();
     };
   }, [submit]);
 

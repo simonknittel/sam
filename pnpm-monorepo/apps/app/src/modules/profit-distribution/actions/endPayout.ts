@@ -44,6 +44,13 @@ export const endPayout = createAuthenticatedAction(
         payoutEndedById: authentication.session.entity.id,
       },
     });
+
+    /**
+     * Also for the error below: then a different tab, a different manager or
+     * the midnight job ended the payout before, and the page must show it.
+     */
+    refresh();
+
     if (count === 0)
       return {
         error: t("Common.badRequest"),
@@ -59,8 +66,6 @@ export const endPayout = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return {
       success: t("Common.successfullySaved"),
