@@ -138,6 +138,8 @@ export const updateEventTemplate = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     if (isNewCover) probeUploadImageDimensions(coverImageId);
 
     await createAuditEvents([
@@ -154,8 +156,6 @@ export const updateEventTemplate = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return { success: t("Common.successfullySaved") };
   },

@@ -55,6 +55,8 @@ export const transferEventTemplateOwnership = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.EVENT_TEMPLATE_OWNERSHIP_TRANSFERRED,
@@ -67,8 +69,6 @@ export const transferEventTemplateOwnership = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return { success: t("Common.successfullySaved") };
   },

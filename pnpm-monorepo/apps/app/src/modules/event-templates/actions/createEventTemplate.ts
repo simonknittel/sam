@@ -81,6 +81,8 @@ export const createEventTemplate = createAuthenticatedAction(
       select: { id: true, name: true },
     });
 
+    refresh();
+
     if (data.coverImageId) probeUploadImageDimensions(data.coverImageId);
 
     await createAuditEvents([
@@ -90,8 +92,6 @@ export const createEventTemplate = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Redirect to the new template, where lineup, briefing and prefill are

@@ -136,6 +136,8 @@ export const duplicateEventTemplate = createAuthenticatedAction(
       { timeout: TRANSACTION_TIMEOUT_MS },
     );
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.EVENT_TEMPLATE_DUPLICATED,
@@ -150,8 +152,6 @@ export const duplicateEventTemplate = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     redirect(getEventTemplatePath(duplicate.id));
   },

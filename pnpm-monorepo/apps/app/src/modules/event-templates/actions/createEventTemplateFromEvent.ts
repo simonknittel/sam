@@ -234,6 +234,8 @@ export const createEventTemplateFromEvent = createAuthenticatedAction(
       { timeout: TRANSACTION_TIMEOUT_MS },
     );
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.EVENT_TEMPLATE_CREATED_FROM_EVENT,
@@ -248,8 +250,6 @@ export const createEventTemplateFromEvent = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     redirect(getEventTemplatePath(template.id));
   },

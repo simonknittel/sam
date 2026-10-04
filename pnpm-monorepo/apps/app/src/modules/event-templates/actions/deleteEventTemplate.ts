@@ -27,8 +27,11 @@ export const deleteEventTemplate = createAuthenticatedAction(
       return { error: "Vorlage nicht gefunden", requestPayload: formData };
     if (!context.permissions.canManage)
       return { error: t("Common.forbidden"), requestPayload: formData };
-    if (context.template.deletedAt !== null)
+    if (context.template.deletedAt !== null) {
+      /** A different tab or user deleted the template before */
+      refresh();
       return { success: t("Common.successfullyDeleted") };
+    }
 
     await prisma.eventTemplate.update({
       where: { id: context.template.id },
@@ -37,6 +40,8 @@ export const deleteEventTemplate = createAuthenticatedAction(
         deletedById: authentication.session.entity?.id ?? null,
       },
     });
+
+    refresh();
 
     await createAuditEvents([
       {
@@ -48,8 +53,6 @@ export const deleteEventTemplate = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return { success: t("Common.successfullyDeleted") };
   },

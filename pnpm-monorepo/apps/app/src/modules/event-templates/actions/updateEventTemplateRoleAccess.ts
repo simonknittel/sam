@@ -77,6 +77,8 @@ export const updateEventTemplateRoleAccess = createAuthenticatedAction(
       }),
     ]);
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.EVENT_TEMPLATE_ROLE_ACCESS_UPDATED,
@@ -88,8 +90,6 @@ export const updateEventTemplateRoleAccess = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return { success: t("Common.successfullySaved") };
   },
