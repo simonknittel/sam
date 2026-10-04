@@ -334,9 +334,14 @@ test("a pasted copy keeps an image in use after the source removes it", async ({
   expect(
     await prisma.wikiPageUpload.count({ where: { pageId: source.id } }),
   ).toBe(0);
+  /**
+   * Only the snapshots of the source: the copy opened in the collab editor
+   * after the paste, and its first store can write an automatic snapshot
+   * that keeps the image.
+   */
   expect(
     await prisma.wikiPageSnapshotUpload.count({
-      where: { uploadId: image.id },
+      where: { uploadId: image.id, snapshot: { pageId: source.id } },
     }),
   ).toBe(0);
 
