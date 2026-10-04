@@ -1,6 +1,5 @@
 "use client";
 
-import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
@@ -18,9 +17,7 @@ interface Props {
 }
 
 export const InheritanceForm = ({ className, currentRole, roles }: Props) => {
-  const { state, formAction } = useAction(updateRoleInheritance, {
-    errorToast: false,
-  });
+  const { formAction } = useAction(updateRoleInheritance);
 
   return (
     <form action={formAction} className={clsx(className)}>
@@ -62,8 +59,6 @@ export const InheritanceForm = ({ className, currentRole, roles }: Props) => {
       <SubmitButton icon={<FaSave />} className="mt-4">
         Speichern
       </SubmitButton>
-
-      <ActionErrorNote className="mt-4" state={state} />
     </form>
   );
 };

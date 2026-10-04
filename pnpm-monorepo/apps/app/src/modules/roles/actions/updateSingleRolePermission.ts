@@ -48,6 +48,8 @@ export const updateSingleRolePermission = createAuthenticatedAction(
       });
     }
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.ROLE_PERMISSION_TOGGLED,
@@ -59,8 +61,6 @@ export const updateSingleRolePermission = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

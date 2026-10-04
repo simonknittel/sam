@@ -5,6 +5,7 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { deletePermissionStringsReferencing } from "@/modules/roles/utils/deletePermissionStringsReferencing";
+import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import * as z from "zod";
 
@@ -37,11 +38,14 @@ export const deleteRole = createAuthenticatedAction(
         name: true,
       },
     });
-    if (!roleToDelete)
+    if (!roleToDelete) {
+      /** A different user deleted the role, and the page must show it */
+      refresh();
       return {
         error: t("Common.notFound"),
         requestPayload: formData,
       };
+    }
 
     await prisma.$transaction([
       prisma.role.delete({
@@ -52,6 +56,8 @@ export const deleteRole = createAuthenticatedAction(
 
       deletePermissionStringsReferencing("roleId", data.id),
     ]);
+
+    refresh();
 
     await createAuditEvents([
       {

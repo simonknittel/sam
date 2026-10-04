@@ -49,6 +49,8 @@ export const updateRolePermissions = createAuthenticatedAction(
       }),
     ]);
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.ROLE_PERMISSIONS_UPDATED,
@@ -58,8 +60,6 @@ export const updateRolePermissions = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

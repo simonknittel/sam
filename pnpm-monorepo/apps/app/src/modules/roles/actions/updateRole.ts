@@ -40,11 +40,14 @@ export const updateRole = createAuthenticatedAction(
         assignAfterInactiveDays: true,
       },
     });
-    if (!existingRole)
+    if (!existingRole) {
+      /** A different user deleted the role, and the page must show it */
+      refresh();
       return {
         error: t("Common.notFound"),
         requestPayload: formData,
       };
+    }
 
     const updatedRole = await prisma.role.update({
       where: {
@@ -58,6 +61,8 @@ export const updateRole = createAuthenticatedAction(
         maxLevel: data.maxLevel,
       },
     });
+
+    refresh();
 
     await createAuditEvents([
       {
@@ -77,8 +82,6 @@ export const updateRole = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

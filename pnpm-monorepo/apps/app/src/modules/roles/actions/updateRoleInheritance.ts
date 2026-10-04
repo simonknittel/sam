@@ -38,11 +38,14 @@ export const updateRoleInheritance = createAuthenticatedAction(
         id: true,
       },
     });
-    if (!role)
+    if (!role) {
+      /** A different user deleted the role, and the page must show it */
+      refresh();
       return {
         error: t("Common.notFound"),
         requestPayload: formData,
       };
+    }
 
     /**
      * Update role
@@ -58,6 +61,8 @@ export const updateRoleInheritance = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.ROLE_INHERITANCE_UPDATED,
@@ -67,8 +72,6 @@ export const updateRoleInheritance = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

@@ -46,6 +46,8 @@ export const updateSingleRoleInheritance = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.ROLE_INHERITANCE_TOGGLED,
@@ -57,8 +59,6 @@ export const updateSingleRoleInheritance = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result
