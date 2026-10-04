@@ -2,9 +2,8 @@
 
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import { Button2 } from "@/modules/common/components/Button2";
 import Note from "@/modules/common/components/Note";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import type { EventContainer } from "@/modules/events/utils/eventContainer";
@@ -67,7 +66,7 @@ export const CreateWikiPageForm = ({
    * A successful creation redirects to the new page; onSuccess closes the
    * modal so it isn't still open after the navigation.
    */
-  const { state, formAction, isPending } = useAction(createWikiPage, {
+  const { state, formAction } = useAction(createWikiPage, {
     errorToast: false,
     onSuccess,
   });
@@ -148,10 +147,9 @@ export const CreateWikiPageForm = ({
         </>
       )}
 
-      <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
-        {isPending ? <AsciiSpinner /> : <FaSave />}
+      <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
         Erstellen
-      </Button2>
+      </SubmitButton>
 
       <ActionErrorNote className="mt-4" state={state} />
     </form>

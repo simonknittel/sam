@@ -2,14 +2,14 @@
 
 import { runAction } from "@/modules/actions/utils/runAction";
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import { api } from "@/trpc/react";
 import type { Event } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { FaPlus, FaSave } from "react-icons/fa";
 import { addEventParticipants } from "../actions/addEventParticipants";
 
@@ -20,7 +20,6 @@ interface Props {
 
 export const AddEventParticipants = ({ className, eventId }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [submitIsPending, startSubmitTransition] = useTransition();
   const utils = api.useUtils();
 
   /**
@@ -40,14 +39,12 @@ export const AddEventParticipants = ({ className, eventId }: Props) => {
     setIsOpen(false);
   };
 
-  const formAction = (formData: FormData) => {
-    startSubmitTransition(async () => {
-      if (!(await runAction(addEventParticipants, formData))) return;
+  const formAction = async (formData: FormData) => {
+    if (!(await runAction(addEventParticipants, formData))) return;
 
-      setIsOpen(false);
-      /** Whoever was just added must not show up in the next opening */
-      await utils.events.getAddableParticipantIds.invalidate({ eventId });
-    });
+    setIsOpen(false);
+    /** Whoever was just added must not show up in the next opening */
+    await utils.events.getAddableParticipantIds.invalidate({ eventId });
   };
 
   return (
@@ -96,10 +93,7 @@ export const AddEventParticipants = ({ className, eventId }: Props) => {
           />
 
           <div className="mt-4 flex flex-col gap-2">
-            <Button2 type="submit" disabled={submitIsPending}>
-              {submitIsPending ? <AsciiSpinner /> : <FaSave />}
-              Speichern
-            </Button2>
+            <SubmitButton icon={<FaSave />}>Speichern</SubmitButton>
           </div>
         </form>
       </Modal>

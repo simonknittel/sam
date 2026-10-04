@@ -3,9 +3,9 @@
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { useState } from "react";
 import { FaExchangeAlt } from "react-icons/fa";
 import { transferEventTemplateOwnership } from "../actions/transferEventTemplateOwnership";
@@ -64,10 +64,10 @@ interface FormProps {
 }
 
 const TransferForm = ({ templateId, currentOwnerId, onSuccess }: FormProps) => {
-  const { state, formAction, isPending } = useAction(
-    transferEventTemplateOwnership,
-    { errorToast: false, onSuccess },
-  );
+  const { state, formAction } = useAction(transferEventTemplateOwnership, {
+    errorToast: false,
+    onSuccess,
+  });
 
   return (
     <form action={formAction}>
@@ -86,10 +86,7 @@ const TransferForm = ({ templateId, currentOwnerId, onSuccess }: FormProps) => {
       <ActionErrorNote className="mt-4" state={state} />
 
       <div className="mt-8 flex justify-end">
-        <Button2 type="submit" disabled={isPending}>
-          {isPending ? <AsciiSpinner /> : <FaExchangeAlt />}
-          Übertragen
-        </Button2>
+        <SubmitButton icon={<FaExchangeAlt />}>Übertragen</SubmitButton>
       </div>
     </form>
   );

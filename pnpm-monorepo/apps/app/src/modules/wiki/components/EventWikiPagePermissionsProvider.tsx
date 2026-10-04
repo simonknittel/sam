@@ -2,10 +2,9 @@
 
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import { Button2 } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import Note from "@/modules/common/components/Note";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import {
   WikiPageEventScope,
@@ -119,13 +118,10 @@ export const EventWikiPagePermissionsProvider = ({
     useState<WikiPageUploadability>(
       initialUploadability(initialAttachmentUploadability),
     );
-  const { state, formAction, isPending } = useAction(
-    updateEventWikiPagePermissions,
-    {
-      errorToast: false,
-      onSuccess: () => setIsOpen(false),
-    },
-  );
+  const { state, formAction } = useAction(updateEventWikiPagePermissions, {
+    errorToast: false,
+    onSuccess: () => setIsOpen(false),
+  });
 
   const effectiveRead = (
     scope: WikiPageEventScope,
@@ -264,10 +260,9 @@ export const EventWikiPagePermissionsProvider = ({
             </p>
           </section>
 
-          <Button2 type="submit" disabled={isPending} className="mt-8 ml-auto">
-            {isPending ? <AsciiSpinner /> : <FaSave />}
+          <SubmitButton icon={<FaSave />} className="mt-8 ml-auto">
             Speichern
-          </Button2>
+          </SubmitButton>
 
           <ActionErrorNote className="mt-4" state={state} />
         </form>

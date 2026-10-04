@@ -1,8 +1,8 @@
 "use client";
 
 import { useAction } from "@/modules/actions/utils/useAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import { Button2, Button2Variant } from "@/modules/common/components/Button2";
+import { Button2Variant } from "@/modules/common/components/Button2";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import type { getProfitDistributionCycleById } from "@/modules/profit-distribution/queries/getProfitDistributionCycleById";
 import { CyclePhase } from "@sam-monorepo/domain";
 import clsx from "clsx";
@@ -17,7 +17,7 @@ interface Props {
 }
 
 export const ToggleMyCededButton = ({ className, cycleData }: Props) => {
-  const { formAction, isPending } = useAction(toggleMyCeded);
+  const { formAction } = useAction(toggleMyCeded);
   const id = useId();
 
   return (
@@ -27,26 +27,22 @@ export const ToggleMyCededButton = ({ className, cycleData }: Props) => {
       {cycleData.myParticipant?.cededAt ? (
         <>
           <input type="hidden" name="value" value="false" />
-          <Button2
+          <SubmitButton
             variant={Button2Variant.Secondary}
             disabled={cycleData.currentPhase !== CyclePhase.Collection}
-            type="submit"
           >
-            {isPending && <AsciiSpinner />}
             Widerrufen
-          </Button2>
+          </SubmitButton>
         </>
       ) : (
         <>
           <input type="hidden" name="value" value="true" />
-          <Button2
+          <SubmitButton
             variant={Button2Variant.Secondary}
             disabled={cycleData.currentPhase !== CyclePhase.Collection}
-            type="submit"
           >
-            {isPending && <AsciiSpinner />}
             Anteil abtreten
-          </Button2>
+          </SubmitButton>
         </>
       )}
     </form>

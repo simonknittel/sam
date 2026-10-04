@@ -4,11 +4,11 @@ import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { useSubmitConfirmation } from "@/modules/common/components/AlertDialog";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import { Button2 } from "@/modules/common/components/Button2";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import { Select } from "@/modules/common/components/form/Select";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { createEvent } from "@/modules/events/actions/createEvent";
 import { EventDescriptionField } from "@/modules/events/components/EventDescriptionField";
 import { EventDescriptionHint } from "@/modules/events/components/EventDescriptionHint";
@@ -42,11 +42,13 @@ export const CreateEventForm = ({
   onSuccess,
   templateId,
 }: Props) => {
-  const { state, formAction, isPending, getDefaultValueWithFallback } =
-    useAction(createEvent, {
+  const { state, formAction, getDefaultValueWithFallback } = useAction(
+    createEvent,
+    {
       errorToast: false,
       onSuccess,
-    });
+    },
+  );
   const templateSelectId = useId();
   const [selectedTemplateId, setSelectedTemplateId] = useState(
     templateId ?? NO_TEMPLATE,
@@ -186,10 +188,9 @@ export const CreateEventForm = ({
         />
       </div>
 
-      <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
-        {isPending ? <AsciiSpinner /> : <FaSave />}
+      <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
         Speichern
-      </Button2>
+      </SubmitButton>
 
       <RestrictedDiscordPublishDialog
         isOpen={restrictedConfirmation.isOpen}

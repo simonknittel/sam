@@ -1,11 +1,10 @@
 "use client";
 
 import { useAction } from "@/modules/actions/utils/useAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import { Button2 } from "@/modules/common/components/Button2";
 import { NumberInput } from "@/modules/common/components/form/NumberInput";
 import Modal from "@/modules/common/components/Modal";
 import Note from "@/modules/common/components/Note";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { type Task, type TaskAssignment } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useState } from "react";
@@ -21,10 +20,12 @@ interface Props {
 
 export const UpdateTaskRepeatable = ({ className, task }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { state, formAction, isPending, getDefaultValueWithFallback } =
-    useAction(updateTaskRepeatable, {
+  const { state, formAction, getDefaultValueWithFallback } = useAction(
+    updateTaskRepeatable,
+    {
       onSuccess: () => setIsOpen(false),
-    });
+    },
+  );
 
   const handleClick = () => {
     setIsOpen(true);
@@ -68,10 +69,9 @@ export const UpdateTaskRepeatable = ({ className, task }: Props) => {
             min={1}
           />
 
-          <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
-            {isPending ? <AsciiSpinner /> : <FaSave />}
+          <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
             Speichern
-          </Button2>
+          </SubmitButton>
 
           {state && "error" in state && (
             <Note type="error" message={state.error} className="mt-4" />

@@ -2,11 +2,10 @@
 
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
-import { Button2 } from "@/modules/common/components/Button2";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import Modal from "@/modules/common/components/Modal";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { type Role, type Task } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useState } from "react";
@@ -23,7 +22,7 @@ interface Props {
 
 export const UpdateRequiredRoles = ({ className, task }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { state, formAction, isPending } = useAction(updateRequiredRoles, {
+  const { state, formAction } = useAction(updateRequiredRoles, {
     errorToast: false,
     onSuccess: () => setIsOpen(false),
   });
@@ -60,10 +59,9 @@ export const UpdateRequiredRoles = ({ className, task }: Props) => {
             defaultChecked={task.hiddenForOtherRoles}
           />
 
-          <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
-            {isPending ? <AsciiSpinner /> : <FaSave />}
+          <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
             Speichern
-          </Button2>
+          </SubmitButton>
 
           <ActionErrorNote className="mt-4" state={state} />
         </form>

@@ -2,8 +2,7 @@
 
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import { Button2 } from "@/modules/common/components/Button2";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { useId } from "react";
 import { FaSave } from "react-icons/fa";
 import { updateWikiPageLink } from "../actions/updateWikiPageLink";
@@ -26,7 +25,7 @@ export const WikiPageLinkSetting = ({
   currentPageId,
 }: Props) => {
   const selectId = useId();
-  const { state, formAction, isPending } = useAction(updateWikiPageLink, {
+  const { state, formAction } = useAction(updateWikiPageLink, {
     errorToast: false,
   });
   const link = WIKI_PAGE_LINKS[linkKey];
@@ -47,10 +46,9 @@ export const WikiPageLinkSetting = ({
       />
       <p className="mt-1 text-xs text-white/40">{link.description}</p>
 
-      <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
-        {isPending ? <AsciiSpinner /> : <FaSave />}
+      <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
         Speichern
-      </Button2>
+      </SubmitButton>
 
       <ActionErrorNote className="mt-4" state={state} />
     </form>

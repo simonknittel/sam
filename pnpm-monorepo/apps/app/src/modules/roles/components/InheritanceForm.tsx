@@ -2,8 +2,7 @@
 
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import { Button2 } from "@/modules/common/components/Button2";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import type { Role } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
@@ -19,7 +18,7 @@ interface Props {
 }
 
 export const InheritanceForm = ({ className, currentRole, roles }: Props) => {
-  const { state, formAction, isPending } = useAction(updateRoleInheritance, {
+  const { state, formAction } = useAction(updateRoleInheritance, {
     errorToast: false,
   });
 
@@ -60,10 +59,9 @@ export const InheritanceForm = ({ className, currentRole, roles }: Props) => {
         ))}
       </div>
 
-      <Button2 type="submit" disabled={isPending} className="mt-4">
-        {isPending ? <AsciiSpinner /> : <FaSave />}
+      <SubmitButton icon={<FaSave />} className="mt-4">
         Speichern
-      </Button2>
+      </SubmitButton>
 
       <ActionErrorNote className="mt-4" state={state} />
     </form>

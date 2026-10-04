@@ -7,6 +7,7 @@ import { Button2 } from "@/modules/common/components/Button2";
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import { TextInput } from "@/modules/common/components/form/TextInput";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { Tile, TileVariant } from "@/modules/common/components/Tile";
 import { deleteEvent } from "@/modules/events/actions/deleteEvent";
 import { updateEvent } from "@/modules/events/actions/updateEvent";
@@ -54,10 +55,12 @@ export const EventSettings = ({
   actionsTile,
 }: Props) => {
   const router = useRouter();
-  const { state, formAction, isPending, getDefaultValueWithFallback } =
-    useAction(updateEvent, {
+  const { state, formAction, getDefaultValueWithFallback } = useAction(
+    updateEvent,
+    {
       errorToast: false,
-    });
+    },
+  );
   const [visibility, setVisibility] = useState<string>(event.visibility);
 
   return (
@@ -139,10 +142,9 @@ export const EventSettings = ({
             />
           )}
 
-          <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
-            {isPending ? <AsciiSpinner /> : <FaSave />}
+          <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
             Speichern
-          </Button2>
+          </SubmitButton>
 
           <ActionErrorNote className="mt-4" state={state} />
         </form>

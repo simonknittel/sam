@@ -2,10 +2,10 @@
 
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import Modal from "@/modules/common/components/Modal";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { useState } from "react";
 import { FaRegSave, FaSave } from "react-icons/fa";
 import { createEventTemplateFromEvent } from "../actions/createEventTemplateFromEvent";
@@ -55,10 +55,10 @@ interface FormProps {
 }
 
 const SaveEventAsTemplateForm = ({ eventId, name, onSuccess }: FormProps) => {
-  const { state, formAction, isPending } = useAction(
-    createEventTemplateFromEvent,
-    { errorToast: false, onSuccess },
-  );
+  const { state, formAction } = useAction(createEventTemplateFromEvent, {
+    errorToast: false,
+    onSuccess,
+  });
 
   return (
     <form action={formAction}>
@@ -80,10 +80,7 @@ const SaveEventAsTemplateForm = ({ eventId, name, onSuccess }: FormProps) => {
       <ActionErrorNote className="mt-4" state={state} />
 
       <div className="mt-8 flex justify-end">
-        <Button2 type="submit" disabled={isPending}>
-          {isPending ? <AsciiSpinner /> : <FaSave />}
-          Speichern
-        </Button2>
+        <SubmitButton icon={<FaSave />}>Speichern</SubmitButton>
       </div>
     </form>
   );

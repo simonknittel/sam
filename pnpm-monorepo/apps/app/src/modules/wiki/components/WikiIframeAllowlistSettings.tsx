@@ -2,9 +2,9 @@
 
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Note from "@/modules/common/components/Note";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import { useState } from "react";
 import toast from "react-hot-toast";
@@ -24,10 +24,9 @@ export const WikiIframeAllowlistSettings = ({ initialDomains }: Props) => {
   const [domains, setDomains] = useState<string[]>([...initialDomains]);
   const [newDomain, setNewDomain] = useState("");
 
-  const { state, formAction, isPending } = useAction(
-    updateWikiIframeAllowlist,
-    { errorToast: false },
-  );
+  const { state, formAction } = useAction(updateWikiIframeAllowlist, {
+    errorToast: false,
+  });
 
   const addDomain = () => {
     const domain = newDomain.trim().toLowerCase();
@@ -103,10 +102,9 @@ export const WikiIframeAllowlistSettings = ({ initialDomains }: Props) => {
           message="Eine Domain gilt auch für alle ihre Subdomains. Entfernte Domains werden auf bestehenden Seiten nicht mehr angezeigt."
         />
 
-        <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
-          {isPending ? <AsciiSpinner /> : <FaSave />}
+        <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
           Speichern
-        </Button2>
+        </SubmitButton>
 
         <ActionErrorNote className="mt-4" state={state} />
       </form>

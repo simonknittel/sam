@@ -1,8 +1,8 @@
 "use client";
 
 import { useAction } from "@/modules/actions/utils/useAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import { Button2, Button2Variant } from "@/modules/common/components/Button2";
+import { Button2Variant } from "@/modules/common/components/Button2";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import type { getProfitDistributionCycleById } from "@/modules/profit-distribution/queries/getProfitDistributionCycleById";
 import { CyclePhase } from "@sam-monorepo/domain";
 import clsx from "clsx";
@@ -17,7 +17,7 @@ interface Props {
 }
 
 export const ToggleMyAcceptedButton = ({ className, cycleData }: Props) => {
-  const { formAction, isPending } = useAction(toggleMyAccepted);
+  const { formAction } = useAction(toggleMyAccepted);
   const id = useId();
 
   return (
@@ -27,14 +27,12 @@ export const ToggleMyAcceptedButton = ({ className, cycleData }: Props) => {
       {cycleData.myParticipant?.acceptedAt ? (
         <>
           <input type="hidden" name="value" value="false" />
-          <Button2
+          <SubmitButton
             variant={Button2Variant.Secondary}
             disabled={cycleData.currentPhase !== CyclePhase.Payout}
-            type="submit"
           >
-            {isPending && <AsciiSpinner />}
             Widerrufen
-          </Button2>
+          </SubmitButton>
         </>
       ) : (
         <>
@@ -45,14 +43,12 @@ export const ToggleMyAcceptedButton = ({ className, cycleData }: Props) => {
             it would override the hidden field above with something the
             schema rejects.
           */}
-          <Button2
+          <SubmitButton
             variant={Button2Variant.Secondary}
             disabled={cycleData.currentPhase !== CyclePhase.Payout}
-            type="submit"
           >
-            {isPending && <AsciiSpinner />}
             Auszahlung zustimmen
-          </Button2>
+          </SubmitButton>
         </>
       )}
     </form>

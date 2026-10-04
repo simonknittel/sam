@@ -3,9 +3,9 @@
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import type { ActionResponse } from "@/modules/actions/utils/createAction";
 import { useAction } from "@/modules/actions/utils/useAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import clsx from "clsx";
 import { useId, useState } from "react";
 import { FaPlus, FaSave } from "react-icons/fa";
@@ -19,11 +19,10 @@ export const CreateSettingsRecord = ({ className, action }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const inputId = useId();
 
-  const { state, formAction, isPending, getDefaultValueWithFallback } =
-    useAction(action, {
-      errorToast: false,
-      onSuccess: () => setIsOpen(false),
-    });
+  const { state, formAction, getDefaultValueWithFallback } = useAction(action, {
+    errorToast: false,
+    onSuccess: () => setIsOpen(false),
+  });
 
   return (
     <>
@@ -57,10 +56,7 @@ export const CreateSettingsRecord = ({ className, action }: Props) => {
           />
 
           <div className="mt-8 flex justify-end">
-            <Button2 type="submit" disabled={isPending}>
-              {isPending ? <AsciiSpinner /> : <FaSave />}
-              Speichern
-            </Button2>
+            <SubmitButton icon={<FaSave />}>Speichern</SubmitButton>
           </div>
 
           <ActionErrorNote className="mt-4" state={state} />

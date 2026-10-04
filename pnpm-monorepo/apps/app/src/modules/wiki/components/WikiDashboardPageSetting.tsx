@@ -2,8 +2,7 @@
 
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import { Button2 } from "@/modules/common/components/Button2";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { useId } from "react";
 import { FaSave } from "react-icons/fa";
 import { updateWikiDashboardPage } from "../actions/updateWikiDashboardPage";
@@ -20,7 +19,7 @@ interface Props {
  */
 export const WikiDashboardPageSetting = ({ options, currentPageId }: Props) => {
   const selectId = useId();
-  const { state, formAction, isPending } = useAction(updateWikiDashboardPage, {
+  const { state, formAction } = useAction(updateWikiDashboardPage, {
     errorToast: false,
   });
 
@@ -37,10 +36,9 @@ export const WikiDashboardPageSetting = ({ options, currentPageId }: Props) => {
         emptyOptionLabel="Keine"
       />
 
-      <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
-        {isPending ? <AsciiSpinner /> : <FaSave />}
+      <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
         Speichern
-      </Button2>
+      </SubmitButton>
 
       <ActionErrorNote className="mt-4" state={state} />
     </form>

@@ -2,11 +2,11 @@
 
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import Modal from "@/modules/common/components/Modal";
 import Note from "@/modules/common/components/Note";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { useState } from "react";
 import { FaFlag } from "react-icons/fa";
 import { createWikiPageReport } from "../actions/createWikiPageReport";
@@ -19,7 +19,7 @@ interface Props {
 
 export const ReportWikiPageModal = ({ className, pageId, title }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { state, formAction, isPending } = useAction(createWikiPageReport, {
+  const { state, formAction } = useAction(createWikiPageReport, {
     errorToast: false,
     onSuccess: () => setIsOpen(false),
   });
@@ -65,10 +65,9 @@ export const ReportWikiPageModal = ({ className, pageId, title }: Props) => {
             message="Die Meldung ist nicht anonym — Wiki-Administratoren sehen, wer sie erstellt hat."
           />
 
-          <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
-            {isPending ? <AsciiSpinner /> : <FaFlag />}
+          <SubmitButton icon={<FaFlag />} className="mt-4 ml-auto">
             Melden
-          </Button2>
+          </SubmitButton>
 
           <ActionErrorNote className="mt-4" state={state} />
         </form>

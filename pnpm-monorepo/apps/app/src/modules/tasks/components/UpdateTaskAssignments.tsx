@@ -3,11 +3,10 @@
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
-import { Button2 } from "@/modules/common/components/Button2";
 import { NumberInput } from "@/modules/common/components/form/NumberInput";
 import Modal from "@/modules/common/components/Modal";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { type Task, type TaskAssignment } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useState } from "react";
@@ -23,11 +22,13 @@ interface Props {
 
 export const UpdateTaskAssignments = ({ className, task }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { state, formAction, isPending, getDefaultValueWithFallback } =
-    useAction(updateTaskAssignments, {
+  const { state, formAction, getDefaultValueWithFallback } = useAction(
+    updateTaskAssignments,
+    {
       errorToast: false,
       onSuccess: () => setIsOpen(false),
-    });
+    },
+  );
 
   return (
     <>
@@ -70,10 +71,9 @@ export const UpdateTaskAssignments = ({ className, task }: Props) => {
             className="mt-4"
           />
 
-          <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
-            {isPending ? <AsciiSpinner /> : <FaSave />}
+          <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
             Speichern
-          </Button2>
+          </SubmitButton>
 
           <ActionErrorNote className="mt-4" state={state} />
         </form>

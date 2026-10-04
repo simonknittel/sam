@@ -1,11 +1,10 @@
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import { Button2 } from "@/modules/common/components/Button2";
 import { DateTimeInput } from "@/modules/common/components/form/DateTimeInput";
 import { NumberInput } from "@/modules/common/components/form/NumberInput";
 import { Textarea } from "@/modules/common/components/form/Textarea";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { createPenaltyEntry } from "@/modules/penalty-points/actions/createPenaltyEntry";
 import clsx from "clsx";
 import { FaSave } from "react-icons/fa";
@@ -16,11 +15,13 @@ interface Props {
 }
 
 export const CreatePenaltyEntryForm = ({ className, onSuccess }: Props) => {
-  const { state, formAction, isPending, getDefaultValueWithFallback } =
-    useAction(createPenaltyEntry, {
+  const { state, formAction, getDefaultValueWithFallback } = useAction(
+    createPenaltyEntry,
+    {
       errorToast: false,
       onSuccess,
-    });
+    },
+  );
 
   return (
     <form action={formAction} className={clsx(className)}>
@@ -50,10 +51,9 @@ export const CreatePenaltyEntryForm = ({ className, onSuccess }: Props) => {
         defaultValue={getDefaultValueWithFallback("expiresAt", "")}
       />
 
-      <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
-        {isPending ? <AsciiSpinner /> : <FaSave />}
+      <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
         Speichern
-      </Button2>
+      </SubmitButton>
 
       <ActionErrorNote className="mt-4" state={state} />
     </form>
