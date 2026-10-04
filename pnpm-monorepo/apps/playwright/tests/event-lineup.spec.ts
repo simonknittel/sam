@@ -274,7 +274,14 @@ test("positions are reordered by dragging and copied into another lineup", async
   await expect
     .poll(() => lineupOf(event.id))
     .toEqual(["Zweiter Posten", "Erster Posten"]);
-  await expect(page.getByTitle("Posten verschieben").first()).toBeVisible();
+  /**
+   * The rows show the order from the server, without a local copy. Thus the
+   * new order before the reload shows that the action refreshed the page.
+   */
+  await expect(inlineEditorTrigger(page)).toHaveText([
+    "Zweiter Posten",
+    "Erster Posten",
+  ]);
 
   /**
    * Copying puts a position on a clipboard that survives the walk to
@@ -516,4 +523,54 @@ test("a deleted participant is not a choice in the position picker", async ({
   await expect(
     gunnerPicker.locator("option", { hasText: "geloeschter-teilnehmer" }),
   ).toHaveCount(0);
+});
+
+test("a citizen removed from a position is listed as unassigned again", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "posten-leiter",
+    permissionStrings: LINEUP_PERMISSIONS,
+  });
+  const pilot = await createCitizen(prisma, { handle: "zugeteilter-pilot" });
+  const event = await createAppEvent(prisma, {
+    name: "Operation Umbesetzung",
+    createdById: manager.entity.id,
+    ...futureEvent(),
+  });
+  await createParticipant(prisma, {
+    eventId: event.id,
+    citizen: pilot,
+    source: EventSource.APP,
+  });
+  const position = await prisma.eventPosition.create({
+    data: { eventId: event.id, name: "Pilot", citizenId: pilot.entity.id },
+  });
+
+  await signIn(manager.user);
+  await page.goto(`/app/events/${event.id}/lineup`);
+  await waitForAppShellHydration(page);
+
+  const picker = page.getByRole("combobox", { name: "Citizen für Pilot" });
+  await expect(picker).toHaveValue(pilot.entity.id);
+  const unassignedNote = page.getByText("Keinem Posten zugeordnet");
+  await expect(unassignedNote).toHaveCount(0);
+
+  await picker.selectOption({ value: "-" });
+
+  /**
+   * The select keeps the value of the browser. The list of the participants
+   * without a position comes from the server, thus it shows the refresh.
+   */
+  await expect(unassignedNote).toBeVisible();
+  await expect
+    .poll(async () => {
+      const updatedPosition = await prisma.eventPosition.findUniqueOrThrow({
+        where: { id: position.id },
+      });
+      return updatedPosition.citizenId;
+    })
+    .toBeNull();
 });

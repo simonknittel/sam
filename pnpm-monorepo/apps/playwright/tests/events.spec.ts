@@ -169,8 +169,16 @@ test("a position application travels from the participant to the manager's assig
       .locator("option", { hasText: "bewerber" }),
   ).toHaveCount(1);
 
+  /**
+   * The select keeps the value of the browser. The list of the participants
+   * without a position comes from the server, thus it shows the refresh.
+   */
+  const unassignedNote = page.getByText("Keinem Posten zugeordnet");
+  await expect(unassignedNote).toBeVisible();
+
   await assignmentSelect.selectOption({ label: "bewerber" });
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+  await expect(unassignedNote).toBeHidden();
 
   await expect
     .poll(async () => {

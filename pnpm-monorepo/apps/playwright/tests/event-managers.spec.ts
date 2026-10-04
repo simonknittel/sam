@@ -43,10 +43,10 @@ const pickCitizen = async (
 };
 
 /**
- * Reaches the activity tab the way a manager does after a mutation: a soft
- * navigation, which is served from the client Router Cache unless the action
- * expired it. A `page.goto` would always refetch and so would pass even if
- * the action revalidated the wrong scope.
+ * The activity tab is a page segment of its own. The soft navigation gets it
+ * from the server again (the stale time of dynamic pages is 0), thus the tab
+ * cannot show if the action refreshed the page. The checks of the manager
+ * tile before the navigation show this.
  */
 const openActivityTab = (page: Page, eventId: string) =>
   clickUntilUrl(
@@ -98,6 +98,10 @@ test("adding managers writes one feed entry for each of them", async ({
   await addModal.getByRole("button", { name: "Speichern" }).click();
 
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+  for (const handle of ["neuer-manager-eins", "neuer-manager-zwei"])
+    await expect(
+      managerTile(page).getByRole("link", { name: handle }),
+    ).toBeVisible();
 
   const stored = await prisma.event.findUniqueOrThrow({
     where: { id: event.id },
@@ -175,6 +179,11 @@ test("removing a manager writes a feed entry", async ({
   await signIn(organizer.user);
   await page.goto(`/app/events/${event.id}/participants`);
 
+  const managerLink = managerTile(page).getByRole("link", {
+    name: "alter-manager",
+  });
+  await expect(managerLink).toBeVisible();
+
   const confirmDialog = page.getByRole("alertdialog");
   await clickUntilVisible(
     managerTile(page).getByTitle("Manager entfernen"),
@@ -183,6 +192,7 @@ test("removing a manager writes a feed entry", async ({
   await confirmDialog.getByRole("button", { name: "Entfernen" }).click();
 
   await expect(page.getByText(DELETED_TEXT)).toBeVisible();
+  await expect(managerLink).toBeHidden();
 
   const stored = await prisma.event.findUniqueOrThrow({
     where: { id: event.id },
