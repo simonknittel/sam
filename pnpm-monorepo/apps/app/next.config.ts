@@ -84,6 +84,21 @@ const nextConfig: NextConfig = {
         },
       ],
     },
+    /**
+     * The confirmation link has a token in its query. Thus no page that the
+     * link leads to may send this URL as the referrer. This rule must come
+     * after the rule for all paths: when two rules set the same header, the
+     * last rule wins.
+     */
+    {
+      source: "/api/confirm-email",
+      headers: [
+        {
+          key: "Referrer-Policy",
+          value: "no-referrer",
+        },
+      ],
+    },
     {
       source: "/service-worker.js",
       headers: [

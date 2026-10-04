@@ -15,6 +15,8 @@ const openConfirmationLink = (request: APIRequestContext, token: string) =>
 const expectRedirect = (response: APIResponse, pathname: string) => {
   expect(response.status()).toBe(307);
   expect(new URL(response.headers().location ?? "").pathname).toBe(pathname);
+  /** The next page must not get the URL with the token as the referrer */
+  expect(response.headers()["referrer-policy"]).toBe("no-referrer");
 };
 
 test("an email confirmation link verifies the email once and leads to the clearance page", async ({
