@@ -64,8 +64,8 @@ export const completeOnboardingTask = createAuthenticatedAction(
     ]);
 
     /**
-     * Deliberately no revalidation: the onboarding state is resolved in the
-     * `/app` layout, so revalidating would re-render the whole shell
+     * Deliberately no `refresh()`: the onboarding state is resolved in the
+     * `/app` layout, so a refresh would re-render the whole shell
      * underneath the open popover. The onboarding context holds the
      * optimistic state instead.
      */

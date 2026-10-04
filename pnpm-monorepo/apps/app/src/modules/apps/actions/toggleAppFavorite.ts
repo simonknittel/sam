@@ -67,9 +67,9 @@ export const toggleAppFavorite = createAuthenticatedAction(
     ]);
 
     /**
-     * Deliberately no revalidation: apps are resolved in the `/app` layout, so
-     * revalidating would re-render the whole shell underneath the open
-     * popover. The apps context holds the optimistic state instead.
+     * Deliberately no `refresh()`: apps are resolved in the `/app` layout, so
+     * a refresh would re-render the whole shell underneath the open popover.
+     * The apps context holds the optimistic state instead.
      */
     return {
       success: existingFavorite

@@ -67,8 +67,8 @@ export const OnboardingProvider = ({ initialState, children }: Props) => {
   );
 
   /**
-   * Completing or skipping deliberately doesn't revalidate the layout, which
-   * would re-render the whole shell underneath an open popover. The
+   * Completing or skipping deliberately calls no `refresh()`, which would
+   * re-render the whole shell underneath an open popover. The
    * optimistic state lives here instead (same pattern as the apps context).
    * Progress rows only ever get added, so whenever the server sends a new
    * set, it is merged into the local one instead of replacing it.

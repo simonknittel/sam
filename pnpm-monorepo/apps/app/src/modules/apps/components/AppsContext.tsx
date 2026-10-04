@@ -36,7 +36,7 @@ export const AppsContextProvider = ({
   /**
    * Apps whose badge counts down while the user works through its items (the
    * changelog marks entries seen as they scroll past) adjust the count here
-   * instead of revalidating the whole app layout for a single number. Steps
+   * instead of a `refresh()` of the whole app layout for a single number. Steps
    * aside whenever the server sends different counts, like the favorites do.
    */
   const serverCountsSignature = Object.entries(serverAppDotBadgeCounts)
@@ -68,8 +68,8 @@ export const AppsContextProvider = ({
   );
 
   /**
-   * Toggling a favorite deliberately doesn't revalidate the layout, which
-   * would re-render the whole shell underneath an open popover. The optimistic
+   * Toggling a favorite deliberately calls no `refresh()`, which would
+   * re-render the whole shell underneath an open popover. The optimistic
    * state lives here instead and steps aside whenever the server sends a
    * different set, e.g. on the next navigation.
    */
