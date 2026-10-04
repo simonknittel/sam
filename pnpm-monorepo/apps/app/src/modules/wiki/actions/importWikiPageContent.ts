@@ -121,6 +121,8 @@ export const importWikiPageContent = createAuthenticatedAction(
       };
     }
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.WIKI_PAGE_CONTENT_IMPORTED,
@@ -131,8 +133,6 @@ export const importWikiPageContent = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return { success: "Inhalt importiert." };
   },

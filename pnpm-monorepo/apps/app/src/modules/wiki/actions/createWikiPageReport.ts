@@ -75,6 +75,8 @@ export const createWikiPageReport = createAuthenticatedAction(
       select: { id: true },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.WIKI_PAGE_REPORTED,
@@ -96,8 +98,6 @@ export const createWikiPageReport = createAuthenticatedAction(
         },
       },
     ]);
-
-    refresh();
 
     return { success: "Meldung gesendet." };
   },

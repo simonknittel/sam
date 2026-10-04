@@ -92,6 +92,14 @@ test("the settings curate the featured pages, the dashboard page and the support
       "pageLink:support": support.id,
     });
 
+  /**
+   * The top bar is in the layout of the app. Before a navigation, it shows
+   * the new support link only when the action refreshes the layout.
+   */
+  await expect(
+    page.getByRole("link", { name: "Support", exact: true }),
+  ).toHaveAttribute("href", `/app/wiki/${support.id}/${support.slug}`);
+
   /** All three settings drive their surface */
   await page.goto("/app/wiki");
   await expect(

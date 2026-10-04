@@ -336,6 +336,8 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
         : []),
     ]);
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.WIKI_PAGE_PERMISSIONS_UPDATED,
@@ -411,8 +413,6 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       })),
     ]);
-
-    refresh();
 
     return {
       success:

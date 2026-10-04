@@ -124,6 +124,12 @@ export const updateWikiPageTags = createAuthenticatedAction(
       return { addedTags, removedAssignments };
     });
 
+    /**
+     * Also without changes: a different user or tab can have set the same
+     * tags before
+     */
+    refresh();
+
     if (!changes) return { success: t("Common.successfullySaved") };
 
     await createAuditEvents([
@@ -140,8 +146,6 @@ export const updateWikiPageTags = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return { success: t("Common.successfullySaved") };
   },

@@ -44,6 +44,8 @@ export const toggleWikiPageFavorite = createAuthenticatedAction(
       });
     }
 
+    refresh();
+
     await createAuditEvents([
       {
         type: existing
@@ -57,8 +59,6 @@ export const toggleWikiPageFavorite = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return {
       success: existing ? "Favorit entfernt." : "Als Favorit gespeichert.",

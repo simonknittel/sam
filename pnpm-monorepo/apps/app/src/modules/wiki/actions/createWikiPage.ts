@@ -127,6 +127,8 @@ export const createWikiPage = createAuthenticatedAction(
         createdByEntityId: authentication.session.entity.id,
       });
 
+      refresh();
+
       await createAuditEvents(
         copiedPages.map((copiedPage) => ({
           type: AuditEventType.WIKI_PAGE_COPIED as const,
@@ -142,7 +144,6 @@ export const createWikiPage = createAuthenticatedAction(
         })),
       );
 
-      refresh();
       const copyVariantHref = await resolveVariantWikiRedirectHref(
         scoped,
         data.variantId,
@@ -208,6 +209,8 @@ export const createWikiPage = createAuthenticatedAction(
       select: { id: true, slug: true },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.WIKI_PAGE_CREATED,
@@ -221,7 +224,6 @@ export const createWikiPage = createAuthenticatedAction(
       },
     ]);
 
-    refresh();
     const variantHref = await resolveVariantWikiRedirectHref(
       scoped,
       data.variantId,

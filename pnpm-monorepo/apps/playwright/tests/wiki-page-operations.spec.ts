@@ -103,6 +103,50 @@ test("a page is renamed, which moves it to a new URL, and moved to a new parent"
   await expect(page.getByRole("link", { name: "Neuer Titel" })).toBeVisible();
 });
 
+test("a new subpage shows up in the sidebar tree", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const owner = await createCitizen(prisma, { handle: "seiten-ersteller" });
+  const parent = await createWikiPage(prisma, {
+    title: "Oberseite",
+    visibility: WikiPageVisibility.PUBLIC,
+    ownerId: owner.entity.id,
+  });
+
+  await signIn(owner.user);
+  await page.goto(`/app/wiki/${parent.id}/${parent.slug}`);
+
+  const createDialog = modal(page, "Neue Seite");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Neue Seite" }),
+    createDialog,
+  );
+  await createDialog.getByLabel("Titel").fill("Unterseite");
+  await createDialog
+    .getByRole("button", { name: "Erstellen", exact: true })
+    .click();
+
+  await expect(page).toHaveURL(/\/unterseite$/);
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Unterseite" }),
+  ).toBeVisible();
+  /**
+   * The sidebar tree is in a layout that the old and the new page share.
+   * Thus it shows the new page only when the action refreshes the layout.
+   */
+  await expect(
+    page.getByRole("link", { name: "Unterseite", exact: true }),
+  ).toBeVisible();
+
+  const subpage = await prisma.wikiPage.findFirstOrThrow({
+    where: { title: "Unterseite" },
+    select: { parentId: true },
+  });
+  expect(subpage.parentId).toBe(parent.id);
+});
+
 test("two moves at the same time cannot put a page below itself", async ({
   page,
   prisma,
@@ -164,11 +208,24 @@ test("two moves at the same time cannot put a page below itself", async ({
     await parallelMove;
   }
 
+  /** A toast, because a refreshed page can have no dialog anymore */
   await expect(
-    moveDialog.getByText(
-      "Die Seite kann nicht dorthin verschoben werden, weil sich die Seitenstruktur in der Zwischenzeit geändert hat.",
-      { exact: false },
+    page.getByText(
+      "Die Seitenstruktur war veraltet. Sie ist jetzt aktuell, bitte versuche es erneut.",
     ),
+  ).toBeVisible();
+  /**
+   * The error also refreshes the page: the sidebar tree shows the second
+   * page below the first page, where the parallel move put it. The open
+   * dialog hides the tree from the accessibility tree, thus close it first.
+   */
+  await moveDialog.getByRole("button", { name: "Schließen" }).click();
+  await expect(moveDialog).toHaveCount(0);
+  const firstPageTreeItem = page.getByRole("listitem").filter({
+    has: page.getByRole("link", { name: "Erste Seite", exact: true }),
+  });
+  await expect(
+    firstPageTreeItem.getByRole("link", { name: "Zweite Seite", exact: true }),
   ).toBeVisible();
 
   /** Only the parallel move is done: the tree has no cycle */

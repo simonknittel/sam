@@ -204,6 +204,8 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
           ])
         : [null, await scopeUpdate];
 
+    refresh();
+
     const scopePayload = {
       pageId: page.id,
       readScope: data.readScope,
@@ -239,8 +241,6 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
         },
       ]);
     }
-
-    refresh();
 
     return { success: t("Common.successfullySaved") };
   },

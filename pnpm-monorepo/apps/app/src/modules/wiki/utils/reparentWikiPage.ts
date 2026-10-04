@@ -79,8 +79,9 @@ const checkViolationMetaSchema = z.object({
   }),
 });
 
+/** The actions refresh the page together with this error */
 export const WIKI_PAGE_TREE_CHANGED_ERROR =
-  "Die Seite kann nicht dorthin verschoben werden, weil sich die Seitenstruktur in der Zwischenzeit geändert hat. Bitte lade die Seite neu und versuche es erneut.";
+  "Die Seitenstruktur war veraltet. Sie ist jetzt aktuell, bitte versuche es erneut.";
 
 /**
  * True when the database refused a reparent (see WikiPage.parentId and

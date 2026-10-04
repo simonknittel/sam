@@ -44,6 +44,8 @@ export const destroyWikiPage = createAuthenticatedAction(
         .map((id) => prisma.wikiPage.delete({ where: { id } })),
     );
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.WIKI_PAGE_DESTROYED,
@@ -56,8 +58,6 @@ export const destroyWikiPage = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return { success: "Endgültig gelöscht." };
   },

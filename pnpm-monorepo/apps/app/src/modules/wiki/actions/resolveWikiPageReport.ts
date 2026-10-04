@@ -33,11 +33,18 @@ export const resolveWikiPageReport = createAuthenticatedAction(
     });
     if (!report)
       return { error: t("Common.notFound"), requestPayload: formData };
-    if (report.resolvedAt)
+    if (report.resolvedAt) {
+      /**
+       * A different manager resolved the report before, and the page must
+       * show it
+       */
+      refresh();
+
       return {
         error: "Diese Meldung wurde bereits bearbeitet.",
         requestPayload: formData,
       };
+    }
 
     await prisma.wikiPageReport.update({
       where: { id: report.id },
@@ -47,6 +54,8 @@ export const resolveWikiPageReport = createAuthenticatedAction(
         resolutionComment: data.resolutionComment ?? null,
       },
     });
+
+    refresh();
 
     await createAuditEvents([
       {
@@ -58,8 +67,6 @@ export const resolveWikiPageReport = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return { success: "Meldung als bearbeitet markiert." };
   },

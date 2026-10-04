@@ -323,6 +323,8 @@ export const pasteWikiPages = createAuthenticatedAction(
         });
     }
 
+    refresh();
+
     await createAuditEvents(
       copiedPages.map((page) => ({
         type: AuditEventType.WIKI_PAGE_COPIED as const,
@@ -350,7 +352,6 @@ export const pasteWikiPages = createAuthenticatedAction(
       path: WIKI_CLIPBOARD_COOKIE_PATH,
     });
 
-    refresh();
     redirect(redirectHref);
   },
 );

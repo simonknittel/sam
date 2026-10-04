@@ -1,6 +1,5 @@
 "use client";
 
-import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import { SubmitButton } from "@/modules/common/components/SubmitButton";
@@ -14,9 +13,11 @@ interface Props {
 
 /** Inline resolve form on the report detail page. */
 export const ResolveWikiPageReportForm = ({ className, reportId }: Props) => {
-  const { state, formAction } = useAction(resolveWikiPageReport, {
-    errorToast: false,
-  });
+  /**
+   * An error shows as a toast: when a different manager resolved the report
+   * before, the refreshed page has no form anymore
+   */
+  const { formAction } = useAction(resolveWikiPageReport);
 
   return (
     <form action={formAction} className={className}>
@@ -36,8 +37,6 @@ export const ResolveWikiPageReportForm = ({ className, reportId }: Props) => {
       <SubmitButton icon={<FaCheck />} className="mt-4 ml-auto">
         Als bearbeitet markieren
       </SubmitButton>
-
-      <ActionErrorNote className="mt-4" state={state} />
     </form>
   );
 };

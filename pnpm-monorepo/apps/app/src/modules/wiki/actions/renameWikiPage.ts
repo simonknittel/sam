@@ -35,6 +35,8 @@ export const renameWikiPage = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.WIKI_PAGE_RENAMED,
@@ -47,8 +49,6 @@ export const renameWikiPage = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return { success: t("Common.successfullySaved") };
   },

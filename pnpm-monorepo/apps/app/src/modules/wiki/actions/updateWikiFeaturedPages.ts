@@ -51,6 +51,8 @@ export const updateWikiFeaturedPages = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.WIKI_SETTINGS_UPDATED,
@@ -61,8 +63,6 @@ export const updateWikiFeaturedPages = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return { success: t("Common.successfullySaved") };
   },

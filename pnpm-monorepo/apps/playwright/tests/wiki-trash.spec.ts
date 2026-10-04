@@ -10,6 +10,7 @@ import {
   clickUntilVisible,
   modal,
   NOT_FOUND_TEXT,
+  waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
@@ -123,4 +124,44 @@ test("a page travels to the trash, back out of it and finally out of existence",
     "WIKI_PAGE_RESTORED",
     "WIKI_PAGE_DESTROYED",
   ]);
+});
+
+test("a page that a different manager restored first leaves the trash", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "wiki-verwalter",
+    permissionStrings: ["wiki;manage"],
+  });
+  const wikiPage = await createWikiPage(prisma, {
+    title: "Handbuch",
+    visibility: WikiPageVisibility.PUBLIC,
+  });
+  await prisma.wikiPage.update({
+    where: { id: wikiPage.id },
+    data: { deletedAt: new Date() },
+  });
+  await signIn(manager.user);
+
+  await page.goto("/app/wiki/trash");
+  const trashRow = page.getByRole("row").filter({ hasText: "Handbuch" });
+  await expect(trashRow).toBeVisible();
+  /** Before hydration, a click on the button has no effect */
+  await waitForAppShellHydration(page);
+
+  /** A different manager restores the page in the meantime */
+  await prisma.wikiPage.update({
+    where: { id: wikiPage.id },
+    data: { deletedAt: null },
+  });
+
+  /**
+   * The error refreshes the page: the trash no longer lists the page, without
+   * a navigation
+   */
+  await trashRow.getByRole("button", { name: "Wiederherstellen" }).click();
+  await expect(page.getByText("Ungültige Anfrage")).toBeVisible();
+  await expect(page.getByText("Der Papierkorb ist leer")).toBeVisible();
 });

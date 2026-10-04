@@ -100,6 +100,8 @@ export const restoreWikiPageSnapshot = createAuthenticatedAction(
       };
     }
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.WIKI_PAGE_SNAPSHOT_RESTORED,
@@ -111,8 +113,6 @@ export const restoreWikiPageSnapshot = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return { success: "Snapshot wiederhergestellt." };
   },

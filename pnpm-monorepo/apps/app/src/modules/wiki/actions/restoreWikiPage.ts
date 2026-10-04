@@ -57,6 +57,8 @@ export const restoreWikiPage = createAuthenticatedAction(
       data: { deletedAt: null, deletedById: null },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.WIKI_PAGE_RESTORED,
@@ -69,8 +71,6 @@ export const restoreWikiPage = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return { success: "Erfolgreich wiederhergestellt." };
   },

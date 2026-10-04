@@ -78,13 +78,19 @@ export const moveWikiPage = createAuthenticatedAction(
         }),
       ]);
     } catch (error) {
-      if (isWikiPageReparentRefused(error))
+      if (isWikiPageReparentRefused(error)) {
+        /** A different move changed the tree before, and the page must show it */
+        refresh();
+
         return {
           error: WIKI_PAGE_TREE_CHANGED_ERROR,
           requestPayload: formData,
         };
+      }
       throw error;
     }
+
+    refresh();
 
     await createAuditEvents(
       buildWikiPageReparentAuditEvents(
@@ -94,8 +100,6 @@ export const moveWikiPage = createAuthenticatedAction(
         authentication.session.user.id,
       ),
     );
-
-    refresh();
 
     return {
       success:

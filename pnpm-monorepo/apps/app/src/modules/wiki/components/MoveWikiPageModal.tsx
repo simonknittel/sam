@@ -1,6 +1,5 @@
 "use client";
 
-import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
@@ -26,8 +25,11 @@ export const MoveWikiPageModal = ({
   currentParentId,
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { state, formAction } = useAction(moveWikiPage, {
-    errorToast: false,
+  /**
+   * An error shows as a toast: when a different user deleted the page before,
+   * the refreshed page has no modal anymore
+   */
+  const { formAction } = useAction(moveWikiPage, {
     onSuccess: () => setIsOpen(false),
   });
 
@@ -78,8 +80,6 @@ export const MoveWikiPageModal = ({
                 <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
                   Verschieben
                 </SubmitButton>
-
-                <ActionErrorNote className="mt-4" state={state} />
               </form>
             )
           }

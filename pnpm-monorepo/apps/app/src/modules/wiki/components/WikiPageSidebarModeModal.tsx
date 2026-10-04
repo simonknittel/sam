@@ -1,6 +1,5 @@
 "use client";
 
-import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
@@ -25,8 +24,11 @@ export const WikiPageSidebarModeModal = ({
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedMode, setSelectedMode] = useState<string>(sidebarMode);
-  const { state, formAction } = useAction(updateWikiPageSidebarMode, {
-    errorToast: false,
+  /**
+   * An error shows as a toast: when a different user deleted the page before,
+   * the refreshed page has no modal anymore
+   */
+  const { formAction } = useAction(updateWikiPageSidebarMode, {
     onSuccess: () => setIsOpen(false),
   });
 
@@ -84,8 +86,6 @@ export const WikiPageSidebarModeModal = ({
           <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
             Speichern
           </SubmitButton>
-
-          <ActionErrorNote className="mt-4" state={state} />
         </form>
       </Modal>
     </>

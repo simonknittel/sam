@@ -31,8 +31,12 @@ export const updateWikiPageSidebarMode = createAuthenticatedAction(
     );
     if (failure) return failure;
 
-    if (page.sidebarMode === data.sidebarMode)
+    if (page.sidebarMode === data.sidebarMode) {
+      /** A different user or tab can have set the mode before */
+      refresh();
+
       return { success: t("Common.successfullySaved") };
+    }
 
     await prisma.wikiPage.update({
       where: { id: page.id },
@@ -41,6 +45,8 @@ export const updateWikiPageSidebarMode = createAuthenticatedAction(
         updatedById: authentication.session.entity?.id ?? null,
       },
     });
+
+    refresh();
 
     await createAuditEvents([
       {
@@ -54,8 +60,6 @@ export const updateWikiPageSidebarMode = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return { success: t("Common.successfullySaved") };
   },

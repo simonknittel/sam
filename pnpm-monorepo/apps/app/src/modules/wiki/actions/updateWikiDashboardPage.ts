@@ -50,6 +50,8 @@ export const updateWikiDashboardPage = createAuthenticatedAction(
       });
     }
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.WIKI_SETTINGS_UPDATED,
@@ -60,8 +62,6 @@ export const updateWikiDashboardPage = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     return { success: t("Common.successfullySaved") };
   },

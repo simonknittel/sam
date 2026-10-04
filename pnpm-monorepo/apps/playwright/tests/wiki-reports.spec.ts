@@ -7,7 +7,11 @@ import {
   WikiPageVisibility,
   wikiParagraph,
 } from "../fixtures/factories";
-import { clickUntilVisible, modal } from "../fixtures/interactions";
+import {
+  clickUntilVisible,
+  modal,
+  waitForAppShellHydration,
+} from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 test("a reader reports a page and its attachment, an admin resolves both", async ({
@@ -147,4 +151,61 @@ test("a reader reports a page and its attachment, an admin resolves both", async
     "WIKI_PAGE_REPORTED",
     "WIKI_PAGE_REPORT_RESOLVED",
   ]);
+});
+
+test("a report that a different manager resolved first shows the resolution", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "wiki-verwalter",
+    permissionStrings: ["wiki;manage"],
+  });
+  const otherAdmin = await createCitizen(prisma, {
+    handle: "zweiter-verwalter",
+    permissionStrings: ["wiki;manage"],
+  });
+  const reader = await createCitizen(prisma, { handle: "wiki-leser" });
+  const wikiPage = await createWikiPage(prisma, {
+    title: "Fragwürdige Seite",
+    visibility: WikiPageVisibility.PUBLIC,
+  });
+  const report = await prisma.wikiPageReport.create({
+    data: {
+      pageId: wikiPage.id,
+      message: "Inhalt ist veraltet",
+      createdById: reader.entity.id,
+    },
+  });
+  await signIn(admin.user);
+
+  await page.goto(`/app/wiki/reports/${report.id}`);
+  await expect(page.getByText("Offen")).toBeVisible();
+  /** Before hydration, the form would submit with a full page load */
+  await waitForAppShellHydration(page);
+
+  /** A different manager resolves the report in the meantime */
+  await prisma.wikiPageReport.update({
+    where: { id: report.id },
+    data: { resolvedAt: new Date(), resolvedById: otherAdmin.entity.id },
+  });
+
+  /**
+   * The error refreshes the page: it shows the resolution of the other
+   * manager, without a navigation. The error stays visible as a toast.
+   */
+  await page.getByRole("button", { name: "Als bearbeitet markieren" }).click();
+  await expect(
+    page.getByText("Diese Meldung wurde bereits bearbeitet."),
+  ).toBeVisible();
+  await expect(page.getByText("Bearbeitet", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "zweiter-verwalter" }),
+  ).toBeVisible();
+
+  const unchanged = await prisma.wikiPageReport.findUniqueOrThrow({
+    where: { id: report.id },
+  });
+  expect(unchanged.resolvedById).toBe(otherAdmin.entity.id);
 });

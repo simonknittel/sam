@@ -1,4 +1,5 @@
 import type { getTranslations } from "next-intl/server";
+import { refresh } from "next/cache";
 import {
   getWikiPageScopedContext,
   isWikiScopeFrozen,
@@ -34,6 +35,7 @@ type RequireAdminableWikiPageResult =
  * the expected trash state, the current user must have admin permission on
  * it, and its scope must not be frozen (past event). Returns the scoped
  * context and page, or the error response the action should return as-is.
+ * Only for server actions: the trash state check calls `refresh()`.
  */
 export const requireAdminableWikiPage = async (
   pageId: string,
@@ -51,8 +53,15 @@ export const requireAdminableWikiPage = async (
 
   const page = scoped.context.pagesById.get(pageId);
   if (!page) return { failure: badRequest };
-  if (options?.expectDeleted ? !page.deletedAt : page.deletedAt)
+  if (options?.expectDeleted ? !page.deletedAt : page.deletedAt) {
+    /**
+     * A different user or tab moved the page into the trash or out of it
+     * before, and the page must show it
+     */
+    refresh();
+
     return { failure: badRequest };
+  }
 
   if (!scoped.context.permissions.get(page.id)?.canAdmin)
     return {

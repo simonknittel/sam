@@ -49,6 +49,8 @@ export const deleteWikiPage = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.WIKI_PAGE_DELETED,
@@ -61,8 +63,6 @@ export const deleteWikiPage = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Deleting from inside a variant embed leads back to the variant page —
