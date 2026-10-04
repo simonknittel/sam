@@ -54,6 +54,16 @@ export const createVariant = createAuthenticatedAction(
         requestPayload: formData,
       };
 
+    const series = await prisma.series.findUnique({
+      where: { id: data.seriesId },
+      select: { id: true },
+    });
+    if (!series)
+      return {
+        error: t("Common.notFound"),
+        requestPayload: formData,
+      };
+
     /**
      * The linked page must be a readable page of the global wiki. One
      * generic error for unknown, trashed and unreadable pages alike, so
