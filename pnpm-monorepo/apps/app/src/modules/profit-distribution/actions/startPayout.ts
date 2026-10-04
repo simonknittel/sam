@@ -6,7 +6,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { CYCLE_PHASE_WHERE, CyclePhase } from "@sam-monorepo/domain";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 const schema = z.object({
@@ -82,12 +82,7 @@ export const startPayout = createAuthenticatedAction(
       },
     ]);
 
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(`/app/sincome/${data.id}/management`);
-    revalidatePath(`/app/sincome/${data.id}`);
-    revalidatePath("/app/sincome");
+    refresh();
 
     return {
       success: t("Common.successfullySaved"),

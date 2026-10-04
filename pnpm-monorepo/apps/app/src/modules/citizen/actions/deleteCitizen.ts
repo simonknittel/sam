@@ -8,7 +8,7 @@ import {
   ACTIVE_CITIZEN_WHERE,
   DELETED_CITIZEN_LABEL,
 } from "@sam-monorepo/domain";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 const schema = z.object({
@@ -68,7 +68,7 @@ export const deleteCitizen = createAuthenticatedAction(
       },
     ]);
 
-    revalidatePath("/app/spynet", "layout");
+    refresh();
 
     return {
       success: t("Common.successfullyDeleted"),

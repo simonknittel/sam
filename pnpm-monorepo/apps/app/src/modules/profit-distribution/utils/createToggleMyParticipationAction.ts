@@ -3,7 +3,7 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { type AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { type CyclePhase, getCurrentPhase } from "@sam-monorepo/domain";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 const schema = z.object({
@@ -96,12 +96,7 @@ export const createToggleMyParticipationAction = (
         },
       ]);
 
-      /**
-       * Revalidate cache(s)
-       */
-      revalidatePath(`/app/sincome/${data.id}/management`);
-      revalidatePath(`/app/sincome/${data.id}`);
-      revalidatePath("/app/sincome");
+      refresh();
 
       return {
         success: t("Common.successfullySaved"),

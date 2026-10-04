@@ -6,7 +6,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { wallTimeSchema } from "@/modules/common/utils/wallTimeSchema";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 const schema = z.object({
@@ -97,13 +97,7 @@ export const createPenaltyEntry = createAuthenticatedAction(
       },
     ]);
 
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(
-      `/app/spynet/citizen/${createdEntry.citizenId}/penalty-points`,
-    );
-    revalidatePath("/app/penalty-points");
+    refresh();
 
     /**
      * Respond with the result

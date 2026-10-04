@@ -6,7 +6,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { CyclePhase, getCurrentPhase } from "@sam-monorepo/domain";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 export interface Change {
@@ -182,12 +182,7 @@ export const updateParticipantAttribute = createAuthenticatedAction(
       },
     ]);
 
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(`/app/sincome/${cycle.id}/management`);
-    revalidatePath(`/app/sincome/${cycle.id}`);
-    revalidatePath("/app/sincome");
+    refresh();
 
     return {
       success: t("Common.successfullySaved"),

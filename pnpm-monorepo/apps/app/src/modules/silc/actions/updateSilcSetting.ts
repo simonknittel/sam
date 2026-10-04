@@ -5,7 +5,7 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { SilcSettingKey } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { auecConversionRateSchema } from "../utils/auecConversionRate";
 
@@ -66,11 +66,7 @@ export const updateSilcSetting = createAuthenticatedAction(
       },
     ]);
 
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath("/app/silc/settings");
-    revalidatePath("/app/silc");
+    refresh();
 
     /**
      * Respond with the result

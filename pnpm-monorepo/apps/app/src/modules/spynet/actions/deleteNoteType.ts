@@ -5,7 +5,7 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { deletePermissionStringsReferencing } from "@/modules/roles/utils/deletePermissionStringsReferencing";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 const schema = z.object({
@@ -40,7 +40,7 @@ export const deleteNoteType = createAuthenticatedAction(
       },
     ]);
 
-    revalidatePath("/app/spynet/settings");
+    refresh();
 
     return {
       success: t("Common.successfullyDeleted"),

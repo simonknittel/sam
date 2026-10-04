@@ -53,7 +53,7 @@ interface Props {
   /**
    * Called after a role assignment changed. The popover refetches its query
    * with it; the server-rendered tile does not need it, because the role
-   * actions revalidate the page.
+   * actions refresh the page.
    */
   readonly onRoleAssignmentsChanged?: () => void;
 }

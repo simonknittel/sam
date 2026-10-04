@@ -2,7 +2,6 @@ import { prisma } from "@/db";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import type { Prisma, SilcTransaction } from "@sam-monorepo/database/client";
 import { lockSilcLedger, updateSilcBalances } from "@sam-monorepo/domain";
-import { revalidatePath } from "next/cache";
 
 export interface NewSilcTransaction {
   receiverId: SilcTransaction["receiverId"];
@@ -47,7 +46,7 @@ export const createSilcTransactionsInTransaction = async (
   return createdTransactions.map((created) => created.id);
 };
 
-/** Notifies the receivers and revalidates the SILC surfaces */
+/** Notifies the receivers */
 export const announceSilcTransactions = async (
   transactionIds: readonly string[],
 ) => {
@@ -61,18 +60,13 @@ export const announceSilcTransactions = async (
       },
     ]);
   }
-
-  revalidatePath("/app/silc");
-  revalidatePath("/app/silc/transactions");
-  revalidatePath("/app/dashboard");
 };
 
 /**
  * Creates SILC transactions in their own transaction and maintains the
  * invariant every SILC path shares: create the rows, rebuild the receivers'
- * balances, notify the receivers and revalidate the SILC surfaces. Callers
- * write their own audit events and revalidate any caller-specific paths
- * themselves.
+ * balances and notify the receivers. Callers write their own audit events
+ * and call `refresh()` themselves.
  *
  * The lambda's salary disbursement performs the same sequence with its own
  * EventBridge transport and cannot import this module.

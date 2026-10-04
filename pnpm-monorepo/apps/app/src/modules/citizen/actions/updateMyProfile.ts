@@ -4,7 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import {
   BIRTHDAY_DAY_MAX,
@@ -112,11 +112,7 @@ export const updateMyProfile = createAuthenticatedAction(
       },
     ]);
 
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath("/app/account/profile");
-    revalidatePath("/app/dashboard");
+    refresh();
 
     return {
       success: t("Common.successfullySaved"),

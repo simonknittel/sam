@@ -9,7 +9,7 @@ import {
   ORGANIZATION_TIMEZONE,
   toDateColumnValue,
 } from "@sam-monorepo/domain";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import * as z from "zod";
 
@@ -74,10 +74,7 @@ export const createProfitDistributionCycle = createAuthenticatedAction(
       },
     ]);
 
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath("/app/sincome");
+    refresh();
     redirect(`/app/sincome/${created.id}`);
   },
 );
