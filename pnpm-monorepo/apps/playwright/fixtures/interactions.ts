@@ -223,6 +223,31 @@ export const pickFromSearch = async (
   await option.click();
 };
 
+/**
+ * The roles and names of the nodes in the accessibility tree of Chromium,
+ * that is, what screen readers get. The role selectors of Playwright ignore
+ * `inert` and the inert page behind a modal dialog, thus this reads the tree
+ * of the browser itself.
+ */
+export const accessibilityTree = async (page: Page) => {
+  const session = await page.context().newCDPSession(page);
+  try {
+    const { nodes } = await session.send("Accessibility.getFullAXTree");
+    return nodes.flatMap((node) =>
+      node.ignored
+        ? []
+        : [
+            {
+              role: String(node.role?.value ?? ""),
+              name: String(node.name?.value ?? ""),
+            },
+          ],
+    );
+  } finally {
+    await session.detach();
+  }
+};
+
 /** The date format every filter and date input of the app expects. */
 export const dateParam = (date: Date) => date.toISOString().slice(0, 10);
 

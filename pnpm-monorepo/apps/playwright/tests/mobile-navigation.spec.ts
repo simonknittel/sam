@@ -1,28 +1,17 @@
 import type { Locator, Page } from "@playwright/test";
 import { createCitizen } from "../fixtures/factories";
-import { clickUntilUrl, clickUntilVisible } from "../fixtures/interactions";
+import {
+  accessibilityTree,
+  clickUntilUrl,
+  clickUntilVisible,
+} from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 test.use({ viewport: { width: 390, height: 844 } });
 
-/**
- * The texts that Chromium gives to screen readers. The role selectors of
- * Playwright ignore `inert`, thus this reads the accessibility tree of the
- * browser itself.
- */
-const textsForScreenReaders = async (page: Page) => {
-  const session = await page.context().newCDPSession(page);
-  try {
-    const { nodes } = await session.send("Accessibility.getFullAXTree");
-    return nodes.flatMap((node) =>
-      !node.ignored && typeof node.name?.value === "string"
-        ? [node.name.value]
-        : [],
-    );
-  } finally {
-    await session.detach();
-  }
-};
+/** The texts that screen readers get */
+const textsForScreenReaders = async (page: Page) =>
+  (await accessibilityTree(page)).map((node) => node.name);
 
 /** Whether the focus is inside the element that the toggle controls */
 const isFocusInControlledElement = (toggle: Locator) =>

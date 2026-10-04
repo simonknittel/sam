@@ -49,7 +49,7 @@ test("the tour keeps the keyboard focus, closes on Escape and returns the focus 
   const citizen = await createCitizen(prisma, { handle: "tastatur-tourist" });
   await signIn(citizen.user);
 
-  await page.goto("/app");
+  await page.goto("/app/dashboard");
   const popover = page.getByRole("dialog", { name: "Erste Schritte" });
   await clickUntilVisible(
     onboardingButton(page),
