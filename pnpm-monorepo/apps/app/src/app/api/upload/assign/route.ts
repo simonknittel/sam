@@ -17,7 +17,6 @@ import {
   isWikiScopeFrozen,
 } from "@/modules/wiki/queries/getWikiPageScopedContext";
 import { EventSource, WikiPageUploadKind } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import * as z from "zod";
 
@@ -208,9 +207,6 @@ export async function PATCH(request: Request) {
       const discordWarning =
         getDiscordSyncWarning(discordResult) ??
         getDiscordCoverImageWarning(discordResult);
-
-      revalidatePath("/app/events");
-      revalidatePath(`/app/events/${event.id}`, "layout");
 
       return NextResponse.json(
         discordWarning ? { warning: discordWarning } : {},

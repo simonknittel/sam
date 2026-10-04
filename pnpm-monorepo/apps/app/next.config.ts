@@ -16,10 +16,6 @@ const s3PublicUrl = new URL(
 );
 
 const nextConfig: NextConfig = {
-  reactStrictMode: true,
-
-  cleanDistDir: true,
-
   images: {
     remotePatterns: [
       {

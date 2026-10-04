@@ -6,8 +6,6 @@ import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { NextResponse, type NextRequest } from "next/server";
 import * as z from "zod";
 
-export const dynamic = "force-dynamic";
-
 const schema = z.object({
   token: z.cuid2(),
 });
