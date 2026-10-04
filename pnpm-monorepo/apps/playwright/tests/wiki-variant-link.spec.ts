@@ -14,26 +14,27 @@ const pickerInput = (picker: Locator) =>
 
 /**
  * Opens the ship picker through the slash palette. The palette opens only
- * when "/" follows a space or a block start.
- *
- * The input of the picker gets the focus. But when the palette closes, it
- * frequently gives the focus back to the editor behind the picker (an open
- * app defect). Thus the test clicks into the input.
+ * when "/" follows a space or a block start. The palette must not take the
+ * focus back from the input of the picker when it closes.
  */
-const openShipPicker = async (page: Page) => {
+const openShipPicker = async (
+  page: Page,
+  pickEntry: (entry: Locator) => Promise<void>,
+) => {
   await page.keyboard.type("/schiff");
-  await expect(
-    page
-      .getByRole("dialog", { name: "Vorschläge" })
-      .getByRole("button", { name: "Schiff", exact: true }),
-  ).toBeVisible();
-  await page.keyboard.press("Enter");
+  const entry = page
+    .getByRole("dialog", { name: "Vorschläge" })
+    .getByRole("button", { name: "Schiff", exact: true });
+  await expect(entry).toBeVisible();
+  await pickEntry(entry);
   const picker = modal(page, /^Schiff$/);
-  const input = pickerInput(picker);
-  await input.click();
-  await expect(input).toBeFocused();
+  await expect(pickerInput(picker)).toBeFocused();
   return picker;
 };
+
+const pickWithEnter = (page: Page) => () => page.keyboard.press("Enter");
+
+const pickWithClick = (entry: Locator) => entry.click();
 
 const shipOptions = (picker: Locator) =>
   picker.getByRole("listbox", { name: "Schiffe" }).getByRole("option");
@@ -67,7 +68,7 @@ test("the ship picker filters, and the keyboard or the mouse picks a ship", asyn
     editorElement.locator(`[data-wiki-variant-link="${variantId}"]`);
 
   // Escape closes the picker without a link
-  let picker = await openShipPicker(page);
+  let picker = await openShipPicker(page, pickWithEnter(page));
   await page.keyboard.press("Escape");
   await expect(picker).toBeHidden();
   await expect(editorElement.locator("[data-wiki-variant-link]")).toHaveCount(
@@ -76,7 +77,7 @@ test("the ship picker filters, and the keyboard or the mouse picks a ship", asyn
 
   // The filter also matches the manufacturer, and the first ship is highlighted
   await focusEditor(page);
-  picker = await openShipPicker(page);
+  picker = await openShipPicker(page, pickWithEnter(page));
   await page.keyboard.type("drake");
   await expect(shipOptions(picker)).toHaveCount(2);
   await expect(shipOptions(picker).first()).toContainText("Cutlass Black");
@@ -90,10 +91,12 @@ test("the ship picker filters, and the keyboard or the mouse picks a ship", asyn
   await expect(picker).toBeHidden();
   await expect(variantLink(cutlassRed.id)).toBeVisible();
 
-  // A click picks the ship under the mouse
+  // After a click on the palette entry, the picker keeps the focus too, and a click picks the ship under the mouse
   await focusEditor(page);
-  picker = await openShipPicker(page);
+  picker = await openShipPicker(page, pickWithClick);
   await expect(shipOptions(picker)).toHaveCount(3);
+  await page.keyboard.type("anvil");
+  await expect(shipOptions(picker)).toHaveCount(1);
   await shipOptions(picker).filter({ hasText: "Carrack" }).click();
   await expect(picker).toBeHidden();
   await expect(variantLink(carrack.id)).toBeVisible();

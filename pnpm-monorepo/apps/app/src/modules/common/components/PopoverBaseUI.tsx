@@ -237,6 +237,10 @@ interface PopoverBaseUIDetachedProps {
  * editor's caret (suggestion menus). Same chrome and collision handling
  * (flip at viewport edges) as PopoverBaseUI, but never opens itself and
  * never takes focus.
+ *
+ * Because the popup never takes the focus, it also does not give the focus
+ * back when it closes. Otherwise it would take the focus from a dialog that
+ * an entry of the popup opens.
  */
 export const PopoverBaseUIDetached = ({
   title,
@@ -271,7 +275,11 @@ export const PopoverBaseUIDetached = ({
             side={side}
             className="z-30"
           >
-            <Popover.Popup className="z-30 outline-hidden" initialFocus={false}>
+            <Popover.Popup
+              className="z-30 outline-hidden"
+              initialFocus={false}
+              finalFocus={false}
+            >
               <PopoverChrome
                 title={title}
                 childrenClassName={childrenClassName}
