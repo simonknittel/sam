@@ -33,11 +33,17 @@ export const deletePenaltyEntry = createAuthenticatedAction(
       where: { id: data.id },
       select: { deletedAt: true },
     });
-    if (existingEntry?.deletedAt)
+    if (existingEntry?.deletedAt) {
+      /**
+       * A different tab or user deleted the entry before, and the page must
+       * show it.
+       */
+      refresh();
       return {
         error: t("Common.notFound"),
         requestPayload: formData,
       };
+    }
 
     /**
      * (Soft-)delete entry
@@ -56,6 +62,8 @@ export const deletePenaltyEntry = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.PENALTY_ENTRY_DELETED,
@@ -68,8 +76,6 @@ export const deletePenaltyEntry = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result

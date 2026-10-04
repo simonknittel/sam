@@ -40,11 +40,14 @@ export const createPenaltyEntry = createAuthenticatedAction(
         error: t("Common.notFound"),
         requestPayload: formData,
       };
-    if (citizen.deletedAt)
+    if (citizen.deletedAt) {
+      /** A different user deleted the citizen, and the page must show it */
+      refresh();
       return {
         error: "Der Citizen ist gelöscht.",
         requestPayload: formData,
       };
+    }
 
     /**
      * Create entry
@@ -71,6 +74,8 @@ export const createPenaltyEntry = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.PENALTY_ENTRY_CREATED,
@@ -96,8 +101,6 @@ export const createPenaltyEntry = createAuthenticatedAction(
         },
       },
     ]);
-
-    refresh();
 
     /**
      * Respond with the result
