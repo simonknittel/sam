@@ -50,7 +50,7 @@ export const EventParticipationControls = ({
    * cancellation) — adjusted during render, not in an effect.
    *
    * Only while the draft is untouched, though: those same background
-   * refreshes arrive whenever anything revalidates the event, and adopting
+   * refreshes arrive whenever an action refreshes the page, and adopting
    * unconditionally would discard whatever the user had typed by then.
    */
   const [previousComment, setPreviousComment] = useState(comment);

@@ -6,7 +6,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { EventActivityType, EventSource } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { getAddableParticipantIds } from "../queries/getAddableParticipantIds";
 import { createEventActivity } from "../utils/eventActivity";
@@ -145,11 +145,7 @@ export const addEventParticipants = createAuthenticatedAction(
       })),
     );
 
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath("/app/events");
-    revalidatePath(`/app/events/${event.id}`, "layout");
+    refresh();
 
     /**
      * Respond with the result

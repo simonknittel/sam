@@ -3,7 +3,7 @@
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { authorizeEventContainer } from "../utils/authorizeEventContainer";
 import {
@@ -12,7 +12,6 @@ import {
 } from "../utils/clonePositions";
 import {
   eventContainerColumns,
-  getLineupPath,
   getPositionContainer,
   type EventContainer,
 } from "../utils/eventContainer";
@@ -201,10 +200,7 @@ export const pasteEventPosition = createAuthenticatedAction(
       ),
     ]);
 
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(getLineupPath(targetContainer));
+    refresh();
 
     /**
      * Respond with the result

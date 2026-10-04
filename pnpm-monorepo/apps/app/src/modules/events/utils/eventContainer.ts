@@ -5,8 +5,7 @@ import type { EventPosition } from "@sam-monorepo/database/browser";
  * blueprint of one. Both store their positions and wiki pages in the same
  * tables (see EventPosition.eventId and WikiPage.templateId), so one editor
  * and one set of server actions serve both — the container is what decides
- * who may edit it, where the audit entry points and which route to
- * revalidate.
+ * who may edit it and where the audit entry points.
  */
 export enum EventContainerKind {
   Event = "event",

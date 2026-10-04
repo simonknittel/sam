@@ -23,7 +23,7 @@ import {
 } from "@sam-monorepo/database/client";
 import type { AuditEventInput } from "@sam-monorepo/domain";
 import { buildBriefingRootPageSeed } from "@sam-monorepo/domain";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import * as z from "zod";
 import {
@@ -345,11 +345,7 @@ export const createEvent = createAuthenticatedAction(
       publishFailed = result?.outcome !== DiscordSyncOutcome.Done;
     }
 
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath("/app/events");
-    revalidatePath("/app/dashboard");
+    refresh();
 
     /**
      * Redirect to the created event; the form's success hook closes the

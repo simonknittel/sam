@@ -19,13 +19,12 @@ import {
 } from "@/modules/uploads/utils/copyUpload";
 import { getEventWikiContext } from "@/modules/wiki/queries/getEventWikiContext";
 import { copyBriefingTree } from "@/modules/wiki/utils/copyBriefingTree";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import * as z from "zod";
 import { getEventTemplateById } from "../queries/getEventTemplateById";
 import {
   EVENT_TEMPLATE_NAME_MAX_LENGTH,
-  EVENT_TEMPLATES_PATH,
   getEventTemplatePath,
 } from "../utils/eventTemplateConstraints";
 
@@ -152,7 +151,7 @@ export const duplicateEventTemplate = createAuthenticatedAction(
       },
     ]);
 
-    revalidatePath(EVENT_TEMPLATES_PATH);
+    refresh();
 
     redirect(getEventTemplatePath(duplicate.id));
   },

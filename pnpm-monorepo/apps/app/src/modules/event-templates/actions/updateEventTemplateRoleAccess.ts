@@ -5,14 +5,10 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { EventTemplateAccessType } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { getEventTemplateById } from "../queries/getEventTemplateById";
-import {
-  EVENT_TEMPLATE_MAX_ROLES,
-  EVENT_TEMPLATES_PATH,
-  getEventTemplatePath,
-} from "../utils/eventTemplateConstraints";
+import { EVENT_TEMPLATE_MAX_ROLES } from "../utils/eventTemplateConstraints";
 
 const roleIdsSchema = z.array(z.cuid()).max(EVENT_TEMPLATE_MAX_ROLES);
 
@@ -93,9 +89,7 @@ export const updateEventTemplateRoleAccess = createAuthenticatedAction(
       },
     ]);
 
-    /** Who sees the template in the list and the picker changed */
-    revalidatePath(EVENT_TEMPLATES_PATH);
-    revalidatePath(getEventTemplatePath(context.template.id), "layout");
+    refresh();
 
     return { success: t("Common.successfullySaved") };
   },

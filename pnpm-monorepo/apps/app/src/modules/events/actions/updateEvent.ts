@@ -13,7 +13,7 @@ import {
   EventVisibility,
 } from "@sam-monorepo/database/client";
 import type { AuditEventInput } from "@sam-monorepo/domain";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { EVENT_MANAGE_GUARD_SELECT } from "../queries/eventManageGuardSelect";
 import { findDescriptionProblem } from "../utils/discordEventDescription";
@@ -261,11 +261,7 @@ export const updateEvent = createAuthenticatedAction(
         ? "Das Event bleibt auf Discord für alle Mitglieder des Servers sichtbar. Entferne es dort, wenn das nicht gewollt ist."
         : null);
 
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath("/app/events");
-    revalidatePath(`/app/events/${event.id}`, "layout");
+    refresh();
 
     /**
      * Respond with the result

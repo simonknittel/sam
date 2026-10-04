@@ -9,7 +9,7 @@ import {
   EventSource,
   Prisma,
 } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { createEventActivity } from "../utils/eventActivity";
 import {
@@ -91,12 +91,7 @@ export const signUpForEvent = createAuthenticatedAction(
       },
     ]);
 
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath("/app/events");
-    revalidatePath("/app/dashboard");
-    revalidatePath(`/app/events/${event.id}`, "layout");
+    refresh();
 
     /**
      * Respond with the result

@@ -3,7 +3,7 @@
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { authorizeEventContainer } from "../utils/authorizeEventContainer";
 import {
@@ -11,7 +11,6 @@ import {
   EVENT_CONTAINER_KIND_FIELD,
   eventContainerColumns,
   EventContainerKind,
-  getLineupPath,
   type EventContainer,
 } from "../utils/eventContainer";
 import { buildPositionCreatedAuditEvent } from "../utils/lineupAuditEvents";
@@ -111,10 +110,7 @@ export const createEventPosition = createAuthenticatedAction(
       ),
     ]);
 
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(getLineupPath(container));
+    refresh();
 
     /**
      * Respond with the result

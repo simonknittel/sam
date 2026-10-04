@@ -15,14 +15,12 @@ import {
   EventDiscordPublishTarget,
   EventVisibility,
 } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { getEventTemplateById } from "../queries/getEventTemplateById";
 import {
   EVENT_TEMPLATE_MAX_ROLES,
   EVENT_TEMPLATE_NAME_MAX_LENGTH,
-  EVENT_TEMPLATES_PATH,
-  getEventTemplatePath,
 } from "../utils/eventTemplateConstraints";
 
 /** The empty marker the cover field submits when no image is selected */
@@ -157,8 +155,7 @@ export const updateEventTemplate = createAuthenticatedAction(
       },
     ]);
 
-    revalidatePath(EVENT_TEMPLATES_PATH);
-    revalidatePath(getEventTemplatePath(context.template.id), "layout");
+    refresh();
 
     return { success: t("Common.successfullySaved") };
   },

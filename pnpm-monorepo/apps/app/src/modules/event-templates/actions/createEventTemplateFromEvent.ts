@@ -29,12 +29,11 @@ import {
   type Event,
 } from "@sam-monorepo/database/client";
 import { buildBriefingRootPageSeed } from "@sam-monorepo/domain";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import * as z from "zod";
 import {
   EVENT_TEMPLATE_NAME_MAX_LENGTH,
-  EVENT_TEMPLATES_PATH,
   getEventTemplatePath,
 } from "../utils/eventTemplateConstraints";
 
@@ -250,7 +249,7 @@ export const createEventTemplateFromEvent = createAuthenticatedAction(
       },
     ]);
 
-    revalidatePath(EVENT_TEMPLATES_PATH);
+    refresh();
 
     redirect(getEventTemplatePath(template.id));
   },

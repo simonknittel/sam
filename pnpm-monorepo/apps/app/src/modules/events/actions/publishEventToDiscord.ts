@@ -6,7 +6,7 @@ import {
   EventDiscordPublishTarget,
   EventSource,
 } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { EVENT_MANAGE_GUARD_SELECT } from "../queries/eventManageGuardSelect";
 import {
@@ -19,7 +19,6 @@ import {
   getDiscordPublishError,
   resolveDiscordPublishTarget,
 } from "../utils/discordPublishing";
-import { getEventPath } from "../utils/eventConstraints";
 import { isAllowedToManageEvent } from "../utils/isAllowedToManageEvent";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
 
@@ -82,10 +81,7 @@ export const publishEventToDiscord = createAuthenticatedAction(
     const error = getDiscordPublishError(result);
     if (error) return { error, requestPayload: formData };
 
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(getEventPath(event.id), "layout");
+    refresh();
 
     const coverImageWarning = getDiscordCoverImageWarning(result);
 
