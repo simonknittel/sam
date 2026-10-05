@@ -12,8 +12,11 @@ interface Props {
 /**
  * Inline error display of a form driven by useAction({ errorToast: false })
  * — the error shows where the form gives it context instead of as a toast.
+ * The alert role makes screen readers announce the error when it shows.
  */
 export const ActionErrorNote = ({ className, state }: Props) =>
   state && "error" in state && state.error ? (
-    <Note type="error" message={state.error} className={className} />
+    <div role="alert" className={className}>
+      <Note type="error" message={state.error} />
+    </div>
   ) : null;
