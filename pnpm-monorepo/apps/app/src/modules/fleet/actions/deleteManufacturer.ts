@@ -4,6 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { Prisma } from "@sam-monorepo/database/client";
 import { refresh } from "next/cache";
 import * as z from "zod";
 
@@ -29,15 +30,34 @@ export const deleteManufacturer = createAuthenticatedAction(
     /**
      * Delete
      */
-    const deletedManufacturer = await prisma.manufacturer.delete({
-      where: {
-        id: data.id,
-      },
-      select: {
-        id: true,
-        name: true,
-      },
-    });
+    let deletedManufacturer;
+    try {
+      deletedManufacturer = await prisma.manufacturer.delete({
+        where: {
+          id: data.id,
+        },
+        select: {
+          id: true,
+          name: true,
+        },
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
+        /**
+         * A different user deleted the manufacturer before, and the page must
+         * show it
+         */
+        refresh();
+        return {
+          error: "Der Hersteller ist bereits gelöscht.",
+          requestPayload: formData,
+        };
+      }
+      throw error;
+    }
 
     refresh();
 

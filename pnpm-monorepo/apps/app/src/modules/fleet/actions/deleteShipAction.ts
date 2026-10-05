@@ -37,6 +37,8 @@ export const deleteShipAction = createAuthenticatedAction(
       },
     });
     if (existingShip?.deletedAt !== null) {
+      /** A different tab deleted the ship before, and the page must show it */
+      refresh();
       return {
         error: t("Common.notFound"),
         requestPayload: formData,

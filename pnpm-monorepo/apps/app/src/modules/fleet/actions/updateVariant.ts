@@ -70,11 +70,16 @@ export const updateVariant = createAuthenticatedAction(
         },
       },
     });
-    if (!existingVariant)
+    if (!existingVariant) {
+      /**
+       * A different user deleted the variant before, and the page must show it
+       */
+      refresh();
       return {
         error: t("Common.notFound"),
         requestPayload: formData,
       };
+    }
 
     /**
      * A changed link must point at a readable page of the global wiki. One

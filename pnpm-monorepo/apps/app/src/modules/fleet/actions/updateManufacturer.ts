@@ -42,11 +42,17 @@ export const updateManufacturerAction = createAuthenticatedAction(
         imageId: true,
       },
     });
-    if (!existingManufacturer)
+    if (!existingManufacturer) {
+      /**
+       * A different user deleted the manufacturer before, and the page must
+       * show it
+       */
+      refresh();
       return {
         error: t("Common.notFound"),
         requestPayload: formData,
       };
+    }
 
     const updatedManufacturer = await prisma.manufacturer.update({
       where: {

@@ -40,11 +40,14 @@ export const updateShipAction = createAuthenticatedAction(
         deletedAt: true,
       },
     });
-    if (existingShip?.deletedAt !== null)
+    if (existingShip?.deletedAt !== null) {
+      /** A different tab deleted the ship before, and the page must show it */
+      refresh();
       return {
         error: t("Common.notFound"),
         requestPayload: formData,
       };
+    }
 
     const updatedShip = await prisma.ship.update({
       where: {

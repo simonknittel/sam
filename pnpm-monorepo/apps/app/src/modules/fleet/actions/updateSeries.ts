@@ -40,11 +40,16 @@ export const updateSeries = createAuthenticatedAction(
         name: true,
       },
     });
-    if (!existingSeries)
+    if (!existingSeries) {
+      /**
+       * A different user deleted the series before, and the page must show it
+       */
+      refresh();
       return {
         error: t("Common.notFound"),
         requestPayload: formData,
       };
+    }
 
     const updatedItem = await prisma.series.update({
       where: {

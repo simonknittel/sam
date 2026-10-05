@@ -58,11 +58,16 @@ export const createVariant = createAuthenticatedAction(
       where: { id: data.seriesId },
       select: { id: true },
     });
-    if (!series)
+    if (!series) {
+      /**
+       * A different user deleted the series before, and the page must show it
+       */
+      refresh();
       return {
         error: t("Common.notFound"),
         requestPayload: formData,
       };
+    }
 
     /**
      * The linked page must be a readable page of the global wiki. One
