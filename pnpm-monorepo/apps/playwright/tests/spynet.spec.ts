@@ -444,6 +444,36 @@ test("the citizen table paginates and filters", async ({
   await expect(page.locator("tbody tr")).toHaveCount(UNNAMED_CITIZENS);
 });
 
+test("the citizen table sends no Discord ID and no TeamSpeak ID to a viewer without the permissions to read them", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const viewer = await createCitizen(prisma, {
+    handle: "tabellen-leser",
+    permissionStrings: ["citizen;read", "spynetCitizen;read"],
+  });
+  await prisma.citizen.create({
+    data: {
+      handle: "verdeckter",
+      discordId: "verdeckte-discord-id",
+      teamspeakId: "verdeckte-teamspeak-id",
+    },
+  });
+
+  await signIn(viewer.user);
+
+  /** The HTML of the page also holds the props of the client components */
+  const response = await page.request.get("/app/spynet/citizen");
+  expect(response.ok()).toBe(true);
+  const html = await response.text();
+  expect(html.includes("verdeckter"), "the HTML has the handle").toBe(true);
+  for (const hiddenValue of ["verdeckte-discord-id", "verdeckte-teamspeak-id"])
+    expect(html.includes(hiddenValue), `the HTML has ${hiddenValue}`).toBe(
+      false,
+    );
+});
+
 /**
  * Only the visible rows: while the page streams, React keeps a hidden copy of
  * the table next to the visible one
