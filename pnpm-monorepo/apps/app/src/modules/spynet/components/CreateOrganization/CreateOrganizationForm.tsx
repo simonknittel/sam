@@ -1,19 +1,9 @@
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import { Button2 } from "@/modules/common/components/Button2";
-import clsx from "clsx";
-import { useRouter } from "next/navigation";
-import { useId, useState } from "react";
-import { useForm, type SubmitHandler } from "react-hook-form";
-import toast from "react-hot-toast";
+import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
+import { useAction } from "@/modules/actions/utils/useAction";
+import { TextInput } from "@/modules/common/components/form/TextInput";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
+import { createOrganization } from "@/modules/organizations/actions/createOrganization";
 import { FaSave } from "react-icons/fa";
-import * as z from "zod/mini";
-
-const createdOrganizationResponseSchema = z.object({ id: z.string() });
-
-interface FormValues {
-  spectrumId: string;
-  name: string;
-}
 
 interface Props {
   readonly className?: string;
@@ -21,70 +11,36 @@ interface Props {
 }
 
 export const CreateOrganizationForm = ({ className, onSuccess }: Props) => {
-  const router = useRouter();
-  const { register, handleSubmit, reset } = useForm<FormValues>();
-  const [isLoading, setIsLoading] = useState(false);
-  const spectrumIdInputId = useId();
-  const nameInputId = useId();
-
-  const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    setIsLoading(true);
-
-    try {
-      const response = await fetch(`/api/spynet/organization`, {
-        method: "POST",
-        body: JSON.stringify({
-          spectrumId: data.spectrumId,
-          name: data.name,
-        }),
-      });
-
-      if (response.ok) {
-        const data = createdOrganizationResponseSchema.parse(
-          await response.json(),
-        );
-        router.push(`/app/spynet/organization/${data.id}`);
-        reset();
-        onSuccess?.();
-      } else {
-        toast.error("Beim Anlegen ist ein Fehler aufgetreten.");
-      }
-    } catch (error) {
-      toast.error("Beim Anlegen ist ein Fehler aufgetreten.");
-      console.error(error);
-    }
-
-    setIsLoading(false);
-  };
+  const { state, formAction, getDefaultValueWithFallback } = useAction(
+    createOrganization,
+    {
+      errorToast: false,
+      onSuccess,
+    },
+  );
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className={clsx(className)}>
-      <label className="block" htmlFor={spectrumIdInputId}>
-        Spectrum ID
-      </label>
-
-      <input
-        className="mt-2 w-full rounded-secondary bg-neutral-900 p-2"
-        id={spectrumIdInputId}
-        {...register("spectrumId", { required: true })}
+    <form action={formAction} className={className}>
+      <TextInput
+        name="spectrumId"
+        label="Spectrum ID"
+        required
         autoFocus
+        defaultValue={getDefaultValueWithFallback("spectrumId", "")}
       />
 
-      <label className="mt-4 block" htmlFor={nameInputId}>
-        Name
-      </label>
-
-      <input
-        className="mt-2 w-full rounded-secondary bg-neutral-900 p-2"
-        id={nameInputId}
-        {...register("name", { required: true })}
+      <TextInput
+        name="name"
+        label="Name"
+        className="mt-4"
+        required
+        defaultValue={getDefaultValueWithFallback("name", "")}
       />
+
+      <ActionErrorNote className="mt-4" state={state} />
 
       <div className="mt-8 flex justify-end">
-        <Button2 type="submit" disabled={isLoading}>
-          {isLoading ? <AsciiSpinner /> : <FaSave />}
-          Anlegen
-        </Button2>
+        <SubmitButton icon={<FaSave />}>Anlegen</SubmitButton>
       </div>
     </form>
   );
