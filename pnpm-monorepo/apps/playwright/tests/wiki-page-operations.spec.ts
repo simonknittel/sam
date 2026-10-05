@@ -12,6 +12,7 @@ import {
   inlineEditorTrigger,
   modal,
   saveInlineEditor,
+  waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
@@ -369,4 +370,50 @@ test("a favorited page shows up in the sidebar's favorites", async ({
       prisma.wikiPageFavorite.count({ where: { pageId: wikiPage.id } }),
     )
     .toBe(0);
+});
+
+test("a page that a different tab saved as a favorite stays a favorite", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, { handle: "wiki-leser" });
+  const wikiPage = await createWikiPage(prisma, {
+    title: "Merkzettel",
+    visibility: WikiPageVisibility.PUBLIC,
+  });
+
+  await signIn(citizen.user);
+  await page.goto(`/app/wiki/${wikiPage.id}/${wikiPage.slug}`);
+  await expect(page.getByText("Du hast bisher keine Favoriten.")).toBeVisible();
+  /** Before hydration, the form would submit with a full page load */
+  await waitForAppShellHydration(page);
+
+  /** A different tab saves the page as a favorite in the meantime */
+  await prisma.wikiPageFavorite.create({
+    data: { citizenId: citizen.entity.id, pageId: wikiPage.id },
+  });
+
+  /**
+   * The button sets the state that it shows, not the opposite of the stored
+   * state. The page shows the favorite without a navigation.
+   */
+  await page.getByRole("button", { name: "Als Favorit speichern" }).click();
+  await expect(page.getByText("Als Favorit gespeichert.")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Favorit entfernen" }),
+  ).toBeVisible();
+  await expect(page.getByText("Du hast bisher keine Favoriten.")).toHaveCount(
+    0,
+  );
+
+  expect(
+    await prisma.wikiPageFavorite.count({ where: { pageId: wikiPage.id } }),
+  ).toBe(1);
+  /** No audit event for a change that did not happen */
+  expect(
+    await prisma.auditEvent.count({
+      where: { type: "WIKI_PAGE_FAVORITE_ADDED" },
+    }),
+  ).toBe(0);
 });
