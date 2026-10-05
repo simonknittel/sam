@@ -11,6 +11,7 @@ import {
   clonePositions,
 } from "../utils/clonePositions";
 import { toEventContainer } from "../utils/eventContainer";
+import { canSeeEvent } from "../utils/eventVisibility";
 import { isAllowedToManagePositions } from "../utils/isAllowedToManagePositions";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
 import { buildPositionTree } from "../utils/positionTree";
@@ -63,12 +64,15 @@ export const copyLineupFromEvent = createAuthenticatedAction(
       }),
 
       prisma.event.findUnique({
-        where: { id: data.sourceEventId },
+        where: { id: data.sourceEventId, deletedAt: null },
         select: {
           id: true,
           lineupEnabled: true,
           discordCreatorId: true,
           createdById: true,
+          deletedAt: true,
+          visibility: true,
+          visibilityRoles: { select: { roleId: true } },
           managers: {
             select: {
               id: true,
@@ -78,7 +82,8 @@ export const copyLineupFromEvent = createAuthenticatedAction(
       }),
     ]);
     if (!targetEvent) return rejectConflict(t("Common.notFound"), formData);
-    if (!sourceEvent)
+    /** An event that the caller cannot see gets the answer of an unknown id */
+    if (!sourceEvent || !(await canSeeEvent(sourceEvent)))
       return {
         error: t("Common.badRequest"),
         requestPayload: formData,
@@ -91,8 +96,9 @@ export const copyLineupFromEvent = createAuthenticatedAction(
 
     /**
      * The caller must be allowed to view the source lineup (same gate as the
-     * lineup page: general event read permission plus an enabled lineup or
-     * position-management rights on the source event).
+     * lineup page: general event read permission, the visibility of the
+     * source event, plus an enabled lineup or position-management rights on
+     * the source event).
      */
     if (!(await authentication.authorize("event", "read")))
       return { error: t("Common.forbidden"), requestPayload: formData };
