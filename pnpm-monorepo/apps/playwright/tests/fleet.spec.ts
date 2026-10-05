@@ -1,4 +1,5 @@
 import { VariantStatus } from "@sam-monorepo/database/client";
+import { expectAuditEvents } from "../fixtures/audit";
 import {
   addCitizenToOrganization,
   createCitizen,
@@ -11,6 +12,7 @@ import {
   fillUntilUrl,
   inlineEditorTrigger,
   modal,
+  NOT_FOUND_TEXT,
   SAVED_TEXT,
   saveInlineEditor,
   statisticTile,
@@ -349,7 +351,7 @@ test("a variant link that is not an http or https URL is a bad request", async (
   ).toBe(0);
 });
 
-test("manufacturers and series can be managed through the REST-backed settings", async ({
+test("manufacturers and series can be created and renamed in the settings", async ({
   page,
   prisma,
   signIn,
@@ -362,7 +364,7 @@ test("manufacturers and series can be managed through the REST-backed settings",
   await signIn(admin.user);
   await page.goto("/app/fleet/settings/manufacturer");
 
-  // Create a manufacturer (POST /api/manufacturer)
+  // Create a manufacturer
   const manufacturerModal = modal(page, "Hersteller anlegen");
   // The top bar has its own "Neu" (create menu) — scope to the page content
   await clickUntilVisible(
@@ -371,14 +373,18 @@ test("manufacturers and series can be managed through the REST-backed settings",
   );
   await manufacturerModal.getByLabel("Name").fill("Aegis Dynamics");
   await manufacturerModal.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText("Erfolgreich erstellt")).toBeVisible();
+  /** Exactly one toast: the old fetch flow sometimes showed it two times */
+  await expect(page.getByText(SAVED_TEXT)).toHaveCount(1);
+  await expect(manufacturerModal).not.toBeVisible();
   await expect(
     page.getByRole("link", { name: "Aegis Dynamics" }),
   ).toBeVisible();
   const manufacturer = await prisma.manufacturer.findFirst();
   expect(manufacturer?.name).toBe("Aegis Dynamics");
+  /** The next saves show the same text, thus this toast must go first */
+  await expect(page.getByText(SAVED_TEXT)).toHaveCount(0);
 
-  // Rename it through the inline editor (server action)
+  // Rename it through the inline editor
   await page.getByRole("link", { name: "Aegis Dynamics" }).click();
   await expect(page).toHaveURL(
     `/app/fleet/settings/manufacturer/${manufacturer!.id}`,
@@ -387,12 +393,93 @@ test("manufacturers and series can be managed through the REST-backed settings",
   await clickUntilVisible(inlineEditorTrigger(page), nameInput);
   await nameInput.fill("Aegis Dynamics GmbH");
   await saveInlineEditor(page);
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+  await expect(page.getByText(SAVED_TEXT)).toHaveCount(1);
   await expect
     .poll(async () => (await prisma.manufacturer.findFirst())?.name)
     .toBe("Aegis Dynamics GmbH");
+  await expect(page.getByText(SAVED_TEXT)).toHaveCount(0);
 
-  // Create a series under it (POST /api/series)
+  // Create a series under it
+  const seriesModal = modal(page, "Serie anlegen");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Anlegen" }),
+    seriesModal,
+  );
+  await expect(seriesModal.getByLabel("Hersteller")).toHaveValue(
+    manufacturer!.id,
+  );
+  await seriesModal.getByLabel("Name", { exact: true }).fill("Avenger");
+  const saveSeriesButton = seriesModal.getByRole("button", {
+    name: "Speichern",
+  });
+  await expect(saveSeriesButton).toBeEnabled();
+  await saveSeriesButton.click();
+  await expect(page.getByText(SAVED_TEXT)).toHaveCount(1);
+  await expect(seriesModal).not.toBeVisible();
+  await expect(page.getByRole("link", { name: "Avenger" })).toBeVisible();
+  const series = await prisma.series.findFirst();
+  expect(series).toMatchObject({
+    name: "Avenger",
+    manufacturerId: manufacturer!.id,
+  });
+
+  await expectAuditEvents(prisma, [
+    "MANUFACTURER_CREATED",
+    "MANUFACTURER_UPDATED",
+    "SERIES_CREATED",
+  ]);
+});
+
+test("a manufacturer name that exists already shows the error and keeps the input", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "flotten-admin",
+    permissionStrings: ["manufacturersSeriesAndVariants;manage"],
+  });
+  await prisma.manufacturer.create({ data: { name: "Aegis Dynamics" } });
+
+  await signIn(admin.user);
+  await page.goto("/app/fleet/settings/manufacturer");
+
+  const manufacturerModal = modal(page, "Hersteller anlegen");
+  await clickUntilVisible(
+    page.getByRole("main").getByRole("button", { name: "Neu" }),
+    manufacturerModal,
+  );
+  const nameInput = manufacturerModal.getByLabel("Name");
+  await nameInput.fill("Aegis Dynamics");
+  await manufacturerModal.getByRole("button", { name: "Speichern" }).click();
+
+  await expect(
+    page.getByText("Ein Hersteller mit diesem Namen existiert bereits."),
+  ).toBeVisible();
+  await expect(manufacturerModal).toBeVisible();
+  await expect(nameInput).toHaveValue("Aegis Dynamics");
+  expect(await prisma.manufacturer.count()).toBe(1);
+  expect(
+    await prisma.auditEvent.count({ where: { type: "MANUFACTURER_CREATED" } }),
+  ).toBe(0);
+});
+
+test("a series of a manufacturer that a different user deleted shows the error and the current page", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "flotten-admin",
+    permissionStrings: ["manufacturersSeriesAndVariants;manage"],
+  });
+  const manufacturer = await prisma.manufacturer.create({
+    data: { name: "Aegis Dynamics" },
+  });
+
+  await signIn(admin.user);
+  await page.goto(`/app/fleet/settings/manufacturer/${manufacturer.id}`);
+
   const seriesModal = modal(page, "Serie anlegen");
   await clickUntilVisible(
     page.getByRole("button", { name: "Anlegen" }),
@@ -403,12 +490,20 @@ test("manufacturers and series can be managed through the REST-backed settings",
     name: "Speichern",
   });
   await expect(saveSeriesButton).toBeEnabled();
+
+  /** A different user deletes the manufacturer after the modal opened */
+  await prisma.manufacturer.delete({ where: { id: manufacturer.id } });
+
+  /** The refresh removes the modal, thus the error shows as a toast */
   await saveSeriesButton.click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
-  await expect(page.getByRole("link", { name: "Avenger" })).toBeVisible();
-  const series = await prisma.series.findFirst();
-  expect(series).toMatchObject({
-    name: "Avenger",
-    manufacturerId: manufacturer!.id,
-  });
+  await expect(
+    page.getByText("Die gesuchte Ressource wurde nicht gefunden."),
+  ).toBeVisible();
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
+  await expect(seriesModal).toHaveCount(0);
+
+  expect(await prisma.series.count()).toBe(0);
+  expect(
+    await prisma.auditEvent.count({ where: { type: "SERIES_CREATED" } }),
+  ).toBe(0);
 });
