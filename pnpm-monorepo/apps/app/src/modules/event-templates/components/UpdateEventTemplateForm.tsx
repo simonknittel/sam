@@ -63,7 +63,6 @@ export const UpdateEventTemplateForm = ({
   );
   const discordCheckboxId = useId();
 
-
   return (
     <form onSubmit={submitWithoutReset} className={clsx(className)}>
       <input type="hidden" name="templateId" value={template.id} />
