@@ -8,6 +8,7 @@ import {
   ConfirmationStatus,
   OrganizationMembershipType,
 } from "@sam-monorepo/database/client";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { refresh } from "next/cache";
 import * as z from "zod";
 import { changeMembershipHistory } from "../utils/changeMembershipHistory";
@@ -16,6 +17,9 @@ const schema = z.object({
   organizationId: z.cuid(),
   citizenId: z.cuid(),
 });
+
+/** Rolls the transaction back, thus the rejected change writes nothing */
+class RejectedChangeError extends Error {}
 
 export const deleteOrganizationMembership = createAuthenticatedAction(
   "deleteOrganizationMembership",
@@ -43,6 +47,7 @@ export const deleteOrganizationMembership = createAuthenticatedAction(
     const isRemoved = await changeMembershipHistory(
       data.citizenId,
       async (transaction) => {
+        /** A deleted citizen gets the same answer as a removed membership */
         const membership =
           await transaction.activeOrganizationMembership.findUnique({
             where: {
@@ -50,12 +55,13 @@ export const deleteOrganizationMembership = createAuthenticatedAction(
                 organizationId: data.organizationId,
                 citizenId: data.citizenId,
               },
+              citizen: ACTIVE_CITIZEN_WHERE,
             },
             select: {
               visibility: true,
             },
           });
-        if (!membership) return false;
+        if (!membership) throw new RejectedChangeError();
 
         await transaction.organizationMembershipHistoryEntry.create({
           data: {
@@ -69,11 +75,17 @@ export const deleteOrganizationMembership = createAuthenticatedAction(
             confirmedById: entityId,
           },
         });
-
-        return true;
       },
-    );
-    /** A different user or tab removed the membership before */
+    )
+      .then(() => true)
+      .catch((error: unknown) => {
+        if (error instanceof RejectedChangeError) return false;
+        throw error;
+      });
+    /**
+     * A different user or tab removed the membership or deleted the citizen
+     * before
+     */
     if (!isRemoved) return rejectConflict(t("Common.notFound"), formData);
 
     refresh();

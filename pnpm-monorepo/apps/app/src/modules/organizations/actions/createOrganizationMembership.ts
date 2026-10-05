@@ -4,14 +4,11 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import {
-  isPrismaError,
-  PrismaErrorCode,
-} from "@/modules/common/utils/isPrismaError";
-import {
   ConfirmationStatus,
   OrganizationMembershipType,
   OrganizationMembershipVisibility,
 } from "@sam-monorepo/database/client";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { refresh } from "next/cache";
 import * as z from "zod";
 import { changeMembershipHistory } from "../utils/changeMembershipHistory";
@@ -33,6 +30,9 @@ const schema = z.object({
   /** The value of the submit button "save and confirm" */
   confirmed: z.literal(ConfirmationStatus.CONFIRMED).optional(),
 });
+
+/** Rolls the transaction back, thus the rejected change writes nothing */
+class RejectedChangeError extends Error {}
 
 export const createOrganizationMembership = createAuthenticatedAction(
   "createOrganizationMembership",
@@ -63,44 +63,42 @@ export const createOrganizationMembership = createAuthenticatedAction(
      */
     const isCreated = await changeMembershipHistory(
       data.citizenId,
-      (transaction) =>
-        transaction.organizationMembershipHistoryEntry.create({
+      async (transaction) => {
+        /**
+         * The user enters one of the IDs. A deleted citizen gets the same
+         * answer as an unknown ID. Organizations cannot be deleted.
+         */
+        const citizen = await transaction.citizen.findUnique({
+          where: { id: data.citizenId, ...ACTIVE_CITIZEN_WHERE },
+          select: { id: true },
+        });
+        const organization = await transaction.organization.findUnique({
+          where: { id: data.organizationId },
+          select: { id: true },
+        });
+        if (!citizen || !organization) throw new RejectedChangeError();
+
+        await transaction.organizationMembershipHistoryEntry.create({
           data: {
-            organization: {
-              connect: {
-                id: data.organizationId,
-              },
-            },
-            citizen: {
-              connect: {
-                id: data.citizenId,
-              },
-            },
+            organizationId: data.organizationId,
+            citizenId: data.citizenId,
             type: data.type,
             visibility: data.visibility,
-            createdBy: {
-              connect: {
-                id: entityId,
-              },
-            },
+            createdById: entityId,
             ...(confirmable
               ? {
                   confirmed: ConfirmationStatus.CONFIRMED,
                   confirmedAt: new Date(),
-                  confirmedBy: {
-                    connect: {
-                      id: entityId,
-                    },
-                  },
+                  confirmedById: entityId,
                 }
               : {}),
           },
-        }),
+        });
+      },
     )
       .then(() => true)
       .catch((error: unknown) => {
-        /** The entered ID belongs to no organization or no citizen */
-        if (isPrismaError(error, PrismaErrorCode.RecordNotFound)) return false;
+        if (error instanceof RejectedChangeError) return false;
         throw error;
       });
     if (!isCreated)

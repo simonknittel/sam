@@ -5,6 +5,7 @@ import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { ConfirmationStatus } from "@sam-monorepo/database/client";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { refresh } from "next/cache";
 import * as z from "zod";
 import { changeMembershipHistory } from "../utils/changeMembershipHistory";
@@ -20,6 +21,12 @@ const schema = z.object({
     ConfirmationStatus.FALSE_REPORT,
   ]),
 });
+
+/**
+ * Rolls the transaction back, thus the rejected change writes nothing. The
+ * message is the answer to the user.
+ */
+class RejectedChangeError extends Error {}
 
 export const confirmOrganizationMembership = createAuthenticatedAction(
   "confirmOrganizationMembership",
@@ -53,12 +60,14 @@ export const confirmOrganizationMembership = createAuthenticatedAction(
               id: data.id,
               organizationId: data.organizationId,
               citizenId: data.citizenId,
+              /** A deleted citizen gets the same answer as an unknown entry */
+              citizen: ACTIVE_CITIZEN_WHERE,
             },
             select: {
               id: true,
             },
           });
-        if (!entry) return t("Common.notFound");
+        if (!entry) throw new RejectedChangeError(t("Common.notFound"));
 
         /**
          * Only an entry without a confirmation changes. Thus a second
@@ -76,11 +85,14 @@ export const confirmOrganizationMembership = createAuthenticatedAction(
               confirmedById: entityId,
             },
           });
-        if (count === 0) return ALREADY_CONFIRMED_ERROR;
-
-        return null;
+        if (count === 0) throw new RejectedChangeError(ALREADY_CONFIRMED_ERROR);
       },
-    );
+    )
+      .then(() => null)
+      .catch((error: unknown) => {
+        if (error instanceof RejectedChangeError) return error.message;
+        throw error;
+      });
     if (conflictError) return rejectConflict(conflictError, formData);
 
     refresh();
