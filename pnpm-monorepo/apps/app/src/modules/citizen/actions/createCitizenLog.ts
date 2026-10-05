@@ -14,7 +14,10 @@ import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { refresh } from "next/cache";
 import * as z from "zod";
 
-/** The limit of the former API route; the column itself has no limit */
+/**
+ * An identity log holds a short value, for example a handle or an ID. The
+ * column has no limit, thus the schema sets one.
+ */
 const IDENTITY_LOG_CONTENT_MAX_LENGTH = 255;
 
 const schema = z.discriminatedUnion("type", [
