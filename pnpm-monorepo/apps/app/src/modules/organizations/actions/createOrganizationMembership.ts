@@ -1,6 +1,8 @@
 "use server";
 
+import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import {
@@ -58,25 +60,38 @@ export const createOrganizationMembership = createAuthenticatedAction(
       (await authentication.authorize("organizationMembership", "confirm"));
 
     /**
+     * On the page of a citizen, the user enters the ID of the organization.
+     * Organizations cannot be deleted, thus an unknown ID is an input error,
+     * and the page needs no refresh.
+     */
+    const organization = await prisma.organization.findUnique({
+      where: { id: data.organizationId },
+      select: { id: true },
+    });
+    if (!organization)
+      return {
+        error: t("Common.notFound"),
+        requestPayload: formData,
+      };
+
+    /**
      * Create the history entry. The active memberships come from the
      * confirmed history entries, see changeMembershipHistory().
      */
-    const isCreated = await changeMembershipHistory(
+    const rejection = await changeMembershipHistory(
       data.citizenId,
       async (transaction) => {
         /**
-         * The user enters one of the IDs. A deleted citizen gets the same
-         * answer as an unknown ID. Organizations cannot be deleted.
+         * A deleted citizen gets the same answer as an unknown ID. On the
+         * page of the citizen, the refresh shows that a different user
+         * deleted it. On the page of an organization, the user enters the ID,
+         * and the refresh changes nothing.
          */
         const citizen = await transaction.citizen.findUnique({
           where: { id: data.citizenId, ...ACTIVE_CITIZEN_WHERE },
           select: { id: true },
         });
-        const organization = await transaction.organization.findUnique({
-          where: { id: data.organizationId },
-          select: { id: true },
-        });
-        if (!citizen || !organization) throw new RejectedChangeError();
+        if (!citizen) throw new RejectedChangeError(t("Common.notFound"));
 
         await transaction.organizationMembershipHistoryEntry.create({
           data: {
@@ -95,17 +110,8 @@ export const createOrganizationMembership = createAuthenticatedAction(
           },
         });
       },
-    )
-      .then(() => true)
-      .catch((error: unknown) => {
-        if (error instanceof RejectedChangeError) return false;
-        throw error;
-      });
-    if (!isCreated)
-      return {
-        error: t("Common.notFound"),
-        requestPayload: formData,
-      };
+    );
+    if (rejection !== null) return rejectConflict(rejection, formData);
 
     refresh();
 
