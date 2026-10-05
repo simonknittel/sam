@@ -38,15 +38,16 @@ export default async function Page({
    * work after the save failed — its own response has no room for a warning
    * (see DISCORD_PUBLISH_FAILED_PARAM). Only managers see them.
    */
-  const [query, canManage, t] = await Promise.all([
-    searchParams,
-    isAllowedToManageEvent(event),
-    getTranslations(),
-  ]);
-  const publishFailed =
-    query[DISCORD_PUBLISH_FAILED_PARAM] === "1" && canManage;
-  const notificationsFailed =
-    query[NOTIFICATIONS_FAILED_PARAM] === "1" && canManage;
+  const query = await searchParams;
+  const hasPublishFailedFlag = query[DISCORD_PUBLISH_FAILED_PARAM] === "1";
+  const hasNotificationsFailedFlag = query[NOTIFICATIONS_FAILED_PARAM] === "1";
+  /** Asked only when a flag is set: most visits have none */
+  const canSeeWarnings =
+    (hasPublishFailedFlag || hasNotificationsFailedFlag) &&
+    (await isAllowedToManageEvent(event));
+  const publishFailed = hasPublishFailedFlag && canSeeWarnings;
+  const notificationsFailed = hasNotificationsFailedFlag && canSeeWarnings;
+  const t = await getTranslations();
 
   return (
     <SuspenseWithErrorBoundaryTile>
