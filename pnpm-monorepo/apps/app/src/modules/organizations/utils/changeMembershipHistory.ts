@@ -11,31 +11,46 @@ import {
 /**
  * Thrown inside the callback of `changeMembershipHistory()` to reject a
  * change. It rolls the transaction back, thus the rejected change writes
- * nothing.
+ * nothing. The constructor makes the message necessary, because it is the
+ * error for the user.
  */
-export class RejectedChangeError extends Error {}
+export class RejectedChangeError extends Error {
+  constructor(message: string) {
+    super(message);
+  }
+}
 
 /**
  * Writes a change to the membership history of a citizen. The active
  * memberships come from the confirmed history entries, thus the same
  * transaction replays them. Use this function for each write to the
  * membership history.
+ *
+ * Returns the message of a `RejectedChangeError` of the change, or null
+ * after a written change.
  */
-export const changeMembershipHistory = async <Result>(
+export const changeMembershipHistory = async (
   citizenId: Citizen["id"],
-  change: (transaction: Prisma.TransactionClient) => Promise<Result>,
-) =>
-  prisma.$transaction(async (transaction) => {
-    /**
-     * Else a replay does not see a parallel change, and the active
-     * memberships stay incorrect.
-     */
-    await lockCitizen(transaction, citizenId);
+  change: (transaction: Prisma.TransactionClient) => Promise<void>,
+): Promise<string | null> => {
+  try {
+    await prisma.$transaction(async (transaction) => {
+      /**
+       * Else a replay does not see a parallel change, and the active
+       * memberships stay incorrect.
+       */
+      await lockCitizen(transaction, citizenId);
 
-    const result = await change(transaction);
-    await replayActiveMemberships(transaction, citizenId);
-    return result;
-  });
+      await change(transaction);
+      await replayActiveMemberships(transaction, citizenId);
+    });
+  } catch (error) {
+    if (error instanceof RejectedChangeError) return error.message;
+    throw error;
+  }
+
+  return null;
+};
 
 const replayActiveMemberships = async (
   transaction: Prisma.TransactionClient,

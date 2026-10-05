@@ -46,9 +46,9 @@ export const confirmOrganizationMembership = createAuthenticatedAction(
 
     /**
      * Set the new confirmation status. The replay adds or removes the active
-     * membership. The result is the error of a conflict, or null.
+     * membership.
      */
-    const conflictError = await changeMembershipHistory(
+    const rejection = await changeMembershipHistory(
       data.citizenId,
       async (transaction) => {
         const entry =
@@ -84,13 +84,8 @@ export const confirmOrganizationMembership = createAuthenticatedAction(
           });
         if (count === 0) throw new RejectedChangeError(ALREADY_CONFIRMED_ERROR);
       },
-    )
-      .then(() => null)
-      .catch((error: unknown) => {
-        if (error instanceof RejectedChangeError) return error.message;
-        throw error;
-      });
-    if (conflictError) return rejectConflict(conflictError, formData);
+    );
+    if (rejection !== null) return rejectConflict(rejection, formData);
 
     refresh();
 

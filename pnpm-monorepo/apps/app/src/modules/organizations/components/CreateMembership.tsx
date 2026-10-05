@@ -35,16 +35,18 @@ export const CreateMembership = ({
   citizenId,
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { isPending, submitWithoutReset } = useAction(createOrganizationMembership, {
-    onSuccess: () => setIsOpen(false),
-  });
+  const { isPending, submitWithoutReset } = useAction(
+    createOrganizationMembership,
+    {
+      onSuccess: () => setIsOpen(false),
+    },
+  );
   const typeInputId = useId();
   const visibilityInputId = useId();
 
   const counterpartLabel = organizationId
     ? "Citizen hinzufügen"
     : "Organisation hinzufügen";
-
 
   return (
     <>

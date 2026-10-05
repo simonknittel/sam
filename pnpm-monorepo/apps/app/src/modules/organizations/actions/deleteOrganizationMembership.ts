@@ -44,10 +44,14 @@ export const deleteOrganizationMembership = createAuthenticatedAction(
      * The history entry LEFT ends the membership. The replay removes it from
      * the active memberships.
      */
-    const isRemoved = await changeMembershipHistory(
+    const rejection = await changeMembershipHistory(
       data.citizenId,
       async (transaction) => {
-        /** A deleted citizen gets the same answer as a removed membership */
+        /**
+         * A different user or tab removed the membership or deleted the
+         * citizen before. A deleted citizen gets the same answer as a removed
+         * membership.
+         */
         const membership =
           await transaction.activeOrganizationMembership.findUnique({
             where: {
@@ -61,7 +65,7 @@ export const deleteOrganizationMembership = createAuthenticatedAction(
               visibility: true,
             },
           });
-        if (!membership) throw new RejectedChangeError();
+        if (!membership) throw new RejectedChangeError(t("Common.notFound"));
 
         await transaction.organizationMembershipHistoryEntry.create({
           data: {
@@ -76,17 +80,8 @@ export const deleteOrganizationMembership = createAuthenticatedAction(
           },
         });
       },
-    )
-      .then(() => true)
-      .catch((error: unknown) => {
-        if (error instanceof RejectedChangeError) return false;
-        throw error;
-      });
-    /**
-     * A different user or tab removed the membership or deleted the citizen
-     * before
-     */
-    if (!isRemoved) return rejectConflict(t("Common.notFound"), formData);
+    );
+    if (rejection !== null) return rejectConflict(rejection, formData);
 
     refresh();
 
