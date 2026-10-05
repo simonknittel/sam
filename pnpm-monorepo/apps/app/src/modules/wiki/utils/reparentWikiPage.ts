@@ -1,8 +1,8 @@
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import type { authenticate } from "@/modules/auth/server";
+import { rejectConflict } from "@/modules/events/utils/rejectConflict";
 import { Prisma } from "@sam-monorepo/database/client";
 import type { getTranslations } from "next-intl/server";
-import { refresh } from "next/cache";
 import * as z from "zod";
 import { buildEventWikiPageMoveReset } from "./buildEventWikiPageMoveReset";
 import { buildWikiPageMoveReset } from "./buildWikiPageMoveReset";
@@ -23,14 +23,11 @@ const WIKI_PAGE_TREE_CHANGED_ERROR =
 
 /**
  * The answer to a move that found a tree which a different user or tab
- * changed after the page showed it. Only for server actions: the page must
- * show the current tree.
+ * changed after the page showed it. Only for server actions (see
+ * rejectConflict).
  */
-export const rejectChangedWikiPageTree = (formData: FormData) => {
-  refresh();
-
-  return { error: WIKI_PAGE_TREE_CHANGED_ERROR, requestPayload: formData };
-};
+export const rejectChangedWikiPageTree = (formData: FormData) =>
+  rejectConflict(WIKI_PAGE_TREE_CHANGED_ERROR, formData);
 
 /**
  * The reparent rules shared by moveWikiPage and updateWikiPagePosition: a

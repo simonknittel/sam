@@ -21,6 +21,7 @@ import {
 import {
   getWikiPageScopedContext,
   isWikiScopeFrozen,
+  rejectFrozenWikiScope,
   type WikiPageScopedContext,
 } from "../queries/getWikiPageScopedContext";
 import {
@@ -141,10 +142,7 @@ export const pasteWikiPages = createAuthenticatedAction(
       if (placement === WikiPagePlacement.Forbidden)
         return { error: t("Common.forbidden"), requestPayload: formData };
       if (isWikiScopeFrozen(targetScoped))
-        return {
-          error: "Das Event ist bereits vorbei.",
-          requestPayload: formData,
-        };
+        return rejectFrozenWikiScope(formData);
     } else {
       if (data.mode === "replace")
         return { error: t("Common.badRequest"), requestPayload: formData };

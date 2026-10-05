@@ -13,6 +13,7 @@ import * as z from "zod";
 import {
   getWikiPageScopedContext,
   isWikiScopeFrozen,
+  rejectFrozenWikiScope,
 } from "../queries/getWikiPageScopedContext";
 import { createWikiPageSafetySnapshot } from "../utils/createWikiPageSafetySnapshot";
 import { replaceWikiPageContent } from "../utils/replaceWikiPageContent";
@@ -60,11 +61,7 @@ export const restoreWikiPageSnapshot = createAuthenticatedAction(
     const context = scoped.context;
     if (!context.permissions.get(page.id)?.canAdmin)
       return { error: t("Common.forbidden"), requestPayload: formData };
-    if (isWikiScopeFrozen(scoped))
-      return {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      };
+    if (isWikiScopeFrozen(scoped)) return rejectFrozenWikiScope(formData);
 
     /**
      * Snapshots may predate editor schema changes — validate against the

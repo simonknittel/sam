@@ -20,6 +20,7 @@ import {
 import {
   getWikiPageScopedContext,
   isWikiScopeFrozen,
+  rejectFrozenWikiScope,
   type WikiPageScopedContext,
 } from "../queries/getWikiPageScopedContext";
 import { copyWikiPageSubtree } from "../utils/copyWikiPageSubtree";
@@ -89,11 +90,7 @@ export const createWikiPage = createAuthenticatedAction(
     if (data.parentId) {
       if (placement === WikiPagePlacement.Forbidden)
         return { error: t("Common.forbidden"), requestPayload: formData };
-      if (isWikiScopeFrozen(scoped))
-        return {
-          error: "Das Event ist bereits vorbei.",
-          requestPayload: formData,
-        };
+      if (isWikiScopeFrozen(scoped)) return rejectFrozenWikiScope(formData);
     } else {
       if (!(await authentication.authorize("wiki", "create")))
         return { error: t("Common.forbidden"), requestPayload: formData };

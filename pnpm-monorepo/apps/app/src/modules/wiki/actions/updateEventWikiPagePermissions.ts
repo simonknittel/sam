@@ -14,6 +14,7 @@ import * as z from "zod";
 import {
   getWikiPageScopedContext,
   isWikiScopeFrozen,
+  rejectFrozenWikiScope,
 } from "../queries/getWikiPageScopedContext";
 import { getEffectiveEventWikiScope } from "../utils/getEffectiveEventWikiScope";
 import { isEventWikiRootPage } from "../utils/isEventWikiRootPage";
@@ -76,11 +77,7 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
     const context = eventScoped.context;
     if (!context.permissions.get(page.id)?.canAdmin)
       return { error: t("Common.forbidden"), requestPayload: formData };
-    if (isWikiScopeFrozen(eventScoped))
-      return {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      };
+    if (isWikiScopeFrozen(eventScoped)) return rejectFrozenWikiScope(formData);
 
     const isRootPage = isEventWikiRootPage(page);
     if (

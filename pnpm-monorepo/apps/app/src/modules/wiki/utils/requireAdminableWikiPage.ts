@@ -3,6 +3,7 @@ import { refresh } from "next/cache";
 import {
   getWikiPageScopedContext,
   isWikiScopeFrozen,
+  rejectFrozenWikiScope,
 } from "../queries/getWikiPageScopedContext";
 import { isEventWikiRootPage } from "./isEventWikiRootPage";
 
@@ -76,12 +77,7 @@ export const requireAdminableWikiPage = async (
     };
 
   if (isWikiScopeFrozen(scoped))
-    return {
-      failure: {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      },
-    };
+    return { failure: rejectFrozenWikiScope(formData) };
 
   if (options?.rejectEventWikiRootPage && isEventWikiRootPage(page))
     return { failure: badRequest };

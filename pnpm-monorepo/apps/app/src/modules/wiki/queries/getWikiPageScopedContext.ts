@@ -3,6 +3,7 @@ import {
   getBriefingPath,
   getWikiPageContainer,
 } from "@/modules/events/utils/eventContainer";
+import { rejectConflict } from "@/modules/events/utils/rejectConflict";
 import { WikiPageNamespace } from "@sam-monorepo/database/client";
 import { WikiScope } from "../utils/wikiPageHref";
 import {
@@ -83,3 +84,11 @@ export const getWikiScopeHomePath = (scoped: WikiPageScopedContext) => {
  */
 export const isWikiScopeFrozen = (scoped: WikiPageScopedContext) =>
   scoped.scope === WikiScope.Event && scoped.context.frozen;
+
+/**
+ * The answer to a mutation in a frozen scope. The event can end while the
+ * page is open, and the page must then show the frozen state. Only for
+ * server actions (see rejectConflict).
+ */
+export const rejectFrozenWikiScope = (formData: FormData) =>
+  rejectConflict("Das Event ist bereits vorbei.", formData);

@@ -10,6 +10,7 @@ import * as z from "zod";
 import {
   getWikiPageScopedContext,
   isWikiScopeFrozen,
+  rejectFrozenWikiScope,
 } from "../queries/getWikiPageScopedContext";
 import { findOrCreateWikiTags } from "../utils/findOrCreateWikiTags";
 
@@ -53,11 +54,7 @@ export const updateWikiPageTags = createAuthenticatedAction(
      * on frozen events); the explicit check only yields the events' usual
      * error message instead of a generic forbidden.
      */
-    if (isWikiScopeFrozen(scoped))
-      return {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      };
+    if (isWikiScopeFrozen(scoped)) return rejectFrozenWikiScope(formData);
     if (!context.permissions.get(page.id)?.canEdit)
       return { error: t("Common.forbidden"), requestPayload: formData };
 

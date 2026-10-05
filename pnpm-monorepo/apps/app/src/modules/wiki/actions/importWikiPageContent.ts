@@ -16,6 +16,7 @@ import * as z from "zod";
 import {
   getWikiPageScopedContext,
   isWikiScopeFrozen,
+  rejectFrozenWikiScope,
 } from "../queries/getWikiPageScopedContext";
 import { getWikiIframeAllowlist } from "../queries/getWikiSettings";
 import { createWikiPageSafetySnapshot } from "../utils/createWikiPageSafetySnapshot";
@@ -59,11 +60,7 @@ export const importWikiPageContent = createAuthenticatedAction(
         : await authentication.authorize("wiki", "manage");
     if (!allowed)
       return { error: t("Common.forbidden"), requestPayload: formData };
-    if (isWikiScopeFrozen(scoped))
-      return {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      };
+    if (isWikiScopeFrozen(scoped)) return rejectFrozenWikiScope(formData);
 
     /**
      * Reject unknown node/mark types and invalid structures — the file may
