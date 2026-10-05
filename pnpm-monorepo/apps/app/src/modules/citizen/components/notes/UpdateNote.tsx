@@ -66,33 +66,16 @@ export const UpdateNote = async ({ note, withBullet = false }: Props) => {
   ]);
 
   /**
-   * Only the columns of the note go to the browser: a row of the notes table
-   * also has the citizen and the names of the authors
+   * Only the fields that the dialog reads go to the browser: a row of the
+   * notes table also has the content, the citizen and the names of the
+   * authors
    */
-  const {
-    id,
-    citizenId,
-    type,
-    content,
-    createdAt,
-    confirmed,
-    noteTypeId,
-    classificationLevelId,
-  } = note;
+  const { id, noteTypeId, classificationLevelId } = note;
 
   const modal = (
     <UpdateNoteModal
       className={withBullet ? "h-auto self-center" : undefined}
-      note={{
-        id,
-        citizenId,
-        type,
-        content,
-        createdAt,
-        confirmed,
-        noteTypeId,
-        classificationLevelId,
-      }}
+      note={{ id, noteTypeId, classificationLevelId }}
       noteTypes={getOptions(allNoteTypes, creatableNoteTypes, noteTypeId)}
       classificationLevels={getOptions(
         allClassificationLevels,

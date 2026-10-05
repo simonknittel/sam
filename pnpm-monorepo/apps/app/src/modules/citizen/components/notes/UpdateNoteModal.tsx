@@ -17,7 +17,10 @@ import { updateNote } from "../../actions/updateNote";
 
 interface Props {
   readonly className?: string;
-  readonly note: CitizenNote;
+  readonly note: Pick<
+    CitizenNote,
+    "id" | "noteTypeId" | "classificationLevelId"
+  >;
   readonly noteTypes: NoteType[];
   readonly classificationLevels: ClassificationLevel[];
 }
@@ -59,7 +62,10 @@ export const UpdateNoteModal = ({
 };
 
 interface UpdateNoteFormProps {
-  readonly note: CitizenNote;
+  readonly note: Pick<
+    CitizenNote,
+    "id" | "noteTypeId" | "classificationLevelId"
+  >;
   readonly noteTypes: NoteType[];
   readonly classificationLevels: ClassificationLevel[];
   readonly onSuccess: () => void;

@@ -48,7 +48,10 @@ export const ConfirmationState = ({ citizenLog }: Props) => {
           {/* The logs of a deleted citizen are read only */}
           {!citizenLog.citizen.deletedAt && (
             <span className="mt-1 flex gap-1 text-neutral-500">
-              <ConfirmLog log={citizenLog} compact={true} />
+              <ConfirmLog
+                log={{ id: citizenLog.id, citizenId: citizenLog.citizenId }}
+                compact={true}
+              />
             </span>
           )}
         </div>
