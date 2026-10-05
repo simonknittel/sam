@@ -31,17 +31,19 @@ export const unbanUserAction = createAuthenticatedAction(
       },
     });
 
-    if (!user)
+    if (!user?.bannedAt) {
+      /**
+       * A different user deleted or unbanned the user before, and the page
+       * must show it
+       */
+      refresh();
       return {
-        error: t("Common.notFound"),
+        error: user
+          ? "Dieser Benutzer ist nicht gesperrt."
+          : t("Common.notFound"),
         requestPayload: formData,
       };
-
-    if (!user.bannedAt)
-      return {
-        error: "Dieser Benutzer ist nicht gesperrt.",
-        requestPayload: formData,
-      };
+    }
 
     await prisma.user.update({
       where: {

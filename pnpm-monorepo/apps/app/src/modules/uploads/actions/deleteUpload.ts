@@ -48,11 +48,16 @@ export const deleteUpload = createAuthenticatedAction(
         ...USAGE_SELECT,
       },
     });
-    if (!upload)
+    if (!upload) {
+      /**
+       * A different user deleted the upload before, and the page must show it
+       */
+      refresh();
       return {
         error: t("Common.notFound"),
         requestPayload: formData,
       };
+    }
 
     const usages = getUploadUsages(upload);
     const locations = usages

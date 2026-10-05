@@ -41,22 +41,24 @@ export const banUserAction = createAuthenticatedAction(
       },
     });
 
-    if (!user)
+    if (!user || user.bannedAt) {
+      /**
+       * A different user deleted or banned the user before, and the page
+       * must show it
+       */
+      refresh();
       return {
-        error: t("Common.notFound"),
+        error: user
+          ? "Dieser Benutzer ist bereits gesperrt."
+          : t("Common.notFound"),
         requestPayload: formData,
       };
+    }
 
     // Admins bypass the permission checks and could unban themselves anyway
     if (user.role === UserRole.ADMIN)
       return {
         error: "Administratoren können nicht gesperrt werden.",
-        requestPayload: formData,
-      };
-
-    if (user.bannedAt)
-      return {
-        error: "Dieser Benutzer ist bereits gesperrt.",
         requestPayload: formData,
       };
 

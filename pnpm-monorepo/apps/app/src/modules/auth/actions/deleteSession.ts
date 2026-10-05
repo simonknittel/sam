@@ -37,13 +37,18 @@ export const deleteSession = createAuthenticatedAction(
         userId: authentication.session.user.id,
       },
     });
+
+    /**
+     * Also when a different tab deleted the session before: the page then
+     * shows the current list
+     */
+    refresh();
+
     if (count === 0)
       return {
         error: t("Common.notFound"),
         requestPayload: formData,
       };
-
-    refresh();
 
     await createAuditEvents([
       {
