@@ -19,6 +19,9 @@ const client =
       })
     : null;
 
+/** PutEvents accepts at most 10 entries per call */
+const BATCH_SIZE = 10;
+
 export const emitEvents = withTrace(
   "emitEvents",
   async (
@@ -39,20 +42,22 @@ export const emitEvents = withTrace(
       return;
     }
 
-    const input: PutEventsCommandInput = {
-      Entries: entries.map((entry) => ({
-        ...entry,
-        EventBusName: env.AWS_EVENT_BUS_ARN!,
-      })),
-    };
+    for (let index = 0; index < entries.length; index += BATCH_SIZE) {
+      const input: PutEventsCommandInput = {
+        Entries: entries.slice(index, index + BATCH_SIZE).map((entry) => ({
+          ...entry,
+          EventBusName: env.AWS_EVENT_BUS_ARN!,
+        })),
+      };
 
-    const command = new PutEventsCommand(input);
-    const response = await client.send(command);
+      const command = new PutEventsCommand(input);
+      const response = await client.send(command);
 
-    if (response.FailedEntryCount) {
-      throw new CustomError("Failed to send events to EventBridge", {
-        response,
-      });
+      if (response.FailedEntryCount) {
+        throw new CustomError("Failed to send events to EventBridge", {
+          response,
+        });
+      }
     }
   },
 );
