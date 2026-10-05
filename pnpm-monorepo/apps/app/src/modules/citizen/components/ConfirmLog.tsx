@@ -1,122 +1,76 @@
 "use client";
 
+import { runAction } from "@/modules/actions/utils/runAction";
 import { ConfirmationValue } from "@/modules/citizen/utils/citizenLogConfirmation";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { api } from "@/trpc/react";
 import { type CitizenLog } from "@sam-monorepo/database/browser";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import toast from "react-hot-toast";
+import { useState, useTransition, type ReactNode } from "react";
 import { FaCheck, FaTimes } from "react-icons/fa";
+import { confirmCitizenLog } from "../actions/confirmCitizenLog";
+
+type Decision = ConfirmationValue.Confirmed | ConfirmationValue.FalseReport;
 
 interface Props {
-  readonly log: Pick<CitizenLog, "id" | "citizenId" | "type">;
+  readonly log: Pick<CitizenLog, "id" | "citizenId">;
   readonly compact?: boolean;
 }
 
 const ConfirmLog = ({ log, compact }: Props) => {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState<ConfirmationValue | false>(false);
   const utils = api.useUtils();
+  const [isPending, startTransition] = useTransition();
+  const [pendingDecision, setPendingDecision] = useState<Decision | null>(null);
 
-  const handleConfirm = async (
-    confirmed: ConfirmationValue.Confirmed | ConfirmationValue.FalseReport,
-  ) => {
-    setIsLoading(confirmed);
+  const handleDecision = (decision: Decision) => {
+    setPendingDecision(decision);
 
-    try {
-      const response = await fetch(
-        `/api/spynet/citizen/${log.citizenId}/log/${log.id}/confirm`,
-        {
-          method: "PATCH",
-          body: JSON.stringify({
-            confirmed,
-          }),
-        },
-      );
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.set("id", log.id);
+      formData.set("confirmed", decision);
 
-      if (response.ok) {
-        await utils.citizenLog.getHistory.invalidate({
-          citizenId: log.citizenId,
-          // @ts-expect-error Don't know how to improve this
-          type: log.type,
-        });
-        router.refresh();
-        toast.success("Erfolgreich gespeichert");
-      } else {
-        toast.error("Beim Speichern ist ein Fehler aufgetreten.");
-      }
-    } catch (error) {
-      toast.error("Beim Speichern ist ein Fehler aufgetreten.");
-      console.error(error);
-    }
-
-    setIsLoading(false);
+      await runAction(confirmCitizenLog, formData);
+      /**
+       * The history modal shows a client query, which the refresh of the
+       * action skips. Also after an error: then a different user possibly
+       * deleted the log.
+       */
+      await utils.citizenLog.getHistory.invalidate({
+        citizenId: log.citizenId,
+      });
+    });
   };
 
-  if (compact) {
-    return (
-      <>
-        <Button
-          variant="tertiary"
-          className="h-auto"
-          onClick={() => void handleConfirm(ConfirmationValue.Confirmed)}
-          disabled={isLoading === ConfirmationValue.Confirmed}
-          title="Bestätigen"
-        >
-          {isLoading === ConfirmationValue.Confirmed ? (
-            <AsciiSpinner />
-          ) : (
-            <FaCheck />
-          )}
-        </Button>
-        /
-        <Button
-          variant="tertiary"
-          className="h-auto"
-          onClick={() => void handleConfirm(ConfirmationValue.FalseReport)}
-          disabled={isLoading === ConfirmationValue.FalseReport}
-          title="Falschmeldung"
-        >
-          {isLoading === ConfirmationValue.FalseReport ? (
-            <AsciiSpinner />
-          ) : (
-            <FaTimes />
-          )}
-        </Button>
-      </>
-    );
-  }
+  const getIcon = (decision: Decision, icon: ReactNode) =>
+    isPending && pendingDecision === decision ? <AsciiSpinner /> : icon;
 
   return (
     <>
       <Button
+        type="button"
         variant="tertiary"
         className="h-auto"
-        onClick={() => void handleConfirm(ConfirmationValue.Confirmed)}
-        disabled={isLoading === ConfirmationValue.Confirmed}
+        onClick={() => handleDecision(ConfirmationValue.Confirmed)}
+        disabled={isPending}
+        title={compact ? "Bestätigen" : undefined}
       >
-        {isLoading === ConfirmationValue.Confirmed ? (
-          <AsciiSpinner />
-        ) : (
-          <FaCheck />
-        )}
-        Bestätigen
+        {getIcon(ConfirmationValue.Confirmed, <FaCheck />)}
+        {!compact && "Bestätigen"}
       </Button>
 
+      {compact && "/"}
+
       <Button
+        type="button"
         variant="tertiary"
         className="h-auto"
-        onClick={() => void handleConfirm(ConfirmationValue.FalseReport)}
-        disabled={isLoading === ConfirmationValue.FalseReport}
+        onClick={() => handleDecision(ConfirmationValue.FalseReport)}
+        disabled={isPending}
+        title={compact ? "Falschmeldung" : undefined}
       >
-        {isLoading === ConfirmationValue.FalseReport ? (
-          <AsciiSpinner />
-        ) : (
-          <FaTimes />
-        )}
-        Falschmeldung
+        {getIcon(ConfirmationValue.FalseReport, <FaTimes />)}
+        {!compact && "Falschmeldung"}
       </Button>
     </>
   );

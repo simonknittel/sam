@@ -1,31 +1,24 @@
 "use client";
 
+import { useAction } from "@/modules/actions/utils/useAction";
 import type { CitizenNote } from "@/modules/citizen/queries/citizenLogTableSelect";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
-import { Button2 } from "@/modules/common/components/Button2";
-import Modal from "@/modules/common/components/Modal";
 import { Select } from "@/modules/common/components/form/Select";
+import Modal from "@/modules/common/components/Modal";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import {
   type ClassificationLevel,
   type NoteType,
 } from "@sam-monorepo/database/browser";
-import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
-import { useForm, type SubmitHandler } from "react-hook-form";
-import toast from "react-hot-toast";
 import { FaPen, FaSave } from "react-icons/fa";
+import { updateNote } from "../../actions/updateNote";
 
 interface Props {
   readonly className?: string;
   readonly note: CitizenNote;
   readonly noteTypes: NoteType[];
   readonly classificationLevels: ClassificationLevel[];
-}
-
-interface FormValues {
-  noteTypeId: string;
-  classificationLevelId: string;
 }
 
 export const UpdateNoteModal = ({
@@ -35,46 +28,11 @@ export const UpdateNoteModal = ({
   classificationLevels = [],
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const router = useRouter();
-  const { register, handleSubmit } = useForm<FormValues>({
-    defaultValues: {
-      noteTypeId: note.noteTypeId ?? undefined,
-      classificationLevelId: note.classificationLevelId ?? undefined,
-    },
+  const { formAction, getDefaultValueWithFallback } = useAction(updateNote, {
+    onSuccess: () => setIsOpen(false),
   });
-  const [isLoading, setIsLoading] = useState(false);
   const noteTypeSelectId = useId();
   const classificationLevelSelectId = useId();
-
-  const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    setIsLoading(true);
-
-    try {
-      const response = await fetch(
-        `/api/spynet/citizen/${note.citizenId}/log/${note.id}`,
-        {
-          method: "PATCH",
-          body: JSON.stringify({
-            noteTypeId: data.noteTypeId,
-            classificationLevelId: data.classificationLevelId,
-          }),
-        },
-      );
-
-      if (response.ok) {
-        router.refresh();
-        toast.success("Erfolgreich gespeichert");
-        setIsOpen(false);
-      } else {
-        toast.error("Beim Speichern ist ein Fehler aufgetreten.");
-      }
-    } catch (error) {
-      toast.error("Beim Speichern ist ein Fehler aufgetreten.");
-      console.error(error);
-    }
-
-    setIsLoading(false);
-  };
 
   return (
     <>
@@ -93,7 +51,9 @@ export const UpdateNoteModal = ({
         className="w-120"
         heading={<h2>Bearbeiten</h2>}
       >
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form action={formAction}>
+          <input type="hidden" name="id" value={note.id} />
+
           <label className="block" htmlFor={noteTypeSelectId}>
             Notizart
           </label>
@@ -101,11 +61,15 @@ export const UpdateNoteModal = ({
           <Select
             className="mt-2"
             id={noteTypeSelectId}
-            {...register("noteTypeId")}
+            name="noteTypeId"
+            defaultValue={getDefaultValueWithFallback(
+              "noteTypeId",
+              note.noteTypeId ?? undefined,
+            )}
           >
-            {noteTypes.map((noteTye) => (
-              <option key={noteTye.id} value={noteTye.id}>
-                {noteTye.name}
+            {noteTypes.map((noteType) => (
+              <option key={noteType.id} value={noteType.id}>
+                {noteType.name}
               </option>
             ))}
           </Select>
@@ -117,7 +81,11 @@ export const UpdateNoteModal = ({
           <Select
             className="mt-2"
             id={classificationLevelSelectId}
-            {...register("classificationLevelId")}
+            name="classificationLevelId"
+            defaultValue={getDefaultValueWithFallback(
+              "classificationLevelId",
+              note.classificationLevelId ?? undefined,
+            )}
           >
             {classificationLevels.map((classificationLevel) => (
               <option
@@ -130,10 +98,7 @@ export const UpdateNoteModal = ({
           </Select>
 
           <div className="mt-8 flex justify-end">
-            <Button2 type="submit" disabled={isLoading}>
-              {isLoading ? <AsciiSpinner /> : <FaSave />}
-              Speichern
-            </Button2>
+            <SubmitButton icon={<FaSave />}>Speichern</SubmitButton>
           </div>
         </form>
       </Modal>

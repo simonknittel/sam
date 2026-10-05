@@ -5,43 +5,31 @@ import Button from "@/modules/common/components/Button";
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
 import { api } from "@/trpc/react";
 import { type CitizenLog } from "@sam-monorepo/database/browser";
-import { useRouter } from "next/navigation";
 import { FaTrash } from "react-icons/fa";
+import { deleteCitizenLog } from "../actions/deleteCitizenLog";
 
 interface Props {
-  readonly log: Pick<CitizenLog, "id" | "citizenId" | "type">;
+  readonly log: Pick<CitizenLog, "id" | "citizenId">;
 }
 
 export const DeleteLog = ({ log }: Props) => {
-  const router = useRouter();
   const utils = api.useUtils();
 
-  const deleteLog = async (formData: FormData) => {
-    const response = await fetch(
-      `/api/spynet/citizen/${log.citizenId}/log/${log.id}`,
-      {
-        method: "DELETE",
-      },
-    );
-
-    if (!response.ok)
-      return {
-        error: "Beim Löschen ist ein Fehler aufgetreten.",
-        requestPayload: formData,
-      };
-
-    await utils.citizenLog.getHistory.invalidate({
-      citizenId: log.citizenId,
-      // @ts-expect-error Don't know how to improve this
-      type: log.type,
-    });
-
-    return { success: "Erfolgreich gelöscht" };
+  /**
+   * The history modal shows a client query, which the refresh of the action
+   * skips. Also after an error: then a different user possibly deleted the
+   * log.
+   */
+  const deleteLogAndReloadHistory = async (formData: FormData) => {
+    const response = await deleteCitizenLog(formData);
+    await utils.citizenLog.getHistory.invalidate({ citizenId: log.citizenId });
+    return response;
   };
 
   return (
     <ConfirmActionButton
-      action={deleteLog}
+      action={deleteLogAndReloadHistory}
+      hiddenFields={[{ name: "id", value: log.id }]}
       trigger={(isPending) => (
         <Button
           title="Eintrag löschen"
@@ -56,7 +44,6 @@ export const DeleteLog = ({ log }: Props) => {
       title="Eintrag löschen?"
       description="Willst du diesen Eintrag löschen?"
       confirmLabel="Löschen"
-      onSuccess={() => router.refresh()}
     />
   );
 };
