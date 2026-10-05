@@ -10,7 +10,7 @@ export enum CitizenTableSort {
   LastSeenAtDescending = "last-seen-at-desc",
 }
 
-const citizenTableParsers = {
+export const citizenTableParsers = {
   ...filterCheckboxListParsers,
   sort: parseAsStringEnum(Object.values(CitizenTableSort)).withDefault(
     CitizenTableSort.CreatedAtDescending,

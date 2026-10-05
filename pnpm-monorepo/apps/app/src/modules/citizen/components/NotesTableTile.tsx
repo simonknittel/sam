@@ -5,17 +5,14 @@ import {
   getConfirmationFilterWhere,
   getReadableCitizenLogWhere,
 } from "@/modules/citizen/queries/getCitizenLogTablePage";
-import {
-  loadCitizenLogTableSearchParams,
-  serializeCitizenLogTableSearchParams,
-} from "@/modules/citizen/utils/citizenLogTableSearchParams";
-import Pagination from "@/modules/common/components/Pagination";
+import { loadCitizenLogTableSearchParams } from "@/modules/citizen/utils/citizenLogTableSearchParams";
 import { getFilterValues } from "@/modules/common/utils/filterCheckboxListParsers";
 import { getAllClassificationLevels } from "@/modules/spynet/queries/getAllClassificationLevels";
 import { getAllNoteTypes } from "@/modules/spynet/queries/getAllNoteTypes";
 import type { Prisma } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import type { SearchParams } from "nuqs/server";
+import { CitizenLogTablePagination } from "./CitizenLogTableLinks";
 import { NotesTable } from "./NotesTable";
 import { NotesTableFilters } from "./NotesTableFilters";
 
@@ -27,13 +24,8 @@ interface Props {
 export const NotesTableTile = async ({ className, searchParams }: Props) => {
   const authentication = await requireAuthentication();
 
-  const searchParameters = await loadCitizenLogTableSearchParams(searchParams);
-  const { filters, sort, page } = searchParameters;
-  const getHref = (values: Partial<typeof searchParameters>) =>
-    serializeCitizenLogTableSearchParams("/app/spynet/notes", {
-      ...searchParameters,
-      ...values,
-    });
+  const { filters, sort, page } =
+    await loadCitizenLogTableSearchParams(searchParams);
 
   /** Only notes with a note type and a classification level show here */
   const visibleWhere: Prisma.CitizenLogWhereInput = {
@@ -98,14 +90,10 @@ export const NotesTableTile = async ({ className, searchParams }: Props) => {
         />
       </div>
 
-      <NotesTable rows={logs} sort={sort} getHref={getHref} />
+      <NotesTable rows={logs} />
 
       <div className="mt-6 flex justify-center">
-        <Pagination
-          totalPages={totalPages}
-          currentPage={page}
-          getHref={getHref}
-        />
+        <CitizenLogTablePagination totalPages={totalPages} />
       </div>
     </section>
   );

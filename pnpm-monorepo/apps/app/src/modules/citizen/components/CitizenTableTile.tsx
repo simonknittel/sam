@@ -3,9 +3,7 @@ import { getCitizensForTable } from "@/modules/citizen/queries/getCitizens";
 import {
   CitizenTableSort,
   loadCitizenTableSearchParams,
-  serializeCitizenTableSearchParams,
 } from "@/modules/citizen/utils/citizenTableSearchParams";
-import Pagination from "@/modules/common/components/Pagination";
 import { getFilterValues } from "@/modules/common/utils/filterCheckboxListParsers";
 import { limitRows, PER_PAGE } from "@/modules/common/utils/pagination";
 import {
@@ -17,6 +15,7 @@ import clsx from "clsx";
 import type { SearchParams } from "nuqs/server";
 import { CitizenTable } from "./CitizenTable";
 import { CitizenTableFilters } from "./CitizenTableFilters";
+import { CitizenTablePagination } from "./CitizenTableLinks";
 
 interface Props {
   readonly className?: string;
@@ -26,13 +25,8 @@ interface Props {
 export const CitizenTableTile = async ({ className, searchParams }: Props) => {
   const authentication = await requireAuthentication();
 
-  const searchParameters = await loadCitizenTableSearchParams(searchParams);
-  const { filters, sort, page } = searchParameters;
-  const getHref = (values: Partial<typeof searchParameters>) =>
-    serializeCitizenTableSearchParams("/app/spynet/citizen", {
-      ...searchParameters,
-      ...values,
-    });
+  const { filters, sort, page } =
+    await loadCitizenTableSearchParams(searchParams);
 
   const unknownAttributes = getFilterValues(filters, "unknown");
   const roleIds = getFilterValues(filters, "role");
@@ -127,15 +121,11 @@ export const CitizenTableTile = async ({ className, searchParams }: Props) => {
         showTeamspeakIdColumn={showTeamspeakIdAtColumn}
         showLastSeenAtColumn={showLastSeenAtColumn}
         showDeleteEntityButton={showDeleteEntityButton}
-        sort={sort}
-        getHref={getHref}
       />
 
       <div className="mt-6 flex justify-center">
-        <Pagination
+        <CitizenTablePagination
           totalPages={Math.ceil(sortedRows.length / PER_PAGE)}
-          currentPage={page}
-          getHref={getHref}
         />
       </div>
     </section>
