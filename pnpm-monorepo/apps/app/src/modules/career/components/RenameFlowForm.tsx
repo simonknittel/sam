@@ -1,6 +1,5 @@
 "use client";
 
-import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import Note from "@/modules/common/components/Note";
@@ -21,9 +20,12 @@ export const RenameFlowForm = ({ flowId, name, slug }: Props) => {
   const [currentName, setCurrentName] = useState(name);
   const [currentSlug, setCurrentSlug] = useState(slug);
 
-  const { state, formAction } = useAction(renameFlow, {
-    errorToast: false,
-  });
+  /**
+   * The errors show as toasts, not in the form: when a different user
+   * deleted the flow, the error refreshes the page, which then shows the
+   * note about the delete instead of this form.
+   */
+  const { formAction } = useAction(renameFlow);
 
   /**
    * The slug is the flow's URL, so changing it breaks every link pointing at
@@ -62,8 +64,6 @@ export const RenameFlowForm = ({ flowId, name, slug }: Props) => {
           className="mt-4"
         />
       )}
-
-      <ActionErrorNote className="mt-4" state={state} />
 
       <div className="mt-4 flex justify-end">
         <SubmitButton icon={<FaSave />}>Speichern</SubmitButton>

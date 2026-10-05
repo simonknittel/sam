@@ -53,7 +53,15 @@ export const updateFlow = createAuthenticatedAction(
      */
     const context = await getFlowContext();
     const flow = context?.flowsById.get(data.flowId);
-    if (!flow || !context?.permissions.get(flow.id)?.canUpdate)
+    if (!flow || flow.deletedAt) {
+      /** A different user deleted the flow before, and the page must show it */
+      refresh();
+      return {
+        error: t("Common.notFound"),
+        requestPayload: formData,
+      };
+    }
+    if (!context?.permissions.get(flow.id)?.canUpdate)
       return {
         error: t("Common.forbidden"),
         requestPayload: formData,

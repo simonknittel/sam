@@ -28,8 +28,11 @@ export const updateFlowRoleAccess = createAuthenticatedAction(
       where: { id: data.flowId },
       select: { id: true, deletedAt: true },
     });
-    if (!flow || flow.deletedAt)
+    if (!flow || flow.deletedAt) {
+      /** A different user deleted the flow before, and the page must show it */
+      refresh();
       return { error: t("Common.notFound"), requestPayload: formData };
+    }
 
     /**
      * UPDATE implies READ, so a role listed in both tiers gets exactly one

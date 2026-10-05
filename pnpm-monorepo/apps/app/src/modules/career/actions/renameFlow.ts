@@ -31,8 +31,11 @@ export const renameFlow = createAuthenticatedAction(
       where: { id: data.flowId },
       select: { id: true, name: true, slug: true, deletedAt: true },
     });
-    if (!flow || flow.deletedAt)
+    if (!flow || flow.deletedAt) {
+      /** A different user deleted the flow before, and the page must show it */
+      refresh();
       return { error: t("Common.notFound"), requestPayload: formData };
+    }
 
     const slugError = validateFlowSlug(data.slug);
     if (slugError) return { error: slugError, requestPayload: formData };

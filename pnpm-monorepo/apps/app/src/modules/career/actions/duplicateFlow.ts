@@ -37,11 +37,16 @@ export const duplicateFlow = createAuthenticatedAction(
     const sourceMetadata = context?.flows.find(
       (flow) => flow.id === data.sourceFlowId,
     );
-    if (!sourceMetadata)
+    if (!sourceMetadata) {
+      /**
+       * A different user deleted the source before, and the page must show it
+       */
+      refresh();
       return {
         error: "Der zu duplizierende Karrierebaum wurde nicht gefunden.",
         requestPayload: formData,
       };
+    }
 
     const slugError = validateFlowSlug(data.slug);
     if (slugError) return { error: slugError, requestPayload: formData };
