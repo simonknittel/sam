@@ -49,7 +49,11 @@ test("a role created and assigned through the UI grants its permission", async (
   await modal(page, "Neue Rolle")
     .getByRole("button", { name: "Speichern" })
     .click();
-  await expect(page.getByText("Erfolgreich hinzugefügt")).toBeVisible();
+  await expect(page.getByText(SAVED_TEXT)).toHaveCount(1);
+  await expect(modal(page, "Neue Rolle")).not.toBeVisible();
+  await expectAuditEvents(prisma, ["ROLE_CREATED"]);
+  /** The next save shows the same text, thus this toast must go first */
+  await expect(page.getByText(SAVED_TEXT)).toHaveCount(0);
 
   // ... and grants it the task-read permission
   await clickUntilUrl(
@@ -105,6 +109,39 @@ test("a role created and assigned through the UI grants its permission", async (
   await page.goto("/app/tasks");
   await expect(page.getByText("Keine Tasks gefunden")).toBeVisible();
   await expect(page.getByText(FORBIDDEN_TEXT)).not.toBeVisible();
+});
+
+test("a role name that exists already shows the error in the create dialog", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "iam-admin",
+    permissionStrings: ["role;manage"],
+  });
+  await createRole(prisma, { name: "Aufgabenleser" });
+
+  await signIn(admin.user);
+  await page.goto("/app/iam/roles");
+  const createDialog = modal(page, "Neue Rolle");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Neue Rolle" }),
+    createDialog,
+  );
+  const nameInput = createDialog.getByLabel("Name");
+  await nameInput.fill("Aufgabenleser");
+  await createDialog.getByRole("button", { name: "Speichern" }).click();
+
+  /** The dialog stays open, thus it shows the error itself */
+  await expect(
+    createDialog.getByText("Eine Rolle mit diesem Namen existiert bereits."),
+  ).toBeVisible();
+  await expect(nameInput).toHaveValue("Aufgabenleser");
+  expect(await prisma.role.count({ where: { name: "Aufgabenleser" } })).toBe(1);
+  expect(
+    await prisma.auditEvent.count({ where: { type: "ROLE_CREATED" } }),
+  ).toBe(0);
 });
 
 test("a role ticked right before the role dialog closes is still saved", async ({

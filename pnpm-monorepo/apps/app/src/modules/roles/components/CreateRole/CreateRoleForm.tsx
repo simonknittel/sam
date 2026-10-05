@@ -1,17 +1,13 @@
+import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
+import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import clsx from "clsx";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { useForm, type SubmitHandler } from "react-hook-form";
-import toast from "react-hot-toast";
+import { startTransition, useState, type FormEventHandler } from "react";
 import { FaSave } from "react-icons/fa";
+import { createRole } from "../../actions/createRole";
 import { Suggestions } from "../Suggestions";
-
-interface FormValues {
-  name: string;
-}
 
 interface Props {
   readonly className?: string;
@@ -19,54 +15,44 @@ interface Props {
 }
 
 export const CreateRoleForm = ({ className, onSuccess }: Props) => {
-  const router = useRouter();
-  const { register, handleSubmit, reset, setValue } = useForm<FormValues>();
-  const [isLoading, setIsLoading] = useState(false);
+  /** Controlled, because a click on a suggestion sets the name */
+  const [name, setName] = useState("");
+  const { state, formAction, isPending } = useAction(createRole, {
+    errorToast: false,
+    onSuccess,
+  });
 
-  const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    setIsLoading(true);
-
-    try {
-      const response = await fetch(`/api/role`, {
-        method: "POST",
-        body: JSON.stringify({
-          name: data.name,
-        }),
-      });
-
-      if (response.ok) {
-        router.refresh();
-        toast.success("Erfolgreich hinzugefügt");
-        reset();
-        onSuccess?.();
-      } else {
-        toast.error("Beim Hinzufügen ist ein Fehler aufgetreten.");
-      }
-    } catch (error) {
-      toast.error("Beim Hinzufügen ist ein Fehler aufgetreten.");
-      console.error(error);
-    }
-
-    setIsLoading(false);
+  /**
+   * Submitted by hand rather than through `<form action>`: React resets a
+   * form once its action resolves, and the name field then shows an empty
+   * value while the state of this component keeps the name (see
+   * `ProfileForm`).
+   */
+  const handleSubmit: FormEventHandler<HTMLFormElement> = (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    startTransition(() => formAction(formData));
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className={clsx(className)}>
+    <form onSubmit={handleSubmit} className={clsx(className)}>
       <TextInput
+        name="name"
         label="Name"
         className="mt-2"
-        {...register("name", { required: true })}
+        value={name}
+        onChange={(event) => setName(event.target.value)}
+        required
         autoFocus
       />
 
-      <Suggestions
-        className="mt-4"
-        onClick={(roleName) => setValue("name", roleName)}
-      />
+      <Suggestions className="mt-4" onClick={setName} />
+
+      <ActionErrorNote className="mt-4" state={state} />
 
       <div className="mt-8 flex justify-end">
-        <Button2 type="submit" disabled={isLoading}>
-          {isLoading ? <AsciiSpinner /> : <FaSave />}
+        <Button2 type="submit" disabled={isPending}>
+          {isPending ? <AsciiSpinner /> : <FaSave />}
           Speichern
         </Button2>
       </div>
