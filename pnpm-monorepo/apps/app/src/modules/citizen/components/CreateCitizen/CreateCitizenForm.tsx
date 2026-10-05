@@ -1,20 +1,12 @@
 "use client";
 
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import { Button2 } from "@/modules/common/components/Button2";
+import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
+import { useAction } from "@/modules/actions/utils/useAction";
+import { TextInput } from "@/modules/common/components/form/TextInput";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import clsx from "clsx";
-import { useRouter } from "next/navigation";
-import { useId, useState } from "react";
-import { useForm, type SubmitHandler } from "react-hook-form";
-import toast from "react-hot-toast";
 import { FaSave } from "react-icons/fa";
-import * as z from "zod/mini";
-
-const createdCitizenResponseSchema = z.object({ id: z.string() });
-
-interface FormValues {
-  spectrumId: string;
-}
+import { createCitizen } from "../../actions/createCitizen";
 
 interface Props {
   readonly className?: string;
@@ -22,57 +14,28 @@ interface Props {
 }
 
 export const CreateCitizenForm = ({ className, onSuccess }: Props) => {
-  const router = useRouter();
-  const { register, handleSubmit, reset } = useForm<FormValues>();
-  const [isLoading, setIsLoading] = useState(false);
-  const inputId = useId();
-
-  const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    setIsLoading(true);
-
-    try {
-      const response = await fetch(`/api/spynet/citizen`, {
-        method: "POST",
-        body: JSON.stringify({
-          type: "citizen",
-          spectrumId: data.spectrumId,
-        }),
-      });
-
-      if (response.ok) {
-        const data = createdCitizenResponseSchema.parse(await response.json());
-        router.push(`/app/spynet/citizen/${data.id}`);
-        reset();
-        onSuccess?.();
-      } else {
-        toast.error("Beim Anlegen ist ein Fehler aufgetreten.");
-      }
-    } catch (error) {
-      toast.error("Beim Anlegen ist ein Fehler aufgetreten.");
-      console.error(error);
-    }
-
-    setIsLoading(false);
-  };
+  const { state, formAction, getDefaultValueWithFallback } = useAction(
+    createCitizen,
+    {
+      errorToast: false,
+      onSuccess,
+    },
+  );
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className={clsx(className)}>
-      <label className="block" htmlFor={inputId}>
-        Spectrum ID
-      </label>
-
-      <input
-        className="mt-2 w-full rounded-secondary bg-neutral-900 p-2"
-        id={inputId}
-        {...register("spectrumId", { required: true })}
+    <form action={formAction} className={clsx(className)}>
+      <TextInput
+        name="spectrumId"
+        label="Spectrum ID"
+        defaultValue={getDefaultValueWithFallback("spectrumId", "")}
+        required
         autoFocus
       />
 
+      <ActionErrorNote className="mt-4" state={state} />
+
       <div className="mt-8 flex justify-end">
-        <Button2 type="submit" disabled={isLoading}>
-          {isLoading ? <AsciiSpinner /> : <FaSave />}
-          Anlegen
-        </Button2>
+        <SubmitButton icon={<FaSave />}>Anlegen</SubmitButton>
       </div>
     </form>
   );
