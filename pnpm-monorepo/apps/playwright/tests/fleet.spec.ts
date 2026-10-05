@@ -374,7 +374,7 @@ test("manufacturers and series can be created and renamed in the settings", asyn
   );
   await manufacturerModal.getByLabel("Name").fill("Aegis Dynamics");
   await manufacturerModal.getByRole("button", { name: "Speichern" }).click();
-  /** Exactly one toast: the old fetch flow sometimes showed it two times */
+  /** Strictly one toast: a save must not show its toast two times */
   await expect(page.getByText(SAVED_TEXT)).toHaveCount(1);
   await expect(manufacturerModal).not.toBeVisible();
   await expect(
@@ -406,15 +406,12 @@ test("manufacturers and series can be created and renamed in the settings", asyn
     page.getByRole("button", { name: "Anlegen" }),
     seriesModal,
   );
-  await expect(seriesModal.getByLabel("Hersteller")).toHaveValue(
-    manufacturer!.id,
+  /** The modal shows the manufacturer with the name of the rename above */
+  await expect(seriesModal.getByRole("definition")).toHaveText(
+    "Aegis Dynamics GmbH",
   );
-  await seriesModal.getByLabel("Name", { exact: true }).fill("Avenger");
-  const saveSeriesButton = seriesModal.getByRole("button", {
-    name: "Speichern",
-  });
-  await expect(saveSeriesButton).toBeEnabled();
-  await saveSeriesButton.click();
+  await seriesModal.getByLabel("Name").fill("Avenger");
+  await seriesModal.getByRole("button", { name: "Speichern" }).click();
   await expect(page.getByText(SAVED_TEXT)).toHaveCount(1);
   await expect(seriesModal).not.toBeVisible();
   await expect(page.getByRole("link", { name: "Avenger" })).toBeVisible();
@@ -486,17 +483,13 @@ test("a series of a manufacturer that a different user deleted shows the error a
     page.getByRole("button", { name: "Anlegen" }),
     seriesModal,
   );
-  await seriesModal.getByLabel("Name", { exact: true }).fill("Avenger");
-  const saveSeriesButton = seriesModal.getByRole("button", {
-    name: "Speichern",
-  });
-  await expect(saveSeriesButton).toBeEnabled();
+  await seriesModal.getByLabel("Name").fill("Avenger");
 
   /** A different user deletes the manufacturer after the modal opened */
   await prisma.manufacturer.delete({ where: { id: manufacturer.id } });
 
   /** The refresh removes the modal, thus the error shows as a toast */
-  await saveSeriesButton.click();
+  await seriesModal.getByRole("button", { name: "Speichern" }).click();
   await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
   await expect(seriesModal).toHaveCount(0);

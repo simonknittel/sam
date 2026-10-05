@@ -74,10 +74,7 @@ export default async function Page(
       </section>
 
       <SuspenseWithErrorBoundaryTile className="w-full flex-1">
-        <SeriesTile
-          manufacturerId={manufacturer.id}
-          className="w-full flex-1"
-        />
+        <SeriesTile manufacturer={manufacturer} className="w-full flex-1" />
       </SuspenseWithErrorBoundaryTile>
     </div>
   );
