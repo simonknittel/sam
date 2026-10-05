@@ -1,27 +1,21 @@
 "use client";
 
+import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
+import { Select } from "@/modules/common/components/form/Select";
+import { TextInput } from "@/modules/common/components/form/TextInput";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import {
   ConfirmationStatus,
   OrganizationMembershipType,
   OrganizationMembershipVisibility,
 } from "@sam-monorepo/database/browser";
-import { useRouter } from "next/navigation";
-import { useId, useState } from "react";
-import { useForm, type SubmitHandler } from "react-hook-form";
-import toast from "react-hot-toast";
+import { startTransition, useId, useState, type FormEventHandler } from "react";
 import { FaPlus, FaSave } from "react-icons/fa";
-
-interface FormValues {
-  counterpartId: string;
-  type: OrganizationMembershipType;
-  visibility: OrganizationMembershipVisibility;
-  confirmed?: "CONFIRMED";
-}
+import { createOrganizationMembership } from "../actions/createOrganizationMembership";
 
 type Props = {
   readonly className?: string;
@@ -41,14 +35,9 @@ export const CreateMembership = ({
   citizenId,
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const router = useRouter();
-  const { register, handleSubmit, reset } = useForm<FormValues>({
-    defaultValues: {
-      type: OrganizationMembershipType.MAIN,
-    },
+  const { formAction, isPending } = useAction(createOrganizationMembership, {
+    onSuccess: () => setIsOpen(false),
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const counterpartInputId = useId();
   const typeInputId = useId();
   const visibilityInputId = useId();
 
@@ -56,45 +45,19 @@ export const CreateMembership = ({
     ? "Citizen hinzufügen"
     : "Organisation hinzufügen";
 
-  const onSubmit: SubmitHandler<FormValues> = async (data, event) => {
-    setIsLoading(true);
-    if (
-      !(event?.nativeEvent instanceof SubmitEvent) ||
-      !(event.nativeEvent.submitter instanceof HTMLButtonElement)
-    )
-      return;
-
-    try {
-      const response = await fetch(
-        `/api/spynet/organization/${organizationId ?? data.counterpartId}/membership`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            citizenId: citizenId ?? data.counterpartId,
-            type: data.type,
-            redacted: data.visibility || false,
-            confirmed:
-              event.nativeEvent.submitter.name === "confirmed"
-                ? ConfirmationStatus.CONFIRMED
-                : undefined,
-          }),
-        },
-      );
-
-      if (response.ok) {
-        router.refresh();
-        reset();
-        setIsOpen(false);
-        toast.success("Erfolgreich gespeichert");
-      } else {
-        toast.error("Beim Speichern ist ein Fehler aufgetreten.");
-      }
-    } catch (error) {
-      toast.error("Beim Speichern ist ein Fehler aufgetreten.");
-      console.error(error);
-    }
-
-    setIsLoading(false);
+  /**
+   * Submitted by hand rather than through `<form action>`: React resets a
+   * form after its action, and the select then shows its first option again,
+   * also after an error. The form data includes the value of the clicked
+   * submit button.
+   */
+  const handleSubmit: FormEventHandler<HTMLFormElement> = (event) => {
+    event.preventDefault();
+    const formData = new FormData(
+      event.currentTarget,
+      (event.nativeEvent as SubmitEvent).submitter,
+    );
+    startTransition(() => formAction(formData));
   };
 
   return (
@@ -114,17 +77,21 @@ export const CreateMembership = ({
         className="w-120"
         heading={<h2>{counterpartLabel}</h2>}
       >
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <label className="block" htmlFor={counterpartInputId}>
-            {organizationId
-              ? "Citizen (Internal ID)"
-              : "Organisation (Internal ID)"}
-          </label>
+        <form onSubmit={handleSubmit}>
+          {organizationId ? (
+            <input type="hidden" name="organizationId" value={organizationId} />
+          ) : (
+            <input type="hidden" name="citizenId" value={citizenId} />
+          )}
 
-          <input
-            className="mt-2 w-full rounded-secondary bg-neutral-900 p-2"
-            id={counterpartInputId}
-            {...register("counterpartId", { required: true })}
+          <TextInput
+            name={organizationId ? "citizenId" : "organizationId"}
+            label={
+              organizationId
+                ? "Citizen (Internal ID)"
+                : "Organisation (Internal ID)"
+            }
+            required
             autoFocus
           />
 
@@ -132,41 +99,43 @@ export const CreateMembership = ({
             Typ
           </label>
 
-          <select
-            className="mt-2 w-full rounded-secondary bg-neutral-900 p-2"
+          <Select
+            className="mt-2"
             id={typeInputId}
-            {...register("type", { required: true })}
+            name="type"
+            defaultValue={OrganizationMembershipType.MAIN}
           >
             <option value={OrganizationMembershipType.MAIN}>Main</option>
             <option value={OrganizationMembershipType.AFFILIATE}>
               Affiliate
             </option>
-          </select>
+          </Select>
 
           <div className="mt-6 flex items-center justify-between">
             <label htmlFor={visibilityInputId}>Redacted</label>
 
             <YesNoCheckbox
-              {...register("visibility")}
               id={visibilityInputId}
+              name="visibility"
               value={OrganizationMembershipVisibility.REDACTED}
             />
           </div>
 
           <div className="mt-8 flex flex-row-reverse items-center gap-4">
-            <Button2 type="submit" disabled={isLoading}>
-              {isLoading ? <AsciiSpinner /> : <FaSave />}
+            <Button2 type="submit" disabled={isPending}>
+              {isPending ? <AsciiSpinner /> : <FaSave />}
               Speichern
             </Button2>
 
             {showConfirmButton && (
               <Button
                 type="submit"
-                disabled={isLoading}
+                disabled={isPending}
                 variant="tertiary"
                 name="confirmed"
+                value={ConfirmationStatus.CONFIRMED}
               >
-                {isLoading ? <AsciiSpinner /> : <FaSave />}
+                {isPending ? <AsciiSpinner /> : <FaSave />}
                 Speichern und bestätigen
               </Button>
             )}
