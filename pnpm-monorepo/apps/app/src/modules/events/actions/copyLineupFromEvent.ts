@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { refresh } from "next/cache";
@@ -15,7 +16,6 @@ import { canSeeEvent } from "../utils/eventVisibility";
 import { isAllowedToManagePositions } from "../utils/isAllowedToManagePositions";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
 import { buildPositionTree } from "../utils/positionTree";
-import { rejectConflict } from "../utils/rejectConflict";
 
 const schema = z.object({
   targetEventId: z.cuid(),

@@ -1,5 +1,6 @@
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { type AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import type {
@@ -89,22 +90,14 @@ export const createRoleAssignmentLevelAction = (
       });
       if (!roleAssignment) {
         /** A different user removed the role, and the page must show it */
-        refresh();
-        return {
-          error: t("Common.notFound"),
-          requestPayload: formData,
-        };
+        return rejectConflict(t("Common.notFound"), formData);
       }
       if (!roleAssignment.role.maxLevel) {
         /**
          * A different user removed the levels of the role, and the page must
          * show it.
          */
-        refresh();
-        return {
-          error: t("Common.badRequest"),
-          requestPayload: formData,
-        };
+        return rejectConflict(t("Common.badRequest"), formData);
       }
 
       await prisma.$transaction([

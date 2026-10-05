@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { wallTimeSchema } from "@/modules/common/utils/wallTimeSchema";
@@ -42,11 +43,7 @@ export const createPenaltyEntry = createAuthenticatedAction(
       };
     if (citizen.deletedAt) {
       /** A different user deleted the citizen, and the page must show it */
-      refresh();
-      return {
-        error: "Der Citizen ist gelöscht.",
-        requestPayload: formData,
-      };
+      return rejectConflict("Der Citizen ist gelöscht.", formData);
     }
 
     /**

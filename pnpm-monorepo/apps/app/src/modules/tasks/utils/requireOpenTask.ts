@@ -1,5 +1,5 @@
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import type { Task } from "@sam-monorepo/database/client";
-import { refresh } from "next/cache";
 import { getTaskById } from "../queries/getTaskById";
 import { isTaskUpdatable } from "./isTaskUpdatable";
 
@@ -30,12 +30,10 @@ export const requireOpenTask = async (
   const task = await getTaskById(taskId);
   if (task && isTaskUpdatable(task)) return { task };
 
-  refresh();
-
   return {
-    failure: {
-      error: task ? CLOSED_TASK_ERROR : TASK_NOT_FOUND_ERROR,
-      requestPayload: formData,
-    },
+    failure: rejectConflict(
+      task ? CLOSED_TASK_ERROR : TASK_NOT_FOUND_ERROR,
+      formData,
+    ),
   };
 };

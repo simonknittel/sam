@@ -1,11 +1,11 @@
 import { prisma } from "@/db";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import type { EventPosition, Prisma } from "@sam-monorepo/database/client";
 import type { getTranslations } from "next-intl/server";
 import { authorizeEventContainer } from "./authorizeEventContainer";
 import { getPositionContainer, type EventContainer } from "./eventContainer";
 import { isAllowedToManagePositions } from "./isAllowedToManagePositions";
 import { isEventUpdatable } from "./isEventUpdatable";
-import { rejectConflict } from "./rejectConflict";
 
 const POSITION_SELECT = {
   id: true,

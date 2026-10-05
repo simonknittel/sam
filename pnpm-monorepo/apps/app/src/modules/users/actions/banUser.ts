@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { UserRole } from "@sam-monorepo/database/client";
@@ -46,11 +47,7 @@ export const banUserAction = createAuthenticatedAction(
 
     if (!user) {
       /** A different user deleted the user before, and the page must show it */
-      refresh();
-      return {
-        error: t("Common.notFound"),
-        requestPayload: formData,
-      };
+      return rejectConflict(t("Common.notFound"), formData);
     }
 
     // Admins bypass the permission checks and could unban themselves anyway

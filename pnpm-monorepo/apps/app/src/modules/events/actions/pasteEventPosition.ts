@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { refresh } from "next/cache";
 import * as z from "zod";
@@ -23,7 +24,6 @@ import {
   getSubtreeDepth,
   MAX_POSITIONS_PER_LEVEL,
 } from "../utils/positionTree";
-import { rejectConflict } from "../utils/rejectConflict";
 
 const schema = z.object({
   sourcePositionId: z.cuid(),

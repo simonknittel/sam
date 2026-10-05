@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { ReadMarkerSubject } from "@sam-monorepo/domain";
@@ -42,9 +43,7 @@ export const markAsRead = createAuthenticatedAction(
      * read access away after the page showed it, and the page must show it.
      */
     if (!(await definition.canRead(data.subjectId))) {
-      refresh();
-
-      return { error: t("Common.notFound"), requestPayload: formData };
+      return rejectConflict(t("Common.notFound"), formData);
     }
 
     const wasNew = (await getNewIds(data.subject, [data.subjectId])).size > 0;

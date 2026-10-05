@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import {
@@ -12,7 +13,6 @@ import { refresh } from "next/cache";
 import * as z from "zod";
 import { EVENT_FREEZE_WINDOW_SELECT } from "../queries/eventRelationSelects";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
-import { rejectConflict } from "../utils/rejectConflict";
 
 const schema = z.object({
   positionId: z.cuid(),

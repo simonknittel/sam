@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import {
@@ -45,12 +46,10 @@ export const createTaskAssignmentForCurrentUser = createAuthenticatedAction(
       task.assignments.length >= task.assignmentLimit
     ) {
       /** The page then shows the citizens who took the last places */
-      refresh();
-
-      return {
-        error: "Dieser Task kann nicht von Weiteren angenommen werden.",
-        requestPayload: formData,
-      };
+      return rejectConflict(
+        "Dieser Task kann nicht von Weiteren angenommen werden.",
+        formData,
+      );
     }
 
     if (!task.hasCurrentUserRequiredRole)
@@ -82,11 +81,10 @@ export const createTaskAssignmentForCurrentUser = createAuthenticatedAction(
         /**
          * A different tab took the task on before, and the page must show it
          */
-        refresh();
-        return {
-          error: "Du hast diesen Task bereits angenommen.",
-          requestPayload: formData,
-        };
+        return rejectConflict(
+          "Du hast diesen Task bereits angenommen.",
+          formData,
+        );
       }
       throw error;
     }

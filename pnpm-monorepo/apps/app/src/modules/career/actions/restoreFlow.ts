@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import {
@@ -33,8 +34,7 @@ export const restoreFlow = createAuthenticatedAction(
       /**
        * A different user restored the flow before, and the page must show it
        */
-      refresh();
-      return { error: t("Common.notFound"), requestPayload: formData };
+      return rejectConflict(t("Common.notFound"), formData);
     }
 
     const slugError = validateFlowSlug(data.slug);

@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import {
@@ -241,11 +242,7 @@ export const completeTask = createAuthenticatedAction(
       };
     if (!(await areActiveReceivers(completionistIds))) {
       /** A different user deleted a completionist, and the page must show it */
-      refresh();
-      return {
-        error: INACTIVE_RECEIVER_ERROR,
-        requestPayload: formData,
-      };
+      return rejectConflict(INACTIVE_RECEIVER_ERROR, formData);
     }
 
     /**

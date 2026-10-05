@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { probeUploadImageDimensions } from "@/modules/common/utils/probeUploadImageDimensions";
@@ -54,7 +55,6 @@ import {
   toTemplateContainer,
 } from "../utils/eventContainer";
 import { buildPositionTree } from "../utils/positionTree";
-import { rejectConflict } from "../utils/rejectConflict";
 
 /** The briefing copy dominates the runtime — same bound the wiki copy uses */
 const TRANSACTION_TIMEOUT_MS = 30_000;

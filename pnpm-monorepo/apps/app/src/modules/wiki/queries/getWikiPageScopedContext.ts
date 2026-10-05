@@ -1,9 +1,9 @@
 import { prisma } from "@/db";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import {
   getBriefingPath,
   getWikiPageContainer,
 } from "@/modules/events/utils/eventContainer";
-import { rejectConflict } from "@/modules/events/utils/rejectConflict";
 import { WikiPageNamespace } from "@sam-monorepo/database/client";
 import { WikiScope } from "../utils/wikiPageHref";
 import {

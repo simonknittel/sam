@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import {
@@ -109,9 +110,7 @@ export const pasteWikiPages = createAuthenticatedAction(
        * A different user deleted the copied page or took the read access
        * away before, and the page must show it
        */
-      refresh();
-
-      return { error: SOURCE_GONE_ERROR, requestPayload: formData };
+      return rejectConflict(SOURCE_GONE_ERROR, formData);
     }
 
     /**
@@ -133,9 +132,7 @@ export const pasteWikiPages = createAuthenticatedAction(
        * must show it. A context that the viewer cannot hold gets the same
        * answer (see getWikiPageScopedContext).
        */
-      refresh();
-
-      return { error: t("Common.notFound"), requestPayload: formData };
+      return rejectConflict(t("Common.notFound"), formData);
     }
 
     if (data.parentId) {

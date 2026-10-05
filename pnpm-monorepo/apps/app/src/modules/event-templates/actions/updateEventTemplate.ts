@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { probeUploadImageDimensions } from "@/modules/common/utils/probeUploadImageDimensions";
@@ -11,7 +12,6 @@ import {
   discordPublishFieldsSchema,
   parseDiscordPublishFields,
 } from "@/modules/events/utils/discordPublishFields";
-import { rejectConflict } from "@/modules/events/utils/rejectConflict";
 import {
   EventDiscordPublishTarget,
   EventVisibility,

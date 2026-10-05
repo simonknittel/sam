@@ -2,9 +2,9 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { refresh } from "next/cache";
 import * as z from "zod";
 import type { WikiSharedContextPage } from "../queries/getWikiContext";
 import { getWikiPageScopedContext } from "../queries/getWikiPageScopedContext";
@@ -58,9 +58,7 @@ export const trackWikiPageVisit = createAuthenticatedAction(
        * after the browser got the page, for example from its back/forward
        * cache, and the page must show it
        */
-      refresh();
-
-      return { error: t("Common.notFound"), requestPayload: formData };
+      return rejectConflict(t("Common.notFound"), formData);
     }
 
     await prisma.wikiPageVisit.upsert({

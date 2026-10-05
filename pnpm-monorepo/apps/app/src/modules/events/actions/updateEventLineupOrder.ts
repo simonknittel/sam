@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { refresh } from "next/cache";
 import * as z from "zod";
@@ -14,7 +15,6 @@ import {
   type EventContainer,
 } from "../utils/eventContainer";
 import { buildLineupOrderChangedAuditEvent } from "../utils/lineupAuditEvents";
-import { rejectConflict } from "../utils/rejectConflict";
 
 // TODO: Simplify recursion
 const schema = z.object({

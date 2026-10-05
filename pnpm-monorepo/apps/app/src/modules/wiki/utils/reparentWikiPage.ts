@@ -1,6 +1,6 @@
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import type { authenticate } from "@/modules/auth/server";
-import { rejectConflict } from "@/modules/events/utils/rejectConflict";
 import { Prisma } from "@sam-monorepo/database/client";
 import type { getTranslations } from "next-intl/server";
 import * as z from "zod";

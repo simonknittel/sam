@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { refresh } from "next/cache";
@@ -34,8 +35,7 @@ export const deleteTask = createAuthenticatedAction(
     const task = await getTaskById(data.id);
     if (!task) {
       /** A different user deleted the task before, and the page must show it */
-      refresh();
-      return { error: TASK_NOT_FOUND_ERROR, requestPayload: formData };
+      return rejectConflict(TASK_NOT_FOUND_ERROR, formData);
     }
     if (!(await isAllowedToManageTask(task)))
       return {

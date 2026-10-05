@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import {
@@ -45,11 +46,10 @@ export const duplicateFlow = createAuthenticatedAction(
       /**
        * A different user deleted the source before, and the page must show it
        */
-      refresh();
-      return {
-        error: "Der zu duplizierende Karrierebaum wurde nicht gefunden.",
-        requestPayload: formData,
-      };
+      return rejectConflict(
+        "Der zu duplizierende Karrierebaum wurde nicht gefunden.",
+        formData,
+      );
     }
 
     const slugError = validateFlowSlug(data.slug);

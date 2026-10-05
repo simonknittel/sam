@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { log } from "@/modules/logging";
@@ -41,9 +42,7 @@ export const restoreWikiPageSnapshot = createAuthenticatedAction(
        * The retention of the automatic snapshots or a permanent delete of the
        * page removed the snapshot before, and the page must show it
        */
-      refresh();
-
-      return { error: t("Common.badRequest"), requestPayload: formData };
+      return rejectConflict(t("Common.badRequest"), formData);
     }
 
     const scoped = await getWikiPageScopedContext(snapshot.pageId);
@@ -54,9 +53,7 @@ export const restoreWikiPageSnapshot = createAuthenticatedAction(
        * show it. A context that the viewer cannot hold gets the same answer
        * (see getWikiPageScopedContext).
        */
-      refresh();
-
-      return { error: t("Common.badRequest"), requestPayload: formData };
+      return rejectConflict(t("Common.badRequest"), formData);
     }
     const context = scoped.context;
     if (!context.permissions.get(page.id)?.canAdmin)

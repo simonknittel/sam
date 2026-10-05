@@ -2,9 +2,9 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { rejectConflict } from "@/modules/events/utils/rejectConflict";
 import { EventTemplateAccessType } from "@sam-monorepo/database/client";
 import { refresh } from "next/cache";
 import * as z from "zod";

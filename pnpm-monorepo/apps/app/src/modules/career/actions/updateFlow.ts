@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { log } from "@/modules/logging";
@@ -61,11 +62,7 @@ export const updateFlow = createAuthenticatedAction(
        * gets the same answer as an unknown one, thus the answer does not show
        * which flows exist.
        */
-      refresh();
-      return {
-        error: t("Common.notFound"),
-        requestPayload: formData,
-      };
+      return rejectConflict(t("Common.notFound"), formData);
     }
     if (!permissions.canUpdate)
       return {

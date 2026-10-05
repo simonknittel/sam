@@ -3,6 +3,7 @@
 import { prisma } from "@/db";
 import { env } from "@/env";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { createS3Client } from "@/modules/common/utils/createS3Client";
@@ -52,11 +53,7 @@ export const deleteUpload = createAuthenticatedAction(
       /**
        * A different user deleted the upload before, and the page must show it
        */
-      refresh();
-      return {
-        error: t("Common.notFound"),
-        requestPayload: formData,
-      };
+      return rejectConflict(t("Common.notFound"), formData);
     }
 
     const usages = getUploadUsages(upload);

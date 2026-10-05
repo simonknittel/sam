@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import {
   EventDiscordPublishTarget,
   EventSource,
@@ -21,7 +22,6 @@ import {
 } from "../utils/discordPublishing";
 import { isAllowedToManageEvent } from "../utils/isAllowedToManageEvent";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
-import { rejectConflict } from "../utils/rejectConflict";
 
 /** Publishing always has a target, unlike the forms that merely offer one */
 const schema = discordPublishFieldsSchema.extend({

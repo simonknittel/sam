@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { refresh } from "next/cache";
@@ -44,9 +45,7 @@ export const updateWikiPageFavorite = createAuthenticatedAction(
        * A different user deleted the page or took the read access away
        * before, and the page must show it
        */
-      refresh();
-
-      return { error: t("Common.notFound"), requestPayload: formData };
+      return rejectConflict(t("Common.notFound"), formData);
     }
 
     /**

@@ -1,6 +1,7 @@
 "use server";
 
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { log } from "@/modules/logging";
@@ -49,9 +50,7 @@ export const importWikiPageContent = createAuthenticatedAction(
        * show it. A context that the viewer cannot hold gets the same answer
        * (see getWikiPageScopedContext).
        */
-      refresh();
-
-      return { error: t("Common.badRequest"), requestPayload: formData };
+      return rejectConflict(t("Common.badRequest"), formData);
     }
     const context = scoped.context;
     const allowed =

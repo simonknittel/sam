@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
@@ -74,11 +75,7 @@ export const updateVariant = createAuthenticatedAction(
       /**
        * A different user deleted the variant before, and the page must show it
        */
-      refresh();
-      return {
-        error: t("Common.notFound"),
-        requestPayload: formData,
-      };
+      return rejectConflict(t("Common.notFound"), formData);
     }
 
     /**

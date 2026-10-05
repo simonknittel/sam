@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { FlowRoleAccessType } from "@sam-monorepo/database/client";
@@ -30,8 +31,7 @@ export const updateFlowRoleAccess = createAuthenticatedAction(
     });
     if (!flow || flow.deletedAt) {
       /** A different user deleted the flow before, and the page must show it */
-      refresh();
-      return { error: t("Common.notFound"), requestPayload: formData };
+      return rejectConflict(t("Common.notFound"), formData);
     }
 
     /**

@@ -1,5 +1,6 @@
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { type AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { type CyclePhase, getCurrentPhase } from "@sam-monorepo/domain";
@@ -63,11 +64,7 @@ export const createToggleMyParticipationAction = (
          * A manager or the midnight job changed the phase, and the page must
          * show it.
          */
-        refresh();
-        return {
-          error: t("Common.badRequest"),
-          requestPayload: formData,
-        };
+        return rejectConflict(t("Common.badRequest"), formData);
       }
 
       const participantData = configuration.participantData(

@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import {
@@ -59,13 +60,10 @@ export const destroyWikiPage = createAuthenticatedAction(
          * the subtree after the check above, and the page must show it. The
          * transaction deleted nothing.
          */
-        refresh();
-
-        return {
-          error:
-            "Der Papierkorb war veraltet. Er ist jetzt aktuell, bitte versuche es erneut.",
-          requestPayload: formData,
-        };
+        return rejectConflict(
+          "Der Papierkorb war veraltet. Er ist jetzt aktuell, bitte versuche es erneut.",
+          formData,
+        );
       }
       throw error;
     }

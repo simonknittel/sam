@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import {
@@ -58,9 +59,7 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
        * A different user or tab deleted the page before, and the page must
        * show it
        */
-      refresh();
-
-      return { error: t("Common.badRequest"), requestPayload: formData };
+      return rejectConflict(t("Common.badRequest"), formData);
     }
     if (!context.permissions.get(page.id)?.canAdmin)
       return { error: t("Common.forbidden"), requestPayload: formData };
@@ -130,12 +129,10 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
         const names = rejected.map(
           (roleId) => roles.find((role) => role.id === roleId)?.name ?? roleId,
         );
-        refresh();
-
-        return {
-          error: `Diese Rollen dürfen die übergeordnete Seite nicht lesen und können deshalb auch auf diese Seite keinen Zugriff erhalten: ${names.join(", ")}.`,
-          requestPayload: formData,
-        };
+        return rejectConflict(
+          `Diese Rollen dürfen die übergeordnete Seite nicht lesen und können deshalb auch auf diese Seite keinen Zugriff erhalten: ${names.join(", ")}.`,
+          formData,
+        );
       }
 
       if (newOwnerId) {

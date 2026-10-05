@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { refresh } from "next/cache";
@@ -42,9 +43,7 @@ export const updateWikiFeaturedPages = createAuthenticatedAction(
        * A different user or tab deleted a selected page before, and the
        * options must show it
        */
-      refresh();
-
-      return { error: t("Common.badRequest"), requestPayload: formData };
+      return rejectConflict(t("Common.badRequest"), formData);
     }
 
     const updatedById = authentication.session.entity?.id ?? null;

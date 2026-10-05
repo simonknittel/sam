@@ -2,9 +2,9 @@
 
 import { env } from "@/env";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import type { WikiCollabSessionTokenPayload } from "@sam-monorepo/wiki-editor";
 import { SignJWT } from "jose";
-import { refresh } from "next/cache";
 import * as z from "zod";
 import { getWikiPageScopedContext } from "../queries/getWikiPageScopedContext";
 
@@ -39,9 +39,7 @@ export const createWikiCollabToken = createAuthenticatedAction<
        * A context that the viewer cannot hold gets the same answer (see
        * getWikiPageScopedContext).
        */
-      refresh();
-
-      return { error: t("Common.badRequest"), requestPayload: formData };
+      return rejectConflict(t("Common.badRequest"), formData);
     }
     const permissions = scoped.context.permissions.get(page.id);
     if (!permissions?.canRead)

@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { EVENT_MANAGE_GUARD_SELECT } from "@/modules/events/queries/eventManageGuardSelect";
@@ -17,7 +18,6 @@ import {
 } from "@/modules/events/utils/eventContainer";
 import { isAllowedToManageEvent } from "@/modules/events/utils/isAllowedToManageEvent";
 import { buildPositionTree } from "@/modules/events/utils/positionTree";
-import { rejectConflict } from "@/modules/events/utils/rejectConflict";
 import {
   COPYABLE_UPLOAD_SELECT,
   copyUpload,

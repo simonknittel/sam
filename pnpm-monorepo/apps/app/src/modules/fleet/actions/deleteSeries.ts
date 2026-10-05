@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import {
@@ -50,11 +51,7 @@ export const deleteSeries = createAuthenticatedAction(
         /**
          * A different user deleted the series before, and the page must show it
          */
-        refresh();
-        return {
-          error: "Die Serie ist bereits gelöscht.",
-          requestPayload: formData,
-        };
+        return rejectConflict("Die Serie ist bereits gelöscht.", formData);
       }
       throw error;
     }

@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotificationsAfterSave } from "@/modules/notifications/utils/triggerNotification";
@@ -70,9 +71,7 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
        * show it. A context that the viewer cannot hold gets the same answer
        * (see getWikiPageScopedContext).
        */
-      refresh();
-
-      return { error: t("Common.badRequest"), requestPayload: formData };
+      return rejectConflict(t("Common.badRequest"), formData);
     }
     const context = eventScoped.context;
     if (!context.permissions.get(page.id)?.canAdmin)
@@ -106,9 +105,7 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
          * A different user deleted the position after the dialog showed it,
          * and the dialog must show the positions of today
          */
-        refresh();
-
-        return { error: t("Common.badRequest"), requestPayload: formData };
+        return rejectConflict(t("Common.badRequest"), formData);
       }
       readScopePositionId = data.readScopePositionId;
     }
