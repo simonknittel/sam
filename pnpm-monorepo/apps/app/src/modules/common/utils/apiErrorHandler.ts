@@ -1,5 +1,8 @@
+import {
+  isPrismaError,
+  PrismaErrorCode,
+} from "@/modules/common/utils/isPrismaError";
 import { log } from "@/modules/logging";
-import { Prisma } from "@sam-monorepo/database/client";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
@@ -26,22 +29,7 @@ export default function apiErrorHandler(error: unknown) {
       },
       { status: 403 },
     );
-  } else if (
-    (error instanceof Error && error.message === "Not found") ||
-    (error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2001")
-  ) {
-    return NextResponse.json(
-      {
-        message: "Not Found",
-      },
-      { status: 404 },
-    );
-  } else if (
-    (error instanceof Error && error.message === "Duplicate") ||
-    (error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2002")
-  ) {
+  } else if (isPrismaError(error, PrismaErrorCode.UniqueConstraintFailed)) {
     return NextResponse.json(
       {
         message: "Conflict",
@@ -50,7 +38,7 @@ export default function apiErrorHandler(error: unknown) {
     );
   } else if (
     error instanceof Error &&
-    ["Bad request", "Unexpected end of JSON input"].includes(error.message)
+    error.message === "Unexpected end of JSON input"
   ) {
     return NextResponse.json(
       {
