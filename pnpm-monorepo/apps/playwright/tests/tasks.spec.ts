@@ -18,6 +18,7 @@ import {
   SAVED_TEXT,
   saveInlineEditor,
   sectionByHeading,
+  waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
@@ -546,6 +547,8 @@ test("taking on a task whose last place a different citizen took shows the messa
   await page.goto(`/app/tasks/${task.id}`);
   const takeOnButton = page.getByRole("button", { name: "Annehmen" });
   await expect(takeOnButton).toBeEnabled();
+  /** One click sends the action once: a second toast fails the check below */
+  await waitForAppShellHydration(page);
 
   await prisma.taskAssignment.create({
     data: {
@@ -554,13 +557,10 @@ test("taking on a task whose last place a different citizen took shows the messa
       createdById: competitor.entity.id,
     },
   });
-  /** A retry of the click while the action is slow shows a second toast */
-  await clickUntilVisible(
-    takeOnButton,
-    page
-      .getByText("Dieser Task kann nicht von Weiteren angenommen werden.")
-      .first(),
-  );
+  await takeOnButton.click();
+  await expect(
+    page.getByText("Dieser Task kann nicht von Weiteren angenommen werden."),
+  ).toBeVisible();
 
   // The refresh shows the citizen who took the last place
   await expect(
@@ -730,6 +730,142 @@ const createTextTask = (
       ...data,
     },
   });
+
+/**
+ * Opens a new public task as a citizen who reads tasks, and waits until a
+ * single click on the page runs its action. The refresh of that action must
+ * be the only one: the read marker stops the refresh of the first visit, and
+ * the test changes the data only after the visit marked the task as read
+ * (the action of the visit refreshes the page when it finds the task gone).
+ */
+const openTaskAsCitizen = async (
+  page: Page,
+  prisma: PrismaClient,
+  signIn: (user: TestCitizen["user"]) => Promise<void>,
+  { isTakenOn }: { readonly isTakenOn: boolean },
+) => {
+  const creator = await createCitizen(prisma, {
+    handle: "task-auftraggeber",
+    permissionStrings: ["task;read"],
+  });
+  const citizen = await createCitizen(prisma, {
+    handle: "task-annehmer",
+    permissionStrings: ["task;read"],
+  });
+  const task = await createTextTask(prisma, creator, "Frachter eskortieren", {
+    ...(isTakenOn && {
+      assignments: {
+        create: {
+          citizenId: citizen.entity.id,
+          createdById: citizen.entity.id,
+        },
+      },
+    }),
+  });
+  await prisma.readMarker.create({
+    data: { citizenId: citizen.entity.id, taskId: task.id },
+  });
+
+  await signIn(citizen.user);
+  /**
+   * The only POST of the visit is the server action of the read marker. Its
+   * response starts after the action ran on the server.
+   */
+  const markAsReadResponse = page.waitForResponse(
+    (response) =>
+      response.request().method() === "POST" &&
+      new URL(response.url()).pathname === `/app/tasks/${task.id}`,
+  );
+  await page.goto(`/app/tasks/${task.id}`);
+  await markAsReadResponse;
+  await expect(
+    page.getByRole("button", { name: isTakenOn ? "Aufgeben" : "Annehmen" }),
+  ).toBeEnabled();
+  await waitForAppShellHydration(page);
+
+  return { creator, citizen, task };
+};
+
+test("taking on a task that a different user deleted shows the message and that the task is gone", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const { creator, task } = await openTaskAsCitizen(page, prisma, signIn, {
+    isTakenOn: false,
+  });
+
+  await prisma.task.update({
+    where: { id: task.id },
+    data: { deletedAt: new Date(), deletedById: creator.entity.id },
+  });
+  await page.getByRole("button", { name: "Annehmen" }).click();
+
+  await expect(page.getByText("Task nicht gefunden")).toBeVisible();
+  // The refresh shows that the task is gone
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
+  expect(
+    await prisma.taskAssignment.count({ where: { taskId: task.id } }),
+  ).toBe(0);
+});
+
+test("taking on a task that a different tab took on shows the message and the assignment", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const { citizen, task } = await openTaskAsCitizen(page, prisma, signIn, {
+    isTakenOn: false,
+  });
+
+  /** The second assignment of the click fails on the unique index */
+  await prisma.taskAssignment.create({
+    data: {
+      taskId: task.id,
+      citizenId: citizen.entity.id,
+      createdById: citizen.entity.id,
+    },
+  });
+  await page.getByRole("button", { name: "Annehmen" }).click();
+
+  await expect(
+    page.getByText("Du hast diesen Task bereits angenommen."),
+  ).toBeVisible();
+  // The refresh shows the assignment of the other tab
+  await expect(page.getByRole("button", { name: "Aufgeben" })).toBeEnabled();
+  expect(
+    await prisma.taskAssignment.count({ where: { taskId: task.id } }),
+  ).toBe(1);
+  expect(
+    await prisma.auditEvent.count({
+      where: { type: "TASK_SELF_ASSIGNMENT_CREATED" },
+    }),
+  ).toBe(0);
+});
+
+test("giving up a task that a different tab gave up shows the message and the open task", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const { task } = await openTaskAsCitizen(page, prisma, signIn, {
+    isTakenOn: true,
+  });
+
+  await prisma.taskAssignment.deleteMany({ where: { taskId: task.id } });
+  await page.getByRole("button", { name: "Aufgeben" }).click();
+
+  await expect(
+    page.getByText("Du hast diesen Task nicht angenommen."),
+  ).toBeVisible();
+  // The refresh shows that the task is not taken on
+  await expect(page.getByRole("button", { name: "Annehmen" })).toBeEnabled();
+  expect(
+    await prisma.auditEvent.count({
+      where: { type: "TASK_SELF_ASSIGNMENT_DELETED" },
+    }),
+  ).toBe(0);
+});
 
 test("a citizen sees exactly the tasks they may see, in each list and on the task page", async ({
   page,

@@ -4,11 +4,10 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { TaskVisibility } from "@sam-monorepo/database/client";
+import { Prisma, TaskVisibility } from "@sam-monorepo/database/client";
 import { refresh } from "next/cache";
 import * as z from "zod";
-import { getTaskById } from "../queries/getTaskById";
-import { rejectClosedTask } from "../utils/rejectClosedTask";
+import { requireOpenTask } from "../utils/requireOpenTask";
 
 const schema = z.object({
   taskId: z.union([z.cuid(), z.cuid2()]),
@@ -24,11 +23,8 @@ export const createTaskAssignmentForCurrentUser = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    const task = await getTaskById(data.taskId);
-    if (!task)
-      return { error: "Task nicht gefunden", requestPayload: formData };
-    const closedTaskFailure = rejectClosedTask(task, formData);
-    if (closedTaskFailure) return closedTaskFailure;
+    const { task, failure } = await requireOpenTask(data.taskId, formData);
+    if (failure) return failure;
 
     if (
       task.visibility === TaskVisibility.PERSONALIZED ||
@@ -62,20 +58,37 @@ export const createTaskAssignmentForCurrentUser = createAuthenticatedAction(
     /**
      * Create
      */
-    await prisma.taskAssignment.create({
-      data: {
-        task: {
-          connect: {
-            id: data.taskId,
+    try {
+      await prisma.taskAssignment.create({
+        data: {
+          task: {
+            connect: {
+              id: data.taskId,
+            },
+          },
+          citizen: {
+            connect: {
+              id: authentication.session.entity.id,
+            },
           },
         },
-        citizen: {
-          connect: {
-            id: authentication.session.entity.id,
-          },
-        },
-      },
-    });
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        /**
+         * A different tab took the task on before, and the page must show it
+         */
+        refresh();
+        return {
+          error: "Du hast diesen Task bereits angenommen.",
+          requestPayload: formData,
+        };
+      }
+      throw error;
+    }
 
     refresh();
 

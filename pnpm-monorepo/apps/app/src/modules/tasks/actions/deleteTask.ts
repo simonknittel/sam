@@ -12,6 +12,7 @@ import {
   isAllowedToDeleteTask,
   isAllowedToManageTask,
 } from "../utils/isAllowedToTask";
+import { TASK_NOT_FOUND_ERROR } from "../utils/requireOpenTask";
 
 const schema = z.object({
   id: z.union([z.cuid(), z.cuid2()]),
@@ -31,8 +32,11 @@ export const deleteTask = createAuthenticatedAction(
      * Authorize the request
      */
     const task = await getTaskById(data.id);
-    if (!task)
-      return { error: "Task nicht gefunden", requestPayload: formData };
+    if (!task) {
+      /** A different user deleted the task before, and the page must show it */
+      refresh();
+      return { error: TASK_NOT_FOUND_ERROR, requestPayload: formData };
+    }
     if (!(await isAllowedToManageTask(task)))
       return {
         error: t("Common.forbidden"),

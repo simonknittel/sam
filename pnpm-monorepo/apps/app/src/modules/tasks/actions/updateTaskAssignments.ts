@@ -4,7 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import { triggerNotificationsAfterSave } from "@/modules/notifications/utils/triggerNotification";
 import { refresh } from "next/cache";
 import * as z from "zod";
 import { requireManageableTask } from "../utils/requireManageableTask";
@@ -78,7 +78,7 @@ export const updateTaskAssignments = createAuthenticatedAction(
     /**
      * Trigger notifications
      */
-    await triggerNotifications([
+    const areNotificationsSent = await triggerNotificationsAfterSave([
       {
         type: "TaskAssignmentUpdated",
         payload: {
@@ -92,6 +92,9 @@ export const updateTaskAssignments = createAuthenticatedAction(
      */
     return {
       success: "Erfolgreich gespeichert.",
+      ...(areNotificationsSent
+        ? {}
+        : { warning: t("Common.notificationsFailed") }),
     };
   },
   {

@@ -23,9 +23,8 @@ import { lockSilcLedger } from "@sam-monorepo/domain";
 import { refresh } from "next/cache";
 import * as z from "zod";
 import { getOpenTasksWhere } from "../queries/getOpenTasksWhere";
-import { getTaskById } from "../queries/getTaskById";
 import { isAllowedToManageTask } from "../utils/isAllowedToTask";
-import { CLOSED_TASK_ERROR, rejectClosedTask } from "../utils/rejectClosedTask";
+import { CLOSED_TASK_ERROR, requireOpenTask } from "../utils/requireOpenTask";
 
 const schema = z.object({
   id: z.union([z.cuid(), z.cuid2()]),
@@ -200,11 +199,8 @@ export const completeTask = createAuthenticatedAction(
     /**
      * Authorize the request
      */
-    const task = await getTaskById(data.id);
-    if (!task)
-      return { error: "Task nicht gefunden", requestPayload: formData };
-    const closedTaskFailure = rejectClosedTask(task, formData);
-    if (closedTaskFailure) return closedTaskFailure;
+    const { task, failure } = await requireOpenTask(data.id, formData);
+    if (failure) return failure;
     const isAllowedToManage = await isAllowedToManageTask(task);
     const isAllowedToSelfComplete =
       task.canSelfComplete &&
@@ -243,11 +239,14 @@ export const completeTask = createAuthenticatedAction(
           "Der Task kann nicht abgeschlossen werden, ohne dass ihn jemand erfüllt hat.",
         requestPayload: formData,
       };
-    if (!(await areActiveReceivers(completionistIds)))
+    if (!(await areActiveReceivers(completionistIds))) {
+      /** A different user deleted a completionist, and the page must show it */
+      refresh();
       return {
         error: INACTIVE_RECEIVER_ERROR,
         requestPayload: formData,
       };
+    }
 
     /**
      * Complete the task, pay the reward and create the next repetition in
@@ -331,8 +330,6 @@ export const completeTask = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    await announceSilcTransactions(silcTransactionIds);
-
     await createAuditEvents([
       {
         type: AuditEventType.TASK_COMPLETED,
@@ -345,11 +342,17 @@ export const completeTask = createAuthenticatedAction(
       },
     ]);
 
+    const areTransactionsAnnounced =
+      await announceSilcTransactions(silcTransactionIds);
+
     /**
      * Respond with the result
      */
     return {
       success: "Erfolgreich abgeschlossen.",
+      ...(areTransactionsAnnounced
+        ? {}
+        : { warning: t("Common.notificationsFailed") }),
     };
   },
   {
