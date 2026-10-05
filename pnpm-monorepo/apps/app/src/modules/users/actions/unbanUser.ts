@@ -27,27 +27,23 @@ export const unbanUserAction = createAuthenticatedAction(
       },
       select: {
         id: true,
-        bannedAt: true,
       },
     });
 
-    if (!user?.bannedAt) {
-      /**
-       * A different user deleted or unbanned the user before, and the page
-       * must show it
-       */
+    if (!user) {
+      /** A different user deleted the user before, and the page must show it */
       refresh();
       return {
-        error: user
-          ? "Dieser Benutzer ist nicht gesperrt."
-          : t("Common.notFound"),
+        error: t("Common.notFound"),
         requestPayload: formData,
       };
     }
 
-    await prisma.user.update({
+    /** Only one of two parallel unbans finds the user banned */
+    const { count } = await prisma.user.updateMany({
       where: {
         id: data.userId,
+        bannedAt: { not: null },
       },
       data: {
         bannedAt: null,
@@ -56,7 +52,17 @@ export const unbanUserAction = createAuthenticatedAction(
       },
     });
 
+    /**
+     * Also when a different user unbanned the user before: the page then
+     * shows that the user is not banned
+     */
     refresh();
+
+    if (count === 0)
+      return {
+        error: "Dieser Benutzer ist nicht gesperrt.",
+        requestPayload: formData,
+      };
 
     await createAuditEvents([
       {

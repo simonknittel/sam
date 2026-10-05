@@ -39,18 +39,16 @@ export const banUserAction = createAuthenticatedAction(
       where: {
         id: data.userId,
       },
+      select: {
+        role: true,
+      },
     });
 
-    if (!user || user.bannedAt) {
-      /**
-       * A different user deleted or banned the user before, and the page
-       * must show it
-       */
+    if (!user) {
+      /** A different user deleted the user before, and the page must show it */
       refresh();
       return {
-        error: user
-          ? "Dieser Benutzer ist bereits gesperrt."
-          : t("Common.notFound"),
+        error: t("Common.notFound"),
         requestPayload: formData,
       };
     }
@@ -63,30 +61,45 @@ export const banUserAction = createAuthenticatedAction(
       };
 
     const reason = data.reason || null;
+    const bannedById = authentication.session.entity.id;
 
     /**
-     * Ban the user and revoke their active sessions
+     * Ban the user and revoke their active sessions. Only one of two
+     * parallel bans finds the user not banned.
      */
-    await prisma.$transaction([
-      prisma.user.update({
+    const isBanned = await prisma.$transaction(async (transaction) => {
+      const { count } = await transaction.user.updateMany({
         where: {
           id: data.userId,
+          bannedAt: null,
         },
         data: {
           bannedAt: new Date(),
-          bannedById: authentication.session.entity.id,
+          bannedById,
           bannedReason: reason,
         },
-      }),
+      });
+      if (count === 0) return false;
 
-      prisma.session.deleteMany({
+      await transaction.session.deleteMany({
         where: {
           userId: data.userId,
         },
-      }),
-    ]);
+      });
+      return true;
+    });
 
+    /**
+     * Also when a different user banned the user before: the page then shows
+     * the ban
+     */
     refresh();
+
+    if (!isBanned)
+      return {
+        error: "Dieser Benutzer ist bereits gesperrt.",
+        requestPayload: formData,
+      };
 
     await createAuditEvents([
       {
