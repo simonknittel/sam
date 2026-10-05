@@ -82,7 +82,10 @@ const eslintConfig = defineConfig([
         },
       ],
 
-      // https://github.com/orgs/react-hook-form/discussions/8622
+      // Some JSX attributes get handlers that return a promise: the URL state
+      // setters of nuqs, the `refetch()` of tRPC, the notification mutations
+      // and the async items of the command menu. React ignores the promise.
+      // In October 2026, 9 attributes in 7 files need this option.
       "@typescript-eslint/no-misused-promises": [
         2,
         {
