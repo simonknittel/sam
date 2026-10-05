@@ -2,6 +2,7 @@
 
 import { useMediaQuery } from "@base-ui/react/unstable-use-media-query";
 import {
+  resolveValue,
   ToastBar,
   Toaster,
   type DefaultToastOptions,
@@ -34,15 +35,26 @@ const REDUCED_MOTION_TOAST_OPTIONS: DefaultToastOptions = {
   },
 };
 
+interface ToastMessageProps {
+  readonly toast: Toast;
+}
+
 /**
- * The wrapper around the toasts is their only live region. A live region in
- * a different live region can make a screen reader announce a toast two
- * times.
+ * The message of a toast with the styles of react-hot-toast, but without its
+ * `role="status"` and `aria-live`: the wrapper of the toasts is their only
+ * live region. A live region in a different live region can make a screen
+ * reader announce a toast two times, and one with `aria-live="off"` hides the
+ * changes of a toast, for example a loading toast that changes to its
+ * result. Other toasts can select the message with `data-toast-message`.
  */
-const TOAST_ARIA_PROPS: Toast["ariaProps"] = {
-  role: "status",
-  "aria-live": "off",
-};
+const ToastMessage = ({ toast }: ToastMessageProps) => (
+  <div
+    data-toast-message
+    className="mx-2.5 my-1 flex flex-auto justify-center whitespace-pre-line"
+  >
+    {resolveValue(toast.message, toast)}
+  </div>
+);
 
 const ToasterContainer = () => {
   const prefersReducedMotion = useMediaQuery(
@@ -64,7 +76,14 @@ const ToasterContainer = () => {
         }
       >
         {(toast) => (
-          <ToastBar toast={{ ...toast, ariaProps: TOAST_ARIA_PROPS }} />
+          <ToastBar toast={toast}>
+            {({ icon }) => (
+              <>
+                {icon}
+                <ToastMessage toast={toast} />
+              </>
+            )}
+          </ToastBar>
         )}
       </Toaster>
     </div>
