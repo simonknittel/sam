@@ -11,7 +11,10 @@ import {
 import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { refresh } from "next/cache";
 import * as z from "zod";
-import { changeMembershipHistory } from "../utils/changeMembershipHistory";
+import {
+  changeMembershipHistory,
+  RejectedChangeError,
+} from "../utils/changeMembershipHistory";
 
 const schema = z.object({
   organizationId: z.cuid(),
@@ -30,9 +33,6 @@ const schema = z.object({
   /** The value of the submit button "save and confirm" */
   confirmed: z.literal(ConfirmationStatus.CONFIRMED).optional(),
 });
-
-/** Rolls the transaction back, thus the rejected change writes nothing */
-class RejectedChangeError extends Error {}
 
 export const createOrganizationMembership = createAuthenticatedAction(
   "createOrganizationMembership",

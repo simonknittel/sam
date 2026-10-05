@@ -13,6 +13,13 @@ import {
  * transaction replays them. Use this function for each write to the
  * membership history.
  */
+/**
+ * Thrown inside the callback of `changeMembershipHistory()` to reject a
+ * change. It rolls the transaction back, thus the rejected change writes
+ * nothing. The message is the answer to the user.
+ */
+export class RejectedChangeError extends Error {}
+
 export const changeMembershipHistory = async <Result>(
   citizenId: Citizen["id"],
   change: (transaction: Prisma.TransactionClient) => Promise<Result>,

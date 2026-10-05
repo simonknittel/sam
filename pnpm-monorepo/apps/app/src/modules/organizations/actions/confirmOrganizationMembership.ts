@@ -8,7 +8,10 @@ import { ConfirmationStatus } from "@sam-monorepo/database/client";
 import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { refresh } from "next/cache";
 import * as z from "zod";
-import { changeMembershipHistory } from "../utils/changeMembershipHistory";
+import {
+  changeMembershipHistory,
+  RejectedChangeError,
+} from "../utils/changeMembershipHistory";
 
 const ALREADY_CONFIRMED_ERROR = "Der Eintrag wurde bereits bestätigt.";
 
@@ -21,12 +24,6 @@ const schema = z.object({
     ConfirmationStatus.FALSE_REPORT,
   ]),
 });
-
-/**
- * Rolls the transaction back, thus the rejected change writes nothing. The
- * message is the answer to the user.
- */
-class RejectedChangeError extends Error {}
 
 export const confirmOrganizationMembership = createAuthenticatedAction(
   "confirmOrganizationMembership",
