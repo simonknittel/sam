@@ -8,7 +8,7 @@ import { probeUploadImageDimensions } from "@/modules/common/utils/probeUploadIm
 import { wallTimeSchema } from "@/modules/common/utils/wallTimeSchema";
 import { DISCORD_EVENT_DESCRIPTION_MAX_LENGTH } from "@/modules/discord/utils/guildScheduledEventPayload";
 import { getEventTemplateById } from "@/modules/event-templates/queries/getEventTemplateById";
-import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import { triggerNotificationsAfterSave } from "@/modules/notifications/utils/triggerNotification";
 import {
   COPYABLE_UPLOAD_SELECT,
   copyUpload,
@@ -46,6 +46,7 @@ import {
   EVENT_MAX_VISIBILITY_ROLES,
   EVENT_NAME_MAX_LENGTH,
   getEventPath,
+  NOTIFICATIONS_FAILED_PARAM,
 } from "../utils/eventConstraints";
 import {
   eventContainerColumns,
@@ -53,6 +54,7 @@ import {
   toTemplateContainer,
 } from "../utils/eventContainer";
 import { buildPositionTree } from "../utils/positionTree";
+import { rejectConflict } from "../utils/rejectConflict";
 
 /** The briefing copy dominates the runtime — same bound the wiki copy uses */
 const TRANSACTION_TIMEOUT_MS = 30_000;
@@ -162,10 +164,7 @@ export const createEvent = createAuthenticatedAction(
       ? await getEventTemplateById(data.templateId)
       : null;
     if (data.templateId && template?.template.deletedAt !== null)
-      return {
-        error: "Vorlage nicht gefunden",
-        requestPayload: formData,
-      };
+      return rejectConflict("Vorlage nicht gefunden", formData);
 
     const templateContainer = template
       ? toTemplateContainer(template.template.id)
@@ -317,7 +316,7 @@ export const createEvent = createAuthenticatedAction(
     /**
      * Trigger notifications
      */
-    await triggerNotifications([
+    const areNotificationsSent = await triggerNotificationsAfterSave([
       {
         type: "EventCreated",
         payload: {
@@ -351,9 +350,14 @@ export const createEvent = createAuthenticatedAction(
      * Redirect to the created event; the form's success hook closes the
      * modal while the navigation is in flight (see useAction).
      */
+    const searchParams = new URLSearchParams();
+    if (publishFailed) searchParams.set(DISCORD_PUBLISH_FAILED_PARAM, "1");
+    if (!areNotificationsSent)
+      searchParams.set(NOTIFICATIONS_FAILED_PARAM, "1");
+    const query = searchParams.toString();
     redirect(
-      publishFailed
-        ? `${getEventPath(createdEvent.id)}?${DISCORD_PUBLISH_FAILED_PARAM}=1`
+      query
+        ? `${getEventPath(createdEvent.id)}?${query}`
         : getEventPath(createdEvent.id),
     );
   },

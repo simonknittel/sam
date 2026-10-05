@@ -1,6 +1,5 @@
 "use client";
 
-import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
@@ -55,12 +54,11 @@ export const EventSettings = ({
   actionsTile,
 }: Props) => {
   const router = useRouter();
-  const { state, formAction, getDefaultValueWithFallback } = useAction(
-    updateEvent,
-    {
-      errorToast: false,
-    },
-  );
+  /**
+   * The errors show as toasts: the refresh after a conflict, for example an
+   * event that a different manager deleted, can remove this form.
+   */
+  const { formAction, getDefaultValueWithFallback } = useAction(updateEvent);
   const [visibility, setVisibility] = useState<string>(event.visibility);
 
   return (
@@ -145,8 +143,6 @@ export const EventSettings = ({
           <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
             Speichern
           </SubmitButton>
-
-          <ActionErrorNote className="mt-4" state={state} />
         </form>
       </Tile>
 

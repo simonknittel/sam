@@ -16,6 +16,7 @@ import {
   getParticipatableAppEvent,
   isParticipationOpen,
 } from "../utils/getParticipatableAppEvent";
+import { rejectConflict } from "../utils/rejectConflict";
 
 const schema = z.object({
   eventId: z.cuid(),
@@ -37,13 +38,9 @@ export const signUpForEvent = createAuthenticatedAction(
     const citizenId = authentication.session.entity.id;
 
     const event = await getParticipatableAppEvent(data.eventId);
-    if (!event)
-      return { error: "Event nicht gefunden", requestPayload: formData };
+    if (!event) return rejectConflict("Event nicht gefunden", formData);
     if (!isParticipationOpen(event))
-      return {
-        error: "Die Anmeldung ist geschlossen.",
-        requestPayload: formData,
-      };
+      return rejectConflict("Die Anmeldung ist geschlossen.", formData);
 
     /**
      * Create a fresh participation row. The unique index for active sign-ups
@@ -69,17 +66,12 @@ export const signUpForEvent = createAuthenticatedAction(
         });
       });
     } catch (error) {
+      /** The unique index found the sign-up of a different tab */
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === "P2002"
-      ) {
-        /** A different tab signed up before, and the page must show it */
-        refresh();
-        return {
-          error: "Du bist bereits angemeldet.",
-          requestPayload: formData,
-        };
-      }
+      )
+        return rejectConflict("Du bist bereits angemeldet.", formData);
       throw error;
     }
 

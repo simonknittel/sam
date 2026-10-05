@@ -23,6 +23,7 @@ import {
   getSubtreeDepth,
   MAX_POSITIONS_PER_LEVEL,
 } from "../utils/positionTree";
+import { rejectConflict } from "../utils/rejectConflict";
 
 const schema = z.object({
   sourcePositionId: z.cuid(),
@@ -74,10 +75,7 @@ export const pasteEventPosition = createAuthenticatedAction(
       !targetPosition ||
       !targetContainer
     )
-      return {
-        error: "Posten nicht gefunden",
-        requestPayload: formData,
-      };
+      return rejectConflict("Posten nicht gefunden", formData);
 
     /**
      * Authorize the request. Both sides go through the same guard, so a
@@ -111,8 +109,7 @@ export const pasteEventPosition = createAuthenticatedAction(
     });
 
     const subtree = getPositionSubtree(sourcePositions, sourcePosition.id);
-    if (!subtree)
-      return { error: "Posten nicht gefunden", requestPayload: formData };
+    if (!subtree) return rejectConflict("Posten nicht gefunden", formData);
 
     const targetPositions = isSameContainer(sourceContainer, targetContainer)
       ? sourcePositions

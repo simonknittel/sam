@@ -4,10 +4,12 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { Prisma } from "@sam-monorepo/database/client";
 import { refresh } from "next/cache";
 import * as z from "zod";
 import { EVENT_FREEZE_WINDOW_SELECT } from "../queries/eventRelationSelects";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
+import { rejectConflict } from "../utils/rejectConflict";
 
 const schema = z.object({
   positionId: z.cuid(),
@@ -27,6 +29,7 @@ export const createEventPositionApplicationForCurrentUser =
       const position = await prisma.eventPosition.findUnique({
         where: {
           id: data.positionId,
+          event: { deletedAt: null },
         },
         select: {
           id: true,
@@ -34,12 +37,9 @@ export const createEventPositionApplicationForCurrentUser =
         },
       });
       if (!position?.event)
-        return { error: "Posten nicht gefunden", requestPayload: formData };
+        return rejectConflict("Posten nicht gefunden", formData);
       if (!isEventUpdatable(position.event))
-        return {
-          error: "Das Event ist bereits vorbei.",
-          requestPayload: formData,
-        };
+        return rejectConflict("Das Event ist bereits vorbei.", formData);
 
       const discordUserId = authentication.session.discordId;
       /**
@@ -59,34 +59,50 @@ export const createEventPositionApplicationForCurrentUser =
           id: true,
         },
       });
+      /** A different tab or a manager cancelled the participation before */
       if (!participant)
-        return {
-          error: "Du bist nicht für dieses Event angemeldet.",
-          requestPayload: formData,
-        };
+        return rejectConflict(
+          "Du bist nicht für dieses Event angemeldet.",
+          formData,
+        );
 
       /**
        * Create application
        */
-      const createdApplication = await prisma.eventPositionApplication.create({
-        data: {
-          position: {
-            connect: {
-              id: data.positionId,
+      const createdApplication = await prisma.eventPositionApplication
+        .create({
+          data: {
+            position: {
+              connect: {
+                id: data.positionId,
+              },
+            },
+            citizen: {
+              connect: {
+                id: authentication.session.entity.id,
+              },
             },
           },
-          citizen: {
-            connect: {
-              id: authentication.session.entity.id,
-            },
+          select: {
+            id: true,
+            positionId: true,
+            citizenId: true,
           },
-        },
-        select: {
-          id: true,
-          positionId: true,
-          citizenId: true,
-        },
-      });
+        })
+        .catch((error: unknown) => {
+          /** The unique index found the application of a different tab */
+          if (
+            error instanceof Prisma.PrismaClientKnownRequestError &&
+            error.code === "P2002"
+          )
+            return null;
+          throw error;
+        });
+      if (!createdApplication)
+        return rejectConflict(
+          "Du hast für diesen Posten bereits Interesse angemeldet.",
+          formData,
+        );
 
       refresh();
 

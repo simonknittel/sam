@@ -14,6 +14,7 @@ import {
   type EventContainer,
 } from "../utils/eventContainer";
 import { buildLineupOrderChangedAuditEvent } from "../utils/lineupAuditEvents";
+import { rejectConflict } from "../utils/rejectConflict";
 
 // TODO: Simplify recursion
 const schema = z.object({
@@ -80,7 +81,8 @@ export const updateEventLineupOrder = createAuthenticatedAction(
     /**
      * Make sure every submitted position belongs to the authorized container.
      * Parent assignments are derived from the submitted tree, so this also
-     * keeps every new parentPositionId inside the container.
+     * keeps every new parentPositionId inside the container. An unknown
+     * position is usually a position that a different tab deleted.
      */
     const containerPositions = await prisma.eventPosition.findMany({
       where: eventContainerColumns(container),
@@ -103,7 +105,10 @@ export const updateEventLineupOrder = createAuthenticatedAction(
         (positionId) => !containerPositionIds.has(positionId),
       )
     )
-      return { error: t("Common.badRequest"), requestPayload: formData };
+      return rejectConflict(
+        "Die Aufstellung wurde in der Zwischenzeit geändert.",
+        formData,
+      );
 
     /**
      * Update lineup order

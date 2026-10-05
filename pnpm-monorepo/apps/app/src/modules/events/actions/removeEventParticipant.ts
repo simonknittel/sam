@@ -4,7 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import { triggerNotificationsAfterSave } from "@/modules/notifications/utils/triggerNotification";
 import { EventActivityType } from "@sam-monorepo/database/client";
 import { refresh } from "next/cache";
 import * as z from "zod";
@@ -13,6 +13,7 @@ import { createEventActivity } from "../utils/eventActivity";
 import { getParticipatableAppEvent } from "../utils/getParticipatableAppEvent";
 import { isAllowedToManageEvent } from "../utils/isAllowedToManageEvent";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
+import { rejectConflict } from "../utils/rejectConflict";
 
 const schema = z.object({
   eventId: z.cuid(),
@@ -28,13 +29,9 @@ export const removeEventParticipant = createAuthenticatedAction(
      * Authorize the request
      */
     const event = await getParticipatableAppEvent(data.eventId);
-    if (!event)
-      return { error: "Event nicht gefunden", requestPayload: formData };
+    if (!event) return rejectConflict("Event nicht gefunden", formData);
     if (!isEventUpdatable(event))
-      return {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      };
+      return rejectConflict("Das Event ist bereits vorbei.", formData);
     if (!(await isAllowedToManageEvent(event)))
       return { error: t("Common.forbidden"), requestPayload: formData };
 
@@ -105,7 +102,7 @@ export const removeEventParticipant = createAuthenticatedAction(
     /**
      * Trigger notifications
      */
-    await triggerNotifications([
+    const areNotificationsSent = await triggerNotificationsAfterSave([
       {
         type: "EventParticipationRemoved",
         payload: {
@@ -121,6 +118,9 @@ export const removeEventParticipant = createAuthenticatedAction(
      */
     return {
       success: "Teilnehmer entfernt.",
+      ...(areNotificationsSent
+        ? {}
+        : { warning: t("Common.notificationsFailed") }),
     };
   },
 );

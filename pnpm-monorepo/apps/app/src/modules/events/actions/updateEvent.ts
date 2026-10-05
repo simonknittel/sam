@@ -6,7 +6,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { wallTimeSchema } from "@/modules/common/utils/wallTimeSchema";
 import { DISCORD_EVENT_DESCRIPTION_MAX_LENGTH } from "@/modules/discord/utils/guildScheduledEventPayload";
-import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import { triggerNotificationsAfterSave } from "@/modules/notifications/utils/triggerNotification";
 import {
   EventActivityType,
   EventSource,
@@ -28,6 +28,7 @@ import {
 } from "../utils/eventConstraints";
 import { isAllowedToManageEvent } from "../utils/isAllowedToManageEvent";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
+import { rejectConflict } from "../utils/rejectConflict";
 
 const schema = z.object({
   eventId: z.cuid(),
@@ -73,13 +74,9 @@ export const updateEvent = createAuthenticatedAction(
         visibilityRoles: { select: { roleId: true } },
       },
     });
-    if (!event)
-      return { error: "Event nicht gefunden", requestPayload: formData };
+    if (!event) return rejectConflict("Event nicht gefunden", formData);
     if (!isEventUpdatable(event))
-      return {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      };
+      return rejectConflict("Das Event ist bereits vorbei.", formData);
     if (!(await isAllowedToManageEvent(event)))
       return {
         error: t("Common.forbidden"),
@@ -136,8 +133,14 @@ export const updateEvent = createAuthenticatedAction(
       !descriptionChanged &&
       !scheduleChanged &&
       !visibilityChanged
-    )
+    ) {
+      /**
+       * Possibly a different tab or manager saved the same values before,
+       * and the page must show them.
+       */
+      refresh();
       return { success: t("Common.successfullySaved") };
+    }
 
     /**
      * Update the event and record the activity entries atomically
@@ -226,16 +229,17 @@ export const updateEvent = createAuthenticatedAction(
     /**
      * Trigger notifications
      */
-    if (nameChanged || descriptionChanged || scheduleChanged) {
-      await triggerNotifications([
-        {
-          type: "EventUpdated",
-          payload: {
-            eventId: event.id,
-          },
-        },
-      ]);
-    }
+    const areNotificationsSent =
+      nameChanged || descriptionChanged || scheduleChanged
+        ? await triggerNotificationsAfterSave([
+            {
+              type: "EventUpdated",
+              payload: {
+                eventId: event.id,
+              },
+            },
+          ])
+        : true;
 
     /**
      * Carry the change over to Discord if the event is published there. A
@@ -257,18 +261,20 @@ export const updateEvent = createAuthenticatedAction(
       visibilityChanged &&
       data.visibility === EventVisibility.RESTRICTED;
 
-    const warning =
+    const warnings = [
       discordSyncWarning ??
-      (becameRestrictedWhilePublished
-        ? "Das Event bleibt auf Discord für alle Mitglieder des Servers sichtbar. Entferne es dort, wenn das nicht gewollt ist."
-        : null);
+        (becameRestrictedWhilePublished
+          ? "Das Event bleibt auf Discord für alle Mitglieder des Servers sichtbar. Entferne es dort, wenn das nicht gewollt ist."
+          : null),
+      areNotificationsSent ? null : t("Common.notificationsFailed"),
+    ].filter((warning) => warning !== null);
 
     /**
      * Respond with the result
      */
     return {
       success: t("Common.successfullySaved"),
-      ...(warning ? { warning } : {}),
+      ...(warnings.length > 0 ? { warning: warnings.join(" ") } : {}),
     };
   },
   {

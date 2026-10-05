@@ -4,7 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import { triggerNotificationsAfterSave } from "@/modules/notifications/utils/triggerNotification";
 import { EventActivityType, EventSource } from "@sam-monorepo/database/client";
 import { refresh } from "next/cache";
 import * as z from "zod";
@@ -12,6 +12,7 @@ import { EVENT_MANAGE_GUARD_SELECT } from "../queries/eventManageGuardSelect";
 import { createEventActivity } from "../utils/eventActivity";
 import { isAllowedToManagePositions } from "../utils/isAllowedToManagePositions";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
+import { rejectConflict } from "../utils/rejectConflict";
 
 const schema = z.object({
   eventId: z.cuid(),
@@ -28,6 +29,7 @@ export const updateEventLineupEnabled = createAuthenticatedAction(
     const event = await prisma.event.findUnique({
       where: {
         id: data.eventId,
+        deletedAt: null,
       },
       select: {
         ...EVENT_MANAGE_GUARD_SELECT,
@@ -35,13 +37,9 @@ export const updateEventLineupEnabled = createAuthenticatedAction(
         lineupEnabled: true,
       },
     });
-    if (!event)
-      return { error: "Event nicht gefunden", requestPayload: formData };
+    if (!event) return rejectConflict("Event nicht gefunden", formData);
     if (!isEventUpdatable(event))
-      return {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      };
+      return rejectConflict("Das Event ist bereits vorbei.", formData);
     if (!(await isAllowedToManagePositions(event)))
       return {
         error: t("Common.forbidden"),
@@ -93,22 +91,25 @@ export const updateEventLineupEnabled = createAuthenticatedAction(
     /**
      * Trigger notifications
      */
-    if (data.value) {
-      await triggerNotifications([
-        {
-          type: "EventLineupEnabled",
-          payload: {
-            eventId: event.id,
+    const areNotificationsSent = data.value
+      ? await triggerNotificationsAfterSave([
+          {
+            type: "EventLineupEnabled",
+            payload: {
+              eventId: event.id,
+            },
           },
-        },
-      ]);
-    }
+        ])
+      : true;
 
     /**
      * Respond with the result
      */
     return {
       success: t("Common.successfullySaved"),
+      ...(areNotificationsSent
+        ? {}
+        : { warning: t("Common.notificationsFailed") }),
     };
   },
 );

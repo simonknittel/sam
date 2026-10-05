@@ -15,6 +15,7 @@ import {
 } from "../utils/eventContainer";
 import { buildPositionCreatedAuditEvent } from "../utils/lineupAuditEvents";
 import { positionColorSchema } from "../utils/positionColorSchema";
+import { rejectConflict } from "../utils/rejectConflict";
 
 const schema = z.object({
   containerKind: z.enum(EventContainerKind),
@@ -45,7 +46,8 @@ export const createEventPosition = createAuthenticatedAction(
 
     /**
      * A parent must live in the same container, or the position would leak
-     * into another lineup — the tree is walked by parentPositionId alone.
+     * into another lineup — the tree is walked by parentPositionId alone. A
+     * missing parent is usually a parent that a different tab deleted.
      */
     if (data.parentPositionId) {
       const parentPosition = await prisma.eventPosition.findFirst({
@@ -56,7 +58,7 @@ export const createEventPosition = createAuthenticatedAction(
         select: { id: true },
       });
       if (!parentPosition)
-        return { error: t("Common.badRequest"), requestPayload: formData };
+        return rejectConflict("Posten nicht gefunden", formData);
     }
 
     /**

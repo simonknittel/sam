@@ -14,6 +14,7 @@ import { toEventContainer } from "../utils/eventContainer";
 import { isAllowedToManagePositions } from "../utils/isAllowedToManagePositions";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
 import { buildPositionTree } from "../utils/positionTree";
+import { rejectConflict } from "../utils/rejectConflict";
 
 const schema = z.object({
   targetEventId: z.cuid(),
@@ -38,7 +39,7 @@ export const copyLineupFromEvent = createAuthenticatedAction(
      */
     const [targetEvent, sourceEvent] = await prisma.$transaction([
       prisma.event.findUnique({
-        where: { id: data.targetEventId },
+        where: { id: data.targetEventId, deletedAt: null },
         select: {
           id: true,
           startTime: true,
@@ -76,11 +77,7 @@ export const copyLineupFromEvent = createAuthenticatedAction(
         },
       }),
     ]);
-    if (!targetEvent)
-      return {
-        error: t("Common.notFound"),
-        requestPayload: formData,
-      };
+    if (!targetEvent) return rejectConflict(t("Common.notFound"), formData);
     if (!sourceEvent)
       return {
         error: t("Common.badRequest"),
@@ -88,10 +85,7 @@ export const copyLineupFromEvent = createAuthenticatedAction(
       };
 
     if (!isEventUpdatable(targetEvent))
-      return {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      };
+      return rejectConflict("Das Event ist bereits vorbei.", formData);
     if (!(await isAllowedToManagePositions(targetEvent)))
       return { error: t("Common.forbidden"), requestPayload: formData };
 

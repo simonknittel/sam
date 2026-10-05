@@ -11,6 +11,7 @@ import { EVENT_MANAGE_GUARD_SELECT } from "../queries/eventManageGuardSelect";
 import { createEventActivity } from "../utils/eventActivity";
 import { isAllowedToManageEvent } from "../utils/isAllowedToManageEvent";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
+import { rejectConflict } from "../utils/rejectConflict";
 
 const schema = z.object({
   eventId: z.cuid(),
@@ -27,16 +28,13 @@ export const deleteManager = createAuthenticatedAction(
     const event = await prisma.event.findUnique({
       where: {
         id: data.eventId,
+        deletedAt: null,
       },
       select: EVENT_MANAGE_GUARD_SELECT,
     });
-    if (!event)
-      return { error: "Event nicht gefunden", requestPayload: formData };
+    if (!event) return rejectConflict("Event nicht gefunden", formData);
     if (!isEventUpdatable(event))
-      return {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      };
+      return rejectConflict("Das Event ist bereits vorbei.", formData);
     if (!(await isAllowedToManageEvent(event)))
       return {
         error: t("Common.forbidden"),
@@ -52,14 +50,12 @@ export const deleteManager = createAuthenticatedAction(
     const isManager = event.managers.some(
       (manager) => manager.id === data.managerId,
     );
-    if (!isManager) {
-      /** A different tab or manager removed the citizen before */
-      refresh();
-      return {
-        error: "Der Citizen ist kein Manager des Events.",
-        requestPayload: formData,
-      };
-    }
+    /** A different tab or manager removed the citizen before */
+    if (!isManager)
+      return rejectConflict(
+        "Der Citizen ist kein Manager des Events.",
+        formData,
+      );
 
     /**
      * Delete manager. One transaction, so the activity entry cannot get lost

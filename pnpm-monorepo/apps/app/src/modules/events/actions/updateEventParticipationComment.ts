@@ -12,6 +12,7 @@ import {
   getParticipatableAppEvent,
   isParticipationOpen,
 } from "../utils/getParticipatableAppEvent";
+import { rejectConflict } from "../utils/rejectConflict";
 
 const schema = z.object({
   eventId: z.cuid(),
@@ -33,13 +34,9 @@ export const updateEventParticipationComment = createAuthenticatedAction(
     const citizenId = authentication.session.entity.id;
 
     const event = await getParticipatableAppEvent(data.eventId);
-    if (!event)
-      return { error: "Event nicht gefunden", requestPayload: formData };
+    if (!event) return rejectConflict("Event nicht gefunden", formData);
     if (!isParticipationOpen(event))
-      return {
-        error: "Die Anmeldung ist geschlossen.",
-        requestPayload: formData,
-      };
+      return rejectConflict("Die Anmeldung ist geschlossen.", formData);
 
     const participant = await prisma.eventParticipant.findFirst({
       where: {
@@ -51,17 +48,9 @@ export const updateEventParticipationComment = createAuthenticatedAction(
         id: true,
       },
     });
-    if (!participant) {
-      /**
-       * A different tab or a manager cancelled the participation before, and
-       * the page must show it.
-       */
-      refresh();
-      return {
-        error: "Du bist nicht angemeldet.",
-        requestPayload: formData,
-      };
-    }
+    /** A different tab or a manager cancelled the participation before */
+    if (!participant)
+      return rejectConflict("Du bist nicht angemeldet.", formData);
 
     /**
      * Update the comment

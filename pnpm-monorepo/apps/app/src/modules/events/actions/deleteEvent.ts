@@ -5,7 +5,7 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { log } from "@/modules/logging";
-import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import { triggerNotificationsAfterSave } from "@/modules/notifications/utils/triggerNotification";
 import { EventSource } from "@sam-monorepo/database/client";
 import { refresh } from "next/cache";
 import * as z from "zod";
@@ -16,6 +16,7 @@ import {
 } from "../utils/discordPublishing";
 import { isAllowedToManageEvent } from "../utils/isAllowedToManageEvent";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
+import { rejectConflict } from "../utils/rejectConflict";
 
 const schema = z.object({
   eventId: z.cuid(),
@@ -39,13 +40,9 @@ export const deleteEvent = createAuthenticatedAction(
         name: true,
       },
     });
-    if (!event)
-      return { error: "Event nicht gefunden", requestPayload: formData };
+    if (!event) return rejectConflict("Event nicht gefunden", formData);
     if (!isEventUpdatable(event))
-      return {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      };
+      return rejectConflict("Das Event ist bereits vorbei.", formData);
     if (!(await isAllowedToManageEvent(event)))
       return {
         error: t("Common.forbidden"),
@@ -99,7 +96,7 @@ export const deleteEvent = createAuthenticatedAction(
     /**
      * Trigger notifications
      */
-    await triggerNotifications([
+    const areNotificationsSent = await triggerNotificationsAfterSave([
       {
         type: "EventDeleted",
         payload: {
@@ -111,14 +108,16 @@ export const deleteEvent = createAuthenticatedAction(
     /**
      * Respond with the result
      */
+    const warnings = [
+      discordResult.outcome === DiscordSyncOutcome.Failed
+        ? "Das Event konnte nicht von Discord entfernt werden und muss dort von Hand gelöscht werden."
+        : null,
+      areNotificationsSent ? null : t("Common.notificationsFailed"),
+    ].filter((warning) => warning !== null);
+
     return {
       success: "Das Event wurde gelöscht.",
-      ...(discordResult.outcome === DiscordSyncOutcome.Failed
-        ? {
-            warning:
-              "Das Event konnte nicht von Discord entfernt werden und muss dort von Hand gelöscht werden.",
-          }
-        : {}),
+      ...(warnings.length > 0 ? { warning: warnings.join(" ") } : {}),
     };
   },
 );

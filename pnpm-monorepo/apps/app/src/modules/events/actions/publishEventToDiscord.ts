@@ -21,6 +21,7 @@ import {
 } from "../utils/discordPublishing";
 import { isAllowedToManageEvent } from "../utils/isAllowedToManageEvent";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
+import { rejectConflict } from "../utils/rejectConflict";
 
 /** Publishing always has a target, unlike the forms that merely offer one */
 const schema = discordPublishFieldsSchema.extend({
@@ -47,23 +48,17 @@ export const publishEventToDiscord = createAuthenticatedAction(
         discordPublishedId: true,
       },
     });
-    if (!event)
-      return { error: "Event nicht gefunden", requestPayload: formData };
+    if (!event) return rejectConflict("Event nicht gefunden", formData);
     if (!isEventUpdatable(event))
-      return {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      };
+      return rejectConflict("Das Event ist bereits vorbei.", formData);
     if (!(await isAllowedToManageEvent(event)))
       return { error: t("Common.forbidden"), requestPayload: formData };
-    if (event.discordPublishedId) {
-      /** A different tab or manager published the event before */
-      refresh();
-      return {
-        error: "Das Event ist bereits auf Discord veröffentlicht.",
-        requestPayload: formData,
-      };
-    }
+    /** A different tab or manager published the event before */
+    if (event.discordPublishedId)
+      return rejectConflict(
+        "Das Event ist bereits auf Discord veröffentlicht.",
+        formData,
+      );
 
     /**
      * Validate the request
