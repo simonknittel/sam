@@ -24,7 +24,6 @@ export const useAction = (
       try {
         const response = await action(formData);
 
-
         if ("error" in response) {
           if (options?.errorToast !== false) toast.error(response.error);
           console.error(response);
