@@ -17,10 +17,9 @@ interface Props {
     OrganizationMembershipHistoryEntry,
     "id" | "organizationId" | "citizenId"
   >;
-  readonly compact?: boolean;
 }
 
-export const ConfirmMembership = ({ entry, compact = false }: Props) => {
+export const ConfirmMembership = ({ entry }: Props) => {
   const { formAction } = useAction(confirmOrganizationMembership);
 
   return (
@@ -28,19 +27,16 @@ export const ConfirmMembership = ({ entry, compact = false }: Props) => {
       <input type="hidden" name="id" value={entry.id} />
       <input type="hidden" name="organizationId" value={entry.organizationId} />
       <input type="hidden" name="citizenId" value={entry.citizenId} />
-
       <DecisionButton
         decision={ConfirmationStatus.CONFIRMED}
         label="Bestätigen"
         icon={<FaCheck />}
-        compact={compact}
       />
-      {compact && "/"}
+      /
       <DecisionButton
         decision={ConfirmationStatus.FALSE_REPORT}
         label="Falschmeldung"
         icon={<FaTimes />}
-        compact={compact}
       />
     </form>
   );
@@ -48,18 +44,12 @@ export const ConfirmMembership = ({ entry, compact = false }: Props) => {
 
 interface DecisionButtonProps {
   readonly decision: ConfirmationStatus;
+  /** The button shows only the icon, thus the label is its title */
   readonly label: string;
   readonly icon: ReactNode;
-  /** Shows only the icon, and the label as the title */
-  readonly compact: boolean;
 }
 
-const DecisionButton = ({
-  decision,
-  label,
-  icon,
-  compact,
-}: DecisionButtonProps) => {
+const DecisionButton = ({ decision, label, icon }: DecisionButtonProps) => {
   const { pending, data } = useFormStatus();
   /** The spinner shows on the button of the decision that the form sends */
   const isSent = pending && data.get("confirmed") === decision;
@@ -72,10 +62,9 @@ const DecisionButton = ({
       variant="tertiary"
       className="h-auto"
       disabled={pending}
-      title={compact ? label : undefined}
+      title={label}
     >
       {isSent ? <AsciiSpinner /> : icon}
-      {!compact && label}
     </Button>
   );
 };

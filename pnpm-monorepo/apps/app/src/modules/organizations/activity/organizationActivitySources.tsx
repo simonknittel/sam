@@ -313,7 +313,18 @@ export const createOrganizationMembershipSource = (
         ...(input.withConfirmation
           ? {
               confirmation: entry.confirmed,
-              confirmAction: <ConfirmMembership entry={entry} compact />,
+              /** The action refuses a decision about a deleted citizen */
+              confirmAction:
+                entry.citizen.deletedAt === null ? (
+                  <ConfirmMembership
+                    /** Only the IDs go to the browser, not the full entry */
+                    entry={{
+                      id: entry.id,
+                      organizationId: entry.organizationId,
+                      citizenId: entry.citizenId,
+                    }}
+                  />
+                ) : undefined,
             }
           : {}),
       }));
