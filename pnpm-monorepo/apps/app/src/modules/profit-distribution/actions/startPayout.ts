@@ -4,7 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import { triggerNotificationsAfterSave } from "@/modules/notifications/utils/triggerNotification";
 import { CYCLE_PHASE_WHERE, CyclePhase } from "@sam-monorepo/domain";
 import { refresh } from "next/cache";
 import * as z from "zod";
@@ -80,7 +80,7 @@ export const startPayout = createAuthenticatedAction(
     /**
      * Trigger notifications
      */
-    await triggerNotifications([
+    const isNotified = await triggerNotificationsAfterSave([
       {
         type: "ProfitDistributionPayoutStarted",
         payload: {
@@ -91,6 +91,7 @@ export const startPayout = createAuthenticatedAction(
 
     return {
       success: t("Common.successfullySaved"),
+      ...(isNotified ? {} : { warning: t("Common.notificationsFailed") }),
     };
   },
 );

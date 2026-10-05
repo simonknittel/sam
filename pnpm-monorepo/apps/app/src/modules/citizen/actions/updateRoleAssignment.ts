@@ -4,7 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import { triggerNotificationsAfterSave } from "@/modules/notifications/utils/triggerNotification";
 import { RoleAssignmentChangeType } from "@sam-monorepo/database/client";
 import { refresh } from "next/cache";
 import * as z from "zod";
@@ -191,7 +191,7 @@ export const updateRoleAssignments = createAuthenticatedAction(
     /**
      * Trigger notifications
      */
-    await triggerNotifications(
+    const isNotified = await triggerNotificationsAfterSave(
       filteredChanges
         .filter((change) => change.enabled)
         .map((change) => ({
@@ -205,6 +205,7 @@ export const updateRoleAssignments = createAuthenticatedAction(
 
     return {
       success: t("Common.successfullySaved"),
+      ...(isNotified ? {} : { warning: t("Common.notificationsFailed") }),
     };
   },
 );

@@ -66,10 +66,11 @@ export const endCollectionPhase = createAuthenticatedAction(
       },
     ]);
 
-    await announceSilcTransactions(transactionIds);
+    const isAnnounced = await announceSilcTransactions(transactionIds);
 
     return {
       success: t("Common.successfullySaved"),
+      ...(isAnnounced ? {} : { warning: t("Common.notificationsFailed") }),
     };
   },
 );

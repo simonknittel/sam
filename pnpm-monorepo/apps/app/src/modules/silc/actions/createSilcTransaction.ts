@@ -68,8 +68,6 @@ export const createSilcTransaction = createAuthenticatedAction(
 
     refresh();
 
-    await announceSilcTransactions(transactionIds);
-
     await createAuditEvents([
       {
         type: AuditEventType.SILC_TRANSACTION_CREATED,
@@ -83,11 +81,14 @@ export const createSilcTransaction = createAuthenticatedAction(
       },
     ]);
 
+    const isAnnounced = await announceSilcTransactions(transactionIds);
+
     /**
      * Respond with the result
      */
     return {
       success: "Erfolgreich gespeichert.",
+      ...(isAnnounced ? {} : { warning: t("Common.notificationsFailed") }),
     };
   },
   {

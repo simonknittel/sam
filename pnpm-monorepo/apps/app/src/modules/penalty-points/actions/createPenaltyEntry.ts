@@ -5,7 +5,7 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { wallTimeSchema } from "@/modules/common/utils/wallTimeSchema";
-import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import { triggerNotificationsAfterSave } from "@/modules/notifications/utils/triggerNotification";
 import { refresh } from "next/cache";
 import * as z from "zod";
 
@@ -93,7 +93,7 @@ export const createPenaltyEntry = createAuthenticatedAction(
     /**
      * Trigger notifications
      */
-    await triggerNotifications([
+    const isNotified = await triggerNotificationsAfterSave([
       {
         type: "PenaltyEntryCreated",
         payload: {
@@ -107,6 +107,7 @@ export const createPenaltyEntry = createAuthenticatedAction(
      */
     return {
       success: "Erfolgreich gespeichert.",
+      ...(isNotified ? {} : { warning: t("Common.notificationsFailed") }),
     };
   },
   {
