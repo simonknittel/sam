@@ -3,11 +3,14 @@ import {
   ConfirmationStatus,
   type PrismaClient,
 } from "@sam-monorepo/database/client";
+import { expectAuditEvents } from "../fixtures/audit";
 import { createCitizen, ONE_MINUTE_MS } from "../fixtures/factories";
 import {
   clickUntilUrl,
   clickUntilVisible,
+  DELETED_TEXT,
   toggleLabel,
+  waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
@@ -157,6 +160,132 @@ test("a viewer with the confirm and read permissions sees all logs of these type
 
   await expect(tableRows(page)).toHaveCount(1);
   await expect(logContent(page, FALSE_REPORT_HANDLE)).toBeVisible();
+});
+
+const RESOURCE_NOT_FOUND_TEXT = "Die gesuchte Ressource wurde nicht gefunden.";
+
+const EDITOR_PERMISSIONS = [
+  ...OTHER_TABLE_PERMISSIONS,
+  "handle;read",
+  "handle;confirm",
+  "handle;delete",
+];
+
+const rowOf = (page: Page, content: string) =>
+  tableRows(page).filter({ has: page.getByText(content, { exact: true }) });
+
+/** Opens the row menu of the log and confirms the delete dialog */
+const deleteLogInTable = async (page: Page, content: string) => {
+  const deleteButton = page
+    .getByRole("dialog", { name: "Aktionen" })
+    .getByRole("button", { name: "Löschen", exact: true });
+  await clickUntilVisible(
+    rowOf(page, content).getByRole("button", { name: "Aktionen" }),
+    deleteButton,
+  );
+  await deleteButton.click();
+
+  await page
+    .getByRole("alertdialog", { name: "Eintrag löschen?" })
+    .getByRole("button", { name: "Löschen" })
+    .click();
+};
+
+test("a log is confirmed and deleted in the log table", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const editor = await createCitizen(prisma, {
+    handle: "log-bearbeiter",
+    permissionStrings: EDITOR_PERMISSIONS,
+  });
+  /**
+   * Two citizens: the confirmation writes the handle into the citizen column
+   * of each row of its citizen
+   */
+  const citizen = await prisma.citizen.create({
+    data: { handle: "beobachteter" },
+  });
+  const otherCitizen = await prisma.citizen.create({
+    data: { handle: "anderer-beobachteter" },
+  });
+  await prisma.citizenLog.createMany({
+    data: [
+      { citizenId: citizen.id, type: "handle", content: "bestaetigter-handle" },
+      {
+        citizenId: otherCitizen.id,
+        type: "handle",
+        content: "geloeschter-handle",
+      },
+    ],
+  });
+
+  await signIn(editor.user);
+  await page.goto("/app/spynet/other");
+  await waitForAppShellHydration(page);
+
+  await rowOf(page, "bestaetigter-handle")
+    .getByRole("button", { name: "Bestätigen" })
+    .click();
+  await expect(
+    rowOf(page, "bestaetigter-handle").getByText("Bestätigt", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    rowOf(page, "bestaetigter-handle").getByText("Unbestätigt"),
+  ).toHaveCount(0);
+  expect(
+    await prisma.citizen.findUniqueOrThrow({
+      where: { id: citizen.id },
+      select: { handle: true },
+    }),
+  ).toEqual({ handle: "bestaetigter-handle" });
+
+  await deleteLogInTable(page, "geloeschter-handle");
+  await expect(page.getByText(DELETED_TEXT)).toBeVisible();
+  await expect(rowOf(page, "geloeschter-handle")).toHaveCount(0);
+  expect(
+    await prisma.citizenLog.count({ where: { content: "geloeschter-handle" } }),
+  ).toBe(0);
+
+  await expectAuditEvents(prisma, [
+    "ENTITY_LOG_CONFIRMED",
+    "ENTITY_LOG_DELETED",
+  ]);
+});
+
+test("the delete of a log that a different user deleted shows a message and removes the row", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const editor = await createCitizen(prisma, {
+    handle: "log-bearbeiter",
+    permissionStrings: EDITOR_PERMISSIONS,
+  });
+  const citizen = await prisma.citizen.create({
+    data: { handle: "beobachteter" },
+  });
+  const staleLog = await prisma.citizenLog.create({
+    data: {
+      citizenId: citizen.id,
+      type: "handle",
+      content: "veralteter-handle",
+    },
+  });
+
+  await signIn(editor.user);
+  await page.goto("/app/spynet/other");
+  await expect(rowOf(page, "veralteter-handle")).toBeVisible();
+
+  await prisma.citizenLog.delete({ where: { id: staleLog.id } });
+
+  await deleteLogInTable(page, "veralteter-handle");
+  await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
+  await expect(rowOf(page, "veralteter-handle")).toHaveCount(0);
+  expect(
+    await prisma.auditEvent.count({ where: { type: "ENTITY_LOG_DELETED" } }),
+  ).toBe(0);
 });
 
 const headerLink = (page: Page, name: string) =>

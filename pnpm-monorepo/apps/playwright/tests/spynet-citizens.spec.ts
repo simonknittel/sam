@@ -5,12 +5,18 @@ import {
   OrganizationMembershipVisibility,
 } from "@sam-monorepo/database/client";
 import { expectAuditEvents } from "../fixtures/audit";
-import { createCitizen, createUserWithoutCitizen } from "../fixtures/factories";
+import {
+  createCitizen,
+  createUserWithoutCitizen,
+  ONE_MINUTE_MS,
+} from "../fixtures/factories";
 import {
   clickUntilVisible,
   DELETED_TEXT,
   modal,
+  SAVED_TEXT,
   sectionByHeading,
+  waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
@@ -88,6 +94,43 @@ test("a citizen is created from a Spectrum ID and deleted again", async ({
   ).toBe(1);
 
   await expectAuditEvents(prisma, ["CITIZEN_CREATED", "CITIZEN_DELETED"]);
+});
+
+test("a known Spectrum ID opens its citizen and creates no second one", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "spynet-anleger",
+    permissionStrings: ["citizen;create", "citizen;read"],
+  });
+  const known = await prisma.citizen.create({
+    data: { handle: "bekannter", spectrumId: "BEKANNTER" },
+  });
+
+  await signIn(admin.user);
+  await page.goto("/app/spynet");
+
+  const createDialog = modal(page, "Neuer Citizen");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Citizen" }),
+    createDialog,
+  );
+  await createDialog.getByLabel("Spectrum ID").fill("BEKANNTER");
+  await createDialog.getByRole("button", { name: "Anlegen" }).click();
+
+  await expect(page.getByRole("heading", { name: "bekannter" })).toBeVisible();
+  await expect(createDialog).toHaveCount(0);
+  await expect(page).toHaveURL(`/app/spynet/citizen/${known.id}`);
+
+  expect(
+    await prisma.citizen.count({ where: { spectrumId: "BEKANNTER" } }),
+  ).toBe(1);
+  expect(await prisma.citizenLog.count()).toBe(0);
+  expect(
+    await prisma.auditEvent.count({ where: { type: "CITIZEN_CREATED" } }),
+  ).toBe(0);
 });
 
 test("a deleted member leaves the member list of its organization", async ({
@@ -231,6 +274,77 @@ test("a log entry is confirmed, and a second one marked a false report", async (
     .toBe("zweiterhandle");
 });
 
+test("a deleted log entry leaves the history, and the overview shows the previous confirmed value", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "spynet-aufraeumer",
+    permissionStrings: ["citizen;read", "handle;read", "handle;delete"],
+  });
+  const target = await createCitizen(prisma, { handle: "neuerhandle" });
+  const now = Date.now();
+  await prisma.citizenLog.createMany({
+    data: ["alterhandle", "neuerhandle"].map((content, index) => {
+      const createdAt = new Date(now - (2 - index) * ONE_MINUTE_MS);
+
+      return {
+        citizenId: target.entity.id,
+        type: "handle",
+        content,
+        confirmed: ConfirmationStatus.CONFIRMED,
+        confirmedAt: createdAt,
+        createdAt,
+      };
+    }),
+  });
+
+  await signIn(admin.user);
+  await page.goto(`/app/spynet/citizen/${target.entity.id}`);
+  await expect(overviewAttribute(page, "Handle")).toContainText("neuerhandle");
+
+  const historyDialog = modal(page, "Handle History");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Handle History" }),
+    historyDialog,
+  );
+  const entryOf = (content: string) =>
+    historyDialog.getByRole("listitem").filter({ hasText: content });
+
+  const deleteDialog = page.getByRole("alertdialog", {
+    name: "Eintrag löschen?",
+  });
+  await clickUntilVisible(
+    entryOf("neuerhandle").getByRole("button", { name: "Löschen" }),
+    deleteDialog,
+  );
+  await deleteDialog.getByRole("button", { name: "Löschen" }).click();
+
+  await expect(page.getByText(DELETED_TEXT)).toBeVisible();
+  await expect(entryOf("neuerhandle")).toHaveCount(0);
+  await expect(entryOf("alterhandle")).toBeVisible();
+
+  /** The page behind the modal shows the change without a new load */
+  await page.keyboard.press("Escape");
+  await expect(historyDialog).not.toBeVisible();
+  await expect(overviewAttribute(page, "Handle")).toContainText("alterhandle");
+
+  expect(
+    await prisma.citizenLog.count({
+      where: { citizenId: target.entity.id, content: "neuerhandle" },
+    }),
+  ).toBe(0);
+  /** The login takes the handle that is confirmed now */
+  expect(
+    await prisma.user.findUniqueOrThrow({
+      where: { id: target.user.id },
+      select: { name: true },
+    }),
+  ).toEqual({ name: "alterhandle" });
+  await expectAuditEvents(prisma, ["ENTITY_LOG_DELETED"]);
+});
+
 test("confirming a Discord ID links the citizen to the login with that ID", async ({
   page,
   prisma,
@@ -282,7 +396,7 @@ test("confirming a Discord ID links the citizen to the login with that ID", asyn
     .toBe(newcomer.id);
 });
 
-test("a false report of the confirmed Discord ID removes the link to the login", async ({
+test("a false report of a Discord ID that a different user confirmed after the page loaded removes the link to the login", async ({
   page,
   prisma,
   signIn,
@@ -290,31 +404,59 @@ test("a false report of the confirmed Discord ID removes the link to the login",
 }) => {
   const admin = await createCitizen(prisma, {
     handle: "spynet-verknuepfer",
-    permissionStrings: ["citizen;read", "discord-id;create", "discord-id;read"],
+    permissionStrings: [
+      "citizen;read",
+      "discord-id;create",
+      "discord-id;read",
+      "discord-id;confirm",
+    ],
   });
   const target = await createCitizen(prisma, { handle: "verknuepfter" });
+  const discordId = target.entity.discordId!;
   const discordIdLog = await prisma.citizenLog.create({
     data: {
       citizenId: target.entity.id,
       type: "discord-id",
-      content: target.entity.discordId,
-      confirmed: ConfirmationStatus.CONFIRMED,
-      confirmedAt: new Date(),
+      content: discordId,
     },
   });
 
   await signIn(admin.user);
+  await page.goto(`/app/spynet/citizen/${target.entity.id}`);
+
+  const historyDialog = modal(page, "Discord ID History");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Discord ID History" }),
+    historyDialog,
+  );
+  const entry = historyDialog
+    .getByRole("listitem")
+    .filter({ hasText: discordId });
+  await expect(entry.getByText("Unbestätigt")).toBeVisible();
 
   /**
-   * The UI shows the decision buttons only for a log without a decision,
-   * thus the change of the decision goes through the API of these buttons
+   * The UI shows the decision buttons only for a log without a decision.
+   * Thus only a page that loaded before a different user decided changes a
+   * decision.
    */
-  const response = await page.request.patch(
-    `/api/spynet/citizen/${target.entity.id}/log/${discordIdLog.id}/confirm`,
-    { data: { confirmed: "false-report" } },
-  );
-  expect(response.status()).toBe(200);
+  await prisma.citizenLog.update({
+    where: { id: discordIdLog.id },
+    data: { confirmed: ConfirmationStatus.CONFIRMED, confirmedAt: new Date() },
+  });
 
+  await entry.getByRole("button", { name: "Falschmeldung" }).click();
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+  await expect(
+    entry.getByRole("button", { name: "Falschmeldung" }),
+  ).toHaveCount(0);
+  await expect(entry.getByText("Falschmeldung", { exact: true })).toBeVisible();
+
+  expect(
+    await prisma.citizenLog.findUniqueOrThrow({
+      where: { id: discordIdLog.id },
+      select: { confirmed: true },
+    }),
+  ).toEqual({ confirmed: ConfirmationStatus.FALSE_REPORT });
   expect(
     await prisma.citizen.findUniqueOrThrow({
       where: { id: target.entity.id },
@@ -432,4 +574,182 @@ test("the overview shows the confirmed value of every identity attribute", async
   for (const [name, value] of Object.entries(expectedAttributes)) {
     await expect(overviewAttribute(page, name)).toContainText(value);
   }
+});
+
+test("a note is saved, confirmed, moved to a different note type and deleted", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const observation = await prisma.noteType.create({
+    data: { name: "Beobachtung" },
+  });
+  const rumour = await prisma.noteType.create({ data: { name: "Gerücht" } });
+  const secret = await prisma.classificationLevel.create({
+    data: { name: "Geheim" },
+  });
+  const topSecret = await prisma.classificationLevel.create({
+    data: { name: "Streng geheim" },
+  });
+  /**
+   * The buttons of a note without a decision need permissions for notes
+   * without a decision
+   */
+  const allNotes = "noteTypeId=*;classificationLevelId=*";
+  const analyst = await createCitizen(prisma, {
+    handle: "notiz-analyst",
+    permissionStrings: [
+      "citizen;read",
+      `note;create;${allNotes}`,
+      ...["read", "confirm", "update", "delete"].map(
+        (operation) => `note;${operation};${allNotes};alsoUnconfirmed=true`,
+      ),
+    ],
+  });
+  const target = await createCitizen(prisma, { handle: "zielperson" });
+  const noteContent = "Fliegt eine Cutlass Black.";
+  const findNote = () =>
+    prisma.citizenLog.findFirstOrThrow({
+      where: { citizenId: target.entity.id, type: "note" },
+      select: {
+        content: true,
+        noteTypeId: true,
+        classificationLevelId: true,
+        confirmed: true,
+      },
+    });
+
+  /** The panels are keep-mounted, thus each lookup names its panel */
+  const notePanel = (name: string) => page.getByRole("tabpanel", { name });
+  const noteIn = (panelName: string) =>
+    notePanel(panelName).getByRole("article").filter({ hasText: noteContent });
+
+  await signIn(analyst.user);
+  await page.goto(`/app/spynet/citizen/${target.entity.id}/notes`);
+  await waitForAppShellHydration(page);
+
+  // Save
+  const contentInput = notePanel("Beobachtung").getByRole("textbox", {
+    name: "Neue Notiz",
+  });
+  await contentInput.fill(noteContent);
+  await notePanel("Beobachtung")
+    .getByRole("combobox", { name: "Geheimhaltungsstufe" })
+    .selectOption({ label: "Streng geheim" });
+  await notePanel("Beobachtung")
+    .getByRole("button", { name: "Speichern" })
+    .click();
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+  await expect(noteIn("Beobachtung").getByText("Unbestätigt")).toBeVisible();
+  await expect(contentInput).toHaveValue("");
+  expect(await findNote()).toEqual({
+    content: noteContent,
+    noteTypeId: observation.id,
+    classificationLevelId: topSecret.id,
+    confirmed: null,
+  });
+
+  // Confirm
+  await noteIn("Beobachtung")
+    .getByRole("button", { name: "Bestätigen" })
+    .click();
+  await expect(noteIn("Beobachtung").getByText("Unbestätigt")).toHaveCount(0);
+  expect((await findNote()).confirmed).toBe(ConfirmationStatus.CONFIRMED);
+
+  // Move to a different note type and classification level
+  const updateDialog = modal(page, "Bearbeiten");
+  await clickUntilVisible(
+    noteIn("Beobachtung").getByRole("button", { name: "Bearbeiten" }),
+    updateDialog,
+  );
+  await updateDialog.getByLabel("Notizart").selectOption({ label: "Gerücht" });
+  await updateDialog
+    .getByLabel("Geheimhaltungsstufe")
+    .selectOption({ label: "Geheim" });
+  await updateDialog.getByRole("button", { name: "Speichern" }).click();
+  await expect(updateDialog).toHaveCount(0);
+
+  await page.getByRole("tab", { name: "Gerücht" }).click();
+  await expect(noteIn("Gerücht")).toBeVisible();
+  await expect(
+    noteIn("Gerücht").getByText("Geheim", { exact: true }),
+  ).toBeVisible();
+  expect(await findNote()).toMatchObject({
+    noteTypeId: rumour.id,
+    classificationLevelId: secret.id,
+  });
+
+  // Delete
+  const deleteDialog = page.getByRole("alertdialog", {
+    name: "Eintrag löschen?",
+  });
+  await clickUntilVisible(
+    noteIn("Gerücht").getByRole("button", { name: "Löschen" }),
+    deleteDialog,
+  );
+  await deleteDialog.getByRole("button", { name: "Löschen" }).click();
+  await expect(page.getByText(DELETED_TEXT)).toBeVisible();
+  await expect(noteIn("Gerücht")).toHaveCount(0);
+  expect(
+    await prisma.citizenLog.count({
+      where: { citizenId: target.entity.id, type: "note" },
+    }),
+  ).toBe(0);
+
+  await expectAuditEvents(prisma, [
+    "ENTITY_LOG_CREATED",
+    "ENTITY_LOG_CONFIRMED",
+    "ENTITY_LOG_UPDATED",
+    "ENTITY_LOG_DELETED",
+  ]);
+});
+
+test("a note in a classification level that a different user deleted shows a message and keeps the text", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  await prisma.noteType.create({ data: { name: "Beobachtung" } });
+  await prisma.classificationLevel.create({ data: { name: "Geheim" } });
+  const topSecret = await prisma.classificationLevel.create({
+    data: { name: "Streng geheim" },
+  });
+  const allNotes = "noteTypeId=*;classificationLevelId=*";
+  const writer = await createCitizen(prisma, {
+    handle: "notiz-verfasser",
+    permissionStrings: [
+      "citizen;read",
+      `note;create;${allNotes}`,
+      `note;read;${allNotes};alsoUnconfirmed=true`,
+    ],
+  });
+  const target = await createCitizen(prisma, { handle: "zielperson" });
+  const noteContent = "Handelt mit Quantanium.";
+  const notePanel = page.getByRole("tabpanel", { name: "Beobachtung" });
+  const classificationLevelSelect = notePanel.getByRole("combobox", {
+    name: "Geheimhaltungsstufe",
+  });
+
+  await signIn(writer.user);
+  await page.goto(`/app/spynet/citizen/${target.entity.id}/notes`);
+  await waitForAppShellHydration(page);
+
+  const contentInput = notePanel.getByRole("textbox", { name: "Neue Notiz" });
+  await contentInput.fill(noteContent);
+  await classificationLevelSelect.selectOption({ label: "Streng geheim" });
+
+  await prisma.classificationLevel.delete({ where: { id: topSecret.id } });
+
+  await notePanel.getByRole("button", { name: "Speichern" }).click();
+  await expect(
+    page.getByText("Die gesuchte Ressource wurde nicht gefunden."),
+  ).toBeVisible();
+  /** The refresh shows the one level that is left, thus no select */
+  await expect(classificationLevelSelect).toHaveCount(0);
+  await expect(contentInput).toHaveValue(noteContent);
+
+  expect(await prisma.citizenLog.count({ where: { type: "note" } })).toBe(0);
+  expect(
+    await prisma.auditEvent.count({ where: { type: "ENTITY_LOG_CREATED" } }),
+  ).toBe(0);
 });
