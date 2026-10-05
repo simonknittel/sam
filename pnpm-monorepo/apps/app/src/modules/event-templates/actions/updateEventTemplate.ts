@@ -11,6 +11,7 @@ import {
   discordPublishFieldsSchema,
   parseDiscordPublishFields,
 } from "@/modules/events/utils/discordPublishFields";
+import { rejectConflict } from "@/modules/events/utils/rejectConflict";
 import {
   EventDiscordPublishTarget,
   EventVisibility,
@@ -53,10 +54,9 @@ export const updateEventTemplate = createAuthenticatedAction(
      * Authorize the request
      */
     const context = await getEventTemplateById(data.templateId);
-    if (!context)
-      return { error: "Vorlage nicht gefunden", requestPayload: formData };
+    if (!context) return rejectConflict("Vorlage nicht gefunden", formData);
     if (context.template.deletedAt !== null)
-      return { error: "Die Vorlage ist gelöscht.", requestPayload: formData };
+      return rejectConflict("Die Vorlage ist gelöscht.", formData);
     if (!context.permissions.canEdit)
       return { error: t("Common.forbidden"), requestPayload: formData };
     const citizenId = authentication.session.entity?.id ?? null;

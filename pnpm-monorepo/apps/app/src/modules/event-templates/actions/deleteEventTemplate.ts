@@ -4,6 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { rejectConflict } from "@/modules/events/utils/rejectConflict";
 import { refresh } from "next/cache";
 import * as z from "zod";
 import { getEventTemplateById } from "../queries/getEventTemplateById";
@@ -23,8 +24,7 @@ export const deleteEventTemplate = createAuthenticatedAction(
   schema,
   async (formData, authentication, data, t) => {
     const context = await getEventTemplateById(data.templateId);
-    if (!context)
-      return { error: "Vorlage nicht gefunden", requestPayload: formData };
+    if (!context) return rejectConflict("Vorlage nicht gefunden", formData);
     if (!context.permissions.canManage)
       return { error: t("Common.forbidden"), requestPayload: formData };
     if (context.template.deletedAt !== null) {

@@ -17,6 +17,7 @@ import {
 } from "@/modules/events/utils/eventContainer";
 import { isAllowedToManageEvent } from "@/modules/events/utils/isAllowedToManageEvent";
 import { buildPositionTree } from "@/modules/events/utils/positionTree";
+import { rejectConflict } from "@/modules/events/utils/rejectConflict";
 import {
   COPYABLE_UPLOAD_SELECT,
   copyUpload,
@@ -136,8 +137,7 @@ export const createEventTemplateFromEvent = createAuthenticatedAction(
         discordPublishedLocation: true,
       },
     });
-    if (!sourceEvent)
-      return { error: "Event nicht gefunden", requestPayload: formData };
+    if (!sourceEvent) return rejectConflict("Event nicht gefunden", formData);
     if (!(await isAllowedToManageEvent(sourceEvent)))
       return { error: t("Common.forbidden"), requestPayload: formData };
 

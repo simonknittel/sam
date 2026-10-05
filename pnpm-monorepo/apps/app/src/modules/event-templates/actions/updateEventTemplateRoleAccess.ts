@@ -4,6 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { rejectConflict } from "@/modules/events/utils/rejectConflict";
 import { EventTemplateAccessType } from "@sam-monorepo/database/client";
 import { refresh } from "next/cache";
 import * as z from "zod";
@@ -28,10 +29,9 @@ export const updateEventTemplateRoleAccess = createAuthenticatedAction(
   schema,
   async (formData, authentication, data, t) => {
     const context = await getEventTemplateById(data.templateId);
-    if (!context)
-      return { error: "Vorlage nicht gefunden", requestPayload: formData };
+    if (!context) return rejectConflict("Vorlage nicht gefunden", formData);
     if (context.template.deletedAt !== null)
-      return { error: "Die Vorlage ist gelöscht.", requestPayload: formData };
+      return rejectConflict("Die Vorlage ist gelöscht.", formData);
     if (!context.permissions.canManageShares)
       return { error: t("Common.forbidden"), requestPayload: formData };
 

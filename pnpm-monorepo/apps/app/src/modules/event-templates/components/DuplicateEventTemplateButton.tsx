@@ -1,6 +1,5 @@
 "use client";
 
-import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { TextInput } from "@/modules/common/components/form/TextInput";
@@ -76,8 +75,11 @@ const DuplicateEventTemplateForm = ({
   name,
   onSuccess,
 }: FormProps) => {
-  const { state, formAction } = useAction(duplicateEventTemplate, {
-    errorToast: false,
+  /**
+   * The errors show as toasts: the refresh after a conflict, for example a
+   * template that a different user deleted, can remove this form.
+   */
+  const { formAction } = useAction(duplicateEventTemplate, {
     onSuccess,
   });
 
@@ -97,8 +99,6 @@ const DuplicateEventTemplateForm = ({
         required
         autoFocus
       />
-
-      <ActionErrorNote className="mt-4" state={state} />
 
       <div className="mt-8 flex justify-end">
         <SubmitButton icon={<FaSave />}>Duplizieren</SubmitButton>

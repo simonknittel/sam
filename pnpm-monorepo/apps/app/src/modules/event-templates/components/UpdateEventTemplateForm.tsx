@@ -1,6 +1,5 @@
 "use client";
 
-import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
@@ -53,9 +52,11 @@ export const UpdateEventTemplateForm = ({
   template,
   channels,
 }: Props) => {
-  const { state, formAction, isPending } = useAction(updateEventTemplate, {
-    errorToast: false,
-  });
+  /**
+   * The errors show as toasts: the refresh after a conflict, for example a
+   * template that a different user deleted, can remove this form.
+   */
+  const { formAction, isPending } = useAction(updateEventTemplate);
   const [visibility, setVisibility] = useState<string>(template.visibility);
   const [isPublishing, setIsPublishing] = useState(
     template.discordPublishTarget !== null,
@@ -162,8 +163,6 @@ export const UpdateEventTemplateForm = ({
         {isPending ? <AsciiSpinner /> : <FaSave />}
         Speichern
       </Button2>
-
-      <ActionErrorNote className="mt-4" state={state} />
     </form>
   );
 };

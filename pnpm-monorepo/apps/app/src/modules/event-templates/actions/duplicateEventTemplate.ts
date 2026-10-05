@@ -13,6 +13,7 @@ import {
   toTemplateContainer,
 } from "@/modules/events/utils/eventContainer";
 import { buildPositionTree } from "@/modules/events/utils/positionTree";
+import { rejectConflict } from "@/modules/events/utils/rejectConflict";
 import {
   COPYABLE_UPLOAD_SELECT,
   copyUpload,
@@ -56,7 +57,7 @@ export const duplicateEventTemplate = createAuthenticatedAction(
 
     const source = await getEventTemplateById(data.sourceTemplateId);
     if (source?.template.deletedAt !== null)
-      return { error: "Vorlage nicht gefunden", requestPayload: formData };
+      return rejectConflict("Vorlage nicht gefunden", formData);
 
     const sourceContainer = toTemplateContainer(source.template.id);
 
