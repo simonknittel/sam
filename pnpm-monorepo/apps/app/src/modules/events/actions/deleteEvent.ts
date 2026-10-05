@@ -50,35 +50,23 @@ export const deleteEvent = createAuthenticatedAction(
       };
 
     /**
-     * Take the event off Discord first: once the row is soft-deleted it no
-     * longer surfaces anywhere the manager could retry from, so a leftover
-     * guild scheduled event would advertise an event that is gone. Nothing
-     * about it may stop the deletion, though — hence the catch.
-     */
-    const discordResult = await removeDiscordEventPublication(event.id, {
-      userId: authentication.session.user.id,
-      citizenId: authentication.session.entity?.id ?? null,
-    }).catch((error: unknown) => {
-      log.error("Failed to remove a deleted event from Discord", {
-        eventId: event.id,
-        error,
-      });
-      return { outcome: DiscordSyncOutcome.Failed } as const;
-    });
-
-    /**
      * Soft-delete the event. The row stays resolvable, so the notification
      * router can still look up the event and its participants afterwards.
+     * The condition on `deletedAt` lets only one of two parallel requests
+     * (a double click, two managers) delete the event. The other request
+     * stops here, thus it removes nothing from Discord and sends nothing.
      */
-    await prisma.event.update({
+    const { count } = await prisma.event.updateMany({
       where: {
         id: event.id,
+        deletedAt: null,
       },
       data: {
         deletedAt: new Date(),
         deletedById: authentication.session.entity?.id ?? null,
       },
     });
+    if (count === 0) return rejectConflict("Event nicht gefunden", formData);
 
     refresh();
 
@@ -92,6 +80,23 @@ export const deleteEvent = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
+
+    /**
+     * Take the event off Discord: the deleted event is not shown anywhere
+     * in the app, thus the manager cannot do it later from the app. A failure
+     * cannot undo the deletion — hence the catch — and comes back as a
+     * warning, so that the manager deletes the Discord event by hand.
+     */
+    const discordResult = await removeDiscordEventPublication(event.id, {
+      userId: authentication.session.user.id,
+      citizenId: authentication.session.entity?.id ?? null,
+    }).catch((error: unknown) => {
+      log.error("Failed to remove a deleted event from Discord", {
+        eventId: event.id,
+        error,
+      });
+      return { outcome: DiscordSyncOutcome.Failed } as const;
+    });
 
     /**
      * Trigger notifications
