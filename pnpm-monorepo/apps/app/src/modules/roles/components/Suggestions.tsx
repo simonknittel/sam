@@ -56,8 +56,9 @@ export const Suggestions = ({ className, onClick }: Props) => {
             {suggestions.data.roleNames.map((roleName) => (
               <button
                 key={roleName}
+                type="button"
                 className={clsx(
-                  "flex items-center gap-2 rounded-secondary bg-neutral-700 px-2 py-1 whitespace-nowrap transition-colors enabled:hover:bg-neutral-600",
+                  "flex items-center gap-2 rounded-secondary bg-neutral-700 px-2 py-1 whitespace-nowrap outline-offset-4 outline-interaction-700 transition-colors enabled:hover:bg-neutral-600 enabled:focus-visible:outline-2 enabled:active:bg-neutral-600",
                   {
                     "animate-pulse": suggestions.isFetching,
                   },
@@ -70,6 +71,7 @@ export const Suggestions = ({ className, onClick }: Props) => {
             ))}
 
             <Button
+              type="button"
               variant="tertiary"
               onClick={() => suggestions.refetch()}
               disabled={suggestions.isFetching}
