@@ -3,6 +3,7 @@
 import { unstable_rethrow } from "next/navigation";
 import toast from "react-hot-toast";
 import type { ActionResponse } from "./createAction";
+import { toastWarning } from "./toastWarning";
 
 /**
  * Runs a server action outside a <form> (click handlers, drag'n'drop,
@@ -27,6 +28,8 @@ export const runAction = async (
       return false;
     }
     if (options?.successToast !== false) toast.success(response.success);
+    /** A silent success still reports the part of the work that failed */
+    if (response.warning) toastWarning(response.warning);
     return true;
   } catch (error) {
     unstable_rethrow(error);
