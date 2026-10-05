@@ -4,7 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import { triggerNotificationsAfterSave } from "@/modules/notifications/utils/triggerNotification";
 import { isAllowedWebPushEndpointUrl } from "@sam-monorepo/domain";
 import { refresh } from "next/cache";
 import * as z from "zod";
@@ -82,9 +82,11 @@ export const subscribeWebPush = createAuthenticatedAction(
     ]);
 
     /**
-     * Trigger test notification
+     * The test notification only confirms the subscription, which is saved
+     * already. A failure must not make the user subscribe again: each new
+     * subscription of the browser gets a new endpoint.
      */
-    await triggerNotifications([
+    const notified = await triggerNotificationsAfterSave([
       {
         type: "WebPushSubscribed",
         payload: {
@@ -95,6 +97,7 @@ export const subscribeWebPush = createAuthenticatedAction(
 
     return {
       success: t("Common.successfullySaved"),
+      ...(notified ? {} : { warning: t("Common.notificationsFailed") }),
     };
   },
 );
