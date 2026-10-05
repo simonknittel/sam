@@ -4,7 +4,10 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { Prisma } from "@sam-monorepo/database/client";
+import {
+  isPrismaError,
+  PrismaErrorCode,
+} from "@/modules/common/utils/isPrismaError";
 import { refresh } from "next/cache";
 import * as z from "zod";
 
@@ -53,11 +56,7 @@ export const updateSingleRolePermission = createAuthenticatedAction(
       })
       .then(() => true)
       .catch((error: unknown) => {
-        if (
-          error instanceof Prisma.PrismaClientKnownRequestError &&
-          error.code === "P2025"
-        )
-          return false;
+        if (isPrismaError(error, PrismaErrorCode.RecordNotFound)) return false;
         throw error;
       });
 

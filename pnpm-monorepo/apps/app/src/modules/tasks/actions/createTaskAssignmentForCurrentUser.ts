@@ -4,7 +4,11 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { Prisma, TaskVisibility } from "@sam-monorepo/database/client";
+import {
+  isPrismaError,
+  PrismaErrorCode,
+} from "@/modules/common/utils/isPrismaError";
+import { TaskVisibility } from "@sam-monorepo/database/client";
 import { refresh } from "next/cache";
 import * as z from "zod";
 import { requireOpenTask } from "../utils/requireOpenTask";
@@ -74,10 +78,7 @@ export const createTaskAssignmentForCurrentUser = createAuthenticatedAction(
         },
       });
     } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2002"
-      ) {
+      if (isPrismaError(error, PrismaErrorCode.UniqueConstraintFailed)) {
         /**
          * A different tab took the task on before, and the page must show it
          */

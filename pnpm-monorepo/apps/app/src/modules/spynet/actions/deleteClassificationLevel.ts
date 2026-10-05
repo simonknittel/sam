@@ -4,8 +4,11 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import {
+  isPrismaError,
+  PrismaErrorCode,
+} from "@/modules/common/utils/isPrismaError";
 import { deletePermissionStringsReferencing } from "@/modules/roles/utils/deletePermissionStringsReferencing";
-import { Prisma } from "@sam-monorepo/database/client";
 import { refresh } from "next/cache";
 import * as z from "zod";
 
@@ -32,11 +35,7 @@ export const deleteClassificationLevel = createAuthenticatedAction(
       ])
       .then(([classificationLevel]) => classificationLevel)
       .catch((error: unknown) => {
-        if (
-          error instanceof Prisma.PrismaClientKnownRequestError &&
-          error.code === "P2025"
-        )
-          return null;
+        if (isPrismaError(error, PrismaErrorCode.RecordNotFound)) return null;
         throw error;
       });
 

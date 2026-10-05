@@ -4,7 +4,10 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { Prisma } from "@sam-monorepo/database/client";
+import {
+  isPrismaError,
+  PrismaErrorCode,
+} from "@/modules/common/utils/isPrismaError";
 import { refresh } from "next/cache";
 import * as z from "zod";
 import { EVENT_FREEZE_WINDOW_SELECT } from "../queries/eventRelationSelects";
@@ -63,11 +66,7 @@ export const deleteEventPositionApplicationForCurrentUser =
            * A different tab or the end of the participation removed the
            * application before
            */
-          if (
-            error instanceof Prisma.PrismaClientKnownRequestError &&
-            error.code === "P2025"
-          )
-            return null;
+          if (isPrismaError(error, PrismaErrorCode.RecordNotFound)) return null;
           throw error;
         });
       if (!deletedApplication)

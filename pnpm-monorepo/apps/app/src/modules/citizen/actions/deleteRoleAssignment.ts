@@ -5,9 +5,10 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import {
-  Prisma,
-  RoleAssignmentChangeType,
-} from "@sam-monorepo/database/client";
+  isPrismaError,
+  PrismaErrorCode,
+} from "@/modules/common/utils/isPrismaError";
+import { RoleAssignmentChangeType } from "@sam-monorepo/database/client";
 import { refresh } from "next/cache";
 import * as z from "zod";
 
@@ -67,11 +68,7 @@ export const deleteRoleAssignment = createAuthenticatedAction(
       ])
       .then(() => true)
       .catch((error: unknown) => {
-        if (
-          error instanceof Prisma.PrismaClientKnownRequestError &&
-          error.code === "P2025"
-        )
-          return false;
+        if (isPrismaError(error, PrismaErrorCode.RecordNotFound)) return false;
         throw error;
       });
 

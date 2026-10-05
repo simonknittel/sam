@@ -4,7 +4,10 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { Prisma } from "@sam-monorepo/database/client";
+import {
+  isPrismaError,
+  PrismaErrorCode,
+} from "@/modules/common/utils/isPrismaError";
 import { refresh } from "next/cache";
 import * as z from "zod";
 import { EVENT_FREEZE_WINDOW_SELECT } from "../queries/eventRelationSelects";
@@ -91,10 +94,7 @@ export const createEventPositionApplicationForCurrentUser =
         })
         .catch((error: unknown) => {
           /** The unique index found the application of a different tab */
-          if (
-            error instanceof Prisma.PrismaClientKnownRequestError &&
-            error.code === "P2002"
-          )
+          if (isPrismaError(error, PrismaErrorCode.UniqueConstraintFailed))
             return null;
           throw error;
         });

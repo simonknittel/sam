@@ -4,9 +4,13 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import {
+  isPrismaError,
+  PrismaErrorCode,
+} from "@/modules/common/utils/isPrismaError";
 import { SLUG_MAX_LENGTH } from "@/modules/common/utils/slugify";
 import { createId } from "@paralleldrive/cuid2";
-import { Prisma, type FlowEdge } from "@sam-monorepo/database/client";
+import { type FlowEdge } from "@sam-monorepo/database/client";
 import { refresh } from "next/cache";
 import * as z from "zod";
 import { getFlowContext } from "../queries/getFlowContext";
@@ -155,10 +159,7 @@ export const duplicateFlow = createAuthenticatedAction(
         return flow.id;
       });
     } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2002"
-      )
+      if (isPrismaError(error, PrismaErrorCode.UniqueConstraintFailed))
         return { error: FLOW_SLUG_TAKEN_ERROR, requestPayload: formData };
       throw error;
     }

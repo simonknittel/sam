@@ -4,7 +4,10 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { Prisma } from "@sam-monorepo/database/client";
+import {
+  isPrismaError,
+  PrismaErrorCode,
+} from "@/modules/common/utils/isPrismaError";
 import { refresh } from "next/cache";
 import * as z from "zod";
 
@@ -43,10 +46,7 @@ export const deleteSeries = createAuthenticatedAction(
         },
       });
     } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2025"
-      ) {
+      if (isPrismaError(error, PrismaErrorCode.RecordNotFound)) {
         /**
          * A different user deleted the series before, and the page must show it
          */
