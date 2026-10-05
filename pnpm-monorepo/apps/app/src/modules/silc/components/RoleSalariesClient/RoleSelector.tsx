@@ -47,6 +47,7 @@ export const RoleSelector = ({ className, defaultValue, onChange }: Props) => {
                   data.find((role) => role.role.id === selectedRole)!.role.id
                 }
                 showPlaceholder
+                withPopover={false}
               />
               <FaPen className="flex-none text-brand-red-500" />
             </span>
@@ -112,6 +113,7 @@ const RoleList = ({ data, onSelectRole }: RoleListProps) => {
                 <SingleRoleBadge
                   roleId={role.role.id}
                   showPlaceholder
+                  withPopover={false}
                   className="bg-transparent group-hover:bg-neutral-700/50 group-focus-visible:bg-neutral-700/50"
                 />
               </button>
