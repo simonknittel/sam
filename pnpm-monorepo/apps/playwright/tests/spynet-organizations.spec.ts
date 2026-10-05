@@ -8,10 +8,12 @@ import {
 import { expectAuditEvents } from "../fixtures/audit";
 import { createCitizen } from "../fixtures/factories";
 import {
+  ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   fillUntilVisible,
   FORBIDDEN_TEXT,
   modal,
+  NOT_FOUND_TEXT,
   RESOURCE_NOT_FOUND_TEXT,
   SAVED_TEXT,
   sectionByHeading,
@@ -62,6 +64,23 @@ const getActiveMembershipWriters = (prisma: PrismaClient, citizenId: string) =>
     WHERE "citizenId" = ${citizenId}
     ORDER BY "organizationId"
   `;
+
+/** The ID of the transaction that wrote the history entry last */
+const getHistoryEntryWriters = (prisma: PrismaClient, historyEntryId: string) =>
+  prisma.$queryRaw<{ writer: string }[]>`
+    SELECT xmin::text AS writer FROM "OrganizationMembershipHistoryEntry"
+    WHERE "id" = ${historyEntryId}
+  `;
+
+/** The statements of the database of the worker that wait for a lock */
+const countLockWaits = async (prisma: PrismaClient) => {
+  const waits = await prisma.$queryRaw<{ count: number }[]>`
+    SELECT count(*)::int AS "count"
+    FROM pg_stat_activity
+    WHERE "datname" = current_database() AND "wait_event_type" = 'Lock'
+  `;
+  return waits[0]?.count;
+};
 
 /** The decision buttons of the entry that waits for its confirmation */
 const unconfirmedRow = (page: Page, handle: string) =>
@@ -402,13 +421,11 @@ test("a confirmed report becomes an active membership, a false report does not",
     confirmed: ConfirmationStatus.FALSE_REPORT,
     confirmedById: admin.entity.id,
   });
-  await expect
-    .poll(() =>
-      prisma.auditEvent.count({
-        where: { type: "ORGANIZATION_MEMBERSHIP_CONFIRMED" },
-      }),
-    )
-    .toBe(2);
+  expect(
+    await prisma.auditEvent.count({
+      where: { type: "ORGANIZATION_MEMBERSHIP_CONFIRMED" },
+    }),
+  ).toBe(2);
 });
 
 test("two confirmations of a reported membership at the same time: one wins, the other gets a conflict", async ({
@@ -457,13 +474,42 @@ test("two confirmations of a reported membership at the same time: one wins, the
       await waitForAppShellHydration(currentPage);
     }
 
-    await Promise.all(
-      pages.map((currentPage) =>
-        unconfirmedRow(currentPage, "org-mitglied")
-          .getByRole("button", { name: "Bestätigen" })
-          .click(),
-      ),
+    /**
+     * The test holds the lock of the citizen that the actions take, until
+     * both confirmations wait for it. Thus the two confirmations run at the
+     * same time, and only the lock sets their order.
+     */
+    const { promise: rowIsHeld, resolve: holdRow } =
+      Promise.withResolvers<void>();
+    const { promise: rowCanBeReleased, resolve: releaseRow } =
+      Promise.withResolvers<void>();
+    const rowLock = prisma.$transaction(
+      async (transaction) => {
+        await transaction.$queryRaw`
+          SELECT 1 FROM "Citizen" WHERE "id" = ${member.entity.id}
+          FOR NO KEY UPDATE
+        `;
+        holdRow();
+        await rowCanBeReleased;
+      },
+      /** Longer than the clicks and the poll below, which wait for the lock */
+      { timeout: ACTION_FEEDBACK_TIMEOUT * 2 },
     );
+    await rowIsHeld;
+
+    try {
+      await Promise.all(
+        pages.map((currentPage) =>
+          unconfirmedRow(currentPage, "org-mitglied")
+            .getByRole("button", { name: "Bestätigen" })
+            .click(),
+        ),
+      );
+      await expect.poll(() => countLockWaits(prisma)).toBe(2);
+    } finally {
+      releaseRow();
+      await rowLock;
+    }
 
     const feedbacks = await Promise.all(
       pages.map(async (currentPage) => {
@@ -508,18 +554,105 @@ test("two confirmations of a reported membership at the same time: one wins, the
     confirmedById: admin.entity.id,
   });
   /** The winning transaction wrote both rows. The conflict wrote nothing. */
-  const entryWriters = await prisma.$queryRaw<{ writer: string }[]>`
-    SELECT xmin::text AS writer FROM "OrganizationMembershipHistoryEntry"
-    WHERE "id" = ${historyEntry.id}
-  `;
   expect(await getActiveMembershipWriters(prisma, member.entity.id)).toEqual(
-    entryWriters,
+    await getHistoryEntryWriters(prisma, historyEntry.id),
   );
   expect(
     await prisma.auditEvent.count({
       where: { type: "ORGANIZATION_MEMBERSHIP_CONFIRMED" },
     }),
   ).toBe(1);
+});
+
+test("a confirmation with the ID of a different citizen changes nothing", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "spynet-organisator",
+    permissionStrings: ORGANIZATION_ADMIN_PERMISSIONS,
+  });
+  const member = await createCitizen(prisma, { handle: "org-mitglied" });
+  /** An active membership, thus a write of a replay is visible */
+  const otherMember = await createCitizen(prisma, {
+    handle: "org-anderes-mitglied",
+  });
+  const organization = await prisma.organization.create({
+    data: {
+      name: "Testorganisation",
+      spectrumId: "TESTORG",
+      createdById: admin.entity.id,
+      membershipHistoryEntries: {
+        create: [
+          {
+            citizenId: member.entity.id,
+            type: OrganizationMembershipType.AFFILIATE,
+            visibility: OrganizationMembershipVisibility.PUBLIC,
+            createdById: admin.entity.id,
+          },
+          {
+            citizenId: otherMember.entity.id,
+            type: OrganizationMembershipType.MAIN,
+            visibility: OrganizationMembershipVisibility.PUBLIC,
+            createdById: admin.entity.id,
+            confirmed: ConfirmationStatus.CONFIRMED,
+            confirmedAt: new Date(),
+            confirmedById: admin.entity.id,
+          },
+        ],
+      },
+      activeMemberships: {
+        create: {
+          citizenId: otherMember.entity.id,
+          type: OrganizationMembershipType.MAIN,
+          visibility: OrganizationMembershipVisibility.PUBLIC,
+        },
+      },
+    },
+  });
+  const historyEntry =
+    await prisma.organizationMembershipHistoryEntry.findFirstOrThrow({
+      where: { citizenId: member.entity.id },
+    });
+
+  await signIn(admin.user);
+  await page.goto(`/app/spynet/organization/${organization.id}`);
+  await expect(page.getByText("Mitglieder (1)")).toBeVisible();
+  await waitForAppShellHydration(page);
+
+  const entryWritersBefore = await getHistoryEntryWriters(
+    prisma,
+    historyEntry.id,
+  );
+  const membershipWritersBefore = await getActiveMembershipWriters(
+    prisma,
+    otherMember.entity.id,
+  );
+
+  /** A crafted request: the entry of one citizen, the ID of a different one */
+  const row = unconfirmedRow(page, "org-mitglied");
+  await row
+    .locator('input[name="citizenId"]')
+    .evaluate((input: HTMLInputElement, citizenId) => {
+      input.value = citizenId;
+    }, otherMember.entity.id);
+  await row.getByRole("button", { name: "Bestätigen" }).click();
+
+  await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
+  await expect(unconfirmedRow(page, "org-mitglied")).toBeVisible();
+  expect(await getHistoryEntryWriters(prisma, historyEntry.id)).toEqual(
+    entryWritersBefore,
+  );
+  expect(
+    await getActiveMembershipWriters(prisma, otherMember.entity.id),
+  ).toEqual(membershipWritersBefore);
+  expect(await prisma.activeOrganizationMembership.count()).toBe(1);
+  expect(
+    await prisma.auditEvent.count({
+      where: { type: "ORGANIZATION_MEMBERSHIP_CONFIRMED" },
+    }),
+  ).toBe(0);
 });
 
 test("a membership that a different tab removed before is not removed again", async ({
@@ -664,6 +797,57 @@ test("a deleted citizen gets no new membership", async ({
   /** The same answer as for an unknown ID */
   await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
   await expect(dialog).toBeVisible();
+  expect(await prisma.organizationMembershipHistoryEntry.count()).toBe(0);
+  expect(await prisma.activeOrganizationMembership.count()).toBe(0);
+  expect(
+    await prisma.auditEvent.count({
+      where: { type: "ORGANIZATION_MEMBERSHIP_CREATED" },
+    }),
+  ).toBe(0);
+});
+
+test("a citizen deleted while its page was open gets no new membership", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "spynet-organisator",
+    permissionStrings: ORGANIZATION_ADMIN_PERMISSIONS,
+  });
+  const member = await createCitizen(prisma, { handle: "org-mitglied" });
+  const organization = await prisma.organization.create({
+    data: {
+      name: "Testorganisation",
+      spectrumId: "TESTORG",
+      createdById: admin.entity.id,
+    },
+  });
+
+  await signIn(admin.user);
+  await page.goto(`/app/spynet/citizen/${member.entity.id}/organizations`);
+
+  const dialog = modal(page, "Organisation hinzufügen");
+  await clickUntilVisible(
+    sectionByHeading(page, "Aktuell").getByRole("button", {
+      name: "Hinzufügen",
+    }),
+    dialog,
+  );
+  await dialog.getByLabel("Organisation (Internal ID)").fill(organization.id);
+
+  /** A different user deletes the citizen */
+  await prisma.citizen.update({
+    where: { id: member.entity.id },
+    data: { deletedAt: new Date(), userId: null },
+  });
+  await dialog
+    .getByRole("button", { name: "Speichern und bestätigen" })
+    .click();
+
+  await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
+  /** The refresh shows that the citizen is gone */
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
   expect(await prisma.organizationMembershipHistoryEntry.count()).toBe(0);
   expect(await prisma.activeOrganizationMembership.count()).toBe(0);
   expect(
