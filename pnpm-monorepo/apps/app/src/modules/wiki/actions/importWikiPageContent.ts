@@ -41,13 +41,18 @@ export const importWikiPageContent = createAuthenticatedAction(
   schema,
   async (formData, authentication, data, t) => {
     const scoped = await getWikiPageScopedContext(data.id);
-    if (!scoped)
-      return { error: t("Common.badRequest"), requestPayload: formData };
-    const context = scoped.context;
+    const page = scoped?.context.pagesById.get(data.id);
+    if (!scoped || !page || page.deletedAt) {
+      /**
+       * A different user or tab deleted the page before, and the page must
+       * show it. A context that the viewer cannot hold gets the same answer
+       * (see getWikiPageScopedContext).
+       */
+      refresh();
 
-    const page = context.pagesById.get(data.id);
-    if (!page || page.deletedAt)
       return { error: t("Common.badRequest"), requestPayload: formData };
+    }
+    const context = scoped.context;
     const allowed =
       scoped.scope === WikiScope.Event
         ? context.permissions.get(page.id)?.canAdmin === true

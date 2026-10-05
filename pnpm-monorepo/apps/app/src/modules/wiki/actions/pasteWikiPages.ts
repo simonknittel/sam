@@ -103,8 +103,15 @@ export const pasteWikiPages = createAuthenticatedAction(
           "read",
         )
       : null;
-    if (!sourceScoped || !sourcePage)
+    if (!sourceScoped || !sourcePage) {
+      /**
+       * A different user deleted the copied page or took the read access
+       * away before, and the page must show it
+       */
+      refresh();
+
       return { error: SOURCE_GONE_ERROR, requestPayload: formData };
+    }
 
     /**
      * The target decides the scope; without a parent the copy lands at the
@@ -115,22 +122,24 @@ export const pasteWikiPages = createAuthenticatedAction(
       : await getWikiContext().then((context) =>
           context ? { scope: WikiScope.Wiki, context } : null,
         );
-    if (!targetScoped)
-      return { error: t("Common.badRequest"), requestPayload: formData };
+    const placement =
+      targetScoped && data.parentId
+        ? resolveWikiPagePlacement(targetScoped.context, data.parentId)
+        : null;
+    if (!targetScoped || placement === WikiPagePlacement.Missing) {
+      /**
+       * A different user or tab deleted the target page before, and the page
+       * must show it. A context that the viewer cannot hold gets the same
+       * answer (see getWikiPageScopedContext).
+       */
+      refresh();
+
+      return { error: t("Common.notFound"), requestPayload: formData };
+    }
 
     if (data.parentId) {
-      const placement = resolveWikiPagePlacement(
-        targetScoped.context,
-        data.parentId,
-      );
-      if (placement !== WikiPagePlacement.Allowed)
-        return {
-          error:
-            placement === WikiPagePlacement.Missing
-              ? t("Common.notFound")
-              : t("Common.forbidden"),
-          requestPayload: formData,
-        };
+      if (placement === WikiPagePlacement.Forbidden)
+        return { error: t("Common.forbidden"), requestPayload: formData };
       if (isWikiScopeFrozen(targetScoped))
         return {
           error: "Das Event ist bereits vorbei.",

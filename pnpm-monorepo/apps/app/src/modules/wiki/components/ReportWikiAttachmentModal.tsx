@@ -1,6 +1,5 @@
 "use client";
 
-import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Textarea } from "@/modules/common/components/form/Textarea";
@@ -25,8 +24,7 @@ export const ReportWikiAttachmentModal = ({
   fileName,
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { state, formAction } = useAction(createWikiPageReport, {
-    errorToast: false,
+  const { formAction } = useAction(createWikiPageReport, {
     onSuccess: () => setIsOpen(false),
   });
 
@@ -76,8 +74,6 @@ export const ReportWikiAttachmentModal = ({
           <SubmitButton icon={<FaFlag />} className="mt-4 ml-auto">
             Melden
           </SubmitButton>
-
-          <ActionErrorNote className="mt-4" state={state} />
         </form>
       </Modal>
     </>

@@ -49,8 +49,11 @@ const openCreatePageModal = async (page: Page) => {
 
 /**
  * The sidebar tree is in a layout that the old and the new page share. Thus
- * it shows the new page only when the action refreshes the layout. A
- * `page.goto()` would load the layout again and hide a missing refresh.
+ * it shows the new page only when the action renders the layout again. A
+ * `page.goto()` would load the layout again and hide a missing refresh. The
+ * paste action also deletes the clipboard cookie, and a cookie change in an
+ * action renders the layout again too. Thus only the test of a new page as
+ * a copy proves `refresh()`.
  */
 const sidebarTreeLink = (page: Page, title: string) =>
   page.getByRole("link", { name: title, exact: true });

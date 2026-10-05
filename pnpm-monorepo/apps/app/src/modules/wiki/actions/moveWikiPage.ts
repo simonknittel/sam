@@ -11,8 +11,8 @@ import {
   buildWikiPageReparentAuditEvents,
   buildWikiPageReparentReset,
   isWikiPageReparentRefused,
+  rejectChangedWikiPageTree,
   validateWikiPageReparent,
-  WIKI_PAGE_TREE_CHANGED_ERROR,
 } from "../utils/reparentWikiPage";
 import { requireAdminableWikiPage } from "../utils/requireAdminableWikiPage";
 
@@ -78,15 +78,9 @@ export const moveWikiPage = createAuthenticatedAction(
         }),
       ]);
     } catch (error) {
-      if (isWikiPageReparentRefused(error)) {
-        /** A different move changed the tree before, and the page must show it */
-        refresh();
-
-        return {
-          error: WIKI_PAGE_TREE_CHANGED_ERROR,
-          requestPayload: formData,
-        };
-      }
+      /** A different move changed the tree before */
+      if (isWikiPageReparentRefused(error))
+        return rejectChangedWikiPageTree(formData);
       throw error;
     }
 

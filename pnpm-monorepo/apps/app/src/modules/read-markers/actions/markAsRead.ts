@@ -38,10 +38,14 @@ export const markAsRead = createAuthenticatedAction(
 
     /**
      * An item which the viewer cannot see is indistinguishable from one
-     * which does not exist
+     * which does not exist. A different user deleted the item or took the
+     * read access away after the page showed it, and the page must show it.
      */
-    if (!(await definition.canRead(data.subjectId)))
+    if (!(await definition.canRead(data.subjectId))) {
+      refresh();
+
       return { error: t("Common.notFound"), requestPayload: formData };
+    }
 
     const wasNew = (await getNewIds(data.subject, [data.subjectId])).size > 0;
 
@@ -52,8 +56,10 @@ export const markAsRead = createAuthenticatedAction(
 
     /**
      * The "new" state shows in lists, tiles and the dot badges of the app
-     * layout. Only a change of that state is worth the render, also when a
-     * parallel request of a different tab wrote the marker first.
+     * layout. Only a change of that state is worth the render. `wasNew` comes
+     * from before the write: a marker that a different tab wrote between the
+     * read and the write does not stop the render, but a marker that it wrote
+     * before the read does.
      */
     if (wasNew) refresh();
 

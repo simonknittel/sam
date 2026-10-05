@@ -4,7 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import { triggerNotificationsAfterSave } from "@/modules/notifications/utils/triggerNotification";
 import { decodeUploadFileName } from "@/modules/uploads/utils/decodeUploadFileName";
 import { refresh } from "next/cache";
 import * as z from "zod";
@@ -24,15 +24,27 @@ export const createWikiPageReport = createAuthenticatedAction(
   "createWikiPageReport",
   schema,
   async (formData, authentication, data, t) => {
-    const scoped = await getWikiPageScopedContext(data.pageId);
     const citizenId = authentication.session.entity?.id;
-    if (!scoped || !citizenId)
+    if (!citizenId)
       return { error: t("Common.notFound"), requestPayload: formData };
-    const context = scoped.context;
 
-    const page = context.pagesById.get(data.pageId);
-    if (!page || page.deletedAt || !context.permissions.get(page.id)?.canRead)
+    const scoped = await getWikiPageScopedContext(data.pageId);
+    const page = scoped?.context.pagesById.get(data.pageId);
+    if (
+      !scoped ||
+      !page ||
+      page.deletedAt ||
+      !scoped.context.permissions.get(page.id)?.canRead
+    ) {
+      /**
+       * A different user or tab deleted the page or took the read access
+       * away before, and the page must show it. A context that the viewer
+       * cannot hold gets the same answer (see getWikiPageScopedContext).
+       */
+      refresh();
+
       return { error: t("Common.notFound"), requestPayload: formData };
+    }
 
     /**
      * Only uploads linked to the reported page can be reported — the link
@@ -48,8 +60,15 @@ export const createWikiPageReport = createAuthenticatedAction(
         },
         select: { id: true, fileName: true },
       });
-      if (!upload)
+      if (!upload) {
+        /**
+         * A different user removed the attachment from the page before, and
+         * the page must show it
+         */
+        refresh();
+
         return { error: t("Common.notFound"), requestPayload: formData };
+      }
     }
 
     const openReports = await prisma.wikiPageReport.count({
@@ -90,7 +109,7 @@ export const createWikiPageReport = createAuthenticatedAction(
       },
     ]);
 
-    await triggerNotifications([
+    const notified = await triggerNotificationsAfterSave([
       {
         type: "WikiPageReported",
         payload: {
@@ -99,6 +118,9 @@ export const createWikiPageReport = createAuthenticatedAction(
       },
     ]);
 
-    return { success: "Meldung gesendet." };
+    return {
+      success: "Meldung gesendet.",
+      ...(notified ? {} : { warning: t("Common.notificationsFailed") }),
+    };
   },
 );

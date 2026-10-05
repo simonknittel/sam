@@ -37,8 +37,15 @@ export const updateWikiFeaturedPages = createAuthenticatedAction(
     const allPagesExist = data.pageIds.every(
       (pageId) => context.pagesById.get(pageId)?.deletedAt === null,
     );
-    if (!allPagesExist)
+    if (!allPagesExist) {
+      /**
+       * A different user or tab deleted a selected page before, and the
+       * options must show it
+       */
+      refresh();
+
       return { error: t("Common.badRequest"), requestPayload: formData };
+    }
 
     const updatedById = authentication.session.entity?.id ?? null;
     await prisma.wikiSetting.upsert({

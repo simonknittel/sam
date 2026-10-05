@@ -28,8 +28,15 @@ export const updateWikiPageLink = createAuthenticatedAction(
     if (data.pageId) {
       const context = await getWikiContext();
       const page = context?.pagesById.get(data.pageId);
-      if (!page || page.deletedAt)
+      if (!page || page.deletedAt) {
+        /**
+         * A different user or tab deleted the selected page before, and the
+         * options must show it
+         */
+        refresh();
+
         return { error: t("Common.badRequest"), requestPayload: formData };
+      }
     }
 
     const settingKey = wikiPageLinkSettingKey(data.key);

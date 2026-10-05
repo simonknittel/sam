@@ -31,8 +31,15 @@ export const resolveWikiPageReport = createAuthenticatedAction(
       where: { id: data.reportId },
       select: { id: true, pageId: true },
     });
-    if (!report)
+    if (!report) {
+      /**
+       * The permanent delete of its page removed the report before, and the
+       * page must show it
+       */
+      refresh();
+
       return { error: t("Common.notFound"), requestPayload: formData };
+    }
 
     /**
      * The condition on `resolvedAt` makes the check and the write one step:

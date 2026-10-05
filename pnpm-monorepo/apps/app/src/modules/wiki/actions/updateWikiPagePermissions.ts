@@ -53,8 +53,15 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
       return { error: t("Common.forbidden"), requestPayload: formData };
 
     const page = context.pagesById.get(data.id);
-    if (!page || page.deletedAt)
+    if (!page || page.deletedAt) {
+      /**
+       * A different user or tab deleted the page before, and the page must
+       * show it
+       */
+      refresh();
+
       return { error: t("Common.badRequest"), requestPayload: formData };
+    }
     if (!context.permissions.get(page.id)?.canAdmin)
       return { error: t("Common.forbidden"), requestPayload: formData };
 
@@ -105,7 +112,8 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
      * explicit owner must be able to read the parent. The pickers only offer
      * such roles, so this normally only catches entries that lost their
      * access to the parent in the meantime — naming them is more helpful
-     * than silently dropping part of the selection.
+     * than silently dropping part of the selection. The refresh gives the
+     * pickers the roles of today.
      */
     if (page.parentId) {
       const allowedRoleIds = resolveWikiPageReadRoleIds(
@@ -122,6 +130,8 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
         const names = rejected.map(
           (roleId) => roles.find((role) => role.id === roleId)?.name ?? roleId,
         );
+        refresh();
+
         return {
           error: `Diese Rollen dürfen die übergeordnete Seite nicht lesen und können deshalb auch auf diese Seite keinen Zugriff erhalten: ${names.join(", ")}.`,
           requestPayload: formData,

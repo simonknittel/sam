@@ -35,7 +35,7 @@ type RequireAdminableWikiPageResult =
  * the expected trash state, the current user must have admin permission on
  * it, and its scope must not be frozen (past event). Returns the scoped
  * context and page, or the error response the action should return as-is.
- * Only for server actions: the trash state check calls `refresh()`.
+ * Only for server actions: the checks of the page state call `refresh()`.
  */
 export const requireAdminableWikiPage = async (
   pageId: string,
@@ -49,10 +49,17 @@ export const requireAdminableWikiPage = async (
   };
 
   const scoped = await getWikiPageScopedContext(pageId);
-  if (!scoped) return { failure: badRequest };
+  const page = scoped?.context.pagesById.get(pageId);
+  if (!scoped || !page) {
+    /**
+     * A different user or tab deleted the page permanently before, and the
+     * page must show it. A context that the viewer cannot hold gets the same
+     * answer (see getWikiPageScopedContext).
+     */
+    refresh();
 
-  const page = scoped.context.pagesById.get(pageId);
-  if (!page) return { failure: badRequest };
+    return { failure: badRequest };
+  }
   if (options?.expectDeleted ? !page.deletedAt : page.deletedAt) {
     /**
      * A different user or tab moved the page into the trash or out of it

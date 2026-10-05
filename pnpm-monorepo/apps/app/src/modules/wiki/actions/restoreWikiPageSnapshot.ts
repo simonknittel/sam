@@ -35,17 +35,29 @@ export const restoreWikiPageSnapshot = createAuthenticatedAction(
       where: { id: data.snapshotId },
       select: { id: true, pageId: true, content: true },
     });
-    if (!snapshot)
+    if (!snapshot) {
+      /**
+       * The retention of the automatic snapshots or a permanent delete of the
+       * page removed the snapshot before, and the page must show it
+       */
+      refresh();
+
       return { error: t("Common.badRequest"), requestPayload: formData };
+    }
 
     const scoped = await getWikiPageScopedContext(snapshot.pageId);
-    if (!scoped)
-      return { error: t("Common.badRequest"), requestPayload: formData };
-    const context = scoped.context;
+    const page = scoped?.context.pagesById.get(snapshot.pageId);
+    if (!scoped || !page || page.deletedAt) {
+      /**
+       * A different user or tab deleted the page before, and the page must
+       * show it. A context that the viewer cannot hold gets the same answer
+       * (see getWikiPageScopedContext).
+       */
+      refresh();
 
-    const page = context.pagesById.get(snapshot.pageId);
-    if (!page || page.deletedAt)
       return { error: t("Common.badRequest"), requestPayload: formData };
+    }
+    const context = scoped.context;
     if (!context.permissions.get(page.id)?.canAdmin)
       return { error: t("Common.forbidden"), requestPayload: formData };
     if (isWikiScopeFrozen(scoped))

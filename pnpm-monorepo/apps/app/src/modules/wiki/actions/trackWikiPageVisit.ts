@@ -4,6 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import type { WikiSharedContextPage } from "../queries/getWikiContext";
 import { getWikiPageScopedContext } from "../queries/getWikiPageScopedContext";
@@ -44,15 +45,23 @@ export const trackWikiPageVisit = createAuthenticatedAction(
       return { success: "Seitenbesuch gespeichert." };
 
     const scoped = await getWikiPageScopedContext(data.pageId);
-    if (!scoped)
-      return { error: t("Common.notFound"), requestPayload: formData };
+    const page = scoped
+      ? getAccessibleWikiPage<WikiSharedContextPage>(
+          scoped.context,
+          data.pageId,
+          "read",
+        )
+      : null;
+    if (!page) {
+      /**
+       * A different user deleted the page or took the read access away
+       * after the browser got the page, for example from its back/forward
+       * cache, and the page must show it
+       */
+      refresh();
 
-    const page = getAccessibleWikiPage<WikiSharedContextPage>(
-      scoped.context,
-      data.pageId,
-      "read",
-    );
-    if (!page) return { error: t("Common.notFound"), requestPayload: formData };
+      return { error: t("Common.notFound"), requestPayload: formData };
+    }
 
     await prisma.wikiPageVisit.upsert({
       where: { citizenId_pageId: { citizenId, pageId: page.id } },

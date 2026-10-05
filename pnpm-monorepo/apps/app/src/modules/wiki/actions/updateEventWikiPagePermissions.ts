@@ -4,7 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import { triggerNotificationsAfterSave } from "@/modules/notifications/utils/triggerNotification";
 import {
   WikiPageEventScope,
   WikiPageUploadability,
@@ -57,18 +57,26 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
   schema,
   async (formData, authentication, data, t) => {
     const scoped = await getWikiPageScopedContext(data.id);
-    if (!scoped)
-      return { error: t("Common.badRequest"), requestPayload: formData };
-    if (scoped.scope !== WikiScope.Event)
-      return { error: t("Common.badRequest"), requestPayload: formData };
-    const context = scoped.context;
+    /**
+     * A page that a different user deleted permanently resolves to the
+     * global wiki, thus its scope is no reason for a different answer
+     */
+    const eventScoped = scoped?.scope === WikiScope.Event ? scoped : null;
+    const page = eventScoped?.context.pagesById.get(data.id);
+    if (!eventScoped || !page || page.deletedAt) {
+      /**
+       * A different user or tab deleted the page before, and the page must
+       * show it. A context that the viewer cannot hold gets the same answer
+       * (see getWikiPageScopedContext).
+       */
+      refresh();
 
-    const page = context.pagesById.get(data.id);
-    if (!page || page.deletedAt)
       return { error: t("Common.badRequest"), requestPayload: formData };
+    }
+    const context = eventScoped.context;
     if (!context.permissions.get(page.id)?.canAdmin)
       return { error: t("Common.forbidden"), requestPayload: formData };
-    if (isWikiScopeFrozen(scoped))
+    if (isWikiScopeFrozen(eventScoped))
       return {
         error: "Das Event ist bereits vorbei.",
         requestPayload: formData,
@@ -88,26 +96,25 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
      * A POSITION scope must reference a position of this event; the
      * reference is meaningless (and nulled) for every other scope.
      */
-    const positionIds = new Set(
-      context.positions.map((position) => position.id),
-    );
-    const resolvePositionId = (
-      scope: WikiPageEventScope,
-      positionId: string | null,
-    ):
-      | { error: true; value?: never }
-      | { error?: never; value: string | null } => {
-      if (scope !== WikiPageEventScope.POSITION) return { value: null };
-      if (!positionId || !positionIds.has(positionId)) return { error: true };
-      return { value: positionId };
-    };
+    let readScopePositionId: string | null = null;
+    if (data.readScope === WikiPageEventScope.POSITION) {
+      if (!data.readScopePositionId)
+        return { error: t("Common.badRequest"), requestPayload: formData };
+      if (
+        !context.positions.some(
+          (position) => position.id === data.readScopePositionId,
+        )
+      ) {
+        /**
+         * A different user deleted the position after the dialog showed it,
+         * and the dialog must show the positions of today
+         */
+        refresh();
 
-    const readPosition = resolvePositionId(
-      data.readScope,
-      data.readScopePositionId,
-    );
-    if (readPosition.error)
-      return { error: t("Common.badRequest"), requestPayload: formData };
+        return { error: t("Common.badRequest"), requestPayload: formData };
+      }
+      readScopePositionId = data.readScopePositionId;
+    }
 
     /**
      * The edit scope must stay a subset of the read scope. INHERIT resolves
@@ -127,7 +134,7 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
 
     const effectiveRead = submittedOrParent(
       data.readScope,
-      readPosition.value,
+      readScopePositionId,
       "read",
     );
 
@@ -167,8 +174,9 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
      * null) and commits together with the scope change, so concurrent
      * submissions cannot publish twice and a failed scope update cannot
      * consume the once-only guard. A crash between the commit and the
-     * EventBridge emit still loses the notification for good — accepted
-     * over the reverse (notifying without the scope actually changing).
+     * EventBridge emit, or a failed emit (the response then has a warning),
+     * still loses the notification for good — accepted over the reverse
+     * (notifying without the scope actually changing).
      */
     const leavesManagers =
       isRootPage &&
@@ -180,7 +188,7 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
       where: { id: page.id },
       data: {
         eventReadScope: data.readScope,
-        eventReadScopePositionId: readPosition.value,
+        eventReadScopePositionId: readScopePositionId,
         eventEditScope: data.editScope,
         eventEditScopePositionId: editPositionId,
         imageUploadability: data.imageUploadability,
@@ -209,7 +217,7 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
     const scopePayload = {
       pageId: page.id,
       readScope: data.readScope,
-      readScopePositionId: readPosition.value,
+      readScopePositionId,
       editScope: data.editScope,
       editScopePositionId: editPositionId,
       imageUploadability: data.imageUploadability,
@@ -229,19 +237,23 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
           },
     ]);
 
-    if (event && publishClaim?.count === 1) {
-      await triggerNotifications([
-        {
-          type: "EventBriefingPublished",
-          payload: {
-            eventId: event.id,
-            readScope: data.readScope,
-            readScopePositionId: readPosition.value,
-          },
-        },
-      ]);
-    }
+    const notified =
+      event && publishClaim?.count === 1
+        ? await triggerNotificationsAfterSave([
+            {
+              type: "EventBriefingPublished",
+              payload: {
+                eventId: event.id,
+                readScope: data.readScope,
+                readScopePositionId,
+              },
+            },
+          ])
+        : true;
 
-    return { success: t("Common.successfullySaved") };
+    return {
+      success: t("Common.successfullySaved"),
+      ...(notified ? {} : { warning: t("Common.notificationsFailed") }),
+    };
   },
 );
