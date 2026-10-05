@@ -3,23 +3,17 @@ import { CitizenLogTableSort } from "@/modules/citizen/utils/citizenLogTableSear
 import { citizenLogTypeTranslations } from "@/modules/citizen/utils/citizenLogTypeTranslations";
 import { Actions } from "@/modules/common/components/Actions";
 import { CitizenCellLink } from "@/modules/common/components/CitizenCellLink";
-import {
-  SortableColumnHeader,
-  SortDirection,
-} from "@/modules/common/components/SortableColumnHeader";
+import { SortDirection } from "@/modules/common/components/SortableColumnHeader";
 import { formatDate } from "@/modules/common/utils/formatDate";
+import { CitizenLogTableSortableColumnHeader } from "./CitizenLogTableLinks";
 import { ConfirmationState } from "./ConfirmationState";
 import { OtherTableDelete } from "./OtherTableDelete";
 
 interface Props {
   readonly rows: readonly CitizenLogTableRow[];
-  readonly sort: CitizenLogTableSort;
-  readonly getHref: (searchParams: {
-    readonly sort: CitizenLogTableSort;
-  }) => string;
 }
 
-export const OtherTable = ({ rows, sort, getHref }: Props) => {
+export const OtherTable = ({ rows }: Props) => {
   return (
     <table className="w-full min-w-400">
       <thead>
@@ -32,27 +26,23 @@ export const OtherTable = ({ rows, sort, getHref }: Props) => {
 
           <th>Bestätigungsstatus</th>
 
-          <SortableColumnHeader
-            sort={sort}
+          <CitizenLogTableSortableColumnHeader
             ascending={CitizenLogTableSort.ConfirmedAtAscending}
             descending={CitizenLogTableSort.ConfirmedAtDescending}
             firstDirection={SortDirection.Descending}
-            getHref={getHref}
           >
             Bestätigt am
-          </SortableColumnHeader>
+          </CitizenLogTableSortableColumnHeader>
 
           <th className="whitespace-nowrap">Bestätigt von</th>
 
-          <SortableColumnHeader
-            sort={sort}
+          <CitizenLogTableSortableColumnHeader
             ascending={CitizenLogTableSort.CreatedAtAscending}
             descending={CitizenLogTableSort.CreatedAtDescending}
             firstDirection={SortDirection.Descending}
-            getHref={getHref}
           >
             Eingereicht am
-          </SortableColumnHeader>
+          </CitizenLogTableSortableColumnHeader>
 
           <th className="whitespace-nowrap">Eingereicht von</th>
         </tr>
@@ -84,7 +74,15 @@ export const OtherTable = ({ rows, sort, getHref }: Props) => {
               </td>
 
               <td>
-                <ConfirmationState citizenLog={citizenLog} />
+                <ConfirmationState
+                  citizenLog={{
+                    id: citizenLog.id,
+                    citizenId: citizenLog.citizenId,
+                    type: citizenLog.type,
+                    confirmed: citizenLog.confirmed,
+                    citizen: { deletedAt: citizenLog.citizen.deletedAt },
+                  }}
+                />
               </td>
 
               <td className="overflow-hidden text-ellipsis">
@@ -110,9 +108,12 @@ export const OtherTable = ({ rows, sort, getHref }: Props) => {
               </td>
 
               <td>
-                <Actions>
-                  <OtherTableDelete log={citizenLog} />
-                </Actions>
+                {/* The logs of a deleted citizen are read only */}
+                {!citizenLog.citizen.deletedAt && (
+                  <Actions>
+                    <OtherTableDelete log={{ id: citizenLog.id }} />
+                  </Actions>
+                )}
               </td>
             </tr>
           );

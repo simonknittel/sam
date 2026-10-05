@@ -1,25 +1,21 @@
+import { requireAuthentication } from "@/modules/auth/server";
 import type { CitizenLogTableRow } from "@/modules/citizen/queries/citizenLogTableSelect";
 import { CitizenLogTableSort } from "@/modules/citizen/utils/citizenLogTableSearchParams";
+import { getNotePermissionAttributes } from "@/modules/citizen/utils/notePermissionAttributes";
 import { Actions } from "@/modules/common/components/Actions";
 import { CitizenCellLink } from "@/modules/common/components/CitizenCellLink";
-import {
-  SortableColumnHeader,
-  SortDirection,
-} from "@/modules/common/components/SortableColumnHeader";
+import { SortDirection } from "@/modules/common/components/SortableColumnHeader";
 import { formatDate } from "@/modules/common/utils/formatDate";
+import { CitizenLogTableSortableColumnHeader } from "./CitizenLogTableLinks";
 import { ConfirmationState } from "./ConfirmationState";
 import { DeleteLog } from "./DeleteLog";
 import { UpdateNote } from "./notes/UpdateNote";
 
 interface Props {
   readonly rows: readonly CitizenLogTableRow[];
-  readonly sort: CitizenLogTableSort;
-  readonly getHref: (searchParams: {
-    readonly sort: CitizenLogTableSort;
-  }) => string;
 }
 
-export const NotesTable = ({ rows, sort, getHref }: Props) => {
+export const NotesTable = ({ rows }: Props) => {
   return (
     <table className="w-full min-w-500">
       <thead>
@@ -34,27 +30,23 @@ export const NotesTable = ({ rows, sort, getHref }: Props) => {
 
           <th>Bestätigungsstatus</th>
 
-          <SortableColumnHeader
-            sort={sort}
+          <CitizenLogTableSortableColumnHeader
             ascending={CitizenLogTableSort.ConfirmedAtAscending}
             descending={CitizenLogTableSort.ConfirmedAtDescending}
             firstDirection={SortDirection.Descending}
-            getHref={getHref}
           >
             Bestätigt am
-          </SortableColumnHeader>
+          </CitizenLogTableSortableColumnHeader>
 
           <th className="whitespace-nowrap">Bestätigt von</th>
 
-          <SortableColumnHeader
-            sort={sort}
+          <CitizenLogTableSortableColumnHeader
             ascending={CitizenLogTableSort.CreatedAtAscending}
             descending={CitizenLogTableSort.CreatedAtDescending}
             firstDirection={SortDirection.Descending}
-            getHref={getHref}
           >
             Eingereicht am
-          </SortableColumnHeader>
+          </CitizenLogTableSortableColumnHeader>
 
           <th className="whitespace-nowrap">Eingereicht von</th>
         </tr>
@@ -94,7 +86,15 @@ export const NotesTable = ({ rows, sort, getHref }: Props) => {
               </td>
 
               <td>
-                <ConfirmationState citizenLog={citizenLog} />
+                <ConfirmationState
+                  citizenLog={{
+                    id: citizenLog.id,
+                    citizenId: citizenLog.citizenId,
+                    type: citizenLog.type,
+                    confirmed: citizenLog.confirmed,
+                    citizen: { deletedAt: citizenLog.citizen.deletedAt },
+                  }}
+                />
               </td>
 
               <td
@@ -126,15 +126,42 @@ export const NotesTable = ({ rows, sort, getHref }: Props) => {
               </td>
 
               <td>
-                <Actions>
-                  <UpdateNote note={citizenLog} />
-                  <DeleteLog log={citizenLog} />
-                </Actions>
+                <NotesTableActions note={citizenLog} />
               </td>
             </tr>
           );
         })}
       </tbody>
     </table>
+  );
+};
+
+interface NotesTableActionsProps {
+  readonly note: CitizenLogTableRow;
+}
+
+/**
+ * The buttons that change or delete the note, with the permission checks of
+ * the notes page of the citizen
+ */
+const NotesTableActions = async ({ note }: NotesTableActionsProps) => {
+  /** The logs of a deleted citizen are read only */
+  if (note.citizen.deletedAt) return null;
+
+  const authentication = await requireAuthentication();
+  const attributes = getNotePermissionAttributes(note);
+  const [showUpdate, showDelete] = await Promise.all([
+    authentication.authorize("note", "update", attributes),
+    authentication.authorize("note", "delete", attributes),
+  ]);
+  if (!showUpdate && !showDelete) return null;
+
+  return (
+    <Actions>
+      {showUpdate && <UpdateNote note={note} />}
+      {showDelete && (
+        <DeleteLog log={{ id: note.id, citizenId: note.citizenId }} />
+      )}
+    </Actions>
   );
 };
