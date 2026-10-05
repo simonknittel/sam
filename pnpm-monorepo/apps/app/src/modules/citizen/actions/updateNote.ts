@@ -70,8 +70,14 @@ export const updateNote = createAuthenticatedAction(
         select: { id: true },
       });
     } catch (error) {
-      /** A different user deleted the note after the read above */
-      if (isPrismaError(error, PrismaErrorCode.RecordNotFound))
+      /**
+       * A different user deleted the note after the read above, or the new
+       * note type or classification level after the page loaded
+       */
+      if (
+        isPrismaError(error, PrismaErrorCode.RecordNotFound) ||
+        isPrismaError(error, PrismaErrorCode.ForeignKeyConstraintFailed)
+      )
         return rejectConflict(t("Common.notFound"), formData);
       throw error;
     }
