@@ -136,6 +136,46 @@ test("an owner creates a template, edits it, deletes it and restores it", async 
   ]);
 });
 
+test("saving a template that a different user deleted shows the error and the deleted template", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const owner = await createOwner(prisma);
+  const manager = await createCitizen(prisma, {
+    handle: "vorlagen-verwalter",
+    permissionStrings: ["event;read", "event;manage"],
+  });
+  const { template } = await createEventTemplate(prisma, {
+    name: "Patrouille",
+    ownedById: owner.entity.id,
+  });
+
+  await signIn(owner.user);
+  await page.goto(`/app/events/templates/${template.id}`);
+  await expect(page.getByRole("heading", { name: "Stammdaten" })).toBeVisible();
+  await waitForAppShellHydration(page);
+
+  /** A different user deletes the template after the page loaded */
+  await prisma.eventTemplate.update({
+    where: { id: template.id },
+    data: { deletedAt: new Date(), deletedById: manager.entity.id },
+  });
+
+  await page.getByLabel("Name").fill("Patrouille Neu");
+  await page.getByRole("button", { name: "Speichern" }).click();
+
+  await expect(page.getByText("Die Vorlage ist gelöscht.")).toBeVisible();
+  /** The page shows the current state without a reload */
+  await expect(page.getByText("Diese Vorlage wurde gelöscht.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Speichern" })).toBeHidden();
+
+  const unchangedTemplate = await prisma.eventTemplate.findUniqueOrThrow({
+    where: { id: template.id },
+  });
+  expect(unchangedTemplate.name).toBe("Patrouille");
+});
+
 test("a template is invisible to everyone it is not shared with", async ({
   page,
   prisma,
