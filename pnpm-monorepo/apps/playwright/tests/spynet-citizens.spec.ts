@@ -3,19 +3,20 @@ import {
   ConfirmationStatus,
   OrganizationMembershipType,
   OrganizationMembershipVisibility,
-  type Prisma,
   type PrismaClient,
 } from "@sam-monorepo/database/client";
 import { expectAuditEvents } from "../fixtures/audit";
+import { startParallelChange } from "../fixtures/database";
 import {
   createCitizen,
   createUserWithoutCitizen,
   ONE_MINUTE_MS,
 } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
+  BAD_REQUEST_TEXT,
   clickUntilVisible,
   DELETED_TEXT,
+  FORBIDDEN_ACTION_TEXT,
   modal,
   NOT_FOUND_TEXT,
   RESOURCE_NOT_FOUND_TEXT,
@@ -24,13 +25,6 @@ import {
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-
-/** The `Common.forbidden` message of an action, not the 403 page */
-const FORBIDDEN_ACTION_TEXT =
-  "Du bist nicht berechtigt diese Aktion auszuführen.";
-
-/** The `Common.badRequest` message of an action */
-const BAD_REQUEST_TEXT = "Ungültige Anfrage";
 
 /**
  * The value of one row of the Übersicht tile. Each row names the attribute
@@ -48,64 +42,6 @@ const markCitizenDeleted = (prisma: PrismaClient, citizenId: string) =>
     where: { id: citizenId },
     data: { deletedAt: new Date() },
   });
-
-/**
- * Starts the change of a different user in a transaction that stays open
- * until the test commits it. Until the commit, the app does not see the
- * change, and a write of the app to a row of the change waits for it.
- */
-const startParallelChange = async <Result>(
-  prisma: PrismaClient,
-  change: (transaction: Prisma.TransactionClient) => Promise<Result>,
-) => {
-  const { promise: canCommit, resolve: allowCommit } =
-    Promise.withResolvers<void>();
-  const { promise: changeIsDone, resolve: signalChange } =
-    Promise.withResolvers<{ sessionId: number; result: Result }>();
-  const parallelTransaction = prisma.$transaction(
-    async (transaction) => {
-      const result = await change(transaction);
-
-      const [session] = await transaction.$queryRaw<{ id: number }[]>`
-        SELECT pg_backend_pid() AS "id"
-      `;
-      signalChange({ sessionId: session!.id, result });
-      await canCommit;
-    },
-    /** Longer than the click and the poll of a test, which wait for the lock */
-    { timeout: ACTION_FEEDBACK_TIMEOUT * 2 },
-  );
-
-  /** The race ends the wait also when the change fails */
-  const { sessionId, result } = await Promise.race([
-    changeIsDone,
-    parallelTransaction.then(() => {
-      throw new Error("The parallel change ended before its commit");
-    }),
-  ]);
-
-  return {
-    /** The result of the change, for example the row that it created */
-    result,
-    /** Waits until a statement of the app waits for a lock of the change */
-    waitForBlockedStatement: () =>
-      expect
-        .poll(async () => {
-          const waitingLocks = await prisma.$queryRaw<{ count: number }[]>`
-            SELECT count(*)::int AS "count"
-            FROM pg_locks
-            WHERE NOT "granted"
-              AND ${sessionId}::int = ANY(pg_blocking_pids("pid"))
-          `;
-          return waitingLocks[0]?.count;
-        })
-        .toBe(1),
-    commit: async () => {
-      allowCommit();
-      await parallelTransaction;
-    },
-  };
-};
 
 test("a citizen is created from a Spectrum ID and deleted again", async ({
   page,
@@ -231,7 +167,7 @@ test("a Spectrum ID of only spaces creates no citizen", async ({
   await createDialog.getByLabel("Spectrum ID").fill("   ");
   await createDialog.getByRole("button", { name: "Anlegen" }).click();
 
-  await expect(createDialog.getByText("Ungültige Anfrage")).toBeVisible();
+  await expect(createDialog.getByText(BAD_REQUEST_TEXT)).toBeVisible();
   expect(
     await prisma.citizen.count({ where: { createdById: admin.entity.id } }),
   ).toBe(0);

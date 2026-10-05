@@ -6,6 +6,7 @@ import {
   createVariant,
 } from "../fixtures/factories";
 import {
+  BAD_REQUEST_TEXT,
   clickUntilUrl,
   clickUntilVisible,
   DELETED_TEXT,
@@ -345,7 +346,7 @@ test("a variant link that is not an http or https URL is a bad request", async (
   await linkUrlInput.fill("javascript:alert(1)");
 
   await createModal.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText("Ungültige Anfrage")).toBeVisible();
+  await expect(page.getByText(BAD_REQUEST_TEXT)).toBeVisible();
   await expect(createModal).toBeVisible();
   expect(
     await prisma.variant.count({ where: { name: "Avenger Stalker" } }),

@@ -6,6 +6,7 @@ import {
   type PrismaClient,
 } from "@sam-monorepo/database/client";
 import { expectAuditEvents } from "../fixtures/audit";
+import { countLockWaits } from "../fixtures/database";
 import { createCitizen } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
@@ -71,16 +72,6 @@ const getHistoryEntryWriters = (prisma: PrismaClient, historyEntryId: string) =>
     SELECT xmin::text AS writer FROM "OrganizationMembershipHistoryEntry"
     WHERE "id" = ${historyEntryId}
   `;
-
-/** The statements of the database of the worker that wait for a lock */
-const countLockWaits = async (prisma: PrismaClient) => {
-  const waits = await prisma.$queryRaw<{ count: number }[]>`
-    SELECT count(*)::int AS "count"
-    FROM pg_stat_activity
-    WHERE "datname" = current_database() AND "wait_event_type" = 'Lock'
-  `;
-  return waits[0]?.count;
-};
 
 /** The decision buttons of the entry that waits for its confirmation */
 const unconfirmedRow = (page: Page, handle: string) =>

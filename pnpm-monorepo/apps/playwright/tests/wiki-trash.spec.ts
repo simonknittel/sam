@@ -1,5 +1,5 @@
-import type { PrismaClient } from "@sam-monorepo/database/client";
 import { expectAuditEvents } from "../fixtures/audit";
+import { countLockWaits } from "../fixtures/database";
 import {
   createCitizen,
   createWikiPage,
@@ -9,22 +9,13 @@ import {
 } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
+  BAD_REQUEST_TEXT,
   clickUntilVisible,
   modal,
   NOT_FOUND_TEXT,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-
-/** The statements of the database of the worker that wait for a lock */
-const countLockWaits = async (prisma: PrismaClient) => {
-  const waits = await prisma.$queryRaw<{ count: number }[]>`
-    SELECT count(*)::int AS "count"
-    FROM pg_stat_activity
-    WHERE "datname" = current_database() AND "wait_event_type" = 'Lock'
-  `;
-  return waits[0]?.count;
-};
 
 test("a page travels to the trash, back out of it and finally out of existence", async ({
   page,
@@ -174,7 +165,7 @@ test("a page that a different manager restored first leaves the trash", async ({
    * a navigation
    */
   await trashRow.getByRole("button", { name: "Wiederherstellen" }).click();
-  await expect(page.getByText("Ungültige Anfrage")).toBeVisible();
+  await expect(page.getByText(BAD_REQUEST_TEXT)).toBeVisible();
   await expect(page.getByText("Der Papierkorb ist leer")).toBeVisible();
 });
 

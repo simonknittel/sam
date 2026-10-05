@@ -10,6 +10,7 @@ import {
   LINEUP_PERMISSIONS,
 } from "../fixtures/factories";
 import {
+  BAD_REQUEST_TEXT,
   clickUntilVisible,
   FORBIDDEN_TEXT,
   inlineEditorTrigger,
@@ -400,7 +401,7 @@ test("a manager cannot copy the lineup of a restricted event that they cannot se
     }, secretEvent.id);
   await copyDialog.getByRole("button", { name: "Kopieren" }).click();
 
-  await expect(page.getByText("Ungültige Anfrage")).toBeVisible();
+  await expect(page.getByText(BAD_REQUEST_TEXT)).toBeVisible();
   expect(
     await prisma.eventPosition.count({ where: { eventId: target.id } }),
   ).toBe(0);
