@@ -10,7 +10,7 @@ import { redirect } from "next/navigation";
 import * as z from "zod";
 
 const schema = z.object({
-  spectrumId: z.string().trim(),
+  spectrumId: z.string().trim().min(1),
 });
 
 export const createCitizen = createAuthenticatedAction(
