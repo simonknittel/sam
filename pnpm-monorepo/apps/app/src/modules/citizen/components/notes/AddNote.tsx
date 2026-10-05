@@ -1,14 +1,15 @@
 "use client";
 
 import { useAction } from "@/modules/actions/utils/useAction";
-import { Button2Variant } from "@/modules/common/components/Button2";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Select } from "@/modules/common/components/form/Select";
-import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import {
   type Citizen,
   type ClassificationLevel,
   type NoteType,
 } from "@sam-monorepo/database/browser";
+import { useState } from "react";
 import { FaSave } from "react-icons/fa";
 import { createCitizenLog } from "../../actions/createCitizenLog";
 import { Formatting } from "./Formatting";
@@ -24,11 +25,14 @@ export const AddNote = ({
   noteTypeId,
   classificationLevels,
 }: Props) => {
-  const { formAction, getDefaultValueWithFallback } =
-    useAction(createCitizenLog);
+  /** Controlled, because a success clears only the text */
+  const [content, setContent] = useState("");
+  const { isPending, submitWithoutReset } = useAction(createCitizenLog, {
+    onSuccess: () => setContent(""),
+  });
 
   return (
-    <form action={formAction}>
+    <form onSubmit={submitWithoutReset}>
       <input type="hidden" name="citizenId" value={entityId} />
       <input type="hidden" name="type" value="note" />
       <input type="hidden" name="noteTypeId" value={noteTypeId} />
@@ -41,7 +45,8 @@ export const AddNote = ({
         className="field-sizing-content min-h-32 w-full rounded-l bg-neutral-800 p-2"
         name="content"
         aria-label="Neue Notiz"
-        defaultValue={getDefaultValueWithFallback("content", "")}
+        value={content}
+        onChange={(event) => setContent(event.target.value)}
         required
       />
 
@@ -50,10 +55,6 @@ export const AddNote = ({
           <Select
             name="classificationLevelId"
             aria-label="Geheimhaltungsstufe"
-            defaultValue={getDefaultValueWithFallback(
-              "classificationLevelId",
-              undefined,
-            )}
             required
             className="bg-neutral-800!"
           >
@@ -77,13 +78,15 @@ export const AddNote = ({
         )}
 
         <div className="col-start-3 flex items-center justify-end gap-4">
-          <SubmitButton
-            icon={<FaSave />}
+          <Button2
+            type="submit"
+            disabled={isPending}
             title="Speichern"
             variant={Button2Variant.Secondary}
           >
+            {isPending ? <AsciiSpinner /> : <FaSave />}
             Speichern
-          </SubmitButton>
+          </Button2>
         </div>
       </div>
     </form>
