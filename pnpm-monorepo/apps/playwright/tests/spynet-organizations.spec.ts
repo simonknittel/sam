@@ -3,6 +3,7 @@ import {
   ConfirmationStatus,
   OrganizationMembershipType,
   OrganizationMembershipVisibility,
+  type PrismaClient,
 } from "@sam-monorepo/database/client";
 import { expectAuditEvents } from "../fixtures/audit";
 import { createCitizen } from "../fixtures/factories";
@@ -49,6 +50,18 @@ const removeMembership = async (page: Page) => {
   );
   await dialog.getByRole("button", { name: "Entfernen" }).click();
 };
+
+/**
+ * The IDs of the transactions that wrote the active membership rows of the
+ * citizen. The replay of the memberships writes all rows of the citizen
+ * again, also when they do not change. Thus a changed ID shows a write.
+ */
+const getActiveMembershipWriters = (prisma: PrismaClient, citizenId: string) =>
+  prisma.$queryRaw<{ writer: string }[]>`
+    SELECT xmin::text AS writer FROM "ActiveOrganizationMembership"
+    WHERE "citizenId" = ${citizenId}
+    ORDER BY "organizationId"
+  `;
 
 /** The decision buttons of the entry that waits for its confirmation */
 const unconfirmedRow = (page: Page, handle: string) =>
@@ -494,6 +507,14 @@ test("two confirmations of a reported membership at the same time: one wins, the
     confirmed: ConfirmationStatus.CONFIRMED,
     confirmedById: admin.entity.id,
   });
+  /** The winning transaction wrote both rows. The conflict wrote nothing. */
+  const entryWriters = await prisma.$queryRaw<{ writer: string }[]>`
+    SELECT xmin::text AS writer FROM "OrganizationMembershipHistoryEntry"
+    WHERE "id" = ${historyEntry.id}
+  `;
+  expect(await getActiveMembershipWriters(prisma, member.entity.id)).toEqual(
+    entryWriters,
+  );
   expect(
     await prisma.auditEvent.count({
       where: { type: "ORGANIZATION_MEMBERSHIP_CONFIRMED" },
@@ -537,6 +558,32 @@ test("a membership that a different tab removed before is not removed again", as
       },
     },
   });
+  /** A membership that stays, thus a write of the replay is visible */
+  await prisma.organization.create({
+    data: {
+      name: "Andere Organisation",
+      spectrumId: "OTHERORG",
+      createdById: admin.entity.id,
+      membershipHistoryEntries: {
+        create: {
+          citizenId: member.entity.id,
+          type: OrganizationMembershipType.AFFILIATE,
+          visibility: OrganizationMembershipVisibility.PUBLIC,
+          createdById: admin.entity.id,
+          confirmed: ConfirmationStatus.CONFIRMED,
+          confirmedAt: new Date(),
+          confirmedById: admin.entity.id,
+        },
+      },
+      activeMemberships: {
+        create: {
+          citizenId: member.entity.id,
+          type: OrganizationMembershipType.AFFILIATE,
+          visibility: OrganizationMembershipVisibility.PUBLIC,
+        },
+      },
+    },
+  });
 
   await signIn(admin.user);
   const otherTab = await context.newPage();
@@ -551,10 +598,17 @@ test("a membership that a different tab removed before is not removed again", as
 
   /** The first tab still shows the member until its own request */
   await expect(page.getByText("Mitglieder (1)")).toBeVisible();
+  const writersBefore = await getActiveMembershipWriters(
+    prisma,
+    member.entity.id,
+  );
   await removeMembership(page);
 
   await expect(page.getByText(NOT_FOUND_ERROR_TEXT)).toBeVisible();
   await expect(page.getByText("Keine Mitglieder")).toBeVisible();
+  expect(await getActiveMembershipWriters(prisma, member.entity.id)).toEqual(
+    writersBefore,
+  );
   expect(
     await prisma.organizationMembershipHistoryEntry.count({
       where: { type: OrganizationMembershipType.LEFT },
@@ -565,6 +619,176 @@ test("a membership that a different tab removed before is not removed again", as
       where: { type: "ORGANIZATION_MEMBERSHIP_REMOVED" },
     }),
   ).toBe(1);
+});
+
+test("a deleted citizen gets no new membership", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "spynet-organisator",
+    permissionStrings: ORGANIZATION_ADMIN_PERMISSIONS,
+  });
+  const deletedCitizen = await createCitizen(prisma, {
+    handle: "org-geloescht",
+  });
+  await prisma.citizen.update({
+    where: { id: deletedCitizen.entity.id },
+    /** A deleted citizen keeps no login, see Citizen_deleted_login_check */
+    data: { deletedAt: new Date(), userId: null },
+  });
+  const organization = await prisma.organization.create({
+    data: {
+      name: "Testorganisation",
+      spectrumId: "TESTORG",
+      createdById: admin.entity.id,
+    },
+  });
+
+  await signIn(admin.user);
+  await page.goto(`/app/spynet/organization/${organization.id}`);
+
+  const dialog = modal(page, "Citizen hinzufügen");
+  await clickUntilVisible(
+    membershipsTile(page).getByRole("button", { name: "Hinzufügen" }),
+    dialog,
+  );
+  await dialog
+    .getByLabel("Citizen (Internal ID)")
+    .fill(deletedCitizen.entity.id);
+  await dialog
+    .getByRole("button", { name: "Speichern und bestätigen" })
+    .click();
+
+  /** The same answer as for an unknown ID */
+  await expect(page.getByText(NOT_FOUND_ERROR_TEXT)).toBeVisible();
+  await expect(dialog).toBeVisible();
+  expect(await prisma.organizationMembershipHistoryEntry.count()).toBe(0);
+  expect(await prisma.activeOrganizationMembership.count()).toBe(0);
+  expect(
+    await prisma.auditEvent.count({
+      where: { type: "ORGANIZATION_MEMBERSHIP_CREATED" },
+    }),
+  ).toBe(0);
+});
+
+test("a citizen deleted while the page was open gets no removal and no decision", async ({
+  context,
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "spynet-organisator",
+    permissionStrings: ORGANIZATION_ADMIN_PERMISSIONS,
+  });
+  const member = await createCitizen(prisma, { handle: "org-mitglied" });
+  const rumoredMember = await createCitizen(prisma, {
+    handle: "org-geruecht",
+  });
+  const organization = await prisma.organization.create({
+    data: {
+      name: "Testorganisation",
+      spectrumId: "TESTORG",
+      createdById: admin.entity.id,
+      membershipHistoryEntries: {
+        create: [
+          {
+            citizenId: member.entity.id,
+            type: OrganizationMembershipType.MAIN,
+            visibility: OrganizationMembershipVisibility.PUBLIC,
+            createdById: admin.entity.id,
+            confirmed: ConfirmationStatus.CONFIRMED,
+            confirmedAt: new Date(),
+            confirmedById: admin.entity.id,
+          },
+          {
+            citizenId: rumoredMember.entity.id,
+            type: OrganizationMembershipType.AFFILIATE,
+            visibility: OrganizationMembershipVisibility.PUBLIC,
+            createdById: admin.entity.id,
+          },
+        ],
+      },
+      activeMemberships: {
+        create: {
+          citizenId: member.entity.id,
+          type: OrganizationMembershipType.MAIN,
+          visibility: OrganizationMembershipVisibility.PUBLIC,
+        },
+      },
+    },
+  });
+
+  await signIn(admin.user);
+  /** The refresh after the removal would remove the decision buttons */
+  const decisionTab = await context.newPage();
+  for (const tab of [page, decisionTab]) {
+    await tab.goto(`/app/spynet/organization/${organization.id}`);
+    await expect(tab.getByText("Mitglieder (1)")).toBeVisible();
+    await waitForAppShellHydration(tab);
+  }
+
+  const writersBefore = await getActiveMembershipWriters(
+    prisma,
+    member.entity.id,
+  );
+  /** A different user deletes both citizens */
+  await prisma.citizen.updateMany({
+    where: { id: { in: [member.entity.id, rumoredMember.entity.id] } },
+    data: { deletedAt: new Date(), userId: null },
+  });
+
+  await removeMembership(page);
+  await expect(page.getByText(NOT_FOUND_ERROR_TEXT)).toBeVisible();
+  /** The refresh shows the list without the deleted citizen */
+  await expect(page.getByText("Keine Mitglieder")).toBeVisible();
+
+  await unconfirmedRow(decisionTab, "org-geruecht")
+    .getByRole("button", { name: "Bestätigen", exact: true })
+    .click();
+  await expect(decisionTab.getByText(NOT_FOUND_ERROR_TEXT)).toBeVisible();
+  /** After the refresh, the entry of the deleted citizen offers no decision */
+  await expect(
+    decisionTab.getByRole("row").filter({ hasText: "Unbestätigt" }),
+  ).toHaveCount(1);
+  await expect(
+    decisionTab.getByRole("button", { name: "Bestätigen", exact: true }),
+  ).toHaveCount(0);
+
+  expect(
+    await prisma.organizationMembershipHistoryEntry.findMany({
+      orderBy: { type: "asc" },
+      select: { citizenId: true, type: true, confirmed: true },
+    }),
+  ).toEqual([
+    {
+      citizenId: member.entity.id,
+      type: OrganizationMembershipType.MAIN,
+      confirmed: ConfirmationStatus.CONFIRMED,
+    },
+    {
+      citizenId: rumoredMember.entity.id,
+      type: OrganizationMembershipType.AFFILIATE,
+      confirmed: null,
+    },
+  ]);
+  expect(await getActiveMembershipWriters(prisma, member.entity.id)).toEqual(
+    writersBefore,
+  );
+  expect(
+    await prisma.auditEvent.count({
+      where: {
+        type: {
+          in: [
+            "ORGANIZATION_MEMBERSHIP_REMOVED",
+            "ORGANIZATION_MEMBERSHIP_CONFIRMED",
+          ],
+        },
+      },
+    }),
+  ).toBe(0);
 });
 
 /**
