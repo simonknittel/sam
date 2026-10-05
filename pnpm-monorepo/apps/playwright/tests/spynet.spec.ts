@@ -350,6 +350,49 @@ test("the settings records can be managed through their tiles", async ({
   }
 });
 
+test("deleting a settings record that a different user deleted shows the error and the current list", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "spynet-admin",
+    permissionStrings: SETTINGS_ADMIN_PERMISSIONS,
+  });
+  const noteType = await prisma.noteType.create({
+    data: { name: "Doppelt gelöscht" },
+  });
+
+  await signIn(admin.user);
+  await page.goto("/app/spynet/settings");
+  const tile = sectionByHeading(page, "Notizarten");
+  await expect(tile.getByText("Doppelt gelöscht")).toBeVisible();
+
+  /** A different user deletes the note type after the page loaded */
+  await prisma.noteType.delete({ where: { id: noteType.id } });
+
+  const deleteButton = page.getByRole("button", { name: "Löschen" });
+  await clickUntilVisible(
+    tile
+      .getByRole("listitem")
+      .filter({ hasText: "Doppelt gelöscht" })
+      .getByRole("button", { name: "Aktionen" }),
+    deleteButton,
+  );
+  await deleteButton.click();
+  const deleteDialog = page.getByRole("alertdialog");
+  await expect(deleteDialog).toBeVisible();
+  await deleteDialog.getByRole("button", { name: "Löschen" }).click();
+
+  await expect(
+    page.getByText("Die gesuchte Ressource wurde nicht gefunden."),
+  ).toBeVisible();
+  await expect(tile.getByText("Keine Notizarten vorhanden")).toBeVisible();
+  expect(
+    await prisma.auditEvent.count({ where: { type: "NOTE_TYPE_DELETED" } }),
+  ).toBe(0);
+});
+
 test("the citizen table paginates and filters", async ({
   page,
   prisma,

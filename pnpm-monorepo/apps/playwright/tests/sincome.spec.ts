@@ -231,6 +231,8 @@ test("a manager runs a cycle from its creation to a closed payout", async ({
     page.getByRole("button", { name: "Auszahlungsphase starten" }),
     page.getByRole("alertdialog"),
   );
+  /** Else the toast of the end of the collection phase passes the check */
+  await expect(page.getByText(SAVED_TEXT)).toBeHidden();
   await page
     .getByRole("alertdialog")
     .getByRole("button", { name: "Starten" })
