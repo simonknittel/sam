@@ -15,10 +15,6 @@ import {
 } from "@/modules/citizen/utils/citizenLogConfirmation";
 import { getNoteClassificationAttributes } from "@/modules/citizen/utils/notePermissionAttributes";
 import { syncCitizenIdentityAfterLogChange } from "@/modules/citizen/utils/syncCitizenIdentityAfterLogChange";
-import {
-  isPrismaError,
-  PrismaErrorCode,
-} from "@/modules/common/utils/isPrismaError";
 import { ConfirmationStatus } from "@sam-monorepo/database/client";
 import { refresh } from "next/cache";
 import * as z from "zod";
@@ -41,9 +37,11 @@ const AUDIT_CONFIRMATION_BY_STATUS = {
   AuditEventDataByType[AuditEventType.ENTITY_LOG_CONFIRMED]["confirmed"]
 >;
 
+const ALREADY_DECIDED_ERROR = "Über diesen Eintrag wurde bereits entschieden.";
+
 /**
- * Confirms a log or marks it as a false report. A log that has a decision
- * already gets the new decision.
+ * Confirms a log or marks it as a false report. Only a log without a decision
+ * gets one: the UI never offers a change of a decision.
  */
 export const confirmCitizenLog = createAuthenticatedAction(
   "confirmCitizenLog",
@@ -101,26 +99,33 @@ export const confirmCitizenLog = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    /** The copies of the confirmed values change in the same transaction */
-    try {
-      await prisma.$transaction(async (transaction) => {
-        await transaction.citizenLog.update({
-          where: { id: citizenLog.id },
-          data: {
-            confirmed: data.confirmed,
-            confirmedAt: new Date(),
-            confirmedById: authentication.session.user.id,
-          },
-          select: { id: true },
-        });
-
-        await syncCitizenIdentityAfterLogChange(citizenLog, transaction);
+    const isUpdated = await prisma.$transaction(async (transaction) => {
+      const { count } = await transaction.citizenLog.updateMany({
+        where: { id: citizenLog.id, confirmed: null },
+        data: {
+          confirmed: data.confirmed,
+          confirmedAt: new Date(),
+          confirmedById: authentication.session.user.id,
+        },
       });
-    } catch (error) {
-      /** A different user deleted the log after the read above */
-      if (isPrismaError(error, PrismaErrorCode.RecordNotFound))
-        return rejectConflict(t("Common.notFound"), formData);
-      throw error;
+      if (count === 0) return false;
+
+      /** The copies of the confirmed values change in the same transaction */
+      await syncCitizenIdentityAfterLogChange(citizenLog, transaction);
+      return true;
+    });
+
+    if (!isUpdated) {
+      /**
+       * A different user or tab decided or deleted the log after the page
+       * loaded, and the page must show it
+       */
+      const isDeleted =
+        (await prisma.citizenLog.count({ where: { id: citizenLog.id } })) === 0;
+      return rejectConflict(
+        isDeleted ? t("Common.notFound") : ALREADY_DECIDED_ERROR,
+        formData,
+      );
     }
 
     refresh();
