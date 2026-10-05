@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { probeUploadImageDimensions } from "@/modules/common/utils/probeUploadImageDimensions";
@@ -15,14 +16,12 @@ import {
   EventDiscordPublishTarget,
   EventVisibility,
 } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { getEventTemplateById } from "../queries/getEventTemplateById";
 import {
   EVENT_TEMPLATE_MAX_ROLES,
   EVENT_TEMPLATE_NAME_MAX_LENGTH,
-  EVENT_TEMPLATES_PATH,
-  getEventTemplatePath,
 } from "../utils/eventTemplateConstraints";
 
 /** The empty marker the cover field submits when no image is selected */
@@ -55,10 +54,9 @@ export const updateEventTemplate = createAuthenticatedAction(
      * Authorize the request
      */
     const context = await getEventTemplateById(data.templateId);
-    if (!context)
-      return { error: "Vorlage nicht gefunden", requestPayload: formData };
+    if (!context) return rejectConflict("Vorlage nicht gefunden", formData);
     if (context.template.deletedAt !== null)
-      return { error: "Die Vorlage ist gelöscht.", requestPayload: formData };
+      return rejectConflict("Die Vorlage ist gelöscht.", formData);
     if (!context.permissions.canEdit)
       return { error: t("Common.forbidden"), requestPayload: formData };
     const citizenId = authentication.session.entity?.id ?? null;
@@ -140,6 +138,8 @@ export const updateEventTemplate = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     if (isNewCover) probeUploadImageDimensions(coverImageId);
 
     await createAuditEvents([
@@ -156,9 +156,6 @@ export const updateEventTemplate = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    revalidatePath(EVENT_TEMPLATES_PATH);
-    revalidatePath(getEventTemplatePath(context.template.id), "layout");
 
     return { success: t("Common.successfullySaved") };
   },

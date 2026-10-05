@@ -111,6 +111,51 @@ test("banning a user revokes their sessions, unbanning lets them back in", async
   await expectAuditEvents(prisma, ["USER_BANNED", "USER_UNBANNED"]);
 });
 
+test("banning a user whom a different admin banned first shows the message and the ban", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "benutzer-verwalter",
+    permissionStrings: USER_ADMIN_PERMISSIONS,
+  });
+  const otherAdmin = await createCitizen(prisma, {
+    handle: "andere-verwalterin",
+  });
+  const target = await createCitizen(prisma, { handle: "zu-sperrender" });
+
+  await signIn(admin.user);
+  await page.goto("/app/iam/users");
+  const targetRow = page.getByRole("row").filter({ hasText: target.user.id });
+  const banDialog = page.getByRole("alertdialog");
+  await clickUntilVisible(
+    targetRow.getByRole("button", { name: "Benutzer sperren" }),
+    banDialog,
+  );
+
+  await prisma.user.update({
+    where: { id: target.user.id },
+    data: { bannedAt: new Date(), bannedById: otherAdmin.entity.id },
+  });
+  await banDialog.getByRole("button", { name: "Sperren" }).click();
+
+  await expect(
+    page.getByText("Dieser Benutzer ist bereits gesperrt."),
+  ).toBeVisible();
+  // The refresh shows the ban of the other admin
+  await expect(targetRow.getByText("Gesperrt")).toBeVisible();
+  expect(
+    await prisma.user.findUniqueOrThrow({
+      where: { id: target.user.id },
+      select: { bannedById: true },
+    }),
+  ).toEqual({ bannedById: otherAdmin.entity.id });
+  expect(
+    await prisma.auditEvent.count({ where: { type: "USER_BANNED" } }),
+  ).toBe(0);
+});
+
 test("an admin confirms the privacy policy on behalf of a user", async ({
   page,
   prisma,

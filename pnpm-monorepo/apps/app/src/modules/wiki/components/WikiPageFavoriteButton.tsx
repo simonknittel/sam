@@ -4,7 +4,7 @@ import { useAction } from "@/modules/actions/utils/useAction";
 import { Button2Variant } from "@/modules/common/components/Button2";
 import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { FaRegStar, FaStar } from "react-icons/fa";
-import { toggleWikiPageFavorite } from "../actions/toggleWikiPageFavorite";
+import { updateWikiPageFavorite } from "../actions/updateWikiPageFavorite";
 
 interface Props {
   readonly className?: string;
@@ -17,11 +17,12 @@ export const WikiPageFavoriteButton = ({
   pageId,
   isFavorite,
 }: Props) => {
-  const { formAction } = useAction(toggleWikiPageFavorite);
+  const { formAction } = useAction(updateWikiPageFavorite);
 
   return (
     <form action={formAction} className={className}>
       <input type="hidden" name="pageId" value={pageId} />
+      {!isFavorite && <input type="hidden" name="isFavorite" value="1" />}
 
       <SubmitButton
         variant={Button2Variant.IconOnly}

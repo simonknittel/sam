@@ -1,6 +1,5 @@
 "use client";
 
-import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import Modal from "@/modules/common/components/Modal";
 import Note from "@/modules/common/components/Note";
@@ -118,8 +117,7 @@ export const EventWikiPagePermissionsProvider = ({
     useState<WikiPageUploadability>(
       initialUploadability(initialAttachmentUploadability),
     );
-  const { state, formAction } = useAction(updateEventWikiPagePermissions, {
-    errorToast: false,
+  const { formAction } = useAction(updateEventWikiPagePermissions, {
     onSuccess: () => setIsOpen(false),
   });
 
@@ -263,8 +261,6 @@ export const EventWikiPagePermissionsProvider = ({
           <SubmitButton icon={<FaSave />} className="mt-8 ml-auto">
             Speichern
           </SubmitButton>
-
-          <ActionErrorNote className="mt-4" state={state} />
         </form>
       </Modal>
     </WikiPagePermissionsOpenerProvider>

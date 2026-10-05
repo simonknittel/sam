@@ -120,7 +120,7 @@ export const PhaseManagementPayoutPreparation = ({ cycleData }: Props) => {
         <AlertDialog
           isOpen={confirmation.isOpen}
           onClose={confirmation.close}
-          title="Auszahlungsphase beenden?"
+          title="Auszahlungsphase starten?"
           description={
             <>
               Willst du die Auszahlungsphase von &ldquo;

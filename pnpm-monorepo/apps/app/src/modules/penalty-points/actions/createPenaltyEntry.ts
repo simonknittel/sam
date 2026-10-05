@@ -2,11 +2,12 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { wallTimeSchema } from "@/modules/common/utils/wallTimeSchema";
-import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
-import { revalidatePath } from "next/cache";
+import { triggerNotificationsAfterSave } from "@/modules/notifications/utils/triggerNotification";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 const schema = z.object({
@@ -40,11 +41,10 @@ export const createPenaltyEntry = createAuthenticatedAction(
         error: t("Common.notFound"),
         requestPayload: formData,
       };
-    if (citizen.deletedAt)
-      return {
-        error: "Der Citizen ist gelöscht.",
-        requestPayload: formData,
-      };
+    if (citizen.deletedAt) {
+      /** A different user deleted the citizen, and the page must show it */
+      return rejectConflict("Der Citizen ist gelöscht.", formData);
+    }
 
     /**
      * Create entry
@@ -71,6 +71,8 @@ export const createPenaltyEntry = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.PENALTY_ENTRY_CREATED,
@@ -88,7 +90,7 @@ export const createPenaltyEntry = createAuthenticatedAction(
     /**
      * Trigger notifications
      */
-    await triggerNotifications([
+    const isNotified = await triggerNotificationsAfterSave([
       {
         type: "PenaltyEntryCreated",
         payload: {
@@ -98,18 +100,11 @@ export const createPenaltyEntry = createAuthenticatedAction(
     ]);
 
     /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(
-      `/app/spynet/citizen/${createdEntry.citizenId}/penalty-points`,
-    );
-    revalidatePath("/app/penalty-points");
-
-    /**
      * Respond with the result
      */
     return {
       success: "Erfolgreich gespeichert.",
+      ...(isNotified ? {} : { warning: t("Common.notificationsFailed") }),
     };
   },
   {

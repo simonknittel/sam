@@ -2,13 +2,17 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import {
+  isPrismaError,
+  PrismaErrorCode,
+} from "@/modules/common/utils/isPrismaError";
 import { TaskVisibility } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
-import { getTaskById } from "../queries/getTaskById";
-import { isTaskUpdatable } from "../utils/isTaskUpdatable";
+import { requireOpenTask } from "../utils/requireOpenTask";
 
 const schema = z.object({
   taskId: z.union([z.cuid(), z.cuid2()]),
@@ -24,14 +28,8 @@ export const createTaskAssignmentForCurrentUser = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    const task = await getTaskById(data.taskId);
-    if (!task)
-      return { error: "Task nicht gefunden", requestPayload: formData };
-    if (!isTaskUpdatable(task))
-      return {
-        error: "Der Task ist bereits abgeschlossen.",
-        requestPayload: formData,
-      };
+    const { task, failure } = await requireOpenTask(data.taskId, formData);
+    if (failure) return failure;
 
     if (
       task.visibility === TaskVisibility.PERSONALIZED ||
@@ -43,11 +41,16 @@ export const createTaskAssignmentForCurrentUser = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    if (task.assignmentLimit && task.assignments.length >= task.assignmentLimit)
-      return {
-        error: "Dieser Task kann nicht von Weiteren angenommen werden.",
-        requestPayload: formData,
-      };
+    if (
+      task.assignmentLimit &&
+      task.assignments.length >= task.assignmentLimit
+    ) {
+      /** The page then shows the citizens who took the last places */
+      return rejectConflict(
+        "Dieser Task kann nicht von Weiteren angenommen werden.",
+        formData,
+      );
+    }
 
     if (!task.hasCurrentUserRequiredRole)
       return {
@@ -58,20 +61,35 @@ export const createTaskAssignmentForCurrentUser = createAuthenticatedAction(
     /**
      * Create
      */
-    await prisma.taskAssignment.create({
-      data: {
-        task: {
-          connect: {
-            id: data.taskId,
+    try {
+      await prisma.taskAssignment.create({
+        data: {
+          task: {
+            connect: {
+              id: data.taskId,
+            },
+          },
+          citizen: {
+            connect: {
+              id: authentication.session.entity.id,
+            },
           },
         },
-        citizen: {
-          connect: {
-            id: authentication.session.entity.id,
-          },
-        },
-      },
-    });
+      });
+    } catch (error) {
+      if (isPrismaError(error, PrismaErrorCode.UniqueConstraintFailed)) {
+        /**
+         * A different tab took the task on before, and the page must show it
+         */
+        return rejectConflict(
+          "Du hast diesen Task bereits angenommen.",
+          formData,
+        );
+      }
+      throw error;
+    }
+
+    refresh();
 
     await createAuditEvents([
       {
@@ -83,12 +101,6 @@ export const createTaskAssignmentForCurrentUser = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath("/app/tasks");
-    revalidatePath(`/app/tasks/${task.id}`);
 
     /**
      * Respond with the result

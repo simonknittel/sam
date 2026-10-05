@@ -3,9 +3,8 @@
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
-import { getLineupPath } from "../utils/eventContainer";
 import { buildPositionNameUpdatedAuditEvent } from "../utils/lineupAuditEvents";
 import { requireManageablePosition } from "../utils/requireManageablePosition";
 
@@ -40,6 +39,8 @@ export const updateEventPositionName = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       buildPositionNameUpdatedAuditEvent(
         container,
@@ -51,11 +52,6 @@ export const updateEventPositionName = createAuthenticatedAction(
         authentication.session.user.id,
       ),
     ]);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(getLineupPath(container));
 
     /**
      * Respond with the result

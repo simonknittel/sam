@@ -2,10 +2,11 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { EventActivityType } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { cancelParticipation } from "../utils/cancelParticipation";
 import { createEventActivity } from "../utils/eventActivity";
@@ -33,13 +34,9 @@ export const cancelEventParticipation = createAuthenticatedAction(
     const citizenId = authentication.session.entity.id;
 
     const event = await getParticipatableAppEvent(data.eventId);
-    if (!event)
-      return { error: "Event nicht gefunden", requestPayload: formData };
+    if (!event) return rejectConflict("Event nicht gefunden", formData);
     if (!isParticipationOpen(event))
-      return {
-        error: "Die Anmeldung ist geschlossen.",
-        requestPayload: formData,
-      };
+      return rejectConflict("Die Anmeldung ist geschlossen.", formData);
 
     const participant = await prisma.eventParticipant.findFirst({
       where: {
@@ -51,31 +48,35 @@ export const cancelEventParticipation = createAuthenticatedAction(
         id: true,
       },
     });
-    if (!participant)
-      return {
-        error: "Du bist nicht angemeldet.",
-        requestPayload: formData,
-      };
 
-    const isCancelled = await prisma.$transaction(async (transaction) => {
-      if (
-        !(await cancelParticipation(transaction, {
-          participantId: participant.id,
+    const isCancelled =
+      participant !== null &&
+      (await prisma.$transaction(async (transaction) => {
+        if (
+          !(await cancelParticipation(transaction, {
+            participantId: participant.id,
+            eventId: event.id,
+            citizenId,
+            cancelledById: citizenId,
+          }))
+        )
+          return false;
+
+        await createEventActivity(transaction, {
           eventId: event.id,
           citizenId,
-          cancelledById: citizenId,
-        }))
-      )
-        return false;
+          type: EventActivityType.PARTICIPATION_CANCELLED,
+          payload: null,
+        });
+        return true;
+      }));
 
-      await createEventActivity(transaction, {
-        eventId: event.id,
-        citizenId,
-        type: EventActivityType.PARTICIPATION_CANCELLED,
-        payload: null,
-      });
-      return true;
-    });
+    /**
+     * Also for the error below: then a different tab, a parallel request or a
+     * manager cancelled the participation before, and the page must show it.
+     */
+    refresh();
+
     if (!isCancelled)
       return {
         error: "Du bist nicht angemeldet.",
@@ -92,13 +93,6 @@ export const cancelEventParticipation = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath("/app/events");
-    revalidatePath("/app/dashboard");
-    revalidatePath(`/app/events/${event.id}`, "layout");
 
     /**
      * Respond with the result

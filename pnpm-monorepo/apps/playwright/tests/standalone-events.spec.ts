@@ -305,6 +305,62 @@ test("deleting an event hides it everywhere", async ({
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
 });
 
+test("saving an event that a different manager deleted shows the error and the missing event", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const creator = await createCitizen(prisma, {
+    handle: "späte-orga",
+    permissionStrings: ["event;read"],
+  });
+  const otherManager = await createCitizen(prisma, {
+    handle: "schnelle-orga",
+    permissionStrings: ["event;read", "event;manage"],
+  });
+  const event = await createAppEvent(prisma, {
+    name: "Operation Verschwunden",
+    createdById: creator.entity.id,
+    ...futureEvent(),
+  });
+  /**
+   * Each visit marks the event as read. The action of a new event refreshes
+   * the page, and the action after the deletion refreshes it too. Thus the
+   * event is read, and the action of the visit ends before the deletion.
+   */
+  await prisma.readMarker.create({
+    data: { citizenId: creator.entity.id, eventId: event.id },
+  });
+  const markAsReadResponse = page.waitForResponse(
+    (response) => response.request().headers()["next-action"] !== undefined,
+  );
+
+  await signIn(creator.user);
+  await page.goto(`/app/events/${event.id}/settings`);
+  await markAsReadResponse;
+  await waitForAppShellHydration(page);
+
+  /** A different manager deletes the event after the page loaded */
+  await prisma.event.update({
+    where: { id: event.id },
+    data: { deletedAt: new Date(), deletedById: otherManager.entity.id },
+  });
+
+  await page.getByLabel("Titel").fill("Operation Zu Spät");
+  await page.getByRole("button", { name: "Speichern" }).click();
+
+  await expect(
+    page.getByText("Event nicht gefunden", { exact: true }),
+  ).toBeVisible();
+  /** The page shows the current state without a reload */
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
+
+  const unchangedEvent = await prisma.event.findUniqueOrThrow({
+    where: { id: event.id },
+  });
+  expect(unchangedEvent.name).toBe("Operation Verschwunden");
+});
+
 test("a restricted event is invisible to non-eligible users", async ({
   page,
   prisma,

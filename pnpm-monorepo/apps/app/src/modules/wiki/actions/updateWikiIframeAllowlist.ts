@@ -4,8 +4,8 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { refresh } from "next/cache";
 import * as z from "zod";
-import { revalidateGlobalWikiScope } from "../queries/getWikiPageScopedContext";
 import {
   MAX_WIKI_IFRAME_ALLOWLIST_ENTRIES,
   WIKI_SETTING_IFRAME_ALLOWLIST,
@@ -48,6 +48,8 @@ export const updateWikiIframeAllowlist = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.WIKI_SETTINGS_UPDATED,
@@ -58,8 +60,6 @@ export const updateWikiIframeAllowlist = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    revalidateGlobalWikiScope();
 
     return { success: t("Common.successfullySaved") };
   },

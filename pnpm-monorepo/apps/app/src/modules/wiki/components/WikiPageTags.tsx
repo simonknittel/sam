@@ -1,6 +1,5 @@
 "use client";
 
-import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Link } from "@/modules/common/components/Link";
@@ -110,8 +109,7 @@ const TagsModal = ({
   const { container } = useWikiPageHrefMode();
   const inputId = useId();
   const [query, setQuery] = useState("");
-  const { state, formAction } = useAction(updateWikiPageTags, {
-    errorToast: false,
+  const { formAction } = useAction(updateWikiPageTags, {
     onSuccess: onRequestClose,
   });
 
@@ -260,8 +258,6 @@ const TagsModal = ({
         <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
           Speichern
         </SubmitButton>
-
-        <ActionErrorNote className="mt-4" state={state} />
       </form>
     </Modal>
   );

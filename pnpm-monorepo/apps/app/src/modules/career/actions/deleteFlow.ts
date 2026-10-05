@@ -2,9 +2,10 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import * as z from "zod";
 
@@ -23,8 +24,10 @@ export const deleteFlow = createAuthenticatedAction(
       where: { id: data.flowId },
       select: { id: true, name: true, slug: true, deletedAt: true },
     });
-    if (!flow || flow.deletedAt)
-      return { error: t("Common.notFound"), requestPayload: formData };
+    if (!flow || flow.deletedAt) {
+      /** A different user deleted the flow before, and the page must show it */
+      return rejectConflict(t("Common.notFound"), formData);
+    }
 
     /**
      * Soft delete only: nodes, edges and role access stay in place, which is
@@ -39,6 +42,8 @@ export const deleteFlow = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.CAREER_FLOW_DELETED,
@@ -50,9 +55,6 @@ export const deleteFlow = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    revalidatePath("/app/career", "layout");
-    revalidatePath(`/app/career/${flow.slug}`);
 
     /** The detail page is gone with the flow; the list is where a restore starts */
     redirect("/app/career/settings");

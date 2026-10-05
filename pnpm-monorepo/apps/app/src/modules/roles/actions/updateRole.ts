@@ -2,9 +2,10 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 const schema = z.object({
@@ -40,11 +41,10 @@ export const updateRole = createAuthenticatedAction(
         assignAfterInactiveDays: true,
       },
     });
-    if (!existingRole)
-      return {
-        error: t("Common.notFound"),
-        requestPayload: formData,
-      };
+    if (!existingRole) {
+      /** A different user deleted the role, and the page must show it */
+      return rejectConflict(t("Common.notFound"), formData);
+    }
 
     const updatedRole = await prisma.role.update({
       where: {
@@ -58,6 +58,8 @@ export const updateRole = createAuthenticatedAction(
         maxLevel: data.maxLevel,
       },
     });
+
+    refresh();
 
     await createAuditEvents([
       {
@@ -77,12 +79,6 @@ export const updateRole = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(`/app/roles/${updatedRole.id}`);
-    revalidatePath("/app/iam/roles");
 
     /**
      * Respond with the result

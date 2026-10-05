@@ -1,6 +1,5 @@
 "use client";
 
-import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
@@ -31,10 +30,12 @@ export const EventParticipationControls = ({
   comment,
   participationOpen,
 }: Props) => {
-  const signUp = useAction(signUpForEvent, { errorToast: false });
-  const updateComment = useAction(updateEventParticipationComment, {
-    errorToast: false,
-  });
+  /**
+   * The errors show as toasts, not in the forms: an error such as "already
+   * signed up" refreshes the page, which then shows the other form.
+   */
+  const signUp = useAction(signUpForEvent);
+  const updateComment = useAction(updateEventParticipationComment);
 
   /**
    * Controlled on purpose: router refreshes re-render this tile in the
@@ -50,7 +51,7 @@ export const EventParticipationControls = ({
    * cancellation) — adjusted during render, not in an effect.
    *
    * Only while the draft is untouched, though: those same background
-   * refreshes arrive whenever anything revalidates the event, and adopting
+   * refreshes arrive whenever an action refreshes the page, and adopting
    * unconditionally would discard whatever the user had typed by then.
    */
   const [previousComment, setPreviousComment] = useState(comment);
@@ -129,8 +130,6 @@ export const EventParticipationControls = ({
           <SubmitButton icon={<FaSignInAlt />} className="mt-2 ml-auto">
             Anmelden
           </SubmitButton>
-
-          <ActionErrorNote className="mt-2" state={signUp.state} />
         </form>
       )}
 
@@ -154,8 +153,6 @@ export const EventParticipationControls = ({
             <SubmitButton icon={<FaSave />} className="mt-2 ml-auto">
               Kommentar speichern
             </SubmitButton>
-
-            <ActionErrorNote className="mt-2" state={updateComment.state} />
           </form>
         </>
       )}

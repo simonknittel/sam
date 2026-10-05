@@ -1,6 +1,5 @@
 "use client";
 
-import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import Tab from "@/modules/common/components/tabs/Tab";
@@ -48,9 +47,11 @@ export const Permissions = ({
   classificationLevels,
   allRoles,
 }: Props) => {
-  const { state, formAction } = useAction(updateRolePermissions, {
-    errorToast: false,
-  });
+  /**
+   * The errors show as toasts: when a different user deleted the role, the
+   * refresh replaces the page and removes this form.
+   */
+  const { formAction } = useAction(updateRolePermissions);
 
   return (
     <form action={formAction}>
@@ -117,8 +118,6 @@ export const Permissions = ({
       <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
         Speichern
       </SubmitButton>
-
-      <ActionErrorNote className="mt-4" state={state} />
     </form>
   );
 };

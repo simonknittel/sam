@@ -2,11 +2,15 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import {
+  isPrismaError,
+  PrismaErrorCode,
+} from "@/modules/common/utils/isPrismaError";
 import { SLUG_MAX_LENGTH } from "@/modules/common/utils/slugify";
-import { Prisma } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import {
   FLOW_NAME_MAX_LENGTH,
@@ -31,8 +35,10 @@ export const renameFlow = createAuthenticatedAction(
       where: { id: data.flowId },
       select: { id: true, name: true, slug: true, deletedAt: true },
     });
-    if (!flow || flow.deletedAt)
-      return { error: t("Common.notFound"), requestPayload: formData };
+    if (!flow || flow.deletedAt) {
+      /** A different user deleted the flow before, and the page must show it */
+      return rejectConflict(t("Common.notFound"), formData);
+    }
 
     const slugError = validateFlowSlug(data.slug);
     if (slugError) return { error: slugError, requestPayload: formData };
@@ -54,13 +60,12 @@ export const renameFlow = createAuthenticatedAction(
         },
       });
     } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2002"
-      )
+      if (isPrismaError(error, PrismaErrorCode.UniqueConstraintFailed))
         return { error: FLOW_SLUG_TAKEN_ERROR, requestPayload: formData };
       throw error;
     }
+
+    refresh();
 
     await createAuditEvents([
       {
@@ -75,11 +80,6 @@ export const renameFlow = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /** The navigation and both the old and the new URL of the flow */
-    revalidatePath("/app/career", "layout");
-    revalidatePath(`/app/career/${flow.slug}`);
-    revalidatePath(`/app/career/${data.slug}`);
 
     return {
       success: t("Common.successfullySaved"),

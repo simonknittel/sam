@@ -2,9 +2,10 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { getWikiContext } from "../queries/getWikiContext";
 import { WIKI_SETTING_FEATURED_PAGES } from "../queries/getWikiSettings";
@@ -37,8 +38,13 @@ export const updateWikiFeaturedPages = createAuthenticatedAction(
     const allPagesExist = data.pageIds.every(
       (pageId) => context.pagesById.get(pageId)?.deletedAt === null,
     );
-    if (!allPagesExist)
-      return { error: t("Common.badRequest"), requestPayload: formData };
+    if (!allPagesExist) {
+      /**
+       * A different user or tab deleted a selected page before, and the
+       * options must show it
+       */
+      return rejectConflict(t("Common.badRequest"), formData);
+    }
 
     const updatedById = authentication.session.entity?.id ?? null;
     await prisma.wikiSetting.upsert({
@@ -51,6 +57,8 @@ export const updateWikiFeaturedPages = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.WIKI_SETTINGS_UPDATED,
@@ -61,8 +69,6 @@ export const updateWikiFeaturedPages = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    revalidatePath("/app/wiki", "layout");
 
     return { success: t("Common.successfullySaved") };
   },

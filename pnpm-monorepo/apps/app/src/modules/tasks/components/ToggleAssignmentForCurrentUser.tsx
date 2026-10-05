@@ -64,7 +64,7 @@ export const ToggleAssignmentForCurrentUser = ({
     (!isCurrentUserAssigned && !hasCurrentUserRequiredRole);
 
   const button = (
-    <Button2 disabled={disabled}>
+    <Button2 disabled={disabled || isPending}>
       {isCurrentUserAssigned ? "Aufgeben" : "Annehmen"}
       {isPending ? (
         <AsciiSpinner />

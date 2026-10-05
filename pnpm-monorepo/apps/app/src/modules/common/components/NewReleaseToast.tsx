@@ -31,7 +31,7 @@ export const NewReleaseToast = () => {
           id: releaseToastId,
           duration: Infinity,
           icon: <AsciiSpinner className="flex-none text-brand-red-500" />,
-          className: "gap-2 [&>div[role='status']]:m-0! pointer-events-none",
+          className: "gap-2 [&>[data-toast-message]]:m-0! pointer-events-none",
         },
       );
     });
@@ -48,7 +48,7 @@ export const NewReleaseToast = () => {
           id: releaseToastId,
           duration: Infinity,
           icon: <FaRocket className="flex-none" />,
-          className: "gap-2 [&>div[role='status']]:m-0!",
+          className: "gap-2 [&>[data-toast-message]]:m-0!",
         },
       );
 

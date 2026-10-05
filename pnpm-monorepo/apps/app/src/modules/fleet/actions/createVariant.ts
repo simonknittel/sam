@@ -2,12 +2,13 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
 import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
 import { VariantStatus } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { ExternalService } from "../types";
 import { createAndReturnTags } from "../utils/createAndReturnTags";
@@ -54,6 +55,17 @@ export const createVariant = createAuthenticatedAction(
         requestPayload: formData,
       };
 
+    const series = await prisma.series.findUnique({
+      where: { id: data.seriesId },
+      select: { id: true },
+    });
+    if (!series) {
+      /**
+       * A different user deleted the series before, and the page must show it
+       */
+      return rejectConflict(t("Common.notFound"), formData);
+    }
+
     /**
      * The linked page must be a readable page of the global wiki. One
      * generic error for unknown, trashed and unreadable pages alike, so
@@ -94,9 +106,6 @@ export const createVariant = createAuthenticatedAction(
             },
           }),
       },
-      include: {
-        series: true,
-      },
     });
 
     const incomingLinks = data.linkServiceNames
@@ -112,6 +121,8 @@ export const createVariant = createAuthenticatedAction(
       authentication.session.entity.id,
     );
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.VARIANT_CREATED_V3,
@@ -126,19 +137,6 @@ export const createVariant = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(
-      `/app/fleet/settings/manufacturers/${createdVariant.series.manufacturerId}`,
-    );
-    revalidatePath(
-      `/app/fleet/settings/manufacturers/${createdVariant.series.manufacturerId}/series/${createdVariant.seriesId}`,
-    );
-    revalidatePath("/app/fleet/org");
-    revalidatePath("/app/fleet/my-ships");
-    revalidatePath(`/app/fleet/variant/${createdVariant.id}`, "layout");
 
     /**
      * Respond with the result

@@ -1,6 +1,5 @@
 "use client";
 
-import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { TextInput } from "@/modules/common/components/form/TextInput";
@@ -55,8 +54,11 @@ interface FormProps {
 }
 
 const SaveEventAsTemplateForm = ({ eventId, name, onSuccess }: FormProps) => {
-  const { state, formAction } = useAction(createEventTemplateFromEvent, {
-    errorToast: false,
+  /**
+   * The errors show as toasts: the refresh after a conflict, for example an
+   * event that a different manager deleted, can remove this form.
+   */
+  const { formAction } = useAction(createEventTemplateFromEvent, {
     onSuccess,
   });
 
@@ -76,8 +78,6 @@ const SaveEventAsTemplateForm = ({ eventId, name, onSuccess }: FormProps) => {
         required
         autoFocus
       />
-
-      <ActionErrorNote className="mt-4" state={state} />
 
       <div className="mt-8 flex justify-end">
         <SubmitButton icon={<FaSave />}>Speichern</SubmitButton>

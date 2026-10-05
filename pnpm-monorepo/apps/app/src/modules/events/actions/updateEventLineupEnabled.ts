@@ -2,11 +2,12 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import { triggerNotificationsAfterSave } from "@/modules/notifications/utils/triggerNotification";
 import { EventActivityType, EventSource } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { EVENT_MANAGE_GUARD_SELECT } from "../queries/eventManageGuardSelect";
 import { createEventActivity } from "../utils/eventActivity";
@@ -28,6 +29,7 @@ export const updateEventLineupEnabled = createAuthenticatedAction(
     const event = await prisma.event.findUnique({
       where: {
         id: data.eventId,
+        deletedAt: null,
       },
       select: {
         ...EVENT_MANAGE_GUARD_SELECT,
@@ -35,13 +37,9 @@ export const updateEventLineupEnabled = createAuthenticatedAction(
         lineupEnabled: true,
       },
     });
-    if (!event)
-      return { error: "Event nicht gefunden", requestPayload: formData };
+    if (!event) return rejectConflict("Event nicht gefunden", formData);
     if (!isEventUpdatable(event))
-      return {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      };
+      return rejectConflict("Das Event ist bereits vorbei.", formData);
     if (!(await isAllowedToManagePositions(event)))
       return {
         error: t("Common.forbidden"),
@@ -77,6 +75,8 @@ export const updateEventLineupEnabled = createAuthenticatedAction(
         });
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.EVENT_LINEUP_STATUS_CHANGED,
@@ -91,27 +91,25 @@ export const updateEventLineupEnabled = createAuthenticatedAction(
     /**
      * Trigger notifications
      */
-    if (data.value) {
-      await triggerNotifications([
-        {
-          type: "EventLineupEnabled",
-          payload: {
-            eventId: event.id,
+    const areNotificationsSent = data.value
+      ? await triggerNotificationsAfterSave([
+          {
+            type: "EventLineupEnabled",
+            payload: {
+              eventId: event.id,
+            },
           },
-        },
-      ]);
-    }
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(`/app/events/${event.id}/lineup`);
+        ])
+      : true;
 
     /**
      * Respond with the result
      */
     return {
       success: t("Common.successfullySaved"),
+      ...(areNotificationsSent
+        ? {}
+        : { warning: t("Common.notificationsFailed") }),
     };
   },
 );

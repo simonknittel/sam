@@ -1,3 +1,4 @@
+import type { PrismaClient } from "@sam-monorepo/database/client";
 import { expectAuditEvents } from "../fixtures/audit";
 import {
   createCitizen,
@@ -7,11 +8,23 @@ import {
   wikiParagraph,
 } from "../fixtures/factories";
 import {
+  ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   modal,
   NOT_FOUND_TEXT,
+  waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
+
+/** The statements of the database of the worker that wait for a lock */
+const countLockWaits = async (prisma: PrismaClient) => {
+  const waits = await prisma.$queryRaw<{ count: number }[]>`
+    SELECT count(*)::int AS "count"
+    FROM pg_stat_activity
+    WHERE "datname" = current_database() AND "wait_event_type" = 'Lock'
+  `;
+  return waits[0]?.count;
+};
 
 test("a page travels to the trash, back out of it and finally out of existence", async ({
   page,
@@ -123,4 +136,125 @@ test("a page travels to the trash, back out of it and finally out of existence",
     "WIKI_PAGE_RESTORED",
     "WIKI_PAGE_DESTROYED",
   ]);
+});
+
+test("a page that a different manager restored first leaves the trash", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "wiki-verwalter",
+    permissionStrings: ["wiki;manage"],
+  });
+  const wikiPage = await createWikiPage(prisma, {
+    title: "Handbuch",
+    visibility: WikiPageVisibility.PUBLIC,
+  });
+  await prisma.wikiPage.update({
+    where: { id: wikiPage.id },
+    data: { deletedAt: new Date() },
+  });
+  await signIn(manager.user);
+
+  await page.goto("/app/wiki/trash");
+  const trashRow = page.getByRole("row").filter({ hasText: "Handbuch" });
+  await expect(trashRow).toBeVisible();
+  /** Before hydration, a click on the button has no effect */
+  await waitForAppShellHydration(page);
+
+  /** A different manager restores the page in the meantime */
+  await prisma.wikiPage.update({
+    where: { id: wikiPage.id },
+    data: { deletedAt: null },
+  });
+
+  /**
+   * The error refreshes the page: the trash no longer lists the page, without
+   * a navigation
+   */
+  await trashRow.getByRole("button", { name: "Wiederherstellen" }).click();
+  await expect(page.getByText("Ungültige Anfrage")).toBeVisible();
+  await expect(page.getByText("Der Papierkorb ist leer")).toBeVisible();
+});
+
+test("a page that a different manager restores during the permanent delete stays", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "wiki-verwalter",
+    permissionStrings: ["wiki;manage"],
+  });
+  const wikiPage = await createWikiPage(prisma, {
+    title: "Handbuch",
+    visibility: WikiPageVisibility.PUBLIC,
+  });
+  await prisma.wikiPage.update({
+    where: { id: wikiPage.id },
+    data: { deletedAt: new Date() },
+  });
+  await signIn(manager.user);
+
+  await page.goto("/app/wiki/trash");
+  const trashRow = page.getByRole("row").filter({ hasText: "Handbuch" });
+  const destroyDialog = modal(page, "Endgültig löschen");
+  await clickUntilVisible(
+    trashRow.getByRole("button", { name: "Endgültig löschen" }),
+    destroyDialog,
+  );
+
+  /**
+   * A different manager restores the page and holds the row until the
+   * permanent delete waits for it. Thus the checks of the action read the
+   * page in the trash, and only the delete itself finds the restore.
+   */
+  const { promise: rowIsHeld, resolve: holdRow } =
+    Promise.withResolvers<void>();
+  const { promise: restoreCanCommit, resolve: commitRestore } =
+    Promise.withResolvers<void>();
+  const parallelRestore = prisma.$transaction(
+    async (transaction) => {
+      await transaction.wikiPage.update({
+        where: { id: wikiPage.id },
+        data: { deletedAt: null },
+      });
+      holdRow();
+      await restoreCanCommit;
+    },
+    /** Longer than the click and the poll below, which wait for the lock */
+    { timeout: ACTION_FEEDBACK_TIMEOUT * 2 },
+  );
+  await rowIsHeld;
+
+  try {
+    await destroyDialog
+      .getByRole("button", { name: "Endgültig löschen" })
+      .click();
+    await expect.poll(() => countLockWaits(prisma)).toBe(1);
+  } finally {
+    commitRestore();
+    await parallelRestore;
+  }
+
+  /**
+   * The page stays, and the error refreshes the trash: it shows the restore
+   * without a navigation
+   */
+  await expect(
+    page.getByText(
+      "Der Papierkorb war veraltet. Er ist jetzt aktuell, bitte versuche es erneut.",
+    ),
+  ).toBeVisible();
+  await expect(page.getByText("Der Papierkorb ist leer")).toBeVisible();
+  expect(
+    await prisma.wikiPage.findUniqueOrThrow({
+      where: { id: wikiPage.id },
+      select: { deletedAt: true },
+    }),
+  ).toEqual({ deletedAt: null });
+  expect(
+    await prisma.auditEvent.count({ where: { type: "WIKI_PAGE_DESTROYED" } }),
+  ).toBe(0);
 });

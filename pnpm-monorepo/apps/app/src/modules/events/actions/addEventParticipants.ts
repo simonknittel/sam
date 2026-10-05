@@ -2,11 +2,12 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import { triggerNotificationsAfterSave } from "@/modules/notifications/utils/triggerNotification";
 import { EventActivityType, EventSource } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { getAddableParticipantIds } from "../queries/getAddableParticipantIds";
 import { createEventActivity } from "../utils/eventActivity";
@@ -28,13 +29,9 @@ export const addEventParticipants = createAuthenticatedAction(
      * Authorize the request
      */
     const event = await getParticipatableAppEvent(data.eventId);
-    if (!event)
-      return { error: "Event nicht gefunden", requestPayload: formData };
+    if (!event) return rejectConflict("Event nicht gefunden", formData);
     if (!isEventUpdatable(event))
-      return {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      };
+      return rejectConflict("Das Event ist bereits vorbei.", formData);
     if (!(await isAllowedToManageEvent(event)))
       return { error: t("Common.forbidden"), requestPayload: formData };
 
@@ -81,8 +78,11 @@ export const addEventParticipants = createAuthenticatedAction(
     const citizenIdsToAdd = requestedCitizenIds.filter(
       (citizenId) => !alreadyActive.has(citizenId),
     );
-    if (citizenIdsToAdd.length <= 0)
+    if (citizenIdsToAdd.length <= 0) {
+      /** The citizens signed up before, and the page must show it */
+      refresh();
       return { success: "Alle ausgewählten Citizen sind bereits angemeldet." };
+    }
 
     /**
      * Add the participants. One transaction, so a failure part-way through
@@ -118,6 +118,12 @@ export const addEventParticipants = createAuthenticatedAction(
       return citizenIds;
     });
 
+    /**
+     * Also for the message below: then the citizens signed up in the
+     * meantime, and the page must show it.
+     */
+    refresh();
+
     if (addedCitizenIds.length <= 0)
       return { success: "Alle ausgewählten Citizen sind bereits angemeldet." };
 
@@ -135,7 +141,7 @@ export const addEventParticipants = createAuthenticatedAction(
     /**
      * Trigger notifications
      */
-    await triggerNotifications(
+    const areNotificationsSent = await triggerNotificationsAfterSave(
       addedCitizenIds.map((citizenId) => ({
         type: "EventParticipationAdded",
         payload: {
@@ -146,16 +152,13 @@ export const addEventParticipants = createAuthenticatedAction(
     );
 
     /**
-     * Revalidate cache(s)
-     */
-    revalidatePath("/app/events");
-    revalidatePath(`/app/events/${event.id}`, "layout");
-
-    /**
      * Respond with the result
      */
     return {
       success: `${addedCitizenIds.length} Teilnehmer hinzugefügt.`,
+      ...(areNotificationsSent
+        ? {}
+        : { warning: t("Common.notificationsFailed") }),
     };
   },
   {

@@ -1,6 +1,5 @@
 "use client";
 
-import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { NumberInput } from "@/modules/common/components/form/NumberInput";
 import { Textarea } from "@/modules/common/components/form/Textarea";
@@ -22,10 +21,7 @@ interface Props {
 }
 
 export const OverviewTab = ({ className, role }: Props) => {
-  const { state: updateState, formAction: updateFormAction } = useAction(
-    updateRole,
-    { errorToast: false },
-  );
+  const { formAction: updateFormAction } = useAction(updateRole);
 
   return (
     <div className={clsx("flex flex-col gap-2", className)}>
@@ -83,8 +79,6 @@ export const OverviewTab = ({ className, role }: Props) => {
           <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
             Speichern
           </SubmitButton>
-
-          <ActionErrorNote className="mt-4" state={updateState} />
         </form>
       </Tile>
 

@@ -4,9 +4,9 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import { triggerNotificationsAfterSave } from "@/modules/notifications/utils/triggerNotification";
 import { CYCLE_PHASE_WHERE, CyclePhase } from "@sam-monorepo/domain";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 const schema = z.object({
@@ -54,6 +54,13 @@ export const startPayout = createAuthenticatedAction(
         payoutEndsAt: data.payoutEndsAt,
       },
     });
+
+    /**
+     * Also for the error below: then a different tab or a different manager
+     * started the payout before, and the page must show it.
+     */
+    refresh();
+
     if (count === 0)
       return {
         error: t("Common.badRequest"),
@@ -73,7 +80,7 @@ export const startPayout = createAuthenticatedAction(
     /**
      * Trigger notifications
      */
-    await triggerNotifications([
+    const isNotified = await triggerNotificationsAfterSave([
       {
         type: "ProfitDistributionPayoutStarted",
         payload: {
@@ -82,15 +89,9 @@ export const startPayout = createAuthenticatedAction(
       },
     ]);
 
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(`/app/sincome/${data.id}/management`);
-    revalidatePath(`/app/sincome/${data.id}`);
-    revalidatePath("/app/sincome");
-
     return {
       success: t("Common.successfullySaved"),
+      ...(isNotified ? {} : { warning: t("Common.notificationsFailed") }),
     };
   },
 );

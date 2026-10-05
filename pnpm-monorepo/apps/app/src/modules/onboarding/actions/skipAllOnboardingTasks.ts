@@ -58,7 +58,7 @@ export const skipAllOnboardingTasks = createAuthenticatedAction(
     }
 
     /**
-     * Deliberately no revalidation, see `completeOnboardingTask`.
+     * Deliberately no `refresh()`, see `completeOnboardingTask`.
      */
     return { success: "Alle Aufgaben wurden als erledigt markiert." };
   },

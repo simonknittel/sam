@@ -2,10 +2,12 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import { triggerNotificationsAfterSave } from "@/modules/notifications/utils/triggerNotification";
 import { RoleAssignmentChangeType } from "@sam-monorepo/database/client";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 export interface Change {
@@ -14,7 +16,16 @@ export interface Change {
   enabled: boolean;
 }
 
-const schema = z.record(z.string(), z.string());
+/**
+ * The form sends the citizen id and one key for each ticked role. The number
+ * of roles has no fixed maximum, thus the limit is an arbitrary number above
+ * it. It keeps the loops of the action bounded.
+ */
+const MAXIMUM_FORM_KEY_COUNT = 500;
+
+const schema = z
+  .record(z.string(), z.string())
+  .refine((record) => Object.keys(record).length <= MAXIMUM_FORM_KEY_COUNT);
 
 export const updateRoleAssignments = createAuthenticatedAction(
   "updateRoleAssignments",
@@ -26,15 +37,6 @@ export const updateRoleAssignments = createAuthenticatedAction(
     if (!authentication.session.entity)
       return {
         error: t("Common.forbidden"),
-        requestPayload: formData,
-      };
-
-    /**
-     * Further validate the request
-     */
-    if (Array.from(formData.keys()).length > 500)
-      return {
-        error: t("Common.badRequest"),
         requestPayload: formData,
       };
 
@@ -66,13 +68,12 @@ export const updateRoleAssignments = createAuthenticatedAction(
         error: t("Common.notFound"),
         requestPayload: formData,
       };
-    if (citizen.deletedAt)
-      return {
-        error: "Der Citizen ist gelöscht.",
-        requestPayload: formData,
-      };
+    if (citizen.deletedAt) {
+      /** A different user deleted the citizen, and the page must show it */
+      return rejectConflict("Der Citizen ist gelöscht.", formData);
+    }
 
-    const selectedRoleAssignments = Array.from(formData.keys())
+    const selectedRoleAssignments = Object.keys(data)
       .filter((inputName) => {
         const [, roleId] = inputName.split("_");
         return allRoles.some((role) => role.id === roleId);
@@ -166,6 +167,8 @@ export const updateRoleAssignments = createAuthenticatedAction(
       }),
     );
 
+    refresh();
+
     if (filteredChanges.length > 0) {
       await createAuditEvents([
         {
@@ -185,7 +188,7 @@ export const updateRoleAssignments = createAuthenticatedAction(
     /**
      * Trigger notifications
      */
-    await triggerNotifications(
+    const isNotified = await triggerNotificationsAfterSave(
       filteredChanges
         .filter((change) => change.enabled)
         .map((change) => ({
@@ -199,6 +202,7 @@ export const updateRoleAssignments = createAuthenticatedAction(
 
     return {
       success: t("Common.successfullySaved"),
+      ...(isNotified ? {} : { warning: t("Common.notificationsFailed") }),
     };
   },
 );

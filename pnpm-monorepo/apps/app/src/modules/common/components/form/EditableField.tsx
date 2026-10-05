@@ -1,5 +1,6 @@
 "use client";
 
+import { toastWarning } from "@/modules/actions/utils/toastWarning";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { useClickAway } from "@uidotdev/usehooks";
 import clsx from "clsx";
@@ -32,6 +33,7 @@ interface Props<Value> {
   readonly action: (formData: FormData) => Promise<
     | {
         success: string;
+        warning?: string;
       }
     | { error: string }
   >;
@@ -102,6 +104,7 @@ export const EditableField = <Value,>({
         }
 
         toast.success(response.success);
+        if (response.warning) toastWarning(response.warning);
         setValue(parseSubmittedValue(formData.get(columnName)));
         setIsEditing(false);
       } catch (error) {

@@ -5,6 +5,7 @@ import {
   createParticipant,
   createVariant,
   EventSource,
+  EventVisibility,
   futureEvent,
   LINEUP_PERMISSIONS,
 } from "../fixtures/factories";
@@ -274,7 +275,14 @@ test("positions are reordered by dragging and copied into another lineup", async
   await expect
     .poll(() => lineupOf(event.id))
     .toEqual(["Zweiter Posten", "Erster Posten"]);
-  await expect(page.getByTitle("Posten verschieben").first()).toBeVisible();
+  /**
+   * The rows show the order from the server, without a local copy. Thus the
+   * new order before the reload shows that the action refreshed the page.
+   */
+  await expect(inlineEditorTrigger(page)).toHaveText([
+    "Zweiter Posten",
+    "Erster Posten",
+  ]);
 
   /**
    * Copying puts a position on a clipboard that survives the walk to
@@ -321,6 +329,81 @@ test("positions are reordered by dragging and copied into another lineup", async
     "EVENT_LINEUP_ORDER_CHANGED",
     "EVENT_POSITION_COPIED",
   ]);
+});
+
+test("a manager cannot copy the lineup of a restricted event that they cannot see", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "posten-leiter",
+    permissionStrings: LINEUP_PERMISSIONS,
+  });
+  const stranger = await createCitizen(prisma, {
+    handle: "geheim-orga",
+    permissionStrings: LINEUP_PERMISSIONS,
+  });
+  const target = await createAppEvent(prisma, {
+    name: "Operation Ziel",
+    createdById: manager.entity.id,
+    ...futureEvent(),
+  });
+  await createAppEvent(prisma, {
+    name: "Operation Öffentlich",
+    createdById: manager.entity.id,
+    lineupEnabled: true,
+    ...futureEvent(),
+  });
+  /** No role can see it, thus only its creator can */
+  const secretEvent = await createAppEvent(prisma, {
+    name: "Operation Geheim",
+    createdById: stranger.entity.id,
+    lineupEnabled: true,
+    visibility: EventVisibility.RESTRICTED,
+    ...futureEvent(),
+  });
+  await prisma.eventPosition.create({
+    data: { eventId: secretEvent.id, name: "Geheimer Posten", order: 0 },
+  });
+  /**
+   * The first visit of a new event marks it as read and refreshes the page
+   * at an unknown time. That render would undo the changed field below.
+   */
+  await prisma.readMarker.create({
+    data: { citizenId: manager.entity.id, eventId: target.id },
+  });
+
+  await signIn(manager.user);
+  await page.goto(`/app/events/${target.id}/lineup`);
+  await waitForAppShellHydration(page);
+
+  const copyDialog = modal(
+    page,
+    "Aufstellung aus einem anderen Event kopieren",
+  );
+  await clickUntilVisible(
+    page.getByTitle("Aufstellung aus einem anderen Event kopieren"),
+    copyDialog,
+  );
+  await copyDialog.getByLabel("Event", { exact: true }).fill("Öffentlich");
+  await page.getByRole("option", { name: /Operation Öffentlich/ }).click();
+
+  /**
+   * The picker offers only the events that the manager can see. A request
+   * outside the picker sends the id of the restricted event.
+   */
+  await copyDialog
+    .locator('input[type="hidden"][name="sourceEventId"]')
+    .evaluate((input, eventId) => {
+      (input as HTMLInputElement).value = eventId;
+    }, secretEvent.id);
+  await copyDialog.getByRole("button", { name: "Kopieren" }).click();
+
+  await expect(page.getByText("Ungültige Anfrage")).toBeVisible();
+  expect(
+    await prisma.eventPosition.count({ where: { eventId: target.id } }),
+  ).toBe(0);
 });
 
 /**
@@ -516,4 +599,54 @@ test("a deleted participant is not a choice in the position picker", async ({
   await expect(
     gunnerPicker.locator("option", { hasText: "geloeschter-teilnehmer" }),
   ).toHaveCount(0);
+});
+
+test("a citizen removed from a position is listed as unassigned again", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "posten-leiter",
+    permissionStrings: LINEUP_PERMISSIONS,
+  });
+  const pilot = await createCitizen(prisma, { handle: "zugeteilter-pilot" });
+  const event = await createAppEvent(prisma, {
+    name: "Operation Umbesetzung",
+    createdById: manager.entity.id,
+    ...futureEvent(),
+  });
+  await createParticipant(prisma, {
+    eventId: event.id,
+    citizen: pilot,
+    source: EventSource.APP,
+  });
+  const position = await prisma.eventPosition.create({
+    data: { eventId: event.id, name: "Pilot", citizenId: pilot.entity.id },
+  });
+
+  await signIn(manager.user);
+  await page.goto(`/app/events/${event.id}/lineup`);
+  await waitForAppShellHydration(page);
+
+  const picker = page.getByRole("combobox", { name: "Citizen für Pilot" });
+  await expect(picker).toHaveValue(pilot.entity.id);
+  const unassignedNote = page.getByText("Keinem Posten zugeordnet");
+  await expect(unassignedNote).toHaveCount(0);
+
+  await picker.selectOption({ value: "-" });
+
+  /**
+   * The select keeps the value of the browser. The list of the participants
+   * without a position comes from the server, thus it shows the refresh.
+   */
+  await expect(unassignedNote).toBeVisible();
+  await expect
+    .poll(async () => {
+      const updatedPosition = await prisma.eventPosition.findUniqueOrThrow({
+        where: { id: position.id },
+      });
+      return updatedPosition.citizenId;
+    })
+    .toBeNull();
 });

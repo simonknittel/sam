@@ -1,6 +1,5 @@
 "use client";
 
-import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
@@ -29,11 +28,11 @@ export const DeleteWikiPageModal = ({
   const [isOpen, setIsOpen] = useState(false);
   /**
    * On success the action redirects to the wiki root, so there is no
-   * success toast and no need to close the modal.
+   * success toast and no need to close the modal. An error shows as a toast:
+   * when a different user deleted the page before, the refreshed page has no
+   * modal anymore.
    */
-  const { state, formAction } = useAction(deleteWikiPage, {
-    errorToast: false,
-  });
+  const { formAction } = useAction(deleteWikiPage);
 
   return (
     <>
@@ -79,8 +78,6 @@ export const DeleteWikiPageModal = ({
           <SubmitButton icon={<FaTrash />} className="mt-4 ml-auto">
             Löschen
           </SubmitButton>
-
-          <ActionErrorNote className="mt-4" state={state} />
         </form>
       </Modal>
     </>

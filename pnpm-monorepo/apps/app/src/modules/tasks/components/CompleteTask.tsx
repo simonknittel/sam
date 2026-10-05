@@ -1,6 +1,5 @@
 "use client";
 
-import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
@@ -25,8 +24,7 @@ interface Props {
 
 export const CompleteTask = ({ className, task }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { state, formAction } = useAction(completeTask, {
-    errorToast: false,
+  const { formAction } = useAction(completeTask, {
     onSuccess: () => setIsOpen(false),
   });
 
@@ -83,8 +81,6 @@ export const CompleteTask = ({ className, task }: Props) => {
           <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
             Speichern
           </SubmitButton>
-
-          <ActionErrorNote className="mt-4" state={state} />
         </form>
       </Modal>
     </>

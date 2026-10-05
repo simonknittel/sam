@@ -9,10 +9,12 @@ import clsx from "clsx";
 import { useState } from "react";
 import { FaPaste, FaTrashAlt } from "react-icons/fa";
 import { pasteWikiPages } from "../actions/pasteWikiPages";
+import { chooseWikiParentId } from "../utils/chooseWikiParentId";
 import type { WikiPageTargetOption } from "../utils/getWikiPageTargets";
 import type { WikiClipboardEntry } from "../utils/wikiClipboardCookie";
 import { useWikiPageHrefMode } from "./WikiPageHrefModeProvider";
 import { WikiPageSelect } from "./WikiPageSelect";
+import { useReloadWikiPageTargetsAfterError } from "./WikiPageTargetsLoader";
 
 enum PasteMode {
   Child = "child",
@@ -51,32 +53,27 @@ export const PasteWikiPagesSection = ({
   /** Inside a variant embed the action redirects back into the embed */
   const { variantId } = useWikiPageHrefMode();
   const [mode, setMode] = useState(PasteMode.Child);
-  const [parentId, setParentId] = useState(() => {
-    if (
-      defaultParentId &&
-      targets.some((target) => target.id === defaultParentId)
-    )
-      return defaultParentId;
-    if (allowTopLevel || targets.length === 0) return "";
-    return targets[0].id;
-  });
+  const [chosenParentId, setParentId] = useState(() =>
+    chooseWikiParentId(targets, allowTopLevel, defaultParentId),
+  );
+  /**
+   * The pages load again after an error and can then miss the chosen page.
+   * Replace mode needs a page: "Oberste Ebene" only exists for children.
+   */
+  const parentId = chooseWikiParentId(
+    targets,
+    mode === PasteMode.Child && allowTopLevel,
+    chosenParentId,
+  );
 
   /**
    * A successful insert redirects to the pasted page; onSuccess closes the
    * modal so it isn't still open after the navigation.
    */
-  const { state, formAction } = useAction(pasteWikiPages, {
-    errorToast: false,
-    onSuccess,
-  });
-
-  const changeMode = (value: string) => {
-    const nextMode = value as PasteMode;
-    setMode(nextMode);
-    /** Replace mode needs a page — "Oberste Ebene" only exists for children */
-    if (nextMode === PasteMode.Replace && parentId === "")
-      setParentId(targets[0]?.id ?? "");
-  };
+  const { state, formAction } = useAction(
+    useReloadWikiPageTargetsAfterError(pasteWikiPages),
+    { errorToast: false, onSuccess },
+  );
 
   return (
     <section
@@ -109,7 +106,7 @@ export const PasteWikiPagesSection = ({
           className="mt-4"
           name="mode"
           value={mode}
-          onChange={changeMode}
+          onChange={(value) => setMode(value as PasteMode)}
           equalWidth
           items={[
             { value: PasteMode.Child, label: "Als Unterseite" },

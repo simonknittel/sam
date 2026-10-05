@@ -17,6 +17,7 @@ import {
   clickUntilVisible,
   fillUntilVisible,
   modal,
+  NOT_FOUND_TEXT,
   sectionByHeading,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -304,6 +305,65 @@ test("a tag name in other letter case uses the existing tag", async ({
     }),
   ).toEqual([{ tag: { id: existingTag.id, name: "Wirtschaft" } }]);
   expect(await prisma.wikiTag.count()).toBe(2);
+});
+
+test("the tags of a page that a different user deleted are not saved", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const editor = await createCitizen(prisma, {
+    handle: "wiki-autor",
+    permissionStrings: ["wiki;manage"],
+  });
+  const wikiPage = await createWikiPage(prisma, {
+    title: "Frachtpreise",
+    visibility: WikiPageVisibility.PUBLIC,
+  });
+
+  await signIn(editor.user);
+  await page.goto(`/app/wiki/${wikiPage.id}/${wikiPage.slug}`);
+  /**
+   * When the page mounts, it records the visit and connects the editor. Both
+   * read the page and show a deletion themselves, thus the deletion below
+   * must come after them.
+   */
+  await expect
+    .poll(() => prisma.wikiPageVisit.count({ where: { pageId: wikiPage.id } }))
+    .toBe(1);
+  await expect(page.locator(".tiptap")).toBeVisible();
+
+  const tagsDialog = modal(page, "Tags bearbeiten");
+  await clickUntilVisible(
+    page.getByRole("button", { name: /Tags bearbeiten/ }),
+    tagsDialog,
+  );
+  const newTagButton = tagsDialog.getByRole("button", {
+    name: '"bergbau" neu anlegen',
+  });
+  await fillUntilVisible(
+    tagsDialog.getByLabel("Tag hinzufügen"),
+    "bergbau",
+    newTagButton,
+  );
+  await newTagButton.click();
+
+  /** A different user moves the page into the trash in the meantime */
+  await prisma.wikiPage.update({
+    where: { id: wikiPage.id },
+    data: { deletedAt: new Date() },
+  });
+
+  /**
+   * The error refreshes the page: it shows that the page is gone, without a
+   * navigation. The dialog goes away with the page, thus a toast shows the
+   * error.
+   */
+  await tagsDialog.getByRole("button", { name: "Speichern" }).click();
+  await expect(page.getByText("Ungültige Anfrage")).toBeVisible();
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
+  await expect(tagsDialog).toHaveCount(0);
+  expect(await prisma.wikiTag.count()).toBe(0);
 });
 
 test("featured pages show on the landing page, filtered by read access", async ({

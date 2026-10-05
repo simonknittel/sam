@@ -2,9 +2,10 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 const schema = z.object({
@@ -26,11 +27,10 @@ export const updateNoteType = createAuthenticatedAction(
       where: { id: data.id },
       select: { name: true },
     });
-    if (!existingNoteType)
-      return {
-        error: t("Common.notFound"),
-        requestPayload: formData,
-      };
+    if (!existingNoteType) {
+      /** A different user deleted the note type, and the page must show it */
+      return rejectConflict(t("Common.notFound"), formData);
+    }
 
     const noteType = await prisma.noteType.update({
       where: { id: data.id },
@@ -38,6 +38,8 @@ export const updateNoteType = createAuthenticatedAction(
         name: data.name,
       },
     });
+
+    refresh();
 
     await createAuditEvents([
       {
@@ -50,8 +52,6 @@ export const updateNoteType = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    revalidatePath("/app/spynet/settings");
 
     return {
       success: "Erfolgreich bearbeitet",

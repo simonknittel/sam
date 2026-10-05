@@ -4,7 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { requireManageableTask } from "../utils/requireManageableTask";
 
@@ -39,6 +39,8 @@ export const updateRequiredRoles = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.TASK_REQUIRED_ROLES_UPDATED,
@@ -48,12 +50,6 @@ export const updateRequiredRoles = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath("/app/tasks");
-    revalidatePath(`/app/tasks/${task.id}`);
 
     /**
      * Respond with the result

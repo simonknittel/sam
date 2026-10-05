@@ -2,9 +2,10 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 const schema = z.object({
@@ -34,12 +35,13 @@ export const reorderFlows = createAuthenticatedAction(
       givenIds.size === data.flowIds.length &&
       givenIds.size === flows.length &&
       flows.every((flow) => givenIds.has(flow.id));
-    if (!isPermutation)
-      return {
-        error:
-          "Die Reihenfolge ist veraltet. Bitte lade die Seite neu und versuche es erneut.",
-        requestPayload: formData,
-      };
+    if (!isPermutation) {
+      /** The page then shows the current list */
+      return rejectConflict(
+        "Die Reihenfolge war veraltet. Die Liste ist jetzt aktuell, bitte versuche es erneut.",
+        formData,
+      );
+    }
 
     /**
      * Positions are not unique, so the whole list can be renumbered in one
@@ -54,6 +56,8 @@ export const reorderFlows = createAuthenticatedAction(
       ),
     );
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.CAREER_FLOWS_REORDERED,
@@ -63,8 +67,6 @@ export const reorderFlows = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    revalidatePath("/app/career", "layout");
 
     return {
       success: t("Common.successfullySaved"),

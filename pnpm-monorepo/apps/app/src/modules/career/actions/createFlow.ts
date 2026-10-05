@@ -4,9 +4,12 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import {
+  isPrismaError,
+  PrismaErrorCode,
+} from "@/modules/common/utils/isPrismaError";
 import { SLUG_MAX_LENGTH } from "@/modules/common/utils/slugify";
-import { Prisma } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import {
   FLOW_NAME_MAX_LENGTH,
@@ -59,13 +62,12 @@ export const createFlow = createAuthenticatedAction(
       flowId = flow.id;
     } catch (error) {
       /** Two managers creating the same slug at once; the index is the arbiter */
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2002"
-      )
+      if (isPrismaError(error, PrismaErrorCode.UniqueConstraintFailed))
         return { error: FLOW_SLUG_TAKEN_ERROR, requestPayload: formData };
       throw error;
     }
+
+    refresh();
 
     await createAuditEvents([
       {
@@ -78,12 +80,6 @@ export const createFlow = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /**
-     * The navigation lives in the career layout, so every career page has to
-     * pick the new flow up.
-     */
-    revalidatePath("/app/career", "layout");
 
     return {
       success: t("Common.successfullySaved"),

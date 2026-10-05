@@ -2,10 +2,11 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { log } from "@/modules/logging";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { nodeDefinitions } from "../nodes/server";
 import { getFlowContext } from "../queries/getFlowContext";
@@ -53,7 +54,17 @@ export const updateFlow = createAuthenticatedAction(
      */
     const context = await getFlowContext();
     const flow = context?.flowsById.get(data.flowId);
-    if (!flow || !context?.permissions.get(flow.id)?.canUpdate)
+    const permissions = flow && context?.permissions.get(flow.id);
+    if (!flow || flow.deletedAt || !permissions?.canRead) {
+      /**
+       * A different user deleted the flow or took the read access away
+       * before, and the page must show it. A flow that the user cannot read
+       * gets the same answer as an unknown one, thus the answer does not show
+       * which flows exist.
+       */
+      return rejectConflict(t("Common.notFound"), formData);
+    }
+    if (!permissions.canUpdate)
       return {
         error: t("Common.forbidden"),
         requestPayload: formData,
@@ -130,6 +141,8 @@ export const updateFlow = createAuthenticatedAction(
       }),
     ]);
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.CAREER_FLOW_UPDATED,
@@ -141,11 +154,6 @@ export const updateFlow = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(`/app/career/${flow.slug}`);
 
     /**
      * Respond with the result

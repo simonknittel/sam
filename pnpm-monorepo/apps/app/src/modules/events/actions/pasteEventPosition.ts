@@ -2,8 +2,9 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { authorizeEventContainer } from "../utils/authorizeEventContainer";
 import {
@@ -12,7 +13,6 @@ import {
 } from "../utils/clonePositions";
 import {
   eventContainerColumns,
-  getLineupPath,
   getPositionContainer,
   type EventContainer,
 } from "../utils/eventContainer";
@@ -75,10 +75,7 @@ export const pasteEventPosition = createAuthenticatedAction(
       !targetPosition ||
       !targetContainer
     )
-      return {
-        error: "Posten nicht gefunden",
-        requestPayload: formData,
-      };
+      return rejectConflict("Posten nicht gefunden", formData);
 
     /**
      * Authorize the request. Both sides go through the same guard, so a
@@ -112,8 +109,7 @@ export const pasteEventPosition = createAuthenticatedAction(
     });
 
     const subtree = getPositionSubtree(sourcePositions, sourcePosition.id);
-    if (!subtree)
-      return { error: "Posten nicht gefunden", requestPayload: formData };
+    if (!subtree) return rejectConflict("Posten nicht gefunden", formData);
 
     const targetPositions = isSameContainer(sourceContainer, targetContainer)
       ? sourcePositions
@@ -189,6 +185,8 @@ export const pasteEventPosition = createAuthenticatedAction(
       });
     });
 
+    refresh();
+
     await createAuditEvents([
       buildPositionCopiedAuditEvent(
         { container: sourceContainer, positionId: sourcePosition.id },
@@ -200,11 +198,6 @@ export const pasteEventPosition = createAuthenticatedAction(
         authentication.session.user.id,
       ),
     ]);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(getLineupPath(targetContainer));
 
     /**
      * Respond with the result

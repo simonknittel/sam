@@ -169,8 +169,16 @@ test("a position application travels from the participant to the manager's assig
       .locator("option", { hasText: "bewerber" }),
   ).toHaveCount(1);
 
+  /**
+   * The select keeps the value of the browser. The list of the participants
+   * without a position comes from the server, thus it shows the refresh.
+   */
+  const unassignedNote = page.getByText("Keinem Posten zugeordnet");
+  await expect(unassignedNote).toBeVisible();
+
   await assignmentSelect.selectOption({ label: "bewerber" });
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+  await expect(unassignedNote).toBeHidden();
 
   await expect
     .poll(async () => {
@@ -180,4 +188,81 @@ test("a position application travels from the participant to the manager's assig
       return updatedPosition?.citizenId;
     })
     .toBe(applicant.entity.id);
+});
+
+test("a position application that a different tab changed shows the error and the current state", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "event-leiter",
+    permissionStrings: LINEUP_PERMISSIONS,
+  });
+  const applicant = await createCitizen(prisma, {
+    handle: "bewerber",
+    permissionStrings: LINEUP_PERMISSIONS,
+  });
+  const event = await createEvent(prisma, {
+    name: "Operation Zwei Tabs",
+    discordCreatorId: manager.entity.discordId!,
+    startTime: new Date(Date.now() + ONE_DAY_MS),
+    lineupEnabled: true,
+  });
+  await createParticipant(prisma, { eventId: event.id, citizen: applicant });
+  const position = await prisma.eventPosition.create({
+    data: { eventId: event.id, name: "Navigator" },
+  });
+  /**
+   * The first visit of a new event marks it as read, which refreshes the
+   * page at an unknown time. A read event keeps the refresh of the action
+   * the only one.
+   */
+  await prisma.readMarker.create({
+    data: { citizenId: applicant.entity.id, eventId: event.id },
+  });
+
+  await signIn(applicant.user);
+  await page.goto(`/app/events/${event.id}/lineup`);
+
+  const applyButton = page.getByRole("button", { name: "Interesse anmelden" });
+  const withdrawButton = page.getByRole("button", { name: "Abmelden" });
+  await expect(page.getByText("Navigator")).toBeVisible();
+  await clickUntilVisible(page.getByTitle("Details öffnen"), applyButton);
+
+  /** A different tab applies after the page loaded */
+  await prisma.eventPositionApplication.create({
+    data: { positionId: position.id, citizenId: applicant.entity.id },
+  });
+
+  await applyButton.click();
+  await expect(
+    page.getByText("Du hast für diesen Posten bereits Interesse angemeldet."),
+  ).toBeVisible();
+  /** The page shows the current state without a reload */
+  await expect(withdrawButton).toBeVisible();
+
+  /** A different tab withdraws the application after the page showed it */
+  await prisma.eventPositionApplication.deleteMany({
+    where: { positionId: position.id },
+  });
+
+  await withdrawButton.click();
+  await expect(
+    page.getByText("Du hast für diesen Posten kein Interesse angemeldet."),
+  ).toBeVisible();
+  await expect(applyButton).toBeVisible();
+
+  /** The two conflicts changed nothing, thus they wrote no audit records */
+  const auditCount = await prisma.auditEvent.count({
+    where: {
+      type: {
+        in: [
+          "EVENT_POSITION_APPLICATION_CREATED",
+          "EVENT_POSITION_APPLICATION_DELETED",
+        ],
+      },
+    },
+  });
+  expect(auditCount).toBe(0);
 });

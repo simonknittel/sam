@@ -5,8 +5,7 @@ import type { EventPosition } from "@sam-monorepo/database/browser";
  * blueprint of one. Both store their positions and wiki pages in the same
  * tables (see EventPosition.eventId and WikiPage.templateId), so one editor
  * and one set of server actions serve both — the container is what decides
- * who may edit it, where the audit entry points and which route to
- * revalidate.
+ * who may edit it and where the audit entry points.
  */
 export enum EventContainerKind {
   Event = "event",
@@ -71,22 +70,6 @@ export const getBriefingPath = (container: EventContainer) => {
 
     case EventContainerKind.Template:
       return `/app/events/templates/${container.id}/briefing`;
-
-    default:
-      throw new Error(
-        `Unknown event container kind: ${container.kind satisfies never}`,
-      );
-  }
-};
-
-/** Where the container itself is rendered */
-export const getEventContainerPath = (container: EventContainer) => {
-  switch (container.kind) {
-    case EventContainerKind.Event:
-      return `/app/events/${container.id}`;
-
-    case EventContainerKind.Template:
-      return `/app/events/templates/${container.id}`;
 
     default:
       throw new Error(

@@ -2,14 +2,15 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import {
-  EventActivityType,
-  EventSource,
-  Prisma,
-} from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+  isPrismaError,
+  PrismaErrorCode,
+} from "@/modules/common/utils/isPrismaError";
+import { EventActivityType, EventSource } from "@sam-monorepo/database/client";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { createEventActivity } from "../utils/eventActivity";
 import {
@@ -37,13 +38,9 @@ export const signUpForEvent = createAuthenticatedAction(
     const citizenId = authentication.session.entity.id;
 
     const event = await getParticipatableAppEvent(data.eventId);
-    if (!event)
-      return { error: "Event nicht gefunden", requestPayload: formData };
+    if (!event) return rejectConflict("Event nicht gefunden", formData);
     if (!isParticipationOpen(event))
-      return {
-        error: "Die Anmeldung ist geschlossen.",
-        requestPayload: formData,
-      };
+      return rejectConflict("Die Anmeldung ist geschlossen.", formData);
 
     /**
      * Create a fresh participation row. The unique index for active sign-ups
@@ -69,16 +66,13 @@ export const signUpForEvent = createAuthenticatedAction(
         });
       });
     } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2002"
-      )
-        return {
-          error: "Du bist bereits angemeldet.",
-          requestPayload: formData,
-        };
+      /** The unique index found the sign-up of a different tab */
+      if (isPrismaError(error, PrismaErrorCode.UniqueConstraintFailed))
+        return rejectConflict("Du bist bereits angemeldet.", formData);
       throw error;
     }
+
+    refresh();
 
     await createAuditEvents([
       {
@@ -90,13 +84,6 @@ export const signUpForEvent = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath("/app/events");
-    revalidatePath("/app/dashboard");
-    revalidatePath(`/app/events/${event.id}`, "layout");
 
     /**
      * Respond with the result

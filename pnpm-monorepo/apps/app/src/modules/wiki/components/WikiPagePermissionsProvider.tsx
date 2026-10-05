@@ -1,6 +1,5 @@
 "use client";
 
-import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
 import Modal from "@/modules/common/components/Modal";
@@ -99,8 +98,7 @@ export const WikiPagePermissionsProvider = ({
     page.ownerId ? "explicit" : "inherit",
   );
 
-  const { state, formAction } = useAction(updateWikiPagePermissions, {
-    errorToast: false,
+  const { formAction } = useAction(updateWikiPagePermissions, {
     onSuccess: () => setIsOpen(false),
   });
 
@@ -462,8 +460,6 @@ export const WikiPagePermissionsProvider = ({
           <SubmitButton icon={<FaSave />} className="mt-8 ml-auto">
             Speichern
           </SubmitButton>
-
-          <ActionErrorNote className="mt-4" state={state} />
         </form>
       </Modal>
     </WikiPagePermissionsOpenerProvider>

@@ -1,6 +1,5 @@
 "use client";
 
-import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import {
@@ -30,11 +29,12 @@ interface Props {
  */
 export const UpdateTaskDescription = ({ className, task }: Props) => {
   const [isEditing, setIsEditing] = useState(false);
-  const { state, formAction, isPending, getDefaultValueWithFallback } =
-    useAction(updateTaskDescription, {
-      errorToast: false,
+  const { formAction, isPending, getDefaultValueWithFallback } = useAction(
+    updateTaskDescription,
+    {
       onSuccess: () => setIsEditing(false),
-    });
+    },
+  );
 
   if (!isEditing)
     return (
@@ -90,8 +90,6 @@ export const UpdateTaskDescription = ({ className, task }: Props) => {
           Abbrechen
         </Button2>
       </div>
-
-      <ActionErrorNote state={state} className="mt-4" />
     </form>
   );
 };

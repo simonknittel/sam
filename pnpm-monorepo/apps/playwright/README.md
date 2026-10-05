@@ -59,7 +59,13 @@ can have no effect.
 - Make sure that a filter test can fail: also seed rows of a different type
   and of a different user.
 - `page.goto()` always loads the page again from the server. Thus it cannot
-  test `revalidatePath()` or the client router cache.
+  test `refresh()` or the client router cache.
+- Some components call an action when the page loads, and the action calls
+  `refresh()` by itself: `MarkAsReadOnMount` on the first visit of a new
+  item, `trackWikiPageVisit` and `createWikiCollabToken` when the page is
+  gone. A test that changes the target right after a load can pass because
+  of this refresh. Wait for these actions (for example the visit row or the
+  editor), or seed the read marker.
 - The suite sets `reducedMotion: "reduce"`. A test of an animation must call
   `page.emulateMedia({ reducedMotion: "no-preference" })`.
 - The stack runs no Lambda functions and sends no EventBridge events. Test

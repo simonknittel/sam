@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import {
@@ -20,19 +21,16 @@ import {
   type Prisma,
 } from "@sam-monorepo/database/client";
 import { lockSilcLedger } from "@sam-monorepo/domain";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { getOpenTasksWhere } from "../queries/getOpenTasksWhere";
-import { getTaskById } from "../queries/getTaskById";
 import { isAllowedToManageTask } from "../utils/isAllowedToTask";
-import { isTaskUpdatable } from "../utils/isTaskUpdatable";
+import { CLOSED_TASK_ERROR, requireOpenTask } from "../utils/requireOpenTask";
 
 const schema = z.object({
   id: z.union([z.cuid(), z.cuid2()]),
   completionistIds: z.array(z.cuid()).max(250), // Arbitrary (untested) limit to prevent DDoS
 });
-
-const ALREADY_COMPLETED_ERROR = "Der Task ist bereits abgeschlossen.";
 
 /** The columns of the claimed task that the completion copies or pays */
 const CLAIMED_TASK_INCLUDE = {
@@ -202,14 +200,8 @@ export const completeTask = createAuthenticatedAction(
     /**
      * Authorize the request
      */
-    const task = await getTaskById(data.id);
-    if (!task)
-      return { error: "Task nicht gefunden", requestPayload: formData };
-    if (!isTaskUpdatable(task))
-      return {
-        error: ALREADY_COMPLETED_ERROR,
-        requestPayload: formData,
-      };
+    const { task, failure } = await requireOpenTask(data.id, formData);
+    if (failure) return failure;
     const isAllowedToManage = await isAllowedToManageTask(task);
     const isAllowedToSelfComplete =
       task.canSelfComplete &&
@@ -248,11 +240,10 @@ export const completeTask = createAuthenticatedAction(
           "Der Task kann nicht abgeschlossen werden, ohne dass ihn jemand erfüllt hat.",
         requestPayload: formData,
       };
-    if (!(await areActiveReceivers(completionistIds)))
-      return {
-        error: INACTIVE_RECEIVER_ERROR,
-        requestPayload: formData,
-      };
+    if (!(await areActiveReceivers(completionistIds))) {
+      /** A different user deleted a completionist, and the page must show it */
+      return rejectConflict(INACTIVE_RECEIVER_ERROR, formData);
+    }
 
     /**
      * Complete the task, pay the reward and create the next repetition in
@@ -323,16 +314,18 @@ export const completeTask = createAuthenticatedAction(
         );
       },
     );
+
+    /**
+     * Also on the conflict: the page then shows the task that a different
+     * completion closed
+     */
+    refresh();
+
     if (!silcTransactionIds)
       return {
-        error: ALREADY_COMPLETED_ERROR,
+        error: CLOSED_TASK_ERROR,
         requestPayload: formData,
       };
-
-    if (silcTransactionIds.length > 0) {
-      await announceSilcTransactions(silcTransactionIds);
-      revalidatePath("/app/spynet/citizen/[id]/silc", "page");
-    }
 
     await createAuditEvents([
       {
@@ -346,17 +339,17 @@ export const completeTask = createAuthenticatedAction(
       },
     ]);
 
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath("/app/tasks");
-    revalidatePath(`/app/tasks/${task.id}`);
+    const areTransactionsAnnounced =
+      await announceSilcTransactions(silcTransactionIds);
 
     /**
      * Respond with the result
      */
     return {
       success: "Erfolgreich abgeschlossen.",
+      ...(areTransactionsAnnounced
+        ? {}
+        : { warning: t("Common.notificationsFailed") }),
     };
   },
   {

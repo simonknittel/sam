@@ -4,7 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 const schema = z.object({});
@@ -30,6 +30,8 @@ export const unsubscribeWebPush = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     if (count > 0)
       await createAuditEvents([
         {
@@ -41,8 +43,6 @@ export const unsubscribeWebPush = createAuthenticatedAction(
           createdById: authentication.session.user.id,
         },
       ]);
-
-    revalidatePath("/app/account/notifications");
 
     return {
       success: "Die Benachrichtigungen wurden auf allen Geräten deaktiviert.",

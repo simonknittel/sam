@@ -5,10 +5,9 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { TaskVisibility } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
-import { getTaskById } from "../queries/getTaskById";
-import { isTaskUpdatable } from "../utils/isTaskUpdatable";
+import { requireOpenTask } from "../utils/requireOpenTask";
 
 const schema = z.object({
   taskId: z.union([z.cuid(), z.cuid2()]),
@@ -24,14 +23,8 @@ export const deleteTaskAssignmentForCurrentUser = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    const task = await getTaskById(data.taskId);
-    if (!task)
-      return { error: "Task nicht gefunden", requestPayload: formData };
-    if (!isTaskUpdatable(task))
-      return {
-        error: "Der Task ist bereits abgeschlossen.",
-        requestPayload: formData,
-      };
+    const { task, failure } = await requireOpenTask(data.taskId, formData);
+    if (failure) return failure;
 
     if (
       task.visibility === TaskVisibility.PERSONALIZED ||
@@ -46,14 +39,24 @@ export const deleteTaskAssignmentForCurrentUser = createAuthenticatedAction(
     /**
      * Delete
      */
-    await prisma.taskAssignment.delete({
+    const { count } = await prisma.taskAssignment.deleteMany({
       where: {
-        taskId_citizenId: {
-          taskId: data.taskId,
-          citizenId: authentication.session.entity.id,
-        },
+        taskId: data.taskId,
+        citizenId: authentication.session.entity.id,
       },
     });
+
+    /**
+     * Also when a different tab gave the task up before: the page then shows
+     * the current state
+     */
+    refresh();
+
+    if (count === 0)
+      return {
+        error: "Du hast diesen Task nicht angenommen.",
+        requestPayload: formData,
+      };
 
     await createAuditEvents([
       {
@@ -65,12 +68,6 @@ export const deleteTaskAssignmentForCurrentUser = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath("/app/tasks");
-    revalidatePath(`/app/tasks/${task.id}`);
 
     /**
      * Respond with the result

@@ -1,6 +1,5 @@
 "use client";
 
-import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
 import { Button2 } from "@/modules/common/components/Button2";
@@ -64,8 +63,11 @@ interface FormProps {
 }
 
 const TransferForm = ({ templateId, currentOwnerId, onSuccess }: FormProps) => {
-  const { state, formAction } = useAction(transferEventTemplateOwnership, {
-    errorToast: false,
+  /**
+   * The errors show as toasts: the refresh after a conflict, for example a
+   * template that a different user deleted, can remove this form.
+   */
+  const { formAction } = useAction(transferEventTemplateOwnership, {
     onSuccess,
   });
 
@@ -82,8 +84,6 @@ const TransferForm = ({ templateId, currentOwnerId, onSuccess }: FormProps) => {
         name="newOwnerId"
         defaultValue={currentOwnerId ?? undefined}
       />
-
-      <ActionErrorNote className="mt-4" state={state} />
 
       <div className="mt-8 flex justify-end">
         <SubmitButton icon={<FaExchangeAlt />}>Übertragen</SubmitButton>

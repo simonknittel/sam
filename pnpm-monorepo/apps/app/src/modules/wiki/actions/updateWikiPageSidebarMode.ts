@@ -5,8 +5,8 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { WikiPageSidebarMode } from "@sam-monorepo/database/client";
+import { refresh } from "next/cache";
 import * as z from "zod";
-import { revalidateWikiScope } from "../queries/getWikiPageScopedContext";
 import { requireAdminableWikiPage } from "../utils/requireAdminableWikiPage";
 
 const schema = z.object({
@@ -23,7 +23,7 @@ export const updateWikiPageSidebarMode = createAuthenticatedAction(
   "updateWikiPageSidebarMode",
   schema,
   async (formData, authentication, data, t) => {
-    const { scoped, page, failure } = await requireAdminableWikiPage(
+    const { page, failure } = await requireAdminableWikiPage(
       data.id,
       formData,
       t,
@@ -31,8 +31,12 @@ export const updateWikiPageSidebarMode = createAuthenticatedAction(
     );
     if (failure) return failure;
 
-    if (page.sidebarMode === data.sidebarMode)
+    if (page.sidebarMode === data.sidebarMode) {
+      /** A different user or tab can have set the mode before */
+      refresh();
+
       return { success: t("Common.successfullySaved") };
+    }
 
     await prisma.wikiPage.update({
       where: { id: page.id },
@@ -41,6 +45,8 @@ export const updateWikiPageSidebarMode = createAuthenticatedAction(
         updatedById: authentication.session.entity?.id ?? null,
       },
     });
+
+    refresh();
 
     await createAuditEvents([
       {
@@ -54,8 +60,6 @@ export const updateWikiPageSidebarMode = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    revalidateWikiScope(scoped);
 
     return { success: t("Common.successfullySaved") };
   },

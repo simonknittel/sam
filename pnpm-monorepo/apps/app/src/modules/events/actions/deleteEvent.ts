@@ -2,12 +2,13 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { log } from "@/modules/logging";
-import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import { triggerNotificationsAfterSave } from "@/modules/notifications/utils/triggerNotification";
 import { EventSource } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { EVENT_MANAGE_GUARD_SELECT } from "../queries/eventManageGuardSelect";
 import {
@@ -39,13 +40,9 @@ export const deleteEvent = createAuthenticatedAction(
         name: true,
       },
     });
-    if (!event)
-      return { error: "Event nicht gefunden", requestPayload: formData };
+    if (!event) return rejectConflict("Event nicht gefunden", formData);
     if (!isEventUpdatable(event))
-      return {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      };
+      return rejectConflict("Das Event ist bereits vorbei.", formData);
     if (!(await isAllowedToManageEvent(event)))
       return {
         error: t("Common.forbidden"),
@@ -53,35 +50,25 @@ export const deleteEvent = createAuthenticatedAction(
       };
 
     /**
-     * Take the event off Discord first: once the row is soft-deleted it no
-     * longer surfaces anywhere the manager could retry from, so a leftover
-     * guild scheduled event would advertise an event that is gone. Nothing
-     * about it may stop the deletion, though — hence the catch.
-     */
-    const discordResult = await removeDiscordEventPublication(event.id, {
-      userId: authentication.session.user.id,
-      citizenId: authentication.session.entity?.id ?? null,
-    }).catch((error: unknown) => {
-      log.error("Failed to remove a deleted event from Discord", {
-        eventId: event.id,
-        error,
-      });
-      return { outcome: DiscordSyncOutcome.Failed } as const;
-    });
-
-    /**
      * Soft-delete the event. The row stays resolvable, so the notification
      * router can still look up the event and its participants afterwards.
+     * The condition on `deletedAt` lets only one of two parallel requests
+     * (a double click, two managers) delete the event. The other request
+     * stops here, thus it removes nothing from Discord and sends nothing.
      */
-    await prisma.event.update({
+    const { count } = await prisma.event.updateMany({
       where: {
         id: event.id,
+        deletedAt: null,
       },
       data: {
         deletedAt: new Date(),
         deletedById: authentication.session.entity?.id ?? null,
       },
     });
+    if (count === 0) return rejectConflict("Event nicht gefunden", formData);
+
+    refresh();
 
     await createAuditEvents([
       {
@@ -95,9 +82,26 @@ export const deleteEvent = createAuthenticatedAction(
     ]);
 
     /**
+     * Take the event off Discord: the deleted event is not shown anywhere
+     * in the app, thus the manager cannot do it later from the app. A failure
+     * cannot undo the deletion — hence the catch — and comes back as a
+     * warning, so that the manager deletes the Discord event by hand.
+     */
+    const discordResult = await removeDiscordEventPublication(event.id, {
+      userId: authentication.session.user.id,
+      citizenId: authentication.session.entity?.id ?? null,
+    }).catch((error: unknown) => {
+      log.error("Failed to remove a deleted event from Discord", {
+        eventId: event.id,
+        error,
+      });
+      return { outcome: DiscordSyncOutcome.Failed } as const;
+    });
+
+    /**
      * Trigger notifications
      */
-    await triggerNotifications([
+    const areNotificationsSent = await triggerNotificationsAfterSave([
       {
         type: "EventDeleted",
         payload: {
@@ -107,22 +111,18 @@ export const deleteEvent = createAuthenticatedAction(
     ]);
 
     /**
-     * Revalidate cache(s)
-     */
-    revalidatePath("/app/events");
-    revalidatePath(`/app/events/${event.id}`, "layout");
-
-    /**
      * Respond with the result
      */
+    const warnings = [
+      discordResult.outcome === DiscordSyncOutcome.Failed
+        ? "Das Event konnte nicht von Discord entfernt werden und muss dort von Hand gelöscht werden."
+        : null,
+      areNotificationsSent ? null : t("Common.notificationsFailed"),
+    ].filter((warning) => warning !== null);
+
     return {
       success: "Das Event wurde gelöscht.",
-      ...(discordResult.outcome === DiscordSyncOutcome.Failed
-        ? {
-            warning:
-              "Das Event konnte nicht von Discord entfernt werden und muss dort von Hand gelöscht werden.",
-          }
-        : {}),
+      ...(warnings.length > 0 ? { warning: warnings.join(" ") } : {}),
     };
   },
 );

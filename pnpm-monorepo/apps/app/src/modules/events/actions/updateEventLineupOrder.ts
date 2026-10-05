@@ -2,8 +2,9 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { authorizeEventContainer } from "../utils/authorizeEventContainer";
 import {
@@ -11,7 +12,6 @@ import {
   EVENT_CONTAINER_KIND_FIELD,
   eventContainerColumns,
   EventContainerKind,
-  getLineupPath,
   type EventContainer,
 } from "../utils/eventContainer";
 import { buildLineupOrderChangedAuditEvent } from "../utils/lineupAuditEvents";
@@ -81,7 +81,8 @@ export const updateEventLineupOrder = createAuthenticatedAction(
     /**
      * Make sure every submitted position belongs to the authorized container.
      * Parent assignments are derived from the submitted tree, so this also
-     * keeps every new parentPositionId inside the container.
+     * keeps every new parentPositionId inside the container. An unknown
+     * position is usually a position that a different tab deleted.
      */
     const containerPositions = await prisma.eventPosition.findMany({
       where: eventContainerColumns(container),
@@ -104,7 +105,10 @@ export const updateEventLineupOrder = createAuthenticatedAction(
         (positionId) => !containerPositionIds.has(positionId),
       )
     )
-      return { error: t("Common.badRequest"), requestPayload: formData };
+      return rejectConflict(
+        "Die Aufstellung wurde in der Zwischenzeit geändert.",
+        formData,
+      );
 
     /**
      * Update lineup order
@@ -137,17 +141,14 @@ export const updateEventLineupOrder = createAuthenticatedAction(
     loop(data.order);
     await prisma.$transaction(transactions);
 
+    refresh();
+
     await createAuditEvents([
       buildLineupOrderChangedAuditEvent(
         container,
         authentication.session.user.id,
       ),
     ]);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(getLineupPath(container));
 
     /**
      * Respond with the result

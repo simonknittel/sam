@@ -1,5 +1,6 @@
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { type AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import type {
@@ -71,14 +72,6 @@ export const createRoleAssignmentLevelAction = (
           requestPayload: formData,
         };
 
-      /**
-       * Further validate the request
-       */
-      if (Array.from(formData.keys()).length > 500)
-        return {
-          error: t("Common.badRequest"),
-          requestPayload: formData,
-        };
       const roleAssignment = await prisma.roleAssignment.findUnique({
         where: {
           citizenId_roleId: {
@@ -95,16 +88,17 @@ export const createRoleAssignmentLevelAction = (
           },
         },
       });
-      if (!roleAssignment)
-        return {
-          error: t("Common.notFound"),
-          requestPayload: formData,
-        };
-      if (!roleAssignment.role.maxLevel)
-        return {
-          error: t("Common.badRequest"),
-          requestPayload: formData,
-        };
+      if (!roleAssignment) {
+        /** A different user removed the role, and the page must show it */
+        return rejectConflict(t("Common.notFound"), formData);
+      }
+      if (!roleAssignment.role.maxLevel) {
+        /**
+         * A different user removed the levels of the role, and the page must
+         * show it.
+         */
+        return rejectConflict(t("Common.badRequest"), formData);
+      }
 
       await prisma.$transaction([
         prisma.roleAssignment.update({
@@ -133,6 +127,8 @@ export const createRoleAssignmentLevelAction = (
         }),
       ]);
 
+      refresh();
+
       /**
        * Create audit event
        */
@@ -146,8 +142,6 @@ export const createRoleAssignmentLevelAction = (
           createdById: authentication.session.user.id,
         },
       ]);
-
-      refresh();
 
       return {
         success: t("Common.successfullySaved"),

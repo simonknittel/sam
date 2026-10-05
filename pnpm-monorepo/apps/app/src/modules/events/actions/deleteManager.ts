@@ -2,10 +2,11 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { EventActivityType } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { EVENT_MANAGE_GUARD_SELECT } from "../queries/eventManageGuardSelect";
 import { createEventActivity } from "../utils/eventActivity";
@@ -27,16 +28,13 @@ export const deleteManager = createAuthenticatedAction(
     const event = await prisma.event.findUnique({
       where: {
         id: data.eventId,
+        deletedAt: null,
       },
       select: EVENT_MANAGE_GUARD_SELECT,
     });
-    if (!event)
-      return { error: "Event nicht gefunden", requestPayload: formData };
+    if (!event) return rejectConflict("Event nicht gefunden", formData);
     if (!isEventUpdatable(event))
-      return {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      };
+      return rejectConflict("Das Event ist bereits vorbei.", formData);
     if (!(await isAllowedToManageEvent(event)))
       return {
         error: t("Common.forbidden"),
@@ -52,11 +50,12 @@ export const deleteManager = createAuthenticatedAction(
     const isManager = event.managers.some(
       (manager) => manager.id === data.managerId,
     );
+    /** A different tab or manager removed the citizen before */
     if (!isManager)
-      return {
-        error: "Der Citizen ist kein Manager des Events.",
-        requestPayload: formData,
-      };
+      return rejectConflict(
+        "Der Citizen ist kein Manager des Events.",
+        formData,
+      );
 
     /**
      * Delete manager. One transaction, so the activity entry cannot get lost
@@ -84,6 +83,8 @@ export const deleteManager = createAuthenticatedAction(
       });
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.EVENT_MANAGER_REMOVED,
@@ -94,11 +95,6 @@ export const deleteManager = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(`/app/events/${event.id}`, "layout");
 
     /**
      * Respond with the result

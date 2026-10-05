@@ -1,9 +1,10 @@
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { type AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { type CyclePhase, getCurrentPhase } from "@sam-monorepo/domain";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 const schema = z.object({
@@ -58,11 +59,13 @@ export const createToggleMyParticipationAction = (
           requestPayload: formData,
         };
       const currentPhase = getCurrentPhase(cycle);
-      if (currentPhase !== configuration.requiredPhase)
-        return {
-          error: t("Common.badRequest"),
-          requestPayload: formData,
-        };
+      if (currentPhase !== configuration.requiredPhase) {
+        /**
+         * A manager or the midnight job changed the phase, and the page must
+         * show it.
+         */
+        return rejectConflict(t("Common.badRequest"), formData);
+      }
 
       const participantData = configuration.participantData(
         data.value,
@@ -84,6 +87,8 @@ export const createToggleMyParticipationAction = (
         },
       });
 
+      refresh();
+
       await createAuditEvents([
         {
           type: configuration.auditEventType,
@@ -95,13 +100,6 @@ export const createToggleMyParticipationAction = (
           createdById: authentication.session.user.id,
         },
       ]);
-
-      /**
-       * Revalidate cache(s)
-       */
-      revalidatePath(`/app/sincome/${data.id}/management`);
-      revalidatePath(`/app/sincome/${data.id}`);
-      revalidatePath("/app/sincome");
 
       return {
         success: t("Common.successfullySaved"),

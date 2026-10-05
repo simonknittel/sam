@@ -1,6 +1,5 @@
 "use client";
 
-import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import Button from "@/modules/common/components/Button";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
@@ -22,8 +21,7 @@ interface Props {
 
 export const UpdateRequiredRoles = ({ className, task }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { state, formAction } = useAction(updateRequiredRoles, {
-    errorToast: false,
+  const { formAction } = useAction(updateRequiredRoles, {
     onSuccess: () => setIsOpen(false),
   });
 
@@ -62,8 +60,6 @@ export const UpdateRequiredRoles = ({ className, task }: Props) => {
           <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
             Speichern
           </SubmitButton>
-
-          <ActionErrorNote className="mt-4" state={state} />
         </form>
       </Modal>
     </>

@@ -2,9 +2,10 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { getWikiContext } from "../queries/getWikiContext";
 import {
@@ -28,8 +29,13 @@ export const updateWikiPageLink = createAuthenticatedAction(
     if (data.pageId) {
       const context = await getWikiContext();
       const page = context?.pagesById.get(data.pageId);
-      if (!page || page.deletedAt)
-        return { error: t("Common.badRequest"), requestPayload: formData };
+      if (!page || page.deletedAt) {
+        /**
+         * A different user or tab deleted the selected page before, and the
+         * options must show it
+         */
+        return rejectConflict(t("Common.badRequest"), formData);
+      }
     }
 
     const settingKey = wikiPageLinkSettingKey(data.key);
@@ -50,6 +56,8 @@ export const updateWikiPageLink = createAuthenticatedAction(
       });
     }
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.WIKI_SETTINGS_UPDATED,
@@ -60,10 +68,6 @@ export const updateWikiPageLink = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    // Page links render in the root app layout (topbar, mobile action bar),
-    // not only under /app/wiki
-    revalidatePath("/app", "layout");
 
     return { success: t("Common.successfullySaved") };
   },

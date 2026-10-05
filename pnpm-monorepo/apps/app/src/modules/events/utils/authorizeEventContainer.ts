@@ -1,6 +1,7 @@
 import { prisma } from "@/db";
 import { getEventTemplateById } from "@/modules/event-templates/queries/getEventTemplateById";
 import type { getTranslations } from "next-intl/server";
+import { refresh } from "next/cache";
 import { EventContainerKind, type EventContainer } from "./eventContainer";
 import { isAllowedToManagePositions } from "./isAllowedToManagePositions";
 import { isEventUpdatable } from "./isEventUpdatable";
@@ -19,11 +20,24 @@ interface Options {
 }
 
 /**
+ * The failure of a container that is gone or over, for example because a
+ * different tab deleted it. The refresh shows that state on the page.
+ */
+const rejectContainerConflict = (
+  error: string,
+): EventContainerAuthorization => {
+  refresh();
+
+  return { allowed: false, error };
+};
+
+/**
  * The single authorization seam of every lineup mutation. Events keep the
- * guards they always had — the event must exist, must not be over, and the
- * user must be allowed to manage its positions. Templates use their own ACL
- * instead: edit access on a template that is not soft-deleted. Templates
- * never freeze, because they have no schedule to be over.
+ * guards they always had — the event must exist, must not be deleted or
+ * over, and the user must be allowed to manage its positions. Templates use
+ * their own ACL instead: edit access on a template that is not soft-deleted.
+ * Templates never freeze, because they have no schedule to be over. Call it
+ * only in a server action (see `rejectContainerConflict`).
  */
 export const authorizeEventContainer = async (
   container: EventContainer,
@@ -33,7 +47,7 @@ export const authorizeEventContainer = async (
   switch (container.kind) {
     case EventContainerKind.Event: {
       const event = await prisma.event.findUnique({
-        where: { id: container.id },
+        where: { id: container.id, deletedAt: null },
         select: {
           startTime: true,
           endTime: true,
@@ -42,9 +56,9 @@ export const authorizeEventContainer = async (
           managers: { select: { id: true } },
         },
       });
-      if (!event) return { allowed: false, error: "Event nicht gefunden" };
+      if (!event) return rejectContainerConflict("Event nicht gefunden");
       if (!options.ignoreFreeze && !isEventUpdatable(event))
-        return { allowed: false, error: "Das Event ist bereits vorbei." };
+        return rejectContainerConflict("Das Event ist bereits vorbei.");
       if (!(await isAllowedToManagePositions(event)))
         return { allowed: false, error: t("Common.forbidden") };
 
@@ -53,9 +67,9 @@ export const authorizeEventContainer = async (
 
     case EventContainerKind.Template: {
       const context = await getEventTemplateById(container.id);
-      if (!context) return { allowed: false, error: "Vorlage nicht gefunden" };
+      if (!context) return rejectContainerConflict("Vorlage nicht gefunden");
       if (context.template.deletedAt !== null)
-        return { allowed: false, error: "Die Vorlage ist gelöscht." };
+        return rejectContainerConflict("Die Vorlage ist gelöscht.");
       if (!context.permissions.canEdit)
         return { allowed: false, error: t("Common.forbidden") };
 

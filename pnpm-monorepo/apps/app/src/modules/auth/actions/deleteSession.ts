@@ -4,7 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { getCurrentSessionId } from "../queries/getCurrentSessionId";
 
@@ -37,6 +37,13 @@ export const deleteSession = createAuthenticatedAction(
         userId: authentication.session.user.id,
       },
     });
+
+    /**
+     * Also when a different tab deleted the session before: the page then
+     * shows the current list
+     */
+    refresh();
+
     if (count === 0)
       return {
         error: t("Common.notFound"),
@@ -53,8 +60,6 @@ export const deleteSession = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    revalidatePath("/app/account/sessions");
 
     return {
       success: t("Common.successfullyDeleted"),

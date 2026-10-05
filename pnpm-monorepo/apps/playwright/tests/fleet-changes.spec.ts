@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test";
 import { expectAuditEvents } from "../fixtures/audit";
 import {
   createCitizen,
@@ -6,6 +7,34 @@ import {
 } from "../fixtures/factories";
 import { clickUntilVisible } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
+
+/**
+ * Every level of the fleet settings hides its delete behind the row's action
+ * menu, and asks again in a dialog of its own.
+ *
+ * @returns The open dialog
+ */
+const openDeleteDialog = async (
+  page: Page,
+  rowText: string,
+  dialogTitle: string,
+) => {
+  const deleteButton = page.getByRole("button", {
+    name: "Löschen",
+    exact: true,
+  });
+  await clickUntilVisible(
+    page
+      .getByRole("row")
+      .filter({ hasText: rowText })
+      .getByRole("button", { name: "Aktionen" }),
+    deleteButton,
+  );
+  const dialog = page.getByRole("alertdialog");
+  await clickUntilVisible(deleteButton, dialog);
+  await expect(dialog.getByText(dialogTitle)).toBeVisible();
+  return dialog;
+};
 
 test("the ship change log lists creations and deletions and filters between them", async ({
   page,
@@ -100,28 +129,11 @@ test("a variant, its series and its manufacturer are deleted through the setting
 
   await signIn(admin.user);
 
-  /**
-   * Every level hides its delete behind the row's action menu, and asks
-   * again in a dialog of its own.
-   */
   const deleteThroughRowActions = async (
     rowText: string,
     dialogTitle: string,
   ) => {
-    const deleteButton = page.getByRole("button", {
-      name: "Löschen",
-      exact: true,
-    });
-    await clickUntilVisible(
-      page
-        .getByRole("row")
-        .filter({ hasText: rowText })
-        .getByRole("button", { name: "Aktionen" }),
-      deleteButton,
-    );
-    const dialog = page.getByRole("alertdialog");
-    await clickUntilVisible(deleteButton, dialog);
-    await expect(dialog.getByText(dialogTitle)).toBeVisible();
+    const dialog = await openDeleteDialog(page, rowText, dialogTitle);
     await dialog.getByRole("button", { name: "Löschen" }).click();
   };
 
@@ -150,4 +162,44 @@ test("a variant, its series and its manufacturer are deleted through the setting
     "SERIES_DELETED",
     "MANUFACTURER_DELETED",
   ]);
+});
+
+test("a delete of a variant that a different user deleted shows the message and the current list", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "flotten-admin",
+    permissionStrings: ["manufacturersSeriesAndVariants;manage"],
+  });
+  const { manufacturer, series, variant } = await createVariant(prisma, {
+    manufacturerName: "Aegis Dynamics",
+    seriesName: "Avenger",
+    variantName: "Avenger Titan",
+  });
+
+  await signIn(admin.user);
+  await page.goto(
+    `/app/fleet/settings/manufacturer/${manufacturer.id}/series/${series.id}`,
+  );
+  const dialog = await openDeleteDialog(
+    page,
+    variant.name,
+    "Variante löschen?",
+  );
+
+  await prisma.variant.delete({ where: { id: variant.id } });
+  await dialog.getByRole("button", { name: "Löschen" }).click();
+
+  await expect(
+    page.getByText("Die Variante ist bereits gelöscht."),
+  ).toBeVisible();
+  // The refresh shows the list without the variant
+  await expect(
+    page.getByRole("row").filter({ hasText: variant.name }),
+  ).toHaveCount(0);
+  expect(
+    await prisma.auditEvent.count({ where: { type: "VARIANT_DELETED" } }),
+  ).toBe(0);
 });

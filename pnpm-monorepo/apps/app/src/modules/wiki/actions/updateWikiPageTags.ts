@@ -2,14 +2,16 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { getWikiPageContainer } from "@/modules/events/utils/eventContainer";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import {
   getWikiPageScopedContext,
   isWikiScopeFrozen,
-  revalidateWikiScope,
+  rejectFrozenWikiScope,
 } from "../queries/getWikiPageScopedContext";
 import { findOrCreateWikiTags } from "../utils/findOrCreateWikiTags";
 
@@ -36,23 +38,22 @@ export const updateWikiPageTags = createAuthenticatedAction(
   schema,
   async (formData, authentication, data, t) => {
     const scoped = await getWikiPageScopedContext(data.id);
-    if (!scoped)
-      return { error: t("Common.badRequest"), requestPayload: formData };
+    const page = scoped?.context.pagesById.get(data.id);
+    if (!scoped || !page || page.deletedAt) {
+      /**
+       * A different user or tab deleted the page before, and the page must
+       * show it. A context that the viewer cannot hold gets the same answer
+       * (see getWikiPageScopedContext).
+       */
+      return rejectConflict(t("Common.badRequest"), formData);
+    }
     const context = scoped.context;
-
-    const page = context.pagesById.get(data.id);
-    if (!page || page.deletedAt)
-      return { error: t("Common.badRequest"), requestPayload: formData };
     /**
      * The freeze would already deny through canEdit (the resolver strips it
      * on frozen events); the explicit check only yields the events' usual
      * error message instead of a generic forbidden.
      */
-    if (isWikiScopeFrozen(scoped))
-      return {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      };
+    if (isWikiScopeFrozen(scoped)) return rejectFrozenWikiScope(formData);
     if (!context.permissions.get(page.id)?.canEdit)
       return { error: t("Common.forbidden"), requestPayload: formData };
 
@@ -124,6 +125,12 @@ export const updateWikiPageTags = createAuthenticatedAction(
       return { addedTags, removedAssignments };
     });
 
+    /**
+     * Also without changes: a different user or tab can have set the same
+     * tags before
+     */
+    refresh();
+
     if (!changes) return { success: t("Common.successfullySaved") };
 
     await createAuditEvents([
@@ -140,8 +147,6 @@ export const updateWikiPageTags = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    revalidateWikiScope(scoped);
 
     return { success: t("Common.successfullySaved") };
   },

@@ -2,15 +2,12 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { getEventTemplateById } from "../queries/getEventTemplateById";
-import {
-  EVENT_TEMPLATES_PATH,
-  getEventTemplatePath,
-} from "../utils/eventTemplateConstraints";
 
 const schema = z.object({
   templateId: z.cuid2(),
@@ -29,15 +26,20 @@ export const transferEventTemplateOwnership = createAuthenticatedAction(
   schema,
   async (formData, authentication, data, t) => {
     const context = await getEventTemplateById(data.templateId);
-    if (!context)
-      return { error: "Vorlage nicht gefunden", requestPayload: formData };
+    if (!context) return rejectConflict("Vorlage nicht gefunden", formData);
     if (context.template.deletedAt !== null)
-      return { error: "Die Vorlage ist gelöscht.", requestPayload: formData };
+      return rejectConflict("Die Vorlage ist gelöscht.", formData);
     if (!context.permissions.canManageShares)
       return { error: t("Common.forbidden"), requestPayload: formData };
 
-    if (data.newOwnerId === context.template.ownedById)
+    if (data.newOwnerId === context.template.ownedById) {
+      /**
+       * Possibly a different tab or user transferred the template before, and
+       * the page must show it.
+       */
+      refresh();
       return { success: t("Common.successfullySaved") };
+    }
 
     /**
      * Any citizen may own a template — holding `event;create` is not
@@ -59,6 +61,8 @@ export const transferEventTemplateOwnership = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.EVENT_TEMPLATE_OWNERSHIP_TRANSFERRED,
@@ -71,9 +75,6 @@ export const transferEventTemplateOwnership = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    revalidatePath(EVENT_TEMPLATES_PATH);
-    revalidatePath(getEventTemplatePath(context.template.id), "layout");
 
     return { success: t("Common.successfullySaved") };
   },

@@ -2,6 +2,7 @@
 
 import { env } from "@/env";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import type { WikiCollabSessionTokenPayload } from "@sam-monorepo/wiki-editor";
 import { SignJWT } from "jose";
 import * as z from "zod";
@@ -30,12 +31,16 @@ export const createWikiCollabToken = createAuthenticatedAction<
       return { error: t("Common.badRequest"), requestPayload: formData };
 
     const scoped = await getWikiPageScopedContext(data.id);
-    if (!scoped)
-      return { error: t("Common.badRequest"), requestPayload: formData };
-
-    const page = scoped.context.pagesById.get(data.id);
-    if (!page || page.deletedAt)
-      return { error: t("Common.badRequest"), requestPayload: formData };
+    const page = scoped?.context.pagesById.get(data.id);
+    if (!scoped || !page || page.deletedAt) {
+      /**
+       * A different user or tab deleted the page while the editor was open,
+       * and the page must show it instead of an editor without a connection.
+       * A context that the viewer cannot hold gets the same answer (see
+       * getWikiPageScopedContext).
+       */
+      return rejectConflict(t("Common.badRequest"), formData);
+    }
     const permissions = scoped.context.permissions.get(page.id);
     if (!permissions?.canRead)
       return { error: t("Common.forbidden"), requestPayload: formData };

@@ -1,6 +1,7 @@
 "use server";
 
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { log } from "@/modules/logging";
@@ -10,12 +11,13 @@ import {
   isWikiIframeSrcAllowed,
 } from "@sam-monorepo/wiki-editor";
 import { Node as ProseMirrorNode } from "@tiptap/pm/model";
+import { refresh } from "next/cache";
 import { unstable_rethrow } from "next/navigation";
 import * as z from "zod";
 import {
   getWikiPageScopedContext,
   isWikiScopeFrozen,
-  revalidateWikiScope,
+  rejectFrozenWikiScope,
 } from "../queries/getWikiPageScopedContext";
 import { getWikiIframeAllowlist } from "../queries/getWikiSettings";
 import { createWikiPageSafetySnapshot } from "../utils/createWikiPageSafetySnapshot";
@@ -41,24 +43,23 @@ export const importWikiPageContent = createAuthenticatedAction(
   schema,
   async (formData, authentication, data, t) => {
     const scoped = await getWikiPageScopedContext(data.id);
-    if (!scoped)
-      return { error: t("Common.badRequest"), requestPayload: formData };
+    const page = scoped?.context.pagesById.get(data.id);
+    if (!scoped || !page || page.deletedAt) {
+      /**
+       * A different user or tab deleted the page before, and the page must
+       * show it. A context that the viewer cannot hold gets the same answer
+       * (see getWikiPageScopedContext).
+       */
+      return rejectConflict(t("Common.badRequest"), formData);
+    }
     const context = scoped.context;
-
-    const page = context.pagesById.get(data.id);
-    if (!page || page.deletedAt)
-      return { error: t("Common.badRequest"), requestPayload: formData };
     const allowed =
       scoped.scope === WikiScope.Event
         ? context.permissions.get(page.id)?.canAdmin === true
         : await authentication.authorize("wiki", "manage");
     if (!allowed)
       return { error: t("Common.forbidden"), requestPayload: formData };
-    if (isWikiScopeFrozen(scoped))
-      return {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      };
+    if (isWikiScopeFrozen(scoped)) return rejectFrozenWikiScope(formData);
 
     /**
      * Reject unknown node/mark types and invalid structures — the file may
@@ -103,6 +104,12 @@ export const importWikiPageContent = createAuthenticatedAction(
       createdById: entityId,
     });
 
+    /**
+     * The safety snapshot is a committed write: the snapshot list must show
+     * it also when the collab replace below fails
+     */
+    refresh();
+
     try {
       await replaceWikiPageContent({
         pageId: page.id,
@@ -131,8 +138,6 @@ export const importWikiPageContent = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    revalidateWikiScope(scoped);
 
     return { success: "Inhalt importiert." };
   },

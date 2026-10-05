@@ -2,11 +2,12 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import {
   EventDiscordPublishTarget,
   EventSource,
 } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { EVENT_MANAGE_GUARD_SELECT } from "../queries/eventManageGuardSelect";
 import {
@@ -19,7 +20,6 @@ import {
   getDiscordPublishError,
   resolveDiscordPublishTarget,
 } from "../utils/discordPublishing";
-import { getEventPath } from "../utils/eventConstraints";
 import { isAllowedToManageEvent } from "../utils/isAllowedToManageEvent";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
 
@@ -48,20 +48,17 @@ export const publishEventToDiscord = createAuthenticatedAction(
         discordPublishedId: true,
       },
     });
-    if (!event)
-      return { error: "Event nicht gefunden", requestPayload: formData };
+    if (!event) return rejectConflict("Event nicht gefunden", formData);
     if (!isEventUpdatable(event))
-      return {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      };
+      return rejectConflict("Das Event ist bereits vorbei.", formData);
     if (!(await isAllowedToManageEvent(event)))
       return { error: t("Common.forbidden"), requestPayload: formData };
+    /** A different tab or manager published the event before */
     if (event.discordPublishedId)
-      return {
-        error: "Das Event ist bereits auf Discord veröffentlicht.",
-        requestPayload: formData,
-      };
+      return rejectConflict(
+        "Das Event ist bereits auf Discord veröffentlicht.",
+        formData,
+      );
 
     /**
      * Validate the request
@@ -82,10 +79,7 @@ export const publishEventToDiscord = createAuthenticatedAction(
     const error = getDiscordPublishError(result);
     if (error) return { error, requestPayload: formData };
 
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(getEventPath(event.id), "layout");
+    refresh();
 
     const coverImageWarning = getDiscordCoverImageWarning(result);
 

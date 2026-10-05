@@ -1,3 +1,4 @@
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import type { authenticate } from "@/modules/auth/server";
 import { Prisma } from "@sam-monorepo/database/client";
@@ -17,12 +18,25 @@ type Authentication = NonNullable<
   Exclude<Awaited<ReturnType<typeof authenticate>>, false>
 >;
 
+const WIKI_PAGE_TREE_CHANGED_ERROR =
+  "Die Seitenstruktur war veraltet. Sie ist jetzt aktuell, bitte versuche es erneut.";
+
+/**
+ * The answer to a move that found a tree which a different user or tab
+ * changed after the page showed it. Only for server actions (see
+ * rejectConflict).
+ */
+export const rejectChangedWikiPageTree = (formData: FormData) =>
+  rejectConflict(WIKI_PAGE_TREE_CHANGED_ERROR, formData);
+
 /**
  * The reparent rules shared by moveWikiPage and updateWikiPagePosition: a
  * page adopting a new parent must land on an adminable target without
  * creating a cycle; moving to the top level is barred in event wikis and
  * requires the global wiki create permission. Returns the error response
  * the action should return as-is, or null when the reparent is allowed.
+ * Only for server actions: a changed tree calls `refresh()` (see
+ * rejectChangedWikiPageTree).
  */
 export const validateWikiPageReparent = async (
   scoped: ScopedContext,
@@ -35,25 +49,24 @@ export const validateWikiPageReparent = async (
   const context = scoped.context;
 
   if (newParentId) {
+    /** The new parent cannot be the page itself */
+    if (newParentId === page.id)
+      return { error: t("Common.badRequest"), requestPayload: formData };
+
     const placement = resolveWikiPagePlacement(context, newParentId);
-    if (placement !== WikiPagePlacement.Allowed)
-      return {
-        error:
-          placement === WikiPagePlacement.Missing
-            ? t("Common.badRequest")
-            : t("Common.forbidden"),
-        requestPayload: formData,
-      };
+    if (placement === WikiPagePlacement.Missing)
+      return rejectChangedWikiPageTree(formData);
+    if (placement === WikiPagePlacement.Forbidden)
+      return { error: t("Common.forbidden"), requestPayload: formData };
 
     /**
-     * Prevent cycles: the new parent must not be the page itself or one of
-     * its descendants.
+     * Prevent cycles. The dialogs do not offer the descendants of the page,
+     * thus a descendant as the new parent comes from a different move.
      */
     if (
-      newParentId === page.id ||
       collectWikiPageDescendants(context.pages, page.id).includes(newParentId)
     )
-      return { error: t("Common.badRequest"), requestPayload: formData };
+      return rejectChangedWikiPageTree(formData);
   } else {
     /** Event wikis have exactly one top-level page: the locked root */
     if (scoped.scope === WikiScope.Event)
@@ -78,9 +91,6 @@ const checkViolationMetaSchema = z.object({
     cause: z.object({ originalCode: z.literal(CHECK_VIOLATION_CODE) }),
   }),
 });
-
-export const WIKI_PAGE_TREE_CHANGED_ERROR =
-  "Die Seite kann nicht dorthin verschoben werden, weil sich die Seitenstruktur in der Zwischenzeit geändert hat. Bitte lade die Seite neu und versuche es erneut.";
 
 /**
  * True when the database refused a reparent (see WikiPage.parentId and

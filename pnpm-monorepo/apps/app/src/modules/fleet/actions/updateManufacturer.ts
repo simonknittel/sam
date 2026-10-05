@@ -2,9 +2,10 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 const schema = z.object({
@@ -42,11 +43,13 @@ export const updateManufacturerAction = createAuthenticatedAction(
         imageId: true,
       },
     });
-    if (!existingManufacturer)
-      return {
-        error: t("Common.notFound"),
-        requestPayload: formData,
-      };
+    if (!existingManufacturer) {
+      /**
+       * A different user deleted the manufacturer before, and the page must
+       * show it
+       */
+      return rejectConflict(t("Common.notFound"), formData);
+    }
 
     const updatedManufacturer = await prisma.manufacturer.update({
       where: {
@@ -54,6 +57,8 @@ export const updateManufacturerAction = createAuthenticatedAction(
       },
       data: updateData,
     });
+
+    refresh();
 
     await createAuditEvents([
       {
@@ -68,13 +73,6 @@ export const updateManufacturerAction = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(`/app/fleet/settings`);
-    revalidatePath("/app/fleet/org");
-    revalidatePath("/app/fleet/my-ships");
 
     /**
      * Respond with the result

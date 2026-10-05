@@ -4,7 +4,11 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import {
+  isPrismaError,
+  PrismaErrorCode,
+} from "@/modules/common/utils/isPrismaError";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 const schema = z
@@ -30,33 +34,39 @@ export const updateRoleInheritance = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    const role = await prisma.role.findUnique({
-      where: {
-        id: data.id,
-      },
-      select: {
-        id: true,
-      },
-    });
-    if (!role)
+    /**
+     * Update role. The update fails with P2025 when the role or a role to
+     * inherit is gone.
+     */
+    const isUpdated = await prisma.role
+      .update({
+        where: {
+          id: data.id,
+        },
+        data: {
+          inherits: {
+            set: data.roles.map((id) => ({ id })),
+          },
+        },
+        select: { id: true },
+      })
+      .then(() => true)
+      .catch((error: unknown) => {
+        if (isPrismaError(error, PrismaErrorCode.RecordNotFound)) return false;
+        throw error;
+      });
+
+    /**
+     * Also for the error below: then a different user deleted one of the
+     * roles, and the page must show it.
+     */
+    refresh();
+
+    if (!isUpdated)
       return {
         error: t("Common.notFound"),
         requestPayload: formData,
       };
-
-    /**
-     * Update role
-     */
-    await prisma.role.update({
-      where: {
-        id: data.id,
-      },
-      data: {
-        inherits: {
-          set: data.roles.map((id) => ({ id })),
-        },
-      },
-    });
 
     await createAuditEvents([
       {
@@ -67,13 +77,6 @@ export const updateRoleInheritance = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(`/app/roles/${data.id}`);
-    revalidatePath(`/app/roles/${data.id}/inheritance`);
-    revalidatePath("/app/iam/inheritance-matrix");
 
     /**
      * Respond with the result

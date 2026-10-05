@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import {
@@ -19,13 +20,12 @@ import {
 } from "@/modules/uploads/utils/copyUpload";
 import { getEventWikiContext } from "@/modules/wiki/queries/getEventWikiContext";
 import { copyBriefingTree } from "@/modules/wiki/utils/copyBriefingTree";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import * as z from "zod";
 import { getEventTemplateById } from "../queries/getEventTemplateById";
 import {
   EVENT_TEMPLATE_NAME_MAX_LENGTH,
-  EVENT_TEMPLATES_PATH,
   getEventTemplatePath,
 } from "../utils/eventTemplateConstraints";
 
@@ -57,7 +57,7 @@ export const duplicateEventTemplate = createAuthenticatedAction(
 
     const source = await getEventTemplateById(data.sourceTemplateId);
     if (source?.template.deletedAt !== null)
-      return { error: "Vorlage nicht gefunden", requestPayload: formData };
+      return rejectConflict("Vorlage nicht gefunden", formData);
 
     const sourceContainer = toTemplateContainer(source.template.id);
 
@@ -137,6 +137,8 @@ export const duplicateEventTemplate = createAuthenticatedAction(
       { timeout: TRANSACTION_TIMEOUT_MS },
     );
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.EVENT_TEMPLATE_DUPLICATED,
@@ -151,8 +153,6 @@ export const duplicateEventTemplate = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    revalidatePath(EVENT_TEMPLATES_PATH);
 
     redirect(getEventTemplatePath(duplicate.id));
   },

@@ -2,8 +2,10 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import * as z from "zod";
 import { getTaskById } from "../queries/getTaskById";
@@ -11,6 +13,7 @@ import {
   isAllowedToDeleteTask,
   isAllowedToManageTask,
 } from "../utils/isAllowedToTask";
+import { TASK_NOT_FOUND_ERROR } from "../utils/requireOpenTask";
 
 const schema = z.object({
   id: z.union([z.cuid(), z.cuid2()]),
@@ -30,8 +33,10 @@ export const deleteTask = createAuthenticatedAction(
      * Authorize the request
      */
     const task = await getTaskById(data.id);
-    if (!task)
-      return { error: "Task nicht gefunden", requestPayload: formData };
+    if (!task) {
+      /** A different user deleted the task before, and the page must show it */
+      return rejectConflict(TASK_NOT_FOUND_ERROR, formData);
+    }
     if (!(await isAllowedToManageTask(task)))
       return {
         error: t("Common.forbidden"),
@@ -55,6 +60,8 @@ export const deleteTask = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.TASK_DELETED,
@@ -66,9 +73,6 @@ export const deleteTask = createAuthenticatedAction(
       },
     ]);
 
-    /**
-     * Revalidate cache(s)
-     */
     redirect("/app/tasks");
 
     /**

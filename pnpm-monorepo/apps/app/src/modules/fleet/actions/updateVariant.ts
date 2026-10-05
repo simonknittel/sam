@@ -2,12 +2,13 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
 import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
 import { VariantStatus } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { ExternalService } from "../types";
 import { createAndReturnTags } from "../utils/createAndReturnTags";
@@ -54,15 +55,6 @@ export const updateVariant = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    /**
-     * Update variant
-     */
-    const tagsToConnect = await createAndReturnTags(
-      data.tagKeys,
-      data.tagValues,
-      authentication.session.entity.id,
-    );
-
     const existingVariant = await prisma.variant.findUnique({
       where: {
         id: data.id,
@@ -79,11 +71,12 @@ export const updateVariant = createAuthenticatedAction(
         },
       },
     });
-    if (!existingVariant)
-      return {
-        error: t("Common.notFound"),
-        requestPayload: formData,
-      };
+    if (!existingVariant) {
+      /**
+       * A different user deleted the variant before, and the page must show it
+       */
+      return rejectConflict(t("Common.notFound"), formData);
+    }
 
     /**
      * A changed link must point at a readable page of the global wiki. One
@@ -113,6 +106,15 @@ export const updateVariant = createAuthenticatedAction(
         };
     }
 
+    /**
+     * Update variant
+     */
+    const tagsToConnect = await createAndReturnTags(
+      data.tagKeys,
+      data.tagValues,
+      authentication.session.entity.id,
+    );
+
     const updatedItem = await prisma.variant.update({
       where: {
         id: data.id,
@@ -124,9 +126,6 @@ export const updateVariant = createAuthenticatedAction(
         tags: {
           set: tagsToConnect.map((tagId) => ({ id: tagId })),
         },
-      },
-      include: {
-        series: true,
       },
     });
 
@@ -142,6 +141,8 @@ export const updateVariant = createAuthenticatedAction(
       incomingLinks,
       authentication.session.entity.id,
     );
+
+    refresh();
 
     await createAuditEvents([
       {
@@ -161,19 +162,6 @@ export const updateVariant = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(
-      `/app/fleet/settings/manufacturers/${updatedItem.series.manufacturerId}`,
-    );
-    revalidatePath(
-      `/app/fleet/settings/manufacturers/${updatedItem.series.manufacturerId}/series/${updatedItem.seriesId}`,
-    );
-    revalidatePath("/app/fleet/org");
-    revalidatePath("/app/fleet/my-ships");
-    revalidatePath(`/app/fleet/variant/${updatedItem.id}`, "layout");
 
     /**
      * Respond with the result

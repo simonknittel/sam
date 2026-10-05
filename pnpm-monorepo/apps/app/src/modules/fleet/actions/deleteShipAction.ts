@@ -2,9 +2,10 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 const schema = z.object({
@@ -37,10 +38,8 @@ export const deleteShipAction = createAuthenticatedAction(
       },
     });
     if (existingShip?.deletedAt !== null) {
-      return {
-        error: t("Common.notFound"),
-        requestPayload: formData,
-      };
+      /** A different tab deleted the ship before, and the page must show it */
+      return rejectConflict(t("Common.notFound"), formData);
     }
 
     /**
@@ -57,6 +56,8 @@ export const deleteShipAction = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.SHIP_DELETED_V2,
@@ -69,12 +70,6 @@ export const deleteShipAction = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath("/app/fleet/org");
-    revalidatePath("/app/fleet/my-ships");
 
     /**
      * Respond with the result

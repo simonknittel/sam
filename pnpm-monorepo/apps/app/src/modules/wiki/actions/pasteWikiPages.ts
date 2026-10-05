@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import {
@@ -10,6 +11,7 @@ import {
   wikiContainerColumns,
 } from "@/modules/events/utils/eventContainer";
 import { log } from "@/modules/logging";
+import { refresh } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect, unstable_rethrow } from "next/navigation";
 import * as z from "zod";
@@ -20,7 +22,7 @@ import {
 import {
   getWikiPageScopedContext,
   isWikiScopeFrozen,
-  revalidateWikiScope,
+  rejectFrozenWikiScope,
   type WikiPageScopedContext,
 } from "../queries/getWikiPageScopedContext";
 import {
@@ -103,8 +105,13 @@ export const pasteWikiPages = createAuthenticatedAction(
           "read",
         )
       : null;
-    if (!sourceScoped || !sourcePage)
-      return { error: SOURCE_GONE_ERROR, requestPayload: formData };
+    if (!sourceScoped || !sourcePage) {
+      /**
+       * A different user deleted the copied page or took the read access
+       * away before, and the page must show it
+       */
+      return rejectConflict(SOURCE_GONE_ERROR, formData);
+    }
 
     /**
      * The target decides the scope; without a parent the copy lands at the
@@ -115,27 +122,24 @@ export const pasteWikiPages = createAuthenticatedAction(
       : await getWikiContext().then((context) =>
           context ? { scope: WikiScope.Wiki, context } : null,
         );
-    if (!targetScoped)
-      return { error: t("Common.badRequest"), requestPayload: formData };
+    const placement =
+      targetScoped && data.parentId
+        ? resolveWikiPagePlacement(targetScoped.context, data.parentId)
+        : null;
+    if (!targetScoped || placement === WikiPagePlacement.Missing) {
+      /**
+       * A different user or tab deleted the target page before, and the page
+       * must show it. A context that the viewer cannot hold gets the same
+       * answer (see getWikiPageScopedContext).
+       */
+      return rejectConflict(t("Common.notFound"), formData);
+    }
 
     if (data.parentId) {
-      const placement = resolveWikiPagePlacement(
-        targetScoped.context,
-        data.parentId,
-      );
-      if (placement !== WikiPagePlacement.Allowed)
-        return {
-          error:
-            placement === WikiPagePlacement.Missing
-              ? t("Common.notFound")
-              : t("Common.forbidden"),
-          requestPayload: formData,
-        };
+      if (placement === WikiPagePlacement.Forbidden)
+        return { error: t("Common.forbidden"), requestPayload: formData };
       if (isWikiScopeFrozen(targetScoped))
-        return {
-          error: "Das Event ist bereits vorbei.",
-          requestPayload: formData,
-        };
+        return rejectFrozenWikiScope(formData);
     } else {
       if (data.mode === "replace")
         return { error: t("Common.badRequest"), requestPayload: formData };
@@ -183,6 +187,12 @@ export const pasteWikiPages = createAuthenticatedAction(
         name: "Automatische Sicherung vor Ersetzen",
         createdById: entity.id,
       });
+
+      /**
+       * The safety snapshot is a committed write: the snapshot list must show
+       * it also when the collab replace below fails
+       */
+      refresh();
 
       try {
         await replaceWikiPageContent({
@@ -307,6 +317,8 @@ export const pasteWikiPages = createAuthenticatedAction(
         createdByEntityId: entity.id,
       }));
 
+      refresh();
+
       const variantHref = await resolveVariantWikiRedirectHref(
         targetScoped,
         data.variantId,
@@ -350,7 +362,6 @@ export const pasteWikiPages = createAuthenticatedAction(
       path: WIKI_CLIPBOARD_COOKIE_PATH,
     });
 
-    revalidateWikiScope(targetScoped);
     redirect(redirectHref);
   },
 );

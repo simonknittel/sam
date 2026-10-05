@@ -4,8 +4,8 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { refresh } from "next/cache";
 import * as z from "zod";
-import { revalidateWikiScope } from "../queries/getWikiPageScopedContext";
 import { requireAdminableWikiPage } from "../utils/requireAdminableWikiPage";
 import { slugifyWikiPageTitle } from "../utils/slugifyWikiPageTitle";
 
@@ -18,7 +18,7 @@ export const renameWikiPage = createAuthenticatedAction(
   "renameWikiPage",
   schema,
   async (formData, authentication, data, t) => {
-    const { scoped, page, failure } = await requireAdminableWikiPage(
+    const { page, failure } = await requireAdminableWikiPage(
       data.id,
       formData,
       t,
@@ -35,6 +35,8 @@ export const renameWikiPage = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.WIKI_PAGE_RENAMED,
@@ -47,8 +49,6 @@ export const renameWikiPage = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    revalidateWikiScope(scoped);
 
     return { success: t("Common.successfullySaved") };
   },

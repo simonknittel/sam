@@ -5,7 +5,7 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { SeasonalEventKey } from "@sam-monorepo/domain";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { getMySeasonalThemeSettings } from "../queries/getMySeasonalThemeSettings";
 
@@ -105,6 +105,8 @@ export const updateMySeasonalThemeSettings = createAuthenticatedAction(
       }),
     );
 
+    refresh();
+
     if (changes.length > 0)
       await createAuditEvents([
         {
@@ -121,14 +123,6 @@ export const updateMySeasonalThemeSettings = createAuthenticatedAction(
           createdById: authentication.session.user.id,
         },
       ]);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath("/app/account/appearance");
-    // The theme root of the shell resolves the settings in the layout of
-    // the app, thus every page below it must render again.
-    revalidatePath("/app", "layout");
 
     return {
       success: t("Common.successfullySaved"),

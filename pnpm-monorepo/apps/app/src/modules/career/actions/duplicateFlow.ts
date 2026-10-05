@@ -2,12 +2,17 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import {
+  isPrismaError,
+  PrismaErrorCode,
+} from "@/modules/common/utils/isPrismaError";
 import { SLUG_MAX_LENGTH } from "@/modules/common/utils/slugify";
 import { createId } from "@paralleldrive/cuid2";
-import { Prisma, type FlowEdge } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { type FlowEdge } from "@sam-monorepo/database/client";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { getFlowContext } from "../queries/getFlowContext";
 import {
@@ -37,11 +42,15 @@ export const duplicateFlow = createAuthenticatedAction(
     const sourceMetadata = context?.flows.find(
       (flow) => flow.id === data.sourceFlowId,
     );
-    if (!sourceMetadata)
-      return {
-        error: "Der zu duplizierende Karrierebaum wurde nicht gefunden.",
-        requestPayload: formData,
-      };
+    if (!sourceMetadata) {
+      /**
+       * A different user deleted the source before, and the page must show it
+       */
+      return rejectConflict(
+        "Der zu duplizierende Karrierebaum wurde nicht gefunden.",
+        formData,
+      );
+    }
 
     const slugError = validateFlowSlug(data.slug);
     if (slugError) return { error: slugError, requestPayload: formData };
@@ -150,13 +159,12 @@ export const duplicateFlow = createAuthenticatedAction(
         return flow.id;
       });
     } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2002"
-      )
+      if (isPrismaError(error, PrismaErrorCode.UniqueConstraintFailed))
         return { error: FLOW_SLUG_TAKEN_ERROR, requestPayload: formData };
       throw error;
     }
+
+    refresh();
 
     await createAuditEvents([
       {
@@ -172,8 +180,6 @@ export const duplicateFlow = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    revalidatePath("/app/career", "layout");
 
     return {
       success: t("Common.successfullySaved"),

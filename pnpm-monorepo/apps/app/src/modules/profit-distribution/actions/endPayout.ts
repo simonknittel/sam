@@ -5,7 +5,7 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { CYCLE_PHASE_WHERE, CyclePhase } from "@sam-monorepo/domain";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 const schema = z.object({
@@ -44,6 +44,13 @@ export const endPayout = createAuthenticatedAction(
         payoutEndedById: authentication.session.entity.id,
       },
     });
+
+    /**
+     * Also for the error below: then a different tab, a different manager or
+     * the midnight job ended the payout before, and the page must show it.
+     */
+    refresh();
+
     if (count === 0)
       return {
         error: t("Common.badRequest"),
@@ -59,13 +66,6 @@ export const endPayout = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(`/app/sincome/${data.id}/management`);
-    revalidatePath(`/app/sincome/${data.id}`);
-    revalidatePath("/app/sincome");
 
     return {
       success: t("Common.successfullySaved"),

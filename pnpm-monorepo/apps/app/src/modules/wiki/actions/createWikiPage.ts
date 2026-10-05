@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import {
@@ -10,6 +11,7 @@ import {
   WikiPageUploadability,
   WikiPageVisibility,
 } from "@sam-monorepo/database/client";
+import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import * as z from "zod";
 import {
@@ -19,7 +21,7 @@ import {
 import {
   getWikiPageScopedContext,
   isWikiScopeFrozen,
-  revalidateWikiScope,
+  rejectFrozenWikiScope,
   type WikiPageScopedContext,
 } from "../queries/getWikiPageScopedContext";
 import { copyWikiPageSubtree } from "../utils/copyWikiPageSubtree";
@@ -70,25 +72,24 @@ export const createWikiPage = createAuthenticatedAction(
       : await getWikiContext().then((context) =>
           context ? { scope: WikiScope.Wiki, context } : null,
         );
-    if (!scoped)
-      return { error: t("Common.badRequest"), requestPayload: formData };
+    const placement =
+      scoped && data.parentId
+        ? resolveWikiPagePlacement(scoped.context, data.parentId)
+        : null;
+    if (!scoped || placement === WikiPagePlacement.Missing) {
+      /**
+       * A different user or tab deleted the parent before, and the page must
+       * show it. A context that the viewer cannot hold gets the same answer
+       * (see getWikiPageScopedContext).
+       */
+      return rejectConflict(t("Common.notFound"), formData);
+    }
     const context = scoped.context;
 
     if (data.parentId) {
-      const placement = resolveWikiPagePlacement(context, data.parentId);
-      if (placement !== WikiPagePlacement.Allowed)
-        return {
-          error:
-            placement === WikiPagePlacement.Missing
-              ? t("Common.notFound")
-              : t("Common.forbidden"),
-          requestPayload: formData,
-        };
-      if (isWikiScopeFrozen(scoped))
-        return {
-          error: "Das Event ist bereits vorbei.",
-          requestPayload: formData,
-        };
+      if (placement === WikiPagePlacement.Forbidden)
+        return { error: t("Common.forbidden"), requestPayload: formData };
+      if (isWikiScopeFrozen(scoped)) return rejectFrozenWikiScope(formData);
     } else {
       if (!(await authentication.authorize("wiki", "create")))
         return { error: t("Common.forbidden"), requestPayload: formData };
@@ -111,8 +112,13 @@ export const createWikiPage = createAuthenticatedAction(
             "read",
           )
         : null;
-      if (!sourceScoped || !sourcePage)
-        return { error: t("Common.notFound"), requestPayload: formData };
+      if (!sourceScoped || !sourcePage) {
+        /**
+         * A different user deleted the source page or took the read access
+         * away before, and the page must show it
+         */
+        return rejectConflict(t("Common.notFound"), formData);
+      }
 
       const { root, copiedPages } = await copyWikiPageSubtree({
         sourceScoped,
@@ -126,6 +132,8 @@ export const createWikiPage = createAuthenticatedAction(
         },
         createdByEntityId: authentication.session.entity.id,
       });
+
+      refresh();
 
       await createAuditEvents(
         copiedPages.map((copiedPage) => ({
@@ -142,7 +150,6 @@ export const createWikiPage = createAuthenticatedAction(
         })),
       );
 
-      revalidateWikiScope(scoped);
       const copyVariantHref = await resolveVariantWikiRedirectHref(
         scoped,
         data.variantId,
@@ -208,6 +215,8 @@ export const createWikiPage = createAuthenticatedAction(
       select: { id: true, slug: true },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.WIKI_PAGE_CREATED,
@@ -221,7 +230,6 @@ export const createWikiPage = createAuthenticatedAction(
       },
     ]);
 
-    revalidateWikiScope(scoped);
     const variantHref = await resolveVariantWikiRedirectHref(
       scoped,
       data.variantId,

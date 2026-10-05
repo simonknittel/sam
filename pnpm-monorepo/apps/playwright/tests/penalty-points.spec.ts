@@ -126,6 +126,51 @@ test("an entry is booked on a citizen, shows on their tab and is deleted again",
   ]);
 });
 
+test("deleting an entry that a different tab deleted shows the error and the current list", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const keeper = await createCitizen(prisma, {
+    handle: "strafpunkt-verwalter",
+    permissionStrings: KEEPER_PERMISSIONS,
+  });
+  const offender = await createCitizen(prisma, { handle: "delinquent" });
+  const entry = await prisma.penaltyEntry.create({
+    data: {
+      citizenId: offender.entity.id,
+      createdById: keeper.entity.id,
+      points: 2,
+      reason: "Doppelt gelöscht",
+    },
+  });
+
+  await signIn(keeper.user);
+  await page.goto("/app/penalty-points");
+  const entryRow = page
+    .getByRole("row")
+    .filter({ hasText: "Doppelt gelöscht" });
+  await expect(entryRow).toBeVisible();
+
+  /** A different tab deletes the entry after the page loaded */
+  await prisma.penaltyEntry.update({
+    where: { id: entry.id },
+    data: { deletedAt: new Date(), deletedById: keeper.entity.id },
+  });
+
+  const deleteDialog = page.getByRole("alertdialog");
+  await clickUntilVisible(
+    entryRow.getByRole("button", { name: "Löschen" }),
+    deleteDialog,
+  );
+  await deleteDialog.getByRole("button", { name: "Löschen" }).click();
+
+  await expect(
+    page.getByText("Die gesuchte Ressource wurde nicht gefunden."),
+  ).toBeVisible();
+  await expect(page.getByText("Keine Strafpunkte gefunden.")).toBeVisible();
+});
+
 test.describe("in a browser outside the time zone of the organization", () => {
   /**
    * The app reads and shows each wall time in the time zone of the

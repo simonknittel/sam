@@ -6,7 +6,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { announceSilcTransactions } from "@/modules/silc/utils/createSilcTransactions";
 import { endCollectionPhaseInTransaction } from "@sam-monorepo/domain";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 const schema = z.object({
@@ -43,6 +43,13 @@ export const endCollectionPhase = createAuthenticatedAction(
         endedAt: new Date(),
       }),
     );
+
+    /**
+     * Also for the error below: then a different tab, a different manager or
+     * the midnight job ended the phase before, and the page must show it.
+     */
+    refresh();
+
     if (transactionIds === null)
       return {
         error: t("Common.badRequest"),
@@ -59,17 +66,11 @@ export const endCollectionPhase = createAuthenticatedAction(
       },
     ]);
 
-    await announceSilcTransactions(transactionIds);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(`/app/sincome/${data.id}/management`);
-    revalidatePath(`/app/sincome/${data.id}`);
-    revalidatePath("/app/sincome");
+    const isAnnounced = await announceSilcTransactions(transactionIds);
 
     return {
       success: t("Common.successfullySaved"),
+      ...(isAnnounced ? {} : { warning: t("Common.notificationsFailed") }),
     };
   },
 );

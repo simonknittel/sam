@@ -2,13 +2,15 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 const schema = z.object({
   id: z.cuid(),
-  name: z.string().trim(),
+  name: z.string().trim().max(255),
 });
 
 export const updateShipAction = createAuthenticatedAction(
@@ -39,11 +41,10 @@ export const updateShipAction = createAuthenticatedAction(
         deletedAt: true,
       },
     });
-    if (existingShip?.deletedAt !== null)
-      return {
-        error: t("Common.notFound"),
-        requestPayload: formData,
-      };
+    if (existingShip?.deletedAt !== null) {
+      /** A different tab deleted the ship before, and the page must show it */
+      return rejectConflict(t("Common.notFound"), formData);
+    }
 
     const updatedShip = await prisma.ship.update({
       where: {
@@ -60,6 +61,8 @@ export const updateShipAction = createAuthenticatedAction(
         name: true,
       },
     });
+
+    refresh();
 
     await createAuditEvents([
       {

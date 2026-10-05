@@ -2,15 +2,14 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import { triggerNotificationsAfterSave } from "@/modules/notifications/utils/triggerNotification";
 import { decodeUploadFileName } from "@/modules/uploads/utils/decodeUploadFileName";
+import { refresh } from "next/cache";
 import * as z from "zod";
-import {
-  getWikiPageScopedContext,
-  revalidateWikiScope,
-} from "../queries/getWikiPageScopedContext";
+import { getWikiPageScopedContext } from "../queries/getWikiPageScopedContext";
 
 /** Simple abuse guard: at most this many unresolved reports per user */
 const MAX_OPEN_REPORTS_PER_USER = 5;
@@ -26,15 +25,25 @@ export const createWikiPageReport = createAuthenticatedAction(
   "createWikiPageReport",
   schema,
   async (formData, authentication, data, t) => {
-    const scoped = await getWikiPageScopedContext(data.pageId);
     const citizenId = authentication.session.entity?.id;
-    if (!scoped || !citizenId)
+    if (!citizenId)
       return { error: t("Common.notFound"), requestPayload: formData };
-    const context = scoped.context;
 
-    const page = context.pagesById.get(data.pageId);
-    if (!page || page.deletedAt || !context.permissions.get(page.id)?.canRead)
-      return { error: t("Common.notFound"), requestPayload: formData };
+    const scoped = await getWikiPageScopedContext(data.pageId);
+    const page = scoped?.context.pagesById.get(data.pageId);
+    if (
+      !scoped ||
+      !page ||
+      page.deletedAt ||
+      !scoped.context.permissions.get(page.id)?.canRead
+    ) {
+      /**
+       * A different user or tab deleted the page or took the read access
+       * away before, and the page must show it. A context that the viewer
+       * cannot hold gets the same answer (see getWikiPageScopedContext).
+       */
+      return rejectConflict(t("Common.notFound"), formData);
+    }
 
     /**
      * Only uploads linked to the reported page can be reported — the link
@@ -50,8 +59,13 @@ export const createWikiPageReport = createAuthenticatedAction(
         },
         select: { id: true, fileName: true },
       });
-      if (!upload)
-        return { error: t("Common.notFound"), requestPayload: formData };
+      if (!upload) {
+        /**
+         * A different user removed the attachment from the page before, and
+         * the page must show it
+         */
+        return rejectConflict(t("Common.notFound"), formData);
+      }
     }
 
     const openReports = await prisma.wikiPageReport.count({
@@ -77,6 +91,8 @@ export const createWikiPageReport = createAuthenticatedAction(
       select: { id: true },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.WIKI_PAGE_REPORTED,
@@ -90,7 +106,7 @@ export const createWikiPageReport = createAuthenticatedAction(
       },
     ]);
 
-    await triggerNotifications([
+    const notified = await triggerNotificationsAfterSave([
       {
         type: "WikiPageReported",
         payload: {
@@ -99,8 +115,9 @@ export const createWikiPageReport = createAuthenticatedAction(
       },
     ]);
 
-    revalidateWikiScope(scoped);
-
-    return { success: "Meldung gesendet." };
+    return {
+      success: "Meldung gesendet.",
+      ...(notified ? {} : { warning: t("Common.notificationsFailed") }),
+    };
   },
 );

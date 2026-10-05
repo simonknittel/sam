@@ -1,4 +1,5 @@
 import { prisma } from "@/db";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import type { EventPosition, Prisma } from "@sam-monorepo/database/client";
 import type { getTranslations } from "next-intl/server";
 import { authorizeEventContainer } from "./authorizeEventContainer";
@@ -40,7 +41,8 @@ type RequireManageablePositionResult =
  * The shared guard of the lineup mutations: the position must exist and the
  * current user must be allowed to edit the container it belongs to (see
  * `authorizeEventContainer`). Returns the position with its container, or
- * the error response the action should return as-is.
+ * the error response the action should return as-is. A position that is gone
+ * refreshes the page, thus call it only in a server action.
  */
 export const requireManageablePosition = async (
   positionId: EventPosition["id"],
@@ -54,9 +56,7 @@ export const requireManageablePosition = async (
 
   const container = position ? getPositionContainer(position) : null;
   if (!position || !container)
-    return {
-      failure: { error: "Posten nicht gefunden", requestPayload: formData },
-    };
+    return { failure: rejectConflict("Posten nicht gefunden", formData) };
 
   const authorization = await authorizeEventContainer(container, t);
   if (!authorization.allowed)
@@ -79,6 +79,8 @@ type RequireManageableEventPositionResult =
  * The guard of the mutations that only make sense on a real event: assigning
  * and unassigning a citizen. Template blueprints are never staffed, so their
  * positions are rejected as not found — the same answer an unknown id gets.
+ * A position that is gone or over refreshes the page, thus call it only in a
+ * server action.
  */
 export const requireManageableEventPosition = async (
   positionId: EventPosition["id"],
@@ -86,7 +88,7 @@ export const requireManageableEventPosition = async (
   t: Awaited<ReturnType<typeof getTranslations>>,
 ): Promise<RequireManageableEventPositionResult> => {
   const position = await prisma.eventPosition.findUnique({
-    where: { id: positionId },
+    where: { id: positionId, event: { deletedAt: null } },
     select: {
       ...POSITION_SELECT,
       event: {
@@ -101,17 +103,12 @@ export const requireManageableEventPosition = async (
     },
   });
 
-  const notFound: RequireManageableEventPositionResult = {
-    failure: { error: "Posten nicht gefunden", requestPayload: formData },
-  };
-  if (!position?.eventId || !position.event) return notFound;
+  if (!position?.eventId || !position.event)
+    return { failure: rejectConflict("Posten nicht gefunden", formData) };
 
   if (!isEventUpdatable(position.event))
     return {
-      failure: {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      },
+      failure: rejectConflict("Das Event ist bereits vorbei.", formData),
     };
 
   if (!(await isAllowedToManagePositions(position.event)))

@@ -2,9 +2,14 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import {
+  isPrismaError,
+  PrismaErrorCode,
+} from "@/modules/common/utils/isPrismaError";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 const schema = z.object({
@@ -29,15 +34,29 @@ export const deleteManufacturer = createAuthenticatedAction(
     /**
      * Delete
      */
-    const deletedManufacturer = await prisma.manufacturer.delete({
-      where: {
-        id: data.id,
-      },
-      select: {
-        id: true,
-        name: true,
-      },
-    });
+    let deletedManufacturer;
+    try {
+      deletedManufacturer = await prisma.manufacturer.delete({
+        where: {
+          id: data.id,
+        },
+        select: {
+          id: true,
+          name: true,
+        },
+      });
+    } catch (error) {
+      if (isPrismaError(error, PrismaErrorCode.RecordNotFound)) {
+        /**
+         * A different user deleted the manufacturer before, and the page must
+         * show it
+         */
+        return rejectConflict("Der Hersteller ist bereits gelöscht.", formData);
+      }
+      throw error;
+    }
+
+    refresh();
 
     await createAuditEvents([
       {
@@ -49,13 +68,6 @@ export const deleteManufacturer = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath("/app/fleet/settings");
-    revalidatePath("/app/fleet/org");
-    revalidatePath("/app/fleet/my-ships");
 
     /**
      * Respond with the result

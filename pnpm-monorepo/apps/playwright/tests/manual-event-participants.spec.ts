@@ -314,6 +314,10 @@ test("a citizen who cancelled signs up again, but a second tab cannot sign up a 
   await expect(
     secondTab.getByText("Du bist bereits angemeldet."),
   ).toBeVisible();
+  /** The refresh of the failed sign-up shows the sign-up of the first tab */
+  await expect(
+    secondTab.getByText("Zugesagt", { exact: true }).filter({ visible: true }),
+  ).toBeVisible();
 
   const rows = await prisma.eventParticipant.findMany({
     where: { eventId: event.id, citizenId: participant.entity.id },

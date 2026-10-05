@@ -4,7 +4,11 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import {
+  isPrismaError,
+  PrismaErrorCode,
+} from "@/modules/common/utils/isPrismaError";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 const schema = z.object({
@@ -31,23 +35,43 @@ export const updateRolePermissions = createAuthenticatedAction(
       };
 
     /**
-     * Update role
+     * Update role. The update fails with P2025 when the role is gone.
      */
-    await prisma.$transaction([
-      prisma.permissionString.deleteMany({
+    const isUpdated = await prisma.role
+      .update({
         where: {
-          roleId: data.id,
+          id: data.id,
         },
-      }),
+        data: {
+          permissionStrings: {
+            deleteMany: {},
+            createMany: {
+              data: data.permissionStrings.map((permissionString) => ({
+                permissionString,
+              })),
+              skipDuplicates: true,
+            },
+          },
+        },
+        select: { id: true },
+      })
+      .then(() => true)
+      .catch((error: unknown) => {
+        if (isPrismaError(error, PrismaErrorCode.RecordNotFound)) return false;
+        throw error;
+      });
 
-      prisma.permissionString.createMany({
-        data: data.permissionStrings.map((permissionString) => ({
-          roleId: data.id,
-          permissionString,
-        })),
-        skipDuplicates: true,
-      }),
-    ]);
+    /**
+     * Also for the error below: then a different user deleted the role, and
+     * the page must show it.
+     */
+    refresh();
+
+    if (!isUpdated)
+      return {
+        error: t("Common.notFound"),
+        requestPayload: formData,
+      };
 
     await createAuditEvents([
       {
@@ -58,11 +82,6 @@ export const updateRolePermissions = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(`/app/roles/${data.id}/permissions`);
 
     /**
      * Respond with the result

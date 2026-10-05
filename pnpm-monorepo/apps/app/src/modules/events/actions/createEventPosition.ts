@@ -2,8 +2,9 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { authorizeEventContainer } from "../utils/authorizeEventContainer";
 import {
@@ -11,7 +12,6 @@ import {
   EVENT_CONTAINER_KIND_FIELD,
   eventContainerColumns,
   EventContainerKind,
-  getLineupPath,
   type EventContainer,
 } from "../utils/eventContainer";
 import { buildPositionCreatedAuditEvent } from "../utils/lineupAuditEvents";
@@ -46,7 +46,8 @@ export const createEventPosition = createAuthenticatedAction(
 
     /**
      * A parent must live in the same container, or the position would leak
-     * into another lineup — the tree is walked by parentPositionId alone.
+     * into another lineup — the tree is walked by parentPositionId alone. A
+     * missing parent is usually a parent that a different tab deleted.
      */
     if (data.parentPositionId) {
       const parentPosition = await prisma.eventPosition.findFirst({
@@ -57,7 +58,7 @@ export const createEventPosition = createAuthenticatedAction(
         select: { id: true },
       });
       if (!parentPosition)
-        return { error: t("Common.badRequest"), requestPayload: formData };
+        return rejectConflict("Posten nicht gefunden", formData);
     }
 
     /**
@@ -98,6 +99,8 @@ export const createEventPosition = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       buildPositionCreatedAuditEvent(
         container,
@@ -110,11 +113,6 @@ export const createEventPosition = createAuthenticatedAction(
         authentication.session.user.id,
       ),
     ]);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(getLineupPath(container));
 
     /**
      * Respond with the result

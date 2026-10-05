@@ -3,16 +3,16 @@
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { refresh } from "next/cache";
 import * as z from "zod";
-import { revalidateWikiScope } from "../queries/getWikiPageScopedContext";
 import { isEventWikiRootPage } from "../utils/isEventWikiRootPage";
 import { lockWikiPageTree } from "../utils/lockWikiPageTree";
 import {
   buildWikiPageReparentAuditEvents,
   buildWikiPageReparentReset,
   isWikiPageReparentRefused,
+  rejectChangedWikiPageTree,
   validateWikiPageReparent,
-  WIKI_PAGE_TREE_CHANGED_ERROR,
 } from "../utils/reparentWikiPage";
 import { requireAdminableWikiPage } from "../utils/requireAdminableWikiPage";
 
@@ -78,13 +78,13 @@ export const moveWikiPage = createAuthenticatedAction(
         }),
       ]);
     } catch (error) {
+      /** A different move changed the tree before */
       if (isWikiPageReparentRefused(error))
-        return {
-          error: WIKI_PAGE_TREE_CHANGED_ERROR,
-          requestPayload: formData,
-        };
+        return rejectChangedWikiPageTree(formData);
       throw error;
     }
+
+    refresh();
 
     await createAuditEvents(
       buildWikiPageReparentAuditEvents(
@@ -94,8 +94,6 @@ export const moveWikiPage = createAuthenticatedAction(
         authentication.session.user.id,
       ),
     );
-
-    revalidateWikiScope(scoped);
 
     return {
       success:

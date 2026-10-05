@@ -1,16 +1,20 @@
 import { expectAuditEvents } from "../fixtures/audit";
-import { createCitizen, createRole } from "../fixtures/factories";
+import { assignRole, createCitizen, createRole } from "../fixtures/factories";
 import {
   clickUntilUrl,
   clickUntilVisible,
   FORBIDDEN_TEXT,
   modal,
+  NOT_FOUND_TEXT,
   SAVED_TEXT,
   sectionByHeading,
   toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
+
+/** The error of an action whose target a different user deleted */
+const RESOURCE_NOT_FOUND_TEXT = "Die gesuchte Ressource wurde nicht gefunden.";
 
 test("a role created and assigned through the UI grants its permission", async ({
   page,
@@ -103,6 +107,68 @@ test("a role created and assigned through the UI grants its permission", async (
   await expect(page.getByText(FORBIDDEN_TEXT)).not.toBeVisible();
 });
 
+test("a role ticked right before the role dialog closes is still saved", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "iam-admin",
+    permissionStrings: [
+      "citizen;read",
+      "otherRole;read;roleId=*",
+      "otherRole;assign;roleId=*",
+    ],
+  });
+  const member = await createCitizen(prisma, { handle: "task-worker" });
+  const firstRole = await createRole(prisma, { name: "Erste Rolle" });
+  const secondRole = await createRole(prisma, { name: "Zweite Rolle" });
+
+  await signIn(admin.user);
+  await page.goto(`/app/spynet/citizen/${member.entity.id}/roles`);
+
+  const rolesDialog = modal(page, "Rollen hinzufügen oder entfernen");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Bearbeiten" }),
+    rolesDialog,
+  );
+
+  /**
+   * The open dialog hides the page from the accessibility tree, thus the
+   * tile behind it is found by its markup.
+   */
+  const rolesTile = page
+    .locator("section")
+    .filter({ has: page.locator("h2", { hasText: /^Rollen$/ }) });
+
+  /** A save refreshes the page behind the dialog, and the dialog stays */
+  await rolesDialog.getByText("Erste Rolle").click();
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+  await expect(rolesTile.getByText("Erste Rolle")).toBeVisible();
+  await expect(
+    rolesDialog.getByRole("checkbox", { name: "Erste Rolle" }),
+  ).toBeChecked();
+
+  /** The dialog closes before the debounced save of the second role */
+  await rolesDialog.getByText("Zweite Rolle").click();
+  await rolesDialog.getByRole("button", { name: "Schließen" }).click();
+  await expect(rolesDialog).not.toBeVisible();
+
+  await expect(rolesTile.getByText("Zweite Rolle")).toBeVisible();
+  await expect
+    .poll(() =>
+      prisma.roleAssignment
+        .findMany({
+          where: { citizenId: member.entity.id },
+          select: { roleId: true },
+        })
+        .then((assignments) =>
+          assignments.map(({ roleId }) => roleId).toSorted(),
+        ),
+    )
+    .toEqual([member.role.id, firstRole.id, secondRole.id].toSorted());
+});
+
 test("deleting a role takes its permissions away from its members", async ({
   page,
   prisma,
@@ -139,6 +205,12 @@ test("deleting a role takes its permissions away from its members", async ({
   await expect
     .poll(() => prisma.role.count({ where: { id: member.role.id } }))
     .toBe(0);
+  await expect(page).toHaveURL("/app/iam/roles");
+
+  // The back/forward cache must not show the deleted role again
+  await page.goBack();
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
+  await expect(page).toHaveURL(`/app/roles/${member.role.id}`);
 
   /** Losing their only role costs them the login permission as well */
   await switchUser(member.user);
@@ -337,4 +409,125 @@ test("the inheritance matrix wires two roles together with a single checkbox", a
   ).toHaveCount(0);
 
   await expectAuditEvents(prisma, ["ROLE_INHERITANCE_TOGGLED"]);
+});
+
+test("saving the permissions of a role that a different user deleted shows the error and the current page", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "iam-admin",
+    permissionStrings: ["role;manage", "otherRole;read;roleId=*"],
+  });
+  const role = await createRole(prisma, { name: "Kurzlebige Rolle" });
+
+  await signIn(admin.user);
+  await page.goto(`/app/roles/${role.id}/permissions`);
+  await waitForAppShellHydration(page);
+  const saveButton = page.getByRole("button", { name: "Speichern" });
+  await expect(saveButton).toBeVisible();
+
+  /** A different user deletes the role after the page loaded */
+  await prisma.role.delete({ where: { id: role.id } });
+
+  /** The refresh removes the form, thus the error shows as a toast */
+  await saveButton.click();
+  await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
+  await expect(page).toHaveURL(`/app/roles/${role.id}/permissions`);
+
+  expect(
+    await prisma.auditEvent.count({
+      where: { type: "ROLE_PERMISSIONS_UPDATED" },
+    }),
+  ).toBe(0);
+});
+
+test("an inheritance of a role that a different user deleted shows the error and the current matrix", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "iam-admin",
+    permissionStrings: ["role;manage", "otherRole;read;roleId=*"],
+  });
+  const member = await createCitizen(prisma, { handle: "task-worker" });
+  const deletedRole = await createRole(prisma, { name: "Kurzlebige Rolle" });
+
+  await signIn(admin.user);
+  await page.goto("/app/iam/inheritance-matrix");
+  await waitForAppShellHydration(page);
+  const cell = page.locator(
+    `input[name="${member.role.id}_${deletedRole.id}"]`,
+  );
+  await expect(cell).toHaveCount(1);
+
+  /** A different user deletes the inherited role after the page loaded */
+  await prisma.role.delete({ where: { id: deletedRole.id } });
+
+  await toggleLabel(page, cell).click();
+  await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
+  await expect(cell).toHaveCount(0);
+  await expect(page.getByText("Kurzlebige Rolle")).toHaveCount(0);
+
+  expect(
+    await prisma.auditEvent.count({
+      where: { type: "ROLE_INHERITANCE_TOGGLED" },
+    }),
+  ).toBe(0);
+});
+
+test("removing a role that a different user removed shows the error and the current roles", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "rollen-admin",
+    permissionStrings: [
+      "citizen;read",
+      "otherRole;read;roleId=*",
+      "otherRole;dismiss;roleId=*",
+    ],
+  });
+  const member = await createCitizen(prisma, { handle: "rollen-mitglied" });
+  const role = await createRole(prisma, { name: "Testrolle" });
+  await assignRole(prisma, member.entity, role);
+
+  await signIn(admin.user);
+  await page.goto(`/app/spynet/citizen/${member.entity.id}/roles`);
+  await waitForAppShellHydration(page);
+
+  const badge = page.getByRole("button").filter({ hasText: "Testrolle" });
+  const popover = page.getByRole("dialog", { name: "Rollendetails" });
+  await clickUntilVisible(badge, popover);
+
+  /** A different user removes the role after the page loaded */
+  await prisma.roleAssignment.delete({
+    where: {
+      citizenId_roleId: { citizenId: member.entity.id, roleId: role.id },
+    },
+  });
+
+  const dialog = page.getByRole("alertdialog", { name: "Rolle entfernen?" });
+  await popover.getByRole("button", { name: "Entfernen" }).click();
+  await dialog.getByRole("button", { name: "Entfernen" }).click();
+
+  /** The refresh removes the badge, thus the error shows as a toast */
+  await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
+  await expect(badge).toHaveCount(0);
+
+  /** The history gets no record of a removal that did not happen */
+  expect(
+    await prisma.roleAssignmentChange.count({
+      where: { citizenId: member.entity.id, roleId: role.id },
+    }),
+  ).toBe(0);
+  expect(
+    await prisma.auditEvent.count({
+      where: { type: "ROLE_ASSIGNMENT_DELETED" },
+    }),
+  ).toBe(0);
 });

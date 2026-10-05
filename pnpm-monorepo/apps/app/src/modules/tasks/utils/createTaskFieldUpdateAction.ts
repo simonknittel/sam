@@ -6,7 +6,7 @@ import type {
   AuditEventDataByType,
   AuditEventType,
 } from "@sam-monorepo/domain";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import type * as z from "zod";
 import {
   requireManageableTask,
@@ -32,8 +32,8 @@ interface Configuration<Schema extends z.ZodType<{ id: Task["id"] }>> {
 /**
  * Factory for the single-field task update actions, which only differ in
  * their schema, the updated column and the emitted audit event. The shared
- * body guards via `requireManageableTask`, updates the task, writes the
- * audit event and revalidates the task pages.
+ * body guards via `requireManageableTask`, updates the task, refreshes the
+ * current page and writes the audit event.
  */
 export const createTaskFieldUpdateAction = <
   Schema extends z.ZodType<{ id: Task["id"] }>,
@@ -58,15 +58,14 @@ export const createTaskFieldUpdateAction = <
         data: configuration.update(data),
       });
 
+      refresh();
+
       await createAuditEvents([
         {
           ...configuration.auditEvent(task, data),
           createdById: authentication.session.user.id,
         },
       ]);
-
-      revalidatePath("/app/tasks");
-      revalidatePath(`/app/tasks/${task.id}`);
 
       return {
         success: t("Common.successfullySaved"),

@@ -221,6 +221,15 @@ export const pickFromSearch = async (
   const option = page.getByRole("option", { name: handle });
   await expect(option).toBeVisible();
   await option.click();
+
+  /**
+   * One animation frame after the pick, the picker moves the focus back to
+   * its input. A fill of the next field before that frame loses its text to
+   * the picker.
+   */
+  await page.evaluate(
+    () => new Promise((resolve) => requestAnimationFrame(resolve)),
+  );
 };
 
 /**

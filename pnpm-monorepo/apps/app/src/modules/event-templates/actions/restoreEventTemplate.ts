@@ -2,15 +2,12 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { getEventTemplateById } from "../queries/getEventTemplateById";
-import {
-  EVENT_TEMPLATES_PATH,
-  getEventTemplatePath,
-} from "../utils/eventTemplateConstraints";
 
 const schema = z.object({
   templateId: z.cuid2(),
@@ -25,17 +22,21 @@ export const restoreEventTemplate = createAuthenticatedAction(
   schema,
   async (formData, authentication, data, t) => {
     const context = await getEventTemplateById(data.templateId);
-    if (!context)
-      return { error: "Vorlage nicht gefunden", requestPayload: formData };
+    if (!context) return rejectConflict("Vorlage nicht gefunden", formData);
     if (!context.permissions.canManage)
       return { error: t("Common.forbidden"), requestPayload: formData };
-    if (context.template.deletedAt === null)
+    if (context.template.deletedAt === null) {
+      /** A different tab or user restored the template before */
+      refresh();
       return { success: t("Common.successfullySaved") };
+    }
 
     await prisma.eventTemplate.update({
       where: { id: context.template.id },
       data: { deletedAt: null, deletedById: null },
     });
+
+    refresh();
 
     await createAuditEvents([
       {
@@ -47,9 +48,6 @@ export const restoreEventTemplate = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    revalidatePath(EVENT_TEMPLATES_PATH);
-    revalidatePath(getEventTemplatePath(context.template.id), "layout");
 
     return { success: t("Common.successfullySaved") };
   },

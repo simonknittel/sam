@@ -8,12 +8,11 @@ import { probeUploadImageDimensions } from "@/modules/common/utils/probeUploadIm
 import { DISCORD_EVENT_DESCRIPTION_MAX_LENGTH } from "@/modules/discord/utils/guildScheduledEventPayload";
 import { findDescriptionProblem } from "@/modules/events/utils/discordEventDescription";
 import { buildBriefingRootPageSeed } from "@sam-monorepo/domain";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import * as z from "zod";
 import {
   EVENT_TEMPLATE_NAME_MAX_LENGTH,
-  EVENT_TEMPLATES_PATH,
   getEventTemplatePath,
 } from "../utils/eventTemplateConstraints";
 
@@ -82,6 +81,8 @@ export const createEventTemplate = createAuthenticatedAction(
       select: { id: true, name: true },
     });
 
+    refresh();
+
     if (data.coverImageId) probeUploadImageDimensions(data.coverImageId);
 
     await createAuditEvents([
@@ -91,8 +92,6 @@ export const createEventTemplate = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    revalidatePath(EVENT_TEMPLATES_PATH);
 
     /**
      * Redirect to the new template, where lineup, briefing and prefill are

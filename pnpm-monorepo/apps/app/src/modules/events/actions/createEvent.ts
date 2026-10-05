@@ -2,13 +2,14 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { probeUploadImageDimensions } from "@/modules/common/utils/probeUploadImageDimensions";
 import { wallTimeSchema } from "@/modules/common/utils/wallTimeSchema";
 import { DISCORD_EVENT_DESCRIPTION_MAX_LENGTH } from "@/modules/discord/utils/guildScheduledEventPayload";
 import { getEventTemplateById } from "@/modules/event-templates/queries/getEventTemplateById";
-import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import { triggerNotificationsAfterSave } from "@/modules/notifications/utils/triggerNotification";
 import {
   COPYABLE_UPLOAD_SELECT,
   copyUpload,
@@ -23,7 +24,7 @@ import {
 } from "@sam-monorepo/database/client";
 import type { AuditEventInput } from "@sam-monorepo/domain";
 import { buildBriefingRootPageSeed } from "@sam-monorepo/domain";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import * as z from "zod";
 import {
@@ -46,6 +47,7 @@ import {
   EVENT_MAX_VISIBILITY_ROLES,
   EVENT_NAME_MAX_LENGTH,
   getEventPath,
+  NOTIFICATIONS_FAILED_PARAM,
 } from "../utils/eventConstraints";
 import {
   eventContainerColumns,
@@ -162,10 +164,7 @@ export const createEvent = createAuthenticatedAction(
       ? await getEventTemplateById(data.templateId)
       : null;
     if (data.templateId && template?.template.deletedAt !== null)
-      return {
-        error: "Vorlage nicht gefunden",
-        requestPayload: formData,
-      };
+      return rejectConflict("Vorlage nicht gefunden", formData);
 
     const templateContainer = template
       ? toTemplateContainer(template.template.id)
@@ -288,6 +287,8 @@ export const createEvent = createAuthenticatedAction(
       { timeout: TRANSACTION_TIMEOUT_MS },
     );
 
+    refresh();
+
     if (data.coverImageId) probeUploadImageDimensions(data.coverImageId);
 
     const auditEvents: AuditEventInput[] = [
@@ -315,7 +316,7 @@ export const createEvent = createAuthenticatedAction(
     /**
      * Trigger notifications
      */
-    await triggerNotifications([
+    const areNotificationsSent = await triggerNotificationsAfterSave([
       {
         type: "EventCreated",
         payload: {
@@ -346,18 +347,17 @@ export const createEvent = createAuthenticatedAction(
     }
 
     /**
-     * Revalidate cache(s)
-     */
-    revalidatePath("/app/events");
-    revalidatePath("/app/dashboard");
-
-    /**
      * Redirect to the created event; the form's success hook closes the
      * modal while the navigation is in flight (see useAction).
      */
+    const searchParams = new URLSearchParams();
+    if (publishFailed) searchParams.set(DISCORD_PUBLISH_FAILED_PARAM, "1");
+    if (!areNotificationsSent)
+      searchParams.set(NOTIFICATIONS_FAILED_PARAM, "1");
+    const query = searchParams.toString();
     redirect(
-      publishFailed
-        ? `${getEventPath(createdEvent.id)}?${DISCORD_PUBLISH_FAILED_PARAM}=1`
+      query
+        ? `${getEventPath(createdEvent.id)}?${query}`
         : getEventPath(createdEvent.id),
     );
   },

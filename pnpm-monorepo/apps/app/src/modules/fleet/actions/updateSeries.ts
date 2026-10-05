@@ -2,9 +2,10 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 const schema = z.object({
@@ -40,11 +41,12 @@ export const updateSeries = createAuthenticatedAction(
         name: true,
       },
     });
-    if (!existingSeries)
-      return {
-        error: t("Common.notFound"),
-        requestPayload: formData,
-      };
+    if (!existingSeries) {
+      /**
+       * A different user deleted the series before, and the page must show it
+       */
+      return rejectConflict(t("Common.notFound"), formData);
+    }
 
     const updatedItem = await prisma.series.update({
       where: {
@@ -52,6 +54,8 @@ export const updateSeries = createAuthenticatedAction(
       },
       data: updateData,
     });
+
+    refresh();
 
     await createAuditEvents([
       {
@@ -65,16 +69,6 @@ export const updateSeries = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(`/app/fleet/settings`);
-    revalidatePath(
-      `/app/fleet/settings/manufacturers/${updatedItem.manufacturerId}`,
-    );
-    revalidatePath("/app/fleet/org");
-    revalidatePath("/app/fleet/my-ships");
 
     /**
      * Respond with the result

@@ -9,27 +9,33 @@ import { updateRoleAssignments } from "../../actions/updateRoleAssignment";
 interface Props {
   readonly children: ReactNode;
   readonly className?: string;
+  /** Runs after each successful save */
+  readonly onSaved?: () => void;
 }
 
-export const UpdateRolesForm = ({ children, className }: Props) => {
+export const UpdateRolesForm = ({ children, className, onSaved }: Props) => {
   const submit = useMemo(
     () =>
-      debounce((form: HTMLFormElement) => {
+      debounce(async (form: HTMLFormElement) => {
         const formData = new FormData(form);
 
-        void runAction(updateRoleAssignments, formData);
+        if (await runAction(updateRoleAssignments, formData)) onSaved?.();
       }, 1000),
-    [],
+    [onSaved],
   );
 
+  /**
+   * The dialog removes the form when it closes. Thus a change that waits for
+   * the debounce is saved then, and not lost.
+   */
   useEffect(() => {
     return () => {
-      submit.cancel();
+      void submit.flush();
     };
   }, [submit]);
 
   const handleChange = (event: FormEvent<HTMLFormElement>) => {
-    submit(event.currentTarget);
+    void submit(event.currentTarget);
   };
 
   return (

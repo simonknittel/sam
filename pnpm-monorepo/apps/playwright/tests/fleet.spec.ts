@@ -159,6 +159,10 @@ test("my ships can be added, renamed and deleted with consistent org counts", as
     page.getByRole("alertdialog"),
   );
   await expect(page.getByText("Schiff löschen?")).toBeVisible();
+  // The dialog gets the name from the server, thus the rename refreshed the page
+  await expect(page.getByRole("alertdialog")).toContainText(
+    'Willst du "Sternenhammer" löschen?',
+  );
   await page
     .getByRole("alertdialog")
     .getByRole("button", { name: "Löschen" })

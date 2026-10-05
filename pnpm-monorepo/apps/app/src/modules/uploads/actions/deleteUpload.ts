@@ -3,12 +3,13 @@
 import { prisma } from "@/db";
 import { env } from "@/env";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { createS3Client } from "@/modules/common/utils/createS3Client";
 import { log } from "@/modules/logging";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { USAGE_SELECT } from "../queries/getUploads";
 import { decodeUploadFileName } from "../utils/decodeUploadFileName";
@@ -48,11 +49,12 @@ export const deleteUpload = createAuthenticatedAction(
         ...USAGE_SELECT,
       },
     });
-    if (!upload)
-      return {
-        error: t("Common.notFound"),
-        requestPayload: formData,
-      };
+    if (!upload) {
+      /**
+       * A different user deleted the upload before, and the page must show it
+       */
+      return rejectConflict(t("Common.notFound"), formData);
+    }
 
     const usages = getUploadUsages(upload);
     const locations = usages
@@ -70,6 +72,8 @@ export const deleteUpload = createAuthenticatedAction(
      * orphaned object — which is why the failure is only logged.
      */
     await prisma.upload.delete({ where: { id: upload.id } });
+
+    refresh();
 
     try {
       await createS3Client().send(
@@ -103,8 +107,6 @@ export const deleteUpload = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    revalidatePath("/app/uploads");
 
     return {
       success: t("Common.successfullyDeleted"),

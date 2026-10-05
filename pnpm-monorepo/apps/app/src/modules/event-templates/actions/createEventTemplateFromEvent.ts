@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { EVENT_MANAGE_GUARD_SELECT } from "@/modules/events/queries/eventManageGuardSelect";
@@ -29,12 +30,11 @@ import {
   type Event,
 } from "@sam-monorepo/database/client";
 import { buildBriefingRootPageSeed } from "@sam-monorepo/domain";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import * as z from "zod";
 import {
   EVENT_TEMPLATE_NAME_MAX_LENGTH,
-  EVENT_TEMPLATES_PATH,
   getEventTemplatePath,
 } from "../utils/eventTemplateConstraints";
 
@@ -137,8 +137,7 @@ export const createEventTemplateFromEvent = createAuthenticatedAction(
         discordPublishedLocation: true,
       },
     });
-    if (!sourceEvent)
-      return { error: "Event nicht gefunden", requestPayload: formData };
+    if (!sourceEvent) return rejectConflict("Event nicht gefunden", formData);
     if (!(await isAllowedToManageEvent(sourceEvent)))
       return { error: t("Common.forbidden"), requestPayload: formData };
 
@@ -235,6 +234,8 @@ export const createEventTemplateFromEvent = createAuthenticatedAction(
       { timeout: TRANSACTION_TIMEOUT_MS },
     );
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.EVENT_TEMPLATE_CREATED_FROM_EVENT,
@@ -249,8 +250,6 @@ export const createEventTemplateFromEvent = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    revalidatePath(EVENT_TEMPLATES_PATH);
 
     redirect(getEventTemplatePath(template.id));
   },

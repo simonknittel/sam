@@ -4,7 +4,11 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import {
+  isPrismaError,
+  PrismaErrorCode,
+} from "@/modules/common/utils/isPrismaError";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 const schema = z
@@ -33,18 +37,38 @@ export const updateSingleRoleInheritance = createAuthenticatedAction(
       };
 
     /**
-     * Update role
+     * Update role. The update fails with P2025 when the role or the role to
+     * connect is gone.
      */
-    await prisma.role.update({
-      where: {
-        id: data.roleId,
-      },
-      data: {
-        inherits: data.checked
-          ? { connect: { id: data.inheritedRoleId } }
-          : { disconnect: { id: data.inheritedRoleId } },
-      },
-    });
+    const isUpdated = await prisma.role
+      .update({
+        where: {
+          id: data.roleId,
+        },
+        data: {
+          inherits: data.checked
+            ? { connect: { id: data.inheritedRoleId } }
+            : { disconnect: { id: data.inheritedRoleId } },
+        },
+        select: { id: true },
+      })
+      .then(() => true)
+      .catch((error: unknown) => {
+        if (isPrismaError(error, PrismaErrorCode.RecordNotFound)) return false;
+        throw error;
+      });
+
+    /**
+     * Also for the error below: then a different user deleted one of the
+     * roles, and the page must show it.
+     */
+    refresh();
+
+    if (!isUpdated)
+      return {
+        error: t("Common.notFound"),
+        requestPayload: formData,
+      };
 
     await createAuditEvents([
       {
@@ -57,12 +81,6 @@ export const updateSingleRoleInheritance = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(`/app/roles/${data.roleId}/inheritance`);
-    revalidatePath("/app/iam/inheritance-matrix");
 
     /**
      * Respond with the result

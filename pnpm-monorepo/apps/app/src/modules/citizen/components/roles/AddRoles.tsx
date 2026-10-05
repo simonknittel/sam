@@ -10,7 +10,6 @@ import clsx from "clsx";
 import Fuse, { type FuseResult } from "fuse.js";
 
 import { api } from "@/trpc/react";
-import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { BsExclamationOctagonFill } from "react-icons/bs";
 import { FaPen } from "react-icons/fa";
@@ -22,7 +21,11 @@ interface Props {
   readonly citizenId: Citizen["id"];
   readonly assignedRoleIds: Role["id"][];
   readonly iconOnly?: boolean;
-  readonly onRequestClose?: () => void;
+  /**
+   * Runs after each save of the role assignments. The save refreshes the
+   * page, but not the data that the client loaded itself.
+   */
+  readonly onSaved?: () => void;
 }
 
 export const AddRoles = ({
@@ -30,11 +33,10 @@ export const AddRoles = ({
   citizenId,
   assignedRoleIds,
   iconOnly = false,
-  onRequestClose,
+  onSaved,
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const router = useRouter();
   const {
     isPending,
     data: assignableRoles,
@@ -46,8 +48,6 @@ export const AddRoles = ({
   const handleRequestClose = () => {
     setIsOpen(false);
     setQuery("");
-    router.refresh();
-    onRequestClose?.();
   };
 
   const fuse = useMemo(() => {
@@ -118,7 +118,7 @@ export const AddRoles = ({
               </div>
             </div>
 
-            <UpdateRolesForm>
+            <UpdateRolesForm onSaved={onSaved}>
               <input type="hidden" name="citizenId" value={citizenId} />
 
               <div

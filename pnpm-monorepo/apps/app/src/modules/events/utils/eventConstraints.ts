@@ -24,3 +24,10 @@ export const getEventUrl = (eventId: string) =>
  * action redirects to the created event — so the event page says it instead.
  */
 export const DISCORD_PUBLISH_FAILED_PARAM = "discordPublishFailed";
+
+/**
+ * Search param the create action redirects with when the notifications about
+ * the new event could not be sent, for the same reason as
+ * DISCORD_PUBLISH_FAILED_PARAM.
+ */
+export const NOTIFICATIONS_FAILED_PARAM = "notificationsFailed";

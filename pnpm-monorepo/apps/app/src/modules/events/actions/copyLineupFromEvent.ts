@@ -2,15 +2,17 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import {
   CLONABLE_POSITION_SELECT,
   clonePositions,
 } from "../utils/clonePositions";
 import { toEventContainer } from "../utils/eventContainer";
+import { canSeeEvent } from "../utils/eventVisibility";
 import { isAllowedToManagePositions } from "../utils/isAllowedToManagePositions";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
 import { buildPositionTree } from "../utils/positionTree";
@@ -38,7 +40,7 @@ export const copyLineupFromEvent = createAuthenticatedAction(
      */
     const [targetEvent, sourceEvent] = await prisma.$transaction([
       prisma.event.findUnique({
-        where: { id: data.targetEventId },
+        where: { id: data.targetEventId, deletedAt: null },
         select: {
           id: true,
           startTime: true,
@@ -62,12 +64,15 @@ export const copyLineupFromEvent = createAuthenticatedAction(
       }),
 
       prisma.event.findUnique({
-        where: { id: data.sourceEventId },
+        where: { id: data.sourceEventId, deletedAt: null },
         select: {
           id: true,
           lineupEnabled: true,
           discordCreatorId: true,
           createdById: true,
+          deletedAt: true,
+          visibility: true,
+          visibilityRoles: { select: { roleId: true } },
           managers: {
             select: {
               id: true,
@@ -76,29 +81,24 @@ export const copyLineupFromEvent = createAuthenticatedAction(
         },
       }),
     ]);
-    if (!targetEvent)
-      return {
-        error: t("Common.notFound"),
-        requestPayload: formData,
-      };
-    if (!sourceEvent)
+    if (!targetEvent) return rejectConflict(t("Common.notFound"), formData);
+    /** An event that the caller cannot see gets the answer of an unknown id */
+    if (!sourceEvent || !(await canSeeEvent(sourceEvent)))
       return {
         error: t("Common.badRequest"),
         requestPayload: formData,
       };
 
     if (!isEventUpdatable(targetEvent))
-      return {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      };
+      return rejectConflict("Das Event ist bereits vorbei.", formData);
     if (!(await isAllowedToManagePositions(targetEvent)))
       return { error: t("Common.forbidden"), requestPayload: formData };
 
     /**
      * The caller must be allowed to view the source lineup (same gate as the
-     * lineup page: general event read permission plus an enabled lineup or
-     * position-management rights on the source event).
+     * lineup page: general event read permission, the visibility of the
+     * source event, plus an enabled lineup or position-management rights on
+     * the source event).
      */
     if (!(await authentication.authorize("event", "read")))
       return { error: t("Common.forbidden"), requestPayload: formData };
@@ -125,6 +125,8 @@ export const copyLineupFromEvent = createAuthenticatedAction(
       }),
     );
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.EVENT_LINEUP_COPIED,
@@ -135,11 +137,6 @@ export const copyLineupFromEvent = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(`/app/events/${targetEvent.id}/lineup`);
 
     return {
       success: t("Common.successfullySaved"),

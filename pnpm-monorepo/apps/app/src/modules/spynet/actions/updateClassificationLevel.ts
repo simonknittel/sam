@@ -2,9 +2,10 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 const schema = z.object({
@@ -27,11 +28,13 @@ export const updateClassificationLevel = createAuthenticatedAction(
         where: { id: data.id },
         select: { name: true },
       });
-    if (!existingClassificationLevel)
-      return {
-        error: t("Common.notFound"),
-        requestPayload: formData,
-      };
+    if (!existingClassificationLevel) {
+      /**
+       * A different user deleted the classification level, and the page must
+       * show it.
+       */
+      return rejectConflict(t("Common.notFound"), formData);
+    }
 
     const classificationLevel = await prisma.classificationLevel.update({
       where: { id: data.id },
@@ -39,6 +42,8 @@ export const updateClassificationLevel = createAuthenticatedAction(
         name: data.name,
       },
     });
+
+    refresh();
 
     await createAuditEvents([
       {
@@ -51,8 +56,6 @@ export const updateClassificationLevel = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    revalidatePath("/app/spynet/settings");
 
     return {
       success: "Erfolgreich bearbeitet",

@@ -2,11 +2,15 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import {
+  isPrismaError,
+  PrismaErrorCode,
+} from "@/modules/common/utils/isPrismaError";
 import { SLUG_MAX_LENGTH } from "@/modules/common/utils/slugify";
-import { Prisma } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { FLOW_SLUG_TAKEN_ERROR, validateFlowSlug } from "../utils/flowSlug";
 
@@ -26,8 +30,12 @@ export const restoreFlow = createAuthenticatedAction(
       where: { id: data.flowId },
       select: { id: true, name: true, deletedAt: true },
     });
-    if (!flow?.deletedAt)
-      return { error: t("Common.notFound"), requestPayload: formData };
+    if (!flow?.deletedAt) {
+      /**
+       * A different user restored the flow before, and the page must show it
+       */
+      return rejectConflict(t("Common.notFound"), formData);
+    }
 
     const slugError = validateFlowSlug(data.slug);
     if (slugError) return { error: slugError, requestPayload: formData };
@@ -62,13 +70,12 @@ export const restoreFlow = createAuthenticatedAction(
         },
       });
     } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2002"
-      )
+      if (isPrismaError(error, PrismaErrorCode.UniqueConstraintFailed))
         return { error: FLOW_SLUG_TAKEN_ERROR, requestPayload: formData };
       throw error;
     }
+
+    refresh();
 
     await createAuditEvents([
       {
@@ -81,9 +88,6 @@ export const restoreFlow = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    revalidatePath("/app/career", "layout");
-    revalidatePath(`/app/career/${data.slug}`);
 
     return {
       success: "Der Karrierebaum wurde wiederhergestellt.",

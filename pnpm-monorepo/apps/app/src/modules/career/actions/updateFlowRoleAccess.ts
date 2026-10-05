@@ -2,10 +2,11 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { FlowRoleAccessType } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 // Arbitrary (untested) limits to prevent DDoS
@@ -26,10 +27,12 @@ export const updateFlowRoleAccess = createAuthenticatedAction(
 
     const flow = await prisma.flow.findUnique({
       where: { id: data.flowId },
-      select: { id: true, slug: true, deletedAt: true },
+      select: { id: true, deletedAt: true },
     });
-    if (!flow || flow.deletedAt)
-      return { error: t("Common.notFound"), requestPayload: formData };
+    if (!flow || flow.deletedAt) {
+      /** A different user deleted the flow before, and the page must show it */
+      return rejectConflict(t("Common.notFound"), formData);
+    }
 
     /**
      * UPDATE implies READ, so a role listed in both tiers gets exactly one
@@ -71,6 +74,8 @@ export const updateFlowRoleAccess = createAuthenticatedAction(
       }),
     ]);
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.CAREER_FLOW_ROLE_ACCESS_UPDATED,
@@ -82,10 +87,6 @@ export const updateFlowRoleAccess = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /** Who sees the flow in the navigation changed for everyone involved */
-    revalidatePath("/app/career", "layout");
-    revalidatePath(`/app/career/${flow.slug}`);
 
     return {
       success: t("Common.successfullySaved"),

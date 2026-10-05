@@ -47,6 +47,17 @@ const openCreatePageModal = async (page: Page) => {
   );
 };
 
+/**
+ * The sidebar tree is in a layout that the old and the new page share. Thus
+ * it shows the new page only when the action renders the layout again. A
+ * `page.goto()` would load the layout again and hide a missing refresh. The
+ * paste action also deletes the clipboard cookie, and a cookie change in an
+ * action renders the layout again too. Thus only the test of a new page as
+ * a copy proves `refresh()`.
+ */
+const sidebarTreeLink = (page: Page, title: string) =>
+  page.getByRole("link", { name: title, exact: true });
+
 /** An image in the content refers to its upload with the last path segment */
 const uploadedImage = (uploadId: string) => {
   const { s3Port } = readStackState();
@@ -104,6 +115,7 @@ test("copy'n'paste inserts a page with its readable children under another page"
 
   await expect(page).toHaveURL(/handbuch-kopie$/);
   await expect(page.getByText("Grundlagen des Bergbaus.")).toBeVisible();
+  await expect(sidebarTreeLink(page, "Handbuch (Kopie)")).toBeVisible();
 
   const rootCopy = await prisma.wikiPage.findFirstOrThrow({
     where: { title: "Handbuch (Kopie)" },
@@ -161,6 +173,7 @@ test("a new page can start as a copy of an existing page", async ({
   await page.getByRole("button", { name: "Erstellen", exact: true }).click();
 
   await expect(page.getByText("Struktur der Vorlage.")).toBeVisible();
+  await expect(sidebarTreeLink(page, "Neu aus Vorlage")).toBeVisible();
 
   const created = await prisma.wikiPage.findFirstOrThrow({
     where: { title: "Neu aus Vorlage" },

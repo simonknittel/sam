@@ -2,10 +2,15 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import {
+  isPrismaError,
+  PrismaErrorCode,
+} from "@/modules/common/utils/isPrismaError";
+import { refresh } from "next/cache";
 import * as z from "zod";
-import { revalidateWikiScope } from "../queries/getWikiPageScopedContext";
 import { collectWikiPageDescendants } from "../utils/collectWikiPageDescendants";
 import { requireAdminableWikiPage } from "../utils/requireAdminableWikiPage";
 
@@ -37,12 +42,33 @@ export const destroyWikiPage = createAuthenticatedAction(
     /**
      * deleteMany can't order by depth, so delete leaves-first in a
      * transaction: reverse BFS order guarantees children before parents.
+     * The condition on `deletedAt` keeps a page that a different user
+     * restored in the meantime.
      */
-    await prisma.$transaction(
-      [...destroyedIds]
-        .reverse()
-        .map((id) => prisma.wikiPage.delete({ where: { id } })),
-    );
+    try {
+      await prisma.$transaction(
+        [...destroyedIds].reverse().map((id) =>
+          prisma.wikiPage.delete({
+            where: { id, deletedAt: { not: null } },
+          }),
+        ),
+      );
+    } catch (error) {
+      if (isPrismaError(error, PrismaErrorCode.RecordNotFound)) {
+        /**
+         * A different user or tab restored or permanently deleted a page of
+         * the subtree after the check above, and the page must show it. The
+         * transaction deleted nothing.
+         */
+        return rejectConflict(
+          "Der Papierkorb war veraltet. Er ist jetzt aktuell, bitte versuche es erneut.",
+          formData,
+        );
+      }
+      throw error;
+    }
+
+    refresh();
 
     await createAuditEvents([
       {
@@ -56,8 +82,6 @@ export const destroyWikiPage = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    revalidateWikiScope(scoped);
 
     return { success: "Endgültig gelöscht." };
   },

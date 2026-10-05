@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { ReadMarkerSubject } from "@sam-monorepo/domain";
@@ -38,10 +39,12 @@ export const markAsRead = createAuthenticatedAction(
 
     /**
      * An item which the viewer cannot see is indistinguishable from one
-     * which does not exist
+     * which does not exist. A different user deleted the item or took the
+     * read access away after the page showed it, and the page must show it.
      */
-    if (!(await definition.canRead(data.subjectId)))
-      return { error: t("Common.notFound"), requestPayload: formData };
+    if (!(await definition.canRead(data.subjectId))) {
+      return rejectConflict(t("Common.notFound"), formData);
+    }
 
     const wasNew = (await getNewIds(data.subject, [data.subjectId])).size > 0;
 
@@ -49,6 +52,15 @@ export const markAsRead = createAuthenticatedAction(
       data: [{ citizenId, ...definition.markerData(data.subjectId) }],
       skipDuplicates: true,
     });
+
+    /**
+     * The "new" state shows in lists, tiles and the dot badges of the app
+     * layout. Only a change of that state is worth the render. `wasNew` comes
+     * from before the write: a marker that a different tab wrote between the
+     * read and the write does not stop the render, but a marker that it wrote
+     * before the read does.
+     */
+    if (wasNew) refresh();
 
     if (count > 0)
       await createAuditEvents([
@@ -62,16 +74,6 @@ export const markAsRead = createAuthenticatedAction(
           createdById: authentication.session.user.id,
         },
       ]);
-
-    /**
-     * The "new" state shows in lists, tiles and the dot badges of the app
-     * layout. The refresh renders them again for the viewer only, and it
-     * also clears the client router cache, which would otherwise show the
-     * old state on a back navigation. Unlike `revalidatePath()`, it keeps the
-     * server caches which other users share. Only a real change is worth the
-     * render.
-     */
-    if (count > 0 && wasNew) refresh();
 
     return { success: "Als gelesen markiert" };
   },

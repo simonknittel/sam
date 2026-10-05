@@ -18,10 +18,14 @@ import {
   SAVED_TEXT,
   saveInlineEditor,
   sectionByHeading,
+  waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 const editButtons = (scope: Locator | Page) => inlineEditorTrigger(scope);
+
+/** The error of each task action for a task that is not open anymore */
+const CLOSED_TASK_TEXT = "Der Task ist bereits abgeschlossen.";
 
 const createSilcTask = (
   prisma: PrismaClient,
@@ -366,6 +370,10 @@ test("a completion that waits for a parallel completion pays no reward", async (
         data: { completedAt: new Date(), completedById: manager.entity.id },
       });
       if (count !== 1) throw new Error("The parallel completion found no task");
+      await transaction.task.update({
+        where: { id: task.id },
+        data: { completionists: { connect: { id: worker.entity.id } } },
+      });
 
       const [session] = await transaction.$queryRaw<{ id: number }[]>`
         SELECT pg_backend_pid() AS "id"
@@ -403,9 +411,14 @@ test("a completion that waits for a parallel completion pays no reward", async (
     await parallelCompletion;
   }
 
-  await expect(
-    completeModal.getByText("Der Task ist bereits abgeschlossen."),
-  ).toBeVisible();
+  /**
+   * The conflict refreshes the page: it shows the task that the parallel
+   * completion closed, and the modal of the open task is gone. The error
+   * stays visible as a toast.
+   */
+  await expect(page.getByText("Erfüllt durch")).toBeVisible();
+  await expect(completeModal).not.toBeVisible();
+  await expect(page.getByText(CLOSED_TASK_TEXT)).toBeVisible();
 
   // The waiting completion paid no reward and created no repetition
   expect(
@@ -423,6 +436,141 @@ test("a completion that waits for a parallel completion pays no reward", async (
   ).toEqual([{ repeatable: 2, completedAt: expect.any(Date) }]);
   expect(
     await prisma.auditEvent.count({ where: { type: "TASK_COMPLETED" } }),
+  ).toBe(0);
+});
+
+test("a completion of a task that a different user completed shows the completed task", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "task-verwalter",
+    permissionStrings: ["task;read", "citizen;read"],
+  });
+  const worker = await createCitizen(prisma, { handle: "silc-arbeiter" });
+  const task = await createSilcTask(prisma, manager, worker, "Konvoi sichern");
+
+  await signIn(manager.user);
+  await page.goto(`/app/tasks/${task.id}`);
+  const completeModal = modal(page, "Task abschließen");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Abschließen" }),
+    completeModal,
+  );
+  await expect(completeModal.getByText("silc-arbeiter")).toBeVisible();
+
+  await prisma.task.update({
+    where: { id: task.id },
+    data: {
+      completedAt: new Date(),
+      completedById: worker.entity.id,
+      completionists: { connect: { id: worker.entity.id } },
+    },
+  });
+  await completeModal.getByRole("button", { name: "Speichern" }).click();
+
+  // The refresh shows the completed task, and the modal of the open task is gone
+  await expect(page.getByText("Erfüllt durch")).toBeVisible();
+  await expect(completeModal).not.toBeVisible();
+  await expect(page.getByText(CLOSED_TASK_TEXT)).toBeVisible();
+  expect(
+    await prisma.silcTransaction.count({ where: { taskId: task.id } }),
+  ).toBe(0);
+});
+
+test("an edit of a task that a different user completed shows the message and the completed task", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "task-verwalter",
+    permissionStrings: ["task;read", "citizen;read"],
+  });
+  const worker = await createCitizen(prisma, { handle: "silc-arbeiter" });
+  const task = await createSilcTask(prisma, manager, worker, "Konvoi sichern");
+
+  await signIn(manager.user);
+  await page.goto(`/app/tasks/${task.id}`);
+  const assignmentsModal = modal(page, "Zuordnung bearbeiten");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Zuordnung bearbeiten" }).first(),
+    assignmentsModal,
+  );
+
+  await prisma.task.update({
+    where: { id: task.id },
+    data: {
+      completedAt: new Date(),
+      completedById: worker.entity.id,
+      completionists: { connect: { id: worker.entity.id } },
+    },
+  });
+  await assignmentsModal.getByRole("button", { name: "Speichern" }).click();
+
+  // The refresh shows the completed task, and the modal of the open task is gone
+  await expect(page.getByText("Erfüllt durch")).toBeVisible();
+  await expect(assignmentsModal).not.toBeVisible();
+  await expect(page.getByText(CLOSED_TASK_TEXT)).toBeVisible();
+});
+
+test("taking on a task whose last place a different citizen took shows the message and that citizen", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const creator = await createCitizen(prisma, {
+    handle: "task-auftraggeber",
+    permissionStrings: ["task;read"],
+  });
+  const viewer = await createCitizen(prisma, {
+    handle: "task-annehmer",
+    permissionStrings: ["task;read"],
+  });
+  const competitor = await createCitizen(prisma, {
+    handle: "schnellere-annehmerin",
+  });
+  const task = await createTextTask(prisma, creator, "Frachter eskortieren", {
+    assignmentLimit: 1,
+  });
+  /**
+   * The first visit of a new task marks it as read, which refreshes the page
+   * at an unknown time. A read task keeps the refresh of the action the only
+   * one.
+   */
+  await prisma.readMarker.create({
+    data: { citizenId: viewer.entity.id, taskId: task.id },
+  });
+
+  await signIn(viewer.user);
+  await page.goto(`/app/tasks/${task.id}`);
+  const takeOnButton = page.getByRole("button", { name: "Annehmen" });
+  await expect(takeOnButton).toBeEnabled();
+  /** One click sends the action once: a second toast fails the check below */
+  await waitForAppShellHydration(page);
+
+  await prisma.taskAssignment.create({
+    data: {
+      taskId: task.id,
+      citizenId: competitor.entity.id,
+      createdById: competitor.entity.id,
+    },
+  });
+  await takeOnButton.click();
+  await expect(
+    page.getByText("Dieser Task kann nicht von Weiteren angenommen werden."),
+  ).toBeVisible();
+
+  // The refresh shows the citizen who took the last place
+  await expect(
+    page.getByRole("main").getByText("schnellere-annehmerin"),
+  ).toBeVisible();
+  await expect(takeOnButton).toBeDisabled();
+  expect(
+    await prisma.taskAssignment.count({
+      where: { taskId: task.id, citizenId: viewer.entity.id },
+    }),
   ).toBe(0);
 });
 
@@ -540,10 +688,20 @@ test("a citizen takes a task on, gives it up, and a manager cancels and deletes 
     deleteDialog,
   );
   await deleteDialog.getByRole("button", { name: "Löschen" }).click();
+  await expect(page.getByText("Keine Tasks gefunden")).toBeVisible();
+  await expect(page).toHaveURL(/\/app\/tasks$/);
 
   await expect
     .poll(() => prisma.task.findUniqueOrThrow({ where: { id: task.id } }))
     .toMatchObject({ deletedAt: expect.any(Date) });
+
+  // The back/forward cache must not show the deleted task again
+  await page.goBack();
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Task löschen" }),
+  ).not.toBeVisible();
+  await expect(page).toHaveURL(new RegExp(`/app/tasks/${task.id}$`));
 
   await page.goto("/app/tasks?status=closed");
   await expect(page.getByText("Keine Tasks gefunden")).toBeVisible();
@@ -572,6 +730,142 @@ const createTextTask = (
       ...data,
     },
   });
+
+/**
+ * Opens a new public task as a citizen who reads tasks, and waits until a
+ * single click on the page runs its action. The refresh of that action must
+ * be the only one: the read marker stops the refresh of the first visit, and
+ * the test changes the data only after the visit marked the task as read
+ * (the action of the visit refreshes the page when it finds the task gone).
+ */
+const openTaskAsCitizen = async (
+  page: Page,
+  prisma: PrismaClient,
+  signIn: (user: TestCitizen["user"]) => Promise<void>,
+  { isTakenOn }: { readonly isTakenOn: boolean },
+) => {
+  const creator = await createCitizen(prisma, {
+    handle: "task-auftraggeber",
+    permissionStrings: ["task;read"],
+  });
+  const citizen = await createCitizen(prisma, {
+    handle: "task-annehmer",
+    permissionStrings: ["task;read"],
+  });
+  const task = await createTextTask(prisma, creator, "Frachter eskortieren", {
+    ...(isTakenOn && {
+      assignments: {
+        create: {
+          citizenId: citizen.entity.id,
+          createdById: citizen.entity.id,
+        },
+      },
+    }),
+  });
+  await prisma.readMarker.create({
+    data: { citizenId: citizen.entity.id, taskId: task.id },
+  });
+
+  await signIn(citizen.user);
+  /**
+   * The only POST of the visit is the server action of the read marker. Its
+   * response starts after the action ran on the server.
+   */
+  const markAsReadResponse = page.waitForResponse(
+    (response) =>
+      response.request().method() === "POST" &&
+      new URL(response.url()).pathname === `/app/tasks/${task.id}`,
+  );
+  await page.goto(`/app/tasks/${task.id}`);
+  await markAsReadResponse;
+  await expect(
+    page.getByRole("button", { name: isTakenOn ? "Aufgeben" : "Annehmen" }),
+  ).toBeEnabled();
+  await waitForAppShellHydration(page);
+
+  return { creator, citizen, task };
+};
+
+test("taking on a task that a different user deleted shows the message and that the task is gone", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const { creator, task } = await openTaskAsCitizen(page, prisma, signIn, {
+    isTakenOn: false,
+  });
+
+  await prisma.task.update({
+    where: { id: task.id },
+    data: { deletedAt: new Date(), deletedById: creator.entity.id },
+  });
+  await page.getByRole("button", { name: "Annehmen" }).click();
+
+  await expect(page.getByText("Task nicht gefunden")).toBeVisible();
+  // The refresh shows that the task is gone
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
+  expect(
+    await prisma.taskAssignment.count({ where: { taskId: task.id } }),
+  ).toBe(0);
+});
+
+test("taking on a task that a different tab took on shows the message and the assignment", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const { citizen, task } = await openTaskAsCitizen(page, prisma, signIn, {
+    isTakenOn: false,
+  });
+
+  /** The second assignment of the click fails on the unique index */
+  await prisma.taskAssignment.create({
+    data: {
+      taskId: task.id,
+      citizenId: citizen.entity.id,
+      createdById: citizen.entity.id,
+    },
+  });
+  await page.getByRole("button", { name: "Annehmen" }).click();
+
+  await expect(
+    page.getByText("Du hast diesen Task bereits angenommen."),
+  ).toBeVisible();
+  // The refresh shows the assignment of the other tab
+  await expect(page.getByRole("button", { name: "Aufgeben" })).toBeEnabled();
+  expect(
+    await prisma.taskAssignment.count({ where: { taskId: task.id } }),
+  ).toBe(1);
+  expect(
+    await prisma.auditEvent.count({
+      where: { type: "TASK_SELF_ASSIGNMENT_CREATED" },
+    }),
+  ).toBe(0);
+});
+
+test("giving up a task that a different tab gave up shows the message and the open task", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const { task } = await openTaskAsCitizen(page, prisma, signIn, {
+    isTakenOn: true,
+  });
+
+  await prisma.taskAssignment.deleteMany({ where: { taskId: task.id } });
+  await page.getByRole("button", { name: "Aufgeben" }).click();
+
+  await expect(
+    page.getByText("Du hast diesen Task nicht angenommen."),
+  ).toBeVisible();
+  // The refresh shows that the task is not taken on
+  await expect(page.getByRole("button", { name: "Annehmen" })).toBeEnabled();
+  expect(
+    await prisma.auditEvent.count({
+      where: { type: "TASK_SELF_ASSIGNMENT_DELETED" },
+    }),
+  ).toBe(0);
+});
 
 test("a citizen sees exactly the tasks they may see, in each list and on the task page", async ({
   page,

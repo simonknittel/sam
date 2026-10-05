@@ -5,7 +5,7 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { wallTimeSchema } from "@/modules/common/utils/wallTimeSchema";
-import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import { triggerNotificationsAfterSave } from "@/modules/notifications/utils/triggerNotification";
 import { MAX_SILC_VALUE } from "@/modules/silc/utils/silcValueLimit";
 import {
   TaskRewardType,
@@ -13,7 +13,7 @@ import {
   type Prisma,
   type Task,
 } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { TASK_DESCRIPTION_MAX_LENGTH } from "../utils/taskConstraints";
 
@@ -189,6 +189,8 @@ export const createTask = createAuthenticatedAction(
         );
     }
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.TASK_CREATED,
@@ -204,7 +206,7 @@ export const createTask = createAuthenticatedAction(
     /**
      * Trigger notifications
      */
-    await triggerNotifications([
+    const areNotificationsSent = await triggerNotificationsAfterSave([
       {
         type: "TaskCreated",
         payload: {
@@ -214,15 +216,13 @@ export const createTask = createAuthenticatedAction(
     ]);
 
     /**
-     * Revalidate cache(s)
-     */
-    revalidatePath("/app/tasks");
-
-    /**
      * Respond with the result
      */
     return {
       success: "Erfolgreich gespeichert.",
+      ...(areNotificationsSent
+        ? {}
+        : { warning: t("Common.notificationsFailed") }),
     };
   },
   {

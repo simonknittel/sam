@@ -2,15 +2,15 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { EventSource } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { EVENT_MANAGE_GUARD_SELECT } from "../queries/eventManageGuardSelect";
 import {
   DiscordSyncOutcome,
   removeDiscordEventPublication,
 } from "../utils/discordPublishing";
-import { getEventPath } from "../utils/eventConstraints";
 import { isAllowedToManageEvent } from "../utils/isAllowedToManageEvent";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
 
@@ -33,13 +33,9 @@ export const unpublishEventFromDiscord = createAuthenticatedAction(
       },
       select: EVENT_MANAGE_GUARD_SELECT,
     });
-    if (!event)
-      return { error: "Event nicht gefunden", requestPayload: formData };
+    if (!event) return rejectConflict("Event nicht gefunden", formData);
     if (!isEventUpdatable(event))
-      return {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      };
+      return rejectConflict("Das Event ist bereits vorbei.", formData);
     if (!(await isAllowedToManageEvent(event)))
       return { error: t("Common.forbidden"), requestPayload: formData };
 
@@ -55,10 +51,7 @@ export const unpublishEventFromDiscord = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(getEventPath(event.id), "layout");
+    refresh();
 
     return {
       success:

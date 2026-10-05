@@ -2,9 +2,14 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import {
+  isPrismaError,
+  PrismaErrorCode,
+} from "@/modules/common/utils/isPrismaError";
+import { refresh } from "next/cache";
 import * as z from "zod";
 import { EVENT_FREEZE_WINDOW_SELECT } from "../queries/eventRelationSelects";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
@@ -27,6 +32,7 @@ export const deleteEventPositionApplicationForCurrentUser =
       const position = await prisma.eventPosition.findUnique({
         where: {
           id: data.positionId,
+          event: { deletedAt: null },
         },
         select: {
           id: true,
@@ -34,29 +40,42 @@ export const deleteEventPositionApplicationForCurrentUser =
         },
       });
       if (!position?.event)
-        return { error: "Posten nicht gefunden", requestPayload: formData };
+        return rejectConflict("Posten nicht gefunden", formData);
       if (!isEventUpdatable(position.event))
-        return {
-          error: "Das Event ist bereits vorbei.",
-          requestPayload: formData,
-        };
+        return rejectConflict("Das Event ist bereits vorbei.", formData);
 
       /**
        * Delete application
        */
-      const deletedApplication = await prisma.eventPositionApplication.delete({
-        where: {
-          positionId_citizenId: {
-            citizenId: authentication.session.entity.id,
-            positionId: data.positionId,
+      const deletedApplication = await prisma.eventPositionApplication
+        .delete({
+          where: {
+            positionId_citizenId: {
+              citizenId: authentication.session.entity.id,
+              positionId: data.positionId,
+            },
           },
-        },
-        select: {
-          id: true,
-          positionId: true,
-          citizenId: true,
-        },
-      });
+          select: {
+            id: true,
+            positionId: true,
+            citizenId: true,
+          },
+        })
+        .catch((error: unknown) => {
+          /**
+           * A different tab or the end of the participation removed the
+           * application before
+           */
+          if (isPrismaError(error, PrismaErrorCode.RecordNotFound)) return null;
+          throw error;
+        });
+      if (!deletedApplication)
+        return rejectConflict(
+          "Du hast für diesen Posten kein Interesse angemeldet.",
+          formData,
+        );
+
+      refresh();
 
       await createAuditEvents([
         {
@@ -70,11 +89,6 @@ export const deleteEventPositionApplicationForCurrentUser =
           createdById: authentication.session.user.id,
         },
       ]);
-
-      /**
-       * Revalidate cache(s)
-       */
-      revalidatePath(`/app/events/${position.event.id}/lineup`);
 
       /**
        * Respond with the result

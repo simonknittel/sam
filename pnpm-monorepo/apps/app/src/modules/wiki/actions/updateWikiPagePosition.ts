@@ -3,8 +3,8 @@
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { refresh } from "next/cache";
 import * as z from "zod";
-import { revalidateWikiScope } from "../queries/getWikiPageScopedContext";
 import { compareWikiPagesByOrder } from "../utils/compareWikiPagesByOrder";
 import { isEventWikiRootPage } from "../utils/isEventWikiRootPage";
 import { lockWikiPageTree } from "../utils/lockWikiPageTree";
@@ -12,8 +12,8 @@ import {
   buildWikiPageReparentAuditEvents,
   buildWikiPageReparentReset,
   isWikiPageReparentRefused,
+  rejectChangedWikiPageTree,
   validateWikiPageReparent,
-  WIKI_PAGE_TREE_CHANGED_ERROR,
 } from "../utils/reparentWikiPage";
 import { requireAdminableWikiPage } from "../utils/requireAdminableWikiPage";
 
@@ -47,9 +47,15 @@ export const updateWikiPagePosition = createAuthenticatedAction(
     if (isEventWikiRootPage(page))
       return { error: t("Common.badRequest"), requestPayload: formData };
 
-    const reference = context.pagesById.get(data.referenceId);
-    if (!reference || reference.deletedAt || reference.id === page.id)
+    if (data.referenceId === page.id)
       return { error: t("Common.badRequest"), requestPayload: formData };
+    /**
+     * A different user moved the reference page into the trash or deleted it
+     * after the sidebar showed it
+     */
+    const reference = context.pagesById.get(data.referenceId);
+    if (!reference || reference.deletedAt)
+      return rejectChangedWikiPageTree(formData);
 
     const newParentId =
       data.position === "inside" ? reference.id : reference.parentId;
@@ -114,14 +120,14 @@ export const updateWikiPagePosition = createAuthenticatedAction(
           ...updates,
         ]);
       } catch (error) {
+        /** A different move changed the tree before */
         if (isWikiPageReparentRefused(error))
-          return {
-            error: WIKI_PAGE_TREE_CHANGED_ERROR,
-            requestPayload: formData,
-          };
+          return rejectChangedWikiPageTree(formData);
         throw error;
       }
     }
+
+    refresh();
 
     if (reset)
       await createAuditEvents(
@@ -132,8 +138,6 @@ export const updateWikiPagePosition = createAuthenticatedAction(
           authentication.session.user.id,
         ),
       );
-
-    revalidateWikiScope(scoped);
 
     return {
       success: reset

@@ -4,9 +4,9 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import { triggerNotificationsAfterSave } from "@/modules/notifications/utils/triggerNotification";
 import { isAllowedWebPushEndpointUrl } from "@sam-monorepo/domain";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 const schema = z.object({
@@ -48,9 +48,6 @@ export const subscribeWebPush = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    /**
-     *
-     */
     const subscription = await prisma.webPushSubscription.upsert({
       where: {
         endpoint: data.subscription.endpoint,
@@ -70,6 +67,9 @@ export const subscribeWebPush = createAuthenticatedAction(
         citizenId: true,
       },
     });
+
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.WEB_PUSH_SUBSCRIBED,
@@ -82,9 +82,11 @@ export const subscribeWebPush = createAuthenticatedAction(
     ]);
 
     /**
-     * Trigger test notification
+     * The test notification only confirms the subscription, which is saved
+     * already. A failure must not make the user subscribe again: each new
+     * subscription of the browser gets a new endpoint.
      */
-    await triggerNotifications([
+    const notified = await triggerNotificationsAfterSave([
       {
         type: "WebPushSubscribed",
         payload: {
@@ -93,13 +95,9 @@ export const subscribeWebPush = createAuthenticatedAction(
       },
     ]);
 
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath("/app/account/notifications");
-
     return {
       success: t("Common.successfullySaved"),
+      ...(notified ? {} : { warning: t("Common.notificationsFailed") }),
     };
   },
 );

@@ -2,9 +2,10 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
 
 const schema = z.object({
@@ -33,11 +34,13 @@ export const deletePenaltyEntry = createAuthenticatedAction(
       where: { id: data.id },
       select: { deletedAt: true },
     });
-    if (existingEntry?.deletedAt)
-      return {
-        error: t("Common.notFound"),
-        requestPayload: formData,
-      };
+    if (existingEntry?.deletedAt) {
+      /**
+       * A different tab or user deleted the entry before, and the page must
+       * show it.
+       */
+      return rejectConflict(t("Common.notFound"), formData);
+    }
 
     /**
      * (Soft-)delete entry
@@ -56,6 +59,8 @@ export const deletePenaltyEntry = createAuthenticatedAction(
       },
     });
 
+    refresh();
+
     await createAuditEvents([
       {
         type: AuditEventType.PENALTY_ENTRY_DELETED,
@@ -68,14 +73,6 @@ export const deletePenaltyEntry = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(
-      `/app/spynet/citizen/${deletedEntry.citizenId}/penalty-points`,
-    );
-    revalidatePath("/app/penalty-points");
 
     /**
      * Respond with the result
