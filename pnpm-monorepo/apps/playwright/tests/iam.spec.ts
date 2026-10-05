@@ -6,6 +6,7 @@ import {
   FORBIDDEN_TEXT,
   modal,
   NOT_FOUND_TEXT,
+  RESOURCE_NOT_FOUND_TEXT,
   SAVED_TEXT,
   sectionByHeading,
   toggleLabel,
@@ -14,7 +15,6 @@ import {
 import { expect, test } from "../fixtures/test";
 
 /** The error of an action whose target a different user deleted */
-const RESOURCE_NOT_FOUND_TEXT = "Die gesuchte Ressource wurde nicht gefunden.";
 
 test("a role created and assigned through the UI grants its permission", async ({
   page,

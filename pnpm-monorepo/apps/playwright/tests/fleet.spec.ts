@@ -13,6 +13,7 @@ import {
   inlineEditorTrigger,
   modal,
   NOT_FOUND_TEXT,
+  RESOURCE_NOT_FOUND_TEXT,
   SAVED_TEXT,
   saveInlineEditor,
   statisticTile,
@@ -496,9 +497,7 @@ test("a series of a manufacturer that a different user deleted shows the error a
 
   /** The refresh removes the modal, thus the error shows as a toast */
   await saveSeriesButton.click();
-  await expect(
-    page.getByText("Die gesuchte Ressource wurde nicht gefunden."),
-  ).toBeVisible();
+  await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
   await expect(seriesModal).toHaveCount(0);
 

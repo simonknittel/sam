@@ -9,6 +9,7 @@ import {
   clickUntilUrl,
   clickUntilVisible,
   DELETED_TEXT,
+  RESOURCE_NOT_FOUND_TEXT,
   toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
@@ -161,8 +162,6 @@ test("a viewer with the confirm and read permissions sees all logs of these type
   await expect(tableRows(page)).toHaveCount(1);
   await expect(logContent(page, FALSE_REPORT_HANDLE)).toBeVisible();
 });
-
-const RESOURCE_NOT_FOUND_TEXT = "Die gesuchte Ressource wurde nicht gefunden.";
 
 const EDITOR_PERMISSIONS = [
   ...OTHER_TABLE_PERMISSIONS,

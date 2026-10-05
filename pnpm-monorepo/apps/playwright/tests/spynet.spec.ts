@@ -15,6 +15,7 @@ import {
   DELETED_TEXT,
   FORBIDDEN_TEXT,
   modal,
+  RESOURCE_NOT_FOUND_TEXT,
   SAVED_TEXT,
   sectionByHeading,
   toggleLabel,
@@ -384,9 +385,7 @@ test("deleting a settings record that a different user deleted shows the error a
   await expect(deleteDialog).toBeVisible();
   await deleteDialog.getByRole("button", { name: "Löschen" }).click();
 
-  await expect(
-    page.getByText("Die gesuchte Ressource wurde nicht gefunden."),
-  ).toBeVisible();
+  await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
   await expect(tile.getByText("Keine Notizarten vorhanden")).toBeVisible();
   expect(
     await prisma.auditEvent.count({ where: { type: "NOTE_TYPE_DELETED" } }),

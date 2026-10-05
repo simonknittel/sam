@@ -12,6 +12,7 @@ import {
   fillUntilVisible,
   FORBIDDEN_TEXT,
   modal,
+  RESOURCE_NOT_FOUND_TEXT,
   SAVED_TEXT,
   sectionByHeading,
   toggleLabel,
@@ -33,7 +34,6 @@ const ORGANIZATION_ADMIN_PERMISSIONS = [
 
 const REMOVED_TEXT = "Erfolgreich entfernt";
 const ALREADY_CONFIRMED_TEXT = "Der Eintrag wurde bereits bestätigt.";
-const NOT_FOUND_ERROR_TEXT = "Die gesuchte Ressource wurde nicht gefunden.";
 
 /** The tile counts its members in its heading, so it is matched loosely */
 const membershipsTile = (page: Page) => sectionByHeading(page, /^Mitglieder/);
@@ -282,7 +282,7 @@ test("a membership reported on the page of a citizen waits for its confirmation"
   await expect(dialog.getByLabel("Redacted")).toBeChecked();
   await dialog.getByRole("button", { name: "Speichern" }).click();
 
-  await expect(page.getByText(NOT_FOUND_ERROR_TEXT)).toBeVisible();
+  await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
   await expect(organizationInput).toHaveValue(unknownOrganizationId);
   await expect(dialog.getByLabel("Typ")).toHaveValue(
     OrganizationMembershipType.AFFILIATE,
@@ -604,7 +604,7 @@ test("a membership that a different tab removed before is not removed again", as
   );
   await removeMembership(page);
 
-  await expect(page.getByText(NOT_FOUND_ERROR_TEXT)).toBeVisible();
+  await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
   await expect(page.getByText("Keine Mitglieder")).toBeVisible();
   expect(await getActiveMembershipWriters(prisma, member.entity.id)).toEqual(
     writersBefore,
@@ -662,7 +662,7 @@ test("a deleted citizen gets no new membership", async ({
     .click();
 
   /** The same answer as for an unknown ID */
-  await expect(page.getByText(NOT_FOUND_ERROR_TEXT)).toBeVisible();
+  await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
   await expect(dialog).toBeVisible();
   expect(await prisma.organizationMembershipHistoryEntry.count()).toBe(0);
   expect(await prisma.activeOrganizationMembership.count()).toBe(0);
@@ -741,14 +741,14 @@ test("a citizen deleted while the page was open gets no removal and no decision"
   });
 
   await removeMembership(page);
-  await expect(page.getByText(NOT_FOUND_ERROR_TEXT)).toBeVisible();
+  await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
   /** The refresh shows the list without the deleted citizen */
   await expect(page.getByText("Keine Mitglieder")).toBeVisible();
 
   await unconfirmedRow(decisionTab, "org-geruecht")
     .getByRole("button", { name: "Bestätigen", exact: true })
     .click();
-  await expect(decisionTab.getByText(NOT_FOUND_ERROR_TEXT)).toBeVisible();
+  await expect(decisionTab.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
   /** After the refresh, the entry of the deleted citizen offers no decision */
   await expect(
     decisionTab.getByRole("row").filter({ hasText: "Unbestätigt" }),

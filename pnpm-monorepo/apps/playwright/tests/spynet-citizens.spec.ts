@@ -14,6 +14,7 @@ import {
   clickUntilVisible,
   DELETED_TEXT,
   modal,
+  RESOURCE_NOT_FOUND_TEXT,
   SAVED_TEXT,
   sectionByHeading,
   waitForAppShellHydration,
@@ -795,9 +796,7 @@ test("a note in a classification level that a different user deleted shows a mes
   await prisma.classificationLevel.delete({ where: { id: topSecret.id } });
 
   await notePanel.getByRole("button", { name: "Speichern" }).click();
-  await expect(
-    page.getByText("Die gesuchte Ressource wurde nicht gefunden."),
-  ).toBeVisible();
+  await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
   /** The refresh shows the one level that is left, thus no select */
   await expect(classificationLevelSelect).toHaveCount(0);
   await expect(contentInput).toHaveValue(noteContent);
@@ -858,9 +857,7 @@ test("a move of a note to a note type that a different user deleted shows a mess
   await prisma.noteType.delete({ where: { id: rumour.id } });
 
   await updateDialog.getByRole("button", { name: "Speichern" }).click();
-  await expect(
-    page.getByText("Die gesuchte Ressource wurde nicht gefunden."),
-  ).toBeVisible();
+  await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
   /** The refresh removes the deleted note type from the select and the tabs */
   await expect(
     noteTypeSelect.getByRole("option", { name: "Gerücht" }),
