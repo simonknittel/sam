@@ -53,15 +53,21 @@ export const updateFlow = createAuthenticatedAction(
      */
     const context = await getFlowContext();
     const flow = context?.flowsById.get(data.flowId);
-    if (!flow || flow.deletedAt) {
-      /** A different user deleted the flow before, and the page must show it */
+    const permissions = flow && context?.permissions.get(flow.id);
+    if (!flow || flow.deletedAt || !permissions?.canRead) {
+      /**
+       * A different user deleted the flow or took the read access away
+       * before, and the page must show it. A flow that the user cannot read
+       * gets the same answer as an unknown one, thus the answer does not show
+       * which flows exist.
+       */
       refresh();
       return {
         error: t("Common.notFound"),
         requestPayload: formData,
       };
     }
-    if (!context?.permissions.get(flow.id)?.canUpdate)
+    if (!permissions.canUpdate)
       return {
         error: t("Common.forbidden"),
         requestPayload: formData,
