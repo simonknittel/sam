@@ -8,13 +8,11 @@ import { Select } from "@/modules/common/components/form/Select";
 import { Tile } from "@/modules/common/components/Tile";
 import { OnboardingTargetId } from "@/modules/onboarding/utils/targets";
 import {
-  startTransition,
   useId,
   useMemo,
   useState,
   type ChangeEvent,
-  type FormEventHandler,
-} from "react";
+  } from "react";
 import { FaSave } from "react-icons/fa";
 import { updateMyProfile } from "../actions/updateMyProfile";
 import {
@@ -85,7 +83,7 @@ export const ProfileForm = ({
   birthdayDay,
   birthdayMonth,
 }: Props) => {
-  const { state, formAction, isPending } = useAction(updateMyProfile, {
+  const { state, isPending, submitWithoutReset } = useAction(updateMyProfile, {
     errorToast: false,
   });
 
@@ -125,18 +123,6 @@ export const ProfileForm = ({
       setCurrentDay(String(nextMaximumDay));
   };
 
-  /**
-   * Submitted by hand rather than through `<form action>`: React resets a
-   * form once its action resolves, which snaps every select back to the
-   * option the server rendered as selected. The component's state does not
-   * change with it, so React never writes the DOM back and the selects end
-   * up showing the values the profile had before the save.
-   */
-  const handleSubmit: FormEventHandler<HTMLFormElement> = (event) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    startTransition(() => formAction(formData));
-  };
 
   return (
     <Tile
@@ -144,7 +130,7 @@ export const ProfileForm = ({
       subheading="Diese Angaben sehen alle Citizens, die dein Profil öffnen können."
     >
       <form
-        onSubmit={handleSubmit}
+        onSubmit={submitWithoutReset}
         data-onboarding-target={OnboardingTargetId.ProfileForm}
       >
         <label htmlFor={timezoneInputId} className="mb-2 block text-white/90">

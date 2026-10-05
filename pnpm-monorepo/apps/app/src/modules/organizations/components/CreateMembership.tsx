@@ -13,7 +13,7 @@ import {
   OrganizationMembershipType,
   OrganizationMembershipVisibility,
 } from "@sam-monorepo/database/browser";
-import { startTransition, useId, useState, type FormEventHandler } from "react";
+import { useId, useState } from "react";
 import { FaPlus, FaSave } from "react-icons/fa";
 import { createOrganizationMembership } from "../actions/createOrganizationMembership";
 
@@ -35,7 +35,7 @@ export const CreateMembership = ({
   citizenId,
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { formAction, isPending } = useAction(createOrganizationMembership, {
+  const { isPending, submitWithoutReset } = useAction(createOrganizationMembership, {
     onSuccess: () => setIsOpen(false),
   });
   const typeInputId = useId();
@@ -45,20 +45,6 @@ export const CreateMembership = ({
     ? "Citizen hinzufügen"
     : "Organisation hinzufügen";
 
-  /**
-   * Submitted by hand rather than through `<form action>`: React resets a
-   * form after its action, and the select then shows its first option again,
-   * also after an error. The form data includes the value of the clicked
-   * submit button.
-   */
-  const handleSubmit: FormEventHandler<HTMLFormElement> = (event) => {
-    event.preventDefault();
-    const formData = new FormData(
-      event.currentTarget,
-      (event.nativeEvent as SubmitEvent).submitter,
-    );
-    startTransition(() => formAction(formData));
-  };
 
   return (
     <>
@@ -77,7 +63,7 @@ export const CreateMembership = ({
         className="w-120"
         heading={<h2>{counterpartLabel}</h2>}
       >
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={submitWithoutReset}>
           {organizationId ? (
             <input type="hidden" name="organizationId" value={organizationId} />
           ) : (

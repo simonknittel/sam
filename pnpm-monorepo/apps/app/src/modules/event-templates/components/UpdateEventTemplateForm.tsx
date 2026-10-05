@@ -17,7 +17,7 @@ import {
   type EventDiscordPublishTarget,
 } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
-import { startTransition, useId, useState, type FormEventHandler } from "react";
+import { useId, useState } from "react";
 import { FaGlobe, FaLock, FaSave } from "react-icons/fa";
 import { updateEventTemplate } from "../actions/updateEventTemplate";
 import { EVENT_TEMPLATE_NAME_MAX_LENGTH } from "../utils/eventTemplateConstraints";
@@ -56,28 +56,16 @@ export const UpdateEventTemplateForm = ({
    * The errors show as toasts: the refresh after a conflict, for example a
    * template that a different user deleted, can remove this form.
    */
-  const { formAction, isPending } = useAction(updateEventTemplate);
+  const { isPending, submitWithoutReset } = useAction(updateEventTemplate);
   const [visibility, setVisibility] = useState<string>(template.visibility);
   const [isPublishing, setIsPublishing] = useState(
     template.discordPublishTarget !== null,
   );
   const discordCheckboxId = useId();
 
-  /**
-   * Submitted by hand rather than through `<form action>`: React resets a
-   * form once its action resolves, which snaps the publish checkbox, its
-   * target and the picked channel back to what the server rendered. The
-   * state of this component does not change with it, so the form ends up
-   * saying something else than what was just saved (see `ProfileForm`).
-   */
-  const handleSubmit: FormEventHandler<HTMLFormElement> = (event) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    startTransition(() => formAction(formData));
-  };
 
   return (
-    <form onSubmit={handleSubmit} className={clsx(className)}>
+    <form onSubmit={submitWithoutReset} className={clsx(className)}>
       <input type="hidden" name="templateId" value={template.id} />
 
       <TextInput
