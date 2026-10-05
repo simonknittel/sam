@@ -216,6 +216,13 @@ test("two moves at the same time cannot put a page below itself", async ({
     ),
   ).toBeVisible();
   /**
+   * The dialog loads its pages again: the second page is now below the first
+   * page, thus no new place for it
+   */
+  await expect(
+    moveDialog.locator("option").filter({ hasText: "Zweite Seite" }),
+  ).toHaveCount(0);
+  /**
    * The error also refreshes the page: the sidebar tree shows the second
    * page below the first page, where the parallel move put it. The open
    * dialog hides the tree from the accessibility tree, thus close it first.

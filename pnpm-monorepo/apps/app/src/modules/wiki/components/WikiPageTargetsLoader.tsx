@@ -1,5 +1,6 @@
 "use client";
 
+import type { ActionResponse } from "@/modules/actions/utils/createAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Note from "@/modules/common/components/Note";
 import { api } from "@/trpc/react";
@@ -52,4 +53,21 @@ export const WikiPageTargetsLoader = ({
     );
 
   return children(data);
+};
+
+/**
+ * Wraps the action of a dialog with the pages of WikiPageTargetsLoader: after
+ * an error, the dialog loads the pages again. A different user can have
+ * changed the tree, and `refresh()` of the action does not load them again.
+ */
+export const useReloadWikiPageTargetsAfterError = (
+  action: (formData: FormData) => Promise<ActionResponse>,
+) => {
+  const utils = api.useUtils();
+
+  return async (formData: FormData) => {
+    const response = await action(formData);
+    if ("error" in response) void utils.wiki.getPageTargets.invalidate();
+    return response;
+  };
 };

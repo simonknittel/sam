@@ -9,7 +9,10 @@ import { useState } from "react";
 import { FaFolderOpen, FaSave } from "react-icons/fa";
 import { moveWikiPage } from "../actions/moveWikiPage";
 import { WikiPageSelect } from "./WikiPageSelect";
-import { WikiPageTargetsLoader } from "./WikiPageTargetsLoader";
+import {
+  useReloadWikiPageTargetsAfterError,
+  WikiPageTargetsLoader,
+} from "./WikiPageTargetsLoader";
 
 interface Props {
   readonly className?: string;
@@ -29,9 +32,10 @@ export const MoveWikiPageModal = ({
    * An error shows as a toast: when a different user deleted the page before,
    * the refreshed page has no modal anymore
    */
-  const { formAction } = useAction(moveWikiPage, {
-    onSuccess: () => setIsOpen(false),
-  });
+  const { formAction } = useAction(
+    useReloadWikiPageTargetsAfterError(moveWikiPage),
+    { onSuccess: () => setIsOpen(false) },
+  );
 
   return (
     <>

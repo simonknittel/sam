@@ -11,9 +11,11 @@ import { api } from "@/trpc/react";
 import { useId, useState } from "react";
 import { FaSave } from "react-icons/fa";
 import { createWikiPage } from "../actions/createWikiPage";
+import { chooseWikiParentId } from "../utils/chooseWikiParentId";
 import type { WikiPageTargetOption } from "../utils/getWikiPageTargets";
 import { useWikiPageHrefMode } from "./WikiPageHrefModeProvider";
 import { WikiPageSelect } from "./WikiPageSelect";
+import { useReloadWikiPageTargetsAfterError } from "./WikiPageTargetsLoader";
 
 interface Props {
   /** Visible pages the viewer manages */
@@ -39,15 +41,11 @@ export const CreateWikiPageForm = ({
 }: Props) => {
   /** Inside a variant embed the action redirects back into the embed */
   const { variantId } = useWikiPageHrefMode();
-  const [parentId, setParentId] = useState(() => {
-    if (
-      defaultParentId &&
-      targets.some((target) => target.id === defaultParentId)
-    )
-      return defaultParentId;
-    if (allowTopLevel || targets.length === 0) return "";
-    return targets[0].id;
-  });
+  const [chosenParentId, setParentId] = useState(() =>
+    chooseWikiParentId(targets, allowTopLevel, defaultParentId),
+  );
+  /** The pages load again after an error and can then miss the chosen page */
+  const parentId = chooseWikiParentId(targets, allowTopLevel, chosenParentId);
   const [copyFromPageId, setCopyFromPageId] = useState("");
   const parentSelectId = useId();
   const copySourceSelectId = useId();
@@ -66,10 +64,10 @@ export const CreateWikiPageForm = ({
    * A successful creation redirects to the new page; onSuccess closes the
    * modal so it isn't still open after the navigation.
    */
-  const { state, formAction } = useAction(createWikiPage, {
-    errorToast: false,
-    onSuccess,
-  });
+  const { state, formAction } = useAction(
+    useReloadWikiPageTargetsAfterError(createWikiPage),
+    { errorToast: false, onSuccess },
+  );
 
   if (!allowTopLevel && targets.length === 0)
     return (
