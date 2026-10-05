@@ -3,6 +3,7 @@ import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import { TextInput } from "@/modules/common/components/form/TextInput";
+import { api } from "@/trpc/react";
 import clsx from "clsx";
 import { useState } from "react";
 import { FaSave } from "react-icons/fa";
@@ -17,11 +18,20 @@ interface Props {
 export const CreateRoleForm = ({ className, onSuccess }: Props) => {
   /** Controlled, because a click on a suggestion sets the name */
   const [name, setName] = useState("");
+  const utils = api.useUtils();
   const { state, isPending, submitWithoutReset } = useAction(createRole, {
     errorToast: false,
-    onSuccess,
+    onSuccess: () => {
+      /**
+       * The refresh does not reload tRPC data. These role lists can stay on
+       * the page while this form shows, for example the role selector of
+       * the salaries.
+       */
+      void utils.roles.invalidate();
+      void utils.silc.getRolesForSalaries.invalidate();
+      onSuccess?.();
+    },
   });
-
 
   return (
     <form onSubmit={submitWithoutReset} className={clsx(className)}>
