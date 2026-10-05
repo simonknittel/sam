@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test";
 import {
   ConfirmationStatus,
   OrganizationMembershipType,
@@ -12,6 +13,7 @@ import {
   modal,
   SAVED_TEXT,
   sectionByHeading,
+  toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -27,6 +29,32 @@ const ORGANIZATION_ADMIN_PERMISSIONS = [
   "organizationMembership;manage",
   "citizen;read",
 ];
+
+const REMOVED_TEXT = "Erfolgreich entfernt";
+const ALREADY_CONFIRMED_TEXT = "Der Eintrag wurde bereits bestätigt.";
+const NOT_FOUND_ERROR_TEXT = "Die gesuchte Ressource wurde nicht gefunden.";
+
+/** The tile counts its members in its heading, so it is matched loosely */
+const membershipsTile = (page: Page) => sectionByHeading(page, /^Mitglieder/);
+
+const removeMembership = async (page: Page) => {
+  const dialog = page.getByRole("alertdialog", {
+    name: "Citizen aus der Organisation entfernen?",
+  });
+  await clickUntilVisible(
+    membershipsTile(page).getByRole("button", {
+      name: "Citizen aus der Organisation entfernen",
+    }),
+    dialog,
+  );
+  await dialog.getByRole("button", { name: "Entfernen" }).click();
+};
+
+/** The decision buttons of the entry that waits for its confirmation */
+const unconfirmedRow = (page: Page, handle: string) =>
+  page.getByRole("row").filter({ hasText: "Unbestätigt" }).filter({
+    hasText: handle,
+  });
 
 test("an organization is created, staffed and cleared out again", async ({
   page,
@@ -55,6 +83,7 @@ test("an organization is created, staffed and cleared out again", async ({
   await createDialog.getByRole("button", { name: "Anlegen" }).click();
 
   await expect(page).toHaveURL(/\/app\/spynet\/organization\/[a-z0-9]+$/);
+  await expect(createDialog).toHaveCount(0);
   const organization = await prisma.organization.findFirstOrThrow();
   expect(organization).toMatchObject({
     spectrumId: "TESTORG",
@@ -69,11 +98,9 @@ test("an organization is created, staffed and cleared out again", async ({
   /**
    * A confirmed membership, entered by its internal id
    */
-  /** The tile counts its members in its heading, so it is matched loosely */
-  const membershipsTile = sectionByHeading(page, /^Mitglieder/);
   const membershipDialog = modal(page, "Citizen hinzufügen");
   await clickUntilVisible(
-    membershipsTile.getByRole("button", { name: "Hinzufügen" }),
+    membershipsTile(page).getByRole("button", { name: "Hinzufügen" }),
     membershipDialog,
   );
   await membershipDialog
@@ -84,6 +111,7 @@ test("an organization is created, staffed and cleared out again", async ({
     .click();
 
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+  await expect(membershipDialog).toHaveCount(0);
   await expect(page.getByText("Mitglieder (1)")).toBeVisible();
   await expect(
     page.getByRole("link", { name: "org-mitglied" }).first(),
@@ -105,23 +133,17 @@ test("an organization is created, staffed and cleared out again", async ({
   });
 
   /**
-   * Removing the membership keeps the history but empties the tile. This one
-   * control still asks through the browser's own confirm dialog.
+   * Removing the membership keeps the history but empties the tile
    */
-  page.once("dialog", (dialog) => void dialog.accept());
-  await membershipsTile
-    .getByRole("button", { name: "Citizen aus der Organisation entfernen" })
-    .click();
+  await removeMembership(page);
 
-  await expect(page.getByText("Erfolgreich entfernt")).toBeVisible();
+  await expect(page.getByText(REMOVED_TEXT)).toBeVisible();
   await expect(page.getByText("Keine Mitglieder")).toBeVisible();
-  await expect
-    .poll(() =>
-      prisma.activeOrganizationMembership.count({
-        where: { organizationId: organization.id },
-      }),
-    )
-    .toBe(0);
+  expect(
+    await prisma.activeOrganizationMembership.count({
+      where: { organizationId: organization.id },
+    }),
+  ).toBe(0);
   /** LEFT ends the membership in the history only */
   expect(
     await prisma.organizationMembershipHistoryEntry.findMany({
@@ -147,7 +169,152 @@ test("an organization is created, staffed and cleared out again", async ({
   ]);
 });
 
-test("a reported membership becomes active with its confirmation", async ({
+test("an organization with a known Spectrum ID is not created again", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "spynet-organisator",
+    permissionStrings: ORGANIZATION_ADMIN_PERMISSIONS,
+  });
+  await prisma.organization.create({
+    data: {
+      name: "Testorganisation",
+      spectrumId: "TESTORG",
+      createdById: admin.entity.id,
+    },
+  });
+
+  await signIn(admin.user);
+  await page.goto("/app/spynet");
+
+  const createDialog = modal(page, "Neue Organisation");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Organisation" }),
+    createDialog,
+  );
+  await createDialog.getByLabel("Spectrum ID").fill("TESTORG");
+  await createDialog.getByLabel("Name").fill("Zweite Organisation");
+  await createDialog.getByRole("button", { name: "Anlegen" }).click();
+
+  /** The modal stays open with the error and the entered values */
+  await expect(
+    createDialog.getByText(
+      "Eine Organisation mit dieser Spectrum ID existiert bereits.",
+    ),
+  ).toBeVisible();
+  await expect(createDialog.getByLabel("Spectrum ID")).toHaveValue("TESTORG");
+  await expect(createDialog.getByLabel("Name")).toHaveValue(
+    "Zweite Organisation",
+  );
+  await expect(page).toHaveURL("/app/spynet");
+
+  expect(await prisma.organization.count()).toBe(1);
+  expect(
+    await prisma.auditEvent.count({ where: { type: "ORGANIZATION_CREATED" } }),
+  ).toBe(0);
+});
+
+test("a membership reported on the page of a citizen waits for its confirmation", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  /** Without the permission to confirm, a report stays unconfirmed */
+  const reporter = await createCitizen(prisma, {
+    handle: "spynet-melder",
+    permissionStrings: [
+      "citizen;read",
+      "organizationMembership;create",
+      "organizationMembership;read",
+    ],
+  });
+  const member = await createCitizen(prisma, { handle: "org-mitglied" });
+  const organization = await prisma.organization.create({
+    data: {
+      name: "Testorganisation",
+      spectrumId: "TESTORG",
+      createdById: reporter.entity.id,
+    },
+  });
+
+  await signIn(reporter.user);
+  await page.goto(`/app/spynet/citizen/${member.entity.id}/organizations`);
+  /** While the page streams, React keeps a hidden copy of the tile */
+  const noOrganizations = page
+    .getByText("Keine Organisationen")
+    .filter({ visible: true });
+  await expect(noOrganizations).toBeVisible();
+
+  const dialog = modal(page, "Organisation hinzufügen");
+  await clickUntilVisible(
+    sectionByHeading(page, "Aktuell").getByRole("button", {
+      name: "Hinzufügen",
+    }),
+    dialog,
+  );
+  await expect(
+    dialog.getByRole("button", { name: "Speichern und bestätigen" }),
+  ).toHaveCount(0);
+
+  /**
+   * An unknown organization: the modal stays open and keeps the values
+   */
+  const organizationInput = dialog.getByLabel("Organisation (Internal ID)");
+  const unknownOrganizationId = `c${"0".repeat(24)}`;
+  await organizationInput.fill(unknownOrganizationId);
+  await dialog.getByLabel("Typ").selectOption("Affiliate");
+  await toggleLabel(dialog, "Redacted").click();
+  await expect(dialog.getByLabel("Redacted")).toBeChecked();
+  await dialog.getByRole("button", { name: "Speichern" }).click();
+
+  await expect(page.getByText(NOT_FOUND_ERROR_TEXT)).toBeVisible();
+  await expect(organizationInput).toHaveValue(unknownOrganizationId);
+  await expect(dialog.getByLabel("Typ")).toHaveValue(
+    OrganizationMembershipType.AFFILIATE,
+  );
+  await expect(dialog.getByLabel("Redacted")).toBeChecked();
+
+  /**
+   * The correct organization
+   */
+  await organizationInput.fill(organization.id);
+  await dialog.getByRole("button", { name: "Speichern" }).click();
+
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+  await expect(dialog).toHaveCount(0);
+  expect(
+    await prisma.organizationMembershipHistoryEntry.findMany({
+      select: {
+        organizationId: true,
+        citizenId: true,
+        type: true,
+        visibility: true,
+        confirmed: true,
+        createdById: true,
+      },
+    }),
+  ).toEqual([
+    {
+      organizationId: organization.id,
+      citizenId: member.entity.id,
+      type: OrganizationMembershipType.AFFILIATE,
+      visibility: OrganizationMembershipVisibility.REDACTED,
+      confirmed: null,
+      createdById: reporter.entity.id,
+    },
+  ]);
+  expect(await prisma.activeOrganizationMembership.count()).toBe(0);
+  await expect(noOrganizations).toBeVisible();
+  expect(
+    await prisma.auditEvent.count({
+      where: { type: "ORGANIZATION_MEMBERSHIP_CREATED" },
+    }),
+  ).toBe(1);
+});
+
+test("a confirmed report becomes an active membership, a false report does not", async ({
   page,
   prisma,
   signIn,
@@ -157,18 +324,21 @@ test("a reported membership becomes active with its confirmation", async ({
     permissionStrings: ORGANIZATION_ADMIN_PERMISSIONS,
   });
   const member = await createCitizen(prisma, { handle: "org-mitglied" });
+  const rumoredMember = await createCitizen(prisma, {
+    handle: "org-geruecht",
+  });
   const organization = await prisma.organization.create({
     data: {
       name: "Testorganisation",
       spectrumId: "TESTORG",
       createdById: admin.entity.id,
       membershipHistoryEntries: {
-        create: {
-          citizenId: member.entity.id,
+        create: [member, rumoredMember].map((citizen) => ({
+          citizenId: citizen.entity.id,
           type: OrganizationMembershipType.AFFILIATE,
           visibility: OrganizationMembershipVisibility.PUBLIC,
           createdById: admin.entity.id,
-        },
+        })),
       },
     },
   });
@@ -179,13 +349,26 @@ test("a reported membership becomes active with its confirmation", async ({
 
   /** A second click would confirm again, thus the page must hydrate first */
   await waitForAppShellHydration(page);
-  await page
-    .getByRole("row")
-    .filter({ hasText: "Unbestätigt" })
+  await unconfirmedRow(page, "org-mitglied")
     .getByRole("button", { name: "Bestätigen" })
     .click();
 
   await expect(page.getByText("Mitglieder (1)")).toBeVisible();
+  await expect(unconfirmedRow(page, "org-mitglied")).toHaveCount(0);
+
+  await unconfirmedRow(page, "org-geruecht")
+    .getByRole("button", { name: "Falschmeldung" })
+    .click();
+
+  await expect(unconfirmedRow(page, "org-geruecht")).toHaveCount(0);
+  await expect(
+    page
+      .getByRole("row")
+      .filter({ hasText: "org-geruecht" })
+      .filter({ hasText: "Falschmeldung" }),
+  ).toBeVisible();
+  await expect(page.getByText("Mitglieder (1)")).toBeVisible();
+
   expect(
     await prisma.activeOrganizationMembership.findMany({
       where: { organizationId: organization.id },
@@ -197,11 +380,27 @@ test("a reported membership becomes active with its confirmation", async ({
       type: OrganizationMembershipType.AFFILIATE,
     },
   ]);
-
-  await expectAuditEvents(prisma, ["ORGANIZATION_MEMBERSHIP_CONFIRMED"]);
+  expect(
+    await prisma.organizationMembershipHistoryEntry.findFirstOrThrow({
+      where: { citizenId: rumoredMember.entity.id },
+      select: { confirmed: true, confirmedById: true },
+    }),
+  ).toEqual({
+    confirmed: ConfirmationStatus.FALSE_REPORT,
+    confirmedById: admin.entity.id,
+  });
+  await expect
+    .poll(() =>
+      prisma.auditEvent.count({
+        where: { type: "ORGANIZATION_MEMBERSHIP_CONFIRMED" },
+      }),
+    )
+    .toBe(2);
 });
 
-test("a second confirmation of a reported membership changes nothing", async ({
+test("two confirmations of a reported membership at the same time: one wins, the other gets a conflict", async ({
+  browser,
+  context,
   page,
   prisma,
   signIn,
@@ -211,7 +410,6 @@ test("a second confirmation of a reported membership changes nothing", async ({
     permissionStrings: ORGANIZATION_ADMIN_PERMISSIONS,
   });
   const member = await createCitizen(prisma, { handle: "org-mitglied" });
-  const otherCitizen = await createCitizen(prisma, { handle: "org-fremder" });
   const organization = await prisma.organization.create({
     data: {
       name: "Testorganisation",
@@ -231,26 +429,50 @@ test("a second confirmation of a reported membership changes nothing", async ({
 
   await signIn(admin.user);
 
-  const confirm = (citizenId: string) =>
-    page.request.patch(
-      `/api/spynet/organization/${organization.id}/membership/${citizenId}/confirm`,
-      {
-        data: { id: historyEntry.id, confirmed: ConfirmationStatus.CONFIRMED },
-      },
+  /**
+   * One client sends its server actions one after the other. Thus the race
+   * needs a second browser context, with the same session.
+   */
+  const secondContext = await browser.newContext();
+  try {
+    await secondContext.addCookies(await context.cookies());
+    const pages = [page, await secondContext.newPage()];
+
+    for (const currentPage of pages) {
+      await currentPage.goto(`/app/spynet/organization/${organization.id}`);
+      await expect(currentPage.getByText("Keine Mitglieder")).toBeVisible();
+      await waitForAppShellHydration(currentPage);
+    }
+
+    await Promise.all(
+      pages.map((currentPage) =>
+        unconfirmedRow(currentPage, "org-mitglied")
+          .getByRole("button", { name: "Bestätigen" })
+          .click(),
+      ),
     );
 
-  /** The entry must belong to the citizen and the organization of the URL */
-  const mismatchedResponse = await confirm(otherCitizen.entity.id);
-  expect(mismatchedResponse.status()).toBe(404);
+    const feedbacks = await Promise.all(
+      pages.map(async (currentPage) => {
+        const feedback = currentPage
+          .getByText(SAVED_TEXT)
+          .or(currentPage.getByText(ALREADY_CONFIRMED_TEXT));
+        await expect(feedback).toBeVisible();
+        const feedbackText = await feedback.innerText();
 
-  const responses = await Promise.all([
-    confirm(member.entity.id),
-    confirm(member.entity.id),
-  ]);
-  /** One confirmation wins. The other one finds the entry confirmed. */
-  expect(responses.map((response) => response.status()).toSorted()).toEqual([
-    200, 409,
-  ]);
+        /** The conflict also refreshes the page */
+        await expect(currentPage.getByText("Mitglieder (1)")).toBeVisible();
+
+        return feedbackText;
+      }),
+    );
+    /** One confirmation wins. The other one finds the entry confirmed. */
+    expect(feedbacks.toSorted()).toEqual(
+      [SAVED_TEXT, ALREADY_CONFIRMED_TEXT].toSorted(),
+    );
+  } finally {
+    await secondContext.close();
+  }
 
   expect(
     await prisma.activeOrganizationMembership.findMany({
@@ -275,6 +497,72 @@ test("a second confirmation of a reported membership changes nothing", async ({
   expect(
     await prisma.auditEvent.count({
       where: { type: "ORGANIZATION_MEMBERSHIP_CONFIRMED" },
+    }),
+  ).toBe(1);
+});
+
+test("a membership that a different tab removed before is not removed again", async ({
+  context,
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "spynet-organisator",
+    permissionStrings: ORGANIZATION_ADMIN_PERMISSIONS,
+  });
+  const member = await createCitizen(prisma, { handle: "org-mitglied" });
+  const organization = await prisma.organization.create({
+    data: {
+      name: "Testorganisation",
+      spectrumId: "TESTORG",
+      createdById: admin.entity.id,
+      membershipHistoryEntries: {
+        create: {
+          citizenId: member.entity.id,
+          type: OrganizationMembershipType.MAIN,
+          visibility: OrganizationMembershipVisibility.PUBLIC,
+          createdById: admin.entity.id,
+          confirmed: ConfirmationStatus.CONFIRMED,
+          confirmedAt: new Date(),
+          confirmedById: admin.entity.id,
+        },
+      },
+      activeMemberships: {
+        create: {
+          citizenId: member.entity.id,
+          type: OrganizationMembershipType.MAIN,
+          visibility: OrganizationMembershipVisibility.PUBLIC,
+        },
+      },
+    },
+  });
+
+  await signIn(admin.user);
+  const otherTab = await context.newPage();
+  for (const tab of [page, otherTab]) {
+    await tab.goto(`/app/spynet/organization/${organization.id}`);
+    await expect(tab.getByText("Mitglieder (1)")).toBeVisible();
+  }
+
+  await removeMembership(otherTab);
+  await expect(otherTab.getByText(REMOVED_TEXT)).toBeVisible();
+  await expect(otherTab.getByText("Keine Mitglieder")).toBeVisible();
+
+  /** The first tab still shows the member until its own request */
+  await expect(page.getByText("Mitglieder (1)")).toBeVisible();
+  await removeMembership(page);
+
+  await expect(page.getByText(NOT_FOUND_ERROR_TEXT)).toBeVisible();
+  await expect(page.getByText("Keine Mitglieder")).toBeVisible();
+  expect(
+    await prisma.organizationMembershipHistoryEntry.count({
+      where: { type: OrganizationMembershipType.LEFT },
+    }),
+  ).toBe(1);
+  expect(
+    await prisma.auditEvent.count({
+      where: { type: "ORGANIZATION_MEMBERSHIP_REMOVED" },
     }),
   ).toBe(1);
 });
