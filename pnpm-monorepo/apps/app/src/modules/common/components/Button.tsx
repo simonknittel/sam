@@ -15,7 +15,7 @@ export const Button = (props: Props) => {
     <button
       className={clsx(
         {
-          "flex items-center justify-center rounded-secondary font-mono uppercase enabled:cursor-pointer disabled:opacity-50 disabled:grayscale": true,
+          "flex items-center justify-center rounded-secondary font-mono uppercase outline-offset-4 outline-interaction-700 enabled:cursor-pointer enabled:focus-visible:outline-2 disabled:opacity-50 disabled:grayscale": true,
           "gap-2": ["primary", "secondary"].includes(variant || ""),
           "min-h-11 py-2 text-base font-bold": variant === "primary",
           "min-h-11 border py-2 text-base": variant === "secondary",
