@@ -4,6 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { Prisma } from "@sam-monorepo/database/client";
 import { refresh } from "next/cache";
 import * as z from "zod";
 
@@ -33,20 +34,42 @@ export const updateSingleRoleInheritance = createAuthenticatedAction(
       };
 
     /**
-     * Update role
+     * Update role. The update fails with P2025 when the role or the role to
+     * connect is gone.
      */
-    await prisma.role.update({
-      where: {
-        id: data.roleId,
-      },
-      data: {
-        inherits: data.checked
-          ? { connect: { id: data.inheritedRoleId } }
-          : { disconnect: { id: data.inheritedRoleId } },
-      },
-    });
+    const isUpdated = await prisma.role
+      .update({
+        where: {
+          id: data.roleId,
+        },
+        data: {
+          inherits: data.checked
+            ? { connect: { id: data.inheritedRoleId } }
+            : { disconnect: { id: data.inheritedRoleId } },
+        },
+        select: { id: true },
+      })
+      .then(() => true)
+      .catch((error: unknown) => {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2025"
+        )
+          return false;
+        throw error;
+      });
 
+    /**
+     * Also for the error below: then a different user deleted one of the
+     * roles, and the page must show it.
+     */
     refresh();
+
+    if (!isUpdated)
+      return {
+        error: t("Common.notFound"),
+        requestPayload: formData,
+      };
 
     await createAuditEvents([
       {

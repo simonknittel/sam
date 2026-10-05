@@ -12,7 +12,6 @@ import {
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Link } from "@/modules/common/components/Link";
-import { Note } from "@/modules/common/components/Note";
 import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
@@ -59,8 +58,11 @@ export const SingleRoleBadge = ({
 }: Props) => {
   const { roles } = useRolesContext();
   const authentication = useAuthentication();
+  /**
+   * The errors show as toasts: when a different user removed the role, the
+   * refresh removes this badge.
+   */
   const {
-    state: deleteRoleAssignmentState,
     formAction: deleteRoleAssignmentFormAction,
     isPending: isDeleteRoleAssignmentPending,
   } = useAction(deleteRoleAssignment, {
@@ -286,17 +288,6 @@ export const SingleRoleBadge = ({
                 }
                 confirmLabel="Entfernen"
               />
-
-              {deleteRoleAssignmentState &&
-                "error" in deleteRoleAssignmentState && (
-                  <Note
-                    type="error"
-                    message={deleteRoleAssignmentState.error}
-                    className={clsx("mt-4", {
-                      "animate-pulse": isDeleteRoleAssignmentPending,
-                    })}
-                  />
-                )}
             </form>
           </div>
         )}

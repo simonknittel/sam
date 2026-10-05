@@ -4,6 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { Prisma } from "@sam-monorepo/database/client";
 import { refresh } from "next/cache";
 import * as z from "zod";
 
@@ -28,27 +29,49 @@ export const updateSingleRolePermission = createAuthenticatedAction(
       };
 
     /**
-     * Update role
+     * Update role. The update fails with P2025 when the role is gone.
      */
-    if (data.checked === true) {
-      // A double click or a second admin must not create a duplicate
-      await prisma.permissionString.createMany({
-        data: {
-          roleId: data.roleId,
-          permissionString: data.permissionString,
-        },
-        skipDuplicates: true,
-      });
-    } else if (data.checked === false) {
-      await prisma.permissionString.deleteMany({
+    const isUpdated = await prisma.role
+      .update({
         where: {
-          roleId: data.roleId,
-          permissionString: data.permissionString,
+          id: data.roleId,
         },
+        data: {
+          permissionStrings: data.checked
+            ? {
+                createMany: {
+                  data: { permissionString: data.permissionString },
+                  // A double click or a second admin must not create a duplicate
+                  skipDuplicates: true,
+                },
+              }
+            : {
+                deleteMany: { permissionString: data.permissionString },
+              },
+        },
+        select: { id: true },
+      })
+      .then(() => true)
+      .catch((error: unknown) => {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2025"
+        )
+          return false;
+        throw error;
       });
-    }
 
+    /**
+     * Also for the error below: then a different user deleted the role, and
+     * the page must show it.
+     */
     refresh();
+
+    if (!isUpdated)
+      return {
+        error: t("Common.notFound"),
+        requestPayload: formData,
+      };
 
     await createAuditEvents([
       {

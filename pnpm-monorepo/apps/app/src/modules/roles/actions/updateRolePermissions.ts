@@ -4,6 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { Prisma } from "@sam-monorepo/database/client";
 import { refresh } from "next/cache";
 import * as z from "zod";
 
@@ -31,25 +32,47 @@ export const updateRolePermissions = createAuthenticatedAction(
       };
 
     /**
-     * Update role
+     * Update role. The update fails with P2025 when the role is gone.
      */
-    await prisma.$transaction([
-      prisma.permissionString.deleteMany({
+    const isUpdated = await prisma.role
+      .update({
         where: {
-          roleId: data.id,
+          id: data.id,
         },
-      }),
+        data: {
+          permissionStrings: {
+            deleteMany: {},
+            createMany: {
+              data: data.permissionStrings.map((permissionString) => ({
+                permissionString,
+              })),
+              skipDuplicates: true,
+            },
+          },
+        },
+        select: { id: true },
+      })
+      .then(() => true)
+      .catch((error: unknown) => {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2025"
+        )
+          return false;
+        throw error;
+      });
 
-      prisma.permissionString.createMany({
-        data: data.permissionStrings.map((permissionString) => ({
-          roleId: data.id,
-          permissionString,
-        })),
-        skipDuplicates: true,
-      }),
-    ]);
-
+    /**
+     * Also for the error below: then a different user deleted the role, and
+     * the page must show it.
+     */
     refresh();
+
+    if (!isUpdated)
+      return {
+        error: t("Common.notFound"),
+        requestPayload: formData,
+      };
 
     await createAuditEvents([
       {
