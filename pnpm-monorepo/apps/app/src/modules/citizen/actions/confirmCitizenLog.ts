@@ -13,9 +13,11 @@ import {
   ConfirmationValue,
   toConfirmationStatus,
 } from "@/modules/citizen/utils/citizenLogConfirmation";
+import { lockCitizen } from "@/modules/citizen/utils/lockCitizen";
 import { getNoteClassificationAttributes } from "@/modules/citizen/utils/notePermissionAttributes";
 import { syncCitizenIdentityAfterLogChange } from "@/modules/citizen/utils/syncCitizenIdentityAfterLogChange";
-import { ConfirmationStatus } from "@sam-monorepo/database/client";
+import { ConfirmationStatus, type Prisma } from "@sam-monorepo/database/client";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { refresh } from "next/cache";
 import * as z from "zod";
 
@@ -41,19 +43,24 @@ const ALREADY_DECIDED_ERROR = "Über diesen Eintrag wurde bereits entschieden.";
 
 /**
  * Confirms a log or marks it as a false report. Only a log without a decision
- * gets one: the UI never offers a change of a decision.
+ * gets one: the UI never offers a change of a decision. The logs of a deleted
+ * citizen are read only.
  */
 export const confirmCitizenLog = createAuthenticatedAction(
   "confirmCitizenLog",
   schema,
   async (formData, authentication, data, t) => {
-    const citizenLog = await prisma.citizenLog.findUnique({
+    const citizenLog = await prisma.citizenLog.findFirst({
       where: {
         id: data.id,
+        citizen: ACTIVE_CITIZEN_WHERE,
       },
       select: CITIZEN_LOG_GUARD_SELECT,
     });
-    /** A different user deleted the log, and the page must show it */
+    /**
+     * A different user deleted the log or its citizen, and the page must
+     * show it
+     */
     if (!citizenLog) return rejectConflict(t("Common.notFound"), formData);
 
     /**
@@ -63,18 +70,12 @@ export const confirmCitizenLog = createAuthenticatedAction(
     switch (citizenLog.type) {
       case "handle":
       case "teamspeak-id":
-        isAuthorized = await authentication.authorize(
-          citizenLog.type,
-          "confirm",
-        );
-        break;
-
       case "discord-id":
       case "citizen-id":
       case "community-moniker":
         isAuthorized = await authentication.authorize(
           citizenLog.type,
-          "create",
+          "confirm",
         );
         break;
 
@@ -99,9 +100,23 @@ export const confirmCitizenLog = createAuthenticatedAction(
         requestPayload: formData,
       };
 
+    /**
+     * The log as the permission check saw it. A different user who moves the
+     * note or deletes the log or its citizen after the check makes the write
+     * fail.
+     */
+    const checkedLogWhere = {
+      id: citizenLog.id,
+      noteTypeId: citizenLog.noteTypeId,
+      classificationLevelId: citizenLog.classificationLevelId,
+      citizen: ACTIVE_CITIZEN_WHERE,
+    } satisfies Prisma.CitizenLogWhereInput;
+
     const isUpdated = await prisma.$transaction(async (transaction) => {
+      await lockCitizen(transaction, citizenLog.citizenId);
+
       const { count } = await transaction.citizenLog.updateMany({
-        where: { id: citizenLog.id, confirmed: null },
+        where: { ...checkedLogWhere, confirmed: null },
         data: {
           confirmed: data.confirmed,
           confirmedAt: new Date(),
@@ -117,13 +132,13 @@ export const confirmCitizenLog = createAuthenticatedAction(
 
     if (!isUpdated) {
       /**
-       * A different user or tab decided or deleted the log after the page
-       * loaded, and the page must show it
+       * A different user or tab changed the log after the page loaded, and
+       * the page must show it. Only an unchanged log has a decision now.
        */
-      const isDeleted =
-        (await prisma.citizenLog.count({ where: { id: citizenLog.id } })) === 0;
+      const isAlreadyDecided =
+        (await prisma.citizenLog.count({ where: checkedLogWhere })) > 0;
       return rejectConflict(
-        isDeleted ? t("Common.notFound") : ALREADY_DECIDED_ERROR,
+        isAlreadyDecided ? ALREADY_DECIDED_ERROR : t("Common.notFound"),
         formData,
       );
     }

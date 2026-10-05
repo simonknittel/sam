@@ -6,12 +6,10 @@ import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { CITIZEN_LOG_GUARD_SELECT } from "@/modules/citizen/queries/citizenLogTableSelect";
+import { lockCitizen } from "@/modules/citizen/utils/lockCitizen";
 import { getNoteClassificationAttributes } from "@/modules/citizen/utils/notePermissionAttributes";
 import { syncCitizenIdentityAfterLogChange } from "@/modules/citizen/utils/syncCitizenIdentityAfterLogChange";
-import {
-  isPrismaError,
-  PrismaErrorCode,
-} from "@/modules/common/utils/isPrismaError";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { refresh } from "next/cache";
 import * as z from "zod";
 
@@ -19,17 +17,22 @@ const schema = z.object({
   id: z.cuid(),
 });
 
+/** The logs of a deleted citizen are read only */
 export const deleteCitizenLog = createAuthenticatedAction(
   "deleteCitizenLog",
   schema,
   async (formData, authentication, data, t) => {
-    const citizenLog = await prisma.citizenLog.findUnique({
+    const citizenLog = await prisma.citizenLog.findFirst({
       where: {
         id: data.id,
+        citizen: ACTIVE_CITIZEN_WHERE,
       },
       select: CITIZEN_LOG_GUARD_SELECT,
     });
-    /** A different user deleted the log, and the page must show it */
+    /**
+     * A different user deleted the log or its citizen, and the page must
+     * show it
+     */
     if (!citizenLog) return rejectConflict(t("Common.notFound"), formData);
 
     /**
@@ -69,24 +72,30 @@ export const deleteCitizenLog = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    /** The copies of the confirmed values change in the same transaction */
-    try {
-      await prisma.$transaction(async (transaction) => {
-        await transaction.citizenLog.delete({
-          where: {
-            id: citizenLog.id,
-          },
-          select: { id: true },
-        });
+    const isDeleted = await prisma.$transaction(async (transaction) => {
+      await lockCitizen(transaction, citizenLog.citizenId);
 
-        await syncCitizenIdentityAfterLogChange(citizenLog, transaction);
+      /**
+       * The log as the permission check saw it. A different user who moves
+       * the note or deletes the log or its citizen after the check makes the
+       * delete fail.
+       */
+      const { count } = await transaction.citizenLog.deleteMany({
+        where: {
+          id: citizenLog.id,
+          noteTypeId: citizenLog.noteTypeId,
+          classificationLevelId: citizenLog.classificationLevelId,
+          citizen: ACTIVE_CITIZEN_WHERE,
+        },
       });
-    } catch (error) {
-      /** A different user deleted the log after the read above */
-      if (isPrismaError(error, PrismaErrorCode.RecordNotFound))
-        return rejectConflict(t("Common.notFound"), formData);
-      throw error;
-    }
+      if (count === 0) return false;
+
+      /** The copies of the confirmed values change in the same transaction */
+      await syncCitizenIdentityAfterLogChange(citizenLog, transaction);
+      return true;
+    });
+    /** The page must show the change of the different user */
+    if (!isDeleted) return rejectConflict(t("Common.notFound"), formData);
 
     refresh();
 

@@ -11,6 +11,7 @@ import {
   isPrismaError,
   PrismaErrorCode,
 } from "@/modules/common/utils/isPrismaError";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { refresh } from "next/cache";
 import * as z from "zod";
 
@@ -20,18 +21,25 @@ const schema = z.object({
   classificationLevelId: z.cuid(),
 });
 
-/** Moves a note to a different note type or classification level */
+/**
+ * Moves a note to a different note type or classification level. The notes
+ * of a deleted citizen are read only.
+ */
 export const updateNote = createAuthenticatedAction(
   "updateNote",
   schema,
   async (formData, authentication, data, t) => {
-    const note = await prisma.citizenLog.findUnique({
+    const note = await prisma.citizenLog.findFirst({
       where: {
         id: data.id,
+        citizen: ACTIVE_CITIZEN_WHERE,
       },
       select: CITIZEN_LOG_GUARD_SELECT,
     });
-    /** A different user deleted the note, and the page must show it */
+    /**
+     * A different user deleted the note or its citizen, and the page must
+     * show it
+     */
     if (!note) return rejectConflict(t("Common.notFound"), formData);
 
     if (note.type !== "note")
@@ -60,27 +68,35 @@ export const updateNote = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    try {
-      await prisma.citizenLog.update({
-        where: { id: note.id },
+    /**
+     * The note as the permission check saw it. A different user who moves
+     * the note or deletes it or its citizen after the check makes the write
+     * fail.
+     */
+    const { count } = await prisma.citizenLog
+      .updateMany({
+        where: {
+          id: note.id,
+          noteTypeId: note.noteTypeId,
+          classificationLevelId: note.classificationLevelId,
+          citizen: ACTIVE_CITIZEN_WHERE,
+        },
         data: {
           noteTypeId: data.noteTypeId,
           classificationLevelId: data.classificationLevelId,
         },
-        select: { id: true },
+      })
+      .catch((error: unknown) => {
+        /**
+         * A different user deleted the new note type or classification level
+         * after the page loaded
+         */
+        if (isPrismaError(error, PrismaErrorCode.ForeignKeyConstraintFailed))
+          return { count: 0 };
+        throw error;
       });
-    } catch (error) {
-      /**
-       * A different user deleted the note after the read above, or the new
-       * note type or classification level after the page loaded
-       */
-      if (
-        isPrismaError(error, PrismaErrorCode.RecordNotFound) ||
-        isPrismaError(error, PrismaErrorCode.ForeignKeyConstraintFailed)
-      )
-        return rejectConflict(t("Common.notFound"), formData);
-      throw error;
-    }
+    /** The page must show the change of the different user */
+    if (count === 0) return rejectConflict(t("Common.notFound"), formData);
 
     refresh();
 
