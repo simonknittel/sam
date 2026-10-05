@@ -1,4 +1,5 @@
 import { prisma } from "@/db";
+import { lockCitizen } from "@/modules/citizen/utils/lockCitizen";
 import {
   ConfirmationStatus,
   OrganizationMembershipType,
@@ -8,29 +9,28 @@ import {
 } from "@sam-monorepo/database/client";
 
 /**
+ * Thrown inside the callback of `changeMembershipHistory()` to reject a
+ * change. It rolls the transaction back, thus the rejected change writes
+ * nothing.
+ */
+export class RejectedChangeError extends Error {}
+
+/**
  * Writes a change to the membership history of a citizen. The active
  * memberships come from the confirmed history entries, thus the same
  * transaction replays them. Use this function for each write to the
  * membership history.
  */
-/**
- * Thrown inside the callback of `changeMembershipHistory()` to reject a
- * change. It rolls the transaction back, thus the rejected change writes
- * nothing. The message is the answer to the user.
- */
-export class RejectedChangeError extends Error {}
-
 export const changeMembershipHistory = async <Result>(
   citizenId: Citizen["id"],
   change: (transaction: Prisma.TransactionClient) => Promise<Result>,
 ) =>
   prisma.$transaction(async (transaction) => {
     /**
-     * Two changes of the same citizen at the same time must replay one after
-     * the other. Else a replay does not see the other change, and the active
+     * Else a replay does not see a parallel change, and the active
      * memberships stay incorrect.
      */
-    await transaction.$queryRaw`SELECT 1 FROM "Citizen" WHERE "id" = ${citizenId} FOR NO KEY UPDATE`;
+    await lockCitizen(transaction, citizenId);
 
     const result = await change(transaction);
     await replayActiveMemberships(transaction, citizenId);
