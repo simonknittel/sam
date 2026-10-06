@@ -7,16 +7,13 @@ import { FaSave } from "react-icons/fa";
 
 interface Props {
   readonly className?: string;
-  readonly onSuccess?: () => void;
 }
 
-export const CreateOrganizationForm = ({ className, onSuccess }: Props) => {
+export const CreateOrganizationForm = ({ className }: Props) => {
+  /** No success hook: the redirect of the action closes the create modal */
   const { state, formAction, getDefaultValueWithFallback } = useAction(
     createOrganization,
-    {
-      errorToast: false,
-      onSuccess,
-    },
+    { errorToast: false },
   );
 
   return (

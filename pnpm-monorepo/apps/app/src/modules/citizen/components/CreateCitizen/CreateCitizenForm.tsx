@@ -10,16 +10,13 @@ import { createCitizen } from "../../actions/createCitizen";
 
 interface Props {
   readonly className?: string;
-  readonly onSuccess?: () => void;
 }
 
-export const CreateCitizenForm = ({ className, onSuccess }: Props) => {
+export const CreateCitizenForm = ({ className }: Props) => {
+  /** No success hook: the action redirects (see `createCitizen`) */
   const { state, formAction, getDefaultValueWithFallback } = useAction(
     createCitizen,
-    {
-      errorToast: false,
-      onSuccess,
-    },
+    { errorToast: false },
   );
 
   return (
