@@ -103,7 +103,7 @@ export const AddRoles = ({
                   label="Suche"
                   placeholder="Rolle suchen..."
                   value={query}
-                  onChange={(e) => setQuery(e.target.value)}
+                  onChange={(event) => setQuery(event.target.value)}
                   autoFocus
                   className="hidden"
                 />
