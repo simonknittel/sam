@@ -155,7 +155,13 @@ test("a role from the create menu shows in a role list that stays on the page", 
     permissionStrings: [
       "role;manage",
       "silcSetting;manage",
-      /** The rate tile of the settings page reads all balances */
+      /**
+       * Workaround for an app defect. Remove it when the defect is fixed:
+       * without this permission, the settings page is forbidden as a whole.
+       * The tile "aUEC Umrechnungskurs" reads the balances of all citizens,
+       * and the query calls forbidden() for the full page, not only for the
+       * tile.
+       */
       "silcBalanceOfOtherCitizen;read",
       "otherRole;read;roleId=*",
     ],

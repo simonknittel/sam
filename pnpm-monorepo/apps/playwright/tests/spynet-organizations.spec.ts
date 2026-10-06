@@ -6,10 +6,9 @@ import {
   type PrismaClient,
 } from "@sam-monorepo/database/client";
 import { expectAuditEvents } from "../fixtures/audit";
-import { countLockWaits } from "../fixtures/database";
+import { countLockWaits, startParallelChange } from "../fixtures/database";
 import { createCitizen } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   fillUntilVisible,
   FORBIDDEN_TEXT,
@@ -470,24 +469,13 @@ test("two confirmations of a reported membership at the same time: one wins, the
      * both confirmations wait for it. Thus the two confirmations run at the
      * same time, and only the lock sets their order.
      */
-    const { promise: rowIsHeld, resolve: holdRow } =
-      Promise.withResolvers<void>();
-    const { promise: rowCanBeReleased, resolve: releaseRow } =
-      Promise.withResolvers<void>();
-    const rowLock = prisma.$transaction(
-      async (transaction) => {
-        await transaction.$queryRaw`
-          SELECT 1 FROM "Citizen" WHERE "id" = ${member.entity.id}
-          FOR NO KEY UPDATE
-        `;
-        holdRow();
-        await rowCanBeReleased;
-      },
-      /** Longer than the clicks and the poll below, which wait for the lock */
-      { timeout: ACTION_FEEDBACK_TIMEOUT * 2 },
+    const citizenLock = await startParallelChange(
+      prisma,
+      (transaction) => transaction.$queryRaw`
+        SELECT 1 FROM "Citizen" WHERE "id" = ${member.entity.id}
+        FOR NO KEY UPDATE
+      `,
     );
-    await rowIsHeld;
-
     try {
       await Promise.all(
         pages.map((currentPage) =>
@@ -496,10 +484,13 @@ test("two confirmations of a reported membership at the same time: one wins, the
             .click(),
         ),
       );
+      /**
+       * The second confirmation waits for the first one, not for the lock of
+       * the test. Thus count all waits.
+       */
       await expect.poll(() => countLockWaits(prisma)).toBe(2);
     } finally {
-      releaseRow();
-      await rowLock;
+      await citizenLock.commit();
     }
 
     const feedbacks = await Promise.all(
