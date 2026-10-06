@@ -447,12 +447,11 @@ test("the notes table shows the change and delete buttons only with the permissi
   ).toHaveText(["Geheim"]);
   await page.keyboard.press("Escape");
   await expect(updateDialog).not.toBeVisible();
-  /** The menu of the row can stay open after the modal */
-  const actions = page.getByRole("dialog", { name: "Aktionen" });
-  await expect(async () => {
-    if (await actions.isVisible()) await page.keyboard.press("Escape");
-    await expect(actions).not.toBeVisible({ timeout: 1_000 });
-  }).toPass();
+  /** The close of the modal also closes the menu of its row */
+  await expect(
+    page.getByRole("dialog", { name: "Aktionen" }),
+  ).not.toBeVisible();
+  await expect(actionsButton(page, "Beobachtung über aktiver")).toBeFocused();
 
   /** Also the current values of the note */
   updateDialog = await openUpdateModal(page, "Gerücht über aktiver", 0);

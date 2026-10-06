@@ -253,18 +253,13 @@ const exerciseSettingsRecordCrud = async (
       .getByRole("listitem")
       .filter({ hasText: record })
       .getByRole("button", { name: "Aktionen" });
-  /**
-   * The row menu stays open behind the modal it opens and is still open once
-   * that modal closes again (reported as a finding) — so Escape closes it
-   * first, because clicking the trigger of an open menu shuts it instead.
-   */
+  /** The close of a modal also closes the row menu that opened it */
   const openRowAction = async (
     record: string,
     actionLabel: string,
     reaction: Locator,
   ) => {
     const actionButton = page.getByRole("button", { name: actionLabel });
-    await page.keyboard.press("Escape");
     await expect(actionButton).toHaveCount(0);
 
     await clickUntilVisible(actionsTrigger(record), actionButton);

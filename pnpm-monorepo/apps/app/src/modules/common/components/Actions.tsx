@@ -67,3 +67,6 @@ export function useActionsContext() {
     );
   return context;
 }
+
+/** The row menu around the component, or undefined outside of a row menu */
+export const useOptionalActionsContext = () => useContext(ActionContext);
