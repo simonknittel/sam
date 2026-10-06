@@ -45,6 +45,7 @@ export const UpdateVariantButton = ({ className, variant }: Props) => {
           <UpdateVariantModal
             onRequestClose={() => {
               setIsOpen(false);
+              // This removes the modal at once: it cannot close the menu
               actionsMenu.closePopover();
             }}
             variant={variant}

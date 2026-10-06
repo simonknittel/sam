@@ -3,7 +3,7 @@
 import { Dialog } from "@base-ui/react/dialog";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
-import { useEffect, type ReactNode } from "react";
+import { useLayoutEffect, type ReactNode } from "react";
 import { FaRegTimesCircle } from "react-icons/fa";
 import {
   useOptionalPopoverBaseUI,
@@ -32,9 +32,10 @@ export default function Modal({
   /**
    * A modal in a popover (for example in a row menu of `Actions`) is a part
    * of the content of the popover. The popover stays open while the modal is
-   * open.
+   * open. A layout effect holds the popover before the browser shows the
+   * modal.
    */
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!isDialogOpen || !popover) return;
 
     return popover.keepOpen();
@@ -53,8 +54,12 @@ export default function Modal({
   /**
    * A modal in a popover also closes the popover, for each type of close. It
    * closes the popover only after its own close: then the focus is back on
-   * the element in the popover that opened the modal, and the popover gives
-   * the focus to its trigger. A modal inside this modal does not see the
+   * the element in the popover that opened the modal. A popover that opened
+   * on a click then gives the focus to its trigger. A popover that opened on
+   * a hover does not control the focus, thus the focus goes to the body.
+   * A modal that its parent removes (and does not close through `isOpen`)
+   * does not get this event. Then the parent must close the popover (for
+   * example UpdateVariantButton). A modal inside this modal does not see the
    * popover.
    */
   const closePopover = (open: boolean) => {
