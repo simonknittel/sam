@@ -69,15 +69,13 @@ interface Props {
 }
 
 export const UploadsTable = async ({ className, searchParams }: Props) => {
-  const {
-    [UPLOAD_USAGE_PARAM]: usage,
-    [UPLOAD_FROM_PARAM]: from,
-    [UPLOAD_TO_PARAM]: to,
-    [UPLOAD_QUERY_PARAM]: query,
-    [UPLOAD_AUTHOR_PARAM]: createdById,
-    cursor,
-    direction,
-  } = await loadSearchParams(searchParams);
+  const searchParameters = await loadSearchParams(searchParams);
+  const usage = searchParameters[UPLOAD_USAGE_PARAM];
+  const from = searchParameters[UPLOAD_FROM_PARAM];
+  const to = searchParameters[UPLOAD_TO_PARAM];
+  const query = searchParameters[UPLOAD_QUERY_PARAM];
+  const createdById = searchParameters[UPLOAD_AUTHOR_PARAM];
+  const { cursor, direction } = searchParameters;
 
   const { uploads, canManage, nextCursor, prevCursor } = await getUploads(
     usage,

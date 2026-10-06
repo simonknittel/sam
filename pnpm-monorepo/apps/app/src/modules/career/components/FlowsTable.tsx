@@ -21,8 +21,9 @@ interface Props {
 }
 
 export const FlowsTable = async ({ searchParams }: Props) => {
-  const { [FLOW_STATUS_PARAM]: status, [FLOW_QUERY_PARAM]: query } =
-    await loadSearchParams(searchParams);
+  const searchParameters = await loadSearchParams(searchParams);
+  const status = searchParameters[FLOW_STATUS_PARAM];
+  const query = searchParameters[FLOW_QUERY_PARAM];
 
   const flows = await getManageableFlows(status, query);
 
