@@ -1,18 +1,16 @@
 "use client";
 
-import { UserRole } from "@sam-monorepo/database/browser";
 import {
   comparePermissionSets,
   type PermissionSet,
 } from "@sam-monorepo/permissions";
 import { useSession } from "next-auth/react";
-import {
-  ADMIN_MODE_COOKIE,
-  ADMIN_MODE_COOKIE_VALUE,
-} from "../utils/adminCookies";
+import { useContext } from "react";
+import { AdminModeContext } from "./AdminModeContext";
 
 export const useAuthentication = () => {
   const { data: session } = useSession();
+  const adminModeActive = useContext(AdminModeContext);
 
   /**
    * Authenticate
@@ -29,22 +27,8 @@ export const useAuthentication = () => {
   ) {
     if (!session) return false;
 
-    const adminEnabled =
-      typeof document !== "undefined" &&
-      document.cookie
-        .split(";")
-        .some(
-          (cookie) =>
-            cookie.trim() === `${ADMIN_MODE_COOKIE}=${ADMIN_MODE_COOKIE_VALUE}`,
-        );
-
-    // Same rule as `isAdminModeActive` on the server
-    if (
-      session.user.role === UserRole.ADMIN &&
-      !session.assumedByAdminId &&
-      adminEnabled
-    )
-      return session;
+    // Same rule as `authorize` on the server
+    if (adminModeActive) return operation === "negate" ? false : session;
 
     const result = comparePermissionSets(
       {
