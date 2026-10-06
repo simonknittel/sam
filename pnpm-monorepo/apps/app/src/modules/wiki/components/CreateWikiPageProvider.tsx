@@ -2,14 +2,7 @@
 
 import Modal from "@/modules/common/components/Modal";
 import { usePathname } from "next/navigation";
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 import {
   parseWikiClipboardCookie,
   serializeWikiClipboardClearCookie,
@@ -54,21 +47,15 @@ export const CreateWikiPageProvider = ({ children, allowTopLevel }: Props) => {
   const hrefMode = useWikiPageHrefMode();
   const [openState, setOpenState] = useState<OpenState | null>(null);
 
-  const openCreateWikiPageModal = useCallback(
-    (parentId?: string) => {
-      const activePageId = getActiveWikiPageId(hrefMode, pathname);
-      setOpenState({
-        parentId: parentId ?? activePageId,
-        clipboard: parseWikiClipboardCookie(document.cookie),
-      });
-    },
-    [pathname, hrefMode],
-  );
+  const openCreateWikiPageModal = (parentId?: string) => {
+    const activePageId = getActiveWikiPageId(hrefMode, pathname);
+    setOpenState({
+      parentId: parentId ?? activePageId,
+      clipboard: parseWikiClipboardCookie(document.cookie),
+    });
+  };
 
-  const value = useMemo(
-    () => ({ openCreateWikiPageModal }),
-    [openCreateWikiPageModal],
-  );
+  const value = { openCreateWikiPageModal };
 
   const discardClipboard = () => {
     document.cookie = serializeWikiClipboardClearCookie();

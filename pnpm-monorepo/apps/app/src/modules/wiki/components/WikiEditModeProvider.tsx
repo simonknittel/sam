@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 
 interface WikiEditModeContext {
   /** Whether the viewer has toggled the page into edit mode */
@@ -31,7 +25,7 @@ interface Props {
 export const WikiEditModeProvider = ({ children }: Props) => {
   const [isEditMode, setEditMode] = useState(false);
 
-  const value = useMemo(() => ({ isEditMode, setEditMode }), [isEditMode]);
+  const value = { isEditMode, setEditMode };
 
   return <WikiEditModeContext value={value}>{children}</WikiEditModeContext>;
 };

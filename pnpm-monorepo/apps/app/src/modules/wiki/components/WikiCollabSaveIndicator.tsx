@@ -70,11 +70,11 @@ export const WikiCollabSaveIndicator = ({
   const state =
     !isConnected && hasUnsyncedChanges ? WikiSaveState.Dirty : serverState;
 
-  const handleForceSave = useCallback(() => {
+  const handleForceSave = () => {
     provider.sendStateless(
       serializeWikiCollabStatelessMessage({ type: "forceSave" }),
     );
-  }, [provider]);
+  };
 
   return (
     <WikiSaveStateIndicator

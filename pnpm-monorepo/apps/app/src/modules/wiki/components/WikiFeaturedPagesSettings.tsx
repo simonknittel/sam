@@ -27,7 +27,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import clsx from "clsx";
-import { useCallback, useId, useState } from "react";
+import { useId, useState } from "react";
 import { FaSave, FaTrash } from "react-icons/fa";
 import { MdDragIndicator } from "react-icons/md";
 import { updateWikiFeaturedPages } from "../actions/updateWikiFeaturedPages";
@@ -75,10 +75,8 @@ export const WikiFeaturedPagesSettings = ({ initialPages, targets }: Props) => {
     setSelectedPageId("");
   };
 
-  const getPageTitle = useCallback(
-    (id: UniqueIdentifier) => pages.find((page) => page.id === id)?.title ?? "",
-    [pages],
-  );
+  const getPageTitle = (id: UniqueIdentifier) =>
+    pages.find((page) => page.id === id)?.title ?? "";
   const { sensors, accessibility } = useSortableList(getPageTitle);
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {

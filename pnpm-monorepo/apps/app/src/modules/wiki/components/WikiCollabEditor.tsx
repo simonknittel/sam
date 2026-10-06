@@ -374,16 +374,13 @@ const ConnectedEditor = ({
   );
 
   const [isEmbedModalOpen, setIsEmbedModalOpen] = useState(false);
-  const requestEmbed = useCallback(() => setIsEmbedModalOpen(true), []);
+  const requestEmbed = () => setIsEmbedModalOpen(true);
 
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
-  const requestLink = useCallback(() => setIsLinkModalOpen(true), []);
+  const requestLink = () => setIsLinkModalOpen(true);
 
   const [isVariantLinkModalOpen, setIsVariantLinkModalOpen] = useState(false);
-  const requestVariantLink = useCallback(
-    () => setIsVariantLinkModalOpen(true),
-    [],
-  );
+  const requestVariantLink = () => setIsVariantLinkModalOpen(true);
 
   const extensions = useWikiEditorExtensions({
     pageId,
