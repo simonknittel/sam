@@ -15,21 +15,26 @@ import { useId, useState } from "react";
 import { FaPen, FaSave } from "react-icons/fa";
 import { updateNote } from "../../actions/updateNote";
 
+/** The classification levels that the dialog offers for each note type */
+type ClassificationLevelsByNoteType = Readonly<
+  Partial<Record<NoteType["id"], readonly ClassificationLevel[]>>
+>;
+
 interface Props {
   readonly className?: string;
   readonly note: Pick<
     CitizenNote,
     "id" | "noteTypeId" | "classificationLevelId"
   >;
-  readonly noteTypes: NoteType[];
-  readonly classificationLevels: ClassificationLevel[];
+  readonly noteTypes: readonly NoteType[];
+  readonly classificationLevels: ClassificationLevelsByNoteType;
 }
 
 export const UpdateNoteModal = ({
   className,
   note,
-  noteTypes = [],
-  classificationLevels = [],
+  noteTypes,
+  classificationLevels,
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -66,10 +71,23 @@ interface UpdateNoteFormProps {
     CitizenNote,
     "id" | "noteTypeId" | "classificationLevelId"
   >;
-  readonly noteTypes: NoteType[];
-  readonly classificationLevels: ClassificationLevel[];
+  readonly noteTypes: readonly NoteType[];
+  readonly classificationLevels: ClassificationLevelsByNoteType;
   readonly onSuccess: () => void;
 }
+
+/**
+ * The value of a controlled select. A value that the select does not offer,
+ * for example after a refresh or after a change of the note type, changes to
+ * the first option, as the browser shows it.
+ */
+const getOfferedValue = (
+  options: readonly { readonly id: string }[],
+  value: string,
+) =>
+  options.some((option) => option.id === value)
+    ? value
+    : (options.at(0)?.id ?? "");
 
 /**
  * The closed modal does not render the form, thus each open starts with the
@@ -87,6 +105,22 @@ const UpdateNoteForm = ({
   const noteTypeSelectId = useId();
   const classificationLevelSelectId = useId();
 
+  /**
+   * Controlled, because the selected note type sets the options of the
+   * classification level
+   */
+  const [noteTypeId, setNoteTypeId] = useState(note.noteTypeId ?? "");
+  const [classificationLevelId, setClassificationLevelId] = useState(
+    note.classificationLevelId ?? "",
+  );
+  const selectedNoteTypeId = getOfferedValue(noteTypes, noteTypeId);
+  const classificationLevelOptions =
+    classificationLevels[selectedNoteTypeId] ?? [];
+  const selectedClassificationLevelId = getOfferedValue(
+    classificationLevelOptions,
+    classificationLevelId,
+  );
+
   return (
     <form onSubmit={submitWithoutReset}>
       <input type="hidden" name="id" value={note.id} />
@@ -99,7 +133,8 @@ const UpdateNoteForm = ({
         className="mt-2"
         id={noteTypeSelectId}
         name="noteTypeId"
-        defaultValue={note.noteTypeId ?? undefined}
+        value={selectedNoteTypeId}
+        onChange={(event) => setNoteTypeId(event.target.value)}
       >
         {noteTypes.map((noteType) => (
           <option key={noteType.id} value={noteType.id}>
@@ -116,9 +151,10 @@ const UpdateNoteForm = ({
         className="mt-2"
         id={classificationLevelSelectId}
         name="classificationLevelId"
-        defaultValue={note.classificationLevelId ?? undefined}
+        value={selectedClassificationLevelId}
+        onChange={(event) => setClassificationLevelId(event.target.value)}
       >
-        {classificationLevels.map((classificationLevel) => (
+        {classificationLevelOptions.map((classificationLevel) => (
           <option key={classificationLevel.id} value={classificationLevel.id}>
             {classificationLevel.name}
           </option>

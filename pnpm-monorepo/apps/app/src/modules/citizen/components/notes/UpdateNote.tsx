@@ -1,32 +1,8 @@
-import { requireAuthentication } from "@/modules/auth/server";
 import type { CitizenNote } from "@/modules/citizen/queries/citizenLogTableSelect";
 import { getAllClassificationLevels } from "@/modules/spynet/queries/getAllClassificationLevels";
 import { getAllNoteTypes } from "@/modules/spynet/queries/getAllNoteTypes";
 import { getCreatableClassificationLevelsDeduped } from "@/modules/spynet/utils/getAllClassificationLevels";
-import { cache } from "react";
 import { UpdateNoteModal } from "./UpdateNoteModal";
-
-/**
- * The note types in which the user may create a note, with the check of the
- * notes page of a citizen. The update of a note needs the same permission
- * for the new note type.
- */
-const getCreatableNoteTypesDeduped = cache(async () => {
-  const [authentication, allNoteTypes] = await Promise.all([
-    requireAuthentication(),
-    getAllNoteTypes(),
-  ]);
-
-  const isCreatable = await Promise.all(
-    allNoteTypes.map((noteType) =>
-      authentication.authorize("note", "create", [
-        { key: "noteTypeId", value: noteType.id },
-      ]),
-    ),
-  );
-
-  return allNoteTypes.filter((noteType, index) => isCreatable[index]);
-});
 
 /**
  * The options of a select: the values in which the user may create a note,
@@ -53,18 +29,6 @@ interface Props {
 }
 
 export const UpdateNote = async ({ note, withBullet = false }: Props) => {
-  const [
-    allNoteTypes,
-    creatableNoteTypes,
-    allClassificationLevels,
-    creatableClassificationLevels,
-  ] = await Promise.all([
-    getAllNoteTypes(),
-    getCreatableNoteTypesDeduped(),
-    getAllClassificationLevels(),
-    getCreatableClassificationLevelsDeduped(note.noteTypeId!),
-  ]);
-
   /**
    * Only the fields that the dialog reads go to the browser: a row of the
    * notes table also has the content, the citizen and the names of the
@@ -72,15 +36,43 @@ export const UpdateNote = async ({ note, withBullet = false }: Props) => {
    */
   const { id, noteTypeId, classificationLevelId } = note;
 
+  const [allNoteTypes, allClassificationLevels] = await Promise.all([
+    getAllNoteTypes(),
+    getAllClassificationLevels(),
+  ]);
+
+  /**
+   * The update of a note needs the permission to create a note in the new
+   * note type and classification level, with the check of the notes page of
+   * a citizen. Thus each note type has its own classification levels, and a
+   * different note type without one is no option.
+   */
+  const noteTypeOptions = (
+    await Promise.all(
+      allNoteTypes.map(async (noteType) => ({
+        noteType,
+        classificationLevels: getOptions(
+          allClassificationLevels,
+          await getCreatableClassificationLevelsDeduped(noteType.id),
+          noteType.id === noteTypeId ? classificationLevelId : null,
+        ),
+      })),
+    )
+  ).filter(
+    ({ noteType, classificationLevels }) =>
+      noteType.id === noteTypeId || classificationLevels.length > 0,
+  );
+
   const modal = (
     <UpdateNoteModal
       className={withBullet ? "h-auto self-center" : undefined}
       note={{ id, noteTypeId, classificationLevelId }}
-      noteTypes={getOptions(allNoteTypes, creatableNoteTypes, noteTypeId)}
-      classificationLevels={getOptions(
-        allClassificationLevels,
-        creatableClassificationLevels,
-        classificationLevelId,
+      noteTypes={noteTypeOptions.map(({ noteType }) => noteType)}
+      classificationLevels={Object.fromEntries(
+        noteTypeOptions.map(({ noteType, classificationLevels }) => [
+          noteType.id,
+          classificationLevels,
+        ]),
       )}
     />
   );
