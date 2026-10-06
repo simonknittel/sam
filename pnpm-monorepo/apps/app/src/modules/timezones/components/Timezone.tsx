@@ -27,7 +27,7 @@ export const Timezone = ({
   timezonePopoverChildren,
 }: Props) => {
   const date = useNow({ updateInterval: 1000 });
-  const timeZoneName = getActiveTimeZoneName(timeZone);
+  const timeZoneName = getActiveTimeZoneName(timeZone, date);
 
   return (
     <article

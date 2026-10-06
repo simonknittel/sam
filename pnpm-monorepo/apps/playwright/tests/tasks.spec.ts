@@ -7,6 +7,7 @@ import {
   assignRole,
   createCitizen,
   createRole,
+  ONE_MINUTE_MS,
   type TestCitizen,
 } from "../fixtures/factories";
 import {
@@ -1055,4 +1056,40 @@ test("a task that requires a role with levels is hidden and cannot be taken on b
     page.getByText("Piloten-Pruefung", { exact: true }),
   ).toBeVisible();
   await expect(page.getByRole("button", { name: "Annehmen" })).toBeEnabled();
+});
+
+test("a task in an open list shows that it expired", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const viewer = await createCitizen(prisma, {
+    handle: "task-beobachter",
+    permissionStrings: ["task;read"],
+  });
+  const task = await createTextTask(prisma, viewer, "Kurzer Auftrag", {
+    expiresAt: new Date(Date.now() + 2 * ONE_MINUTE_MS),
+  });
+  /** A read task does not refresh the page, which would render it again */
+  await prisma.readMarker.create({
+    data: { citizenId: viewer.entity.id, taskId: task.id },
+  });
+
+  await signIn(viewer.user);
+  /** The test moves the time of the page forward instead of waiting */
+  await page.clock.install();
+  await page.goto("/app/tasks");
+
+  const taskItem = page
+    .getByRole("article")
+    .filter({ hasText: "Kurzer Auftrag" });
+  await expect(taskItem.getByTitle(/^Ablaufdatum:/)).toBeVisible();
+  await expect(taskItem.getByText("Abgelaufen", { exact: true })).toHaveCount(
+    0,
+  );
+  /** Only the hydrated page has the clock that the test moves */
+  await waitForAppShellHydration(page);
+
+  await page.clock.fastForward(5 * ONE_MINUTE_MS);
+  await expect(taskItem.getByText("Abgelaufen", { exact: true })).toBeVisible();
 });

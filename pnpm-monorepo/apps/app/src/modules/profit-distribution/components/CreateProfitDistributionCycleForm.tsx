@@ -7,6 +7,7 @@ import { Note } from "@/modules/common/components/Note";
 import { RichText } from "@/modules/common/components/RichText";
 import { getLocalDateKey, ORGANIZATION_TIMEZONE } from "@sam-monorepo/domain";
 import clsx from "clsx";
+import { useNow } from "next-intl";
 import { useState } from "react";
 import { FaChevronDown, FaSave } from "react-icons/fa";
 import { createProfitDistributionCycle } from "../actions/createProfitDistributionCycle";
@@ -25,7 +26,9 @@ export const CreateProfitDistributionCycleForm = ({
   const [end, setEnd] = useState("");
   const [showInstructions, setShowInstructions] = useState(false);
 
-  const min = getLocalDateKey(new Date(), ORGANIZATION_TIMEZONE);
+  /** The form opens in a modal, thus the date of the opening is sufficient */
+  const openedAt = useNow();
+  const min = getLocalDateKey(openedAt, ORGANIZATION_TIMEZONE);
 
   return (
     <form action={formAction} className={clsx(className)}>
