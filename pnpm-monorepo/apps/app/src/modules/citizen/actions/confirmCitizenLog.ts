@@ -14,7 +14,7 @@ import {
   toConfirmationStatus,
 } from "@/modules/citizen/utils/citizenLogConfirmation";
 import { lockCitizen } from "@/modules/citizen/utils/lockCitizen";
-import { getNoteClassificationAttributes } from "@/modules/citizen/utils/notePermissionAttributes";
+import { getNotePermissionAttributes } from "@/modules/citizen/utils/notePermissionAttributes";
 import { syncCitizenIdentityAfterLogChange } from "@/modules/citizen/utils/syncCitizenIdentityAfterLogChange";
 import { ConfirmationStatus, type Prisma } from "@sam-monorepo/database/client";
 import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
@@ -41,6 +41,9 @@ const AUDIT_CONFIRMATION_BY_STATUS = {
 
 const ALREADY_DECIDED_ERROR = "Über diesen Eintrag wurde bereits entschieden.";
 
+const OWN_DISCORD_ID_ERROR =
+  "Du kannst deine eigene Discord ID nicht bestätigen. Das muss eine andere Person tun.";
+
 /**
  * Confirms a log or marks it as a false report. Only a log without a decision
  * gets one: the UI never offers a change of a decision. The logs of a deleted
@@ -55,7 +58,7 @@ export const confirmCitizenLog = createAuthenticatedAction(
         id: data.id,
         citizen: ACTIVE_CITIZEN_WHERE,
       },
-      select: CITIZEN_LOG_GUARD_SELECT,
+      select: { ...CITIZEN_LOG_GUARD_SELECT, confirmed: true, content: true },
     });
     /**
      * A different user deleted the log or its citizen, and the page must
@@ -83,7 +86,7 @@ export const confirmCitizenLog = createAuthenticatedAction(
         isAuthorized = await authentication.authorize(
           "note",
           "confirm",
-          getNoteClassificationAttributes(citizenLog),
+          getNotePermissionAttributes(citizenLog),
         );
         break;
 
@@ -97,6 +100,28 @@ export const confirmCitizenLog = createAuthenticatedAction(
     if (!isAuthorized)
       return {
         error: t("Common.forbidden"),
+        requestPayload: formData,
+      };
+
+    /**
+     * A confirmed Discord ID links the citizen to the login of the Discord
+     * account. A user who confirms their own Discord ID could thus move
+     * their login to a different citizen and get its roles.
+     */
+    if (
+      citizenLog.type === "discord-id" &&
+      data.confirmed === ConfirmationStatus.CONFIRMED &&
+      citizenLog.content &&
+      (await prisma.account.count({
+        where: {
+          provider: "discord",
+          providerAccountId: citizenLog.content,
+          userId: authentication.session.user.id,
+        },
+      })) > 0
+    )
+      return {
+        error: OWN_DISCORD_ID_ERROR,
         requestPayload: formData,
       };
 

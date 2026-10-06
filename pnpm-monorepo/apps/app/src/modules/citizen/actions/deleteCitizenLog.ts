@@ -7,7 +7,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { CITIZEN_LOG_GUARD_SELECT } from "@/modules/citizen/queries/citizenLogTableSelect";
 import { lockCitizen } from "@/modules/citizen/utils/lockCitizen";
-import { getNoteClassificationAttributes } from "@/modules/citizen/utils/notePermissionAttributes";
+import { getNotePermissionAttributes } from "@/modules/citizen/utils/notePermissionAttributes";
 import { syncCitizenIdentityAfterLogChange } from "@/modules/citizen/utils/syncCitizenIdentityAfterLogChange";
 import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { refresh } from "next/cache";
@@ -27,7 +27,7 @@ export const deleteCitizenLog = createAuthenticatedAction(
         id: data.id,
         citizen: ACTIVE_CITIZEN_WHERE,
       },
-      select: CITIZEN_LOG_GUARD_SELECT,
+      select: { ...CITIZEN_LOG_GUARD_SELECT, confirmed: true },
     });
     /**
      * A different user deleted the log or its citizen, and the page must
@@ -55,7 +55,7 @@ export const deleteCitizenLog = createAuthenticatedAction(
         isAuthorized = await authentication.authorize(
           "note",
           "delete",
-          getNoteClassificationAttributes(citizenLog),
+          getNotePermissionAttributes(citizenLog),
         );
         break;
 
@@ -77,14 +77,15 @@ export const deleteCitizenLog = createAuthenticatedAction(
 
       /**
        * The log as the permission check saw it. A different user who moves
-       * the note or deletes the log or its citizen after the check makes the
-       * delete fail.
+       * the note, decides about the log or deletes the log or its citizen
+       * after the check makes the delete fail.
        */
       const { count } = await transaction.citizenLog.deleteMany({
         where: {
           id: citizenLog.id,
           noteTypeId: citizenLog.noteTypeId,
           classificationLevelId: citizenLog.classificationLevelId,
+          confirmed: citizenLog.confirmed,
           citizen: ACTIVE_CITIZEN_WHERE,
         },
       });

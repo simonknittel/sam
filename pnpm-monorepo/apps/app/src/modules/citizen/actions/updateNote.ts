@@ -6,7 +6,8 @@ import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { CITIZEN_LOG_GUARD_SELECT } from "@/modules/citizen/queries/citizenLogTableSelect";
-import { getNoteClassificationAttributes } from "@/modules/citizen/utils/notePermissionAttributes";
+import { lockCitizen } from "@/modules/citizen/utils/lockCitizen";
+import { getNotePermissionAttributes } from "@/modules/citizen/utils/notePermissionAttributes";
 import {
   isPrismaError,
   PrismaErrorCode,
@@ -34,7 +35,7 @@ export const updateNote = createAuthenticatedAction(
         id: data.id,
         citizen: ACTIVE_CITIZEN_WHERE,
       },
-      select: CITIZEN_LOG_GUARD_SELECT,
+      select: { ...CITIZEN_LOG_GUARD_SELECT, confirmed: true },
     });
     /**
      * A different user deleted the note or its citizen, and the page must
@@ -56,7 +57,7 @@ export const updateNote = createAuthenticatedAction(
       !(await authentication.authorize(
         "note",
         "update",
-        getNoteClassificationAttributes(note),
+        getNotePermissionAttributes(note),
       )) ||
       !(await authentication.authorize("note", "create", [
         { key: "noteTypeId", value: data.noteTypeId },
@@ -68,23 +69,29 @@ export const updateNote = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    /**
-     * The note as the permission check saw it. A different user who moves
-     * the note or deletes it or its citizen after the check makes the write
-     * fail.
-     */
-    const { count } = await prisma.citizenLog
-      .updateMany({
-        where: {
-          id: note.id,
-          noteTypeId: note.noteTypeId,
-          classificationLevelId: note.classificationLevelId,
-          citizen: ACTIVE_CITIZEN_WHERE,
-        },
-        data: {
-          noteTypeId: data.noteTypeId,
-          classificationLevelId: data.classificationLevelId,
-        },
+    const isUpdated = await prisma
+      .$transaction(async (transaction) => {
+        await lockCitizen(transaction, note.citizenId);
+
+        /**
+         * The note as the permission check saw it. A different user who
+         * moves or decides the note or deletes it or its citizen after the
+         * check makes the write fail.
+         */
+        const { count } = await transaction.citizenLog.updateMany({
+          where: {
+            id: note.id,
+            noteTypeId: note.noteTypeId,
+            classificationLevelId: note.classificationLevelId,
+            confirmed: note.confirmed,
+            citizen: ACTIVE_CITIZEN_WHERE,
+          },
+          data: {
+            noteTypeId: data.noteTypeId,
+            classificationLevelId: data.classificationLevelId,
+          },
+        });
+        return count > 0;
       })
       .catch((error: unknown) => {
         /**
@@ -92,11 +99,11 @@ export const updateNote = createAuthenticatedAction(
          * after the page loaded
          */
         if (isPrismaError(error, PrismaErrorCode.ForeignKeyConstraintFailed))
-          return { count: 0 };
+          return false;
         throw error;
       });
     /** The page must show the change of the different user */
-    if (count === 0) return rejectConflict(t("Common.notFound"), formData);
+    if (!isUpdated) return rejectConflict(t("Common.notFound"), formData);
 
     refresh();
 
