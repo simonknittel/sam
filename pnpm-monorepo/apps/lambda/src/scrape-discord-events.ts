@@ -93,20 +93,20 @@ export const handler: ScheduledHandler = async () => {
       });
 
       if (existingEventFromDatabase) {
+        /**
+         * `!=` on purpose: the database has null where Discord leaves a
+         * field out
+         */
         const hasAnyChanges =
           existingEventFromDatabase.name !== futureEventFromDiscord.name ||
           existingEventFromDatabase.startTime.getTime() !==
             futureEventFromDiscord.scheduled_start_time.getTime() ||
-          // biome-ignore lint/suspicious/noDoubleEquals: <explanation>
           existingEventFromDatabase.endTime?.getTime() !=
             futureEventFromDiscord.scheduled_end_time?.getTime() ||
-          // biome-ignore lint/suspicious/noDoubleEquals: <explanation>
           existingEventFromDatabase.description !=
             futureEventFromDiscord.description ||
-          // biome-ignore lint/suspicious/noDoubleEquals: <explanation>
           existingEventFromDatabase.location !=
             futureEventFromDiscord.entity_metadata.location ||
-          // biome-ignore lint/suspicious/noDoubleEquals: <explanation>
           existingEventFromDatabase.discordImage !=
             futureEventFromDiscord.image;
 
@@ -149,13 +149,10 @@ export const handler: ScheduledHandler = async () => {
           existingEventFromDatabase.name !== futureEventFromDiscord.name ||
           existingEventFromDatabase.startTime.getTime() !==
             futureEventFromDiscord.scheduled_start_time.getTime() ||
-          // biome-ignore lint/suspicious/noDoubleEquals: <explanation>
           existingEventFromDatabase.endTime?.getTime() !=
             futureEventFromDiscord.scheduled_end_time?.getTime() ||
-          // biome-ignore lint/suspicious/noDoubleEquals: <explanation>
           existingEventFromDatabase.description !=
             futureEventFromDiscord.description ||
-          // biome-ignore lint/suspicious/noDoubleEquals: <explanation>
           existingEventFromDatabase.location !=
             futureEventFromDiscord.entity_metadata.location;
 

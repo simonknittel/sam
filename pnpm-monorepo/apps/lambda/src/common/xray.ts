@@ -5,9 +5,8 @@ import {
 
 setContextMissingStrategy(
   process.env.ENVIRONMENT === "local"
-    ? () => {
-        // log.info("Local environment, skipping tracing with AWS X-Ray");
-      }
+    ? /** Locally, no X-Ray daemon runs: ignore the missing context */
+      () => {}
     : "LOG_ERROR",
 );
 
