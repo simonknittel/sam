@@ -2,7 +2,7 @@
 
 import { Tabs } from "@base-ui/react/tabs";
 import type { ReactNode } from "react";
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useState } from "react";
 
 interface TabsContextInterface {
   activeTab: string | null;
@@ -24,13 +24,10 @@ export const TabsProvider = ({
     initialActiveTab || null,
   );
 
-  const value = useMemo(
-    () => ({
-      activeTab,
-      setActiveTab,
-    }),
-    [activeTab, setActiveTab],
-  );
+  const value = {
+    activeTab,
+    setActiveTab,
+  };
 
   return (
     <TabsContext value={value}>

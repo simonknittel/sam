@@ -14,7 +14,7 @@ import {
   type Node as NodeType,
 } from "@xyflow/react";
 import clsx from "clsx";
-import { useCallback, useState, type ComponentType } from "react";
+import { useState, type ComponentType } from "react";
 import { FaPen } from "react-icons/fa";
 import { FaTrash } from "react-icons/fa6";
 import Markdown from "react-markdown";
@@ -37,13 +37,13 @@ export const Node: ComponentType<NodeProps<Markdown>> = (props) => {
   const { deleteElements } = useReactFlow<Markdown>();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const onEdit = useCallback(() => {
+  const onEdit = () => {
     setIsEditModalOpen((currentValue) => !currentValue);
-  }, []);
+  };
 
-  const onDelete = useCallback(() => {
+  const onDelete = () => {
     void deleteElements({ nodes: [{ id: props.id }] });
-  }, [deleteElements, props.id]);
+  };
 
   const backgroundColor = getBackground(
     props.data.backgroundColor,

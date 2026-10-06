@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useRef } from "react";
 
 export const useMouseEnterCounter = (
   onEnter: () => void,
@@ -18,9 +18,9 @@ export const useMouseEnterCounter = (
     onLeave();
   };
 
-  const reset = useCallback(() => {
+  const reset = () => {
     mouseEnterCounter.current = 0;
-  }, []);
+  };
 
   return {
     handleMouseEnter,

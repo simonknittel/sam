@@ -5,7 +5,7 @@ import { Combobox } from "@base-ui/react/combobox";
 import clsx from "clsx";
 import { useTopLoader } from "nextjs-toploader";
 import { parseAsString, useQueryState, useQueryStates } from "nuqs";
-import { useCallback, useEffect, useId, useTransition } from "react";
+import { useEffect, useId, useTransition } from "react";
 import { FaCheck, FaChevronDown } from "react-icons/fa";
 
 interface Item {
@@ -49,19 +49,16 @@ export const SingleSelectComboboxFilter = ({
   const selectedItem =
     items.find((item) => item.value === selectedValue) ?? null;
 
-  const setValueAndResetPagination = useCallback(
-    async (newValue: Item | null) => {
-      await setSelectedValue(newValue?.value ?? null);
+  const setValueAndResetPagination = async (newValue: Item | null) => {
+    await setSelectedValue(newValue?.value ?? null);
 
-      if (resetCursorPagination) {
-        await setPagination({
-          cursor: null,
-          direction: null,
-        });
-      }
-    },
-    [setPagination, setSelectedValue, resetCursorPagination],
-  );
+    if (resetCursorPagination) {
+      await setPagination({
+        cursor: null,
+        direction: null,
+      });
+    }
+  };
 
   const loader = useTopLoader();
 

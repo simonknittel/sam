@@ -22,7 +22,7 @@ import {
   arrayMove,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { startTransition, useCallback, useOptimistic, useState } from "react";
+import { startTransition, useOptimistic, useState } from "react";
 import { FaPlus } from "react-icons/fa";
 import { reorderFlows } from "../actions/reorderFlows";
 import type { ManageableFlow } from "../queries/getManageableFlows";
@@ -77,11 +77,8 @@ export const FlowsTableClient = ({
   const [duplicationSource, setDuplicationSource] =
     useState<DuplicationSource | null>(null);
 
-  const getFlowName = useCallback(
-    (id: UniqueIdentifier) =>
-      optimisticFlows.find((flow) => flow.id === id)?.name ?? "",
-    [optimisticFlows],
-  );
+  const getFlowName = (id: UniqueIdentifier) =>
+    optimisticFlows.find((flow) => flow.id === id)?.name ?? "";
   const { sensors, accessibility } = useSortableList(getFlowName);
 
   const handleDragEnd = (event: DragEndEvent) => {

@@ -35,12 +35,11 @@ const loadSearchParams = createLoader({
 });
 
 export default async function Page({ searchParams }: PageProps<"/">) {
-  const {
-    uwu,
-    error,
-    [REDIRECT_TO_SEARCH_PARAM]: redirectToParam,
-  } = await loadSearchParams(searchParams);
-  const redirectTo = validateRedirectTo(redirectToParam);
+  const searchParameters = await loadSearchParams(searchParams);
+  const { uwu, error } = searchParameters;
+  const redirectTo = validateRedirectTo(
+    searchParameters[REDIRECT_TO_SEARCH_PARAM],
+  );
 
   const authentication = await authenticate();
   // TODO: Instead of the static /dashboard, get redirect target from user settings once implemented

@@ -19,6 +19,9 @@ interface Props {
   readonly className?: string;
 }
 
+/** The React Compiler does not compile a component with an `import()` */
+const loadCanvasConfetti = () => import("canvas-confetti");
+
 /**
  * A canvas which repeats a burst of confetti while it is in view. The caller
  * places the canvas and describes the shots, thus the same animation works
@@ -98,7 +101,7 @@ export const ConfettiCanvas = ({
      * off, so that the animation behaves the same in the browser and in the
      * Playwright suite.
      */
-    void import("canvas-confetti")
+    void loadCanvasConfetti()
       .then((module) => {
         if (isCancelled) return;
 

@@ -9,14 +9,7 @@ import { Button2 } from "@/modules/common/components/Button2";
 import { track } from "@plausible-analytics/tracker";
 import clsx from "clsx";
 import { get, set } from "idb-keyval";
-import {
-  useCallback,
-  useEffect,
-  useEffectEvent,
-  useMemo,
-  useRef,
-  type MouseEvent,
-} from "react";
+import { useEffect, useEffectEvent, useRef, type MouseEvent } from "react";
 import { FaFileArrowUp } from "react-icons/fa6";
 import { useEntryUpload } from "../hooks/useEntryUpload";
 import { useLogParser } from "../hooks/useLogParser";
@@ -62,10 +55,9 @@ export const LogAnalyzer = ({ className }: Props) => {
 
   const sessionCitizen = authentication ? authentication.session.entity : null;
   /** The signed-in citizen is never a deleted one */
-  const ownCitizen = useMemo(
-    () => (sessionCitizen ? { ...sessionCitizen, deletedAt: null } : null),
-    [sessionCitizen],
-  );
+  const ownCitizen = sessionCitizen
+    ? { ...sessionCitizen, deletedAt: null }
+    : null;
 
   const parseLogFiles = useLogParser();
 
@@ -84,136 +76,118 @@ export const LogAnalyzer = ({ className }: Props) => {
     requiresFullReadRef.current = true;
   }, [daysToLoad, uploadEntries]);
 
-  const parseLogs = useCallback(
-    (isNew = false) => {
-      startTransition(async () => {
-        if (!directoryHandleRef.current) return;
+  const parseLogs = (isNew = false) => {
+    startTransition(async () => {
+      if (!directoryHandleRef.current) return;
 
-        try {
-          const filterProps = Object.fromEntries(
-            Object.values(EntryType).map((type) => [
-              `log_analyzer_filter_${type}`,
-              ownEntryTypes[type],
-            ]),
-          );
-
-          track("log_analyzer_parse", {
-            props: {
-              user_id: authentication
-                ? authentication?.session.user.id
-                : "unknown",
-              log_analyzer_days_to_load: String(daysToLoad),
-              log_analyzer_live_mode: String(isLiveModeEnabled),
-              log_analyzer_autostart: String(isAutostartEnabled),
-              log_analyzer_overlay: String(!!pipWindow),
-              ...filterProps,
-            },
-            interactive: false,
-          });
-        } catch {
-          // Tracking failure should not affect log parsing
-        }
-
-        const logFiles = (
-          await Array.fromAsync(getFilesRecursively(directoryHandleRef.current))
-        ).filter((logFile): logFile is LogFile =>
-          Boolean(logFile?.file.name.endsWith(".log")),
+      try {
+        const filterProps = Object.fromEntries(
+          Object.values(EntryType).map((type) => [
+            `log_analyzer_filter_${type}`,
+            ownEntryTypes[type],
+          ]),
         );
 
-        const windowStart = getWindowStart(daysToLoad);
-        const windowEnd = new Date();
-        windowEnd.setHours(23, 59, 59, 999);
+        track("log_analyzer_parse", {
+          props: {
+            user_id: authentication
+              ? authentication?.session.user.id
+              : "unknown",
+            log_analyzer_days_to_load: String(daysToLoad),
+            log_analyzer_live_mode: String(isLiveModeEnabled),
+            log_analyzer_autostart: String(isAutostartEnabled),
+            log_analyzer_overlay: String(!!pipWindow),
+            ...filterProps,
+          },
+          interactive: false,
+        });
+      } catch {
+        // Tracking failure should not affect log parsing
+      }
 
-        const logFilesInWindow = windowStart
-          ? logFiles.filter(
-              ({ file }) =>
-                file.lastModified >= windowStart.getTime() &&
-                file.lastModified <= windowEnd.getTime(),
-            )
-          : logFiles;
+      const logFiles = (
+        await Array.fromAsync(getFilesRecursively(directoryHandleRef.current))
+      ).filter((logFile): logFile is LogFile =>
+        Boolean(logFile?.file.name.endsWith(".log")),
+      );
 
-        const isFullRead = requiresFullReadRef.current;
-        requiresFullReadRef.current = false;
+      const windowStart = getWindowStart(daysToLoad);
+      const windowEnd = new Date();
+      windowEnd.setHours(23, 59, 59, 999);
 
-        try {
-          const rawMatches = await parseLogFiles(logFilesInWindow, isFullRead);
+      const logFilesInWindow = windowStart
+        ? logFiles.filter(
+            ({ file }) =>
+              file.lastModified >= windowStart.getTime() &&
+              file.lastModified <= windowEnd.getTime(),
+          )
+        : logFiles;
 
-          /**
-           * Map raw matches to `IEntry` on the main thread (needed for JSX rendering)
-           */
-          setEntries((previousEntries) => {
-            const newEntries = new Map<string, IEntry>(previousEntries);
+      const isFullRead = requiresFullReadRef.current;
+      requiresFullReadRef.current = false;
 
-            for (const rawMatch of rawMatches) {
-              const isoDate = new Date(rawMatch.isoDate);
-              const key = createEntryKey(rawMatch.type, rawMatch.fullMatch);
-              const existingEntry = newEntries.get(key);
-              /**
-               * A local entry replaces a shared one of the same line, because
-               * it belongs to the user and not to whoever shared it first. It
-               * keeps the highlight state of the entry it replaces.
-               */
-              if (existingEntry && !existingEntry.isShared) continue;
+      try {
+        const rawMatches = await parseLogFiles(logFilesInWindow, isFullRead);
 
-              newEntries.set(key, {
-                key,
-                type: rawMatch.type,
-                isoDate,
-                isNew: existingEntry?.isNew ?? isNew,
-                ...deriveEntryFields(rawMatch.type, rawMatch.groups),
-                citizen: ownCitizen,
-                isShared: false,
-                isUploaded: false,
-              });
-            }
+        /**
+         * Map raw matches to `IEntry` on the main thread (needed for JSX rendering)
+         */
+        setEntries((previousEntries) => {
+          const newEntries = new Map<string, IEntry>(previousEntries);
 
-            /** A file of the window can begin before the window */
-            deleteEntriesBefore(newEntries, windowStart);
+          for (const rawMatch of rawMatches) {
+            const isoDate = new Date(rawMatch.isoDate);
+            const key = createEntryKey(rawMatch.type, rawMatch.fullMatch);
+            const existingEntry = newEntries.get(key);
+            /**
+             * A local entry replaces a shared one of the same line, because
+             * it belongs to the user and not to whoever shared it first. It
+             * keeps the highlight state of the entry it replaces.
+             */
+            if (existingEntry && !existingEntry.isShared) continue;
 
-            return newEntries;
-          });
+            newEntries.set(key, {
+              key,
+              type: rawMatch.type,
+              isoDate,
+              isNew: existingEntry?.isNew ?? isNew,
+              ...deriveEntryFields(rawMatch.type, rawMatch.groups),
+              citizen: ownCitizen,
+              isShared: false,
+              isUploaded: false,
+            });
+          }
 
-          /**
-           * Sharing must not hold up the rendering of the new entries. A
-           * failed upload tries again with the whole window next cycle.
-           */
-          void uploadEntries(rawMatches).then(
-            (isComplete) => {
-              if (!isComplete) requiresFullReadRef.current = true;
-            },
-            () => {
-              requiresFullReadRef.current = true;
-            },
-          );
-        } catch (error) {
-          requiresFullReadRef.current = true;
-          console.error("[Log Analyzer] Error reading files:", error);
-        }
-      });
-    },
-    [
-      authentication,
-      daysToLoad,
-      ownEntryTypes,
-      isAutostartEnabled,
-      isLiveModeEnabled,
-      ownCitizen,
-      parseLogFiles,
-      pipWindow,
-      setEntries,
-      startTransition,
-      uploadEntries,
-    ],
-  );
+          /** A file of the window can begin before the window */
+          deleteEntriesBefore(newEntries, windowStart);
 
-  const openDirectory = useCallback(
-    (directoryHandle: FileSystemDirectoryHandle) => {
-      directoryHandleRef.current = directoryHandle;
-      requiresFullReadRef.current = true;
-      parseLogs();
-    },
-    [parseLogs],
-  );
+          return newEntries;
+        });
+
+        /**
+         * Sharing must not hold up the rendering of the new entries. A
+         * failed upload tries again with the whole window next cycle.
+         */
+        void uploadEntries(rawMatches).then(
+          (isComplete) => {
+            if (!isComplete) requiresFullReadRef.current = true;
+          },
+          () => {
+            requiresFullReadRef.current = true;
+          },
+        );
+      } catch (error) {
+        requiresFullReadRef.current = true;
+        console.error("[Log Analyzer] Error reading files:", error);
+      }
+    });
+  };
+
+  const openDirectory = (directoryHandle: FileSystemDirectoryHandle) => {
+    directoryHandleRef.current = directoryHandle;
+    requiresFullReadRef.current = true;
+    parseLogs();
+  };
 
   const parseNewLogLines = useEffectEvent(() => parseLogs(true));
 
@@ -227,39 +201,38 @@ export const LogAnalyzer = ({ className }: Props) => {
     return () => window.clearInterval(interval);
   }, [isLiveModeEnabled]);
 
-  const handlePreviousDirectorySelect = useCallback(
-    (event?: MouseEvent<HTMLButtonElement>) => {
-      event?.preventDefault();
+  const handlePreviousDirectorySelect = (
+    event?: MouseEvent<HTMLButtonElement>,
+  ) => {
+    event?.preventDefault();
 
-      get("directory_handle")
-        .then(
-          async (
-            existingDirectoryHandle: FileSystemDirectoryHandle | undefined,
-          ) => {
-            if (existingDirectoryHandle) {
-              const permissionState =
-                await existingDirectoryHandle.requestPermission();
-              if (permissionState === "granted") {
-                openDirectory(existingDirectoryHandle);
-                return;
-              }
+    get("directory_handle")
+      .then(
+        async (
+          existingDirectoryHandle: FileSystemDirectoryHandle | undefined,
+        ) => {
+          if (existingDirectoryHandle) {
+            const permissionState =
+              await existingDirectoryHandle.requestPermission();
+            if (permissionState === "granted") {
+              openDirectory(existingDirectoryHandle);
+              return;
             }
+          }
 
-            const newDirectoryHandle = await window.showDirectoryPicker();
-            if (!newDirectoryHandle) return;
-            openDirectory(newDirectoryHandle);
-            await set("directory_handle", newDirectoryHandle);
-          },
-        )
-        .catch((error) => {
-          console.error(
-            "[Log Analyzer] Error retrieving or selecting directory handle:",
-            error,
-          );
-        });
-    },
-    [openDirectory],
-  );
+          const newDirectoryHandle = await window.showDirectoryPicker();
+          if (!newDirectoryHandle) return;
+          openDirectory(newDirectoryHandle);
+          await set("directory_handle", newDirectoryHandle);
+        },
+      )
+      .catch((error) => {
+        console.error(
+          "[Log Analyzer] Error retrieving or selecting directory handle:",
+          error,
+        );
+      });
+  };
 
   const handleNewDirectorySelect = (event?: MouseEvent<HTMLButtonElement>) => {
     event?.preventDefault();
@@ -276,9 +249,13 @@ export const LogAnalyzer = ({ className }: Props) => {
       });
   };
 
+  const selectPreviousDirectoryOnAutostart = useEffectEvent(() =>
+    handlePreviousDirectorySelect(),
+  );
+
   /**
    * The ref makes sure enabling autostart triggers the directory selection
-   * exactly once, even when `handlePreviousDirectorySelect` changes identity.
+   * exactly once, also when React runs the effect again (Strict Mode).
    */
   const autostartTriggeredRef = useRef(false);
   useEffect(() => {
@@ -289,13 +266,13 @@ export const LogAnalyzer = ({ className }: Props) => {
     if (autostartTriggeredRef.current) return;
 
     autostartTriggeredRef.current = true;
-    handlePreviousDirectorySelect();
-  }, [isAutostartEnabled, handlePreviousDirectorySelect]);
+    selectPreviousDirectoryOnAutostart();
+  }, [isAutostartEnabled]);
 
-  const handleRefresh = useCallback(() => {
+  const handleRefresh = () => {
     parseLogs(true);
     refreshSharedEntries();
-  }, [parseLogs, refreshSharedEntries]);
+  };
 
   return (
     <div className={clsx(className)}>

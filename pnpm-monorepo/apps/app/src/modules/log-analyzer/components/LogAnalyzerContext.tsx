@@ -1,5 +1,6 @@
 "use client";
 
+import { useStoredValue } from "@/modules/common/utils/useStoredValue";
 import { useLocalStorage } from "@uidotdev/usehooks";
 import type {
   Dispatch,
@@ -7,14 +8,7 @@ import type {
   SetStateAction,
   TransitionStartFunction,
 } from "react";
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-  useTransition,
-} from "react";
+import { createContext, useContext, useState, useTransition } from "react";
 import {
   createEntryTypeRecord,
   EntryType,
@@ -65,33 +59,20 @@ const ALL_TYPES_OFF = createEntryTypeRecord(false);
 /**
  * A stored record of the entry types. The stored value lacks the types which
  * came after the user stored it, thus the default fills them up on every
- * read.
- *
- * `useLocalStorage` parses the stored text on every render and gives a new
- * object each time. The record stays the same object until the setting
- * changes, thus the callbacks which read it change only then (see
+ * read. The upload function changes with the record of the shared types,
+ * thus the record must change only with the stored text (see
  * `requiresFullReadRef` in `LogAnalyzer`).
  */
 const useStoredEntryTypes = (key: string, defaultValue: EntryTypeRecord) => {
-  const [storedValue, setStoredValue] = useLocalStorage<
+  const [storedValue, setStoredValue] = useStoredValue<
     Partial<EntryTypeRecord>
   >(key, defaultValue);
 
-  const storedText = JSON.stringify(storedValue);
-  const value = useMemo(
-    () => ({
-      ...defaultValue,
-      ...(JSON.parse(storedText) as Partial<EntryTypeRecord>),
-    }),
-    [defaultValue, storedText],
-  );
+  const value = { ...defaultValue, ...storedValue };
 
-  const setType = useCallback(
-    (type: EntryType, isEnabled: boolean) => {
-      setStoredValue((previous) => ({ ...previous, [type]: isEnabled }));
-    },
-    [setStoredValue],
-  );
+  const setType = (type: EntryType, isEnabled: boolean) => {
+    setStoredValue((previous) => ({ ...previous, [type]: isEnabled }));
+  };
 
   return [value, setType] as const;
 };
@@ -119,7 +100,7 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
     ALL_TYPES_OFF,
   );
 
-  const [hiddenCitizenIds, setHiddenCitizenIds] = useLocalStorage<string[]>(
+  const [hiddenCitizenIds, setHiddenCitizenIds] = useStoredValue<string[]>(
     "log_analyzer_hidden_citizens",
     [],
   );
@@ -148,84 +129,52 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
 
   const [entries, setEntries] = useState<Map<string, IEntry>>(new Map());
 
-  const setOthersEntryType = useCallback(
-    (type: EntryType, isEnabled: boolean) => {
-      setStoredOthersEntryType(type, isEnabled);
+  const setOthersEntryType = (type: EntryType, isEnabled: boolean) => {
+    setStoredOthersEntryType(type, isEnabled);
 
-      /** The entries of the other citizens leave the table with the last type */
-      const isAnotherTypeEnabled = Object.values(EntryType).some(
-        (otherType) => otherType !== type && othersEntryTypes[otherType],
-      );
-      if (isEnabled || isAnotherTypeEnabled) return;
+    /** The entries of the other citizens leave the table with the last type */
+    const isAnotherTypeEnabled = Object.values(EntryType).some(
+      (otherType) => otherType !== type && othersEntryTypes[otherType],
+    );
+    if (isEnabled || isAnotherTypeEnabled) return;
 
-      setEntries(
-        (previousEntries) =>
-          new Map(
-            Array.from(previousEntries).filter(([, entry]) => !entry.isShared),
-          ),
-      );
-    },
-    [othersEntryTypes, setStoredOthersEntryType],
-  );
+    setEntries(
+      (previousEntries) =>
+        new Map(
+          Array.from(previousEntries).filter(([, entry]) => !entry.isShared),
+        ),
+    );
+  };
 
-  const entryFilterFn = useCallback(
-    (entry: IEntry) => {
-      if (!entry.isShared) return ownEntryTypes[entry.type];
-      if (!othersEntryTypes[entry.type]) return false;
-      return !entry.citizen || !hiddenCitizenIds.includes(entry.citizen.id);
-    },
-    [hiddenCitizenIds, othersEntryTypes, ownEntryTypes],
-  );
+  const entryFilterFn = (entry: IEntry) => {
+    if (!entry.isShared) return ownEntryTypes[entry.type];
+    if (!othersEntryTypes[entry.type]) return false;
+    return !entry.citizen || !hiddenCitizenIds.includes(entry.citizen.id);
+  };
 
-  /** Prevent unnecessary rerenders */
-  const value = useMemo(
-    () => ({
-      isSharingAvailable,
-      isPending,
-      startTransition,
-      isLiveModeEnabled,
-      setIsLiveModeEnabled,
-      isAutostartEnabled,
-      setIsAutostartEnabled,
-      daysToLoad,
-      ownEntryTypes,
-      setOwnEntryType,
-      sharingEntryTypes,
-      setSharingEntryType,
-      isSharingEnabled,
-      othersEntryTypes,
-      setOthersEntryType,
-      isSharedViewEnabled,
-      hiddenCitizenIds,
-      setHiddenCitizenIds,
-      entryFilterFn,
-      entries,
-      setEntries,
-    }),
-    [
-      isSharingAvailable,
-      isPending,
-      startTransition,
-      isLiveModeEnabled,
-      setIsLiveModeEnabled,
-      isAutostartEnabled,
-      setIsAutostartEnabled,
-      daysToLoad,
-      ownEntryTypes,
-      setOwnEntryType,
-      sharingEntryTypes,
-      setSharingEntryType,
-      isSharingEnabled,
-      othersEntryTypes,
-      setOthersEntryType,
-      isSharedViewEnabled,
-      hiddenCitizenIds,
-      setHiddenCitizenIds,
-      entryFilterFn,
-      entries,
-      setEntries,
-    ],
-  );
+  const value = {
+    isSharingAvailable,
+    isPending,
+    startTransition,
+    isLiveModeEnabled,
+    setIsLiveModeEnabled,
+    isAutostartEnabled,
+    setIsAutostartEnabled,
+    daysToLoad,
+    ownEntryTypes,
+    setOwnEntryType,
+    sharingEntryTypes,
+    setSharingEntryType,
+    isSharingEnabled,
+    othersEntryTypes,
+    setOthersEntryType,
+    isSharedViewEnabled,
+    hiddenCitizenIds,
+    setHiddenCitizenIds,
+    entryFilterFn,
+    entries,
+    setEntries,
+  };
 
   return <Context value={value}>{children}</Context>;
 };

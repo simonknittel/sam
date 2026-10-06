@@ -15,9 +15,7 @@ import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import type { Editor } from "@tiptap/react";
 import clsx from "clsx";
 import {
-  useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type KeyboardEvent,
@@ -127,21 +125,19 @@ export const WikiGutter = ({
   const [controlsHovered, setControlsHovered] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
 
-  /**
-   * Identity-stable for the same reason as COMPUTE_POSITION_CONFIG — an
-   * inline handler would re-register the plugin on every render, hiding
-   * the handle whenever the pointer rests.
-   */
-  const handleNodeChange = useCallback(
-    ({ node, pos }: { node: ProseMirrorNode | null; pos: number }) => {
-      setBlock((previous) => {
-        if (!node) return null;
-        if (previous?.node === node && previous.pos === pos) return previous;
-        return { node, pos };
-      });
-    },
-    [],
-  );
+  const handleNodeChange = ({
+    node,
+    pos,
+  }: {
+    node: ProseMirrorNode | null;
+    pos: number;
+  }) => {
+    setBlock((previous) => {
+      if (!node) return null;
+      if (previous?.node === node && previous.pos === pos) return previous;
+      return { node, pos };
+    });
+  };
 
   /**
    * The Alt state must be captured when the popover opens — by the time
@@ -161,17 +157,6 @@ export const WikiGutter = ({
     setPaletteOpen(open);
     if (editor.isDestroyed) return;
     editor.view.dispatch(editor.state.tr.setMeta("lockDragHandle", open));
-  };
-
-  /**
-   * closePopover in the palette is a programmatic close — Base UI reports
-   * only its own dismissals through onOpenChange, so the palette calls
-   * this when an entry is picked.
-   */
-  const closePalette = () => {
-    setPaletteOpen(false);
-    if (editor.isDestroyed) return;
-    editor.view.dispatch(editor.state.tr.setMeta("lockDragHandle", false));
   };
 
   /**
@@ -239,7 +224,6 @@ export const WikiGutter = ({
             onRequestLink={onRequestLink}
             onRequestVariantLink={onRequestVariantLink}
             insertAboveRef={insertAboveRef}
-            onClosePalette={closePalette}
           />
         </PopoverBaseUI>
 
@@ -267,8 +251,6 @@ interface InsertBlockActionsProps {
   readonly onRequestLink: () => void;
   readonly onRequestVariantLink: () => void;
   readonly insertAboveRef: RefObject<boolean>;
-  /** Releases the parent's palette state (lock, highlight) on insert */
-  readonly onClosePalette: () => void;
 }
 
 /**
@@ -290,7 +272,6 @@ const InsertBlockActions = ({
   onRequestLink,
   onRequestVariantLink,
   insertAboveRef,
-  onClosePalette,
 }: InsertBlockActionsProps) => {
   const { closePopover } = usePopoverBaseUI();
   const [query, setQuery] = useState("");
@@ -302,47 +283,34 @@ const InsertBlockActions = ({
    * autoFocus would scroll the page to the popup's initial (0,0)
    * position.
    */
-  const focusInput = useCallback((input: HTMLInputElement | null) => {
+  const focusInput = (input: HTMLInputElement | null) => {
     input?.focus({ preventScroll: true });
-  }, []);
-
-  /**
-   * Memoized so unrelated gutter re-renders (hover state) keep the array
-   * identity — WikiSuggestionMenu resets its keyboard selection whenever
-   * the items identity changes (wanted only when the query changes).
-   */
-  const entries = useMemo(() => {
-    if (!block) return [];
-
-    /**
-     * The palette inserts next to the hovered block, i.e. into its parent —
-     * for blocks nested in a text-only container (quote, table cell, list
-     * item) only the text-level entries apply there, and inside a grid the
-     * grid entries disappear (grids never nest).
-     */
-    const restrictions = getWikiPositionRestrictions(
-      editor.state.doc,
-      block.pos,
-    );
-    const items = applyWikiUploadRestrictions(
-      (restrictions.blocks
-        ? WIKI_SLASH_COMMAND_ITEMS.filter((item) => item.allowedInTextOnlyBlock)
-        : WIKI_SLASH_COMMAND_ITEMS
-      ).filter((item) => !(restrictions.grids && item.insertsGrid)),
-      { canUploadImages, canUploadAttachments },
-    ).filter((item) => matchesWikiSlashCommandQuery(item, query));
-
-    const copiedBlockItem = getWikiCopiedBlockItem(
-      restrictions,
-      query,
-      items.length > 0,
-    );
-    return copiedBlockItem ? [copiedBlockItem, ...items] : items;
-  }, [editor, block, query, canUploadImages, canUploadAttachments]);
+  };
 
   if (!block) return null;
   const node = editor.state.doc.nodeAt(block.pos);
   if (node?.type.name !== block.node.type.name) return null;
+
+  /**
+   * The palette inserts next to the hovered block, i.e. into its parent —
+   * for blocks nested in a text-only container (quote, table cell, list
+   * item) only the text-level entries apply there, and inside a grid the
+   * grid entries disappear (grids never nest).
+   */
+  const restrictions = getWikiPositionRestrictions(editor.state.doc, block.pos);
+  const items = applyWikiUploadRestrictions(
+    (restrictions.blocks
+      ? WIKI_SLASH_COMMAND_ITEMS.filter((item) => item.allowedInTextOnlyBlock)
+      : WIKI_SLASH_COMMAND_ITEMS
+    ).filter((item) => !(restrictions.grids && item.insertsGrid)),
+    { canUploadImages, canUploadAttachments },
+  ).filter((item) => matchesWikiSlashCommandQuery(item, query));
+  const copiedBlockItem = getWikiCopiedBlockItem(
+    restrictions,
+    query,
+    items.length > 0,
+  );
+  const entries = copiedBlockItem ? [copiedBlockItem, ...items] : items;
 
   const insertPosition = () =>
     insertAboveRef.current ? block.pos : block.pos + node.nodeSize;
@@ -350,7 +318,6 @@ const InsertBlockActions = ({
   const insertBlock = (item: WikiSlashCommandItem) => {
     if (item.disabled === true) return;
     closePopover();
-    onClosePalette();
 
     /**
      * The focus is in the filter input of the palette. The focus() command

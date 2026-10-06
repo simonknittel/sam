@@ -5,9 +5,7 @@ import { Popover } from "@base-ui/react/popover"; // eslint-disable-line no-rest
 import clsx from "clsx";
 import {
   createContext,
-  useCallback,
   useContext,
-  useMemo,
   useRef,
   useState,
   type ComponentProps,
@@ -17,11 +15,38 @@ import { IoMdArrowDropup } from "react-icons/io";
 
 interface PopoverBaseUIContext {
   closePopover: () => void;
+  /**
+   * Keeps the popover open, for example while a dialog of its content is
+   * open. Returns the function that ends this hold.
+   */
+  keepOpen: () => () => void;
 }
 
 const PopoverBaseUIContext = createContext<PopoverBaseUIContext | undefined>(
   undefined,
 );
+
+/**
+ * A dialog of the content is in a portal outside of the popup. Base UI thus
+ * sees the pointer on the dialog as outside of the popover, and closes the
+ * popover. This close also removes the dialog. While something holds the
+ * popover open, the popover cancels each close request of Base UI.
+ */
+const useKeepOpen = () => {
+  const holdCountRef = useRef(0);
+
+  const keepOpen = () => {
+    holdCountRef.current += 1;
+
+    return () => {
+      holdCountRef.current -= 1;
+    };
+  };
+
+  const isKeptOpen = () => holdCountRef.current > 0;
+
+  return { keepOpen, isKeptOpen };
+};
 
 interface PopoverChromeProps {
   readonly children: ReactNode;
@@ -97,6 +122,7 @@ interface PopoverBaseUIContextProviderProps {
   readonly triggerTitle?: string;
   readonly children: ReactNode;
   readonly childrenClassName?: string;
+  /** Reports each open and close, also a close through `closePopover` */
   readonly onOpenChange?: (open: boolean) => void;
   /**
    * When true, the popover only opens on mouse hover.
@@ -143,38 +169,45 @@ export const PopoverBaseUI = ({
    */
   const wasOpenedByHoverRef = useRef(false);
 
-  const handleOpenChange = useCallback(
-    (open: boolean, eventDetails: PopoverRoot.ChangeEventDetails) => {
-      if (hoverOnly && open && eventDetails.reason !== "trigger-hover") return;
+  const { keepOpen, isKeptOpen } = useKeepOpen();
 
-      if (
-        !open &&
-        wasOpenedByHoverRef.current &&
-        eventDetails.reason === "trigger-press"
-      ) {
-        wasOpenedByHoverRef.current = false;
-        return;
-      }
+  const handleOpenChange = (
+    open: boolean,
+    eventDetails: PopoverRoot.ChangeEventDetails,
+  ) => {
+    if (!open && isKeptOpen()) {
+      eventDetails.cancel();
+      return;
+    }
 
-      wasOpenedByHoverRef.current =
-        open && eventDetails.reason === "trigger-hover";
+    if (hoverOnly && open && eventDetails.reason !== "trigger-hover") return;
 
-      setIsOpen(open);
-      onOpenChange?.(open);
-    },
-    [onOpenChange, hoverOnly],
-  );
+    if (
+      !open &&
+      wasOpenedByHoverRef.current &&
+      eventDetails.reason === "trigger-press"
+    ) {
+      wasOpenedByHoverRef.current = false;
+      return;
+    }
 
-  const closePopover = useCallback(() => {
+    wasOpenedByHoverRef.current =
+      open && eventDetails.reason === "trigger-hover";
+
+    setIsOpen(open);
+    onOpenChange?.(open);
+  };
+
+  const closePopover = () => {
+    wasOpenedByHoverRef.current = false;
     setIsOpen(false);
-  }, [setIsOpen]);
+    onOpenChange?.(false);
+  };
 
-  const value = useMemo(
-    () => ({
-      closePopover,
-    }),
-    [closePopover],
-  );
+  const value = {
+    closePopover,
+    keepOpen,
+  };
 
   return (
     <PopoverBaseUIContext value={value}>
@@ -251,18 +284,25 @@ export const PopoverBaseUIDetached = ({
   childrenClassName,
   side = "bottom",
 }: PopoverBaseUIDetachedProps) => {
-  const handleOpenChange = useCallback(
-    (nextOpen: boolean) => {
-      onOpenChange?.(nextOpen);
-    },
-    [onOpenChange],
-  );
+  const { keepOpen, isKeptOpen } = useKeepOpen();
 
-  const closePopover = useCallback(() => {
+  const handleOpenChange = (
+    nextOpen: boolean,
+    eventDetails: PopoverRoot.ChangeEventDetails,
+  ) => {
+    if (!nextOpen && isKeptOpen()) {
+      eventDetails.cancel();
+      return;
+    }
+
+    onOpenChange?.(nextOpen);
+  };
+
+  const closePopover = () => {
     onOpenChange?.(false);
-  }, [onOpenChange]);
+  };
 
-  const value = useMemo(() => ({ closePopover }), [closePopover]);
+  const value = { closePopover, keepOpen };
 
   return (
     <PopoverBaseUIContext value={value}>
@@ -303,3 +343,22 @@ export function usePopoverBaseUI() {
   if (!context) throw new Error("[PopoverContext] Provider is missing!");
   return context;
 }
+
+/** The popover around the component, or undefined outside of a popover */
+export const useOptionalPopoverBaseUI = () => useContext(PopoverBaseUIContext);
+
+interface WithoutPopoverBaseUIProps {
+  readonly children: ReactNode;
+}
+
+/**
+ * Hides the popover from its children. A dialog in a popover holds the
+ * popover open and closes it after its own close. A dialog inside this
+ * dialog must not close the popover, because this close also removes the
+ * outer dialog.
+ */
+export const WithoutPopoverBaseUI = ({
+  children,
+}: WithoutPopoverBaseUIProps) => (
+  <PopoverBaseUIContext value={undefined}>{children}</PopoverBaseUIContext>
+);

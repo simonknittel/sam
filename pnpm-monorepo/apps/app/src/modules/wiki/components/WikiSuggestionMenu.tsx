@@ -10,7 +10,6 @@ import clsx from "clsx";
 import {
   Fragment,
   useImperativeHandle,
-  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -226,10 +225,9 @@ const WikiSuggestionPopover = <Item extends WikiSuggestionMenuItem>({
   onDismiss,
   ref,
 }: WikiSuggestionPopoverProps<Item>) => {
-  const anchor = useMemo(
-    () => (anchorRect ? { getBoundingClientRect: () => anchorRect } : null),
-    [anchorRect],
-  );
+  const anchor = anchorRect
+    ? { getBoundingClientRect: () => anchorRect }
+    : null;
 
   return (
     <PopoverBaseUIDetached

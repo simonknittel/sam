@@ -5,7 +5,6 @@ import {
   createContext,
   useContext,
   useEffect,
-  useMemo,
   useState,
   type ReactNode,
 } from "react";
@@ -87,14 +86,8 @@ export const WikiPageTreeCollapseProvider = ({
    * every server render, so only values comparable by equality keep the
    * adjustment below from rerunning on each of them.
    */
-  const pagesToExpand = useMemo(
-    () => collectWikiPagesToExpand(nodes, activePageId).join(","),
-    [nodes, activePageId],
-  );
-  const expandablePages = useMemo(
-    () => collectExpandableWikiPages(nodes).join(","),
-    [nodes],
-  );
+  const pagesToExpand = collectWikiPagesToExpand(nodes, activePageId).join(",");
+  const expandablePages = collectExpandableWikiPages(nodes).join(",");
 
   const [state, setState] = useState(() =>
     expandWikiPages(
@@ -120,30 +113,27 @@ export const WikiPageTreeCollapseProvider = ({
     document.cookie = serializeWikiExpandedPagesCookie(state, hrefMode.scope);
   }, [state, hrefMode.scope]);
 
-  const value = useMemo(
-    () => ({
-      isExpanded: (pageId: string) => isWikiPageExpanded(state, pageId),
-      toggle: (pageId: string) =>
-        setState((previous) =>
-          setWikiPageExpansion(
-            previous,
-            pageId,
-            !isWikiPageExpanded(previous, pageId),
-          ),
+  const value = {
+    isExpanded: (pageId: string) => isWikiPageExpanded(state, pageId),
+    toggle: (pageId: string) =>
+      setState((previous) =>
+        setWikiPageExpansion(
+          previous,
+          pageId,
+          !isWikiPageExpanded(previous, pageId),
         ),
-      expand: (pageId: string) =>
-        setState((previous) => setWikiPageExpansion(previous, pageId, true)),
-      // Merged into the state so pages the sidebar currently leaves out, e.g.
-      // the hidden ones, keep theirs instead of silently collapsing
-      expandAll: () =>
-        setState((previous) =>
-          expandWikiPages(previous, splitPath(expandablePages)),
-        ),
-      collapseAll: () => setState(WIKI_ALL_COLLAPSED),
-      hasAnyExpanded: state.size > 0,
-    }),
-    [state, expandablePages],
-  );
+      ),
+    expand: (pageId: string) =>
+      setState((previous) => setWikiPageExpansion(previous, pageId, true)),
+    // Merged into the state so pages the sidebar currently leaves out, e.g.
+    // the hidden ones, keep theirs instead of silently collapsing
+    expandAll: () =>
+      setState((previous) =>
+        expandWikiPages(previous, splitPath(expandablePages)),
+      ),
+    collapseAll: () => setState(WIKI_ALL_COLLAPSED),
+    hasAnyExpanded: state.size > 0,
+  };
 
   return (
     <WikiPageTreeCollapseContext value={value}>

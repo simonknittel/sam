@@ -4,7 +4,7 @@ import avatarFrame from "@/modules/avatar-creator/assets/avatar-frame.png";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { OnboardingTargetId } from "@/modules/onboarding/utils/targets";
 import clsx from "clsx";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const DEFAULT_SCALING_MULTIPLIER = 0.73;
 const CANVAS_WIDTH = avatarFrame.width / 3;
@@ -95,6 +95,16 @@ const drawUserImageToCanvas = (
 
 type BackgroundOption = "transparent" | "black" | "white" | "custom";
 
+const getBackgroundColor = (
+  backgroundOption: BackgroundOption,
+  customBackground: string,
+) => {
+  if (backgroundOption === "transparent") return null;
+  if (backgroundOption === "black") return "#000000";
+  if (backgroundOption === "white") return "#FFFFFF";
+  return customBackground || "#000000";
+};
+
 interface Props {
   readonly className?: string;
 }
@@ -124,11 +134,8 @@ export const AvatarCreatorClient = ({ className }: Props) => {
     lastY: number;
   }>({ isDragging: false, lastX: 0, lastY: 0 });
 
-  const baseFitScale = useMemo(() => {
-    if (!userImage) {
-      return DEFAULT_SCALING_MULTIPLIER;
-    }
-
+  let baseFitScale = DEFAULT_SCALING_MULTIPLIER;
+  if (userImage) {
     const targetWidth =
       canvasSize?.width ?? frameImage?.naturalWidth ?? userImage.naturalWidth;
     const targetHeight =
@@ -136,8 +143,8 @@ export const AvatarCreatorClient = ({ className }: Props) => {
       frameImage?.naturalHeight ??
       userImage.naturalHeight;
 
-    return calculateFitScale(userImage, targetWidth, targetHeight);
-  }, [canvasSize, frameImage, userImage]);
+    baseFitScale = calculateFitScale(userImage, targetWidth, targetHeight);
+  }
 
   useEffect(() => {
     const img = new Image();
@@ -150,12 +157,10 @@ export const AvatarCreatorClient = ({ className }: Props) => {
     };
   }, []);
 
-  const backgroundColor = useMemo<string | null>(() => {
-    if (backgroundOption === "transparent") return null;
-    if (backgroundOption === "black") return "#000000";
-    if (backgroundOption === "white") return "#FFFFFF";
-    return customBackground || "#000000";
-  }, [backgroundOption, customBackground]);
+  const backgroundColor = getBackgroundColor(
+    backgroundOption,
+    customBackground,
+  );
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -201,49 +206,46 @@ export const AvatarCreatorClient = ({ className }: Props) => {
     userImage,
   ]);
 
-  const handleFileChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
-      if (!file) {
-        setUserImage(null);
-        setScaleMultiplier(DEFAULT_SCALING_MULTIPLIER);
-        setImageOffset({ x: 0, y: 0 });
-        hasUserAdjustedRef.current = false;
-        return;
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      setUserImage(null);
+      setScaleMultiplier(DEFAULT_SCALING_MULTIPLIER);
+      setImageOffset({ x: 0, y: 0 });
+      hasUserAdjustedRef.current = false;
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+    image.decoding = "async";
+    image.onerror = () => URL.revokeObjectURL(objectUrl);
+    image.onload = () => {
+      /**
+       * The image keeps its data after it loads. Thus the canvas can still
+       * draw it after the release of the URL.
+       */
+      URL.revokeObjectURL(objectUrl);
+      setUserImage(image);
+      hasUserAdjustedRef.current = false;
+      if (!canvasSize && frameImage) {
+        setCanvasSize({
+          width: frameImage.naturalWidth,
+          height: frameImage.naturalHeight,
+        });
+      }
+      if (!canvasSize && !frameImage) {
+        setCanvasSize({
+          width: image.naturalWidth,
+          height: image.naturalHeight,
+        });
       }
 
-      const objectUrl = URL.createObjectURL(file);
-      const image = new Image();
-      image.decoding = "async";
-      image.onerror = () => URL.revokeObjectURL(objectUrl);
-      image.onload = () => {
-        /**
-         * The image keeps its data after it loads. Thus the canvas can still
-         * draw it after the release of the URL.
-         */
-        URL.revokeObjectURL(objectUrl);
-        setUserImage(image);
-        hasUserAdjustedRef.current = false;
-        if (!canvasSize && frameImage) {
-          setCanvasSize({
-            width: frameImage.naturalWidth,
-            height: frameImage.naturalHeight,
-          });
-        }
-        if (!canvasSize && !frameImage) {
-          setCanvasSize({
-            width: image.naturalWidth,
-            height: image.naturalHeight,
-          });
-        }
-
-        setScaleMultiplier(DEFAULT_SCALING_MULTIPLIER);
-        setImageOffset({ x: 0, y: 0 });
-      };
-      image.src = objectUrl;
-    },
-    [canvasSize, frameImage],
-  );
+      setScaleMultiplier(DEFAULT_SCALING_MULTIPLIER);
+      setImageOffset({ x: 0, y: 0 });
+    };
+    image.src = objectUrl;
+  };
 
   const handleScaleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setScaleMultiplier(parseFloat(event.target.value));
@@ -322,7 +324,7 @@ export const AvatarCreatorClient = ({ className }: Props) => {
     pointerStateRef.current = { isDragging: false, lastX: 0, lastY: 0 };
   };
 
-  const handleDownload = useCallback(() => {
+  const handleDownload = () => {
     const canvas = canvasRef.current;
     if (!canvas) {
       return;
@@ -339,7 +341,7 @@ export const AvatarCreatorClient = ({ className }: Props) => {
       link.click();
       URL.revokeObjectURL(url);
     }, "image/png");
-  }, []);
+  };
 
   return (
     <div

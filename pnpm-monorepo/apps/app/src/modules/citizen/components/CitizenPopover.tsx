@@ -6,18 +6,25 @@ import { api } from "@/trpc/react";
 import type { Citizen } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
-import { useCallback, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { BsExclamationOctagonFill } from "react-icons/bs";
 
 /**
  * Each citizen link has a popover, but the profile shows only after a hover.
  * Thus its code (for example the role forms) loads only then, and not on
  * each page with a citizen link.
+ *
+ * `dynamic()` and the preload on open use the same loader. With a second
+ * `import()`, the build makes a second chunk with the same code, and the
+ * browser loads both. The React Compiler does not compile a component with
+ * an `import()`, thus the loader is outside of the component.
  */
-const ProfileContent = dynamic(
-  () => import("./ProfileContent").then((mod) => mod.ProfileContent),
-  { loading: () => <ProfileLoading /> },
-);
+const loadProfileContent = () =>
+  import("./ProfileContent").then((module) => module.ProfileContent);
+
+const ProfileContent = dynamic(loadProfileContent, {
+  loading: () => <ProfileLoading />,
+});
 
 interface Props {
   readonly children?: ReactNode;
@@ -34,16 +41,16 @@ export const CitizenPopover = ({ children, citizenId }: Props) => {
       },
     );
 
-  const handleOpenChange = useCallback((open: boolean) => {
+  const handleOpenChange = (open: boolean) => {
     setIsEnabled(open);
 
     // Load the code of the profile at the same time as its data
-    if (open) void import("./ProfileContent");
-  }, []);
+    if (open) void loadProfileContent();
+  };
 
-  const handleRoleAssignmentsChanged = useCallback(() => {
+  const handleRoleAssignmentsChanged = () => {
     void refetch();
-  }, [refetch]);
+  };
 
   return (
     <PopoverBaseUI

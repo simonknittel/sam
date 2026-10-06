@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useContext } from "react";
 
 /**
  * The ids of the citizens who have their birthday today. An empty set
@@ -21,7 +21,7 @@ interface Props {
  * never reaches the browser — see `getCitizenIdsWithBirthdayToday`.
  */
 export const BirthdayCitizensProvider = ({ children, citizenIds }: Props) => {
-  const value = useMemo(() => new Set(citizenIds), [citizenIds]);
+  const value = new Set(citizenIds);
 
   return (
     <BirthdayCitizensContext value={value}>{children}</BirthdayCitizensContext>

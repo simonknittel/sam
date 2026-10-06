@@ -7,7 +7,7 @@ import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { api } from "@/trpc/react";
 import type { WikiPage } from "@sam-monorepo/database/browser";
-import { useCallback, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { BsExclamationOctagonFill } from "react-icons/bs";
 import { FaInfoCircle } from "react-icons/fa";
 
@@ -43,9 +43,9 @@ export const WikiPageDetailsPopover = ({ pageId }: Props) => {
     },
   );
 
-  const handleOpenChange = useCallback((open: boolean) => {
+  const handleOpenChange = (open: boolean) => {
     if (open) setIsEnabled(true);
-  }, []);
+  };
 
   return (
     <PopoverBaseUI

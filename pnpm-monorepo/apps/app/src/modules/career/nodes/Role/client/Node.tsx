@@ -19,7 +19,7 @@ import {
 } from "@xyflow/react";
 import clsx from "clsx";
 import Image from "next/image";
-import { useCallback, useState, type ComponentType } from "react";
+import { useState, type ComponentType } from "react";
 import { FaPen } from "react-icons/fa";
 import { FaTrash } from "react-icons/fa6";
 import { CreateOrUpdateNodeModal } from "../../../components/CreateOrUpdateNodeModal";
@@ -51,13 +51,13 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
   if (!authentication || !authentication.session.entity)
     throw new Error("Unauthorized");
 
-  const onEdit = useCallback(() => {
+  const onEdit = () => {
     setIsEditModalOpen((currentValue) => !currentValue);
-  }, []);
+  };
 
-  const onDelete = useCallback(() => {
+  const onDelete = () => {
     void deleteElements({ nodes: [{ id: props.id }] });
-  }, [deleteElements, props.id]);
+  };
 
   const role =
     "role" in props.data && props.data.role

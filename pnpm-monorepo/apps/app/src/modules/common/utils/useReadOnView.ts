@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useEffectEvent,
-  useRef,
-  type RefObject,
-} from "react";
+import { useEffect, useEffectEvent, useRef, type RefObject } from "react";
 
 /**
  * An item counts as viewed once at least this share of it has been visible
@@ -65,7 +59,7 @@ export const useReadOnView = ({ enabled = true, rootRef, onRead }: Options) => {
 
   const reportRead = useEffectEvent(onRead);
 
-  const observeItem: ReadOnViewRef = useCallback((element) => {
+  const observeItem: ReadOnViewRef = (element) => {
     if (!element) return;
 
     registeredElements.current.add(element);
@@ -79,7 +73,7 @@ export const useReadOnView = ({ enabled = true, rootRef, onRead }: Options) => {
         observer.unobserve(element);
       }
     };
-  }, []);
+  };
 
   useEffect(() => {
     if (!enabled) return;

@@ -1,7 +1,7 @@
 "use client";
 
 import { api, type RouterOutputs } from "@/trpc/react";
-import { useCallback, useEffect, useEffectEvent, useRef } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 import { useLogAnalyzerContext } from "../components/LogAnalyzerContext";
 import { deleteEntriesBefore, getWindowStart } from "../utils/entryWindow";
 import { LIVE_MODE_DOWNLOAD_INTERVAL_MS } from "../utils/liveMode";
@@ -14,8 +14,8 @@ import {
 } from "../utils/PATTERNS";
 import { clampDaysToLoad } from "../utils/sharedEntries";
 
-type SharedEntry =
-  RouterOutputs["logAnalyzer"]["getSharedEntries"]["entries"][number];
+type SharedEntriesResponse = RouterOutputs["logAnalyzer"]["getSharedEntries"];
+type SharedEntry = SharedEntriesResponse["entries"][number];
 
 /**
  * Rebuilds the capture groups and the message of a shared entry. An entry of
@@ -72,7 +72,30 @@ export const useSharedEntries = () => {
   /** The generation whose request is on its way, so two never overlap. */
   const fetchingGenerationRef = useRef<number | null>(null);
 
-  const fetchSharedEntries = useCallback(async () => {
+  const addSharedEntries = (data: SharedEntriesResponse) => {
+    const isNew = hasLoadedRef.current;
+    hasLoadedRef.current = true;
+
+    if (data.entries.length > 0) {
+      setEntries((previousEntries) => {
+        const newEntries = new Map(previousEntries);
+
+        for (const row of data.entries) {
+          const entry = toEntry(row, isNew);
+          /** A local entry of the same line wins: it is the user's own event */
+          if (!entry || newEntries.has(entry.key)) continue;
+          newEntries.set(entry.key, entry);
+        }
+
+        deleteEntriesBefore(newEntries, getWindowStart(daysToLoad));
+        return newEntries;
+      });
+    }
+
+    if (data.cursorId) cursorRef.current = data.cursorId;
+  };
+
+  const fetchSharedEntries = async () => {
     const generation = generationRef.current;
     if (fetchingGenerationRef.current === generation) return;
     fetchingGenerationRef.current = generation;
@@ -84,35 +107,19 @@ export const useSharedEntries = () => {
         cursorId: cursorRef.current,
       });
 
-      if (generation !== generationRef.current) return;
-
-      const isNew = hasLoadedRef.current;
-      hasLoadedRef.current = true;
-
-      if (data.entries.length > 0) {
-        setEntries((previousEntries) => {
-          const newEntries = new Map(previousEntries);
-
-          for (const row of data.entries) {
-            const entry = toEntry(row, isNew);
-            /** A local entry of the same line wins: it is the user's own event */
-            if (!entry || newEntries.has(entry.key)) continue;
-            newEntries.set(entry.key, entry);
-          }
-
-          deleteEntriesBefore(newEntries, getWindowStart(daysToLoad));
-          return newEntries;
-        });
-      }
-
-      if (data.cursorId) cursorRef.current = data.cursorId;
+      if (generation === generationRef.current) addSharedEntries(data);
     } catch (error) {
       console.error("[Log Analyzer] Error loading shared entries:", error);
-    } finally {
-      if (fetchingGenerationRef.current === generation)
-        fetchingGenerationRef.current = null;
     }
-  }, [daysToLoad, setEntries, utils]);
+
+    /**
+     * Not in a `finally` clause, because the React Compiler does not compile
+     * a function with one. The catch clause above handles all errors, thus
+     * this line runs after each request.
+     */
+    if (fetchingGenerationRef.current === generation)
+      fetchingGenerationRef.current = null;
+  };
 
   /** A changed `daysToLoad` must not restart the interval or load again */
   const fetchSharedEntriesFromEffect = useEffectEvent(() => {
@@ -141,8 +148,8 @@ export const useSharedEntries = () => {
     return () => window.clearInterval(interval);
   }, [isLiveModeEnabled, isSharedViewEnabled]);
 
-  return useCallback(() => {
+  return () => {
     if (!isSharedViewEnabled) return;
     void fetchSharedEntries();
-  }, [fetchSharedEntries, isSharedViewEnabled]);
+  };
 };

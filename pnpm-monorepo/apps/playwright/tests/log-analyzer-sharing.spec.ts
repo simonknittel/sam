@@ -92,6 +92,67 @@ const appendLogLines = (page: Page, lines: readonly string[]) =>
     [...lines],
   );
 
+/**
+ * Records for each request to the log parser worker whether it reads the
+ * whole window again (`isFullRead`).
+ */
+const recordFullReads = (page: Page) =>
+  page.addInitScript(() => {
+    const fullReads: boolean[] = [];
+    const originalPostMessage = Worker.prototype.postMessage;
+
+    Worker.prototype.postMessage = function (
+      this: Worker,
+      ...parameters: Parameters<Worker["postMessage"]>
+    ) {
+      const [message] = parameters;
+      if (typeof message === "object" && message && "isFullRead" in message)
+        fullReads.push(Boolean(message.isFullRead));
+
+      originalPostMessage.apply(this, parameters);
+    } as Worker["postMessage"];
+
+    Object.assign(window, { fullReads });
+  });
+
+const fullReads = (page: Page) =>
+  page.evaluate(
+    () => (window as unknown as { fullReads: boolean[] }).fullReads,
+  );
+
+/**
+ * Replaces the picture-in-picture window of the browser, which no test can
+ * open. The overlay renders into a document of its own, and the stub counts
+ * how often the app closes the window.
+ */
+const stubPictureInPicture = (page: Page) =>
+  page.addInitScript(() => {
+    const overlayWindow = {
+      document: document.implementation.createHTMLDocument("Overlay"),
+      closeCount: 0,
+      addEventListener: () => {},
+      close() {
+        overlayWindow.closeCount += 1;
+      },
+    };
+
+    Object.defineProperty(window, "documentPictureInPicture", {
+      configurable: true,
+      value: { requestWindow: () => Promise.resolve(overlayWindow) },
+    });
+    Object.assign(window, { overlayWindow });
+  });
+
+const readOverlayWindow = (page: Page) =>
+  page.evaluate(() => {
+    const { document: overlayDocument, closeCount } = (
+      window as unknown as {
+        overlayWindow: { document: Document; closeCount: number };
+      }
+    ).overlayWindow;
+    return { text: overlayDocument.body.textContent, closeCount };
+  });
+
 const settingsDialog = (page: Page) =>
   page.getByRole("dialog", { name: "Filter & Teilen", exact: true });
 
@@ -398,10 +459,15 @@ test("live mode reads the lines which the game adds to the log", async ({
   /** The test moves the time of the page forward instead of waiting */
   await page.clock.install();
   await stubDirectoryPicker(page, [joinPuLine(hoursAgo(2))]);
+  await recordFullReads(page);
   await page.goto(PAGE_PATH);
 
   await selectFolder(page);
   await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 1);
+  /** A retried click of the folder button reads the folder once more */
+  const readsOfTheFolder = await fullReads(page);
+  expect(readsOfTheFolder).not.toHaveLength(0);
+  expect(readsOfTheFolder).not.toContain(false);
 
   await toggleLabel(page, "Automatisch aktualisieren").click();
   await expect(
@@ -414,6 +480,78 @@ test("live mode reads the lines which the game adds to the log", async ({
 
   await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 2);
   await expect(rowOf(page, "Blueprint erhalten")).toBeVisible();
+
+  /**
+   * The cycle of live mode reads only the added lines. The renders since
+   * the first read must not ask for the whole window again.
+   */
+  const readsOfLiveMode = (await fullReads(page)).slice(
+    readsOfTheFolder.length,
+  );
+  expect(readsOfLiveMode).not.toHaveLength(0);
+  expect(readsOfLiveMode).not.toContain(true);
+});
+
+test("the overlay stays open while the page renders again", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, {
+    handle: "log-overlay",
+    permissionStrings: LOG_ANALYZER_PERMISSIONS,
+  });
+
+  await signIn(citizen.user);
+  await stubDirectoryPicker(page, [joinPuLine(hoursAgo(2))]);
+  await stubPictureInPicture(page);
+  await page.goto(PAGE_PATH);
+
+  await selectFolder(page);
+  await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 1);
+
+  await page.getByRole("button", { name: "Overlay", exact: true }).click();
+  await expect
+    .poll(async () => (await readOverlayWindow(page)).text)
+    .toContain("Neue Logs aus der aktuellen Session");
+
+  /** The overlay shows the entries which a refresh of the folder adds */
+  await appendLogLines(page, [blueprintLine(hoursAgo(1))]);
+  await refresh(page);
+  await expect
+    .poll(async () => (await readOverlayWindow(page)).text)
+    .toContain("Blueprint erhalten");
+
+  /**
+   * No control of the page loads it again from the server. The router of
+   * Next.js, which the page shows as `window.next.router` for debugging,
+   * does that like a server action with `refresh()`, and it writes a new
+   * history state when it renders the answer. That render reaches the whole
+   * log analyzer.
+   */
+  await page.evaluate(() => {
+    Object.assign(window, { historyStateBeforeRefresh: window.history.state });
+    (
+      window as unknown as { next: { router: { refresh: () => void } } }
+    ).next.router.refresh();
+  });
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          window.history.state !==
+          (window as unknown as { historyStateBeforeRefresh: unknown })
+            .historyStateBeforeRefresh,
+      ),
+    )
+    .toBe(true);
+
+  await appendLogLines(page, [disconnectionLine(hoursAgo(1))]);
+  await refresh(page);
+  await expect
+    .poll(async () => (await readOverlayWindow(page)).text)
+    .toContain("Verbindung getrennt");
+  expect((await readOverlayWindow(page)).closeCount).toBe(0);
 });
 
 test("a user without a linked citizen cannot share", async ({

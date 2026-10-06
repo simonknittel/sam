@@ -4,10 +4,8 @@ import * as RadixPopover from "@radix-ui/react-popover"; // eslint-disable-line 
 import clsx from "clsx";
 import {
   createContext,
-  useCallback,
   useContext,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -47,30 +45,27 @@ export const Popover = ({
     onOpenChangeRef.current = onOpenChange;
   }, [onOpenChange]);
 
-  const setIsOpen = useCallback((open: boolean) => {
+  const setIsOpen = (open: boolean) => {
     _setIsOpen(open);
     onOpenChangeRef.current?.(open);
-  }, []);
+  };
 
-  const onEnter = useCallback(() => setIsOpen(true), [setIsOpen]);
-  const onLeave = useCallback(() => setIsOpen(false), [setIsOpen]);
+  const onEnter = () => setIsOpen(true);
+  const onLeave = () => setIsOpen(false);
 
   const { handleMouseEnter, handleMouseLeave, reset } = useMouseEnterCounter(
     onEnter,
     onLeave,
   );
 
-  const closePopover = useCallback(() => {
+  const closePopover = () => {
     setIsOpen(false);
     reset();
-  }, [setIsOpen, reset]);
+  };
 
-  const value = useMemo(
-    () => ({
-      closePopover,
-    }),
-    [closePopover],
-  );
+  const value = {
+    closePopover,
+  };
 
   return (
     <PopoverContext value={value}>

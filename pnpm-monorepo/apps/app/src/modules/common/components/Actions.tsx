@@ -1,9 +1,9 @@
 "use client";
 
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { FaEllipsisH, FaTimes } from "react-icons/fa";
 import Button from "./Button";
-import { PopoverBaseUI, usePopoverBaseUI } from "./PopoverBaseUI";
+import { PopoverBaseUI } from "./PopoverBaseUI";
 
 interface Props {
   children?: ReactNode;
@@ -15,8 +15,7 @@ export const Actions = ({ children }: Readonly<Props>) => {
       title="Aktionen"
       /**
        * Base UI sets `data-popup-open` on the trigger while the menu is open.
-       * The icon follows this attribute, not an own state: `onOpenChange`
-       * does not report a close by an entry (`closePopover`).
+       * The icon follows this attribute, thus the menu needs no own state.
        */
       trigger={
         <>
@@ -31,50 +30,7 @@ export const Actions = ({ children }: Readonly<Props>) => {
       side="left"
       childrenClassName="flex flex-col items-start gap-2"
     >
-      <ActionsContextBridge>{children}</ActionsContextBridge>
+      {children}
     </PopoverBaseUI>
   );
 };
-
-const ActionsContextBridge = ({ children }: Readonly<Props>) => {
-  const { closePopover } = usePopoverBaseUI();
-
-  const value = useMemo(() => ({ closePopover }), [closePopover]);
-
-  return <ActionContext value={value}>{children}</ActionContext>;
-};
-
-interface ActionContextInterface {
-  closePopover: () => void;
-}
-
-const ActionContext = createContext<ActionContextInterface | undefined>(
-  undefined,
-);
-
-/**
- * Check for undefined since the defaultValue of the context is undefined. If
- * it's still undefined, then the provider is missing.
- *
- * Deliberately not named `useAction` — that name belongs to the server-action
- * hook in `modules/actions`.
- */
-export function useActionsContext() {
-  const context = useContext(ActionContext);
-  if (!context)
-    throw new Error(
-      "Provider for `useActionsContext()` is missing. Make sure to have a `<Actions> ... </Actions>` parent.",
-    );
-  return context;
-}
-
-/** The row menu around the component, or undefined outside of a row menu */
-export const useOptionalActionsContext = () => useContext(ActionContext);
-
-/**
- * Hides the row menu from its children. A dialog of a menu entry closes the
- * menu, but a dialog inside this dialog must not close it.
- */
-export const WithoutActionsContext = ({ children }: Readonly<Props>) => (
-  <ActionContext value={undefined}>{children}</ActionContext>
-);

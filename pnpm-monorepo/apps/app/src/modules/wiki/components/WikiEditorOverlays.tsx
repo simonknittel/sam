@@ -1,7 +1,7 @@
 "use client";
 
 import type { Editor } from "@tiptap/react";
-import { useCallback, useRef } from "react";
+import { useRef } from "react";
 import { WikiEditMenu } from "./WikiEditMenu";
 import {
   useWikiFocusedElement,
@@ -68,9 +68,9 @@ export const WikiEditorOverlays = ({ editor, onRequestLink }: Props) => {
     lockRef: dragLockRef,
   });
 
-  const setDragLock = useCallback((locked: boolean) => {
+  const setDragLock = (locked: boolean) => {
     dragLockRef.current = locked;
-  }, []);
+  };
 
   return (
     /* data-wiki-editor-chrome: clicks here keep the focused block */

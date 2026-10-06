@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import type { PrismaClient } from "@sam-monorepo/database/client";
 import { expectAuditEvents } from "../fixtures/audit";
 import { createCitizen, createUserWithoutCitizen } from "../fixtures/factories";
 import {
@@ -10,6 +11,11 @@ import {
   toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
+import {
+  holdServerActions,
+  isServerActionRequest,
+  recordServerActions,
+} from "../fixtures/server-actions";
 import { expect, test } from "../fixtures/test";
 
 /** A day of the Halloween range, thus every visit here carries that theme */
@@ -46,6 +52,16 @@ const eventCheckbox = (page: Page, eventKey: string) =>
 
 const toggleEvent = (page: Page, eventKey: string) =>
   toggleLabel(page, eventCheckbox(page, eventKey)).click();
+
+/** The keys of the events which the citizen switched off, sorted */
+const switchedOffEvents = (prisma: PrismaClient, citizenId: string) =>
+  prisma.seasonalThemeSetting
+    .findMany({
+      where: { citizenId },
+      select: { eventKey: true },
+      orderBy: { eventKey: "asc" },
+    })
+    .then((settings) => settings.map((setting) => setting.eventKey));
 
 test("the appearance page offers a switch for every seasonal event", async ({
   page,
@@ -141,6 +157,89 @@ test("switching the active event off strips its theme and switching it on restor
   expect(settings.map((setting) => setting.eventKey)).toEqual(["christmas"]);
 
   await expectAuditEvents(prisma, ["SEASONAL_THEME_SETTINGS_UPDATED"]);
+});
+
+test("a switch toggled while the save of another switch runs is saved too", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, {
+    handle: "darstellungs-nachzuegler",
+  });
+  await signIn(citizen.user);
+
+  await page.goto(APPEARANCE_PAGE);
+  // Each toggle saves once, thus the page has to be hydrated first
+  await waitForAppShellHydration(page);
+
+  const releaseSaves = await holdServerActions(page, APPEARANCE_PAGE);
+  const firstSave = page.waitForRequest((request) =>
+    isServerActionRequest(request, APPEARANCE_PAGE),
+  );
+  await toggleEvent(page, "christmas");
+  await firstSave;
+
+  /**
+   * The answer of the first save renders the form again. That render must
+   * keep the save of the second switch, which waits for the debounce.
+   */
+  await toggleEvent(page, "new-year");
+  releaseSaves();
+
+  await expect
+    .poll(() => switchedOffEvents(prisma, citizen.entity.id))
+    .toEqual(["christmas", "new-year"]);
+});
+
+test("switches toggled within the debounce share one save", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, {
+    handle: "darstellungs-sammler",
+  });
+  await signIn(citizen.user);
+
+  await page.goto(APPEARANCE_PAGE);
+  await waitForAppShellHydration(page);
+
+  const saves = recordServerActions(page, APPEARANCE_PAGE);
+  for (const eventKey of ["halloween", "christmas", "new-year"])
+    await toggleEvent(page, eventKey);
+
+  await expect
+    .poll(() => switchedOffEvents(prisma, citizen.entity.id))
+    .toEqual(["christmas", "halloween", "new-year"]);
+  expect(saves).toHaveLength(1);
+});
+
+test("a switch toggled right before a navigation is still saved", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, {
+    handle: "darstellungs-wechsler",
+  });
+  await signIn(citizen.user);
+
+  await page.goto(APPEARANCE_PAGE);
+  await waitForAppShellHydration(page);
+
+  const pageErrors: Error[] = [];
+  page.on("pageerror", (error) => pageErrors.push(error));
+
+  /** The navigation removes the form before the debounce ends */
+  await toggleEvent(page, "christmas");
+  await page.getByRole("link", { name: "Sitzungen" }).click();
+  await expect(page).toHaveURL("/app/account/sessions");
+
+  await expect
+    .poll(() => switchedOffEvents(prisma, citizen.entity.id))
+    .toEqual(["christmas"]);
+  expect(pageErrors).toEqual([]);
 });
 
 test("the login page keeps its theme although the citizen switched it off", async ({

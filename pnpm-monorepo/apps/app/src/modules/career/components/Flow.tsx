@@ -27,12 +27,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useRouter } from "next/navigation";
-import {
-  useCallback,
-  useState,
-  useTransition,
-  type MouseEventHandler,
-} from "react";
+import { useState, useTransition, type MouseEventHandler } from "react";
 import { FaPen, FaSave } from "react-icons/fa";
 import { FaPlus } from "react-icons/fa6";
 import { updateFlow } from "../actions/updateFlow";
@@ -84,7 +79,7 @@ export const Flow = ({
   const router = useRouter();
   const [unsaved, setUnsaved] = useState(false);
 
-  const onNodesChange: OnNodesChange = useCallback((changes) => {
+  const onNodesChange: OnNodesChange = (changes) => {
     if (
       changes.some((change) => {
         if (change.type === "select") return false;
@@ -94,17 +89,17 @@ export const Flow = ({
     )
       setUnsaved(true);
     return setNodes((nds) => applyNodeChanges(changes, nds));
-  }, []);
-  const onEdgesChange: OnEdgesChange = useCallback((changes) => {
+  };
+  const onEdgesChange: OnEdgesChange = (changes) => {
     if (changes.some((change) => change.type !== "select")) setUnsaved(true);
     return setEdges((eds) => applyEdgeChanges(changes, eds));
-  }, []);
-  const onConnect: OnConnect = useCallback((params) => {
+  };
+  const onConnect: OnConnect = (params) => {
     setUnsaved(true);
     return setEdges((eds) => addEdge(params, eds));
-  }, []);
+  };
 
-  const onSave: MouseEventHandler<HTMLButtonElement> = useCallback(() => {
+  const onSave: MouseEventHandler<HTMLButtonElement> = () => {
     startTransition(async () => {
       const formData = new FormData();
       formData.append("flowId", flow.id);
@@ -113,18 +108,17 @@ export const Flow = ({
 
       if (await runAction(updateFlow, formData)) setUnsaved(false);
     });
-  }, [flow.id, nodes, edges]);
+  };
 
-  const onToggleUpdating: MouseEventHandler<HTMLButtonElement> =
-    useCallback(() => {
-      if (isUpdating) {
-        document.cookie = `is_updating_flow=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC`;
-      } else {
-        document.cookie = `is_updating_flow=${flow.id}; path=/`;
-      }
+  const onToggleUpdating: MouseEventHandler<HTMLButtonElement> = () => {
+    if (isUpdating) {
+      document.cookie = `is_updating_flow=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC`;
+    } else {
+      document.cookie = `is_updating_flow=${flow.id}; path=/`;
+    }
 
-      router.refresh();
-    }, [isUpdating, flow.id, router]);
+    router.refresh();
+  };
 
   return (
     <FlowProvider isUpdating={isUpdating} additionalData={additionalData}>

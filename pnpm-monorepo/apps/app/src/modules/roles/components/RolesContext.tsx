@@ -2,7 +2,7 @@
 
 import type { BadgeRole } from "@/modules/roles/queries/getRoles";
 import type { ReactNode } from "react";
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useContext } from "react";
 
 interface RolesContext {
   readonly roles: readonly BadgeRole[];
@@ -16,12 +16,9 @@ interface Props {
 }
 
 export const RolesContextProvider = ({ children, roles }: Props) => {
-  const value = useMemo(
-    () => ({
-      roles,
-    }),
-    [roles],
-  );
+  const value = {
+    roles,
+  };
 
   return <RolesContext value={value}>{children}</RolesContext>;
 };

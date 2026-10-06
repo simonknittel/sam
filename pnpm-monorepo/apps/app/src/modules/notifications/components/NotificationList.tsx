@@ -5,7 +5,7 @@ import { useTabsContext } from "@/modules/common/components/tabs/TabsContext";
 import { useReadOnView } from "@/modules/common/utils/useReadOnView";
 import { api } from "@/trpc/react";
 import clsx from "clsx";
-import { useCallback, useRef } from "react";
+import { useRef } from "react";
 import { BsExclamationOctagonFill } from "react-icons/bs";
 import { useOnSiteNotificationMutations } from "../hooks/useOnSiteNotificationMutations";
 import { NotificationCenterTab } from "../utils/types";
@@ -81,13 +81,13 @@ export const NotificationList = ({
     onRead: handleRead,
   });
 
-  const handleNavigateToTarget = useCallback(
-    (notificationId: string, isUnread: boolean) => {
-      if (isUnread) void markRead([notificationId]);
-      onNavigate?.();
-    },
-    [markRead, onNavigate],
-  );
+  const handleNavigateToTarget = (
+    notificationId: string,
+    isUnread: boolean,
+  ) => {
+    if (isUnread) void markRead([notificationId]);
+    onNavigate?.();
+  };
 
   if (isPending)
     return (

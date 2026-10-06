@@ -3,7 +3,7 @@
 import { runAction } from "@/modules/actions/utils/runAction";
 import clsx from "clsx";
 import { debounce } from "lodash";
-import { useEffect, useMemo, type FormEvent, type ReactNode } from "react";
+import { useEffect, type FormEvent, type ReactNode } from "react";
 import { updateParticipantAttribute } from "../actions/updateParticipantAttribute";
 
 interface Props {
@@ -13,16 +13,12 @@ interface Props {
 }
 
 export const CitizenTableForm = ({ children, className, cycleId }: Props) => {
-  const submit = useMemo(
-    () =>
-      debounce((form: HTMLFormElement) => {
-        const formData = new FormData(form);
-        formData.append("cycleId", cycleId);
+  const submit = debounce((form: HTMLFormElement) => {
+    const formData = new FormData(form);
+    formData.append("cycleId", cycleId);
 
-        void runAction(updateParticipantAttribute, formData);
-      }, 1000),
-    [cycleId],
-  );
+    void runAction(updateParticipantAttribute, formData);
+  }, 1000);
 
   /**
    * A change that waits for the debounce is saved when the form unmounts (for

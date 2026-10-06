@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useContext } from "react";
 
 interface FlowContext {
   isUpdating: boolean;
@@ -21,10 +21,7 @@ export const FlowProvider = ({
   isUpdating,
   additionalData,
 }: Props) => {
-  const value = useMemo(
-    () => ({ isUpdating, additionalData }),
-    [isUpdating, additionalData],
-  );
+  const value = { isUpdating, additionalData };
 
   return <FlowContext value={value}>{children}</FlowContext>;
 };

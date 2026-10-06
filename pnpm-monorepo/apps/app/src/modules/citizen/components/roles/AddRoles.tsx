@@ -10,7 +10,7 @@ import clsx from "clsx";
 import Fuse, { type FuseResult } from "fuse.js";
 
 import { api } from "@/trpc/react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { BsExclamationOctagonFill } from "react-icons/bs";
 import { FaPen } from "react-icons/fa";
 import { RoleCheckbox } from "./RoleCheckbox";
@@ -50,26 +50,18 @@ export const AddRoles = ({
     setQuery("");
   };
 
-  const fuse = useMemo(() => {
-    if (!assignableRoles) return null;
-    return new Fuse<BadgeRole>(assignableRoles, {
-      keys: ["name"],
-      includeMatches: true,
-      threshold: 0.2,
-    });
-  }, [assignableRoles]);
+  const fuse = assignableRoles
+    ? new Fuse<BadgeRole>(assignableRoles, {
+        keys: ["name"],
+        includeMatches: true,
+        threshold: 0.2,
+      })
+    : null;
 
-  const searchResults = useMemo(
-    () => (query && fuse ? fuse.search(query) : []),
-    [fuse, query],
-  );
+  const searchResults = query && fuse ? fuse.search(query) : [];
 
-  const resultsById = useMemo(
-    () =>
-      new Map<Role["id"], FuseResult<BadgeRole>>(
-        searchResults.map((result) => [result.item.id, result] as const),
-      ),
-    [searchResults],
+  const resultsById = new Map<Role["id"], FuseResult<BadgeRole>>(
+    searchResults.map((result) => [result.item.id, result] as const),
   );
 
   return (
@@ -111,7 +103,7 @@ export const AddRoles = ({
                   label="Suche"
                   placeholder="Rolle suchen..."
                   value={query}
-                  onChange={(e) => setQuery(e.target.value)}
+                  onChange={(event) => setQuery(event.target.value)}
                   autoFocus
                   className="hidden"
                 />

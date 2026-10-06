@@ -25,12 +25,11 @@ interface Props {
 }
 
 export const EventTemplatesTable = async ({ searchParams }: Props) => {
-  const {
-    [EVENT_TEMPLATE_STATUS_PARAM]: status,
-    [EVENT_TEMPLATE_SHARING_PARAM]: sharing,
-    [EVENT_TEMPLATE_OWNER_PARAM]: ownerId,
-    [EVENT_TEMPLATE_QUERY_PARAM]: query,
-  } = await loadSearchParams(searchParams);
+  const searchParameters = await loadSearchParams(searchParams);
+  const status = searchParameters[EVENT_TEMPLATE_STATUS_PARAM];
+  const sharing = searchParameters[EVENT_TEMPLATE_SHARING_PARAM];
+  const ownerId = searchParameters[EVENT_TEMPLATE_OWNER_PARAM];
+  const query = searchParameters[EVENT_TEMPLATE_QUERY_PARAM];
 
   const authentication = await authenticate();
   const [viewer, entries, canCreate] = await Promise.all([

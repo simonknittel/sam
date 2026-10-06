@@ -291,7 +291,8 @@ export const WikiResizeHandles = ({
         );
       }
 
-      dragState.frame ??= window.requestAnimationFrame(writeDraggedValue);
+      if (dragState.frame === null)
+        dragState.frame = window.requestAnimationFrame(writeDraggedValue);
     };
 
     /**

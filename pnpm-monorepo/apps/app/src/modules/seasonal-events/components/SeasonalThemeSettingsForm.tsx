@@ -6,13 +6,7 @@ import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import type { SeasonalEventKey } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { debounce } from "lodash";
-import {
-  startTransition,
-  useEffect,
-  useId,
-  useMemo,
-  type FormEvent,
-} from "react";
+import { startTransition, useEffect, useId, type FormEvent } from "react";
 import { updateMySeasonalThemeSettings } from "../actions/updateMySeasonalThemeSettings";
 
 /**
@@ -41,19 +35,19 @@ export const SeasonalThemeSettingsForm = ({ className, rows }: Props) => {
     errorToast: false,
   });
 
-  const submit = useMemo(
-    () =>
-      debounce((form: HTMLFormElement) => {
-        const formData = new FormData(form);
+  const submit = debounce((form: HTMLFormElement) => {
+    const formData = new FormData(form);
 
-        startTransition(() => formAction(formData));
-      }, SAVE_DEBOUNCE_DURATION),
-    [formAction],
-  );
+    startTransition(() => formAction(formData));
+  }, SAVE_DEBOUNCE_DURATION);
 
+  /**
+   * A change that waits for the debounce is saved when the form unmounts (for
+   * example on a navigation), and not lost.
+   */
   useEffect(() => {
     return () => {
-      submit.cancel();
+      submit.flush();
     };
   }, [submit]);
 

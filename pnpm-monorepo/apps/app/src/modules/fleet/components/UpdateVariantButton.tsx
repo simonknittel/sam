@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionsContext } from "@/modules/common/components/Actions";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
+import { usePopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import {
   type Variant,
   type VariantExternalLink,
@@ -27,7 +27,7 @@ interface Props {
 
 export const UpdateVariantButton = ({ className, variant }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const actionsContext = useActionsContext();
+  const actionsMenu = usePopoverBaseUI();
 
   return (
     <div className={clsx(className, "flex justify-center")}>
@@ -45,7 +45,8 @@ export const UpdateVariantButton = ({ className, variant }: Props) => {
           <UpdateVariantModal
             onRequestClose={() => {
               setIsOpen(false);
-              actionsContext.closePopover();
+              // This removes the modal at once: it cannot close the menu
+              actionsMenu.closePopover();
             }}
             variant={variant}
           />

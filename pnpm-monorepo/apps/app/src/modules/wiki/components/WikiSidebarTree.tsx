@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   FaAngleDoubleDown,
   FaAngleDoubleUp,
@@ -53,10 +53,7 @@ export const WikiSidebarTree = ({
 }: Props) => {
   const hrefMode = useWikiPageHrefMode();
   const [showHidden, setShowHidden] = useState(initialShowHidden);
-  const defaultTree = useMemo(
-    () => pruneWikiTree(tree, new Set(hiddenPageIds)),
-    [tree, hiddenPageIds],
-  );
+  const defaultTree = pruneWikiTree(tree, new Set(hiddenPageIds));
   const nodes = showHidden ? tree : defaultTree;
   const hasCollapsiblePages = nodes.some((node) => node.children.length > 0);
 

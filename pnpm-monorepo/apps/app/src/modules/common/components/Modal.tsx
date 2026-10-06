@@ -3,9 +3,12 @@
 import { Dialog } from "@base-ui/react/dialog";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
-import type { ReactNode } from "react";
+import { useLayoutEffect, type ReactNode } from "react";
 import { FaRegTimesCircle } from "react-icons/fa";
-import { useOptionalActionsContext, WithoutActionsContext } from "./Actions";
+import {
+  useOptionalPopoverBaseUI,
+  WithoutPopoverBaseUI,
+} from "./PopoverBaseUI";
 
 interface Props {
   readonly className?: string;
@@ -23,7 +26,20 @@ export default function Modal({
   heading,
 }: Props) {
   const router = useRouter();
-  const rowMenu = useOptionalActionsContext();
+  const popover = useOptionalPopoverBaseUI();
+  const isDialogOpen = Boolean(isOpen);
+
+  /**
+   * A modal in a popover (for example in a row menu of `Actions`) is a part
+   * of the content of the popover. The popover stays open while the modal is
+   * open. A layout effect holds the popover before the browser shows the
+   * modal.
+   */
+  useLayoutEffect(() => {
+    if (!isDialogOpen || !popover) return;
+
+    return popover.keepOpen();
+  }, [isDialogOpen, popover]);
 
   const handleOpenChange = (open: boolean) => {
     if (open) return;
@@ -36,20 +52,25 @@ export default function Modal({
   };
 
   /**
-   * A modal of an entry of a row menu (`Actions`) also closes the menu, for
-   * each type of close. It closes the menu only after its own close: then the
-   * focus is back on the entry in the menu, and the menu gives it to its
-   * trigger. A modal inside this modal does not see the menu.
+   * A modal in a popover also closes the popover, for each type of close. It
+   * closes the popover only after its own close: then the focus is back on
+   * the element in the popover that opened the modal. A popover that opened
+   * on a click then gives the focus to its trigger. A popover that opened on
+   * a hover does not control the focus, thus the focus goes to the body.
+   * A modal that its parent removes (and does not close through `isOpen`)
+   * does not get this event. Then the parent must close the popover (for
+   * example UpdateVariantButton). A modal inside this modal does not see the
+   * popover.
    */
-  const closeRowMenu = (open: boolean) => {
-    if (!open) rowMenu?.closePopover();
+  const closePopover = (open: boolean) => {
+    if (!open) popover?.closePopover();
   };
 
   return (
     <Dialog.Root
-      open={Boolean(isOpen)}
+      open={isDialogOpen}
       onOpenChange={handleOpenChange}
-      onOpenChangeComplete={closeRowMenu}
+      onOpenChangeComplete={closePopover}
     >
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-30 bg-neutral-800/50 backdrop-blur-sm" />
@@ -78,7 +99,7 @@ export default function Modal({
             </div>
 
             <div className="p-4">
-              <WithoutActionsContext>{children}</WithoutActionsContext>
+              <WithoutPopoverBaseUI>{children}</WithoutPopoverBaseUI>
             </div>
           </Dialog.Popup>
         </div>

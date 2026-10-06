@@ -9,7 +9,7 @@ import {
   WikiPageEventScope,
   WikiPageUploadability,
 } from "@sam-monorepo/database/browser";
-import { useCallback, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   FaGlobe,
   FaPen,
@@ -91,7 +91,7 @@ export const EventWikiPagePermissionsProvider = ({
   parentEditScope,
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const openPermissions = useCallback(() => setIsOpen(true), []);
+  const openPermissions = () => setIsOpen(true);
   const [readScope, setReadScope] =
     useState<WikiPageEventScope>(initialReadScope);
   const [readPositionId, setReadPositionId] = useState(

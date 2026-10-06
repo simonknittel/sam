@@ -2,14 +2,7 @@
 
 import { runAction } from "@/modules/actions/utils/runAction";
 import { OnboardingTaskCompletionMethod } from "@sam-monorepo/database/browser";
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 import { completeOnboardingStep } from "../actions/completeOnboardingStep";
 import { completeOnboardingTask } from "../actions/completeOnboardingTask";
 import { skipAllOnboardingTasks } from "../actions/skipAllOnboardingTasks";
@@ -53,18 +46,10 @@ interface Props {
 }
 
 export const OnboardingProvider = ({ initialState, children }: Props) => {
-  const eligibleTasks = useMemo(
-    () => initialState?.eligibleTasks ?? [],
-    [initialState?.eligibleTasks],
-  );
-  const serverCompletedTaskKeys = useMemo(
-    () => initialState?.completedTaskKeys ?? [],
-    [initialState?.completedTaskKeys],
-  );
-  const serverCompletedStepProgressKeys = useMemo(
-    () => initialState?.completedStepProgressKeys ?? [],
-    [initialState?.completedStepProgressKeys],
-  );
+  const eligibleTasks = initialState?.eligibleTasks ?? [];
+  const serverCompletedTaskKeys = initialState?.completedTaskKeys ?? [];
+  const serverCompletedStepProgressKeys =
+    initialState?.completedStepProgressKeys ?? [];
 
   /**
    * Completing or skipping deliberately calls no `refresh()`, which would
@@ -101,55 +86,50 @@ export const OnboardingProvider = ({ initialState, children }: Props) => {
     null,
   );
 
-  const completeTask = useCallback(
-    (taskKey: OnboardingTaskKey, method: OnboardingTaskCompletionMethod) => {
-      setCompletedTaskKeys(
-        (previousKeys) => new Set([...previousKeys, taskKey]),
-      );
+  const completeTask = (
+    taskKey: OnboardingTaskKey,
+    method: OnboardingTaskCompletionMethod,
+  ) => {
+    setCompletedTaskKeys((previousKeys) => new Set([...previousKeys, taskKey]));
 
-      const formData = new FormData();
-      formData.append("taskKey", taskKey);
-      formData.append("completionMethod", method);
-      void runAction(completeOnboardingTask, formData);
-    },
-    [],
-  );
+    const formData = new FormData();
+    formData.append("taskKey", taskKey);
+    formData.append("completionMethod", method);
+    void runAction(completeOnboardingTask, formData);
+  };
 
-  const startTour = useCallback(
-    (taskKey: OnboardingTaskKey) => {
-      const task = eligibleTasks.find(
-        (taskCandidate) => taskCandidate.key === taskKey,
-      );
-      if (!task) return;
+  const startTour = (taskKey: OnboardingTaskKey) => {
+    const task = eligibleTasks.find(
+      (taskCandidate) => taskCandidate.key === taskKey,
+    );
+    if (!task) return;
 
-      /** A replay of a completed task starts from the beginning */
-      const isReplay = completedTaskKeys.has(taskKey);
+    /** A replay of a completed task starts from the beginning */
+    const isReplay = completedTaskKeys.has(taskKey);
 
-      const firstIncompleteIndex = task.stepKeys.findIndex(
-        (stepKey) =>
-          !completedStepProgressKeys.has(
-            encodeOnboardingStepProgressKey(taskKey, stepKey),
-          ),
-      );
+    const firstIncompleteIndex = task.stepKeys.findIndex(
+      (stepKey) =>
+        !completedStepProgressKeys.has(
+          encodeOnboardingStepProgressKey(taskKey, stepKey),
+        ),
+    );
 
-      /**
-       * All steps stamped but the task not finished (e.g. exited on the last
-       * step): resume at the last step so the task can still be finished.
-       */
-      const resumeIndex =
-        firstIncompleteIndex === -1
-          ? task.stepKeys.length - 1
-          : firstIncompleteIndex;
+    /**
+     * All steps stamped but the task not finished (e.g. exited on the last
+     * step): resume at the last step so the task can still be finished.
+     */
+    const resumeIndex =
+      firstIncompleteIndex === -1
+        ? task.stepKeys.length - 1
+        : firstIncompleteIndex;
 
-      setActiveTour({
-        taskKey,
-        stepIndex: isReplay ? 0 : resumeIndex,
-      });
-    },
-    [eligibleTasks, completedTaskKeys, completedStepProgressKeys],
-  );
+    setActiveTour({
+      taskKey,
+      stepIndex: isReplay ? 0 : resumeIndex,
+    });
+  };
 
-  const advanceTour = useCallback(() => {
+  const advanceTour = () => {
     if (!activeTour) return;
 
     const task = eligibleTasks.find(
@@ -187,68 +167,50 @@ export const OnboardingProvider = ({ initialState, children }: Props) => {
     }
 
     setActiveTour({ ...activeTour, stepIndex: activeTour.stepIndex + 1 });
-  }, [activeTour, eligibleTasks, completeTask]);
+  };
 
-  const retreatTour = useCallback(() => {
+  const retreatTour = () => {
     setActiveTour((currentTour) =>
       currentTour && currentTour.stepIndex > 0
         ? { ...currentTour, stepIndex: currentTour.stepIndex - 1 }
         : currentTour,
     );
-  }, []);
+  };
 
-  const exitTour = useCallback(() => {
+  const exitTour = () => {
     setActiveTour(null);
-  }, []);
+  };
 
-  const markTaskAsDone = useCallback(
-    (taskKey: OnboardingTaskKey) => {
-      completeTask(taskKey, OnboardingTaskCompletionMethod.SKIPPED);
-    },
-    [completeTask],
-  );
+  const markTaskAsDone = (taskKey: OnboardingTaskKey) => {
+    completeTask(taskKey, OnboardingTaskCompletionMethod.SKIPPED);
+  };
 
-  const markAllTasksAsDone = useCallback(() => {
+  const markAllTasksAsDone = () => {
     setCompletedTaskKeys(
       (previousKeys) =>
         new Set([...previousKeys, ...eligibleTasks.map((task) => task.key)]),
     );
 
     void runAction(skipAllOnboardingTasks, new FormData());
-  }, [eligibleTasks]);
+  };
 
   const openTaskCount = eligibleTasks.filter(
     (task) => !completedTaskKeys.has(task.key),
   ).length;
 
-  const value = useMemo(
-    () => ({
-      eligibleTasks,
-      completedTaskKeys,
-      completedStepProgressKeys,
-      openTaskCount,
-      activeTour,
-      startTour,
-      advanceTour,
-      retreatTour,
-      exitTour,
-      markTaskAsDone,
-      markAllTasksAsDone,
-    }),
-    [
-      eligibleTasks,
-      completedTaskKeys,
-      completedStepProgressKeys,
-      openTaskCount,
-      activeTour,
-      startTour,
-      advanceTour,
-      retreatTour,
-      exitTour,
-      markTaskAsDone,
-      markAllTasksAsDone,
-    ],
-  );
+  const value = {
+    eligibleTasks,
+    completedTaskKeys,
+    completedStepProgressKeys,
+    openTaskCount,
+    activeTour,
+    startTour,
+    advanceTour,
+    retreatTour,
+    exitTour,
+    markTaskAsDone,
+    markAllTasksAsDone,
+  };
 
   return <OnboardingContext value={value}>{children}</OnboardingContext>;
 };

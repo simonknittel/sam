@@ -4,10 +4,8 @@ import { runAction } from "@/modules/actions/utils/runAction";
 import clsx from "clsx";
 import {
   createContext,
-  useCallback,
   useContext,
   useEffect,
-  useMemo,
   useRef,
   useState,
   useTransition,
@@ -54,56 +52,51 @@ export const WikiPageDndProvider = ({ children }: ProviderProps) => {
   const [draggedPageId, setDraggedPageId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const handleCancel = useCallback(() => {
+  const handleCancel = () => {
     setDraggedPageId(null);
-  }, []);
+  };
 
-  const handleDragStart = useCallback(
-    (event: MouseEvent<HTMLButtonElement>, pageId: string) => {
-      if (event.button !== 0) return;
-      // Prevent text selection while dragging
-      event.preventDefault();
-      setDraggedPageId(pageId);
-      document.addEventListener("mouseup", handleCancel, { once: true });
-    },
-    [handleCancel],
-  );
+  const handleDragStart = (
+    event: MouseEvent<HTMLButtonElement>,
+    pageId: string,
+  ) => {
+    if (event.button !== 0) return;
+    // Prevent text selection while dragging
+    event.preventDefault();
+    setDraggedPageId(pageId);
+    document.addEventListener("mouseup", handleCancel, { once: true });
+  };
 
-  const submitPosition = useCallback(
-    (pageId: string, referenceId: string, position: DropPosition) => {
-      startTransition(async () => {
-        const formData = new FormData();
-        formData.set("id", pageId);
-        formData.set("referenceId", referenceId);
-        formData.set("position", position);
-        await runAction(updateWikiPagePosition, formData, {
-          // The successful reorder is visible in the sidebar itself
-          successToast: false,
-        });
+  const submitPosition = (
+    pageId: string,
+    referenceId: string,
+    position: DropPosition,
+  ) => {
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.set("id", pageId);
+      formData.set("referenceId", referenceId);
+      formData.set("position", position);
+      await runAction(updateWikiPagePosition, formData, {
+        // The successful reorder is visible in the sidebar itself
+        successToast: false,
       });
-    },
-    [],
-  );
+    });
+  };
 
-  const handleDrop = useCallback(
-    (referenceId: string, position: DropPosition) => {
-      if (!draggedPageId || draggedPageId === referenceId) return;
-      setDraggedPageId(null);
-      submitPosition(draggedPageId, referenceId, position);
-    },
-    [draggedPageId, submitPosition],
-  );
+  const handleDrop = (referenceId: string, position: DropPosition) => {
+    if (!draggedPageId || draggedPageId === referenceId) return;
+    setDraggedPageId(null);
+    submitPosition(draggedPageId, referenceId, position);
+  };
 
-  const value = useMemo(
-    () => ({
-      draggedPageId,
-      isPending,
-      handleDragStart,
-      handleDrop,
-      submitPosition,
-    }),
-    [draggedPageId, isPending, handleDragStart, handleDrop, submitPosition],
-  );
+  const value = {
+    draggedPageId,
+    isPending,
+    handleDragStart,
+    handleDrop,
+    submitPosition,
+  };
 
   return <WikiPageDndContext value={value}>{children}</WikiPageDndContext>;
 };

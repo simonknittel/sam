@@ -146,3 +146,43 @@ for (const palette of Object.values(Palette)) {
     }
   });
 }
+
+test("the keyboard selection of the gutter palette stays when the pointer moves", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const editor = await createCitizen(prisma, { handle: "editor" });
+  const wikiPage = await seedEditablePage(prisma, { title: "Auswahl" });
+  await signIn(editor.user);
+
+  await page.goto(`/app/wiki/${wikiPage.id}/${wikiPage.slug}`);
+  await enterEditMode(page);
+
+  const insertButton = page.getByRole("button", {
+    name: "Block darunter einfügen (Alt: darüber)",
+  });
+  await hoverUntilVisible(
+    page.locator('.tiptap[contenteditable="true"] p').first(),
+    insertButton,
+  );
+  await insertButton.click();
+  const menu = page.getByRole("dialog", { name: "Block einfügen" });
+  await expect(
+    menu.getByRole("textbox", { name: "Blocktypen filtern" }),
+  ).toBeFocused();
+
+  /** "Text", "Kleiner Text", then "Überschrift 1" */
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("ArrowDown");
+
+  /** The pointer leaves the gutter and comes back, which renders it again */
+  await page.mouse.move(0, 0);
+  await insertButton.hover();
+  await page.keyboard.press("Enter");
+
+  await expect(menu).toBeHidden();
+  await expect(page.locator('.tiptap[contenteditable="true"] h1')).toHaveCount(
+    1,
+  );
+});

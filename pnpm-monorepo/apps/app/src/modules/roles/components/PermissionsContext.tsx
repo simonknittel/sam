@@ -2,7 +2,7 @@
 
 import { type PermissionString } from "@sam-monorepo/database/browser";
 import type { ReactNode } from "react";
-import { createContext, useCallback, useContext, useMemo } from "react";
+import { createContext, useContext } from "react";
 
 interface PermissionsContextInterface {
   register: (permissionString: string) => {
@@ -27,31 +27,21 @@ interface Props {
 }
 
 export const PermissionsProvider = ({ children, role }: Props) => {
-  const permissionStrings = useMemo(
-    () =>
-      role.permissionStrings.map(
-        (permissionString) => permissionString.permissionString,
-      ),
-    [role.permissionStrings],
+  const permissionStrings = role.permissionStrings.map(
+    (permissionString) => permissionString.permissionString,
   );
 
-  const register = useCallback(
-    (permissionString: string) => {
-      return {
-        name: permissionString,
-        defaultChecked: permissionStrings.includes(permissionString),
-      };
-    },
-    [permissionStrings],
-  );
+  const register = (permissionString: string) => {
+    return {
+      name: permissionString,
+      defaultChecked: permissionStrings.includes(permissionString),
+    };
+  };
 
-  const value = useMemo(
-    () => ({
-      register,
-      permissionStrings,
-    }),
-    [register, permissionStrings],
-  );
+  const value = {
+    register,
+    permissionStrings,
+  };
 
   return <PermissionsContext value={value}>{children}</PermissionsContext>;
 };

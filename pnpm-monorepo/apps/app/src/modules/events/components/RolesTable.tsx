@@ -5,7 +5,6 @@ import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import type { BadgeRole } from "@/modules/roles/queries/getRoles";
 import { createColumnHelper, type SortingState } from "@tanstack/react-table";
 import clsx from "clsx";
-import { useMemo } from "react";
 
 interface Row {
   role: BadgeRole;
@@ -13,6 +12,20 @@ interface Row {
 }
 
 const columnHelper = createColumnHelper<Row>();
+
+const COLUMNS = [
+  columnHelper.accessor("role.name", {
+    header: "Rolle",
+    id: "name",
+    cell: (row) => {
+      const { role } = row.row.original;
+      return <SingleRoleBadge roleId={role.id} className="inline-flex" />;
+    },
+  }),
+  columnHelper.accessor("count", {
+    header: "Anzahl",
+  }),
+];
 
 const TABLE_MIN_WIDTH = "min-w-80";
 const GRID_COLS = "grid-cols-[256px_56px]";
@@ -24,26 +37,10 @@ interface Props {
 }
 
 export const RolesTable = ({ className, rows }: Props) => {
-  const columns = useMemo(() => {
-    return [
-      columnHelper.accessor("role.name", {
-        header: "Rolle",
-        id: "name",
-        cell: (row) => {
-          const { role } = row.row.original;
-          return <SingleRoleBadge roleId={role.id} className="inline-flex" />;
-        },
-      }),
-      columnHelper.accessor("count", {
-        header: "Anzahl",
-      }),
-    ];
-  }, []);
-
   return (
     <SortableTable
       data={rows}
-      columns={columns}
+      columns={COLUMNS}
       initialSorting={INITIAL_SORTING}
       className={clsx(TABLE_MIN_WIDTH, className)}
       gridColsClassName={GRID_COLS}

@@ -1,7 +1,7 @@
 "use client";
 
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
-import { useEffect, type MouseEventHandler } from "react";
+import { useEffect, useEffectEvent, type MouseEventHandler } from "react";
 import { FaRegWindowRestore } from "react-icons/fa";
 import { collapseRepeatedEntries } from "../utils/collapseRepeatedEntries";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
@@ -25,11 +25,20 @@ export const OverlayButton = ({ className }: Props) => {
 
   const { entries, entryFilterFn } = useLogAnalyzerContext();
 
+  /**
+   * The overlay closes only when the button unmounts. A cleanup with
+   * `closePipWindow` as dependency would also close it each time that
+   * function changes.
+   */
+  const closeOverlayOnUnmount = useEffectEvent(() => {
+    closePipWindow();
+  });
+
   useEffect(() => {
     return () => {
-      closePipWindow();
+      closeOverlayOnUnmount();
     };
-  }, [closePipWindow]);
+  }, []);
 
   if (!isSupported) return null;
 
