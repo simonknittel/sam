@@ -8,7 +8,7 @@ import {
   TabsProvider,
   useTabsContext,
 } from "@/modules/common/components/tabs/TabsContext";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { FaArchive, FaCheckDouble, FaCog } from "react-icons/fa";
 import { useOnSiteNotificationMutations } from "../hooks/useOnSiteNotificationMutations";
 import { NotificationCenterTab } from "../utils/types";
@@ -35,15 +35,15 @@ export const NotificationCenter = ({ onNavigate }: Props) => {
     ReadonlySet<string>
   >(new Set());
 
-  const retainHighlights = useCallback((notificationIds: string[]) => {
+  const retainHighlights = (notificationIds: string[]) => {
     setRetainedHighlightIds(
       (previousIds) => new Set([...previousIds, ...notificationIds]),
     );
-  }, []);
+  };
 
-  const clearRetainedHighlights = useCallback(() => {
+  const clearRetainedHighlights = () => {
     setRetainedHighlightIds(new Set());
-  }, []);
+  };
 
   return (
     <TabsProvider initialActiveTab={NotificationCenterTab.Inbox}>

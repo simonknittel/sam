@@ -13,10 +13,8 @@ import {
 } from "@sam-monorepo/notifications/channels";
 import {
   createContext,
-  useCallback,
   useContext,
   useEffect,
-  useMemo,
   useState,
   type ReactNode,
 } from "react";
@@ -69,9 +67,9 @@ export const OnSiteNotificationsProvider = ({
   const { client } = useChannelsContext();
   const utils = api.useUtils();
 
-  const adjustUnreadCount = useCallback((delta: number) => {
+  const adjustUnreadCount = (delta: number) => {
     setUnreadCount((count) => Math.max(0, count + delta));
-  }, []);
+  };
 
   /**
    * Mirror the unread count into the document title. The MutationObserver
@@ -149,14 +147,11 @@ export const OnSiteNotificationsProvider = ({
     };
   }, [client, entityId, utils]);
 
-  const value = useMemo(
-    () => ({
-      unreadCount,
-      setUnreadCount,
-      adjustUnreadCount,
-    }),
-    [unreadCount, adjustUnreadCount],
-  );
+  const value = {
+    unreadCount,
+    setUnreadCount,
+    adjustUnreadCount,
+  };
 
   return (
     <OnSiteNotificationsContext value={value}>

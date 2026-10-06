@@ -2,7 +2,6 @@
 
 import { runAction } from "@/modules/actions/utils/runAction";
 import { api } from "@/trpc/react";
-import { useCallback } from "react";
 import { archiveOnSiteNotification } from "../actions/archiveOnSiteNotification";
 import { archiveReadOnSiteNotifications } from "../actions/archiveReadOnSiteNotifications";
 import { markAllOnSiteNotificationsRead } from "../actions/markAllOnSiteNotificationsRead";
@@ -25,111 +24,96 @@ export const useOnSiteNotificationMutations = () => {
   const utils = api.useUtils();
   const { setUnreadCount, adjustUnreadCount } = useOnSiteNotifications();
 
-  const updateListItems = useCallback(
-    (
-      tab: NotificationCenterTab,
-      updateItem: (item: OnSiteNotificationRow) => OnSiteNotificationRow | null,
-    ) => {
-      utils.onSiteNotifications.list.setInfiniteData({ tab }, (oldData) => {
-        if (!oldData) return oldData;
+  const updateListItems = (
+    tab: NotificationCenterTab,
+    updateItem: (item: OnSiteNotificationRow) => OnSiteNotificationRow | null,
+  ) => {
+    utils.onSiteNotifications.list.setInfiniteData({ tab }, (oldData) => {
+      if (!oldData) return oldData;
 
-        return {
-          ...oldData,
-          pages: oldData.pages.map((page) => ({
-            ...page,
-            items: page.items
-              .map(updateItem)
-              .filter((item): item is OnSiteNotificationRow => item !== null),
-          })),
-        };
-      });
-    },
-    [utils],
-  );
+      return {
+        ...oldData,
+        pages: oldData.pages.map((page) => ({
+          ...page,
+          items: page.items
+            .map(updateItem)
+            .filter((item): item is OnSiteNotificationRow => item !== null),
+        })),
+      };
+    });
+  };
 
   /**
    * Marks the given (unread, unarchived) notifications as read. Runs
    * silently — used by the read-on-view tracking and target navigation.
    */
-  const markRead = useCallback(
-    async (notificationIds: string[]) => {
-      if (notificationIds.length <= 0) return;
+  const markRead = async (notificationIds: string[]) => {
+    if (notificationIds.length <= 0) return;
 
-      const formData = new FormData();
-      for (const notificationId of notificationIds) {
-        formData.append("notificationId", notificationId);
-      }
+    const formData = new FormData();
+    for (const notificationId of notificationIds) {
+      formData.append("notificationId", notificationId);
+    }
 
-      const succeeded = await runAction(markOnSiteNotificationsRead, formData, {
-        successToast: false,
-      });
-      if (!succeeded) return;
+    const succeeded = await runAction(markOnSiteNotificationsRead, formData, {
+      successToast: false,
+    });
+    if (!succeeded) return;
 
-      updateListItems(NotificationCenterTab.Inbox, (item) =>
-        notificationIds.includes(item.id) && !item.readAt
-          ? { ...item, readAt: new Date() }
-          : item,
-      );
-      adjustUnreadCount(-notificationIds.length);
-    },
-    [updateListItems, adjustUnreadCount],
-  );
+    updateListItems(NotificationCenterTab.Inbox, (item) =>
+      notificationIds.includes(item.id) && !item.readAt
+        ? { ...item, readAt: new Date() }
+        : item,
+    );
+    adjustUnreadCount(-notificationIds.length);
+  };
 
-  const markUnread = useCallback(
-    async (notification: OnSiteNotificationRow) => {
-      const formData = new FormData();
-      formData.set("notificationId", notification.id);
+  const markUnread = async (notification: OnSiteNotificationRow) => {
+    const formData = new FormData();
+    formData.set("notificationId", notification.id);
 
-      const succeeded = await runAction(markOnSiteNotificationUnread, formData);
-      if (!succeeded) return;
+    const succeeded = await runAction(markOnSiteNotificationUnread, formData);
+    if (!succeeded) return;
 
-      updateListItems(NotificationCenterTab.Inbox, (item) =>
-        item.id === notification.id ? { ...item, readAt: null } : item,
-      );
-      adjustUnreadCount(1);
-    },
-    [updateListItems, adjustUnreadCount],
-  );
+    updateListItems(NotificationCenterTab.Inbox, (item) =>
+      item.id === notification.id ? { ...item, readAt: null } : item,
+    );
+    adjustUnreadCount(1);
+  };
 
-  const archive = useCallback(
-    async (notification: OnSiteNotificationRow) => {
-      const formData = new FormData();
-      formData.set("notificationId", notification.id);
+  const archive = async (notification: OnSiteNotificationRow) => {
+    const formData = new FormData();
+    formData.set("notificationId", notification.id);
 
-      const succeeded = await runAction(archiveOnSiteNotification, formData);
-      if (!succeeded) return;
+    const succeeded = await runAction(archiveOnSiteNotification, formData);
+    if (!succeeded) return;
 
-      updateListItems(NotificationCenterTab.Inbox, (item) =>
-        item.id === notification.id ? null : item,
-      );
-      if (!notification.readAt) adjustUnreadCount(-1);
-      await utils.onSiteNotifications.list.invalidate({
-        tab: NotificationCenterTab.Archive,
-      });
-    },
-    [updateListItems, adjustUnreadCount, utils],
-  );
+    updateListItems(NotificationCenterTab.Inbox, (item) =>
+      item.id === notification.id ? null : item,
+    );
+    if (!notification.readAt) adjustUnreadCount(-1);
+    await utils.onSiteNotifications.list.invalidate({
+      tab: NotificationCenterTab.Archive,
+    });
+  };
 
-  const unarchive = useCallback(
-    async (notification: OnSiteNotificationRow) => {
-      const formData = new FormData();
-      formData.set("notificationId", notification.id);
+  const unarchive = async (notification: OnSiteNotificationRow) => {
+    const formData = new FormData();
+    formData.set("notificationId", notification.id);
 
-      const succeeded = await runAction(unarchiveOnSiteNotification, formData);
-      if (!succeeded) return;
+    const succeeded = await runAction(unarchiveOnSiteNotification, formData);
+    if (!succeeded) return;
 
-      updateListItems(NotificationCenterTab.Archive, (item) =>
-        item.id === notification.id ? null : item,
-      );
-      if (!notification.readAt) adjustUnreadCount(1);
-      await utils.onSiteNotifications.list.invalidate({
-        tab: NotificationCenterTab.Inbox,
-      });
-    },
-    [updateListItems, adjustUnreadCount, utils],
-  );
+    updateListItems(NotificationCenterTab.Archive, (item) =>
+      item.id === notification.id ? null : item,
+    );
+    if (!notification.readAt) adjustUnreadCount(1);
+    await utils.onSiteNotifications.list.invalidate({
+      tab: NotificationCenterTab.Inbox,
+    });
+  };
 
-  const markAllRead = useCallback(async () => {
+  const markAllRead = async () => {
     const succeeded = await runAction(
       markAllOnSiteNotificationsRead,
       new FormData(),
@@ -140,9 +124,9 @@ export const useOnSiteNotificationMutations = () => {
       item.readAt ? item : { ...item, readAt: new Date() },
     );
     setUnreadCount(0);
-  }, [updateListItems, setUnreadCount]);
+  };
 
-  const archiveAllRead = useCallback(async () => {
+  const archiveAllRead = async () => {
     const succeeded = await runAction(
       archiveReadOnSiteNotifications,
       new FormData(),
@@ -155,7 +139,7 @@ export const useOnSiteNotificationMutations = () => {
     await utils.onSiteNotifications.list.invalidate({
       tab: NotificationCenterTab.Archive,
     });
-  }, [updateListItems, utils]);
+  };
 
   return {
     markRead,
