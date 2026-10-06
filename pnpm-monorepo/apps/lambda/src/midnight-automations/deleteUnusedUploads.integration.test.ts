@@ -1,4 +1,8 @@
-import { DeleteObjectsCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import {
+  DeleteObjectsCommand,
+  ListObjectsV2Command,
+  type DeleteObjectsCommandOutput,
+} from "@aws-sdk/client-s3";
 import { prisma } from "@sam-monorepo/database";
 import {
   WikiPageSnapshotKind,
@@ -62,11 +66,20 @@ const toOldObjects = (keys: readonly string[]): BucketObject[] =>
  * The bucket lists the pages one after the other. The continuation token is
  * the index of the next page.
  *
+ * @param answerDeleteRequest gives the answer to each DeleteObjects request,
+ * by the index of the request. As default, the bucket deletes all objects.
  * @returns the continuation token of each list request. The paginator changes
  * the input of its commands, thus the mock records the token at the request.
  */
-const mockBucket = (pages: readonly (readonly BucketObject[])[]) => {
+const mockBucket = (
+  pages: readonly (readonly BucketObject[])[],
+  answerDeleteRequest: (
+    requestIndex: number,
+  ) => Promise<Pick<DeleteObjectsCommandOutput, "Errors">> = () =>
+    Promise.resolve({}),
+) => {
   const requestedContinuationTokens: (string | undefined)[] = [];
+  let deleteRequestCount = 0;
 
   sendMock.mockImplementation((command: unknown) => {
     if (command instanceof ListObjectsV2Command) {
@@ -87,7 +100,10 @@ const mockBucket = (pages: readonly (readonly BucketObject[])[]) => {
       });
     }
 
-    return Promise.resolve({});
+    if (command instanceof DeleteObjectsCommand)
+      return answerDeleteRequest(deleteRequestCount++);
+
+    throw new Error("Unknown command");
   });
 
   return requestedContinuationTokens;
@@ -102,6 +118,13 @@ const getDeleteRequests = () =>
     );
 
 const getDeletedObjectKeys = () => getDeleteRequests().flat();
+
+const getAuditEventData = async () =>
+  (
+    await prisma.auditEvent.findMany({
+      where: { type: AuditEventType.UNUSED_UPLOADS_DELETED },
+    })
+  ).map(({ data }) => data);
 
 const getRemainingUploadIds = async () =>
   (await prisma.upload.findMany({ select: { id: true } }))
@@ -167,10 +190,7 @@ test("deletes only the old upload that nothing uses, with its object", async () 
   );
   expect(getDeletedObjectKeys()).toEqual([unusedUpload.id]);
 
-  const auditEvents = await prisma.auditEvent.findMany({
-    where: { type: AuditEventType.UNUSED_UPLOADS_DELETED },
-  });
-  expect(auditEvents.map(({ data }) => data)).toEqual([
+  expect(await getAuditEventData()).toEqual([
     { databaseCount: 1, bucketCount: 1 },
   ]);
 });
@@ -206,10 +226,49 @@ test("sweeps all pages of the bucket and deletes at most 1000 objects per reques
   expect(getDeletedObjectKeys()).toEqual(orphanedKeys);
   expect(await getRemainingUploadIds()).toEqual([freshUpload.id]);
 
-  const auditEvents = await prisma.auditEvent.findMany({
-    where: { type: AuditEventType.UNUSED_UPLOADS_DELETED },
-  });
-  expect(auditEvents.map(({ data }) => data)).toEqual([
+  expect(await getAuditEventData()).toEqual([
     { databaseCount: 0, bucketCount: 1001 },
+  ]);
+});
+
+test("counts only the objects that the bucket deleted", async () => {
+  const orphanedKeys = ["orphaned-0", "orphaned-1", "orphaned-2"];
+  mockBucket([toOldObjects(orphanedKeys)], () =>
+    Promise.resolve({
+      Errors: [{ Key: "orphaned-1", Code: "InternalError" }],
+    }),
+  );
+
+  await deleteUnusedUploads();
+
+  expect(getDeletedObjectKeys()).toEqual(orphanedKeys);
+  expect(await getAuditEventData()).toEqual([
+    { databaseCount: 0, bucketCount: 2 },
+  ]);
+});
+
+test("records the deleted rows and objects also when the bucket fails", async () => {
+  const unusedUpload = await createUpload("unused.png", TWO_DAYS_AGO);
+
+  /** One more than DeleteObjects accepts in one request */
+  const orphanedKeys = [...new Array(1001).keys()].map(
+    (index) => `orphaned-${index}`,
+  );
+  mockBucket(
+    [toOldObjects([unusedUpload.id, ...orphanedKeys])],
+    (requestIndex) =>
+      requestIndex === 0
+        ? Promise.resolve({})
+        : Promise.reject(new Error("The bucket is not available")),
+  );
+
+  await expect(deleteUnusedUploads()).rejects.toThrow(
+    "The bucket is not available",
+  );
+
+  expect(await getRemainingUploadIds()).toEqual([]);
+  expect(getDeleteRequests().map((keys) => keys.length)).toEqual([1000, 2]);
+  expect(await getAuditEventData()).toEqual([
+    { databaseCount: 1, bucketCount: 1000 },
   ]);
 });
