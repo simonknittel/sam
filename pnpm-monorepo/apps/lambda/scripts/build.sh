@@ -18,36 +18,34 @@ fi
 echo "Cleaning up old build..."
 rm -rf $OUTPUT_DIRECTORY $OUTPUT_DIRECTORY.zip
 
-# Get all functions
-FUNCTION_FILES=$(find src -maxdepth 1 -type f -name "*.ts")
+# Create one bundle for each function
+#
+# - Each file in `src` is the entry point of one function. The output of `src/<function>.ts` is `build/<function>/index.mjs`.
+# - Without `--splitting`, each bundle contains all of its code, as with one call for each function.
+# - The meta file contains all bundles and can be analyzed using: https://esbuild.github.io/analyze/
+# - `--external:@aws-sdk` excludes any imported AWS SDKs from the bundle since they are already provided by the AWS Lambda runtime.
+# - The banner is needed to allow usage of `require` in ESM modules (see https://github.com/aws/aws-sam-cli/issues/4827)
+echo "Bundling all functions..."
+esbuild src/*.ts \
+	--bundle \
+	--outdir=$OUTPUT_DIRECTORY \
+	--entry-names='[name]/index' \
+	--out-extension:.js=.mjs \
+	--format=esm \
+	--platform=node \
+	--target=node24 \
+	--sourcemap \
+	--minify \
+	--metafile=$OUTPUT_DIRECTORY/meta.json \
+	--external:@aws-sdk \
+	--banner:js='import { createRequire } from "module"; const require = createRequire(import.meta.url);'
 
-for file in "src"/*.ts; do
-	FUNCTION_FILENAME=$(basename "$file")
-	FUNCTION_NAME="${FUNCTION_FILENAME%.ts}"
-
-	# Create bundle
-	#
-	# - The meta file can by analyzed using: https://esbuild.github.io/analyze/
-	# - `--external:@aws-sdk` excludes any imported AWS SDKs from the bundle since they are already provided by the AWS Lambda runtime.
-	# - The banner is needed to allow usage of `require` in ESM modules (see https://github.com/aws/aws-sam-cli/issues/4827)
-	echo "Bundling $FUNCTION_NAME..."
-	esbuild src/$FUNCTION_NAME.ts \
-		--bundle \
-		--outfile=$OUTPUT_DIRECTORY/$FUNCTION_NAME/index.mjs \
-		--format=esm \
-		--platform=node \
-		--target=node24 \
-		--sourcemap \
-		--minify \
-		--metafile=$OUTPUT_DIRECTORY/$FUNCTION_NAME/meta.json \
-		--external:@aws-sdk \
-		--banner:js='import { createRequire } from "module"; const require = createRequire(import.meta.url);'
+for file in src/*.ts; do
+	FUNCTION_NAME=$(basename "$file" .ts)
 
 	# Create ZIP file for upload to AWS Lambda
 	echo "Creating ZIP file for $FUNCTION_NAME..."
-	cd $OUTPUT_DIRECTORY/$FUNCTION_NAME/
-	zip --recurse-paths ../$FUNCTION_NAME.zip . --exclude "meta.json"
-	cd ../../
+	(cd $OUTPUT_DIRECTORY/$FUNCTION_NAME/ && zip --recurse-paths ../$FUNCTION_NAME.zip .)
 done
 
 echo "Builds successful"
