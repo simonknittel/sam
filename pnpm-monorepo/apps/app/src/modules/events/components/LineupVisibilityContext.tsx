@@ -1,7 +1,7 @@
 "use client";
 
+import { useStoredValue } from "@/modules/common/utils/useStoredValue";
 import type { EventPosition } from "@sam-monorepo/database/browser";
-import { useLocalStorage } from "@uidotdev/usehooks";
 import clsx from "clsx";
 import type { ReactNode } from "react";
 import { createContext, startTransition, useContext } from "react";
@@ -28,7 +28,7 @@ interface Props {
 }
 
 export const LineupVisibilityProvider = ({ children, items }: Props) => {
-  const [openItems, setOpenItems] = useLocalStorage<EventPosition["id"][]>(
+  const [openItems, setOpenItems] = useStoredValue<EventPosition["id"][]>(
     "open_positions",
     [],
   );

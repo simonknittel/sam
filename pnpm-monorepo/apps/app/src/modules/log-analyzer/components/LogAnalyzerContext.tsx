@@ -1,5 +1,6 @@
 "use client";
 
+import { useStoredValue } from "@/modules/common/utils/useStoredValue";
 import { useLocalStorage } from "@uidotdev/usehooks";
 import type {
   Dispatch,
@@ -7,13 +8,7 @@ import type {
   SetStateAction,
   TransitionStartFunction,
 } from "react";
-import {
-  createContext,
-  useContext,
-  useMemo,
-  useState,
-  useTransition,
-} from "react";
+import { createContext, useContext, useState, useTransition } from "react";
 import {
   createEntryTypeRecord,
   EntryType,
@@ -62,27 +57,11 @@ const ALL_TYPES_ON = createEntryTypeRecord(true);
 const ALL_TYPES_OFF = createEntryTypeRecord(false);
 
 /**
- * `useLocalStorage` parses the stored text on every render and gives a new
- * object each time. This value stays the same object until the stored text
- * changes, thus the functions which read it change only then (see
- * `requiresFullReadRef` in `LogAnalyzer`).
- */
-function useStoredValue<Value>(key: string, defaultValue: Value) {
-  const [storedValue, setStoredValue] = useLocalStorage<Value>(
-    key,
-    defaultValue,
-  );
-
-  const storedText = JSON.stringify(storedValue);
-  const value = useMemo(() => JSON.parse(storedText) as Value, [storedText]);
-
-  return [value, setStoredValue] as const;
-}
-
-/**
  * A stored record of the entry types. The stored value lacks the types which
  * came after the user stored it, thus the default fills them up on every
- * read.
+ * read. The upload function changes with the record of the shared types,
+ * thus the record must change only with the stored text (see
+ * `requiresFullReadRef` in `LogAnalyzer`).
  */
 const useStoredEntryTypes = (key: string, defaultValue: EntryTypeRecord) => {
   const [storedValue, setStoredValue] = useStoredValue<

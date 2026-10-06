@@ -1,7 +1,7 @@
 "use client";
 
+import { useStoredValue } from "@/modules/common/utils/useStoredValue";
 import type { EventPosition } from "@sam-monorepo/database/browser";
-import { useLocalStorage } from "@uidotdev/usehooks";
 import { createContext, useContext, type ReactNode } from "react";
 import type { EventContainer } from "../utils/eventContainer";
 
@@ -40,8 +40,10 @@ interface Props {
  * the lineup of another event or template.
  */
 export const LineupClipboardProvider = ({ children }: Props) => {
-  const [clipboard, setClipboard] =
-    useLocalStorage<LineupClipboardEntry | null>("lineup_clipboard", null);
+  const [clipboard, setClipboard] = useStoredValue<LineupClipboardEntry | null>(
+    "lineup_clipboard",
+    null,
+  );
 
   const copy = (entry: LineupClipboardEntry) => {
     setClipboard(entry);
