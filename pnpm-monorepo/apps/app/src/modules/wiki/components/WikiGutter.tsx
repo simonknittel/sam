@@ -160,17 +160,6 @@ export const WikiGutter = ({
   };
 
   /**
-   * closePopover in the palette is a programmatic close — Base UI reports
-   * only its own dismissals through onOpenChange, so the palette calls
-   * this when an entry is picked.
-   */
-  const closePalette = () => {
-    setPaletteOpen(false);
-    if (editor.isDestroyed) return;
-    editor.view.dispatch(editor.state.tr.setMeta("lockDragHandle", false));
-  };
-
-  /**
    * Highlights the gutter's block while the gutter is in use (pointer
    * over its controls or the insert palette open), so it's clear which
    * node it affects. Merely hovering block content washes the hovered
@@ -235,7 +224,6 @@ export const WikiGutter = ({
             onRequestLink={onRequestLink}
             onRequestVariantLink={onRequestVariantLink}
             insertAboveRef={insertAboveRef}
-            onClosePalette={closePalette}
           />
         </PopoverBaseUI>
 
@@ -263,8 +251,6 @@ interface InsertBlockActionsProps {
   readonly onRequestLink: () => void;
   readonly onRequestVariantLink: () => void;
   readonly insertAboveRef: RefObject<boolean>;
-  /** Releases the parent's palette state (lock, highlight) on insert */
-  readonly onClosePalette: () => void;
 }
 
 /**
@@ -286,7 +272,6 @@ const InsertBlockActions = ({
   onRequestLink,
   onRequestVariantLink,
   insertAboveRef,
-  onClosePalette,
 }: InsertBlockActionsProps) => {
   const { closePopover } = usePopoverBaseUI();
   const [query, setQuery] = useState("");
@@ -333,7 +318,6 @@ const InsertBlockActions = ({
   const insertBlock = (item: WikiSlashCommandItem) => {
     if (item.disabled === true) return;
     closePopover();
-    onClosePalette();
 
     /**
      * The focus is in the filter input of the palette. The focus() command

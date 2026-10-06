@@ -122,6 +122,7 @@ interface PopoverBaseUIContextProviderProps {
   readonly triggerTitle?: string;
   readonly children: ReactNode;
   readonly childrenClassName?: string;
+  /** Reports each open and close, also a close through `closePopover` */
   readonly onOpenChange?: (open: boolean) => void;
   /**
    * When true, the popover only opens on mouse hover.
@@ -198,7 +199,9 @@ export const PopoverBaseUI = ({
   };
 
   const closePopover = () => {
+    wasOpenedByHoverRef.current = false;
     setIsOpen(false);
+    onOpenChange?.(false);
   };
 
   const value = {
