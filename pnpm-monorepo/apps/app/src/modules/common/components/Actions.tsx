@@ -70,3 +70,11 @@ export function useActionsContext() {
 
 /** The row menu around the component, or undefined outside of a row menu */
 export const useOptionalActionsContext = () => useContext(ActionContext);
+
+/**
+ * Hides the row menu from its children. A dialog of a menu entry closes the
+ * menu, but a dialog inside this dialog must not close it.
+ */
+export const WithoutActionsContext = ({ children }: Readonly<Props>) => (
+  <ActionContext value={undefined}>{children}</ActionContext>
+);
