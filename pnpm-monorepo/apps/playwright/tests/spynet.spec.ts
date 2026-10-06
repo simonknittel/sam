@@ -474,6 +474,58 @@ test("the citizen table sends no Discord ID and no TeamSpeak ID to a viewer with
     );
 });
 
+test("the citizen page sends no Discord ID, no TeamSpeak ID, no login and no roles to a viewer without the permissions to read them", async ({
+  page,
+  prisma,
+  signIn,
+  switchUser,
+}) => {
+  const reader = await createCitizen(prisma, {
+    handle: "profil-leser",
+    permissionStrings: ["citizen;read"],
+  });
+  const deleter = await createCitizen(prisma, {
+    handle: "profil-loescher",
+    permissionStrings: ["citizen;read", "citizen;delete"],
+  });
+  const target = await createCitizen(prisma, { handle: "verdeckter" });
+  const teamspeakId = "verdeckte-teamspeak-id";
+  await prisma.citizen.update({
+    where: { id: target.entity.id },
+    data: { teamspeakId },
+  });
+  const hiddenValues = {
+    "the Discord ID": target.entity.discordId!,
+    "the TeamSpeak ID": teamspeakId,
+    "the login": target.user.id,
+    "the role": target.role.id,
+  };
+
+  /**
+   * The HTML of the page also holds the props of the client components: the
+   * history buttons, and the delete button only with the permission to delete
+   */
+  const expectNoHiddenValues = async (clientComponentText: string) => {
+    const response = await page.request.get(
+      `/app/spynet/citizen/${target.entity.id}`,
+    );
+    expect(response.ok()).toBe(true);
+    const html = await response.text();
+    expect(
+      html.includes(clientComponentText),
+      `the HTML has "${clientComponentText}"`,
+    ).toBe(true);
+    for (const [name, value] of Object.entries(hiddenValues))
+      expect(html.includes(value), `the HTML has ${name}`).toBe(false);
+  };
+
+  await signIn(reader.user);
+  await expectNoHiddenValues("Handle History");
+
+  await switchUser(deleter.user);
+  await expectNoHiddenValues("Danger Zone");
+});
+
 /**
  * Only the visible rows: while the page streams, React keeps a hidden copy of
  * the table next to the visible one
@@ -486,6 +538,59 @@ const citizenTableHeaderLink = (page: Page, name: string) =>
 
 const citizenTableColumnHeader = (page: Page, name: string) =>
   page.locator("thead").getByRole("columnheader", { name });
+
+test("the citizen table ignores the filters by an unknown Discord ID or TeamSpeak ID without the permissions to read them", async ({
+  page,
+  prisma,
+  signIn,
+  switchUser,
+}) => {
+  /** The fixture gives each of them a Discord ID and no TeamSpeak ID */
+  const viewer = await createCitizen(prisma, {
+    handle: "filter-leser",
+    permissionStrings: ["citizen;read", "spynetCitizen;read"],
+  });
+  const permittedViewer = await createCitizen(prisma, {
+    handle: "filter-pruefer",
+    permissionStrings: [
+      "citizen;read",
+      "spynetCitizen;read",
+      "discord-id;read",
+      "teamspeak-id;read",
+    ],
+  });
+  await prisma.citizen.createMany({
+    data: [
+      { handle: "mit-discord-id", discordId: "bekannte-discord-id" },
+      { handle: "mit-teamspeak-id", teamspeakId: "bekannte-teamspeak-id" },
+    ],
+  });
+  const rows = citizenTableRows(page);
+  const expectRows = async (filter: string, handles: readonly string[]) => {
+    await page.goto(`/app/spynet/citizen?filters=${filter}`);
+    await expect(rows).toHaveCount(handles.length);
+    for (const handle of handles)
+      await expect(rows.filter({ hasText: handle })).toHaveCount(1);
+  };
+
+  await signIn(viewer.user);
+  const allHandles = [
+    "filter-leser",
+    "filter-pruefer",
+    "mit-discord-id",
+    "mit-teamspeak-id",
+  ];
+  await expectRows("unknown-discord-id", allHandles);
+  await expectRows("unknown-teamspeak-id", allHandles);
+
+  await switchUser(permittedViewer.user);
+  await expectRows("unknown-discord-id", ["mit-teamspeak-id"]);
+  await expectRows("unknown-teamspeak-id", [
+    "filter-leser",
+    "filter-pruefer",
+    "mit-discord-id",
+  ]);
+});
 
 test("the citizen table sorts by its column headers and keeps the sort on the other pages", async ({
   page,

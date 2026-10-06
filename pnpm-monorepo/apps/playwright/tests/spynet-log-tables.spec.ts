@@ -12,6 +12,7 @@ import {
   DELETED_TEXT,
   modal,
   RESOURCE_NOT_FOUND_TEXT,
+  SAVED_TEXT,
   toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
@@ -334,6 +335,9 @@ test("the log table shows no delete button for a log of a deleted citizen", asyn
   await expect(actionsButton(page, "verwaister-handle")).toHaveCount(0);
 });
 
+/** Reads the confirmed notes of each note type and classification level */
+const READ_CONFIRMED_NOTES = "note;read;noteTypeId=*;classificationLevelId=*";
+
 /**
  * Opens the menu of a note in the notes table, checks its delete button and
  * opens the change modal. An open modal hides the page from the
@@ -373,13 +377,18 @@ test("the notes table shows the change and delete buttons only with the permissi
   const observationAttributes = `noteTypeId=${observation.id};classificationLevelId=${secret.id}`;
   const reader = await createCitizen(prisma, {
     handle: "notiz-leser",
-    permissionStrings: ["citizen;read", "spynetNotes;read"],
+    permissionStrings: [
+      "citizen;read",
+      "spynetNotes;read",
+      READ_CONFIRMED_NOTES,
+    ],
   });
   const editor = await createCitizen(prisma, {
     handle: "notiz-bearbeiter",
     permissionStrings: [
       "citizen;read",
       "spynetNotes;read",
+      READ_CONFIRMED_NOTES,
       `note;create;${observationAttributes}`,
       `note;update;${observationAttributes}`,
       `note;delete;${observationAttributes}`,
@@ -454,6 +463,190 @@ test("the notes table shows the change and delete buttons only with the permissi
   await expect(
     updateDialog.getByLabel("Geheimhaltungsstufe").locator("option"),
   ).toHaveText(["Geheim"]);
+});
+
+test("the change dialog of a note offers the classification levels of the selected note type", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const observation = await prisma.noteType.create({
+    data: { name: "Beobachtung" },
+  });
+  const rumour = await prisma.noteType.create({ data: { name: "Gerücht" } });
+  const secret = await prisma.classificationLevel.create({
+    data: { name: "Geheim" },
+  });
+  const topSecret = await prisma.classificationLevel.create({
+    data: { name: "Streng geheim" },
+  });
+  const classification = (noteTypeId: string, classificationLevelId: string) =>
+    `noteTypeId=${noteTypeId};classificationLevelId=${classificationLevelId}`;
+  const editor = await createCitizen(prisma, {
+    handle: "notiz-bearbeiter",
+    permissionStrings: [
+      "citizen;read",
+      "spynetNotes;read",
+      READ_CONFIRMED_NOTES,
+      `note;update;${classification(observation.id, secret.id)}`,
+      `note;create;${classification(observation.id, secret.id)}`,
+      `note;create;${classification(rumour.id, secret.id)}`,
+      `note;create;${classification(rumour.id, topSecret.id)}`,
+    ],
+  });
+  const citizen = await prisma.citizen.create({
+    data: { handle: "beobachteter" },
+  });
+  const note = await prisma.citizenLog.create({
+    data: {
+      citizenId: citizen.id,
+      type: "note",
+      content: "Beobachtung über beobachteter",
+      noteTypeId: observation.id,
+      classificationLevelId: secret.id,
+      confirmed: ConfirmationStatus.CONFIRMED,
+      confirmedAt: new Date(),
+    },
+  });
+
+  await signIn(editor.user);
+  await page.goto("/app/spynet/notes");
+  const updateDialog = await openUpdateModal(
+    page,
+    "Beobachtung über beobachteter",
+    0,
+  );
+  const noteTypeSelect = updateDialog.getByLabel("Notizart");
+  const classificationLevelSelect = updateDialog.getByLabel(
+    "Geheimhaltungsstufe",
+  );
+  await expect(noteTypeSelect.locator("option")).toHaveText([
+    "Beobachtung",
+    "Gerücht",
+  ]);
+  await expect(classificationLevelSelect.locator("option")).toHaveText([
+    "Geheim",
+  ]);
+
+  await noteTypeSelect.selectOption({ label: "Gerücht" });
+  await expect(classificationLevelSelect.locator("option")).toHaveText([
+    "Geheim",
+    "Streng geheim",
+  ]);
+  await classificationLevelSelect.selectOption({ label: "Streng geheim" });
+  await updateDialog.getByRole("button", { name: "Speichern" }).click();
+
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+  expect(
+    await prisma.citizenLog.findUniqueOrThrow({
+      where: { id: note.id },
+      select: { noteTypeId: true, classificationLevelId: true },
+    }),
+  ).toEqual({ noteTypeId: rumour.id, classificationLevelId: topSecret.id });
+  await expectAuditEvents(prisma, ["ENTITY_LOG_UPDATED"]);
+});
+
+test("the notes table shows only the notes that the read permissions allow, and counts only their pages", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const observation = await prisma.noteType.create({
+    data: { name: "Beobachtung" },
+  });
+  const rumour = await prisma.noteType.create({ data: { name: "Gerücht" } });
+  const secret = await prisma.classificationLevel.create({
+    data: { name: "Geheim" },
+  });
+  const topSecret = await prisma.classificationLevel.create({
+    data: { name: "Streng geheim" },
+  });
+  /**
+   * The unconfirmed notes need `alsoUnconfirmed`: the viewer has it only for
+   * the rumours
+   */
+  const viewer = await createCitizen(prisma, {
+    handle: "notiz-leser",
+    permissionStrings: [
+      "citizen;read",
+      "spynetNotes;read",
+      `note;read;noteTypeId=${observation.id};classificationLevelId=${secret.id}`,
+      `note;read;noteTypeId=${rumour.id};classificationLevelId=${secret.id};alsoUnconfirmed=true`,
+    ],
+  });
+  const citizen = await prisma.citizen.create({
+    data: { handle: "beobachteter" },
+  });
+  const note = (
+    content: string,
+    noteTypeId: string,
+    classificationLevelId: string,
+    confirmed: ConfirmationStatus | null,
+  ): Prisma.CitizenLogCreateManyInput => ({
+    citizenId: citizen.id,
+    type: "note",
+    content,
+    noteTypeId,
+    classificationLevelId,
+    confirmed,
+    confirmedAt: confirmed ? new Date() : null,
+  });
+  const readableContents = [
+    "Bestätigte Beobachtung",
+    "Unbestätigtes Gerücht",
+    "Falsch gemeldetes Gerücht",
+  ];
+  await prisma.citizenLog.createMany({
+    data: [
+      note(
+        "Bestätigte Beobachtung",
+        observation.id,
+        secret.id,
+        ConfirmationStatus.CONFIRMED,
+      ),
+      note("Unbestätigte Beobachtung", observation.id, secret.id, null),
+      note("Unbestätigtes Gerücht", rumour.id, secret.id, null),
+      note(
+        "Falsch gemeldetes Gerücht",
+        rumour.id,
+        secret.id,
+        ConfirmationStatus.FALSE_REPORT,
+      ),
+      /** A full page of notes in a classification level without permission */
+      ...Array.from({ length: PER_PAGE }, (unused, index) =>
+        note(
+          `Streng geheime Beobachtung ${index + 1}`,
+          observation.id,
+          topSecret.id,
+          ConfirmationStatus.CONFIRMED,
+        ),
+      ),
+    ],
+  });
+
+  await signIn(viewer.user);
+  await page.goto("/app/spynet/notes");
+
+  for (const content of readableContents)
+    await expect(logContent(page, content)).toBeVisible();
+  await expect(tableRows(page)).toHaveCount(readableContents.length);
+  await expect(page.getByText("1 / 1").filter({ visible: true })).toBeVisible();
+
+  /** The filter offers only the classification levels of these notes */
+  const classificationLevelFilter = page.getByRole("dialog", {
+    name: "Geheimhaltungsstufen",
+  });
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Geheimhaltungsstufen" }),
+    classificationLevelFilter,
+  );
+  await expect(classificationLevelFilter.getByRole("checkbox")).toHaveCount(1);
+  await expect(
+    classificationLevelFilter.getByRole("checkbox", {
+      name: "Geheim",
+      exact: true,
+    }),
+  ).toBeVisible();
 });
 
 const headerLink = (page: Page, name: string) =>
@@ -549,7 +742,11 @@ const waitUntilSettled = (page: Page, request: Request) =>
  */
 const holdFilterRender = async (page: Page, filters: string) => {
   const released = Promise.withResolvers<void>();
-  const heldRequests: Request[] = [];
+  /**
+   * One promise for each held request. The listeners start when the request
+   * is held: the browser can cancel the request before `release()`.
+   */
+  const settledRequests: Promise<void>[] = [];
 
   const isFilterChange = (url: URL) =>
     url.pathname === "/app/spynet/other" &&
@@ -559,25 +756,22 @@ const holdFilterRender = async (page: Page, filters: string) => {
   await page.route(isFilterChange, async (route) => {
     const headers = route.request().headers();
     if (headers.rsc === "1" && !headers["next-router-prefetch"]) {
-      heldRequests.push(route.request());
+      settledRequests.push(waitUntilSettled(page, route.request()));
       await released.promise;
     }
     await route.continue();
   });
 
   return {
-    heldRequestCount: () => heldRequests.length,
+    heldRequestCount: () => settledRequests.length,
     /**
      * Sends the held requests to the server and waits until they settle.
      * Next.js cancels the response of a navigation that a newer navigation
      * replaced.
      */
     release: async () => {
-      const settled = heldRequests.map((request) =>
-        waitUntilSettled(page, request),
-      );
       released.resolve();
-      await Promise.all(settled);
+      await Promise.all(settledRequests);
       await page.unroute(isFilterChange);
     },
   };
@@ -670,7 +864,11 @@ test("the notes table keeps the note type filters of an old bookmark when it sor
 }) => {
   const viewer = await createCitizen(prisma, {
     handle: "notiz-sortierer",
-    permissionStrings: ["citizen;read", "spynetNotes;read"],
+    permissionStrings: [
+      "citizen;read",
+      "spynetNotes;read",
+      READ_CONFIRMED_NOTES,
+    ],
   });
   const observation = await prisma.noteType.create({
     data: { name: "Beobachtung" },
