@@ -27,13 +27,11 @@ export const NotesTableTile = async ({ className, searchParams }: Props) => {
   const { filters, sort, page } =
     await loadCitizenLogTableSearchParams(searchParams);
 
-  /** Only notes with a note type and a classification level show here */
-  const visibleWhere: Prisma.CitizenLogWhereInput = {
-    AND: [
-      await getReadableCitizenLogWhere(["note"], authentication),
-      { noteTypeId: { not: null }, classificationLevelId: { not: null } },
-    ],
-  };
+  /** Only notes with a note type and a classification level match */
+  const visibleWhere = await getReadableCitizenLogWhere(
+    ["note"],
+    authentication,
+  );
 
   const noteTypeIds = getFilterValues(filters, "note-type");
   const classificationLevelIds = getFilterValues(
