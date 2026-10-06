@@ -1,4 +1,3 @@
-import formData from "form-data";
 import Mailgun from "mailgun.js";
 import * as z from "zod";
 import { log } from "../common/logger";
@@ -14,7 +13,7 @@ export const emailFunctionHandler = async (
     requestId: body.requestId,
   });
 
-  const mailgun = new Mailgun(formData);
+  const mailgun = new Mailgun(FormData);
 
   const mg = mailgun.client({
     username: "api",
