@@ -9,14 +9,14 @@ OUTPUT_DIRECTORY="build"
 # Check if required Node.js version is installed
 REQUIRED_NODE_VERSION=$(cat ../../.nvmrc)
 INSTALLED_NODE_VERSION=$(node -v | sed 's/v//')
-if ! node -v | grep -q $REQUIRED_NODE_VERSION; then
+if [ "$INSTALLED_NODE_VERSION" != "$REQUIRED_NODE_VERSION" ]; then
 	echo "The required Node.js version is not installed (required: $REQUIRED_NODE_VERSION, installed: $INSTALLED_NODE_VERSION). Make sure you have the correct version installed (e.g. by running \`nvm install\`)."
 	exit 1
 fi
 
 # Clean up old build
 echo "Cleaning up old build..."
-rm -rf $OUTPUT_DIRECTORY $OUTPUT_DIRECTORY.zip
+rm -rf "$OUTPUT_DIRECTORY"
 
 # Create one bundle for each function
 #
