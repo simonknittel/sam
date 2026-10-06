@@ -1,7 +1,7 @@
 import * as z from "zod";
 import { env } from "../../setup";
 import { checkResponseForError } from "./checkResponseForError";
-import { eventSchema } from "./schemas";
+import { eventSchema, MAXIMUM_DISCORD_ITEM_COUNT } from "./schemas";
 
 export const getEvents = async () => {
   // https://discord.com/developers/docs/resources/guild-scheduled-event#list-scheduled-events-for-guild
@@ -26,7 +26,7 @@ export const getEvents = async () => {
   };
 };
 
-const successSchema = z.array(eventSchema);
+const successSchema = z.array(eventSchema).max(MAXIMUM_DISCORD_ITEM_COUNT);
 
 const errorSchema = z.object({
   message: z.string(),

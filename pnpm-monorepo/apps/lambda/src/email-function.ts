@@ -42,11 +42,14 @@ export const handler: SQSHandler = async (event) => {
 
 export const requestBodySchema = z.object({
   template: z.enum(["emailConfirmation"]),
-  messages: z.array(
-    z.object({
-      to: z.email(),
-      templateProps: z.record(z.string(), z.string()),
-    }),
-  ),
+  messages: z
+    .array(
+      z.object({
+        to: z.email(),
+        templateProps: z.record(z.string(), z.string()),
+      }),
+    )
+    /** Mailgun accepts at most 1,000 recipients in one batch */
+    .max(1000),
   requestId: z.cuid2(),
 });

@@ -92,6 +92,12 @@ export const notificationRouterHandler = async (
   }
 };
 
+/**
+ * An EventBridge entry has at most 256 KB, so it cannot carry more items
+ * than this. The limit only bounds the loops over a malformed event.
+ */
+const MAXIMUM_EVENT_ITEM_COUNT = 10_000;
+
 export const bodySchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("EventCreated"),
@@ -165,7 +171,7 @@ export const bodySchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("TaskCreated"),
     payload: z.object({
-      taskIds: z.array(z.cuid()),
+      taskIds: z.array(z.cuid()).max(MAXIMUM_EVENT_ITEM_COUNT),
     }),
     requestId: z.cuid2(),
   }),
@@ -190,13 +196,15 @@ export const bodySchema = z.discriminatedUnion("type", [
     type: z.literal("ProfitDistributionPayoutDisbursed"),
     payload: z.object({
       cycleId: z.string(),
-      changes: z.array(
-        z.object({
-          citizenId: z.string(),
-          attribute: z.string(),
-          enabled: z.boolean(),
-        }),
-      ),
+      changes: z
+        .array(
+          z.object({
+            citizenId: z.string(),
+            attribute: z.string(),
+            enabled: z.boolean(),
+          }),
+        )
+        .max(MAXIMUM_EVENT_ITEM_COUNT),
     }),
     requestId: z.cuid2(),
   }),
@@ -204,7 +212,7 @@ export const bodySchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("SilcTransactionsCreated"),
     payload: z.object({
-      transactionIds: z.array(z.cuid()),
+      transactionIds: z.array(z.cuid()).max(MAXIMUM_EVENT_ITEM_COUNT),
     }),
     requestId: z.cuid2(),
   }),

@@ -2,7 +2,11 @@ import { setTimeout } from "node:timers/promises";
 import * as z from "zod";
 import { log } from "../../../common/logger";
 import { checkResponseForError } from "./checkResponseForError";
-import { memberSchema, userSchema } from "./schemas";
+import {
+  MAXIMUM_DISCORD_ITEM_COUNT,
+  memberSchema,
+  userSchema,
+} from "./schemas";
 
 export const getEventUsers = async (discordId: string) => {
   let response;
@@ -39,13 +43,15 @@ export const getEventUsers = async (discordId: string) => {
   return data as z.infer<typeof successSchema>;
 };
 
-const successSchema = z.array(
-  z.object({
-    user_id: z.string(),
-    user: userSchema,
-    member: memberSchema,
-  }),
-);
+const successSchema = z
+  .array(
+    z.object({
+      user_id: z.string(),
+      user: userSchema,
+      member: memberSchema,
+    }),
+  )
+  .max(MAXIMUM_DISCORD_ITEM_COUNT);
 
 const errorSchema = z.object({
   message: z.string(),
