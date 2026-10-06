@@ -360,10 +360,16 @@ test("a pasted copy keeps an image in use after the source removes it", async ({
 
   await page.goto("/app/uploads");
   const row = page.getByRole("row").filter({ hasText: "Kopiertes Bild.png" });
+  /**
+   * Not the usage as a snapshot: the first store of the copy in the collab
+   * editor can write an automatic snapshot, which links the image too.
+   */
+  const attachmentUsage = row
+    .getByRole("listitem")
+    .filter({ hasText: "Wiki-Bild/-Anhang" });
   await expect(
-    row.getByRole("link", { name: "Bildvorlage (Kopie)" }),
+    attachmentUsage.getByRole("link", { name: "Bildvorlage (Kopie)" }),
   ).toHaveAttribute("href", `/app/wiki/${copy.id}/${copy.slug}`);
-  await expect(row.getByText("Wiki-Bild/-Anhang")).toBeVisible();
 
   await page.goto("/app/uploads?usage=unused");
   await expect(page.getByText("Keine Uploads für diese Filter.")).toBeVisible();
