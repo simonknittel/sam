@@ -6,7 +6,7 @@ import { api } from "@/trpc/react";
 import type { Citizen } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
-import { useCallback, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { BsExclamationOctagonFill } from "react-icons/bs";
 
 /**
@@ -18,6 +18,9 @@ const ProfileContent = dynamic(
   () => import("./ProfileContent").then((mod) => mod.ProfileContent),
   { loading: () => <ProfileLoading /> },
 );
+
+/** The React Compiler does not compile a component with an `import()` */
+const loadProfileContent = () => import("./ProfileContent");
 
 interface Props {
   readonly children?: ReactNode;
@@ -34,16 +37,16 @@ export const CitizenPopover = ({ children, citizenId }: Props) => {
       },
     );
 
-  const handleOpenChange = useCallback((open: boolean) => {
+  const handleOpenChange = (open: boolean) => {
     setIsEnabled(open);
 
     // Load the code of the profile at the same time as its data
-    if (open) void import("./ProfileContent");
-  }, []);
+    if (open) void loadProfileContent();
+  };
 
-  const handleRoleAssignmentsChanged = useCallback(() => {
+  const handleRoleAssignmentsChanged = () => {
     void refetch();
-  }, [refetch]);
+  };
 
   return (
     <PopoverBaseUI

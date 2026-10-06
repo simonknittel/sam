@@ -15,11 +15,13 @@ interface Props {
   readonly mobileToggleIcon?: ReactNode;
 }
 
+const DEFAULT_MOBILE_TOGGLE_ICON = <FaFilter />;
+
 export const SidebarContainer = ({
   className,
   children,
   mobileToggleLabel = "Filter",
-  mobileToggleIcon = <FaFilter />,
+  mobileToggleIcon = DEFAULT_MOBILE_TOGGLE_ICON,
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const contentId = useId();

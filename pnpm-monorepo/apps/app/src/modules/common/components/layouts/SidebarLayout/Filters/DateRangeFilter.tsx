@@ -5,7 +5,7 @@ import { cursorPaginationParsers } from "@/modules/common/CursorPagination/curso
 import clsx from "clsx";
 import { useTopLoader } from "nextjs-toploader";
 import { parseAsString, useQueryStates } from "nuqs";
-import { useCallback, useEffect, useTransition } from "react";
+import { useEffect, useTransition } from "react";
 
 interface Props {
   readonly fromName: string;
@@ -30,27 +30,26 @@ export const DateRangeFilter = ({
 }: Props) => {
   const [isLoading, startTransition] = useTransition();
 
-  const [{ [fromName]: from, [toName]: to }, setRange] = useQueryStates(
+  const [range, setRange] = useQueryStates(
     {
       [fromName]: parseAsString,
       [toName]: parseAsString,
     },
     { shallow: false, startTransition },
   );
+  const from = range[fromName];
+  const to = range[toName];
   const [, setPagination] = useQueryStates(cursorPaginationParsers, {
     shallow: false,
     startTransition,
   });
 
-  const setBound = useCallback(
-    async (name: string, value: string) => {
-      await setRange({ [name]: value === "" ? null : value });
+  const setBound = async (name: string, value: string) => {
+    await setRange({ [name]: value === "" ? null : value });
 
-      if (resetCursorPagination)
-        await setPagination({ cursor: null, direction: null });
-    },
-    [setRange, setPagination, resetCursorPagination],
-  );
+    if (resetCursorPagination)
+      await setPagination({ cursor: null, direction: null });
+  };
 
   const loader = useTopLoader();
 
