@@ -1,6 +1,7 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import { getCitizensForTable } from "@/modules/citizen/queries/getCitizens";
 import {
+  citizenTableParsers,
   CitizenTableSort,
   loadCitizenTableSearchParams,
 } from "@/modules/citizen/utils/citizenTableSearchParams";
@@ -25,8 +26,11 @@ interface Props {
 export const CitizenTableTile = async ({ className, searchParams }: Props) => {
   const authentication = await requireAuthentication();
 
-  const { filters, sort, page } =
-    await loadCitizenTableSearchParams(searchParams);
+  const {
+    filters,
+    sort: requestedSort,
+    page,
+  } = await loadCitizenTableSearchParams(searchParams);
 
   const [
     showLastSeenAtColumn,
@@ -51,6 +55,17 @@ export const CitizenTableTile = async ({ className, searchParams }: Props) => {
       (attribute !== "teamspeak-id" || showTeamspeakIdColumn),
   );
   const roleIds = getFilterValues(filters, "role");
+
+  /**
+   * The table shows the column only with the read permission, thus a sort by
+   * it is no option without the permission
+   */
+  const sort =
+    !showLastSeenAtColumn &&
+    (requestedSort === CitizenTableSort.LastSeenAtAscending ||
+      requestedSort === CitizenTableSort.LastSeenAtDescending)
+      ? citizenTableParsers.sort.defaultValue
+      : requestedSort;
 
   const citizens = await getCitizensForTable();
 

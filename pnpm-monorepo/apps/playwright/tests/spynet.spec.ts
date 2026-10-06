@@ -666,6 +666,54 @@ test("the citizen table sorts by its column headers and keeps the sort on the ot
   await expect(rows.first()).toContainText("bewohner-51");
 });
 
+test("the citizen table uses the default sort for a sort by the last-seen time without the permission to read it", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const viewer = await createCitizen(prisma, {
+    handle: "tabellen-leser",
+    permissionStrings: ["citizen;read", "spynetCitizen;read"],
+  });
+  /**
+   * The newest citizen comes last into the database, and the citizen that
+   * was seen last is the oldest. Thus the default sort (newest first), the
+   * order of the database and a sort by the last-seen time each start with
+   * a different citizen.
+   */
+  const createdAt = viewer.entity.createdAt.getTime();
+  const lastSeenUser = await prisma.user.create({
+    data: {
+      name: "zuletzt-gesehen",
+      lastSeenAt: new Date(createdAt + ONE_MINUTE_MS),
+    },
+  });
+  await prisma.citizen.create({
+    data: {
+      handle: "zuletzt-gesehen",
+      userId: lastSeenUser.id,
+      createdAt: new Date(createdAt - ONE_MINUTE_MS),
+    },
+  });
+  await prisma.citizen.create({
+    data: {
+      handle: "neuester",
+      createdAt: new Date(createdAt + ONE_MINUTE_MS),
+    },
+  });
+  const rows = citizenTableRows(page);
+
+  await signIn(viewer.user);
+
+  for (const sort of ["last-seen-at-asc", "last-seen-at-desc"]) {
+    await page.goto(`/app/spynet/citizen?sort=${sort}`);
+    await expect(rows).toHaveCount(3);
+    await expect(rows.nth(0)).toContainText("neuester");
+    await expect(rows.nth(1)).toContainText("tabellen-leser");
+    await expect(rows.nth(2)).toContainText("zuletzt-gesehen");
+  }
+});
+
 test("the citizen table shows the first page for a page number that is not a page", async ({
   page,
   prisma,
