@@ -28,7 +28,28 @@ export const CitizenTableTile = async ({ className, searchParams }: Props) => {
   const { filters, sort, page } =
     await loadCitizenTableSearchParams(searchParams);
 
-  const unknownAttributes = getFilterValues(filters, "unknown");
+  const [
+    showLastSeenAtColumn,
+    showTeamspeakIdColumn,
+    showDiscordIdColumn,
+    showDeleteEntityButton,
+  ] = await Promise.all([
+    authentication.authorize("lastSeen", "read"),
+    authentication.authorize("teamspeak-id", "read"),
+    authentication.authorize("discord-id", "read"),
+    authentication.authorize("citizen", "delete"),
+  ]);
+
+  /**
+   * The filters show these options only with the read permission. A filter
+   * by a value that the viewer may not read would show which citizens have
+   * one, thus the table ignores it.
+   */
+  const unknownAttributes = getFilterValues(filters, "unknown").filter(
+    (attribute) =>
+      (attribute !== "discord-id" || showDiscordIdColumn) &&
+      (attribute !== "teamspeak-id" || showTeamspeakIdColumn),
+  );
   const roleIds = getFilterValues(filters, "role");
 
   const citizens = await getCitizensForTable();
@@ -89,23 +110,6 @@ export const CitizenTableTile = async ({ className, searchParams }: Props) => {
   });
   const limitedRows = limitRows(sortedRows, page);
 
-  const showLastSeenAtColumn = await authentication.authorize(
-    "lastSeen",
-    "read",
-  );
-  const showTeamspeakIdAtColumn = await authentication.authorize(
-    "teamspeak-id",
-    "read",
-  );
-  const showDiscordIdAtColumn = await authentication.authorize(
-    "discord-id",
-    "read",
-  );
-  const showDeleteEntityButton = await authentication.authorize(
-    "citizen",
-    "delete",
-  );
-
   return (
     <section
       className={clsx(
@@ -117,8 +121,8 @@ export const CitizenTableTile = async ({ className, searchParams }: Props) => {
 
       <CitizenTable
         rows={limitedRows}
-        showDiscordIdColumn={showDiscordIdAtColumn}
-        showTeamspeakIdColumn={showTeamspeakIdAtColumn}
+        showDiscordIdColumn={showDiscordIdColumn}
+        showTeamspeakIdColumn={showTeamspeakIdColumn}
         showLastSeenAtColumn={showLastSeenAtColumn}
         showDeleteEntityButton={showDeleteEntityButton}
       />
