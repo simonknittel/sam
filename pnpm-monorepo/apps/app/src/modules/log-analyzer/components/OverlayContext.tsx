@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 
 interface OverlayContext {
   isSupported: boolean;
@@ -30,15 +23,15 @@ export function OverlayProvider({ children }: Props) {
   const [pipWindow, setPipWindow] = useState<Window | null>(null);
 
   // Close pipWindow programmatically
-  const closePipWindow = useCallback(() => {
+  const closePipWindow = () => {
     if (pipWindow != null) {
       pipWindow.close();
       setPipWindow(null);
     }
-  }, [pipWindow]);
+  };
 
   // Open new pipWindow
-  const requestPipWindow = useCallback(async () => {
+  const requestPipWindow = async () => {
     // We don't want to allow multiple requests.
     if (pipWindow != null) return;
 
@@ -81,18 +74,14 @@ export function OverlayProvider({ children }: Props) {
     });
 
     setPipWindow(pip);
-  }, [pipWindow]);
+  };
 
-  const value = useMemo(() => {
-    {
-      return {
-        isSupported,
-        pipWindow,
-        requestPipWindow,
-        closePipWindow,
-      };
-    }
-  }, [closePipWindow, isSupported, pipWindow, requestPipWindow]);
+  const value = {
+    isSupported,
+    pipWindow,
+    requestPipWindow,
+    closePipWindow,
+  };
 
   return <OverlayContext value={value}>{children}</OverlayContext>;
 }

@@ -1,7 +1,7 @@
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Table, TBody, THead } from "@/modules/common/components/Table";
 import clsx from "clsx";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { collapseRepeatedEntries } from "../utils/collapseRepeatedEntries";
 import { Entry } from "./Entry";
 import { EntryClock } from "./EntryClock";
@@ -21,17 +21,12 @@ export const LogAnalyzerTable = ({ className }: Props) => {
   const [visibleRowCount, setVisibleRowCount] = useState(ROWS_PER_PAGE);
 
   /** The filter runs first, so the sort works on the smaller list */
-  const sortedFilteredEntries = useMemo(
-    () =>
-      collapseRepeatedEntries(
-        Array.from(entries.values())
-          .filter(entryFilterFn)
-          .toSorted(
-            (first, second) =>
-              second.isoDate.getTime() - first.isoDate.getTime(),
-          ),
+  const sortedFilteredEntries = collapseRepeatedEntries(
+    Array.from(entries.values())
+      .filter(entryFilterFn)
+      .toSorted(
+        (first, second) => second.isoDate.getTime() - first.isoDate.getTime(),
       ),
-    [entries, entryFilterFn],
   );
 
   const visibleEntries = sortedFilteredEntries.slice(0, visibleRowCount);

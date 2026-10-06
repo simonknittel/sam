@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import type {
   LogFile,
   ParseRequest,
@@ -76,26 +76,23 @@ export const useLogParser = () => {
     };
   }, []);
 
-  return useCallback(
-    (files: readonly LogFile[], isFullRead: boolean) =>
-      new Promise<RawMatch[]>((resolve, reject) => {
-        const worker = workerRef.current;
-        if (!worker) {
-          reject(new Error("The log parser is not running"));
-          return;
-        }
-        if (workerErrorRef.current) {
-          reject(workerErrorRef.current);
-          return;
-        }
+  return (files: readonly LogFile[], isFullRead: boolean) =>
+    new Promise<RawMatch[]>((resolve, reject) => {
+      const worker = workerRef.current;
+      if (!worker) {
+        reject(new Error("The log parser is not running"));
+        return;
+      }
+      if (workerErrorRef.current) {
+        reject(workerErrorRef.current);
+        return;
+      }
 
-        const id = nextRequestIdRef.current;
-        nextRequestIdRef.current += 1;
-        pendingRequestsRef.current.set(id, { resolve, reject });
+      const id = nextRequestIdRef.current;
+      nextRequestIdRef.current += 1;
+      pendingRequestsRef.current.set(id, { resolve, reject });
 
-        const request: ParseRequest = { id, files, isFullRead };
-        worker.postMessage(request);
-      }),
-    [],
-  );
+      const request: ParseRequest = { id, files, isFullRead };
+      worker.postMessage(request);
+    });
 };
