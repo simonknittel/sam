@@ -69,20 +69,17 @@ const getReadableNoteWhere = async (
             ),
           ]);
 
-          if (readsConfirmed && readsUnconfirmed) return classification;
+          /**
+           * A permission for the notes that are not confirmed also matches
+           * the confirmed notes: their attributes are a part of the
+           * attributes of a note that is not confirmed (see
+           * getNotePermissionAttributes)
+           */
+          if (readsUnconfirmed) return classification;
           if (readsConfirmed)
             return {
               ...classification,
               confirmed: ConfirmationStatus.CONFIRMED,
-            };
-          /** A comparison in SQL does not match NULL */
-          if (readsUnconfirmed)
-            return {
-              ...classification,
-              OR: [
-                { confirmed: null },
-                { confirmed: { not: ConfirmationStatus.CONFIRMED } },
-              ],
             };
           return null;
         },
