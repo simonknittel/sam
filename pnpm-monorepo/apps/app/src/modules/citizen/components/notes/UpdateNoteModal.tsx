@@ -120,6 +120,14 @@ const UpdateNoteForm = ({
     classificationLevelOptions,
     classificationLevelId,
   );
+  /**
+   * A save without a change does not change the note, and a save without a
+   * classification level fails
+   */
+  const isSaveDisabled =
+    !selectedClassificationLevelId ||
+    (selectedNoteTypeId === note.noteTypeId &&
+      selectedClassificationLevelId === note.classificationLevelId);
 
   return (
     <form onSubmit={submitWithoutReset}>
@@ -162,7 +170,7 @@ const UpdateNoteForm = ({
       </Select>
 
       <div className="mt-8 flex justify-end">
-        <Button2 type="submit" disabled={isPending}>
+        <Button2 type="submit" disabled={isPending || isSaveDisabled}>
           {isPending ? <AsciiSpinner /> : <FaSave />}
           Speichern
         </Button2>
