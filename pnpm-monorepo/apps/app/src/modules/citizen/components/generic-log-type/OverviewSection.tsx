@@ -12,7 +12,7 @@ interface Props {
   readonly name: string;
   /** The content of the latest confirmed log entry of this type */
   readonly value: string | null;
-  readonly entity: Pick<Citizen, "id">;
+  readonly citizenId: Citizen["id"];
 }
 
 export const OverviewSection = async ({
@@ -20,7 +20,7 @@ export const OverviewSection = async ({
   icon,
   name,
   value,
-  entity,
+  citizenId,
 }: Props) => {
   const authentication = await requireAuthentication();
   const showCreate = await authentication.authorize(type, "create");
@@ -39,7 +39,7 @@ export const OverviewSection = async ({
 
       <HistoryModal
         type={type}
-        entity={entity}
+        entity={{ id: citizenId }}
         variant={HistoryModalVariant.Inline}
         showCreate={showCreate}
         showDelete={showDelete}

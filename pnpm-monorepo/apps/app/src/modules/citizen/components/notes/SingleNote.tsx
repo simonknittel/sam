@@ -31,6 +31,8 @@ export const SingleNote = async ({ note }: Props) => {
   const isUnconfirmed = note.confirmed === null;
   const isFalseReport = note.confirmed === ConfirmationStatus.FALSE_REPORT;
   const authorizationAttributes = getNotePermissionAttributes(note);
+  /** The client components get only the fields that they read */
+  const log = { id: note.id, citizenId: note.citizenId };
 
   let content: ReactNode = note.content;
   const matches = note.content?.match(/@citizen:(\d+)|@org:([a-zA-Z0-9_]+)/g);
@@ -180,7 +182,7 @@ export const SingleNote = async ({ note }: Props) => {
           <div className="flex flex-wrap gap-2 lg:gap-4">
             <p className="text-sm font-bold">Unbestätigt</p>
 
-            {showConfirm && <ConfirmLog log={note} />}
+            {showConfirm && <ConfirmLog log={log} />}
           </div>
         </div>
       )}
@@ -227,7 +229,7 @@ export const SingleNote = async ({ note }: Props) => {
             {showDelete && (
               <>
                 <span>&bull;</span>
-                <DeleteLog log={note} />
+                <DeleteLog log={log} />
               </>
             )}
           </div>

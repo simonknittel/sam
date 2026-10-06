@@ -81,21 +81,21 @@ export const Overview = async ({ className, entity }: Props) => {
             type="citizen-id"
             name="Citizen ID"
             value={entity.citizenRecord}
-            entity={entity}
+            citizenId={entity.id}
           />
 
           <OverviewSection
             type="handle"
             name="Handle"
             value={entity.handle}
-            entity={entity}
+            citizenId={entity.id}
           />
 
           <OverviewSection
             type="community-moniker"
             name="Community Moniker"
             value={entity.communityMoniker}
-            entity={entity}
+            citizenId={entity.id}
           />
 
           {showDiscordId && (
@@ -104,7 +104,7 @@ export const Overview = async ({ className, entity }: Props) => {
               icon={<FaDiscord />}
               name="Discord ID"
               value={entity.discordId}
-              entity={entity}
+              citizenId={entity.id}
             />
           )}
 
@@ -114,7 +114,7 @@ export const Overview = async ({ className, entity }: Props) => {
               icon={<FaTeamspeak />}
               name="TeamSpeak ID"
               value={entity.teamspeakId}
-              entity={entity}
+              citizenId={entity.id}
             />
           )}
 
@@ -157,7 +157,16 @@ export const Overview = async ({ className, entity }: Props) => {
         )}
       </Tile>
 
-      {showDelete && <DeleteCitizen entity={entity} className="mt-4" />}
+      {/**
+       * Only the fields that the client component reads go to the browser:
+       * the citizen also has, for example, the Discord ID and the login
+       */}
+      {showDelete && (
+        <DeleteCitizen
+          entity={{ id: entity.id, handle: entity.handle }}
+          className="mt-4"
+        />
+      )}
     </div>
   );
 };
