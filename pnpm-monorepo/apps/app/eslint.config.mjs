@@ -146,6 +146,13 @@ const eslintConfig = defineConfig([
       // that it does not support yet ("todo") or that stops one of its
       // internal checks ("invariant"). The build of Next.js does not show
       // these components, thus lint must show them.
+      // The rules also report server components, but Next.js does not compile
+      // server components. There, a rewrite or an `eslint-disable-next-line`
+      // with a reason is correct.
+      // Lint uses the Babel compiler, but the build uses its Rust port (see
+      // `reactCompiler` in next.config.ts). Thus the two can skip different
+      // components. After an upgrade of Next.js, examine the client chunks of
+      // the build: each compiled component calls the cache of the compiler.
       "react-hooks/todo": "error",
       "react-hooks/invariant": "error",
 
