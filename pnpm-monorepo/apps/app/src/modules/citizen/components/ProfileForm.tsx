@@ -7,7 +7,7 @@ import { Button2 } from "@/modules/common/components/Button2";
 import { Select } from "@/modules/common/components/form/Select";
 import { Tile } from "@/modules/common/components/Tile";
 import { OnboardingTargetId } from "@/modules/onboarding/utils/targets";
-import { useId, useMemo, useState, type ChangeEvent } from "react";
+import { useId, useState, type ChangeEvent } from "react";
 import { FaSave } from "react-icons/fa";
 import { updateMyProfile } from "../actions/updateMyProfile";
 import {
@@ -94,10 +94,7 @@ export const ProfileForm = ({
   const dayInputId = useId();
   const monthInputId = useId();
 
-  const timezoneGroups = useMemo(
-    () => groupTimezonesByArea(timezones),
-    [timezones],
-  );
+  const timezoneGroups = groupTimezonesByArea(timezones);
 
   const maximumDay =
     currentMonth === NOT_SET

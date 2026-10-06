@@ -3,7 +3,7 @@
 import { runAction } from "@/modules/actions/utils/runAction";
 import clsx from "clsx";
 import { debounce } from "lodash";
-import { useEffect, useMemo, type FormEvent, type ReactNode } from "react";
+import { useEffect, type FormEvent, type ReactNode } from "react";
 import { updateRoleAssignments } from "../../actions/updateRoleAssignment";
 
 interface Props {
@@ -14,15 +14,11 @@ interface Props {
 }
 
 export const UpdateRolesForm = ({ children, className, onSaved }: Props) => {
-  const submit = useMemo(
-    () =>
-      debounce(async (form: HTMLFormElement) => {
-        const formData = new FormData(form);
+  const submit = debounce(async (form: HTMLFormElement) => {
+    const formData = new FormData(form);
 
-        if (await runAction(updateRoleAssignments, formData)) onSaved?.();
-      }, 1000),
-    [onSaved],
-  );
+    if (await runAction(updateRoleAssignments, formData)) onSaved?.();
+  }, 1000);
 
   /**
    * The dialog removes the form when it closes. Thus a change that waits for
