@@ -5,11 +5,13 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   useReactTable,
+  type Header,
   type SortingState,
   type TableOptions,
 } from "@tanstack/react-table";
 import clsx from "clsx";
 import { FaSortAlphaDown, FaSortAlphaUpAlt } from "react-icons/fa";
+import { SortDirection } from "./SortableColumnHeader";
 
 interface Props<Row> {
   readonly className?: string;
@@ -22,6 +24,31 @@ interface Props<Row> {
   readonly rowClassName?: string;
   readonly cellClassName?: string;
 }
+
+/**
+ * The `aria-sort` value of a header. Only one header can have the attribute,
+ * thus a table sorted by more than one column gives it to the first column of
+ * the sort.
+ */
+const getAriaSort = <Row,>(header: Header<Row, unknown>) => {
+  if (header.isPlaceholder || header.column.getSortIndex() !== 0)
+    return undefined;
+
+  const direction = header.column.getIsSorted();
+  switch (direction) {
+    case "asc":
+      return SortDirection.Ascending;
+
+    case "desc":
+      return SortDirection.Descending;
+
+    case false:
+      return undefined;
+
+    default:
+      throw new Error(`Unknown sort direction: ${direction satisfies never}`);
+  }
+};
 
 /**
  * A CSS-grid table whose headers toggle client-side sorting. The callers give
@@ -60,29 +87,39 @@ export const SortableTable = <Row,>({
             key={headerGroup.id}
             className={clsx("grid items-center gap-4 pb-2", gridColsClassName)}
           >
-            {headerGroup.headers.map((header) => (
-              <th key={header.id} className="p-0 text-left text-neutral-500">
-                {header.isPlaceholder ? null : (
-                  <div
-                    className={
-                      header.column.getCanSort()
-                        ? "flex cursor-pointer items-center gap-2 select-none hover:text-neutral-300"
-                        : ""
-                    }
-                    onClick={header.column.getToggleSortingHandler()}
-                  >
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext(),
-                    )}
-                    {{
-                      asc: <FaSortAlphaDown />,
-                      desc: <FaSortAlphaUpAlt />,
-                    }[header.column.getIsSorted() as string] ?? null}
-                  </div>
-                )}
-              </th>
-            ))}
+            {headerGroup.headers.map((header) => {
+              const label = header.isPlaceholder
+                ? null
+                : flexRender(
+                    header.column.columnDef.header,
+                    header.getContext(),
+                  );
+              const canSort =
+                !header.isPlaceholder && header.column.getCanSort();
+              const direction = header.column.getIsSorted();
+
+              return (
+                <th
+                  key={header.id}
+                  className="p-0 text-left text-neutral-500"
+                  aria-sort={getAriaSort(header)}
+                >
+                  {canSort ? (
+                    <button
+                      type="button"
+                      className="flex w-full cursor-pointer items-center gap-2 select-none hover:text-neutral-300 focus-visible:text-neutral-300 active:text-neutral-200"
+                      onClick={header.column.getToggleSortingHandler()}
+                    >
+                      {label}
+                      {direction === "asc" && <FaSortAlphaDown />}
+                      {direction === "desc" && <FaSortAlphaUpAlt />}
+                    </button>
+                  ) : (
+                    label
+                  )}
+                </th>
+              );
+            })}
           </tr>
         ))}
       </thead>
