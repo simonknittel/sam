@@ -10,7 +10,7 @@ import { captureAsyncFunc } from "../common/xray";
 
 export const endPayoutPhases = async () => {
   await captureAsyncFunc("endPayoutPhases", async () => {
-    void log.info("Checking for profit distribution payout phases to end");
+    log.info("Checking for profit distribution payout phases to end");
 
     const now = new Date();
 
@@ -43,7 +43,7 @@ export const endPayoutPhases = async () => {
       })),
     );
 
-    void log.info("Ended payout phases", {
+    log.info("Ended payout phases", {
       count: cycles.length,
       cycleIds: cycles.map((cycle) => cycle.id),
     });

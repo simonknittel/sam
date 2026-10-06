@@ -22,7 +22,7 @@ export const getEventUsers = async (discordId: string) => {
     const retryAfterSeconds = retryAfterHeader
       ? Number.parseInt(retryAfterHeader, 10) + 1
       : 1;
-    void log.warn("Hit rate limit of Discord", {
+    log.warn("Hit rate limit of Discord", {
       endpoint: "getEventUsers",
       retryAfter: retryAfterSeconds,
       attempt,

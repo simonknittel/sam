@@ -10,7 +10,6 @@ import type { ScheduledHandler } from "aws-lambda";
 import { shuffle } from "lodash";
 import { createAuditEvents } from "./common/audit";
 import { log } from "./common/logger";
-import { initializeRequestContext } from "./common/requestContext";
 import { deleteCancelledEvents } from "./scrape-discord-events/deleteCancelledEvents";
 import { getEvents } from "./scrape-discord-events/discord/utils/getEvents";
 import { findCitizenIdByDiscordId } from "./scrape-discord-events/findCitizenIdByDiscordId";
@@ -28,257 +27,254 @@ const getAppPublishedDiscordIds = async () => {
   return events.map((event) => event.discordPublishedId!);
 };
 
-export const handler: ScheduledHandler = async (event, context) => {
-  return initializeRequestContext(context.awsRequestId, async () => {
-    try {
-      /**
-       * Everything the app published to the guild itself is invisible to
-       * this sync — those events already live in the database as APP rows
-       * and the app keeps them up to date from its own side.
-       *
-       * Read on both sides of the fetch and unioned, because either order
-       * alone loses a race: an event published after the DB read would not
-       * be excluded, and one unpublished after it would be excluded by the
-       * later read but had already been fetched. Both cases would import it
-       * as a duplicate — and the second would then have the participant
-       * sync call a scheduled event that no longer exists, aborting the run.
-       */
-      const publishedIdsBeforeFetch = await getAppPublishedDiscordIds();
-      const { data: _futureEventsFromDiscord } = await getEvents();
-      void log.info("Fetched events from Discord", {
-        count: _futureEventsFromDiscord.length,
-        eventIds: _futureEventsFromDiscord.map((event) => event.id),
+export const handler: ScheduledHandler = async () => {
+  try {
+    /**
+     * Everything the app published to the guild itself is invisible to
+     * this sync — those events already live in the database as APP rows
+     * and the app keeps them up to date from its own side.
+     *
+     * Read on both sides of the fetch and unioned, because either order
+     * alone loses a race: an event published after the DB read would not
+     * be excluded, and one unpublished after it would be excluded by the
+     * later read but had already been fetched. Both cases would import it
+     * as a duplicate — and the second would then have the participant
+     * sync call a scheduled event that no longer exists, aborting the run.
+     */
+    const publishedIdsBeforeFetch = await getAppPublishedDiscordIds();
+    const { data: _futureEventsFromDiscord } = await getEvents();
+    log.info("Fetched events from Discord", {
+      count: _futureEventsFromDiscord.length,
+      eventIds: _futureEventsFromDiscord.map((event) => event.id),
+    });
+    const publishedIdsAfterFetch = await getAppPublishedDiscordIds();
+
+    const ownEventsFromDiscord = excludeAppPublishedEvents(
+      _futureEventsFromDiscord,
+      new Set([...publishedIdsBeforeFetch, ...publishedIdsAfterFetch]),
+    );
+    if (ownEventsFromDiscord.length !== _futureEventsFromDiscord.length)
+      log.info("Skipped guild events the app published itself", {
+        count: _futureEventsFromDiscord.length - ownEventsFromDiscord.length,
       });
-      const publishedIdsAfterFetch = await getAppPublishedDiscordIds();
 
-      const ownEventsFromDiscord = excludeAppPublishedEvents(
-        _futureEventsFromDiscord,
-        new Set([...publishedIdsBeforeFetch, ...publishedIdsAfterFetch]),
-      );
-      if (ownEventsFromDiscord.length !== _futureEventsFromDiscord.length)
-        void log.info("Skipped guild events the app published itself", {
-          count: _futureEventsFromDiscord.length - ownEventsFromDiscord.length,
-        });
+    // Shuffle array so rate limits not always hitting the same events
+    const futureEventsFromDiscord = shuffle(ownEventsFromDiscord);
+    // // Limit to 5 events to avoid rate limits
+    // futureEventsFromDiscord = futureEventsFromDiscord.slice(0, 5);
 
-      // Shuffle array so rate limits not always hitting the same events
-      const futureEventsFromDiscord = shuffle(ownEventsFromDiscord);
-      // // Limit to 5 events to avoid rate limits
-      // futureEventsFromDiscord = futureEventsFromDiscord.slice(0, 5);
+    await deleteCancelledEvents(futureEventsFromDiscord);
 
-      await deleteCancelledEvents(futureEventsFromDiscord);
-
-      for (const futureEventFromDiscord of futureEventsFromDiscord) {
-        const existingEventFromDatabase = await prisma.event.findUnique({
-          where: {
-            discordId: futureEventFromDiscord.id,
-          },
-          select: {
-            id: true,
-            name: true,
-            startTime: true,
-            endTime: true,
-            description: true,
-            location: true,
-            discordImage: true,
-            discordCreatorId: true,
-            createdById: true,
-            wikiPages: {
-              where: {
-                parentId: null,
-              },
-              select: {
-                id: true,
-              },
-              take: 1,
+    for (const futureEventFromDiscord of futureEventsFromDiscord) {
+      const existingEventFromDatabase = await prisma.event.findUnique({
+        where: {
+          discordId: futureEventFromDiscord.id,
+        },
+        select: {
+          id: true,
+          name: true,
+          startTime: true,
+          endTime: true,
+          description: true,
+          location: true,
+          discordImage: true,
+          discordCreatorId: true,
+          createdById: true,
+          wikiPages: {
+            where: {
+              parentId: null,
             },
+            select: {
+              id: true,
+            },
+            take: 1,
           },
-        });
+        },
+      });
 
-        if (existingEventFromDatabase) {
-          const hasAnyChanges =
-            existingEventFromDatabase.name !== futureEventFromDiscord.name ||
-            existingEventFromDatabase.startTime.getTime() !==
-              futureEventFromDiscord.scheduled_start_time.getTime() ||
-            // biome-ignore lint/suspicious/noDoubleEquals: <explanation>
-            existingEventFromDatabase.endTime?.getTime() !=
-              futureEventFromDiscord.scheduled_end_time?.getTime() ||
-            // biome-ignore lint/suspicious/noDoubleEquals: <explanation>
-            existingEventFromDatabase.description !=
-              futureEventFromDiscord.description ||
-            // biome-ignore lint/suspicious/noDoubleEquals: <explanation>
-            existingEventFromDatabase.location !=
-              futureEventFromDiscord.entity_metadata.location ||
-            // biome-ignore lint/suspicious/noDoubleEquals: <explanation>
-            existingEventFromDatabase.discordImage !=
-              futureEventFromDiscord.image;
+      if (existingEventFromDatabase) {
+        const hasAnyChanges =
+          existingEventFromDatabase.name !== futureEventFromDiscord.name ||
+          existingEventFromDatabase.startTime.getTime() !==
+            futureEventFromDiscord.scheduled_start_time.getTime() ||
+          // biome-ignore lint/suspicious/noDoubleEquals: <explanation>
+          existingEventFromDatabase.endTime?.getTime() !=
+            futureEventFromDiscord.scheduled_end_time?.getTime() ||
+          // biome-ignore lint/suspicious/noDoubleEquals: <explanation>
+          existingEventFromDatabase.description !=
+            futureEventFromDiscord.description ||
+          // biome-ignore lint/suspicious/noDoubleEquals: <explanation>
+          existingEventFromDatabase.location !=
+            futureEventFromDiscord.entity_metadata.location ||
+          // biome-ignore lint/suspicious/noDoubleEquals: <explanation>
+          existingEventFromDatabase.discordImage !=
+            futureEventFromDiscord.image;
 
-          if (hasAnyChanges) {
-            await prisma.event.update({
-              where: {
-                id: existingEventFromDatabase.id,
-              },
-              data: {
-                name: futureEventFromDiscord.name,
-                startTime: futureEventFromDiscord.scheduled_start_time,
-                endTime: futureEventFromDiscord.scheduled_end_time,
-                description: futureEventFromDiscord.description,
-                location:
-                  futureEventFromDiscord.entity_metadata.location || null,
-                discordImage: futureEventFromDiscord.image,
-              },
-              select: {
-                id: true,
-              },
-            });
-
-            void log.info("Updated event from Discord", {
-              eventId: existingEventFromDatabase.id,
-              discordEventId: futureEventFromDiscord.id,
-            });
-
-            await createAuditEvents([
-              {
-                type: AuditEventType.EVENT_UPDATED_FROM_DISCORD,
-                data: {
-                  eventId: existingEventFromDatabase.id,
-                  discordId: futureEventFromDiscord.id,
-                  name: futureEventFromDiscord.name,
-                },
-              },
-            ]);
-          }
-
-          const hasChangesForNotification =
-            existingEventFromDatabase.name !== futureEventFromDiscord.name ||
-            existingEventFromDatabase.startTime.getTime() !==
-              futureEventFromDiscord.scheduled_start_time.getTime() ||
-            // biome-ignore lint/suspicious/noDoubleEquals: <explanation>
-            existingEventFromDatabase.endTime?.getTime() !=
-              futureEventFromDiscord.scheduled_end_time?.getTime() ||
-            // biome-ignore lint/suspicious/noDoubleEquals: <explanation>
-            existingEventFromDatabase.description !=
-              futureEventFromDiscord.description ||
-            // biome-ignore lint/suspicious/noDoubleEquals: <explanation>
-            existingEventFromDatabase.location !=
-              futureEventFromDiscord.entity_metadata.location;
-
-          if (hasChangesForNotification) {
-            await triggerNotifications([
-              {
-                type: "EventUpdated",
-                payload: {
-                  eventId: existingEventFromDatabase.id,
-                },
-              },
-            ]);
-          }
-
-          /**
-           * The citizen of the Discord creator can come after the import of
-           * the event. Thus look for it again on each run.
-           */
-          if (existingEventFromDatabase.createdById === null) {
-            const createdById = await findCitizenIdByDiscordId(
-              existingEventFromDatabase.discordCreatorId,
-            );
-
-            if (createdById) {
-              await prisma.event.update({
-                where: {
-                  id: existingEventFromDatabase.id,
-                },
-                data: {
-                  createdById,
-                },
-                select: {
-                  id: true,
-                },
-              });
-
-              void log.info("Linked event from Discord to its creator", {
-                eventId: existingEventFromDatabase.id,
-                discordEventId: futureEventFromDiscord.id,
-              });
-            }
-          }
-
-          if (existingEventFromDatabase.wikiPages.length === 0) {
-            await prisma.wikiPage.create({
-              data: {
-                ...buildBriefingRootPageSeed(
-                  await findCitizenIdByDiscordId(
-                    existingEventFromDatabase.discordCreatorId,
-                  ),
-                ),
-                eventId: existingEventFromDatabase.id,
-              },
-            });
-
-            void log.info("Seeded missing briefing page for existing event", {
-              eventId: existingEventFromDatabase.id,
-              discordEventId: futureEventFromDiscord.id,
-            });
-          }
-        } else {
-          const createdById = await findCitizenIdByDiscordId(
-            futureEventFromDiscord.creator_id,
-          );
-
-          const newEvent = await prisma.event.create({
+        if (hasAnyChanges) {
+          await prisma.event.update({
+            where: {
+              id: existingEventFromDatabase.id,
+            },
             data: {
-              source: EventSource.DISCORD,
-              discordId: futureEventFromDiscord.id,
-              discordCreatorId: futureEventFromDiscord.creator_id,
-              createdById,
               name: futureEventFromDiscord.name,
               startTime: futureEventFromDiscord.scheduled_start_time,
               endTime: futureEventFromDiscord.scheduled_end_time,
               description: futureEventFromDiscord.description,
               location: futureEventFromDiscord.entity_metadata.location || null,
               discordImage: futureEventFromDiscord.image,
-              discordGuildId: futureEventFromDiscord.guild_id,
-              wikiPages: {
-                create: buildBriefingRootPageSeed(createdById),
-              },
             },
             select: {
               id: true,
             },
           });
 
-          void log.info("Created new event from Discord", {
-            eventId: newEvent.id,
+          log.info("Updated event from Discord", {
+            eventId: existingEventFromDatabase.id,
             discordEventId: futureEventFromDiscord.id,
           });
 
           await createAuditEvents([
             {
-              type: AuditEventType.EVENT_IMPORTED_FROM_DISCORD,
+              type: AuditEventType.EVENT_UPDATED_FROM_DISCORD,
               data: {
-                eventId: newEvent.id,
+                eventId: existingEventFromDatabase.id,
                 discordId: futureEventFromDiscord.id,
                 name: futureEventFromDiscord.name,
               },
             },
           ]);
+        }
 
+        const hasChangesForNotification =
+          existingEventFromDatabase.name !== futureEventFromDiscord.name ||
+          existingEventFromDatabase.startTime.getTime() !==
+            futureEventFromDiscord.scheduled_start_time.getTime() ||
+          // biome-ignore lint/suspicious/noDoubleEquals: <explanation>
+          existingEventFromDatabase.endTime?.getTime() !=
+            futureEventFromDiscord.scheduled_end_time?.getTime() ||
+          // biome-ignore lint/suspicious/noDoubleEquals: <explanation>
+          existingEventFromDatabase.description !=
+            futureEventFromDiscord.description ||
+          // biome-ignore lint/suspicious/noDoubleEquals: <explanation>
+          existingEventFromDatabase.location !=
+            futureEventFromDiscord.entity_metadata.location;
+
+        if (hasChangesForNotification) {
           await triggerNotifications([
             {
-              type: "EventCreated",
+              type: "EventUpdated",
               payload: {
-                eventId: newEvent.id,
+                eventId: existingEventFromDatabase.id,
               },
             },
           ]);
         }
 
-        await updateParticipants(futureEventFromDiscord);
+        /**
+         * The citizen of the Discord creator can come after the import of
+         * the event. Thus look for it again on each run.
+         */
+        if (existingEventFromDatabase.createdById === null) {
+          const createdById = await findCitizenIdByDiscordId(
+            existingEventFromDatabase.discordCreatorId,
+          );
+
+          if (createdById) {
+            await prisma.event.update({
+              where: {
+                id: existingEventFromDatabase.id,
+              },
+              data: {
+                createdById,
+              },
+              select: {
+                id: true,
+              },
+            });
+
+            log.info("Linked event from Discord to its creator", {
+              eventId: existingEventFromDatabase.id,
+              discordEventId: futureEventFromDiscord.id,
+            });
+          }
+        }
+
+        if (existingEventFromDatabase.wikiPages.length === 0) {
+          await prisma.wikiPage.create({
+            data: {
+              ...buildBriefingRootPageSeed(
+                await findCitizenIdByDiscordId(
+                  existingEventFromDatabase.discordCreatorId,
+                ),
+              ),
+              eventId: existingEventFromDatabase.id,
+            },
+          });
+
+          log.info("Seeded missing briefing page for existing event", {
+            eventId: existingEventFromDatabase.id,
+            discordEventId: futureEventFromDiscord.id,
+          });
+        }
+      } else {
+        const createdById = await findCitizenIdByDiscordId(
+          futureEventFromDiscord.creator_id,
+        );
+
+        const newEvent = await prisma.event.create({
+          data: {
+            source: EventSource.DISCORD,
+            discordId: futureEventFromDiscord.id,
+            discordCreatorId: futureEventFromDiscord.creator_id,
+            createdById,
+            name: futureEventFromDiscord.name,
+            startTime: futureEventFromDiscord.scheduled_start_time,
+            endTime: futureEventFromDiscord.scheduled_end_time,
+            description: futureEventFromDiscord.description,
+            location: futureEventFromDiscord.entity_metadata.location || null,
+            discordImage: futureEventFromDiscord.image,
+            discordGuildId: futureEventFromDiscord.guild_id,
+            wikiPages: {
+              create: buildBriefingRootPageSeed(createdById),
+            },
+          },
+          select: {
+            id: true,
+          },
+        });
+
+        log.info("Created new event from Discord", {
+          eventId: newEvent.id,
+          discordEventId: futureEventFromDiscord.id,
+        });
+
+        await createAuditEvents([
+          {
+            type: AuditEventType.EVENT_IMPORTED_FROM_DISCORD,
+            data: {
+              eventId: newEvent.id,
+              discordId: futureEventFromDiscord.id,
+              name: futureEventFromDiscord.name,
+            },
+          },
+        ]);
+
+        await triggerNotifications([
+          {
+            type: "EventCreated",
+            payload: {
+              eventId: newEvent.id,
+            },
+          },
+        ]);
       }
 
-      void log.info("Finished scraping Discord events");
-    } catch (error) {
-      void log.error("Failed to scrape Discord events", { error });
-      throw error;
+      await updateParticipants(futureEventFromDiscord);
     }
-  });
+
+    log.info("Finished scraping Discord events");
+  } catch (error) {
+    log.error("Failed to scrape Discord events", { error });
+    throw error;
+  }
 };

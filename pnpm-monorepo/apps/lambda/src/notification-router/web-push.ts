@@ -144,19 +144,16 @@ export const publishWebPushNotifications = async (
           if (attempt < RATE_LIMIT_MAX_RETRIES) {
             const retryDelayMs =
               getRetryAfterDelayMs(error) ?? RATE_LIMIT_DEFAULT_DELAY_MS;
-            void log.warn(
-              "Rate limited sending web push notification, retrying",
-              {
-                subscriptionId: id,
-                retryDelayMs,
-                attempt: attempt + 1,
-              },
-            );
+            log.warn("Rate limited sending web push notification, retrying", {
+              subscriptionId: id,
+              retryDelayMs,
+              attempt: attempt + 1,
+            });
             await setTimeout(retryDelayMs);
             continue;
           }
 
-          void log.error(
+          log.error(
             "Exceeded retries after rate limit for web push notification",
             {
               subscriptionId: id,
@@ -167,7 +164,7 @@ export const publishWebPushNotifications = async (
           break;
         }
 
-        void log.error("Error sending web push notification", {
+        log.error("Error sending web push notification", {
           error: toLoggableWebPushError(error),
           subscriptionId: id,
         });

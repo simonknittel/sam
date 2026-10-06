@@ -22,7 +22,7 @@ export const createAuditEvents = async (events: AuditEventInput[]) => {
       })),
     });
   } catch (error) {
-    void log.error("Failed to write audit event(s)", {
+    log.error("Failed to write audit event(s)", {
       error,
       types: events.map((event) => event.type).join(", "),
     });

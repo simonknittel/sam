@@ -8,7 +8,7 @@ const NOTIFICATION_MINUTES_BEFORE = 15;
 
 export const eventStartingSoon = async () => {
   await captureAsyncFunc("eventStartingSoon", async () => {
-    void log.info("Checking for events starting soon");
+    log.info("Checking for events starting soon");
 
     const now = new Date();
     const notificationWindow = new Date(
@@ -30,7 +30,7 @@ export const eventStartingSoon = async () => {
       },
     });
 
-    void log.info("Found events starting soon", {
+    log.info("Found events starting soon", {
       count: events.length,
       eventIds: events.map((e) => e.id),
     });
