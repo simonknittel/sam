@@ -103,7 +103,7 @@ export const wikiCitizenMentioned = async () => {
       },
     });
 
-    void log.info("Checking pending wiki citizen mentions", {
+    log.info("Checking pending wiki citizen mentions", {
       count: pending.length,
     });
     if (pending.length === 0) return;
@@ -261,7 +261,7 @@ export const wikiCitizenMentioned = async () => {
       notifiable.push(mention);
     }
 
-    void log.info("Gated pending wiki citizen mentions", {
+    log.info("Gated pending wiki citizen mentions", {
       notified: notifiable.length,
       suppressed: suppressedIds.length,
     });

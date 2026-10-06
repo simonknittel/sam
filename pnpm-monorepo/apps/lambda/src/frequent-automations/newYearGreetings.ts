@@ -51,14 +51,14 @@ export const newYearGreetings = async () => {
       } catch (error) {
         // A time zone the runtime does not know must not stop the sibling
         // citizens or the sibling jobs of this Lambda.
-        void log.warn("Failed to check the turn of the year of a citizen", {
+        log.warn("Failed to check the turn of the year of a citizen", {
           citizenId: candidate.id,
           error,
         });
       }
     }
 
-    void log.info("Checked the turn of the year", {
+    log.info("Checked the turn of the year", {
       candidateCount: candidates.length,
       greetableCount: greetable.length,
     });

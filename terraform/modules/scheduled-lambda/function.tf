@@ -17,6 +17,16 @@ resource "aws_lambda_function" "main" {
     mode = "Active"
   }
 
+  # With JSON, the Lambda runtime adds the timestamp, the level and the request
+  # ID to each console call (see pnpm-monorepo/apps/lambda/src/common/logger.ts).
+  # INFO is the lowest level that the code uses. The system log level INFO
+  # keeps the "start" and "report" lines of each invocation.
+  logging_config {
+    log_format            = "JSON"
+    application_log_level = "INFO"
+    system_log_level      = "INFO"
+  }
+
   layers = [
     "arn:aws:lambda:eu-central-1:580247275435:layer:LambdaInsightsExtension-Arm64:25" # https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Lambda-Insights-extension-versionsARM.html
   ]

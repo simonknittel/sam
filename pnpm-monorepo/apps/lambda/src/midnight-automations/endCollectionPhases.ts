@@ -11,7 +11,7 @@ import { captureAsyncFunc } from "../common/xray";
 
 export const endCollectionPhases = async () => {
   await captureAsyncFunc("endCollectionPhases", async () => {
-    void log.info("Checking for profit distribution collection phases to end");
+    log.info("Checking for profit distribution collection phases to end");
 
     const now = new Date();
 
@@ -34,7 +34,7 @@ export const endCollectionPhases = async () => {
       },
     });
 
-    void log.info("Found collection phases to end", {
+    log.info("Found collection phases to end", {
       count: cycles.length,
       cycleIds: cycles.map((cycle) => cycle.id),
     });
@@ -52,7 +52,7 @@ export const endCollectionPhases = async () => {
         }),
       );
       if (transactionIds === null) {
-        void log.info("Collection phase was ended before", {
+        log.info("Collection phase was ended before", {
           cycleId: cycle.id,
         });
         continue;
@@ -67,7 +67,7 @@ export const endCollectionPhases = async () => {
         },
       ]);
 
-      void log.info("Ended collection phase", {
+      log.info("Ended collection phase", {
         cycleId: cycle.id,
         bookingCount: transactionIds.length,
       });

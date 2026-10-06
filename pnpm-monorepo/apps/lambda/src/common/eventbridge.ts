@@ -26,12 +26,12 @@ export const emitEvents = async (
 ) => {
   await captureAsyncFunc("emitEvents", async () => {
     if (!process.env.AWS_EVENT_BUS_ARN) {
-      void log.info("Event bus ARN not configured, skipping emitting events.");
+      log.info("Event bus ARN not configured, skipping emitting events.");
       return;
     }
 
     if (entries.length <= 0) {
-      void log.info("No entries provided to send to EventBridge.");
+      log.info("No entries provided to send to EventBridge.");
       return;
     }
 
@@ -47,7 +47,7 @@ export const emitEvents = async (
       const response = await client.send(command);
 
       if (response.FailedEntryCount) {
-        void log.error("Failed to send events to EventBridge", {
+        log.error("Failed to send events to EventBridge", {
           response,
         });
       }

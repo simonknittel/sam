@@ -1,19 +1,21 @@
 import * as z from "zod";
 import { env } from "../../setup";
 import { checkResponseForError } from "./checkResponseForError";
-import { eventSchema } from "./schemas";
+import { eventSchema, MAXIMUM_DISCORD_ITEM_COUNT } from "./schemas";
 
 export const getEvents = async () => {
   // https://discord.com/developers/docs/resources/guild-scheduled-event#list-scheduled-events-for-guild
-  const response = await fetch(
-    `https://discord.com/api/v10/guilds/${env.DISCORD_GUILD_ID}/scheduled-events?with_user_count=true`,
-    {
-      headers: new Headers({
-        Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
-      }),
-      signal: AbortSignal.timeout(5000),
-    },
+  const url = new URL(
+    `https://discord.com/api/v10/guilds/${env.DISCORD_GUILD_ID}/scheduled-events`,
   );
+  url.searchParams.set("with_user_count", "true");
+
+  const response = await fetch(url, {
+    headers: new Headers({
+      Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
+    }),
+    signal: AbortSignal.timeout(5000),
+  });
 
   const body: unknown = await response.json();
   const data = responseSchema.parse(body);
@@ -26,7 +28,7 @@ export const getEvents = async () => {
   };
 };
 
-const successSchema = z.array(eventSchema);
+const successSchema = z.array(eventSchema).max(MAXIMUM_DISCORD_ITEM_COUNT);
 
 const errorSchema = z.object({
   message: z.string(),

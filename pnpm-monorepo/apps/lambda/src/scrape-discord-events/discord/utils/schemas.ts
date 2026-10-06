@@ -1,5 +1,11 @@
 import * as z from "zod";
 
+/**
+ * Discord returns at most 100 items in one response of these endpoints. The
+ * limit only bounds the loops over a malformed response.
+ */
+export const MAXIMUM_DISCORD_ITEM_COUNT = 1000;
+
 export const userSchema = z.object({
   id: z.string(),
   username: z.string(),

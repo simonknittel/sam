@@ -1,7 +1,8 @@
 import {
   DeleteObjectsCommand,
-  ListObjectsV2Command,
+  paginateListObjectsV2,
   S3Client,
+  type ListObjectsV2CommandOutput,
 } from "@aws-sdk/client-s3";
 import { prisma } from "@sam-monorepo/database";
 import { AuditEventType, UNUSED_UPLOAD_WHERE } from "@sam-monorepo/domain";
@@ -19,6 +20,14 @@ const GRACE_PERIOD_HOURS = 24;
 
 /** DeleteObjects accepts at most 1000 keys per request. */
 const DELETE_BATCH_SIZE = 1000;
+
+/**
+ * Without timeouts, a bucket that does not answer stops the job until the
+ * function times out. A DeleteObjects request with 1000 keys can take longer
+ * than a usual request, thus the request timeout is longer.
+ */
+const CONNECTION_TIMEOUT_MILLISECONDS = 5_000;
+const REQUEST_TIMEOUT_MILLISECONDS = 10_000;
 
 /**
  * Deletes uploads which are no longer used anywhere, from both the database
@@ -64,95 +73,103 @@ export const deleteUnusedUploads = async () => {
         }),
     );
 
-    const s3 = new S3Client({
-      region: "auto",
-      endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-      credentials: {
-        accessKeyId,
-        secretAccessKey,
-      },
-    });
+    /** The objects that the bucket deleted, also when a later request fails */
+    let bucketCount = 0;
 
-    const objects = await captureAsyncFunc("list bucket objects", async () => {
-      const result: { key: string; lastModified?: Date }[] = [];
-      let continuationToken: string | undefined;
-
-      do {
-        const response = await s3.send(
-          new ListObjectsV2Command({
-            Bucket: bucketName,
-            ContinuationToken: continuationToken,
-          }),
-        );
-
-        for (const object of response.Contents ?? []) {
-          if (!object.Key) continue;
-          result.push({ key: object.Key, lastModified: object.LastModified });
-        }
-
-        continuationToken = response.NextContinuationToken;
-      } while (continuationToken);
-
-      return result;
-    });
-
-    const remainingUploads = await captureAsyncFunc(
-      "find remaining uploads",
-      () => prisma.upload.findMany({ select: { id: true } }),
-    );
-    const remainingIds = new Set(remainingUploads.map((upload) => upload.id));
-
-    const orphanedKeys = objects
-      .filter(
-        (object) =>
-          !remainingIds.has(object.key) &&
-          object.lastModified !== undefined &&
-          object.lastModified < cutoff,
-      )
-      .map((object) => object.key);
-
-    if (orphanedKeys.length > 0) {
-      await captureAsyncFunc("delete objects from the bucket", async () => {
-        for (
-          let offset = 0;
-          offset < orphanedKeys.length;
-          offset += DELETE_BATCH_SIZE
-        ) {
-          const response = await s3.send(
-            new DeleteObjectsCommand({
-              Bucket: bucketName,
-              Delete: {
-                Objects: orphanedKeys
-                  .slice(offset, offset + DELETE_BATCH_SIZE)
-                  .map((key) => ({ Key: key })),
-                Quiet: true,
-              },
-            }),
-          );
-
-          if (response.Errors && response.Errors.length > 0)
-            log.warn("Failed to delete some objects from the bucket", {
-              errors: response.Errors,
-            });
-        }
-      });
-    }
-
-    if (databaseCount > 0 || orphanedKeys.length > 0) {
-      log.info("Deleted unused uploads", {
-        databaseCount,
-        bucketCount: orphanedKeys.length,
-      });
-
-      await createAuditEvents([
-        {
-          type: AuditEventType.UNUSED_UPLOADS_DELETED,
-          data: {
-            databaseCount,
-            bucketCount: orphanedKeys.length,
-          },
+    try {
+      const s3 = new S3Client({
+        region: "auto",
+        endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+        credentials: {
+          accessKeyId,
+          secretAccessKey,
         },
-      ]);
+        requestHandler: {
+          connectionTimeout: CONNECTION_TIMEOUT_MILLISECONDS,
+          requestTimeout: REQUEST_TIMEOUT_MILLISECONDS,
+          /** Without it, the SDK only logs a warning after the timeout */
+          throwOnRequestTimeout: true,
+        },
+      });
+
+      const pages = await captureAsyncFunc("list bucket objects", async () => {
+        const result: ListObjectsV2CommandOutput[] = [];
+        for await (const page of paginateListObjectsV2(
+          { client: s3 },
+          { Bucket: bucketName },
+        )) {
+          result.push(page);
+        }
+        return result;
+      });
+
+      const remainingUploads = await captureAsyncFunc(
+        "find remaining uploads",
+        () => prisma.upload.findMany({ select: { id: true } }),
+      );
+      const remainingIds = new Set(remainingUploads.map((upload) => upload.id));
+
+      const orphanedKeys = pages
+        .flatMap((page) => page.Contents ?? [])
+        .filter(
+          (object) =>
+            object.LastModified !== undefined && object.LastModified < cutoff,
+        )
+        .map((object) => object.Key)
+        .filter((key) => key !== undefined)
+        .filter((key) => !remainingIds.has(key));
+
+      if (orphanedKeys.length > 0) {
+        await captureAsyncFunc("delete objects from the bucket", async () => {
+          for (
+            let offset = 0;
+            offset < orphanedKeys.length;
+            offset += DELETE_BATCH_SIZE
+          ) {
+            const batch = orphanedKeys.slice(
+              offset,
+              offset + DELETE_BATCH_SIZE,
+            );
+
+            const response = await s3.send(
+              new DeleteObjectsCommand({
+                Bucket: bucketName,
+                Delete: {
+                  Objects: batch.map((key) => ({ Key: key })),
+                  /** The response contains only the keys that failed */
+                  Quiet: true,
+                },
+              }),
+            );
+
+            const errors = response.Errors ?? [];
+            bucketCount += batch.length - errors.length;
+
+            if (errors.length > 0)
+              log.warn("Failed to delete some objects from the bucket", {
+                errors,
+              });
+          }
+        });
+      }
+    } finally {
+      /** Also when the bucket fails: the rows are deleted already */
+      if (databaseCount > 0 || bucketCount > 0) {
+        log.info("Deleted unused uploads", {
+          databaseCount,
+          bucketCount,
+        });
+
+        await createAuditEvents([
+          {
+            type: AuditEventType.UNUSED_UPLOADS_DELETED,
+            data: {
+              databaseCount,
+              bucketCount,
+            },
+          },
+        ]);
+      }
     }
   });
 };

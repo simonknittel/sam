@@ -1,49 +1,42 @@
 import { serializeError } from "serialize-error";
-import { getRequestContext, type RequestContext } from "./requestContext";
 
-interface LogEntry {
-  /** ISO string of the date (`new Date().toISOString()`) */
-  timestamp: string;
-  message: string;
-  level: "info" | "warn" | "error";
-  /** Stack trace for every log entry, not only errors. Also, the original stack trace sometimes doesn't contain the full stack trace. */
-  requestId?: RequestContext["requestId"];
-  stack: string;
-  /** Any other serialized arguments */
-  [key: string]: string | number | boolean | undefined | null;
+enum LogLevel {
+  Info = "info",
+  Warn = "warn",
+  Error = "error",
 }
 
+/**
+ * The Lambda runtime serializes an `Error` without its `cause`. Thus each
+ * field that is an `Error` becomes a plain object.
+ */
+const serializeErrors = (fields: Record<string, unknown>) =>
+  Object.fromEntries(
+    Object.entries(fields).map(([key, value]) => [
+      key,
+      value instanceof Error ? serializeError(value) : value,
+    ]),
+  );
+
+/**
+ * The functions use the JSON log format (see the Terraform modules). Thus the
+ * Lambda runtime writes each console call as one JSON object, with the
+ * timestamp, the level and the request ID. This object becomes its `message`
+ * field.
+ */
 const createLogLevel =
-  (level: LogEntry["level"]) =>
-  async (message: string, args: Record<string, unknown> = {}) => {
-    const { error, ...remainingArgs } = args;
-
-    let requestContext: RequestContext | undefined;
-    try {
-      requestContext = getRequestContext();
-    } catch {}
-
-    const logEntry: LogEntry = {
-      timestamp: new Date().toISOString(),
+  (level: LogLevel) =>
+  (message: string, fields: Record<string, unknown> = {}) => {
+    console[level]({
+      ...serializeErrors(fields),
       message,
-      level,
-      ...(requestContext ? { requestId: requestContext.requestId } : {}),
-      stack: new Error().stack!,
-      ...(error
-        ? { serializedError: JSON.stringify(serializeError(error)) }
-        : {}),
-      ...remainingArgs,
-    };
-
-    if (process.env.NODE_ENV === "production") {
-      console[level](JSON.stringify(logEntry));
-    } else {
-      console[level](logEntry);
-    }
+      /** The stack of the call, also for entries without an error */
+      stack: new Error().stack,
+    });
   };
 
 export const log = {
-  info: createLogLevel("info"),
-  warn: createLogLevel("warn"),
-  error: createLogLevel("error"),
+  info: createLogLevel(LogLevel.Info),
+  warn: createLogLevel(LogLevel.Warn),
+  error: createLogLevel(LogLevel.Error),
 };

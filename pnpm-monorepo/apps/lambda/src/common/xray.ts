@@ -5,24 +5,23 @@ import {
 
 setContextMissingStrategy(
   process.env.ENVIRONMENT === "local"
-    ? () => {
-        // log.info("Local environment, skipping tracing with AWS X-Ray");
-      }
+    ? /** Locally, no X-Ray daemon runs: ignore the missing context */
+      () => {}
     : "LOG_ERROR",
 );
 
 export * from "aws-xray-sdk-core";
 
 // @ts-expect-error
-export const captureAsyncFunc: typeof _captureAsyncFunc = (name, fcn) => {
+export const captureAsyncFunc: typeof _captureAsyncFunc = (name, callback) => {
   return _captureAsyncFunc(name, async (subsegment) => {
     try {
-      const rtn = await fcn();
+      const result = await callback();
 
       subsegment?.close();
       subsegment?.flush();
 
-      return rtn;
+      return result;
     } catch (error) {
       // @ts-expect-error
       subsegment?.close(error);

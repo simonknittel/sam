@@ -18,7 +18,7 @@ export const runJobsInIsolation = async (
       await job();
     } catch (error) {
       failedJobs.push(name);
-      await log.error("Job failed", { job: name, error });
+      log.error("Job failed", { job: name, error });
     }
   }
 

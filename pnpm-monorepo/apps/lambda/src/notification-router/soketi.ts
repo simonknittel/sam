@@ -84,7 +84,7 @@ export const publishOnSiteNotificationEvents = async (
        * Realtime delivery is best-effort: the rows are already persisted and
        * recipients will see them on their next page load.
        */
-      void log.error("Error publishing on-site notification events", {
+      log.error("Error publishing on-site notification events", {
         error,
         count: batch.length,
       });

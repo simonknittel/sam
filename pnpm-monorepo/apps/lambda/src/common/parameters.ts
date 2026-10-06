@@ -31,7 +31,7 @@ export const fetchParameters = async <T extends Record<string, string>>(
     const missingParameters = names.filter((name) => !valueMap.has(name));
 
     if (invalidParameters.length > 0 || missingParameters.length > 0) {
-      void log.error("Failed to fetch parameter", {
+      log.error("Failed to fetch parameter", {
         invalidParameters,
         missingParameters,
       });
@@ -44,7 +44,7 @@ export const fetchParameters = async <T extends Record<string, string>>(
     ]);
     return Object.fromEntries(resolvedEntries);
   } catch (error) {
-    void log.error("Failed to fetch parameter", { error });
+    log.error("Failed to fetch parameter", { error });
     throw error instanceof Error
       ? error
       : new Error("Failed to fetch parameter");
@@ -94,7 +94,7 @@ export const fetchOptionalParameters = async <T extends Record<string, string>>(
         .map(([key, name]) => [key, valueMap.get(name)!]),
     ) as Partial<Record<keyof T, string>>;
   } catch (error) {
-    void log.warn("Failed to fetch optional parameters, skipping", { error });
+    log.warn("Failed to fetch optional parameters, skipping", { error });
     return {};
   }
 };
