@@ -632,6 +632,73 @@ test("a confirmation of the own Discord ID shows a message and changes no login,
   await expect.poll(countConfirmations).toBe(1);
 });
 
+test("a confirmation of a Discord ID that a different citizen has shows a message and changes nothing", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const reviewer = await createCitizen(prisma, {
+    handle: "spynet-verknuepfer",
+    permissionStrings: [
+      "citizen;read",
+      "discord-id;create",
+      "discord-id;read",
+      "discord-id;confirm",
+    ],
+  });
+  const holder = await createCitizen(prisma, { handle: "inhaber" });
+  const target = await createCitizen(prisma, { handle: "zweite-person" });
+  const takenDiscordId = holder.entity.discordId!;
+
+  await signIn(reviewer.user);
+  await page.goto(`/app/spynet/citizen/${target.entity.id}`);
+
+  const historyDialog = modal(page, "Discord ID History");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Discord ID History" }),
+    historyDialog,
+  );
+  await historyDialog
+    .getByPlaceholder("Neuer Eintrag ...")
+    .fill(takenDiscordId);
+  await historyDialog.getByRole("button", { name: "Speichern" }).click();
+  const entry = historyDialog
+    .getByRole("listitem")
+    .filter({ hasText: takenDiscordId });
+  await entry.getByRole("button", { name: "Bestätigen" }).click();
+
+  await expect(
+    page.getByText("Diese Discord ID gehört bereits zu einem anderen Citizen."),
+  ).toBeVisible();
+  expect(
+    await prisma.citizenLog.findFirstOrThrow({
+      where: { citizenId: target.entity.id, content: takenDiscordId },
+      select: { confirmed: true },
+    }),
+  ).toEqual({ confirmed: null });
+  expect(
+    await prisma.citizen.findMany({
+      where: { id: { in: [holder.entity.id, target.entity.id] } },
+      select: { id: true, discordId: true, userId: true },
+      orderBy: { handle: "asc" },
+    }),
+  ).toEqual([
+    {
+      id: holder.entity.id,
+      discordId: takenDiscordId,
+      userId: holder.user.id,
+    },
+    {
+      id: target.entity.id,
+      discordId: target.entity.discordId,
+      userId: target.user.id,
+    },
+  ]);
+  expect(
+    await prisma.auditEvent.count({ where: { type: "ENTITY_LOG_CONFIRMED" } }),
+  ).toBe(0);
+});
+
 test("a decision about a Discord ID, Citizen ID or Community Moniker needs the confirm permission of its type, not the create permission", async ({
   page,
   prisma,

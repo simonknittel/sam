@@ -16,6 +16,10 @@ import {
 import { lockCitizen } from "@/modules/citizen/utils/lockCitizen";
 import { getNotePermissionAttributes } from "@/modules/citizen/utils/notePermissionAttributes";
 import { syncCitizenIdentityAfterLogChange } from "@/modules/citizen/utils/syncCitizenIdentityAfterLogChange";
+import {
+  isPrismaError,
+  PrismaErrorCode,
+} from "@/modules/common/utils/isPrismaError";
 import { ConfirmationStatus, type Prisma } from "@sam-monorepo/database/client";
 import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { refresh } from "next/cache";
@@ -49,6 +53,12 @@ const OWN_DISCORD_ID_ERROR =
  * gets one: the UI never offers a change of a decision. The logs of a deleted
  * citizen are read only.
  */
+/** The result of a confirmation that the unique Discord ID refused */
+const DISCORD_ID_TAKEN = Symbol("Discord ID taken");
+
+const DISCORD_ID_TAKEN_ERROR =
+  "Diese Discord ID gehört bereits zu einem anderen Citizen.";
+
 export const confirmCitizenLog = createAuthenticatedAction(
   "confirmCitizenLog",
   schema,
@@ -58,7 +68,7 @@ export const confirmCitizenLog = createAuthenticatedAction(
         id: data.id,
         citizen: ACTIVE_CITIZEN_WHERE,
       },
-      select: { ...CITIZEN_LOG_GUARD_SELECT, confirmed: true, content: true },
+      select: { ...CITIZEN_LOG_GUARD_SELECT, content: true },
     });
     /**
      * A different user deleted the log or its citizen, and the page must
@@ -137,23 +147,36 @@ export const confirmCitizenLog = createAuthenticatedAction(
       citizen: ACTIVE_CITIZEN_WHERE,
     } satisfies Prisma.CitizenLogWhereInput;
 
-    const isUpdated = await prisma.$transaction(async (transaction) => {
-      await lockCitizen(transaction, citizenLog.citizenId);
+    const isUpdated = await prisma
+      .$transaction(async (transaction) => {
+        await lockCitizen(transaction, citizenLog.citizenId);
 
-      const { count } = await transaction.citizenLog.updateMany({
-        where: { ...checkedLogWhere, confirmed: null },
-        data: {
-          confirmed: data.confirmed,
-          confirmedAt: new Date(),
-          confirmedById: authentication.session.user.id,
-        },
+        const { count } = await transaction.citizenLog.updateMany({
+          where: { ...checkedLogWhere, confirmed: null },
+          data: {
+            confirmed: data.confirmed,
+            confirmedAt: new Date(),
+            confirmedById: authentication.session.user.id,
+          },
+        });
+        if (count === 0) return false;
+
+        /** The copies of the confirmed values change in the same transaction */
+        await syncCitizenIdentityAfterLogChange(citizenLog, transaction);
+        return true;
+      })
+      .catch((error: unknown) => {
+        /**
+         * The Discord ID is the confirmed Discord ID of a different active
+         * citizen: its unique index refuses the copy, and the transaction
+         * writes nothing
+         */
+        if (isPrismaError(error, PrismaErrorCode.UniqueConstraintFailed))
+          return DISCORD_ID_TAKEN;
+        throw error;
       });
-      if (count === 0) return false;
-
-      /** The copies of the confirmed values change in the same transaction */
-      await syncCitizenIdentityAfterLogChange(citizenLog, transaction);
-      return true;
-    });
+    if (isUpdated === DISCORD_ID_TAKEN)
+      return { error: DISCORD_ID_TAKEN_ERROR, requestPayload: formData };
 
     if (!isUpdated) {
       /**
