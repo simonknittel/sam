@@ -1,7 +1,7 @@
 "use client";
 
 import type { Dispatch, ReactNode, SetStateAction } from "react";
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 
 interface CmdKContext {
@@ -49,18 +49,15 @@ export const CmdKProvider = ({ children, canReadCareer }: Props) => {
     enabled: () => !document.querySelector("dialog:modal"),
   });
 
-  const value = useMemo(
-    () => ({
-      open,
-      setOpen,
-      search,
-      setSearch,
-      pages,
-      setPages,
-      canReadCareer,
-    }),
-    [open, setOpen, search, setSearch, pages, setPages, canReadCareer],
-  );
+  const value = {
+    open,
+    setOpen,
+    search,
+    setSearch,
+    pages,
+    setPages,
+    canReadCareer,
+  };
 
   return <CmdKContext value={value}>{children}</CmdKContext>;
 };

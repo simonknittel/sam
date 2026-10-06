@@ -14,7 +14,6 @@ import {
   hasSortableData,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
-import { useMemo } from "react";
 
 /**
  * Give these attributes to `useSortable()`. Screen readers then call the
@@ -80,8 +79,9 @@ const createAccessibility = (
  * the keyboard: the space bar picks the entry up, the arrow keys move it, and
  * the space bar drops it.
  *
- * Keep `getName` stable (for example with `useCallback`). A new function
- * makes a new configuration, which forgets the state of a running drag.
+ * Keep `getName` stable. A component that the React Compiler compiles does
+ * this by itself. A new function makes a new configuration, which forgets
+ * the state of a running drag.
  */
 export const useSortableList = (getName: (id: UniqueIdentifier) => string) => {
   const sensors = useSensors(
@@ -93,7 +93,7 @@ export const useSortableList = (getName: (id: UniqueIdentifier) => string) => {
     }),
   );
 
-  const accessibility = useMemo(() => createAccessibility(getName), [getName]);
+  const accessibility = createAccessibility(getName);
 
   return { sensors, accessibility };
 };

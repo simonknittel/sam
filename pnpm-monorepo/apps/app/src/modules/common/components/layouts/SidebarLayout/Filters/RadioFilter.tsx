@@ -4,7 +4,7 @@ import { cursorPaginationParsers } from "@/modules/common/CursorPagination/curso
 import clsx from "clsx";
 import { useTopLoader } from "nextjs-toploader";
 import { useQueryState, useQueryStates } from "nuqs";
-import { useCallback, useEffect, useTransition } from "react";
+import { useEffect, useTransition } from "react";
 import { RadioGroup } from "../../../form/RadioGroup";
 
 interface Props {
@@ -34,19 +34,16 @@ export const RadioFilter = ({
     startTransition,
   });
 
-  const setValueAndResetPagination = useCallback(
-    async (newValue: string) => {
-      await setValue(newValue);
+  const setValueAndResetPagination = async (newValue: string) => {
+    await setValue(newValue);
 
-      if (resetCursorPagination) {
-        await setPagination({
-          cursor: null,
-          direction: null,
-        });
-      }
-    },
-    [setValue, setPagination, resetCursorPagination],
-  );
+    if (resetCursorPagination) {
+      await setPagination({
+        cursor: null,
+        direction: null,
+      });
+    }
+  };
 
   const loader = useTopLoader();
 

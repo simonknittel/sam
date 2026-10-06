@@ -4,14 +4,7 @@ import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Modal from "@/modules/common/components/Modal";
 import dynamic from "next/dynamic";
 import type { ReactNode } from "react";
-import {
-  createContext,
-  Suspense,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-} from "react";
+import { createContext, Suspense, useContext, useState } from "react";
 
 const CreateCitizenForm = dynamic(() =>
   import("@/modules/citizen/components/CreateCitizen/CreateCitizenForm").then(
@@ -165,18 +158,14 @@ export const CreateContextProvider = ({ children }: Props) => {
     readonly payload?: CreateFormPayload;
   } | null>(null);
 
-  const openCreateModal = useCallback(
-    (modalId: keyof typeof createForms, payload?: CreateFormPayload) =>
-      setCurrentlyOpenForm({ modalId, payload }),
-    [],
-  );
+  const openCreateModal = (
+    modalId: keyof typeof createForms,
+    payload?: CreateFormPayload,
+  ) => setCurrentlyOpenForm({ modalId, payload });
 
-  const value = useMemo(
-    () => ({
-      openCreateModal,
-    }),
-    [openCreateModal],
-  );
+  const value = {
+    openCreateModal,
+  };
 
   return (
     <CreateContext value={value}>

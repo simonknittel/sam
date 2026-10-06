@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
 import { FaEllipsisH, FaTimes } from "react-icons/fa";
 import Button from "./Button";
 import { PopoverBaseUI, usePopoverBaseUI } from "./PopoverBaseUI";
@@ -39,7 +39,7 @@ export const Actions = ({ children }: Readonly<Props>) => {
 const ActionsContextBridge = ({ children }: Readonly<Props>) => {
   const { closePopover } = usePopoverBaseUI();
 
-  const value = useMemo(() => ({ closePopover }), [closePopover]);
+  const value = { closePopover };
 
   return <ActionContext value={value}>{children}</ActionContext>;
 };

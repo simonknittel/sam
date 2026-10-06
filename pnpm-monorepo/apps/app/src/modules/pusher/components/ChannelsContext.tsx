@@ -4,7 +4,7 @@ import { env } from "@/env";
 import type { User } from "@sam-monorepo/database/browser";
 import Pusher from "pusher-js";
 import type { ReactNode } from "react";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 interface ChannelsContext {
   client: Pusher | null;
@@ -67,7 +67,7 @@ export const ChannelsProvider = ({ children, userId }: Props) => {
     };
   }, [userId, client]);
 
-  const value = useMemo(() => ({ client }), [client]);
+  const value = { client };
 
   return <ChannelsContext value={value}>{children}</ChannelsContext>;
 };

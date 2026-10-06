@@ -5,9 +5,7 @@ import { Popover } from "@base-ui/react/popover"; // eslint-disable-line no-rest
 import clsx from "clsx";
 import {
   createContext,
-  useCallback,
   useContext,
-  useMemo,
   useRef,
   useState,
   type ComponentProps,
@@ -143,38 +141,35 @@ export const PopoverBaseUI = ({
    */
   const wasOpenedByHoverRef = useRef(false);
 
-  const handleOpenChange = useCallback(
-    (open: boolean, eventDetails: PopoverRoot.ChangeEventDetails) => {
-      if (hoverOnly && open && eventDetails.reason !== "trigger-hover") return;
+  const handleOpenChange = (
+    open: boolean,
+    eventDetails: PopoverRoot.ChangeEventDetails,
+  ) => {
+    if (hoverOnly && open && eventDetails.reason !== "trigger-hover") return;
 
-      if (
-        !open &&
-        wasOpenedByHoverRef.current &&
-        eventDetails.reason === "trigger-press"
-      ) {
-        wasOpenedByHoverRef.current = false;
-        return;
-      }
+    if (
+      !open &&
+      wasOpenedByHoverRef.current &&
+      eventDetails.reason === "trigger-press"
+    ) {
+      wasOpenedByHoverRef.current = false;
+      return;
+    }
 
-      wasOpenedByHoverRef.current =
-        open && eventDetails.reason === "trigger-hover";
+    wasOpenedByHoverRef.current =
+      open && eventDetails.reason === "trigger-hover";
 
-      setIsOpen(open);
-      onOpenChange?.(open);
-    },
-    [onOpenChange, hoverOnly],
-  );
+    setIsOpen(open);
+    onOpenChange?.(open);
+  };
 
-  const closePopover = useCallback(() => {
+  const closePopover = () => {
     setIsOpen(false);
-  }, [setIsOpen]);
+  };
 
-  const value = useMemo(
-    () => ({
-      closePopover,
-    }),
-    [closePopover],
-  );
+  const value = {
+    closePopover,
+  };
 
   return (
     <PopoverBaseUIContext value={value}>
@@ -251,18 +246,15 @@ export const PopoverBaseUIDetached = ({
   childrenClassName,
   side = "bottom",
 }: PopoverBaseUIDetachedProps) => {
-  const handleOpenChange = useCallback(
-    (nextOpen: boolean) => {
-      onOpenChange?.(nextOpen);
-    },
-    [onOpenChange],
-  );
+  const handleOpenChange = (nextOpen: boolean) => {
+    onOpenChange?.(nextOpen);
+  };
 
-  const closePopover = useCallback(() => {
+  const closePopover = () => {
     onOpenChange?.(false);
-  }, [onOpenChange]);
+  };
 
-  const value = useMemo(() => ({ closePopover }), [closePopover]);
+  const value = { closePopover };
 
   return (
     <PopoverBaseUIContext value={value}>

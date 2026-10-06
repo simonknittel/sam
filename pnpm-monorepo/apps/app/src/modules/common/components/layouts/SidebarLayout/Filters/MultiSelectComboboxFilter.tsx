@@ -10,7 +10,7 @@ import {
   useQueryState,
   useQueryStates,
 } from "nuqs";
-import { useCallback, useEffect, useId, useMemo, useTransition } from "react";
+import { useEffect, useId, useMemo, useTransition } from "react";
 import { FaCheck, FaChevronDown, FaTimes } from "react-icons/fa";
 
 interface Item {
@@ -54,6 +54,12 @@ export const MultiSelectComboboxFilter = ({
     startTransition,
   });
 
+  /**
+   * The React Compiler does not memoize `sortedItems`, `selectedItems` and
+   * `groupedItems` (see its output in the build), thus they keep `useMemo`.
+   * The combobox then gets the same arrays while the items and the selection
+   * stay the same.
+   */
   const sortedItems = useMemo(() => items.toSorted(compareByLabel), [items]);
 
   const selectedItems = useMemo(() => {
@@ -63,19 +69,16 @@ export const MultiSelectComboboxFilter = ({
     return sortedItems.filter((item) => selected.has(item.value));
   }, [sortedItems, selectedValues]);
 
-  const setValueAndResetPagination = useCallback(
-    async (newItems: Item[]) => {
-      await setSelectedValues(newItems.map((item) => item.value));
+  const setValueAndResetPagination = async (newItems: Item[]) => {
+    await setSelectedValues(newItems.map((item) => item.value));
 
-      if (resetCursorPagination) {
-        await setPagination({
-          cursor: null,
-          direction: null,
-        });
-      }
-    },
-    [setPagination, setSelectedValues, resetCursorPagination],
-  );
+    if (resetCursorPagination) {
+      await setPagination({
+        cursor: null,
+        direction: null,
+      });
+    }
+  };
 
   const loader = useTopLoader();
 
