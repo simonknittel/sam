@@ -632,6 +632,83 @@ test("a confirmation of the own Discord ID shows a message and changes no login,
   await expect.poll(countConfirmations).toBe(1);
 });
 
+test("a confirmation of the own Discord ID is refused also when the own citizen has no Discord ID", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const reviewer = await createCitizen(prisma, {
+    handle: "spynet-verknuepfer",
+    permissionStrings: [
+      "citizen;read",
+      "discord-id;create",
+      "discord-id;read",
+      "discord-id;confirm",
+    ],
+  });
+  /**
+   * The Discord account of the reviewer stays, but no citizen has its
+   * Discord ID. Thus the unique Discord ID cannot refuse the confirmation,
+   * only the check of the own Discord account can.
+   */
+  const ownDiscordId = reviewer.entity.discordId!;
+  await prisma.citizen.update({
+    where: { id: reviewer.entity.id },
+    data: { discordId: null },
+  });
+  const target = await createCitizen(prisma, { handle: "zielperson" });
+  const ownLog = await prisma.citizenLog.create({
+    data: {
+      citizenId: target.entity.id,
+      type: "discord-id",
+      content: ownDiscordId,
+    },
+  });
+
+  await signIn(reviewer.user);
+  await page.goto(`/app/spynet/citizen/${target.entity.id}`);
+
+  const historyDialog = modal(page, "Discord ID History");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Discord ID History" }),
+    historyDialog,
+  );
+  const entry = historyDialog
+    .getByRole("listitem")
+    .filter({ hasText: ownDiscordId });
+  await entry.getByRole("button", { name: "Bestätigen" }).click();
+
+  await expect(
+    page.getByText(
+      "Du kannst deine eigene Discord ID nicht bestätigen. Das muss eine andere Person tun.",
+    ),
+  ).toBeVisible();
+  await expect(entry.getByText("Unbestätigt")).toBeVisible();
+  expect(
+    await prisma.citizenLog.findUniqueOrThrow({
+      where: { id: ownLog.id },
+      select: { confirmed: true },
+    }),
+  ).toEqual({ confirmed: null });
+  expect(
+    await prisma.citizen.findMany({
+      where: { id: { in: [reviewer.entity.id, target.entity.id] } },
+      select: { id: true, discordId: true, userId: true },
+      orderBy: { handle: "asc" },
+    }),
+  ).toEqual([
+    { id: reviewer.entity.id, discordId: null, userId: reviewer.user.id },
+    {
+      id: target.entity.id,
+      discordId: target.entity.discordId,
+      userId: target.user.id,
+    },
+  ]);
+  expect(
+    await prisma.auditEvent.count({ where: { type: "ENTITY_LOG_CONFIRMED" } }),
+  ).toBe(0);
+});
+
 test("a confirmation of a Discord ID that a different citizen has shows a message and changes nothing", async ({
   page,
   prisma,
@@ -1838,6 +1915,104 @@ test("the change modal of a note opens with the values of the note again after a
   expect(
     await prisma.auditEvent.count({ where: { type: "ENTITY_LOG_UPDATED" } }),
   ).toBe(0);
+});
+
+test("the change dialog of a note saves only a different note type or classification level", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const observation = await prisma.noteType.create({
+    data: { name: "Beobachtung" },
+  });
+  const rumour = await prisma.noteType.create({ data: { name: "Gerücht" } });
+  const secret = await prisma.classificationLevel.create({
+    data: { name: "Geheim" },
+  });
+  await prisma.classificationLevel.create({ data: { name: "Streng geheim" } });
+  const allNotes = "noteTypeId=*;classificationLevelId=*";
+  /**
+   * The analyst may create notes only of the note type "Gerücht", thus the
+   * dialog offers for "Beobachtung" only the current classification level
+   * of the note
+   */
+  const analyst = await createCitizen(prisma, {
+    handle: "notiz-analyst",
+    permissionStrings: [
+      "citizen;read",
+      `note;create;noteTypeId=${rumour.id};classificationLevelId=*`,
+      `note;read;${allNotes};alsoUnconfirmed=true`,
+      `note;update;${allNotes};alsoUnconfirmed=true`,
+    ],
+  });
+  const target = await createCitizen(prisma, { handle: "zielperson" });
+  const classifiedContent = "Fliegt eine Cutlass Black.";
+  /** A different user deleted the classification level of this note */
+  const unclassifiedContent = "Handelt mit Quantanium.";
+  await prisma.citizenLog.createMany({
+    data: [
+      {
+        citizenId: target.entity.id,
+        type: "note",
+        content: classifiedContent,
+        noteTypeId: observation.id,
+        classificationLevelId: secret.id,
+      },
+      {
+        citizenId: target.entity.id,
+        type: "note",
+        content: unclassifiedContent,
+        noteTypeId: observation.id,
+      },
+    ],
+  });
+
+  await signIn(analyst.user);
+  await page.goto(`/app/spynet/citizen/${target.entity.id}/notes`);
+  await waitForAppShellHydration(page);
+
+  const updateDialog = modal(page, "Bearbeiten");
+  const openUpdateDialog = (content: string) =>
+    clickUntilVisible(
+      page
+        .getByRole("tabpanel", { name: "Beobachtung" })
+        .getByRole("article")
+        .filter({ hasText: content })
+        .getByRole("button", { name: "Bearbeiten" }),
+      updateDialog,
+    );
+  const noteTypeSelect = updateDialog.getByLabel("Notizart");
+  const classificationLevelSelect = updateDialog.getByLabel(
+    "Geheimhaltungsstufe",
+  );
+  const saveButton = updateDialog.getByRole("button", { name: "Speichern" });
+
+  await openUpdateDialog(classifiedContent);
+  await expect(saveButton).toBeDisabled();
+  await noteTypeSelect.selectOption({ label: "Gerücht" });
+  await expect(saveButton).toBeEnabled();
+  await noteTypeSelect.selectOption({ label: "Beobachtung" });
+  await expect(classificationLevelSelect).toHaveValue(secret.id);
+  await expect(saveButton).toBeDisabled();
+
+  await page.keyboard.press("Escape");
+  await expect(updateDialog).not.toBeVisible();
+  await openUpdateDialog(unclassifiedContent);
+  await expect(classificationLevelSelect.locator("option")).toHaveCount(0);
+  await expect(saveButton).toBeDisabled();
+  await noteTypeSelect.selectOption({ label: "Gerücht" });
+  await expect(saveButton).toBeEnabled();
+
+  expect(
+    await prisma.citizenLog.findMany({
+      where: { citizenId: target.entity.id, type: "note" },
+      select: { noteTypeId: true, classificationLevelId: true },
+      orderBy: { content: "asc" },
+    }),
+  ).toEqual([
+    { noteTypeId: observation.id, classificationLevelId: secret.id },
+    { noteTypeId: observation.id, classificationLevelId: null },
+  ]);
 });
 
 test("a move of a note that a different user moved after the permission check shows a message and keeps the other move", async ({

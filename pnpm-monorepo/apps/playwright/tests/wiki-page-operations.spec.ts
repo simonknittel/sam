@@ -265,10 +265,10 @@ test("a move waits for the tree lock before it changes a row", async ({
   /**
    * A different move holds the tree lock. When the test commits it, it first
    * changes the row of the page in the dialog, as a new sort order of the
-   * siblings does. The move
-   * of the dialog takes the tree lock first, thus it has no row yet that the
-   * parallel move waits for. When the lock comes only from the trigger, the
-   * dialog holds the row of its page already, and the two moves deadlock.
+   * siblings does. The move of the dialog takes the tree lock first, thus it
+   * has no row yet that the parallel move waits for. When the lock comes only
+   * from the trigger, the dialog holds the row of its page already, and the
+   * two moves deadlock.
    */
   const parallelMove = await startParallelChange(
     prisma,
