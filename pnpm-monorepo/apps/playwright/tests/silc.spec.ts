@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test";
 import { createCitizen, createSilcTransaction } from "../fixtures/factories";
 import {
   clickUntilUrl,
@@ -7,6 +8,8 @@ import {
   modal,
   pickFromSearch,
   SAVED_TEXT,
+  sectionByHeading,
+  waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
@@ -17,6 +20,12 @@ const SILC_ADMIN_PERMISSIONS = [
   // requires the citizen read permission
   "citizen;read",
 ];
+
+const balancesTile = (page: Page) => sectionByHeading(page, "Übersicht");
+
+/** The handles in the balances table, from the top to the bottom */
+const balanceTableHandles = (page: Page) =>
+  balancesTile(page).getByRole("table").getByRole("link");
 
 test("a transaction created through the UI updates balances and the system log", async ({
   page,
@@ -224,4 +233,129 @@ test("deleting a transaction soft deletes it and reverts the balance", async ({
   await expect(
     page.getByRole("row").filter({ hasText: "Fehlbuchung" }),
   ).toBeVisible();
+});
+
+test("the header buttons of the balances table sort the rows by their column, also with the keyboard", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "silc-verwalter",
+    permissionStrings: SILC_ADMIN_PERMISSIONS,
+  });
+  for (const [handle, value] of [
+    ["silc-alpha", 5],
+    ["silc-bravo", 30],
+    ["silc-charlie", 10],
+  ] as const) {
+    const receiver = await createCitizen(prisma, { handle });
+    await createSilcTransaction(prisma, {
+      receiverId: receiver.entity.id,
+      value,
+    });
+  }
+
+  await signIn(admin.user);
+  await page.goto("/app/silc/dashboard");
+
+  const handles = balanceTableHandles(page);
+  const balanceHeader = balancesTile(page).getByRole("columnheader", {
+    name: "Kontostand",
+  });
+  const balanceIcon = balanceHeader.locator("svg");
+  const citizenHeader = balancesTile(page).getByRole("columnheader", {
+    name: "Citizen",
+  });
+  const citizenIcon = citizenHeader.locator("svg");
+
+  // The highest balance comes first
+  await expect(handles).toHaveText([
+    "silc-bravo",
+    "silc-charlie",
+    "silc-alpha",
+  ]);
+  await expect(balanceHeader).toHaveAttribute("aria-sort", "descending");
+  /** The handle is only the second key of the sort */
+  await expect(citizenHeader).not.toHaveAttribute("aria-sort");
+  const descendingIcon = await balanceIcon.innerHTML();
+  /** Sorting is client state only, thus a click before the hydration is lost */
+  await waitForAppShellHydration(page);
+
+  /** A real button, thus the keyboard also sorts */
+  await balanceHeader.getByRole("button", { name: "Kontostand" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(handles).toHaveText([
+    "silc-alpha",
+    "silc-charlie",
+    "silc-bravo",
+  ]);
+  await expect(balanceHeader).toHaveAttribute("aria-sort", "ascending");
+  await expect(balanceIcon).toHaveCount(1);
+  expect(await balanceIcon.innerHTML()).not.toBe(descendingIcon);
+  await expect(citizenIcon).toHaveCount(0);
+
+  await citizenHeader.getByRole("button", { name: "Citizen" }).click();
+  await expect(handles).toHaveText([
+    "silc-alpha",
+    "silc-bravo",
+    "silc-charlie",
+  ]);
+  await expect(citizenHeader).toHaveAttribute("aria-sort", "ascending");
+  await expect(balanceHeader).not.toHaveAttribute("aria-sort");
+  await expect(citizenIcon).toHaveCount(1);
+  await expect(balanceIcon).toHaveCount(0);
+});
+
+test("a transaction updates the balances table that already shows rows", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "silc-verwalter",
+    permissionStrings: SILC_ADMIN_PERMISSIONS,
+  });
+  const leader = await createCitizen(prisma, { handle: "silc-spitze" });
+  const follower = await createCitizen(prisma, { handle: "silc-verfolger" });
+  await createSilcTransaction(prisma, {
+    receiverId: leader.entity.id,
+    value: 30,
+  });
+  await createSilcTransaction(prisma, {
+    receiverId: follower.entity.id,
+    value: 10,
+  });
+
+  await signIn(admin.user);
+  await page.goto("/app/silc/dashboard");
+
+  const handles = balanceTableHandles(page);
+  await expect(handles).toHaveText(["silc-spitze", "silc-verfolger"]);
+
+  const createModal = modal(page, "Transaktion erstellen");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Transaktion erstellen" }),
+    createModal,
+  );
+  await fillUntilValue(createModal.getByLabel("Wert"), "100");
+  await pickFromSearch(
+    page,
+    createModal.getByRole("combobox", { name: "Citizens" }),
+    "silc-verfolger",
+  );
+  await expect(
+    createModal.getByRole("link", { name: "silc-verfolger" }),
+  ).toBeVisible();
+  await expect(createModal.getByLabel("Wert")).toHaveValue("100");
+  await createModal
+    .getByRole("button", { name: "Speichern", exact: true })
+    .click();
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+
+  // Without a reload, the table shows the new balance and sorts again
+  await expect(handles).toHaveText(["silc-verfolger", "silc-spitze"]);
+  await expect(
+    balancesTile(page).getByRole("row").filter({ hasText: "silc-verfolger" }),
+  ).toContainText("110");
 });

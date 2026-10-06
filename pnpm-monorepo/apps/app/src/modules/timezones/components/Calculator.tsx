@@ -4,6 +4,7 @@ import { DateTimeInput } from "@/modules/common/components/form/DateTimeInput";
 import { Select } from "@/modules/common/components/form/Select";
 import { instantToWallTime, wallTimeToInstant } from "@sam-monorepo/domain";
 import clsx from "clsx";
+import { useNow } from "next-intl";
 import { parseAsIsoDateTime, parseAsStringLiteral, useQueryState } from "nuqs";
 import { useId, type ChangeEventHandler } from "react";
 import { getActiveTimeZoneName } from "../utils/getActiveTimeZoneName";
@@ -14,9 +15,11 @@ interface Props {
 }
 
 export const Calculator = ({ className }: Props) => {
+  /** The time when the calculator opens. It does not keep ticking. */
+  const openedAt = useNow();
   const [date, setDate] = useQueryState(
     "dt",
-    parseAsIsoDateTime.withDefault(new Date()),
+    parseAsIsoDateTime.withDefault(openedAt),
   );
   const [timeZone, setTimeZone] = useQueryState(
     "tz",
@@ -74,18 +77,20 @@ export const Calculator = ({ className }: Props) => {
                 value={timeZone}
                 onChange={handleTimeZoneChange}
               >
-                <option value="UTC">{getActiveTimeZoneName("UTC")}</option>
+                <option value="UTC">
+                  {getActiveTimeZoneName("UTC", date)}
+                </option>
 
                 <option value="Europe/London">
-                  {getActiveTimeZoneName("Europe/London")}
+                  {getActiveTimeZoneName("Europe/London", date)}
                 </option>
 
                 <option value="Europe/Berlin">
-                  {getActiveTimeZoneName("Europe/Berlin")}
+                  {getActiveTimeZoneName("Europe/Berlin", date)}
                 </option>
 
                 <option value="America/Los_Angeles">
-                  {getActiveTimeZoneName("America/Los_Angeles")}
+                  {getActiveTimeZoneName("America/Los_Angeles", date)}
                 </option>
               </Select>
             </div>

@@ -5,6 +5,7 @@ import { getAppFavoriteKeys } from "@/modules/apps/utils/queries/getAppFavoriteK
 import { getAppLinks } from "@/modules/apps/utils/queries/getAppLinks";
 import { SessionProviderContainer } from "@/modules/auth/components/SessionProviderContainer";
 import { requireAuthenticationPage } from "@/modules/auth/server";
+import { isAdminModeActive } from "@/modules/auth/utils/isAdminModeActive";
 import { hasAnyReadableFlow } from "@/modules/career/queries/getMyReadableFlows";
 import { getUnseenChangelogEntryKeys } from "@/modules/changelog/queries/getUnseenChangelogEntryKeys";
 import { CHANGELOG_APP_SLUG } from "@/modules/changelog/utils/CHANGELOG_APP_SLUG";
@@ -62,13 +63,18 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     getNewItemCountsByAppSlug(),
   ]);
 
+  const adminModeActive = await isAdminModeActive(authentication.session);
+
   const seasonalThemeRootProps = getSeasonalThemeRootProps(
     seasonalTheme,
     "min-h-dvh background-primary",
   );
 
   return (
-    <SessionProviderContainer session={authentication.session}>
+    <SessionProviderContainer
+      session={authentication.session}
+      adminModeActive={adminModeActive}
+    >
       <NuqsAdapter>
         <TRPCReactProvider>
           <ChannelsProvider userId={authentication.session.user.id}>

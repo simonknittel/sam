@@ -10,6 +10,7 @@ import {
 } from "../fixtures/factories";
 import {
   clickUntilVisible,
+  collectHydrationErrors,
   FORBIDDEN_TEXT,
   modal,
   NOT_FOUND_TEXT,
@@ -266,34 +267,27 @@ test("the settings pages hydrate cleanly and never scroll the page sideways", as
   await createFlow(prisma, { name: "Team", slug: "team", position: 1 });
   await signIn(manager.user);
 
-  const browserErrors: string[] = [];
-  page.on("console", (message) => {
-    if (message.type() === "error") browserErrors.push(message.text());
-  });
-  page.on("pageerror", (error) => browserErrors.push(String(error)));
-
   /**
    * dnd-kit numbers its accessibility ids from a module-level counter that
    * survives across server renders, so without an explicit DndContext id the
    * server and the browser disagree on every visit but the first.
    */
-  const hydrationErrors = () =>
-    browserErrors.filter((message) => /hydrat/i.test(message));
+  const hydrationErrors = collectHydrationErrors(page);
 
   await page.goto("/app/career/settings");
   await waitForAppShellHydration(page);
-  expect(hydrationErrors()).toEqual([]);
+  expect(hydrationErrors).toEqual([]);
   expect(await hasHorizontalPageOverflow(page)).toBe(false);
 
   /** Again, because the mismatch only showed from the second render on */
   await page.goto("/app/career/settings");
   await waitForAppShellHydration(page);
-  expect(hydrationErrors()).toEqual([]);
+  expect(hydrationErrors).toEqual([]);
 
   await page.goto(`/app/career/settings/${flow.id}`);
   await waitForAppShellHydration(page);
   await expect(page.getByRole("combobox", { name: "Zugriff" })).toBeVisible();
-  expect(hydrationErrors()).toEqual([]);
+  expect(hydrationErrors).toEqual([]);
   expect(await hasHorizontalPageOverflow(page)).toBe(false);
 });
 

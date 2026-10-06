@@ -1,7 +1,7 @@
 /**
- * The cookies of the admin toolbar. Only its server actions write them. The
- * server reads them on each request, and `useAuthentication` reads the admin
- * mode cookie in the browser.
+ * The cookies of the admin toolbar. Only its server actions write them. Only
+ * the server reads them, on each request. The browser gets the admin mode from
+ * the layout of `/app` (see `AdminModeContext`).
  */
 
 /** Switches admin mode on, but only for a user with the admin role */

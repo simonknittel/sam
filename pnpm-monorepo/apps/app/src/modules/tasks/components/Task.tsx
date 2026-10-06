@@ -11,11 +11,15 @@ import { useMarkAsRead } from "@/modules/read-markers/hooks/useMarkAsRead";
 import type { TaskListRow } from "@/modules/tasks/queries/taskListSelect";
 import { getCitizenDisplayName, ReadMarkerSubject } from "@sam-monorepo/domain";
 import clsx from "clsx";
+import { useNow } from "next-intl";
 import type { ReactNode } from "react";
 import { BsExclamationOctagonFill } from "react-icons/bs";
 import { FaCheck, FaCheckSquare, FaClock, FaInfoCircle } from "react-icons/fa";
 import { IoPerson } from "react-icons/io5";
 import { TbRepeatOnce } from "react-icons/tb";
+
+/** The "Abgelaufen" badge shows at most one minute after the end date */
+const EXPIRY_CHECK_INTERVAL_MS = 60_000;
 
 interface Props {
   readonly className?: string;
@@ -32,6 +36,10 @@ export const Task = ({ className, task, isNew: isNewOnServer }: Props) => {
     task.id,
     isNewOnServer,
   );
+  /** Only a task with an end date needs a clock that keeps ticking */
+  const now = useNow({
+    updateInterval: task.expiresAt ? EXPIRY_CHECK_INTERVAL_MS : undefined,
+  });
 
   const badges: ReactNode[] = [];
   if (task.expiresAt) {
@@ -87,7 +95,7 @@ export const Task = ({ className, task, isNew: isNewOnServer }: Props) => {
     );
   } else if (
     task.expiresAt &&
-    task.expiresAt < new Date() &&
+    task.expiresAt < now &&
     task.completionists &&
     task.completionists.length <= 0
   ) {

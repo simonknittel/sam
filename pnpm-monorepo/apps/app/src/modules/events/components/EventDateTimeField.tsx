@@ -3,7 +3,19 @@
 import { DateTimeInput } from "@/modules/common/components/form/DateTimeInput";
 import { ORGANIZATION_TIMEZONE, wallTimeToInstant } from "@sam-monorepo/domain";
 import clsx from "clsx";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
+
+/** The field reads the time zone of the browser one time. */
+const subscribeToNothing = () => () => undefined;
+
+const getBrowserTimeZone = () =>
+  Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+/**
+ * The server does not know the time zone of the viewer. Thus the server
+ * render and the hydration show no hint.
+ */
+const getServerTimeZone = () => null;
 
 interface Props {
   readonly className?: string;
@@ -31,10 +43,14 @@ export const EventDateTimeField = ({
     typeof defaultValue === "string" ? defaultValue : "",
   );
 
-  const browserTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const browserTimeZone = useSyncExternalStore(
+    subscribeToNothing,
+    getBrowserTimeZone,
+    getServerTimeZone,
+  );
 
   let localTimeHint: string | null = null;
-  if (value && browserTimeZone !== ORGANIZATION_TIMEZONE) {
+  if (value && browserTimeZone && browserTimeZone !== ORGANIZATION_TIMEZONE) {
     try {
       localTimeHint = wallTimeToInstant(
         value,

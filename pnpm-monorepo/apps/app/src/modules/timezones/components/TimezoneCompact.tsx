@@ -16,7 +16,7 @@ export const TimezoneCompact = ({
   timeZone,
   isLocalTimeZone,
 }: Props) => {
-  const timeZoneName = getActiveTimeZoneName(timeZone);
+  const timeZoneName = getActiveTimeZoneName(timeZone, date);
   const heading = isLocalTimeZone ? "Deine lokale Zeit" : timeZoneName;
 
   return (

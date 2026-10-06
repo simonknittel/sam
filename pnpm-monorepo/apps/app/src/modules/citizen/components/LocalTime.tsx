@@ -1,5 +1,6 @@
 "use client";
 
+import { useNow } from "next-intl";
 import { useSyncExternalStore } from "react";
 
 /**
@@ -32,6 +33,7 @@ interface Props {
  * viewer. The time does not keep ticking.
  */
 export const LocalTime = ({ timezone }: Props) => {
+  const now = useNow();
   const isBrowser = useSyncExternalStore(
     subscribeToNothing,
     () => true,
@@ -39,7 +41,7 @@ export const LocalTime = ({ timezone }: Props) => {
   );
   if (!isBrowser) return null;
 
-  const localTime = formatLocalTime(timezone, new Date());
+  const localTime = formatLocalTime(timezone, now);
   if (!localTime) return null;
 
   return <span className="text-white/40">{localTime} Uhr</span>;

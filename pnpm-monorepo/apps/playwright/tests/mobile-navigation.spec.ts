@@ -4,6 +4,7 @@ import {
   accessibilityTree,
   clickUntilUrl,
   clickUntilVisible,
+  collectHydrationErrors,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
@@ -112,4 +113,38 @@ test("the navigation and the filter toggles tell their state", async ({
 
   await clickUntilVisible(filterToggle, filters);
   await expect(filterToggle).toHaveAttribute("aria-expanded", "true");
+});
+
+test("admin mode shows the Tasks and Fleet links of an admin without a hydration error", async ({
+  page,
+  prisma,
+  signIn,
+  enableAdminMode,
+}) => {
+  /** Only admin mode gives this admin the permissions for the two links */
+  const admin = await createCitizen(prisma, {
+    handle: "mobil-admin",
+    admin: true,
+  });
+  await signIn(admin.user);
+  await enableAdminMode();
+
+  const hydrationErrors = collectHydrationErrors(page);
+
+  await page.goto("/app");
+  await expect(page).toHaveURL(/\/app\/dashboard$/);
+
+  const actionBar = page
+    .locator("nav")
+    .filter({ has: page.getByRole("button", { name: "Apps" }) });
+  /** The links of the bar itself, without the app links in its flyout */
+  const barLinks = actionBar.locator(":scope > ul > li > a");
+  await expect(barLinks).toHaveText(["Dashboard", "Tasks", "Flotte"]);
+
+  /** The action bar hydrates in its own Suspense boundary */
+  await clickUntilVisible(
+    actionBar.getByRole("button", { name: "Apps" }),
+    actionBar.getByRole("button", { name: "Apps", expanded: true }),
+  );
+  expect(hydrationErrors).toEqual([]);
 });
