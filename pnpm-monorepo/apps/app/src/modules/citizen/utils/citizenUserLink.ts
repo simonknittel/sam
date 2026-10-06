@@ -1,5 +1,4 @@
 import { prisma } from "@/db";
-import { log } from "@/modules/logging";
 import {
   type Citizen,
   type Prisma,
@@ -14,61 +13,40 @@ import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
  */
 
 /**
- * A deleted citizen gets no link: the write skips it, and the result is
- * false. The CHECK constraint `Citizen_deleted_login_check` refuses such a
- * link also for a delete that runs at the same time.
+ * At each sign-in, links the user to the citizen of its Discord account. The
+ * writes compare the Discord ID of each citizen themselves, not a read
+ * before them. Thus a parallel change of the Discord ID of a citizen, for
+ * example the delete of its confirmed Discord ID log, cannot leave a link
+ * that does not agree with it.
  */
-const setCitizenUser = async (
-  client: Prisma.TransactionClient,
-  citizenId: Citizen["id"],
-  userId: User["id"] | null,
-) => {
-  if (userId)
-    await client.citizen.updateMany({
-      where: { userId, id: { not: citizenId } },
-      data: { userId: null },
-    });
-
-  const { count } = await client.citizen.updateMany({
-    where: { id: citizenId, ...ACTIVE_CITIZEN_WHERE },
-    data: { userId },
-  });
-
-  return count > 0;
-};
-
-/** At each sign-in, links the user to the citizen of its Discord account */
 export const linkCitizenOfSignedInUser = async (
   userId: User["id"],
   discordId: string,
 ) => {
-  const citizen = await prisma.citizen.findFirst({
-    where: { discordId, ...ACTIVE_CITIZEN_WHERE },
-    select: { id: true },
-  });
-
-  if (citizen) {
-    const isLinked = await prisma.$transaction((transaction) =>
-      setCitizenUser(transaction, citizen.id, userId),
-    );
-    if (!isLinked)
-      log.info(
-        "The citizen of a signed-in user was deleted during the sign-in",
-        {
-          userId,
-          citizenId: citizen.id,
-        },
-      );
-    return;
-  }
-
-  await prisma.citizen.updateMany({
-    where: { userId },
-    data: { userId: null },
-  });
+  await prisma.$transaction([
+    prisma.citizen.updateMany({
+      where: {
+        userId,
+        OR: [{ discordId: null }, { discordId: { not: discordId } }],
+      },
+      data: { userId: null },
+    }),
+    /**
+     * Only one active citizen can have the Discord ID. A deleted citizen gets
+     * no link, and the CHECK constraint `Citizen_deleted_login_check` refuses
+     * such a link also for a delete that runs at the same time.
+     */
+    prisma.citizen.updateMany({
+      where: { discordId, ...ACTIVE_CITIZEN_WHERE },
+      data: { userId },
+    }),
+  ]);
 };
 
-/** After the Discord ID of a citizen changed, links the matching user */
+/**
+ * After the Discord ID of a citizen changed, links the matching user. Call
+ * it in the transaction of the change, after `lockCitizen`.
+ */
 export const relinkCitizenUser = async (
   citizenId: Citizen["id"],
   client: Prisma.TransactionClient,
@@ -90,6 +68,18 @@ export const relinkCitizenUser = async (
           select: { userId: true },
         })
       : null;
+  const userId = account?.userId ?? null;
 
-  await setCitizenUser(client, citizenId, account?.userId ?? null);
+  /** A user has one citizen at most */
+  if (userId)
+    await client.citizen.updateMany({
+      where: { userId, id: { not: citizenId } },
+      data: { userId: null },
+    });
+
+  await client.citizen.update({
+    where: { id: citizenId },
+    data: { userId },
+    select: { id: true },
+  });
 };
