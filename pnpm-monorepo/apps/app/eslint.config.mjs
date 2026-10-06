@@ -142,6 +142,13 @@ const eslintConfig = defineConfig([
         },
       ],
 
+      // The React Compiler does not compile a component or a hook with syntax
+      // that it does not support yet ("todo") or that stops one of its
+      // internal checks ("invariant"). The build of Next.js does not show
+      // these components, thus lint must show them.
+      "react-hooks/todo": "error",
+      "react-hooks/invariant": "error",
+
       "@typescript-eslint/restrict-template-expressions": [
         "error",
         {
