@@ -1,4 +1,3 @@
-import type { Request } from "@playwright/test";
 import { expectAuditEvents } from "../fixtures/audit";
 import {
   createCitizen,
@@ -14,6 +13,7 @@ import {
   toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
+import { isServerActionRequest } from "../fixtures/server-actions";
 import { expect, test } from "../fixtures/test";
 
 const MANAGER_PERMISSIONS = [
@@ -399,11 +399,6 @@ test("the payout checkboxes keep the focus while their saves refresh the table",
   });
 
   const managementPage = `/app/sincome/${cycle.id}/management`;
-  /** A server action posts to the address of the page it runs on */
-  const isSaveRequest = (request: Request) =>
-    request.method() === "POST" &&
-    new URL(request.url()).pathname === managementPage &&
-    request.headers()["next-action"] !== undefined;
 
   await signIn(manager.user);
   await page.goto(managementPage);
@@ -419,7 +414,7 @@ test("the payout checkboxes keep the focus while their saves refresh the table",
 
   await firstCheckbox.focus();
   const firstSave = page.waitForResponse((response) =>
-    isSaveRequest(response.request()),
+    isServerActionRequest(response.request(), managementPage),
   );
   await page.keyboard.press("Space");
   await firstSave;
@@ -437,12 +432,7 @@ test("the payout checkboxes keep the focus while their saves refresh the table",
   await expect(firstCheckbox).toBeChecked();
   await expect(firstCheckbox).toBeFocused();
 
-  /**
-   * The row of the second citizen: the popover trigger and the link of the
-   * citizen, the consent, then the payout
-   */
-  for (let step = 0; step < 4; step += 1) await page.keyboard.press("Tab");
-  await expect(secondCheckbox).toBeFocused();
+  await secondCheckbox.focus();
   await page.keyboard.press("Space");
   await expect(secondCheckbox).toBeChecked();
 

@@ -1,4 +1,3 @@
-import type { Page, Request } from "@playwright/test";
 import { expectAuditEvents } from "../fixtures/audit";
 import { assignRole, createCitizen, createRole } from "../fixtures/factories";
 import {
@@ -13,24 +12,11 @@ import {
   toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
+import { recordServerActions } from "../fixtures/server-actions";
 import { expect, test } from "../fixtures/test";
 
-/**
- * Collects the server actions which the page at the path sends from now on.
- * A server action posts to the address of the page it runs on.
- */
-const recordActions = (page: Page, path: string) => {
-  const actions: Request[] = [];
-  page.on("request", (request) => {
-    if (
-      request.method() === "POST" &&
-      new URL(request.url()).pathname === path &&
-      request.headers()["next-action"] !== undefined
-    )
-      actions.push(request);
-  });
-  return actions;
-};
+/** The debounce of the role form (UpdateRolesForm) in milliseconds */
+const ROLE_SAVE_DEBOUNCE = 1_000;
 
 test("a role created and assigned through the UI grants its permission", async ({
   page,
@@ -303,6 +289,8 @@ test("roles ticked within the debounce share one save, also with a search betwee
 
   await signIn(admin.user);
   const rolesPage = `/app/spynet/citizen/${member.entity.id}/roles`;
+  /** The test controls the time of the debounce */
+  await page.clock.install();
   await page.goto(rolesPage);
 
   const rolesDialog = modal(page, "Rollen hinzufügen oder entfernen");
@@ -312,11 +300,21 @@ test("roles ticked within the debounce share one save, also with a search betwee
   );
   await expect(rolesDialog.getByText("Zweite Rolle")).toBeVisible();
 
-  const saves = recordActions(page, rolesPage);
+  /**
+   * The time stops before the first role, thus all steps are in the
+   * debounce, also on a slow machine. The clock cannot go back, thus it
+   * stops one second after the current time of the page.
+   */
+  const pageTime = await page.evaluate(() => Date.now());
+  await page.clock.pauseAt(pageTime + 1_000);
+
+  const saves = recordServerActions(page, rolesPage);
   await rolesDialog.getByText("Erste Rolle").click();
   /** The search renders the form again while the first role waits */
   await rolesDialog.getByPlaceholder("Rolle suchen...").fill("Zweite");
   await rolesDialog.getByText("Zweite Rolle").click();
+  await page.clock.runFor(ROLE_SAVE_DEBOUNCE);
+  await page.clock.resume();
 
   await expect
     .poll(() =>

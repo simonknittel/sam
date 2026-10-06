@@ -1,4 +1,4 @@
-import type { Page, Request } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import type { PrismaClient } from "@sam-monorepo/database/client";
 import { expectAuditEvents } from "../fixtures/audit";
 import { createCitizen, createUserWithoutCitizen } from "../fixtures/factories";
@@ -11,6 +11,11 @@ import {
   toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
+import {
+  holdServerActions,
+  isServerActionRequest,
+  recordServerActions,
+} from "../fixtures/server-actions";
 import { expect, test } from "../fixtures/test";
 
 /** A day of the Halloween range, thus every visit here carries that theme */
@@ -47,37 +52,6 @@ const eventCheckbox = (page: Page, eventKey: string) =>
 
 const toggleEvent = (page: Page, eventKey: string) =>
   toggleLabel(page, eventCheckbox(page, eventKey)).click();
-
-/** A server action posts to the address of the page it runs on */
-const isSaveRequest = (request: Request) =>
-  request.method() === "POST" &&
-  new URL(request.url()).pathname === APPEARANCE_PAGE &&
-  request.headers()["next-action"] !== undefined;
-
-/** Collects the saves which the page sends from now on */
-const recordSaves = (page: Page) => {
-  const saves: Request[] = [];
-  page.on("request", (request) => {
-    if (isSaveRequest(request)) saves.push(request);
-  });
-  return saves;
-};
-
-/**
- * Holds the saves in the browser until the test calls the returned function,
- * thus the test can act while a save runs.
- */
-const holdSaves = async (page: Page) => {
-  const { promise: released, resolve: release } = Promise.withResolvers<void>();
-  await page.route(
-    (url) => url.pathname === APPEARANCE_PAGE,
-    async (route) => {
-      if (isSaveRequest(route.request())) await released;
-      await route.continue();
-    },
-  );
-  return release;
-};
 
 /** The keys of the events which the citizen switched off, sorted */
 const switchedOffEvents = (prisma: PrismaClient, citizenId: string) =>
@@ -199,8 +173,10 @@ test("a switch toggled while the save of another switch runs is saved too", asyn
   // Each toggle saves once, thus the page has to be hydrated first
   await waitForAppShellHydration(page);
 
-  const releaseSaves = await holdSaves(page);
-  const firstSave = page.waitForRequest(isSaveRequest);
+  const releaseSaves = await holdServerActions(page, APPEARANCE_PAGE);
+  const firstSave = page.waitForRequest((request) =>
+    isServerActionRequest(request, APPEARANCE_PAGE),
+  );
   await toggleEvent(page, "christmas");
   await firstSave;
 
@@ -229,7 +205,7 @@ test("switches toggled within the debounce share one save", async ({
   await page.goto(APPEARANCE_PAGE);
   await waitForAppShellHydration(page);
 
-  const saves = recordSaves(page);
+  const saves = recordServerActions(page, APPEARANCE_PAGE);
   for (const eventKey of ["halloween", "christmas", "new-year"])
     await toggleEvent(page, eventKey);
 

@@ -1,4 +1,4 @@
-import type { Page, Request } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import {
   NotificationChannel,
   type PrismaClient,
@@ -9,6 +9,11 @@ import {
   toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
+import {
+  holdServerActions,
+  isServerActionRequest,
+  recordServerActions,
+} from "../fixtures/server-actions";
 import { expect, test } from "../fixtures/test";
 
 /**
@@ -24,37 +29,6 @@ const browserCheckboxLabel = (page: Page, notificationType: string) =>
   toggleLabel(page, browserCheckbox(page, notificationType));
 
 const NOTIFICATIONS_PAGE = "/app/account/notifications";
-
-/** A server action posts to the address of the page it runs on */
-const isSaveRequest = (request: Request) =>
-  request.method() === "POST" &&
-  new URL(request.url()).pathname === NOTIFICATIONS_PAGE &&
-  request.headers()["next-action"] !== undefined;
-
-/** Collects the saves which the page sends from now on */
-const recordSaves = (page: Page) => {
-  const saves: Request[] = [];
-  page.on("request", (request) => {
-    if (isSaveRequest(request)) saves.push(request);
-  });
-  return saves;
-};
-
-/**
- * Holds the saves in the browser until the test calls the returned function,
- * thus the test can act while a save runs.
- */
-const holdSaves = async (page: Page) => {
-  const { promise: released, resolve: release } = Promise.withResolvers<void>();
-  await page.route(
-    (url) => url.pathname === NOTIFICATIONS_PAGE,
-    async (route) => {
-      if (isSaveRequest(route.request())) await released;
-      await route.continue();
-    },
-  );
-  return release;
-};
 
 /** The types whose browser notifications the citizen turned off, sorted */
 const disabledBrowserNotifications = (
@@ -170,8 +144,10 @@ test("a checkbox toggled while the save of another checkbox runs is saved too", 
   await page.goto(NOTIFICATIONS_PAGE);
   await waitForAppShellHydration(page);
 
-  const releaseSaves = await holdSaves(page);
-  const firstSave = page.waitForRequest(isSaveRequest);
+  const releaseSaves = await holdServerActions(page, NOTIFICATIONS_PAGE);
+  const firstSave = page.waitForRequest((request) =>
+    isServerActionRequest(request, NOTIFICATIONS_PAGE),
+  );
   await browserCheckboxLabel(page, "event_created").click();
   await firstSave;
 
@@ -200,7 +176,7 @@ test("checkboxes toggled within the debounce share one save", async ({
   await page.goto(NOTIFICATIONS_PAGE);
   await waitForAppShellHydration(page);
 
-  const saves = recordSaves(page);
+  const saves = recordServerActions(page, NOTIFICATIONS_PAGE);
   for (const notificationType of [
     "birthday",
     "event_created",
