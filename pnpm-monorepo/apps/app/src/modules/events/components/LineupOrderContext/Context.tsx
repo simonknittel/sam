@@ -26,11 +26,11 @@ interface LineupOrderContext {
   container: EventContainer;
   positions: PositionType[];
   handleDragStart: (
-    e: MouseEvent<HTMLButtonElement>,
+    event: MouseEvent<HTMLButtonElement>,
     position: PositionType,
   ) => void;
   handleDragEnd: (
-    e: MouseEvent<HTMLDivElement>,
+    event: MouseEvent<HTMLDivElement>,
     targetPosition: PositionType,
     order: "before" | "after" | "inside",
   ) => void;
@@ -70,7 +70,7 @@ export const LineupOrderProvider = ({
   };
 
   const handleDragStart = (
-    e: MouseEvent<HTMLButtonElement>,
+    event: MouseEvent<HTMLButtonElement>,
     position: PositionType,
   ) => {
     setIsDragging(position);
@@ -80,7 +80,7 @@ export const LineupOrderProvider = ({
   };
 
   const handleDragEnd = (
-    e: MouseEvent<HTMLDivElement>,
+    event: MouseEvent<HTMLDivElement>,
     targetPosition: PositionType,
     order: "before" | "after" | "inside",
   ) => {

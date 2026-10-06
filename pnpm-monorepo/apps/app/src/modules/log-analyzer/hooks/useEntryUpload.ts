@@ -67,6 +67,10 @@ export const useEntryUpload = () => {
     if (storedHashesRef.current)
       return Promise.resolve(storedHashesRef.current);
 
+    /**
+     * No `??=`: the React Compiler does not compile a function with it, and
+     * LogAnalyzer needs a stable upload function.
+     */
     if (!loadingRef.current) {
       loadingRef.current = (async () => {
         const hashes = new Set<string>();
