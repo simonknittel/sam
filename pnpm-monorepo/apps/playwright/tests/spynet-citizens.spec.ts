@@ -3,7 +3,7 @@ import {
   ConfirmationStatus,
   OrganizationMembershipType,
   OrganizationMembershipVisibility,
-  type PrismaClient,
+  type Prisma,
 } from "@sam-monorepo/database/client";
 import { expectAuditEvents } from "../fixtures/audit";
 import { startParallelChange } from "../fixtures/database";
@@ -37,7 +37,10 @@ const overviewAttribute = (page: Page, name: string) =>
     .locator("dd");
 
 /** A different user deletes the citizen: a soft delete, as the action does */
-const markCitizenDeleted = (prisma: PrismaClient, citizenId: string) =>
+const markCitizenDeleted = (
+  prisma: Prisma.TransactionClient,
+  citizenId: string,
+) =>
   prisma.citizen.update({
     where: { id: citizenId },
     data: { deletedAt: new Date() },
@@ -550,6 +553,85 @@ test("confirming a Discord ID links the citizen to the login with that ID", asyn
     .toBe(newcomer.id);
 });
 
+test("a confirmation of the own Discord ID shows a message and changes no login, and the Discord ID of a different person is confirmed", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const reviewer = await createCitizen(prisma, {
+    handle: "spynet-verknuepfer",
+    permissionStrings: [
+      "citizen;read",
+      "discord-id;create",
+      "discord-id;read",
+      "discord-id;confirm",
+    ],
+  });
+  /** The roles of the target would go to the login that the confirmation links */
+  const target = await createCitizen(prisma, { handle: "zielperson" });
+  const ownDiscordId = reviewer.entity.discordId!;
+  const newcomer = await createUserWithoutCitizen(prisma, { name: "neuling" });
+  const { providerAccountId: newcomerDiscordId } =
+    await prisma.account.findFirstOrThrow({
+      where: { userId: newcomer.id },
+    });
+  const loginOf = async (citizenId: string) =>
+    (
+      await prisma.citizen.findUniqueOrThrow({
+        where: { id: citizenId },
+        select: { userId: true },
+      })
+    ).userId;
+  const countConfirmations = () =>
+    prisma.auditEvent.count({ where: { type: "ENTITY_LOG_CONFIRMED" } });
+
+  await signIn(reviewer.user);
+  await page.goto(`/app/spynet/citizen/${target.entity.id}`);
+
+  const historyDialog = modal(page, "Discord ID History");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Discord ID History" }),
+    historyDialog,
+  );
+  const entryOf = (discordId: string) =>
+    historyDialog.getByRole("listitem").filter({ hasText: discordId });
+  const addEntry = async (discordId: string) => {
+    await historyDialog.getByPlaceholder("Neuer Eintrag ...").fill(discordId);
+    await historyDialog.getByRole("button", { name: "Speichern" }).click();
+    await expect(entryOf(discordId)).toBeVisible();
+  };
+
+  await addEntry(ownDiscordId);
+  await entryOf(ownDiscordId)
+    .getByRole("button", { name: "Bestätigen" })
+    .click();
+  await expect(
+    page.getByText(
+      "Du kannst deine eigene Discord ID nicht bestätigen. Das muss eine andere Person tun.",
+    ),
+  ).toBeVisible();
+  await expect(entryOf(ownDiscordId).getByText("Unbestätigt")).toBeVisible();
+
+  expect(
+    await prisma.citizenLog.findFirstOrThrow({
+      where: { citizenId: target.entity.id, content: ownDiscordId },
+      select: { confirmed: true },
+    }),
+  ).toEqual({ confirmed: null });
+  expect(await loginOf(target.entity.id)).toBe(target.user.id);
+  expect(await loginOf(reviewer.entity.id)).toBe(reviewer.user.id);
+  expect(await countConfirmations()).toBe(0);
+
+  await addEntry(newcomerDiscordId);
+  await entryOf(newcomerDiscordId)
+    .getByRole("button", { name: "Bestätigen" })
+    .click();
+
+  await expect.poll(() => loginOf(target.entity.id)).toBe(newcomer.id);
+  expect(await loginOf(reviewer.entity.id)).toBe(reviewer.user.id);
+  await expect.poll(countConfirmations).toBe(1);
+});
+
 test("a decision about a Discord ID, Citizen ID or Community Moniker needs the confirm permission of its type, not the create permission", async ({
   page,
   prisma,
@@ -924,6 +1006,57 @@ test("a delete of a log of a citizen that a different user deleted after the pag
   ).toBe(0);
 });
 
+test("a new log that waits for a parallel delete of its citizen is not saved", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const reporter = await createCitizen(prisma, {
+    handle: "spynet-melder",
+    permissionStrings: ["citizen;read", "handle;read", "handle;create"],
+  });
+  const target = await prisma.citizen.create({
+    data: { handle: "loeschziel" },
+  });
+
+  await signIn(reporter.user);
+  await page.goto(`/app/spynet/citizen/${target.id}`);
+  const historyDialog = modal(page, "Handle History");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Handle History" }),
+    historyDialog,
+  );
+  await historyDialog
+    .getByPlaceholder("Neuer Eintrag ...")
+    .fill("neuer-handle");
+
+  /**
+   * A different user deletes the citizen. The check of the action waits for
+   * the delete and then sees it. Without the lock of the citizen, the action
+   * would not wait and would save the log for the deleted citizen.
+   */
+  const parallelDelete = await startParallelChange(prisma, (transaction) =>
+    markCitizenDeleted(transaction, target.id),
+  );
+  try {
+    await historyDialog.getByRole("button", { name: "Speichern" }).click();
+    await parallelDelete.waitForBlockedStatement();
+  } finally {
+    await parallelDelete.commit();
+  }
+
+  await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
+  /** The refresh shows that the citizen is gone */
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
+
+  expect(
+    await prisma.citizenLog.count({ where: { citizenId: target.id } }),
+  ).toBe(0);
+  expect(
+    await prisma.auditEvent.count({ where: { type: "ENTITY_LOG_CREATED" } }),
+  ).toBe(0);
+});
+
 test("the log table shows no decision buttons for a log of a deleted citizen", async ({
   page,
   prisma,
@@ -1237,6 +1370,157 @@ test("a note is saved, confirmed, moved to a different note type and deleted", a
     "ENTITY_LOG_UPDATED",
     "ENTITY_LOG_DELETED",
   ]);
+});
+
+test("a decision, a move or a delete of a note without a decision needs the permission for notes without a decision", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const observation = await prisma.noteType.create({
+    data: { name: "Beobachtung" },
+  });
+  const rumour = await prisma.noteType.create({ data: { name: "Gerücht" } });
+  const secret = await prisma.classificationLevel.create({
+    data: { name: "Geheim" },
+  });
+  const allNotes = "noteTypeId=*;classificationLevelId=*";
+  const withUnconfirmed = (operation: string) =>
+    `note;${operation};${allNotes};alsoUnconfirmed=true`;
+  const operations = ["confirm", "update", "delete"];
+  /**
+   * Each operation for the note type and the classification level of the
+   * note, without and with the notes without a decision
+   */
+  const analyst = await createCitizen(prisma, {
+    handle: "notiz-analyst",
+    permissionStrings: [
+      "citizen;read",
+      `note;create;${allNotes}`,
+      withUnconfirmed("read"),
+      ...operations.map((operation) => `note;${operation};${allNotes}`),
+      ...operations.map(withUnconfirmed),
+    ],
+  });
+  const target = await createCitizen(prisma, { handle: "zielperson" });
+  const noteContent = "Fliegt eine Cutlass Black.";
+  const note = await prisma.citizenLog.create({
+    data: {
+      citizenId: target.entity.id,
+      type: "note",
+      content: noteContent,
+      noteTypeId: observation.id,
+      classificationLevelId: secret.id,
+    },
+  });
+  const noteIn = (panelName: string) =>
+    page
+      .getByRole("tabpanel", { name: panelName })
+      .getByRole("article")
+      .filter({ hasText: noteContent });
+  const updateDialog = modal(page, "Bearbeiten");
+  const deleteDialog = page.getByRole("alertdialog", {
+    name: "Eintrag löschen?",
+  });
+  const moveToRumour = async () => {
+    await clickUntilVisible(
+      noteIn("Beobachtung").getByRole("button", { name: "Bearbeiten" }),
+      updateDialog,
+    );
+    await updateDialog
+      .getByLabel("Notizart")
+      .selectOption({ label: "Gerücht" });
+    await updateDialog.getByRole("button", { name: "Speichern" }).click();
+  };
+  const deleteNote = async (panelName: string) => {
+    await clickUntilVisible(
+      noteIn(panelName).getByRole("button", { name: "Löschen" }),
+      deleteDialog,
+    );
+    await deleteDialog.getByRole("button", { name: "Löschen" }).click();
+  };
+
+  await signIn(analyst.user);
+
+  for (const { operation, button, act } of [
+    {
+      operation: "confirm",
+      button: "Bestätigen",
+      act: () =>
+        noteIn("Beobachtung")
+          .getByRole("button", { name: "Bestätigen" })
+          .click(),
+    },
+    { operation: "update", button: "Bearbeiten", act: moveToRumour },
+    {
+      operation: "delete",
+      button: "Löschen",
+      act: () => deleteNote("Beobachtung"),
+    },
+  ]) {
+    /** A new page load also removes the toast of the operation before */
+    await page.goto(`/app/spynet/citizen/${target.entity.id}/notes`);
+    await waitForAppShellHydration(page);
+    await expect(
+      noteIn("Beobachtung").getByRole("button", { name: button }),
+    ).toBeVisible();
+
+    /**
+     * A different user removes the permission for notes without a decision
+     * after the page loaded. The permission without them stays.
+     */
+    await prisma.permissionString.deleteMany({
+      where: { permissionString: withUnconfirmed(operation) },
+    });
+
+    await act();
+    await expect(page.getByText(FORBIDDEN_ACTION_TEXT)).toBeVisible();
+  }
+
+  expect(
+    await prisma.citizenLog.findUniqueOrThrow({
+      where: { id: note.id },
+      select: { noteTypeId: true, confirmed: true },
+    }),
+  ).toEqual({ noteTypeId: observation.id, confirmed: null });
+  expect(
+    await prisma.auditEvent.count({
+      where: {
+        type: {
+          in: [
+            "ENTITY_LOG_CONFIRMED",
+            "ENTITY_LOG_UPDATED",
+            "ENTITY_LOG_DELETED",
+          ],
+        },
+      },
+    }),
+  ).toBe(0);
+
+  /** With the permissions for notes without a decision again */
+  await prisma.permissionString.createMany({
+    data: operations.map((operation) => ({
+      roleId: analyst.role.id,
+      permissionString: withUnconfirmed(operation),
+    })),
+  });
+  await page.goto(`/app/spynet/citizen/${target.entity.id}/notes`);
+  await waitForAppShellHydration(page);
+
+  await moveToRumour();
+  await expect(updateDialog).toHaveCount(0);
+  expect(
+    await prisma.citizenLog.findUniqueOrThrow({
+      where: { id: note.id },
+      select: { noteTypeId: true, confirmed: true },
+    }),
+  ).toEqual({ noteTypeId: rumour.id, confirmed: null });
+
+  await page.getByRole("tab", { name: "Gerücht" }).click();
+  await deleteNote("Gerücht");
+  await expect(page.getByText(DELETED_TEXT)).toBeVisible();
+  expect(await prisma.citizenLog.count({ where: { id: note.id } })).toBe(0);
+  await expectAuditEvents(prisma, ["ENTITY_LOG_UPDATED", "ENTITY_LOG_DELETED"]);
 });
 
 test("a note in a classification level that a different user deleted shows a message and keeps the text", async ({
@@ -1571,6 +1855,87 @@ test("a move of a note that a different user moved after the permission check sh
   ).toBe(0);
 });
 
+test("a move of a note that a different user decided after the permission check shows a message and keeps the decision", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const observation = await prisma.noteType.create({
+    data: { name: "Beobachtung" },
+  });
+  await prisma.noteType.create({ data: { name: "Gerücht" } });
+  const classificationLevel = await prisma.classificationLevel.create({
+    data: { name: "Geheim" },
+  });
+  const allNotes = "noteTypeId=*;classificationLevelId=*";
+  const analyst = await createCitizen(prisma, {
+    handle: "notiz-analyst",
+    permissionStrings: [
+      "citizen;read",
+      `note;create;${allNotes}`,
+      `note;read;${allNotes};alsoUnconfirmed=true`,
+      `note;update;${allNotes};alsoUnconfirmed=true`,
+    ],
+  });
+  const target = await createCitizen(prisma, { handle: "zielperson" });
+  const note = await prisma.citizenLog.create({
+    data: {
+      citizenId: target.entity.id,
+      type: "note",
+      content: "Fliegt eine Cutlass Black.",
+      noteTypeId: observation.id,
+      classificationLevelId: classificationLevel.id,
+    },
+  });
+
+  await signIn(analyst.user);
+  await page.goto(`/app/spynet/citizen/${target.entity.id}/notes`);
+
+  const updateDialog = modal(page, "Bearbeiten");
+  await clickUntilVisible(
+    page
+      .getByRole("tabpanel", { name: "Beobachtung" })
+      .getByRole("button", { name: "Bearbeiten" }),
+    updateDialog,
+  );
+  await updateDialog.getByLabel("Notizart").selectOption({ label: "Gerücht" });
+
+  /**
+   * A different user confirms the note. The permission check of the action
+   * still sees the note without a decision, and its write waits for the
+   * decision.
+   */
+  const parallelDecision = await startParallelChange(prisma, (transaction) =>
+    transaction.citizenLog.update({
+      where: { id: note.id },
+      data: {
+        confirmed: ConfirmationStatus.CONFIRMED,
+        confirmedAt: new Date(),
+      },
+    }),
+  );
+  try {
+    await updateDialog.getByRole("button", { name: "Speichern" }).click();
+    await parallelDecision.waitForBlockedStatement();
+  } finally {
+    await parallelDecision.commit();
+  }
+
+  await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
+  expect(
+    await prisma.citizenLog.findUniqueOrThrow({
+      where: { id: note.id },
+      select: { noteTypeId: true, confirmed: true },
+    }),
+  ).toEqual({
+    noteTypeId: observation.id,
+    confirmed: ConfirmationStatus.CONFIRMED,
+  });
+  expect(
+    await prisma.auditEvent.count({ where: { type: "ENTITY_LOG_UPDATED" } }),
+  ).toBe(0);
+});
+
 test("a move of a note of a citizen that a different user deleted after the page loaded changes nothing", async ({
   page,
   prisma,
@@ -1621,6 +1986,83 @@ test("a move of a note of a citizen that a different user deleted after the page
   await markCitizenDeleted(prisma, target.id);
 
   await updateDialog.getByRole("button", { name: "Speichern" }).click();
+  await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
+  /** The refresh shows that the citizen is gone */
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
+
+  expect(
+    await prisma.citizenLog.findUniqueOrThrow({
+      where: { id: note.id },
+      select: { noteTypeId: true },
+    }),
+  ).toEqual({ noteTypeId: observation.id });
+  expect(
+    await prisma.auditEvent.count({ where: { type: "ENTITY_LOG_UPDATED" } }),
+  ).toBe(0);
+});
+
+test("a move of a note that waits for a parallel delete of its citizen changes nothing", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const observation = await prisma.noteType.create({
+    data: { name: "Beobachtung" },
+  });
+  await prisma.noteType.create({ data: { name: "Gerücht" } });
+  const classificationLevel = await prisma.classificationLevel.create({
+    data: { name: "Geheim" },
+  });
+  const allNotes = "noteTypeId=*;classificationLevelId=*";
+  const analyst = await createCitizen(prisma, {
+    handle: "notiz-analyst",
+    permissionStrings: [
+      "citizen;read",
+      `note;create;${allNotes}`,
+      `note;read;${allNotes};alsoUnconfirmed=true`,
+      `note;update;${allNotes};alsoUnconfirmed=true`,
+    ],
+  });
+  const target = await prisma.citizen.create({
+    data: { handle: "zielperson" },
+  });
+  const note = await prisma.citizenLog.create({
+    data: {
+      citizenId: target.id,
+      type: "note",
+      content: "Fliegt eine Cutlass Black.",
+      noteTypeId: observation.id,
+      classificationLevelId: classificationLevel.id,
+    },
+  });
+
+  await signIn(analyst.user);
+  await page.goto(`/app/spynet/citizen/${target.id}/notes`);
+
+  const updateDialog = modal(page, "Bearbeiten");
+  await clickUntilVisible(
+    page
+      .getByRole("tabpanel", { name: "Beobachtung" })
+      .getByRole("button", { name: "Bearbeiten" }),
+    updateDialog,
+  );
+  await updateDialog.getByLabel("Notizart").selectOption({ label: "Gerücht" });
+
+  /**
+   * A different user deletes the citizen. The write of the action waits for
+   * the delete and then sees it. Without the lock of the citizen, the write
+   * would not wait and would move the note of the deleted citizen.
+   */
+  const parallelDelete = await startParallelChange(prisma, (transaction) =>
+    markCitizenDeleted(transaction, target.id),
+  );
+  try {
+    await updateDialog.getByRole("button", { name: "Speichern" }).click();
+    await parallelDelete.waitForBlockedStatement();
+  } finally {
+    await parallelDelete.commit();
+  }
+
   await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
   /** The refresh shows that the citizen is gone */
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
