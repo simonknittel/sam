@@ -1,3 +1,4 @@
+import type { Request } from "@playwright/test";
 import { expectAuditEvents } from "../fixtures/audit";
 import {
   createCitizen,
@@ -358,4 +359,109 @@ test("a manager runs a cycle from its creation to a closed payout", async ({
     "PROFIT_CYCLE_PAYOUT_ENDED",
     "PROFIT_DISTRIBUTION_MY_ACCEPTED_TOGGLED",
   ]);
+});
+
+test("the payout checkboxes keep the focus while their saves refresh the table", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "sincome-verwalter",
+    permissionStrings: MANAGER_PERMISSIONS,
+  });
+  /** The table sorts by the name, thus the first citizen comes first */
+  const firstCitizen = await createCitizen(prisma, {
+    handle: "sincome-erster",
+  });
+  const secondCitizen = await createCitizen(prisma, {
+    handle: "sincome-zweiter",
+  });
+
+  /** A cycle in its payout phase, in which both citizens accepted */
+  const cycle = await prisma.profitDistributionCycle.create({
+    data: {
+      title: "Auszahlungszyklus",
+      createdById: manager.entity.id,
+      collectionEndsAt: new Date(Date.now() - 2 * ONE_DAY_MS),
+      collectionEndedAt: new Date(Date.now() - 2 * ONE_DAY_MS),
+      payoutStartedAt: new Date(Date.now() - ONE_DAY_MS),
+      payoutEndsAt: new Date(Date.now() + 7 * ONE_DAY_MS),
+      auecProfit: BigInt(1_000_000),
+      participants: {
+        create: [firstCitizen, secondCitizen].map((citizen) => ({
+          citizenId: citizen.entity.id,
+          silcBalanceSnapshot: 100,
+          acceptedAt: new Date(),
+        })),
+      },
+    },
+  });
+
+  const managementPage = `/app/sincome/${cycle.id}/management`;
+  /** A server action posts to the address of the page it runs on */
+  const isSaveRequest = (request: Request) =>
+    request.method() === "POST" &&
+    new URL(request.url()).pathname === managementPage &&
+    request.headers()["next-action"] !== undefined;
+
+  await signIn(manager.user);
+  await page.goto(managementPage);
+  /** Each toggle saves once, thus the page has to be hydrated first */
+  await waitForAppShellHydration(page);
+
+  const firstCheckbox = page.getByRole("checkbox", {
+    name: "Ausgezahlt: sincome-erster",
+  });
+  const secondCheckbox = page.getByRole("checkbox", {
+    name: "Ausgezahlt: sincome-zweiter",
+  });
+
+  await firstCheckbox.focus();
+  const firstSave = page.waitForResponse((response) =>
+    isSaveRequest(response.request()),
+  );
+  await page.keyboard.press("Space");
+  await firstSave;
+
+  /**
+   * The save refreshes the page, which renders the table again with the new
+   * status. The rows must stay in place: a new row would take the focus away
+   * from the checkbox.
+   */
+  await expect(
+    page.locator("tr", { hasText: "sincome-erster" }).getByText("Ausgezahlt", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(firstCheckbox).toBeChecked();
+  await expect(firstCheckbox).toBeFocused();
+
+  /**
+   * The row of the second citizen: the popover trigger and the link of the
+   * citizen, the consent, then the payout
+   */
+  for (let step = 0; step < 4; step += 1) await page.keyboard.press("Tab");
+  await expect(secondCheckbox).toBeFocused();
+  await page.keyboard.press("Space");
+  await expect(secondCheckbox).toBeChecked();
+
+  await expect
+    .poll(async () => {
+      const participants =
+        await prisma.profitDistributionCycleParticipant.findMany({
+          where: { cycleId: cycle.id },
+          select: { citizenId: true, disbursedAt: true },
+        });
+      return Object.fromEntries(
+        participants.map((participant) => [
+          participant.citizenId,
+          participant.disbursedAt !== null,
+        ]),
+      );
+    })
+    .toEqual({
+      [firstCitizen.entity.id]: true,
+      [secondCitizen.entity.id]: true,
+    });
 });

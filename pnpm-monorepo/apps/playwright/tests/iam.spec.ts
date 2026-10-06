@@ -1,3 +1,4 @@
+import type { Page, Request } from "@playwright/test";
 import { expectAuditEvents } from "../fixtures/audit";
 import { assignRole, createCitizen, createRole } from "../fixtures/factories";
 import {
@@ -13,6 +14,23 @@ import {
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
+
+/**
+ * Collects the server actions which the page at the path sends from now on.
+ * A server action posts to the address of the page it runs on.
+ */
+const recordActions = (page: Page, path: string) => {
+  const actions: Request[] = [];
+  page.on("request", (request) => {
+    if (
+      request.method() === "POST" &&
+      new URL(request.url()).pathname === path &&
+      request.headers()["next-action"] !== undefined
+    )
+      actions.push(request);
+  });
+  return actions;
+};
 
 test("a role created and assigned through the UI grants its permission", async ({
   page,
@@ -264,6 +282,55 @@ test("a role ticked right before the role dialog closes is still saved", async (
         ),
     )
     .toEqual([member.role.id, firstRole.id, secondRole.id].toSorted());
+});
+
+test("roles ticked within the debounce share one save, also with a search between them", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "iam-admin",
+    permissionStrings: [
+      "citizen;read",
+      "otherRole;read;roleId=*",
+      "otherRole;assign;roleId=*",
+    ],
+  });
+  const member = await createCitizen(prisma, { handle: "task-worker" });
+  const firstRole = await createRole(prisma, { name: "Erste Rolle" });
+  const secondRole = await createRole(prisma, { name: "Zweite Rolle" });
+
+  await signIn(admin.user);
+  const rolesPage = `/app/spynet/citizen/${member.entity.id}/roles`;
+  await page.goto(rolesPage);
+
+  const rolesDialog = modal(page, "Rollen hinzufügen oder entfernen");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Bearbeiten" }),
+    rolesDialog,
+  );
+  await expect(rolesDialog.getByText("Zweite Rolle")).toBeVisible();
+
+  const saves = recordActions(page, rolesPage);
+  await rolesDialog.getByText("Erste Rolle").click();
+  /** The search renders the form again while the first role waits */
+  await rolesDialog.getByPlaceholder("Rolle suchen...").fill("Zweite");
+  await rolesDialog.getByText("Zweite Rolle").click();
+
+  await expect
+    .poll(() =>
+      prisma.roleAssignment
+        .findMany({
+          where: { citizenId: member.entity.id },
+          select: { roleId: true },
+        })
+        .then((assignments) =>
+          assignments.map(({ roleId }) => roleId).toSorted(),
+        ),
+    )
+    .toEqual([member.role.id, firstRole.id, secondRole.id].toSorted());
+  expect(saves).toHaveLength(1);
 });
 
 test("deleting a role takes its permissions away from its members", async ({
