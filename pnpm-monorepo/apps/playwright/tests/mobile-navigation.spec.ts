@@ -4,6 +4,7 @@ import {
   accessibilityTree,
   clickUntilUrl,
   clickUntilVisible,
+  collectHydrationErrors,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
@@ -22,13 +23,6 @@ const isFocusInControlledElement = (toggle: Locator) =>
     if (!controlledElement) throw new Error("aria-controls names no element");
     return controlledElement.contains(document.activeElement);
   });
-
-/**
- * A production build names a hydration error only with its number, for
- * example "Minified React error #418" (https://react.dev/errors/418).
- */
-const isHydrationError = (message: string) =>
-  /hydrat|react\.dev\/errors\/(418|423|425)\b/i.test(message);
 
 /** The element that a toggle button shows and hides (its aria-controls) */
 const controlledElement = async (toggle: Locator) => {
@@ -135,14 +129,7 @@ test("admin mode shows the Tasks and Fleet links of an admin without a hydration
   await signIn(admin.user);
   await enableAdminMode();
 
-  const hydrationErrors: string[] = [];
-  page.on("console", (message) => {
-    if (message.type() === "error" && isHydrationError(message.text()))
-      hydrationErrors.push(message.text());
-  });
-  page.on("pageerror", (error) => {
-    if (isHydrationError(String(error))) hydrationErrors.push(String(error));
-  });
+  const hydrationErrors = collectHydrationErrors(page);
 
   await page.goto("/app");
   await expect(page).toHaveURL(/\/app\/dashboard$/);

@@ -10,6 +10,7 @@ import {
   wikiParagraph,
 } from "../fixtures/factories";
 import {
+  collectHydrationErrors,
   SAVED_TEXT,
   sectionByHeading,
   waitForAppShellHydration,
@@ -170,12 +171,7 @@ for (const { name, drag } of REORDER_GESTURES) {
     });
     await setWikiFeaturedPages(prisma, [first.id, second.id]);
 
-    const hydrationErrors: string[] = [];
-    page.on("console", (message) => {
-      if (message.type() === "error" && /hydrat/i.test(message.text())) {
-        hydrationErrors.push(message.text());
-      }
-    });
+    const hydrationErrors = collectHydrationErrors(page);
 
     await signIn(manager.user);
     await page.goto("/app/wiki/settings");

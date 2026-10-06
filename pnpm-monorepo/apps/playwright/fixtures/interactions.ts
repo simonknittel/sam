@@ -282,3 +282,27 @@ export const waitForAppShellHydration = async (page: Page) => {
   await page.keyboard.press("Escape");
   await expect(popover).not.toBeVisible();
 };
+
+/**
+ * A production build names a hydration error only with its number, for
+ * example "Minified React error #418" (https://react.dev/errors/418).
+ */
+const isHydrationError = (message: string) =>
+  /hydrat|react\.dev\/errors\/(418|423|425)\b/i.test(message);
+
+/**
+ * Collects the hydration errors of the page from now on. React writes them
+ * to the console or reports them as uncaught errors. Start the collection
+ * before the navigation, and examine the list after the hydration.
+ */
+export const collectHydrationErrors = (page: Page) => {
+  const hydrationErrors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error" && isHydrationError(message.text()))
+      hydrationErrors.push(message.text());
+  });
+  page.on("pageerror", (error) => {
+    if (isHydrationError(String(error))) hydrationErrors.push(String(error));
+  });
+  return hydrationErrors;
+};
