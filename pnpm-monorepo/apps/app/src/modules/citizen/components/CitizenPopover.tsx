@@ -13,14 +13,18 @@ import { BsExclamationOctagonFill } from "react-icons/bs";
  * Each citizen link has a popover, but the profile shows only after a hover.
  * Thus its code (for example the role forms) loads only then, and not on
  * each page with a citizen link.
+ *
+ * `dynamic()` and the preload on open use the same loader. With a second
+ * `import()`, the build makes a second chunk with the same code, and the
+ * browser loads both. The React Compiler does not compile a component with
+ * an `import()`, thus the loader is outside of the component.
  */
-const ProfileContent = dynamic(
-  () => import("./ProfileContent").then((mod) => mod.ProfileContent),
-  { loading: () => <ProfileLoading /> },
-);
+const loadProfileContent = () =>
+  import("./ProfileContent").then((module) => module.ProfileContent);
 
-/** The React Compiler does not compile a component with an `import()` */
-const loadProfileContent = () => import("./ProfileContent");
+const ProfileContent = dynamic(loadProfileContent, {
+  loading: () => <ProfileLoading />,
+});
 
 interface Props {
   readonly children?: ReactNode;
