@@ -86,15 +86,7 @@ export const NotesTable = ({ rows }: Props) => {
               </td>
 
               <td>
-                <ConfirmationState
-                  citizenLog={{
-                    id: citizenLog.id,
-                    citizenId: citizenLog.citizenId,
-                    type: citizenLog.type,
-                    confirmed: citizenLog.confirmed,
-                    citizen: { deletedAt: citizenLog.citizen.deletedAt },
-                  }}
-                />
+                <NoteConfirmationState note={citizenLog} />
               </td>
 
               <td
@@ -136,15 +128,40 @@ export const NotesTable = ({ rows }: Props) => {
   );
 };
 
-interface NotesTableActionsProps {
+interface NoteProps {
   readonly note: CitizenLogTableRow;
 }
+
+/**
+ * The confirmation state of the note, with the decision buttons only for a
+ * viewer who may decide about the note
+ */
+const NoteConfirmationState = async ({ note }: NoteProps) => {
+  const authentication = await requireAuthentication();
+  const canDecide = await authentication.authorize(
+    "note",
+    "confirm",
+    getNotePermissionAttributes(note),
+  );
+
+  return (
+    <ConfirmationState
+      citizenLog={{
+        id: note.id,
+        citizenId: note.citizenId,
+        confirmed: note.confirmed,
+        citizen: { deletedAt: note.citizen.deletedAt },
+      }}
+      canDecide={canDecide}
+    />
+  );
+};
 
 /**
  * The buttons that change or delete the note, with the permission checks of
  * the notes page of the citizen
  */
-const NotesTableActions = async ({ note }: NotesTableActionsProps) => {
+const NotesTableActions = async ({ note }: NoteProps) => {
   /** The logs of a deleted citizen are read only */
   if (note.citizen.deletedAt) return null;
 

@@ -78,10 +78,15 @@ export const OtherTable = ({ rows }: Props) => {
                   citizenLog={{
                     id: citizenLog.id,
                     citizenId: citizenLog.citizenId,
-                    type: citizenLog.type,
                     confirmed: citizenLog.confirmed,
                     citizen: { deletedAt: citizenLog.citizen.deletedAt },
                   }}
+                  /**
+                   * The table shows a log without a decision only to a viewer
+                   * with the permission to confirm the logs of its type (see
+                   * getReadableCitizenLogWhere)
+                   */
+                  canDecide={true}
                 />
               </td>
 

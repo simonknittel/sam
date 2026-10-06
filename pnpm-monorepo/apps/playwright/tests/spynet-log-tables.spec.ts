@@ -338,6 +338,9 @@ test("the log table shows no delete button for a log of a deleted citizen", asyn
 /** Reads the confirmed notes of each note type and classification level */
 const READ_CONFIRMED_NOTES = "note;read;noteTypeId=*;classificationLevelId=*";
 
+/** The names of the buttons that decide about a log without a decision */
+const DECISION_BUTTONS = ["Bestätigen", "Falschmeldung"];
+
 /**
  * Opens the menu of a note in the notes table, checks its delete button and
  * opens the change modal. An open modal hides the page from the
@@ -630,6 +633,16 @@ test("the notes table shows only the notes that the read permissions allow, and 
     await expect(logContent(page, content)).toBeVisible();
   await expect(tableRows(page)).toHaveCount(readableContents.length);
   await expect(page.getByText("1 / 1").filter({ visible: true })).toBeVisible();
+  /** The viewer may read the rumour without a decision, but not decide it */
+  await expect(
+    rowOf(page, "Unbestätigtes Gerücht").getByText("Unbestätigt", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  for (const decision of DECISION_BUTTONS)
+    await expect(
+      tableRows(page).getByRole("button", { name: decision }),
+    ).toHaveCount(0);
 
   /** The filter offers only the classification levels of these notes */
   const classificationLevelFilter = page.getByRole("dialog", {
@@ -646,6 +659,74 @@ test("the notes table shows only the notes that the read permissions allow, and 
       exact: true,
     }),
   ).toBeVisible();
+});
+
+test("the notes table shows the decision buttons only with the permission to confirm the note", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const observation = await prisma.noteType.create({
+    data: { name: "Beobachtung" },
+  });
+  const rumour = await prisma.noteType.create({ data: { name: "Gerücht" } });
+  const secret = await prisma.classificationLevel.create({
+    data: { name: "Geheim" },
+  });
+  /** The reviewer may read all notes, but decide only about the rumours */
+  const reviewer = await createCitizen(prisma, {
+    handle: "notiz-pruefer",
+    permissionStrings: [
+      "citizen;read",
+      "spynetNotes;read",
+      "note;read;noteTypeId=*;classificationLevelId=*;alsoUnconfirmed=true",
+      `note;confirm;noteTypeId=${rumour.id};classificationLevelId=*;alsoUnconfirmed=true`,
+    ],
+  });
+  const citizen = await prisma.citizen.create({
+    data: { handle: "beobachteter" },
+  });
+  const note = (content: string, noteTypeId: string) => ({
+    citizenId: citizen.id,
+    type: "note",
+    content,
+    noteTypeId,
+    classificationLevelId: secret.id,
+  });
+  await prisma.citizenLog.createMany({
+    data: [
+      note("Unbestätigte Beobachtung", observation.id),
+      note("Unbestätigtes Gerücht", rumour.id),
+    ],
+  });
+
+  await signIn(reviewer.user);
+  await page.goto("/app/spynet/notes");
+  await waitForAppShellHydration(page);
+
+  const observationRow = rowOf(page, "Unbestätigte Beobachtung");
+  const rumourRow = rowOf(page, "Unbestätigtes Gerücht");
+  await expect(
+    observationRow.getByText("Unbestätigt", { exact: true }),
+  ).toBeVisible();
+  for (const decision of DECISION_BUTTONS) {
+    await expect(
+      observationRow.getByRole("button", { name: decision }),
+    ).toHaveCount(0);
+    await expect(
+      rumourRow.getByRole("button", { name: decision }),
+    ).toBeVisible();
+  }
+
+  await rumourRow.getByRole("button", { name: "Bestätigen" }).click();
+  await expect(rumourRow.getByText("Bestätigt", { exact: true })).toBeVisible();
+  expect(
+    await prisma.citizenLog.findFirstOrThrow({
+      where: { content: "Unbestätigtes Gerücht" },
+      select: { confirmed: true },
+    }),
+  ).toEqual({ confirmed: ConfirmationStatus.CONFIRMED });
+  await expectAuditEvents(prisma, ["ENTITY_LOG_CONFIRMED"]);
 });
 
 const headerLink = (page: Page, name: string) =>

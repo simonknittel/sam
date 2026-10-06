@@ -8,15 +8,14 @@ import { FaCheckCircle, FaInfoCircle } from "react-icons/fa";
 import ConfirmLog from "./ConfirmLog";
 
 interface Props {
-  readonly citizenLog: Pick<
-    CitizenLog,
-    "id" | "citizenId" | "type" | "confirmed"
-  > & {
+  readonly citizenLog: Pick<CitizenLog, "id" | "citizenId" | "confirmed"> & {
     readonly citizen: Pick<Citizen, "deletedAt">;
   };
+  /** The viewer may confirm the log or mark it as a false report */
+  readonly canDecide: boolean;
 }
 
-export const ConfirmationState = ({ citizenLog }: Props) => {
+export const ConfirmationState = ({ citizenLog, canDecide }: Props) => {
   switch (citizenLog.confirmed) {
     case ConfirmationStatus.CONFIRMED:
       return (
@@ -46,7 +45,7 @@ export const ConfirmationState = ({ citizenLog }: Props) => {
             Unbestätigt
           </span>
           {/* The logs of a deleted citizen are read only */}
-          {!citizenLog.citizen.deletedAt && (
+          {canDecide && !citizenLog.citizen.deletedAt && (
             <span className="mt-1 flex gap-1 text-neutral-500">
               <ConfirmLog
                 log={{ id: citizenLog.id, citizenId: citizenLog.citizenId }}
