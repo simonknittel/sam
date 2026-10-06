@@ -10,14 +10,7 @@ import type { VariantCatalogManufacturer } from "@/modules/fleet/queries/getVari
 import type { Ship } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import type { MouseEvent } from "react";
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-  useTransition,
-} from "react";
+import { createContext, useContext, useState, useTransition } from "react";
 import {
   eventContainerFormValues,
   type EventContainer,
@@ -72,140 +65,130 @@ export const LineupOrderProvider = ({
   const [isDragging, setIsDragging] = useState<PositionType | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const handleCancel = useCallback(() => {
+  const handleCancel = () => {
     setIsDragging(null);
-  }, []);
+  };
 
-  const handleDragStart = useCallback(
-    (e: MouseEvent<HTMLButtonElement>, position: PositionType) => {
-      setIsDragging(position);
-      document.addEventListener("mouseup", handleCancel, {
-        once: true,
-      });
-    },
-    [handleCancel],
-  );
+  const handleDragStart = (
+    e: MouseEvent<HTMLButtonElement>,
+    position: PositionType,
+  ) => {
+    setIsDragging(position);
+    document.addEventListener("mouseup", handleCancel, {
+      once: true,
+    });
+  };
 
-  const handleDragEnd = useCallback(
-    (
-      e: MouseEvent<HTMLDivElement>,
-      targetPosition: PositionType,
-      order: "before" | "after" | "inside",
-    ) => {
-      startTransition(async () => {
-        document.removeEventListener("mouseup", handleCancel);
-        setIsDragging(null);
+  const handleDragEnd = (
+    e: MouseEvent<HTMLDivElement>,
+    targetPosition: PositionType,
+    order: "before" | "after" | "inside",
+  ) => {
+    startTransition(async () => {
+      document.removeEventListener("mouseup", handleCancel);
+      setIsDragging(null);
 
-        if (!isDragging) return;
-        if (targetPosition.id === isDragging.id) return;
+      if (!isDragging) return;
+      if (targetPosition.id === isDragging.id) return;
 
-        const clonedDraggedPosition = structuredClone(isDragging);
-        const clonedPositions = structuredClone(positions);
+      const clonedDraggedPosition = structuredClone(isDragging);
+      const clonedPositions = structuredClone(positions);
 
-        // Remove dragged position from old order
-        const removeLoop = (positions: PositionType[]) => {
+      // Remove dragged position from old order
+      const removeLoop = (positions: PositionType[]) => {
+        for (const [index, position] of positions.entries()) {
+          if (position.id === clonedDraggedPosition.id) {
+            positions.splice(index, 1);
+            return true;
+          }
+
+          if (position.childPositions) {
+            if (removeLoop(position.childPositions)) return true;
+          }
+        }
+      };
+      removeLoop(clonedPositions);
+
+      // Insert dragged position into new order
+      if (order === "before") {
+        const beforeLoop = (positions: PositionType[]) => {
           for (const [index, position] of positions.entries()) {
-            if (position.id === clonedDraggedPosition.id) {
-              positions.splice(index, 1);
+            if (position.id === targetPosition.id) {
+              positions.splice(index, 0, clonedDraggedPosition);
+              positions.forEach((position, index) => (position.order = index));
               return true;
             }
 
             if (position.childPositions) {
-              if (removeLoop(position.childPositions)) return true;
+              if (beforeLoop(position.childPositions)) return true;
             }
           }
         };
-        removeLoop(clonedPositions);
-
-        // Insert dragged position into new order
-        if (order === "before") {
-          const beforeLoop = (positions: PositionType[]) => {
-            for (const [index, position] of positions.entries()) {
-              if (position.id === targetPosition.id) {
-                positions.splice(index, 0, clonedDraggedPosition);
-                positions.forEach(
-                  (position, index) => (position.order = index),
-                );
-                return true;
-              }
-
-              if (position.childPositions) {
-                if (beforeLoop(position.childPositions)) return true;
-              }
+        beforeLoop(clonedPositions);
+      } else if (order === "after") {
+        const afterLoop = (positions: PositionType[]) => {
+          for (const [index, position] of positions.entries()) {
+            if (position.id === targetPosition.id) {
+              positions.splice(index + 1, 0, clonedDraggedPosition);
+              positions.forEach((position, index) => (position.order = index));
+              return true;
             }
-          };
-          beforeLoop(clonedPositions);
-        } else if (order === "after") {
-          const afterLoop = (positions: PositionType[]) => {
-            for (const [index, position] of positions.entries()) {
-              if (position.id === targetPosition.id) {
-                positions.splice(index + 1, 0, clonedDraggedPosition);
-                positions.forEach(
-                  (position, index) => (position.order = index),
-                );
-                return true;
-              }
 
-              if (position.childPositions) {
-                if (afterLoop(position.childPositions)) return true;
-              }
+            if (position.childPositions) {
+              if (afterLoop(position.childPositions)) return true;
             }
-          };
-          afterLoop(clonedPositions);
-        } else if (order === "inside") {
-          const insertLoop = (positions: PositionType[]) => {
-            for (const [, position] of positions.entries()) {
-              if (position.id === targetPosition.id) {
-                if (!position.childPositions) position.childPositions = [];
-                position.childPositions.splice(0, 0, clonedDraggedPosition);
-                position.childPositions.forEach(
-                  (position, index) => (position.order = index),
-                );
-                return true;
-              }
-
-              if (position.childPositions) {
-                if (insertLoop(position.childPositions)) return true;
-              }
+          }
+        };
+        afterLoop(clonedPositions);
+      } else if (order === "inside") {
+        const insertLoop = (positions: PositionType[]) => {
+          for (const [, position] of positions.entries()) {
+            if (position.id === targetPosition.id) {
+              if (!position.childPositions) position.childPositions = [];
+              position.childPositions.splice(0, 0, clonedDraggedPosition);
+              position.childPositions.forEach(
+                (position, index) => (position.order = index),
+              );
+              return true;
             }
-          };
-          insertLoop(clonedPositions);
-        }
 
-        /**
-         * Save to database
-         */
-        const formData = new FormData();
-        for (const [name, value] of Object.entries(
-          eventContainerFormValues(container),
-        ))
-          formData.append(name, value);
-        const mapPosition = (position: MappedPosition): MappedPosition => ({
-          id: position.id,
-          order: position.order,
-          childPositions: position.childPositions?.map(mapPosition),
-        });
-        formData.append(
-          "order",
-          JSON.stringify(clonedPositions.map(mapPosition)),
-        );
+            if (position.childPositions) {
+              if (insertLoop(position.childPositions)) return true;
+            }
+          }
+        };
+        insertLoop(clonedPositions);
+      }
 
-        await runAction(updateEventLineupOrder, formData);
+      /**
+       * Save to database
+       */
+      const formData = new FormData();
+      for (const [name, value] of Object.entries(
+        eventContainerFormValues(container),
+      ))
+        formData.append(name, value);
+      const mapPosition = (position: MappedPosition): MappedPosition => ({
+        id: position.id,
+        order: position.order,
+        childPositions: position.childPositions?.map(mapPosition),
       });
-    },
-    [container, handleCancel, isDragging, positions],
-  );
+      formData.append(
+        "order",
+        JSON.stringify(clonedPositions.map(mapPosition)),
+      );
 
-  const value = useMemo(
-    () => ({
-      container,
-      positions,
-      handleDragStart,
-      handleDragEnd,
-      isDragging,
-    }),
-    [container, positions, handleDragStart, handleDragEnd, isDragging],
-  );
+      await runAction(updateEventLineupOrder, formData);
+    });
+  };
+
+  const value = {
+    container,
+    positions,
+    handleDragStart,
+    handleDragEnd,
+    isDragging,
+  };
 
   return (
     <LineupOrderContext value={value}>

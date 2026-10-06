@@ -2,13 +2,7 @@
 
 import type { EventPosition } from "@sam-monorepo/database/browser";
 import { useLocalStorage } from "@uidotdev/usehooks";
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, type ReactNode } from "react";
 import type { EventContainer } from "../utils/eventContainer";
 
 export interface LineupClipboardEntry {
@@ -49,30 +43,24 @@ export const LineupClipboardProvider = ({ children }: Props) => {
   const [clipboard, setClipboard] =
     useLocalStorage<LineupClipboardEntry | null>("lineup_clipboard", null);
 
-  const copy = useCallback(
-    (entry: LineupClipboardEntry) => {
-      setClipboard(entry);
-    },
-    [setClipboard],
-  );
+  const copy = (entry: LineupClipboardEntry) => {
+    setClipboard(entry);
+  };
 
-  const clear = useCallback(() => {
+  const clear = () => {
     setClipboard(null);
-  }, [setClipboard]);
+  };
 
-  const value = useMemo(
-    () => ({
-      /**
-       * Entries copied before the clipboard learned about containers name
-       * their event in a since-removed field, so they are dropped instead of
-       * rendering a paste menu that cannot work.
-       */
-      clipboard: clipboard?.container ? clipboard : null,
-      copy,
-      clear,
-    }),
-    [clipboard, copy, clear],
-  );
+  const value = {
+    /**
+     * Entries copied before the clipboard learned about containers name
+     * their event in a since-removed field, so they are dropped instead of
+     * rendering a paste menu that cannot work.
+     */
+    clipboard: clipboard?.container ? clipboard : null,
+    copy,
+    clear,
+  };
 
   return (
     <LineupClipboardContext value={value}>{children}</LineupClipboardContext>

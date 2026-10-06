@@ -4,13 +4,7 @@ import type { EventPosition } from "@sam-monorepo/database/browser";
 import { useLocalStorage } from "@uidotdev/usehooks";
 import clsx from "clsx";
 import type { ReactNode } from "react";
-import {
-  createContext,
-  startTransition,
-  useCallback,
-  useContext,
-  useMemo,
-} from "react";
+import { createContext, startTransition, useContext } from "react";
 
 interface LineupVisibilityContext {
   openItems: EventPosition["id"][];
@@ -39,14 +33,11 @@ export const LineupVisibilityProvider = ({ children, items }: Props) => {
     [],
   );
 
-  const open = useCallback(
-    (itemId: EventPosition["id"]) => {
-      setOpenItems((prev) => [...prev, itemId]);
-    },
-    [setOpenItems],
-  );
+  const open = (itemId: EventPosition["id"]) => {
+    setOpenItems((prev) => [...prev, itemId]);
+  };
 
-  const openAll = useCallback(() => {
+  const openAll = () => {
     const allItemIds: EventPosition["id"][] = [];
 
     const loop = (items: PositionType[]) => {
@@ -63,31 +54,25 @@ export const LineupVisibilityProvider = ({ children, items }: Props) => {
     startTransition(() => {
       setOpenItems(allItemIds);
     });
-  }, [setOpenItems, items]);
+  };
 
-  const close = useCallback(
-    (itemId: EventPosition["id"]) => {
-      setOpenItems((prev) => prev.filter((id) => id !== itemId));
-    },
-    [setOpenItems],
-  );
+  const close = (itemId: EventPosition["id"]) => {
+    setOpenItems((prev) => prev.filter((id) => id !== itemId));
+  };
 
-  const closeAll = useCallback(() => {
+  const closeAll = () => {
     startTransition(() => {
       setOpenItems([]);
     });
-  }, [setOpenItems]);
+  };
 
-  const value = useMemo(
-    () => ({
-      openItems,
-      open,
-      openAll,
-      close,
-      closeAll,
-    }),
-    [openItems, open, openAll, close, closeAll],
-  );
+  const value = {
+    openItems,
+    open,
+    openAll,
+    close,
+    closeAll,
+  };
 
   return (
     <LineupVisibilityContext value={value}>{children}</LineupVisibilityContext>
