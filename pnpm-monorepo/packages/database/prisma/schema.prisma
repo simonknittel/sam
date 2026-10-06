@@ -7,7 +7,8 @@ generator client {
   output          = "../src/generated/prisma"
   previewFeatures = ["partialIndexes", "relationJoins"]
   // The small query compiler makes each Lambda bundle 2.3 MB smaller and the
-  // cold start faster. It compiles a query a little slower, but the query plan
-  // cache compiles each query shape only one time in each process.
+  // cold start faster. It compiles a query a little slower. The query plan
+  // cache keeps compiled queries, thus most query shapes compile only one time
+  // in each process.
   compilerBuild   = "small"
 }

@@ -93,8 +93,15 @@ export const notificationRouterHandler = async (
 };
 
 /**
- * An EventBridge entry has at most 256 KB, so it cannot carry more items
- * than this. The limit only bounds the loops over a malformed event.
+ * Not a limit of the transport: EventBridge and SQS accept events of up to
+ * 1 MB, which is space for more IDs than this limit. One event of the app or
+ * of the salary payout has far fewer items: for example, the salary payout
+ * sends one ID for each paid booking of the day, thus at most one ID for each
+ * citizen and role with a salary on that day. The limit only stops the loops
+ * over a malformed event.
+ * An event with more items fails the validation: SQS delivers it again, then
+ * it moves the event to the dead-letter queue, and nobody gets its
+ * notifications.
  */
 const MAXIMUM_EVENT_ITEM_COUNT = 10_000;
 
