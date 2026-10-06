@@ -1,9 +1,9 @@
 "use client";
 
-import { createContext, useContext, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { FaEllipsisH, FaTimes } from "react-icons/fa";
 import Button from "./Button";
-import { PopoverBaseUI, usePopoverBaseUI } from "./PopoverBaseUI";
+import { PopoverBaseUI } from "./PopoverBaseUI";
 
 interface Props {
   children?: ReactNode;
@@ -31,39 +31,7 @@ export const Actions = ({ children }: Readonly<Props>) => {
       side="left"
       childrenClassName="flex flex-col items-start gap-2"
     >
-      <ActionsContextBridge>{children}</ActionsContextBridge>
+      {children}
     </PopoverBaseUI>
   );
 };
-
-const ActionsContextBridge = ({ children }: Readonly<Props>) => {
-  const { closePopover } = usePopoverBaseUI();
-
-  const value = { closePopover };
-
-  return <ActionContext value={value}>{children}</ActionContext>;
-};
-
-interface ActionContextInterface {
-  closePopover: () => void;
-}
-
-const ActionContext = createContext<ActionContextInterface | undefined>(
-  undefined,
-);
-
-/**
- * Check for undefined since the defaultValue of the context is undefined. If
- * it's still undefined, then the provider is missing.
- *
- * Deliberately not named `useAction` — that name belongs to the server-action
- * hook in `modules/actions`.
- */
-export function useActionsContext() {
-  const context = useContext(ActionContext);
-  if (!context)
-    throw new Error(
-      "Provider for `useActionsContext()` is missing. Make sure to have a `<Actions> ... </Actions>` parent.",
-    );
-  return context;
-}
