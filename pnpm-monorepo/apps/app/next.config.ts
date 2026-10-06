@@ -53,6 +53,14 @@ const nextConfig: NextConfig = {
 
   poweredByHeader: false,
 
+  /**
+   * Only the native Rust compiler of Turbopack (`turbopackRustReactCompiler`
+   * below) compiles the components; the Babel plugin is not a fallback.
+   * Change the two options together: without the Rust option, the build
+   * fails, because `babel-plugin-react-compiler` is not installed.
+   */
+  reactCompiler: true,
+
   // eslint-disable-next-line @typescript-eslint/require-await
   headers: async () => [
     {
@@ -136,6 +144,8 @@ const nextConfig: NextConfig = {
 
   experimental: {
     authInterrupts: true,
+    // See `reactCompiler` above.
+    turbopackRustReactCompiler: true,
   },
 };
 
