@@ -85,6 +85,8 @@ export const useAction = (
    * action. React resets a `<form action>` form after each action, also
    * after an error, and a select then falls back to its first option. The
    * clicked submit button goes into the FormData, as with a native submit.
+   * `useFormStatus` (for example in `SubmitButton`) sees no submit of such a
+   * form: show the pending state with `isPending`.
    */
   const submitWithoutReset: FormEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
