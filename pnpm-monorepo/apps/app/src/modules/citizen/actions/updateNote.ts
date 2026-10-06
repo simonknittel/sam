@@ -35,7 +35,7 @@ export const updateNote = createAuthenticatedAction(
         id: data.id,
         citizen: ACTIVE_CITIZEN_WHERE,
       },
-      select: { ...CITIZEN_LOG_GUARD_SELECT, confirmed: true },
+      select: CITIZEN_LOG_GUARD_SELECT,
     });
     /**
      * A different user deleted the note or its citizen, and the page must

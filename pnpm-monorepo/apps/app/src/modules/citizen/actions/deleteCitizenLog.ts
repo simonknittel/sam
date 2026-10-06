@@ -27,7 +27,7 @@ export const deleteCitizenLog = createAuthenticatedAction(
         id: data.id,
         citizen: ACTIVE_CITIZEN_WHERE,
       },
-      select: { ...CITIZEN_LOG_GUARD_SELECT, confirmed: true },
+      select: CITIZEN_LOG_GUARD_SELECT,
     });
     /**
      * A different user deleted the log or its citizen, and the page must
