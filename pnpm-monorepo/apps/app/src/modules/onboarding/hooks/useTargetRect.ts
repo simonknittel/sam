@@ -2,6 +2,8 @@
 
 import { useCallback, useRef, useSyncExternalStore } from "react";
 
+const getServerSnapshot = () => null;
+
 const rectsAreEqual = (firstRect: DOMRect, secondRect: DOMRect) =>
   firstRect.top === secondRect.top &&
   firstRect.left === secondRect.left &&
@@ -13,6 +15,10 @@ const rectsAreEqual = (firstRect: DOMRect, secondRect: DOMRect) =>
  * scrolling, window resizes and size changes of the element itself.
  */
 export const useTargetRect = (element: HTMLElement | null) => {
+  /**
+   * `useSyncExternalStore` subscribes again each time this function changes:
+   * new listeners and a new `ResizeObserver`.
+   */
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
       if (!element) return () => undefined;
@@ -38,7 +44,7 @@ export const useTargetRect = (element: HTMLElement | null) => {
    */
   const lastRectRef = useRef<DOMRect | null>(null);
 
-  const getSnapshot = useCallback(() => {
+  const getSnapshot = () => {
     if (!element) {
       lastRectRef.current = null;
       return null;
@@ -50,9 +56,7 @@ export const useTargetRect = (element: HTMLElement | null) => {
 
     lastRectRef.current = nextRect;
     return nextRect;
-  }, [element]);
-
-  const getServerSnapshot = useCallback(() => null, []);
+  };
 
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 };
