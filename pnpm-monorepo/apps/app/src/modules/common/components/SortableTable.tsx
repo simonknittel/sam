@@ -1,12 +1,22 @@
 "use client";
 
-import { flexRender, type Table } from "@tanstack/react-table";
+import {
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  useReactTable,
+  type SortingState,
+  type TableOptions,
+} from "@tanstack/react-table";
 import clsx from "clsx";
 import { FaSortAlphaDown, FaSortAlphaUpAlt } from "react-icons/fa";
 
 interface Props<Row> {
   readonly className?: string;
-  readonly table: Table<Row>;
+  readonly data: TableOptions<Row>["data"];
+  readonly columns: TableOptions<Row>["columns"];
+  /** Applies only when the table mounts. A click on a header changes it. */
+  readonly initialSorting: SortingState;
   /** The shared grid template of the header and body rows */
   readonly gridColsClassName: string;
   readonly rowClassName?: string;
@@ -14,17 +24,34 @@ interface Props<Row> {
 }
 
 /**
- * The render shell shared by the TanStack tables: a CSS-grid table whose
- * headers toggle client-side sorting. Column definitions, sorting state and
- * the `useReactTable` call stay with the caller.
+ * A CSS-grid table whose headers toggle client-side sorting. The callers give
+ * the rows and the column definitions.
  */
 export const SortableTable = <Row,>({
   className,
-  table,
+  data,
+  columns,
+  initialSorting,
   gridColsClassName,
   rowClassName,
   cellClassName,
 }: Props<Row>) => {
+  /**
+   * `useReactTable` returns the same object on each render, and TanStack
+   * changes this object in place. Thus the React Compiler must not memoize
+   * the values that this component reads from the table. The compiler skips
+   * each component that calls `useReactTable`. Keep this call and the reads
+   * of the table in the same component.
+   */
+  // eslint-disable-next-line react-hooks/incompatible-library -- see the comment above
+  const table = useReactTable({
+    data,
+    columns,
+    initialState: { sorting: initialSorting },
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
   return (
     <table className={clsx("w-full", className)}>
       <thead>

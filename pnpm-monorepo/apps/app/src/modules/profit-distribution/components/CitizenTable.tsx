@@ -6,15 +6,9 @@ import { SortableTable } from "@/modules/common/components/SortableTable";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import type { Citizen } from "@sam-monorepo/database/browser";
 import { CyclePhase, getCitizenDisplayName } from "@sam-monorepo/domain";
-import {
-  createColumnHelper,
-  getCoreRowModel,
-  getSortedRowModel,
-  useReactTable,
-  type SortingState,
-} from "@tanstack/react-table";
+import { createColumnHelper, type SortingState } from "@tanstack/react-table";
 import clsx from "clsx";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import type { getProfitDistributionCycleById } from "../queries/getProfitDistributionCycleById";
 import { getPayoutState, PayoutState } from "../utils/getMyPayoutStatus";
 import { CitizenTableForm } from "./CitizenTableForm";
@@ -35,6 +29,7 @@ const columnHelper = createColumnHelper<Row>();
 
 const TABLE_MIN_WIDTH = "min-w-80";
 const GRID_COLS = "grid-cols-[256px_56px_128px_256px_128px_128px_128px]";
+const INITIAL_SORTING: SortingState = [{ id: "displayName", desc: false }];
 
 interface Props {
   readonly className?: string;
@@ -120,10 +115,6 @@ export const CitizenTable = ({ className, cycleData }: Props) => {
     cycleData.auecPerSilc,
     cycleData.cycle,
     cycleData.allSilcBalances,
-  ]);
-
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: "displayName", desc: false },
   ]);
 
   const columns = useMemo(() => {
@@ -260,22 +251,12 @@ export const CitizenTable = ({ className, cycleData }: Props) => {
     ];
   }, [cycleData.currentPhase, cycleData.cycle.id]);
 
-  // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Table's API is not React-Compiler-safe; the component simply opts out of compilation.
-  const table = useReactTable({
-    data: rows,
-    columns,
-    state: {
-      sorting,
-    },
-    onSortingChange: setSorting,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-  });
-
   return (
     <CitizenTableForm cycleId={cycleData.cycle.id} className="overflow-x-auto">
       <SortableTable
-        table={table}
+        data={rows}
+        columns={columns}
+        initialSorting={INITIAL_SORTING}
         className={clsx(TABLE_MIN_WIDTH, className)}
         gridColsClassName={GRID_COLS}
         rowClassName="py-px"
