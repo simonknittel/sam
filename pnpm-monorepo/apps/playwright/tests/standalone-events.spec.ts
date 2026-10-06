@@ -14,6 +14,7 @@ import {
 } from "../fixtures/factories";
 import {
   clickUntilVisible,
+  collectHydrationErrors,
   fillUntilValue,
   NOT_FOUND_TEXT,
   SAVED_TEXT,
@@ -263,6 +264,45 @@ test("the organizer edits the event via the settings tab", async ({
   ).toBeVisible();
   await expect(page.getByText("Beschreibung aktualisiert")).toBeVisible();
   await expect(page.getByText("Zeitraum geändert:")).toBeVisible();
+});
+
+test.describe("in a browser outside the time zones of the server and the organization", () => {
+  /**
+   * The server runs in UTC, and the organization is in Europe/Berlin. Only
+   * the browser can name a third time zone.
+   */
+  test.use({ timezoneId: "America/Los_Angeles" });
+
+  test("the settings show the start in the time zone of the browser without a hydration error", async ({
+    page,
+    prisma,
+    signIn,
+  }) => {
+    const creator = await createCitizen(prisma, {
+      handle: "zeitzonen-orga",
+      permissionStrings: ["event;read"],
+    });
+    /** Winter time: 20:00 in Berlin is 11:00 in Los Angeles */
+    const event = await createAppEvent(prisma, {
+      name: "Operation Zeitzone",
+      createdById: creator.entity.id,
+      startTime: new Date("2099-01-15T19:00:00.000Z"),
+      endTime: new Date("2099-01-15T21:00:00.000Z"),
+    });
+    const hydrationErrors = collectHydrationErrors(page);
+
+    await signIn(creator.user);
+    await page.goto(`/app/events/${event.id}/settings`);
+    await waitForAppShellHydration(page);
+
+    await expect(page.getByLabel("Start")).toHaveValue("2099-01-15T20:00");
+    await expect(
+      page.getByText(
+        /^In deiner Zeitzone \(America\/Los_Angeles\): .*15\. Januar 2099.*11:00$/,
+      ),
+    ).toBeVisible();
+    expect(hydrationErrors).toEqual([]);
+  });
 });
 
 test("deleting an event hides it everywhere", async ({
