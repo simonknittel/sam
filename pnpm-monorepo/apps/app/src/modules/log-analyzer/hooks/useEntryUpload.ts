@@ -3,7 +3,7 @@
 import { runAction } from "@/modules/actions/utils/runAction";
 import { useHasLinkedCitizen } from "@/modules/auth/hooks/useHasLinkedCitizen";
 import { api } from "@/trpc/react";
-import { useCallback, useRef } from "react";
+import { useRef } from "react";
 import { uploadLogAnalyzerEntries } from "../actions/uploadLogAnalyzerEntries";
 import { useLogAnalyzerContext } from "../components/LogAnalyzerContext";
 import { createEntryHash } from "../utils/createEntryHash";
@@ -63,155 +63,142 @@ export const useEntryUpload = () => {
   /** The keys of the entries the server verifiably holds. */
   const settledKeysRef = useRef(new Set<string>());
 
-  const loadStoredHashes = useCallback(() => {
+  const loadStoredHashes = () => {
     if (storedHashesRef.current)
       return Promise.resolve(storedHashesRef.current);
 
-    loadingRef.current ??= (async () => {
-      const hashes = new Set<string>();
-      let cursorHash: string | undefined;
+    if (!loadingRef.current) {
+      loadingRef.current = (async () => {
+        const hashes = new Set<string>();
+        let cursorHash: string | undefined;
 
-      do {
-        /** The vanilla client keeps no copy of the pages in the query cache */
-        const page = await utils.client.logAnalyzer.getOwnEntryHashes.query({
-          daysToLoad: clampDaysToLoad(daysToLoad),
-          cursorHash,
+        do {
+          /** The vanilla client keeps no copy of the pages in the query cache */
+          const page = await utils.client.logAnalyzer.getOwnEntryHashes.query({
+            daysToLoad: clampDaysToLoad(daysToLoad),
+            cursorHash,
+          });
+
+          for (const hash of page.hashes) hashes.add(hash);
+          cursorHash = page.cursorHash ?? undefined;
+        } while (cursorHash);
+
+        storedHashesRef.current = hashes;
+        return hashes;
+      })()
+        .catch((error: unknown) => {
+          console.error(
+            "[Log Analyzer] Error loading the hashes of the own entries:",
+            error,
+          );
+          return null;
+        })
+        .finally(() => {
+          /** A failed load starts again on the next cycle */
+          loadingRef.current = null;
         });
-
-        for (const hash of page.hashes) hashes.add(hash);
-        cursorHash = page.cursorHash ?? undefined;
-      } while (cursorHash);
-
-      storedHashesRef.current = hashes;
-      return hashes;
-    })()
-      .catch((error: unknown) => {
-        console.error(
-          "[Log Analyzer] Error loading the hashes of the own entries:",
-          error,
-        );
-        return null;
-      })
-      .finally(() => {
-        /** A failed load starts again on the next cycle */
-        loadingRef.current = null;
-      });
+    }
 
     return loadingRef.current;
-  }, [daysToLoad, utils]);
+  };
 
-  const markEntriesUploaded = useCallback(
-    (keys: readonly string[]) => {
-      if (keys.length <= 0) return;
+  const markEntriesUploaded = (keys: readonly string[]) => {
+    if (keys.length <= 0) return;
 
-      setEntries((previousEntries) => {
-        /** Keys the table does not hold leave it untouched */
-        let newEntries: Map<string, IEntry> | null = null;
+    setEntries((previousEntries) => {
+      /** Keys the table does not hold leave it untouched */
+      let newEntries: Map<string, IEntry> | null = null;
 
-        for (const key of keys) {
-          const existingEntry = previousEntries.get(key);
-          if (!existingEntry || existingEntry.isUploaded) continue;
+      for (const key of keys) {
+        const existingEntry = previousEntries.get(key);
+        if (!existingEntry || existingEntry.isUploaded) continue;
 
-          newEntries ??= new Map(previousEntries);
-          newEntries.set(key, { ...existingEntry, isUploaded: true });
-        }
-
-        return newEntries ?? previousEntries;
-      });
-    },
-    [setEntries],
-  );
-
-  return useCallback(
-    async (rawMatches: readonly RawMatch[]) => {
-      if (!isSharingEnabled || !hasLinkedCitizen) return true;
-
-      const settledKeys = settledKeysRef.current;
-
-      /** One entry can arrive more than once, for example from two files */
-      const newMatchesByKey = new Map<string, RawMatch>();
-      for (const rawMatch of rawMatches) {
-        if (!sharingEntryTypes[rawMatch.type]) continue;
-
-        const key = createEntryKey(rawMatch.type, rawMatch.fullMatch);
-        if (settledKeys.has(key) || newMatchesByKey.has(key)) continue;
-
-        newMatchesByKey.set(key, rawMatch);
+        if (!newEntries) newEntries = new Map(previousEntries);
+        newEntries.set(key, { ...existingEntry, isUploaded: true });
       }
-      if (newMatchesByKey.size <= 0) return true;
 
-      const storedHashes = await loadStoredHashes();
-      /** Without the set the upload would offer the whole window again */
-      if (!storedHashes) return false;
+      return newEntries ?? previousEntries;
+    });
+  };
 
-      /** One batch, because a hash per await would walk thousands of turns */
-      const hashedMatches = await Promise.all(
-        Array.from(newMatchesByKey, async ([key, rawMatch]) => ({
-          key,
-          rawMatch,
-          hash: await createEntryHash(rawMatch.type, rawMatch.fullMatch),
-        })),
+  return async (rawMatches: readonly RawMatch[]) => {
+    if (!isSharingEnabled || !hasLinkedCitizen) return true;
+
+    const settledKeys = settledKeysRef.current;
+
+    /** One entry can arrive more than once, for example from two files */
+    const newMatchesByKey = new Map<string, RawMatch>();
+    for (const rawMatch of rawMatches) {
+      if (!sharingEntryTypes[rawMatch.type]) continue;
+
+      const key = createEntryKey(rawMatch.type, rawMatch.fullMatch);
+      if (settledKeys.has(key) || newMatchesByKey.has(key)) continue;
+
+      newMatchesByKey.set(key, rawMatch);
+    }
+    if (newMatchesByKey.size <= 0) return true;
+
+    const storedHashes = await loadStoredHashes();
+    /** Without the set the upload would offer the whole window again */
+    if (!storedHashes) return false;
+
+    /** One batch, because a hash per await would walk thousands of turns */
+    const hashedMatches = await Promise.all(
+      Array.from(newMatchesByKey, async ([key, rawMatch]) => ({
+        key,
+        rawMatch,
+        hash: await createEntryHash(rawMatch.type, rawMatch.fullMatch),
+      })),
+    );
+
+    const pendingEntries: PendingEntry[] = [];
+    const storedKeys: string[] = [];
+
+    for (const { key, rawMatch, hash } of hashedMatches) {
+      if (storedHashes.has(hash)) {
+        settledKeys.add(key);
+        storedKeys.push(key);
+        continue;
+      }
+
+      pendingEntries.push({
+        key,
+        hash,
+        type: rawMatch.type,
+        rawLine: rawMatch.fullMatch,
+        eventAt: takesTimeOfPrecedingLine(rawMatch.type)
+          ? rawMatch.isoDate
+          : undefined,
+      });
+    }
+
+    /** The badge of an entry of an earlier visit needs no request */
+    markEntriesUploaded(storedKeys);
+
+    for (
+      let index = 0;
+      index < pendingEntries.length;
+      index += MAXIMUM_UPLOAD_ENTRIES
+    ) {
+      const chunk = pendingEntries.slice(index, index + MAXIMUM_UPLOAD_ENTRIES);
+
+      const succeeded = await runAction(
+        uploadLogAnalyzerEntries,
+        createUploadFormData(chunk),
+        { successToast: false },
       );
 
-      const pendingEntries: PendingEntry[] = [];
-      const storedKeys: string[] = [];
+      /**
+       * The keys of a failed chunk stay unsettled, so the next cycle sends
+       * its entries again. Stopping here keeps one broken cycle down to
+       * one message for the user.
+       */
+      if (!succeeded) return false;
 
-      for (const { key, rawMatch, hash } of hashedMatches) {
-        if (storedHashes.has(hash)) {
-          settledKeys.add(key);
-          storedKeys.push(key);
-          continue;
-        }
+      for (const entry of chunk) settledKeys.add(entry.key);
+      markEntriesUploaded(chunk.map((entry) => entry.key));
+    }
 
-        pendingEntries.push({
-          key,
-          hash,
-          type: rawMatch.type,
-          rawLine: rawMatch.fullMatch,
-          eventAt: takesTimeOfPrecedingLine(rawMatch.type)
-            ? rawMatch.isoDate
-            : undefined,
-        });
-      }
-
-      /** The badge of an entry of an earlier visit needs no request */
-      markEntriesUploaded(storedKeys);
-
-      for (
-        let index = 0;
-        index < pendingEntries.length;
-        index += MAXIMUM_UPLOAD_ENTRIES
-      ) {
-        const chunk = pendingEntries.slice(
-          index,
-          index + MAXIMUM_UPLOAD_ENTRIES,
-        );
-
-        const succeeded = await runAction(
-          uploadLogAnalyzerEntries,
-          createUploadFormData(chunk),
-          { successToast: false },
-        );
-
-        /**
-         * The keys of a failed chunk stay unsettled, so the next cycle sends
-         * its entries again. Stopping here keeps one broken cycle down to
-         * one message for the user.
-         */
-        if (!succeeded) return false;
-
-        for (const entry of chunk) settledKeys.add(entry.key);
-        markEntriesUploaded(chunk.map((entry) => entry.key));
-      }
-
-      return true;
-    },
-    [
-      hasLinkedCitizen,
-      isSharingEnabled,
-      loadStoredHashes,
-      markEntriesUploaded,
-      sharingEntryTypes,
-    ],
-  );
+    return true;
+  };
 };

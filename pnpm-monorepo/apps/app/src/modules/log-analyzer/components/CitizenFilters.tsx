@@ -5,7 +5,6 @@ import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import type { Citizen } from "@sam-monorepo/database/browser";
 import { getCitizenDisplayName } from "@sam-monorepo/domain";
 import clsx from "clsx";
-import { useMemo } from "react";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 
 interface Props {
@@ -22,21 +21,18 @@ export const CitizenFilters = ({ className }: Props) => {
   const { entries, hiddenCitizenIds, setHiddenCitizenIds } =
     useLogAnalyzerContext();
 
-  /** The walk over all entries runs once per change, not once per render */
-  const sortedCitizens = useMemo(() => {
-    const citizens = new Map<
-      Citizen["id"],
-      Pick<Citizen, "id" | "handle" | "deletedAt">
-    >();
-    for (const entry of entries.values()) {
-      if (entry.isShared && entry.citizen)
-        citizens.set(entry.citizen.id, entry.citizen);
-    }
+  const citizens = new Map<
+    Citizen["id"],
+    Pick<Citizen, "id" | "handle" | "deletedAt">
+  >();
+  for (const entry of entries.values()) {
+    if (entry.isShared && entry.citizen)
+      citizens.set(entry.citizen.id, entry.citizen);
+  }
 
-    return Array.from(citizens.values()).toSorted((first, second) =>
-      (first.handle ?? "").localeCompare(second.handle ?? ""),
-    );
-  }, [entries]);
+  const sortedCitizens = Array.from(citizens.values()).toSorted(
+    (first, second) => (first.handle ?? "").localeCompare(second.handle ?? ""),
+  );
 
   const handleChange = (citizenId: Citizen["id"], isChecked: boolean) => {
     setHiddenCitizenIds((previous) =>

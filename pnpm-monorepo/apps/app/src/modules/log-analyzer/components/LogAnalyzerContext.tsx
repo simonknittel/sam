@@ -62,28 +62,34 @@ const ALL_TYPES_ON = createEntryTypeRecord(true);
 const ALL_TYPES_OFF = createEntryTypeRecord(false);
 
 /**
+ * `useLocalStorage` parses the stored text on every render and gives a new
+ * object each time. This value stays the same object until the stored text
+ * changes, thus the functions which read it change only then (see
+ * `requiresFullReadRef` in `LogAnalyzer`).
+ */
+function useStoredValue<Value>(key: string, defaultValue: Value) {
+  const [storedValue, setStoredValue] = useLocalStorage<Value>(
+    key,
+    defaultValue,
+  );
+
+  const storedText = JSON.stringify(storedValue);
+  const value = useMemo(() => JSON.parse(storedText) as Value, [storedText]);
+
+  return [value, setStoredValue] as const;
+}
+
+/**
  * A stored record of the entry types. The stored value lacks the types which
  * came after the user stored it, thus the default fills them up on every
  * read.
- *
- * `useLocalStorage` parses the stored text on every render and gives a new
- * object each time. The record stays the same object until the setting
- * changes, thus the callbacks which read it change only then (see
- * `requiresFullReadRef` in `LogAnalyzer`).
  */
 const useStoredEntryTypes = (key: string, defaultValue: EntryTypeRecord) => {
-  const [storedValue, setStoredValue] = useLocalStorage<
+  const [storedValue, setStoredValue] = useStoredValue<
     Partial<EntryTypeRecord>
   >(key, defaultValue);
 
-  const storedText = JSON.stringify(storedValue);
-  const value = useMemo(
-    () => ({
-      ...defaultValue,
-      ...(JSON.parse(storedText) as Partial<EntryTypeRecord>),
-    }),
-    [defaultValue, storedText],
-  );
+  const value = { ...defaultValue, ...storedValue };
 
   const setType = (type: EntryType, isEnabled: boolean) => {
     setStoredValue((previous) => ({ ...previous, [type]: isEnabled }));
@@ -115,7 +121,7 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
     ALL_TYPES_OFF,
   );
 
-  const [hiddenCitizenIds, setHiddenCitizenIds] = useLocalStorage<string[]>(
+  const [hiddenCitizenIds, setHiddenCitizenIds] = useStoredValue<string[]>(
     "log_analyzer_hidden_citizens",
     [],
   );
