@@ -24,6 +24,7 @@ rm -rf "$OUTPUT_DIRECTORY"
 # - Without `--splitting`, each bundle contains all of its code, as with one call for each function.
 # - The meta file contains all bundles and can be analyzed using: https://esbuild.github.io/analyze/
 # - `--external:@aws-sdk` excludes any imported AWS SDKs from the bundle since they are already provided by the AWS Lambda runtime.
+# - `--define:process.env.NODE_ENV` replaces each `process.env.NODE_ENV` expression with "production". Thus the bundles do not contain the development builds of libraries (for example React). The functions also run with NODE_ENV=production (see the Terraform modules). Code that reads the complete `process.env` object (for example the environment schemas) gets the value at runtime.
 # - The banner is needed to allow usage of `require` in ESM modules (see https://github.com/aws/aws-sam-cli/issues/4827)
 echo "Bundling all functions..."
 esbuild src/*.ts \
@@ -38,6 +39,7 @@ esbuild src/*.ts \
 	--minify \
 	--metafile=$OUTPUT_DIRECTORY/meta.json \
 	--external:@aws-sdk \
+	--define:process.env.NODE_ENV='"production"' \
 	--banner:js='import { createRequire } from "module"; const require = createRequire(import.meta.url);'
 
 for file in src/*.ts; do
