@@ -3,7 +3,7 @@
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Link } from "@/modules/common/components/Link";
 import clsx from "clsx";
-import { useCallback, type MouseEvent } from "react";
+import type { MouseEvent } from "react";
 import type { App } from "../utils/types";
 
 interface Props {
@@ -40,14 +40,11 @@ export const Filters = ({
       .map((tag) => ({ key: tag, label: tag })),
   ];
 
-  const handleClick = useCallback(
-    (event: MouseEvent, tag: string) => {
-      if (!setSelectedTags) return;
-      event.preventDefault();
-      setSelectedTags([tag]);
-    },
-    [setSelectedTags],
-  );
+  const handleClick = (event: MouseEvent, tag: string) => {
+    if (!setSelectedTags) return;
+    event.preventDefault();
+    setSelectedTags([tag]);
+  };
 
   return (
     <div className={clsx("flex flex-wrap justify-center gap-2", className)}>
@@ -62,7 +59,7 @@ export const Filters = ({
           }
           key={key}
           replace
-          onClick={(e) => handleClick(e, key)}
+          onClick={(event) => handleClick(event, key)}
         >
           {label.charAt(0).toUpperCase() + label.slice(1)}
         </Button2>

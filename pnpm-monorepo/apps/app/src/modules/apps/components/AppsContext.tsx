@@ -1,13 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-} from "react";
+import { createContext, useContext, useState } from "react";
 import type { App } from "../utils/types";
 
 interface AppsContext {
@@ -57,15 +51,12 @@ export const AppsContextProvider = ({
     setAppDotBadgeCounts(serverAppDotBadgeCounts);
   }
 
-  const adjustAppDotBadgeCount = useCallback(
-    (appSlug: string, delta: number) => {
-      setAppDotBadgeCounts((previousCounts) => ({
-        ...previousCounts,
-        [appSlug]: Math.max(0, (previousCounts[appSlug] ?? 0) + delta),
-      }));
-    },
-    [],
-  );
+  const adjustAppDotBadgeCount = (appSlug: string, delta: number) => {
+    setAppDotBadgeCounts((previousCounts) => ({
+      ...previousCounts,
+      [appSlug]: Math.max(0, (previousCounts[appSlug] ?? 0) + delta),
+    }));
+  };
 
   /**
    * Toggling a favorite deliberately calls no `refresh()`, which would
@@ -85,31 +76,22 @@ export const AppsContextProvider = ({
     setFavoriteAppKeys(new Set(serverFavoriteAppKeys));
   }
 
-  const setAppFavorite = useCallback((appKey: string, isFavorite: boolean) => {
+  const setAppFavorite = (appKey: string, isFavorite: boolean) => {
     setFavoriteAppKeys((previousKeys) => {
       const nextKeys = new Set(previousKeys);
       if (isFavorite) nextKeys.add(appKey);
       else nextKeys.delete(appKey);
       return nextKeys;
     });
-  }, []);
+  };
 
-  const value = useMemo(
-    () => ({
-      apps,
-      appDotBadgeCounts,
-      adjustAppDotBadgeCount,
-      favoriteAppKeys,
-      setAppFavorite,
-    }),
-    [
-      apps,
-      appDotBadgeCounts,
-      adjustAppDotBadgeCount,
-      favoriteAppKeys,
-      setAppFavorite,
-    ],
-  );
+  const value = {
+    apps,
+    appDotBadgeCounts,
+    adjustAppDotBadgeCount,
+    favoriteAppKeys,
+    setAppFavorite,
+  };
 
   return <AppsContext value={value}>{children}</AppsContext>;
 };
