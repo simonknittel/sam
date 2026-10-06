@@ -48,17 +48,36 @@ const ALREADY_DECIDED_ERROR = "Über diesen Eintrag wurde bereits entschieden.";
 const OWN_DISCORD_ID_ERROR =
   "Du kannst deine eigene Discord ID nicht bestätigen. Das muss eine andere Person tun.";
 
-/**
- * Confirms a log or marks it as a false report. Only a log without a decision
- * gets one: the UI never offers a change of a decision. The logs of a deleted
- * citizen are read only.
- */
 /** The result of a confirmation that the unique Discord ID refused */
 const DISCORD_ID_TAKEN = Symbol("Discord ID taken");
 
 const DISCORD_ID_TAKEN_ERROR =
   "Diese Discord ID gehört bereits zu einem anderen Citizen.";
 
+/**
+ * A unique constraint error of the index of the confirmed Discord IDs of the
+ * active citizens (see `Citizen.discordId`). The driver adapter gives the
+ * name of the index.
+ */
+const discordIdIndexErrorSchema = z.object({
+  meta: z.object({
+    driverAdapterError: z.object({
+      cause: z.object({
+        constraint: z.object({ index: z.literal("Citizen_discordId_key") }),
+      }),
+    }),
+  }),
+});
+
+const isDiscordIdTakenError = (error: unknown) =>
+  isPrismaError(error, PrismaErrorCode.UniqueConstraintFailed) &&
+  discordIdIndexErrorSchema.safeParse(error).success;
+
+/**
+ * Confirms a log or marks it as a false report. Only a log without a decision
+ * gets one: the UI never offers a change of a decision. The logs of a deleted
+ * citizen are read only.
+ */
 export const confirmCitizenLog = createAuthenticatedAction(
   "confirmCitizenLog",
   schema,
@@ -171,7 +190,7 @@ export const confirmCitizenLog = createAuthenticatedAction(
          * citizen: its unique index refuses the copy, and the transaction
          * writes nothing
          */
-        if (isPrismaError(error, PrismaErrorCode.UniqueConstraintFailed))
+        if (citizenLog.type === "discord-id" && isDiscordIdTakenError(error))
           return DISCORD_ID_TAKEN;
         throw error;
       });
