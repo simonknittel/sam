@@ -1,5 +1,8 @@
-import type { Page } from "@playwright/test";
-import { NotificationChannel } from "@sam-monorepo/database/client";
+import type { Page, Request } from "@playwright/test";
+import {
+  NotificationChannel,
+  type PrismaClient,
+} from "@sam-monorepo/database/client";
 import { createCitizen } from "../fixtures/factories";
 import {
   SAVED_TEXT,
@@ -20,6 +23,52 @@ const browserCheckbox = (page: Page, notificationType: string) =>
 const browserCheckboxLabel = (page: Page, notificationType: string) =>
   toggleLabel(page, browserCheckbox(page, notificationType));
 
+const NOTIFICATIONS_PAGE = "/app/account/notifications";
+
+/** A server action posts to the address of the page it runs on */
+const isSaveRequest = (request: Request) =>
+  request.method() === "POST" &&
+  new URL(request.url()).pathname === NOTIFICATIONS_PAGE &&
+  request.headers()["next-action"] !== undefined;
+
+/** Collects the saves which the page sends from now on */
+const recordSaves = (page: Page) => {
+  const saves: Request[] = [];
+  page.on("request", (request) => {
+    if (isSaveRequest(request)) saves.push(request);
+  });
+  return saves;
+};
+
+/**
+ * Holds the saves in the browser until the test calls the returned function,
+ * thus the test can act while a save runs.
+ */
+const holdSaves = async (page: Page) => {
+  const { promise: released, resolve: release } = Promise.withResolvers<void>();
+  await page.route(
+    (url) => url.pathname === NOTIFICATIONS_PAGE,
+    async (route) => {
+      if (isSaveRequest(route.request())) await released;
+      await route.continue();
+    },
+  );
+  return release;
+};
+
+/** The types whose browser notifications the citizen turned off, sorted */
+const disabledBrowserNotifications = (
+  prisma: PrismaClient,
+  citizenId: string,
+) =>
+  prisma.notificationSetting
+    .findMany({
+      where: { citizenId, channel: NotificationChannel.WEB_PUSH },
+      select: { notificationType: true },
+      orderBy: { notificationType: "asc" },
+    })
+    .then((settings) => settings.map((setting) => setting.notificationType));
+
 test("browser notifications are enabled by default", async ({
   page,
   prisma,
@@ -30,7 +79,7 @@ test("browser notifications are enabled by default", async ({
   });
   await signIn(citizen.user);
 
-  await page.goto("/app/account/notifications");
+  await page.goto(NOTIFICATIONS_PAGE);
   await waitForAppShellHydration(page);
 
   await expect(browserCheckbox(page, "event_created")).toBeChecked();
@@ -72,7 +121,7 @@ test("toggling a browser notification off and on again is a round trip", async (
   const citizen = await createCitizen(prisma, { handle: "notification-muter" });
   await signIn(citizen.user);
 
-  await page.goto("/app/account/notifications");
+  await page.goto(NOTIFICATIONS_PAGE);
   await waitForAppShellHydration(page);
 
   // Disabling persists a "disabled" row …
@@ -108,6 +157,86 @@ test("toggling a browser notification off and on again is a round trip", async (
     .toBe(0);
 });
 
+test("a checkbox toggled while the save of another checkbox runs is saved too", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, {
+    handle: "notification-nachzuegler",
+  });
+  await signIn(citizen.user);
+
+  await page.goto(NOTIFICATIONS_PAGE);
+  await waitForAppShellHydration(page);
+
+  const releaseSaves = await holdSaves(page);
+  const firstSave = page.waitForRequest(isSaveRequest);
+  await browserCheckboxLabel(page, "event_created").click();
+  await firstSave;
+
+  /**
+   * The answer of the first save renders the form again. That render must
+   * keep the save of the second checkbox, which waits for the debounce.
+   */
+  await browserCheckboxLabel(page, "wiki_page_reported").click();
+  releaseSaves();
+
+  await expect
+    .poll(() => disabledBrowserNotifications(prisma, citizen.entity.id))
+    .toEqual(["event_created", "wiki_page_reported"]);
+});
+
+test("checkboxes toggled within the debounce share one save", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, {
+    handle: "notification-sammler",
+  });
+  await signIn(citizen.user);
+
+  await page.goto(NOTIFICATIONS_PAGE);
+  await waitForAppShellHydration(page);
+
+  const saves = recordSaves(page);
+  for (const notificationType of [
+    "birthday",
+    "event_created",
+    "wiki_page_reported",
+  ])
+    await browserCheckboxLabel(page, notificationType).click();
+
+  await expect
+    .poll(() => disabledBrowserNotifications(prisma, citizen.entity.id))
+    .toEqual(["birthday", "event_created", "wiki_page_reported"]);
+  expect(saves).toHaveLength(1);
+});
+
+test("a checkbox toggled right before a navigation is still saved", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, {
+    handle: "notification-wechsler",
+  });
+  await signIn(citizen.user);
+
+  await page.goto(NOTIFICATIONS_PAGE);
+  await waitForAppShellHydration(page);
+
+  /** The navigation removes the form before the debounce ends */
+  await browserCheckboxLabel(page, "event_created").click();
+  await page.getByRole("link", { name: "Sitzungen" }).click();
+  await expect(page).toHaveURL("/app/account/sessions");
+
+  await expect
+    .poll(() => disabledBrowserNotifications(prisma, citizen.entity.id))
+    .toEqual(["event_created"]);
+});
+
 test("disabling web push entirely removes all subscriptions", async ({
   page,
   prisma,
@@ -139,7 +268,7 @@ test("disabling web push entirely removes all subscriptions", async ({
   });
   await signIn(citizen.user);
 
-  await page.goto("/app/account/notifications");
+  await page.goto(NOTIFICATIONS_PAGE);
   await waitForAppShellHydration(page);
 
   await page
