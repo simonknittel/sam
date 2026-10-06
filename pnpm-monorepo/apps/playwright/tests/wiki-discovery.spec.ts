@@ -13,6 +13,7 @@ import {
   wikiParagraph,
 } from "../fixtures/factories";
 import {
+  BAD_REQUEST_TEXT,
   clickUntilUrl,
   clickUntilVisible,
   fillUntilVisible,
@@ -360,7 +361,7 @@ test("the tags of a page that a different user deleted are not saved", async ({
    * error.
    */
   await tagsDialog.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText("Ungültige Anfrage")).toBeVisible();
+  await expect(page.getByText(BAD_REQUEST_TEXT)).toBeVisible();
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
   await expect(tagsDialog).toHaveCount(0);
   expect(await prisma.wikiTag.count()).toBe(0);

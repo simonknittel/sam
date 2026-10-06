@@ -9,18 +9,22 @@ import { DeleteSeriesButton } from "./DeleteSeriesButton";
 
 interface Props {
   readonly className?: string;
-  readonly manufacturerId: Manufacturer["id"];
+  readonly manufacturer: Pick<Manufacturer, "id" | "name">;
 }
 
 const GRID_COLS = "grid-cols-[128px_1fr_44px]";
 
-export const SeriesTile = async ({ className, manufacturerId }: Props) => {
-  const series = await getSeriesByManufacturerId(manufacturerId);
+export const SeriesTile = async ({ className, manufacturer }: Props) => {
+  const series = await getSeriesByManufacturerId(manufacturer.id);
 
   return (
     <Tile
       heading="Serien"
-      cta={<CreateSeriesButton manufacturerId={manufacturerId} />}
+      cta={
+        <CreateSeriesButton
+          manufacturer={{ id: manufacturer.id, name: manufacturer.name }}
+        />
+      }
       className={clsx(className)}
       childrenClassName="overflow-auto"
     >
@@ -54,7 +58,7 @@ export const SeriesTile = async ({ className, manufacturerId }: Props) => {
               >
                 <td className="truncate" title={row.name}>
                   <Link
-                    href={`/app/fleet/settings/manufacturer/${manufacturerId}/series/${row.id}`}
+                    href={`/app/fleet/settings/manufacturer/${manufacturer.id}/series/${row.id}`}
                     className="text-brand-red-500 hover:text-brand-red-300"
                     prefetch={false}
                   >

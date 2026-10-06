@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@sam-monorepo/database/client";
+import { LockType, startParallelChange } from "../fixtures/database";
 import {
   createCitizen,
   createWikiPage,
@@ -7,7 +7,6 @@ import {
   wikiParagraph,
 } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   inlineEditorTrigger,
   modal,
@@ -15,18 +14,6 @@ import {
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-
-/** The transactions that wait for an advisory lock, for example the tree lock */
-const countWaitingAdvisoryLocks = async (prisma: PrismaClient) => {
-  const waitingLocks = await prisma.$queryRaw<{ count: number }[]>`
-    SELECT count(*)::int AS "count"
-    FROM pg_locks
-    WHERE "locktype" = 'advisory'
-      AND NOT "granted"
-      AND "database" = (SELECT "oid" FROM pg_database WHERE "datname" = current_database())
-  `;
-  return waitingLocks[0]?.count;
-};
 
 test("a page is renamed, which moves it to a new URL, and moved to a new parent", async ({
   page,
@@ -187,26 +174,17 @@ test("two moves at the same time cannot put a page below itself", async ({
    * checks of the app, waits for the lock and sees the parallel move only
    * after it.
    */
-  const { promise: parallelMoveCanCommit, resolve: commitParallelMove } =
-    Promise.withResolvers<void>();
-  const parallelMove = prisma.$transaction(
-    async (transaction) => {
-      await transaction.wikiPage.update({
-        where: { id: second.id },
-        data: { parentId: first.id, visibility: WikiPageVisibility.INHERIT },
-      });
-      await parallelMoveCanCommit;
-    },
-    /** Longer than the click and the poll below, which wait for the lock */
-    { timeout: ACTION_FEEDBACK_TIMEOUT * 2 },
+  const parallelMove = await startParallelChange(prisma, (transaction) =>
+    transaction.wikiPage.update({
+      where: { id: second.id },
+      data: { parentId: first.id, visibility: WikiPageVisibility.INHERIT },
+    }),
   );
-
   try {
     await moveDialog.getByRole("button", { name: "Verschieben" }).click();
-    await expect.poll(() => countWaitingAdvisoryLocks(prisma)).toBe(1);
+    await parallelMove.waitForBlockedStatement(LockType.Advisory);
   } finally {
-    commitParallelMove();
-    await parallelMove;
+    await parallelMove.commit();
   }
 
   /** A toast, because a refreshed page can have no dialog anymore */
@@ -285,36 +263,31 @@ test("a move waits for the tree lock before it changes a row", async ({
   });
 
   /**
-   * A different move holds the tree lock and then changes the row of the
-   * page in the dialog, as a new sort order of the siblings does. The move
-   * of the dialog takes the tree lock first, thus it has no row yet that the
-   * parallel move waits for. When the lock comes only from the trigger, the
-   * dialog holds the row of its page already, and the two moves deadlock.
+   * A different move holds the tree lock. When the test commits it, it first
+   * changes the row of the page in the dialog, as a new sort order of the
+   * siblings does. The move of the dialog takes the tree lock first, thus it
+   * has no row yet that the parallel move waits for. When the lock comes only
+   * from the trigger, the dialog holds the row of its page already, and the
+   * two moves deadlock.
    */
-  const { promise: parallelMoveCanContinue, resolve: continueParallelMove } =
-    Promise.withResolvers<void>();
-  const parallelMove = prisma.$transaction(
-    async (transaction) => {
-      await transaction.wikiPage.update({
+  const parallelMove = await startParallelChange(
+    prisma,
+    (transaction) =>
+      transaction.wikiPage.update({
         where: { id: second.id },
         data: { parentId: target.id, visibility: WikiPageVisibility.INHERIT },
-      });
-      await parallelMoveCanContinue;
-      await transaction.wikiPage.update({
+      }),
+    (transaction) =>
+      transaction.wikiPage.update({
         where: { id: first.id },
         data: { sortOrder: 1 },
-      });
-    },
-    /** Longer than the click and the poll below, which wait for the lock */
-    { timeout: ACTION_FEEDBACK_TIMEOUT * 2 },
+      }),
   );
-
   try {
     await moveDialog.getByRole("button", { name: "Verschieben" }).click();
-    await expect.poll(() => countWaitingAdvisoryLocks(prisma)).toBe(1);
+    await parallelMove.waitForBlockedStatement(LockType.Advisory);
   } finally {
-    continueParallelMove();
-    await parallelMove;
+    await parallelMove.commit();
   }
 
   /** Both moves are done */

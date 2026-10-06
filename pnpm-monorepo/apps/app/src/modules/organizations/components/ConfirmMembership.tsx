@@ -1,125 +1,70 @@
 "use client";
 
+import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import {
   ConfirmationStatus,
   type OrganizationMembershipHistoryEntry,
 } from "@sam-monorepo/database/browser";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import toast from "react-hot-toast";
+import type { ReactNode } from "react";
+import { useFormStatus } from "react-dom";
 import { FaCheck, FaTimes } from "react-icons/fa";
-
-/** The route answers a second confirmation of the same entry with 409 */
-const HTTP_CONFLICT = 409;
+import { confirmOrganizationMembership } from "../actions/confirmOrganizationMembership";
 
 interface Props {
-  readonly entry: OrganizationMembershipHistoryEntry;
-  readonly compact?: boolean;
+  readonly entry: Pick<
+    OrganizationMembershipHistoryEntry,
+    "id" | "organizationId" | "citizenId"
+  >;
 }
 
-export const ConfirmMembership = ({ entry, compact }: Props) => {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState<string | false>(false);
-
-  const handleConfirm = async (confirmed: string) => {
-    setIsLoading(confirmed);
-
-    try {
-      const response = await fetch(
-        encodeURI(
-          `/api/spynet/organization/${entry.organizationId}/membership/${entry.citizenId}/confirm`,
-        ),
-        {
-          method: "PATCH",
-          body: JSON.stringify({
-            id: entry.id,
-            confirmed,
-          }),
-        },
-      );
-
-      if (response.ok) {
-        router.refresh();
-        toast.success("Erfolgreich gespeichert");
-      } else if (response.status === HTTP_CONFLICT) {
-        router.refresh();
-        toast.error("Der Eintrag wurde bereits bestätigt.");
-      } else {
-        toast.error("Beim Speichern ist ein Fehler aufgetreten.");
-      }
-    } catch (error) {
-      toast.error("Beim Speichern ist ein Fehler aufgetreten.");
-      console.error(error);
-    }
-
-    setIsLoading(false);
-  };
-
-  if (compact) {
-    return (
-      <>
-        <Button
-          variant="tertiary"
-          className="h-auto"
-          onClick={() => void handleConfirm(ConfirmationStatus.CONFIRMED)}
-          disabled={isLoading === ConfirmationStatus.CONFIRMED}
-          title="Bestätigen"
-        >
-          {isLoading === ConfirmationStatus.CONFIRMED ? (
-            <AsciiSpinner />
-          ) : (
-            <FaCheck />
-          )}
-        </Button>
-        /
-        <Button
-          variant="tertiary"
-          className="h-auto"
-          onClick={() => void handleConfirm(ConfirmationStatus.FALSE_REPORT)}
-          disabled={isLoading === ConfirmationStatus.FALSE_REPORT}
-          title="Falschmeldung"
-        >
-          {isLoading === ConfirmationStatus.FALSE_REPORT ? (
-            <AsciiSpinner />
-          ) : (
-            <FaTimes />
-          )}
-        </Button>
-      </>
-    );
-  }
+export const ConfirmMembership = ({ entry }: Props) => {
+  const { formAction } = useAction(confirmOrganizationMembership);
 
   return (
-    <>
-      <Button
-        variant="tertiary"
-        className="h-auto"
-        onClick={() => void handleConfirm(ConfirmationStatus.CONFIRMED)}
-        disabled={isLoading === ConfirmationStatus.CONFIRMED}
-      >
-        {isLoading === ConfirmationStatus.CONFIRMED ? (
-          <AsciiSpinner />
-        ) : (
-          <FaCheck />
-        )}
-        Bestätigen
-      </Button>
+    <form action={formAction} className="flex items-center gap-2">
+      <input type="hidden" name="id" value={entry.id} />
+      <input type="hidden" name="organizationId" value={entry.organizationId} />
+      <input type="hidden" name="citizenId" value={entry.citizenId} />
+      <DecisionButton
+        decision={ConfirmationStatus.CONFIRMED}
+        label="Bestätigen"
+        icon={<FaCheck />}
+      />
+      /
+      <DecisionButton
+        decision={ConfirmationStatus.FALSE_REPORT}
+        label="Falschmeldung"
+        icon={<FaTimes />}
+      />
+    </form>
+  );
+};
 
-      <Button
-        variant="tertiary"
-        className="h-auto"
-        onClick={() => void handleConfirm(ConfirmationStatus.FALSE_REPORT)}
-        disabled={isLoading === ConfirmationStatus.FALSE_REPORT}
-      >
-        {isLoading === ConfirmationStatus.FALSE_REPORT ? (
-          <AsciiSpinner />
-        ) : (
-          <FaTimes />
-        )}
-        Falschmeldung
-      </Button>
-    </>
+interface DecisionButtonProps {
+  readonly decision: ConfirmationStatus;
+  /** The button shows only the icon, thus the label is its title */
+  readonly label: string;
+  readonly icon: ReactNode;
+}
+
+const DecisionButton = ({ decision, label, icon }: DecisionButtonProps) => {
+  const { pending, data } = useFormStatus();
+  /** The spinner shows on the button of the decision that the form sends */
+  const isSent = pending && data.get("confirmed") === decision;
+
+  return (
+    <Button
+      type="submit"
+      name="confirmed"
+      value={decision}
+      variant="tertiary"
+      className="h-auto"
+      disabled={pending}
+      title={label}
+    >
+      {isSent ? <AsciiSpinner /> : icon}
+    </Button>
   );
 };

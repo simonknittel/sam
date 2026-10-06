@@ -9,7 +9,7 @@ export enum CitizenLogTableSort {
   CreatedAtDescending = "created-at-desc",
 }
 
-const citizenLogTableParsers = {
+export const citizenLogTableParsers = {
   ...filterCheckboxListParsers,
   sort: parseAsStringEnum(Object.values(CitizenLogTableSort)).withDefault(
     CitizenLogTableSort.CreatedAtDescending,

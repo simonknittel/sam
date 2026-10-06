@@ -1,15 +1,13 @@
 import { CitizenTableSort } from "@/modules/citizen/utils/citizenTableSearchParams";
 import { Actions } from "@/modules/common/components/Actions";
 import { Link } from "@/modules/common/components/Link";
-import {
-  SortableColumnHeader,
-  SortDirection,
-} from "@/modules/common/components/SortableColumnHeader";
+import { SortDirection } from "@/modules/common/components/SortableColumnHeader";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { type Citizen } from "@sam-monorepo/database/client";
 import type { CSSProperties } from "react";
 import { FaExternalLinkAlt } from "react-icons/fa";
 import { CitizenTableDelete } from "./CitizenTableDelete";
+import { CitizenTableSortableColumnHeader } from "./CitizenTableLinks";
 import { HistoryModal } from "./generic-log-type/HistoryModal";
 
 type Row = Readonly<{
@@ -26,10 +24,6 @@ interface Props {
   readonly showTeamspeakIdColumn?: boolean;
   readonly showLastSeenAtColumn?: boolean;
   readonly showDeleteEntityButton?: boolean;
-  readonly sort: CitizenTableSort;
-  readonly getHref: (searchParams: {
-    readonly sort: CitizenTableSort;
-  }) => string;
 }
 
 export const CitizenTable = ({
@@ -38,8 +32,6 @@ export const CitizenTable = ({
   showTeamspeakIdColumn = false,
   showLastSeenAtColumn = false,
   showDeleteEntityButton = false,
-  sort,
-  getHref,
 }: Props) => {
   const columns = [
     "1fr",
@@ -60,15 +52,13 @@ export const CitizenTable = ({
     >
       <thead>
         <tr className="grid grid-cols-(--table-columns) items-center gap-4 text-left text-neutral-500">
-          <SortableColumnHeader
-            sort={sort}
+          <CitizenTableSortableColumnHeader
             ascending={CitizenTableSort.HandleAscending}
             descending={CitizenTableSort.HandleDescending}
             firstDirection={SortDirection.Ascending}
-            getHref={getHref}
           >
             Handle
-          </SortableColumnHeader>
+          </CitizenTableSortableColumnHeader>
 
           <th className="whitespace-nowrap">Spectrum ID</th>
 
@@ -80,32 +70,34 @@ export const CitizenTable = ({
             <th className="whitespace-nowrap">TeamSpeak ID</th>
           )}
 
-          <SortableColumnHeader
-            sort={sort}
+          <CitizenTableSortableColumnHeader
             ascending={CitizenTableSort.CreatedAtAscending}
             descending={CitizenTableSort.CreatedAtDescending}
             firstDirection={SortDirection.Descending}
-            getHref={getHref}
           >
             Erstellt am
-          </SortableColumnHeader>
+          </CitizenTableSortableColumnHeader>
 
           {showLastSeenAtColumn && (
-            <SortableColumnHeader
-              sort={sort}
+            <CitizenTableSortableColumnHeader
               ascending={CitizenTableSort.LastSeenAtAscending}
               descending={CitizenTableSort.LastSeenAtDescending}
               firstDirection={SortDirection.Descending}
-              getHref={getHref}
             >
               Zuletzt gesehen
-            </SortableColumnHeader>
+            </CitizenTableSortableColumnHeader>
           )}
         </tr>
       </thead>
 
       <tbody>
         {rows.map((row) => {
+          /**
+           * The client components get only the id: the row also has the
+           * values of the hidden columns, for example the Discord ID
+           */
+          const citizen = { id: row.entity.id };
+
           return (
             <tr
               key={row.entity.id}
@@ -119,7 +111,7 @@ export const CitizenTable = ({
                     <span className="text-neutral-500 italic">-</span>
                   )}
                 </span>
-                <HistoryModal type="handle" entity={row.entity} />
+                <HistoryModal type="handle" entity={citizen} />
               </td>
 
               <td
@@ -140,7 +132,7 @@ export const CitizenTable = ({
                       <span className="text-neutral-500 italic">-</span>
                     )}
                   </span>
-                  <HistoryModal type="discord-id" entity={row.entity} />
+                  <HistoryModal type="discord-id" entity={citizen} />
                 </td>
               )}
 
@@ -155,7 +147,7 @@ export const CitizenTable = ({
                       <span className="text-neutral-500 italic">-</span>
                     )}
                   </span>
-                  <HistoryModal type="teamspeak-id" entity={row.entity} />
+                  <HistoryModal type="teamspeak-id" entity={citizen} />
                 </td>
               )}
 
@@ -180,7 +172,7 @@ export const CitizenTable = ({
                   </Link>
 
                   {showDeleteEntityButton && (
-                    <CitizenTableDelete entity={row.entity} />
+                    <CitizenTableDelete entity={citizen} />
                   )}
                 </Actions>
               </td>

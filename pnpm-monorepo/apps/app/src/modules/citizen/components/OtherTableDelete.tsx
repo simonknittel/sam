@@ -4,36 +4,18 @@ import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
 import { type CitizenLog } from "@sam-monorepo/database/browser";
-import { useRouter } from "next/navigation";
 import { FaTrash } from "react-icons/fa";
+import { deleteCitizenLog } from "../actions/deleteCitizenLog";
 
 interface Props {
-  readonly log: Pick<CitizenLog, "id" | "citizenId">;
+  readonly log: Pick<CitizenLog, "id">;
 }
 
 export const OtherTableDelete = ({ log }: Props) => {
-  const router = useRouter();
-
-  const deleteLog = async (formData: FormData) => {
-    const response = await fetch(
-      `/api/spynet/citizen/${log.citizenId}/log/${log.id}`,
-      {
-        method: "DELETE",
-      },
-    );
-
-    if (!response.ok)
-      return {
-        error: "Beim Löschen ist ein Fehler aufgetreten.",
-        requestPayload: formData,
-      };
-
-    return { success: "Erfolgreich gelöscht" };
-  };
-
   return (
     <ConfirmActionButton
-      action={deleteLog}
+      action={deleteCitizenLog}
+      hiddenFields={[{ name: "id", value: log.id }]}
       trigger={(isPending) => (
         <Button
           title="Eintrag löschen"
@@ -47,7 +29,6 @@ export const OtherTableDelete = ({ log }: Props) => {
       title="Eintrag löschen?"
       description="Willst du diesen Eintrag löschen?"
       confirmLabel="Löschen"
-      onSuccess={() => router.refresh()}
     />
   );
 };

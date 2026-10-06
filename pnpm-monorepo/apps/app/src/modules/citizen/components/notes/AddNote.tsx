@@ -1,5 +1,6 @@
 "use client";
 
+import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Select } from "@/modules/common/components/form/Select";
@@ -8,11 +9,9 @@ import {
   type ClassificationLevel,
   type NoteType,
 } from "@sam-monorepo/database/browser";
-import { useRouter } from "next/navigation";
-import { useId, useState } from "react";
-import { useForm, type SubmitHandler } from "react-hook-form";
-import toast from "react-hot-toast";
+import { useState } from "react";
 import { FaSave } from "react-icons/fa";
+import { createCitizenLog } from "../../actions/createCitizenLog";
 import { Formatting } from "./Formatting";
 
 interface Props {
@@ -21,78 +20,42 @@ interface Props {
   readonly classificationLevels: ClassificationLevel[];
 }
 
-interface FormValues {
-  content: string;
-  classificationLevelId: ClassificationLevel["id"];
-}
-
 export const AddNote = ({
   entityId,
   noteTypeId,
   classificationLevels,
 }: Props) => {
-  const router = useRouter();
-  const { register, handleSubmit, reset } = useForm<FormValues>();
-  const [isLoading, setIsLoading] = useState(false);
-  const contentInputId = useId();
-  const classificationLevelSelectId = useId();
-
-  const onSubmit: SubmitHandler<FormValues> = async (data, e) => {
-    setIsLoading(true);
-
-    if (
-      !(e?.nativeEvent instanceof SubmitEvent) ||
-      !(e.nativeEvent.submitter instanceof HTMLButtonElement)
-    )
-      return;
-
-    try {
-      const response = await fetch(`/api/spynet/citizen/${entityId}/log`, {
-        method: "POST",
-        body: JSON.stringify({
-          type: "note",
-          content: data.content,
-          noteTypeId,
-          classificationLevelId: data.classificationLevelId,
-          confirmed:
-            e.nativeEvent.submitter.name === "confirmed"
-              ? "confirmed"
-              : undefined,
-        }),
-      });
-
-      if (response.ok) {
-        router.refresh();
-        toast.success("Erfolgreich gespeichert");
-        reset();
-      } else {
-        toast.error("Beim Speichern ist ein Fehler aufgetreten.");
-      }
-    } catch (error) {
-      toast.error("Beim Speichern ist ein Fehler aufgetreten.");
-      console.error(error);
-    }
-
-    setIsLoading(false);
-  };
+  /** Controlled, because a success clears only the text */
+  const [content, setContent] = useState("");
+  const { isPending, submitWithoutReset } = useAction(createCitizenLog, {
+    onSuccess: () => setContent(""),
+  });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={submitWithoutReset}>
+      <input type="hidden" name="citizenId" value={entityId} />
+      <input type="hidden" name="type" value="note" />
+      <input type="hidden" name="noteTypeId" value={noteTypeId} />
+
       <div className="mb-1 flex justify-end">
         <Formatting />
       </div>
 
       <textarea
         className="field-sizing-content min-h-32 w-full rounded-l bg-neutral-800 p-2"
-        id={contentInputId}
-        {...register("content", { required: true })}
+        name="content"
+        aria-label="Neue Notiz"
+        value={content}
+        onChange={(event) => setContent(event.target.value)}
+        required
       />
 
       <div className="mt-1 grid grid-cols-3 gap-1">
         {classificationLevels.length > 1 && (
           <Select
-            id={classificationLevelSelectId}
-            {...register("classificationLevelId", { required: true })}
+            name="classificationLevelId"
+            aria-label="Geheimhaltungsstufe"
+            required
             className="bg-neutral-800!"
           >
             {classificationLevels.map((classificationLevel) => (
@@ -109,20 +72,19 @@ export const AddNote = ({
         {classificationLevels.length === 1 && classificationLevels[0] && (
           <input
             type="hidden"
-            {...register("classificationLevelId", {
-              value: classificationLevels[0].id,
-            })}
+            name="classificationLevelId"
+            value={classificationLevels[0].id}
           />
         )}
 
         <div className="col-start-3 flex items-center justify-end gap-4">
           <Button2
             type="submit"
-            disabled={isLoading}
+            disabled={isPending}
             title="Speichern"
             variant={Button2Variant.Secondary}
           >
-            {isLoading ? <AsciiSpinner /> : <FaSave />}
+            {isPending ? <AsciiSpinner /> : <FaSave />}
             Speichern
           </Button2>
         </div>

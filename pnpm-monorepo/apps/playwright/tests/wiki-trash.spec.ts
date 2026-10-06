@@ -1,5 +1,5 @@
-import type { PrismaClient } from "@sam-monorepo/database/client";
 import { expectAuditEvents } from "../fixtures/audit";
+import { startParallelChange } from "../fixtures/database";
 import {
   createCitizen,
   createWikiPage,
@@ -8,23 +8,13 @@ import {
   wikiParagraph,
 } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
+  BAD_REQUEST_TEXT,
   clickUntilVisible,
   modal,
   NOT_FOUND_TEXT,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-
-/** The statements of the database of the worker that wait for a lock */
-const countLockWaits = async (prisma: PrismaClient) => {
-  const waits = await prisma.$queryRaw<{ count: number }[]>`
-    SELECT count(*)::int AS "count"
-    FROM pg_stat_activity
-    WHERE "datname" = current_database() AND "wait_event_type" = 'Lock'
-  `;
-  return waits[0]?.count;
-};
 
 test("a page travels to the trash, back out of it and finally out of existence", async ({
   page,
@@ -174,7 +164,7 @@ test("a page that a different manager restored first leaves the trash", async ({
    * a navigation
    */
   await trashRow.getByRole("button", { name: "Wiederherstellen" }).click();
-  await expect(page.getByText("Ungültige Anfrage")).toBeVisible();
+  await expect(page.getByText(BAD_REQUEST_TEXT)).toBeVisible();
   await expect(page.getByText("Der Papierkorb ist leer")).toBeVisible();
 });
 
@@ -210,32 +200,19 @@ test("a page that a different manager restores during the permanent delete stays
    * permanent delete waits for it. Thus the checks of the action read the
    * page in the trash, and only the delete itself finds the restore.
    */
-  const { promise: rowIsHeld, resolve: holdRow } =
-    Promise.withResolvers<void>();
-  const { promise: restoreCanCommit, resolve: commitRestore } =
-    Promise.withResolvers<void>();
-  const parallelRestore = prisma.$transaction(
-    async (transaction) => {
-      await transaction.wikiPage.update({
-        where: { id: wikiPage.id },
-        data: { deletedAt: null },
-      });
-      holdRow();
-      await restoreCanCommit;
-    },
-    /** Longer than the click and the poll below, which wait for the lock */
-    { timeout: ACTION_FEEDBACK_TIMEOUT * 2 },
+  const parallelRestore = await startParallelChange(prisma, (transaction) =>
+    transaction.wikiPage.update({
+      where: { id: wikiPage.id },
+      data: { deletedAt: null },
+    }),
   );
-  await rowIsHeld;
-
   try {
     await destroyDialog
       .getByRole("button", { name: "Endgültig löschen" })
       .click();
-    await expect.poll(() => countLockWaits(prisma)).toBe(1);
+    await parallelRestore.waitForBlockedStatement();
   } finally {
-    commitRestore();
-    await parallelRestore;
+    await parallelRestore.commit();
   }
 
   /**

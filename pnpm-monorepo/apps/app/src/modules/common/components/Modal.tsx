@@ -5,6 +5,7 @@ import clsx from "clsx";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { FaRegTimesCircle } from "react-icons/fa";
+import { useOptionalActionsContext, WithoutActionsContext } from "./Actions";
 
 interface Props {
   readonly className?: string;
@@ -22,6 +23,7 @@ export default function Modal({
   heading,
 }: Props) {
   const router = useRouter();
+  const rowMenu = useOptionalActionsContext();
 
   const handleOpenChange = (open: boolean) => {
     if (open) return;
@@ -33,8 +35,22 @@ export default function Modal({
     }
   };
 
+  /**
+   * A modal of an entry of a row menu (`Actions`) also closes the menu, for
+   * each type of close. It closes the menu only after its own close: then the
+   * focus is back on the entry in the menu, and the menu gives it to its
+   * trigger. A modal inside this modal does not see the menu.
+   */
+  const closeRowMenu = (open: boolean) => {
+    if (!open) rowMenu?.closePopover();
+  };
+
   return (
-    <Dialog.Root open={Boolean(isOpen)} onOpenChange={handleOpenChange}>
+    <Dialog.Root
+      open={Boolean(isOpen)}
+      onOpenChange={handleOpenChange}
+      onOpenChangeComplete={closeRowMenu}
+    >
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-30 bg-neutral-800/50 backdrop-blur-sm" />
 
@@ -61,7 +77,9 @@ export default function Modal({
               </Dialog.Close>
             </div>
 
-            <div className="p-4">{children}</div>
+            <div className="p-4">
+              <WithoutActionsContext>{children}</WithoutActionsContext>
+            </div>
           </Dialog.Popup>
         </div>
       </Dialog.Portal>

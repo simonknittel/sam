@@ -1,12 +1,12 @@
 import { useTranslations } from "next-intl";
 import { unstable_rethrow } from "next/navigation";
-import { useActionState } from "react";
+import { startTransition, useActionState, type FormEventHandler } from "react";
 import toast from "react-hot-toast";
 import type { ActionResponse } from "./createAction";
 import { toastWarning } from "./toastWarning";
 
 export const useAction = (
-  action: (formData: FormData) => Promise<ActionResponse | void>,
+  action: (formData: FormData) => Promise<ActionResponse>,
   options?: {
     /** Receives the submitted FormData, e.g. to branch on the clicked submit button */
     onSuccess?: (formData: FormData) => void;
@@ -23,16 +23,6 @@ export const useAction = (
     async (previousState: unknown, formData: FormData) => {
       try {
         const response = await action(formData);
-
-        /**
-         * Actions that `redirect()` on success resolve without a response
-         * (the navigation is already in flight). Only run the success hook,
-         * e.g. to close a modal before the new page renders.
-         */
-        if (!response) {
-          options?.onSuccess?.(formData);
-          return null;
-        }
 
         if ("error" in response) {
           if (options?.errorToast !== false) toast.error(response.error);
@@ -90,5 +80,28 @@ export const useAction = (
     return fallback;
   };
 
-  return { state, formAction, isPending, getDefaultValueWithFallback };
+  /**
+   * The `onSubmit` handler for a form that must keep its values after the
+   * action. React resets a `<form action>` form after each action, also
+   * after an error, and a select then falls back to its first option. The
+   * clicked submit button goes into the FormData, as with a native submit.
+   * `useFormStatus` (for example in `SubmitButton`) sees no submit of such a
+   * form: show the pending state with `isPending`.
+   */
+  const submitWithoutReset: FormEventHandler<HTMLFormElement> = (event) => {
+    event.preventDefault();
+    const formData = new FormData(
+      event.currentTarget,
+      (event.nativeEvent as SubmitEvent).submitter,
+    );
+    startTransition(() => formAction(formData));
+  };
+
+  return {
+    state,
+    formAction,
+    isPending,
+    getDefaultValueWithFallback,
+    submitWithoutReset,
+  };
 };

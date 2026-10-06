@@ -1,17 +1,14 @@
+import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
+import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import { TextInput } from "@/modules/common/components/form/TextInput";
+import { api } from "@/trpc/react";
 import clsx from "clsx";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useForm, type SubmitHandler } from "react-hook-form";
-import toast from "react-hot-toast";
 import { FaSave } from "react-icons/fa";
+import { createRole } from "../../actions/createRole";
 import { Suggestions } from "../Suggestions";
-
-interface FormValues {
-  name: string;
-}
 
 interface Props {
   readonly className?: string;
@@ -19,54 +16,42 @@ interface Props {
 }
 
 export const CreateRoleForm = ({ className, onSuccess }: Props) => {
-  const router = useRouter();
-  const { register, handleSubmit, reset, setValue } = useForm<FormValues>();
-  const [isLoading, setIsLoading] = useState(false);
-
-  const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    setIsLoading(true);
-
-    try {
-      const response = await fetch(`/api/role`, {
-        method: "POST",
-        body: JSON.stringify({
-          name: data.name,
-        }),
-      });
-
-      if (response.ok) {
-        router.refresh();
-        toast.success("Erfolgreich hinzugefügt");
-        reset();
-        onSuccess?.();
-      } else {
-        toast.error("Beim Hinzufügen ist ein Fehler aufgetreten.");
-      }
-    } catch (error) {
-      toast.error("Beim Hinzufügen ist ein Fehler aufgetreten.");
-      console.error(error);
-    }
-
-    setIsLoading(false);
-  };
+  /** Controlled, because a click on a suggestion sets the name */
+  const [name, setName] = useState("");
+  const utils = api.useUtils();
+  const { state, isPending, submitWithoutReset } = useAction(createRole, {
+    errorToast: false,
+    onSuccess: () => {
+      /**
+       * The refresh does not reload tRPC data. These role lists can stay on
+       * the page while this form shows, for example the role selector of
+       * the salaries.
+       */
+      void utils.roles.invalidate();
+      void utils.silc.getRolesForSalaries.invalidate();
+      onSuccess?.();
+    },
+  });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className={clsx(className)}>
+    <form onSubmit={submitWithoutReset} className={clsx(className)}>
       <TextInput
+        name="name"
         label="Name"
         className="mt-2"
-        {...register("name", { required: true })}
+        value={name}
+        onChange={(event) => setName(event.target.value)}
+        required
         autoFocus
       />
 
-      <Suggestions
-        className="mt-4"
-        onClick={(roleName) => setValue("name", roleName)}
-      />
+      <Suggestions className="mt-4" onClick={setName} />
+
+      <ActionErrorNote className="mt-4" state={state} />
 
       <div className="mt-8 flex justify-end">
-        <Button2 type="submit" disabled={isLoading}>
-          {isLoading ? <AsciiSpinner /> : <FaSave />}
+        <Button2 type="submit" disabled={isPending}>
+          {isPending ? <AsciiSpinner /> : <FaSave />}
           Speichern
         </Button2>
       </div>

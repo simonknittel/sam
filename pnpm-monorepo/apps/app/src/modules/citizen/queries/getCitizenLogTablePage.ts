@@ -2,6 +2,8 @@ import { prisma } from "@/db";
 import type { requireAuthentication } from "@/modules/auth/server";
 import { getFilterValues } from "@/modules/common/utils/filterCheckboxListParsers";
 import { PER_PAGE } from "@/modules/common/utils/pagination";
+import { getAllClassificationLevels } from "@/modules/spynet/queries/getAllClassificationLevels";
+import { getAllNoteTypes } from "@/modules/spynet/queries/getAllNoteTypes";
 import type { GenericCitizenLogType } from "@/types";
 import { ConfirmationStatus, type Prisma } from "@sam-monorepo/database/client";
 import {
@@ -9,6 +11,7 @@ import {
   toConfirmationStatus,
 } from "../utils/citizenLogConfirmation";
 import { CitizenLogTableSort } from "../utils/citizenLogTableSearchParams";
+import { getNotePermissionAttributes } from "../utils/notePermissionAttributes";
 import { CITIZEN_LOG_TABLE_SELECT } from "./citizenLogTableSelect";
 
 type Authentication = Awaited<ReturnType<typeof requireAuthentication>>;
@@ -22,9 +25,80 @@ const TYPES_WITH_READ_PERMISSION: readonly CitizenLogTableType[] = [
 ];
 
 /**
+ * The notes that `note;read` allows, with the check of the notes page of a
+ * citizen: the permission for the note type and the classification level of
+ * the note, and `alsoUnconfirmed` for a note that is not confirmed. The
+ * database cannot compare a note with the permissions, thus the condition
+ * lists each readable combination. A note without a note type or without a
+ * classification level matches none.
+ */
+const getReadableNoteWhere = async (
+  authentication: Pick<Authentication, "authorize">,
+): Promise<Prisma.CitizenLogWhereInput> => {
+  const [noteTypes, classificationLevels] = await Promise.all([
+    getAllNoteTypes(),
+    getAllClassificationLevels(),
+  ]);
+
+  const conditions = await Promise.all(
+    noteTypes.flatMap((noteType) =>
+      classificationLevels.map(
+        async (
+          classificationLevel,
+        ): Promise<Prisma.CitizenLogWhereInput | null> => {
+          const classification = {
+            noteTypeId: noteType.id,
+            classificationLevelId: classificationLevel.id,
+          };
+          const [readsConfirmed, readsUnconfirmed] = await Promise.all([
+            authentication.authorize(
+              "note",
+              "read",
+              getNotePermissionAttributes({
+                ...classification,
+                confirmed: ConfirmationStatus.CONFIRMED,
+              }),
+            ),
+            authentication.authorize(
+              "note",
+              "read",
+              getNotePermissionAttributes({
+                ...classification,
+                confirmed: null,
+              }),
+            ),
+          ]);
+
+          /**
+           * A permission for the notes that are not confirmed also matches
+           * the confirmed notes: their attributes are a part of the
+           * attributes of a note that is not confirmed (see
+           * getNotePermissionAttributes)
+           */
+          if (readsUnconfirmed) return classification;
+          if (readsConfirmed)
+            return {
+              ...classification,
+              confirmed: ConfirmationStatus.CONFIRMED,
+            };
+          return null;
+        },
+      ),
+    ),
+  );
+
+  /** An empty OR matches no note */
+  return {
+    type: "note",
+    OR: conditions.filter((condition) => condition !== null),
+  };
+};
+
+/**
  * The logs of the given types that the viewer may read in the Spynet tables:
  * a type with its own read permission needs it, and a log that is not
- * confirmed needs the permission to confirm logs of its type.
+ * confirmed needs the permission to confirm logs of its type. A note needs
+ * the read permission for its classification instead.
  */
 export const getReadableCitizenLogWhere = async (
   types: readonly CitizenLogTableType[],
@@ -32,6 +106,8 @@ export const getReadableCitizenLogWhere = async (
 ): Promise<Prisma.CitizenLogWhereInput> => {
   const conditions = await Promise.all(
     types.map(async (type): Promise<Prisma.CitizenLogWhereInput | null> => {
+      if (type === "note") return getReadableNoteWhere(authentication);
+
       if (
         TYPES_WITH_READ_PERMISSION.includes(type) &&
         !(await authentication.authorize(type, "read"))

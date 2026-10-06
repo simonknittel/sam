@@ -1,64 +1,20 @@
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import Button from "@/modules/common/components/Button";
+import { useAction } from "@/modules/actions/utils/useAction";
+import { TextInput } from "@/modules/common/components/form/TextInput";
 import Modal from "@/modules/common/components/Modal";
-import { api } from "@/trpc/react";
-import { type Manufacturer, type Series } from "@sam-monorepo/database/client";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { useForm, type SubmitHandler } from "react-hook-form";
-import { toast } from "react-hot-toast";
+import { SubmitButton } from "@/modules/common/components/SubmitButton";
+import { type Manufacturer } from "@sam-monorepo/database/browser";
 import { FaSave } from "react-icons/fa";
+import { createSeries } from "../actions/createSeries";
 
 interface Props {
   readonly onRequestClose: () => void;
-  readonly manufacturerId?: Manufacturer["id"];
+  readonly manufacturer: Pick<Manufacturer, "id" | "name">;
 }
 
-interface FormValues {
-  manufacturerId: Manufacturer["id"];
-  name: Series["name"];
-}
-
-export const CreateSeriesModal = ({
-  onRequestClose,
-  manufacturerId,
-}: Props) => {
-  const router = useRouter();
-  const { register, handleSubmit, reset } = useForm<FormValues>({
-    defaultValues: {
-      manufacturerId,
-    },
+export const CreateSeriesModal = ({ onRequestClose, manufacturer }: Props) => {
+  const { formAction, getDefaultValueWithFallback } = useAction(createSeries, {
+    onSuccess: onRequestClose,
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const manufacturers = api.manufacturer.getAll.useQuery(undefined);
-
-  const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    setIsLoading(true);
-
-    try {
-      const response = await fetch("/api/series", {
-        method: "POST",
-        body: JSON.stringify({
-          name: data.name,
-          manufacturerId: data.manufacturerId,
-        }),
-      });
-
-      if (response.ok) {
-        router.refresh();
-        toast.success("Erfolgreich gespeichert");
-        reset();
-        onRequestClose();
-      } else {
-        toast.error("Beim Speichern ist ein Fehler aufgetreten.");
-      }
-    } catch (error) {
-      toast.error("Beim Speichern ist ein Fehler aufgetreten.");
-      console.error(error);
-    }
-
-    setIsLoading(false);
-  };
 
   return (
     <Modal
@@ -67,50 +23,27 @@ export const CreateSeriesModal = ({
       className="w-120"
       heading={<h2>Serie anlegen</h2>}
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <label className="block" htmlFor="manufacturerId">
-          Hersteller
-        </label>
+      <form action={formAction}>
+        <dl>
+          <dt className="text-white/90">Hersteller</dt>
+          <dd className="mt-2 truncate" title={manufacturer.name}>
+            {manufacturer.name}
+          </dd>
+        </dl>
 
-        {manufacturers.isFetching ? (
-          <div className="mt-2 h-10 w-full animate-pulse rounded-secondary bg-neutral-900 p-2" />
-        ) : (
-          <select
-            id="manufacturerId"
-            className="mt-2 w-full rounded-secondary bg-neutral-900 p-2"
-            {...register("manufacturerId", { required: true })}
-            defaultValue={manufacturerId}
-            autoFocus={!Boolean(manufacturerId)}
-            disabled={Boolean(manufacturerId)}
-          >
-            {manufacturers.data?.map((manufacturer) => (
-              <option key={manufacturer.id} value={manufacturer.id}>
-                {manufacturer.name}
-              </option>
-            ))}
-          </select>
-        )}
+        <input type="hidden" name="manufacturerId" value={manufacturer.id} />
 
-        <label className="mt-4 block" htmlFor="name">
-          Name
-        </label>
-
-        <input
-          id="name"
-          type="text"
-          className="mt-2 w-full rounded-secondary bg-neutral-900 p-2"
-          {...register("name", { required: true })}
-          autoFocus={Boolean(manufacturerId)}
+        <TextInput
+          name="name"
+          label="Name"
+          className="mt-4"
+          defaultValue={getDefaultValueWithFallback("name", "")}
+          required
+          autoFocus
         />
 
         <div className="mt-4 flex justify-end">
-          <Button
-            type="submit"
-            disabled={isLoading || manufacturers.isFetching}
-          >
-            {isLoading ? <AsciiSpinner /> : <FaSave />}
-            Speichern
-          </Button>
+          <SubmitButton icon={<FaSave />}>Speichern</SubmitButton>
         </div>
       </form>
     </Modal>

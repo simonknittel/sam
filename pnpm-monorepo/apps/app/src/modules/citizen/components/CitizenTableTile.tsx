@@ -1,11 +1,10 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import { getCitizensForTable } from "@/modules/citizen/queries/getCitizens";
 import {
+  citizenTableParsers,
   CitizenTableSort,
   loadCitizenTableSearchParams,
-  serializeCitizenTableSearchParams,
 } from "@/modules/citizen/utils/citizenTableSearchParams";
-import Pagination from "@/modules/common/components/Pagination";
 import { getFilterValues } from "@/modules/common/utils/filterCheckboxListParsers";
 import { limitRows, PER_PAGE } from "@/modules/common/utils/pagination";
 import {
@@ -17,6 +16,7 @@ import clsx from "clsx";
 import type { SearchParams } from "nuqs/server";
 import { CitizenTable } from "./CitizenTable";
 import { CitizenTableFilters } from "./CitizenTableFilters";
+import { CitizenTablePagination } from "./CitizenTableLinks";
 
 interface Props {
   readonly className?: string;
@@ -26,16 +26,46 @@ interface Props {
 export const CitizenTableTile = async ({ className, searchParams }: Props) => {
   const authentication = await requireAuthentication();
 
-  const searchParameters = await loadCitizenTableSearchParams(searchParams);
-  const { filters, sort, page } = searchParameters;
-  const getHref = (values: Partial<typeof searchParameters>) =>
-    serializeCitizenTableSearchParams("/app/spynet/citizen", {
-      ...searchParameters,
-      ...values,
-    });
+  const {
+    filters,
+    sort: requestedSort,
+    page,
+  } = await loadCitizenTableSearchParams(searchParams);
 
-  const unknownAttributes = getFilterValues(filters, "unknown");
+  const [
+    showLastSeenAtColumn,
+    showTeamspeakIdColumn,
+    showDiscordIdColumn,
+    showDeleteEntityButton,
+  ] = await Promise.all([
+    authentication.authorize("lastSeen", "read"),
+    authentication.authorize("teamspeak-id", "read"),
+    authentication.authorize("discord-id", "read"),
+    authentication.authorize("citizen", "delete"),
+  ]);
+
+  /**
+   * The filters show these options only with the read permission. A filter
+   * by a value that the viewer may not read would show which citizens have
+   * one, thus the table ignores it.
+   */
+  const unknownAttributes = getFilterValues(filters, "unknown").filter(
+    (attribute) =>
+      (attribute !== "discord-id" || showDiscordIdColumn) &&
+      (attribute !== "teamspeak-id" || showTeamspeakIdColumn),
+  );
   const roleIds = getFilterValues(filters, "role");
+
+  /**
+   * The table shows the column only with the read permission, thus a sort by
+   * it is no option without the permission
+   */
+  const sort =
+    !showLastSeenAtColumn &&
+    (requestedSort === CitizenTableSort.LastSeenAtAscending ||
+      requestedSort === CitizenTableSort.LastSeenAtDescending)
+      ? citizenTableParsers.sort.defaultValue
+      : requestedSort;
 
   const citizens = await getCitizensForTable();
 
@@ -95,23 +125,6 @@ export const CitizenTableTile = async ({ className, searchParams }: Props) => {
   });
   const limitedRows = limitRows(sortedRows, page);
 
-  const showLastSeenAtColumn = await authentication.authorize(
-    "lastSeen",
-    "read",
-  );
-  const showTeamspeakIdAtColumn = await authentication.authorize(
-    "teamspeak-id",
-    "read",
-  );
-  const showDiscordIdAtColumn = await authentication.authorize(
-    "discord-id",
-    "read",
-  );
-  const showDeleteEntityButton = await authentication.authorize(
-    "citizen",
-    "delete",
-  );
-
   return (
     <section
       className={clsx(
@@ -123,19 +136,15 @@ export const CitizenTableTile = async ({ className, searchParams }: Props) => {
 
       <CitizenTable
         rows={limitedRows}
-        showDiscordIdColumn={showDiscordIdAtColumn}
-        showTeamspeakIdColumn={showTeamspeakIdAtColumn}
+        showDiscordIdColumn={showDiscordIdColumn}
+        showTeamspeakIdColumn={showTeamspeakIdColumn}
         showLastSeenAtColumn={showLastSeenAtColumn}
         showDeleteEntityButton={showDeleteEntityButton}
-        sort={sort}
-        getHref={getHref}
       />
 
       <div className="mt-6 flex justify-center">
-        <Pagination
+        <CitizenTablePagination
           totalPages={Math.ceil(sortedRows.length / PER_PAGE)}
-          currentPage={page}
-          getHref={getHref}
         />
       </div>
     </section>

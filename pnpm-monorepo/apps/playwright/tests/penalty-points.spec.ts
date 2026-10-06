@@ -5,6 +5,7 @@ import {
   DELETED_TEXT,
   modal,
   pickFromSearch,
+  RESOURCE_NOT_FOUND_TEXT,
   SAVED_TEXT,
   sectionByHeading,
 } from "../fixtures/interactions";
@@ -165,9 +166,7 @@ test("deleting an entry that a different tab deleted shows the error and the cur
   );
   await deleteDialog.getByRole("button", { name: "Löschen" }).click();
 
-  await expect(
-    page.getByText("Die gesuchte Ressource wurde nicht gefunden."),
-  ).toBeVisible();
+  await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
   await expect(page.getByText("Keine Strafpunkte gefunden.")).toBeVisible();
 });
 

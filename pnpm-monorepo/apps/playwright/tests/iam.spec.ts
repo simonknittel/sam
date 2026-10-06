@@ -6,15 +6,13 @@ import {
   FORBIDDEN_TEXT,
   modal,
   NOT_FOUND_TEXT,
+  RESOURCE_NOT_FOUND_TEXT,
   SAVED_TEXT,
   sectionByHeading,
   toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-
-/** The error of an action whose target a different user deleted */
-const RESOURCE_NOT_FOUND_TEXT = "Die gesuchte Ressource wurde nicht gefunden.";
 
 test("a role created and assigned through the UI grants its permission", async ({
   page,
@@ -49,7 +47,11 @@ test("a role created and assigned through the UI grants its permission", async (
   await modal(page, "Neue Rolle")
     .getByRole("button", { name: "Speichern" })
     .click();
-  await expect(page.getByText("Erfolgreich hinzugefügt")).toBeVisible();
+  await expect(page.getByText(SAVED_TEXT)).toHaveCount(1);
+  await expect(modal(page, "Neue Rolle")).not.toBeVisible();
+  await expectAuditEvents(prisma, ["ROLE_CREATED"]);
+  /** The next save shows the same text, thus this toast must go first */
+  await expect(page.getByText(SAVED_TEXT)).toHaveCount(0);
 
   // ... and grants it the task-read permission
   await clickUntilUrl(
@@ -105,6 +107,101 @@ test("a role created and assigned through the UI grants its permission", async (
   await page.goto("/app/tasks");
   await expect(page.getByText("Keine Tasks gefunden")).toBeVisible();
   await expect(page.getByText(FORBIDDEN_TEXT)).not.toBeVisible();
+});
+
+test("a role name that exists already shows the error in the create dialog", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "iam-admin",
+    permissionStrings: ["role;manage"],
+  });
+  await createRole(prisma, { name: "Aufgabenleser" });
+
+  await signIn(admin.user);
+  await page.goto("/app/iam/roles");
+  const createDialog = modal(page, "Neue Rolle");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Neue Rolle" }),
+    createDialog,
+  );
+  const nameInput = createDialog.getByLabel("Name");
+  await nameInput.fill("Aufgabenleser");
+  await createDialog.getByRole("button", { name: "Speichern" }).click();
+
+  /**
+   * The dialog stays open, thus it shows the error itself. The alert role
+   * makes screen readers announce it.
+   */
+  await expect(createDialog.getByRole("alert")).toHaveText(
+    "Eine Rolle mit diesem Namen existiert bereits.",
+  );
+  await expect(nameInput).toHaveValue("Aufgabenleser");
+  expect(await prisma.role.count({ where: { name: "Aufgabenleser" } })).toBe(1);
+  expect(
+    await prisma.auditEvent.count({ where: { type: "ROLE_CREATED" } }),
+  ).toBe(0);
+});
+
+test("a role from the create menu shows in a role list that stays on the page", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "iam-admin",
+    permissionStrings: [
+      "role;manage",
+      "silcSetting;manage",
+      /**
+       * Workaround for an app defect. Remove it when the defect is fixed:
+       * without this permission, the settings page is forbidden as a whole.
+       * The tile "aUEC Umrechnungskurs" reads the balances of all citizens,
+       * and the query calls forbidden() for the full page, not only for the
+       * tile.
+       */
+      "silcBalanceOfOtherCitizen;read",
+      "otherRole;read;roleId=*",
+    ],
+  });
+
+  await signIn(admin.user);
+  await page.goto("/app/silc/settings");
+  await waitForAppShellHydration(page);
+
+  /**
+   * The role selector of a salary row gets its roles through tRPC, and the
+   * row stays while the create dialog is open
+   */
+  const salaryTile = sectionByHeading(page, "Gehälter");
+  const addSalaryRow = salaryTile.getByRole("button", { name: "Neu" });
+  await expect(addSalaryRow).toBeVisible();
+  await addSalaryRow.click();
+  const roleSelectorTrigger = salaryTile.getByRole("button", {
+    name: "Rolle auswählen",
+  });
+  await expect(roleSelectorTrigger).toBeEnabled();
+
+  // The admin creates a role through the create menu of the top bar
+  const createMenu = page.getByRole("dialog", { name: "Neu erstellen" });
+  await clickUntilVisible(
+    /** Only the trigger of the menu has an expanded state */
+    page.getByRole("button", { name: "Neu", exact: true, expanded: false }),
+    createMenu,
+  );
+  await createMenu.getByRole("button", { name: "Rolle", exact: true }).click();
+  const createDialog = modal(page, "Neue Rolle");
+  await createDialog.getByLabel("Name").fill("Gehaltsrolle");
+  await createDialog.getByRole("button", { name: "Speichern" }).click();
+  await expect(page.getByText(SAVED_TEXT)).toHaveCount(1);
+  await expect(createDialog).not.toBeVisible();
+
+  // The role selector of the row offers the new role
+  const rolePicker = page.getByRole("dialog", { name: "Rolle auswählen" });
+  await clickUntilVisible(roleSelectorTrigger, rolePicker);
+  await expect(rolePicker.getByText("Gehaltsrolle")).toBeVisible();
 });
 
 test("a role ticked right before the role dialog closes is still saved", async ({

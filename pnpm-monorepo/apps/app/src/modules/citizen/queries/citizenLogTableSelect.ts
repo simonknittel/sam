@@ -49,8 +49,9 @@ export type CitizenNote = Prisma.CitizenLogGetPayload<{
 }>;
 
 /**
- * One log as the spynet API routes guard on it: the identity of the log and
- * the columns their permission checks read.
+ * One log as the citizen log actions guard on it: the identity of the log,
+ * the columns their permission checks read and the decision, which the
+ * write checks again.
  */
 export const CITIZEN_LOG_GUARD_SELECT = {
   id: true,

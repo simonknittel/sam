@@ -24,6 +24,14 @@ export const NOT_FOUND_TEXT = "Page not found";
 /** Success feedback of the shared action helpers. */
 export const SAVED_TEXT = "Erfolgreich gespeichert";
 export const DELETED_TEXT = "Erfolgreich gelöscht";
+/** The `Common.notFound` message of an action, not the 404 page */
+export const RESOURCE_NOT_FOUND_TEXT =
+  "Die gesuchte Ressource wurde nicht gefunden.";
+/** The `Common.forbidden` message of an action, not the 403 page */
+export const FORBIDDEN_ACTION_TEXT =
+  "Du bist nicht berechtigt diese Aktion auszuführen.";
+/** The `Common.badRequest` message of an action */
+export const BAD_REQUEST_TEXT = "Ungültige Anfrage";
 
 /**
  * Scopes a lookup to the tile/section carrying the given heading. Tiles,

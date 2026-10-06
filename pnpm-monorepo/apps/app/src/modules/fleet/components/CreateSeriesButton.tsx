@@ -13,10 +13,10 @@ const CreateSeriesModal = dynamic(() =>
 
 interface Props {
   readonly className?: string;
-  readonly manufacturerId?: Manufacturer["id"];
+  readonly manufacturer: Pick<Manufacturer, "id" | "name">;
 }
 
-export const CreateSeriesButton = ({ className, manufacturerId }: Props) => {
+export const CreateSeriesButton = ({ className, manufacturer }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -39,7 +39,7 @@ export const CreateSeriesButton = ({ className, manufacturerId }: Props) => {
         <Suspense>
           <CreateSeriesModal
             onRequestClose={() => setIsOpen(false)}
-            manufacturerId={manufacturerId}
+            manufacturer={manufacturer}
           />
         </Suspense>
       )}

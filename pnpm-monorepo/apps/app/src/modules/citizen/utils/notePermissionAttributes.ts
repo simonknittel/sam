@@ -19,7 +19,7 @@ const DELETED_CLASSIFICATION_ATTRIBUTE_VALUE = "(deleted)";
  * The classification of a note as the note permissions (for example
  * `note;delete;noteTypeId=…;classificationLevelId=…`) compare with it
  */
-export const getNoteClassificationAttributes = (
+const getNoteClassificationAttributes = (
   note: Pick<CitizenLog, "noteTypeId" | "classificationLevelId">,
 ): PermissionAttributes => [
   {
@@ -33,8 +33,8 @@ export const getNoteClassificationAttributes = (
 ];
 
 /**
- * The attributes that the read permissions of notes compare with: the
- * classification, and `alsoUnconfirmed` for a note that is not confirmed
+ * The attributes that the note permissions compare an existing note with:
+ * the classification, and `alsoUnconfirmed` for a note that is not confirmed
  */
 export const getNotePermissionAttributes = (
   note: Pick<CitizenLog, "noteTypeId" | "classificationLevelId" | "confirmed">,

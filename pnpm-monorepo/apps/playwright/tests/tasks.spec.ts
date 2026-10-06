@@ -2,6 +2,7 @@ import type { Locator, Page } from "@playwright/test";
 import type { Prisma, PrismaClient } from "@sam-monorepo/database/client";
 import { TaskRewardType, TaskVisibility } from "@sam-monorepo/database/client";
 import { expectAuditEvents } from "../fixtures/audit";
+import { startParallelChange } from "../fixtures/database";
 import {
   assignRole,
   createCitizen,
@@ -9,7 +10,6 @@ import {
   type TestCitizen,
 } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   FORBIDDEN_TEXT,
   inlineEditorTrigger,
@@ -357,13 +357,8 @@ test("a completion that waits for a parallel completion pays no reward", async (
    * the app, waits for the lock of the task row and sees the parallel
    * completion only after it.
    */
-  const {
-    promise: parallelCompletionCanCommit,
-    resolve: commitParallelCompletion,
-  } = Promise.withResolvers<void>();
-  const { promise: claim, resolve: signalClaim } =
-    Promise.withResolvers<number>();
-  const parallelCompletion = prisma.$transaction(
+  const parallelCompletion = await startParallelChange(
+    prisma,
     async (transaction) => {
       const { count } = await transaction.task.updateMany({
         where: { id: task.id, completedAt: null },
@@ -374,41 +369,13 @@ test("a completion that waits for a parallel completion pays no reward", async (
         where: { id: task.id },
         data: { completionists: { connect: { id: worker.entity.id } } },
       });
-
-      const [session] = await transaction.$queryRaw<{ id: number }[]>`
-        SELECT pg_backend_pid() AS "id"
-      `;
-      signalClaim(session!.id);
-      await parallelCompletionCanCommit;
     },
-    /** Longer than the click and the poll below, which wait for the lock */
-    { timeout: ACTION_FEEDBACK_TIMEOUT * 2 },
   );
-
   try {
-    /** The race ends the wait also when the parallel completion fails */
-    const parallelSessionId = await Promise.race([
-      claim,
-      parallelCompletion.then(() => {
-        throw new Error("The parallel completion ended before its claim");
-      }),
-    ]);
-
     await completeModal.getByRole("button", { name: "Speichern" }).click();
-    await expect
-      .poll(async () => {
-        const waitingLocks = await prisma.$queryRaw<{ count: number }[]>`
-            SELECT count(*)::int AS "count"
-            FROM pg_locks
-            WHERE NOT "granted"
-              AND ${parallelSessionId}::int = ANY(pg_blocking_pids("pid"))
-          `;
-        return waitingLocks[0]?.count;
-      })
-      .toBe(1);
+    await parallelCompletion.waitForBlockedStatement();
   } finally {
-    commitParallelCompletion();
-    await parallelCompletion;
+    await parallelCompletion.commit();
   }
 
   /**

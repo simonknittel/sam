@@ -12,11 +12,8 @@ interface HiddenField {
 
 interface Props {
   readonly className?: string;
-  /**
-   * Server action, or a `useAction`-compatible client handler for the
-   * legacy REST mutations that have not been migrated to actions yet.
-   */
-  readonly action: (formData: FormData) => Promise<ActionResponse | void>;
+  /** A server action, or a client function that wraps one */
+  readonly action: (formData: FormData) => Promise<ActionResponse>;
   readonly hiddenFields?: readonly HiddenField[];
   /**
    * Renders the submit button of the form (`type="submit"`). Its click opens

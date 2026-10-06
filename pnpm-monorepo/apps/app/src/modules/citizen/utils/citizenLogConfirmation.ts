@@ -1,8 +1,8 @@
 import { ConfirmationStatus } from "@sam-monorepo/database/browser";
 
 /**
- * The confirmation of a log as the URL filters ("confirmation-…"), the body
- * of the confirm API and the system log write it. The UI and the database
+ * The confirmation of a log as the URL filters ("confirmation-…"), the
+ * confirm action and the system log write it. The UI and the database
  * use `ConfirmationStatus`, with NULL for a log without a decision.
  */
 export enum ConfirmationValue {

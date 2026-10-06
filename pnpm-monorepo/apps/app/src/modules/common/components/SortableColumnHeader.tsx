@@ -18,7 +18,7 @@ const ARROW_ICONS: SortIcons = {
   descending: <FaSortDown />,
 };
 
-interface Props<Sort extends string> {
+export interface SortableColumnHeaderProps<Sort extends string> {
   readonly className?: string;
   /** The label of the column */
   readonly children: ReactNode;
@@ -51,7 +51,7 @@ export const SortableColumnHeader = <Sort extends string>({
   getHref,
   icons = ARROW_ICONS,
   addition,
-}: Props<Sort>) => {
+}: SortableColumnHeaderProps<Sort>) => {
   const [firstSort, secondSort] =
     firstDirection === SortDirection.Ascending
       ? [ascending, descending]

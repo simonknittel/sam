@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useMemo, type ReactNode } from "react";
 import { FaEllipsisH, FaTimes } from "react-icons/fa";
 import Button from "./Button";
 import { PopoverBaseUI, usePopoverBaseUI } from "./PopoverBaseUI";
@@ -16,15 +10,23 @@ interface Props {
 }
 
 export const Actions = ({ children }: Readonly<Props>) => {
-  const [isOpen, setIsOpen] = useState(false);
-
   return (
     <PopoverBaseUI
       title="Aktionen"
-      trigger={isOpen ? <FaTimes /> : <FaEllipsisH />}
+      /**
+       * Base UI sets `data-popup-open` on the trigger while the menu is open.
+       * The icon follows this attribute, not an own state: `onOpenChange`
+       * does not report a close by an entry (`closePopover`).
+       */
+      trigger={
+        <>
+          <FaEllipsisH className="group-data-popup-open:hidden" />
+          <FaTimes className="hidden group-data-popup-open:block" />
+        </>
+      }
+      triggerClassName="group"
       triggerRender={<Button variant="secondary" iconOnly={true} />}
       triggerTitle="Aktionen"
-      onOpenChange={setIsOpen}
       openOnHover={false}
       side="left"
       childrenClassName="flex flex-col items-start gap-2"
@@ -65,3 +67,14 @@ export function useActionsContext() {
     );
   return context;
 }
+
+/** The row menu around the component, or undefined outside of a row menu */
+export const useOptionalActionsContext = () => useContext(ActionContext);
+
+/**
+ * Hides the row menu from its children. A dialog of a menu entry closes the
+ * menu, but a dialog inside this dialog must not close it.
+ */
+export const WithoutActionsContext = ({ children }: Readonly<Props>) => (
+  <ActionContext value={undefined}>{children}</ActionContext>
+);

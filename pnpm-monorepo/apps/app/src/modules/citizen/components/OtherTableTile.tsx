@@ -6,16 +6,13 @@ import {
   getReadableCitizenLogWhere,
   type CitizenLogTableType,
 } from "@/modules/citizen/queries/getCitizenLogTablePage";
-import {
-  loadCitizenLogTableSearchParams,
-  serializeCitizenLogTableSearchParams,
-} from "@/modules/citizen/utils/citizenLogTableSearchParams";
-import Pagination from "@/modules/common/components/Pagination";
+import { loadCitizenLogTableSearchParams } from "@/modules/citizen/utils/citizenLogTableSearchParams";
 import { getFilterValues } from "@/modules/common/utils/filterCheckboxListParsers";
 import type { CitizenLogType } from "@/types";
 import type { Prisma } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import type { SearchParams } from "nuqs/server";
+import { CitizenLogTablePagination } from "./CitizenLogTableLinks";
 import { OtherFilters } from "./OtherFilters";
 import { OtherTable } from "./OtherTable";
 
@@ -35,13 +32,8 @@ interface Props {
 const OtherTableTile = async ({ className, searchParams }: Props) => {
   const authentication = await requireAuthentication();
 
-  const searchParameters = await loadCitizenLogTableSearchParams(searchParams);
-  const { filters, sort, page } = searchParameters;
-  const getHref = (values: Partial<typeof searchParameters>) =>
-    serializeCitizenLogTableSearchParams("/app/spynet/other", {
-      ...searchParameters,
-      ...values,
-    });
+  const { filters, sort, page } =
+    await loadCitizenLogTableSearchParams(searchParams);
 
   const visibleWhere = await getReadableCitizenLogWhere(
     IDENTITY_LOG_TYPES,
@@ -86,14 +78,10 @@ const OtherTableTile = async ({ className, searchParams }: Props) => {
         />
       </div>
 
-      <OtherTable rows={logs} sort={sort} getHref={getHref} />
+      <OtherTable rows={logs} />
 
       <div className="mt-6 flex justify-center">
-        <Pagination
-          totalPages={totalPages}
-          currentPage={page}
-          getHref={getHref}
-        />
+        <CitizenLogTablePagination totalPages={totalPages} />
       </div>
     </section>
   );

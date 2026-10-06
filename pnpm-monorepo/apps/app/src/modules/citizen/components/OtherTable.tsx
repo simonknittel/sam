@@ -1,25 +1,20 @@
+import { requireAuthentication } from "@/modules/auth/server";
 import type { CitizenLogTableRow } from "@/modules/citizen/queries/citizenLogTableSelect";
 import { CitizenLogTableSort } from "@/modules/citizen/utils/citizenLogTableSearchParams";
 import { citizenLogTypeTranslations } from "@/modules/citizen/utils/citizenLogTypeTranslations";
 import { Actions } from "@/modules/common/components/Actions";
 import { CitizenCellLink } from "@/modules/common/components/CitizenCellLink";
-import {
-  SortableColumnHeader,
-  SortDirection,
-} from "@/modules/common/components/SortableColumnHeader";
+import { SortDirection } from "@/modules/common/components/SortableColumnHeader";
 import { formatDate } from "@/modules/common/utils/formatDate";
+import { CitizenLogTableSortableColumnHeader } from "./CitizenLogTableLinks";
 import { ConfirmationState } from "./ConfirmationState";
 import { OtherTableDelete } from "./OtherTableDelete";
 
 interface Props {
   readonly rows: readonly CitizenLogTableRow[];
-  readonly sort: CitizenLogTableSort;
-  readonly getHref: (searchParams: {
-    readonly sort: CitizenLogTableSort;
-  }) => string;
 }
 
-export const OtherTable = ({ rows, sort, getHref }: Props) => {
+export const OtherTable = ({ rows }: Props) => {
   return (
     <table className="w-full min-w-400">
       <thead>
@@ -32,27 +27,23 @@ export const OtherTable = ({ rows, sort, getHref }: Props) => {
 
           <th>Bestätigungsstatus</th>
 
-          <SortableColumnHeader
-            sort={sort}
+          <CitizenLogTableSortableColumnHeader
             ascending={CitizenLogTableSort.ConfirmedAtAscending}
             descending={CitizenLogTableSort.ConfirmedAtDescending}
             firstDirection={SortDirection.Descending}
-            getHref={getHref}
           >
             Bestätigt am
-          </SortableColumnHeader>
+          </CitizenLogTableSortableColumnHeader>
 
           <th className="whitespace-nowrap">Bestätigt von</th>
 
-          <SortableColumnHeader
-            sort={sort}
+          <CitizenLogTableSortableColumnHeader
             ascending={CitizenLogTableSort.CreatedAtAscending}
             descending={CitizenLogTableSort.CreatedAtDescending}
             firstDirection={SortDirection.Descending}
-            getHref={getHref}
           >
             Eingereicht am
-          </SortableColumnHeader>
+          </CitizenLogTableSortableColumnHeader>
 
           <th className="whitespace-nowrap">Eingereicht von</th>
         </tr>
@@ -84,7 +75,20 @@ export const OtherTable = ({ rows, sort, getHref }: Props) => {
               </td>
 
               <td>
-                <ConfirmationState citizenLog={citizenLog} />
+                <ConfirmationState
+                  citizenLog={{
+                    id: citizenLog.id,
+                    citizenId: citizenLog.citizenId,
+                    confirmed: citizenLog.confirmed,
+                    citizen: { deletedAt: citizenLog.citizen.deletedAt },
+                  }}
+                  /**
+                   * The table shows a log without a decision only to a viewer
+                   * with the permission to confirm the logs of its type (see
+                   * getReadableCitizenLogWhere)
+                   */
+                  canDecide={true}
+                />
               </td>
 
               <td className="overflow-hidden text-ellipsis">
@@ -110,9 +114,7 @@ export const OtherTable = ({ rows, sort, getHref }: Props) => {
               </td>
 
               <td>
-                <Actions>
-                  <OtherTableDelete log={citizenLog} />
-                </Actions>
+                <OtherTableActions log={citizenLog} />
               </td>
             </tr>
           );
@@ -120,4 +122,38 @@ export const OtherTable = ({ rows, sort, getHref }: Props) => {
       </tbody>
     </table>
   );
+};
+
+interface OtherTableActionsProps {
+  readonly log: CitizenLogTableRow;
+}
+
+/**
+ * The delete button of the log, with the permission check of the delete
+ * action
+ */
+const OtherTableActions = async ({ log }: OtherTableActionsProps) => {
+  /** The logs of a deleted citizen are read only */
+  if (log.citizen.deletedAt) return null;
+
+  switch (log.type) {
+    case "handle":
+    case "teamspeak-id":
+    case "discord-id":
+    case "citizen-id":
+    case "community-moniker": {
+      const authentication = await requireAuthentication();
+      if (!(await authentication.authorize(log.type, "delete"))) return null;
+
+      return (
+        <Actions>
+          <OtherTableDelete log={{ id: log.id }} />
+        </Actions>
+      );
+    }
+
+    /** The other types, for example the Spectrum ID: nobody can delete them */
+    default:
+      return null;
+  }
 };
