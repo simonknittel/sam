@@ -1,3 +1,4 @@
+import { requireAuthentication } from "@/modules/auth/server";
 import type { CitizenLogTableRow } from "@/modules/citizen/queries/citizenLogTableSelect";
 import { CitizenLogTableSort } from "@/modules/citizen/utils/citizenLogTableSearchParams";
 import { citizenLogTypeTranslations } from "@/modules/citizen/utils/citizenLogTypeTranslations";
@@ -113,12 +114,7 @@ export const OtherTable = ({ rows }: Props) => {
               </td>
 
               <td>
-                {/* The logs of a deleted citizen are read only */}
-                {!citizenLog.citizen.deletedAt && (
-                  <Actions>
-                    <OtherTableDelete log={{ id: citizenLog.id }} />
-                  </Actions>
-                )}
+                <OtherTableActions log={citizenLog} />
               </td>
             </tr>
           );
@@ -126,4 +122,38 @@ export const OtherTable = ({ rows }: Props) => {
       </tbody>
     </table>
   );
+};
+
+interface OtherTableActionsProps {
+  readonly log: CitizenLogTableRow;
+}
+
+/**
+ * The delete button of the log, with the permission check of the delete
+ * action
+ */
+const OtherTableActions = async ({ log }: OtherTableActionsProps) => {
+  /** The logs of a deleted citizen are read only */
+  if (log.citizen.deletedAt) return null;
+
+  switch (log.type) {
+    case "handle":
+    case "teamspeak-id":
+    case "discord-id":
+    case "citizen-id":
+    case "community-moniker": {
+      const authentication = await requireAuthentication();
+      if (!(await authentication.authorize(log.type, "delete"))) return null;
+
+      return (
+        <Actions>
+          <OtherTableDelete log={{ id: log.id }} />
+        </Actions>
+      );
+    }
+
+    /** The other types, for example the Spectrum ID: nobody can delete them */
+    default:
+      return null;
+  }
 };

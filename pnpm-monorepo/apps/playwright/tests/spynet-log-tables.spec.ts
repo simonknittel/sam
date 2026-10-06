@@ -335,6 +335,48 @@ test("the log table shows no delete button for a log of a deleted citizen", asyn
   await expect(actionsButton(page, "verwaister-handle")).toHaveCount(0);
 });
 
+test("the log table shows the delete button only with the delete permission of the log type", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const viewer = await createCitizen(prisma, {
+    handle: "log-leser",
+    permissionStrings: [
+      ...OTHER_TABLE_PERMISSIONS,
+      "handle;read",
+      "teamspeak-id;read",
+      "teamspeak-id;delete",
+    ],
+  });
+  const citizen = await prisma.citizen.create({ data: { handle: "aktiver" } });
+  await prisma.citizenLog.createMany({
+    data: [
+      {
+        citizenId: citizen.id,
+        type: "handle",
+        content: "nur-lesbarer-handle",
+        confirmed: ConfirmationStatus.CONFIRMED,
+        confirmedAt: new Date(),
+      },
+      {
+        citizenId: citizen.id,
+        type: "teamspeak-id",
+        content: "loeschbare-teamspeak-id",
+        confirmed: ConfirmationStatus.CONFIRMED,
+        confirmedAt: new Date(),
+      },
+    ],
+  });
+
+  await signIn(viewer.user);
+  await page.goto("/app/spynet/other");
+
+  await expect(actionsButton(page, "loeschbare-teamspeak-id")).toBeVisible();
+  await expect(rowOf(page, "nur-lesbarer-handle")).toBeVisible();
+  await expect(actionsButton(page, "nur-lesbarer-handle")).toHaveCount(0);
+});
+
 /** Reads the confirmed notes of each note type and classification level */
 const READ_CONFIRMED_NOTES = "note;read;noteTypeId=*;classificationLevelId=*";
 
