@@ -1,7 +1,8 @@
 import {
   DeleteObjectsCommand,
-  ListObjectsV2Command,
+  paginateListObjectsV2,
   S3Client,
+  type ListObjectsV2CommandOutput,
 } from "@aws-sdk/client-s3";
 import { prisma } from "@sam-monorepo/database";
 import { AuditEventType, UNUSED_UPLOAD_WHERE } from "@sam-monorepo/domain";
@@ -73,26 +74,14 @@ export const deleteUnusedUploads = async () => {
       },
     });
 
-    const objects = await captureAsyncFunc("list bucket objects", async () => {
-      const result: { key: string; lastModified?: Date }[] = [];
-      let continuationToken: string | undefined;
-
-      do {
-        const response = await s3.send(
-          new ListObjectsV2Command({
-            Bucket: bucketName,
-            ContinuationToken: continuationToken,
-          }),
-        );
-
-        for (const object of response.Contents ?? []) {
-          if (!object.Key) continue;
-          result.push({ key: object.Key, lastModified: object.LastModified });
-        }
-
-        continuationToken = response.NextContinuationToken;
-      } while (continuationToken);
-
+    const pages = await captureAsyncFunc("list bucket objects", async () => {
+      const result: ListObjectsV2CommandOutput[] = [];
+      for await (const page of paginateListObjectsV2(
+        { client: s3 },
+        { Bucket: bucketName },
+      )) {
+        result.push(page);
+      }
       return result;
     });
 
@@ -102,14 +91,15 @@ export const deleteUnusedUploads = async () => {
     );
     const remainingIds = new Set(remainingUploads.map((upload) => upload.id));
 
-    const orphanedKeys = objects
+    const orphanedKeys = pages
+      .flatMap((page) => page.Contents ?? [])
       .filter(
         (object) =>
-          !remainingIds.has(object.key) &&
-          object.lastModified !== undefined &&
-          object.lastModified < cutoff,
+          object.LastModified !== undefined && object.LastModified < cutoff,
       )
-      .map((object) => object.key);
+      .map((object) => object.Key)
+      .filter((key) => key !== undefined)
+      .filter((key) => !remainingIds.has(key));
 
     if (orphanedKeys.length > 0) {
       await captureAsyncFunc("delete objects from the bucket", async () => {

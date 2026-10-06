@@ -20,12 +20,18 @@ vi.mock("./setup", () => ({
   },
 }));
 
-vi.mock("@aws-sdk/client-s3", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@aws-sdk/client-s3")>()),
-  S3Client: class {
-    send = sendMock;
-  },
-}));
+vi.mock("@aws-sdk/client-s3", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@aws-sdk/client-s3")>();
+
+  /** The paginator accepts only an instance of the original client. */
+  class S3Client extends original.S3Client {
+    override send(...parameters: unknown[]) {
+      return sendMock(...parameters);
+    }
+  }
+
+  return { ...original, S3Client };
+});
 
 const ONE_HOUR_MS = 60 * 60 * 1000;
 /** The midnight job runs in the first minutes of a day */
@@ -44,28 +50,58 @@ const createWikiPage = () =>
     select: { id: true },
   });
 
-/** Each upload has an old object in the bucket */
-const mockBucket = (uploadIds: readonly string[]) => {
+interface BucketObject {
+  readonly key: string;
+  readonly lastModified: Date;
+}
+
+const toOldObjects = (keys: readonly string[]): BucketObject[] =>
+  keys.map((key) => ({ key, lastModified: TWO_DAYS_AGO }));
+
+/**
+ * The bucket lists the pages one after the other. The continuation token is
+ * the index of the next page.
+ *
+ * @returns the continuation token of each list request. The paginator changes
+ * the input of its commands, thus the mock records the token at the request.
+ */
+const mockBucket = (pages: readonly (readonly BucketObject[])[]) => {
+  const requestedContinuationTokens: (string | undefined)[] = [];
+
   sendMock.mockImplementation((command: unknown) => {
-    if (command instanceof ListObjectsV2Command)
+    if (command instanceof ListObjectsV2Command) {
+      const continuationToken = command.input.ContinuationToken;
+      requestedContinuationTokens.push(continuationToken);
+
+      const pageIndex = Number(continuationToken ?? 0);
+      const page = pages[pageIndex];
+      if (!page) throw new Error(`Unknown page: ${continuationToken}`);
+
       return Promise.resolve({
-        Contents: uploadIds.map((uploadId) => ({
-          Key: uploadId,
-          LastModified: TWO_DAYS_AGO,
+        Contents: page.map((object) => ({
+          Key: object.key,
+          LastModified: object.lastModified,
         })),
+        NextContinuationToken:
+          pageIndex + 1 < pages.length ? String(pageIndex + 1) : undefined,
       });
+    }
 
     return Promise.resolve({});
   });
+
+  return requestedContinuationTokens;
 };
 
-const getDeletedObjectKeys = () =>
+const getDeleteRequests = () =>
   sendMock.mock.calls
     .map(([command]: unknown[]) => command)
     .filter((command) => command instanceof DeleteObjectsCommand)
-    .flatMap((command) =>
+    .map((command) =>
       (command.input.Delete?.Objects ?? []).map((object) => object.Key),
     );
+
+const getDeletedObjectKeys = () => getDeleteRequests().flat();
 
 const getRemainingUploadIds = async () =>
   (await prisma.upload.findMany({ select: { id: true } }))
@@ -115,7 +151,14 @@ test("deletes only the old upload that nothing uses, with its object", async () 
 
   const unusedUpload = await createUpload("unused.png", TWO_DAYS_AGO);
 
-  mockBucket([pageImage.id, snapshotImage.id, freshUpload.id, unusedUpload.id]);
+  mockBucket([
+    toOldObjects([
+      pageImage.id,
+      snapshotImage.id,
+      freshUpload.id,
+      unusedUpload.id,
+    ]),
+  ]);
 
   await deleteUnusedUploads();
 
@@ -129,5 +172,44 @@ test("deletes only the old upload that nothing uses, with its object", async () 
   });
   expect(auditEvents.map(({ data }) => data)).toEqual([
     { databaseCount: 1, bucketCount: 1 },
+  ]);
+});
+
+test("sweeps all pages of the bucket and deletes at most 1000 objects per request", async () => {
+  /** The row stays, thus its object stays */
+  const freshUpload = await createUpload(
+    "fresh.png",
+    new Date(NOW.getTime() - ONE_HOUR_MS),
+  );
+
+  /** One more than DeleteObjects accepts in one request */
+  const orphanedKeys = [...new Array(1001).keys()].map(
+    (index) => `orphaned-${index}`,
+  );
+
+  const requestedContinuationTokens = mockBucket([
+    toOldObjects(orphanedKeys.slice(0, 1000)),
+    [
+      ...toOldObjects([...orphanedKeys.slice(1000), freshUpload.id]),
+      /** Younger than the grace period, thus it stays without an Upload row */
+      {
+        key: "young-object",
+        lastModified: new Date(NOW.getTime() - ONE_HOUR_MS),
+      },
+    ],
+  ]);
+
+  await deleteUnusedUploads();
+
+  expect(requestedContinuationTokens).toEqual([undefined, "1"]);
+  expect(getDeleteRequests().map((keys) => keys.length)).toEqual([1000, 1]);
+  expect(getDeletedObjectKeys()).toEqual(orphanedKeys);
+  expect(await getRemainingUploadIds()).toEqual([freshUpload.id]);
+
+  const auditEvents = await prisma.auditEvent.findMany({
+    where: { type: AuditEventType.UNUSED_UPLOADS_DELETED },
+  });
+  expect(auditEvents.map(({ data }) => data)).toEqual([
+    { databaseCount: 0, bucketCount: 1001 },
   ]);
 });
