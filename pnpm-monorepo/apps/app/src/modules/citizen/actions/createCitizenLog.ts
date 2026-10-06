@@ -5,6 +5,7 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { lockCitizen } from "@/modules/citizen/utils/lockCitizen";
 import {
   isPrismaError,
   PrismaErrorCode,
@@ -61,48 +62,51 @@ export const createCitizenLog = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    const citizen = await prisma.citizen.findFirst({
-      where: {
-        id: data.citizenId,
-        ...ACTIVE_CITIZEN_WHERE,
-      },
-      select: {
-        id: true,
-      },
-    });
-    /** A different user deleted the citizen, and the page must show it */
-    if (!citizen) return rejectConflict(t("Common.notFound"), formData);
-
     let createdLog;
     try {
-      createdLog = await prisma.citizenLog.create({
-        data: {
-          type: data.type,
-          content: data.content,
-          submittedBy: {
-            connect: {
-              id: authentication.session.user.id,
-            },
+      createdLog = await prisma.$transaction(async (transaction) => {
+        await lockCitizen(transaction, data.citizenId);
+
+        const citizen = await transaction.citizen.findFirst({
+          where: {
+            id: data.citizenId,
+            ...ACTIVE_CITIZEN_WHERE,
           },
-          citizen: {
-            connect: {
-              id: citizen.id,
-            },
+          select: {
+            id: true,
           },
-          ...(data.type === "note"
-            ? {
-                noteType: { connect: { id: data.noteTypeId } },
-                classificationLevel: {
-                  connect: { id: data.classificationLevelId },
-                },
-              }
-            : {}),
-        },
-        select: {
-          id: true,
-          type: true,
-          citizenId: true,
-        },
+        });
+        if (!citizen) return null;
+
+        return transaction.citizenLog.create({
+          data: {
+            type: data.type,
+            content: data.content,
+            submittedBy: {
+              connect: {
+                id: authentication.session.user.id,
+              },
+            },
+            citizen: {
+              connect: {
+                id: citizen.id,
+              },
+            },
+            ...(data.type === "note"
+              ? {
+                  noteType: { connect: { id: data.noteTypeId } },
+                  classificationLevel: {
+                    connect: { id: data.classificationLevelId },
+                  },
+                }
+              : {}),
+          },
+          select: {
+            id: true,
+            type: true,
+            citizenId: true,
+          },
+        });
       });
     } catch (error) {
       /**
@@ -113,6 +117,8 @@ export const createCitizenLog = createAuthenticatedAction(
         return rejectConflict(t("Common.notFound"), formData);
       throw error;
     }
+    /** A different user deleted the citizen, and the page must show it */
+    if (!createdLog) return rejectConflict(t("Common.notFound"), formData);
 
     refresh();
 
