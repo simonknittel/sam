@@ -413,11 +413,24 @@ export const authOptions: NextAuthOptions = {
 
   events: {
     signIn: async (message) => {
-      if (message.account?.provider === "discord")
-        await linkCitizenOfSignedInUser(
-          message.user.id,
-          message.account.providerAccountId,
-        );
+      /**
+       * A failed link does not stop the sign-in, because next-auth catches
+       * the errors of the events. The system log must show the login also
+       * then.
+       */
+      if (message.account?.provider === "discord") {
+        try {
+          await linkCitizenOfSignedInUser(
+            message.user.id,
+            message.account.providerAccountId,
+          );
+        } catch (error) {
+          log.error("Failed to link the citizen of the signed-in user", {
+            userId: message.user.id,
+            error,
+          });
+        }
+      }
 
       await createAuditEvents([
         {
