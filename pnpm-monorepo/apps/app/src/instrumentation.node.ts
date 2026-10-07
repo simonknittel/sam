@@ -6,7 +6,8 @@ import {
   type Context,
   type SpanKind,
 } from "@opentelemetry/api";
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { OTLPTraceExporter as OTLPJsonTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { OTLPTraceExporter as OTLPProtobufTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { AwsInstrumentation } from "@opentelemetry/instrumentation-aws-sdk";
 import { HttpInstrumentation } from "@opentelemetry/instrumentation-http";
 import { UndiciInstrumentation } from "@opentelemetry/instrumentation-undici";
@@ -20,6 +21,7 @@ import {
 } from "@opentelemetry/sdk-trace-node";
 import { ATTR_URL_PATH } from "@opentelemetry/semantic-conventions";
 import { PrismaInstrumentation } from "@prisma/instrumentation";
+import { env } from "./env";
 import { FlushOnRootSpanEndProcessor } from "./modules/tracing/utils/FlushOnRootSpanEndProcessor";
 
 // API reference: https://open-telemetry.github.io/opentelemetry-js/
@@ -56,18 +58,37 @@ class IgnorePingSampler implements Sampler {
   }
 }
 
+/**
+ * The span pipeline is explicit because of the flush wrapper, thus it selects
+ * its exporter itself. The SDK makes the log pipeline from the environment
+ * variables. Thus OTEL_EXPORTER_OTLP_PROTOCOL sets the format of the spans and
+ * of the logs, with the default `http/protobuf` of the SDK. All exporters read
+ * the endpoint from OTEL_EXPORTER_OTLP_ENDPOINT.
+ */
+const createTraceExporter = () => {
+  const protocol = env.OTEL_EXPORTER_OTLP_PROTOCOL;
+
+  switch (protocol) {
+    case "http/json":
+      return new OTLPJsonTraceExporter();
+
+    case "http/protobuf":
+    case undefined:
+      return new OTLPProtobufTraceExporter();
+
+    default:
+      throw new Error(`Unknown OTLP protocol: ${protocol satisfies never}`);
+  }
+};
+
 const sdk = new NodeSDK({
   serviceName: "sam",
-  // The span pipeline is explicit because of the flush wrapper. Its exporter
-  // always sends JSON. The SDK makes the log pipeline from the environment
-  // variables, thus OTEL_EXPORTER_OTLP_PROTOCOL sets the format of the logs.
-  // All exporters read the endpoint from OTEL_EXPORTER_OTLP_ENDPOINT.
   spanProcessors: [
     new FlushOnRootSpanEndProcessor(
       // One request creates hundreds of spans, and a per-span export discards
       // whichever span ends while 30 sends are already in flight.
       new BatchSpanProcessor(
-        new OTLPTraceExporter(),
+        createTraceExporter(),
         // Some spans of Next.js end after the root span, thus after the flush
         // of the request. The default of 5 seconds keeps them on hold long
         // enough for a freeze of the function to catch them.

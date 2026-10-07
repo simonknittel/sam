@@ -119,8 +119,9 @@ export const env = createEnv({
     OPENAI_EXTRA_API_KEY: z.optional(z.string()),
     ENABLE_INSTRUMENTATION: z.optional(z.string()),
     /**
-     * The format of the log records (see instrumentation.node.ts). The spans
-     * always use HTTP and the same endpoint, thus gRPC cannot work.
+     * The format of the spans and of the log records (see
+     * instrumentation.node.ts). The span pipeline has only the two HTTP
+     * exporters, thus gRPC cannot work.
      */
     OTEL_EXPORTER_OTLP_PROTOCOL: z.optional(
       z.enum(["http/json", "http/protobuf"]),
