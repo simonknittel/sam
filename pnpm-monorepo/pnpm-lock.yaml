@@ -78,6 +78,9 @@ importers:
       '@opentelemetry/exporter-trace-otlp-http':
         specifier: 0.222.0
         version: 0.222.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/exporter-trace-otlp-proto':
+        specifier: 0.222.0
+        version: 0.222.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/instrumentation-aws-sdk':
         specifier: 0.77.0
         version: 0.77.0(@opentelemetry/api@1.9.1)(supports-color@7.2.0)
