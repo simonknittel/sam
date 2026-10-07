@@ -119,13 +119,10 @@ export const env = createEnv({
     OPENAI_EXTRA_API_KEY: z.optional(z.string()),
     ENABLE_INSTRUMENTATION: z.optional(z.string()),
     /**
-     * The format of the spans and of the log records (see
-     * instrumentation.node.ts). The span pipeline has only the two HTTP
-     * exporters, thus gRPC cannot work.
+     * The spans and the log records go as protobuf over HTTP (see
+     * instrumentation.node.ts). The SDK reads this variable for the logs.
      */
-    OTEL_EXPORTER_OTLP_PROTOCOL: z.optional(
-      z.enum(["http/json", "http/protobuf"]),
-    ),
+    OTEL_EXPORTER_OTLP_PROTOCOL: z.optional(z.literal("http/protobuf")),
     OTEL_EXPORTER_OTLP_ENDPOINT: z.optional(z.string()),
     /** Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
     PUSHER_CHANNELS_APP_SECRET: z._default(z.string(), "app-secret"),

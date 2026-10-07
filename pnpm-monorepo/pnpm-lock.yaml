@@ -75,9 +75,6 @@ importers:
       '@opentelemetry/api-logs':
         specifier: 0.222.0
         version: 0.222.0
-      '@opentelemetry/exporter-trace-otlp-http':
-        specifier: 0.222.0
-        version: 0.222.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/exporter-trace-otlp-proto':
         specifier: 0.222.0
         version: 0.222.0(@opentelemetry/api@1.9.1)
