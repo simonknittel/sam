@@ -1,6 +1,7 @@
 "use client";
 
 import { useMediaQuery } from "@base-ui/react/unstable-use-media-query";
+import clsx from "clsx";
 import {
   resolveValue,
   ToastBar,
@@ -8,7 +9,6 @@ import {
   type DefaultToastOptions,
   type Toast,
 } from "react-hot-toast";
-import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 
 /**
  * An error toast is often the only place that shows the error of a server
@@ -22,16 +22,47 @@ const ERROR_OPTIONS = { duration: ERROR_TOAST_DURATION_MS };
 
 const TOAST_OPTIONS: DefaultToastOptions = { error: ERROR_OPTIONS };
 
+interface ToastIconProps {
+  readonly className: string;
+  readonly symbolPath: string;
+}
+
+/**
+ * The icons are drawn inline: each page shows toasts, and an icon package
+ * would add its full icon chunk also to the public pages.
+ */
+const ToastIcon = ({ className, symbolPath }: ToastIconProps) => (
+  <svg
+    viewBox="0 0 20 20"
+    aria-hidden="true"
+    className={clsx(className, "size-5 shrink-0")}
+  >
+    <circle cx="10" cy="10" r="10" fill="currentColor" />
+    <path
+      d={symbolPath}
+      fill="none"
+      stroke="white"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 /**
  * The default icons of react-hot-toast pop in with keyframes of the library,
  * which the reduced-motion rule in `globals.css` does not reach. An icon
  * element replaces them without an animation.
  */
 const REDUCED_MOTION_TOAST_OPTIONS: DefaultToastOptions = {
-  success: { icon: <FaCheckCircle className="size-5 text-green-500" /> },
+  success: {
+    icon: <ToastIcon className="text-green-500" symbolPath="M6 10.5l3 3 5-6" />,
+  },
   error: {
     ...ERROR_OPTIONS,
-    icon: <FaTimesCircle className="size-5 text-red-500" />,
+    icon: (
+      <ToastIcon className="text-red-500" symbolPath="M7 7l6 6M13 7l-6 6" />
+    ),
   },
 };
 
