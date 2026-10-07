@@ -93,7 +93,7 @@
     "remark-gfm": "4.0.1",
     "serialize-error": "13.0.1",
     "server-only": "0.0.1",
-    "sharp": "0.35.4",
+    "sharp": "0.35.5",
     "slug": "12.0.1",
     "strip-markdown": "6.0.0",
     "superjson": "2.2.6",
