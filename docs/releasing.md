@@ -7,7 +7,7 @@ There is a single branch (`main`). A push to `main` alone never deploys to produ
 
 ## Release workflow
 
-The [Release workflow](../.github/workflows/release.yml) is the only procedure that deploys to production. First, it gives the release the next release number and creates the Git tag and the GitHub release `release-<number>` on the commit. The app shows the number in the footer of the dashboard. If this job fails, the workflow stops before it changes production. Then it runs three jobs in parallel:
+The [Release workflow](../.github/workflows/release.yml) is the only procedure that deploys to production. First, it gives the release the next release number and creates the Git tag and the GitHub release `release-<number>` on the commit. The app shows the number and the short commit SHA in the footer of the dashboard. If this job fails, the workflow stops before it changes production. Then it runs three jobs in parallel:
 
 - Send the `deploying` event to the `releases` channel of Soketi
 - Deploy the Lambda functions to AWS

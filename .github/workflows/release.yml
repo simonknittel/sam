@@ -50,9 +50,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GIT_REF: ${{ inputs.git_ref || github.sha }}
-          # The Release workflow ran 104 times before it created release
-          # numbers. The numbers continue this count.
-          LAST_NUMBER_BEFORE_TAGS: 104
+          # The release numbers continue the count of the production
+          # deployments before them: 1294 through the Git integration of
+          # Vercel (its GitHub deployment records up to 2026-07-30) and 104
+          # runs of this workflow.
+          LAST_NUMBER_BEFORE_TAGS: 1398
         shell: bash
         run: |
           set -euo pipefail
@@ -126,7 +128,11 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           RELEASE_NUMBER: ${{ needs.create_release.outputs.number }}
-        run: vercel deploy --prod --yes --token="$VERCEL_TOKEN" --build-env NEXT_PUBLIC_RELEASE_NUMBER="$RELEASE_NUMBER"
+          COMMIT_SHA: ${{ needs.create_release.outputs.sha }}
+        run: |
+          vercel deploy --prod --yes --token="$VERCEL_TOKEN" \
+            --build-env NEXT_PUBLIC_RELEASE_NUMBER="$RELEASE_NUMBER" \
+            --env COMMIT_SHA="$COMMIT_SHA"
 
   announce:
     name: Announce release
