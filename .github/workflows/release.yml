@@ -50,9 +50,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GIT_REF: ${{ inputs.git_ref || github.sha }}
-          # The Release workflow ran 104 times before it created release
-          # numbers. The numbers continue this count.
-          LAST_NUMBER_BEFORE_TAGS: 104
+          # The release numbers continue the count of the production
+          # deployments before them: 1294 through the Git integration of
+          # Vercel (its GitHub deployment records up to 2026-07-30) and 104
+          # runs of this workflow.
+          LAST_NUMBER_BEFORE_TAGS: 1398
         shell: bash
         run: |
           set -euo pipefail
