@@ -394,6 +394,8 @@ export const authOptions: NextAuthOptions = {
       clientSecret: env.DISCORD_CLIENT_SECRET,
       authorization:
         "https://discord.com/api/oauth2/authorize?scope=identify+email+guilds.members.read",
+      // Discord sends the `iss` parameter in the callback (RFC 9207). openid-client rejects the callback if the provider has no issuer.
+      issuer: "https://discord.com",
     }),
   ],
 
