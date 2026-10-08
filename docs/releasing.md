@@ -7,7 +7,7 @@ There is a single branch (`main`). A push to `main` alone never deploys to produ
 
 ## Release workflow
 
-The [Release workflow](../.github/workflows/release.yml) is the only procedure that deploys to production. It runs three jobs in parallel:
+The [Release workflow](../.github/workflows/release.yml) is the only procedure that deploys to production. First, it gives the release the next release number and creates the Git tag and the GitHub release `release-<number>` on the commit. The app shows the number in the footer of the dashboard. If this job fails, the workflow stops before it changes production. Then it runs three jobs in parallel:
 
 - Send the `deploying` event to the `releases` channel of Soketi
 - Deploy the Lambda functions to AWS
@@ -20,6 +20,12 @@ The two deployments do not depend on each other. If the Lambda job fails, the ap
 The workflow deploys the Lambda functions to the **test** AWS environment. A production AWS account does not exist yet, thus the test environment intentionally also operates as production (see [setup-test-and-production.md](./setup-test-and-production.md)).
 
 The workflow starts automatically each Tuesday at 8am UTC. You can also start it manually through `Actions > Release > Run workflow`.
+
+### Release numbers
+
+Each release gets a new number: the highest number of the `release-<number>` tags plus 1. Thus also a failed release, a rollback, and a second release of the same commit get their own number and tag. "Re-run all jobs" gives a new number. "Re-run failed jobs" keeps the number, because it does not run the first job again.
+
+Do not delete the tag with the highest number: the next release then uses its number again.
 
 ## Collab server
 
