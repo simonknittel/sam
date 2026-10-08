@@ -126,7 +126,11 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           RELEASE_NUMBER: ${{ needs.create_release.outputs.number }}
-        run: vercel deploy --prod --yes --token="$VERCEL_TOKEN" --build-env NEXT_PUBLIC_RELEASE_NUMBER="$RELEASE_NUMBER"
+          COMMIT_SHA: ${{ needs.create_release.outputs.sha }}
+        run: |
+          vercel deploy --prod --yes --token="$VERCEL_TOKEN" \
+            --build-env NEXT_PUBLIC_RELEASE_NUMBER="$RELEASE_NUMBER" \
+            --env COMMIT_SHA="$COMMIT_SHA"
 
   announce:
     name: Announce release
