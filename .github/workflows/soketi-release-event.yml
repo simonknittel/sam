@@ -15,7 +15,7 @@ on:
 jobs:
   send_event:
     name: Send event
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     environment: Production
     permissions:
       contents: read
