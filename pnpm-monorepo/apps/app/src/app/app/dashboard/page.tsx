@@ -1,6 +1,7 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { ProfileTile } from "@/modules/citizen/components/ProfileTile";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
+import { DashboardFooter } from "@/modules/dashboard/components/DashboardFooter";
 import { TileSkeleton } from "@/modules/dashboard/components/TileSkeleton";
 import { CalendarTile } from "@/modules/events/components/CalendarTile";
 import { SeasonalGreetingBanner } from "@/modules/seasonal-events/components/SeasonalGreetingBanner";
@@ -70,6 +71,8 @@ export default async function Page() {
           </section>
         </div>
       </div>
+
+      <DashboardFooter />
     </div>
   );
 }

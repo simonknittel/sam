@@ -188,6 +188,13 @@ export const env = createEnv({
     /** npx web-push generate-vapid-keys */
     NEXT_PUBLIC_VAPID_KEY: z.optional(z.string()),
     NEXT_PUBLIC_PLAUSIBLE_ENDPOINT: z.optional(z.url()),
+    /**
+     * Number of the production release (Git tag `release-<number>`). The
+     * Release workflow sets it at build time. Not set in all other builds.
+     */
+    NEXT_PUBLIC_RELEASE_NUMBER: z.optional(
+      z.coerce.number().check(z.int(), z.positive()),
+    ),
     NEXT_PUBLIC_HOST: z.pipe(
       // Uses VERCEL_URL if HOST and BASE_URL are not set, e.g. on Vercel's preview deployments
       z.transform((str) => {
@@ -241,6 +248,7 @@ export const env = createEnv({
       process.env.NEXT_PUBLIC_PUSHER_CHANNELS_SECURE_PORT,
     NEXT_PUBLIC_VAPID_KEY: process.env.NEXT_PUBLIC_VAPID_KEY,
     NEXT_PUBLIC_PLAUSIBLE_ENDPOINT: process.env.NEXT_PUBLIC_PLAUSIBLE_ENDPOINT,
+    NEXT_PUBLIC_RELEASE_NUMBER: process.env.NEXT_PUBLIC_RELEASE_NUMBER,
     NEXT_PUBLIC_HOST: process.env.NEXT_PUBLIC_HOST,
     NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
   },
