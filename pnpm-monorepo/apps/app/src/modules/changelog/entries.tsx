@@ -51,7 +51,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-10-24-mcp-rollen",
     date: "2026-10-24",
-    title: "MCP: Rollen bearbeiten",
+    title: "Rollen bearbeiten",
     tags: ["Neu", "MCP"],
     isTracked: false,
     body: () => (
@@ -79,7 +79,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-10-24-mcp-app",
     date: "2026-10-24",
-    title: "MCP: Eigene App und Tools für jeden Client",
+    title: "Eigene App und Tools für jeden Client",
     tags: ["Neu", "MCP"],
     isTracked: false,
     body: () => (
@@ -163,7 +163,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-10-13-human-resources-einstellung",
     date: "2026-10-13",
-    title: "IAM: Human-Resources-Rollen festlegen",
+    title: "Human-Resources-Rollen festlegen",
     tags: ["Neu", "IAM"],
     isTracked: false,
     requiresAuth: { resource: "role", action: "manage" },
@@ -187,7 +187,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-10-12-willkommen-und-geburtstag",
     date: "2026-10-12",
-    title: "Dashboard: Willkommensgruß und Geburtstagsbanner",
+    title: "Willkommensgruß und Geburtstagsbanner",
     tags: ["Neu", "Dashboard", "Benachrichtigungen"],
     body: () => (
       <>
@@ -211,7 +211,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-10-11-task-benachrichtigungen",
     date: "2026-10-11",
-    title: "Tasks: Benachrichtigungen bei neuen und gelöschten Tasks",
+    title: "Benachrichtigungen bei neuen und gelöschten Tasks",
     tags: ["Neu", "Tasks", "Benachrichtigungen"],
     body: () => (
       <>
@@ -243,7 +243,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-09-27-neue-tasks-und-events",
     date: "2026-09-27",
-    title: "Tasks und Events: Neu-Markierung",
+    title: "Neu-Markierung",
     tags: ["Tasks", "Events", "Neu"],
     body: () => (
       <>
@@ -266,7 +266,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-09-17-log-analyzer-neue-events",
     date: "2026-09-17",
-    title: "Log Analyzer: Neue Events",
+    title: "Neue Events",
     tags: ["Log Analyzer", "Neu"],
     body: () => (
       <>
@@ -278,7 +278,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-09-01-log-analyzer-teilen",
     date: "2026-09-01",
-    title: "Log Analyzer: Einträge mit anderen teilen",
+    title: "Einträge mit anderen teilen",
     tags: ["Log Analyzer", "Neu"],
     isTracked: true,
     body: () => (
@@ -332,7 +332,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-09-01-event-manager-aktivitaet",
     date: "2026-09-01",
-    title: "Events: Managerwechsel in der Aktivität",
+    title: "Managerwechsel in der Aktivität",
     tags: ["Events", "Änderung"],
     isTracked: false,
     body: () => (
@@ -348,7 +348,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-08-27-wiki-blockmenue-per-klick",
     date: "2026-08-27",
-    title: "Wiki: Menüs öffnen per Klick",
+    title: "Menüs öffnen per Klick",
     tags: ["Änderung", "Wiki"],
     isTracked: false,
     body: () => (
@@ -766,7 +766,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-08-15-wiki-umflossene-bilder",
     date: "2026-08-15",
-    title: "Wiki: Vom Text umflossene Bilder",
+    title: "Vom Text umflossene Bilder",
     tags: ["Neu", "Wiki"],
     isTracked: true,
     body: () => (
@@ -823,7 +823,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-08-09-wiki-erwaehnungen",
     date: "2026-08-09",
-    title: "Wiki: Benachrichtigung bei Erwähnung",
+    title: "Benachrichtigung bei Erwähnung",
     tags: ["Neu", "Wiki", "Events"],
     isTracked: true,
     body: () => (
@@ -880,7 +880,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-08-08-wiki-kopieren-und-einfuegen",
     date: "2026-08-08",
-    title: "Wiki: Seiten kopieren und einfügen",
+    title: "Seiten kopieren und einfügen",
     tags: ["Neu", "Wiki", "Events"],
     isTracked: true,
     body: () => (
@@ -905,7 +905,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-08-08-event-briefing",
     date: "2026-08-08",
-    title: "Events: Briefing",
+    title: "Briefing",
     tags: ["Neu", "Events", "Wiki"],
     isTracked: true,
     body: () => (
@@ -934,7 +934,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-08-05-wiki-kleiner-text",
     date: "2026-08-05",
-    title: "Wiki: Kleiner Text",
+    title: "Kleiner Text",
     tags: ["Neu", "Wiki"],
     isTracked: false,
     body: () => (
@@ -983,7 +983,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-08-05-wiki-featured-seiten",
     date: "2026-08-05",
-    title: "Wiki: Featured Seiten",
+    title: "Featured Seiten",
     tags: ["Neu", "Wiki"],
     isTracked: false,
     body: () => (
@@ -1015,7 +1015,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-08-04-wiki-inhaltsverzeichnis-einklappen",
     date: "2026-08-04",
-    title: "Wiki: Inhaltsverzeichnis einklappen",
+    title: "Inhaltsverzeichnis einklappen",
     tags: ["Neu", "Wiki"],
     isTracked: false,
     body: () => (
@@ -1041,7 +1041,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-08-02-wiki-blockbreite",
     date: "2026-08-02",
-    title: "Wiki: Blockbreite",
+    title: "Blockbreite",
     tags: ["Neu", "Wiki"],
     isTracked: false,
     body: () => (
@@ -1061,7 +1061,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-08-02-wiki-upload-berechtigungen",
     date: "2026-08-02",
-    title: "Wiki: Upload-Berechtigungen",
+    title: "Upload-Berechtigungen",
     tags: ["Änderung", "Wiki"],
     isTracked: false,
     body: () => (
@@ -1084,7 +1084,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-08-02-wiki-verbundene-nutzer",
     date: "2026-08-02",
-    title: "Wiki: Verbundene Nutzer",
+    title: "Verbundene Nutzer",
     tags: ["Änderung", "Wiki"],
     isTracked: false,
     body: () => (
@@ -1099,7 +1099,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-08-02-wiki-rollenmitglieder",
     date: "2026-08-02",
-    title: "Wiki: Rollenmitglieder",
+    title: "Rollenmitglieder",
     tags: ["Neu", "Wiki"],
     isTracked: false,
     body: () => (
@@ -1124,7 +1124,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-08-02-wiki-schiffe",
     date: "2026-08-02",
-    title: "Wiki: Schiffe verlinken",
+    title: "Schiffe verlinken",
     tags: ["Neu", "Wiki"],
     isTracked: false,
     body: () => (
@@ -1141,7 +1141,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-08-02-wiki-suche-tags",
     date: "2026-08-02",
-    title: "Wiki: Tags in der Suche",
+    title: "Tags in der Suche",
     tags: ["Neu", "Wiki"],
     isTracked: true,
     body: () => (
@@ -1157,7 +1157,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-08-02-wiki-dateianhaenge",
     date: "2026-08-02",
-    title: "Wiki: Dateianhänge melden",
+    title: "Dateianhänge melden",
     tags: ["Neu", "Wiki"],
     isTracked: true,
     body: () => (
