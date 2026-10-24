@@ -1,4 +1,5 @@
 import type { AuditEventType } from "@sam-monorepo/domain";
+import { findClearedCitizens } from "../auth/clearedCitizens.js";
 import type { ApplicationContext, Notification } from "../context.js";
 import { triggerNotificationsAfterSave } from "../notifications.js";
 
@@ -33,7 +34,10 @@ interface GreetingRun<Candidate extends { readonly id: string }> {
 }
 
 /**
- * Greets the candidates that the rule selects right now. The run happens
+ * Greets the candidates that the rule selects right now and that are cleared
+ * (see `findClearedCitizens()`). The clearance is checked only for the
+ * candidates that the rule selects, because the rule is cheap and selects
+ * few. The run happens
  * every 15 minutes, thus a greeting arrives at most 15 minutes after the
  * local midnight of the citizen.
  *
@@ -55,13 +59,11 @@ export const greetCitizens = async <Candidate extends { readonly id: string }>(
   }: GreetingRun<Candidate>,
 ): Promise<GreetingRunOutput> => {
   const now = context.now();
-  const greetable: Candidate[] = [];
+  const due: Candidate[] = [];
 
   for (const candidate of candidates) {
-    if (greetable.length >= maximumPerRun) break;
-
     try {
-      if (shouldGreet(candidate, now)) greetable.push(candidate);
+      if (shouldGreet(candidate, now)) due.push(candidate);
     } catch (error) {
       // A time zone that the runtime does not know must not stop the other
       // citizens or the other jobs of the Lambda function.
@@ -72,6 +74,16 @@ export const greetCitizens = async <Candidate extends { readonly id: string }>(
       });
     }
   }
+
+  const clearedCitizens =
+    due.length > 0
+      ? await findClearedCitizens(context, {
+          id: { in: due.map((citizen) => citizen.id) },
+        })
+      : new Map();
+  const greetable = due
+    .filter((citizen) => clearedCitizens.has(citizen.id))
+    .slice(0, maximumPerRun);
 
   if (greetable.length === 0)
     return {

@@ -105,8 +105,9 @@ test("greets a cleared citizen at the start of January 1 in their time zone", as
     now,
   });
 
+  // The rule checks both citizens, the clearance refuses the negated login
   await expect(sendNewYearGreetings(context)).resolves.toEqual({
-    candidateCount: 1,
+    candidateCount: 2,
     greetedCount: 1,
     notificationsSent: true,
   });

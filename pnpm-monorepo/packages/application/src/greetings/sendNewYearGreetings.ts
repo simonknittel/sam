@@ -1,9 +1,9 @@
 import {
+  ACTIVE_CITIZEN_WHERE,
   AuditEventType,
   getLocalDate,
   ORGANIZATION_TIMEZONE,
 } from "@sam-monorepo/domain";
-import { findClearedCitizens } from "../auth/clearedCitizens.js";
 import type { ApplicationContext } from "../context.js";
 import { withSpan } from "../withSpan.js";
 import {
@@ -29,11 +29,9 @@ export const sendNewYearGreetings = (
   context: ApplicationContext,
 ): Promise<GreetingRunOutput> =>
   withSpan(context, "sendNewYearGreetings", async () => {
-    const clearedCitizens = await findClearedCitizens(context, {});
-
     return greetCitizens(context, {
       candidates: await context.prisma.citizen.findMany({
-        where: { id: { in: [...clearedCitizens.keys()] } },
+        where: ACTIVE_CITIZEN_WHERE,
         select: { id: true, timezone: true, newYearGreetingSentAt: true },
       }),
       maximumPerRun: MAXIMUM_NEW_YEAR_GREETINGS_PER_RUN,

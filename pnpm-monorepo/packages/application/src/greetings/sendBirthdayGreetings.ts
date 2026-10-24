@@ -1,5 +1,4 @@
-import { AuditEventType } from "@sam-monorepo/domain";
-import { findClearedCitizens } from "../auth/clearedCitizens.js";
+import { ACTIVE_CITIZEN_WHERE, AuditEventType } from "@sam-monorepo/domain";
 import type { ApplicationContext } from "../context.js";
 import { withSpan } from "../withSpan.js";
 import { shouldGreetOnBirthday } from "./birthdayGreetingRule.js";
@@ -21,14 +20,13 @@ export const sendBirthdayGreetings = (
   context: ApplicationContext,
 ): Promise<GreetingRunOutput> =>
   withSpan(context, "sendBirthdayGreetings", async () => {
-    const clearedCitizens = await findClearedCitizens(context, {
-      birthdayDay: { not: null },
-      birthdayMonth: { not: null },
-    });
-
     return greetCitizens(context, {
       candidates: await context.prisma.citizen.findMany({
-        where: { id: { in: [...clearedCitizens.keys()] } },
+        where: {
+          ...ACTIVE_CITIZEN_WHERE,
+          birthdayDay: { not: null },
+          birthdayMonth: { not: null },
+        },
         select: {
           id: true,
           timezone: true,
