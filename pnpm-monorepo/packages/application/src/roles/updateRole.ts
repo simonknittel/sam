@@ -86,6 +86,7 @@ export const updateRole = (
         description: true,
         maxAgeDays: true,
         assignAfterInactiveDays: true,
+        maxLevel: true,
       },
     });
     if (!existingRole) throw new NotFoundError(RoleErrorMessage.NotFound);
@@ -119,7 +120,7 @@ export const updateRole = (
 
     await context.audit.create([
       {
-        type: AuditEventType.ROLE_UPDATED_V3,
+        type: AuditEventType.ROLE_UPDATED_V4,
         data: {
           roleId: updatedRole.id,
           previousName: existingRole.name,
@@ -130,6 +131,8 @@ export const updateRole = (
           newAssignAfterInactiveDays: updatedRole.assignAfterInactiveDays,
           previousDescription: existingRole.description,
           newDescription: updatedRole.description,
+          previousMaxLevel: existingRole.maxLevel,
+          newMaxLevel: updatedRole.maxLevel,
         },
         createdById: actor.userId,
       },

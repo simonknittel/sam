@@ -290,6 +290,7 @@ test.describe("the role tools of the MCP server", () => {
         role_id: logistics.id,
         name: "Logistik und Handel",
         description: null,
+        max_level: 5,
       }),
     ).toEqual({
       id: logistics.id,
@@ -297,12 +298,12 @@ test.describe("the role tools of the MCP server", () => {
       description: null,
       max_age_days: 30,
       assign_after_inactive_days: null,
-      max_level: 3,
+      max_level: 5,
     });
 
     expect(
       await prisma.auditEvent.findFirstOrThrow({
-        where: { type: "ROLE_UPDATED_V3" },
+        where: { type: "ROLE_UPDATED_V4" },
         select: { createdById: true, data: true, triggeredViaMcp: true },
       }),
     ).toEqual({
@@ -317,6 +318,8 @@ test.describe("the role tools of the MCP server", () => {
         newAssignAfterInactiveDays: null,
         previousDescription: "Transporte",
         newDescription: null,
+        previousMaxLevel: 3,
+        newMaxLevel: 5,
       },
       triggeredViaMcp: true,
     });

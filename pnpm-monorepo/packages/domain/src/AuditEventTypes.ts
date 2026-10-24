@@ -42,7 +42,9 @@ export enum AuditEventType {
   ROLE_CREATED = "ROLE_CREATED",
   ROLE_UPDATED = "ROLE_UPDATED",
   ROLE_UPDATED_V2 = "ROLE_UPDATED_V2",
+  /** @deprecated Superseded by ROLE_UPDATED_V4 (adds the levels) */
   ROLE_UPDATED_V3 = "ROLE_UPDATED_V3",
+  ROLE_UPDATED_V4 = "ROLE_UPDATED_V4",
   ROLE_DELETED = "ROLE_DELETED",
   ROLE_PERMISSIONS_UPDATED = "ROLE_PERMISSIONS_UPDATED",
   ROLE_PERMISSION_TOGGLED = "ROLE_PERMISSION_TOGGLED",
@@ -476,6 +478,20 @@ export interface AuditEventDataByType {
     newAssignAfterInactiveDays: number | null;
     previousDescription: string | null;
     newDescription: string | null;
+  };
+
+  [AuditEventType.ROLE_UPDATED_V4]: {
+    roleId: string;
+    previousName: string;
+    newName: string;
+    previousMaxAgeDays: number | null;
+    newMaxAgeDays: number | null;
+    previousAssignAfterInactiveDays: number | null;
+    newAssignAfterInactiveDays: number | null;
+    previousDescription: string | null;
+    newDescription: string | null;
+    previousMaxLevel: number | null;
+    newMaxLevel: number | null;
   };
 
   [AuditEventType.ROLE_DELETED]: {

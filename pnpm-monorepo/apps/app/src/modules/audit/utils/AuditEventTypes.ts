@@ -402,6 +402,25 @@ export const AuditEventDefinitions: {
       `Role updated: "${data.previousName}" → "${data.newName}"`,
   },
 
+  [AuditEventType.ROLE_UPDATED_V4]: {
+    type: AuditEventType.ROLE_UPDATED_V4,
+    data: {
+      roleId: "string",
+      previousName: "string",
+      newName: "string",
+      previousMaxAgeDays: 0,
+      newMaxAgeDays: 0,
+      previousAssignAfterInactiveDays: 0,
+      newAssignAfterInactiveDays: 0,
+      previousDescription: null,
+      newDescription: null,
+      previousMaxLevel: 0,
+      newMaxLevel: 0,
+    },
+    message: (data) =>
+      `Role updated: "${data.previousName}" → "${data.newName}"`,
+  },
+
   [AuditEventType.ROLE_DELETED]: {
     type: AuditEventType.ROLE_DELETED,
     data: {
