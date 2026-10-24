@@ -12,13 +12,14 @@ it has no sessions, no subscriptions, no resources and no prompts.
 
 The permission `mcp;use` ("MCP-Server nutzen" in the role settings) and the
 clearance of the app (a confirmed email and `login;manage`) gate the whole
-server: the consent page, the account page, the token endpoint and each
+server: the consent page, the MCP app, the token endpoint and each
 request with an access token. Only the removal of access stays open without
 `mcp;use`: a user can always disconnect a client and deny a consent. Each
-user with it finds the URL and the steps for the supported clients on
-`/app/account/mcp`. On the same page, the user disconnects clients and
-disables tools. A client opens the consent page `/app/oauth/authorize` of
-SAM; the user signs in to SAM if necessary and allows the access.
+user with it finds the URL and the steps for the supported clients in the
+MCP app (`/app/mcp`). In the same app, the user names and disconnects
+clients and disables tools for each client. A client opens the consent page
+`/app/oauth/authorize` of SAM; the user signs in to SAM if necessary, can
+give the client a name and disable tools, and allows the access.
 
 ## OAuth design
 
@@ -30,7 +31,10 @@ app.
   cache. There is no Dynamic Client Registration and there are no
   pre-registered clients.
 - **Grant:** the authorization code grant with PKCE (`S256` only). Each
-  consent makes a new grant (a "connected client" on the account page).
+  consent makes a new grant (a "connected client" in the MCP app). The tool
+  settings and the name belong to the grant. The grant keeps the user agent
+  of the browser of the consent, thus the user can tell two grants of the
+  same client apart.
 - **Access tokens:** ES256 JSON Web Tokens with a lifetime of 1 hour. The
   embed signing key signs them (see
   [Embedded App Authentication](./embedded-app-authentication.md)). The
@@ -46,7 +50,7 @@ app.
   an abandoned authorization) and cached client metadata documents that
   expired more than 24 hours ago.
 - **Permissions:** the own roles of the user. Admin mode is off. An admin
-  can enable admin mode for one client on the account page.
+  can enable admin mode for one client in the MCP app.
 
 Endpoints:
 
@@ -70,7 +74,7 @@ Endpoints:
 
 The Unleash flag `DisableMcpServer` is the kill switch. While it is on, the
 MCP endpoint and the OAuth endpoints answer `503`, and the consent page
-shows a notice. The account page stays available.
+shows a notice. The MCP app stays available.
 
 Use the standard strategy for all users on this flag. The MCP endpoint and
 the OAuth endpoints have no session, thus a strategy for some users does not
