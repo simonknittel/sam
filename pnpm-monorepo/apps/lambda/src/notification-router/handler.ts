@@ -10,6 +10,7 @@ import { EventParticipationAddedHandler } from "./type-handlers/EventParticipati
 import { EventParticipationRemovedHandler } from "./type-handlers/EventParticipationRemoved";
 import { EventStartingHandler } from "./type-handlers/EventStarting";
 import { EventUpdatedHandler } from "./type-handlers/EventUpdated";
+import { ManualNotificationCreatedHandler } from "./type-handlers/ManualNotificationCreated";
 import { NewYearGreetingHandler } from "./type-handlers/NewYearGreeting";
 import { PenaltyEntryCreatedHandler } from "./type-handlers/PenaltyEntryCreated";
 import { ProfitDistributionPayoutDisbursedHandler } from "./type-handlers/ProfitDistributionPayoutDisbursed";
@@ -98,6 +99,9 @@ export const notificationRouterHandler = async (
       break;
     case "WelcomeGreeting":
       await WelcomeGreetingHandler(context, body.payload);
+      break;
+    case "ManualNotificationCreated":
+      await ManualNotificationCreatedHandler(context, body.payload);
       break;
     default:
       throw new Error(`Unknown notification type: ${body satisfies never}`);
@@ -311,6 +315,14 @@ export const bodySchema = z.discriminatedUnion("type", [
     type: z.literal("WelcomeGreeting"),
     payload: z.object({
       citizenId: z.cuid(),
+    }),
+    requestId: z.cuid2(),
+  }),
+
+  z.object({
+    type: z.literal("ManualNotificationCreated"),
+    payload: z.object({
+      manualNotificationId: z.cuid2(),
     }),
     requestId: z.cuid2(),
   }),
