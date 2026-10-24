@@ -23,7 +23,11 @@ import { startCimdServer, type CimdServer } from "./cimd-server";
 import { startDiscordMock, type DiscordMock } from "./discord-mock";
 import { ONE_DAY_MS } from "./factories";
 import { createMcpClient, type McpTestClient } from "./mcp-client";
-import { authorizeMcpClient, type McpAuthorization } from "./oauth";
+import {
+  authorizeMcpClient,
+  type AuthorizeMcpClientOptions,
+  type McpAuthorization,
+} from "./oauth";
 import type { StackScope } from "./unleash";
 
 interface WorkerStack {
@@ -77,6 +81,7 @@ interface Fixtures {
    */
   readonly authorizeMcpClient: (
     user: Pick<User, "id">,
+    options?: Pick<AuthorizeMcpClientOptions, "beforeApprove">,
   ) => Promise<McpAuthorization>;
   /**
    * Connects the MCP client SDK with an access token. The fixture closes the
@@ -300,7 +305,7 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
     { page, request, stack, signIn, cimdServer },
     use,
   ) => {
-    await use((user) =>
+    await use((user, options) =>
       authorizeMcpClient({
         page,
         request,
@@ -308,6 +313,7 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
         signIn,
         cimdServer,
         user,
+        ...options,
       }),
     );
   },

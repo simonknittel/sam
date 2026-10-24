@@ -243,9 +243,13 @@ test.describe("the penalty points and fleet write tools of the MCP server", () =
       destructiveHint: true,
     });
 
-    // A tool that the user disabled on the account page does not exist
+    // A tool that the user disabled for the client does not exist
+    const grant = await prisma.oAuthGrant.findFirstOrThrow({
+      where: { userId: owner.user.id },
+      select: { id: true },
+    });
     const toolSetting = await prisma.mcpToolSetting.create({
-      data: { userId: owner.user.id, toolName: "delete_ship" },
+      data: { grantId: grant.id, toolName: "delete_ship" },
     });
     await expect(
       client.callTool("delete_ship", { ship_id: ownShip.id }),

@@ -1,10 +1,12 @@
 import type { Page } from "@playwright/test";
+import { expectAuditEvents } from "../fixtures/audit";
 import { CIMD_CLIENT_NAME } from "../fixtures/cimd-server";
 import {
   createCitizen,
   createMcpCitizen,
   MCP_USE_PERMISSION,
 } from "../fixtures/factories";
+import { clickUntilVisible, toggleLabel } from "../fixtures/interactions";
 import {
   LEGACY_INITIALIZE_REQUEST,
   modernMcpRequest,
@@ -145,9 +147,7 @@ test.describe("the OAuth server and the MCP endpoint", () => {
     const client = await connectMcpClient(authorization.accessToken);
 
     const discovery = await client.discover();
-    expect(discovery.instructions).toContain(
-      new URL("/app/account/mcp", issuer).href,
-    );
+    expect(discovery.instructions).toContain(new URL("/app/mcp", issuer).href);
     expect(await client.listToolNames()).toContain("get_current_user");
 
     const result = await client.callTool("get_current_user");
@@ -168,6 +168,58 @@ test.describe("the OAuth server and the MCP endpoint", () => {
     expect(legacyResponse.status()).toBe(400);
     const legacyBody = (await legacyResponse.json()) as JsonRpcErrorResponse;
     expect(legacyBody.error.code).toBe(UNSUPPORTED_PROTOCOL_VERSION_ERROR_CODE);
+  });
+
+  test("the consent page gives the new client an own name and its tools", async ({
+    page,
+    prisma,
+    cimdServer,
+    authorizeMcpClient,
+    connectMcpClient,
+  }) => {
+    const citizen = await createMcpCitizen(prisma, { handle: "mcp-planer" });
+
+    const authorization = await authorizeMcpClient(citizen.user, {
+      beforeApprove: async (consentPage) => {
+        const nameDialog = consentPage.getByRole("dialog", {
+          name: "Client benennen",
+        });
+        await clickUntilVisible(
+          consentPage.getByRole("button", { name: "Ändern" }),
+          nameDialog,
+        );
+        await nameDialog.getByLabel("Name").fill("Laptop");
+        await nameDialog.getByRole("button", { name: "Übernehmen" }).click();
+        await expect(nameDialog).toBeHidden();
+
+        const toolsDialog = consentPage.getByRole("dialog", {
+          name: "Tools auswählen",
+        });
+        await clickUntilVisible(
+          consentPage.getByRole("button", { name: "Auswählen" }),
+          toolsDialog,
+        );
+        const toolSwitch = consentPage.getByRole("checkbox", {
+          name: "Get the current user",
+        });
+        await toggleLabel(toolsDialog, toolSwitch).click();
+        await expect(toolSwitch).not.toBeChecked();
+        await consentPage.keyboard.press("Escape");
+        await expect(toolsDialog).toBeHidden();
+      },
+    });
+    const client = await connectMcpClient(authorization.accessToken);
+    expect(await client.listToolNames()).not.toContain("get_current_user");
+
+    await page.goto("/app/mcp");
+    const clientRow = page
+      .getByRole("row")
+      .filter({ hasText: cimdServer.host });
+    await expect(clientRow.getByText("Laptop")).toBeVisible();
+    // The browser of the consent identifies the client
+    await expect(clientRow).not.toContainText("Unbekannt");
+
+    await expectAuditEvents(prisma, ["OAUTH_GRANT_CREATED_V2"]);
   });
 
   test("a refresh token works once, and its reuse disconnects the client", async ({
@@ -358,8 +410,9 @@ test.describe("the OAuth server and the MCP endpoint", () => {
     await expect(
       page.getByText(cimdServer.host, { exact: true }),
     ).toBeVisible();
+    // The name also shows as the name of the new client
     await expect(
-      page.getByText(CIMD_CLIENT_NAME, { exact: true }),
+      page.getByText(CIMD_CLIENT_NAME, { exact: true }).first(),
     ).toBeVisible();
     await expect(allowButton).toBeVisible();
 

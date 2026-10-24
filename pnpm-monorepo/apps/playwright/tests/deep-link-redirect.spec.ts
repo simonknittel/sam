@@ -23,9 +23,9 @@ test("a deep link visit with a stale session cookie lands on the login page with
   // after a sign-out on a different device)
   await prisma.session.deleteMany({ where: { userId: citizen.user.id } });
 
-  await page.goto("/app/account/mcp?x=1");
+  await page.goto("/app/mcp?x=1");
 
-  await expect(page).toHaveURL("/?redirect-to=%2Fapp%2Faccount%2Fmcp%3Fx%3D1");
+  await expect(page).toHaveURL("/?redirect-to=%2Fapp%2Fmcp%3Fx%3D1");
   await expect(page.getByRole("button", { name: "Login" })).toBeVisible();
 });
 

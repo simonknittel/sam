@@ -205,7 +205,7 @@ export interface McpAuthorization {
   readonly revoke: (token: string) => Promise<number>;
 }
 
-interface AuthorizeMcpClientOptions {
+export interface AuthorizeMcpClientOptions {
   readonly page: Page;
   readonly request: APIRequestContext;
   /** The URL of the app of the worker */
@@ -213,6 +213,8 @@ interface AuthorizeMcpClientOptions {
   readonly signIn: (user: Pick<User, "id">) => Promise<void>;
   readonly cimdServer: CimdServer;
   readonly user: Pick<User, "id">;
+  /** Changes the settings of the consent page before the approval */
+  readonly beforeApprove?: (page: Page) => Promise<void>;
 }
 
 /**
@@ -228,6 +230,7 @@ export const authorizeMcpClient = async ({
   signIn,
   cimdServer,
   user,
+  beforeApprove,
 }: AuthorizeMcpClientOptions): Promise<McpAuthorization> => {
   const metadata = await readMcpServerMetadata(request);
   const pkce = createPkcePair();
@@ -249,6 +252,7 @@ export const authorizeMcpClient = async ({
   await expect(allowButton).toBeVisible();
   // One click, because each approval creates a grant
   await waitForAppShellHydration(page);
+  await beforeApprove?.(page);
   await allowButton.click();
 
   const authorizationResponse = await waitForAuthorizationResponse(page);

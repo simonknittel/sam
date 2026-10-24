@@ -21,8 +21,6 @@ import { expect, test } from "../fixtures/test";
  */
 const GATED_ROUTES = [
   "/app/account/analytics",
-  /** `mcp;use` */
-  "/app/account/mcp",
   /** No readable flow and no `career;manage` */
   "/app/career",
   "/app/career/settings",
@@ -41,6 +39,8 @@ const GATED_ROUTES = [
   "/app/leaderboards",
   /** `manualNotification;manage` */
   "/app/manual-notifications",
+  /** `mcp;use` */
+  "/app/mcp",
   "/app/penalty-points",
   "/app/silc/dashboard",
   "/app/silc/settings",
