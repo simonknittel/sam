@@ -49,6 +49,34 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-10-24-mcp-rollen",
+    date: "2026-10-24",
+    title: "MCP: Rollen bearbeiten",
+    tags: ["Neu", "MCP"],
+    isTracked: false,
+    body: () => (
+      <>
+        <p>
+          Über den MCP-Server bearbeiten KI-Clients jetzt auch Rollen: den
+          Namen, die Beschreibung, die Inaktivitätsregeln, die Stufen und die
+          Berechtigungen. Dafür brauchst du wie in der Rollenverwaltung die
+          Berechtigung &bdquo;Rollen inkl. Berechtigungen verwalten&ldquo;. Ein
+          weiteres Tool gibt dem Client alle Berechtigungen mit den
+          Beschreibungen aus der Rollenverwaltung, damit er weiß, was eine
+          Berechtigung bewirkt.
+        </p>
+
+        <p>
+          In der Rollenverwaltung zeigt die Berechtigungsmatrix jetzt auch
+          &bdquo;Citizen löschen&ldquo;. Wenn du eine Rolle auf einen Namen
+          umbenennst, den schon eine andere Rolle hat, bekommst du jetzt einen
+          passenden Hinweis.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-10-24-mcp-app",
     date: "2026-10-24",
     title: "MCP: Eigene App und Tools für jeden Client",
