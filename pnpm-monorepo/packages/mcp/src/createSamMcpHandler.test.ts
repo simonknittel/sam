@@ -165,9 +165,7 @@ describe("discovery", () => {
     expect(status).toBe(200);
     expect(body.result?.supportedVersions).toEqual([PROTOCOL_VERSION]);
     expect(body.result?.capabilities.tools).toEqual({ listChanged: false });
-    expect(body.result?.instructions).toContain(
-      "http://localhost/app/account/mcp",
-    );
+    expect(body.result?.instructions).toContain("http://localhost/app/mcp");
   });
 
   test("tools/list gives get_current_user with its annotations and its output schema", async () => {
@@ -222,7 +220,7 @@ describe("tools/call", () => {
       admin_mode: false,
       permission_count: 1,
       tool_groups: ["account"],
-      account_page_url: "http://localhost/app/account/mcp",
+      settings_page_url: "http://localhost/app/mcp",
     });
     expect(body.result?.content).toEqual([
       { type: "text", text: JSON.stringify(body.result?.structuredContent) },

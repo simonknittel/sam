@@ -13,7 +13,7 @@ import { TOOL_CATALOG, toToolCatalogEntry } from "./catalog.js";
 import type { CatalogTool, ToolRequestScope } from "./toolDefinition.js";
 
 export interface RegisterToolsOptions {
-  /** The tools that the user disabled on the account page */
+  /** The tools that the user disabled for the client of the request */
   readonly disabledToolNames: readonly string[];
 }
 

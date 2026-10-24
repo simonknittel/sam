@@ -46,6 +46,6 @@ export const toToolCatalogEntry = (tool: CatalogTool): ToolCatalogEntry => ({
   kind: tool.annotations.readOnlyHint ? ToolKind.Read : ToolKind.Write,
 });
 
-/** All tools in the order of `tools/list`, for example for the account page */
+/** All tools in the order of `tools/list`, for example for the MCP app */
 export const listToolCatalog = (): ToolCatalogEntry[] =>
   TOOL_CATALOG.map(toToolCatalogEntry);

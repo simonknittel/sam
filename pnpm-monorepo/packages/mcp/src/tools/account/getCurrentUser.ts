@@ -1,8 +1,8 @@
 import type { Actor } from "@sam-monorepo/application";
 import { UserRole } from "@sam-monorepo/database/browser";
 import * as z from "zod";
-import { getAccountPageUrl } from "../../accountPageUrl.js";
 import { citizenReferenceSchema } from "../../schemas.js";
+import { getSettingsPageUrl } from "../../settingsPageUrl.js";
 import {
   defineTool,
   READ_ONLY_TOOL_ANNOTATIONS,
@@ -45,7 +45,7 @@ export const getCurrentUserTool = defineTool({
       .describe("Admin mode gives an admin all permissions."),
     permission_count: z.number().int().min(0),
     tool_groups: z.array(z.enum(ToolGroup)),
-    account_page_url: z.url(),
+    settings_page_url: z.url(),
   }),
   isVisible: () => true,
   handler: async (context, actor, _input, { availableTools }) => {
@@ -63,7 +63,7 @@ export const getCurrentUserTool = defineTool({
       tool_groups: TOOL_GROUP_ORDER.filter((group) =>
         availableGroups.has(group),
       ),
-      account_page_url: getAccountPageUrl(context),
+      settings_page_url: getSettingsPageUrl(context),
     };
   },
 });

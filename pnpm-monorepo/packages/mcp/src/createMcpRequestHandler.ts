@@ -10,7 +10,6 @@ import {
 } from "@modelcontextprotocol/server";
 import {
   ForbiddenError,
-  getDisabledToolNames,
   getProtectedResourceMetadata,
   InvalidTokenError,
   resolvePrincipal,
@@ -84,9 +83,9 @@ const authenticate = async (
 };
 
 /**
- * Loads the actor and the disabled tools of a verified token. Gives the
- * principal, or the response for a revoked grant, a banned user or a user
- * without the clearance of the app.
+ * Loads the actor and the disabled tools of the grant of a verified token.
+ * Gives the principal, or the response for a revoked grant, a banned user or
+ * a user without the clearance of the app.
  */
 const loadPrincipal = async (
   context: ApplicationContext,
@@ -97,12 +96,12 @@ const loadPrincipal = async (
   >,
 ): Promise<McpPrincipalExtra | Response> => {
   try {
-    const { actor } = await resolvePrincipal(context, verifiedToken);
+    const { actor, grant } = await resolvePrincipal(context, verifiedToken);
 
     return {
       context,
       actor,
-      disabledToolNames: await getDisabledToolNames(context, actor),
+      disabledToolNames: grant.disabledToolNames,
     };
   } catch (error) {
     if (error instanceof InvalidTokenError)

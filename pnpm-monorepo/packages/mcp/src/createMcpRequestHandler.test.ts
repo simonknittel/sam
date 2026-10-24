@@ -40,6 +40,7 @@ const createGrantRow = () => ({
   lastUsedAt: null as Date | null,
   revokedAt: null as Date | null,
   adminModeEnabledAt: null,
+  toolSettings: [],
   user: {
     role: null,
     emailVerified: new Date("2026-01-01T00:00:00Z"),
@@ -57,7 +58,7 @@ const log = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
 /** `withSpan()` uses only `startActiveSpan()`, `setStatus()` and `end()` */
 const span = { setStatus: () => span, end: () => undefined };
 
-/** Only the queries of the principal and of the tool settings */
+/** Only the queries of the principal */
 const prisma = {
   oAuthGrant: {
     findUnique: () => Promise.resolve(grantRow),
@@ -79,7 +80,6 @@ const prisma = {
         },
       ]),
   },
-  mcpToolSetting: { findMany: () => Promise.resolve([]) },
 };
 
 const context = {

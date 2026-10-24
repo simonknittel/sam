@@ -25,7 +25,7 @@ export const READ_ONLY_TOOL_ANNOTATIONS: ToolAnnotations = {
   openWorldHint: false,
 };
 
-/** The data of a tool that the account page shows */
+/** The data of a tool that the MCP app shows */
 export interface ToolCatalogEntry {
   readonly name: string;
   readonly group: ToolGroup;

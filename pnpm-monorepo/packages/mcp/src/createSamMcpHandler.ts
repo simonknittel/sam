@@ -20,7 +20,7 @@ const SERVER_TITLE = "SAM";
 export interface McpPrincipalExtra {
   readonly context: ApplicationContext;
   readonly actor: Actor;
-  /** The tools that the user disabled on the account page */
+  /** The tools that the user disabled for the client of the request */
   readonly disabledToolNames: readonly string[];
 }
 

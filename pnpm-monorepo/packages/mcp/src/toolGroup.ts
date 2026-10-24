@@ -1,6 +1,6 @@
 /**
  * The areas of the app that the tools belong to. The order of the members is
- * the order of the groups in `tools/list` and on the account page.
+ * the order of the groups in `tools/list` and in the MCP app.
  */
 export enum ToolGroup {
   Account = "account",
