@@ -1,4 +1,4 @@
-import { requireAuthentication } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { Actions } from "@/modules/common/components/Actions";
 import { CitizenCellLink } from "@/modules/common/components/CitizenCellLink";
 import { SortDirection } from "@/modules/common/components/SortableColumnHeader";
@@ -139,7 +139,7 @@ interface NoteProps {
  * viewer who may decide about the note
  */
 const NoteConfirmationState = async ({ note }: NoteProps) => {
-  const authentication = await requireAuthentication();
+  const authentication = await requireAuthenticationPage();
   const canDecide = await authentication.authorize(
     "note",
     "confirm",
@@ -167,7 +167,7 @@ const NotesTableActions = async ({ note }: NoteProps) => {
   /** The logs of a deleted citizen are read only */
   if (note.citizen.deletedAt) return null;
 
-  const authentication = await requireAuthentication();
+  const authentication = await requireAuthenticationPage();
   const attributes = getNotePermissionAttributes(note);
   const [showUpdate, showDelete] = await Promise.all([
     authentication.authorize("note", "update", attributes),

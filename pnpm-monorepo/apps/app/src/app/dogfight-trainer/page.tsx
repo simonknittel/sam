@@ -11,6 +11,10 @@ export const metadata: Metadata = {
   title: "Dogfight Trainer",
 };
 
+/**
+ * Public on purpose: the game is a static build that loads no data of SAM,
+ * and the feature flag turns the page on or off for each visitor.
+ */
 export default async function Page() {
   if (!(await getUnleashFlag(UNLEASH_FLAG.EnableCareBearShooter)))
     redirect("/");

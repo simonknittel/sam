@@ -1,4 +1,4 @@
-import { authenticate } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { DefaultLayout } from "@/modules/common/components/layouts/DefaultLayout";
 import { getNavigationItems } from "@/modules/iam/utils/getNavigationItems";
 import { CreateRoleButton } from "@/modules/roles/components/CreateRole/CreateRoleButton";
@@ -14,11 +14,10 @@ export const metadata: Metadata = {
 export default async function Layout({ children }: LayoutProps<"/app/iam">) {
   const [pages, authentication] = await Promise.all([
     getNavigationItems(),
-    authenticate(),
+    requireAuthenticationPage(),
   ]);
 
-  const showCreateRoleButton =
-    authentication && authentication.authorize("role", "manage");
+  const showCreateRoleButton = await authentication.authorize("role", "manage");
 
   return (
     <DefaultLayout

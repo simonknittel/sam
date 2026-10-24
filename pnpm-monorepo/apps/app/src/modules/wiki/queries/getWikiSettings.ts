@@ -1,5 +1,7 @@
-import { getApplicationContext } from "@/modules/application";
-import { authenticate } from "@/modules/auth/server";
+import {
+  getApplicationContext,
+  getOptionalRequestActor,
+} from "@/modules/application";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
   findWikiPageLinkTarget,
@@ -52,15 +54,15 @@ interface WikiPageLinkTarget {
 
 /**
  * The page of a page link, or null when the link is not set or the page is
- * in the trash. Also null without a session: the top bar and the error pages
- * call it. The page checks the permissions when the user opens it.
+ * in the trash. Also null without a session or without clearance: the top bar
+ * and the error pages call it. The page checks the permissions when the user
+ * opens it.
  */
 export const getWikiPageLinkTarget = cache(
   withTrace(
     "getWikiPageLinkTarget",
     async (key: WikiPageLinkKey): Promise<WikiPageLinkTarget | null> => {
-      const authentication = await authenticate();
-      if (!authentication) return null;
+      if (!(await getOptionalRequestActor())) return null;
 
       const target = await findWikiPageLinkTarget(getApplicationContext(), {
         key,

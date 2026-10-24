@@ -1,4 +1,4 @@
-import { requireAuthentication } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { Filter } from "@/modules/common/components/Filter";
 import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
 import clsx from "clsx";
@@ -10,7 +10,7 @@ interface Props {
 }
 
 export const CitizenTableFilters = async ({ className }: Props) => {
-  const authentication = await requireAuthentication();
+  const authentication = await requireAuthenticationPage();
   const [showDiscordId, showTeamspeakId] = await Promise.all([
     authentication.authorize("discord-id", "read"),
     authentication.authorize("teamspeak-id", "read"),

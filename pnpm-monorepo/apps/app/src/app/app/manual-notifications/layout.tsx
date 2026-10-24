@@ -1,4 +1,4 @@
-import { authenticate } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { DefaultLayout } from "@/modules/common/components/layouts/DefaultLayout";
 import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthContent";
 import { CreateManualNotificationButton } from "@/modules/manual-notifications/components/CreateManualNotification/CreateManualNotificationButton";
@@ -14,11 +14,12 @@ export const metadata: Metadata = {
 export default async function Layout({
   children,
 }: LayoutProps<"/app/manual-notifications">) {
-  const authentication = await authenticate();
+  const authentication = await requireAuthenticationPage();
 
-  const showCta =
-    authentication &&
-    (await authentication.authorize("manualNotification", "manage"));
+  const showCta = await authentication.authorize(
+    "manualNotification",
+    "manage",
+  );
 
   return (
     <DefaultLayout

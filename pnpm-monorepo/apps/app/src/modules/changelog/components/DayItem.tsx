@@ -1,4 +1,4 @@
-import { authenticate } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import type { ChangelogEntry } from "../types";
 import { DayItemContainer } from "./DayItemContainer";
 import { RedactedDayItemContent } from "./RedactedDayItemContent";
@@ -12,13 +12,11 @@ export const DayItem = async ({ entry, isUnseen = false }: Props) => {
   const isTracked = entry.isTracked === true;
 
   if (entry.requiresAuth) {
-    const authentication = await authenticate();
-    const authorized =
-      authentication &&
-      (await authentication.authorize(
-        entry.requiresAuth.resource,
-        entry.requiresAuth.action,
-      ));
+    const authentication = await requireAuthenticationPage();
+    const authorized = await authentication.authorize(
+      entry.requiresAuth.resource,
+      entry.requiresAuth.action,
+    );
 
     if (!authorized)
       return (

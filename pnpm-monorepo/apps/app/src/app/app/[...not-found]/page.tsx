@@ -16,6 +16,7 @@ export const metadata: Metadata = {
   title: "404 Not Found",
 };
 
+/** No gate: the page loads no data and only answers with a 404 */
 export default function Page() {
   notFound();
 }

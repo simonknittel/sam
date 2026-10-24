@@ -1,4 +1,4 @@
-import { requireAuthentication } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SubNavigation } from "@/modules/common/components/SubNavigation";
 import type { EventCitizenReference } from "@/modules/events/queries/eventRelationSelects";
 import { toEventContainer } from "@/modules/events/utils/eventContainer";
@@ -19,7 +19,7 @@ interface Props {
 }
 
 export const Navigation = async ({ className, event }: Props) => {
-  const authentication = await requireAuthentication();
+  const authentication = await requireAuthenticationPage();
   const [showLineup, showFleetLink, eventWikiContext, showSettings] =
     await Promise.all([
       isLineupVisible(event),

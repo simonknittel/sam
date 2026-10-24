@@ -1,4 +1,4 @@
-import { authenticate, requireAuthenticationPage } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { SmallBadge } from "@/modules/common/components/SmallBadge";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
@@ -43,12 +43,10 @@ interface DetailsProps {
 }
 
 const EventTemplateDetails = async ({ templateId }: DetailsProps) => {
-  const authentication = await authenticate();
+  const authentication = await requireAuthenticationPage();
   const [context, canCreate] = await Promise.all([
     getEventTemplateById(templateId),
-    authentication
-      ? authentication.authorize("event", "create")
-      : Promise.resolve(false),
+    authentication.authorize("event", "create"),
   ]);
   if (!context) notFound();
 

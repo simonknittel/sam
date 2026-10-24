@@ -36,7 +36,16 @@ export const authenticate = cache(
   }),
 );
 
-export async function requireAuthenticationPage(requestPath?: string) {
+/**
+ * The gate of each server component of `/app`: a session, a confirmed email
+ * and `login;manage`. Call it in each page, layout, slot and
+ * `generateMetadata` that loads data, also below a layout that calls it:
+ * Next.js renders the segments of a route separately and streams them in one
+ * response, thus the redirect of a parent layout does not stop the data of
+ * the other segments. The clearance, email confirmation and login pages use
+ * `authenticate()` instead, because they serve users without clearance.
+ */
+export const requireAuthenticationPage = cache(async (requestPath?: string) => {
   const authentication = await authenticate();
 
   if (!authentication) {
@@ -83,7 +92,7 @@ export async function requireAuthenticationPage(requestPath?: string) {
       return result;
     },
   };
-}
+});
 
 export async function requireAuthenticationApi(
   requestPath?: string,
@@ -134,12 +143,6 @@ export async function requireAuthenticationApi(
     },
   };
 }
-
-export const requireAuthentication = cache(async () => {
-  const authentication = await authenticate();
-  if (!authentication) throw new Error("Unauthorized");
-  return authentication;
-});
 
 export async function authorize(
   session: Session,

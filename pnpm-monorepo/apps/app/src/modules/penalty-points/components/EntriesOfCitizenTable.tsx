@@ -1,4 +1,4 @@
-import { requireAuthentication } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { Tile } from "@/modules/common/components/Tile";
 import type { Citizen } from "@sam-monorepo/database/client";
 import clsx from "clsx";
@@ -26,7 +26,7 @@ export const EntriesOfCitizenTable = async ({
   citizenId,
   searchParams,
 }: Props) => {
-  const authentication = await requireAuthentication();
+  const authentication = await requireAuthenticationPage();
   const { expired } = await loadSearchParams(searchParams);
   const [showCreate, showDelete] = await Promise.all([
     authentication.authorize("penaltyEntry", "create"),

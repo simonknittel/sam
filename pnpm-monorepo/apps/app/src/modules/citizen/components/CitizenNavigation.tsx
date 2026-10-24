@@ -1,4 +1,4 @@
-import { requireAuthentication } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SubNavigation } from "@/modules/common/components/SubNavigation";
 import type { Citizen } from "@sam-monorepo/database/client";
 import clsx from "clsx";
@@ -10,7 +10,7 @@ interface Props {
 }
 
 export const CitizenNavigation = async ({ className, citizenId }: Props) => {
-  const authentication = await requireAuthentication();
+  const authentication = await requireAuthenticationPage();
   if (!authentication.session.entity) forbidden();
   const showOrganizations = await authentication.authorize(
     "organizationMembership",

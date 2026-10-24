@@ -1,4 +1,4 @@
-import { requireAuthentication } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { BirthdayGreetingBanner } from "@/modules/citizen/components/BirthdayGreetingBanner";
 import { WelcomeGreetingBanner } from "@/modules/onboarding/components/WelcomeGreetingBanner";
 import { isWelcomeDay } from "@/modules/onboarding/queries/isWelcomeDay";
@@ -21,7 +21,7 @@ import { GreetingBannerPreview } from "../utils/GreetingBannerPreview";
  */
 export const DashboardGreetingBanner = async () => {
   const [authentication, preview] = await Promise.all([
-    requireAuthentication(),
+    requireAuthenticationPage(),
     getGreetingBannerPreview(),
   ]);
   const { entity } = authentication.session;

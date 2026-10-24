@@ -1,4 +1,4 @@
-import { requireAuthentication } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { CopyToClipboard } from "@/modules/common/components/CopyToClipboard";
 import { RSIButton } from "@/modules/common/components/RSIButton";
 import { Tile } from "@/modules/common/components/Tile";
@@ -38,7 +38,7 @@ interface Props {
 }
 
 export const Overview = async ({ className, entity }: Props) => {
-  const authentication = await requireAuthentication();
+  const authentication = await requireAuthenticationPage();
   /**
    * Both attributes are set by the citizen themselves and need no permission
    * of their own, the same rule the citizen popover follows.

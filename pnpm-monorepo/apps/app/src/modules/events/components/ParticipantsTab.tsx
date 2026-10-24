@@ -1,4 +1,4 @@
-import { requireAuthentication } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import { RolesCell } from "@/modules/citizen/components/RolesCell";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
@@ -73,7 +73,7 @@ export const ParticipantsTab = async ({
   event,
   searchParams,
 }: Props) => {
-  const authentication = await requireAuthentication();
+  const authentication = await requireAuthenticationPage();
   if (!authentication.session.entity) forbidden();
   const isAllowedToManageEvent = await _isAllowedToManageEvent(event);
   const showCreateSilcTransactionButton = await authentication.authorize(

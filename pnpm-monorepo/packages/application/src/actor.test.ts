@@ -40,18 +40,19 @@ describe("admin mode", () => {
 
 describe("clearance", () => {
   test("requires a confirmed email address and login;manage", () => {
+    expect(createActor(MEMBER).hasClearance()).toBe(true);
     expect(() => createActor(MEMBER).requireClearance()).not.toThrow();
 
-    expect(() =>
-      createActor({ ...MEMBER, emailConfirmedAt: null }).requireClearance(),
-    ).toThrow(ForbiddenError);
+    const unconfirmed = createActor({ ...MEMBER, emailConfirmedAt: null });
+    expect(unconfirmed.hasClearance()).toBe(false);
+    expect(() => unconfirmed.requireClearance()).toThrow(ForbiddenError);
 
-    expect(() =>
-      createActor({
-        ...MEMBER,
-        permissionSets: [{ resource: "event", operation: "read" }],
-      }).requireClearance(),
-    ).toThrow(ForbiddenError);
+    const withoutLogin = createActor({
+      ...MEMBER,
+      permissionSets: [{ resource: "event", operation: "read" }],
+    });
+    expect(withoutLogin.hasClearance()).toBe(false);
+    expect(() => withoutLogin.requireClearance()).toThrow(ForbiddenError);
   });
 
   test("does not require a confirmed email address in admin mode", () => {
@@ -63,6 +64,7 @@ describe("clearance", () => {
       adminMode: true,
     });
 
+    expect(actor.hasClearance()).toBe(true);
     expect(() => actor.requireClearance()).not.toThrow();
   });
 });

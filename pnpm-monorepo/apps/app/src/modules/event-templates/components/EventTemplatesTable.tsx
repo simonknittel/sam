@@ -1,4 +1,4 @@
-import { authenticate } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { EventTemplateStatus } from "@sam-monorepo/application";
 import { createLoader, type SearchParams } from "nuqs/server";
 import { getEventTemplates } from "../queries/getEventTemplates";
@@ -31,13 +31,11 @@ export const EventTemplatesTable = async ({ searchParams }: Props) => {
   const ownerId = searchParameters[EVENT_TEMPLATE_OWNER_PARAM];
   const query = searchParameters[EVENT_TEMPLATE_QUERY_PARAM];
 
-  const authentication = await authenticate();
+  const authentication = await requireAuthenticationPage();
   const [viewer, entries, canCreate] = await Promise.all([
     getEventTemplateViewer(),
     getEventTemplates({ status, sharing, ownerId, query }),
-    authentication
-      ? authentication.authorize("event", "create")
-      : Promise.resolve(false),
+    authentication.authorize("event", "create"),
   ]);
 
   return (

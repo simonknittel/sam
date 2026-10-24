@@ -1,4 +1,4 @@
-import { authenticate } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { DefaultLayout } from "@/modules/common/components/layouts/DefaultLayout";
 import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthContent";
 import { CreateProfitDistributionCycleButton } from "@/modules/profit-distribution/components/CreateProfitDistributionCycleButton";
@@ -17,12 +17,13 @@ export default async function Layout({
 }: LayoutProps<"/app/sincome">) {
   const [pages, authentication] = await Promise.all([
     getNavigationItems(),
-    authenticate(),
+    requireAuthenticationPage(),
   ]);
 
-  const showCta =
-    authentication &&
-    (await authentication.authorize("profitDistributionCycle", "create"));
+  const showCta = await authentication.authorize(
+    "profitDistributionCycle",
+    "create",
+  );
 
   return (
     <DefaultLayout

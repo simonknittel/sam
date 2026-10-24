@@ -1,4 +1,4 @@
-import { authenticate } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { DefaultLayout } from "@/modules/common/components/layouts/DefaultLayout";
 import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthContent";
 import { CreateWikiPageButton } from "@/modules/wiki/components/CreateWikiPageButton";
@@ -18,16 +18,12 @@ export const metadata: Metadata = {
 export default async function Layout({ children }: LayoutProps<"/app/wiki">) {
   const [context, authentication] = await Promise.all([
     getWikiContext(),
-    authenticate(),
+    requireAuthenticationPage(),
   ]);
 
   const [allowTopLevel, hasWikiManage] = await Promise.all([
-    authentication
-      ? authentication.authorize("wiki", "create")
-      : Promise.resolve(false),
-    authentication
-      ? authentication.authorize("wiki", "manage")
-      : Promise.resolve(false),
+    authentication.authorize("wiki", "create"),
+    authentication.authorize("wiki", "manage"),
   ]);
   /**
    * Only whether targets exist matters here — the modal loads them itself

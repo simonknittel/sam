@@ -1,4 +1,4 @@
-import { requireAuthentication } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
 import clsx from "clsx";
 import { type SearchParams } from "nuqs/server";
@@ -15,7 +15,7 @@ export const UsersTile = async ({ className, searchParams }: Props) => {
   const { sort, q, banned, cursor } =
     await loadUserListSearchParams(searchParams);
 
-  const authentication = await requireAuthentication();
+  const authentication = await requireAuthenticationPage();
   const showBanActions = await authentication.authorize("user", "ban");
 
   const { users, nextCursor, prevCursor } = await getUsersWithEntities({

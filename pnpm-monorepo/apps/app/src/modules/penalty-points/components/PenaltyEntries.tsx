@@ -1,4 +1,4 @@
-import { requireAuthentication } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { Tile } from "@/modules/common/components/Tile";
 import { createCursorPaginationLoader } from "@/modules/common/CursorPagination/createCursorPaginationLoader";
 import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
@@ -23,7 +23,7 @@ interface Props {
 }
 
 export const PenaltyEntries = async ({ className, searchParams }: Props) => {
-  const authentication = await requireAuthentication();
+  const authentication = await requireAuthenticationPage();
   const { status, cursor, direction } = await loadSearchParams(searchParams);
 
   const { entries, nextCursor, prevCursor } = await getPenaltyEntriesPaginated(

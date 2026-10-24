@@ -1,4 +1,4 @@
-import { requireAuthentication } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import type { GenericCitizenLogType } from "@/types";
 import { type Citizen } from "@sam-monorepo/database/client";
 import { type ReactNode } from "react";
@@ -22,7 +22,7 @@ export const OverviewSection = async ({
   value,
   citizenId,
 }: Props) => {
-  const authentication = await requireAuthentication();
+  const authentication = await requireAuthenticationPage();
   const showCreate = await authentication.authorize(type, "create");
   const showDelete = await authentication.authorize(type, "delete");
   const showConfirm = await authentication.authorize(type, "confirm");

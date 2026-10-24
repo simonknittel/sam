@@ -3,7 +3,7 @@ import {
   getRequestActor,
   throwApplicationErrorForPage,
 } from "@/modules/application";
-import { requireAuthentication } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import {
@@ -37,7 +37,7 @@ interface Props {
 }
 
 export const SingleNote = async ({ note }: Props) => {
-  const authentication = await requireAuthentication();
+  const authentication = await requireAuthenticationPage();
 
   const isUnconfirmed = note.confirmed === null;
   const isFalseReport = note.confirmed === ConfirmationStatus.FALSE_REPORT;

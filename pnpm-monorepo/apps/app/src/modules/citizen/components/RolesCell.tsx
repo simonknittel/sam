@@ -1,4 +1,4 @@
-import { requireAuthentication } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { AddRoles } from "@/modules/citizen/components/roles/AddRoles";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import type { BadgeRole } from "@/modules/roles/queries/getRoles";
@@ -25,7 +25,7 @@ export const RolesCell = async ({
   entity,
   assignableRoles,
 }: Props) => {
-  const authentication = await requireAuthentication();
+  const authentication = await requireAuthenticationPage();
 
   const showUpdateRolesButton =
     (await authentication.authorize("otherRole", "assign", [

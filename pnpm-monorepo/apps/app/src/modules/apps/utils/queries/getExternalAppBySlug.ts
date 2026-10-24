@@ -1,12 +1,11 @@
-import { authenticate } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { cache } from "react";
 import { externalApps } from "../externalApps";
 
 export const getExternalAppBySlug = cache(
   withTrace("getExternalApp", async (slug: string) => {
-    const authentication = await authenticate();
-    if (!authentication) return null;
+    await requireAuthenticationPage();
 
     // TODO: Implement fetching apps from database
 

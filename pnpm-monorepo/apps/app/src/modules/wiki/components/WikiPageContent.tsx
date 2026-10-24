@@ -1,4 +1,4 @@
-import { authenticate } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { EditableInput } from "@/modules/common/components/form/EditableInput";
@@ -115,7 +115,7 @@ export const WikiPageContent = async ({
     (id) => context.permissions.get(id)?.canRead === true,
   ).length;
 
-  const authentication = await authenticate();
+  const authentication = await requireAuthenticationPage();
 
   const sourceTitle = (sourceId: string) =>
     sourceId === page.id ? undefined : context.pagesById.get(sourceId)?.title;
@@ -168,9 +168,7 @@ export const WikiPageContent = async ({
       : [];
 
   const canCreateTopLevel = Boolean(
-    !isVariantScope &&
-    authentication &&
-    (await authentication.authorize("wiki", "create")),
+    !isVariantScope && (await authentication.authorize("wiki", "create")),
   );
 
   const collabUrl = getWikiCollabUrl();

@@ -1,4 +1,4 @@
-import { requireAuthentication } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { Tile, TileVariant } from "@/modules/common/components/Tile";
 import type { EventCitizenReference } from "@/modules/events/queries/eventRelationSelects";
 import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
@@ -22,7 +22,7 @@ interface Props {
  * positions assigned to them, including the required ship variants.
  */
 export const PersonalBriefing = async ({ className, event }: Props) => {
-  const authentication = await requireAuthentication();
+  const authentication = await requireAuthenticationPage();
   const citizenId = authentication.session.entity?.id ?? null;
   const discordUserId = authentication.session.discordId;
 

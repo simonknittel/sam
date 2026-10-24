@@ -1,4 +1,4 @@
-import { requireAuthentication } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import Avatar, { AvatarDecoration } from "@/modules/common/components/Avatar";
 import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import clsx from "clsx";
@@ -11,7 +11,7 @@ interface Props {
 }
 
 export const Account = async ({ className }: Props) => {
-  const authentication = await requireAuthentication();
+  const authentication = await requireAuthenticationPage();
 
   const name =
     authentication.session.user.name || authentication.session.discordId;

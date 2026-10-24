@@ -1,4 +1,4 @@
-import { requireAuthentication } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
 import { forbidden } from "next/navigation";
 import { type SearchParams } from "nuqs/server";
@@ -14,7 +14,7 @@ interface Props {
 }
 
 export const MyFleetTile = async ({ className, searchParams }: Props) => {
-  const authentication = await requireAuthentication();
+  const authentication = await requireAuthenticationPage();
   if (!(await authentication.authorize("ship", "manage"))) forbidden();
 
   const {

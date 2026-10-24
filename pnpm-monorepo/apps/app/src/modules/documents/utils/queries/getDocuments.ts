@@ -1,5 +1,5 @@
 import { env } from "@/env";
-import { requireAuthentication } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { svgToStaticImageData } from "@/modules/common/utils/svgToStaticImageData";
 import srcA1 from "@/modules/documents/assets/a1.svg";
 import srcA2 from "@/modules/documents/assets/a2.svg";
@@ -247,7 +247,7 @@ const categories: Category[] = [
 
 export const getDocuments = cache(
   withTrace("getDocuments", async () => {
-    const authentication = await requireAuthentication();
+    const authentication = await requireAuthenticationPage();
 
     const authorizations = await Promise.all([
       authentication.authorize("documentAlliance", "read"),

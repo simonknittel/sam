@@ -1,5 +1,11 @@
 import type { Locator, Page } from "@playwright/test";
-import { createCitizen } from "../fixtures/factories";
+import { WikiPageVisibility } from "@sam-monorepo/database/client";
+import {
+  createAppEvent,
+  createCitizen,
+  createWikiPage,
+  futureEvent,
+} from "../fixtures/factories";
 import { FORBIDDEN_TEXT } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
@@ -119,6 +125,81 @@ test("the spynet settings send an unauthorized citizen away", async ({
 
   await expect(page).toHaveURL("/app/dashboard");
   await expect(page.getByText(FORBIDDEN_TEXT)).toHaveCount(0);
+});
+
+/**
+ * Next.js renders the segments of a route separately and streams them in one
+ * response, thus the redirect of the root layout of `/app` does not stop the
+ * data of a nested layout or of `generateMetadata`. The test reads the raw
+ * response, because the browser follows the redirect before it shows
+ * anything.
+ */
+test("a user without clearance gets no data of a layout or of a page title", async ({
+  page,
+  prisma,
+  signIn,
+  switchUser,
+}) => {
+  const permissionStrings = ["event;read"];
+  const cleared = await createCitizen(prisma, {
+    handle: "mit-freigabe",
+    permissionStrings,
+  });
+  const unconfirmed = await createCitizen(prisma, {
+    handle: "unbestaetigt",
+    permissionStrings,
+  });
+  await prisma.user.update({
+    where: { id: unconfirmed.user.id },
+    data: { emailVerified: null },
+  });
+  const withoutLogin = await createCitizen(prisma, {
+    handle: "ohne-anmeldung",
+    permissionStrings,
+    canLogIn: false,
+  });
+
+  const wikiPage = await createWikiPage(prisma, {
+    title: "Sichtbare Wiki-Seite",
+    visibility: WikiPageVisibility.PUBLIC,
+  });
+  await createWikiPage(prisma, {
+    title: "Unterseite im Seitenbaum",
+    parentId: wikiPage.id,
+  });
+  const event = await createAppEvent(prisma, {
+    name: "Event mit Namen",
+    createdById: cleared.entity.id,
+    ...futureEvent(),
+  });
+
+  const readBodies = async () =>
+    Promise.all(
+      [`/app/wiki/${wikiPage.id}`, `/app/events/${event.id}`].map(
+        async (path) => (await page.request.get(path)).text(),
+      ),
+    );
+  const TITLES = [
+    "Sichtbare Wiki-Seite",
+    "Unterseite im Seitenbaum",
+    "Event mit Namen",
+  ];
+
+  // The control: the bodies carry the titles for a user with clearance
+  await signIn(cleared.user);
+  const clearedBodies = (await readBodies()).join("\n");
+  for (const title of TITLES) expect(clearedBodies).toContain(title);
+
+  for (const citizen of [unconfirmed, withoutLogin]) {
+    await switchUser(citizen.user);
+    const bodies = (await readBodies()).join("\n");
+
+    for (const title of TITLES)
+      expect(
+        bodies,
+        `${citizen.entity.handle} must not get ${title}`,
+      ).not.toContain(title);
+  }
 });
 
 test("an unknown route answers with 404", async ({ request }) => {

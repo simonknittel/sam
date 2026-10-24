@@ -1,4 +1,4 @@
-import { authenticate } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { DefaultLayout } from "@/modules/common/components/layouts/DefaultLayout";
 import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthContent";
 import { CreateEventButton } from "@/modules/events/components/CreateEvent/CreateEventButton";
@@ -15,11 +15,10 @@ export const metadata: Metadata = {
 export default async function Layout({ children }: LayoutProps<"/app/events">) {
   const [pages, authentication] = await Promise.all([
     getNavigationItems(),
-    authenticate(),
+    requireAuthenticationPage(),
   ]);
 
-  const showCta =
-    authentication && (await authentication.authorize("event", "create"));
+  const showCta = await authentication.authorize("event", "create");
 
   return (
     <DefaultLayout

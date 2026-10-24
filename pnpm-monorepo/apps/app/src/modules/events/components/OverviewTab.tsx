@@ -1,4 +1,4 @@
-import { requireAuthentication } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { Tile } from "@/modules/common/components/Tile";
 import type { EventCitizenReference } from "@/modules/events/queries/eventRelationSelects";
 import type { VariantTagBadgeItem } from "@/modules/fleet/queries/shipQuery";
@@ -25,7 +25,7 @@ interface Props {
 }
 
 export const OverviewTab = async ({ className, event }: Props) => {
-  const authentication = await requireAuthentication();
+  const authentication = await requireAuthenticationPage();
   const showFleetSummary = await authentication.authorize("orgFleet", "read");
   const showCoverUpload =
     event.source === EventSource.APP &&

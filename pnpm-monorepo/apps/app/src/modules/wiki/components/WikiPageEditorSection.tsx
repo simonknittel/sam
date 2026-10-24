@@ -1,4 +1,4 @@
-import { authenticate } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import type { WikiPageStaticContent } from "../queries/getWikiPageStaticContent";
 import { getWikiCollabColor } from "../utils/getWikiCollabColor";
 import { getWikiCollabUrl } from "../utils/getWikiCollabUrl";
@@ -31,8 +31,8 @@ export const WikiPageEditorSection = async ({
   );
   if (!collabUrl) return staticFallback;
 
-  const authentication = await authenticate();
-  const session = authentication ? authentication.session : null;
+  const authentication = await requireAuthenticationPage();
+  const { session } = authentication;
 
   return (
     <WikiCollabEditor

@@ -1,4 +1,4 @@
-import { requireAuthentication } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { Tile } from "@/modules/common/components/Tile";
 import type { Citizen } from "@sam-monorepo/database/client";
 import clsx from "clsx";
@@ -11,7 +11,7 @@ interface Props {
 }
 
 export const SilcTransactions = async ({ className, citizenId }: Props) => {
-  const authentication = await requireAuthentication();
+  const authentication = await requireAuthenticationPage();
 
   const entries = await getSilcTransactionsOfCitizen(citizenId);
   const hasEntries = entries.length > 0;

@@ -37,13 +37,19 @@ export interface Actor {
     attributes?: PermissionSet["attributes"],
   ) => boolean;
   /**
-   * Throws a `ForbiddenError` when the user cannot use the app: the same gate
-   * as the pages, the API routes and the server actions
+   * Whether the user can use the app: a confirmed email (admin mode skips
+   * it) and `login;manage`. The same gate as the pages, the API routes and
+   * the server actions.
    */
+  readonly hasClearance: () => boolean;
+  /** Throws a `ForbiddenError` when `hasClearance()` is false */
   readonly requireClearance: () => void;
 }
 
-export type ActorFields = Omit<Actor, "authorize" | "requireClearance">;
+export type ActorFields = Omit<
+  Actor,
+  "authorize" | "hasClearance" | "requireClearance"
+>;
 
 /**
  * Builds the actor. `adminMode` applies only to an admin. The caller resolves
@@ -62,13 +68,16 @@ export const createActor = (fields: ActorFields): Actor => {
     );
   };
 
+  // Admin mode skips the email confirmation, like the gate of the app
+  const hasConfirmedEmail = () => adminMode || fields.emailConfirmedAt !== null;
+
   return {
     ...fields,
     adminMode,
     authorize,
+    hasClearance: () => hasConfirmedEmail() && authorize("login", "manage"),
     requireClearance: () => {
-      // Admin mode skips the email confirmation, like the gate of the app
-      if (!adminMode && !fields.emailConfirmedAt)
+      if (!hasConfirmedEmail())
         throw new ForbiddenError("The email address is not confirmed");
 
       if (!authorize("login", "manage"))

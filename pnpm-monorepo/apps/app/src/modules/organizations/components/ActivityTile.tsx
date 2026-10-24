@@ -3,7 +3,7 @@ import {
   ACTIVITY_PAGE_SIZE,
   ActivityColumn,
 } from "@/modules/activity/utils/activityEntry";
-import { requireAuthentication } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { createCursorPaginationLoader } from "@/modules/common/CursorPagination/createCursorPaginationLoader";
 import type { Organization } from "@sam-monorepo/database/client";
 import { paginateMergedSources } from "@sam-monorepo/domain";
@@ -24,7 +24,7 @@ interface Props {
 }
 
 export const ActivityTile = async ({ className, id, searchParams }: Props) => {
-  const authentication = await requireAuthentication();
+  const authentication = await requireAuthenticationPage();
   if (!(await authentication.authorize("organization", "read"))) forbidden();
 
   /**

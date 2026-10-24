@@ -1,4 +1,4 @@
-import { authenticate } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { VariantWikiSidebar } from "@/modules/wiki/components/VariantWikiSidebar";
@@ -31,10 +31,11 @@ export const VariantDetailFrame = async ({
   wikiContent,
   searchParams,
 }: Props) => {
-  const authentication = await authenticate();
-  const hasOtherShipsRead = authentication
-    ? await authentication.authorize("otherShips", "read")
-    : false;
+  const authentication = await requireAuthenticationPage();
+  const hasOtherShipsRead = await authentication.authorize(
+    "otherShips",
+    "read",
+  );
 
   return (
     <div className="flex flex-col gap-0.5">

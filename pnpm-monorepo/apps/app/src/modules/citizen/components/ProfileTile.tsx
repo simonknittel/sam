@@ -1,11 +1,11 @@
-import { requireAuthentication } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import clsx from "clsx";
 import { forbidden } from "next/navigation";
 import { getCitizenProfile } from "../queries/getCitizenProfile";
 import { ProfileContent } from "./ProfileContent";
 
 export const ProfileTile = async () => {
-  const authentication = await requireAuthentication();
+  const authentication = await requireAuthenticationPage();
   if (!authentication.session.entity) forbidden();
 
   const profile = await getCitizenProfile(authentication.session.entity.id);

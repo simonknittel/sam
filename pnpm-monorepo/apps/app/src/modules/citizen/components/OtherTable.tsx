@@ -1,4 +1,4 @@
-import { requireAuthentication } from "@/modules/auth/server";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { citizenLogTypeTranslations } from "@/modules/citizen/utils/citizenLogTypeTranslations";
 import { Actions } from "@/modules/common/components/Actions";
 import { CitizenCellLink } from "@/modules/common/components/CitizenCellLink";
@@ -142,7 +142,7 @@ const OtherTableActions = async ({ log }: OtherTableActionsProps) => {
     case "discord-id":
     case "citizen-id":
     case "community-moniker": {
-      const authentication = await requireAuthentication();
+      const authentication = await requireAuthenticationPage();
       if (!(await authentication.authorize(log.type, "delete"))) return null;
 
       return (

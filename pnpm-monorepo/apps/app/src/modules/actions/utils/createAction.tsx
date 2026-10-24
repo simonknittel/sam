@@ -1,7 +1,4 @@
-import {
-  authenticate,
-  type requireAuthentication,
-} from "@/modules/auth/server";
+import { authenticate } from "@/modules/auth/server";
 import { requireConfirmedEmailForAction } from "@/modules/auth/utils/emailConfirmation";
 import { isAdminBehindSession } from "@/modules/auth/utils/isAdminBehindSession";
 import { log } from "@/modules/logging";
@@ -31,10 +28,7 @@ export type ActionResponse =
       requestPayload: FormData;
     };
 
-type Authentication = Exclude<
-  Awaited<ReturnType<typeof requireAuthentication>>,
-  false
->;
+type Authentication = Exclude<Awaited<ReturnType<typeof authenticate>>, false>;
 
 export type Translations = Awaited<ReturnType<typeof getTranslations>>;
 
