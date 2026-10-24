@@ -183,10 +183,10 @@ export const bodySchema = z.discriminatedUnion("type", [
 
   z.object({
     type: z.literal("EventBriefingPublished"),
+    // The router reads the current read scope from the database, thus the
+    // schema drops a read scope in the payload
     payload: z.object({
       eventId: z.cuid(),
-      readScope: z.enum(["PARTICIPANTS", "POSITION", "ALL"]),
-      readScopePositionId: z.cuid().nullable(),
     }),
     requestId: z.cuid2(),
   }),

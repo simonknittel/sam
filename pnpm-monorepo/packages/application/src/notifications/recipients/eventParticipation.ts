@@ -1,5 +1,9 @@
 import type { ApplicationContext } from "../../context.js";
-import type { EventNotificationRecipients } from "./eventRecipients.js";
+import {
+  EVENT_RECIPIENT_SELECT,
+  findEventRecipients,
+  type EventNotificationRecipients,
+} from "./eventRecipients.js";
 
 export interface FindEventParticipationRecipientInput {
   readonly eventId: string;
@@ -7,10 +11,10 @@ export interface FindEventParticipationRecipientInput {
 }
 
 /**
- * The citizen whom a manager added to the event or removed from it. The app
- * only lets a manager add citizens who can see the event, and a removal
- * keeps the view of the citizen on the event. Thus the single receiver needs
- * no further check. Null when the event does not exist.
+ * The citizen whom a manager added to the event or removed from it, when the
+ * citizen can see the event now (see `findEventRecipients()`). The roles of
+ * the citizen and the visibility of the event can change after the request.
+ * Null when the event does not exist.
  */
 export const findEventParticipationRecipient = async (
   context: ApplicationContext,
@@ -18,9 +22,14 @@ export const findEventParticipationRecipient = async (
 ): Promise<EventNotificationRecipients | null> => {
   const event = await context.prisma.event.findUnique({
     where: { id: input.eventId },
-    select: { id: true, name: true },
+    select: { id: true, name: true, ...EVENT_RECIPIENT_SELECT },
   });
   if (!event) return null;
 
-  return { event, recipients: [{ citizenId: input.citizenId }] };
+  return {
+    event: { id: event.id, name: event.name },
+    recipients: await findEventRecipients(context, event, {
+      id: input.citizenId,
+    }),
+  };
 };

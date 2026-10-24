@@ -1,17 +1,18 @@
 /**
  * The recipient rules of the notification router: for each notification
  * type, the citizens who get it. No actor and no permission check of a
- * caller: the rule is the check of the receivers.
+ * caller: the rule is the check of the receivers for its feature.
+ * `storeOnSiteNotifications()` adds the clearance.
  */
 export { findEventBriefingPublishedRecipients } from "./eventBriefingPublished.js";
 export { findEventCreatedRecipients } from "./eventCreated.js";
-export { findEventParticipantRecipients } from "./eventParticipants.js";
+export {
+  findEventDeletedRecipients,
+  findEventParticipantRecipients,
+} from "./eventParticipants.js";
 export { findEventParticipationRecipient } from "./eventParticipation.js";
 export type { EventNotificationRecipients } from "./eventRecipients.js";
-export {
-  findGreetingRecipient,
-  findWelcomeGreetingRecipient,
-} from "./greetingRecipients.js";
+export { findGreetingRecipient } from "./greetingRecipients.js";
 export {
   findManualNotificationRecipients,
   type ManualNotificationRecipients,

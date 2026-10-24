@@ -17,8 +17,8 @@ export type EventRecipientInput = Pick<Event, "visibility" | "createdById"> & {
 
 /**
  * Citizen where-fragment excluding citizens who cannot see the event, to be
- * ANDed into every per-citizen event query — notification recipients in the
- * Lambda, addable participants in the app. PUBLIC events restrict nothing.
+ * ANDed into a per-citizen event query (the addable participants of the
+ * app). PUBLIC events restrict nothing.
  * For RESTRICTED events a citizen must hold one of the allowed roles
  * (expanded one level through the inheritance relation, mirroring
  * `resolveEffectiveRoles`), hold `event;manage` through a role, be the
@@ -69,10 +69,12 @@ export const buildEventRecipientWhere = (
 };
 
 /**
- * Citizen where-fragment for citizens who can open the app at all: they are
- * not deleted and hold `login;manage` through one of their roles. It is the
- * minimum condition for every notification — a citizen who cannot log in can
- * read none of them.
+ * Citizen where-fragment for citizens who are not deleted and hold
+ * `login;manage` through a directly assigned role. Only an approximation of
+ * the clearance: it ignores the inherited roles, the level gate, the
+ * negation and the conditions of the user. The notification router uses the
+ * effective permissions instead (`findClearedCitizens()` of the application
+ * package).
  */
 export const CAN_LOGIN_CITIZEN_WHERE: Prisma.CitizenWhereInput = {
   ...ACTIVE_CITIZEN_WHERE,
@@ -86,11 +88,11 @@ export const CAN_LOGIN_CITIZEN_WHERE: Prisma.CitizenWhereInput = {
 };
 
 /**
- * Citizen where-fragment for citizens who can act on an event at all: they
- * hold both `login;manage` and `event;read` through their roles. Combined
- * with `buildEventRecipientWhere()` this is the reachability rule for event
- * notifications, so nobody gets notified about — or manually added to — an
- * event they can't open.
+ * Citizen where-fragment for citizens who hold both `login;manage` and
+ * `event;read` through directly assigned roles. Only an approximation, with
+ * the limits of `CAN_LOGIN_CITIZEN_WHERE`: the addable participants use it as
+ * a prefilter and decide with the effective roles. The event notifications
+ * do not use it (see `findEventRecipients()` of the application package).
  */
 export const NOTIFIABLE_CITIZEN_WHERE: Prisma.CitizenWhereInput = {
   AND: [

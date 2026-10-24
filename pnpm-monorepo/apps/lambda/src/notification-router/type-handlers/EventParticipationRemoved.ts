@@ -12,8 +12,8 @@ type Payload = {
 };
 
 /**
- * Removal leaves the citizen's view of the event untouched, so the message
- * still links to the event page.
+ * The message links to the event page, thus only a citizen who can see the
+ * event now gets it (see `findEventParticipationRecipient()`)
  */
 export const EventParticipationRemovedHandler = async (
   context: ApplicationContext,

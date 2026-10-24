@@ -1,6 +1,7 @@
 import { prisma } from "@sam-monorepo/database";
 import {
   EventSource,
+  EventVisibility,
   WikiPageEventScope,
   WikiPageNamespace,
 } from "@sam-monorepo/database/client";
@@ -216,4 +217,58 @@ test("a failed notification trigger keeps the mentions pending until the next ru
   const nextStateById = await getMentionStates();
   expect(nextStateById.get(creatorMention.id)).toBe("notified");
   expect(nextStateById.get(participantMention.id)).toBe("notified");
+});
+
+test("a mention on a briefing of a deleted event or of an event that the citizen cannot see is suppressed", async () => {
+  const author = await createReader("author");
+  const participant = await createReader("participant");
+  const restrictedEvent = await createEventWithRootPage(
+    "Restricted",
+    author.id,
+    WikiPageEventScope.PARTICIPANTS,
+  );
+  const deletedEvent = await createEventWithRootPage(
+    "Deleted",
+    author.id,
+    WikiPageEventScope.PARTICIPANTS,
+  );
+  const visibilityRole = await prisma.role.create({
+    data: { name: "Visibility role" },
+  });
+  await prisma.event.update({
+    where: { id: restrictedEvent.event.id },
+    data: {
+      visibility: EventVisibility.RESTRICTED,
+      visibilityRoles: { create: { roleId: visibilityRole.id } },
+    },
+  });
+  await prisma.event.update({
+    where: { id: deletedEvent.event.id },
+    data: { deletedAt: TEST_NOW },
+  });
+  await prisma.eventParticipant.createMany({
+    data: [restrictedEvent, deletedEvent].map(({ event }) => ({
+      eventId: event.id,
+      source: EventSource.APP,
+      citizenId: participant.id,
+    })),
+  });
+  await prisma.wikiPageCitizenMention.createMany({
+    data: [restrictedEvent, deletedEvent].map(({ page }) => ({
+      pageId: page.id,
+      citizenId: participant.id,
+      createdById: author.id,
+    })),
+  });
+  const { context, notifications } = createTestApplicationContext();
+
+  const output = await notifyWikiCitizenMentions(context);
+
+  expect(output).toEqual({
+    pendingMentionCount: 2,
+    notifiedMentionCount: 0,
+    suppressedMentionCount: 2,
+    notificationsSent: true,
+  });
+  expect(notifications).toEqual([]);
 });

@@ -5,11 +5,17 @@ import {
   createTestApplicationContext,
   TEST_NOW,
 } from "../../../test/applicationContext.js";
+import {
+  CLEARED_USER,
+  createCitizenWithPermissions,
+} from "../../../test/citizensWithPermissions.js";
 import { truncateAllTables } from "../../../test/database.js";
 import {
   storeOnSiteNotifications,
   type OnSiteNotificationDraft,
 } from "./onSiteNotificationStore.js";
+
+const LOGIN_PERMISSION_STRINGS = ["login;manage"];
 
 const createDraft = (receiverId: string): OnSiteNotificationDraft => ({
   receiverId,
@@ -22,27 +28,43 @@ beforeEach(async () => {
 });
 
 describe("storeOnSiteNotifications", () => {
-  test("writes nothing for a deleted receiver", async () => {
-    const activeReceiver = await prisma.citizen.create({
-      data: { handle: "active" },
-    });
-    const deletedReceiver = await prisma.citizen.create({
-      data: { handle: "deleted", deletedAt: TEST_NOW },
-    });
+  test("writes rows only for the receivers who pass the clearance page", async () => {
+    const cleared = await createCitizenWithPermissions(
+      "cleared",
+      LOGIN_PERMISSION_STRINGS,
+      [],
+      CLEARED_USER,
+    );
+    const receivers = await Promise.all([
+      createCitizenWithPermissions("banned", LOGIN_PERMISSION_STRINGS, [], {
+        user: { create: { emailVerified: TEST_NOW, bannedAt: TEST_NOW } },
+      }),
+      createCitizenWithPermissions(
+        "without-confirmed-email",
+        LOGIN_PERMISSION_STRINGS,
+        [],
+        { user: { create: {} } },
+      ),
+      createCitizenWithPermissions("without-user", LOGIN_PERMISSION_STRINGS),
+      createCitizenWithPermissions(
+        "negated-login",
+        [...LOGIN_PERMISSION_STRINGS, "login;negate"],
+        [],
+        CLEARED_USER,
+      ),
+    ]);
     const { context, auditEvents } = createTestApplicationContext();
 
     const rows = await storeOnSiteNotifications(context, [
-      createDraft(activeReceiver.id),
-      createDraft(deletedReceiver.id),
+      createDraft(cleared.id),
+      ...receivers.map((receiver) => createDraft(receiver.id)),
     ]);
 
     const onSiteNotifications = await prisma.onSiteNotification.findMany({
       select: { citizenId: true },
     });
-    expect(onSiteNotifications).toEqual([{ citizenId: activeReceiver.id }]);
-    expect(rows).toEqual([
-      expect.objectContaining({ citizenId: activeReceiver.id }),
-    ]);
+    expect(onSiteNotifications).toEqual([{ citizenId: cleared.id }]);
+    expect(rows).toEqual([expect.objectContaining({ citizenId: cleared.id })]);
     expect(auditEvents).toEqual([
       {
         type: AuditEventType.ON_SITE_NOTIFICATIONS_CREATED,
@@ -52,7 +74,7 @@ describe("storeOnSiteNotifications", () => {
     ]);
   });
 
-  test("writes no row and no audit event when all receivers are deleted", async () => {
+  test("writes no row and no audit event when no receiver passes the clearance page", async () => {
     const deletedReceiver = await prisma.citizen.create({
       data: { handle: "deleted", deletedAt: TEST_NOW },
     });

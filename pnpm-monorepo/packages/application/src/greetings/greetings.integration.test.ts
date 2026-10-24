@@ -2,7 +2,10 @@ import { prisma } from "@sam-monorepo/database";
 import { AuditEventType } from "@sam-monorepo/domain";
 import { beforeEach, expect, test } from "vitest";
 import { createTestApplicationContext } from "../../test/applicationContext.js";
-import { createCitizenWithPermissions } from "../../test/citizensWithPermissions.js";
+import {
+  CLEARED_USER,
+  createCitizenWithPermissions,
+} from "../../test/citizensWithPermissions.js";
 import { truncateAllTables } from "../../test/database.js";
 import { sendBirthdayGreetings } from "./sendBirthdayGreetings.js";
 import { sendNewYearGreetings } from "./sendNewYearGreetings.js";
@@ -14,7 +17,7 @@ beforeEach(async () => {
   await truncateAllTables();
 });
 
-/** The greetings go only to the citizens who can log in */
+/** The greetings go only to the cleared citizens */
 const LOGIN_PERMISSION_STRINGS = ["login;manage"];
 
 test("greets a citizen once on the birthday in their own time zone", async () => {
@@ -25,6 +28,7 @@ test("greets a citizen once on the birthday in their own time zone", async () =>
     LOGIN_PERMISSION_STRINGS,
     [],
     {
+      ...CLEARED_USER,
       timezone: "Pacific/Kiritimati",
       birthdayDay: 25,
       birthdayMonth: 12,
@@ -35,6 +39,7 @@ test("greets a citizen once on the birthday in their own time zone", async () =>
     LOGIN_PERMISSION_STRINGS,
     [],
     {
+      ...CLEARED_USER,
       timezone: "Europe/Berlin",
       birthdayDay: 25,
       birthdayMonth: 12,
@@ -81,11 +86,19 @@ test("greets a citizen once on the birthday in their own time zone", async () =>
   expect(secondRun.auditEvents).toEqual([]);
 });
 
-test("greets a citizen at the start of January 1 in their time zone", async () => {
+test("greets a cleared citizen at the start of January 1 in their time zone", async () => {
   const now = new Date("2027-01-01T00:05:00+01:00");
   const citizen = await createCitizenWithPermissions(
     "berlin",
     LOGIN_PERMISSION_STRINGS,
+    [],
+    CLEARED_USER,
+  );
+  await createCitizenWithPermissions(
+    "negated-login",
+    [...LOGIN_PERMISSION_STRINGS, "login;negate"],
+    [],
+    CLEARED_USER,
   );
 
   const { context, notifications, auditEvents } = createTestApplicationContext({
@@ -120,6 +133,8 @@ test("keeps the markers without an audit event when the notifications fail", asy
   const citizen = await createCitizenWithPermissions(
     "berlin",
     LOGIN_PERMISSION_STRINGS,
+    [],
+    CLEARED_USER,
   );
 
   const { context, auditEvents } = createTestApplicationContext({

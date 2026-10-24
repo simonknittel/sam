@@ -173,9 +173,9 @@ export const updateEventWikiPagePermissions = (
 
     /**
      * "Published" means that the read scope of the root page is wider than
-     * the managers for the first time. The notification router finds the
-     * recipients from the scope in the payload, thus only the citizens that
-     * can read the briefing now get the notification, and only one time per
+     * the managers for the first time. The notification router reads the
+     * read scope of the root page at delivery, thus only the citizens that
+     * can read the briefing then get the notification, and only one time per
      * event: the claim on `Event.briefingPublishedAt` is atomic (it requires
      * null) and commits together with the change of the scope. Thus two
      * submits at the same time cannot publish two times, and a failed update
@@ -253,11 +253,7 @@ export const updateEventWikiPagePermissions = (
         ? await triggerNotificationsAfterSave(context, [
             {
               type: "EventBriefingPublished",
-              payload: {
-                eventId: event.id,
-                readScope: input.read_scope,
-                readScopePositionId,
-              },
+              payload: { eventId: event.id },
             },
           ])
         : true;

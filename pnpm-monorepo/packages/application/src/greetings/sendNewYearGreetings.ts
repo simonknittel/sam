@@ -1,9 +1,9 @@
 import {
   AuditEventType,
-  CAN_LOGIN_CITIZEN_WHERE,
   getLocalDate,
   ORGANIZATION_TIMEZONE,
 } from "@sam-monorepo/domain";
+import { findClearedCitizens } from "../auth/clearedCitizens.js";
 import type { ApplicationContext } from "../context.js";
 import { withSpan } from "../withSpan.js";
 import {
@@ -21,16 +21,19 @@ import { shouldGreetForNewYear } from "./newYearGreetingRule.js";
 const MAXIMUM_NEW_YEAR_GREETINGS_PER_RUN = 500;
 
 /**
- * Greets each citizen when January 1 starts in their own time zone (see
- * `greetCitizens()` for the run and the markers).
+ * Greets each cleared citizen (see `findClearedCitizens()`) when January 1
+ * starts in their own time zone (see `greetCitizens()` for the run and the
+ * markers).
  */
 export const sendNewYearGreetings = (
   context: ApplicationContext,
 ): Promise<GreetingRunOutput> =>
-  withSpan(context, "sendNewYearGreetings", async () =>
-    greetCitizens(context, {
+  withSpan(context, "sendNewYearGreetings", async () => {
+    const clearedCitizens = await findClearedCitizens(context, {});
+
+    return greetCitizens(context, {
       candidates: await context.prisma.citizen.findMany({
-        where: CAN_LOGIN_CITIZEN_WHERE,
+        where: { id: { in: [...clearedCitizens.keys()] } },
         select: { id: true, timezone: true, newYearGreetingSentAt: true },
       }),
       maximumPerRun: MAXIMUM_NEW_YEAR_GREETINGS_PER_RUN,
@@ -46,5 +49,5 @@ export const sendNewYearGreetings = (
         },
       }),
       auditType: AuditEventType.NEW_YEAR_GREETINGS_SENT,
-    }),
-  );
+    });
+  });

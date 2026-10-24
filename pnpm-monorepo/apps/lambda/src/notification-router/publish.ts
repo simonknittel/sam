@@ -10,10 +10,9 @@ import { publishWebPushNotifications } from "./web-push";
 
 /**
  * Sends the notifications on all channels. It writes the on-site
- * notifications of the active receivers (`storeOnSiteNotifications()` leaves
- * out the deleted receivers) and announces them through Soketi. Then it
- * sends web push to the same receivers, if their notification settings
- * allow it.
+ * notifications of the cleared receivers (`storeOnSiteNotifications()` leaves
+ * out the other receivers) and announces them through Soketi. Then it sends
+ * web push to the same receivers, if their notification settings allow it.
  */
 export const publishNotifications = async (
   context: ApplicationContext,
@@ -25,7 +24,7 @@ export const publishNotifications = async (
   const rows = await storeOnSiteNotifications(context, notifications);
   if (rows.length <= 0) return;
 
-  const activeReceiverIds = new Set(rows.map((row) => row.citizenId));
+  const clearedReceiverIds = new Set(rows.map((row) => row.citizenId));
 
   await publishOnSiteNotificationEvents(rows);
 
@@ -33,7 +32,7 @@ export const publishNotifications = async (
     await publishWebPushNotifications(
       context,
       notifications.filter((notification) =>
-        activeReceiverIds.has(notification.receiverId),
+        clearedReceiverIds.has(notification.receiverId),
       ),
       webPushOptions,
     );

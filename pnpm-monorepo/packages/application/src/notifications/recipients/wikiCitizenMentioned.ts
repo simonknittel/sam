@@ -1,6 +1,10 @@
 import { getCitizenDisplayName } from "@sam-monorepo/domain";
 import { CITIZEN_REFERENCE_SELECT } from "../../citizenReference.js";
 import type { ApplicationContext } from "../../context.js";
+import {
+  createWikiMentionReadGate,
+  PENDING_WIKI_MENTION_SELECT,
+} from "../../wiki/wikiMentionReadGate.js";
 import type { Recipient } from "./recipient.js";
 
 export interface FindWikiCitizenMentionedRecipientInput {
@@ -19,9 +23,11 @@ export interface WikiCitizenMentionedRecipients {
 }
 
 /**
- * The mentioned citizen of one pending mention link. The wiki mention
- * automation has already done the read check of the mention. Null when the
- * mention was removed in the meantime or its page is in the trash.
+ * The mentioned citizen of one pending mention link, when the citizen can
+ * read the page now. The wiki mention automation did the same read check
+ * (`createWikiMentionReadGate()`), but the page and the roles can change
+ * before the delivery. Null when the mention was removed in the meantime or
+ * its page is in the trash.
  */
 export const findWikiCitizenMentionedRecipient = async (
   context: ApplicationContext,
@@ -30,14 +36,20 @@ export const findWikiCitizenMentionedRecipient = async (
   const mention = await context.prisma.wikiPageCitizenMention.findUnique({
     where: { id: input.mentionId },
     select: {
-      citizenId: true,
+      ...PENDING_WIKI_MENTION_SELECT,
       createdBy: { select: CITIZEN_REFERENCE_SELECT },
       page: {
-        select: { id: true, title: true, eventId: true, deletedAt: true },
+        select: {
+          ...PENDING_WIKI_MENTION_SELECT.page.select,
+          id: true,
+          title: true,
+        },
       },
     },
   });
   if (!mention || mention.page.deletedAt) return null;
+
+  const mayRead = await createWikiMentionReadGate(context, [mention]);
 
   return {
     mention: {
@@ -48,6 +60,6 @@ export const findWikiCitizenMentionedRecipient = async (
         ? getCitizenDisplayName(mention.createdBy)
         : null,
     },
-    recipients: [{ citizenId: mention.citizenId }],
+    recipients: mayRead(mention) ? [{ citizenId: mention.citizenId }] : [],
   };
 };

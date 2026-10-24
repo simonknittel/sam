@@ -1,4 +1,5 @@
-import { AuditEventType, CAN_LOGIN_CITIZEN_WHERE } from "@sam-monorepo/domain";
+import { AuditEventType } from "@sam-monorepo/domain";
+import { findClearedCitizens } from "../auth/clearedCitizens.js";
 import type { ApplicationContext } from "../context.js";
 import { withSpan } from "../withSpan.js";
 import { shouldGreetOnBirthday } from "./birthdayGreetingRule.js";
@@ -12,22 +13,22 @@ import {
 const MAXIMUM_BIRTHDAY_GREETINGS_PER_RUN = 100;
 
 /**
- * Greets each citizen whose birthday starts in their own time zone (see
- * `greetCitizens()` for the run and the markers).
+ * Greets each cleared citizen (see `findClearedCitizens()`) whose birthday
+ * starts in their own time zone (see `greetCitizens()` for the run and the
+ * markers).
  */
 export const sendBirthdayGreetings = (
   context: ApplicationContext,
 ): Promise<GreetingRunOutput> =>
-  withSpan(context, "sendBirthdayGreetings", async () =>
-    greetCitizens(context, {
+  withSpan(context, "sendBirthdayGreetings", async () => {
+    const clearedCitizens = await findClearedCitizens(context, {
+      birthdayDay: { not: null },
+      birthdayMonth: { not: null },
+    });
+
+    return greetCitizens(context, {
       candidates: await context.prisma.citizen.findMany({
-        where: {
-          AND: [
-            { birthdayDay: { not: null } },
-            { birthdayMonth: { not: null } },
-            CAN_LOGIN_CITIZEN_WHERE,
-          ],
-        },
+        where: { id: { in: [...clearedCitizens.keys()] } },
         select: {
           id: true,
           timezone: true,
@@ -44,5 +45,5 @@ export const sendBirthdayGreetings = (
         payload: { citizenId: citizen.id },
       }),
       auditType: AuditEventType.BIRTHDAY_GREETINGS_SENT,
-    }),
-  );
+    });
+  });

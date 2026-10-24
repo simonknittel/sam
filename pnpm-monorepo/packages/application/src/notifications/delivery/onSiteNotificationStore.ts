@@ -1,10 +1,10 @@
 import type { Prisma } from "@sam-monorepo/database/client";
 import {
-  ACTIVE_CITIZEN_WHERE,
   AuditEventType,
   ON_SITE_NOTIFICATION_PAYLOAD_VERSIONS,
   type ParsedOnSiteNotificationPayload,
 } from "@sam-monorepo/domain";
+import { findClearedCitizens } from "../../auth/clearedCitizens.js";
 import type { ApplicationContext } from "../../context.js";
 
 /** One on-site notification for one receiver, before the store writes it */
@@ -23,12 +23,14 @@ export interface StoredOnSiteNotification {
 }
 
 /**
- * Writes one on-site notification for each draft of an active receiver. A
- * deleted citizen gets no notification on any channel. This is the only
- * filter for this rule: the recipient rules do not filter deleted receivers
- * again, and the other channels send only to the receivers of the written
- * rows. On-site is always on, thus the settings of the citizen do not filter
- * the rows (they filter only web push).
+ * Writes one on-site notification for each draft of a cleared receiver (see
+ * `findClearedCitizens()`). A receiver that is deleted, that has no user, a
+ * banned user or an unconfirmed email, or that does not have the effective
+ * `login;manage` gets no notification on any channel. This is the only
+ * place that must check this clearance rule: a recipient rule checks the
+ * rules of its feature, and the other channels send only to the receivers of
+ * the written rows. On-site is always on, thus the settings of the citizen
+ * do not filter the rows (they filter only web push).
  */
 export const storeOnSiteNotifications = async (
   context: ApplicationContext,
@@ -36,26 +38,19 @@ export const storeOnSiteNotifications = async (
 ): Promise<StoredOnSiteNotification[]> => {
   if (drafts.length <= 0) return [];
 
-  const activeReceivers = await context.prisma.citizen.findMany({
-    where: {
-      id: {
-        in: [...new Set(drafts.map((draft) => draft.receiverId))],
-      },
-      ...ACTIVE_CITIZEN_WHERE,
+  const clearedReceivers = await findClearedCitizens(context, {
+    id: {
+      in: [...new Set(drafts.map((draft) => draft.receiverId))],
     },
-    select: { id: true },
   });
-  const activeReceiverIds = new Set(
-    activeReceivers.map((receiver) => receiver.id),
-  );
 
-  const activeDrafts = drafts.filter((draft) =>
-    activeReceiverIds.has(draft.receiverId),
+  const clearedDrafts = drafts.filter((draft) =>
+    clearedReceivers.has(draft.receiverId),
   );
-  if (activeDrafts.length <= 0) return [];
+  if (clearedDrafts.length <= 0) return [];
 
   const rows = await context.prisma.onSiteNotification.createManyAndReturn({
-    data: activeDrafts.map((draft) => ({
+    data: clearedDrafts.map((draft) => ({
       citizenId: draft.receiverId,
       notificationType: draft.notificationType,
       payload: draft.payload,

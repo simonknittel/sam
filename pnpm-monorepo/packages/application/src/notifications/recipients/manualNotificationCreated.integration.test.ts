@@ -1,10 +1,11 @@
-import { prisma, type Prisma } from "@sam-monorepo/database";
+import { prisma } from "@sam-monorepo/database";
 import { beforeEach, describe, expect, test } from "vitest";
 import {
   createTestApplicationContext,
   TEST_NOW,
 } from "../../../test/applicationContext.js";
 import {
+  CLEARED_USER,
   createCitizenWithPermissions,
   MAXIMUM_LEVEL,
 } from "../../../test/citizensWithPermissions.js";
@@ -12,11 +13,6 @@ import { truncateAllTables } from "../../../test/database.js";
 import { findManualNotificationRecipients } from "./manualNotificationCreated.js";
 
 const LOGIN_PERMISSION_STRINGS = ["login;manage"];
-
-/** A linked user who passes the clearance page */
-const CLEARED_USER = {
-  user: { create: { emailVerified: TEST_NOW } },
-} as const satisfies Prisma.CitizenCreateInput;
 
 interface ManualNotificationFixture {
   readonly citizenIds?: readonly string[];

@@ -1,11 +1,20 @@
 import { prisma } from "@sam-monorepo/database";
 import type { Prisma } from "@sam-monorepo/database/client";
+import { TEST_NOW } from "./applicationContext.js";
 
 /**
  * Test fixtures for citizens with permissions, also for the two parts of the
  * effective-role rule (see `findCitizensWithPermissions()`): the inherited
  * roles and the level gate.
  */
+
+/**
+ * The `data` of a citizen with a linked user who passes the clearance page
+ * (see `findClearedCitizens()`)
+ */
+export const CLEARED_USER = {
+  user: { create: { emailVerified: TEST_NOW } },
+} as const satisfies Prisma.CitizenCreateInput;
 
 /** Each value above 1 is possible. It keeps level 1 below the maximum. */
 export const MAXIMUM_LEVEL = 2;

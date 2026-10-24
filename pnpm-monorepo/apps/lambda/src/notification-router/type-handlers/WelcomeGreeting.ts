@@ -1,5 +1,5 @@
 import {
-  findWelcomeGreetingRecipient,
+  findGreetingRecipient,
   type ApplicationContext,
 } from "@sam-monorepo/application";
 import { type Citizen } from "@sam-monorepo/database";
@@ -63,7 +63,7 @@ const pickWording = () =>
 
 /**
  * A personal welcome to the citizen on the first day they can open the app
- * (see `findWelcomeGreetingRecipient()` for the condition). The app sends the
+ * (see `findGreetingRecipient()` for the condition). The app sends the
  * request once for each citizen (see `Citizen.welcomedAt`).
  *
  * The picked wording travels in the payload as well, so that the on-site row
@@ -74,7 +74,7 @@ export const WelcomeGreetingHandler = async (
   context: ApplicationContext,
   payload: Payload,
 ) => {
-  const recipient = await findWelcomeGreetingRecipient(context, {
+  const recipient = await findGreetingRecipient(context, {
     citizenId: payload.citizenId,
   });
   if (!recipient) return;

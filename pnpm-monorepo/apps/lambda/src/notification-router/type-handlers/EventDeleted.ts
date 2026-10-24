@@ -1,5 +1,5 @@
 import {
-  findEventParticipantRecipients,
+  findEventDeletedRecipients,
   type ApplicationContext,
 } from "@sam-monorepo/application";
 import { type Event } from "@sam-monorepo/database";
@@ -13,7 +13,7 @@ export const EventDeletedHandler = async (
   context: ApplicationContext,
   payload: Payload,
 ) => {
-  const result = await findEventParticipantRecipients(context, {
+  const result = await findEventDeletedRecipients(context, {
     eventId: payload.eventId,
   });
   if (!result) return;

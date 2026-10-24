@@ -1,6 +1,26 @@
-import { getAuecPerSilc, getTotalSilc } from "@sam-monorepo/domain";
+import {
+  getAuecPerSilc,
+  getTotalSilc,
+  type PermissionSet,
+} from "@sam-monorepo/domain";
+import { findCitizenIdsWithPermissions } from "../../auth/effectivePermissionsOfCitizens.js";
 import type { ApplicationContext } from "../../context.js";
 import type { Recipient } from "./recipient.js";
+
+/** The receiver of a payout notification must be able to open the cycle */
+const PAYOUT_RECEIVER_PERMISSION_SETS = [
+  { resource: "profitDistributionCycle", operation: "read" },
+] as const satisfies readonly PermissionSet[];
+
+const findPayoutReceiverIds = (
+  context: ApplicationContext,
+  citizenIds: readonly string[],
+) =>
+  findCitizenIdsWithPermissions(
+    context,
+    { id: { in: [...citizenIds] } },
+    PAYOUT_RECEIVER_PERMISSION_SETS,
+  );
 
 interface PayoutCycleReference {
   readonly id: string;
@@ -17,15 +37,13 @@ export interface PayoutStartedRecipients {
 }
 
 /**
- * All participants of the cycle. Null when the cycle does not exist or has
- * no participant.
+ * All participants of the cycle who can open the cycle. Null when the cycle
+ * does not exist or has no participant.
  */
 export const findPayoutStartedRecipients = async (
   context: ApplicationContext,
   input: FindPayoutStartedRecipientsInput,
 ): Promise<PayoutStartedRecipients | null> => {
-  // TODO: Only send notifications to citizens which have the `login;manage` and `profitDistributionCycle;read` permission
-
   const cycle = await context.prisma.profitDistributionCycle.findUnique({
     where: {
       id: input.cycleId,
@@ -42,11 +60,14 @@ export const findPayoutStartedRecipients = async (
   });
   if (!cycle || cycle.participants.length === 0) return null;
 
+  const receiverIds = await findPayoutReceiverIds(
+    context,
+    cycle.participants.map((participant) => participant.citizenId),
+  );
+
   return {
     cycle: { id: cycle.id, title: cycle.title },
-    recipients: cycle.participants.map((participant) => ({
-      citizenId: participant.citizenId,
-    })),
+    recipients: Array.from(receiverIds, (citizenId) => ({ citizenId })),
   };
 };
 
@@ -73,15 +94,14 @@ export interface PayoutDisbursedRecipients {
 }
 
 /**
- * The participants whose `disbursed` attribute the changes enabled. Null when
- * the cycle does not exist or has no participant.
+ * The participants whose `disbursed` attribute the changes enabled, and who
+ * can open the cycle. Null when the cycle does not exist or has no
+ * participant.
  */
 export const findPayoutDisbursedRecipients = async (
   context: ApplicationContext,
   input: FindPayoutDisbursedRecipientsInput,
 ): Promise<PayoutDisbursedRecipients | null> => {
-  // TODO: Only send notifications to citizens which have the `login;manage` and `profitDistributionCycle;read` permission
-
   const cycle = await context.prisma.profitDistributionCycle.findUnique({
     where: {
       id: input.cycleId,
@@ -111,6 +131,13 @@ export const findPayoutDisbursedRecipients = async (
       ),
   );
 
+  const receiverIds = await findPayoutReceiverIds(
+    context,
+    participantsWithDisbursedEnabled.map(
+      (participant) => participant.citizenId,
+    ),
+  );
+
   const auecPerSilc = getAuecPerSilc(
     cycle.auecProfit || 0,
     getTotalSilc(cycle.participants),
@@ -118,9 +145,11 @@ export const findPayoutDisbursedRecipients = async (
 
   return {
     cycle: { id: cycle.id, title: cycle.title },
-    recipients: participantsWithDisbursedEnabled.map((participant) => ({
-      citizenId: participant.citizenId,
-      auecAmount: (participant.silcBalanceSnapshot || 0) * auecPerSilc,
-    })),
+    recipients: participantsWithDisbursedEnabled
+      .filter((participant) => receiverIds.has(participant.citizenId))
+      .map((participant) => ({
+        citizenId: participant.citizenId,
+        auecAmount: (participant.silcBalanceSnapshot || 0) * auecPerSilc,
+      })),
   };
 };

@@ -9,6 +9,7 @@ import {
 } from "@sam-monorepo/domain";
 import { loadEffectivePermissionsOfCitizens } from "../auth/effectivePermissionsOfCitizens.js";
 import type { ApplicationContext } from "../context.js";
+import { resolveEventVisibility } from "../events/eventVisibility.js";
 
 /** The fields of a pending mention that the gate and the job read */
 export const PENDING_WIKI_MENTION_SELECT = {
@@ -41,6 +42,9 @@ const MENTION_EVENT_SELECT = {
   startTime: true,
   endTime: true,
   createdById: true,
+  visibility: true,
+  deletedAt: true,
+  visibilityRoles: { select: { roleId: true } },
   managers: { select: { id: true } },
   participants: {
     where: { cancelledAt: null },
@@ -126,7 +130,9 @@ const loadCitizenGrants = async (
 /**
  * Builds the check that a pending mention passes when the mentioned citizen
  * can log in and read the page now. A page of the WIKI namespace uses the
- * role-based resolver. A page of the EVENT namespace uses the event
+ * role-based resolver. A page of the EVENT namespace needs an event that the
+ * citizen can see (`resolveEventVisibility()`, thus not deleted), like the
+ * briefing of the app (`buildEventWikiContext()`). Then it uses the event
  * resolver, which keeps unpublished briefings silent.
  */
 export const createWikiMentionReadGate = async (
@@ -232,6 +238,13 @@ export const createWikiMentionReadGate = async (
       ? eventsById.get(mention.page.eventId)
       : undefined;
     if (!event || !grants.hasEventRead) return false;
+
+    const canSeeEvent = resolveEventVisibility(event, {
+      citizenId: mention.citizenId,
+      roleIds: grants.roleIds,
+      hasEventManage: grants.hasEventManage,
+    });
+    if (!canSeeEvent) return false;
 
     return (
       getEventResolver(event, mention.citizenId, grants).get(mention.pageId)

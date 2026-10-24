@@ -7,9 +7,6 @@ import { publishNotifications } from "../publish.js";
 
 type Payload = {
   eventId: Event["id"];
-  /** At the time of the publication */
-  readScope: "PARTICIPANTS" | "POSITION" | "ALL";
-  readScopePositionId: string | null;
 };
 
 /**
@@ -23,8 +20,6 @@ export const EventBriefingPublishedHandler = async (
 ) => {
   const result = await findEventBriefingPublishedRecipients(context, {
     eventId: payload.eventId,
-    readScope: payload.readScope,
-    readScopePositionId: payload.readScopePositionId,
   });
   if (!result) return;
 
