@@ -11,8 +11,7 @@ export const ManualNotificationsFilters = () => {
     <>
       <TextSearchFilter
         name={MANUAL_NOTIFICATIONS_SEARCH_PARAM}
-        label="Suche"
-        placeholder="Titel oder Text..."
+        label="Titel oder Text"
         resetCursorPagination
       />
 

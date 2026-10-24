@@ -1,6 +1,7 @@
+import { LOGIN_MANAGE_PERMISSION_SET } from "../../auth/clearedCitizens.js";
 import { findCitizenIdsWithPermissions } from "../../auth/effectivePermissionsOfCitizens.js";
 import type { ApplicationContext } from "../../context.js";
-import { LOGIN_MANAGE_PERMISSION_SET, type Recipient } from "./recipient.js";
+import type { Recipient } from "./recipient.js";
 
 export interface FindSilcTransactionRecipientsInput {
   readonly transactionIds: readonly string[];

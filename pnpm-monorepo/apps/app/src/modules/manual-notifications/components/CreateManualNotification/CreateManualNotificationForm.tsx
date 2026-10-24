@@ -46,7 +46,7 @@ export const CreateManualNotificationForm = ({
       <Textarea
         name="body"
         label="Text"
-        hint={`max. ${MANUAL_NOTIFICATION_BODY_MAX_LENGTH.toLocaleString("de-DE")} Zeichen`}
+        hint={`max. ${MANUAL_NOTIFICATION_BODY_MAX_LENGTH} Zeichen`}
         maxLength={MANUAL_NOTIFICATION_BODY_MAX_LENGTH}
         defaultValue={getDefaultValueWithFallback("body", "")}
         required

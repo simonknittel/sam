@@ -1,5 +1,5 @@
 import type { PermissionSet } from "@sam-monorepo/domain";
-import { LOGIN_MANAGE_PERMISSION_SET } from "./recipient.js";
+import { LOGIN_MANAGE_PERMISSION_SET } from "../../auth/clearedCitizens.js";
 
 /**
  * The receiver of a task notification must be able to log in and to open

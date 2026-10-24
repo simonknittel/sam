@@ -71,13 +71,7 @@ export const ManualNotificationsTable = async ({
           </td>
 
           <td className="truncate leading-8">
-            <CitizenLink
-              citizen={
-                notification.created_by
-                  ? { ...notification.created_by, deletedAt: null }
-                  : null
-              }
-            />
+            <CitizenLink citizen={notification.created_by} />
           </td>
 
           <td title={notification.title} className="truncate leading-8">

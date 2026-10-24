@@ -11,8 +11,15 @@ import { Link } from "./Link";
 
 interface Props {
   readonly className?: string;
-  /** A deleted citizen shows as "Deleted citizen", without a link */
-  readonly citizen?: Pick<Citizen, "id" | "handle" | "deletedAt"> | null;
+  /**
+   * A deleted citizen shows as "Deleted citizen", without a link. Without
+   * `deletedAt`, the citizen is not deleted.
+   */
+  readonly citizen?:
+    | (Pick<Citizen, "id" | "handle"> & {
+        readonly deletedAt?: Citizen["deletedAt"];
+      })
+    | null;
   readonly page?: string;
 }
 

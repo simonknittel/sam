@@ -1,7 +1,8 @@
 import { CAN_LOGIN_CITIZEN_WHERE } from "@sam-monorepo/domain";
+import { LOGIN_MANAGE_PERMISSION_SET } from "../../auth/clearedCitizens.js";
 import { isCitizenWithPermissions } from "../../auth/effectivePermissionsOfCitizens.js";
 import type { ApplicationContext } from "../../context.js";
-import { LOGIN_MANAGE_PERMISSION_SET, type Recipient } from "./recipient.js";
+import type { Recipient } from "./recipient.js";
 
 export interface FindGreetingRecipientInput {
   readonly citizenId: string;

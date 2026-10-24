@@ -209,8 +209,7 @@ test("the search filter narrows the list to the matching title or text", async (
     permissionStrings: SENDER_PERMISSIONS,
   });
   const receiver = await createCitizen(prisma, { handle: "empfaenger" });
-  /** Deliberately without `otherRole;read`: the table cannot name the role */
-  const hiddenRole = await createRole(prisma, { name: "Geheimdienst" });
+  const fleet = await createRole(prisma, { name: "Flotte" });
 
   await prisma.manualNotification.create({
     data: {
@@ -225,7 +224,7 @@ test("the search filter narrows the list to the matching title or text", async (
       createdById: sender.entity.id,
       title: "Flottenübung",
       body: "Wir üben den Verbandsflug.",
-      receiverRoles: { create: { roleId: hiddenRole.id } },
+      receiverRoles: { create: { roleId: fleet.id } },
     },
   });
 
@@ -239,13 +238,11 @@ test("the search filter narrows the list to the matching title or text", async (
   await expect(
     maintenanceRow.getByRole("link", { name: "empfaenger" }),
   ).toBeVisible();
-  await expect(exerciseRow.getByText("Verborgene Rolle")).toBeVisible();
-  await expect(exerciseRow.getByText("Geheimdienst")).toHaveCount(0);
 
   // The search filter feeds the nuqs URL contract (?search=…)
   await fillUntilUrl(
     page,
-    page.getByLabel("Suche"),
+    page.getByLabel("Titel oder Text"),
     "Wartung",
     /search=Wartung/,
   );

@@ -36,6 +36,11 @@ interface Props {
   readonly className?: string;
   readonly roleId: Role["id"];
   readonly showPlaceholder?: boolean;
+  /**
+   * The title of the placeholder "Verborgene Rolle" for a role that the
+   * viewer cannot see. Without it, the badge of such a role renders nothing.
+   */
+  readonly hiddenRoleTitle?: string;
   readonly citizenId?: string;
   readonly citizenLevel?: number | null;
   readonly onSuccess?: () => void;
@@ -51,6 +56,7 @@ export const SingleRoleBadge = ({
   className,
   roleId,
   showPlaceholder = false,
+  hiddenRoleTitle,
   citizenId,
   citizenLevel = 0,
   onSuccess,
@@ -79,7 +85,21 @@ export const SingleRoleBadge = ({
   const removeConfirmation = useSubmitConfirmation();
 
   const role = roles.find((role) => role.id === roleId);
-  if (!role) return null;
+  if (!role) {
+    if (!hiddenRoleTitle) return null;
+
+    return (
+      <span
+        className={clsx(
+          "inline-flex h-8 items-center rounded-secondary bg-neutral-700/50 px-2 font-mono text-sm text-neutral-500",
+          className,
+        )}
+        title={hiddenRoleTitle}
+      >
+        Verborgene Rolle
+      </span>
+    );
+  }
 
   const canAssign =
     authentication &&

@@ -3,12 +3,6 @@ import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { ManualNotificationsFilters } from "@/modules/manual-notifications/components/ManualNotificationsFilters";
 import { ManualNotificationsTable } from "@/modules/manual-notifications/components/ManualNotificationsTable";
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Manuelle Benachrichtigungen",
-};
-
 export default async function Page({
   searchParams,
 }: PageProps<"/app/manual-notifications">) {

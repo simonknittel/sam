@@ -1,6 +1,6 @@
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
+import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import type { ManualNotificationOutput } from "@sam-monorepo/application";
-import { ReceiverRoleBadge } from "./ReceiverRoleBadge";
 
 interface Props {
   readonly notification: Pick<
@@ -9,7 +9,10 @@ interface Props {
   >;
 }
 
-/** The selected citizens and roles of a manual notification */
+/**
+ * The selected citizens and roles of a manual notification. A role that the
+ * viewer cannot see shows as a placeholder, like in the role picker.
+ */
 export const ManualNotificationReceivers = ({ notification }: Props) => {
   if (
     notification.receiver_citizens.length <= 0 &&
@@ -20,14 +23,16 @@ export const ManualNotificationReceivers = ({ notification }: Props) => {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
       {notification.receiver_roles.map((role) => (
-        <ReceiverRoleBadge key={role.id} role={role} />
+        <SingleRoleBadge
+          key={role.id}
+          roleId={role.id}
+          className="inline-flex"
+          hiddenRoleTitle="Diese Rolle ist ein Empfänger, du darfst sie aber nicht sehen."
+        />
       ))}
 
       {notification.receiver_citizens.map((citizen) => (
-        <CitizenLink
-          key={citizen.id}
-          citizen={{ ...citizen, deletedAt: null }}
-        />
+        <CitizenLink key={citizen.id} citizen={citizen} />
       ))}
     </div>
   );

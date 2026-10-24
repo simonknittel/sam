@@ -13,7 +13,7 @@ export const sendManualNotificationTool = defineTool({
   group: ToolGroup.ManualNotifications,
   title: "Send a manual notification",
   description:
-    "Sends a notification with its own title and body to the chosen citizens (citizen ids from a Spynet tool) and to the members of the chosen roles (role ids from list_roles). A role includes the citizens who have it through their effective roles, also through an inherited role. Only the citizens who can log in to SAM receive the notification. It is delivered on-site and by web push, like every notification of the SAM web app. Gives the sent notification with the chosen receivers.",
+    "Sends a notification with its own title and body to the chosen citizens (citizen ids from a Spynet tool) and to the members of the chosen roles (role ids from list_roles). A role includes the citizens who have it through their effective roles, also through an inherited role. Only the citizens who can log in to SAM receive the notification. It is delivered on-site and by web push, like every notification of the SAM web app. To give citizen_ids, the user needs the permission to read citizens; without it, give only role_ids. Gives the sent notification with the chosen receivers.",
   annotations: {
     readOnlyHint: false,
     destructiveHint: false,
