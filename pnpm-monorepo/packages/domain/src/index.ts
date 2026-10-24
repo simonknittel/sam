@@ -151,6 +151,7 @@ export {
   type ParsedOnSiteNotificationPayload,
 } from "./notifications/onSiteNotificationPayloads.js";
 export * from "./notifications/onSiteNotificationTab.js";
+export { OAUTH_GRANT_CUSTOM_NAME_MAXIMUM_LENGTH } from "./oauth/oauthGrantLimits.js";
 export * from "./onboarding/onboardingTasks.js";
 export { ORG_ID } from "./ORG_ID.js";
 export { getOrganizationLogoUrl } from "./organization/organizationLogoUrl.js";
@@ -308,7 +309,10 @@ export { decodeUploadFileName } from "./uploads/uploadFileName.js";
 export * from "./uploads/uploadUsage.js";
 export { UNUSED_UPLOAD_WHERE } from "./uploads/uploadUsageRelations.js";
 export { ASSUMABLE_USER_WHERE } from "./users/assumableUser.js";
-export { BAN_REASON_MAXIMUM_LENGTH } from "./users/userLimits.js";
+export {
+  BAN_REASON_MAXIMUM_LENGTH,
+  USER_AGENT_MAXIMUM_LENGTH,
+} from "./users/userLimits.js";
 export {
   EventWikiScopeTier,
   getEffectiveEventWikiScope,

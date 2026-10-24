@@ -239,12 +239,17 @@ export enum AuditEventType {
   ASSUME_USER_ENDED = "ASSUME_USER_ENDED",
   READ_MARKER_CREATED = "READ_MARKER_CREATED",
   CITIZEN_WELCOMED = "CITIZEN_WELCOMED",
+  /** @deprecated Superseded by OAUTH_GRANT_CREATED_V2 (adds the settings of the consent) */
   OAUTH_GRANT_CREATED = "OAUTH_GRANT_CREATED",
   OAUTH_GRANT_REVOKED = "OAUTH_GRANT_REVOKED",
   OAUTH_GRANT_ADMIN_MODE_UPDATED = "OAUTH_GRANT_ADMIN_MODE_UPDATED",
+  /** @deprecated Superseded by MCP_TOOL_SETTING_UPDATED_V2 (the setting moved from the user to the grant) */
   MCP_TOOL_SETTING_UPDATED = "MCP_TOOL_SETTING_UPDATED",
   OAUTH_RECORDS_PURGED = "OAUTH_RECORDS_PURGED",
   MANUAL_NOTIFICATION_CREATED = "MANUAL_NOTIFICATION_CREATED",
+  OAUTH_GRANT_CREATED_V2 = "OAUTH_GRANT_CREATED_V2",
+  OAUTH_GRANT_RENAMED = "OAUTH_GRANT_RENAMED",
+  MCP_TOOL_SETTING_UPDATED_V2 = "MCP_TOOL_SETTING_UPDATED_V2",
 }
 
 /**
@@ -1675,6 +1680,34 @@ export interface AuditEventDataByType {
     title: string;
     receiverCitizenIds: string[];
     receiverRoleIds: string[];
+  };
+
+  /**
+   * `clientId` is the URL of the Client ID Metadata Document. The client
+   * gives `clientName` itself, thus the name is not trusted. `customName` and
+   * `disabledToolNames` are the settings that the user selected on the
+   * consent page.
+   */
+  [AuditEventType.OAUTH_GRANT_CREATED_V2]: {
+    grantId: string;
+    clientId: string;
+    clientName: string;
+    customName: string | null;
+    disabledToolNames: string[];
+  };
+
+  /** `customName` is null when the user removed the own name */
+  [AuditEventType.OAUTH_GRANT_RENAMED]: {
+    grantId: string;
+    clientId: string;
+    customName: string | null;
+  };
+
+  [AuditEventType.MCP_TOOL_SETTING_UPDATED_V2]: {
+    grantId: string;
+    clientId: string;
+    toolName: string;
+    enabled: boolean;
   };
 }
 
