@@ -24,9 +24,10 @@ const inactivityDaysSchema = z
   .min(ROLE_INACTIVITY_DAYS_MINIMUM)
   .max(ROLE_INACTIVITY_DAYS_MAXIMUM);
 
+/** A field that is not given stays. The form of the app gives all fields. */
 export const updateRoleInputSchema = z.object({
   role_id: idSchema,
-  name: roleNameSchema,
+  name: roleNameSchema.optional(),
   description: z
     .string()
     .max(ROLE_DESCRIPTION_MAXIMUM_LENGTH)
@@ -64,8 +65,8 @@ export interface UpdateRoleOutput {
 }
 
 /**
- * Changes the name, the description, the inactivity rules and the levels of
- * a role. Requires `role;manage`.
+ * Changes the given fields of a role: the name, the description, the
+ * inactivity rules and the levels. Requires `role;manage`.
  *
  * @throws NotFoundError when the role does not exist
  * @throws ValidationError when a different role has the name

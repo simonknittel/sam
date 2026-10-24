@@ -11,6 +11,13 @@ export enum RoleErrorMessage {
   NameTaken = "A role with this name exists already",
   /** A `ValidationError`: a role that inherits itself adds nothing */
   SelfInheritance = "A role cannot inherit itself",
+  /** A `ValidationError` */
+  PermissionStringAddedAndRemoved = "A permission string cannot be in add and in remove",
+  /**
+   * A `ValidationError`: the role page cannot give the permission string, thus
+   * it is probably a typo
+   */
+  UnknownPermissionString = "A permission string of add is not in the permission catalog and is not a rule",
 }
 
 /**

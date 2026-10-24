@@ -11,6 +11,12 @@ export {
   type ChangeRoleAssignmentLevelOutput,
 } from "./changeRoleAssignmentLevel.js";
 export {
+  changeRolePermissions,
+  changeRolePermissionsInputSchema,
+  type ChangeRolePermissionsInput,
+  type ChangeRolePermissionsOutput,
+} from "./changeRolePermissions.js";
+export {
   countCitizensPerRole,
   type CountCitizensPerRoleOutput,
 } from "./countCitizensPerRole.js";
@@ -33,6 +39,12 @@ export {
   type DeleteRoleAssignmentOutput,
 } from "./deleteRoleAssignment.js";
 export { findManagedRole, type ManagedRole } from "./findManagedRole.js";
+export {
+  getPermissionCatalog,
+  getPermissionCatalogInputSchema,
+  type CatalogPermissionOutput,
+  type GetPermissionCatalogOutput,
+} from "./getPermissionCatalog.js";
 export {
   getRole,
   getRoleInputSchema,
