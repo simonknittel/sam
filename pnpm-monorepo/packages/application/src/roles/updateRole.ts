@@ -9,7 +9,11 @@ import {
 import * as z from "zod";
 import { requirePermission, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
-import { NotFoundError, rethrowRecordNotFound } from "../errors.js";
+import {
+  NotFoundError,
+  rethrowRecordNotFound,
+  rethrowUniqueConstraintFailed,
+} from "../errors.js";
 import { idSchema } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
 import { RoleErrorMessage } from "./roleErrors.js";
@@ -64,6 +68,7 @@ export interface UpdateRoleOutput {
  * a role. Requires `role;manage`.
  *
  * @throws NotFoundError when the role does not exist
+ * @throws ValidationError when a different role has the name
  */
 export const updateRole = (
   context: ApplicationContext,
@@ -84,27 +89,31 @@ export const updateRole = (
     });
     if (!existingRole) throw new NotFoundError(RoleErrorMessage.NotFound);
 
-    const updatedRole = await rethrowRecordNotFound(
+    const updatedRole = await rethrowUniqueConstraintFailed(
       () =>
-        context.prisma.role.update({
-          where: { id: input.role_id },
-          data: {
-            name: input.name,
-            description: input.description,
-            maxAgeDays: input.max_age_days,
-            assignAfterInactiveDays: input.assign_after_inactive_days,
-            maxLevel: input.max_level,
-          },
-          select: {
-            id: true,
-            name: true,
-            description: true,
-            maxAgeDays: true,
-            assignAfterInactiveDays: true,
-            maxLevel: true,
-          },
-        }),
-      RoleErrorMessage.NotFound,
+        rethrowRecordNotFound(
+          () =>
+            context.prisma.role.update({
+              where: { id: input.role_id },
+              data: {
+                name: input.name,
+                description: input.description,
+                maxAgeDays: input.max_age_days,
+                assignAfterInactiveDays: input.assign_after_inactive_days,
+                maxLevel: input.max_level,
+              },
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                maxAgeDays: true,
+                assignAfterInactiveDays: true,
+                maxLevel: true,
+              },
+            }),
+          RoleErrorMessage.NotFound,
+        ),
+      RoleErrorMessage.NameTaken,
     );
 
     await context.audit.create([
