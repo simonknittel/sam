@@ -3,6 +3,7 @@ import {
   callForContent,
   callForError,
   NOT_FOUND_RESULT,
+  VALIDATION_RESULT,
 } from "../fixtures/mcp-client";
 import { expect, test } from "../fixtures/test";
 
@@ -33,9 +34,16 @@ test.describe("the role tools of the MCP server", () => {
       (await authorizeMcpClient(viewer.user)).accessToken,
     );
 
-    expect(await client.listToolNames()).toEqual(
+    const toolNames = await client.listToolNames();
+    expect(toolNames).toEqual(
       expect.arrayContaining(["get_role", "list_roles"]),
     );
+    for (const managerToolName of [
+      "change_role_permissions",
+      "get_permission_catalog",
+      "update_role",
+    ])
+      expect(toolNames).not.toContain(managerToolName);
 
     // The own role of the viewer and the role "Bergung" are hidden, also as
     // an inherited role
@@ -142,5 +150,182 @@ test.describe("the role tools of the MCP server", () => {
       assign_after_inactive_days: null,
       permission_strings: ["event;read", "ship;read"],
     });
+  });
+
+  test("change_role_permissions adds strings of the catalog and rules, removes any string and writes one audit event per change", async ({
+    prisma,
+    authorizeMcpClient,
+    connectMcpClient,
+  }) => {
+    const logistics = await createRole(prisma, {
+      name: "Logistik",
+      // The catalog does not have legacy;read
+      permissionStrings: ["event;read", "legacy;read", "ship;manage"],
+    });
+    const manager = await createMcpCitizen(prisma, {
+      handle: "mcp-rollen-verwalter",
+      permissionStrings: ["role;manage"],
+    });
+    const client = await connectMcpClient(
+      (await authorizeMcpClient(manager.user)).accessToken,
+    );
+    const roleRule = `otherRole;read;roleId=${logistics.id}`;
+
+    // The role has ship;manage already and does not have wiki;read
+    expect(
+      await callForContent(client, "change_role_permissions", {
+        role_id: logistics.id,
+        add: ["task;read", "ship;manage", roleRule],
+        remove: ["event;read", "legacy;read", "wiki;read"],
+      }),
+    ).toEqual({
+      role_id: logistics.id,
+      permission_strings: [roleRule, "ship;manage", "task;read"],
+      added: [roleRule, "task;read"],
+      removed: ["event;read", "legacy;read"],
+    });
+
+    expect(
+      await prisma.permissionString.findMany({
+        where: { roleId: logistics.id },
+        select: { permissionString: true },
+        orderBy: { permissionString: "asc" },
+      }),
+    ).toEqual([
+      { permissionString: roleRule },
+      { permissionString: "ship;manage" },
+      { permissionString: "task;read" },
+    ]);
+
+    const toggledEvent = (permissionString: string, enabled: boolean) => ({
+      createdById: manager.user.id,
+      data: { roleId: logistics.id, permissionString, enabled },
+      triggeredViaMcp: true,
+    });
+    const auditEvents = await prisma.auditEvent.findMany({
+      where: { type: "ROLE_PERMISSION_TOGGLED" },
+      select: { createdById: true, data: true, triggeredViaMcp: true },
+    });
+    expect(auditEvents).toHaveLength(4);
+    expect(auditEvents).toEqual(
+      expect.arrayContaining([
+        toggledEvent(roleRule, true),
+        toggledEvent("task;read", true),
+        toggledEvent("event;read", false),
+        toggledEvent("legacy;read", false),
+      ]),
+    );
+
+    expect(
+      await callForError(client, "change_role_permissions", {
+        role_id: logistics.id,
+        add: ["citizen;reed"],
+      }),
+    ).toMatch(VALIDATION_RESULT);
+    expect(
+      await callForError(client, "change_role_permissions", {
+        role_id: logistics.id,
+        add: ["task;manage"],
+        remove: ["task;manage"],
+      }),
+    ).toMatch(VALIDATION_RESULT);
+  });
+
+  test("get_permission_catalog gives the permissions of the role page with their texts", async ({
+    prisma,
+    authorizeMcpClient,
+    connectMcpClient,
+  }) => {
+    const manager = await createMcpCitizen(prisma, {
+      handle: "mcp-rollen-verwalter",
+      permissionStrings: ["role;manage"],
+    });
+    const client = await connectMcpClient(
+      (await authorizeMcpClient(manager.user)).accessToken,
+    );
+
+    const { permissions } = await callForContent(
+      client,
+      "get_permission_catalog",
+    );
+    expect(permissions).toContainEqual({
+      permission_string: "task;read;taskDeleted=1",
+      section: "Tasks",
+      title: "Lesen - Gelöschte",
+      description:
+        "Citizen mit dieser Berechtigung können gelöschte Tasks lesen.",
+    });
+    expect(permissions).toContainEqual({
+      permission_string: "citizen;delete",
+      section: "Citizen",
+      title: "Citizen löschen",
+      description: null,
+    });
+  });
+
+  test("update_role changes only the given fields and refuses the name of a different role", async ({
+    prisma,
+    authorizeMcpClient,
+    connectMcpClient,
+  }) => {
+    const logistics = await prisma.role.create({
+      data: {
+        name: "Logistik",
+        description: "Transporte",
+        maxAgeDays: 30,
+        maxLevel: 3,
+      },
+    });
+    await createRole(prisma, { name: "Bergung" });
+    const manager = await createMcpCitizen(prisma, {
+      handle: "mcp-rollen-verwalter",
+      permissionStrings: ["role;manage"],
+    });
+    const client = await connectMcpClient(
+      (await authorizeMcpClient(manager.user)).accessToken,
+    );
+
+    expect(
+      await callForContent(client, "update_role", {
+        role_id: logistics.id,
+        name: "Logistik und Handel",
+        description: null,
+      }),
+    ).toEqual({
+      id: logistics.id,
+      name: "Logistik und Handel",
+      description: null,
+      max_age_days: 30,
+      assign_after_inactive_days: null,
+      max_level: 3,
+    });
+
+    expect(
+      await prisma.auditEvent.findFirstOrThrow({
+        where: { type: "ROLE_UPDATED_V3" },
+        select: { createdById: true, data: true, triggeredViaMcp: true },
+      }),
+    ).toEqual({
+      createdById: manager.user.id,
+      data: {
+        roleId: logistics.id,
+        previousName: "Logistik",
+        newName: "Logistik und Handel",
+        previousMaxAgeDays: 30,
+        newMaxAgeDays: 30,
+        previousAssignAfterInactiveDays: null,
+        newAssignAfterInactiveDays: null,
+        previousDescription: "Transporte",
+        newDescription: null,
+      },
+      triggeredViaMcp: true,
+    });
+
+    expect(
+      await callForError(client, "update_role", {
+        role_id: logistics.id,
+        name: "Bergung",
+      }),
+    ).toMatch(VALIDATION_RESULT);
   });
 });
