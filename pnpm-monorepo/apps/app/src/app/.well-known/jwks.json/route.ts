@@ -13,8 +13,9 @@ const CACHE_MAX_AGE_IN_SECONDS = 5 * 60;
 
 /**
  * Publishes the public key embedded apps verify their identity tokens with
- * (see docs/embedded-app-authentication.md). Public by design — this is the
- * one endpoint that must be reachable without a session.
+ * (see docs/embedded-app-authentication.md). The MCP access tokens use the
+ * same key. Public by design: a verifier has no session, and the key set
+ * holds only public keys.
  */
 export const GET = async () => {
   const jsonWebKeySet: EmbedJsonWebKeySet = createEmbedJsonWebKeySet(

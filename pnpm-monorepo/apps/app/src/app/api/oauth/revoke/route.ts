@@ -14,7 +14,9 @@ import { revokeToken, revokeTokenInputSchema } from "@sam-monorepo/application";
 
 /**
  * The revocation endpoint of the MCP OAuth server (RFC 7009). It answers
- * `200` also for an unknown token.
+ * `200` also for an unknown token. Public by design: the clients are public
+ * clients, and the possession of a token is the proof. A revocation can only
+ * remove access.
  */
 export const POST = async (request: Request) => {
   if (await isMcpServerDisabled()) return temporarilyUnavailableResponse();

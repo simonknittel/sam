@@ -7,6 +7,10 @@ import {
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
+ * Public by design: the user opens the link of the confirmation email, also
+ * without a session. The token in the link is the proof (see
+ * `confirmEmailWithToken()`).
+ *
  * The `Referrer-Policy: no-referrer` header of this route is in
  * `next.config.ts`. A header of a route handler cannot replace a header of
  * the config.
