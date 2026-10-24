@@ -8,7 +8,7 @@ import {
 import * as z from "zod";
 import { requireCitizen, requirePermission, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
-import { ValidationError } from "../errors.js";
+import { rethrowRecordNotFound, ValidationError } from "../errors.js";
 import { triggerNotificationsAfterSave } from "../notifications.js";
 import { idSchema } from "../pagination.js";
 import { requireVisibleRoles } from "../roles/roleVisibility.js";
@@ -60,6 +60,7 @@ export interface CreateManualNotificationOutput {
  *
  * @throws ValidationError when no receiver is selected, when a citizen does
  * not exist or is deleted, or when a role does not exist or is not visible
+ * @throws NotFoundError when a role goes away between the check and the write
  */
 export const createManualNotification = (
   context: ApplicationContext,
@@ -90,24 +91,28 @@ export const createManualNotification = (
       ManualNotificationErrorMessage.UnknownRole,
     );
 
-    const notification = await context.prisma.manualNotification.create({
-      data: {
-        createdBy: { connect: { id: sender.id } },
-        title: input.title,
-        body: input.body,
-        receiverCitizens: {
-          create: citizenIds.map((citizenId) => ({
-            citizen: { connect: { id: citizenId } },
-          })),
-        },
-        receiverRoles: {
-          create: roleIds.map((roleId) => ({
-            role: { connect: { id: roleId } },
-          })),
-        },
-      },
-      select: MANUAL_NOTIFICATION_SELECT,
-    });
+    const notification = await rethrowRecordNotFound(
+      () =>
+        context.prisma.manualNotification.create({
+          data: {
+            createdBy: { connect: { id: sender.id } },
+            title: input.title,
+            body: input.body,
+            receiverCitizens: {
+              create: citizenIds.map((citizenId) => ({
+                citizen: { connect: { id: citizenId } },
+              })),
+            },
+            receiverRoles: {
+              create: roleIds.map((roleId) => ({
+                role: { connect: { id: roleId } },
+              })),
+            },
+          },
+          select: MANUAL_NOTIFICATION_SELECT,
+        }),
+      ManualNotificationErrorMessage.UnknownRole,
+    );
 
     await context.audit.create([
       {
