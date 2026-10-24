@@ -172,6 +172,16 @@ export {
 } from "./pagination/mergedCursor.js";
 export { comparePermissionSets } from "./permissions/comparePermissionSets.js";
 export { getPermissionSetsByRoles } from "./permissions/getPermissionSetsByRoles.js";
+export {
+  NOTE_RULE_OPERATIONS,
+  PERMISSION_CATALOG,
+  ROLE_RULE_OPERATIONS,
+  getPermissionDescription,
+  isCatalogPermissionString,
+  isPermissionRule,
+  type CatalogPermission,
+  type CatalogPermissionString,
+} from "./permissions/permissionCatalog.js";
 export type { PermissionSet } from "./permissions/PermissionSet.js";
 export { PERMISSION_STRING_PATTERN } from "./permissions/permissionStringPattern.js";
 export {

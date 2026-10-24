@@ -4,6 +4,7 @@ import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import TabPanel from "@/modules/common/components/tabs/TabPanel";
 import { Tooltip } from "@/modules/common/components/Tooltip";
 import { type Role } from "@sam-monorepo/database/browser";
+import { getPermissionDescription } from "@sam-monorepo/domain";
 import { FaInfoCircle } from "react-icons/fa";
 import { usePermissionsContext } from "../PermissionsContext";
 import { RoleSection } from "./components/RoleSection";
@@ -27,7 +28,7 @@ const OtherTab = ({ roles }: Readonly<Props>) => {
       <div className="flex items-center justify-between py-2">
         <div>
           <h4 className="font-bold">Gesperrt</h4>
-          <p className="text-sm">Negiert Anmelden anderer Rollen</p>
+          <p className="text-sm">{getPermissionDescription("login;negate")}</p>
         </div>
 
         <YesNoCheckbox {...register("login;negate")} />
@@ -61,8 +62,7 @@ const OtherTab = ({ roles }: Readonly<Props>) => {
         <div>
           <h4 className="font-bold">MCP-Server nutzen</h4>
           <p className="text-sm text-neutral-500">
-            KI-Clients wie Claude mit SAM verbinden. Die Clients arbeiten mit
-            den Berechtigungen des Benutzers.
+            {getPermissionDescription("mcp;use")}
           </p>
         </div>
 
@@ -73,10 +73,7 @@ const OtherTab = ({ roles }: Readonly<Props>) => {
         <div>
           <h4 className="font-bold">System Log lesen</h4>
           <p className="text-sm text-yellow-500">
-            ⚠️ Benutzer mit dieser Berechtigung können vertrauliche
-            Informationen und personenbezogene Daten (PII) einsehen. Diese
-            Berechtigung sollte nur einem sehr begrenzten Personenkreis gewährt
-            werden.
+            {getPermissionDescription("systemLog;read")}
           </p>
         </div>
 
@@ -87,9 +84,7 @@ const OtherTab = ({ roles }: Readonly<Props>) => {
         <div>
           <h4 className="font-bold">Globale Statistiken lesen</h4>
           <p className="text-sm">
-            Diese Darstellung der Statistiken kann nicht die Rollen des
-            aktuellen Benutzers berücksichtigen. Daher werden bspw. die
-            Berechtigungen für die Sichtbarkeit von Rollen hier ausgehebelt.
+            {getPermissionDescription("globalStatistics;read")}
           </p>
         </div>
 
@@ -99,10 +94,7 @@ const OtherTab = ({ roles }: Readonly<Props>) => {
       <div className="flex items-center justify-between py-2">
         <div>
           <h4 className="font-bold">Uploads verwalten</h4>
-          <p className="text-sm">
-            Zeigt in der Uploads-App die Uploads aller Benutzer inkl. Urheber an
-            und erlaubt das Löschen beliebiger Uploads.
-          </p>
+          <p className="text-sm">{getPermissionDescription("upload;manage")}</p>
         </div>
 
         <YesNoCheckbox {...register("upload;manage")} />
@@ -112,8 +104,7 @@ const OtherTab = ({ roles }: Readonly<Props>) => {
         <div>
           <h4 className="font-bold">Benachrichtigungen</h4>
           <p className="text-sm">
-            Benachrichtigungen mit eigenem Titel und Text an Citizens oder
-            Rollen senden und die gesendeten Benachrichtigungen einsehen.
+            {getPermissionDescription("manualNotification;manage")}
           </p>
         </div>
 
@@ -125,10 +116,7 @@ const OtherTab = ({ roles }: Readonly<Props>) => {
           <h4 className="font-bold">Karrierebäume verwalten</h4>
 
           <Tooltip triggerChildren={<FaInfoCircle />}>
-            Nutzer mit dieser Berechtigung können unter Karriere → Einstellungen
-            Karrierebäume anlegen, duplizieren, umbenennen, sortieren und
-            löschen sowie deren Berechtigungen vergeben. Zusätzlich können sie
-            jeden Karrierebaum lesen und bearbeiten.
+            {getPermissionDescription("career;manage")}
           </Tooltip>
         </div>
 

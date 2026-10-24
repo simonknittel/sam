@@ -2,6 +2,7 @@
 
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import TabPanel from "@/modules/common/components/tabs/TabPanel";
+import { getPermissionDescription } from "@sam-monorepo/domain";
 import { usePermissionsContext } from "../PermissionsContext";
 
 const EventsTab = () => {
@@ -18,10 +19,7 @@ const EventsTab = () => {
       <div className="flex items-center justify-between gap-2 py-2">
         <div>
           <h4 className="font-bold">Events erstellen</h4>
-          <p className="text-sm">
-            Citizen mit dieser Berechtigung können eigene Events in der App
-            erstellen und diese als Organisator verwalten.
-          </p>
+          <p className="text-sm">{getPermissionDescription("event;create")}</p>
         </div>
 
         <YesNoCheckbox {...register("event;create")} />
@@ -37,8 +35,7 @@ const EventsTab = () => {
         <div>
           <h4 className="font-bold">Event-Vorlagen teilen</h4>
           <p className="text-sm">
-            Citizen mit dieser Berechtigung können ihre eigenen Event-Vorlagen
-            für Rollen freigeben und den Besitz an andere Citizen übertragen.
+            {getPermissionDescription("eventTemplateShare;manage")}
           </p>
         </div>
 
@@ -55,9 +52,7 @@ const EventsTab = () => {
         <div>
           <h4 className="font-bold">Aufstellung - Posten verwalten</h4>
           <p className="text-sm">
-            Citizen mit dieser Berechtigung können die Posten der
-            Eventaufstellung bearbeiten, selbst wenn sie nicht Organisator des
-            Events sind.
+            {getPermissionDescription("othersEventPosition;manage")}
           </p>
         </div>
 

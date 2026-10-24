@@ -2,6 +2,7 @@
 
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import TabPanel from "@/modules/common/components/tabs/TabPanel";
+import { getPermissionDescription } from "@sam-monorepo/domain";
 import { usePermissionsContext } from "../PermissionsContext";
 
 export const SilcTab = () => {
@@ -13,8 +14,7 @@ export const SilcTab = () => {
         <div>
           <h4 className="font-bold">Eigenen Kontostand einsehen</h4>
           <p className="text-sm">
-            Citizen mit dieser Berechtigung können ihren eigenen SILC-Kontostand
-            einsehen.
+            {getPermissionDescription("silcBalanceOfCurrentCitizen;read")}
           </p>
         </div>
 
@@ -25,8 +25,7 @@ export const SilcTab = () => {
         <div>
           <h4 className="font-bold">Alle Kontostände einsehen</h4>
           <p className="text-sm">
-            Citizen mit dieser Berechtigung können die SILC-Kontoständer aller
-            Citizen einsehen.
+            {getPermissionDescription("silcBalanceOfOtherCitizen;read")}
           </p>
         </div>
 
@@ -37,7 +36,7 @@ export const SilcTab = () => {
         <div>
           <h4 className="font-bold">SINcome einsehen</h4>
           <p className="text-sm">
-            Citizen mit dieser Berechtigung können die SINcome einsehen.
+            {getPermissionDescription("profitDistributionCycle;read")}
           </p>
         </div>
 
@@ -48,7 +47,7 @@ export const SilcTab = () => {
         <div>
           <h4 className="font-bold">SINcome verwalten</h4>
           <p className="text-sm">
-            Citizen mit dieser Berechtigung können die SINcome verwalten.
+            {getPermissionDescription("profitDistributionCycle;manage")}
           </p>
         </div>
 
@@ -59,8 +58,7 @@ export const SilcTab = () => {
         <div>
           <h4 className="font-bold">Eigene Transaktionen einsehen</h4>
           <p className="text-sm">
-            Citizen mit dieser Berechtigung können die SILC-Transaktionen zum
-            eigenen Konto einsehen.
+            {getPermissionDescription("silcTransactionOfCurrentCitizen;read")}
           </p>
         </div>
 
@@ -71,8 +69,7 @@ export const SilcTab = () => {
         <div>
           <h4 className="font-bold">Alle Transaktionen einsehen</h4>
           <p className="text-sm">
-            Citizen mit dieser Berechtigung können die SILC-Transaktionen aller
-            Citizen einsehen.
+            {getPermissionDescription("silcTransactionOfOtherCitizen;read")}
           </p>
         </div>
 
@@ -83,7 +80,7 @@ export const SilcTab = () => {
         <div>
           <h4 className="font-bold">Transaktionen erstellen</h4>
           <p className="text-sm">
-            Citizen mit dieser Berechtigung können SILC-Transaktionen erstellen.
+            {getPermissionDescription("silcTransactionOfOtherCitizen;create")}
           </p>
         </div>
 
@@ -94,8 +91,7 @@ export const SilcTab = () => {
         <div>
           <h4 className="font-bold">Transaktionen bearbeiten und löschen</h4>
           <p className="text-sm">
-            Citizen mit dieser Berechtigung können SILC-Transaktionen bearbeiten
-            und löschen
+            {getPermissionDescription("silcTransactionOfOtherCitizen;manage")}
           </p>
         </div>
 
@@ -106,8 +102,7 @@ export const SilcTab = () => {
         <div>
           <h4 className="font-bold">Einstellungen bearbeiten</h4>
           <p className="text-sm">
-            Citizen mit dieser Berechtigung können SILC-Einstellungen
-            bearbeiten.
+            {getPermissionDescription("silcSetting;manage")}
           </p>
         </div>
 

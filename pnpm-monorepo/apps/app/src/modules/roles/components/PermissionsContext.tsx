@@ -1,11 +1,12 @@
 "use client";
 
 import { type PermissionString } from "@sam-monorepo/database/browser";
+import type { CatalogPermissionString } from "@sam-monorepo/domain";
 import type { ReactNode } from "react";
 import { createContext, useContext } from "react";
 
 interface PermissionsContextInterface {
-  register: (permissionString: string) => {
+  register: (permissionString: CatalogPermissionString) => {
     name: string;
     defaultChecked: boolean;
   };
@@ -31,7 +32,7 @@ export const PermissionsProvider = ({ children, role }: Props) => {
     (permissionString) => permissionString.permissionString,
   );
 
-  const register = (permissionString: string) => {
+  const register = (permissionString: CatalogPermissionString) => {
     return {
       name: permissionString,
       defaultChecked: permissionStrings.includes(permissionString),

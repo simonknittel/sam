@@ -1,5 +1,6 @@
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import { Tooltip } from "@/modules/common/components/Tooltip";
+import { getPermissionDescription } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { FaInfoCircle } from "react-icons/fa";
 import { usePermissionsContext } from "../../PermissionsContext";
@@ -21,9 +22,7 @@ export const OrganizationMembershipSection = ({ className }: Props) => {
             <h5 className="font-bold">Lesen</h5>
 
             <Tooltip triggerChildren={<FaInfoCircle />}>
-              Nutzer mit dieser Berechtigung können Organisationsmitglieder
-              sehen, die ihre Sichtbarkeit auf &quot;Visible&quot; gesetzt
-              haben.
+              {getPermissionDescription("organizationMembership;read")}
             </Tooltip>
           </div>
 
@@ -35,9 +34,9 @@ export const OrganizationMembershipSection = ({ className }: Props) => {
             <h5 className="font-bold">Lesen (Redacted)</h5>
 
             <Tooltip triggerChildren={<FaInfoCircle />}>
-              Nutzer mit dieser Berechtigung können Organisationsmitglieder
-              sehen, die ihre Sichtbarkeit auf &quot;Redacted&quot; gesetzt
-              haben.
+              {getPermissionDescription(
+                "organizationMembership;read;alsoVisibilityRedacted=true",
+              )}
             </Tooltip>
           </div>
 
@@ -53,8 +52,7 @@ export const OrganizationMembershipSection = ({ className }: Props) => {
             <h5 className="font-bold">Erstellen</h5>
 
             <Tooltip triggerChildren={<FaInfoCircle />}>
-              Nutzer mit dieser Berechtigung können Citizen einer Organisation
-              hinzufügen. Dies Mitgliedschaften gelten erst mal als unbestätigt.
+              {getPermissionDescription("organizationMembership;create")}
             </Tooltip>
           </div>
 
@@ -66,8 +64,7 @@ export const OrganizationMembershipSection = ({ className }: Props) => {
             <h5 className="font-bold">Löschen</h5>
 
             <Tooltip triggerChildren={<FaInfoCircle />}>
-              Nutzer mit dieser Berechtigung können Citizen aus einer
-              Organisation entfernen.
+              {getPermissionDescription("organizationMembership;delete")}
             </Tooltip>
           </div>
 
@@ -79,8 +76,7 @@ export const OrganizationMembershipSection = ({ className }: Props) => {
             <h5 className="font-bold">Bestätigen</h5>
 
             <Tooltip triggerChildren={<FaInfoCircle />}>
-              Nutzer mit dieser Berechtigung können die Mitgliedschaft eines
-              Citizen in einer Organisation bestätigen.
+              {getPermissionDescription("organizationMembership;confirm")}
             </Tooltip>
           </div>
 

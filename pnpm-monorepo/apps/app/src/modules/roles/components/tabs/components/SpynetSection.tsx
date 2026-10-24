@@ -1,5 +1,6 @@
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import { Tooltip } from "@/modules/common/components/Tooltip";
+import { getPermissionDescription } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { FaInfoCircle } from "react-icons/fa";
 import { usePermissionsContext } from "../../PermissionsContext";
@@ -21,7 +22,7 @@ export const SpynetSection = ({ className }: Props) => {
             <h5 className="font-bold">Aktivität</h5>
 
             <Tooltip triggerChildren={<FaInfoCircle />}>
-              Ermöglicht das Aufrufen der Aktivität-Seite im Spynet.
+              {getPermissionDescription("spynetActivity;read")}
             </Tooltip>
           </div>
 
@@ -33,7 +34,7 @@ export const SpynetSection = ({ className }: Props) => {
             <h5 className="font-bold">Citizen</h5>
 
             <Tooltip triggerChildren={<FaInfoCircle />}>
-              Ermöglicht das Aufrufen der Citizen-Seite im Spynet.
+              {getPermissionDescription("spynetCitizen;read")}
             </Tooltip>
           </div>
 
@@ -45,7 +46,7 @@ export const SpynetSection = ({ className }: Props) => {
             <h5 className="font-bold">Notizen</h5>
 
             <Tooltip triggerChildren={<FaInfoCircle />}>
-              Ermöglicht das Aufrufen der Notizen-Seite im Spynet.
+              {getPermissionDescription("spynetNotes;read")}
             </Tooltip>
           </div>
 
@@ -57,7 +58,7 @@ export const SpynetSection = ({ className }: Props) => {
             <h5 className="font-bold">Sonstige</h5>
 
             <Tooltip triggerChildren={<FaInfoCircle />}>
-              Ermöglicht das Aufrufen der Sonstige-Seite im Spynet.
+              {getPermissionDescription("spynetOther;read")}
             </Tooltip>
           </div>
 

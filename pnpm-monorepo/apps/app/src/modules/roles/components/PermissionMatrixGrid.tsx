@@ -2,9 +2,9 @@
 
 import { runAction } from "@/modules/actions/utils/runAction";
 import type { PermissionMatrixRole } from "@sam-monorepo/application";
+import { PERMISSION_CATALOG } from "@sam-monorepo/domain";
 import type { ChangeEventHandler, CSSProperties } from "react";
 import { updateSingleRolePermission } from "../actions/updateSingleRolePermission";
-import { STATIC_PERMISSIONS } from "../utils/STATIC_PERMISSIONS";
 import { MatrixCell } from "./MatrixCell";
 import { MatrixRoleCell } from "./MatrixRoleCell";
 
@@ -14,7 +14,7 @@ import { MatrixRoleCell } from "./MatrixRoleCell";
  * this module renders on the server and in the browser, and the two must
  * not disagree on the order (a hydration mismatch).
  */
-const permissions = STATIC_PERMISSIONS.toSorted((first, second) =>
+const permissions = PERMISSION_CATALOG.toSorted((first, second) =>
   first.section.localeCompare(second.section, "de"),
 );
 
@@ -65,7 +65,7 @@ export const PermissionMatrixGrid = ({ roles }: Props) => {
 
             {permissions.map((permission) => (
               <th
-                key={permission.string}
+                key={permission.permissionString}
                 className="flex items-end justify-center font-normal whitespace-nowrap"
               >
                 <div className="w-0 -rotate-45">
@@ -109,10 +109,12 @@ const MatrixRow = ({ role }: MatrixRowProps) => {
 
       {permissions.map((permission) => (
         <MatrixCell
-          key={permission.string}
-          name={`${role.id}_${permission.string}`}
+          key={permission.permissionString}
+          name={`${role.id}_${permission.permissionString}`}
           label={`${permission.section} / ${permission.title} – ${role.name}`}
-          defaultChecked={grantedPermissionStrings.has(permission.string)}
+          defaultChecked={grantedPermissionStrings.has(
+            permission.permissionString,
+          )}
         />
       ))}
     </tr>

@@ -3,6 +3,7 @@
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import TabPanel from "@/modules/common/components/tabs/TabPanel";
 import { TaskRewardType, TaskVisibility } from "@sam-monorepo/database/browser";
+import { getPermissionDescription } from "@sam-monorepo/domain";
 import { usePermissionsContext } from "../PermissionsContext";
 
 export const TasksTab = () => {
@@ -18,9 +19,7 @@ export const TasksTab = () => {
               Öffentlich, personalisiert oder Gruppe
             </h4>
             <p className="text-sm text-neutral-400">
-              Citizen mit dieser Berechtigung können öffentliche Tasks lesen
-              sowie personalisierte und Gruppen-Tasks, die ihnen zugewiesen
-              sind.
+              {getPermissionDescription("task;read")}
             </p>
           </div>
 
@@ -31,7 +30,7 @@ export const TasksTab = () => {
           <div>
             <h4 className="font-bold">Gelöscht</h4>
             <p className="text-sm text-neutral-400">
-              Citizen mit dieser Berechtigung können gelöschte Tasks lesen.
+              {getPermissionDescription("task;read;taskDeleted=1")}
             </p>
           </div>
 
@@ -46,9 +45,7 @@ export const TasksTab = () => {
           <div>
             <h4 className="font-bold">Öffentlich</h4>
             <p className="text-sm text-neutral-400">
-              Citizen mit dieser Berechtigung können einen öffentlichen Task
-              erstellen, welcher von allen eingesehen und angenommen werden
-              kann.
+              {getPermissionDescription("task;create")}
             </p>
           </div>
 
@@ -59,8 +56,9 @@ export const TasksTab = () => {
           <div>
             <h4 className="font-bold">Personalisiert oder Gruppe</h4>
             <p className="text-sm text-neutral-400">
-              Citizen mit dieser Berechtigung können einen personalisierten oder
-              Gruppen-Task erstellen.
+              {getPermissionDescription(
+                `task;create;taskVisibility=${TaskVisibility.PERSONALIZED}`,
+              )}
             </p>
           </div>
 
@@ -75,8 +73,9 @@ export const TasksTab = () => {
           <div>
             <h4 className="font-bold">Mit neuen SILC</h4>
             <p className="text-sm text-neutral-400">
-              Citizen mit dieser Berechtigung können einen personalisierten oder
-              Gruppen-Task erstellen, welcher neue SILC als Belohnung hat.
+              {getPermissionDescription(
+                `task;create;taskVisibility=${TaskVisibility.PERSONALIZED};taskRewardType=${TaskRewardType.NEW_SILC}`,
+              )}
             </p>
           </div>
 
@@ -92,8 +91,7 @@ export const TasksTab = () => {
         <div>
           <h4 className="font-bold">Tasks verwalten</h4>
           <p className="text-sm text-neutral-400">
-            Citizen mit dieser Berechtigung können alle Arten von Tasks
-            einsehen, erstellen und bearbeiten.
+            {getPermissionDescription("task;manage")}
           </p>
         </div>
 

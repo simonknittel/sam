@@ -2,6 +2,7 @@
 
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import TabPanel from "@/modules/common/components/tabs/TabPanel";
+import { getPermissionDescription } from "@sam-monorepo/domain";
 import { usePermissionsContext } from "../PermissionsContext";
 
 export const PenaltyPointsTab = () => {
@@ -13,8 +14,7 @@ export const PenaltyPointsTab = () => {
         <div>
           <h4 className="font-bold">Lesen</h4>
           <p className="text-sm">
-            Citizen mit dieser Berechtigung können Strafpunkte von anderen
-            Citizen lesen.
+            {getPermissionDescription("penaltyEntry;read")}
           </p>
         </div>
 
@@ -25,8 +25,7 @@ export const PenaltyPointsTab = () => {
         <div>
           <h4 className="font-bold">Eintragen</h4>
           <p className="text-sm">
-            Citizen mit dieser Berechtigung können Strafpunkte bei anderen
-            Citizen eintragen.
+            {getPermissionDescription("penaltyEntry;create")}
           </p>
         </div>
 
@@ -37,10 +36,7 @@ export const PenaltyPointsTab = () => {
         <div>
           <h4 className="font-bold">Löschen</h4>
           <p className="text-sm">
-            Citizen mit dieser Berechtigung können Strafpunkte bei anderen
-            Citizen löschen. Dies sollte nur in Ausnahmefällen verwendet werden.
-            Wenn Strafpunkte selbstständig ablaufen sollen, sollte stattdessen
-            für den Eintrag ein Verfallsdatum angegeben werden.
+            {getPermissionDescription("penaltyEntry;delete")}
           </p>
         </div>
 
@@ -51,8 +47,7 @@ export const PenaltyPointsTab = () => {
         <div>
           <h4 className="font-bold">Eigene Strafpunkte lesen</h4>
           <p className="text-sm">
-            Citizen mit dieser Berechtigung können ihre eigenen Strafpunkte
-            lesen.
+            {getPermissionDescription("ownPenaltyEntry;read")}
           </p>
         </div>
 
