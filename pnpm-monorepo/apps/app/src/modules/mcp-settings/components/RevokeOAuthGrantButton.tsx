@@ -8,12 +8,14 @@ import { revokeOAuthGrant } from "../actions/revokeOAuthGrant";
 interface Props {
   readonly className?: string;
   readonly grantId: string;
+  readonly displayName: string;
   readonly clientHost: string;
 }
 
 export const RevokeOAuthGrantButton = ({
   className,
   grantId,
+  displayName,
   clientHost,
 }: Props) => {
   return (
@@ -26,7 +28,7 @@ export const RevokeOAuthGrantButton = ({
           type="submit"
           variant="tertiary"
           disabled={isPending}
-          aria-label={`${clientHost} trennen`}
+          aria-label={`${displayName} trennen`}
         >
           <FaUnlink /> Trennen
         </Button>
@@ -34,9 +36,10 @@ export const RevokeOAuthGrantButton = ({
       title="Client trennen?"
       description={
         <>
-          <span className="font-bold break-all">{clientHost}</span> verliert
-          sofort den Zugriff auf SAM. Für eine neue Verbindung musst du den
-          Zugriff erneut erlauben.
+          <span className="font-bold wrap-break-word">{displayName}</span>{" "}
+          <span className="break-all">({clientHost})</span> verliert sofort den
+          Zugriff auf SAM. Für eine neue Verbindung musst du den Zugriff erneut
+          erlauben.
         </>
       }
       confirmLabel="Trennen"

@@ -3,10 +3,10 @@ import { createNavigationItems } from "@/modules/common/utils/createNavigationIt
 
 export const getNavigationItems = createNavigationItems(
   async (authentication) => {
-    const permissions: boolean[] = await Promise.all([
-      authentication.authorize("analytics", "manage"),
-      authentication.authorize("mcp", "use"),
-    ]);
+    const canManageAnalytics = await authentication.authorize(
+      "analytics",
+      "manage",
+    );
 
     const pages: Page[] = [];
 
@@ -34,14 +34,7 @@ export const getNavigationItems = createNavigationItems(
       url: "/app/account/sessions",
     });
 
-    if (permissions[1]) {
-      pages.push({
-        title: "MCP",
-        url: "/app/account/mcp",
-      });
-    }
-
-    if (permissions[0]) {
+    if (canManageAnalytics) {
       pages.push({
         title: "Analytics",
         url: "/app/account/analytics",

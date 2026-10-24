@@ -2400,4 +2400,42 @@ export const AuditEventDefinitions: {
     },
     message: (data) => `Manual notification "${data.title}" sent`,
   },
+
+  [AuditEventType.OAUTH_GRANT_CREATED_V2]: {
+    type: AuditEventType.OAUTH_GRANT_CREATED_V2,
+    data: {
+      grantId: "string",
+      clientId: "string",
+      clientName: "string",
+      customName: "string",
+      disabledToolNames: ["string"],
+    },
+    message: (data) =>
+      `OAuth client ${data.clientName} connected (${data.clientId}, grant ${data.grantId})${data.customName ? ` as ${data.customName}` : ""}${data.disabledToolNames.length > 0 ? ` with ${data.disabledToolNames.length} disabled MCP tool(s)` : ""}`,
+  },
+
+  [AuditEventType.OAUTH_GRANT_RENAMED]: {
+    type: AuditEventType.OAUTH_GRANT_RENAMED,
+    data: {
+      grantId: "string",
+      clientId: "string",
+      customName: "string",
+    },
+    message: (data) =>
+      data.customName
+        ? `OAuth client renamed to ${data.customName} (${data.clientId}, grant ${data.grantId})`
+        : `Own name of OAuth client removed (${data.clientId}, grant ${data.grantId})`,
+  },
+
+  [AuditEventType.MCP_TOOL_SETTING_UPDATED_V2]: {
+    type: AuditEventType.MCP_TOOL_SETTING_UPDATED_V2,
+    data: {
+      grantId: "string",
+      clientId: "string",
+      toolName: "string",
+      enabled: true,
+    },
+    message: (data) =>
+      `MCP tool ${data.toolName} ${data.enabled ? "enabled" : "disabled"} for OAuth client ${data.clientId} (grant ${data.grantId})`,
+  },
 };

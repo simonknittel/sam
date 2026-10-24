@@ -5,13 +5,7 @@ import Note from "@/modules/common/components/Note";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { ConnectedClientsTile } from "@/modules/mcp-settings/components/ConnectedClientsTile";
 import { McpConnectionTile } from "@/modules/mcp-settings/components/McpConnectionTile";
-import { McpToolSettingsTile } from "@/modules/mcp-settings/components/McpToolSettingsTile";
 import { isMcpServerDisabled } from "@/modules/oauth/utils/isMcpServerDisabled";
-import { type Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "MCP",
-};
 
 /**
  * The page stays available while the kill switch is on: it only manages
@@ -19,7 +13,7 @@ export const metadata: Metadata = {
  */
 export default async function Page() {
   const { session, authorizePage } =
-    await requireAuthenticationPage("/app/account/mcp");
+    await requireAuthenticationPage("/app/mcp");
   await authorizePage("mcp", "use");
 
   return (
@@ -42,10 +36,6 @@ export default async function Page() {
         <ConnectedClientsTile
           canManageAdminMode={await isAdminModeActive(session)}
         />
-      </SuspenseWithErrorBoundaryTile>
-
-      <SuspenseWithErrorBoundaryTile>
-        <McpToolSettingsTile />
       </SuspenseWithErrorBoundaryTile>
     </div>
   );

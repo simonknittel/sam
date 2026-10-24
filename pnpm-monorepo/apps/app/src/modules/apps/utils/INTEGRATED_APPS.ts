@@ -145,6 +145,15 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
     tags: ["System"],
   },
   {
+    name: "MCP",
+    slug: "mcp",
+    href: "/app/mcp",
+    description:
+      "Verbinde KI-Clients wie Claude oder ChatGPT mit SAM und wähle ihre Tools",
+    permissionStrings: ["mcp;use"],
+    tags: ["System"],
+  },
+  {
     name: "SILC",
     slug: "silc",
     href: "/app/silc",

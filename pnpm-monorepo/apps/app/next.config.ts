@@ -140,6 +140,12 @@ const nextConfig: NextConfig = {
       destination: "/app/external/scrappers-codex",
       permanent: true,
     },
+    // The MCP settings moved from the account to the MCP app
+    {
+      source: "/app/account/mcp",
+      destination: "/app/mcp",
+      permanent: true,
+    },
   ],
 
   experimental: {

@@ -49,6 +49,39 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-10-24-mcp-app",
+    date: "2026-10-24",
+    title: "MCP: Eigene App und Tools für jeden Client",
+    tags: ["Neu", "MCP"],
+    isTracked: false,
+    requiresAuth: { resource: "mcp", action: "use" },
+    body: () => (
+      <>
+        <p>
+          Die MCP-Einstellungen sind aus dem Account in die neue App{" "}
+          <Link
+            href="/app/mcp"
+            className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300 active:text-interaction-700"
+          >
+            MCP
+          </Link>{" "}
+          umgezogen. Dort wählst du die Tools jetzt für jeden verbundenen Client
+          einzeln. Deine bisherige Auswahl gilt für alle Clients, die schon
+          verbunden sind.
+        </p>
+
+        <p>
+          Damit du zwei Verbindungen desselben Clients unterscheiden kannst,
+          gibst du einem Client einen eigenen Namen, zum Beispiel den Namen des
+          Geräts. Die neue Spalte &bdquo;Browser&ldquo; zeigt, mit welchem
+          Browser du den Zugriff erlaubt hast. Den Namen und die Tools wählst du
+          auch schon, wenn du den Zugriff erlaubst.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-10-24-manuelle-benachrichtigungen",
     date: "2026-10-24",
     title: "Manuelle Benachrichtigungen",

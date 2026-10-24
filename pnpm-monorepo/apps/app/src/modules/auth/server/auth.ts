@@ -23,6 +23,7 @@ import {
   comparePermissionSets,
   getLocalDateKey,
   ORGANIZATION_TIMEZONE,
+  USER_AGENT_MAXIMUM_LENGTH,
   type PermissionSet,
 } from "@sam-monorepo/domain";
 import {
@@ -96,12 +97,6 @@ const adapter = PrismaAdapter(prisma);
 export const SESSION_MAX_AGE = 60 * 60 * 24 * 31; // 31 days, in seconds
 
 /**
- * A user agent is client-controlled and unbounded in length, so it gets
- * capped before it reaches the database. Real ones stay well below this.
- */
-const MAX_USER_AGENT_LENGTH = 512;
-
-/**
  * Replaces the adapter's own `createSession` so the session gets the two
  * columns the account's session list shows. The adapter writes only the
  * fields NextAuth knows about, so there is nothing to delegate to.
@@ -115,7 +110,7 @@ export const createSession = async (
     data: {
       ...session,
       createdAt: new Date(),
-      userAgent: userAgent?.slice(0, MAX_USER_AGENT_LENGTH) ?? null,
+      userAgent: userAgent?.slice(0, USER_AGENT_MAXIMUM_LENGTH) ?? null,
     },
   });
 };

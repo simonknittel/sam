@@ -7,13 +7,16 @@ import { updateMcpToolSetting } from "../actions/updateMcpToolSetting";
 
 interface Props {
   readonly className?: string;
+  readonly grantId: string;
   readonly toolName: string;
   readonly toolTitle: string;
   readonly isEnabled: boolean;
 }
 
+/** Saves each change at once for the connected client */
 export const McpToolSwitch = ({
   className,
+  grantId,
   toolName,
   toolTitle,
   isEnabled,
@@ -29,6 +32,7 @@ export const McpToolSwitch = ({
     const enabled = event.target.checked;
 
     const formData = new FormData();
+    formData.set("grantId", grantId);
     formData.set("toolName", toolName);
     formData.set("enabled", String(enabled));
 

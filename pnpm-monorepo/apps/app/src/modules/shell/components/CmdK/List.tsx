@@ -15,6 +15,7 @@ import {
   FaHome,
   FaLock,
   FaPiggyBank,
+  FaRobot,
   FaTools,
   FaUser,
 } from "react-icons/fa";
@@ -88,6 +89,7 @@ export const List = () => {
     globalStatisticsRead,
     systemLogRead,
     manualNotificationManage,
+    mcpUse,
   ] = [
     authentication.authorize("citizen", "read"),
     authentication.authorize("organization", "read"),
@@ -104,6 +106,7 @@ export const List = () => {
     authentication.authorize("globalStatistics", "read"),
     authentication.authorize("systemLog", "read"),
     authentication.authorize("manualNotification", "manage"),
+    authentication.authorize("mcp", "use"),
   ];
   const careerRead = canReadCareer ?? false;
   const fleetRead = orgFleetRead || shipManage;
@@ -124,6 +127,7 @@ export const List = () => {
     taskRead,
     systemLogRead,
     manualNotificationManage,
+    mcpUse,
   };
 
   const menuItems: MenuItem[] = [
@@ -256,6 +260,15 @@ export const List = () => {
       type: MenuItemType.Link,
       href: "/app/manual-notifications",
       authKey: "manualNotificationManage",
+    },
+    {
+      id: "mcp",
+      label: "MCP",
+      keywords: ["MCP", "KI", "AI", "Claude", "ChatGPT", "Codex"],
+      icon: <FaRobot />,
+      type: MenuItemType.Link,
+      href: "/app/mcp",
+      authKey: "mcpUse",
     },
     {
       id: "log-analyzer",

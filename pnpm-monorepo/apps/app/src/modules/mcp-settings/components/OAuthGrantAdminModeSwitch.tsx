@@ -9,14 +9,14 @@ import { updateOAuthGrantAdminMode } from "../actions/updateOAuthGrantAdminMode"
 interface Props {
   readonly className?: string;
   readonly grantId: string;
-  readonly clientHost: string;
+  readonly displayName: string;
   readonly isEnabled: boolean;
 }
 
 export const OAuthGrantAdminModeSwitch = ({
   className,
   grantId,
-  clientHost,
+  displayName,
   isEnabled,
 }: Props) => {
   const formRef = useRef<HTMLFormElement>(null);
@@ -40,7 +40,7 @@ export const OAuthGrantAdminModeSwitch = ({
 
       <YesNoCheckbox
         hideLabel
-        aria-label={`Admin-Modus für ${clientHost}`}
+        aria-label={`Admin-Modus für ${displayName}`}
         checked={isEnabled}
         disabled={isPending}
         onChange={() => formRef.current?.requestSubmit()}
