@@ -62,7 +62,6 @@ model User {
   /// The grants on which this user enabled admin mode.
   adminModeOAuthGrants    OAuthGrant[]             @relation("adminModeEnabledOAuthGrants")
   oauthAuthorizationCodes OAuthAuthorizationCode[] @relation("oauthAuthorizationCodes")
-  mcpToolSettings         McpToolSetting[]         @relation("mcpToolSettings")
 }
 
 /// NULL for every user without a special role

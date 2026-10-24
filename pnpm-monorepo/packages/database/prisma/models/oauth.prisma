@@ -52,8 +52,15 @@ model OAuthGrant {
   /// The name of the client at the time of the consent. The client gives
   /// this name itself, thus the name is not trusted.
   clientName           String
+  /// The name that the user gave the client. NULL: the list shows
+  /// `clientName`.
+  customName           String?
   /// The host of the redirect URI at the time of the consent.
   redirectHost         String
+  /// The user agent of the browser that gave the consent. It helps the user
+  /// to identify two grants of the same client. NULL for the grants from
+  /// before this column.
+  userAgent            String?
   scope                String
   resource             String
   createdAt            DateTime                 @default(now()) @db.Timestamptz(3)
@@ -72,6 +79,7 @@ model OAuthGrant {
   adminModeEnabledBy   User?                    @relation("adminModeEnabledOAuthGrants", fields: [adminModeEnabledById], references: [id], onDelete: SetNull)
   authorizationCodes   OAuthAuthorizationCode[]
   refreshTokens        OAuthRefreshToken[]
+  toolSettings         McpToolSetting[]
 
   /// The user ID comes first, thus the same index also serves the list of
   /// the grants of a user.

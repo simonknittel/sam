@@ -1,11 +1,12 @@
-/// Opt-out model: a row disables the MCP tool for the user. Without a row,
-/// the tool is enabled. Thus new tools are enabled for all users.
+/// Opt-out model: a row disables the MCP tool for one connected client (a
+/// grant). Without a row, the tool is enabled. Thus new tools and new
+/// grants have all tools enabled.
 model McpToolSetting {
-  id         String   @id @default(cuid(2))
-  userId     String
-  user       User     @relation("mcpToolSettings", fields: [userId], references: [id], onDelete: Cascade)
+  id         String     @id @default(cuid(2))
+  grantId    String
+  grant      OAuthGrant @relation(fields: [grantId], references: [id], onDelete: Cascade)
   toolName   String
-  disabledAt DateTime @default(now()) @db.Timestamptz(3)
+  disabledAt DateTime   @default(now()) @db.Timestamptz(3)
 
-  @@unique([userId, toolName])
+  @@unique([grantId, toolName])
 }
