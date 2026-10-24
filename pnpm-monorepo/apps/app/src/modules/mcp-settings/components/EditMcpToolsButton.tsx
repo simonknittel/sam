@@ -1,54 +1,58 @@
 "use client";
 
-import Button from "@/modules/common/components/Button";
-import Modal from "@/modules/common/components/Modal";
-import { useState, type ReactNode } from "react";
-import { FaTools } from "react-icons/fa";
+import type { ToolCatalogGroup } from "@sam-monorepo/mcp";
+import { McpToolList } from "./McpToolList";
+import { McpToolsModalButton } from "./McpToolsModalButton";
+import { McpToolSwitch } from "./McpToolSwitch";
 
 interface Props {
   readonly className?: string;
+  readonly grantId: string;
   readonly displayName: string;
   readonly clientHost: string;
-  /** The list of the tools with their switches */
-  readonly children: ReactNode;
+  /** The same object for all rows, thus the page sends the catalog once */
+  readonly toolGroups: readonly ToolCatalogGroup[];
+  readonly disabledToolNames: readonly string[];
 }
 
+/** The tools of a connected client. Each change saves at once. */
 export const EditMcpToolsButton = ({
   className,
+  grantId,
   displayName,
   clientHost,
-  children,
+  toolGroups,
+  disabledToolNames,
 }: Props) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const disabledToolNameSet = new Set(disabledToolNames);
 
   return (
-    <>
-      <Button
-        className={className}
-        type="button"
-        variant="tertiary"
-        onClick={() => setIsOpen(true)}
-        aria-label={`Tools von ${displayName} bearbeiten`}
-      >
-        <FaTools /> Tools bearbeiten
-      </Button>
-
-      <Modal
-        isOpen={isOpen}
-        onRequestClose={() => setIsOpen(false)}
-        className="w-200"
-        heading={<h2>Tools bearbeiten</h2>}
-      >
-        <p className="mb-4 text-sm text-neutral-500">
+    <McpToolsModalButton
+      className={className}
+      label="Tools bearbeiten"
+      ariaLabel={`Tools von ${displayName} bearbeiten`}
+      heading="Tools bearbeiten"
+      description={
+        <>
           Jede Änderung gilt sofort für{" "}
           <span className="font-bold wrap-break-word text-neutral-50">
             {displayName}
           </span>{" "}
           <span className="break-all">({clientHost})</span>.
-        </p>
-
-        {children}
-      </Modal>
-    </>
+        </>
+      }
+    >
+      <McpToolList
+        groups={toolGroups}
+        renderSwitch={(tool) => (
+          <McpToolSwitch
+            grantId={grantId}
+            toolName={tool.name}
+            toolTitle={tool.title}
+            isEnabled={!disabledToolNameSet.has(tool.name)}
+          />
+        )}
+      />
+    </McpToolsModalButton>
   );
 };

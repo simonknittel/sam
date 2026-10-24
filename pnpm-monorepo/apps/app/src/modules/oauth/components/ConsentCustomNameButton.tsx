@@ -36,7 +36,12 @@ export const ConsentCustomNameButton = ({
 
   return (
     <>
-      <Button type="button" variant="tertiary" onClick={open}>
+      <Button
+        type="button"
+        variant="tertiary"
+        onClick={open}
+        aria-label="Name ändern"
+      >
         <FaPen /> Ändern
       </Button>
 

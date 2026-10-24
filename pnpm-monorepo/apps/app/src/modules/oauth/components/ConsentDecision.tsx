@@ -1,7 +1,7 @@
 "use client";
 
 import { Button2Variant } from "@/modules/common/components/Button2";
-import type { McpToolGroup } from "@/modules/mcp-settings/utils/getMcpToolGroups";
+import type { ToolCatalogGroup } from "@sam-monorepo/mcp";
 import { useState } from "react";
 import { FaCheck, FaTimes } from "react-icons/fa";
 import { approveAuthorization } from "../actions/approveAuthorization";
@@ -15,7 +15,7 @@ interface Props {
   readonly parameters: Readonly<Record<string, string>>;
   /** The name that the client gives itself */
   readonly clientName: string;
-  readonly toolGroups: readonly McpToolGroup[];
+  readonly toolGroups: readonly ToolCatalogGroup[];
 }
 
 /**

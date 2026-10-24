@@ -1,9 +1,8 @@
-import type { ToolCatalogEntry } from "@sam-monorepo/mcp";
+import type { ToolCatalogEntry, ToolCatalogGroup } from "@sam-monorepo/mcp";
 import type { ReactNode } from "react";
-import type { McpToolGroup } from "../utils/getMcpToolGroups";
 
 interface Props {
-  readonly groups: readonly McpToolGroup[];
+  readonly groups: readonly ToolCatalogGroup[];
   /** The switch of a tool, for example a checkbox */
   readonly renderSwitch: (tool: ToolCatalogEntry) => ReactNode;
 }
@@ -27,7 +26,7 @@ export const McpToolList = ({ groups, renderSwitch }: Props) => {
 };
 
 interface McpToolGroupSectionProps {
-  readonly group: McpToolGroup;
+  readonly group: ToolCatalogGroup;
   readonly renderSwitch: Props["renderSwitch"];
 }
 

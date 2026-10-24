@@ -6,7 +6,6 @@ import {
   type AuthorizationRequestValidation,
   type AuthorizationRequestValidationKind,
 } from "@sam-monorepo/application";
-import { listToolCatalog } from "@sam-monorepo/mcp";
 import * as z from "zod";
 import { isMcpServerDisabled } from "./isMcpServerDisabled";
 
@@ -114,13 +113,21 @@ export const consentFormSchema = z.object({
 });
 
 /**
+ * Far above the number of tools in the catalog. Not the size of the catalog:
+ * a page from before a release can send a tool that the release removed.
+ */
+const MAXIMUM_DISABLED_TOOL_NAMES = 200;
+
+/**
  * The fields of the approve form: the fields of the request and the settings
  * of the new grant. A form of a page from before these settings has no
- * name. A list without duplicates is never longer than the catalog.
+ * name.
  */
 export const approveFormSchema = consentFormSchema.extend({
   custom_name: grantCustomNameSchema.optional(),
-  disabled_tool_names: z.array(mcpToolNameSchema).max(listToolCatalog().length),
+  disabled_tool_names: z
+    .array(mcpToolNameSchema)
+    .max(MAXIMUM_DISABLED_TOOL_NAMES),
 });
 
 export const parseApproveFormData = (formData: FormData) => ({

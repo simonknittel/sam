@@ -12,7 +12,7 @@ import {
   createGrantWithAuthorizationCode,
   validateAuthorizationRequest,
 } from "@sam-monorepo/application";
-import { listToolCatalog } from "@sam-monorepo/mcp";
+import { isCatalogToolName } from "@sam-monorepo/mcp";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import {
@@ -51,11 +51,6 @@ export const approveAuthorization = createAuthenticatedAction(
 
     switch (validation.kind) {
       case AuthorizationRequestValidationKind.Valid: {
-        // The catalog of the tools is in the MCP package, thus the use case
-        // cannot check the names. A tool that a release removed after the
-        // page loaded does not stop the consent.
-        const toolNames = new Set(listToolCatalog().map((tool) => tool.name));
-
         let code: string;
         try {
           ({ code } = await createGrantWithAuthorizationCode(
@@ -64,9 +59,9 @@ export const approveAuthorization = createAuthenticatedAction(
             {
               ...validation,
               customName: customName ?? null,
-              disabledToolNames: disabledToolNames.filter((toolName) =>
-                toolNames.has(toolName),
-              ),
+              // A tool that a release removed after the page loaded does
+              // not stop the consent
+              disabledToolNames: disabledToolNames.filter(isCatalogToolName),
               userAgent: (await headers()).get("user-agent"),
             },
           ));

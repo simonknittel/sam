@@ -6,13 +6,14 @@ import {
 } from "@/modules/common/components/TableTile";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import type { OwnGrant } from "@sam-monorepo/application";
+import {
+  listToolCatalogGroups,
+  type ToolCatalogGroup,
+} from "@sam-monorepo/mcp";
 import clsx from "clsx";
 import { getMyOAuthGrants } from "../queries/getMyOAuthGrants";
 import { getGrantDisplayName } from "../utils/getGrantDisplayName";
-import { getMcpToolGroups, type McpToolGroup } from "../utils/getMcpToolGroups";
 import { EditMcpToolsButton } from "./EditMcpToolsButton";
-import { McpToolList } from "./McpToolList";
-import { McpToolSwitch } from "./McpToolSwitch";
 import { OAuthGrantAdminModeSwitch } from "./OAuthGrantAdminModeSwitch";
 import { RenameOAuthGrantButton } from "./RenameOAuthGrantButton";
 import { RevokeOAuthGrantButton } from "./RevokeOAuthGrantButton";
@@ -71,7 +72,7 @@ export const ConnectedClientsTile = async ({
   canManageAdminMode,
 }: Props) => {
   const grants = await getMyOAuthGrants();
-  const toolGroups = getMcpToolGroups();
+  const toolGroups = listToolCatalogGroups();
 
   const columns = canManageAdminMode
     ? [...BASE_COLUMNS, ADMIN_MODE_COLUMN, ACTIONS_COLUMN]
@@ -100,7 +101,7 @@ export const ConnectedClientsTile = async ({
 
 interface ConnectedClientRowProps {
   readonly grant: OwnGrant;
-  readonly toolGroups: readonly McpToolGroup[];
+  readonly toolGroups: readonly ToolCatalogGroup[];
   readonly canManageAdminMode: boolean;
 }
 
@@ -111,34 +112,10 @@ const ConnectedClientRow = ({
 }: ConnectedClientRowProps) => {
   const displayName = getGrantDisplayName(grant);
   const userAgent = formatUserAgent(grant.userAgent) ?? grant.userAgent;
-  const disabledToolNames = new Set(grant.disabledToolNames);
 
   return (
     <TRow className="min-h-10">
-      <td className="flex min-w-0 items-center gap-2">
-        <div className="min-w-0">
-          <p className="truncate font-bold" title={displayName}>
-            {displayName}
-          </p>
-
-          {grant.customName && (
-            <p
-              className="truncate text-xs text-neutral-500"
-              title={grant.clientName}
-            >
-              {grant.clientName}
-            </p>
-          )}
-        </div>
-
-        <RenameOAuthGrantButton
-          className="flex-none"
-          grantId={grant.id}
-          displayName={displayName}
-          clientName={grant.clientName}
-          customName={grant.customName}
-        />
-      </td>
+      <GrantNameCell grant={grant} displayName={displayName} />
 
       <td className="truncate" title={grant.clientId}>
         {grant.clientHost}
@@ -169,21 +146,12 @@ const ConnectedClientRow = ({
 
       <td className="flex flex-wrap items-center gap-x-4">
         <EditMcpToolsButton
+          grantId={grant.id}
           displayName={displayName}
           clientHost={grant.clientHost}
-        >
-          <McpToolList
-            groups={toolGroups}
-            renderSwitch={(tool) => (
-              <McpToolSwitch
-                grantId={grant.id}
-                toolName={tool.name}
-                toolTitle={tool.title}
-                isEnabled={!disabledToolNames.has(tool.name)}
-              />
-            )}
-          />
-        </EditMcpToolsButton>
+          toolGroups={toolGroups}
+          disabledToolNames={grant.disabledToolNames}
+        />
 
         <RevokeOAuthGrantButton
           grantId={grant.id}
@@ -192,5 +160,40 @@ const ConnectedClientRow = ({
         />
       </td>
     </TRow>
+  );
+};
+
+interface GrantNameCellProps {
+  readonly grant: OwnGrant;
+  readonly displayName: string;
+}
+
+/** The own name of the user shows the name of the client below it */
+const GrantNameCell = ({ grant, displayName }: GrantNameCellProps) => {
+  return (
+    <td className="flex min-w-0 items-center gap-2">
+      <div className="min-w-0">
+        <p className="truncate font-bold" title={displayName}>
+          {displayName}
+        </p>
+
+        {grant.customName && (
+          <p
+            className="truncate text-xs text-neutral-500"
+            title={grant.clientName}
+          >
+            {grant.clientName}
+          </p>
+        )}
+      </div>
+
+      <RenameOAuthGrantButton
+        className="flex-none"
+        grantId={grant.id}
+        displayName={displayName}
+        clientName={grant.clientName}
+        customName={grant.customName}
+      />
+    </td>
   );
 };

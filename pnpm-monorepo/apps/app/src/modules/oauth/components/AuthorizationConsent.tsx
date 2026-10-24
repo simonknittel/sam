@@ -1,9 +1,9 @@
 import { Tile } from "@/modules/common/components/Tile";
-import { getMcpToolGroups } from "@/modules/mcp-settings/utils/getMcpToolGroups";
 import type {
   AuthorizationRequestValidation,
   AuthorizationRequestValidationKind,
 } from "@sam-monorepo/application";
+import { listToolCatalogGroups } from "@sam-monorepo/mcp";
 import { getRedirectTarget, toConsentFormParameters } from "../utils/consent";
 import { ConsentDecision } from "./ConsentDecision";
 
@@ -34,7 +34,7 @@ export const AuthorizationConsent = ({ validation }: Props) => {
       <ConsentDecision
         parameters={toConsentFormParameters(validation)}
         clientName={validation.client.clientName}
-        toolGroups={getMcpToolGroups()}
+        toolGroups={listToolCatalogGroups()}
       />
 
       <p className="text-right text-sm break-all text-neutral-500">
