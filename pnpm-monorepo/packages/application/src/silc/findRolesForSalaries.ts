@@ -1,3 +1,4 @@
+import { requirePermission, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { getPaidAssignments, SALARY_ROLE_SELECT } from "./salaryRules.js";
 
@@ -17,12 +18,17 @@ export interface RoleForSalaries {
  * role from its id, thus the role needs only its id and its name for the
  * sort.
  *
- * It has no permission check. Its only caller, the salary editor, is on the
- * SILC settings page, which requires `silcSetting;manage`.
+ * Requires `silcSetting;manage`, like the SILC settings page of the editor:
+ * the list has also the roles that the actor cannot see.
+ *
+ * @throws ForbiddenError when the actor does not have the permission
  */
 export const findRolesForSalaries = async (
   context: Pick<ApplicationContext, "prisma">,
+  actor: Actor,
 ): Promise<RoleForSalaries[]> => {
+  requirePermission(actor, "silcSetting", "manage");
+
   const roles = await context.prisma.role.findMany({
     select: SALARY_ROLE_SELECT,
   });

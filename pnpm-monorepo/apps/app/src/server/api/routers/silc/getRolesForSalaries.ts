@@ -1,4 +1,4 @@
-import { getApplicationContext } from "@/modules/application";
+import { getApplicationContext, toActor } from "@/modules/application";
 import { findRolesForSalaries } from "@sam-monorepo/application";
 import { protectedProcedure, toTrpcError } from "../../trpc";
 
@@ -7,9 +7,12 @@ import { protectedProcedure, toTrpcError } from "../../trpc";
  * "citizens × SILC" preview of the salary editor (see
  * `findRolesForSalaries`)
  */
-export const getRolesForSalaries = protectedProcedure.query(async () => {
+export const getRolesForSalaries = protectedProcedure.query(async ({ ctx }) => {
   try {
-    return await findRolesForSalaries(getApplicationContext());
+    return await findRolesForSalaries(
+      getApplicationContext(),
+      await toActor(ctx.session),
+    );
   } catch (error) {
     throw toTrpcError(error, "Failed to fetch roles");
   }
