@@ -2389,4 +2389,15 @@ export const AuditEventDefinitions: {
     message: (data) =>
       `Deleted ${data.authorizationCodeCount} expired OAuth authorization code(s), ${data.refreshTokenCount} expired OAuth refresh token(s), ${data.grantCount} OAuth grant(s) without a token and ${data.clientMetadataCount} expired OAuth client metadata document(s)`,
   },
+
+  [AuditEventType.MANUAL_NOTIFICATION_CREATED]: {
+    type: AuditEventType.MANUAL_NOTIFICATION_CREATED,
+    data: {
+      manualNotificationId: "string",
+      title: "string",
+      receiverCitizenIds: ["string"],
+      receiverRoleIds: ["string"],
+    },
+    message: (data) => `Manual notification "${data.title}" sent`,
+  },
 };

@@ -12,6 +12,10 @@ export {
   findGreetingRecipient,
   findWelcomeGreetingRecipient,
 } from "./greetingRecipients.js";
+export {
+  findManualNotificationRecipients,
+  type ManualNotificationRecipients,
+} from "./manualNotificationCreated.js";
 export { findPenaltyEntryRecipient } from "./penaltyEntryCreated.js";
 export {
   findPayoutDisbursedRecipients,

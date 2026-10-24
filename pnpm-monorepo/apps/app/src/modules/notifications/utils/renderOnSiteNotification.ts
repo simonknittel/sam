@@ -271,6 +271,15 @@ export const renderOnSiteNotification = (
         decoration: NotificationDecoration.Welcome,
       };
 
+    case "manual_notification":
+      return {
+        title: parsed.payload.title,
+        body: parsed.payload.body,
+        url: null,
+        appTitle,
+        decoration: null,
+      };
+
     default:
       throw new Error(`Unknown notification type: ${parsed satisfies never}`);
   }

@@ -1,4 +1,4 @@
-import type { PermissionSet } from "@sam-monorepo/domain";
+export { LOGIN_MANAGE_PERMISSION_SET } from "../../auth/clearedCitizens.js";
 
 /**
  * A citizen who gets a notification. A rule about a subject (an event, a
@@ -9,9 +9,3 @@ import type { PermissionSet } from "@sam-monorepo/domain";
 export interface Recipient {
   readonly citizenId: string;
 }
-
-/** Each receiver of a notification must be able to log in */
-export const LOGIN_MANAGE_PERMISSION_SET = {
-  resource: "login",
-  operation: "manage",
-} as const satisfies PermissionSet;

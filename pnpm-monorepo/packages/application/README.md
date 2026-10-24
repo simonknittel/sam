@@ -76,7 +76,7 @@ src/
   citizenReference.ts      the citizen in the outputs
   activitySources.ts       the shared input and filter of the sources of the activity tables
   withSpan.ts              the span helper
-  auth/                    the effective roles of a citizen (the session and the MCP principal), the sessions, the email confirmation and the admin toolbar
+  auth/                    the effective roles of a citizen (the session and the MCP principal), the clearance filter of the receivers, the sessions, the email confirmation and the admin toolbar
   oauth/                   the use cases of the OAuth authorization server
   <feature>/<useCase>.ts   one use case per file, with its input schema and its output type
   <feature>/index.ts       the barrel of the feature
