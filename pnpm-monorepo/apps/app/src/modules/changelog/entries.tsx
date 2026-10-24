@@ -55,23 +55,12 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     tags: ["Neu", "Benachrichtigungen"],
     isTracked: false,
     body: () => (
-      <>
-        <p>
-          Mit der neuen App &bdquo;Manuelle Benachrichtigungen&ldquo; sendest du
-          Benachrichtigungen mit eigenem Titel und Text an einzelne Citizens
-          oder an alle Mitglieder einer Rolle. Die Empfänger bekommen sie wie
-          jede andere Benachrichtigung im SAM und als Web Push. Nur Citizens,
-          die sich anmelden können, erhalten sie.
-        </p>
-
-        <p>
-          Das Formular findest du unter &bdquo;Neu&ldquo; in der oberen Leiste
-          und in der App, die alle gesendeten Benachrichtigungen auflistet. Die
-          App und das Senden erfordern die neue Berechtigung &bdquo;Manuelle
-          Benachrichtigungen&ldquo;. Verbundene KI-Clients senden und lesen sie
-          über den MCP-Server.
-        </p>
-      </>
+      <p>
+        Mit der neuen App &bdquo;Manuelle Benachrichtigungen&ldquo; sendest du
+        Benachrichtigungen mit eigenem Titel und Text an einzelne Citizens oder
+        an alle Mitglieder einer Rolle. Die Empfänger bekommen sie wie jede
+        andere Benachrichtigung im SAM und als Web Push.
+      </p>
     ),
   },
 
