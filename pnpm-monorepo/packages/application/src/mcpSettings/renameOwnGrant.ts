@@ -46,13 +46,13 @@ export const renameOwnGrant = (
 
     if (grant.customName === input.custom_name) return;
 
+    // The last of two parallel renames wins
     const { count } = await context.prisma.oAuthGrant.updateMany({
-      // The condition makes only one of two parallel requests write the
-      // audit event
-      where: { id: grant.id, revokedAt: null, customName: grant.customName },
+      where: { id: grant.id, revokedAt: null },
       data: { customName: input.custom_name },
     });
-    if (count === 0) return;
+    // A parallel request revoked the grant first
+    if (count === 0) throw new NotFoundError("The grant does not exist");
 
     await context.audit.create([
       {
