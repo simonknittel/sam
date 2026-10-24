@@ -185,7 +185,7 @@ test.describe("the OAuth server and the MCP endpoint", () => {
           name: "Client benennen",
         });
         await clickUntilVisible(
-          consentPage.getByRole("button", { name: "Ändern" }),
+          consentPage.getByRole("button", { name: "Name ändern" }),
           nameDialog,
         );
         await nameDialog.getByLabel("Name").fill("Laptop");
@@ -196,7 +196,7 @@ test.describe("the OAuth server and the MCP endpoint", () => {
           name: "Tools auswählen",
         });
         await clickUntilVisible(
-          consentPage.getByRole("button", { name: "Auswählen" }),
+          consentPage.getByRole("button", { name: "Tools auswählen" }),
           toolsDialog,
         );
         const toolSwitch = consentPage.getByRole("checkbox", {
@@ -215,9 +215,9 @@ test.describe("the OAuth server and the MCP endpoint", () => {
     const clientRow = page
       .getByRole("row")
       .filter({ hasText: cimdServer.host });
-    await expect(clientRow.getByText("Laptop")).toBeVisible();
+    await expect(clientRow.getByText("Laptop", { exact: true })).toBeVisible();
     // The browser of the consent identifies the client
-    await expect(clientRow).not.toContainText("Unbekannt");
+    await expect(clientRow).toContainText("Chrome");
 
     await expectAuditEvents(prisma, ["OAUTH_GRANT_CREATED_V2"]);
   });

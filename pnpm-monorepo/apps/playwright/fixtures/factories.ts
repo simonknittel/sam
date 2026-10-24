@@ -140,7 +140,7 @@ export const createCitizen = async (
 
 /**
  * The permission that gates the MCP server: the consent page, the creation
- * of a grant, each request with an access token and the account page.
+ * of a grant, each request with an access token and the MCP app.
  */
 export const MCP_USE_PERMISSION = "mcp;use";
 

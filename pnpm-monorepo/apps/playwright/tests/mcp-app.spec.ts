@@ -42,7 +42,9 @@ test.describe("the MCP app", () => {
       .getByRole("row")
       .filter({ hasText: cimdServer.host });
     await expect(clientRow).toBeVisible();
-    await expect(clientRow.getByText(CIMD_CLIENT_NAME)).toBeVisible();
+    await expect(
+      clientRow.getByText(CIMD_CLIENT_NAME, { exact: true }),
+    ).toBeVisible();
 
     const dialog = page.getByRole("alertdialog", { name: "Client trennen?" });
     await clickUntilVisible(
@@ -201,7 +203,7 @@ test.describe("the MCP app", () => {
     await expectAuditEvents(prisma, ["OAUTH_GRANT_ADMIN_MODE_UPDATED"]);
   });
 
-  test("an admin who assumes a user manages the clients and the tools of that user, but not their admin mode", async ({
+  test("an admin who assumes a user sees the clients of that user, but not their admin mode", async ({
     page,
     context,
     prisma,
