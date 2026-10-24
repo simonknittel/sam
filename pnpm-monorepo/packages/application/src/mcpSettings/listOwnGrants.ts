@@ -19,11 +19,17 @@ export interface OwnGrant {
   readonly clientHost: string;
   /** The client gives its name itself, thus the name is not trusted */
   readonly clientName: string;
+  /** The name that the user gave the client */
+  readonly customName: string | null;
   readonly redirectHost: string;
+  /** The user agent of the browser that gave the consent */
+  readonly userAgent: string | null;
   readonly createdAt: Date;
   readonly lastUsedAt: Date | null;
   /** Admin mode applies only when this is set and the user is an admin */
   readonly adminModeEnabledAt: Date | null;
+  /** The tools that the user disabled for this client, sorted by the name */
+  readonly disabledToolNames: string[];
 }
 
 /**
@@ -49,10 +55,16 @@ export const listOwnGrants = async (
       id: true,
       clientId: true,
       clientName: true,
+      customName: true,
       redirectHost: true,
+      userAgent: true,
       createdAt: true,
       lastUsedAt: true,
       adminModeEnabledAt: true,
+      toolSettings: {
+        select: { toolName: true },
+        orderBy: { toolName: "asc" },
+      },
     },
   });
 
@@ -61,9 +73,12 @@ export const listOwnGrants = async (
     clientId: grant.clientId,
     clientHost: new URL(grant.clientId).host,
     clientName: grant.clientName,
+    customName: grant.customName,
     redirectHost: grant.redirectHost,
+    userAgent: grant.userAgent,
     createdAt: grant.createdAt,
     lastUsedAt: grant.lastUsedAt,
     adminModeEnabledAt: grant.adminModeEnabledAt,
+    disabledToolNames: grant.toolSettings.map((setting) => setting.toolName),
   }));
 };

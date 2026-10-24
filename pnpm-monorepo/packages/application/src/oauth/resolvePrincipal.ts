@@ -19,6 +19,8 @@ export interface PrincipalGrant {
   readonly createdAt: Date;
   /** Admin mode applies only when this is set and the user is an admin */
   readonly adminModeEnabledAt: Date | null;
+  /** The tools that the user disabled for this client */
+  readonly disabledToolNames: string[];
 }
 
 export interface Principal {
@@ -50,6 +52,7 @@ export const resolvePrincipal = (
         createdAt: true,
         lastUsedAt: true,
         revokedAt: true,
+        toolSettings: { select: { toolName: true } },
       },
     });
 
@@ -98,6 +101,9 @@ export const resolvePrincipal = (
         clientName: grant.clientName,
         createdAt: grant.createdAt,
         adminModeEnabledAt: hasStaleAdminMode ? null : grant.adminModeEnabledAt,
+        disabledToolNames: grant.toolSettings.map(
+          (setting) => setting.toolName,
+        ),
       },
     };
   });

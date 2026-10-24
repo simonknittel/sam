@@ -1,4 +1,7 @@
-import { AuditEventType } from "@sam-monorepo/domain";
+import {
+  AuditEventType,
+  USER_AGENT_MAXIMUM_LENGTH,
+} from "@sam-monorepo/domain";
 import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { requireMcpAccess } from "../mcpAccess.js";
@@ -8,8 +11,9 @@ import type { ClientMetadata } from "./resolveClientMetadata.js";
 import { createOpaqueToken, hashOpaqueToken } from "./secrets.js";
 
 /**
- * The fields of a valid authorization request. Give only the result of
- * `validateAuthorizationRequest()`.
+ * The fields of a valid authorization request and the settings of the
+ * consent. Give only the result of `validateAuthorizationRequest()` for the
+ * fields of the request.
  */
 export interface CreateGrantWithAuthorizationCodeInput {
   readonly client: Pick<ClientMetadata, "clientId" | "clientName">;
@@ -17,6 +21,16 @@ export interface CreateGrantWithAuthorizationCodeInput {
   readonly codeChallenge: string;
   readonly scope: string;
   readonly resource: string;
+  /** The name that the user gave the client, see `grantCustomNameSchema` */
+  readonly customName: string | null;
+  /**
+   * The tools that the user disabled for the client. The catalog of the
+   * tools is in the MCP package, thus the caller makes sure that the tools
+   * exist.
+   */
+  readonly disabledToolNames: readonly string[];
+  /** The user agent of the browser that gives the consent */
+  readonly userAgent: string | null;
 }
 
 export interface CreateGrantWithAuthorizationCodeOutput {
@@ -52,6 +66,7 @@ export const createGrantWithAuthorizationCode = (
 
     const code = createOpaqueToken();
     const now = context.now();
+    const disabledToolNames = [...new Set(input.disabledToolNames)].sort();
 
     const grant = await context.prisma.$transaction(async (transaction) => {
       const grant = await transaction.oAuthGrant.create({
@@ -59,9 +74,20 @@ export const createGrantWithAuthorizationCode = (
           userId: actor.userId,
           clientId: input.client.clientId,
           clientName: input.client.clientName,
+          customName: input.customName,
           redirectHost: getRedirectHost(input.redirectUri),
+          userAgent:
+            input.userAgent?.slice(0, USER_AGENT_MAXIMUM_LENGTH) ?? null,
           scope: input.scope,
           resource: input.resource,
+          toolSettings: {
+            createMany: {
+              data: disabledToolNames.map((toolName) => ({
+                toolName,
+                disabledAt: now,
+              })),
+            },
+          },
         },
         select: { id: true },
       });
@@ -88,11 +114,13 @@ export const createGrantWithAuthorizationCode = (
 
     await context.audit.create([
       {
-        type: AuditEventType.OAUTH_GRANT_CREATED,
+        type: AuditEventType.OAUTH_GRANT_CREATED_V2,
         data: {
           grantId: grant.id,
           clientId: input.client.clientId,
           clientName: input.client.clientName,
+          customName: input.customName,
+          disabledToolNames,
         },
         createdById: actor.userId,
       },

@@ -1,9 +1,17 @@
-/** The use cases of the MCP settings of a user: the tool opt-outs and the connected clients */
-export { getDisabledToolNames } from "./getDisabledToolNames.js";
+/** The use cases of the MCP settings of a user: the connected clients and their tools */
 export { listOwnGrants, type OwnGrant } from "./listOwnGrants.js";
+export { mcpToolNameSchema } from "./mcpToolNameSchema.js";
+export {
+  grantCustomNameSchema,
+  renameOwnGrant,
+  renameOwnGrantInputSchema,
+} from "./renameOwnGrant.js";
 export { revokeOwnGrant, revokeOwnGrantInputSchema } from "./revokeOwnGrant.js";
 export {
   setOwnGrantAdminMode,
   setOwnGrantAdminModeInputSchema,
 } from "./setOwnGrantAdminMode.js";
-export { setToolEnabled, setToolEnabledInputSchema } from "./setToolEnabled.js";
+export {
+  setOwnGrantToolEnabled,
+  setOwnGrantToolEnabledInputSchema,
+} from "./setOwnGrantToolEnabled.js";
