@@ -116,6 +116,7 @@ model Role {
   citizenCounts             RoleCitizenCount[]
   wikiPageAccess            WikiPageRoleAccess[]
   flowAccess                FlowRoleAccess[]
+  manualNotifications       ManualNotificationRole[]
 
   /// Human-readable description of the role (markdown).
   description            String?

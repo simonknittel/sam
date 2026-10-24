@@ -101,6 +101,8 @@ model Citizen {
   createdLogAnalyzerEntries                    LogAnalyzerEntry[]                   @relation("createdLogAnalyzerEntries")
   seasonalThemeSettings                        SeasonalThemeSetting[]
   readMarkers                                  ReadMarker[]
+  createdManualNotifications                   ManualNotification[]                 @relation("createdManualNotifications")
+  receivedManualNotifications                  ManualNotificationCitizen[]          @relation("receivedManualNotifications")
 
   /// The login of the citizen: the user whose Discord account has the
   /// Discord ID of the citizen. Set at each sign-in and when the Discord ID

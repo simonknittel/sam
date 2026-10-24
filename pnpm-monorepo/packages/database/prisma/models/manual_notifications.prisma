@@ -1,0 +1,43 @@
+/// A notification with its own title and body that a member sent to chosen
+/// citizens and roles. A sent notification is immutable: nobody edits or
+/// deletes a message that was already delivered, thus the model has no
+/// `updated*` and no `deleted*` columns.
+model ManualNotification {
+  id          String   @id @default(cuid(2))
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  createdBy   Citizen? @relation("createdManualNotifications", fields: [createdById], references: [id], onDelete: SetNull)
+  createdById String?
+  title       String
+  body        String
+
+  receiverCitizens ManualNotificationCitizen[]
+  receiverRoles    ManualNotificationRole[]
+
+  /// The list of the app pages with a key of (createdAt, id)
+  @@index([createdAt(sort: Desc), id(sort: Desc)])
+}
+
+/// A citizen that the sender selected as a receiver
+model ManualNotificationCitizen {
+  id                   String             @id @default(cuid(2))
+  manualNotification   ManualNotification @relation(fields: [manualNotificationId], references: [id], onDelete: Cascade)
+  manualNotificationId String
+  citizen              Citizen            @relation("receivedManualNotifications", fields: [citizenId], references: [id], onDelete: Cascade)
+  citizenId            String
+
+  @@unique([manualNotificationId, citizenId])
+  @@index([citizenId])
+}
+
+/// A role that the sender selected as a receiver. The members of the role
+/// with their effective roles receive the notification.
+model ManualNotificationRole {
+  id                   String             @id @default(cuid(2))
+  manualNotification   ManualNotification @relation(fields: [manualNotificationId], references: [id], onDelete: Cascade)
+  manualNotificationId String
+  role                 Role               @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  roleId               String
+
+  @@unique([manualNotificationId, roleId])
+  @@index([roleId])
+}
