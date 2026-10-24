@@ -3,7 +3,7 @@ import {
   type CatalogTool,
   type ToolCatalogEntry,
 } from "./toolDefinition.js";
-import { TOOL_GROUP_ORDER } from "./toolGroup.js";
+import { TOOL_GROUP_ORDER, TOOL_GROUP_TITLES, ToolGroup } from "./toolGroup.js";
 import { getCurrentUserTool } from "./tools/account/getCurrentUser.js";
 import { changelogTools } from "./tools/changelog/index.js";
 import { eventsTools } from "./tools/events/index.js";
@@ -49,3 +49,32 @@ export const toToolCatalogEntry = (tool: CatalogTool): ToolCatalogEntry => ({
 /** All tools in the order of `tools/list`, for example for the MCP app */
 export const listToolCatalog = (): ToolCatalogEntry[] =>
   TOOL_CATALOG.map(toToolCatalogEntry);
+
+/** The tools of one group of the catalog */
+export interface ToolCatalogGroup {
+  readonly group: ToolGroup;
+  readonly title: string;
+  readonly tools: ToolCatalogEntry[];
+}
+
+/** The groups of the catalog with their tools, in the order of `tools/list` */
+export const listToolCatalogGroups = (): ToolCatalogGroup[] => {
+  const catalog = listToolCatalog();
+
+  return TOOL_GROUP_ORDER.map((group) => ({
+    group,
+    title: TOOL_GROUP_TITLES[group],
+    tools: catalog.filter((tool) => tool.group === group),
+  })).filter((group) => group.tools.length > 0);
+};
+
+const TOOL_NAMES: ReadonlySet<string> = new Set(
+  TOOL_CATALOG.map((tool) => tool.name),
+);
+
+/**
+ * Whether the catalog has a tool of this name. The application package
+ * cannot check the names of the tool settings, because the catalog is in
+ * this package. Thus the host checks them with this function.
+ */
+export const isCatalogToolName = (toolName: string) => TOOL_NAMES.has(toolName);

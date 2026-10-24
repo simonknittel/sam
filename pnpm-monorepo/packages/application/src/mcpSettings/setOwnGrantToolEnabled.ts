@@ -16,9 +16,8 @@ export const setOwnGrantToolEnabledInputSchema = z.object({
 
 /**
  * Enables or disables an MCP tool for a connected client of the actor. A row
- * disables the tool (see the `McpToolSetting` model). The catalog of the
- * tools is in the MCP package, thus the caller makes sure that the tool
- * exists.
+ * disables the tool (see the `McpToolSetting` model). The caller makes sure
+ * that the tool exists (see `mcpToolNameSchema`).
  *
  * @throws ForbiddenError when the actor cannot use the MCP server
  * @throws NotFoundError when the grant does not belong to the actor or is

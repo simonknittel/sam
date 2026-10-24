@@ -4,10 +4,14 @@
  * host. A host (for example a Next.js route) applies its kill switch, builds
  * the application context and calls the request handler.
  */
-export { listToolCatalog } from "./catalog.js";
+export {
+  isCatalogToolName,
+  listToolCatalogGroups,
+  type ToolCatalogGroup,
+} from "./catalog.js";
 export {
   createMcpRequestHandler,
   type McpRequestHandler,
 } from "./createMcpRequestHandler.js";
 export { ToolKind, type ToolCatalogEntry } from "./toolDefinition.js";
-export { TOOL_GROUP_TITLES, ToolGroup } from "./toolGroup.js";
+export { ToolGroup } from "./toolGroup.js";

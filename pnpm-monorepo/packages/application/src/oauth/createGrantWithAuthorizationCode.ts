@@ -24,9 +24,8 @@ export interface CreateGrantWithAuthorizationCodeInput {
   /** The name that the user gave the client, see `grantCustomNameSchema` */
   readonly customName: string | null;
   /**
-   * The tools that the user disabled for the client. The catalog of the
-   * tools is in the MCP package, thus the caller makes sure that the tools
-   * exist.
+   * The tools that the user disabled for the client. The caller makes sure
+   * that the tools exist (see `mcpToolNameSchema`).
    */
   readonly disabledToolNames: readonly string[];
   /** The user agent of the browser that gives the consent */
