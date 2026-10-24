@@ -33,6 +33,8 @@ const GATED_ROUTES = [
   "/app/iam/settings",
   "/app/iam/users",
   "/app/leaderboards",
+  /** `manualNotification;manage` */
+  "/app/manual-notifications",
   "/app/penalty-points",
   "/app/silc/dashboard",
   "/app/silc/settings",
