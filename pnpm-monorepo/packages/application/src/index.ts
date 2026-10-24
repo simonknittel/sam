@@ -37,6 +37,7 @@ export {
   type LogArguments,
   type Logger,
   type Notification,
+  type RealtimeServer,
   type SigningKey,
   type StorageDeleteFailure,
   type StoredObject,

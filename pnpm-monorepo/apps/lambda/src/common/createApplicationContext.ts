@@ -65,6 +65,7 @@ export const createApplicationContext = ({
     now: () => new Date(),
     changelog: null,
     collab: null,
+    realtime: null,
     discord,
     storage,
     images: null,

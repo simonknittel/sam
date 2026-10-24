@@ -1,10 +1,16 @@
 import {
+  isPrismaError,
+  PrismaErrorCode,
+  type Prisma,
+} from "@sam-monorepo/database/client";
+import {
   AuditEventType,
   isAllowedWebPushEndpointUrl,
 } from "@sam-monorepo/domain";
 import * as z from "zod";
 import { requireCitizen, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
+import { ForbiddenError } from "../errors.js";
 import { triggerNotificationsAfterSave } from "../notifications.js";
 import { withSpan } from "../withSpan.js";
 
@@ -43,12 +49,38 @@ export interface SubscribeWebPushOutput {
 }
 
 /**
+ * The unique constraint of the endpoint refuses the endpoint of a different
+ * citizen
+ */
+const createSubscription = async (
+  context: ApplicationContext,
+  data: Prisma.WebPushSubscriptionUncheckedCreateInput,
+) => {
+  try {
+    const { id } = await context.prisma.webPushSubscription.create({
+      data,
+      select: { id: true },
+    });
+    return id;
+  } catch (error) {
+    if (isPrismaError(error, PrismaErrorCode.UniqueConstraintFailed))
+      throw new ForbiddenError(
+        "The web push endpoint is the subscription of a different citizen",
+        { cause: error },
+      );
+
+    throw error;
+  }
+};
+
+/**
  * Saves the web push subscription of a browser for the citizen of the actor.
  * The endpoint identifies the subscription: a second save of the same
  * endpoint changes only its keys. A test notification confirms the
  * subscription on the device.
  *
- * @throws ForbiddenError for a user without a citizen
+ * @throws ForbiddenError for a user without a citizen, or when the endpoint
+ * is the subscription of a different citizen
  */
 export const subscribeWebPush = (
   context: ApplicationContext,
@@ -58,32 +90,32 @@ export const subscribeWebPush = (
   withSpan(context, "subscribeWebPush", async () => {
     const citizenId = requireCitizen(actor).id;
 
-    const subscription = await context.prisma.webPushSubscription.upsert({
-      where: {
-        endpoint: input.subscription.endpoint,
-      },
-      update: {
-        p256dh: input.subscription.keys.p256dh,
-        auth: input.subscription.keys.auth,
-      },
-      create: {
+    const keys = {
+      p256dh: input.subscription.keys.p256dh,
+      auth: input.subscription.keys.auth,
+    };
+
+    // The update changes only a subscription of the own citizen
+    const [updatedSubscription] =
+      await context.prisma.webPushSubscription.updateManyAndReturn({
+        where: { endpoint: input.subscription.endpoint, citizenId },
+        data: keys,
+        select: { id: true },
+      });
+    const subscriptionId =
+      updatedSubscription?.id ??
+      (await createSubscription(context, {
         citizenId,
         endpoint: input.subscription.endpoint,
-        p256dh: input.subscription.keys.p256dh,
-        auth: input.subscription.keys.auth,
-      },
-      select: {
-        id: true,
-        citizenId: true,
-      },
-    });
+        ...keys,
+      }));
 
     await context.audit.create([
       {
         type: AuditEventType.WEB_PUSH_SUBSCRIBED,
         data: {
-          subscriptionId: subscription.id,
-          citizenId: subscription.citizenId,
+          subscriptionId,
+          citizenId,
         },
         createdById: actor.userId,
       },
@@ -98,13 +130,13 @@ export const subscribeWebPush = (
       {
         type: "WebPushSubscribed",
         payload: {
-          subscriptionId: subscription.id,
+          subscriptionId,
         },
       },
     ]);
 
     return {
-      subscription_id: subscription.id,
+      subscription_id: subscriptionId,
       notifications_sent: notificationsSent,
     };
   });

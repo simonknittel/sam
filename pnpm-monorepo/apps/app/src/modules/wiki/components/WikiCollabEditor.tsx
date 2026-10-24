@@ -11,6 +11,7 @@ import { Collaboration } from "@tiptap/extension-collaboration";
 import { CollaborationCaret } from "@tiptap/extension-collaboration-caret";
 import { useEditor } from "@tiptap/react";
 import clsx from "clsx";
+import { useRouter } from "next/navigation";
 import {
   useCallback,
   useEffect,
@@ -19,7 +20,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
-import { createWikiCollabToken } from "../actions/createWikiCollabToken";
+import * as z from "zod/mini";
 import type { WikiImageDimensions } from "../utils/wikiImageRendering";
 import { useWikiEditorExtensions } from "./useWikiEditorExtensions";
 import { WikiCollabSaveIndicator } from "./WikiCollabSaveIndicator";
@@ -79,6 +80,44 @@ interface Props {
 const noop = () => undefined;
 
 /**
+ * The interval of the token refresh of an open editor. It is half of the
+ * lifetime of a session token (60 seconds, see `createCollabClient` of the
+ * infrastructure package), thus one refresh can come late (for example in a
+ * hidden tab). The collab server closes a connection whose token expired
+ * without a refresh.
+ */
+const TOKEN_REFRESH_INTERVAL_MILLISECONDS = 30_000;
+
+const TOKEN_REQUEST_TIMEOUT_MILLISECONDS = 5_000;
+
+const collabTokenResponseSchema = z.object({ token: z.string() });
+
+/**
+ * A token of the collab token route (`/api/wiki/[pageId]/collab-token`). A
+ * route handler and not a server action: an editor that is open during a
+ * deploy continues to get tokens. Calls `onPageGone` when the page does not
+ * exist for the user anymore.
+ */
+const fetchCollabToken = async (pageId: string, onPageGone: () => void) => {
+  const response = await fetch(
+    new URL(
+      `/api/wiki/${encodeURIComponent(pageId)}/collab-token`,
+      window.location.origin,
+    ),
+    {
+      cache: "no-store",
+      signal: AbortSignal.timeout(TOKEN_REQUEST_TIMEOUT_MILLISECONDS),
+    },
+  );
+
+  if (response.status === 404) onPageGone();
+  if (!response.ok)
+    throw new Error(`The token request failed with status ${response.status}`);
+
+  return collabTokenResponseSchema.parse(await response.json()).token;
+};
+
+/**
  * Unique connected users (by name) from the provider's awareness states,
  * each with the edit-mode flag its client published — whether they are
  * editing right now, not whether they may: users with edit permission
@@ -135,7 +174,8 @@ const getAwarenessUsers = (provider: HocuspocusProvider): WikiCollabUser[] => {
  * Editors additionally start in the read-only view and only get the
  * editing chrome while they have toggled edit mode on (WikiEditModeToggle).
  * The provider fetches a fresh short-lived JWT from the app on every
- * (re)connect. Mounted with key={pageId} so every page gets its own
+ * (re)connect, and sends a fresh one on an interval while it is
+ * authenticated. Mounted with key={pageId} so every page gets its own
  * provider.
  */
 export const WikiCollabEditor = ({
@@ -160,6 +200,7 @@ export const WikiCollabEditor = ({
   const isEditing = canEdit && isEditMode;
 
   const [provider, setProvider] = useState<HocuspocusProvider | null>(null);
+  const router = useRouter();
 
   /**
    * The provider opens a websocket, so it must be created after commit —
@@ -171,23 +212,29 @@ export const WikiCollabEditor = ({
     const createdProvider = new HocuspocusProvider({
       url: collabUrl,
       name: pageId,
-      token: async () => {
-        const formData = new FormData();
-        formData.set("id", pageId);
-        const response = await createWikiCollabToken(formData);
-        if ("token" in response) return response.token;
-        throw new Error(
-          "error" in response ? response.error : "Ungültige Antwort",
-        );
-      },
+      // The page shows the deletion or the lost access after a refresh
+      token: () => fetchCollabToken(pageId, () => router.refresh()),
     });
     // eslint-disable-next-line react-hooks/set-state-in-effect, react-you-might-not-need-an-effect/no-external-store-subscription, react-you-might-not-need-an-effect/no-adjust-state-on-prop-change -- The provider is an external resource that must be instantiated post-commit (see above); this effect is its only owner.
     setProvider(createdProvider);
 
+    /**
+     * The collab server applies the edit permission of each new token. A
+     * failed mint (for example after the user lost the access to the page)
+     * gives the "authenticationFailed" event like a rejected token. The
+     * provider is then not authenticated and sends no further token, thus
+     * the collab server closes the connection when the last token expires,
+     * and the reconnect fails.
+     */
+    const tokenRefreshInterval = setInterval(() => {
+      if (createdProvider.isAuthenticated) void createdProvider.sendToken();
+    }, TOKEN_REFRESH_INTERVAL_MILLISECONDS);
+
     return () => {
+      clearInterval(tokenRefreshInterval);
       createdProvider.destroy();
     };
-  }, [collabUrl, pageId]);
+  }, [collabUrl, pageId, router]);
 
   if (!provider)
     return (

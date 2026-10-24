@@ -3,7 +3,7 @@
  * (apps/collab). The Next.js app mints them (short-lived, HS256, signed
  * with the shared COLLAB_JWT_SECRET); the collab server only verifies.
  * Both sides use these definitions, and the explicit `scope` claim keeps
- * the two token kinds from ever being interchangeable.
+ * the token kinds from ever being interchangeable.
  */
 
 /** Authorizes one editor connection to one page */
@@ -21,6 +21,13 @@ export interface WikiCollabReplaceTokenPayload {
   readonly scope: "replace";
   readonly pageId: string;
   readonly entityId: string | null;
+}
+
+/** Authorizes one internal request that closes all connections of one user */
+export interface WikiCollabDisconnectTokenPayload {
+  readonly scope: "disconnect";
+  /** The user (JWT subject) whose connections the collab server closes */
+  readonly sub: string;
 }
 
 /**
@@ -70,4 +77,20 @@ export const parseWikiCollabReplaceTokenPayload = (
     pageId: claims.pageId,
     entityId: claims.entityId,
   };
+};
+
+/**
+ * Parses a verified JWT's payload into a disconnect token; NULL for anything
+ * that is not one — including session tokens, which have a user too.
+ */
+export const parseWikiCollabDisconnectTokenPayload = (
+  payload: unknown,
+): WikiCollabDisconnectTokenPayload | null => {
+  if (typeof payload !== "object" || payload === null) return null;
+  const claims = payload as Record<string, unknown>;
+
+  if (claims.scope !== "disconnect") return null;
+  if (typeof claims.sub !== "string" || !claims.sub) return null;
+
+  return { scope: "disconnect", sub: claims.sub };
 };

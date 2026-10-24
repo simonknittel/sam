@@ -1,4 +1,5 @@
 import {
+  parseWikiCollabDisconnectTokenPayload,
   parseWikiCollabReplaceTokenPayload,
   parseWikiCollabSessionTokenPayload,
 } from "@sam-monorepo/wiki-editor";
@@ -8,6 +9,7 @@ import { createCollabClient } from "./createCollabClient.js";
 
 const JWT_SECRET = "test-collab-secret";
 const REPLACE_TIMEOUT_MILLISECONDS = 15_000;
+const DISCONNECT_TIMEOUT_MILLISECONDS = 5_000;
 /** The lifetime of each token in seconds */
 const TOKEN_LIFETIME_SECONDS = 60;
 
@@ -102,7 +104,7 @@ describe("replaceContent", () => {
     fetchMock.mockResolvedValue(new Response(null, { status: 401 }));
 
     await expect(createClient().replaceContent(REPLACEMENT)).rejects.toThrow(
-      "Collab replace request failed with status 401",
+      "Collab request to /replace failed with status 401",
     );
   });
 });
@@ -130,5 +132,27 @@ describe("createSessionToken", () => {
       TOKEN_LIFETIME_SECONDS,
     );
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("disconnectUser", () => {
+  test("sends a disconnect token for the user that only the disconnect endpoint accepts", async () => {
+    const timeoutSpy = vi.spyOn(AbortSignal, "timeout");
+
+    await createClient("wss://collab.example").disconnectUser("user-1");
+
+    const request = getRequest();
+    expect(request.url).toBe("https://collab.example/disconnect");
+    expect(request.method).toBe("POST");
+    expect(timeoutSpy).toHaveBeenCalledWith(DISCONNECT_TIMEOUT_MILLISECONDS);
+    const { payload } = await verifyToken(request.token);
+    expect(parseWikiCollabDisconnectTokenPayload(payload)).toEqual({
+      scope: "disconnect",
+      sub: "user-1",
+    });
+    expect(parseWikiCollabSessionTokenPayload(payload)).toBeNull();
+    expect((payload.exp ?? 0) - (payload.iat ?? 0)).toBe(
+      TOKEN_LIFETIME_SECONDS,
+    );
   });
 });

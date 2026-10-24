@@ -4,18 +4,27 @@ import type {
   WikiPageContentReplacement,
 } from "@sam-monorepo/application";
 import type {
+  WikiCollabDisconnectTokenPayload,
   WikiCollabReplaceTokenPayload,
   WikiCollabSessionTokenPayload,
 } from "@sam-monorepo/wiki-editor";
-import { SignJWT } from "jose";
+import { SignJWT, type JWTPayload } from "jose";
 
 /**
- * The lifetime of each token. The collab provider asks for a new session
- * token on each reconnect, and a replace token is used at once.
+ * The lifetime of each token. The editor sends a new session token before
+ * the old one expires (see `WikiCollabEditor` of the app), and the collab
+ * server closes a connection without a valid session token. A replace token
+ * and a disconnect token are used at once.
  */
 const TOKEN_LIFETIME = "60s";
 
 const TOKEN_ALGORITHM = "HS256";
+
+/**
+ * The maximum time of one disconnect request. A ban waits for it, and a
+ * failure does not stop the ban.
+ */
+const DISCONNECT_TIMEOUT_MILLISECONDS = 5_000;
 
 export interface CollabClientOptions {
   /** The WebSocket URL of the collab server (`ws:` or `wss:`) */
@@ -28,8 +37,9 @@ export interface CollabClientOptions {
 
 /**
  * The collab server of the wiki editor (`apps/collab`). The client signs the
- * tokens that the server verifies. The explicit `scope` claim keeps the two
- * token kinds apart: a session token never authorizes a replace.
+ * tokens that the server verifies. The explicit `scope` claim keeps the
+ * token kinds apart: for example, a session token never authorizes a
+ * replace.
  */
 export const createCollabClient = ({
   url,
@@ -37,6 +47,52 @@ export const createCollabClient = ({
   replaceTimeoutMilliseconds,
 }: CollabClientOptions): NonNullable<ApplicationContext["collab"]> => {
   const key = new TextEncoder().encode(jwtSecret);
+
+  const signToken = (claims: JWTPayload, subject?: string) => {
+    const token = new SignJWT(claims)
+      .setProtectedHeader({ alg: TOKEN_ALGORITHM })
+      .setIssuedAt()
+      .setExpirationTime(TOKEN_LIFETIME);
+    if (subject !== undefined) token.setSubject(subject);
+
+    return token.sign(key);
+  };
+
+  /**
+   * Sends a request to an HTTP endpoint of the collab server, which has the
+   * host of the WebSocket URL. Throws when the server does not accept the
+   * request.
+   */
+  const post = async (
+    path: string,
+    token: string,
+    timeoutMilliseconds: number,
+    jsonBody?: string,
+  ) => {
+    const endpointUrl = new URL(path, url);
+    endpointUrl.protocol = endpointUrl.protocol === "ws:" ? "http:" : "https:";
+
+    const response = await fetch(endpointUrl, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+        ...(jsonBody === undefined
+          ? {}
+          : { "content-type": "application/json" }),
+      },
+      body: jsonBody,
+      signal: AbortSignal.timeout(timeoutMilliseconds),
+    });
+    /**
+     * The client uses only the status. It cancels the body, thus the
+     * connection does not wait for a read of the body.
+     */
+    await response.body?.cancel();
+    if (!response.ok)
+      throw new Error(
+        `Collab request to ${path} failed with status ${response.status}`,
+      );
+  };
 
   return {
     /**
@@ -49,37 +105,18 @@ export const createCollabClient = ({
       content,
       updatedByEntityId,
     }: WikiPageContentReplacement) => {
-      const replaceUrl = new URL("/replace", url);
-      replaceUrl.protocol = replaceUrl.protocol === "ws:" ? "http:" : "https:";
-
-      const token = await new SignJWT({
+      const token = await signToken({
         scope: "replace",
         pageId,
         entityId: updatedByEntityId,
-      } satisfies WikiCollabReplaceTokenPayload)
-        .setProtectedHeader({ alg: TOKEN_ALGORITHM })
-        .setIssuedAt()
-        .setExpirationTime(TOKEN_LIFETIME)
-        .sign(key);
+      } satisfies WikiCollabReplaceTokenPayload);
 
-      const response = await fetch(replaceUrl, {
-        method: "POST",
-        headers: {
-          authorization: `Bearer ${token}`,
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({ content }),
-        signal: AbortSignal.timeout(replaceTimeoutMilliseconds),
-      });
-      /**
-       * The client uses only the status. It cancels the body, thus the
-       * connection does not wait for a read of the body.
-       */
-      await response.body?.cancel();
-      if (!response.ok)
-        throw new Error(
-          `Collab replace request failed with status ${response.status}`,
-        );
+      await post(
+        "/replace",
+        token,
+        replaceTimeoutMilliseconds,
+        JSON.stringify({ content }),
+      );
     },
 
     createSessionToken: ({
@@ -88,16 +125,26 @@ export const createCollabClient = ({
       entityId,
       canEdit,
     }: WikiCollabSession) =>
-      new SignJWT({
-        scope: "session",
-        pageId,
-        entityId,
-        canEdit,
-      } satisfies Omit<WikiCollabSessionTokenPayload, "sub">)
-        .setProtectedHeader({ alg: TOKEN_ALGORITHM })
-        .setSubject(userId)
-        .setIssuedAt()
-        .setExpirationTime(TOKEN_LIFETIME)
-        .sign(key),
+      signToken(
+        {
+          scope: "session",
+          pageId,
+          entityId,
+          canEdit,
+        } satisfies Omit<WikiCollabSessionTokenPayload, "sub">,
+        userId,
+      ),
+
+    disconnectUser: async (userId: string) => {
+      const token = await signToken(
+        { scope: "disconnect" } satisfies Omit<
+          WikiCollabDisconnectTokenPayload,
+          "sub"
+        >,
+        userId,
+      );
+
+      await post("/disconnect", token, DISCONNECT_TIMEOUT_MILLISECONDS);
+    },
   };
 };

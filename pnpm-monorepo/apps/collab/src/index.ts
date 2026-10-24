@@ -1,4 +1,4 @@
-import { Server, type Document } from "@hocuspocus/server";
+import { Server, type Connection, type Document } from "@hocuspocus/server";
 import { prisma } from "@sam-monorepo/database";
 import { WikiPageSnapshotKind } from "@sam-monorepo/database/client";
 import {
@@ -13,6 +13,7 @@ import {
   collectWikiUploadReferences,
   extractWikiPageText,
   getWikiEditorSchema,
+  parseWikiCollabDisconnectTokenPayload,
   parseWikiCollabReplaceTokenPayload,
   parseWikiCollabSessionTokenPayload,
   parseWikiCollabStatelessMessage,
@@ -33,25 +34,133 @@ import { env } from "./env.js";
  * The Yjs collaboration backend for the wiki. The Next.js app remains the
  * single permission authority: it mints short-lived
  * JWTs per page and viewer, this server only verifies them and persists
- * documents. The editor schema is shared with the app through
- * @sam-monorepo/wiki-editor. Deployed next to Soketi via the core-services
- * repository.
+ * documents. An open editor sends a new token before its token expires,
+ * and the server closes a connection without a valid token. The editor
+ * schema is shared with the app through @sam-monorepo/wiki-editor. Deployed
+ * next to Soketi via the core-services repository.
  */
 
 const replaceBodySchema = z.object({
   content: z.unknown(),
 });
 
+/**
+ * The values of a connection that change while it is open. Hocuspocus gives
+ * the hooks shallow copies of the context (it copies the context after each
+ * token sync), thus these values are in an object that all copies share.
+ */
+interface ConnectionState {
+  /**
+   * The expiry of the last valid session token, in milliseconds since the
+   * epoch (see `closeConnectionsWithExpiredTokens`)
+   */
+  tokenExpiresAt: number;
+  didEdit: boolean;
+}
+
 interface ConnectionContext {
-  userId: string;
-  entityId: string | null;
-  canEdit: boolean;
+  readonly userId: string;
+  readonly entityId: string | null;
   /** Server-internal connections (replace endpoint) write no audit events */
-  isInternal?: boolean;
-  didEdit?: boolean;
+  readonly isInternal: boolean;
+  readonly state: ConnectionState;
 }
 
 const secret = new TextEncoder().encode(env.COLLAB_JWT_SECRET);
+
+/**
+ * A connection stays open for this time after the expiry of its last session
+ * token. The time covers the request of the editor for the next token, and
+ * the timers of a hidden browser tab, which the browser can delay to one run
+ * per minute.
+ */
+const SESSION_TOKEN_GRACE_PERIOD_MILLISECONDS = 30_000;
+
+/** The interval of the check for connections with an expired session token */
+const SESSION_EXPIRY_CHECK_INTERVAL_MILLISECONDS = 10_000;
+
+/**
+ * The close code of Hocuspocus for a connection without a valid token
+ * (`Unauthorized` of @hocuspocus/common)
+ */
+const UNAUTHORIZED_CLOSE_CODE = 4401;
+
+/** The app gives each token a short lifetime, thus a token must expire */
+const verifyToken = (token: string) =>
+  jwtVerify(token, secret, { algorithms: ["HS256"], requiredClaims: ["exp"] });
+
+/**
+ * Verifies a session token for the document. Gives the claims and the expiry
+ * in milliseconds since the epoch.
+ */
+const verifySessionToken = async (rawToken: string, documentName: string) => {
+  const { payload } = await verifyToken(rawToken);
+  const token = parseWikiCollabSessionTokenPayload(payload);
+  if (!token || payload.exp === undefined)
+    throw new Error("Invalid token payload");
+  if (token.pageId !== documentName)
+    throw new Error("Token does not match the requested document");
+
+  return { token, expiresAt: payload.exp * 1000 };
+};
+
+/**
+ * Verifies the bearer token of an internal request. Gives null when the
+ * request has no valid token of the kind that `parse` accepts.
+ */
+const verifyBearerToken = async <Payload>(
+  request: IncomingMessage,
+  parse: (payload: unknown) => Payload | null,
+): Promise<Payload | null> => {
+  const authorization = request.headers.authorization;
+  if (!authorization?.startsWith("Bearer ")) return null;
+
+  try {
+    const { payload } = await verifyToken(
+      authorization.slice("Bearer ".length),
+    );
+    return parse(payload);
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Closes the socket of an editor connection. The connection leaves its
+ * document first, thus the server applies no further message of the socket
+ * to the document. The provider of the editor then connects again with a
+ * new token from the app: a user who lost the access gets the
+ * authentication error of the editor.
+ */
+const closeConnection = (
+  connection: Connection<ConnectionContext>,
+  reason: string,
+) => {
+  connection.close({ code: UNAUTHORIZED_CLOSE_CODE, reason });
+  connection.webSocket.close(UNAUTHORIZED_CLOSE_CODE, reason);
+};
+
+const getEditorConnections = (): Connection<ConnectionContext>[] =>
+  [...server.hocuspocus.documents.values()].flatMap((document) =>
+    document.getConnections(),
+  );
+
+/**
+ * Closes each connection whose last session token expired more than the
+ * grace period ago. A periodic check also finds a reader that sends no
+ * messages.
+ */
+const closeConnectionsWithExpiredTokens = () => {
+  const now = Date.now();
+
+  for (const connection of getEditorConnections())
+    if (
+      now >
+      connection.context.state.tokenExpiresAt +
+        SESSION_TOKEN_GRACE_PERIOD_MILLISECONDS
+    )
+      closeConnection(connection, "Session token expired");
+};
 
 const editorSchema = getWikiEditorSchema();
 
@@ -263,25 +372,11 @@ const handleReplaceRequest = async (
   request: IncomingMessage,
   response: ServerResponse,
 ) => {
-  const authorization = request.headers.authorization;
-  if (!authorization?.startsWith("Bearer ")) {
-    respondJson(response, 401, { error: "Unauthorized" });
-    return;
-  }
-
-  let pageId: string;
-  let entityId: string | null;
-  try {
-    const { payload } = await jwtVerify(
-      authorization.slice("Bearer ".length),
-      secret,
-      { algorithms: ["HS256"] },
-    );
-    const token = parseWikiCollabReplaceTokenPayload(payload);
-    if (!token) throw new Error("Invalid token payload");
-    pageId = token.pageId;
-    entityId = token.entityId;
-  } catch {
+  const token = await verifyBearerToken(
+    request,
+    parseWikiCollabReplaceTokenPayload,
+  );
+  if (!token) {
     respondJson(response, 401, { error: "Unauthorized" });
     return;
   }
@@ -306,11 +401,15 @@ const handleReplaceRequest = async (
   try {
     const context: ConnectionContext = {
       userId: "",
-      entityId,
-      canEdit: true,
+      entityId: token.entityId,
       isInternal: true,
+      // A direct connection is not part of the expiry check
+      state: { tokenExpiresAt: Number.POSITIVE_INFINITY, didEdit: false },
     };
-    connection = await server.hocuspocus.openDirectConnection(pageId, context);
+    connection = await server.hocuspocus.openDirectConnection(
+      token.pageId,
+      context,
+    );
   } catch {
     respondJson(response, 404, { error: "Unknown document" });
     return;
@@ -334,28 +433,81 @@ const handleReplaceRequest = async (
   respondJson(response, 200, { ok: true });
 };
 
+/**
+ * Internal "close all connections of one user" command from the Next.js app
+ * (a ban). Authenticated with a short-lived JWT signed with the shared
+ * secret.
+ */
+const handleDisconnectRequest = async (
+  request: IncomingMessage,
+  response: ServerResponse,
+) => {
+  const token = await verifyBearerToken(
+    request,
+    parseWikiCollabDisconnectTokenPayload,
+  );
+  if (!token) {
+    respondJson(response, 401, { error: "Unauthorized" });
+    return;
+  }
+
+  for (const connection of getEditorConnections())
+    if (connection.context.userId === token.sub)
+      closeConnection(connection, "Disconnected by the app");
+
+  respondJson(response, 200, { ok: true });
+};
+
+/** The internal endpoints for the Next.js app, by path. Each takes a POST. */
+const internalRequestHandlers = new Map([
+  ["/replace", handleReplaceRequest],
+  ["/disconnect", handleDisconnectRequest],
+]);
+
 const server = new Server<ConnectionContext>({
   port: env.PORT,
   debounce: 2_000,
   maxDebounce: 10_000,
 
   async onAuthenticate(data) {
-    const { payload } = await jwtVerify(data.token, secret, {
-      algorithms: ["HS256"],
-    });
-    const token = parseWikiCollabSessionTokenPayload(payload);
-    if (!token) throw new Error("Invalid token payload");
-    if (token.pageId !== data.documentName)
-      throw new Error("Token does not match the requested document");
+    const { token, expiresAt } = await verifySessionToken(
+      data.token,
+      data.documentName,
+    );
 
     if (!token.canEdit) data.connectionConfig.readOnly = true;
 
     const context: ConnectionContext = {
       userId: token.sub,
       entityId: token.entityId,
-      canEdit: token.canEdit,
+      isInternal: false,
+      state: { tokenExpiresAt: expiresAt, didEdit: false },
     };
     return context;
+  },
+
+  /**
+   * The editor sends a new session token before the old one expires. The
+   * token gives the current edit permission of the user. A token that the
+   * server does not accept closes the connection.
+   */
+  async onTokenSync(data) {
+    const { connection } = data;
+
+    try {
+      const { token, expiresAt } = await verifySessionToken(
+        data.token,
+        data.documentName,
+      );
+      if (token.sub !== connection.context.userId)
+        throw new Error("Token of a different user");
+
+      connection.readOnly = !token.canEdit;
+      connection.context.state.tokenExpiresAt = expiresAt;
+    } catch {
+      console.warn("[collab] Closed a connection after an invalid token sync");
+      closeConnection(connection, "Invalid session token");
+    }
   },
 
   async onRequest(data) {
@@ -369,11 +521,18 @@ const server = new Server<ConnectionContext>({
       throw null;
     }
 
-    if (data.request.method === "POST" && data.request.url === "/replace") {
+    const internalRequestHandler =
+      data.request.method === "POST" && data.request.url
+        ? internalRequestHandlers.get(data.request.url)
+        : undefined;
+    if (internalRequestHandler) {
       try {
-        await handleReplaceRequest(data.request, data.response);
+        await internalRequestHandler(data.request, data.response);
       } catch (error) {
-        console.error("[collab] Replace request failed", error);
+        console.error(
+          `[collab] Internal request to ${data.request.url} failed`,
+          error,
+        );
         if (!data.response.headersSent)
           respondJson(data.response, 500, { error: "Internal server error" });
       }
@@ -559,7 +718,11 @@ const server = new Server<ConnectionContext>({
   },
 
   async onChange(data) {
-    if (data.context) data.context.didEdit = true;
+    /**
+     * The context of a change without an editor connection (for example an
+     * internal write of Hocuspocus) can be empty
+     */
+    if (data.context?.state) data.context.state.didEdit = true;
     broadcastSaveState(data.document, data.documentName, WikiSaveState.Dirty);
   },
 
@@ -570,7 +733,7 @@ const server = new Server<ConnectionContext>({
      * database column is a plain string). Internal connections (replace
      * endpoint) skip this — the app writes its own, more specific event.
      */
-    if (!data.context?.didEdit || data.context.isInternal) return;
+    if (!data.context?.state?.didEdit || data.context.isInternal) return;
 
     /**
      * A failed audit write must never take the server down: connection
@@ -599,6 +762,11 @@ const server = new Server<ConnectionContext>({
 await server.listen();
 console.log(`[collab] Listening on port ${env.PORT}`);
 
+const expiryCheckInterval = setInterval(
+  closeConnectionsWithExpiredTokens,
+  SESSION_EXPIRY_CHECK_INTERVAL_MILLISECONDS,
+);
+
 /**
  * Edits are persisted on a debounce, so an abrupt exit drops up to
  * `maxDebounce` worth of them. Hocuspocus' destroy() closes the
@@ -612,6 +780,7 @@ const shutDown = async (signal: NodeJS.Signals) => {
   if (isShuttingDown) return;
   isShuttingDown = true;
   console.log(`[collab] ${signal} received, flushing open documents`);
+  clearInterval(expiryCheckInterval);
 
   try {
     await server.destroy();

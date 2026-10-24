@@ -8,6 +8,10 @@ import { EMBED_TOKEN_ALGORITHM } from "@/modules/embed-authentication/utils/cons
 import { getEmbedSigningKey } from "@/modules/embed-authentication/utils/getEmbedSigningKey";
 import { emitEvents } from "@/modules/eventbridge/utils";
 import { log } from "@/modules/logging";
+import {
+  channelsClient,
+  createChannelsRealtimeServer,
+} from "@/modules/pusher/utils/channelsClient";
 import { getTracer } from "@/modules/tracing/utils/getTracer";
 import {
   createApplicationUrls,
@@ -76,6 +80,9 @@ const createApplicationContext = (): ApplicationContext => ({
           replaceTimeoutMilliseconds: 15_000,
         })
       : null,
+  realtime: channelsClient
+    ? createChannelsRealtimeServer(channelsClient)
+    : null,
   discord: createDiscordGateway({
     apiBaseUrl: env.DISCORD_API_BASE_URL,
     botToken: env.DISCORD_TOKEN,

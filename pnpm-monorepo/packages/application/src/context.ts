@@ -54,6 +54,18 @@ export interface WikiCollabSession {
   readonly canEdit: boolean;
 }
 
+/**
+ * The realtime server (Pusher Channels or Soketi) that sends the on-site
+ * notifications to the open tabs. Each tab signs in with the id of its user.
+ */
+export interface RealtimeServer {
+  /**
+   * Closes all connections that signed in with the user. Throws when the
+   * server refuses the request.
+   */
+  readonly terminateUserConnections: (userId: string) => Promise<void>;
+}
+
 /** The key that signs the access tokens. Its public key is in the JWKS. */
 export interface SigningKey {
   readonly privateKey: KeyObject;
@@ -164,7 +176,17 @@ export interface ApplicationContext {
     readonly createSessionToken: (
       session: WikiCollabSession,
     ) => Promise<string>;
+    /**
+     * Closes all editor connections of the user. Throws when the collab
+     * server refuses the request or cannot be reached.
+     */
+    readonly disconnectUser: (userId: string) => Promise<void>;
   } | null;
+  /**
+   * Null when the host has no client of the realtime server (the Lambda
+   * functions, or an app without the configuration of Pusher)
+   */
+  readonly realtime: RealtimeServer | null;
   /**
    * Null when the host has no bot token. Then a use case behaves as if
    * Discord cannot be reached.

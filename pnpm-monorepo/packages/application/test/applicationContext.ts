@@ -32,9 +32,10 @@ type TestApplicationContextOptions = Partial<
 /**
  * The context of the integration tests. It uses the database of the
  * testcontainer (`test/databaseUrl.ts` sets the URL before the test files
- * load). The audit writer, the notification trigger and the email requester
- * only record, thus a test can examine `auditEvents`, `notifications` and
- * `emailRequests`. An override replaces the port of the same name.
+ * load). The audit writer, the notification trigger, the email requester and
+ * the realtime server only record, thus a test can examine `auditEvents`,
+ * `notifications`, `emailRequests` and `terminatedRealtimeUserIds`. An
+ * override replaces the port of the same name.
  */
 export const createTestApplicationContext = ({
   now = TEST_NOW,
@@ -43,6 +44,7 @@ export const createTestApplicationContext = ({
   const auditEvents: AuditEventInput[] = [];
   const notifications: Notification[] = [];
   const emailRequests: EmailRequest[] = [];
+  const terminatedRealtimeUserIds: string[] = [];
 
   const context: ApplicationContext = {
     prisma,
@@ -67,6 +69,11 @@ export const createTestApplicationContext = ({
     now: () => new Date(now),
     changelog: null,
     collab: null,
+    realtime: {
+      terminateUserConnections: async (userId) => {
+        terminatedRealtimeUserIds.push(userId);
+      },
+    },
     discord: null,
     storage: null,
     images: null,
@@ -79,7 +86,13 @@ export const createTestApplicationContext = ({
     ...overrides,
   };
 
-  return { context, auditEvents, notifications, emailRequests };
+  return {
+    context,
+    auditEvents,
+    notifications,
+    emailRequests,
+    terminatedRealtimeUserIds,
+  };
 };
 
 interface TestActorOptions {

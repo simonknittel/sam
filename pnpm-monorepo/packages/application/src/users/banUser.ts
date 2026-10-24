@@ -30,8 +30,36 @@ export interface BanUserOutput {
 }
 
 /**
- * Bans a user and revokes their sessions. Requires `user;ban` and a citizen
- * of the actor, who is the person that banned the user.
+ * Ends the open connections of a banned user: the realtime connections of
+ * the on-site notifications and the connections of the wiki editor. The
+ * sessions of the user are deleted already, thus a reconnect fails. A
+ * failure does not undo the ban: the function logs it and continues.
+ */
+const endLiveConnections = async (
+  context: ApplicationContext,
+  userId: string,
+) => {
+  const [realtimeResult, collabResult] = await Promise.allSettled([
+    context.realtime?.terminateUserConnections(userId),
+    context.collab?.disconnectUser(userId),
+  ]);
+
+  if (realtimeResult.status === "rejected")
+    context.log.error(
+      "Failed to end the realtime connections of a banned user",
+      { userId, error: realtimeResult.reason },
+    );
+  if (collabResult.status === "rejected")
+    context.log.error(
+      "Failed to end the wiki editor connections of a banned user",
+      { userId, error: collabResult.reason },
+    );
+};
+
+/**
+ * Bans a user, revokes their sessions, deletes the web push subscriptions of
+ * their citizen and ends their open connections. Requires `user;ban` and a
+ * citizen of the actor, who is the person that banned the user.
  *
  * @throws ValidationError when the actor bans themselves, or when the user is
  * an admin
@@ -75,6 +103,9 @@ export const banUser = (
       await transaction.session.deleteMany({
         where: { userId: input.user_id },
       });
+      await transaction.webPushSubscription.deleteMany({
+        where: { citizen: { userId: input.user_id } },
+      });
 
       return true;
     });
@@ -90,6 +121,8 @@ export const banUser = (
         createdById: actor.userId,
       },
     ]);
+
+    await endLiveConnections(context, input.user_id);
 
     return { user_id: input.user_id, banned_at: bannedAt.toISOString() };
   });

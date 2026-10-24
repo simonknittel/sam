@@ -28,8 +28,10 @@ export {
   serializeWikiCollabStatelessMessage,
 } from "./wikiCollabSaveState.js";
 export {
+  parseWikiCollabDisconnectTokenPayload,
   parseWikiCollabReplaceTokenPayload,
   parseWikiCollabSessionTokenPayload,
+  type WikiCollabDisconnectTokenPayload,
   type WikiCollabReplaceTokenPayload,
   type WikiCollabSessionTokenPayload,
 } from "./wikiCollabTokens.js";
