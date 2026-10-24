@@ -1,7 +1,7 @@
 "use client";
 
 import { useAction } from "@/modules/actions/utils/useAction";
-import Button from "@/modules/common/components/Button";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { useState } from "react";
@@ -25,23 +25,22 @@ export const RenameOAuthGrantButton = ({
   customName,
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { formAction } = useAction(renameOAuthGrant, {
-    onSuccess: () => setIsOpen(false),
-  });
+  const { formAction, getDefaultValueWithFallback } = useAction(
+    renameOAuthGrant,
+    { onSuccess: () => setIsOpen(false) },
+  );
 
   return (
     <>
-      <Button
+      <Button2
         className={className}
         type="button"
-        variant="tertiary"
-        iconOnly
+        variant={Button2Variant.IconOnly}
         onClick={() => setIsOpen(true)}
-        title={`${displayName} umbenennen`}
-        aria-label={`${displayName} umbenennen`}
+        tooltip={`${displayName} umbenennen`}
       >
         <FaPen />
-      </Button>
+      </Button2>
 
       <Modal
         isOpen={isOpen}
@@ -54,7 +53,10 @@ export const RenameOAuthGrantButton = ({
 
           <GrantCustomNameInput
             name="customName"
-            defaultValue={customName ?? ""}
+            defaultValue={getDefaultValueWithFallback(
+              "customName",
+              customName ?? "",
+            )}
             clientName={clientName}
           />
 
