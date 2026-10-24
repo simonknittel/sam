@@ -214,6 +214,7 @@ test("the search filter narrows the list to the matching title or text", async (
   await prisma.manualNotification.create({
     data: {
       createdById: sender.entity.id,
+      createdAt: new Date("2026-10-20T10:00:00Z"),
       title: "Wartung am Montag",
       body: "Das SAM ist am Montag kurz nicht erreichbar.",
       receiverCitizens: { create: { citizenId: receiver.entity.id } },
@@ -222,6 +223,7 @@ test("the search filter narrows the list to the matching title or text", async (
   await prisma.manualNotification.create({
     data: {
       createdById: sender.entity.id,
+      createdAt: new Date("2026-10-21T10:00:00Z"),
       title: "Flottenübung",
       body: "Wir üben den Verbandsflug.",
       receiverRoles: { create: { roleId: fleet.id } },
@@ -235,6 +237,10 @@ test("the search filter narrows the list to the matching title or text", async (
   const exerciseRow = rowWithTitle(page, "Flottenübung");
   await expect(maintenanceRow).toBeVisible();
   await expect(exerciseRow).toBeVisible();
+  // The newest notification first
+  await expect(
+    page.getByRole("row").filter({ hasText: /Wartung am Montag|Flottenübung/ }),
+  ).toHaveText([/Flottenübung/, /Wartung am Montag/]);
   await expect(
     maintenanceRow.getByRole("link", { name: "empfaenger" }),
   ).toBeVisible();

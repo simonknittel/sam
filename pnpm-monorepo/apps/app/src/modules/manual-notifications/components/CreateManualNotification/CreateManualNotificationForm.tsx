@@ -57,10 +57,6 @@ export const CreateManualNotificationForm = ({
 
       <RolesPicker name="roleId[]" label="Rollen" className="mt-4" />
 
-      <p className="mt-2 text-xs text-gray-400">
-        Nur Citizens, die sich anmelden können, erhalten die Benachrichtigung.
-      </p>
-
       <SubmitButton icon={<FaPaperPlane />} className="mt-4 ml-auto">
         Senden
       </SubmitButton>
