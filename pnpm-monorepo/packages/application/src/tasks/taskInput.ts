@@ -1,6 +1,5 @@
 import { TaskRewardType, TaskVisibility } from "@sam-monorepo/database/browser";
 import {
-  ACTIVE_CITIZEN_WHERE,
   SILC_VALUE_MAXIMUM,
   TASK_DESCRIPTION_MAX_LENGTH,
   TASK_MAX_CITIZENS,
@@ -9,16 +8,11 @@ import {
   TASK_TITLE_MAX_LENGTH,
 } from "@sam-monorepo/domain";
 import * as z from "zod";
-import type { Actor } from "../actor.js";
-import type { ApplicationContext } from "../context.js";
 import {
   DATE_TIME_INPUT_DESCRIPTION,
   dateTimeInputSchema,
 } from "../dateTime.js";
-import { ValidationError } from "../errors.js";
 import { idSchema } from "../pagination.js";
-import { isRoleVisible } from "../roles/roleVisibility.js";
-import { TaskErrorMessage } from "./taskErrors.js";
 import { TaskRewardKind, TaskVisibilityKind } from "./taskOutput.js";
 
 /** The schemas of the task fields that the create and the update share */
@@ -84,50 +78,4 @@ export const TASK_REWARD_TYPE_BY_KIND: Readonly<
   [TaskRewardKind.Silc]: TaskRewardType.SILC,
   [TaskRewardKind.NewSilc]: TaskRewardType.NEW_SILC,
   [TaskRewardKind.Text]: TaskRewardType.TEXT,
-};
-
-/**
- * The assignees that a write adds must be citizens that are not deleted,
- * like the choices of the citizen picker of the forms
- *
- * @param citizenIds The citizens that the write adds
- * @throws ValidationError when a citizen does not exist or is deleted
- */
-export const requireActiveAssignees = async (
-  context: ApplicationContext,
-  citizenIds: readonly string[],
-) => {
-  const uniqueCitizenIds = [...new Set(citizenIds)];
-  if (uniqueCitizenIds.length <= 0) return;
-
-  const activeCount = await context.prisma.citizen.count({
-    where: { id: { in: uniqueCitizenIds }, ...ACTIVE_CITIZEN_WHERE },
-  });
-  if (activeCount !== uniqueCitizenIds.length)
-    throw new ValidationError(TaskErrorMessage.UnknownAssignee);
-};
-
-/**
- * The required roles that a write adds must exist and be visible for the
- * actor, like the choices of the role picker of the forms
- *
- * @param roleIds The roles that the write adds
- * @throws ValidationError when a role does not exist or is not visible
- */
-export const requireVisibleRoles = async (
-  context: ApplicationContext,
-  actor: Actor,
-  roleIds: readonly string[],
-) => {
-  const uniqueRoleIds = [...new Set(roleIds)];
-  if (uniqueRoleIds.length <= 0) return;
-
-  if (uniqueRoleIds.some((roleId) => !isRoleVisible(actor, roleId)))
-    throw new ValidationError(TaskErrorMessage.UnknownRequiredRole);
-
-  const existingCount = await context.prisma.role.count({
-    where: { id: { in: uniqueRoleIds } },
-  });
-  if (existingCount !== uniqueRoleIds.length)
-    throw new ValidationError(TaskErrorMessage.UnknownRequiredRole);
 };

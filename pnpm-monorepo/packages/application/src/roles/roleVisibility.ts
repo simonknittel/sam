@@ -1,5 +1,6 @@
 import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
+import { ValidationError } from "../errors.js";
 
 /** The order of the role picker of the app */
 export const compareRoleNames = (
@@ -54,4 +55,31 @@ export const loadVisibleRoleIds = async (
     .filter((role) => isRoleVisible(actor, role.id))
     .toSorted(compareRoleNames)
     .map((role) => role.id);
+};
+
+/**
+ * The roles that a write adds must exist and be visible for the actor (see
+ * `isRoleVisible()`), like the choices of the role picker of the forms
+ *
+ * @param roleIds The roles that the write adds
+ * @param errorMessage The message of the feature for the `ValidationError`
+ * @throws ValidationError when a role does not exist or is not visible
+ */
+export const requireVisibleRoles = async (
+  context: Pick<ApplicationContext, "prisma">,
+  actor: Pick<Actor, "authorize">,
+  roleIds: readonly string[],
+  errorMessage: string,
+) => {
+  const uniqueRoleIds = [...new Set(roleIds)];
+  if (uniqueRoleIds.length <= 0) return;
+
+  if (uniqueRoleIds.some((roleId) => !isRoleVisible(actor, roleId)))
+    throw new ValidationError(errorMessage);
+
+  const existingCount = await context.prisma.role.count({
+    where: { id: { in: uniqueRoleIds } },
+  });
+  if (existingCount !== uniqueRoleIds.length)
+    throw new ValidationError(errorMessage);
 };

@@ -7,6 +7,8 @@ import type { ApplicationContext, Notification } from "../context.js";
 import { DATE_TIME_INPUT_DESCRIPTION } from "../dateTime.js";
 import { ValidationError } from "../errors.js";
 import { triggerNotificationsAfterSave } from "../notifications.js";
+import { requireVisibleRoles } from "../roles/roleVisibility.js";
+import { requireActiveCitizens } from "../spynet/requireActiveCitizens.js";
 import { withSpan } from "../withSpan.js";
 import { taskIdSchema } from "./getTask.js";
 import {
@@ -16,11 +18,7 @@ import {
 } from "./taskDetails.js";
 import { TaskErrorMessage } from "./taskErrors.js";
 import { requireManageableTask } from "./taskGuards.js";
-import {
-  requireActiveAssignees,
-  requireVisibleRoles,
-  taskFieldSchemas,
-} from "./taskInput.js";
+import { taskFieldSchemas } from "./taskInput.js";
 
 export const updateTaskInputSchema = z.object({
   task_id: taskIdSchema,
@@ -299,11 +297,12 @@ const requireAllowedChanges = async (
     const currentAssigneeIds = new Set(
       task.assignments.map((assignment) => assignment.citizenId),
     );
-    await requireActiveAssignees(
+    await requireActiveCitizens(
       context,
       input.assignee_ids.filter(
         (citizenId) => !currentAssigneeIds.has(citizenId),
       ),
+      TaskErrorMessage.UnknownAssignee,
     );
   }
   if (input.required_role_ids) {
@@ -312,6 +311,7 @@ const requireAllowedChanges = async (
       context,
       actor,
       input.required_role_ids.filter((roleId) => !currentRoleIds.has(roleId)),
+      TaskErrorMessage.UnknownRequiredRole,
     );
   }
 };

@@ -7,12 +7,12 @@ import type { ApplicationContext } from "../context.js";
 import { DATE_TIME_INPUT_DESCRIPTION } from "../dateTime.js";
 import { ValidationError } from "../errors.js";
 import { triggerNotificationsAfterSave } from "../notifications.js";
+import { requireVisibleRoles } from "../roles/roleVisibility.js";
+import { requireActiveCitizens } from "../spynet/requireActiveCitizens.js";
 import { withSpan } from "../withSpan.js";
 import { findTaskOutput, type GetTaskOutput } from "./taskDetails.js";
 import { TaskErrorMessage } from "./taskErrors.js";
 import {
-  requireActiveAssignees,
-  requireVisibleRoles,
   TASK_REWARD_TYPE_BY_KIND,
   TASK_VISIBILITY_BY_KIND,
   taskFieldSchemas,
@@ -201,8 +201,18 @@ export const createTask = (
 
     // Each visibility stores only its own list (see `createTaskRows()`)
     if (visibility === TaskVisibility.PUBLIC)
-      await requireVisibleRoles(context, actor, input.required_role_ids);
-    else await requireActiveAssignees(context, input.assignee_ids);
+      await requireVisibleRoles(
+        context,
+        actor,
+        input.required_role_ids,
+        TaskErrorMessage.UnknownRequiredRole,
+      );
+    else
+      await requireActiveCitizens(
+        context,
+        input.assignee_ids,
+        TaskErrorMessage.UnknownAssignee,
+      );
     // Without an assignee, a personalized task would become no task
     if (
       visibility === TaskVisibility.PERSONALIZED &&
