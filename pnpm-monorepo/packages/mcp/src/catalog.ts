@@ -9,6 +9,7 @@ import { changelogTools } from "./tools/changelog/index.js";
 import { eventsTools } from "./tools/events/index.js";
 import { fleetTools } from "./tools/fleet/index.js";
 import { lineupTools } from "./tools/lineup/index.js";
+import { manualNotificationTools } from "./tools/manualNotifications/index.js";
 import { penaltyPointsTools } from "./tools/penaltyPoints/index.js";
 import { rolesTools } from "./tools/roles/index.js";
 import { spynetTools } from "./tools/spynet/index.js";
@@ -32,6 +33,7 @@ export const TOOL_CATALOG: readonly CatalogTool[] = [
   ...eventsTools,
   ...lineupTools,
   ...tasksTools,
+  ...manualNotificationTools,
   ...changelogTools,
   ...systemLogTools,
 ].sort(compareTools);

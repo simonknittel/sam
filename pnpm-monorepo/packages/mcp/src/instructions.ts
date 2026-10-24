@@ -8,7 +8,7 @@ import { getAccountPageUrl } from "./accountPageUrl.js";
 
 /** The text that the client gives to the model with `server/discover` */
 export const getInstructions = (context: Pick<ApplicationContext, "urls">) =>
-  `SAM (Sinister Administration Module) is the internal ERP and CRM of a Star Citizen organization: citizens and organizations (Spynet), roles, penalty points, the fleet, the wiki, events with their lineups, tasks, the changelog of SAM, and the system log (the audit log). The tools read and change this data with the roles of the signed-in user.
+  `SAM (Sinister Administration Module) is the internal ERP and CRM of a Star Citizen organization: citizens and organizations (Spynet), roles, penalty points, the fleet, the wiki, events with their lineups, tasks, manual notifications, the changelog of SAM, and the system log (the audit log). The tools read and change this data with the roles of the signed-in user.
 
 - Call get_current_user first: it tells who the user is and which tool groups this client can use.
 - Most content is in German. Show it as it is. Write new content in German, unless the user asks for a different language.
