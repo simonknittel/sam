@@ -183,7 +183,12 @@ export const updateEvent = (
         discordPublishedId: true,
       },
     });
-    if (!event || !canActorSeeEvent(actor, event))
+    // `canActorSeeEvent()` leaves `event;read` to its callers
+    if (
+      !event ||
+      !actor.authorize("event", "read") ||
+      !canActorSeeEvent(actor, event)
+    )
       throw new NotFoundError(EventErrorMessage.NotFound);
     if (changesDetails && event.source !== EventSource.APP)
       throw new ConflictError(EventErrorMessage.DiscordEvent);

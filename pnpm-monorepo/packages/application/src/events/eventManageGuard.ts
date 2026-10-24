@@ -48,9 +48,10 @@ export interface ManageableEventOptions {
 }
 
 /**
- * Throws when the actor cannot see the event (it does not exist for the
- * actor then), when the event ended (nothing of it can change then) or when
- * the rule does not let the actor manage it
+ * Throws when the actor cannot read the event (`event;read` and the
+ * visibility; it does not exist for the actor then), when the event ended
+ * (nothing of it can change then) or when the rule does not let the actor
+ * manage it
  *
  * @throws NotFoundError, ConflictError or ForbiddenError
  */
@@ -61,7 +62,8 @@ export const requireManageableEvent = (
   isAllowed: (actor: Actor, event: ManageGuardEvent) => boolean,
   { ignoreFreeze = false }: ManageableEventOptions = {},
 ) => {
-  if (!canActorSeeEvent(actor, event))
+  // `canActorSeeEvent()` leaves `event;read` to its callers
+  if (!actor.authorize("event", "read") || !canActorSeeEvent(actor, event))
     throw new NotFoundError(EventErrorMessage.NotFound);
 
   if (!ignoreFreeze && !isEventUpdatable(event, context.now()))

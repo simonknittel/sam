@@ -1,5 +1,5 @@
 import type { Prisma } from "@sam-monorepo/database/client";
-import type { Actor } from "../actor.js";
+import { requirePermission, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { ConflictError, ForbiddenError, NotFoundError } from "../errors.js";
 import { EventErrorMessage } from "../events/eventErrors.js";
@@ -29,9 +29,21 @@ export const LINEUP_EVENT_SELECT = {
 } as const satisfies Prisma.EventSelect;
 
 /**
- * The guard of each change of the lineup of an event: the event exists, is
- * not deleted and is visible for the actor, it has not ended, and the actor
- * manages its positions.
+ * The permissions of the lineup page (see `getEventLineup()`). Each guard of
+ * this file requires them, thus a write needs the same permissions as the
+ * read of the lineup.
+ *
+ * @throws ForbiddenError
+ */
+const requireLineupPermissions = (actor: Actor) => {
+  requirePermission(actor, "event", "read");
+  requirePermission(actor, "ship", "read");
+};
+
+/**
+ * The guard of each change of the lineup of an event: the actor has the
+ * permissions of the lineup, the event exists, is not deleted and is visible
+ * for the actor, it has not ended, and the actor manages its positions.
  *
  * @throws NotFoundError, ConflictError or ForbiddenError
  */
@@ -41,6 +53,8 @@ export const requireManageableEventLineup = async (
   eventId: string,
   options: ManageableEventOptions = {},
 ) => {
+  requireLineupPermissions(actor);
+
   const event = await context.prisma.event.findUnique({
     where: { id: eventId, deletedAt: null },
     select: LINEUP_EVENT_SELECT,
@@ -63,13 +77,15 @@ export const requireManageableEventLineup = async (
  * actor can see, with its event. A position of an event template does not
  * exist for the use cases: they change only the lineups of events.
  *
- * @throws NotFoundError
+ * @throws ForbiddenError or NotFoundError
  */
 const findVisibleEventPosition = async (
   context: ApplicationContext,
   actor: Actor,
   positionId: string,
 ) => {
+  requireLineupPermissions(actor);
+
   const position = await context.prisma.eventPosition.findUnique({
     where: { id: positionId, event: { deletedAt: null } },
     select: {
