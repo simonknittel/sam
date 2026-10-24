@@ -2,6 +2,7 @@ import { AuditEventType } from "@sam-monorepo/domain";
 import type { ApplicationContext } from "../context.js";
 import { withSpan } from "../withSpan.js";
 import { AUTHORIZATION_CODE_LIFETIME_IN_MILLISECONDS } from "./constants.js";
+import { resetStaleGrantAdminModes } from "./resetStaleGrantAdminModes.js";
 
 /** 24 hours after its expiry, a cached client metadata document is deleted */
 const CLIENT_METADATA_RETENTION_IN_MILLISECONDS = 24 * 60 * 60 * 1000;
@@ -11,6 +12,8 @@ export interface PurgeExpiredOAuthRecordsOutput {
   readonly refreshTokenCount: number;
   readonly grantCount: number;
   readonly clientMetadataCount: number;
+  /** See `resetStaleGrantAdminModes()`, with its own audit events */
+  readonly adminModeResetCount: number;
 }
 
 /**
@@ -27,6 +30,9 @@ export interface PurgeExpiredOAuthRecordsOutput {
  * - Cached client metadata documents that expired more than 24 hours ago.
  *   The app does not use an expired document: the next consent of the
  *   client fetches the document again.
+ *
+ * It also turns off the admin mode of the grants of users who are not
+ * admins anymore (see `resetStaleGrantAdminModes()`).
  */
 export const purgeExpiredOAuthRecords = (
   context: ApplicationContext,
@@ -81,5 +87,7 @@ export const purgeExpiredOAuthRecords = (
         },
       ]);
 
-    return counts;
+    const adminModeResetCount = await resetStaleGrantAdminModes(context);
+
+    return { ...counts, adminModeResetCount };
   });

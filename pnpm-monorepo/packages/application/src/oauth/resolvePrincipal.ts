@@ -1,3 +1,4 @@
+import { UserRole } from "@sam-monorepo/database/browser";
 import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { requireMcpAccess } from "../mcpAccess.js";
@@ -5,6 +6,7 @@ import { withSpan } from "../withSpan.js";
 import type { VerifiedAccessToken } from "./accessToken.js";
 import { InvalidTokenError } from "./errors.js";
 import { createGrantActor, GRANT_ACTOR_SELECT } from "./grantActor.js";
+import { resetStaleGrantAdminModes } from "./resetStaleGrantAdminModes.js";
 
 /** The app updates `lastUsedAt` of a grant at most one time in this interval */
 const LAST_USED_AT_INTERVAL_IN_MILLISECONDS = 60 * 60 * 1000;
@@ -61,6 +63,11 @@ export const resolvePrincipal = (
 
     if (grant.user.bannedAt) throw new InvalidTokenError("The user is banned");
 
+    const hasStaleAdminMode =
+      grant.adminModeEnabledAt !== null && grant.user.role !== UserRole.ADMIN;
+    if (hasStaleAdminMode)
+      await resetStaleGrantAdminModes(context, { id: grant.id });
+
     const actor = await createGrantActor(context, grant);
 
     actor.requireClearance();
@@ -90,7 +97,7 @@ export const resolvePrincipal = (
         clientId: grant.clientId,
         clientName: grant.clientName,
         createdAt: grant.createdAt,
-        adminModeEnabledAt: grant.adminModeEnabledAt,
+        adminModeEnabledAt: hasStaleAdminMode ? null : grant.adminModeEnabledAt,
       },
     };
   });

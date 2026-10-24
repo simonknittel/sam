@@ -1,4 +1,5 @@
 import { prisma } from "@sam-monorepo/database";
+import { UserRole } from "@sam-monorepo/database/client";
 import { AuditEventType } from "@sam-monorepo/domain";
 import { beforeEach, expect, test } from "vitest";
 import {
@@ -141,6 +142,7 @@ test("deletes expired codes, expired refresh tokens, grants without a token and 
     refreshTokenCount: 1,
     grantCount: 2,
     clientMetadataCount: 1,
+    adminModeResetCount: 0,
   });
 
   expect(
@@ -167,6 +169,58 @@ test("deletes expired codes, expired refresh tokens, grants without a token and 
         refreshTokenCount: 1,
         grantCount: 2,
         clientMetadataCount: 1,
+      },
+      createdById: null,
+    },
+  ]);
+});
+
+test("turns off the admin mode of the grants of users who are not admins anymore", async () => {
+  const { id: adminId } = await prisma.user.create({
+    data: { role: UserRole.ADMIN },
+  });
+  const createConnectedGrant = async (grantUserId: string) => {
+    const grant = await prisma.oAuthGrant.create({
+      data: {
+        ...CLIENT,
+        userId: grantUserId,
+        clientName: "Client",
+        redirectHost: "client.example.com",
+        createdAt: minutesFromNow(-60),
+        adminModeEnabledAt: minutesFromNow(-60),
+        adminModeEnabledById: grantUserId,
+      },
+    });
+    await createRefreshToken(grant.id, {
+      expiresAt: new Date(TEST_NOW.getTime() + ONE_DAY_IN_MILLISECONDS),
+    });
+    return grant;
+  };
+  // The user of `userId` was an admin when they enabled the admin mode
+  const demotedGrant = await createConnectedGrant(userId);
+  const adminGrant = await createConnectedGrant(adminId);
+
+  const { context, auditEvents } = createTestApplicationContext();
+
+  const output = await purgeExpiredOAuthRecords(context);
+
+  expect(output.adminModeResetCount).toBe(1);
+  const readAdminMode = async (grantId: string) =>
+    (
+      await prisma.oAuthGrant.findUniqueOrThrow({
+        where: { id: grantId },
+        select: { adminModeEnabledAt: true },
+      })
+    ).adminModeEnabledAt;
+  expect(await readAdminMode(demotedGrant.id)).toBeNull();
+  expect(await readAdminMode(adminGrant.id)).toEqual(minutesFromNow(-60));
+  expect(auditEvents).toEqual([
+    {
+      type: AuditEventType.OAUTH_GRANT_ADMIN_MODE_UPDATED,
+      data: {
+        grantId: demotedGrant.id,
+        clientId: CLIENT.clientId,
+        enabled: false,
       },
       createdById: null,
     },
