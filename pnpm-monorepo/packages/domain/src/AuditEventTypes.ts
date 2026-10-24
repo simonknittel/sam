@@ -244,6 +244,7 @@ export enum AuditEventType {
   OAUTH_GRANT_ADMIN_MODE_UPDATED = "OAUTH_GRANT_ADMIN_MODE_UPDATED",
   MCP_TOOL_SETTING_UPDATED = "MCP_TOOL_SETTING_UPDATED",
   OAUTH_RECORDS_PURGED = "OAUTH_RECORDS_PURGED",
+  MANUAL_NOTIFICATION_CREATED = "MANUAL_NOTIFICATION_CREATED",
 }
 
 /**
@@ -1666,6 +1667,14 @@ export interface AuditEventDataByType {
     refreshTokenCount: number;
     grantCount: number;
     clientMetadataCount: number;
+  };
+
+  /** The receivers as the sender selected them, before the clearance filter */
+  [AuditEventType.MANUAL_NOTIFICATION_CREATED]: {
+    manualNotificationId: string;
+    title: string;
+    receiverCitizenIds: string[];
+    receiverRoleIds: string[];
   };
 }
 

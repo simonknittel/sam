@@ -1,0 +1,7 @@
+/** The rules of the manual notifications */
+export {
+  MANUAL_NOTIFICATION_BODY_MAX_LENGTH,
+  MANUAL_NOTIFICATION_MAX_RECEIVER_CITIZENS,
+  MANUAL_NOTIFICATION_MAX_RECEIVER_ROLES,
+  MANUAL_NOTIFICATION_TITLE_MAX_LENGTH,
+} from "./manualNotificationLimits.js";

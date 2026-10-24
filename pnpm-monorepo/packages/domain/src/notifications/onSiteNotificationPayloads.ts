@@ -1,4 +1,8 @@
 import * as z from "zod/mini";
+import {
+  MANUAL_NOTIFICATION_BODY_MAX_LENGTH,
+  MANUAL_NOTIFICATION_TITLE_MAX_LENGTH,
+} from "../manualNotifications/manualNotificationLimits.js";
 
 /**
  * Payload schemas for on-site notifications, shared between the
@@ -182,6 +186,16 @@ export const wikiCitizenMentionedPayloadSchema = z.object({
   eventId: z.nullable(z.string()),
 });
 
+/**
+ * A notification that a member sent by hand to chosen citizens and roles. It
+ * carries the title and the body that the sender wrote, thus the on-site row
+ * shows the same text as the web push notification. It points at nothing.
+ */
+export const manualNotificationPayloadSchema = z.object({
+  title: z.string().check(z.maxLength(MANUAL_NOTIFICATION_TITLE_MAX_LENGTH)),
+  body: z.string().check(z.maxLength(MANUAL_NOTIFICATION_BODY_MAX_LENGTH)),
+});
+
 export const onSiteNotificationPayloadSchemas = {
   event_created: eventCreatedPayloadSchema,
   event_updated: eventUpdatedPayloadSchema,
@@ -204,6 +218,7 @@ export const onSiteNotificationPayloadSchemas = {
   birthday: birthdayPayloadSchema,
   new_year: newYearPayloadSchema,
   welcome: welcomePayloadSchema,
+  manual_notification: manualNotificationPayloadSchema,
 } as const;
 
 export type OnSiteNotificationType =
@@ -237,6 +252,7 @@ export const ON_SITE_NOTIFICATION_PAYLOAD_VERSIONS: Record<
   birthday: 1,
   new_year: 1,
   welcome: 1,
+  manual_notification: 1,
 };
 
 export type ParsedOnSiteNotificationPayload = {

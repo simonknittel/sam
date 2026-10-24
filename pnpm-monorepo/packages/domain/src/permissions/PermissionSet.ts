@@ -77,7 +77,8 @@ export interface PermissionSet {
     | "systemLog"
     | "upload"
     | "wiki"
-    | "mcp";
+    | "mcp"
+    | "manualNotification";
   operation:
     | "create"
     | "read"

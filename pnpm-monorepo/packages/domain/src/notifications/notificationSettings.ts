@@ -27,6 +27,7 @@ export enum NotificationSettingType {
   TaskDeleted = "task_deleted",
   WikiPageReported = "wiki_page_reported",
   WikiCitizenMentioned = "wiki_citizen_mentioned",
+  ManualNotification = "manual_notification",
 }
 
 /** All notification types of the settings, in the order of the settings page */
