@@ -8,8 +8,12 @@ import type { ReactNode } from "react";
 
 interface Props {
   readonly action: (formData: FormData) => Promise<ActionResponse>;
-  /** The validated parameters of the authorization request */
-  readonly parameters: Readonly<Record<string, string>>;
+  /**
+   * The validated parameters of the authorization request and, for the
+   * approval, the settings of the consent. A list gives one field for each
+   * value.
+   */
+  readonly fields: Readonly<Record<string, string | readonly string[]>>;
   readonly variant?: Button2Variant;
   readonly icon: ReactNode;
   readonly children: ReactNode;
@@ -21,7 +25,7 @@ interface Props {
  */
 export const ConsentDecisionForm = ({
   action,
-  parameters,
+  fields,
   variant,
   icon,
   children,
@@ -30,9 +34,16 @@ export const ConsentDecisionForm = ({
 
   return (
     <form action={formAction}>
-      {Object.entries(parameters).map(([name, value]) => (
-        <input key={name} type="hidden" name={name} value={value} />
-      ))}
+      {Object.entries(fields).flatMap(([name, value]) =>
+        (typeof value === "string" ? [value] : value).map((item) => (
+          <input
+            key={`${name}=${item}`}
+            type="hidden"
+            name={name}
+            value={item}
+          />
+        )),
+      )}
 
       <SubmitButton variant={variant} icon={icon}>
         {children}

@@ -1,9 +1,12 @@
 import { getApplicationContext } from "@/modules/application";
 import {
   AuthorizationClientErrorReason,
+  grantCustomNameSchema,
+  mcpToolNameSchema,
   type AuthorizationRequestValidation,
   type AuthorizationRequestValidationKind,
 } from "@sam-monorepo/application";
+import { listToolCatalog } from "@sam-monorepo/mcp";
 import * as z from "zod";
 import { isMcpServerDisabled } from "./isMcpServerDisabled";
 
@@ -108,4 +111,19 @@ export const consentFormSchema = z.object({
   scope: consentFormFieldSchema,
   resource: consentFormFieldSchema,
   state: consentFormFieldSchema,
+});
+
+/**
+ * The fields of the approve form: the fields of the request and the settings
+ * of the new grant. A form of a page from before these settings has no
+ * name. A list without duplicates is never longer than the catalog.
+ */
+export const approveFormSchema = consentFormSchema.extend({
+  custom_name: grantCustomNameSchema.optional(),
+  disabled_tool_names: z.array(mcpToolNameSchema).max(listToolCatalog().length),
+});
+
+export const parseApproveFormData = (formData: FormData) => ({
+  ...Object.fromEntries(formData.entries()),
+  disabled_tool_names: formData.getAll("disabled_tool_names"),
 });

@@ -1,14 +1,11 @@
-import { Button2Variant } from "@/modules/common/components/Button2";
 import { Tile } from "@/modules/common/components/Tile";
+import { getMcpToolGroups } from "@/modules/mcp-settings/utils/getMcpToolGroups";
 import type {
   AuthorizationRequestValidation,
   AuthorizationRequestValidationKind,
 } from "@sam-monorepo/application";
-import { FaCheck, FaTimes } from "react-icons/fa";
-import { approveAuthorization } from "../actions/approveAuthorization";
-import { denyAuthorization } from "../actions/denyAuthorization";
 import { getRedirectTarget, toConsentFormParameters } from "../utils/consent";
-import { ConsentDecisionForm } from "./ConsentDecisionForm";
+import { ConsentDecision } from "./ConsentDecision";
 
 interface Props {
   readonly validation: Extract<
@@ -22,8 +19,6 @@ interface Props {
  * trusted identity of the client: the client gives its name itself.
  */
 export const AuthorizationConsent = ({ validation }: Props) => {
-  const parameters = toConsentFormParameters(validation);
-
   return (
     <Tile heading="Zugriff erlauben" childrenClassName="flex flex-col gap-4">
       <div>
@@ -36,24 +31,11 @@ export const AuthorizationConsent = ({ validation }: Props) => {
         <p className="break-all">{new URL(validation.client.clientId).host}</p>
       </div>
 
-      <div className="flex flex-wrap justify-end gap-2">
-        <ConsentDecisionForm
-          action={denyAuthorization}
-          parameters={parameters}
-          variant={Button2Variant.Secondary}
-          icon={<FaTimes />}
-        >
-          Ablehnen
-        </ConsentDecisionForm>
-
-        <ConsentDecisionForm
-          action={approveAuthorization}
-          parameters={parameters}
-          icon={<FaCheck />}
-        >
-          Erlauben
-        </ConsentDecisionForm>
-      </div>
+      <ConsentDecision
+        parameters={toConsentFormParameters(validation)}
+        clientName={validation.client.clientName}
+        toolGroups={getMcpToolGroups()}
+      />
 
       <p className="text-right text-sm break-all text-neutral-500">
         Du wirst weitergeleitet zu {getRedirectTarget(validation.redirectUri)}
