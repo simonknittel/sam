@@ -14,7 +14,8 @@ export const resetStaleGrantAdminModes = async (
   context: ApplicationContext,
   where: Prisma.OAuthGrantWhereInput = {},
 ): Promise<number> => {
-  const grants = await context.prisma.oAuthGrant.findMany({
+  // Only the request that turns the admin mode off writes the audit event
+  const grants = await context.prisma.oAuthGrant.updateManyAndReturn({
     where: {
       AND: [
         where,
@@ -24,14 +25,10 @@ export const resetStaleGrantAdminModes = async (
         },
       ],
     },
+    data: { adminModeEnabledAt: null, adminModeEnabledById: null },
     select: { id: true, clientId: true },
   });
   if (grants.length === 0) return 0;
-
-  await context.prisma.oAuthGrant.updateMany({
-    where: { id: { in: grants.map((grant) => grant.id) } },
-    data: { adminModeEnabledAt: null, adminModeEnabledById: null },
-  });
 
   await context.audit.create(
     grants.map((grant) => ({

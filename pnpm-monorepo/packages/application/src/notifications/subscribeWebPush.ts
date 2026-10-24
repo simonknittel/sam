@@ -1,8 +1,4 @@
-import {
-  isPrismaError,
-  PrismaErrorCode,
-  type Prisma,
-} from "@sam-monorepo/database/client";
+import { isPrismaError, PrismaErrorCode } from "@sam-monorepo/database/client";
 import {
   AuditEventType,
   isAllowedWebPushEndpointUrl,
@@ -48,14 +44,40 @@ export interface SubscribeWebPushOutput {
   readonly notifications_sent: boolean;
 }
 
-/**
- * The unique constraint of the endpoint refuses the endpoint of a different
- * citizen
- */
-const createSubscription = async (
+interface SubscriptionData {
+  readonly citizenId: string;
+  readonly endpoint: string;
+  readonly p256dh: string;
+  readonly auth: string;
+}
+
+/** Changes the keys of the subscription of the endpoint of the own citizen */
+const updateOwnSubscription = async (
   context: ApplicationContext,
-  data: Prisma.WebPushSubscriptionUncheckedCreateInput,
+  { citizenId, endpoint, p256dh, auth }: SubscriptionData,
 ) => {
+  const [subscription] =
+    await context.prisma.webPushSubscription.updateManyAndReturn({
+      where: { endpoint, citizenId },
+      data: { p256dh, auth },
+      select: { id: true },
+    });
+
+  return subscription?.id;
+};
+
+/**
+ * Saves the subscription and gives its id. The unique constraint of the
+ * endpoint refuses the endpoint of a different citizen. A parallel save of
+ * the same citizen can create the row first; then the keys change.
+ */
+const saveSubscription = async (
+  context: ApplicationContext,
+  data: SubscriptionData,
+) => {
+  const updatedId = await updateOwnSubscription(context, data);
+  if (updatedId) return updatedId;
+
   try {
     const { id } = await context.prisma.webPushSubscription.create({
       data,
@@ -63,13 +85,16 @@ const createSubscription = async (
     });
     return id;
   } catch (error) {
-    if (isPrismaError(error, PrismaErrorCode.UniqueConstraintFailed))
-      throw new ForbiddenError(
-        "The web push endpoint is the subscription of a different citizen",
-        { cause: error },
-      );
+    if (!isPrismaError(error, PrismaErrorCode.UniqueConstraintFailed))
+      throw error;
 
-    throw error;
+    const parallelId = await updateOwnSubscription(context, data);
+    if (parallelId) return parallelId;
+
+    throw new ForbiddenError(
+      "The web push endpoint is the subscription of a different citizen",
+      { cause: error },
+    );
   }
 };
 
@@ -90,25 +115,12 @@ export const subscribeWebPush = (
   withSpan(context, "subscribeWebPush", async () => {
     const citizenId = requireCitizen(actor).id;
 
-    const keys = {
+    const subscriptionId = await saveSubscription(context, {
+      citizenId,
+      endpoint: input.subscription.endpoint,
       p256dh: input.subscription.keys.p256dh,
       auth: input.subscription.keys.auth,
-    };
-
-    // The update changes only a subscription of the own citizen
-    const [updatedSubscription] =
-      await context.prisma.webPushSubscription.updateManyAndReturn({
-        where: { endpoint: input.subscription.endpoint, citizenId },
-        data: keys,
-        select: { id: true },
-      });
-    const subscriptionId =
-      updatedSubscription?.id ??
-      (await createSubscription(context, {
-        citizenId,
-        endpoint: input.subscription.endpoint,
-        ...keys,
-      }));
+    });
 
     await context.audit.create([
       {
