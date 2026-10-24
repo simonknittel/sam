@@ -4,6 +4,7 @@ import * as z from "zod";
 import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { ForbiddenError, NotFoundError } from "../errors.js";
+import { requireMcpAccess } from "../mcpAccess.js";
 import { idSchema } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
 
@@ -17,7 +18,8 @@ export const setOwnGrantAdminModeInputSchema = z.object({
  * mode gives the requests of the client all permissions, like admin mode in
  * the app. It applies only while the user is an admin.
  *
- * @throws ForbiddenError when the actor is not an admin
+ * @throws ForbiddenError when the actor is not an admin or cannot use the
+ * MCP server
  * @throws NotFoundError when the grant does not belong to the actor or is
  * revoked
  */
@@ -33,6 +35,7 @@ export const setOwnGrantAdminMode = (
       throw new ForbiddenError(
         "Only an admin can change the admin mode of a client",
       );
+    requireMcpAccess(actor);
 
     const grant = await context.prisma.oAuthGrant.findFirst({
       where: { id: input.grant_id, userId: actor.userId, revokedAt: null },

@@ -303,6 +303,33 @@ test.describe("the OAuth server and the MCP endpoint", () => {
     expect(refresh.error).toBe("invalid_grant");
   });
 
+  test("a connected client gets 403 and no new token when the user loses the clearance", async ({
+    prisma,
+    request,
+    authorizeMcpClient,
+  }) => {
+    const citizen = await createMcpCitizen(prisma, {
+      handle: "mcp-unbestaetigt",
+    });
+    const authorization = await authorizeMcpClient(citizen.user);
+
+    await prisma.user.update({
+      where: { id: citizen.user.id },
+      data: { emailVerified: null },
+    });
+
+    const call = await postMcpEndpoint(
+      request,
+      modernMcpRequest("tools/list"),
+      authorization.accessToken,
+    );
+    expect(call.status()).toBe(403);
+
+    const refresh = await authorization.refresh(authorization.refreshToken);
+    expect(refresh.status).toBe(400);
+    expect(refresh.error).toBe("invalid_grant");
+  });
+
   test("the consent page refuses an invalid client or redirect URI and links other errors back to the client", async ({
     page,
     prisma,

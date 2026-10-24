@@ -2,6 +2,7 @@ import { AuditEventType } from "@sam-monorepo/domain";
 import * as z from "zod";
 import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
+import { requireMcpAccess } from "../mcpAccess.js";
 import { withSpan } from "../withSpan.js";
 
 /** The names of the MCP tools are lowercase snake_case */
@@ -19,6 +20,8 @@ export const setToolEnabledInputSchema = z.object({
  * Enables or disables an MCP tool for the actor. A row disables the tool (see
  * the `McpToolSetting` model). The catalog of the tools is in the MCP
  * package, thus the caller makes sure that the tool exists.
+ *
+ * @throws ForbiddenError when the actor cannot use the MCP server
  */
 export const setToolEnabled = (
   context: ApplicationContext,
@@ -26,6 +29,8 @@ export const setToolEnabled = (
   input: z.infer<typeof setToolEnabledInputSchema>,
 ): Promise<void> =>
   withSpan(context, "setToolEnabled", async () => {
+    requireMcpAccess(actor);
+
     const { count } = input.enabled
       ? await context.prisma.mcpToolSetting.deleteMany({
           where: { userId: actor.userId, toolName: input.tool_name },

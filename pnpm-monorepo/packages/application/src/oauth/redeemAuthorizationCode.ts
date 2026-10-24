@@ -126,8 +126,9 @@ export const redeemAuthorizationCode = (
     if (grant.revokedAt || grant.user.bannedAt)
       throw invalidGrant("The grant is revoked");
 
-    // The user lost the permission after the consent
-    if (!canUseMcp(await createGrantActor(context, grant)))
+    // The user lost the clearance or the permission after the consent
+    const actor = await createGrantActor(context, grant);
+    if (!actor.hasClearance() || !canUseMcp(actor))
       throw invalidGrant("The user cannot use the MCP server");
 
     const refreshToken = createRefreshToken(context, grant.id);

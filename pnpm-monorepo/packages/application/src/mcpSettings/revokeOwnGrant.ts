@@ -13,7 +13,8 @@ export const revokeOwnGrantInputSchema = z.object({
 /**
  * Disconnects a client of the actor: revokes the grant, deletes its refresh
  * tokens and writes the audit event. The next MCP request with an access
- * token of the grant gets `401`.
+ * token of the grant gets `401`. No check of `mcp;use`: a user who lost the
+ * permission can still remove the access of a client.
  *
  * @throws NotFoundError when the grant does not belong to the actor or is
  * already revoked

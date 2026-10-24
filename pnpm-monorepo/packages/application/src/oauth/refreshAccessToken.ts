@@ -94,10 +94,12 @@ export const refreshAccessToken = (
       throw invalidGrant("The refresh token belongs to a different client");
 
     /**
-     * The user lost the permission after the consent. The token stays
-     * unused: a role can give the permission back.
+     * The user lost the clearance or the permission after the consent. The
+     * token stays unused: a role or the email confirmation can give the
+     * access back.
      */
-    if (!canUseMcp(await createGrantActor(context, grant)))
+    const actor = await createGrantActor(context, grant);
+    if (!actor.hasClearance() || !canUseMcp(actor))
       throw invalidGrant("The user cannot use the MCP server");
 
     if (input.resource !== undefined && !isMcpResource(context, input.resource))
