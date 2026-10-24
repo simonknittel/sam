@@ -89,6 +89,21 @@ test.describe("the manual notification write tool of the MCP server", () => {
         receiverRoleIds: [escort.id],
       },
     });
+
+    expect(
+      await callForContent(client, "list_manual_notifications", {
+        search: "Samstag",
+      }),
+    ).toMatchObject({
+      notifications: [
+        {
+          id: notification.id,
+          title: "Treffen am Samstag",
+          receiver_roles: [{ id: escort.id, name: "Geleitschutz" }],
+        },
+      ],
+      next_cursor: null,
+    });
   });
 
   test("send_manual_notification refuses no receivers and a hidden role, and is not available without manualNotification;manage", async ({
@@ -129,9 +144,9 @@ test.describe("the manual notification write tool of the MCP server", () => {
     const readerClient = await connectMcpClient(
       (await authorizeMcpClient(reader.user)).accessToken,
     );
-    expect(await readerClient.listToolNames()).not.toContain(
-      "send_manual_notification",
-    );
+    const readerToolNames = await readerClient.listToolNames();
+    expect(readerToolNames).not.toContain("send_manual_notification");
+    expect(readerToolNames).not.toContain("list_manual_notifications");
     await expect(
       readerClient.callTool("send_manual_notification", {
         title: "Ohne Berechtigung",
