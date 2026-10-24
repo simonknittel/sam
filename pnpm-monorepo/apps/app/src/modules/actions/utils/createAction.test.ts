@@ -1,4 +1,5 @@
 import { authenticate } from "@/modules/auth/server";
+import { requireConfirmedEmailForAction } from "@/modules/auth/utils/emailConfirmation";
 import { log } from "@/modules/logging";
 import { SpanStatusCode, trace } from "@opentelemetry/api";
 import {
@@ -9,7 +10,7 @@ import {
 import { notFound, redirect } from "next/navigation";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import * as z from "zod";
-import { createAuthenticatedAction } from "./createAction";
+import { ActionGate, createAuthenticatedAction } from "./createAction";
 
 vi.mock("@/modules/auth/server", () => ({
   authenticate: vi.fn(),
@@ -37,6 +38,7 @@ vi.mock("next-intl/server", async () => {
 const INTERNAL_SERVER_ERROR_TEXT =
   "Ein unerwarteter Fehler ist aufgetreten. Bitte probiere es später erneut. Wenn der Fehler weiterhin auftritt, wende dich an den Support.";
 const BAD_REQUEST_TEXT = "Ungültige Anfrage";
+const FORBIDDEN_TEXT = "Du bist nicht berechtigt diese Aktion auszuführen.";
 
 const spanExporter = new InMemorySpanExporter();
 
@@ -184,4 +186,100 @@ describe("createAuthenticatedAction", () => {
       SpanStatusCode.UNSET,
     );
   });
+});
+
+describe("the gates of createAuthenticatedAction", () => {
+  interface SessionState {
+    readonly isAdmin: boolean;
+    readonly hasConfirmedEmail: boolean;
+    readonly hasLogin: boolean;
+  }
+
+  const mockSession = ({
+    isAdmin,
+    hasConfirmedEmail,
+    hasLogin,
+  }: SessionState) => {
+    vi.mocked(authenticate).mockResolvedValue({
+      session: {
+        user: {
+          id: "clhaw95yi0000jr08ybuvy137",
+          role: isAdmin ? "ADMIN" : null,
+        },
+        assumedByAdminId: null,
+      },
+      authorize: (resource: string, operation: string) =>
+        Promise.resolve(
+          hasLogin && resource === "login" && operation === "manage",
+        ),
+    } as unknown as Awaited<ReturnType<typeof authenticate>>);
+
+    vi.mocked(requireConfirmedEmailForAction).mockImplementation(() =>
+      hasConfirmedEmail
+        ? Promise.resolve()
+        : Promise.reject(new Error("Forbidden")),
+    );
+  };
+
+  const CLEARED = { isAdmin: false, hasConfirmedEmail: true, hasLogin: true };
+  const UNCONFIRMED = { ...CLEARED, hasConfirmedEmail: false };
+  const WITHOUT_LOGIN = { ...CLEARED, hasLogin: false };
+  const ADMIN_WITHOUT_CLEARANCE = {
+    isAdmin: true,
+    hasConfirmedEmail: false,
+    hasLogin: false,
+  };
+
+  test.each([
+    { gate: ActionGate.Clearance, session: CLEARED, runs: true },
+    { gate: ActionGate.Clearance, session: UNCONFIRMED, runs: false },
+    { gate: ActionGate.Clearance, session: WITHOUT_LOGIN, runs: false },
+    { gate: ActionGate.Admin, session: CLEARED, runs: false },
+    { gate: ActionGate.Admin, session: ADMIN_WITHOUT_CLEARANCE, runs: true },
+    { gate: ActionGate.None, session: UNCONFIRMED, runs: true },
+    { gate: ActionGate.None, session: WITHOUT_LOGIN, runs: true },
+  ])(
+    "the $gate gate runs the action: $runs ($session)",
+    async ({ gate, session, runs }) => {
+      mockSession(session);
+      const implementation = vi.fn(() => Promise.resolve({ success: "OK" }));
+      const action = createAuthenticatedAction(
+        "gatedAction",
+        schema,
+        implementation,
+        { gate },
+      );
+      const formData = createFormData({ name: "Aufgabe" });
+
+      const response = await action(formData);
+
+      expect(implementation).toHaveBeenCalledTimes(runs ? 1 : 0);
+      expect(response).toEqual(
+        runs
+          ? { success: "OK" }
+          : { error: FORBIDDEN_TEXT, requestPayload: formData },
+      );
+    },
+  );
+
+  test.each([ActionGate.Clearance, ActionGate.Admin, ActionGate.None])(
+    "the %s gate refuses a request without a session",
+    async (gate) => {
+      vi.mocked(authenticate).mockResolvedValue(false);
+      const implementation = vi.fn();
+      const action = createAuthenticatedAction(
+        "gatedAction",
+        schema,
+        implementation,
+        { gate },
+      );
+      const formData = createFormData({ name: "Aufgabe" });
+
+      expect(await action(formData)).toEqual({
+        error: FORBIDDEN_TEXT,
+        requestPayload: formData,
+      });
+      expect(implementation).not.toHaveBeenCalled();
+    },
+  );
 });
