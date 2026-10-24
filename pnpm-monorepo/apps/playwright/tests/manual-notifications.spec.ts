@@ -319,7 +319,14 @@ test("the notification center shows a manual notification with its title and tex
   await expect(
     popover.getByText("Wir treffen uns um 20 Uhr in Port Tressler."),
   ).toBeVisible();
+  /**
+   * Scoped to the item: the hidden title of the popover has the same text as
+   * the app.
+   */
   await expect(
-    popover.getByText("Manuelle Benachrichtigungen", { exact: true }),
+    popover
+      .getByRole("listitem")
+      .filter({ hasText: "Treffen am Samstag" })
+      .getByText("Benachrichtigungen", { exact: true }),
   ).toBeVisible();
 });

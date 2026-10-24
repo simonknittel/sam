@@ -56,7 +56,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     isTracked: false,
     body: () => (
       <p>
-        Mit der neuen App &bdquo;Manuelle Benachrichtigungen&ldquo; sendest du
+        Mit der neuen App &bdquo;Benachrichtigungen&ldquo; sendest du
         Benachrichtigungen mit eigenem Titel und Text an einzelne Citizens oder
         an alle Mitglieder einer Rolle. Die Empfänger bekommen sie wie jede
         andere Benachrichtigung im SAM und als Web Push.

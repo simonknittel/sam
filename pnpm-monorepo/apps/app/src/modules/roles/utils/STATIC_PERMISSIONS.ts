@@ -553,7 +553,7 @@ export const STATIC_PERMISSIONS = [
   },
   {
     section: "Sonstiges",
-    title: "Manuelle Benachrichtigungen",
+    title: "Benachrichtigungen",
     string: "manualNotification;manage",
   },
 ];

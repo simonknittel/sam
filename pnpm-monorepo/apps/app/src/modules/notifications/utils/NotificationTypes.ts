@@ -91,13 +91,13 @@ export const NOTIFICATIONS_APPS: NotificationApp[] = [
   },
 
   {
-    appTitle: "Manuelle Benachrichtigungen",
+    appTitle: "Benachrichtigungen",
     notificationTypes: [
       {
         id: NotificationSettingType.ManualNotification,
         title: "Neue Benachrichtigung",
         description: "Von einem Mitglied manuell gesendet",
-        category: "Manuelle Benachrichtigungen",
+        category: "Benachrichtigungen",
       },
     ],
   },

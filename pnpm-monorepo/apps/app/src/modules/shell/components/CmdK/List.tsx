@@ -250,7 +250,7 @@ export const List = () => {
     },
     {
       id: "manual-notifications",
-      label: "Manuelle Benachrichtigungen",
+      label: "Benachrichtigungen",
       keywords: ["Benachrichtigungen", "Notifications"],
       icon: <FaBullhorn />,
       type: MenuItemType.Link,

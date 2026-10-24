@@ -6,8 +6,8 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: {
-    template: "%s - Manuelle Benachrichtigungen",
-    default: "Manuelle Benachrichtigungen",
+    template: "%s - Benachrichtigungen",
+    default: "Benachrichtigungen",
   },
 };
 
@@ -23,7 +23,7 @@ export default async function Layout({
 
   return (
     <DefaultLayout
-      title="Manuelle Benachrichtigungen"
+      title="Benachrichtigungen"
       cta={showCta ? <CreateManualNotificationButton /> : undefined}
       slug="manual-notifications"
     >
