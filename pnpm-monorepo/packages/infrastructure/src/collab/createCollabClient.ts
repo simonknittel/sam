@@ -11,12 +11,16 @@ import type {
 import { SignJWT, type JWTPayload } from "jose";
 
 /**
- * The lifetime of each token. The editor sends a new session token before
- * the old one expires (see `WikiCollabEditor` of the app), and the collab
- * server closes a connection without a valid session token. A replace token
- * and a disconnect token are used at once.
+ * The lifetime of a session token. The editor sends a new session token
+ * after half of this time (see `WikiCollabEditor` of the app), and the
+ * collab server closes a connection without a valid session token. Thus a
+ * user who loses the access keeps an open editor for at most this time plus
+ * the grace period of the collab server.
  */
-const TOKEN_LIFETIME = "60s";
+const SESSION_TOKEN_LIFETIME = "120s";
+
+/** The lifetime of a replace token and of a disconnect token: used at once */
+const REQUEST_TOKEN_LIFETIME = "60s";
 
 const TOKEN_ALGORITHM = "HS256";
 
@@ -48,11 +52,15 @@ export const createCollabClient = ({
 }: CollabClientOptions): NonNullable<ApplicationContext["collab"]> => {
   const key = new TextEncoder().encode(jwtSecret);
 
-  const signToken = (claims: JWTPayload, subject?: string) => {
+  const signToken = (
+    claims: JWTPayload,
+    lifetime: string,
+    subject?: string,
+  ) => {
     const token = new SignJWT(claims)
       .setProtectedHeader({ alg: TOKEN_ALGORITHM })
       .setIssuedAt()
-      .setExpirationTime(TOKEN_LIFETIME);
+      .setExpirationTime(lifetime);
     if (subject !== undefined) token.setSubject(subject);
 
     return token.sign(key);
@@ -105,11 +113,14 @@ export const createCollabClient = ({
       content,
       updatedByEntityId,
     }: WikiPageContentReplacement) => {
-      const token = await signToken({
-        scope: "replace",
-        pageId,
-        entityId: updatedByEntityId,
-      } satisfies WikiCollabReplaceTokenPayload);
+      const token = await signToken(
+        {
+          scope: "replace",
+          pageId,
+          entityId: updatedByEntityId,
+        } satisfies WikiCollabReplaceTokenPayload,
+        REQUEST_TOKEN_LIFETIME,
+      );
 
       await post(
         "/replace",
@@ -132,6 +143,7 @@ export const createCollabClient = ({
           entityId,
           canEdit,
         } satisfies Omit<WikiCollabSessionTokenPayload, "sub">,
+        SESSION_TOKEN_LIFETIME,
         userId,
       ),
 
@@ -141,6 +153,7 @@ export const createCollabClient = ({
           WikiCollabDisconnectTokenPayload,
           "sub"
         >,
+        REQUEST_TOKEN_LIFETIME,
         userId,
       );
 

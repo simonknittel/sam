@@ -32,14 +32,14 @@ export async function GET(
     const { pageId } = await context.params;
     const input = createWikiCollabTokenInputSchema.parse({ page_id: pageId });
 
-    const { token } = await createWikiCollabToken(
+    const { token, canEdit } = await createWikiCollabToken(
       getApplicationContext(),
       await toActor(authentication.session),
       input,
     );
 
     return NextResponse.json(
-      { token },
+      { token, canEdit },
       { headers: { "cache-control": "no-store" } },
     );
   } catch (error) {

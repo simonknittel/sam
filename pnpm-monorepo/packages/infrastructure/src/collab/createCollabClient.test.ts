@@ -10,8 +10,10 @@ import { createCollabClient } from "./createCollabClient.js";
 const JWT_SECRET = "test-collab-secret";
 const REPLACE_TIMEOUT_MILLISECONDS = 15_000;
 const DISCONNECT_TIMEOUT_MILLISECONDS = 5_000;
-/** The lifetime of each token in seconds */
-const TOKEN_LIFETIME_SECONDS = 60;
+/** The lifetime of a replace token and of a disconnect token in seconds */
+const REQUEST_TOKEN_LIFETIME_SECONDS = 60;
+/** The lifetime of a session token in seconds */
+const SESSION_TOKEN_LIFETIME_SECONDS = 120;
 
 const fetchMock = vi.fn<typeof fetch>();
 
@@ -87,7 +89,7 @@ describe("replaceContent", () => {
     });
     expect(parseWikiCollabSessionTokenPayload(payload)).toBeNull();
     expect((payload.exp ?? 0) - (payload.iat ?? 0)).toBe(
-      TOKEN_LIFETIME_SECONDS,
+      REQUEST_TOKEN_LIFETIME_SECONDS,
     );
   });
 
@@ -129,7 +131,7 @@ describe("createSessionToken", () => {
     });
     expect(parseWikiCollabReplaceTokenPayload(payload)).toBeNull();
     expect((payload.exp ?? 0) - (payload.iat ?? 0)).toBe(
-      TOKEN_LIFETIME_SECONDS,
+      SESSION_TOKEN_LIFETIME_SECONDS,
     );
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -152,7 +154,7 @@ describe("disconnectUser", () => {
     });
     expect(parseWikiCollabSessionTokenPayload(payload)).toBeNull();
     expect((payload.exp ?? 0) - (payload.iat ?? 0)).toBe(
-      TOKEN_LIFETIME_SECONDS,
+      REQUEST_TOKEN_LIFETIME_SECONDS,
     );
   });
 });

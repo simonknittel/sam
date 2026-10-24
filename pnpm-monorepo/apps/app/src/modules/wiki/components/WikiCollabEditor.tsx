@@ -81,24 +81,44 @@ const noop = () => undefined;
 
 /**
  * The interval of the token refresh of an open editor. It is half of the
- * lifetime of a session token (60 seconds, see `createCollabClient` of the
- * infrastructure package), thus one refresh can come late (for example in a
- * hidden tab). The collab server closes a connection whose token expired
- * without a refresh.
+ * lifetime of a session token (120 seconds, see `createCollabClient` of the
+ * infrastructure package), thus one refresh can fail or come late (for
+ * example in a hidden tab) without an effect. The collab server closes a
+ * connection whose token expired without a refresh.
  */
-const TOKEN_REFRESH_INTERVAL_MILLISECONDS = 30_000;
+const TOKEN_REFRESH_INTERVAL_MILLISECONDS = 60_000;
 
 const TOKEN_REQUEST_TIMEOUT_MILLISECONDS = 5_000;
 
-const collabTokenResponseSchema = z.object({ token: z.string() });
+const collabTokenResponseSchema = z.object({
+  token: z.string(),
+  canEdit: z.boolean(),
+});
+
+/** A token request that the collab token route did not answer with a token */
+class CollabTokenRequestError extends Error {
+  constructor(readonly status: number) {
+    super(`The token request failed with status ${status}`);
+  }
+}
+
+/**
+ * Whether the user cannot get a token anymore: no session, no clearance, no
+ * read access, or the page is gone. Other failures (a timeout, a deploy) can
+ * pass.
+ */
+const isAccessLost = (error: unknown) =>
+  error instanceof CollabTokenRequestError &&
+  [401, 403, 404].includes(error.status);
 
 /**
  * A token of the collab token route (`/api/wiki/[pageId]/collab-token`). A
  * route handler and not a server action: an editor that is open during a
- * deploy continues to get tokens. Calls `onPageGone` when the page does not
- * exist for the user anymore.
+ * deploy continues to get tokens.
+ *
+ * @throws CollabTokenRequestError when the route does not give a token
  */
-const fetchCollabToken = async (pageId: string, onPageGone: () => void) => {
+const fetchCollabToken = async (pageId: string) => {
   const response = await fetch(
     new URL(
       `/api/wiki/${encodeURIComponent(pageId)}/collab-token`,
@@ -109,12 +129,9 @@ const fetchCollabToken = async (pageId: string, onPageGone: () => void) => {
       signal: AbortSignal.timeout(TOKEN_REQUEST_TIMEOUT_MILLISECONDS),
     },
   );
+  if (!response.ok) throw new CollabTokenRequestError(response.status);
 
-  if (response.status === 404) onPageGone();
-  if (!response.ok)
-    throw new Error(`The token request failed with status ${response.status}`);
-
-  return collabTokenResponseSchema.parse(await response.json()).token;
+  return collabTokenResponseSchema.parse(await response.json());
 };
 
 /**
@@ -209,32 +226,75 @@ export const WikiCollabEditor = ({
    * for every discarded attempt.
    */
   useEffect(() => {
+    let refreshedToken: string | null = null;
+    let isPageRefreshRequested = false;
+
+    /**
+     * The page renders the editor again after a refresh: with the new edit
+     * permission, without a deleted page, or without the lost access. One
+     * refresh for each provider is sufficient.
+     */
+    const refreshPage = () => {
+      if (isPageRefreshRequested) return;
+      isPageRefreshRequested = true;
+      router.refresh();
+    };
+
+    const requestToken = async () => {
+      try {
+        const response = await fetchCollabToken(pageId);
+        if (response.canEdit !== canEdit) refreshPage();
+        return response.token;
+      } catch (error) {
+        if (isAccessLost(error)) refreshPage();
+        throw error;
+      }
+    };
+
     const createdProvider = new HocuspocusProvider({
       url: collabUrl,
       name: pageId,
-      // The page shows the deletion or the lost access after a refresh
-      token: () => fetchCollabToken(pageId, () => router.refresh()),
+      token: async () => {
+        if (refreshedToken === null) return requestToken();
+
+        const token = refreshedToken;
+        refreshedToken = null;
+        return token;
+      },
     });
     // eslint-disable-next-line react-hooks/set-state-in-effect, react-you-might-not-need-an-effect/no-external-store-subscription, react-you-might-not-need-an-effect/no-adjust-state-on-prop-change -- The provider is an external resource that must be instantiated post-commit (see above); this effect is its only owner.
     setProvider(createdProvider);
 
     /**
-     * The collab server applies the edit permission of each new token. A
-     * failed mint (for example after the user lost the access to the page)
-     * gives the "authenticationFailed" event like a rejected token. The
-     * provider is then not authenticated and sends no further token, thus
-     * the collab server closes the connection when the last token expires,
-     * and the reconnect fails.
+     * Sends a new token to the collab server, which applies its edit
+     * permission. A failure without a lost access waits for the next
+     * interval: the current token is still valid. After a lost access, the
+     * provider asks for a token again, which fails: the provider then shows
+     * the authentication failure and sends no further token, the collab
+     * server closes the connection when the last token expires, and the
+     * reconnect fails.
      */
+    const refreshToken = async () => {
+      if (!createdProvider.isAuthenticated) return;
+
+      try {
+        refreshedToken = await requestToken();
+      } catch (error) {
+        if (!isAccessLost(error)) return;
+      }
+
+      await createdProvider.sendToken();
+    };
+
     const tokenRefreshInterval = setInterval(() => {
-      if (createdProvider.isAuthenticated) void createdProvider.sendToken();
+      void refreshToken();
     }, TOKEN_REFRESH_INTERVAL_MILLISECONDS);
 
     return () => {
       clearInterval(tokenRefreshInterval);
       createdProvider.destroy();
     };
-  }, [collabUrl, pageId, router]);
+  }, [canEdit, collabUrl, pageId, router]);
 
   if (!provider)
     return (
