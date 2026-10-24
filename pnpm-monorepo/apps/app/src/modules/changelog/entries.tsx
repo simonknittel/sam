@@ -54,7 +54,6 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     title: "MCP: Eigene App und Tools für jeden Client",
     tags: ["Neu", "MCP"],
     isTracked: false,
-    requiresAuth: { resource: "mcp", action: "use" },
     body: () => (
       <>
         <p>
