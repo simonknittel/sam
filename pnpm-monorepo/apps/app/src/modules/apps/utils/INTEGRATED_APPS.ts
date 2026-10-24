@@ -137,6 +137,14 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
     permissionStrings: ["logAnalyzer;read"],
   },
   {
+    name: "Manuelle Benachrichtigungen",
+    slug: "manual-notifications",
+    href: "/app/manual-notifications",
+    description: "Benachrichtigungen an Citizens oder Rollen senden",
+    permissionStrings: ["manualNotification;manage"],
+    tags: ["System"],
+  },
+  {
     name: "SILC",
     slug: "silc",
     href: "/app/silc",

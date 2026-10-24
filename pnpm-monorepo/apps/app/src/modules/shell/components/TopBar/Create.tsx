@@ -59,9 +59,13 @@ export const Create = ({ className }: Props) => {
   );
   /** Same gate as creating an event: a template is a blueprint of one */
   const showCreateEventTemplate = showCreateEvent;
+  const showCreateManualNotification = Boolean(
+    authentication && authentication.authorize("manualNotification", "manage"),
+  );
 
   if (
     !showCreateFlow &&
+    !showCreateManualNotification &&
     !showCreateCitizen &&
     !showCreateDistributionCycle &&
     !showCreateOrganization &&
@@ -106,6 +110,7 @@ export const Create = ({ className }: Props) => {
           showCreateSilcTransaction={showCreateSilcTransaction}
           showCreateWikiPage={showCreateWikiPage}
           showCreateFlow={showCreateFlow}
+          showCreateManualNotification={showCreateManualNotification}
         />
       </PopoverBaseUI>
     </div>
@@ -124,6 +129,7 @@ interface PopoverChildrenProps {
   readonly showCreateSilcTransaction: boolean;
   readonly showCreateWikiPage: boolean;
   readonly showCreateFlow: boolean;
+  readonly showCreateManualNotification: boolean;
 }
 
 const PopoverChildren = ({
@@ -138,6 +144,7 @@ const PopoverChildren = ({
   showCreateSilcTransaction,
   showCreateWikiPage,
   showCreateFlow,
+  showCreateManualNotification,
 }: PopoverChildrenProps) => {
   const { closePopover } = usePopoverBaseUI();
   const { openCreateModal } = useCreateContext();
@@ -222,6 +229,12 @@ const PopoverChildren = ({
     });
   if (showCreateFlow)
     items.push({ label: "Karrierebaum", type: "button", modalId: "flow" });
+  if (showCreateManualNotification)
+    items.push({
+      label: "Benachrichtigung",
+      type: "button",
+      modalId: "manualNotification",
+    });
 
   items = items.toSorted((a, b) => a.label.localeCompare(b.label));
 

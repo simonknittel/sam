@@ -551,4 +551,9 @@ export const STATIC_PERMISSIONS = [
     title: "Uploads verwalten",
     string: "upload;manage",
   },
+  {
+    section: "Sonstiges",
+    title: "Manuelle Benachrichtigungen",
+    string: "manualNotification;manage",
+  },
 ];

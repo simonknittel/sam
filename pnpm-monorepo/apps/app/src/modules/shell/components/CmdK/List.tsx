@@ -8,6 +8,7 @@ import type { ReactElement } from "react";
 import { AiFillAppstore } from "react-icons/ai";
 import {
   FaBookOpen,
+  FaBullhorn,
   FaCamera,
   FaChartLine,
   FaClock,
@@ -86,6 +87,7 @@ export const List = () => {
     eventRead,
     globalStatisticsRead,
     systemLogRead,
+    manualNotificationManage,
   ] = [
     authentication.authorize("citizen", "read"),
     authentication.authorize("organization", "read"),
@@ -101,6 +103,7 @@ export const List = () => {
     authentication.authorize("event", "read"),
     authentication.authorize("globalStatistics", "read"),
     authentication.authorize("systemLog", "read"),
+    authentication.authorize("manualNotification", "manage"),
   ];
   const careerRead = canReadCareer ?? false;
   const fleetRead = orgFleetRead || shipManage;
@@ -120,6 +123,7 @@ export const List = () => {
     penaltyEntryCreate,
     taskRead,
     systemLogRead,
+    manualNotificationManage,
   };
 
   const menuItems: MenuItem[] = [
@@ -243,6 +247,15 @@ export const List = () => {
       type: MenuItemType.Link,
       href: "/app/career",
       authKey: "careerRead",
+    },
+    {
+      id: "manual-notifications",
+      label: "Manuelle Benachrichtigungen",
+      keywords: ["Benachrichtigungen", "Notifications"],
+      icon: <FaBullhorn />,
+      type: MenuItemType.Link,
+      href: "/app/manual-notifications",
+      authKey: "manualNotificationManage",
     },
     {
       id: "log-analyzer",

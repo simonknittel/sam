@@ -109,6 +109,18 @@ const OtherTab = ({ roles }: Readonly<Props>) => {
       </div>
 
       <div className="flex items-center justify-between py-2">
+        <div>
+          <h4 className="font-bold">Manuelle Benachrichtigungen</h4>
+          <p className="text-sm">
+            Benachrichtigungen mit eigenem Titel und Text an Citizens oder
+            Rollen senden und die gesendeten Benachrichtigungen einsehen.
+          </p>
+        </div>
+
+        <YesNoCheckbox {...register("manualNotification;manage")} />
+      </div>
+
+      <div className="flex items-center justify-between py-2">
         <div className="flex items-center gap-2">
           <h4 className="font-bold">Karrierebäume verwalten</h4>
 

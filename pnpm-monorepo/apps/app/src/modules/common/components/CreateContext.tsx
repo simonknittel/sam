@@ -72,6 +72,12 @@ const CreateEventTemplateForm = dynamic(() =>
   ),
 );
 
+const CreateManualNotificationForm = dynamic(() =>
+  import("@/modules/manual-notifications/components/CreateManualNotification/CreateManualNotificationForm").then(
+    (mod) => mod.CreateManualNotificationForm,
+  ),
+);
+
 export const createForms = {
   citizen: {
     formComponent: CreateCitizenForm,
@@ -127,6 +133,11 @@ export const createForms = {
     formComponent: CreateEventTemplateForm,
     modalHeading: "Neue Event-Vorlage",
     modalWidth: "w-120",
+  },
+  manualNotification: {
+    formComponent: CreateManualNotificationForm,
+    modalHeading: "Neue Benachrichtigung",
+    modalWidth: "w-3xl",
   },
 };
 
