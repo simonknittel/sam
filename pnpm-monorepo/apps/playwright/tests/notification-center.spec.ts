@@ -499,7 +499,7 @@ test("long lists page with Mehr laden", async ({ page, prisma, signIn }) => {
   ).not.toBeAttached();
 });
 
-test("a notification leads to the entity it is about", async ({
+test("a notification about a new event leads to the event and marks it as read", async ({
   page,
   prisma,
   signIn,
@@ -508,12 +508,13 @@ test("a notification leads to the entity it is about", async ({
     handle: "durchklicker",
     permissionStrings: ["event;read"],
   });
+  const creator = await createCitizen(prisma, { handle: "zielsprung-chef" });
   const event = await createAppEvent(prisma, {
     name: "Operation Zielsprung",
-    createdById: citizen.entity.id,
+    createdById: creator.entity.id,
     ...futureEvent(),
   });
-  await createOnSiteNotification(prisma, {
+  const notification = await createOnSiteNotification(prisma, {
     citizenId: citizen.entity.id,
     notificationType: "event_created",
     payload: { eventId: event.id, eventName: event.name },
@@ -523,6 +524,10 @@ test("a notification leads to the entity it is about", async ({
   await page.goto("/app");
   await openNotificationCenter(page);
 
+  /**
+   * The event is new, thus the read refreshes the page during the
+   * navigation. The navigation must win.
+   */
   await popover(page).getByRole("link", { name: "Neues Event" }).click();
 
   await expect(page).toHaveURL(`/app/events/${event.id}`);
@@ -531,6 +536,20 @@ test("a notification leads to the entity it is about", async ({
   ).toBeVisible();
   /** Following a notification closes the popover it came from */
   await expect(popover(page)).toHaveCount(0);
+  await expect
+    .poll(async () => ({
+      notificationRead:
+        (
+          await prisma.onSiteNotification.findUniqueOrThrow({
+            where: { id: notification.id },
+          })
+        ).readAt !== null,
+      markers: await prisma.readMarker.count({
+        where: { eventId: event.id, citizenId: citizen.entity.id },
+      }),
+    }))
+    .toEqual({ notificationRead: true, markers: 1 });
+  await expect(page).toHaveURL(`/app/events/${event.id}`);
 });
 
 test.describe("mobile", () => {
