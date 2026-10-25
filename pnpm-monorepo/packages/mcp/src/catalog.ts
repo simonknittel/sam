@@ -1,3 +1,4 @@
+import type { Actor } from "@sam-monorepo/application";
 import {
   ToolKind,
   type CatalogTool,
@@ -46,7 +47,7 @@ export const toToolCatalogEntry = (tool: CatalogTool): ToolCatalogEntry => ({
   kind: tool.annotations.readOnlyHint ? ToolKind.Read : ToolKind.Write,
 });
 
-/** All tools in the order of `tools/list`, for example for the MCP app */
+/** All tools in the order of `tools/list` */
 export const listToolCatalog = (): ToolCatalogEntry[] =>
   TOOL_CATALOG.map(toToolCatalogEntry);
 
@@ -57,9 +58,14 @@ export interface ToolCatalogGroup {
   readonly tools: ToolCatalogEntry[];
 }
 
-/** The groups of the catalog with their tools, in the order of `tools/list` */
-export const listToolCatalogGroups = (): ToolCatalogGroup[] => {
-  const catalog = listToolCatalog();
+/**
+ * The groups of the catalog with the tools that are visible for the actor, in
+ * the order of `tools/list`. The MCP app and the consent page show them.
+ */
+export const listToolCatalogGroups = (actor: Actor): ToolCatalogGroup[] => {
+  const catalog = TOOL_CATALOG.filter((tool) => tool.isVisible(actor)).map(
+    toToolCatalogEntry,
+  );
 
   return TOOL_GROUP_ORDER.map((group) => ({
     group,
