@@ -18,6 +18,7 @@ const CHART_TITLES = [
   "Rollen",
   "Events",
   "SILC",
+  "MCP-Nutzung",
 ];
 
 /**
@@ -48,7 +49,7 @@ const countPaintedPixels = (page: Page, title: string) =>
 /** Axis lines alone already paint far more than this. */
 const MIN_PAINTED_PIXELS = 1_000;
 
-test("all nine statistics charts paint their canvases", async ({
+test("all ten statistics charts paint their canvases", async ({
   page,
   prisma,
   signIn,
@@ -59,10 +60,10 @@ test("all nine statistics charts paint their canvases", async ({
   });
 
   /**
-   * The snapshot charts (Flotte gesamt, Flotte, Rollen, Logins) only have
-   * data for days with rows. The chart axis ends yesterday. A `@db.Date`
-   * column keeps the UTC date of the value, which is yesterday in UTC and
-   * yesterday or earlier in Europe/Berlin.
+   * The snapshot charts (Flotte gesamt, Flotte, Rollen, Logins,
+   * MCP-Nutzung) only have data for days with rows. The chart axis ends
+   * yesterday. A `@db.Date` column keeps the UTC date of the value, which is
+   * yesterday in UTC and yesterday or earlier in Europe/Berlin.
    */
   const snapshotDay = new Date(Date.now() - ONE_DAY_MS);
   const { variant } = await createVariant(prisma, {
@@ -79,6 +80,9 @@ test("all nine statistics charts paint their canvases", async ({
   });
   await prisma.dailyLoginCount.create({
     data: { date: snapshotDay, count: 5 },
+  });
+  await prisma.dailyMcpUsageCount.create({
+    data: { day: snapshotDay, count: 4 },
   });
 
   await signIn(viewer.user);
