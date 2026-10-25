@@ -253,7 +253,50 @@ export enum AuditEventType {
   OAUTH_GRANT_CREATED_V2 = "OAUTH_GRANT_CREATED_V2",
   OAUTH_GRANT_RENAMED = "OAUTH_GRANT_RENAMED",
   MCP_TOOL_SETTING_UPDATED_V2 = "MCP_TOOL_SETTING_UPDATED_V2",
+  // The read accesses, see `READ_AUDIT_EVENT_TYPES`
+  CURRENT_USER_READ = "CURRENT_USER_READ",
+  CITIZEN_READ = "CITIZEN_READ",
+  ORGANIZATION_READ = "ORGANIZATION_READ",
+  CITIZEN_NOTES_LISTED = "CITIZEN_NOTES_LISTED",
+  CITIZENS_LISTED = "CITIZENS_LISTED",
+  CITIZENS_AND_ORGANIZATIONS_SEARCHED = "CITIZENS_AND_ORGANIZATIONS_SEARCHED",
+  ROLE_READ = "ROLE_READ",
+  ROLES_LISTED = "ROLES_LISTED",
+  PERMISSION_CATALOG_READ = "PERMISSION_CATALOG_READ",
+  PENALTY_ENTRIES_LISTED = "PENALTY_ENTRIES_LISTED",
+  OWN_SHIPS_LISTED = "OWN_SHIPS_LISTED",
+  ORGANIZATION_FLEET_LISTED = "ORGANIZATION_FLEET_LISTED",
+  SHIP_VARIANTS_SEARCHED = "SHIP_VARIANTS_SEARCHED",
+  WIKI_PAGE_READ = "WIKI_PAGE_READ",
+  WIKI_PAGES_LISTED = "WIKI_PAGES_LISTED",
+  WIKI_SEARCHED = "WIKI_SEARCHED",
+  EVENT_READ = "EVENT_READ",
+  EVENTS_LISTED = "EVENTS_LISTED",
+  EVENT_LINEUP_READ = "EVENT_LINEUP_READ",
+  TASK_READ = "TASK_READ",
+  TASKS_LISTED = "TASKS_LISTED",
+  MANUAL_NOTIFICATIONS_LISTED = "MANUAL_NOTIFICATIONS_LISTED",
+  CHANGELOG_ENTRIES_LISTED = "CHANGELOG_ENTRIES_LISTED",
+  AUDIT_EVENTS_LISTED = "AUDIT_EVENTS_LISTED",
 }
+
+/** A type alias for the same reason as `WikiPageAuditScope` */
+type AuditJsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | AuditJsonValue[]
+  | { [key: string]: AuditJsonValue };
+
+/**
+ * The payload of all read accesses. `arguments` holds the query parameters
+ * after the validation, with the default values. The result of the read stays
+ * out of the log.
+ */
+type ReadAuditEventData = {
+  arguments: { [key: string]: AuditJsonValue };
+};
 
 /**
  * Wiki page audit payloads carry the owning event's id so event wiki rows
@@ -1733,6 +1776,31 @@ export interface AuditEventDataByType {
     toolName: string;
     enabled: boolean;
   };
+
+  [AuditEventType.CURRENT_USER_READ]: ReadAuditEventData;
+  [AuditEventType.CITIZEN_READ]: ReadAuditEventData;
+  [AuditEventType.ORGANIZATION_READ]: ReadAuditEventData;
+  [AuditEventType.CITIZEN_NOTES_LISTED]: ReadAuditEventData;
+  [AuditEventType.CITIZENS_LISTED]: ReadAuditEventData;
+  [AuditEventType.CITIZENS_AND_ORGANIZATIONS_SEARCHED]: ReadAuditEventData;
+  [AuditEventType.ROLE_READ]: ReadAuditEventData;
+  [AuditEventType.ROLES_LISTED]: ReadAuditEventData;
+  [AuditEventType.PERMISSION_CATALOG_READ]: ReadAuditEventData;
+  [AuditEventType.PENALTY_ENTRIES_LISTED]: ReadAuditEventData;
+  [AuditEventType.OWN_SHIPS_LISTED]: ReadAuditEventData;
+  [AuditEventType.ORGANIZATION_FLEET_LISTED]: ReadAuditEventData;
+  [AuditEventType.SHIP_VARIANTS_SEARCHED]: ReadAuditEventData;
+  [AuditEventType.WIKI_PAGE_READ]: ReadAuditEventData;
+  [AuditEventType.WIKI_PAGES_LISTED]: ReadAuditEventData;
+  [AuditEventType.WIKI_SEARCHED]: ReadAuditEventData;
+  [AuditEventType.EVENT_READ]: ReadAuditEventData;
+  [AuditEventType.EVENTS_LISTED]: ReadAuditEventData;
+  [AuditEventType.EVENT_LINEUP_READ]: ReadAuditEventData;
+  [AuditEventType.TASK_READ]: ReadAuditEventData;
+  [AuditEventType.TASKS_LISTED]: ReadAuditEventData;
+  [AuditEventType.MANUAL_NOTIFICATIONS_LISTED]: ReadAuditEventData;
+  [AuditEventType.CHANGELOG_ENTRIES_LISTED]: ReadAuditEventData;
+  [AuditEventType.AUDIT_EVENTS_LISTED]: ReadAuditEventData;
 }
 
 /**

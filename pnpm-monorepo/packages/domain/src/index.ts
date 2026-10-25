@@ -237,6 +237,10 @@ export {
   PayoutState,
   getPayoutState,
 } from "./profitDistribution/payoutState.js";
+export {
+  READ_AUDIT_EVENT_TYPES,
+  type ReadAuditEventType,
+} from "./readAuditEventTypes.js";
 export { ReadMarkerSubject } from "./readMarkers/ReadMarkerSubject.js";
 export {
   ROLE_DESCRIPTION_MAXIMUM_LENGTH,
