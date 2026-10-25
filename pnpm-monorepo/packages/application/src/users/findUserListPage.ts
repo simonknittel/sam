@@ -19,6 +19,14 @@ export enum UserBanStatus {
   Active = "active",
 }
 
+/** The two-factor authentication of the last Discord login */
+export enum UserTwoFactorStatus {
+  All = "all",
+  Enabled = "enabled",
+  Disabled = "disabled",
+  Unknown = "unknown",
+}
+
 /**
  * Longer than any handle. The search comes from the URL, thus the host cuts
  * it to this length.
@@ -59,6 +67,7 @@ type UserListRow = Prisma.UserGetPayload<{ select: typeof USER_LIST_SELECT }>;
 export interface UserListInput {
   readonly sort: UserSort;
   readonly banStatus: UserBanStatus;
+  readonly twoFactorStatus: UserTwoFactorStatus;
   /** At most `USER_LIST_HANDLE_QUERY_MAXIMUM_LENGTH` characters */
   readonly handleQuery: string | null;
   /** The `nextCursor` or the `prevCursor` of a page */
@@ -126,6 +135,29 @@ const getBanStatusWhere = (banStatus: UserBanStatus): Prisma.UserWhereInput => {
   }
 };
 
+const getTwoFactorStatusWhere = (
+  twoFactorStatus: UserTwoFactorStatus,
+): Prisma.UserWhereInput => {
+  switch (twoFactorStatus) {
+    case UserTwoFactorStatus.All:
+      return {};
+
+    case UserTwoFactorStatus.Enabled:
+      return { discordTwoFactorEnabled: true };
+
+    case UserTwoFactorStatus.Disabled:
+      return { discordTwoFactorEnabled: false };
+
+    case UserTwoFactorStatus.Unknown:
+      return { discordTwoFactorEnabled: null };
+
+    default:
+      throw new Error(
+        `Unknown two-factor status: ${twoFactorStatus satisfies never}`,
+      );
+  }
+};
+
 /** The handle belongs to the citizen of the user */
 const getHandleWhere = (handleQuery: string): Prisma.UserWhereInput => ({
   citizen: {
@@ -155,7 +187,7 @@ const parseOffset = (cursor: string | null) => {
 export const findUserListPage = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,
-  { sort, banStatus, handleQuery, cursor }: UserListInput,
+  { sort, banStatus, twoFactorStatus, handleQuery, cursor }: UserListInput,
   { pageSize }: UserListPageOptions,
 ): Promise<UserListPage> => {
   requirePermission(actor, "user", "read");
@@ -165,6 +197,7 @@ export const findUserListPage = async (
   const rows = await context.prisma.user.findMany({
     where: {
       ...getBanStatusWhere(banStatus),
+      ...getTwoFactorStatusWhere(twoFactorStatus),
       ...(handleQuery ? getHandleWhere(handleQuery) : {}),
     },
     orderBy: getOrderBy(sort),

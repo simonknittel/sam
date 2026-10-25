@@ -12,7 +12,7 @@ interface Props {
 }
 
 export const UsersTile = async ({ className, searchParams }: Props) => {
-  const { sort, q, banned, cursor } =
+  const { sort, q, banned, two_factor, cursor } =
     await loadUserListSearchParams(searchParams);
 
   const authentication = await requireAuthenticationPage();
@@ -21,6 +21,7 @@ export const UsersTile = async ({ className, searchParams }: Props) => {
   const { users, nextCursor, prevCursor } = await getUsersWithEntities({
     sort,
     banStatus: banned,
+    twoFactorStatus: two_factor,
     handleQuery: q,
     cursor,
   });

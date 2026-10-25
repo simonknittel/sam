@@ -13,6 +13,7 @@ export {
   USER_LIST_HANDLE_QUERY_MAXIMUM_LENGTH,
   UserBanStatus,
   UserSort,
+  UserTwoFactorStatus,
   findUserListPage,
   type UserListEntry,
   type UserListInput,
