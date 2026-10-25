@@ -1,7 +1,10 @@
 import { env } from "@/env";
 import { getApplicationContext } from "@/modules/application/getApplicationContext";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
-import { DEVELOPMENT_SESSION_TOKEN_COOKIE } from "@/modules/auth/utils/sessionTokenCookie";
+import {
+  DEVELOPMENT_SESSION_TOKEN_COOKIE,
+  SESSION_TOKEN_COOKIE_NAMES,
+} from "@/modules/auth/utils/sessionTokenCookie";
 import { getDiscordAvatar } from "@/modules/discord/utils/getDiscordAvatar";
 import { getDiscordTwoFactorEnabled } from "@/modules/discord/utils/getDiscordTwoFactorEnabled";
 import { getGuildMember } from "@/modules/discord/utils/getGuildMember";
@@ -152,6 +155,31 @@ const getAssumedUser = async (
       ...ASSUMABLE_USER_WHERE,
     },
   });
+};
+
+/**
+ * Whether the request carries the token of a valid session. During a
+ * session, NextAuth links a Discord account without a user to the user of
+ * the session, and the citizen of that account then moves to this user. A
+ * user has one Discord account, thus the sign-in refuses such a link: else a
+ * user with the two-factor authentication could take the permissions of a
+ * different account without it.
+ */
+const hasSessionOfRequest = async () => {
+  const cookieStore = await cookies();
+  const sessionTokens = SESSION_TOKEN_COOKIE_NAMES.flatMap((name) => {
+    const value = cookieStore.get(name)?.value;
+    return value ? [value] : [];
+  });
+  if (sessionTokens.length === 0) return false;
+
+  const sessionCount = await prisma.session.count({
+    where: {
+      sessionToken: { in: sessionTokens },
+      expires: { gt: new Date() },
+    },
+  });
+  return sessionCount > 0;
 };
 
 /**
@@ -352,10 +380,13 @@ export const authOptions: NextAuthOptions = {
         profileEmail: profile.email,
       });
 
-      /** The sign-in callback only checks whether the user exists and is banned */
+      /**
+       * The sign-in callback checks whether the user exists and is banned,
+       * and compares the status of the two-factor authentication
+       */
       const existingUser = await prisma.user.findUnique({
         where: { id: user.id },
-        select: { id: true, bannedAt: true },
+        select: { id: true, bannedAt: true, discordTwoFactorEnabled: true },
       });
 
       if (!account) throw new Error("account is missing");
@@ -391,8 +422,25 @@ export const authOptions: NextAuthOptions = {
         }
 
         const avatar = getDiscordAvatar(profile as DiscordProfile, guildMember);
+        const discordTwoFactorEnabled = getDiscordTwoFactorEnabled(profile);
+
+        /**
+         * The status belongs to the user, thus it also applies to the older
+         * sessions. A session from before the two-factor authentication can
+         * belong to a different person, for example after a phished
+         * password. Thus these sessions end when a login confirms the
+         * two-factor authentication. NextAuth then creates a new session for
+         * this login, because the session of the cookie is gone.
+         */
+        const endsOlderSessions =
+          discordTwoFactorEnabled === true &&
+          existingUser.discordTwoFactorEnabled !== true;
 
         await prisma.$transaction([
+          ...(endsOlderSessions
+            ? [prisma.session.deleteMany({ where: { userId: user.id } })]
+            : []),
+
           prisma.account.update({
             where: {
               provider_providerAccountId: {
@@ -416,13 +464,20 @@ export const authOptions: NextAuthOptions = {
             data: {
               email: profile.email!.toLocaleLowerCase(),
               image: avatar,
-              discordTwoFactorEnabled: getDiscordTwoFactorEnabled(profile),
+              discordTwoFactorEnabled,
               updatedAt: new Date(),
             },
           }),
         ]);
       } else {
         // New user
+        if (await hasSessionOfRequest()) {
+          log.info("Refused the link of a different Discord account", {
+            accountProviderAccountId: account.providerAccountId,
+          });
+          return false;
+        }
+
         const guildMember = await getGuildMember(account.access_token);
 
         if ("message" in guildMember) {
