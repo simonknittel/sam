@@ -3,6 +3,7 @@ import Note from "@/modules/common/components/Note";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { StatisticSection } from "@/modules/statistics/components/StatisticSection";
 import { getDailyLoginStatisticChart } from "@/modules/statistics/queries/getDailyLoginStatisticChart";
+import { getDailyMcpUsageStatisticChart } from "@/modules/statistics/queries/getDailyMcpUsageStatisticChart";
 import { getDailySilcStatisticChart } from "@/modules/statistics/queries/getDailySilcStatisticChart";
 import { getEventsPerDayStatisticChart } from "@/modules/statistics/queries/getEventsPerDayStatisticChart";
 import { getRegisteredUserStatisticChart } from "@/modules/statistics/queries/getRegisteredUserStatisticChart";
@@ -31,6 +32,7 @@ export default async function Page() {
     loginChart,
     eventsChart,
     silcChart,
+    mcpUsageChart,
   ] = await Promise.all([
     getRoleCitizenStatisticChart(),
     getVariantShipStatisticChart(),
@@ -41,6 +43,7 @@ export default async function Page() {
     getDailyLoginStatisticChart(),
     getEventsPerDayStatisticChart(),
     getDailySilcStatisticChart(),
+    getDailyMcpUsageStatisticChart(),
   ]);
 
   return (
@@ -111,6 +114,13 @@ export default async function Page() {
           title="SILC"
           description="Neu generierte SILC-Menge pro Tag"
           chart={silcChart}
+          className="flex-1"
+        />
+
+        <StatisticSection
+          title="MCP-Nutzung"
+          description="Anzahl Einträge im System Log über den MCP-Server pro Tag"
+          chart={mcpUsageChart}
           className="flex-1"
         />
       </div>
