@@ -14,7 +14,10 @@ export type MarkOnSiteNotificationUnreadInput = z.output<
 
 export interface MarkOnSiteNotificationUnreadOutput {
   readonly notification_id: string;
-  /** False when the notification is not an own notification */
+  /**
+   * False when the notification is not an own notification or is unread
+   * already
+   */
   readonly changed: boolean;
 }
 
@@ -34,6 +37,7 @@ export const markOnSiteNotificationUnread = async (
     where: {
       id: input.notification_id,
       citizenId,
+      readAt: { not: null },
     },
     data: {
       readAt: null,
