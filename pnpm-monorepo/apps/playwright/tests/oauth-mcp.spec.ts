@@ -46,6 +46,19 @@ const CONSENT_UNAVAILABLE_TEXT =
 const MCP_ACCESS_DENIED_TEXT =
   "Du hast keine Berechtigung, den MCP-Server zu nutzen.";
 
+interface SkillsListResponse {
+  readonly result: {
+    readonly skills: readonly {
+      readonly uri: string;
+      readonly frontmatter: { readonly name: string };
+      readonly resources: readonly {
+        readonly uri: string;
+        readonly size: number;
+      }[];
+    }[];
+  };
+}
+
 interface JsonRpcErrorResponse {
   readonly error: { readonly code: number; readonly message: string };
 }
@@ -168,6 +181,40 @@ test.describe("the OAuth server and the MCP endpoint", () => {
     expect(legacyResponse.status()).toBe(400);
     const legacyBody = (await legacyResponse.json()) as JsonRpcErrorResponse;
     expect(legacyBody.error.code).toBe(UNSUPPORTED_PROTOCOL_VERSION_ERROR_CODE);
+  });
+
+  test("a client lists the skills and reads the files of a skill", async ({
+    prisma,
+    request,
+    authorizeMcpClient,
+    connectMcpClient,
+  }) => {
+    const citizen = await createMcpCitizen(prisma, { handle: "mcp-skills" });
+    const { accessToken } = await authorizeMcpClient(citizen.user);
+    const client = await connectMcpClient(accessToken);
+
+    const discovery = await client.discover();
+    expect(discovery.capabilities.extensions).toHaveProperty([
+      "io.modelcontextprotocol/skills",
+    ]);
+
+    // The client SDK has no method for the extension
+    const response = await postMcpEndpoint(
+      request,
+      modernMcpRequest("skills/list"),
+      accessToken,
+    );
+    expect(response.status()).toBe(200);
+    const { result } = (await response.json()) as SkillsListResponse;
+    const overview = result.skills.find(
+      (skill) => skill.uri === "skill://sam-overview/SKILL.md",
+    );
+    expect(overview?.frontmatter.name).toBe("sam-overview");
+
+    for (const { uri, size } of overview?.resources ?? [])
+      expect(
+        new TextEncoder().encode(await client.readResourceText(uri)).byteLength,
+      ).toBe(size);
   });
 
   test("the consent page gives the new client an own name and its tools", async ({

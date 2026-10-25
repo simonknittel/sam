@@ -38,6 +38,8 @@ export interface McpTestClient {
     name: string,
     toolArguments?: Record<string, unknown>,
   ) => Promise<CallToolResult>;
+  /** The text of a resource, for example a file of a skill */
+  readonly readResourceText: (uri: string) => Promise<string>;
   readonly close: () => Promise<void>;
 }
 
@@ -72,6 +74,11 @@ export const createMcpClient = async ({
     listToolNames: async () => (await listTools()).map((tool) => tool.name),
     callTool: (name, toolArguments = {}) =>
       client.callTool({ name, arguments: toolArguments }),
+    readResourceText: async (uri) => {
+      const [content] = (await client.readResource({ uri })).contents;
+
+      return content && "text" in content ? content.text : "";
+    },
     close: () => client.close(),
   };
 };
