@@ -3,6 +3,7 @@ import {
   getRole,
   getRoleInputSchema,
 } from "@sam-monorepo/application";
+import { AuditEventType } from "@sam-monorepo/domain";
 import * as z from "zod";
 import {
   defineTool,
@@ -18,6 +19,7 @@ export const getRoleTool = defineTool({
   description:
     "Gives one role by its id (from list_roles or get_citizen): the fields of list_roles and, only with the permission to manage roles, the inactivity rules and the permission strings. A role that the user cannot see gives a NotFoundError.",
   annotations: READ_ONLY_TOOL_ANNOTATIONS,
+  readAuditEventType: AuditEventType.ROLE_READ,
   inputSchema: getRoleInputSchema,
   outputSchema: z.strictObject({
     ...roleOutputShape,

@@ -3,6 +3,7 @@ import {
   listRoles,
   listRolesInputSchema,
 } from "@sam-monorepo/application";
+import { AuditEventType } from "@sam-monorepo/domain";
 import * as z from "zod";
 import {
   defineTool,
@@ -18,6 +19,7 @@ export const listRolesTool = defineTool({
   description:
     "Gives the roles that the user can see, sorted by name: the id, the name, the description as Markdown, the icon URL, the number of levels and the ids of the inherited roles. Use the role ids with get_role or as the role filter of list_citizens.",
   annotations: READ_ONLY_TOOL_ANNOTATIONS,
+  readAuditEventType: AuditEventType.ROLES_LISTED,
   inputSchema: listRolesInputSchema,
   outputSchema: z.strictObject({
     roles: z.array(z.strictObject(roleOutputShape)),

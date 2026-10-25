@@ -2,6 +2,7 @@ import {
   listManualNotifications,
   listManualNotificationsInputSchema,
 } from "@sam-monorepo/application";
+import { AuditEventType } from "@sam-monorepo/domain";
 import * as z from "zod";
 import {
   defineTool,
@@ -17,6 +18,7 @@ export const listManualNotificationsTool = defineTool({
   description:
     "Gives the manual notifications that members sent with send_manual_notification (title, body, sender and the chosen receivers), the newest first. The search matches the title or the body. from and to bound the time of the sending.",
   annotations: READ_ONLY_TOOL_ANNOTATIONS,
+  readAuditEventType: AuditEventType.MANUAL_NOTIFICATIONS_LISTED,
   inputSchema: listManualNotificationsInputSchema,
   outputSchema: z.strictObject({
     notifications: z.array(manualNotificationOutputSchema),

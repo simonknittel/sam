@@ -1,4 +1,5 @@
 import { searchWiki, searchWikiInputSchema } from "@sam-monorepo/application";
+import { AuditEventType } from "@sam-monorepo/domain";
 import * as z from "zod";
 import {
   defineTool,
@@ -13,6 +14,7 @@ export const searchWikiTool = defineTool({
   description:
     "Searches the titles, the text and the tags of the wiki pages that the user can read (German full-text search, the best match first) and the matching tag names. Without event_id it searches the global wiki, with event_id the briefing of that event. Give a page id to get_wiki_page for the full content; path is relative to the base URL of SAM",
   annotations: READ_ONLY_TOOL_ANNOTATIONS,
+  readAuditEventType: AuditEventType.WIKI_SEARCHED,
   inputSchema: searchWikiInputSchema,
   outputSchema: z.strictObject({
     pages: z.array(

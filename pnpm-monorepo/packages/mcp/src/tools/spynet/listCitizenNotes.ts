@@ -3,6 +3,7 @@ import {
   listCitizenNotes,
   listCitizenNotesInputSchema,
 } from "@sam-monorepo/application";
+import { AuditEventType } from "@sam-monorepo/domain";
 import * as z from "zod";
 import { citizenReferenceSchema, dateTimeOutputSchema } from "../../schemas.js";
 import {
@@ -23,6 +24,7 @@ export const listCitizenNotesTool = defineTool({
   description:
     "Lists the Spynet notes about a citizen (by the citizen id), the newest first, with the note type, the classification level and the confirmation state. A note that the user may only see redacted has `redacted: true` and no content. created_by and confirmed_at are null for a user who cannot open the notes page of the Spynet. The notes are in German.",
   annotations: READ_ONLY_TOOL_ANNOTATIONS,
+  readAuditEventType: AuditEventType.CITIZEN_NOTES_LISTED,
   inputSchema: listCitizenNotesInputSchema,
   outputSchema: z.strictObject({
     notes: z.array(

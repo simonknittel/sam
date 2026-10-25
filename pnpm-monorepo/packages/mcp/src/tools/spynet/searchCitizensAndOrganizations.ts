@@ -2,7 +2,7 @@ import {
   searchCitizensAndOrganizations,
   searchCitizensAndOrganizationsInputSchema,
 } from "@sam-monorepo/application";
-import { SpynetSearchHitType } from "@sam-monorepo/domain";
+import { AuditEventType, SpynetSearchHitType } from "@sam-monorepo/domain";
 import * as z from "zod";
 import {
   defineTool,
@@ -17,6 +17,7 @@ export const searchCitizensAndOrganizationsTool = defineTool({
   description:
     "Searches the citizens (by handle, community moniker, citizen record and Spectrum ID) and the organizations (by name and Spectrum ID) of the Spynet, with the best matches first. Use it to find the id of a citizen or an organization: give the id, not the handle, to the other tools. A handle is only display text.",
   annotations: READ_ONLY_TOOL_ANNOTATIONS,
+  readAuditEventType: AuditEventType.CITIZENS_AND_ORGANIZATIONS_SEARCHED,
   inputSchema: searchCitizensAndOrganizationsInputSchema,
   outputSchema: z.strictObject({
     hits: z.array(

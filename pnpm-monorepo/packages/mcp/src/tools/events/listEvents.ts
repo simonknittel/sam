@@ -4,6 +4,7 @@ import {
   listEvents,
   listEventsInputSchema,
 } from "@sam-monorepo/application";
+import { AuditEventType } from "@sam-monorepo/domain";
 import * as z from "zod";
 import { dateTimeOutputSchema } from "../../schemas.js";
 import {
@@ -19,6 +20,7 @@ export const listEventsTool = defineTool({
   description:
     "Lists the events that the user can see, in pages. status: open (not ended yet, the default), new (open and not read by the user yet), closed (already started) or all; open and new are sorted by the start ascending, closed and all descending. participating: me gives only the events with an active sign-up of the user; type: app or discord filters by the source. Give next_cursor as cursor to continue the list. Use the event ids with get_event and get_event_lineup.",
   annotations: READ_ONLY_TOOL_ANNOTATIONS,
+  readAuditEventType: AuditEventType.EVENTS_LISTED,
   inputSchema: listEventsInputSchema,
   outputSchema: z.strictObject({
     events: z.array(

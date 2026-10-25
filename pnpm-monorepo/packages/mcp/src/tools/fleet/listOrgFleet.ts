@@ -2,6 +2,7 @@ import {
   listOrgFleet,
   listOrgFleetInputSchema,
 } from "@sam-monorepo/application";
+import { AuditEventType } from "@sam-monorepo/domain";
 import * as z from "zod";
 import {
   defineTool,
@@ -17,6 +18,7 @@ export const listOrgFleetTool = defineTool({
   description:
     "Gives the ship variants with the number of ships that the members of the organization own (also the variants with 0 ships), and the totals of ships and of citizens with ships. Filter by flight readiness, by manufacturer ids (from search_ship_variants), by variant tag ids (from the tags in earlier results) and by a part of the variant name.",
   annotations: READ_ONLY_TOOL_ANNOTATIONS,
+  readAuditEventType: AuditEventType.ORGANIZATION_FLEET_LISTED,
   inputSchema: listOrgFleetInputSchema,
   outputSchema: z.strictObject({
     fleet: z.array(

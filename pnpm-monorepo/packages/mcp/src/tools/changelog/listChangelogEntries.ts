@@ -2,6 +2,7 @@ import {
   listChangelogEntries,
   listChangelogEntriesInputSchema,
 } from "@sam-monorepo/application";
+import { AuditEventType } from "@sam-monorepo/domain";
 import * as z from "zod";
 import {
   defineTool,
@@ -16,6 +17,7 @@ export const listChangelogEntriesTool = defineTool({
   description:
     "Gives the entries of the changelog of SAM (the release notes), the newest first: the key, the date, the title, the tags and the text as Markdown. Give a quarter (for example 2026-q4) for the entries of this quarter.",
   annotations: READ_ONLY_TOOL_ANNOTATIONS,
+  readAuditEventType: AuditEventType.CHANGELOG_ENTRIES_LISTED,
   inputSchema: listChangelogEntriesInputSchema,
   outputSchema: z.strictObject({
     entries: z.array(

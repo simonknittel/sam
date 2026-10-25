@@ -75,6 +75,16 @@ const callTool = async (
     },
   ).catch((error: unknown) => toErrorResult(tool, context, actor, error));
 
+  if (tool.readAuditEventType && result.isError !== true)
+    await context.audit.create([
+      {
+        type: tool.readAuditEventType,
+        // Gives the dates of the parsed arguments as ISO strings
+        data: { arguments: JSON.parse(JSON.stringify(input)) },
+        createdById: actor.userId,
+      },
+    ]);
+
   // Never log the arguments or the output: they can contain personal data
   context.log.info("MCP tool call", {
     tool: tool.name,

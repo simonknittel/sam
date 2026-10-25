@@ -1,5 +1,6 @@
 import type { Actor } from "@sam-monorepo/application";
 import { UserRole } from "@sam-monorepo/database/browser";
+import { AuditEventType } from "@sam-monorepo/domain";
 import * as z from "zod";
 import { citizenReferenceSchema } from "../../schemas.js";
 import { getSettingsPageUrl } from "../../settingsPageUrl.js";
@@ -35,6 +36,7 @@ export const getCurrentUserTool = defineTool({
   description:
     "Gives the signed-in user of SAM: the user id, the citizen (id and handle, or null for a user without a citizen), the user role, whether admin mode is on, the number of permissions, the tool groups that this client can use, and the URL of the page where the user selects the tools.",
   annotations: READ_ONLY_TOOL_ANNOTATIONS,
+  readAuditEventType: AuditEventType.CURRENT_USER_READ,
   inputSchema: z.strictObject({}),
   outputSchema: z.strictObject({
     user_id: z.string(),

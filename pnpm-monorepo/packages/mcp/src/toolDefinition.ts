@@ -1,4 +1,5 @@
 import type { Actor, ApplicationContext } from "@sam-monorepo/application";
+import type { ReadAuditEventType } from "@sam-monorepo/domain";
 import type * as z from "zod";
 import type { ToolGroup } from "./toolGroup.js";
 
@@ -55,6 +56,12 @@ export interface ToolDefinition<
   /** English. Tells the model when to use the tool and what it returns. */
   readonly description: string;
   readonly annotations: ToolAnnotations;
+  /**
+   * Only a read tool, and each read tool has its own type: the registry writes
+   * an event of this type for each successful call. The use cases of the
+   * write tools write their audit events themselves.
+   */
+  readonly readAuditEventType?: ReadAuditEventType;
   readonly inputSchema: InputSchema;
   /**
    * A strict object (`z.strictObject()`) also for the nested objects. The

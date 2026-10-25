@@ -12,6 +12,7 @@ import {
   ForbiddenError,
   type ApplicationContext,
 } from "@sam-monorepo/application";
+import { AuditEventType } from "@sam-monorepo/domain";
 import { createHash } from "node:crypto";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { listToolCatalog } from "./catalog.js";
@@ -32,14 +33,20 @@ const ENDPOINT_URL = "http://localhost/api/mcp";
 
 const log = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
 
+const audit = { create: vi.fn() };
+
 /** `withSpan()` uses only `startActiveSpan()`, `setStatus()` and `end()` */
 const span = { setStatus: () => span, end: () => undefined };
 
 const baseUrl = new URL("http://localhost");
 
-/** The tools of these tests use only the logger, the tracer and the URLs */
+/**
+ * The tools of these tests use only the logger, the tracer and the URLs. The
+ * registry writes the audit event of a read tool.
+ */
 const context = {
   log,
+  audit,
   tracer: {
     startActiveSpan: (_name: string, callback: (span: unknown) => unknown) =>
       callback(span),
@@ -241,6 +248,13 @@ describe("tools/call", () => {
       durationMs: expect.any(Number),
       isError: false,
     });
+    expect(audit.create).toHaveBeenCalledExactlyOnceWith([
+      {
+        type: AuditEventType.CURRENT_USER_READ,
+        data: { arguments: {} },
+        createdById: "user",
+      },
+    ]);
   });
 
   test("a disabled tool is not in the list and cannot be called", async () => {
@@ -279,6 +293,8 @@ describe("tools/call", () => {
       ],
     });
     expect(log.error).not.toHaveBeenCalled();
+    // A failed read writes no audit event, like a failed write
+    expect(audit.create).not.toHaveBeenCalled();
   });
 
   test("an output with a field that the output schema does not name does not leave the server", async () => {

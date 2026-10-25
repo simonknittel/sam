@@ -3,6 +3,7 @@ import {
   getOrganizationInputSchema,
   MembershipVisibility,
 } from "@sam-monorepo/application";
+import { AuditEventType } from "@sam-monorepo/domain";
 import * as z from "zod";
 import { citizenReferenceSchema } from "../../schemas.js";
 import {
@@ -18,6 +19,7 @@ export const getOrganizationTool = defineTool({
   description:
     "Gives a Star Citizen organization of the Spynet by its id, with its current members. The members are empty without the permission to read memberships. Each member has a citizen id for get_citizen; the handle is only display text.",
   annotations: READ_ONLY_TOOL_ANNOTATIONS,
+  readAuditEventType: AuditEventType.ORGANIZATION_READ,
   inputSchema: getOrganizationInputSchema,
   outputSchema: z.strictObject({
     id: z.string(),

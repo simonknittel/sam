@@ -85,6 +85,7 @@ const prisma = {
 const context = {
   prisma,
   log,
+  audit: { create: () => Promise.resolve() },
   tracer: {
     startActiveSpan: (_name: string, callback: (span: unknown) => unknown) =>
       callback(span),

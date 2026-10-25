@@ -1,4 +1,5 @@
 import { listMyShips, listMyShipsInputSchema } from "@sam-monorepo/application";
+import { AuditEventType } from "@sam-monorepo/domain";
 import * as z from "zod";
 import {
   defineTool,
@@ -14,6 +15,7 @@ export const listMyShipsTool = defineTool({
   description:
     "Gives the ships of the citizen of the signed-in user with their variants, sorted by the variant name; the list is empty for a user without a citizen. Filter like list_org_fleet; deleted: true gives only the deleted ships.",
   annotations: READ_ONLY_TOOL_ANNOTATIONS,
+  readAuditEventType: AuditEventType.OWN_SHIPS_LISTED,
   inputSchema: listMyShipsInputSchema,
   outputSchema: z.strictObject({
     ships: z.array(shipOutputSchema),

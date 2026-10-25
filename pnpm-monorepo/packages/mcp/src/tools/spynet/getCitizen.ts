@@ -3,6 +3,7 @@ import {
   getCitizenInputSchema,
   MembershipVisibility,
 } from "@sam-monorepo/application";
+import { AuditEventType } from "@sam-monorepo/domain";
 import * as z from "zod";
 import { dateTimeOutputSchema } from "../../schemas.js";
 import {
@@ -18,6 +19,7 @@ export const getCitizenTool = defineTool({
   description:
     "Gives the profile of a citizen by its id: the identity values, the visible roles, the current organizations, the current penalty points and the number of ships. A value that the user cannot read is null (the lists are empty). The handle is only display text; use the ids in other tools. Every user can read the own citizen (see get_current_user); without access to the Spynet, only the handle, the time zone, the roles, the penalty points and the number of ships.",
   annotations: READ_ONLY_TOOL_ANNOTATIONS,
+  readAuditEventType: AuditEventType.CITIZEN_READ,
   inputSchema: getCitizenInputSchema,
   outputSchema: z.strictObject({
     id: z.string(),

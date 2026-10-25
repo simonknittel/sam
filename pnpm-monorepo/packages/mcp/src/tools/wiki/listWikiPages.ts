@@ -2,6 +2,7 @@ import {
   listWikiPages,
   listWikiPagesInputSchema,
 } from "@sam-monorepo/application";
+import { AuditEventType } from "@sam-monorepo/domain";
 import * as z from "zod";
 import {
   defineTool,
@@ -16,6 +17,7 @@ export const listWikiPagesTool = defineTool({
   description:
     "Gives the wiki pages that the user can read, in the order of the page tree (depth first, with parent_id and depth). Without event_id it lists the global wiki, with event_id the briefing of that event; parent_id lists only the pages below that page. The ids are the keys for get_wiki_page; path is relative to the base URL of SAM",
   annotations: READ_ONLY_TOOL_ANNOTATIONS,
+  readAuditEventType: AuditEventType.WIKI_PAGES_LISTED,
   inputSchema: listWikiPagesInputSchema,
   outputSchema: z.strictObject({
     pages: z.array(

@@ -25,7 +25,7 @@ SAM (Sinister Administration Module) is the internal tooling, ERP and CRM of our
 - **Access**: a user must be a member of the Discord server of the organization. A new user must confirm their email address and needs the clearance from Human Resources.
 - **SILC**: the internal currency of the organization. Members earn it, for example with tasks, and SINcome turns it into aUEC, the money of Star Citizen.
 - **Notifications**: SAM notifies members in the app and with web push, for example about new events, tasks or roles. Each user can switch off web push per kind on \`/app/account/notifications\`.
-- **System log**: each change writes an entry to the system log (audit log).
+- **System log**: each change and each call of a read tool of this server writes an entry to the system log (audit log).
 
 ## Apps
 

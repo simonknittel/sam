@@ -2,6 +2,7 @@ import {
   listAuditEvents,
   listAuditEventsInputSchema,
 } from "@sam-monorepo/application";
+import { AuditEventType } from "@sam-monorepo/domain";
 import * as z from "zod";
 import { citizenReferenceSchema, dateTimeOutputSchema } from "../../schemas.js";
 import {
@@ -49,8 +50,9 @@ export const listAuditEventsTool = defineTool({
   group: ToolGroup.SystemLog,
   title: "List the audit events",
   description:
-    "Gives the system log of SAM, the newest first: the audited user actions and automation runs with their type, their time, the user who did it and the payload. Filter by the types, by the users (created_by_user_ids) or their citizens (created_by_citizen_ids), by a time range and by the actions through the MCP server (triggered_via_mcp). The list hides the high-volume types, unless a type filter is set or include_high_volume is true.",
+    "Gives the system log of SAM, the newest first: the audited user actions and automation runs with their type, their time, the user who did it and the payload. Filter by the types, by the users (created_by_user_ids) or their citizens (created_by_citizen_ids), by a time range, by the actions through the MCP server (triggered_via_mcp) and by the kind of access (access: write, read or all). The list hides the high-volume types, unless a type filter is set or include_high_volume is true. It hides the reads through the MCP server, unless a type filter is set or access is read or all.",
   annotations: READ_ONLY_TOOL_ANNOTATIONS,
+  readAuditEventType: AuditEventType.AUDIT_EVENTS_LISTED,
   inputSchema: listAuditEventsInputSchema,
   outputSchema: z.strictObject({
     events: z.array(auditEventOutputSchema),

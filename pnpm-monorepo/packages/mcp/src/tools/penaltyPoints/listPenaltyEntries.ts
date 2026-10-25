@@ -2,6 +2,7 @@ import {
   listPenaltyEntries,
   listPenaltyEntriesInputSchema,
 } from "@sam-monorepo/application";
+import { AuditEventType } from "@sam-monorepo/domain";
 import * as z from "zod";
 import {
   defineTool,
@@ -17,6 +18,7 @@ export const listPenaltyEntriesTool = defineTool({
   description:
     "Gives the penalty entries (points, reason, author and expiry) of all citizens or of one citizen (citizen_id from a Spynet tool), the newest first; status active means not expired and not deleted, inactive means expired and not deleted. A user who can read only the own entries must give the citizen id of get_current_user.",
   annotations: READ_ONLY_TOOL_ANNOTATIONS,
+  readAuditEventType: AuditEventType.PENALTY_ENTRIES_LISTED,
   inputSchema: listPenaltyEntriesInputSchema,
   outputSchema: z.strictObject({
     entries: z.array(penaltyEntryOutputSchema),
