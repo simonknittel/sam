@@ -205,6 +205,7 @@ export enum AuditEventType {
   ON_SITE_NOTIFICATION_UNARCHIVED = "ON_SITE_NOTIFICATION_UNARCHIVED",
   IRRELEVANT_ON_SITE_NOTIFICATIONS_ARCHIVED = "IRRELEVANT_ON_SITE_NOTIFICATIONS_ARCHIVED",
   WEB_PUSH_SUBSCRIPTIONS_PRUNED = "WEB_PUSH_SUBSCRIPTIONS_PRUNED",
+  /** @deprecated Superseded by READ_MARKERS_CREATED (the changelog entries became a subject of the read markers) */
   CHANGELOG_ENTRIES_SEEN = "CHANGELOG_ENTRIES_SEEN",
   UNUSED_UPLOADS_DELETED = "UNUSED_UPLOADS_DELETED",
   /** @deprecated Superseded by UPLOAD_DELETED_V2 (the uploader can be unknown) */
@@ -253,6 +254,7 @@ export enum AuditEventType {
   OAUTH_GRANT_CREATED_V2 = "OAUTH_GRANT_CREATED_V2",
   OAUTH_GRANT_RENAMED = "OAUTH_GRANT_RENAMED",
   MCP_TOOL_SETTING_UPDATED_V2 = "MCP_TOOL_SETTING_UPDATED_V2",
+  READ_MARKERS_CREATED = "READ_MARKERS_CREATED",
   // The read accesses, see `READ_AUDIT_EVENT_TYPES`
   CURRENT_USER_READ = "CURRENT_USER_READ",
   CITIZEN_READ = "CITIZEN_READ",
@@ -1775,6 +1777,20 @@ export interface AuditEventDataByType {
     clientId: string;
     toolName: string;
     enabled: boolean;
+  };
+
+  /**
+   * The read markers that one request wrote for a batch of items, for
+   * example the items of the notifications of "mark all as read". Only the
+   * first read of each item is in the list. The `subjectId` of a changelog
+   * entry is its key.
+   */
+  [AuditEventType.READ_MARKERS_CREATED]: {
+    citizenId: string;
+    markers: {
+      subject: ReadMarkerSubject;
+      subjectId: string;
+    }[];
   };
 
   [AuditEventType.CURRENT_USER_READ]: ReadAuditEventData;

@@ -1,17 +1,20 @@
-/// Records that a citizen has read an item (a subject), e.g. a task or an
-/// event. An item without a marker of the citizen is unread; the app decides
-/// in the `read-markers` module whether an unread item shows as "new".
+/// Records that a citizen has read an item (a subject), e.g. a task, an event
+/// or a changelog entry. An item without a marker of the citizen is unread;
+/// the rule of its subject type decides whether an unread item is "new".
 ///
-/// Each subject type has its own nullable foreign key column, thus the
-/// database keeps the integrity and deletes the markers together with their
-/// item. A hand-written CHECK constraint (see the migration
-/// `read_markers`) makes sure that exactly one of these columns is set.
+/// Each subject type has its own nullable column. A subject that is a
+/// database row has a foreign key, thus the database keeps the integrity and
+/// deletes the markers together with their item. A changelog entry is code
+/// in the app, thus its column holds the key of the entry without a foreign
+/// key. A hand-written CHECK constraint (see the migrations `read_markers`
+/// and `changelog_read_markers`) makes sure that exactly one of these columns
+/// is set.
 ///
-/// To add a subject type in the database: add a nullable column with its
-/// relation (named `readMarkers` on the subject model) and a unique
-/// constraint of the column together with `citizenId`, and extend the CHECK
-/// constraint in a new migration. The steps in the code are documented at
-/// `READ_MARKER_SUBJECT_RULES` in
+/// To add a subject type in the database: add a nullable column (with its
+/// relation named `readMarkers` on the subject model, when the subject is a
+/// database row) and a unique constraint of the column together with
+/// `citizenId`, and extend the CHECK constraint in a new migration. The steps
+/// in the code are documented at `READ_MARKER_SUBJECT_RULES` in
 /// `packages/application/src/readMarkers/readMarkerSubjects.ts`.
 model ReadMarker {
   id        String   @id @default(cuid(2))
@@ -24,9 +27,12 @@ model ReadMarker {
   eventId String?
   event   Event?  @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
+  changelogEntryKey String?
+
   /// The subject column comes first, thus the same index also serves the
   /// cascade delete of the subject.
   @@unique([taskId, citizenId])
   @@unique([eventId, citizenId])
+  @@unique([changelogEntryKey, citizenId])
   @@index([citizenId])
 }

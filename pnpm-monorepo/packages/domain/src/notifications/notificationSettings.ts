@@ -6,7 +6,6 @@ import { NotificationChannel } from "@sam-monorepo/database/browser";
  * order of the settings page.
  */
 export enum NotificationSettingType {
-  ChangelogEntryCreated = "changelog_entry_created",
   EventCreated = "event_created",
   EventUpdated = "event_updated",
   EventDeleted = "event_deleted",
