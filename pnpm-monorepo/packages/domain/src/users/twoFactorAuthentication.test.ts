@@ -11,6 +11,22 @@ describe("isMissingTwoFactorAuthentication", () => {
     { resource: "user", operation: "read" },
     { resource: "user", operation: "manage" },
     { resource: "systemLog", operation: "read" },
+    { resource: "discord-id", operation: "create" },
+    { resource: "discord-id", operation: "confirm" },
+    { resource: "discord-id", operation: "delete" },
+    { resource: "discord-id", operation: "manage" },
+    { resource: "classificationLevel", operation: "manage" },
+    { resource: "noteType", operation: "manage" },
+    {
+      resource: "otherRole",
+      operation: "assign",
+      attributes: [{ key: "roleId", value: "*" }],
+    },
+    {
+      resource: "otherRole",
+      operation: "manage",
+      attributes: [{ key: "roleId", value: "clx123abc" }],
+    },
   ] satisfies PermissionSet[])(
     "$resource;$operation requires the two-factor authentication",
     (permissionSet) => {
@@ -59,7 +75,17 @@ describe("isMissingTwoFactorAuthentication", () => {
         permissionSets: [
           LOGIN,
           { resource: "event", operation: "manage" },
-          { resource: "otherRole", operation: "read" },
+          { resource: "discord-id", operation: "read" },
+          {
+            resource: "otherRole",
+            operation: "read",
+            attributes: [{ key: "roleId", value: "*" }],
+          },
+          {
+            resource: "otherRole",
+            operation: "dismiss",
+            attributes: [{ key: "roleId", value: "*" }],
+          },
         ],
         discordTwoFactorEnabled: false,
       }),

@@ -324,7 +324,10 @@ export * from "./uploads/uploadUsage.js";
 export { UNUSED_UPLOAD_WHERE } from "./uploads/uploadUsageRelations.js";
 export { ASSUMABLE_USER_WHERE } from "./users/assumableUser.js";
 export {
+  TWO_FACTOR_AUTHENTICATION_PERMISSION_SETS,
+  TWO_FACTOR_AUTHENTICATION_ROLE_RULE_OPERATIONS,
   isMissingTwoFactorAuthentication,
+  permissionStringRequiresTwoFactorAuthentication,
   type TwoFactorAuthenticationSubject,
 } from "./users/twoFactorAuthentication.js";
 export {
