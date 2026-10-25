@@ -201,3 +201,33 @@ test("an admin confirms the privacy policy on behalf of a user", async ({
 
   await expectAuditEvents(prisma, ["EMAIL_VERIFIED"]);
 });
+
+test("the users table shows the Discord two-factor authentication of the last login", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "zwei-faktor-leser",
+    permissionStrings: USER_ADMIN_PERMISSIONS,
+  });
+  const statuses = [
+    { handle: "mit-2fa", discordTwoFactorEnabled: true, text: "Aktiv" },
+    { handle: "ohne-2fa", discordTwoFactorEnabled: false, text: "Inaktiv" },
+    { handle: "ungeprueft", discordTwoFactorEnabled: null, text: "Unbekannt" },
+  ];
+  const users = await Promise.all(
+    statuses.map(async ({ handle, discordTwoFactorEnabled, text }) => ({
+      citizen: await createCitizen(prisma, { handle, discordTwoFactorEnabled }),
+      text,
+    })),
+  );
+
+  await signIn(admin.user);
+  await page.goto("/app/iam/users");
+
+  for (const { citizen, text } of users) {
+    const row = page.getByRole("row").filter({ hasText: citizen.user.id });
+    await expect(row.getByText(text, { exact: true })).toBeVisible();
+  }
+});

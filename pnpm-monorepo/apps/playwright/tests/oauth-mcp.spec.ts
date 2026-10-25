@@ -406,32 +406,47 @@ test.describe("the OAuth server and the MCP endpoint", () => {
     expect(refresh.error).toBe("invalid_grant");
   });
 
-  test("a connected client gets 403 and no new token when the user loses the clearance", async ({
-    prisma,
-    request,
-    authorizeMcpClient,
-  }) => {
-    const citizen = await createMcpCitizen(prisma, {
+  for (const { loss, handle, permissionStrings, lostClearance } of [
+    {
+      loss: "the confirmed email",
       handle: "mcp-unbestaetigt",
-    });
-    const authorization = await authorizeMcpClient(citizen.user);
-
-    await prisma.user.update({
-      where: { id: citizen.user.id },
-      data: { emailVerified: null },
-    });
-
-    const call = await postMcpEndpoint(
+      permissionStrings: [],
+      lostClearance: { emailVerified: null },
+    },
+    {
+      loss: "the two-factor authentication of Discord",
+      handle: "mcp-ohne-2fa",
+      permissionStrings: ["user;read"],
+      lostClearance: { discordTwoFactorEnabled: false },
+    },
+  ])
+    test(`a connected client gets 403 and no new token when the user loses ${loss}`, async ({
+      prisma,
       request,
-      modernMcpRequest("tools/list"),
-      authorization.accessToken,
-    );
-    expect(call.status()).toBe(403);
+      authorizeMcpClient,
+    }) => {
+      const citizen = await createMcpCitizen(prisma, {
+        handle,
+        permissionStrings,
+      });
+      const authorization = await authorizeMcpClient(citizen.user);
 
-    const refresh = await authorization.refresh(authorization.refreshToken);
-    expect(refresh.status).toBe(400);
-    expect(refresh.error).toBe("invalid_grant");
-  });
+      await prisma.user.update({
+        where: { id: citizen.user.id },
+        data: lostClearance,
+      });
+
+      const call = await postMcpEndpoint(
+        request,
+        modernMcpRequest("tools/list"),
+        authorization.accessToken,
+      );
+      expect(call.status()).toBe(403);
+
+      const refresh = await authorization.refresh(authorization.refreshToken);
+      expect(refresh.status).toBe(400);
+      expect(refresh.error).toBe("invalid_grant");
+    });
 
   test("the consent page refuses an invalid client or redirect URI and links other errors back to the client", async ({
     page,

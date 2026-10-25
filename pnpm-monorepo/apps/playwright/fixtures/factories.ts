@@ -78,6 +78,12 @@ interface CreateCitizenOptions {
    * about to open the app for the first time.
    */
   readonly welcomedAt?: Date | null;
+  /**
+   * The status of the last Discord login. Enabled by default, so that an
+   * admin and the sensitive permissions pass the gate of the two-factor
+   * authentication.
+   */
+  readonly discordTwoFactorEnabled?: boolean | null;
 }
 
 /** Long before every test, so that the welcome day of the citizen is over */
@@ -96,6 +102,7 @@ export const createCitizen = async (
     admin = false,
     emailVerified = new Date(),
     welcomedAt = WELCOMED_LONG_AGO,
+    discordTwoFactorEnabled = true,
   }: CreateCitizenOptions,
 ): Promise<TestCitizen> => {
   const suffix = randomUUID().slice(0, 8);
@@ -107,6 +114,7 @@ export const createCitizen = async (
       email: `${handle}-${suffix}@example.com`,
       emailVerified,
       role: admin ? UserRole.ADMIN : null,
+      discordTwoFactorEnabled,
       accounts: {
         create: {
           type: "oauth",
@@ -176,6 +184,7 @@ export const createUserWithoutCitizen = (
       email: `${name}-${randomUUID().slice(0, 8)}@example.com`,
       emailVerified: new Date(),
       role: admin ? UserRole.ADMIN : null,
+      discordTwoFactorEnabled: true,
       accounts: {
         create: {
           type: "oauth",

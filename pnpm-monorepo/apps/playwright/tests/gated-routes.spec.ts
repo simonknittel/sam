@@ -158,6 +158,11 @@ test("a user without clearance gets no data of a layout or of a page title", asy
     permissionStrings,
     canLogIn: false,
   });
+  const withoutTwoFactor = await createCitizen(prisma, {
+    handle: "ohne-2fa",
+    permissionStrings: [...permissionStrings, "role;manage"],
+    discordTwoFactorEnabled: false,
+  });
 
   const wikiPage = await createWikiPage(prisma, {
     title: "Sichtbare Wiki-Seite",
@@ -190,7 +195,7 @@ test("a user without clearance gets no data of a layout or of a page title", asy
   const clearedBodies = (await readBodies()).join("\n");
   for (const title of TITLES) expect(clearedBodies).toContain(title);
 
-  for (const citizen of [unconfirmed, withoutLogin]) {
+  for (const citizen of [unconfirmed, withoutLogin, withoutTwoFactor]) {
     await switchUser(citizen.user);
     const bodies = (await readBodies()).join("\n");
 
