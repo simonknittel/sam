@@ -1,6 +1,11 @@
 import { expectAuditEvents } from "../fixtures/audit";
 import { createCitizen } from "../fixtures/factories";
-import { clickUntilVisible, SAVED_TEXT } from "../fixtures/interactions";
+import {
+  clickUntilUrl,
+  clickUntilVisible,
+  SAVED_TEXT,
+  toggleLabel,
+} from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 const USER_ADMIN_PERMISSIONS = ["user;read", "user;ban", "user;manage"];
@@ -202,7 +207,7 @@ test("an admin confirms the privacy policy on behalf of a user", async ({
   await expectAuditEvents(prisma, ["EMAIL_VERIFIED"]);
 });
 
-test("the users table shows the Discord two-factor authentication of the last login", async ({
+test("the users table shows and filters the Discord two-factor authentication of the last login", async ({
   page,
   prisma,
   signIn,
@@ -212,22 +217,59 @@ test("the users table shows the Discord two-factor authentication of the last lo
     permissionStrings: USER_ADMIN_PERMISSIONS,
   });
   const statuses = [
-    { handle: "mit-2fa", discordTwoFactorEnabled: true, text: "Aktiv" },
-    { handle: "ohne-2fa", discordTwoFactorEnabled: false, text: "Inaktiv" },
-    { handle: "ungeprueft", discordTwoFactorEnabled: null, text: "Unbekannt" },
+    {
+      handle: "mit-2fa",
+      discordTwoFactorEnabled: true,
+      text: "Aktiv",
+      filter: "enabled",
+    },
+    {
+      handle: "ohne-2fa",
+      discordTwoFactorEnabled: false,
+      text: "Inaktiv",
+      filter: "disabled",
+    },
+    {
+      handle: "ungeprueft",
+      discordTwoFactorEnabled: null,
+      text: "Unbekannt",
+      filter: "unknown",
+    },
   ];
   const users = await Promise.all(
-    statuses.map(async ({ handle, discordTwoFactorEnabled, text }) => ({
+    statuses.map(async ({ handle, discordTwoFactorEnabled, text, filter }) => ({
       citizen: await createCitizen(prisma, { handle, discordTwoFactorEnabled }),
       text,
+      filter,
     })),
   );
+  const rowOf = (userId: string) =>
+    page.getByRole("row").filter({ hasText: userId });
 
   await signIn(admin.user);
   await page.goto("/app/iam/users");
 
   for (const { citizen, text } of users) {
-    const row = page.getByRole("row").filter({ hasText: citizen.user.id });
-    await expect(row.getByText(text, { exact: true })).toBeVisible();
+    await expect(
+      rowOf(citizen.user.id).getByText(text, { exact: true }),
+    ).toBeVisible();
+  }
+
+  // Each option of the filter keeps only the users with its status
+  for (const { text, filter } of users) {
+    await clickUntilUrl(
+      page,
+      toggleLabel(
+        page.getByRole("radiogroup", { name: "Discord 2FA" }),
+        new RegExp(`^${text}$`),
+      ),
+      new RegExp(`two_factor=${filter}`),
+    );
+
+    for (const { citizen, filter: otherFilter } of users) {
+      const row = rowOf(citizen.user.id);
+      if (otherFilter === filter) await expect(row).toBeVisible();
+      else await expect(row).toHaveCount(0);
+    }
   }
 });

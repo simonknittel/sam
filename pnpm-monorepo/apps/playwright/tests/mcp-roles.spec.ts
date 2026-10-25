@@ -254,12 +254,21 @@ test.describe("the role tools of the MCP server", () => {
       title: "Lesen - Gelöschte",
       description:
         "Citizen mit dieser Berechtigung können gelöschte Tasks lesen.",
+      requires_two_factor_authentication: false,
     });
     expect(permissions).toContainEqual({
       permission_string: "citizen;delete",
       section: "Citizen",
       title: "Citizen löschen",
       description: null,
+      requires_two_factor_authentication: false,
+    });
+    expect(permissions).toContainEqual({
+      permission_string: "discord-id;delete",
+      section: "Citizen",
+      title: "Discord ID löschen",
+      description: null,
+      requires_two_factor_authentication: true,
     });
   });
 
