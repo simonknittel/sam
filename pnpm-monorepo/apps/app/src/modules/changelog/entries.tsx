@@ -49,6 +49,27 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-10-25-mcp-lesezugriffe",
+    date: "2026-10-25",
+    title: "Lesezugriffe im System Log",
+    tags: ["MCP", "System Log"],
+    isTracked: false,
+    body: () => (
+      <p>
+        Das Lesen von Daten über den MCP-Server erzeugt jetzt ebenfalls Einträge
+        im{" "}
+        <Link
+          href="/app/system-log"
+          className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300 active:text-interaction-700"
+        >
+          System Log
+        </Link>
+        : einen pro Aufruf eines lesenden Tools.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-10-25-mcp-skills",
     date: "2026-10-25",
     title: "Skills over MCP",
