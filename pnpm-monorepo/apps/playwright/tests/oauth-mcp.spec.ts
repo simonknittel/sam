@@ -246,6 +246,10 @@ test.describe("the OAuth server and the MCP endpoint", () => {
           consentPage.getByRole("button", { name: "Tools auswählen" }),
           toolsDialog,
         );
+        // The citizen has no permission for the tool
+        await expect(
+          toolsDialog.getByRole("checkbox", { name: "List the audit events" }),
+        ).toHaveCount(0);
         const toolSwitch = consentPage.getByRole("checkbox", {
           name: "Get the current user",
         });

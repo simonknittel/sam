@@ -120,6 +120,10 @@ test.describe("the MCP app", () => {
       name: "Get the current user",
     });
     await expect(toolSwitch).toBeChecked();
+    // The citizen has no permission for the tool
+    await expect(
+      toolsDialog.getByRole("checkbox", { name: "List the audit events" }),
+    ).toHaveCount(0);
 
     await toggleLabel(toolsDialog, toolSwitch).click();
     await expect(toolSwitch).not.toBeChecked();
@@ -189,8 +193,25 @@ test.describe("the MCP app", () => {
     await waitForAppShellHydration(page);
     await expect(adminModeSwitch).not.toBeChecked();
 
+    // The tools of the client follow the admin mode of the client, not the
+    // admin mode of the toolbar
+    const toolsButton = clientRow.getByRole("button", {
+      name: `Tools von ${CIMD_CLIENT_NAME} bearbeiten`,
+    });
+    const toolsDialog = page.getByRole("dialog", { name: "Tools bearbeiten" });
+    const adminToolSwitch = toolsDialog.getByRole("checkbox", {
+      name: "List the audit events",
+    });
+    await clickUntilVisible(toolsButton, toolsDialog);
+    await expect(adminToolSwitch).toHaveCount(0);
+    await page.keyboard.press("Escape");
+    await expect(toolsDialog).toBeHidden();
+
     await toggleLabel(page, adminModeSwitch).click();
     await expect(adminModeSwitch).toBeChecked();
+
+    await clickUntilVisible(toolsButton, toolsDialog);
+    await expect(adminToolSwitch).toBeChecked();
 
     await expect
       .poll(
