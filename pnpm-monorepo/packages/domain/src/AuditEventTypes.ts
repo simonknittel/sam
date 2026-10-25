@@ -229,6 +229,7 @@ export enum AuditEventType {
   CITIZENS_PER_ROLE_COUNTED = "CITIZENS_PER_ROLE_COUNTED",
   SHIPS_PER_VARIANT_COUNTED = "SHIPS_PER_VARIANT_COUNTED",
   UNIQUE_LOGINS_COUNTED = "UNIQUE_LOGINS_COUNTED",
+  MCP_USAGE_COUNTED = "MCP_USAGE_COUNTED",
   APP_FAVORITE_ADDED = "APP_FAVORITE_ADDED",
   APP_FAVORITE_REMOVED = "APP_FAVORITE_REMOVED",
   CITIZEN_PROFILE_UPDATED = "CITIZEN_PROFILE_UPDATED",
@@ -1565,6 +1566,13 @@ export interface AuditEventDataByType {
 
   [AuditEventType.UNIQUE_LOGINS_COUNTED]: {
     date: string;
+    count: number;
+  };
+
+  [AuditEventType.MCP_USAGE_COUNTED]: {
+    /** The start of the counted day */
+    date: string;
+    /** The number of the audit events of the day through the MCP server */
     count: number;
   };
 

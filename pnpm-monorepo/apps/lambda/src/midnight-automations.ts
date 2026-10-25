@@ -4,6 +4,7 @@ import {
   archiveIrrelevantOnSiteNotifications,
   autoAssignInactiveRoles,
   countCitizensPerRole,
+  countMcpUsage,
   countShips,
   countUniqueLogins,
   deleteUnusedUploads,
@@ -65,6 +66,7 @@ export const handler: ScheduledHandler = async () =>
     disburseRoleSalaries: createJob(disburseRoleSalaries),
     countShips: createJob(countShips),
     countUniqueLogins: createJob(countUniqueLogins),
+    countMcpUsage: createJob(countMcpUsage),
     purgeTrashedWikiPages: createJob(purgeTrashedWikiPages),
     purgeOrphanedWikiTags: createJob(purgeOrphanedWikiTags),
     archiveIrrelevantOnSiteNotifications: createJob(

@@ -1,4 +1,5 @@
 /** The use cases of the system log (the audit events) */
+export { countMcpUsage, type CountMcpUsageOutput } from "./countMcpUsage.js";
 export {
   listAuditEventCreators,
   type AuditEventCreator,

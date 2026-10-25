@@ -34,6 +34,11 @@ export interface DailyLoginCountRow {
   readonly count: number;
 }
 
+export interface DailyMcpUsageCountRow {
+  readonly day: Date;
+  readonly count: number;
+}
+
 export interface PositiveSilcTransactionRow {
   readonly createdAt: Date;
   readonly value: number;
@@ -79,6 +84,30 @@ export const findDailyLoginCountRows = async (
     where: { date: { gte: previousDay?.date ?? fromDay } },
     orderBy: { date: "asc" },
     select: { date: true, count: true },
+  });
+};
+
+/**
+ * The MCP usage counts of the window, with the last day before it. The change
+ * of the first day of the chart compares with that day.
+ */
+export const findDailyMcpUsageCountRows = async (
+  context: ApplicationContext,
+  actor: Actor,
+  { fromDay }: StatisticDayWindow,
+): Promise<DailyMcpUsageCountRow[]> => {
+  requirePermission(actor, "globalStatistics", "read");
+
+  const previousDay = await context.prisma.dailyMcpUsageCount.findFirst({
+    where: { day: { lt: fromDay } },
+    orderBy: { day: "desc" },
+    select: { day: true },
+  });
+
+  return context.prisma.dailyMcpUsageCount.findMany({
+    where: { day: { gte: previousDay?.day ?? fromDay } },
+    orderBy: { day: "asc" },
+    select: { day: true, count: true },
   });
 };
 

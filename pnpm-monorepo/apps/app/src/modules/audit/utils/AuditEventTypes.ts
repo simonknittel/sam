@@ -2232,6 +2232,16 @@ export const AuditEventDefinitions: {
     message: (data) => `Counted ${data.count} unique login(s) on ${data.date}`,
   },
 
+  [AuditEventType.MCP_USAGE_COUNTED]: {
+    type: AuditEventType.MCP_USAGE_COUNTED,
+    data: {
+      date: "string",
+      count: 0,
+    },
+    message: (data) =>
+      `Counted ${data.count} system log entries through the MCP server on ${data.date}`,
+  },
+
   [AuditEventType.APP_FAVORITE_ADDED]: {
     type: AuditEventType.APP_FAVORITE_ADDED,
     data: {
