@@ -19,8 +19,37 @@ interface Item {
   readonly group?: string;
 }
 
+/** Combobox detects the groups by their `items` and filters inside them */
+interface ItemGroup {
+  readonly value: string;
+  readonly items: Item[];
+}
+
 const compareByLabel = (first: Item, second: Item) =>
   first.label.localeCompare(second.label);
+
+interface OptionProps {
+  readonly item: Item;
+  readonly isInGroup: boolean;
+}
+
+const Option = ({ item, isInGroup }: OptionProps) => (
+  <Combobox.Item
+    value={item}
+    className={clsx(
+      "grid cursor-pointer grid-cols-[0.75rem_1fr] items-center gap-2 py-1.5 text-sm outline-none data-highlighted:bg-neutral-800",
+      { "pr-3 pl-8": isInGroup, "px-3": !isInGroup },
+    )}
+  >
+    <Combobox.ItemIndicator className="col-start-1 text-brand-red-300">
+      <FaCheck className="size-2.5" />
+    </Combobox.ItemIndicator>
+
+    <div title={item.label} className="col-start-2 truncate">
+      {item.label}
+    </div>
+  </Combobox.Item>
+);
 
 interface Props {
   readonly name: string;
@@ -99,8 +128,9 @@ export const MultiSelectComboboxFilter = ({
 
     return Array.from(
       Map.groupBy(sortedItems, (item) => item.group ?? ""),
-    ).sort(([firstGroup], [secondGroup]) =>
-      firstGroup.localeCompare(secondGroup),
+      ([group, groupItems]): ItemGroup => ({ value: group, items: groupItems }),
+    ).sort((firstGroup, secondGroup) =>
+      firstGroup.value.localeCompare(secondGroup.value),
     );
   }, [sortedItems, hasGroups]);
 
@@ -109,7 +139,7 @@ export const MultiSelectComboboxFilter = ({
       <p className="font-mono text-sm text-white/40 uppercase">{label}</p>
 
       <Combobox.Root
-        items={sortedItems}
+        items={groupedItems ?? sortedItems}
         value={selectedItems}
         multiple
         onValueChange={setValueAndResetPagination}
@@ -137,6 +167,7 @@ export const MultiSelectComboboxFilter = ({
 
                       <Combobox.Input
                         id={id}
+                        aria-label={label}
                         placeholder={value.length > 0 ? "" : placeholder}
                         className="h-6 min-w-16 flex-1 border-0 bg-transparent px-1 text-sm outline-none placeholder:text-neutral-500"
                         autoComplete="off"
@@ -168,52 +199,25 @@ export const MultiSelectComboboxFilter = ({
                 </div>
               </Combobox.Empty>
 
-              {hasGroups && groupedItems ? (
-                groupedItems.map(([group, groupItems]) => (
-                  <div key={group}>
-                    <div className="px-3 py-1 text-xs font-medium tracking-wider text-neutral-500 uppercase">
-                      {group}
-                    </div>
+              <Combobox.List>
+                {(entry: Item | ItemGroup) =>
+                  "items" in entry ? (
+                    <Combobox.Group key={entry.value} items={entry.items}>
+                      <Combobox.GroupLabel className="px-3 py-1 text-xs font-medium tracking-wider text-neutral-500 uppercase">
+                        {entry.value}
+                      </Combobox.GroupLabel>
 
-                    {groupItems.map((item) => (
-                      <Combobox.Item
-                        key={item.value}
-                        value={item}
-                        className="grid cursor-pointer grid-cols-[0.75rem_1fr] items-center gap-2 py-1.5 pr-3 pl-8 text-sm outline-none data-highlighted:bg-neutral-800"
-                      >
-                        <Combobox.ItemIndicator className="col-start-1 text-brand-red-300">
-                          <FaCheck className="size-2.5" />
-                        </Combobox.ItemIndicator>
-
-                        <div
-                          title={item.label}
-                          className="col-start-2 truncate"
-                        >
-                          {item.label}
-                        </div>
-                      </Combobox.Item>
-                    ))}
-                  </div>
-                ))
-              ) : (
-                <Combobox.List>
-                  {(item: Item) => (
-                    <Combobox.Item
-                      key={item.value}
-                      value={item}
-                      className="grid cursor-pointer grid-cols-[0.75rem_1fr] items-center gap-2 px-3 py-1.5 text-sm outline-none data-highlighted:bg-neutral-800"
-                    >
-                      <Combobox.ItemIndicator className="col-start-1 text-brand-red-300">
-                        <FaCheck className="size-2.5" />
-                      </Combobox.ItemIndicator>
-
-                      <div title={item.label} className="col-start-2 truncate">
-                        {item.label}
-                      </div>
-                    </Combobox.Item>
-                  )}
-                </Combobox.List>
-              )}
+                      <Combobox.Collection>
+                        {(item: Item) => (
+                          <Option key={item.value} item={item} isInGroup />
+                        )}
+                      </Combobox.Collection>
+                    </Combobox.Group>
+                  ) : (
+                    <Option key={entry.value} item={entry} isInGroup={false} />
+                  )
+                }
+              </Combobox.List>
             </Combobox.Popup>
           </Combobox.Positioner>
         </Combobox.Portal>
