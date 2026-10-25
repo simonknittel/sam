@@ -49,6 +49,28 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-10-25-mcp-nutzung",
+    date: "2026-10-25",
+    title: "Nutzung des MCP-Servers",
+    tags: ["Neu", "Statistiken"],
+    isTracked: false,
+    body: () => (
+      <p>
+        Die{" "}
+        <Link
+          href="/app/statistics"
+          className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300 active:text-interaction-700"
+        >
+          Statistiken
+        </Link>{" "}
+        zeigen jetzt auch die Nutzung des MCP-Servers im Diagramm
+        &bdquo;MCP-Nutzung&ldquo;. Das Lesen von Daten wird aktuell nicht
+        einberechnet.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-10-24-mcp-rollen",
     date: "2026-10-24",
     title: "Rollen bearbeiten",
