@@ -2,7 +2,6 @@ import type { ReadMarkerSubject } from "@sam-monorepo/domain";
 import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { READ_MARKER_SUBJECT_RULES } from "./readMarkerSubjects.js";
-import { buildUnreadWhere } from "./unreadWhere.js";
 
 export interface FindNewItemIdsInput {
   readonly subject: ReadMarkerSubject;
@@ -22,12 +21,9 @@ export const findNewItemIds = async (
 ): Promise<string[]> => {
   if (input.subjectIds.length === 0) return [];
 
-  const unreadWhere = buildUnreadWhere(actor, input.subject);
-  if (!unreadWhere) return [];
-
   return READ_MARKER_SUBJECT_RULES[input.subject].findNewIds(
     context,
+    actor,
     input.subjectIds,
-    unreadWhere,
   );
 };

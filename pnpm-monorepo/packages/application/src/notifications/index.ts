@@ -35,11 +35,11 @@ export {
   type MarkAllOnSiteNotificationsReadOutput,
 } from "./markAllOnSiteNotificationsRead.js";
 export {
-  markOnSiteNotificationsRead,
-  markOnSiteNotificationsReadInputSchema,
-  type MarkOnSiteNotificationsReadInput,
-  type MarkOnSiteNotificationsReadOutput,
-} from "./markOnSiteNotificationsRead.js";
+  markOnSiteNotificationRead,
+  markOnSiteNotificationReadInputSchema,
+  type MarkOnSiteNotificationReadInput,
+  type MarkOnSiteNotificationReadOutput,
+} from "./markOnSiteNotificationRead.js";
 export {
   markOnSiteNotificationUnread,
   markOnSiteNotificationUnreadInputSchema,

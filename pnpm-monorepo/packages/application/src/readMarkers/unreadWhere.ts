@@ -9,12 +9,18 @@ import type { Actor } from "../actor.js";
 const TASKS_AND_EVENTS_TRACKED_SINCE = new Date("2026-09-27T00:00:00Z");
 
 /**
+ * The subject types whose items are database rows. The changelog entries are
+ * code in the app and have their own rule (see `changelogReadMarkers.ts`).
+ */
+type RowReadMarkerSubject = ReadMarkerSubject.Task | ReadMarkerSubject.Event;
+
+/**
  * Items created before this date are never new. It is the start of the read
  * markers for the subject type, thus its existing items do not suddenly show
  * as new for everybody.
  */
 export const READ_MARKER_TRACKED_SINCE: Readonly<
-  Record<ReadMarkerSubject, Date>
+  Record<RowReadMarkerSubject, Date>
 > = {
   [ReadMarkerSubject.Task]: TASKS_AND_EVENTS_TRACKED_SINCE,
   [ReadMarkerSubject.Event]: TASKS_AND_EVENTS_TRACKED_SINCE,
@@ -57,7 +63,7 @@ export const getNewSince = (
  */
 export const buildUnreadWhere = (
   actor: Pick<Actor, "citizen" | "emailConfirmedAt">,
-  subject: ReadMarkerSubject,
+  subject: RowReadMarkerSubject,
 ): UnreadWhere | null => {
   const citizenId = actor.citizen?.id;
   if (!citizenId) return null;
