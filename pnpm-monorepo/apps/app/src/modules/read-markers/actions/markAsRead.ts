@@ -1,6 +1,9 @@
 "use server";
 
-import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import {
+  createAuthenticatedAction,
+  type ActionSuccess,
+} from "@/modules/actions/utils/createAction";
 import {
   getApplicationContext,
   mapApplicationErrorToActionResponse,
@@ -12,7 +15,15 @@ import {
   type MarkItemAsReadOutput,
 } from "@sam-monorepo/application";
 import { refresh } from "next/cache";
-import type { MarkAsReadResponse } from "../utils/markAsReadResponse";
+
+export interface MarkAsReadResponse extends ActionSuccess {
+  /**
+   * Whether the read marked notifications as read which announced the item.
+   * The client then fetches the unread count of the bell again, see
+   * `useRefetchOnSiteNotifications()`.
+   */
+  readonly notificationsRead: boolean;
+}
 
 /**
  * Marks one item as read by the viewer: from its details once they mounted

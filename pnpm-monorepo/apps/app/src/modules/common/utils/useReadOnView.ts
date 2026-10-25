@@ -6,7 +6,7 @@ import { useEffect, useEffectEvent, useRef } from "react";
  * An item counts as viewed once at least this share of it has been visible
  * for the dwell time.
  */
-export const READ_ON_VIEW_VISIBILITY_THRESHOLD = 0.5;
+const READ_ON_VIEW_VISIBILITY_THRESHOLD = 0.5;
 
 /**
  * An item taller than the visible area can never reach the share above, so it
@@ -15,13 +15,13 @@ export const READ_ON_VIEW_VISIBILITY_THRESHOLD = 0.5;
  */
 const READ_ON_VIEW_BAND_ROOT_MARGIN = "-25% 0px -25% 0px";
 
-export const READ_ON_VIEW_DWELL_MILLISECONDS = 500;
+const READ_ON_VIEW_DWELL_MILLISECONDS = 500;
 
 /**
  * Viewed items are collected and reported in batches to avoid one server
  * action per item while scrolling.
  */
-export const READ_ON_VIEW_FLUSH_DEBOUNCE_MILLISECONDS = 1_000;
+const READ_ON_VIEW_FLUSH_DEBOUNCE_MILLISECONDS = 1_000;
 
 /**
  * Ref callback which registers an element for read-on-view tracking. The id

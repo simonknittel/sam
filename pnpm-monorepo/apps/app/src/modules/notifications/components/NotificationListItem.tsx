@@ -46,6 +46,9 @@ export const NotificationListItem = ({
 }: Props) => {
   const rendering = renderOnSiteNotification(notification);
   const isUnread = !notification.readAt;
+  const readToggleLabel = isUnread
+    ? "Als gelesen markieren"
+    : "Als ungelesen markieren";
   const Decoration = rendering.decoration
     ? decorationComponents[rendering.decoration]
     : null;
@@ -102,27 +105,19 @@ export const NotificationListItem = ({
         <div className="relative flex gap-1 opacity-0 group-focus-within/notification:opacity-100 group-hover/notification:opacity-100">
           {tab === OnSiteNotificationTab.Inbox && (
             <>
-              {isUnread ? (
-                <button
-                  type="button"
-                  onClick={() => onMarkRead(notification)}
-                  title="Als gelesen markieren"
-                  aria-label="Als gelesen markieren"
-                  className="cursor-pointer p-1 text-neutral-500 transition-colors hover:text-interaction-500 focus-visible:text-interaction-500 active:scale-95"
-                >
-                  <FaEnvelopeOpen />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => onMarkUnread(notification)}
-                  title="Als ungelesen markieren"
-                  aria-label="Als ungelesen markieren"
-                  className="cursor-pointer p-1 text-neutral-500 transition-colors hover:text-interaction-500 focus-visible:text-interaction-500 active:scale-95"
-                >
-                  <FaEnvelope />
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() =>
+                  isUnread
+                    ? onMarkRead(notification)
+                    : onMarkUnread(notification)
+                }
+                title={readToggleLabel}
+                aria-label={readToggleLabel}
+                className="cursor-pointer p-1 text-neutral-500 transition-colors hover:text-interaction-500 focus-visible:text-interaction-500 active:scale-95"
+              >
+                {isUnread ? <FaEnvelopeOpen /> : <FaEnvelope />}
+              </button>
 
               <button
                 type="button"

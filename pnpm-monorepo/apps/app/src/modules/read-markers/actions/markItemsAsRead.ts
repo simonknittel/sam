@@ -1,6 +1,9 @@
 "use server";
 
-import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import {
+  createAuthenticatedAction,
+  type ActionSuccess,
+} from "@/modules/actions/utils/createAction";
 import {
   getApplicationContext,
   mapApplicationErrorToActionResponse,
@@ -11,17 +14,27 @@ import {
   markItemsAsRead as markItemsAsReadUseCase,
   type MarkItemsAsReadOutput,
 } from "@sam-monorepo/application";
-import { refresh } from "next/cache";
-import type { MarkAsReadResponse } from "../utils/markAsReadResponse";
+
+export interface MarkItemsAsReadResponse extends ActionSuccess {
+  /**
+   * Whether one of the items was new for the viewer. The client then
+   * refreshes the page, see `<UnseenEntriesProvider>`.
+   */
+  readonly newItemsRead: boolean;
+}
 
 /**
  * Marks a batch of items of one subject type as read by the viewer. The
  * read-on-view tracking of the changelog page calls it, hence the batch
  * input. Repeated calls change nothing.
+ *
+ * Without a `refresh()`: the tracking runs while the viewer reads, and the
+ * refresh of the old page can win the race against a click on a link and
+ * keep the old page open. The client refreshes the router instead.
  */
 export const markItemsAsRead = createAuthenticatedAction<
   typeof markItemsAsReadInputSchema,
-  MarkAsReadResponse
+  MarkItemsAsReadResponse
 >(
   "markItemsAsRead",
   markItemsAsReadInputSchema,
@@ -37,12 +50,9 @@ export const markItemsAsRead = createAuthenticatedAction<
       return mapApplicationErrorToActionResponse(error, { formData, t });
     }
 
-    // The "new" state shows in lists, tiles and the dot badges of the app layout
-    if (result.new_count > 0) refresh();
-
     return {
       success: "Als gelesen markiert",
-      notificationsRead: result.notifications_read > 0,
+      newItemsRead: result.new_count > 0,
     };
   },
   {

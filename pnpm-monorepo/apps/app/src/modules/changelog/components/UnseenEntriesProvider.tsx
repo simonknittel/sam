@@ -7,12 +7,13 @@ import {
 } from "@/modules/common/utils/useReadOnView";
 import { markItemsAsRead } from "@/modules/read-markers/actions/markItemsAsRead";
 import { ReadMarkerSubject } from "@sam-monorepo/domain";
+import { useRouter } from "next/navigation";
 import { createContext, useContext, useState, type ReactNode } from "react";
 
 interface UnseenEntriesContext {
   /**
    * Entries which keep their "Neu" indicator although they are already
-   * marked as seen.
+   * read.
    */
   readonly retainedHighlightKeys: ReadonlySet<string>;
   readonly observeEntry: ReadOnViewRef;
@@ -28,8 +29,8 @@ interface Props {
 
 /**
  * Marks a tracked changelog entry as read once it has dwelled in the
- * viewport. The action refreshes the page, thus the dot badge of the app
- * drops. The entries stay highlighted for as long as this provider is
+ * viewport. The router then refreshes the page, thus the dot badge of the
+ * app drops. The entries stay highlighted for as long as this provider is
  * mounted, so the user doesn't lose track of what is new while they are still
  * reading — leaving the changelog unmounts it and the next visit renders them
  * without a highlight.
@@ -38,6 +39,7 @@ export const UnseenEntriesProvider = ({ children }: Props) => {
   const [retainedHighlightKeys, setRetainedHighlightKeys] = useState<
     ReadonlySet<string>
   >(new Set());
+  const router = useRouter();
 
   const markSeen = async (keys: string[]) => {
     const formData = new FormData();
@@ -46,7 +48,10 @@ export const UnseenEntriesProvider = ({ children }: Props) => {
       formData.append("subjectId", key);
     }
 
-    await runAction(markItemsAsRead, formData, { successToast: false });
+    const response = await runAction(markItemsAsRead, formData, {
+      successToast: false,
+    });
+    if (response?.newItemsRead) router.refresh();
   };
 
   const handleRead = (keys: string[]) => {

@@ -1,6 +1,9 @@
 "use server";
 
-import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import {
+  createAuthenticatedAction,
+  type ActionSuccess,
+} from "@/modules/actions/utils/createAction";
 import {
   getApplicationContext,
   mapApplicationErrorToActionResponse,
@@ -11,7 +14,15 @@ import {
   markOnSiteNotificationRead as markOnSiteNotificationReadUseCase,
   type MarkOnSiteNotificationReadOutput,
 } from "@sam-monorepo/application";
-import type { MarkOnSiteNotificationReadResponse } from "../utils/markOnSiteNotificationReadResponse";
+
+export interface MarkOnSiteNotificationReadResponse extends ActionSuccess {
+  /**
+   * Whether the notification announced an item which was new for the
+   * viewer. The client then refreshes the page, see
+   * `useOnSiteNotificationMutations()`.
+   */
+  readonly newItemRead: boolean;
+}
 
 /**
  * Marks an own notification as read: from its toggle, or from a click on its

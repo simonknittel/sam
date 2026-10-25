@@ -72,8 +72,7 @@ export const useOnSiteNotificationMutations = () => {
     updateListItems(tab, (item) =>
       item.id === notification.id ? { ...item, readAt: new Date() } : item,
     );
-    // An archived notification does not count
-    adjustUnreadCount(notification.archivedAt ? 0 : -1);
+    if (!notification.archivedAt) adjustUnreadCount(-1);
   };
 
   const markUnread = async (notification: OnSiteNotificationRow) => {

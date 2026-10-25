@@ -16,7 +16,7 @@ interface Props {
   readonly isTracked: boolean;
   readonly isUnseenOnServer: boolean;
   /**
-   * A redacted entry is still marked as seen once it has been scrolled past,
+   * A redacted entry is still marked as read once it has been scrolled past,
    * so its dot badge clears, but it never reveals that it is new.
    */
   readonly isRedacted?: boolean;
