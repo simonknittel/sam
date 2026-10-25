@@ -8,6 +8,7 @@ import {
 import {
   createAppEvent,
   createCitizen,
+  createOnSiteNotification,
   createRole,
   futureEvent,
   ONE_DAY_MS,
@@ -171,6 +172,52 @@ test("a new task stays new until the viewer opens it, also after a back navigati
   expect(
     await prisma.auditEvent.count({ where: { type: "READ_MARKER_CREATED" } }),
   ).toBe(1);
+});
+
+test("opening a new task marks its notification as read, and the bell follows without a reload", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const creator = await createCitizen(prisma, {
+    handle: "rm-melder",
+    permissionStrings: ["task;read"],
+  });
+  const viewer = await createCitizen(prisma, {
+    handle: "rm-empfaenger",
+    permissionStrings: ["task;read"],
+  });
+  const task = await createTask(prisma, creator, "Konvoi begleiten");
+  const notification = await createOnSiteNotification(prisma, {
+    citizenId: viewer.entity.id,
+    notificationType: "task_created",
+    payload: { taskId: task.id, taskTitle: task.title },
+  });
+  await signIn(viewer.user);
+
+  await page.goto("/app/dashboard");
+  await expect(page).toHaveTitle(/^\(1\)/);
+
+  await clickUntilUrl(
+    page,
+    sectionByHeading(page, "Neue Tasks").getByRole("link", {
+      name: "Konvoi begleiten",
+      exact: true,
+    }),
+    new RegExp(`/app/tasks/${task.id}$`),
+  );
+
+  await expect
+    .poll(
+      async () =>
+        (
+          await prisma.onSiteNotification.findUniqueOrThrow({
+            where: { id: notification.id },
+          })
+        ).readAt,
+    )
+    .not.toBeNull();
+  await expect(page).toHaveTitle(/^[^(]/);
 });
 
 test("the marker in the dashboard tile marks a task as read, and the next new task moves up", async ({

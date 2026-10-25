@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { TaskRewardType, TaskVisibility } from "@sam-monorepo/database/client";
 import {
   createAppEvent,
   createCitizen,
@@ -6,7 +7,7 @@ import {
   createOnSiteNotifications,
   futureEvent,
 } from "../fixtures/factories";
-import { clickUntilVisible } from "../fixtures/interactions";
+import { clickUntilVisible, sectionByHeading } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 const bellButton = (page: Page) =>
@@ -36,8 +37,9 @@ const openNotificationCenter = (page: Page) =>
 const unreadRowDots = (page: Page) =>
   popover(page).getByTitle("Ungelesen", { exact: true });
 
-/** Dwell time + flush debounce + server action, with headroom. */
-const READ_ON_VIEW_TIMEOUT = 15_000;
+/** The row of a notification, found through a text of its body */
+const notificationRow = (page: Page, text: string) =>
+  popover(page).getByRole("listitem").filter({ hasText: text });
 
 /** The "Erste Schritte" popover, which the welcome greeting opens */
 const onboardingPopover = (page: Page) =>
@@ -202,14 +204,20 @@ test("unknown notification types render a generic fallback", async ({
   ).toBeVisible();
 });
 
-test("notifications in view are marked read, keeping their highlight until the popover closes", async ({
+test("opening the popover marks nothing as read, the toggle marks one notification", async ({
   page,
   prisma,
   signIn,
 }) => {
   const citizen = await createCitizen(prisma, { handle: "viewer" });
-  await createOnSiteNotification(prisma, { citizenId: citizen.entity.id });
-  await createOnSiteNotification(prisma, { citizenId: citizen.entity.id });
+  const alpha = await createOnSiteNotification(prisma, {
+    citizenId: citizen.entity.id,
+    payload: { eventId: "evt-alpha", eventName: "Operation Alpha" },
+  });
+  const beta = await createOnSiteNotification(prisma, {
+    citizenId: citizen.entity.id,
+    payload: { eventId: "evt-beta", eventName: "Operation Beta" },
+  });
   await signIn(citizen.user);
 
   await page.goto("/app");
@@ -220,52 +228,83 @@ test("notifications in view are marked read, keeping their highlight until the p
   await openNotificationCenter(page);
   await expect(unreadRowDots(page)).toHaveCount(2);
 
-  await expect(page).toHaveTitle(/^[^(]/, { timeout: READ_ON_VIEW_TIMEOUT });
-  await expect(bellDot(page)).toHaveCount(0);
+  const alphaRow = notificationRow(page, "Operation Alpha");
+  await alphaRow.hover();
+  await alphaRow
+    .getByRole("button", { name: "Als gelesen markieren", exact: true })
+    .click();
+
+  await expect(unreadRowDots(page)).toHaveCount(1);
+  await expect(page).toHaveTitle(/^\(1\)/);
+  await expect(
+    alphaRow.getByRole("button", {
+      name: "Als ungelesen markieren",
+      exact: true,
+    }),
+  ).toBeAttached();
   await expect
-    .poll(() => prisma.onSiteNotification.count({ where: { readAt: null } }))
-    .toBe(0);
-
-  // Read in the database, but still highlighted while the popover stays open
-  await expect(unreadRowDots(page)).toHaveCount(2);
-
-  await page.keyboard.press("Escape");
-  await expect(popover(page)).toHaveCount(0);
-  await openNotificationCenter(page);
-
-  await expect(unreadRowDots(page)).toHaveCount(0);
+    .poll(async () =>
+      (
+        await prisma.onSiteNotification.findMany({
+          where: { id: { in: [alpha.id, beta.id] } },
+          orderBy: { createdAt: "asc" },
+        })
+      ).map((notification) => notification.readAt !== null),
+    )
+    .toEqual([true, false]);
 });
 
-test("only notifications in view get marked read", async ({
+test("reading the notification about a new task marks the task as read", async ({
   page,
   prisma,
   signIn,
 }) => {
-  const citizen = await createCitizen(prisma, { handle: "scroller" });
-  await createOnSiteNotifications(prisma, {
-    citizenId: citizen.entity.id,
-    count: 30,
+  const creator = await createCitizen(prisma, {
+    handle: "nc-auftraggeber",
+    permissionStrings: ["task;read"],
   });
-  await signIn(citizen.user);
+  const viewer = await createCitizen(prisma, {
+    handle: "nc-leser",
+    permissionStrings: ["task;read"],
+  });
+  const task = await prisma.task.create({
+    data: {
+      title: "Frachter eskortieren",
+      visibility: TaskVisibility.PUBLIC,
+      rewardType: TaskRewardType.TEXT,
+      rewardTypeTextValue: "Ruhm und Ehre",
+      createdById: creator.entity.id,
+      // Later than the email confirmation of the viewer, thus the task is new
+      createdAt: new Date(),
+    },
+  });
+  await createOnSiteNotification(prisma, {
+    citizenId: viewer.entity.id,
+    notificationType: "task_created",
+    payload: { taskId: task.id, taskTitle: task.title },
+  });
+  await signIn(viewer.user);
 
-  await page.goto("/app");
+  await page.goto("/app/dashboard");
+  await expect(sectionByHeading(page, "Neue Tasks")).toBeVisible();
   await openNotificationCenter(page);
-  await expect(
-    popover(page).getByText("Event 1", { exact: true }),
-  ).toBeVisible();
+
+  const taskRow = notificationRow(page, "Frachter eskortieren");
+  await taskRow.hover();
+  await taskRow
+    .getByRole("button", { name: "Als gelesen markieren", exact: true })
+    .click();
 
   await expect
-    .poll(
-      () =>
-        prisma.onSiteNotification.count({ where: { readAt: { not: null } } }),
-      { timeout: READ_ON_VIEW_TIMEOUT },
+    .poll(() =>
+      prisma.readMarker.count({
+        where: { taskId: task.id, citizenId: viewer.entity.id },
+      }),
     )
-    .toBeGreaterThan(0);
-
-  const unreadCount = await prisma.onSiteNotification.count({
-    where: { readAt: null },
-  });
-  expect(unreadCount).toBeGreaterThan(0);
+    .toBe(1);
+  // The refresh removes the tile, which shows only new tasks
+  await expect(sectionByHeading(page, "Neue Tasks")).toHaveCount(0);
+  await expect(page).toHaveTitle(/^[^(]/);
 });
 
 test("a read notification can be marked unread again", async ({
@@ -361,24 +400,34 @@ test("a notification can be archived and restored again", async ({
     .toBeNull();
 });
 
-test("the bulk actions mark everything read and archive what is read", async ({
+test("the bulk actions mark everything read with the announced events and archive what is read", async ({
   page,
   prisma,
   signIn,
 }) => {
-  const citizen = await createCitizen(prisma, { handle: "bulk-reader" });
-  /**
-   * More rows than the popover shows at once: read-on-view would otherwise
-   * mark the whole list read on its own, and the bulk button — which
-   * disables itself once nothing is unread — could never be clicked.
-   */
+  const citizen = await createCitizen(prisma, {
+    handle: "bulk-reader",
+    permissionStrings: ["event;read"],
+  });
+  const creator = await createCitizen(prisma, { handle: "bulk-creator" });
+  const event = await createAppEvent(prisma, {
+    name: "Operation Sammelmarke",
+    createdById: creator.entity.id,
+    ...futureEvent(),
+  });
+  await createOnSiteNotification(prisma, {
+    citizenId: citizen.entity.id,
+    notificationType: "event_created",
+    payload: { eventId: event.id, eventName: event.name },
+  });
   await createOnSiteNotifications(prisma, {
     citizenId: citizen.entity.id,
-    count: 30,
+    count: 2,
   });
   await signIn(citizen.user);
 
   await page.goto("/app");
+  await expect(page).toHaveTitle(/^\(3\)/);
   await openNotificationCenter(page);
 
   await popover(page)
@@ -390,6 +439,13 @@ test("the bulk actions mark everything read and archive what is read", async ({
   await expect
     .poll(() => prisma.onSiteNotification.count({ where: { readAt: null } }))
     .toBe(0);
+  await expect
+    .poll(() =>
+      prisma.readMarker.count({
+        where: { eventId: event.id, citizenId: citizen.entity.id },
+      }),
+    )
+    .toBe(1);
 
   // Everything is read by now, so archiving the read ones empties the inbox
   await popover(page)

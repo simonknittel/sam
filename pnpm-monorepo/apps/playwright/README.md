@@ -72,7 +72,9 @@ can have no effect.
   test `refresh()` or the client router cache.
 - Some components call an action when the page loads, and the action calls
   `refresh()` by itself: `MarkAsReadOnMount` on the first visit of a new
-  item and `trackWikiPageVisit`. The collab editor refreshes the page when
+  item, the read-on-view of new changelog entries and `trackWikiPageVisit`.
+  The read of a notification about a new item refreshes the router too. The
+  collab editor refreshes the page when
   its token request gives a 404 (the page is gone). A test that changes the
   target right after a load can pass because of this refresh. Wait for these actions (for example the visit row or the
   editor), or seed the read marker.

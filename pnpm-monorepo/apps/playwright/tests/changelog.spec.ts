@@ -38,8 +38,11 @@ test("entries are marked as seen in view and keep their indicator", async ({
   const indicatorCount = await newEntryIndicators(page).count();
 
   const seenCount = () =>
-    prisma.changelogEntrySeen.count({
-      where: { citizenId: citizen.entity.id },
+    prisma.readMarker.count({
+      where: {
+        citizenId: citizen.entity.id,
+        changelogEntryKey: { not: null },
+      },
     });
 
   /**
