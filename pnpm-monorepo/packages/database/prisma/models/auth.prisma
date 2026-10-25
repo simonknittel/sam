@@ -57,8 +57,9 @@ model User {
   bannedById              String?
   bannedBy                Citizen?                 @relation("bannedBy", fields: [bannedById], references: [id])
   /// The status of the two-factor authentication that Discord gave at the
-  /// last Discord login of the user. NULL: no Discord login since SAM stores
-  /// the status. The login audit event records the time of each status.
+  /// last Discord login of the user. NULL: unknown, because no Discord login
+  /// since SAM stores the status, or Discord gave no valid status. The login
+  /// audit event records the time of each status.
   discordTwoFactorEnabled Boolean?
   citizen                 Citizen?                 @relation("citizen")
   oauthGrants             OAuthGrant[]             @relation("oauthGrants")

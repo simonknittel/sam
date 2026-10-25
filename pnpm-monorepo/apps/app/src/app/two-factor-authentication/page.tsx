@@ -31,9 +31,7 @@ export default async function Page() {
 
   await requireConfirmedEmailForPage(authentication.session);
 
-  if (!(await authentication.authorize("login", "manage")))
-    redirect("/clearance");
-
+  // Without `login;manage`, `/app` leads on to the clearance page
   if (!isMissingTwoFactorAuthenticationOfSession(authentication.session))
     redirect("/app");
 
@@ -55,7 +53,7 @@ export default async function Page() {
           <p>
             {authentication.session.discordTwoFactorEnabled === false
               ? "Bei deiner letzten Anmeldung hat Discord gemeldet, dass die Zwei-Faktor-Authentifizierung für deinen Account nicht aktiv ist."
-              : "Wir haben die Zwei-Faktor-Authentifizierung deines Discord-Accounts noch nicht geprüft."}
+              : "Wir kennen den Status der Zwei-Faktor-Authentifizierung deines Discord-Accounts noch nicht."}
           </p>
 
           <ol className="list-inside list-decimal">

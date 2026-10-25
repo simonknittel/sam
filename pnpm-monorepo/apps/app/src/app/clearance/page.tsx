@@ -1,6 +1,7 @@
 import { AdminToolbar } from "@/modules/admin-toolbar/components/AdminToolbar";
 import { authenticate } from "@/modules/auth/server";
 import { requireConfirmedEmailForPage } from "@/modules/auth/utils/emailConfirmation";
+import { requireTwoFactorAuthenticationForPage } from "@/modules/auth/utils/twoFactorAuthentication";
 import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { ClearanceLogout } from "@/modules/iam/components/ClearanceLogout";
 import { HumanResourcesPopover } from "@/modules/iam/components/HumanResourcesPopover";
@@ -28,6 +29,13 @@ export default async function Page() {
   }
 
   await requireConfirmedEmailForPage(authentication.session);
+
+  /**
+   * Before the clearance: an admin without `login;manage` gets it from admin
+   * mode, and the admin toolbar of this page needs the two-factor
+   * authentication
+   */
+  requireTwoFactorAuthenticationForPage(authentication.session);
 
   if (await authentication.authorize("login", "manage")) redirect("/app");
 

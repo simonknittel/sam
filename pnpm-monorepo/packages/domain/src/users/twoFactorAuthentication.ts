@@ -16,7 +16,7 @@ export interface TwoFactorAuthenticationSubject {
   readonly userRole: UserRole | null;
   /** The own permissions, without admin mode */
   readonly permissionSets: PermissionSet[];
-  /** Null when no Discord login gave the status yet */
+  /** Null when the status is unknown */
   readonly discordTwoFactorEnabled: boolean | null;
 }
 

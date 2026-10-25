@@ -10,7 +10,7 @@ export const DiscordTwoFactorStatus = ({ enabled }: Props) => {
     return (
       <span
         className="text-neutral-500 italic"
-        title="Keine Anmeldung über Discord, seit SAM den Status speichert"
+        title="Seit SAM den Status speichert, hat keine Anmeldung über Discord einen Status übermittelt"
       >
         Unbekannt
       </span>
