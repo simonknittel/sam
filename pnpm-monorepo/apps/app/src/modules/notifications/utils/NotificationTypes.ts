@@ -14,17 +14,6 @@ interface NotificationApp {
 
 export const NOTIFICATIONS_APPS: NotificationApp[] = [
   {
-    appTitle: "Changelog",
-    notificationTypes: [
-      {
-        id: NotificationSettingType.ChangelogEntryCreated,
-        title: "Neuer Eintrag",
-        category: "Changelog",
-      },
-    ],
-  },
-
-  {
     appTitle: "Events",
     notificationTypes: [
       {

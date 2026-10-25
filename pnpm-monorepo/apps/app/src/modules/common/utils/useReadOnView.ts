@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useEffectEvent, useRef, type RefObject } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 
 /**
  * An item counts as viewed once at least this share of it has been visible
@@ -30,30 +30,18 @@ export const READ_ON_VIEW_FLUSH_DEBOUNCE_MILLISECONDS = 1_000;
 export type ReadOnViewRef = (element: Element | null) => (() => void) | void;
 
 interface Options {
-  /**
-   * While false nothing is observed and everything already collected is
-   * reported, so a list which is hidden or switched away from stops marking
-   * its items.
-   */
-  readonly enabled?: boolean;
-  /**
-   * Scroll container the observed elements live in. Omit for lists which
-   * scroll with the page. Read once per observer, so the container has to be
-   * mounted while `enabled` is true.
-   */
-  readonly rootRef?: RefObject<Element | null>;
   /** Receives the ids of the elements which have been viewed, in batches. */
   readonly onRead: (ids: string[]) => void;
 }
 
 /**
  * Read-on-view tracking: reports the id of every registered element which
- * stays sufficiently visible for the dwell time, batched over a short
- * debounce. Register an element with the returned ref callback and put its id
- * into `data-read-on-view-id`. Dropping the ref stops the tracking of that
- * element, which is how an item opts out once it has been reported.
+ * stays sufficiently visible in the viewport for the dwell time, batched over
+ * a short debounce. Register an element with the returned ref callback and
+ * put its id into `data-read-on-view-id`. Dropping the ref stops the tracking
+ * of that element, which is how an item opts out once it has been reported.
  */
-export const useReadOnView = ({ enabled = true, rootRef, onRead }: Options) => {
+export const useReadOnView = ({ onRead }: Options) => {
   const registeredElements = useRef(new Set<Element>());
   const observersRef = useRef<IntersectionObserver[]>([]);
 
@@ -76,8 +64,6 @@ export const useReadOnView = ({ enabled = true, rootRef, onRead }: Options) => {
   };
 
   useEffect(() => {
-    if (!enabled) return;
-
     const dwellTimers = new Map<string, number>();
     const pendingIds = new Set<string>();
     let flushTimer: number | null = null;
@@ -149,8 +135,6 @@ export const useReadOnView = ({ enabled = true, rootRef, onRead }: Options) => {
         }
       };
 
-    const root = rootRef?.current ?? null;
-
     const observers = [
       new IntersectionObserver(
         handleEntries(
@@ -158,11 +142,11 @@ export const useReadOnView = ({ enabled = true, rootRef, onRead }: Options) => {
           (entry) =>
             entry.intersectionRatio >= READ_ON_VIEW_VISIBILITY_THRESHOLD,
         ),
-        { root, threshold: READ_ON_VIEW_VISIBILITY_THRESHOLD },
+        { threshold: READ_ON_VIEW_VISIBILITY_THRESHOLD },
       ),
       new IntersectionObserver(
         handleEntries(visibleByBand, (entry) => entry.isIntersecting),
-        { root, rootMargin: READ_ON_VIEW_BAND_ROOT_MARGIN, threshold: 0 },
+        { rootMargin: READ_ON_VIEW_BAND_ROOT_MARGIN, threshold: 0 },
       ),
     ];
 
@@ -184,7 +168,7 @@ export const useReadOnView = ({ enabled = true, rootRef, onRead }: Options) => {
       if (flushTimer !== null) window.clearTimeout(flushTimer);
       flush();
     };
-  }, [enabled, rootRef]);
+  }, []);
 
   return observeItem;
 };

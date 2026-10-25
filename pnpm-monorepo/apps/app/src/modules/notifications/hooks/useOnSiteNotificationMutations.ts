@@ -3,10 +3,11 @@
 import { runAction } from "@/modules/actions/utils/runAction";
 import { api } from "@/trpc/react";
 import { OnSiteNotificationTab } from "@sam-monorepo/domain";
+import { useRouter } from "next/navigation";
 import { archiveOnSiteNotification } from "../actions/archiveOnSiteNotification";
 import { archiveReadOnSiteNotifications } from "../actions/archiveReadOnSiteNotifications";
 import { markAllOnSiteNotificationsRead } from "../actions/markAllOnSiteNotificationsRead";
-import { markOnSiteNotificationsRead } from "../actions/markOnSiteNotificationsRead";
+import { markOnSiteNotificationRead } from "../actions/markOnSiteNotificationRead";
 import { markOnSiteNotificationUnread } from "../actions/markOnSiteNotificationUnread";
 import { unarchiveOnSiteNotification } from "../actions/unarchiveOnSiteNotification";
 import { useOnSiteNotifications } from "../components/OnSiteNotificationsProvider";
@@ -14,12 +15,14 @@ import type { OnSiteNotificationRow } from "../utils/types";
 
 /**
  * The state-changing operations of the notification center. Each runs its
- * server action and mirrors the result into the TanStack cache and the
- * unread count, so the UI updates without refetching. Lists the row moved
- * out of (other tab) are invalidated instead and refetch on their next use.
+ * server action and mirrors the result into the TanStack cache, so the lists
+ * update without refetching. Lists the row moved out of (other tab) are
+ * invalidated instead and refetch on their next use. The unread count
+ * changes at once and is then fetched from the server.
  */
 export const useOnSiteNotificationMutations = () => {
   const utils = api.useUtils();
+  const router = useRouter();
   const { setUnreadCount, adjustUnreadCount } = useOnSiteNotifications();
 
   const updateListItems = (
@@ -42,28 +45,35 @@ export const useOnSiteNotificationMutations = () => {
   };
 
   /**
-   * Marks the given (unread, unarchived) notifications as read. Runs
-   * silently — used by the read-on-view tracking and target navigation.
+   * Marks an unread notification as read: from its toggle, or silently from
+   * a click on its target
    */
-  const markRead = async (notificationIds: string[]) => {
-    if (notificationIds.length <= 0) return;
-
+  const markRead = async (
+    notification: OnSiteNotificationRow,
+    options?: { readonly successToast?: boolean },
+  ) => {
     const formData = new FormData();
-    for (const notificationId of notificationIds) {
-      formData.append("notificationId", notificationId);
-    }
+    formData.set("notificationId", notification.id);
 
-    const succeeded = await runAction(markOnSiteNotificationsRead, formData, {
-      successToast: false,
+    const response = await runAction(markOnSiteNotificationRead, formData, {
+      successToast: options?.successToast,
     });
-    if (!succeeded) return;
+    if (!response) return;
 
-    updateListItems(OnSiteNotificationTab.Inbox, (item) =>
-      notificationIds.includes(item.id) && !item.readAt
-        ? { ...item, readAt: new Date() }
-        : item,
+    /**
+     * The announced item lost its "new" state in the lists, tiles and dot
+     * badges. After a click on the target, the router refreshes the new page.
+     */
+    if (response.newItemRead) router.refresh();
+
+    const tab = notification.archivedAt
+      ? OnSiteNotificationTab.Archive
+      : OnSiteNotificationTab.Inbox;
+    updateListItems(tab, (item) =>
+      item.id === notification.id ? { ...item, readAt: new Date() } : item,
     );
-    adjustUnreadCount(-notificationIds.length);
+    // An archived notification does not count
+    adjustUnreadCount(notification.archivedAt ? 0 : -1);
   };
 
   const markUnread = async (notification: OnSiteNotificationRow) => {

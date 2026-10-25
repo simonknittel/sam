@@ -12,13 +12,7 @@ import {
   ON_SITE_NOTIFICATION_CREATED_EVENT,
   OnSiteNotificationTab,
 } from "@sam-monorepo/domain";
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useEffect, type ReactNode } from "react";
 import * as z from "zod/mini";
 import type { OnSiteNotificationRow } from "../utils/types";
 
@@ -32,9 +26,26 @@ const realtimeNotificationSchema = z.object({
   archivedAt: z.null(),
 });
 
+/** Sets the count at once, then fetches it from the server */
+const updateUnreadCount = (
+  utils: ReturnType<typeof api.useUtils>,
+  updateCount: (count: number) => number,
+) => {
+  utils.onSiteNotifications.unreadCount.setData(undefined, (count) =>
+    count === undefined ? count : Math.max(0, updateCount(count)),
+  );
+  void utils.onSiteNotifications.unreadCount.invalidate();
+};
+
 interface OnSiteNotificationsContext {
   readonly unreadCount: number;
+  /**
+   * Sets the count at once after a change of the read state, and then
+   * fetches it from the server: the server count wins, thus the bell does
+   * not drift.
+   */
   readonly setUnreadCount: (count: number) => void;
+  /** Like `setUnreadCount()`, relative to the current count */
   readonly adjustUnreadCount: (delta: number) => void;
 }
 
@@ -44,20 +55,29 @@ const OnSiteNotificationsContext = createContext<
 
 interface Props {
   readonly children: ReactNode;
+  /** The count of the server render, until the first fetch of the count */
   readonly initialUnreadCount: number;
 }
 
 /**
- * Holds the unread count of on-site notifications (server-rendered initial
- * value), mirrors it into the document title, and subscribes to the
- * citizen's soketi channel to receive new notifications in realtime. Without
- * a connected websocket client this degrades to the initial page load state.
+ * Holds the unread count of on-site notifications in the TanStack cache,
+ * next to the notification lists, mirrors it into the document title, and
+ * subscribes to the citizen's soketi channel to receive new notifications in
+ * realtime. Without a connected websocket client the count changes only with
+ * the own changes of the read state.
  */
 export const OnSiteNotificationsProvider = ({
   children,
   initialUnreadCount,
 }: Props) => {
-  const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
+  const { data: unreadCount } = api.onSiteNotifications.unreadCount.useQuery(
+    undefined,
+    {
+      initialData: initialUnreadCount,
+      // Each change of the count fetches it again (see `setUnreadCount`)
+      staleTime: Infinity,
+    },
+  );
 
   const authentication = useAuthentication();
   const entityId = authentication ? authentication.session.entity?.id : null;
@@ -65,24 +85,30 @@ export const OnSiteNotificationsProvider = ({
   const { client } = useChannelsContext();
   const utils = api.useUtils();
 
+  const setUnreadCount = (count: number) => {
+    updateUnreadCount(utils, () => count);
+  };
+
   const adjustUnreadCount = (delta: number) => {
-    setUnreadCount((count) => Math.max(0, count + delta));
+    updateUnreadCount(utils, (count) => count + delta);
   };
 
   /**
    * Mirror the unread count into the document title. The MutationObserver
-   * re-applies it after Next.js rewrites the title on navigation.
+   * re-applies it after Next.js rewrites the title on navigation. It observes
+   * the head, because a `refresh()` replaces the title element.
    */
   useEffect(() => {
     setDocumentTitleUnreadCount(unreadCount);
 
-    const titleElement = document.querySelector("title");
-    if (!titleElement) return;
-
     const observer = new MutationObserver(() => {
       restoreDocumentTitleUnreadCount(unreadCount);
     });
-    observer.observe(titleElement, { childList: true });
+    observer.observe(document.head, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
 
     return () => {
       observer.disconnect();
@@ -105,7 +131,7 @@ export const OnSiteNotificationsProvider = ({
         citizenId: entityId,
       };
 
-      setUnreadCount((count) => count + 1);
+      updateUnreadCount(utils, (count) => count + 1);
 
       /**
        * Prepend into the inbox list only when it has been fetched before;

@@ -9,7 +9,6 @@ import {
   useTabsContext,
 } from "@/modules/common/components/tabs/TabsContext";
 import { OnSiteNotificationTab } from "@sam-monorepo/domain";
-import { useState } from "react";
 import { FaArchive, FaCheckDouble, FaCog } from "react-icons/fa";
 import { useOnSiteNotificationMutations } from "../hooks/useOnSiteNotificationMutations";
 import { NotificationList } from "./NotificationList";
@@ -25,26 +24,6 @@ interface Props {
 }
 
 export const NotificationCenter = ({ onNavigate }: Props) => {
-  /**
-   * Notifications marked read by read-on-view keep their unread highlight so
-   * users don't lose track of what is new while they are still reading. The
-   * set resets when the notification center unmounts, i.e. when the
-   * surrounding popover closes. Marking all as read clears it immediately.
-   */
-  const [retainedHighlightIds, setRetainedHighlightIds] = useState<
-    ReadonlySet<string>
-  >(new Set());
-
-  const retainHighlights = (notificationIds: string[]) => {
-    setRetainedHighlightIds(
-      (previousIds) => new Set([...previousIds, ...notificationIds]),
-    );
-  };
-
-  const clearRetainedHighlights = () => {
-    setRetainedHighlightIds(new Set());
-  };
-
   return (
     <TabsProvider initialActiveTab={OnSiteNotificationTab.Inbox}>
       <div className="flex items-start justify-between gap-2">
@@ -53,18 +32,13 @@ export const NotificationCenter = ({ onNavigate }: Props) => {
           <Tab id={OnSiteNotificationTab.Archive}>Archiv</Tab>
         </TabList>
 
-        <HeaderActions
-          onNavigate={onNavigate}
-          onClearRetainedHighlights={clearRetainedHighlights}
-        />
+        <HeaderActions onNavigate={onNavigate} />
       </div>
 
       <TabPanel id={OnSiteNotificationTab.Inbox}>
         <NotificationList
           tab={OnSiteNotificationTab.Inbox}
           onNavigate={onNavigate}
-          retainedHighlightIds={retainedHighlightIds}
-          onRetainHighlights={retainHighlights}
         />
       </TabPanel>
 
@@ -80,13 +54,9 @@ export const NotificationCenter = ({ onNavigate }: Props) => {
 
 interface HeaderActionsProps {
   readonly onNavigate?: () => void;
-  readonly onClearRetainedHighlights: () => void;
 }
 
-const HeaderActions = ({
-  onNavigate,
-  onClearRetainedHighlights,
-}: HeaderActionsProps) => {
+const HeaderActions = ({ onNavigate }: HeaderActionsProps) => {
   const { activeTab } = useTabsContext();
   const { unreadCount } = useOnSiteNotifications();
   const { markAllRead, archiveAllRead } = useOnSiteNotificationMutations();
@@ -97,10 +67,7 @@ const HeaderActions = ({
         <>
           <button
             type="button"
-            onClick={() => {
-              onClearRetainedHighlights();
-              void markAllRead();
-            }}
+            onClick={() => void markAllRead()}
             disabled={unreadCount <= 0}
             title="Alle als gelesen markieren"
             aria-label="Alle als gelesen markieren"

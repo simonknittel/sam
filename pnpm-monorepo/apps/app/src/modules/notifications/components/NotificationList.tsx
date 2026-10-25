@@ -2,22 +2,17 @@
 
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { useTabsContext } from "@/modules/common/components/tabs/TabsContext";
-import { useReadOnView } from "@/modules/common/utils/useReadOnView";
 import { api } from "@/trpc/react";
 import { OnSiteNotificationTab } from "@sam-monorepo/domain";
 import clsx from "clsx";
-import { useRef } from "react";
 import { BsExclamationOctagonFill } from "react-icons/bs";
 import { useOnSiteNotificationMutations } from "../hooks/useOnSiteNotificationMutations";
+import type { OnSiteNotificationRow } from "../utils/types";
 import { NotificationListItem } from "./NotificationListItem";
 
 interface Props {
   readonly tab: OnSiteNotificationTab;
   readonly onNavigate?: () => void;
-  /** Notifications which keep their unread highlight although already read */
-  readonly retainedHighlightIds?: ReadonlySet<string>;
-  /** Called with the ids read-on-view marks read, to retain their highlight */
-  readonly onRetainHighlights?: (notificationIds: string[]) => void;
 }
 
 /**
@@ -31,12 +26,7 @@ interface Props {
 const statusMessageClassName =
   "-mx-4 -mb-4 border-t border-neutral-800 box-content min-h-21 px-4 flex gap-2 justify-center items-center text-center";
 
-export const NotificationList = ({
-  tab,
-  onNavigate,
-  retainedHighlightIds,
-  onRetainHighlights,
-}: Props) => {
+export const NotificationList = ({ tab, onNavigate }: Props) => {
   const { activeTab } = useTabsContext();
   const isActive = activeTab === tab;
   const {
@@ -58,34 +48,9 @@ export const NotificationList = ({
 
   const notifications = data?.pages.flatMap((page) => page.items) ?? [];
 
-  const scrollContainerRef = useRef<HTMLUListElement>(null);
-
-  /**
-   * Read-on-view marks an unread notification read once it has dwelled in the
-   * scroll container, and retains its highlight so the user doesn't lose
-   * track of what is new while the popover is still open. Only enabled once
-   * the list is rendered, because the observer needs the scroll container as
-   * its root.
-   */
-  const handleRead = (notificationIds: string[]) => {
-    onRetainHighlights?.(notificationIds);
-    void markRead(notificationIds);
-  };
-
-  const observeNotification = useReadOnView({
-    enabled:
-      isActive &&
-      tab === OnSiteNotificationTab.Inbox &&
-      notifications.length > 0,
-    rootRef: scrollContainerRef,
-    onRead: handleRead,
-  });
-
-  const handleNavigateToTarget = (
-    notificationId: string,
-    isUnread: boolean,
-  ) => {
-    if (isUnread) void markRead([notificationId]);
+  const handleNavigateToTarget = (notification: OnSiteNotificationRow) => {
+    if (!notification.readAt)
+      void markRead(notification, { successToast: false });
     onNavigate?.();
   };
 
@@ -125,19 +90,13 @@ export const NotificationList = ({
     );
 
   return (
-    <ul
-      ref={scrollContainerRef}
-      className="-mx-4 -mb-4 max-h-96 divide-y divide-neutral-800 overflow-y-auto border-t border-neutral-800"
-    >
+    <ul className="-mx-4 -mb-4 max-h-96 divide-y divide-neutral-800 overflow-y-auto border-t border-neutral-800">
       {notifications.map((notification) => (
         <NotificationListItem
           key={notification.id}
           notification={notification}
           tab={tab}
-          keepUnreadHighlight={
-            retainedHighlightIds?.has(notification.id) ?? false
-          }
-          observeReadOnView={observeNotification}
+          onMarkRead={markRead}
           onArchive={archive}
           onUnarchive={unarchive}
           onMarkUnread={markUnread}

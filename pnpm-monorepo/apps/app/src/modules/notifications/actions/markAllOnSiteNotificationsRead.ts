@@ -1,11 +1,35 @@
 "use server";
 
-import { ActionRefresh, createUseCaseAction } from "@/modules/application";
-import { markAllOnSiteNotificationsRead as markAllOnSiteNotificationsReadUseCase } from "@sam-monorepo/application";
+import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import {
+  getApplicationContext,
+  mapApplicationErrorToActionResponse,
+  toActor,
+} from "@/modules/application";
+import {
+  markAllOnSiteNotificationsRead as markAllOnSiteNotificationsReadUseCase,
+  type MarkAllOnSiteNotificationsReadOutput,
+} from "@sam-monorepo/application";
+import { refresh } from "next/cache";
+import * as z from "zod";
 
-export const markAllOnSiteNotificationsRead = createUseCaseAction({
-  name: "markAllOnSiteNotificationsRead",
-  useCase: markAllOnSiteNotificationsReadUseCase,
-  refresh: ActionRefresh.Never,
-  success: () => "Alle als gelesen markiert",
-});
+export const markAllOnSiteNotificationsRead = createAuthenticatedAction(
+  "markAllOnSiteNotificationsRead",
+  z.object({}),
+  async (formData, authentication, _data, t) => {
+    let result: MarkAllOnSiteNotificationsReadOutput;
+    try {
+      result = await markAllOnSiteNotificationsReadUseCase(
+        getApplicationContext(),
+        await toActor(authentication.session),
+      );
+    } catch (error) {
+      return mapApplicationErrorToActionResponse(error, { formData, t });
+    }
+
+    // The items lost their "new" state in the lists, tiles and dot badges
+    if (result.new_items_read) refresh();
+
+    return { success: "Alle als gelesen markiert" };
+  },
+);

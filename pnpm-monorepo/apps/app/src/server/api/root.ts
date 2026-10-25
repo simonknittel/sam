@@ -12,6 +12,7 @@ import { getSharedEntries } from "./routers/logAnalyzer/getSharedEntries";
 import { getManufacturerById } from "./routers/manufacturer/getById";
 import { getSeriesByManufacturerId } from "./routers/manufacturer/getSeriesByManufacturerId";
 import { list as listOnSiteNotifications } from "./routers/onSiteNotifications/list";
+import { unreadCount as countUnreadOnSiteNotifications } from "./routers/onSiteNotifications/unreadCount";
 import { getAssignableRoles } from "./routers/roles/getAssignableRoles";
 import { getVisibleRoles } from "./routers/roles/getVisibleRoles";
 import { getRolesForSalaries } from "./routers/silc/getRolesForSalaries";
@@ -61,6 +62,7 @@ export const appRouter = createTRPCRouter({
   }),
   onSiteNotifications: createTRPCRouter({
     list: listOnSiteNotifications,
+    unreadCount: countUnreadOnSiteNotifications,
   }),
   roles: createTRPCRouter({
     getVisibleRoles,

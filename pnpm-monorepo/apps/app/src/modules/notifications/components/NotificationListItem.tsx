@@ -3,10 +3,9 @@
 import { Link } from "@/modules/common/components/Link";
 import { RelativeDate } from "@/modules/common/components/RelativeDate";
 import { UnreadEdge } from "@/modules/common/components/UnreadEdge";
-import type { ReadOnViewRef } from "@/modules/common/utils/useReadOnView";
 import { OnSiteNotificationTab } from "@sam-monorepo/domain";
 import type { ComponentType } from "react";
-import { FaArchive, FaEnvelope, FaUndo } from "react-icons/fa";
+import { FaArchive, FaEnvelope, FaEnvelopeOpen, FaUndo } from "react-icons/fa";
 import {
   NotificationDecoration,
   renderOnSiteNotification,
@@ -29,59 +28,44 @@ const decorationComponents: Record<NotificationDecoration, ComponentType> = {
 interface Props {
   readonly notification: OnSiteNotificationRow;
   readonly tab: OnSiteNotificationTab;
-  /**
-   * Keeps the unread highlight visible although the notification is already
-   * read — read-on-view marks notifications read while the popover is open,
-   * but their highlight should only disappear once the popover closes.
-   */
-  readonly keepUnreadHighlight: boolean;
-  /** Registers unread rows for the read-on-view tracking of the list */
-  readonly observeReadOnView: ReadOnViewRef;
+  readonly onMarkRead: (notification: OnSiteNotificationRow) => void;
+  readonly onMarkUnread: (notification: OnSiteNotificationRow) => void;
   readonly onArchive: (notification: OnSiteNotificationRow) => void;
   readonly onUnarchive: (notification: OnSiteNotificationRow) => void;
-  readonly onMarkUnread: (notification: OnSiteNotificationRow) => void;
-  readonly onNavigateToTarget: (
-    notificationId: string,
-    isUnread: boolean,
-  ) => void;
+  readonly onNavigateToTarget: (notification: OnSiteNotificationRow) => void;
 }
 
 export const NotificationListItem = ({
   notification,
   tab,
-  keepUnreadHighlight,
-  observeReadOnView,
+  onMarkRead,
+  onMarkUnread,
   onArchive,
   onUnarchive,
-  onMarkUnread,
   onNavigateToTarget,
 }: Props) => {
   const rendering = renderOnSiteNotification(notification);
   const isUnread = !notification.readAt;
-  const showsUnreadHighlight = isUnread || keepUnreadHighlight;
-  const trackReadOnView = isUnread && tab === OnSiteNotificationTab.Inbox;
   const Decoration = rendering.decoration
     ? decorationComponents[rendering.decoration]
     : null;
 
   return (
     <li
-      ref={trackReadOnView ? observeReadOnView : undefined}
       /* `isolate` keeps the decoration between the row's background and its
       text. Without it, the negative z-index of the decoration would put it
       behind the background of the popover. */
       className="group/notification relative isolate px-4 py-2 focus-within:bg-neutral-800/50 hover:bg-neutral-800/50"
-      data-read-on-view-id={trackReadOnView ? notification.id : undefined}
     >
       {Decoration && <Decoration />}
 
-      {showsUnreadHighlight && <UnreadEdge title="Ungelesen" />}
+      {isUnread && <UnreadEdge title="Ungelesen" />}
 
       <div className="flex items-center gap-2">
         {rendering.url ? (
           <Link
             href={rendering.url}
-            onClick={() => onNavigateToTarget(notification.id, isUnread)}
+            onClick={() => onNavigateToTarget(notification)}
             className="truncate text-sm font-bold after:absolute after:inset-0 hover:underline focus-visible:underline"
             title={rendering.title}
           >
@@ -118,7 +102,17 @@ export const NotificationListItem = ({
         <div className="relative flex gap-1 opacity-0 group-focus-within/notification:opacity-100 group-hover/notification:opacity-100">
           {tab === OnSiteNotificationTab.Inbox && (
             <>
-              {!isUnread && (
+              {isUnread ? (
+                <button
+                  type="button"
+                  onClick={() => onMarkRead(notification)}
+                  title="Als gelesen markieren"
+                  aria-label="Als gelesen markieren"
+                  className="cursor-pointer p-1 text-neutral-500 transition-colors hover:text-interaction-500 focus-visible:text-interaction-500 active:scale-95"
+                >
+                  <FaEnvelopeOpen />
+                </button>
+              ) : (
                 <button
                   type="button"
                   onClick={() => onMarkUnread(notification)}
