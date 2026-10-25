@@ -35,6 +35,12 @@ export enum SystemLogApp {
   Wiki = "Wiki",
 }
 
+const formatDiscordTwoFactorStatus = (enabled: boolean | null) => {
+  if (enabled === null) return "unknown";
+
+  return enabled ? "enabled" : "disabled";
+};
+
 /** A read access gives the query parameters of the read */
 const toReadMessage = (subject: string, data: { arguments: object }) =>
   `${subject}: ${JSON.stringify(data.arguments)}`;
@@ -68,6 +74,19 @@ export const AuditEventDefinitions: {
     },
     message: (data) =>
       `User ${data.userName ?? data.userId} (${data.userEmail ?? "unknown email"}) logged in`,
+  },
+
+  [AuditEventType.USER_LOGIN_V3]: {
+    type: AuditEventType.USER_LOGIN_V3,
+    app: SystemLogApp.Account,
+    data: {
+      userId: "string",
+      userEmail: "string",
+      userName: "string",
+      discordTwoFactorEnabled: true,
+    },
+    message: (data) =>
+      `User ${data.userName ?? data.userId} (${data.userEmail ?? "unknown email"}) logged in (Discord two-factor authentication: ${formatDiscordTwoFactorStatus(data.discordTwoFactorEnabled)})`,
   },
 
   [AuditEventType.USER_LOGOUT]: {

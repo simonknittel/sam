@@ -3,6 +3,7 @@ import { getApplicationContext } from "@/modules/application/getApplicationConte
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { DEVELOPMENT_SESSION_TOKEN_COOKIE } from "@/modules/auth/utils/sessionTokenCookie";
 import { getDiscordAvatar } from "@/modules/discord/utils/getDiscordAvatar";
+import { getDiscordTwoFactorEnabled } from "@/modules/discord/utils/getDiscordTwoFactorEnabled";
 import { getGuildMember } from "@/modules/discord/utils/getGuildMember";
 import { log } from "@/modules/logging";
 import { PrismaAdapter } from "@auth/prisma-adapter";
@@ -22,6 +23,7 @@ import {
   ASSUMABLE_USER_WHERE,
   comparePermissionSets,
   getLocalDateKey,
+  isMissingTwoFactorAuthentication,
   ORGANIZATION_TIMEZONE,
   USER_AGENT_MAXIMUM_LENGTH,
   type PermissionSet,
@@ -56,6 +58,11 @@ declare module "next-auth" {
     } & DefaultSession["user"];
     /** NULL only for a user without a Discord account */
     discordId: string | null;
+    /**
+     * The two-factor authentication of the Discord account behind the
+     * session token, not of an assumed user: the person who logged in.
+     */
+    discordTwoFactorEnabled: boolean | null;
     givenPermissionSets: PermissionSet[];
     /**
      * Kept deliberately minimal: the session is serialized into the payload
@@ -89,6 +96,7 @@ declare module "next-auth" {
   interface User {
     role?: UserRole | null;
     lastSeenAt?: Date;
+    discordTwoFactorEnabled?: boolean | null;
   }
 }
 
@@ -120,12 +128,18 @@ export const createSession = async (
  * admin toolbar). The session is then built entirely from the assumed user,
  * so the whole app behaves as if they were logged in — including audit
  * attribution of mutations. The cookie is only honored when the user behind
- * the session token actually has the admin role.
+ * the session token actually has the admin role and the two-factor
+ * authentication of Discord. Without it, the own session of the admin stops
+ * at the gate of the two-factor authentication.
  */
 const getAssumedUser = async (
   sessionUser: AdapterUser,
 ): Promise<DatabaseUser | null> => {
-  if (sessionUser.role !== UserRole.ADMIN) return null;
+  if (
+    sessionUser.role !== UserRole.ADMIN ||
+    sessionUser.discordTwoFactorEnabled !== true
+  )
+    return null;
 
   const assumedUserId = (await cookies()).get(ASSUME_USER_COOKIE)?.value;
   if (!assumedUserId || assumedUserId === sessionUser.id) return null;
@@ -281,8 +295,9 @@ export const authOptions: NextAuthOptions = {
       // The welcome follows the roles of the citizen and not the admin mode,
       // because the notification goes only to citizens with `login;manage`
       // through their roles. An assumed session must not use up the welcome
-      // of the assumed user. The dashboard requires a confirmed email (see
-      // `requireConfirmedEmailForPage()`), thus the welcome waits for it.
+      // of the assumed user. The dashboard requires a confirmed email and
+      // the two-factor authentication that some permissions require (see
+      // `requireAuthenticationPage()`), thus the welcome waits for them.
       if (
         citizen &&
         !citizen.welcomedAt &&
@@ -291,7 +306,12 @@ export const authOptions: NextAuthOptions = {
         comparePermissionSets(
           { resource: "login", operation: "manage" },
           givenPermissionSets,
-        )
+        ) &&
+        !isMissingTwoFactorAuthentication({
+          userRole: user.role ?? null,
+          permissionSets: givenPermissionSets,
+          discordTwoFactorEnabled: user.discordTwoFactorEnabled ?? null,
+        })
       )
         await welcomeCitizen(citizen.id, user.id);
 
@@ -307,6 +327,7 @@ export const authOptions: NextAuthOptions = {
           emailVerified: effectiveUser.emailVerified,
         },
         discordId: accounts[0]?.providerAccountId ?? null,
+        discordTwoFactorEnabled: user.discordTwoFactorEnabled ?? null,
         givenPermissionSets,
         entity,
         assumedByAdminId: assumedUser ? user.id : null,
@@ -395,6 +416,7 @@ export const authOptions: NextAuthOptions = {
             data: {
               email: profile.email!.toLocaleLowerCase(),
               image: avatar,
+              discordTwoFactorEnabled: getDiscordTwoFactorEnabled(profile),
               updatedAt: new Date(),
             },
           }),
@@ -414,6 +436,8 @@ export const authOptions: NextAuthOptions = {
 
         const avatar = getDiscordAvatar(profile as DiscordProfile, guildMember);
         user.image = avatar;
+
+        user.discordTwoFactorEnabled = getDiscordTwoFactorEnabled(profile);
 
         user.name = null;
 
@@ -506,11 +530,14 @@ export const authOptions: NextAuthOptions = {
 
       await getApplicationContext().audit.create([
         {
-          type: AuditEventType.USER_LOGIN_V2,
+          type: AuditEventType.USER_LOGIN_V3,
           data: {
             userId: message.user.id,
             userEmail: message.user.email,
             userName: message.user.name,
+            discordTwoFactorEnabled: message.profile
+              ? getDiscordTwoFactorEnabled(message.profile)
+              : null,
           },
           createdById: message.user.id,
         },

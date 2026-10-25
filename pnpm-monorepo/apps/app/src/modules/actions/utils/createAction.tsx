@@ -1,6 +1,7 @@
 import { authenticate } from "@/modules/auth/server";
 import { requireConfirmedEmailForAction } from "@/modules/auth/utils/emailConfirmation";
 import { isAdminBehindSession } from "@/modules/auth/utils/isAdminBehindSession";
+import { isMissingTwoFactorAuthenticationOfSession } from "@/modules/auth/utils/twoFactorAuthentication";
 import { log } from "@/modules/logging";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { getTranslations } from "next-intl/server";
@@ -37,8 +38,8 @@ export type Translations = Awaited<ReturnType<typeof getTranslations>>;
 /** The check an action runs on the session before it validates the request */
 export enum ActionGate {
   /**
-   * The same confirmed-email and clearance (`login`/`manage`) gates as pages
-   * and API routes
+   * The same confirmed-email, clearance (`login`/`manage`) and two-factor
+   * authentication gates as pages and API routes
    */
   Clearance = "clearance",
   /**
@@ -67,14 +68,25 @@ const passesGate = async (
         return false;
       }
 
-      if (await authentication.authorize("login", "manage")) return true;
+      if (!(await authentication.authorize("login", "manage"))) {
+        log.info("Forbidden request to action", {
+          actionName,
+          userId: authentication.session.user.id,
+          reason: "Missing clearance",
+        });
+        return false;
+      }
 
-      log.info("Forbidden request to action", {
-        actionName,
-        userId: authentication.session.user.id,
-        reason: "Missing clearance",
-      });
-      return false;
+      if (isMissingTwoFactorAuthenticationOfSession(authentication.session)) {
+        log.info("Forbidden request to action", {
+          actionName,
+          userId: authentication.session.user.id,
+          reason: "Missing two-factor authentication",
+        });
+        return false;
+      }
+
+      return true;
 
     case ActionGate.Admin:
       if (isAdminBehindSession(authentication.session)) return true;

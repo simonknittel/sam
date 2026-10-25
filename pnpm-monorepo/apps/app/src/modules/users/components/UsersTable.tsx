@@ -8,6 +8,7 @@ import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { BanUser } from "@/modules/users/components/BanUser";
+import { DiscordTwoFactorStatus } from "@/modules/users/components/DiscordTwoFactorStatus";
 import { UnbanUser } from "@/modules/users/components/UnbanUser";
 import { VerifyEmailButton } from "@/modules/users/components/VerifyEmailButton";
 import {
@@ -18,10 +19,10 @@ import {
 import { FaExternalLinkAlt } from "react-icons/fa";
 import { FaCircleXmark } from "react-icons/fa6";
 
-const COLUMNS = "240px 240px 150px 200px 150px 150px 24px";
+const COLUMNS = "240px 240px 150px 200px 120px 150px 150px 24px";
 /** The actions column only fits its labels from `sm` upwards */
 const SM_COLUMNS =
-  "sm:[--table-columns:240px_240px_150px_200px_150px_150px_110px]";
+  "sm:[--table-columns:240px_240px_150px_200px_120px_150px_150px_110px]";
 
 interface Props {
   readonly className?: string;
@@ -33,6 +34,7 @@ interface Props {
       | "image"
       | "createdAt"
       | "emailVerified"
+      | "discordTwoFactorEnabled"
       | "bannedAt"
       | "bannedReason"
       | "role"
@@ -64,6 +66,7 @@ export const UsersTable = ({
         <th>User ID</th>
         <th>Registriert am</th>
         <th>Datenschutzerklärung</th>
+        <th>Discord 2FA</th>
         <th>Handle</th>
         <th>Gesperrt</th>
         <th>
@@ -118,6 +121,10 @@ export const UsersTable = ({
               ) : (
                 <VerifyEmailButton userId={user.id} />
               )}
+            </td>
+
+            <td className="overflow-hidden">
+              <DiscordTwoFactorStatus enabled={user.discordTwoFactorEnabled} />
             </td>
 
             <td className="overflow-hidden">

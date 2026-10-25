@@ -25,6 +25,7 @@ export const toActor = async (session: Session): Promise<Actor> => {
       : null,
     roleIds: effectiveRoles?.roleIds ?? new Set(),
     discordUserId: session.discordId,
+    discordTwoFactorEnabled: session.discordTwoFactorEnabled,
     permissionSets: session.givenPermissionSets,
     adminMode,
   });

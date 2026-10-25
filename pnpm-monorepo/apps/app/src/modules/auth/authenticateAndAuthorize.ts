@@ -8,6 +8,10 @@ import {
   REQUEST_PATH_HEADER,
   validateRedirectTo,
 } from "@/modules/auth/utils/redirectTo";
+import {
+  requireTwoFactorAuthenticationForApi,
+  requireTwoFactorAuthenticationForPage,
+} from "@/modules/auth/utils/twoFactorAuthentication";
 import { log } from "@/modules/logging";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
@@ -37,13 +41,14 @@ export const authenticate = cache(
 );
 
 /**
- * The gate of each server component of `/app`: a session, a confirmed email
- * and `login;manage`. Call it in each page, layout, slot and
- * `generateMetadata` that loads data, also below a layout that calls it:
- * Next.js renders the segments of a route separately and streams them in one
- * response, thus the redirect of a parent layout does not stop the data of
- * the other segments. The clearance, email confirmation and login pages use
- * `authenticate()` instead, because they serve users without clearance.
+ * The gate of each server component of `/app`: a session, a confirmed email,
+ * `login;manage` and the two-factor authentication that some permissions
+ * require. Call it in each page, layout, slot and `generateMetadata` that
+ * loads data, also below a layout that calls it: Next.js renders the segments
+ * of a route separately and streams them in one response, thus the redirect
+ * of a parent layout does not stop the data of the other segments. The
+ * clearance, email confirmation, two-factor authentication and login pages
+ * use `authenticate()` instead, because they serve users without clearance.
  */
 export const requireAuthenticationPage = cache(async (requestPath?: string) => {
   const authentication = await authenticate();
@@ -65,6 +70,8 @@ export const requireAuthenticationPage = cache(async (requestPath?: string) => {
 
   if (!(await authentication.authorize("login", "manage")))
     redirect("/clearance");
+
+  requireTwoFactorAuthenticationForPage(authentication.session);
 
   return {
     ...authentication,
@@ -114,6 +121,8 @@ export async function requireAuthenticationApi(
 
   if (!(await authentication.authorize("login", "manage")))
     throw new Error("Forbidden");
+
+  requireTwoFactorAuthenticationForApi(authentication.session);
 
   return {
     ...authentication,

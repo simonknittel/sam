@@ -9,6 +9,7 @@
 import { authorize, getServerAuthSession } from "@/modules/auth/server";
 import { requireConfirmedEmailForTrpc } from "@/modules/auth/utils/emailConfirmation";
 import { isAdminBehindSession } from "@/modules/auth/utils/isAdminBehindSession";
+import { requireTwoFactorAuthenticationForTrpc } from "@/modules/auth/utils/twoFactorAuthentication";
 import { log } from "@/modules/logging";
 import { ForbiddenError } from "@sam-monorepo/application";
 import { initTRPC, TRPCError } from "@trpc/server";
@@ -84,6 +85,8 @@ export const protectedProcedure = trpc.procedure.use(async ({ ctx, next }) => {
   // The same clearance gate as the pages, the API routes and the actions
   if (!(await authorize(ctx.session, "login", "manage")))
     throw new TRPCError({ code: "FORBIDDEN" });
+
+  requireTwoFactorAuthenticationForTrpc(ctx.session);
 
   return next({
     ctx: {

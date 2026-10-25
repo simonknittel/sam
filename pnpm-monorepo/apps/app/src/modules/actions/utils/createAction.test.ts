@@ -72,7 +72,11 @@ beforeEach(() => {
   spanExporter.reset();
 
   vi.mocked(authenticate).mockResolvedValue({
-    session: { user: { id: "clhaw95yi0000jr08ybuvy137" } },
+    session: {
+      user: { id: "clhaw95yi0000jr08ybuvy137", role: null },
+      givenPermissionSets: [],
+      discordTwoFactorEnabled: null,
+    },
     authorize: () => Promise.resolve(true),
   } as unknown as Awaited<ReturnType<typeof authenticate>>);
 });
@@ -193,12 +197,14 @@ describe("the gates of createAuthenticatedAction", () => {
     readonly isAdmin: boolean;
     readonly hasConfirmedEmail: boolean;
     readonly hasLogin: boolean;
+    readonly hasTwoFactor: boolean;
   }
 
   const mockSession = ({
     isAdmin,
     hasConfirmedEmail,
     hasLogin,
+    hasTwoFactor,
   }: SessionState) => {
     vi.mocked(authenticate).mockResolvedValue({
       session: {
@@ -206,6 +212,8 @@ describe("the gates of createAuthenticatedAction", () => {
           id: "clhaw95yi0000jr08ybuvy137",
           role: isAdmin ? "ADMIN" : null,
         },
+        givenPermissionSets: [],
+        discordTwoFactorEnabled: hasTwoFactor,
         assumedByAdminId: null,
       },
       authorize: (resource: string, operation: string) =>
@@ -221,14 +229,22 @@ describe("the gates of createAuthenticatedAction", () => {
     );
   };
 
-  const CLEARED = { isAdmin: false, hasConfirmedEmail: true, hasLogin: true };
+  const CLEARED = {
+    isAdmin: false,
+    hasConfirmedEmail: true,
+    hasLogin: true,
+    hasTwoFactor: false,
+  };
   const UNCONFIRMED = { ...CLEARED, hasConfirmedEmail: false };
   const WITHOUT_LOGIN = { ...CLEARED, hasLogin: false };
   const ADMIN_WITHOUT_CLEARANCE = {
     isAdmin: true,
     hasConfirmedEmail: false,
     hasLogin: false,
+    hasTwoFactor: true,
   };
+  const ADMIN = { ...CLEARED, isAdmin: true, hasTwoFactor: true };
+  const ADMIN_WITHOUT_TWO_FACTOR = { ...ADMIN, hasTwoFactor: false };
 
   test.each([
     { gate: ActionGate.Clearance, session: CLEARED, runs: true },
@@ -236,6 +252,13 @@ describe("the gates of createAuthenticatedAction", () => {
     { gate: ActionGate.Clearance, session: WITHOUT_LOGIN, runs: false },
     { gate: ActionGate.Admin, session: CLEARED, runs: false },
     { gate: ActionGate.Admin, session: ADMIN_WITHOUT_CLEARANCE, runs: true },
+    { gate: ActionGate.Clearance, session: ADMIN, runs: true },
+    {
+      gate: ActionGate.Clearance,
+      session: ADMIN_WITHOUT_TWO_FACTOR,
+      runs: false,
+    },
+    { gate: ActionGate.Admin, session: ADMIN_WITHOUT_TWO_FACTOR, runs: false },
     { gate: ActionGate.None, session: UNCONFIRMED, runs: true },
     { gate: ActionGate.None, session: WITHOUT_LOGIN, runs: true },
   ])(

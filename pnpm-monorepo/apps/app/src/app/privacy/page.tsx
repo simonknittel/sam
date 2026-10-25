@@ -292,6 +292,15 @@ export default function Page() {
             </p>
 
             <p>
+              Bei jeder Anmeldung über Discord speichern wir, ob für Ihren
+              Discord-Account die Zwei-Faktor-Authentifizierung aktiviert ist.
+              Discord übermittelt diese Angabe zusammen mit Ihrem Profil. Wir
+              benötigen sie, um Accounts mit besonders schützenswerten
+              Berechtigungen abzusichern. Dies liegt in unserem berechtigten
+              Interesse nach Art. 6 Abs. 1 f DSGVO.
+            </p>
+
+            <p>
               Zudem gespeichert werden IT-Nutzungsdaten (z.B. IP-Adresse,
               Geräte-ID, Logging-Daten, Uhrzeit, Datum, Dauer der Nutzung der
               Webseiten, Betriebssystem, Browser oder andere Geräte-Kennungen)

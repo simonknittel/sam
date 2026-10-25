@@ -8,6 +8,7 @@ import { validateRedirectTo } from "@/modules/auth/utils/redirectTo";
 import { DEVELOPMENT_SESSION_TOKEN_COOKIE } from "@/modules/auth/utils/sessionTokenCookie";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
+  enableDevelopmentLoginTwoFactor,
   findDevelopmentLoginUser,
   findDevelopmentLoginUserInputSchema,
 } from "@sam-monorepo/application";
@@ -61,6 +62,8 @@ export const developmentLogin = withTrace(
         error: t("Common.notFound"),
         requestPayload: formData,
       };
+
+    await enableDevelopmentLoginTwoFactor(getApplicationContext(), user.id);
 
     const sessionToken = randomBytes(SESSION_TOKEN_BYTES).toString("hex");
     const expires = new Date(Date.now() + SESSION_MAX_AGE * 1000);
