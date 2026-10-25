@@ -1,5 +1,6 @@
 "use client";
 
+import { useRefetchOnSiteNotifications } from "@/modules/notifications/hooks/useRefetchOnSiteNotifications";
 import type { ReadMarkerSubject } from "@sam-monorepo/domain";
 import { useEffect, useRef } from "react";
 import { markAsRead } from "../actions/markAsRead";
@@ -12,11 +13,13 @@ interface Props {
 /**
  * Marks the item as read once its details actually mounted in the browser.
  * Deliberately not during the server render: hover-triggered prefetching
- * (see the common `<Link>`) renders details the user never opens. Renders
- * nothing.
+ * (see the common `<Link>`) renders details the user never opens. The read
+ * also marks the notifications which announced the item, thus the bell
+ * fetches its count again. Renders nothing.
  */
 export const MarkAsReadOnMount = ({ subject, subjectId }: Props) => {
   const markedItemRef = useRef<string | null>(null);
+  const refetchOnSiteNotifications = useRefetchOnSiteNotifications();
 
   useEffect(() => {
     // eslint-disable-next-line react-you-might-not-need-an-effect/no-event-handler -- There is no user event: mounting in the browser IS the visit, so the effect reports it to the server.
@@ -30,10 +33,15 @@ export const MarkAsReadOnMount = ({ subject, subjectId }: Props) => {
      * Fire-and-forget instead of `runAction()`: a failed read marker must
      * never surface to the user, and `runAction()` toasts errors.
      */
-    markAsRead(formData).catch(() => {
-      // Failures are already logged server-side.
-    });
-  }, [subject, subjectId]);
+    markAsRead(formData)
+      .then((response) => {
+        if (!("error" in response) && response.notificationsRead)
+          refetchOnSiteNotifications();
+      })
+      .catch(() => {
+        // Failures are already logged server-side.
+      });
+  }, [subject, subjectId, refetchOnSiteNotifications]);
 
   return null;
 };

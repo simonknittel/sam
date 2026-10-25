@@ -2722,6 +2722,17 @@ export const AuditEventDefinitions: {
       `MCP tool ${data.toolName} ${data.enabled ? "enabled" : "disabled"} for OAuth client ${data.clientId} (grant ${data.grantId})`,
   },
 
+  [AuditEventType.READ_MARKERS_CREATED]: {
+    type: AuditEventType.READ_MARKERS_CREATED,
+    app: SystemLogApp.Other,
+    data: {
+      citizenId: "string",
+      markers: [{ subject: ReadMarkerSubject.Task, subjectId: "string" }],
+    },
+    message: (data) =>
+      `Marked ${data.markers.length} item(s) as read: ${data.markers.map((marker) => `${marker.subject} ${marker.subjectId}`).join(", ")}`,
+  },
+
   [AuditEventType.CURRENT_USER_READ]: {
     type: AuditEventType.CURRENT_USER_READ,
     app: SystemLogApp.Account,

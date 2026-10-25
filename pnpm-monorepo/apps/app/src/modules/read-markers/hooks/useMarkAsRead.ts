@@ -1,6 +1,7 @@
 "use client";
 
 import { runAction } from "@/modules/actions/utils/runAction";
+import { useRefetchOnSiteNotifications } from "@/modules/notifications/hooks/useRefetchOnSiteNotifications";
 import type { ReadMarkerSubject } from "@sam-monorepo/domain";
 import { useOptimistic, useRef, useState, useTransition } from "react";
 import { markAsRead } from "../actions/markAsRead";
@@ -9,7 +10,9 @@ import { markAsRead } from "../actions/markAsRead";
  * The "new" state of an item for its row or card, plus the click handler of
  * its `<NewMarkerButton>`. The highlight disappears at once; the action
  * refreshes the app, thus the server state (lists, tiles, dot badges)
- * follows in the same transition. A failure restores the highlight.
+ * follows in the same transition, and the bell fetches its count again when
+ * the read marked the notifications of the item. A failure restores the
+ * highlight.
  */
 export const useMarkAsRead = (
   subject: ReadMarkerSubject,
@@ -24,6 +27,7 @@ export const useMarkAsRead = (
   const [isMarkedAsRead, setIsMarkedAsRead] = useState(false);
   const [isNew, setIsNew] = useOptimistic(isNewOnServer && !isMarkedAsRead);
   const [, startTransition] = useTransition();
+  const refetchOnSiteNotifications = useRefetchOnSiteNotifications();
   /** Attach to the link of the item: it takes the focus of the marker */
   const focusTargetRef = useRef<HTMLAnchorElement>(null);
 
@@ -37,8 +41,13 @@ export const useMarkAsRead = (
       const formData = new FormData();
       formData.set("subject", subject);
       formData.set("subjectId", subjectId);
-      if (await runAction(markAsRead, formData, { successToast: false }))
-        setIsMarkedAsRead(true);
+      const response = await runAction(markAsRead, formData, {
+        successToast: false,
+      });
+      if (!response) return;
+
+      setIsMarkedAsRead(true);
+      if (response.notificationsRead) refetchOnSiteNotifications();
     });
   };
 

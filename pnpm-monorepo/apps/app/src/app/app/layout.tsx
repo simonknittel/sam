@@ -7,8 +7,6 @@ import { SessionProviderContainer } from "@/modules/auth/components/SessionProvi
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { isAdminModeActive } from "@/modules/auth/utils/isAdminModeActive";
 import { hasAnyReadableFlow } from "@/modules/career/queries/getMyReadableFlows";
-import { getUnseenChangelogEntryKeys } from "@/modules/changelog/queries/getUnseenChangelogEntryKeys";
-import { CHANGELOG_APP_SLUG } from "@/modules/changelog/utils/CHANGELOG_APP_SLUG";
 import { BirthdayCitizensProvider } from "@/modules/citizen/components/BirthdayCitizensProvider";
 import { getCitizenIdsWithBirthdayToday } from "@/modules/citizen/queries/getCitizenIdsWithBirthdayToday";
 import { CreateContextProvider } from "@/modules/common/components/CreateContext";
@@ -42,7 +40,6 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     apps,
     favoriteAppKeys,
     visibleRoles,
-    changelogUnseenKeys,
     openWikiReportCount,
     unreadOnSiteNotificationCount,
     canReadCareer,
@@ -55,7 +52,6 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     getAppLinks(),
     getAppFavoriteKeys(),
     getVisibleRoles(),
-    getUnseenChangelogEntryKeys(),
     getOpenWikiReportCount(),
     getUnreadOnSiteNotificationCount(),
     hasAnyReadableFlow(),
@@ -89,10 +85,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
                     <AppsContextProvider
                       apps={apps}
                       appDotBadgeCounts={addCountsByAppSlug(
-                        {
-                          [CHANGELOG_APP_SLUG]: changelogUnseenKeys.size,
-                          wiki: openWikiReportCount,
-                        },
+                        { wiki: openWikiReportCount },
                         newItemCountsByAppSlug,
                       )}
                       favoriteAppKeys={[...favoriteAppKeys]}

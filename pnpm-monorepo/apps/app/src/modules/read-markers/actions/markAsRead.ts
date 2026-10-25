@@ -12,13 +12,17 @@ import {
   type MarkItemAsReadOutput,
 } from "@sam-monorepo/application";
 import { refresh } from "next/cache";
+import type { MarkAsReadResponse } from "../utils/markAsReadResponse";
 
 /**
  * Marks one item as read by the viewer: from its details once they mounted
  * in the browser (see `<MarkAsReadOnMount>`), or from a click on its "Neu"
  * marker. Repeated calls change nothing.
  */
-export const markAsRead = createAuthenticatedAction(
+export const markAsRead = createAuthenticatedAction<
+  typeof markItemAsReadInputSchema,
+  MarkAsReadResponse
+>(
   "markAsRead",
   markItemAsReadInputSchema,
   async (formData, authentication, data, t) => {
@@ -42,7 +46,10 @@ export const markAsRead = createAuthenticatedAction(
      */
     if (result.was_new) refresh();
 
-    return { success: "Als gelesen markiert" };
+    return {
+      success: "Als gelesen markiert",
+      notificationsRead: result.notifications_read > 0,
+    };
   },
   {
     parseFormData: (formData) => ({

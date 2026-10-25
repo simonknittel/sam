@@ -3,7 +3,8 @@ import { Day } from "@/modules/changelog/components/Day";
 import { DayItem } from "@/modules/changelog/components/DayItem";
 import { Navigation } from "@/modules/changelog/components/Navigation";
 import { getChangelogEntriesByQuarter } from "@/modules/changelog/queries/getChangelogEntriesByQuarter";
-import { getUnseenChangelogEntryKeys } from "@/modules/changelog/queries/getUnseenChangelogEntryKeys";
+import { getNewIds } from "@/modules/read-markers/queries/getNewIds";
+import { ReadMarkerSubject } from "@sam-monorepo/domain";
 import { notFound } from "next/navigation";
 
 export default async function Page({
@@ -16,7 +17,10 @@ export default async function Page({
   const quarterEntries = await getChangelogEntriesByQuarter(quarter);
   if (quarterEntries.length === 0) notFound();
 
-  const unseenKeys = await getUnseenChangelogEntryKeys();
+  const unseenKeys = await getNewIds(
+    ReadMarkerSubject.ChangelogEntry,
+    quarterEntries.map((entry) => entry.key),
+  );
 
   const grouped = Map.groupBy(quarterEntries, (entry) => entry.date);
   const dates = [...grouped.keys()].toSorted(
