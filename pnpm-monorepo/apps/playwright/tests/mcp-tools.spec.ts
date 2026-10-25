@@ -37,6 +37,8 @@ import { expect, test } from "../fixtures/test";
  */
 const TOOLS_WITHOUT_PERMISSION = [
   "get_current_user",
+  "list_my_notifications",
+  "update_notification",
   "get_citizen",
   "get_permission_catalog",
   "get_wiki_page",
