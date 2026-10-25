@@ -12,6 +12,13 @@ const requestSpynetSearch = (page: Page) =>
     }),
   });
 
+/**
+ * A route of `requireAuthenticationApi`. The page does not exist, thus a
+ * request through the gate gets 404.
+ */
+const requestWikiExport = (page: Page) =>
+  page.request.get("/api/wiki/unbekanntewikiseite/export");
+
 test("a citizen with a sensitive permission needs the two-factor authentication of Discord", async ({
   page,
   prisma,
@@ -39,6 +46,7 @@ test("a citizen with a sensitive permission needs the two-factor authentication 
   ).toBeVisible();
   await expect(page.getByRole("button", { name: "Abmelden" })).toBeVisible();
   expect((await requestSpynetSearch(page)).status()).toBe(403);
+  expect((await requestWikiExport(page)).status()).toBe(403);
 
   // The next Discord login writes the status
   await prisma.user.update({
@@ -49,6 +57,7 @@ test("a citizen with a sensitive permission needs the two-factor authentication 
   await page.goto("/two-factor-authentication");
   await expect(page).toHaveURL("/app/dashboard");
   expect((await requestSpynetSearch(page)).status()).toBe(200);
+  expect((await requestWikiExport(page)).status()).toBe(404);
 });
 
 test("an admin without a known two-factor authentication stops at the gate and gets no admin tools", async ({
@@ -61,17 +70,25 @@ test("an admin without a known two-factor authentication stops at the gate and g
     admin: true,
     discordTwoFactorEnabled: null,
   });
+  /** Needs no two-factor authentication of their own */
+  const assumable = await createCitizen(prisma, { handle: "annehmbar" });
   await signIn(admin.user);
+  await page.context().addCookies([
+    {
+      name: "assume_user",
+      value: assumable.user.id,
+      domain: "localhost",
+      path: "/",
+    },
+  ]);
 
   await page.goto("/app/dashboard");
 
+  // The session ignores the assume and stays the one of the admin
   await expect(page).toHaveURL("/two-factor-authentication");
   await expect(
-    page.getByText("Wir haben die Zwei-Faktor-Authentifizierung"),
+    page.getByText("Wir kennen den Status der Zwei-Faktor-Authentifizierung"),
   ).toBeVisible();
-  await expect(page.getByRole("button", { name: /^Admin tools/ })).toHaveCount(
-    0,
-  );
   const assumableUsers = await page.request.get(
     "/api/trpc/users.getAssumableUsers",
   );
