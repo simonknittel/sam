@@ -1,4 +1,4 @@
-import { AuditEventType, ReadMarkerSubject } from "@sam-monorepo/domain";
+import { ReadMarkerSubject } from "@sam-monorepo/domain";
 import * as z from "zod";
 import { requireCitizen, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
@@ -8,6 +8,7 @@ import { markAnnouncementsAsRead } from "./announcements.js";
 import { ReadMarkerErrorMessage } from "./readMarkerErrors.js";
 import { READ_MARKER_SUBJECT_RULES } from "./readMarkerSubjects.js";
 import {
+  auditCreatedReadMarkers,
   readMarkerSubjectIdSchema,
   writeReadMarkers,
 } from "./writeReadMarkers.js";
@@ -55,7 +56,7 @@ export const markItemAsRead = (
   input: MarkItemAsReadInput,
 ): Promise<MarkItemAsReadOutput> =>
   withSpan(context, "markItemAsRead", async () => {
-    const citizenId = requireCitizen(actor).id;
+    requireCitizen(actor);
 
     const rule = READ_MARKER_SUBJECT_RULES[input.subject];
     if (!rule.canReadSubject(actor))
@@ -76,18 +77,11 @@ export const markItemAsRead = (
       readableIds,
     );
 
-    if (createdIds.length > 0)
-      await context.audit.create([
-        {
-          type: AuditEventType.READ_MARKER_CREATED,
-          data: {
-            citizenId,
-            subject: input.subject,
-            subjectId: input.subject_id,
-          },
-          createdById: actor.userId,
-        },
-      ]);
+    await auditCreatedReadMarkers(
+      context,
+      actor,
+      createdIds.map((subjectId) => ({ subject: input.subject, subjectId })),
+    );
 
     const notificationsRead = await markAnnouncementsAsRead(context, actor, [
       { subject: input.subject, subjectId: input.subject_id },

@@ -138,10 +138,11 @@ describe("notification read → item read", () => {
         createdById: actor.userId,
       },
       {
-        type: AuditEventType.READ_MARKERS_CREATED,
+        type: AuditEventType.READ_MARKER_CREATED,
         data: {
           citizenId: citizen.id,
-          markers: [{ subject: ReadMarkerSubject.Task, subjectId: task.id }],
+          subject: ReadMarkerSubject.Task,
+          subjectId: task.id,
         },
         createdById: actor.userId,
       },

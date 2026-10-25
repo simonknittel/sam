@@ -69,6 +69,38 @@ export const writeReadMarkers = async (
   };
 };
 
+/**
+ * The audit event of the markers which one request created:
+ * `READ_MARKER_CREATED` for one item, `READ_MARKERS_CREATED` for more items
+ */
+export const auditCreatedReadMarkers = async (
+  context: ApplicationContext,
+  actor: Actor,
+  createdItems: readonly ReadMarkerItem[],
+) => {
+  const citizenId = requireCitizen(actor).id;
+  const [firstItem, ...otherItems] = createdItems;
+  if (!firstItem) return;
+
+  await context.audit.create([
+    otherItems.length === 0
+      ? {
+          type: AuditEventType.READ_MARKER_CREATED,
+          data: {
+            citizenId,
+            subject: firstItem.subject,
+            subjectId: firstItem.subjectId,
+          },
+          createdById: actor.userId,
+        }
+      : {
+          type: AuditEventType.READ_MARKERS_CREATED,
+          data: { citizenId, markers: [...createdItems] },
+          createdById: actor.userId,
+        },
+  ]);
+};
+
 interface MarkedReadableItems {
   /** The items which exist and which the actor can see */
   readonly readableItems: ReadMarkerItem[];
@@ -79,16 +111,14 @@ interface MarkedReadableItems {
 /**
  * Marks a batch of items as read by the actor, of one or more subject types.
  * Skips the subject types which the actor may not read and the items which
- * the actor cannot see. Writes one `READ_MARKERS_CREATED` event for the
- * markers which it created.
+ * the actor cannot see. Writes one audit event for the markers which it
+ * created (see `auditCreatedReadMarkers()`).
  */
 export const markReadableItemsAsRead = async (
   context: ApplicationContext,
   actor: Actor,
   items: readonly ReadMarkerItem[],
 ): Promise<MarkedReadableItems> => {
-  const citizenId = requireCitizen(actor).id;
-
   const readableItems: ReadMarkerItem[] = [];
   const newItems: ReadMarkerItem[] = [];
   const createdItems: ReadMarkerItem[] = [];
@@ -120,14 +150,7 @@ export const markReadableItemsAsRead = async (
     createdItems.push(...createdIds.map(toItem));
   }
 
-  if (createdItems.length > 0)
-    await context.audit.create([
-      {
-        type: AuditEventType.READ_MARKERS_CREATED,
-        data: { citizenId, markers: createdItems },
-        createdById: actor.userId,
-      },
-    ]);
+  await auditCreatedReadMarkers(context, actor, createdItems);
 
   return { readableItems, newItems };
 };

@@ -33,7 +33,7 @@ type StringPayloadKey<Type extends OnSiteNotificationType> = {
  * read of the notification and the read of its item are one read state (see
  * `announcements.ts`).
  */
-export interface ReadMarkerAnnouncement {
+interface ReadMarkerAnnouncement {
   readonly notificationType: OnSiteNotificationType;
   /** The key of the payload which holds the id of the item */
   readonly subjectIdKey: string;

@@ -1780,10 +1780,10 @@ export interface AuditEventDataByType {
   };
 
   /**
-   * The read markers that one request wrote for a batch of items, for
-   * example the items of the notifications of "mark all as read". Only the
-   * first read of each item is in the list. The `subjectId` of a changelog
-   * entry is its key.
+   * The read markers that one request wrote for two or more items, for
+   * example the items of the notifications of "mark all as read". A request
+   * that marks one item writes `READ_MARKER_CREATED`. Only the first read of
+   * each item is in the list. The `subjectId` of a changelog entry is its key.
    */
   [AuditEventType.READ_MARKERS_CREATED]: {
     citizenId: string;

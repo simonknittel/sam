@@ -1,9 +1,9 @@
 import { AuditEventType } from "@sam-monorepo/domain";
 import * as z from "zod";
-import { requireCitizen, type Actor } from "../actor.js";
+import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { idSchema } from "../pagination.js";
-import { markAnnouncedItemsAsRead } from "../readMarkers/announcements.js";
+import { markOwnNotificationsAsRead } from "./markOwnNotificationsAsRead.js";
 
 export const markOnSiteNotificationReadInputSchema = z.object({
   notification_id: idSchema,
@@ -35,46 +35,20 @@ export const markOnSiteNotificationRead = async (
   actor: Actor,
   input: MarkOnSiteNotificationReadInput,
 ): Promise<MarkOnSiteNotificationReadOutput> => {
-  const citizenId = requireCitizen(actor).id;
-
-  const notifications =
-    await context.prisma.onSiteNotification.updateManyAndReturn({
-      where: {
-        id: input.notification_id,
-        citizenId,
-        readAt: null,
-      },
-      data: {
-        readAt: context.now(),
-      },
-      select: {
-        notificationType: true,
-        payload: true,
-        payloadVersion: true,
-      },
-    });
-
-  if (notifications.length > 0)
-    await context.audit.create([
-      {
-        type: AuditEventType.ON_SITE_NOTIFICATIONS_READ,
-        data: {
-          citizenId,
-          count: notifications.length,
-        },
-        createdById: actor.userId,
-      },
-    ]);
-
-  const newItems = await markAnnouncedItemsAsRead(
+  const { count, newItemRead } = await markOwnNotificationsAsRead(
     context,
     actor,
-    notifications,
+    { id: input.notification_id },
+    (citizenId, readCount) => ({
+      type: AuditEventType.ON_SITE_NOTIFICATIONS_READ,
+      data: { citizenId, count: readCount },
+      createdById: actor.userId,
+    }),
   );
 
   return {
     notification_id: input.notification_id,
-    changed: notifications.length > 0,
-    new_item_read: newItems.length > 0,
+    changed: count > 0,
+    new_item_read: newItemRead,
   };
 };

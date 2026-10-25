@@ -47,19 +47,20 @@ const findAnnouncedItem = (
  * Marks the items which the notifications announce as read by the actor. The
  * caller has marked the notifications as read.
  *
- * @returns the announced items which were new for the actor
+ * @returns whether an announced item was new for the actor
  */
 export const markAnnouncedItemsAsRead = async (
   context: ApplicationContext,
   actor: Actor,
   notifications: readonly NotificationContent[],
-): Promise<ReadMarkerItem[]> => {
+): Promise<boolean> => {
   const items = notifications.flatMap(
     (notification) => findAnnouncedItem(notification) ?? [],
   );
-  if (items.length === 0) return [];
+  if (items.length === 0) return false;
 
-  return (await markReadableItemsAsRead(context, actor, items)).newItems;
+  const { newItems } = await markReadableItemsAsRead(context, actor, items);
+  return newItems.length > 0;
 };
 
 /**
