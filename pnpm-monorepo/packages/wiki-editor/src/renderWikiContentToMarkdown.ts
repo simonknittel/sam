@@ -87,7 +87,10 @@ const prefixLines = (text: string, prefix: string) =>
     .join("\n");
 
 const escapeLinkText = (text: string) =>
-  text.replace(/\s+/g, " ").replace(/[[\]]/g, "\\$&").trim();
+  text
+    .replace(/\s+/g, " ")
+    .replace(/[\\[\]]/g, "\\$&")
+    .trim();
 
 /**
  * An absolute http, https or mailto URL, or null for all other values (for
@@ -216,7 +219,7 @@ const renderImage = ({ node }: NodeProps, baseUrl: string | URL) => {
 };
 
 const renderTableCell = ({ children }: NodeProps) =>
-  joinBlocks(children).replace(/\n+/g, "<br>").replace(/\|/g, "\\|");
+  joinBlocks(children).replace(/\n+/g, "<br>").replace(/[\\|]/g, "\\$&");
 
 const createNodeMapping = ({
   baseUrl,

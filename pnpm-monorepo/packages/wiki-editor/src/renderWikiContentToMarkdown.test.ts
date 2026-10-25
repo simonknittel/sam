@@ -128,13 +128,13 @@ describe("renderWikiContentToMarkdown", () => {
               type: "tableRow",
               content: [
                 cell("tableCell", "Carrack"),
-                cell("tableCell", "A | B"),
+                cell("tableCell", "A \\ B | C"),
               ],
             },
           ],
         },
       ]),
-    ).toBe("| Schiff | Rolle |\n| --- | --- |\n| Carrack | A \\| B |\n");
+    ).toBe("| Schiff | Rolle |\n| --- | --- |\n| Carrack | A \\\\ B \\| C |\n");
   });
 
   test("renders a callout as a block quote with a label", () => {
@@ -187,7 +187,7 @@ describe("renderWikiContentToMarkdown", () => {
         {
           pages: {
             p1: {
-              title: "Regeln [neu]",
+              title: "Regeln [neu] ¯\\_(ツ)_/¯",
               slug: "regeln-neu",
               href: "/app/wiki/p1/regeln-neu",
             },
@@ -196,7 +196,7 @@ describe("renderWikiContentToMarkdown", () => {
         },
       ),
     ).toBe(
-      "[Regeln \\[neu\\]](https://sam.example.com/app/wiki/p1/regeln-neu), [Nicht verfügbare Seite], [Carrack](https://sam.example.com/app/fleet/variant/v1)\n",
+      "[Regeln \\[neu\\] ¯\\\\_(ツ)_/¯](https://sam.example.com/app/wiki/p1/regeln-neu), [Nicht verfügbare Seite], [Carrack](https://sam.example.com/app/fleet/variant/v1)\n",
     );
   });
 
