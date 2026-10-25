@@ -67,7 +67,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     date: "2026-10-25",
     title: "Zwei-Faktor-Authentifizierung",
     tags: ["Änderung"],
-    isTracked: false,
+    isTracked: true,
     body: () => (
       <p>
         Einige Berechtigungen setzen jetzt voraus, dass die
