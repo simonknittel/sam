@@ -11,6 +11,7 @@ import { eventsTools } from "./tools/events/index.js";
 import { fleetTools } from "./tools/fleet/index.js";
 import { lineupTools } from "./tools/lineup/index.js";
 import { manualNotificationTools } from "./tools/manualNotifications/index.js";
+import { notificationTools } from "./tools/notifications/index.js";
 import { penaltyPointsTools } from "./tools/penaltyPoints/index.js";
 import { rolesTools } from "./tools/roles/index.js";
 import { spynetTools } from "./tools/spynet/index.js";
@@ -26,6 +27,7 @@ const compareTools = (first: CatalogTool, second: CatalogTool) =>
 /** All tools, sorted by the order of the groups and then by the name */
 export const TOOL_CATALOG: readonly CatalogTool[] = [
   getCurrentUserTool,
+  ...notificationTools,
   ...spynetTools,
   ...rolesTools,
   ...penaltyPointsTools,
