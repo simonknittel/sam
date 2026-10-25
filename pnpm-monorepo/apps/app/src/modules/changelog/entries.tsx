@@ -49,6 +49,32 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-10-25-mcp-skills",
+    date: "2026-10-25",
+    title: "Skills für KI-Clients",
+    tags: ["Neu", "MCP"],
+    isTracked: false,
+    body: () => (
+      <>
+        <p>
+          Der MCP-Server liefert jetzt Skills mit. Sie erklären KI-Clients, was
+          SAM ist, wie die einzelnen Apps funktionieren (zum Beispiel die Phasen
+          von SINcome oder die Aufstellung eines Events) und wie Rollen und
+          Berechtigungen zusammenhängen. Clients, die die Skills-Erweiterung von
+          MCP unterstützen, laden einen Skill selbst, wenn sie ihn brauchen.
+          Noch unterstützen nur wenige Clients diese Erweiterung.
+        </p>
+
+        <p>
+          Das Tool, das alle Berechtigungen mit ihren Beschreibungen liefert,
+          braucht nicht mehr die Berechtigung &bdquo;Rollen inkl. Berechtigungen
+          verwalten&ldquo;.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-10-25-mcp-nutzung",
     date: "2026-10-25",
     title: "Nutzung des MCP-Servers",
