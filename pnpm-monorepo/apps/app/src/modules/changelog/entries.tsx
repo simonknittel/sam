@@ -49,6 +49,20 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-10-25-mcp-benachrichtigungen",
+    date: "2026-10-25",
+    title: "Benachrichtigungen über MCP",
+    tags: ["Neu", "MCP"],
+    isTracked: false,
+    body: () => (
+      <p>
+        Es gibt nun zwei neue MCP-Tools, um die eigenen Benachrichtigungen zu
+        lesen und zu verwalten.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-10-25-zwei-faktor-authentifizierung",
     date: "2026-10-25",
     title: "Zwei-Faktor-Authentifizierung",
