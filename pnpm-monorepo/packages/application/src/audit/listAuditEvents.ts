@@ -1,5 +1,8 @@
 import type { Prisma } from "@sam-monorepo/database/client";
-import { HIGH_VOLUME_AUDIT_EVENT_TYPES } from "@sam-monorepo/domain";
+import {
+  HIGH_VOLUME_AUDIT_EVENT_TYPES,
+  READ_AUDIT_EVENT_TYPES,
+} from "@sam-monorepo/domain";
 import * as z from "zod";
 import { requirePermission, type Actor } from "../actor.js";
 import {
@@ -23,6 +26,13 @@ import {
 /** The maximum number of values of a filter. It keeps the query small. */
 const MAXIMUM_FILTER_VALUES = 50;
 
+/** The kind of access of the events, see `READ_AUDIT_EVENT_TYPES` */
+export enum AuditEventAccess {
+  Write = "write",
+  Read = "read",
+  All = "all",
+}
+
 export const listAuditEventsInputSchema = z.object({
   types: z
     .array(
@@ -32,7 +42,7 @@ export const listAuditEventsInputSchema = z.object({
     .max(MAXIMUM_FILTER_VALUES)
     .optional()
     .describe(
-      "Only the events of these types, for example TASK_CREATED, SHIP_CREATED_V2 or ROLE_ASSIGNMENT_CREATED. Use the type values of earlier results. A type filter also shows the high-volume types (see include_high_volume).",
+      "Only the events of these types, for example TASK_CREATED, SHIP_CREATED_V2 or ROLE_ASSIGNMENT_CREATED. Use the type values of earlier results. A type filter also shows the high-volume types and the reads (it ignores include_high_volume and access).",
     ),
   created_by_user_ids: z
     .array(idSchema)
@@ -69,6 +79,12 @@ export const listAuditEventsInputSchema = z.object({
     .default(false)
     .describe(
       `Also the types that the app writes per page view, per notification or per automation run, which the list hides without this flag or a type filter: ${[...HIGH_VOLUME_AUDIT_EVENT_TYPES].join(", ")}.`,
+    ),
+  access: z
+    .enum(AuditEventAccess)
+    .default(AuditEventAccess.Write)
+    .describe(
+      "write (default): the changes and the other events, without the reads. read: only the reads, which the MCP server writes for each successful call of a read tool, one type per tool (for example CITIZEN_READ or TASKS_LISTED). all: both.",
     ),
   limit: pageLimitSchema,
   cursor: cursorSchema.optional(),
@@ -120,8 +136,9 @@ const AUDIT_EVENT_SELECT = {
 } as const satisfies Prisma.AuditEventSelect;
 
 /**
- * An explicit type filter always wins, thus a filter for a high-volume type
- * never gives an empty list because of `include_high_volume`.
+ * An explicit type filter always wins, thus a filter for a high-volume type or
+ * for a read type never gives an empty list because of `include_high_volume`
+ * or `access`.
  */
 const buildTypeWhere = (
   input: ListAuditEventsInput,
@@ -129,9 +146,20 @@ const buildTypeWhere = (
   if (input.types && input.types.length > 0)
     return { type: { in: input.types } };
 
-  if (input.include_high_volume) return {};
+  const hiddenTypes = [
+    ...(input.include_high_volume ? [] : HIGH_VOLUME_AUDIT_EVENT_TYPES),
+    ...(input.access === AuditEventAccess.Write ? READ_AUDIT_EVENT_TYPES : []),
+  ];
 
-  return { type: { notIn: [...HIGH_VOLUME_AUDIT_EVENT_TYPES] } };
+  return {
+    type: {
+      in:
+        input.access === AuditEventAccess.Read
+          ? [...READ_AUDIT_EVENT_TYPES]
+          : undefined,
+      notIn: hiddenTypes,
+    },
+  };
 };
 
 const buildWhere = (

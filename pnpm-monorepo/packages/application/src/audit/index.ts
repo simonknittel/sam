@@ -5,6 +5,7 @@ export {
   type AuditEventCreator,
 } from "./listAuditEventCreators.js";
 export {
+  AuditEventAccess,
   listAuditEvents,
   listAuditEventsInputSchema,
   type AuditEventCreatorOutput,
