@@ -280,6 +280,7 @@ export enum AuditEventType {
   TASK_READ = "TASK_READ",
   TASKS_LISTED = "TASKS_LISTED",
   MANUAL_NOTIFICATIONS_LISTED = "MANUAL_NOTIFICATIONS_LISTED",
+  OWN_NOTIFICATIONS_LISTED = "OWN_NOTIFICATIONS_LISTED",
   CHANGELOG_ENTRIES_LISTED = "CHANGELOG_ENTRIES_LISTED",
   AUDIT_EVENTS_LISTED = "AUDIT_EVENTS_LISTED",
 }
@@ -1825,6 +1826,7 @@ export interface AuditEventDataByType {
   [AuditEventType.TASK_READ]: ReadAuditEventData;
   [AuditEventType.TASKS_LISTED]: ReadAuditEventData;
   [AuditEventType.MANUAL_NOTIFICATIONS_LISTED]: ReadAuditEventData;
+  [AuditEventType.OWN_NOTIFICATIONS_LISTED]: ReadAuditEventData;
   [AuditEventType.CHANGELOG_ENTRIES_LISTED]: ReadAuditEventData;
   [AuditEventType.AUDIT_EVENTS_LISTED]: ReadAuditEventData;
 }

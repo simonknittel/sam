@@ -23,6 +23,7 @@ const READ_AUDIT_EVENT_TYPE_LIST = [
   AuditEventType.TASK_READ,
   AuditEventType.TASKS_LISTED,
   AuditEventType.MANUAL_NOTIFICATIONS_LISTED,
+  AuditEventType.OWN_NOTIFICATIONS_LISTED,
   AuditEventType.CHANGELOG_ENTRIES_LISTED,
   AuditEventType.AUDIT_EVENTS_LISTED,
 ] as const;

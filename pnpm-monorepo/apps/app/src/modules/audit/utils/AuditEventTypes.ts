@@ -2907,6 +2907,13 @@ export const AuditEventDefinitions: {
     message: (data) => toReadMessage("Manual notifications listed", data),
   },
 
+  [AuditEventType.OWN_NOTIFICATIONS_LISTED]: {
+    type: AuditEventType.OWN_NOTIFICATIONS_LISTED,
+    app: SystemLogApp.Notifications,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Own notifications listed", data),
+  },
+
   [AuditEventType.CHANGELOG_ENTRIES_LISTED]: {
     type: AuditEventType.CHANGELOG_ENTRIES_LISTED,
     app: SystemLogApp.Changelog,
