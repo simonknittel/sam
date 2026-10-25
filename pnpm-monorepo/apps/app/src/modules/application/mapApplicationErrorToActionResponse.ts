@@ -1,5 +1,5 @@
 import type {
-  ActionResponse,
+  ActionError,
   Translations,
 } from "@/modules/actions/utils/createAction";
 import { rejectConflict } from "@/modules/actions/utils/rejectConflict";
@@ -45,7 +45,7 @@ export const isApplicationError = (error: unknown) =>
 export const mapApplicationErrorToActionResponse = (
   error: unknown,
   { formData, t, texts = {} }: Options,
-): ActionResponse => {
+): ActionError => {
   if (error instanceof ForbiddenError)
     return {
       error: texts[error.message] ?? t("Common.forbidden"),

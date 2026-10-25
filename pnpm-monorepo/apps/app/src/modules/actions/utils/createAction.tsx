@@ -7,26 +7,28 @@ import { getTranslations } from "next-intl/server";
 import { unstable_rethrow } from "next/navigation";
 import type * as z from "zod";
 
-export type ActionResponse =
-  | {
-      success: string;
-      /**
-       * Shown next to the success message when part of the work did not go
-       * through but the app-side save stands — e.g. a published event whose
-       * Discord counterpart could not be updated.
-       */
-      warning?: string;
-    }
-  | {
-      error: string;
-      /**
-       * Since Next.js resets a form after submission, we include the original
-       * request payload in the response for the respective client component
-       * being able to repopulate the form with the previous values. See
-       * `useAction()` for more details.
-       */
-      requestPayload: FormData;
-    };
+export interface ActionSuccess {
+  success: string;
+  /**
+   * Shown next to the success message when part of the work did not go
+   * through but the app-side save stands — e.g. a published event whose
+   * Discord counterpart could not be updated.
+   */
+  warning?: string;
+}
+
+export interface ActionError {
+  error: string;
+  /**
+   * Since Next.js resets a form after submission, we include the original
+   * request payload in the response for the respective client component
+   * being able to repopulate the form with the previous values. See
+   * `useAction()` for more details.
+   */
+  requestPayload: FormData;
+}
+
+export type ActionResponse = ActionSuccess | ActionError;
 
 type Authentication = Exclude<Awaited<ReturnType<typeof authenticate>>, false>;
 
@@ -93,14 +95,15 @@ const passesGate = async (
 };
 
 /**
- * The `Response` generic widens the return type for actions that respond
- * with more than an ActionResponse (e.g. a minted token) — the wrapper's
- * own error responses stay ActionResponse. Pass it explicitly (it is
- * NoInfer, so plain actions keep their exact ActionResponse type).
+ * The `Success` generic replaces the success response for actions that
+ * respond with more than a text (e.g. a flag for the client component, which
+ * `runAction()` gives back) — the wrapper's own responses are errors. Pass it
+ * explicitly (it is NoInfer, so plain actions keep their exact
+ * ActionResponse type).
  */
 export const createAuthenticatedAction = <
   T extends z.ZodTypeAny,
-  Response = never,
+  Success extends ActionSuccess = ActionSuccess,
 >(
   name: string,
   zodSchema: T,
@@ -109,7 +112,7 @@ export const createAuthenticatedAction = <
     authentication: Authentication,
     data: z.infer<T>,
     t: Translations,
-  ) => Promise<ActionResponse | NoInfer<Response>>,
+  ) => Promise<ActionError | NoInfer<Success>>,
   options?: {
     /**
      * Maps the FormData to the schema input. The default keeps only the
@@ -120,7 +123,7 @@ export const createAuthenticatedAction = <
     /** `ActionGate.Clearance` by default */
     gate?: ActionGate;
   },
-): ((formData: FormData) => Promise<ActionResponse | Response>) => {
+): ((formData: FormData) => Promise<ActionError | Success>) => {
   const parseFormData =
     options?.parseFormData ??
     ((formData: FormData) => Object.fromEntries(formData.entries()));
@@ -130,7 +133,7 @@ export const createAuthenticatedAction = <
     async (
       formData: FormData,
       t: Translations,
-    ): Promise<ActionResponse | Response> => {
+    ): Promise<ActionError | Success> => {
       /**
        * Authenticate the request
        */
