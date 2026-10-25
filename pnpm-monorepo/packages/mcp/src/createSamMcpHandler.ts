@@ -7,6 +7,7 @@ import type { Actor, ApplicationContext } from "@sam-monorepo/application";
 import * as z from "zod";
 import { getInstructions } from "./instructions.js";
 import { registerTools } from "./registry.js";
+import { registerSkills, SKILLS_EXTENSION_ID } from "./skillRegistry.js";
 
 /** The `name` of `serverInfo` */
 export const SERVER_NAME = "sam";
@@ -73,10 +74,15 @@ export const createSamMcpHandler = ({
           instructions: getInstructions(context),
           // `tools/list` must answer also when the user disabled all tools.
           // Without subscriptions, a client cannot get a change of the list.
-          capabilities: { tools: { listChanged: false } },
+          capabilities: {
+            tools: { listChanged: false },
+            resources: { listChanged: false },
+            extensions: { [SKILLS_EXTENSION_ID]: {} },
+          },
         },
       );
       registerTools(server, context, actor, { disabledToolNames });
+      registerSkills(server);
 
       return server;
     },

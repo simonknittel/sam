@@ -5,12 +5,14 @@ import {
   type CallToolResult,
   type DiscoverResult,
   type ListToolsResult,
+  type ReadResourceResult,
 } from "@modelcontextprotocol/server";
 import {
   createActor,
   ForbiddenError,
   type ApplicationContext,
 } from "@sam-monorepo/application";
+import { createHash } from "node:crypto";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { listToolCatalog } from "./catalog.js";
 import {
@@ -141,6 +143,8 @@ const sendModernRequest = <Result>(
       "mcp-protocol-version": PROTOCOL_VERSION,
       "mcp-method": method,
       ...(typeof params.name === "string" && { "mcp-name": params.name }),
+      ...(method === "resources/read" &&
+        typeof params.uri === "string" && { "mcp-name": params.uri }),
     },
     principal,
   );
@@ -158,14 +162,21 @@ afterEach(() => {
 });
 
 describe("discovery", () => {
-  test("server/discover gives the instructions and the tools capability", async () => {
+  test("server/discover gives the instructions, the capabilities and the skills extension", async () => {
     const { status, body } =
       await sendModernRequest<DiscoverResult>("server/discover");
 
     expect(status).toBe(200);
     expect(body.result?.supportedVersions).toEqual([PROTOCOL_VERSION]);
-    expect(body.result?.capabilities.tools).toEqual({ listChanged: false });
+    expect(body.result?.capabilities).toMatchObject({
+      tools: { listChanged: false },
+      resources: { listChanged: false },
+      extensions: { "io.modelcontextprotocol/skills": {} },
+    });
     expect(body.result?.instructions).toContain("http://localhost/app/mcp");
+    expect(body.result?.instructions).toContain(
+      "skill://sam-overview/SKILL.md",
+    );
   });
 
   test("tools/list gives get_current_user with its annotations and its output schema", async () => {
@@ -323,5 +334,88 @@ describe("tools/call", () => {
     expect(JSON.stringify(log.error.mock.calls)).not.toContain(
       "user@example.com",
     );
+  });
+});
+
+/** The fields of a cacheable result of the 2026-07-28 revision */
+interface CacheableResult {
+  readonly resultType: string;
+  readonly ttlMs: number;
+  readonly cacheScope: string;
+}
+
+interface SkillEntry {
+  readonly uri: string;
+  readonly frontmatter: Record<string, unknown>;
+  readonly resources: readonly {
+    readonly uri: string;
+    readonly digest: string;
+    readonly size: number;
+  }[];
+}
+
+/** The skills write the values of the frontmatter as JSON strings */
+const FRONTMATTER_PATTERN = /^---\nname: (.+)\ndescription: (.+)\n---\n/;
+
+describe("skills", () => {
+  test("each file of the manifest of skills/list agrees with its content from resources/read", async () => {
+    const list = await sendModernRequest<
+      CacheableResult & { readonly skills: readonly SkillEntry[] }
+    >("skills/list");
+
+    expect(list.body.result).toMatchObject({
+      resultType: "complete",
+      ttlMs: expect.any(Number),
+      cacheScope: "public",
+    });
+    expect(list.body.result?.skills.length).toBeGreaterThan(0);
+
+    for (const skill of list.body.result?.skills ?? []) {
+      for (const resource of skill.resources) {
+        const read = await sendModernRequest<ReadResourceResult>(
+          "resources/read",
+          { uri: resource.uri },
+        );
+        const [content] = read.body.result?.contents ?? [];
+        const text = content && "text" in content ? content.text : "";
+        const bytes = new TextEncoder().encode(text);
+
+        expect(content?.mimeType).toBe("text/markdown");
+        expect(bytes.byteLength).toBe(resource.size);
+        expect(
+          `sha256:${createHash("sha256").update(bytes).digest("hex")}`,
+        ).toBe(resource.digest);
+
+        if (resource.uri === skill.uri) {
+          const [, name, description] = FRONTMATTER_PATTERN.exec(text) ?? [];
+          expect(skill.frontmatter).toEqual({
+            name: JSON.parse(name ?? "null"),
+            description: JSON.parse(description ?? "null"),
+          });
+          expect(skill.uri).toBe(`skill://${skill.frontmatter.name}/SKILL.md`);
+        }
+      }
+    }
+  });
+
+  test("skills/get gives the entry of skills/list, and an unknown URI gives an invalid-params error", async () => {
+    const list = await sendModernRequest<{
+      readonly skills: readonly SkillEntry[];
+    }>("skills/list");
+    const [skill] = list.body.result?.skills ?? [];
+
+    const get = await sendModernRequest<
+      CacheableResult & { readonly skill: SkillEntry }
+    >("skills/get", { uri: skill?.uri });
+    expect(get.body.result).toMatchObject({
+      resultType: "complete",
+      cacheScope: "public",
+      skill,
+    });
+
+    const unknown = await sendModernRequest("skills/get", {
+      uri: "skill://unknown/SKILL.md",
+    });
+    expect(unknown.body.error?.code).toBe(-32602);
   });
 });
