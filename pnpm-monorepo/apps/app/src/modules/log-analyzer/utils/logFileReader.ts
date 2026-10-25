@@ -203,7 +203,7 @@ export const createLogFileReader = () => {
         states.set(path, await readFile(logFile, state, matches));
       } catch (error) {
         /** The state stays, thus the next read tries the same lines again */
-        console.error(`[Log Analyzer] Error reading ${path}:`, error);
+        console.error("[Log Analyzer] Error reading %s:", path, error);
       }
     }
 

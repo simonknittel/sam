@@ -9,7 +9,7 @@ export async function* getFilesRecursively(
       const file = await entry.getFile();
       if (file) yield { path, file };
     } catch (error) {
-      console.error(`[Log Analyzer] Error getting file: ${entry.name}`, error);
+      console.error("[Log Analyzer] Error getting file: %s", entry.name, error);
       yield null;
     }
   } else if (entry.kind === "directory") {
