@@ -6,7 +6,8 @@ Desktop, Claude Code, ChatGPT and Codex connect with OAuth 2.1. The tools use th
 permissions of the user who connects the client.
 
 The server supports only the protocol revision 2026-07-28. It is stateless:
-it has no sessions, no subscriptions, no resources and no prompts.
+it has no sessions, no subscriptions and no prompts. Its only resources are
+the files of its skills.
 
 ## Connect a client
 
@@ -89,6 +90,19 @@ cannot use such a URL. Thus the stack sets
 test worker serves the CIMD document of the test client, with loopback
 redirect URIs. The tests then do the consent in the browser, exchange the
 code with `fetch` and call the MCP endpoint with the MCP client SDK.
+
+## Skills
+
+The server serves [Agent Skills](https://agentskills.io) with the
+[Skills extension](https://modelcontextprotocol.io/extensions/skills/overview)
+of MCP: `skills/list` and `skills/get` give the skills, and `resources/read`
+gives their files. The skills teach a model the concepts of SAM. All users
+get the same skills. The server instructions name the skills, thus a client
+without the extension can read them as resources.
+
+The skills are in `packages/mcp/src/skills`. Write a skill in English and
+keep it short: give the concepts, the processes and the rules of an app that
+the tool descriptions do not give, not each field or option.
 
 ## Code layout
 
