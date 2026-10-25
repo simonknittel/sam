@@ -3,6 +3,7 @@ import {
   clickUntilUrl,
   dateParam,
   fillUntilUrl,
+  fillUntilVisible,
   toggleLabel,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -56,6 +57,13 @@ test("the log renders its events and the filters narrow the table", async ({
         createdById: admin.user.id,
         triggeredViaMcp: true,
       },
+      // A read through the MCP server
+      {
+        type: "TASK_READ",
+        data: { arguments: { task_id: "aufgabe-1" } },
+        createdById: admin.user.id,
+        triggeredViaMcp: true,
+      },
     ],
   });
 
@@ -71,6 +79,8 @@ test("the log renders its events and the filters narrow the table", async ({
     page.getByText("Manufacturer Drake created (hersteller-1)"),
   ).toBeVisible();
   await expect(page.getByText("MANUFACTURER_CREATED")).toBeVisible();
+  // The access filter hides the reads by default
+  await expect(rowOfType("TASK_READ")).toHaveCount(0);
 
   // Only the row of the action through the MCP server has the mark
   const mcpMark = (type: string) =>
@@ -121,4 +131,41 @@ test("the log renders its events and the filters narrow the table", async ({
   );
   await expect(rowOfType("TASK_CREATED")).toBeVisible();
   await expect(rowOfType("ROLE_CREATED")).toHaveCount(0);
+
+  // The access filter keeps only the reads. The other MCP specs write reads
+  // at the same time, thus the page shows only the reads of this user.
+  await page.goto(`/app/system-log?createdById=${admin.user.id}`);
+  await clickUntilUrl(
+    page,
+    toggleLabel(page.getByRole("radiogroup", { name: "ZUGRIFF" }), /^Lesen$/),
+    /access=read/,
+  );
+  await expect(
+    page.getByText('Task read: {"task_id":"aufgabe-1"}'),
+  ).toBeVisible();
+  await expect(rowOfType("TASK_CREATED")).toHaveCount(0);
+  await expect(rowOfType("ROLE_CREATED")).toHaveCount(0);
+
+  // The type filter searches the types, groups them by app and shows a read
+  // type also without the access filter
+  await page.goto(`/app/system-log?createdById=${admin.user.id}`);
+  const typeOption = page
+    .getByRole("group", { name: "Tasks" })
+    .getByRole("option", { name: "TASK_READ", exact: true });
+  await fillUntilVisible(
+    page.getByRole("combobox", { name: "TYPE" }),
+    "TASK_READ",
+    typeOption,
+  );
+  await expect(page.getByRole("listbox").getByRole("option")).toHaveText([
+    "TASK_READ",
+  ]);
+  // The visible option proves the hydration, and a second click would remove
+  // the type again, thus a single click
+  await typeOption.click();
+  await expect(page).toHaveURL(/type=TASK_READ/);
+  await expect(
+    page.getByText('Task read: {"task_id":"aufgabe-1"}'),
+  ).toBeVisible();
+  await expect(rowOfType("TASK_CREATED")).toHaveCount(0);
 });

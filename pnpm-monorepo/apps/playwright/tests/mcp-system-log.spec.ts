@@ -9,9 +9,10 @@ const minutesAgo = (minutes: number) =>
   new Date(Date.now() - minutes * ONE_MINUTE_MS);
 
 /**
- * Creates four events with distinct times, from the oldest to the newest:
- * a task by the viewer, a ship without a creator, a task by a colleague
- * (done through the MCP server) and a high-volume wiki visit by the viewer.
+ * Creates five events with distinct times, from the oldest to the newest:
+ * a task by the viewer, a ship without a creator, a read by a colleague
+ * through the MCP server, a task by the colleague (done through the MCP
+ * server) and a high-volume wiki visit by the viewer.
  * The returned window contains only these events. The stack writes events of
  * its own at the current time (the login and the OAuth grant of the viewer),
  * and the window ends before them.
@@ -44,6 +45,15 @@ const seedAuditEvents = async (
       createdAt: minutesAgo(30),
     },
   });
+  const readOfColleague = await prisma.auditEvent.create({
+    data: {
+      type: "TASK_READ",
+      data: { arguments: { task_id: "task-a" } },
+      createdById: colleagueUserId,
+      triggeredViaMcp: true,
+      createdAt: minutesAgo(25),
+    },
+  });
   const taskOfColleague = await prisma.auditEvent.create({
     data: {
       type: "TASK_CREATED",
@@ -65,6 +75,7 @@ const seedAuditEvents = async (
   return {
     taskOfViewer,
     ship,
+    readOfColleague,
     taskOfColleague,
     wikiVisit,
     window: {
@@ -80,7 +91,7 @@ const eventsWithIds = (...auditEvents: readonly AuditEvent[]) => ({
 });
 
 test.describe("the list_audit_events tool of the MCP server", () => {
-  test("the events come newest first, the high-volume types need a request, the filters narrow the events, and a cursor pages through them", async ({
+  test("the events come newest first, the high-volume types and the reads need a request, the filters narrow the events, a cursor pages through them, and each call is a read", async ({
     prisma,
     authorizeMcpClient,
     connectMcpClient,
@@ -92,19 +103,25 @@ test.describe("the list_audit_events tool of the MCP server", () => {
     const colleague = await createMcpCitizen(prisma, {
       handle: "mcp-protokoll-kollege",
     });
-    const { taskOfViewer, ship, taskOfColleague, wikiVisit, window } =
-      await seedAuditEvents(prisma, {
-        viewerUserId: viewer.user.id,
-        viewerCitizenId: viewer.entity.id,
-        colleagueUserId: colleague.user.id,
-      });
+    const {
+      taskOfViewer,
+      ship,
+      readOfColleague,
+      taskOfColleague,
+      wikiVisit,
+      window,
+    } = await seedAuditEvents(prisma, {
+      viewerUserId: viewer.user.id,
+      viewerCitizenId: viewer.entity.id,
+      colleagueUserId: colleague.user.id,
+    });
     const client = await connectMcpClient(
       (await authorizeMcpClient(viewer.user)).accessToken,
     );
 
     expect(await client.listToolNames()).toContain(TOOL_NAME);
 
-    // Without a filter for the types, the wiki visit is hidden
+    // Without a filter for the types, the wiki visit and the read are hidden
     expect(await callForContent(client, TOOL_NAME, window)).toEqual({
       events: [
         {
@@ -170,12 +187,29 @@ test.describe("the list_audit_events tool of the MCP server", () => {
       eventsWithIds(wikiVisit, taskOfColleague, ship, taskOfViewer),
     );
     // A filter for the types shows the named types, also the high-volume ones
+    // and the reads
     expect(
       await callForContent(client, TOOL_NAME, {
         ...window,
         types: ["WIKI_PAGE_VISITED"],
       }),
     ).toMatchObject(eventsWithIds(wikiVisit));
+    expect(
+      await callForContent(client, TOOL_NAME, {
+        ...window,
+        types: ["TASK_READ"],
+      }),
+    ).toMatchObject(eventsWithIds(readOfColleague));
+
+    // The access filter gives only the reads, or the reads and the writes
+    expect(
+      await callForContent(client, TOOL_NAME, { ...window, access: "read" }),
+    ).toMatchObject(eventsWithIds(readOfColleague));
+    expect(
+      await callForContent(client, TOOL_NAME, { ...window, access: "all" }),
+    ).toMatchObject(
+      eventsWithIds(taskOfColleague, readOfColleague, ship, taskOfViewer),
+    );
 
     expect(
       await callForContent(client, TOOL_NAME, {
@@ -234,5 +268,25 @@ test.describe("the list_audit_events tool of the MCP server", () => {
         cursor: secondPage.next_cursor,
       }),
     ).toMatchObject({ ...eventsWithIds(taskOfViewer), next_cursor: null });
+
+    // Each successful call of the tool wrote its read through the MCP server
+    // with the parsed arguments, but not with the result
+    const reads = await prisma.auditEvent.findMany({
+      where: { type: "AUDIT_EVENTS_LISTED", createdById: viewer.user.id },
+      select: { triggeredViaMcp: true, data: true },
+    });
+    expect(reads).toHaveLength(14);
+    expect(reads.every((read) => read.triggeredViaMcp)).toBe(true);
+    expect(reads).toContainEqual({
+      triggeredViaMcp: true,
+      data: {
+        arguments: {
+          ...window,
+          access: "all",
+          include_high_volume: false,
+          limit: 25,
+        },
+      },
+    });
   });
 });
