@@ -34,3 +34,15 @@ model DailyLoginCount {
 
   @@unique([date])
 }
+
+model DailyMcpUsageCount {
+  id        String   @id @default(cuid())
+  /// The calendar day (Europe/Berlin) that the count is for, see
+  /// RoleCitizenCount.day
+  day       DateTime @db.Date
+  /// The number of the audit events of the day with `triggeredViaMcp`
+  count     Int
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@unique([day])
+}
