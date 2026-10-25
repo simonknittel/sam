@@ -71,7 +71,7 @@ export const createSamMcpHandler = ({
       const server = new McpServer(
         { name: SERVER_NAME, version: serverVersion, title: SERVER_TITLE },
         {
-          instructions: getInstructions(context),
+          instructions: getInstructions(),
           // `tools/list` must answer also when the user disabled all tools.
           // Without subscriptions, a client cannot get a change of the list.
           capabilities: {

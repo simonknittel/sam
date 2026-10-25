@@ -173,7 +173,6 @@ describe("discovery", () => {
       resources: { listChanged: false },
       extensions: { "io.modelcontextprotocol/skills": {} },
     });
-    expect(body.result?.instructions).toContain("http://localhost/app/mcp");
     expect(body.result?.instructions).toContain(
       "skill://sam-overview/SKILL.md",
     );

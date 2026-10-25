@@ -160,7 +160,7 @@ test.describe("the OAuth server and the MCP endpoint", () => {
     const client = await connectMcpClient(authorization.accessToken);
 
     const discovery = await client.discover();
-    expect(discovery.instructions).toContain(new URL("/app/mcp", issuer).href);
+    expect(discovery.instructions).toContain("get_current_user");
     expect(await client.listToolNames()).toContain("get_current_user");
 
     const result = await client.callTool("get_current_user");
