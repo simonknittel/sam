@@ -50,7 +50,7 @@ export default async function Page() {
             Zwei-Faktor-Authentifizierung nutzen.
           </p>
 
-          <p>
+          <p className="font-bold">
             {authentication.session.discordTwoFactorEnabled === false
               ? "Bei deiner letzten Anmeldung hat Discord gemeldet, dass die Zwei-Faktor-Authentifizierung für deinen Account nicht aktiv ist."
               : "Wir kennen den Status der Zwei-Faktor-Authentifizierung deines Discord-Accounts noch nicht."}
