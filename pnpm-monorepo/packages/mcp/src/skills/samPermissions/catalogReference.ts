@@ -1,15 +1,19 @@
 import {
   PERMISSION_CATALOG,
+  permissionStringRequiresTwoFactorAuthentication,
   type CatalogPermission,
 } from "@sam-monorepo/domain";
 import type { SkillFile } from "../../skillDefinition.js";
+
+const TWO_FACTOR_AUTHENTICATION_MARK =
+  "(requires the two-factor authentication)";
 
 const formatPermission = ({
   permissionString,
   title,
   description,
 }: CatalogPermission) =>
-  `- \`${permissionString}\`: ${title}${description ? ` — ${description}` : ""}`;
+  `- \`${permissionString}\`: ${title}${permissionStringRequiresTwoFactorAuthentication(permissionString) ? ` ${TWO_FACTOR_AUTHENTICATION_MARK}` : ""}${description ? ` — ${description}` : ""}`;
 
 const formatSection = (
   section: string,
@@ -28,7 +32,7 @@ export const catalogReference: SkillFile = {
     "All permission strings of the role page of SAM by section, with their German titles and descriptions.",
   content: `# Permission catalog
 
-The permissions that the role page offers as a checkbox, in the sections of the role page. The titles and the descriptions are the German texts of the role page. The rules for other roles and for notes are not in this list (see SKILL.md).
+The permissions that the role page offers as a checkbox, in the sections of the role page. The titles and the descriptions are the German texts of the role page. A permission with the mark "${TWO_FACTOR_AUTHENTICATION_MARK}" requires the two-factor authentication of the Discord account (see SKILL.md). The rules for other roles and for notes are not in this list (see SKILL.md).
 
 ${Array.from(sections, ([section, permissions]) => formatSection(section, permissions)).join("\n")}`,
 };

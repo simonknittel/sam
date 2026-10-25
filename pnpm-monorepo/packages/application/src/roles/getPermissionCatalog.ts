@@ -1,5 +1,6 @@
 import {
   PERMISSION_CATALOG,
+  permissionStringRequiresTwoFactorAuthentication,
   type CatalogPermission,
 } from "@sam-monorepo/domain";
 import * as z from "zod";
@@ -16,6 +17,11 @@ export interface CatalogPermissionOutput {
   readonly title: string;
   /** German, or null */
   readonly description: string | null;
+  /**
+   * Whether a holder can use SAM only with the two-factor authentication of
+   * their Discord account (see `isMissingTwoFactorAuthentication()`)
+   */
+  readonly requires_two_factor_authentication: boolean;
 }
 
 export interface GetPermissionCatalogOutput {
@@ -38,6 +44,10 @@ export const getPermissionCatalog = async (
       section: permission.section,
       title: permission.title,
       description: permission.description ?? null,
+      requires_two_factor_authentication:
+        permissionStringRequiresTwoFactorAuthentication(
+          permission.permissionString,
+        ),
     })),
   };
 };

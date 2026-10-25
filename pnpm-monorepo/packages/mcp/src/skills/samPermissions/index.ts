@@ -1,9 +1,22 @@
 import {
   NOTE_RULE_OPERATIONS,
   ROLE_RULE_OPERATIONS,
+  TWO_FACTOR_AUTHENTICATION_PERMISSION_SETS,
+  TWO_FACTOR_AUTHENTICATION_ROLE_RULE_OPERATIONS,
+  transformPermissionSetToPermissionString,
 } from "@sam-monorepo/domain";
 import type { SkillDefinition } from "../../skillDefinition.js";
 import { catalogReference } from "./catalogReference.js";
+
+const twoFactorAuthenticationPermissions = [
+  ...TWO_FACTOR_AUTHENTICATION_PERMISSION_SETS.map(
+    (permissionSet) =>
+      `\`${transformPermissionSetToPermissionString(permissionSet)}\``,
+  ),
+  ...TWO_FACTOR_AUTHENTICATION_ROLE_RULE_OPERATIONS.map(
+    (operation) => `\`otherRole;${operation};roleId=<role id or *>\``,
+  ),
+];
 
 export const samPermissionsSkill: SkillDefinition = {
   name: "sam-permissions",
@@ -17,7 +30,15 @@ SAM gives access only through roles. A role has a list of permission strings. A 
 
 - **Role assignment**: a citizen has roles. A role can have levels. Then the role counts only when the citizen has the maximum level. A role without levels always counts.
 - **Inheritance**: a role can inherit other roles. The citizen also gets the permissions of the inherited roles, but only of the roles that the role inherits directly (one level). Thus a change of a role also changes the roles that inherit it.
-- **Clearance**: to use SAM at all, a user needs \`login;manage\` and a confirmed email. An admin and a user with \`role;manage\`, \`user;read\` or \`systemLog;read\` also need the two-factor authentication of their Discord account at their last Discord login. The MCP server also needs \`mcp;use\`.
+- **Clearance**: to use SAM at all, a user needs \`login;manage\` and a confirmed email. Some permissions also need the two-factor authentication (see below). The MCP server also needs \`mcp;use\`.
+
+## Two-factor authentication
+
+An admin and a user with one of these permissions can use SAM only when Discord reported the two-factor authentication of their Discord account at their last Discord login:
+
+${twoFactorAuthenticationPermissions.map((permission) => `- ${permission}`).join("\n")}
+
+A rule for only one role also requires it. A \`manage\` string of the same resource also requires it. The catalog marks these permissions. Without the two-factor authentication, the web app shows only a page that tells the user to enable it and to log in again with Discord, and the MCP server refuses the requests of the user.
 
 ## Permission strings
 
@@ -50,7 +71,7 @@ To change the permissions of a role:
 
 1. Find the role with \`list_roles\` and read its permission strings with \`get_role\`.
 2. Select the strings from the catalog. Remember \`manage\`, the negations and the inheritance.
-3. Tell the user the change and its effect (all citizens of the role and of the roles that inherit it). Get a confirmation.
+3. Tell the user the change and its effect (all citizens of the role and of the roles that inherit it). When you add a permission that requires the two-factor authentication, also tell the user that each of these citizens without it cannot use SAM until a Discord login reports it. Get a confirmation.
 4. Call \`change_role_permissions\` with the strings to add and to remove.
 `,
   files: [catalogReference],
