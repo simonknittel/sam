@@ -7,6 +7,7 @@ import { CursorDirection } from "@/modules/common/CursorPagination/cursorPaginat
 import { getDateRangeFilter } from "@/modules/common/utils/getDateRangeFilter";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
+  AuditEventAccess,
   listAuditEvents,
   UnknownCursorBehavior,
 } from "@sam-monorepo/application";
@@ -41,6 +42,7 @@ export const getAuditEvents = cache(
       direction: CursorDirection = CursorDirection.Next,
       volume: SystemLogVolume = SystemLogVolume.WithoutHighVolume,
       origin: SystemLogOrigin = SystemLogOrigin.All,
+      access: AuditEventAccess = AuditEventAccess.Write,
       from?: string | null,
       to?: string | null,
     ) => {
@@ -57,6 +59,7 @@ export const getAuditEvents = cache(
             to: lt,
             include_high_volume: volume === SystemLogVolume.All,
             triggered_via_mcp: getTriggeredViaMcp(origin),
+            access,
             limit: AUDIT_EVENTS_PAGE_SIZE,
             cursor: cursor ?? undefined,
           },

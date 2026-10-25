@@ -6,14 +6,17 @@ import {
   type TableColumn,
 } from "@/modules/common/components/TableTile";
 import { formatDate } from "@/modules/common/utils/formatDate";
+import { AuditEventAccess } from "@sam-monorepo/application";
 import { parseAsArrayOf, parseAsString, type SearchParams } from "nuqs/server";
 import { getAuditEvents } from "../queries/getAuditEvents";
 import { getAuditEventMessage } from "../utils/getAuditEventMessage";
 import {
+  SYSTEM_LOG_ACCESS_PARAM,
   SYSTEM_LOG_FROM_PARAM,
   SYSTEM_LOG_ORIGIN_PARAM,
   SYSTEM_LOG_TO_PARAM,
   SYSTEM_LOG_VOLUME_PARAM,
+  systemLogAccessParser,
   SystemLogOrigin,
   systemLogOriginParser,
   systemLogVolumeParser,
@@ -32,6 +35,7 @@ const loadSearchParams = createCursorPaginationLoader({
   createdById: parseAsArrayOf(parseAsString),
   [SYSTEM_LOG_VOLUME_PARAM]: systemLogVolumeParser,
   [SYSTEM_LOG_ORIGIN_PARAM]: systemLogOriginParser,
+  [SYSTEM_LOG_ACCESS_PARAM]: systemLogAccessParser,
   [SYSTEM_LOG_FROM_PARAM]: parseAsString,
   [SYSTEM_LOG_TO_PARAM]: parseAsString,
 });
@@ -42,8 +46,17 @@ interface Props {
 }
 
 export const SystemLogTable = async ({ className, searchParams }: Props) => {
-  const { type, createdById, cursor, direction, volume, origin, from, to } =
-    await loadSearchParams(searchParams);
+  const {
+    type,
+    createdById,
+    cursor,
+    direction,
+    volume,
+    origin,
+    access,
+    from,
+    to,
+  } = await loadSearchParams(searchParams);
 
   const { events, nextCursor, prevCursor } = await getAuditEvents(
     type,
@@ -52,6 +65,7 @@ export const SystemLogTable = async ({ className, searchParams }: Props) => {
     direction,
     volume,
     origin,
+    access,
     from,
     to,
   );
@@ -61,6 +75,7 @@ export const SystemLogTable = async ({ className, searchParams }: Props) => {
     (type && type.length > 0) ||
     (createdById && createdById.length > 0) ||
     origin !== SystemLogOrigin.All ||
+    access === AuditEventAccess.Read ||
     from ||
     to,
   );

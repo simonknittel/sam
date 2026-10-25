@@ -1,12 +1,13 @@
 import { DateRangeFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/DateRangeFilter";
 import { MultiSelectComboboxFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/MultiSelectComboboxFilter";
 import { RadioFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/RadioFilter";
-import type { AuditEventCreator } from "@sam-monorepo/application";
 import {
-  AuditEventType,
-  HIGH_VOLUME_AUDIT_EVENT_TYPES,
-} from "../utils/AuditEventTypes";
+  AuditEventAccess,
+  type AuditEventCreator,
+} from "@sam-monorepo/application";
+import { AuditEventDefinitions } from "../utils/AuditEventTypes";
 import {
+  SYSTEM_LOG_ACCESS_PARAM,
   SYSTEM_LOG_FROM_PARAM,
   SYSTEM_LOG_ORIGIN_PARAM,
   SYSTEM_LOG_TO_PARAM,
@@ -19,25 +20,11 @@ interface Props {
   readonly creators: AuditEventCreator[];
 }
 
-/**
- * Grouping the high-volume types apart is what tells someone browsing the
- * list that those entries behave differently, without the volume filter and
- * the type filter having to contradict each other: picking a type here
- * always shows it.
- */
-const TYPE_GROUP_HIGH_VOLUME = "Hohes Volumen";
-const TYPE_GROUP_DEFAULT = "Alle übrigen";
-
 export const SystemLogFilters = ({ creators }: Props) => {
-  const typeItems = [
-    ...Object.values(AuditEventType).map((type) => ({
-      value: type,
-      label: type,
-      group: HIGH_VOLUME_AUDIT_EVENT_TYPES.has(type)
-        ? TYPE_GROUP_HIGH_VOLUME
-        : TYPE_GROUP_DEFAULT,
-    })),
-  ];
+  // A selected type always shows, also a high-volume type or a read type
+  const typeItems = Object.values(AuditEventDefinitions).map(
+    ({ type, app }) => ({ value: type, label: type, group: app }),
+  );
 
   const creatorItems = [
     ...creators.map((creator) => ({
@@ -84,6 +71,27 @@ export const SystemLogFilters = ({ creators }: Props) => {
           {
             value: SystemLogOrigin.Mcp,
             label: "MCP",
+          },
+        ]}
+        resetCursorPagination
+      />
+
+      <RadioFilter
+        name={SYSTEM_LOG_ACCESS_PARAM}
+        label="ZUGRIFF"
+        items={[
+          {
+            value: AuditEventAccess.Write,
+            label: "Schreiben",
+            default: true,
+          },
+          {
+            value: AuditEventAccess.Read,
+            label: "Lesen",
+          },
+          {
+            value: AuditEventAccess.All,
+            label: "Alle",
           },
         ]}
         resetCursorPagination

@@ -1,6 +1,5 @@
 export {
   AuditEventType,
-  HIGH_VOLUME_AUDIT_EVENT_TYPES,
   type AuditEventDataByType,
 } from "@sam-monorepo/domain";
 import {
@@ -9,8 +8,40 @@ import {
   type AuditEventDataByType,
 } from "@sam-monorepo/domain";
 
+/**
+ * The app of a type: the groups of the type filter of the system log. The
+ * values are the names of the apps. `Other` holds the types that belong to no
+ * app.
+ */
+export enum SystemLogApp {
+  Account = "Account",
+  Career = "Karriere",
+  Changelog = "Changelog",
+  Events = "Events",
+  Fleet = "Flotte",
+  Iam = "IAM",
+  LogAnalyzer = "Log Analyzer",
+  Mcp = "MCP",
+  Notifications = "Benachrichtigungen",
+  Other = "Sonstiges",
+  PenaltyPoints = "Strafpunkte",
+  ProfitDistribution = "SINcome",
+  Silc = "SILC",
+  Spynet = "Spynet",
+  Statistics = "Statistiken",
+  SystemLog = "System Log",
+  Tasks = "Tasks",
+  Uploads = "Uploads",
+  Wiki = "Wiki",
+}
+
+/** A read access gives the query parameters of the read */
+const toReadMessage = (subject: string, data: { arguments: object }) =>
+  `${subject}: ${JSON.stringify(data.arguments)}`;
+
 interface AuditEventDefinition<Type extends AuditEventType> {
   type: Type;
+  app: SystemLogApp;
   data: AuditEventDataByType[Type];
   message: (data: AuditEventDataByType[Type]) => string;
 }
@@ -20,6 +51,7 @@ export const AuditEventDefinitions: {
 } = {
   [AuditEventType.USER_LOGIN]: {
     type: AuditEventType.USER_LOGIN,
+    app: SystemLogApp.Account,
     data: {
       userId: "string",
     },
@@ -28,6 +60,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.USER_LOGIN_V2]: {
     type: AuditEventType.USER_LOGIN_V2,
+    app: SystemLogApp.Account,
     data: {
       userId: "string",
       userEmail: "string",
@@ -39,6 +72,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.USER_LOGOUT]: {
     type: AuditEventType.USER_LOGOUT,
+    app: SystemLogApp.Account,
     data: {
       sessionId: "string",
       userId: "string",
@@ -48,6 +82,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.USER_SESSION_DELETED]: {
     type: AuditEventType.USER_SESSION_DELETED,
+    app: SystemLogApp.Account,
     data: {
       sessionId: "string",
       userId: "string",
@@ -58,6 +93,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EXPIRED_AUTHENTICATION_RECORDS_PURGED]: {
     type: AuditEventType.EXPIRED_AUTHENTICATION_RECORDS_PURGED,
+    app: SystemLogApp.Account,
     data: {
       sessionCount: 0,
       verificationTokenCount: 0,
@@ -69,6 +105,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.USER_FIRST_VISIT_OF_THE_DAY]: {
     type: AuditEventType.USER_FIRST_VISIT_OF_THE_DAY,
+    app: SystemLogApp.Account,
     data: {
       userId: "string",
     },
@@ -77,6 +114,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.USER_FIRST_VISIT_OF_THE_DAY_V2]: {
     type: AuditEventType.USER_FIRST_VISIT_OF_THE_DAY_V2,
+    app: SystemLogApp.Account,
     data: {
       userId: "string",
       userEmail: "string",
@@ -88,6 +126,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.SHIP_CREATED]: {
     type: AuditEventType.SHIP_CREATED,
+    app: SystemLogApp.Fleet,
     data: {
       shipId: "string",
       ownerId: "string",
@@ -99,6 +138,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.SHIP_UPDATED]: {
     type: AuditEventType.SHIP_UPDATED,
+    app: SystemLogApp.Fleet,
     data: {
       shipId: "string",
       ownerId: "string",
@@ -111,6 +151,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.SHIP_DELETED]: {
     type: AuditEventType.SHIP_DELETED,
+    app: SystemLogApp.Fleet,
     data: {
       shipId: "string",
       ownerId: "string",
@@ -122,6 +163,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.SHIP_CREATED_V2]: {
     type: AuditEventType.SHIP_CREATED_V2,
+    app: SystemLogApp.Fleet,
     data: {
       shipId: "string",
       ownerId: "string",
@@ -133,6 +175,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.SHIP_UPDATED_V2]: {
     type: AuditEventType.SHIP_UPDATED_V2,
+    app: SystemLogApp.Fleet,
     data: {
       shipId: "string",
       ownerId: "string",
@@ -145,6 +188,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.SHIP_DELETED_V2]: {
     type: AuditEventType.SHIP_DELETED_V2,
+    app: SystemLogApp.Fleet,
     data: {
       shipId: "string",
       ownerId: "string",
@@ -157,6 +201,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.VARIANT_CREATED]: {
     type: AuditEventType.VARIANT_CREATED,
+    app: SystemLogApp.Fleet,
     data: {
       variantId: "string",
       seriesId: "string",
@@ -169,6 +214,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.VARIANT_CREATED_V2]: {
     type: AuditEventType.VARIANT_CREATED_V2,
+    app: SystemLogApp.Fleet,
     data: {
       variantId: "string",
       seriesId: "string",
@@ -187,6 +233,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.VARIANT_CREATED_V3]: {
     type: AuditEventType.VARIANT_CREATED_V3,
+    app: SystemLogApp.Fleet,
     data: {
       variantId: "string",
       seriesId: "string",
@@ -206,6 +253,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.VARIANT_UPDATED]: {
     type: AuditEventType.VARIANT_UPDATED,
+    app: SystemLogApp.Fleet,
     data: {
       variantId: "string",
       seriesId: "string",
@@ -220,6 +268,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.VARIANT_UPDATED_V2]: {
     type: AuditEventType.VARIANT_UPDATED_V2,
+    app: SystemLogApp.Fleet,
     data: {
       variantId: "string",
       seriesId: "string",
@@ -246,6 +295,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.VARIANT_UPDATED_V3]: {
     type: AuditEventType.VARIANT_UPDATED_V3,
+    app: SystemLogApp.Fleet,
     data: {
       variantId: "string",
       seriesId: "string",
@@ -274,6 +324,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.VARIANT_DELETED]: {
     type: AuditEventType.VARIANT_DELETED,
+    app: SystemLogApp.Fleet,
     data: {
       variantId: "string",
       seriesId: "string",
@@ -285,6 +336,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.SERIES_UPDATED]: {
     type: AuditEventType.SERIES_UPDATED,
+    app: SystemLogApp.Fleet,
     data: {
       seriesId: "string",
       manufacturerId: "string",
@@ -297,6 +349,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.SERIES_DELETED]: {
     type: AuditEventType.SERIES_DELETED,
+    app: SystemLogApp.Fleet,
     data: {
       seriesId: "string",
       manufacturerId: "string",
@@ -308,6 +361,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.MANUFACTURER_UPDATED]: {
     type: AuditEventType.MANUFACTURER_UPDATED,
+    app: SystemLogApp.Fleet,
     data: {
       manufacturerId: "string",
       previousName: "string",
@@ -321,6 +375,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.MANUFACTURER_DELETED]: {
     type: AuditEventType.MANUFACTURER_DELETED,
+    app: SystemLogApp.Fleet,
     data: {
       manufacturerId: "string",
       name: "string",
@@ -330,6 +385,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WEB_PUSH_SUBSCRIBED]: {
     type: AuditEventType.WEB_PUSH_SUBSCRIBED,
+    app: SystemLogApp.Notifications,
     data: {
       subscriptionId: "string",
       citizenId: "string",
@@ -340,6 +396,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WEB_PUSH_UNSUBSCRIBED]: {
     type: AuditEventType.WEB_PUSH_UNSUBSCRIBED,
+    app: SystemLogApp.Notifications,
     data: {
       citizenId: "string",
       count: 0,
@@ -350,6 +407,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ROLE_CREATED]: {
     type: AuditEventType.ROLE_CREATED,
+    app: SystemLogApp.Iam,
     data: {
       roleId: "string",
       name: "string",
@@ -359,6 +417,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ROLE_UPDATED]: {
     type: AuditEventType.ROLE_UPDATED,
+    app: SystemLogApp.Iam,
     data: {
       roleId: "string",
       previousName: "string",
@@ -372,6 +431,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ROLE_UPDATED_V2]: {
     type: AuditEventType.ROLE_UPDATED_V2,
+    app: SystemLogApp.Iam,
     data: {
       roleId: "string",
       previousName: "string",
@@ -387,6 +447,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ROLE_UPDATED_V3]: {
     type: AuditEventType.ROLE_UPDATED_V3,
+    app: SystemLogApp.Iam,
     data: {
       roleId: "string",
       previousName: "string",
@@ -404,6 +465,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ROLE_UPDATED_V4]: {
     type: AuditEventType.ROLE_UPDATED_V4,
+    app: SystemLogApp.Iam,
     data: {
       roleId: "string",
       previousName: "string",
@@ -423,6 +485,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ROLE_DELETED]: {
     type: AuditEventType.ROLE_DELETED,
+    app: SystemLogApp.Iam,
     data: {
       roleId: "string",
       name: "string",
@@ -432,6 +495,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ROLE_PERMISSIONS_UPDATED]: {
     type: AuditEventType.ROLE_PERMISSIONS_UPDATED,
+    app: SystemLogApp.Iam,
     data: {
       roleId: "string",
     },
@@ -440,6 +504,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ROLE_PERMISSION_TOGGLED]: {
     type: AuditEventType.ROLE_PERMISSION_TOGGLED,
+    app: SystemLogApp.Iam,
     data: {
       roleId: "string",
       permissionString: "string",
@@ -451,6 +516,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ROLE_INHERITANCE_UPDATED]: {
     type: AuditEventType.ROLE_INHERITANCE_UPDATED,
+    app: SystemLogApp.Iam,
     data: {
       roleId: "string",
     },
@@ -459,6 +525,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ROLE_INHERITANCE_TOGGLED]: {
     type: AuditEventType.ROLE_INHERITANCE_TOGGLED,
+    app: SystemLogApp.Iam,
     data: {
       roleId: "string",
       inheritedRoleId: "string",
@@ -470,6 +537,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ROLE_ASSIGNMENTS_UPDATED]: {
     type: AuditEventType.ROLE_ASSIGNMENTS_UPDATED,
+    app: SystemLogApp.Iam,
     data: {
       citizenId: "string",
       changes: [
@@ -484,6 +552,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ROLE_ASSIGNMENT_DELETED]: {
     type: AuditEventType.ROLE_ASSIGNMENT_DELETED,
+    app: SystemLogApp.Iam,
     data: {
       citizenId: "string",
       roleId: "string",
@@ -494,6 +563,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ROLE_ASSIGNMENT_LEVEL_INCREASED]: {
     type: AuditEventType.ROLE_ASSIGNMENT_LEVEL_INCREASED,
+    app: SystemLogApp.Iam,
     data: {
       citizenId: "string",
       roleId: "string",
@@ -504,6 +574,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ROLE_ASSIGNMENT_LEVEL_DECREASED]: {
     type: AuditEventType.ROLE_ASSIGNMENT_LEVEL_DECREASED,
+    app: SystemLogApp.Iam,
     data: {
       citizenId: "string",
       roleId: "string",
@@ -514,6 +585,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ROLE_AUTO_ASSIGNED]: {
     type: AuditEventType.ROLE_AUTO_ASSIGNED,
+    app: SystemLogApp.Iam,
     data: {
       citizenId: "string",
       citizenHandle: "string",
@@ -526,6 +598,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ROLE_AUTO_REMOVED]: {
     type: AuditEventType.ROLE_AUTO_REMOVED,
+    app: SystemLogApp.Iam,
     data: {
       citizenId: "string",
       citizenHandle: "string",
@@ -538,6 +611,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.SILC_TRANSACTION_CREATED]: {
     type: AuditEventType.SILC_TRANSACTION_CREATED,
+    app: SystemLogApp.Silc,
     data: {
       transactionIds: ["string"],
       receiverIds: ["string"],
@@ -549,6 +623,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.SILC_TRANSACTION_UPDATED]: {
     type: AuditEventType.SILC_TRANSACTION_UPDATED,
+    app: SystemLogApp.Silc,
     data: {
       transactionId: "string",
       previousValue: 0,
@@ -563,6 +638,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.SILC_TRANSACTION_DELETED]: {
     type: AuditEventType.SILC_TRANSACTION_DELETED,
+    app: SystemLogApp.Silc,
     data: {
       transactionId: "string",
       receiverId: "string",
@@ -574,6 +650,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.SALARY_CONFIG_UPDATED]: {
     type: AuditEventType.SALARY_CONFIG_UPDATED,
+    app: SystemLogApp.Silc,
     data: {
       roleIds: ["string"],
     },
@@ -582,6 +659,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.PENALTY_ENTRY_CREATED]: {
     type: AuditEventType.PENALTY_ENTRY_CREATED,
+    app: SystemLogApp.PenaltyPoints,
     data: {
       penaltyEntryId: "string",
       citizenId: "string",
@@ -595,6 +673,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.PENALTY_ENTRY_DELETED]: {
     type: AuditEventType.PENALTY_ENTRY_DELETED,
+    app: SystemLogApp.PenaltyPoints,
     data: {
       penaltyEntryId: "string",
       citizenId: "string",
@@ -607,6 +686,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.PROFIT_CYCLE_CREATED]: {
     type: AuditEventType.PROFIT_CYCLE_CREATED,
+    app: SystemLogApp.ProfitDistribution,
     data: {
       cycleId: "string",
       title: "string",
@@ -618,6 +698,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.PROFIT_CYCLE_COLLECTION_ENDED]: {
     type: AuditEventType.PROFIT_CYCLE_COLLECTION_ENDED,
+    app: SystemLogApp.ProfitDistribution,
     data: {
       cycleId: "string",
     },
@@ -627,6 +708,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.PROFIT_CYCLE_PAYOUT_STARTED]: {
     type: AuditEventType.PROFIT_CYCLE_PAYOUT_STARTED,
+    app: SystemLogApp.ProfitDistribution,
     data: {
       cycleId: "string",
     },
@@ -636,6 +718,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.PROFIT_CYCLE_PAYOUT_ENDED]: {
     type: AuditEventType.PROFIT_CYCLE_PAYOUT_ENDED,
+    app: SystemLogApp.ProfitDistribution,
     data: {
       cycleId: "string",
     },
@@ -645,6 +728,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.PROFIT_CYCLE_PARTICIPANT_UPDATED]: {
     type: AuditEventType.PROFIT_CYCLE_PARTICIPANT_UPDATED,
+    app: SystemLogApp.ProfitDistribution,
     data: {
       cycleId: "string",
       changes: [
@@ -661,6 +745,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.PROFIT_DISTRIBUTION_MY_ACCEPTED_TOGGLED]: {
     type: AuditEventType.PROFIT_DISTRIBUTION_MY_ACCEPTED_TOGGLED,
+    app: SystemLogApp.ProfitDistribution,
     data: {
       cycleId: "string",
       citizenId: "string",
@@ -672,6 +757,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.PROFIT_DISTRIBUTION_MY_CEDED_TOGGLED]: {
     type: AuditEventType.PROFIT_DISTRIBUTION_MY_CEDED_TOGGLED,
+    app: SystemLogApp.ProfitDistribution,
     data: {
       cycleId: "string",
       citizenId: "string",
@@ -683,6 +769,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.TASK_CREATED]: {
     type: AuditEventType.TASK_CREATED,
+    app: SystemLogApp.Tasks,
     data: {
       taskIds: ["string"],
       visibility: "PUBLIC",
@@ -693,6 +780,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.TASK_COMPLETED]: {
     type: AuditEventType.TASK_COMPLETED,
+    app: SystemLogApp.Tasks,
     data: {
       taskId: "string",
       completionistIds: ["string"],
@@ -703,6 +791,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.TASK_DELETED]: {
     type: AuditEventType.TASK_DELETED,
+    app: SystemLogApp.Tasks,
     data: {
       taskId: "string",
       title: "string",
@@ -712,6 +801,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.TASK_CANCELLED]: {
     type: AuditEventType.TASK_CANCELLED,
+    app: SystemLogApp.Tasks,
     data: {
       taskId: "string",
       title: "string",
@@ -721,6 +811,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.TASK_ASSIGNMENTS_UPDATED]: {
     type: AuditEventType.TASK_ASSIGNMENTS_UPDATED,
+    app: SystemLogApp.Tasks,
     data: {
       taskId: "string",
     },
@@ -729,6 +820,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.TASK_TITLE_UPDATED]: {
     type: AuditEventType.TASK_TITLE_UPDATED,
+    app: SystemLogApp.Tasks,
     data: {
       taskId: "string",
       previousTitle: "Old title",
@@ -740,6 +832,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.TASK_DESCRIPTION_UPDATED]: {
     type: AuditEventType.TASK_DESCRIPTION_UPDATED,
+    app: SystemLogApp.Tasks,
     data: {
       taskId: "string",
       previousDescription: "Old description",
@@ -750,6 +843,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.TASK_EXPIRES_AT_UPDATED]: {
     type: AuditEventType.TASK_EXPIRES_AT_UPDATED,
+    app: SystemLogApp.Tasks,
     data: {
       taskId: "string",
       previousExpiresAt: null,
@@ -760,6 +854,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.TASK_REPEATABLE_UPDATED]: {
     type: AuditEventType.TASK_REPEATABLE_UPDATED,
+    app: SystemLogApp.Tasks,
     data: {
       taskId: "string",
       previousRepeatable: 1,
@@ -770,6 +865,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.TASK_REQUIRED_ROLES_UPDATED]: {
     type: AuditEventType.TASK_REQUIRED_ROLES_UPDATED,
+    app: SystemLogApp.Tasks,
     data: {
       taskId: "string",
     },
@@ -778,6 +874,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.TASK_REWARD_TEXT_UPDATED]: {
     type: AuditEventType.TASK_REWARD_TEXT_UPDATED,
+    app: SystemLogApp.Tasks,
     data: {
       taskId: "string",
       previousValue: "Old reward",
@@ -788,6 +885,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.TASK_REWARD_SILC_UPDATED]: {
     type: AuditEventType.TASK_REWARD_SILC_UPDATED,
+    app: SystemLogApp.Tasks,
     data: {
       taskId: "string",
       previousValue: 10,
@@ -798,6 +896,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.TASK_REWARD_NEW_SILC_UPDATED]: {
     type: AuditEventType.TASK_REWARD_NEW_SILC_UPDATED,
+    app: SystemLogApp.Tasks,
     data: {
       taskId: "string",
       previousValue: 100,
@@ -808,6 +907,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.TASK_SELF_ASSIGNMENT_CREATED]: {
     type: AuditEventType.TASK_SELF_ASSIGNMENT_CREATED,
+    app: SystemLogApp.Tasks,
     data: {
       taskId: "string",
       citizenId: "string",
@@ -818,6 +918,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.TASK_SELF_ASSIGNMENT_DELETED]: {
     type: AuditEventType.TASK_SELF_ASSIGNMENT_DELETED,
+    app: SystemLogApp.Tasks,
     data: {
       taskId: "string",
       citizenId: "string",
@@ -828,6 +929,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_POSITION_CREATED]: {
     type: AuditEventType.EVENT_POSITION_CREATED,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
       positionId: "string",
@@ -841,6 +943,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_POSITION_UPDATED]: {
     type: AuditEventType.EVENT_POSITION_UPDATED,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
       positionId: "string",
@@ -853,6 +956,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_POSITION_UPDATED_V2]: {
     type: AuditEventType.EVENT_POSITION_UPDATED_V2,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
       positionId: "string",
@@ -871,6 +975,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_POSITION_DELETED]: {
     type: AuditEventType.EVENT_POSITION_DELETED,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
       positionId: "string",
@@ -882,6 +987,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_MANAGERS_ASSIGNED]: {
     type: AuditEventType.EVENT_MANAGERS_ASSIGNED,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
       managerIds: ["string"],
@@ -891,6 +997,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_MANAGER_REMOVED]: {
     type: AuditEventType.EVENT_MANAGER_REMOVED,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
       managerId: "string",
@@ -901,6 +1008,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_LINEUP_STATUS_CHANGED]: {
     type: AuditEventType.EVENT_LINEUP_STATUS_CHANGED,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
       enabled: true,
@@ -911,6 +1019,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_LINEUP_ORDER_CHANGED]: {
     type: AuditEventType.EVENT_LINEUP_ORDER_CHANGED,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
     },
@@ -919,6 +1028,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_POSITION_CITIZEN_ASSIGNED]: {
     type: AuditEventType.EVENT_POSITION_CITIZEN_ASSIGNED,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
       positionId: "string",
@@ -930,6 +1040,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_POSITION_CITIZEN_REMOVED]: {
     type: AuditEventType.EVENT_POSITION_CITIZEN_REMOVED,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
       positionId: "string",
@@ -941,6 +1052,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_POSITION_NAME_UPDATED]: {
     type: AuditEventType.EVENT_POSITION_NAME_UPDATED,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
       positionId: "string",
@@ -953,6 +1065,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_POSITION_APPLICATION_CREATED]: {
     type: AuditEventType.EVENT_POSITION_APPLICATION_CREATED,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
       positionId: "string",
@@ -965,6 +1078,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_POSITION_APPLICATION_DELETED]: {
     type: AuditEventType.EVENT_POSITION_APPLICATION_DELETED,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
       positionId: "string",
@@ -977,6 +1091,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_LINEUP_COPIED]: {
     type: AuditEventType.EVENT_LINEUP_COPIED,
+    app: SystemLogApp.Events,
     data: {
       sourceEventId: "string",
       targetEventId: "string",
@@ -987,6 +1102,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_POSITION_COPIED]: {
     type: AuditEventType.EVENT_POSITION_COPIED,
+    app: SystemLogApp.Events,
     data: {
       sourceEventId: "string",
       sourcePositionId: "string",
@@ -1001,6 +1117,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_TEMPLATE_POSITION_CREATED]: {
     type: AuditEventType.EVENT_TEMPLATE_POSITION_CREATED,
+    app: SystemLogApp.Events,
     data: {
       templateId: "string",
       positionId: "string",
@@ -1014,6 +1131,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_TEMPLATE_POSITION_UPDATED]: {
     type: AuditEventType.EVENT_TEMPLATE_POSITION_UPDATED,
+    app: SystemLogApp.Events,
     data: {
       templateId: "string",
       positionId: "string",
@@ -1032,6 +1150,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_TEMPLATE_POSITION_NAME_UPDATED]: {
     type: AuditEventType.EVENT_TEMPLATE_POSITION_NAME_UPDATED,
+    app: SystemLogApp.Events,
     data: {
       templateId: "string",
       positionId: "string",
@@ -1044,6 +1163,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_TEMPLATE_POSITION_DELETED]: {
     type: AuditEventType.EVENT_TEMPLATE_POSITION_DELETED,
+    app: SystemLogApp.Events,
     data: {
       templateId: "string",
       positionId: "string",
@@ -1055,6 +1175,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_TEMPLATE_LINEUP_ORDER_CHANGED]: {
     type: AuditEventType.EVENT_TEMPLATE_LINEUP_ORDER_CHANGED,
+    app: SystemLogApp.Events,
     data: {
       templateId: "string",
     },
@@ -1064,6 +1185,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_TEMPLATE_POSITION_COPIED]: {
     type: AuditEventType.EVENT_TEMPLATE_POSITION_COPIED,
+    app: SystemLogApp.Events,
     data: {
       sourceEventId: "string",
       sourceTemplateId: "string",
@@ -1080,6 +1202,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_TEMPLATE_CREATED]: {
     type: AuditEventType.EVENT_TEMPLATE_CREATED,
+    app: SystemLogApp.Events,
     data: {
       templateId: "string",
       name: "string",
@@ -1090,6 +1213,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_TEMPLATE_UPDATED]: {
     type: AuditEventType.EVENT_TEMPLATE_UPDATED,
+    app: SystemLogApp.Events,
     data: {
       templateId: "string",
       previousName: "string",
@@ -1104,6 +1228,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_TEMPLATE_DUPLICATED]: {
     type: AuditEventType.EVENT_TEMPLATE_DUPLICATED,
+    app: SystemLogApp.Events,
     data: {
       templateId: "string",
       name: "string",
@@ -1118,6 +1243,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_TEMPLATE_CREATED_FROM_EVENT]: {
     type: AuditEventType.EVENT_TEMPLATE_CREATED_FROM_EVENT,
+    app: SystemLogApp.Events,
     data: {
       templateId: "string",
       name: "string",
@@ -1132,6 +1258,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_TEMPLATE_DELETED]: {
     type: AuditEventType.EVENT_TEMPLATE_DELETED,
+    app: SystemLogApp.Events,
     data: {
       templateId: "string",
       name: "string",
@@ -1142,6 +1269,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_TEMPLATE_RESTORED]: {
     type: AuditEventType.EVENT_TEMPLATE_RESTORED,
+    app: SystemLogApp.Events,
     data: {
       templateId: "string",
       name: "string",
@@ -1152,6 +1280,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_TEMPLATE_ROLE_ACCESS_UPDATED]: {
     type: AuditEventType.EVENT_TEMPLATE_ROLE_ACCESS_UPDATED,
+    app: SystemLogApp.Events,
     data: {
       templateId: "string",
       readRoleIds: ["string"],
@@ -1163,6 +1292,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_TEMPLATE_OWNERSHIP_TRANSFERRED]: {
     type: AuditEventType.EVENT_TEMPLATE_OWNERSHIP_TRANSFERRED,
+    app: SystemLogApp.Events,
     data: {
       templateId: "string",
       name: "string",
@@ -1175,6 +1305,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_CREATED_FROM_TEMPLATE]: {
     type: AuditEventType.EVENT_CREATED_FROM_TEMPLATE,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
       templateId: "string",
@@ -1186,6 +1317,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.CITIZEN_CREATED]: {
     type: AuditEventType.CITIZEN_CREATED,
+    app: SystemLogApp.Spynet,
     data: {
       citizenId: "string",
       spectrumId: "string",
@@ -1196,6 +1328,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.CITIZEN_DELETED]: {
     type: AuditEventType.CITIZEN_DELETED,
+    app: SystemLogApp.Spynet,
     data: {
       citizenId: "string",
       spectrumId: "string",
@@ -1206,6 +1339,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ENTITY_LOG_CREATED]: {
     type: AuditEventType.ENTITY_LOG_CREATED,
+    app: SystemLogApp.Spynet,
     data: {
       entityId: "string",
       logId: "string",
@@ -1217,6 +1351,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ENTITY_LOG_UPDATED]: {
     type: AuditEventType.ENTITY_LOG_UPDATED,
+    app: SystemLogApp.Spynet,
     data: {
       entityId: "string",
       logId: "string",
@@ -1228,6 +1363,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ENTITY_LOG_DELETED]: {
     type: AuditEventType.ENTITY_LOG_DELETED,
+    app: SystemLogApp.Spynet,
     data: {
       entityId: "string",
       logId: "string",
@@ -1239,6 +1375,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ORGANIZATION_CREATED]: {
     type: AuditEventType.ORGANIZATION_CREATED,
+    app: SystemLogApp.Spynet,
     data: {
       organizationId: "string",
       spectrumId: "string",
@@ -1250,6 +1387,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ORGANIZATION_MEMBERSHIP_CREATED]: {
     type: AuditEventType.ORGANIZATION_MEMBERSHIP_CREATED,
+    app: SystemLogApp.Spynet,
     data: {
       organizationId: "string",
       citizenId: "string",
@@ -1261,6 +1399,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ORGANIZATION_MEMBERSHIP_REMOVED]: {
     type: AuditEventType.ORGANIZATION_MEMBERSHIP_REMOVED,
+    app: SystemLogApp.Spynet,
     data: {
       organizationId: "string",
       citizenId: "string",
@@ -1271,6 +1410,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ORGANIZATION_MEMBERSHIP_CONFIRMED]: {
     type: AuditEventType.ORGANIZATION_MEMBERSHIP_CONFIRMED,
+    app: SystemLogApp.Spynet,
     data: {
       historyEntryId: "string",
       citizenId: "string",
@@ -1282,6 +1422,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.CLASSIFICATION_LEVEL_CREATED]: {
     type: AuditEventType.CLASSIFICATION_LEVEL_CREATED,
+    app: SystemLogApp.Spynet,
     data: {
       classificationLevelId: "string",
       name: "string",
@@ -1291,6 +1432,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.CLASSIFICATION_LEVEL_UPDATED]: {
     type: AuditEventType.CLASSIFICATION_LEVEL_UPDATED,
+    app: SystemLogApp.Spynet,
     data: {
       classificationLevelId: "string",
       previousName: "string",
@@ -1302,6 +1444,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.CLASSIFICATION_LEVEL_DELETED]: {
     type: AuditEventType.CLASSIFICATION_LEVEL_DELETED,
+    app: SystemLogApp.Spynet,
     data: {
       classificationLevelId: "string",
       name: "string",
@@ -1311,6 +1454,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.NOTE_TYPE_CREATED]: {
     type: AuditEventType.NOTE_TYPE_CREATED,
+    app: SystemLogApp.Spynet,
     data: {
       noteTypeId: "string",
       name: "string",
@@ -1320,6 +1464,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.NOTE_TYPE_UPDATED]: {
     type: AuditEventType.NOTE_TYPE_UPDATED,
+    app: SystemLogApp.Spynet,
     data: {
       noteTypeId: "string",
       previousName: "string",
@@ -1331,6 +1476,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.NOTE_TYPE_DELETED]: {
     type: AuditEventType.NOTE_TYPE_DELETED,
+    app: SystemLogApp.Spynet,
     data: {
       noteTypeId: "string",
       name: "string",
@@ -1340,6 +1486,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.UPLOAD_CREATED]: {
     type: AuditEventType.UPLOAD_CREATED,
+    app: SystemLogApp.Uploads,
     data: {
       uploadId: "string",
       fileName: "file.png",
@@ -1350,6 +1497,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.RESOURCE_IMAGE_ASSIGNED]: {
     type: AuditEventType.RESOURCE_IMAGE_ASSIGNED,
+    app: SystemLogApp.Uploads,
     data: {
       resourceType: "manufacturer",
       resourceId: "string",
@@ -1362,6 +1510,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EMAIL_VERIFIED]: {
     type: AuditEventType.EMAIL_VERIFIED,
+    app: SystemLogApp.Account,
     data: {
       userId: "string",
     },
@@ -1370,6 +1519,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EMAIL_CONFIRMATION_REQUESTED]: {
     type: AuditEventType.EMAIL_CONFIRMATION_REQUESTED,
+    app: SystemLogApp.Account,
     data: {
       userId: "string",
       email: "user@example.com",
@@ -1380,6 +1530,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EMAIL_VERIFIED_VIA_TOKEN]: {
     type: AuditEventType.EMAIL_VERIFIED_VIA_TOKEN,
+    app: SystemLogApp.Account,
     data: {
       userId: "string",
     },
@@ -1388,6 +1539,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.USER_BANNED]: {
     type: AuditEventType.USER_BANNED,
+    app: SystemLogApp.Iam,
     data: {
       userId: "string",
       reason: "string",
@@ -1398,6 +1550,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.USER_UNBANNED]: {
     type: AuditEventType.USER_UNBANNED,
+    app: SystemLogApp.Iam,
     data: {
       userId: "string",
     },
@@ -1406,6 +1559,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.USER_LOGIN_BLOCKED]: {
     type: AuditEventType.USER_LOGIN_BLOCKED,
+    app: SystemLogApp.Iam,
     data: {
       userId: "string",
     },
@@ -1414,6 +1568,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WIKI_PAGE_CREATED]: {
     type: AuditEventType.WIKI_PAGE_CREATED,
+    app: SystemLogApp.Wiki,
     data: {
       pageId: "string",
       title: "string",
@@ -1424,6 +1579,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WIKI_PAGE_UPDATED]: {
     type: AuditEventType.WIKI_PAGE_UPDATED,
+    app: SystemLogApp.Wiki,
     data: {
       pageId: "string",
     },
@@ -1432,6 +1588,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WIKI_PAGE_RENAMED]: {
     type: AuditEventType.WIKI_PAGE_RENAMED,
+    app: SystemLogApp.Wiki,
     data: {
       pageId: "string",
       previousTitle: "string",
@@ -1443,6 +1600,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WIKI_PAGE_MOVED]: {
     type: AuditEventType.WIKI_PAGE_MOVED,
+    app: SystemLogApp.Wiki,
     data: {
       pageId: "string",
       previousParentId: null,
@@ -1453,6 +1611,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WIKI_PAGE_DUPLICATED]: {
     type: AuditEventType.WIKI_PAGE_DUPLICATED,
+    app: SystemLogApp.Wiki,
     data: {
       pageId: "string",
       sourcePageId: "string",
@@ -1467,6 +1626,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WIKI_PAGE_COPIED]: {
     type: AuditEventType.WIKI_PAGE_COPIED,
+    app: SystemLogApp.Wiki,
     data: {
       pageId: "string",
       sourcePageId: "string",
@@ -1480,6 +1640,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WIKI_PAGE_PERMISSIONS_UPDATED]: {
     type: AuditEventType.WIKI_PAGE_PERMISSIONS_UPDATED,
+    app: SystemLogApp.Wiki,
     data: {
       pageId: "string",
       visibility: "RESTRICTED",
@@ -1496,6 +1657,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WIKI_PAGE_EVENT_SCOPES_UPDATED]: {
     type: AuditEventType.WIKI_PAGE_EVENT_SCOPES_UPDATED,
+    app: SystemLogApp.Wiki,
     data: {
       pageId: "string",
       eventId: "string",
@@ -1510,6 +1672,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WIKI_PAGE_TEMPLATE_SCOPES_UPDATED]: {
     type: AuditEventType.WIKI_PAGE_TEMPLATE_SCOPES_UPDATED,
+    app: SystemLogApp.Wiki,
     data: {
       pageId: "string",
       templateId: "string",
@@ -1526,6 +1689,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WIKI_PAGE_ROLE_ACCESS_PRUNED]: {
     type: AuditEventType.WIKI_PAGE_ROLE_ACCESS_PRUNED,
+    app: SystemLogApp.Wiki,
     data: {
       pageId: "string",
       removedRoleIds: ["string"],
@@ -1537,6 +1701,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WIKI_PAGE_PERMISSIONS_RESET_BY_MOVE]: {
     type: AuditEventType.WIKI_PAGE_PERMISSIONS_RESET_BY_MOVE,
+    app: SystemLogApp.Wiki,
     data: {
       pageId: "string",
       movedPageId: "string",
@@ -1548,6 +1713,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WIKI_PAGE_OWNERSHIP_TRANSFERRED]: {
     type: AuditEventType.WIKI_PAGE_OWNERSHIP_TRANSFERRED,
+    app: SystemLogApp.Wiki,
     data: {
       pageId: "string",
       previousOwnerId: "string",
@@ -1559,6 +1725,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WIKI_PAGE_DELETED]: {
     type: AuditEventType.WIKI_PAGE_DELETED,
+    app: SystemLogApp.Wiki,
     data: {
       pageId: "string",
       title: "string",
@@ -1569,6 +1736,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WIKI_PAGE_RESTORED]: {
     type: AuditEventType.WIKI_PAGE_RESTORED,
+    app: SystemLogApp.Wiki,
     data: {
       pageId: "string",
       title: "string",
@@ -1579,6 +1747,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WIKI_PAGE_DESTROYED]: {
     type: AuditEventType.WIKI_PAGE_DESTROYED,
+    app: SystemLogApp.Wiki,
     data: {
       pageId: "string",
       title: "string",
@@ -1590,6 +1759,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WIKI_SETTINGS_UPDATED]: {
     type: AuditEventType.WIKI_SETTINGS_UPDATED,
+    app: SystemLogApp.Wiki,
     data: {
       setting: "string",
       value: "string",
@@ -1599,6 +1769,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WIKI_PAGE_REPORTED]: {
     type: AuditEventType.WIKI_PAGE_REPORTED,
+    app: SystemLogApp.Wiki,
     data: {
       reportId: "string",
       pageId: "string",
@@ -1609,6 +1780,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WIKI_PAGE_REPORT_RESOLVED]: {
     type: AuditEventType.WIKI_PAGE_REPORT_RESOLVED,
+    app: SystemLogApp.Wiki,
     data: {
       reportId: "string",
       pageId: "string",
@@ -1618,6 +1790,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WIKI_PAGE_SNAPSHOT_RESTORED]: {
     type: AuditEventType.WIKI_PAGE_SNAPSHOT_RESTORED,
+    app: SystemLogApp.Wiki,
     data: {
       pageId: "string",
       snapshotId: "string",
@@ -1627,6 +1800,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WIKI_PAGE_CONTENT_IMPORTED]: {
     type: AuditEventType.WIKI_PAGE_CONTENT_IMPORTED,
+    app: SystemLogApp.Wiki,
     data: {
       pageId: "string",
     },
@@ -1635,6 +1809,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WIKI_PAGE_SIDEBAR_MODE_UPDATED]: {
     type: AuditEventType.WIKI_PAGE_SIDEBAR_MODE_UPDATED,
+    app: SystemLogApp.Wiki,
     data: {
       pageId: "string",
       previousSidebarMode: "VISIBLE",
@@ -1646,6 +1821,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WIKI_PAGE_TAGS_UPDATED]: {
     type: AuditEventType.WIKI_PAGE_TAGS_UPDATED,
+    app: SystemLogApp.Wiki,
     data: {
       pageId: "string",
       addedTagNames: ["string"],
@@ -1656,6 +1832,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WIKI_PAGE_ICON_UPDATED]: {
     type: AuditEventType.WIKI_PAGE_ICON_UPDATED,
+    app: SystemLogApp.Wiki,
     data: {
       pageId: "string",
       iconId: null,
@@ -1668,6 +1845,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WIKI_PAGE_FAVORITE_ADDED]: {
     type: AuditEventType.WIKI_PAGE_FAVORITE_ADDED,
+    app: SystemLogApp.Wiki,
     data: {
       pageId: "string",
       citizenId: "string",
@@ -1677,6 +1855,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WIKI_PAGE_FAVORITE_REMOVED]: {
     type: AuditEventType.WIKI_PAGE_FAVORITE_REMOVED,
+    app: SystemLogApp.Wiki,
     data: {
       pageId: "string",
       citizenId: "string",
@@ -1686,6 +1865,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WIKI_PAGE_VISITED]: {
     type: AuditEventType.WIKI_PAGE_VISITED,
+    app: SystemLogApp.Wiki,
     data: {
       pageId: "string",
       citizenId: "string",
@@ -1695,6 +1875,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WIKI_CITIZEN_MENTIONS_SWEPT]: {
     type: AuditEventType.WIKI_CITIZEN_MENTIONS_SWEPT,
+    app: SystemLogApp.Wiki,
     data: {
       notifiedCount: 0,
       suppressedCount: 0,
@@ -1705,6 +1886,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.TRASHED_WIKI_PAGES_PURGED]: {
     type: AuditEventType.TRASHED_WIKI_PAGES_PURGED,
+    app: SystemLogApp.Wiki,
     data: {
       count: 0,
     },
@@ -1713,6 +1895,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ORPHANED_WIKI_TAGS_PURGED]: {
     type: AuditEventType.ORPHANED_WIKI_TAGS_PURGED,
+    app: SystemLogApp.Wiki,
     data: {
       count: 0,
     },
@@ -1721,6 +1904,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.MANUFACTURER_CREATED]: {
     type: AuditEventType.MANUFACTURER_CREATED,
+    app: SystemLogApp.Fleet,
     data: {
       manufacturerId: "string",
       name: "string",
@@ -1731,6 +1915,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.SERIES_CREATED]: {
     type: AuditEventType.SERIES_CREATED,
+    app: SystemLogApp.Fleet,
     data: {
       seriesId: "string",
       name: "string",
@@ -1741,6 +1926,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ENTITY_LOG_CONFIRMED]: {
     type: AuditEventType.ENTITY_LOG_CONFIRMED,
+    app: SystemLogApp.Spynet,
     data: {
       entityId: "string",
       logId: "string",
@@ -1755,6 +1941,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.CAREER_FLOW_UPDATED]: {
     type: AuditEventType.CAREER_FLOW_UPDATED,
+    app: SystemLogApp.Career,
     data: {
       flowId: "string",
       nodeCount: 0,
@@ -1766,6 +1953,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.CAREER_FLOW_CREATED]: {
     type: AuditEventType.CAREER_FLOW_CREATED,
+    app: SystemLogApp.Career,
     data: {
       flowId: "string",
       name: "string",
@@ -1777,6 +1965,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.CAREER_FLOW_DUPLICATED]: {
     type: AuditEventType.CAREER_FLOW_DUPLICATED,
+    app: SystemLogApp.Career,
     data: {
       flowId: "string",
       name: "string",
@@ -1791,6 +1980,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.CAREER_FLOW_RENAMED]: {
     type: AuditEventType.CAREER_FLOW_RENAMED,
+    app: SystemLogApp.Career,
     data: {
       flowId: "string",
       previousName: "string",
@@ -1804,6 +1994,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.CAREER_FLOWS_REORDERED]: {
     type: AuditEventType.CAREER_FLOWS_REORDERED,
+    app: SystemLogApp.Career,
     data: {
       flowIds: ["string"],
     },
@@ -1812,6 +2003,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.CAREER_FLOW_DELETED]: {
     type: AuditEventType.CAREER_FLOW_DELETED,
+    app: SystemLogApp.Career,
     data: {
       flowId: "string",
       name: "string",
@@ -1823,6 +2015,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.CAREER_FLOW_RESTORED]: {
     type: AuditEventType.CAREER_FLOW_RESTORED,
+    app: SystemLogApp.Career,
     data: {
       flowId: "string",
       name: "string",
@@ -1834,6 +2027,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.CAREER_FLOW_ROLE_ACCESS_UPDATED]: {
     type: AuditEventType.CAREER_FLOW_ROLE_ACCESS_UPDATED,
+    app: SystemLogApp.Career,
     data: {
       flowId: "string",
       readRoleIds: ["string"],
@@ -1845,6 +2039,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.IAM_SETTING_UPDATED]: {
     type: AuditEventType.IAM_SETTING_UPDATED,
+    app: SystemLogApp.Iam,
     data: {
       key: "string",
       value: "string",
@@ -1854,6 +2049,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.SILC_SETTING_UPDATED]: {
     type: AuditEventType.SILC_SETTING_UPDATED,
+    app: SystemLogApp.Silc,
     data: {
       key: "string",
       value: "string",
@@ -1863,6 +2059,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.SILC_ALL_EXPIRED]: {
     type: AuditEventType.SILC_ALL_EXPIRED,
+    app: SystemLogApp.Silc,
     data: {
       citizenCount: 0,
       expiredValue: 0,
@@ -1873,6 +2070,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.SILC_BALANCES_REFRESHED]: {
     type: AuditEventType.SILC_BALANCES_REFRESHED,
+    app: SystemLogApp.Silc,
     data: {
       citizenCount: 0,
     },
@@ -1882,6 +2080,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ROLE_SALARIES_DISBURSED]: {
     type: AuditEventType.ROLE_SALARIES_DISBURSED,
+    app: SystemLogApp.Silc,
     data: {
       roleIds: ["string"],
       transactionCount: 0,
@@ -1893,6 +2092,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.NOTIFICATION_SETTINGS_UPDATED]: {
     type: AuditEventType.NOTIFICATION_SETTINGS_UPDATED,
+    app: SystemLogApp.Notifications,
     data: {
       citizenId: "string",
       enabled: [{ notificationType: "string", channel: "string" }],
@@ -1904,6 +2104,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ON_SITE_NOTIFICATIONS_CREATED]: {
     type: AuditEventType.ON_SITE_NOTIFICATIONS_CREATED,
+    app: SystemLogApp.Notifications,
     data: {
       count: 0,
       notificationTypes: ["string"],
@@ -1914,6 +2115,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ON_SITE_NOTIFICATIONS_READ]: {
     type: AuditEventType.ON_SITE_NOTIFICATIONS_READ,
+    app: SystemLogApp.Notifications,
     data: {
       citizenId: "string",
       count: 0,
@@ -1923,6 +2125,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ON_SITE_NOTIFICATIONS_ALL_READ]: {
     type: AuditEventType.ON_SITE_NOTIFICATIONS_ALL_READ,
+    app: SystemLogApp.Notifications,
     data: {
       citizenId: "string",
       count: 0,
@@ -1933,6 +2136,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ON_SITE_NOTIFICATION_UNREAD]: {
     type: AuditEventType.ON_SITE_NOTIFICATION_UNREAD,
+    app: SystemLogApp.Notifications,
     data: {
       citizenId: "string",
       notificationId: "string",
@@ -1942,6 +2146,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ON_SITE_NOTIFICATION_ARCHIVED]: {
     type: AuditEventType.ON_SITE_NOTIFICATION_ARCHIVED,
+    app: SystemLogApp.Notifications,
     data: {
       citizenId: "string",
       notificationId: "string",
@@ -1951,6 +2156,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ON_SITE_NOTIFICATIONS_READ_ARCHIVED]: {
     type: AuditEventType.ON_SITE_NOTIFICATIONS_READ_ARCHIVED,
+    app: SystemLogApp.Notifications,
     data: {
       citizenId: "string",
       count: 0,
@@ -1960,6 +2166,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ON_SITE_NOTIFICATION_UNARCHIVED]: {
     type: AuditEventType.ON_SITE_NOTIFICATION_UNARCHIVED,
+    app: SystemLogApp.Notifications,
     data: {
       citizenId: "string",
       notificationId: "string",
@@ -1969,6 +2176,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.IRRELEVANT_ON_SITE_NOTIFICATIONS_ARCHIVED]: {
     type: AuditEventType.IRRELEVANT_ON_SITE_NOTIFICATIONS_ARCHIVED,
+    app: SystemLogApp.Notifications,
     data: {
       count: 0,
     },
@@ -1978,6 +2186,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.WEB_PUSH_SUBSCRIPTIONS_PRUNED]: {
     type: AuditEventType.WEB_PUSH_SUBSCRIPTIONS_PRUNED,
+    app: SystemLogApp.Notifications,
     data: {
       count: 0,
       reason: "expired",
@@ -1988,6 +2197,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.CHANGELOG_ENTRIES_SEEN]: {
     type: AuditEventType.CHANGELOG_ENTRIES_SEEN,
+    app: SystemLogApp.Changelog,
     data: {
       citizenId: "string",
       count: 0,
@@ -1997,6 +2207,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.UNUSED_UPLOADS_DELETED]: {
     type: AuditEventType.UNUSED_UPLOADS_DELETED,
+    app: SystemLogApp.Uploads,
     data: {
       databaseCount: 0,
       bucketCount: 0,
@@ -2007,6 +2218,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.UPLOAD_DELETED]: {
     type: AuditEventType.UPLOAD_DELETED,
+    app: SystemLogApp.Uploads,
     data: {
       uploadId: "string",
       fileName: "file.png",
@@ -2022,6 +2234,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.UPLOAD_DELETED_V2]: {
     type: AuditEventType.UPLOAD_DELETED_V2,
+    app: SystemLogApp.Uploads,
     data: {
       uploadId: "string",
       fileName: "file.png",
@@ -2039,6 +2252,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_IMPORTED_FROM_DISCORD]: {
     type: AuditEventType.EVENT_IMPORTED_FROM_DISCORD,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
       discordId: "string",
@@ -2050,6 +2264,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_UPDATED_FROM_DISCORD]: {
     type: AuditEventType.EVENT_UPDATED_FROM_DISCORD,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
       discordId: "string",
@@ -2061,6 +2276,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_DELETED_FROM_DISCORD]: {
     type: AuditEventType.EVENT_DELETED_FROM_DISCORD,
+    app: SystemLogApp.Events,
     data: {
       eventIds: ["string"],
     },
@@ -2070,6 +2286,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_PARTICIPANTS_SYNCED]: {
     type: AuditEventType.EVENT_PARTICIPANTS_SYNCED,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
       addedCount: 0,
@@ -2081,6 +2298,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_CREATED_IN_APP]: {
     type: AuditEventType.EVENT_CREATED_IN_APP,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
       name: "string",
@@ -2090,6 +2308,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_UPDATED_IN_APP]: {
     type: AuditEventType.EVENT_UPDATED_IN_APP,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
       changedFields: ["string"],
@@ -2100,6 +2319,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_DELETED_IN_APP]: {
     type: AuditEventType.EVENT_DELETED_IN_APP,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
       name: "string",
@@ -2109,6 +2329,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_VISIBILITY_UPDATED]: {
     type: AuditEventType.EVENT_VISIBILITY_UPDATED,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
       visibility: "string",
@@ -2122,6 +2343,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_PUBLISHED_TO_DISCORD]: {
     type: AuditEventType.EVENT_PUBLISHED_TO_DISCORD,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
       discordScheduledEventId: "string",
@@ -2137,6 +2359,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_UNPUBLISHED_FROM_DISCORD]: {
     type: AuditEventType.EVENT_UNPUBLISHED_FROM_DISCORD,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
       discordScheduledEventId: "string",
@@ -2147,6 +2370,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_DISCORD_PUBLICATION_CLEARED]: {
     type: AuditEventType.EVENT_DISCORD_PUBLICATION_CLEARED,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
       discordScheduledEventId: "string",
@@ -2157,6 +2381,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_PARTICIPATION_SIGNED_UP]: {
     type: AuditEventType.EVENT_PARTICIPATION_SIGNED_UP,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
       citizenId: "string",
@@ -2167,6 +2392,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_PARTICIPATION_COMMENT_UPDATED]: {
     type: AuditEventType.EVENT_PARTICIPATION_COMMENT_UPDATED,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
       citizenId: "string",
@@ -2177,6 +2403,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_PARTICIPATION_CANCELLED]: {
     type: AuditEventType.EVENT_PARTICIPATION_CANCELLED,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
       citizenId: "string",
@@ -2187,6 +2414,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_PARTICIPANT_ADDED_BY_MANAGER]: {
     type: AuditEventType.EVENT_PARTICIPANT_ADDED_BY_MANAGER,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
       citizenId: "string",
@@ -2197,6 +2425,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.EVENT_PARTICIPANT_REMOVED_BY_MANAGER]: {
     type: AuditEventType.EVENT_PARTICIPANT_REMOVED_BY_MANAGER,
+    app: SystemLogApp.Events,
     data: {
       eventId: "string",
       citizenId: "string",
@@ -2207,6 +2436,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.CITIZENS_PER_ROLE_COUNTED]: {
     type: AuditEventType.CITIZENS_PER_ROLE_COUNTED,
+    app: SystemLogApp.Statistics,
     data: {
       roleCount: 0,
     },
@@ -2216,6 +2446,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.SHIPS_PER_VARIANT_COUNTED]: {
     type: AuditEventType.SHIPS_PER_VARIANT_COUNTED,
+    app: SystemLogApp.Statistics,
     data: {
       variantCount: 0,
     },
@@ -2225,6 +2456,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.UNIQUE_LOGINS_COUNTED]: {
     type: AuditEventType.UNIQUE_LOGINS_COUNTED,
+    app: SystemLogApp.Statistics,
     data: {
       date: "string",
       count: 0,
@@ -2234,6 +2466,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.MCP_USAGE_COUNTED]: {
     type: AuditEventType.MCP_USAGE_COUNTED,
+    app: SystemLogApp.Statistics,
     data: {
       date: "string",
       count: 0,
@@ -2244,6 +2477,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.APP_FAVORITE_ADDED]: {
     type: AuditEventType.APP_FAVORITE_ADDED,
+    app: SystemLogApp.Other,
     data: {
       appKey: "string",
       citizenId: "string",
@@ -2253,6 +2487,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.APP_FAVORITE_REMOVED]: {
     type: AuditEventType.APP_FAVORITE_REMOVED,
+    app: SystemLogApp.Other,
     data: {
       appKey: "string",
       citizenId: "string",
@@ -2262,6 +2497,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.CITIZEN_PROFILE_UPDATED]: {
     type: AuditEventType.CITIZEN_PROFILE_UPDATED,
+    app: SystemLogApp.Account,
     data: {
       citizenId: "string",
       timezoneSet: true,
@@ -2273,6 +2509,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.BIRTHDAY_GREETINGS_SENT]: {
     type: AuditEventType.BIRTHDAY_GREETINGS_SENT,
+    app: SystemLogApp.Other,
     data: {
       citizenCount: 0,
     },
@@ -2281,6 +2518,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.NEW_YEAR_GREETINGS_SENT]: {
     type: AuditEventType.NEW_YEAR_GREETINGS_SENT,
+    app: SystemLogApp.Other,
     data: {
       citizenCount: 0,
     },
@@ -2289,6 +2527,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ONBOARDING_TASK_COMPLETED]: {
     type: AuditEventType.ONBOARDING_TASK_COMPLETED,
+    app: SystemLogApp.Other,
     data: {
       citizenId: "string",
       taskKey: "string",
@@ -2304,6 +2543,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.LOG_ANALYZER_ENTRIES_UPLOADED]: {
     type: AuditEventType.LOG_ANALYZER_ENTRIES_UPLOADED,
+    app: SystemLogApp.LogAnalyzer,
     data: {
       citizenId: "string",
       entryCount: 0,
@@ -2315,6 +2555,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.SEASONAL_THEME_SETTINGS_UPDATED]: {
     type: AuditEventType.SEASONAL_THEME_SETTINGS_UPDATED,
+    app: SystemLogApp.Account,
     data: {
       citizenId: "string",
       enabled: ["string"],
@@ -2328,6 +2569,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ASSUME_USER_STARTED]: {
     type: AuditEventType.ASSUME_USER_STARTED,
+    app: SystemLogApp.Iam,
     data: {
       assumedUserId: "string",
       assumedUserName: "string",
@@ -2338,6 +2580,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.ASSUME_USER_ENDED]: {
     type: AuditEventType.ASSUME_USER_ENDED,
+    app: SystemLogApp.Iam,
     data: {
       assumedUserId: "string",
       assumedUserName: "string",
@@ -2348,6 +2591,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.READ_MARKER_CREATED]: {
     type: AuditEventType.READ_MARKER_CREATED,
+    app: SystemLogApp.Other,
     data: {
       citizenId: "string",
       subject: ReadMarkerSubject.Task,
@@ -2358,6 +2602,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.CITIZEN_WELCOMED]: {
     type: AuditEventType.CITIZEN_WELCOMED,
+    app: SystemLogApp.Other,
     data: {
       citizenId: "string",
     },
@@ -2367,6 +2612,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.OAUTH_GRANT_CREATED]: {
     type: AuditEventType.OAUTH_GRANT_CREATED,
+    app: SystemLogApp.Mcp,
     data: {
       grantId: "string",
       clientId: "string",
@@ -2378,6 +2624,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.OAUTH_GRANT_REVOKED]: {
     type: AuditEventType.OAUTH_GRANT_REVOKED,
+    app: SystemLogApp.Mcp,
     data: {
       grantId: "string",
       clientId: "string",
@@ -2388,6 +2635,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.OAUTH_GRANT_ADMIN_MODE_UPDATED]: {
     type: AuditEventType.OAUTH_GRANT_ADMIN_MODE_UPDATED,
+    app: SystemLogApp.Mcp,
     data: {
       grantId: "string",
       clientId: "string",
@@ -2399,6 +2647,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.MCP_TOOL_SETTING_UPDATED]: {
     type: AuditEventType.MCP_TOOL_SETTING_UPDATED,
+    app: SystemLogApp.Mcp,
     data: {
       toolName: "string",
       enabled: true,
@@ -2409,6 +2658,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.OAUTH_RECORDS_PURGED]: {
     type: AuditEventType.OAUTH_RECORDS_PURGED,
+    app: SystemLogApp.Mcp,
     data: {
       authorizationCodeCount: 0,
       refreshTokenCount: 0,
@@ -2421,6 +2671,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.MANUAL_NOTIFICATION_CREATED]: {
     type: AuditEventType.MANUAL_NOTIFICATION_CREATED,
+    app: SystemLogApp.Notifications,
     data: {
       manualNotificationId: "string",
       title: "string",
@@ -2432,6 +2683,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.OAUTH_GRANT_CREATED_V2]: {
     type: AuditEventType.OAUTH_GRANT_CREATED_V2,
+    app: SystemLogApp.Mcp,
     data: {
       grantId: "string",
       clientId: "string",
@@ -2445,6 +2697,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.OAUTH_GRANT_RENAMED]: {
     type: AuditEventType.OAUTH_GRANT_RENAMED,
+    app: SystemLogApp.Mcp,
     data: {
       grantId: "string",
       clientId: "string",
@@ -2458,6 +2711,7 @@ export const AuditEventDefinitions: {
 
   [AuditEventType.MCP_TOOL_SETTING_UPDATED_V2]: {
     type: AuditEventType.MCP_TOOL_SETTING_UPDATED_V2,
+    app: SystemLogApp.Mcp,
     data: {
       grantId: "string",
       clientId: "string",
@@ -2466,5 +2720,174 @@ export const AuditEventDefinitions: {
     },
     message: (data) =>
       `MCP tool ${data.toolName} ${data.enabled ? "enabled" : "disabled"} for OAuth client ${data.clientId} (grant ${data.grantId})`,
+  },
+
+  [AuditEventType.CURRENT_USER_READ]: {
+    type: AuditEventType.CURRENT_USER_READ,
+    app: SystemLogApp.Account,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Current user read", data),
+  },
+
+  [AuditEventType.CITIZEN_READ]: {
+    type: AuditEventType.CITIZEN_READ,
+    app: SystemLogApp.Spynet,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Citizen read", data),
+  },
+
+  [AuditEventType.ORGANIZATION_READ]: {
+    type: AuditEventType.ORGANIZATION_READ,
+    app: SystemLogApp.Spynet,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Organization read", data),
+  },
+
+  [AuditEventType.CITIZEN_NOTES_LISTED]: {
+    type: AuditEventType.CITIZEN_NOTES_LISTED,
+    app: SystemLogApp.Spynet,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Citizen notes listed", data),
+  },
+
+  [AuditEventType.CITIZENS_LISTED]: {
+    type: AuditEventType.CITIZENS_LISTED,
+    app: SystemLogApp.Spynet,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Citizens listed", data),
+  },
+
+  [AuditEventType.CITIZENS_AND_ORGANIZATIONS_SEARCHED]: {
+    type: AuditEventType.CITIZENS_AND_ORGANIZATIONS_SEARCHED,
+    app: SystemLogApp.Spynet,
+    data: { arguments: {} },
+    message: (data) =>
+      toReadMessage("Citizens and organizations searched", data),
+  },
+
+  [AuditEventType.ROLE_READ]: {
+    type: AuditEventType.ROLE_READ,
+    app: SystemLogApp.Iam,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Role read", data),
+  },
+
+  [AuditEventType.ROLES_LISTED]: {
+    type: AuditEventType.ROLES_LISTED,
+    app: SystemLogApp.Iam,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Roles listed", data),
+  },
+
+  [AuditEventType.PERMISSION_CATALOG_READ]: {
+    type: AuditEventType.PERMISSION_CATALOG_READ,
+    app: SystemLogApp.Iam,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Permission catalog read", data),
+  },
+
+  [AuditEventType.PENALTY_ENTRIES_LISTED]: {
+    type: AuditEventType.PENALTY_ENTRIES_LISTED,
+    app: SystemLogApp.PenaltyPoints,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Penalty entries listed", data),
+  },
+
+  [AuditEventType.OWN_SHIPS_LISTED]: {
+    type: AuditEventType.OWN_SHIPS_LISTED,
+    app: SystemLogApp.Fleet,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Own ships listed", data),
+  },
+
+  [AuditEventType.ORGANIZATION_FLEET_LISTED]: {
+    type: AuditEventType.ORGANIZATION_FLEET_LISTED,
+    app: SystemLogApp.Fleet,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Organization fleet listed", data),
+  },
+
+  [AuditEventType.SHIP_VARIANTS_SEARCHED]: {
+    type: AuditEventType.SHIP_VARIANTS_SEARCHED,
+    app: SystemLogApp.Fleet,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Ship variants searched", data),
+  },
+
+  [AuditEventType.WIKI_PAGE_READ]: {
+    type: AuditEventType.WIKI_PAGE_READ,
+    app: SystemLogApp.Wiki,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Wiki page read", data),
+  },
+
+  [AuditEventType.WIKI_PAGES_LISTED]: {
+    type: AuditEventType.WIKI_PAGES_LISTED,
+    app: SystemLogApp.Wiki,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Wiki pages listed", data),
+  },
+
+  [AuditEventType.WIKI_SEARCHED]: {
+    type: AuditEventType.WIKI_SEARCHED,
+    app: SystemLogApp.Wiki,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Wiki searched", data),
+  },
+
+  [AuditEventType.EVENT_READ]: {
+    type: AuditEventType.EVENT_READ,
+    app: SystemLogApp.Events,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Event read", data),
+  },
+
+  [AuditEventType.EVENTS_LISTED]: {
+    type: AuditEventType.EVENTS_LISTED,
+    app: SystemLogApp.Events,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Events listed", data),
+  },
+
+  [AuditEventType.EVENT_LINEUP_READ]: {
+    type: AuditEventType.EVENT_LINEUP_READ,
+    app: SystemLogApp.Events,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Event lineup read", data),
+  },
+
+  [AuditEventType.TASK_READ]: {
+    type: AuditEventType.TASK_READ,
+    app: SystemLogApp.Tasks,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Task read", data),
+  },
+
+  [AuditEventType.TASKS_LISTED]: {
+    type: AuditEventType.TASKS_LISTED,
+    app: SystemLogApp.Tasks,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Tasks listed", data),
+  },
+
+  [AuditEventType.MANUAL_NOTIFICATIONS_LISTED]: {
+    type: AuditEventType.MANUAL_NOTIFICATIONS_LISTED,
+    app: SystemLogApp.Notifications,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Manual notifications listed", data),
+  },
+
+  [AuditEventType.CHANGELOG_ENTRIES_LISTED]: {
+    type: AuditEventType.CHANGELOG_ENTRIES_LISTED,
+    app: SystemLogApp.Changelog,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Changelog entries listed", data),
+  },
+
+  [AuditEventType.AUDIT_EVENTS_LISTED]: {
+    type: AuditEventType.AUDIT_EVENTS_LISTED,
+    app: SystemLogApp.SystemLog,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("System log listed", data),
   },
 };
