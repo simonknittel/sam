@@ -1,18 +1,10 @@
 "use server";
 
-import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
-import {
-  getApplicationContext,
-  mapApplicationErrorToActionResponse,
-  toActor,
-} from "@/modules/application";
+import { createUseCaseAction } from "@/modules/application";
 import {
   createCitizenInputSchema,
   createCitizen as createCitizenUseCase,
-  type CreateCitizenOutput,
 } from "@sam-monorepo/application";
-import { refresh } from "next/cache";
-import { redirect } from "next/navigation";
 import { CITIZEN_ERROR_TEXTS } from "../utils/citizenErrorTexts";
 
 /**
@@ -25,30 +17,12 @@ import { CITIZEN_ERROR_TEXTS } from "../utils/citizenErrorTexts";
  * because its state is in that subtree. The success hook of the form does
  * not run.
  */
-export const createCitizen = createAuthenticatedAction(
-  "createCitizen",
-  createCitizenInputSchema,
-  async (formData, authentication, data, t) => {
-    let result: CreateCitizenOutput;
-    try {
-      result = await createCitizenUseCase(
-        getApplicationContext(),
-        await toActor(authentication.session),
-        data,
-      );
-    } catch (error) {
-      return mapApplicationErrorToActionResponse(error, {
-        formData,
-        t,
-        texts: CITIZEN_ERROR_TEXTS,
-      });
-    }
-
-    if (result.created) refresh();
-
-    redirect(`/app/spynet/citizen/${result.citizen_id}`);
-  },
-  {
-    parseFormData: (formData) => ({ spectrum_id: formData.get("spectrumId") }),
-  },
-);
+export const createCitizen = createUseCaseAction({
+  name: "createCitizen",
+  schema: createCitizenInputSchema,
+  useCase: createCitizenUseCase,
+  parseFormData: (formData) => ({ spectrum_id: formData.get("spectrumId") }),
+  texts: CITIZEN_ERROR_TEXTS,
+  refresh: (output) => output.created,
+  redirect: (output) => `/app/spynet/citizen/${output.citizen_id}`,
+});
