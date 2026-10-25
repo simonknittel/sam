@@ -20,7 +20,7 @@ import { authOptions } from "../modules/auth/server/auth";
 
 export const metadata: Metadata = {
   description:
-    "Sinister Administration Module (SAM) for the Star Citizen organization Sinister Incorporated",
+    "Sinister Administration Module (SAM) of our Star Citizen organization",
 };
 
 const BANNED_ERROR = "UserBanned";
