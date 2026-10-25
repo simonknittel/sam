@@ -49,6 +49,20 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-10-25-zwei-faktor-authentifizierung",
+    date: "2026-10-25",
+    title: "Zwei-Faktor-Authentifizierung",
+    tags: ["Änderung"],
+    isTracked: false,
+    body: () => (
+      <p>
+        Einige Berechtigungen setzen jetzt voraus, dass die
+        Zwei-Faktor-Authentifizierung in Discord aktiviert ist.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-10-25-mcp-lesezugriffe",
     date: "2026-10-25",
     title: "Lesezugriffe im System Log",
