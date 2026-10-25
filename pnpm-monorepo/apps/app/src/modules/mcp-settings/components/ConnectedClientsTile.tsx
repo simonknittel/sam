@@ -1,3 +1,4 @@
+import { getRequestActor } from "@/modules/application";
 import { formatUserAgent } from "@/modules/auth/utils/formatUserAgent";
 import { TRow } from "@/modules/common/components/Table";
 import {
@@ -6,13 +7,11 @@ import {
 } from "@/modules/common/components/TableTile";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import type { OwnGrant } from "@sam-monorepo/application";
-import {
-  listToolCatalogGroups,
-  type ToolCatalogGroup,
-} from "@sam-monorepo/mcp";
+import type { ToolCatalogGroup } from "@sam-monorepo/mcp";
 import clsx from "clsx";
 import { getMyOAuthGrants } from "../queries/getMyOAuthGrants";
 import { getGrantDisplayName } from "../utils/getGrantDisplayName";
+import { listGrantToolGroups } from "../utils/listGrantToolGroups";
 import { EditMcpToolsButton } from "./EditMcpToolsButton";
 import { OAuthGrantAdminModeSwitch } from "./OAuthGrantAdminModeSwitch";
 import { RenameOAuthGrantButton } from "./RenameOAuthGrantButton";
@@ -71,8 +70,12 @@ export const ConnectedClientsTile = async ({
   className,
   canManageAdminMode,
 }: Props) => {
-  const grants = await getMyOAuthGrants();
-  const toolGroups = listToolCatalogGroups();
+  const [grants, actor] = await Promise.all([
+    getMyOAuthGrants(),
+    getRequestActor(),
+  ]);
+  const toolGroups = listGrantToolGroups(actor, false);
+  const adminModeToolGroups = listGrantToolGroups(actor, true);
 
   const columns = canManageAdminMode
     ? [...BASE_COLUMNS, ADMIN_MODE_COLUMN, ACTIONS_COLUMN]
@@ -91,7 +94,9 @@ export const ConnectedClientsTile = async ({
         <ConnectedClientRow
           key={grant.id}
           grant={grant}
-          toolGroups={toolGroups}
+          toolGroups={
+            grant.adminModeEnabledAt === null ? toolGroups : adminModeToolGroups
+          }
           canManageAdminMode={canManageAdminMode}
         />
       ))}

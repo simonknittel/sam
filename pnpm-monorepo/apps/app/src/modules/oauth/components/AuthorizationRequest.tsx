@@ -41,7 +41,8 @@ export const AuthorizationRequest = async ({
   if (isAssumedUser)
     return <AuthorizationNotice message={ASSUMED_USER_MESSAGE} />;
 
-  if (!canUseMcp(await getRequestActor()))
+  const actor = await getRequestActor();
+  if (!canUseMcp(actor))
     return <AuthorizationNotice message={MCP_ACCESS_MESSAGE} />;
 
   const context = getApplicationContext();
@@ -49,7 +50,7 @@ export const AuthorizationRequest = async ({
 
   switch (validation.kind) {
     case AuthorizationRequestValidationKind.Valid:
-      return <AuthorizationConsent validation={validation} />;
+      return <AuthorizationConsent validation={validation} actor={actor} />;
 
     case AuthorizationRequestValidationKind.ClientError:
       return (

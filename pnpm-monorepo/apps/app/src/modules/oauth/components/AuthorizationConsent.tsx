@@ -1,9 +1,10 @@
 import { Tile } from "@/modules/common/components/Tile";
+import { listGrantToolGroups } from "@/modules/mcp-settings/utils/listGrantToolGroups";
 import type {
+  Actor,
   AuthorizationRequestValidation,
   AuthorizationRequestValidationKind,
 } from "@sam-monorepo/application";
-import { listToolCatalogGroups } from "@sam-monorepo/mcp";
 import { getRedirectTarget, toConsentFormParameters } from "../utils/consent";
 import { ConsentDecision } from "./ConsentDecision";
 
@@ -12,13 +13,14 @@ interface Props {
     AuthorizationRequestValidation,
     { kind: AuthorizationRequestValidationKind.Valid }
   >;
+  readonly actor: Actor;
 }
 
 /**
  * Asks the user to connect a client. The host of the client id is the only
  * trusted identity of the client: the client gives its name itself.
  */
-export const AuthorizationConsent = ({ validation }: Props) => {
+export const AuthorizationConsent = ({ validation, actor }: Props) => {
   return (
     <Tile heading="Zugriff erlauben" childrenClassName="flex flex-col gap-4">
       <div>
@@ -34,7 +36,8 @@ export const AuthorizationConsent = ({ validation }: Props) => {
       <ConsentDecision
         parameters={toConsentFormParameters(validation)}
         clientName={validation.client.clientName}
-        toolGroups={listToolCatalogGroups()}
+        // A new grant starts without admin mode
+        toolGroups={listGrantToolGroups(actor, false)}
       />
 
       <p className="text-right text-sm break-all text-neutral-500">

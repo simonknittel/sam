@@ -10,7 +10,10 @@ interface Props {
   readonly grantId: string;
   readonly displayName: string;
   readonly clientHost: string;
-  /** The same object for all rows, thus the page sends the catalog once */
+  /**
+   * The tools that the client can see. The rows share one object for each
+   * admin mode, thus the page sends each list once.
+   */
   readonly toolGroups: readonly ToolCatalogGroup[];
   readonly disabledToolNames: readonly string[];
 }
