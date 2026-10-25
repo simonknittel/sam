@@ -36,13 +36,13 @@ test.describe("the role tools of the MCP server", () => {
 
     const toolNames = await client.listToolNames();
     expect(toolNames).toEqual(
-      expect.arrayContaining(["get_role", "list_roles"]),
+      expect.arrayContaining([
+        "get_permission_catalog",
+        "get_role",
+        "list_roles",
+      ]),
     );
-    for (const managerToolName of [
-      "change_role_permissions",
-      "get_permission_catalog",
-      "update_role",
-    ])
+    for (const managerToolName of ["change_role_permissions", "update_role"])
       expect(toolNames).not.toContain(managerToolName);
 
     // The own role of the viewer and the role "Bergung" are hidden, also as
@@ -236,12 +236,12 @@ test.describe("the role tools of the MCP server", () => {
     authorizeMcpClient,
     connectMcpClient,
   }) => {
-    const manager = await createMcpCitizen(prisma, {
-      handle: "mcp-rollen-verwalter",
-      permissionStrings: ["role;manage"],
+    // The catalog needs no permission besides mcp;use
+    const member = await createMcpCitizen(prisma, {
+      handle: "mcp-rollen-mitglied",
     });
     const client = await connectMcpClient(
-      (await authorizeMcpClient(manager.user)).accessToken,
+      (await authorizeMcpClient(member.user)).accessToken,
     );
 
     const { permissions } = await callForContent(

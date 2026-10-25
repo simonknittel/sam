@@ -3,7 +3,7 @@ import {
   type CatalogPermission,
 } from "@sam-monorepo/domain";
 import * as z from "zod";
-import { requirePermission, type Actor } from "../actor.js";
+import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 
 export const getPermissionCatalogInputSchema = z.strictObject({});
@@ -25,14 +25,13 @@ export interface GetPermissionCatalogOutput {
 
 /**
  * The permissions that the role page offers as a checkbox, with the texts of
- * the role page (see `PERMISSION_CATALOG`). Requires `role;manage`.
+ * the role page (see `PERMISSION_CATALOG`). Each user can read them: the
+ * catalog is static and contains no data of the organization.
  */
 export const getPermissionCatalog = async (
   _context: ApplicationContext,
-  actor: Actor,
+  _actor: Actor,
 ): Promise<GetPermissionCatalogOutput> => {
-  requirePermission(actor, "role", "manage");
-
   return {
     permissions: PERMISSION_CATALOG.map((permission: CatalogPermission) => ({
       permission_string: permission.permissionString,
