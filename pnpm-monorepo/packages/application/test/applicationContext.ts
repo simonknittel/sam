@@ -107,8 +107,8 @@ interface TestActorOptions {
 }
 
 /**
- * An actor with a confirmed email address, the given permission strings and
- * the given effective roles
+ * An actor with a confirmed email address, the two-factor authentication of
+ * Discord, the given permission strings and the given effective roles
  */
 export const createTestActor = ({
   userId,
@@ -124,6 +124,7 @@ export const createTestActor = ({
     citizen,
     roleIds: new Set(roleIds),
     discordUserId: null,
+    discordTwoFactorEnabled: true,
     permissionSets: permissionStrings.map(
       transformPermissionStringToPermissionSet,
     ),

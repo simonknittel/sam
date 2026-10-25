@@ -1,6 +1,7 @@
 import { UserRole } from "@sam-monorepo/database/browser";
 import {
   comparePermissionSets,
+  isMissingTwoFactorAuthentication,
   transformPermissionStringToPermissionSet,
   type PermissionSet,
 } from "@sam-monorepo/domain";
@@ -28,6 +29,11 @@ export interface Actor {
   readonly roleIds: ReadonlySet<string>;
   /** The id of the Discord account of the user, or null without one */
   readonly discordUserId: string | null;
+  /**
+   * The two-factor authentication of the Discord account of the person
+   * behind the request (see `isMissingTwoFactorAuthentication()`)
+   */
+  readonly discordTwoFactorEnabled: boolean | null;
   readonly permissionSets: PermissionSet[];
   /** True only for an admin who enabled admin mode */
   readonly adminMode: boolean;
@@ -38,8 +44,9 @@ export interface Actor {
   ) => boolean;
   /**
    * Whether the user can use the app: a confirmed email (admin mode skips
-   * it) and `login;manage`. The same gate as the pages, the API routes and
-   * the server actions.
+   * it), `login;manage` and the two-factor authentication that some
+   * permissions require. The same gate as the pages, the API routes and the
+   * server actions.
    */
   readonly hasClearance: () => boolean;
   /** Throws a `ForbiddenError` when `hasClearance()` is false */
@@ -71,17 +78,29 @@ export const createActor = (fields: ActorFields): Actor => {
   // Admin mode skips the email confirmation, like the gate of the app
   const hasConfirmedEmail = () => adminMode || fields.emailConfirmedAt !== null;
 
+  // Admin mode does not skip it: an admin always requires it
+  const hasTwoFactorAuthentication = () =>
+    !isMissingTwoFactorAuthentication(fields);
+
   return {
     ...fields,
     adminMode,
     authorize,
-    hasClearance: () => hasConfirmedEmail() && authorize("login", "manage"),
+    hasClearance: () =>
+      hasConfirmedEmail() &&
+      authorize("login", "manage") &&
+      hasTwoFactorAuthentication(),
     requireClearance: () => {
       if (!hasConfirmedEmail())
         throw new ForbiddenError("The email address is not confirmed");
 
       if (!authorize("login", "manage"))
         throw new ForbiddenError("The user has no clearance");
+
+      if (!hasTwoFactorAuthentication())
+        throw new ForbiddenError(
+          "The Discord account has no two-factor authentication",
+        );
     },
   };
 };

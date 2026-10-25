@@ -17,7 +17,7 @@ SAM gives access only through roles. A role has a list of permission strings. A 
 
 - **Role assignment**: a citizen has roles. A role can have levels. Then the role counts only when the citizen has the maximum level. A role without levels always counts.
 - **Inheritance**: a role can inherit other roles. The citizen also gets the permissions of the inherited roles, but only of the roles that the role inherits directly (one level). Thus a change of a role also changes the roles that inherit it.
-- **Clearance**: to use SAM at all, a user needs \`login;manage\` and a confirmed email. The MCP server also needs \`mcp;use\`.
+- **Clearance**: to use SAM at all, a user needs \`login;manage\` and a confirmed email. An admin and a user with \`role;manage\`, \`user;read\` or \`systemLog;read\` also need the two-factor authentication of their Discord account at their last Discord login. The MCP server also needs \`mcp;use\`.
 
 ## Permission strings
 

@@ -10,6 +10,7 @@ const MEMBER: ActorFields = {
   citizen: { id: "citizen", handle: "handle" },
   roleIds: new Set(),
   discordUserId: null,
+  discordTwoFactorEnabled: null,
   permissionSets: [
     { resource: "login", operation: "manage" },
     { resource: "event", operation: "read" },
@@ -60,11 +61,24 @@ describe("clearance", () => {
       ...MEMBER,
       userRole: UserRole.ADMIN,
       emailConfirmedAt: null,
+      discordTwoFactorEnabled: true,
       permissionSets: [],
       adminMode: true,
     });
 
     expect(actor.hasClearance()).toBe(true);
     expect(() => actor.requireClearance()).not.toThrow();
+  });
+
+  test("requires the two-factor authentication of Discord for an admin, also in admin mode", () => {
+    const admin = { ...MEMBER, userRole: UserRole.ADMIN, adminMode: true };
+
+    const withoutTwoFactor = createActor(admin);
+    expect(withoutTwoFactor.hasClearance()).toBe(false);
+    expect(() => withoutTwoFactor.requireClearance()).toThrow(ForbiddenError);
+
+    expect(
+      createActor({ ...admin, discordTwoFactorEnabled: true }).hasClearance(),
+    ).toBe(true);
   });
 });

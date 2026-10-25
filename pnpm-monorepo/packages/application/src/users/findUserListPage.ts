@@ -34,6 +34,7 @@ const USER_LIST_SELECT = {
   image: true,
   createdAt: true,
   emailVerified: true,
+  discordTwoFactorEnabled: true,
   bannedAt: true,
   bannedReason: true,
   role: true,

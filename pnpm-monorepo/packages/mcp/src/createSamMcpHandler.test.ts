@@ -66,6 +66,7 @@ const actor = createActor({
   citizen: { id: "citizen", handle: "Handle" },
   roleIds: new Set(),
   discordUserId: null,
+  discordTwoFactorEnabled: null,
   permissionSets: [{ resource: "login", operation: "manage" }],
   adminMode: false,
 });

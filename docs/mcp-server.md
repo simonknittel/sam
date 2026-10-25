@@ -12,7 +12,8 @@ the files of its skills.
 ## Connect a client
 
 The permission `mcp;use` ("MCP-Server nutzen" in the role settings) and the
-clearance of the app (a confirmed email and `login;manage`) gate the whole
+clearance of the app (a confirmed email, `login;manage` and the Discord
+two-factor authentication that some permissions require) gate the whole
 server: the consent page, the MCP app, the token endpoint and each
 request with an access token. Only the removal of access stays open without
 `mcp;use`: a user can always disconnect a client and deny a consent. Each

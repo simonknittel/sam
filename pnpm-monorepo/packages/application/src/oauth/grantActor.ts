@@ -12,6 +12,7 @@ export const GRANT_ACTOR_SELECT = {
       role: true,
       emailVerified: true,
       bannedAt: true,
+      discordTwoFactorEnabled: true,
       citizen: { select: { id: true, handle: true } },
       // The same account as the `discordId` of the session of the app
       accounts: {
@@ -49,6 +50,7 @@ export const createGrantActor = async (
     citizen: user.citizen,
     roleIds: effectiveRoles?.roleIds ?? new Set(),
     discordUserId: user.accounts[0]?.providerAccountId ?? null,
+    discordTwoFactorEnabled: user.discordTwoFactorEnabled,
     permissionSets: effectiveRoles?.permissionSets ?? [],
     // `createActor()` applies admin mode only to an admin
     adminMode: grant.adminModeEnabledAt !== null,

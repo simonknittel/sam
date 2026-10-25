@@ -115,7 +115,7 @@ These exports are not use cases. No MCP tool calls them:
 These use cases run without an actor. No MCP tool calls them:
 
 - The admin toolbar (`startAssumingUser`, `stopAssumingUser` and `listAssumableUsers`) takes the id of the admin as input. During an assume, the actor is the assumed user, thus the host keeps the admin gate. A different host must not call them without a check of its own.
-- The development login (`findDevelopmentLoginUser` and `listDevelopmentLoginUsers`) and `findSessionIdByToken` run without a session. The host checks the environment and reads the cookie.
+- The development login (`findDevelopmentLoginUser`, `listDevelopmentLoginUsers` and `enableDevelopmentLoginTwoFactor`) and `findSessionIdByToken` run without a session. The host checks the environment and reads the cookie.
 - `confirmEmailWithToken` is public: the token is the proof.
 - The Human Resources reads of the clearance page (`getHumanResourcesRoleIds` and `listHumanResourcesContacts`) run for users who have no clearance yet.
 - The recipient rules (`notifications/recipients`) and the delivery store (`notifications/delivery`) belong to the notification router of the Lambda functions. A recipient rule is the check of the receivers of one notification type, and the store writes the on-site rows and reads and prunes the web push subscriptions. The transports (the realtime channel, the push service) and the wording are in the Lambda function.

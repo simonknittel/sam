@@ -21,6 +21,7 @@ export {
   type SendEmailConfirmationInput,
   type SendEmailConfirmationOutput,
 } from "./emailConfirmationRequest.js";
+export { enableDevelopmentLoginTwoFactor } from "./enableDevelopmentLoginTwoFactor.js";
 export {
   findDevelopmentLoginUser,
   findDevelopmentLoginUserInputSchema,
