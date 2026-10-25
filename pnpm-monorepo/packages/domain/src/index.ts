@@ -324,6 +324,10 @@ export * from "./uploads/uploadUsage.js";
 export { UNUSED_UPLOAD_WHERE } from "./uploads/uploadUsageRelations.js";
 export { ASSUMABLE_USER_WHERE } from "./users/assumableUser.js";
 export {
+  isMissingTwoFactorAuthentication,
+  type TwoFactorAuthenticationSubject,
+} from "./users/twoFactorAuthentication.js";
+export {
   BAN_REASON_MAXIMUM_LENGTH,
   USER_AGENT_MAXIMUM_LENGTH,
 } from "./users/userLimits.js";

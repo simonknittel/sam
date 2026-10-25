@@ -9,6 +9,7 @@ import { AuditEventType } from "./AuditEventTypes.js";
 export const HIGH_VOLUME_AUDIT_EVENT_TYPES: ReadonlySet<AuditEventType> =
   new Set([
     AuditEventType.USER_LOGIN_V2,
+    AuditEventType.USER_LOGIN_V3,
     AuditEventType.USER_FIRST_VISIT_OF_THE_DAY_V2,
     AuditEventType.WIKI_PAGE_VISITED,
     AuditEventType.WIKI_PAGE_UPDATED,

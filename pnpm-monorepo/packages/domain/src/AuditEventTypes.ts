@@ -9,7 +9,9 @@ import type { ReadMarkerSubject } from "./readMarkers/ReadMarkerSubject.js";
  */
 export enum AuditEventType {
   USER_LOGIN = "USER_LOGIN",
+  /** @deprecated Superseded by USER_LOGIN_V3 (adds the Discord two-factor authentication) */
   USER_LOGIN_V2 = "USER_LOGIN_V2",
+  USER_LOGIN_V3 = "USER_LOGIN_V3",
   USER_LOGOUT = "USER_LOGOUT",
   USER_SESSION_DELETED = "USER_SESSION_DELETED",
   EXPIRED_AUTHENTICATION_RECORDS_PURGED = "EXPIRED_AUTHENTICATION_RECORDS_PURGED",
@@ -321,6 +323,14 @@ export interface AuditEventDataByType {
     userId: string;
     userEmail?: string | null;
     userName?: string | null;
+  };
+
+  [AuditEventType.USER_LOGIN_V3]: {
+    userId: string;
+    userEmail?: string | null;
+    userName?: string | null;
+    /** Null when Discord gave no status */
+    discordTwoFactorEnabled: boolean | null;
   };
 
   [AuditEventType.USER_LOGOUT]: {
