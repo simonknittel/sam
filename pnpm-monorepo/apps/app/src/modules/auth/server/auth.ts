@@ -590,9 +590,14 @@ export const authOptions: NextAuthOptions = {
             userId: message.user.id,
             userEmail: message.user.email,
             userName: message.user.name,
-            discordTwoFactorEnabled: message.profile
-              ? getDiscordTwoFactorEnabled(message.profile)
-              : null,
+            /**
+             * The profile of this event comes from `profile()` of the
+             * provider and does not have `mfa_enabled`. The user comes from
+             * the database after the sign-in callback, thus it has the
+             * status of this login.
+             */
+            discordTwoFactorEnabled:
+              message.user.discordTwoFactorEnabled ?? null,
           },
           createdById: message.user.id,
         },
