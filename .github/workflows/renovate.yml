@@ -32,3 +32,6 @@ jobs:
           token: ${{ secrets.RENOVATE_TOKEN }}
         env:
           LOG_LEVEL: debug
+          # The registry of the Docker Hardened Images (the collab Dockerfile)
+          # requires a login also for reads
+          RENOVATE_HOST_RULES: '[{"hostType":"docker","matchHost":"dhi.io","username":"${{ vars.DOCKERHUB_USERNAME }}","password":"${{ secrets.DOCKERHUB_TOKEN }}"}]'

@@ -76,6 +76,13 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm --filter @sam-monorepo/playwright exec playwright install --with-deps chromium
 
+      # The base images of the collab Dockerfile are Docker Hardened Images
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: dhi.io
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       # Spawns the whole stack itself: Postgres and collab containers via
       # testcontainers (the runner's Docker daemon) plus a production build
       # of the app per worker.
