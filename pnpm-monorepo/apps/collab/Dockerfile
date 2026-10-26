@@ -1,6 +1,9 @@
 # Build context is the pnpm-monorepo directory:
 #   docker build -f apps/collab/Dockerfile .
-FROM node:24.22.0-alpine@sha256:44fce696f38ba8c987c4db89954051000bbd05ffd8d8659ba15ed4a8602e937f AS build
+# The base images are Docker Hardened Images (see the requirements in
+# docs/setup-local-machine.md). The runtime image has no shell and no package
+# manager and runs as the user node.
+FROM dhi.io/node:24.22.0-alpine3.23-dev@sha256:8fa088f0a4f94e07bc48e918de9000cab24d7bebb5c5dab979e4ada822baba0d AS build
 RUN corepack enable
 WORKDIR /monorepo
 
@@ -24,7 +27,7 @@ RUN pnpm --filter "@sam-monorepo/collab..." run build
 # scripts, which are not in allowBuilds.
 RUN pnpm --filter "@sam-monorepo/collab" deploy --prod --ignore-scripts /deploy
 
-FROM node:24.22.0-alpine@sha256:44fce696f38ba8c987c4db89954051000bbd05ffd8d8659ba15ed4a8602e937f
+FROM dhi.io/node:24.22.0-alpine3.23@sha256:9d689c1ce509b09fec87494d6d5bddab425df98c5d890fe720f4dd5813a97715
 ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=build /deploy ./

@@ -3,7 +3,10 @@
 ## Requirements
 
 - [nvm](https://github.com/nvm-sh/nvm)
-- [Docker](https://www.docker.com/)
+- [Docker](https://www.docker.com/), logged in to the registry of the
+  [Docker Hardened Images](https://docs.docker.com/dhi/) with a Docker Hub
+  account: `docker login dhi.io`. The build of the wiki collaboration server
+  uses base images from this registry.
 
 ## Setup
 

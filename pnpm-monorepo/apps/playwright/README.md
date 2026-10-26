@@ -48,7 +48,9 @@ pnpm exec playwright test tests/wiki-editing.spec.ts   # single file
 `PLAYWRIGHT_SKIP_BUILD=1` also reuses an old build after a change to the app
 or after a branch switch. Then the tests do not test your change.
 
-Requirements: Docker runs, and the Playwright browsers are installed
+Requirements: Docker runs and is logged in to `dhi.io` (see the
+[requirements of the local machine](../../../docs/setup-local-machine.md#requirements)),
+and the Playwright browsers are installed
 (`pnpm exec playwright install chromium`).
 
 The suite is fully independent of the dev stack (`compose.yml`) — both can
