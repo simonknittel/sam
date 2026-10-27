@@ -36,7 +36,7 @@ import { expect, test } from "../fixtures/test";
  * `tools/list`: by group, then by name.
  */
 const TOOLS_WITHOUT_PERMISSION = [
-  "get_current_user",
+  "get_user",
   "list_my_notifications",
   "update_notification",
   "get_citizen",

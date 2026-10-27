@@ -289,4 +289,70 @@ test.describe("the list_audit_events tool of the MCP server", () => {
       },
     });
   });
+
+  test("the email addresses in the payloads are redacted, also in an older payload that is a JSON-encoded string", async ({
+    prisma,
+    authorizeMcpClient,
+    connectMcpClient,
+  }) => {
+    const viewer = await createMcpCitizen(prisma, {
+      handle: "mcp-protokoll-datenschutz",
+      permissionStrings: ["systemLog;read"],
+    });
+    const login = await prisma.auditEvent.create({
+      data: {
+        type: "USER_LOGIN_V3",
+        data: {
+          userId: viewer.user.id,
+          userEmail: "jane.doe@example.org",
+          userName: "Jane",
+          discordTwoFactorEnabled: true,
+        },
+        createdById: viewer.user.id,
+        createdAt: minutesAgo(20),
+      },
+    });
+    const confirmation = await prisma.auditEvent.create({
+      data: {
+        type: "EMAIL_CONFIRMATION_REQUESTED",
+        data: JSON.stringify({
+          userId: viewer.user.id,
+          email: "jane.doe@example.org",
+        }),
+        createdById: viewer.user.id,
+        createdAt: minutesAgo(10),
+      },
+    });
+    const client = await connectMcpClient(
+      (await authorizeMcpClient(viewer.user)).accessToken,
+    );
+
+    const result = await callForContent(client, TOOL_NAME, {
+      types: ["USER_LOGIN_V3", "EMAIL_CONFIRMATION_REQUESTED"],
+      from: minutesAgo(30).toISOString(),
+      to: minutesAgo(5).toISOString(),
+    });
+
+    expect(result).toMatchObject({
+      events: [
+        {
+          id: confirmation.id,
+          data: JSON.stringify({
+            userId: viewer.user.id,
+            email: "j***e@e***e.org",
+          }),
+        },
+        {
+          id: login.id,
+          data: {
+            userId: viewer.user.id,
+            userEmail: "j***e@e***e.org",
+            userName: "Jane",
+            discordTwoFactorEnabled: true,
+          },
+        },
+      ],
+    });
+    expect(JSON.stringify(result)).not.toContain("jane.doe@example.org");
+  });
 });

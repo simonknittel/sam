@@ -117,7 +117,7 @@ test.describe("the MCP app", () => {
       toolsDialog,
     );
     const toolSwitch = page.getByRole("checkbox", {
-      name: "Get the current user",
+      name: "Get a user",
     });
     await expect(toolSwitch).toBeChecked();
     // The citizen has no permission for the tool
@@ -127,22 +127,18 @@ test.describe("the MCP app", () => {
 
     await toggleLabel(toolsDialog, toolSwitch).click();
     await expect(toolSwitch).not.toBeChecked();
-    await expect
-      .poll(() => laptop.listToolNames())
-      .not.toContain("get_current_user");
-    await expect(laptop.callTool("get_current_user")).rejects.toMatchObject({
+    await expect.poll(() => laptop.listToolNames()).not.toContain("get_user");
+    await expect(laptop.callTool("get_user")).rejects.toMatchObject({
       code: UNKNOWN_TOOL_ERROR_CODE,
     });
-    expect(await desktop.listToolNames()).toContain("get_current_user");
+    expect(await desktop.listToolNames()).toContain("get_user");
 
     await toggleLabel(toolsDialog, toolSwitch).click();
     await expect(toolSwitch).toBeChecked();
-    await expect
-      .poll(() => laptop.listToolNames())
-      .toContain("get_current_user");
-    expect(
-      (await laptop.callTool("get_current_user")).structuredContent,
-    ).toMatchObject({ user_id: citizen.user.id });
+    await expect.poll(() => laptop.listToolNames()).toContain("get_user");
+    expect((await laptop.callTool("get_user")).structuredContent).toMatchObject(
+      { id: citizen.user.id },
+    );
 
     await expectAuditEvents(prisma, [
       "OAUTH_GRANT_RENAMED",
@@ -178,9 +174,9 @@ test.describe("the MCP app", () => {
     const authorization = await authorizeMcpClient(admin.user);
     const client = await connectMcpClient(authorization.accessToken);
     // Admin mode is off for a new client, also for an admin
-    expect(
-      (await client.callTool("get_current_user")).structuredContent,
-    ).toMatchObject({ role: "admin", admin_mode: false });
+    expect((await client.callTool("get_user")).structuredContent).toMatchObject(
+      { role: "admin", client: { admin_mode: false } },
+    );
 
     // The switch shows only while the admin mode of the toolbar is active
     await page.goto(MCP_APP_PAGE);
@@ -216,10 +212,9 @@ test.describe("the MCP app", () => {
     await expect
       .poll(
         async () =>
-          structuredContentOf(await client.callTool("get_current_user"))
-            .admin_mode,
+          structuredContentOf(await client.callTool("get_user")).client,
       )
-      .toBe(true);
+      .toMatchObject({ admin_mode: true });
 
     await expectAuditEvents(prisma, ["OAUTH_GRANT_ADMIN_MODE_UPDATED"]);
   });

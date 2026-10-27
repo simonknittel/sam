@@ -160,16 +160,16 @@ test.describe("the OAuth server and the MCP endpoint", () => {
     const client = await connectMcpClient(authorization.accessToken);
 
     const discovery = await client.discover();
-    expect(discovery.instructions).toContain("get_current_user");
-    expect(await client.listToolNames()).toContain("get_current_user");
+    expect(discovery.instructions).toContain("get_user");
+    expect(await client.listToolNames()).toContain("get_user");
 
-    const result = await client.callTool("get_current_user");
+    const result = await client.callTool("get_user");
     expect(result.isError).toBeFalsy();
     expect(result.structuredContent).toMatchObject({
-      user_id: citizen.user.id,
+      id: citizen.user.id,
       citizen: { id: citizen.entity.id, handle: "mcp-nutzer" },
       role: "user",
-      admin_mode: false,
+      client: { admin_mode: false },
     });
 
     // The server serves only the 2026-07-28 revision
@@ -251,7 +251,7 @@ test.describe("the OAuth server and the MCP endpoint", () => {
           toolsDialog.getByRole("checkbox", { name: "List the audit events" }),
         ).toHaveCount(0);
         const toolSwitch = consentPage.getByRole("checkbox", {
-          name: "Get the current user",
+          name: "Get a user",
         });
         await toggleLabel(toolsDialog, toolSwitch).click();
         await expect(toolSwitch).not.toBeChecked();
@@ -260,7 +260,7 @@ test.describe("the OAuth server and the MCP endpoint", () => {
       },
     });
     const client = await connectMcpClient(authorization.accessToken);
-    expect(await client.listToolNames()).not.toContain("get_current_user");
+    expect(await client.listToolNames()).not.toContain("get_user");
 
     await page.goto("/app/mcp");
     const clientRow = page
