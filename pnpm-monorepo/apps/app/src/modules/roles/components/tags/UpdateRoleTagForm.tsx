@@ -12,6 +12,7 @@ import { updateRoleTag } from "../../actions/updateRoleTag";
 import type { RolePickerRole } from "../RolePicker/RolePanel";
 import { RolePicker } from "../RolePicker/RolePicker";
 import { RoleTagFields } from "./RoleTagFields";
+import { useSelectionChanges } from "./useSelectionChanges";
 
 interface Props {
   readonly tag: Pick<ManagedRoleTag, "id" | "name" | "description" | "roleIds">;
@@ -27,20 +28,35 @@ export const UpdateRoleTagForm = ({ tag, roles }: Props) => {
   const { state, isPending, submitWithoutReset } = useAction(updateRoleTag, {
     errorToast: false,
   });
+  const { selectedIds, setSelectedIds, addedIds, removedIds } =
+    useSelectionChanges(tag.roleIds);
 
   return (
     <Tile heading="Tag bearbeiten">
       <form onSubmit={submitWithoutReset}>
         <input type="hidden" name="tagId" value={tag.id} />
 
+        {addedIds.map((roleId) => (
+          <input key={roleId} type="hidden" name="addRoleIds" value={roleId} />
+        ))}
+
+        {removedIds.map((roleId) => (
+          <input
+            key={roleId}
+            type="hidden"
+            name="removeRoleIds"
+            value={roleId}
+          />
+        ))}
+
         <RoleTagFields tag={tag} />
 
         <RolePicker
           mode={ItemPickerMode.Multiple}
-          name="roleIds"
           label="Rollen"
           roles={roles}
-          defaultValue={tag.roleIds}
+          value={selectedIds}
+          onChange={setSelectedIds}
           className="mt-4"
         />
 

@@ -6,11 +6,12 @@ import {
 } from "../../test/applicationContext.js";
 import { truncateAllTables } from "../../test/database.js";
 import { ForbiddenError } from "../errors.js";
-import { findManagedRole, findManagedRoleTag } from "./findManagedRole.js";
 import {
+  findManagedRole,
+  findManagedRoleTag,
   findManagedRoleTags,
-  findRoleTableRows,
-} from "./roleAdministrationRows.js";
+} from "./findManagedRole.js";
+import { findPickerRoleTagBadges } from "./roleTagBadges.js";
 
 /** `role;manage` without `otherRole;read`: the manager sees no role badge */
 const manager = createTestActor({
@@ -23,9 +24,10 @@ beforeEach(async () => {
 });
 
 /**
- * The tag page and the role page save the full lists of the links. A link
- * that is missing in a list is removed, thus the lists must not depend on
- * the role visibility of the manager.
+ * The tag page and the role page show and change all links of a tag or of a
+ * role, thus the lists must not depend on the role visibility of the
+ * manager. Their role pickers offer all roles, thus the tags of the roles
+ * context have all roles too.
  */
 test("the role pages and the tag pages get all links, also of hidden roles", async () => {
   const { context } = createTestApplicationContext();
@@ -49,17 +51,16 @@ test("the role pages and the tag pages get all links, also of hidden roles", asy
   expect(await findManagedRoleTag(context, manager, tag.id)).toEqual(
     expectedTag,
   );
-  expect(await findManagedRoleTags(context, manager)).toEqual([
+  const expectedTags = [
     expectedTag,
     { ...expectedTag, id: emptyTag.id, name: "Leer", roleIds: [] },
-  ]);
+  ];
+  expect(await findManagedRoleTags(context, manager)).toEqual(expectedTags);
+  expect(await findPickerRoleTagBadges(context, manager)).toEqual(expectedTags);
 
   expect((await findManagedRole(context, manager, scout.id))?.tags).toEqual([
     { tagId: tag.id },
   ]);
-  expect(
-    (await findRoleTableRows(context, manager)).map((role) => role.tagIds),
-  ).toEqual([[tag.id], [tag.id]]);
 });
 
 test("the tag pages require role;manage", async () => {

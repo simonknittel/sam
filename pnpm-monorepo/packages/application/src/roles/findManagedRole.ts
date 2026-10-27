@@ -50,13 +50,13 @@ export interface ManagedRoleTag {
   readonly icon: RoleIcon | null;
   /**
    * All roles of the tag, sorted by name. The tag outputs give only the roles
-   * that the actor can see, but the tag page saves the full list: a role
-   * that is not in the list loses the tag.
+   * that the actor can see, but the tag page shows and changes all roles of
+   * the tag.
    */
   readonly roleIds: string[];
 }
 
-export const toManagedRoleTag = (tag: RoleTagBadgeRow): ManagedRoleTag => ({
+const toManagedRoleTag = (tag: RoleTagBadgeRow): ManagedRoleTag => ({
   id: tag.id,
   name: tag.name,
   description: tag.description,
@@ -84,4 +84,21 @@ export const findManagedRoleTag = async (
   });
 
   return tag ? toManagedRoleTag(tag) : null;
+};
+
+/**
+ * All tags with all of their roles (see `ManagedRoleTag`), sorted by name
+ * like the tag row of the role picker. Requires `role;manage`.
+ */
+export const findManagedRoleTags = async (
+  context: Pick<ApplicationContext, "prisma">,
+  actor: Actor,
+): Promise<ManagedRoleTag[]> => {
+  requirePermission(actor, "role", "manage");
+
+  const tags = await context.prisma.roleTag.findMany({
+    select: ROLE_TAG_BADGE_SELECT,
+  });
+
+  return tags.map(toManagedRoleTag).toSorted(compareRoleNames);
 };

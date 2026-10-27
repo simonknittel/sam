@@ -2,55 +2,27 @@
 
 import { createUseCaseAction } from "@/modules/application";
 import {
-  findManagedRoleTag,
-  idSchema,
-  NotFoundError,
-  RoleTagErrorMessage,
   updateRoleTagInputSchema,
   updateRoleTag as updateRoleTagUseCase,
 } from "@sam-monorepo/application";
-import { ROLE_TAG_ASSIGNMENT_CHANGES_MAXIMUM } from "@sam-monorepo/domain";
-import * as z from "zod";
-
-/** The form gives all roles of the tag, not the add and remove lists */
-const updateRoleTagFormSchema = updateRoleTagInputSchema
-  .omit({ add_role_ids: true, remove_role_ids: true })
-  .extend({
-    role_ids: z.array(idSchema).max(ROLE_TAG_ASSIGNMENT_CHANGES_MAXIMUM),
-  });
+import { ROLE_TAG_ERROR_TEXTS } from "../utils/roleErrorTexts";
 
 /**
- * Saves the name, the description and the roles of a tag. The action
- * compares the roles of the form with the current roles of the tag: the
- * difference gives the add and remove lists of the use case.
+ * Saves the name, the description and the changes of the roles of a tag. The
+ * form gives the add and remove lists against the roles that the page
+ * loaded, thus a role that a different user added after the load stays.
  */
 export const updateRoleTag = createUseCaseAction({
   name: "updateRoleTag",
-  schema: updateRoleTagFormSchema,
-  useCase: async (context, actor, { role_ids: roleIds, ...input }) => {
-    const tag = await findManagedRoleTag(context, actor, input.tag_id);
-    if (!tag) throw new NotFoundError(RoleTagErrorMessage.NotFound);
-
-    const currentRoleIds = new Set(tag.roleIds);
-    const selectedRoleIds = new Set(roleIds);
-
-    return updateRoleTagUseCase(context, actor, {
-      ...input,
-      add_role_ids: roleIds.filter((roleId) => !currentRoleIds.has(roleId)),
-      remove_role_ids: tag.roleIds.filter(
-        (roleId) => !selectedRoleIds.has(roleId),
-      ),
-    });
-  },
+  schema: updateRoleTagInputSchema,
+  useCase: updateRoleTagUseCase,
   parseFormData: (formData) => ({
     tag_id: formData.get("tagId"),
     name: formData.get("name"),
     description: formData.get("description"),
-    role_ids: formData.getAll("roleIds"),
+    add_role_ids: formData.getAll("addRoleIds"),
+    remove_role_ids: formData.getAll("removeRoleIds"),
   }),
-  texts: {
-    [RoleTagErrorMessage.NameTaken]:
-      "Ein Tag mit diesem Namen existiert bereits.",
-  },
+  texts: ROLE_TAG_ERROR_TEXTS,
   success: (t) => t("Common.successfullySaved"),
 });

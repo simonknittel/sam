@@ -1,6 +1,9 @@
+import {
+  UploadedIcon,
+  UploadedIconSize,
+} from "@/modules/common/components/UploadedIcon";
 import type { BadgeRoleTag } from "@/modules/roles/queries/getRoles";
 import clsx from "clsx";
-import { UploadedIcon, UploadedIconSize } from "@/modules/common/components/UploadedIcon";
 
 interface Props {
   readonly className?: string;

@@ -18,8 +18,8 @@ export type RoleTagBadgeRow = Prisma.RoleTagGetPayload<{
 
 /**
  * Everything that the tag row of the role picker renders. The app sends the
- * visible tags into the roles context of the client on each page, like the
- * role badges.
+ * tags into the roles context of the client on each page, like the role
+ * badges (see `findPickerRoleTagBadges()`).
  */
 export interface RoleTagBadge {
   readonly id: string;
@@ -27,14 +27,17 @@ export interface RoleTagBadge {
   /** Plain text */
   readonly description: string | null;
   readonly icon: RoleIcon | null;
-  /** The roles of the tag that the actor can see, sorted by name */
+  /**
+   * The roles of the tag that the actor can see, sorted by name. In the
+   * roles context of a user with `role;manage`, all roles of the tag.
+   */
   readonly roleIds: string[];
 }
 
-/** The tag with the roles that the actor can see (see `isRoleVisible()`) */
-export const toRoleTagBadge = (
-  actor: Pick<Actor, "authorize">,
+/** The tag with only the roles that pass the filter */
+const toRoleTagBadgeWithRoles = (
   tag: RoleTagBadgeRow,
+  includesRole: (roleId: string) => boolean,
 ): RoleTagBadge => ({
   id: tag.id,
   name: tag.name,
@@ -42,10 +45,17 @@ export const toRoleTagBadge = (
   icon: tag.icon,
   roleIds: tag.roles
     .map((assignment) => assignment.role)
-    .filter((role) => isRoleVisible(actor, role.id))
+    .filter((role) => includesRole(role.id))
     .toSorted(compareRoleNames)
     .map((role) => role.id),
 });
+
+/** The tag with the roles that the actor can see (see `isRoleVisible()`) */
+export const toRoleTagBadge = (
+  actor: Pick<Actor, "authorize">,
+  tag: RoleTagBadgeRow,
+): RoleTagBadge =>
+  toRoleTagBadgeWithRoles(tag, (roleId) => isRoleVisible(actor, roleId));
 
 /**
  * Whether the actor can see the tag: a user sees a tag only if the user sees
@@ -70,5 +80,28 @@ export const findVisibleRoleTagBadges = async (
   return tags
     .map((tag) => toRoleTagBadge(actor, tag))
     .filter((tag) => isRoleTagVisible(actor, tag))
+    .toSorted(compareRoleNames);
+};
+
+/**
+ * The tags of the roles context of the app, sorted by name. The role pickers
+ * of the role pages and of the tag page offer all roles to a user with
+ * `role;manage`, thus this user gets all tags with all of their roles: a
+ * click on a tag also selects the roles that the user cannot see. The other
+ * users get the visible tags (see `findVisibleRoleTagBadges()`).
+ */
+export const findPickerRoleTagBadges = async (
+  context: Pick<ApplicationContext, "prisma">,
+  actor: Pick<Actor, "authorize">,
+): Promise<RoleTagBadge[]> => {
+  if (!actor.authorize("role", "manage"))
+    return findVisibleRoleTagBadges(context, actor);
+
+  const tags = await context.prisma.roleTag.findMany({
+    select: ROLE_TAG_BADGE_SELECT,
+  });
+
+  return tags
+    .map((tag) => toRoleTagBadgeWithRoles(tag, () => true))
     .toSorted(compareRoleNames);
 };

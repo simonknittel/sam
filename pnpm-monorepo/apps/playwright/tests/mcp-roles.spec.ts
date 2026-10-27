@@ -386,9 +386,10 @@ test.describe("the role tools of the MCP server", () => {
       handle: "mcp-tags-betrachter",
       permissionStrings: [`otherRole;read;roleId=${command.id}`],
     });
+    // The manager sees no role, but manages the tags of all roles
     const manager = await createMcpCitizen(prisma, {
       handle: "mcp-tags-verwalter",
-      permissionStrings: ["role;manage", `otherRole;read;roleId=${command.id}`],
+      permissionStrings: ["role;manage"],
     });
 
     const viewerClient = await connectMcpClient(
@@ -451,7 +452,7 @@ test.describe("the role tools of the MCP server", () => {
           name: "Führung",
           description: "Leitende Rollen",
           icon_url: null,
-          role_ids: [command.id],
+          role_ids: [],
         },
       ],
       next_cursor: leadership.id,

@@ -9,6 +9,7 @@ import { FaSave } from "react-icons/fa";
 import { changeRoleTags } from "../../actions/changeRoleTags";
 import { useRolesContext } from "../RolesContext";
 import { RoleTagPicker } from "./RoleTagPicker";
+import { useSelectionChanges } from "./useSelectionChanges";
 
 interface Props {
   readonly roleId: string;
@@ -20,11 +21,21 @@ interface Props {
 export const RoleTagsForm = ({ roleId, tagIds }: Props) => {
   const { tags } = useRolesContext();
   const { formAction } = useAction(changeRoleTags);
+  const { selectedIds, setSelectedIds, addedIds, removedIds } =
+    useSelectionChanges(tagIds);
 
   return (
     <Tile heading="Tags">
       <form action={formAction}>
         <input type="hidden" name="roleId" value={roleId} />
+
+        {addedIds.map((tagId) => (
+          <input key={tagId} type="hidden" name="addTagIds" value={tagId} />
+        ))}
+
+        {removedIds.map((tagId) => (
+          <input key={tagId} type="hidden" name="removeTagIds" value={tagId} />
+        ))}
 
         {tags.length <= 0 && (
           <p className="mb-2 text-sm text-neutral-500">
@@ -39,7 +50,7 @@ export const RoleTagsForm = ({ roleId, tagIds }: Props) => {
           </p>
         )}
 
-        <RoleTagPicker name="tagIds" defaultValue={tagIds} />
+        <RoleTagPicker value={selectedIds} onChange={setSelectedIds} />
 
         <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
           Speichern

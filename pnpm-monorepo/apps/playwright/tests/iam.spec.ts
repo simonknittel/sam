@@ -14,6 +14,7 @@ import {
   NOT_FOUND_TEXT,
   openRolePicker,
   pickRole,
+  pickRoleTag,
   RESOURCE_NOT_FOUND_TEXT,
   rolePickerChips,
   rolePickerOption,
@@ -857,4 +858,40 @@ test("the rules of a role take their target from the role picker, also all roles
   await expect(
     page.getByRole("button", { name: targetRole.name, exact: true }),
   ).toBeVisible();
+});
+
+test("a tag on the inheritance tab adds also the roles that the manager cannot see", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  // role;manage without otherRole;read: the manager sees no role badge
+  const manager = await createCitizen(prisma, {
+    handle: "iam-verwalter",
+    permissionStrings: ["role;manage"],
+  });
+  const role = await createRole(prisma, { name: "Staffelführung" });
+  const pilot = await createRole(prisma, { name: "Pilot" });
+  const gunner = await createRole(prisma, { name: "Schütze" });
+  await createRoleTag(prisma, { name: "Flugstaffel", roles: [pilot, gunner] });
+
+  await signIn(manager.user);
+  await page.goto(`/app/roles/${role.id}/inheritance`);
+  await waitForAppShellHydration(page);
+  await pickRoleTag(
+    page.getByRole("button", { name: "Rolle auswählen" }),
+    "Flugstaffel",
+  );
+  await expect(rolePickerChips(page)).toHaveText(["Pilot", "Schütze"]);
+  await page.getByRole("button", { name: "Speichern" }).click();
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+
+  const inheriting = await prisma.role.findUniqueOrThrow({
+    where: { id: role.id },
+    select: { inherits: { select: { id: true } } },
+  });
+  expect(inheriting.inherits.map(({ id }) => id).toSorted()).toEqual(
+    [pilot.id, gunner.id].toSorted(),
+  );
+  await expectAuditEvents(prisma, ["ROLE_INHERITANCE_UPDATED"]);
 });

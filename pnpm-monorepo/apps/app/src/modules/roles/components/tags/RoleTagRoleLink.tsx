@@ -1,6 +1,9 @@
 import { Link } from "@/modules/common/components/Link";
+import {
+  UploadedIcon,
+  UploadedIconSize,
+} from "@/modules/common/components/UploadedIcon";
 import type { RolePickerRole } from "../RolePicker/RolePanel";
-import { UploadedIcon, UploadedIconSize } from "@/modules/common/components/UploadedIcon";
 
 interface Props {
   readonly role: RolePickerRole;

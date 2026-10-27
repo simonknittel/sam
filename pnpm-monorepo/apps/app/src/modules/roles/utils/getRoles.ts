@@ -7,8 +7,8 @@ import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
   findAssignableRoleBadges,
   findOwnAssignedRoleBadges,
+  findPickerRoleTagBadges,
   findVisibleRoleBadges,
-  findVisibleRoleTagBadges,
 } from "@sam-monorepo/application";
 import type { RoleAssignment } from "@sam-monorepo/database/client";
 import { cache } from "react";
@@ -21,12 +21,13 @@ export const getVisibleRoles = cache(
 );
 
 /**
- * The tags that the viewer can see, each with the ids of its visible roles,
- * sorted by name. The role picker shows them.
+ * The tags that the viewer can see, sorted by name, for the roles context.
+ * Each tag has the ids of its visible roles, or of all its roles for a
+ * viewer with `role;manage` (see `findPickerRoleTagBadges()`).
  */
 export const getVisibleRoleTags = cache(
   withTrace("getVisibleRoleTags", async () =>
-    findVisibleRoleTagBadges(getApplicationContext(), await getRequestActor()),
+    findPickerRoleTagBadges(getApplicationContext(), await getRequestActor()),
   ),
 );
 

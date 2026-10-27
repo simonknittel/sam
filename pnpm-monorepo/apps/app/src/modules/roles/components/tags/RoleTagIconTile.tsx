@@ -7,7 +7,7 @@ interface Props {
   readonly tag: Pick<ManagedRoleTag, "id" | "icon">;
 }
 
-/** The icon upload of the role overview, for a tag */
+/** The upload of the icon of a tag, on the tag page */
 export const RoleTagIconTile = ({ tag }: Props) => {
   return (
     <Tile heading="Icon">

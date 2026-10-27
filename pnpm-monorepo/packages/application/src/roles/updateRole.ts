@@ -21,7 +21,7 @@ import { withSpan } from "../withSpan.js";
 import { RoleErrorMessage } from "./roleErrors.js";
 import {
   roleNameSchema,
-  roleTagChangesInputShape,
+  roleTagAssignmentIdsSchema,
 } from "./roleInputSchemas.js";
 import {
   toRoleTagAssignmentAuditEvents,
@@ -35,8 +35,8 @@ const inactivityDaysSchema = z
   .max(ROLE_INACTIVITY_DAYS_MAXIMUM);
 
 /**
- * A field that is not given stays. The form of the app gives all fields of
- * the role, and no tags.
+ * A field that is not given stays. The role form of the app gives all fields
+ * of the role and no tags, the tag form of the role page only the tags.
  */
 export const updateRoleInputSchema = z.object({
   role_id: idSchema,
@@ -64,7 +64,12 @@ export const updateRoleInputSchema = z.object({
     .describe(
       "The number of levels that a citizen must reach to get the permissions of the role. Null removes the levels.",
     ),
-  ...roleTagChangesInputShape,
+  add_tag_ids: roleTagAssignmentIdsSchema.describe(
+    "The tags that the role gets. The other tags of the role stay.",
+  ),
+  remove_tag_ids: roleTagAssignmentIdsSchema.describe(
+    "The tags that the role loses.",
+  ),
 });
 
 export type UpdateRoleInput = z.infer<typeof updateRoleInputSchema>;

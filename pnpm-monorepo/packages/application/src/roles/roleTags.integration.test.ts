@@ -14,7 +14,6 @@ import { truncateAllTables } from "../../test/database.js";
 import { ForbiddenError, NotFoundError, ValidationError } from "../errors.js";
 import { assignRoleTagImage } from "../uploads/assignResourceImage.js";
 import { UploadErrorMessage } from "../uploads/uploadErrors.js";
-import { changeRoleTags, changeRoleTagsInputSchema } from "./changeRoleTags.js";
 import { createRoleTag, createRoleTagInputSchema } from "./createRoleTag.js";
 import { deleteRole } from "./deleteRole.js";
 import { deleteRoleTag } from "./deleteRoleTag.js";
@@ -114,15 +113,6 @@ test("the writes require role;manage", async () => {
         }),
       ),
     () => deleteRoleTag(context, actor, { tag_id: flight.id }),
-    () =>
-      changeRoleTags(
-        context,
-        actor,
-        changeRoleTagsInputSchema.parse({
-          role_id: pilot.id,
-          add_tag_ids: [flight.id],
-        }),
-      ),
     () =>
       updateRole(
         context,
@@ -250,18 +240,13 @@ test("the input schemas limit the names, the descriptions and the id lists", () 
       remove_role_ids: tooManyIds,
     }).success,
   ).toBe(false);
-  expect(
-    changeRoleTagsInputSchema.safeParse({
-      role_id: "role",
-      add_tag_ids: tooManyIds,
-    }).success,
-  ).toBe(false);
-  expect(
-    updateRoleInputSchema.safeParse({
-      role_id: "role",
-      remove_tag_ids: tooManyIds,
-    }).success,
-  ).toBe(false);
+  for (const tagIds of [
+    { add_tag_ids: tooManyIds },
+    { remove_tag_ids: tooManyIds },
+  ])
+    expect(
+      updateRoleInputSchema.safeParse({ role_id: "role", ...tagIds }).success,
+    ).toBe(false);
 });
 
 test("a tag name is unique without regard to the case", async () => {
@@ -461,7 +446,7 @@ test("updateRoleTag writes the audit events only for real changes", async () => 
   ).rejects.toThrow(new NotFoundError(RoleTagErrorMessage.NotFound));
 });
 
-test("changeRoleTags writes the audit events only for real changes", async () => {
+test("updateRole changes the tags in the same transaction as the fields, and only a real change of the tags writes the link event", async () => {
   const { actor } = await createManager();
   const pilot = await createRole("Pilot");
   const flight = await createTag("Flight", [pilot]);
@@ -469,78 +454,27 @@ test("changeRoleTags writes the audit events only for real changes", async () =>
   const medical = await createTag("Medical");
   const { context, auditEvents } = createTestApplicationContext();
 
-  // The role has the tag "Flight" already and does not have "Medical"
-  const input = changeRoleTagsInputSchema.parse({
+  /**
+   * Only tags: the fields stay and ROLE_UPDATED_V4 is not written. The role
+   * has the tag "Flight" already and does not have "Medical".
+   */
+  const tagsInput = updateRoleInputSchema.parse({
     role_id: pilot.id,
     add_tag_ids: [flight.id, crew.id],
     remove_tag_ids: [medical.id],
   });
-  expect(await changeRoleTags(context, actor, input)).toEqual({
-    role_id: pilot.id,
-    tags: [
-      { id: crew.id, name: "Crew" },
-      { id: flight.id, name: "Flight" },
-    ],
-    added_tag_ids: [crew.id],
-    removed_tag_ids: [],
+  expect(await updateRole(context, actor, tagsInput)).toMatchObject({
+    id: pilot.id,
+    name: "Pilot",
   });
   expect(auditEvents.splice(0)).toEqual([
     assignmentsEvent([{ roleId: pilot.id, tagId: crew.id }], []),
   ]);
 
-  expect(await changeRoleTags(context, actor, input)).toMatchObject({
-    added_tag_ids: [],
-    removed_tag_ids: [],
-  });
+  // The same write again changes nothing
+  await updateRole(context, actor, tagsInput);
   expect(auditEvents).toEqual([]);
-
-  await expect(
-    changeRoleTags(
-      context,
-      actor,
-      changeRoleTagsInputSchema.parse({
-        role_id: pilot.id,
-        add_tag_ids: ["unknown"],
-        remove_tag_ids: [flight.id],
-      }),
-    ),
-  ).rejects.toThrow(new NotFoundError(RoleTagErrorMessage.NotFound));
-  await expect(
-    changeRoleTags(
-      context,
-      actor,
-      changeRoleTagsInputSchema.parse({
-        role_id: "unknown",
-        add_tag_ids: [flight.id],
-      }),
-    ),
-  ).rejects.toThrow(new NotFoundError(RoleErrorMessage.NotFound));
   expect(await readLinks()).toEqual(["Pilot:Crew", "Pilot:Flight"]);
-});
-
-test("updateRole changes the tags in the same transaction as the fields", async () => {
-  const { actor } = await createManager();
-  const pilot = await createRole("Pilot");
-  const flight = await createTag("Flight", [pilot]);
-  const crew = await createTag("Crew");
-  const { context, auditEvents } = createTestApplicationContext();
-
-  // Only tags: the fields stay and ROLE_UPDATED_V4 is not written
-  await updateRole(
-    context,
-    actor,
-    updateRoleInputSchema.parse({
-      role_id: pilot.id,
-      add_tag_ids: [crew.id],
-      remove_tag_ids: [flight.id],
-    }),
-  );
-  expect(auditEvents.splice(0)).toEqual([
-    assignmentsEvent(
-      [{ roleId: pilot.id, tagId: crew.id }],
-      [{ roleId: pilot.id, tagId: flight.id }],
-    ),
-  ]);
 
   // An unknown tag undoes the change of the name
   await expect(
@@ -551,6 +485,7 @@ test("updateRole changes the tags in the same transaction as the fields", async 
         role_id: pilot.id,
         name: "Pilotin",
         add_tag_ids: ["unknown"],
+        remove_tag_ids: [flight.id],
       }),
     ),
   ).rejects.toThrow(new NotFoundError(RoleTagErrorMessage.NotFound));
@@ -560,6 +495,17 @@ test("updateRole changes the tags in the same transaction as the fields", async 
       select: { name: true },
     }),
   ).toEqual({ name: "Pilot" });
+  await expect(
+    updateRole(
+      context,
+      actor,
+      updateRoleInputSchema.parse({
+        role_id: "unknown",
+        add_tag_ids: [flight.id],
+      }),
+    ),
+  ).rejects.toThrow(new NotFoundError(RoleErrorMessage.NotFound));
+  expect(await readLinks()).toEqual(["Pilot:Crew", "Pilot:Flight"]);
 
   expect(
     await updateRole(
@@ -568,7 +514,7 @@ test("updateRole changes the tags in the same transaction as the fields", async 
       updateRoleInputSchema.parse({
         role_id: pilot.id,
         name: "Pilotin",
-        remove_tag_ids: [crew.id],
+        remove_tag_ids: [crew.id, flight.id],
       }),
     ),
   ).toMatchObject({ id: pilot.id, name: "Pilotin" });
@@ -580,7 +526,13 @@ test("updateRole changes the tags in the same transaction as the fields", async 
         newName: "Pilotin",
       }),
     }),
-    assignmentsEvent([], [{ roleId: pilot.id, tagId: crew.id }]),
+    assignmentsEvent(
+      [],
+      [
+        { roleId: pilot.id, tagId: crew.id },
+        { roleId: pilot.id, tagId: flight.id },
+      ],
+    ),
   ]);
   expect(await readLinks()).toEqual([]);
 });

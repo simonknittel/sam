@@ -8,7 +8,10 @@ interface RolesContext {
   readonly roles: readonly BadgeRole[];
   /** Sorted by name */
   readonly tags: readonly BadgeRoleTag[];
-  /** The tags of each visible role, sorted by name */
+  /**
+   * The tags of each role, sorted by name. With `role;manage`, also of roles
+   * that the viewer cannot see (pickers that offer all roles need them).
+   */
   readonly tagsByRoleId: ReadonlyMap<BadgeRole["id"], readonly BadgeRoleTag[]>;
 }
 

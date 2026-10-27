@@ -46,13 +46,3 @@ export const roleTagAssignmentIdsSchema = z
   .array(idSchema)
   .max(ROLE_TAG_ASSIGNMENT_CHANGES_MAXIMUM)
   .default([]);
-
-/** The tag lists of `updateRole()` and `changeRoleTags()` */
-export const roleTagChangesInputShape = {
-  add_tag_ids: roleTagAssignmentIdsSchema.describe(
-    "The tags that the role gets. The other tags of the role stay.",
-  ),
-  remove_tag_ids: roleTagAssignmentIdsSchema.describe(
-    "The tags that the role loses.",
-  ),
-};

@@ -17,12 +17,6 @@ export {
   type ChangeRolePermissionsOutput,
 } from "./changeRolePermissions.js";
 export {
-  changeRoleTags,
-  changeRoleTagsInputSchema,
-  type ChangeRoleTagsInput,
-  type ChangeRoleTagsOutput,
-} from "./changeRoleTags.js";
-export {
   countCitizensPerRole,
   type CountCitizensPerRoleOutput,
 } from "./countCitizensPerRole.js";
@@ -59,6 +53,7 @@ export {
 export {
   findManagedRole,
   findManagedRoleTag,
+  findManagedRoleTags,
   type ManagedRole,
   type ManagedRoleTag,
 } from "./findManagedRole.js";
@@ -92,7 +87,6 @@ export {
 } from "./removeExpiredRoleAssignments.js";
 export {
   findInheritanceMatrixRoles,
-  findManagedRoleTags,
   findPermissionMatrixRoles,
   findRoleTableRows,
   type InheritanceMatrixRole,
@@ -122,6 +116,7 @@ export {
 } from "./roleErrors.js";
 export type { RoleOutput } from "./roleOutput.js";
 export {
+  findPickerRoleTagBadges,
   findVisibleRoleTagBadges,
   type RoleTagBadge,
 } from "./roleTagBadges.js";

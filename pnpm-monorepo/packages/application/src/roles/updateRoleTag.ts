@@ -16,10 +16,9 @@ import {
   roleTagNameSchema,
 } from "./roleInputSchemas.js";
 import {
-  requireRolesExist,
   toRoleTagAssignmentAuditEvents,
   toUniqueAssignmentIds,
-  writeRoleTagAssignments,
+  writeRolesOfTag,
 } from "./roleTagAssignmentWrites.js";
 import { ROLE_TAG_BADGE_SELECT, toRoleTagBadge } from "./roleTagBadges.js";
 import { toRoleTagOutput, type RoleTagOutput } from "./roleTagOutput.js";
@@ -99,16 +98,9 @@ export const updateRoleTag = (
                   select: { id: true },
                 });
 
-              await requireRolesExist(transaction, roleIds.add);
-              const changes = await writeRoleTagAssignments(transaction, {
-                add: roleIds.add.map((roleId) => ({
-                  roleId,
-                  tagId: previousTag.id,
-                })),
-                remove: roleIds.remove.map((roleId) => ({
-                  roleId,
-                  tagId: previousTag.id,
-                })),
+              const changes = await writeRolesOfTag(transaction, {
+                tagId: previousTag.id,
+                roleIds,
                 createdById: citizenId,
               });
 

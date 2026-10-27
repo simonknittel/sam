@@ -4,8 +4,8 @@ import { createUseCaseAction } from "@/modules/application";
 import {
   createRoleTagInputSchema,
   createRoleTag as createRoleTagUseCase,
-  RoleTagErrorMessage,
 } from "@sam-monorepo/application";
+import { ROLE_TAG_ERROR_TEXTS } from "../utils/roleErrorTexts";
 
 /** Opens the page of the new tag: the icon and the roles come next */
 export const createRoleTag = createUseCaseAction({
@@ -16,9 +16,6 @@ export const createRoleTag = createUseCaseAction({
     name: formData.get("name"),
     description: formData.get("description"),
   }),
-  texts: {
-    [RoleTagErrorMessage.NameTaken]:
-      "Ein Tag mit diesem Namen existiert bereits.",
-  },
+  texts: ROLE_TAG_ERROR_TEXTS,
   redirect: (tag) => `/app/iam/tags/${tag.id}`,
 });

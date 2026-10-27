@@ -25,6 +25,7 @@ export const listRoleTagsTool = defineTool({
     tags: z.array(roleTagOutputSchema),
     next_cursor: z.string().nullable(),
   }),
-  isVisible: canSeeAnyRole,
+  isVisible: (actor) =>
+    canSeeAnyRole(actor) || actor.authorize("role", "manage"),
   handler: listRoleTags,
 });

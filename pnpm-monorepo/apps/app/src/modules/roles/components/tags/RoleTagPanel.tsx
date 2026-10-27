@@ -2,32 +2,13 @@
 
 import { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
 import { ItemPickerPanel } from "@/modules/common/components/ItemPicker/ItemPickerPanel";
-import { underlineCharacters } from "@/modules/common/utils/underlineCharacters";
+import { searchItems } from "@/modules/common/components/ItemPicker/searchItems";
+import {
+  UploadedIcon,
+  UploadedIconSize,
+} from "@/modules/common/components/UploadedIcon";
 import type { BadgeRoleTag } from "@/modules/roles/queries/getRoles";
-import Fuse from "fuse.js";
 import { useState } from "react";
-import { UploadedIcon, UploadedIconSize } from "@/modules/common/components/UploadedIcon";
-
-/** The same value as the search of the role picker (see `RolePanel`) */
-const SEARCH_THRESHOLD = 0.2;
-
-/**
- * Searches the tag names. Gives the ids of the matched tags, each with the
- * character ranges of the match.
- */
-const search = (tags: readonly BadgeRoleTag[], query: string) => {
-  const fuse = new Fuse(tags, {
-    keys: ["name"],
-    includeMatches: true,
-    threshold: SEARCH_THRESHOLD,
-  });
-
-  return new Map(
-    fuse
-      .search(query)
-      .map((result) => [result.item.id, result.matches?.[0]?.indices]),
-  );
-};
 
 interface Props {
   /** Sorted by name */
@@ -44,8 +25,7 @@ interface Props {
 export const RoleTagPanel = ({ tags, selectedTagIds, onTagClick }: Props) => {
   const [query, setQuery] = useState("");
 
-  const trimmedQuery = query.trim();
-  const matches = trimmedQuery ? search(tags, trimmedQuery) : null;
+  const search = searchItems(tags, query);
 
   return (
     <ItemPickerPanel
@@ -55,21 +35,16 @@ export const RoleTagPanel = ({ tags, selectedTagIds, onTagClick }: Props) => {
       query={query}
       onQueryChange={setQuery}
       items={tags
-        .filter((tag) => !matches || matches.has(tag.id))
-        .map((tag) => {
-          const nameMatch = matches?.get(tag.id);
-
-          return {
-            id: tag.id,
-            name: tag.name,
-            nameContent: nameMatch
-              ? underlineCharacters(tag.name, nameMatch)
-              : undefined,
-            icon: tag.icon && (
-              <UploadedIcon upload={tag.icon} size={UploadedIconSize.Medium} />
-            ),
-          };
-        })}
+        .filter((tag) => search.isListed(tag.id))
+        .map((tag) => ({
+          id: tag.id,
+          name: tag.name,
+          nameContent: search.getNameContent(tag),
+          icon: tag.icon && (
+            <UploadedIcon upload={tag.icon} size={UploadedIconSize.Medium} />
+          ),
+        }))}
+      bestMatchId={search.matchedIds[0]}
       selectedIds={selectedTagIds}
       onSelect={onTagClick}
       emptyText="Kein Tag gefunden"

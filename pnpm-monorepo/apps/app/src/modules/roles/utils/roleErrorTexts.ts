@@ -3,6 +3,7 @@ import type { ApplicationErrorTexts } from "@/modules/application";
 import {
   RoleAssignmentErrorMessage,
   RoleErrorMessage,
+  RoleTagErrorMessage,
 } from "@sam-monorepo/application";
 
 /**
@@ -16,3 +17,9 @@ export const getRoleErrorTexts = (t: Translations): ApplicationErrorTexts => ({
   // A different user removed the levels of the role
   [RoleAssignmentErrorMessage.RoleHasNoLevels]: t("Common.badRequest"),
 });
+
+/** The texts of the tag actions for the errors of their use cases */
+export const ROLE_TAG_ERROR_TEXTS: ApplicationErrorTexts = {
+  [RoleTagErrorMessage.NameTaken]:
+    "Ein Tag mit diesem Namen existiert bereits.",
+};

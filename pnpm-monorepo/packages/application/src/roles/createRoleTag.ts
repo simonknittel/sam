@@ -11,9 +11,9 @@ import {
   roleTagNameSchema,
 } from "./roleInputSchemas.js";
 import {
-  requireRolesExist,
   toRoleTagAssignmentAuditEvents,
-  writeRoleTagAssignments,
+  toUniqueAssignmentIds,
+  writeRolesOfTag,
 } from "./roleTagAssignmentWrites.js";
 import { ROLE_TAG_BADGE_SELECT, toRoleTagBadge } from "./roleTagBadges.js";
 import { toRoleTagOutput, type RoleTagOutput } from "./roleTagOutput.js";
@@ -49,13 +49,11 @@ export const createRoleTag = (
     requirePermission(actor, "role", "manage");
 
     const citizenId = actor.citizen?.id ?? null;
-    const roleIds = [...new Set(input.role_ids)];
+    const roleIds = toUniqueAssignmentIds(input.role_ids, []);
 
     const { tag, changes } = await rethrowUniqueConstraintFailed(
       () =>
         context.prisma.$transaction(async (transaction) => {
-          await requireRolesExist(transaction, roleIds);
-
           const { id: tagId } = await transaction.roleTag.create({
             data: {
               name: input.name,
@@ -66,9 +64,9 @@ export const createRoleTag = (
             select: { id: true },
           });
 
-          const changes = await writeRoleTagAssignments(transaction, {
-            add: roleIds.map((roleId) => ({ roleId, tagId })),
-            remove: [],
+          const changes = await writeRolesOfTag(transaction, {
+            tagId,
+            roleIds,
             createdById: citizenId,
           });
 

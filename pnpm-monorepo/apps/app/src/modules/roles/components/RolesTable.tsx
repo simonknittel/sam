@@ -1,13 +1,15 @@
 import { Link } from "@/modules/common/components/Link";
 import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
-import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
+import {
+  UploadedIcon,
+  UploadedIconSize,
+} from "@/modules/common/components/UploadedIcon";
 import {
   sortAscWithAndNullLast,
   sortDescAndNullLast,
 } from "@/modules/common/utils/sorting";
 import type { ManagedRoleTag } from "@sam-monorepo/application";
 import clsx from "clsx";
-import Image from "next/image";
 import {
   createLoader,
   parseAsArrayOf,
@@ -56,6 +58,14 @@ export const RolesTable = async ({ className, searchParams }: Props) => {
     getManagedRoleTags(),
   ]);
 
+  /** The tags of each role, sorted by name like `allTags` */
+  const tagsByRoleId = new Map<string, ManagedRoleTag[]>();
+  for (const tag of allTags) {
+    for (const roleId of tag.roleIds) {
+      tagsByRoleId.set(roleId, [...(tagsByRoleId.get(roleId) ?? []), tag]);
+    }
+  }
+
   const filterTagIds = new Set(tags);
 
   const filteredRoles = roles.filter((role) => {
@@ -67,7 +77,7 @@ export const RolesTable = async ({ className, searchParams }: Props) => {
     }
     if (
       filterTagIds.size > 0 &&
-      !role.tagIds.some((tagId) => filterTagIds.has(tagId))
+      !tagsByRoleId.get(role.id)?.some((tag) => filterTagIds.has(tag.id))
     ) {
       return false;
     }
@@ -144,16 +154,9 @@ export const RolesTable = async ({ className, searchParams }: Props) => {
                 >
                   {role.icon ? (
                     <div className="flex aspect-square size-6 flex-none items-center justify-center overflow-hidden rounded-secondary">
-                      <Image
-                        src={getPublicUploadUrl(role.icon.id)}
-                        alt=""
-                        width={24}
-                        height={24}
-                        className="max-h-full max-w-full"
-                        unoptimized={["image/svg+xml", "image/gif"].includes(
-                          role.icon.mimeType,
-                        )}
-                        loading="lazy"
+                      <UploadedIcon
+                        upload={role.icon}
+                        size={UploadedIconSize.Medium}
                       />
                     </div>
                   ) : (
@@ -173,9 +176,7 @@ export const RolesTable = async ({ className, searchParams }: Props) => {
                 {role.description || null}
               </td>
 
-              <RoleTagsCell
-                tags={allTags.filter((tag) => role.tagIds.includes(tag.id))}
-              />
+              <RoleTagsCell tags={tagsByRoleId.get(role.id) ?? []} />
 
               <td>
                 <Link

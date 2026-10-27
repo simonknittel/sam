@@ -44,7 +44,7 @@ export const toUniqueAssignmentIds = (
 };
 
 /** @throws NotFoundError when a role does not exist */
-export const requireRolesExist = async (
+const requireRolesExist = async (
   transaction: Prisma.TransactionClient,
   roleIds: readonly string[],
 ) => {
@@ -58,7 +58,7 @@ export const requireRolesExist = async (
 };
 
 /** @throws NotFoundError when a tag does not exist */
-export const requireRoleTagsExist = async (
+const requireRoleTagsExist = async (
   transaction: Prisma.TransactionClient,
   tagIds: readonly string[],
 ) => {
@@ -77,7 +77,7 @@ export const requireRoleTagsExist = async (
  * already stays, and a link that does not exist cannot be removed: thus the
  * result has only the links that really changed, in the order of the input.
  */
-export const writeRoleTagAssignments = async (
+const writeRoleTagAssignments = async (
   transaction: Prisma.TransactionClient,
   {
     add,
@@ -157,6 +157,34 @@ export const writeTagsOfRole = async (
   return writeRoleTagAssignments(transaction, {
     add: tagIds.add.map((tagId) => ({ roleId, tagId })),
     remove: tagIds.remove.map((tagId) => ({ roleId, tagId })),
+    createdById,
+  });
+};
+
+/**
+ * Adds roles to one tag and removes roles from it on the transaction of the
+ * caller (see `writeRoleTagAssignments()`)
+ *
+ * @throws NotFoundError when a role to add does not exist
+ */
+export const writeRolesOfTag = async (
+  transaction: Prisma.TransactionClient,
+  {
+    tagId,
+    roleIds,
+    createdById,
+  }: {
+    readonly tagId: string;
+    readonly roleIds: UniqueAssignmentIds;
+    /** The citizen of the actor */
+    readonly createdById: string | null;
+  },
+): Promise<RoleTagAssignmentChanges> => {
+  await requireRolesExist(transaction, roleIds.add);
+
+  return writeRoleTagAssignments(transaction, {
+    add: roleIds.add.map((roleId) => ({ roleId, tagId })),
+    remove: roleIds.remove.map((roleId) => ({ roleId, tagId })),
     createdById,
   });
 };
