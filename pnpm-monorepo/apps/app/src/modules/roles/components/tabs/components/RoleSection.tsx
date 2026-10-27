@@ -76,8 +76,6 @@ type RuleProps = Readonly<{
   handleDelete: () => void;
 }>;
 
-const ignoreChange = () => undefined;
-
 const Rule = ({ ruleString, roles, handleDelete }: RuleProps) => {
   const [resource, _operation = "", ...attributeStrings] =
     ruleString.split(";");
@@ -101,30 +99,14 @@ const Rule = ({ ruleString, roles, handleDelete }: RuleProps) => {
     <div className="mt-2 grid grid-cols-3 gap-2">
       {operation && <input type="hidden" name={inputName} />}
 
-      <div className="relative">
-        <RolePicker
-          mode={ItemPickerMode.Single}
-          required
-          roles={roles}
-          extraEntries={ALL_ROLES_ENTRIES}
-          value={roleId || null}
-          onChange={(nextRoleId) => setRoleId(nextRoleId ?? "")}
-        />
-
-        {/*
-          The picker has no constraint of the browser. This field, which has
-          no name and thus is not submitted, stops the submit of the form
-          while the rule has no role: a rule without a role is not valid.
-        */}
-        <input
-          required
-          tabIndex={-1}
-          aria-hidden
-          value={roleId}
-          onChange={ignoreChange}
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-px opacity-0"
-        />
-      </div>
+      <RolePicker
+        mode={ItemPickerMode.Single}
+        required
+        roles={roles}
+        extraEntries={ALL_ROLES_ENTRIES}
+        value={roleId || null}
+        onChange={(nextRoleId) => setRoleId(nextRoleId ?? "")}
+      />
 
       <select
         required
