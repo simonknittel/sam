@@ -121,20 +121,31 @@ test("a radio group keeps its selection after the action of its form", async ({
   await expect(restricted).toBeChecked();
   await expect
     .poll(async () => {
-      const { visibility } = await prisma.event.findUniqueOrThrow({
-        where: { id: event.id },
-      });
-      return visibility;
+      const { visibility, visibilityRoles } =
+        await prisma.event.findUniqueOrThrow({
+          where: { id: event.id },
+          include: { visibilityRoles: true },
+        });
+      return {
+        visibility,
+        roleIds: visibilityRoles.map(({ roleId }) => roleId),
+      };
     })
-    .toBe(EventVisibility.RESTRICTED);
+    .toEqual({ visibility: EventVisibility.RESTRICTED, roleIds: [role.id] });
 
   await page.getByLabel("Titel").fill("Operation Auswahl II");
   await saveButton.click();
   await expect
-    .poll(() => prisma.event.findUniqueOrThrow({ where: { id: event.id } }))
+    .poll(() =>
+      prisma.event.findUniqueOrThrow({
+        where: { id: event.id },
+        include: { visibilityRoles: true },
+      }),
+    )
     .toMatchObject({
       name: "Operation Auswahl II",
       visibility: EventVisibility.RESTRICTED,
+      visibilityRoles: [{ roleId: role.id }],
     });
   await expect(restricted).toBeChecked();
 });

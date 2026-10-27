@@ -10,9 +10,10 @@ import {
   fillUntilUrl,
   fillUntilValue,
   modal,
+  openRolePicker,
   pickFromSearch,
-  pickRoles,
   rolePickerChips,
+  rolePickerOption,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
@@ -92,12 +93,19 @@ test("a notification from the create menu goes to a citizen and a role, and list
    * The citizen picker has an icon button with the same name, which selects
    * the citizens of a role instead. The role picker's trigger has a text.
    */
-  await pickRoles(
+  const popover = await openRolePicker(
     dialog
       .getByRole("button", { name: "Rolle auswählen" })
       .filter({ hasText: "Rolle auswählen" }),
-    ["Geleitschutz"],
   );
+  const option = rolePickerOption(popover, "Geleitschutz");
+  await option.click();
+  await expect(option).toHaveAttribute("aria-selected", "true");
+
+  /** A click outside of the popover closes only the popover, not the dialog */
+  await dialog.getByRole("heading", { name: "Neue Benachrichtigung" }).click();
+  await expect(popover).not.toBeVisible();
+  await expect(dialog).toBeVisible();
   await expect(rolePickerChips(dialog)).toHaveText(["Geleitschutz"]);
 
   await dialog.getByRole("button", { name: "Senden" }).click();

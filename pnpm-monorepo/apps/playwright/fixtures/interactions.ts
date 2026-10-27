@@ -274,11 +274,16 @@ export const openRolePicker = async (trigger: Locator) => {
   return popover;
 };
 
+/**
+ * The search field of a role picker or of a role panel. The scope is the
+ * popover or the dialog that holds the panel.
+ */
+export const rolePickerSearchField = (scope: Locator) =>
+  scope.getByRole("combobox", { name: "Rolle oder Tag suchen …" });
+
 /** Searches the role names and the tag names in an open role picker */
 export const searchRolePicker = (popover: Locator, query: string) =>
-  popover
-    .getByRole("combobox", { name: "Rolle oder Tag suchen …" })
-    .fill(query);
+  rolePickerSearchField(popover).fill(query);
 
 /** Closes an open role picker with Escape */
 export const closeRolePicker = async (popover: Locator) => {

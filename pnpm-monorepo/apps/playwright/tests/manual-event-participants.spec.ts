@@ -1,5 +1,8 @@
 import type { Locator, Page } from "@playwright/test";
-import { EventActivityType } from "@sam-monorepo/database/client";
+import {
+  EventActivityType,
+  type PrismaClient,
+} from "@sam-monorepo/database/client";
 import {
   assignRole,
   createAppEvent,
@@ -20,6 +23,7 @@ import {
   modal,
   openRolePicker,
   pickFromSearch,
+  rolePickerOption,
   rolePickerTag,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
@@ -147,11 +151,13 @@ test("a manager adds citizens with a shared comment", async ({
   await expect(addedRow).toContainText("Vom Manager nachgetragen");
 });
 
-test("a tag in the role shortcut of the citizen picker replaces the picked citizens with the citizens of its roles", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
+/**
+ * A manager with an event, and the citizens of the roles "Pilot",
+ * "Ingenieur" and "Händler". The roles "Pilot" and "Ingenieur" have the tag
+ * "Crew". The citizen "zuvor-gewaehlt" has no role, and the citizen
+ * "schon-dabei" is a participant.
+ */
+const seedRoleShortcut = async (prisma: PrismaClient) => {
   const pilotRole = await createRole(prisma, { name: "Pilot" });
   const engineerRole = await createRole(prisma, { name: "Ingenieur" });
   const traderRole = await createRole(prisma, { name: "Händler" });
@@ -172,6 +178,14 @@ test("a tag in the role shortcut of the citizen picker replaces the picked citiz
     prisma,
     appEvent("Operation Crew", manager.entity.id),
   );
+  /**
+   * The first visit of a new event marks it as read and refreshes the page
+   * at an unknown time. The refresh can drop the citizen that the test
+   * picked before, and then the replacement would not be proven.
+   */
+  await prisma.readMarker.create({
+    data: { citizenId: manager.entity.id, eventId: event.id },
+  });
 
   const citizenWithRoles = async (
     handle: string,
@@ -201,13 +215,38 @@ test("a tag in the role shortcut of the citizen picker replaces the picked citiz
     source: EventSource.APP,
   });
 
-  await signIn(manager.user);
-  await page.goto(`/app/events/${event.id}/participants`);
+  return { manager, event, pilot, engineer, allRounder, participant };
+};
 
+/**
+ * Opens the add dialog, picks the citizen "zuvor-gewaehlt" and opens the role
+ * shortcut. The picked citizen must still be there when the popover is open,
+ * so that a replacement is a change that the test can see.
+ */
+const openRoleShortcutAfterPick = async (page: Page) => {
   const addModal = await openAddModal(page);
   await pickCitizen(addModal, page, "zuvor-gewaehlt");
 
   const popover = await openRolePicker(addModal.getByTitle("Rolle auswählen"));
+  await expect(
+    addModal.getByRole("link", { name: "zuvor-gewaehlt" }),
+  ).toBeVisible();
+
+  return { addModal, popover };
+};
+
+test("a tag in the role shortcut of the citizen picker replaces the picked citizens with the citizens of its roles", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const { manager, event, pilot, engineer, allRounder, participant } =
+    await seedRoleShortcut(prisma);
+
+  await signIn(manager.user);
+  await page.goto(`/app/events/${event.id}/participants`);
+
+  const { addModal, popover } = await openRoleShortcutAfterPick(page);
   await rolePickerTag(popover, "Crew").click();
   await expect(popover).not.toBeVisible();
 
@@ -231,6 +270,44 @@ test("a tag in the role shortcut of the citizen picker replaces the picked citiz
       engineer.entity.id,
       allRounder.entity.id,
     ].toSorted(),
+  );
+});
+
+test("a role in the role shortcut of the citizen picker replaces the picked citizens with the citizens of the role", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const { manager, event, pilot, allRounder, participant } =
+    await seedRoleShortcut(prisma);
+
+  await signIn(manager.user);
+  await page.goto(`/app/events/${event.id}/participants`);
+
+  const { addModal, popover } = await openRoleShortcutAfterPick(page);
+  await rolePickerOption(popover, "Pilot").click();
+  await expect(popover).not.toBeVisible();
+
+  for (const handle of ["pilotin", "allrounder"]) {
+    await expect(addModal.getByRole("link", { name: handle })).toHaveCount(1);
+  }
+  for (const handle of [
+    "zuvor-gewaehlt",
+    "ingenieur",
+    "haendler",
+    "schon-dabei",
+  ]) {
+    await expect(addModal.getByRole("link", { name: handle })).toHaveCount(0);
+  }
+
+  await addModal.getByRole("button", { name: "Speichern" }).click();
+  await expect(page.getByText("2 Teilnehmer hinzugefügt.")).toBeVisible();
+  const rows = await prisma.eventParticipant.findMany({
+    where: { eventId: event.id },
+    select: { citizenId: true },
+  });
+  expect(rows.map((row) => row.citizenId).toSorted()).toEqual(
+    [participant.entity.id, pilot.entity.id, allRounder.entity.id].toSorted(),
   );
 });
 

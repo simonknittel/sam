@@ -13,7 +13,6 @@ import {
 import {
   clickUntilUrl,
   clickUntilVisible,
-  closeRolePicker,
   DELETED_TEXT,
   FORBIDDEN_TEXT,
   modal,
@@ -801,10 +800,14 @@ test("an old bookmark with comma-separated filters still filters the citizen tab
   await expect(page.getByText("2 / 1")).toBeVisible();
   await expect(rows).toHaveCount(0);
 
-  // The role filter shows the roles of the URL, and a removal goes back to the first page
-  await waitForAppShellHydration(page);
-  await rolePickerChips(page).filter({ hasText: "Bergbau" }).click();
-  await expect(page).toHaveURL(
+  /**
+   * The role filter shows the roles of the URL, and a removal goes back to
+   * the first page. The filters hydrate after the app shell, inside their
+   * own Suspense tile.
+   */
+  await clickUntilUrl(
+    page,
+    rolePickerChips(page).filter({ hasText: "Bergbau" }),
     /\/app\/spynet\/citizen\?filters=unknown-handle$/,
   );
   await expect(page.getByText("1 / 1")).toBeVisible();
@@ -846,13 +849,23 @@ test("the role filter of the citizen table applies when its popover closes, and 
   await signIn(viewer.user);
   await page.goto("/app/spynet/citizen");
   await expect(rows).toHaveCount(4);
+  const getHistoryLength = () => page.evaluate(() => history.length);
+  const historyLengthBefore = await getHistoryLength();
 
   /** The URL and the table stay while the popover is open */
   const popover = await openRolePicker(
     page.getByRole("button", { name: "Rolle auswählen" }),
   );
   await rolePickerOption(popover, "Kampf").click();
+  await expect(rolePickerOption(popover, "Kampf")).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
   await rolePickerOption(popover, "Kampf").click();
+  await expect(rolePickerOption(popover, "Kampf")).toHaveAttribute(
+    "aria-selected",
+    "false",
+  );
   await rolePickerTag(popover, "Wirtschaft").click();
   await expect(rolePickerOption(popover, "Handel")).toHaveAttribute(
     "aria-selected",
@@ -861,17 +874,29 @@ test("the role filter of the citizen table applies when its popover closes, and 
   await expect(page).toHaveURL(/\/app\/spynet\/citizen$/);
   await expect(rows).toHaveCount(4);
 
-  await closeRolePicker(popover);
+  /**
+   * A click outside closes the popover and applies the filter. The check
+   * above can pass before a reload arrives, thus the history proves that
+   * the change is one entry and not one entry for each click.
+   */
+  await page
+    .locator("section")
+    .filter({ has: page.getByRole("table") })
+    .last()
+    .click({ position: { x: 8, y: 8 } });
+  await expect(popover).not.toBeVisible();
   await expect(page).toHaveURL(
     new RegExp(`\\?filters=role-${miningRole.id},role-${tradeRole.id}$`),
   );
   await expect(rows).toHaveCount(2);
   await expect(rows.filter({ hasText: "kaempfer" })).toHaveCount(0);
+  expect(await getHistoryLength()).toBe(historyLengthBefore + 1);
 
   await rolePickerChips(page).filter({ hasText: "Handel" }).click();
   await expect(page).toHaveURL(new RegExp(`\\?filters=role-${miningRole.id}$`));
   await expect(rows).toHaveCount(1);
   await expect(rows.first()).toContainText("bergmann");
+  expect(await getHistoryLength()).toBe(historyLengthBefore + 2);
 
   /** Each change is one entry in the history */
   await page.goBack();

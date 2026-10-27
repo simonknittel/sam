@@ -492,6 +492,60 @@ test("a tag in the sharing picker adds a share for each of its roles with the lo
     );
 });
 
+test("a share with a role that the viewer cannot see stays listed, and a save of a different change keeps it", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const visibleRole = await createRole(prisma, { name: "Sichtbares Team" });
+  const hiddenRole = await createRole(prisma, { name: "Verdecktes Team" });
+  const owner = await createCitizen(prisma, {
+    handle: "owner",
+    permissionStrings: [
+      ...OWNER_PERMISSIONS.filter(
+        (permission) => !permission.startsWith("otherRole;read"),
+      ),
+      `otherRole;read;roleId=${visibleRole.id}`,
+    ],
+  });
+  const { template } = await createEventTemplate(prisma, {
+    name: "Vorlage mit verdeckter Freigabe",
+    ownedById: owner.entity.id,
+    roleAccess: [{ roleId: hiddenRole.id, type: EventTemplateAccessType.EDIT }],
+  });
+
+  await signIn(owner.user);
+  await page.goto(`/app/events/templates/${template.id}/sharing`);
+  await waitForAppShellHydration(page);
+
+  await expect(page.getByText("Nicht sichtbare Rolle")).toBeVisible();
+  await pickRoles(page.getByRole("button", { name: "Rolle auswählen" }), [
+    visibleRole.name,
+  ]);
+  await expect(page.getByRole("combobox", { name: "Zugriff" })).toHaveCount(2);
+
+  await page.getByRole("button", { name: "Speichern" }).click();
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+
+  /** A save deletes and creates all rows, thus the hidden share must be in its request */
+  await expect
+    .poll(async () => {
+      const { roleAccess } = await prisma.eventTemplate.findUniqueOrThrow({
+        where: { id: template.id },
+        include: { roleAccess: true },
+      });
+      return roleAccess
+        .map(({ roleId, type }) => ({ roleId, type }))
+        .toSorted((first, second) => first.roleId.localeCompare(second.roleId));
+    })
+    .toEqual(
+      [
+        { roleId: hiddenRole.id, type: EventTemplateAccessType.EDIT },
+        { roleId: visibleRole.id, type: EventTemplateAccessType.READ },
+      ].toSorted((first, second) => first.roleId.localeCompare(second.roleId)),
+    );
+});
+
 test("an event created from a template gets its lineup, briefing and prefill", async ({
   page,
   prisma,

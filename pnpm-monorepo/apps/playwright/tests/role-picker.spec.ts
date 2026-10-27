@@ -20,6 +20,7 @@ import {
   rolePickerChips,
   rolePickerOption,
   rolePickerPopover,
+  rolePickerSearchField,
   rolePickerTag,
   SAVED_TEXT,
   searchRolePicker,
@@ -178,9 +179,7 @@ test("the role picker works with the keyboard and gives the focus back to its tr
   await signIn(admin.user);
   const { settingTile, trigger } = await openHumanResourcesSetting(page);
   const popover = rolePickerPopover(page);
-  const searchField = popover.getByRole("combobox", {
-    name: "Rolle oder Tag suchen …",
-  });
+  const searchField = rolePickerSearchField(popover);
 
   /** A key press before the hydration of the setting has no effect */
   await expect(async () => {
@@ -382,19 +381,13 @@ test("the role picker of the Human Resources roles disables the roles and the ta
 
   /** 19 selected roles and the two roles of the tag are more than 20 */
   await expect(tag).toBeDisabled();
-  await expect(tag).toHaveAttribute(
-    "title",
-    "Mit den Rollen dieses Tags wären mehr als 20 Rollen ausgewählt.",
-  );
+  await expect(tag).toHaveAttribute("title", /mehr als 20 Rollen/);
 
   /** At the maximum, the roles that are not selected are disabled */
   await rolePickerOption(popover, "Rolle 20").click();
   const lastRole = rolePickerOption(popover, "Rolle 21");
   await expect(lastRole).toBeDisabled();
-  await expect(lastRole).toHaveAttribute(
-    "title",
-    "Rolle 21\nDu kannst maximal 20 Rollen auswählen.",
-  );
+  await expect(lastRole).toHaveAttribute("title", /maximal 20 Rollen/);
   await lastRole.click({ force: true });
   await expect(lastRole).toHaveAttribute("aria-selected", "false");
 

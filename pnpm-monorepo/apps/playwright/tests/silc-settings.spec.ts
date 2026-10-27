@@ -7,6 +7,7 @@ import {
   createSilcTransaction,
 } from "../fixtures/factories";
 import {
+  closeRolePicker,
   openRolePicker,
   pickRole,
   rolePickerOption,
@@ -74,10 +75,16 @@ test("the aUEC conversion rate and the role salaries are edited through the sett
     "Bezahlte Rolle",
   );
 
-  /** A salary row needs a role, thus a click on the selected role keeps it */
+  /**
+   * The pick closes the popover and gives the focus back to the trigger,
+   * which now has the name of the selected role
+   */
   const selectedRoleTrigger = salaryTile.getByRole("button", {
     name: "Bezahlte Rolle",
   });
+  await expect(selectedRoleTrigger).toBeFocused();
+
+  /** A salary row needs a role, thus a click on the selected role keeps it */
   await pickRole(selectedRoleTrigger, "Bezahlte Rolle");
   await expect(selectedRoleTrigger).toBeVisible();
 
@@ -121,9 +128,8 @@ test("a tag in the salary role picker filters the list to its roles, and a secon
   await expect(addSalaryRow).toBeVisible();
   await addSalaryRow.click();
 
-  const popover = await openRolePicker(
-    salaryTile.getByRole("button", { name: "Rolle auswählen" }),
-  );
+  const trigger = salaryTile.getByRole("button", { name: "Rolle auswählen" });
+  const popover = await openRolePicker(trigger);
   const tag = rolePickerTag(popover, "Gehaltsgruppe");
   await expect(rolePickerOption(popover, "Andere Rolle")).toBeVisible();
 
@@ -138,6 +144,72 @@ test("a tag in the salary role picker filters the list to its roles, and a secon
   await expect(tag).toHaveAttribute("aria-pressed", "false");
   await expect(rolePickerOption(popover, "Getaggte Rolle")).toBeVisible();
   await expect(rolePickerOption(popover, "Andere Rolle")).toBeVisible();
+
+  /** Nothing was selected, so the trigger still has its placeholder */
+  await closeRolePicker(popover);
+  await expect(trigger).toHaveText("Rolle auswählen");
+});
+
+test("a saved salary of a role that the viewer cannot see stays listed, and a save keeps it", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const visibleRole = await createRole(prisma, { name: "Sichtbare Rolle" });
+  const hiddenRole = await createRole(prisma, { name: "Verdeckte Rolle" });
+  const admin = await createCitizen(prisma, {
+    handle: "silc-einsteller",
+    /** Like the permissions above, but the viewer sees only one role */
+    permissionStrings: [
+      ...SETTINGS_ADMIN_PERMISSIONS.filter(
+        (permission) => !permission.startsWith("otherRole;read"),
+      ),
+      `otherRole;read;roleId=${visibleRole.id}`,
+    ],
+  });
+  await prisma.silcRoleSalary.create({
+    data: { roleId: hiddenRole.id, value: 25, dayOfMonth: 5 },
+  });
+
+  await signIn(admin.user);
+  await page.goto("/app/silc/settings");
+  await waitForAppShellHydration(page);
+
+  const salaryTile = sectionByHeading(page, "Gehälter");
+  /** The rows only render once the roles came back through tRPC */
+  const addSalaryRow = salaryTile.getByRole("button", { name: "Neu" });
+  await expect(addSalaryRow).toBeVisible();
+  await expect(
+    salaryTile.getByRole("button", { name: "Verborgene Rolle" }),
+  ).toBeVisible();
+
+  await addSalaryRow.click();
+  const popover = await openRolePicker(
+    salaryTile.getByRole("button", { name: "Rolle auswählen" }),
+  );
+  await expect(popover.getByRole("option")).toHaveText(["Sichtbare Rolle"]);
+  await rolePickerOption(popover, "Sichtbare Rolle").click();
+  await expect(popover).not.toBeVisible();
+
+  /** The new row is the last one */
+  await salaryTile.getByLabel("SILC").last().fill("40");
+  await salaryTile.getByLabel("Tag im Monat").last().fill("15");
+  await salaryTile.getByRole("button", { name: "Speichern" }).click();
+  /** The tile shows the success text, too, thus the toast alone is not unique */
+  await expect(salaryTile.getByText(SAVED_TEXT)).toBeVisible();
+
+  /** A save deletes and creates all rows, thus the hidden role must be in its request */
+  await expect
+    .poll(async () => {
+      const salaries = await prisma.silcRoleSalary.findMany({
+        select: { roleId: true, value: true, dayOfMonth: true },
+      });
+      return salaries.toSorted((first, second) => first.value - second.value);
+    })
+    .toEqual([
+      { roleId: hiddenRole.id, value: 25, dayOfMonth: 5 },
+      { roleId: visibleRole.id, value: 40, dayOfMonth: 15 },
+    ]);
 });
 
 test("expiring all SILC zeroes every balance, and the refresh recomputes them", async ({

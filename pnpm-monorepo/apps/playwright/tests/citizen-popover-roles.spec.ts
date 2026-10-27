@@ -10,6 +10,7 @@ import {
   hoverUntilVisible,
   modal,
   rolePickerOption,
+  rolePickerSearchField,
   searchRolePicker,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -144,9 +145,7 @@ const SCENARIOS: readonly InteractionScenario[] = [
      * first match.
      */
     tickRole: async (rolesDialog, roleName) => {
-      const search = rolesDialog.getByRole("combobox", {
-        name: "Rolle oder Tag suchen …",
-      });
+      const search = rolePickerSearchField(rolesDialog);
       await expect(search).toBeFocused();
       await searchRolePicker(rolesDialog, roleName);
       await expect(rolePickerOption(rolesDialog, roleName)).toHaveAttribute(
