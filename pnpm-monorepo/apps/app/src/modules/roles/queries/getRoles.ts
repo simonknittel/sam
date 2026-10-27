@@ -15,6 +15,16 @@ import { cache } from "react";
 
 export type BadgeRole = RoleBadge;
 
+/** A tag as the role picker shows it */
+export interface BadgeRoleTag {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string | null;
+  readonly icon: { readonly id: string; readonly mimeType: string } | null;
+  /** The roles with this tag that the viewer can see */
+  readonly roleIds: readonly BadgeRole["id"][];
+}
+
 /**
  * The badges of all roles. Prefer the wrappers in
  * `modules/roles/utils/getRoles.ts`: they apply the `otherRole;read`
