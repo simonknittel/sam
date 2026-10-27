@@ -4,11 +4,12 @@ import { runAction } from "@/modules/actions/utils/runAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Select } from "@/modules/common/components/form/Select";
-import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
+import { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
+import { RolePicker } from "@/modules/roles/components/RolePicker/RolePicker";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import { EventTemplateAccessType } from "@sam-monorepo/database/browser";
 import { useId, useState, useTransition, type FormEventHandler } from "react";
-import { FaSave, FaTrash, FaUsers } from "react-icons/fa";
+import { FaSave, FaTrash } from "react-icons/fa";
 import { updateEventTemplateRoleAccess } from "../actions/updateEventTemplateRoleAccess";
 
 /** "Kein Zugriff" is the absence of a row, so it needs a value of its own */
@@ -111,10 +112,6 @@ export const EventTemplateRoleAccessEditor = ({
     });
   };
 
-  const addableRoles = selectableRoles.filter(
-    (role) => !entries.some((entry) => entry.roleId === role.id),
-  );
-
   /**
    * Sorted for display rather than kept in state, so the list reads the same
    * before and after a save and a newly added role lands where it belongs
@@ -129,10 +126,17 @@ export const EventTemplateRoleAccessEditor = ({
     ),
   );
 
-  const handleAdd = (roleId: string) =>
+  /**
+   * The picker gives the full selection. A new role gets the lowest tier, a
+   * deselected role loses its row. A row of a role that this user cannot see
+   * stays, because the picker keeps it selected.
+   */
+  const handleRolesChange = (roleIds: readonly string[]) =>
     setEntries((previous) => [
-      ...previous,
-      { roleId, choice: AccessChoice.Read },
+      ...previous.filter((entry) => roleIds.includes(entry.roleId)),
+      ...roleIds
+        .filter((roleId) => !previous.some((entry) => entry.roleId === roleId))
+        .map((roleId) => ({ roleId, choice: AccessChoice.Read })),
     ]);
 
   const handleChange = (roleId: string, choice: AccessChoice) =>
@@ -170,42 +174,14 @@ export const EventTemplateRoleAccessEditor = ({
         </ul>
       )}
 
-      <PopoverBaseUI
-        title="Rolle auswählen"
-        trigger={
-          <span className="mt-4 flex h-9 w-fit items-center gap-2 rounded-secondary border border-neutral-700 px-3 text-sm hover:bg-neutral-800">
-            <FaUsers /> Rolle hinzufügen
-          </span>
-        }
-        childrenClassName="max-h-96 overflow-auto"
-      >
-        <div className="flex flex-col gap-2">
-          {addableRoles.length === 0 ? (
-            <p className="text-neutral-500">
-              Alle für dich sichtbaren Rollen sind bereits aufgeführt.
-            </p>
-          ) : (
-            addableRoles
-              .toSorted((a, b) => a.name.localeCompare(b.name))
-              .map((role) => (
-                <button
-                  key={role.id}
-                  type="button"
-                  onClick={() => handleAdd(role.id)}
-                  className="group"
-                >
-                  {/* The badge's own popover trigger would nest buttons here */}
-                  <SingleRoleBadge
-                    roleId={role.id}
-                    showPlaceholder
-                    withPopover={false}
-                    className="bg-transparent group-hover:bg-neutral-700/50 group-focus-visible:bg-neutral-700/50"
-                  />
-                </button>
-              ))
-          )}
-        </div>
-      </PopoverBaseUI>
+      <RolePicker
+        mode={ItemPickerMode.Multiple}
+        hideChips
+        value={entries.map((entry) => entry.roleId)}
+        onChange={handleRolesChange}
+        offeredRoleIds={selectableRoles.map((role) => role.id)}
+        className="mt-4"
+      />
 
       <div className="mt-4 flex justify-end">
         <Button2 type="submit" disabled={isPending}>

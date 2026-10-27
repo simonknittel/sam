@@ -3,10 +3,14 @@ import {
   assignRole,
   createCitizen,
   createRole,
+  createRoleTag,
   createSilcTransaction,
 } from "../fixtures/factories";
 import {
-  clickUntilVisible,
+  openRolePicker,
+  pickRole,
+  rolePickerOption,
+  rolePickerTag,
   SAVED_TEXT,
   sectionByHeading,
   waitForAppShellHydration,
@@ -65,12 +69,17 @@ test("the aUEC conversion rate and the role salaries are edited through the sett
   await expect(addSalaryRow).toBeVisible();
   await addSalaryRow.click();
 
-  const rolePicker = page.getByRole("dialog", { name: "Rolle auswählen" });
-  await clickUntilVisible(
+  await pickRole(
     salaryTile.getByRole("button", { name: "Rolle auswählen" }),
-    rolePicker,
+    "Bezahlte Rolle",
   );
-  await rolePicker.getByText("Bezahlte Rolle").click();
+
+  /** A salary row needs a role, thus a click on the selected role keeps it */
+  const selectedRoleTrigger = salaryTile.getByRole("button", {
+    name: "Bezahlte Rolle",
+  });
+  await pickRole(selectedRoleTrigger, "Bezahlte Rolle");
+  await expect(selectedRoleTrigger).toBeVisible();
 
   await salaryTile.getByLabel("SILC").fill("40");
   await salaryTile.getByLabel("Tag im Monat").fill("15");
@@ -85,6 +94,50 @@ test("the aUEC conversion rate and the role salaries are edited through the sett
     "SILC_SETTING_UPDATED",
     "SALARY_CONFIG_UPDATED",
   ]);
+});
+
+test("a tag in the salary role picker filters the list to its roles, and a second click clears the filter", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "silc-einsteller",
+    permissionStrings: SETTINGS_ADMIN_PERMISSIONS,
+  });
+  const taggedRole = await createRole(prisma, { name: "Getaggte Rolle" });
+  await createRole(prisma, { name: "Andere Rolle" });
+  await createRoleTag(prisma, {
+    name: "Gehaltsgruppe",
+    roles: [taggedRole],
+  });
+
+  await signIn(admin.user);
+  await page.goto("/app/silc/settings");
+  await waitForAppShellHydration(page);
+
+  const salaryTile = sectionByHeading(page, "Gehälter");
+  const addSalaryRow = salaryTile.getByRole("button", { name: "Neu" });
+  await expect(addSalaryRow).toBeVisible();
+  await addSalaryRow.click();
+
+  const popover = await openRolePicker(
+    salaryTile.getByRole("button", { name: "Rolle auswählen" }),
+  );
+  const tag = rolePickerTag(popover, "Gehaltsgruppe");
+  await expect(rolePickerOption(popover, "Andere Rolle")).toBeVisible();
+
+  /** In single mode, a tag only filters the list. It selects nothing. */
+  await tag.click();
+  await expect(tag).toHaveAttribute("aria-pressed", "true");
+  await expect(rolePickerOption(popover, "Getaggte Rolle")).toBeVisible();
+  await expect(rolePickerOption(popover, "Andere Rolle")).toHaveCount(0);
+  await expect(popover).toBeVisible();
+
+  await tag.click();
+  await expect(tag).toHaveAttribute("aria-pressed", "false");
+  await expect(rolePickerOption(popover, "Getaggte Rolle")).toBeVisible();
+  await expect(rolePickerOption(popover, "Andere Rolle")).toBeVisible();
 });
 
 test("expiring all SILC zeroes every balance, and the refresh recomputes them", async ({

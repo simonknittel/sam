@@ -6,14 +6,21 @@ import {
   createCitizen,
   createFlow,
   createRole,
+  createRoleTag,
   FlowRoleAccessType,
 } from "../fixtures/factories";
 import {
   clickUntilVisible,
+  closeRolePicker,
   collectHydrationErrors,
   FORBIDDEN_TEXT,
   modal,
   NOT_FOUND_TEXT,
+  openRolePicker,
+  pickRole,
+  pickRoles,
+  pickRoleTag,
+  rolePickerOption,
   SAVED_TEXT,
   sectionByHeading,
   toggleLabel,
@@ -43,7 +50,7 @@ const renameForm = (page: Page) =>
 const accessForm = (page: Page) =>
   page
     .locator("form")
-    .filter({ has: page.getByRole("button", { name: "Rolle hinzufügen" }) });
+    .filter({ has: page.getByRole("button", { name: "Rolle auswählen" }) });
 
 /**
  * Whether the page as a whole scrolls sideways. Wide content is supposed to
@@ -763,8 +770,11 @@ for (const { label, type } of ROLE_NODE_TYPES) {
     prisma,
     signIn,
   }) => {
-    /** The manager's role is the only role, thus the form selects it */
+    /**
+     * The manager's role is the first role by name, thus the form selects it
+     */
     const manager = await createManager(prisma);
+    const otherRole = await createRole(prisma, { name: "zz-nachwuchs" });
     const flow = await createFlow(prisma, { name: "Academy", slug: "academy" });
     const savedNodes = () =>
       prisma.flowNode.findMany({
@@ -786,8 +796,8 @@ for (const { label, type } of ROLE_NODE_TYPES) {
       label,
     ).click();
     await expect(
-      addDialog.getByRole("combobox", { name: "Rolle" }),
-    ).toHaveValue(manager.role.id);
+      addDialog.getByRole("button", { name: manager.role.name }),
+    ).toBeVisible();
     await addDialog.getByRole("button", { name: "Speichern" }).click();
     await expect(addDialog).toBeHidden();
 
@@ -803,6 +813,11 @@ for (const { label, type } of ROLE_NODE_TYPES) {
     await selectNode(page, flowNodes(page));
     const editDialog = modal(page, "Element bearbeiten");
     await page.getByRole("button", { name: "Bearbeiten", exact: true }).click();
+    /** The node gets a different role */
+    await pickRole(
+      editDialog.getByRole("button", { name: manager.role.name }),
+      otherRole.name,
+    );
     await toggleLabel(
       editDialog.getByRole("radiogroup", {
         name: "Dauerhaft farbig anzeigen",
@@ -815,7 +830,7 @@ for (const { label, type } of ROLE_NODE_TYPES) {
     await saveFlow(page);
     await expect
       .poll(savedNodes)
-      .toEqual([{ type, roleId: manager.role.id, showUnlocked: true }]);
+      .toEqual([{ type, roleId: otherRole.id, showUnlocked: true }]);
 
     /**
      * Delete
@@ -849,14 +864,14 @@ test("granting access in the management UI lets a role read the flow", async ({
   await signIn(manager.user);
   await page.goto(`/app/career/settings/${flow.id}`);
 
-  const rolePicker = page.getByRole("dialog", { name: "Rolle auswählen" });
-  await clickUntilVisible(
-    page.getByRole("button", { name: "Rolle hinzufügen" }),
-    rolePicker,
-  );
-  await rolePicker.getByText("academy-zugriff").click();
+  await pickRoles(page.getByRole("button", { name: "Rolle auswählen" }), [
+    "academy-zugriff",
+  ]);
 
-  await page.getByRole("combobox", { name: "Zugriff" }).selectOption("read");
+  /** A new row has the lowest tier */
+  await expect(page.getByRole("combobox", { name: "Zugriff" })).toHaveValue(
+    "read",
+  );
   await accessForm(page).getByRole("button", { name: "Speichern" }).click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
@@ -868,6 +883,86 @@ test("granting access in the management UI lets a role read the flow", async ({
   ).toHaveCount(0);
 
   await expectAuditEvents(prisma, ["CAREER_FLOW_ROLE_ACCESS_UPDATED"]);
+});
+
+test("a tag in the access picker adds a row for each of its roles, a deselect removes a row, and a hidden role stays", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const alpha = await createRole(prisma, { name: "alpha-stufe" });
+  const beta = await createRole(prisma, { name: "beta-stufe" });
+  const hidden = await createRole(prisma, { name: "versteckte-stufe" });
+  await createRoleTag(prisma, {
+    name: "Stufen",
+    roles: [alpha, beta, hidden],
+  });
+  /** This manager sees only the first two roles */
+  const manager = await createCitizen(prisma, {
+    handle: "manager",
+    permissionStrings: [
+      "career;manage",
+      `otherRole;read;roleId=${alpha.id}`,
+      `otherRole;read;roleId=${beta.id}`,
+    ],
+  });
+  const flow = await createFlow(prisma, {
+    name: "Academy",
+    slug: "academy",
+    roleAccess: [{ roleId: hidden.id, type: FlowRoleAccessType.UPDATE }],
+  });
+
+  await signIn(manager.user);
+  await page.goto(`/app/career/settings/${flow.id}`);
+  await waitForAppShellHydration(page);
+
+  const rows = page.getByRole("listitem").filter({
+    has: page.getByRole("combobox", { name: "Zugriff" }),
+  });
+  const tierOf = (roleName: string) =>
+    rows
+      .filter({ hasText: roleName })
+      .getByRole("combobox", { name: "Zugriff" });
+  await expect(rows).toHaveCount(1);
+  await expect(rows.filter({ hasText: "Nicht sichtbare Rolle" })).toHaveCount(
+    1,
+  );
+
+  /** A click on the tag adds one row for each role that the manager sees */
+  const trigger = page.getByRole("button", { name: "Rolle auswählen" });
+  await pickRoleTag(trigger, "Stufen");
+  await expect(rows).toHaveCount(3);
+  await expect(tierOf("alpha-stufe")).toHaveValue("read");
+  await expect(tierOf("beta-stufe")).toHaveValue("read");
+
+  /** A listed role has a checkmark, and a click on it removes its row */
+  const popover = await openRolePicker(trigger);
+  const betaOption = rolePickerOption(popover, "beta-stufe");
+  await expect(betaOption).toHaveAttribute("aria-selected", "true");
+  await betaOption.click();
+  await expect(betaOption).toHaveAttribute("aria-selected", "false");
+  await closeRolePicker(popover);
+  await expect(rows).toHaveCount(2);
+
+  await accessForm(page).getByRole("button", { name: "Speichern" }).click();
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+
+  /** The row of the hidden role stays as it was */
+  const savedAccess = async () => {
+    const roleAccess = await prisma.flowRoleAccess.findMany({
+      where: { flowId: flow.id },
+      select: { roleId: true, type: true },
+    });
+    return roleAccess.toSorted((first, second) =>
+      first.roleId.localeCompare(second.roleId),
+    );
+  };
+  await expect.poll(savedAccess).toEqual(
+    [
+      { roleId: alpha.id, type: FlowRoleAccessType.READ },
+      { roleId: hidden.id, type: FlowRoleAccessType.UPDATE },
+    ].toSorted((first, second) => first.roleId.localeCompare(second.roleId)),
+  );
 });
 
 test("saving access keeps every role's tier on its own row", async ({

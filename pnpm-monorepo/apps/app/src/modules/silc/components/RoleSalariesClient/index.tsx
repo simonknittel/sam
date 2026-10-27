@@ -4,7 +4,9 @@ import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
+import { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
 import Note from "@/modules/common/components/Note";
+import { RolePicker } from "@/modules/roles/components/RolePicker/RolePicker";
 import { api } from "@/trpc/react";
 import { createId } from "@paralleldrive/cuid2";
 import type { RoleSalaryRow } from "@sam-monorepo/application";
@@ -12,7 +14,6 @@ import clsx from "clsx";
 import { useState } from "react";
 import { FaPlus, FaSave, FaTrash } from "react-icons/fa";
 import { updateRoleSalaries } from "../../actions/updateRoleSalaries";
-import { RoleSelector } from "./RoleSelector";
 
 interface Props {
   readonly className?: string;
@@ -34,6 +35,8 @@ export const RoleSalariesClient = ({
 
   const { isPending: isPendingRolesForSalaries, data } =
     api.silc.getRolesForSalaries.useQuery(undefined);
+
+  const offeredRoleIds = data?.map((role) => role.role.id);
 
   const handleCreate = () => {
     setSalaries((prev) => [
@@ -67,8 +70,12 @@ export const RoleSalariesClient = ({
                 key={salary.id}
                 className="grid grid-cols-[1fr_1fr_44px] grid-rows-3 gap-2 md:grid-cols-[300px_1fr_1fr_44px] md:grid-rows-2"
               >
-                <RoleSelector
-                  defaultValue={salary.roleId}
+                <RolePicker
+                  mode={ItemPickerMode.Single}
+                  name="roleId[]"
+                  required
+                  offeredRoleIds={offeredRoleIds}
+                  value={salary.roleId}
                   onChange={(roleId) => {
                     setSalaries((prev) =>
                       prev.map((s) =>

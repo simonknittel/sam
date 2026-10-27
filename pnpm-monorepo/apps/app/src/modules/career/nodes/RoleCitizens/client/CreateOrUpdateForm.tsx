@@ -1,6 +1,8 @@
 import { Button2 } from "@/modules/common/components/Button2";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import { Select } from "@/modules/common/components/form/Select";
+import { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
+import { RolePicker } from "@/modules/roles/components/RolePicker/RolePicker";
 import { createId } from "@paralleldrive/cuid2";
 import {
   FlowNodeRoleCitizensAlignment,
@@ -34,8 +36,8 @@ export const CreateOrUpdateForm = ({ initialData, onDone }: Props) => {
   const { additionalData } = useFlowContext();
   const { roles, assignedRoles } = additionalData as AdditionalDataType;
   const { addNodes, updateNodeData } = useReactFlow<RoleNode>();
-  const [roleId, setRoleId] = useState<Role["id"]>(
-    initialData?.roleId ?? roles.at(0)?.id ?? "",
+  const [roleId, setRoleId] = useState<Role["id"] | null>(
+    initialData?.roleId ?? roles.at(0)?.id ?? null,
   );
   const [alignment, setAlignment] = useState<FlowNodeRoleCitizensAlignment>(
     initialData?.roleCitizensAlignment || FlowNodeRoleCitizensAlignment.CENTER,
@@ -46,7 +48,6 @@ export const CreateOrUpdateForm = ({ initialData, onDone }: Props) => {
   const [showUnlocked, setShowUnlocked] = useState<boolean>(
     initialData?.showUnlocked || false,
   );
-  const roleInputId = useId();
   const backgroundColorInputId = useId();
   const backgroundTransparencyInputId = useId();
 
@@ -98,21 +99,15 @@ export const CreateOrUpdateForm = ({ initialData, onDone }: Props) => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <label htmlFor={roleInputId} className="mt-6 block">
-        Rolle
-      </label>
-      <Select
-        id={roleInputId}
-        className="mt-2"
+      <RolePicker
+        mode={ItemPickerMode.Single}
+        required
+        label="Rolle"
+        roles={roles}
         value={roleId}
-        onChange={(event) => setRoleId(event.target.value)}
-      >
-        {roles.map((role) => (
-          <option key={role.id} value={role.id}>
-            {role.name}
-          </option>
-        ))}
-      </Select>
+        onChange={setRoleId}
+        className="mt-6"
+      />
 
       <p className="mt-6">Ausrichtung</p>
       <RadioGroup
