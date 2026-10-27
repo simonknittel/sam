@@ -19,11 +19,11 @@ const RolesContext = createContext<RolesContext | undefined>(undefined);
 interface Props {
   readonly children: ReactNode;
   readonly roles: readonly BadgeRole[];
-  /** The tags of the visible roles */
-  readonly tags?: readonly BadgeRoleTag[];
+  /** The tags that the viewer can see */
+  readonly tags: readonly BadgeRoleTag[];
 }
 
-export const RolesContextProvider = ({ children, roles, tags = [] }: Props) => {
+export const RolesContextProvider = ({ children, roles, tags }: Props) => {
   const tagIdsByRoleId = new Map<BadgeRole["id"], BadgeRoleTag["id"][]>();
   for (const tag of tags) {
     for (const roleId of tag.roleIds) {

@@ -11,6 +11,8 @@ import {
   fillUntilValue,
   modal,
   pickFromSearch,
+  pickRoles,
+  rolePickerChips,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
@@ -90,20 +92,13 @@ test("a notification from the create menu goes to a citizen and a role, and list
    * The citizen picker has an icon button with the same name, which selects
    * the citizens of a role instead. The role picker's trigger has a text.
    */
-  const rolePicker = page.getByRole("dialog", { name: "Rolle auswählen" });
-  await clickUntilVisible(
+  await pickRoles(
     dialog
       .getByRole("button", { name: "Rolle auswählen" })
       .filter({ hasText: "Rolle auswählen" }),
-    rolePicker,
+    ["Geleitschutz"],
   );
-  await rolePicker.getByText("Geleitschutz", { exact: true }).click();
-  await expect(dialog.getByTitle("Rolle entfernen")).toHaveText([
-    "Geleitschutz",
-  ]);
-  /** A click outside the role picker closes it and frees the submit button */
-  await dialog.getByLabel("Titel", { exact: true }).click();
-  await expect(rolePicker).not.toBeVisible();
+  await expect(rolePickerChips(dialog)).toHaveText(["Geleitschutz"]);
 
   await dialog.getByRole("button", { name: "Senden" }).click();
 

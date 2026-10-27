@@ -20,7 +20,10 @@ import { getOnboardingState } from "@/modules/onboarding/utils/queries/getOnboar
 import { ChannelsProvider } from "@/modules/pusher/components/ChannelsContext";
 import { getNewItemCountsByAppSlug } from "@/modules/read-markers/queries/getNewItemCountsByAppSlug";
 import { RolesContextProvider } from "@/modules/roles/components/RolesContext";
-import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
+import {
+  getVisibleRoles,
+  getVisibleRoleTags,
+} from "@/modules/roles/utils/getRoles";
 import { SeasonalViewportLayer } from "@/modules/seasonal-events/components/SeasonalViewportLayer";
 import { getActiveSeasonalTheme } from "@/modules/seasonal-events/queries/getActiveSeasonalTheme";
 import { getSeasonalThemeRootProps } from "@/modules/seasonal-events/utils/getSeasonalThemeRootProps";
@@ -40,6 +43,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     apps,
     favoriteAppKeys,
     visibleRoles,
+    visibleRoleTags,
     openWikiReportCount,
     unreadOnSiteNotificationCount,
     canReadCareer,
@@ -52,6 +56,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     getAppLinks(),
     getAppFavoriteKeys(),
     getVisibleRoles(),
+    getVisibleRoleTags(),
     getOpenWikiReportCount(),
     getUnreadOnSiteNotificationCount(),
     hasAnyReadableFlow(),
@@ -77,7 +82,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
         <TRPCReactProvider>
           <ChannelsProvider userId={authentication.session.user.id}>
             <NextIntlClientProvider>
-              <RolesContextProvider roles={visibleRoles}>
+              <RolesContextProvider roles={visibleRoles} tags={visibleRoleTags}>
                 <BirthdayCitizensProvider citizenIds={birthdayCitizenIds}>
                   <div {...seasonalThemeRootProps}>
                     <SkipToContentLink />

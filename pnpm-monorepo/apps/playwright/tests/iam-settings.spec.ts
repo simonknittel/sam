@@ -3,6 +3,8 @@ import { expectAuditEvents } from "../fixtures/audit";
 import { assignRole, createCitizen, createRole } from "../fixtures/factories";
 import {
   clickUntilVisible,
+  pickRoles,
+  rolePickerChips,
   SAVED_TEXT,
   sectionByHeading,
   waitForAppShellHydration,
@@ -69,16 +71,12 @@ test("the Human Resources roles are selected on the IAM settings page and their 
   await waitForAppShellHydration(page);
 
   const settingTile = sectionByHeading(page, "Human Resources");
-  const selectedRoles = settingTile.getByTitle("Rolle entfernen");
-  const rolePicker = page.getByRole("dialog", { name: "Rolle auswählen" });
-  await clickUntilVisible(
+  const selectedRoles = rolePickerChips(settingTile);
+  await pickRoles(
     settingTile.getByRole("button", { name: "Rolle auswählen" }),
-    rolePicker,
+    ["Human Resources"],
   );
-  await rolePicker.getByText("Human Resources", { exact: true }).click();
   await expect(selectedRoles).toHaveText(["Human Resources"]);
-  await page.keyboard.press("Escape");
-  await expect(rolePicker).not.toBeVisible();
 
   await settingTile.getByRole("button", { name: "Speichern" }).click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
