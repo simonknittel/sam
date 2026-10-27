@@ -6,7 +6,7 @@ resource "aws_lambda_function" "main" {
   source_code_hash = filebase64sha256("${path.module}/placeholder.zip")
   runtime          = var.runtime
   timeout          = var.timeout
-  memory_size      = 512
+  memory_size      = 1769 # One full vCPU for shorter cold starts: Lambda gives CPU in proportion to the memory (https://docs.aws.amazon.com/lambda/latest/dg/configuration-memory.html)
   architectures    = ["arm64"]
 
   # https://docs.aws.amazon.com/lambda/latest/dg/configuration-concurrency.html
