@@ -1,8 +1,11 @@
 "use client";
 
+import {
+  UploadedIcon,
+  UploadedIconSize,
+} from "@/modules/common/components/UploadedIcon";
 import type { BadgeRoleTag } from "@/modules/roles/queries/getRoles";
 import clsx from "clsx";
-import { UploadedIcon, UploadedIconSize } from "./UploadedIcon";
 
 interface Props {
   readonly tag: BadgeRoleTag;
@@ -13,7 +16,7 @@ interface Props {
   readonly isPressed?: boolean;
   /** Disables the tag. The title gives this reason. */
   readonly disabledReason?: string;
-  readonly onClick: (tagId: BadgeRoleTag["id"]) => void;
+  readonly onClick: (tag: BadgeRoleTag) => void;
 }
 
 export const RoleTagChip = ({
@@ -31,7 +34,7 @@ export const RoleTagChip = ({
       aria-disabled={isDisabled || undefined}
       title={disabledReason ?? tag.description ?? undefined}
       onClick={() => {
-        if (!isDisabled) onClick(tag.id);
+        if (!isDisabled) onClick(tag);
       }}
       className={clsx(
         "inline-flex min-h-7 items-center gap-1 rounded-secondary border px-2 py-0.5 text-left font-mono text-xs outline-offset-2 outline-interaction-700 focus-visible:outline-2",

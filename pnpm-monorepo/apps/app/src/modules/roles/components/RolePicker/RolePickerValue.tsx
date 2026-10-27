@@ -1,14 +1,17 @@
 "use client";
 
+import {
+  UploadedIcon,
+  UploadedIconSize,
+} from "@/modules/common/components/UploadedIcon";
 import type { BadgeRole } from "@/modules/roles/queries/getRoles";
 import type { RolePickerExtraEntry, RolePickerRole } from "./RolePanel";
-import { UploadedIcon, UploadedIconSize } from "./UploadedIcon";
 
 interface Props {
   readonly roleId: BadgeRole["id"];
   /** The roles of the picker */
   readonly roles: readonly RolePickerRole[];
-  readonly extraEntries: readonly RolePickerExtraEntry[];
+  readonly extraEntries?: readonly RolePickerExtraEntry[];
 }
 
 /**
@@ -17,7 +20,11 @@ interface Props {
  * shows as a placeholder, because the picker still submits it: a save
  * without it would remove it from the record.
  */
-export const RolePickerValue = ({ roleId, roles, extraEntries }: Props) => {
+export const RolePickerValue = ({
+  roleId,
+  roles,
+  extraEntries = [],
+}: Props) => {
   const extraEntry = extraEntries.find((entry) => entry.id === roleId);
   if (extraEntry)
     return (

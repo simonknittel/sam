@@ -183,7 +183,6 @@ export const FlowRoleAccessEditor = ({
         hideChips
         value={entries.map((entry) => entry.roleId)}
         onChange={handleRolesChange}
-        offeredRoleIds={selectableRoles.map((role) => role.id)}
         className="mt-4"
       />
 

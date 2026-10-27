@@ -6,7 +6,7 @@ import { underlineCharacters } from "@/modules/common/utils/underlineCharacters"
 import type { BadgeRoleTag } from "@/modules/roles/queries/getRoles";
 import Fuse from "fuse.js";
 import { useState } from "react";
-import { UploadedIcon, UploadedIconSize } from "../RolePicker/UploadedIcon";
+import { UploadedIcon, UploadedIconSize } from "@/modules/common/components/UploadedIcon";
 
 /** The same value as the search of the role picker (see `RolePanel`) */
 const SEARCH_THRESHOLD = 0.2;

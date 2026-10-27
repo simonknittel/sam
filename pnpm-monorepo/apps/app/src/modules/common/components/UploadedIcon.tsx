@@ -5,6 +5,7 @@ import Image from "next/image";
 export enum UploadedIconSize {
   Small = 16,
   Medium = 24,
+  Large = 48,
 }
 
 interface Props {
@@ -12,7 +13,7 @@ interface Props {
   readonly size: UploadedIconSize;
 }
 
-/** The icon of a role or of a tag */
+/** An uploaded image as an icon, for example of a role or of a tag */
 export const UploadedIcon = ({ upload, size }: Props) => {
   return (
     <Image

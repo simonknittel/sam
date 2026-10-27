@@ -3,13 +3,15 @@
 import { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
 import type { ItemPickerItem } from "@/modules/common/components/ItemPicker/ItemPickerOption";
 import { ItemPickerPanel } from "@/modules/common/components/ItemPicker/ItemPickerPanel";
-import { underlineCharacters } from "@/modules/common/utils/underlineCharacters";
+import { searchItems } from "@/modules/common/components/ItemPicker/searchItems";
+import {
+  UploadedIcon,
+  UploadedIconSize,
+} from "@/modules/common/components/UploadedIcon";
 import type { BadgeRole, BadgeRoleTag } from "@/modules/roles/queries/getRoles";
-import Fuse from "fuse.js";
 import { useState, type ReactNode } from "react";
 import { useRolesContext } from "../RolesContext";
 import { RoleTagChip } from "./RoleTagChip";
-import { UploadedIcon, UploadedIconSize } from "./UploadedIcon";
 
 /** An entry above the roles, for example "Alle" with the id `*` */
 export interface RolePickerExtraEntry {
@@ -25,42 +27,7 @@ export const compareNames = (
   second: { readonly name: string },
 ) => first.name.localeCompare(second.name);
 
-interface SearchEntry {
-  readonly id: string;
-  readonly name: string;
-  readonly tagNames: readonly string[];
-}
-
-/**
- * 0 finds only exact matches, 1 finds everything. 0.2 permits small typing
- * errors. The role assignment of a citizen uses the same value.
- */
-const SEARCH_THRESHOLD = 0.2;
-
-/**
- * Searches the names and the tag names. Gives the ids of the matched
- * entries from the best to the worst match, each with the character ranges
- * of the match in the name.
- */
-const search = (entries: readonly SearchEntry[], query: string) => {
-  const fuse = new Fuse(entries, {
-    keys: ["name", "tagNames"],
-    includeMatches: true,
-    threshold: SEARCH_THRESHOLD,
-  });
-
-  return new Map(
-    fuse
-      .search(query)
-      .map((result) => [
-        result.item.id,
-        result.matches?.find((match) => match.key === "name")?.indices,
-      ]),
-  );
-};
-
 interface Props {
-  readonly className?: string;
   readonly mode: ItemPickerMode;
   readonly selectedRoleIds: readonly BadgeRole["id"][];
   /**
@@ -89,10 +56,7 @@ interface Props {
    */
   readonly onTagClick?: (roleIds: BadgeRole["id"][]) => void;
   /** See `renderTrailing` of `ItemPickerPanel` */
-  readonly renderTrailing?: (
-    roleId: BadgeRole["id"],
-    isSelected: boolean,
-  ) => ReactNode;
+  readonly renderTrailing?: (isSelected: boolean) => ReactNode;
 }
 
 /**
@@ -102,7 +66,6 @@ interface Props {
  * modal. The owner holds the selection.
  */
 export const RolePanel = ({
-  className,
   mode,
   selectedRoleIds,
   roles,
@@ -114,7 +77,7 @@ export const RolePanel = ({
   onTagClick,
   renderTrailing,
 }: Props) => {
-  const { roles: visibleRoles, tags, tagIdsByRoleId } = useRolesContext();
+  const { roles: visibleRoles, tags, tagsByRoleId } = useRolesContext();
   const [query, setQuery] = useState("");
   /** Single mode: the tag that filters the list */
   const [filterTagId, setFilterTagId] = useState<BadgeRoleTag["id"] | null>(
@@ -130,10 +93,9 @@ export const RolePanel = ({
   const offeredRoleIdSet = new Set(offeredRoles.map((role) => role.id));
   const selectedRoleIdSet = new Set(selectedRoleIds);
 
-  const tagById = new Map(tags.map((tag) => [tag.id, tag]));
-  const offeredTags = tags
-    .filter((tag) => tag.roleIds.some((roleId) => offeredRoleIdSet.has(roleId)))
-    .toSorted(compareNames);
+  const offeredTags = tags.filter((tag) =>
+    tag.roleIds.some((roleId) => offeredRoleIdSet.has(roleId)),
+  );
   const filterTag =
     mode === ItemPickerMode.Single
       ? offeredTags.find((tag) => tag.id === filterTagId)
@@ -175,14 +137,13 @@ export const RolePanel = ({
     return `Mit den Rollen dieses Tags wären mehr als ${max} Rollen ausgewählt.`;
   };
 
-  const handleTagClick = (tagId: BadgeRoleTag["id"]) => {
+  const handleTagClick = (tag: BadgeRoleTag) => {
     if (mode === ItemPickerMode.Single) {
-      setFilterTagId((previous) => (previous === tagId ? null : tagId));
+      setFilterTagId((previous) => (previous === tag.id ? null : tag.id));
       return;
     }
 
-    const tag = tagById.get(tagId);
-    if (tag) onTagClick?.(getAddableRoleIds(tag));
+    onTagClick?.(getAddableRoleIds(tag));
   };
 
   const listedRoles = filterTag
@@ -190,48 +151,35 @@ export const RolePanel = ({
     : offeredRoles;
   const listedExtraEntries = filterTag ? [] : extraEntries;
 
-  const trimmedQuery = query.trim();
-  const matches = trimmedQuery
-    ? search(
-        [
-          ...listedExtraEntries.map((entry) => ({ ...entry, tagNames: [] })),
-          ...listedRoles.map((role) => ({
-            id: role.id,
-            name: role.name,
-            tagNames: (tagIdsByRoleId.get(role.id) ?? []).flatMap((tagId) => {
-              const tag = tagById.get(tagId);
-              return tag ? [tag.name] : [];
-            }),
-          })),
-        ],
-        trimmedQuery,
-      )
-    : null;
-  const isListed = (id: string) => !matches || matches.has(id);
-  const bestMatchId = matches
-    ? [...matches.keys()].find((id) => getDisabledReason(id) === undefined)
-    : undefined;
+  const search = searchItems(
+    [
+      ...listedExtraEntries.map((entry) => ({ ...entry, tagNames: [] })),
+      ...listedRoles.map((role) => ({
+        id: role.id,
+        name: role.name,
+        tagNames: (tagsByRoleId.get(role.id) ?? []).map((tag) => tag.name),
+      })),
+    ],
+    query,
+    ["name", "tagNames"],
+  );
+  const bestMatchId = search.matchedIds.find(
+    (id) => getDisabledReason(id) === undefined,
+  );
 
   const toItem = (
     entry: { readonly id: string; readonly name: string },
     icon?: ReactNode,
-  ): ItemPickerItem => {
-    const nameMatch = matches?.get(entry.id);
-
-    return {
-      id: entry.id,
-      name: entry.name,
-      nameContent: nameMatch
-        ? underlineCharacters(entry.name, nameMatch)
-        : undefined,
-      icon,
-      disabledReason: getDisabledReason(entry.id),
-    };
-  };
+  ): ItemPickerItem => ({
+    id: entry.id,
+    name: entry.name,
+    nameContent: search.getNameContent(entry),
+    icon,
+    disabledReason: getDisabledReason(entry.id),
+  });
 
   return (
     <ItemPickerPanel
-      className={className}
       mode={mode}
       label="Rollen"
       searchPlaceholder="Rolle oder Tag suchen …"
@@ -265,10 +213,10 @@ export const RolePanel = ({
         )
       }
       extraItems={listedExtraEntries
-        .filter((entry) => isListed(entry.id))
+        .filter((entry) => search.isListed(entry.id))
         .map((entry) => toItem(entry))}
       items={listedRoles
-        .filter((role) => isListed(role.id))
+        .filter((role) => search.isListed(role.id))
         .map((role) =>
           toItem(
             role,
@@ -281,10 +229,7 @@ export const RolePanel = ({
       selectedIds={selectedRoleIds}
       onSelect={onRoleClick}
       emptyText="Keine Rolle gefunden"
-      renderTrailing={
-        renderTrailing &&
-        ((item, isSelected) => renderTrailing(item.id, isSelected))
-      }
+      renderTrailing={renderTrailing}
     />
   );
 };

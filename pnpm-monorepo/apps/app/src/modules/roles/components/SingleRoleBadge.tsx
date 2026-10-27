@@ -14,11 +14,13 @@ import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Link } from "@/modules/common/components/Link";
 import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import { SubmitButton } from "@/modules/common/components/SubmitButton";
-import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
+import {
+  UploadedIcon,
+  UploadedIconSize,
+} from "@/modules/common/components/UploadedIcon";
 import { type Role } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
-import Image from "next/image";
 import { FaCog, FaMinus, FaPlus, FaTrash } from "react-icons/fa";
 import { useRolesContext } from "./RolesContext";
 import { RoleTagBadge } from "./tags/RoleTagBadge";
@@ -45,12 +47,6 @@ interface Props {
   readonly citizenId?: string;
   readonly citizenLevel?: number | null;
   readonly onSuccess?: () => void;
-  /**
-   * Whether the badge opens the role's detail popover. Turn it off inside
-   * another interactive element (e.g. a role picker's option button) —
-   * the popover's trigger is a button and would nest buttons there.
-   */
-  readonly withPopover?: boolean;
 }
 
 export const SingleRoleBadge = ({
@@ -61,9 +57,8 @@ export const SingleRoleBadge = ({
   citizenId,
   citizenLevel = 0,
   onSuccess,
-  withPopover = true,
 }: Props) => {
-  const { roles, tags, tagIdsByRoleId } = useRolesContext();
+  const { roles, tagsByRoleId } = useRolesContext();
   const authentication = useAuthentication();
   /**
    * The errors show as toasts: when a different user removed the role, the
@@ -121,9 +116,7 @@ export const SingleRoleBadge = ({
   const canManage =
     authentication && authentication.authorize("role", "manage");
 
-  /** The context gives the tags sorted by name */
-  const roleTagIds = tagIdsByRoleId.get(role.id) ?? [];
-  const roleTags = tags.filter((tag) => roleTagIds.includes(tag.id));
+  const roleTags = tagsByRoleId.get(role.id) ?? [];
 
   const showLevelProgress =
     role.maxLevel && citizenId && (citizenLevel ?? 0) < role.maxLevel;
@@ -140,17 +133,7 @@ export const SingleRoleBadge = ({
     >
       {role.icon && (
         <span className="flex aspect-square size-6 items-center justify-center">
-          <Image
-            src={getPublicUploadUrl(role.icon.id)}
-            alt=""
-            width={24}
-            height={24}
-            className="max-h-full max-w-full"
-            unoptimized={["image/svg+xml", "image/gif"].includes(
-              role.icon.mimeType,
-            )}
-            loading="lazy"
-          />
+          <UploadedIcon upload={role.icon} size={UploadedIconSize.Medium} />
         </span>
       )}
 
@@ -173,8 +156,6 @@ export const SingleRoleBadge = ({
     </span>
   );
 
-  if (!withPopover) return badge;
-
   return (
     <PopoverBaseUI
       title="Rollendetails"
@@ -185,17 +166,7 @@ export const SingleRoleBadge = ({
         <div className="inline-flex items-center gap-4 align-middle">
           {role.icon ? (
             <span className="flex aspect-square size-12 items-center justify-center">
-              <Image
-                src={getPublicUploadUrl(role.icon.id)}
-                alt=""
-                width={48}
-                height={48}
-                className="max-h-full max-w-full"
-                unoptimized={["image/svg+xml", "image/gif"].includes(
-                  role.icon.mimeType,
-                )}
-                loading="lazy"
-              />
+              <UploadedIcon upload={role.icon} size={UploadedIconSize.Large} />
             </span>
           ) : (
             <span className="size-12 rounded-secondary border border-white/10" />

@@ -6,12 +6,10 @@ import { createContext, useContext } from "react";
 
 interface RolesContext {
   readonly roles: readonly BadgeRole[];
+  /** Sorted by name */
   readonly tags: readonly BadgeRoleTag[];
-  /** The ids of the tags of each visible role */
-  readonly tagIdsByRoleId: ReadonlyMap<
-    BadgeRole["id"],
-    readonly BadgeRoleTag["id"][]
-  >;
+  /** The tags of each visible role, sorted by name */
+  readonly tagsByRoleId: ReadonlyMap<BadgeRole["id"], readonly BadgeRoleTag[]>;
 }
 
 const RolesContext = createContext<RolesContext | undefined>(undefined);
@@ -19,19 +17,19 @@ const RolesContext = createContext<RolesContext | undefined>(undefined);
 interface Props {
   readonly children: ReactNode;
   readonly roles: readonly BadgeRole[];
-  /** The tags that the viewer can see */
+  /** The tags that the viewer can see, sorted by name */
   readonly tags: readonly BadgeRoleTag[];
 }
 
 export const RolesContextProvider = ({ children, roles, tags }: Props) => {
-  const tagIdsByRoleId = new Map<BadgeRole["id"], BadgeRoleTag["id"][]>();
+  const tagsByRoleId = new Map<BadgeRole["id"], BadgeRoleTag[]>();
   for (const tag of tags) {
     for (const roleId of tag.roleIds) {
-      const tagIds = tagIdsByRoleId.get(roleId);
-      if (tagIds) {
-        tagIds.push(tag.id);
+      const roleTags = tagsByRoleId.get(roleId);
+      if (roleTags) {
+        roleTags.push(tag);
       } else {
-        tagIdsByRoleId.set(roleId, [tag.id]);
+        tagsByRoleId.set(roleId, [tag]);
       }
     }
   }
@@ -39,7 +37,7 @@ export const RolesContextProvider = ({ children, roles, tags }: Props) => {
   const value = {
     roles,
     tags,
-    tagIdsByRoleId,
+    tagsByRoleId,
   };
 
   return <RolesContext value={value}>{children}</RolesContext>;

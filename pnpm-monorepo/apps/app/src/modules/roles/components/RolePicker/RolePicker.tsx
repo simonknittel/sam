@@ -38,10 +38,6 @@ interface CommonProps {
    * wiki page. Selected roles outside of this list stay selected.
    */
   readonly offeredRoleIds?: readonly BadgeRole["id"][];
-  /** Offered roles that the viewer cannot select, each with the reason */
-  readonly disabledRoles?: ReadonlyMap<BadgeRole["id"], string>;
-  /** Entries above the roles, for example "Alle" with the id `*` */
-  readonly extraEntries?: readonly RolePickerExtraEntry[];
   /** Reports each open and close of the popover */
   readonly onOpenChange?: (open: boolean) => void;
 }
@@ -58,6 +54,8 @@ interface SingleProps extends CommonProps {
    * form without a selected role
    */
   readonly required?: boolean;
+  /** Entries above the roles, for example "Alle" with the id `*` */
+  readonly extraEntries?: readonly RolePickerExtraEntry[];
 }
 
 interface MultipleProps extends CommonProps {
@@ -100,8 +98,6 @@ export const RolePicker = (props: Props) => {
     helpText,
     roles: suppliedRoles,
     offeredRoleIds,
-    disabledRoles,
-    extraEntries = [],
     onOpenChange,
   } = props;
   const { roles: visibleRoles } = useRolesContext();
@@ -161,7 +157,7 @@ export const RolePicker = (props: Props) => {
 
     if (isSelected) {
       removeRole(roleId);
-    } else if (props.max === undefined || selectedRoleIds.length < props.max) {
+    } else {
       changeSelection([...selectedRoleIds, roleId]);
     }
   };
@@ -170,17 +166,12 @@ export const RolePicker = (props: Props) => {
     changeSelection([...selectedRoleIds, ...roleIds]);
   };
 
-  /**
-   * The extra entries first, then the roles by name, then the roles that the
-   * viewer cannot see
-   */
+  /** The roles by name, then the roles that the viewer cannot see */
   const roleIndexById = new Map(
     roles.toSorted(compareNames).map((role, index) => [role.id, index]),
   );
   const getSortIndex = (roleId: BadgeRole["id"]) =>
-    extraEntries.some((entry) => entry.id === roleId)
-      ? -1
-      : (roleIndexById.get(roleId) ?? roles.length);
+    roleIndexById.get(roleId) ?? roles.length;
   const sortedSelectedRoleIds = selectedRoleIds.toSorted(
     (first, second) => getSortIndex(first) - getSortIndex(second),
   );
@@ -200,7 +191,7 @@ export const RolePicker = (props: Props) => {
                 <RolePickerValue
                   roleId={selectedRoleId}
                   roles={roles}
-                  extraEntries={extraEntries}
+                  extraEntries={props.extraEntries}
                 />
               ) : (
                 <span className="flex h-8 items-center gap-2 px-2 font-mono text-sm">
@@ -246,8 +237,11 @@ export const RolePicker = (props: Props) => {
           selectedRoleIds={selectedRoleIds}
           roles={roles}
           offeredRoleIds={offeredRoleIds}
-          disabledRoles={disabledRoles}
-          extraEntries={extraEntries}
+          extraEntries={
+            props.mode === ItemPickerMode.Single
+              ? props.extraEntries
+              : undefined
+          }
           max={props.mode === ItemPickerMode.Multiple ? props.max : undefined}
           onRoleClick={handleRoleClick}
           onTagClick={handleTagClick}
@@ -293,7 +287,6 @@ export const RolePicker = (props: Props) => {
                 key={roleId}
                 roleId={roleId}
                 roles={roles}
-                extraEntries={extraEntries}
                 onRemove={removeRole}
               />
             ))}

@@ -1,7 +1,9 @@
 import { Link } from "@/modules/common/components/Link";
-import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
+import {
+  UploadedIcon,
+  UploadedIconSize,
+} from "@/modules/common/components/UploadedIcon";
 import type { Role, Upload } from "@sam-monorepo/database/browser";
-import Image from "next/image";
 import type { ComponentProps } from "react";
 
 interface Props {
@@ -27,17 +29,7 @@ export const MatrixRoleCell = ({ role, href }: Props) => {
       >
         {role.icon ? (
           <div className="flex aspect-square size-4 flex-none items-center justify-center overflow-hidden rounded-secondary">
-            <Image
-              src={getPublicUploadUrl(role.icon.id)}
-              alt=""
-              width={16}
-              height={16}
-              className="max-h-full max-w-full"
-              unoptimized={["image/svg+xml", "image/gif"].includes(
-                role.icon.mimeType,
-              )}
-              loading="lazy"
-            />
+            <UploadedIcon upload={role.icon} size={UploadedIconSize.Small} />
           </div>
         ) : (
           <div className="size-4 flex-none" />

@@ -10,18 +10,13 @@ import {
   updateRoleAssignments as updateRoleAssignmentsUseCase,
 } from "@sam-monorepo/application";
 
-/** A ticked role checkbox sends a field with this prefix and the role id */
-const ROLE_FIELD_PREFIX = "role_";
-
 export const updateRoleAssignments = createUseCaseAction({
   name: "updateRoleAssignments",
   schema: updateRoleAssignmentsInputSchema,
   useCase: updateRoleAssignmentsUseCase,
   parseFormData: (formData) => ({
     citizen_id: formData.get("citizenId"),
-    role_ids: Array.from(formData.keys())
-      .filter((key) => key.startsWith(ROLE_FIELD_PREFIX))
-      .map((key) => key.slice(ROLE_FIELD_PREFIX.length)),
+    role_ids: formData.getAll("roleId"),
   }),
   texts: getRoleErrorTexts,
   success: (t) => t("Common.successfullySaved"),

@@ -22,7 +22,7 @@ const toFormData = (
 ) => {
   const formData = new FormData();
   formData.set("citizenId", citizenId);
-  for (const roleId of roleIds) formData.set(`role_${roleId}`, "on");
+  for (const roleId of roleIds) formData.append("roleId", roleId);
   return formData;
 };
 
@@ -128,7 +128,7 @@ export const UpdateRolesForm = ({
       disabledRoles={disabledRoles}
       onRoleClick={handleRoleClick}
       onTagClick={handleTagClick}
-      renderTrailing={(unused, isSelected) => (
+      renderTrailing={(isSelected) => (
         // The row is the control. Without pointer events, a click on the checkbox is a click on the row.
         <YesNoCheckbox
           checked={isSelected}

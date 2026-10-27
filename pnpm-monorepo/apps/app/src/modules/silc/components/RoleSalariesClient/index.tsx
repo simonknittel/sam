@@ -36,8 +36,6 @@ export const RoleSalariesClient = ({
   const { isPending: isPendingRolesForSalaries, data } =
     api.silc.getRolesForSalaries.useQuery(undefined);
 
-  const offeredRoleIds = data?.map((role) => role.role.id);
-
   const handleCreate = () => {
     setSalaries((prev) => [
       ...prev,
@@ -74,7 +72,6 @@ export const RoleSalariesClient = ({
                   mode={ItemPickerMode.Single}
                   name="roleId[]"
                   required
-                  offeredRoleIds={offeredRoleIds}
                   value={salary.roleId}
                   onChange={(roleId) => {
                     setSalaries((prev) =>

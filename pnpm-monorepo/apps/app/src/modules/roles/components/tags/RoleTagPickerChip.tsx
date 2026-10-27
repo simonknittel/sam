@@ -2,7 +2,7 @@
 
 import type { BadgeRoleTag } from "@/modules/roles/queries/getRoles";
 import { FaTrash } from "react-icons/fa";
-import { UploadedIcon, UploadedIconSize } from "../RolePicker/UploadedIcon";
+import { UploadedIcon, UploadedIconSize } from "@/modules/common/components/UploadedIcon";
 
 interface Props {
   readonly tag: BadgeRoleTag;

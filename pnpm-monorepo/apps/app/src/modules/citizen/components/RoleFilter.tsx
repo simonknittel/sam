@@ -45,8 +45,7 @@ export const RoleFilter = ({ className }: Props) => {
 
   const appliedRoleIds = [...new Set(getFilterValues(filters, FILTER_PREFIX))];
 
-  const [isOpen, setIsOpen] = useState(false);
-  /** The selection in the open popover, or null without a change */
+  /** The selection in the open popover, or null while the popover is closed */
   const [draftRoleIds, setDraftRoleIds] = useState<BadgeRole["id"][] | null>(
     null,
   );
@@ -73,7 +72,7 @@ export const RoleFilter = ({ className }: Props) => {
   };
 
   const handleChange = (roleIds: BadgeRole["id"][]) => {
-    if (isOpen) {
+    if (draftRoleIds !== null) {
       setDraftRoleIds(roleIds);
     } else {
       applyRoleIds(roleIds);
@@ -81,8 +80,10 @@ export const RoleFilter = ({ className }: Props) => {
   };
 
   const handleOpenChange = (open: boolean) => {
-    setIsOpen(open);
-    if (open) return;
+    if (open) {
+      setDraftRoleIds(appliedRoleIds);
+      return;
+    }
 
     if (draftRoleIds) applyRoleIds(draftRoleIds);
     setDraftRoleIds(null);

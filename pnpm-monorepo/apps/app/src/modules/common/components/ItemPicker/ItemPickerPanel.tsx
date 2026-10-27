@@ -1,6 +1,5 @@
 "use client";
 
-import clsx from "clsx";
 import {
   useEffect,
   useId,
@@ -28,7 +27,6 @@ const scrollIntoList = (list: HTMLElement, option: HTMLElement) => {
 };
 
 interface Props {
-  readonly className?: string;
   readonly mode: ItemPickerMode;
   /** The accessible name of the list */
   readonly label: string;
@@ -60,10 +58,7 @@ interface Props {
    * example with a checkbox. The row stays the control: a click on the row
    * calls `onSelect`.
    */
-  readonly renderTrailing?: (
-    item: ItemPickerItem,
-    isSelected: boolean,
-  ) => ReactNode;
+  readonly renderTrailing?: (isSelected: boolean) => ReactNode;
 }
 
 /**
@@ -74,7 +69,6 @@ interface Props {
  * Enter selects it.
  */
 export const ItemPickerPanel = ({
-  className,
   mode,
   label,
   searchPlaceholder,
@@ -187,7 +181,7 @@ export const ItemPickerPanel = ({
         elementId={getElementId(item.id)}
         isActive={item === activeItem}
         isSelected={isSelected}
-        trailing={renderTrailing?.(item, isSelected)}
+        trailing={renderTrailing?.(isSelected)}
         onActivate={setActiveId}
         onSelect={onSelect}
       />
@@ -195,7 +189,7 @@ export const ItemPickerPanel = ({
   };
 
   return (
-    <div className={clsx(className)}>
+    <div>
       <input
         ref={inputRef}
         type="text"
