@@ -119,16 +119,16 @@ export {
   type EventParticipationInput,
 } from "./ownParticipation.js";
 export {
-  removeEventManager,
-  removeEventManagerInputSchema,
-  type RemoveEventManagerInput,
-} from "./removeEventManager.js";
+  removeEventManagers,
+  removeEventManagersInputSchema,
+  type RemoveEventManagersInput,
+} from "./removeEventManagers.js";
 export {
-  removeEventParticipant,
-  removeEventParticipantInputSchema,
-  type RemoveEventParticipantInput,
-  type RemoveEventParticipantOutput,
-} from "./removeEventParticipant.js";
+  removeEventParticipants,
+  removeEventParticipantsInputSchema,
+  type RemoveEventParticipantsInput,
+  type RemoveEventParticipantsOutput,
+} from "./removeEventParticipants.js";
 export { signUpForEvent } from "./signUpForEvent.js";
 export {
   syncDiscordEvents,

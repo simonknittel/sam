@@ -2,18 +2,18 @@
 
 import { createUseCaseAction } from "@/modules/application";
 import {
-  removeEventManager,
-  removeEventManagerInputSchema,
+  removeEventManagers,
+  removeEventManagersInputSchema,
 } from "@sam-monorepo/application";
 import { EVENT_ERROR_TEXTS } from "../utils/eventErrorTexts";
 
 export const deleteManager = createUseCaseAction({
   name: "deleteManager",
-  schema: removeEventManagerInputSchema,
-  useCase: removeEventManager,
+  schema: removeEventManagersInputSchema,
+  useCase: removeEventManagers,
   parseFormData: (formData) => ({
     event_id: formData.get("eventId"),
-    citizen_id: formData.get("managerId"),
+    citizen_ids: [formData.get("managerId")],
   }),
   texts: EVENT_ERROR_TEXTS,
   success: (t) => t("Common.successfullyDeleted"),

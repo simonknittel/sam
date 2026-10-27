@@ -5,18 +5,18 @@ import {
   notificationsFailedWarning,
 } from "@/modules/application";
 import {
-  removeEventParticipantInputSchema,
-  removeEventParticipant as removeEventParticipantUseCase,
+  removeEventParticipants,
+  removeEventParticipantsInputSchema,
 } from "@sam-monorepo/application";
 import { EVENT_ERROR_TEXTS } from "../utils/eventErrorTexts";
 
 export const removeEventParticipant = createUseCaseAction({
   name: "removeEventParticipant",
-  schema: removeEventParticipantInputSchema,
-  useCase: removeEventParticipantUseCase,
+  schema: removeEventParticipantsInputSchema,
+  useCase: removeEventParticipants,
   parseFormData: (formData) => ({
     event_id: formData.get("eventId"),
-    citizen_id: formData.get("citizenId"),
+    citizen_ids: [formData.get("citizenId")],
     reason: formData.get("reason") ?? undefined,
   }),
   texts: EVENT_ERROR_TEXTS,
