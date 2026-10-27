@@ -60,6 +60,8 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
           Überall, wo Rollen ausgewählt werden, gibt es jetzt dieselbe Auswahl:
           eine Suche nach Rollen und Tags, darunter alle Tags und eine Rolle pro
           Zeile. Ein Klick auf einen Tag wählt alle Rollen mit diesem Tag aus.
+          Wo nur eine Rolle möglich ist, filtert ein Klick auf einen Tag die
+          Liste.
         </p>
         <p>
           Rollen können jetzt Tags haben. Wer Rollen verwalten darf, verwaltet
