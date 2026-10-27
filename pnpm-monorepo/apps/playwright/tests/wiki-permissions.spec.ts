@@ -5,6 +5,7 @@ import {
   createCitizen,
   createEventBriefingPage,
   createRole,
+  createRoleTag,
   createWikiPage,
   futureEvent,
   ONE_DAY_MS,
@@ -18,8 +19,16 @@ import {
 } from "../fixtures/factories";
 import {
   clickUntilVisible,
+  closeRolePicker,
   modal,
   NOT_FOUND_TEXT,
+  openRolePicker,
+  rolePickerChips,
+  rolePickerOption,
+  rolePickerTag,
+  SAVED_TEXT,
+  sectionByHeading,
+  toggleLabel,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
@@ -388,4 +397,83 @@ test("a finished event leaves its managers the badge without the dialog", async 
   await expect(audienceBadge(page)).toHaveText("Sichtbar für: Event-Manager");
   await expect(audienceBadgeButton(page)).toHaveCount(0);
   await expect(permissionsButton(page)).toHaveCount(0);
+});
+
+test("the role picker of a child page offers the read roles of the parent, and a tag adds only these roles", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "tag-verwalter",
+    permissionStrings: ["wiki;manage", "otherRole;read;roleId=*"],
+  });
+  const pilotRole = await createRole(prisma, { name: "Pilot" });
+  const navigatorRole = await createRole(prisma, { name: "Navigator" });
+  const engineerRole = await createRole(prisma, { name: "Ingenieur" });
+  await createRoleTag(prisma, {
+    name: "Flugbetrieb",
+    roles: [pilotRole, navigatorRole, engineerRole],
+  });
+
+  /** The parent narrows the offer: the engineers cannot read it */
+  const parentPage = await createWikiPage(prisma, {
+    title: "Flugdienst",
+    visibility: WikiPageVisibility.RESTRICTED,
+    roleAccess: [
+      { roleId: pilotRole.id, type: WikiPageAccessType.READ },
+      { roleId: navigatorRole.id, type: WikiPageAccessType.READ },
+    ],
+  });
+  const childPage = await createWikiPage(prisma, {
+    title: "Dienstplan",
+    parentId: parentPage.id,
+  });
+
+  await signIn(manager.user);
+  await page.goto(`/app/wiki/${childPage.id}/${childPage.slug}`);
+  const permissionsDialog = modal(page, "Berechtigungen");
+  await clickUntilVisible(permissionsButton(page), permissionsDialog);
+
+  const readSection = sectionByHeading(page, "Lesen");
+  await toggleLabel(readSection, /^Eingeschränkt$/).click();
+  const trigger = readSection.getByRole("button", { name: "Rolle auswählen" });
+
+  const popover = await openRolePicker(trigger);
+  await expect(rolePickerOption(popover, "Pilot")).toBeVisible();
+  await expect(rolePickerOption(popover, "Navigator")).toBeVisible();
+  await expect(rolePickerOption(popover, "Ingenieur")).toHaveCount(0);
+
+  await rolePickerTag(popover, "Flugbetrieb").click();
+  await expect(rolePickerOption(popover, "Pilot")).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await closeRolePicker(popover);
+  await expect(permissionsDialog).toBeVisible();
+  await expect(rolePickerChips(readSection)).toHaveText(["Navigator", "Pilot"]);
+
+  await permissionsDialog.getByRole("button", { name: "Speichern" }).click();
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+
+  await expect
+    .poll(async () => {
+      const roleAccess = await prisma.wikiPageRoleAccess.findMany({
+        where: { pageId: childPage.id },
+        select: { roleId: true, type: true },
+      });
+      return roleAccess
+        .map(({ roleId, type }) => `${type}:${roleId}`)
+        .toSorted();
+    })
+    .toEqual(
+      [
+        `${WikiPageAccessType.READ}:${pilotRole.id}`,
+        `${WikiPageAccessType.READ}:${navigatorRole.id}`,
+      ].toSorted(),
+    );
+  expect(
+    (await prisma.wikiPage.findUniqueOrThrow({ where: { id: childPage.id } }))
+      .visibility,
+  ).toBe(WikiPageVisibility.RESTRICTED);
 });

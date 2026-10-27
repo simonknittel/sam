@@ -11,6 +11,7 @@ import {
 import {
   clickUntilVisible,
   modal,
+  pickRoles,
   SAVED_TEXT,
   toggleLabel,
   waitForAppShellHydration,
@@ -107,12 +108,9 @@ test("a radio group keeps its selection after the action of its form", async ({
   const restricted = page.getByRole("radio", { name: "Eingeschränkt" });
   const saveButton = page.getByRole("button", { name: "Speichern" });
   await toggleLabel(page, /^Eingeschränkt$/).click();
-  const rolePicker = page.getByRole("dialog", { name: "Rolle auswählen" });
-  await clickUntilVisible(
-    page.getByRole("button", { name: "Rolle hinzufügen" }),
-    rolePicker,
-  );
-  await rolePicker.getByText(role.name).click();
+  await pickRoles(page.getByRole("button", { name: "Rolle auswählen" }), [
+    role.name,
+  ]);
   await saveButton.click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   /**

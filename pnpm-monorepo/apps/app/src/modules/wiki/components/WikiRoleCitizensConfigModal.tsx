@@ -1,11 +1,12 @@
 "use client";
 
 import { Button2 } from "@/modules/common/components/Button2";
+import { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
 import Modal from "@/modules/common/components/Modal";
+import { RolePicker } from "@/modules/roles/components/RolePicker/RolePicker";
 import { normalizeWikiRoleCitizensConfig } from "@sam-monorepo/wiki-editor";
 import type { Editor } from "@tiptap/react";
 import { FaSave } from "react-icons/fa";
-import { WikiRoleSelector } from "./WikiRoleSelector";
 
 interface Props {
   readonly editor: Editor;
@@ -64,11 +65,11 @@ export const WikiRoleCitizensConfigModal = ({
           save(new FormData(event.currentTarget));
         }}
       >
-        <p className="mb-1">Rolle</p>
-        <WikiRoleSelector
-          inputName="roleId"
-          defaultValue={initial.roleId ? [initial.roleId] : []}
-          single
+        <RolePicker
+          mode={ItemPickerMode.Single}
+          label="Rolle"
+          name="roleId"
+          defaultValue={initial.roleId}
         />
 
         <Button2 type="submit" className="mt-4 ml-auto">

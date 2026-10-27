@@ -6,13 +6,14 @@ import { Button2 } from "@/modules/common/components/Button2";
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import { TextInput } from "@/modules/common/components/form/TextInput";
+import { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
 import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { Tile, TileVariant } from "@/modules/common/components/Tile";
 import { deleteEvent } from "@/modules/events/actions/deleteEvent";
 import { updateEvent } from "@/modules/events/actions/updateEvent";
 import { EventDescriptionField } from "@/modules/events/components/EventDescriptionField";
 import { EventDescriptionHint } from "@/modules/events/components/EventDescriptionHint";
-import { WikiRoleSelector } from "@/modules/wiki/components/WikiRoleSelector";
+import { RolePicker } from "@/modules/roles/components/RolePicker/RolePicker";
 import { EventVisibility } from "@sam-monorepo/database/browser";
 import { EVENT_NAME_MAX_LENGTH } from "@sam-monorepo/domain";
 import clsx from "clsx";
@@ -133,8 +134,9 @@ export const EventSettings = ({
           />
 
           {visibility === EventVisibility.RESTRICTED && (
-            <WikiRoleSelector
-              inputName="visibilityRole[]"
+            <RolePicker
+              mode={ItemPickerMode.Multiple}
+              name="visibilityRole[]"
               defaultValue={event.visibilityRoleIds}
               className="mt-2"
             />

@@ -1,20 +1,21 @@
 "use client";
 
 import { Tile } from "@/modules/common/components/Tile";
-import type { ManagedRole, RoleBadge } from "@sam-monorepo/application";
+import type { ManagedRole } from "@sam-monorepo/application";
 import type {
   ClassificationLevel,
   NoteType,
 } from "@sam-monorepo/database/browser";
 import { Permissions } from "./Permissions";
 import { PermissionsProvider } from "./PermissionsContext";
+import type { RolePickerRole } from "./RolePicker/RolePanel";
 
 interface Props {
   readonly className?: string;
   readonly role: Pick<ManagedRole, "id" | "permissionStrings">;
   readonly noteTypes: NoteType[];
   readonly classificationLevels: ClassificationLevel[];
-  readonly allRoles: readonly Pick<RoleBadge, "id" | "name">[];
+  readonly allRoles: readonly RolePickerRole[];
 }
 
 export const PermissionsTab = ({

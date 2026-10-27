@@ -2,11 +2,13 @@
 
 import { useAction } from "@/modules/actions/utils/useAction";
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
+import { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
 import Modal from "@/modules/common/components/Modal";
 import Note from "@/modules/common/components/Note";
 import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
+import { RolePicker } from "@/modules/roles/components/RolePicker/RolePicker";
 import {
   WikiPageEditability,
   WikiPageUploadability,
@@ -27,7 +29,6 @@ import { updateWikiPagePermissions } from "../actions/updateWikiPagePermissions"
 import type { WikiEffectivePermissions } from "../utils/resolveWikiPageEffectivePermissions";
 import { WikiEffectivePermissionList } from "./WikiEffectivePermissionList";
 import { WikiPagePermissionsOpenerProvider } from "./WikiPagePermissionsOpener";
-import { WikiRoleSelector } from "./WikiRoleSelector";
 
 interface Props {
   /** The page view the dialog's triggers live in */
@@ -171,11 +172,12 @@ export const WikiPagePermissionsProvider = ({
 
             {visibility === WikiPageVisibility.RESTRICTED && (
               <>
-                <WikiRoleSelector
+                <RolePicker
+                  mode={ItemPickerMode.Multiple}
                   className="mt-2"
-                  inputName="readRole[]"
+                  name="readRole[]"
                   defaultValue={readRoleIds}
-                  selectableRoleIds={isRoot ? undefined : parentReadRoleIds}
+                  offeredRoleIds={isRoot ? undefined : parentReadRoleIds}
                 />
                 <p className="mt-1 text-xs text-neutral-400">
                   Ohne Rollen ist die Seite privat: Nur der Besitzer und die
@@ -242,11 +244,12 @@ export const WikiPagePermissionsProvider = ({
             />
 
             {editability === WikiPageEditability.RESTRICTED && (
-              <WikiRoleSelector
+              <RolePicker
+                mode={ItemPickerMode.Multiple}
                 className="mt-2"
-                inputName="editRole[]"
+                name="editRole[]"
                 defaultValue={editRoleIds}
-                selectableRoleIds={isRoot ? undefined : parentReadRoleIds}
+                offeredRoleIds={isRoot ? undefined : parentReadRoleIds}
               />
             )}
 
@@ -386,11 +389,12 @@ export const WikiPagePermissionsProvider = ({
               Zusätzliche Manager dieser Seite und ihrer Unterseiten:
             </p>
 
-            <WikiRoleSelector
+            <RolePicker
+              mode={ItemPickerMode.Multiple}
               className="mt-2"
-              inputName="adminRole[]"
+              name="adminRole[]"
               defaultValue={adminRoleIds}
-              selectableRoleIds={isRoot ? undefined : parentReadRoleIds}
+              offeredRoleIds={isRoot ? undefined : parentReadRoleIds}
             />
 
             {hasDescendants && (

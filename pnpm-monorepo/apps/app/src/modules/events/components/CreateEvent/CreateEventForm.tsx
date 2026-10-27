@@ -8,11 +8,12 @@ import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import { Select } from "@/modules/common/components/form/Select";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
+import { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
 import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { createEvent } from "@/modules/events/actions/createEvent";
 import { EventDescriptionField } from "@/modules/events/components/EventDescriptionField";
 import { EventDescriptionHint } from "@/modules/events/components/EventDescriptionHint";
-import { WikiRoleSelector } from "@/modules/wiki/components/WikiRoleSelector";
+import { RolePicker } from "@/modules/roles/components/RolePicker/RolePicker";
 import { api } from "@/trpc/react";
 import {
   EventVisibility,
@@ -346,9 +347,10 @@ const VisibilityFields = ({
       />
 
       {visibility === EventVisibility.RESTRICTED && (
-        <WikiRoleSelector
-          inputName="visibilityRole[]"
-          defaultValue={[...defaultRoleIds]}
+        <RolePicker
+          mode={ItemPickerMode.Multiple}
+          name="visibilityRole[]"
+          defaultValue={defaultRoleIds}
           className="mt-2"
         />
       )}

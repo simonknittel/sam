@@ -1,13 +1,23 @@
 import Button from "@/modules/common/components/Button";
-import { type Role } from "@sam-monorepo/database/client";
+import { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
+import type {
+  RolePickerExtraEntry,
+  RolePickerRole,
+} from "@/modules/roles/components/RolePicker/RolePanel";
+import { RolePicker } from "@/modules/roles/components/RolePicker/RolePicker";
 import clsx from "clsx";
 import { useState } from "react";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import { usePermissionsContext } from "../../PermissionsContext";
 
+/** The rule target `*` stands for all roles */
+const ALL_ROLES_ENTRIES: readonly RolePickerExtraEntry[] = [
+  { id: "*", name: "Alle" },
+];
+
 interface Props {
   readonly className?: string;
-  readonly roles: readonly Pick<Role, "id" | "name">[];
+  readonly roles: readonly RolePickerRole[];
 }
 
 export const RoleSection = ({ className, roles }: Props) => {
@@ -62,9 +72,11 @@ export const RoleSection = ({ className, roles }: Props) => {
 
 type RuleProps = Readonly<{
   ruleString: string;
-  roles: readonly Pick<Role, "id" | "name">[];
+  roles: readonly RolePickerRole[];
   handleDelete: () => void;
 }>;
+
+const ignoreChange = () => undefined;
 
 const Rule = ({ ruleString, roles, handleDelete }: RuleProps) => {
   const [resource, _operation = "", ...attributeStrings] =
@@ -89,23 +101,30 @@ const Rule = ({ ruleString, roles, handleDelete }: RuleProps) => {
     <div className="mt-2 grid grid-cols-3 gap-2">
       {operation && <input type="hidden" name={inputName} />}
 
-      <select
-        defaultValue={roleId}
-        required
-        className="h-11 rounded-secondary bg-neutral-900 px-4"
-        onChange={(event) => setRoleId(event.target.value)}
-      >
-        <option disabled hidden value=""></option>
-        <option value="*">Alle</option>
+      <div className="relative">
+        <RolePicker
+          mode={ItemPickerMode.Single}
+          required
+          roles={roles}
+          extraEntries={ALL_ROLES_ENTRIES}
+          value={roleId || null}
+          onChange={(nextRoleId) => setRoleId(nextRoleId ?? "")}
+        />
 
-        {roles
-          .toSorted((a, b) => a.name.localeCompare(b.name))
-          .map((role) => (
-            <option key={role.id} value={role.id}>
-              {role.name}
-            </option>
-          ))}
-      </select>
+        {/*
+          The picker has no constraint of the browser. This field, which has
+          no name and thus is not submitted, stops the submit of the form
+          while the rule has no role: a rule without a role is not valid.
+        */}
+        <input
+          required
+          tabIndex={-1}
+          aria-hidden
+          value={roleId}
+          onChange={ignoreChange}
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-px opacity-0"
+        />
+      </div>
 
       <select
         required

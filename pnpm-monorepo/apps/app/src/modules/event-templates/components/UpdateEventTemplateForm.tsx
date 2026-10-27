@@ -6,11 +6,12 @@ import { Button2 } from "@/modules/common/components/Button2";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
+import { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
 import { EventTemplateDescriptionHint } from "@/modules/event-templates/components/EventTemplateDescriptionHint";
 import { DiscordPublishTargetFields } from "@/modules/events/components/DiscordPublishTargetFields";
 import { EventCoverImageField } from "@/modules/events/components/EventCoverImageField";
 import { EventDescriptionField } from "@/modules/events/components/EventDescriptionField";
-import { WikiRoleSelector } from "@/modules/wiki/components/WikiRoleSelector";
+import { RolePicker } from "@/modules/roles/components/RolePicker/RolePicker";
 import {
   EventVisibility,
   type EventDiscordPublishTarget,
@@ -113,9 +114,10 @@ export const UpdateEventTemplateForm = ({
       />
 
       {visibility === EventVisibility.RESTRICTED && (
-        <WikiRoleSelector
-          inputName="visibilityRole[]"
-          defaultValue={[...template.visibilityRoleIds]}
+        <RolePicker
+          mode={ItemPickerMode.Multiple}
+          name="visibilityRole[]"
+          defaultValue={template.visibilityRoleIds}
           className="mt-2"
         />
       )}

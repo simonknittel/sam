@@ -3,15 +3,15 @@
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import TabPanel from "@/modules/common/components/tabs/TabPanel";
 import { Tooltip } from "@/modules/common/components/Tooltip";
-import { type Role } from "@sam-monorepo/database/browser";
 import { getPermissionDescription } from "@sam-monorepo/domain";
 import { FaInfoCircle } from "react-icons/fa";
 import { usePermissionsContext } from "../PermissionsContext";
+import type { RolePickerRole } from "../RolePicker/RolePanel";
 import { RoleSection } from "./components/RoleSection";
 import { SpynetSection } from "./components/SpynetSection";
 
 interface Props {
-  readonly roles: readonly Pick<Role, "id" | "name">[];
+  readonly roles: readonly RolePickerRole[];
 }
 
 const OtherTab = ({ roles }: Readonly<Props>) => {

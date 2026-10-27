@@ -5,7 +5,7 @@ import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import Tab from "@/modules/common/components/tabs/Tab";
 import TabList from "@/modules/common/components/tabs/TabList";
 import { TabsProvider } from "@/modules/common/components/tabs/TabsContext";
-import type { ManagedRole, RoleBadge } from "@sam-monorepo/application";
+import type { ManagedRole } from "@sam-monorepo/application";
 import {
   type ClassificationLevel,
   type NoteType,
@@ -22,6 +22,7 @@ import { IoDocuments } from "react-icons/io5";
 import { MdTaskAlt, MdWorkspaces } from "react-icons/md";
 import { RiSpyFill } from "react-icons/ri";
 import { updateRolePermissions } from "../actions/updateRolePermissions";
+import type { RolePickerRole } from "./RolePicker/RolePanel";
 import { CitizenTab } from "./tabs/CitizenTab";
 import { DocumentsTab } from "./tabs/DocumentsTab";
 import EventsTab from "./tabs/EventsTab";
@@ -38,7 +39,7 @@ interface Props {
   readonly role: Pick<ManagedRole, "id">;
   readonly noteTypes: NoteType[];
   readonly classificationLevels: ClassificationLevel[];
-  readonly allRoles: readonly Pick<RoleBadge, "id" | "name">[];
+  readonly allRoles: readonly RolePickerRole[];
 }
 
 export const Permissions = ({

@@ -14,6 +14,7 @@ import {
   createEvent,
   createEventTemplate,
   createRole,
+  createRoleTag,
   EventTemplateAccessType,
   futureEvent,
   ONE_DAY_MS,
@@ -26,6 +27,9 @@ import {
   modal,
   NOT_FOUND_TEXT,
   pickFromSearch,
+  pickRoles,
+  pickRoleTag,
+  rolePickerChips,
   SAVED_TEXT,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
@@ -431,8 +435,61 @@ test("`event;manage` manages a foreign personal template", async ({
 
   await page.goto(`/app/events/templates/${template.id}/sharing`);
   await expect(
-    page.getByRole("button", { name: "Rolle hinzufügen" }),
+    page.getByRole("button", { name: "Rolle auswählen" }),
   ).toBeVisible();
+});
+
+test("a tag in the sharing picker adds a share for each of its roles with the lowest tier", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const owner = await createOwner(prisma);
+  const firstRole = await createRole(prisma, { name: "Staffel-A" });
+  const secondRole = await createRole(prisma, { name: "Staffel-B" });
+  await createRole(prisma, { name: "Staffel-C" });
+  await createRoleTag(prisma, {
+    name: "Staffeln",
+    roles: [firstRole, secondRole],
+  });
+  const { template } = await createEventTemplate(prisma, {
+    name: "Geteilt per Tag",
+    ownedById: owner.entity.id,
+  });
+
+  await signIn(owner.user);
+  await page.goto(`/app/events/templates/${template.id}/sharing`);
+  await waitForAppShellHydration(page);
+
+  await pickRoleTag(
+    page.getByRole("button", { name: "Rolle auswählen" }),
+    "Staffeln",
+  );
+
+  const tiers = page.getByRole("combobox", { name: "Zugriff" });
+  await expect(tiers).toHaveCount(2);
+  await expect(tiers.first()).toHaveValue("read");
+  await expect(tiers.last()).toHaveValue("read");
+
+  await page.getByRole("button", { name: "Speichern" }).click();
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+
+  await expect
+    .poll(async () => {
+      const { roleAccess } = await prisma.eventTemplate.findUniqueOrThrow({
+        where: { id: template.id },
+        include: { roleAccess: true },
+      });
+      return roleAccess
+        .map(({ roleId, type }) => ({ roleId, type }))
+        .toSorted((first, second) => first.roleId.localeCompare(second.roleId));
+    })
+    .toEqual(
+      [
+        { roleId: firstRole.id, type: EventTemplateAccessType.READ },
+        { roleId: secondRole.id, type: EventTemplateAccessType.READ },
+      ].toSorted((first, second) => first.roleId.localeCompare(second.roleId)),
+    );
 });
 
 test("an event created from a template gets its lineup, briefing and prefill", async ({
@@ -899,4 +956,112 @@ test("saving an event as a template follows the settings gate", async ({
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
 
   expect(await prisma.eventTemplate.count()).toBe(0);
+});
+
+test("a tag in the visibility picker of a template adds its roles to the saved ones", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const owner = await createOwner(prisma);
+  const savedRole = await createRole(prisma, { name: "Einzelrolle" });
+  const firstRole = await createRole(prisma, { name: "Pilotenrolle" });
+  const secondRole = await createRole(prisma, { name: "Schützenrolle" });
+  await createRoleTag(prisma, {
+    name: "Besatzung",
+    roles: [firstRole, secondRole],
+  });
+  const { template } = await createEventTemplate(prisma, {
+    name: "Besatzungsvorlage",
+    ownedById: owner.entity.id,
+    visibility: EventVisibility.RESTRICTED,
+    visibilityRoleIds: [savedRole.id],
+  });
+
+  await signIn(owner.user);
+  await page.goto(`/app/events/templates/${template.id}`);
+  await waitForAppShellHydration(page);
+
+  await expect(rolePickerChips(page)).toHaveText([savedRole.name]);
+  await pickRoleTag(
+    page.getByRole("button", { name: "Rolle auswählen" }),
+    "Besatzung",
+  );
+  await expect(rolePickerChips(page)).toHaveText([
+    savedRole.name,
+    firstRole.name,
+    secondRole.name,
+  ]);
+
+  await page.getByRole("button", { name: "Speichern" }).click();
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+
+  await expect
+    .poll(async () => {
+      const { visibilityRoles } = await prisma.eventTemplate.findUniqueOrThrow({
+        where: { id: template.id },
+        include: { visibilityRoles: true },
+      });
+      return visibilityRoles.map(({ roleId }) => roleId).toSorted();
+    })
+    .toEqual([savedRole.id, firstRole.id, secondRole.id].toSorted());
+});
+
+test("the role picker of the new event follows the template that the picker of templates selects", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const owner = await createOwner(prisma);
+  const templateRole = await createRole(prisma, { name: "Vorlagenrolle" });
+  const addedRole = await createRole(prisma, { name: "Zusatzrolle" });
+  await createEventTemplate(prisma, {
+    name: "Eingeschränkte Vorlage",
+    ownedById: owner.entity.id,
+    visibility: EventVisibility.RESTRICTED,
+    visibilityRoleIds: [templateRole.id],
+  });
+
+  await signIn(owner.user);
+  await page.goto("/app/events");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Event erstellen" }),
+    modal(page, "Neues Event"),
+  );
+
+  const createDialog = modal(page, "Neues Event");
+  const templatePicker = createDialog.getByLabel("Vorlage (optional)");
+  await expect(templatePicker).toBeVisible();
+  const chips = rolePickerChips(createDialog);
+  await expect(chips).toHaveCount(0);
+
+  /** The template prefills the roles, and a different choice removes them */
+  await templatePicker.selectOption({ label: "Eingeschränkte Vorlage" });
+  await expect(chips).toHaveText([templateRole.name]);
+  await templatePicker.selectOption({ label: "Ohne Vorlage" });
+  await expect(chips).toHaveCount(0);
+  await templatePicker.selectOption({ label: "Eingeschränkte Vorlage" });
+  await expect(chips).toHaveText([templateRole.name]);
+
+  await pickRoles(
+    createDialog.getByRole("button", { name: "Rolle auswählen" }),
+    [addedRole.name],
+  );
+  await expect(chips).toHaveText(
+    [addedRole.name, templateRole.name].toSorted(),
+  );
+
+  await fillUntilValue(createDialog.getByLabel("Start"), "2999-01-01T18:00");
+  await fillUntilValue(createDialog.getByLabel("Ende"), "2999-01-01T20:00");
+  await createDialog.getByRole("button", { name: "Speichern" }).click();
+  await expect(page).toHaveURL(/\/app\/events\/[^/]+$/);
+
+  const event = await prisma.event.findFirstOrThrow({
+    where: { name: "Eingeschränkte Vorlage" },
+    include: { visibilityRoles: true },
+  });
+  expect(event.visibility).toBe(EventVisibility.RESTRICTED);
+  expect(event.visibilityRoles.map(({ roleId }) => roleId).toSorted()).toEqual(
+    [templateRole.id, addedRole.id].toSorted(),
+  );
 });
