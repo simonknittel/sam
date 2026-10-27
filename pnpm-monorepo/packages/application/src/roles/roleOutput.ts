@@ -1,6 +1,11 @@
 import type { Prisma } from "@sam-monorepo/database/client";
 import type { Actor } from "../actor.js";
 import { getPublicUploadUrl, type ApplicationContext } from "../context.js";
+import {
+  ROLE_TAG_REFERENCES_SELECT,
+  toRoleTagReferences,
+  type RoleTagReference,
+} from "./roleTagOutput.js";
 import { isRoleVisible } from "./roleVisibility.js";
 
 /** The fields of a role in the role list */
@@ -11,6 +16,7 @@ export const ROLE_OUTPUT_SELECT = {
   iconId: true,
   maxLevel: true,
   inherits: { select: { id: true }, orderBy: { name: "asc" } },
+  tags: ROLE_TAG_REFERENCES_SELECT,
 } as const satisfies Prisma.RoleSelect;
 
 type RoleOutputRow = Prisma.RoleGetPayload<{
@@ -30,6 +36,8 @@ export interface RoleOutput {
    * the roles that the actor can see.
    */
   readonly inherited_role_ids: string[];
+  /** Sorted by name */
+  readonly tags: RoleTagReference[];
 }
 
 export const toRoleOutput = (
@@ -45,4 +53,5 @@ export const toRoleOutput = (
   inherited_role_ids: role.inherits
     .map((inheritedRole) => inheritedRole.id)
     .filter((inheritedRoleId) => isRoleVisible(actor, inheritedRoleId)),
+  tags: toRoleTagReferences(role.tags),
 });

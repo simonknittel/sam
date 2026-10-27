@@ -20,6 +20,16 @@ export enum RoleErrorMessage {
   UnknownPermissionString = "A permission string of add is not in the permission catalog and is not a rule",
 }
 
+/** The messages of the errors that the role tag use cases throw */
+export enum RoleTagErrorMessage {
+  /** A `NotFoundError` */
+  NotFound = "The role tag does not exist",
+  /** A `ValidationError`: the names are unique without regard to the case */
+  NameTaken = "A role tag with this name exists already",
+  /** A `ValidationError` */
+  AddedAndRemoved = "An id cannot be in add and in remove",
+}
+
 /**
  * The messages of the errors that the role-assignment use cases throw for a
  * rule of the role assignments

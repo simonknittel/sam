@@ -17,6 +17,12 @@ export {
   type ChangeRolePermissionsOutput,
 } from "./changeRolePermissions.js";
 export {
+  changeRoleTags,
+  changeRoleTagsInputSchema,
+  type ChangeRoleTagsInput,
+  type ChangeRoleTagsOutput,
+} from "./changeRoleTags.js";
+export {
   countCitizensPerRole,
   type CountCitizensPerRoleOutput,
 } from "./countCitizensPerRole.js";
@@ -26,6 +32,12 @@ export {
   type CreateRoleInput,
   type CreateRoleOutput,
 } from "./createRole.js";
+export {
+  createRoleTag,
+  createRoleTagInputSchema,
+  type CreateRoleTagInput,
+  type CreateRoleTagOutput,
+} from "./createRoleTag.js";
 export {
   deleteRole,
   deleteRoleInputSchema,
@@ -38,6 +50,12 @@ export {
   type DeleteRoleAssignmentInput,
   type DeleteRoleAssignmentOutput,
 } from "./deleteRoleAssignment.js";
+export {
+  deleteRoleTag,
+  deleteRoleTagInputSchema,
+  type DeleteRoleTagInput,
+  type DeleteRoleTagOutput,
+} from "./deleteRoleTag.js";
 export { findManagedRole, type ManagedRole } from "./findManagedRole.js";
 export {
   getPermissionCatalog,
@@ -57,6 +75,12 @@ export {
   type ListRolesInput,
   type ListRolesOutput,
 } from "./listRoles.js";
+export {
+  listRoleTags,
+  listRoleTagsInputSchema,
+  type ListRoleTagsInput,
+  type ListRoleTagsOutput,
+} from "./listRoleTags.js";
 export {
   removeExpiredRoleAssignments,
   type RemoveExpiredRoleAssignmentsOutput,
@@ -85,8 +109,17 @@ export {
   type OwnAssignedRoleBadge,
   type RoleBadge,
 } from "./roleBadges.js";
-export { RoleAssignmentErrorMessage, RoleErrorMessage } from "./roleErrors.js";
+export {
+  RoleAssignmentErrorMessage,
+  RoleErrorMessage,
+  RoleTagErrorMessage,
+} from "./roleErrors.js";
 export type { RoleOutput } from "./roleOutput.js";
+export {
+  findVisibleRoleTagBadges,
+  type RoleTagBadge,
+} from "./roleTagBadges.js";
+export type { RoleTagOutput, RoleTagReference } from "./roleTagOutput.js";
 export { canSeeAnyRole } from "./roleVisibility.js";
 export {
   setRoleInheritance,
@@ -125,3 +158,9 @@ export {
   type UpdateRolePermissionsInput,
   type UpdateRolePermissionsOutput,
 } from "./updateRolePermissions.js";
+export {
+  updateRoleTag,
+  updateRoleTagInputSchema,
+  type UpdateRoleTagInput,
+  type UpdateRoleTagOutput,
+} from "./updateRoleTag.js";

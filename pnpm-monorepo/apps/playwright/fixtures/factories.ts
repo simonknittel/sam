@@ -217,6 +217,26 @@ export const createRole = async (
     },
   });
 
+interface CreateRoleTagOptions {
+  readonly name?: string;
+  readonly description?: string;
+  /** The roles that get the tag */
+  readonly roles?: readonly Pick<Role, "id">[];
+}
+
+/** A tag without an icon */
+export const createRoleTag = async (
+  prisma: PrismaClient,
+  { name, description, roles = [] }: CreateRoleTagOptions = {},
+) =>
+  prisma.roleTag.create({
+    data: {
+      name: name ?? `tag-${randomUUID().slice(0, 8)}`,
+      description,
+      roles: { create: roles.map((role) => ({ roleId: role.id })) },
+    },
+  });
+
 interface AssignRoleOptions {
   readonly currentLevel?: number;
 }

@@ -2752,6 +2752,54 @@ export const AuditEventDefinitions: {
       `Marked ${data.markers.length} item(s) as read: ${data.markers.map((marker) => `${marker.subject} ${marker.subjectId}`).join(", ")}`,
   },
 
+  [AuditEventType.ROLE_TAG_CREATED]: {
+    type: AuditEventType.ROLE_TAG_CREATED,
+    app: SystemLogApp.Iam,
+    data: {
+      tagId: "string",
+      name: "string",
+      description: null,
+    },
+    message: (data) => `Role tag created: "${data.name}" (${data.tagId})`,
+  },
+
+  [AuditEventType.ROLE_TAG_UPDATED]: {
+    type: AuditEventType.ROLE_TAG_UPDATED,
+    app: SystemLogApp.Iam,
+    data: {
+      tagId: "string",
+      previousName: "string",
+      newName: "string",
+      previousDescription: null,
+      newDescription: null,
+    },
+    message: (data) =>
+      `Role tag updated: "${data.previousName}" → "${data.newName}" (${data.tagId})`,
+  },
+
+  [AuditEventType.ROLE_TAG_DELETED]: {
+    type: AuditEventType.ROLE_TAG_DELETED,
+    app: SystemLogApp.Iam,
+    data: {
+      tagId: "string",
+      name: "string",
+      roleIds: ["string"],
+    },
+    message: (data) =>
+      `Role tag deleted: "${data.name}" (${data.tagId}), removed from ${data.roleIds.length} role(s)`,
+  },
+
+  [AuditEventType.ROLE_TAG_ASSIGNMENTS_UPDATED]: {
+    type: AuditEventType.ROLE_TAG_ASSIGNMENTS_UPDATED,
+    app: SystemLogApp.Iam,
+    data: {
+      added: [{ roleId: "string", tagId: "string" }],
+      removed: [{ roleId: "string", tagId: "string" }],
+    },
+    message: (data) =>
+      `Role tags updated: ${data.added.length} link(s) added, ${data.removed.length} link(s) removed`,
+  },
+
   [AuditEventType.CURRENT_USER_READ]: {
     type: AuditEventType.CURRENT_USER_READ,
     app: SystemLogApp.Account,
@@ -2821,6 +2869,13 @@ export const AuditEventDefinitions: {
     app: SystemLogApp.Iam,
     data: { arguments: {} },
     message: (data) => toReadMessage("Roles listed", data),
+  },
+
+  [AuditEventType.ROLE_TAGS_LISTED]: {
+    type: AuditEventType.ROLE_TAGS_LISTED,
+    app: SystemLogApp.Iam,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Role tags listed", data),
   },
 
   [AuditEventType.PERMISSION_CATALOG_READ]: {

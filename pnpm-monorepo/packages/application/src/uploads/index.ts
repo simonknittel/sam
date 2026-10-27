@@ -11,9 +11,12 @@ export {
   assignManufacturerImageInputSchema,
   assignRoleImage,
   assignRoleImageInputSchema,
+  assignRoleTagImage,
+  assignRoleTagImageInputSchema,
   type AssignManufacturerImageInput,
   type AssignResourceImageOutput,
   type AssignRoleImageInput,
+  type AssignRoleTagImageInput,
 } from "./assignResourceImage.js";
 export {
   assignWikiPageIcon,

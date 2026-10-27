@@ -3,6 +3,7 @@ import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import {
   cursorSchema,
+  idSchema,
   pageLimitSchema,
   paginateByCursor,
 } from "../pagination.js";
@@ -24,6 +25,11 @@ export const listRolesInputSchema = z.object({
     .max(MAXIMUM_QUERY_LENGTH)
     .optional()
     .describe("A part of the role name, without regard to the case."),
+  tag_id: idSchema
+    .optional()
+    .describe(
+      "Gives only the roles with this tag (the id of a tag of a role).",
+    ),
   limit: pageLimitSchema,
   cursor: cursorSchema.optional(),
 });
@@ -37,7 +43,8 @@ export interface ListRolesOutput {
 
 /**
  * The roles that the actor can see (see `isRoleVisible()`), sorted by name,
- * one page. The cursor is the id of a role.
+ * one page. The cursor is the id of a role. A tag that does not exist gives
+ * an empty list.
  *
  * @throws ValidationError when no role of the list has the cursor
  */
@@ -47,9 +54,12 @@ export const listRoles = async (
   input: ListRolesInput,
 ): Promise<ListRolesOutput> => {
   const roles = await context.prisma.role.findMany({
-    where: input.query
-      ? { name: { contains: input.query, mode: "insensitive" } }
-      : {},
+    where: {
+      name: input.query
+        ? { contains: input.query, mode: "insensitive" }
+        : undefined,
+      tags: input.tag_id ? { some: { tagId: input.tag_id } } : undefined,
+    },
     select: ROLE_OUTPUT_SELECT,
   });
 

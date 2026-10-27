@@ -3,8 +3,12 @@ import { AuditEventType } from "@sam-monorepo/domain";
 import * as z from "zod";
 import { requireCitizen, requirePermission, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
-import { rethrowRecordNotFound } from "../errors.js";
+import { NotFoundError, rethrowRecordNotFound } from "../errors.js";
 import { idSchema } from "../pagination.js";
+import {
+  findAssignableUpload,
+  requireOwnImageUpload,
+} from "./assignableUpload.js";
 import { UploadErrorMessage } from "./uploadErrors.js";
 
 /**
@@ -32,6 +36,15 @@ export const assignRoleImageInputSchema = z.object({
 });
 
 export type AssignRoleImageInput = z.infer<typeof assignRoleImageInputSchema>;
+
+export const assignRoleTagImageInputSchema = z.object({
+  tag_id: idSchema,
+  upload_id: idSchema,
+});
+
+export type AssignRoleTagImageInput = z.infer<
+  typeof assignRoleTagImageInputSchema
+>;
 
 export interface AssignResourceImageOutput {
   /** The image whose dimensions the host probes after the response */
@@ -138,4 +151,52 @@ export const assignRoleImage = async (
   ]);
 
   return { probe_upload_id: input.upload_id };
+};
+
+/**
+ * Sets the icon of a role tag. The icon must be an image of the citizen of
+ * the actor. The nightly cleanup deletes the upload of a replaced icon.
+ *
+ * @throws ForbiddenError when the user has no citizen, when the actor does
+ * not have `role;manage`, or when the upload belongs to a different citizen
+ * @throws NotFoundError `UploadErrorMessage.TargetNotFound` or
+ * `UploadErrorMessage.UploadNotFound`
+ * @throws ValidationError when the upload is not an image
+ */
+export const assignRoleTagImage = async (
+  context: ApplicationContext,
+  actor: Actor,
+  input: AssignRoleTagImageInput,
+): Promise<AssignResourceImageOutput> => {
+  const citizen = requireCitizen(actor);
+  requirePermission(actor, "role", "manage");
+
+  const upload = await findAssignableUpload(context, input.upload_id);
+  if (!upload) throw new NotFoundError(UploadErrorMessage.UploadNotFound);
+  requireOwnImageUpload(upload, citizen);
+
+  await rethrowRecordNotFound(
+    () =>
+      context.prisma.roleTag.update({
+        where: { id: input.tag_id },
+        data: { iconId: upload.id, updatedById: citizen.id },
+        select: { id: true },
+      }),
+    UploadErrorMessage.TargetNotFound,
+  );
+
+  await context.audit.create([
+    {
+      type: AuditEventType.RESOURCE_IMAGE_ASSIGNED,
+      data: {
+        resourceType: "roleTag",
+        resourceId: input.tag_id,
+        resourceAttribute: "iconId",
+        imageId: upload.id,
+      },
+      createdById: actor.userId,
+    },
+  ]);
+
+  return { probe_upload_id: upload.id };
 };

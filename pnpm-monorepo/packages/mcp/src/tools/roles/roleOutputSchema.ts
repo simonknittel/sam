@@ -17,4 +17,9 @@ export const roleOutputShape = {
     .describe(
       "The roles whose permissions this role also gives. Only the roles that the user can see.",
     ),
+  tags: z
+    .array(z.strictObject({ id: z.string(), name: z.string() }))
+    .describe(
+      "The tags of the role, sorted by name. A tag groups roles. Use a tag id as the tag_id filter of list_roles.",
+    ),
 };

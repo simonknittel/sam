@@ -250,6 +250,11 @@ export {
   ROLE_LEVEL_MINIMUM,
   ROLE_NAME_MAXIMUM_LENGTH,
 } from "./roles/roleLimits.js";
+export {
+  ROLE_TAG_ASSIGNMENT_CHANGES_MAXIMUM,
+  ROLE_TAG_DESCRIPTION_MAXIMUM_LENGTH,
+  ROLE_TAG_NAME_MAXIMUM_LENGTH,
+} from "./roles/roleTagLimits.js";
 export { getInGameYear } from "./seasonal/inGameYear.js";
 export {
   SEASONAL_EVENT_DEFINITIONS,

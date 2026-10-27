@@ -121,12 +121,51 @@ model Role {
   wikiPageAccess            WikiPageRoleAccess[]
   flowAccess                FlowRoleAccess[]
   manualNotifications       ManualNotificationRole[]
+  tags                      RoleTagAssignment[]
 
   /// Human-readable description of the role (markdown).
   description            String?
   /// Number of levels this role has. NULL if the role does not have levels.
   maxLevel               Int?
   assignmentLevelChanges RoleAssignmentLevelChange[] @relation("role")
+}
+
+/// A label for roles. A tag selects all of its roles in the role picker. A
+/// user sees a tag only if the user sees at least one of its roles, or with
+/// `role;manage`. A delete is permanent, like the delete of a role: the audit
+/// event keeps the name and the roles.
+model RoleTag {
+  id          String              @id @default(cuid(2))
+  /// The `citext` type makes the name unique without letter case
+  name        String              @unique @db.Citext
+  /// Plain text: the role picker shows it as a tooltip
+  description String?
+  iconId      String?
+  icon        Upload?             @relation(name: "roleTagIcon", fields: [iconId], references: [id], onDelete: SetNull)
+  roles       RoleTagAssignment[]
+
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  createdById String?
+  createdBy   Citizen? @relation("createdRoleTags", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+  updatedById String?
+  updatedBy   Citizen? @relation("updatedRoleTags", fields: [updatedById], references: [id], onDelete: SetNull)
+}
+
+/// The link between a role and a tag
+model RoleTagAssignment {
+  id     String  @id @default(cuid(2))
+  roleId String
+  role   Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  tagId  String
+  tag    RoleTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  createdById String?
+  createdBy   Citizen? @relation("createdRoleTagAssignments", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([roleId, tagId])
+  @@index([tagId])
 }
 
 model PermissionString {

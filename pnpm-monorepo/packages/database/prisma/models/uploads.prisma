@@ -15,6 +15,7 @@ model Upload {
   createdBy             Citizen?                 @relation(fields: [createdById], references: [id], onDelete: SetNull)
   roleIcons             Role[]                   @relation("icon")
   roleThumbnails        Role[]                   @relation("thumbnail")
+  roleTagIcons          RoleTag[]                @relation("roleTagIcon")
   manufacturers         Manufacturer[]
   eventCovers           Event[]                  @relation("eventCoverImage")
   eventTemplateCovers   EventTemplate[]          @relation("eventTemplateCoverImage")

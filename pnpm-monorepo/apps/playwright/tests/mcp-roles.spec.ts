@@ -1,4 +1,8 @@
-import { createMcpCitizen, createRole } from "../fixtures/factories";
+import {
+  createMcpCitizen,
+  createRole,
+  createRoleTag,
+} from "../fixtures/factories";
 import {
   callForContent,
   callForError,
@@ -8,7 +12,7 @@ import {
 import { expect, test } from "../fixtures/test";
 
 test.describe("the role tools of the MCP server", () => {
-  test("list_roles gives only the roles with otherRole;read for their id, and get_role does not find a hidden role", async ({
+  test("list_roles gives only the roles with otherRole;read for their id with their tags, and get_role does not find a hidden role", async ({
     prisma,
     authorizeMcpClient,
     connectMcpClient,
@@ -22,6 +26,10 @@ test.describe("the role tools of the MCP server", () => {
         name: "Kommando",
         inherits: { connect: [{ id: scout.id }, { id: salvage.id }] },
       },
+    });
+    const leadership = await createRoleTag(prisma, {
+      name: "Führung",
+      roles: [command, salvage],
     });
     const viewer = await createMcpCitizen(prisma, {
       handle: "mcp-rollen-betrachter",
@@ -56,6 +64,7 @@ test.describe("the role tools of the MCP server", () => {
           icon_url: null,
           max_level: 3,
           inherited_role_ids: [],
+          tags: [],
         },
         {
           id: command.id,
@@ -64,6 +73,7 @@ test.describe("the role tools of the MCP server", () => {
           icon_url: null,
           max_level: null,
           inherited_role_ids: [scout.id],
+          tags: [{ id: leadership.id, name: "Führung" }],
         },
       ],
       next_cursor: null,
@@ -84,6 +94,10 @@ test.describe("the role tools of the MCP server", () => {
     expect(
       await callForContent(client, "list_roles", { query: "KOMM" }),
     ).toMatchObject({ roles: [{ id: command.id }] });
+    // The tag filter also leaves out the hidden role "Bergung"
+    expect(
+      await callForContent(client, "list_roles", { tag_id: leadership.id }),
+    ).toMatchObject({ roles: [{ id: command.id }], next_cursor: null });
 
     expect(
       await callForError(client, "get_role", { role_id: salvage.id }),
@@ -121,6 +135,7 @@ test.describe("the role tools of the MCP server", () => {
       icon_url: null,
       max_level: null,
       inherited_role_ids: [],
+      tags: [],
     };
 
     const readerClient = await connectMcpClient(

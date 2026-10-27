@@ -258,6 +258,10 @@ export enum AuditEventType {
   OAUTH_GRANT_RENAMED = "OAUTH_GRANT_RENAMED",
   MCP_TOOL_SETTING_UPDATED_V2 = "MCP_TOOL_SETTING_UPDATED_V2",
   READ_MARKERS_CREATED = "READ_MARKERS_CREATED",
+  ROLE_TAG_CREATED = "ROLE_TAG_CREATED",
+  ROLE_TAG_UPDATED = "ROLE_TAG_UPDATED",
+  ROLE_TAG_DELETED = "ROLE_TAG_DELETED",
+  ROLE_TAG_ASSIGNMENTS_UPDATED = "ROLE_TAG_ASSIGNMENTS_UPDATED",
   // The read accesses, see `READ_AUDIT_EVENT_TYPES`
   /** @deprecated Superseded by USER_READ (the tool get_user replaced get_current_user) */
   CURRENT_USER_READ = "CURRENT_USER_READ",
@@ -270,6 +274,7 @@ export enum AuditEventType {
   CITIZENS_AND_ORGANIZATIONS_SEARCHED = "CITIZENS_AND_ORGANIZATIONS_SEARCHED",
   ROLE_READ = "ROLE_READ",
   ROLES_LISTED = "ROLES_LISTED",
+  ROLE_TAGS_LISTED = "ROLE_TAGS_LISTED",
   PERMISSION_CATALOG_READ = "PERMISSION_CATALOG_READ",
   PENALTY_ENTRIES_LISTED = "PENALTY_ENTRIES_LISTED",
   OWN_SHIPS_LISTED = "OWN_SHIPS_LISTED",
@@ -1808,6 +1813,44 @@ export interface AuditEventDataByType {
     }[];
   };
 
+  [AuditEventType.ROLE_TAG_CREATED]: {
+    tagId: string;
+    name: string;
+    description: string | null;
+  };
+
+  /** Only a change of the name or of the description writes the event */
+  [AuditEventType.ROLE_TAG_UPDATED]: {
+    tagId: string;
+    previousName: string;
+    newName: string;
+    previousDescription: string | null;
+    newDescription: string | null;
+  };
+
+  /** `roleIds`: all roles that had the tag before the delete */
+  [AuditEventType.ROLE_TAG_DELETED]: {
+    tagId: string;
+    name: string;
+    roleIds: string[];
+  };
+
+  /**
+   * The links between roles and tags that one write added or removed: on the
+   * page of a tag, on the page of a role or through the MCP server. Only the
+   * links that really changed are in the lists.
+   */
+  [AuditEventType.ROLE_TAG_ASSIGNMENTS_UPDATED]: {
+    added: {
+      roleId: string;
+      tagId: string;
+    }[];
+    removed: {
+      roleId: string;
+      tagId: string;
+    }[];
+  };
+
   [AuditEventType.CURRENT_USER_READ]: ReadAuditEventData;
   [AuditEventType.USER_READ]: ReadAuditEventData;
   [AuditEventType.USERS_LISTED]: ReadAuditEventData;
@@ -1818,6 +1861,7 @@ export interface AuditEventDataByType {
   [AuditEventType.CITIZENS_AND_ORGANIZATIONS_SEARCHED]: ReadAuditEventData;
   [AuditEventType.ROLE_READ]: ReadAuditEventData;
   [AuditEventType.ROLES_LISTED]: ReadAuditEventData;
+  [AuditEventType.ROLE_TAGS_LISTED]: ReadAuditEventData;
   [AuditEventType.PERMISSION_CATALOG_READ]: ReadAuditEventData;
   [AuditEventType.PENALTY_ENTRIES_LISTED]: ReadAuditEventData;
   [AuditEventType.OWN_SHIPS_LISTED]: ReadAuditEventData;
@@ -1840,6 +1884,11 @@ export interface AuditEventDataByType {
 /**
  * One creatable audit event: the payload type is tied to the event type so
  * writers can't emit a payload the system log doesn't know how to render.
+ *
+ * The second member accepts the same read events. It lets a writer give any
+ * read type in one value (the MCP server writes the type of its tool):
+ * TypeScript matches such a value against the members of the first union
+ * only for at most 25 types.
  */
 export type AuditEventInput =
   | {

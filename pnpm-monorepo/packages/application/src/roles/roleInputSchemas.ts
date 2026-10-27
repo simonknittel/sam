@@ -1,8 +1,12 @@
 import {
   PERMISSION_STRING_PATTERN,
   ROLE_NAME_MAXIMUM_LENGTH,
+  ROLE_TAG_ASSIGNMENT_CHANGES_MAXIMUM,
+  ROLE_TAG_DESCRIPTION_MAXIMUM_LENGTH,
+  ROLE_TAG_NAME_MAXIMUM_LENGTH,
 } from "@sam-monorepo/domain";
 import * as z from "zod";
+import { idSchema } from "../pagination.js";
 
 /**
  * A role has much fewer permission strings or inherited roles, and a citizen
@@ -24,3 +28,31 @@ export const permissionStringSchema = z
   .describe(
     "A permission string: `resource;operation`, followed by any number of `;key=value` attributes.",
   );
+
+export const roleTagNameSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(ROLE_TAG_NAME_MAXIMUM_LENGTH);
+
+/** The use cases store an empty description as null */
+export const roleTagDescriptionSchema = z
+  .string()
+  .trim()
+  .max(ROLE_TAG_DESCRIPTION_MAXIMUM_LENGTH);
+
+/** An add or remove list of the links between roles and tags */
+export const roleTagAssignmentIdsSchema = z
+  .array(idSchema)
+  .max(ROLE_TAG_ASSIGNMENT_CHANGES_MAXIMUM)
+  .default([]);
+
+/** The tag lists of `updateRole()` and `changeRoleTags()` */
+export const roleTagChangesInputShape = {
+  add_tag_ids: roleTagAssignmentIdsSchema.describe(
+    "The tags that the role gets. The other tags of the role stay.",
+  ),
+  remove_tag_ids: roleTagAssignmentIdsSchema.describe(
+    "The tags that the role loses.",
+  ),
+};

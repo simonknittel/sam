@@ -18,6 +18,8 @@ import {
   assignManufacturerImageInputSchema,
   assignRoleImage,
   assignRoleImageInputSchema,
+  assignRoleTagImage,
+  assignRoleTagImageInputSchema,
   assignWikiPageIcon,
   assignWikiPageIconInputSchema,
   idSchema,
@@ -35,6 +37,7 @@ enum UploadTargetType {
   Manufacturer = "manufacturer",
   Event = "event",
   Role = "role",
+  RoleTag = "roleTag",
   WikiPage = "wikiPage",
 }
 
@@ -64,6 +67,13 @@ const bodySchema = z.discriminatedUnion("resourceType", [
   z.object({
     resourceType: z.literal(UploadTargetType.Role),
     resourceAttribute: z.enum(RoleImageAttribute),
+    resourceId: idSchema,
+    imageId: idSchema,
+  }),
+  /** Sets the icon of a role tag. `resourceId` is the id of the tag. */
+  z.object({
+    resourceType: z.literal(UploadTargetType.RoleTag),
+    resourceAttribute: z.literal("iconId"),
     resourceId: idSchema,
     imageId: idSchema,
   }),
@@ -180,6 +190,18 @@ const assignUpload = async (
         assignRoleImageInputSchema.parse({
           role_id: body.resourceId,
           attribute: body.resourceAttribute,
+          upload_id: body.imageId,
+        }),
+      );
+      return { probeUploadId: result.probe_upload_id, warning: null };
+    }
+
+    case UploadTargetType.RoleTag: {
+      const result = await assignRoleTagImage(
+        context,
+        actor,
+        assignRoleTagImageInputSchema.parse({
+          tag_id: body.resourceId,
           upload_id: body.imageId,
         }),
       );
