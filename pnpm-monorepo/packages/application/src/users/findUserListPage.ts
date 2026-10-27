@@ -91,7 +91,9 @@ export interface UserListPage {
   readonly prevCursor: string | null;
 }
 
-const getOrderBy = (sort: UserSort): Prisma.UserOrderByWithRelationInput[] => {
+export const getUserListOrderBy = (
+  sort: UserSort,
+): Prisma.UserOrderByWithRelationInput[] => {
   switch (sort) {
     case UserSort.CreatedAtDescending:
       return [{ createdAt: { sort: "desc", nulls: "last" } }, { id: "desc" }];
@@ -165,19 +167,33 @@ const getHandleWhere = (handleQuery: string): Prisma.UserWhereInput => ({
   },
 });
 
+export const getUserListWhere = ({
+  banStatus,
+  twoFactorStatus,
+  handleQuery,
+}: Pick<
+  UserListInput,
+  "banStatus" | "twoFactorStatus" | "handleQuery"
+>): Prisma.UserWhereInput => ({
+  ...getBanStatusWhere(banStatus),
+  ...getTwoFactorStatusWhere(twoFactorStatus),
+  ...(handleQuery ? getHandleWhere(handleQuery) : {}),
+});
+
 /**
  * The cursor of the user list is the offset of the first row of the page.
  * Unlike a keyset cursor, an offset works with each sort order without
  * additional conditions for the null values of the nullable sort columns.
  * The list is small, thus the database skips the rows before the offset
- * quickly. Cursors come from the URL, thus a malformed one gives the first
- * page.
+ * quickly.
+ *
+ * @returns null for a malformed cursor
  */
-const parseOffset = (cursor: string | null) => {
+export const parseUserListOffset = (cursor: string) => {
   const offset = Number(cursor);
-  return Number.isSafeInteger(offset) && offset > 0 && offset <= MAXIMUM_OFFSET
+  return Number.isSafeInteger(offset) && offset >= 0 && offset <= MAXIMUM_OFFSET
     ? offset
-    : 0;
+    : null;
 };
 
 /**
@@ -192,15 +208,12 @@ export const findUserListPage = async (
 ): Promise<UserListPage> => {
   requirePermission(actor, "user", "read");
 
-  const offset = parseOffset(cursor);
+  // Cursors come from the URL, thus a malformed one gives the first page
+  const offset = (cursor === null ? null : parseUserListOffset(cursor)) ?? 0;
 
   const rows = await context.prisma.user.findMany({
-    where: {
-      ...getBanStatusWhere(banStatus),
-      ...getTwoFactorStatusWhere(twoFactorStatus),
-      ...(handleQuery ? getHandleWhere(handleQuery) : {}),
-    },
-    orderBy: getOrderBy(sort),
+    where: getUserListWhere({ banStatus, twoFactorStatus, handleQuery }),
+    orderBy: getUserListOrderBy(sort),
     skip: offset,
     take: pageSize + 1,
     select: USER_LIST_SELECT,

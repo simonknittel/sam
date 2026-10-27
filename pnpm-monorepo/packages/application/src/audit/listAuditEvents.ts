@@ -49,7 +49,7 @@ export const listAuditEventsInputSchema = z.object({
     .max(MAXIMUM_FILTER_VALUES)
     .optional()
     .describe(
-      "Only the events of these users: created_by.user_id of earlier results, or user_id of get_current_user.",
+      "Only the events of these users: created_by.user_id of earlier results, or the id of get_user.",
     ),
   created_by_citizen_ids: z
     .array(idSchema)

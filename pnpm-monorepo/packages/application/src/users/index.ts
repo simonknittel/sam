@@ -1,4 +1,7 @@
-/** The use cases of the users: the user list, the bans and the logins */
+/**
+ * The use cases of the users: the user list, the reads of a user, the bans and
+ * the logins
+ */
 export {
   banUser,
   banUserInputSchema,
@@ -21,9 +24,22 @@ export {
   type UserListPageOptions,
 } from "./findUserListPage.js";
 export {
+  getUser,
+  getUserInputSchema,
+  isOwnUser,
+  type GetUserInput,
+} from "./getUser.js";
+export {
+  listUsers,
+  listUsersInputSchema,
+  type ListUsersInput,
+  type ListUsersOutput,
+} from "./listUsers.js";
+export {
   unbanUser,
   unbanUserInputSchema,
   type UnbanUserInput,
   type UnbanUserOutput,
 } from "./unbanUser.js";
 export { UserErrorMessage } from "./userErrors.js";
+export { UserRoleOutput, type UserOutput } from "./userOutput.js";
