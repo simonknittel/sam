@@ -41,6 +41,9 @@ const getUsageHref = (usage: UploadUsageLocation) => {
     case UploadUsageType.RoleThumbnail:
       return `/app/roles/${usage.resource.id}`;
 
+    case UploadUsageType.RoleTagIcon:
+      return `/app/iam/tags/${usage.resource.id}`;
+
     case UploadUsageType.ManufacturerLogo:
       return `/app/fleet/settings/manufacturer/${usage.resource.id}`;
 

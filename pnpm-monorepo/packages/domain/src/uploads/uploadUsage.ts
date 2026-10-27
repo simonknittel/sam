@@ -11,6 +11,7 @@ import type { Prisma } from "@sam-monorepo/database/client";
 export enum UploadUsageType {
   RoleIcon = "roleIcon",
   RoleThumbnail = "roleThumbnail",
+  RoleTagIcon = "roleTagIcon",
   ManufacturerLogo = "manufacturerLogo",
   EventCover = "eventCover",
   EventTemplateCover = "eventTemplateCover",
@@ -40,6 +41,7 @@ export enum UploadUsageType {
 export const UPLOAD_USAGE_RELATION_BY_TYPE = {
   [UploadUsageType.RoleIcon]: "roleIcons",
   [UploadUsageType.RoleThumbnail]: "roleThumbnails",
+  [UploadUsageType.RoleTagIcon]: "roleTagIcons",
   [UploadUsageType.ManufacturerLogo]: "manufacturers",
   [UploadUsageType.EventCover]: "eventCovers",
   [UploadUsageType.EventTemplateCover]: "eventTemplateCovers",
@@ -61,6 +63,7 @@ export const UPLOAD_USAGE_TYPE_LABELS: Readonly<
 > = {
   [UploadUsageType.RoleIcon]: "Rollen-Icon",
   [UploadUsageType.RoleThumbnail]: "Rollen-Thumbnail",
+  [UploadUsageType.RoleTagIcon]: "Rollen-Tag-Icon",
   [UploadUsageType.ManufacturerLogo]: "Hersteller-Bild",
   [UploadUsageType.EventCover]: "Event-Titelbild",
   [UploadUsageType.EventTemplateCover]: "Vorlagen-Titelbild",
@@ -88,6 +91,7 @@ export interface UploadUsageWikiPage {
 export interface UploadUsageSource {
   readonly roleIcons: readonly UploadUsageNamedResource[];
   readonly roleThumbnails: readonly UploadUsageNamedResource[];
+  readonly roleTagIcons: readonly UploadUsageNamedResource[];
   readonly manufacturers: readonly UploadUsageNamedResource[];
   readonly eventCovers: readonly UploadUsageNamedResource[];
   readonly eventTemplateCovers: readonly UploadUsageNamedResource[];
@@ -113,6 +117,7 @@ export type UploadUsageLocation = UploadUsageLocationFields &
         readonly type:
           | UploadUsageType.RoleIcon
           | UploadUsageType.RoleThumbnail
+          | UploadUsageType.RoleTagIcon
           | UploadUsageType.ManufacturerLogo
           | UploadUsageType.EventCover
           | UploadUsageType.EventTemplateCover;
@@ -131,6 +136,7 @@ export type UploadUsageLocation = UploadUsageLocationFields &
 const NAMED_RESOURCE_USAGE_TYPES = [
   UploadUsageType.RoleIcon,
   UploadUsageType.RoleThumbnail,
+  UploadUsageType.RoleTagIcon,
   UploadUsageType.ManufacturerLogo,
   UploadUsageType.EventCover,
   UploadUsageType.EventTemplateCover,

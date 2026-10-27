@@ -15,6 +15,7 @@ const UPLOAD_USAGE_WIKI_PAGE_SELECT = {
 export const UPLOAD_USAGE_SELECT = {
   roleIcons: { select: { id: true, name: true } },
   roleThumbnails: { select: { id: true, name: true } },
+  roleTagIcons: { select: { id: true, name: true } },
   manufacturers: { select: { id: true, name: true } },
   eventCovers: { select: { id: true, name: true } },
   eventTemplateCovers: { select: { id: true, name: true } },

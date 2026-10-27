@@ -5,6 +5,7 @@ import { getUploadUsages } from "./uploadUsage";
 const emptyUpload: UploadUsageSource = {
   roleIcons: [],
   roleThumbnails: [],
+  roleTagIcons: [],
   manufacturers: [],
   eventCovers: [],
   eventTemplateCovers: [],
@@ -34,6 +35,22 @@ describe("get upload usages", () => {
         key: "eventTemplateCover:template-1",
         label: "Patrouille",
         href: "/app/events/templates/template-1",
+      },
+    ]);
+  });
+
+  test("a role tag icon counts as a usage", () => {
+    expect(
+      getUploadUsages({
+        ...emptyUpload,
+        roleTagIcons: [{ id: "tag-1", name: "Piloten" }],
+      }),
+    ).toEqual([
+      {
+        type: UploadUsageType.RoleTagIcon,
+        key: "roleTagIcon:tag-1",
+        label: "Piloten",
+        href: "/app/iam/tags/tag-1",
       },
     ]);
   });

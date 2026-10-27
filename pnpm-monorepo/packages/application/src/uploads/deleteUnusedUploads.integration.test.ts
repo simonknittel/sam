@@ -76,6 +76,11 @@ test("deletes only the old upload that nothing uses, with its object", async () 
     data: { snapshotId: snapshot.id, uploadId: snapshotImage.id },
   });
 
+  const roleTagIcon = await createUpload("tag.png", TWO_DAYS_AGO);
+  await prisma.roleTag.create({
+    data: { name: "Piloten", iconId: roleTagIcon.id },
+  });
+
   /** The editor did not store the content with it yet */
   const freshUpload = await createUpload("fresh.png", ONE_HOUR_AGO);
 
@@ -85,6 +90,7 @@ test("deletes only the old upload that nothing uses, with its object", async () 
     objects: toOldObjects([
       pageImage.id,
       snapshotImage.id,
+      roleTagIcon.id,
       freshUpload.id,
       unusedUpload.id,
     ]),
@@ -101,7 +107,7 @@ test("deletes only the old upload that nothing uses, with its object", async () 
   });
 
   expect(await getRemainingUploadIds()).toEqual(
-    [pageImage.id, snapshotImage.id, freshUpload.id].toSorted(),
+    [pageImage.id, snapshotImage.id, roleTagIcon.id, freshUpload.id].toSorted(),
   );
   expect(deleteRequests).toEqual([[unusedUpload.id]]);
   expect(auditEvents).toEqual([toSweepAuditEvent(1, 1)]);
