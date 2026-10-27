@@ -1,3 +1,4 @@
+import type { ReadAuditEventType } from "./readAuditEventTypes.js";
 import type { ReadMarkerSubject } from "./readMarkers/ReadMarkerSubject.js";
 
 /**
@@ -258,7 +259,10 @@ export enum AuditEventType {
   MCP_TOOL_SETTING_UPDATED_V2 = "MCP_TOOL_SETTING_UPDATED_V2",
   READ_MARKERS_CREATED = "READ_MARKERS_CREATED",
   // The read accesses, see `READ_AUDIT_EVENT_TYPES`
+  /** @deprecated Superseded by USER_READ (the tool get_user replaced get_current_user) */
   CURRENT_USER_READ = "CURRENT_USER_READ",
+  USER_READ = "USER_READ",
+  USERS_LISTED = "USERS_LISTED",
   CITIZEN_READ = "CITIZEN_READ",
   ORGANIZATION_READ = "ORGANIZATION_READ",
   CITIZEN_NOTES_LISTED = "CITIZEN_NOTES_LISTED",
@@ -1805,6 +1809,8 @@ export interface AuditEventDataByType {
   };
 
   [AuditEventType.CURRENT_USER_READ]: ReadAuditEventData;
+  [AuditEventType.USER_READ]: ReadAuditEventData;
+  [AuditEventType.USERS_LISTED]: ReadAuditEventData;
   [AuditEventType.CITIZEN_READ]: ReadAuditEventData;
   [AuditEventType.ORGANIZATION_READ]: ReadAuditEventData;
   [AuditEventType.CITIZEN_NOTES_LISTED]: ReadAuditEventData;
@@ -1835,10 +1841,22 @@ export interface AuditEventDataByType {
  * One creatable audit event: the payload type is tied to the event type so
  * writers can't emit a payload the system log doesn't know how to render.
  */
-export type AuditEventInput = {
-  [Key in AuditEventType]: {
-    type: Key;
-    data: AuditEventDataByType[Key];
-    createdById?: string | null;
-  };
-}[AuditEventType];
+export type AuditEventInput =
+  | {
+      [Key in AuditEventType]: {
+        type: Key;
+        data: AuditEventDataByType[Key];
+        createdById?: string | null;
+      };
+    }[AuditEventType]
+  /**
+   * All read types have the same payload. This member accepts an event whose
+   * type is a union of the read types (the MCP registry writes such events):
+   * TypeScript compares a union of more than 25 types with the members above
+   * not one by one.
+   */
+  | {
+      type: ReadAuditEventType;
+      data: ReadAuditEventData;
+      createdById?: string | null;
+    };

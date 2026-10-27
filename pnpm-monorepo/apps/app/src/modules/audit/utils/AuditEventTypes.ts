@@ -2759,6 +2759,20 @@ export const AuditEventDefinitions: {
     message: (data) => toReadMessage("Current user read", data),
   },
 
+  [AuditEventType.USER_READ]: {
+    type: AuditEventType.USER_READ,
+    app: SystemLogApp.Iam,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("User read", data),
+  },
+
+  [AuditEventType.USERS_LISTED]: {
+    type: AuditEventType.USERS_LISTED,
+    app: SystemLogApp.Iam,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Users listed", data),
+  },
+
   [AuditEventType.CITIZEN_READ]: {
     type: AuditEventType.CITIZEN_READ,
     app: SystemLogApp.Spynet,

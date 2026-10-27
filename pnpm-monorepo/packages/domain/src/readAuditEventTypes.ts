@@ -2,6 +2,8 @@ import { AuditEventType } from "./AuditEventTypes.js";
 
 const READ_AUDIT_EVENT_TYPE_LIST = [
   AuditEventType.CURRENT_USER_READ,
+  AuditEventType.USER_READ,
+  AuditEventType.USERS_LISTED,
   AuditEventType.CITIZEN_READ,
   AuditEventType.ORGANIZATION_READ,
   AuditEventType.CITIZEN_NOTES_LISTED,
