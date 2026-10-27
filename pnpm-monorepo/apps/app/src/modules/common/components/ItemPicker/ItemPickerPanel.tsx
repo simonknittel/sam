@@ -1,5 +1,6 @@
 "use client";
 
+import clsx from "clsx";
 import {
   useEffect,
   useId,
@@ -8,6 +9,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react";
+import { ItemPickerListHeight } from "./ItemPickerListHeight";
 import { ItemPickerMode } from "./ItemPickerMode";
 import { ItemPickerOption, type ItemPickerItem } from "./ItemPickerOption";
 
@@ -59,7 +61,13 @@ interface Props {
    * calls `onSelect`.
    */
   readonly renderTrailing?: (isSelected: boolean) => ReactNode;
+  readonly listHeight?: ItemPickerListHeight;
 }
+
+const LIST_HEIGHT_CLASS_NAMES: Record<ItemPickerListHeight, string> = {
+  [ItemPickerListHeight.Default]: "max-h-72",
+  [ItemPickerListHeight.Tall]: "max-h-144",
+};
 
 /**
  * The content of a picker: a search field, an optional toolbar and a list
@@ -82,6 +90,7 @@ export const ItemPickerPanel = ({
   onSelect,
   emptyText,
   renderTrailing,
+  listHeight = ItemPickerListHeight.Default,
 }: Props) => {
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -228,7 +237,10 @@ export const ItemPickerPanel = ({
         role="listbox"
         aria-label={label}
         aria-multiselectable={mode === ItemPickerMode.Multiple || undefined}
-        className="relative mt-2 max-h-72 overflow-y-auto overscroll-contain empty:hidden"
+        className={clsx(
+          "relative mt-2 overflow-y-auto overscroll-contain empty:hidden",
+          LIST_HEIGHT_CLASS_NAMES[listHeight],
+        )}
       >
         {extraItems.map(renderOption)}
 

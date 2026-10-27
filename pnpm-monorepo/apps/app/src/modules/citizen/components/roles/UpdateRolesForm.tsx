@@ -3,6 +3,7 @@
 import { runAction } from "@/modules/actions/utils/runAction";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
+import { ItemPickerListHeight } from "@/modules/common/components/ItemPicker/ItemPickerListHeight";
 import { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
 import {
   RolePanel,
@@ -119,6 +120,7 @@ export const UpdateRolesForm = ({
       roles={assignableRoles}
       disabledRoles={disabledRoles}
       onRoleClick={handleRoleClick}
+      listHeight={ItemPickerListHeight.Tall}
       renderTrailing={(isSelected) => (
         // The row is the control. Without pointer events, a click on the checkbox is a click on the row.
         <YesNoCheckbox

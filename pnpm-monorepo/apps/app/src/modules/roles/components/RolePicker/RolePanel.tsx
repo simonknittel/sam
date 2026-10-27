@@ -1,5 +1,6 @@
 "use client";
 
+import type { ItemPickerListHeight } from "@/modules/common/components/ItemPicker/ItemPickerListHeight";
 import type { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
 import type { ItemPickerItem } from "@/modules/common/components/ItemPicker/ItemPickerOption";
 import { ItemPickerPanel } from "@/modules/common/components/ItemPicker/ItemPickerPanel";
@@ -50,6 +51,7 @@ interface Props {
   readonly onRoleClick: (roleId: BadgeRole["id"]) => void;
   /** See `renderTrailing` of `ItemPickerPanel` */
   readonly renderTrailing?: (isSelected: boolean) => ReactNode;
+  readonly listHeight?: ItemPickerListHeight;
 }
 
 /**
@@ -69,6 +71,7 @@ export const RolePanel = ({
   max,
   onRoleClick,
   renderTrailing,
+  listHeight,
 }: Props) => {
   const { roles: visibleRoles, tags, tagsByRoleId } = useRolesContext();
   const [query, setQuery] = useState("");
@@ -185,6 +188,7 @@ export const RolePanel = ({
       onSelect={onRoleClick}
       emptyText="Keine Rolle gefunden"
       renderTrailing={renderTrailing}
+      listHeight={listHeight}
     />
   );
 };
