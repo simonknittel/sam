@@ -8,6 +8,7 @@ import {
 } from "@/modules/common/utils/filterCheckboxListParsers";
 import { RolePicker } from "@/modules/roles/components/RolePicker/RolePicker";
 import type { BadgeRole } from "@/modules/roles/queries/getRoles";
+import { MAXIMUM_CITIZEN_LIST_ROLE_FILTERS } from "@sam-monorepo/domain";
 import { useTopLoader } from "nextjs-toploader";
 import { useQueryStates } from "nuqs";
 import { useEffect, useState, useTransition } from "react";
@@ -17,9 +18,6 @@ import { useEffect, useState, useTransition } from "react";
  * `CitizenTableTile`)
  */
 const FILTER_PREFIX = "role";
-
-/** The same limit as `MAXIMUM_ROLE_FILTERS` of `listCitizensInputSchema` */
-const MAXIMUM_ROLE_FILTERS = 100;
 
 interface Props {
   readonly className?: string;
@@ -97,7 +95,7 @@ export const RoleFilter = ({ className }: Props) => {
       value={draftRoleIds ?? appliedRoleIds}
       onChange={handleChange}
       onOpenChange={handleOpenChange}
-      max={MAXIMUM_ROLE_FILTERS}
+      max={MAXIMUM_CITIZEN_LIST_ROLE_FILTERS}
     />
   );
 };

@@ -14,7 +14,6 @@ import { getSeriesByManufacturerId } from "./routers/manufacturer/getSeriesByMan
 import { list as listOnSiteNotifications } from "./routers/onSiteNotifications/list";
 import { unreadCount as countUnreadOnSiteNotifications } from "./routers/onSiteNotifications/unreadCount";
 import { getAssignableRoles } from "./routers/roles/getAssignableRoles";
-import { getVisibleRoles } from "./routers/roles/getVisibleRoles";
 import { getRolesForSalaries } from "./routers/silc/getRolesForSalaries";
 import { search as searchSpynet } from "./routers/spynet/search";
 import { getAssumableUsers } from "./routers/users/getAssumableUsers";
@@ -65,7 +64,6 @@ export const appRouter = createTRPCRouter({
     unreadCount: countUnreadOnSiteNotifications,
   }),
   roles: createTRPCRouter({
-    getVisibleRoles,
     getAssignableRoles,
   }),
   silc: createTRPCRouter({

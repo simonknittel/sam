@@ -284,6 +284,7 @@ export {
   slugify,
   slugifyWikiPageTitle,
 } from "./slug.js";
+export { MAXIMUM_CITIZEN_LIST_ROLE_FILTERS } from "./spynet/citizenListFilters.js";
 export {
   ConfirmationValue,
   toConfirmationStatus,

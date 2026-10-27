@@ -1,4 +1,7 @@
-import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
+import {
+  ACTIVE_CITIZEN_WHERE,
+  MAXIMUM_CITIZEN_LIST_ROLE_FILTERS,
+} from "@sam-monorepo/domain";
 import * as z from "zod";
 import { requirePermission, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
@@ -37,12 +40,11 @@ export const CITIZEN_LIST_DEFAULT_SORT = CitizenListSort.CreatedDescending;
 
 /** Role ids are cuids. The limits only refuse input that is too large. */
 const MAXIMUM_ROLE_ID_LENGTH = 64;
-const MAXIMUM_ROLE_FILTERS = 100;
 
 export const listCitizensInputSchema = z.object({
   role_ids: z
     .array(z.string().max(MAXIMUM_ROLE_ID_LENGTH))
-    .max(MAXIMUM_ROLE_FILTERS)
+    .max(MAXIMUM_CITIZEN_LIST_ROLE_FILTERS)
     .default([])
     .describe("Only the citizens with at least one of these roles."),
   unknown: z
