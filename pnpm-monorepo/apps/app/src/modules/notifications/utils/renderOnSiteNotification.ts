@@ -1,5 +1,7 @@
 import {
   BIRTHDAY_FALLBACK_WORDING,
+  FLEET_UPDATE_REMINDER_WORDING,
+  MY_SHIPS_PATH,
   ONBOARDING_POPOVER_PATH,
   parseOnSiteNotificationPayload,
 } from "@sam-monorepo/domain";
@@ -276,6 +278,15 @@ export const renderOnSiteNotification = (
         title: parsed.payload.title,
         body: parsed.payload.body,
         url: null,
+        appTitle,
+        decoration: null,
+      };
+
+    case "fleet_update_reminder":
+      return {
+        title: FLEET_UPDATE_REMINDER_WORDING.title,
+        body: FLEET_UPDATE_REMINDER_WORDING.body,
+        url: MY_SHIPS_PATH,
         appTitle,
         decoration: null,
       };

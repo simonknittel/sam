@@ -49,6 +49,22 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-10-27-erinnerung-an-die-flotte",
+    date: "2026-10-27",
+    title: "Erinnerung an die Flotte",
+    tags: ["Neu", "Flotte", "Benachrichtigungen"],
+    isTracked: false,
+    body: () => (
+      <p>
+        Wer mindestens 6 Monate nicht im SAM war, bekommt beim nächsten Besuch
+        eine Benachrichtigung, die eigenen Schiffe zu prüfen. Die
+        Browser-Benachrichtigung lässt sich in den Einstellungen unter „Flotte“
+        abschalten.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-10-27-rollenauswahl-und-tags",
     date: "2026-10-27",
     title: "Einheitliche Rollenauswahl und Rollen-Tags",

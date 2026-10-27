@@ -25,6 +25,7 @@ import {
   ACTIVE_CITIZEN_WHERE,
   ASSUMABLE_USER_WHERE,
   comparePermissionSets,
+  FLEET_UPDATE_REMINDER_ABSENCE_MONTHS,
   getLocalDateKey,
   isMissingTwoFactorAuthentication,
   ORGANIZATION_TIMEZONE,
@@ -232,6 +233,70 @@ const welcomeCitizen = async (
 };
 
 /**
+ * Moves `lastSeenAt` of the user to now on their first request of the day.
+ * After an absence of `FLEET_UPDATE_REMINDER_ABSENCE_MONTHS` or more, the
+ * citizen of the user also gets the reminder to check their ships. A user
+ * without `lastSeenAt` is new and gets the welcome instead.
+ *
+ * Only the request that moves `lastSeenAt` from the value of its session
+ * continues, thus parallel requests of the same visit write one audit event
+ * and send one reminder.
+ */
+const recordFirstVisitOfTheDay = async (
+  user: AdapterUser,
+  citizenId: Citizen["id"] | null,
+) => {
+  try {
+    const now = new Date();
+    const previousLastSeenAt = user.lastSeenAt ?? null;
+
+    const { count } = await prisma.user.updateMany({
+      where: { id: user.id, lastSeenAt: previousLastSeenAt },
+      data: { lastSeenAt: now },
+    });
+    if (count !== 1) return;
+
+    await getApplicationContext().audit.create([
+      {
+        type: AuditEventType.USER_FIRST_VISIT_OF_THE_DAY_V2,
+        data: {
+          userId: user.id,
+          userEmail: user.email,
+          userName: user.name,
+        },
+        createdById: user.id,
+      },
+    ]);
+
+    const absenceStart = new Date(now);
+    absenceStart.setUTCMonth(
+      absenceStart.getUTCMonth() - FLEET_UPDATE_REMINDER_ABSENCE_MONTHS,
+    );
+    if (!citizenId || !previousLastSeenAt || previousLastSeenAt > absenceStart)
+      return;
+
+    after(async () => {
+      try {
+        await getApplicationContext().notifications.trigger([
+          { type: "FleetUpdateReminder", payload: { citizenId } },
+        ]);
+      } catch (error) {
+        log.error("Failed to send the fleet update reminder", {
+          citizenId,
+          userId: user.id,
+          error,
+        });
+      }
+    });
+  } catch (error) {
+    log.warn("Failed to update user's lastSeenAt", {
+      userId: user.id,
+      error,
+    });
+  }
+};
+
+/**
  * Options for NextAuth.js used to configure adapters, providers, callbacks, etc.
  *
  * @see https://next-auth.js.org/configuration/options
@@ -290,35 +355,8 @@ export const authOptions: NextAuthOptions = {
         (!user.lastSeenAt ||
           getLocalDateKey(user.lastSeenAt, ORGANIZATION_TIMEZONE) !==
             getLocalDateKey(new Date(), ORGANIZATION_TIMEZONE))
-      ) {
-        try {
-          await prisma.user.update({
-            where: {
-              id: user.id,
-            },
-            data: {
-              lastSeenAt: new Date(),
-            },
-          });
-
-          await getApplicationContext().audit.create([
-            {
-              type: AuditEventType.USER_FIRST_VISIT_OF_THE_DAY_V2,
-              data: {
-                userId: user.id,
-                userEmail: user.email,
-                userName: user.name,
-              },
-              createdById: user.id,
-            },
-          ]);
-        } catch (error) {
-          log.warn("Failed to update user's lastSeenAt", {
-            userId: user.id,
-            error,
-          });
-        }
-      }
+      )
+        await recordFirstVisitOfTheDay(user, citizen?.id ?? null);
 
       // The welcome follows the roles of the citizen and not the admin mode,
       // because the notification goes only to citizens with `login;manage`

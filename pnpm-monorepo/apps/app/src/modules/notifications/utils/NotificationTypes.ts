@@ -1,4 +1,7 @@
-import { NotificationSettingType } from "@sam-monorepo/domain";
+import {
+  FLEET_UPDATE_REMINDER_ABSENCE_MONTHS,
+  NotificationSettingType,
+} from "@sam-monorepo/domain";
 
 export interface NotificationType {
   readonly id: NotificationSettingType;
@@ -63,6 +66,18 @@ export const NOTIFICATIONS_APPS: NotificationApp[] = [
         title: "Abmeldung durch Manager",
         description: "Wenn mich ein Manager von einem Event entfernt",
         category: "Events",
+      },
+    ],
+  },
+
+  {
+    appTitle: "Flotte",
+    notificationTypes: [
+      {
+        id: NotificationSettingType.FleetUpdateReminder,
+        title: "Erinnerung",
+        description: `Beim ersten Besuch nach mindestens ${FLEET_UPDATE_REMINDER_ABSENCE_MONTHS} Monaten Abwesenheit`,
+        category: "Flotte",
       },
     ],
   },
