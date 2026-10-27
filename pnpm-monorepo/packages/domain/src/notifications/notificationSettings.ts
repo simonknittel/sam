@@ -14,6 +14,7 @@ export enum NotificationSettingType {
   EventStarting = "event_starting",
   EventParticipationAdded = "event_participation_added",
   EventParticipationRemoved = "event_participation_removed",
+  FleetUpdateReminder = "fleet_update_reminder",
   RoleAdded = "role_added",
   SilcTransactionCreated = "silc_transaction_created",
   SincomePayoutStarted = "sincome_payout_started",

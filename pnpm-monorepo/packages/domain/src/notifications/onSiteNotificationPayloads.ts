@@ -178,6 +178,32 @@ export const ONBOARDING_POPOVER_SEARCH_PARAM = "erste-schritte";
 /** The path of the dashboard with the parameter which opens the popover */
 export const ONBOARDING_POPOVER_PATH = `/app/dashboard?${ONBOARDING_POPOVER_SEARCH_PARAM}=1`;
 
+/**
+ * The time without a visit after which the first visit of a citizen brings
+ * the fleet update reminder: a long absence makes it likely that the ships
+ * of the citizen in the game and in the SAM are different
+ */
+export const FLEET_UPDATE_REMINDER_ABSENCE_MONTHS = 6;
+
+/**
+ * The text is the same for each citizen, thus the Lambda (web push) and the
+ * app (on-site row) share it here and the payload is empty
+ */
+export const FLEET_UPDATE_REMINDER_WORDING = {
+  title: "Willkommen zurück!",
+  body: "Ist deine Flotte noch aktuell? Prüfe deine Schiffe unter „Meine Schiffe“.",
+} as const;
+
+/** The page of the own ships, which the fleet update reminder links to */
+export const MY_SHIPS_PATH = "/app/fleet/my-ships";
+
+/**
+ * The reminder to check the own ships on the first visit after an absence
+ * of `FLEET_UPDATE_REMINDER_ABSENCE_MONTHS`. It carries nothing, see
+ * `FLEET_UPDATE_REMINDER_WORDING`.
+ */
+export const fleetUpdateReminderPayloadSchema = z.object({});
+
 export const wikiCitizenMentionedPayloadSchema = z.object({
   pageId: z.string(),
   pageTitle: z.string(),
@@ -219,6 +245,7 @@ export const onSiteNotificationPayloadSchemas = {
   new_year: newYearPayloadSchema,
   welcome: welcomePayloadSchema,
   manual_notification: manualNotificationPayloadSchema,
+  fleet_update_reminder: fleetUpdateReminderPayloadSchema,
 } as const;
 
 export type OnSiteNotificationType =
@@ -253,6 +280,7 @@ export const ON_SITE_NOTIFICATION_PAYLOAD_VERSIONS: Record<
   new_year: 1,
   welcome: 1,
   manual_notification: 1,
+  fleet_update_reminder: 1,
 };
 
 export type ParsedOnSiteNotificationPayload = {

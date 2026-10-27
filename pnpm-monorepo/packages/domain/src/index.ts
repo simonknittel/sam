@@ -118,6 +118,9 @@ export {
 export * from "./notifications/notificationSettings.js";
 export {
   BIRTHDAY_FALLBACK_WORDING,
+  FLEET_UPDATE_REMINDER_ABSENCE_MONTHS,
+  FLEET_UPDATE_REMINDER_WORDING,
+  MY_SHIPS_PATH,
   ONBOARDING_POPOVER_PATH,
   ONBOARDING_POPOVER_SEARCH_PARAM,
   ON_SITE_NOTIFICATION_PAYLOAD_VERSIONS,
@@ -130,6 +133,7 @@ export {
   eventParticipationRemovedPayloadSchema,
   eventStartingPayloadSchema,
   eventUpdatedPayloadSchema,
+  fleetUpdateReminderPayloadSchema,
   isOnSiteNotificationType,
   manualNotificationPayloadSchema,
   newYearPayloadSchema,
