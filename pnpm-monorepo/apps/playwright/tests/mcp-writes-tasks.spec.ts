@@ -218,24 +218,34 @@ test.describe("the task write tools of the MCP server", () => {
     );
     const tools = await workerClient.listTools();
     expect(
-      tools.find((tool) => tool.name === "drop_task")?.annotations,
+      tools.find((tool) => tool.name === "update_my_task_assignment")
+        ?.annotations,
     ).toMatchObject({ destructiveHint: true, idempotentHint: false });
     expect(
-      tools.find((tool) => tool.name === "accept_task")?.annotations,
-    ).toMatchObject({ destructiveHint: false, idempotentHint: true });
-    expect(
-      await callForContent(workerClient, "drop_task", { task_id: task.id }),
+      await callForContent(workerClient, "update_my_task_assignment", {
+        task_id: task.id,
+        action: "drop",
+      }),
     ).toMatchObject({ task: { assignees: [], is_assigned_to_me: false } });
     expect(
-      await callForError(workerClient, "drop_task", { task_id: task.id }),
+      await callForError(workerClient, "update_my_task_assignment", {
+        task_id: task.id,
+        action: "drop",
+      }),
     ).toMatch(CONFLICT_RESULT);
     expect(
-      await callForContent(workerClient, "accept_task", { task_id: task.id }),
-    ).toMatchObject({ is_assigned_to_me: true });
+      await callForContent(workerClient, "update_my_task_assignment", {
+        task_id: task.id,
+        action: "accept",
+      }),
+    ).toMatchObject({ task: { is_assigned_to_me: true } });
     // A repeated accept changes nothing and gives the same task
     expect(
-      await callForContent(workerClient, "accept_task", { task_id: task.id }),
-    ).toMatchObject({ is_assigned_to_me: true });
+      await callForContent(workerClient, "update_my_task_assignment", {
+        task_id: task.id,
+        action: "accept",
+      }),
+    ).toMatchObject({ task: { is_assigned_to_me: true } });
     expect(
       await prisma.taskAssignment.count({ where: { taskId: task.id } }),
     ).toBe(1);

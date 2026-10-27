@@ -226,7 +226,7 @@ test.describe("the event write tools of the MCP server", () => {
     ]);
   });
 
-  test("sign_up_for_event signs up or changes the comment, and cancel_event_participation cancels the sign-up", async ({
+  test("update_my_event_participation signs up, changes the comment and cancels the sign-up", async ({
     prisma,
     authorizeMcpClient,
     connectMcpClient,
@@ -248,10 +248,11 @@ test.describe("the event write tools of the MCP server", () => {
 
     const signUp = {
       event_id: event.id,
+      action: "sign_up",
       comment: "Mit meiner Mustang Alpha.",
     };
     expect(
-      await callForContent(client, "sign_up_for_event", signUp),
+      await callForContent(client, "update_my_event_participation", signUp),
     ).toMatchObject({
       is_participating: true,
       participants: [
@@ -259,10 +260,11 @@ test.describe("the event write tools of the MCP server", () => {
       ],
     });
     // The same input again changes nothing
-    await callForContent(client, "sign_up_for_event", signUp);
+    await callForContent(client, "update_my_event_participation", signUp);
     expect(
-      await callForContent(client, "sign_up_for_event", {
+      await callForContent(client, "update_my_event_participation", {
         event_id: event.id,
+        action: "sign_up",
         comment: "Mit der Dragonfly.",
       }),
     ).toMatchObject({
@@ -272,13 +274,15 @@ test.describe("the event write tools of the MCP server", () => {
     });
 
     expect(
-      await callForContent(client, "cancel_event_participation", {
+      await callForContent(client, "update_my_event_participation", {
         event_id: event.id,
+        action: "cancel",
       }),
     ).toMatchObject({ is_participating: false, participants: [] });
     expect(
-      await callForError(client, "cancel_event_participation", {
+      await callForError(client, "update_my_event_participation", {
         event_id: event.id,
+        action: "cancel",
       }),
     ).toMatch(CONFLICT_RESULT);
 
@@ -329,15 +333,17 @@ test.describe("the event write tools of the MCP server", () => {
     );
 
     expect(
-      await callForError(client, "add_event_participants", {
+      await callForError(client, "update_event_participants", {
         event_id: event.id,
+        action: "add",
         citizen_ids: [wingman.entity.id, outsider.entity.id],
       }),
     ).toMatch(VALIDATION_RESULT);
 
     expect(
-      await callForContent(client, "add_event_participants", {
+      await callForContent(client, "update_event_participants", {
         event_id: event.id,
+        action: "add",
         citizen_ids: [wingman.entity.id],
         comment: "Als Geleitschutz.",
       }),
@@ -350,36 +356,44 @@ test.describe("the event write tools of the MCP server", () => {
           },
         ],
       },
-      added_citizen_ids: [wingman.entity.id],
+      changed_citizen_ids: [wingman.entity.id],
       notifications_sent: true,
     });
 
     expect(
-      await callForContent(client, "remove_event_participant", {
+      await callForContent(client, "update_event_participants", {
         event_id: event.id,
-        citizen_id: wingman.entity.id,
+        action: "remove",
+        citizen_ids: [wingman.entity.id],
         reason: "Doppelt eingeplant.",
       }),
-    ).toMatchObject({ event: { participants: [] }, notifications_sent: true });
+    ).toMatchObject({
+      event: { participants: [] },
+      changed_citizen_ids: [wingman.entity.id],
+      notifications_sent: true,
+    });
     expect(
-      await callForError(client, "remove_event_participant", {
+      await callForError(client, "update_event_participants", {
         event_id: event.id,
-        citizen_id: wingman.entity.id,
+        action: "remove",
+        citizen_ids: [wingman.entity.id],
       }),
     ).toMatch(CONFLICT_RESULT);
 
     expect(
-      await callForContent(client, "add_event_managers", {
+      await callForContent(client, "update_event_managers", {
         event_id: event.id,
+        action: "add",
         citizen_ids: [deputy.entity.id],
       }),
     ).toMatchObject({
       managers: [{ id: deputy.entity.id, handle: "mcp-stellvertreterin" }],
     });
     expect(
-      await callForContent(client, "remove_event_manager", {
+      await callForContent(client, "update_event_managers", {
         event_id: event.id,
-        citizen_id: deputy.entity.id,
+        action: "remove",
+        citizen_ids: [deputy.entity.id],
       }),
     ).toMatchObject({ managers: [] });
 
@@ -493,7 +507,7 @@ test.describe("the event write tools of the MCP server", () => {
 
     const toolNames = await client.listToolNames();
     expect(toolNames).toEqual(
-      expect.arrayContaining(["update_event", "sign_up_for_event"]),
+      expect.arrayContaining(["update_event", "update_my_event_participation"]),
     );
     expect(toolNames).not.toContain("create_event");
     await expect(
@@ -515,8 +529,9 @@ test.describe("the event write tools of the MCP server", () => {
       await callForError(client, "delete_event", { event_id: event.id }),
     ).toMatch(FORBIDDEN_RESULT);
     expect(
-      await callForError(client, "add_event_managers", {
+      await callForError(client, "update_event_managers", {
         event_id: event.id,
+        action: "add",
         citizen_ids: [bystander.entity.id],
       }),
     ).toMatch(FORBIDDEN_RESULT);

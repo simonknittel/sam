@@ -216,25 +216,31 @@ test.describe("the lineup write tools of the MCP server", () => {
 
     const tools = await participantClient.listTools();
     expect(
-      tools.find((tool) => tool.name === "apply_for_event_position")
-        ?.annotations,
-    ).toMatchObject({ destructiveHint: false, idempotentHint: true });
-    expect(
-      tools.find((tool) => tool.name === "withdraw_event_position_application")
+      tools.find((tool) => tool.name === "update_my_event_position_application")
         ?.annotations,
     ).toMatchObject({ destructiveHint: true, idempotentHint: false });
 
     // The applicants are visible only for the managers of the positions
     expect(
-      await callForContent(participantClient, "apply_for_event_position", {
-        position_id: position.id,
-      }),
+      await callForContent(
+        participantClient,
+        "update_my_event_position_application",
+        {
+          position_id: position.id,
+          action: "apply",
+        },
+      ),
     ).toMatchObject({ id: position.id, applications: [] });
     // A repeated application changes nothing
     expect(
-      await callForContent(participantClient, "apply_for_event_position", {
-        position_id: position.id,
-      }),
+      await callForContent(
+        participantClient,
+        "update_my_event_position_application",
+        {
+          position_id: position.id,
+          action: "apply",
+        },
+      ),
     ).toMatchObject({ id: position.id, applications: [] });
     expect(await prisma.eventPositionApplication.count()).toBe(1);
     expect(
@@ -269,14 +275,14 @@ test.describe("the lineup write tools of the MCP server", () => {
 
     await callForContent(
       participantClient,
-      "withdraw_event_position_application",
-      { position_id: position.id },
+      "update_my_event_position_application",
+      { position_id: position.id, action: "withdraw" },
     );
     expect(
       await callForError(
         participantClient,
-        "withdraw_event_position_application",
-        { position_id: position.id },
+        "update_my_event_position_application",
+        { position_id: position.id, action: "withdraw" },
       ),
     ).toMatch(CONFLICT_RESULT);
     expect(await prisma.eventPositionApplication.count()).toBe(0);
@@ -446,14 +452,16 @@ test.describe("the lineup write tools of the MCP server", () => {
     ).toMatch(FORBIDDEN_RESULT);
     // Without a participation, an application is a conflict
     expect(
-      await callForError(readerClient, "apply_for_event_position", {
+      await callForError(readerClient, "update_my_event_position_application", {
         position_id: position.id,
+        action: "apply",
       }),
     ).toMatch(CONFLICT_RESULT);
     // A lineup that is not enabled is visible only for its managers
     expect(
-      await callForError(readerClient, "apply_for_event_position", {
+      await callForError(readerClient, "update_my_event_position_application", {
         position_id: hiddenLineupPosition.id,
+        action: "apply",
       }),
     ).toMatch(FORBIDDEN_RESULT);
 
