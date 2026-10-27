@@ -133,7 +133,7 @@ test("a tag in the salary role picker filters the list to its roles, and a secon
   const tag = rolePickerTag(popover, "Gehaltsgruppe");
   await expect(rolePickerOption(popover, "Andere Rolle")).toBeVisible();
 
-  /** In single mode, a tag only filters the list. It selects nothing. */
+  /** A tag only filters the list. It selects nothing. */
   await tag.click();
   await expect(tag).toHaveAttribute("aria-pressed", "true");
   await expect(rolePickerOption(popover, "Getaggte Rolle")).toBeVisible();

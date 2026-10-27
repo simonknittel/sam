@@ -245,22 +245,19 @@ const Multiple = ({
 
   const [isRolePickerOpen, setIsRolePickerOpen] = useState(false);
 
-  /** Replaces the selected citizens with the citizens of the roles */
-  const selectCitizensOfRoles = (roleIds: readonly BadgeRole["id"][]) => {
+  /** Replaces the selected citizens with the citizens of the role */
+  const selectCitizensOfRole = (roleId: BadgeRole["id"]) => {
     if (!dataCitizensGroupedByVisibleRoles) return;
 
     const { citizens, roleGroups } = dataCitizensGroupedByVisibleRoles;
-    const roleIdSet = new Set(roleIds);
-    const citizenIdsOfRoles = new Set(
-      roleGroups
-        .filter((group) => roleIdSet.has(group.roleId))
-        .flatMap((group) => group.citizenIds),
+    const citizenIdsOfRole = new Set(
+      roleGroups.find((group) => group.roleId === roleId)?.citizenIds,
     );
 
     setSelectedCitizens(
       citizens.filter(
         (citizen) =>
-          citizenIdsOfRoles.has(citizen.id) &&
+          citizenIdsOfRole.has(citizen.id) &&
           (!selectableIds || selectableIds.has(citizen.id)),
       ),
     );
@@ -315,17 +312,15 @@ const Multiple = ({
           open={isRolePickerOpen}
           onOpenChange={setIsRolePickerOpen}
         >
-          {/* Multiple mode without a selection: a click on a tag gives all roles of the tag */}
           <RolePanel
-            mode={ItemPickerMode.Multiple}
+            mode={ItemPickerMode.Single}
             selectedRoleIds={[]}
             offeredRoleIds={
               dataCitizensGroupedByVisibleRoles?.roleGroups.map(
                 (group) => group.roleId,
               ) ?? []
             }
-            onRoleClick={(roleId) => selectCitizensOfRoles([roleId])}
-            onTagClick={selectCitizensOfRoles}
+            onRoleClick={selectCitizensOfRole}
           />
         </ItemPickerPopover>
       </div>

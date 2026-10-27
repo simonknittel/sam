@@ -255,7 +255,10 @@ export const rolePickerPopover = (page: Page) =>
 export const rolePickerOption = (popover: Locator, roleName: string) =>
   popover.getByRole("option", { name: roleName, exact: true });
 
-/** A tag in the tag row of an open role picker */
+/**
+ * A tag in the tag row of an open role picker. A click filters the list to
+ * the roles of the tag (`aria-pressed`), and a second click clears the filter.
+ */
 export const rolePickerTag = (popover: Locator, tagName: string) =>
   popover.getByRole("button", { name: tagName, exact: true });
 
@@ -308,16 +311,6 @@ export const pickRoles = async (
     await expect(option).toHaveAttribute("aria-selected", "true");
   }
 
-  await closeRolePicker(popover);
-};
-
-/**
- * Selects all roles of a tag in a role picker in multiple mode. In single
- * mode, a click on a tag only filters the list.
- */
-export const pickRoleTag = async (trigger: Locator, tagName: string) => {
-  const popover = await openRolePicker(trigger);
-  await rolePickerTag(popover, tagName).click();
   await closeRolePicker(popover);
 };
 

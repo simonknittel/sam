@@ -866,7 +866,12 @@ test("the role filter of the citizen table applies when its popover closes, and 
     "aria-selected",
     "false",
   );
+  /** The tag filters the list and selects nothing */
   await rolePickerTag(popover, "Wirtschaft").click();
+  await expect(popover.getByRole("option")).toHaveText(["Bergbau", "Handel"]);
+  await expect(popover.getByRole("option", { selected: true })).toHaveCount(0);
+  await rolePickerOption(popover, "Bergbau").click();
+  await rolePickerOption(popover, "Handel").click();
   await expect(rolePickerOption(popover, "Handel")).toHaveAttribute(
     "aria-selected",
     "true",

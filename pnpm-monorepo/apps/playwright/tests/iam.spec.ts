@@ -14,7 +14,6 @@ import {
   NOT_FOUND_TEXT,
   openRolePicker,
   pickRole,
-  pickRoleTag,
   RESOURCE_NOT_FOUND_TEXT,
   rolePickerChips,
   rolePickerOption,
@@ -345,7 +344,7 @@ test("roles ticked within the debounce share one save, also with a search betwee
   expect(saves).toHaveLength(1);
 });
 
-test("a tag in the role dialog ticks only the roles that the viewer may assign, and the autosave saves them", async ({
+test("a tag in the role dialog filters the roles and saves nothing, and a role in the filter is saved", async ({
   page,
   prisma,
   signIn,
@@ -373,31 +372,65 @@ test("a tag in the role dialog ticks only the roles that the viewer may assign, 
   const member = await createCitizen(prisma, { handle: "task-worker" });
 
   await signIn(admin.user);
-  await page.goto(`/app/spynet/citizen/${member.entity.id}/roles`);
+  const rolesPage = `/app/spynet/citizen/${member.entity.id}/roles`;
+  /** The test controls the time of the debounce */
+  await page.clock.install();
+  await page.goto(rolesPage);
 
   const rolesDialog = modal(page, "Rollen hinzufügen oder entfernen");
   await clickUntilVisible(
     page.getByRole("button", { name: "Bearbeiten" }),
     rolesDialog,
   );
+  const options = rolesDialog.getByRole("option");
+  await expect(options).toHaveText([
+    "Händler",
+    "Ingenieur",
+    "Kommandant",
+    "Pilot",
+  ]);
   await expect(rolePickerOption(rolesDialog, "Kommandant")).toHaveAttribute(
     "aria-disabled",
     "true",
   );
 
-  /** Without the disabled role and without the role outside of the tag */
-  await rolePickerTag(rolesDialog, "Crew").click();
-  for (const [roleName, isSelected] of [
-    ["Pilot", true],
-    ["Ingenieur", true],
-    ["Kommandant", false],
-    ["Händler", false],
-  ] as const) {
-    await expect(rolePickerOption(rolesDialog, roleName)).toHaveAttribute(
-      "aria-selected",
-      String(isSelected),
-    );
-  }
+  /** The checkboxes of two rows do not touch */
+  const firstBox = await options.nth(0).locator("label").boundingBox();
+  const secondBox = await options.nth(1).locator("label").boundingBox();
+  expect(firstBox).not.toBeNull();
+  expect(secondBox).not.toBeNull();
+  expect(secondBox!.y - (firstBox!.y + firstBox!.height)).toBeGreaterThan(4);
+
+  /**
+   * The time stops before the tag, thus a save would start within the
+   * debounce that the test runs below
+   */
+  const pageTime = await page.evaluate(() => Date.now());
+  await page.clock.pauseAt(pageTime + 1_000);
+  const saves = recordServerActions(page, rolesPage);
+
+  /** The tag shows only its roles, also the disabled one, and ticks none */
+  const crewTag = rolePickerTag(rolesDialog, "Crew");
+  await crewTag.click();
+  await expect(crewTag).toHaveAttribute("aria-pressed", "true");
+  await expect(options).toHaveText(["Ingenieur", "Kommandant", "Pilot"]);
+  await expect(rolesDialog.getByRole("option", { selected: true })).toHaveCount(
+    0,
+  );
+  await page.clock.runFor(ROLE_SAVE_DEBOUNCE);
+  expect(saves).toHaveLength(0);
+
+  /** A second click on the tag shows all roles again */
+  await rolePickerOption(rolesDialog, "Pilot").click();
+  await crewTag.click();
+  await expect(crewTag).toHaveAttribute("aria-pressed", "false");
+  await expect(options).toHaveCount(4);
+  await expect(rolePickerOption(rolesDialog, "Pilot")).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await page.clock.runFor(ROLE_SAVE_DEBOUNCE);
+  await page.clock.resume();
 
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   await expect
@@ -411,7 +444,8 @@ test("a tag in the role dialog ticks only the roles that the viewer may assign, 
           assignments.map(({ roleId }) => roleId).toSorted(),
         ),
     )
-    .toEqual([member.role.id, pilotRole.id, engineerRole.id].toSorted());
+    .toEqual([member.role.id, pilotRole.id].toSorted());
+  expect(saves).toHaveLength(1);
 });
 
 test("deleting a role takes its permissions away from its members", async ({
@@ -860,7 +894,7 @@ test("the rules of a role take their target from the role picker, also all roles
   ).toBeVisible();
 });
 
-test("a tag on the inheritance tab adds also the roles that the manager cannot see", async ({
+test("a tag on the inheritance tab shows also the roles that the manager cannot see", async ({
   page,
   prisma,
   signIn,
@@ -878,11 +912,15 @@ test("a tag on the inheritance tab adds also the roles that the manager cannot s
   await signIn(manager.user);
   await page.goto(`/app/roles/${role.id}/inheritance`);
   await waitForAppShellHydration(page);
-  await pickRoleTag(
+  const popover = await openRolePicker(
     page.getByRole("button", { name: "Rolle auswählen" }),
-    "Flugstaffel",
   );
-  await expect(rolePickerChips(page)).toHaveText(["Pilot", "Schütze"]);
+  await rolePickerTag(popover, "Flugstaffel").click();
+  await expect(popover.getByRole("option")).toHaveText(["Pilot", "Schütze"]);
+  await expect(rolePickerChips(page)).toHaveCount(0);
+  await rolePickerOption(popover, "Schütze").click();
+  await closeRolePicker(popover);
+  await expect(rolePickerChips(page)).toHaveText(["Schütze"]);
   await page.getByRole("button", { name: "Speichern" }).click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
@@ -890,8 +928,6 @@ test("a tag on the inheritance tab adds also the roles that the manager cannot s
     where: { id: role.id },
     select: { inherits: { select: { id: true } } },
   });
-  expect(inheriting.inherits.map(({ id }) => id).toSorted()).toEqual(
-    [pilot.id, gunner.id].toSorted(),
-  );
+  expect(inheriting.inherits.map(({ id }) => id)).toEqual([gunner.id]);
   await expectAuditEvents(prisma, ["ROLE_INHERITANCE_UPDATED"]);
 });

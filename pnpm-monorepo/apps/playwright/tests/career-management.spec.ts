@@ -19,8 +19,8 @@ import {
   openRolePicker,
   pickRole,
   pickRoles,
-  pickRoleTag,
   rolePickerOption,
+  rolePickerTag,
   SAVED_TEXT,
   sectionByHeading,
   toggleLabel,
@@ -885,7 +885,7 @@ test("granting access in the management UI lets a role read the flow", async ({
   await expectAuditEvents(prisma, ["CAREER_FLOW_ROLE_ACCESS_UPDATED"]);
 });
 
-test("a tag in the access picker adds a row for each of its roles, a deselect removes a row, and a hidden role stays", async ({
+test("a tag in the access picker filters the roles that the manager sees, a role adds a row, a deselect removes it, and a hidden role stays", async ({
   page,
   prisma,
   signIn,
@@ -928,16 +928,26 @@ test("a tag in the access picker adds a row for each of its roles, a deselect re
     1,
   );
 
-  /** A click on the tag adds one row for each role that the manager sees */
-  const trigger = page.getByRole("button", { name: "Rolle auswählen" });
-  await pickRoleTag(trigger, "Stufen");
+  /** The tag shows the roles that the manager sees and adds no row */
+  const popover = await openRolePicker(
+    page.getByRole("button", { name: "Rolle auswählen" }),
+  );
+  await rolePickerTag(popover, "Stufen").click();
+  await expect(popover.getByRole("option")).toHaveText([
+    "alpha-stufe",
+    "beta-stufe",
+  ]);
+  await expect(rows).toHaveCount(1);
+
+  /** A role adds a row with the lowest tier */
+  await rolePickerOption(popover, "alpha-stufe").click();
+  const betaOption = rolePickerOption(popover, "beta-stufe");
+  await betaOption.click();
   await expect(rows).toHaveCount(3);
   await expect(tierOf("alpha-stufe")).toHaveValue("read");
   await expect(tierOf("beta-stufe")).toHaveValue("read");
 
   /** A listed role has a checkmark, and a click on it removes its row */
-  const popover = await openRolePicker(trigger);
-  const betaOption = rolePickerOption(popover, "beta-stufe");
   await expect(betaOption).toHaveAttribute("aria-selected", "true");
   await betaOption.click();
   await expect(betaOption).toHaveAttribute("aria-selected", "false");

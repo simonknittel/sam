@@ -22,14 +22,17 @@ import {
 } from "../fixtures/factories";
 import {
   clickUntilVisible,
+  closeRolePicker,
   DELETED_TEXT,
   fillUntilValue,
   modal,
   NOT_FOUND_TEXT,
+  openRolePicker,
   pickFromSearch,
   pickRoles,
-  pickRoleTag,
   rolePickerChips,
+  rolePickerOption,
+  rolePickerTag,
   SAVED_TEXT,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
@@ -439,7 +442,7 @@ test("`event;manage` manages a foreign personal template", async ({
   ).toBeVisible();
 });
 
-test("a tag in the sharing picker adds a share for each of its roles with the lowest tier", async ({
+test("a tag in the sharing picker filters the roles and adds no share, and a role of the filter gets the lowest tier", async ({
   page,
   prisma,
   signIn,
@@ -461,15 +464,21 @@ test("a tag in the sharing picker adds a share for each of its roles with the lo
   await page.goto(`/app/events/templates/${template.id}/sharing`);
   await waitForAppShellHydration(page);
 
-  await pickRoleTag(
-    page.getByRole("button", { name: "Rolle auswählen" }),
-    "Staffeln",
-  );
-
   const tiers = page.getByRole("combobox", { name: "Zugriff" });
-  await expect(tiers).toHaveCount(2);
-  await expect(tiers.first()).toHaveValue("read");
-  await expect(tiers.last()).toHaveValue("read");
+  const popover = await openRolePicker(
+    page.getByRole("button", { name: "Rolle auswählen" }),
+  );
+  await rolePickerTag(popover, "Staffeln").click();
+  await expect(popover.getByRole("option")).toHaveText([
+    "Staffel-A",
+    "Staffel-B",
+  ]);
+  await expect(tiers).toHaveCount(0);
+
+  await rolePickerOption(popover, "Staffel-B").click();
+  await closeRolePicker(popover);
+  await expect(tiers).toHaveCount(1);
+  await expect(tiers).toHaveValue("read");
 
   await page.getByRole("button", { name: "Speichern" }).click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
@@ -484,12 +493,7 @@ test("a tag in the sharing picker adds a share for each of its roles with the lo
         .map(({ roleId, type }) => ({ roleId, type }))
         .toSorted((first, second) => first.roleId.localeCompare(second.roleId));
     })
-    .toEqual(
-      [
-        { roleId: firstRole.id, type: EventTemplateAccessType.READ },
-        { roleId: secondRole.id, type: EventTemplateAccessType.READ },
-      ].toSorted((first, second) => first.roleId.localeCompare(second.roleId)),
-    );
+    .toEqual([{ roleId: secondRole.id, type: EventTemplateAccessType.READ }]);
 });
 
 test("a share with a role that the viewer cannot see stays listed, and a save of a different change keeps it", async ({
@@ -1012,7 +1016,7 @@ test("saving an event as a template follows the settings gate", async ({
   expect(await prisma.eventTemplate.count()).toBe(0);
 });
 
-test("a tag in the visibility picker of a template adds its roles to the saved ones", async ({
+test("a tag in the visibility picker of a template filters its roles, and the saved roles stay selected", async ({
   page,
   prisma,
   signIn,
@@ -1037,13 +1041,18 @@ test("a tag in the visibility picker of a template adds its roles to the saved o
   await waitForAppShellHydration(page);
 
   await expect(rolePickerChips(page)).toHaveText([savedRole.name]);
-  await pickRoleTag(
+  const popover = await openRolePicker(
     page.getByRole("button", { name: "Rolle auswählen" }),
-    "Besatzung",
   );
+  await rolePickerTag(popover, "Besatzung").click();
+  await expect(popover.getByRole("option")).toHaveText([
+    firstRole.name,
+    secondRole.name,
+  ]);
+  await rolePickerOption(popover, secondRole.name).click();
+  await closeRolePicker(popover);
   await expect(rolePickerChips(page)).toHaveText([
     savedRole.name,
-    firstRole.name,
     secondRole.name,
   ]);
 
@@ -1058,7 +1067,7 @@ test("a tag in the visibility picker of a template adds its roles to the saved o
       });
       return visibilityRoles.map(({ roleId }) => roleId).toSorted();
     })
-    .toEqual([savedRole.id, firstRole.id, secondRole.id].toSorted());
+    .toEqual([savedRole.id, secondRole.id].toSorted());
 });
 
 test("the role picker of the new event follows the template that the picker of templates selects", async ({

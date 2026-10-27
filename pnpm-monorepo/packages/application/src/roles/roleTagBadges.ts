@@ -87,8 +87,8 @@ export const findVisibleRoleTagBadges = async (
  * The tags of the roles context of the app, sorted by name. The role pickers
  * of the role pages and of the tag page offer all roles to a user with
  * `role;manage`, thus this user gets all tags with all of their roles: a
- * click on a tag also selects the roles that the user cannot see. The other
- * users get the visible tags (see `findVisibleRoleTagBadges()`).
+ * tag filter also shows the roles that the user cannot see. The other users
+ * get the visible tags (see `findVisibleRoleTagBadges()`).
  */
 export const findPickerRoleTagBadges = async (
   context: Pick<ApplicationContext, "prisma">,

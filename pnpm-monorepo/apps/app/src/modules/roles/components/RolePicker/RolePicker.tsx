@@ -162,10 +162,6 @@ export const RolePicker = (props: Props) => {
     }
   };
 
-  const handleTagClick = (roleIds: BadgeRole["id"][]) => {
-    changeSelection([...selectedRoleIds, ...roleIds]);
-  };
-
   /** The roles by name, then the roles that the viewer cannot see */
   const roleIndexById = new Map(
     roles.toSorted(compareNames).map((role, index) => [role.id, index]),
@@ -244,7 +240,6 @@ export const RolePicker = (props: Props) => {
           }
           max={props.mode === ItemPickerMode.Multiple ? props.max : undefined}
           onRoleClick={handleRoleClick}
-          onTagClick={handleTagClick}
         />
       </ItemPickerPopover>
 

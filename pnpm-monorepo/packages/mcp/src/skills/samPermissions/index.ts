@@ -58,7 +58,7 @@ The role page has two kinds of rules in addition to the catalog:
 
 ## Role tags
 
-A role tag (Tag) groups roles, for example "Führung". A tag has a name, an optional description (a tooltip) and an optional icon. It gives no permissions and changes no access. In the role pickers of the web app, the search also finds the tags, and a click on a tag selects all of its roles at once. The IAM app has a page "Tags", and the role page shows the tags of the role. To change tags, a user needs \`role;manage\`. A user sees a tag only when the user sees at least one role of the tag (\`otherRole;read\`); with \`role;manage\`, the user sees all tags, also the tags without roles.
+A role tag (Tag) groups roles, for example "Führung". A tag has a name, an optional description (a tooltip) and an optional icon. It gives no permissions and changes no access. In the role pickers of the web app, the search also finds the tags, and a click on a tag shows only the roles of the tag. It selects no role. The IAM app has a page "Tags", and the role page shows the tags of the role. To change tags, a user needs \`role;manage\`. A user sees a tag only when the user sees at least one role of the tag (\`otherRole;read\`); with \`role;manage\`, the user sees all tags, also the tags without roles.
 
 ## Catalog
 

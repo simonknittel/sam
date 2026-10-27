@@ -45,6 +45,7 @@ export const ItemPickerOption = ({
   onSelect,
 }: Props) => {
   const isDisabled = item.disabledReason !== undefined;
+  const hasTrailing = trailing !== undefined;
 
   return (
     <div
@@ -63,15 +64,18 @@ export const ItemPickerOption = ({
         if (!isDisabled) onSelect(item.id);
       }}
       className={clsx(
-        "flex h-8 items-center gap-2 rounded-secondary px-2 select-none",
+        "flex items-center gap-2 rounded-secondary px-2 select-none",
         {
+          "h-8": !hasTrailing,
+          // A trailing control (for example a checkbox) can be as high as a compact row. The higher row keeps the controls of two rows apart.
+          "h-10": hasTrailing,
           "bg-white/10": isActive,
           "cursor-pointer hover:bg-white/10 active:bg-white/20": !isDisabled,
           "cursor-not-allowed opacity-50": isDisabled,
         },
       )}
     >
-      {trailing === undefined && (
+      {!hasTrailing && (
         <FaCheck
           aria-hidden
           className={clsx("size-2.5 flex-none text-brand-red-300", {
@@ -88,7 +92,7 @@ export const ItemPickerOption = ({
         {item.nameContent ?? item.name}
       </span>
 
-      {trailing !== undefined && (
+      {hasTrailing && (
         <span className="ml-auto flex flex-none items-center">{trailing}</span>
       )}
     </div>

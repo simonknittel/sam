@@ -154,8 +154,9 @@ test("a manager adds citizens with a shared comment", async ({
 /**
  * A manager with an event, and the citizens of the roles "Pilot",
  * "Ingenieur" and "Händler". The roles "Pilot" and "Ingenieur" have the tag
- * "Crew". The citizen "zuvor-gewaehlt" has no role, and the citizen
- * "schon-dabei" is a participant.
+ * "Crew". The citizen "allrounder" has both roles of the tag, the citizen
+ * "zuvor-gewaehlt" has no role, and the citizen "schon-dabei" is a
+ * participant.
  */
 const seedRoleShortcut = async (prisma: PrismaClient) => {
   const pilotRole = await createRole(prisma, { name: "Pilot" });
@@ -199,8 +200,7 @@ const seedRoleShortcut = async (prisma: PrismaClient) => {
     return citizen;
   };
   const pilot = await citizenWithRoles("pilotin", [pilotRole]);
-  const engineer = await citizenWithRoles("ingenieur", [engineerRole]);
-  /** Has both roles of the tag, and is added once */
+  await citizenWithRoles("ingenieur", [engineerRole]);
   const allRounder = await citizenWithRoles("allrounder", [
     pilotRole,
     engineerRole,
@@ -215,7 +215,7 @@ const seedRoleShortcut = async (prisma: PrismaClient) => {
     source: EventSource.APP,
   });
 
-  return { manager, event, pilot, engineer, allRounder, participant };
+  return { manager, event, pilot, allRounder, participant };
 };
 
 /**
@@ -235,45 +235,7 @@ const openRoleShortcutAfterPick = async (page: Page) => {
   return { addModal, popover };
 };
 
-test("a tag in the role shortcut of the citizen picker replaces the picked citizens with the citizens of its roles", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const { manager, event, pilot, engineer, allRounder, participant } =
-    await seedRoleShortcut(prisma);
-
-  await signIn(manager.user);
-  await page.goto(`/app/events/${event.id}/participants`);
-
-  const { addModal, popover } = await openRoleShortcutAfterPick(page);
-  await rolePickerTag(popover, "Crew").click();
-  await expect(popover).not.toBeVisible();
-
-  for (const handle of ["pilotin", "ingenieur", "allrounder"]) {
-    await expect(addModal.getByRole("link", { name: handle })).toHaveCount(1);
-  }
-  for (const handle of ["zuvor-gewaehlt", "haendler", "schon-dabei"]) {
-    await expect(addModal.getByRole("link", { name: handle })).toHaveCount(0);
-  }
-
-  await addModal.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText("3 Teilnehmer hinzugefügt.")).toBeVisible();
-  const rows = await prisma.eventParticipant.findMany({
-    where: { eventId: event.id },
-    select: { citizenId: true },
-  });
-  expect(rows.map((row) => row.citizenId).toSorted()).toEqual(
-    [
-      participant.entity.id,
-      pilot.entity.id,
-      engineer.entity.id,
-      allRounder.entity.id,
-    ].toSorted(),
-  );
-});
-
-test("a role in the role shortcut of the citizen picker replaces the picked citizens with the citizens of the role", async ({
+test("a tag in the role shortcut of the citizen picker filters the roles, and a role replaces the picked citizens with the citizens of the role", async ({
   page,
   prisma,
   signIn,
@@ -285,6 +247,16 @@ test("a role in the role shortcut of the citizen picker replaces the picked citi
   await page.goto(`/app/events/${event.id}/participants`);
 
   const { addModal, popover } = await openRoleShortcutAfterPick(page);
+
+  /** The tag picks no citizen */
+  const crewTag = rolePickerTag(popover, "Crew");
+  await crewTag.click();
+  await expect(crewTag).toHaveAttribute("aria-pressed", "true");
+  await expect(popover.getByRole("option")).toHaveText(["Ingenieur", "Pilot"]);
+  await expect(
+    addModal.getByRole("link", { name: "zuvor-gewaehlt" }),
+  ).toBeVisible();
+
   await rolePickerOption(popover, "Pilot").click();
   await expect(popover).not.toBeVisible();
 

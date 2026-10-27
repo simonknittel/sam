@@ -130,7 +130,7 @@ model Role {
   assignmentLevelChanges RoleAssignmentLevelChange[] @relation("role")
 }
 
-/// A label for roles. A tag selects all of its roles in the role picker. A
+/// A label for roles. A click on a tag filters the role picker to its roles. A
 /// user sees a tag only if the user sees at least one of its roles, or with
 /// `role;manage`. A delete is permanent, like the delete of a role: the audit
 /// event keeps the name and the roles.

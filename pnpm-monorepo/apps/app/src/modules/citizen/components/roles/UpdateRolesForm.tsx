@@ -103,21 +103,13 @@ export const UpdateRolesForm = ({
     }),
   );
 
-  const changeRoles = (roleIds: readonly Role["id"][]) => {
+  const handleRoleClick = (roleId: Role["id"]) => {
+    const roleIds = checkedRoleIds.includes(roleId)
+      ? checkedRoleIds.filter((checkedRoleId) => checkedRoleId !== roleId)
+      : [...checkedRoleIds, roleId];
+
     setCheckedRoleIds(roleIds);
     void saveRef.current?.(roleIds);
-  };
-
-  const handleRoleClick = (roleId: Role["id"]) => {
-    changeRoles(
-      checkedRoleIds.includes(roleId)
-        ? checkedRoleIds.filter((checkedRoleId) => checkedRoleId !== roleId)
-        : [...checkedRoleIds, roleId],
-    );
-  };
-
-  const handleTagClick = (roleIds: Role["id"][]) => {
-    if (roleIds.length > 0) changeRoles([...checkedRoleIds, ...roleIds]);
   };
 
   return (
@@ -127,7 +119,6 @@ export const UpdateRolesForm = ({
       roles={assignableRoles}
       disabledRoles={disabledRoles}
       onRoleClick={handleRoleClick}
-      onTagClick={handleTagClick}
       renderTrailing={(isSelected) => (
         // The row is the control. Without pointer events, a click on the checkbox is a click on the row.
         <YesNoCheckbox

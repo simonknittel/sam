@@ -16,7 +16,6 @@ import {
   modal,
   openRolePicker,
   pickRole,
-  pickRoleTag,
   rolePickerChips,
   rolePickerOption,
   rolePickerPopover,
@@ -65,7 +64,7 @@ const expectActiveOption = async (popover: Locator, roleName: string) => {
   );
 };
 
-test("the role picker finds roles by name and by tag, a tag adds its visible roles, and a click in the list deselects a role", async ({
+test("the role picker finds roles by name and by tag, a tag filters the list without a selection, and a click in the list deselects a role", async ({
   page,
   prisma,
   signIn,
@@ -131,23 +130,42 @@ test("the role picker finds roles by name and by tag, a tag adds its visible rol
   await expect(options).toHaveCount(4);
 
   /**
-   * A tag adds its offered roles, and a role that is already selected stays
-   * selected
+   * A tag shows only its offered roles and selects none of them. A selected
+   * role outside of the tag stays selected.
    */
-  await rolePickerOption(popover, "Pilot").click();
-  await expect(rolePickerOption(popover, "Pilot")).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
-  await rolePickerTag(popover, "Flugcrew").click();
-  await expect(rolePickerChips(settingTile)).toHaveText(["Navigator", "Pilot"]);
+  await rolePickerOption(popover, "Bordarzt").click();
+  const flightCrewTag = rolePickerTag(popover, "Flugcrew");
+  const workshopTag = rolePickerTag(popover, "Werkstatt");
+  await flightCrewTag.click();
+  await expect(flightCrewTag).toHaveAttribute("aria-pressed", "true");
+  await expect(workshopTag).toHaveAttribute("aria-pressed", "false");
+  await expect(options).toHaveText(["Navigator", "Pilot"]);
+  await expect(popover.getByRole("option", { selected: true })).toHaveCount(0);
+  await expect(rolePickerChips(settingTile)).toHaveText(["Bordarzt"]);
   await expect(popover).toBeVisible();
+
+  /** The search finds only the roles of the tag */
+  await searchRolePicker(popover, "Mechaniker");
+  await expect(options).toHaveCount(0);
+  await searchRolePicker(popover, "Pilot");
+  await expect(options).toHaveText(["Pilot"]);
+  await rolePickerOption(popover, "Pilot").click();
+  await searchRolePicker(popover, "");
+  await expect(rolePickerChips(settingTile)).toHaveText(["Bordarzt", "Pilot"]);
+
+  /** A different tag replaces the filter, and a second click clears it */
+  await workshopTag.click();
+  await expect(flightCrewTag).toHaveAttribute("aria-pressed", "false");
+  await expect(options).toHaveText(["Mechaniker"]);
+  await workshopTag.click();
+  await expect(workshopTag).toHaveAttribute("aria-pressed", "false");
+  await expect(options).toHaveCount(4);
 
   /**
    * A click on a selected role deselects it
    */
-  await rolePickerOption(popover, "Navigator").click();
-  await expect(rolePickerOption(popover, "Navigator")).toHaveAttribute(
+  await rolePickerOption(popover, "Bordarzt").click();
+  await expect(rolePickerOption(popover, "Bordarzt")).toHaveAttribute(
     "aria-selected",
     "false",
   );
@@ -322,8 +340,12 @@ test("in the edit dialog of a task, Escape closes only the role picker, and a ro
   await expect(dialog).toBeVisible();
   await expect(trigger).toBeFocused();
 
-  /** The tag adds only the role that the viewer can see */
-  await pickRoleTag(trigger, "Flugcrew");
+  /** The tag shows only the roles that the viewer can see */
+  await openRolePicker(trigger);
+  await rolePickerTag(popover, "Flugcrew").click();
+  await expect(popover.getByRole("option")).toHaveText(["Navigator", "Pilot"]);
+  await rolePickerOption(popover, "Navigator").click();
+  await closeRolePicker(popover);
   await expect(dialog).toBeVisible();
   await expect(rolePickerChips(dialog)).toHaveText([
     "Navigator",
@@ -344,7 +366,7 @@ test("in the edit dialog of a task, Escape closes only the role picker, and a ro
   );
 });
 
-test("the role picker of the Human Resources roles disables the roles and the tags above the maximum", async ({
+test("the role picker of the Human Resources roles disables the roles above the maximum", async ({
   page,
   prisma,
   signIn,
@@ -358,10 +380,6 @@ test("the role picker of the Human Resources roles disables the roles and the ta
       }),
     );
   }
-  await createRoleTag(prisma, {
-    name: "Nachzügler",
-    roles: [roles[19]!, roles[20]!],
-  });
   await prisma.iamSetting.create({
     data: {
       key: IamSettingKey.HUMAN_RESOURCES_ROLE_IDS,
@@ -377,11 +395,6 @@ test("the role picker of the Human Resources roles disables the roles and the ta
   const { settingTile, trigger } = await openHumanResourcesSetting(page);
   await expect(rolePickerChips(settingTile)).toHaveCount(19);
   const popover = await openRolePicker(trigger);
-  const tag = rolePickerTag(popover, "Nachzügler");
-
-  /** 19 selected roles and the two roles of the tag are more than 20 */
-  await expect(tag).toBeDisabled();
-  await expect(tag).toHaveAttribute("title", /mehr als 20 Rollen/);
 
   /** At the maximum, the roles that are not selected are disabled */
   await rolePickerOption(popover, "Rolle 20").click();
@@ -391,11 +404,10 @@ test("the role picker of the Human Resources roles disables the roles and the ta
   await lastRole.click({ force: true });
   await expect(lastRole).toHaveAttribute("aria-selected", "false");
 
-  /** Below the maximum, the role and the tag are enabled again */
+  /** Below the maximum, the role is enabled again */
   await rolePickerOption(popover, "Rolle 01").click();
   await expect(lastRole).toBeEnabled();
-  await expect(tag).toBeEnabled();
-  await tag.click();
+  await lastRole.click();
   await expect(lastRole).toHaveAttribute("aria-selected", "true");
   await expect(rolePickerChips(settingTile)).toHaveCount(20);
 

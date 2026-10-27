@@ -399,7 +399,7 @@ test("a finished event leaves its managers the badge without the dialog", async 
   await expect(permissionsButton(page)).toHaveCount(0);
 });
 
-test("the role picker of a child page offers the read roles of the parent, and a tag adds only these roles", async ({
+test("the role picker of a child page offers the read roles of the parent, and a tag filters only these roles", async ({
   page,
   prisma,
   signIn,
@@ -411,6 +411,7 @@ test("the role picker of a child page offers the read roles of the parent, and a
   const pilotRole = await createRole(prisma, { name: "Pilot" });
   const navigatorRole = await createRole(prisma, { name: "Navigator" });
   const engineerRole = await createRole(prisma, { name: "Ingenieur" });
+  const traderRole = await createRole(prisma, { name: "Händler" });
   await createRoleTag(prisma, {
     name: "Flugbetrieb",
     roles: [pilotRole, navigatorRole, engineerRole],
@@ -423,6 +424,7 @@ test("the role picker of a child page offers the read roles of the parent, and a
     roleAccess: [
       { roleId: pilotRole.id, type: WikiPageAccessType.READ },
       { roleId: navigatorRole.id, type: WikiPageAccessType.READ },
+      { roleId: traderRole.id, type: WikiPageAccessType.READ },
     ],
   });
   const childPage = await createWikiPage(prisma, {
@@ -440,15 +442,15 @@ test("the role picker of a child page offers the read roles of the parent, and a
   const trigger = readSection.getByRole("button", { name: "Rolle auswählen" });
 
   const popover = await openRolePicker(trigger);
-  await expect(rolePickerOption(popover, "Pilot")).toBeVisible();
-  await expect(rolePickerOption(popover, "Navigator")).toBeVisible();
+  const options = popover.getByRole("option");
+  await expect(rolePickerOption(popover, "Händler")).toBeVisible();
   await expect(rolePickerOption(popover, "Ingenieur")).toHaveCount(0);
 
   await rolePickerTag(popover, "Flugbetrieb").click();
-  await expect(rolePickerOption(popover, "Pilot")).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
+  await expect(options).toHaveText(["Navigator", "Pilot"]);
+  await expect(rolePickerChips(readSection)).toHaveCount(0);
+  await rolePickerOption(popover, "Navigator").click();
+  await rolePickerOption(popover, "Pilot").click();
   await closeRolePicker(popover);
   await expect(permissionsDialog).toBeVisible();
   await expect(rolePickerChips(readSection)).toHaveText(["Navigator", "Pilot"]);

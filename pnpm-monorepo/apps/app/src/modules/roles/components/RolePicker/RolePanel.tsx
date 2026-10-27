@@ -1,6 +1,6 @@
 "use client";
 
-import { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
+import type { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
 import type { ItemPickerItem } from "@/modules/common/components/ItemPicker/ItemPickerOption";
 import { ItemPickerPanel } from "@/modules/common/components/ItemPicker/ItemPickerPanel";
 import { searchItems } from "@/modules/common/components/ItemPicker/searchItems";
@@ -43,25 +43,19 @@ interface Props {
   readonly extraEntries?: readonly RolePickerExtraEntry[];
   /**
    * Multiple mode: the maximum number of selected roles. At the maximum, the
-   * roles that are not selected are disabled. A tag is disabled when its
-   * roles would go over the maximum.
+   * roles that are not selected are disabled.
    */
   readonly max?: number;
   /** A click or Enter on a role or an extra entry that is not disabled */
   readonly onRoleClick: (roleId: BadgeRole["id"]) => void;
-  /**
-   * Multiple mode: a click on a tag. Gives the offered roles of the tag that
-   * are not disabled and not selected yet. In single mode, a click on a tag
-   * filters the list.
-   */
-  readonly onTagClick?: (roleIds: BadgeRole["id"][]) => void;
   /** See `renderTrailing` of `ItemPickerPanel` */
   readonly renderTrailing?: (isSelected: boolean) => ReactNode;
 }
 
 /**
  * The content of the role picker: a search over the role names and the tag
- * names, the tags of the offered roles, and one offered role per row. It
+ * names, the tags of the offered roles, and one offered role per row. A click
+ * on a tag filters the list to the roles of the tag and selects nothing. It
  * works in the popover of `RolePicker` and also embedded, for example in a
  * modal. The owner holds the selection.
  */
@@ -74,12 +68,11 @@ export const RolePanel = ({
   extraEntries = [],
   max,
   onRoleClick,
-  onTagClick,
   renderTrailing,
 }: Props) => {
   const { roles: visibleRoles, tags, tagsByRoleId } = useRolesContext();
   const [query, setQuery] = useState("");
-  /** Single mode: the tag that filters the list */
+  /** The tag that filters the list */
   const [filterTagId, setFilterTagId] = useState<BadgeRoleTag["id"] | null>(
     null,
   );
@@ -96,10 +89,7 @@ export const RolePanel = ({
   const offeredTags = tags.filter((tag) =>
     tag.roleIds.some((roleId) => offeredRoleIdSet.has(roleId)),
   );
-  const filterTag =
-    mode === ItemPickerMode.Single
-      ? offeredTags.find((tag) => tag.id === filterTagId)
-      : undefined;
+  const filterTag = offeredTags.find((tag) => tag.id === filterTagId);
 
   const getDisabledReason = (roleId: BadgeRole["id"]) => {
     const disabledReason = disabledRoles?.get(roleId);
@@ -115,35 +105,9 @@ export const RolePanel = ({
     return undefined;
   };
 
-  /** The roles that a click on the tag adds, sorted by name */
-  const getAddableRoleIds = (tag: BadgeRoleTag) => {
-    const tagRoleIdSet = new Set(tag.roleIds);
-
-    return offeredRoles
-      .filter(
-        (role) =>
-          tagRoleIdSet.has(role.id) &&
-          !disabledRoles?.has(role.id) &&
-          !selectedRoleIdSet.has(role.id),
-      )
-      .map((role) => role.id);
-  };
-
-  const getTagDisabledReason = (tag: BadgeRoleTag) => {
-    if (mode !== ItemPickerMode.Multiple || max === undefined) return undefined;
-    if (selectedRoleIds.length + getAddableRoleIds(tag).length <= max)
-      return undefined;
-
-    return `Mit den Rollen dieses Tags wären mehr als ${max} Rollen ausgewählt.`;
-  };
-
-  const handleTagClick = (tag: BadgeRoleTag) => {
-    if (mode === ItemPickerMode.Single) {
-      setFilterTagId((previous) => (previous === tag.id ? null : tag.id));
-      return;
-    }
-
-    onTagClick?.(getAddableRoleIds(tag));
+  /** A second click on the filtering tag clears the filter */
+  const toggleFilterTag = (tag: BadgeRoleTag) => {
+    setFilterTagId((previous) => (previous === tag.id ? null : tag.id));
   };
 
   const listedRoles = filterTag
@@ -189,24 +153,15 @@ export const RolePanel = ({
         offeredTags.length > 0 && (
           <div
             role="group"
-            aria-label={
-              mode === ItemPickerMode.Single
-                ? "Nach Tag filtern"
-                : "Alle Rollen eines Tags auswählen"
-            }
+            aria-label="Nach Tag filtern"
             className="flex max-h-24 flex-wrap gap-1 overflow-y-auto"
           >
             {offeredTags.map((tag) => (
               <RoleTagChip
                 key={tag.id}
                 tag={tag}
-                isPressed={
-                  mode === ItemPickerMode.Single
-                    ? tag.id === filterTag?.id
-                    : undefined
-                }
-                disabledReason={getTagDisabledReason(tag)}
-                onClick={handleTagClick}
+                isPressed={tag.id === filterTag?.id}
+                onClick={toggleFilterTag}
               />
             ))}
           </div>
