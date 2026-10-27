@@ -12,7 +12,7 @@ module "email_function" {
   runtime                        = "nodejs24.x"
   environment_variables          = var.email_function_environment_variables
   batch_size                     = 10
-  batch_window                   = 30
+  batch_window                   = 0
   parameters = [
     "/mailgun/api_key",
   ]
