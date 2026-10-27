@@ -10,6 +10,7 @@ import {
 } from "../fixtures/factories";
 import {
   clickUntilVisible,
+  fillUntilUrl,
   fillUntilVisible,
   FORBIDDEN_TEXT,
   modal,
@@ -43,6 +44,12 @@ const tagsNavigationLink = (page: Page) =>
   page
     .getByRole("link", { name: "Tags", exact: true })
     .filter({ visible: true });
+
+/** The row of a tag in the table of the IAM page "Tags" */
+const tagRow = (page: Page, name: string) =>
+  page
+    .getByRole("row")
+    .filter({ has: page.getByRole("link", { name, exact: true }) });
 
 /** The links between roles and tags as "role:tag", sorted */
 const readLinks = async (prisma: PrismaClient) => {
@@ -174,17 +181,15 @@ test("a manager renames, describes and deletes a tag and changes its roles on th
     "ROLE_TAG_ASSIGNMENTS_UPDATED",
   ]);
 
-  // The list: sorted by name, each tag with its roles
+  // The table: sorted by name, each tag with its description and roles
   await page.goto("/app/iam/tags");
   await expect(page.getByRole("link", { name: /^(Flug|Gefecht)$/ })).toHaveText(
     ["Flug", "Gefecht"],
   );
-  const listItem = page
-    .getByRole("listitem")
-    .filter({ has: page.getByRole("link", { name: "Gefecht", exact: true }) });
-  await expect(listItem.getByText("Alle Rollen im Gefecht")).toBeVisible();
+  const row = tagRow(page, "Gefecht");
+  await expect(row.getByText("Alle Rollen im Gefecht")).toBeVisible();
   await expect(
-    listItem.getByRole("list", { name: "Rollen" }).getByRole("link"),
+    row.getByRole("list", { name: "Rollen" }).getByRole("link"),
   ).toHaveText(["Pilot"]);
 
   // The delete removes only the tag, and the roles stay
@@ -410,6 +415,64 @@ test("a selected tag that a different user deleted shows as an unknown tag on th
   await expect(chips).toHaveCount(0);
   await tile.getByRole("button", { name: "Speichern" }).click();
   await expect.poll(() => readLinks(prisma)).toEqual([]);
+});
+
+test("the tag table shows the roles of each tag, and the name search filters it", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "tag-admin",
+    permissionStrings: ["role;manage"],
+  });
+  const pilot = await createRole(prisma, { name: "Pilot" });
+  const scout = await createRole(prisma, { name: "Scout" });
+  await createRoleTag(prisma, { name: "Logistik" });
+  await createRoleTag(prisma, { name: "Kampf", roles: [scout] });
+  await createRoleTag(prisma, {
+    name: "Flug",
+    description: "Alle fliegenden Rollen",
+    roles: [scout, pilot],
+  });
+
+  const tagLinks = page.getByRole("link", {
+    name: /^(Flug|Kampf|Logistik)$/,
+  });
+  const rolesOf = (name: string) =>
+    tagRow(page, name).getByRole("list", { name: "Rollen" }).getByRole("link");
+
+  await signIn(admin.user);
+  await page.goto("/app/iam/tags");
+  await expect(
+    page.getByRole("columnheader").filter({ visible: true }),
+  ).toHaveText(["Tag", "Beschreibung", "Rollen"]);
+  await expect(tagLinks).toHaveText(["Flug", "Kampf", "Logistik"]);
+  await expect(
+    tagRow(page, "Flug").getByText("Alle fliegenden Rollen"),
+  ).toBeVisible();
+  await expect(rolesOf("Flug")).toHaveText(["Pilot", "Scout"]);
+  await expect(rolesOf("Kampf")).toHaveText(["Scout"]);
+  await expect(
+    tagRow(page, "Logistik").getByText("Keine Rollen"),
+  ).toBeVisible();
+
+  // The search ignores the case and filters on the server
+  const search = page.getByRole("textbox", { name: "Name", exact: true });
+  await fillUntilUrl(page, search, "KAM", /q=KAM/);
+  await expect(tagLinks).toHaveText(["Kampf"]);
+  await expect(rolesOf("Kampf")).toHaveText(["Scout"]);
+
+  await fillUntilUrl(page, search, "gibt es nicht", /q=gibt/);
+  await expect(
+    page.getByText("Kein Tag passt zu dieser Suche.").filter({ visible: true }),
+  ).toBeVisible();
+  await expect(tagLinks).toHaveCount(0);
+  // The call to action stays, also without a hit
+  await expect(page.getByRole("button", { name: "Neuer Tag" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Suche löschen" }).click();
+  await expect(tagLinks).toHaveText(["Flug", "Kampf", "Logistik"]);
 });
 
 test("the roles table shows the tags of each role and filters by tag", async ({
