@@ -49,6 +49,32 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-10-27-rollenauswahl-und-tags",
+    date: "2026-10-27",
+    title: "Einheitliche Rollenauswahl und Rollen-Tags",
+    tags: ["Neu", "Änderung", "Rollen"],
+    isTracked: false,
+    body: () => (
+      <>
+        <p>
+          Überall, wo Rollen ausgewählt werden, gibt es jetzt dieselbe Auswahl:
+          eine Suche nach Rollen und Tags, darunter alle Tags und eine Rolle pro
+          Zeile. Ein Klick auf einen Tag wählt alle Rollen mit diesem Tag aus.
+        </p>
+        <p>
+          Rollen können jetzt Tags haben. Wer Rollen verwalten darf, verwaltet
+          die Tags im IAM unter „Tags“ oder auf der Seite einer Rolle. Auch die
+          MCP-Tools für Rollen kennen die Tags.
+        </p>
+        <p>
+          Der Rollenfilter der Citizen-Liste gilt jetzt erst, wenn die Auswahl
+          geschlossen wird.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-10-25-mcp-benachrichtigungen",
     date: "2026-10-25",
     title: "Benachrichtigungen über MCP",
