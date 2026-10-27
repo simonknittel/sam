@@ -5,7 +5,6 @@ import {
   type ToolCatalogEntry,
 } from "./toolDefinition.js";
 import { TOOL_GROUP_ORDER, TOOL_GROUP_TITLES, ToolGroup } from "./toolGroup.js";
-import { getCurrentUserTool } from "./tools/account/getCurrentUser.js";
 import { changelogTools } from "./tools/changelog/index.js";
 import { eventsTools } from "./tools/events/index.js";
 import { fleetTools } from "./tools/fleet/index.js";
@@ -17,6 +16,7 @@ import { rolesTools } from "./tools/roles/index.js";
 import { spynetTools } from "./tools/spynet/index.js";
 import { systemLogTools } from "./tools/systemLog/index.js";
 import { tasksTools } from "./tools/tasks/index.js";
+import { usersTools } from "./tools/users/index.js";
 import { wikiTools } from "./tools/wiki/index.js";
 
 const compareTools = (first: CatalogTool, second: CatalogTool) =>
@@ -26,7 +26,7 @@ const compareTools = (first: CatalogTool, second: CatalogTool) =>
 
 /** All tools, sorted by the order of the groups and then by the name */
 export const TOOL_CATALOG: readonly CatalogTool[] = [
-  getCurrentUserTool,
+  ...usersTools,
   ...notificationTools,
   ...spynetTools,
   ...rolesTools,

@@ -29,13 +29,13 @@ SAM (Sinister Administration Module) is the internal tooling, ERP and CRM of our
 
 ## Apps
 
-The paths are on the host of this MCP server. \`/app/apps\` lists all apps of the user. The column "Tools" gives the tool groups of this server for the app (\`get_current_user\` gives the groups of this client). For an app without tools, send the user to the web app.
+The paths are on the host of this MCP server. \`/app/apps\` lists all apps of the user. The column "Tools" gives the tool groups of this server for the app (\`get_user\` without a user id gives the groups of this client). For an app without tools, send the user to the web app.
 
 | App | Path | Purpose | Tools |
 | --- | --- | --- | --- |
 | Dashboard | \`/app/dashboard\` | Start page with the calendar, the tasks, a wiki page and the Spynet search | – |
 | Spynet | \`/app/spynet\` | Intelligence database: citizens, organizations and notes. See [references/spynet.md](references/spynet.md). | ${ToolGroup.Spynet} |
-| IAM | \`/app/iam\` | Roles, permission matrix, inheritance matrix and users. See the skill \`sam-permissions\`. | ${ToolGroup.Roles} |
+| IAM | \`/app/iam\` | Roles, permission matrix, inheritance matrix and users. See the skill \`sam-permissions\`. | ${ToolGroup.Roles}, ${ToolGroup.Users} |
 | Strafpunkte | \`/app/penalty-points\` | Penalty points for citizens. An entry can have an expiry date (Verfällt am); only active entries count. | ${ToolGroup.PenaltyPoints} |
 | Flotte | \`/app/fleet\` | Own ships and the fleet of the organization. See [references/fleet.md](references/fleet.md). | ${ToolGroup.Fleet} |
 | Wiki | \`/app/wiki\` | The knowledge of the organization. See [references/wiki.md](references/wiki.md). | ${ToolGroup.Wiki} |

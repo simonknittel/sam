@@ -16,7 +16,7 @@ export const listPenaltyEntriesTool = defineTool({
   group: ToolGroup.PenaltyPoints,
   title: "List penalty entries",
   description:
-    "Gives the penalty entries (points, reason, author and expiry) of all citizens or of one citizen (citizen_id from a Spynet tool), the newest first; status active means not expired and not deleted, inactive means expired and not deleted. A user who can read only the own entries must give the citizen id of get_current_user.",
+    "Gives the penalty entries (points, reason, author and expiry) of all citizens or of one citizen (citizen_id from a Spynet tool), the newest first; status active means not expired and not deleted, inactive means expired and not deleted. A user who can read only the own entries must give the citizen id of get_user.",
   annotations: READ_ONLY_TOOL_ANNOTATIONS,
   readAuditEventType: AuditEventType.PENALTY_ENTRIES_LISTED,
   inputSchema: listPenaltyEntriesInputSchema,

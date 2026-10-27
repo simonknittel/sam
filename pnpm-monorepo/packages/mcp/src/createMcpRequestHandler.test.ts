@@ -58,8 +58,25 @@ const log = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
 /** `withSpan()` uses only `startActiveSpan()`, `setStatus()` and `end()` */
 const span = { setStatus: () => span, end: () => undefined };
 
-/** Only the queries of the principal */
+/** The queries of the principal and the user query of `get_user` */
 const prisma = {
+  user: {
+    findUnique: ({ where }: { where: { id: string } }) =>
+      Promise.resolve({
+        id: where.id,
+        name: "Name",
+        email: null,
+        emailVerified: null,
+        createdAt: null,
+        role: null,
+        discordTwoFactorEnabled: null,
+        bannedAt: null,
+        bannedReason: null,
+        bannedBy: null,
+        accounts: [],
+        citizen: { id: "citizen", handle: "Handle", deletedAt: null },
+      }),
+  },
   oAuthGrant: {
     findUnique: () => Promise.resolve(grantRow),
     updateMany: () => Promise.resolve({ count: 1 }),
@@ -113,8 +130,8 @@ const issueToken = () =>
     scope: "mcp",
   });
 
-/** A `tools/call` of `get_current_user` in the 2026-07-28 revision */
-const callGetCurrentUser = (headers: Record<string, string>) =>
+/** A `tools/call` of `get_user` in the 2026-07-28 revision */
+const callGetUser = (headers: Record<string, string>) =>
   handleRequest(
     context,
     new Request(mcpResourceUrl, {
@@ -125,7 +142,7 @@ const callGetCurrentUser = (headers: Record<string, string>) =>
         accept: "application/json, text/event-stream",
         "mcp-protocol-version": PROTOCOL_VERSION,
         "mcp-method": "tools/call",
-        "mcp-name": "get_current_user",
+        "mcp-name": "get_user",
         ...headers,
       },
       body: JSON.stringify({
@@ -133,7 +150,7 @@ const callGetCurrentUser = (headers: Record<string, string>) =>
         id: 1,
         method: "tools/call",
         params: {
-          name: "get_current_user",
+          name: "get_user",
           arguments: {},
           _meta: {
             [PROTOCOL_VERSION_META_KEY]: PROTOCOL_VERSION,
@@ -146,7 +163,7 @@ const callGetCurrentUser = (headers: Record<string, string>) =>
   );
 
 const callWithToken = async () =>
-  callGetCurrentUser({ authorization: `Bearer ${await issueToken()}` });
+  callGetUser({ authorization: `Bearer ${await issueToken()}` });
 
 beforeEach(() => {
   grantRow = createGrantRow();
@@ -155,7 +172,7 @@ beforeEach(() => {
 
 describe("authentication", () => {
   test("a request without a token gets the challenge with the metadata URL and the scope", async () => {
-    const response = await callGetCurrentUser({});
+    const response = await callGetUser({});
 
     expect(response.status).toBe(401);
     const challenge = response.headers.get("www-authenticate");
@@ -172,8 +189,8 @@ describe("authentication", () => {
     expect(response.status).toBe(200);
     const body = (await response.json()) as { result: CallToolResult };
     expect(body.result.structuredContent).toMatchObject({
-      user_id: "user",
-      citizen: { id: "citizen", handle: "Handle" },
+      id: "user",
+      client: { permission_count: 2 },
     });
   });
 
@@ -211,7 +228,7 @@ describe("authentication", () => {
   });
 
   test("a request with the host of a different site is refused before the token check", async () => {
-    const response = await callGetCurrentUser({ host: "attacker.example" });
+    const response = await callGetUser({ host: "attacker.example" });
 
     expect(response.status).toBe(403);
     expect(response.headers.get("www-authenticate")).toBeNull();

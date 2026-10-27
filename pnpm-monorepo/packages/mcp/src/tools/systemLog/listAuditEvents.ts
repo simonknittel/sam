@@ -2,7 +2,10 @@ import {
   listAuditEvents,
   listAuditEventsInputSchema,
 } from "@sam-monorepo/application";
-import { AuditEventType } from "@sam-monorepo/domain";
+import {
+  AuditEventType,
+  redactEmailAddressesInJson,
+} from "@sam-monorepo/domain";
 import * as z from "zod";
 import { citizenReferenceSchema, dateTimeOutputSchema } from "../../schemas.js";
 import {
@@ -41,7 +44,7 @@ const auditEventOutputSchema = z.strictObject({
   data: z
     .unknown()
     .describe(
-      "The payload with the keys as the app stored them, for example the ids of the changed items. Older events store it as a JSON-encoded string.",
+      "The payload with the keys as the app stored them, for example the ids of the changed items. Older events store it as a JSON-encoded string. The email addresses are redacted, like the email of get_user.",
     ),
 });
 
@@ -66,6 +69,13 @@ export const listAuditEventsTool = defineTool({
       input,
     );
 
-    return { events, next_cursor };
+    // The system log of the web app shows the full email addresses
+    return {
+      events: events.map((event) => ({
+        ...event,
+        data: redactEmailAddressesInJson(event.data),
+      })),
+      next_cursor,
+    };
   },
 });

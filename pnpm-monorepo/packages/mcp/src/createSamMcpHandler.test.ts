@@ -21,7 +21,7 @@ import {
   toAuthInfoExtra,
   type McpPrincipalExtra,
 } from "./createSamMcpHandler.js";
-import { getCurrentUserTool } from "./tools/account/getCurrentUser.js";
+import { getUserTool } from "./tools/users/getUser.js";
 
 /**
  * The revision of the protocol that the endpoint serves. The SDK exports only
@@ -40,11 +40,28 @@ const span = { setStatus: () => span, end: () => undefined };
 
 const baseUrl = new URL("http://localhost");
 
+/** The columns of the user that `get_user` selects */
+const USER_ROW = {
+  id: "user",
+  name: "Name",
+  email: "user@example.com",
+  emailVerified: new Date("2026-01-01T00:00:00Z"),
+  createdAt: new Date("2025-12-01T00:00:00Z"),
+  role: null,
+  discordTwoFactorEnabled: null,
+  bannedAt: null,
+  bannedReason: null,
+  bannedBy: null,
+  accounts: [{ providerAccountId: "1234" }],
+  citizen: { id: "citizen", handle: "Handle", deletedAt: null },
+};
+
 /**
- * The tools of these tests use only the logger, the tracer and the URLs. The
- * registry writes the audit event of a read tool.
+ * The tool of these tests uses only the user query, the logger, the tracer
+ * and the URLs. The registry writes the audit event of a read tool.
  */
 const context = {
+  prisma: { user: { findUnique: () => Promise.resolve(USER_ROW) } },
   log,
   audit,
   tracer: {
@@ -72,13 +89,13 @@ const actor = createActor({
 });
 
 /**
- * The tests look only at `get_current_user`. The other tools of the catalog
- * are disabled, thus a new tool that every user sees does not change the
+ * The tests look only at `get_user`. The other tools of the catalog are
+ * disabled, thus a new tool that every user sees does not change the
  * expectations.
  */
 const OTHER_TOOL_NAMES = listToolCatalog()
   .map((tool) => tool.name)
-  .filter((name) => name !== "get_current_user");
+  .filter((name) => name !== "get_user");
 
 const handler = createSamMcpHandler({
   serverVersion: "1.0.0",
@@ -157,10 +174,10 @@ const sendModernRequest = <Result>(
     principal,
   );
 
-const callGetCurrentUser = (principal?: Partial<McpPrincipalExtra>) =>
+const callGetUser = (principal?: Partial<McpPrincipalExtra>) =>
   sendModernRequest<CallToolResult>(
     "tools/call",
-    { name: "get_current_user", arguments: {} },
+    { name: "get_user", arguments: {} },
     principal,
   );
 
@@ -186,12 +203,12 @@ describe("discovery", () => {
     );
   });
 
-  test("tools/list gives get_current_user with its annotations and its output schema", async () => {
+  test("tools/list gives get_user with its annotations and its output schema", async () => {
     const { body } = await sendModernRequest<ListToolsResult>("tools/list");
 
     expect(body.result?.tools).toEqual([
       expect.objectContaining({
-        name: "get_current_user",
+        name: "get_user",
         annotations: {
           readOnlyHint: true,
           destructiveHint: false,
@@ -227,31 +244,40 @@ describe("discovery", () => {
 });
 
 describe("tools/call", () => {
-  test("get_current_user gives the structured content and the same JSON as text", async () => {
-    const { body } = await callGetCurrentUser();
+  test("get_user without a user id gives the signed-in user with a redacted email address and this client, as structured content and as the same JSON text", async () => {
+    const { body } = await callGetUser();
 
     expect(body.result?.isError).toBeUndefined();
     expect(body.result?.structuredContent).toEqual({
-      user_id: "user",
-      citizen: { id: "citizen", handle: "Handle" },
+      id: "user",
+      name: "Name",
+      email: "u***r@e***e.com",
+      email_verified_at: "2026-01-01T00:00:00.000Z",
+      created_at: "2025-12-01T00:00:00.000Z",
       role: "user",
-      admin_mode: false,
-      permission_count: 1,
-      tool_groups: ["account"],
-      settings_page_url: "http://localhost/app/mcp",
+      discord_id: "1234",
+      discord_two_factor_enabled: null,
+      citizen: { id: "citizen", handle: "Handle" },
+      ban: null,
+      client: {
+        admin_mode: false,
+        permission_count: 1,
+        tool_groups: ["users"],
+        settings_page_url: "http://localhost/app/mcp",
+      },
     });
     expect(body.result?.content).toEqual([
       { type: "text", text: JSON.stringify(body.result?.structuredContent) },
     ]);
     expect(log.info).toHaveBeenCalledWith("MCP tool call", {
-      tool: "get_current_user",
+      tool: "get_user",
       userId: "user",
       durationMs: expect.any(Number),
       isError: false,
     });
     expect(audit.create).toHaveBeenCalledExactlyOnceWith([
       {
-        type: AuditEventType.CURRENT_USER_READ,
+        type: AuditEventType.USER_READ,
         data: { arguments: {} },
         createdById: "user",
       },
@@ -260,7 +286,7 @@ describe("tools/call", () => {
 
   test("a disabled tool is not in the list and cannot be called", async () => {
     const principal = {
-      disabledToolNames: [...OTHER_TOOL_NAMES, "get_current_user"],
+      disabledToolNames: [...OTHER_TOOL_NAMES, "get_user"],
     };
 
     const list = await sendModernRequest<ListToolsResult>(
@@ -270,19 +296,19 @@ describe("tools/call", () => {
     );
     expect(list.body.result?.tools).toEqual([]);
 
-    const call = await callGetCurrentUser(principal);
+    const call = await callGetUser(principal);
     expect(call.body.error).toEqual({
       code: -32602,
-      message: "Tool get_current_user not found",
+      message: "Tool get_user not found",
     });
   });
 
   test("a typed error becomes a tool error with its message", async () => {
-    vi.spyOn(getCurrentUserTool, "handler").mockRejectedValueOnce(
+    vi.spyOn(getUserTool, "handler").mockRejectedValueOnce(
       new ForbiddenError("The permission event;read is missing"),
     );
 
-    const { body } = await callGetCurrentUser();
+    const { body } = await callGetUser();
 
     expect(body.result).toMatchObject({
       isError: true,
@@ -299,18 +325,18 @@ describe("tools/call", () => {
   });
 
   test("an output with a field that the output schema does not name does not leave the server", async () => {
-    const output = await getCurrentUserTool.handler(
+    const output = await getUserTool.handler(
       context,
       actor,
       {},
       { availableTools: [] },
     );
-    vi.spyOn(getCurrentUserTool, "handler").mockResolvedValueOnce({
+    vi.spyOn(getUserTool, "handler").mockResolvedValueOnce({
       ...output,
-      email: "user@example.com",
+      unredacted_email: "user@example.com",
     });
 
-    const { body } = await callGetCurrentUser();
+    const { body } = await callGetUser();
 
     expect(body.result).toMatchObject({
       isError: true,
@@ -320,7 +346,7 @@ describe("tools/call", () => {
     });
     expect(JSON.stringify(body)).not.toContain("user@example.com");
     expect(log.error).toHaveBeenCalledWith("The MCP tool failed", {
-      tool: "get_current_user",
+      tool: "get_user",
       userId: "user",
       errorName: "ZodError",
       issues: [{ code: "unrecognized_keys", path: "" }],
@@ -336,12 +362,12 @@ describe("tools/call", () => {
       new Error("Unique constraint failed: user@example.com"),
       { code: "P2002" },
     );
-    vi.spyOn(getCurrentUserTool, "handler").mockRejectedValueOnce(error);
+    vi.spyOn(getUserTool, "handler").mockRejectedValueOnce(error);
 
-    await callGetCurrentUser();
+    await callGetUser();
 
     expect(log.error).toHaveBeenCalledWith("The MCP tool failed", {
-      tool: "get_current_user",
+      tool: "get_user",
       userId: "user",
       errorName: "Error",
       errorCode: "P2002",

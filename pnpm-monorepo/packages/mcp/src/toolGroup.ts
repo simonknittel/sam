@@ -3,7 +3,7 @@
  * the order of the groups in `tools/list` and in the MCP app.
  */
 export enum ToolGroup {
-  Account = "account",
+  Users = "users",
   Notifications = "notifications",
   Spynet = "spynet",
   Roles = "roles",
@@ -19,7 +19,7 @@ export enum ToolGroup {
 }
 
 export const TOOL_GROUP_TITLES: Readonly<Record<ToolGroup, string>> = {
-  [ToolGroup.Account]: "Account",
+  [ToolGroup.Users]: "Users",
   [ToolGroup.Notifications]: "Notifications",
   [ToolGroup.Spynet]: "Spynet",
   [ToolGroup.Roles]: "Roles",
