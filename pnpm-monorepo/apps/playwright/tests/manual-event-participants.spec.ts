@@ -7,6 +7,7 @@ import {
   createEvent,
   createParticipant,
   createRole,
+  createRoleTag,
   EventSource,
   EventVisibility,
   futureEvent,
@@ -17,7 +18,9 @@ import {
   clickUntilVisible,
   fillUntilValue,
   modal,
+  openRolePicker,
   pickFromSearch,
+  rolePickerTag,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -142,6 +145,93 @@ test("a manager adds citizens with a shared comment", async ({
   await expect(addedRow).toBeVisible();
   await expect(addedRow).toContainText("teilnehmer-manager");
   await expect(addedRow).toContainText("Vom Manager nachgetragen");
+});
+
+test("a tag in the role shortcut of the citizen picker replaces the picked citizens with the citizens of its roles", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const pilotRole = await createRole(prisma, { name: "Pilot" });
+  const engineerRole = await createRole(prisma, { name: "Ingenieur" });
+  const traderRole = await createRole(prisma, { name: "Händler" });
+  await createRoleTag(prisma, {
+    name: "Crew",
+    roles: [pilotRole, engineerRole],
+  });
+  const manager = await createCitizen(prisma, {
+    handle: "crew-manager",
+    permissionStrings: [
+      ...MANAGER_PERMISSIONS,
+      `otherRole;read;roleId=${pilotRole.id}`,
+      `otherRole;read;roleId=${engineerRole.id}`,
+      `otherRole;read;roleId=${traderRole.id}`,
+    ],
+  });
+  const event = await createAppEvent(
+    prisma,
+    appEvent("Operation Crew", manager.entity.id),
+  );
+
+  const citizenWithRoles = async (
+    handle: string,
+    roles: readonly { readonly id: string }[],
+  ) => {
+    const citizen = await createCitizen(prisma, {
+      handle,
+      permissionStrings: ["event;read"],
+    });
+    for (const role of roles) await assignRole(prisma, citizen.entity, role);
+    return citizen;
+  };
+  const pilot = await citizenWithRoles("pilotin", [pilotRole]);
+  const engineer = await citizenWithRoles("ingenieur", [engineerRole]);
+  /** Has both roles of the tag, and is added once */
+  const allRounder = await citizenWithRoles("allrounder", [
+    pilotRole,
+    engineerRole,
+  ]);
+  await citizenWithRoles("haendler", [traderRole]);
+  await citizenWithRoles("zuvor-gewaehlt", []);
+  /** The picker does not offer a participant */
+  const participant = await citizenWithRoles("schon-dabei", [pilotRole]);
+  await createParticipant(prisma, {
+    eventId: event.id,
+    citizen: participant,
+    source: EventSource.APP,
+  });
+
+  await signIn(manager.user);
+  await page.goto(`/app/events/${event.id}/participants`);
+
+  const addModal = await openAddModal(page);
+  await pickCitizen(addModal, page, "zuvor-gewaehlt");
+
+  const popover = await openRolePicker(addModal.getByTitle("Rolle auswählen"));
+  await rolePickerTag(popover, "Crew").click();
+  await expect(popover).not.toBeVisible();
+
+  for (const handle of ["pilotin", "ingenieur", "allrounder"]) {
+    await expect(addModal.getByRole("link", { name: handle })).toHaveCount(1);
+  }
+  for (const handle of ["zuvor-gewaehlt", "haendler", "schon-dabei"]) {
+    await expect(addModal.getByRole("link", { name: handle })).toHaveCount(0);
+  }
+
+  await addModal.getByRole("button", { name: "Speichern" }).click();
+  await expect(page.getByText("3 Teilnehmer hinzugefügt.")).toBeVisible();
+  const rows = await prisma.eventParticipant.findMany({
+    where: { eventId: event.id },
+    select: { citizenId: true },
+  });
+  expect(rows.map((row) => row.citizenId).toSorted()).toEqual(
+    [
+      participant.entity.id,
+      pilot.entity.id,
+      engineer.entity.id,
+      allRounder.entity.id,
+    ].toSorted(),
+  );
 });
 
 test("a manager removes a participant with a reason and clears their lineup", async ({

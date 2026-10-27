@@ -7,15 +7,21 @@ import {
   assignRole,
   createCitizen,
   createRole,
+  createRoleTag,
   ONE_MINUTE_MS,
 } from "../fixtures/factories";
 import {
   clickUntilUrl,
   clickUntilVisible,
+  closeRolePicker,
   DELETED_TEXT,
   FORBIDDEN_TEXT,
   modal,
+  openRolePicker,
   RESOURCE_NOT_FOUND_TEXT,
+  rolePickerChips,
+  rolePickerOption,
+  rolePickerTag,
   SAVED_TEXT,
   sectionByHeading,
   toggleLabel,
@@ -795,20 +801,82 @@ test("an old bookmark with comma-separated filters still filters the citizen tab
   await expect(page.getByText("2 / 1")).toBeVisible();
   await expect(rows).toHaveCount(0);
 
-  // The checkboxes show the filters of the URL, and a change goes back to the first page
-  const roleFilter = page.getByRole("dialog", { name: "Rollen" });
-  await clickUntilVisible(
-    page.getByRole("button", { name: "Rollen", exact: true }),
-    roleFilter,
-  );
-  await expect(
-    roleFilter.getByRole("checkbox", { name: "Bergbau" }),
-  ).toBeChecked();
-  await clickUntilUrl(
-    page,
-    toggleLabel(roleFilter, "Bergbau"),
+  // The role filter shows the roles of the URL, and a removal goes back to the first page
+  await waitForAppShellHydration(page);
+  await rolePickerChips(page).filter({ hasText: "Bergbau" }).click();
+  await expect(page).toHaveURL(
     /\/app\/spynet\/citizen\?filters=unknown-handle$/,
   );
   await expect(page.getByText("1 / 1")).toBeVisible();
   await expect(rows).toHaveCount(2);
+});
+
+test("the role filter of the citizen table applies when its popover closes, and a removal applies at once", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const miningRole = await createRole(prisma, { name: "Bergbau" });
+  const tradeRole = await createRole(prisma, { name: "Handel" });
+  const combatRole = await createRole(prisma, { name: "Kampf" });
+  await createRoleTag(prisma, {
+    name: "Wirtschaft",
+    roles: [miningRole, tradeRole],
+  });
+  const viewer = await createCitizen(prisma, {
+    handle: "rollen-filterer",
+    permissionStrings: [
+      "citizen;read",
+      "spynetCitizen;read",
+      `otherRole;read;roleId=${miningRole.id}`,
+      `otherRole;read;roleId=${tradeRole.id}`,
+      `otherRole;read;roleId=${combatRole.id}`,
+    ],
+  });
+  for (const [handle, role] of [
+    ["bergmann", miningRole],
+    ["haendlerin", tradeRole],
+    ["kaempfer", combatRole],
+  ] as const) {
+    const citizen = await prisma.citizen.create({ data: { handle } });
+    await assignRole(prisma, citizen, role);
+  }
+  const rows = citizenTableRows(page);
+
+  await signIn(viewer.user);
+  await page.goto("/app/spynet/citizen");
+  await expect(rows).toHaveCount(4);
+
+  /** The URL and the table stay while the popover is open */
+  const popover = await openRolePicker(
+    page.getByRole("button", { name: "Rolle auswählen" }),
+  );
+  await rolePickerOption(popover, "Kampf").click();
+  await rolePickerOption(popover, "Kampf").click();
+  await rolePickerTag(popover, "Wirtschaft").click();
+  await expect(rolePickerOption(popover, "Handel")).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await expect(page).toHaveURL(/\/app\/spynet\/citizen$/);
+  await expect(rows).toHaveCount(4);
+
+  await closeRolePicker(popover);
+  await expect(page).toHaveURL(
+    new RegExp(`\\?filters=role-${miningRole.id},role-${tradeRole.id}$`),
+  );
+  await expect(rows).toHaveCount(2);
+  await expect(rows.filter({ hasText: "kaempfer" })).toHaveCount(0);
+
+  await rolePickerChips(page).filter({ hasText: "Handel" }).click();
+  await expect(page).toHaveURL(new RegExp(`\\?filters=role-${miningRole.id}$`));
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first()).toContainText("bergmann");
+
+  /** Each change is one entry in the history */
+  await page.goBack();
+  await expect(rows).toHaveCount(2);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/app\/spynet\/citizen$/);
+  await expect(rows).toHaveCount(4);
 });

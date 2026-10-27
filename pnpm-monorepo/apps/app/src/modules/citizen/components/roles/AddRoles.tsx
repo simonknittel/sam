@@ -2,18 +2,14 @@
 
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
-import { TextInput } from "@/modules/common/components/form/TextInput";
 import Modal from "@/modules/common/components/Modal";
-import type { BadgeRole } from "@/modules/roles/queries/getRoles";
 import { type Citizen, type Role } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
-import Fuse, { type FuseResult } from "fuse.js";
 
 import { api } from "@/trpc/react";
 import { useState } from "react";
 import { BsExclamationOctagonFill } from "react-icons/bs";
 import { FaPen } from "react-icons/fa";
-import { RoleCheckbox } from "./RoleCheckbox";
 import { UpdateRolesForm } from "./UpdateRolesForm";
 
 interface Props {
@@ -36,7 +32,6 @@ export const AddRoles = ({
   onSaved,
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [query, setQuery] = useState("");
   const {
     isPending,
     data: assignableRoles,
@@ -44,25 +39,6 @@ export const AddRoles = ({
   } = api.roles.getAssignableRoles.useQuery(undefined, {
     enabled: isOpen,
   });
-
-  const handleRequestClose = () => {
-    setIsOpen(false);
-    setQuery("");
-  };
-
-  const fuse = assignableRoles
-    ? new Fuse<BadgeRole>(assignableRoles, {
-        keys: ["name"],
-        includeMatches: true,
-        threshold: 0.2,
-      })
-    : null;
-
-  const searchResults = query && fuse ? fuse.search(query) : [];
-
-  const resultsById = new Map<Role["id"], FuseResult<BadgeRole>>(
-    searchResults.map((result) => [result.item.id, result] as const),
-  );
 
   return (
     <>
@@ -77,8 +53,8 @@ export const AddRoles = ({
 
       <Modal
         isOpen={isOpen}
-        onRequestClose={handleRequestClose}
-        className="w-7xl"
+        onRequestClose={() => setIsOpen(false)}
+        className="w-120"
         heading={<h2>Rollen hinzufügen oder entfernen</h2>}
       >
         {isPending && (
@@ -96,46 +72,12 @@ export const AddRoles = ({
         )}
 
         {assignableRoles && (
-          <>
-            <div className="mb-4 flex justify-center border-b border-b-neutral-700 px-4 pb-4">
-              <div className="w-full max-w-md text-center">
-                <TextInput
-                  label="Suche"
-                  placeholder="Rolle suchen..."
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  autoFocus
-                  className="hidden"
-                />
-              </div>
-            </div>
-
-            <UpdateRolesForm onSaved={onSaved}>
-              <input type="hidden" name="citizenId" value={citizenId} />
-
-              <div
-                className="columns-3xs gap-8"
-                style={{
-                  columnRule: "1px solid #404040", // neutral-700
-                }}
-              >
-                {assignableRoles?.map((role) => {
-                  const result = resultsById.get(role.id);
-
-                  return (
-                    <RoleCheckbox
-                      key={role.id}
-                      role={role}
-                      isChecked={assignedRoleIds.includes(role.id)}
-                      isVisible={query ? result !== undefined : true}
-                      match={result?.matches?.[0]}
-                      query={query}
-                    />
-                  );
-                })}
-              </div>
-            </UpdateRolesForm>
-          </>
+          <UpdateRolesForm
+            citizenId={citizenId}
+            assignedRoleIds={assignedRoleIds}
+            assignableRoles={assignableRoles}
+            onSaved={onSaved}
+          />
         )}
       </Modal>
     </>

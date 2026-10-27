@@ -6,7 +6,12 @@ import {
   createRole,
   futureEvent,
 } from "../fixtures/factories";
-import { hoverUntilVisible, modal } from "../fixtures/interactions";
+import {
+  hoverUntilVisible,
+  modal,
+  rolePickerOption,
+  searchRolePicker,
+} from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 /**
@@ -124,7 +129,7 @@ const SCENARIOS: readonly InteractionScenario[] = [
     interaction: Interaction.Click,
     openDialog: (editButton) => editButton.click(),
     tickRole: (rolesDialog, roleName) =>
-      rolesDialog.getByText(roleName).click(),
+      rolePickerOption(rolesDialog, roleName).click(),
     closeDialog: (rolesDialog) => closeButton(rolesDialog).click(),
   },
   {
@@ -134,15 +139,28 @@ const SCENARIOS: readonly InteractionScenario[] = [
       await editButton.focus();
       await editButton.page().keyboard.press("Enter");
     },
-    tickRole: (rolesDialog, roleName) =>
-      rolesDialog.getByRole("checkbox", { name: roleName }).press("Space"),
+    /**
+     * The search field has the focus. During a search, Enter ticks the
+     * first match.
+     */
+    tickRole: async (rolesDialog, roleName) => {
+      const search = rolesDialog.getByRole("combobox", {
+        name: "Rolle oder Tag suchen …",
+      });
+      await expect(search).toBeFocused();
+      await searchRolePicker(rolesDialog, roleName);
+      await expect(rolePickerOption(rolesDialog, roleName)).toHaveAttribute(
+        "data-active",
+      );
+      await search.press("Enter");
+    },
     closeDialog: (rolesDialog) => rolesDialog.page().keyboard.press("Escape"),
   },
   {
     interaction: Interaction.PointerSteps,
     openDialog: clickWithPointerSteps,
     tickRole: (rolesDialog, roleName) =>
-      clickWithPointerSteps(rolesDialog.getByText(roleName)),
+      clickWithPointerSteps(rolePickerOption(rolesDialog, roleName)),
     closeDialog: (rolesDialog) =>
       clickWithPointerSteps(closeButton(rolesDialog)),
   },
@@ -166,16 +184,17 @@ for (const scenario of SCENARIOS) {
 
     await scenario.openDialog(editButton);
     /** The roles load only after the dialog opened */
-    await expect(rolesDialog.getByText(FIRST_ROLE)).toBeVisible();
+    await expect(rolePickerOption(rolesDialog, FIRST_ROLE)).toBeVisible();
 
     await scenario.tickRole(rolesDialog, FIRST_ROLE);
     await expect
       .poll(savedRoleIds)
       .toEqual([ownRoleId, firstRoleId].toSorted());
     await expect(rolesDialog).toBeVisible();
-    await expect(
-      rolesDialog.getByRole("checkbox", { name: FIRST_ROLE }),
-    ).toBeChecked();
+    await expect(rolePickerOption(rolesDialog, FIRST_ROLE)).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
 
     await scenario.tickRole(rolesDialog, SECOND_ROLE);
     await expect
@@ -205,10 +224,10 @@ test("a role ticked right before the role dialog of the citizen popover closes i
   } = await openCitizenPopover(page, prisma, signIn);
 
   await editButton.click();
-  await expect(rolesDialog.getByText(FIRST_ROLE)).toBeVisible();
+  await expect(rolePickerOption(rolesDialog, FIRST_ROLE)).toBeVisible();
 
   /** The dialog closes before the debounced save of the role */
-  await rolesDialog.getByText(FIRST_ROLE).click();
+  await rolePickerOption(rolesDialog, FIRST_ROLE).click();
   await closeButton(rolesDialog).click();
   await expect(rolesDialog).not.toBeVisible();
   await expect(popover).not.toBeVisible();

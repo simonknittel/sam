@@ -2,9 +2,11 @@
 
 import Button from "@/modules/common/components/Button";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
-import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
+import { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
+import { ItemPickerPopover } from "@/modules/common/components/ItemPicker/ItemPickerPopover";
 import { underlineCharacters } from "@/modules/common/utils/underlineCharacters";
-import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
+import { RolePanel } from "@/modules/roles/components/RolePicker/RolePanel";
+import type { BadgeRole } from "@/modules/roles/queries/getRoles";
 import { api } from "@/trpc/react";
 import {
   Combobox,
@@ -241,23 +243,30 @@ const Multiple = ({
     defaultValue || [],
   );
 
-  const handleSelectRole = (roleId: string) => {
+  const [isRolePickerOpen, setIsRolePickerOpen] = useState(false);
+
+  /** Replaces the selected citizens with the citizens of the roles */
+  const selectCitizensOfRoles = (roleIds: readonly BadgeRole["id"][]) => {
     if (!dataCitizensGroupedByVisibleRoles) return;
 
     const { citizens, roleGroups } = dataCitizensGroupedByVisibleRoles;
-    const citizenIdsOfRole = new Set(
-      roleGroups.find((group) => group.roleId === roleId)?.citizenIds,
-    );
-    const citizensOfRole = citizens.filter((citizen) =>
-      citizenIdsOfRole.has(citizen.id),
+    const roleIdSet = new Set(roleIds);
+    const citizenIdsOfRoles = new Set(
+      roleGroups
+        .filter((group) => roleIdSet.has(group.roleId))
+        .flatMap((group) => group.citizenIds),
     );
 
     setSelectedCitizens(
-      selectableIds
-        ? citizensOfRole.filter((citizen) => selectableIds.has(citizen.id))
-        : citizensOfRole,
+      citizens.filter(
+        (citizen) =>
+          citizenIdsOfRoles.has(citizen.id) &&
+          (!selectableIds || selectableIds.has(citizen.id)),
+      ),
     );
+    setIsRolePickerOpen(false);
   };
+
   return (
     <>
       <div className="flex gap-2">
@@ -290,7 +299,7 @@ const Multiple = ({
           </ComboboxOptions>
         </Combobox>
 
-        <PopoverBaseUI
+        <ItemPickerPopover
           title="Citizens einer Rolle auswählen"
           trigger={<FaUsers />}
           triggerRender={
@@ -303,27 +312,22 @@ const Multiple = ({
               disabled={isPending}
             />
           }
-          openOnHover={false}
-          positionerClassName="z-40"
-          childrenClassName="max-h-96 overflow-auto"
+          open={isRolePickerOpen}
+          onOpenChange={setIsRolePickerOpen}
         >
-          <div className="flex flex-col gap-2">
-            {dataCitizensGroupedByVisibleRoles?.roleGroups.map(({ roleId }) => (
-              <button
-                key={roleId}
-                type="button"
-                onClick={() => handleSelectRole(roleId)}
-                className="group"
-              >
-                <SingleRoleBadge
-                  roleId={roleId}
-                  showPlaceholder
-                  className="bg-transparent group-hover:bg-neutral-700/50 group-focus-visible:bg-neutral-700/50"
-                />
-              </button>
-            ))}
-          </div>
-        </PopoverBaseUI>
+          {/* Multiple mode without a selection: a click on a tag gives all roles of the tag */}
+          <RolePanel
+            mode={ItemPickerMode.Multiple}
+            selectedRoleIds={[]}
+            offeredRoleIds={
+              dataCitizensGroupedByVisibleRoles?.roleGroups.map(
+                (group) => group.roleId,
+              ) ?? []
+            }
+            onRoleClick={(roleId) => selectCitizensOfRoles([roleId])}
+            onTagClick={selectCitizensOfRoles}
+          />
+        </ItemPickerPopover>
       </div>
 
       <p className="mt-1 text-xs text-gray-400">Mehrfachauswahl möglich</p>

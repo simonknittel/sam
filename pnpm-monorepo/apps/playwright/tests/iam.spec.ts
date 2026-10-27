@@ -1,13 +1,25 @@
 import { expectAuditEvents } from "../fixtures/audit";
-import { assignRole, createCitizen, createRole } from "../fixtures/factories";
+import {
+  assignRole,
+  createCitizen,
+  createRole,
+  createRoleTag,
+} from "../fixtures/factories";
 import {
   clickUntilUrl,
   clickUntilVisible,
+  closeRolePicker,
   FORBIDDEN_TEXT,
   modal,
   NOT_FOUND_TEXT,
+  openRolePicker,
+  pickRole,
   RESOURCE_NOT_FOUND_TEXT,
+  rolePickerChips,
+  rolePickerOption,
+  rolePickerTag,
   SAVED_TEXT,
+  searchRolePicker,
   sectionByHeading,
   toggleLabel,
   waitForAppShellHydration,
@@ -94,9 +106,10 @@ test("a role created and assigned through the UI grants its permission", async (
     page.getByRole("button", { name: "Bearbeiten" }),
     modal(page, "Rollen hinzufügen oder entfernen"),
   );
-  await modal(page, "Rollen hinzufügen oder entfernen")
-    .getByText("Aufgabenleser")
-    .click();
+  await rolePickerOption(
+    modal(page, "Rollen hinzufügen oder entfernen"),
+    "Aufgabenleser",
+  ).click();
   // The role checkboxes save through a debounced form (1s)
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   await page.getByRole("button", { name: "Schließen" }).click();
@@ -176,17 +189,17 @@ test("a role from the create menu shows in a role list that stays on the page", 
   await waitForAppShellHydration(page);
 
   /**
-   * The role selector of a salary row gets its roles through tRPC, and the
-   * row stays while the create dialog is open
+   * The role picker of a salary row gets its roles from the roles context
+   * and from tRPC, and the row stays while the create dialog is open
    */
   const salaryTile = sectionByHeading(page, "Gehälter");
   const addSalaryRow = salaryTile.getByRole("button", { name: "Neu" });
   await expect(addSalaryRow).toBeVisible();
   await addSalaryRow.click();
-  const roleSelectorTrigger = salaryTile.getByRole("button", {
+  const rolePickerTrigger = salaryTile.getByRole("button", {
     name: "Rolle auswählen",
   });
-  await expect(roleSelectorTrigger).toBeEnabled();
+  await expect(rolePickerTrigger).toBeEnabled();
 
   // The admin creates a role through the create menu of the top bar
   const createMenu = page.getByRole("dialog", { name: "Neu erstellen" });
@@ -202,10 +215,9 @@ test("a role from the create menu shows in a role list that stays on the page", 
   await expect(page.getByText(SAVED_TEXT)).toHaveCount(1);
   await expect(createDialog).not.toBeVisible();
 
-  // The role selector of the row offers the new role
-  const rolePicker = page.getByRole("dialog", { name: "Rolle auswählen" });
-  await clickUntilVisible(roleSelectorTrigger, rolePicker);
-  await expect(rolePicker.getByText("Gehaltsrolle")).toBeVisible();
+  // The role picker of the row offers the new role
+  const rolePicker = await openRolePicker(rolePickerTrigger);
+  await expect(rolePickerOption(rolePicker, "Gehaltsrolle")).toBeVisible();
 });
 
 test("a role ticked right before the role dialog closes is still saved", async ({
@@ -243,15 +255,16 @@ test("a role ticked right before the role dialog closes is still saved", async (
     .filter({ has: page.locator("h2", { hasText: /^Rollen$/ }) });
 
   /** A save refreshes the page behind the dialog, and the dialog stays */
-  await rolesDialog.getByText("Erste Rolle").click();
+  await rolePickerOption(rolesDialog, "Erste Rolle").click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   await expect(rolesTile.getByText("Erste Rolle")).toBeVisible();
-  await expect(
-    rolesDialog.getByRole("checkbox", { name: "Erste Rolle" }),
-  ).toBeChecked();
+  await expect(rolePickerOption(rolesDialog, "Erste Rolle")).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
 
   /** The dialog closes before the debounced save of the second role */
-  await rolesDialog.getByText("Zweite Rolle").click();
+  await rolePickerOption(rolesDialog, "Zweite Rolle").click();
   await rolesDialog.getByRole("button", { name: "Schließen" }).click();
   await expect(rolesDialog).not.toBeVisible();
 
@@ -298,7 +311,7 @@ test("roles ticked within the debounce share one save, also with a search betwee
     page.getByRole("button", { name: "Bearbeiten" }),
     rolesDialog,
   );
-  await expect(rolesDialog.getByText("Zweite Rolle")).toBeVisible();
+  await expect(rolePickerOption(rolesDialog, "Zweite Rolle")).toBeVisible();
 
   /**
    * The time stops before the first role, thus all steps are in the
@@ -309,10 +322,10 @@ test("roles ticked within the debounce share one save, also with a search betwee
   await page.clock.pauseAt(pageTime + 1_000);
 
   const saves = recordServerActions(page, rolesPage);
-  await rolesDialog.getByText("Erste Rolle").click();
+  await rolePickerOption(rolesDialog, "Erste Rolle").click();
   /** The search renders the form again while the first role waits */
-  await rolesDialog.getByPlaceholder("Rolle suchen...").fill("Zweite");
-  await rolesDialog.getByText("Zweite Rolle").click();
+  await searchRolePicker(rolesDialog, "Zweite");
+  await rolePickerOption(rolesDialog, "Zweite Rolle").click();
   await page.clock.runFor(ROLE_SAVE_DEBOUNCE);
   await page.clock.resume();
 
@@ -329,6 +342,75 @@ test("roles ticked within the debounce share one save, also with a search betwee
     )
     .toEqual([member.role.id, firstRole.id, secondRole.id].toSorted());
   expect(saves).toHaveLength(1);
+});
+
+test("a tag in the role dialog ticks only the roles that the viewer may assign, and the autosave saves them", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const pilotRole = await createRole(prisma, { name: "Pilot" });
+  const engineerRole = await createRole(prisma, { name: "Ingenieur" });
+  const commanderRole = await createRole(prisma, { name: "Kommandant" });
+  const traderRole = await createRole(prisma, { name: "Händler" });
+  await createRoleTag(prisma, {
+    name: "Crew",
+    roles: [pilotRole, engineerRole, commanderRole],
+  });
+  const admin = await createCitizen(prisma, {
+    handle: "iam-admin",
+    permissionStrings: [
+      "citizen;read",
+      "otherRole;read;roleId=*",
+      `otherRole;assign;roleId=${pilotRole.id}`,
+      `otherRole;assign;roleId=${engineerRole.id}`,
+      `otherRole;assign;roleId=${traderRole.id}`,
+      /** The dialog offers this role, but the admin may not give it */
+      `otherRole;dismiss;roleId=${commanderRole.id}`,
+    ],
+  });
+  const member = await createCitizen(prisma, { handle: "task-worker" });
+
+  await signIn(admin.user);
+  await page.goto(`/app/spynet/citizen/${member.entity.id}/roles`);
+
+  const rolesDialog = modal(page, "Rollen hinzufügen oder entfernen");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Bearbeiten" }),
+    rolesDialog,
+  );
+  await expect(rolePickerOption(rolesDialog, "Kommandant")).toHaveAttribute(
+    "aria-disabled",
+    "true",
+  );
+
+  /** Without the disabled role and without the role outside of the tag */
+  await rolePickerTag(rolesDialog, "Crew").click();
+  for (const [roleName, isSelected] of [
+    ["Pilot", true],
+    ["Ingenieur", true],
+    ["Kommandant", false],
+    ["Händler", false],
+  ] as const) {
+    await expect(rolePickerOption(rolesDialog, roleName)).toHaveAttribute(
+      "aria-selected",
+      String(isSelected),
+    );
+  }
+
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+  await expect
+    .poll(() =>
+      prisma.roleAssignment
+        .findMany({
+          where: { citizenId: member.entity.id },
+          select: { roleId: true },
+        })
+        .then((assignments) =>
+          assignments.map(({ roleId }) => roleId).toSorted(),
+        ),
+    )
+    .toEqual([member.role.id, pilotRole.id, engineerRole.id].toSorted());
 });
 
 test("deleting a role takes its permissions away from its members", async ({
@@ -408,10 +490,14 @@ test("an inherited role hands its permissions down to the inheriting one", async
    */
   await switchUser(admin.user);
   await page.goto(`/app/roles/${member.role.id}/inheritance`);
-  await toggleLabel(
-    page,
-    page.locator(`input[value="${taskRole.id}"]`),
-  ).click();
+  const popover = await openRolePicker(
+    page.getByRole("button", { name: "Rolle auswählen" }),
+  );
+  /** A role cannot inherit itself, thus the picker does not offer it */
+  await expect(rolePickerOption(popover, member.role.name)).toHaveCount(0);
+  await rolePickerOption(popover, taskRole.name).click();
+  await closeRolePicker(popover);
+  await expect(rolePickerChips(page)).toHaveText([taskRole.name]);
   await page.getByRole("button", { name: "Speichern" }).click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
@@ -556,7 +642,7 @@ test("the inheritance matrix wires two roles together with a single checkbox", a
 
   /** The per-role tab is the second edit surface and must agree */
   await page.goto(`/app/roles/${member.role.id}/inheritance`);
-  await expect(page.locator(`input[value="${taskRole.id}"]`)).toBeChecked();
+  await expect(rolePickerChips(page)).toHaveText([taskRole.name]);
 
   /** Unchecking the same cell takes the inheritance away again */
   await page.goto("/app/iam/inheritance-matrix");
@@ -692,4 +778,83 @@ test("removing a role that a different user removed shows the error and the curr
       where: { type: "ROLE_ASSIGNMENT_DELETED" },
     }),
   ).toBe(0);
+});
+
+test("the rules of a role take their target from the role picker, also all roles", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "iam-admin",
+    permissionStrings: ["role;manage", "otherRole;read;roleId=*"],
+  });
+  const role = await createRole(prisma, { name: "Personalrolle" });
+  const targetRole = await createRole(prisma, { name: "Zielrolle" });
+
+  await signIn(admin.user);
+  await page.goto(`/app/roles/${role.id}/permissions`);
+  await waitForAppShellHydration(page);
+  const ruleHeading = page.getByRole("heading", {
+    name: "Diese Rolle kann folgende Rollen ...",
+  });
+  const otherTab = page.getByRole("tab", { name: "Sonstiges" });
+  await clickUntilVisible(otherTab, ruleHeading);
+
+  const createRule = page.getByRole("button", { name: "Regel erstellen" });
+  /** A picker with a selection has the name of the selection */
+  const emptyPickers = page.getByRole("button", { name: "Rolle auswählen" });
+  const operations = page
+    .locator("select")
+    .filter({ has: page.locator('option[value="assign"]') });
+  const isFormValid = () =>
+    page
+      .locator("form")
+      .filter({ has: createRule })
+      .evaluate((form: HTMLFormElement) => form.checkValidity());
+
+  /** A rule without a role is not valid: the browser stops the submit */
+  await createRule.click();
+  await operations.first().selectOption("read");
+  expect(await isFormValid()).toBe(false);
+
+  /** The entry "Alle" is the rule target `*` */
+  await pickRole(emptyPickers.first(), "Alle");
+  expect(await isFormValid()).toBe(true);
+
+  await createRule.click();
+  await pickRole(emptyPickers.first(), targetRole.name);
+  await operations.nth(1).selectOption("assign");
+
+  await page.getByRole("button", { name: "Speichern" }).click();
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+
+  await expect
+    .poll(async () => {
+      const permissionStrings = await prisma.permissionString.findMany({
+        where: { roleId: role.id },
+        select: { permissionString: true },
+      });
+      return permissionStrings
+        .map(({ permissionString }) => permissionString)
+        .toSorted();
+    })
+    .toEqual(
+      [
+        "otherRole;read;roleId=*",
+        `otherRole;assign;roleId=${targetRole.id}`,
+      ].toSorted(),
+    );
+  await expectAuditEvents(prisma, ["ROLE_PERMISSIONS_UPDATED"]);
+
+  /** The saved rules show their targets again */
+  await page.reload();
+  await waitForAppShellHydration(page);
+  await clickUntilVisible(otherTab, ruleHeading);
+  await expect(
+    page.getByRole("button", { name: "Alle", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: targetRole.name, exact: true }),
+  ).toBeVisible();
 });
