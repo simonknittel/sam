@@ -1,4 +1,5 @@
-import { RolesPicker } from "@/modules/roles/components/RolesPicker";
+import { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
+import { RolePicker } from "@/modules/roles/components/RolePicker/RolePicker";
 import type { Role } from "@sam-monorepo/database/browser";
 
 interface Props {
@@ -8,7 +9,8 @@ interface Props {
 
 export const RequiredRoles = ({ className, defaultValue }: Props) => {
   return (
-    <RolesPicker
+    <RolePicker
+      mode={ItemPickerMode.Multiple}
       className={className}
       name="requiredRole[]"
       label="Erforderliche Rolle(n)"

@@ -7,7 +7,12 @@ import type { BadgeRole } from "@/modules/roles/queries/getRoles";
 import { useState, type ReactNode } from "react";
 import { FaChevronDown, FaUsers } from "react-icons/fa";
 import { useRolesContext } from "../RolesContext";
-import { RolePanel, type RolePickerExtraEntry } from "./RolePanel";
+import {
+  compareNames,
+  RolePanel,
+  type RolePickerExtraEntry,
+  type RolePickerRole,
+} from "./RolePanel";
 import { RolePickerChip } from "./RolePickerChip";
 import { RolePickerValue } from "./RolePickerValue";
 
@@ -20,6 +25,13 @@ interface CommonProps {
   readonly name?: string;
   readonly label?: ReactNode;
   readonly helpText?: ReactNode;
+  /**
+   * Replaces the roles of the roles context, which are the roles that the
+   * viewer can see. Example: all roles for a user with `role;manage`. The
+   * offered roles, the selected roles and the search use this list. The tags
+   * still come from the context.
+   */
+  readonly roles?: readonly RolePickerRole[];
   /**
    * Limits the offered roles, for example to the read roles of the parent
    * wiki page. Selected roles outside of this list stay selected.
@@ -71,10 +83,10 @@ const toRoleIds = (
 };
 
 /**
- * Offers the roles that the viewer can see in a popover. In single mode, the
- * trigger shows the selected role. In multiple mode, the selected roles show
- * under the trigger. A selected role that the viewer cannot see stays
- * selected and is submitted.
+ * Offers the roles that the viewer can see (or the roles of `roles`) in a
+ * popover. In single mode, the trigger shows the selected role. In multiple
+ * mode, the selected roles show under the trigger. A selected role that is
+ * not in these roles stays selected and is submitted.
  */
 export const RolePicker = (props: Props) => {
   const {
@@ -82,12 +94,14 @@ export const RolePicker = (props: Props) => {
     name,
     label,
     helpText,
+    roles: suppliedRoles,
     offeredRoleIds,
     disabledRoles,
     extraEntries = [],
     onOpenChange,
   } = props;
-  const { roles } = useRolesContext();
+  const { roles: visibleRoles } = useRolesContext();
+  const roles = suppliedRoles ?? visibleRoles;
 
   const [uncontrolledRoleIds, setUncontrolledRoleIds] = useState(() =>
     toRoleIds(props.defaultValue),
@@ -149,7 +163,9 @@ export const RolePicker = (props: Props) => {
    * The extra entries first, then the roles by name, then the roles that the
    * viewer cannot see
    */
-  const roleIndexById = new Map(roles.map((role, index) => [role.id, index]));
+  const roleIndexById = new Map(
+    roles.toSorted(compareNames).map((role, index) => [role.id, index]),
+  );
   const getSortIndex = (roleId: BadgeRole["id"]) =>
     extraEntries.some((entry) => entry.id === roleId)
       ? -1
@@ -172,6 +188,7 @@ export const RolePicker = (props: Props) => {
               {selectedRoleId ? (
                 <RolePickerValue
                   roleId={selectedRoleId}
+                  roles={roles}
                   extraEntries={extraEntries}
                 />
               ) : (
@@ -211,6 +228,7 @@ export const RolePicker = (props: Props) => {
         <RolePanel
           mode={props.mode}
           selectedRoleIds={selectedRoleIds}
+          roles={roles}
           offeredRoleIds={offeredRoleIds}
           disabledRoles={disabledRoles}
           extraEntries={extraEntries}
@@ -230,6 +248,7 @@ export const RolePicker = (props: Props) => {
               <RolePickerChip
                 key={roleId}
                 roleId={roleId}
+                roles={roles}
                 extraEntries={extraEntries}
                 onRemove={removeRole}
               />

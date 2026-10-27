@@ -17,6 +17,14 @@ export interface RolePickerExtraEntry {
   readonly name: string;
 }
 
+/** A role that the picker offers or shows as selected */
+export type RolePickerRole = Pick<BadgeRole, "id" | "name" | "icon">;
+
+export const compareNames = (
+  first: { readonly name: string },
+  second: { readonly name: string },
+) => first.name.localeCompare(second.name);
+
 interface SearchEntry {
   readonly id: string;
   readonly name: string;
@@ -55,9 +63,12 @@ interface Props {
   readonly mode: ItemPickerMode;
   readonly selectedRoleIds: readonly BadgeRole["id"][];
   /**
-   * Limits the offered roles. Without it, the panel offers all roles that
-   * the viewer can see.
+   * Replaces the roles of the roles context, which are the roles that the
+   * viewer can see. Example: all roles for a user with `role;manage`. The
+   * tags still come from the context.
    */
+  readonly roles?: readonly RolePickerRole[];
+  /** Limits the offered roles to these roles */
   readonly offeredRoleIds?: readonly BadgeRole["id"][];
   /** Offered roles that the viewer cannot select, each with the reason */
   readonly disabledRoles?: ReadonlyMap<BadgeRole["id"], string>;
@@ -93,6 +104,7 @@ export const RolePanel = ({
   className,
   mode,
   selectedRoleIds,
+  roles,
   offeredRoleIds,
   disabledRoles,
   extraEntries = [],
@@ -101,23 +113,26 @@ export const RolePanel = ({
   onTagClick,
   renderTrailing,
 }: Props) => {
-  const { roles, tags, tagIdsByRoleId } = useRolesContext();
+  const { roles: visibleRoles, tags, tagIdsByRoleId } = useRolesContext();
   const [query, setQuery] = useState("");
   /** Single mode: the tag that filters the list */
   const [filterTagId, setFilterTagId] = useState<BadgeRoleTag["id"] | null>(
     null,
   );
 
-  const offeredRoles = offeredRoleIds
-    ? roles.filter((role) => offeredRoleIds.includes(role.id))
-    : roles;
+  const availableRoles = roles ?? visibleRoles;
+  const offeredRoles = (
+    offeredRoleIds
+      ? availableRoles.filter((role) => offeredRoleIds.includes(role.id))
+      : availableRoles
+  ).toSorted(compareNames);
   const offeredRoleIdSet = new Set(offeredRoles.map((role) => role.id));
   const selectedRoleIdSet = new Set(selectedRoleIds);
 
   const tagById = new Map(tags.map((tag) => [tag.id, tag]));
   const offeredTags = tags
     .filter((tag) => tag.roleIds.some((roleId) => offeredRoleIdSet.has(roleId)))
-    .toSorted((first, second) => first.name.localeCompare(second.name));
+    .toSorted(compareNames);
   const filterTag =
     mode === ItemPickerMode.Single
       ? offeredTags.find((tag) => tag.id === filterTagId)

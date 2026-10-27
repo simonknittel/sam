@@ -241,6 +241,92 @@ export const pickFromSearch = async (
 };
 
 /**
+ * The popover of the role picker (`RolePicker`): a search field, the tags of
+ * the offered roles and one role per row. Only one popover is open at a
+ * time, thus it needs no scope.
+ */
+export const rolePickerPopover = (page: Page) =>
+  page.getByRole("dialog", { name: "Rolle auswählen" });
+
+/**
+ * A role in the list of an open role picker. The match is exact, because a
+ * role name can be a part of a different role name.
+ */
+export const rolePickerOption = (popover: Locator, roleName: string) =>
+  popover.getByRole("option", { name: roleName, exact: true });
+
+/** A tag in the tag row of an open role picker */
+export const rolePickerTag = (popover: Locator, tagName: string) =>
+  popover.getByRole("button", { name: tagName, exact: true });
+
+/** The selected roles under the trigger of a role picker in multiple mode */
+export const rolePickerChips = (scope: Page | Locator) =>
+  scope.getByTitle("Rolle entfernen");
+
+/**
+ * Opens a role picker and gives its popover. The trigger is the button
+ * "Rolle auswählen". In single mode with a selection, the trigger has the
+ * name of the selected role.
+ */
+export const openRolePicker = async (trigger: Locator) => {
+  const popover = rolePickerPopover(trigger.page());
+  await clickUntilVisible(trigger, popover);
+  return popover;
+};
+
+/** Searches the role names and the tag names in an open role picker */
+export const searchRolePicker = (popover: Locator, query: string) =>
+  popover
+    .getByRole("combobox", { name: "Rolle oder Tag suchen …" })
+    .fill(query);
+
+/** Closes an open role picker with Escape */
+export const closeRolePicker = async (popover: Locator) => {
+  await popover.page().keyboard.press("Escape");
+  await expect(popover).not.toBeVisible();
+};
+
+/**
+ * Selects roles in a role picker in multiple mode: opens it, clicks each
+ * role and closes it. Each role must not be selected yet, because a click on
+ * a selected role deselects it.
+ */
+export const pickRoles = async (
+  trigger: Locator,
+  roleNames: readonly string[],
+) => {
+  const popover = await openRolePicker(trigger);
+
+  for (const roleName of roleNames) {
+    const option = rolePickerOption(popover, roleName);
+    await option.click();
+    await expect(option).toHaveAttribute("aria-selected", "true");
+  }
+
+  await closeRolePicker(popover);
+};
+
+/**
+ * Selects all roles of a tag in a role picker in multiple mode. In single
+ * mode, a click on a tag only filters the list.
+ */
+export const pickRoleTag = async (trigger: Locator, tagName: string) => {
+  const popover = await openRolePicker(trigger);
+  await rolePickerTag(popover, tagName).click();
+  await closeRolePicker(popover);
+};
+
+/**
+ * Selects a role in a role picker in single mode. The pick closes the
+ * popover.
+ */
+export const pickRole = async (trigger: Locator, roleName: string) => {
+  const popover = await openRolePicker(trigger);
+  await rolePickerOption(popover, roleName).click();
+  await expect(popover).not.toBeVisible();
+};
+
+/**
  * The roles and names of the nodes in the accessibility tree of Chromium,
  * that is, what screen readers get. The role selectors of Playwright ignore
  * `inert` and the inert page behind a modal dialog, thus this reads the tree

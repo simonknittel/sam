@@ -5,9 +5,10 @@ import { useAction } from "@/modules/actions/utils/useAction";
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import { TextInput } from "@/modules/common/components/form/TextInput";
+import { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
 import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { createManualNotification } from "@/modules/manual-notifications/actions/createManualNotification";
-import { RolesPicker } from "@/modules/roles/components/RolesPicker";
+import { RolePicker } from "@/modules/roles/components/RolePicker/RolePicker";
 import {
   MANUAL_NOTIFICATION_BODY_MAX_LENGTH,
   MANUAL_NOTIFICATION_TITLE_MAX_LENGTH,
@@ -55,7 +56,12 @@ export const CreateManualNotificationForm = ({
 
       <CitizenInput name="citizenId" multiple className="mt-4" />
 
-      <RolesPicker name="roleId[]" label="Rollen" className="mt-4" />
+      <RolePicker
+        mode={ItemPickerMode.Multiple}
+        name="roleId[]"
+        label="Rollen"
+        className="mt-4"
+      />
 
       <SubmitButton icon={<FaPaperPlane />} className="mt-4 ml-auto">
         Senden
