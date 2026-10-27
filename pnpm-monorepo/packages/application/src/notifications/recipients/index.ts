@@ -12,6 +12,7 @@ export {
 } from "./eventParticipants.js";
 export { findEventParticipationRecipient } from "./eventParticipation.js";
 export type { EventNotificationRecipients } from "./eventRecipients.js";
+export { findFleetUpdateReminderRecipient } from "./fleetUpdateReminder.js";
 export { findGreetingRecipient } from "./greetingRecipients.js";
 export {
   findManualNotificationRecipients,

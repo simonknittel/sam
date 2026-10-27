@@ -10,6 +10,7 @@ import { EventParticipationAddedHandler } from "./type-handlers/EventParticipati
 import { EventParticipationRemovedHandler } from "./type-handlers/EventParticipationRemoved";
 import { EventStartingHandler } from "./type-handlers/EventStarting";
 import { EventUpdatedHandler } from "./type-handlers/EventUpdated";
+import { FleetUpdateReminderHandler } from "./type-handlers/FleetUpdateReminder";
 import { ManualNotificationCreatedHandler } from "./type-handlers/ManualNotificationCreated";
 import { NewYearGreetingHandler } from "./type-handlers/NewYearGreeting";
 import { PenaltyEntryCreatedHandler } from "./type-handlers/PenaltyEntryCreated";
@@ -99,6 +100,9 @@ export const notificationRouterHandler = async (
       break;
     case "WelcomeGreeting":
       await WelcomeGreetingHandler(context, body.payload);
+      break;
+    case "FleetUpdateReminder":
+      await FleetUpdateReminderHandler(context, body.payload);
       break;
     case "ManualNotificationCreated":
       await ManualNotificationCreatedHandler(context, body.payload);
@@ -313,6 +317,14 @@ export const bodySchema = z.discriminatedUnion("type", [
 
   z.object({
     type: z.literal("WelcomeGreeting"),
+    payload: z.object({
+      citizenId: z.cuid(),
+    }),
+    requestId: z.cuid2(),
+  }),
+
+  z.object({
+    type: z.literal("FleetUpdateReminder"),
     payload: z.object({
       citizenId: z.cuid(),
     }),
