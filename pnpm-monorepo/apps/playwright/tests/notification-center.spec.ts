@@ -183,6 +183,35 @@ test("a welcome greeting reads its wording and opens the onboarding popover", as
   await expect(page).toHaveURL("/app/dashboard");
 });
 
+test("a fleet update reminder opens the own ships", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, {
+    handle: "rueckkehrer",
+    permissionStrings: ["ship;manage"],
+  });
+  await createOnSiteNotification(prisma, {
+    citizenId: citizen.entity.id,
+    notificationType: "fleet_update_reminder",
+    payload: {},
+  });
+  await signIn(citizen.user);
+
+  await page.goto("/app");
+  await openNotificationCenter(page);
+
+  await expect(
+    popover(page).getByText(
+      "Ist deine Flotte noch aktuell? Prüfe deine Schiffe unter „Meine Schiffe“.",
+    ),
+  ).toBeVisible();
+  await popover(page).getByRole("link", { name: "Willkommen zurück!" }).click();
+
+  await expect(page).toHaveURL("/app/fleet/my-ships");
+});
+
 test("unknown notification types render a generic fallback", async ({
   page,
   prisma,
