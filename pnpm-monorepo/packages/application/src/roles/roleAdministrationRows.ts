@@ -1,6 +1,9 @@
 import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { requirePermission, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
+import { toManagedRoleTag, type ManagedRoleTag } from "./findManagedRole.js";
+import { ROLE_TAG_BADGE_SELECT } from "./roleTagBadges.js";
+import { compareRoleNames } from "./roleVisibility.js";
 
 export interface RoleIcon {
   readonly id: string;
@@ -35,6 +38,8 @@ export interface RoleTableRow {
   readonly inheritanceCount: number;
   /** Only the active citizens */
   readonly citizenCount: number;
+  /** All tags of the role */
+  readonly tagIds: string[];
 }
 
 const ICON_SELECT = { select: { id: true, mimeType: true } } as const;
@@ -125,12 +130,31 @@ export const findRoleTableRows = async (
           assignments: { where: { citizen: ACTIVE_CITIZEN_WHERE } },
         },
       },
+      tags: { select: { tagId: true } },
     },
   });
 
-  return roles.map(({ _count, ...role }) => ({
+  return roles.map(({ _count, tags, ...role }) => ({
     ...role,
     inheritanceCount: _count.inherits,
     citizenCount: _count.assignments,
+    tagIds: tags.map((assignment) => assignment.tagId),
   }));
+};
+
+/**
+ * All tags with all of their roles (see `ManagedRoleTag`), sorted by name
+ * like the tag row of the role picker. Requires `role;manage`.
+ */
+export const findManagedRoleTags = async (
+  context: Pick<ApplicationContext, "prisma">,
+  actor: Actor,
+): Promise<ManagedRoleTag[]> => {
+  requirePermission(actor, "role", "manage");
+
+  const tags = await context.prisma.roleTag.findMany({
+    select: ROLE_TAG_BADGE_SELECT,
+  });
+
+  return tags.map(toManagedRoleTag).toSorted(compareRoleNames);
 };

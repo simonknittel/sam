@@ -4,6 +4,7 @@ import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { RolesFilters } from "@/modules/roles/components/RolesFilters";
 import { RolesTable } from "@/modules/roles/components/RolesTable";
+import { getManagedRoleTags } from "@/modules/roles/queries/getRoleTags";
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -16,9 +17,17 @@ export default async function Page({
   const authentication = await requireAuthenticationPage("/app/iam/roles");
   await authentication.authorizePage("role", "manage");
 
+  const tags = await getManagedRoleTags();
+
   return (
     <MaxWidthContent>
-      <SidebarLayout sidebar={<RolesFilters />}>
+      <SidebarLayout
+        sidebar={
+          <RolesFilters
+            tags={tags.map((tag) => ({ id: tag.id, name: tag.name }))}
+          />
+        }
+      >
         <SuspenseWithErrorBoundaryTile>
           <RolesTable searchParams={searchParams} />
         </SuspenseWithErrorBoundaryTile>

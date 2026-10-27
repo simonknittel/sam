@@ -21,6 +21,7 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import { FaCog, FaMinus, FaPlus, FaTrash } from "react-icons/fa";
 import { useRolesContext } from "./RolesContext";
+import { RoleTagBadge } from "./tags/RoleTagBadge";
 
 /**
  * Role badges show on many pages, but the description shows only in the
@@ -62,7 +63,7 @@ export const SingleRoleBadge = ({
   onSuccess,
   withPopover = true,
 }: Props) => {
-  const { roles } = useRolesContext();
+  const { roles, tags, tagIdsByRoleId } = useRolesContext();
   const authentication = useAuthentication();
   /**
    * The errors show as toasts: when a different user removed the role, the
@@ -119,6 +120,10 @@ export const SingleRoleBadge = ({
     ]);
   const canManage =
     authentication && authentication.authorize("role", "manage");
+
+  /** The context gives the tags sorted by name */
+  const roleTagIds = tagIdsByRoleId.get(role.id) ?? [];
+  const roleTags = tags.filter((tag) => roleTagIds.includes(tag.id));
 
   const showLevelProgress =
     role.maxLevel && citizenId && (citizenLevel ?? 0) < role.maxLevel;
@@ -216,6 +221,16 @@ export const SingleRoleBadge = ({
             </div>
           </div>
         </div>
+
+        {roleTags.length > 0 && (
+          <ul aria-label="Tags" className="mt-4 flex flex-wrap gap-1">
+            {roleTags.map((tag) => (
+              <li key={tag.id} className="max-w-full">
+                <RoleTagBadge tag={tag} />
+              </li>
+            ))}
+          </ul>
+        )}
 
         {role.description && (
           <div className="mt-4 max-h-60 overflow-y-auto border-t border-white/10 pt-4">

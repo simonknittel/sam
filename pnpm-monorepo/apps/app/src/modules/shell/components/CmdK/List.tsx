@@ -506,6 +506,15 @@ const IAMPage = ({ userRead, roleManage }: IAMPageProps) => {
             setOpen={setOpen}
             setSearch={setSearch}
           />
+
+          <LinkItem
+            label="Tags"
+            keywords={["Rollen-Tags", "Role tags"]}
+            icon={<FaLock />}
+            href="/app/iam/tags"
+            setOpen={setOpen}
+            setSearch={setSearch}
+          />
         </>
       )}
     </Command.Group>

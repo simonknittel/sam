@@ -56,7 +56,12 @@ export {
   type DeleteRoleTagInput,
   type DeleteRoleTagOutput,
 } from "./deleteRoleTag.js";
-export { findManagedRole, type ManagedRole } from "./findManagedRole.js";
+export {
+  findManagedRole,
+  findManagedRoleTag,
+  type ManagedRole,
+  type ManagedRoleTag,
+} from "./findManagedRole.js";
 export {
   getPermissionCatalog,
   getPermissionCatalogInputSchema,
@@ -87,6 +92,7 @@ export {
 } from "./removeExpiredRoleAssignments.js";
 export {
   findInheritanceMatrixRoles,
+  findManagedRoleTags,
   findPermissionMatrixRoles,
   findRoleTableRows,
   type InheritanceMatrixRole,

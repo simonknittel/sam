@@ -5,17 +5,22 @@ import {
   sortAscWithAndNullLast,
   sortDescAndNullLast,
 } from "@/modules/common/utils/sorting";
+import type { ManagedRoleTag } from "@sam-monorepo/application";
 import clsx from "clsx";
 import Image from "next/image";
 import {
   createLoader,
+  parseAsArrayOf,
   parseAsString,
   parseAsStringLiteral,
   type SearchParams,
 } from "nuqs/server";
 import { getRolesForTable } from "../queries/getRoles";
+import { getManagedRoleTags } from "../queries/getRoleTags";
+import { RoleTagBadge } from "./tags/RoleTagBadge";
 
-const COLUMNS = "300px minmax(200px,1fr) 128px 128px 128px 80px 80px";
+const COLUMNS =
+  "300px minmax(200px,1fr) minmax(160px,1fr) 128px 128px 128px 80px 80px";
 
 const loadSearchParams = createLoader({
   filter: parseAsStringLiteral([
@@ -34,6 +39,8 @@ const loadSearchParams = createLoader({
     "citizen-asc",
   ]).withDefault("name-asc"),
   q: parseAsString,
+  /** The ids of the tags. A role with one of these tags passes. */
+  tags: parseAsArrayOf(parseAsString),
 });
 
 interface Props {
@@ -42,9 +49,14 @@ interface Props {
 }
 
 export const RolesTable = async ({ className, searchParams }: Props) => {
-  const { filter, sort, q } = await loadSearchParams(searchParams);
+  const { filter, sort, q, tags } = await loadSearchParams(searchParams);
 
-  const roles = await getRolesForTable();
+  const [roles, allTags] = await Promise.all([
+    getRolesForTable(),
+    getManagedRoleTags(),
+  ]);
+
+  const filterTagIds = new Set(tags);
 
   const filteredRoles = roles.filter((role) => {
     if (q) {
@@ -52,6 +64,12 @@ export const RolesTable = async ({ className, searchParams }: Props) => {
       if (!role.name.toLowerCase().includes(searchQuery)) {
         return false;
       }
+    }
+    if (
+      filterTagIds.size > 0 &&
+      !role.tagIds.some((tagId) => filterTagIds.has(tagId))
+    ) {
+      return false;
     }
     switch (filter) {
       case "has-inheritance":
@@ -88,11 +106,13 @@ export const RolesTable = async ({ className, searchParams }: Props) => {
 
   return (
     <section className={clsx("rounded-primary bg-secondary p-4", className)}>
-      <Table columns={COLUMNS} minWidth={840}>
+      <Table columns={COLUMNS} minWidth={1000}>
         <THead>
           <th>Rolle</th>
 
           <th>Beschreibung</th>
+
+          <th>Tags</th>
 
           <th className="text-center">Vererbungen</th>
 
@@ -153,6 +173,10 @@ export const RolesTable = async ({ className, searchParams }: Props) => {
                 {role.description || null}
               </td>
 
+              <RoleTagsCell
+                tags={allTags.filter((tag) => role.tagIds.includes(tag.id))}
+              />
+
               <td>
                 <Link
                   href={`/app/roles/${role.id}/inheritance`}
@@ -187,5 +211,29 @@ export const RolesTable = async ({ className, searchParams }: Props) => {
         <p className="text-neutral-500 italic">Keine Rollen vorhanden</p>
       )}
     </section>
+  );
+};
+
+interface RoleTagsCellProps {
+  /** Sorted by name */
+  readonly tags: readonly Pick<
+    ManagedRoleTag,
+    "id" | "name" | "description" | "icon"
+  >[];
+}
+
+/** The row has one line: tags that do not fit are cut off, the title lists all */
+const RoleTagsCell = ({ tags }: RoleTagsCellProps) => {
+  return (
+    <td
+      title={
+        tags.length > 0 ? tags.map((tag) => tag.name).join(", ") : undefined
+      }
+      className="flex gap-1 overflow-hidden"
+    >
+      {tags.map((tag) => (
+        <RoleTagBadge key={tag.id} tag={tag} className="flex-none" />
+      ))}
+    </td>
   );
 };

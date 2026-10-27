@@ -35,6 +35,7 @@ const GATED_ROUTES = [
   "/app/iam/permission-matrix",
   "/app/iam/roles",
   "/app/iam/settings",
+  "/app/iam/tags",
   "/app/iam/users",
   "/app/leaderboards",
   /** `manualNotification;manage` */

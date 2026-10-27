@@ -20,6 +20,7 @@ import clsx from "clsx";
 import { FaSave } from "react-icons/fa";
 import { updateRole } from "../actions/updateRole";
 import { DeleteRole } from "./DeleteRole";
+import { RoleTagsForm } from "./tags/RoleTagsForm";
 
 interface Props {
   readonly className?: string;
@@ -34,6 +35,7 @@ interface Props {
     | "iconId"
     | "thumbnailId"
     | "icon"
+    | "tags"
   >;
 }
 
@@ -106,6 +108,11 @@ export const OverviewTab = ({ className, role }: Props) => {
           </SubmitButton>
         </form>
       </Tile>
+
+      <RoleTagsForm
+        roleId={role.id}
+        tagIds={role.tags.map((assignment) => assignment.tagId)}
+      />
 
       <Tile heading="Bilder">
         <div className="flex flex-col gap-4 md:flex-row">

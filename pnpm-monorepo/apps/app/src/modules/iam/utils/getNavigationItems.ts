@@ -17,6 +17,10 @@ export const getNavigationItems = createNavigationItems(
           url: "/app/iam/roles",
         },
         {
+          title: "Tags",
+          url: "/app/iam/tags",
+        },
+        {
           title: "Berechtigungsmatrix",
           url: "/app/iam/permission-matrix",
         },
