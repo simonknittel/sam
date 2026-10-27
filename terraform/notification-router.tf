@@ -12,7 +12,7 @@ module "notification_router" {
   runtime                        = "nodejs24.x"
   environment_variables          = var.notification_router_environment_variables
   batch_size                     = 10
-  batch_window                   = 30
+  batch_window                   = 0
   parameters = [
     "/database/connection_string",
     "/web_push/private_vapid_key",

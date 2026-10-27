@@ -65,6 +65,9 @@ variable "batch_size" {
   type = number
 }
 
+# In seconds: the time that Lambda waits for more messages before it starts a
+# batch that is not full. With few messages, a batch seldom fills, thus each
+# message waits the full window.
 variable "batch_window" {
   type = number
 }
