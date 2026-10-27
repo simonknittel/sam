@@ -39,7 +39,8 @@ const SEARCH_THRESHOLD = 0.2;
 
 /**
  * Searches the names and the tag names. Gives the ids of the matched
- * entries, each with the character ranges of the match in the name.
+ * entries from the best to the worst match, each with the character ranges
+ * of the match in the name.
  */
 const search = (entries: readonly SearchEntry[], query: string) => {
   const fuse = new Fuse(entries, {
@@ -207,6 +208,9 @@ export const RolePanel = ({
       )
     : null;
   const isListed = (id: string) => !matches || matches.has(id);
+  const bestMatchId = matches
+    ? [...matches.keys()].find((id) => getDisabledReason(id) === undefined)
+    : undefined;
 
   const toItem = (
     entry: { readonly id: string; readonly name: string },
@@ -273,6 +277,7 @@ export const RolePanel = ({
             ),
           ),
         )}
+      bestMatchId={bestMatchId}
       selectedIds={selectedRoleIds}
       onSelect={onRoleClick}
       emptyText="Keine Rolle gefunden"

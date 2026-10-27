@@ -32,7 +32,8 @@ interface Props {
 
 /**
  * The search field keeps the focus while the arrow keys move through the
- * list. Thus the active row shows the focus state.
+ * list. Thus the active row shows the focus state. The translucent colours
+ * show on black and on the grey of a modal.
  */
 export const ItemPickerOption = ({
   item,
@@ -64,9 +65,8 @@ export const ItemPickerOption = ({
       className={clsx(
         "flex h-8 items-center gap-2 rounded-secondary px-2 select-none",
         {
-          "bg-neutral-800": isActive,
-          "cursor-pointer hover:bg-neutral-800 active:bg-neutral-700":
-            !isDisabled,
+          "bg-white/10": isActive,
+          "cursor-pointer hover:bg-white/10 active:bg-white/20": !isDisabled,
           "cursor-not-allowed opacity-50": isDisabled,
         },
       )}

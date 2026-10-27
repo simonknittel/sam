@@ -36,8 +36,8 @@ export const RoleTagChip = ({
       className={clsx(
         "inline-flex min-h-7 items-center gap-1 rounded-secondary border px-2 py-0.5 text-left font-mono text-xs outline-offset-2 outline-interaction-700 focus-visible:outline-2",
         {
-          "border-neutral-700": !isPressed,
-          "hover:border-neutral-500 hover:bg-neutral-800 active:bg-neutral-700":
+          "border-white/20": !isPressed,
+          "hover:border-white/40 hover:bg-white/10 active:bg-white/20":
             !isPressed && !isDisabled,
           "border-interaction-500 bg-interaction-500/20 text-interaction-300 hover:bg-interaction-500/30 active:bg-interaction-500/10":
             isPressed,

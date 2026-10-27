@@ -45,6 +45,12 @@ interface Props {
   readonly extraItems?: readonly ItemPickerItem[];
   /** The items in the order of the list. The owner filters them with the query. */
   readonly items: readonly ItemPickerItem[];
+  /**
+   * The best match of the search. During a search, it is active until the
+   * user moves to a different item. Without it, the first item that is not
+   * disabled is active.
+   */
+  readonly bestMatchId?: ItemPickerItem["id"];
   readonly selectedIds: readonly ItemPickerItem["id"][];
   /** A click or Enter on an item that is not disabled */
   readonly onSelect: (itemId: ItemPickerItem["id"]) => void;
@@ -77,6 +83,7 @@ export const ItemPickerPanel = ({
   toolbar,
   extraItems = [],
   items,
+  bestMatchId,
   selectedIds,
   onSelect,
   emptyText,
@@ -104,14 +111,15 @@ export const ItemPickerPanel = ({
     if (list && activeOption) scrollIntoList(list, activeOption);
   }, []);
 
-  /**
-   * During a search, the first match is active until the user moves to a
-   * different item. Thus Enter selects the first match.
-   */
+  /** During a search, Enter selects the best match */
+  const enabledItems = allItems.filter(
+    (item) => item.disabledReason === undefined,
+  );
   const activeItem =
     allItems.find((item) => item.id === activeId) ??
     (query.trim()
-      ? allItems.find((item) => item.disabledReason === undefined)
+      ? (enabledItems.find((item) => item.id === bestMatchId) ??
+        enabledItems[0])
       : undefined);
   const activeIndex = activeItem ? allItems.indexOf(activeItem) : -1;
 
@@ -238,7 +246,7 @@ export const ItemPickerPanel = ({
       </div>
 
       {allItems.length === 0 && (
-        <p className="mt-2 px-2 text-sm text-neutral-500">{emptyText}</p>
+        <p className="mt-2 px-2 text-sm text-neutral-400">{emptyText}</p>
       )}
     </div>
   );

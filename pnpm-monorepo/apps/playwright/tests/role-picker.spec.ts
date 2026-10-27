@@ -15,6 +15,7 @@ import {
   closeRolePicker,
   modal,
   openRolePicker,
+  pickRole,
   pickRoleTag,
   rolePickerChips,
   rolePickerOption,
@@ -164,8 +165,8 @@ test("the role picker works with the keyboard and gives the focus back to its tr
 }) => {
   const roles = [
     await createRole(prisma, { name: "Bordarzt" }),
+    await createRole(prisma, { name: "Co-Pilot" }),
     await createRole(prisma, { name: "Mechaniker" }),
-    await createRole(prisma, { name: "Navigator" }),
     await createRole(prisma, { name: "Pilot" }),
   ];
   const pilot = roles[3]!;
@@ -192,7 +193,7 @@ test("the role picker works with the keyboard and gives the focus back to its tr
   await page.keyboard.press("ArrowDown");
   await expectActiveOption(popover, "Bordarzt");
   await page.keyboard.press("ArrowDown");
-  await expectActiveOption(popover, "Mechaniker");
+  await expectActiveOption(popover, "Co-Pilot");
   await page.keyboard.press("End");
   await expectActiveOption(popover, "Pilot");
   await page.keyboard.press("Home");
@@ -204,8 +205,12 @@ test("the role picker works with the keyboard and gives the focus back to its tr
   await page.keyboard.press("Enter");
   await expect(rolePickerChips(settingTile)).toHaveCount(0);
 
-  /** During a search, Enter selects the first match */
-  await page.keyboard.type("pil");
+  /**
+   * During a search, the list stays in name order, and Enter selects the
+   * best match
+   */
+  await page.keyboard.type("Pilot");
+  await expect(popover.getByRole("option")).toHaveText(["Co-Pilot", "Pilot"]);
   await expectActiveOption(popover, "Pilot");
   await page.keyboard.press("Enter");
   await expect(rolePickerChips(settingTile)).toHaveText(["Pilot"]);
@@ -218,6 +223,49 @@ test("the role picker works with the keyboard and gives the focus back to its tr
   await settingTile.getByRole("button", { name: "Speichern" }).click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   expect(await readHumanResourcesRoleIds(prisma)).toEqual([pilot.id]);
+});
+
+test("a required role picker stops the submit of its form without a role and shows why", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  await createRole(prisma, { name: "Bezahlte Rolle" });
+  const admin = await createCitizen(prisma, {
+    handle: "silc-einsteller",
+    permissionStrings: [
+      "silcSetting;manage",
+      "silcBalanceOfOtherCitizen;manage",
+      "otherRole;read;roleId=*",
+    ],
+  });
+
+  await signIn(admin.user);
+  await page.goto("/app/silc/settings");
+  await waitForAppShellHydration(page);
+
+  /** A role salary needs a role */
+  const salaryTile = sectionByHeading(page, "Gehälter");
+  const addSalaryRow = salaryTile.getByRole("button", { name: "Neu" });
+  await expect(addSalaryRow).toBeVisible();
+  await addSalaryRow.click();
+  await salaryTile.getByLabel("SILC").fill("40");
+  await salaryTile.getByLabel("Tag im Monat").fill("15");
+  await salaryTile.getByRole("button", { name: "Speichern" }).click();
+
+  const trigger = salaryTile.getByRole("button", { name: "Rolle auswählen" });
+  const requiredText = salaryTile.getByText("Wähle eine Rolle aus.");
+  await expect(requiredText).toBeVisible();
+  await expect(trigger).toBeFocused();
+  await expect(trigger).toHaveAccessibleDescription("Wähle eine Rolle aus.");
+  expect(await prisma.silcRoleSalary.count()).toBe(0);
+
+  await pickRole(trigger, "Bezahlte Rolle");
+  await expect(requiredText).not.toBeVisible();
+  await salaryTile.getByRole("button", { name: "Speichern" }).click();
+  await expect
+    .poll(() => prisma.silcRoleSalary.count({ where: { value: 40 } }))
+    .toBe(1);
 });
 
 test("in the edit dialog of a task, Escape closes only the role picker, and a role that the viewer cannot see stays required after a save", async ({

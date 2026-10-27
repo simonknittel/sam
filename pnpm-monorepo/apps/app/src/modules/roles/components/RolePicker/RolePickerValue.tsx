@@ -42,11 +42,11 @@ export const RolePickerValue = ({ roleId, roles, extraEntries }: Props) => {
 
   return (
     <span className="inline-flex h-8 max-w-full items-center gap-2 px-2 align-middle">
-      <span className="flex size-6 flex-none items-center justify-center">
-        {role.icon && (
+      {role.icon && (
+        <span className="flex size-6 flex-none items-center justify-center">
           <UploadedIcon upload={role.icon} size={UploadedIconSize.Medium} />
-        )}
-      </span>
+        </span>
+      )}
 
       <span className="truncate font-mono text-sm" title={role.name}>
         {role.name}

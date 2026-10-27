@@ -4,7 +4,8 @@ import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
 import { ItemPickerPopover } from "@/modules/common/components/ItemPicker/ItemPickerPopover";
 import type { BadgeRole } from "@/modules/roles/queries/getRoles";
-import { useState, type ReactNode } from "react";
+import clsx from "clsx";
+import { useId, useRef, useState, type ReactNode } from "react";
 import { FaChevronDown, FaUsers } from "react-icons/fa";
 import { useRolesContext } from "../RolesContext";
 import {
@@ -52,7 +53,10 @@ interface SingleProps extends CommonProps {
   /** The selection of a controlled picker, together with `onChange` */
   readonly value?: BadgeRole["id"] | null;
   readonly onChange?: (roleId: BadgeRole["id"] | null) => void;
-  /** Prevents the deselection of the selected role */
+  /**
+   * Prevents the deselection of the selected role, and the submit of the
+   * form without a selected role
+   */
   readonly required?: boolean;
 }
 
@@ -113,6 +117,12 @@ export const RolePicker = (props: Props) => {
 
   const [isOpen, setIsOpen] = useState(false);
 
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const errorId = useId();
+  /** Single mode with `required`: whether a submit found no selected role */
+  const [isInvalid, setIsInvalid] = useState(false);
+  const showsRequiredError = isInvalid && selectedRoleIds.length === 0;
+
   const changeOpen = (open: boolean) => {
     setIsOpen(open);
     onOpenChange?.(open);
@@ -120,6 +130,7 @@ export const RolePicker = (props: Props) => {
 
   const changeSelection = (roleIds: readonly BadgeRole["id"][]) => {
     if (!isControlled) setUncontrolledRoleIds(roleIds);
+    setIsInvalid(false);
 
     if (props.mode === ItemPickerMode.Single) {
       props.onChange?.(roleIds[0] ?? null);
@@ -209,9 +220,14 @@ export const RolePicker = (props: Props) => {
           // Each mode keeps one element type. After a pick, a new element would not get the focus back from the popover.
           props.mode === ItemPickerMode.Single ? (
             <button
+              ref={triggerRef}
               type="button"
               title="Rolle auswählen"
-              className="inline-flex max-w-full cursor-pointer items-center justify-between gap-1 rounded-secondary bg-neutral-700/50 pr-3 outline-offset-4 outline-interaction-700 hover:bg-neutral-600/50 focus-visible:outline-2 active:bg-neutral-700/30"
+              aria-describedby={showsRequiredError ? errorId : undefined}
+              className={clsx(
+                "inline-flex max-w-full cursor-pointer items-center justify-between gap-1 rounded-secondary bg-neutral-700/50 pr-3 outline-offset-4 outline-interaction-700 hover:bg-neutral-600/50 focus-visible:outline-2 active:bg-neutral-700/30",
+                { "ring-1 ring-brand-red-500": showsRequiredError },
+              )}
             />
           ) : (
             <Button2
@@ -237,6 +253,34 @@ export const RolePicker = (props: Props) => {
           onTagClick={handleTagClick}
         />
       </ItemPickerPopover>
+
+      {props.mode === ItemPickerMode.Single && props.required && (
+        /**
+         * The browser does not submit the form while this field is empty. The
+         * field has no name, thus the form does not submit its value. The
+         * message of the browser would show at this hidden field, thus the
+         * picker shows its own message and focuses its trigger.
+         */
+        <input
+          required
+          tabIndex={-1}
+          aria-hidden
+          value={selectedRoleId ?? ""}
+          onChange={() => undefined}
+          onInvalid={(event) => {
+            event.preventDefault();
+            setIsInvalid(true);
+            triggerRef.current?.focus();
+          }}
+          className="sr-only"
+        />
+      )}
+
+      {showsRequiredError && (
+        <p id={errorId} className="mt-1 text-sm text-brand-red-300">
+          Wähle eine Rolle aus.
+        </p>
+      )}
 
       {helpText && <p className="mt-1 text-xs text-gray-400">{helpText}</p>}
 
