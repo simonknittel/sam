@@ -20,6 +20,6 @@ export const roleOutputShape = {
   tags: z
     .array(z.strictObject({ id: z.string(), name: z.string() }))
     .describe(
-      "The tags of the role, sorted by name. A tag groups roles. Use a tag id as the tag_id filter of list_roles.",
+      "The tags of the role, sorted by name. A tag groups roles. Use a tag id as the tag_id filter of list_roles. list_role_tags gives the other fields of a tag.",
     ),
 };

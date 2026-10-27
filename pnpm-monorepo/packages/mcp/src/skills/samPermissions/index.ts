@@ -56,16 +56,22 @@ The role page has two kinds of rules in addition to the catalog:
 - **Other roles**: \`otherRole;<operation>;roleId=<role id or *>\`. Operations: ${ROLE_RULE_OPERATIONS.join(", ")}. \`read\` shows the role, \`assign\` gives the role to citizens, \`dismiss\` takes it from citizens.
 - **Notes of citizens**: \`note;<operation>;noteTypeId=<note type id or *>;classificationLevelId=<classification level id or *>\`, optionally followed by \`;alsoUnconfirmed=true\` (also the notes that are not confirmed). Operations: ${NOTE_RULE_OPERATIONS.join(", ")}.
 
+## Role tags
+
+A role tag (Tag) groups roles, for example "Führung". A tag has a name, an optional description (a tooltip) and an optional icon. It gives no permissions and changes no access. In the role pickers of the web app, the search also finds the tags, and a click on a tag selects all of its roles at once. The IAM app has a page "Tags", and the role page shows the tags of the role. To change tags, a user needs \`role;manage\`. A user sees a tag only when the user sees at least one role of the tag (\`otherRole;read\`); with \`role;manage\`, the user sees all tags, also the tags without roles.
+
 ## Catalog
 
 [references/catalog.md](references/catalog.md) lists all permissions of the role page with their German titles and descriptions. Read it when the user asks what a permission does or which permission an action needs. When you show a permission to the user, give its German title, because the role page shows this title.
 
 ## Tools
 
-- \`list_roles\` and \`get_role\`: the roles that the user can see. Only with \`role;manage\`, \`get_role\` gives the permission strings of a role.
+- \`list_roles\` and \`get_role\`: the roles that the user can see, with their tags. \`list_roles\` can filter by one tag. Only with \`role;manage\`, \`get_role\` gives the permission strings of a role.
+- \`list_role_tags\`: the tags that the user can see with the ids of their roles.
 - \`list_citizens\` with a role filter: the citizens who have the role directly (also below its maximum level). For the effect of a change, also filter by the roles that inherit it.
 - \`change_role_permissions\`: adds and removes permission strings of a role. Only catalog strings and rules can be added.
-- \`update_role\`: the name, the description, the levels and the inactivity rules of a role.
+- \`update_role\`: the name, the description, the levels and the inactivity rules of a role, and its tags (add and remove).
+- \`create_role_tag\`, \`update_role_tag\` and \`delete_role_tag\`: create a tag, change its name, its description and its roles (add and remove), and delete it. A deleted tag cannot be restored, and its roles stay.
 
 To change the permissions of a role:
 

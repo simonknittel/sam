@@ -35,7 +35,7 @@ The paths are on the host of this MCP server. \`/app/apps\` lists all apps of th
 | --- | --- | --- | --- |
 | Dashboard | \`/app/dashboard\` | Start page with the calendar, the tasks, a wiki page and the Spynet search | – |
 | Spynet | \`/app/spynet\` | Intelligence database: citizens, organizations and notes. See [references/spynet.md](references/spynet.md). | ${ToolGroup.Spynet} |
-| IAM | \`/app/iam\` | Roles, permission matrix, inheritance matrix and users. See the skill \`sam-permissions\`. | ${ToolGroup.Roles}, ${ToolGroup.Users} |
+| IAM | \`/app/iam\` | Roles, role tags (groups of roles), permission matrix, inheritance matrix and users. See the skill \`sam-permissions\`. | ${ToolGroup.Roles}, ${ToolGroup.Users} |
 | Strafpunkte | \`/app/penalty-points\` | Penalty points for citizens. An entry can have an expiry date (Verfällt am); only active entries count. | ${ToolGroup.PenaltyPoints} |
 | Flotte | \`/app/fleet\` | Own ships and the fleet of the organization. See [references/fleet.md](references/fleet.md). | ${ToolGroup.Fleet} |
 | Wiki | \`/app/wiki\` | The knowledge of the organization. See [references/wiki.md](references/wiki.md). | ${ToolGroup.Wiki} |

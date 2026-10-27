@@ -17,7 +17,7 @@ export const getRoleTool = defineTool({
   group: ToolGroup.Roles,
   title: "Get a role",
   description:
-    "Gives one role by its id (from list_roles or get_citizen): the fields of list_roles and, only with the permission to manage roles, the inactivity rules and the permission strings. A role that the user cannot see gives a NotFoundError.",
+    "Gives one role by its id (from list_roles or get_citizen): the fields of list_roles (with the tags of the role) and, only with the permission to manage roles, the inactivity rules and the permission strings. A role that the user cannot see gives a NotFoundError.",
   annotations: READ_ONLY_TOOL_ANNOTATIONS,
   readAuditEventType: AuditEventType.ROLE_READ,
   inputSchema: getRoleInputSchema,
