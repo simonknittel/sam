@@ -156,8 +156,11 @@ test("uploads of other users stay hidden without the permission", async ({
   await signIn(citizen.user);
   await page.goto("/app/uploads");
 
+  /** While the page streams, a hidden copy of the text can also exist */
   await expect(
-    page.getByText("Du hast bisher keine Dateien hochgeladen."),
+    page
+      .locator("#main-content")
+      .getByText("Du hast bisher keine Dateien hochgeladen."),
   ).toBeVisible();
   await expect(page.getByText("Fremdes Dokument.pdf")).toHaveCount(0);
 });
