@@ -2,6 +2,8 @@ import { env } from "@/env";
 import { svgToStaticImageData } from "@/modules/common/utils/svgToStaticImageData";
 import { type MetadataRoute } from "next";
 import faviconSrc from "../assets/favicon.svg";
+import iconMaskable512Src from "../assets/icon-maskable-512.png";
+import iconMaskableSrc from "../assets/icon-maskable.svg";
 import screenshotAppsMobileSrc from "../assets/screenshots/screenshot-apps-mobile.avif";
 import screenshotAppsSrc from "../assets/screenshots/screenshot-apps.avif";
 import screenshotDashboardMobileSrc from "../assets/screenshots/screenshot-dashboard-mobile.avif";
@@ -39,6 +41,19 @@ export default function manifest(): MetadataRoute.Manifest {
         src: svgToStaticImageData(faviconSrc).src,
         sizes: "any",
         type: "image/svg+xml",
+      },
+      // Android uses maskable icons to fill the full launcher shape
+      {
+        src: svgToStaticImageData(iconMaskableSrc).src,
+        sizes: "any",
+        type: "image/svg+xml",
+        purpose: "maskable",
+      },
+      {
+        src: iconMaskable512Src.src,
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
       },
     ],
     screenshots: [
