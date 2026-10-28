@@ -28,7 +28,7 @@ export const NotificationCenter = ({ onNavigate }: Props) => {
     <TabsProvider initialActiveTab={OnSiteNotificationTab.Inbox}>
       <div className="flex items-start justify-between gap-2">
         <TabList>
-          <Tab id={OnSiteNotificationTab.Inbox}>Posteingang</Tab>
+          <Tab id={OnSiteNotificationTab.Inbox}>Inbox</Tab>
           <Tab id={OnSiteNotificationTab.Archive}>Archiv</Tab>
         </TabList>
 
