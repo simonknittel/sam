@@ -1,7 +1,5 @@
 "use client";
 
-import { UnreadDot } from "@/modules/common/components/UnreadDot";
-import { useOnSiteNotifications } from "@/modules/notifications/components/OnSiteNotificationsProvider";
 import clsx from "clsx";
 import { usePathname } from "next/navigation";
 import {
@@ -16,6 +14,8 @@ import {
 } from "react";
 import { AiFillAppstore } from "react-icons/ai";
 import { FaTimes } from "react-icons/fa";
+import { BarItemContent, barItemClassName } from "./BarItemContent";
+import { useDrawerSwipe } from "./useDrawerSwipe";
 
 interface MobileActionBarFlyoutContext {
   /**
@@ -32,6 +32,7 @@ interface MobileActionBarFlyoutContext {
    */
   readonly isSlideInComplete: boolean;
   readonly show: () => void;
+  readonly hide: () => void;
 }
 
 const MobileActionBarFlyoutContext = createContext<
@@ -49,22 +50,32 @@ export function useMobileActionBarFlyout() {
   return context;
 }
 
-export function useMobileActionBarFlyoutVisibility() {
-  return useMobileActionBarFlyout().isVisible;
-}
-
 interface Props {
   readonly children?: ReactNode;
+  /** Whether an app in the flyout has new items */
+  readonly hasUnreadDot: boolean;
 }
 
-export const MobileActionBarFlyout = ({ children }: Props) => {
+/**
+ * The toggle of the action bar and the flyout with the navigation. Also a
+ * swipe from the left edge opens the flyout, and a swipe to the left closes
+ * it (see `useDrawerSwipe`).
+ */
+export const MobileActionBarFlyout = ({ children, hasUnreadDot }: Props) => {
   const pathname = usePathname();
   const [isVisible, setIsVisible] = useState(false);
   const [isSlideInComplete, setIsSlideInComplete] = useState(false);
-  const { unreadCount } = useOnSiteNotifications();
   const flyoutId = useId();
   const toggleRef = useRef<HTMLButtonElement>(null);
   const flyoutRef = useRef<HTMLDivElement>(null);
+  const backdropRef = useRef<HTMLDivElement>(null);
+
+  const drag = useDrawerSwipe({
+    panelRef: flyoutRef,
+    backdropRef,
+    isOpen: isVisible,
+    onOpenChange: setIsVisible,
+  });
 
   const [previousPathname, setPreviousPathname] = useState(pathname);
   if (pathname !== previousPathname) {
@@ -114,7 +125,11 @@ export const MobileActionBarFlyout = ({ children }: Props) => {
     isVisible,
     isSlideInComplete,
     show: () => setIsVisible(true),
+    hide: () => setIsVisible(false),
   };
+
+  /** From 0 (closed) to 1 (open) */
+  const progress = drag ? drag.progress : Number(isVisible);
 
   return (
     <>
@@ -125,43 +140,51 @@ export const MobileActionBarFlyout = ({ children }: Props) => {
         type="button"
         aria-expanded={isVisible}
         aria-controls={flyoutId}
-        className="flex h-full flex-col items-center justify-center rounded-secondary px-4 active:bg-neutral-700"
+        className={clsx(barItemClassName, "cursor-pointer")}
       >
-        <span className="relative">
-          {isVisible ? <FaTimes /> : <AiFillAppstore />}
-          {unreadCount > 0 && (
-            <UnreadDot className="absolute -top-1 -right-2" />
-          )}
-        </span>
-        <span className="text-xs">Apps</span>
+        <BarItemContent
+          icon={isVisible ? <FaTimes /> : <AiFillAppstore />}
+          label="Apps"
+          hasUnreadDot={hasUnreadDot}
+        />
       </button>
 
       <div
-        ref={flyoutRef}
-        id={flyoutId}
-        // The closed flyout only moves off-screen. Thus it must also leave
-        // the focus order and the accessibility tree.
-        inert={!isVisible}
-        onKeyDown={handleKeyDown}
-        className={clsx(
-          "fixed top-0 bottom-0 left-0 z-50 flex w-96 max-w-[90dvw] flex-col overflow-auto bg-neutral-800 shadow-sm transition-transform",
-          {
-            "-translate-x-full": isVisible === false,
-            "translate-x-0": isVisible === true,
-          },
-        )}
+        className={clsx("fixed inset-0 z-50", {
+          "pointer-events-none": !isVisible && !drag,
+        })}
       >
-        <MobileActionBarFlyoutContext value={contextValue}>
-          {children}
-        </MobileActionBarFlyoutContext>
-      </div>
-
-      {isVisible && (
         <div
-          className="fixed inset-0 z-40"
+          ref={backdropRef}
           onClick={() => setIsVisible(false)}
+          style={{ opacity: progress }}
+          className={clsx("absolute inset-0 bg-black/60", {
+            "transition-opacity duration-200 ease-out": !drag,
+          })}
         />
-      )}
+
+        <div
+          ref={flyoutRef}
+          id={flyoutId}
+          // The closed flyout only moves off-screen. Thus it must also leave
+          // the focus order and the accessibility tree.
+          inert={!isVisible}
+          onKeyDown={handleKeyDown}
+          style={drag ? { translate: `${drag.translate}px 0` } : undefined}
+          className={clsx(
+            "absolute inset-y-0 left-0 flex w-96 max-w-[90dvw] flex-col overflow-auto overscroll-contain bg-neutral-800 shadow-sm",
+            {
+              "transition-transform duration-200 ease-out": !drag,
+              "-translate-x-full": !drag && !isVisible,
+              "translate-x-0": !drag && isVisible,
+            },
+          )}
+        >
+          <MobileActionBarFlyoutContext value={contextValue}>
+            {children}
+          </MobileActionBarFlyoutContext>
+        </div>
+      </div>
     </>
   );
 };

@@ -17,14 +17,31 @@ import {
   PopoverBaseUI,
   usePopoverBaseUI,
 } from "@/modules/common/components/PopoverBaseUI";
-import clsx from "clsx";
+import type { ComponentProps } from "react";
 import { FaPlus } from "react-icons/fa";
+
+type PopoverProps = ComponentProps<typeof PopoverBaseUI>;
 
 interface Props {
   readonly className?: string;
+  readonly triggerClassName?: string;
+  readonly side?: PopoverProps["side"];
+  readonly positionerClassName?: string;
+  readonly open?: boolean;
+  readonly onOpenChange?: (open: boolean) => void;
+  /** Called after a click on an item, after the popover closed */
+  readonly onSelect?: () => void;
 }
 
-export const Create = ({ className }: Props) => {
+export const Create = ({
+  className,
+  triggerClassName = "h-full px-6",
+  side,
+  positionerClassName,
+  open,
+  onOpenChange,
+  onSelect,
+}: Props) => {
   const authentication = useAuthentication();
 
   const showCreateCitizen = Boolean(
@@ -80,7 +97,7 @@ export const Create = ({ className }: Props) => {
     return null;
 
   return (
-    <div className={clsx("h-full p-2", className)}>
+    <div className={className}>
       <PopoverBaseUI
         title="Neu erstellen"
         trigger={
@@ -95,8 +112,12 @@ export const Create = ({ className }: Props) => {
             colorSchema={Button2ColorSchema.InteractionMuted}
           />
         }
-        triggerClassName="h-full px-6"
+        triggerClassName={triggerClassName}
         childrenClassName="flex flex-col gap-px w-52"
+        side={side}
+        positionerClassName={positionerClassName}
+        open={open}
+        onOpenChange={onOpenChange}
       >
         <PopoverChildren
           showCreateCitizen={showCreateCitizen}
@@ -111,6 +132,7 @@ export const Create = ({ className }: Props) => {
           showCreateWikiPage={showCreateWikiPage}
           showCreateFlow={showCreateFlow}
           showCreateManualNotification={showCreateManualNotification}
+          onSelect={onSelect}
         />
       </PopoverBaseUI>
     </div>
@@ -130,6 +152,7 @@ interface PopoverChildrenProps {
   readonly showCreateWikiPage: boolean;
   readonly showCreateFlow: boolean;
   readonly showCreateManualNotification: boolean;
+  readonly onSelect?: () => void;
 }
 
 const PopoverChildren = ({
@@ -145,6 +168,7 @@ const PopoverChildren = ({
   showCreateWikiPage,
   showCreateFlow,
   showCreateManualNotification,
+  onSelect,
 }: PopoverChildrenProps) => {
   const { closePopover } = usePopoverBaseUI();
   const { openCreateModal } = useCreateContext();
@@ -153,6 +177,7 @@ const PopoverChildren = ({
   const handleClick = (modalId: keyof typeof createForms) => {
     openCreateModal(modalId);
     closePopover();
+    onSelect?.();
   };
 
   // @ts-expect-error Doesn't make any sense
@@ -248,7 +273,10 @@ const PopoverChildren = ({
           return (
             <Link
               key={item.label}
-              onClick={() => closePopover()}
+              onClick={() => {
+                closePopover();
+                onSelect?.();
+              }}
               href={item.href}
               className={className}
             >

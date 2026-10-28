@@ -5,114 +5,83 @@ import { groupByFeatured } from "@/modules/apps/utils/groupByFeatured";
 import type { App, RedactedApp } from "@/modules/apps/utils/types";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { Link } from "@/modules/common/components/Link";
+import { UnreadDot } from "@/modules/common/components/UnreadDot";
 import clsx from "clsx";
 import { usePathname } from "next/navigation";
-import { FaHome } from "react-icons/fa";
-import { MdTaskAlt, MdWorkspaces } from "react-icons/md";
-import { TbMilitaryRank } from "react-icons/tb";
+import type { ReactNode } from "react";
+import { FaBookOpen, FaHome } from "react-icons/fa";
+import { MdEvent, MdTaskAlt } from "react-icons/md";
 import { Footer } from "../Footer";
 import { Account } from "./Account";
+import { BarItemContent, barItemClassName } from "./BarItemContent";
+import { Create } from "./Create";
 import { MobileActionBarFlyout } from "./MobileActionBarFlyout";
+import { Notifications } from "./Notifications";
 
 type LinkedApp = Exclude<App, RedactedApp>;
 
 interface Props {
   readonly supportHref: string | null;
-  /** Whether the viewer may read at least one career flow */
-  readonly canReadCareer: boolean;
 }
 
-export const MobileActionBarClient = ({
-  supportHref,
-  canReadCareer,
-}: Props) => {
+export const MobileActionBarClient = ({ supportHref }: Props) => {
   const authentication = useAuthentication();
   if (!authentication) throw new Error("Unauthorized");
 
-  const { apps } = useAppsContext();
+  const { apps, appDotBadgeCounts } = useAppsContext();
   const pathname = usePathname();
   if (!apps) return null;
   const { featured, other } = groupByFeatured(apps);
   const currentApp = findCurrentApp(apps.filter(isLinkedApp), pathname);
+  const hasAppDotBadge = Object.values(appDotBadgeCounts).some(
+    (count) => count > 0,
+  );
 
-  const [canTasksRead, canFleetRead, canShipManage] = [
-    authentication.authorize("task", "read"),
-    authentication.authorize("orgFleet", "read"),
-    authentication.authorize("ship", "manage"),
-  ];
+  const showEvents = authentication.authorize("event", "read");
+  const showTasks = authentication.authorize("task", "read");
 
-  const showTasks = canTasksRead;
-  const showFleet = canFleetRead || canShipManage;
-  const showCareer = canReadCareer;
+  const renderAppLinks = (sectionApps: App[]) =>
+    sectionApps.filter(isLinkedApp).map((app) => (
+      <li key={app.name}>
+        <AppLink
+          app={app}
+          isCurrent={app === currentApp}
+          pathname={pathname}
+          hasUnreadDot={Boolean(appDotBadgeCounts[app.slug])}
+        />
+      </li>
+    ));
 
   return (
-    <ul className="flex h-full justify-evenly">
-      <li className="h-full py-1">
-        <Link
-          href="/app"
-          className="flex h-full flex-col items-center justify-center rounded-secondary px-4 active:bg-neutral-700"
-        >
-          <FaHome className="text-xl text-neutral-500" />
-          <span className="text-xs">Dashboard</span>
-        </Link>
-      </li>
+    <ul className="flex h-full px-1">
+      <BarLink href="/app" icon={<FaHome />} label="Dashboard" />
+
+      {showEvents && (
+        <BarLink href="/app/events" icon={<MdEvent />} label="Events" />
+      )}
 
       {showTasks && (
-        <li className="h-full py-1">
-          <Link
-            href="/app/tasks"
-            className="flex h-full flex-col items-center justify-center rounded-secondary px-4 active:bg-neutral-700"
-          >
-            <MdTaskAlt className="text-xl text-neutral-500" />
-            <span className="text-xs">Tasks</span>
-          </Link>
-        </li>
+        <BarLink href="/app/tasks" icon={<MdTaskAlt />} label="Tasks" />
       )}
 
-      {showFleet && (
-        <li className="h-full py-1">
-          <Link
-            href="/app/fleet"
-            className="flex h-full flex-col items-center justify-center rounded-secondary px-4 active:bg-neutral-700"
-          >
-            <MdWorkspaces className="text-xl text-neutral-500" />
-            <span className="text-xs">Flotte</span>
-          </Link>
-        </li>
-      )}
+      <BarLink href="/app/wiki" icon={<FaBookOpen />} label="Wiki" />
 
-      {showCareer && (
-        <li className="h-full py-1">
-          <Link
-            href="/app/career"
-            className="flex h-full flex-col items-center justify-center rounded-secondary px-4 active:bg-neutral-700"
-          >
-            <TbMilitaryRank className="text-xl text-neutral-500" />
-            <span className="text-xs">Karriere</span>
-          </Link>
-        </li>
-      )}
+      <li className="h-full min-w-fit flex-1 py-1">
+        <Notifications />
+      </li>
 
-      <li className="h-full py-1">
-        <MobileActionBarFlyout>
+      <li className="h-full min-w-fit flex-1 py-1">
+        <MobileActionBarFlyout hasUnreadDot={hasAppDotBadge}>
           <Account supportHref={supportHref} />
 
           <div className="p-4">
+            <Create />
+
             {featured && (
-              <div>
+              <div className="mt-4">
                 <p className="pl-2 text-neutral-500">Featured</p>
 
-                <ul className="mt-1">
-                  {featured.filter(isLinkedApp).map((app) => (
-                    <li key={app.name}>
-                      <AppLink
-                        app={app}
-                        isCurrent={app === currentApp}
-                        pathname={pathname}
-                      />
-                    </li>
-                  ))}
-                </ul>
+                <ul className="mt-1">{renderAppLinks(featured)}</ul>
               </div>
             )}
 
@@ -120,17 +89,7 @@ export const MobileActionBarClient = ({
               <div className="mt-4">
                 <p className="pl-2 text-neutral-500">Sonstige</p>
 
-                <ul className="mt-2">
-                  {other.filter(isLinkedApp).map((app) => (
-                    <li key={app.name}>
-                      <AppLink
-                        app={app}
-                        isCurrent={app === currentApp}
-                        pathname={pathname}
-                      />
-                    </li>
-                  ))}
-                </ul>
+                <ul className="mt-2">{renderAppLinks(other)}</ul>
               </div>
             )}
           </div>
@@ -139,6 +98,22 @@ export const MobileActionBarClient = ({
         </MobileActionBarFlyout>
       </li>
     </ul>
+  );
+};
+
+interface BarLinkProps {
+  readonly href: string;
+  readonly icon: ReactNode;
+  readonly label: string;
+}
+
+const BarLink = ({ href, icon, label }: BarLinkProps) => {
+  return (
+    <li className="h-full min-w-fit flex-1 py-1">
+      <Link href={href} className={barItemClassName}>
+        <BarItemContent icon={icon} label={label} />
+      </Link>
+    </li>
   );
 };
 
@@ -164,9 +139,11 @@ interface AppLinkProps {
   readonly app: LinkedApp;
   readonly isCurrent: boolean;
   readonly pathname: string;
+  /** Whether the app has new items */
+  readonly hasUnreadDot: boolean;
 }
 
-const AppLink = ({ app, isCurrent, pathname }: AppLinkProps) => {
+const AppLink = ({ app, isCurrent, pathname, hasUnreadDot }: AppLinkProps) => {
   const href = getAppHref(app);
   /**
    * "page" only on the start page of the app. On a different page of the
@@ -179,11 +156,13 @@ const AppLink = ({ app, isCurrent, pathname }: AppLinkProps) => {
       href={href}
       aria-current={isCurrent ? ariaCurrent : undefined}
       className={clsx(
-        "relative block rounded-secondary p-2 before:absolute before:inset-y-3 before:left-0 before:w-0.5 before:rounded-secondary active:bg-neutral-700",
+        "relative flex items-center gap-1.5 rounded-secondary p-2 before:absolute before:inset-y-3 before:left-0 before:w-0.5 before:rounded-secondary hover:bg-neutral-700 focus-visible:bg-neutral-700 active:bg-neutral-600",
         { "before:bg-interaction-500": isCurrent },
       )}
     >
       {app.name}
+
+      {hasUnreadDot && <UnreadDot />}
     </Link>
   );
 };

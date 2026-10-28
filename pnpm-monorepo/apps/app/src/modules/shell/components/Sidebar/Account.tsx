@@ -2,10 +2,8 @@ import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import Avatar, { AvatarDecoration } from "@/modules/common/components/Avatar";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Link } from "@/modules/common/components/Link";
-import clsx from "clsx";
-import { FaQuestionCircle, FaUser } from "react-icons/fa";
+import { FaQuestionCircle } from "react-icons/fa";
 import { LogoutButton } from "../LogoutButton";
-import { Notifications } from "./Notifications";
 import { Onboarding } from "./Onboarding";
 
 interface Props {
@@ -22,12 +20,13 @@ export const Account = ({ supportHref }: Props) => {
   const image = authentication ? authentication.session.user.image : undefined;
 
   return (
-    <div
-      className={clsx(
-        "flex items-center justify-between border-b border-neutral-800 p-4",
-      )}
-    >
-      <div className="flex items-center gap-4">
+    <div className="flex items-center justify-between gap-2 border-b border-neutral-800 p-4">
+      <Link
+        href="/app/account"
+        // Without the label, the alt text of the avatar repeats the name
+        aria-label={name ?? undefined}
+        className="-m-2 flex min-w-0 items-center gap-4 rounded-secondary p-2 hover:bg-neutral-700 focus-visible:bg-neutral-700 active:bg-neutral-600"
+      >
         <Avatar
           name={name}
           image={image}
@@ -39,12 +38,12 @@ export const Account = ({ supportHref }: Props) => {
           }
         />
 
-        <div>
-          <p>{name}</p>
-        </div>
-      </div>
+        <span className="truncate" title={name ?? undefined}>
+          {name}
+        </span>
+      </Link>
 
-      <div className="flex gap-1">
+      <div className="flex flex-none gap-1">
         {supportHref && (
           <Button2
             as={Link}
@@ -57,12 +56,6 @@ export const Account = ({ supportHref }: Props) => {
         )}
 
         <Onboarding />
-
-        <Notifications />
-
-        <Button2 as={Link} href="/app/account" title="Account">
-          <FaUser />
-        </Button2>
 
         <LogoutButton />
       </div>

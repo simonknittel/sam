@@ -1,4 +1,3 @@
-import { hasAnyReadableFlow } from "@/modules/career/queries/getMyReadableFlows";
 import { getWikiPageLinkTarget } from "@/modules/wiki/queries/getWikiSettings";
 import { WikiPageLinkKey } from "@sam-monorepo/domain";
 import { Suspense } from "react";
@@ -15,15 +14,7 @@ export const MobileActionBarLoader = () => {
 };
 
 const MobileActionBar = async () => {
-  const [supportTarget, canReadCareer] = await Promise.all([
-    getWikiPageLinkTarget(WikiPageLinkKey.Support),
-    hasAnyReadableFlow(),
-  ]);
+  const supportTarget = await getWikiPageLinkTarget(WikiPageLinkKey.Support);
 
-  return (
-    <MobileActionBarClient
-      supportHref={supportTarget?.href ?? null}
-      canReadCareer={canReadCareer}
-    />
-  );
+  return <MobileActionBarClient supportHref={supportTarget?.href ?? null} />;
 };

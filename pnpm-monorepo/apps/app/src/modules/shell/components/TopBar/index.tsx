@@ -23,7 +23,7 @@ export const TopBar = ({ className }: Props) => {
       >
         <div className="flex flex-1 items-center">
           <Apps />
-          <Create />
+          <Create className="h-full p-2" />
         </div>
 
         <CmdKLoader className="w-96 flex-initial" />
