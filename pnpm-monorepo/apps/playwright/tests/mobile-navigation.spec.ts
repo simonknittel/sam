@@ -31,6 +31,46 @@ const controlledElement = async (toggle: Locator) => {
   return toggle.page().locator(`[id="${id}"]`);
 };
 
+interface Point {
+  readonly x: number;
+  readonly y: number;
+}
+
+/**
+ * A swipe with a finger. Playwright has no touch swipe, thus the gesture
+ * goes through the Chrome DevTools Protocol (as `sortByTouch`).
+ */
+const swipe = async (page: Page, from: Point, to: Point) => {
+  const session = await page.context().newCDPSession(page);
+  try {
+    await session.send("Emulation.setTouchEmulationEnabled", {
+      enabled: true,
+    });
+    await session.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [from],
+    });
+    const stepCount = 10;
+    for (let step = 1; step <= stepCount; step++) {
+      await session.send("Input.dispatchTouchEvent", {
+        type: "touchMove",
+        touchPoints: [
+          {
+            x: from.x + ((to.x - from.x) * step) / stepCount,
+            y: from.y + ((to.y - from.y) * step) / stepCount,
+          },
+        ],
+      });
+    }
+    await session.send("Input.dispatchTouchEvent", {
+      type: "touchEnd",
+      touchPoints: [],
+    });
+  } finally {
+    await session.detach();
+  }
+};
+
 test("the closed flyout is out of reach and Escape closes the open one", async ({
   page,
   prisma,
@@ -115,7 +155,40 @@ test("the navigation and the filter toggles tell their state", async ({
   await expect(filterToggle).toHaveAttribute("aria-expanded", "true");
 });
 
-test("admin mode shows the Tasks and Fleet links of an admin without a hydration error", async ({
+test("swipes open and close the flyout, but not from the outer edge", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, { handle: "wisch-nutzer" });
+  await signIn(citizen.user);
+  await page.goto("/app/dashboard");
+
+  const actionBar = page.locator("nav");
+  const toggle = actionBar.getByRole("button", { name: "Apps" });
+
+  /** The swipe works only after the action bar hydrated */
+  await expect(async () => {
+    await swipe(page, { x: 50, y: 400 }, { x: 320, y: 420 });
+    await expect(toggle).toHaveAttribute("aria-expanded", "true", {
+      timeout: 1_000,
+    });
+  }).toPass();
+
+  /** The avatar and the name replace the account button */
+  await expect(
+    actionBar.getByRole("link", { name: "wisch-nutzer", exact: true }),
+  ).toHaveAttribute("href", "/app/account");
+
+  await swipe(page, { x: 300, y: 400 }, { x: 60, y: 410 });
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+
+  /** The outer pixels belong to the swipe-back gesture of the browser */
+  await swipe(page, { x: 10, y: 400 }, { x: 320, y: 400 });
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+});
+
+test("admin mode shows the Events and Tasks links of an admin without a hydration error", async ({
   page,
   prisma,
   signIn,
@@ -139,7 +212,7 @@ test("admin mode shows the Tasks and Fleet links of an admin without a hydration
     .filter({ has: page.getByRole("button", { name: "Apps" }) });
   /** The links of the bar itself, without the app links in its flyout */
   const barLinks = actionBar.locator(":scope > ul > li > a");
-  await expect(barLinks).toHaveText(["Dashboard", "Tasks", "Flotte"]);
+  await expect(barLinks).toHaveText(["Dashboard", "Events", "Tasks", "Wiki"]);
 
   /** The action bar hydrates in its own Suspense boundary */
   await clickUntilVisible(

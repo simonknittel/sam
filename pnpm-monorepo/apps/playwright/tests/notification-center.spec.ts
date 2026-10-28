@@ -17,9 +17,8 @@ const bellButton = (page: Page) =>
 const bellDot = (page: Page) => bellButton(page).locator("[data-unread-dot]");
 
 /**
- * The notification center is mounted twice (top bar popover and the hidden
- * mobile flyout), so desktop assertions are scoped to the open popover —
- * Base UI renders its popup with `role="dialog"`, named after its trigger.
+ * The open popover, or on mobile the bottom sheet. Base UI renders both with
+ * `role="dialog"` and the name "Benachrichtigungen".
  */
 const popover = (page: Page) =>
   page.getByRole("dialog", { name: "Benachrichtigungen" });
@@ -27,7 +26,7 @@ const popover = (page: Page) =>
 const openNotificationCenter = (page: Page) =>
   clickUntilVisible(
     bellButton(page),
-    popover(page).getByRole("tab", { name: "Posteingang" }),
+    popover(page).getByRole("tab", { name: "Inbox" }),
   );
 
 /**
@@ -414,9 +413,7 @@ test("a notification can be archived and restored again", async ({
     popover(page).getByText("Keine archivierten Benachrichtigungen"),
   ).toBeVisible();
 
-  await popover(page)
-    .getByRole("tab", { name: "Posteingang", exact: true })
-    .click();
+  await popover(page).getByRole("tab", { name: "Inbox", exact: true }).click();
   await expect(popover(page).getByText("Neues Event")).toBeVisible();
 
   await expect
@@ -584,7 +581,7 @@ test("a notification about a new event leads to the event and marks it as read",
 test.describe("mobile", () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  test("the mobile flyout mounts the notification center", async ({
+  test("the Inbox of the action bar opens the notification center in a bottom sheet", async ({
     page,
     prisma,
     signIn,
@@ -596,8 +593,15 @@ test.describe("mobile", () => {
     await page.goto("/app");
     await expect(page).toHaveTitle(/^\(1\)/);
 
-    await page.locator("nav").getByRole("button", { name: "Apps" }).click();
-    await openNotificationCenter(page);
+    const inboxButton = page
+      .locator("nav")
+      .getByRole("button", { name: "Inbox" });
+    await expect(inboxButton.locator("[data-unread-dot]")).toBeVisible();
+
+    await clickUntilVisible(
+      inboxButton,
+      popover(page).getByRole("tab", { name: "Inbox" }),
+    );
 
     await expect(popover(page).getByText("Neues Event")).toBeVisible();
     await expect(unreadRowDots(page)).toHaveCount(1);

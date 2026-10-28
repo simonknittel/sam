@@ -309,13 +309,12 @@ test("the notification center shows a manual notification with its title and tex
   await page.goto("/app");
   /**
    * Base UI renders the popover with `role="dialog"`, named after its
-   * trigger. The notification center is mounted twice (top bar and mobile
-   * flyout), so the assertions are scoped to the open popover.
+   * trigger. The assertions are scoped to the open popover.
    */
   const popover = page.getByRole("dialog", { name: "Benachrichtigungen" });
   await clickUntilVisible(
     page.getByRole("button", { name: "Benachrichtigungen" }),
-    popover.getByRole("tab", { name: "Posteingang" }),
+    popover.getByRole("tab", { name: "Inbox" }),
   );
 
   await expect(popover.getByText("Treffen am Samstag")).toBeVisible();
