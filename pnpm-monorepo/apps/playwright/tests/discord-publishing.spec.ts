@@ -486,7 +486,7 @@ test("a template's publish preference prefills the create form and publishes the
   );
 
   await page
-    .getByLabel("Vorlage")
+    .getByLabel("Vorlage (optional)")
     .selectOption({ label: "Standard-Patrouille" });
 
   // The template switched publishing on and preselected its channel
