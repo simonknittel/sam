@@ -13,6 +13,7 @@ import {
   BAD_REQUEST_TEXT,
   clickUntilVisible,
   FORBIDDEN_TEXT,
+  hoverUntilVisible,
   inlineEditorTrigger,
   modal,
   saveInlineEditor,
@@ -650,4 +651,59 @@ test("a citizen removed from a position is listed as unassigned again", async ({
       return updatedPosition.citizenId;
     })
     .toBeNull();
+});
+
+test("the popover of an alternative ship keeps the list of the alternatives open", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "posten-leiter",
+    permissionStrings: LINEUP_PERMISSIONS,
+  });
+  const { variant: mantis } = await createVariant(prisma, {
+    manufacturerName: "Roberts Space Industries",
+    seriesName: "Mantis",
+    variantName: "Mantis",
+  });
+  const { variant: gladius } = await createVariant(prisma, {
+    manufacturerName: "Aegis Dynamics",
+    seriesName: "Gladius",
+    variantName: "Gladius",
+  });
+  const event = await createAppEvent(prisma, {
+    name: "Operation Alternativen",
+    createdById: manager.entity.id,
+    ...futureEvent(),
+  });
+  await prisma.eventPosition.create({
+    data: {
+      eventId: event.id,
+      name: "Abfangjäger",
+      requiredVariants: {
+        create: [
+          { variantId: mantis.id, order: 0 },
+          { variantId: gladius.id, order: 1 },
+        ],
+      },
+    },
+  });
+
+  await signIn(manager.user);
+  await page.goto(`/app/events/${event.id}/lineup`);
+
+  const alternatives = page.getByRole("dialog", { name: "Alternativen" });
+  await hoverUntilVisible(
+    page.getByRole("button", { name: /Mantis/ }),
+    alternatives,
+  );
+
+  const variantPopover = page.getByRole("dialog", { name: "Schiffsdetails" });
+  await alternatives.getByRole("link", { name: "Gladius" }).hover();
+  await expect(variantPopover).toContainText("Aegis Dynamics");
+
+  await variantPopover.hover();
+  await expect(variantPopover).toBeVisible();
+  await expect(alternatives).toBeVisible();
 });

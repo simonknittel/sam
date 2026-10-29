@@ -45,6 +45,8 @@ export const ShipsTable = ({ className, ships, editable = false }: Props) => {
               <VariantWithLogo
                 variant={ship.variant}
                 manufacturer={ship.variant.series.manufacturer}
+                ship={ship}
+                fullWidth
               />
             </td>
 

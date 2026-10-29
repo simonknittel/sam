@@ -115,6 +115,7 @@ export const ToggleEventPositionApplicationForCurrentUser = ({
                       variant={requiredVariant.variant}
                       manufacturer={requiredVariant.variant.series.manufacturer}
                       size={32}
+                      disablePopover
                     />
                   ))}
                 </>

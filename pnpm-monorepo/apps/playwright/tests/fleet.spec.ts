@@ -11,6 +11,7 @@ import {
   clickUntilVisible,
   DELETED_TEXT,
   fillUntilUrl,
+  hoverUntilVisible,
   inlineEditorTrigger,
   modal,
   NOT_FOUND_TEXT,
@@ -200,6 +201,66 @@ test("my ships can be added, renamed and deleted with consistent org counts", as
       ownerId: owner.entity.id,
     });
   }
+});
+
+test("the variant popover shows the custom name only for an individual ship", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const owner = await createCitizen(prisma, {
+    handle: "schiffs-besitzer",
+    permissionStrings: [
+      "ship;manage",
+      "orgFleet;read",
+      "organizationMembership;read",
+    ],
+  });
+  await addCitizenToOrganization(prisma, owner);
+  const { variant } = await createVariant(prisma, {
+    manufacturerName: "Anvil Aerospace",
+    seriesName: "Carrack",
+    variantName: "Carrack",
+    status: VariantStatus.FLIGHT_READY,
+  });
+  await prisma.ship.create({
+    data: {
+      ownerId: owner.entity.id,
+      variantId: variant.id,
+      name: "Sternenfaust",
+    },
+  });
+
+  await signIn(owner.user);
+  await page.goto("/app/fleet/my-ships");
+
+  const popover = page.getByRole("dialog", { name: "Schiffsdetails" });
+  await hoverUntilVisible(
+    page
+      .getByRole("row")
+      .filter({ hasText: "Carrack" })
+      .getByRole("link", { name: "Carrack" }),
+    popover,
+  );
+
+  await expect(popover).toContainText("Anvil Aerospace");
+  await expect(popover).toContainText("Sternenfaust");
+  await expect(popover.getByRole("link", { name: "Carrack" })).toHaveAttribute(
+    "href",
+    `/app/fleet/variant/${variant.id}`,
+  );
+
+  // The org fleet counts the variant, not a ship of a citizen
+  await page.goto("/app/fleet/org");
+  await hoverUntilVisible(
+    page
+      .getByRole("row")
+      .filter({ hasText: "Carrack" })
+      .getByRole("link", { name: "Carrack" }),
+    popover,
+  );
+  await expect(popover).toContainText("Anvil Aerospace");
+  await expect(popover).not.toContainText("Sternenfaust");
 });
 
 test("the ship count of a variant ignores deleted ships and the ships of deleted owners", async ({

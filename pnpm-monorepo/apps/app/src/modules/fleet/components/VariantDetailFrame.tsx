@@ -58,7 +58,7 @@ export const VariantDetailFrame = async ({
       {hasOtherShipsRead && (
         <SuspenseWithErrorBoundaryTile className="mt-2">
           <VariantShipsTile
-            variantId={variant.id}
+            variant={variant}
             className="mt-2"
             searchParams={searchParams}
           />

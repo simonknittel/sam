@@ -35,6 +35,7 @@ export const FleetTable = ({ className, fleet }: Props) => {
               <VariantWithLogo
                 variant={row.variant}
                 manufacturer={row.variant.series.manufacturer}
+                fullWidth
               />
             </td>
 

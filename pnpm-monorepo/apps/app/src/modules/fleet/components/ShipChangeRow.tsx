@@ -30,6 +30,8 @@ export const ShipChangeRow = ({ change }: Props) => {
         <VariantWithLogo
           variant={change.ship.variant}
           manufacturer={change.ship.variant.series.manufacturer}
+          ship={change.ship}
+          fullWidth
         />
       </td>
 

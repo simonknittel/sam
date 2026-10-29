@@ -3,23 +3,24 @@ import { createCursorPaginationLoader } from "@/modules/common/CursorPagination/
 import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
 import { type SearchParams } from "nuqs/server";
 import { getVariantShips } from "../queries/getVariantShips";
+import type { VariantDetail } from "./VariantDetailHeader";
 import { VariantShipsTable } from "./VariantShipsTable";
 
 const loadSearchParams = createCursorPaginationLoader({});
 
 interface Props {
   readonly className?: string;
-  readonly variantId: string;
+  readonly variant: VariantDetail;
   readonly searchParams: Promise<SearchParams>;
 }
 
 export const VariantShipsTile = async ({
   className,
-  variantId,
+  variant,
   searchParams,
 }: Props) => {
   const { cursor, direction } = await loadSearchParams(searchParams);
-  const { ships, nextCursor, prevCursor } = await getVariantShips(variantId, {
+  const { ships, nextCursor, prevCursor } = await getVariantShips(variant.id, {
     cursor,
     direction,
   });
@@ -30,7 +31,7 @@ export const VariantShipsTile = async ({
         <p className="text-center text-white/90">Keine Schiffe gefunden</p>
       ) : (
         <>
-          <VariantShipsTable ships={ships} />
+          <VariantShipsTable ships={ships} variant={variant} />
 
           <CursorPaginationControls
             nextCursor={nextCursor}
