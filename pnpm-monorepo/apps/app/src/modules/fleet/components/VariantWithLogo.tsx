@@ -1,20 +1,16 @@
 import { Link } from "@/modules/common/components/Link";
-import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
-import type {
-  Manufacturer,
-  Upload,
-  Variant,
-} from "@sam-monorepo/database/client";
+import type { Variant } from "@sam-monorepo/database/client";
 import clsx from "clsx";
-import Image from "next/image";
+import {
+  ManufacturerLogo,
+  type ManufacturerLogoManufacturer,
+} from "./ManufacturerLogo";
 
 interface Props {
   readonly className?: string;
   readonly variantNameClassName?: string;
   readonly variant: Pick<Variant, "id" | "name">;
-  readonly manufacturer: Pick<Manufacturer, "name"> & {
-    image?: Pick<Upload, "id" | "mimeType"> | null;
-  };
+  readonly manufacturer: ManufacturerLogoManufacturer;
   /**
    * Logo of an already-resolved URL, for callers that don't hold the
    * manufacturer's upload row (the wiki resolves it when rendering a
@@ -40,54 +36,8 @@ export const VariantWithLogo = ({
 }: Props) => {
   const isInline = size === "inline";
 
-  const resolvedLogo =
-    logo ??
-    (manufacturer.image
-      ? {
-          src: getPublicUploadUrl(manufacturer.image.id),
-          mimeType: manufacturer.image.mimeType,
-        }
-      : null);
-
-  const logoElement = resolvedLogo ? (
-    <Image
-      src={resolvedLogo.src}
-      /** Decorative inline: the ship's name sits right next to the logo */
-      alt={isInline ? "" : `Logo of ${manufacturer.name}`}
-      width={isInline ? 16 : size}
-      height={isInline ? 16 : size}
-      className={clsx(
-        "object-contain object-center",
-        isInline
-          ? /* Fixed width so stacked links align, see wikiEditor.css */
-            "mr-1 inline-block h-[1em] w-[3em] align-[-0.15em]"
-          : "flex-none",
-        {
-          "size-8": size === 32,
-          "size-12": size === 48,
-          "size-20": size === 80,
-        },
-      )}
-      title={`Logo of ${manufacturer.name}`}
-      unoptimized={["image/svg+xml", "image/gif"].includes(
-        resolvedLogo.mimeType,
-      )}
-      loading="lazy"
-    />
-  ) : (
-    /* Keeps variants aligned when their manufacturer has no logo */
-    <span
-      className={clsx(
-        isInline
-          ? "mr-1 inline-block h-[1em] w-[3em] align-[-0.15em]"
-          : "block flex-none",
-        {
-          "size-8": size === 32,
-          "size-12": size === 48,
-          "size-20": size === 80,
-        },
-      )}
-    ></span>
+  const logoElement = (
+    <ManufacturerLogo manufacturer={manufacturer} logo={logo} size={size} />
   );
 
   const name = isInline ? (
