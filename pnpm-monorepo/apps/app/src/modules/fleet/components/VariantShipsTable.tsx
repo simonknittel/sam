@@ -1,7 +1,8 @@
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
 import { type Citizen, type Ship } from "@sam-monorepo/database/client";
-import { ShipPopover, type ShipPopoverShip } from "./ShipPopover";
+import type { VariantDetail } from "./VariantDetailHeader";
+import { VariantPopover } from "./VariantPopover";
 
 interface VariantShipRow {
   id: Ship["id"];
@@ -19,7 +20,7 @@ interface Props {
   readonly className?: string;
   readonly ships: VariantShipRow[];
   /** The variant of all ships */
-  readonly variant: ShipPopoverShip["variant"];
+  readonly variant: VariantDetail;
 }
 
 export const VariantShipsTable = ({ className, ships, variant }: Props) => {
@@ -46,14 +47,16 @@ export const VariantShipsTable = ({ className, ships, variant }: Props) => {
 
             <td className="overflow-hidden">
               {ship.name && (
-                <ShipPopover
-                  ship={{ name: ship.name, variant }}
+                <VariantPopover
+                  variant={variant}
+                  manufacturer={variant.series.manufacturer}
+                  ship={ship}
                   triggerClassName="max-w-full cursor-pointer underline decoration-dotted underline-offset-4 hover:text-interaction-500 focus-visible:text-interaction-500 active:text-interaction-300"
                 >
                   <span className="block truncate" title={ship.name}>
                     {ship.name}
                   </span>
-                </ShipPopover>
+                </VariantPopover>
               )}
             </td>
           </TRow>

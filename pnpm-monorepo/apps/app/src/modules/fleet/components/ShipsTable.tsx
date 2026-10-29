@@ -5,7 +5,6 @@ import { FaRegCircleXmark } from "react-icons/fa6";
 import type { ShipVariant } from "../queries/shipQuery";
 import { DeleteShip } from "./DeleteShip";
 import { EditableShipName } from "./EditableShipName";
-import { ShipPopover } from "./ShipPopover";
 import { VariantTagBadge } from "./VariantTagBadge";
 import { VariantWithLogo } from "./VariantWithLogo";
 
@@ -43,16 +42,12 @@ export const ShipsTable = ({ className, ships, editable = false }: Props) => {
         {ships.map((ship) => (
           <TRow key={ship.id}>
             <td className="overflow-hidden">
-              <ShipPopover
+              <VariantWithLogo
+                variant={ship.variant}
+                manufacturer={ship.variant.series.manufacturer}
                 ship={ship}
-                triggerClassName="block w-full"
-                hoverOnly
-              >
-                <VariantWithLogo
-                  variant={ship.variant}
-                  manufacturer={ship.variant.series.manufacturer}
-                />
-              </ShipPopover>
+                fullWidth
+              />
             </td>
 
             {editable ? (

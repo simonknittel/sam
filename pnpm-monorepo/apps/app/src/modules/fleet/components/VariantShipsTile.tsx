@@ -3,14 +3,14 @@ import { createCursorPaginationLoader } from "@/modules/common/CursorPagination/
 import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
 import { type SearchParams } from "nuqs/server";
 import { getVariantShips } from "../queries/getVariantShips";
-import type { ShipPopoverShip } from "./ShipPopover";
+import type { VariantDetail } from "./VariantDetailHeader";
 import { VariantShipsTable } from "./VariantShipsTable";
 
 const loadSearchParams = createCursorPaginationLoader({});
 
 interface Props {
   readonly className?: string;
-  readonly variant: ShipPopoverShip["variant"];
+  readonly variant: VariantDetail;
   readonly searchParams: Promise<SearchParams>;
 }
 

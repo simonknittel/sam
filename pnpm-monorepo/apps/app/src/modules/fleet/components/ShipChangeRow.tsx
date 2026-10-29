@@ -4,7 +4,6 @@ import { formatDate } from "@/modules/common/utils/formatDate";
 import type { ShipChangeRow as Change } from "@/modules/fleet/queries/getShipChanges";
 import { ShipChangeType } from "@sam-monorepo/application";
 import { clsx } from "clsx";
-import { ShipPopover } from "./ShipPopover";
 import { VariantWithLogo } from "./VariantWithLogo";
 
 interface Props {
@@ -28,16 +27,12 @@ export const ShipChangeRow = ({ change }: Props) => {
       </td>
 
       <td className="overflow-hidden">
-        <ShipPopover
+        <VariantWithLogo
+          variant={change.ship.variant}
+          manufacturer={change.ship.variant.series.manufacturer}
           ship={change.ship}
-          triggerClassName="block w-full"
-          hoverOnly
-        >
-          <VariantWithLogo
-            variant={change.ship.variant}
-            manufacturer={change.ship.variant.series.manufacturer}
-          />
-        </ShipPopover>
+          fullWidth
+        />
       </td>
 
       <td title={change.ship.name || undefined} className="truncate">

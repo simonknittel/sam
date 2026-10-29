@@ -1,10 +1,11 @@
 import { Link } from "@/modules/common/components/Link";
-import type { Variant } from "@sam-monorepo/database/client";
+import type { Ship, Variant } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import {
   ManufacturerLogo,
   type ManufacturerLogoManufacturer,
 } from "./ManufacturerLogo";
+import { VariantPopover } from "./VariantPopover";
 
 interface Props {
   readonly className?: string;
@@ -23,6 +24,16 @@ interface Props {
    */
   readonly size?: 32 | 48 | 80 | "inline";
   readonly disableLink?: boolean;
+  /**
+   * The link opens the popover of the variant on hover. A link inside a
+   * different popup (for example a tooltip) disables it: the popup closes
+   * when the pointer moves to the popover.
+   */
+  readonly disablePopover?: boolean;
+  /** The individual ship of a citizen, for the popover */
+  readonly ship?: Pick<Ship, "name">;
+  /** The link fills the width of its container, for example a table cell */
+  readonly fullWidth?: boolean;
 }
 
 export const VariantWithLogo = ({
@@ -33,6 +44,9 @@ export const VariantWithLogo = ({
   logo,
   size = 48,
   disableLink = false,
+  disablePopover = false,
+  ship,
+  fullWidth = false,
 }: Props) => {
   const isInline = size === "inline";
 
@@ -64,7 +78,7 @@ export const VariantWithLogo = ({
       </div>
     );
 
-  return (
+  const link = (
     <Link
       href={`/app/fleet/variant/${variant.id}`}
       className={
@@ -80,5 +94,23 @@ export const VariantWithLogo = ({
       {logoElement}
       {name}
     </Link>
+  );
+
+  if (disablePopover) return link;
+
+  return (
+    <VariantPopover
+      variant={variant}
+      manufacturer={manufacturer}
+      logo={logo}
+      ship={ship}
+      triggerClassName={clsx({
+        "block w-full": fullWidth,
+        "max-w-full": !fullWidth,
+      })}
+      hoverOnly
+    >
+      {link}
+    </VariantPopover>
   );
 };
