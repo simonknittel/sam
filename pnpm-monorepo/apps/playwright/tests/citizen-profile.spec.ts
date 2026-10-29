@@ -12,6 +12,7 @@ import {
   type TestCitizen,
 } from "../fixtures/factories";
 import {
+  clickUntilVisible,
   hoverUntilVisible,
   SAVED_TEXT,
   sectionByHeading,
@@ -373,6 +374,43 @@ test("the dashboard tile hides what the own permissions do not cover", async ({
   await expect(spynetSection.getByRole("link", { name: "Flotte" })).toHaveCount(
     0,
   );
+});
+
+test("the account popover shows the profile of the own citizen", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, {
+    handle: "konto-profilinhaber",
+    permissionStrings: OWN_PROFILE_PERMISSIONS,
+  });
+  await seedProfile(prisma, citizen);
+
+  await signIn(citizen.user);
+  await page.goto("/app/account");
+
+  const popover = page.getByRole("dialog", { name: "Account" });
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Account" }),
+    popover,
+  );
+
+  await expect(popover).toContainText(citizen.entity.handle!);
+  await expect(popover).toContainText("1.234");
+  await expect(popover).toContainText("Europe/Berlin");
+  await expectMetricLinks(popover, citizen.entity.id);
+  await expect(
+    popover.getByRole("link", { name: "Einstellungen" }),
+  ).toBeVisible();
+  await expect(popover.getByRole("button", { name: "Abmelden" })).toBeVisible();
+
+  /** The top bar stays after a navigation, but the popover closes */
+  await popover.getByRole("link", { name: "Flotte" }).click();
+  await expect(page).toHaveURL(
+    `/app/spynet/citizen/${citizen.entity.id}/fleet`,
+  );
+  await expect(popover).toBeHidden();
 });
 
 /** The birthday list reads the day in the time zone of the organization */
