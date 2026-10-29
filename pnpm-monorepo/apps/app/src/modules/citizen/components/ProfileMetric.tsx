@@ -24,7 +24,7 @@ interface Props {
 }
 
 /**
- * One number of a citizen profile, shown identically in the popover and in
+ * One number of a citizen profile, shown identically in the popovers and in
  * the dashboard tile.
  */
 export const ProfileMetric = ({

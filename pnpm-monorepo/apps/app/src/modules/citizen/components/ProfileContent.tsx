@@ -59,9 +59,10 @@ interface Props {
 }
 
 /**
- * The profile of a citizen. Both surfaces which show a profile — the citizen
- * popover and the dashboard tile — render this component, so that they
- * cannot drift apart. Each surface adds its own chrome around it.
+ * The profile of a citizen. All surfaces which show a profile — the citizen
+ * popover, the account popover of the top bar and the dashboard tile —
+ * render this component, so that they cannot drift apart. Each surface adds
+ * its own chrome around it.
  */
 export const ProfileContent = ({
   profile,

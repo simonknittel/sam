@@ -31,9 +31,9 @@ interface ProfileMetricLink {
 }
 
 /**
- * Everything both profile surfaces of the app show: the citizen popover and
- * the profile tile of the dashboard. Only the app uses it, thus the keys are
- * camelCase.
+ * Everything the profile surfaces of the app show: the citizen popover, the
+ * account popover and the profile tile of the dashboard. Only the app uses
+ * it, thus the keys are camelCase.
  */
 export interface CitizenProfile {
   readonly citizen: {
@@ -75,10 +75,11 @@ export interface CitizenProfile {
 }
 
 /**
- * The profile of a citizen for the popover and the dashboard tile. The
+ * The profile of a citizen for the popovers and the dashboard tile. The
  * permission for each metric depends on whether the actor looks at the own
  * citizen or at a different one. The own profile needs no `citizen;read`,
- * because the dashboard tile shows it to each citizen.
+ * because the dashboard tile and the account popover show it to each
+ * citizen.
  *
  * A metric also carries the Spynet page behind it, but only when the actor
  * can open that page. Each of these pages asks for its own permission, which
