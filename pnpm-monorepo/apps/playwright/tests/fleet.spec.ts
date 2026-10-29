@@ -203,15 +203,20 @@ test("my ships can be added, renamed and deleted with consistent org counts", as
   }
 });
 
-test("the ship popover shows the variant and the custom name of a ship", async ({
+test("the variant popover shows the custom name only for an individual ship", async ({
   page,
   prisma,
   signIn,
 }) => {
   const owner = await createCitizen(prisma, {
     handle: "schiffs-besitzer",
-    permissionStrings: ["ship;manage"],
+    permissionStrings: [
+      "ship;manage",
+      "orgFleet;read",
+      "organizationMembership;read",
+    ],
   });
+  await addCitizenToOrganization(prisma, owner);
   const { variant } = await createVariant(prisma, {
     manufacturerName: "Anvil Aerospace",
     seriesName: "Carrack",
@@ -244,6 +249,18 @@ test("the ship popover shows the variant and the custom name of a ship", async (
     "href",
     `/app/fleet/variant/${variant.id}`,
   );
+
+  // The org fleet counts the variant, not a ship of a citizen
+  await page.goto("/app/fleet/org");
+  await hoverUntilVisible(
+    page
+      .getByRole("row")
+      .filter({ hasText: "Carrack" })
+      .getByRole("link", { name: "Carrack" }),
+    popover,
+  );
+  await expect(popover).toContainText("Anvil Aerospace");
+  await expect(popover).not.toContainText("Sternenfaust");
 });
 
 test("the ship count of a variant ignores deleted ships and the ships of deleted owners", async ({
