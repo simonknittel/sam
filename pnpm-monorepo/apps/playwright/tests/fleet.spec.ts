@@ -11,6 +11,7 @@ import {
   clickUntilVisible,
   DELETED_TEXT,
   fillUntilUrl,
+  hoverUntilVisible,
   inlineEditorTrigger,
   modal,
   NOT_FOUND_TEXT,
@@ -200,6 +201,49 @@ test("my ships can be added, renamed and deleted with consistent org counts", as
       ownerId: owner.entity.id,
     });
   }
+});
+
+test("the ship popover shows the variant and the custom name of a ship", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const owner = await createCitizen(prisma, {
+    handle: "schiffs-besitzer",
+    permissionStrings: ["ship;manage"],
+  });
+  const { variant } = await createVariant(prisma, {
+    manufacturerName: "Anvil Aerospace",
+    seriesName: "Carrack",
+    variantName: "Carrack",
+    status: VariantStatus.FLIGHT_READY,
+  });
+  await prisma.ship.create({
+    data: {
+      ownerId: owner.entity.id,
+      variantId: variant.id,
+      name: "Sternenfaust",
+    },
+  });
+
+  await signIn(owner.user);
+  await page.goto("/app/fleet/my-ships");
+
+  const popover = page.getByRole("dialog", { name: "Schiffsdetails" });
+  await hoverUntilVisible(
+    page
+      .getByRole("row")
+      .filter({ hasText: "Carrack" })
+      .getByRole("link", { name: "Carrack" }),
+    popover,
+  );
+
+  await expect(popover).toContainText("Anvil Aerospace");
+  await expect(popover).toContainText("Sternenfaust");
+  await expect(popover.getByRole("link", { name: "Carrack" })).toHaveAttribute(
+    "href",
+    `/app/fleet/variant/${variant.id}`,
+  );
 });
 
 test("the ship count of a variant ignores deleted ships and the ships of deleted owners", async ({
