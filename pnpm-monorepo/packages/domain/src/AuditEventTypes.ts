@@ -249,6 +249,7 @@ export enum AuditEventType {
   ONBOARDING_TASK_COMPLETED = "ONBOARDING_TASK_COMPLETED",
   LOG_ANALYZER_ENTRIES_UPLOADED = "LOG_ANALYZER_ENTRIES_UPLOADED",
   SEASONAL_THEME_SETTINGS_UPDATED = "SEASONAL_THEME_SETTINGS_UPDATED",
+  CALENDAR_ENTRY_TYPE_SETTINGS_UPDATED = "CALENDAR_ENTRY_TYPE_SETTINGS_UPDATED",
   ASSUME_USER_STARTED = "ASSUME_USER_STARTED",
   ASSUME_USER_ENDED = "ASSUME_USER_ENDED",
   READ_MARKER_CREATED = "READ_MARKER_CREATED",
@@ -1720,6 +1721,17 @@ export interface AuditEventDataByType {
    * theme again, `disabled` the events the citizen switched off.
    */
   [AuditEventType.SEASONAL_THEME_SETTINGS_UPDATED]: {
+    citizenId: string;
+    enabled: string[];
+    disabled: string[];
+  };
+
+  /**
+   * Both lists hold calendar entry types, and both hold only the types the
+   * citizen really changed. `enabled` names the types which the calendar
+   * shows again, `disabled` the types the citizen switched off.
+   */
+  [AuditEventType.CALENDAR_ENTRY_TYPE_SETTINGS_UPDATED]: {
     citizenId: string;
     enabled: string[];
     disabled: string[];

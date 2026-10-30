@@ -13,6 +13,26 @@ export {
 } from "./AuditEventTypes.js";
 export { buildBriefingRootPageSeed } from "./buildBriefingRootPageSeed.js";
 export {
+  getBirthdayOccurrencesInRange,
+  getSalaryDueDaysInRange,
+  getSeasonalGreetingDaysInRange,
+  type SeasonalGreetingDay,
+} from "./calendar/calendarDateRules.js";
+export {
+  CALENDAR_ENTRY_TYPES,
+  CalendarEntryType,
+} from "./calendar/calendarEntryType.js";
+export {
+  CalendarRangeProblem,
+  MAXIMUM_CALENDAR_RANGE_MONTHS,
+  addDaysToLocalDate,
+  compareLocalDates,
+  findCalendarRangeProblem,
+  parseLocalDateKey,
+  toLocalDateKey,
+  type LocalDateRange,
+} from "./calendar/calendarRange.js";
+export {
   getYesterdayDateColumnValue,
   toDateColumnValue,
 } from "./calendarDate.js";
@@ -278,6 +298,7 @@ export {
 export { getAuecPerSilc } from "./silc/getAuecPerSilc.js";
 export { getTotalSilc } from "./silc/getTotalSilc.js";
 export { lockSilcLedger } from "./silc/lockSilcLedger.js";
+export { isSalaryDue } from "./silc/salaryDueDay.js";
 export {
   SILC_DESCRIPTION_MAXIMUM_LENGTH,
   SILC_VALUE_MAXIMUM,
