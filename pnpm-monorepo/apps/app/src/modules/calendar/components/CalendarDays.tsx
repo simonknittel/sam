@@ -39,7 +39,7 @@ const CalendarDay = ({
   <section className="flex flex-col gap-0.5">
     <Heading className="mb-2 flex items-baseline gap-2 font-mono text-lg uppercase">
       {formatCalendarDay(date)}
-      {isToday && <span className="text-sm text-green-500">Heute</span>}
+      {isToday && <span className="text-sm text-blue-500">Heute</span>}
     </Heading>
 
     {entries.map(({ entry, index }) => (
