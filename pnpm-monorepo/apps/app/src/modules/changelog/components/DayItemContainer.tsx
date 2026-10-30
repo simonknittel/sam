@@ -1,13 +1,15 @@
 "use client";
 
-import { NewBadge } from "@/modules/common/components/NewBadge";
 import { SmallBadge } from "@/modules/common/components/SmallBadge";
 import {
   UnreadEdge,
   UnreadEdgeWidth,
 } from "@/modules/common/components/UnreadEdge";
+import { NewMarkerButton } from "@/modules/read-markers/components/NewMarkerButton";
+import { useMarkAsRead } from "@/modules/read-markers/hooks/useMarkAsRead";
+import { ReadMarkerSubject } from "@sam-monorepo/domain";
 import clsx from "clsx";
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { useUnseenEntries } from "./UnseenEntriesProvider";
 
 interface Props {
@@ -34,12 +36,26 @@ export const DayItemContainer = ({
   tags,
   children,
 }: Props) => {
-  const { retainedHighlightKeys, observeEntry } = useUnseenEntries();
+  const { retainedHighlightKeys, observeEntry, dismissHighlight } =
+    useUnseenEntries();
+  const { isNew, markAsRead } = useMarkAsRead(
+    ReadMarkerSubject.ChangelogEntry,
+    entryKey,
+    isTracked && isUnseenOnServer,
+  );
+  /** The entry has no link, thus its title takes the focus of the marker */
+  const titleRef = useRef<HTMLElement>(null);
 
   const isRetained = retainedHighlightKeys.has(entryKey);
-  const isUnseen = isTracked && isUnseenOnServer && !isRetained;
-  const showsNewIndicator =
-    !isRedacted && isTracked && (isUnseenOnServer || isRetained);
+  const isUnseen = isNew && !isRetained;
+  const showsNewIndicator = !isRedacted && (isNew || isRetained);
+
+  const handleNewMarkerClick = () => {
+    titleRef.current?.focus();
+    dismissHighlight(entryKey);
+    // Without `isNew`, only the retained highlight shows: the entry is read
+    if (isNew) markAsRead();
+  };
 
   return (
     <li
@@ -54,9 +70,20 @@ export const DayItemContainer = ({
       {showsNewIndicator && <UnreadEdge width={UnreadEdgeWidth.Thin} />}
 
       <div className="flex items-center gap-2">
-        <strong className="block font-mono font-bold uppercase">{title}</strong>
+        <strong
+          ref={titleRef}
+          tabIndex={-1}
+          className="block font-mono font-bold uppercase outline-hidden"
+        >
+          {title}
+        </strong>
 
-        {showsNewIndicator && <NewBadge />}
+        {showsNewIndicator && (
+          <NewMarkerButton
+            onClick={handleNewMarkerClick}
+            className="flex-none"
+          />
+        )}
       </div>
 
       {tags && tags.length > 0 && (

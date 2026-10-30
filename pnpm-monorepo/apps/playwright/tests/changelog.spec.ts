@@ -1,5 +1,6 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { createCitizen } from "../fixtures/factories";
+import { waitForAppShellHydration } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 /**
@@ -8,6 +9,9 @@ import { expect, test } from "../fixtures/test";
  * compare counts instead of naming single entries.
  */
 const newEntryIndicators = (page: Page) => page.locator("[data-new-badge]");
+
+const newMarkerButtons = (scope: Page | Locator) =>
+  scope.getByRole("button", { name: "Neu – als gelesen markieren" });
 
 /** Dwell time + flush debounce + server action, with headroom. */
 const READ_ON_VIEW_TIMEOUT = 15_000;
@@ -69,6 +73,45 @@ test("entries are marked as seen in view and keep their indicator", async ({
   await page.reload();
   await expect(newEntryIndicators(page).first()).toBeVisible();
   expect(await newEntryIndicators(page).count()).toBeLessThan(indicatorCount);
+});
+
+test("the marker of an entry marks it as read and removes its indicator at once", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, {
+    handle: "changelog-marker",
+    emailVerified: BEFORE_THE_FIRST_ENTRY,
+  });
+  await signIn(citizen.user);
+
+  await openChangelog(page);
+  await waitForAppShellHydration(page);
+  await expect(newEntryIndicators(page).first()).toBeVisible();
+  const indicatorCount = await newEntryIndicators(page).count();
+
+  // The last entry is out of view, thus it is not read yet and has its key
+  const entry = page
+    .locator("li[data-read-on-view-id]")
+    .filter({ has: newMarkerButtons(page) })
+    .last();
+  const entryKey = await entry.getAttribute("data-read-on-view-id");
+  await newMarkerButtons(entry).click();
+
+  await expect(newEntryIndicators(page)).toHaveCount(indicatorCount - 1);
+  await expect
+    .poll(
+      () =>
+        prisma.readMarker.count({
+          where: {
+            citizenId: citizen.entity.id,
+            changelogEntryKey: entryKey,
+          },
+        }),
+      { timeout: READ_ON_VIEW_TIMEOUT },
+    )
+    .toBe(1);
 });
 
 test("entries published before the email confirmation are not new", async ({
