@@ -1,13 +1,12 @@
 import { env } from "@/env";
 import type { DiscordProfile } from "next-auth/providers/discord";
-import type * as z from "zod";
-import type { guildMemberResponseSchema } from "./schemas";
+import type { GuildMember } from "./schemas";
 
 export const getDiscordAvatar = (
   profile: DiscordProfile,
-  guildMember: z.infer<typeof guildMemberResponseSchema>,
+  guildMember: GuildMember,
 ) => {
-  if (guildMember && "avatar" in guildMember && guildMember.avatar) {
+  if (guildMember.avatar) {
     const format = getFormat(guildMember.avatar);
     return `https://cdn.discordapp.com/guilds/${env.DISCORD_GUILD_ID}/users/${profile.id}/avatars/${guildMember.avatar}.${format}`;
   } else if (profile.avatar) {

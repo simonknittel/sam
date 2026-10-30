@@ -1,7 +1,13 @@
 import { env } from "@/env";
-import { guildMemberResponseSchema } from "./schemas";
+import { guildMemberResponseSchema, type GuildMember } from "./schemas";
 
-export const getGuildMember = async (access_token: string) => {
+/**
+ * @returns `null` when the user is not a member of the guild. Throws for all
+ * other failures, for example a rate limit or a timeout.
+ */
+export const getGuildMember = async (
+  access_token: string,
+): Promise<GuildMember | null> => {
   const headers = new Headers();
   headers.set("Authorization", `Bearer ${access_token}`);
 
@@ -16,8 +22,11 @@ export const getGuildMember = async (access_token: string) => {
     },
   );
 
-  const body: unknown = await response.json();
-  const data = guildMemberResponseSchema.parse(body);
+  // Discord answers "Unknown Guild" when the user is not a member
+  if (response.status === 404) return null;
+  if (!response.ok)
+    throw new Error(`Discord answered with the status ${response.status}`);
 
-  return data;
+  const body: unknown = await response.json();
+  return guildMemberResponseSchema.parse(body);
 };

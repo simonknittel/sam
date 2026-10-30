@@ -1,4 +1,4 @@
-import toast from "react-hot-toast";
+import toast, { type ToastOptions } from "react-hot-toast";
 
 /**
  * Long enough to be read rather than skimmed past: a warning always sits
@@ -7,5 +7,9 @@ import toast from "react-hot-toast";
  */
 const WARNING_TOAST_DURATION_MS = 8_000;
 
-export const toastWarning = (message: string) =>
-  toast(message, { icon: "⚠️", duration: WARNING_TOAST_DURATION_MS });
+export const toastWarning = (message: string, options?: ToastOptions) =>
+  toast(message, {
+    icon: "⚠️",
+    duration: WARNING_TOAST_DURATION_MS,
+    ...options,
+  });

@@ -1,4 +1,5 @@
 import { DevelopmentLogin } from "@/modules/auth/components/DevelopmentLogin";
+import { LoginErrorToast } from "@/modules/auth/components/LoginErrorToast";
 import { authenticate } from "@/modules/auth/server";
 import {
   REDIRECT_TO_SEARCH_PARAM,
@@ -6,7 +7,6 @@ import {
 } from "@/modules/auth/utils/redirectTo";
 import { Hero } from "@/modules/common/components/Hero";
 import { LoginButtons } from "@/modules/common/components/LoginButtons";
-import Note from "@/modules/common/components/Note";
 import { UwuHero } from "@/modules/common/components/UwuHero";
 import { SeasonalConfetti } from "@/modules/seasonal-events/components/SeasonalConfetti";
 import { SeasonalViewportLayer } from "@/modules/seasonal-events/components/SeasonalViewportLayer";
@@ -22,8 +22,6 @@ export const metadata: Metadata = {
   description:
     "Sinister Administration Module (SAM) of our Star Citizen organization",
 };
-
-const BANNED_ERROR = "UserBanned";
 
 const loadSearchParams = createLoader({
   uwu: parseAsString,
@@ -56,6 +54,8 @@ export default async function Page({ searchParams }: PageProps<"/">) {
     <div {...seasonalThemeRootProps}>
       <SeasonalConfetti />
 
+      {error && <LoginErrorToast error={error} />}
+
       <DevelopmentLogin redirectTo={redirectTo} />
 
       <main className="flex w-full max-w-md flex-1 flex-col items-center justify-center gap-4 py-8">
@@ -67,17 +67,6 @@ export default async function Page({ searchParams }: PageProps<"/">) {
             redirectTo={redirectTo}
           />
         </div>
-
-        {error && (
-          <Note
-            className="max-w-xs lg:p-4!"
-            message={
-              error === BANNED_ERROR
-                ? "Dein Account wurde gesperrt."
-                : "Beim Anmelden ist ein Fehler aufgetreten."
-            }
-          />
-        )}
       </main>
 
       <Footer className="p-4" />
