@@ -628,6 +628,23 @@ export const authOptions: NextAuthOptions = {
     ? { sessionToken: DEVELOPMENT_SESSION_TOKEN_COOKIE }
     : undefined,
 
+  /**
+   * Else next-auth writes its errors only to the console. Only the code and
+   * the error go to the log, because some metadata contains the Discord
+   * profile.
+   */
+  logger: {
+    error: (code, metadata) => {
+      log.error("NextAuth error", {
+        code,
+        error: metadata instanceof Error ? metadata : metadata.error,
+      });
+    },
+    warn: (code) => {
+      log.warn("NextAuth warning", { code });
+    },
+  },
+
   events: {
     signIn: async (message) => {
       /**
