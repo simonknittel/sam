@@ -15,6 +15,7 @@ import {
  */
 export enum SystemLogApp {
   Account = "Account",
+  Calendar = "Kalender",
   Career = "Karriere",
   Changelog = "Changelog",
   Events = "Events",
@@ -2614,6 +2615,20 @@ export const AuditEventDefinitions: {
     },
     message: (data) =>
       `Citizen ${data.citizenId} updated their seasonal theme settings (switched on: ${
+        data.enabled.join(", ") || "none"
+      }, switched off: ${data.disabled.join(", ") || "none"})`,
+  },
+
+  [AuditEventType.CALENDAR_ENTRY_TYPE_SETTINGS_UPDATED]: {
+    type: AuditEventType.CALENDAR_ENTRY_TYPE_SETTINGS_UPDATED,
+    app: SystemLogApp.Calendar,
+    data: {
+      citizenId: "string",
+      enabled: ["string"],
+      disabled: [],
+    },
+    message: (data) =>
+      `Citizen ${data.citizenId} updated their calendar entry types (switched on: ${
         data.enabled.join(", ") || "none"
       }, switched off: ${data.disabled.join(", ") || "none"})`,
   },

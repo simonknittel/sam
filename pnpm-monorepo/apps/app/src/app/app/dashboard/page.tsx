@@ -1,10 +1,10 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
+import { CalendarTile } from "@/modules/calendar/components/CalendarTile";
 import { ProfileTile } from "@/modules/citizen/components/ProfileTile";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { DashboardFooter } from "@/modules/dashboard/components/DashboardFooter";
 import { DashboardGreetingBanner } from "@/modules/dashboard/components/DashboardGreetingBanner";
 import { TileSkeleton } from "@/modules/dashboard/components/TileSkeleton";
-import { CalendarTile } from "@/modules/events/components/CalendarTile";
 import { SeasonalSpynetSearchTileSlot } from "@/modules/seasonal-events/components/SeasonalSpynetSearchTileSlot";
 import { SpynetSearchTile } from "@/modules/spynet/components/SpynetSearchTile/SpynetSearchTile";
 import { TasksDashboardTile } from "@/modules/tasks/components/DashboardTile";
@@ -15,15 +15,12 @@ import { Suspense } from "react";
 export default async function Page() {
   const authentication = await requireAuthenticationPage("/app/dashboard");
 
-  const [canCitizenRead, canOrgRead, canEventRead, canTaskRead] =
-    await Promise.all([
-      authentication.authorize("citizen", "read"),
-      authentication.authorize("organization", "read"),
-      authentication.authorize("event", "read"),
-      authentication.authorize("task", "read"),
-    ]);
+  const [canCitizenRead, canOrgRead, canTaskRead] = await Promise.all([
+    authentication.authorize("citizen", "read"),
+    authentication.authorize("organization", "read"),
+    authentication.authorize("task", "read"),
+  ]);
 
-  const showCalendar = canEventRead;
   const showSpynetSearchTile = canCitizenRead || canOrgRead;
 
   return (
@@ -34,11 +31,10 @@ export default async function Page() {
       cannot change their layout. */}
       <div className="@container/main flex flex-row flex-wrap justify-center gap-6">
         <div className="flex w-100 flex-none flex-col gap-6 @7xl/main:max-w-none @7xl/main:flex-1">
-          {showCalendar && (
-            <Suspense fallback={<TileSkeleton />}>
-              <CalendarTile className="@container/events" />
-            </Suspense>
-          )}
+          {/* For everybody: the seasonal entries need no permission */}
+          <Suspense fallback={<TileSkeleton />}>
+            <CalendarTile className="@container/events" />
+          </Suspense>
 
           <SuspenseWithErrorBoundaryTile>
             <WikiDashboardPageTile />

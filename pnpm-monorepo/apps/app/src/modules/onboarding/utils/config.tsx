@@ -99,14 +99,20 @@ const ONBOARDING_STEP_CONTENT: Record<
   Omit<OnboardingStep, "key">
 > = {
   [OnboardingStepKey.EventsCalendar]: {
-    title: "Der Eventkalender",
+    title: "Der Kalender",
     route: "/app/dashboard",
     targetId: OnboardingTargetId.DashboardCalendar,
     content: () => (
       <>
         <p>
-          Auf dem Dashboard siehst du unsere nächsten Events. Ein Klick auf ein
+          Auf dem Dashboard zeigt dir der Kalender die nächsten sieben Tage:
+          unsere Events und weitere Termine wie Geburtstage. Ein Klick auf ein
           Event öffnet die Detailseite mit allen weiteren Informationen.
+        </p>
+
+        <p className="mt-2">
+          Über „Zum Kalender“ siehst du weitere Zeiträume und wählst aus, welche
+          Termine du sehen möchtest.
         </p>
       </>
     ),

@@ -3,9 +3,7 @@ import {
   getRequestActor,
   throwApplicationErrorForPage,
 } from "@/modules/application";
-import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
-  countOpenEvents,
   EventListStatus,
   EventParticipationFilter,
   EventTypeFilter,
@@ -16,23 +14,6 @@ import { CursorDirection } from "@sam-monorepo/domain";
 import { cache } from "react";
 
 const EVENTS_PAGE_SIZE = 10;
-
-/**
- * How many open events there are in total — for the dashboard tile, which
- * only lists the next few of them.
- */
-export const getOpenEventCount = cache(
-  withTrace("getOpenEventCount", async (): Promise<number> => {
-    try {
-      return await countOpenEvents(
-        getApplicationContext(),
-        await getRequestActor(),
-      );
-    } catch (error) {
-      return throwApplicationErrorForPage(error);
-    }
-  }),
-);
 
 /**
  * One page of the events list. A stale cursor in the URL (its event is gone

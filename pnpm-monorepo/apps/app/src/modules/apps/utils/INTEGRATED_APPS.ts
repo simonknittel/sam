@@ -117,6 +117,13 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
     tags: ["System"],
   },
   {
+    name: "Kalender",
+    slug: "calendar",
+    href: "/app/calendar",
+    description:
+      "Deine Termine auf einen Blick: Events, Geburtstage, Fristen und mehr",
+  },
+  {
     name: "Karriere",
     slug: "career",
     href: "/app/career",
