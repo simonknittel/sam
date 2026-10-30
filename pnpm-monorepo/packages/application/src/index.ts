@@ -15,6 +15,7 @@ export {
 export * from "./apps/index.js";
 export * from "./audit/index.js";
 export * from "./auth/index.js";
+export * from "./calendar/index.js";
 export * from "./career/index.js";
 export * from "./changelog/index.js";
 export type { CitizenReference } from "./citizenReference.js";

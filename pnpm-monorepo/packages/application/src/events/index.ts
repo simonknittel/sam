@@ -64,7 +64,6 @@ export {
   toEventVisibilityType,
 } from "./eventOutput.js";
 export {
-  countOpenEvents,
   findEventFleet,
   findEventOptions,
   findResolvedEventParticipants,
@@ -96,9 +95,11 @@ export {
   EventListStatus,
   EventParticipationFilter,
   EventTypeFilter,
+  findEventCardRows,
   findEventListPage,
   listEvents,
   listEventsInputSchema,
+  type EventCardRows,
   type EventListEntry,
   type EventListPage,
   type EventListRow,

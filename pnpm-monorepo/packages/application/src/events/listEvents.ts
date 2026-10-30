@@ -226,6 +226,26 @@ const getCancelledParticipationEventIds = async (
   return rows.map((row) => row.eventId);
 };
 
+/** The active participations of the actor, by Discord account or citizen */
+const buildViewerParticipationWhere = (
+  actor: Actor,
+): Prisma.EventParticipantWhereInput => {
+  const { discordUserId } = actor;
+  const citizenId = actor.citizen?.id ?? null;
+
+  /**
+   * Without a Discord id, `{ discordUserId: null }` would match every app
+   * sign-up
+   */
+  return {
+    cancelledAt: null,
+    OR: [
+      ...(discordUserId ? [{ discordUserId }] : []),
+      ...(citizenId ? [{ citizenId }] : []),
+    ],
+  };
+};
+
 /**
  * One page of the events that the actor can see, with the rows that the
  * event cards of the app render. The app pages in both directions, the
@@ -249,19 +269,8 @@ export const findEventListPage = (
     const statusWhere = getStatusWhere(input.status, now, unreadWhere);
     if (!statusWhere) return EMPTY_EVENT_LIST_PAGE;
 
-    const { discordUserId } = actor;
     const citizenId = actor.citizen?.id ?? null;
-    /**
-     * Without a Discord id, `{ discordUserId: null }` would match every app
-     * sign-up
-     */
-    const viewerParticipationWhere: Prisma.EventParticipantWhereInput = {
-      cancelledAt: null,
-      OR: [
-        ...(discordUserId ? [{ discordUserId }] : []),
-        ...(citizenId ? [{ citizenId }] : []),
-      ],
-    };
+    const viewerParticipationWhere = buildViewerParticipationWhere(actor);
 
     const orderDirection: Prisma.SortOrder =
       input.status === EventListStatus.Open ||
@@ -317,6 +326,60 @@ export const findEventListPage = (
       newEventIds: new Set(newEventIds),
       nextCursor: page.nextCursor,
       prevCursor: page.previousCursor,
+    };
+  });
+
+/** The rows of the event cards of a list that has no pages */
+export interface EventCardRows {
+  /** The participations of each event are the active ones of the actor */
+  readonly events: EventListRow[];
+  /** The events with a cancelled participation of the actor */
+  readonly cancelledParticipationEventIds: string[];
+  readonly newEventIds: ReadonlySet<string>;
+}
+
+/**
+ * All events of the where fragment that the actor can see, with the rows
+ * that the event cards of the app render, sorted by the start. For the lists
+ * outside of the events page, for example the calendar. The caller limits
+ * the number of the events with the fragment (for example a date range).
+ *
+ * @throws ForbiddenError without `event;read`
+ */
+export const findEventCardRows = (
+  context: ApplicationContext,
+  actor: Actor,
+  eventWhere: Prisma.EventWhereInput,
+): Promise<EventCardRows> =>
+  withSpan(context, "findEventCardRows", async () => {
+    requirePermission(actor, "event", "read");
+
+    const events = await context.prisma.event.findMany({
+      where: {
+        AND: [eventWhere, buildVisibleEventsWhere(toEventViewer(actor))],
+      },
+      select: eventListSelect(buildViewerParticipationWhere(actor)),
+      orderBy: [{ startTime: "asc" }, { id: "asc" }],
+    });
+
+    const eventIds = events.map((event) => event.id);
+    const unreadWhere = buildUnreadWhere(actor, ReadMarkerSubject.Event);
+
+    const [cancelledParticipationEventIds, newEventIds] = await Promise.all([
+      getCancelledParticipationEventIds(
+        context,
+        eventIds,
+        actor.citizen?.id ?? null,
+      ),
+      unreadWhere
+        ? findNewEventIds(context.prisma, eventIds, unreadWhere, context.now())
+        : [],
+    ]);
+
+    return {
+      events,
+      cancelledParticipationEventIds,
+      newEventIds: new Set(newEventIds),
     };
   });
 

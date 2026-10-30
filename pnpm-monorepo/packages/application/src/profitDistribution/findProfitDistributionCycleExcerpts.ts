@@ -35,13 +35,10 @@ export interface ProfitDistributionCycleExcerpt {
   readonly myPayoutState: PayoutState;
 }
 
-/**
- * Of the open cycles, a member who is not a manager sees only the first
- * cycle in the collection phase, and the cycles in the payout preparation and
- * payout phases.
- */
+type CyclePhaseRow = Parameters<typeof getCurrentPhase>[0];
+
 const isVisibleOpenCycle = (
-  cycle: CycleExcerptRow,
+  cycle: CyclePhaseRow,
   isFirstCollectionCycle: boolean,
 ) => {
   const phase = getCurrentPhase(cycle);
@@ -59,6 +56,28 @@ const isVisibleOpenCycle = (
     default:
       throw new Error(`Unknown cycle phase: ${phase satisfies never}`);
   }
+};
+
+/**
+ * Of the open cycles, a member who is not a manager sees only the first
+ * cycle in the collection phase, and the cycles in the payout preparation and
+ * payout phases. `openCycles` are the cycles that are not completed, the
+ * latest planned end of the collection phase first. The list of the cycles
+ * and the calendar use this rule.
+ */
+export const filterVisibleOpenCycles = <Cycle extends CyclePhaseRow>(
+  openCycles: readonly Cycle[],
+  isManager: boolean,
+): Cycle[] => {
+  if (isManager) return [...openCycles];
+
+  const firstCollectionCycle = openCycles.find(
+    (cycle) => getCurrentPhase(cycle) === CyclePhase.Collection,
+  );
+
+  return openCycles.filter((cycle) =>
+    isVisibleOpenCycle(cycle, cycle === firstCollectionCycle),
+  );
 };
 
 /**
@@ -86,14 +105,9 @@ export const findProfitDistributionCycleExcerpts = (
       select: CYCLE_EXCERPT_SELECT,
     });
 
-    const firstCollectionCycle = cycles.find(
-      (cycle) => getCurrentPhase(cycle) === CyclePhase.Collection,
-    );
     const visibleCycles =
-      status === ProfitDistributionCycleListStatus.Open && !isManager
-        ? cycles.filter((cycle) =>
-            isVisibleOpenCycle(cycle, cycle === firstCollectionCycle),
-          )
+      status === ProfitDistributionCycleListStatus.Open
+        ? filterVisibleOpenCycles(cycles, isManager)
         : cycles;
 
     /** One read of the own balance for all cycles in the collection phase */

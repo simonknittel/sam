@@ -11,7 +11,6 @@ import { SHIP_VARIANT_SELECT } from "../fleet/shipVariant.js";
 import { EVENT_PAGE_RELATIONS_SELECT } from "./eventSelects.js";
 import { buildVisibleEventsWhere, toEventViewer } from "./eventVisibility.js";
 import { requireVisibleEvent } from "./findVisibleEvent.js";
-import { getOpenEventsWhere } from "./openEvents.js";
 import { buildParticipantCitizenWhere } from "./participantCitizenWhere.js";
 
 /** An event as the event picker lists, searches and submits it */
@@ -36,28 +35,6 @@ export const findEventOptions = (
     where: buildVisibleEventsWhere(toEventViewer(actor)),
     orderBy: { name: "asc" },
     select: { id: true, name: true, startTime: true },
-  });
-};
-
-/**
- * How many open events the actor can see in total — for the dashboard tile,
- * which only lists the next few of them
- *
- * @throws ForbiddenError without `event;read`
- */
-export const countOpenEvents = (
-  context: ApplicationContext,
-  actor: Actor,
-): Promise<number> => {
-  requirePermission(actor, "event", "read");
-
-  return context.prisma.event.count({
-    where: {
-      AND: [
-        getOpenEventsWhere(context.now()),
-        buildVisibleEventsWhere(toEventViewer(actor)),
-      ],
-    },
   });
 };
 
