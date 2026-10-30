@@ -16,8 +16,12 @@ docker compose up --detach psql
 # confirmation tokens, web push subscriptions) which must not leave
 # production. Their tables get restored empty. The dump file gets removed
 # because it still contains the not yet anonymized data of the other tables.
+# The production connection string uses `sslmode=verify-full`. The container
+# has no `~/.postgresql/root.crt`, thus `pg_dump` uses the system CA roots.
+# Only `pg_dump`: with `sslrootcert=system`, libpq refuses a weaker `sslmode`,
+# and the local `pg_restore` connects without TLS.
 docker container exec --interactive sam-psql-1 /bin/bash <<EOF
-	pg_dump --dbname=$CONNECTION_STRING --no-owner --no-privileges --no-acl --no-tablespaces --exclude-table-data='"Session"' --exclude-table-data='"VerificationToken"' --exclude-table-data='"EmailConfirmationToken"' --exclude-table-data='"WebPushSubscription"' --format=custom --file dump && \
+	PGSSLROOTCERT=system pg_dump --dbname=$CONNECTION_STRING --no-owner --no-privileges --no-acl --no-tablespaces --exclude-table-data='"Session"' --exclude-table-data='"VerificationToken"' --exclude-table-data='"EmailConfirmationToken"' --exclude-table-data='"WebPushSubscription"' --format=custom --file dump && \
 		pg_restore --dbname=postgresql://postgres:admin@localhost:5432/db --no-owner --clean --if-exists dump && \
 		rm dump
 EOF
