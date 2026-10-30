@@ -99,7 +99,6 @@ export {
   findEventListPage,
   listEvents,
   listEventsInputSchema,
-  type EventCardRows,
   type EventListEntry,
   type EventListPage,
   type EventListRow,

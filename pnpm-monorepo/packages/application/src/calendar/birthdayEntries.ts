@@ -1,32 +1,25 @@
 import {
   CalendarEntryType,
-  CAN_LOGIN_CITIZEN_WHERE,
   getBirthdayOccurrencesInRange,
   toLocalDateKey,
 } from "@sam-monorepo/domain";
+import { LISTED_BIRTHDAY_CITIZEN_WHERE } from "../spynet/birthdays.js";
 import type {
   BirthdayCalendarEntry,
   CalendarEntryCollector,
 } from "./calendarEntry.js";
 
 /**
- * The birthdays of the citizens, each time they are celebrated in the range.
- * Citizens who can no longer sign in are left out, the same rule as the list
- * of the upcoming birthdays and the greeting job. The birthday needs no
- * permission of its own beyond `citizen;read`.
+ * The birthdays of the citizens of the lists (see
+ * `LISTED_BIRTHDAY_CITIZEN_WHERE`), each time they are celebrated in the
+ * range. The birthday needs no permission of its own beyond `citizen;read`.
  */
 export const birthdayEntryCollector: CalendarEntryCollector<BirthdayCalendarEntry> =
   {
     canRead: (actor) => actor.authorize("citizen", "read"),
     collect: async (context, actor, { range }) => {
       const citizens = await context.prisma.citizen.findMany({
-        /** `AND` composes the imported fragment without a key collision */
-        where: {
-          AND: [
-            { birthdayDay: { not: null }, birthdayMonth: { not: null } },
-            CAN_LOGIN_CITIZEN_WHERE,
-          ],
-        },
+        where: LISTED_BIRTHDAY_CITIZEN_WHERE,
         select: {
           id: true,
           handle: true,

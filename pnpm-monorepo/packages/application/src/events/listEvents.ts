@@ -137,12 +137,16 @@ export type EventListRow = Prisma.EventGetPayload<{
   select: ReturnType<typeof eventListSelect>;
 }>;
 
-export interface EventListPage {
+/** The rows of the event cards of a list */
+export interface EventCardRows {
   /** The participations of each event are the active ones of the actor */
   readonly events: EventListRow[];
   /** The listed events with a cancelled participation of the actor */
   readonly cancelledParticipationEventIds: string[];
   readonly newEventIds: ReadonlySet<string>;
+}
+
+export interface EventListPage extends EventCardRows {
   readonly nextCursor: string | null;
   readonly prevCursor: string | null;
 }
@@ -246,6 +250,53 @@ const buildViewerParticipationWhere = (
   };
 };
 
+interface EventCardRowsOptions {
+  /** The moment of the read */
+  readonly now: Date;
+  /**
+   * True for a list that holds only new events: each event is new without a
+   * read of the read markers
+   */
+  readonly areAllNew?: boolean;
+}
+
+/**
+ * The listed events with the flags of their cards: the events with a
+ * cancelled participation of the actor and the events that are new for the
+ * actor
+ */
+const toEventCardRows = async (
+  context: ApplicationContext,
+  actor: Actor,
+  events: EventListRow[],
+  { now, areAllNew = false }: EventCardRowsOptions,
+): Promise<EventCardRows> => {
+  const eventIds = events.map((event) => event.id);
+  const unreadWhere = buildUnreadWhere(actor, ReadMarkerSubject.Event);
+
+  const getNewEventIds = async () => {
+    if (areAllNew) return eventIds;
+    if (!unreadWhere) return [];
+
+    return findNewEventIds(context.prisma, eventIds, unreadWhere, now);
+  };
+
+  const [cancelledParticipationEventIds, newEventIds] = await Promise.all([
+    getCancelledParticipationEventIds(
+      context,
+      eventIds,
+      actor.citizen?.id ?? null,
+    ),
+    getNewEventIds(),
+  ]);
+
+  return {
+    events,
+    cancelledParticipationEventIds,
+    newEventIds: new Set(newEventIds),
+  };
+};
+
 /**
  * One page of the events that the actor can see, with the rows that the
  * event cards of the app render. The app pages in both directions, the
@@ -269,7 +320,6 @@ export const findEventListPage = (
     const statusWhere = getStatusWhere(input.status, now, unreadWhere);
     if (!statusWhere) return EMPTY_EVENT_LIST_PAGE;
 
-    const citizenId = actor.citizen?.id ?? null;
     const viewerParticipationWhere = buildViewerParticipationWhere(actor);
 
     const orderDirection: Prisma.SortOrder =
@@ -304,39 +354,17 @@ export const findEventListPage = (
         }),
       async (id) => (await context.prisma.event.count({ where: { id } })) > 0,
     );
-    const events = page.items;
-
-    const eventIds = events.map((event) => event.id);
-    const getNewEventIds = async () => {
-      // The "new" status lists only new events
-      if (input.status === EventListStatus.New) return eventIds;
-      if (!unreadWhere) return [];
-
-      return findNewEventIds(context.prisma, eventIds, unreadWhere, now);
-    };
-
-    const [cancelledParticipationEventIds, newEventIds] = await Promise.all([
-      getCancelledParticipationEventIds(context, eventIds, citizenId),
-      getNewEventIds(),
-    ]);
 
     return {
-      events,
-      cancelledParticipationEventIds,
-      newEventIds: new Set(newEventIds),
+      ...(await toEventCardRows(context, actor, page.items, {
+        now,
+        // The "new" status lists only new events
+        areAllNew: input.status === EventListStatus.New,
+      })),
       nextCursor: page.nextCursor,
       prevCursor: page.previousCursor,
     };
   });
-
-/** The rows of the event cards of a list that has no pages */
-export interface EventCardRows {
-  /** The participations of each event are the active ones of the actor */
-  readonly events: EventListRow[];
-  /** The events with a cancelled participation of the actor */
-  readonly cancelledParticipationEventIds: string[];
-  readonly newEventIds: ReadonlySet<string>;
-}
 
 /**
  * All events of the where fragment that the actor can see, with the rows
@@ -362,25 +390,7 @@ export const findEventCardRows = (
       orderBy: [{ startTime: "asc" }, { id: "asc" }],
     });
 
-    const eventIds = events.map((event) => event.id);
-    const unreadWhere = buildUnreadWhere(actor, ReadMarkerSubject.Event);
-
-    const [cancelledParticipationEventIds, newEventIds] = await Promise.all([
-      getCancelledParticipationEventIds(
-        context,
-        eventIds,
-        actor.citizen?.id ?? null,
-      ),
-      unreadWhere
-        ? findNewEventIds(context.prisma, eventIds, unreadWhere, context.now())
-        : [],
-    ]);
-
-    return {
-      events,
-      cancelledParticipationEventIds,
-      newEventIds: new Set(newEventIds),
-    };
+    return toEventCardRows(context, actor, events, { now: context.now() });
   });
 
 /**
