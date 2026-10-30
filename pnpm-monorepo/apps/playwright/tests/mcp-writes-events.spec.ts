@@ -306,6 +306,53 @@ test.describe("the event write tools of the MCP server", () => {
     ).toBe(2);
   });
 
+  test("update_event turns the participation off, and then the sign-up is refused", async ({
+    prisma,
+    authorizeMcpClient,
+    connectMcpClient,
+  }) => {
+    const organizer = await createMcpCitizen(prisma, {
+      handle: "mcp-stille-orga",
+      permissionStrings: ["event;read"],
+    });
+    const pilot = await createMcpCitizen(prisma, {
+      handle: "mcp-stiller-pilot",
+      permissionStrings: ["event;read"],
+    });
+    const event = await createAppEvent(prisma, {
+      name: "Briefing ohne Anmeldung",
+      createdById: organizer.entity.id,
+      ...futureEvent(),
+    });
+    const organizerClient = await connectMcpClient(
+      (await authorizeMcpClient(organizer.user)).accessToken,
+    );
+    const pilotClient = await connectMcpClient(
+      (await authorizeMcpClient(pilot.user)).accessToken,
+    );
+
+    expect(
+      await callForContent(organizerClient, "update_event", {
+        event_id: event.id,
+        participation_enabled: false,
+      }),
+    ).toMatchObject({
+      event: { participation_enabled: false, participants: [] },
+      changes: ["participation_enabled"],
+    });
+
+    expect(
+      await callForError(pilotClient, "update_my_event_participation", {
+        event_id: event.id,
+        action: "sign_up",
+      }),
+    ).toMatch(CONFLICT_RESULT);
+    expect(
+      await prisma.eventParticipant.count({ where: { eventId: event.id } }),
+    ).toBe(0);
+    await expectAuditEvents(prisma, ["EVENT_PARTICIPATION_STATUS_CHANGED"]);
+  });
+
   test("a manager adds and removes participants and managers, but cannot add a citizen who cannot see the event", async ({
     prisma,
     authorizeMcpClient,
