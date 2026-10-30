@@ -1,11 +1,7 @@
 import * as z from "zod";
 
-export const guildMemberResponseSchema = z.union([
-  z.object({
-    avatar: z.string().nullable(),
-  }),
+export const guildMemberResponseSchema = z.object({
+  avatar: z.string().nullable(),
+});
 
-  z.object({
-    message: z.string(),
-  }),
-]);
+export type GuildMember = z.infer<typeof guildMemberResponseSchema>;

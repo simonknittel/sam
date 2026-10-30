@@ -8,6 +8,7 @@ import {
 import { getDiscordAvatar } from "@/modules/discord/utils/getDiscordAvatar";
 import { getDiscordTwoFactorEnabled } from "@/modules/discord/utils/getDiscordTwoFactorEnabled";
 import { getGuildMember } from "@/modules/discord/utils/getGuildMember";
+import type { GuildMember } from "@/modules/discord/utils/schemas";
 import { log } from "@/modules/logging";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import {
@@ -34,6 +35,7 @@ import {
 } from "@sam-monorepo/domain";
 import {
   getServerSession,
+  type CallbacksOptions,
   type DefaultSession,
   type NextAuthOptions,
   type Session,
@@ -45,6 +47,7 @@ import DiscordProvider, {
 import { cookies, headers } from "next/headers";
 import { after } from "next/server";
 import { ASSUME_USER_COOKIE } from "../utils/adminCookies";
+import { getLoginErrorPath, LoginError } from "../utils/loginError";
 import { getEffectiveRoles, type EffectiveRoles } from "./getEffectiveRoles";
 
 /**
@@ -297,6 +300,169 @@ const recordFirstVisitOfTheDay = async (
 };
 
 /**
+ * The `signIn` callback of NextAuth. It allows the login with `true`, or
+ * refuses it with the path of the login page and the error code.
+ */
+const signInWithDiscord = async ({
+  user,
+  account,
+  profile,
+}: Parameters<CallbacksOptions["signIn"]>[0]) => {
+  if (!profile) throw new Error("Missing profile");
+
+  /**
+   * Update account and user on login
+   *
+   * This callback doesn't tell us if the user already exists in the
+   * database. Also, this callback gets called before a new user gets
+   * created in the database. Therefore, we have to figure out ourselves
+   * if we can update an existing user or not.
+   */
+
+  log.info("Login attempt", {
+    accountProvider: account?.provider,
+    accountProviderAccountId: account?.providerAccountId,
+    profileEmail: profile.email,
+  });
+
+  /**
+   * The sign-in callback checks whether the user exists and is banned,
+   * and compares the status of the two-factor authentication
+   */
+  const existingUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { id: true, bannedAt: true, discordTwoFactorEnabled: true },
+  });
+
+  if (!account) throw new Error("account is missing");
+  if (!account.access_token) throw new Error("account.access_token is missing");
+
+  if (existingUser?.bannedAt) {
+    log.info("Banned user attempted to log in", {
+      userId: user.id,
+    });
+
+    await getApplicationContext().audit.create([
+      {
+        type: AuditEventType.USER_LOGIN_BLOCKED,
+        data: {
+          userId: user.id,
+        },
+        createdById: user.id,
+      },
+    ]);
+
+    return getLoginErrorPath(LoginError.UserBanned);
+  }
+
+  if (!existingUser && (await hasSessionOfRequest())) {
+    log.info("Refused the link of a different Discord account", {
+      accountProviderAccountId: account.providerAccountId,
+    });
+    return false;
+  }
+
+  // A Discord account that was made with a phone number has no email address
+  if (!profile.email) {
+    log.info("Discord account without an email address attempted to log in", {
+      accountProviderAccountId: account.providerAccountId,
+    });
+    return getLoginErrorPath(LoginError.DiscordEmailMissing);
+  }
+
+  let guildMember: GuildMember | null;
+  try {
+    guildMember = await getGuildMember(account.access_token);
+  } catch (error) {
+    log.warn("Failed to get the guild member from Discord", {
+      userId: user.id,
+      error,
+    });
+    return getLoginErrorPath(LoginError.DiscordUnavailable);
+  }
+
+  if (!guildMember) {
+    log.info("User not member of the Discord guild", {
+      userId: user.id,
+    });
+    return getLoginErrorPath(LoginError.NotGuildMember);
+  }
+
+  const email = profile.email.toLocaleLowerCase();
+  const avatar = getDiscordAvatar(profile as DiscordProfile, guildMember);
+  const discordTwoFactorEnabled = getDiscordTwoFactorEnabled(profile);
+
+  if (existingUser) {
+    /**
+     * The status belongs to the user, thus it also applies to the older
+     * sessions. A session from before the two-factor authentication can
+     * belong to a different person, for example after a phished
+     * password. Thus these sessions end when a login confirms the
+     * two-factor authentication. NextAuth then creates a new session for
+     * this login, because the session of the cookie is gone.
+     */
+    const endsOlderSessions =
+      discordTwoFactorEnabled === true &&
+      existingUser.discordTwoFactorEnabled !== true;
+
+    await prisma.$transaction([
+      ...(endsOlderSessions
+        ? [prisma.session.deleteMany({ where: { userId: user.id } })]
+        : []),
+
+      prisma.account.update({
+        where: {
+          provider_providerAccountId: {
+            provider: account.provider,
+            providerAccountId: account.providerAccountId,
+          },
+        },
+        data: {
+          refresh_token: account.refresh_token,
+          access_token: account.access_token,
+          expires_at: account.expires_at,
+          scope: account.scope,
+          updatedAt: new Date(),
+        },
+      }),
+
+      prisma.user.update({
+        where: {
+          id: user.id,
+        },
+        data: {
+          email,
+          image: avatar,
+          discordTwoFactorEnabled,
+          updatedAt: new Date(),
+        },
+      }),
+    ]);
+
+    return true;
+  }
+
+  // New user
+  user.email = email;
+  user.image = avatar;
+  user.discordTwoFactorEnabled = discordTwoFactorEnabled;
+  user.name = null;
+
+  if (!("id" in profile) || !profile.id)
+    throw new Error("profile.id is missing");
+
+  /** The columns hold the latest confirmed Discord ID and handle */
+  const citizen = await prisma.citizen.findFirst({
+    where: { discordId: profile.id, ...ACTIVE_CITIZEN_WHERE },
+    select: { id: true, handle: true },
+  });
+
+  if (citizen) user.name = citizen.handle || citizen.id;
+
+  return true;
+};
+
+/**
  * Options for NextAuth.js used to configure adapters, providers, callbacks, etc.
  *
  * @see https://next-auth.js.org/configuration/options
@@ -400,153 +566,14 @@ export const authOptions: NextAuthOptions = {
       };
     },
 
-    async signIn({ user, account, profile }) {
-      if (!profile) throw new Error("Missing profile");
-
-      /**
-       * Update account and user on login
-       *
-       * This callback doesn't tell us if the user already exists in the
-       * database. Also, this callback gets called before a new user gets
-       * created in the database. Therefore, we have to figure out ourselves
-       * if we can update an existing user or not.
-       */
-
-      log.info("Login attempt", {
-        accountProvider: account?.provider,
-        accountProviderAccountId: account?.providerAccountId,
-        profileEmail: profile.email,
-      });
-
-      /**
-       * The sign-in callback checks whether the user exists and is banned,
-       * and compares the status of the two-factor authentication
-       */
-      const existingUser = await prisma.user.findUnique({
-        where: { id: user.id },
-        select: { id: true, bannedAt: true, discordTwoFactorEnabled: true },
-      });
-
-      if (!account) throw new Error("account is missing");
-      if (!account.access_token)
-        throw new Error("account.access_token is missing");
-
-      if (existingUser) {
-        if (existingUser.bannedAt) {
-          log.info("Banned user attempted to log in", {
-            userId: user.id,
-          });
-
-          await getApplicationContext().audit.create([
-            {
-              type: AuditEventType.USER_LOGIN_BLOCKED,
-              data: {
-                userId: user.id,
-              },
-              createdById: user.id,
-            },
-          ]);
-
-          return "/?error=UserBanned";
-        }
-
-        const guildMember = await getGuildMember(account.access_token);
-
-        if ("message" in guildMember) {
-          log.info("User not member of the Discord guild", {
-            userId: user.id,
-          });
-          throw new Error(guildMember.message);
-        }
-
-        const avatar = getDiscordAvatar(profile as DiscordProfile, guildMember);
-        const discordTwoFactorEnabled = getDiscordTwoFactorEnabled(profile);
-
-        /**
-         * The status belongs to the user, thus it also applies to the older
-         * sessions. A session from before the two-factor authentication can
-         * belong to a different person, for example after a phished
-         * password. Thus these sessions end when a login confirms the
-         * two-factor authentication. NextAuth then creates a new session for
-         * this login, because the session of the cookie is gone.
-         */
-        const endsOlderSessions =
-          discordTwoFactorEnabled === true &&
-          existingUser.discordTwoFactorEnabled !== true;
-
-        await prisma.$transaction([
-          ...(endsOlderSessions
-            ? [prisma.session.deleteMany({ where: { userId: user.id } })]
-            : []),
-
-          prisma.account.update({
-            where: {
-              provider_providerAccountId: {
-                provider: account.provider,
-                providerAccountId: account.providerAccountId,
-              },
-            },
-            data: {
-              refresh_token: account.refresh_token,
-              access_token: account.access_token,
-              expires_at: account.expires_at,
-              scope: account.scope,
-              updatedAt: new Date(),
-            },
-          }),
-
-          prisma.user.update({
-            where: {
-              id: user.id,
-            },
-            data: {
-              email: profile.email!.toLocaleLowerCase(),
-              image: avatar,
-              discordTwoFactorEnabled,
-              updatedAt: new Date(),
-            },
-          }),
-        ]);
-      } else {
-        // New user
-        if (await hasSessionOfRequest()) {
-          log.info("Refused the link of a different Discord account", {
-            accountProviderAccountId: account.providerAccountId,
-          });
-          return false;
-        }
-
-        const guildMember = await getGuildMember(account.access_token);
-
-        if ("message" in guildMember) {
-          log.info("User not member of the Discord guild", {
-            userId: user.id,
-          });
-          throw new Error(guildMember.message);
-        }
-
-        user.email = profile.email!.toLocaleLowerCase();
-
-        const avatar = getDiscordAvatar(profile as DiscordProfile, guildMember);
-        user.image = avatar;
-
-        user.discordTwoFactorEnabled = getDiscordTwoFactorEnabled(profile);
-
-        user.name = null;
-
-        if (!("id" in profile) || !profile.id)
-          throw new Error("profile.id is missing");
-
-        /** The columns hold the latest confirmed Discord ID and handle */
-        const citizen = await prisma.citizen.findFirst({
-          where: { discordId: profile.id, ...ACTIVE_CITIZEN_WHERE },
-          select: { id: true, handle: true },
-        });
-
-        if (citizen) user.name = citizen.handle || citizen.id;
+    signIn: async (parameters) => {
+      try {
+        return await signInWithDiscord(parameters);
+      } catch (error) {
+        // Else next-auth puts the message of the error into the URL
+        log.error("Failed to sign in", { error });
+        return getLoginErrorPath(LoginError.LoginFailed);
       }
-
-      return true;
     },
   },
 
@@ -587,6 +614,8 @@ export const authOptions: NextAuthOptions = {
 
   pages: {
     error: "/",
+    // next-auth shows the errors of the OAuth flow on its sign-in page
+    signIn: "/",
     newUser: "/email-confirmation?new-user=true",
   },
 
