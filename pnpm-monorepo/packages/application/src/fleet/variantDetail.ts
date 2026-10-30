@@ -8,22 +8,30 @@ import {
   VARIANT_LINK_SELECT,
   VARIANT_MANUFACTURER_SELECT,
 } from "./catalogRows.js";
-import { VARIANT_TAG_SELECT } from "./shipVariant.js";
+import { VARIANT_TAG_ORDER, VARIANT_TAG_SELECT } from "./shipVariant.js";
 import { canViewVariantPages } from "./variantPageAccess.js";
 
 const VARIANT_DETAIL_SELECT = {
   id: true,
   name: true,
   status: true,
-  ...VARIANT_MANUFACTURER_SELECT,
-  tags: { select: VARIANT_TAG_SELECT },
+  seriesId: true,
+  series: {
+    select: {
+      manufacturerId: true,
+      ...VARIANT_MANUFACTURER_SELECT.series.select,
+    },
+  },
+  tags: { select: VARIANT_TAG_SELECT, orderBy: VARIANT_TAG_ORDER },
   externalLinks: { select: VARIANT_EXTERNAL_LINK_SELECT },
   _count: { select: { ships: { where: ACTIVE_OWNER_SHIP_WHERE } } },
 } as const satisfies Prisma.VariantSelect;
 
 /**
- * The head of the variant page. The count has the ships of all active
- * citizens that are not deleted, also of the citizens that are not members.
+ * The head of the variant page and the details of the variant popover. The
+ * count has the ships of all active citizens that are not deleted, also of
+ * the citizens that are not members. The ids of the series and of the
+ * manufacturer give the link to the settings of the variant.
  */
 export type VariantDetailRow = Prisma.VariantGetPayload<{
   select: typeof VARIANT_DETAIL_SELECT;

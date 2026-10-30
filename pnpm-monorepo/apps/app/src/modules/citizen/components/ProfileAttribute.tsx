@@ -10,7 +10,8 @@ interface Props {
 /**
  * One name/value pair of a citizen, shown identically on each surface which
  * describes a citizen: the popover, the dashboard tile and the Spynet
- * overview. The name stays on the left, the value follows on the right.
+ * overview. The variant popover uses it too, thus both popovers look the
+ * same. The name stays on the left, the value follows on the right.
  */
 export const ProfileAttribute = ({ icon, name, children }: Props) => {
   return (

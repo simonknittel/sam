@@ -98,12 +98,16 @@ export const VariantWithLogo = ({
 
   if (disablePopover) return link;
 
+  /**
+   * The popover is a Client Component: only the fields that it reads go to
+   * the browser, not the full rows of the callers
+   */
   return (
     <VariantPopover
-      variant={variant}
-      manufacturer={manufacturer}
+      variant={{ id: variant.id, name: variant.name }}
+      manufacturer={{ name: manufacturer.name, image: manufacturer.image }}
       logo={logo}
-      ship={ship}
+      ship={ship && { name: ship.name }}
       triggerClassName={clsx({
         "block w-full": fullWidth,
         "max-w-full": !fullWidth,

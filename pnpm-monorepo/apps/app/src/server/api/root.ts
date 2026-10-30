@@ -19,6 +19,7 @@ import { search as searchSpynet } from "./routers/spynet/search";
 import { getAssumableUsers } from "./routers/users/getAssumableUsers";
 import { getAll as getAllVariants } from "./routers/variant/getAll";
 import { getById as getVariantById } from "./routers/variant/getById";
+import { getDetailById as getVariantDetailById } from "./routers/variant/getDetailById";
 import { getLinkablePages } from "./routers/wiki/getLinkablePages";
 import { getPageDetails } from "./routers/wiki/getPageDetails";
 import { getPageIndex } from "./routers/wiki/getPageIndex";
@@ -78,6 +79,7 @@ export const appRouter = createTRPCRouter({
   variant: createTRPCRouter({
     getAll: getAllVariants,
     getById: getVariantById,
+    getDetailById: getVariantDetailById,
   }),
   wiki: createTRPCRouter({
     getLinkablePages,
