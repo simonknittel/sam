@@ -1,20 +1,29 @@
+import { createCursorPaginationLoader } from "@/modules/common/CursorPagination/createCursorPaginationLoader";
 import {
   addDaysToLocalDate,
-  CalendarRangeProblem,
+  compareLocalDates,
+  fromDateColumnValue,
   getLocalDate,
   MAXIMUM_CALENDAR_RANGE_MONTHS,
   ORGANIZATION_TIMEZONE,
   parseLocalDateKey,
+  toDateColumnValue,
+  toLocalDateKey,
+  type LocalDate,
   type LocalDateRange,
 } from "@sam-monorepo/domain";
-import { createLoader, parseAsString, type SearchParams } from "nuqs/server";
+import { parseAsStringEnum, type SearchParams } from "nuqs/server";
 
-/** The search parameters of the date range filter of the calendar app */
-export const CALENDAR_FROM_PARAM = "from";
-export const CALENDAR_TO_PARAM = "to";
+/** The status filter of the calendar app */
+export enum CalendarListStatus {
+  /** From today, the earliest day first */
+  Upcoming = "upcoming",
+  /** Until yesterday, the latest day first */
+  Past = "past",
+}
 
-/** The default range of the calendar app: today and the next 30 days */
-const DEFAULT_RANGE_LENGTH_IN_DAYS = 30;
+/** The number of days of one page of the calendar app */
+export const CALENDAR_PAGE_DAY_COUNT = 14;
 
 /** The number of calendar days of the dashboard tile, today included */
 export const DASHBOARD_CALENDAR_DAY_COUNT = 7;
@@ -30,54 +39,108 @@ export const getDashboardCalendarRange = (): LocalDateRange => {
   };
 };
 
+/** A day outside the month rolls over, for example February 29 of a common year */
+const addMonthsToLocalDate = (date: LocalDate, months: number) =>
+  fromDateColumnValue(
+    toDateColumnValue({ ...date, month: date.month + months }),
+  );
+
+export interface CalendarPage {
+  /** The days of the page in the order of the list */
+  readonly days: LocalDate[];
+  readonly range: LocalDateRange;
+  /** The first day of the next page ("YYYY-MM-DD"), null on the last page */
+  readonly nextCursor: string | null;
+  /** The first day of the previous page, null on the first page */
+  readonly prevCursor: string | null;
+}
+
 /**
- * The range of the calendar app from the bounds in the URL ("YYYY-MM-DD").
- * A missing bound is the default length away from the other bound, and
- * without both bounds the range starts today. A malformed bound counts as a
- * missing one, like in the other date filters: the URL is easy to edit. The
- * caller checks the length (see `findCalendarRangeProblem`).
+ * A page of the calendar app: `CALENDAR_PAGE_DAY_COUNT` days from the cursor,
+ * which is the first day of the page in the order of the list. Each status
+ * goes `MAXIMUM_CALENDAR_RANGE_MONTHS` months from today, because the
+ * birthdays and the seasonal days repeat each year without an end. A cursor
+ * outside of these days counts as a missing one, like a malformed one: the
+ * URL is easy to edit.
  */
-const parseCalendarRange = (
-  from: string | null,
-  to: string | null,
-): LocalDateRange => {
-  const start = from ? parseLocalDateKey(from) : null;
-  const end = to ? parseLocalDateKey(to) : null;
+export const getCalendarPage = (
+  status: CalendarListStatus,
+  cursor: string | null,
+  today: LocalDate,
+): CalendarPage => {
+  const step = status === CalendarListStatus.Upcoming ? 1 : -1;
+  const firstDay =
+    status === CalendarListStatus.Upcoming
+      ? today
+      : addDaysToLocalDate(today, -1);
+  const lastDay = addMonthsToLocalDate(
+    today,
+    step * MAXIMUM_CALENDAR_RANGE_MONTHS,
+  );
 
-  if (start && end) return { start, end };
+  /** Positive when `first` comes after `second` in the order of the list */
+  const compareInList = (first: LocalDate, second: LocalDate) =>
+    step * compareLocalDates(first, second);
 
-  if (end)
-    return {
-      start: addDaysToLocalDate(end, -DEFAULT_RANGE_LENGTH_IN_DAYS),
-      end,
-    };
+  const cursorDay = cursor ? parseLocalDateKey(cursor) : null;
+  const pageStart =
+    cursorDay &&
+    compareInList(cursorDay, firstDay) >= 0 &&
+    compareInList(cursorDay, lastDay) <= 0
+      ? cursorDay
+      : firstDay;
 
-  const defaultStart = start ?? getToday();
+  const fullPageEnd = addDaysToLocalDate(
+    pageStart,
+    step * (CALENDAR_PAGE_DAY_COUNT - 1),
+  );
+  const pageEnd =
+    compareInList(fullPageEnd, lastDay) > 0 ? lastDay : fullPageEnd;
+
+  const days: LocalDate[] = [];
+  for (
+    let day = pageStart;
+    compareInList(day, pageEnd) <= 0;
+    day = addDaysToLocalDate(day, step)
+  )
+    days.push(day);
+
+  const fullPrevStart = addDaysToLocalDate(
+    pageStart,
+    -step * CALENDAR_PAGE_DAY_COUNT,
+  );
+  const prevStart =
+    compareInList(fullPrevStart, firstDay) < 0 ? firstDay : fullPrevStart;
 
   return {
-    start: defaultStart,
-    end: addDaysToLocalDate(defaultStart, DEFAULT_RANGE_LENGTH_IN_DAYS),
+    days,
+    range:
+      step > 0
+        ? { start: pageStart, end: pageEnd }
+        : { start: pageEnd, end: pageStart },
+    nextCursor:
+      compareInList(pageEnd, lastDay) < 0
+        ? toLocalDateKey(addDaysToLocalDate(pageEnd, step))
+        : null,
+    prevCursor:
+      compareInList(pageStart, firstDay) > 0 ? toLocalDateKey(prevStart) : null,
   };
 };
 
-const loadRangeSearchParams = createLoader({
-  [CALENDAR_FROM_PARAM]: parseAsString,
-  [CALENDAR_TO_PARAM]: parseAsString,
+const loadCalendarSearchParams = createCursorPaginationLoader({
+  status: parseAsStringEnum(Object.values(CalendarListStatus)).withDefault(
+    CalendarListStatus.Upcoming,
+  ),
 });
 
-/** The range of the calendar app from the search parameters of the page */
-export const loadCalendarRange = async (
+/**
+ * The page of the calendar app from the search parameters of the page. The
+ * cursor names the page itself, thus the direction of the pagination does
+ * not matter.
+ */
+export const loadCalendarPage = async (
   searchParams: Promise<SearchParams>,
-): Promise<LocalDateRange> => {
-  const { from, to } = await loadRangeSearchParams(searchParams);
-  return parseCalendarRange(from, to);
-};
-
-export const CALENDAR_RANGE_PROBLEM_TEXTS: Record<
-  CalendarRangeProblem,
-  string
-> = {
-  [CalendarRangeProblem.EndBeforeStart]:
-    "Das Enddatum liegt vor dem Startdatum. Wähle einen anderen Zeitraum.",
-  [CalendarRangeProblem.TooLong]: `Der Zeitraum ist länger als ${MAXIMUM_CALENDAR_RANGE_MONTHS} Monate. Wähle einen kürzeren Zeitraum.`,
+): Promise<CalendarPage> => {
+  const { status, cursor } = await loadCalendarSearchParams(searchParams);
+  return getCalendarPage(status, cursor, getToday());
 };

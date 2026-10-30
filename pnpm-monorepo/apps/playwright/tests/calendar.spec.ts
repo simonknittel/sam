@@ -46,6 +46,37 @@ const monthDayFromToday = (days: number) => {
   return { birthdayDay: readPart("day"), birthdayMonth: readPart("month") };
 };
 
+/** The heading of a day of the list, some days after today */
+const dayHeading = (page: Page, days: number) =>
+  page.getByRole("heading", {
+    level: 2,
+    name: new Intl.DateTimeFormat("de-DE", {
+      timeZone: "Europe/Berlin",
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(new Date(Date.now() + days * ONE_DAY_MS)),
+  });
+
+/**
+ * The next December 24 in the time zone of the app ("YYYY-MM-DD"). It is
+ * always less than 12 months away, thus the list can show it.
+ */
+const nextChristmasEve = () => {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Europe/Berlin",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+  }).formatToParts(new Date());
+  const readPart = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((part) => part.type === type)?.value);
+  const isAfterChristmasEve = readPart("month") === 12 && readPart("day") > 24;
+
+  return `${readPart("year") + Number(isAfterChristmasEve)}-12-24`;
+};
+
 /** A citizen who can sign in, with a birthday in two days */
 const createBirthdayCitizen = async (prisma: PrismaClient, handle: string) => {
   const citizen = await createCitizen(prisma, { handle });
@@ -168,19 +199,38 @@ test("a type switched off in the app disappears from the tile and stays off afte
   await expectAuditEvents(prisma, ["CALENDAR_ENTRY_TYPE_SETTINGS_UPDATED"]);
 });
 
-test("a range of more than 12 months shows a message instead of the entries", async ({
+test("the list shows each day of a page of 14 days, and the past starts with yesterday", async ({
   page,
   prisma,
   signIn,
 }) => {
-  const viewer = await createCitizen(prisma, { handle: "kalender-zeitraum" });
+  const viewer = await createCitizen(prisma, { handle: "kalender-seiten" });
   await signIn(viewer.user);
 
-  await page.goto(`${CALENDAR_PAGE}?from=2030-01-01&to=2031-01-02`);
+  await page.goto(CALENDAR_PAGE);
+  await waitForAppShellHydration(page);
+  // Also the days without an entry show
+  await expect(dayHeading(page, 0)).toBeVisible();
+  await expect(dayHeading(page, 13)).toBeVisible();
+  await expect(dayHeading(page, 14)).toHaveCount(0);
 
-  await expect(
-    page.getByText("Der Zeitraum ist länger als 12 Monate."),
-  ).toBeVisible();
+  await clickUntilUrl(
+    page,
+    page.getByRole("button", { name: "Weiter", exact: true }),
+    /cursor=/,
+  );
+  await expect(dayHeading(page, 14)).toBeVisible();
+  await expect(dayHeading(page, 0)).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Zurück", exact: true }).click();
+  await expect(dayHeading(page, 0)).toBeVisible();
+
+  await clickUntilUrl(page, toggleLabel(page, /^Vergangen$/), /status=past/);
+  await expect(dayHeading(page, -1)).toBeVisible();
+  await expect(dayHeading(page, 0)).toHaveCount(0);
+  const yesterdayBox = await dayHeading(page, -1).boundingBox();
+  const twoWeeksAgoBox = await dayHeading(page, -14).boundingBox();
+  expect(yesterdayBox!.y).toBeLessThan(twoWeeksAgoBox!.y);
 });
 
 test("a user without event;read sees the seasonal entries but no events", async ({
@@ -191,16 +241,17 @@ test("a user without event;read sees the seasonal entries but no events", async 
   const viewer = await createCitizen(prisma, {
     handle: "kalender-ohne-events",
   });
+  const christmasEve = nextChristmasEve();
   await prisma.event.create({
     data: {
       source: EventSource.APP,
       name: "Weihnachtsfeier",
-      startTime: new Date("2030-12-24T18:00:00.000Z"),
+      startTime: new Date(`${christmasEve}T18:00:00.000Z`),
     },
   });
 
   await signIn(viewer.user);
-  await page.goto(`${CALENDAR_PAGE}?from=2030-12-20&to=2030-12-31`);
+  await page.goto(`${CALENDAR_PAGE}?cursor=${christmasEve}`);
 
   await expect(page.getByRole("heading", { name: "Weihnachten" })).toHaveCount(
     3,
