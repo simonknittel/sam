@@ -31,6 +31,8 @@ export const EVENT_ERROR_TEXTS = {
   [EventErrorMessage.PublishedOnDiscord]:
     "Das Event ist auf Discord veröffentlicht.",
   [EventErrorMessage.ParticipationClosed]: "Die Anmeldung ist geschlossen.",
+  [EventErrorMessage.ParticipationDisabled]:
+    "Die Teilnahme an diesem Event ist abgeschaltet.",
   [EventErrorMessage.AlreadySignedUp]: "Du bist bereits angemeldet.",
   [EventErrorMessage.NotSignedUp]: "Du bist nicht angemeldet.",
   [EventErrorMessage.CitizenNotSignedUp]: "Der Citizen ist nicht angemeldet.",

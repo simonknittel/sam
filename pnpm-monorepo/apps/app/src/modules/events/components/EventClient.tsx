@@ -54,6 +54,7 @@ interface EventCard extends Readonly<
     | "discordId"
     | "discordGuildId"
     | "discordImage"
+    | "participationEnabled"
   >
 > {
   readonly coverImage: EventCoverImage | null;
@@ -108,11 +109,13 @@ export const EventClient = ({
   const isCurrentCitizenParticipating = ownParticipation !== null;
 
   /**
-   * Mirrors `isParticipationOpen()` on the server. Sign-up stays open until
-   * the event ends, and only citizens can sign up at all.
+   * Mirrors `isParticipationOpen()` and the participation switch on the
+   * server. Sign-up stays open until the event ends, and only citizens can
+   * sign up at all.
    */
   const showParticipationButton =
     event.source === EventSource.APP &&
+    event.participationEnabled &&
     Boolean(authentication && authentication.session.entity) &&
     event.endTime !== null &&
     event.endTime > now;
@@ -197,11 +200,13 @@ export const EventClient = ({
               icon={<FaClock />}
             />
 
-            <Badge
-              label="Teilnehmer"
-              value={event.participantCount.toString()}
-              icon={<FaUser />}
-            />
+            {event.participationEnabled && (
+              <Badge
+                label="Teilnehmer"
+                value={event.participantCount.toString()}
+                icon={<FaUser />}
+              />
+            )}
 
             {isCurrentCitizenParticipating && (
               <Badge

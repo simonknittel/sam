@@ -83,6 +83,7 @@ const EventTemplateDetails = async ({ templateId }: DetailsProps) => {
               visibilityRoleIds: template.visibilityRoles.map(
                 (visibilityRole) => visibilityRole.roleId,
               ),
+              participationEnabled: template.participationEnabled,
               discordPublishTarget: template.discordPublishTarget,
               discordPublishChannelId: template.discordPublishChannelId,
               discordPublishLocation: template.discordPublishLocation,

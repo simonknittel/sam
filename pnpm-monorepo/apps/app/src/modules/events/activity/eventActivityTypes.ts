@@ -28,6 +28,7 @@ export const EVENT_ACTIVITY_TYPE_LABELS: Record<EventActivityType, string> = {
   [EventActivityType.MANAGER_ADDED]: "Manager hinzugefügt",
   [EventActivityType.MANAGER_REMOVED]: "Manager entfernt",
   [EventActivityType.LINEUP_TOGGLED]: "Aufstellung",
+  [EventActivityType.PARTICIPATION_TOGGLED]: "Teilnahme",
 };
 
 export const EVENT_SCHEDULE_TYPE_LABEL = "Beginn/Ende";

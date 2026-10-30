@@ -8,9 +8,11 @@ import { getPublishableGuildChannels } from "@/modules/discord/utils/getPublisha
 import { SaveEventAsTemplateButton } from "@/modules/event-templates/components/SaveEventAsTemplateButton";
 import { EventDiscordSettings } from "@/modules/events/components/EventDiscordSettings";
 import { EventSettings } from "@/modules/events/components/EventSettings";
+import { UpdateEventParticipationEnabled } from "@/modules/events/components/UpdateEventParticipationEnabled";
 import { getEventById } from "@/modules/events/queries/getEventById";
 import { getEventUrl } from "@/modules/events/utils/eventConstraints";
 import { isAllowedToManageEvent } from "@/modules/events/utils/isAllowedToManageEvent";
+import { isAllowedToManagePositions } from "@/modules/events/utils/isAllowedToManagePositions";
 import { isEventUpdatable } from "@/modules/events/utils/isEventUpdatable";
 import { EventSource } from "@sam-monorepo/database/client";
 import { instantToWallTime, ORGANIZATION_TIMEZONE } from "@sam-monorepo/domain";
@@ -82,6 +84,25 @@ export default async function Page({
             (visibilityRole) => visibilityRole.roleId,
           ),
         }}
+        participationTile={
+          (await isAllowedToManagePositions(event)) ? (
+            <Tile heading="Teilnahme">
+              <p className="text-sm text-neutral-400">
+                Mitglieder können sich anmelden und für Posten der Aufstellung
+                eingetragen werden. Ohne Teilnahme sind die Aufstellung, die
+                Teilnehmer und die Flotte der Teilnehmer ausgeblendet; die
+                Freigabe der Aufstellung bleibt gespeichert.
+              </p>
+
+              <UpdateEventParticipationEnabled
+                eventId={event.id}
+                participationEnabled={event.participationEnabled}
+                activeParticipantCount={event.participants.length}
+                className="mt-4"
+              />
+            </Tile>
+          ) : null
+        }
         /**
          * Its own boundary: the channel list is a live Discord call, so the
          * rest of the settings must neither wait for it nor disappear with

@@ -87,11 +87,15 @@ export const CreateEventForm = ({
   const [isPublishing, setIsPublishing] = useState(
     selectedTemplate?.discordPublishTarget != null,
   );
+  const [isParticipationEnabled, setIsParticipationEnabled] = useState(
+    selectedTemplate?.participationEnabled ?? true,
+  );
   const [previousPrefillKey, setPreviousPrefillKey] = useState(prefillKey);
   if (prefillKey !== previousPrefillKey) {
     setPreviousPrefillKey(prefillKey);
     setVisibility(selectedTemplate?.visibility ?? EventVisibility.PUBLIC);
     setIsPublishing(selectedTemplate?.discordPublishTarget != null);
+    setIsParticipationEnabled(selectedTemplate?.participationEnabled ?? true);
   }
 
   const restrictedConfirmation = useSubmitConfirmation(
@@ -179,6 +183,11 @@ export const CreateEventForm = ({
         />
       </div>
 
+      <ParticipationField
+        isEnabled={isParticipationEnabled}
+        onIsEnabledChange={setIsParticipationEnabled}
+      />
+
       <div key={`discord-${prefillKey}`}>
         <DiscordPublishFields
           isPublishing={isPublishing}
@@ -239,6 +248,43 @@ const TemplateCoverField = ({ uploadId }: TemplateCoverFieldProps) => {
         Titelbild der Vorlage ersetzen oder entfernen
       </button>
     </div>
+  );
+};
+
+interface ParticipationFieldProps {
+  readonly isEnabled: boolean;
+  readonly onIsEnabledChange: (isEnabled: boolean) => void;
+}
+
+/** On by default. A template prefills its own value. */
+const ParticipationField = ({
+  isEnabled,
+  onIsEnabledChange,
+}: ParticipationFieldProps) => {
+  const checkboxId = useId();
+
+  return (
+    <>
+      <label htmlFor={checkboxId} className="mt-4 block">
+        Teilnahme
+      </label>
+      <p className="mt-1 text-xs text-white/40">
+        Mitglieder können sich anmelden und für Posten der Aufstellung
+        eingetragen werden. Ohne Teilnahme sind die Aufstellung und die
+        Teilnehmer ausgeblendet.
+      </p>
+
+      <YesNoCheckbox
+        id={checkboxId}
+        name="participationEnabled"
+        value="true"
+        className="mt-2"
+        checked={isEnabled}
+        onChange={(changeEvent) =>
+          onIsEnabledChange(changeEvent.target.checked)
+        }
+      />
+    </>
   );
 };
 

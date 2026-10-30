@@ -51,17 +51,20 @@ export const OverviewTab = async ({ className, event }: Props) => {
           className="w-full flex-initial 3xl:w-1/2 md:w-1/2 lg:w-full xl:w-1/2 2xl:w-full"
         />
 
-        {showFleetSummary && (
+        {/* Without the participation, there are no participants to sum up */}
+        {showFleetSummary && event.participationEnabled && (
           <FleetSummary
             event={event}
             className="w-full flex-initial 3xl:w-1/2 md:w-1/2 lg:w-full xl:w-1/2 2xl:w-full"
           />
         )}
 
-        <ParticipantsSummary
-          event={event}
-          className="w-full flex-initial 3xl:w-1/2 md:w-1/2 lg:w-full xl:w-1/2 2xl:w-full"
-        />
+        {event.participationEnabled && (
+          <ParticipantsSummary
+            event={event}
+            className="w-full flex-initial 3xl:w-1/2 md:w-1/2 lg:w-full xl:w-1/2 2xl:w-full"
+          />
+        )}
       </div>
     </div>
   );

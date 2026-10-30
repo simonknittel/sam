@@ -32,6 +32,8 @@ export default async function Page({
   const eventId = (await params).id;
   const event = await getEventById(eventId);
   if (!event) notFound();
+  // The page exists only while the participation of the event is on
+  if (!event.participationEnabled) notFound();
 
   const showActions = isEventUpdatable(event);
   const showManagePositions =

@@ -31,6 +31,8 @@ export const WIKI_ERROR_TEXTS = {
     "Eine Seite kann nicht durch sich selbst ersetzt werden.",
   [WikiErrorMessage.EditScopeWiderThanReadScope]:
     "Bearbeiten darf nicht mehr Personen umfassen als Lesen.",
+  [WikiErrorMessage.ParticipationScopeUnavailable]:
+    "Die Teilnahme an diesem Event ist abgeschaltet. Teilnehmer und Aufstellung stehen deshalb nicht zur Auswahl.",
   [WikiErrorMessage.OwnerCannotReadParent]:
     "Der ausgewählte Besitzer darf die übergeordnete Seite nicht lesen und hätte deshalb keinen Zugriff auf diese Seite.",
   [WikiErrorMessage.TooManyOpenReports]:
