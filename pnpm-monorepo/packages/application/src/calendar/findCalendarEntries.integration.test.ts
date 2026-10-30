@@ -5,6 +5,7 @@ import {
   TaskRewardType,
   TaskVisibility,
 } from "@sam-monorepo/database/browser";
+import type { Prisma } from "@sam-monorepo/database/client";
 import {
   AuditEventType,
   CalendarEntryType,
@@ -64,7 +65,11 @@ const createViewerActor = async (permissionStrings: readonly string[]) => {
   };
 };
 
-const createTaskWithAssignee = (title: string, citizenId: string) =>
+const createTaskWithAssignee = (
+  title: string,
+  citizenId: string,
+  data: Partial<Prisma.TaskUncheckedCreateInput> = {},
+) =>
   prisma.task.create({
     data: {
       title,
@@ -73,6 +78,7 @@ const createTaskWithAssignee = (title: string, citizenId: string) =>
       visibility: TaskVisibility.PUBLIC,
       expiresAt: new Date("2026-06-21T10:00:00.000Z"),
       assignments: { create: { citizenId } },
+      ...data,
     },
   });
 
@@ -82,8 +88,34 @@ beforeEach(async () => {
 
 describe("findCalendarEntries", () => {
   test("each type shows only the entries that the actor may see", async () => {
-    const { citizen: viewer, actor } =
-      await createViewerActor(ALL_TYPE_PERMISSIONS);
+    const salaryRole = await prisma.role.create({
+      data: {
+        name: "Pilot",
+        silcSalaries: {
+          create: [
+            { value: 100, dayOfMonth: 4 },
+            // June has no 31st, thus the salary is due on June 30
+            { value: 50, dayOfMonth: 31 },
+          ],
+        },
+      },
+    });
+    // The actor cannot see this role, thus its name stays out
+    const hiddenSalaryRole = await prisma.role.create({
+      data: {
+        name: "Hidden salary role",
+        silcSalaries: {
+          create: [
+            { value: 30, dayOfMonth: 4 },
+            { value: 20, dayOfMonth: 31 },
+          ],
+        },
+      },
+    });
+    const { citizen: viewer, actor } = await createViewerActor([
+      ...ALL_TYPE_PERMISSIONS,
+      `otherRole;read;roleId=${salaryRole.id}`,
+    ]);
     const other = await createCitizenWithPermissions(
       "other",
       [LOGIN_PERMISSION],
@@ -116,29 +148,29 @@ describe("findCalendarEntries", () => {
     });
 
     const ownTask = await createTaskWithAssignee("Own", viewer.id);
+    await createTaskWithAssignee("Own cancelled", viewer.id, {
+      cancelledAt: NOW,
+    });
+    await createTaskWithAssignee("Own deleted", viewer.id, { deletedAt: NOW });
     await createTaskWithAssignee("Other", other.id);
 
-    const salaryRole = await prisma.role.create({
-      data: {
-        name: "Pilot",
-        silcSalaries: {
-          create: [
-            { value: 100, dayOfMonth: 4 },
-            // June has no 31st, thus the salary is due on June 30
-            { value: 50, dayOfMonth: 31 },
-          ],
-        },
-        assignments: {
-          create: [{ citizenId: viewer.id }, { citizenId: other.id }],
-        },
-      },
+    await prisma.roleAssignment.createMany({
+      data: [
+        { citizenId: viewer.id, roleId: salaryRole.id },
+        { citizenId: other.id, roleId: salaryRole.id },
+        { citizenId: viewer.id, roleId: hiddenSalaryRole.id },
+      ],
     });
-    for (const receiverId of [viewer.id, other.id])
+    for (const { receiverId, role } of [
+      { receiverId: viewer.id, role: salaryRole },
+      { receiverId: viewer.id, role: hiddenSalaryRole },
+      { receiverId: other.id, role: salaryRole },
+    ])
       await prisma.silcTransaction.create({
         data: {
           receiverId,
-          value: 100,
-          salaryRoleId: salaryRole.id,
+          value: role === salaryRole ? 100 : 30,
+          salaryRoleId: role.id,
           salaryDate: new Date("2026-06-04T00:00:00.000Z"),
         },
       });
@@ -197,12 +229,18 @@ describe("findCalendarEntries", () => {
     expect(
       entries.flatMap((entry) =>
         entry.type === CalendarEntryType.SilcSalary
-          ? [{ value: entry.value, isForecast: entry.isForecast }]
+          ? [
+              {
+                value: entry.value,
+                isForecast: entry.isForecast,
+                roleNames: entry.roleNames,
+              },
+            ]
           : [],
       ),
     ).toEqual([
-      { value: 100, isForecast: false },
-      { value: 50, isForecast: true },
+      { value: 130, isForecast: false, roleNames: ["Pilot"] },
+      { value: 70, isForecast: true, roleNames: ["Pilot"] },
     ]);
   });
 

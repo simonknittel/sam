@@ -1,6 +1,7 @@
 import {
   CalendarEntryType,
   compareLocalDates,
+  fromDateColumnValue,
   getLocalDate,
   getSalaryDueDaysInRange,
   ORGANIZATION_TIMEZONE,
@@ -8,8 +9,9 @@ import {
   toLocalDateKey,
   type LocalDate,
 } from "@sam-monorepo/domain";
-import { requireCitizen } from "../actor.js";
+import { requireCitizen, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
+import { isRoleVisible } from "../roles/roleVisibility.js";
 import { getPaidAssignments, SALARY_ROLE_SELECT } from "../silc/salaryRules.js";
 import type {
   CalendarEntryCollector,
@@ -22,6 +24,19 @@ interface SalaryDay {
   value: number;
   readonly roleNames: Set<string>;
 }
+
+interface SalaryRole {
+  readonly id: string;
+  readonly name: string;
+}
+
+/**
+ * The name of a role is only for the actors who can see the role (see
+ * `isRoleVisible`). The app hides the own hidden roles too, thus a salary of
+ * such a role adds its value without its name.
+ */
+const getVisibleRoleName = (actor: Actor, role: SalaryRole | null) =>
+  role && isRoleVisible(actor, role.id) ? role.name : null;
 
 const addToSalaryDay = (
   salaryDays: Map<string, SalaryDay>,
@@ -117,7 +132,7 @@ export const silcSalaryEntryCollector: CalendarEntryCollector<SilcSalaryCalendar
           select: {
             value: true,
             salaryDate: true,
-            salaryRole: { select: { name: true } },
+            salaryRole: { select: { id: true, name: true } },
           },
         }),
         hasForecast ? findPaidSalaryRoles(context, citizenId) : [],
@@ -129,15 +144,16 @@ export const silcSalaryEntryCollector: CalendarEntryCollector<SilcSalaryCalendar
 
         addToSalaryDay(
           bookedDays,
-          // A `@db.Date` value is midnight UTC of its day
-          getLocalDate(booking.salaryDate, "UTC"),
+          fromDateColumnValue(booking.salaryDate),
           booking.value,
-          booking.salaryRole?.name ?? null,
+          getVisibleRoleName(actor, booking.salaryRole),
         );
       }
 
       const forecastDays = new Map<string, SalaryDay>();
       for (const role of roles) {
+        const roleName = getVisibleRoleName(actor, role);
+
         for (const salary of role.silcSalaries) {
           const dueDays = getSalaryDueDaysInRange(salary.dayOfMonth, {
             start: forecastStart,
@@ -147,7 +163,7 @@ export const silcSalaryEntryCollector: CalendarEntryCollector<SilcSalaryCalendar
           for (const date of dueDays) {
             if (bookedDays.has(toLocalDateKey(date))) continue;
 
-            addToSalaryDay(forecastDays, date, salary.value, role.name);
+            addToSalaryDay(forecastDays, date, salary.value, roleName);
           }
         }
       }

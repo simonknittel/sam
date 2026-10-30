@@ -54,7 +54,10 @@ export interface TaskDeadlineCalendarEntry extends CalendarEntryBase {
 export interface SilcSalaryCalendarEntry extends CalendarEntryBase {
   readonly type: CalendarEntryType.SilcSalary;
   readonly value: number;
-  /** The roles that pay the salary, by name */
+  /**
+   * The roles that pay the salary, by name. Only the roles that the actor
+   * can see (see `isRoleVisible`).
+   */
   readonly roleNames: string[];
   /**
    * True for a salary that the current roles of the actor will pay, false
