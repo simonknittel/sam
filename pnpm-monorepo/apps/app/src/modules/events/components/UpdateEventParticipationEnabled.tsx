@@ -40,7 +40,13 @@ export const UpdateEventParticipationEnabled = ({
 }: Props) => {
   const { isPending, formAction } = useAction(updateEventParticipationEnabled);
   const confirmation = useSubmitConfirmation();
-  const [isChecked, setIsChecked] = useState(participationEnabled);
+  /**
+   * "Abbrechen" mounts a new switch with the value of the page. A reset of
+   * the form would change the value without React noticing (React follows
+   * only the writes to the `checked` property), and the next click would
+   * then send no change event.
+   */
+  const [switchKey, setSwitchKey] = useState(0);
   /**
    * True after the confirm button submitted the form. The dialog closes
    * after the submission too, and then the switch must stay off.
@@ -59,9 +65,13 @@ export const UpdateEventParticipationEnabled = ({
   const handleClose = () => {
     confirmation.close();
     // "Abbrechen" or Escape: the participation stays on
-    if (!isConfirmedRef.current) setIsChecked(true);
+    if (!isConfirmedRef.current) setSwitchKey((key) => key + 1);
   };
 
+  /**
+   * Uncontrolled: React resets the form after the action, thus the switch
+   * shows the value of the page that the action refreshed
+   */
   return (
     <form
       action={formAction}
@@ -80,15 +90,13 @@ export const UpdateEventParticipationEnabled = ({
       />
 
       <YesNoCheckbox
+        key={switchKey}
         name="value"
         value="true"
         aria-label="Teilnahme"
         disabled={isPending}
-        checked={isChecked}
-        onChange={(changeEvent) => {
-          setIsChecked(changeEvent.target.checked);
-          changeEvent.target.form?.requestSubmit();
-        }}
+        defaultChecked={participationEnabled}
+        onChange={(changeEvent) => changeEvent.target.form?.requestSubmit()}
         yesLabel="Aktiviert"
         noLabel="Deaktiviert"
         labelClassName="w-auto"

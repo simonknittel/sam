@@ -11,6 +11,7 @@ import { EventTemplateDescriptionHint } from "@/modules/event-templates/componen
 import { DiscordPublishTargetFields } from "@/modules/events/components/DiscordPublishTargetFields";
 import { EventCoverImageField } from "@/modules/events/components/EventCoverImageField";
 import { EventDescriptionField } from "@/modules/events/components/EventDescriptionField";
+import { EventParticipationField } from "@/modules/events/components/EventParticipationField";
 import { RolePicker } from "@/modules/roles/components/RolePicker/RolePicker";
 import {
   EventVisibility,
@@ -63,10 +64,6 @@ export const UpdateEventTemplateForm = ({
   const [isPublishing, setIsPublishing] = useState(
     template.discordPublishTarget !== null,
   );
-  const [isParticipationEnabled, setIsParticipationEnabled] = useState(
-    template.participationEnabled,
-  );
-  const participationCheckboxId = useId();
   const discordCheckboxId = useId();
 
   return (
@@ -127,23 +124,10 @@ export const UpdateEventTemplateForm = ({
         />
       )}
 
-      <label htmlFor={participationCheckboxId} className="mt-4 block">
-        Teilnahme
-      </label>
-      <p className="mt-1 text-xs text-white/40">
-        Bei Events aus dieser Vorlage können sich Mitglieder anmelden und für
-        Posten der Aufstellung eingetragen werden.
-      </p>
-
-      <YesNoCheckbox
-        id={participationCheckboxId}
-        name="participationEnabled"
-        value="true"
-        className="mt-2"
-        checked={isParticipationEnabled}
-        onChange={(changeEvent) =>
-          setIsParticipationEnabled(changeEvent.target.checked)
-        }
+      <EventParticipationField
+        hint="Bei Events aus dieser Vorlage können sich Mitglieder anmelden und für Posten der Aufstellung eingetragen werden."
+        defaultChecked={template.participationEnabled}
+        className="mt-4"
       />
 
       <label htmlFor={discordCheckboxId} className="mt-4 block">

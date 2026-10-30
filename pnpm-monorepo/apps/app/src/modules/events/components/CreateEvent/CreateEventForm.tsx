@@ -26,6 +26,7 @@ import { FaGlobe, FaLock, FaSave } from "react-icons/fa";
 import { DiscordPublishTargetFields } from "../DiscordPublishTargetFields";
 import { EventCoverImageField } from "../EventCoverImageField";
 import { EventDateTimeField } from "../EventDateTimeField";
+import { EventParticipationField } from "../EventParticipationField";
 import { RestrictedDiscordPublishDialog } from "../RestrictedDiscordPublishDialog";
 
 /** The "no template" option of the picker */
@@ -87,16 +88,20 @@ export const CreateEventForm = ({
   const [isPublishing, setIsPublishing] = useState(
     selectedTemplate?.discordPublishTarget != null,
   );
-  const [isParticipationEnabled, setIsParticipationEnabled] = useState(
-    selectedTemplate?.participationEnabled ?? true,
-  );
   const [previousPrefillKey, setPreviousPrefillKey] = useState(prefillKey);
   if (prefillKey !== previousPrefillKey) {
     setPreviousPrefillKey(prefillKey);
     setVisibility(selectedTemplate?.visibility ?? EventVisibility.PUBLIC);
     setIsPublishing(selectedTemplate?.discordPublishTarget != null);
-    setIsParticipationEnabled(selectedTemplate?.participationEnabled ?? true);
   }
+
+  /**
+   * React resets the form after an error to the defaults. A checkbox sends no
+   * value while it is clear, thus the default comes from the submitted form
+   * as a whole, not from the field (see `getDefaultValueWithFallback()`).
+   */
+  const submittedForm =
+    state && "requestPayload" in state ? state.requestPayload : null;
 
   const restrictedConfirmation = useSubmitConfirmation(
     visibility === EventVisibility.RESTRICTED && isPublishing,
@@ -183,9 +188,15 @@ export const CreateEventForm = ({
         />
       </div>
 
-      <ParticipationField
-        isEnabled={isParticipationEnabled}
-        onIsEnabledChange={setIsParticipationEnabled}
+      <EventParticipationField
+        key={`participation-${prefillKey}`}
+        hint="Mitglieder können sich anmelden und für Posten der Aufstellung eingetragen werden. Ohne Teilnahme sind die Aufstellung und die Teilnehmer ausgeblendet."
+        defaultChecked={
+          submittedForm
+            ? submittedForm.get("participationEnabled") === "true"
+            : (selectedTemplate?.participationEnabled ?? true)
+        }
+        className="mt-4"
       />
 
       <div key={`discord-${prefillKey}`}>
@@ -248,43 +259,6 @@ const TemplateCoverField = ({ uploadId }: TemplateCoverFieldProps) => {
         Titelbild der Vorlage ersetzen oder entfernen
       </button>
     </div>
-  );
-};
-
-interface ParticipationFieldProps {
-  readonly isEnabled: boolean;
-  readonly onIsEnabledChange: (isEnabled: boolean) => void;
-}
-
-/** On by default. A template prefills its own value. */
-const ParticipationField = ({
-  isEnabled,
-  onIsEnabledChange,
-}: ParticipationFieldProps) => {
-  const checkboxId = useId();
-
-  return (
-    <>
-      <label htmlFor={checkboxId} className="mt-4 block">
-        Teilnahme
-      </label>
-      <p className="mt-1 text-xs text-white/40">
-        Mitglieder können sich anmelden und für Posten der Aufstellung
-        eingetragen werden. Ohne Teilnahme sind die Aufstellung und die
-        Teilnehmer ausgeblendet.
-      </p>
-
-      <YesNoCheckbox
-        id={checkboxId}
-        name="participationEnabled"
-        value="true"
-        className="mt-2"
-        checked={isEnabled}
-        onChange={(changeEvent) =>
-          onIsEnabledChange(changeEvent.target.checked)
-        }
-      />
-    </>
   );
 };
 

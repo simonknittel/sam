@@ -84,6 +84,10 @@ export default async function Page({
             (visibilityRole) => visibilityRole.roleId,
           ),
         }}
+        /**
+         * The page requires `isAllowedToManageEvent()`, thus with the rule of
+         * the positions this is the rule of the switch in `updateEvent()`
+         */
         participationTile={
           (await isAllowedToManagePositions(event)) ? (
             <Tile heading="Teilnahme">
