@@ -8,8 +8,8 @@ import {
   WikiScopeKind,
   getEffectiveEventWikiScope,
   isEventWikiRootPage,
+  isEventWikiScopeAvailable,
   isEventWikiScopeSubset,
-  isParticipationEventWikiScope,
   type EventWikiScopeSelection,
 } from "@sam-monorepo/domain";
 import * as z from "zod";
@@ -106,14 +106,21 @@ export const updateEventWikiPagePermissions = (
       throw new ValidationError("The root page cannot inherit a scope");
 
     /**
-     * While the participation of the event is turned off, these scopes grant
-     * only the managers, and the dialog does not offer them. Thus a scope
-     * change cannot publish the briefing to an audience that does not exist.
+     * Like the dialog. Thus a scope change cannot publish the briefing to an
+     * audience that does not exist.
      */
     if (
-      scope.event?.participationEnabled === false &&
-      (isParticipationEventWikiScope(input.read_scope) ||
-        isParticipationEventWikiScope(input.edit_scope))
+      scope.event &&
+      !(
+        isEventWikiScopeAvailable(
+          input.read_scope,
+          scope.event.participationEnabled,
+        ) &&
+        isEventWikiScopeAvailable(
+          input.edit_scope,
+          scope.event.participationEnabled,
+        )
+      )
     )
       throw new ValidationError(WikiErrorMessage.ParticipationScopeUnavailable);
 

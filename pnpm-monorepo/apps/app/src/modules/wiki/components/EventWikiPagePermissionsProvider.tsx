@@ -10,8 +10,8 @@ import {
   WikiPageUploadability,
 } from "@sam-monorepo/database/browser";
 import {
+  isEventWikiScopeAvailable,
   isEventWikiScopeSubset,
-  isParticipationEventWikiScope,
   type EventWikiScopeSelection,
 } from "@sam-monorepo/domain";
 import { useState, type ReactNode } from "react";
@@ -100,12 +100,11 @@ export const EventWikiPagePermissionsProvider = ({
   const [isOpen, setIsOpen] = useState(false);
   const openPermissions = () => setIsOpen(true);
   /**
-   * While the participation is off, the scopes of the participation grant
-   * like MANAGERS, and the dialog does not offer them: it shows their
-   * effective meaning instead
+   * A stored scope that the dialog does not offer shows as its effective
+   * meaning: MANAGERS
    */
   const isScopeOffered = (scope: WikiPageEventScope) =>
-    participationEnabled || !isParticipationEventWikiScope(scope);
+    isEventWikiScopeAvailable(scope, participationEnabled);
   const initialScope = (scope: WikiPageEventScope) =>
     isScopeOffered(scope) ? scope : WikiPageEventScope.MANAGERS;
   const [readScope, setReadScope] = useState<WikiPageEventScope>(

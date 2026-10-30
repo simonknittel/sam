@@ -6,7 +6,7 @@ import {
 } from "@sam-monorepo/database/client";
 import {
   collectPositionScopeIdsForCitizen,
-  isParticipationEventWikiScope,
+  isEventWikiScopeAvailable,
 } from "@sam-monorepo/domain";
 import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
@@ -64,10 +64,11 @@ export const canReadEventBriefing = async (
 
   if (isAllowedToManageEvent(actor, event)) return true;
 
-  // The rule of the resolver: these scopes grant like MANAGERS then
   if (
-    !event.participationEnabled &&
-    isParticipationEventWikiScope(rootPage.eventReadScope)
+    !isEventWikiScopeAvailable(
+      rootPage.eventReadScope,
+      event.participationEnabled,
+    )
   )
     return false;
 

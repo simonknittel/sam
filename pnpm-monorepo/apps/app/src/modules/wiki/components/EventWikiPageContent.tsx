@@ -9,7 +9,7 @@ import {
   collectWikiPageDescendants,
   getEffectiveEventWikiScope,
   isEventWikiRootPage,
-  isParticipationEventWikiScope,
+  isEventWikiScopeAvailable,
   type ResolvedEventWikiPagePermissions,
 } from "@sam-monorepo/domain";
 import { FaHistory } from "react-icons/fa";
@@ -86,11 +86,9 @@ export const EventWikiPageContent = async ({
     EventWikiScopeTier.Read,
   );
   const readAudienceLabel = getEventWikiReadAudienceLabel(
-    // The rule of the resolver: these scopes grant like MANAGERS then
-    !participationEnabled &&
-      isParticipationEventWikiScope(effectiveReadScope.scope)
-      ? { scope: WikiPageEventScope.MANAGERS, positionId: null }
-      : effectiveReadScope,
+    isEventWikiScopeAvailable(effectiveReadScope.scope, participationEnabled)
+      ? effectiveReadScope
+      : { scope: WikiPageEventScope.MANAGERS, positionId: null },
     (positionId) =>
       context.positions.find((position) => position.id === positionId)?.name,
   );

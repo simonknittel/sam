@@ -10,15 +10,20 @@ export interface EventWikiScopeSelection {
 }
 
 /**
- * Whether the audience of the scope comes from the participation in the
- * event: the participants (PARTICIPANTS) and the citizens of a lineup branch
- * (POSITION). While the participation of the event is turned off, these
- * scopes grant like MANAGERS (fail closed, see
- * `createEventWikiPagePermissionResolver()`).
+ * Whether a briefing page of an event can use the scope. PARTICIPANTS (the
+ * participants) and POSITION (the citizens of a lineup branch) get their
+ * audience from the participation. Thus while the participation of the
+ * event is turned off, these two scopes are not available: they grant like
+ * MANAGERS (fail closed, like a dangling POSITION reference), and the dialog
+ * does not offer them.
  */
-export const isParticipationEventWikiScope = (scope: WikiPageEventScope) =>
-  scope === WikiPageEventScope.PARTICIPANTS ||
-  scope === WikiPageEventScope.POSITION;
+export const isEventWikiScopeAvailable = (
+  scope: WikiPageEventScope,
+  participationEnabled: boolean,
+) =>
+  participationEnabled ||
+  (scope !== WikiPageEventScope.PARTICIPANTS &&
+    scope !== WikiPageEventScope.POSITION);
 
 /** The two scopes of a briefing page */
 export enum EventWikiScopeTier {

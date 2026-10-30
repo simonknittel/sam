@@ -2,7 +2,7 @@ import {
   WikiPageEventScope,
   WikiPageUploadability,
 } from "@sam-monorepo/database/browser";
-import { isParticipationEventWikiScope } from "../wiki/eventWikiScopes.js";
+import { isEventWikiScopeAvailable } from "../wiki/eventWikiScopes.js";
 import {
   findWikiPageSettingSource,
   resolveWikiPageTier,
@@ -171,8 +171,7 @@ const findScopeSource = (
  * - MANAGERS as an explicit scope grants nothing beyond the fixed manage
  *   tier — it is the "private" value.
  * - While the participation of the event is turned off, PARTICIPANTS and
- *   POSITION grant like MANAGERS (fail closed, like a dangling POSITION
- *   reference).
+ *   POSITION grant like MANAGERS (see `isEventWikiScopeAvailable()`).
  * - After the event is over (`frozen`) canEdit is false for everyone;
  *   reading and the managers' canAdmin stay.
  */
@@ -212,7 +211,7 @@ export const createEventWikiPagePermissionResolver = (
     scope: WikiPageEventScope,
     positionId: string | null,
   ) => {
-    if (!options.participationEnabled && isParticipationEventWikiScope(scope))
+    if (!isEventWikiScopeAvailable(scope, options.participationEnabled))
       return false;
 
     switch (scope) {
