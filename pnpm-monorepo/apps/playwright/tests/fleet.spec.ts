@@ -263,6 +263,79 @@ test("the variant popover shows the custom name only for an individual ship", as
   await expect(popover).not.toContainText("Sternenfaust");
 });
 
+test("the variant popover shows the details of the variant and links its settings only for a manager", async ({
+  page,
+  prisma,
+  signIn,
+  switchUser,
+}) => {
+  const viewer = await createCitizen(prisma, {
+    handle: "flotten-beobachter",
+    permissionStrings: ["orgFleet;read", "organizationMembership;read"],
+  });
+  const manager = await createCitizen(prisma, {
+    handle: "flotten-verwalter",
+    permissionStrings: [
+      "orgFleet;read",
+      "organizationMembership;read",
+      "manufacturersSeriesAndVariants;manage",
+    ],
+  });
+  await addCitizenToOrganization(prisma, viewer);
+  const { manufacturer, series, variant } = await createVariant(prisma, {
+    manufacturerName: "Drake Interplanetary",
+    seriesName: "Cutlass",
+    variantName: "Cutlass Black",
+    status: VariantStatus.NOT_FLIGHT_READY,
+  });
+  await prisma.variantTag.create({
+    data: {
+      key: "Rolle",
+      value: "Fracht",
+      variants: { connect: { id: variant.id } },
+    },
+  });
+  await prisma.ship.createMany({
+    data: [
+      { ownerId: viewer.entity.id, variantId: variant.id },
+      { ownerId: viewer.entity.id, variantId: variant.id },
+    ],
+  });
+
+  const popover = page.getByRole("dialog", { name: "Schiffsdetails" });
+  const variantLink = page
+    .getByRole("row")
+    .filter({ hasText: "Cutlass Black" })
+    .getByRole("link", { name: "Cutlass Black" });
+
+  await signIn(viewer.user);
+  await page.goto("/app/fleet/org");
+  await hoverUntilVisible(variantLink, popover);
+
+  await expect(popover.getByRole("list", { name: "Tags" })).toContainText(
+    "Fracht",
+  );
+  await expect(popover.getByRole("term")).toHaveText([
+    "Flight ready",
+    "Einzelschiffe",
+  ]);
+  await expect(popover.getByRole("definition")).toHaveText(["Nein", "2"]);
+  await expect(
+    popover.getByRole("link", { name: "Einstellungen" }),
+  ).toHaveCount(0);
+
+  await switchUser(manager.user);
+  await page.goto("/app/fleet/org");
+  await hoverUntilVisible(variantLink, popover);
+
+  await expect(
+    popover.getByRole("link", { name: "Einstellungen" }),
+  ).toHaveAttribute(
+    "href",
+    `/app/fleet/settings/manufacturer/${manufacturer.id}/series/${series.id}`,
+  );
+});
+
 test("the ship count of a variant ignores deleted ships and the ships of deleted owners", async ({
   page,
   prisma,
