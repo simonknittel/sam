@@ -7,6 +7,7 @@ import {
   parseLocalDateKey,
   type LocalDateRange,
 } from "@sam-monorepo/domain";
+import { createLoader, parseAsString, type SearchParams } from "nuqs/server";
 
 /** The search parameters of the date range filter of the calendar app */
 export const CALENDAR_FROM_PARAM = "from";
@@ -60,6 +61,19 @@ export const parseCalendarRange = (
     start: defaultStart,
     end: addDaysToLocalDate(defaultStart, DEFAULT_RANGE_LENGTH_IN_DAYS),
   };
+};
+
+const loadRangeSearchParams = createLoader({
+  [CALENDAR_FROM_PARAM]: parseAsString,
+  [CALENDAR_TO_PARAM]: parseAsString,
+});
+
+/** The range of the calendar app from the search parameters of the page */
+export const loadCalendarRange = async (
+  searchParams: Promise<SearchParams>,
+): Promise<LocalDateRange> => {
+  const { from, to } = await loadRangeSearchParams(searchParams);
+  return parseCalendarRange(from, to);
 };
 
 export const CALENDAR_RANGE_PROBLEM_TEXTS: Record<

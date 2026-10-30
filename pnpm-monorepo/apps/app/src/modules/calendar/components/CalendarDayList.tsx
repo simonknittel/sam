@@ -8,27 +8,17 @@ import {
   ORGANIZATION_TIMEZONE,
   toLocalDateKey,
   type LocalDate,
+  type LocalDateRange,
 } from "@sam-monorepo/domain";
 import clsx from "clsx";
-import { createLoader, parseAsString, type SearchParams } from "nuqs/server";
 import { getCalendarEntries } from "../queries/getCalendarEntries";
-import {
-  CALENDAR_FROM_PARAM,
-  CALENDAR_RANGE_PROBLEM_TEXTS,
-  CALENDAR_TO_PARAM,
-  parseCalendarRange,
-} from "../utils/calendarRange";
+import { CALENDAR_RANGE_PROBLEM_TEXTS } from "../utils/calendarRange";
 import {
   CalendarDayStyle,
   formatCalendarDay,
 } from "../utils/formatCalendarDate";
 import { CalendarEntryItem } from "./CalendarEntryItem";
 import { CalendarEntryDateStyle } from "./CalendarEntryRow";
-
-const loadSearchParams = createLoader({
-  [CALENDAR_FROM_PARAM]: parseAsString,
-  [CALENDAR_TO_PARAM]: parseAsString,
-});
 
 /** An entry with its position in the whole list */
 interface PositionedEntry {
@@ -62,7 +52,7 @@ const CalendarDay = ({ date, isToday, entries }: CalendarDayProps) => (
 
 interface Props {
   readonly className?: string;
-  readonly searchParams: Promise<SearchParams>;
+  readonly range: LocalDateRange;
 }
 
 /**
@@ -70,10 +60,7 @@ interface Props {
  * (in the time zone of the organization). A day without an entry has no
  * heading.
  */
-export const CalendarDayList = async ({ className, searchParams }: Props) => {
-  const { from, to } = await loadSearchParams(searchParams);
-  const range = parseCalendarRange(from, to);
-
+export const CalendarDayList = async ({ className, range }: Props) => {
   const rangeProblem = findCalendarRangeProblem(range);
   if (rangeProblem)
     return (
