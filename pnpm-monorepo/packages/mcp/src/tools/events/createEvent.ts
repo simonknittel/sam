@@ -10,7 +10,7 @@ export const createEventTool = defineTool({
   group: ToolGroup.Events,
   title: "Create an event",
   description:
-    "Creates an event in SAM with the user as its creator and organizer, and notifies the users who can see it. Give the name, the start and the end, the visibility and, for a restricted event, the visibility role ids (from list_roles). Templates, cover images, the location and the publication on Discord are only available in the SAM web app. Gives the new event like get_event.",
+    "Creates an event in SAM with the user as its creator and organizer, and notifies the users who can see it. Give the name, the start and the end, the visibility and, for a restricted event, the visibility role ids (from list_roles). participation_enabled false creates the event without sign-up and lineup. Templates, cover images, the location and the publication on Discord are only available in the SAM web app. Gives the new event like get_event.",
   annotations: {
     readOnlyHint: false,
     destructiveHint: false,

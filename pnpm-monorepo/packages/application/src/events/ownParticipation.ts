@@ -10,6 +10,7 @@ import { idSchema } from "../pagination.js";
 import { createEventActivity } from "./eventActivity.js";
 import { EventErrorMessage } from "./eventErrors.js";
 import { participationTextSchema } from "./eventInputSchemas.js";
+import { lockParticipationEnabledEvent } from "./participatableAppEvent.js";
 
 /**
  * The input of the writes of the own participation:
@@ -58,7 +59,9 @@ export const findActiveParticipation = (
  * rejects a second active sign-up.
  *
  * @throws ConflictError `EventErrorMessage.AlreadySignedUp` when the citizen has an active
- * participation, for example from a different tab
+ * participation, for example from a different tab, or
+ * `EventErrorMessage.ParticipationDisabled` when a manager turned the
+ * participation off in the meantime
  */
 export const insertOwnParticipation = async (
   context: ApplicationContext,
@@ -67,6 +70,8 @@ export const insertOwnParticipation = async (
 ) => {
   try {
     await context.prisma.$transaction(async (transaction) => {
+      await lockParticipationEnabledEvent(transaction, eventId);
+
       await transaction.eventParticipant.create({
         data: {
           eventId,

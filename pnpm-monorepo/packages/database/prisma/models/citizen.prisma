@@ -99,6 +99,7 @@ model Citizen {
   deletedFlows                                 Flow[]                               @relation("deletedFlows")
   createdLogAnalyzerEntries                    LogAnalyzerEntry[]                   @relation("createdLogAnalyzerEntries")
   seasonalThemeSettings                        SeasonalThemeSetting[]
+  calendarEntryTypeSettings                    CalendarEntryTypeSetting[]
   readMarkers                                  ReadMarker[]
   createdManualNotifications                   ManualNotification[]                 @relation("createdManualNotifications")
   receivedManualNotifications                  ManualNotificationCitizen[]          @relation("receivedManualNotifications")

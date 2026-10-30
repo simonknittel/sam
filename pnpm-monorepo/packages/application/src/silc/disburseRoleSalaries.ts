@@ -1,11 +1,11 @@
 import {
   AuditEventType,
   getLocalDate,
+  isSalaryDue,
   lockSilcLedger,
   ORGANIZATION_TIMEZONE,
   toDateColumnValue,
   updateSilcBalances,
-  type LocalDate,
 } from "@sam-monorepo/domain";
 import type { ApplicationContext } from "../context.js";
 import { withSpan } from "../withSpan.js";
@@ -21,18 +21,6 @@ export interface DisburseRoleSalariesOutput {
   readonly disbursedValue: number;
   readonly notificationsSent: boolean;
 }
-
-const getLastDayOfMonth = ({ year, month }: LocalDate) =>
-  toDateColumnValue({ year, month: month + 1, day: 0 }).getUTCDate();
-
-/**
- * A salary is due on its day of the month. A short month does not have the
- * day of each salary (for example the 31st), thus such a salary is due on
- * the last day of the month.
- */
-const isSalaryDue = (dayOfMonth: number, today: LocalDate) =>
-  dayOfMonth === today.day ||
-  (today.day === getLastDayOfMonth(today) && dayOfMonth > today.day);
 
 /**
  * Pays the salaries of the roles that are due on the day of the run (in the

@@ -7,6 +7,7 @@
  * Everything here is pure: the functions receive the local date of the
  * viewer and never read the clock.
  */
+import { addDaysToLocalDate } from "../calendarDate.js";
 import type { LocalDate } from "../timeZone.js";
 
 /**
@@ -171,22 +172,10 @@ export const getNextSeasonalGreetingStart = (
 /** One year holds every month/day pair */
 const DAYS_TO_SEARCH = 366;
 
-const addDays = (localDate: LocalDate, dayCount: number): LocalDate => {
-  const moment = new Date(
-    Date.UTC(localDate.year, localDate.month - 1, localDate.day + dayCount),
-  );
-
-  return {
-    year: moment.getUTCFullYear(),
-    month: moment.getUTCMonth() + 1,
-    day: moment.getUTCDate(),
-  };
-};
-
 /** The next day which no theme range holds, `from` included */
 export const getNextDayWithoutSeasonalEvent = (from: LocalDate): LocalDate => {
   for (let offset = 0; offset < DAYS_TO_SEARCH; offset += 1) {
-    const date = addDays(from, offset);
+    const date = addDaysToLocalDate(from, offset);
     if (getActiveSeasonalEvent(date) === null) return date;
   }
 

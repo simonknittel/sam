@@ -1,0 +1,14 @@
+/// Opt-out model for the entry types of the calendar: the existence of a row
+/// means the entry type is hidden for the citizen, in the calendar app and on
+/// the dashboard tile. The absence of a row means the type is shown. Entry
+/// types introduced in the future are therefore shown by default for
+/// everyone. The entry type is a string, thus a new type needs no migration.
+model CalendarEntryTypeSetting {
+  id         String   @id @default(cuid(2))
+  citizenId  String
+  citizen    Citizen  @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  entryType  String
+  disabledAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@unique([citizenId, entryType])
+}

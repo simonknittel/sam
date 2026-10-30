@@ -2,12 +2,14 @@ import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { EditableInput } from "@/modules/common/components/form/EditableInput";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
+import { WikiPageEventScope } from "@sam-monorepo/database/browser";
 import {
   EventWikiScopeTier,
   collectVisibleWikiSubtree,
   collectWikiPageDescendants,
   getEffectiveEventWikiScope,
   isEventWikiRootPage,
+  isEventWikiScopeAvailable,
   type ResolvedEventWikiPagePermissions,
 } from "@sam-monorepo/domain";
 import { FaHistory } from "react-icons/fa";
@@ -76,8 +78,17 @@ export const EventWikiPageContent = async ({
   const canAdministrate = permissions.canAdmin;
   const canManagePermissions = canAdministrate && !context.frozen;
 
+  /** A template has no participation switch: its scopes are data */
+  const participationEnabled = context.event?.participationEnabled ?? true;
+  const effectiveReadScope = getEffectiveEventWikiScope(
+    context,
+    page.id,
+    EventWikiScopeTier.Read,
+  );
   const readAudienceLabel = getEventWikiReadAudienceLabel(
-    getEffectiveEventWikiScope(context, page.id, EventWikiScopeTier.Read),
+    isEventWikiScopeAvailable(effectiveReadScope.scope, participationEnabled)
+      ? effectiveReadScope
+      : { scope: WikiPageEventScope.MANAGERS, positionId: null },
     (positionId) =>
       context.positions.find((position) => position.id === positionId)?.name,
   );
@@ -230,6 +241,7 @@ export const EventWikiPageContent = async ({
         <EventWikiPagePermissionsProvider
           pageId={page.id}
           isRootPage={isRootPage}
+          participationEnabled={participationEnabled}
           readScope={page.eventReadScope}
           readScopePositionId={page.eventReadScopePositionId}
           editScope={page.eventEditScope}

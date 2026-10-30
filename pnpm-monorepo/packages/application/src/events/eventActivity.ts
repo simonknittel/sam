@@ -56,6 +56,11 @@ export interface EventActivityPayloadByType {
   [EventActivityType.LINEUP_TOGGLED]: {
     enabled: boolean;
   };
+  /** The count of the sign-ups that the switch to false cancelled */
+  [EventActivityType.PARTICIPATION_TOGGLED]: {
+    enabled: boolean;
+    cancelledParticipantCount: number;
+  };
 }
 
 /**

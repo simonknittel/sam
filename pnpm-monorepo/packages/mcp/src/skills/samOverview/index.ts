@@ -34,6 +34,7 @@ The paths are on the host of this MCP server. \`/app/apps\` lists all apps of th
 | App | Path | Purpose | Tools |
 | --- | --- | --- | --- |
 | Dashboard | \`/app/dashboard\` | Start page with the calendar, the tasks, a wiki page and the Spynet search | – |
+| Kalender | \`/app/calendar\` | All dated entries that the user may see: events, birthdays, deadlines of own tasks, own SILC salaries, SINcome phase ends, expiry of own penalty points and seasonal events | – |
 | Spynet | \`/app/spynet\` | Intelligence database: citizens, organizations and notes. See [references/spynet.md](references/spynet.md). | ${ToolGroup.Spynet} |
 | IAM | \`/app/iam\` | Roles, role tags (groups of roles), permission matrix, inheritance matrix and users. See the skill \`sam-permissions\`. | ${ToolGroup.Roles}, ${ToolGroup.Users} |
 | Strafpunkte | \`/app/penalty-points\` | Penalty points for citizens. An entry can have an expiry date (Verfällt am); only active entries count. | ${ToolGroup.PenaltyPoints} |

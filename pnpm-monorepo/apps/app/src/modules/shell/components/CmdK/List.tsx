@@ -9,6 +9,7 @@ import { AiFillAppstore } from "react-icons/ai";
 import {
   FaBookOpen,
   FaBullhorn,
+  FaCalendarAlt,
   FaCamera,
   FaChartLine,
   FaClock,
@@ -242,6 +243,14 @@ export const List = () => {
       type: MenuItemType.Page,
       page: "iam",
       authKey: "iamRead",
+    },
+    {
+      id: "calendar",
+      label: "Kalender",
+      keywords: ["Kalender", "Calendar", "Termine", "Geburtstage"],
+      icon: <FaCalendarAlt />,
+      type: MenuItemType.Link,
+      href: "/app/calendar",
     },
     {
       id: "career",

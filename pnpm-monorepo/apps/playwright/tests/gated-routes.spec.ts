@@ -71,6 +71,11 @@ const OPEN_ROUTES: readonly [route: string, marker: (page: Page) => Locator][] =
   [
     ["/app/dashboard", (page) => page.getByRole("heading", { name: "Spynet" })],
     ["/app/apps", (page) => page.getByRole("link", { name: "Changelog" })],
+    /** Each entry type keeps the read rule of its source */
+    [
+      "/app/calendar",
+      (page) => page.getByText("Saisonale Events", { exact: true }),
+    ],
     /** Every citizen switches the seasonal events off for themselves */
     [
       "/app/account/appearance",

@@ -137,7 +137,7 @@ test("an owner creates a template, edits it, deletes it and restores it", async 
 
   await expectAuditEvents(prisma, [
     "EVENT_TEMPLATE_CREATED",
-    "EVENT_TEMPLATE_UPDATED",
+    "EVENT_TEMPLATE_UPDATED_V2",
     "EVENT_TEMPLATE_DELETED",
     "EVENT_TEMPLATE_RESTORED",
   ]);

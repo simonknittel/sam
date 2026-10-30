@@ -44,6 +44,11 @@ const lineupToggledPayloadSchema = z.object({
   enabled: z.boolean(),
 });
 
+const participationToggledPayloadSchema = z.object({
+  enabled: z.boolean(),
+  cancelledParticipantCount: z.number(),
+});
+
 const participantAddedPayloadSchema = z.object({
   citizenId: z.string(),
   comment: z.string().nullable(),
@@ -267,6 +272,23 @@ const buildActivityEntry = (activity: EventActivityRow): ActivityEntry => {
           payload.success && !payload.data.enabled
             ? "Aufstellung zurückgezogen"
             : "Aufstellung veröffentlicht",
+      };
+    }
+
+    case EventActivityType.PARTICIPATION_TOGGLED: {
+      const payload = participationToggledPayloadSchema.safeParse(
+        activity.payload,
+      );
+      if (!payload.success) return { ...base, message: "Teilnahme geändert" };
+      if (payload.data.enabled)
+        return { ...base, message: "Teilnahme eingeschaltet" };
+
+      const count = payload.data.cancelledParticipantCount;
+      return {
+        ...base,
+        message: `Teilnahme abgeschaltet (${count} ${
+          count === 1 ? "Anmeldung" : "Anmeldungen"
+        } storniert)`,
       };
     }
 

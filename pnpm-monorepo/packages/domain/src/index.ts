@@ -13,6 +13,25 @@ export {
 } from "./AuditEventTypes.js";
 export { buildBriefingRootPageSeed } from "./buildBriefingRootPageSeed.js";
 export {
+  getBirthdayOccurrencesInRange,
+  getSalaryDueDaysInRange,
+  getSeasonalGreetingDaysInRange,
+} from "./calendar/calendarDateRules.js";
+export {
+  CALENDAR_ENTRY_TYPES,
+  CalendarEntryType,
+} from "./calendar/calendarEntryType.js";
+export {
+  CalendarRangeProblem,
+  MAXIMUM_CALENDAR_RANGE_MONTHS,
+  compareLocalDates,
+  findCalendarRangeProblem,
+  parseLocalDateKey,
+  type LocalDateRange,
+} from "./calendar/calendarRange.js";
+export {
+  addDaysToLocalDate,
+  fromDateColumnValue,
   getYesterdayDateColumnValue,
   toDateColumnValue,
 } from "./calendarDate.js";
@@ -277,6 +296,7 @@ export {
 export { getAuecPerSilc } from "./silc/getAuecPerSilc.js";
 export { getTotalSilc } from "./silc/getTotalSilc.js";
 export { lockSilcLedger } from "./silc/lockSilcLedger.js";
+export { isSalaryDue } from "./silc/salaryDueDay.js";
 export {
   SILC_DESCRIPTION_MAXIMUM_LENGTH,
   SILC_VALUE_MAXIMUM,
@@ -325,6 +345,7 @@ export {
   getStartOfLocalDay,
   instantToWallTime,
   subtractCalendarDays,
+  toLocalDateKey,
   wallTimeToInstant,
   type LocalDate,
 } from "./timeZone.js";
@@ -351,6 +372,7 @@ export {
 export {
   EventWikiScopeTier,
   getEffectiveEventWikiScope,
+  isEventWikiScopeAvailable,
   isEventWikiScopeSubset,
   type EventWikiScopeSelection,
 } from "./wiki/eventWikiScopes.js";

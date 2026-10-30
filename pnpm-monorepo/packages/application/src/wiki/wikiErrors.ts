@@ -47,6 +47,11 @@ export enum WikiErrorMessage {
   CannotReplaceWithItself = "A page cannot replace itself",
   /** A `ValidationError` */
   EditScopeWiderThanReadScope = "The edit scope is wider than the read scope",
+  /**
+   * A `ValidationError`: while the participation of the event is turned off,
+   * a page cannot get the scopes of the participants and of the lineup
+   */
+  ParticipationScopeUnavailable = "The participation of the event is turned off: the scopes PARTICIPANTS and POSITION are not available",
   /** A `ValidationError` */
   OwnerCannotReadParent = "The owner cannot read the parent page",
   /** The message of `WikiRolesCannotReadParentError` */

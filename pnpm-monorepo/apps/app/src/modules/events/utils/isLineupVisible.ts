@@ -7,5 +7,6 @@ import type { Event } from "@sam-monorepo/database/client";
 
 /** See `isLineupVisible()` of the application package */
 export const isLineupVisible = async (
-  event: EventManageInput & Pick<Event, "lineupEnabled">,
+  event: EventManageInput &
+    Pick<Event, "lineupEnabled" | "participationEnabled">,
 ) => isLineupVisibleForActor(await getRequestActor(), event);

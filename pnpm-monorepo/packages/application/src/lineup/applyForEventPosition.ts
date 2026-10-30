@@ -1,10 +1,10 @@
-import { isPrismaError, PrismaErrorCode } from "@sam-monorepo/database/client";
 import { AuditEventType } from "@sam-monorepo/domain";
 import * as z from "zod";
 import { requireCitizen, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { ConflictError } from "../errors.js";
 import { isAllowedToManagePositions } from "../events/eventManageRules.js";
+import { lockParticipationEnabledEvent } from "../events/participatableAppEvent.js";
 import { idSchema } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
 import { LineupErrorMessage } from "./lineupErrors.js";
@@ -80,20 +80,22 @@ export const applyForEventPosition = (
       position.event.id,
     );
 
-    const application = await context.prisma.eventPositionApplication
-      .create({
-        data: {
-          position: { connect: { id: position.id } },
-          citizen: { connect: { id: citizen.id } },
-        },
-        select: { id: true },
-      })
-      .catch((error: unknown) => {
-        // The unique index found the application of a different tab or call
-        if (isPrismaError(error, PrismaErrorCode.UniqueConstraintFailed))
-          return null;
-        throw error;
-      });
+    /**
+     * The lock keeps a switch of the participation to false from clearing
+     * the applications before this one. The unique index skips the
+     * application of a different tab or call.
+     */
+    const [application] = await context.prisma.$transaction(
+      async (transaction) => {
+        await lockParticipationEnabledEvent(transaction, position.event.id);
+
+        return transaction.eventPositionApplication.createManyAndReturn({
+          data: [{ positionId: position.id, citizenId: citizen.id }],
+          skipDuplicates: true,
+          select: { id: true },
+        });
+      },
+    );
 
     if (application)
       await context.audit.create([

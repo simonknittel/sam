@@ -11,6 +11,7 @@ import { EventTemplateDescriptionHint } from "@/modules/event-templates/componen
 import { DiscordPublishTargetFields } from "@/modules/events/components/DiscordPublishTargetFields";
 import { EventCoverImageField } from "@/modules/events/components/EventCoverImageField";
 import { EventDescriptionField } from "@/modules/events/components/EventDescriptionField";
+import { EventParticipationField } from "@/modules/events/components/EventParticipationField";
 import { RolePicker } from "@/modules/roles/components/RolePicker/RolePicker";
 import {
   EventVisibility,
@@ -32,6 +33,7 @@ interface Props {
     readonly coverImageId: string | null;
     readonly visibility: EventVisibility;
     readonly visibilityRoleIds: readonly string[];
+    readonly participationEnabled: boolean;
     readonly discordPublishTarget: EventDiscordPublishTarget | null;
     readonly discordPublishChannelId: string | null;
     readonly discordPublishLocation: string | null;
@@ -121,6 +123,12 @@ export const UpdateEventTemplateForm = ({
           className="mt-2"
         />
       )}
+
+      <EventParticipationField
+        hint="Bei Events aus dieser Vorlage können sich Mitglieder anmelden und für Posten der Aufstellung eingetragen werden."
+        defaultChecked={template.participationEnabled}
+        className="mt-4"
+      />
 
       <label htmlFor={discordCheckboxId} className="mt-4 block">
         Auf Discord veröffentlichen

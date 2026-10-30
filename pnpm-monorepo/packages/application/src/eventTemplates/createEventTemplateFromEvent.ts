@@ -93,8 +93,8 @@ const toDiscordPublishPrefill = (
 
 /**
  * Turns a past or upcoming app event into a personal template of the acting
- * manager: core data, cover, visibility prefill, lineup and briefing carry
- * over — the reverse direction of the template in `createEvent`.
+ * manager: core data, cover, visibility prefill, participation switch,
+ * lineup and briefing carry over — the reverse direction of the template in `createEvent`.
  *
  * Managing the event is the gate, not merely seeing it: the briefing's
  * MANAGERS-scoped pages and a disabled lineup are readable inside the
@@ -129,6 +129,7 @@ export const createEventTemplateFromEvent = (
         name: true,
         description: true,
         coverImage: { select: COPYABLE_UPLOAD_SELECT },
+        participationEnabled: true,
         discordPublishedChannelId: true,
         discordPublishedLocation: true,
       },
@@ -160,6 +161,7 @@ export const createEventTemplateFromEvent = (
           visibilityRoleIds: sourceEvent.visibilityRoles.map(
             (visibilityRole) => visibilityRole.roleId,
           ),
+          participationEnabled: sourceEvent.participationEnabled,
           ...toDiscordPublishPrefill(context, sourceEvent),
         },
       );

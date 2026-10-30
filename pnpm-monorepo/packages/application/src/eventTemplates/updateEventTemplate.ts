@@ -28,6 +28,8 @@ export const updateEventTemplateInputSchema = z.object({
   /** The visibility of the events that the template creates */
   visibility: eventVisibilitySchema,
   visibility_role_ids: visibilityRoleIdsSchema.optional(),
+  /** The participation switch of the events that the template creates */
+  participation_enabled: z.boolean(),
   /** The Discord publishing an event created from this template starts with */
   ...discordPublishFieldsShape,
 });
@@ -137,6 +139,7 @@ export const updateEventTemplate = (
               deleteMany: {},
               create: visibilityRoleIds.map((roleId) => ({ roleId })),
             },
+            participationEnabled: input.participation_enabled,
             discordPublishTarget: input.discord_publish_target ?? null,
             discordPublishChannelId: publishesToChannel
               ? (input.discord_publish_channel_id ?? null)
@@ -155,7 +158,7 @@ export const updateEventTemplate = (
 
     await context.audit.create([
       {
-        type: AuditEventType.EVENT_TEMPLATE_UPDATED,
+        type: AuditEventType.EVENT_TEMPLATE_UPDATED_V2,
         data: {
           templateId: template.id,
           previousName: template.name,
@@ -163,6 +166,7 @@ export const updateEventTemplate = (
           visibility,
           visibilityRoleIds,
           coverImageChanged,
+          participationEnabled: input.participation_enabled,
         },
         createdById: actor.userId,
       },

@@ -23,7 +23,7 @@ export const updateEventParticipantsTool = defineTool({
   group: ToolGroup.Events,
   title: "Update the participants of an event",
   description:
-    "Signs citizens up for an event of SAM (event_id from list_events) that has not ended, or cancels their sign-ups, and notifies each changed citizen. Needs can_manage. add: each citizen (citizen_ids from search_citizens_and_organizations or get_event) must be able to see the event, log in and get event notifications, else nothing is added; the citizens who are already signed up are skipped. remove: each citizen must be a participant (from get_event), else nothing is removed; the position applications and the lineup assignments of the citizens at the event are removed too. comment is only for add, reason only for remove. Gives the event like get_event and the ids of the changed citizens.",
+    "Signs citizens up for an event of SAM (event_id from list_events) that has not ended, or cancels their sign-ups, and notifies each changed citizen. Needs can_manage. add: each citizen (citizen_ids from search_citizens_and_organizations or get_event) must be able to see the event, log in and get event notifications, else nothing is added; the citizens who are already signed up are skipped. remove: each citizen must be a participant (from get_event), else nothing is removed; the position applications and the lineup assignments of the citizens at the event are removed too. comment is only for add, reason only for remove. An event with participation_enabled false refuses both. Gives the event like get_event and the ids of the changed citizens.",
   annotations: {
     readOnlyHint: false,
     destructiveHint: true,

@@ -68,6 +68,8 @@ export const updateEventTemplate = createAuthenticatedAction(
         coverImageId: formData.get("coverImageId") ?? NO_COVER,
         visibility,
         visibility_role_ids,
+        // The checkbox sends a value only while it is checked
+        participation_enabled: formData.get("participationEnabled") === "true",
         ...parseDiscordPublishFields(formData),
       };
     },

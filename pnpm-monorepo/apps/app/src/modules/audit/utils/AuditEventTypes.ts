@@ -15,6 +15,7 @@ import {
  */
 export enum SystemLogApp {
   Account = "Account",
+  Calendar = "Kalender",
   Career = "Karriere",
   Changelog = "Changelog",
   Events = "Events",
@@ -1036,6 +1037,22 @@ export const AuditEventDefinitions: {
       `Event lineup ${data.enabled ? "enabled" : "disabled"} (event: ${data.eventId})`,
   },
 
+  [AuditEventType.EVENT_PARTICIPATION_STATUS_CHANGED]: {
+    type: AuditEventType.EVENT_PARTICIPATION_STATUS_CHANGED,
+    app: SystemLogApp.Events,
+    data: {
+      eventId: "string",
+      enabled: false,
+      cancelledParticipantCount: 0,
+      clearedPositionCount: 0,
+      deletedApplicationCount: 0,
+    },
+    message: (data) =>
+      data.enabled
+        ? `Event participation enabled (event: ${data.eventId})`
+        : `Event participation disabled (event: ${data.eventId}, cancelled sign-ups: ${data.cancelledParticipantCount}, cleared positions: ${data.clearedPositionCount}, deleted applications: ${data.deletedApplicationCount})`,
+  },
+
   [AuditEventType.EVENT_LINEUP_ORDER_CHANGED]: {
     type: AuditEventType.EVENT_LINEUP_ORDER_CHANGED,
     app: SystemLogApp.Events,
@@ -1240,6 +1257,22 @@ export const AuditEventDefinitions: {
       visibility: "PUBLIC",
       visibilityRoleIds: ["string"],
       coverImageChanged: false,
+    },
+    message: (data) =>
+      `Event template "${data.name}" updated (${data.templateId})`,
+  },
+
+  [AuditEventType.EVENT_TEMPLATE_UPDATED_V2]: {
+    type: AuditEventType.EVENT_TEMPLATE_UPDATED_V2,
+    app: SystemLogApp.Events,
+    data: {
+      templateId: "string",
+      previousName: "string",
+      name: "string",
+      visibility: "PUBLIC",
+      visibilityRoleIds: ["string"],
+      coverImageChanged: false,
+      participationEnabled: true,
     },
     message: (data) =>
       `Event template "${data.name}" updated (${data.templateId})`,
@@ -2582,6 +2615,20 @@ export const AuditEventDefinitions: {
     },
     message: (data) =>
       `Citizen ${data.citizenId} updated their seasonal theme settings (switched on: ${
+        data.enabled.join(", ") || "none"
+      }, switched off: ${data.disabled.join(", ") || "none"})`,
+  },
+
+  [AuditEventType.CALENDAR_ENTRY_TYPE_SETTINGS_UPDATED]: {
+    type: AuditEventType.CALENDAR_ENTRY_TYPE_SETTINGS_UPDATED,
+    app: SystemLogApp.Calendar,
+    data: {
+      citizenId: "string",
+      enabled: ["string"],
+      disabled: [],
+    },
+    message: (data) =>
+      `Citizen ${data.citizenId} updated their calendar entry types (switched on: ${
         data.enabled.join(", ") || "none"
       }, switched off: ${data.disabled.join(", ") || "none"})`,
   },

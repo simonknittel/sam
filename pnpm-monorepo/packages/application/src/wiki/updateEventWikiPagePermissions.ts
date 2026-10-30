@@ -8,6 +8,7 @@ import {
   WikiScopeKind,
   getEffectiveEventWikiScope,
   isEventWikiRootPage,
+  isEventWikiScopeAvailable,
   isEventWikiScopeSubset,
   type EventWikiScopeSelection,
 } from "@sam-monorepo/domain";
@@ -69,7 +70,9 @@ export interface UpdateEventWikiPagePermissionsOutput {
  * actor can hold, is in the trash, or the position does not exist
  * @throws ForbiddenError when the actor cannot manage the page
  * @throws ConflictError when the event of the briefing is over
- * @throws ValidationError for a combination that the page cannot have
+ * @throws ValidationError for a combination that the page cannot have, or
+ * for a scope of the participation while the participation of the event is
+ * turned off
  */
 export const updateEventWikiPagePermissions = (
   context: ApplicationContext,
@@ -101,6 +104,25 @@ export const updateEventWikiPagePermissions = (
         input.attachment_uploadability === WikiPageUploadability.INHERIT)
     )
       throw new ValidationError("The root page cannot inherit a scope");
+
+    /**
+     * Like the dialog. Thus a scope change cannot publish the briefing to an
+     * audience that does not exist.
+     */
+    if (
+      scope.event &&
+      !(
+        isEventWikiScopeAvailable(
+          input.read_scope,
+          scope.event.participationEnabled,
+        ) &&
+        isEventWikiScopeAvailable(
+          input.edit_scope,
+          scope.event.participationEnabled,
+        )
+      )
+    )
+      throw new ValidationError(WikiErrorMessage.ParticipationScopeUnavailable);
 
     /**
      * A POSITION scope must refer to a position of the lineup. The other

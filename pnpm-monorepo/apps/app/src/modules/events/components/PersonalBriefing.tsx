@@ -18,8 +18,9 @@ interface Props {
 
 /**
  * The viewer's personal view of an event on its overview: own sign-up state
- * (with the sign-up/comment/cancel controls on app events) and the lineup
- * positions assigned to them, including the required ship variants.
+ * (with the sign-up/comment/cancel controls on app events whose
+ * participation is on) and the lineup positions assigned to them, including
+ * the required ship variants.
  */
 export const PersonalBriefing = async ({ className, event }: Props) => {
   const authentication = await requireAuthenticationPage();
@@ -68,6 +69,10 @@ export const PersonalBriefing = async ({ className, event }: Props) => {
             Die Teilnahme wird über Discord verwaltet.
           </p>
         </>
+      ) : !event.participationEnabled ? (
+        <p className="text-sm text-neutral-500">
+          Für dieses Event gibt es keine Anmeldung.
+        </p>
       ) : (
         <EventParticipationControls
           eventId={event.id}

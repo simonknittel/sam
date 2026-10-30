@@ -36,6 +36,11 @@ interface Props {
     readonly visibilityRoleIds: string[];
   };
   /**
+   * The participation switch, rendered by the page: it needs the count of
+   * the active sign-ups
+   */
+  readonly participationTile?: ReactNode;
+  /**
    * The Discord publishing card, rendered by the page: it needs a live
    * channel list from Discord and therefore stays a Server Component.
    */
@@ -51,6 +56,7 @@ interface Props {
 export const EventSettings = ({
   className,
   event,
+  participationTile,
   discordCard,
   actionsTile,
 }: Props) => {
@@ -147,6 +153,8 @@ export const EventSettings = ({
           </SubmitButton>
         </form>
       </Tile>
+
+      {participationTile}
 
       {discordCard}
 

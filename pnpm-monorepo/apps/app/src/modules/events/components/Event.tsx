@@ -48,6 +48,7 @@ export const Event = async ({
         discordGuildId: event.discordGuildId,
         discordImage: event.discordImage,
         coverImage: event.coverImage,
+        participationEnabled: event.participationEnabled,
         participantCount: event._count.participants,
       }}
       ownParticipation={

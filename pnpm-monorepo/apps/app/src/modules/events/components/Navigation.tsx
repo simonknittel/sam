@@ -20,7 +20,7 @@ interface Props {
 
 export const Navigation = async ({ className, event }: Props) => {
   const authentication = await requireAuthenticationPage();
-  const [showLineup, showFleetLink, eventWikiContext, showSettings] =
+  const [showLineup, canReadFleet, eventWikiContext, showSettings] =
     await Promise.all([
       isLineupVisible(event),
       authentication.authorize("orgFleet", "read"),
@@ -38,6 +38,10 @@ export const Navigation = async ({ className, event }: Props) => {
     eventWikiContext?.rootPage &&
     eventWikiContext.permissions.get(eventWikiContext.rootPage.id)?.canRead,
   );
+
+  /** The pages of the participants exist only while the participation is on */
+  const showParticipants = event.participationEnabled;
+  const showFleetLink = canReadFleet && event.participationEnabled;
 
   const pages = [
     {
@@ -64,11 +68,15 @@ export const Navigation = async ({ className, event }: Props) => {
           },
         ]
       : []),
-    {
-      name: "Teilnehmer",
-      icon: <FaUsers />,
-      path: `/app/events/${event.id}/participants`,
-    },
+    ...(showParticipants
+      ? [
+          {
+            name: "Teilnehmer",
+            icon: <FaUsers />,
+            path: `/app/events/${event.id}/participants`,
+          },
+        ]
+      : []),
     ...(event.source === EventSource.APP
       ? [
           {

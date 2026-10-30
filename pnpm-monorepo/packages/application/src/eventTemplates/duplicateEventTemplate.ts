@@ -29,9 +29,9 @@ export interface DuplicateEventTemplateOutput {
 
 /**
  * Copies a template the actor may read into a personal template of their
- * own: fields, visibility prefill, cover, lineup and briefing carry over,
- * the role shares deliberately do not. Handing a copy out again is the
- * duplicator's decision, not an inherited one.
+ * own: fields, visibility prefill, participation switch, cover, lineup and
+ * briefing carry over, the role shares deliberately do not. Handing a copy
+ * out again is the duplicator's decision, not an inherited one.
  */
 export const duplicateEventTemplate = (
   context: ApplicationContext,
@@ -56,6 +56,7 @@ export const duplicateEventTemplate = (
           coverImage: { select: COPYABLE_UPLOAD_SELECT },
           visibility: true,
           visibilityRoles: { select: { roleId: true } },
+          participationEnabled: true,
           discordPublishTarget: true,
           discordPublishChannelId: true,
           discordPublishLocation: true,
@@ -83,6 +84,7 @@ export const duplicateEventTemplate = (
           visibilityRoleIds: source.visibilityRoles.map(
             (visibilityRole) => visibilityRole.roleId,
           ),
+          participationEnabled: source.participationEnabled,
           discordPublishTarget: source.discordPublishTarget,
           discordPublishChannelId: source.discordPublishChannelId,
           discordPublishLocation: source.discordPublishLocation,

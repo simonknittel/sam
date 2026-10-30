@@ -21,7 +21,7 @@ export const updateMyEventParticipationTool = defineTool({
   group: ToolGroup.Events,
   title: "Update the own participation in an event",
   description:
-    "Signs the user up for an event of SAM (event_id from list_events, source app) or cancels the sign-up of the user, before the end of the event. sign_up also changes the comment of an existing sign-up; without a comment, an existing sign-up keeps its comment. cancel also removes the position applications and the lineup assignments of the user at the event; without a sign-up, the result is a conflict. comment is only for sign_up. A Discord event takes its sign-ups only on Discord. Gives the event like get_event, with the new is_participating.",
+    "Signs the user up for an event of SAM (event_id from list_events, source app) or cancels the sign-up of the user, before the end of the event. sign_up also changes the comment of an existing sign-up; without a comment, an existing sign-up keeps its comment. cancel also removes the position applications and the lineup assignments of the user at the event; without a sign-up, the result is a conflict. comment is only for sign_up. A Discord event takes its sign-ups only on Discord, and an event with participation_enabled false takes none. Gives the event like get_event, with the new is_participating.",
   annotations: {
     readOnlyHint: false,
     destructiveHint: true,

@@ -41,6 +41,7 @@ const MENTION_EVENT_SELECT = {
   id: true,
   startTime: true,
   endTime: true,
+  participationEnabled: true,
   createdById: true,
   visibility: true,
   deletedAt: true,
@@ -217,7 +218,10 @@ export const createWikiMentionReadGate = async (
           citizenId,
         ),
       },
-      { frozen: eventHasEnded(event) },
+      {
+        frozen: eventHasEnded(event),
+        participationEnabled: event.participationEnabled,
+      },
     );
     eventResolvers.set(key, resolver);
     return resolver;

@@ -80,6 +80,8 @@ export interface EventListEntry {
   readonly visibility: EventVisibilityType;
   /** The active participations */
   readonly participant_count: number;
+  /** False when a manager turned off the participation (see `get_event`) */
+  readonly participation_enabled: boolean;
   readonly is_participating: boolean;
   /** Open and unread for the actor (see the read markers) */
   readonly is_new: boolean;
@@ -112,6 +114,8 @@ const eventListSelect = (
     discordImage: true,
     // For the lineup and briefing checks
     lineupEnabled: true,
+    // Also hides the sign-up and the participant count of the event card
+    participationEnabled: true,
     discordCreatorId: true,
     createdById: true,
     managers: EVENT_PAGE_RELATIONS_SELECT.managers,
@@ -133,12 +137,16 @@ export type EventListRow = Prisma.EventGetPayload<{
   select: ReturnType<typeof eventListSelect>;
 }>;
 
-export interface EventListPage {
+/** The rows of the event cards of a list */
+export interface EventCardRows {
   /** The participations of each event are the active ones of the actor */
   readonly events: EventListRow[];
   /** The listed events with a cancelled participation of the actor */
   readonly cancelledParticipationEventIds: string[];
   readonly newEventIds: ReadonlySet<string>;
+}
+
+export interface EventListPage extends EventCardRows {
   readonly nextCursor: string | null;
   readonly prevCursor: string | null;
 }
@@ -222,6 +230,73 @@ const getCancelledParticipationEventIds = async (
   return rows.map((row) => row.eventId);
 };
 
+/** The active participations of the actor, by Discord account or citizen */
+const buildViewerParticipationWhere = (
+  actor: Actor,
+): Prisma.EventParticipantWhereInput => {
+  const { discordUserId } = actor;
+  const citizenId = actor.citizen?.id ?? null;
+
+  /**
+   * Without a Discord id, `{ discordUserId: null }` would match every app
+   * sign-up
+   */
+  return {
+    cancelledAt: null,
+    OR: [
+      ...(discordUserId ? [{ discordUserId }] : []),
+      ...(citizenId ? [{ citizenId }] : []),
+    ],
+  };
+};
+
+interface EventCardRowsOptions {
+  /** The moment of the read */
+  readonly now: Date;
+  /**
+   * True for a list that holds only new events: each event is new without a
+   * read of the read markers
+   */
+  readonly areAllNew?: boolean;
+}
+
+/**
+ * The listed events with the flags of their cards: the events with a
+ * cancelled participation of the actor and the events that are new for the
+ * actor
+ */
+const toEventCardRows = async (
+  context: ApplicationContext,
+  actor: Actor,
+  events: EventListRow[],
+  { now, areAllNew = false }: EventCardRowsOptions,
+): Promise<EventCardRows> => {
+  const eventIds = events.map((event) => event.id);
+  const unreadWhere = buildUnreadWhere(actor, ReadMarkerSubject.Event);
+
+  const getNewEventIds = async () => {
+    if (areAllNew) return eventIds;
+    if (!unreadWhere) return [];
+
+    return findNewEventIds(context.prisma, eventIds, unreadWhere, now);
+  };
+
+  const [cancelledParticipationEventIds, newEventIds] = await Promise.all([
+    getCancelledParticipationEventIds(
+      context,
+      eventIds,
+      actor.citizen?.id ?? null,
+    ),
+    getNewEventIds(),
+  ]);
+
+  return {
+    events,
+    cancelledParticipationEventIds,
+    newEventIds: new Set(newEventIds),
+  };
+};
+
 /**
  * One page of the events that the actor can see, with the rows that the
  * event cards of the app render. The app pages in both directions, the
@@ -245,19 +320,7 @@ export const findEventListPage = (
     const statusWhere = getStatusWhere(input.status, now, unreadWhere);
     if (!statusWhere) return EMPTY_EVENT_LIST_PAGE;
 
-    const { discordUserId } = actor;
-    const citizenId = actor.citizen?.id ?? null;
-    /**
-     * Without a Discord id, `{ discordUserId: null }` would match every app
-     * sign-up
-     */
-    const viewerParticipationWhere: Prisma.EventParticipantWhereInput = {
-      cancelledAt: null,
-      OR: [
-        ...(discordUserId ? [{ discordUserId }] : []),
-        ...(citizenId ? [{ citizenId }] : []),
-      ],
-    };
+    const viewerParticipationWhere = buildViewerParticipationWhere(actor);
 
     const orderDirection: Prisma.SortOrder =
       input.status === EventListStatus.Open ||
@@ -291,29 +354,43 @@ export const findEventListPage = (
         }),
       async (id) => (await context.prisma.event.count({ where: { id } })) > 0,
     );
-    const events = page.items;
-
-    const eventIds = events.map((event) => event.id);
-    const getNewEventIds = async () => {
-      // The "new" status lists only new events
-      if (input.status === EventListStatus.New) return eventIds;
-      if (!unreadWhere) return [];
-
-      return findNewEventIds(context.prisma, eventIds, unreadWhere, now);
-    };
-
-    const [cancelledParticipationEventIds, newEventIds] = await Promise.all([
-      getCancelledParticipationEventIds(context, eventIds, citizenId),
-      getNewEventIds(),
-    ]);
 
     return {
-      events,
-      cancelledParticipationEventIds,
-      newEventIds: new Set(newEventIds),
+      ...(await toEventCardRows(context, actor, page.items, {
+        now,
+        // The "new" status lists only new events
+        areAllNew: input.status === EventListStatus.New,
+      })),
       nextCursor: page.nextCursor,
       prevCursor: page.previousCursor,
     };
+  });
+
+/**
+ * All events of the where fragment that the actor can see, with the rows
+ * that the event cards of the app render, sorted by the start. For the lists
+ * outside of the events page, for example the calendar. The caller limits
+ * the number of the events with the fragment (for example a date range).
+ *
+ * @throws ForbiddenError without `event;read`
+ */
+export const findEventCardRows = (
+  context: ApplicationContext,
+  actor: Actor,
+  eventWhere: Prisma.EventWhereInput,
+): Promise<EventCardRows> =>
+  withSpan(context, "findEventCardRows", async () => {
+    requirePermission(actor, "event", "read");
+
+    const events = await context.prisma.event.findMany({
+      where: {
+        AND: [eventWhere, buildVisibleEventsWhere(toEventViewer(actor))],
+      },
+      select: eventListSelect(buildViewerParticipationWhere(actor)),
+      orderBy: [{ startTime: "asc" }, { id: "asc" }],
+    });
+
+    return toEventCardRows(context, actor, events, { now: context.now() });
   });
 
 /**
@@ -338,6 +415,7 @@ export const listEvents = async (
       source: toEventSourceType(event.source),
       visibility: toEventVisibilityType(event.visibility),
       participant_count: event._count.participants,
+      participation_enabled: event.participationEnabled,
       is_participating: event.participants.length > 0,
       is_new: page.newEventIds.has(event.id),
     })),

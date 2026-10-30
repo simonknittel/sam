@@ -35,6 +35,7 @@ export const listEventsTool = defineTool({
         source: z.enum(EventSourceType),
         visibility: z.enum(EventVisibilityType),
         participant_count: z.number().int().min(0),
+        participation_enabled: z.boolean(),
         is_participating: z.boolean(),
         is_new: z.boolean(),
       }),

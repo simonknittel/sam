@@ -16,6 +16,11 @@ export enum EventErrorMessage {
   PublishedOnDiscord = "The event is published on Discord. Do this change in the SAM web app, which also changes the Discord event.",
   /** A `ConflictError`: the own participation cannot change after the end */
   ParticipationClosed = "The sign-up is closed",
+  /**
+   * A `ConflictError`: a manager turned off the participation of the event.
+   * Nobody can sign up or be added then, and the lineup is hidden.
+   */
+  ParticipationDisabled = "The participation of the event is turned off: nobody can sign up, and the lineup is not available",
   /** A `ConflictError` */
   AlreadySignedUp = "The user is already signed up",
   /** A `ConflictError` */

@@ -10,6 +10,7 @@ import {
   WikiPageUploadability,
 } from "@sam-monorepo/database/browser";
 import {
+  isEventWikiScopeAvailable,
   isEventWikiScopeSubset,
   type EventWikiScopeSelection,
 } from "@sam-monorepo/domain";
@@ -38,6 +39,11 @@ interface Props {
   readonly children: ReactNode;
   readonly pageId: string;
   readonly isRootPage: boolean;
+  /**
+   * False while the participation of the event is turned off: then the
+   * scopes of the participants and of the lineup are not offered
+   */
+  readonly participationEnabled: boolean;
   readonly readScope: WikiPageEventScope;
   readonly readScopePositionId: string | null;
   readonly editScope: WikiPageEventScope;
@@ -79,6 +85,7 @@ export const EventWikiPagePermissionsProvider = ({
   children,
   pageId,
   isRootPage,
+  participationEnabled,
   readScope: initialReadScope,
   readScopePositionId: initialReadPositionId,
   editScope: initialEditScope,
@@ -92,13 +99,23 @@ export const EventWikiPagePermissionsProvider = ({
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const openPermissions = () => setIsOpen(true);
-  const [readScope, setReadScope] =
-    useState<WikiPageEventScope>(initialReadScope);
-  const [readPositionId, setReadPositionId] = useState(
-    initialReadPositionId ?? "",
+  /**
+   * A stored scope that the dialog does not offer shows as its effective
+   * meaning: MANAGERS
+   */
+  const isScopeOffered = (scope: WikiPageEventScope) =>
+    isEventWikiScopeAvailable(scope, participationEnabled);
+  const initialScope = (scope: WikiPageEventScope) =>
+    isScopeOffered(scope) ? scope : WikiPageEventScope.MANAGERS;
+  const [readScope, setReadScope] = useState<WikiPageEventScope>(
+    initialScope(initialReadScope),
   );
-  const [editScope, setEditScope] =
-    useState<WikiPageEventScope>(initialEditScope);
+  const [readPositionId, setReadPositionId] = useState(
+    isScopeOffered(initialReadScope) ? (initialReadPositionId ?? "") : "",
+  );
+  const [editScope, setEditScope] = useState<WikiPageEventScope>(
+    initialScope(initialEditScope),
+  );
   /**
    * A stored INHERIT on a root page (the schema default; the seed writes
    * RESTRICTED explicitly since the uploadability tiers reached event
@@ -188,6 +205,14 @@ export const EventWikiPagePermissionsProvider = ({
             }
           />
 
+          {!participationEnabled && (
+            <Note
+              type="info"
+              message="Die Teilnahme an diesem Event ist abgeschaltet. Deshalb stehen „Aufstellung“ und „Teilnehmer“ nicht zur Auswahl, und Seiten mit diesen Scopes können nur die Manager lesen."
+              className="mt-2"
+            />
+          )}
+
           <ScopeSection
             legend="Lesen"
             name="readScope"
@@ -200,7 +225,7 @@ export const EventWikiPagePermissionsProvider = ({
                 ? "Alle, die einer Position innerhalb der gewählten Aufstellungs-Gruppe zugewiesen sind."
                 : "Das Event hat noch keine passende Aufstellungs-Gruppe."
             }
-            isOptionAllowed={() => true}
+            isOptionAllowed={isScopeOffered}
             positionSelect={{
               name: "readScopePositionId",
               value: readPositionId,
@@ -218,6 +243,7 @@ export const EventWikiPagePermissionsProvider = ({
             inheritedFrom={inheritedFrom.edit}
             positionHint="Alle aus der für Lesen gewählten Aufstellungs-Gruppe."
             isOptionAllowed={(scope) =>
+              isScopeOffered(scope) &&
               isEditChoiceAllowed(scope, currentEffectiveRead)
             }
           />
@@ -280,7 +306,10 @@ interface ScopeSectionProps {
   readonly allowInherit: boolean;
   readonly inheritedFrom?: string;
   readonly positionHint: string;
-  /** Drops scope options the subset rule forbids (the edit section) */
+  /**
+   * Drops the scope options that the participation switch or, in the edit
+   * section, the subset rule forbids
+   */
   readonly isOptionAllowed: (scope: WikiPageEventScope) => boolean;
   /** Only the read scope picks a group; edit follows the read's */
   readonly positionSelect?: {

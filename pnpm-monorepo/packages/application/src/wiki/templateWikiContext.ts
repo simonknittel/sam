@@ -62,8 +62,13 @@ export const buildTemplateWikiContext = (
       positionScopeIds: new Set(),
     };
 
+    /**
+     * A template has no participants, and the permissions below replace
+     * the grants anyway
+     */
     const resolved = resolveEventWikiPagePermissions(allPages, viewer, {
       frozen: false,
+      participationEnabled: true,
     });
     const permissions = new Map(
       [...resolved].map(([pageId, pagePermissions]) => [

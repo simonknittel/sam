@@ -13,6 +13,13 @@ interface Props {
   readonly label: string;
   readonly className?: string;
   readonly resetCursorPagination?: boolean;
+  /**
+   * The bounds ("YYYY-MM-DD") that the reader of the filter applies while
+   * the URL has none. The inputs show them, thus the filter shows the range
+   * that the page shows.
+   */
+  readonly defaultFrom?: string;
+  readonly defaultTo?: string;
 }
 
 /**
@@ -27,6 +34,8 @@ export const DateRangeFilter = ({
   label,
   className,
   resetCursorPagination,
+  defaultFrom,
+  defaultTo,
 }: Props) => {
   const [isLoading, startTransition] = useTransition();
 
@@ -37,15 +46,23 @@ export const DateRangeFilter = ({
     },
     { shallow: false, startTransition },
   );
-  const from = range[fromName];
-  const to = range[toName];
+  const from = range[fromName] ?? defaultFrom ?? null;
+  const to = range[toName] ?? defaultTo ?? null;
   const [, setPagination] = useQueryStates(cursorPaginationParsers, {
     shallow: false,
     startTransition,
   });
 
+  /**
+   * Both bounds go into the URL, thus a bound that only showed its default
+   * keeps the value that the user saw
+   */
   const setBound = async (name: string, value: string) => {
-    await setRange({ [name]: value === "" ? null : value });
+    await setRange({
+      [fromName]: from,
+      [toName]: to,
+      [name]: value === "" ? null : value,
+    });
 
     if (resetCursorPagination)
       await setPagination({ cursor: null, direction: null });

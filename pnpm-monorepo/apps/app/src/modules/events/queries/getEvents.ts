@@ -3,36 +3,17 @@ import {
   getRequestActor,
   throwApplicationErrorForPage,
 } from "@/modules/application";
-import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
-  countOpenEvents,
-  EventListStatus,
-  EventParticipationFilter,
-  EventTypeFilter,
   findEventListPage,
   UnknownCursorBehavior,
+  type EventListStatus,
+  type EventParticipationFilter,
+  type EventTypeFilter,
 } from "@sam-monorepo/application";
-import { CursorDirection } from "@sam-monorepo/domain";
+import type { CursorDirection } from "@sam-monorepo/domain";
 import { cache } from "react";
 
 const EVENTS_PAGE_SIZE = 10;
-
-/**
- * How many open events there are in total — for the dashboard tile, which
- * only lists the next few of them.
- */
-export const getOpenEventCount = cache(
-  withTrace("getOpenEventCount", async (): Promise<number> => {
-    try {
-      return await countOpenEvents(
-        getApplicationContext(),
-        await getRequestActor(),
-      );
-    } catch (error) {
-      return throwApplicationErrorForPage(error);
-    }
-  }),
-);
 
 /**
  * One page of the events list. A stale cursor in the URL (its event is gone
@@ -41,11 +22,11 @@ export const getOpenEventCount = cache(
  */
 export const getEvents = cache(
   async (
-    status: EventListStatus = EventListStatus.Open,
-    participating: EventParticipationFilter = EventParticipationFilter.All,
-    type: EventTypeFilter = EventTypeFilter.All,
-    cursor?: string | null,
-    direction: CursorDirection = CursorDirection.Next,
+    status: EventListStatus,
+    participating: EventParticipationFilter,
+    type: EventTypeFilter,
+    cursor: string | null,
+    direction: CursorDirection,
   ) => {
     try {
       return await findEventListPage(

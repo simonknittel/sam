@@ -77,11 +77,16 @@ model Event {
   visibility      EventVisibility       @default(PUBLIC)
   visibilityRoles EventVisibilityRole[]
 
-  participants  EventParticipant[]
-  positions     EventPosition[]
-  lineupEnabled Boolean            @default(false)
-  managers      Citizen[]          @relation("eventManagers")
-  activities    EventActivity[]
+  participants         EventParticipant[]
+  positions            EventPosition[]
+  lineupEnabled        Boolean            @default(false)
+  /// Only for app events. While false, nobody can sign up, and the lineup,
+  /// the participant pages and the participant summaries are hidden. The
+  /// switch to false cancels the sign-ups and clears the lineup
+  /// assignments and applications.
+  participationEnabled Boolean            @default(true)
+  managers             Citizen[]          @relation("eventManagers")
+  activities           EventActivity[]
 
   /// Set when the briefing root page's read scope first left MANAGERS.
   /// Guards the one-time "briefing published" notification.
@@ -157,6 +162,7 @@ enum EventActivityType {
   MANAGER_ADDED
   MANAGER_REMOVED
   LINEUP_TOGGLED
+  PARTICIPATION_TOGGLED
 }
 
 model EventActivity {
@@ -210,6 +216,10 @@ model EventTemplate {
   discordPublishTarget    EventDiscordPublishTarget?
   discordPublishChannelId String?
   discordPublishLocation  String?
+
+  /// Prefills the created event's participation switch (see
+  /// Event.participationEnabled)
+  participationEnabled Boolean @default(true)
 
   /// Who may use and edit the template (see EventTemplateAccessType)
   roleAccess EventTemplateRoleAccess[]
