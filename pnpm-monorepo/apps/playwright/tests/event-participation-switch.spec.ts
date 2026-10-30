@@ -31,6 +31,17 @@ const PARTICIPATION_TAB_PATHS = ["lineup", "participants", "fleet"] as const;
 const eventTab = (page: Page, eventId: string, path: string) =>
   page.locator(`a[href="/app/events/${eventId}/${path}"]`);
 
+/**
+ * The visible state of the participation switch on the settings page. The
+ * switch is disabled while its action runs, and React resets the form when
+ * the action ends: thus the state is read after that.
+ */
+const expectParticipationSwitch = async (page: Page, stateLabel: string) => {
+  const tile = sectionByHeading(page, "Teilnahme");
+  await expect(tile.getByRole("checkbox", { name: "Teilnahme" })).toBeEnabled();
+  await expect(tile.getByText(stateLabel, { exact: true })).toBeVisible();
+};
+
 test("a manager turns the participation off: the sign-ups are cancelled and the participation pages are gone", async ({
   page,
   prisma,
@@ -80,11 +91,12 @@ test("a manager turns the participation off: the sign-ups are cancelled and the 
   await toggleLabel(participationTile, "Aktiviert").click();
   await expect(confirmation).toContainText("1 aktive Anmeldung wird storniert");
   await confirmation.getByRole("button", { name: "Abbrechen" }).click();
-  await expect(toggleLabel(participationTile, "Aktiviert")).toBeVisible();
+  await expectParticipationSwitch(page, "Aktiviert");
 
   await toggleLabel(participationTile, "Aktiviert").click();
   await confirmation.getByRole("button", { name: "Abschalten" }).click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+  await expectParticipationSwitch(page, "Deaktiviert");
 
   await expect
     .poll(() =>
@@ -147,6 +159,28 @@ test("a manager turns the participation off: the sign-ups are cancelled and the 
   await expect(card.getByRole("link", { name: "Details" })).toBeVisible();
   await expect(card.getByRole("button", { name: "Anmelden" })).toHaveCount(0);
   await expect(card.getByTitle(/^Teilnehmer:/)).toHaveCount(0);
+
+  /** The switch to true needs no confirmation and restores nothing */
+  await switchUser(organizer.user);
+  await page.goto(`/app/events/${event.id}/settings`);
+  await waitForAppShellHydration(page);
+  await expectParticipationSwitch(page, "Deaktiviert");
+  await toggleLabel(sectionByHeading(page, "Teilnahme"), "Deaktiviert").click();
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+  await expectParticipationSwitch(page, "Aktiviert");
+  await expect
+    .poll(() =>
+      prisma.event.findUniqueOrThrow({
+        where: { id: event.id },
+        select: { participationEnabled: true },
+      }),
+    )
+    .toEqual({ participationEnabled: true });
+  expect(
+    await prisma.eventParticipant.count({
+      where: { eventId: event.id, cancelledAt: null },
+    }),
+  ).toBe(0);
 });
 
 test("the create dialog offers the participation switch, and a template prefills it", async ({
