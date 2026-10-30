@@ -16,7 +16,6 @@ export {
   getBirthdayOccurrencesInRange,
   getSalaryDueDaysInRange,
   getSeasonalGreetingDaysInRange,
-  type SeasonalGreetingDay,
 } from "./calendar/calendarDateRules.js";
 export {
   CALENDAR_ENTRY_TYPES,
@@ -25,14 +24,14 @@ export {
 export {
   CalendarRangeProblem,
   MAXIMUM_CALENDAR_RANGE_MONTHS,
-  addDaysToLocalDate,
   compareLocalDates,
   findCalendarRangeProblem,
   parseLocalDateKey,
-  toLocalDateKey,
   type LocalDateRange,
 } from "./calendar/calendarRange.js";
 export {
+  addDaysToLocalDate,
+  fromDateColumnValue,
   getYesterdayDateColumnValue,
   toDateColumnValue,
 } from "./calendarDate.js";
@@ -346,6 +345,7 @@ export {
   getStartOfLocalDay,
   instantToWallTime,
   subtractCalendarDays,
+  toLocalDateKey,
   wallTimeToInstant,
   type LocalDate,
 } from "./timeZone.js";

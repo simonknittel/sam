@@ -156,7 +156,8 @@ export interface LocalDate {
   readonly day: number;
 }
 
-const formatLocalDateKey = ({ year, month, day }: LocalDate) =>
+/** The "YYYY-MM-DD" value of a calendar date */
+export const toLocalDateKey = ({ year, month, day }: LocalDate) =>
   `${padNumber(year, 4)}-${padNumber(month, 2)}-${padNumber(day, 2)}`;
 
 /**
@@ -176,7 +177,7 @@ export const getLocalDate = (moment: Date, timeZone: string): LocalDate => {
  * runtime does not know.
  */
 export const getLocalDateKey = (instant: Date, timeZone: string): string =>
-  formatLocalDateKey(getZonedDateTimeParts(instant, timeZone));
+  toLocalDateKey(getZonedDateTimeParts(instant, timeZone));
 
 /**
  * Reads a `datetime-local` value ("YYYY-MM-DDTHH:mm") as a wall time in the
@@ -221,7 +222,7 @@ export const wallTimeToInstant = (wallTime: string, timeZone: string): Date => {
 export const instantToWallTime = (instant: Date, timeZone: string): string => {
   const parts = getZonedDateTimeParts(instant, timeZone);
 
-  return `${formatLocalDateKey(parts)}T${padNumber(parts.hour, 2)}:${padNumber(parts.minute, 2)}`;
+  return `${toLocalDateKey(parts)}T${padNumber(parts.hour, 2)}:${padNumber(parts.minute, 2)}`;
 };
 
 /**

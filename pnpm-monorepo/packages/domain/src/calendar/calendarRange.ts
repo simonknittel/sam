@@ -1,4 +1,8 @@
-import { toDateColumnValue } from "../calendarDate.js";
+import {
+  addDaysToLocalDate,
+  fromDateColumnValue,
+  toDateColumnValue,
+} from "../calendarDate.js";
 import type { LocalDate } from "../timeZone.js";
 
 /**
@@ -25,20 +29,14 @@ export enum CalendarRangeProblem {
 
 const LOCAL_DATE_KEY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 
-/** The calendar date of a `@db.Date` value, the inverse of `toDateColumnValue` */
-const fromDateColumnValue = (value: Date): LocalDate => ({
-  year: value.getUTCFullYear(),
-  month: value.getUTCMonth() + 1,
-  day: value.getUTCDate(),
-});
-
 /** Moves a day outside its month into the next or the previous month */
 const normalizeLocalDate = (date: LocalDate): LocalDate =>
   fromDateColumnValue(toDateColumnValue(date));
 
 /**
  * Reads a "YYYY-MM-DD" value, for example a bound of the date filter in the
- * URL. Null for a value that names no day, for example February 30.
+ * URL. Null for a value that names no day, for example February 30. The
+ * inverse of `toLocalDateKey`.
  */
 export const parseLocalDateKey = (value: string): LocalDate | null => {
   const match = LOCAL_DATE_KEY_PATTERN.exec(value);
@@ -61,17 +59,6 @@ export const parseLocalDateKey = (value: string): LocalDate | null => {
 
   return date;
 };
-
-/** The "YYYY-MM-DD" value of a date, the inverse of `parseLocalDateKey` */
-export const toLocalDateKey = ({ year, month, day }: LocalDate) =>
-  [
-    String(year).padStart(4, "0"),
-    String(month).padStart(2, "0"),
-    String(day).padStart(2, "0"),
-  ].join("-");
-
-export const addDaysToLocalDate = (date: LocalDate, days: number) =>
-  normalizeLocalDate({ ...date, day: date.day + days });
 
 /** Negative when `first` is before `second`, 0 for the same day */
 export const compareLocalDates = (first: LocalDate, second: LocalDate) =>

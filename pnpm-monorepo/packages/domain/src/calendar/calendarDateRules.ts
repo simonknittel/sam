@@ -50,7 +50,7 @@ export const getSalaryDueDaysInRange = (
 ): LocalDate[] =>
   getLocalDatesOfRange(range).filter((date) => isSalaryDue(dayOfMonth, date));
 
-export interface SeasonalGreetingDay {
+interface SeasonalGreetingDay {
   readonly date: LocalDate;
   readonly event: SeasonalEventKey;
 }

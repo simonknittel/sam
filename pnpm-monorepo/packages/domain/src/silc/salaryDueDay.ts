@@ -2,7 +2,7 @@ import { toDateColumnValue } from "../calendarDate.js";
 import type { LocalDate } from "../timeZone.js";
 
 /** The number of days of the month of the date */
-export const getLastDayOfMonth = ({ year, month }: LocalDate) =>
+const getLastDayOfMonth = ({ year, month }: LocalDate) =>
   toDateColumnValue({ year, month: month + 1, day: 0 }).getUTCDate();
 
 /**
