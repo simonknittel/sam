@@ -26,6 +26,9 @@
     hsl(0 69% 30% / 1)
   );
   --background-color-secondary: hsla(0, 0%, 15%, 0.5);
+  /* The secondary surface of a clickable tile under the pointer or the focus:
+     the same colour, less transparent */
+  --background-color-secondary-hover: hsla(0, 0%, 15%, 0.8);
   --background-color-secondary-opaque: hsla(0, 0%, 8%, 1);
   --background-color-tertiary: hsla(0, 0%, 25%, 0.5);
 

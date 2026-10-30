@@ -7,8 +7,7 @@ import {
   DASHBOARD_CALENDAR_DAY_COUNT,
   getDashboardCalendarRange,
 } from "../utils/calendarRange";
-import { CalendarEntryItem } from "./CalendarEntryItem";
-import { CalendarEntryDateStyle } from "./CalendarEntryRow";
+import { CalendarDayHeadingLevel, CalendarDays } from "./CalendarDays";
 
 interface Props {
   readonly className?: string;
@@ -16,8 +15,8 @@ interface Props {
 
 /**
  * The entries of the next days (see `DASHBOARD_CALENDAR_DAY_COUNT`) and the
- * events that run now, as one flat list without a limit. The type filter of
- * the calendar app applies.
+ * events that run now, under a heading for each day, without a limit. The
+ * type filter of the calendar app applies.
  */
 export const CalendarTile = async ({ className }: Props) => {
   const { start, end } = getDashboardCalendarRange();
@@ -40,14 +39,11 @@ export const CalendarTile = async ({ className }: Props) => {
       </h2>
 
       {entries.length > 0 ? (
-        entries.map((entry, index) => (
-          <CalendarEntryItem
-            key={entry.key}
-            entry={entry}
-            index={index}
-            dateStyle={CalendarEntryDateStyle.DayAndTime}
-          />
-        ))
+        <CalendarDays
+          entries={entries}
+          headingLevel={CalendarDayHeadingLevel.Tile}
+          className="w-full"
+        />
       ) : (
         <div className="w-full corners-secondary bg-secondary p-4">
           <p>

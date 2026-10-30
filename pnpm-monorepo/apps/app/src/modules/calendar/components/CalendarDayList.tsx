@@ -1,65 +1,22 @@
 import "server-only";
 
 import { Note } from "@/modules/common/components/Note";
-import type { CalendarEntry } from "@sam-monorepo/application";
 import {
   findCalendarRangeProblem,
-  getLocalDateKey,
-  ORGANIZATION_TIMEZONE,
   toLocalDateKey,
-  type LocalDate,
   type LocalDateRange,
 } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { getCalendarEntries } from "../queries/getCalendarEntries";
 import { CALENDAR_RANGE_PROBLEM_TEXTS } from "../utils/calendarRange";
-import {
-  CalendarDayStyle,
-  formatCalendarDay,
-} from "../utils/formatCalendarDate";
-import { CalendarEntryItem } from "./CalendarEntryItem";
-import { CalendarEntryDateStyle } from "./CalendarEntryRow";
-
-/** An entry with its position in the whole list */
-interface PositionedEntry {
-  readonly entry: CalendarEntry;
-  readonly index: number;
-}
-
-interface CalendarDayProps {
-  readonly date: LocalDate;
-  readonly isToday: boolean;
-  readonly entries: readonly PositionedEntry[];
-}
-
-const CalendarDay = ({ date, isToday, entries }: CalendarDayProps) => (
-  <section className="flex flex-col gap-0.5">
-    <h2 className="mb-2 flex items-baseline gap-2 font-mono text-lg uppercase">
-      {formatCalendarDay(date, CalendarDayStyle.Long)}
-      {isToday && <span className="text-sm text-green-500">Heute</span>}
-    </h2>
-
-    {entries.map(({ entry, index }) => (
-      <CalendarEntryItem
-        key={entry.key}
-        entry={entry}
-        index={index}
-        dateStyle={CalendarEntryDateStyle.TimeOnly}
-      />
-    ))}
-  </section>
-);
+import { CalendarDayHeadingLevel, CalendarDays } from "./CalendarDays";
 
 interface Props {
   readonly className?: string;
   readonly range: LocalDateRange;
 }
 
-/**
- * The entries of the range of the date filter, under a heading for each day
- * (in the time zone of the organization). A day without an entry has no
- * heading.
- */
+/** The entries of the range of the date filter, under a heading for each day */
 export const CalendarDayList = async ({ className, range }: Props) => {
   const rangeProblem = findCalendarRangeProblem(range);
   if (rangeProblem)
@@ -77,33 +34,18 @@ export const CalendarDayList = async ({ className, range }: Props) => {
     false,
   );
 
-  const todayKey = getLocalDateKey(new Date(), ORGANIZATION_TIMEZONE);
-  const entriesByDay = Map.groupBy(
-    entries.map((entry, index) => ({ entry, index })),
-    ({ entry }) => toLocalDateKey(entry.date),
-  );
+  if (entries.length <= 0)
+    return (
+      <div className={clsx("corners-secondary bg-secondary p-4", className)}>
+        <p>In diesem Zeitraum gibt es keine Einträge.</p>
+      </div>
+    );
 
   return (
-    <div className={clsx("flex flex-col gap-6", className)}>
-      <p className="text-neutral-500">
-        Zeitraum: {formatCalendarDay(range.start, CalendarDayStyle.Numeric)} –{" "}
-        {formatCalendarDay(range.end, CalendarDayStyle.Numeric)}
-      </p>
-
-      {entriesByDay.size > 0 ? (
-        [...entriesByDay].map(([dayKey, dayEntries]) => (
-          <CalendarDay
-            key={dayKey}
-            date={dayEntries[0].entry.date}
-            isToday={dayKey === todayKey}
-            entries={dayEntries}
-          />
-        ))
-      ) : (
-        <div className="corners-secondary bg-secondary p-4">
-          <p>In diesem Zeitraum gibt es keine Einträge.</p>
-        </div>
-      )}
-    </div>
+    <CalendarDays
+      entries={entries}
+      headingLevel={CalendarDayHeadingLevel.Page}
+      className={className}
+    />
   );
 };

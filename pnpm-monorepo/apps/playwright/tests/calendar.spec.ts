@@ -116,6 +116,13 @@ test("the dashboard tile shows the events, the birthdays and the own task deadli
   await expect(
     page.getByRole("heading", { name: "Kalender-Operation" }),
   ).toBeVisible();
+
+  // The whole row is clickable: a click into its padding, not on its title
+  await page
+    .getByRole("article")
+    .filter({ hasText: "Geburtstag von kalender-geburtstag" })
+    .click({ position: { x: 8, y: 8 } });
+  await expect(page).toHaveURL(`/app/spynet/citizen/${other.entity.id}`);
 });
 
 test("a type switched off in the app disappears from the tile and stays off after a reload", async ({

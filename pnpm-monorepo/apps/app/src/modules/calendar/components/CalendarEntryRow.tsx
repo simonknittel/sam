@@ -2,7 +2,6 @@ import "server-only";
 
 import { Link } from "@/modules/common/components/Link";
 import { SmallBadge } from "@/modules/common/components/SmallBadge";
-import { formatDate } from "@/modules/common/utils/formatDate";
 import { SEASONAL_THEMES } from "@/modules/seasonal-events/utils/SEASONAL_THEMES";
 import {
   ProfitDistributionPhaseEnd,
@@ -12,20 +11,8 @@ import {
 } from "@sam-monorepo/application";
 import { CalendarEntryType } from "@sam-monorepo/domain";
 import clsx from "clsx";
-import {
-  CalendarDayStyle,
-  formatCalendarDay,
-  formatCalendarTime,
-} from "../utils/formatCalendarDate";
+import { formatCalendarTime } from "../utils/formatCalendarDate";
 import { CalendarEntryTypeIcon } from "./CalendarEntryTypeIcon";
-
-/** How a row shows its day and its time */
-export enum CalendarEntryDateStyle {
-  /** For a flat list: the day, and the time of an entry with a time */
-  DayAndTime = "day_and_time",
-  /** For a list under day headings: only the time */
-  TimeOnly = "time_only",
-}
 
 /** The event entries render the event card instead of a row */
 type RowEntry = Exclude<CalendarEntry, EventCalendarEntry>;
@@ -70,7 +57,7 @@ const getRowContent = (entry: RowEntry): RowContent => {
       return {
         title: `SILC-Gehalt: ${entry.value.toLocaleString("de-DE")} SILC`,
         details: entry.roleNames.join(", ") || null,
-        badge: entry.isForecast ? "Voraussichtlich" : null,
+        badge: null,
       };
 
     case CalendarEntryType.ProfitDistribution:
@@ -102,40 +89,31 @@ const getRowContent = (entry: RowEntry): RowContent => {
   }
 };
 
-const formatEntryDate = (
-  entry: RowEntry,
-  dateStyle: CalendarEntryDateStyle,
-) => {
-  switch (dateStyle) {
-    case CalendarEntryDateStyle.DayAndTime:
-      return entry.time
-        ? formatDate(entry.time, "long")
-        : formatCalendarDay(entry.date, CalendarDayStyle.Short);
-
-    case CalendarEntryDateStyle.TimeOnly:
-      return entry.time ? formatCalendarTime(entry.time) : "Ganztägig";
-
-    default:
-      throw new Error(
-        `Unknown calendar entry date style: ${dateStyle satisfies never}`,
-      );
-  }
-};
+/** The heading of the day gives the date, thus a row shows only the time */
+const formatEntryTime = (entry: RowEntry) =>
+  entry.time ? formatCalendarTime(entry.time) : "Ganztägig";
 
 interface Props {
   readonly className?: string;
   readonly entry: RowEntry;
-  readonly dateStyle: CalendarEntryDateStyle;
 }
 
-/** A compact row for each entry that is not an event */
-export const CalendarEntryRow = ({ className, entry, dateStyle }: Props) => {
+/**
+ * A compact row for each entry that is not an event. With a link, the whole
+ * row is clickable: the link stretches over the row, but its name stays the
+ * title.
+ */
+export const CalendarEntryRow = ({ className, entry }: Props) => {
   const { title, details, badge } = getRowContent(entry);
 
   return (
     <article
       className={clsx(
         "flex w-full items-center gap-3 corners-secondary bg-secondary px-4 py-3",
+        {
+          "relative transition-colors focus-within:bg-secondary-hover hover:bg-secondary-hover active:bg-secondary-opaque":
+            entry.href,
+        },
         className,
       )}
     >
@@ -149,7 +127,7 @@ export const CalendarEntryRow = ({ className, entry, dateStyle }: Props) => {
           {entry.href ? (
             <Link
               href={entry.href}
-              className="text-interaction-500 hover:text-interaction-300 hover:underline focus-visible:underline active:text-interaction-300"
+              className="outline-hidden after:absolute after:inset-0 focus-visible:underline"
             >
               {title}
             </Link>
@@ -159,7 +137,7 @@ export const CalendarEntryRow = ({ className, entry, dateStyle }: Props) => {
         </h3>
 
         <p className="text-sm text-neutral-500">
-          {formatEntryDate(entry, dateStyle)}
+          {formatEntryTime(entry)}
           {details && <> · {details}</>}
         </p>
       </div>
