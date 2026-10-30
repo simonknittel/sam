@@ -75,15 +75,18 @@ const CalendarTypeField = ({ setting, disabled }: CalendarTypeFieldProps) => {
   const inputId = useId();
 
   return (
-    <div className="flex w-full items-center justify-between gap-4">
+    <div className="flex w-full items-start justify-between gap-4">
+      {/* The padding centers the first line (1.5rem) on the checkbox (2rem) */}
       <label
         htmlFor={inputId}
-        className="flex cursor-pointer items-center gap-2"
+        className="flex cursor-pointer items-start gap-2 py-1"
       >
-        <CalendarEntryTypeIcon
-          type={setting.type}
-          className="flex-none text-neutral-500"
-        />
+        <span className="flex h-lh flex-none items-center">
+          <CalendarEntryTypeIcon
+            type={setting.type}
+            className="text-neutral-500"
+          />
+        </span>
         {CALENDAR_ENTRY_TYPE_LABELS[setting.type]}
       </label>
 
