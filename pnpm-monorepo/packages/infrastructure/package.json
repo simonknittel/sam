@@ -16,13 +16,13 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@aws-sdk/client-eventbridge": "3.1150.0",
-    "@aws-sdk/client-s3": "3.1150.0",
-    "@aws-sdk/s3-request-presigner": "3.1150.0",
+    "@aws-sdk/client-eventbridge": "3.1156.0",
+    "@aws-sdk/client-s3": "3.1156.0",
+    "@aws-sdk/s3-request-presigner": "3.1156.0",
     "@paralleldrive/cuid2": "3.3.0",
     "@sam-monorepo/application": "workspace:*",
     "@sam-monorepo/database": "workspace:*",
-    "jose": "6.2.12",
+    "jose": "6.2.13",
     "zod": "4.6.7"
   },
   "devDependencies": {
@@ -30,7 +30,7 @@
     "@sam-monorepo/wiki-editor": "workspace:*",
     "@types/node": "24.19.2",
     "typescript": "7.0.2",
-    "vite": "8.3.4",
-    "vitest": "5.0.4"
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
   }
 }

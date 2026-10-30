@@ -17,13 +17,13 @@
     "format": "prisma format"
   },
   "dependencies": {
-    "@prisma/client": "7.10.0",
-    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.1",
+    "@prisma/adapter-pg": "7.10.1",
     "zod": "4.6.7"
   },
   "devDependencies": {
     "@types/node": "24.19.2",
-    "prisma": "7.10.0",
+    "prisma": "7.10.1",
     "typescript": "7.0.2"
   }
 }

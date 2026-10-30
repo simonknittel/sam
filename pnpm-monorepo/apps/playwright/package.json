@@ -5,15 +5,15 @@
     "test": "playwright test"
   },
   "devDependencies": {
-    "@aws-sdk/client-s3": "3.1150.0",
-    "@modelcontextprotocol/client": "2.3.1",
-    "@playwright/test": "1.64.0",
-    "@prisma/adapter-pg": "7.10.0",
+    "@aws-sdk/client-s3": "3.1156.0",
+    "@modelcontextprotocol/client": "2.4.0",
+    "@playwright/test": "1.64.1",
+    "@prisma/adapter-pg": "7.10.1",
     "@sam-monorepo/database": "workspace:*",
     "@sam-monorepo/domain": "workspace:*",
-    "@testcontainers/postgresql": "12.2.0",
+    "@testcontainers/postgresql": "12.2.1",
     "@types/node": "24.19.2",
-    "testcontainers": "12.2.0",
+    "testcontainers": "12.2.1",
     "typescript": "7.0.2"
   }
 }

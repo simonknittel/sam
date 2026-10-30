@@ -7,9 +7,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "3.1150.0",
-    "@aws-sdk/client-ssm": "3.1150.0",
-    "@opentelemetry/api": "1.9.1",
+    "@aws-sdk/client-dynamodb": "3.1156.0",
+    "@aws-sdk/client-ssm": "3.1156.0",
+    "@opentelemetry/api": "1.10.0",
     "@sam-monorepo/application": "workspace:*",
     "@sam-monorepo/database": "workspace:*",
     "@sam-monorepo/domain": "workspace:*",
@@ -18,8 +18,8 @@
     "aws-xray-sdk-core": "3.12.0",
     "mailgun.js": "14.1.0",
     "pusher": "5.3.4",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "react-email": "6.11.3",
     "serialize-error": "13.0.2",
     "web-push": "3.6.7",
@@ -31,7 +31,7 @@
     "@types/web-push": "3.6.4",
     "esbuild": "0.28.2",
     "typescript": "7.0.2",
-    "vite": "8.3.4",
-    "vitest": "5.0.4"
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
   }
 }
