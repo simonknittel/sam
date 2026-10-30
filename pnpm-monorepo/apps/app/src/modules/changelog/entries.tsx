@@ -38,6 +38,10 @@ import image20260816Activity from "@/modules/changelog/assets/2026-08-16-activit
 import image20260816CreateModal from "@/modules/changelog/assets/2026-08-16-create-modal.png";
 import image20260816PersonalBriefing from "@/modules/changelog/assets/2026-08-16-personal-briefing.png";
 import image20260816Settings from "@/modules/changelog/assets/2026-08-16-settings.png";
+import image20261030CalendarApp from "@/modules/changelog/assets/2026-10-30-calendar-app.png";
+import image20261030CalendarTile from "@/modules/changelog/assets/2026-10-30-calendar-tile.png";
+import image20261030EventParticipationDialog from "@/modules/changelog/assets/2026-10-30-event-participation-dialog.png";
+import image20261030EventParticipation from "@/modules/changelog/assets/2026-10-30-event-participation.png";
 import {
   ChangelogImage,
   ChangelogImageWidth,
@@ -48,6 +52,77 @@ import { AiFillAppstore } from "react-icons/ai";
 import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
+  {
+    key: "2026-10-30-kalender",
+    date: "2026-10-30",
+    title: "Kalender statt Events auf dem Dashboard",
+    tags: ["Neu", "Änderung", "Kalender", "Dashboard"],
+    isTracked: false,
+    body: () => (
+      <>
+        <p>
+          Die Kachel &bdquo;Events&ldquo; auf dem Dashboard heißt jetzt
+          &bdquo;Kalender&ldquo; und zeigt alles mit einem Datum aus den
+          nächsten 7 Tagen: Events, Geburtstage, die Fristen deiner Tasks, dein
+          SILC-Gehalt, das Ende von SINcome-Phasen, den Ablauf deiner
+          Strafpunkte und saisonale Events. Du siehst nur, was du auch an
+          anderer Stelle sehen darfst.
+        </p>
+
+        <Link href={image20261030CalendarTile.src}>
+          <ChangelogImage
+            src={image20261030CalendarTile}
+            alt=""
+            isAboveTheFold
+          />
+        </Link>
+
+        <p>
+          &bdquo;Zum Kalender&ldquo; öffnet die neue App &bdquo;Kalender&ldquo;.
+          Dort wählst du einen beliebigen Zeitraum von bis zu 12 Monaten und
+          blendest einzelne Typen aus. Die Auswahl wird gespeichert und gilt
+          auch für die Kachel.
+        </p>
+
+        <Link href={image20261030CalendarApp.src}>
+          <ChangelogImage src={image20261030CalendarApp} alt="" />
+        </Link>
+      </>
+    ),
+  },
+
+  {
+    key: "2026-10-30-teilnahme-abschaltbar",
+    date: "2026-10-30",
+    title: "Teilnahme an Events abschaltbar",
+    tags: ["Neu", "Events"],
+    isTracked: false,
+    requiresAuth: { resource: "event", action: "read" },
+    body: () => (
+      <>
+        <p>
+          Bei SAM-Events lässt sich die Teilnahme abschalten: beim Erstellen, in
+          den Einstellungen des Events und in Vorlagen. Ohne Teilnahme kann sich
+          niemand anmelden, und Aufstellung, Teilnehmer und Flotte sind
+          ausgeblendet.
+        </p>
+
+        <Link href={image20261030EventParticipation.src}>
+          <ChangelogImage src={image20261030EventParticipation} alt="" />
+        </Link>
+
+        <p>
+          Beim Abschalten werden alle Anmeldungen storniert und die Teilnehmer
+          benachrichtigt.
+        </p>
+
+        <Link href={image20261030EventParticipationDialog.src}>
+          <ChangelogImage src={image20261030EventParticipationDialog} alt="" />
+        </Link>
+      </>
+    ),
+  },
+
   {
     key: "2026-10-27-erinnerung-an-die-flotte",
     date: "2026-10-27",

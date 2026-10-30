@@ -1,5 +1,6 @@
 import accountScreenshot from "@/modules/account/assets/screenshot.png";
 import avatarCreatorScreenshot from "@/modules/avatar-creator/assets/screenshot.png";
+import calendarScreenshot from "@/modules/calendar/assets/screenshot.png";
 import careerScreenshot from "@/modules/career/assets/screenshot.png";
 import { hasAnyReadableFlow } from "@/modules/career/queries/getMyReadableFlows";
 import changelogScreenshot from "@/modules/changelog/assets/screenshot.png";
@@ -120,6 +121,7 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
     name: "Kalender",
     slug: "calendar",
     href: "/app/calendar",
+    imageSrc: calendarScreenshot,
     description:
       "Deine Termine auf einen Blick: Events, Geburtstage, Fristen und mehr",
   },
