@@ -24,6 +24,13 @@ interface Props {
 }
 
 export const VariantShipsTable = ({ className, ships, variant }: Props) => {
+  /** The popover is a Client Component: it gets only the fields it reads */
+  const popoverVariant = { id: variant.id, name: variant.name };
+  const popoverManufacturer = {
+    name: variant.series.manufacturer.name,
+    image: variant.series.manufacturer.image,
+  };
+
   return (
     <Table className={className} columns={COLUMNS} minWidth={560}>
       <THead>
@@ -48,9 +55,9 @@ export const VariantShipsTable = ({ className, ships, variant }: Props) => {
             <td className="overflow-hidden">
               {ship.name && (
                 <VariantPopover
-                  variant={variant}
-                  manufacturer={variant.series.manufacturer}
-                  ship={ship}
+                  variant={popoverVariant}
+                  manufacturer={popoverManufacturer}
+                  ship={{ name: ship.name }}
                   triggerClassName="max-w-full cursor-pointer underline decoration-dotted underline-offset-4 hover:text-interaction-500 focus-visible:text-interaction-500 active:text-interaction-300"
                 >
                   <span className="block truncate" title={ship.name}>

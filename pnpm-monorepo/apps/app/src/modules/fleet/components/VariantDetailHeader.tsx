@@ -76,11 +76,9 @@ export const VariantDetailHeader = ({ variant }: Props) => {
       </div>
 
       <div className="flex flex-wrap gap-1 rounded-primary bg-secondary p-4">
-        {variant.tags
-          .toSorted((a, b) => a.key.localeCompare(b.key))
-          .map((tag) => (
-            <VariantTagBadge key={tag.id} tag={tag} />
-          ))}
+        {variant.tags.map((tag) => (
+          <VariantTagBadge key={tag.id} tag={tag} />
+        ))}
       </div>
     </>
   );
