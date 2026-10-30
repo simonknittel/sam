@@ -59,11 +59,6 @@ export interface SilcSalaryCalendarEntry extends CalendarEntryBase {
    * can see (see `isRoleVisible`).
    */
   readonly roleNames: string[];
-  /**
-   * True for a salary that the current roles of the actor will pay, false
-   * for a booking that the salary job made
-   */
-  readonly isForecast: boolean;
 }
 
 /** The phase of a profit distribution cycle that ends */

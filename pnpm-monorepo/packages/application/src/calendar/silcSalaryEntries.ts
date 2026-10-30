@@ -85,7 +85,6 @@ const findPaidSalaryRoles = async (
 
 const toEntries = (
   salaryDays: Map<string, SalaryDay>,
-  isForecast: boolean,
   href: string | null,
 ): SilcSalaryCalendarEntry[] =>
   [...salaryDays].map(([key, salaryDay]) => ({
@@ -98,7 +97,6 @@ const toEntries = (
     roleNames: [...salaryDay.roleNames].toSorted((first, second) =>
       first.localeCompare(second, "de"),
     ),
-    isForecast,
   }));
 
 /**
@@ -175,9 +173,6 @@ export const silcSalaryEntryCollector: CalendarEntryCollector<SilcSalaryCalendar
           ? `/app/spynet/citizen/${citizenId}/silc`
           : null;
 
-      return [
-        ...toEntries(bookedDays, false, href),
-        ...toEntries(forecastDays, true, href),
-      ];
+      return [...toEntries(bookedDays, href), ...toEntries(forecastDays, href)];
     },
   };

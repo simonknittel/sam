@@ -232,15 +232,15 @@ describe("findCalendarEntries", () => {
           ? [
               {
                 value: entry.value,
-                isForecast: entry.isForecast,
                 roleNames: entry.roleNames,
               },
             ]
           : [],
       ),
     ).toEqual([
-      { value: 130, isForecast: false, roleNames: ["Pilot"] },
-      { value: 70, isForecast: true, roleNames: ["Pilot"] },
+      // The booking of the past day, then the forecast of today
+      { value: 130, roleNames: ["Pilot"] },
+      { value: 70, roleNames: ["Pilot"] },
     ]);
   });
 
