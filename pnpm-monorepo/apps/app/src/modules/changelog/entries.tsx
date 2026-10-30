@@ -55,18 +55,17 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-10-30-kalender",
     date: "2026-10-30",
-    title: "Kalender statt Events auf dem Dashboard",
-    tags: ["Neu", "Änderung", "Kalender", "Dashboard"],
-    isTracked: false,
+    title: "Kalender statt Events",
+    tags: ["Änderung", "Kalender", "Dashboard"],
+    isTracked: true,
     body: () => (
       <>
         <p>
-          Die Kachel &bdquo;Events&ldquo; auf dem Dashboard heißt jetzt
-          &bdquo;Kalender&ldquo; und zeigt alles mit einem Datum aus den
-          nächsten 7 Tagen: Events, Geburtstage, die Fristen deiner Tasks, dein
+          Die Kachel &bdquo;Events&ldquo; auf dem Dashboard wurde mit einem
+          &bdquo;Kalender&ldquo; ersetzt und zeigt alles mit einem Datum der
+          nächsten 7 Tagen: Events, Geburtstage, die Task-Fristen, dein
           SILC-Gehalt, das Ende von SINcome-Phasen, den Ablauf deiner
-          Strafpunkte und saisonale Events. Du siehst nur, was du auch an
-          anderer Stelle sehen darfst.
+          Strafpunkte und saisonale Events.
         </p>
 
         <Link href={image20261030CalendarTile.src}>
@@ -76,13 +75,6 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
             isAboveTheFold
           />
         </Link>
-
-        <p>
-          &bdquo;Zum Kalender&ldquo; öffnet die neue App &bdquo;Kalender&ldquo;.
-          Dort wählst du einen beliebigen Zeitraum von bis zu 12 Monaten und
-          blendest einzelne Typen aus. Die Auswahl wird gespeichert und gilt
-          auch für die Kachel.
-        </p>
 
         <Link href={image20261030CalendarApp.src}>
           <ChangelogImage src={image20261030CalendarApp} alt="" />
@@ -96,13 +88,11 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     date: "2026-10-30",
     title: "Teilnahme an Events abschaltbar",
     tags: ["Neu", "Events"],
-    isTracked: false,
-    requiresAuth: { resource: "event", action: "read" },
+    isTracked: true,
     body: () => (
       <>
         <p>
-          Bei SAM-Events lässt sich die Teilnahme abschalten: beim Erstellen, in
-          den Einstellungen des Events und in Vorlagen. Ohne Teilnahme kann sich
+          Bei Events lässt sich die Teilnahme nun abschalten. Dadurch kann sich
           niemand anmelden, und Aufstellung, Teilnehmer und Flotte sind
           ausgeblendet.
         </p>
@@ -112,8 +102,8 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
         </Link>
 
         <p>
-          Beim Abschalten werden alle Anmeldungen storniert und die Teilnehmer
-          benachrichtigt.
+          Beim nachträglichen Abschalten werden alle Anmeldungen storniert und
+          die Teilnehmer benachrichtigt.
         </p>
 
         <Link href={image20261030EventParticipationDialog.src}>
