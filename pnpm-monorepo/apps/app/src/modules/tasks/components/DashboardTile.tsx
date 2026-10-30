@@ -21,7 +21,7 @@ export const TasksDashboardTile = async ({ className }: Props) => {
 
   return (
     <section className={clsx(className)}>
-      <h2 className="self-start font-mono text-2xl font-thin uppercase">
+      <h2 className="self-start font-mono text-lg text-white/60 uppercase">
         Meine Tasks
       </h2>
 

@@ -54,7 +54,7 @@ export default async function Page() {
           )}
 
           <section className="flex flex-none flex-col gap-0.5">
-            <h2 className="mb-2 self-start font-mono text-2xl font-thin uppercase">
+            <h2 className="mb-2 self-start font-mono text-lg text-white/60 uppercase">
               Spynet
             </h2>
 

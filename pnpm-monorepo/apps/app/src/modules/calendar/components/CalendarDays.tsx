@@ -37,9 +37,13 @@ const CalendarDay = ({
   headingLevel: Heading,
 }: CalendarDayProps) => (
   <section className="flex flex-col gap-0.5">
-    <Heading className="mb-2 flex items-baseline gap-2 font-mono text-lg uppercase">
+    <Heading className="mb-2 flex items-center gap-2 font-mono text-lg text-white/60 uppercase">
       {formatCalendarDay(date)}
-      {isToday && <span className="text-sm text-blue-500">Heute</span>}
+      {isToday && (
+        <span className="rounded-secondary border border-blue-500 bg-blue-500/20 px-1 py-0.5 font-mono text-xs text-text-primary uppercase opacity-60">
+          Heute
+        </span>
+      )}
     </Heading>
 
     {entries.map(({ entry, index }) => (
