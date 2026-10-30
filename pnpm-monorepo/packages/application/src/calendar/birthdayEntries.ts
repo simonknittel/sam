@@ -41,7 +41,8 @@ export const birthdayEntryCollector: CalendarEntryCollector<BirthdayCalendarEntr
           key: `birthday:${citizen.id}:${toLocalDateKey(date)}`,
           date,
           time: null,
-          href: `/app/spynet/citizen/${citizen.id}`,
+          /** The list of the birthdays has the read rule of this entry */
+          href: "/app/spynet/birthdays",
           citizen: { id: citizen.id, handle: citizen.handle },
         }));
       });

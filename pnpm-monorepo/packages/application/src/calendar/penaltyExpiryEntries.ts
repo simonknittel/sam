@@ -30,9 +30,9 @@ export const penaltyExpiryEntryCollector: CalendarEntryCollector<PenaltyExpiryCa
         select: { id: true, points: true, expiresAt: true },
       });
 
-      /** The penalty points tab of the own citizen lists the entries */
-      const href = actor.authorize("citizen", "read")
-        ? `/app/spynet/citizen/${citizenId}/penalty-points`
+      /** The penalty points app needs more than the own entries */
+      const href = actor.authorize("penaltyEntry", "read")
+        ? "/app/penalty-points"
         : null;
 
       return penaltyEntries.flatMap(({ id, points, expiresAt }) => {

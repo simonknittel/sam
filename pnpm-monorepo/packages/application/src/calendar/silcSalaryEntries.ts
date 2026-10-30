@@ -166,12 +166,10 @@ export const silcSalaryEntryCollector: CalendarEntryCollector<SilcSalaryCalendar
         }
       }
 
-      /** The SILC tab of the own citizen lists the bookings */
-      const href =
-        actor.authorize("citizen", "read") &&
-        actor.authorize("silcTransactionOfCurrentCitizen", "read")
-          ? `/app/spynet/citizen/${citizenId}/silc`
-          : null;
+      /** The SILC settings list the salaries of the roles */
+      const href = actor.authorize("silcSetting", "manage")
+        ? "/app/silc/settings"
+        : null;
 
       return [...toEntries(bookedDays, href), ...toEntries(forecastDays, href)];
     },
