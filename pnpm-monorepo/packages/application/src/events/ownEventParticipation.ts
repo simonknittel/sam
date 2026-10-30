@@ -57,6 +57,7 @@ export const findOwnEventParticipation = async (
 ): Promise<OwnEventParticipation> => {
   const event = await requireVisibleEvent(context, actor, eventId, {
     lineupEnabled: true,
+    participationEnabled: true,
   });
 
   const citizenId = actor.citizen?.id ?? null;

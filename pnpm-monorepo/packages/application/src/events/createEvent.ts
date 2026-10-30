@@ -61,6 +61,12 @@ export const createEventInputSchema = z.object({
   ),
   visibility: eventVisibilitySchema,
   visibility_role_ids: visibilityRoleIdsSchema.optional(),
+  participation_enabled: z
+    .boolean()
+    .optional()
+    .describe(
+      "False creates the event without sign-up and without lineup: nobody can sign up or be added. Default true (or the value of the template).",
+    ),
 });
 
 export type CreateEventInput = z.infer<typeof createEventInputSchema>;
@@ -128,6 +134,7 @@ const loadTemplateCopySource = async (
       select: {
         name: true,
         coverImage: { select: COPYABLE_UPLOAD_SELECT },
+        participationEnabled: true,
       },
     },
   );
@@ -142,6 +149,7 @@ const loadTemplateCopySource = async (
     id: template.id,
     name: template.name,
     coverImage: copiesCover ? template.coverImage : null,
+    participationEnabled: template.participationEnabled,
     content: copiesBriefing ? content : { ...content, briefingPages: [] },
     copiesBriefing,
     /**
@@ -248,6 +256,14 @@ export const createEvent = (
             visibilityRoles: {
               create: visibilityRoleIds.map((roleId) => ({ roleId })),
             },
+            /**
+             * The form of the app prefills the value of the template, thus
+             * the template only decides when the input has no value
+             */
+            participationEnabled:
+              input.participation_enabled ??
+              templateSource?.participationEnabled ??
+              true,
             createdById: citizenId,
             coverImageId: coverImageId ?? copiedCoverImage?.id ?? null,
             briefingPublishedAt: templateSource?.isBriefingPublished

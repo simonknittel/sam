@@ -23,14 +23,37 @@ const findParticipatableAppEvent = async (
       source: EventSource.APP,
       deletedAt: null,
     },
-    select: VISIBLE_EVENT_MANAGE_GUARD_SELECT,
+    select: {
+      ...VISIBLE_EVENT_MANAGE_GUARD_SELECT,
+      participationEnabled: true,
+    },
   });
   if (!event || !canActorSeeEvent(actor, event)) return null;
 
   return event;
 };
 
-/** Like `findParticipatableAppEvent()`, but throws instead of giving null */
+/**
+ * The guard of each write of a participation or of the lineup of an event:
+ * while a manager turned the participation off, nobody can sign up or be
+ * added, and the lineup is hidden. The positions stay for a later switch to
+ * true.
+ *
+ * @throws ConflictError
+ */
+export const requireParticipationEnabled = (
+  event: Pick<Event, "participationEnabled">,
+) => {
+  if (!event.participationEnabled)
+    throw new ConflictError(EventErrorMessage.ParticipationDisabled);
+};
+
+/**
+ * Like `findParticipatableAppEvent()`, but throws instead of giving null, and
+ * when the participation of the event is turned off
+ *
+ * @throws NotFoundError or ConflictError
+ */
 export const requireParticipatableAppEvent = async (
   context: ApplicationContext,
   actor: Actor,
@@ -38,6 +61,7 @@ export const requireParticipatableAppEvent = async (
 ) => {
   const event = await findParticipatableAppEvent(context, actor, eventId);
   if (!event) throw new NotFoundError(EventErrorMessage.NotFound);
+  requireParticipationEnabled(event);
 
   return event;
 };

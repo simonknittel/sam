@@ -37,6 +37,7 @@ const DETAIL_SELECT = {
   name: true,
   description: true,
   visibility: true,
+  participationEnabled: true,
   discordPublishTarget: true,
   discordPublishChannelId: true,
   discordPublishLocation: true,
@@ -198,6 +199,7 @@ const PICKER_SELECT = {
   name: true,
   description: true,
   visibility: true,
+  participationEnabled: true,
   discordPublishTarget: true,
   discordPublishChannelId: true,
   discordPublishLocation: true,
@@ -215,6 +217,7 @@ export interface UsableEventTemplateRow {
   readonly description: string | null;
   readonly visibility: EventVisibility;
   readonly visibilityRoleIds: string[];
+  readonly participationEnabled: boolean;
   readonly coverImageId: string | null;
   readonly discordPublishTarget: EventDiscordPublishTarget | null;
   readonly discordPublishChannelId: string | null;
@@ -252,6 +255,7 @@ export const findUsableEventTemplates = async (
       visibilityRoleIds: template.visibilityRoles.map(
         (visibilityRole) => visibilityRole.roleId,
       ),
+      participationEnabled: template.participationEnabled,
       coverImageId: template.coverImageId,
       discordPublishTarget: template.discordPublishTarget,
       discordPublishChannelId: template.discordPublishChannelId,

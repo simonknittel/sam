@@ -132,7 +132,8 @@ export const findAddableParticipantIds = async (
  *
  * @throws ForbiddenError without `event;read` or when the actor cannot
  * manage the event, NotFoundError when the actor cannot see the app event,
- * ConflictError `EventErrorMessage.EventEnded`
+ * ConflictError `EventErrorMessage.EventEnded` or
+ * `EventErrorMessage.ParticipationDisabled`
  */
 export const findAddableEventParticipantIds = async (
   context: ApplicationContext,

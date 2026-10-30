@@ -20,6 +20,11 @@ import {
 import { triggerNotificationsAfterSave } from "../notifications.js";
 import { idSchema } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
+import {
+  clearEventParticipation,
+  NO_CLEARED_EVENT_PARTICIPATION,
+  PARTICIPATION_DISABLED_REASON,
+} from "./clearEventParticipation.js";
 import { createEventActivity } from "./eventActivity.js";
 import { requireDescriptionFitsDiscord } from "./eventDescription.js";
 import {
@@ -54,11 +59,14 @@ export enum EventChange {
   /** The visibility or the visibility roles */
   Visibility = "visibility",
   LineupEnabled = "lineup_enabled",
+  ParticipationEnabled = "participation_enabled",
 }
 
 /**
  * Only the fields of the input change. The fields of an event that comes
  * from Discord stay as Discord gives them: only `lineup_enabled` can change.
+ * The participation of a Discord event is always on: its sign-ups come from
+ * Discord.
  */
 export const updateEventInputSchema = z.object({
   event_id: idSchema,
@@ -78,7 +86,13 @@ export const updateEventInputSchema = z.object({
     .boolean()
     .optional()
     .describe(
-      "True shows the lineup to the participants and notifies them, false hides it again. Needs can_manage_positions.",
+      "True shows the lineup to the participants and notifies them, false hides it again. Needs can_manage_positions and participation_enabled.",
+    ),
+  participation_enabled: z
+    .boolean()
+    .optional()
+    .describe(
+      "Only for an event of SAM (source app). False cancels all sign-ups (each participant gets a notification), removes the assigned citizens and the applications of all positions (the positions stay) and hides the lineup; while it is false, nobody can sign up or be added. True opens the sign-up again, but restores nothing. Needs can_manage_positions.",
     ),
 });
 
@@ -146,13 +160,24 @@ const CONTENT_CHANGES: ReadonlySet<EventChange> = new Set([
   EventChange.Schedule,
 ]);
 
+/** The changes of the two switches: they write no detail field */
+const SWITCH_CHANGES: ReadonlySet<EventChange> = new Set([
+  EventChange.LineupEnabled,
+  EventChange.ParticipationEnabled,
+]);
+
 const toSortedKey = (roleIds: readonly string[]) =>
   roleIds.toSorted().join(",");
 
 /**
  * Changes the details of an app event (name, description, schedule,
- * visibility) and whether its lineup is visible. Writes nothing when the
- * values are the same.
+ * visibility), whether its lineup is visible and whether its participation
+ * is on. Writes nothing when the values are the same.
+ *
+ * The switch of the participation to false cancels all sign-ups and clears
+ * the lineup assignments and applications in the same transaction (see
+ * `clearEventParticipation()`), and each cancelled participant gets the
+ * "removed from the event" notification.
  */
 export const updateEvent = (
   context: ApplicationContext,
@@ -165,6 +190,7 @@ export const updateEvent = (
       (field) => input[field] !== undefined,
     );
     const changesLineup = input.lineup_enabled !== undefined;
+    const changesParticipation = input.participation_enabled !== undefined;
 
     /**
      * Authorize the request
@@ -180,6 +206,7 @@ export const updateEvent = (
         name: true,
         description: true,
         lineupEnabled: true,
+        participationEnabled: true,
         discordPublishedId: true,
       },
     });
@@ -190,7 +217,10 @@ export const updateEvent = (
       !canActorSeeEvent(actor, event)
     )
       throw new NotFoundError(EventErrorMessage.NotFound);
-    if (changesDetails && event.source !== EventSource.APP)
+    if (
+      (changesDetails || changesParticipation) &&
+      event.source !== EventSource.APP
+    )
       throw new ConflictError(EventErrorMessage.DiscordEvent);
     if (!isEventUpdatable(event, context.now()))
       throw new ConflictError(EventErrorMessage.EventEnded);
@@ -198,6 +228,8 @@ export const updateEvent = (
       throw new ForbiddenError("The user cannot manage the event");
     if (changesLineup && !isAllowedToManagePositions(actor, event))
       throw new ForbiddenError("The user cannot manage the lineup");
+    if (changesParticipation && !isAllowedToManagePositions(actor, event))
+      throw new ForbiddenError("The user cannot manage the participation");
     const citizenId = actor.citizen?.id ?? null;
 
     /**
@@ -250,14 +282,28 @@ export const updateEvent = (
       changes.push(EventChange.Visibility);
     if (changesLineup && input.lineup_enabled !== event.lineupEnabled)
       changes.push(EventChange.LineupEnabled);
+    const participationEnabled =
+      input.participation_enabled ?? event.participationEnabled;
+    if (participationEnabled !== event.participationEnabled)
+      changes.push(EventChange.ParticipationEnabled);
 
     const changesContent = changes.some((change) =>
       CONTENT_CHANGES.has(change),
     );
     const changesDetailFields = changes.some(
-      (change) => change !== EventChange.LineupEnabled,
+      (change) => !SWITCH_CHANGES.has(change),
     );
     const changesLineupEnabled = changes.includes(EventChange.LineupEnabled);
+    const changesParticipationEnabled = changes.includes(
+      EventChange.ParticipationEnabled,
+    );
+
+    /**
+     * The lineup is hidden while the participation is off, thus its switch
+     * keeps the stored value
+     */
+    if (changesLineupEnabled && !participationEnabled)
+      throw new ConflictError(EventErrorMessage.ParticipationDisabled);
 
     if (changes.length <= 0)
       return {
@@ -284,75 +330,101 @@ export const updateEvent = (
     /**
      * Update the event and record the activity entries atomically
      */
-    await context.prisma.$transaction(async (transaction) => {
-      await transaction.event.update({
-        where: {
-          id: event.id,
-        },
-        data: {
-          ...(changesDetailFields
-            ? {
-                name,
-                description,
-                startTime,
-                endTime,
-                visibility,
-                visibilityRoles: {
-                  deleteMany: {},
-                  create: visibilityRoleIds.map((roleId) => ({ roleId })),
-                },
-              }
-            : {}),
-          ...(changesLineupEnabled
-            ? { lineupEnabled: input.lineup_enabled }
-            : {}),
-        },
-      });
-
-      if (changes.includes(EventChange.Name))
-        await createEventActivity(transaction, {
-          eventId: event.id,
-          citizenId,
-          type: EventActivityType.TITLE_UPDATED,
-          payload: {
-            previousName: event.name,
-            newName: name,
+    const clearedParticipation = await context.prisma.$transaction(
+      async (transaction) => {
+        await transaction.event.update({
+          where: {
+            id: event.id,
+          },
+          data: {
+            ...(changesDetailFields
+              ? {
+                  name,
+                  description,
+                  startTime,
+                  endTime,
+                  visibility,
+                  visibilityRoles: {
+                    deleteMany: {},
+                    create: visibilityRoleIds.map((roleId) => ({ roleId })),
+                  },
+                }
+              : {}),
+            ...(changesLineupEnabled
+              ? { lineupEnabled: input.lineup_enabled }
+              : {}),
+            ...(changesParticipationEnabled ? { participationEnabled } : {}),
           },
         });
 
-      if (changes.includes(EventChange.Description))
-        await createEventActivity(transaction, {
-          eventId: event.id,
-          citizenId,
-          type: EventActivityType.DESCRIPTION_UPDATED,
-          payload: null,
-        });
+        if (changes.includes(EventChange.Name))
+          await createEventActivity(transaction, {
+            eventId: event.id,
+            citizenId,
+            type: EventActivityType.TITLE_UPDATED,
+            payload: {
+              previousName: event.name,
+              newName: name,
+            },
+          });
 
-      if (changes.includes(EventChange.Schedule))
+        if (changes.includes(EventChange.Description))
+          await createEventActivity(transaction, {
+            eventId: event.id,
+            citizenId,
+            type: EventActivityType.DESCRIPTION_UPDATED,
+            payload: null,
+          });
+
+        if (changes.includes(EventChange.Schedule))
+          await createEventActivity(transaction, {
+            eventId: event.id,
+            citizenId,
+            type: EventActivityType.SCHEDULE_UPDATED,
+            payload: {
+              previousStartTime: event.startTime.toISOString(),
+              newStartTime: startTime.toISOString(),
+              previousEndTime: event.endTime?.toISOString() ?? null,
+              newEndTime: endTime?.toISOString() ?? null,
+            },
+          });
+
+        /**
+         * The activity feed only exists on app events; recorded in both
+         * directions, rendered as "published"/"withdrawn".
+         */
+        if (changesLineupEnabled && event.source === EventSource.APP)
+          await createEventActivity(transaction, {
+            eventId: event.id,
+            citizenId,
+            type: EventActivityType.LINEUP_TOGGLED,
+            payload: { enabled: input.lineup_enabled === true },
+          });
+
+        if (!changesParticipationEnabled) return NO_CLEARED_EVENT_PARTICIPATION;
+
+        // The switch to true restores nothing
+        const cleared = participationEnabled
+          ? NO_CLEARED_EVENT_PARTICIPATION
+          : await clearEventParticipation(transaction, {
+              eventId: event.id,
+              cancelledById: citizenId,
+              cancelledAt: context.now(),
+            });
+
         await createEventActivity(transaction, {
           eventId: event.id,
           citizenId,
-          type: EventActivityType.SCHEDULE_UPDATED,
+          type: EventActivityType.PARTICIPATION_TOGGLED,
           payload: {
-            previousStartTime: event.startTime.toISOString(),
-            newStartTime: startTime.toISOString(),
-            previousEndTime: event.endTime?.toISOString() ?? null,
-            newEndTime: endTime?.toISOString() ?? null,
+            enabled: participationEnabled,
+            cancelledParticipantCount: cleared.cancelledParticipantCount,
           },
         });
 
-      /**
-       * The activity feed only exists on app events; recorded in both
-       * directions, rendered as "published"/"withdrawn".
-       */
-      if (changesLineupEnabled && event.source === EventSource.APP)
-        await createEventActivity(transaction, {
-          eventId: event.id,
-          citizenId,
-          type: EventActivityType.LINEUP_TOGGLED,
-          payload: { enabled: input.lineup_enabled === true },
-        });
-    });
+        return cleared;
+      },
+    );
 
     const auditEvents: AuditEventInput[] = [];
     if (changesContent)
@@ -385,6 +457,19 @@ export const updateEvent = (
         },
         createdById: actor.userId,
       });
+    if (changesParticipationEnabled)
+      auditEvents.push({
+        type: AuditEventType.EVENT_PARTICIPATION_STATUS_CHANGED,
+        data: {
+          eventId: event.id,
+          enabled: participationEnabled,
+          cancelledParticipantCount:
+            clearedParticipation.cancelledParticipantCount,
+          clearedPositionCount: clearedParticipation.clearedPositionCount,
+          deletedApplicationCount: clearedParticipation.deletedApplicationCount,
+        },
+        createdById: actor.userId,
+      });
     await context.audit.create(auditEvents);
 
     const notifications: Notification[] = [];
@@ -397,6 +482,15 @@ export const updateEvent = (
       notifications.push({
         type: "EventLineupEnabled",
         payload: { eventId: event.id },
+      });
+    for (const cancelledCitizenId of clearedParticipation.cancelledCitizenIds)
+      notifications.push({
+        type: "EventParticipationRemoved",
+        payload: {
+          eventId: event.id,
+          citizenId: cancelledCitizenId,
+          reason: PARTICIPATION_DISABLED_REASON,
+        },
       });
     const notificationsSent =
       notifications.length > 0

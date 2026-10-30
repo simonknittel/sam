@@ -80,6 +80,8 @@ export interface EventListEntry {
   readonly visibility: EventVisibilityType;
   /** The active participations */
   readonly participant_count: number;
+  /** False when a manager turned off the participation (see `get_event`) */
+  readonly participation_enabled: boolean;
   readonly is_participating: boolean;
   /** Open and unread for the actor (see the read markers) */
   readonly is_new: boolean;
@@ -112,6 +114,8 @@ const eventListSelect = (
     discordImage: true,
     // For the lineup and briefing checks
     lineupEnabled: true,
+    // Also hides the sign-up and the participant count of the event card
+    participationEnabled: true,
     discordCreatorId: true,
     createdById: true,
     managers: EVENT_PAGE_RELATIONS_SELECT.managers,
@@ -338,6 +342,7 @@ export const listEvents = async (
       source: toEventSourceType(event.source),
       visibility: toEventVisibilityType(event.visibility),
       participant_count: event._count.participants,
+      participation_enabled: event.participationEnabled,
       is_participating: event.participants.length > 0,
       is_new: page.newEventIds.has(event.id),
     })),

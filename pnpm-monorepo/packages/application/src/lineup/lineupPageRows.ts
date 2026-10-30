@@ -80,6 +80,7 @@ export const findEventLineupCitizens = async (
 ): Promise<EventLineupCitizen[]> => {
   const event = await requireVisibleEvent(context, actor, eventId, {
     lineupEnabled: true,
+    participationEnabled: true,
     participants: EVENT_PAGE_RELATIONS_SELECT.participants,
   });
 

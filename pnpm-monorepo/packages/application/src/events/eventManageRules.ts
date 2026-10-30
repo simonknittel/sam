@@ -46,10 +46,18 @@ export const isAllowedToManagePositions = (
   isEventOrganizer(actor, event) ||
   actor.authorize("othersEventPosition", "manage");
 
+/**
+ * The lineup shows to everybody when it is enabled, and to the managers of
+ * the positions always. While the participation of the event is turned off,
+ * the lineup shows to nobody.
+ */
 export const isLineupVisible = (
   actor: Actor,
-  event: EventManageInput & Pick<Event, "lineupEnabled">,
-) => event.lineupEnabled || isAllowedToManagePositions(actor, event);
+  event: EventManageInput &
+    Pick<Event, "lineupEnabled" | "participationEnabled">,
+) =>
+  event.participationEnabled &&
+  (event.lineupEnabled || isAllowedToManagePositions(actor, event));
 
 /** An event that has not ended yet can change */
 export const isEventUpdatable = (

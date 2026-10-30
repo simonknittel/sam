@@ -53,6 +53,11 @@ export interface GetEventOutput {
   readonly visibility_role_ids: string[];
   readonly source: EventSourceType;
   readonly lineup_enabled: boolean;
+  /**
+   * False when a manager turned off the participation: nobody can sign up
+   * or be added, and the lineup is hidden. Always true for a Discord event.
+   */
+  readonly participation_enabled: boolean;
   readonly created_by: CitizenReference | null;
   readonly managers: CitizenReference[];
   /**
@@ -132,6 +137,7 @@ const toEventOutput = async (
       : [],
     source: toEventSourceType(event.source),
     lineup_enabled: event.lineupEnabled,
+    participation_enabled: event.participationEnabled,
     created_by: toCitizenReference(event.createdBy),
     managers: toCitizenReferences(event.managers),
     participants,

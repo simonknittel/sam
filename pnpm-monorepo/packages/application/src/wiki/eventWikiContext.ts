@@ -71,6 +71,7 @@ export interface EventWikiContext {
     | "startTime"
     | "endTime"
     | "briefingPublishedAt"
+    | "participationEnabled"
   > | null;
   /** Flat lineup positions, e.g. for the POSITION scope picker */
   positions: EventWikiContextPosition[];
@@ -185,6 +186,7 @@ export const buildEventWikiContext = (
           startTime: true,
           endTime: true,
           briefingPublishedAt: true,
+          participationEnabled: true,
           managers: { select: { id: true } },
           visibilityRoles: { select: { roleId: true } },
           positions: { select: EVENT_WIKI_POSITION_SELECT },
@@ -234,6 +236,7 @@ export const buildEventWikiContext = (
     const frozen = !isEventUpdatable(event, context.now());
     const permissions = resolveEventWikiPagePermissions(allPages, viewer, {
       frozen,
+      participationEnabled: event.participationEnabled,
     });
     const pages = allPages.filter((page) => page.deletedAt === null);
     const rootPage = pickEventWikiRootPage(pages);
@@ -251,6 +254,7 @@ export const buildEventWikiContext = (
         startTime: event.startTime,
         endTime: event.endTime,
         briefingPublishedAt: event.briefingPublishedAt,
+        participationEnabled: event.participationEnabled,
       },
       positions: event.positions,
       viewer,

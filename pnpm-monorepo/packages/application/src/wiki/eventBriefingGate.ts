@@ -4,7 +4,10 @@ import {
   type Event,
   type EventParticipant,
 } from "@sam-monorepo/database/client";
-import { collectPositionScopeIdsForCitizen } from "@sam-monorepo/domain";
+import {
+  collectPositionScopeIdsForCitizen,
+  isParticipationEventWikiScope,
+} from "@sam-monorepo/domain";
 import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import {
@@ -18,7 +21,7 @@ import {
  * check if the actor takes part.
  */
 export type EventBriefingGateEvent = EventManageInput &
-  Pick<Event, "id"> & {
+  Pick<Event, "id" | "participationEnabled"> & {
     readonly participants: readonly Pick<
       EventParticipant,
       "citizenId" | "discordUserId"
@@ -60,6 +63,13 @@ export const canReadEventBriefing = async (
   if (!rootPage) return false;
 
   if (isAllowedToManageEvent(actor, event)) return true;
+
+  // The rule of the resolver: these scopes grant like MANAGERS then
+  if (
+    !event.participationEnabled &&
+    isParticipationEventWikiScope(rootPage.eventReadScope)
+  )
+    return false;
 
   switch (rootPage.eventReadScope) {
     case WikiPageEventScope.ALL:
