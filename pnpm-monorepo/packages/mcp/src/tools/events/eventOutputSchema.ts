@@ -20,6 +20,11 @@ export const eventOutputSchema = z.strictObject({
   visibility_role_ids: z.array(z.string()),
   source: z.enum(EventSourceType),
   lineup_enabled: z.boolean(),
+  participation_enabled: z
+    .boolean()
+    .describe(
+      "False when a manager turned off the participation: nobody can sign up or be added, and the lineup is not available.",
+    ),
   created_by: citizenReferenceSchema.nullable(),
   managers: z.array(citizenReferenceSchema),
   participants: z.array(
