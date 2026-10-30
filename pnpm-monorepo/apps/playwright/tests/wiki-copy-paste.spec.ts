@@ -372,7 +372,10 @@ test("a pasted copy keeps an image in use after the source removes it", async ({
   ).toHaveAttribute("href", `/app/wiki/${copy.id}/${copy.slug}`);
 
   await page.goto("/app/uploads?usage=unused");
-  await expect(page.getByText("Keine Uploads für diese Filter.")).toBeVisible();
+  // While the page streams, a hidden copy of the text can also exist
+  await expect(
+    page.locator("#main-content").getByText("Keine Uploads für diese Filter."),
+  ).toBeVisible();
 });
 
 test("an event created from a template links the uploads of its briefing copy", async ({
