@@ -94,6 +94,11 @@ export enum AuditEventType {
   EVENT_MANAGERS_ASSIGNED = "EVENT_MANAGERS_ASSIGNED",
   EVENT_MANAGER_REMOVED = "EVENT_MANAGER_REMOVED",
   EVENT_LINEUP_STATUS_CHANGED = "EVENT_LINEUP_STATUS_CHANGED",
+  /**
+   * The participation switch of an app event. The switch to false cancels
+   * the sign-ups and clears the assignments and applications of the lineup.
+   */
+  EVENT_PARTICIPATION_STATUS_CHANGED = "EVENT_PARTICIPATION_STATUS_CHANGED",
   EVENT_LINEUP_ORDER_CHANGED = "EVENT_LINEUP_ORDER_CHANGED",
   EVENT_POSITION_CITIZEN_ASSIGNED = "EVENT_POSITION_CITIZEN_ASSIGNED",
   EVENT_POSITION_CITIZEN_REMOVED = "EVENT_POSITION_CITIZEN_REMOVED",
@@ -113,7 +118,9 @@ export enum AuditEventType {
    */
   EVENT_TEMPLATE_POSITION_COPIED = "EVENT_TEMPLATE_POSITION_COPIED",
   EVENT_TEMPLATE_CREATED = "EVENT_TEMPLATE_CREATED",
+  /** @deprecated Superseded by EVENT_TEMPLATE_UPDATED_V2 (adds the participation switch) */
   EVENT_TEMPLATE_UPDATED = "EVENT_TEMPLATE_UPDATED",
+  EVENT_TEMPLATE_UPDATED_V2 = "EVENT_TEMPLATE_UPDATED_V2",
   EVENT_TEMPLATE_DUPLICATED = "EVENT_TEMPLATE_DUPLICATED",
   /**
    * The reverse direction of EVENT_CREATED_FROM_TEMPLATE: a manager turned
@@ -834,6 +841,15 @@ export interface AuditEventDataByType {
     enabled: boolean;
   };
 
+  /** The counts are 0 when the switch changed to true */
+  [AuditEventType.EVENT_PARTICIPATION_STATUS_CHANGED]: {
+    eventId: string;
+    enabled: boolean;
+    cancelledParticipantCount: number;
+    clearedPositionCount: number;
+    deletedApplicationCount: number;
+  };
+
   [AuditEventType.EVENT_LINEUP_ORDER_CHANGED]: {
     eventId: string;
   };
@@ -947,6 +963,16 @@ export interface AuditEventDataByType {
     visibility: string;
     visibilityRoleIds: string[];
     coverImageChanged: boolean;
+  };
+
+  [AuditEventType.EVENT_TEMPLATE_UPDATED_V2]: {
+    templateId: string;
+    previousName: string;
+    name: string;
+    visibility: string;
+    visibilityRoleIds: string[];
+    coverImageChanged: boolean;
+    participationEnabled: boolean;
   };
 
   [AuditEventType.EVENT_TEMPLATE_DUPLICATED]: {

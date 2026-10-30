@@ -2,6 +2,7 @@ import {
   WikiPageEventScope,
   WikiPageUploadability,
 } from "@sam-monorepo/database/browser";
+import { isParticipationEventWikiScope } from "../wiki/eventWikiScopes.js";
 import {
   findWikiPageSettingSource,
   resolveWikiPageTier,
@@ -60,6 +61,16 @@ export interface ResolvedEventWikiPagePermissions {
   readonly editScopeSourceId: string;
   readonly imageUploadabilitySourceId: string;
   readonly attachmentUploadabilitySourceId: string;
+}
+
+export interface EventWikiResolverOptions {
+  /** The event is over: nobody edits or uploads anymore */
+  readonly frozen: boolean;
+  /**
+   * False while the participation of the event is turned off: then the
+   * scopes PARTICIPANTS and POSITION grant nothing beyond the managers
+   */
+  readonly participationEnabled: boolean;
 }
 
 interface FlatPositionAssignment {
@@ -159,13 +170,16 @@ const findScopeSource = (
  *   validated to always carry explicit scopes; this is the safety net.
  * - MANAGERS as an explicit scope grants nothing beyond the fixed manage
  *   tier — it is the "private" value.
+ * - While the participation of the event is turned off, PARTICIPANTS and
+ *   POSITION grant like MANAGERS (fail closed, like a dangling POSITION
+ *   reference).
  * - After the event is over (`frozen`) canEdit is false for everyone;
  *   reading and the managers' canAdmin stay.
  */
 export const createEventWikiPagePermissionResolver = (
   pages: readonly EventWikiPagePermissionSource[],
   viewer: EventWikiViewer,
-  options: { readonly frozen: boolean },
+  options: EventWikiResolverOptions,
 ) => {
   const pagesById = new Map(pages.map((page) => [page.id, page]));
   const readScopeSourceCache = new Map<string, EventWikiPagePermissionSource>();
@@ -198,6 +212,9 @@ export const createEventWikiPagePermissionResolver = (
     scope: WikiPageEventScope,
     positionId: string | null,
   ) => {
+    if (!options.participationEnabled && isParticipationEventWikiScope(scope))
+      return false;
+
     switch (scope) {
       case WikiPageEventScope.ALL:
         return true;
@@ -351,7 +368,7 @@ export const createEventWikiPagePermissionResolver = (
 export const resolveEventWikiPagePermissions = (
   pages: readonly EventWikiPagePermissionSource[],
   viewer: EventWikiViewer,
-  options: { readonly frozen: boolean },
+  options: EventWikiResolverOptions,
 ) => {
   const resolver = createEventWikiPagePermissionResolver(
     pages,

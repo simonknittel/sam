@@ -34,7 +34,12 @@ const resolve = (
   pages: readonly EventWikiPagePermissionSource[],
   currentViewer: EventWikiViewer,
   frozen = false,
-) => resolveEventWikiPagePermissions(pages, currentViewer, { frozen });
+  participationEnabled = true,
+) =>
+  resolveEventWikiPagePermissions(pages, currentViewer, {
+    frozen,
+    participationEnabled,
+  });
 
 describe("resolve event wiki page permissions", () => {
   test("event managers hold all tiers on managers-only pages", () => {
@@ -136,6 +141,51 @@ describe("resolve event wiki page permissions", () => {
 
     expect(asParticipant.get("root")).toMatchObject({ canRead: false });
     expect(asManager.get("root")).toMatchObject({ canRead: true });
+  });
+
+  test("while the participation is off, PARTICIPANTS and POSITION grant only the managers", () => {
+    const pages = [
+      page({
+        id: "root",
+        eventReadScope: WikiPageEventScope.PARTICIPANTS,
+        eventEditScope: WikiPageEventScope.MANAGERS,
+      }),
+      page({
+        id: "squad-page",
+        parentId: "root",
+        eventReadScope: WikiPageEventScope.POSITION,
+        eventReadScopePositionId: "squad",
+        eventEditScope: WikiPageEventScope.POSITION,
+        eventEditScopePositionId: "squad",
+      }),
+    ] as const;
+    const member = viewer({
+      isParticipant: true,
+      positionScopeIds: new Set(["squad"]),
+    });
+
+    const asMember = resolve(pages, member, false, false);
+    const asManager = resolve(
+      pages,
+      viewer({ isEventManager: true }),
+      false,
+      false,
+    );
+
+    for (const pageId of ["root", "squad-page"]) {
+      expect(asMember.get(pageId)).toMatchObject({
+        canRead: false,
+        canEdit: false,
+      });
+      expect(asManager.get(pageId)).toMatchObject({
+        canRead: true,
+        canEdit: true,
+      });
+    }
+    expect(resolve(pages, member).get("squad-page")).toMatchObject({
+      canRead: true,
+      canEdit: true,
+    });
   });
 
   test("edit scope POSITION grants subtree members editing and, implied, reading", () => {

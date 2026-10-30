@@ -204,6 +204,7 @@ export {
   createEventWikiPagePermissionResolver,
   resolveEventWikiPagePermissions,
   type EventWikiPagePermissionSource,
+  type EventWikiResolverOptions,
   type EventWikiViewer,
   type ResolvedEventWikiPagePermissions,
 } from "./permissions/resolveEventWikiPagePermissions.js";
@@ -352,6 +353,7 @@ export {
   EventWikiScopeTier,
   getEffectiveEventWikiScope,
   isEventWikiScopeSubset,
+  isParticipationEventWikiScope,
   type EventWikiScopeSelection,
 } from "./wiki/eventWikiScopes.js";
 export {

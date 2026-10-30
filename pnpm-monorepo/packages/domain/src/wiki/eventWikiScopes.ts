@@ -9,6 +9,17 @@ export interface EventWikiScopeSelection {
   readonly positionId: string | null;
 }
 
+/**
+ * Whether the audience of the scope comes from the participation in the
+ * event: the participants (PARTICIPANTS) and the citizens of a lineup branch
+ * (POSITION). While the participation of the event is turned off, these
+ * scopes grant like MANAGERS (fail closed, see
+ * `createEventWikiPagePermissionResolver()`).
+ */
+export const isParticipationEventWikiScope = (scope: WikiPageEventScope) =>
+  scope === WikiPageEventScope.PARTICIPANTS ||
+  scope === WikiPageEventScope.POSITION;
+
 /** The two scopes of a briefing page */
 export enum EventWikiScopeTier {
   Read = "read",
