@@ -34,9 +34,7 @@ export const CalendarTile = async ({ className }: Props) => {
       )}
       data-onboarding-target={OnboardingTargetId.DashboardCalendar}
     >
-      <h2 className="mb-2 w-full font-mono text-2xl font-thin uppercase">
-        Kalender
-      </h2>
+      <h2 className="sr-only">Kalender</h2>
 
       {entries.length > 0 ? (
         <CalendarDays
