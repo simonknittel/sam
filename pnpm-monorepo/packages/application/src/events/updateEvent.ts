@@ -228,7 +228,17 @@ export const updateEvent = (
       throw new ForbiddenError("The user cannot manage the event");
     if (changesLineup && !isAllowedToManagePositions(actor, event))
       throw new ForbiddenError("The user cannot manage the lineup");
-    if (changesParticipation && !isAllowedToManagePositions(actor, event))
+    /**
+     * The switch to false cancels all sign-ups, thus it needs the rule of
+     * the removal of participants too, not only the one of the lineup
+     */
+    if (
+      changesParticipation &&
+      !(
+        isAllowedToManageEvent(actor, event) &&
+        isAllowedToManagePositions(actor, event)
+      )
+    )
       throw new ForbiddenError("The user cannot manage the participation");
     const citizenId = actor.citizen?.id ?? null;
 

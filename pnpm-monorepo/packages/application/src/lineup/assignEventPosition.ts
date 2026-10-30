@@ -3,6 +3,7 @@ import * as z from "zod";
 import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { ConflictError, ValidationError } from "../errors.js";
+import { lockParticipationEnabledEvent } from "../events/participatableAppEvent.js";
 import { idSchema } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
 import { LineupErrorMessage } from "./lineupErrors.js";
@@ -111,9 +112,18 @@ export const assignEventPosition = (
         input.citizen_id,
       );
 
-      await context.prisma.eventPosition.update({
-        where: { id: position.id },
-        data: { citizen: { connect: { id: citizen.id } } },
+      /**
+       * The lock keeps a switch of the participation to false from clearing
+       * the assignments before this one. A removal needs no lock: the
+       * switch removes the citizen too.
+       */
+      await context.prisma.$transaction(async (transaction) => {
+        await lockParticipationEnabledEvent(transaction, event.id);
+
+        await transaction.eventPosition.update({
+          where: { id: position.id },
+          data: { citizen: { connect: { id: citizen.id } } },
+        });
       });
 
       await context.audit.create([

@@ -17,7 +17,10 @@ import { participationTextSchema } from "./eventInputSchemas.js";
 import { requireManageableEvent } from "./eventManageGuard.js";
 import { isAllowedToManageEvent } from "./eventManageRules.js";
 import { loadEventOutput, type GetEventOutput } from "./getEvent.js";
-import { requireParticipatableAppEvent } from "./participatableAppEvent.js";
+import {
+  lockParticipationEnabledEvent,
+  requireParticipatableAppEvent,
+} from "./participatableAppEvent.js";
 
 export const addEventParticipantsInputSchema = z.object({
   event_id: idSchema,
@@ -119,6 +122,8 @@ export const addEventParticipants = (
     const addedCitizenIds =
       citizenIdsToAdd.length > 0
         ? await context.prisma.$transaction(async (transaction) => {
+            await lockParticipationEnabledEvent(transaction, event.id);
+
             const created =
               await transaction.eventParticipant.createManyAndReturn({
                 data: citizenIdsToAdd.map((citizenId) => ({

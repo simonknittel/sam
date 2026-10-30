@@ -8,13 +8,14 @@ import {
   TEST_NOW,
 } from "../../test/applicationContext.js";
 import { truncateAllTables } from "../../test/database.js";
-import { ConflictError } from "../errors.js";
+import { ConflictError, ForbiddenError } from "../errors.js";
 import { applyForEventPosition } from "../lineup/applyForEventPosition.js";
 import { assignEventPosition } from "../lineup/assignEventPosition.js";
 import { findEventParticipantRecipients } from "../notifications/recipients/eventParticipants.js";
 import { addEventParticipants } from "./addEventParticipants.js";
 import { PARTICIPATION_DISABLED_REASON } from "./clearEventParticipation.js";
 import { EventErrorMessage } from "./eventErrors.js";
+import { lockParticipationEnabledEvent } from "./participatableAppEvent.js";
 import { signUpForEvent } from "./signUpForEvent.js";
 import { EventChange, updateEvent } from "./updateEvent.js";
 
@@ -185,6 +186,13 @@ test("the switch to false cancels the sign-ups, clears the lineup and notifies e
     await findEventParticipantRecipients(context, { eventId: event.id }),
   ).toBeNull();
 
+  // A write that passed the guard before the switch is refused in its transaction
+  await expect(
+    prisma.$transaction((transaction) =>
+      lockParticipationEnabledEvent(transaction, event.id),
+    ),
+  ).rejects.toThrow(PARTICIPATION_DISABLED);
+
   // The switch to true restores nothing and notifies nobody
   const { context: secondContext, notifications: secondNotifications } =
     createTestApplicationContext();
@@ -255,4 +263,35 @@ test("while the participation is off, nobody signs up, is added, applies or is a
   ).toEqual({ lineupEnabled: false });
   expect(auditEvents).toEqual([]);
   expect(notifications).toEqual([]);
+});
+
+test("a manager of the positions who cannot manage the event cannot turn the participation off", async () => {
+  const [organizer, positionManager] = await Promise.all(
+    ["organizer", "position-manager"].map(createCitizen),
+  );
+  const event = await createAppEvent(organizer!.id);
+  const { context, auditEvents } = createTestApplicationContext();
+
+  await expect(
+    updateEvent(
+      context,
+      createTestActor({
+        userId: `user-${positionManager!.id}`,
+        citizen: positionManager!,
+        permissionStrings: [
+          ...MEMBER_PERMISSION_STRINGS,
+          "othersEventPosition;manage",
+        ],
+      }),
+      { event_id: event.id, participation_enabled: false },
+    ),
+  ).rejects.toThrow(ForbiddenError);
+
+  expect(
+    await prisma.event.findUniqueOrThrow({
+      where: { id: event.id },
+      select: { participationEnabled: true },
+    }),
+  ).toEqual({ participationEnabled: true });
+  expect(auditEvents).toEqual([]);
 });

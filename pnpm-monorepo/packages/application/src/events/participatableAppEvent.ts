@@ -1,5 +1,5 @@
 import { EventSource } from "@sam-monorepo/database/browser";
-import type { Event } from "@sam-monorepo/database/client";
+import type { Event, Prisma } from "@sam-monorepo/database/client";
 import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { ConflictError, NotFoundError } from "../errors.js";
@@ -46,6 +46,30 @@ export const requireParticipationEnabled = (
 ) => {
   if (!event.participationEnabled)
     throw new ConflictError(EventErrorMessage.ParticipationDisabled);
+};
+
+/**
+ * The check of `requireParticipationEnabled()` again, in the transaction of
+ * a write that adds a participant, an application or an assignment. The
+ * shared lock on the row of the event waits for a switch to false that
+ * changed the row first, and a switch that comes later waits for this
+ * transaction. Thus the switch cannot clear the participation before the
+ * write adds a row that it then keeps. Call it first in the transaction.
+ *
+ * PostgreSQL releases the lock at the commit or the rollback.
+ *
+ * @throws NotFoundError or ConflictError
+ */
+export const lockParticipationEnabledEvent = async (
+  transaction: Prisma.TransactionClient,
+  eventId: Event["id"],
+) => {
+  const [event] = await transaction.$queryRaw<
+    Pick<Event, "participationEnabled">[]
+  >`SELECT "participationEnabled" FROM "Event" WHERE "id" = ${eventId} FOR SHARE`;
+  if (!event) throw new NotFoundError(EventErrorMessage.NotFound);
+
+  requireParticipationEnabled(event);
 };
 
 /**
