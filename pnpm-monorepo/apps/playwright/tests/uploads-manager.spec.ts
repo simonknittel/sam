@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test";
 import { WikiPageUploadKind } from "@sam-monorepo/database/client";
 import path from "node:path";
 import {
@@ -35,6 +36,10 @@ const imagePath = path.join(
 
 /** Deleting the object in the bucket happens after the action responded. */
 const BUCKET_TIMEOUT = 15_000;
+
+/** While the page streams, a hidden copy of the text can also exist */
+const mainContentText = (page: Page, text: string) =>
+  page.locator("#main-content").getByText(text);
 
 const objectUrl = (uploadId: string) => {
   const { s3Port } = readStackState();
@@ -156,11 +161,8 @@ test("uploads of other users stay hidden without the permission", async ({
   await signIn(citizen.user);
   await page.goto("/app/uploads");
 
-  /** While the page streams, a hidden copy of the text can also exist */
   await expect(
-    page
-      .locator("#main-content")
-      .getByText("Du hast bisher keine Dateien hochgeladen."),
+    mainContentText(page, "Du hast bisher keine Dateien hochgeladen."),
   ).toBeVisible();
   await expect(page.getByText("Fremdes Dokument.pdf")).toHaveCount(0);
 });
@@ -230,7 +232,9 @@ test("a manager sees every upload with its author and can filter them", async ({
 
   // The author filter keeps only that author's uploads
   await page.goto(`/app/uploads?createdById=${manager.entity.id}`);
-  await expect(page.getByText("Keine Uploads für diese Filter.")).toBeVisible();
+  await expect(
+    mainContentText(page, "Keine Uploads für diese Filter."),
+  ).toBeVisible();
 });
 
 /**
@@ -311,7 +315,9 @@ test("an image removed from a page stays in use through the snapshot of the old 
   await expect(row.getByText("Unbenutzt", { exact: true })).toHaveCount(0);
 
   await page.goto("/app/uploads?usage=unused");
-  await expect(page.getByText("Keine Uploads für diese Filter.")).toBeVisible();
+  await expect(
+    mainContentText(page, "Keine Uploads für diese Filter."),
+  ).toBeVisible();
 });
 
 test("a manager deletes an upload from the database and the bucket", async ({
