@@ -169,7 +169,7 @@ test("the events tour highlights the dashboard calendar and shows screenshot ste
     .getByRole("button", { name: "Starten" })
     .click();
 
-  const calendarStep = stepDialog(page, "Der Eventkalender");
+  const calendarStep = stepDialog(page, "Der Kalender");
   await expect(calendarStep).toBeVisible();
   await expect(
     page.locator('[data-onboarding-target="dashboard-calendar"]'),
