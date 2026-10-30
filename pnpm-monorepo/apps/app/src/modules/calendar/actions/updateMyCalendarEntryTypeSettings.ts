@@ -17,5 +17,7 @@ export const updateMyCalendarEntryTypeSettings = createUseCaseAction({
   parseFormData: (formData) => ({
     enabled_types: [...new Set(formData.keys())],
   }),
+  /** A save that changes nothing leaves the page as it is */
+  refresh: (output) => output.enabled.length + output.disabled.length > 0,
   success: (t) => t("Common.successfullySaved"),
 });

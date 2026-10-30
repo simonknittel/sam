@@ -4,13 +4,13 @@ import {
   throwApplicationErrorForPage,
 } from "@/modules/application";
 import {
-  EventListStatus,
-  EventParticipationFilter,
-  EventTypeFilter,
   findEventListPage,
   UnknownCursorBehavior,
+  type EventListStatus,
+  type EventParticipationFilter,
+  type EventTypeFilter,
 } from "@sam-monorepo/application";
-import { CursorDirection } from "@sam-monorepo/domain";
+import type { CursorDirection } from "@sam-monorepo/domain";
 import { cache } from "react";
 
 const EVENTS_PAGE_SIZE = 10;
@@ -22,11 +22,11 @@ const EVENTS_PAGE_SIZE = 10;
  */
 export const getEvents = cache(
   async (
-    status: EventListStatus = EventListStatus.Open,
-    participating: EventParticipationFilter = EventParticipationFilter.All,
-    type: EventTypeFilter = EventTypeFilter.All,
-    cursor?: string | null,
-    direction: CursorDirection = CursorDirection.Next,
+    status: EventListStatus,
+    participating: EventParticipationFilter,
+    type: EventTypeFilter,
+    cursor: string | null,
+    direction: CursorDirection,
   ) => {
     try {
       return await findEventListPage(

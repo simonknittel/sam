@@ -1,10 +1,11 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { CalendarTile } from "@/modules/calendar/components/CalendarTile";
+import { CalendarTileSkeleton } from "@/modules/calendar/components/CalendarTileSkeleton";
 import { ProfileTile } from "@/modules/citizen/components/ProfileTile";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
+import { ErrorBoundary } from "@/modules/common/components/SuspenseWithErrorBoundaryTile/ErrorBoundary";
 import { DashboardFooter } from "@/modules/dashboard/components/DashboardFooter";
 import { DashboardGreetingBanner } from "@/modules/dashboard/components/DashboardGreetingBanner";
-import { TileSkeleton } from "@/modules/dashboard/components/TileSkeleton";
 import { SeasonalSpynetSearchTileSlot } from "@/modules/seasonal-events/components/SeasonalSpynetSearchTileSlot";
 import { SpynetSearchTile } from "@/modules/spynet/components/SpynetSearchTile/SpynetSearchTile";
 import { TasksDashboardTile } from "@/modules/tasks/components/DashboardTile";
@@ -31,10 +32,13 @@ export default async function Page() {
       cannot change their layout. */}
       <div className="@container/main flex flex-row flex-wrap justify-center gap-6">
         <div className="flex w-100 flex-none flex-col gap-6 @7xl/main:max-w-none @7xl/main:flex-1">
-          {/* For everybody: the seasonal entries need no permission */}
-          <Suspense fallback={<TileSkeleton />}>
-            <CalendarTile className="@container/events" />
-          </Suspense>
+          {/* For everybody: the seasonal entries need no permission. An error
+          of the tile leaves the rest of the dashboard. */}
+          <ErrorBoundary>
+            <Suspense fallback={<CalendarTileSkeleton />}>
+              <CalendarTile className="@container/events" />
+            </Suspense>
+          </ErrorBoundary>
 
           <SuspenseWithErrorBoundaryTile>
             <WikiDashboardPageTile />

@@ -16,11 +16,8 @@ export const CALENDAR_TO_PARAM = "to";
 /** The default range of the calendar app: today and the next 30 days */
 const DEFAULT_RANGE_LENGTH_IN_DAYS = 30;
 
-/**
- * The range of the dashboard tile: today and the next 6 days, thus 7
- * calendar days
- */
-const DASHBOARD_RANGE_LENGTH_IN_DAYS = 6;
+/** The number of calendar days of the dashboard tile, today included */
+export const DASHBOARD_CALENDAR_DAY_COUNT = 7;
 
 const getToday = () => getLocalDate(new Date(), ORGANIZATION_TIMEZONE);
 
@@ -29,7 +26,7 @@ export const getDashboardCalendarRange = (): LocalDateRange => {
 
   return {
     start: today,
-    end: addDaysToLocalDate(today, DASHBOARD_RANGE_LENGTH_IN_DAYS),
+    end: addDaysToLocalDate(today, DASHBOARD_CALENDAR_DAY_COUNT - 1),
   };
 };
 
@@ -40,7 +37,7 @@ export const getDashboardCalendarRange = (): LocalDateRange => {
  * missing one, like in the other date filters: the URL is easy to edit. The
  * caller checks the length (see `findCalendarRangeProblem`).
  */
-export const parseCalendarRange = (
+const parseCalendarRange = (
   from: string | null,
   to: string | null,
 ): LocalDateRange => {

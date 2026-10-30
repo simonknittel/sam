@@ -3,7 +3,10 @@ import { OnboardingTargetId } from "@/modules/onboarding/utils/targets";
 import { toLocalDateKey } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { getCalendarEntries } from "../queries/getCalendarEntries";
-import { getDashboardCalendarRange } from "../utils/calendarRange";
+import {
+  DASHBOARD_CALENDAR_DAY_COUNT,
+  getDashboardCalendarRange,
+} from "../utils/calendarRange";
 import { CalendarEntryItem } from "./CalendarEntryItem";
 import { CalendarEntryDateStyle } from "./CalendarEntryRow";
 
@@ -12,8 +15,9 @@ interface Props {
 }
 
 /**
- * The entries of the next 7 days and the events that run now, as one flat
- * list without a limit. The type filter of the calendar app applies.
+ * The entries of the next days (see `DASHBOARD_CALENDAR_DAY_COUNT`) and the
+ * events that run now, as one flat list without a limit. The type filter of
+ * the calendar app applies.
  */
 export const CalendarTile = async ({ className }: Props) => {
   const { start, end } = getDashboardCalendarRange();
@@ -46,7 +50,10 @@ export const CalendarTile = async ({ className }: Props) => {
         ))
       ) : (
         <div className="w-full corners-secondary bg-secondary p-4">
-          <p>In den nächsten 7 Tagen stehen keine Termine an.</p>
+          <p>
+            In den nächsten {DASHBOARD_CALENDAR_DAY_COUNT} Tagen stehen keine
+            Termine an.
+          </p>
         </div>
       )}
 

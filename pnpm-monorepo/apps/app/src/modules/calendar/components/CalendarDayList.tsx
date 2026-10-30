@@ -4,7 +4,7 @@ import { Note } from "@/modules/common/components/Note";
 import type { CalendarEntry } from "@sam-monorepo/application";
 import {
   findCalendarRangeProblem,
-  getLocalDate,
+  getLocalDateKey,
   ORGANIZATION_TIMEZONE,
   toLocalDateKey,
   type LocalDate,
@@ -77,9 +77,7 @@ export const CalendarDayList = async ({ className, range }: Props) => {
     false,
   );
 
-  const todayKey = toLocalDateKey(
-    getLocalDate(new Date(), ORGANIZATION_TIMEZONE),
-  );
+  const todayKey = getLocalDateKey(new Date(), ORGANIZATION_TIMEZONE);
   const entriesByDay = Map.groupBy(
     entries.map((entry, index) => ({ entry, index })),
     ({ entry }) => toLocalDateKey(entry.date),
