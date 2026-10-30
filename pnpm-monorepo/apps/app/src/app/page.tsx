@@ -1,5 +1,5 @@
 import { DevelopmentLogin } from "@/modules/auth/components/DevelopmentLogin";
-import { LoginErrorNote } from "@/modules/auth/components/LoginErrorNote";
+import { LoginErrorToast } from "@/modules/auth/components/LoginErrorToast";
 import { authenticate } from "@/modules/auth/server";
 import {
   REDIRECT_TO_SEARCH_PARAM,
@@ -54,6 +54,8 @@ export default async function Page({ searchParams }: PageProps<"/">) {
     <div {...seasonalThemeRootProps}>
       <SeasonalConfetti />
 
+      {error && <LoginErrorToast error={error} />}
+
       <DevelopmentLogin redirectTo={redirectTo} />
 
       <main className="flex w-full max-w-md flex-1 flex-col items-center justify-center gap-4 py-8">
@@ -65,8 +67,6 @@ export default async function Page({ searchParams }: PageProps<"/">) {
             redirectTo={redirectTo}
           />
         </div>
-
-        {error && <LoginErrorNote error={error} />}
       </main>
 
       <Footer className="p-4" />
