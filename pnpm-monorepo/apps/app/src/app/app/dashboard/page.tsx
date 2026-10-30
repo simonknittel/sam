@@ -39,10 +39,6 @@ export default async function Page() {
               <CalendarTile className="@container/events" />
             </Suspense>
           </ErrorBoundary>
-
-          <SuspenseWithErrorBoundaryTile>
-            <WikiDashboardPageTile />
-          </SuspenseWithErrorBoundaryTile>
         </div>
 
         <div className="flex w-100 flex-none flex-col gap-6">
@@ -69,6 +65,10 @@ export default async function Page() {
               <ProfileTile />
             </SuspenseWithErrorBoundaryTile>
           </section>
+
+          <SuspenseWithErrorBoundaryTile>
+            <WikiDashboardPageTile />
+          </SuspenseWithErrorBoundaryTile>
         </div>
       </div>
 
