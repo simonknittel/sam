@@ -62,10 +62,9 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
       <>
         <p>
           Die Kachel &bdquo;Events&ldquo; auf dem Dashboard wurde mit einem
-          &bdquo;Kalender&ldquo; ersetzt und zeigt alles mit einem Datum der
-          nächsten 7 Tagen: Events, Geburtstage, die Task-Fristen, dein
-          SILC-Gehalt, das Ende von SINcome-Phasen, den Ablauf deiner
-          Strafpunkte und saisonale Events.
+          &bdquo;Kalender&ldquo; ersetzt und zeigt alles der nächsten 7 Tage:
+          Events, Geburtstage, die Task-Fristen, dein SILC-Gehalt, das Ende von
+          SINcome-Phasen, den Ablauf deiner Strafpunkte und saisonale Events.
         </p>
 
         <Link href={image20261030CalendarTile.src}>
