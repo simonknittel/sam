@@ -96,16 +96,16 @@ const buildAssignmentMessage = (
   switch (type) {
     case RoleAssignmentChangeType.ADD:
       return (
-        <>
+        <p>
           Rolle <SingleRoleBadge roleId={roleId} /> hinzugefügt
-        </>
+        </p>
       );
 
     case RoleAssignmentChangeType.REMOVE:
       return (
-        <>
+        <p>
           Rolle <SingleRoleBadge roleId={roleId} /> entfernt
-        </>
+        </p>
       );
 
     default:
@@ -120,16 +120,16 @@ const buildLevelMessage = (
   switch (type) {
     case RoleAssignmentLevelChangeType.UP:
       return (
-        <>
+        <p>
           Level der Rolle <SingleRoleBadge roleId={roleId} /> erhöht
-        </>
+        </p>
       );
 
     case RoleAssignmentLevelChangeType.DOWN:
       return (
-        <>
+        <p>
           Level der Rolle <SingleRoleBadge roleId={roleId} /> verringert
-        </>
+        </p>
       );
 
     default:
