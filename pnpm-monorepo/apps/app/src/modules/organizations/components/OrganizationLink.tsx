@@ -22,7 +22,12 @@ export const OrganizationLink = ({ className, organization }: Props) => {
       prefetch={false}
     >
       {logoUrl && (
-        <span className="inline-block rounded-secondary bg-black">
+        /**
+         * The logo (24 px) is higher than a line of text. The negative
+         * margins keep the link one line high, thus the name stays on the
+         * baseline of the surrounding text.
+         */
+        <span className="my-[calc((1lh_-_24px)/2)] rounded-secondary bg-black">
           <Image src={logoUrl} alt="" width={24} height={24} />
         </span>
       )}
