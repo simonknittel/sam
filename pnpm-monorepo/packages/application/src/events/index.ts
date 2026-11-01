@@ -129,6 +129,10 @@ export {
   type RemoveEventParticipantsInput,
   type RemoveEventParticipantsOutput,
 } from "./removeEventParticipants.js";
+export {
+  sendEventMorningReminders,
+  type SendEventMorningRemindersOutput,
+} from "./sendEventMorningReminders.js";
 export { signUpForEvent } from "./signUpForEvent.js";
 export {
   syncDiscordEvents,
