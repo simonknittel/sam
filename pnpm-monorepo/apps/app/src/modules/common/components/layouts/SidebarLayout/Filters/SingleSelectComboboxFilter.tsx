@@ -82,6 +82,7 @@ export const SingleSelectComboboxFilter = ({
             <Combobox.InputGroup>
               <Combobox.Input
                 id={id}
+                aria-label={label}
                 placeholder={placeholder}
                 className="h-6 w-full min-w-16 flex-1 border-0 bg-transparent px-1 text-sm outline-none placeholder:text-neutral-500"
                 autoComplete="off"
