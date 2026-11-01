@@ -5,11 +5,11 @@ import {
   clickUntilVisible,
   DELETED_TEXT,
   fillUntilValue,
+  fillUntilVisible,
   modal,
   pickFromSearch,
   SAVED_TEXT,
   sectionByHeading,
-  waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
@@ -235,7 +235,7 @@ test("deleting a transaction soft deletes it and reverts the balance", async ({
   ).toBeVisible();
 });
 
-test("the header buttons of the balances table sort the rows by their column, also with the keyboard", async ({
+test("the sort in the sidebar orders the balances table", async ({
   page,
   prisma,
   signIn,
@@ -260,51 +260,37 @@ test("the header buttons of the balances table sort the rows by their column, al
   await page.goto("/app/silc/dashboard");
 
   const handles = balanceTableHandles(page);
-  const balanceHeader = balancesTile(page).getByRole("columnheader", {
-    name: "Kontostand",
-  });
-  const balanceIcon = balanceHeader.locator("svg");
-  const citizenHeader = balancesTile(page).getByRole("columnheader", {
-    name: "Citizen",
-  });
-  const citizenIcon = citizenHeader.locator("svg");
+  const sort = page.getByRole("combobox", { name: "Sortierung" });
+
+  const pickSort = async (label: string) => {
+    const option = page.getByRole("option", { name: label, exact: true });
+    await fillUntilVisible(sort, label, option);
+    await option.click();
+  };
 
   // The highest balance comes first
+  await expect(sort).toHaveValue("Kontostand ↓");
   await expect(handles).toHaveText([
     "silc-bravo",
     "silc-charlie",
     "silc-alpha",
   ]);
-  await expect(balanceHeader).toHaveAttribute("aria-sort", "descending");
-  /** The handle is only the second key of the sort */
-  await expect(citizenHeader).not.toHaveAttribute("aria-sort");
-  const descendingIcon = await balanceIcon.innerHTML();
-  /** Sorting is client state only, thus a click before the hydration is lost */
-  await waitForAppShellHydration(page);
 
-  /** A real button, thus the keyboard also sorts */
-  await balanceHeader.getByRole("button", { name: "Kontostand" }).focus();
-  await page.keyboard.press("Enter");
+  await pickSort("Kontostand ↑");
+  await expect(page).toHaveURL(/sort=balance-asc/);
   await expect(handles).toHaveText([
     "silc-alpha",
     "silc-charlie",
     "silc-bravo",
   ]);
-  await expect(balanceHeader).toHaveAttribute("aria-sort", "ascending");
-  await expect(balanceIcon).toHaveCount(1);
-  expect(await balanceIcon.innerHTML()).not.toBe(descendingIcon);
-  await expect(citizenIcon).toHaveCount(0);
 
-  await citizenHeader.getByRole("button", { name: "Citizen" }).click();
+  await pickSort("Citizen A - Z");
+  await expect(page).toHaveURL(/sort=handle-asc/);
   await expect(handles).toHaveText([
     "silc-alpha",
     "silc-bravo",
     "silc-charlie",
   ]);
-  await expect(citizenHeader).toHaveAttribute("aria-sort", "ascending");
-  await expect(balanceHeader).not.toHaveAttribute("aria-sort");
-  await expect(citizenIcon).toHaveCount(1);
-  await expect(balanceIcon).toHaveCount(0);
 });
 
 test("a transaction updates the balances table that already shows rows", async ({
