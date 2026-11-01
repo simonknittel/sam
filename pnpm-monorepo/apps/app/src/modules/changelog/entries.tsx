@@ -53,6 +53,22 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-11-01-inbox-oeffnet-sich-selbst",
+    date: "2026-11-01",
+    title: "Die Inbox öffnet sich selbst",
+    tags: ["Änderung", "Benachrichtigungen"],
+    isTracked: false,
+    body: () => (
+      <p>
+        Auf dem Desktop öffnet sich die Inbox jetzt von selbst, wenn beim Laden
+        der Seite ungelesene Benachrichtigungen da sind oder eine neue
+        eintrifft. Nach dem Schließen bleibt sie bis zum nächsten Neuladen oder
+        zur nächsten Benachrichtigung zu.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-11-01-event-erinnerung-am-morgen",
     date: "2026-11-01",
     title: "Event-Erinnerung am Morgen",
