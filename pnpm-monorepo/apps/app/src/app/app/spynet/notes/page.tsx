@@ -1,5 +1,8 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
+import { NotesTableFilters } from "@/modules/citizen/components/NotesTableFilters";
 import { NotesTableTile } from "@/modules/citizen/components/NotesTableTile";
+import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthContent";
+import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { type Metadata } from "next";
 
@@ -17,10 +20,12 @@ export default async function Page({
   ]);
 
   return (
-    <div className="overflow-x-hidden">
-      <SuspenseWithErrorBoundaryTile>
-        <NotesTableTile searchParams={searchParams} />
-      </SuspenseWithErrorBoundaryTile>
-    </div>
+    <MaxWidthContent>
+      <SidebarLayout sidebar={<NotesTableFilters />}>
+        <SuspenseWithErrorBoundaryTile>
+          <NotesTableTile searchParams={searchParams} />
+        </SuspenseWithErrorBoundaryTile>
+      </SidebarLayout>
+    </MaxWidthContent>
   );
 }

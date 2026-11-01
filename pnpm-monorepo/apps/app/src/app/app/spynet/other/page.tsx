@@ -1,7 +1,10 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
+import { OtherFilters } from "@/modules/citizen/components/OtherFilters";
+import { OtherTableTile } from "@/modules/citizen/components/OtherTableTile";
+import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthContent";
+import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { type Metadata } from "next";
-import OtherTableTile from "../../../../modules/citizen/components/OtherTableTile";
 
 export const metadata: Metadata = {
   title: "Sonstige",
@@ -17,10 +20,12 @@ export default async function Page({
   ]);
 
   return (
-    <div className="overflow-x-hidden">
-      <SuspenseWithErrorBoundaryTile>
-        <OtherTableTile searchParams={searchParams} />
-      </SuspenseWithErrorBoundaryTile>
-    </div>
+    <MaxWidthContent>
+      <SidebarLayout sidebar={<OtherFilters />}>
+        <SuspenseWithErrorBoundaryTile>
+          <OtherTableTile searchParams={searchParams} />
+        </SuspenseWithErrorBoundaryTile>
+      </SidebarLayout>
+    </MaxWidthContent>
   );
 }

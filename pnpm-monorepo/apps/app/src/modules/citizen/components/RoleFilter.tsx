@@ -1,39 +1,35 @@
 "use client";
 
-import { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
 import {
-  filterCheckboxListParsers,
-  getFilterValue,
-  getFilterValues,
-} from "@/modules/common/utils/filterCheckboxListParsers";
+  CITIZEN_TABLE_ROLE_PARAM,
+  citizenTableParsers,
+} from "@/modules/citizen/utils/citizenTableSearchParams";
+import { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
+import { cursorPaginationParsers } from "@/modules/common/CursorPagination/cursorPaginationParsers";
 import { RolePicker } from "@/modules/roles/components/RolePicker/RolePicker";
 import type { BadgeRole } from "@/modules/roles/queries/getRoles";
 import { MAXIMUM_CITIZEN_LIST_ROLE_FILTERS } from "@sam-monorepo/domain";
 import { useTopLoader } from "nextjs-toploader";
-import { useQueryStates } from "nuqs";
+import { useQueryState, useQueryStates } from "nuqs";
 import { useEffect, useState, useTransition } from "react";
 
 /**
- * The prefix of the role filters in the `filters` parameter (see
- * `CitizenTableTile`)
- */
-const FILTER_PREFIX = "role";
-
-interface Props {
-  readonly className?: string;
-}
-
-/**
- * Filters the citizen table by roles, in the same `filters` URL parameter as
- * the `FilterCheckboxList` filters. A change in the open popover applies
+ * Filters the citizen table by roles. A change in the open popover applies
  * when the popover closes. The removal of a selected role applies at once.
  */
-export const RoleFilter = ({ className }: Props) => {
+export const RoleFilter = () => {
   const [isLoading, startTransition] = useTransition();
-  const [{ filters }, setSearchParams] = useQueryStates(
-    filterCheckboxListParsers,
-    { shallow: false, history: "push", startTransition },
+  const [roleIds, setRoleIds] = useQueryState(
+    CITIZEN_TABLE_ROLE_PARAM,
+    citizenTableParsers[CITIZEN_TABLE_ROLE_PARAM].withOptions({
+      shallow: false,
+      startTransition,
+    }),
   );
+  const [, setPagination] = useQueryStates(cursorPaginationParsers, {
+    shallow: false,
+    startTransition,
+  });
 
   const loader = useTopLoader();
 
@@ -43,39 +39,30 @@ export const RoleFilter = ({ className }: Props) => {
     }
   }, [loader, isLoading]);
 
-  const appliedRoleIds = [...new Set(getFilterValues(filters, FILTER_PREFIX))];
+  const appliedRoleIds = [...new Set(roleIds)];
 
   /** The selection in the open popover, or null while the popover is closed */
   const [draftRoleIds, setDraftRoleIds] = useState<BadgeRole["id"][] | null>(
     null,
   );
 
-  const applyRoleIds = (roleIds: readonly BadgeRole["id"][]) => {
-    const roleIdSet = new Set(roleIds);
+  const applyRoleIds = (newRoleIds: readonly BadgeRole["id"][]) => {
+    const roleIdSet = new Set(newRoleIds);
     if (
       roleIdSet.size === appliedRoleIds.length &&
       appliedRoleIds.every((roleId) => roleIdSet.has(roleId))
     )
       return;
 
-    const rolePrefix = getFilterValue(FILTER_PREFIX, "");
-
-    void setSearchParams((current) => ({
-      filters: [
-        ...current.filters.filter((filter) => !filter.startsWith(rolePrefix)),
-        ...[...roleIdSet].map((roleId) =>
-          getFilterValue(FILTER_PREFIX, roleId),
-        ),
-      ],
-      page: null,
-    }));
+    void setRoleIds([...roleIdSet]);
+    void setPagination({ cursor: null, direction: null });
   };
 
-  const handleChange = (roleIds: BadgeRole["id"][]) => {
+  const handleChange = (newRoleIds: BadgeRole["id"][]) => {
     if (draftRoleIds !== null) {
-      setDraftRoleIds(roleIds);
+      setDraftRoleIds(newRoleIds);
     } else {
-      applyRoleIds(roleIds);
+      applyRoleIds(newRoleIds);
     }
   };
 
@@ -90,13 +77,17 @@ export const RoleFilter = ({ className }: Props) => {
   };
 
   return (
-    <RolePicker
-      className={className}
-      mode={ItemPickerMode.Multiple}
-      value={draftRoleIds ?? appliedRoleIds}
-      onChange={handleChange}
-      onOpenChange={handleOpenChange}
-      max={MAXIMUM_CITIZEN_LIST_ROLE_FILTERS}
-    />
+    <div className="corners-secondary bg-secondary p-2">
+      <p className="font-mono text-sm text-white/40 uppercase">Rollen</p>
+
+      <RolePicker
+        className="mt-1"
+        mode={ItemPickerMode.Multiple}
+        value={draftRoleIds ?? appliedRoleIds}
+        onChange={handleChange}
+        onOpenChange={handleOpenChange}
+        max={MAXIMUM_CITIZEN_LIST_ROLE_FILTERS}
+      />
+    </div>
   );
 };

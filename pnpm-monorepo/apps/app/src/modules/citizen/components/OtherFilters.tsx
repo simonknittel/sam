@@ -1,33 +1,35 @@
+import {
+  getApplicationContext,
+  getRequestActor,
+  throwApplicationErrorForPage,
+} from "@/modules/application";
+import { CITIZEN_LOG_TABLE_TYPE_PARAM } from "@/modules/citizen/utils/citizenLogTableSearchParams";
 import { citizenLogTypeTranslations } from "@/modules/citizen/utils/citizenLogTypeTranslations";
-import { Filter } from "@/modules/common/components/Filter";
-import type { CitizenLogType } from "@/types";
-import type { ConfirmationStatus } from "@sam-monorepo/database/client";
-import { CitizenLogTypeFilter } from "./CitizenLogTypeFilter";
-import { ConfirmationStateFilter } from "./ConfirmationStateFilter";
+import { MultiSelectComboboxFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/MultiSelectComboboxFilter";
+import { findIdentityLogTableFilterOptions } from "@sam-monorepo/application";
+import { CitizenLogTableFilters } from "./CitizenLogTableFilters";
 
-interface Props {
-  readonly confirmationStates: readonly (ConfirmationStatus | null)[];
-  readonly types: readonly CitizenLogType[];
-}
-
-export const OtherFilters = ({ confirmationStates, types }: Props) => {
-  const citizenLogTypes = new Map<CitizenLogType, string>(
-    types.map((type) => [type, citizenLogTypeTranslations[type]]),
-  );
+export const OtherFilters = async () => {
+  const options = await findIdentityLogTableFilterOptions(
+    getApplicationContext(),
+    await getRequestActor(),
+  ).catch(throwApplicationErrorForPage);
 
   return (
-    <div className="flex items-center gap-2">
-      {confirmationStates.length > 0 && (
-        <Filter name="Bestätigungsstatus">
-          <ConfirmationStateFilter confirmationStates={confirmationStates} />
-        </Filter>
+    <>
+      {options.types.length > 0 && (
+        <MultiSelectComboboxFilter
+          name={CITIZEN_LOG_TABLE_TYPE_PARAM}
+          label="Merkmal"
+          items={options.types.map((type) => ({
+            value: type,
+            label: citizenLogTypeTranslations[type],
+          }))}
+          resetCursorPagination
+        />
       )}
 
-      {citizenLogTypes.size > 0 && (
-        <Filter name="Merkmal">
-          <CitizenLogTypeFilter citizenLogTypes={citizenLogTypes} />
-        </Filter>
-      )}
-    </div>
+      <CitizenLogTableFilters confirmationStates={options.confirmationStates} />
+    </>
   );
 };

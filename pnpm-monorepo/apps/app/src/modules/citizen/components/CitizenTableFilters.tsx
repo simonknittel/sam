@@ -1,33 +1,82 @@
-import { requireAuthenticationPage } from "@/modules/auth/server";
-import { Filter } from "@/modules/common/components/Filter";
+import { getRequestActor } from "@/modules/application";
+import {
+  CITIZEN_TABLE_DEFAULT_SORT,
+  CITIZEN_TABLE_UNKNOWN_PARAM,
+  CitizenTableSort,
+} from "@/modules/citizen/utils/citizenTableSearchParams";
+import { MultiSelectComboboxFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/MultiSelectComboboxFilter";
+import { SingleSelectComboboxFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/SingleSelectComboboxFilter";
 import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
-import clsx from "clsx";
+import { CitizenUnknownAttribute } from "@sam-monorepo/application";
 import { RoleFilter } from "./RoleFilter";
-import { UnknownsFilter } from "./UnknownsFilter";
 
-interface Props {
-  readonly className?: string;
-}
-
-export const CitizenTableFilters = async ({ className }: Props) => {
-  const authentication = await requireAuthenticationPage();
-  const [showDiscordId, showTeamspeakId] = await Promise.all([
-    authentication.authorize("discord-id", "read"),
-    authentication.authorize("teamspeak-id", "read"),
-  ]);
+export const CitizenTableFilters = async () => {
+  const actor = await getRequestActor();
+  const showDiscordId = actor.authorize("discord-id", "read");
+  const showTeamspeakId = actor.authorize("teamspeak-id", "read");
+  const showLastSeenAt = actor.authorize("lastSeen", "read");
 
   const visibleRoles = await getVisibleRoles();
 
   return (
-    <div className={clsx("flex items-start gap-2", className)}>
-      <Filter name="Unbekannt">
-        <UnknownsFilter
-          showDiscordId={showDiscordId}
-          showTeamspeakId={showTeamspeakId}
-        />
-      </Filter>
+    <>
+      <MultiSelectComboboxFilter
+        name={CITIZEN_TABLE_UNKNOWN_PARAM}
+        label="Unbekannt"
+        items={[
+          { value: CitizenUnknownAttribute.Handle, label: "Handles" },
+          ...(showDiscordId
+            ? [
+                {
+                  value: CitizenUnknownAttribute.DiscordId,
+                  label: "Discord IDs",
+                },
+              ]
+            : []),
+          ...(showTeamspeakId
+            ? [
+                {
+                  value: CitizenUnknownAttribute.TeamspeakId,
+                  label: "TeamSpeak IDs",
+                },
+              ]
+            : []),
+        ]}
+        resetCursorPagination
+      />
 
-      {visibleRoles.length > 0 && <RoleFilter className="min-w-0 flex-1" />}
-    </div>
+      {visibleRoles.length > 0 && <RoleFilter />}
+
+      <SingleSelectComboboxFilter
+        name="sort"
+        label="Sortierung"
+        items={[
+          /** The filter selects the first item while the URL has no sort */
+          {
+            value: CITIZEN_TABLE_DEFAULT_SORT,
+            label: "Erstellt am ↓",
+          },
+          {
+            value: CitizenTableSort.CreatedAtAscending,
+            label: "Erstellt am ↑",
+          },
+          { value: CitizenTableSort.HandleAscending, label: "Handle A - Z" },
+          { value: CitizenTableSort.HandleDescending, label: "Handle Z - A" },
+          ...(showLastSeenAt
+            ? [
+                {
+                  value: CitizenTableSort.LastSeenAtDescending,
+                  label: "Zuletzt gesehen ↓",
+                },
+                {
+                  value: CitizenTableSort.LastSeenAtAscending,
+                  label: "Zuletzt gesehen ↑",
+                },
+              ]
+            : []),
+        ]}
+        resetCursorPagination
+      />
+    </>
   );
 };
