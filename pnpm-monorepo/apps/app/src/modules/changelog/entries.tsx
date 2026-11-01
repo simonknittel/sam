@@ -53,6 +53,21 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-11-01-event-erinnerung-am-morgen",
+    date: "2026-11-01",
+    title: "Event-Erinnerung am Morgen",
+    tags: ["Neu", "Events", "Benachrichtigungen"],
+    isTracked: false,
+    body: () => (
+      <p>
+        Um 7:30 Uhr bekommst du jetzt eine Erinnerung an deine Events für den
+        Tag. Die Browser-Benachrichtigung lässt sich in den Einstellungen unter
+        „Events“ abschalten.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-10-30-kalender",
     date: "2026-10-30",
     title: "Kalender statt Events",
