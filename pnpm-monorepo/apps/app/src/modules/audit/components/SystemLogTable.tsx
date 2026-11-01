@@ -8,6 +8,7 @@ import {
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { AuditEventAccess } from "@sam-monorepo/application";
 import { parseAsArrayOf, parseAsString, type SearchParams } from "nuqs/server";
+import { FaCheck } from "react-icons/fa";
 import { getAuditEvents } from "../queries/getAuditEvents";
 import { getAuditEventMessage } from "../utils/getAuditEventMessage";
 import {
@@ -125,7 +126,14 @@ export const SystemLogTable = async ({ className, searchParams }: Props) => {
               {createdBy}
             </td>
 
-            <td>{event.triggered_via_mcp && "Ja"}</td>
+            <td>
+              {event.triggered_via_mcp && (
+                <>
+                  <FaCheck aria-hidden className="text-white" />
+                  <span className="sr-only">Ja</span>
+                </>
+              )}
+            </td>
 
             <td title={message} className="truncate">
               {message}
