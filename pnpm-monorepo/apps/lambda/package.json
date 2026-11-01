@@ -9,7 +9,7 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb": "3.1156.0",
     "@aws-sdk/client-ssm": "3.1156.0",
-    "@opentelemetry/api": "1.10.0",
+    "@opentelemetry/api": "1.9.1",
     "@sam-monorepo/application": "workspace:*",
     "@sam-monorepo/database": "workspace:*",
     "@sam-monorepo/domain": "workspace:*",
