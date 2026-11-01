@@ -1,6 +1,7 @@
 import {
   BIRTHDAY_FALLBACK_WORDING,
   FLEET_UPDATE_REMINDER_WORDING,
+  getEventMorningReminderTitle,
   MY_SHIPS_PATH,
   ONBOARDING_POPOVER_PATH,
   parseOnSiteNotificationPayload,
@@ -103,6 +104,15 @@ export const renderOnSiteNotification = (
         title: "Briefing veröffentlicht",
         body: parsed.payload.eventName,
         url: `/app/events/${parsed.payload.eventId}/briefing`,
+        appTitle,
+        decoration: null,
+      };
+
+    case "event_morning_reminder":
+      return {
+        title: getEventMorningReminderTitle(new Date(parsed.payload.startTime)),
+        body: parsed.payload.eventName,
+        url: `/app/events/${parsed.payload.eventId}`,
         appTitle,
         decoration: null,
       };

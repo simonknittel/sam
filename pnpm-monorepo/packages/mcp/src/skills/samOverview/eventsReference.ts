@@ -19,7 +19,7 @@ Events (\`/app/events\`) are the operations and meetings of the organization, wi
 - **Templates (Vorlagen)**: personal blueprints for new events, with lineup and briefing. The owner can share a template with roles.
 - **End**: after the end of the event (without an end: 4 hours after the start), nothing of the event can change.
 
-Members get a notification about a new event. Participants also get notifications about changes, a cancellation, the published lineup and the start in 15 minutes. A published briefing notifies the citizens who can read it.
+Members get a notification about a new event. Participants also get notifications about changes, a cancellation, the published lineup, a reminder at 07:30 for the events until the next morning and the start in 15 minutes. A published briefing notifies the citizens who can read it.
 
 Tools: ${formatToolNames(ToolGroup.Events)}, ${formatToolNames(ToolGroup.Lineup)}.
 `,

@@ -4,6 +4,7 @@ import {
   notifyEventsStartingSoon,
   notifyWikiCitizenMentions,
   sendBirthdayGreetings,
+  sendEventMorningReminders,
   sendNewYearGreetings,
 } from "@sam-monorepo/application";
 import type { ScheduledHandler } from "aws-lambda";
@@ -22,6 +23,7 @@ const createJob = createJobFactory(context);
 export const handler: ScheduledHandler = async () =>
   runJobsInIsolation({
     eventStartingSoon: createJob(notifyEventsStartingSoon),
+    eventMorningReminders: createJob(sendEventMorningReminders),
     wikiCitizenMentioned: createJob(notifyWikiCitizenMentions),
     birthdayGreetings: createJob(sendBirthdayGreetings),
     newYearGreetings: createJob(sendNewYearGreetings),

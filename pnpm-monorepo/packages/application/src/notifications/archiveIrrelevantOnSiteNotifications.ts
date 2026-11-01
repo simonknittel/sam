@@ -13,10 +13,13 @@ import { withSpan } from "../withSpan.js";
  *
  * `event_starting` goes out 15 minutes before the event starts (see the
  * frequent automation of the same name), so it is obsolete the moment the
- * event begins.
+ * event begins. `event_morning_reminder` goes out at 07:30 for the events
+ * that start before 07:30 of the next day (see
+ * `sendEventMorningReminders()`), so it is obsolete after one day.
  */
 const RELEVANCE_MINUTES_BY_TYPE = {
   event_starting: 15,
+  event_morning_reminder: 24 * 60,
 } as const satisfies Partial<Record<OnSiteNotificationType, number>>;
 
 const MILLISECONDS_PER_MINUTE = 60 * 1000;

@@ -50,6 +50,13 @@ export const NOTIFICATIONS_APPS: NotificationApp[] = [
         category: "Events",
       },
       {
+        id: NotificationSettingType.EventMorningReminder,
+        title: "Erinnerung am Morgen",
+        description:
+          "Nur bei eigener Teilnahme. Um 7:30 Uhr für die Events bis zum nächsten Morgen.",
+        category: "Events",
+      },
+      {
         id: NotificationSettingType.EventStarting,
         title: "Event beginnt bald",
         description: "Nur bei eigener Teilnahme. 15 Minuten vor Event-Start.",

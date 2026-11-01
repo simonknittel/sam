@@ -3,6 +3,7 @@ import {
   MANUAL_NOTIFICATION_BODY_MAX_LENGTH,
   MANUAL_NOTIFICATION_TITLE_MAX_LENGTH,
 } from "../manualNotifications/manualNotificationLimits.js";
+import { ORGANIZATION_TIMEZONE } from "../timeZone.js";
 
 /**
  * Payload schemas for on-site notifications, shared between the
@@ -39,6 +40,26 @@ export const eventBriefingPublishedPayloadSchema = z.object({
   eventId: z.string(),
   eventName: z.string(),
 });
+
+export const eventMorningReminderPayloadSchema = z.object({
+  eventId: z.string(),
+  eventName: z.string(),
+  startTime: z.iso.datetime(),
+});
+
+const EVENT_START_TIME_FORMAT = new Intl.DateTimeFormat("de-DE", {
+  timeZone: ORGANIZATION_TIMEZONE,
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+/**
+ * The title of the morning reminder of an event, for the Lambda (web push)
+ * and the app (on-site row). It gives the start time in the time zone of the
+ * organization, like the event page.
+ */
+export const getEventMorningReminderTitle = (startTime: Date) =>
+  `Event beginnt um ${EVENT_START_TIME_FORMAT.format(startTime)} Uhr`;
 
 export const eventStartingPayloadSchema = z.object({
   eventId: z.string(),
@@ -228,6 +249,7 @@ export const onSiteNotificationPayloadSchemas = {
   event_deleted: eventDeletedPayloadSchema,
   event_lineup_enabled: eventLineupEnabledPayloadSchema,
   event_briefing_published: eventBriefingPublishedPayloadSchema,
+  event_morning_reminder: eventMorningReminderPayloadSchema,
   event_starting: eventStartingPayloadSchema,
   event_participation_added: eventParticipationAddedPayloadSchema,
   event_participation_removed: eventParticipationRemovedPayloadSchema,
@@ -263,6 +285,7 @@ export const ON_SITE_NOTIFICATION_PAYLOAD_VERSIONS: Record<
   event_deleted: 1,
   event_lineup_enabled: 1,
   event_briefing_published: 1,
+  event_morning_reminder: 1,
   event_starting: 1,
   event_participation_added: 1,
   event_participation_removed: 1,

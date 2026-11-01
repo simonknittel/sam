@@ -9,11 +9,17 @@ export interface FindEventParticipantRecipientsInput {
   readonly eventId: string;
 }
 
+export interface EventParticipantRecipients extends EventNotificationRecipients {
+  readonly event: EventNotificationRecipients["event"] & {
+    readonly startTime: Date;
+  };
+}
+
 const findParticipantRecipients = async (
   context: ApplicationContext,
   input: FindEventParticipantRecipientsInput,
   { ignoresDeletion }: { readonly ignoresDeletion: boolean },
-): Promise<EventNotificationRecipients | null> => {
+): Promise<EventParticipantRecipients | null> => {
   const event = await context.prisma.event.findUnique({
     where: {
       id: input.eventId,
@@ -21,6 +27,7 @@ const findParticipantRecipients = async (
     select: {
       id: true,
       name: true,
+      startTime: true,
       ...EVENT_RECIPIENT_SELECT,
       participants: {
         where: { cancelledAt: null },
@@ -48,7 +55,10 @@ const findParticipantRecipients = async (
     },
   );
 
-  return { event: { id: event.id, name: event.name }, recipients };
+  return {
+    event: { id: event.id, name: event.name, startTime: event.startTime },
+    recipients,
+  };
 };
 
 /**
@@ -60,7 +70,7 @@ const findParticipantRecipients = async (
 export const findEventParticipantRecipients = (
   context: ApplicationContext,
   input: FindEventParticipantRecipientsInput,
-): Promise<EventNotificationRecipients | null> =>
+): Promise<EventParticipantRecipients | null> =>
   findParticipantRecipients(context, input, { ignoresDeletion: false });
 
 /**
@@ -71,5 +81,5 @@ export const findEventParticipantRecipients = (
 export const findEventDeletedRecipients = (
   context: ApplicationContext,
   input: FindEventParticipantRecipientsInput,
-): Promise<EventNotificationRecipients | null> =>
+): Promise<EventParticipantRecipients | null> =>
   findParticipantRecipients(context, input, { ignoresDeletion: true });
