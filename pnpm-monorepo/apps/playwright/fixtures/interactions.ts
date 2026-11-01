@@ -150,6 +150,26 @@ export const fillUntilValue = (input: Locator, value: string) =>
     await expect(input).toHaveValue(value, { timeout: REACTION_TIMEOUT });
   }).toPass({ timeout: HYDRATION_TIMEOUT });
 
+/**
+ * Picks an option of a combobox filter in a filter sidebar
+ * (`MultiSelectComboboxFilter`, `SingleSelectComboboxFilter`): types the
+ * name of the option into the filter and clicks the option. The list of a
+ * multi-select filter stays open after the click.
+ */
+export const pickFilterOption = async (
+  page: Page,
+  filterLabel: string,
+  optionName: string,
+) => {
+  const option = page.getByRole("option", { name: optionName, exact: true });
+  await fillUntilVisible(
+    page.getByRole("combobox", { name: filterLabel }),
+    optionName,
+    option,
+  );
+  await option.click();
+};
+
 /** Retries the fill until the URL reflects it (nuqs-managed filters). */
 export const fillUntilUrl = (
   page: Page,

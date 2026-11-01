@@ -17,13 +17,13 @@ import {
   FORBIDDEN_TEXT,
   modal,
   openRolePicker,
+  pickFilterOption,
   RESOURCE_NOT_FOUND_TEXT,
   rolePickerChips,
   rolePickerOption,
   rolePickerTag,
   SAVED_TEXT,
   sectionByHeading,
-  toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -392,6 +392,12 @@ test("deleting a settings record that a different user deleted shows the error a
   ).toBe(0);
 });
 
+const nextPageButton = (page: Page) =>
+  page.getByRole("button", { name: "Weiter", exact: true });
+
+const previousPageButton = (page: Page) =>
+  page.getByRole("button", { name: "Zurück", exact: true });
+
 test("the citizen table paginates and filters", async ({
   page,
   prisma,
@@ -423,25 +429,20 @@ test("the citizen table paginates and filters", async ({
   await page.goto("/app/spynet/citizen");
 
   // 55 citizens (incl. the viewer) at 50 per page
-  await expect(page.getByText("1 / 2")).toBeVisible();
   await expect(page.locator("tbody tr")).toHaveCount(50);
 
-  await page.goto("/app/spynet/citizen?page=2");
-  await expect(page.getByText("2 / 2")).toBeVisible();
+  await clickUntilUrl(page, nextPageButton(page), /cursor=/);
   await expect(page.locator("tbody tr")).toHaveCount(5);
+  await expect(nextPageButton(page)).toBeDisabled();
 
-  // The "Unbekannt" filter narrows the table to citizens without a handle
-  await page.goto("/app/spynet/citizen");
-  await clickUntilVisible(
-    page.getByRole("button", { name: "Unbekannt" }),
-    page.getByText("Handles", { exact: true }),
-  );
-  await clickUntilUrl(
-    page,
-    toggleLabel(page, "Handles"),
-    /filters=unknown-handle/,
-  );
+  /**
+   * The "Unbekannt" filter narrows the table to citizens without a handle and
+   * goes back to the first page
+   */
+  await pickFilterOption(page, "Unbekannt", "Handles");
+  await expect(page).toHaveURL(/\/app\/spynet\/citizen\?unknown=handle$/);
   await expect(page.locator("tbody tr")).toHaveCount(UNNAMED_CITIZENS);
+  await expect(nextPageButton(page)).toHaveCount(0);
 });
 
 test("the citizen table sends no Discord ID and no TeamSpeak ID to a viewer without the permissions to read them", async ({
@@ -533,12 +534,6 @@ test("the citizen page sends no Discord ID, no TeamSpeak ID, no login and no rol
 const citizenTableRows = (page: Page) =>
   page.locator("tbody tr").filter({ visible: true });
 
-const citizenTableHeaderLink = (page: Page, name: string) =>
-  page.locator("thead").getByRole("link", { name, exact: true });
-
-const citizenTableColumnHeader = (page: Page, name: string) =>
-  page.locator("thead").getByRole("columnheader", { name });
-
 test("the citizen table ignores the filters by an unknown Discord ID or TeamSpeak ID without the permissions to read them", async ({
   page,
   prisma,
@@ -567,7 +562,7 @@ test("the citizen table ignores the filters by an unknown Discord ID or TeamSpea
   });
   const rows = citizenTableRows(page);
   const expectRows = async (filter: string, handles: readonly string[]) => {
-    await page.goto(`/app/spynet/citizen?filters=${filter}`);
+    await page.goto(`/app/spynet/citizen?unknown=${filter}`);
     await expect(rows).toHaveCount(handles.length);
     for (const handle of handles)
       await expect(rows.filter({ hasText: handle })).toHaveCount(1);
@@ -580,19 +575,19 @@ test("the citizen table ignores the filters by an unknown Discord ID or TeamSpea
     "mit-discord-id",
     "mit-teamspeak-id",
   ];
-  await expectRows("unknown-discord-id", allHandles);
-  await expectRows("unknown-teamspeak-id", allHandles);
+  await expectRows("discord_id", allHandles);
+  await expectRows("teamspeak_id", allHandles);
 
   await switchUser(permittedViewer.user);
-  await expectRows("unknown-discord-id", ["mit-teamspeak-id"]);
-  await expectRows("unknown-teamspeak-id", [
+  await expectRows("discord_id", ["mit-teamspeak-id"]);
+  await expectRows("teamspeak_id", [
     "filter-leser",
     "filter-pruefer",
     "mit-discord-id",
   ]);
 });
 
-test("the citizen table sorts by its column headers and keeps the sort on the other pages", async ({
+test("the citizen table sorts by the sort filter and keeps the sort on the other pages", async ({
   page,
   prisma,
   signIn,
@@ -620,55 +615,34 @@ test("the citizen table sorts by its column headers and keeps the sort on the ot
   await page.goto("/app/spynet/citizen");
   await expect(rows.first()).toContainText("tabellen-sortierer");
   await expect(rows.nth(1)).toContainText("bewohner-01");
-  await expect(citizenTableColumnHeader(page, "Erstellt am")).toHaveAttribute(
-    "aria-sort",
-    "descending",
-  );
-  await expect(citizenTableColumnHeader(page, "Handle")).not.toHaveAttribute(
-    "aria-sort",
+  await expect(page.getByRole("combobox", { name: "Sortierung" })).toHaveValue(
+    "Erstellt am ↓",
   );
 
-  await citizenTableHeaderLink(page, "Handle").click();
-  await expect(page).toHaveURL(/sort=handle-asc/);
+  await pickFilterOption(page, "Sortierung", "Handle A - Z");
+  await expect(page).toHaveURL(/\/app\/spynet\/citizen\?sort=handle-asc$/);
   await expect(rows.first()).toContainText("bewohner-01");
-  await expect(citizenTableColumnHeader(page, "Handle")).toHaveAttribute(
-    "aria-sort",
-    "ascending",
-  );
-  await expect(
-    citizenTableColumnHeader(page, "Erstellt am"),
-  ).not.toHaveAttribute("aria-sort");
 
-  await page.getByRole("link", { name: "Nächste Seite" }).click();
-  await expect(page).toHaveURL(/page=2/);
+  await clickUntilUrl(page, nextPageButton(page), /cursor=/);
   await expect(page).toHaveURL(/sort=handle-asc/);
-  await expect(page.getByText("2 / 2")).toBeVisible();
   await expect(rows).toHaveCount(2);
   await expect(rows.first()).toContainText("bewohner-51");
 
-  // A second click changes the direction and keeps the page
-  await citizenTableHeaderLink(page, "Handle").click();
-  await expect(page).toHaveURL(/sort=handle-desc/);
-  await expect(page).toHaveURL(/page=2/);
-  await expect(rows.first()).toContainText("bewohner-02");
-  await expect(citizenTableColumnHeader(page, "Handle")).toHaveAttribute(
-    "aria-sort",
-    "descending",
-  );
+  await clickUntilUrl(page, previousPageButton(page), /direction=prev/);
+  await expect(rows).toHaveCount(50);
+  await expect(rows.first()).toContainText("bewohner-01");
 
-  await page.getByRole("link", { name: "Vorherige Seite" }).click();
+  // A different sort goes back to the first page
+  await pickFilterOption(page, "Sortierung", "Handle Z - A");
   await expect(page).toHaveURL(/\/app\/spynet\/citizen\?sort=handle-desc$/);
-  await expect(page.getByText("1 / 2")).toBeVisible();
+  await expect(previousPageButton(page)).toBeDisabled();
+  await expect(rows.first()).toContainText("tabellen-sortierer");
   await expect(rows.nth(1)).toContainText("bewohner-51");
 
   // The default sort leaves no sort parameter in the URL
-  await citizenTableHeaderLink(page, "Erstellt am").click();
+  await pickFilterOption(page, "Sortierung", "Erstellt am ↓");
   await expect(page).toHaveURL(/\/app\/spynet\/citizen$/);
   await expect(rows.nth(1)).toContainText("bewohner-01");
-
-  await citizenTableHeaderLink(page, "Erstellt am").click();
-  await expect(page).toHaveURL(/sort=created-at-asc/);
-  await expect(rows.first()).toContainText("bewohner-51");
 });
 
 test("the citizen table uses the default sort for a sort by the last-seen time without the permission to read it", async ({
@@ -719,7 +693,7 @@ test("the citizen table uses the default sort for a sort by the last-seen time w
   }
 });
 
-test("the citizen table shows the first page for a page number that is not a page", async ({
+test("the citizen table shows the first page for a cursor of no citizen", async ({
   page,
   prisma,
   signIn,
@@ -741,19 +715,14 @@ test("the citizen table shows the first page for a page number that is not a pag
   const rows = citizenTableRows(page);
 
   await signIn(viewer.user);
-
-  /** The last value is larger than Number.MAX_SAFE_INTEGER */
-  for (const pageParameter of ["0", "-1", "9007199254740993"]) {
-    await page.goto(`/app/spynet/citizen?page=${pageParameter}`);
-    await expect(
-      page.getByText("1 / 2").filter({ visible: true }),
-    ).toBeVisible();
-    await expect(rows).toHaveCount(50);
-    await expect(rows.first()).toContainText("seiten-zaehler");
-  }
+  await page.goto("/app/spynet/citizen?cursor=geloeschter-citizen");
+  await expect(rows).toHaveCount(50);
+  await expect(rows.first()).toContainText("seiten-zaehler");
+  await expect(nextPageButton(page)).toBeEnabled();
+  await expect(previousPageButton(page)).toBeDisabled();
 });
 
-test("an old bookmark with comma-separated filters still filters the citizen table", async ({
+test("the citizen table combines its filters, and a removed role goes back to the first page", async ({
   page,
   prisma,
   signIn,
@@ -782,35 +751,24 @@ test("an old bookmark with comma-separated filters still filters the citizen tab
 
   await signIn(viewer.user);
 
-  /**
-   * The format of the filter list before nuqs: URLSearchParams encoded the
-   * comma. Only the citizen without a handle and with the role matches both
-   * filters.
-   */
-  await page.goto(
-    `/app/spynet/citizen?filters=unknown-handle%2Crole-${miningRole.id}`,
-  );
+  /** Only the citizen without a handle and with the role matches both filters */
+  await page.goto(`/app/spynet/citizen?unknown=handle&role=${miningRole.id}`);
   await expect(rows).toHaveCount(1);
   await expect(rows.first()).toContainText("OHNE-HANDLE-MIT-ROLLE");
 
-  // The format of nuqs, on a page after the last one
-  await page.goto(
-    `/app/spynet/citizen?filters=unknown-handle,role-${miningRole.id}&page=2`,
-  );
-  await expect(page.getByText("2 / 1")).toBeVisible();
-  await expect(rows).toHaveCount(0);
-
   /**
    * The role filter shows the roles of the URL, and a removal goes back to
-   * the first page. The filters hydrate after the app shell, inside their
-   * own Suspense tile.
+   * the first page
    */
+  await page.goto(
+    `/app/spynet/citizen?unknown=handle&role=${miningRole.id}&cursor=${unnamedWithRole.id}`,
+  );
+  await expect(rows).toHaveCount(0);
   await clickUntilUrl(
     page,
     rolePickerChips(page).filter({ hasText: "Bergbau" }),
-    /\/app\/spynet\/citizen\?filters=unknown-handle$/,
+    /\/app\/spynet\/citizen\?unknown=handle$/,
   );
-  await expect(page.getByText("1 / 1")).toBeVisible();
   await expect(rows).toHaveCount(2);
 });
 
@@ -849,8 +807,6 @@ test("the role filter of the citizen table applies when its popover closes, and 
   await signIn(viewer.user);
   await page.goto("/app/spynet/citizen");
   await expect(rows).toHaveCount(4);
-  const getHistoryLength = () => page.evaluate(() => history.length);
-  const historyLengthBefore = await getHistoryLength();
 
   /** The URL and the table stay while the popover is open */
   const popover = await openRolePicker(
@@ -879,11 +835,7 @@ test("the role filter of the citizen table applies when its popover closes, and 
   await expect(page).toHaveURL(/\/app\/spynet\/citizen$/);
   await expect(rows).toHaveCount(4);
 
-  /**
-   * A click outside closes the popover and applies the filter. The check
-   * above can pass before a reload arrives, thus the history proves that
-   * the change is one entry and not one entry for each click.
-   */
+  /** A click outside closes the popover and applies the filter */
   await page
     .locator("section")
     .filter({ has: page.getByRole("table") })
@@ -891,22 +843,13 @@ test("the role filter of the citizen table applies when its popover closes, and 
     .click({ position: { x: 8, y: 8 } });
   await expect(popover).not.toBeVisible();
   await expect(page).toHaveURL(
-    new RegExp(`\\?filters=role-${miningRole.id},role-${tradeRole.id}$`),
+    new RegExp(`\\?role=${miningRole.id},${tradeRole.id}$`),
   );
   await expect(rows).toHaveCount(2);
   await expect(rows.filter({ hasText: "kaempfer" })).toHaveCount(0);
-  expect(await getHistoryLength()).toBe(historyLengthBefore + 1);
 
   await rolePickerChips(page).filter({ hasText: "Handel" }).click();
-  await expect(page).toHaveURL(new RegExp(`\\?filters=role-${miningRole.id}$`));
+  await expect(page).toHaveURL(new RegExp(`\\?role=${miningRole.id}$`));
   await expect(rows).toHaveCount(1);
   await expect(rows.first()).toContainText("bergmann");
-  expect(await getHistoryLength()).toBe(historyLengthBefore + 2);
-
-  /** Each change is one entry in the history */
-  await page.goBack();
-  await expect(rows).toHaveCount(2);
-  await page.goBack();
-  await expect(page).toHaveURL(/\/app\/spynet\/citizen$/);
-  await expect(rows).toHaveCount(4);
 });
