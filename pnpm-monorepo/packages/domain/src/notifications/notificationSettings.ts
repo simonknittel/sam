@@ -11,6 +11,7 @@ export enum NotificationSettingType {
   EventDeleted = "event_deleted",
   EventLineupEnabled = "event_lineup_enabled",
   EventBriefingPublished = "event_briefing_published",
+  EventMorningReminder = "event_morning_reminder",
   EventStarting = "event_starting",
   EventParticipationAdded = "event_participation_added",
   EventParticipationRemoved = "event_participation_removed",
