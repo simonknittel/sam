@@ -2,7 +2,7 @@
 
 There is a single branch (`main`). A push to `main` alone never deploys to production:
 
-- Vercel only creates _preview_ deployments for pushes. The Production Branch of the project points to `production-gate`, a frozen branch with a ruleset that blocks all pushes. Vercel requires that the Production Branch exists in the repository.
+- Vercel only creates _preview_ deployments for pushes, and only for `feature/*` branches (see the [ignored build step](../.vercel/ignore-step.sh)). The Production Branch of the project points to `production-gate`, a frozen branch with a ruleset that blocks all pushes. Vercel requires that the Production Branch exists in the repository.
 - Only the [Release workflow](../.github/workflows/release.yml) deploys the Lambda functions. As an alternative, start the [Deploy Lambda functions workflow](../.github/workflows/deploy-lambda-functions.yml) manually.
 
 ## Release workflow

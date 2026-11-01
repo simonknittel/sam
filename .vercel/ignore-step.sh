@@ -13,8 +13,10 @@ if [[ "$VERCEL_ENV" == "production" ]] ; then
   exit 1;
 fi
 
-# Only proceed for the default branch and feature branches
-if [[ "$VERCEL_GIT_COMMIT_REF" != "main" && "$VERCEL_GIT_COMMIT_REF" != feature/* ]] ; then
+# Only proceed for feature branches. Do not build previews of `main`: the
+# Release workflow builds the same commit again for production. Vercel runs
+# only one build at a time, thus the release would wait for the preview build.
+if [[ "$VERCEL_GIT_COMMIT_REF" != feature/* ]] ; then
   echo "🛑 - Build cancelled (incorrect branch)"
   exit 0;
 fi
