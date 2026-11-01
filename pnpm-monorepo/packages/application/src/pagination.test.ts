@@ -2,6 +2,7 @@ import { CursorDirection } from "@sam-monorepo/domain";
 import { describe, expect, test, vi } from "vitest";
 import { ValidationError } from "./errors.js";
 import {
+  paginateByCursor,
   paginateByDatabaseCursor,
   UnknownCursorBehavior,
   type DatabaseCursorArguments,
@@ -116,6 +117,31 @@ describe("paginateByDatabaseCursor", () => {
         isKnownCursor,
       ),
     ).resolves.toEqual({
+      items: [{ id: "4" }, { id: "5" }],
+      nextCursor: null,
+      previousCursor: "4",
+    });
+  });
+});
+
+describe("paginateByCursor", () => {
+  test("drops an unknown cursor and gives the first page, or the last page backward", () => {
+    const options = {
+      cursor: "unknown",
+      pageSize: PAGE_SIZE,
+      unknownCursor: UnknownCursorBehavior.FirstPage,
+      getCursor: (row: { readonly id: string }) => row.id,
+    };
+
+    expect(paginateByCursor(ROWS, options)).toEqual({
+      items: [{ id: "1" }, { id: "2" }],
+      nextCursor: "2",
+      previousCursor: null,
+    });
+
+    expect(
+      paginateByCursor(ROWS, { ...options, direction: CursorDirection.Prev }),
+    ).toEqual({
       items: [{ id: "4" }, { id: "5" }],
       nextCursor: null,
       previousCursor: "4",

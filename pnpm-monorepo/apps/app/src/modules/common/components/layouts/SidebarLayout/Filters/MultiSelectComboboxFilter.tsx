@@ -98,15 +98,11 @@ export const MultiSelectComboboxFilter = ({
     return sortedItems.filter((item) => selected.has(item.value));
   }, [sortedItems, selectedValues]);
 
-  const setValueAndResetPagination = async (newItems: Item[]) => {
-    await setSelectedValues(newItems.map((item) => item.value));
-
-    if (resetCursorPagination) {
-      await setPagination({
-        cursor: null,
-        direction: null,
-      });
-    }
+  const setValueAndResetPagination = (newItems: Item[]) => {
+    /** In the same tick, nuqs gives both changes one URL update */
+    void setSelectedValues(newItems.map((item) => item.value));
+    if (resetCursorPagination)
+      void setPagination({ cursor: null, direction: null });
   };
 
   const loader = useTopLoader();

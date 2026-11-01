@@ -6,13 +6,14 @@ import {
 } from "@sam-monorepo/domain";
 import { CITIZEN_REFERENCE_SELECT } from "../citizenReference.js";
 import type { ApplicationContext } from "../context.js";
+import { paginateByDatabaseCursor, type PageOptions } from "../pagination.js";
 
 /**
  * One log row of the note and identity tables. Both tables serialize their
  * rows into client components, thus the citizen is joined as {id, handle}
- * and the authors by name alone. A full `User` row here would put the email
- * address of each user in a browser payload: the global `omit` covers the
- * OAuth tokens, not the email.
+ * and the authors by name and citizen alone. A full `User` row here would put
+ * the email address of each user in a browser payload: the global `omit`
+ * covers the OAuth tokens, not the email.
  */
 export const CITIZEN_LOG_TABLE_SELECT = {
   id: true,
@@ -22,13 +23,17 @@ export const CITIZEN_LOG_TABLE_SELECT = {
   createdAt: true,
   confirmed: true,
   confirmedAt: true,
-  confirmedBy: { select: { name: true } },
+  confirmedBy: {
+    select: { name: true, citizen: { select: CITIZEN_REFERENCE_SELECT } },
+  },
   noteTypeId: true,
   noteType: { select: { id: true, name: true } },
   classificationLevelId: true,
   classificationLevel: { select: { id: true, name: true } },
   citizen: { select: CITIZEN_REFERENCE_SELECT },
-  submittedBy: { select: { name: true } },
+  submittedBy: {
+    select: { name: true, citizen: { select: CITIZEN_REFERENCE_SELECT } },
+  },
 } as const satisfies Prisma.CitizenLogSelect;
 
 export type CitizenLogTableRow = Prisma.CitizenLogGetPayload<{
@@ -36,28 +41,31 @@ export type CitizenLogTableRow = Prisma.CitizenLogGetPayload<{
 }>;
 
 /** The app-only options of the Spynet log tables */
-export interface CitizenLogTablePageOptions {
+export interface CitizenLogTablePageOptions extends PageOptions {
   readonly pageSize: number;
 }
 
-/** The sort and the page of a Spynet log table, from the URL of the app */
+/** The sort and the cursor of a Spynet log table, from the URL of the app */
 export interface CitizenLogTablePageRequest {
   readonly sort: CitizenLogTableSort;
-  /** From 1. A page after the last one has no rows. */
-  readonly page: number;
+  /** The id of a log. Without a cursor, the first page. */
+  readonly cursor?: string | null;
 }
 
 /** One page of a Spynet log table */
 export interface CitizenLogTablePage {
   readonly rows: CitizenLogTableRow[];
-  readonly totalPages: number;
+  /** Null on the last page */
+  readonly nextCursor: string | null;
+  /** Null on the first page */
+  readonly prevCursor: string | null;
 }
 
 const isConfirmationValue = (value: string): value is ConfirmationValue =>
   Object.values<string>(ConfirmationValue).includes(value);
 
 /**
- * The confirmation filters of the tables ("confirmation-confirmed", …) as a
+ * The confirmation filter of the tables (`ConfirmationValue`) as a
  * condition, from the raw values of the URL. Without a filter, the condition
  * matches each log.
  */
@@ -106,23 +114,34 @@ const getOrderBy = (
   }
 };
 
-/** One page of a Spynet log table, filtered and sorted in the database */
+/**
+ * One page of a Spynet log table, filtered and sorted in the database
+ *
+ * @throws ValidationError when no log has the cursor (see
+ * `PageOptions.unknownCursor`)
+ */
 export const loadCitizenLogTablePage = async (
   context: Pick<ApplicationContext, "prisma">,
   where: Prisma.CitizenLogWhereInput,
-  { sort, page }: CitizenLogTablePageRequest,
-  { pageSize }: CitizenLogTablePageOptions,
+  { sort, cursor }: CitizenLogTablePageRequest,
+  { pageSize, direction, unknownCursor }: CitizenLogTablePageOptions,
 ): Promise<CitizenLogTablePage> => {
-  const [rows, count] = await context.prisma.$transaction([
-    context.prisma.citizenLog.findMany({
-      where,
-      orderBy: getOrderBy(sort),
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-      select: CITIZEN_LOG_TABLE_SELECT,
-    }),
-    context.prisma.citizenLog.count({ where }),
-  ]);
+  const page = await paginateByDatabaseCursor(
+    { cursor, pageSize, direction, unknownCursor },
+    (cursorArguments) =>
+      context.prisma.citizenLog.findMany({
+        where,
+        orderBy: getOrderBy(sort),
+        select: CITIZEN_LOG_TABLE_SELECT,
+        ...cursorArguments,
+      }),
+    async (id) =>
+      (await context.prisma.citizenLog.count({ where: { id } })) > 0,
+  );
 
-  return { rows, totalPages: Math.ceil(count / pageSize) };
+  return {
+    rows: page.items,
+    nextCursor: page.nextCursor,
+    prevCursor: page.previousCursor,
+  };
 };

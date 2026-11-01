@@ -1,4 +1,5 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
+import { serializeCitizenTableSearchParams } from "@/modules/citizen/utils/citizenTableSearchParams";
 import { SubNavigation } from "@/modules/common/components/SubNavigation";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
 import { getRoleById } from "@/modules/roles/queries/getRoleById";
@@ -52,7 +53,9 @@ export default async function Layout({
     {
       name: "Citizen",
       icon: <FaUsers />,
-      path: `/app/spynet/citizen?filters=role-${role.id}`,
+      path: serializeCitizenTableSearchParams("/app/spynet/citizen", {
+        role: [role.id],
+      }),
     },
   ];
 

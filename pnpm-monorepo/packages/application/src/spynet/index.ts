@@ -71,8 +71,9 @@ export {
   type RedactedCitizenNoteRow,
 } from "./findCitizenNoteTabs.js";
 export {
+  findIdentityLogTableFilterOptions,
   findIdentityLogTablePage,
-  type IdentityLogTablePage,
+  type IdentityLogTableFilterOptions,
   type IdentityLogTablePageInput,
 } from "./findIdentityLogTablePage.js";
 export {
@@ -81,8 +82,9 @@ export {
   type NoteMentionTargetsInput,
 } from "./findNoteMentionTargets.js";
 export {
+  findNoteTableFilterOptions,
   findNoteTablePage,
-  type NoteTablePage,
+  type NoteTableFilterOptions,
   type NoteTablePageInput,
 } from "./findNoteTablePage.js";
 export { findSpynetCitizen, type SpynetCitizen } from "./findSpynetCitizen.js";

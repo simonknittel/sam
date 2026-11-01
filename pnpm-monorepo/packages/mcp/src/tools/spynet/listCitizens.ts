@@ -16,7 +16,7 @@ export const listCitizensTool = defineTool({
   group: ToolGroup.Spynet,
   title: "List citizens",
   description:
-    "Lists the citizens of the Spynet, filtered by role ids and by missing values (`unknown`) and sorted. The result is paged: give `page` (from 1) and read `page_count`. Each citizen has an id for the other tools; the handle is only display text. The Discord ID, the TeamSpeak ID and the last visit are null without the permission to read them.",
+    "Lists the citizens of the Spynet, filtered by role ids and by missing values (`unknown`) and sorted. The result is paged: give next_cursor as cursor to continue the list; total is the number of citizens with these filters. Each citizen has an id for the other tools; the handle is only display text. The Discord ID, the TeamSpeak ID and the last visit are null without the permission to read them.",
   annotations: READ_ONLY_TOOL_ANNOTATIONS,
   readAuditEventType: AuditEventType.CITIZENS_LISTED,
   inputSchema: listCitizensInputSchema,
@@ -34,11 +34,17 @@ export const listCitizensTool = defineTool({
       }),
     ),
     total: z.int().min(0),
-    page: z.int().min(1),
-    page_count: z.int().min(0),
+    next_cursor: z.string().nullable(),
   }),
   isVisible: (actor) =>
     actor.authorize("citizen", "read") &&
     actor.authorize("spynetCitizen", "read"),
-  handler: listCitizens,
+  handler: async (context, actor, input) => {
+    const { citizens, total, next_cursor } = await listCitizens(
+      context,
+      actor,
+      input,
+    );
+    return { citizens, total, next_cursor };
+  },
 });

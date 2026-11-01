@@ -1,3 +1,4 @@
+import { serializeCitizenTableSearchParams } from "@/modules/citizen/utils/citizenTableSearchParams";
 import { Link } from "@/modules/common/components/Link";
 import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
 import {
@@ -196,7 +197,12 @@ export const RolesTable = async ({ className, searchParams }: Props) => {
 
               <td>
                 <Link
-                  href={`/app/spynet/citizen?filters=role-${role.id}`}
+                  href={serializeCitizenTableSearchParams(
+                    "/app/spynet/citizen",
+                    {
+                      role: [role.id],
+                    },
+                  )}
                   className="flex h-8 items-center justify-center gap-2 rounded-secondary px-2 hover:bg-white/10"
                   prefetch={false}
                 >

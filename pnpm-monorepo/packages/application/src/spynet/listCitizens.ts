@@ -5,7 +5,12 @@ import {
 import * as z from "zod";
 import { requirePermission, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
-import { pageLimitSchema } from "../pagination.js";
+import {
+  cursorSchema,
+  pageLimitSchema,
+  paginateByCursor,
+  type PageOptions,
+} from "../pagination.js";
 import { isRoleVisible } from "../roles/roleVisibility.js";
 import { withSpan } from "../withSpan.js";
 
@@ -53,8 +58,8 @@ export const listCitizensInputSchema = z.object({
     .default([])
     .describe("Only the citizens without at least one of these values."),
   sort: z.enum(CitizenListSort).default(CITIZEN_LIST_DEFAULT_SORT),
-  page: z.int().min(1).default(1).describe("The page, from 1."),
   limit: pageLimitSchema,
+  cursor: cursorSchema.optional(),
 });
 
 export interface CitizenListItem {
@@ -75,9 +80,12 @@ export interface CitizenListItem {
 
 export interface ListCitizensOutput {
   readonly citizens: CitizenListItem[];
+  /** The number of citizens with these filters, on all pages */
   readonly total: number;
-  readonly page: number;
-  readonly page_count: number;
+  /** Null on the last page */
+  readonly next_cursor: string | null;
+  /** Null on the first page */
+  readonly previous_cursor: string | null;
 }
 
 type SortValue = string | number | null;
@@ -116,7 +124,11 @@ interface Row {
   readonly roleAssignments: readonly { readonly roleId: string }[];
 }
 
-const compareRows = (sort: CitizenListSort) => (first: Row, second: Row) => {
+const compareRowsBySort = (
+  sort: CitizenListSort,
+  first: Row,
+  second: Row,
+): number => {
   switch (sort) {
     case CitizenListSort.HandleAscending:
       return compareAscending(first.handle, second.handle);
@@ -150,6 +162,13 @@ const compareRows = (sort: CitizenListSort) => (first: Row, second: Row) => {
   }
 };
 
+/**
+ * The id makes the order total: the cursor of a page is the id of its last
+ * citizen, thus citizens with the same value must keep their order
+ */
+const compareRows = (sort: CitizenListSort) => (first: Row, second: Row) =>
+  compareRowsBySort(sort, first, second) || first.id.localeCompare(second.id);
+
 const hasUnknownAttribute = (
   row: Row,
   unknownAttributes: readonly CitizenUnknownAttribute[],
@@ -172,12 +191,17 @@ const hasUnknownAttribute = (
  * One page of the citizens table of the Spynet: the citizens that are not
  * deleted, filtered by their visible roles and by missing values, and
  * sorted. The filters and the sort run in memory, because the role filter
- * depends on the permissions of the actor.
+ * depends on the permissions of the actor. The cursor is the id of a
+ * citizen.
+ *
+ * @throws ValidationError when no citizen of the list has the cursor (see
+ * `PageOptions.unknownCursor`)
  */
 export const listCitizens = async (
   context: ApplicationContext,
   actor: Actor,
   input: z.output<typeof listCitizensInputSchema>,
+  { direction, unknownCursor }: PageOptions = {},
 ): Promise<ListCitizensOutput> => {
   requirePermission(actor, "citizen", "read");
   requirePermission(actor, "spynetCitizen", "read");
@@ -233,10 +257,16 @@ export const listCitizens = async (
       )
       .toSorted(compareRows(sort));
 
-    const start = (input.page - 1) * input.limit;
+    const page = paginateByCursor(sortedRows, {
+      cursor: input.cursor,
+      direction,
+      unknownCursor,
+      pageSize: input.limit,
+      getCursor: (row) => row.id,
+    });
 
     return {
-      citizens: sortedRows.slice(start, start + input.limit).map((row) => ({
+      citizens: page.items.map((row) => ({
         id: row.id,
         handle: row.handle,
         spectrum_id: row.spectrumId,
@@ -247,8 +277,8 @@ export const listCitizens = async (
         role_ids: getVisibleRoleIds(actor, row.roleAssignments),
       })),
       total: sortedRows.length,
-      page: input.page,
-      page_count: Math.ceil(sortedRows.length / input.limit),
+      next_cursor: page.nextCursor,
+      previous_cursor: page.previousCursor,
     };
   });
 };

@@ -1,4 +1,4 @@
-import type { Page, Request } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import {
   ConfirmationStatus,
   type Prisma,
@@ -11,9 +11,9 @@ import {
   clickUntilVisible,
   DELETED_TEXT,
   modal,
+  pickFilterOption,
   RESOURCE_NOT_FOUND_TEXT,
   SAVED_TEXT,
-  toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -89,6 +89,9 @@ const createLogs = async (prisma: PrismaClient) => {
 const tableRows = (page: Page) =>
   page.locator("tbody tr").filter({ visible: true });
 
+const nextPageButton = (page: Page) =>
+  page.getByRole("button", { name: "Weiter", exact: true });
+
 const logContent = (page: Page, content: string) =>
   tableRows(page).getByText(content, { exact: true });
 
@@ -108,7 +111,6 @@ test("a viewer without the confirm permission sees only the confirmed logs of th
 
   await expect(logContent(page, NEWEST_CONFIRMED_HANDLE)).toBeVisible();
   await expect(tableRows(page)).toHaveCount(PER_PAGE);
-  await expect(page.getByText("1 / 2").filter({ visible: true })).toBeVisible();
   for (const content of [
     UNCONFIRMED_HANDLE,
     FALSE_REPORT_HANDLE,
@@ -116,9 +118,9 @@ test("a viewer without the confirm permission sees only the confirmed logs of th
   ])
     await expect(logContent(page, content)).toHaveCount(0);
 
-  await page.goto("/app/spynet/other?page=2");
-  await expect(page.getByText("2 / 2").filter({ visible: true })).toBeVisible();
+  await clickUntilUrl(page, nextPageButton(page), /cursor=/);
   await expect(tableRows(page)).toHaveCount(1);
+  await expect(nextPageButton(page)).toBeDisabled();
   await expect(logContent(page, OLDEST_CONFIRMED_HANDLE)).toBeVisible();
 });
 
@@ -149,18 +151,8 @@ test("a viewer with the confirm and read permissions sees all logs of these type
   ])
     await expect(logContent(page, content)).toBeVisible();
 
-  const confirmationFilter = page.getByRole("dialog", {
-    name: "Bestätigungsstatus",
-  });
-  await clickUntilVisible(
-    page.getByRole("button", { name: "Bestätigungsstatus" }),
-    confirmationFilter,
-  );
-  await clickUntilUrl(
-    page,
-    toggleLabel(confirmationFilter, "Falschmeldung"),
-    /filters=confirmation-false-report/,
-  );
+  await pickFilterOption(page, "Bestätigungsstatus", "Falschmeldung");
+  await expect(page).toHaveURL(/\?confirmation=false-report$/);
 
   await expect(tableRows(page)).toHaveCount(1);
   await expect(logContent(page, FALSE_REPORT_HANDLE)).toBeVisible();
@@ -236,6 +228,12 @@ test("a log is confirmed and deleted in the log table", async ({
   await expect(
     rowOf(page, "bestaetigter-handle").getByText("Unbestätigt"),
   ).toHaveCount(0);
+  /** "Bestätigt von" links to the citizen of the editor */
+  await expect(
+    rowOf(page, "bestaetigter-handle").getByRole("link", {
+      name: "log-bearbeiter",
+    }),
+  ).toBeVisible();
   expect(
     await prisma.citizen.findUniqueOrThrow({
       where: { id: citizen.id },
@@ -590,7 +588,7 @@ test("the change dialog of a note offers the classification levels of the select
   await expectAuditEvents(prisma, ["ENTITY_LOG_UPDATED"]);
 });
 
-test("the notes table shows only the notes that the read permissions allow, and counts only their pages", async ({
+test("the notes table shows only the notes that the read permissions allow, and pages only through them", async ({
   page,
   prisma,
   signIn,
@@ -674,7 +672,7 @@ test("the notes table shows only the notes that the read permissions allow, and 
   for (const content of readableContents)
     await expect(logContent(page, content)).toBeVisible();
   await expect(tableRows(page)).toHaveCount(readableContents.length);
-  await expect(page.getByText("1 / 1").filter({ visible: true })).toBeVisible();
+  await expect(nextPageButton(page)).toHaveCount(0);
   /** The viewer may read the rumour without a decision, but not decide it */
   await expect(
     rowOf(page, "Unbestätigtes Gerücht").getByText("Unbestätigt", {
@@ -687,20 +685,12 @@ test("the notes table shows only the notes that the read permissions allow, and 
     ).toHaveCount(0);
 
   /** The filter offers only the classification levels of these notes */
-  const classificationLevelFilter = page.getByRole("dialog", {
-    name: "Geheimhaltungsstufen",
-  });
+  const options = page.getByRole("option");
   await clickUntilVisible(
-    page.getByRole("button", { name: "Geheimhaltungsstufen" }),
-    classificationLevelFilter,
+    page.getByRole("combobox", { name: "Geheimhaltungsstufe" }),
+    options.first(),
   );
-  await expect(classificationLevelFilter.getByRole("checkbox")).toHaveCount(1);
-  await expect(
-    classificationLevelFilter.getByRole("checkbox", {
-      name: "Geheim",
-      exact: true,
-    }),
-  ).toBeVisible();
+  await expect(options).toHaveText(["Geheim"]);
 });
 
 test("the notes table shows the decision buttons only with the permission to confirm the note", async ({
@@ -771,9 +761,6 @@ test("the notes table shows the decision buttons only with the permission to con
   await expectAuditEvents(prisma, ["ENTITY_LOG_CONFIRMED"]);
 });
 
-const headerLink = (page: Page, name: string) =>
-  page.locator("thead").getByRole("link", { name, exact: true });
-
 test("the log table sorts by the confirmation time and keeps the sort and the filters on the next page", async ({
   page,
   prisma,
@@ -793,7 +780,7 @@ test("the log table sorts by the confirmation time and keeps the sort and the fi
   await signIn(viewer.user);
   await page.goto("/app/spynet/other");
 
-  await headerLink(page, "Eingereicht am").click();
+  await pickFilterOption(page, "Sortierung", "Eingereicht am ↑");
   await expect(page).toHaveURL(/sort=created-at-asc/);
   await expect(tableRows(page).first()).toContainText(OLDEST_CONFIRMED_HANDLE);
 
@@ -801,185 +788,37 @@ test("the log table sorts by the confirmation time and keeps the sort and the fi
    * The newest confirmation first, and the log without a decision last: on
    * the second page after the three oldest confirmed logs
    */
-  await headerLink(page, "Bestätigt am").click();
+  await pickFilterOption(page, "Sortierung", "Bestätigt am ↓");
   await expect(page).toHaveURL(/sort=confirmed-at-desc/);
   await expect(logContent(page, CONFIRMED_DISCORD_ID)).toBeVisible();
-  await expect(
-    page.locator("thead").getByRole("columnheader", { name: "Bestätigt am" }),
-  ).toHaveAttribute("aria-sort", "descending");
-  await page.getByRole("link", { name: "Nächste Seite" }).click();
-  await expect(page).toHaveURL(/page=2/);
+  /** The cursor of "Weiter" comes from the render of the new sort */
+  await expect(logContent(page, UNCONFIRMED_HANDLE)).toHaveCount(0);
+  await clickUntilUrl(page, nextPageButton(page), /cursor=/);
   await expect(page).toHaveURL(/sort=confirmed-at-desc/);
   await expect(tableRows(page)).toHaveCount(4);
   await expect(tableRows(page).last()).toContainText(UNCONFIRMED_HANDLE);
 
-  /** 51 confirmed handle logs and the confirmed Discord ID: two pages */
-  await page.goto("/app/spynet/other");
-  const confirmationFilter = page.getByRole("dialog", {
-    name: "Bestätigungsstatus",
-  });
-  await clickUntilVisible(
-    page.getByRole("button", { name: "Bestätigungsstatus" }),
-    confirmationFilter,
-  );
   await clickUntilUrl(
     page,
-    toggleLabel(confirmationFilter, /^Bestätigt$/),
-    /filters=confirmation-confirmed$/,
+    page.getByRole("button", { name: "Zurück", exact: true }),
+    /direction=prev/,
   );
-  await expect(page.getByText("1 / 2").filter({ visible: true })).toBeVisible();
-  await page.keyboard.press("Escape");
-  await expect(confirmationFilter).not.toBeVisible();
-
-  await page.getByRole("link", { name: "Nächste Seite" }).click();
-  await expect(page).toHaveURL(/page=2/);
-  await expect(page).toHaveURL(/filters=confirmation-confirmed/);
-  await expect(tableRows(page)).toHaveCount(2);
-  await expect(tableRows(page).last()).toContainText(OLDEST_CONFIRMED_HANDLE);
-
-  // A page number below 1 shows the first page
-  await page.goto("/app/spynet/other?page=-1");
-  await expect(page.getByText("1 / 2").filter({ visible: true })).toBeVisible();
   await expect(tableRows(page)).toHaveCount(PER_PAGE);
-});
-
-/** Resolves when the browser has the full response, or cancelled the request */
-const waitUntilSettled = (page: Page, request: Request) =>
-  new Promise<void>((resolve) => {
-    const onSettled = (settledRequest: Request) => {
-      if (settledRequest !== request) return;
-      page.off("requestfinished", onSettled);
-      page.off("requestfailed", onSettled);
-      resolve();
-    };
-    page.on("requestfinished", onSettled);
-    page.on("requestfailed", onSettled);
-  });
-
-/**
- * Holds the server render of the log table for the given filters until
- * `release()`. Next.js asks for a server render with the RSC header, a
- * prefetch also carries the prefetch header. A page link or a sort link adds
- * its parameter, thus the render of a link click does not wait.
- */
-const holdFilterRender = async (page: Page, filters: string) => {
-  const released = Promise.withResolvers<void>();
-  /**
-   * One promise for each held request. The listeners start when the request
-   * is held: the browser can cancel the request before `release()`.
-   */
-  const settledRequests: Promise<void>[] = [];
-
-  const isFilterChange = (url: URL) =>
-    url.pathname === "/app/spynet/other" &&
-    url.searchParams.get("filters") === filters &&
-    !url.searchParams.has("page") &&
-    !url.searchParams.has("sort");
-  await page.route(isFilterChange, async (route) => {
-    const headers = route.request().headers();
-    if (headers.rsc === "1" && !headers["next-router-prefetch"]) {
-      settledRequests.push(waitUntilSettled(page, route.request()));
-      await released.promise;
-    }
-    await route.continue();
-  });
-
-  return {
-    heldRequestCount: () => settledRequests.length,
-    /**
-     * Sends the held requests to the server and waits until they settle.
-     * Next.js cancels the response of a navigation that a newer navigation
-     * replaced.
-     */
-    release: async () => {
-      released.resolve();
-      await Promise.all(settledRequests);
-      await page.unroute(isFilterChange);
-    },
-  };
-};
-
-test("the page and sort links keep a filter change that the server did not render yet", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const viewer = await createCitizen(prisma, {
-    handle: "log-filterer",
-    permissionStrings: [
-      ...OTHER_TABLE_PERMISSIONS,
-      "handle;read",
-      "handle;confirm",
-      "discord-id;read",
-    ],
-  });
-  await createLogs(prisma);
-  const confirmationFilter = page.getByRole("dialog", {
-    name: "Bestätigungsstatus",
-  });
-
-  /**
-   * Selects one confirmation filter. The table keeps the rows without the
-   * filter, because the server render of the change waits.
-   */
-  const filterWithoutRender = async (label: RegExp, filters: string) => {
-    await page.goto("/app/spynet/other");
-    const render = await holdFilterRender(page, filters);
-    await clickUntilVisible(
-      page.getByRole("button", { name: "Bestätigungsstatus" }),
-      confirmationFilter,
-    );
-    await clickUntilUrl(
-      page,
-      toggleLabel(confirmationFilter, label),
-      new RegExp(`\\?filters=${filters}$`),
-    );
-    await expect.poll(render.heldRequestCount).toBeGreaterThan(0);
-    await page.keyboard.press("Escape");
-    await expect(confirmationFilter).not.toBeVisible();
-    await expect(logContent(page, UNCONFIRMED_HANDLE)).toBeVisible();
-    return render;
-  };
-
-  await signIn(viewer.user);
+  await expect(logContent(page, CONFIRMED_DISCORD_ID)).toBeVisible();
 
   /** 51 confirmed handle logs and the confirmed Discord ID: two pages */
-  const pageRender = await filterWithoutRender(
-    /^Bestätigt$/,
-    "confirmation-confirmed",
-  );
-  await page.getByRole("link", { name: "Nächste Seite" }).click();
-  await expect(page).toHaveURL(
-    /\/app\/spynet\/other\?filters=confirmation-confirmed&page=2$/,
-  );
+  await page.goto("/app/spynet/other");
+  await pickFilterOption(page, "Bestätigungsstatus", "Bestätigt");
+  await expect(page).toHaveURL(/\?confirmation=confirmed$/);
+  await expect(logContent(page, UNCONFIRMED_HANDLE)).toHaveCount(0);
+
+  await clickUntilUrl(page, nextPageButton(page), /cursor=/);
+  await expect(page).toHaveURL(/confirmation=confirmed/);
   await expect(tableRows(page)).toHaveCount(2);
   await expect(tableRows(page).last()).toContainText(OLDEST_CONFIRMED_HANDLE);
-
-  /** The late render of the filter change does not replace the next page */
-  await pageRender.release();
-  await expect(page).toHaveURL(
-    /\/app\/spynet\/other\?filters=confirmation-confirmed&page=2$/,
-  );
-  await expect(tableRows(page)).toHaveCount(2);
-
-  const sortRender = await filterWithoutRender(
-    /^Falschmeldung$/,
-    "confirmation-false-report",
-  );
-  await headerLink(page, "Eingereicht am").click();
-  await expect(page).toHaveURL(
-    /\/app\/spynet\/other\?filters=confirmation-false-report&sort=created-at-asc$/,
-  );
-  await expect(tableRows(page)).toHaveCount(1);
-  await expect(logContent(page, FALSE_REPORT_HANDLE)).toBeVisible();
-  await sortRender.release();
-  await expect(page).toHaveURL(
-    /\/app\/spynet\/other\?filters=confirmation-false-report&sort=created-at-asc$/,
-  );
-  await expect(tableRows(page)).toHaveCount(1);
 });
 
-test("the notes table keeps the note type filters of an old bookmark when it sorts", async ({
+test("the notes table filters by note types and keeps the filter when it sorts", async ({
   page,
   prisma,
   signIn,
@@ -1024,36 +863,23 @@ test("the notes table keeps the note type filters of an old bookmark when it sor
   });
 
   await signIn(viewer.user);
+  await page.goto("/app/spynet/notes");
+  await expect(tableRows(page)).toHaveCount(3);
 
-  /** The format of the filter list before nuqs: URLSearchParams encoded the comma */
-  await page.goto(
-    `/app/spynet/notes?filters=note-type-${observation.id}%2Cnote-type-${rumour.id}`,
+  await pickFilterOption(page, "Notizart", "Beobachtung");
+  await expect(page).toHaveURL(new RegExp(`\\?note_type=${observation.id}$`));
+  await pickFilterOption(page, "Notizart", "Gerücht");
+  await expect(page).toHaveURL(
+    new RegExp(`\\?note_type=${observation.id},${rumour.id}$`),
   );
   await expect(tableRows(page)).toHaveCount(2);
   await expect(tableRows(page).first()).toContainText("Notiz: Beobachtung");
   await expect(logContent(page, "Notiz: Sichtung")).toHaveCount(0);
 
-  const noteTypeFilter = page.getByRole("dialog", { name: "Notizarten" });
-  await clickUntilVisible(
-    page.getByRole("button", { name: "Notizarten" }),
-    noteTypeFilter,
-  );
-  await expect(
-    noteTypeFilter.getByRole("checkbox", { name: "Beobachtung" }),
-  ).toBeChecked();
-  await expect(
-    noteTypeFilter.getByRole("checkbox", { name: "Gerücht" }),
-  ).toBeChecked();
-  await expect(
-    noteTypeFilter.getByRole("checkbox", { name: "Sichtung" }),
-  ).not.toBeChecked();
-  await page.keyboard.press("Escape");
-  await expect(noteTypeFilter).not.toBeVisible();
-
-  await headerLink(page, "Eingereicht am").click();
+  await pickFilterOption(page, "Sortierung", "Eingereicht am ↑");
   await expect(page).toHaveURL(/sort=created-at-asc/);
   await expect(page).toHaveURL(
-    new RegExp(`filters=note-type-${observation.id},note-type-${rumour.id}`),
+    new RegExp(`note_type=${observation.id},${rumour.id}`),
   );
   await expect(tableRows(page)).toHaveCount(2);
   await expect(tableRows(page).first()).toContainText("Notiz: Gerücht");

@@ -3,68 +3,82 @@ import {
   getRequestActor,
   throwApplicationErrorForPage,
 } from "@/modules/application";
-import { loadCitizenLogTableSearchParams } from "@/modules/citizen/utils/citizenLogTableSearchParams";
-import { getFilterValues } from "@/modules/common/utils/filterCheckboxListParsers";
-import { PER_PAGE } from "@/modules/common/utils/pagination";
-import { findIdentityLogTablePage } from "@sam-monorepo/application";
-import clsx from "clsx";
+import {
+  limitFilterValues,
+  loadCitizenLogTableSearchParams,
+} from "@/modules/citizen/utils/citizenLogTableSearchParams";
+import {
+  TableTile,
+  type TableColumn,
+} from "@/modules/common/components/TableTile";
+import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
+import {
+  findIdentityLogTablePage,
+  UnknownCursorBehavior,
+} from "@sam-monorepo/application";
 import type { SearchParams } from "nuqs/server";
-import { CitizenLogTablePagination } from "./CitizenLogTableLinks";
-import { OtherFilters } from "./OtherFilters";
-import { OtherTable } from "./OtherTable";
+import { CITIZEN_LOG_TABLE_COLUMNS } from "./citizenLogTableColumns";
+import { OtherTableRow } from "./OtherTableRow";
+
+const COLUMNS: TableColumn[] = [
+  CITIZEN_LOG_TABLE_COLUMNS.citizen,
+  {
+    key: "type",
+    label: "Merkmal",
+    track: "minmax(140px,1fr)",
+    minWidth: 140,
+  },
+  { key: "content", label: "Wert", track: "minmax(200px,2fr)", minWidth: 200 },
+  ...CITIZEN_LOG_TABLE_COLUMNS.end,
+];
+
+/** The number of rows on one page of the table */
+const PAGE_SIZE = 50;
 
 interface Props {
   readonly className?: string;
   readonly searchParams: Promise<SearchParams>;
 }
 
-const loadOtherTable = async (searchParams: Promise<SearchParams>) => {
-  const { filters, sort, page } =
+export const OtherTableTile = async ({ className, searchParams }: Props) => {
+  const { type, confirmation, sort, cursor, direction } =
     await loadCitizenLogTableSearchParams(searchParams);
 
-  try {
-    return await findIdentityLogTablePage(
-      getApplicationContext(),
-      await getRequestActor(),
-      {
-        filters: {
-          types: getFilterValues(filters, "type"),
-          confirmationValues: getFilterValues(filters, "confirmation"),
-        },
-        sort,
-        page,
+  const { rows, nextCursor, prevCursor } = await findIdentityLogTablePage(
+    getApplicationContext(),
+    await getRequestActor(),
+    {
+      filters: {
+        types: limitFilterValues(type),
+        confirmationValues: limitFilterValues(confirmation),
       },
-      { pageSize: PER_PAGE },
-    );
-  } catch (error) {
-    return throwApplicationErrorForPage(error);
-  }
-};
-
-const OtherTableTile = async ({ className, searchParams }: Props) => {
-  const { rows, totalPages, options } = await loadOtherTable(searchParams);
+      sort,
+      cursor,
+    },
+    {
+      pageSize: PAGE_SIZE,
+      direction,
+      unknownCursor: UnknownCursorBehavior.FirstPage,
+    },
+  ).catch(throwApplicationErrorForPage);
 
   return (
-    <section
-      className={clsx(
-        "overflow-auto rounded-primary bg-neutral-800/50 p-6",
-        className,
-      )}
-    >
-      <div className="mb-6">
-        <OtherFilters
-          confirmationStates={options.confirmationStates}
-          types={options.types}
+    <TableTile
+      className={className}
+      columns={COLUMNS}
+      isEmpty={rows.length === 0}
+      emptyMessage="Keine Einträge gefunden."
+      bodyClassName="text-sm"
+      footer={
+        <CursorPaginationControls
+          nextCursor={nextCursor}
+          prevCursor={prevCursor}
         />
-      </div>
-
-      <OtherTable rows={rows} />
-
-      <div className="mt-6 flex justify-center">
-        <CitizenLogTablePagination totalPages={totalPages} />
-      </div>
-    </section>
+      }
+    >
+      {rows.map((log) => (
+        <OtherTableRow key={log.id} log={log} />
+      ))}
+    </TableTile>
   );
 };
-
-export default OtherTableTile;

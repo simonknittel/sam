@@ -49,15 +49,11 @@ export const SingleSelectComboboxFilter = ({
   const selectedItem =
     items.find((item) => item.value === selectedValue) ?? null;
 
-  const setValueAndResetPagination = async (newValue: Item | null) => {
-    await setSelectedValue(newValue?.value ?? null);
-
-    if (resetCursorPagination) {
-      await setPagination({
-        cursor: null,
-        direction: null,
-      });
-    }
+  const setValueAndResetPagination = (newValue: Item | null) => {
+    /** In the same tick, nuqs gives both changes one URL update */
+    void setSelectedValue(newValue?.value ?? null);
+    if (resetCursorPagination)
+      void setPagination({ cursor: null, direction: null });
   };
 
   const loader = useTopLoader();
