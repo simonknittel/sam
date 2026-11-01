@@ -41,7 +41,7 @@ export const AdminToolbarClient = ({
   ];
 
   return (
-    <div className="fixed top-2 left-1/2 z-50 flex max-w-[calc(100vw-1rem)] -translate-x-1/2 gap-2">
+    <>
       {assumedUserLabel !== null && (
         <AssumedUserBanner assumedUserLabel={assumedUserLabel} />
       )}
@@ -69,6 +69,6 @@ export const AdminToolbarClient = ({
           <GreetingBannerPreviewTool preview={greetingBannerPreview} />
         </AdminToolbarSection>
       </AdminToolbarShell>
-    </div>
+    </>
   );
 };
