@@ -6,6 +6,7 @@ import { EventBriefingPublishedHandler } from "./type-handlers/EventBriefingPubl
 import { EventCreatedHandler } from "./type-handlers/EventCreated";
 import { EventDeletedHandler } from "./type-handlers/EventDeleted";
 import { EventLineupEnabledHandler } from "./type-handlers/EventLineupEnabled";
+import { EventMorningReminderHandler } from "./type-handlers/EventMorningReminder";
 import { EventParticipationAddedHandler } from "./type-handlers/EventParticipationAdded";
 import { EventParticipationRemovedHandler } from "./type-handlers/EventParticipationRemoved";
 import { EventStartingHandler } from "./type-handlers/EventStarting";
@@ -49,6 +50,9 @@ export const notificationRouterHandler = async (
       break;
     case "EventBriefingPublished":
       await EventBriefingPublishedHandler(context, body.payload);
+      break;
+    case "EventMorningReminder":
+      await EventMorningReminderHandler(context, body.payload);
       break;
     case "EventStarting":
       await EventStartingHandler(context, body.payload);
@@ -152,6 +156,14 @@ export const bodySchema = z.discriminatedUnion("type", [
 
   z.object({
     type: z.literal("EventLineupEnabled"),
+    payload: z.object({
+      eventId: z.cuid(),
+    }),
+    requestId: z.cuid2(),
+  }),
+
+  z.object({
+    type: z.literal("EventMorningReminder"),
     payload: z.object({
       eventId: z.cuid(),
     }),
