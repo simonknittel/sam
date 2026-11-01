@@ -26,13 +26,16 @@ export interface IdentityLogTablePageInput extends CitizenLogTablePageRequest {
   };
 }
 
-export interface IdentityLogTablePage extends CitizenLogTablePage {
-  /** The values that at least one visible log has: the filters offer them */
-  readonly options: {
-    readonly types: GenericCitizenLogType[];
-    readonly confirmationStates: (ConfirmationStatus | null)[];
-  };
+/** The values that at least one visible log has: the filters offer them */
+export interface IdentityLogTableFilterOptions {
+  readonly types: GenericCitizenLogType[];
+  readonly confirmationStates: (ConfirmationStatus | null)[];
 }
+
+const requireIdentityLogTablePermissions = (actor: Actor) => {
+  requirePermission(actor, "citizen", "read");
+  requirePermission(actor, "spynetOther", "read");
+};
 
 /**
  * One page of the table of the identity logs (handles, IDs, …) of the
@@ -43,48 +46,48 @@ export const findIdentityLogTablePage = async (
   actor: Actor,
   { filters, ...pageRequest }: IdentityLogTablePageInput,
   options: CitizenLogTablePageOptions,
-): Promise<IdentityLogTablePage> => {
-  requirePermission(actor, "citizen", "read");
-  requirePermission(actor, "spynetOther", "read");
+): Promise<CitizenLogTablePage> => {
+  requireIdentityLogTablePermissions(actor);
 
-  const visibleWhere = await getReadableCitizenLogWhere(
+  return loadCitizenLogTablePage(
     context,
-    actor,
-    IDENTITY_LOG_TYPES,
-  );
-
-  const [page, filterOptions] = await Promise.all([
-    loadCitizenLogTablePage(
-      context,
-      {
-        AND: [
-          visibleWhere,
-          getConfirmationFilterWhere(filters.confirmationValues),
-          filters.types.length > 0 ? { type: { in: [...filters.types] } } : {},
-        ],
-      },
-      pageRequest,
-      options,
-    ),
-    context.prisma.citizenLog.groupBy({
-      by: ["type", "confirmed"],
-      where: visibleWhere,
-    }),
-  ]);
-
-  return {
-    ...page,
-    options: {
-      types: [
-        ...new Set(
-          filterOptions.flatMap((option) =>
-            IDENTITY_LOG_TYPES.filter((type) => type === option.type),
-          ),
-        ),
-      ],
-      confirmationStates: [
-        ...new Set(filterOptions.map((option) => option.confirmed)),
+    {
+      AND: [
+        await getReadableCitizenLogWhere(context, actor, IDENTITY_LOG_TYPES),
+        getConfirmationFilterWhere(filters.confirmationValues),
+        filters.types.length > 0 ? { type: { in: [...filters.types] } } : {},
       ],
     },
+    pageRequest,
+    options,
+  );
+};
+
+/**
+ * The filter values of the identity log table, independent of the selected
+ * filters. Requires `citizen;read` and `spynetOther;read`, like the page.
+ */
+export const findIdentityLogTableFilterOptions = async (
+  context: Pick<ApplicationContext, "prisma">,
+  actor: Actor,
+): Promise<IdentityLogTableFilterOptions> => {
+  requireIdentityLogTablePermissions(actor);
+
+  const filterOptions = await context.prisma.citizenLog.groupBy({
+    by: ["type", "confirmed"],
+    where: await getReadableCitizenLogWhere(context, actor, IDENTITY_LOG_TYPES),
+  });
+
+  return {
+    types: [
+      ...new Set(
+        filterOptions.flatMap((option) =>
+          IDENTITY_LOG_TYPES.filter((type) => type === option.type),
+        ),
+      ),
+    ],
+    confirmationStates: [
+      ...new Set(filterOptions.map((option) => option.confirmed)),
+    ],
   };
 };
