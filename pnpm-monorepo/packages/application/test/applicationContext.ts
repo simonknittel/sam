@@ -102,6 +102,8 @@ interface TestActorOptions {
   readonly permissionStrings?: readonly string[];
   /** The ids of the effective roles of the actor */
   readonly roleIds?: readonly string[];
+  /** Gives the actor the admin role without admin mode */
+  readonly admin?: boolean;
   /** Gives the actor the admin role with admin mode */
   readonly adminMode?: boolean;
 }
@@ -115,11 +117,12 @@ export const createTestActor = ({
   citizen = null,
   permissionStrings = [],
   roleIds = [],
+  admin = false,
   adminMode = false,
 }: TestActorOptions): Actor =>
   createActor({
     userId,
-    userRole: adminMode ? UserRole.ADMIN : null,
+    userRole: admin || adminMode ? UserRole.ADMIN : null,
     emailConfirmedAt: TEST_NOW,
     citizen,
     roleIds: new Set(roleIds),

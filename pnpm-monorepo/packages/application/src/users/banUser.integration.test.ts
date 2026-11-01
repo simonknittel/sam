@@ -7,7 +7,9 @@ import {
 } from "../../test/applicationContext.js";
 import { createTestCollabServer } from "../../test/collabServer.js";
 import { truncateAllTables } from "../../test/database.js";
+import { ForbiddenError } from "../errors.js";
 import { banUser } from "./banUser.js";
+import { unbanUser } from "./unbanUser.js";
 
 beforeEach(async () => {
   await truncateAllTables();
@@ -36,17 +38,13 @@ const createUserWithDevices = async (handle: string) => {
   return user;
 };
 
-const createModerator = async () => {
+const createAdmin = async () => {
   const citizen = await prisma.citizen.create({
-    data: { handle: "moderator", user: { create: {} } },
+    data: { handle: "admin", user: { create: {} } },
     select: { id: true, handle: true, userId: true },
   });
 
-  return createTestActor({
-    userId: citizen.userId!,
-    citizen,
-    permissionStrings: ["user;ban"],
-  });
+  return createTestActor({ userId: citizen.userId!, citizen, admin: true });
 };
 
 test("deletes the sessions and the web push subscriptions and ends the live connections", async () => {
@@ -57,7 +55,7 @@ test("deletes the sessions and the web push subscriptions and ends the live conn
     collab,
   });
 
-  await banUser(context, await createModerator(), {
+  await banUser(context, await createAdmin(), {
     user_id: bannedUser.id,
   });
 
@@ -89,7 +87,7 @@ test("keeps the ban when the live connections cannot be ended", async () => {
   });
 
   await expect(
-    banUser(context, await createModerator(), { user_id: bannedUser.id }),
+    banUser(context, await createAdmin(), { user_id: bannedUser.id }),
   ).resolves.toEqual({
     user_id: bannedUser.id,
     banned_at: TEST_NOW.toISOString(),
@@ -102,4 +100,37 @@ test("keeps the ban when the live connections cannot be ended", async () => {
     }),
   ).resolves.toEqual({ bannedAt: TEST_NOW });
   expect(loggedErrors).toHaveLength(2);
+});
+
+test("refuses a user without the admin role, also with every user permission of a role", async () => {
+  const targetUser = await createUserWithDevices("target");
+  const citizen = await prisma.citizen.create({
+    data: { handle: "manager", user: { create: {} } },
+    select: { id: true, handle: true, userId: true },
+  });
+  // `manage` includes all operations of a resource
+  const manager = createTestActor({
+    userId: citizen.userId!,
+    citizen,
+    permissionStrings: ["user;manage"],
+  });
+  const { context } = createTestApplicationContext();
+
+  await expect(
+    banUser(context, manager, { user_id: targetUser.id }),
+  ).rejects.toThrow(ForbiddenError);
+
+  await prisma.user.update({
+    where: { id: targetUser.id },
+    data: { bannedAt: TEST_NOW },
+  });
+  await expect(
+    unbanUser(context, manager, { user_id: targetUser.id }),
+  ).rejects.toThrow(ForbiddenError);
+  await expect(
+    prisma.user.findUniqueOrThrow({
+      where: { id: targetUser.id },
+      select: { bannedAt: true },
+    }),
+  ).resolves.toEqual({ bannedAt: TEST_NOW });
 });

@@ -119,6 +119,15 @@ export const requirePermission = (
 };
 
 /**
+ * Throws a `ForbiddenError` when the actor does not have the admin role.
+ * Admin mode is not necessary, and no role permission replaces the admin role.
+ */
+export const requireAdmin = (actor: Actor) => {
+  if (actor.userRole !== UserRole.ADMIN)
+    throw new ForbiddenError("The user is not an admin");
+};
+
+/**
  * Whether the actor has at least one of the permission strings. An absent or
  * empty list means that no permission is necessary. The app catalog and the
  * onboarding read their required permissions as permission strings.

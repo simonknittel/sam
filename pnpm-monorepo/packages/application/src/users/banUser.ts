@@ -4,7 +4,7 @@ import {
   BAN_REASON_MAXIMUM_LENGTH,
 } from "@sam-monorepo/domain";
 import * as z from "zod";
-import { requireCitizen, requirePermission, type Actor } from "../actor.js";
+import { requireAdmin, requireCitizen, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { ConflictError, NotFoundError, ValidationError } from "../errors.js";
 import { idSchema } from "../pagination.js";
@@ -58,9 +58,10 @@ const endLiveConnections = async (
 
 /**
  * Bans a user, revokes their sessions, deletes the web push subscriptions of
- * their citizen and ends their open connections. Requires `user;ban` and a
- * citizen of the actor, who is the person that banned the user.
+ * their citizen and ends their open connections. Requires the admin role and
+ * a citizen of the actor, who is the person that banned the user.
  *
+ * @throws ForbiddenError when the actor is not an admin or has no citizen
  * @throws ValidationError when the actor bans themselves, or when the user is
  * an admin
  * @throws NotFoundError when the user does not exist
@@ -73,7 +74,7 @@ export const banUser = (
   input: BanUserInput,
 ): Promise<BanUserOutput> =>
   withSpan(context, "banUser", async () => {
-    requirePermission(actor, "user", "ban");
+    requireAdmin(actor);
     const bannedBy = requireCitizen(actor);
 
     if (input.user_id === actor.userId)
