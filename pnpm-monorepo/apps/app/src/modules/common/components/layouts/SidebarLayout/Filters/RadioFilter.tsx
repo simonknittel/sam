@@ -34,15 +34,11 @@ export const RadioFilter = ({
     startTransition,
   });
 
-  const setValueAndResetPagination = async (newValue: string) => {
-    await setValue(newValue);
-
-    if (resetCursorPagination) {
-      await setPagination({
-        cursor: null,
-        direction: null,
-      });
-    }
+  const setValueAndResetPagination = (newValue: string) => {
+    /** In the same tick, nuqs gives both changes one URL update */
+    void setValue(newValue);
+    if (resetCursorPagination)
+      void setPagination({ cursor: null, direction: null });
   };
 
   const loader = useTopLoader();

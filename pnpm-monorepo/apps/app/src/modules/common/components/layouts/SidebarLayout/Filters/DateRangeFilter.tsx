@@ -57,15 +57,15 @@ export const DateRangeFilter = ({
    * Both bounds go into the URL, thus a bound that only showed its default
    * keeps the value that the user saw
    */
-  const setBound = async (name: string, value: string) => {
-    await setRange({
+  const setBound = (name: string, value: string) => {
+    /** In the same tick, nuqs gives both changes one URL update */
+    void setRange({
       [fromName]: from,
       [toName]: to,
       [name]: value === "" ? null : value,
     });
-
     if (resetCursorPagination)
-      await setPagination({ cursor: null, direction: null });
+      void setPagination({ cursor: null, direction: null });
   };
 
   const loader = useTopLoader();
@@ -84,7 +84,7 @@ export const DateRangeFilter = ({
           labelClassName="text-sm text-white/60"
           value={from ?? ""}
           max={to ?? undefined}
-          onChange={(event) => void setBound(fromName, event.target.value)}
+          onChange={(event) => setBound(fromName, event.target.value)}
           className="mt-1"
         />
 
@@ -93,7 +93,7 @@ export const DateRangeFilter = ({
           labelClassName="text-sm text-white/60"
           value={to ?? ""}
           min={from ?? undefined}
-          onChange={(event) => void setBound(toName, event.target.value)}
+          onChange={(event) => setBound(toName, event.target.value)}
           className="mt-1"
         />
       </div>

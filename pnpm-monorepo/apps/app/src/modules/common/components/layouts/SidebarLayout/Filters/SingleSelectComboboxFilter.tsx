@@ -49,15 +49,11 @@ export const SingleSelectComboboxFilter = ({
   const selectedItem =
     items.find((item) => item.value === selectedValue) ?? null;
 
-  const setValueAndResetPagination = async (newValue: Item | null) => {
-    await setSelectedValue(newValue?.value ?? null);
-
-    if (resetCursorPagination) {
-      await setPagination({
-        cursor: null,
-        direction: null,
-      });
-    }
+  const setValueAndResetPagination = (newValue: Item | null) => {
+    /** In the same tick, nuqs gives both changes one URL update */
+    void setSelectedValue(newValue?.value ?? null);
+    if (resetCursorPagination)
+      void setPagination({ cursor: null, direction: null });
   };
 
   const loader = useTopLoader();
@@ -82,6 +78,7 @@ export const SingleSelectComboboxFilter = ({
             <Combobox.InputGroup>
               <Combobox.Input
                 id={id}
+                aria-label={label}
                 placeholder={placeholder}
                 className="h-6 w-full min-w-16 flex-1 border-0 bg-transparent px-1 text-sm outline-none placeholder:text-neutral-500"
                 autoComplete="off"
