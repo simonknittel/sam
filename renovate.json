@@ -27,6 +27,38 @@
       "pinDigests": false
     },
     {
+      "description": "OpenTelemetry 0.300.0 breaks the app on Vercel: the ESM build of @opentelemetry/instrumentation-http loads forwarded-parse through createRequire, thus the build does not include it (https://github.com/open-telemetry/opentelemetry-js/issues/7229). Remove these rules when a release fixes the issue.",
+      "matchDepNames": [
+        "@opentelemetry/api-logs",
+        "@opentelemetry/exporter-trace-otlp-proto",
+        "@opentelemetry/instrumentation-http",
+        "@opentelemetry/sdk-logs",
+        "@opentelemetry/sdk-node"
+      ],
+      "allowedVersions": "<0.300.0"
+    },
+    {
+      "description": "These versions require @opentelemetry/instrumentation 0.300.0, see the rule above.",
+      "matchDepNames": [
+        "@opentelemetry/instrumentation-aws-sdk"
+      ],
+      "allowedVersions": "<0.79.0"
+    },
+    {
+      "description": "These versions require @opentelemetry/instrumentation 0.300.0, see the rule above.",
+      "matchDepNames": [
+        "@opentelemetry/instrumentation-undici"
+      ],
+      "allowedVersions": "<0.34.0"
+    },
+    {
+      "description": "The SDK packages before 0.300.0 require @opentelemetry/api below 1.10.0, see the rule above.",
+      "matchDepNames": [
+        "@opentelemetry/api"
+      ],
+      "allowedVersions": "<1.10.0"
+    },
+    {
       "groupName": "Patch Tuesday",
       "groupSlug": "patch-tuesday",
       "matchUpdateTypes": [
