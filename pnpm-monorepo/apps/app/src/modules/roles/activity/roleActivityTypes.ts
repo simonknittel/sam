@@ -3,7 +3,7 @@ export enum RoleActivitySourceKey {
   AssignmentLevel = "role-assignment-level",
 }
 
-/** Doubles as the labels of the activity type filter. */
+/** The labels of the activity type filter and of the type column. */
 export const ROLE_ACTIVITY_TYPE_LABELS: Record<RoleActivitySourceKey, string> =
   {
     [RoleActivitySourceKey.Assignment]: "Rollen-Zuweisung",

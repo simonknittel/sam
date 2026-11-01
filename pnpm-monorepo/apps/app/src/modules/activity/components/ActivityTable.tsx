@@ -21,6 +21,13 @@ const ACTOR_COLUMN: TableColumn = {
   minWidth: 180,
 };
 
+const TYPE_COLUMN: TableColumn = {
+  key: ActivityColumn.Type,
+  label: "Typ",
+  track: "180px",
+  minWidth: 180,
+};
+
 const MESSAGE_COLUMN: TableColumn = {
   key: "message",
   label: "Aktivität",
@@ -64,7 +71,6 @@ export const ActivityTable = ({
 }: Props) => {
   const tableColumns: TableColumn[] = [
     DATE_COLUMN,
-    ...(columns.includes(ActivityColumn.Actor) ? [ACTOR_COLUMN] : []),
     ...(columns.includes(ActivityColumn.Target)
       ? [
           {
@@ -75,7 +81,9 @@ export const ActivityTable = ({
           },
         ]
       : []),
+    ...(columns.includes(ActivityColumn.Type) ? [TYPE_COLUMN] : []),
     MESSAGE_COLUMN,
+    ...(columns.includes(ActivityColumn.Actor) ? [ACTOR_COLUMN] : []),
     ...(columns.includes(ActivityColumn.Confirmation)
       ? [CONFIRMATION_COLUMN]
       : []),

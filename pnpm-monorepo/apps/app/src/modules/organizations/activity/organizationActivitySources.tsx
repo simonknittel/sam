@@ -17,7 +17,10 @@ import {
 import type { MergedCursorSourceInput } from "@sam-monorepo/domain";
 import { ConfirmMembership } from "../components/ConfirmMembership";
 import { OrganizationLink } from "../components/OrganizationLink";
-import { OrganizationActivitySourceKey } from "./organizationActivityTypes";
+import {
+  ORGANIZATION_ACTIVITY_TYPE_LABELS,
+  OrganizationActivitySourceKey,
+} from "./organizationActivityTypes";
 
 interface Input {
   /** Restricts the source to one organization's history. */
@@ -61,6 +64,9 @@ export const createOrganizationCreatedSource = (
 
       return organizations.map((organization) => ({
         sourceKey: OrganizationActivitySourceKey.Created,
+        type: ORGANIZATION_ACTIVITY_TYPE_LABELS[
+          OrganizationActivitySourceKey.Created
+        ],
         id: organization.id,
         date: organization.createdAt,
         actor: organization.createdBy,
@@ -99,6 +105,9 @@ export const createOrganizationRenamedSource = (
           case "name":
             return {
               sourceKey: OrganizationActivitySourceKey.Renamed,
+              type: ORGANIZATION_ACTIVITY_TYPE_LABELS[
+                OrganizationActivitySourceKey.Renamed
+              ],
               id: entry.id,
               date: entry.createdAt,
               actor: entry.createdBy,
@@ -141,6 +150,9 @@ export const createOrganizationMembershipSource = (
 
       return entries.map((entry) => ({
         sourceKey: OrganizationActivitySourceKey.Membership,
+        type: ORGANIZATION_ACTIVITY_TYPE_LABELS[
+          OrganizationActivitySourceKey.Membership
+        ],
         id: entry.id,
         date: entry.createdAt,
         actor: entry.createdBy,

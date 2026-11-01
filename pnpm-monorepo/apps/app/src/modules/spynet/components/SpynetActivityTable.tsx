@@ -86,7 +86,11 @@ export const SpynetActivityTable = async ({
     <ActivityTable
       className={className}
       entries={entries}
-      columns={[ActivityColumn.Actor, ActivityColumn.Target]}
+      columns={[
+        ActivityColumn.Target,
+        ActivityColumn.Type,
+        ActivityColumn.Actor,
+      ]}
       emptyMessage={
         hasActiveActivityFilters(filters)
           ? "Keine Aktivität für diese Filter."
