@@ -15,7 +15,10 @@ import {
 } from "@sam-monorepo/database/client";
 import type { MergedCursorSourceInput } from "@sam-monorepo/domain";
 import { SingleRoleBadge } from "../components/SingleRoleBadge";
-import { RoleActivitySourceKey } from "./roleActivityTypes";
+import {
+  ROLE_ACTIVITY_TYPE_LABELS,
+  RoleActivitySourceKey,
+} from "./roleActivityTypes";
 
 interface Input {
   /** Restricts the source to one citizen's history. */
@@ -49,6 +52,7 @@ export const createRoleAssignmentSource = (input: Input = {}): ActivitySource =>
 
       return changes.map((change) => ({
         sourceKey: RoleActivitySourceKey.Assignment,
+        type: ROLE_ACTIVITY_TYPE_LABELS[RoleActivitySourceKey.Assignment],
         id: change.id,
         date: change.createdAt,
         actor: change.createdBy,
@@ -78,6 +82,7 @@ export const createRoleAssignmentLevelSource = (
 
       return changes.map((change) => ({
         sourceKey: RoleActivitySourceKey.AssignmentLevel,
+        type: ROLE_ACTIVITY_TYPE_LABELS[RoleActivitySourceKey.AssignmentLevel],
         id: change.id,
         date: change.createdAt,
         actor: change.createdBy,

@@ -102,7 +102,9 @@ test("the spynet activity table paginates and filters", async ({
   // The type filter queries only the source it names
   await page.goto("/app/spynet/activity?type=role-assignment");
   await expect(page.locator("tbody tr")).toHaveCount(1);
-  await expect(page.locator("tbody tr").first()).toContainText("Rolle");
+  await expect(page.locator("tbody tr").first()).toContainText(
+    "Rollen-Zuweisung",
+  );
 
   // The actor filter keeps only that actor's entries
   await page.goto(`/app/spynet/activity?actor=${target.entity.id}`);

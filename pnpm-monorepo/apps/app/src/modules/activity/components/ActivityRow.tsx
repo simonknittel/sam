@@ -40,14 +40,12 @@ export const ActivityRow = ({ entry, columns }: Props) => {
         </time>
       </td>
 
-      {columns.includes(ActivityColumn.Actor) && (
-        <td className={clsx(FIRST_LINE, "min-w-0")}>
-          <CitizenLink citizen={entry.actor} className="truncate" />
-        </td>
-      )}
-
       {columns.includes(ActivityColumn.Target) && (
         <td className={clsx(FIRST_LINE, "min-w-0")}>{entry.target}</td>
+      )}
+
+      {columns.includes(ActivityColumn.Type) && (
+        <td className={clsx(FIRST_LINE, "min-w-0")}>{entry.type}</td>
       )}
 
       <td className="min-w-0">
@@ -59,6 +57,12 @@ export const ActivityRow = ({ entry, columns }: Props) => {
           </p>
         )}
       </td>
+
+      {columns.includes(ActivityColumn.Actor) && (
+        <td className={clsx(FIRST_LINE, "min-w-0")}>
+          <CitizenLink citizen={entry.actor} className="truncate" />
+        </td>
+      )}
 
       {columns.includes(ActivityColumn.Confirmation) && (
         <td className={clsx(FIRST_LINE, "gap-2 text-sm")}>

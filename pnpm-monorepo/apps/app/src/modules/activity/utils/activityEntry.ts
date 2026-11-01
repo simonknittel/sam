@@ -20,6 +20,8 @@ export interface ActivityEntry extends MergedCursorEntry {
   readonly actor?: Pick<Citizen, "id" | "handle" | "deletedAt"> | null;
   /** Who or what the entry is about, in contexts that don't already imply it. */
   readonly target?: ReactNode;
+  /** The label of the entry's type, as the activity type filter shows it. */
+  readonly type?: string;
   readonly message: ReactNode;
   /** Free text belonging to the entry, e.g. a participation comment. */
   readonly comment?: string | null;
@@ -38,5 +40,6 @@ export type ActivitySource = MergedCursorSource<ActivityEntry>;
 export enum ActivityColumn {
   Actor = "actor",
   Target = "target",
+  Type = "type",
   Confirmation = "confirmation",
 }

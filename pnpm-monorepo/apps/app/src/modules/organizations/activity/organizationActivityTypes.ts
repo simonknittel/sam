@@ -4,7 +4,7 @@ export enum OrganizationActivitySourceKey {
   Membership = "organization-membership",
 }
 
-/** Doubles as the labels of the activity type filter. */
+/** The labels of the activity type filter and of the type column. */
 export const ORGANIZATION_ACTIVITY_TYPE_LABELS: Record<
   OrganizationActivitySourceKey,
   string
