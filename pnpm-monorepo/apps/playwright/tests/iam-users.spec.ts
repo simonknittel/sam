@@ -8,7 +8,7 @@ import {
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
-const USER_ADMIN_PERMISSIONS = ["user;read", "user;ban", "user;manage"];
+const USER_MANAGER_PERMISSIONS = ["user;read", "user;manage"];
 
 test("banning a user revokes their sessions, unbanning lets them back in", async ({
   page,
@@ -19,7 +19,8 @@ test("banning a user revokes their sessions, unbanning lets them back in", async
 }) => {
   const admin = await createCitizen(prisma, {
     handle: "benutzer-verwalter",
-    permissionStrings: USER_ADMIN_PERMISSIONS,
+    admin: true,
+    permissionStrings: ["user;read"],
   });
   const target = await createCitizen(prisma, { handle: "zu-sperrender" });
 
@@ -123,7 +124,8 @@ test("banning a user whom a different admin banned first shows the message and t
 }) => {
   const admin = await createCitizen(prisma, {
     handle: "benutzer-verwalter",
-    permissionStrings: USER_ADMIN_PERMISSIONS,
+    admin: true,
+    permissionStrings: ["user;read"],
   });
   const otherAdmin = await createCitizen(prisma, {
     handle: "andere-verwalterin",
@@ -161,14 +163,14 @@ test("banning a user whom a different admin banned first shows the message and t
   ).toBe(0);
 });
 
-test("an admin confirms the privacy policy on behalf of a user", async ({
+test("a user manager confirms the privacy policy on behalf of a user, but cannot ban", async ({
   page,
   prisma,
   signIn,
 }) => {
-  const admin = await createCitizen(prisma, {
+  const userManager = await createCitizen(prisma, {
     handle: "benutzer-verwalter",
-    permissionStrings: USER_ADMIN_PERMISSIONS,
+    permissionStrings: USER_MANAGER_PERMISSIONS,
   });
   const target = await createCitizen(prisma, { handle: "unbestaetigter" });
   /** Whoever never confirmed it: the factory confirms it for sign-in's sake */
@@ -177,11 +179,15 @@ test("an admin confirms the privacy policy on behalf of a user", async ({
     data: { emailVerified: null },
   });
 
-  await signIn(admin.user);
+  await signIn(userManager.user);
   await page.goto("/app/iam/users");
 
   const targetRow = page.getByRole("row").filter({ hasText: target.user.id });
   await expect(targetRow).toBeVisible();
+  // Only the admin role gives the ban, no role permission
+  await expect(
+    targetRow.getByRole("button", { name: "Benutzer sperren" }),
+  ).toHaveCount(0);
 
   const confirmDialog = page.getByRole("alertdialog");
   await clickUntilVisible(
@@ -214,7 +220,7 @@ test("the users table shows and filters the Discord two-factor authentication of
 }) => {
   const admin = await createCitizen(prisma, {
     handle: "zwei-faktor-leser",
-    permissionStrings: USER_ADMIN_PERMISSIONS,
+    permissionStrings: USER_MANAGER_PERMISSIONS,
   });
   const statuses = [
     {

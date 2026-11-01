@@ -1,5 +1,6 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
+import { UserRole } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { type SearchParams } from "nuqs/server";
 import { getUsersWithEntities } from "../queries/getUsersWithEntities";
@@ -16,7 +17,9 @@ export const UsersTile = async ({ className, searchParams }: Props) => {
     await loadUserListSearchParams(searchParams);
 
   const authentication = await requireAuthenticationPage();
-  const showBanActions = await authentication.authorize("user", "ban");
+  // The use cases check the same role: an admin who assumes a user gets the
+  // role of that user
+  const showBanActions = authentication.session.user.role === UserRole.ADMIN;
 
   const { users, nextCursor, prevCursor } = await getUsersWithEntities({
     sort,

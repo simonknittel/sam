@@ -1,6 +1,6 @@
 import { AuditEventType } from "@sam-monorepo/domain";
 import * as z from "zod";
-import { requirePermission, type Actor } from "../actor.js";
+import { requireAdmin, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { ConflictError, NotFoundError } from "../errors.js";
 import { idSchema } from "../pagination.js";
@@ -18,8 +18,9 @@ export interface UnbanUserOutput {
 }
 
 /**
- * Lifts the ban of a user. Requires `user;ban`.
+ * Lifts the ban of a user. Requires the admin role.
  *
+ * @throws ForbiddenError when the actor is not an admin
  * @throws NotFoundError when the user does not exist
  * @throws ConflictError when the user is not banned (usually because a
  * different user unbanned them before)
@@ -30,7 +31,7 @@ export const unbanUser = (
   input: UnbanUserInput,
 ): Promise<UnbanUserOutput> =>
   withSpan(context, "unbanUser", async () => {
-    requirePermission(actor, "user", "ban");
+    requireAdmin(actor);
 
     const user = await context.prisma.user.findUnique({
       where: { id: input.user_id },
