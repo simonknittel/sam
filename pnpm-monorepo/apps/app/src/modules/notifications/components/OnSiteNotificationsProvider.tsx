@@ -12,7 +12,13 @@ import {
   ON_SITE_NOTIFICATION_CREATED_EVENT,
   OnSiteNotificationTab,
 } from "@sam-monorepo/domain";
-import { createContext, useContext, useEffect, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import * as z from "zod/mini";
 import type { OnSiteNotificationRow } from "../utils/types";
 
@@ -47,6 +53,14 @@ interface OnSiteNotificationsContext {
   readonly setUnreadCount: (count: number) => void;
   /** Like `setUnreadCount()`, relative to the current count */
   readonly adjustUnreadCount: (delta: number) => void;
+  /**
+   * Whether the inbox must open by itself: on the page load with unread
+   * notifications, and when a new notification arrives. The request stays
+   * pending until the inbox surface of the current viewport opens, see
+   * `useInboxOpenState()`.
+   */
+  readonly isInboxOpenRequested: boolean;
+  readonly settleInboxOpenRequest: () => void;
 }
 
 const OnSiteNotificationsContext = createContext<
@@ -93,6 +107,14 @@ export const OnSiteNotificationsProvider = ({
     updateUnreadCount(utils, (count) => count + delta);
   };
 
+  const [isInboxOpenRequested, setIsInboxOpenRequested] = useState(
+    initialUnreadCount > 0,
+  );
+
+  const settleInboxOpenRequest = () => {
+    setIsInboxOpenRequested(false);
+  };
+
   /**
    * Mirror the unread count into the document title. The MutationObserver
    * re-applies it after Next.js rewrites the title on navigation. It observes
@@ -132,6 +154,7 @@ export const OnSiteNotificationsProvider = ({
       };
 
       updateUnreadCount(utils, (count) => count + 1);
+      setIsInboxOpenRequested(true);
 
       /**
        * Prepend into the inbox list only when it has been fetched before;
@@ -175,6 +198,8 @@ export const OnSiteNotificationsProvider = ({
     unreadCount,
     setUnreadCount,
     adjustUnreadCount,
+    isInboxOpenRequested,
+    settleInboxOpenRequest,
   };
 
   return (

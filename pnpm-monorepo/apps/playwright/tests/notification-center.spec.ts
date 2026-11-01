@@ -7,7 +7,11 @@ import {
   createOnSiteNotifications,
   futureEvent,
 } from "../fixtures/factories";
-import { clickUntilVisible, sectionByHeading } from "../fixtures/interactions";
+import {
+  clickUntilUrl,
+  clickUntilVisible,
+  sectionByHeading,
+} from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 const bellButton = (page: Page) =>
@@ -23,11 +27,19 @@ const bellDot = (page: Page) => bellButton(page).locator("[data-unread-dot]");
 const popover = (page: Page) =>
   page.getByRole("dialog", { name: "Benachrichtigungen" });
 
+/** Without unread notifications, the popover opens only through the bell */
 const openNotificationCenter = (page: Page) =>
   clickUntilVisible(
     bellButton(page),
     popover(page).getByRole("tab", { name: "Inbox" }),
   );
+
+/**
+ * With unread notifications, the popover opens by itself after the
+ * hydration. A press of the bell would close it again.
+ */
+const waitForOpenedNotificationCenter = (page: Page) =>
+  expect(popover(page).getByRole("tab", { name: "Inbox" })).toBeVisible();
 
 /**
  * exact — "Ungelesen" would otherwise also match the read rows'
@@ -64,7 +76,7 @@ test("the popover lists notifications with their content", async ({
   await signIn(citizen.user);
 
   await page.goto("/app");
-  await openNotificationCenter(page);
+  await waitForOpenedNotificationCenter(page);
 
   await expect(unreadRowDots(page)).toHaveCount(1);
 
@@ -103,7 +115,7 @@ test("a birthday greeting reads its wording", async ({
   await signIn(citizen.user);
 
   await page.goto("/app");
-  await openNotificationCenter(page);
+  await waitForOpenedNotificationCenter(page);
 
   await expect(popover(page).getByText("Ein Hoch auf dich!")).toBeVisible();
   await expect(
@@ -137,7 +149,7 @@ test("a New Year greeting reads its wording", async ({
   await signIn(citizen.user);
 
   await page.goto("/app");
-  await openNotificationCenter(page);
+  await waitForOpenedNotificationCenter(page);
 
   await expect(popover(page).getByText("Willkommen in 2957!")).toBeVisible();
   await expect(
@@ -165,7 +177,7 @@ test("a welcome greeting reads its wording and opens the onboarding popover", as
 
   /** Not the dashboard, thus the link must navigate to it */
   await page.goto("/app/apps");
-  await openNotificationCenter(page);
+  await waitForOpenedNotificationCenter(page);
 
   await expect(
     popover(page).getByText(
@@ -199,7 +211,7 @@ test("a fleet update reminder opens the own ships", async ({
   await signIn(citizen.user);
 
   await page.goto("/app");
-  await openNotificationCenter(page);
+  await waitForOpenedNotificationCenter(page);
 
   await expect(
     popover(page).getByText(
@@ -225,7 +237,7 @@ test("unknown notification types render a generic fallback", async ({
   await signIn(citizen.user);
 
   await page.goto("/app");
-  await openNotificationCenter(page);
+  await waitForOpenedNotificationCenter(page);
 
   await expect(
     popover(page).getByText("Benachrichtigung", { exact: true }),
@@ -253,7 +265,7 @@ test("opening the popover marks nothing as read, the toggle marks one notificati
   await expect(page).toHaveTitle(/^\(2\)/);
   await expect(bellDot(page)).toBeVisible();
 
-  await openNotificationCenter(page);
+  await waitForOpenedNotificationCenter(page);
   await expect(unreadRowDots(page)).toHaveCount(2);
 
   const alphaRow = notificationRow(page, "Operation Alpha");
@@ -315,7 +327,7 @@ test("reading the notification about a new task marks the task as read", async (
 
   await page.goto("/app/dashboard");
   await expect(sectionByHeading(page, "Neue Tasks")).toBeVisible();
-  await openNotificationCenter(page);
+  await waitForOpenedNotificationCenter(page);
 
   const taskRow = notificationRow(page, "Frachter eskortieren");
   await taskRow.hover();
@@ -381,7 +393,7 @@ test("a notification can be archived and restored again", async ({
 
   await page.goto("/app");
   await expect(page).toHaveTitle(/^\(1\)/);
-  await openNotificationCenter(page);
+  await waitForOpenedNotificationCenter(page);
 
   await popover(page).getByText("Neues Event").hover();
   await popover(page)
@@ -454,7 +466,7 @@ test("the bulk actions mark everything read with the announced events and archiv
 
   await page.goto("/app");
   await expect(page).toHaveTitle(/^\(3\)/);
-  await openNotificationCenter(page);
+  await waitForOpenedNotificationCenter(page);
 
   await popover(page)
     .getByRole("button", { name: "Alle als gelesen markieren", exact: true })
@@ -548,7 +560,7 @@ test("a notification about a new event leads to the event and marks it as read",
   await signIn(citizen.user);
 
   await page.goto("/app");
-  await openNotificationCenter(page);
+  await waitForOpenedNotificationCenter(page);
 
   /**
    * The event is new, thus the read refreshes the page during the
@@ -578,6 +590,34 @@ test("a notification about a new event leads to the event and marks it as read",
   await expect(page).toHaveURL(`/app/events/${event.id}`);
 });
 
+test("after a close, the popover stays closed until the next page load", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, { handle: "wiederkehrer" });
+  await createOnSiteNotification(prisma, { citizenId: citizen.entity.id });
+  await signIn(citizen.user);
+
+  await page.goto("/app");
+  await waitForOpenedNotificationCenter(page);
+
+  await clickUntilUrl(
+    page,
+    popover(page).getByRole("link", { name: "Einstellungen" }),
+    "/app/account/notifications",
+  );
+  await expect(
+    page.getByRole("checkbox", { name: "Browser: Neues Event" }),
+  ).toBeVisible();
+  // The navigation through the popover closed it, and it stays closed
+  await expect(popover(page)).toHaveCount(0);
+  await expect(bellDot(page)).toBeVisible();
+
+  await page.reload();
+  await waitForOpenedNotificationCenter(page);
+});
+
 test.describe("mobile", () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
@@ -597,6 +637,8 @@ test.describe("mobile", () => {
       .locator("nav")
       .getByRole("button", { name: "Inbox" });
     await expect(inboxButton.locator("[data-unread-dot]")).toBeVisible();
+    // Unlike the popover of the top bar, the bottom sheet never opens by itself
+    await expect(popover(page)).toHaveCount(0);
 
     await clickUntilVisible(
       inboxButton,
