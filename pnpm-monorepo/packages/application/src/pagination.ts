@@ -133,13 +133,19 @@ export const paginateByCursor = <Item>(
   }: CursorPageOptions<Item>,
 ): CursorPage<Item> => {
   let pageItems: Item[];
+  /** An unknown cursor tells nothing about the rows in the other direction */
+  let knownCursor = cursor;
 
   if (cursor) {
     const cursorIndex = sortedItems.findIndex(
       (item) => getCursor(item) === cursor,
     );
-    if (cursorIndex === -1 && unknownCursor === UnknownCursorBehavior.Reject)
-      throw new ValidationError("Unknown cursor");
+    if (cursorIndex === -1) {
+      if (unknownCursor === UnknownCursorBehavior.Reject)
+        throw new ValidationError("Unknown cursor");
+
+      knownCursor = null;
+    }
 
     if (direction === CursorDirection.Next) {
       // An unknown cursor starts at the first item
@@ -157,7 +163,12 @@ export const paginateByCursor = <Item>(
     pageItems = sortedItems.slice(0, pageSize + 1);
   }
 
-  return toCursorPage(pageItems, { cursor, direction, pageSize, getCursor });
+  return toCursorPage(pageItems, {
+    cursor: knownCursor,
+    direction,
+    pageSize,
+    getCursor,
+  });
 };
 
 /** The cursor arguments of a Prisma `findMany` for one page */
