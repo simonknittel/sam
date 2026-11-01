@@ -1,9 +1,8 @@
-import { UserRole } from "@sam-monorepo/database/browser";
 import { AuditEventType } from "@sam-monorepo/domain";
 import * as z from "zod";
-import type { Actor } from "../actor.js";
+import { requireAdmin, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
-import { ForbiddenError, NotFoundError } from "../errors.js";
+import { NotFoundError } from "../errors.js";
 import { requireMcpAccess } from "../mcpAccess.js";
 import { idSchema } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
@@ -31,10 +30,7 @@ export const setOwnGrantAdminMode = (
   withSpan(context, "setOwnGrantAdminMode", async () => {
     // The role and not the admin mode of the session: the admin mode of a
     // grant does not depend on the admin mode in the app
-    if (actor.userRole !== UserRole.ADMIN)
-      throw new ForbiddenError(
-        "Only an admin can change the admin mode of a client",
-      );
+    requireAdmin(actor);
     requireMcpAccess(actor);
 
     const grant = await context.prisma.oAuthGrant.findFirst({
