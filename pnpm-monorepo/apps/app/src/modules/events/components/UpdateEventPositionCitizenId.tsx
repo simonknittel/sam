@@ -197,10 +197,7 @@ const ChoiceSection = ({
 
   return (
     <section aria-labelledby={headingId}>
-      <h3
-        id={headingId}
-        className="font-mono text-xs text-neutral-500 uppercase"
-      >
+      <h3 id={headingId} className="font-mono text-xs text-white uppercase">
         {title}
       </h3>
 
