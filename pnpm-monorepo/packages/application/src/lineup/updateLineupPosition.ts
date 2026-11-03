@@ -39,6 +39,7 @@ export const updateLineupPosition = (
 
         const updatedPosition = await writeLineupPositionChange(
           context,
+          actor,
           position,
           input,
         );

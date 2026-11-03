@@ -47,6 +47,7 @@ export {
 } from "./lineupOutput.js";
 export {
   findEventLineupCitizens,
+  findOwnRequiredRoleIds,
   findOwnShipsOfRequiredVariants,
   type EventLineupCitizen,
 } from "./lineupPageRows.js";

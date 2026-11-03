@@ -72,6 +72,7 @@ export const withdrawEventPositionApplication = (
 
     return toLineupPositionOutput(
       context,
+      actor,
       position.id,
       isAllowedToManagePositions(actor, position.event),
     );

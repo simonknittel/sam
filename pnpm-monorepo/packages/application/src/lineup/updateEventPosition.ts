@@ -38,6 +38,7 @@ export const updateEventPosition = (
 
     const updatedPosition = await writeLineupPositionChange(
       context,
+      actor,
       position,
       change,
     );
@@ -50,5 +51,5 @@ export const updateEventPosition = (
       },
     ]);
 
-    return toLineupPositionOutput(context, position.id, true);
+    return toLineupPositionOutput(context, actor, position.id, true);
   });

@@ -19,6 +19,8 @@ export const CLONABLE_POSITION_SELECT = {
     select: { variantId: true, order: true },
     orderBy: { order: "asc" },
   },
+  requiredRoles: { select: { roleId: true } },
+  requiredRoleMatch: true,
 } as const satisfies Prisma.EventPositionSelect;
 
 /**
@@ -46,6 +48,8 @@ interface ClonablePosition {
     readonly variantId: string;
     readonly order: number;
   }[];
+  readonly requiredRoles: readonly { readonly roleId: string }[];
+  readonly requiredRoleMatch: EventPosition["requiredRoleMatch"];
   readonly childPositions: readonly ClonablePosition[];
 }
 
@@ -86,6 +90,7 @@ export const clonePositions = async (
         fontSize: position.fontSize,
         backgroundColor: position.backgroundColor,
         textColor: position.textColor,
+        requiredRoleMatch: position.requiredRoleMatch,
         order: target.startOrder + index,
         ...(position.requiredVariants.length > 0
           ? {
@@ -97,6 +102,17 @@ export const clonePositions = async (
                       order,
                     }),
                   ),
+                },
+              },
+            }
+          : {}),
+        ...(position.requiredRoles.length > 0
+          ? {
+              requiredRoles: {
+                createMany: {
+                  data: position.requiredRoles.map(({ roleId }) => ({
+                    roleId,
+                  })),
                 },
               },
             }

@@ -204,5 +204,5 @@ export const assignEventPosition = (
       : [];
     await triggerNotificationsAfterSave(context, notifications);
 
-    return toLineupPositionOutput(context, position.id, true);
+    return toLineupPositionOutput(context, actor, position.id, true);
   });

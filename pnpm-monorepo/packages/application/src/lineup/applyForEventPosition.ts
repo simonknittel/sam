@@ -122,6 +122,7 @@ export const applyForEventPosition = (
 
     return toLineupPositionOutput(
       context,
+      actor,
       position.id,
       isAllowedToManagePositions(actor, position.event),
     );

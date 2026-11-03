@@ -22,6 +22,8 @@ export enum LineupErrorMessage {
   TooManyPositions = `The lineup has at most ${LINEUP_MAX_POSITIONS} positions`,
   /** A `ValidationError` */
   VariantNotFound = "A ship variant does not exist",
+  /** A `ValidationError`: also a role that the actor cannot see */
+  RoleNotFound = "A role does not exist",
   /** A `ValidationError` */
   CitizenNotFound = "The citizen does not exist",
   /**

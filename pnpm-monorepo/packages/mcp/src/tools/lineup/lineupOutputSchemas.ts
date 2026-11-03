@@ -1,4 +1,5 @@
 import type { Actor } from "@sam-monorepo/application";
+import { EventPositionRoleMatch } from "@sam-monorepo/database/browser";
 import * as z from "zod";
 import { citizenReferenceSchema, eventReferenceSchema } from "../../schemas.js";
 
@@ -12,6 +13,19 @@ const positionFields = {
       name: z.string(),
     }),
   ),
+  required_roles: z
+    .array(
+      z.strictObject({
+        id: z.string(),
+        name: z.string(),
+      }),
+    )
+    .describe("Only the required roles that the user can see."),
+  required_role_match: z
+    .enum(EventPositionRoleMatch)
+    .describe(
+      "ALL: the citizen needs each required role. ANY: the citizen needs one of them.",
+    ),
   assignee: citizenReferenceSchema
     .nullable()
     .describe(

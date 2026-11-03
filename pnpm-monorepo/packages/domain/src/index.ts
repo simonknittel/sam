@@ -112,6 +112,10 @@ export {
   MAXIMUM_POSITION_NAME_LENGTH,
 } from "./events/lineupLimits.js";
 export {
+  hasRequiredRolesOfPosition,
+  type PositionRoleRequirement,
+} from "./events/positionRoleRequirement.js";
+export {
   PastePlacement,
   buildPositionTree,
   canPasteSubtree,

@@ -50,5 +50,5 @@ export const reorderEventLineup = (
       },
     ]);
 
-    return toEventLineupOutput(context, event, true);
+    return toEventLineupOutput(context, actor, event, true);
   });

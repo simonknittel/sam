@@ -1,3 +1,4 @@
+import type { EventPositionRoleMatch } from "@sam-monorepo/database/browser";
 import type { ReadAuditEventType } from "./readAuditEventTypes.js";
 import type { ReadMarkerSubject } from "./readMarkers/ReadMarkerSubject.js";
 
@@ -87,7 +88,9 @@ export enum AuditEventType {
   TASK_REWARD_NEW_SILC_UPDATED = "TASK_REWARD_NEW_SILC_UPDATED",
   TASK_SELF_ASSIGNMENT_CREATED = "TASK_SELF_ASSIGNMENT_CREATED",
   TASK_SELF_ASSIGNMENT_DELETED = "TASK_SELF_ASSIGNMENT_DELETED",
+  /** @deprecated Superseded by EVENT_POSITION_CREATED_V2 (adds the required roles) */
   EVENT_POSITION_CREATED = "EVENT_POSITION_CREATED",
+  EVENT_POSITION_CREATED_V2 = "EVENT_POSITION_CREATED_V2",
   EVENT_POSITION_UPDATED = "EVENT_POSITION_UPDATED",
   EVENT_POSITION_UPDATED_V2 = "EVENT_POSITION_UPDATED_V2",
   EVENT_POSITION_DELETED = "EVENT_POSITION_DELETED",
@@ -109,7 +112,9 @@ export enum AuditEventType {
   EVENT_POSITION_APPLICATION_DELETED = "EVENT_POSITION_APPLICATION_DELETED",
   EVENT_LINEUP_COPIED = "EVENT_LINEUP_COPIED",
   EVENT_POSITION_COPIED = "EVENT_POSITION_COPIED",
+  /** @deprecated Superseded by EVENT_TEMPLATE_POSITION_CREATED_V2 (adds the required roles) */
   EVENT_TEMPLATE_POSITION_CREATED = "EVENT_TEMPLATE_POSITION_CREATED",
+  EVENT_TEMPLATE_POSITION_CREATED_V2 = "EVENT_TEMPLATE_POSITION_CREATED_V2",
   EVENT_TEMPLATE_POSITION_UPDATED = "EVENT_TEMPLATE_POSITION_UPDATED",
   EVENT_TEMPLATE_POSITION_NAME_UPDATED = "EVENT_TEMPLATE_POSITION_NAME_UPDATED",
   EVENT_TEMPLATE_POSITION_DELETED = "EVENT_TEMPLATE_POSITION_DELETED",
@@ -803,6 +808,16 @@ export interface AuditEventDataByType {
     parentPositionId?: string;
   };
 
+  [AuditEventType.EVENT_POSITION_CREATED_V2]: {
+    eventId: string;
+    positionId: string;
+    name: string;
+    variantIds: string[];
+    roleIds: string[];
+    roleMatch: EventPositionRoleMatch;
+    parentPositionId?: string;
+  };
+
   [AuditEventType.EVENT_POSITION_UPDATED]: {
     eventId: string;
     positionId: string;
@@ -913,6 +928,16 @@ export interface AuditEventDataByType {
     positionId: string;
     name: string;
     variantIds: string[];
+    parentPositionId?: string;
+  };
+
+  [AuditEventType.EVENT_TEMPLATE_POSITION_CREATED_V2]: {
+    templateId: string;
+    positionId: string;
+    name: string;
+    variantIds: string[];
+    roleIds: string[];
+    roleMatch: EventPositionRoleMatch;
     parentPositionId?: string;
   };
 

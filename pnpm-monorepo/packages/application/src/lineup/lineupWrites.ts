@@ -1,4 +1,8 @@
-import type { EventPosition, Prisma } from "@sam-monorepo/database/client";
+import type {
+  EventPosition,
+  EventPositionRoleMatch,
+  Prisma,
+} from "@sam-monorepo/database/client";
 import {
   getEventContainerOfRow,
   getPositionLevels,
@@ -7,6 +11,7 @@ import {
   LINEUP_MAX_POSITIONS_PER_LEVEL,
   type EventContainerColumns,
 } from "@sam-monorepo/domain";
+import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import {
   ConflictError,
@@ -14,6 +19,7 @@ import {
   rethrowRecordNotFound,
   ValidationError,
 } from "../errors.js";
+import { isRoleVisible, requireVisibleRoles } from "../roles/roleVisibility.js";
 import { LineupErrorMessage } from "./lineupErrors.js";
 import {
   toStoredFontSize,
@@ -87,6 +93,57 @@ const requireVariants = async (
 const toRequiredVariantRows = (variantIds: readonly string[]) =>
   variantIds.map((variantId, index) => ({ variantId, order: index }));
 
+/**
+ * The actor can require only the roles of the role picker: the roles that
+ * exist and that the actor can see
+ */
+const requireNewRequiredRoles = async (
+  context: ApplicationContext,
+  actor: Actor,
+  roleIds: readonly string[],
+) => {
+  await requireVisibleRoles(
+    context,
+    actor,
+    roleIds,
+    LineupErrorMessage.RoleNotFound,
+  );
+
+  return Array.from(new Set(roleIds));
+};
+
+/**
+ * The new required roles of a position. The actor gives only the roles that
+ * the actor can see, thus the roles that the actor cannot see stay.
+ */
+const resolveRequiredRoleChange = async (
+  context: ApplicationContext,
+  actor: Actor,
+  positionId: string,
+  roleIds: readonly string[],
+) => {
+  const currentRoleIds = (
+    await context.prisma.eventPositionRequiredRole.findMany({
+      where: { positionId },
+      select: { roleId: true },
+    })
+  ).map(({ roleId }) => roleId);
+
+  const addedRoleIds = await requireNewRequiredRoles(
+    context,
+    actor,
+    roleIds.filter((roleId) => !currentRoleIds.includes(roleId)),
+  );
+  const keptRoleIds = currentRoleIds.filter(
+    (roleId) => roleIds.includes(roleId) || !isRoleVisible(actor, roleId),
+  );
+
+  return [...keptRoleIds, ...addedRoleIds];
+};
+
+const toRequiredRoleRows = (roleIds: readonly string[]) =>
+  roleIds.map((roleId) => ({ roleId }));
+
 interface ContainerPosition {
   readonly id: string;
   readonly parentPositionId: string | null;
@@ -134,12 +191,15 @@ export interface CreatedLineupPosition {
   readonly positionId: string;
   readonly name: string;
   readonly variantIds: string[];
+  readonly roleIds: string[];
+  readonly roleMatch: EventPositionRoleMatch;
   readonly parentPositionId?: string;
 }
 
 /** Adds the position as the last position of its parent */
 export const insertLineupPosition = async (
   context: ApplicationContext,
+  actor: Actor,
   container: EventContainerColumns,
   fields: NewPositionFields,
 ): Promise<CreatedLineupPosition> => {
@@ -155,6 +215,11 @@ export const insertLineupPosition = async (
   const variantIds = await requireVariants(
     context,
     fields.required_variant_ids,
+  );
+  const roleIds = await requireNewRequiredRoles(
+    context,
+    actor,
+    fields.required_role_ids,
   );
 
   const createdPosition = await context.prisma.eventPosition.create({
@@ -173,6 +238,10 @@ export const insertLineupPosition = async (
       requiredVariants: {
         createMany: { data: toRequiredVariantRows(variantIds) },
       },
+      requiredRoles: {
+        createMany: { data: toRequiredRoleRows(roleIds) },
+      },
+      requiredRoleMatch: fields.required_role_match,
       parentPositionId,
     },
     select: { id: true },
@@ -182,6 +251,8 @@ export const insertLineupPosition = async (
     positionId: createdPosition.id,
     name: fields.name,
     variantIds,
+    roleIds,
+    roleMatch: fields.required_role_match,
     parentPositionId: fields.parent_position_id,
   };
 };
@@ -209,6 +280,7 @@ const changedValue = <Value>(change: Value | undefined, current: Value) =>
  */
 export const writeLineupPositionChange = async (
   context: ApplicationContext,
+  actor: Actor,
   position: Pick<
     EventPosition,
     "id" | "name" | "fontSize" | "backgroundColor" | "textColor"
@@ -221,32 +293,51 @@ export const writeLineupPositionChange = async (
     fontSize: toStoredFontSize(change.font_size),
     backgroundColor: change.background_color,
     textColor: change.text_color,
+    requiredRoleMatch: change.required_role_match,
   };
 
   const variantIds = change.required_variant_ids
     ? await requireVariants(context, change.required_variant_ids)
     : null;
+  const roleIds = change.required_role_ids
+    ? await resolveRequiredRoleChange(
+        context,
+        actor,
+        position.id,
+        change.required_role_ids,
+      )
+    : null;
 
   await rethrowRecordNotFound(async () => {
-    if (!variantIds) {
-      await context.prisma.eventPosition.update({
-        where: { id: position.id },
-        data: fields,
-      });
-      return;
-    }
-
     await context.prisma.$transaction([
-      context.prisma.eventPositionRequiredVariant.deleteMany({
-        where: { positionId: position.id },
-      }),
+      ...(variantIds
+        ? [
+            context.prisma.eventPositionRequiredVariant.deleteMany({
+              where: { positionId: position.id },
+            }),
+          ]
+        : []),
+      ...(roleIds
+        ? [
+            context.prisma.eventPositionRequiredRole.deleteMany({
+              where: { positionId: position.id },
+            }),
+          ]
+        : []),
       context.prisma.eventPosition.update({
         where: { id: position.id },
         data: {
           ...fields,
-          requiredVariants: {
-            createMany: { data: toRequiredVariantRows(variantIds) },
-          },
+          ...(variantIds && {
+            requiredVariants: {
+              createMany: { data: toRequiredVariantRows(variantIds) },
+            },
+          }),
+          ...(roleIds && {
+            requiredRoles: {
+              createMany: { data: toRequiredRoleRows(roleIds) },
+            },
+          }),
         },
       }),
     ]);

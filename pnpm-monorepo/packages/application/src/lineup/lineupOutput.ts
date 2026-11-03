@@ -1,9 +1,11 @@
 import type {
   Citizen,
   Event,
+  EventPositionRoleMatch,
   Prisma,
   Variant,
 } from "@sam-monorepo/database/client";
+import type { Actor } from "../actor.js";
 import {
   toCitizenReference,
   toCitizenReferences,
@@ -11,6 +13,7 @@ import {
 } from "../citizenReference.js";
 import type { ApplicationContext } from "../context.js";
 import { isEventUpdatable } from "../events/eventManageRules.js";
+import { compareRoleNames, isRoleVisible } from "../roles/roleVisibility.js";
 import { POSITION_TREE_INCLUDE } from "./positionTreeInclude.js";
 
 export interface LineupPosition {
@@ -19,6 +22,12 @@ export interface LineupPosition {
   readonly description: string | null;
   /** The ship variants of the position, in their order */
   readonly required_variants: { readonly id: string; readonly name: string }[];
+  /**
+   * The required roles that the actor can see, sorted by name. The app shows
+   * only these roles (see the role badges).
+   */
+  readonly required_roles: RoleReference[];
+  readonly required_role_match: EventPositionRoleMatch;
   /** Null when nobody is assigned or the assigned citizen is deleted */
   readonly assignee: CitizenReference | null;
   /**
@@ -58,6 +67,11 @@ export const findEventPositionTree = (
 
 type PositionCitizen = Pick<Citizen, "id" | "handle" | "deletedAt">;
 
+interface RoleReference {
+  readonly id: string;
+  readonly name: string;
+}
+
 /** One level of the position tree, as `POSITION_TREE_INCLUDE` loads it */
 interface PositionTreeRow {
   readonly id: string;
@@ -66,15 +80,47 @@ interface PositionTreeRow {
   readonly requiredVariants: readonly {
     readonly variant: Pick<Variant, "id" | "name">;
   }[];
+  readonly requiredRoles: readonly { readonly roleId: string }[];
+  readonly requiredRoleMatch: EventPositionRoleMatch;
   readonly citizen: PositionCitizen | null;
   readonly applications: readonly { readonly citizen: PositionCitizen }[];
   /** Missing on the deepest level */
   readonly childPositions?: readonly PositionTreeRow[];
 }
 
+const collectRequiredRoleIds = (
+  positions: readonly PositionTreeRow[],
+): string[] =>
+  positions.flatMap((position) => [
+    ...position.requiredRoles.map(({ roleId }) => roleId),
+    ...collectRequiredRoleIds(position.childPositions ?? []),
+  ]);
+
+/** The required roles of the positions that the actor can see, by id */
+const findVisibleRequiredRoles = async (
+  context: ApplicationContext,
+  actor: Actor,
+  positions: readonly PositionTreeRow[],
+): Promise<Map<string, RoleReference>> => {
+  const roleIds = new Set(
+    collectRequiredRoleIds(positions).filter((roleId) =>
+      isRoleVisible(actor, roleId),
+    ),
+  );
+  if (roleIds.size <= 0) return new Map();
+
+  const roles = await context.prisma.role.findMany({
+    where: { id: { in: [...roleIds] } },
+    select: { id: true, name: true },
+  });
+
+  return new Map(roles.map((role) => [role.id, role]));
+};
+
 const toLineupPosition = (
   position: PositionTreeRow,
   canManagePositions: boolean,
+  visibleRoles: ReadonlyMap<string, RoleReference>,
 ): LineupPosition => ({
   id: position.id,
   name: position.name,
@@ -83,6 +129,10 @@ const toLineupPosition = (
     id: variant.id,
     name: variant.name,
   })),
+  required_roles: position.requiredRoles
+    .flatMap(({ roleId }) => visibleRoles.get(roleId) ?? [])
+    .toSorted(compareRoleNames),
+  required_role_match: position.requiredRoleMatch,
   assignee: toCitizenReference(position.citizen),
   applications: canManagePositions
     ? toCitizenReferences(
@@ -90,7 +140,7 @@ const toLineupPosition = (
       )
     : [],
   children: (position.childPositions ?? []).map((childPosition) =>
-    toLineupPosition(childPosition, canManagePositions),
+    toLineupPosition(childPosition, canManagePositions, visibleRoles),
   ),
 });
 
@@ -100,17 +150,23 @@ const toLineupPosition = (
  */
 export const toEventLineupOutput = async (
   context: ApplicationContext,
+  actor: Actor,
   event: Pick<Event, "id" | "name" | "startTime" | "endTime">,
   canManagePositions: boolean,
 ): Promise<GetEventLineupOutput> => {
   const positions = await findEventPositionTree(context, event.id);
+  const visibleRoles = await findVisibleRequiredRoles(
+    context,
+    actor,
+    positions,
+  );
 
   return {
     event: { id: event.id, name: event.name },
     can_manage_positions: canManagePositions,
     is_updatable: isEventUpdatable(event, context.now()),
     positions: positions.map((position) =>
-      toLineupPosition(position, canManagePositions),
+      toLineupPosition(position, canManagePositions, visibleRoles),
     ),
   };
 };
@@ -121,16 +177,21 @@ export const toEventLineupOutput = async (
  */
 export const toLineupPositionOutput = async (
   context: ApplicationContext,
+  actor: Actor,
   positionId: string,
   canManagePositions: boolean,
-): Promise<LineupPosition> =>
-  toLineupPosition(
-    await context.prisma.eventPosition.findUniqueOrThrow({
-      where: { id: positionId },
-      include: POSITION_TREE_INCLUDE,
-    }),
+): Promise<LineupPosition> => {
+  const position = await context.prisma.eventPosition.findUniqueOrThrow({
+    where: { id: positionId },
+    include: POSITION_TREE_INCLUDE,
+  });
+
+  return toLineupPosition(
+    position,
     canManagePositions,
+    await findVisibleRequiredRoles(context, actor, [position]),
   );
+};
 
 /**
  * The output of a write of one position that serves the lineups of the

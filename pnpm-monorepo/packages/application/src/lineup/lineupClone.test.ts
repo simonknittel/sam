@@ -1,3 +1,4 @@
+import { EventPositionRoleMatch } from "@sam-monorepo/database/browser";
 import type { Prisma } from "@sam-monorepo/database/client";
 import { describe, expect, test } from "vitest";
 import { clonePositions } from "./lineupClone.js";
@@ -48,6 +49,8 @@ interface SourcePosition {
   backgroundColor: null;
   textColor: null;
   requiredVariants: never[];
+  requiredRoles: never[];
+  requiredRoleMatch: EventPositionRoleMatch;
   childPositions: SourcePosition[];
 }
 
@@ -63,6 +66,8 @@ const position = (
   backgroundColor: null,
   textColor: null,
   requiredVariants: [],
+  requiredRoles: [],
+  requiredRoleMatch: EventPositionRoleMatch.ANY,
   childPositions,
 });
 

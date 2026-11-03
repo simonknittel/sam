@@ -1,3 +1,4 @@
+import { EventPositionRoleMatch } from "@sam-monorepo/database/browser";
 import {
   MAXIMUM_POSITION_DESCRIPTION_LENGTH,
   MAXIMUM_POSITION_NAME_LENGTH,
@@ -30,6 +31,12 @@ export const toStoredFontSize = (
 const MAXIMUM_REQUIRED_VARIANTS = 250;
 
 /**
+ * Arbitrary (untested) cap of the required roles, like the required roles of
+ * a task, to prevent a denial of service
+ */
+const MAXIMUM_REQUIRED_ROLES = 50;
+
+/**
  * The color input of the app sends `#rrggbb`. The lineup puts the value into
  * the inline style of the position, thus a different value could add CSS
  * declarations. Without the flag `i`: the JSON Schema of the MCP tools has
@@ -54,6 +61,19 @@ const requiredVariantIdsSchema = z
   .max(MAXIMUM_REQUIRED_VARIANTS)
   .describe(
     "The ship variants (from search_ship_variants) of which the citizen of the position flies one, in the order of preference.",
+  );
+
+const requiredRoleIdsSchema = z
+  .array(idSchema)
+  .max(MAXIMUM_REQUIRED_ROLES)
+  .describe(
+    "The roles (from list_roles) that the citizen of the position must have, as effective roles. required_role_match tells if the citizen needs all of them or one of them.",
+  );
+
+const requiredRoleMatchSchema = z
+  .enum(EventPositionRoleMatch)
+  .describe(
+    "ALL: the citizen needs each required role. ANY: the citizen needs one of them.",
   );
 
 /** Null resets a format; a field that is not given keeps its value */
@@ -83,6 +103,10 @@ export const newPositionFieldsSchema = z.object({
   name: positionNameSchema,
   description: positionDescriptionSchema.optional(),
   required_variant_ids: requiredVariantIdsSchema.default([]),
+  required_role_ids: requiredRoleIdsSchema.default([]),
+  required_role_match: requiredRoleMatchSchema.default(
+    EventPositionRoleMatch.ANY,
+  ),
   ...positionFormatSchemas,
 });
 
@@ -97,6 +121,12 @@ export const positionChangeSchema = z.object({
     .describe(
       "Replaces the required ship variants (from search_ship_variants), in the order of preference. An empty array removes them.",
     ),
+  required_role_ids: requiredRoleIdsSchema
+    .optional()
+    .describe(
+      "Replaces the required roles (from list_roles) that the user can see. The required roles that the user cannot see stay. An empty array removes the visible ones.",
+    ),
+  required_role_match: requiredRoleMatchSchema.optional(),
   ...positionFormatSchemas,
 });
 

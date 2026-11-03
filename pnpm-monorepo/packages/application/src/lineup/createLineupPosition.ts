@@ -48,13 +48,14 @@ export const createLineupPosition = (
 
         const createdPosition = await insertLineupPosition(
           context,
+          actor,
           { eventId: null, templateId: containerId },
           fields,
         );
 
         await context.audit.create([
           {
-            type: AuditEventType.EVENT_TEMPLATE_POSITION_CREATED,
+            type: AuditEventType.EVENT_TEMPLATE_POSITION_CREATED_V2,
             data: { templateId: containerId, ...createdPosition },
             createdById: actor.userId,
           },

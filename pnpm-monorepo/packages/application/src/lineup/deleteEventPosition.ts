@@ -56,6 +56,7 @@ export const deleteEventPosition = (
 
     const deletedPosition = await toLineupPositionOutput(
       context,
+      actor,
       position.id,
       true,
     );

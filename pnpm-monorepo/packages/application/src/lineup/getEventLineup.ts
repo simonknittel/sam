@@ -23,12 +23,12 @@ export const getEventLineupInputSchema = z.object({
 export type GetEventLineupInput = z.infer<typeof getEventLineupInputSchema>;
 
 /**
- * The lineup of an event: the position tree with the required variants, the
- * assignees and, for a manager of the positions, the applications. The same
- * checks as the lineup page of the app: a citizen, `event;read`, `ship;read`
- * (the page shows the own ships of the required variants), the visibility of
- * the event, a participation that is not turned off, and a lineup that is
- * enabled or that the actor can manage.
+ * The lineup of an event: the position tree with the required variants and
+ * roles, the assignees and, for a manager of the positions, the
+ * applications. The same checks as the lineup page of the app: a citizen,
+ * `event;read`, `ship;read` (the page shows the own ships of the required
+ * variants), the visibility of the event, a participation that is not turned
+ * off, and a lineup that is enabled or that the actor can manage.
  */
 export const getEventLineup = (
   context: ApplicationContext,
@@ -47,6 +47,7 @@ export const getEventLineup = (
 
     return toEventLineupOutput(
       context,
+      actor,
       event,
       isAllowedToManagePositions(actor, event),
     );

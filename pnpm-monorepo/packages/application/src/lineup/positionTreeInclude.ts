@@ -28,6 +28,14 @@ const REQUIRED_VARIANTS_INCLUDE = {
 } as const satisfies Prisma.EventPosition$requiredVariantsArgs;
 
 /**
+ * Only the ids: the role badges of the app take the names of the roles that
+ * the viewer can see from the roles context
+ */
+const REQUIRED_ROLES_INCLUDE = {
+  select: { roleId: true },
+} as const satisfies Prisma.EventPosition$requiredRolesArgs;
+
+/**
  * Everything the lineup renders for one position, without its children.
  * Citizens appear as `CitizenLink`s, so they are joined as {id, handle}
  * rather than as full Citizen rows with their Discord and Teamspeak ids and
@@ -41,6 +49,7 @@ const POSITION_INCLUDE = {
   },
   citizen: { select: CITIZEN_REFERENCE_SELECT },
   requiredVariants: REQUIRED_VARIANTS_INCLUDE,
+  requiredRoles: REQUIRED_ROLES_INCLUDE,
 } satisfies Prisma.EventPositionInclude;
 
 /**
@@ -50,6 +59,7 @@ const POSITION_INCLUDE = {
  */
 const TEMPLATE_POSITION_INCLUDE = {
   requiredVariants: REQUIRED_VARIANTS_INCLUDE,
+  requiredRoles: REQUIRED_ROLES_INCLUDE,
 } satisfies Prisma.EventPositionInclude;
 
 const CHILDREN_ORDER = { order: "asc" } as const;
