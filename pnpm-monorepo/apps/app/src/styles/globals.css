@@ -472,6 +472,27 @@
   scrollbar-color: var(--color-neutral-700) transparent;
 }
 
+/**
+ * Chromium on Windows and Linux, and Firefox, draw the open list of a select
+ * with the colours of the select and its options. A select with a
+ * see-through background (for example `bg-white/10`) gets a white list with
+ * its light text, thus the text is not readable. An opaque option keeps the
+ * list dark. On macOS and iOS, the operating system draws the list and
+ * ignores these colours, but it obeys `color-scheme` (`scheme-dark` on
+ * `<html>`).
+ */
+@layer base {
+  option,
+  optgroup {
+    background-color: var(--color-neutral-900);
+    color: var(--color-text-primary);
+  }
+
+  option:disabled {
+    color: var(--color-neutral-500);
+  }
+}
+
 @utility background-primary {
   background:
     radial-gradient(hsla(0, 0%, 100%, 0.03) 1px, transparent 0),
