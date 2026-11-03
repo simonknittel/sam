@@ -3,6 +3,7 @@
 import { runAction } from "@/modules/actions/utils/runAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
+import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import Modal from "@/modules/common/components/Modal";
 import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
 import {
@@ -143,7 +144,7 @@ export const UpdateEventPositionCitizenId = ({
         <div className="flex items-center justify-between gap-4">
           <p className="min-w-0 truncate" title={assignedCitizenName ?? ""}>
             <span className="text-neutral-500">Zugewiesen: </span>
-            {assignedCitizenName ?? "-"}
+            {assignedCitizen ? <CitizenLink citizen={assignedCitizen} /> : "-"}
           </p>
 
           {assignedCitizen && (
@@ -267,7 +268,7 @@ const ChoiceRow = ({
     <li className="flex items-start justify-between gap-4 rounded-secondary bg-neutral-900/50 p-2">
       <div className="min-w-0">
         <p className="truncate font-bold" title={name}>
-          {name}
+          <CitizenLink citizen={choice.citizen} />
         </p>
         <UnmetRequirementList
           position={position}

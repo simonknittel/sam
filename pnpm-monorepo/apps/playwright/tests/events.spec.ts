@@ -10,6 +10,7 @@ import {
 } from "../fixtures/factories";
 import {
   clickUntilVisible,
+  hoverUntilVisible,
   openPositionCitizenModal,
   positionCitizenChoice,
   SAVED_TEXT,
@@ -178,6 +179,10 @@ test("a position application travels from the participant to the manager's assig
     "bewerber",
   );
   await expect(applicantChoice).toHaveCount(1);
+  await hoverUntilVisible(
+    applicantChoice.getByRole("link", { name: "bewerber", exact: true }),
+    page.getByRole("dialog", { name: "Citizen-Details" }),
+  );
 
   await applicantChoice
     .getByRole("button", { name: "bewerber zuweisen", exact: true })
