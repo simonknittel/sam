@@ -84,9 +84,9 @@ export const deletePenaltyEntry = (
 
     return {
       entry: toPenaltyEntryOutput(entry),
-      notifications_sent:
-        notifications.length > 0
-          ? await triggerNotificationsAfterSave(context, notifications)
-          : true,
+      notifications_sent: await triggerNotificationsAfterSave(
+        context,
+        notifications,
+      ),
     };
   });

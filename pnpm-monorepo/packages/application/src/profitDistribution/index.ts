@@ -17,6 +17,7 @@ export {
 } from "./endDueCollectionPhases.js";
 export {
   endDuePayoutPhases,
+  getPayoutPhaseEnd,
   type EndDuePayoutPhasesOutput,
 } from "./endDuePayoutPhases.js";
 export {

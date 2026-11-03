@@ -1,7 +1,7 @@
 import { isCitizenWithPermissions } from "../../auth/effectivePermissionsOfCitizens.js";
 import type { ApplicationContext } from "../../context.js";
 import type { Recipient } from "./recipient.js";
-import { getRoleReceiverPermissionSets } from "./roleAdded.js";
+import { getRoleReceiverPermissionSets } from "./roleRecipients.js";
 
 export interface FindRoleLevelIncreasedRecipientInput {
   readonly citizenId: string;

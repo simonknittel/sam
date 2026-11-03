@@ -58,6 +58,7 @@ export {
 export * from "./events/index.js";
 export * from "./eventTemplates/index.js";
 export * from "./fleet/index.js";
+export { FREQUENT_AUTOMATIONS_INTERVAL_MINUTES } from "./frequentAutomations.js";
 export * from "./greetings/index.js";
 export * from "./iam/index.js";
 export * from "./leaderboards/index.js";

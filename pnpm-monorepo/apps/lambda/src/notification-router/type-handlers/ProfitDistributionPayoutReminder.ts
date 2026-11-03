@@ -1,9 +1,10 @@
 import {
   findPayoutReminderRecipients,
+  getPayoutPhaseEnd,
   type ApplicationContext,
 } from "@sam-monorepo/application";
 import { getSincomePayoutReminderText } from "@sam-monorepo/domain";
-import { publishNotifications } from "../publish";
+import { getTimeToLiveUntil, publishNotifications } from "../publish";
 
 interface Payload {
   cycleId: string;
@@ -34,5 +35,12 @@ export const ProfitDistributionPayoutReminderHandler = async (
       ...text,
       url: `/app/sincome/${result.cycle.id}`,
     })),
+    {
+      // A reminder that arrives after the end of the payout phase has no use
+      TTL: getTimeToLiveUntil(
+        context,
+        getPayoutPhaseEnd(result.cycle.payoutEndsAt),
+      ),
+    },
   );
 };

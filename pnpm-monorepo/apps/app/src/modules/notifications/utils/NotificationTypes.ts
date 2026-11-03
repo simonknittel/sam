@@ -196,7 +196,7 @@ export const NOTIFICATIONS_APPS: NotificationApp[] = [
         id: NotificationSettingType.SincomePayoutReminder,
         title: "Erinnerung an die Zustimmung",
         description:
-          "24 Stunden vor dem Ende der Auszahlungsphase, wenn ich noch nicht zugestimmt habe",
+          "Am Morgen des letzten Tages der Auszahlungsphase, wenn ich noch nicht zugestimmt habe",
         category: "SINcome",
       },
       {

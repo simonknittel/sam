@@ -1,56 +1,60 @@
-import { CYCLE_PHASE_WHERE, CyclePhase } from "@sam-monorepo/domain";
+import {
+  addDaysToLocalDate,
+  CYCLE_PHASE_WHERE,
+  CyclePhase,
+  getLocalDate,
+  ORGANIZATION_TIMEZONE,
+  toDateColumnValue,
+} from "@sam-monorepo/domain";
 import type { ApplicationContext } from "../context.js";
+import { isFirstRunAfterWallTime } from "../frequentAutomations.js";
 import { triggerNotificationsAfterSave } from "../notifications.js";
 import { withSpan } from "../withSpan.js";
 
-/** The time between the reminder and the planned end of the payout phase */
-const REMINDER_HOURS_BEFORE_PAYOUT_END = 24;
-
 /**
- * The interval of the schedule of `frequent-automations`: thus the planned
- * end of each cycle is in the window of exactly one run.
+ * The wall time ("HH:mm") of the reminders on the last day of the payout
+ * phase, in the time zone of the organization
  */
-const RUN_INTERVAL_MINUTES = 15;
-
-const MILLISECONDS_PER_MINUTE = 60 * 1000;
-const MILLISECONDS_PER_HOUR = 60 * MILLISECONDS_PER_MINUTE;
+const REMINDER_WALL_TIME = "07:30";
 
 export interface SendSincomePayoutRemindersOutput {
-  /** The cycles whose payout phase ends in 24 hours */
+  /** True only for the run of the day that sends the reminders */
+  readonly isReminderRun: boolean;
+  /** The cycles whose payout phase has its last day today */
   readonly cycleCount: number;
   readonly notificationsSent: boolean;
 }
 
 /**
  * Requests the `ProfitDistributionPayoutReminder` notification of each cycle
- * in the payout phase whose planned end is 24 hours (plus less than one run
- * interval) after now. The notification router sends it to the participants
- * who did not accept their payout yet.
+ * in the payout phase whose last day is today. The planned end of the payout
+ * phase is this date (see `toDateColumnValue()`), and the midnight job ends
+ * the phase after it (see `getPayoutPhaseEnd()`). Only the first run after
+ * the reminder time sends them, the other runs of the day do nothing. The
+ * notification router sends them to the participants who did not accept
+ * their payout yet.
  */
 export const sendSincomePayoutReminders = (
   context: ApplicationContext,
 ): Promise<SendSincomePayoutRemindersOutput> =>
   withSpan(context, "sendSincomePayoutReminders", async () => {
-    const windowStart = new Date(
-      context.now().getTime() +
-        REMINDER_HOURS_BEFORE_PAYOUT_END * MILLISECONDS_PER_HOUR,
-    );
+    const now = context.now();
+    if (!isFirstRunAfterWallTime(now, REMINDER_WALL_TIME))
+      return { isReminderRun: false, cycleCount: 0, notificationsSent: true };
+
+    const today = getLocalDate(now, ORGANIZATION_TIMEZONE);
     const cycles = await context.prisma.profitDistributionCycle.findMany({
       where: {
         ...CYCLE_PHASE_WHERE[CyclePhase.Payout],
         payoutEndsAt: {
-          gte: windowStart,
-          lt: new Date(
-            windowStart.getTime() +
-              RUN_INTERVAL_MINUTES * MILLISECONDS_PER_MINUTE,
-          ),
+          gte: toDateColumnValue(today),
+          lt: toDateColumnValue(addDaysToLocalDate(today, 1)),
         },
       },
       select: {
         id: true,
       },
     });
-    if (cycles.length <= 0) return { cycleCount: 0, notificationsSent: true };
 
     const notificationsSent = await triggerNotificationsAfterSave(
       context,
@@ -60,5 +64,9 @@ export const sendSincomePayoutReminders = (
       })),
     );
 
-    return { cycleCount: cycles.length, notificationsSent };
+    return {
+      isReminderRun: true,
+      cycleCount: cycles.length,
+      notificationsSent,
+    };
   });

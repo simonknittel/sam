@@ -1,9 +1,12 @@
 import {
   findEventParticipantRecipients,
+  FREQUENT_AUTOMATIONS_INTERVAL_MINUTES,
   type ApplicationContext,
 } from "@sam-monorepo/application";
 import { type Event } from "@sam-monorepo/database";
 import { publishNotifications } from "../publish.js";
+
+const SECONDS_PER_MINUTE = 60;
 
 type Payload = {
   eventId: Event["id"];
@@ -29,7 +32,9 @@ export const EventStartingHandler = async (
       url: `/app/events/${result.event.id}`,
     })),
     {
-      TTL: 15 * 60, // 15 minutes in seconds
+      // The event starts at most one run interval after the job (see
+      // `notifyEventsStartingSoon()`)
+      TTL: FREQUENT_AUTOMATIONS_INTERVAL_MINUTES * SECONDS_PER_MINUTE,
       urgency: "high",
     },
   );

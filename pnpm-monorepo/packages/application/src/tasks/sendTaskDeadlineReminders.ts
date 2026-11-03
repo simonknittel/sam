@@ -1,4 +1,5 @@
 import type { ApplicationContext } from "../context.js";
+import { getRunWindow } from "../frequentAutomations.js";
 import { triggerNotificationsAfterSave } from "../notifications.js";
 import { withSpan } from "../withSpan.js";
 import { getOpenTasksWhere } from "./taskWhere.js";
@@ -6,16 +7,7 @@ import { getOpenTasksWhere } from "./taskWhere.js";
 /** The time between the reminder and the expiry of the task */
 const REMINDER_HOURS_BEFORE_EXPIRY = 24;
 
-/**
- * The interval of the schedule of `frequent-automations`: thus the windows
- * of the runs follow each other, and each expiry is in the window of exactly
- * one run.
- */
-const RUN_INTERVAL_MINUTES = 15;
-
-const MILLISECONDS_PER_MINUTE = 60 * 1000;
-
-const MILLISECONDS_PER_HOUR = 60 * MILLISECONDS_PER_MINUTE;
+const MILLISECONDS_PER_HOUR = 60 * 60 * 1000;
 
 export interface SendTaskDeadlineRemindersOutput {
   /** The open tasks with assignees that expire in the window of the run */
@@ -33,19 +25,15 @@ export const sendTaskDeadlineReminders = (
 ): Promise<SendTaskDeadlineRemindersOutput> =>
   withSpan(context, "sendTaskDeadlineReminders", async () => {
     const now = context.now();
-    const windowStart = new Date(
-      now.getTime() + REMINDER_HOURS_BEFORE_EXPIRY * MILLISECONDS_PER_HOUR,
-    );
-    const windowEnd = new Date(
-      windowStart.getTime() + RUN_INTERVAL_MINUTES * MILLISECONDS_PER_MINUTE,
-    );
-
     const tasks = await context.prisma.task.findMany({
       where: {
         AND: [
           getOpenTasksWhere(now),
           {
-            expiresAt: { gte: windowStart, lt: windowEnd },
+            expiresAt: getRunWindow(
+              now,
+              REMINDER_HOURS_BEFORE_EXPIRY * MILLISECONDS_PER_HOUR,
+            ),
             // Only the assignees get the reminder
             assignments: { some: {} },
           },
@@ -55,7 +43,6 @@ export const sendTaskDeadlineReminders = (
         id: true,
       },
     });
-    if (tasks.length <= 0) return { taskCount: 0, notificationsSent: true };
 
     const notificationsSent = await triggerNotificationsAfterSave(
       context,

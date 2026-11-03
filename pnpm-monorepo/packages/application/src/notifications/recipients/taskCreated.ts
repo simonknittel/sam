@@ -24,12 +24,12 @@ export interface FindTaskCreatedRecipientsInput {
 }
 
 /**
- * One group for each new task that is not deleted. A personalized or group
- * task notifies its assignees. A public task has no assignees yet: it
- * notifies each citizen who can take it on, except its creator: the citizen
- * must have a required role (`hasRequiredRole()`), also when the task is
- * visible for other roles. `task;manage` shows all tasks, but it gives no
- * notification.
+ * One group for each new task that is not deleted. The creator of the task
+ * gets no notification. A personalized or group task notifies its assignees.
+ * A public task has no assignees yet: it notifies each citizen who can take
+ * it on: the citizen must have a required role (`hasRequiredRole()`), also
+ * when the task is visible for other roles. `task;manage` shows all tasks,
+ * but it gives no notification.
  */
 export const findTaskCreatedRecipients = async (
   context: ApplicationContext,
@@ -90,7 +90,11 @@ export const findTaskCreatedRecipients = async (
           task: taskReference,
           kind: TaskCreatedRecipientKind.Assignee,
           recipients: task.assignments
-            .filter((assignment) => receivers.has(assignment.citizenId))
+            .filter(
+              (assignment) =>
+                assignment.citizenId !== task.createdById &&
+                receivers.has(assignment.citizenId),
+            )
             .map((assignment) => ({ citizenId: assignment.citizenId })),
         };
 

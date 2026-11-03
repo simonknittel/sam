@@ -48,8 +48,9 @@ export interface CreatePenaltyEntryOutput {
 }
 
 /**
- * Gives penalty points to a citizen and notifies about the new entry. Also
- * needs `citizen;read`, like the citizen picker of the form.
+ * Gives penalty points to a citizen and notifies the citizen about the new
+ * entry, except when the citizen is the actor. Also needs `citizen;read`,
+ * like the citizen picker of the form.
  */
 export const createPenaltyEntry = (
   context: ApplicationContext,
@@ -98,8 +99,17 @@ export const createPenaltyEntry = (
 
     return {
       entry: toPenaltyEntryOutput(entry),
-      notifications_sent: await triggerNotificationsAfterSave(context, [
-        { type: "PenaltyEntryCreated", payload: { penaltyEntryId: entry.id } },
-      ]),
+      // The actor gets no notification about points for the own citizen
+      notifications_sent: await triggerNotificationsAfterSave(
+        context,
+        entry.citizen.id === author.id
+          ? []
+          : [
+              {
+                type: "PenaltyEntryCreated",
+                payload: { penaltyEntryId: entry.id },
+              },
+            ],
+      ),
     };
   });

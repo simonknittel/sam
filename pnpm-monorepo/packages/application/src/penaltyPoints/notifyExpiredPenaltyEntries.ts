@@ -1,14 +1,10 @@
 import type { ApplicationContext } from "../context.js";
+import {
+  FREQUENT_AUTOMATIONS_INTERVAL_MILLISECONDS,
+  getRunWindow,
+} from "../frequentAutomations.js";
 import { triggerNotificationsAfterSave } from "../notifications.js";
 import { withSpan } from "../withSpan.js";
-
-/**
- * The interval of the schedule of `frequent-automations`: thus the expiry of
- * each entry is in the window of exactly one run.
- */
-const RUN_INTERVAL_MINUTES = 15;
-
-const MILLISECONDS_PER_MINUTE = 60 * 1000;
 
 export interface NotifyExpiredPenaltyEntriesOutput {
   /** The entries that expired since the last run */
@@ -26,23 +22,18 @@ export const notifyExpiredPenaltyEntries = (
   context: ApplicationContext,
 ): Promise<NotifyExpiredPenaltyEntriesOutput> =>
   withSpan(context, "notifyExpiredPenaltyEntries", async () => {
-    const now = context.now();
     const penaltyEntries = await context.prisma.penaltyEntry.findMany({
       where: {
-        expiresAt: {
-          gte: new Date(
-            now.getTime() - RUN_INTERVAL_MINUTES * MILLISECONDS_PER_MINUTE,
-          ),
-          lt: now,
-        },
+        expiresAt: getRunWindow(
+          context.now(),
+          -FREQUENT_AUTOMATIONS_INTERVAL_MILLISECONDS,
+        ),
         deletedAt: null,
       },
       select: {
         id: true,
       },
     });
-    if (penaltyEntries.length <= 0)
-      return { penaltyEntryCount: 0, notificationsSent: true };
 
     const notificationsSent = await triggerNotificationsAfterSave(
       context,

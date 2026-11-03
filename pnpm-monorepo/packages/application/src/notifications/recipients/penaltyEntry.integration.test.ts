@@ -13,7 +13,7 @@ import { truncateAllTables } from "../../../test/database.js";
 import {
   findPenaltyEntryExpiredRecipient,
   findPenaltyEntryRecipient,
-} from "./penaltyEntryCreated.js";
+} from "./penaltyEntry.js";
 import type { Recipient } from "./recipient.js";
 
 const PERMISSION_STRINGS = ["login;manage", "ownPenaltyEntry;read"];

@@ -4,9 +4,7 @@ import {
 } from "@sam-monorepo/application";
 import { type Task } from "@sam-monorepo/database";
 import { getTaskDeadlineReminderText } from "@sam-monorepo/domain";
-import { publishNotifications } from "../publish";
-
-const MILLISECONDS_PER_SECOND = 1000;
+import { getTimeToLiveUntil, publishNotifications } from "../publish";
 
 interface Payload {
   taskId: Task["id"];
@@ -39,13 +37,7 @@ export const TaskDeadlineReminderHandler = async (
     })),
     {
       // A reminder that arrives after the expiry of the task has no use
-      TTL: Math.max(
-        0,
-        Math.floor(
-          (result.task.expiresAt.getTime() - context.now().getTime()) /
-            MILLISECONDS_PER_SECOND,
-        ),
-      ),
+      TTL: getTimeToLiveUntil(context, result.task.expiresAt),
     },
   );
 };

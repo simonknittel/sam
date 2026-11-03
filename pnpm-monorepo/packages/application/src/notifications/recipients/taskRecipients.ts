@@ -16,18 +16,18 @@ export const TASK_RECEIVER_PERMISSION_SETS = [
 
 /**
  * The citizens of the list who can receive a task notification (see
- * `TASK_RECEIVER_PERMISSION_SETS`), except the citizen who caused the
- * change. A null in the list is a deleted citizen, for example the deleted
- * creator of a task.
+ * `TASK_RECEIVER_PERMISSION_SETS`), except the excluded citizen: usually the
+ * citizen who caused the change. A null in the list is a deleted citizen,
+ * for example the deleted creator of a task.
  */
 export const findTaskReceivers = async (
   context: ApplicationContext,
   citizenIds: readonly (string | null)[],
-  actorId: string | null,
+  excludedCitizenId: string | null,
 ): Promise<Recipient[]> => {
   const candidateIds = citizenIds.filter(
     (citizenId): citizenId is string =>
-      citizenId !== null && citizenId !== actorId,
+      citizenId !== null && citizenId !== excludedCitizenId,
   );
   if (candidateIds.length <= 0) return [];
 

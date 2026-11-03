@@ -133,10 +133,10 @@ const changeRoleAssignmentLevel = (
       citizen_id: input.citizen_id,
       role_id: input.role_id,
       current_level: updatedRoleAssignment.currentLevel,
-      notifications_sent:
-        notifications.length > 0
-          ? await triggerNotificationsAfterSave(context, notifications)
-          : true,
+      notifications_sent: await triggerNotificationsAfterSave(
+        context,
+        notifications,
+      ),
     };
   });
 

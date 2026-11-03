@@ -142,12 +142,17 @@ export const getRoleLevelIncreasedText = ({
   body: `${roleName}: ${level} von ${maxLevel} Level erreicht`,
 });
 
+/**
+ * `payoutEndsAt` is the last day of the payout phase, as midnight UTC (see
+ * `toDateColumnValue()`). The time zone of the organization is east of UTC,
+ * thus this instant is on the same day there.
+ */
 export const getSincomePayoutReminderText = ({
   cycleTitle,
   payoutEndsAt,
 }: OnSiteNotificationPayload<"sincome_payout_reminder">): NotificationText => ({
   title: "SINcome: Zustimmung fehlt",
-  body: `Die Auszahlungsphase für den Zeitraum ${cycleTitle} endet am ${formatDateTime(payoutEndsAt)}. Bitte stimme der Auszahlung zu.`,
+  body: `Letzter Tag der Auszahlungsphase für den Zeitraum ${cycleTitle}: ${DAY_FORMAT.format(new Date(payoutEndsAt))}. Bitte stimme der Auszahlung zu.`,
 });
 
 const describePenaltyEntry = ({

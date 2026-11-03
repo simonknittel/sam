@@ -4,19 +4,23 @@
  * caller: the rule is the check of the receivers for its feature.
  * `storeOnSiteNotifications()` adds the clearance.
  */
-export { findEventBriefingAudienceRecipients } from "./eventBriefingAudience.js";
+export {
+  findEventBriefingAudienceRecipients,
+  findEventBriefingUpdatedRecipients,
+} from "./eventBriefingAudience.js";
+export { findEventCitizenRecipient } from "./eventCitizen.js";
 export { findEventCreatedRecipients } from "./eventCreated.js";
 export {
   findEventLineupEnabledRecipients,
   findEventPositionAssignedRecipient,
   findEventPositionUnassignedRecipient,
-} from "./eventLineupRecipients.js";
+  findEventPositionVacatedRecipients,
+} from "./eventLineup.js";
 export { findEventOrganizerRecipients } from "./eventOrganizers.js";
 export {
   findEventDeletedRecipients,
   findEventParticipantRecipients,
 } from "./eventParticipants.js";
-export { findEventParticipationRecipient } from "./eventParticipation.js";
 export { findEventPositionApplicationRecipients } from "./eventPositionApplicationCreated.js";
 export type { EventNotificationRecipients } from "./eventRecipients.js";
 export { findFleetUpdateReminderRecipient } from "./fleetUpdateReminder.js";
@@ -28,7 +32,7 @@ export {
 export {
   findPenaltyEntryExpiredRecipient,
   findPenaltyEntryRecipient,
-} from "./penaltyEntryCreated.js";
+} from "./penaltyEntry.js";
 export {
   findPayoutDisbursedRecipients,
   findPayoutReminderRecipients,

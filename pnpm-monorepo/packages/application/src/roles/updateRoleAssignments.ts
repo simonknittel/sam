@@ -48,7 +48,8 @@ export interface UpdateRoleAssignmentsOutput {
  * Gives the roles of the list to a citizen and removes all other roles.
  * Requires a citizen. A change that the actor may not make (see
  * `canAssignRole()` and `canDismissRole()`) is left out without an error.
- * The citizen gets a notification for each added role.
+ * The citizen gets a notification for each added role, except when the
+ * citizen is the actor.
  *
  * @throws NotFoundError when the citizen does not exist
  * @throws ConflictError when the citizen is deleted
@@ -142,19 +143,24 @@ export const updateRoleAssignments = (
       ]);
     }
 
-    const notifications = changes
-      .filter((change) => change.enabled)
-      .map((change) => ({
-        type: "RoleAdded",
-        payload: { citizenId: input.citizen_id, roleId: change.role_id },
-      }));
+    // The actor gets no notification about a role that the actor gave to
+    // the own citizen
+    const notifications =
+      input.citizen_id === actorCitizen.id
+        ? []
+        : changes
+            .filter((change) => change.enabled)
+            .map((change) => ({
+              type: "RoleAdded",
+              payload: { citizenId: input.citizen_id, roleId: change.role_id },
+            }));
 
     return {
       citizen_id: input.citizen_id,
       changes,
-      notifications_sent:
-        notifications.length > 0
-          ? await triggerNotificationsAfterSave(context, notifications)
-          : true,
+      notifications_sent: await triggerNotificationsAfterSave(
+        context,
+        notifications,
+      ),
     };
   });

@@ -1,14 +1,7 @@
 import type { ApplicationContext } from "../context.js";
+import { FREQUENT_AUTOMATIONS_INTERVAL_MILLISECONDS } from "../frequentAutomations.js";
 import { triggerNotificationsAfterSave } from "../notifications.js";
 import { withSpan } from "../withSpan.js";
-
-/**
- * The interval of the schedule of `frequent-automations`: thus each run
- * notifies the events that start before the next run.
- */
-const NOTIFICATION_MINUTES_BEFORE = 15;
-
-const MILLISECONDS_PER_MINUTE = 60 * 1000;
 
 export interface NotifyEventsStartingSoonOutput {
   /** The events (from the app and from Discord) that start soon */
@@ -16,7 +9,10 @@ export interface NotifyEventsStartingSoonOutput {
   readonly notificationsSent: boolean;
 }
 
-/** Requests the `EventStarting` notification of each event that starts soon */
+/**
+ * Requests the `EventStarting` notification of each event that starts soon:
+ * from now until one run interval after now, thus before the next run
+ */
 export const notifyEventsStartingSoon = (
   context: ApplicationContext,
 ): Promise<NotifyEventsStartingSoonOutput> =>
@@ -27,8 +23,7 @@ export const notifyEventsStartingSoon = (
         startTime: {
           gte: now,
           lte: new Date(
-            now.getTime() +
-              NOTIFICATION_MINUTES_BEFORE * MILLISECONDS_PER_MINUTE,
+            now.getTime() + FREQUENT_AUTOMATIONS_INTERVAL_MILLISECONDS,
           ),
         },
         deletedAt: null,
@@ -37,7 +32,6 @@ export const notifyEventsStartingSoon = (
         id: true,
       },
     });
-    if (events.length <= 0) return { eventCount: 0, notificationsSent: true };
 
     const notificationsSent = await triggerNotificationsAfterSave(
       context,

@@ -1,7 +1,6 @@
-import { findCitizenIdsWithPermissions } from "../../auth/effectivePermissionsOfCitizens.js";
 import type { ApplicationContext } from "../../context.js";
 import type { Recipient } from "./recipient.js";
-import { TASK_RECEIVER_PERMISSION_SETS } from "./taskRecipients.js";
+import { findTaskReceivers } from "./taskRecipients.js";
 
 export interface FindTaskAssignmentRecipientsInput {
   readonly taskId: string;
@@ -13,8 +12,10 @@ export interface TaskAssignmentRecipients {
 }
 
 /**
- * The assignees of the task who can log in and open tasks. Null when the
- * task does not exist or has no assignee.
+ * The assignees of the task who can log in and open tasks, except the
+ * assignees who made their assignment themselves: an actor who assigns the
+ * own citizen, or a citizen who accepted the task. Null when the task does
+ * not exist.
  */
 export const findTaskAssignmentRecipients = async (
   context: ApplicationContext,
@@ -30,24 +31,21 @@ export const findTaskAssignmentRecipients = async (
       assignments: {
         select: {
           citizenId: true,
+          createdById: true,
         },
       },
     },
   });
-  if (!task || task.assignments.length <= 0) return null;
-
-  const recipientIds = await findCitizenIdsWithPermissions(
-    context,
-    {
-      id: {
-        in: task.assignments.map((assignment) => assignment.citizenId),
-      },
-    },
-    TASK_RECEIVER_PERMISSION_SETS,
-  );
+  if (!task) return null;
 
   return {
     task: { id: task.id, title: task.title },
-    recipients: Array.from(recipientIds, (citizenId) => ({ citizenId })),
+    recipients: await findTaskReceivers(
+      context,
+      task.assignments
+        .filter((assignment) => assignment.createdById !== assignment.citizenId)
+        .map((assignment) => assignment.citizenId),
+      null,
+    ),
   };
 };
