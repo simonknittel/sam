@@ -4,6 +4,7 @@ import { runAction } from "@/modules/actions/utils/runAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
+import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
 import {
   EventPositionRoleMatch,
   type Citizen,
@@ -34,8 +35,6 @@ const compareByCitizenDisplayName = (first: Choice, second: Choice) =>
   getCitizenDisplayName(first.citizen).localeCompare(
     getCitizenDisplayName(second.citizen),
   );
-
-const variantNameList = new Intl.ListFormat("de", { type: "disjunction" });
 
 interface Props {
   readonly className?: string;
@@ -135,7 +134,7 @@ export const UpdateEventPositionCitizenId = ({
         isOpen={isOpen}
         onRequestClose={() => setIsOpen(false)}
         className="w-160"
-        heading={<h2>Citizen für {position.name}</h2>}
+        heading={<h2>Posten zuweisen</h2>}
       >
         <div className="flex items-center justify-between gap-4">
           <p className="min-w-0 truncate" title={assignedCitizenName ?? ""}>
@@ -298,15 +297,22 @@ const UnmetRequirementList = ({
   return (
     <ul className="mt-1 flex flex-col gap-1 text-sm">
       {isShipMissing && (
-        <li>
+        <li className="flex flex-col gap-1">
           <span className="text-neutral-500">
             {position.requiredVariants.length > 1
               ? "Fehlendes Schiff (eines davon):"
               : "Fehlendes Schiff:"}
-          </span>{" "}
-          {variantNameList.format(
-            position.requiredVariants.map(({ variant }) => variant.name),
-          )}
+          </span>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            {position.requiredVariants.map((requiredVariant) => (
+              <VariantWithLogo
+                key={requiredVariant.id}
+                variant={requiredVariant.variant}
+                manufacturer={requiredVariant.variant.series.manufacturer}
+                size={32}
+              />
+            ))}
+          </div>
         </li>
       )}
 

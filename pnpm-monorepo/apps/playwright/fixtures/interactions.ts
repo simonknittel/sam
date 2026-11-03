@@ -71,7 +71,7 @@ export const openPositionCitizenModal = async (
   page: Page,
   positionName: string,
 ) => {
-  const dialog = modal(page, `Citizen für ${positionName}`);
+  const dialog = modal(page, "Posten zuweisen");
   await clickUntilVisible(
     page.getByRole("button", { name: `Citizen für ${positionName}:` }),
     dialog,

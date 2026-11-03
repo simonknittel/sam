@@ -519,9 +519,14 @@ test("the requirement check finds a ship after the first page of the fleet, but 
 
   await switchUser(organizer.user);
   await page.goto(`/app/events/${event.id}/lineup`);
-  await expect(
-    await applicantChoice("Alle Teilnehmer - Voraussetzungen nicht erfüllt"),
-  ).toContainText("Fehlendes Schiff: Retaliator Bomber");
+  const unmetChoice = await applicantChoice(
+    "Alle Teilnehmer - Voraussetzungen nicht erfüllt",
+  );
+  await expect(unmetChoice).toContainText("Fehlendes Schiff:");
+  await hoverUntilVisible(
+    unmetChoice.getByRole("link", { name: "Retaliator Bomber" }),
+    page.getByRole("dialog", { name: "Schiffsdetails" }),
+  );
 
   // The ship after the first page of the fleet meets the requirement
   await prisma.ship.update({
