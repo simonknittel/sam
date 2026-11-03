@@ -12,6 +12,7 @@ import {
 import { EVENT_PAGE_RELATIONS_SELECT } from "../events/eventSelects.js";
 import { requireVisibleEvent } from "../events/findVisibleEvent.js";
 import { buildParticipantCitizenWhere } from "../events/participantCitizenWhere.js";
+import { isRoleVisible } from "../roles/roleVisibility.js";
 
 /**
  * The ships that the requirement check of the lineup compares with the
@@ -106,23 +107,31 @@ export interface EventLineupCitizen {
   /** The ships of the citizen of the variants that the lineup requires */
   readonly ships: RequiredVariantShip[];
   /**
-   * The effective roles of the citizen that the lineup requires. Empty when
-   * the actor cannot manage the positions: only the citizen picker of the
-   * managers compares them.
+   * The effective roles of the citizen that the lineup requires and that the
+   * actor can see: the app shows the roles of a citizen only with
+   * `otherRole;read` for each role. Empty when the actor cannot manage the
+   * positions: only the citizen picker of the managers compares them.
    */
   readonly roleIds: string[];
 }
 
 /**
- * The required roles of the citizens, by citizen id. Without a required role
- * in the lineup, the query of the roles is not necessary.
+ * The required roles of the citizens that the actor can see, by citizen id.
+ * Thus a citizen with a required role that the actor cannot see does not meet
+ * the requirement for the actor. Without such a role in the lineup, the query
+ * of the roles is not necessary.
  */
-const findRequiredRoleIdsOfCitizens = async (
+const findVisibleRequiredRoleIdsOfCitizens = async (
   context: ApplicationContext,
+  actor: Actor,
   eventId: string,
   citizenIds: readonly string[],
 ): Promise<Map<string, string[]>> => {
-  const requiredRoleIds = await findRequiredRoleIdsOfEvent(context, eventId);
+  const requiredRoleIds = new Set(
+    [...(await findRequiredRoleIdsOfEvent(context, eventId))].filter((roleId) =>
+      isRoleVisible(actor, roleId),
+    ),
+  );
   if (requiredRoleIds.size <= 0 || citizenIds.length <= 0) return new Map();
 
   const effectiveRolesByCitizenId = await loadEffectivePermissionsOfCitizens(
@@ -140,8 +149,8 @@ const findRequiredRoleIdsOfCitizens = async (
 
 /**
  * The citizens of the active participants of an event, with their ships of
- * the required variants and, for a manager of the positions, their required
- * roles. The lineup offers these citizens for its positions,
+ * the required variants and, for a manager of the positions, their visible
+ * required roles. The lineup offers these citizens for its positions,
  * thus a deleted citizen is not one of them. The same checks as the lineup
  * page: `event;read`, the visibility of the event, and a lineup that is
  * enabled or that the actor can manage.
@@ -177,8 +186,9 @@ export const findEventLineupCitizens = async (
   });
 
   const roleIdsByCitizenId = isAllowedToManagePositions(actor, event)
-    ? await findRequiredRoleIdsOfCitizens(
+    ? await findVisibleRequiredRoleIdsOfCitizens(
         context,
+        actor,
         event.id,
         citizens.map((citizen) => citizen.id),
       )

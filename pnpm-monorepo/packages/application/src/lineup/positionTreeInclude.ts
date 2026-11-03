@@ -29,10 +29,12 @@ const REQUIRED_VARIANTS_INCLUDE = {
 
 /**
  * Only the ids: the role badges of the app take the names of the roles that
- * the viewer can see from the roles context
+ * the viewer can see from the roles context. The order is the order of the
+ * role picker.
  */
 const REQUIRED_ROLES_INCLUDE = {
   select: { roleId: true },
+  orderBy: { role: { name: "asc" } },
 } as const satisfies Prisma.EventPosition$requiredRolesArgs;
 
 /**
