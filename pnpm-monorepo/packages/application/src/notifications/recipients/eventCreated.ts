@@ -7,11 +7,13 @@ import {
 
 export interface FindEventCreatedRecipientsInput {
   readonly eventId: string;
+  /** The citizen who caused the notification gets none */
+  readonly excludedCitizenId?: string | null;
 }
 
 /**
- * The citizens who can see the new event (see `findEventRecipients()`). Null
- * when the event does not exist.
+ * The citizens who can see the new event (see `findEventRecipients()`),
+ * without the excluded citizen. Null when the event does not exist.
  */
 export const findEventCreatedRecipients = async (
   context: ApplicationContext,
@@ -31,6 +33,11 @@ export const findEventCreatedRecipients = async (
 
   return {
     event: { id: event.id, name: event.name },
-    recipients: await findEventRecipients(context, event, {}),
+    recipients: await findEventRecipients(
+      context,
+      event,
+      {},
+      { excludedCitizenId: input.excludedCitizenId },
+    ),
   };
 };

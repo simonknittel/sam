@@ -5,11 +5,15 @@ import type { ApplicationContext } from "../context.js";
 import { ConflictError } from "../errors.js";
 import { isAllowedToManagePositions } from "../events/eventManageRules.js";
 import { lockParticipationEnabledEvent } from "../events/participatableAppEvent.js";
+import { triggerNotificationsAfterSave } from "../notifications.js";
 import { idSchema } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
 import { LineupErrorMessage } from "./lineupErrors.js";
 import { requireApplicableEventPosition } from "./lineupGuards.js";
-import { toLineupPositionOutput, type LineupPosition } from "./lineupOutput.js";
+import {
+  toLineupPositionOutput,
+  type NotifyingLineupPositionWriteOutput,
+} from "./lineupOutput.js";
 
 export const applyForEventPositionInputSchema = z.object({
   position_id: idSchema.describe(
@@ -58,14 +62,14 @@ const requireOwnParticipation = async (
 /**
  * Applies the own citizen for a position of an event in which the citizen
  * participates. A manager of the positions confirms the application with the
- * assignment. A repeated application changes nothing and gives the position
- * like the first one.
+ * assignment. A new application notifies the organizers. A repeated
+ * application changes nothing and gives the position like the first one.
  */
 export const applyForEventPosition = (
   context: ApplicationContext,
   actor: Actor,
   input: ApplyForEventPositionInput,
-): Promise<LineupPosition> =>
+): Promise<NotifyingLineupPositionWriteOutput> =>
   withSpan(context, "applyForEventPosition", async () => {
     const citizen = requireCitizen(actor);
     const position = await requireApplicableEventPosition(
@@ -111,9 +115,21 @@ export const applyForEventPosition = (
         },
       ]);
 
-    return toLineupPositionOutput(
-      context,
-      position.id,
-      isAllowedToManagePositions(actor, position.event),
-    );
+    const notificationsSent = application
+      ? await triggerNotificationsAfterSave(context, [
+          {
+            type: "EventPositionApplicationCreated",
+            payload: { applicationId: application.id },
+          },
+        ])
+      : true;
+
+    return {
+      position: await toLineupPositionOutput(
+        context,
+        position.id,
+        isAllowedToManagePositions(actor, position.event),
+      ),
+      notifications_sent: notificationsSent,
+    };
   });

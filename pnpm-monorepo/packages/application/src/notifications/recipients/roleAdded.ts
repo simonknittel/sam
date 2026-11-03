@@ -1,7 +1,7 @@
-import { LOGIN_MANAGE_PERMISSION_SET } from "../../auth/clearedCitizens.js";
 import { isCitizenWithPermissions } from "../../auth/effectivePermissionsOfCitizens.js";
 import type { ApplicationContext } from "../../context.js";
 import type { Recipient } from "./recipient.js";
+import { getRoleReceiverPermissionSets } from "./roleRecipients.js";
 
 export interface FindRoleAddedRecipientInput {
   readonly citizenId: string;
@@ -15,7 +15,7 @@ export interface RoleAddedRecipients {
 
 /**
  * The citizen who got the role, when the citizen can log in and read the
- * added role (`otherRole;manage` includes the read). Null when the role does
+ * added role (see `getRoleReceiverPermissionSets()`). Null when the role does
  * not exist.
  */
 export const findRoleAddedRecipient = async (
@@ -29,14 +29,11 @@ export const findRoleAddedRecipient = async (
         name: true,
       },
     }),
-    isCitizenWithPermissions(context, input.citizenId, [
-      LOGIN_MANAGE_PERMISSION_SET,
-      {
-        resource: "otherRole",
-        operation: "read",
-        attributes: [{ key: "roleId", value: input.roleId }],
-      },
-    ]),
+    isCitizenWithPermissions(
+      context,
+      input.citizenId,
+      getRoleReceiverPermissionSets(input.roleId),
+    ),
   ]);
   if (!role) return null;
 

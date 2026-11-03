@@ -16,6 +16,8 @@ export enum WikiErrorMessage {
   SourcePageNotFound = "The copied page does not exist",
   /** A `ConflictError`: the briefing refuses all changes */
   BriefingFrozen = "The event of the briefing is over",
+  /** A `ConflictError`: only the managers can read the briefing */
+  BriefingNotPublished = "The briefing is not published: only the managers can read it",
   /** A `ConflictError`: a different request changed the tree first */
   PageTreeChanged = "The page tree changed in the meantime",
   /** A `NotFoundError`: a different request restored a page first */

@@ -6,7 +6,13 @@ import {
   type DiscordScheduledEvent,
 } from "../context.js";
 import { callDiscord } from "../discord/callDiscord.js";
+import { triggerNotificationsAfterSave } from "../notifications.js";
 import { diffParticipants } from "./discordEventReconciliation.js";
+import {
+  buildCancellationNotifications,
+  buildSignUpNotifications,
+  type OwnCancellation,
+} from "./participationChangeNotifications.js";
 
 export interface SyncDiscordParticipantsOutput {
   /** The new RSVPs on Discord, as in `EVENT_PARTICIPANTS_SYNCED` */
@@ -15,6 +21,7 @@ export interface SyncDiscordParticipantsOutput {
   readonly removedCount: number;
   /** The rows that got the citizen of their Discord user in this run */
   readonly linkedCount: number;
+  readonly notificationsSent: boolean;
 }
 
 const findActiveCitizensByDiscordId = (
@@ -36,8 +43,9 @@ const findActiveCitizensByDiscordId = (
 
 /**
  * Makes the participants of the event from Discord agree with the users that
- * are interested in the scheduled event on Discord. Gives null when the
- * database has no active row from Discord for the scheduled event.
+ * are interested in the scheduled event on Discord, and notifies the
+ * organizers about the new RSVPs and the withdrawals of citizens. Gives null
+ * when the database has no active row from Discord for the scheduled event.
  */
 export const syncDiscordParticipants = async (
   context: ApplicationContext,
@@ -51,6 +59,7 @@ export const syncDiscordParticipants = async (
     },
     select: {
       id: true,
+      startTime: true,
     },
   });
   if (!databaseEvent) return null;
@@ -68,20 +77,31 @@ export const syncDiscordParticipants = async (
       `Failed to read the users of the Discord event "${scheduledEvent.id}"`,
     );
 
-  const activeParticipants = await context.prisma.eventParticipant.findMany({
+  const discordParticipants = await context.prisma.eventParticipant.findMany({
     where: {
       eventId: databaseEvent.id,
       source: EventSource.DISCORD,
-      cancelledAt: null,
     },
     select: {
       discordUserId: true,
+      cancelledAt: true,
     },
   });
 
+  /**
+   * The first rows from Discord of an event are the RSVPs from before the
+   * import, not changes of the participation, thus they notify nobody. The
+   * rule reads the rows, not the run that imported the event: else a failed
+   * read of the users after the import would make the next run notify about
+   * each RSVP.
+   */
+  const storesFirstRows = discordParticipants.length <= 0;
+
   const { added, removed } = diffParticipants(
     userIdsResult.data,
-    activeParticipants,
+    discordParticipants.filter(
+      (participant) => participant.cancelledAt === null,
+    ),
   );
 
   /**
@@ -89,9 +109,27 @@ export const syncDiscordParticipants = async (
    * the active sign-ups ignores the cancelled rows, thus a later RSVP gets a
    * new row). It also deletes the position applications of the citizen and
    * removes the citizen from the lineup positions. All in one transaction.
+   * The first read gives the positions for the notifications before the
+   * clearing.
    */
+  let cancellations: OwnCancellation[] = [];
   if (removed.length > 0) {
-    await context.prisma.$transaction([
+    const [vacatedPositions] = await context.prisma.$transaction([
+      context.prisma.eventPosition.findMany({
+        where: {
+          eventId: databaseEvent.id,
+          citizen: {
+            discordId: {
+              in: removed,
+            },
+          },
+        },
+        select: {
+          name: true,
+          citizenId: true,
+        },
+      }),
+
       context.prisma.eventParticipant.updateMany({
         where: {
           eventId: databaseEvent.id,
@@ -133,6 +171,17 @@ export const syncDiscordParticipants = async (
         },
       }),
     ]);
+
+    const withdrawnCitizens = await findActiveCitizensByDiscordId(
+      context,
+      removed,
+    );
+    cancellations = withdrawnCitizens.map((citizen) => ({
+      citizenId: citizen.id,
+      vacatedPositionNames: vacatedPositions
+        .filter((position) => position.citizenId === citizen.id)
+        .map((position) => position.name),
+    }));
   }
 
   /**
@@ -141,21 +190,29 @@ export const syncDiscordParticipants = async (
    * unique rule for the active sign-ups skips the second row, thus one
    * conflict does not stop the run.
    */
+  let signedUpCitizenIds: string[] = [];
   if (added.length > 0) {
     const citizens = await findActiveCitizensByDiscordId(context, added);
     const citizenIdByDiscordId = new Map(
       citizens.map((citizen) => [citizen.discordId, citizen.id]),
     );
 
-    await context.prisma.eventParticipant.createMany({
-      data: added.map((discordUserId) => ({
-        eventId: databaseEvent.id,
-        source: EventSource.DISCORD,
-        discordUserId,
-        citizenId: citizenIdByDiscordId.get(discordUserId) ?? null,
-      })),
-      skipDuplicates: true,
-    });
+    const createdParticipants =
+      await context.prisma.eventParticipant.createManyAndReturn({
+        data: added.map((discordUserId) => ({
+          eventId: databaseEvent.id,
+          source: EventSource.DISCORD,
+          discordUserId,
+          citizenId: citizenIdByDiscordId.get(discordUserId) ?? null,
+        })),
+        skipDuplicates: true,
+        select: {
+          citizenId: true,
+        },
+      });
+    signedUpCitizenIds = createdParticipants.flatMap((participant) =>
+      participant.citizenId === null ? [] : [participant.citizenId],
+    );
   }
 
   /**
@@ -227,9 +284,23 @@ export const syncDiscordParticipants = async (
     ]);
   }
 
+  const now = context.now();
+  const notifications = storesFirstRows
+    ? []
+    : [
+        ...buildCancellationNotifications(databaseEvent, now, cancellations),
+        ...buildSignUpNotifications(databaseEvent, now, signedUpCitizenIds),
+      ];
+
+  const notificationsSent = await triggerNotificationsAfterSave(
+    context,
+    notifications,
+  );
+
   return {
     addedCount: added.length,
     removedCount: removed.length,
     linkedCount,
+    notificationsSent,
   };
 };

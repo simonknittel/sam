@@ -1,9 +1,7 @@
 import { createEvent, createEventInputSchema } from "@sam-monorepo/application";
-import * as z from "zod";
-import { notificationsSentSchema } from "../../schemas.js";
 import { defineTool } from "../../toolDefinition.js";
 import { ToolGroup } from "../../toolGroup.js";
-import { eventOutputSchema } from "./eventOutputSchema.js";
+import { notifyingEventWriteOutputSchema } from "./eventOutputSchema.js";
 
 export const createEventTool = defineTool({
   name: "create_event",
@@ -18,10 +16,7 @@ export const createEventTool = defineTool({
     openWorldHint: false,
   },
   inputSchema: createEventInputSchema,
-  outputSchema: z.strictObject({
-    event: eventOutputSchema,
-    notifications_sent: notificationsSentSchema,
-  }),
+  outputSchema: notifyingEventWriteOutputSchema,
   isVisible: (actor) =>
     actor.authorize("event", "create") && actor.citizen !== null,
   handler: (context, actor, input) => createEvent(context, actor, input),

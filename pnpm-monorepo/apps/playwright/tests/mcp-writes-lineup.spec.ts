@@ -230,7 +230,10 @@ test.describe("the lineup write tools of the MCP server", () => {
           action: "apply",
         },
       ),
-    ).toMatchObject({ id: position.id, applications: [] });
+    ).toMatchObject({
+      position: { id: position.id, applications: [] },
+      notifications_sent: true,
+    });
     // A repeated application changes nothing
     expect(
       await callForContent(
@@ -241,7 +244,10 @@ test.describe("the lineup write tools of the MCP server", () => {
           action: "apply",
         },
       ),
-    ).toMatchObject({ id: position.id, applications: [] });
+    ).toMatchObject({
+      position: { id: position.id, applications: [] },
+      notifications_sent: true,
+    });
     expect(await prisma.eventPositionApplication.count()).toBe(1);
     expect(
       await prisma.auditEvent.count({
@@ -263,15 +269,18 @@ test.describe("the lineup write tools of the MCP server", () => {
         citizen_id: participant.entity.id,
       }),
     ).toMatchObject({
-      assignee: { id: participant.entity.id, handle: "mcp-bewerberin" },
-      applications: [{ id: participant.entity.id, handle: "mcp-bewerberin" }],
+      position: {
+        assignee: { id: participant.entity.id, handle: "mcp-bewerberin" },
+        applications: [{ id: participant.entity.id, handle: "mcp-bewerberin" }],
+      },
+      notifications_sent: true,
     });
     expect(
       await callForContent(organizerClient, "assign_event_position", {
         position_id: position.id,
         citizen_id: null,
       }),
-    ).toMatchObject({ assignee: null });
+    ).toMatchObject({ position: { assignee: null }, notifications_sent: true });
 
     await callForContent(
       participantClient,
@@ -349,9 +358,12 @@ test.describe("the lineup write tools of the MCP server", () => {
         position_id: parent.id,
       }),
     ).toMatchObject({
-      id: parent.id,
-      name: "Bergungsschiff",
-      children: [expect.objectContaining({ name: "Traktorstrahl" })],
+      position: {
+        id: parent.id,
+        name: "Bergungsschiff",
+        children: [expect.objectContaining({ name: "Traktorstrahl" })],
+      },
+      notifications_sent: true,
     });
     expect(
       await prisma.eventPosition.count({ where: { eventId: event.id } }),

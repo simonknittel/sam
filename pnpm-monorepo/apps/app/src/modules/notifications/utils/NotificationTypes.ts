@@ -28,7 +28,13 @@ export const NOTIFICATIONS_APPS: NotificationApp[] = [
         id: NotificationSettingType.EventUpdated,
         title: "Aktualisierung",
         description:
-          "Nur bei eigener Teilnahme. Bei Änderung des Titel, der Beschreibung, des Datums und des Ortes.",
+          "Nur bei eigener Teilnahme. Bei Änderung des Titels, der Beschreibung, des Endes und des Ortes.",
+        category: "Events",
+      },
+      {
+        id: NotificationSettingType.EventRescheduled,
+        title: "Verschiebung",
+        description: "Nur bei eigener Teilnahme. Wenn sich der Beginn ändert.",
         category: "Events",
       },
       {
@@ -44,9 +50,30 @@ export const NOTIFICATIONS_APPS: NotificationApp[] = [
         category: "Events",
       },
       {
+        id: NotificationSettingType.EventPositionAssigned,
+        title: "Posten zugeteilt",
+        description:
+          "Wenn mich ein Manager in der veröffentlichten Aufstellung einem Posten zuteilt",
+        category: "Events",
+      },
+      {
+        id: NotificationSettingType.EventPositionUnassigned,
+        title: "Nicht mehr eingeteilt",
+        description:
+          "Wenn ich in der veröffentlichten Aufstellung einen Posten verliere",
+        category: "Events",
+      },
+      {
         id: NotificationSettingType.EventBriefingPublished,
         title: "Briefing veröffentlicht",
         description: "Wenn das Briefing eines Events für mich freigegeben wird",
+        category: "Events",
+      },
+      {
+        id: NotificationSettingType.EventBriefingUpdated,
+        title: "Briefing aktualisiert",
+        description:
+          "Wenn ein Manager auf eine Änderung am Briefing hinweist, das ich lesen kann",
         category: "Events",
       },
       {
@@ -74,6 +101,33 @@ export const NOTIFICATIONS_APPS: NotificationApp[] = [
         description: "Wenn mich ein Manager von einem Event entfernt",
         category: "Events",
       },
+      {
+        id: NotificationSettingType.EventManagerAdded,
+        title: "Als Manager eingetragen",
+        description: "Wenn mich jemand als Manager eines Events einträgt",
+        category: "Events",
+      },
+      {
+        id: NotificationSettingType.EventParticipationChanged,
+        title: "An- und Abmeldungen",
+        description:
+          "Nur als Manager oder Ersteller eines Events. Ab 24 Stunden vor dem Beginn.",
+        category: "Events",
+      },
+      {
+        id: NotificationSettingType.EventPositionVacated,
+        title: "Posten frei geworden",
+        description:
+          "Nur als Manager oder Ersteller eines Events. Wenn sich ein eingeteilter Teilnehmer abmeldet.",
+        category: "Events",
+      },
+      {
+        id: NotificationSettingType.EventPositionApplicationCreated,
+        title: "Neue Bewerbung",
+        description:
+          "Nur als Manager oder Ersteller eines Events. Wenn sich jemand für einen Posten bewirbt.",
+        category: "Events",
+      },
     ],
   },
 
@@ -96,6 +150,12 @@ export const NOTIFICATIONS_APPS: NotificationApp[] = [
         id: NotificationSettingType.RoleAdded,
         title: "Zuweisung",
         description: "Wenn mir eine Rolle zugewiesen wird",
+        category: "Karriere",
+      },
+      {
+        id: NotificationSettingType.RoleLevelIncreased,
+        title: "Neues Level",
+        description: "Wenn mein Level in einer Rolle steigt",
         category: "Karriere",
       },
     ],
@@ -133,6 +193,13 @@ export const NOTIFICATIONS_APPS: NotificationApp[] = [
         category: "SINcome",
       },
       {
+        id: NotificationSettingType.SincomePayoutReminder,
+        title: "Erinnerung an die Zustimmung",
+        description:
+          "Am Morgen des letzten Tages der Auszahlungsphase, wenn ich noch nicht zugestimmt habe",
+        category: "SINcome",
+      },
+      {
         id: NotificationSettingType.SincomePayoutDisbursed,
         title: "Auszahlung erhalten",
         category: "SINcome",
@@ -167,6 +234,18 @@ export const NOTIFICATIONS_APPS: NotificationApp[] = [
         title: "Neuer Eintrag",
         category: "Strafpunkte",
       },
+      {
+        id: NotificationSettingType.PenaltyEntryExpired,
+        title: "Eintrag abgelaufen",
+        description: "Wenn ein Eintrag abläuft",
+        category: "Strafpunkte",
+      },
+      {
+        id: NotificationSettingType.PenaltyEntryDeleted,
+        title: "Eintrag gelöscht",
+        description: "Wenn ein gültiger Eintrag gelöscht wird",
+        category: "Strafpunkte",
+      },
     ],
   },
 
@@ -183,6 +262,30 @@ export const NOTIFICATIONS_APPS: NotificationApp[] = [
         id: NotificationSettingType.TaskAssignmentUpdated,
         title: "Zuweisung",
         description: "Wenn mir ein Task zugewiesen wird",
+        category: "Tasks",
+      },
+      {
+        id: NotificationSettingType.TaskAccepted,
+        title: "Annahme",
+        description: "Wenn jemand einen meiner Tasks annimmt",
+        category: "Tasks",
+      },
+      {
+        id: NotificationSettingType.TaskDeadlineReminder,
+        title: "Ablauf",
+        description: "Nur bei eigener Zuweisung. 24 Stunden vor dem Ablauf.",
+        category: "Tasks",
+      },
+      {
+        id: NotificationSettingType.TaskCompleted,
+        title: "Abschluss",
+        description: "Wenn jemand anderes einen meiner Tasks abschließt",
+        category: "Tasks",
+      },
+      {
+        id: NotificationSettingType.TaskCancelled,
+        title: "Abbruch",
+        description: "Nur bei eigener Zuweisung",
         category: "Tasks",
       },
       {

@@ -10,12 +10,12 @@ import {
   createCitizenWithPermissions,
 } from "../../../test/citizensWithPermissions.js";
 import { truncateAllTables } from "../../../test/database.js";
+import { findEventCitizenRecipient } from "./eventCitizen.js";
 import { findEventCreatedRecipients } from "./eventCreated.js";
 import {
   findEventDeletedRecipients,
   findEventParticipantRecipients,
 } from "./eventParticipants.js";
-import { findEventParticipationRecipient } from "./eventParticipation.js";
 
 /** The event notifications reach the citizens who can log in and read events */
 const NOTIFIABLE_PERMISSION_STRINGS = ["login;manage", "event;read"];
@@ -76,10 +76,11 @@ test("a restricted event reaches the citizens who can see it with their effectiv
   );
 });
 
-test("the deletion reaches the participants, other notifications of a deleted event reach nobody", async () => {
-  const participant = await createCitizenWithPermissions(
-    "participant",
-    NOTIFIABLE_PERMISSION_STRINGS,
+test("the deletion reaches the participants without the actor, other notifications of a deleted event reach nobody", async () => {
+  const [participant, actor] = await Promise.all(
+    ["participant", "actor"].map((handle) =>
+      createCitizenWithPermissions(handle, NOTIFIABLE_PERMISSION_STRINGS),
+    ),
   );
   const event = await prisma.event.create({
     data: {
@@ -88,7 +89,10 @@ test("the deletion reaches the participants, other notifications of a deleted ev
       startTime: TEST_NOW,
       deletedAt: TEST_NOW,
       participants: {
-        create: { source: EventSource.APP, citizenId: participant.id },
+        create: [participant!.id, actor!.id].map((citizenId) => ({
+          source: EventSource.APP,
+          citizenId,
+        })),
       },
     },
   });
@@ -96,12 +100,13 @@ test("the deletion reaches the participants, other notifications of a deleted ev
 
   const deleted = await findEventDeletedRecipients(context, {
     eventId: event.id,
+    excludedCitizenId: actor!.id,
   });
   const updated = await findEventParticipantRecipients(context, {
     eventId: event.id,
   });
 
-  expect(deleted?.recipients).toEqual([{ citizenId: participant.id }]);
+  expect(deleted?.recipients).toEqual([{ citizenId: participant!.id }]);
   expect(updated?.recipients).toEqual([]);
 });
 
@@ -115,16 +120,16 @@ test("a participation notification reaches the citizen only while the citizen ca
   const { context } = createTestApplicationContext();
   const input = { eventId: event.id, citizenId: citizen.id };
 
-  expect(
-    (await findEventParticipationRecipient(context, input))?.recipients,
-  ).toEqual([{ citizenId: citizen.id }]);
+  expect((await findEventCitizenRecipient(context, input))?.recipients).toEqual(
+    [{ citizenId: citizen.id }],
+  );
 
   // The citizen lost the visibility role before the delivery
   await prisma.roleAssignment.deleteMany({
     where: { citizenId: citizen.id, roleId: visibilityRole.id },
   });
 
-  expect(
-    (await findEventParticipationRecipient(context, input))?.recipients,
-  ).toEqual([]);
+  expect((await findEventCitizenRecipient(context, input))?.recipients).toEqual(
+    [],
+  );
 });

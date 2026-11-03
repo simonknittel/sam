@@ -1,32 +1,45 @@
 import {
-  findEventParticipantRecipients,
+  findEventLineupEnabledRecipients,
   type ApplicationContext,
 } from "@sam-monorepo/application";
-import { type Event } from "@sam-monorepo/database";
+import { type Citizen, type Event } from "@sam-monorepo/database";
+import { getEventLineupEnabledText } from "@sam-monorepo/domain";
 import { publishNotifications } from "../publish.js";
 
 type Payload = {
   eventId: Event["id"];
+  actorCitizenId?: Citizen["id"] | null;
 };
 
 export const EventLineupEnabledHandler = async (
   context: ApplicationContext,
   payload: Payload,
 ) => {
-  const result = await findEventParticipantRecipients(context, {
+  const result = await findEventLineupEnabledRecipients(context, {
     eventId: payload.eventId,
+    excludedCitizenId: payload.actorCitizenId,
   });
   if (!result) return;
 
   await publishNotifications(
     context,
-    result.recipients.map((recipient) => ({
-      receiverId: recipient.citizenId,
-      notificationType: "event_lineup_enabled" as const,
-      payload: { eventId: result.event.id, eventName: result.event.name },
-      title: "Aufstellung veröffentlicht",
-      body: result.event.name,
-      url: `/app/events/${result.event.id}/lineup`,
-    })),
+    result.recipients.map((recipient) => {
+      const notificationPayload = {
+        eventId: result.event.id,
+        eventName: result.event.name,
+        // Without positions, the field is missing like in the older rows
+        ...(recipient.positionNames.length > 0
+          ? { positionNames: recipient.positionNames }
+          : {}),
+      };
+
+      return {
+        receiverId: recipient.citizenId,
+        notificationType: "event_lineup_enabled" as const,
+        payload: notificationPayload,
+        ...getEventLineupEnabledText(notificationPayload),
+        url: `/app/events/${result.event.id}/lineup`,
+      };
+    }),
   );
 };

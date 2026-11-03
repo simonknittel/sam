@@ -10,6 +10,14 @@ import {
 import type { LineupPositionWriteOutput } from "./lineupOutput.js";
 import { findLineupPosition, removeLineupPosition } from "./lineupWrites.js";
 
+export interface DeleteLineupPositionOutput extends LineupPositionWriteOutput {
+  /**
+   * See `NotifyingLineupPositionWriteOutput`. A position of an event
+   * template has no assigned citizens, thus its deletion notifies nobody.
+   */
+  readonly notifications_sent: boolean;
+}
+
 /**
  * Deletes a position and its children from the lineup of an event or of an
  * event template that the actor can change. The input is the input of
@@ -19,7 +27,7 @@ export const deleteLineupPosition = (
   context: ApplicationContext,
   actor: Actor,
   input: DeleteEventPositionInput,
-): Promise<LineupPositionWriteOutput> =>
+): Promise<DeleteLineupPositionOutput> =>
   withSpan(context, "deleteLineupPosition", async () => {
     const { position, container } = await findLineupPosition(
       context,
@@ -27,9 +35,14 @@ export const deleteLineupPosition = (
     );
 
     switch (container.kind) {
-      case EventContainerKind.Event:
-        await deleteEventPosition(context, actor, input);
-        break;
+      case EventContainerKind.Event: {
+        const { notifications_sent } = await deleteEventPosition(
+          context,
+          actor,
+          input,
+        );
+        return { position_id: position.id, notifications_sent };
+      }
 
       case EventContainerKind.Template:
         await requireEditableEventTemplate(context, actor, container.id);
@@ -47,13 +60,11 @@ export const deleteLineupPosition = (
             createdById: actor.userId,
           },
         ]);
-        break;
+        return { position_id: position.id, notifications_sent: true };
 
       default:
         throw new Error(
           `Unknown lineup container kind: ${container.kind satisfies never}`,
         );
     }
-
-    return { position_id: position.id };
   });

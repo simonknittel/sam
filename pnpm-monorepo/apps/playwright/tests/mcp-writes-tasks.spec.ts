@@ -386,7 +386,10 @@ test.describe("the task write tools of the MCP server", () => {
     );
     expect(
       await callForContent(creatorClient, "cancel_task", { task_id: task.id }),
-    ).toMatchObject({ title: "Fracht ausliefern", status: "cancelled" });
+    ).toMatchObject({
+      task: { title: "Fracht ausliefern", status: "cancelled" },
+      notifications_sent: true,
+    });
     expect(
       await callForError(creatorClient, "cancel_task", { task_id: task.id }),
     ).toMatch(CONFLICT_RESULT);

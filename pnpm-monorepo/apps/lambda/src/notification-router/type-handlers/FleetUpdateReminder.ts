@@ -4,7 +4,7 @@ import {
 } from "@sam-monorepo/application";
 import { type Citizen } from "@sam-monorepo/database";
 import {
-  FLEET_UPDATE_REMINDER_WORDING,
+  getFleetUpdateReminderText,
   MY_SHIPS_PATH,
 } from "@sam-monorepo/domain";
 import { publishNotifications } from "../publish";
@@ -32,8 +32,7 @@ export const FleetUpdateReminderHandler = async (
       receiverId: recipient.citizenId,
       notificationType: "fleet_update_reminder" as const,
       payload: {},
-      title: FLEET_UPDATE_REMINDER_WORDING.title,
-      body: FLEET_UPDATE_REMINDER_WORDING.body,
+      ...getFleetUpdateReminderText(),
       url: MY_SHIPS_PATH,
     },
   ]);

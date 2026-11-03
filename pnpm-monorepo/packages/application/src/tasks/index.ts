@@ -52,6 +52,10 @@ export {
   type TaskListPageOptions,
 } from "./listTasks.js";
 export {
+  sendTaskDeadlineReminders,
+  type SendTaskDeadlineRemindersOutput,
+} from "./sendTaskDeadlineReminders.js";
+export {
   type GetTaskOutput,
   type NotifyingTaskWriteOutput,
   type TaskRoleReference,

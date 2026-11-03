@@ -2,10 +2,13 @@ import { env } from "./frequent-automations/setup"; // must be first
 
 import {
   notifyEventsStartingSoon,
+  notifyExpiredPenaltyEntries,
   notifyWikiCitizenMentions,
   sendBirthdayGreetings,
   sendEventMorningReminders,
   sendNewYearGreetings,
+  sendSincomePayoutReminders,
+  sendTaskDeadlineReminders,
 } from "@sam-monorepo/application";
 import type { ScheduledHandler } from "aws-lambda";
 import { createApplicationContext } from "./common/createApplicationContext";
@@ -27,4 +30,7 @@ export const handler: ScheduledHandler = async () =>
     wikiCitizenMentioned: createJob(notifyWikiCitizenMentions),
     birthdayGreetings: createJob(sendBirthdayGreetings),
     newYearGreetings: createJob(sendNewYearGreetings),
+    sincomePayoutReminders: createJob(sendSincomePayoutReminders),
+    penaltyEntryExpired: createJob(notifyExpiredPenaltyEntries),
+    taskDeadlineReminders: createJob(sendTaskDeadlineReminders),
   });

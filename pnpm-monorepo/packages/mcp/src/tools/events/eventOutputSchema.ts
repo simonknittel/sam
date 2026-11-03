@@ -4,7 +4,11 @@ import {
   type Actor,
 } from "@sam-monorepo/application";
 import * as z from "zod";
-import { citizenReferenceSchema, dateTimeOutputSchema } from "../../schemas.js";
+import {
+  citizenReferenceSchema,
+  dateTimeOutputSchema,
+  notificationsSentSchema,
+} from "../../schemas.js";
 
 /** One event as `get_event` gives it. The write tools give the same shape. */
 export const eventOutputSchema = z.strictObject({
@@ -38,6 +42,12 @@ export const eventOutputSchema = z.strictObject({
   can_manage_positions: z.boolean(),
   is_updatable: z.boolean(),
   is_participating: z.boolean(),
+});
+
+/** The output of the write tools of an event that can send notifications */
+export const notifyingEventWriteOutputSchema = z.strictObject({
+  event: eventOutputSchema,
+  notifications_sent: notificationsSentSchema,
 });
 
 /**

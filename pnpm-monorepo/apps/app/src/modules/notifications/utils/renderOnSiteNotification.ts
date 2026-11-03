@@ -1,7 +1,41 @@
 import {
   BIRTHDAY_FALLBACK_WORDING,
-  FLEET_UPDATE_REMINDER_WORDING,
-  getEventMorningReminderTitle,
+  getEventBriefingPublishedText,
+  getEventBriefingUpdatedText,
+  getEventCreatedText,
+  getEventDeletedText,
+  getEventLineupEnabledText,
+  getEventManagerAddedText,
+  getEventMorningReminderText,
+  getEventParticipationAddedText,
+  getEventParticipationChangedText,
+  getEventParticipationRemovedText,
+  getEventPositionApplicationCreatedText,
+  getEventPositionAssignedText,
+  getEventPositionUnassignedText,
+  getEventPositionVacatedText,
+  getEventRescheduledText,
+  getEventStartingText,
+  getEventUpdatedText,
+  getFleetUpdateReminderText,
+  getPenaltyEntryCreatedText,
+  getPenaltyEntryDeletedText,
+  getPenaltyEntryExpiredText,
+  getRoleAddedText,
+  getRoleLevelIncreasedText,
+  getSilcTransactionCreatedText,
+  getSincomePayoutDisbursedText,
+  getSincomePayoutReminderText,
+  getSincomePayoutStartedText,
+  getTaskAcceptedText,
+  getTaskAssignmentUpdatedText,
+  getTaskCancelledText,
+  getTaskCompletedText,
+  getTaskCreatedText,
+  getTaskDeadlineReminderText,
+  getTaskDeletedText,
+  getWikiCitizenMentionedText,
+  getWikiPageReportedText,
   MY_SHIPS_PATH,
   ONBOARDING_POPOVER_PATH,
   parseOnSiteNotificationPayload,
@@ -38,10 +72,10 @@ const appTitleByNotificationTypeId = new Map<string, string>(
 );
 
 /**
- * Maps a stored notification to its display content, mirroring the texts of
- * the corresponding web push notifications. Unknown types, unknown payload
- * versions and invalid payloads (rows outlive schema changes) fall back to a
- * generic rendering.
+ * Maps a stored notification to its display content. The texts come from the
+ * same functions as the texts of the web push notifications. Unknown types,
+ * unknown payload versions and invalid payloads (rows outlive schema changes)
+ * fall back to a generic rendering.
  */
 export const renderOnSiteNotification = (
   notification: Pick<
@@ -65,8 +99,7 @@ export const renderOnSiteNotification = (
   switch (parsed.notificationType) {
     case "event_created":
       return {
-        title: "Neues Event",
-        body: parsed.payload.eventName,
+        ...getEventCreatedText(parsed.payload),
         url: `/app/events/${parsed.payload.eventId}`,
         appTitle,
         decoration: null,
@@ -74,8 +107,7 @@ export const renderOnSiteNotification = (
 
     case "event_updated":
       return {
-        title: "Event aktualisiert",
-        body: parsed.payload.eventName,
+        ...getEventUpdatedText(parsed.payload),
         url: `/app/events/${parsed.payload.eventId}`,
         appTitle,
         decoration: null,
@@ -83,17 +115,39 @@ export const renderOnSiteNotification = (
 
     case "event_deleted":
       return {
-        title: "Event gelöscht",
-        body: parsed.payload.eventName,
+        ...getEventDeletedText(parsed.payload),
         url: null,
+        appTitle,
+        decoration: null,
+      };
+
+    case "event_rescheduled":
+      return {
+        ...getEventRescheduledText(parsed.payload),
+        url: `/app/events/${parsed.payload.eventId}`,
         appTitle,
         decoration: null,
       };
 
     case "event_lineup_enabled":
       return {
-        title: "Aufstellung veröffentlicht",
-        body: parsed.payload.eventName,
+        ...getEventLineupEnabledText(parsed.payload),
+        url: `/app/events/${parsed.payload.eventId}/lineup`,
+        appTitle,
+        decoration: null,
+      };
+
+    case "event_position_assigned":
+      return {
+        ...getEventPositionAssignedText(parsed.payload),
+        url: `/app/events/${parsed.payload.eventId}/lineup`,
+        appTitle,
+        decoration: null,
+      };
+
+    case "event_position_unassigned":
+      return {
+        ...getEventPositionUnassignedText(parsed.payload),
         url: `/app/events/${parsed.payload.eventId}/lineup`,
         appTitle,
         decoration: null,
@@ -101,8 +155,15 @@ export const renderOnSiteNotification = (
 
     case "event_briefing_published":
       return {
-        title: "Briefing veröffentlicht",
-        body: parsed.payload.eventName,
+        ...getEventBriefingPublishedText(parsed.payload),
+        url: `/app/events/${parsed.payload.eventId}/briefing`,
+        appTitle,
+        decoration: null,
+      };
+
+    case "event_briefing_updated":
+      return {
+        ...getEventBriefingUpdatedText(parsed.payload),
         url: `/app/events/${parsed.payload.eventId}/briefing`,
         appTitle,
         decoration: null,
@@ -110,8 +171,7 @@ export const renderOnSiteNotification = (
 
     case "event_morning_reminder":
       return {
-        title: getEventMorningReminderTitle(new Date(parsed.payload.startTime)),
-        body: parsed.payload.eventName,
+        ...getEventMorningReminderText(parsed.payload),
         url: `/app/events/${parsed.payload.eventId}`,
         appTitle,
         decoration: null,
@@ -119,8 +179,7 @@ export const renderOnSiteNotification = (
 
     case "event_starting":
       return {
-        title: "Event beginnt in 15 Minuten",
-        body: parsed.payload.eventName,
+        ...getEventStartingText(parsed.payload),
         url: `/app/events/${parsed.payload.eventId}`,
         appTitle,
         decoration: null,
@@ -128,8 +187,7 @@ export const renderOnSiteNotification = (
 
     case "event_participation_added":
       return {
-        title: "Zum Event hinzugefügt",
-        body: `Du wurdest zum Event "${parsed.payload.eventName}" hinzugefügt.`,
+        ...getEventParticipationAddedText(parsed.payload),
         url: `/app/events/${parsed.payload.eventId}`,
         appTitle,
         decoration: null,
@@ -137,19 +195,55 @@ export const renderOnSiteNotification = (
 
     case "event_participation_removed":
       return {
-        title: "Vom Event entfernt",
-        body: parsed.payload.reason
-          ? `Du wurdest vom Event "${parsed.payload.eventName}" entfernt. Grund: ${parsed.payload.reason}`
-          : `Du wurdest vom Event "${parsed.payload.eventName}" entfernt.`,
+        ...getEventParticipationRemovedText(parsed.payload),
         url: `/app/events/${parsed.payload.eventId}`,
+        appTitle,
+        decoration: null,
+      };
+
+    case "event_manager_added":
+      return {
+        ...getEventManagerAddedText(parsed.payload),
+        url: `/app/events/${parsed.payload.eventId}`,
+        appTitle,
+        decoration: null,
+      };
+
+    case "event_participation_changed":
+      return {
+        ...getEventParticipationChangedText(parsed.payload),
+        url: `/app/events/${parsed.payload.eventId}/participants`,
+        appTitle,
+        decoration: null,
+      };
+
+    case "event_position_vacated":
+      return {
+        ...getEventPositionVacatedText(parsed.payload),
+        url: `/app/events/${parsed.payload.eventId}/lineup`,
+        appTitle,
+        decoration: null,
+      };
+
+    case "event_position_application_created":
+      return {
+        ...getEventPositionApplicationCreatedText(parsed.payload),
+        url: `/app/events/${parsed.payload.eventId}/lineup`,
         appTitle,
         decoration: null,
       };
 
     case "role_added":
       return {
-        title: "Neue Rolle",
-        body: `Dir wurde eine neue Rolle zugewiesen: ${parsed.payload.roleName}`,
+        ...getRoleAddedText(parsed.payload),
+        url: null,
+        appTitle,
+        decoration: null,
+      };
+
+    case "role_level_increased":
+      return {
+        ...getRoleLevelIncreasedText(parsed.payload),
         url: null,
         appTitle,
         decoration: null,
@@ -157,8 +251,7 @@ export const renderOnSiteNotification = (
 
     case "silc_transaction_created":
       return {
-        title: "SILC-Transaktion erhalten",
-        body: `${parsed.payload.value.toLocaleString("de", { signDisplay: "always" })} SILC${parsed.payload.description ? ` - ${parsed.payload.description}` : ""}`,
+        ...getSilcTransactionCreatedText(parsed.payload),
         url: null,
         appTitle,
         decoration: null,
@@ -166,8 +259,15 @@ export const renderOnSiteNotification = (
 
     case "sincome_payout_started":
       return {
-        title: "SINcome-Auszahlung gestartet",
-        body: `Die Auszahlungsphase für den Zeitraum ${parsed.payload.cycleTitle} wurde gestartet. Bitte stimme der Auszahlung zu.`,
+        ...getSincomePayoutStartedText(parsed.payload),
+        url: `/app/sincome/${parsed.payload.cycleId}`,
+        appTitle,
+        decoration: null,
+      };
+
+    case "sincome_payout_reminder":
+      return {
+        ...getSincomePayoutReminderText(parsed.payload),
         url: `/app/sincome/${parsed.payload.cycleId}`,
         appTitle,
         decoration: null,
@@ -175,8 +275,7 @@ export const renderOnSiteNotification = (
 
     case "sincome_payout_disbursed":
       return {
-        title: "SINcome-Auszahlung erhalten",
-        body: `Für den Zeitraum ${parsed.payload.cycleTitle} hast du eine Auszahlung in Höhe von ${parsed.payload.auecAmount.toLocaleString("de-DE")} aUEC erhalten.`,
+        ...getSincomePayoutDisbursedText(parsed.payload),
         url: `/app/sincome/${parsed.payload.cycleId}`,
         appTitle,
         decoration: null,
@@ -184,10 +283,23 @@ export const renderOnSiteNotification = (
 
     case "penalty_entry_created":
       return {
-        title: "Strafpunkte erhalten",
-        body: parsed.payload.reason
-          ? `Du hast ${parsed.payload.points} Strafpunkte erhalten für ${parsed.payload.reason}`
-          : `Du hast ${parsed.payload.points} Strafpunkte erhalten`,
+        ...getPenaltyEntryCreatedText(parsed.payload),
+        url: null,
+        appTitle,
+        decoration: null,
+      };
+
+    case "penalty_entry_expired":
+      return {
+        ...getPenaltyEntryExpiredText(parsed.payload),
+        url: null,
+        appTitle,
+        decoration: null,
+      };
+
+    case "penalty_entry_deleted":
+      return {
+        ...getPenaltyEntryDeletedText(parsed.payload),
         url: null,
         appTitle,
         decoration: null,
@@ -195,8 +307,7 @@ export const renderOnSiteNotification = (
 
     case "task_created":
       return {
-        title: "Neuer Task",
-        body: parsed.payload.taskTitle,
+        ...getTaskCreatedText(parsed.payload),
         url: `/app/tasks/${parsed.payload.taskId}`,
         appTitle,
         decoration: null,
@@ -204,8 +315,39 @@ export const renderOnSiteNotification = (
 
     case "task_assignment_updated":
       return {
-        title: "Neuer Task",
-        body: `Dir wurde ein Task zugewiesen: ${parsed.payload.taskTitle}`,
+        ...getTaskAssignmentUpdatedText(parsed.payload),
+        url: `/app/tasks/${parsed.payload.taskId}`,
+        appTitle,
+        decoration: null,
+      };
+
+    case "task_accepted":
+      return {
+        ...getTaskAcceptedText(parsed.payload),
+        url: `/app/tasks/${parsed.payload.taskId}`,
+        appTitle,
+        decoration: null,
+      };
+
+    case "task_deadline_reminder":
+      return {
+        ...getTaskDeadlineReminderText(parsed.payload),
+        url: `/app/tasks/${parsed.payload.taskId}`,
+        appTitle,
+        decoration: null,
+      };
+
+    case "task_completed":
+      return {
+        ...getTaskCompletedText(parsed.payload),
+        url: `/app/tasks/${parsed.payload.taskId}`,
+        appTitle,
+        decoration: null,
+      };
+
+    case "task_cancelled":
+      return {
+        ...getTaskCancelledText(parsed.payload),
         url: `/app/tasks/${parsed.payload.taskId}`,
         appTitle,
         decoration: null,
@@ -213,8 +355,7 @@ export const renderOnSiteNotification = (
 
     case "task_deleted":
       return {
-        title: "Task gelöscht",
-        body: parsed.payload.taskTitle,
+        ...getTaskDeletedText(parsed.payload),
         url: null,
         appTitle,
         decoration: null,
@@ -222,10 +363,7 @@ export const renderOnSiteNotification = (
 
     case "wiki_page_reported":
       return {
-        title: "Neue Meldung im Wiki",
-        body: parsed.payload.uploadFileName
-          ? `${parsed.payload.reportedByHandle ?? "Unbekannt"} hat den Dateianhang "${parsed.payload.uploadFileName}" auf der Seite "${parsed.payload.pageTitle}" gemeldet`
-          : `${parsed.payload.reportedByHandle ?? "Unbekannt"} hat die Seite "${parsed.payload.pageTitle}" gemeldet`,
+        ...getWikiPageReportedText(parsed.payload),
         url: "/app/wiki/reports",
         appTitle,
         decoration: null,
@@ -233,10 +371,7 @@ export const renderOnSiteNotification = (
 
     case "wiki_citizen_mentioned":
       return {
-        title: "Du wurdest im Wiki erwähnt",
-        body: parsed.payload.mentionedByHandle
-          ? `${parsed.payload.mentionedByHandle} hat dich auf der Seite "${parsed.payload.pageTitle}" erwähnt`
-          : `Du wurdest auf der Seite "${parsed.payload.pageTitle}" erwähnt`,
+        ...getWikiCitizenMentionedText(parsed.payload),
         url: parsed.payload.eventId
           ? `/app/events/${parsed.payload.eventId}/briefing/${parsed.payload.pageId}`
           : `/app/wiki/${parsed.payload.pageId}`,
@@ -294,8 +429,7 @@ export const renderOnSiteNotification = (
 
     case "fleet_update_reminder":
       return {
-        title: FLEET_UPDATE_REMINDER_WORDING.title,
-        body: FLEET_UPDATE_REMINDER_WORDING.body,
+        ...getFleetUpdateReminderText(),
         url: MY_SHIPS_PATH,
         appTitle,
         decoration: null,

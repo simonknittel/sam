@@ -9,6 +9,7 @@ import {
   NotFoundError,
   rethrowRecordNotFound,
 } from "../errors.js";
+import { triggerNotificationsAfterSave } from "../notifications.js";
 import { idSchema } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
 import { RoleAssignmentErrorMessage } from "./roleErrors.js";
@@ -26,6 +27,11 @@ export interface ChangeRoleAssignmentLevelOutput {
   readonly citizen_id: string;
   readonly role_id: string;
   readonly current_level: number | null;
+  /**
+   * False when the change is saved, but the notifications failed. The change
+   * stands, thus the caller must not make it again.
+   */
+  readonly notifications_sent: boolean;
 }
 
 interface LevelChange {
@@ -108,16 +114,36 @@ const changeRoleAssignmentLevel = (
       },
     ]);
 
+    // Only an increase below the maximum level makes the level rise. A
+    // missing level counts as level 0.
+    const levelRose =
+      (updatedRoleAssignment.currentLevel ?? 0) >
+      (roleAssignment.currentLevel ?? 0);
+    const notifications =
+      levelRose && input.citizen_id !== actorCitizen.id
+        ? [
+            {
+              type: "RoleLevelIncreased",
+              payload: { citizenId: input.citizen_id, roleId: input.role_id },
+            },
+          ]
+        : [];
+
     return {
       citizen_id: input.citizen_id,
       role_id: input.role_id,
       current_level: updatedRoleAssignment.currentLevel,
+      notifications_sent: await triggerNotificationsAfterSave(
+        context,
+        notifications,
+      ),
     };
   });
 
 /**
  * Increases the level of a citizen in a role with levels by one, up to the
- * maximum level. Requires a citizen and `otherRole;assign` for the role.
+ * maximum level, and notifies the citizen when the level rose. Requires a
+ * citizen and `otherRole;assign` for the role.
  *
  * @throws NotFoundError when the citizen does not have the role
  * @throws ConflictError when the role has no levels

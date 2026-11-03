@@ -14,6 +14,8 @@ export const WIKI_ERROR_TEXTS = {
   [WikiErrorMessage.SourcePageNotFound]:
     "Die kopierte Seite existiert nicht mehr oder ist für dich nicht sichtbar.",
   [WikiErrorMessage.BriefingFrozen]: "Das Event ist bereits vorbei.",
+  [WikiErrorMessage.BriefingNotPublished]:
+    "Das Briefing ist nicht veröffentlicht. Nur die Manager können es lesen.",
   [WikiErrorMessage.PageTreeChanged]:
     "Die Seitenstruktur war veraltet. Sie ist jetzt aktuell, bitte versuche es erneut.",
   [WikiErrorMessage.TrashChanged]:

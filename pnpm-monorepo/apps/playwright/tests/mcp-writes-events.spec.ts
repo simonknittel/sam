@@ -254,10 +254,13 @@ test.describe("the event write tools of the MCP server", () => {
     expect(
       await callForContent(client, "update_my_event_participation", signUp),
     ).toMatchObject({
-      is_participating: true,
-      participants: [
-        { citizen: pilotReference, comment: "Mit meiner Mustang Alpha." },
-      ],
+      event: {
+        is_participating: true,
+        participants: [
+          { citizen: pilotReference, comment: "Mit meiner Mustang Alpha." },
+        ],
+      },
+      notifications_sent: true,
     });
     // The same input again changes nothing
     await callForContent(client, "update_my_event_participation", signUp);
@@ -268,9 +271,12 @@ test.describe("the event write tools of the MCP server", () => {
         comment: "Mit der Dragonfly.",
       }),
     ).toMatchObject({
-      participants: [
-        { citizen: pilotReference, comment: "Mit der Dragonfly." },
-      ],
+      event: {
+        participants: [
+          { citizen: pilotReference, comment: "Mit der Dragonfly." },
+        ],
+      },
+      notifications_sent: true,
     });
 
     expect(
@@ -278,7 +284,10 @@ test.describe("the event write tools of the MCP server", () => {
         event_id: event.id,
         action: "cancel",
       }),
-    ).toMatchObject({ is_participating: false, participants: [] });
+    ).toMatchObject({
+      event: { is_participating: false, participants: [] },
+      notifications_sent: true,
+    });
     expect(
       await callForError(client, "update_my_event_participation", {
         event_id: event.id,
@@ -434,7 +443,10 @@ test.describe("the event write tools of the MCP server", () => {
         citizen_ids: [deputy.entity.id],
       }),
     ).toMatchObject({
-      managers: [{ id: deputy.entity.id, handle: "mcp-stellvertreterin" }],
+      event: {
+        managers: [{ id: deputy.entity.id, handle: "mcp-stellvertreterin" }],
+      },
+      notifications_sent: true,
     });
     expect(
       await callForContent(client, "update_event_managers", {
@@ -442,7 +454,7 @@ test.describe("the event write tools of the MCP server", () => {
         action: "remove",
         citizen_ids: [deputy.entity.id],
       }),
-    ).toMatchObject({ managers: [] });
+    ).toMatchObject({ event: { managers: [] }, notifications_sent: true });
 
     await expectAuditEvents(prisma, [
       "EVENT_PARTICIPANT_ADDED_BY_MANAGER",

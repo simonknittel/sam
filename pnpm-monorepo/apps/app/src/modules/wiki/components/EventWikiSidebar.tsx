@@ -1,8 +1,10 @@
 import { Link } from "@/modules/common/components/Link";
 import type { EventContainer } from "@/modules/events/utils/eventContainer";
+import { isEventBriefingPublished } from "@sam-monorepo/application";
 import { FaTrash } from "react-icons/fa";
 import { getEventWikiContext } from "../queries/getEventWikiContext";
 import { createEventWikiHrefMode } from "../utils/wikiPageHref";
+import { AnnounceEventBriefingUpdate } from "./AnnounceEventBriefingUpdate";
 import { WikiSidebarPanels } from "./WikiSidebarPanels";
 
 interface Props {
@@ -20,6 +22,10 @@ export const EventWikiSidebar = async ({ container }: Props) => {
   if (!context?.rootPage) return null;
 
   const hrefMode = createEventWikiHrefMode(container, context.rootPage.id);
+  const announceableEventId =
+    context.event && !context.frozen && isEventBriefingPublished(context)
+      ? context.event.id
+      : null;
 
   return (
     <WikiSidebarPanels
@@ -28,7 +34,7 @@ export const EventWikiSidebar = async ({ container }: Props) => {
       hrefMode={hrefMode}
       footer={
         context.viewer.isEventManager && (
-          <div className="corners-secondary bg-secondary px-2 py-2">
+          <div className="flex flex-col corners-secondary bg-secondary px-2 py-2">
             <Link
               href={`${hrefMode.basePath}/trash`}
               prefetch={false}
@@ -37,6 +43,10 @@ export const EventWikiSidebar = async ({ container }: Props) => {
               <FaTrash className="size-3 flex-none text-neutral-500" />
               Papierkorb
             </Link>
+
+            {announceableEventId && (
+              <AnnounceEventBriefingUpdate eventId={announceableEventId} />
+            )}
           </div>
         )
       }

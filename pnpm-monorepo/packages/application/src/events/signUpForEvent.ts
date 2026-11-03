@@ -1,9 +1,10 @@
 import { requireCitizen, requirePermission, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { ConflictError } from "../errors.js";
+import { triggerNotificationsAfterSave } from "../notifications.js";
 import { withSpan } from "../withSpan.js";
 import { EventErrorMessage } from "./eventErrors.js";
-import { loadEventOutput, type GetEventOutput } from "./getEvent.js";
+import { loadEventOutput, type NotifyingEventWriteOutput } from "./getEvent.js";
 import {
   findActiveParticipation,
   insertOwnParticipation,
@@ -11,6 +12,7 @@ import {
   type EventParticipationInput,
 } from "./ownParticipation.js";
 import { requireOpenParticipatableAppEvent } from "./participatableAppEvent.js";
+import { buildSignUpNotifications } from "./participationChangeNotifications.js";
 
 const isAlreadySignedUp = (error: unknown) =>
   error instanceof ConflictError &&
@@ -19,13 +21,14 @@ const isAlreadySignedUp = (error: unknown) =>
 /**
  * Signs the user up for an app event, or updates the comment of the existing
  * sign-up. A second call with the same input changes nothing. Without a
- * comment, an existing sign-up keeps its comment.
+ * comment, an existing sign-up keeps its comment. Only a new sign-up notifies
+ * the organizers.
  */
 export const signUpForEvent = (
   context: ApplicationContext,
   actor: Actor,
   input: EventParticipationInput,
-): Promise<GetEventOutput> =>
+): Promise<NotifyingEventWriteOutput> =>
   withSpan(context, "signUpForEvent", async () => {
     const citizenId = requireCitizen(actor).id;
     requirePermission(actor, "event", "read");
@@ -52,7 +55,19 @@ export const signUpForEvent = (
           comment: comment ?? null,
         });
 
-        return await loadEventOutput(context, actor, event.id);
+        const notifications = buildSignUpNotifications(event, context.now(), [
+          citizenId,
+        ]);
+
+        const notificationsSent = await triggerNotificationsAfterSave(
+          context,
+          notifications,
+        );
+
+        return {
+          event: await loadEventOutput(context, actor, event.id),
+          notifications_sent: notificationsSent,
+        };
       } catch (error) {
         if (!isAlreadySignedUp(error)) throw error;
 
@@ -74,5 +89,8 @@ export const signUpForEvent = (
         comment,
       });
 
-    return loadEventOutput(context, actor, event.id);
+    return {
+      event: await loadEventOutput(context, actor, event.id),
+      notifications_sent: true,
+    };
   });

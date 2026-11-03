@@ -16,7 +16,7 @@ import { EventErrorMessage } from "./eventErrors.js";
 import { participationTextSchema } from "./eventInputSchemas.js";
 import { requireManageableEvent } from "./eventManageGuard.js";
 import { isAllowedToManageEvent } from "./eventManageRules.js";
-import { loadEventOutput, type GetEventOutput } from "./getEvent.js";
+import { loadEventOutput, type NotifyingEventWriteOutput } from "./getEvent.js";
 import {
   lockParticipationEnabledEvent,
   requireParticipatableAppEvent,
@@ -39,20 +39,14 @@ export type AddEventParticipantsInput = z.infer<
   typeof addEventParticipantsInputSchema
 >;
 
-export interface AddEventParticipantsOutput {
-  readonly event: GetEventOutput;
+export interface AddEventParticipantsOutput extends NotifyingEventWriteOutput {
   /** Empty when all citizens were already signed up */
   readonly added_citizen_ids: string[];
-  /**
-   * False when the participants are added, but the notifications failed.
-   * The participants stay added.
-   */
-  readonly notifications_sent: boolean;
 }
 
 /**
  * A manager signs citizens up for an app event. Each added citizen gets a
- * notification.
+ * notification, except the actor.
  */
 export const addEventParticipants = (
   context: ApplicationContext,
@@ -170,15 +164,18 @@ export const addEventParticipants = (
       })),
     );
 
+    // The actor gets no notification about the own sign-up
     const notificationsSent = await triggerNotificationsAfterSave(
       context,
-      addedCitizenIds.map((citizenId) => ({
-        type: "EventParticipationAdded",
-        payload: {
-          eventId: event.id,
-          citizenId,
-        },
-      })),
+      addedCitizenIds
+        .filter((citizenId) => citizenId !== managerId)
+        .map((citizenId) => ({
+          type: "EventParticipationAdded",
+          payload: {
+            eventId: event.id,
+            citizenId,
+          },
+        })),
     );
 
     return {

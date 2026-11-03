@@ -132,7 +132,13 @@ export const deleteEvent = (
     ]);
 
     const notificationsSent = await triggerNotificationsAfterSave(context, [
-      { type: "EventDeleted", payload: { eventId: event.id } },
+      {
+        type: "EventDeleted",
+        payload: {
+          eventId: event.id,
+          actorCitizenId: actor.citizen?.id ?? null,
+        },
+      },
     ]);
 
     /**

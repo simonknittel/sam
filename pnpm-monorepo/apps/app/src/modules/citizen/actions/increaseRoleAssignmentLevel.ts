@@ -1,6 +1,9 @@
 "use server";
 
-import { createUseCaseAction } from "@/modules/application";
+import {
+  createUseCaseAction,
+  notificationsFailedWarning,
+} from "@/modules/application";
 import { getRoleErrorTexts } from "@/modules/roles/utils/roleErrorTexts";
 import {
   changeRoleAssignmentLevelInputSchema,
@@ -17,4 +20,5 @@ export const increaseRoleAssignmentLevel = createUseCaseAction({
   }),
   texts: getRoleErrorTexts,
   success: (t) => t("Common.successfullySaved"),
+  warning: notificationsFailedWarning,
 });

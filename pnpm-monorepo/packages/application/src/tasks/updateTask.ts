@@ -345,12 +345,10 @@ export const updateTask = (
 
     await context.audit.create(changes.map((change) => change.auditEvent));
 
-    const notifications = changes.flatMap(
-      (change) => change.notification ?? [],
+    const notificationsSent = await triggerNotificationsAfterSave(
+      context,
+      changes.flatMap((change) => change.notification ?? []),
     );
-    const notificationsSent =
-      notifications.length <= 0 ||
-      (await triggerNotificationsAfterSave(context, notifications));
 
     return {
       task: await findTaskOutput(context, actor, task.id),

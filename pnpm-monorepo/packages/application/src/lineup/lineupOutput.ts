@@ -132,6 +132,17 @@ export const toLineupPositionOutput = async (
     canManagePositions,
   );
 
+/** The output of a write of one position of an event that notifies citizens */
+export interface NotifyingLineupPositionWriteOutput {
+  readonly position: LineupPosition;
+  /**
+   * False when the change is saved, but the notifications failed. The change
+   * stands, thus the caller must not send it again. True also when the
+   * change needs no notification.
+   */
+  readonly notifications_sent: boolean;
+}
+
 /**
  * The output of a write of one position that serves the lineups of the
  * events and of the event templates

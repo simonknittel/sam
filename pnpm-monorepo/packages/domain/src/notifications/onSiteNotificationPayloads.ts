@@ -1,9 +1,9 @@
 import * as z from "zod/mini";
+import { LINEUP_MAX_POSITIONS } from "../events/lineupLimits.js";
 import {
   MANUAL_NOTIFICATION_BODY_MAX_LENGTH,
   MANUAL_NOTIFICATION_TITLE_MAX_LENGTH,
 } from "../manualNotifications/manualNotificationLimits.js";
-import { ORGANIZATION_TIMEZONE } from "../timeZone.js";
 
 /**
  * Payload schemas for on-site notifications, shared between the
@@ -31,9 +31,43 @@ export const eventDeletedPayloadSchema = z.object({
   eventName: z.string(),
 });
 
+/** One citizen can hold each position of a lineup */
+const positionNamesSchema = z
+  .array(z.string())
+  .check(z.maxLength(LINEUP_MAX_POSITIONS));
+
+/**
+ * `positionNames` are the positions of the receiver at the publication. The
+ * field is optional and the version stays 1, because the addition does not
+ * break the older rows (see the birthday greeting).
+ */
 export const eventLineupEnabledPayloadSchema = z.object({
   eventId: z.string(),
   eventName: z.string(),
+  positionNames: z.optional(positionNamesSchema),
+});
+
+/** The new start of an event, the old start is not of interest */
+export const eventRescheduledPayloadSchema = z.object({
+  eventId: z.string(),
+  eventName: z.string(),
+  startTime: z.iso.datetime(),
+});
+
+export const eventPositionAssignedPayloadSchema = z.object({
+  eventId: z.string(),
+  eventName: z.string(),
+  positionName: z.string(),
+});
+
+/**
+ * The receiver no longer holds the position: a manager removed the receiver,
+ * gave the position to a different citizen or deleted the position
+ */
+export const eventPositionUnassignedPayloadSchema = z.object({
+  eventId: z.string(),
+  eventName: z.string(),
+  positionName: z.string(),
 });
 
 export const eventBriefingPublishedPayloadSchema = z.object({
@@ -41,25 +75,50 @@ export const eventBriefingPublishedPayloadSchema = z.object({
   eventName: z.string(),
 });
 
+export const eventBriefingUpdatedPayloadSchema = z.object({
+  eventId: z.string(),
+  eventName: z.string(),
+});
+
+export const eventManagerAddedPayloadSchema = z.object({
+  eventId: z.string(),
+  eventName: z.string(),
+});
+
+/** The change of a participation that the managers of an event hear about */
+export enum EventParticipationChange {
+  SignedUp = "signed_up",
+  Cancelled = "cancelled",
+}
+
+/** `citizenHandle` is null for a citizen without a handle */
+export const eventParticipationChangedPayloadSchema = z.object({
+  eventId: z.string(),
+  eventName: z.string(),
+  citizenHandle: z.nullable(z.string()),
+  change: z.enum(EventParticipationChange),
+});
+
+/** The positions that a participant gave free with the cancellation */
+export const eventPositionVacatedPayloadSchema = z.object({
+  eventId: z.string(),
+  eventName: z.string(),
+  citizenHandle: z.nullable(z.string()),
+  positionNames: positionNamesSchema,
+});
+
+export const eventPositionApplicationCreatedPayloadSchema = z.object({
+  eventId: z.string(),
+  eventName: z.string(),
+  positionName: z.string(),
+  citizenHandle: z.nullable(z.string()),
+});
+
 export const eventMorningReminderPayloadSchema = z.object({
   eventId: z.string(),
   eventName: z.string(),
   startTime: z.iso.datetime(),
 });
-
-const EVENT_START_TIME_FORMAT = new Intl.DateTimeFormat("de-DE", {
-  timeZone: ORGANIZATION_TIMEZONE,
-  hour: "2-digit",
-  minute: "2-digit",
-});
-
-/**
- * The title of the morning reminder of an event, for the Lambda (web push)
- * and the app (on-site row). It gives the start time in the time zone of the
- * organization, like the event page.
- */
-export const getEventMorningReminderTitle = (startTime: Date) =>
-  `Event beginnt um ${EVENT_START_TIME_FORMAT.format(startTime)} Uhr`;
 
 export const eventStartingPayloadSchema = z.object({
   eventId: z.string(),
@@ -83,6 +142,14 @@ export const roleAddedPayloadSchema = z.object({
   roleName: z.string(),
 });
 
+/** The level that the citizen reached in the role, of `maxLevel` */
+export const roleLevelIncreasedPayloadSchema = z.object({
+  roleId: z.string(),
+  roleName: z.string(),
+  level: z.number(),
+  maxLevel: z.number(),
+});
+
 export const silcTransactionCreatedPayloadSchema = z.object({
   transactionId: z.string(),
   value: z.number(),
@@ -94,6 +161,12 @@ export const sincomePayoutStartedPayloadSchema = z.object({
   cycleTitle: z.string(),
 });
 
+export const sincomePayoutReminderPayloadSchema = z.object({
+  cycleId: z.string(),
+  cycleTitle: z.string(),
+  payoutEndsAt: z.iso.datetime(),
+});
+
 export const sincomePayoutDisbursedPayloadSchema = z.object({
   cycleId: z.string(),
   cycleTitle: z.string(),
@@ -101,6 +174,16 @@ export const sincomePayoutDisbursedPayloadSchema = z.object({
 });
 
 export const penaltyEntryCreatedPayloadSchema = z.object({
+  points: z.number(),
+  reason: z.nullable(z.string()),
+});
+
+export const penaltyEntryExpiredPayloadSchema = z.object({
+  points: z.number(),
+  reason: z.nullable(z.string()),
+});
+
+export const penaltyEntryDeletedPayloadSchema = z.object({
   points: z.number(),
   reason: z.nullable(z.string()),
 });
@@ -117,6 +200,31 @@ export const taskAssignmentUpdatedPayloadSchema = z.object({
 
 export const taskDeletedPayloadSchema = z.object({
   taskTitle: z.string(),
+});
+
+export const taskCancelledPayloadSchema = z.object({
+  taskId: z.string(),
+  taskTitle: z.string(),
+});
+
+export const taskDeadlineReminderPayloadSchema = z.object({
+  taskId: z.string(),
+  taskTitle: z.string(),
+  expiresAt: z.iso.datetime(),
+});
+
+/** `citizenHandle` is null for a citizen without a handle */
+export const taskAcceptedPayloadSchema = z.object({
+  taskId: z.string(),
+  taskTitle: z.string(),
+  citizenHandle: z.nullable(z.string()),
+});
+
+/** `citizenHandle` is the citizen who completed the task */
+export const taskCompletedPayloadSchema = z.object({
+  taskId: z.string(),
+  taskTitle: z.string(),
+  citizenHandle: z.nullable(z.string()),
 });
 
 export const wikiPageReportedPayloadSchema = z.object({
@@ -206,22 +314,13 @@ export const ONBOARDING_POPOVER_PATH = `/app/dashboard?${ONBOARDING_POPOVER_SEAR
  */
 export const FLEET_UPDATE_REMINDER_ABSENCE_MONTHS = 6;
 
-/**
- * The text is the same for each citizen, thus the Lambda (web push) and the
- * app (on-site row) share it here and the payload is empty
- */
-export const FLEET_UPDATE_REMINDER_WORDING = {
-  title: "Willkommen zurück!",
-  body: "Ist deine Flotte noch aktuell? Prüfe deine Schiffe unter „Meine Schiffe“.",
-} as const;
-
 /** The page of the own ships, which the fleet update reminder links to */
 export const MY_SHIPS_PATH = "/app/fleet/my-ships";
 
 /**
  * The reminder to check the own ships on the first visit after an absence
  * of `FLEET_UPDATE_REMINDER_ABSENCE_MONTHS`. It carries nothing, see
- * `FLEET_UPDATE_REMINDER_WORDING`.
+ * `getFleetUpdateReminderText()`.
  */
 export const fleetUpdateReminderPayloadSchema = z.object({});
 
@@ -246,20 +345,37 @@ export const manualNotificationPayloadSchema = z.object({
 export const onSiteNotificationPayloadSchemas = {
   event_created: eventCreatedPayloadSchema,
   event_updated: eventUpdatedPayloadSchema,
+  event_rescheduled: eventRescheduledPayloadSchema,
   event_deleted: eventDeletedPayloadSchema,
   event_lineup_enabled: eventLineupEnabledPayloadSchema,
+  event_position_assigned: eventPositionAssignedPayloadSchema,
+  event_position_unassigned: eventPositionUnassignedPayloadSchema,
   event_briefing_published: eventBriefingPublishedPayloadSchema,
+  event_briefing_updated: eventBriefingUpdatedPayloadSchema,
   event_morning_reminder: eventMorningReminderPayloadSchema,
   event_starting: eventStartingPayloadSchema,
   event_participation_added: eventParticipationAddedPayloadSchema,
   event_participation_removed: eventParticipationRemovedPayloadSchema,
+  event_manager_added: eventManagerAddedPayloadSchema,
+  event_participation_changed: eventParticipationChangedPayloadSchema,
+  event_position_vacated: eventPositionVacatedPayloadSchema,
+  event_position_application_created:
+    eventPositionApplicationCreatedPayloadSchema,
   role_added: roleAddedPayloadSchema,
+  role_level_increased: roleLevelIncreasedPayloadSchema,
   silc_transaction_created: silcTransactionCreatedPayloadSchema,
   sincome_payout_started: sincomePayoutStartedPayloadSchema,
+  sincome_payout_reminder: sincomePayoutReminderPayloadSchema,
   sincome_payout_disbursed: sincomePayoutDisbursedPayloadSchema,
   penalty_entry_created: penaltyEntryCreatedPayloadSchema,
+  penalty_entry_expired: penaltyEntryExpiredPayloadSchema,
+  penalty_entry_deleted: penaltyEntryDeletedPayloadSchema,
   task_created: taskCreatedPayloadSchema,
   task_assignment_updated: taskAssignmentUpdatedPayloadSchema,
+  task_accepted: taskAcceptedPayloadSchema,
+  task_deadline_reminder: taskDeadlineReminderPayloadSchema,
+  task_completed: taskCompletedPayloadSchema,
+  task_cancelled: taskCancelledPayloadSchema,
   task_deleted: taskDeletedPayloadSchema,
   wiki_page_reported: wikiPageReportedPayloadSchema,
   wiki_citizen_mentioned: wikiCitizenMentionedPayloadSchema,
@@ -282,20 +398,36 @@ export const ON_SITE_NOTIFICATION_PAYLOAD_VERSIONS: Record<
 > = {
   event_created: 1,
   event_updated: 1,
+  event_rescheduled: 1,
   event_deleted: 1,
   event_lineup_enabled: 1,
+  event_position_assigned: 1,
+  event_position_unassigned: 1,
   event_briefing_published: 1,
+  event_briefing_updated: 1,
   event_morning_reminder: 1,
   event_starting: 1,
   event_participation_added: 1,
   event_participation_removed: 1,
+  event_manager_added: 1,
+  event_participation_changed: 1,
+  event_position_vacated: 1,
+  event_position_application_created: 1,
   role_added: 1,
+  role_level_increased: 1,
   silc_transaction_created: 1,
   sincome_payout_started: 1,
+  sincome_payout_reminder: 1,
   sincome_payout_disbursed: 1,
   penalty_entry_created: 1,
+  penalty_entry_expired: 1,
+  penalty_entry_deleted: 1,
   task_created: 1,
   task_assignment_updated: 1,
+  task_accepted: 1,
+  task_deadline_reminder: 1,
+  task_completed: 1,
+  task_cancelled: 1,
   task_deleted: 1,
   wiki_page_reported: 1,
   wiki_citizen_mentioned: 1,

@@ -3,6 +3,7 @@ import {
   type ApplicationContext,
 } from "@sam-monorepo/application";
 import { type PenaltyEntry } from "@sam-monorepo/database";
+import { getPenaltyEntryCreatedText } from "@sam-monorepo/domain";
 import { publishNotifications } from "../publish";
 
 interface Payload {
@@ -18,17 +19,15 @@ export const PenaltyEntryCreatedHandler = async (
   });
   if (!result) return;
 
+  const text = getPenaltyEntryCreatedText(result.penaltyEntry);
+
   await publishNotifications(
     context,
     result.recipients.map((recipient) => ({
       receiverId: recipient.citizenId,
       notificationType: "penalty_entry_created" as const,
-      payload: {
-        points: result.penaltyEntry.points,
-        reason: result.penaltyEntry.reason,
-      },
-      title: "Strafpunkte erhalten",
-      body: `Du hast ${result.penaltyEntry.points} Strafpunkte erhalten für ${result.penaltyEntry.reason}`,
+      payload: result.penaltyEntry,
+      ...text,
     })),
   );
 };

@@ -4,6 +4,10 @@ import {
   type ApplicationContext,
 } from "@sam-monorepo/application";
 import { type Task } from "@sam-monorepo/database";
+import {
+  getTaskAssignmentUpdatedText,
+  getTaskCreatedText,
+} from "@sam-monorepo/domain";
 import { type Notification } from "../notification";
 import { publishNotifications } from "../publish";
 
@@ -21,14 +25,15 @@ export const TaskCreatedHandler = async (
 
   const notifications = groups.flatMap(
     ({ task, kind, recipients }): Notification[] => {
+      const notificationPayload = { taskId: task.id, taskTitle: task.title };
+
       switch (kind) {
         case TaskCreatedRecipientKind.PublicTask:
           return recipients.map((recipient) => ({
             receiverId: recipient.citizenId,
             notificationType: "task_created",
-            payload: { taskId: task.id, taskTitle: task.title },
-            title: "Neuer Task",
-            body: task.title,
+            payload: notificationPayload,
+            ...getTaskCreatedText(notificationPayload),
             url: `/app/tasks/${task.id}`,
           }));
 
@@ -36,9 +41,8 @@ export const TaskCreatedHandler = async (
           return recipients.map((recipient) => ({
             receiverId: recipient.citizenId,
             notificationType: "task_assignment_updated",
-            payload: { taskId: task.id, taskTitle: task.title },
-            title: "Neuer Task",
-            body: `Dir wurde ein Task zugewiesen: ${task.title}`,
+            payload: notificationPayload,
+            ...getTaskAssignmentUpdatedText(notificationPayload),
             url: `/app/tasks/${task.id}`,
           }));
 

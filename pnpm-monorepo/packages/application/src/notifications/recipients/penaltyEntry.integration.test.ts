@@ -10,7 +10,10 @@ import {
   MAXIMUM_LEVEL,
 } from "../../../test/citizensWithPermissions.js";
 import { truncateAllTables } from "../../../test/database.js";
-import { findPenaltyEntryRecipient } from "./penaltyEntryCreated.js";
+import {
+  findPenaltyEntryExpiredRecipient,
+  findPenaltyEntryRecipient,
+} from "./penaltyEntry.js";
 import type { Recipient } from "./recipient.js";
 
 const PERMISSION_STRINGS = ["login;manage", "ownPenaltyEntry;read"];
@@ -93,5 +96,28 @@ describe("findPenaltyEntryRecipient", () => {
     expect(
       (await findPenaltyEntryRecipient(context, input))?.recipients,
     ).toEqual([]);
+  });
+});
+
+describe("findPenaltyEntryExpiredRecipient", () => {
+  test("does not notify about an entry that was deleted before the delivery", async () => {
+    const citizen = await createCitizenWithInheritedPermissions(
+      "expired",
+      PERMISSION_STRINGS,
+    );
+    const penaltyEntry = await createPenaltyEntry(citizen.id);
+    const { context } = createTestApplicationContext();
+    const input = { penaltyEntryId: penaltyEntry.id };
+
+    expect(
+      (await findPenaltyEntryExpiredRecipient(context, input))?.recipients,
+    ).toEqual([{ citizenId: citizen.id }]);
+
+    await prisma.penaltyEntry.update({
+      where: { id: penaltyEntry.id },
+      data: { deletedAt: TEST_NOW },
+    });
+
+    expect(await findPenaltyEntryExpiredRecipient(context, input)).toBeNull();
   });
 });

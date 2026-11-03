@@ -5,12 +5,11 @@ import {
   removeEventParticipantsInputSchema,
 } from "@sam-monorepo/application";
 import * as z from "zod";
-import { notificationsSentSchema } from "../../schemas.js";
 import { defineTool } from "../../toolDefinition.js";
 import { ToolGroup } from "../../toolGroup.js";
 import {
-  eventOutputSchema,
   isEventWriteToolVisible,
+  notifyingEventWriteOutputSchema,
 } from "./eventOutputSchema.js";
 
 export enum EventParticipantsAction {
@@ -45,14 +44,12 @@ export const updateEventParticipantsTool = defineTool({
           : comment === undefined,
       "comment is only for add, reason only for remove.",
     ),
-  outputSchema: z.strictObject({
-    event: eventOutputSchema,
+  outputSchema: notifyingEventWriteOutputSchema.extend({
     changed_citizen_ids: z
       .array(z.string())
       .describe(
         "The citizens whose sign-up changed: for add without the citizens who were already signed up, for remove all citizen_ids.",
       ),
-    notifications_sent: notificationsSentSchema,
   }),
   isVisible: isEventWriteToolVisible,
   handler: async (

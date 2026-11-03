@@ -2,11 +2,12 @@ import {
   addDaysToLocalDate,
   getLocalDate,
   ORGANIZATION_TIMEZONE,
-  toLocalDateKey,
-  wallTimeToInstant,
-  type LocalDate,
 } from "@sam-monorepo/domain";
 import type { ApplicationContext } from "../context.js";
+import {
+  getOrganizationInstant,
+  isFirstRunAfterWallTime,
+} from "../frequentAutomations.js";
 import { triggerNotificationsAfterSave } from "../notifications.js";
 import { withSpan } from "../withSpan.js";
 
@@ -19,14 +20,6 @@ import { withSpan } from "../withSpan.js";
  */
 const REMINDER_WALL_TIME = "07:30";
 
-/**
- * The interval of the schedule of `frequent-automations`: thus exactly one
- * run of a day starts in this interval after the reminder time.
- */
-const RUN_INTERVAL_MINUTES = 15;
-
-const MILLISECONDS_PER_MINUTE = 60 * 1000;
-
 export interface SendEventMorningRemindersOutput {
   /** True only for the run of the day that sends the reminders */
   readonly isReminderRun: boolean;
@@ -34,12 +27,6 @@ export interface SendEventMorningRemindersOutput {
   readonly eventCount: number;
   readonly notificationsSent: boolean;
 }
-
-const toInstant = (date: LocalDate, wallTime: string) =>
-  wallTimeToInstant(
-    `${toLocalDateKey(date)}T${wallTime}`,
-    ORGANIZATION_TIMEZONE,
-  );
 
 /**
  * Requests the `EventMorningReminder` notification of each event with an
@@ -52,22 +39,18 @@ export const sendEventMorningReminders = (
 ): Promise<SendEventMorningRemindersOutput> =>
   withSpan(context, "sendEventMorningReminders", async () => {
     const now = context.now();
-    const today = getLocalDate(now, ORGANIZATION_TIMEZONE);
-    const reminderTime = toInstant(today, REMINDER_WALL_TIME);
-    const millisecondsSinceReminderTime =
-      now.getTime() - reminderTime.getTime();
-    if (
-      millisecondsSinceReminderTime < 0 ||
-      millisecondsSinceReminderTime >=
-        RUN_INTERVAL_MINUTES * MILLISECONDS_PER_MINUTE
-    )
+    if (!isFirstRunAfterWallTime(now, REMINDER_WALL_TIME))
       return { isReminderRun: false, eventCount: 0, notificationsSent: true };
 
+    const today = getLocalDate(now, ORGANIZATION_TIMEZONE);
     const events = await context.prisma.event.findMany({
       where: {
         startTime: {
-          gte: reminderTime,
-          lt: toInstant(addDaysToLocalDate(today, 1), REMINDER_WALL_TIME),
+          gte: getOrganizationInstant(today, REMINDER_WALL_TIME),
+          lt: getOrganizationInstant(
+            addDaysToLocalDate(today, 1),
+            REMINDER_WALL_TIME,
+          ),
         },
         deletedAt: null,
         participants: { some: { cancelledAt: null } },
@@ -76,8 +59,6 @@ export const sendEventMorningReminders = (
         id: true,
       },
     });
-    if (events.length <= 0)
-      return { isReminderRun: true, eventCount: 0, notificationsSent: true };
 
     const notificationsSent = await triggerNotificationsAfterSave(
       context,

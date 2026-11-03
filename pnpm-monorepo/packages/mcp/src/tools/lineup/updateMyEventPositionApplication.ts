@@ -8,7 +8,7 @@ import { defineTool } from "../../toolDefinition.js";
 import { ToolGroup } from "../../toolGroup.js";
 import {
   isLineupToolVisible,
-  lineupPositionSchema,
+  notifyingLineupPositionWriteOutputSchema,
 } from "./lineupOutputSchemas.js";
 
 export enum MyEventPositionApplicationAction {
@@ -21,7 +21,7 @@ export const updateMyEventPositionApplicationTool = defineTool({
   group: ToolGroup.Lineup,
   title: "Apply for a position of an event or withdraw the application",
   description:
-    "Applies the own citizen for a position (position id from get_event_lineup), or withdraws the own application. The lineup must be enabled, and the event must not have ended. apply needs a sign-up of the user for the event (update_my_event_participation); a manager of the positions confirms the application with the assignment, and a repeated application changes nothing. withdraw without an application gives a conflict. Gives the position.",
+    "Applies the own citizen for a position (position id from get_event_lineup), or withdraws the own application. The lineup must be enabled, and the event must not have ended. apply needs a sign-up of the user for the event (update_my_event_participation); a manager of the positions confirms the application with the assignment. A new application notifies the organizers of the event, a repeated application changes nothing. withdraw without an application gives a conflict. Gives the position.",
   annotations: {
     readOnlyHint: false,
     destructiveHint: true,
@@ -32,7 +32,7 @@ export const updateMyEventPositionApplicationTool = defineTool({
   inputSchema: applyForEventPositionInputSchema.extend({
     action: z.enum(MyEventPositionApplicationAction),
   }),
-  outputSchema: lineupPositionSchema,
+  outputSchema: notifyingLineupPositionWriteOutputSchema,
   isVisible: isLineupToolVisible,
   handler: async (context, actor, { action, ...input }) => {
     switch (action) {
@@ -40,7 +40,15 @@ export const updateMyEventPositionApplicationTool = defineTool({
         return applyForEventPosition(context, actor, input);
 
       case MyEventPositionApplicationAction.Withdraw:
-        return withdrawEventPositionApplication(context, actor, input);
+        return {
+          position: await withdrawEventPositionApplication(
+            context,
+            actor,
+            input,
+          ),
+          // A withdrawal notifies nobody
+          notifications_sent: true,
+        };
 
       default:
         throw new Error(

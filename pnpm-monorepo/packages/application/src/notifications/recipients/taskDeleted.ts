@@ -1,8 +1,7 @@
-import { findCitizenIdsWithPermissions } from "../../auth/effectivePermissionsOfCitizens.js";
 import type { ApplicationContext } from "../../context.js";
 import { isTaskUpdatable } from "../../tasks/taskRules.js";
 import type { Recipient } from "./recipient.js";
-import { TASK_RECEIVER_PERMISSION_SETS } from "./taskRecipients.js";
+import { findTaskReceivers } from "./taskRecipients.js";
 
 export interface FindTaskDeletedRecipientsInput {
   readonly taskId: string;
@@ -47,20 +46,12 @@ export const findTaskDeletedRecipients = async (
   if (!isTaskUpdatable({ ...task, deletedAt: null }, task.deletedAt))
     return null;
 
-  const assigneeIds = task.assignments
-    .map((assignment) => assignment.citizenId)
-    .filter((citizenId) => citizenId !== task.deletedById);
-  if (assigneeIds.length <= 0)
-    return { task: { title: task.title }, recipients: [] };
-
-  const recipientIds = await findCitizenIdsWithPermissions(
-    context,
-    { id: { in: assigneeIds } },
-    TASK_RECEIVER_PERMISSION_SETS,
-  );
-
   return {
     task: { title: task.title },
-    recipients: Array.from(recipientIds, (citizenId) => ({ citizenId })),
+    recipients: await findTaskReceivers(
+      context,
+      task.assignments.map((assignment) => assignment.citizenId),
+      task.deletedById,
+    ),
   };
 };

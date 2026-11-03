@@ -69,7 +69,11 @@ test("raises a role without a level to level 1 and records the change", async ()
 
   const output = await increaseRoleAssignmentLevel(context, actor, input);
 
-  expect(output).toEqual({ ...input, current_level: 1 });
+  expect(output).toEqual({
+    ...input,
+    current_level: 1,
+    notifications_sent: true,
+  });
   expect(await findAssignment(input.citizen_id)).toEqual({
     currentLevel: 1,
     currentLevelUpdatedAt: TEST_NOW,
@@ -104,6 +108,33 @@ test("keeps the level at the maximum level", async () => {
   const output = await increaseRoleAssignmentLevel(context, actor, input);
 
   expect(output.current_level).toBe(MAXIMUM_LEVEL);
+});
+
+test("notifies the citizen only when the level rose and the citizen is not the actor", async () => {
+  const { actor, input, managerId } = await createAssignment({
+    currentLevel: MAXIMUM_LEVEL - 1,
+  });
+  await prisma.roleAssignment.create({
+    data: { citizenId: managerId, roleId: input.role_id, currentLevel: 1 },
+  });
+  const { context, notifications } = createTestApplicationContext();
+
+  // To the maximum level
+  await increaseRoleAssignmentLevel(context, actor, input);
+  // At the maximum level
+  await increaseRoleAssignmentLevel(context, actor, input);
+  await decreaseRoleAssignmentLevel(context, actor, input);
+  await increaseRoleAssignmentLevel(context, actor, {
+    ...input,
+    citizen_id: managerId,
+  });
+
+  expect(notifications).toEqual([
+    {
+      type: "RoleLevelIncreased",
+      payload: { citizenId: input.citizen_id, roleId: input.role_id },
+    },
+  ]);
 });
 
 test("lowers the level down to 0", async () => {

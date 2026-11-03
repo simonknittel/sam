@@ -133,7 +133,11 @@ describe("findTaskCreatedRecipients", () => {
     },
   );
 
-  test("a personalized task notifies only its assignees who can log in and open tasks", async () => {
+  test("a personalized task notifies only its assignees who can log in and open tasks, except its creator", async () => {
+    const creator = await createCitizenWithPermissions(
+      "creator",
+      RECEIVER_PERMISSION_STRINGS,
+    );
     const assignee = await createCitizenWithPermissions(
       "assignee",
       RECEIVER_PERMISSION_STRINGS,
@@ -145,8 +149,10 @@ describe("findTaskCreatedRecipients", () => {
     await createCitizenWithPermissions("reader", RECEIVER_PERMISSION_STRINGS);
     const task = await createTask({
       visibility: TaskVisibility.PERSONALIZED,
+      createdById: creator.id,
       assignments: {
         create: [
+          { citizenId: creator.id },
           { citizenId: assignee.id },
           { citizenId: assigneeWithoutTaskRead.id },
         ],

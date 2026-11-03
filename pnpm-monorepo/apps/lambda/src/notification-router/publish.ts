@@ -8,6 +8,23 @@ import { type Notification } from "./notification";
 import { publishOnSiteNotificationEvents } from "./soketi";
 import { publishWebPushNotifications } from "./web-push";
 
+const MILLISECONDS_PER_SECOND = 1000;
+
+/**
+ * The web push TTL (in seconds) of a notification that has no use after the
+ * deadline: the push service drops it when it cannot deliver it before
+ */
+export const getTimeToLiveUntil = (
+  context: ApplicationContext,
+  deadline: Date,
+): number =>
+  Math.max(
+    0,
+    Math.floor(
+      (deadline.getTime() - context.now().getTime()) / MILLISECONDS_PER_SECOND,
+    ),
+  );
+
 /**
  * Sends the notifications on all channels. It writes the on-site
  * notifications of the cleared receivers (`storeOnSiteNotifications()` leaves

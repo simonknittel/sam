@@ -14,6 +14,7 @@ import { triggerNotificationsAfterSave } from "../notifications.js";
 import { withSpan } from "../withSpan.js";
 import { deleteCancelledDiscordEvents } from "./deleteCancelledDiscordEvents.js";
 import { excludeAppPublishedEvents } from "./discordEventReconciliation.js";
+import { buildEventChangeNotifications } from "./eventChangeNotifications.js";
 import { syncDiscordParticipants } from "./syncDiscordParticipants.js";
 
 export interface SyncDiscordEventsOutput {
@@ -142,7 +143,10 @@ const importDiscordEvent = async (
   ]);
 
   const notificationsSent = await triggerNotificationsAfterSave(context, [
-    { type: "EventCreated", payload: { eventId: event.id } },
+    {
+      type: "EventCreated",
+      payload: { eventId: event.id, actorCitizenId: null },
+    },
   ]);
 
   return {
@@ -189,14 +193,19 @@ const reconcileDiscordEvent = async (
   if (!existingEvent) return importDiscordEvent(context, scheduledEvent);
 
   /** A change of only the image sends no notification */
-  const hasNotifiedChange =
-    existingEvent.name !== scheduledEvent.name ||
-    existingEvent.startTime.getTime() !== scheduledEvent.startTime.getTime() ||
-    existingEvent.endTime?.getTime() !== scheduledEvent.endTime?.getTime() ||
-    existingEvent.description !== scheduledEvent.description ||
-    existingEvent.location !== scheduledEvent.location;
+  const notifications = buildEventChangeNotifications(existingEvent.id, null, {
+    startTime:
+      existingEvent.startTime.getTime() !== scheduledEvent.startTime.getTime(),
+    endTime:
+      existingEvent.endTime?.getTime() !== scheduledEvent.endTime?.getTime(),
+    details:
+      existingEvent.name !== scheduledEvent.name ||
+      existingEvent.description !== scheduledEvent.description ||
+      existingEvent.location !== scheduledEvent.location,
+  });
   const hasChange =
-    hasNotifiedChange || existingEvent.discordImage !== scheduledEvent.image;
+    notifications.length > 0 ||
+    existingEvent.discordImage !== scheduledEvent.image;
 
   if (hasChange) {
     await context.prisma.event.update({
@@ -229,11 +238,10 @@ const reconcileDiscordEvent = async (
     ]);
   }
 
-  const notificationsSent = hasNotifiedChange
-    ? await triggerNotificationsAfterSave(context, [
-        { type: "EventUpdated", payload: { eventId: existingEvent.id } },
-      ])
-    : true;
+  const notificationsSent = await triggerNotificationsAfterSave(
+    context,
+    notifications,
+  );
 
   /**
    * The citizen of the Discord creator can come after the import of the
@@ -365,6 +373,7 @@ export const syncDiscordEvents = (
         addedParticipantCount += participants.addedCount;
         removedParticipantCount += participants.removedCount;
         linkedParticipantCount += participants.linkedCount;
+        notificationsSent &&= participants.notificationsSent;
       }
     }
 

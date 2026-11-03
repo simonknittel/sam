@@ -1,6 +1,9 @@
 "use server";
 
-import { createUseCaseAction } from "@/modules/application";
+import {
+  createUseCaseAction,
+  notificationsFailedWarning,
+} from "@/modules/application";
 import {
   assignEventPosition,
   assignEventPositionInputSchema,
@@ -17,4 +20,5 @@ export const resetEventPositionCitizenId = createUseCaseAction({
   }),
   texts: EVENT_ERROR_TEXTS,
   success: (t) => t("Common.successfullySaved"),
+  warning: notificationsFailedWarning,
 });

@@ -275,7 +275,10 @@ export const updateEventWikiPagePermissions = (
         ? await triggerNotificationsAfterSave(context, [
             {
               type: "EventBriefingPublished",
-              payload: { eventId: event.id },
+              payload: {
+                eventId: event.id,
+                actorCitizenId: actor.citizen?.id ?? null,
+              },
             },
           ])
         : true;

@@ -3,6 +3,7 @@ import {
   type ApplicationContext,
 } from "@sam-monorepo/application";
 import { type Task } from "@sam-monorepo/database";
+import { getTaskDeletedText } from "@sam-monorepo/domain";
 import { publishNotifications } from "../publish";
 
 interface Payload {
@@ -18,14 +19,16 @@ export const TaskDeletedHandler = async (
   });
   if (!result) return;
 
+  const notificationPayload = { taskTitle: result.task.title };
+  const text = getTaskDeletedText(notificationPayload);
+
   await publishNotifications(
     context,
     result.recipients.map((recipient) => ({
       receiverId: recipient.citizenId,
       notificationType: "task_deleted" as const,
-      payload: { taskTitle: result.task.title },
-      title: "Task gelöscht",
-      body: result.task.title,
+      payload: notificationPayload,
+      ...text,
     })),
   );
 };
