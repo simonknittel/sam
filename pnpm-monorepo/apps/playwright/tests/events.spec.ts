@@ -8,7 +8,12 @@ import {
   LINEUP_PERMISSIONS,
   ONE_DAY_MS,
 } from "../fixtures/factories";
-import { clickUntilVisible, SAVED_TEXT } from "../fixtures/interactions";
+import {
+  clickUntilVisible,
+  openPositionCitizenModal,
+  positionCitizenChoice,
+  SAVED_TEXT,
+} from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 test("the fleet tab counts the ships of both participation kinds", async ({
@@ -158,26 +163,27 @@ test("a position application travels from the participant to the manager's assig
   await page.goto(`/app/events/${event.id}/lineup`);
 
   await expect(page.getByText("Navigator")).toBeVisible();
-  const assignmentSelect = page.getByRole("combobox", {
-    name: "Citizen für Navigator",
-  });
-  await expect(assignmentSelect).toBeVisible();
-  // The application shows up in the applicants optgroup
-  await expect(
-    assignmentSelect
-      .locator('optgroup[label="Interessenten - Voraussetzungen erfüllt"]')
-      .locator("option", { hasText: "bewerber" }),
-  ).toHaveCount(1);
-
   /**
-   * The select keeps the value of the browser. The list of the participants
-   * without a position comes from the server, thus it shows the refresh.
+   * The list of the participants without a position comes from the server,
+   * thus it shows the refresh
    */
   const unassignedNote = page.getByText("Keinem Posten zugeordnet");
   await expect(unassignedNote).toBeVisible();
 
-  await assignmentSelect.selectOption({ label: "bewerber" });
+  // The application shows up in the applicants section
+  const dialog = await openPositionCitizenModal(page, "Navigator");
+  const applicantChoice = positionCitizenChoice(
+    dialog,
+    "Interessenten - Voraussetzungen erfüllt",
+    "bewerber",
+  );
+  await expect(applicantChoice).toHaveCount(1);
+
+  await applicantChoice
+    .getByRole("button", { name: "bewerber zuweisen", exact: true })
+    .click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+  await expect(dialog).toBeHidden();
   await expect(unassignedNote).toBeHidden();
 
   await expect

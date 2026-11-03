@@ -19,7 +19,9 @@ import {
   hoverUntilVisible,
   inlineEditorTrigger,
   modal,
+  openPositionCitizenModal,
   pickRoles,
+  positionCitizenChoice,
   rolePickerChips,
   saveInlineEditor,
   toggleLabel,
@@ -497,11 +499,12 @@ test("the requirement check finds a ship after the first page of the fleet, but 
   const unmetRequirementHint = page
     .getByText("Du erfüllst nicht die Voraussetzungen für diesen Posten.")
     .first();
-  const participantOption = (optionGroupLabel: string) =>
-    page
-      .getByRole("combobox", { name: "Citizen für Bomberpilot" })
-      .locator(`optgroup[label="${optionGroupLabel}"]`)
-      .locator("option", { hasText: "posten-bewerber" });
+  const applicantChoice = async (sectionTitle: string) =>
+    positionCitizenChoice(
+      await openPositionCitizenModal(page, "Bomberpilot"),
+      sectionTitle,
+      "posten-bewerber",
+    );
 
   /**
    * A deleted ship does not meet the requirement. The hint opens on focus,
@@ -517,8 +520,8 @@ test("the requirement check finds a ship after the first page of the fleet, but 
   await switchUser(organizer.user);
   await page.goto(`/app/events/${event.id}/lineup`);
   await expect(
-    participantOption("Alle Teilnehmer - Voraussetzungen nicht erfüllt"),
-  ).toHaveCount(1);
+    await applicantChoice("Alle Teilnehmer - Voraussetzungen nicht erfüllt"),
+  ).toContainText("Fehlendes Schiff: Retaliator Bomber");
 
   // The ship after the first page of the fleet meets the requirement
   await prisma.ship.update({
@@ -528,7 +531,7 @@ test("the requirement check finds a ship after the first page of the fleet, but 
 
   await page.goto(`/app/events/${event.id}/lineup`);
   await expect(
-    participantOption("Alle Teilnehmer - Voraussetzungen erfüllt"),
+    await applicantChoice("Alle Teilnehmer - Voraussetzungen erfüllt"),
   ).toHaveCount(1);
 
   /**
@@ -594,11 +597,12 @@ test("a position requires all of its roles or one of them", async ({
     );
   };
   const requiredRoleIds = [pilotRole.id, medicRole.id].toSorted();
-  const participantOption = (optionGroupLabel: string) =>
-    page
-      .getByRole("combobox", { name: "Citizen für Rettungspilot" })
-      .locator(`optgroup[label="${optionGroupLabel}"]`)
-      .locator("option", { hasText: "posten-bewerber" });
+  const applicantChoice = async (sectionTitle: string) =>
+    positionCitizenChoice(
+      await openPositionCitizenModal(page, "Rettungspilot"),
+      sectionTitle,
+      "posten-bewerber",
+    );
 
   await signIn(organizer.user);
   await page.goto(lineupUrl);
@@ -627,9 +631,12 @@ test("a position requires all of its roles or one of them", async ({
 
   /** The applicant has only one of the two roles */
   await page.goto(lineupUrl);
-  await expect(
-    participantOption("Alle Teilnehmer - Voraussetzungen nicht erfüllt"),
-  ).toHaveCount(1);
+  const unmetChoice = await applicantChoice(
+    "Alle Teilnehmer - Voraussetzungen nicht erfüllt",
+  );
+  await expect(unmetChoice).toContainText("Fehlende Rolle:");
+  await expect(unmetChoice.getByText("Sanitäter")).toBeVisible();
+  await expect(unmetChoice.getByText("Pilot")).toHaveCount(0);
 
   const applyButton = page.getByRole("button", { name: "Interesse anmelden" });
   const unmetRequirementHint = page
@@ -639,7 +646,9 @@ test("a position requires all of its roles or one of them", async ({
   await switchUser(applicant.user);
   await page.goto(lineupUrl);
   await clickUntilVisible(page.getByTitle("Details öffnen"), applyButton);
-  await expect(page.getByText("Alle diese Rollen")).toBeVisible();
+  await expect(
+    page.getByText("Erforderliche Rolle (alle diese Rollen)"),
+  ).toBeVisible();
   await expect(page.getByText("Verborgene Rolle")).toHaveCount(2);
   await applyButton.focus();
   await expect(unmetRequirementHint).toBeVisible();
@@ -669,7 +678,7 @@ test("a position requires all of its roles or one of them", async ({
 
   await page.goto(lineupUrl);
   await expect(
-    participantOption("Alle Teilnehmer - Voraussetzungen erfüllt"),
+    await applicantChoice("Alle Teilnehmer - Voraussetzungen erfüllt"),
   ).toHaveCount(1);
 
   await switchUser(applicant.user);
@@ -682,6 +691,56 @@ test("a position requires all of its roles or one of them", async ({
     "EVENT_POSITION_CREATED_V2",
     "EVENT_POSITION_UPDATED_V2",
   ]);
+});
+
+test("a manager does not learn who has a required role that the manager cannot see", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const secretRole = await createRole(prisma, { name: "Geheimdienst" });
+  const organizer = await createCitizen(prisma, {
+    handle: "posten-leiter",
+    permissionStrings: LINEUP_PERMISSIONS,
+  });
+  const agent = await createCitizen(prisma, { handle: "geheimer-agent" });
+  await assignRole(prisma, agent.entity, secretRole);
+  const event = await createAppEvent(prisma, {
+    name: "Operation Schatten",
+    createdById: organizer.entity.id,
+    ...futureEvent(),
+  });
+  await createParticipant(prisma, {
+    eventId: event.id,
+    citizen: agent,
+    source: EventSource.APP,
+  });
+  await prisma.eventPosition.create({
+    data: {
+      eventId: event.id,
+      name: "Späher",
+      requiredRoles: { create: { roleId: secretRole.id } },
+    },
+  });
+
+  await signIn(organizer.user);
+  await page.goto(`/app/events/${event.id}/lineup`);
+
+  const dialog = await openPositionCitizenModal(page, "Späher");
+  const agentChoice = positionCitizenChoice(
+    dialog,
+    "Alle Teilnehmer - Voraussetzungen nicht erfüllt",
+    "geheimer-agent",
+  );
+  await expect(agentChoice).toContainText("Fehlende Rolle:");
+  await expect(agentChoice).toContainText("Verborgene Rolle");
+  await expect(
+    positionCitizenChoice(
+      dialog,
+      "Alle Teilnehmer - Voraussetzungen erfüllt",
+      "geheimer-agent",
+    ),
+  ).toHaveCount(0);
 });
 
 test("a deleted participant is not a choice in the position picker", async ({
@@ -736,33 +795,35 @@ test("a deleted participant is not a choice in the position picker", async ({
   await signIn(manager.user);
   await page.goto(`/app/events/${event.id}/lineup`);
 
-  const pilotPicker = page.getByRole("combobox", { name: "Citizen für Pilot" });
+  const pilotDialog = await openPositionCitizenModal(page, "Pilot");
+  const pilotChoices = pilotDialog.getByRole("listitem");
   await expect(
-    pilotPicker.locator("option", { hasText: "aktiver-teilnehmer" }),
-  ).toHaveCount(1);
+    pilotChoices.filter({ hasText: "aktiver-teilnehmer" }),
+  ).not.toHaveCount(0);
   await expect(
-    pilotPicker.locator("option", { hasText: DELETED_CITIZEN_LABEL }),
+    pilotChoices.filter({ hasText: DELETED_CITIZEN_LABEL }),
   ).toHaveCount(0);
-  await expect(
-    pilotPicker.locator("option", { hasText: "geloeschter-teilnehmer" }),
-  ).toHaveCount(0);
+  await expect(pilotDialog.getByText("geloeschter-teilnehmer")).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(pilotDialog).toBeHidden();
 
   /**
    * The position keeps its deleted citizen and shows the label, but the
    * manager cannot choose it again
    */
-  const gunnerPicker = page.getByRole("combobox", {
-    name: "Citizen für Schütze",
-  });
-  await expect(gunnerPicker).toHaveValue(deletedParticipant.entity.id);
-  const deletedOption = gunnerPicker.locator("option", {
-    hasText: DELETED_CITIZEN_LABEL,
-  });
-  await expect(deletedOption).toHaveCount(1);
-  await expect(deletedOption).toBeDisabled();
   await expect(
-    gunnerPicker.locator("option", { hasText: "geloeschter-teilnehmer" }),
+    page.getByRole("button", { name: "Citizen für Schütze:" }),
+  ).toHaveText(DELETED_CITIZEN_LABEL);
+  const gunnerDialog = await openPositionCitizenModal(page, "Schütze");
+  await expect(gunnerDialog).toContainText(
+    `Zugewiesen: ${DELETED_CITIZEN_LABEL}`,
+  );
+  await expect(
+    gunnerDialog
+      .getByRole("listitem")
+      .filter({ hasText: DELETED_CITIZEN_LABEL }),
   ).toHaveCount(0);
+  await expect(gunnerDialog.getByText("geloeschter-teilnehmer")).toHaveCount(0);
 });
 
 test("a citizen removed from a position is listed as unassigned again", async ({
@@ -793,18 +854,22 @@ test("a citizen removed from a position is listed as unassigned again", async ({
   await page.goto(`/app/events/${event.id}/lineup`);
   await waitForAppShellHydration(page);
 
-  const picker = page.getByRole("combobox", { name: "Citizen für Pilot" });
-  await expect(picker).toHaveValue(pilot.entity.id);
   const unassignedNote = page.getByText("Keinem Posten zugeordnet");
   await expect(unassignedNote).toHaveCount(0);
 
-  await picker.selectOption({ value: "-" });
+  const dialog = await openPositionCitizenModal(page, "Pilot");
+  await expect(dialog).toContainText("Zugewiesen: zugeteilter-pilot");
+  await dialog.getByRole("button", { name: "Entfernen" }).click();
+  await expect(dialog).toBeHidden();
 
   /**
-   * The select keeps the value of the browser. The list of the participants
-   * without a position comes from the server, thus it shows the refresh.
+   * The list of the participants without a position comes from the server,
+   * thus it shows the refresh
    */
   await expect(unassignedNote).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Citizen für Pilot:" }),
+  ).toHaveText("-");
   await expect
     .poll(async () => {
       const updatedPosition = await prisma.eventPosition.findUniqueOrThrow({

@@ -63,6 +63,36 @@ export const statisticTile = (page: Page, label: string) =>
 export const modal = (page: Page, heading: string | RegExp) =>
   page.getByRole("dialog", { name: heading });
 
+/**
+ * Opens the modal of a lineup position that assigns its citizen. The button
+ * shows the assigned citizen, and its name starts with the position.
+ */
+export const openPositionCitizenModal = async (
+  page: Page,
+  positionName: string,
+) => {
+  const dialog = modal(page, `Citizen für ${positionName}`);
+  await clickUntilVisible(
+    page.getByRole("button", { name: `Citizen für ${positionName}:` }),
+    dialog,
+  );
+  return dialog;
+};
+
+/**
+ * The row of a citizen in a section of the citizen modal of a position, for
+ * example "Alle Teilnehmer - Voraussetzungen erfüllt"
+ */
+export const positionCitizenChoice = (
+  dialog: Locator,
+  sectionTitle: string,
+  citizenName: string,
+) =>
+  dialog
+    .getByRole("region", { name: sectionTitle, exact: true })
+    .getByRole("listitem")
+    .filter({ hasText: citizenName });
+
 /** The element which wears the theme of the active seasonal event. */
 export const themeRoot = (page: Page) => page.locator("[data-seasonal-event]");
 
