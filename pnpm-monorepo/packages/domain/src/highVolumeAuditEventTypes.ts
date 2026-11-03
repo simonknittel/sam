@@ -24,4 +24,5 @@ export const HIGH_VOLUME_AUDIT_EVENT_TYPES: ReadonlySet<AuditEventType> =
     AuditEventType.LOG_ANALYZER_ENTRIES_UPLOADED,
     AuditEventType.READ_MARKER_CREATED,
     AuditEventType.READ_MARKERS_CREATED,
+    AuditEventType.AUDIT_EVENTS_LISTED,
   ]);
