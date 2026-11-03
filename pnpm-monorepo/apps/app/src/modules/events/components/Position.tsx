@@ -275,7 +275,7 @@ export const Position = ({
 
       {isOpen && (
         <div className="border-t border-white/10 bg-secondary">
-          <div className="flex gap-2 p-4">
+          <div className="flex flex-col gap-4 p-4 @3xl:flex-row @3xl:gap-2">
             <div className="flex flex-1 flex-col">
               <h3 className="font-mono text-xs text-white/40 uppercase">
                 Beschreibung
