@@ -1,27 +1,36 @@
 "use client";
 
-import {
-  CITIZEN_TABLE_ROLE_PARAM,
-  citizenTableParsers,
-} from "@/modules/citizen/utils/citizenTableSearchParams";
 import { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
 import { cursorPaginationParsers } from "@/modules/common/CursorPagination/cursorPaginationParsers";
 import { RolePicker } from "@/modules/roles/components/RolePicker/RolePicker";
 import type { BadgeRole } from "@/modules/roles/queries/getRoles";
-import { MAXIMUM_CITIZEN_LIST_ROLE_FILTERS } from "@sam-monorepo/domain";
 import { useTopLoader } from "nextjs-toploader";
-import { useQueryState, useQueryStates } from "nuqs";
+import {
+  parseAsArrayOf,
+  parseAsString,
+  useQueryState,
+  useQueryStates,
+} from "nuqs";
 import { useEffect, useState, useTransition } from "react";
 
+interface Props {
+  /** The search param that holds the ids of the selected roles */
+  readonly name: string;
+  readonly resetCursorPagination?: boolean;
+  /** The maximum number of selected roles */
+  readonly max?: number;
+}
+
 /**
- * Filters the citizen table by roles. A change in the open popover applies
- * when the popover closes. The removal of a selected role applies at once.
+ * Filters a table of a sidebar layout by roles. A change in the open popover
+ * applies when the popover closes. The removal of a selected role applies at
+ * once.
  */
-export const RoleFilter = () => {
+export const RoleFilter = ({ name, resetCursorPagination, max }: Props) => {
   const [isLoading, startTransition] = useTransition();
   const [roleIds, setRoleIds] = useQueryState(
-    CITIZEN_TABLE_ROLE_PARAM,
-    citizenTableParsers[CITIZEN_TABLE_ROLE_PARAM].withOptions({
+    name,
+    parseAsArrayOf(parseAsString).withDefault([]).withOptions({
       shallow: false,
       startTransition,
     }),
@@ -54,8 +63,10 @@ export const RoleFilter = () => {
     )
       return;
 
+    /** In the same tick, nuqs gives both changes one URL update */
     void setRoleIds([...roleIdSet]);
-    void setPagination({ cursor: null, direction: null });
+    if (resetCursorPagination)
+      void setPagination({ cursor: null, direction: null });
   };
 
   const handleChange = (newRoleIds: BadgeRole["id"][]) => {
@@ -86,7 +97,7 @@ export const RoleFilter = () => {
         value={draftRoleIds ?? appliedRoleIds}
         onChange={handleChange}
         onOpenChange={handleOpenChange}
-        max={MAXIMUM_CITIZEN_LIST_ROLE_FILTERS}
+        max={max}
       />
     </div>
   );
