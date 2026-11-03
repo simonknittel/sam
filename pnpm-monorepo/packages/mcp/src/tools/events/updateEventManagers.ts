@@ -4,6 +4,7 @@ import {
   removeEventManagers,
 } from "@sam-monorepo/application";
 import * as z from "zod";
+import { notificationsSentSchema } from "../../schemas.js";
 import { defineTool } from "../../toolDefinition.js";
 import { ToolGroup } from "../../toolGroup.js";
 import {
@@ -21,7 +22,7 @@ export const updateEventManagersTool = defineTool({
   group: ToolGroup.Events,
   title: "Update the managers of an event",
   description:
-    "Adds managers to an event (event_id from list_events) that has not ended, or removes managers from it. Needs can_manage. add makes the citizens (citizen_ids from search_citizens_and_organizations) managers and skips the citizens who already manage the event. remove takes the manager role from the citizens (citizen_ids from the managers of get_event); when one of them is not a manager, nothing changes and the result is a conflict. The creator of the event stays its organizer. Gives the event like get_event.",
+    "Adds managers to an event (event_id from list_events) that has not ended, or removes managers from it. Needs can_manage. add makes the citizens (citizen_ids from search_citizens_and_organizations) managers, skips the citizens who already manage the event and notifies each new manager. remove takes the manager role from the citizens (citizen_ids from the managers of get_event); when one of them is not a manager, nothing changes and the result is a conflict. The creator of the event stays its organizer. Gives the event like get_event.",
   annotations: {
     readOnlyHint: false,
     destructiveHint: true,
@@ -35,15 +36,22 @@ export const updateEventManagersTool = defineTool({
       "The citizens who become managers or who lose the manager role. Managers can change the event, its participants, its managers and its lineup.",
     ),
   }),
-  outputSchema: eventOutputSchema,
+  outputSchema: z.strictObject({
+    event: eventOutputSchema,
+    notifications_sent: notificationsSentSchema,
+  }),
   isVisible: isEventWriteToolVisible,
   handler: async (context, actor, { action, ...input }) => {
     switch (action) {
       case EventManagersAction.Add:
         return addEventManagers(context, actor, input);
 
+      // A removal sends no notification
       case EventManagersAction.Remove:
-        return removeEventManagers(context, actor, input);
+        return {
+          event: await removeEventManagers(context, actor, input),
+          notifications_sent: true,
+        };
 
       default:
         throw new Error(

@@ -6,7 +6,7 @@ import { defineTool } from "../../toolDefinition.js";
 import { ToolGroup } from "../../toolGroup.js";
 import {
   isLineupToolVisible,
-  lineupPositionSchema,
+  notifyingLineupPositionWriteOutputSchema,
 } from "./lineupOutputSchemas.js";
 
 export const assignEventPositionTool = defineTool({
@@ -14,7 +14,7 @@ export const assignEventPositionTool = defineTool({
   group: ToolGroup.Lineup,
   title: "Assign a citizen to a position of an event",
   description:
-    "Sets the citizen of a position (position id from get_event_lineup): a participant of the event or a citizen who applied for the position. citizen_id null removes the assigned citizen. Needs the right to manage the positions of the event, and the event must not have ended. Gives the position.",
+    "Sets the citizen of a position (position id from get_event_lineup): a participant of the event or a citizen who applied for the position. citizen_id null removes the assigned citizen. Needs the right to manage the positions of the event, and the event must not have ended. While the lineup is published, the new and the previous citizen get a notification, but not the user. Gives the position.",
   annotations: {
     readOnlyHint: false,
     destructiveHint: false,
@@ -22,7 +22,7 @@ export const assignEventPositionTool = defineTool({
     openWorldHint: false,
   },
   inputSchema: assignEventPositionInputSchema,
-  outputSchema: lineupPositionSchema,
+  outputSchema: notifyingLineupPositionWriteOutputSchema,
   isVisible: isLineupToolVisible,
   handler: assignEventPosition,
 });

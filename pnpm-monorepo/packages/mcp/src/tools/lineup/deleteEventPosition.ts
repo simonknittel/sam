@@ -6,7 +6,7 @@ import { defineTool } from "../../toolDefinition.js";
 import { ToolGroup } from "../../toolGroup.js";
 import {
   isLineupToolVisible,
-  lineupPositionSchema,
+  notifyingLineupPositionWriteOutputSchema,
 } from "./lineupOutputSchemas.js";
 
 export const deleteEventPositionTool = defineTool({
@@ -14,7 +14,7 @@ export const deleteEventPositionTool = defineTool({
   group: ToolGroup.Lineup,
   title: "Delete a position from the lineup of an event",
   description:
-    "Deletes a position (position id from get_event_lineup) together with its children, their assigned citizens and their applications. This cannot be undone. Needs the right to manage the positions of the event, and the event must not have ended. Gives the deleted position as it was before the deletion.",
+    "Deletes a position (position id from get_event_lineup) together with its children, their assigned citizens and their applications. This cannot be undone. Needs the right to manage the positions of the event, and the event must not have ended. While the lineup is published, each assigned citizen except the user gets a notification. Gives the deleted position as it was before the deletion.",
   annotations: {
     readOnlyHint: false,
     destructiveHint: true,
@@ -22,7 +22,7 @@ export const deleteEventPositionTool = defineTool({
     openWorldHint: false,
   },
   inputSchema: deleteEventPositionInputSchema,
-  outputSchema: lineupPositionSchema,
+  outputSchema: notifyingLineupPositionWriteOutputSchema,
   isVisible: isLineupToolVisible,
   handler: deleteEventPosition,
 });
