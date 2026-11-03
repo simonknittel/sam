@@ -12,13 +12,9 @@ on:
           - test
 
 jobs:
-  plan:
-    uses: ./.github/workflows/terraform-plan.yml
-    with:
-      environment: ${{ inputs.environment }}
-      store_plan: true
-    secrets: inherit
-
+  # Plan and apply run in one job: a saved plan file contains the state with
+  # all secrets in plain text. Thus, the plan file must not leave the runner
+  # (artifacts of a public repository are available to all GitHub users).
   apply:
     runs-on: ubuntu-24.04
 
@@ -29,11 +25,9 @@ jobs:
       id-token: write # Required for aws-actions/configure-aws-credentials
       contents: read # Required for aws-actions/configure-aws-credentials
 
-    needs: [plan]
-
     environment: "terraform-${{ inputs.environment }}"
 
-    timeout-minutes: 5
+    timeout-minutes: 10
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -53,12 +47,6 @@ jobs:
           role-to-assume: ${{ vars.IAM_ROLE_ARN }}
           aws-region: eu-central-1
 
-      - name: Retrieve tfplan artifact
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: tfplan
-          path: terraform/
-
       - name: Create tfvars file
         working-directory: terraform
         run: |
@@ -68,6 +56,10 @@ jobs:
 
       - name: terraform init
         run: terraform init -backend-config=${{ inputs.environment }}.s3.tfbackend
+        working-directory: terraform
+
+      - name: terraform plan
+        run: terraform plan -no-color -out=tfplan -var-file=${{ inputs.environment || 'test' }}.tfvars
         working-directory: terraform
 
       - name: terraform apply

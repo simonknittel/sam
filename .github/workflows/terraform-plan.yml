@@ -17,15 +17,6 @@ on:
         type: choice
         options:
           - test
-  workflow_call:
-    inputs:
-      environment:
-        required: true
-        default: "test"
-        type: string
-      store_plan:
-        required: false
-        type: boolean
 
 jobs:
   plan:
@@ -73,7 +64,7 @@ jobs:
         working-directory: terraform
 
       - name: terraform plan
-        run: terraform plan -no-color -out=tfplan -var-file=${{ inputs.environment || 'test' }}.tfvars
+        run: terraform plan -no-color -var-file=${{ inputs.environment || 'test' }}.tfvars
         working-directory: terraform
         id: plan
         continue-on-error: true
@@ -127,11 +118,3 @@ jobs:
       - name: Break on terraform plan failure
         if: steps.plan.outcome == 'failure'
         run: exit 1
-
-      - name: Store artifact
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: inputs.store_plan || false
-        with:
-          name: tfplan
-          path: terraform/tfplan
-          retention-days: 1
