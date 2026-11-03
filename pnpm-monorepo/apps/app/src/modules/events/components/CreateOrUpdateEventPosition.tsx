@@ -14,6 +14,7 @@ import type {
   VariantCatalogVariant,
 } from "@/modules/fleet/queries/getVariantCatalog";
 import { RolePicker } from "@/modules/roles/components/RolePicker/RolePicker";
+import { useRolesContext } from "@/modules/roles/components/RolesContext";
 import {
   EventPositionRoleMatch,
   type EventPosition,
@@ -48,7 +49,7 @@ import {
   eventContainerFormValues,
   type EventContainer,
 } from "../utils/eventContainer";
-import { getRoleMatchLabel } from "./PositionRequiredRoles";
+import { getRoleMatchLabel, RequiredRoleBadges } from "./PositionRequiredRoles";
 
 const ADD_LABEL = "Posten hinzufügen";
 const EDIT_LABEL = "Posten bearbeiten";
@@ -445,14 +446,22 @@ interface RequiredRolesProps {
 
 /**
  * The match of the roles is a choice only for two roles or more. With fewer
- * roles, the form keeps the choice in a hidden field.
+ * roles, the form keeps the choice in a hidden field. The save keeps the
+ * required roles that the user cannot see (see `writeLineupPositionChange()`),
+ * thus they are not in the picker and the user cannot remove them.
  */
 const RequiredRoles = ({
   className,
   defaultRoleIds = [],
   defaultMatch = EventPositionRoleMatch.ANY,
 }: RequiredRolesProps) => {
-  const [roleIds, setRoleIds] = useState<readonly string[]>(defaultRoleIds);
+  const { roles: visibleRoles } = useRolesContext();
+  const isVisible = (roleId: string) =>
+    visibleRoles.some((role) => role.id === roleId);
+  const hiddenRoleIds = defaultRoleIds.filter((roleId) => !isVisible(roleId));
+  const [roleIds, setRoleIds] = useState<readonly string[]>(() =>
+    defaultRoleIds.filter(isVisible),
+  );
   const [match, setMatch] = useState(defaultMatch);
   const matchInputId = useId();
 
@@ -466,7 +475,17 @@ const RequiredRoles = ({
         onChange={setRoleIds}
       />
 
-      {roleIds.length > 1 ? (
+      {hiddenRoleIds.length > 0 && (
+        <div className="mt-2 text-sm text-neutral-500">
+          <p>
+            Dazu kommen Rollen, die du nicht sehen darfst. Sie bleiben beim
+            Speichern erhalten.
+          </p>
+          <RequiredRoleBadges roleIds={hiddenRoleIds} className="mt-1" />
+        </div>
+      )}
+
+      {roleIds.length + hiddenRoleIds.length > 1 ? (
         <div className="mt-2">
           <label htmlFor={matchInputId} className="mb-1 block text-sm">
             Der Citizen benötigt
