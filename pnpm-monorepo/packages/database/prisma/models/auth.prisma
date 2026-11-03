@@ -105,6 +105,7 @@ model Role {
   eventTemplateVisibilities EventTemplateVisibilityRole[]
   eventTemplateAccess       EventTemplateRoleAccess[]
   tasksRequiredIn           Task[]                        @relation("requiredRoles")
+  eventPositionsRequiredIn  EventPositionRequiredRole[]
   silcSalaries              SilcRoleSalary[]
   salaryTransactions        SilcTransaction[]
   /// Number of days after which this role gets removed from a citizen due to

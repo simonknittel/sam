@@ -282,6 +282,13 @@ model EventTemplateRoleAccess {
   @@index([roleId])
 }
 
+/// Whether the citizen of a position must have each required role of the
+/// position (ALL), or one of them (ANY)
+enum EventPositionRoleMatch {
+  ANY
+  ALL
+}
+
 model EventPosition {
   id String @id @default(cuid())
 
@@ -294,19 +301,24 @@ model EventPosition {
   templateId String?
   template   EventTemplate? @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
-  name             String
-  description      String?
-  requiredVariants EventPositionRequiredVariant[]
-  applications     EventPositionApplication[]     @relation("applications")
-  citizenId        String?
-  citizen          Citizen?                       @relation("citizen", fields: [citizenId], references: [id], onDelete: SetNull)
-  parentPositionId String?
-  parentPosition   EventPosition?                 @relation("parentPosition", fields: [parentPositionId], references: [id], onDelete: Cascade)
-  childPositions   EventPosition[]                @relation("parentPosition")
-  order            Int                            @default(0)
-  fontSize         String?
-  backgroundColor  String?
-  textColor        String?
+  name              String
+  description       String?
+  requiredVariants  EventPositionRequiredVariant[]
+  /// The roles that the citizen of the position must have, as effective roles
+  /// (with the inherited roles and the level gate). `requiredRoleMatch` tells
+  /// if the citizen needs all of them or one of them.
+  requiredRoles     EventPositionRequiredRole[]
+  requiredRoleMatch EventPositionRoleMatch         @default(ANY)
+  applications      EventPositionApplication[]     @relation("applications")
+  citizenId         String?
+  citizen           Citizen?                       @relation("citizen", fields: [citizenId], references: [id], onDelete: SetNull)
+  parentPositionId  String?
+  parentPosition    EventPosition?                 @relation("parentPosition", fields: [parentPositionId], references: [id], onDelete: Cascade)
+  childPositions    EventPosition[]                @relation("parentPosition")
+  order             Int                            @default(0)
+  fontSize          String?
+  backgroundColor   String?
+  textColor         String?
 
   /// Event wiki pages whose read/edit scope references this position's
   /// subtree (see WikiPage.eventReadScopePosition)
@@ -327,6 +339,17 @@ model EventPositionRequiredVariant {
   order      Int
 
   @@unique([positionId, variantId])
+}
+
+model EventPositionRequiredRole {
+  id         String        @id @default(cuid(2))
+  positionId String
+  position   EventPosition @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  roleId     String
+  role       Role          @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([positionId, roleId])
+  @@index([roleId])
 }
 
 model EventPositionApplication {
