@@ -28,6 +28,7 @@ import {
   createS3Storage,
   type S3ClientOptions,
 } from "@sam-monorepo/infrastructure";
+import { after } from "next/server";
 import { sharpImageReader } from "./sharpImageReader";
 
 /**
@@ -56,10 +57,13 @@ const createStorage = (): ApplicationContext["storage"] => {
 // The emitter has its own span, thus the two ports need no span of their own
 const createApplicationContext = (): ApplicationContext => ({
   prisma,
-  audit: createPrismaAuditWriter({ prisma, log }),
+  // The response does not wait for the audit events and the notifications
+  audit: createPrismaAuditWriter({ prisma, log, defer: after }),
   notifications: createEventBridgeNotificationTrigger({
     emitEvents,
     source: "App",
+    log,
+    defer: after,
   }),
   email: createEventBridgeEmailRequester({ emitEvents, source: "App" }),
   log,
@@ -136,5 +140,10 @@ export const getApplicationContext = () =>
 export const getMcpApplicationContext = () =>
   (mcpContext ??= {
     ...getApplicationContext(),
-    audit: createPrismaAuditWriter({ prisma, log, triggeredViaMcp: true }),
+    audit: createPrismaAuditWriter({
+      prisma,
+      log,
+      triggeredViaMcp: true,
+      defer: after,
+    }),
   });

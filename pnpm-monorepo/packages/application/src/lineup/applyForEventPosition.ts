@@ -10,10 +10,7 @@ import { idSchema } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
 import { LineupErrorMessage } from "./lineupErrors.js";
 import { requireApplicableEventPosition } from "./lineupGuards.js";
-import {
-  toLineupPositionOutput,
-  type NotifyingLineupPositionWriteOutput,
-} from "./lineupOutput.js";
+import { toLineupPositionOutput, type LineupPosition } from "./lineupOutput.js";
 
 export const applyForEventPositionInputSchema = z.object({
   position_id: idSchema.describe(
@@ -69,7 +66,7 @@ export const applyForEventPosition = (
   context: ApplicationContext,
   actor: Actor,
   input: ApplyForEventPositionInput,
-): Promise<NotifyingLineupPositionWriteOutput> =>
+): Promise<LineupPosition> =>
   withSpan(context, "applyForEventPosition", async () => {
     const citizen = requireCitizen(actor);
     const position = await requireApplicableEventPosition(
@@ -115,21 +112,17 @@ export const applyForEventPosition = (
         },
       ]);
 
-    const notificationsSent = application
-      ? await triggerNotificationsAfterSave(context, [
-          {
-            type: "EventPositionApplicationCreated",
-            payload: { applicationId: application.id },
-          },
-        ])
-      : true;
+    if (application)
+      await triggerNotificationsAfterSave(context, [
+        {
+          type: "EventPositionApplicationCreated",
+          payload: { applicationId: application.id },
+        },
+      ]);
 
-    return {
-      position: await toLineupPositionOutput(
-        context,
-        position.id,
-        isAllowedToManagePositions(actor, position.event),
-      ),
-      notifications_sent: notificationsSent,
-    };
+    return toLineupPositionOutput(
+      context,
+      position.id,
+      isAllowedToManagePositions(actor, position.event),
+    );
   });

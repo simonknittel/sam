@@ -8,7 +8,7 @@ import { defineTool } from "../../toolDefinition.js";
 import { ToolGroup } from "../../toolGroup.js";
 import {
   isLineupToolVisible,
-  notifyingLineupPositionWriteOutputSchema,
+  lineupPositionSchema,
 } from "./lineupOutputSchemas.js";
 
 export enum MyEventPositionApplicationAction {
@@ -32,7 +32,7 @@ export const updateMyEventPositionApplicationTool = defineTool({
   inputSchema: applyForEventPositionInputSchema.extend({
     action: z.enum(MyEventPositionApplicationAction),
   }),
-  outputSchema: notifyingLineupPositionWriteOutputSchema,
+  outputSchema: lineupPositionSchema,
   isVisible: isLineupToolVisible,
   handler: async (context, actor, { action, ...input }) => {
     switch (action) {
@@ -40,15 +40,7 @@ export const updateMyEventPositionApplicationTool = defineTool({
         return applyForEventPosition(context, actor, input);
 
       case MyEventPositionApplicationAction.Withdraw:
-        return {
-          position: await withdrawEventPositionApplication(
-            context,
-            actor,
-            input,
-          ),
-          // A withdrawal notifies nobody
-          notifications_sent: true,
-        };
+        return withdrawEventPositionApplication(context, actor, input);
 
       default:
         throw new Error(

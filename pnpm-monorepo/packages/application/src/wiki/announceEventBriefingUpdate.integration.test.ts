@@ -85,11 +85,10 @@ test("a published briefing notifies its readers without the manager who announce
   const { context, auditEvents, notifications } =
     createTestApplicationContext();
 
-  const output = await announceEventBriefingUpdate(context, actor, {
+  await announceEventBriefingUpdate(context, actor, {
     event_id: event.id,
   });
 
-  expect(output).toEqual({ notifications_sent: true });
   expect(notifications).toEqual([
     {
       type: "EventBriefingUpdated",

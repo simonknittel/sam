@@ -1,9 +1,6 @@
 "use server";
 
-import {
-  createUseCaseAction,
-  notificationsFailedWarning,
-} from "@/modules/application";
+import { createUseCaseAction } from "@/modules/application";
 import {
   applyForEventPosition,
   applyForEventPositionInputSchema,
@@ -21,6 +18,5 @@ export const createEventPositionApplicationForCurrentUser = createUseCaseAction(
     texts: EVENT_ERROR_TEXTS,
     success: () =>
       "Erfolgreich gespeichert. Die Anmeldung muss vom Organisator des Events bestätigt werden.",
-    warning: notificationsFailedWarning,
   },
 );

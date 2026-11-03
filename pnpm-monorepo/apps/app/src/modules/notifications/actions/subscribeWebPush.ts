@@ -1,9 +1,6 @@
 "use server";
 
-import {
-  createUseCaseAction,
-  notificationsFailedWarning,
-} from "@/modules/application";
+import { createUseCaseAction } from "@/modules/application";
 import {
   subscribeWebPushInputSchema,
   subscribeWebPush as subscribeWebPushUseCase,
@@ -25,5 +22,4 @@ export const subscribeWebPush = createUseCaseAction({
     };
   },
   success: (t) => t("Common.successfullySaved"),
-  warning: notificationsFailedWarning,
 });

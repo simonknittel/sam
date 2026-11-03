@@ -27,11 +27,6 @@ export interface ChangeRoleAssignmentLevelOutput {
   readonly citizen_id: string;
   readonly role_id: string;
   readonly current_level: number | null;
-  /**
-   * False when the change is saved, but the notifications failed. The change
-   * stands, thus the caller must not make it again.
-   */
-  readonly notifications_sent: boolean;
 }
 
 interface LevelChange {
@@ -129,14 +124,12 @@ const changeRoleAssignmentLevel = (
           ]
         : [];
 
+    await triggerNotificationsAfterSave(context, notifications);
+
     return {
       citizen_id: input.citizen_id,
       role_id: input.role_id,
       current_level: updatedRoleAssignment.currentLevel,
-      notifications_sent: await triggerNotificationsAfterSave(
-        context,
-        notifications,
-      ),
     };
   });
 

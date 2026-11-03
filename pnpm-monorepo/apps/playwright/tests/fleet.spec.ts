@@ -182,6 +182,11 @@ test("my ships can be added, renamed and deleted with consistent org counts", as
   await expect(statisticTile(page, "Schiffe")).toContainText("0");
 
   // The three writes log the V2 event types, whose ownerId is a citizen id
+  await expectAuditEvents(prisma, [
+    "SHIP_CREATED_V2",
+    "SHIP_UPDATED_V2",
+    "SHIP_DELETED_V2",
+  ]);
   const auditEvents = await prisma.auditEvent.findMany({
     where: {
       type: {

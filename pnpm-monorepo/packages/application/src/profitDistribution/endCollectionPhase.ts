@@ -19,7 +19,6 @@ export type EndCollectionPhaseInput = z.infer<
 export interface EndCollectionPhaseOutput {
   readonly cycle_id: string;
   readonly booking_count: number;
-  readonly notifications_sent: boolean;
 }
 
 /**
@@ -47,14 +46,10 @@ export const endCollectionPhase = (
     if (transactionIds === null)
       throw new ConflictError(ProfitDistributionErrorMessage.WrongPhase);
 
-    const notificationsSent = await announceSilcTransactions(
-      context,
-      transactionIds,
-    );
+    await announceSilcTransactions(context, transactionIds);
 
     return {
       cycle_id: input.cycle_id,
       booking_count: transactionIds.length,
-      notifications_sent: notificationsSent,
     };
   });

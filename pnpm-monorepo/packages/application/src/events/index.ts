@@ -90,7 +90,6 @@ export {
   type EventParticipantEntry,
   type GetEventInput,
   type GetEventOutput,
-  type NotifyingEventWriteOutput,
 } from "./getEvent.js";
 export {
   EventListStatus,

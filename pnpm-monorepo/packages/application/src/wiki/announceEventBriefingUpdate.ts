@@ -25,14 +25,6 @@ export type AnnounceEventBriefingUpdateInput = z.infer<
   typeof announceEventBriefingUpdateInputSchema
 >;
 
-export interface AnnounceEventBriefingUpdateOutput {
-  /**
-   * False when the announcement is saved, but the notifications failed. The
-   * caller must not announce again.
-   */
-  readonly notifications_sent: boolean;
-}
-
 /**
  * Whether more citizens than the managers can read the briefing of the event
  * now: a manager published it (see `updateEventWikiPagePermissions()`), and
@@ -72,7 +64,7 @@ export const announceEventBriefingUpdate = (
   context: ApplicationContext,
   actor: Actor,
   input: AnnounceEventBriefingUpdateInput,
-): Promise<AnnounceEventBriefingUpdateOutput> =>
+): Promise<void> =>
   withSpan(context, "announceEventBriefingUpdate", async () => {
     /**
      * Authorize the request
@@ -99,12 +91,10 @@ export const announceEventBriefingUpdate = (
       },
     ]);
 
-    const notificationsSent = await triggerNotificationsAfterSave(context, [
+    await triggerNotificationsAfterSave(context, [
       {
         type: "EventBriefingUpdated",
         payload: { eventId: scope.event.id, actorCitizenId: citizen.id },
       },
     ]);
-
-    return { notifications_sent: notificationsSent };
   });

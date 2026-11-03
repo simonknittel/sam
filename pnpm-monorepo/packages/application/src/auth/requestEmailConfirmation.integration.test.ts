@@ -27,7 +27,7 @@ test("saves a token and requests the email with the link", async () => {
 
   await expect(
     requestEmailConfirmation(context, createTestActor({ userId: user.id })),
-  ).resolves.toEqual({ notifications_sent: true });
+  ).resolves.toEqual({ email_sent: true });
 
   const storedToken = await prisma.emailConfirmationToken.findFirstOrThrow({
     where: { userId: user.id },
@@ -73,6 +73,6 @@ test("writes no audit event when the email cannot go out", async () => {
 
   await expect(
     requestEmailConfirmation(context, createTestActor({ userId: user.id })),
-  ).resolves.toEqual({ notifications_sent: false });
+  ).resolves.toEqual({ email_sent: false });
   expect(auditEvents).toEqual([]);
 });

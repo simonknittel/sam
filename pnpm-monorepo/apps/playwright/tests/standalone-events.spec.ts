@@ -252,10 +252,11 @@ test("the organizer edits the event via the settings tab", async ({
     "TITLE_UPDATED",
   ]);
 
-  const auditCount = await prisma.auditEvent.count({
-    where: { type: "EVENT_UPDATED_IN_APP" },
-  });
-  expect(auditCount).toBe(1);
+  await expect
+    .poll(() =>
+      prisma.auditEvent.count({ where: { type: "EVENT_UPDATED_IN_APP" } }),
+    )
+    .toBe(1);
 
   // The feed renders the changes
   await page.goto(`/app/events/${event.id}/activity`);

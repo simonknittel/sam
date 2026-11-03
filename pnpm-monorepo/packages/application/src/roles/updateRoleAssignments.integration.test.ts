@@ -30,7 +30,6 @@ test("notifies the citizen about each added role, but not the actor about a role
       role_ids: [role.id],
     });
     expect(output.changes).toEqual([{ role_id: role.id, enabled: true }]);
-    expect(output.notifications_sent).toBe(true);
   }
 
   expect(notifications).toEqual([

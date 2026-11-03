@@ -19,10 +19,7 @@ import {
 } from "../silc/silcLedger.js";
 import { withSpan } from "../withSpan.js";
 import { taskIdSchema } from "./getTask.js";
-import {
-  findTaskOutput,
-  type NotifyingTaskWriteOutput,
-} from "./taskDetails.js";
+import { findTaskOutput, type GetTaskOutput } from "./taskDetails.js";
 import { TaskErrorMessage } from "./taskErrors.js";
 import { requireOpenTask } from "./taskGuards.js";
 import { isAllowedToManageTask } from "./taskRules.js";
@@ -193,7 +190,7 @@ export const completeTask = (
   context: ApplicationContext,
   actor: Actor,
   input: CompleteTaskInput,
-): Promise<NotifyingTaskWriteOutput> =>
+): Promise<GetTaskOutput> =>
   withSpan(context, "completeTask", async () => {
     const citizen = requireCitizen(actor);
     const task = await requireOpenTask(context, actor, input.task_id);
@@ -303,16 +300,12 @@ export const completeTask = (
       },
     ]);
 
-    const [silcNotificationsSent, completionNotificationsSent] =
-      await Promise.all([
-        announceSilcTransactions(context, silcTransactionIds),
-        triggerNotificationsAfterSave(context, [
-          { type: "TaskCompleted", payload: { taskId: task.id } },
-        ]),
-      ]);
+    await Promise.all([
+      announceSilcTransactions(context, silcTransactionIds),
+      triggerNotificationsAfterSave(context, [
+        { type: "TaskCompleted", payload: { taskId: task.id } },
+      ]),
+    ]);
 
-    return {
-      task: await findTaskOutput(context, actor, task.id),
-      notifications_sent: silcNotificationsSent && completionNotificationsSent,
-    };
+    return findTaskOutput(context, actor, task.id);
   });

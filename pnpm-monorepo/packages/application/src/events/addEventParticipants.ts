@@ -16,7 +16,7 @@ import { EventErrorMessage } from "./eventErrors.js";
 import { participationTextSchema } from "./eventInputSchemas.js";
 import { requireManageableEvent } from "./eventManageGuard.js";
 import { isAllowedToManageEvent } from "./eventManageRules.js";
-import { loadEventOutput, type NotifyingEventWriteOutput } from "./getEvent.js";
+import { loadEventOutput, type GetEventOutput } from "./getEvent.js";
 import {
   lockParticipationEnabledEvent,
   requireParticipatableAppEvent,
@@ -39,7 +39,9 @@ export type AddEventParticipantsInput = z.infer<
   typeof addEventParticipantsInputSchema
 >;
 
-export interface AddEventParticipantsOutput extends NotifyingEventWriteOutput {
+export interface AddEventParticipantsOutput {
+  /** The event after the write, like `getEvent()` */
+  readonly event: GetEventOutput;
   /** Empty when all citizens were already signed up */
   readonly added_citizen_ids: string[];
 }
@@ -150,7 +152,6 @@ export const addEventParticipants = (
       return {
         event: await loadEventOutput(context, actor, event.id),
         added_citizen_ids: [],
-        notifications_sent: true,
       };
 
     await context.audit.create(
@@ -165,7 +166,7 @@ export const addEventParticipants = (
     );
 
     // The actor gets no notification about the own sign-up
-    const notificationsSent = await triggerNotificationsAfterSave(
+    await triggerNotificationsAfterSave(
       context,
       addedCitizenIds
         .filter((citizenId) => citizenId !== managerId)
@@ -181,6 +182,5 @@ export const addEventParticipants = (
     return {
       event: await loadEventOutput(context, actor, event.id),
       added_citizen_ids: addedCitizenIds,
-      notifications_sent: notificationsSent,
     };
   });

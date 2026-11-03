@@ -38,15 +38,6 @@ export const createPenaltyEntryInputSchema = z.object({
     ),
 });
 
-export interface CreatePenaltyEntryOutput {
-  readonly entry: PenaltyEntryOutput;
-  /**
-   * False when the entry is saved, but the notifications failed. The entry
-   * stands, thus the caller must not create it again.
-   */
-  readonly notifications_sent: boolean;
-}
-
 /**
  * Gives penalty points to a citizen and notifies the citizen about the new
  * entry, except when the citizen is the actor. Also needs `citizen;read`,
@@ -56,7 +47,7 @@ export const createPenaltyEntry = (
   context: ApplicationContext,
   actor: Actor,
   input: z.infer<typeof createPenaltyEntryInputSchema>,
-): Promise<CreatePenaltyEntryOutput> =>
+): Promise<PenaltyEntryOutput> =>
   withSpan(context, "createPenaltyEntry", async () => {
     requirePermission(actor, "penaltyEntry", "create");
     requirePermission(actor, "citizen", "read");
@@ -97,19 +88,11 @@ export const createPenaltyEntry = (
       },
     ]);
 
-    return {
-      entry: toPenaltyEntryOutput(entry),
-      // The actor gets no notification about points for the own citizen
-      notifications_sent: await triggerNotificationsAfterSave(
-        context,
-        entry.citizen.id === author.id
-          ? []
-          : [
-              {
-                type: "PenaltyEntryCreated",
-                payload: { penaltyEntryId: entry.id },
-              },
-            ],
-      ),
-    };
+    // The actor gets no notification about points for the own citizen
+    if (entry.citizen.id !== author.id)
+      await triggerNotificationsAfterSave(context, [
+        { type: "PenaltyEntryCreated", payload: { penaltyEntryId: entry.id } },
+      ]);
+
+    return toPenaltyEntryOutput(entry);
   });

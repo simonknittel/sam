@@ -41,7 +41,6 @@ export type SubscribeWebPushInput = z.output<
 
 export interface SubscribeWebPushOutput {
   readonly subscription_id: string;
-  readonly notifications_sent: boolean;
 }
 
 interface SubscriptionData {
@@ -138,7 +137,7 @@ export const subscribeWebPush = (
      * already. A failure must not make the user subscribe again: each new
      * subscription of the browser gets a new endpoint.
      */
-    const notificationsSent = await triggerNotificationsAfterSave(context, [
+    await triggerNotificationsAfterSave(context, [
       {
         type: "WebPushSubscribed",
         payload: {
@@ -147,8 +146,5 @@ export const subscribeWebPush = (
       },
     ]);
 
-    return {
-      subscription_id: subscriptionId,
-      notifications_sent: notificationsSent,
-    };
+    return { subscription_id: subscriptionId };
   });

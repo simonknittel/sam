@@ -30,7 +30,6 @@ export type CreateWikiPageReportInput = z.infer<
 
 export interface CreateWikiPageReportOutput {
   readonly report_id: string;
-  readonly notifications_sent: boolean;
 }
 
 /**
@@ -110,9 +109,9 @@ export const createWikiPageReport = (
       },
     ]);
 
-    const notificationsSent = await triggerNotificationsAfterSave(context, [
+    await triggerNotificationsAfterSave(context, [
       { type: "WikiPageReported", payload: { reportId: report.id } },
     ]);
 
-    return { report_id: report.id, notifications_sent: notificationsSent };
+    return { report_id: report.id };
   });

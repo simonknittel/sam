@@ -169,9 +169,11 @@ test("a new task stays new until the viewer opens it, also after a back navigati
   await page.goto(`/app/tasks/${task.id}`);
   expect((await secondMarkAsRead).ok()).toBe(true);
   expect(await prisma.readMarker.count({ where: { taskId: task.id } })).toBe(1);
-  expect(
-    await prisma.auditEvent.count({ where: { type: "READ_MARKER_CREATED" } }),
-  ).toBe(1);
+  await expect
+    .poll(() =>
+      prisma.auditEvent.count({ where: { type: "READ_MARKER_CREATED" } }),
+    )
+    .toBe(1);
 });
 
 test("opening a new task marks its notification as read, and the bell follows without a reload", async ({

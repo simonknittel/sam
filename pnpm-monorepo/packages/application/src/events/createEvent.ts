@@ -50,7 +50,7 @@ import {
 } from "./eventInputSchemas.js";
 import { toEventVisibility } from "./eventOutput.js";
 import { resolveVisibilityRoleIds } from "./eventVisibilityRoles.js";
-import { loadEventOutput, type NotifyingEventWriteOutput } from "./getEvent.js";
+import { loadEventOutput, type GetEventOutput } from "./getEvent.js";
 
 export const createEventInputSchema = z.object({
   name: eventNameSchema,
@@ -98,7 +98,9 @@ export interface CreateEventOptions {
   readonly discordPublication?: EventDiscordPublishRequest;
 }
 
-export interface CreateEventOutput extends NotifyingEventWriteOutput {
+export interface CreateEventOutput {
+  /** The event after the write, like `getEvent()` */
+  readonly event: GetEventOutput;
   /**
    * Only with the option `discordPublication`. The MCP tools parse the
    * output with a strict schema, thus the key must not exist without the
@@ -321,7 +323,7 @@ export const createEvent = (
       });
     await context.audit.create(auditEvents);
 
-    const notificationsSent = await triggerNotificationsAfterSave(context, [
+    await triggerNotificationsAfterSave(context, [
       {
         type: "EventCreated",
         payload: { eventId: createdEvent.id, actorCitizenId: citizenId },
@@ -343,7 +345,6 @@ export const createEvent = (
 
     return {
       event: await loadEventOutput(context, actor, createdEvent.id),
-      notifications_sent: notificationsSent,
       ...(discord ? { discord } : {}),
     };
   });

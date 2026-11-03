@@ -13,7 +13,7 @@ import { withSpan } from "../withSpan.js";
 import { taskIdSchema } from "./getTask.js";
 import {
   findTaskOutput,
-  type NotifyingTaskWriteOutput,
+  type GetTaskOutput,
   type VisibleTask,
 } from "./taskDetails.js";
 import { TaskErrorMessage } from "./taskErrors.js";
@@ -326,7 +326,7 @@ export const updateTask = (
   context: ApplicationContext,
   actor: Actor,
   input: UpdateTaskInput,
-): Promise<NotifyingTaskWriteOutput> =>
+): Promise<GetTaskOutput> =>
   withSpan(context, "updateTask", async () => {
     const task = await requireManageableTask(context, actor, input.task_id);
     await requireAllowedChanges(context, actor, task, input);
@@ -345,13 +345,10 @@ export const updateTask = (
 
     await context.audit.create(changes.map((change) => change.auditEvent));
 
-    const notificationsSent = await triggerNotificationsAfterSave(
+    await triggerNotificationsAfterSave(
       context,
       changes.flatMap((change) => change.notification ?? []),
     );
 
-    return {
-      task: await findTaskOutput(context, actor, task.id),
-      notifications_sent: notificationsSent,
-    };
+    return findTaskOutput(context, actor, task.id);
   });

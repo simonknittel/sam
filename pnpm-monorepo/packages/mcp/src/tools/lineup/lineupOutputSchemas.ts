@@ -1,10 +1,6 @@
 import type { Actor } from "@sam-monorepo/application";
 import * as z from "zod";
-import {
-  citizenReferenceSchema,
-  eventReferenceSchema,
-  notificationsSentSchema,
-} from "../../schemas.js";
+import { citizenReferenceSchema, eventReferenceSchema } from "../../schemas.js";
 
 const positionFields = {
   id: z.string(),
@@ -45,12 +41,6 @@ const fourthLevelPositionSchema = z.strictObject({
 export const lineupPositionSchema = createPositionSchema(
   createPositionSchema(createPositionSchema(fourthLevelPositionSchema)),
 );
-
-/** The output of the writes of one position that notify citizens */
-export const notifyingLineupPositionWriteOutputSchema = z.strictObject({
-  position: lineupPositionSchema,
-  notifications_sent: notificationsSentSchema,
-});
 
 export const eventLineupSchema = z.strictObject({
   event: eventReferenceSchema,

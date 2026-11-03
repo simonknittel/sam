@@ -3,7 +3,7 @@ import { defineTool } from "../../toolDefinition.js";
 import { ToolGroup } from "../../toolGroup.js";
 import {
   isTaskWriteToolVisible,
-  notifyingTaskWriteOutputSchema,
+  taskOutputSchema,
 } from "./taskOutputSchemas.js";
 
 export const updateTaskTool = defineTool({
@@ -19,7 +19,7 @@ export const updateTaskTool = defineTool({
     openWorldHint: false,
   },
   inputSchema: updateTaskInputSchema,
-  outputSchema: notifyingTaskWriteOutputSchema,
+  outputSchema: taskOutputSchema,
   isVisible: isTaskWriteToolVisible,
   handler: updateTask,
 });

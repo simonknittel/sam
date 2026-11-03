@@ -27,7 +27,6 @@ export type StartPayoutInput = z.infer<typeof startPayoutInputSchema>;
 
 export interface StartPayoutOutput {
   readonly cycle_id: string;
-  readonly notifications_sent: boolean;
 }
 
 /**
@@ -71,12 +70,12 @@ export const startPayout = (
       },
     ]);
 
-    const notificationsSent = await triggerNotificationsAfterSave(context, [
+    await triggerNotificationsAfterSave(context, [
       {
         type: "ProfitDistributionPayoutStarted",
         payload: { cycleId: input.cycle_id },
       },
     ]);
 
-    return { cycle_id: input.cycle_id, notifications_sent: notificationsSent };
+    return { cycle_id: input.cycle_id };
   });

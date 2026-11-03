@@ -22,7 +22,6 @@ import { parseDiscordPublishFields } from "../utils/discordPublishFields";
 import {
   DISCORD_PUBLISH_FAILED_PARAM,
   getEventPath,
-  NOTIFICATIONS_FAILED_PARAM,
 } from "../utils/eventConstraints";
 import { EVENT_ERROR_TEXTS } from "../utils/eventErrorTexts";
 import { parseEventDetailsFormData } from "../utils/eventFormData";
@@ -107,8 +106,6 @@ export const createEvent = createAuthenticatedAction(
     const searchParams = new URLSearchParams();
     if (result.discord && result.discord.outcome !== DiscordSyncOutcome.Done)
       searchParams.set(DISCORD_PUBLISH_FAILED_PARAM, "1");
-    if (!result.notifications_sent)
-      searchParams.set(NOTIFICATIONS_FAILED_PARAM, "1");
     const query = searchParams.toString();
     redirect(
       query ? `${getEventPath(eventId)}?${query}` : getEventPath(eventId),

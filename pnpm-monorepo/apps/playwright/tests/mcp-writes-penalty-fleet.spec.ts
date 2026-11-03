@@ -39,15 +39,12 @@ test.describe("the penalty points and fleet write tools of the MCP server", () =
       expires_at: "2099-07-15T08:15:00+02:00",
     });
     expect(result).toMatchObject({
-      entry: {
-        citizen: { id: offender.entity.id, handle: "mcp-delinquent" },
-        points: 3,
-        reason: "Beschuss eines Members",
-        created_by: { id: keeper.entity.id },
-        expires_at: "2099-07-15T06:15:00.000Z",
-        deleted_at: null,
-      },
-      notifications_sent: true,
+      citizen: { id: offender.entity.id, handle: "mcp-delinquent" },
+      points: 3,
+      reason: "Beschuss eines Members",
+      created_by: { id: keeper.entity.id },
+      expires_at: "2099-07-15T06:15:00.000Z",
+      deleted_at: null,
     });
 
     const entry = await prisma.penaltyEntry.findFirstOrThrow();

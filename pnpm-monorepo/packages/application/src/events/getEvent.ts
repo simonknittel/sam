@@ -73,18 +73,6 @@ export interface GetEventOutput {
   readonly is_participating: boolean;
 }
 
-/** The output of a write of an event that can send notifications */
-export interface NotifyingEventWriteOutput {
-  /** The event after the write, like `getEvent()` */
-  readonly event: GetEventOutput;
-  /**
-   * False when the write is saved, but the notifications failed. The write
-   * stands, thus the caller must not do it again. True also when the write
-   * needs no notification.
-   */
-  readonly notifications_sent: boolean;
-}
-
 const getParticipantEntries = async (
   context: ApplicationContext,
   participants: EventDetails["participants"],

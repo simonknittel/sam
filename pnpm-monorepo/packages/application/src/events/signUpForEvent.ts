@@ -4,7 +4,7 @@ import { ConflictError } from "../errors.js";
 import { triggerNotificationsAfterSave } from "../notifications.js";
 import { withSpan } from "../withSpan.js";
 import { EventErrorMessage } from "./eventErrors.js";
-import { loadEventOutput, type NotifyingEventWriteOutput } from "./getEvent.js";
+import { loadEventOutput, type GetEventOutput } from "./getEvent.js";
 import {
   findActiveParticipation,
   insertOwnParticipation,
@@ -28,7 +28,7 @@ export const signUpForEvent = (
   context: ApplicationContext,
   actor: Actor,
   input: EventParticipationInput,
-): Promise<NotifyingEventWriteOutput> =>
+): Promise<GetEventOutput> =>
   withSpan(context, "signUpForEvent", async () => {
     const citizenId = requireCitizen(actor).id;
     requirePermission(actor, "event", "read");
@@ -59,15 +59,9 @@ export const signUpForEvent = (
           citizenId,
         ]);
 
-        const notificationsSent = await triggerNotificationsAfterSave(
-          context,
-          notifications,
-        );
+        await triggerNotificationsAfterSave(context, notifications);
 
-        return {
-          event: await loadEventOutput(context, actor, event.id),
-          notifications_sent: notificationsSent,
-        };
+        return loadEventOutput(context, actor, event.id);
       } catch (error) {
         if (!isAlreadySignedUp(error)) throw error;
 
@@ -89,8 +83,5 @@ export const signUpForEvent = (
         comment,
       });
 
-    return {
-      event: await loadEventOutput(context, actor, event.id),
-      notifications_sent: true,
-    };
+    return loadEventOutput(context, actor, event.id);
   });

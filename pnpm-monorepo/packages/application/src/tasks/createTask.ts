@@ -68,11 +68,6 @@ export type CreateTaskInput = z.infer<typeof createTaskInputSchema>;
 
 export interface CreateTaskOutput {
   /**
-   * False when the tasks are saved, but the notifications failed. The tasks
-   * stand, thus the caller must not create them again.
-   */
-  readonly notifications_sent: boolean;
-  /**
    * The new task. A personalized task becomes one task for each assignee:
    * this is the first of them.
    */
@@ -230,7 +225,7 @@ export const createTask = (
       },
     ]);
 
-    const notificationsSent = await triggerNotificationsAfterSave(context, [
+    await triggerNotificationsAfterSave(context, [
       { type: "TaskCreated", payload: { taskIds } },
     ]);
 
@@ -238,7 +233,6 @@ export const createTask = (
     if (!firstTaskId) throw new Error("The creation of a task created no row");
 
     return {
-      notifications_sent: notificationsSent,
       task: await findTaskOutput(context, actor, firstTaskId),
       task_ids: taskIds,
     };

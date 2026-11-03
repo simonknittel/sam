@@ -2,8 +2,6 @@ import {
   createPenaltyEntry,
   createPenaltyEntryInputSchema,
 } from "@sam-monorepo/application";
-import * as z from "zod";
-import { notificationsSentSchema } from "../../schemas.js";
 import { defineTool } from "../../toolDefinition.js";
 import { ToolGroup } from "../../toolGroup.js";
 import { penaltyEntryOutputSchema } from "./penaltyEntryOutputSchema.js";
@@ -21,10 +19,7 @@ export const createPenaltyEntryTool = defineTool({
     openWorldHint: false,
   },
   inputSchema: createPenaltyEntryInputSchema,
-  outputSchema: z.strictObject({
-    entry: penaltyEntryOutputSchema,
-    notifications_sent: notificationsSentSchema,
-  }),
+  outputSchema: penaltyEntryOutputSchema,
   isVisible: (actor) =>
     actor.authorize("penaltyEntry", "create") &&
     actor.authorize("citizen", "read") &&

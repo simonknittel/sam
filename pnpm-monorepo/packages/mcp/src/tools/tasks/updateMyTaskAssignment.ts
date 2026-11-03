@@ -4,7 +4,6 @@ import {
   dropTask,
 } from "@sam-monorepo/application";
 import * as z from "zod";
-import { notificationsSentSchema } from "../../schemas.js";
 import { defineTool } from "../../toolDefinition.js";
 import { ToolGroup } from "../../toolGroup.js";
 import {
@@ -35,20 +34,15 @@ export const updateMyTaskAssignmentTool = defineTool({
   }),
   outputSchema: z.strictObject({
     task: taskOutputSchema.nullable(),
-    notifications_sent: notificationsSentSchema,
   }),
   isVisible: isTaskWriteToolVisible,
   handler: async (context, actor, { action, ...input }) => {
     switch (action) {
       case MyTaskAssignmentAction.Accept:
-        return acceptTask(context, actor, input);
+        return { task: await acceptTask(context, actor, input) };
 
-      // A drop notifies nobody
       case MyTaskAssignmentAction.Drop:
-        return {
-          ...(await dropTask(context, actor, input)),
-          notifications_sent: true,
-        };
+        return dropTask(context, actor, input);
 
       default:
         throw new Error(

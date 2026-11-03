@@ -4,11 +4,7 @@ import {
   ActionGate,
   createAuthenticatedAction,
 } from "@/modules/actions/utils/createAction";
-import {
-  getApplicationContext,
-  notificationsFailedWarning,
-  toActor,
-} from "@/modules/application";
+import { getApplicationContext, toActor } from "@/modules/application";
 import { requestEmailConfirmation } from "@sam-monorepo/application";
 import { redirect } from "next/navigation";
 import * as z from "zod";
@@ -18,7 +14,7 @@ const schema = z.object({});
 export const requestEmailConfirmationAction = createAuthenticatedAction(
   "requestEmailConfirmationAction",
   schema,
-  async (formData, authentication, data, t) => {
+  async (formData, authentication) => {
     if (authentication.session.user.emailVerified) redirect("/clearance");
 
     const output = await requestEmailConfirmation(
@@ -28,7 +24,9 @@ export const requestEmailConfirmationAction = createAuthenticatedAction(
 
     return {
       success: "Bestätigungs-E-Mail angefordert.",
-      warning: notificationsFailedWarning(t, output),
+      ...(output.email_sent
+        ? {}
+        : { warning: "Die Bestätigungs-E-Mail konnte nicht gesendet werden." }),
     };
   },
   {

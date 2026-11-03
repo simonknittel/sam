@@ -40,11 +40,6 @@ export interface DeleteEventOptions {
 export interface DeleteEventOutput {
   readonly event_id: string;
   /**
-   * False when the event is deleted, but the notifications failed. The
-   * deletion stands.
-   */
-  readonly notifications_sent: boolean;
-  /**
    * Only with the option `removesDiscordPublication`. Failed means that the
    * Discord event must be deleted by hand. The MCP tools parse the output
    * with a strict schema, thus the key must not exist without the option.
@@ -131,7 +126,7 @@ export const deleteEvent = (
       },
     ]);
 
-    const notificationsSent = await triggerNotificationsAfterSave(context, [
+    await triggerNotificationsAfterSave(context, [
       {
         type: "EventDeleted",
         payload: {
@@ -151,7 +146,6 @@ export const deleteEvent = (
 
     return {
       event_id: event.id,
-      notifications_sent: notificationsSent,
       ...(discord ? { discord } : {}),
     };
   });

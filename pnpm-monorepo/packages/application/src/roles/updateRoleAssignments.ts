@@ -37,11 +37,6 @@ export interface UpdateRoleAssignmentsOutput {
   readonly citizen_id: string;
   /** Empty when nothing changed */
   readonly changes: RoleAssignmentUpdate[];
-  /**
-   * False when the roles are changed, but the notifications failed. The
-   * roles stay changed.
-   */
-  readonly notifications_sent: boolean;
 }
 
 /**
@@ -155,12 +150,7 @@ export const updateRoleAssignments = (
               payload: { citizenId: input.citizen_id, roleId: change.role_id },
             }));
 
-    return {
-      citizen_id: input.citizen_id,
-      changes,
-      notifications_sent: await triggerNotificationsAfterSave(
-        context,
-        notifications,
-      ),
-    };
+    await triggerNotificationsAfterSave(context, notifications);
+
+    return { citizen_id: input.citizen_id, changes };
   });

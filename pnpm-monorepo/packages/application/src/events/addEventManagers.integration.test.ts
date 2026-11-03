@@ -45,10 +45,9 @@ test("only a new manager other than the actor gets a notification", async () => 
     citizen_ids: [newManager!.id, existingManager!.id, organizer!.id],
   });
 
-  expect(output.event.managers.map((manager) => manager.id).toSorted()).toEqual(
+  expect(output.managers.map((manager) => manager.id).toSorted()).toEqual(
     [organizer!.id, existingManager!.id, newManager!.id].toSorted(),
   );
-  expect(output.notifications_sent).toBe(true);
   expect(notifications).toEqual([
     {
       type: "EventManagerAdded",

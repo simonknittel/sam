@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { expectAuditEvents } from "../fixtures/audit";
 import { createCitizen, createSilcTransaction } from "../fixtures/factories";
 import {
   clickUntilUrl,
@@ -99,6 +100,7 @@ test("a transaction created through the UI updates balances and the system log",
   await expect(transactionRow).toContainText("silc-empfaenger");
 
   // The audit event renders with its human-readable message
+  await expectAuditEvents(prisma, ["SILC_TRANSACTION_CREATED"]);
   await page.goto("/app/system-log");
   await expect(
     page.getByText("SILC transaction created: 42 SILC").first(),
@@ -219,10 +221,13 @@ test("deleting a transaction soft deletes it and reverts the balance", async ({
     where: { id: receiver.entity.id },
   });
   expect(receiverEntity?.silcBalance).toBe(0);
-  const auditEvent = await prisma.auditEvent.findFirst({
-    where: { type: "SILC_TRANSACTION_DELETED" },
-  });
-  expect(auditEvent).not.toBeNull();
+  await expect
+    .poll(() =>
+      prisma.auditEvent.findFirst({
+        where: { type: "SILC_TRANSACTION_DELETED" },
+      }),
+    )
+    .not.toBeNull();
 
   // The soft-deleted entry stays reachable through the "Gelöscht" filter
   await clickUntilUrl(

@@ -1,9 +1,6 @@
 "use server";
 
-import {
-  createUseCaseAction,
-  notificationsFailedWarning,
-} from "@/modules/application";
+import { createUseCaseAction } from "@/modules/application";
 import {
   createPenaltyEntryInputSchema,
   createPenaltyEntry as createPenaltyEntryUseCase,
@@ -25,5 +22,4 @@ export const createPenaltyEntry = createUseCaseAction({
     [PenaltyEntryErrorMessage.CitizenDeleted]: "Der Citizen ist gelöscht.",
   },
   success: (t) => t("Common.successfullySaved"),
-  warning: notificationsFailedWarning,
 });

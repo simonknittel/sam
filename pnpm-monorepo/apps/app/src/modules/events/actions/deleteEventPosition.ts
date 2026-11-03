@@ -1,9 +1,6 @@
 "use server";
 
-import {
-  createUseCaseAction,
-  notificationsFailedWarning,
-} from "@/modules/application";
+import { createUseCaseAction } from "@/modules/application";
 import {
   deleteEventPositionInputSchema,
   deleteLineupPosition,
@@ -18,5 +15,4 @@ export const deleteEventPosition = createUseCaseAction({
   parseFormData: (formData) => ({ position_id: formData.get("id") }),
   texts: EVENT_ERROR_TEXTS,
   success: (t) => t("Common.successfullyDeleted"),
-  warning: notificationsFailedWarning,
 });

@@ -10,6 +10,5 @@ export {
   type ApplicationErrorTexts,
 } from "./mapApplicationErrorToActionResponse";
 export { mapApplicationErrorToRouteResponse } from "./mapApplicationErrorToRouteResponse";
-export { notificationsFailedWarning } from "./notificationsFailedWarning";
 export { throwApplicationErrorForPage } from "./throwApplicationErrorForPage";
 export { toActor } from "./toActor";

@@ -10,10 +10,7 @@ import { idSchema } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
 import { LineupErrorMessage } from "./lineupErrors.js";
 import { requireManageableEventPosition } from "./lineupGuards.js";
-import {
-  toLineupPositionOutput,
-  type NotifyingLineupPositionWriteOutput,
-} from "./lineupOutput.js";
+import { toLineupPositionOutput, type LineupPosition } from "./lineupOutput.js";
 
 export const assignEventPositionInputSchema = z.object({
   position_id: idSchema.describe(
@@ -130,7 +127,7 @@ export const assignEventPosition = (
   context: ApplicationContext,
   actor: Actor,
   input: AssignEventPositionInput,
-): Promise<NotifyingLineupPositionWriteOutput> =>
+): Promise<LineupPosition> =>
   withSpan(context, "assignEventPosition", async () => {
     const { position, event } = await requireManageableEventPosition(
       context,
@@ -205,13 +202,7 @@ export const assignEventPosition = (
           assignedCitizenId: citizen?.id ?? null,
         })
       : [];
-    const notificationsSent = await triggerNotificationsAfterSave(
-      context,
-      notifications,
-    );
+    await triggerNotificationsAfterSave(context, notifications);
 
-    return {
-      position: await toLineupPositionOutput(context, position.id, true),
-      notifications_sent: notificationsSent,
-    };
+    return toLineupPositionOutput(context, position.id, true);
   });

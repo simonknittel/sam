@@ -48,10 +48,9 @@ test("notifies the citizen only about the deletion of an entry that still counte
   const { context, notifications } = createTestApplicationContext();
 
   for (const penaltyEntry of [neverExpires, expiresNow, expired]) {
-    const output = await deletePenaltyEntry(context, actor, {
+    await deletePenaltyEntry(context, actor, {
       penalty_entry_id: penaltyEntry.id,
     });
-    expect(output.notifications_sent).toBe(true);
   }
 
   expect(notifications).toEqual(
@@ -71,6 +70,6 @@ test("does not notify the actor about the deletion of an own entry", async () =>
     penalty_entry_id: ownEntry.id,
   });
 
-  expect(output.entry.deleted_at).toBe(TEST_NOW.toISOString());
+  expect(output.deleted_at).toBe(TEST_NOW.toISOString());
   expect(notifications).toEqual([]);
 });

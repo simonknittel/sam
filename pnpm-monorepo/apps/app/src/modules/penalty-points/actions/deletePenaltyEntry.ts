@@ -1,9 +1,6 @@
 "use server";
 
-import {
-  createUseCaseAction,
-  notificationsFailedWarning,
-} from "@/modules/application";
+import { createUseCaseAction } from "@/modules/application";
 import {
   deletePenaltyEntryInputSchema,
   deletePenaltyEntry as deletePenaltyEntryUseCase,
@@ -17,5 +14,4 @@ export const deletePenaltyEntry = createUseCaseAction({
     penalty_entry_id: formData.get("id"),
   }),
   success: (t) => t("Common.successfullyDeleted"),
-  warning: notificationsFailedWarning,
 });

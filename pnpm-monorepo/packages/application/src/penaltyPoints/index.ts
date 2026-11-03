@@ -2,12 +2,10 @@
 export {
   createPenaltyEntry,
   createPenaltyEntryInputSchema,
-  type CreatePenaltyEntryOutput,
 } from "./createPenaltyEntry.js";
 export {
   deletePenaltyEntry,
   deletePenaltyEntryInputSchema,
-  type DeletePenaltyEntryOutput,
 } from "./deletePenaltyEntry.js";
 export {
   PenaltyEntryStatus,

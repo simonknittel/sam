@@ -295,10 +295,13 @@ const exerciseSettingsRecordCrud = async (
   await expect(tile.getByText(scenario.updatedName)).toHaveCount(0);
 
   expect(await scenario.countRecords(prisma)).toBe(0);
-  const auditEvent = await prisma.auditEvent.findFirst({
-    where: { type: scenario.deletedAuditEventType },
-  });
-  expect(auditEvent).not.toBeNull();
+  await expect
+    .poll(() =>
+      prisma.auditEvent.findFirst({
+        where: { type: scenario.deletedAuditEventType },
+      }),
+    )
+    .not.toBeNull();
 
   // The delete shows up in the system log with its rendered message
   await page.goto("/app/system-log");

@@ -1,6 +1,5 @@
 import { deleteEvent, deleteEventInputSchema } from "@sam-monorepo/application";
 import * as z from "zod";
-import { notificationsSentSchema } from "../../schemas.js";
 import { defineTool } from "../../toolDefinition.js";
 import { ToolGroup } from "../../toolGroup.js";
 import { isEventWriteToolVisible } from "./eventOutputSchema.js";
@@ -20,7 +19,6 @@ export const deleteEventTool = defineTool({
   inputSchema: deleteEventInputSchema,
   outputSchema: z.strictObject({
     event_id: z.string(),
-    notifications_sent: notificationsSentSchema,
   }),
   isVisible: isEventWriteToolVisible,
   // Without the Discord option: the MCP server cannot reach Discord

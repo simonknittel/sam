@@ -1,9 +1,6 @@
 "use server";
 
-import {
-  createUseCaseAction,
-  notificationsFailedWarning,
-} from "@/modules/application";
+import { createUseCaseAction } from "@/modules/application";
 import {
   addEventParticipantsInputSchema,
   addEventParticipants as addEventParticipantsUseCase,
@@ -28,5 +25,4 @@ export const addEventParticipants = createUseCaseAction({
     output.added_citizen_ids.length <= 0
       ? "Alle ausgewählten Citizen sind bereits angemeldet."
       : `${output.added_citizen_ids.length} Teilnehmer hinzugefügt.`,
-  warning: notificationsFailedWarning,
 });

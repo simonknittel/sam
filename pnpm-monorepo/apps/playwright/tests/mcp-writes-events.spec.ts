@@ -112,7 +112,6 @@ test.describe("the event write tools of the MCP server", () => {
         is_updatable: true,
         is_participating: false,
       },
-      notifications_sent: true,
     });
 
     const event = await prisma.event.findFirstOrThrow({
@@ -176,7 +175,6 @@ test.describe("the event write tools of the MCP server", () => {
         end_time: "2099-07-15T23:00:00.000Z",
       },
       changes: ["name", "schedule"],
-      notifications_sent: true,
     });
 
     expect(
@@ -254,13 +252,10 @@ test.describe("the event write tools of the MCP server", () => {
     expect(
       await callForContent(client, "update_my_event_participation", signUp),
     ).toMatchObject({
-      event: {
-        is_participating: true,
-        participants: [
-          { citizen: pilotReference, comment: "Mit meiner Mustang Alpha." },
-        ],
-      },
-      notifications_sent: true,
+      is_participating: true,
+      participants: [
+        { citizen: pilotReference, comment: "Mit meiner Mustang Alpha." },
+      ],
     });
     // The same input again changes nothing
     await callForContent(client, "update_my_event_participation", signUp);
@@ -271,12 +266,9 @@ test.describe("the event write tools of the MCP server", () => {
         comment: "Mit der Dragonfly.",
       }),
     ).toMatchObject({
-      event: {
-        participants: [
-          { citizen: pilotReference, comment: "Mit der Dragonfly." },
-        ],
-      },
-      notifications_sent: true,
+      participants: [
+        { citizen: pilotReference, comment: "Mit der Dragonfly." },
+      ],
     });
 
     expect(
@@ -284,10 +276,7 @@ test.describe("the event write tools of the MCP server", () => {
         event_id: event.id,
         action: "cancel",
       }),
-    ).toMatchObject({
-      event: { is_participating: false, participants: [] },
-      notifications_sent: true,
-    });
+    ).toMatchObject({ is_participating: false, participants: [] });
     expect(
       await callForError(client, "update_my_event_participation", {
         event_id: event.id,
@@ -413,7 +402,6 @@ test.describe("the event write tools of the MCP server", () => {
         ],
       },
       changed_citizen_ids: [wingman.entity.id],
-      notifications_sent: true,
     });
 
     expect(
@@ -426,7 +414,6 @@ test.describe("the event write tools of the MCP server", () => {
     ).toMatchObject({
       event: { participants: [] },
       changed_citizen_ids: [wingman.entity.id],
-      notifications_sent: true,
     });
     expect(
       await callForError(client, "update_event_participants", {
@@ -443,10 +430,7 @@ test.describe("the event write tools of the MCP server", () => {
         citizen_ids: [deputy.entity.id],
       }),
     ).toMatchObject({
-      event: {
-        managers: [{ id: deputy.entity.id, handle: "mcp-stellvertreterin" }],
-      },
-      notifications_sent: true,
+      managers: [{ id: deputy.entity.id, handle: "mcp-stellvertreterin" }],
     });
     expect(
       await callForContent(client, "update_event_managers", {
@@ -454,7 +438,7 @@ test.describe("the event write tools of the MCP server", () => {
         action: "remove",
         citizen_ids: [deputy.entity.id],
       }),
-    ).toMatchObject({ event: { managers: [] }, notifications_sent: true });
+    ).toMatchObject({ managers: [] });
 
     await expectAuditEvents(prisma, [
       "EVENT_PARTICIPANT_ADDED_BY_MANAGER",
@@ -531,7 +515,7 @@ test.describe("the event write tools of the MCP server", () => {
 
     expect(
       await callForContent(client, "delete_event", { event_id: event.id }),
-    ).toEqual({ event_id: event.id, notifications_sent: true });
+    ).toEqual({ event_id: event.id });
     expect(
       await prisma.event.findUniqueOrThrow({ where: { id: event.id } }),
     ).toMatchObject({

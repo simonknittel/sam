@@ -322,10 +322,11 @@ test("completing a task with a SILC reward pays the completionists", async ({
     description: "Task erfüllt: Station verteidigen",
   });
 
-  const auditEvent = await prisma.auditEvent.findFirst({
-    where: { type: "TASK_COMPLETED" },
-  });
-  expect(auditEvent).not.toBeNull();
+  await expect
+    .poll(() =>
+      prisma.auditEvent.findFirst({ where: { type: "TASK_COMPLETED" } }),
+    )
+    .not.toBeNull();
 });
 
 test("a completion that waits for a parallel completion pays no reward", async ({

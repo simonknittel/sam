@@ -27,17 +27,15 @@ test("notifies the citizen about the new entry, but not the actor about points f
     citizen_id: member.id,
     points: 3,
   });
-  const ownEntry = await createPenaltyEntry(context, actor, {
+  await createPenaltyEntry(context, actor, {
     citizen_id: manager.id,
     points: 3,
   });
 
-  expect(memberEntry.notifications_sent).toBe(true);
-  expect(ownEntry.notifications_sent).toBe(true);
   expect(notifications).toEqual([
     {
       type: "PenaltyEntryCreated",
-      payload: { penaltyEntryId: memberEntry.entry.id },
+      payload: { penaltyEntryId: memberEntry.id },
     },
   ]);
 });

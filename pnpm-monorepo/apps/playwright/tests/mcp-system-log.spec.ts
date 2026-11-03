@@ -271,8 +271,13 @@ test.describe("the list_audit_events tool of the MCP server", () => {
 
     // Each successful call of the tool wrote its read through the MCP server
     // with the parsed arguments, but not with the result
+    const where = {
+      type: "AUDIT_EVENTS_LISTED",
+      createdById: viewer.user.id,
+    };
+    await expect.poll(() => prisma.auditEvent.count({ where })).toBe(14);
     const reads = await prisma.auditEvent.findMany({
-      where: { type: "AUDIT_EVENTS_LISTED", createdById: viewer.user.id },
+      where,
       select: { triggeredViaMcp: true, data: true },
     });
     expect(reads).toHaveLength(14);
