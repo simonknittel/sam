@@ -127,11 +127,13 @@ for (const { channel, entityType } of CHANNEL_KINDS) {
     );
 
     // The system log records the publication
-    expect(
-      await prisma.auditEvent.count({
-        where: { type: "EVENT_PUBLISHED_TO_DISCORD" },
-      }),
-    ).toBe(1);
+    await expect
+      .poll(() =>
+        prisma.auditEvent.count({
+          where: { type: "EVENT_PUBLISHED_TO_DISCORD" },
+        }),
+      )
+      .toBe(1);
 
     await page.getByRole("button", { name: "Von Discord entfernen" }).click();
     await page
@@ -148,11 +150,13 @@ for (const { channel, entityType } of CHANNEL_KINDS) {
     });
     expect(unpublished!.discordPublishedId).toBeNull();
     expect(unpublished!.discordPublishedChannelId).toBeNull();
-    expect(
-      await prisma.auditEvent.count({
-        where: { type: "EVENT_UNPUBLISHED_FROM_DISCORD" },
-      }),
-    ).toBe(1);
+    await expect
+      .poll(() =>
+        prisma.auditEvent.count({
+          where: { type: "EVENT_UNPUBLISHED_FROM_DISCORD" },
+        }),
+      )
+      .toBe(1);
   });
 }
 
@@ -313,11 +317,13 @@ test("an event deleted on Discord's side is marked as unpublished again", async 
   const healed = await prisma.event.findUnique({ where: { id: event.id } });
   expect(healed!.discordPublishedId).toBeNull();
   expect(healed!.discordPublishedLocation).toBeNull();
-  expect(
-    await prisma.auditEvent.count({
-      where: { type: "EVENT_DISCORD_PUBLICATION_CLEARED" },
-    }),
-  ).toBe(1);
+  await expect
+    .poll(() =>
+      prisma.auditEvent.count({
+        where: { type: "EVENT_DISCORD_PUBLICATION_CLEARED" },
+      }),
+    )
+    .toBe(1);
 
   // The card offers publishing again
   await page.reload();

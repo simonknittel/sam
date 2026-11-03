@@ -83,10 +83,12 @@ test("an email confirmation link verifies the email once and leads to the cleara
     "/email-confirmation",
   );
 
-  expect(
-    await prisma.auditEvent.findMany({
-      where: { type: "EMAIL_VERIFIED_VIA_TOKEN" },
-      select: { createdById: true },
-    }),
-  ).toEqual([{ createdById: citizen.user.id }]);
+  await expect
+    .poll(() =>
+      prisma.auditEvent.findMany({
+        where: { type: "EMAIL_VERIFIED_VIA_TOKEN" },
+        select: { createdById: true },
+      }),
+    )
+    .toEqual([{ createdById: citizen.user.id }]);
 });

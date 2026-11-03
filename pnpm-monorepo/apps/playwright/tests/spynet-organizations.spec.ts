@@ -329,11 +329,13 @@ test("a membership reported on the page of a citizen waits for its confirmation"
   ]);
   expect(await prisma.activeOrganizationMembership.count()).toBe(0);
   await expect(noOrganizations).toBeVisible();
-  expect(
-    await prisma.auditEvent.count({
-      where: { type: "ORGANIZATION_MEMBERSHIP_CREATED" },
-    }),
-  ).toBe(1);
+  await expect
+    .poll(() =>
+      prisma.auditEvent.count({
+        where: { type: "ORGANIZATION_MEMBERSHIP_CREATED" },
+      }),
+    )
+    .toBe(1);
 });
 
 test("a confirmed report becomes an active membership, a false report does not", async ({
@@ -411,11 +413,13 @@ test("a confirmed report becomes an active membership, a false report does not",
     confirmed: ConfirmationStatus.FALSE_REPORT,
     confirmedById: admin.entity.id,
   });
-  expect(
-    await prisma.auditEvent.count({
-      where: { type: "ORGANIZATION_MEMBERSHIP_CONFIRMED" },
-    }),
-  ).toBe(2);
+  await expect
+    .poll(() =>
+      prisma.auditEvent.count({
+        where: { type: "ORGANIZATION_MEMBERSHIP_CONFIRMED" },
+      }),
+    )
+    .toBe(2);
 });
 
 test("two confirmations of a reported membership at the same time: one wins, the other gets a conflict", async ({
@@ -539,11 +543,13 @@ test("two confirmations of a reported membership at the same time: one wins, the
   expect(await getActiveMembershipWriters(prisma, member.entity.id)).toEqual(
     await getHistoryEntryWriters(prisma, historyEntry.id),
   );
-  expect(
-    await prisma.auditEvent.count({
-      where: { type: "ORGANIZATION_MEMBERSHIP_CONFIRMED" },
-    }),
-  ).toBe(1);
+  await expect
+    .poll(() =>
+      prisma.auditEvent.count({
+        where: { type: "ORGANIZATION_MEMBERSHIP_CONFIRMED" },
+      }),
+    )
+    .toBe(1);
 });
 
 test("a confirmation with the ID of a different citizen changes nothing", async ({
@@ -729,11 +735,13 @@ test("a membership that a different tab removed before is not removed again", as
       where: { type: OrganizationMembershipType.LEFT },
     }),
   ).toBe(1);
-  expect(
-    await prisma.auditEvent.count({
-      where: { type: "ORGANIZATION_MEMBERSHIP_REMOVED" },
-    }),
-  ).toBe(1);
+  await expect
+    .poll(() =>
+      prisma.auditEvent.count({
+        where: { type: "ORGANIZATION_MEMBERSHIP_REMOVED" },
+      }),
+    )
+    .toBe(1);
 });
 
 test("a deleted citizen gets no new membership", async ({

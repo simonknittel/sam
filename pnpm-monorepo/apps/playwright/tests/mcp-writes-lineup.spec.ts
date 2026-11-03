@@ -161,24 +161,28 @@ test.describe("the lineup write tools of the MCP server", () => {
       "EVENT_POSITION_UPDATED_V2",
       "EVENT_LINEUP_ORDER_CHANGED",
     ]);
-    expect(
-      await prisma.auditEvent.findFirstOrThrow({
-        where: {
-          type: "EVENT_POSITION_CREATED",
-          data: { path: ["positionId"], equals: copilotId },
+    // The test creates five positions, thus the check above does not wait
+    // for the event of the copilot
+    await expect
+      .poll(() =>
+        prisma.auditEvent.findFirst({
+          where: {
+            type: "EVENT_POSITION_CREATED",
+            data: { path: ["positionId"], equals: copilotId },
+          },
+          select: { createdById: true, data: true },
+        }),
+      )
+      .toEqual({
+        createdById: organizer.user.id,
+        data: {
+          eventId: event.id,
+          positionId: copilotId,
+          name: "Copilot",
+          variantIds: [],
+          parentPositionId: pilotId,
         },
-        select: { createdById: true, data: true },
-      }),
-    ).toEqual({
-      createdById: organizer.user.id,
-      data: {
-        eventId: event.id,
-        positionId: copilotId,
-        name: "Copilot",
-        variantIds: [],
-        parentPositionId: pilotId,
-      },
-    });
+      });
   });
 
   test("a participant applies and withdraws, and the organizer assigns and clears the position", async ({
@@ -230,10 +234,7 @@ test.describe("the lineup write tools of the MCP server", () => {
           action: "apply",
         },
       ),
-    ).toMatchObject({
-      position: { id: position.id, applications: [] },
-      notifications_sent: true,
-    });
+    ).toMatchObject({ id: position.id, applications: [] });
     // A repeated application changes nothing
     expect(
       await callForContent(
@@ -244,16 +245,15 @@ test.describe("the lineup write tools of the MCP server", () => {
           action: "apply",
         },
       ),
-    ).toMatchObject({
-      position: { id: position.id, applications: [] },
-      notifications_sent: true,
-    });
+    ).toMatchObject({ id: position.id, applications: [] });
     expect(await prisma.eventPositionApplication.count()).toBe(1);
-    expect(
-      await prisma.auditEvent.count({
-        where: { type: "EVENT_POSITION_APPLICATION_CREATED" },
-      }),
-    ).toBe(1);
+    await expect
+      .poll(() =>
+        prisma.auditEvent.count({
+          where: { type: "EVENT_POSITION_APPLICATION_CREATED" },
+        }),
+      )
+      .toBe(1);
 
     // Only a participant or an applicant gets the position, like in the form
     expect(
@@ -269,18 +269,15 @@ test.describe("the lineup write tools of the MCP server", () => {
         citizen_id: participant.entity.id,
       }),
     ).toMatchObject({
-      position: {
-        assignee: { id: participant.entity.id, handle: "mcp-bewerberin" },
-        applications: [{ id: participant.entity.id, handle: "mcp-bewerberin" }],
-      },
-      notifications_sent: true,
+      assignee: { id: participant.entity.id, handle: "mcp-bewerberin" },
+      applications: [{ id: participant.entity.id, handle: "mcp-bewerberin" }],
     });
     expect(
       await callForContent(organizerClient, "assign_event_position", {
         position_id: position.id,
         citizen_id: null,
       }),
-    ).toMatchObject({ position: { assignee: null }, notifications_sent: true });
+    ).toMatchObject({ assignee: null });
 
     await callForContent(
       participantClient,
@@ -358,12 +355,9 @@ test.describe("the lineup write tools of the MCP server", () => {
         position_id: parent.id,
       }),
     ).toMatchObject({
-      position: {
-        id: parent.id,
-        name: "Bergungsschiff",
-        children: [expect.objectContaining({ name: "Traktorstrahl" })],
-      },
-      notifications_sent: true,
+      id: parent.id,
+      name: "Bergungsschiff",
+      children: [expect.objectContaining({ name: "Traktorstrahl" })],
     });
     expect(
       await prisma.eventPosition.count({ where: { eventId: event.id } }),

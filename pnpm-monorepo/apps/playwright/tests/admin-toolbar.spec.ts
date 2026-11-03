@@ -136,8 +136,12 @@ test("assuming users switches the effective citizen and names the admin in the s
   // While assuming, every other event names the assumed user, thus these
   // must name the admin. The timestamps have millisecond precision only,
   // thus the assertion does not depend on the order.
+  const where = {
+    type: { in: ["ASSUME_USER_STARTED", "ASSUME_USER_ENDED"] },
+  };
+  await expect.poll(() => prisma.auditEvent.count({ where })).toBe(4);
   const events = await prisma.auditEvent.findMany({
-    where: { type: { in: ["ASSUME_USER_STARTED", "ASSUME_USER_ENDED"] } },
+    where,
     select: { type: true, createdById: true, data: true },
   });
   const firstUser = {

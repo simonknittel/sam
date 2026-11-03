@@ -113,10 +113,13 @@ test("toggling a browser notification off and on again is a round trip", async (
     channel: NotificationChannel.WEB_PUSH,
   });
 
-  const auditEvent = await prisma.auditEvent.findFirst({
-    where: { type: "NOTIFICATION_SETTINGS_UPDATED" },
-  });
-  expect(auditEvent).not.toBeNull();
+  await expect
+    .poll(() =>
+      prisma.auditEvent.findFirst({
+        where: { type: "NOTIFICATION_SETTINGS_UPDATED" },
+      }),
+    )
+    .not.toBeNull();
 
   // … and re-enabling deletes it again, back to the default
   await browserCheckboxLabel(page, "event_created").click();
@@ -271,8 +274,9 @@ test("disabling web push entirely removes all subscriptions", async ({
   });
   expect(settingsCount).toBe(1);
 
-  const auditEvent = await prisma.auditEvent.findFirst({
-    where: { type: "WEB_PUSH_UNSUBSCRIBED" },
-  });
-  expect(auditEvent).not.toBeNull();
+  await expect
+    .poll(() =>
+      prisma.auditEvent.findFirst({ where: { type: "WEB_PUSH_UNSUBSCRIBED" } }),
+    )
+    .not.toBeNull();
 });

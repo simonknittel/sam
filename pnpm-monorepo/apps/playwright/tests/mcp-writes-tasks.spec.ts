@@ -39,7 +39,6 @@ test.describe("the task write tools of the MCP server", () => {
     });
     const task = await prisma.task.findFirstOrThrow();
     expect(result).toMatchObject({
-      notifications_sent: true,
       task: {
         title: "Frachter eskortieren",
         description: "Von Lorville nach Area18.",
@@ -180,14 +179,11 @@ test.describe("the task write tools of the MCP server", () => {
         assignee_ids: [worker.entity.id],
       }),
     ).toMatchObject({
-      task: {
-        title: "Konvoi eskortieren",
-        // A field that is not given stays
-        description: "Von Lorville nach Area18.",
-        reward: { type: "text", value: "Ruhm und Ehre" },
-        assignees: [{ id: worker.entity.id, handle: "mcp-auftragnehmer" }],
-      },
-      notifications_sent: true,
+      title: "Konvoi eskortieren",
+      // A field that is not given stays
+      description: "Von Lorville nach Area18.",
+      reward: { type: "text", value: "Ruhm und Ehre" },
+      assignees: [{ id: worker.entity.id, handle: "mcp-auftragnehmer" }],
     });
     // The reward of a text task has no SILC value
     expect(
@@ -306,12 +302,9 @@ test.describe("the task write tools of the MCP server", () => {
         completionist_ids: [worker.entity.id],
       }),
     ).toMatchObject({
-      task: {
-        status: "completed",
-        completionists: [{ id: worker.entity.id, handle: "mcp-arbeiter" }],
-        is_updatable: false,
-      },
-      notifications_sent: true,
+      status: "completed",
+      completionists: [{ id: worker.entity.id, handle: "mcp-arbeiter" }],
+      is_updatable: false,
     });
     // A completed task cannot be completed again
     expect(
@@ -386,10 +379,7 @@ test.describe("the task write tools of the MCP server", () => {
     );
     expect(
       await callForContent(creatorClient, "cancel_task", { task_id: task.id }),
-    ).toMatchObject({
-      task: { title: "Fracht ausliefern", status: "cancelled" },
-      notifications_sent: true,
-    });
+    ).toMatchObject({ title: "Fracht ausliefern", status: "cancelled" });
     expect(
       await callForError(creatorClient, "cancel_task", { task_id: task.id }),
     ).toMatch(CONFLICT_RESULT);

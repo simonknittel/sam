@@ -42,16 +42,11 @@ test.describe("the manual notification write tool of the MCP server", () => {
       role_ids: [escort.id],
     });
     expect(result).toMatchObject({
-      notification: {
-        title: "Treffen am Samstag",
-        body: "Wir treffen uns um 20 Uhr in Port Tressler.",
-        created_by: { id: sender.entity.id, handle: "mcp-absenderin" },
-        receiver_citizens: [
-          { id: receiver.entity.id, handle: "mcp-empfaenger" },
-        ],
-        receiver_roles: [{ id: escort.id, name: "Geleitschutz" }],
-      },
-      notifications_sent: true,
+      title: "Treffen am Samstag",
+      body: "Wir treffen uns um 20 Uhr in Port Tressler.",
+      created_by: { id: sender.entity.id, handle: "mcp-absenderin" },
+      receiver_citizens: [{ id: receiver.entity.id, handle: "mcp-empfaenger" }],
+      receiver_roles: [{ id: escort.id, name: "Geleitschutz" }],
     });
 
     const notification = await prisma.manualNotification.findFirstOrThrow();

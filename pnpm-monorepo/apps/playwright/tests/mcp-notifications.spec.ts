@@ -111,17 +111,19 @@ test.describe("the notification tools of the MCP server", () => {
       next_cursor: null,
     });
 
-    expect(
-      await prisma.auditEvent.findFirstOrThrow({
-        where: { type: "OWN_NOTIFICATIONS_LISTED" },
-        orderBy: { createdAt: "asc" },
-        select: { createdById: true, triggeredViaMcp: true, data: true },
-      }),
-    ).toEqual({
-      createdById: reader.user.id,
-      triggeredViaMcp: true,
-      data: { arguments: { read: "unread", archived: "no", limit: 25 } },
-    });
+    await expect
+      .poll(() =>
+        prisma.auditEvent.findFirst({
+          where: { type: "OWN_NOTIFICATIONS_LISTED" },
+          orderBy: { createdAt: "asc" },
+          select: { createdById: true, triggeredViaMcp: true, data: true },
+        }),
+      )
+      .toEqual({
+        createdById: reader.user.id,
+        triggeredViaMcp: true,
+        data: { arguments: { read: "unread", archived: "no", limit: 25 } },
+      });
   });
 
   test("update_notification marks an own notification as read and unread and moves it to the archive and back, and a repeated call changes nothing", async ({

@@ -138,17 +138,19 @@ test.describe("the user tools of the MCP server", () => {
     ).toMatch(NOT_FOUND_RESULT);
 
     // Each successful call wrote its read with the parsed arguments
-    expect(
-      await prisma.auditEvent.findMany({
-        where: { type: "USER_READ", createdById: viewer.user.id },
-        select: { triggeredViaMcp: true, data: true },
-      }),
-    ).toEqual([
-      {
-        triggeredViaMcp: true,
-        data: { arguments: { user_id: banned.user.id } },
-      },
-    ]);
+    await expect
+      .poll(() =>
+        prisma.auditEvent.findMany({
+          where: { type: "USER_READ", createdById: viewer.user.id },
+          select: { triggeredViaMcp: true, data: true },
+        }),
+      )
+      .toEqual([
+        {
+          triggeredViaMcp: true,
+          data: { arguments: { user_id: banned.user.id } },
+        },
+      ]);
   });
 
   test("a user without user;read sees get_user, but not list_users, and gets only the own user", async ({

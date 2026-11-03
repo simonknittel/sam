@@ -225,8 +225,10 @@ test.describe("the role tools of the MCP server", () => {
       data: { roleId: logistics.id, permissionString, enabled },
       triggeredViaMcp: true,
     });
+    const where = { type: "ROLE_PERMISSION_TOGGLED" };
+    await expect.poll(() => prisma.auditEvent.count({ where })).toBe(4);
     const auditEvents = await prisma.auditEvent.findMany({
-      where: { type: "ROLE_PERMISSION_TOGGLED" },
+      where,
       select: { createdById: true, data: true, triggeredViaMcp: true },
     });
     expect(auditEvents).toHaveLength(4);
@@ -333,28 +335,30 @@ test.describe("the role tools of the MCP server", () => {
       max_level: 5,
     });
 
-    expect(
-      await prisma.auditEvent.findFirstOrThrow({
-        where: { type: "ROLE_UPDATED_V4" },
-        select: { createdById: true, data: true, triggeredViaMcp: true },
-      }),
-    ).toEqual({
-      createdById: manager.user.id,
-      data: {
-        roleId: logistics.id,
-        previousName: "Logistik",
-        newName: "Logistik und Handel",
-        previousMaxAgeDays: 30,
-        newMaxAgeDays: 30,
-        previousAssignAfterInactiveDays: null,
-        newAssignAfterInactiveDays: null,
-        previousDescription: "Transporte",
-        newDescription: null,
-        previousMaxLevel: 3,
-        newMaxLevel: 5,
-      },
-      triggeredViaMcp: true,
-    });
+    await expect
+      .poll(() =>
+        prisma.auditEvent.findFirst({
+          where: { type: "ROLE_UPDATED_V4" },
+          select: { createdById: true, data: true, triggeredViaMcp: true },
+        }),
+      )
+      .toEqual({
+        createdById: manager.user.id,
+        data: {
+          roleId: logistics.id,
+          previousName: "Logistik",
+          newName: "Logistik und Handel",
+          previousMaxAgeDays: 30,
+          newMaxAgeDays: 30,
+          previousAssignAfterInactiveDays: null,
+          newAssignAfterInactiveDays: null,
+          previousDescription: "Transporte",
+          newDescription: null,
+          previousMaxLevel: 3,
+          newMaxLevel: 5,
+        },
+        triggeredViaMcp: true,
+      });
 
     expect(
       await callForError(client, "update_role", {
@@ -475,16 +479,18 @@ test.describe("the role tools of the MCP server", () => {
       next_cursor: null,
     });
 
-    expect(
-      await prisma.auditEvent.findFirstOrThrow({
-        where: { type: "ROLE_TAGS_LISTED", createdById: viewer.user.id },
-        select: { createdById: true, triggeredViaMcp: true, data: true },
-      }),
-    ).toEqual({
-      createdById: viewer.user.id,
-      triggeredViaMcp: true,
-      data: { arguments: { limit: 25 } },
-    });
+    await expect
+      .poll(() =>
+        prisma.auditEvent.findFirst({
+          where: { type: "ROLE_TAGS_LISTED", createdById: viewer.user.id },
+          select: { createdById: true, triggeredViaMcp: true, data: true },
+        }),
+      )
+      .toEqual({
+        createdById: viewer.user.id,
+        triggeredViaMcp: true,
+        data: { arguments: { limit: 25 } },
+      });
   });
 
   test("create_role_tag, update_role_tag and delete_role_tag change a tag, refuse a taken name and write the audit events", async ({
@@ -530,20 +536,24 @@ test.describe("the role tools of the MCP server", () => {
       createdById: manager.entity.id,
       updatedById: manager.entity.id,
     });
-    expect(await auditEventsOf("ROLE_TAG_CREATED")).toEqual([
-      {
-        createdById: manager.user.id,
-        data: { tagId, name: "Führung", description: "Leitende Rollen" },
-        triggeredViaMcp: true,
-      },
-    ]);
-    expect(await auditEventsOf("ROLE_TAG_ASSIGNMENTS_UPDATED")).toEqual([
-      {
-        createdById: manager.user.id,
-        data: { added: [{ roleId: command.id, tagId }], removed: [] },
-        triggeredViaMcp: true,
-      },
-    ]);
+    await expect
+      .poll(() => auditEventsOf("ROLE_TAG_CREATED"))
+      .toEqual([
+        {
+          createdById: manager.user.id,
+          data: { tagId, name: "Führung", description: "Leitende Rollen" },
+          triggeredViaMcp: true,
+        },
+      ]);
+    await expect
+      .poll(() => auditEventsOf("ROLE_TAG_ASSIGNMENTS_UPDATED"))
+      .toEqual([
+        {
+          createdById: manager.user.id,
+          data: { added: [{ roleId: command.id, tagId }], removed: [] },
+          triggeredViaMcp: true,
+        },
+      ]);
 
     // The names are unique without regard to the case
     expect(
@@ -574,20 +584,24 @@ test.describe("the role tools of the MCP server", () => {
       icon_url: null,
       role_ids: [salvage.id],
     });
-    expect(await auditEventsOf("ROLE_TAG_UPDATED")).toEqual([
-      {
-        createdById: manager.user.id,
-        data: {
-          tagId,
-          previousName: "Führung",
-          newName: "Leitung",
-          previousDescription: "Leitende Rollen",
-          newDescription: null,
+    await expect
+      .poll(() => auditEventsOf("ROLE_TAG_UPDATED"))
+      .toEqual([
+        {
+          createdById: manager.user.id,
+          data: {
+            tagId,
+            previousName: "Führung",
+            newName: "Leitung",
+            previousDescription: "Leitende Rollen",
+            newDescription: null,
+          },
+          triggeredViaMcp: true,
         },
-        triggeredViaMcp: true,
-      },
-    ]);
-    expect(await auditEventsOf("ROLE_TAG_ASSIGNMENTS_UPDATED")).toHaveLength(2);
+      ]);
+    await expect
+      .poll(() => auditEventsOf("ROLE_TAG_ASSIGNMENTS_UPDATED"))
+      .toHaveLength(2);
     expect((await auditEventsOf("ROLE_TAG_ASSIGNMENTS_UPDATED"))[1]).toEqual({
       createdById: manager.user.id,
       data: {
@@ -646,13 +660,15 @@ test.describe("the role tools of the MCP server", () => {
     expect(await prisma.roleTag.findMany({ select: { id: true } })).toEqual([
       { id: other.id },
     ]);
-    expect(await auditEventsOf("ROLE_TAG_DELETED")).toEqual([
-      {
-        createdById: manager.user.id,
-        data: { tagId, name: "Leitung", roleIds: [salvage.id] },
-        triggeredViaMcp: true,
-      },
-    ]);
+    await expect
+      .poll(() => auditEventsOf("ROLE_TAG_DELETED"))
+      .toEqual([
+        {
+          createdById: manager.user.id,
+          data: { tagId, name: "Leitung", roleIds: [salvage.id] },
+          triggeredViaMcp: true,
+        },
+      ]);
 
     expect(
       await callForError(client, "delete_role_tag", { tag_id: tagId }),
@@ -719,22 +735,24 @@ test.describe("the role tools of the MCP server", () => {
         { id: support.id, name: "Unterstützung" },
       ],
     });
-    expect(
-      await prisma.auditEvent.findMany({
-        where: { type: "ROLE_TAG_ASSIGNMENTS_UPDATED" },
-        select: { data: true },
-      }),
-    ).toEqual([
-      {
-        data: {
-          added: [
-            { roleId: logistics.id, tagId: leadership.id },
-            { roleId: logistics.id, tagId: support.id },
-          ],
-          removed: [],
+    await expect
+      .poll(() =>
+        prisma.auditEvent.findMany({
+          where: { type: "ROLE_TAG_ASSIGNMENTS_UPDATED" },
+          select: { data: true },
+        }),
+      )
+      .toEqual([
+        {
+          data: {
+            added: [
+              { roleId: logistics.id, tagId: leadership.id },
+              { roleId: logistics.id, tagId: support.id },
+            ],
+            removed: [],
+          },
         },
-      },
-    ]);
+      ]);
     expect(await roleEvents()).toEqual([
       {
         type: "ROLE_TAG_ASSIGNMENTS_UPDATED",
@@ -766,11 +784,13 @@ test.describe("the role tools of the MCP server", () => {
     expect(
       await callForContent(client, "get_role", { role_id: logistics.id }),
     ).toMatchObject({ tags: [{ id: leadership.id, name: "Führung" }] });
-    expect((await roleEvents()).map(({ type }) => type).toSorted()).toEqual([
-      "ROLE_TAG_ASSIGNMENTS_UPDATED",
-      "ROLE_TAG_ASSIGNMENTS_UPDATED",
-      "ROLE_UPDATED_V4",
-    ]);
+    await expect
+      .poll(async () => (await roleEvents()).map(({ type }) => type).toSorted())
+      .toEqual([
+        "ROLE_TAG_ASSIGNMENTS_UPDATED",
+        "ROLE_TAG_ASSIGNMENTS_UPDATED",
+        "ROLE_UPDATED_V4",
+      ]);
     expect(
       await callForContent(client, "list_roles", { tag_id: support.id }),
     ).toMatchObject({ roles: [{ id: salvage.id }], next_cursor: null });
