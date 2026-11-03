@@ -109,6 +109,24 @@ test("the log renders its events and the filters narrow the table", async ({
   ).toBeVisible();
   await expect(page.getByText('Role created: "Aufklärer"')).toHaveCount(0);
 
+  // Each view writes a read with its filters, but not with the result. The
+  // page writes it before it shows the table.
+  const reads = await prisma.auditEvent.findMany({
+    where: { type: "AUDIT_EVENTS_LISTED", createdById: admin.user.id },
+    select: { triggeredViaMcp: true, data: true },
+  });
+  expect(reads).toContainEqual({
+    triggeredViaMcp: false,
+    data: {
+      arguments: {
+        types: ["MANUFACTURER_CREATED"],
+        include_high_volume: false,
+        access: "write",
+        limit: 50,
+      },
+    },
+  });
+
   // The user filter keeps only the selected creator's events
   await page.goto(`/app/system-log?createdById=${otherUser.user.id}`);
   await expect(
