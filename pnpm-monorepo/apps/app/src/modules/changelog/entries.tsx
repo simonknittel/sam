@@ -56,7 +56,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     key: "2026-11-03-neue-benachrichtigungen",
     date: "2026-11-03",
     title: "Mehr Benachrichtigungen",
-    tags: ["Neu", "Events", "Benachrichtigungen"],
+    tags: ["Neu", "Benachrichtigungen"],
     isTracked: false,
     body: () => (
       <p>
