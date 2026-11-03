@@ -3,6 +3,7 @@
 import { toastWarning } from "@/modules/actions/utils/toastWarning";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
+import { IMAGE_MIME_TYPES } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -123,7 +124,7 @@ export const ImageUpload = ({
       <input
         type="file"
         onChange={changeHandler}
-        accept="image/*"
+        accept={IMAGE_MIME_TYPES.join(",")}
         disabled={isPending}
         className="absolute inset-0 cursor-pointer opacity-0 file:cursor-pointer"
       />

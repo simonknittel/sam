@@ -4,6 +4,7 @@ import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import useUpload from "@/modules/common/utils/useUpload";
+import { IMAGE_MIME_TYPES } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import Image from "next/image";
 import { useState, type ChangeEventHandler } from "react";
@@ -115,7 +116,7 @@ export const EventCoverImageField = ({
         <input
           type="file"
           onChange={changeHandler}
-          accept="image/*"
+          accept={IMAGE_MIME_TYPES.join(",")}
           className="mt-2 block w-full cursor-pointer rounded-secondary border border-neutral-800 bg-neutral-900 p-2 text-sm file:mr-2 file:cursor-pointer"
         />
       )}

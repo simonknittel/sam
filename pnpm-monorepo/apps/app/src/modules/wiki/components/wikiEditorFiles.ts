@@ -1,7 +1,8 @@
 "use client";
 
 import {
-  ATTACHMENT_APPLICATION_MIME_TYPES,
+  ATTACHMENT_MIME_TYPES,
+  IMAGE_MIME_TYPES,
   UploadCategory,
 } from "@sam-monorepo/domain";
 import type { Editor } from "@tiptap/core";
@@ -14,16 +15,17 @@ import {
   uploadWikiPageFile,
 } from "../utils/uploadWikiPageFile";
 
-export const WIKI_IMAGE_ACCEPT = "image/*";
+export const WIKI_IMAGE_ACCEPT = IMAGE_MIME_TYPES.join(",");
 /**
  * `text/*` is not one of the spec's wildcard values (only image, audio and
  * video are), but the major browsers prefix-match any `type/*` entry. The
- * extensions cover files the platform reports no mime type for (Markdown,
- * YAML, …), which mime-only accept values would exclude from the picker —
- * they must stay in sync with MIME_TYPES_BY_EXTENSION.
+ * upload sends the text formats that are not in `ATTACHMENT_MIME_TYPES` as
+ * `text/plain`. The extensions cover files the platform reports no mime type
+ * for (Markdown, YAML, …), which mime-only accept values would exclude from
+ * the picker — they must stay in sync with MIME_TYPES_BY_EXTENSION.
  */
 export const WIKI_ATTACHMENT_ACCEPT = [
-  ...ATTACHMENT_APPLICATION_MIME_TYPES,
+  ...ATTACHMENT_MIME_TYPES,
   "text/*",
   ".md",
   ".markdown",

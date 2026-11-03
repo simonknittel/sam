@@ -1,6 +1,7 @@
 import { createUploadResponseSchema } from "@/modules/common/utils/createUploadResponseSchema";
 import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import {
+  isAllowedImageMimeType,
   isAttachmentMimeType,
   MAXIMUM_ATTACHMENT_SIZE_BYTES,
   MAXIMUM_IMAGE_SIZE_BYTES,
@@ -31,17 +32,23 @@ const MIME_TYPES_BY_EXTENSION: Readonly<Record<string, string>> = {
 /**
  * Browsers leave `file.type` empty for types their platform has no
  * registered mapping for (most developer text formats: Markdown, YAML,
- * TOML, logs, …) — fall back to the file extension for those.
+ * TOML, logs, …), or give a type that the upload does not accept — fall back
+ * to the file extension for those. The upload stores the other text formats
+ * (source code, logs, …) as `text/plain`, which a browser never executes.
  */
 const resolveWikiFileMimeType = (file: File): string => {
-  if (file.type) return file.type;
+  if (isAllowedImageMimeType(file.type) || isAttachmentMimeType(file.type))
+    return file.type;
   const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
-  return MIME_TYPES_BY_EXTENSION[extension] ?? "";
+  const mimeTypeOfExtension = MIME_TYPES_BY_EXTENSION[extension];
+  if (mimeTypeOfExtension) return mimeTypeOfExtension;
+  if (file.type.startsWith("text/")) return "text/plain";
+  return file.type;
 };
 
 export const getWikiUploadKind = (file: File): UploadCategory | null => {
   const mimeType = resolveWikiFileMimeType(file);
-  if (mimeType.startsWith("image/")) return UploadCategory.Image;
+  if (isAllowedImageMimeType(mimeType)) return UploadCategory.Image;
   if (isAttachmentMimeType(mimeType)) return UploadCategory.Attachment;
   return null;
 };

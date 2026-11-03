@@ -6,17 +6,35 @@ export enum UploadCategory {
 }
 
 /**
- * The `application/*` MIME types that an attachment can have: PDF, office
- * documents and structured text formats that browsers report with an
- * `application/` type. Plain text formats are not in the list, because
- * `isAttachmentMimeType` accepts most `text/*` types. The list has no
- * archives (a reader cannot examine their contents quickly), no
- * `application/octet-stream` (the type of executables and unknown binaries)
- * and no XML: everyone can read an upload directly from the bucket, and a
- * browser shows an XML document inline, where an SVG or XSLT payload can
- * execute scripts.
+ * The MIME types that an image upload can have. Everyone can read an upload
+ * directly from the bucket, and the bucket serves the stored type as the
+ * `Content-Type`. Thus, the list has only raster formats that browsers show
+ * as an image and that the dimension probe can read. SVG is not in the list:
+ * an SVG document can execute scripts.
  */
-export const ATTACHMENT_APPLICATION_MIME_TYPES: readonly string[] = [
+export const IMAGE_MIME_TYPES: readonly string[] = [
+  "image/png",
+  "image/jpeg",
+  "image/gif",
+  "image/webp",
+  "image/avif",
+];
+
+/**
+ * The MIME types that an attachment can have: plain text formats, PDF,
+ * office documents and structured text formats. Everyone can read an upload
+ * directly from the bucket (without the `Content-Disposition: attachment` of
+ * the attachment route), thus the list has no type that a browser shows as an
+ * active document or runs as a script: no HTML, XML, XSLT, SVG or
+ * JavaScript. The list also has no archives (a reader cannot examine their
+ * contents quickly) and no `application/octet-stream` (the type of
+ * executables and unknown binaries). The client sends other text formats as
+ * `text/plain`.
+ */
+export const ATTACHMENT_MIME_TYPES: readonly string[] = [
+  "text/plain",
+  "text/markdown",
+  "text/csv",
   "application/pdf",
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -36,50 +54,20 @@ export const ATTACHMENT_APPLICATION_MIME_TYPES: readonly string[] = [
 ];
 
 /**
- * The `text/*` types that browsers show as active documents. Everyone can
- * read an upload directly from the bucket (without the
- * `Content-Disposition: attachment` of the attachment route), thus these
- * types would execute scripts on the origin of the bucket. The upload
- * refuses them.
+ * Whether a file with this MIME type can be an attachment. Only an exact
+ * entry of `ATTACHMENT_MIME_TYPES` passes: a prefix or a denylist lets
+ * through a scriptable type (for example `text/xsl`), a parameter, or a list
+ * such as `text/plain,text/html`, of which browsers use the last type.
  */
-const SCRIPTABLE_TEXT_MIME_TYPES: readonly string[] = ["text/html", "text/xml"];
+export const isAttachmentMimeType = (mimeType: string): boolean =>
+  ATTACHMENT_MIME_TYPES.includes(mimeType);
 
 /**
- * The type without parameters, in lowercase letters. A comparison of the raw
- * string would let `text/html;charset=utf-8` or `TEXT/HTML` pass the
- * exclusions.
+ * Whether a file with this MIME type can be an image upload. Only an exact
+ * entry of `IMAGE_MIME_TYPES` passes (see `isAttachmentMimeType`).
  */
-const getMimeTypeEssence = (mimeType: string): string =>
-  (mimeType.split(";")[0] ?? "").trim().toLowerCase();
-
-/**
- * Whether a file with this MIME type can be an attachment: most `text/*`
- * types and the `application/*` types of `ATTACHMENT_APPLICATION_MIME_TYPES`,
- * but no type that a browser shows as a document with scripts (see
- * `SCRIPTABLE_TEXT_MIME_TYPES`). A type with parameters is refused, thus the
- * stored `Content-Type` stays one exact token that a comparison can use.
- */
-export const isAttachmentMimeType = (mimeType: string): boolean => {
-  if (mimeType.includes(";")) return false;
-  const essence = getMimeTypeEssence(mimeType);
-  if (SCRIPTABLE_TEXT_MIME_TYPES.includes(essence)) return false;
-  return (
-    essence.startsWith("text/") ||
-    ATTACHMENT_APPLICATION_MIME_TYPES.includes(essence)
-  );
-};
-
-/**
- * Whether a file with this MIME type can be an image upload. SVG is refused:
- * the app shows images inline from the public URL of the bucket, and an SVG
- * document can execute scripts.
- */
-export const isAllowedImageMimeType = (mimeType: string): boolean => {
-  if (mimeType.includes(";")) return false;
-  const essence = getMimeTypeEssence(mimeType);
-  if (essence === "image/svg+xml") return false;
-  return essence.startsWith("image/");
-};
+export const isAllowedImageMimeType = (mimeType: string): boolean =>
+  IMAGE_MIME_TYPES.includes(mimeType);
 
 /**
  * The maximum declared size of an attachment. The upload checks the size
