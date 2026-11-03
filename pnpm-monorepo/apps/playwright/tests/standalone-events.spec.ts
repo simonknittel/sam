@@ -560,6 +560,14 @@ test("the sign-up lifecycle: sign up with comment, edit, cancel, re-sign-up", as
   ).toBeVisible();
   await expect(page.getByText("Kommentar aktualisiert")).toBeVisible();
   await expect(page.getByText("Abgemeldet", { exact: true })).toBeVisible();
+
+  // The participant is also the affected citizen of their own entries
+  const affectedCell = page
+    .getByRole("row")
+    .filter({ hasText: "Abgemeldet" })
+    .getByRole("cell")
+    .nth(1);
+  await expect(affectedCell).toContainText("anmelder");
 });
 
 test("sign-up closes at the event's end and past events show synthetic activity", async ({

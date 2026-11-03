@@ -165,8 +165,8 @@ const buildActivityEntry = (activity: EventActivityRow): ActivityEntry => {
   };
 
   /**
-   * The target column of the types whose payload names an affected citizen.
-   * A citizen that the row does not resolve renders as "Unbekannt".
+   * The target column of the types that affect a citizen. A citizen that the
+   * row does not resolve renders as "Unbekannt".
    */
   const affectedCitizenTarget = (
     <CitizenLink citizen={activity.affectedCitizen} className="truncate" />
@@ -212,6 +212,7 @@ const buildActivityEntry = (activity: EventActivityRow): ActivityEntry => {
       return {
         ...base,
         message: "Angemeldet",
+        target: affectedCitizenTarget,
         comment: payload.success ? payload.data.comment : null,
       };
     }
@@ -221,12 +222,17 @@ const buildActivityEntry = (activity: EventActivityRow): ActivityEntry => {
       return {
         ...base,
         message: "Kommentar aktualisiert",
+        target: affectedCitizenTarget,
         comment: payload.success ? payload.data.comment : null,
       };
     }
 
     case EventActivityType.PARTICIPATION_CANCELLED:
-      return { ...base, message: "Abgemeldet" };
+      return {
+        ...base,
+        message: "Abgemeldet",
+        target: affectedCitizenTarget,
+      };
 
     case EventActivityType.PARTICIPATION_ADDED_BY_MANAGER: {
       const payload = participantAddedPayloadSchema.safeParse(activity.payload);

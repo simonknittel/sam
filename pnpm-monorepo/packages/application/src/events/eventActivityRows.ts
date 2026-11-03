@@ -33,8 +33,10 @@ export interface EventActivityRow {
   /** Who caused the entry */
   readonly actor: EventActivityCitizen | null;
   /**
-   * The citizen that the payload names for the types of
-   * `TYPES_WITH_AFFECTED_CITIZEN`, or null when it does not exist (anymore)
+   * The citizen that the entry is about: the payload's citizen for the types
+   * of `TYPES_WITH_AFFECTED_CITIZEN_IN_PAYLOAD`, the actor for the types of
+   * `SELF_APPLIED_TYPES`. Null for all other types, or when the citizen does
+   * not exist (anymore).
    */
   readonly affectedCitizen: EventActivityCitizen | null;
 }
@@ -43,11 +45,19 @@ export interface EventActivityRow {
  * The types whose payload names a citizen other than the row's own actor:
  * the row's citizen column holds the acting manager
  */
-const TYPES_WITH_AFFECTED_CITIZEN: ReadonlySet<EventActivityType> = new Set([
-  EventActivityType.PARTICIPATION_ADDED_BY_MANAGER,
-  EventActivityType.PARTICIPATION_REMOVED_BY_MANAGER,
-  EventActivityType.MANAGER_ADDED,
-  EventActivityType.MANAGER_REMOVED,
+const TYPES_WITH_AFFECTED_CITIZEN_IN_PAYLOAD: ReadonlySet<EventActivityType> =
+  new Set([
+    EventActivityType.PARTICIPATION_ADDED_BY_MANAGER,
+    EventActivityType.PARTICIPATION_REMOVED_BY_MANAGER,
+    EventActivityType.MANAGER_ADDED,
+    EventActivityType.MANAGER_REMOVED,
+  ]);
+
+/** The types where the actor changes their own participation */
+const SELF_APPLIED_TYPES: ReadonlySet<EventActivityType> = new Set([
+  EventActivityType.PARTICIPATION_SIGNED_UP,
+  EventActivityType.PARTICIPATION_COMMENT_UPDATED,
+  EventActivityType.PARTICIPATION_CANCELLED,
 ]);
 
 const affectedCitizenPayloadSchema = z.object({ citizenId: z.string() });
@@ -56,7 +66,7 @@ const getAffectedCitizenId = (activity: {
   readonly type: EventActivityType;
   readonly payload: Prisma.JsonValue;
 }): string | null =>
-  TYPES_WITH_AFFECTED_CITIZEN.has(activity.type)
+  TYPES_WITH_AFFECTED_CITIZEN_IN_PAYLOAD.has(activity.type)
     ? (affectedCitizenPayloadSchema.safeParse(activity.payload).data
         ?.citizenId ?? null)
     : null;
@@ -112,20 +122,25 @@ export const findEventActivityRows = async (
     affectedCitizens.map((citizen) => [citizen.id, citizen]),
   );
 
-  return activities.map((activity) => {
-    const affectedCitizenId = getAffectedCitizenId(activity);
+  const getAffectedCitizen = (
+    activity: (typeof activities)[number],
+  ): EventActivityCitizen | null => {
+    if (SELF_APPLIED_TYPES.has(activity.type)) return activity.citizen;
 
-    return {
-      id: activity.id,
-      type: activity.type,
-      createdAt: activity.createdAt,
-      payload: activity.payload,
-      actor: activity.citizen,
-      affectedCitizen: affectedCitizenId
-        ? (affectedCitizenById.get(affectedCitizenId) ?? null)
-        : null,
-    };
-  });
+    const affectedCitizenId = getAffectedCitizenId(activity);
+    return affectedCitizenId
+      ? (affectedCitizenById.get(affectedCitizenId) ?? null)
+      : null;
+  };
+
+  return activities.map((activity) => ({
+    id: activity.id,
+    type: activity.type,
+    createdAt: activity.createdAt,
+    payload: activity.payload,
+    actor: activity.citizen,
+    affectedCitizen: getAffectedCitizen(activity),
+  }));
 };
 
 /**
