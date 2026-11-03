@@ -1,4 +1,5 @@
 import { env } from "@/env";
+import { SelectEscapeGuard } from "@/modules/common/components/SelectEscapeGuard";
 import ToasterContainer from "@/modules/common/components/ToasterContainer";
 import { TooltipProvider } from "@/modules/common/components/Tooltip";
 import {
@@ -41,6 +42,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <TooltipProvider>{children}</TooltipProvider>
         <NextTopLoader color="#c22424" showSpinner={false} />
         <ToasterContainer />
+        <SelectEscapeGuard />
       </body>
     </html>
   );

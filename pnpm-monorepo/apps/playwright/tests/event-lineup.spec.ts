@@ -69,9 +69,24 @@ test("a manager builds a lineup: create, rename, require a ship, duplicate, dele
   await createDialog
     .getByRole("button", { name: "Hinzufügen", exact: true })
     .click();
-  await createDialog
-    .getByLabel("Benötigtes Schiff")
-    .selectOption({ value: variant.id });
+
+  /**
+   * The browser shows the open list of a select in the page. Escape closes
+   * only the list, not the dialog with the text that the manager typed.
+   */
+  const requiredShip = createDialog.getByLabel("Benötigtes Schiff");
+  const bomberOption = requiredShip.getByRole("option", {
+    name: "Retaliator Bomber",
+  });
+  await requiredShip.click();
+  await expect(bomberOption).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(bomberOption).toBeHidden();
+  await expect(createDialog.getByLabel("Name")).toHaveValue("Pilot");
+
+  await requiredShip.click();
+  await bomberOption.click();
+  await expect(requiredShip).toHaveValue(variant.id);
   await createDialog
     .getByRole("button", { name: "Speichern", exact: true })
     .click();
