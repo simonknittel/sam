@@ -209,27 +209,16 @@ const welcomeCitizen = async (
     });
     if (count !== 1) return;
 
-    after(async () => {
-      try {
-        await getApplicationContext().notifications.trigger([
-          { type: "WelcomeGreeting", payload: { citizenId } },
-        ]);
-      } catch (error) {
-        log.error("Failed to send the welcome notification", {
-          citizenId,
-          userId,
-          error,
-        });
-      }
-
-      await getApplicationContext().audit.create([
-        {
-          type: AuditEventType.CITIZEN_WELCOMED,
-          data: { citizenId },
-          createdById: userId,
-        },
-      ]);
-    });
+    await getApplicationContext().notifications.trigger([
+      { type: "WelcomeGreeting", payload: { citizenId } },
+    ]);
+    await getApplicationContext().audit.create([
+      {
+        type: AuditEventType.CITIZEN_WELCOMED,
+        data: { citizenId },
+        createdById: userId,
+      },
+    ]);
   } catch (error) {
     log.error("Failed to welcome the citizen", { citizenId, userId, error });
   }
@@ -243,7 +232,8 @@ const welcomeCitizen = async (
  *
  * Only the request that moves `lastSeenAt` from the value of its session
  * continues, thus parallel requests of the same visit write one audit event
- * and send one reminder.
+ * and send one reminder. The caller runs it after the response, thus the
+ * first page of the day does not wait for the writes.
  */
 const recordFirstVisitOfTheDay = async (
   user: AdapterUser,
@@ -278,19 +268,9 @@ const recordFirstVisitOfTheDay = async (
     if (!citizenId || !previousLastSeenAt || previousLastSeenAt > absenceStart)
       return;
 
-    after(async () => {
-      try {
-        await getApplicationContext().notifications.trigger([
-          { type: "FleetUpdateReminder", payload: { citizenId } },
-        ]);
-      } catch (error) {
-        log.error("Failed to send the fleet update reminder", {
-          citizenId,
-          userId: user.id,
-          error,
-        });
-      }
-    });
+    await getApplicationContext().notifications.trigger([
+      { type: "FleetUpdateReminder", payload: { citizenId } },
+    ]);
   } catch (error) {
     log.warn("Failed to update user's lastSeenAt", {
       userId: user.id,
@@ -522,7 +502,7 @@ export const authOptions: NextAuthOptions = {
           getLocalDateKey(user.lastSeenAt, ORGANIZATION_TIMEZONE) !==
             getLocalDateKey(new Date(), ORGANIZATION_TIMEZONE))
       )
-        await recordFirstVisitOfTheDay(user, citizen?.id ?? null);
+        after(() => recordFirstVisitOfTheDay(user, citizen?.id ?? null));
 
       // The welcome follows the roles of the citizen and not the admin mode,
       // because the notification goes only to citizens with `login;manage`
