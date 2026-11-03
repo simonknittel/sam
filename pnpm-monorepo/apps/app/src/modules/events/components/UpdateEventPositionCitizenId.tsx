@@ -12,7 +12,7 @@ import {
 import { getCitizenDisplayName } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { useId, useState, useTransition } from "react";
-import { FaPen } from "react-icons/fa";
+import { FaCheckCircle, FaExclamationCircle, FaPen } from "react-icons/fa";
 import { resetEventPositionCitizenId } from "../actions/resetEventPositionCitizenId";
 import { updateEventPositionCitizenId } from "../actions/updateEventPositionCitizenId";
 import type {
@@ -88,18 +88,22 @@ export const UpdateEventPositionCitizenId = ({
   const sections = [
     {
       title: "Interessenten - Voraussetzungen erfüllt",
+      meetsRequirements: true,
       choices: applicationsSatisfyingRequirements,
     },
     {
       title: "Interessenten - Voraussetzungen nicht erfüllt",
+      meetsRequirements: false,
       choices: applicationsNotSatisfyingRequirements,
     },
     {
       title: "Alle Teilnehmer - Voraussetzungen erfüllt",
+      meetsRequirements: true,
       choices: citizensSatisfyingRequirements,
     },
     {
       title: "Alle Teilnehmer - Voraussetzungen nicht erfüllt",
+      meetsRequirements: false,
       choices: citizensNotSatisfyingRequirements,
     },
   ];
@@ -160,6 +164,7 @@ export const UpdateEventPositionCitizenId = ({
             <ChoiceSection
               key={section.title}
               title={section.title}
+              meetsRequirements={section.meetsRequirements}
               position={position}
               choices={section.choices}
               assignedCitizenId={assignedCitizen?.id ?? null}
@@ -176,6 +181,8 @@ export const UpdateEventPositionCitizenId = ({
 
 interface ChoiceSectionProps {
   readonly title: string;
+  /** Whether the citizens of the section meet the requirements */
+  readonly meetsRequirements: boolean;
   readonly position: PositionType;
   readonly choices: readonly Choice[];
   readonly assignedCitizenId: DisplayedCitizen["id"] | null;
@@ -186,6 +193,7 @@ interface ChoiceSectionProps {
 
 const ChoiceSection = ({
   title,
+  meetsRequirements,
   position,
   choices,
   assignedCitizenId,
@@ -197,7 +205,21 @@ const ChoiceSection = ({
 
   return (
     <section aria-labelledby={headingId}>
-      <h3 id={headingId} className="font-mono text-xs text-white uppercase">
+      <h3
+        id={headingId}
+        className="flex items-center gap-2 font-mono text-xs text-white uppercase"
+      >
+        {meetsRequirements ? (
+          <FaCheckCircle
+            className="flex-none text-sm text-green-500"
+            aria-hidden
+          />
+        ) : (
+          <FaExclamationCircle
+            className="flex-none text-sm text-yellow-500"
+            aria-hidden
+          />
+        )}
         {title}
       </h3>
 
