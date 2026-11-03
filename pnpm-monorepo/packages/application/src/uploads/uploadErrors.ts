@@ -17,4 +17,6 @@ export enum UploadErrorMessage {
   LinkedToOtherPage = "The upload is linked to a different wiki page",
   /** A `ValidationError` */
   NotAnImage = "The upload is not an image",
+  /** A `ValidationError`: for example a PDF as the image of a wiki page */
+  MimeTypeNotOfKind = "The MIME type of the upload is not allowed for this kind",
 }

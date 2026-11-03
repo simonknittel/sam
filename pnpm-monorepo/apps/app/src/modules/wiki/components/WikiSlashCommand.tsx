@@ -34,11 +34,8 @@ import {
 import { getWikiNodeTypeLabel } from "../utils/getWikiNodeTypeLabel";
 import { getWikiCopiedBlock, type WikiCopiedBlock } from "./wikiBlockClipboard";
 import {
-  insertWikiFile,
   isWikiUploadKindAllowed,
-  pickWikiFiles,
-  WIKI_ATTACHMENT_ACCEPT,
-  WIKI_IMAGE_ACCEPT,
+  pickAndInsertWikiFiles,
   type WikiUploadPermissions,
 } from "./wikiEditorFiles";
 import { createWikiSuggestionRender } from "./WikiSuggestionMenu";
@@ -232,10 +229,12 @@ export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
     uploadKind: UploadCategory.Image,
     run: (editor, range, options) => {
       editor.chain().focus().deleteRange(range).run();
-      pickWikiFiles(WIKI_IMAGE_ACCEPT, (files) => {
-        for (const file of files)
-          void insertWikiFile(editor, options.pageId, options, file);
-      });
+      pickAndInsertWikiFiles(
+        editor,
+        options.pageId,
+        options,
+        UploadCategory.Image,
+      );
     },
   },
   {
@@ -245,10 +244,12 @@ export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
     uploadKind: UploadCategory.Attachment,
     run: (editor, range, options) => {
       editor.chain().focus().deleteRange(range).run();
-      pickWikiFiles(WIKI_ATTACHMENT_ACCEPT, (files) => {
-        for (const file of files)
-          void insertWikiFile(editor, options.pageId, options, file);
-      });
+      pickAndInsertWikiFiles(
+        editor,
+        options.pageId,
+        options,
+        UploadCategory.Attachment,
+      );
     },
   },
   {

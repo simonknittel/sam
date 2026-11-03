@@ -1,5 +1,6 @@
 "use client";
 
+import { UploadCategory } from "@sam-monorepo/domain";
 import { getWikiSelectionRestrictions } from "@sam-monorepo/wiki-editor";
 import { useEditorState, type Editor } from "@tiptap/react";
 import {
@@ -18,12 +19,7 @@ import {
   FaTable,
   FaUndo,
 } from "react-icons/fa";
-import {
-  insertWikiFile,
-  pickWikiFiles,
-  WIKI_ATTACHMENT_ACCEPT,
-  WIKI_IMAGE_ACCEPT,
-} from "../wikiEditorFiles";
+import { pickAndInsertWikiFiles } from "../wikiEditorFiles";
 import { CalloutPicker } from "./CalloutPicker";
 import { EmbedPicker } from "./EmbedPicker";
 import { GridPicker } from "./GridPicker";
@@ -59,12 +55,9 @@ export const WikiEditorToolbar = ({
 }: Props) => {
   const uploadPermissions = { canUploadImages, canUploadAttachments };
 
-  const pickAndInsert = (accept: string) => {
+  const pickAndInsert = (kind: UploadCategory) => {
     if (!editor) return;
-    pickWikiFiles(accept, (files) => {
-      for (const file of files)
-        void insertWikiFile(editor, pageId, uploadPermissions, file);
-    });
+    pickAndInsertWikiFiles(editor, pageId, uploadPermissions, kind);
   };
 
   const active = useEditorState({
@@ -215,7 +208,7 @@ export const WikiEditorToolbar = ({
         }
         isActive={active?.image ?? false}
         disabled={restricted.blocks || !canUploadImages}
-        onClick={() => pickAndInsert(WIKI_IMAGE_ACCEPT)}
+        onClick={() => pickAndInsert(UploadCategory.Image)}
       >
         <FaImage />
       </ToolbarButton>
@@ -228,7 +221,7 @@ export const WikiEditorToolbar = ({
         }
         isActive={active?.attachment ?? false}
         disabled={restricted.blocks || !canUploadAttachments}
-        onClick={() => pickAndInsert(WIKI_ATTACHMENT_ACCEPT)}
+        onClick={() => pickAndInsert(UploadCategory.Attachment)}
       >
         <FaPaperclip />
       </ToolbarButton>

@@ -10,7 +10,6 @@ const SCRIPTABLE_MIME_TYPES = [
   "text/xml",
   "text/xsl",
   "text/javascript",
-  "image/svg+xml",
   "application/xhtml+xml",
 ];
 
@@ -28,16 +27,23 @@ test.each([
   expect(isAllowedImageMimeType(mimeType)).toBe(false);
 });
 
-test.each(["text/plain", "text/markdown", "text/csv", "application/pdf"])(
-  "accepts the attachment MIME type %j",
-  (mimeType) => {
-    expect(isAttachmentMimeType(mimeType)).toBe(true);
-  },
-);
+test.each([
+  "text/plain",
+  "text/markdown",
+  "text/csv",
+  "application/pdf",
+  "image/svg+xml",
+])("accepts the attachment MIME type %j", (mimeType) => {
+  expect(isAttachmentMimeType(mimeType)).toBe(true);
+});
 
-test.each(["image/png", "image/jpeg", "image/gif", "image/webp", "image/avif"])(
-  "accepts the image MIME type %j",
-  (mimeType) => {
-    expect(isAllowedImageMimeType(mimeType)).toBe(true);
-  },
-);
+test.each([
+  "image/png",
+  "image/jpeg",
+  "image/gif",
+  "image/webp",
+  "image/avif",
+  "image/svg+xml",
+])("accepts the image MIME type %j", (mimeType) => {
+  expect(isAllowedImageMimeType(mimeType)).toBe(true);
+});

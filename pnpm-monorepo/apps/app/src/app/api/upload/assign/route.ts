@@ -30,6 +30,7 @@ import {
   type Actor,
   type ApplicationContext,
 } from "@sam-monorepo/application";
+import { UploadCategory } from "@sam-monorepo/domain";
 import { NextResponse } from "next/server";
 import * as z from "zod";
 
@@ -87,6 +88,7 @@ const bodySchema = z.discriminatedUnion("resourceType", [
       resourceAttribute: z.literal(WikiPageUploadAttribute.Uploads),
       resourceId: idSchema,
       uploadId: idSchema,
+      kind: z.enum(UploadCategory),
     }),
     /**
      * Sets or removes (`imageId: null`) the icon of a wiki page.
@@ -135,6 +137,7 @@ const assignWikiPageUpload = async (
         linkWikiPageUploadInputSchema.parse({
           page_id: body.resourceId,
           upload_id: body.uploadId,
+          kind: body.kind,
         }),
       );
       return { probeUploadId: result.probe_upload_id, warning: null };

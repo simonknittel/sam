@@ -149,6 +149,65 @@ test("an image uploaded to a wiki page is stored, displayed and persisted", asyn
   await expect(readViewImage).not.toHaveJSProperty("naturalWidth", 0);
 });
 
+test("an SVG uploaded to a wiki page becomes an image or an attachment, as the picker selects", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "wiki-svg-manager",
+    permissionStrings: ["wiki;manage"],
+  });
+  const wikiPage = await seedEditablePage(prisma, { title: "Logoseite" });
+  await signIn(manager.user);
+
+  await page.goto(`/app/wiki/${wikiPage.id}/${wikiPage.slug}`);
+  await enterEditMode(page);
+  await focusEditor(page);
+
+  const svg = Buffer.from(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="48"><rect width="64" height="48" fill="red"/></svg>',
+  );
+  const pickSvg = async (buttonName: string, fileName: string) => {
+    const fileChooserPromise = page.waitForEvent("filechooser");
+    await page.getByRole("button", { name: buttonName, exact: true }).click();
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles({
+      name: fileName,
+      mimeType: "image/svg+xml",
+      buffer: svg,
+    });
+    await expect(
+      page.getByText(`"${fileName}" wurde eingefügt.`),
+    ).toBeVisible();
+  };
+
+  await pickSvg("Bild einfügen", "bild.svg");
+  await pickSvg("Dateianhang einfügen", "anhang.svg");
+
+  expect(
+    await prisma.upload.findMany({
+      select: {
+        fileName: true,
+        mimeType: true,
+        wikiPageLinks: { select: { kind: true } },
+      },
+      orderBy: { fileName: "asc" },
+    }),
+  ).toEqual([
+    {
+      fileName: "anhang.svg",
+      mimeType: "image/svg+xml",
+      wikiPageLinks: [{ kind: WikiPageUploadKind.ATTACHMENT }],
+    },
+    {
+      fileName: "bild.svg",
+      mimeType: "image/svg+xml",
+      wikiPageLinks: [{ kind: WikiPageUploadKind.IMAGE }],
+    },
+  ]);
+});
+
 /**
  * The author of an upload is a citizen. Admin mode gives all permissions,
  * thus only the missing citizen refuses the upload here.

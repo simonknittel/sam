@@ -7,8 +7,7 @@ const PREVIEW_SIZE = 40;
 
 /**
  * Formats the optimizer cannot resize (animated GIF) or must not process
- * (SVG, rejected at upload but present on legacy rows) — same list the
- * other upload surfaces use.
+ * (SVG) — same list the other upload surfaces use.
  */
 const UNOPTIMIZED_MIME_TYPES: readonly string[] = [
   "image/svg+xml",

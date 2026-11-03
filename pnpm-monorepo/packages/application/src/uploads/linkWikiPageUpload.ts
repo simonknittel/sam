@@ -1,18 +1,40 @@
 import { WikiPageUploadKind } from "@sam-monorepo/database/client";
+import {
+  isAllowedImageMimeType,
+  isAttachmentMimeType,
+  UploadCategory,
+} from "@sam-monorepo/domain";
 import * as z from "zod";
 import { requireCitizen, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
-import { ForbiddenError, NotFoundError } from "../errors.js";
+import { ForbiddenError, NotFoundError, ValidationError } from "../errors.js";
 import { idSchema } from "../pagination.js";
 import { loadWikiScopeOfPage } from "../wiki/wikiScope.js";
 import { withSpan } from "../withSpan.js";
-import { isImageUpload } from "./assignableUpload.js";
 import { UploadErrorMessage } from "./uploadErrors.js";
 
 export const linkWikiPageUploadInputSchema = z.object({
   page_id: idSchema,
   upload_id: idSchema,
+  /**
+   * The kind that the editor inserts. The MIME type does not always decide
+   * it: an SVG can be an image or an attachment.
+   */
+  kind: z.enum(UploadCategory),
 });
+
+const isMimeTypeOfKind = (kind: UploadCategory, mimeType: string) => {
+  switch (kind) {
+    case UploadCategory.Image:
+      return isAllowedImageMimeType(mimeType);
+
+    case UploadCategory.Attachment:
+      return isAttachmentMimeType(mimeType);
+
+    default:
+      throw new Error(`Unknown upload category: ${kind satisfies never}`);
+  }
+};
 
 export type LinkWikiPageUploadInput = z.infer<
   typeof linkWikiPageUploadInputSchema
@@ -33,9 +55,9 @@ export interface LinkWikiPageUploadOutput {
  * the page before the editor stores the content. After that, the collab
  * server makes the links of each page agree with its stored content (see
  * `replaceWikiPageUploadLinks()`). The actor needs the upload permission of
- * the page for the kind of the upload (by the stored MIME type, as
- * `getWikiUploadKind()` of the app). The upload must belong to the citizen
- * of the actor and must not be linked to a different page.
+ * the page for the kind of the upload, and the stored MIME type must be
+ * allowed for this kind. The upload must belong to the citizen of the actor
+ * and must not be linked to a different page.
  *
  * No audit event: `UPLOAD_CREATED` records the upload and
  * `WIKI_PAGE_UPDATED` records the editing session.
@@ -45,6 +67,7 @@ export interface LinkWikiPageUploadOutput {
  * different citizen, or when it is linked to a different page
  * @throws NotFoundError when the page or the upload does not exist for the
  * actor
+ * @throws ValidationError `UploadErrorMessage.MimeTypeNotOfKind`
  */
 export const linkWikiPageUpload = (
   context: ApplicationContext,
@@ -72,7 +95,7 @@ export const linkWikiPageUpload = (
     if (!upload) throw new NotFoundError(UploadErrorMessage.UploadNotFound);
 
     const permissions = scope.permissions.get(page.id);
-    const isImage = isImageUpload(upload);
+    const isImage = input.kind === UploadCategory.Image;
     const canUpload = isImage
       ? permissions?.canUploadImages
       : permissions?.canUploadAttachments;
@@ -82,6 +105,8 @@ export const linkWikiPageUpload = (
       throw new ForbiddenError(UploadErrorMessage.NotOwnUpload);
     if (upload.wikiPageLinks.some((link) => link.pageId !== page.id))
       throw new ForbiddenError(UploadErrorMessage.LinkedToOtherPage);
+    if (!isMimeTypeOfKind(input.kind, upload.mimeType))
+      throw new ValidationError(UploadErrorMessage.MimeTypeNotOfKind);
 
     await context.prisma.wikiPageUpload.createMany({
       data: {

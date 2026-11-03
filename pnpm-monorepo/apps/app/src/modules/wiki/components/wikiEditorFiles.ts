@@ -15,7 +15,7 @@ import {
   uploadWikiPageFile,
 } from "../utils/uploadWikiPageFile";
 
-export const WIKI_IMAGE_ACCEPT = IMAGE_MIME_TYPES.join(",");
+const WIKI_IMAGE_ACCEPT = IMAGE_MIME_TYPES.join(",");
 /**
  * `text/*` is not one of the spec's wildcard values (only image, audio and
  * video are), but the major browsers prefix-match any `type/*` entry. The
@@ -24,7 +24,7 @@ export const WIKI_IMAGE_ACCEPT = IMAGE_MIME_TYPES.join(",");
  * for (Markdown, YAML, …), which mime-only accept values would exclude from
  * the picker — they must stay in sync with MIME_TYPES_BY_EXTENSION.
  */
-export const WIKI_ATTACHMENT_ACCEPT = [
+const WIKI_ATTACHMENT_ACCEPT = [
   ...ATTACHMENT_MIME_TYPES,
   "text/*",
   ".md",
@@ -65,18 +65,25 @@ const UPLOAD_BLOCKED_MESSAGES: Record<UploadCategory, string> = {
     "Dateianhänge dürfen auf dieser Seite nur Manager hochladen.",
 };
 
+interface InsertWikiFileOptions {
+  /** Where a drop inserts the file. Without it, the file goes to the selection. */
+  readonly position?: number;
+  /** The kind of the file picker (see `getWikiUploadKind()`) */
+  readonly pickedKind?: UploadCategory;
+}
+
 /**
  * Uploads a file and inserts the matching node (image or attachment card)
- * into the editor — at `position` for drops, at the selection otherwise.
+ * into the editor.
  */
 export const insertWikiFile = async (
   editor: Editor,
   pageId: string,
   permissions: WikiUploadPermissions,
   file: File,
-  position?: number,
+  { position, pickedKind }: InsertWikiFileOptions = {},
 ) => {
-  const kind = getWikiUploadKind(file);
+  const kind = getWikiUploadKind(file, pickedKind);
   if (!kind) {
     toast.error(`Der Dateityp von "${file.name}" wird nicht unterstützt.`);
     return;
@@ -140,19 +147,31 @@ export const insertWikiFile = async (
   }
 };
 
+const WIKI_ACCEPT_BY_KIND: Record<UploadCategory, string> = {
+  [UploadCategory.Image]: WIKI_IMAGE_ACCEPT,
+  [UploadCategory.Attachment]: WIKI_ATTACHMENT_ACCEPT,
+};
+
 /**
- * Opens the browser's file picker and hands the picked files to `onPick`.
+ * Opens the browser's file picker for the kind and inserts the picked files
+ * as this kind, if their type allows it (see `getWikiUploadKind()`).
  */
-export const pickWikiFiles = (
-  accept: string,
-  onPick: (files: File[]) => void,
+export const pickAndInsertWikiFiles = (
+  editor: Editor,
+  pageId: string,
+  permissions: WikiUploadPermissions,
+  kind: UploadCategory,
 ) => {
   const input = document.createElement("input");
   input.type = "file";
-  input.accept = accept;
+  input.accept = WIKI_ACCEPT_BY_KIND[kind];
   input.multiple = true;
   input.addEventListener("change", () => {
-    if (input.files) onPick([...input.files]);
+    if (!input.files) return;
+    for (const file of input.files)
+      void insertWikiFile(editor, pageId, permissions, file, {
+        pickedKind: kind,
+      });
   });
   input.click();
 };
@@ -175,7 +194,7 @@ export const createWikiFileHandler = (
         blockedKinds.add(kind);
         continue;
       }
-      void insertWikiFile(editor, pageId, permissions, file, position);
+      void insertWikiFile(editor, pageId, permissions, file, { position });
     }
     for (const kind of blockedKinds) toast.error(UPLOAD_BLOCKED_MESSAGES[kind]);
   };

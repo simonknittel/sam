@@ -46,8 +46,22 @@ const resolveWikiFileMimeType = (file: File): string => {
   return file.type;
 };
 
-export const getWikiUploadKind = (file: File): UploadCategory | null => {
+const isMimeTypeOfKind = (kind: UploadCategory, mimeType: string) =>
+  kind === UploadCategory.Image
+    ? isAllowedImageMimeType(mimeType)
+    : isAttachmentMimeType(mimeType);
+
+/**
+ * A file picker gives the kind that the user selected ("Bild" or
+ * "Dateianhang"). A type that both kinds accept (SVG) then follows the
+ * picker. A drop or a paste gives no kind: an image type then makes an image.
+ */
+export const getWikiUploadKind = (
+  file: File,
+  pickedKind?: UploadCategory,
+): UploadCategory | null => {
   const mimeType = resolveWikiFileMimeType(file);
+  if (pickedKind && isMimeTypeOfKind(pickedKind, mimeType)) return pickedKind;
   if (isAllowedImageMimeType(mimeType)) return UploadCategory.Image;
   if (isAttachmentMimeType(mimeType)) return UploadCategory.Attachment;
   return null;
@@ -112,6 +126,7 @@ export const uploadWikiPageFile = async (
       resourceAttribute: "uploads",
       resourceId: pageId,
       uploadId: created.item.id,
+      kind,
     }),
     signal: AbortSignal.timeout(10_000),
   });

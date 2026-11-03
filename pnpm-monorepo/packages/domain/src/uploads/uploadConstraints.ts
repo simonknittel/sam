@@ -6,11 +6,16 @@ export enum UploadCategory {
 }
 
 /**
- * The MIME types that an image upload can have. Everyone can read an upload
- * directly from the bucket, and the bucket serves the stored type as the
- * `Content-Type`. Thus, the list has only raster formats that browsers show
- * as an image and that the dimension probe can read. SVG is not in the list:
- * an SVG document can execute scripts.
+ * The MIME types that an image upload can have: formats that browsers show
+ * as an image. Everyone can read an upload directly from the bucket, and the
+ * bucket serves the stored type as the `Content-Type`.
+ *
+ * SVG is in the list on purpose (accepted risk, 2026-11-03): an SVG that a
+ * user opens directly from the bucket can execute scripts on the origin of
+ * the bucket, not on the origin of the app. The app shows an SVG only in an
+ * `<img>` or through the image optimizer with a sandbox policy, where it
+ * cannot execute scripts. `ATTACHMENT_MIME_TYPES` accepts SVG for the same
+ * reason.
  */
 export const IMAGE_MIME_TYPES: readonly string[] = [
   "image/png",
@@ -18,23 +23,26 @@ export const IMAGE_MIME_TYPES: readonly string[] = [
   "image/gif",
   "image/webp",
   "image/avif",
+  "image/svg+xml",
 ];
 
 /**
  * The MIME types that an attachment can have: plain text formats, PDF,
- * office documents and structured text formats. Everyone can read an upload
- * directly from the bucket (without the `Content-Disposition: attachment` of
- * the attachment route), thus the list has no type that a browser shows as an
- * active document or runs as a script: no HTML, XML, XSLT, SVG or
- * JavaScript. The list also has no archives (a reader cannot examine their
- * contents quickly) and no `application/octet-stream` (the type of
- * executables and unknown binaries). The client sends other text formats as
- * `text/plain`.
+ * office documents, structured text formats and SVG. Everyone can read an
+ * upload directly from the bucket (without the `Content-Disposition:
+ * attachment` of the attachment route), thus the list has no type that a
+ * browser shows as an active document or runs as a script: no HTML, XML,
+ * XSLT or JavaScript. SVG is the accepted exception (see
+ * `IMAGE_MIME_TYPES`). The list also has no archives (a reader cannot
+ * examine their contents quickly) and no `application/octet-stream` (the
+ * type of executables and unknown binaries). The client sends other text
+ * formats as `text/plain`.
  */
 export const ATTACHMENT_MIME_TYPES: readonly string[] = [
   "text/plain",
   "text/markdown",
   "text/csv",
+  "image/svg+xml",
   "application/pdf",
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
