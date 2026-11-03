@@ -30,7 +30,11 @@ export const updateTaskInputSchema = z.object({
     .describe(
       `When the task expires. ${DATE_TIME_INPUT_DESCRIPTION} Null: the task never expires.`,
     ),
-  repeatable: taskFieldSchemas.repeatable.optional(),
+  repeatable: taskFieldSchemas.repeatable
+    .optional()
+    .describe(
+      "How often the task can be completed. Each completion creates the next repetition with the rest of the count. For a task with a new_silc reward, a change needs the permission to create new SILC.",
+    ),
   reward_silc_value: taskFieldSchemas.reward_silc_value
     .optional()
     .describe(
@@ -268,7 +272,7 @@ const getTaskChanges = (
  * choices: the forms of the assignees, the assignment limit and the required
  * roles exist only for a public task, the pickers offer the citizens that
  * are not deleted and the roles that the actor can see, and only a creator
- * of new SILC changes a reward of new SILC
+ * of new SILC changes the reward or the repetitions of a task with new SILC
  */
 const requireAllowedChanges = async (
   context: ApplicationContext,
@@ -284,8 +288,12 @@ const requireAllowedChanges = async (
   if (changesPublicFields && task.visibility !== TaskVisibility.PUBLIC)
     throw new ValidationError(TaskErrorMessage.OnlyForPublicTask);
 
+  /**
+   * Each repetition pays the reward again, thus the count of the repetitions
+   * also decides how much new SILC the task can create
+   */
   if (
-    input.reward_silc_value !== undefined &&
+    (input.reward_silc_value !== undefined || input.repeatable !== undefined) &&
     task.rewardType === TaskRewardType.NEW_SILC
   )
     requirePermission(actor, "task", "create", [

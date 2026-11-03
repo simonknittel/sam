@@ -95,19 +95,23 @@ const getRewardTransactions = (
   }
 };
 
-/** Creates the next repetition of a task that can be completed again */
+/**
+ * Creates the next repetition of a task that can be completed again. The
+ * repetition keeps the creator of the task: the creator manages it and pays
+ * a SILC reward. The completer is only the author of the copied assignments.
+ */
 const createRepetition = async (
   transaction: Prisma.TransactionClient,
   task: TaskToComplete,
   completionistIds: readonly string[],
-  createdById: string,
+  completerId: string,
 ) => {
   const columns = {
     visibility: task.visibility,
     assignmentLimit: task.assignmentLimit,
     title: task.title,
     description: task.description,
-    createdById,
+    createdById: task.createdById,
     expiresAt: task.expiresAt,
     rewardType: task.rewardType,
     rewardTypeTextValue: task.rewardTypeTextValue,
@@ -129,7 +133,7 @@ const createRepetition = async (
                 )
                 .map((assignment) => ({
                   citizenId: assignment.citizenId,
-                  createdById,
+                  createdById: completerId,
                 })),
             },
           },
@@ -149,7 +153,7 @@ const createRepetition = async (
             createMany: {
               data: task.assignments.map((assignment) => ({
                 citizenId: assignment.citizenId,
-                createdById,
+                createdById: completerId,
               })),
             },
           },
@@ -164,7 +168,10 @@ const createRepetition = async (
           data: {
             ...columns,
             assignments: {
-              create: { citizenId: assignment.citizenId, createdById },
+              create: {
+                citizenId: assignment.citizenId,
+                createdById: completerId,
+              },
             },
             canSelfComplete: task.canSelfComplete,
           },
