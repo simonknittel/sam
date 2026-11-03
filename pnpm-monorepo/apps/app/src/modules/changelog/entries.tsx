@@ -62,7 +62,8 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
       <p>
         Posten in der Aufstellung können jetzt neben einem Schiff auch Rollen
         erfordern. Bei mehreren Rollen legst du fest, ob alle oder eine davon
-        nötig sind.
+        nötig sind. Beim Zuweisen siehst du, welche Voraussetzungen einem
+        Citizen fehlen.
       </p>
     ),
   },
