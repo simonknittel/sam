@@ -4,6 +4,7 @@ import {
   type ApplicationContext,
 } from "@sam-monorepo/application";
 import { type Event } from "@sam-monorepo/database";
+import { getEventStartingText } from "@sam-monorepo/domain";
 import { publishNotifications } from "../publish.js";
 
 const SECONDS_PER_MINUTE = 60;
@@ -21,14 +22,19 @@ export const EventStartingHandler = async (
   });
   if (!result) return;
 
+  const notificationPayload = {
+    eventId: result.event.id,
+    eventName: result.event.name,
+  };
+  const text = getEventStartingText(notificationPayload);
+
   await publishNotifications(
     context,
     result.recipients.map((recipient) => ({
       receiverId: recipient.citizenId,
       notificationType: "event_starting" as const,
-      payload: { eventId: result.event.id, eventName: result.event.name },
-      title: "Event beginnt in 15 Minuten",
-      body: result.event.name,
+      payload: notificationPayload,
+      ...text,
       url: `/app/events/${result.event.id}`,
     })),
     {

@@ -3,6 +3,7 @@ import {
   type ApplicationContext,
 } from "@sam-monorepo/application";
 import { type Citizen, type Event } from "@sam-monorepo/database";
+import { getEventParticipationRemovedText } from "@sam-monorepo/domain";
 import { publishNotifications } from "../publish.js";
 
 type Payload = {
@@ -25,20 +26,20 @@ export const EventParticipationRemovedHandler = async (
   });
   if (!result) return;
 
-  const body = `Du wurdest vom Event "${result.event.name}" entfernt.`;
+  const notificationPayload = {
+    eventId: result.event.id,
+    eventName: result.event.name,
+    reason: payload.reason,
+  };
+  const text = getEventParticipationRemovedText(notificationPayload);
 
   await publishNotifications(
     context,
     result.recipients.map((recipient) => ({
       receiverId: recipient.citizenId,
       notificationType: "event_participation_removed" as const,
-      payload: {
-        eventId: result.event.id,
-        eventName: result.event.name,
-        reason: payload.reason,
-      },
-      title: "Vom Event entfernt",
-      body: payload.reason ? `${body} Grund: ${payload.reason}` : body,
+      payload: notificationPayload,
+      ...text,
       url: `/app/events/${result.event.id}`,
     })),
   );

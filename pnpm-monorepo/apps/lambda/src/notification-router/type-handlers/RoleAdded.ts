@@ -3,6 +3,7 @@ import {
   type ApplicationContext,
 } from "@sam-monorepo/application";
 import { type Citizen, type Role } from "@sam-monorepo/database";
+import { getRoleAddedText } from "@sam-monorepo/domain";
 import { publishNotifications } from "../publish";
 
 interface Payload {
@@ -20,14 +21,19 @@ export const RoleAddedHandler = async (
   });
   if (!result) return;
 
+  const notificationPayload = {
+    roleId: result.role.id,
+    roleName: result.role.name,
+  };
+  const text = getRoleAddedText(notificationPayload);
+
   await publishNotifications(
     context,
     result.recipients.map((recipient) => ({
       receiverId: recipient.citizenId,
       notificationType: "role_added" as const,
-      payload: { roleId: result.role.id, roleName: result.role.name },
-      title: "Neue Rolle",
-      body: `Dir wurde eine neue Rolle zugewiesen: ${result.role.name}`,
+      payload: notificationPayload,
+      ...text,
     })),
   );
 };

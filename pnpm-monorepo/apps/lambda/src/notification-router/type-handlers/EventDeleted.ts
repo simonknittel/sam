@@ -3,6 +3,7 @@ import {
   type ApplicationContext,
 } from "@sam-monorepo/application";
 import { type Citizen, type Event } from "@sam-monorepo/database";
+import { getEventDeletedText } from "@sam-monorepo/domain";
 import { publishNotifications } from "../publish.js";
 
 type Payload = {
@@ -20,14 +21,16 @@ export const EventDeletedHandler = async (
   });
   if (!result) return;
 
+  const notificationPayload = { eventName: result.event.name };
+  const text = getEventDeletedText(notificationPayload);
+
   await publishNotifications(
     context,
     result.recipients.map((recipient) => ({
       receiverId: recipient.citizenId,
       notificationType: "event_deleted" as const,
-      payload: { eventName: result.event.name },
-      title: "Event gelöscht",
-      body: result.event.name,
+      payload: notificationPayload,
+      ...text,
     })),
   );
 };

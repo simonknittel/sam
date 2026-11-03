@@ -3,6 +3,7 @@ import {
   type ApplicationContext,
 } from "@sam-monorepo/application";
 import { type WikiPageCitizenMention } from "@sam-monorepo/database";
+import { getWikiCitizenMentionedText } from "@sam-monorepo/domain";
 import { publishNotifications } from "../publish";
 
 interface Payload {
@@ -23,24 +24,23 @@ export const WikiCitizenMentionedHandler = async (
   if (!result) return;
 
   const { mention } = result;
+  const notificationPayload = {
+    pageId: mention.pageId,
+    pageTitle: mention.pageTitle,
+    // The text shows this value, thus it holds the label of a deleted
+    // citizen.
+    mentionedByHandle: mention.mentionedByName,
+    eventId: mention.eventId,
+  };
+  const text = getWikiCitizenMentionedText(notificationPayload);
 
   await publishNotifications(
     context,
     result.recipients.map((recipient) => ({
       receiverId: recipient.citizenId,
       notificationType: "wiki_citizen_mentioned" as const,
-      payload: {
-        pageId: mention.pageId,
-        pageTitle: mention.pageTitle,
-        // The app shows this value in the on-site text, thus it holds the
-        // label of a deleted citizen.
-        mentionedByHandle: mention.mentionedByName,
-        eventId: mention.eventId,
-      },
-      title: "Du wurdest im Wiki erwähnt",
-      body: mention.mentionedByName
-        ? `${mention.mentionedByName} hat dich auf der Seite "${mention.pageTitle}" erwähnt`
-        : `Du wurdest auf der Seite "${mention.pageTitle}" erwähnt`,
+      payload: notificationPayload,
+      ...text,
       url: mention.eventId
         ? `/app/events/${mention.eventId}/briefing/${mention.pageId}`
         : `/app/wiki/${mention.pageId}`,

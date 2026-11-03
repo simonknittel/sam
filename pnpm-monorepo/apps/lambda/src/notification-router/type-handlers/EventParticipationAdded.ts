@@ -3,6 +3,7 @@ import {
   type ApplicationContext,
 } from "@sam-monorepo/application";
 import { type Citizen, type Event } from "@sam-monorepo/database";
+import { getEventParticipationAddedText } from "@sam-monorepo/domain";
 import { publishNotifications } from "../publish.js";
 
 type Payload = {
@@ -20,14 +21,19 @@ export const EventParticipationAddedHandler = async (
   });
   if (!result) return;
 
+  const notificationPayload = {
+    eventId: result.event.id,
+    eventName: result.event.name,
+  };
+  const text = getEventParticipationAddedText(notificationPayload);
+
   await publishNotifications(
     context,
     result.recipients.map((recipient) => ({
       receiverId: recipient.citizenId,
       notificationType: "event_participation_added" as const,
-      payload: { eventId: result.event.id, eventName: result.event.name },
-      title: "Zum Event hinzugefügt",
-      body: `Du wurdest zum Event "${result.event.name}" hinzugefügt.`,
+      payload: notificationPayload,
+      ...text,
       url: `/app/events/${result.event.id}`,
     })),
   );

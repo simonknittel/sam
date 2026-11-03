@@ -4,7 +4,6 @@ import {
   MANUAL_NOTIFICATION_BODY_MAX_LENGTH,
   MANUAL_NOTIFICATION_TITLE_MAX_LENGTH,
 } from "../manualNotifications/manualNotificationLimits.js";
-import { ORGANIZATION_TIMEZONE } from "../timeZone.js";
 
 /**
  * Payload schemas for on-site notifications, shared between the
@@ -120,20 +119,6 @@ export const eventMorningReminderPayloadSchema = z.object({
   eventName: z.string(),
   startTime: z.iso.datetime(),
 });
-
-const EVENT_START_TIME_FORMAT = new Intl.DateTimeFormat("de-DE", {
-  timeZone: ORGANIZATION_TIMEZONE,
-  hour: "2-digit",
-  minute: "2-digit",
-});
-
-/**
- * The title of the morning reminder of an event, for the Lambda (web push)
- * and the app (on-site row). It gives the start time in the time zone of the
- * organization, like the event page.
- */
-export const getEventMorningReminderTitle = (startTime: Date) =>
-  `Event beginnt um ${EVENT_START_TIME_FORMAT.format(startTime)} Uhr`;
 
 export const eventStartingPayloadSchema = z.object({
   eventId: z.string(),
@@ -329,22 +314,13 @@ export const ONBOARDING_POPOVER_PATH = `/app/dashboard?${ONBOARDING_POPOVER_SEAR
  */
 export const FLEET_UPDATE_REMINDER_ABSENCE_MONTHS = 6;
 
-/**
- * The text is the same for each citizen, thus the Lambda (web push) and the
- * app (on-site row) share it here and the payload is empty
- */
-export const FLEET_UPDATE_REMINDER_WORDING = {
-  title: "Willkommen zurück!",
-  body: "Ist deine Flotte noch aktuell? Prüfe deine Schiffe unter „Meine Schiffe“.",
-} as const;
-
 /** The page of the own ships, which the fleet update reminder links to */
 export const MY_SHIPS_PATH = "/app/fleet/my-ships";
 
 /**
  * The reminder to check the own ships on the first visit after an absence
  * of `FLEET_UPDATE_REMINDER_ABSENCE_MONTHS`. It carries nothing, see
- * `FLEET_UPDATE_REMINDER_WORDING`.
+ * `getFleetUpdateReminderText()`.
  */
 export const fleetUpdateReminderPayloadSchema = z.object({});
 

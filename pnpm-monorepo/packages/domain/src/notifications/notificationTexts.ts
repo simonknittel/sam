@@ -39,6 +39,74 @@ const formatDateTime = (isoDateTime: string) => {
 
 const UNKNOWN_CITIZEN = "Unbekannt";
 
+export const getEventCreatedText = ({
+  eventName,
+}: OnSiteNotificationPayload<"event_created">): NotificationText => ({
+  title: "Neues Event",
+  body: eventName,
+});
+
+export const getEventUpdatedText = ({
+  eventName,
+}: OnSiteNotificationPayload<"event_updated">): NotificationText => ({
+  title: "Event aktualisiert",
+  body: eventName,
+});
+
+export const getEventDeletedText = ({
+  eventName,
+}: OnSiteNotificationPayload<"event_deleted">): NotificationText => ({
+  title: "Event gelöscht",
+  body: eventName,
+});
+
+export const getEventBriefingPublishedText = ({
+  eventName,
+}: OnSiteNotificationPayload<"event_briefing_published">): NotificationText => ({
+  title: "Briefing veröffentlicht",
+  body: eventName,
+});
+
+export const getEventMorningReminderText = ({
+  eventName,
+  startTime,
+}: OnSiteNotificationPayload<"event_morning_reminder">): NotificationText => ({
+  title: `Event beginnt um ${TIME_FORMAT.format(new Date(startTime))} Uhr`,
+  body: eventName,
+});
+
+/**
+ * "15 Minuten" is `FREQUENT_AUTOMATIONS_INTERVAL_MINUTES` in
+ * `packages/application/src/frequentAutomations.ts`. The domain package
+ * cannot import the application package. If you change the interval, change
+ * this title too.
+ */
+export const getEventStartingText = ({
+  eventName,
+}: OnSiteNotificationPayload<"event_starting">): NotificationText => ({
+  title: "Event beginnt in 15 Minuten",
+  body: eventName,
+});
+
+export const getEventParticipationAddedText = ({
+  eventName,
+}: OnSiteNotificationPayload<"event_participation_added">): NotificationText => ({
+  title: "Zum Event hinzugefügt",
+  body: `Du wurdest zum Event "${eventName}" hinzugefügt.`,
+});
+
+export const getEventParticipationRemovedText = ({
+  eventName,
+  reason,
+}: OnSiteNotificationPayload<"event_participation_removed">): NotificationText => {
+  const body = `Du wurdest vom Event "${eventName}" entfernt.`;
+
+  return {
+    title: "Vom Event entfernt",
+    body: reason ? `${body} Grund: ${reason}` : body,
+  };
+};
+
 export const getEventLineupEnabledText = ({
   eventName,
   positionNames,
@@ -133,6 +201,13 @@ export const getEventPositionApplicationCreatedText = ({
   body: `${citizenHandle ?? UNKNOWN_CITIZEN} für ${positionName} – ${eventName}`,
 });
 
+export const getRoleAddedText = ({
+  roleName,
+}: OnSiteNotificationPayload<"role_added">): NotificationText => ({
+  title: "Neue Rolle",
+  body: `Dir wurde eine neue Rolle zugewiesen: ${roleName}`,
+});
+
 export const getRoleLevelIncreasedText = ({
   roleName,
   level,
@@ -140,6 +215,25 @@ export const getRoleLevelIncreasedText = ({
 }: OnSiteNotificationPayload<"role_level_increased">): NotificationText => ({
   title: "Neues Level",
   body: `${roleName}: ${level} von ${maxLevel} Level erreicht`,
+});
+
+export const getSilcTransactionCreatedText = ({
+  value,
+  description,
+}: OnSiteNotificationPayload<"silc_transaction_created">): NotificationText => {
+  const amount = `${value.toLocaleString("de", { signDisplay: "always" })} SILC`;
+
+  return {
+    title: "SILC-Transaktion erhalten",
+    body: description ? `${amount} - ${description}` : amount,
+  };
+};
+
+export const getSincomePayoutStartedText = ({
+  cycleTitle,
+}: OnSiteNotificationPayload<"sincome_payout_started">): NotificationText => ({
+  title: "SINcome-Auszahlung gestartet",
+  body: `Die Auszahlungsphase für den Zeitraum ${cycleTitle} wurde gestartet. Bitte stimme der Auszahlung zu.`,
 });
 
 /**
@@ -153,6 +247,24 @@ export const getSincomePayoutReminderText = ({
 }: OnSiteNotificationPayload<"sincome_payout_reminder">): NotificationText => ({
   title: "SINcome: Zustimmung fehlt",
   body: `Letzter Tag der Auszahlungsphase für den Zeitraum ${cycleTitle}: ${DAY_FORMAT.format(new Date(payoutEndsAt))}. Bitte stimme der Auszahlung zu.`,
+});
+
+export const getSincomePayoutDisbursedText = ({
+  cycleTitle,
+  auecAmount,
+}: OnSiteNotificationPayload<"sincome_payout_disbursed">): NotificationText => ({
+  title: "SINcome-Auszahlung erhalten",
+  body: `Für den Zeitraum ${cycleTitle} hast du eine Auszahlung in Höhe von ${auecAmount.toLocaleString("de-DE")} aUEC erhalten.`,
+});
+
+export const getPenaltyEntryCreatedText = ({
+  points,
+  reason,
+}: OnSiteNotificationPayload<"penalty_entry_created">): NotificationText => ({
+  title: "Strafpunkte erhalten",
+  body: reason
+    ? `Du hast ${points} Strafpunkte erhalten für ${reason}`
+    : `Du hast ${points} Strafpunkte erhalten`,
 });
 
 const describePenaltyEntry = ({
@@ -176,6 +288,20 @@ export const getPenaltyEntryDeletedText = (
 ): NotificationText => ({
   title: "Strafpunkte gelöscht",
   body: `${describePenaltyEntry(payload)} wurden gelöscht.`,
+});
+
+export const getTaskCreatedText = ({
+  taskTitle,
+}: OnSiteNotificationPayload<"task_created">): NotificationText => ({
+  title: "Neuer Task",
+  body: taskTitle,
+});
+
+export const getTaskAssignmentUpdatedText = ({
+  taskTitle,
+}: OnSiteNotificationPayload<"task_assignment_updated">): NotificationText => ({
+  title: "Neuer Task",
+  body: `Dir wurde ein Task zugewiesen: ${taskTitle}`,
 });
 
 export const getTaskCancelledText = ({
@@ -207,4 +333,42 @@ export const getTaskCompletedText = ({
 }: OnSiteNotificationPayload<"task_completed">): NotificationText => ({
   title: "Task abgeschlossen",
   body: `${citizenHandle ?? UNKNOWN_CITIZEN} hat "${taskTitle}" abgeschlossen`,
+});
+
+export const getTaskDeletedText = ({
+  taskTitle,
+}: OnSiteNotificationPayload<"task_deleted">): NotificationText => ({
+  title: "Task gelöscht",
+  body: taskTitle,
+});
+
+export const getWikiPageReportedText = ({
+  pageTitle,
+  uploadFileName,
+  reportedByHandle,
+}: OnSiteNotificationPayload<"wiki_page_reported">): NotificationText => {
+  const handle = reportedByHandle ?? UNKNOWN_CITIZEN;
+
+  return {
+    title: "Neue Meldung im Wiki",
+    body: uploadFileName
+      ? `${handle} hat den Dateianhang "${uploadFileName}" auf der Seite "${pageTitle}" gemeldet`
+      : `${handle} hat die Seite "${pageTitle}" gemeldet`,
+  };
+};
+
+export const getWikiCitizenMentionedText = ({
+  pageTitle,
+  mentionedByHandle,
+}: OnSiteNotificationPayload<"wiki_citizen_mentioned">): NotificationText => ({
+  title: "Du wurdest im Wiki erwähnt",
+  body: mentionedByHandle
+    ? `${mentionedByHandle} hat dich auf der Seite "${pageTitle}" erwähnt`
+    : `Du wurdest auf der Seite "${pageTitle}" erwähnt`,
+});
+
+/** The text is the same for each citizen, thus the payload is empty */
+export const getFleetUpdateReminderText = (): NotificationText => ({
+  title: "Willkommen zurück!",
+  body: "Ist deine Flotte noch aktuell? Prüfe deine Schiffe unter „Meine Schiffe“.",
 });

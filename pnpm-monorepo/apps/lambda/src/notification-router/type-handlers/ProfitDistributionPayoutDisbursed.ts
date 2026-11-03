@@ -2,6 +2,7 @@ import {
   findPayoutDisbursedRecipients,
   type ApplicationContext,
 } from "@sam-monorepo/application";
+import { getSincomePayoutDisbursedText } from "@sam-monorepo/domain";
 import { publishNotifications } from "../publish";
 
 interface Change {
@@ -27,17 +28,20 @@ export const ProfitDistributionPayoutDisbursedHandler = async (
 
   await publishNotifications(
     context,
-    result.recipients.map((recipient) => ({
-      receiverId: recipient.citizenId,
-      notificationType: "sincome_payout_disbursed" as const,
-      payload: {
+    result.recipients.map((recipient) => {
+      const notificationPayload = {
         cycleId: result.cycle.id,
         cycleTitle: result.cycle.title,
         auecAmount: recipient.auecAmount,
-      },
-      title: "SINcome-Auszahlung erhalten",
-      body: `Für den Zeitraum ${result.cycle.title} hast du eine Auszahlung in Höhe von ${recipient.auecAmount.toLocaleString("de-DE")} aUEC erhalten.`,
-      url: `/app/sincome/${result.cycle.id}`,
-    })),
+      };
+
+      return {
+        receiverId: recipient.citizenId,
+        notificationType: "sincome_payout_disbursed" as const,
+        payload: notificationPayload,
+        ...getSincomePayoutDisbursedText(notificationPayload),
+        url: `/app/sincome/${result.cycle.id}`,
+      };
+    }),
   );
 };

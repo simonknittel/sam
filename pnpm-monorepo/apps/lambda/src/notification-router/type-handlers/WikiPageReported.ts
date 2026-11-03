@@ -3,6 +3,7 @@ import {
   type ApplicationContext,
 } from "@sam-monorepo/application";
 import { type WikiPageReport } from "@sam-monorepo/database";
+import { getWikiPageReportedText } from "@sam-monorepo/domain";
 import { publishNotifications } from "../publish";
 
 interface Payload {
@@ -19,24 +20,23 @@ export const WikiPageReportedHandler = async (
   if (!result) return;
 
   const { report } = result;
+  const notificationPayload = {
+    reportId: report.id,
+    pageTitle: report.pageTitle,
+    uploadFileName: report.uploadFileName,
+    // The text shows this value, thus it holds the label of a deleted
+    // citizen.
+    reportedByHandle: report.reportedByName,
+  };
+  const text = getWikiPageReportedText(notificationPayload);
 
   await publishNotifications(
     context,
     result.recipients.map((recipient) => ({
       receiverId: recipient.citizenId,
       notificationType: "wiki_page_reported" as const,
-      payload: {
-        reportId: report.id,
-        pageTitle: report.pageTitle,
-        uploadFileName: report.uploadFileName,
-        // The app shows this value in the on-site text, thus it holds the
-        // label of a deleted citizen.
-        reportedByHandle: report.reportedByName,
-      },
-      title: "Neue Meldung im Wiki",
-      body: report.uploadFileName
-        ? `${report.reportedByName ?? "Unbekannt"} hat den Dateianhang "${report.uploadFileName}" auf der Seite "${report.pageTitle}" gemeldet`
-        : `${report.reportedByName ?? "Unbekannt"} hat die Seite "${report.pageTitle}" gemeldet`,
+      payload: notificationPayload,
+      ...text,
       url: "/app/wiki/reports",
     })),
   );

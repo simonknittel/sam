@@ -3,6 +3,7 @@ import {
   type ApplicationContext,
 } from "@sam-monorepo/application";
 import { type SilcTransaction } from "@sam-monorepo/database";
+import { getSilcTransactionCreatedText } from "@sam-monorepo/domain";
 import { publishNotifications } from "../publish";
 
 interface Payload {
@@ -19,16 +20,19 @@ export const SilcTransactionsCreatedHandler = async (
 
   await publishNotifications(
     context,
-    recipients.map((recipient) => ({
-      receiverId: recipient.citizenId,
-      notificationType: "silc_transaction_created" as const,
-      payload: {
+    recipients.map((recipient) => {
+      const notificationPayload = {
         transactionId: recipient.transactionId,
         value: recipient.value,
         description: recipient.description,
-      },
-      title: "SILC-Transaktion erhalten",
-      body: `${recipient.value.toLocaleString("de", { signDisplay: "always" })} SILC - ${recipient.description}`,
-    })),
+      };
+
+      return {
+        receiverId: recipient.citizenId,
+        notificationType: "silc_transaction_created" as const,
+        payload: notificationPayload,
+        ...getSilcTransactionCreatedText(notificationPayload),
+      };
+    }),
   );
 };

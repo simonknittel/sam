@@ -2,6 +2,7 @@ import {
   findPayoutStartedRecipients,
   type ApplicationContext,
 } from "@sam-monorepo/application";
+import { getSincomePayoutStartedText } from "@sam-monorepo/domain";
 import { publishNotifications } from "../publish";
 
 interface Payload {
@@ -17,14 +18,19 @@ export const ProfitDistributionPayoutStartedHandler = async (
   });
   if (!result) return;
 
+  const notificationPayload = {
+    cycleId: result.cycle.id,
+    cycleTitle: result.cycle.title,
+  };
+  const text = getSincomePayoutStartedText(notificationPayload);
+
   await publishNotifications(
     context,
     result.recipients.map((recipient) => ({
       receiverId: recipient.citizenId,
       notificationType: "sincome_payout_started" as const,
-      payload: { cycleId: result.cycle.id, cycleTitle: result.cycle.title },
-      title: "SINcome-Auszahlung gestartet",
-      body: `Die Auszahlungsphase für den Zeitraum ${result.cycle.title} wurde gestartet. Bitte stimme der Auszahlung zu.`,
+      payload: notificationPayload,
+      ...text,
       url: `/app/sincome/${result.cycle.id}`,
     })),
   );
