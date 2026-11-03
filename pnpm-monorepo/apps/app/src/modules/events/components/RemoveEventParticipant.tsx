@@ -41,7 +41,12 @@ export const RemoveEventParticipant = ({
         <button
           type="submit"
           disabled={isPending}
-          className="flex size-8 items-center justify-center rounded-secondary text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 active:text-brand-red-300 enabled:cursor-pointer disabled:opacity-50"
+          /**
+           * `relative` keeps the `sr-only` label in the button. Without it,
+           * the label leaves the scroll container of the table and widens the
+           * page on small screens.
+           */
+          className="relative flex size-8 items-center justify-center rounded-secondary text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 active:text-brand-red-300 enabled:cursor-pointer disabled:opacity-50"
           title="Teilnehmer entfernen"
         >
           {isPending ? <AsciiSpinner /> : <FaTrash />}
