@@ -157,7 +157,7 @@ test.describe("the lineup write tools of the MCP server", () => {
     ).toEqual({ parentPositionId: null });
 
     await expectAuditEvents(prisma, [
-      "EVENT_POSITION_CREATED",
+      "EVENT_POSITION_CREATED_V2",
       "EVENT_POSITION_UPDATED_V2",
       "EVENT_LINEUP_ORDER_CHANGED",
     ]);
@@ -167,7 +167,7 @@ test.describe("the lineup write tools of the MCP server", () => {
       .poll(() =>
         prisma.auditEvent.findFirst({
           where: {
-            type: "EVENT_POSITION_CREATED",
+            type: "EVENT_POSITION_CREATED_V2",
             data: { path: ["positionId"], equals: copilotId },
           },
           select: { createdById: true, data: true },
@@ -180,9 +180,73 @@ test.describe("the lineup write tools of the MCP server", () => {
           positionId: copilotId,
           name: "Copilot",
           variantIds: [],
+          roleIds: [],
+          roleMatch: "ANY",
           parentPositionId: pilotId,
         },
       });
+  });
+
+  test("the required roles: only visible roles can be added and show, an update keeps the hidden ones", async ({
+    prisma,
+    authorizeMcpClient,
+    connectMcpClient,
+  }) => {
+    const gunnerRole = await createRole(prisma, { name: "Bordschütze" });
+    const hiddenRole = await createRole(prisma, { name: "Geheimdienst" });
+    const organizer = await createMcpCitizen(prisma, {
+      handle: "mcp-staffelfuehrer",
+      permissionStrings: [
+        ...LINEUP_PERMISSIONS,
+        `otherRole;read;roleId=${gunnerRole.id}`,
+      ],
+    });
+    const event = await createAppEvent(prisma, {
+      name: "Expedition nach Pyro",
+      createdById: organizer.entity.id,
+      ...futureEvent(),
+    });
+    const client = await connectMcpClient(
+      (await authorizeMcpClient(organizer.user)).accessToken,
+    );
+
+    expect(
+      await callForError(client, "create_event_position", {
+        event_id: event.id,
+        name: "Agent",
+        required_role_ids: [hiddenRole.id],
+      }),
+    ).toMatch(VALIDATION_RESULT);
+
+    const gunner = await callForContent(client, "create_event_position", {
+      event_id: event.id,
+      name: "Turmschütze",
+      required_role_ids: [gunnerRole.id],
+      required_role_match: "ALL",
+    });
+    expect(gunner).toMatchObject({
+      required_roles: [{ id: gunnerRole.id, name: "Bordschütze" }],
+      required_role_match: "ALL",
+    });
+    const gunnerId = String(gunner.id);
+
+    // A role from a user who can see it, thus the organizer cannot see it
+    await prisma.eventPositionRequiredRole.create({
+      data: { positionId: gunnerId, roleId: hiddenRole.id },
+    });
+
+    expect(
+      await callForContent(client, "update_event_position", {
+        position_id: gunnerId,
+        required_role_ids: [],
+      }),
+    ).toMatchObject({ required_roles: [], required_role_match: "ALL" });
+    expect(
+      await prisma.eventPositionRequiredRole.findMany({
+        where: { positionId: gunnerId },
+        select: { roleId: true },
+      }),
+    ).toEqual([{ roleId: hiddenRole.id }]);
   });
 
   test("a participant applies and withdraws, and the organizer assigns and clears the position", async ({

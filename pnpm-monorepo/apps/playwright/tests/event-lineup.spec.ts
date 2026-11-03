@@ -1,8 +1,11 @@
+import { EventPositionRoleMatch } from "@sam-monorepo/database/client";
 import { expectAuditEvents } from "../fixtures/audit";
 import {
+  assignRole,
   createAppEvent,
   createCitizen,
   createParticipant,
+  createRole,
   createVariant,
   EventSource,
   EventVisibility,
@@ -16,6 +19,8 @@ import {
   hoverUntilVisible,
   inlineEditorTrigger,
   modal,
+  pickRoles,
+  rolePickerChips,
   saveInlineEditor,
   toggleLabel,
   waitForAppShellHydration,
@@ -174,7 +179,7 @@ test("a manager builds a lineup: create, rename, require a ship, duplicate, dele
     .toEqual([positions[1]!.id]);
 
   await expectAuditEvents(prisma, [
-    "EVENT_POSITION_CREATED",
+    "EVENT_POSITION_CREATED_V2",
     "EVENT_POSITION_NAME_UPDATED",
     "EVENT_POSITION_COPIED",
     "EVENT_POSITION_DELETED",
@@ -535,6 +540,148 @@ test("the requirement check finds a ship after the first page of the fleet, but 
   await expect(applyButton).toBeVisible();
   await applyButton.focus();
   await expect(unmetRequirementHint).toHaveCount(0);
+});
+
+test("a position requires all of its roles or one of them", async ({
+  page,
+  prisma,
+  signIn,
+  switchUser,
+}) => {
+  const pilotRole = await createRole(prisma, { name: "Pilot" });
+  const medicRole = await createRole(prisma, { name: "Sanitäter" });
+  const organizer = await createCitizen(prisma, {
+    handle: "posten-leiter",
+    permissionStrings: [
+      ...LINEUP_PERMISSIONS,
+      `otherRole;read;roleId=${pilotRole.id}`,
+      `otherRole;read;roleId=${medicRole.id}`,
+    ],
+  });
+  /** The applicant cannot see the two roles */
+  const applicant = await createCitizen(prisma, {
+    handle: "posten-bewerber",
+    permissionStrings: LINEUP_PERMISSIONS,
+  });
+  await assignRole(prisma, applicant.entity, pilotRole);
+  const event = await createAppEvent(prisma, {
+    name: "Operation Rettung",
+    createdById: organizer.entity.id,
+    lineupEnabled: true,
+    ...futureEvent(),
+  });
+  await createParticipant(prisma, {
+    eventId: event.id,
+    citizen: applicant,
+    source: EventSource.APP,
+  });
+
+  const lineupUrl = `/app/events/${event.id}/lineup`;
+  const findRequiredRoles = async () => {
+    const position = await prisma.eventPosition.findFirst({
+      where: { eventId: event.id },
+      select: {
+        requiredRoleMatch: true,
+        requiredRoles: { select: { roleId: true } },
+      },
+    });
+
+    return (
+      position && {
+        match: position.requiredRoleMatch,
+        roleIds: position.requiredRoles.map(({ roleId }) => roleId).toSorted(),
+      }
+    );
+  };
+  const requiredRoleIds = [pilotRole.id, medicRole.id].toSorted();
+  const participantOption = (optionGroupLabel: string) =>
+    page
+      .getByRole("combobox", { name: "Citizen für Rettungspilot" })
+      .locator(`optgroup[label="${optionGroupLabel}"]`)
+      .locator("option", { hasText: "posten-bewerber" });
+
+  await signIn(organizer.user);
+  await page.goto(lineupUrl);
+  await waitForAppShellHydration(page);
+
+  const createDialog = modal(page, "Posten hinzufügen");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Posten hinzufügen" }).first(),
+    createDialog,
+  );
+  await createDialog.getByLabel("Name").fill("Rettungspilot");
+  await pickRoles(
+    createDialog.getByRole("button", { name: "Rolle auswählen" }),
+    ["Pilot", "Sanitäter"],
+  );
+  await createDialog
+    .getByLabel("Der Citizen benötigt")
+    .selectOption({ label: "Alle diese Rollen" });
+  await createDialog
+    .getByRole("button", { name: "Speichern", exact: true })
+    .click();
+
+  await expect
+    .poll(findRequiredRoles)
+    .toEqual({ match: EventPositionRoleMatch.ALL, roleIds: requiredRoleIds });
+
+  /** The applicant has only one of the two roles */
+  await page.goto(lineupUrl);
+  await expect(
+    participantOption("Alle Teilnehmer - Voraussetzungen nicht erfüllt"),
+  ).toHaveCount(1);
+
+  const applyButton = page.getByRole("button", { name: "Interesse anmelden" });
+  const unmetRequirementHint = page
+    .getByText("Du erfüllst nicht die Voraussetzungen für diesen Posten.")
+    .first();
+
+  await switchUser(applicant.user);
+  await page.goto(lineupUrl);
+  await clickUntilVisible(page.getByTitle("Details öffnen"), applyButton);
+  await expect(page.getByText("Alle diese Rollen")).toBeVisible();
+  await expect(page.getByText("Verborgene Rolle")).toHaveCount(2);
+  await applyButton.focus();
+  await expect(unmetRequirementHint).toBeVisible();
+
+  /**
+   * The lineup keeps the open positions in the local storage of the
+   * browser, which the switch of the user keeps
+   */
+  await switchUser(organizer.user);
+  await page.goto(lineupUrl);
+  const editDialog = modal(page, "Posten bearbeiten");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Posten bearbeiten" }),
+    editDialog,
+  );
+  await expect(rolePickerChips(editDialog)).toHaveText(["Pilot", "Sanitäter"]);
+  await editDialog
+    .getByLabel("Der Citizen benötigt")
+    .selectOption({ label: "Eine dieser Rollen" });
+  await editDialog
+    .getByRole("button", { name: "Speichern", exact: true })
+    .click();
+
+  await expect
+    .poll(findRequiredRoles)
+    .toEqual({ match: EventPositionRoleMatch.ANY, roleIds: requiredRoleIds });
+
+  await page.goto(lineupUrl);
+  await expect(
+    participantOption("Alle Teilnehmer - Voraussetzungen erfüllt"),
+  ).toHaveCount(1);
+
+  await switchUser(applicant.user);
+  await page.goto(lineupUrl);
+  await expect(applyButton).toBeVisible();
+  await applyButton.focus();
+  await expect(unmetRequirementHint).toHaveCount(0);
+
+  await expectAuditEvents(prisma, [
+    "EVENT_POSITION_CREATED_V2",
+    "EVENT_POSITION_UPDATED_V2",
+  ]);
 });
 
 test("a deleted participant is not a choice in the position picker", async ({

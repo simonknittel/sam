@@ -706,7 +706,7 @@ test("a template position is edited through the shared lineup editor", async ({
   expect(position.eventId).toBeNull();
   expect(position.citizenId).toBeNull();
 
-  await expectAuditEvents(prisma, ["EVENT_TEMPLATE_POSITION_CREATED"]);
+  await expectAuditEvents(prisma, ["EVENT_TEMPLATE_POSITION_CREATED_V2"]);
 });
 
 test("a template's briefing root page is locked like an event's", async ({
