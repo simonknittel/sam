@@ -1,9 +1,6 @@
 "use server";
 
-import {
-  createUseCaseAction,
-  notificationsFailedWarning,
-} from "@/modules/application";
+import { createUseCaseAction } from "@/modules/application";
 import {
   cancelEventParticipationInputSchema,
   cancelEventParticipation as cancelEventParticipationUseCase,
@@ -17,5 +14,4 @@ export const cancelEventParticipation = createUseCaseAction({
   parseFormData: (formData) => ({ event_id: formData.get("eventId") }),
   texts: EVENT_ERROR_TEXTS,
   success: () => "Du hast dich abgemeldet.",
-  warning: notificationsFailedWarning,
 });

@@ -1,9 +1,6 @@
 "use server";
 
-import {
-  createUseCaseAction,
-  notificationsFailedWarning,
-} from "@/modules/application";
+import { createUseCaseAction } from "@/modules/application";
 import {
   startPayoutInputSchema,
   startPayout as startPayoutUseCase,
@@ -25,5 +22,4 @@ export const startPayout = createUseCaseAction({
   }),
   texts: getProfitDistributionErrorTexts,
   success: (t) => t("Common.successfullySaved"),
-  warning: notificationsFailedWarning,
 });

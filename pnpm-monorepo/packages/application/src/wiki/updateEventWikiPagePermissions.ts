@@ -50,7 +50,6 @@ export interface UpdateEventWikiPagePermissionsOutput {
   readonly page_id: string;
   /** True when this update published the briefing of the event */
   readonly published_briefing: boolean;
-  readonly notifications_sent: boolean;
 }
 
 /**
@@ -270,22 +269,16 @@ export const updateEventWikiPagePermissions = (
           },
     ]);
 
-    const notificationsSent =
-      event && publishedBriefing
-        ? await triggerNotificationsAfterSave(context, [
-            {
-              type: "EventBriefingPublished",
-              payload: {
-                eventId: event.id,
-                actorCitizenId: actor.citizen?.id ?? null,
-              },
-            },
-          ])
-        : true;
+    if (event && publishedBriefing)
+      await triggerNotificationsAfterSave(context, [
+        {
+          type: "EventBriefingPublished",
+          payload: {
+            eventId: event.id,
+            actorCitizenId: actor.citizen?.id ?? null,
+          },
+        },
+      ]);
 
-    return {
-      page_id: page.id,
-      published_briefing: publishedBriefing,
-      notifications_sent: notificationsSent,
-    };
+    return { page_id: page.id, published_briefing: publishedBriefing };
   });

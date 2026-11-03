@@ -1,9 +1,6 @@
 "use server";
 
-import {
-  createUseCaseAction,
-  notificationsFailedWarning,
-} from "@/modules/application";
+import { createUseCaseAction } from "@/modules/application";
 import {
   createSilcTransactionInputSchema,
   createSilcTransaction as createSilcTransactionUseCase,
@@ -23,5 +20,4 @@ export const createSilcTransaction = createUseCaseAction({
   }),
   texts: SILC_ERROR_TEXTS,
   success: (t) => t("Common.successfullySaved"),
-  warning: notificationsFailedWarning,
 });

@@ -7,8 +7,8 @@ import * as z from "zod";
 import { defineTool } from "../../toolDefinition.js";
 import { ToolGroup } from "../../toolGroup.js";
 import {
+  eventOutputSchema,
   isEventWriteToolVisible,
-  notifyingEventWriteOutputSchema,
 } from "./eventOutputSchema.js";
 
 export const updateEventTool = defineTool({
@@ -25,7 +25,8 @@ export const updateEventTool = defineTool({
     openWorldHint: false,
   },
   inputSchema: updateEventInputSchema,
-  outputSchema: notifyingEventWriteOutputSchema.extend({
+  outputSchema: z.strictObject({
+    event: eventOutputSchema,
     changes: z.array(z.enum(EventChange)),
   }),
   isVisible: isEventWriteToolVisible,

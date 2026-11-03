@@ -7,8 +7,8 @@ import * as z from "zod";
 import { defineTool } from "../../toolDefinition.js";
 import { ToolGroup } from "../../toolGroup.js";
 import {
+  eventOutputSchema,
   isEventWriteToolVisible,
-  notifyingEventWriteOutputSchema,
 } from "./eventOutputSchema.js";
 
 export enum EventManagersAction {
@@ -35,19 +35,15 @@ export const updateEventManagersTool = defineTool({
       "The citizens who become managers or who lose the manager role. Managers can change the event, its participants, its managers and its lineup.",
     ),
   }),
-  outputSchema: notifyingEventWriteOutputSchema,
+  outputSchema: eventOutputSchema,
   isVisible: isEventWriteToolVisible,
   handler: async (context, actor, { action, ...input }) => {
     switch (action) {
       case EventManagersAction.Add:
         return addEventManagers(context, actor, input);
 
-      // A removal sends no notification
       case EventManagersAction.Remove:
-        return {
-          event: await removeEventManagers(context, actor, input),
-          notifications_sent: true,
-        };
+        return removeEventManagers(context, actor, input);
 
       default:
         throw new Error(

@@ -97,7 +97,6 @@ test("the switch to false cancels the sign-ups, clears the lineup and notifies e
   expect(output.changes).toEqual([EventChange.ParticipationEnabled]);
   expect(output.event.participation_enabled).toBe(false);
   expect(output.event.participants).toEqual([]);
-  expect(output.notifications_sent).toBe(true);
 
   const participants = await prisma.eventParticipant.findMany({
     where: { eventId: event.id },

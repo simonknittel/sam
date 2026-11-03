@@ -10,7 +10,7 @@ import { withSpan } from "../withSpan.js";
 import { cancelParticipation } from "./cancelParticipation.js";
 import { createEventActivity } from "./eventActivity.js";
 import { EventErrorMessage } from "./eventErrors.js";
-import { loadEventOutput, type NotifyingEventWriteOutput } from "./getEvent.js";
+import { loadEventOutput, type GetEventOutput } from "./getEvent.js";
 import { findActiveParticipation } from "./ownParticipation.js";
 import { requireOpenParticipatableAppEvent } from "./participatableAppEvent.js";
 import { buildCancellationNotifications } from "./participationChangeNotifications.js";
@@ -31,7 +31,7 @@ export const cancelEventParticipation = (
   context: ApplicationContext,
   actor: Actor,
   input: CancelEventParticipationInput,
-): Promise<NotifyingEventWriteOutput> =>
+): Promise<GetEventOutput> =>
   withSpan(context, "cancelEventParticipation", async () => {
     const citizenId = requireCitizen(actor).id;
     requirePermission(actor, "event", "read");
@@ -92,13 +92,7 @@ export const cancelEventParticipation = (
       { citizenId, vacatedPositionNames: cancellation.vacatedPositionNames },
     ]);
 
-    const notificationsSent = await triggerNotificationsAfterSave(
-      context,
-      notifications,
-    );
+    await triggerNotificationsAfterSave(context, notifications);
 
-    return {
-      event: await loadEventOutput(context, actor, event.id),
-      notifications_sent: notificationsSent,
-    };
+    return loadEventOutput(context, actor, event.id);
   });

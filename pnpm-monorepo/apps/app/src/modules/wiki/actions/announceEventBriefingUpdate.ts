@@ -1,10 +1,6 @@
 "use server";
 
-import {
-  ActionRefresh,
-  createUseCaseAction,
-  notificationsFailedWarning,
-} from "@/modules/application";
+import { ActionRefresh, createUseCaseAction } from "@/modules/application";
 import {
   announceEventBriefingUpdateInputSchema,
   announceEventBriefingUpdate as announceEventBriefingUpdateUseCase,
@@ -23,5 +19,4 @@ export const announceEventBriefingUpdate = createUseCaseAction({
   // The announcement changes nothing that the page shows
   refresh: ActionRefresh.Never,
   success: () => "Die Benachrichtigung wurde gesendet.",
-  warning: notificationsFailedWarning,
 });

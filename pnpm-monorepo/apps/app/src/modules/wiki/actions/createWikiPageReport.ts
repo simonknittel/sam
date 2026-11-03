@@ -1,9 +1,6 @@
 "use server";
 
-import {
-  createUseCaseAction,
-  notificationsFailedWarning,
-} from "@/modules/application";
+import { createUseCaseAction } from "@/modules/application";
 import {
   createWikiPageReportInputSchema,
   createWikiPageReport as createWikiPageReportUseCase,
@@ -22,5 +19,4 @@ export const createWikiPageReport = createUseCaseAction({
   }),
   texts: WIKI_ERROR_TEXTS,
   success: () => "Meldung gesendet.",
-  warning: notificationsFailedWarning,
 });

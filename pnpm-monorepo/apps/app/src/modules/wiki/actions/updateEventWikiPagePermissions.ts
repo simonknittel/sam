@@ -1,9 +1,6 @@
 "use server";
 
-import {
-  createUseCaseAction,
-  notificationsFailedWarning,
-} from "@/modules/application";
+import { createUseCaseAction } from "@/modules/application";
 import {
   updateEventWikiPagePermissionsInputSchema,
   updateEventWikiPagePermissions as updateEventWikiPagePermissionsUseCase,
@@ -26,5 +23,4 @@ export const updateEventWikiPagePermissions = createUseCaseAction({
   }),
   texts: WIKI_ERROR_TEXTS,
   success: (t) => t("Common.successfullySaved"),
-  warning: notificationsFailedWarning,
 });

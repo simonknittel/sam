@@ -1,6 +1,5 @@
 import { createTask, createTaskInputSchema } from "@sam-monorepo/application";
 import * as z from "zod";
-import { notificationsSentSchema } from "../../schemas.js";
 import { defineTool } from "../../toolDefinition.js";
 import { ToolGroup } from "../../toolGroup.js";
 import { taskOutputSchema } from "./taskOutputSchemas.js";
@@ -19,7 +18,6 @@ export const createTaskTool = defineTool({
   },
   inputSchema: createTaskInputSchema,
   outputSchema: z.strictObject({
-    notifications_sent: notificationsSentSchema,
     task: taskOutputSchema,
     task_ids: z
       .array(z.string())

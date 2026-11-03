@@ -1,9 +1,6 @@
 "use server";
 
-import {
-  createUseCaseAction,
-  notificationsFailedWarning,
-} from "@/modules/application";
+import { createUseCaseAction } from "@/modules/application";
 import {
   updateCycleParticipants,
   updateCycleParticipantsInputSchema,
@@ -32,5 +29,4 @@ export const updateParticipantAttribute = createUseCaseAction({
   }),
   texts: getProfitDistributionErrorTexts,
   success: (t) => t("Common.successfullySaved"),
-  warning: notificationsFailedWarning,
 });

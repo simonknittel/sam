@@ -2,7 +2,7 @@ import { requireCitizen, requirePermission, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { triggerNotificationsAfterSave } from "../notifications.js";
 import { withSpan } from "../withSpan.js";
-import { loadEventOutput, type NotifyingEventWriteOutput } from "./getEvent.js";
+import { loadEventOutput, type GetEventOutput } from "./getEvent.js";
 import {
   insertOwnParticipation,
   type EventParticipationInput,
@@ -19,7 +19,7 @@ export const createEventParticipation = (
   context: ApplicationContext,
   actor: Actor,
   input: EventParticipationInput,
-): Promise<NotifyingEventWriteOutput> =>
+): Promise<GetEventOutput> =>
   withSpan(context, "createEventParticipation", async () => {
     const citizenId = requireCitizen(actor).id;
     requirePermission(actor, "event", "read");
@@ -40,13 +40,7 @@ export const createEventParticipation = (
       citizenId,
     ]);
 
-    const notificationsSent = await triggerNotificationsAfterSave(
-      context,
-      notifications,
-    );
+    await triggerNotificationsAfterSave(context, notifications);
 
-    return {
-      event: await loadEventOutput(context, actor, event.id),
-      notifications_sent: notificationsSent,
-    };
+    return loadEventOutput(context, actor, event.id);
   });

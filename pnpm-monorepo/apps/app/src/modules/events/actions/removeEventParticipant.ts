@@ -1,9 +1,6 @@
 "use server";
 
-import {
-  createUseCaseAction,
-  notificationsFailedWarning,
-} from "@/modules/application";
+import { createUseCaseAction } from "@/modules/application";
 import {
   removeEventParticipants,
   removeEventParticipantsInputSchema,
@@ -21,5 +18,4 @@ export const removeEventParticipant = createUseCaseAction({
   }),
   texts: EVENT_ERROR_TEXTS,
   success: () => "Teilnehmer entfernt.",
-  warning: notificationsFailedWarning,
 });

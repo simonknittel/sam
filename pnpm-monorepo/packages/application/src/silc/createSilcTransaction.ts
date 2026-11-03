@@ -40,7 +40,6 @@ export type CreateSilcTransactionInput = z.infer<
 
 export interface CreateSilcTransactionOutput {
   readonly transaction_ids: string[];
-  readonly notifications_sent: boolean;
 }
 
 /**
@@ -87,11 +86,7 @@ export const createSilcTransaction = (
       },
     ]);
 
-    return {
-      transaction_ids: transactionIds,
-      notifications_sent: await announceSilcTransactions(
-        context,
-        transactionIds,
-      ),
-    };
+    await announceSilcTransactions(context, transactionIds);
+
+    return { transaction_ids: transactionIds };
   });

@@ -17,16 +17,6 @@ export const deletePenaltyEntryInputSchema = z.object({
   penalty_entry_id: idSchema.describe("The id of the penalty entry."),
 });
 
-export interface DeletePenaltyEntryOutput {
-  /** The entry after the deletion */
-  readonly entry: PenaltyEntryOutput;
-  /**
-   * False when the entry is deleted, but the notifications failed. The
-   * deletion stands, thus the caller must not delete the entry again.
-   */
-  readonly notifications_sent: boolean;
-}
-
 /**
  * Soft-deletes a penalty entry. When the entry still counted, it notifies
  * the citizen of the entry. Requires `penaltyEntry;delete` and a citizen.
@@ -37,7 +27,7 @@ export const deletePenaltyEntry = (
   context: ApplicationContext,
   actor: Actor,
   input: z.infer<typeof deletePenaltyEntryInputSchema>,
-): Promise<DeletePenaltyEntryOutput> =>
+): Promise<PenaltyEntryOutput> =>
   withSpan(context, "deletePenaltyEntry", async () => {
     requirePermission(actor, "penaltyEntry", "delete");
     const actorCitizen = requireCitizen(actor);
@@ -82,11 +72,7 @@ export const deletePenaltyEntry = (
           ]
         : [];
 
-    return {
-      entry: toPenaltyEntryOutput(entry),
-      notifications_sent: await triggerNotificationsAfterSave(
-        context,
-        notifications,
-      ),
-    };
+    await triggerNotificationsAfterSave(context, notifications);
+
+    return toPenaltyEntryOutput(entry);
   });

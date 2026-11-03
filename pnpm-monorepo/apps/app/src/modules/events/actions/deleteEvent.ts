@@ -4,7 +4,6 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import {
   getApplicationContext,
   mapApplicationErrorToActionResponse,
-  notificationsFailedWarning,
   toActor,
 } from "@/modules/application";
 import {
@@ -42,16 +41,14 @@ export const deleteEvent = createAuthenticatedAction(
      * Respond with the result. A failed removal from Discord cannot undo the
      * deletion, thus the manager deletes the Discord event by hand.
      */
-    const warnings = [
-      result.discord?.outcome === DiscordSyncOutcome.Failed
-        ? "Das Event konnte nicht von Discord entfernt werden und muss dort von Hand gelöscht werden."
-        : null,
-      notificationsFailedWarning(t, result),
-    ].filter((warning) => typeof warning === "string");
-
     return {
       success: "Das Event wurde gelöscht.",
-      ...(warnings.length > 0 ? { warning: warnings.join(" ") } : {}),
+      ...(result.discord?.outcome === DiscordSyncOutcome.Failed
+        ? {
+            warning:
+              "Das Event konnte nicht von Discord entfernt werden und muss dort von Hand gelöscht werden.",
+          }
+        : {}),
     };
   },
   {

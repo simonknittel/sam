@@ -2,8 +2,6 @@ import {
   createManualNotification,
   createManualNotificationInputSchema,
 } from "@sam-monorepo/application";
-import * as z from "zod";
-import { notificationsSentSchema } from "../../schemas.js";
 import { defineTool } from "../../toolDefinition.js";
 import { ToolGroup } from "../../toolGroup.js";
 import { manualNotificationOutputSchema } from "./manualNotificationOutputSchema.js";
@@ -21,10 +19,7 @@ export const sendManualNotificationTool = defineTool({
     openWorldHint: false,
   },
   inputSchema: createManualNotificationInputSchema,
-  outputSchema: z.strictObject({
-    notification: manualNotificationOutputSchema,
-    notifications_sent: notificationsSentSchema,
-  }),
+  outputSchema: manualNotificationOutputSchema,
   isVisible: (actor) =>
     actor.authorize("manualNotification", "manage") && actor.citizen !== null,
   handler: createManualNotification,

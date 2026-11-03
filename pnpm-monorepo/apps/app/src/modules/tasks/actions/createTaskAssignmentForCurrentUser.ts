@@ -1,9 +1,6 @@
 "use server";
 
-import {
-  createUseCaseAction,
-  notificationsFailedWarning,
-} from "@/modules/application";
+import { createUseCaseAction } from "@/modules/application";
 import { acceptTask, acceptTaskInputSchema } from "@sam-monorepo/application";
 import { TASK_ERROR_TEXTS } from "../utils/taskErrorTexts";
 
@@ -14,5 +11,4 @@ export const createTaskAssignmentForCurrentUser = createUseCaseAction({
   parseFormData: (formData) => ({ task_id: formData.get("taskId") }),
   texts: TASK_ERROR_TEXTS,
   success: (t) => t("Common.successfullySaved"),
-  warning: notificationsFailedWarning,
 });

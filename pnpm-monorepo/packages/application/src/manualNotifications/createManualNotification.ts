@@ -42,15 +42,6 @@ export type CreateManualNotificationInput = z.output<
   typeof createManualNotificationInputSchema
 >;
 
-export interface CreateManualNotificationOutput {
-  readonly notification: ManualNotificationOutput;
-  /**
-   * False when the notification is saved, but the delivery failed. The
-   * notification stands, thus the caller must not create it again.
-   */
-  readonly notifications_sent: boolean;
-}
-
 /**
  * Sends a notification with its own title and body to the selected citizens
  * and to the members of the selected roles. Only the citizens who can log in
@@ -66,7 +57,7 @@ export const createManualNotification = (
   context: ApplicationContext,
   actor: Actor,
   input: CreateManualNotificationInput,
-): Promise<CreateManualNotificationOutput> =>
+): Promise<ManualNotificationOutput> =>
   withSpan(context, "createManualNotification", async () => {
     requirePermission(actor, "manualNotification", "manage");
     const sender = requireCitizen(actor);
@@ -127,13 +118,12 @@ export const createManualNotification = (
       },
     ]);
 
-    return {
-      notification: toManualNotificationOutput(notification),
-      notifications_sent: await triggerNotificationsAfterSave(context, [
-        {
-          type: "ManualNotificationCreated",
-          payload: { manualNotificationId: notification.id },
-        },
-      ]),
-    };
+    await triggerNotificationsAfterSave(context, [
+      {
+        type: "ManualNotificationCreated",
+        payload: { manualNotificationId: notification.id },
+      },
+    ]);
+
+    return toManualNotificationOutput(notification);
   });

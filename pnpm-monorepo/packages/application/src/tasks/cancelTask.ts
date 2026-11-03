@@ -6,10 +6,7 @@ import { ConflictError } from "../errors.js";
 import { triggerNotificationsAfterSave } from "../notifications.js";
 import { withSpan } from "../withSpan.js";
 import { taskIdSchema } from "./getTask.js";
-import {
-  findTaskOutput,
-  type NotifyingTaskWriteOutput,
-} from "./taskDetails.js";
+import { findTaskOutput, type GetTaskOutput } from "./taskDetails.js";
 import { TaskErrorMessage } from "./taskErrors.js";
 import { requireManageableTask } from "./taskGuards.js";
 import { getOpenTasksWhere } from "./taskWhere.js";
@@ -28,7 +25,7 @@ export const cancelTask = (
   context: ApplicationContext,
   actor: Actor,
   input: CancelTaskInput,
-): Promise<NotifyingTaskWriteOutput> =>
+): Promise<GetTaskOutput> =>
   withSpan(context, "cancelTask", async () => {
     const citizen = requireCitizen(actor);
     const task = await requireManageableTask(context, actor, input.task_id);
@@ -53,12 +50,9 @@ export const cancelTask = (
       },
     ]);
 
-    const notificationsSent = await triggerNotificationsAfterSave(context, [
+    await triggerNotificationsAfterSave(context, [
       { type: "TaskCancelled", payload: { taskId: task.id } },
     ]);
 
-    return {
-      task: await findTaskOutput(context, actor, task.id),
-      notifications_sent: notificationsSent,
-    };
+    return findTaskOutput(context, actor, task.id);
   });

@@ -3,7 +3,6 @@ export {
   createManualNotification,
   createManualNotificationInputSchema,
   type CreateManualNotificationInput,
-  type CreateManualNotificationOutput,
 } from "./createManualNotification.js";
 export {
   listManualNotifications,

@@ -51,11 +51,6 @@ interface UseCaseActionOptions<Schema extends z.ZodTypeAny, Output> {
 type UseCaseActionResult<Output, Fields> =
   | {
       readonly success: (t: Translations, output: Output) => string;
-      /** For example `notificationsFailedWarning()` */
-      readonly warning?: (
-        t: Translations,
-        output: Output,
-      ) => string | undefined;
       /**
        * More fields of the success response, for the client component, which
        * gets them from `runAction()`. For example a flag that tells the
@@ -68,7 +63,6 @@ type UseCaseActionResult<Output, Fields> =
       /** The path of the page that the action opens */
       readonly redirect: (output: Output) => string;
       readonly success?: never;
-      readonly warning?: never;
       readonly responseFields?: never;
     };
 
@@ -89,8 +83,8 @@ const shouldRefresh = <Output>(
 /**
  * A server action that runs one use case for the user of the session: the
  * standard shape of the thin action wrappers. After the use case, the action
- * refreshes the page (see `refresh`) and answers with the texts of `success`
- * and `warning` and the `responseFields`, or opens the page of `redirect`.
+ * refreshes the page (see `refresh`) and answers with the text of `success`
+ * and the `responseFields`, or opens the page of `redirect`.
  * The redirect is outside of the error mapping, because `redirect()` throws.
  * An action that does more (a cookie, an app-only option, its own `catch`)
  * calls `createAuthenticatedAction()` itself.
@@ -129,11 +123,8 @@ export const createUseCaseAction = <
 
       if (definition.redirect) redirect(definition.redirect(output));
 
-      const warning = definition.warning?.(t, output);
-
       return {
         success: definition.success(t, output),
-        ...(warning === undefined ? {} : { warning }),
         // Without `responseFields`, `Fields` is its default without keys
         ...(definition.responseFields?.(output) ?? ({} as Fields)),
       };

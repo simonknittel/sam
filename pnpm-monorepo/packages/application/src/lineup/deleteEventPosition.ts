@@ -7,11 +7,7 @@ import { triggerNotificationsAfterSave } from "../notifications.js";
 import { idSchema } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
 import { requireManageableEventPosition } from "./lineupGuards.js";
-import {
-  toLineupPositionOutput,
-  type LineupPosition,
-  type NotifyingLineupPositionWriteOutput,
-} from "./lineupOutput.js";
+import { toLineupPositionOutput, type LineupPosition } from "./lineupOutput.js";
 import { removeLineupPosition } from "./lineupWrites.js";
 
 export const deleteEventPositionInputSchema = z.object({
@@ -50,7 +46,7 @@ export const deleteEventPosition = (
   context: ApplicationContext,
   actor: Actor,
   input: DeleteEventPositionInput,
-): Promise<NotifyingLineupPositionWriteOutput> =>
+): Promise<LineupPosition> =>
   withSpan(context, "deleteEventPosition", async () => {
     const { position, event } = await requireManageableEventPosition(
       context,
@@ -92,10 +88,7 @@ export const deleteEventPosition = (
           positionName,
         },
       }));
-    const notificationsSent = await triggerNotificationsAfterSave(
-      context,
-      notifications,
-    );
+    await triggerNotificationsAfterSave(context, notifications);
 
-    return { position: deletedPosition, notifications_sent: notificationsSent };
+    return deletedPosition;
   });

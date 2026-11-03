@@ -5,11 +5,7 @@ import {
   type Actor,
 } from "@sam-monorepo/application";
 import * as z from "zod";
-import {
-  citizenReferenceSchema,
-  dateTimeOutputSchema,
-  notificationsSentSchema,
-} from "../../schemas.js";
+import { citizenReferenceSchema, dateTimeOutputSchema } from "../../schemas.js";
 
 /** The fields of a task in `list_tasks`, and the base of `get_task` */
 export const taskListItemOutputShape = {
@@ -51,12 +47,6 @@ export const taskOutputSchema = z.strictObject({
   repeatable: z.number().int(),
   hidden_for_other_roles: z.boolean(),
   assignment_limit: z.number().int().nullable(),
-});
-
-/** The output of the writes of one task that notify other members */
-export const notifyingTaskWriteOutputSchema = z.strictObject({
-  task: taskOutputSchema,
-  notifications_sent: notificationsSentSchema,
 });
 
 /**

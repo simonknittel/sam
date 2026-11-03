@@ -4,7 +4,6 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import {
   getApplicationContext,
   mapApplicationErrorToActionResponse,
-  notificationsFailedWarning,
   toActor,
 } from "@/modules/application";
 import {
@@ -49,20 +48,18 @@ export const updateEvent = createAuthenticatedAction(
      * visibility does not narrow it on Discord, thus that is said out loud.
      */
     const discordSync = result.discord?.sync;
-    const warnings = [
+    const warning =
       (discordSync ? getDiscordSyncWarning(discordSync) : null) ??
-        (result.discord?.staysVisibleOnDiscord
-          ? "Das Event bleibt auf Discord für alle Mitglieder des Servers sichtbar. Entferne es dort, wenn das nicht gewollt ist."
-          : null),
-      notificationsFailedWarning(t, result),
-    ].filter((warning) => typeof warning === "string");
+      (result.discord?.staysVisibleOnDiscord
+        ? "Das Event bleibt auf Discord für alle Mitglieder des Servers sichtbar. Entferne es dort, wenn das nicht gewollt ist."
+        : null);
 
     /**
      * Respond with the result
      */
     return {
       success: t("Common.successfullySaved"),
-      ...(warnings.length > 0 ? { warning: warnings.join(" ") } : {}),
+      ...(warning ? { warning } : {}),
     };
   },
   {

@@ -79,8 +79,8 @@ test("an assignment notifies the new and the previous citizen, but not the actor
   await assign(null);
 
   expect(output).toMatchObject({
-    position: { id: position.id, assignee: { id: first!.id } },
-    notifications_sent: true,
+    id: position.id,
+    assignee: { id: first!.id },
   });
   expect(notifications).toEqual([
     {
@@ -138,7 +138,7 @@ test("a deletion notifies the citizens of the position and of its children, but 
     { position_id: squad.id },
   );
 
-  expect(output).toEqual({ position_id: squad.id, notifications_sent: true });
+  expect(output).toEqual({ position_id: squad.id });
   expect(notifications).toHaveLength(3);
   expect(notifications).toEqual(
     expect.arrayContaining(

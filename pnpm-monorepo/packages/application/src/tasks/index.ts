@@ -57,7 +57,6 @@ export {
 } from "./sendTaskDeadlineReminders.js";
 export {
   type GetTaskOutput,
-  type NotifyingTaskWriteOutput,
   type TaskRoleReference,
   type VisibleTask,
 } from "./taskDetails.js";

@@ -17,11 +17,6 @@ export type DeleteTaskInput = z.infer<typeof deleteTaskInputSchema>;
 
 export interface DeleteTaskOutput {
   readonly task_id: string;
-  /**
-   * False when the task is deleted, but the notifications failed. The
-   * deletion stands.
-   */
-  readonly notifications_sent: boolean;
 }
 
 /**
@@ -63,9 +58,9 @@ export const deleteTask = (
       },
     ]);
 
-    const notificationsSent = await triggerNotificationsAfterSave(context, [
+    await triggerNotificationsAfterSave(context, [
       { type: "TaskDeleted", payload: { taskId: task.id } },
     ]);
 
-    return { task_id: task.id, notifications_sent: notificationsSent };
+    return { task_id: task.id };
   });

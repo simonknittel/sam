@@ -72,7 +72,6 @@ test("raises a role without a level to level 1 and records the change", async ()
   expect(output).toEqual({
     ...input,
     current_level: 1,
-    notifications_sent: true,
   });
   expect(await findAssignment(input.citizen_id)).toEqual({
     currentLevel: 1,

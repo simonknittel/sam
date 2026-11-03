@@ -6,7 +6,7 @@ import { sendEmailConfirmation } from "./emailConfirmationRequest.js";
 
 export interface RequestEmailConfirmationOutput {
   /** False when the user has no email address or the email did not go out */
-  readonly notifications_sent: boolean;
+  readonly email_sent: boolean;
 }
 
 /**
@@ -47,5 +47,5 @@ export const requestEmailConfirmation = (
         },
       ]);
 
-    return { notifications_sent: requested };
+    return { email_sent: requested };
   });

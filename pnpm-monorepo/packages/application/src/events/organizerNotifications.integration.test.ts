@@ -78,8 +78,7 @@ test("a new sign-up notifies the organizers from 24 hours before the start, a co
     comment: "Mit der Cutlass.",
   });
 
-  expect(earlyOutput.notifications_sent).toBe(true);
-  expect(earlyOutput.event.is_participating).toBe(true);
+  expect(earlyOutput.is_participating).toBe(true);
   expect(notifications).toEqual([
     {
       type: "EventParticipationChanged",
@@ -158,8 +157,7 @@ test("a new application notifies the organizers, a repeated one does not", async
   await applyForEventPosition(context, actor, { position_id: position.id });
 
   const application = await prisma.eventPositionApplication.findFirstOrThrow();
-  expect(output.notifications_sent).toBe(true);
-  expect(output.position.id).toBe(position.id);
+  expect(output.id).toBe(position.id);
   expect(notifications).toEqual([
     {
       type: "EventPositionApplicationCreated",

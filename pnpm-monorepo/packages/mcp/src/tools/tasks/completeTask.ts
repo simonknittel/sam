@@ -6,7 +6,7 @@ import { defineTool } from "../../toolDefinition.js";
 import { ToolGroup } from "../../toolGroup.js";
 import {
   isTaskWriteToolVisible,
-  notifyingTaskWriteOutputSchema,
+  taskOutputSchema,
 } from "./taskOutputSchemas.js";
 
 export const completeTaskTool = defineTool({
@@ -22,7 +22,7 @@ export const completeTaskTool = defineTool({
     openWorldHint: false,
   },
   inputSchema: completeTaskInputSchema,
-  outputSchema: notifyingTaskWriteOutputSchema,
+  outputSchema: taskOutputSchema,
   isVisible: isTaskWriteToolVisible,
   handler: completeTask,
 });

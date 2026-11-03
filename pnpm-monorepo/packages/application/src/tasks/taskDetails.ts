@@ -44,18 +44,6 @@ export interface GetTaskOutput extends TaskListItem {
   readonly assignment_limit: number | null;
 }
 
-/** The output of a write of one task that notifies other members */
-export interface NotifyingTaskWriteOutput {
-  /** The task after the write */
-  readonly task: GetTaskOutput;
-  /**
-   * False when the change is saved, but the notifications failed. The change
-   * stands, thus the caller must not send it again. True also when the
-   * change needs no notification.
-   */
-  readonly notifications_sent: boolean;
-}
-
 export type VisibleTask = TaskDetailsRow & {
   /**
    * The role rule of the self-assignment, with the effective roles of the

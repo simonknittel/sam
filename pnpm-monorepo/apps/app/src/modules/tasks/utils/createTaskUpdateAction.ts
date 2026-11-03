@@ -1,7 +1,4 @@
-import {
-  createUseCaseAction,
-  notificationsFailedWarning,
-} from "@/modules/application";
+import { createUseCaseAction } from "@/modules/application";
 import { updateTask, updateTaskInputSchema } from "@sam-monorepo/application";
 import { TASK_ERROR_TEXTS } from "./taskErrorTexts";
 
@@ -25,5 +22,4 @@ export const createTaskUpdateAction = (
     parseFormData,
     texts: TASK_ERROR_TEXTS,
     success: (t) => t("Common.successfullySaved"),
-    warning: notificationsFailedWarning,
   });

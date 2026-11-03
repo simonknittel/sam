@@ -53,7 +53,6 @@ export interface CycleParticipantChange {
 export interface UpdateCycleParticipantsOutput {
   readonly cycle_id: string;
   readonly changes: CycleParticipantChange[];
-  readonly notifications_sent: boolean;
 }
 
 /** The attributes that a manager can change in the phase */
@@ -166,7 +165,7 @@ export const updateCycleParticipants = (
         },
       ]);
 
-    const notificationsSent = await triggerNotificationsAfterSave(context, [
+    await triggerNotificationsAfterSave(context, [
       {
         type: "ProfitDistributionPayoutDisbursed",
         payload: { cycleId: cycle.id, changes: changesOfPayload },
@@ -176,6 +175,5 @@ export const updateCycleParticipants = (
     return {
       cycle_id: cycle.id,
       changes,
-      notifications_sent: notificationsSent,
     };
   });

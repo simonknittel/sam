@@ -7,10 +7,7 @@ import { ConflictError, ForbiddenError } from "../errors.js";
 import { triggerNotificationsAfterSave } from "../notifications.js";
 import { withSpan } from "../withSpan.js";
 import { taskIdSchema } from "./getTask.js";
-import {
-  findTaskOutput,
-  type NotifyingTaskWriteOutput,
-} from "./taskDetails.js";
+import { findTaskOutput, type GetTaskOutput } from "./taskDetails.js";
 import { TaskErrorMessage } from "./taskErrors.js";
 import { requireSelfAssignableTask } from "./taskGuards.js";
 
@@ -30,7 +27,7 @@ export const acceptTask = (
   context: ApplicationContext,
   actor: Actor,
   input: AcceptTaskInput,
-): Promise<NotifyingTaskWriteOutput> =>
+): Promise<GetTaskOutput> =>
   withSpan(context, "acceptTask", async () => {
     const citizen = requireCitizen(actor);
     const task = await requireSelfAssignableTask(context, actor, input.task_id);
@@ -38,10 +35,7 @@ export const acceptTask = (
     if (
       task.assignments.some((assignment) => assignment.citizenId === citizen.id)
     )
-      return {
-        task: await findTaskOutput(context, actor, task.id),
-        notifications_sent: true,
-      };
+      return findTaskOutput(context, actor, task.id);
 
     if (task.assignmentLimit && task.assignments.length >= task.assignmentLimit)
       throw new ConflictError(TaskErrorMessage.AssignmentLimitReached);
@@ -60,10 +54,7 @@ export const acceptTask = (
     } catch (error) {
       // A different tab or call of the user accepted the task in between
       if (isPrismaError(error, PrismaErrorCode.UniqueConstraintFailed))
-        return {
-          task: await findTaskOutput(context, actor, task.id),
-          notifications_sent: true,
-        };
+        return findTaskOutput(context, actor, task.id);
 
       throw error;
     }
@@ -76,15 +67,12 @@ export const acceptTask = (
       },
     ]);
 
-    const notificationsSent = await triggerNotificationsAfterSave(context, [
+    await triggerNotificationsAfterSave(context, [
       {
         type: "TaskAccepted",
         payload: { taskId: task.id, citizenId: citizen.id },
       },
     ]);
 
-    return {
-      task: await findTaskOutput(context, actor, task.id),
-      notifications_sent: notificationsSent,
-    };
+    return findTaskOutput(context, actor, task.id);
   });

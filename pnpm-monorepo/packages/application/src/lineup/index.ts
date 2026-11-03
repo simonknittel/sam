@@ -44,7 +44,6 @@ export {
   type LineupCopyOutput,
   type LineupPosition,
   type LineupPositionWriteOutput,
-  type NotifyingLineupPositionWriteOutput,
 } from "./lineupOutput.js";
 export {
   findEventLineupCitizens,

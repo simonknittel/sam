@@ -1,9 +1,6 @@
 "use server";
 
-import {
-  createUseCaseAction,
-  notificationsFailedWarning,
-} from "@/modules/application";
+import { createUseCaseAction } from "@/modules/application";
 import {
   cancelTaskInputSchema,
   cancelTask as cancelTaskUseCase,
@@ -17,5 +14,4 @@ export const cancelTask = createUseCaseAction({
   parseFormData: (formData) => ({ task_id: formData.get("id") }),
   texts: TASK_ERROR_TEXTS,
   success: () => "Erfolgreich abgebrochen",
-  warning: notificationsFailedWarning,
 });

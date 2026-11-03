@@ -6,7 +6,7 @@ import { defineTool } from "../../toolDefinition.js";
 import { ToolGroup } from "../../toolGroup.js";
 import {
   isLineupToolVisible,
-  notifyingLineupPositionWriteOutputSchema,
+  lineupPositionSchema,
 } from "./lineupOutputSchemas.js";
 
 export const deleteEventPositionTool = defineTool({
@@ -22,7 +22,7 @@ export const deleteEventPositionTool = defineTool({
     openWorldHint: false,
   },
   inputSchema: deleteEventPositionInputSchema,
-  outputSchema: notifyingLineupPositionWriteOutputSchema,
+  outputSchema: lineupPositionSchema,
   isVisible: isLineupToolVisible,
   handler: deleteEventPosition,
 });

@@ -7,8 +7,8 @@ import * as z from "zod";
 import { defineTool } from "../../toolDefinition.js";
 import { ToolGroup } from "../../toolGroup.js";
 import {
+  eventOutputSchema,
   isEventWriteToolVisible,
-  notifyingEventWriteOutputSchema,
 } from "./eventOutputSchema.js";
 
 export enum MyEventParticipationAction {
@@ -37,7 +37,7 @@ export const updateMyEventParticipationTool = defineTool({
         action === MyEventParticipationAction.SignUp || comment === undefined,
       "comment is only for sign_up.",
     ),
-  outputSchema: notifyingEventWriteOutputSchema,
+  outputSchema: eventOutputSchema,
   isVisible: isEventWriteToolVisible,
   handler: async (context, actor, { action, event_id, comment }) => {
     switch (action) {

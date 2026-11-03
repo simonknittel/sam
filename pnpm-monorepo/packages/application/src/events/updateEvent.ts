@@ -49,7 +49,7 @@ import {
 import { toEventVisibility } from "./eventOutput.js";
 import { canActorSeeEvent } from "./eventVisibility.js";
 import { resolveVisibilityRoleIds } from "./eventVisibilityRoles.js";
-import { loadEventOutput, type NotifyingEventWriteOutput } from "./getEvent.js";
+import { loadEventOutput, type GetEventOutput } from "./getEvent.js";
 
 /** What an update changed */
 export enum EventChange {
@@ -123,7 +123,9 @@ export interface UpdateEventDiscordResult {
   readonly staysVisibleOnDiscord: boolean;
 }
 
-export interface UpdateEventOutput extends NotifyingEventWriteOutput {
+export interface UpdateEventOutput {
+  /** The event after the write, like `getEvent()` */
+  readonly event: GetEventOutput;
   /** Empty when the event already had the given values */
   readonly changes: EventChange[];
   /**
@@ -313,7 +315,6 @@ export const updateEvent = (
       return {
         event: await loadEventOutput(context, actor, event.id),
         changes,
-        notifications_sent: true,
         ...(syncsDiscordPublication ? { discord: NO_DISCORD_CHANGE } : {}),
       };
 
@@ -499,10 +500,7 @@ export const updateEvent = (
             reason: PARTICIPATION_DISABLED_REASON,
           },
         });
-    const notificationsSent = await triggerNotificationsAfterSave(
-      context,
-      notifications,
-    );
+    await triggerNotificationsAfterSave(context, notifications);
 
     /**
      * Carry the change over to Discord if the event is published there. A
@@ -519,7 +517,6 @@ export const updateEvent = (
     return {
       event: await loadEventOutput(context, actor, event.id),
       changes,
-      notifications_sent: notificationsSent,
       ...(discord ? { discord } : {}),
     };
   });

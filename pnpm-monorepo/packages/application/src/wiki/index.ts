@@ -7,7 +7,6 @@ export {
   announceEventBriefingUpdateInputSchema,
   isEventBriefingPublished,
   type AnnounceEventBriefingUpdateInput,
-  type AnnounceEventBriefingUpdateOutput,
 } from "./announceEventBriefingUpdate.js";
 export {
   createWikiCollabToken,

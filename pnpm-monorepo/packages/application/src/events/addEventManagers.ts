@@ -18,7 +18,7 @@ import {
   VISIBLE_EVENT_MANAGE_GUARD_SELECT,
 } from "./eventManageGuard.js";
 import { isAllowedToManageEvent } from "./eventManageRules.js";
-import { loadEventOutput, type NotifyingEventWriteOutput } from "./getEvent.js";
+import { loadEventOutput, type GetEventOutput } from "./getEvent.js";
 
 export const addEventManagersInputSchema = z.object({
   event_id: idSchema,
@@ -40,7 +40,7 @@ export const addEventManagers = (
   context: ApplicationContext,
   actor: Actor,
   input: AddEventManagersInput,
-): Promise<NotifyingEventWriteOutput> =>
+): Promise<GetEventOutput> =>
   withSpan(context, "addEventManagers", async () => {
     /**
      * Authorize the request
@@ -113,7 +113,7 @@ export const addEventManagers = (
       },
     ]);
 
-    const notificationsSent = await triggerNotificationsAfterSave(
+    await triggerNotificationsAfterSave(
       context,
       managerIdsToAdd
         .filter((managerId) => managerId !== actingManagerId)
@@ -123,8 +123,5 @@ export const addEventManagers = (
         })),
     );
 
-    return {
-      event: await loadEventOutput(context, actor, event.id),
-      notifications_sent: notificationsSent,
-    };
+    return loadEventOutput(context, actor, event.id);
   });

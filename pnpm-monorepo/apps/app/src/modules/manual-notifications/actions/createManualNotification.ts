@@ -1,9 +1,6 @@
 "use server";
 
-import {
-  createUseCaseAction,
-  notificationsFailedWarning,
-} from "@/modules/application";
+import { createUseCaseAction } from "@/modules/application";
 import {
   createManualNotificationInputSchema,
   createManualNotification as createManualNotificationUseCase,
@@ -22,5 +19,4 @@ export const createManualNotification = createUseCaseAction({
   }),
   texts: MANUAL_NOTIFICATION_ERROR_TEXTS,
   success: () => "Die Benachrichtigung wurde gesendet.",
-  warning: notificationsFailedWarning,
 });
