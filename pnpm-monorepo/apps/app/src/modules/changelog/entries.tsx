@@ -53,6 +53,25 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-11-03-neue-benachrichtigungen",
+    date: "2026-11-03",
+    title: "Mehr Benachrichtigungen",
+    tags: ["Neu", "Events", "Benachrichtigungen"],
+    isTracked: false,
+    body: () => (
+      <p>
+        Du erfährst jetzt, wenn du einem Posten zugeteilt wirst oder ihn
+        verlierst, wenn ein Event verschoben wird und wenn ein Manager auf eine
+        Änderung am Briefing hinweist. Manager bekommen neue Bewerbungen, frei
+        gewordene Posten und kurz vor dem Beginn An- und Abmeldungen mit. Dazu
+        kommen Benachrichtigungen zu Tasks, zur SINcome-Zustimmung, zu neuen
+        Leveln und zu Strafpunkten. Die Browser-Benachrichtigungen lassen sich
+        in den Einstellungen einzeln abschalten.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-11-01-inbox-oeffnet-sich-selbst",
     date: "2026-11-01",
     title: "Die Inbox öffnet sich selbst",
