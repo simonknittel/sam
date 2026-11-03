@@ -53,6 +53,21 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-11-03-erforderliche-rollen-fuer-posten",
+    date: "2026-11-03",
+    title: "Erforderliche Rollen für Posten",
+    tags: ["Neu", "Events"],
+    isTracked: true,
+    body: () => (
+      <p>
+        Posten in der Aufstellung können jetzt neben einem Schiff auch Rollen
+        erfordern. Bei mehreren Rollen legst du fest, ob alle oder eine davon
+        nötig sind.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-11-03-neue-benachrichtigungen",
     date: "2026-11-03",
     title: "Mehr Benachrichtigungen",

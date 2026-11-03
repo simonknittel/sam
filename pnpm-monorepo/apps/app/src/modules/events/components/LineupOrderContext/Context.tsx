@@ -48,6 +48,8 @@ interface Props {
   readonly showManage?: boolean;
   readonly variants: readonly VariantCatalogManufacturer[];
   readonly myShips: readonly Pick<Ship, "variantId">[];
+  /** The roles of the signed-in citizen that the lineup requires */
+  readonly myRoleIds: readonly string[];
   readonly allEventCitizens: EventLineupCitizen[];
   readonly showActions?: boolean;
 }
@@ -59,6 +61,7 @@ export const LineupOrderProvider = ({
   showManage,
   variants,
   myShips,
+  myRoleIds,
   allEventCitizens,
   showActions,
 }: Props) => {
@@ -207,6 +210,7 @@ export const LineupOrderProvider = ({
             showManage={showManage}
             variants={variants}
             myShips={myShips}
+            myRoleIds={myRoleIds}
             allEventCitizens={allEventCitizens}
             showActions={showActions}
             groupLevel={1}

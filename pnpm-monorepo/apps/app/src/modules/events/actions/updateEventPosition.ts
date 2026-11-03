@@ -19,6 +19,10 @@ export const updateEventPosition = createUseCaseAction({
       ? formData.get("description")
       : undefined,
     required_variant_ids: formData.getAll("variantId[]"),
+    required_role_ids: formData.getAll("requiredRoleId[]"),
+    required_role_match: formData.has("requiredRoleMatch")
+      ? formData.get("requiredRoleMatch")
+      : undefined,
     font_size: formData.has("fontSize") ? formData.get("fontSize") : null,
     background_color: formData.has("backgroundColor")
       ? formData.get("backgroundColor")

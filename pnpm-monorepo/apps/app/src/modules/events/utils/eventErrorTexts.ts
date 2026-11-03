@@ -57,6 +57,7 @@ export const EVENT_ERROR_TEXTS = {
   [LineupErrorMessage.TooManyPositionsOnLevel]: `Auf dieser Ebene sind maximal ${LINEUP_MAX_POSITIONS_PER_LEVEL} Posten möglich.`,
   [LineupErrorMessage.TooManyPositions]: `Die Aufstellung hat maximal ${LINEUP_MAX_POSITIONS} Posten.`,
   [LineupErrorMessage.VariantNotFound]: "Schiff nicht gefunden",
+  [LineupErrorMessage.RoleNotFound]: "Rolle nicht gefunden",
   [LineupErrorMessage.CitizenNotFound]: "Citizen nicht gefunden",
   [LineupErrorMessage.CitizenNotParticipating]:
     "Der Citizen ist nicht für dieses Event angemeldet und hat kein Interesse für diesen Posten angemeldet.",

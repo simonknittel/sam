@@ -2,6 +2,7 @@ export {
   AuditEventType,
   type AuditEventDataByType,
 } from "@sam-monorepo/domain";
+import { EventPositionRoleMatch } from "@sam-monorepo/database/browser";
 import {
   AuditEventType,
   ReadMarkerSubject,
@@ -961,6 +962,22 @@ export const AuditEventDefinitions: {
       `Event position "${data.name}" created (event: ${data.eventId})`,
   },
 
+  [AuditEventType.EVENT_POSITION_CREATED_V2]: {
+    type: AuditEventType.EVENT_POSITION_CREATED_V2,
+    app: SystemLogApp.Events,
+    data: {
+      eventId: "string",
+      positionId: "string",
+      name: "string",
+      variantIds: ["string"],
+      roleIds: ["string"],
+      roleMatch: EventPositionRoleMatch.ANY,
+      parentPositionId: "string",
+    },
+    message: (data) =>
+      `Event position "${data.name}" created (event: ${data.eventId})`,
+  },
+
   [AuditEventType.EVENT_POSITION_UPDATED]: {
     type: AuditEventType.EVENT_POSITION_UPDATED,
     app: SystemLogApp.Events,
@@ -1169,6 +1186,22 @@ export const AuditEventDefinitions: {
       positionId: "string",
       name: "string",
       variantIds: ["string"],
+      parentPositionId: "string",
+    },
+    message: (data) =>
+      `Event template position "${data.name}" created (template: ${data.templateId})`,
+  },
+
+  [AuditEventType.EVENT_TEMPLATE_POSITION_CREATED_V2]: {
+    type: AuditEventType.EVENT_TEMPLATE_POSITION_CREATED_V2,
+    app: SystemLogApp.Events,
+    data: {
+      templateId: "string",
+      positionId: "string",
+      name: "string",
+      variantIds: ["string"],
+      roleIds: ["string"],
+      roleMatch: EventPositionRoleMatch.ANY,
       parentPositionId: "string",
     },
     message: (data) =>

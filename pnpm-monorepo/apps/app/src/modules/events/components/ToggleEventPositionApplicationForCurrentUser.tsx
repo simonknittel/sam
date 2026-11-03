@@ -7,6 +7,7 @@ import { Tooltip } from "@/modules/common/components/Tooltip";
 import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
 import type {
   EventPosition,
+  EventPositionRequiredRole,
   EventPositionRequiredVariant,
   Manufacturer,
   Series,
@@ -18,6 +19,7 @@ import { useId, useTransition } from "react";
 import { FaMinus, FaPlus } from "react-icons/fa";
 import { createEventPositionApplicationForCurrentUser } from "../actions/createEventPositionApplicationForCurrentUser";
 import { deleteEventPositionApplicationForCurrentUser } from "../actions/deleteEventPositionApplicationForCurrentUser";
+import { PositionRequiredRoles } from "./PositionRequiredRoles";
 
 interface Props {
   readonly className?: string;
@@ -31,6 +33,7 @@ interface Props {
         };
       };
     })[];
+    requiredRoles: Pick<EventPositionRequiredRole, "roleId">[];
   };
   readonly hasCurrentUserAlreadyApplied?: boolean;
   readonly doesCurrentUserSatisfyRequirements?: boolean;
@@ -118,6 +121,15 @@ export const ToggleEventPositionApplicationForCurrentUser = ({
                       disablePopover
                     />
                   ))}
+                </>
+              )}
+
+              {position.requiredRoles.length > 0 && (
+                <>
+                  <p className="mt-4 text-sm text-gray-500">
+                    Erforderliche Rolle
+                  </p>
+                  <PositionRequiredRoles position={position} />
                 </>
               )}
             </div>

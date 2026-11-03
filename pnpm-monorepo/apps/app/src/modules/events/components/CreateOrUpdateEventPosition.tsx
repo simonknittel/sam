@@ -6,16 +6,20 @@ import Button from "@/modules/common/components/Button";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import { TextInput } from "@/modules/common/components/form/TextInput";
+import { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
 import Modal from "@/modules/common/components/Modal";
 import { Tooltip } from "@/modules/common/components/Tooltip";
 import type {
   VariantCatalogManufacturer,
   VariantCatalogVariant,
 } from "@/modules/fleet/queries/getVariantCatalog";
-import type {
-  EventPosition,
-  EventPositionRequiredVariant,
-  Variant,
+import { RolePicker } from "@/modules/roles/components/RolePicker/RolePicker";
+import {
+  EventPositionRoleMatch,
+  type EventPosition,
+  type EventPositionRequiredRole,
+  type EventPositionRequiredVariant,
+  type Variant,
 } from "@sam-monorepo/database/browser";
 import {
   MAXIMUM_POSITION_DESCRIPTION_LENGTH,
@@ -44,6 +48,7 @@ import {
   eventContainerFormValues,
   type EventContainer,
 } from "../utils/eventContainer";
+import { getRoleMatchLabel } from "./PositionRequiredRoles";
 
 const ADD_LABEL = "Posten hinzufügen";
 const EDIT_LABEL = "Posten bearbeiten";
@@ -62,6 +67,7 @@ interface CreateProps {
 interface UpdateProps {
   readonly position: EventPosition & {
     requiredVariants: EventPositionRequiredVariant[];
+    requiredRoles: Pick<EventPositionRequiredRole, "roleId">[];
   };
 }
 
@@ -212,6 +218,18 @@ export const CreateOrUpdateEventPosition = (props: Props) => {
                     (requiredVariant) => requiredVariant.variantId,
                   )
                 : undefined
+            }
+            className="mt-4"
+          />
+
+          <RequiredRoles
+            defaultRoleIds={
+              "position" in props
+                ? props.position.requiredRoles.map(({ roleId }) => roleId)
+                : undefined
+            }
+            defaultMatch={
+              "position" in props ? props.position.requiredRoleMatch : undefined
             }
             className="mt-4"
           />
@@ -416,6 +434,63 @@ const RequiredVariants = ({
           <input type="hidden" name="variantId[]" value={item} key={item} />
         ))}
     </>
+  );
+};
+
+interface RequiredRolesProps {
+  readonly className?: string;
+  readonly defaultRoleIds?: readonly string[];
+  readonly defaultMatch?: EventPositionRoleMatch;
+}
+
+/**
+ * The match of the roles is a choice only for two roles or more. With fewer
+ * roles, the form keeps the choice in a hidden field.
+ */
+const RequiredRoles = ({
+  className,
+  defaultRoleIds = [],
+  defaultMatch = EventPositionRoleMatch.ANY,
+}: RequiredRolesProps) => {
+  const [roleIds, setRoleIds] = useState<readonly string[]>(defaultRoleIds);
+  const [match, setMatch] = useState(defaultMatch);
+  const matchInputId = useId();
+
+  return (
+    <div className={clsx(className)}>
+      <RolePicker
+        mode={ItemPickerMode.Multiple}
+        name="requiredRoleId[]"
+        label="Erforderliche Rolle (optional)"
+        value={roleIds}
+        onChange={setRoleIds}
+      />
+
+      {roleIds.length > 1 ? (
+        <div className="mt-2">
+          <label htmlFor={matchInputId} className="mb-1 block text-sm">
+            Der Citizen benötigt
+          </label>
+          <select
+            id={matchInputId}
+            name="requiredRoleMatch"
+            className="w-full rounded-secondary bg-neutral-900 p-2"
+            value={match}
+            onChange={(event) =>
+              setMatch(event.target.value as EventPositionRoleMatch)
+            }
+          >
+            {Object.values(EventPositionRoleMatch).map((roleMatch) => (
+              <option key={roleMatch} value={roleMatch}>
+                {getRoleMatchLabel(roleMatch)}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : (
+        <input type="hidden" name="requiredRoleMatch" value={match} />
+      )}
+    </div>
   );
 };
 

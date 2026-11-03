@@ -59,6 +59,7 @@ export const EventTemplateLineupTab = ({
           canManagePositions={canEdit}
           variants={variants}
           myShips={[]}
+          myRoleIds={[]}
           allEventCitizens={[]}
           showActions={false}
         />

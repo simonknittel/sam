@@ -1,32 +1,44 @@
 import type { EventLineupCitizen } from "@sam-monorepo/application";
 import type { Ship } from "@sam-monorepo/database/client";
+import { hasRequiredRolesOfPosition } from "@sam-monorepo/domain";
 import type { PositionType } from "../components/Position";
+
+const hasRequiredVariant = (
+  position: PositionType,
+  ships: readonly Pick<Ship, "variantId">[],
+) =>
+  position.requiredVariants.length <= 0 ||
+  position.requiredVariants.some((requiredVariant) =>
+    ships.some((ship) => ship.variantId === requiredVariant.variantId),
+  );
+
+/**
+ * A citizen meets the requirements of a position with one of the required
+ * ships and with the required roles
+ */
+const meetsRequirements = (
+  position: PositionType,
+  ships: readonly Pick<Ship, "variantId">[],
+  roleIds: readonly string[],
+) =>
+  hasRequiredVariant(position, ships) &&
+  hasRequiredRolesOfPosition(position, new Set(roleIds));
 
 export const checkRequirements = (
   position: PositionType,
   myShips: readonly Pick<Ship, "variantId">[],
+  myRoleIds: readonly string[],
   allEventCitizens: EventLineupCitizen[],
 ) => {
-  let doesCurrentUserSatisfyRequirements = true;
-  if (
-    position.requiredVariants.length > 0 &&
-    !position.requiredVariants.some((requiredVariant) =>
-      myShips.some((ship) => ship.variantId === requiredVariant.variantId),
-    )
-  )
-    doesCurrentUserSatisfyRequirements = false;
+  const doesCurrentUserSatisfyRequirements = meetsRequirements(
+    position,
+    myShips,
+    myRoleIds,
+  );
 
-  let citizensSatisfyingRequirements = allEventCitizens;
-  if (position.requiredVariants.length > 0) {
-    citizensSatisfyingRequirements = citizensSatisfyingRequirements.filter(
-      (citizen) =>
-        citizen.ships.some((ship) =>
-          position.requiredVariants.some(
-            (requiredVariant) => requiredVariant.variantId === ship.variantId,
-          ),
-        ),
-    );
-  }
+  const citizensSatisfyingRequirements = allEventCitizens.filter((citizen) =>
+    meetsRequirements(position, citizen.ships, citizen.roleIds),
+  );
   const citizensNotSatisfyingRequirements = allEventCitizens.filter(
     (citizen) =>
       !citizensSatisfyingRequirements.some(

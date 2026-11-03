@@ -9,6 +9,7 @@ import {
   type Citizen,
   type EventPosition,
   type EventPositionApplication,
+  type EventPositionRequiredRole,
   type EventPositionRequiredVariant,
   type Manufacturer,
   type Series,
@@ -30,6 +31,7 @@ import { DragHandle } from "./LineupOrderContext/DragHandle";
 import { DragTarget } from "./LineupOrderContext/DragTarget";
 import { useLineupVisibility } from "./LineupVisibilityContext";
 import { PasteEventPositionButton } from "./PasteEventPositionButton";
+import { PositionRequiredRoles } from "./PositionRequiredRoles";
 import { PositionVariants } from "./PositionVariants";
 import { ToggleEventPositionApplicationForCurrentUser } from "./ToggleEventPositionApplicationForCurrentUser";
 import { UpdateEventPositionCitizenId } from "./UpdateEventPositionCitizenId";
@@ -52,6 +54,7 @@ export type PositionType = EventPosition & {
       };
     };
   })[];
+  requiredRoles: Pick<EventPositionRequiredRole, "roleId">[];
   citizen?: Pick<Citizen, "id" | "handle" | "deletedAt"> | null;
   childPositions?: PositionType[];
 };
@@ -62,6 +65,7 @@ interface Props {
   readonly showManage?: boolean;
   readonly variants: readonly VariantCatalogManufacturer[];
   readonly myShips: readonly Pick<Ship, "variantId">[];
+  readonly myRoleIds: readonly string[];
   readonly allEventCitizens: EventLineupCitizen[];
   readonly showActions?: boolean;
   readonly groupLevel: number;
@@ -74,6 +78,7 @@ export const Position = ({
   showManage,
   variants,
   myShips,
+  myRoleIds,
   allEventCitizens,
   showActions,
   groupLevel,
@@ -111,7 +116,7 @@ export const Position = ({
     citizensNotSatisfyingRequirements,
     applicationsSatisfyingRequirements,
     applicationsNotSatisfyingRequirements,
-  } = checkRequirements(position, myShips, allEventCitizens);
+  } = checkRequirements(position, myShips, myRoleIds, allEventCitizens);
 
   const newParentPositions = [...parentPositions, position.id];
 
@@ -279,7 +284,12 @@ export const Position = ({
               )}
             </div>
 
-            {/* TODO: Implement (multiple) role requirements */}
+            <div className="flex flex-1 flex-col">
+              <h3 className="font-mono text-xs text-white/40 uppercase">
+                Erforderliche Rolle
+              </h3>
+              <PositionRequiredRoles position={position} className="mt-1" />
+            </div>
           </div>
 
           {((supportsStaffing && showActions) || showManage) && (
@@ -354,6 +364,7 @@ export const Position = ({
               showManage={showManage}
               variants={variants}
               myShips={myShips}
+              myRoleIds={myRoleIds}
               allEventCitizens={allEventCitizens}
               showActions={showActions}
               groupLevel={groupLevel + 1}

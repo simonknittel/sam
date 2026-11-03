@@ -16,6 +16,7 @@ export const Positions = ({
   canManagePositions,
   variants,
   myShips,
+  myRoleIds,
   allEventCitizens,
   showActions,
 }: Props) => {
@@ -30,6 +31,7 @@ export const Positions = ({
           showManage={canManagePositions}
           variants={variants}
           myShips={myShips}
+          myRoleIds={myRoleIds}
           allEventCitizens={allEventCitizens}
           showActions={showActions}
           className="flex flex-col gap-px"

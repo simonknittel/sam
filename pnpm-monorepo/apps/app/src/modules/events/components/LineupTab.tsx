@@ -32,6 +32,7 @@ interface Props {
   readonly canManagePositions?: boolean;
   readonly variants: readonly VariantCatalogManufacturer[];
   readonly myShips: readonly Pick<Ship, "variantId">[];
+  readonly myRoleIds: readonly string[];
   readonly allEventCitizens: EventLineupCitizen[];
   readonly showActions?: boolean;
 }
@@ -43,6 +44,7 @@ export const LineupTab = ({
   canManagePositions,
   variants,
   myShips,
+  myRoleIds,
   allEventCitizens,
   showActions,
 }: Props) => {
@@ -97,6 +99,7 @@ export const LineupTab = ({
           canManagePositions={canManagePositions}
           variants={variants}
           myShips={myShips}
+          myRoleIds={myRoleIds}
           allEventCitizens={allEventCitizens}
           showActions={showActions}
         />

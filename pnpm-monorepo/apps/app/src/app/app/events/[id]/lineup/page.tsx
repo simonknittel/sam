@@ -3,6 +3,7 @@ import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMet
 import { LineupTab } from "@/modules/events/components/LineupTab";
 import { getEventById } from "@/modules/events/queries/getEventById";
 import { getEventPositions } from "@/modules/events/queries/getEventPositions";
+import { getMyRequiredRoleIds } from "@/modules/events/queries/getMyRequiredRoleIds";
 import { getMyShipsOfRequiredVariants } from "@/modules/events/queries/getMyShipsOfRequiredVariants";
 import { getEventCitizens } from "@/modules/events/utils/getEventCitizens";
 import { isAllowedToManagePositions } from "@/modules/events/utils/isAllowedToManagePositions";
@@ -41,17 +42,20 @@ export default async function Page({
 
   if (!(await isLineupVisible(event))) forbidden();
 
-  const [positions, variants, myShips, allEventCitizens] = await Promise.all([
-    getEventPositions(event.id),
+  const [positions, variants, myShips, myRoleIds, allEventCitizens] =
+    await Promise.all([
+      getEventPositions(event.id),
 
-    // Only the position forms use the catalog. It is large, thus a viewer
-    // who cannot manage the positions does not get it.
-    showManagePositions ? getVariantCatalog() : [],
+      // Only the position forms use the catalog. It is large, thus a viewer
+      // who cannot manage the positions does not get it.
+      showManagePositions ? getVariantCatalog() : [],
 
-    getMyShipsOfRequiredVariants(event.id),
+      getMyShipsOfRequiredVariants(event.id),
 
-    getEventCitizens(event.id),
-  ]);
+      getMyRequiredRoleIds(event.id),
+
+      getEventCitizens(event.id),
+    ]);
 
   return (
     <LineupTab
@@ -60,6 +64,7 @@ export default async function Page({
       canManagePositions={showManagePositions}
       variants={variants}
       myShips={myShips}
+      myRoleIds={myRoleIds}
       allEventCitizens={allEventCitizens}
       showActions={showActions}
     />

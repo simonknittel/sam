@@ -24,6 +24,10 @@ export const createEventPosition = createUseCaseAction({
       ? formData.get("description")
       : undefined,
     required_variant_ids: formData.getAll("variantId[]"),
+    required_role_ids: formData.getAll("requiredRoleId[]"),
+    required_role_match: formData.has("requiredRoleMatch")
+      ? formData.get("requiredRoleMatch")
+      : undefined,
     parent_position_id: formData.has("parentPositionId")
       ? formData.get("parentPositionId")
       : undefined,
