@@ -1053,6 +1053,16 @@ export const AuditEventDefinitions: {
         : `Event participation disabled (event: ${data.eventId}, cancelled sign-ups: ${data.cancelledParticipantCount}, cleared positions: ${data.clearedPositionCount}, deleted applications: ${data.deletedApplicationCount})`,
   },
 
+  [AuditEventType.EVENT_BRIEFING_UPDATE_ANNOUNCED]: {
+    type: AuditEventType.EVENT_BRIEFING_UPDATE_ANNOUNCED,
+    app: SystemLogApp.Events,
+    data: {
+      eventId: "string",
+    },
+    message: (data) =>
+      `Event briefing update announced (event: ${data.eventId})`,
+  },
+
   [AuditEventType.EVENT_LINEUP_ORDER_CHANGED]: {
     type: AuditEventType.EVENT_LINEUP_ORDER_CHANGED,
     app: SystemLogApp.Events,

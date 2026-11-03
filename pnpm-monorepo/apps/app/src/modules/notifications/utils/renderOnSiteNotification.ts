@@ -1,7 +1,24 @@
 import {
   BIRTHDAY_FALLBACK_WORDING,
   FLEET_UPDATE_REMINDER_WORDING,
+  getEventBriefingUpdatedText,
+  getEventLineupEnabledText,
+  getEventManagerAddedText,
   getEventMorningReminderTitle,
+  getEventParticipationChangedText,
+  getEventPositionApplicationCreatedText,
+  getEventPositionAssignedText,
+  getEventPositionUnassignedText,
+  getEventPositionVacatedText,
+  getEventRescheduledText,
+  getPenaltyEntryDeletedText,
+  getPenaltyEntryExpiredText,
+  getRoleLevelIncreasedText,
+  getSincomePayoutReminderText,
+  getTaskAcceptedText,
+  getTaskCancelledText,
+  getTaskCompletedText,
+  getTaskDeadlineReminderText,
   MY_SHIPS_PATH,
   ONBOARDING_POPOVER_PATH,
   parseOnSiteNotificationPayload,
@@ -90,10 +107,33 @@ export const renderOnSiteNotification = (
         decoration: null,
       };
 
+    case "event_rescheduled":
+      return {
+        ...getEventRescheduledText(parsed.payload),
+        url: `/app/events/${parsed.payload.eventId}`,
+        appTitle,
+        decoration: null,
+      };
+
     case "event_lineup_enabled":
       return {
-        title: "Aufstellung veröffentlicht",
-        body: parsed.payload.eventName,
+        ...getEventLineupEnabledText(parsed.payload),
+        url: `/app/events/${parsed.payload.eventId}/lineup`,
+        appTitle,
+        decoration: null,
+      };
+
+    case "event_position_assigned":
+      return {
+        ...getEventPositionAssignedText(parsed.payload),
+        url: `/app/events/${parsed.payload.eventId}/lineup`,
+        appTitle,
+        decoration: null,
+      };
+
+    case "event_position_unassigned":
+      return {
+        ...getEventPositionUnassignedText(parsed.payload),
         url: `/app/events/${parsed.payload.eventId}/lineup`,
         appTitle,
         decoration: null,
@@ -103,6 +143,14 @@ export const renderOnSiteNotification = (
       return {
         title: "Briefing veröffentlicht",
         body: parsed.payload.eventName,
+        url: `/app/events/${parsed.payload.eventId}/briefing`,
+        appTitle,
+        decoration: null,
+      };
+
+    case "event_briefing_updated":
+      return {
+        ...getEventBriefingUpdatedText(parsed.payload),
         url: `/app/events/${parsed.payload.eventId}/briefing`,
         appTitle,
         decoration: null,
@@ -146,10 +194,50 @@ export const renderOnSiteNotification = (
         decoration: null,
       };
 
+    case "event_manager_added":
+      return {
+        ...getEventManagerAddedText(parsed.payload),
+        url: `/app/events/${parsed.payload.eventId}`,
+        appTitle,
+        decoration: null,
+      };
+
+    case "event_participation_changed":
+      return {
+        ...getEventParticipationChangedText(parsed.payload),
+        url: `/app/events/${parsed.payload.eventId}/participants`,
+        appTitle,
+        decoration: null,
+      };
+
+    case "event_position_vacated":
+      return {
+        ...getEventPositionVacatedText(parsed.payload),
+        url: `/app/events/${parsed.payload.eventId}/lineup`,
+        appTitle,
+        decoration: null,
+      };
+
+    case "event_position_application_created":
+      return {
+        ...getEventPositionApplicationCreatedText(parsed.payload),
+        url: `/app/events/${parsed.payload.eventId}/lineup`,
+        appTitle,
+        decoration: null,
+      };
+
     case "role_added":
       return {
         title: "Neue Rolle",
         body: `Dir wurde eine neue Rolle zugewiesen: ${parsed.payload.roleName}`,
+        url: null,
+        appTitle,
+        decoration: null,
+      };
+
+    case "role_level_increased":
+      return {
+        ...getRoleLevelIncreasedText(parsed.payload),
         url: null,
         appTitle,
         decoration: null,
@@ -168,6 +256,14 @@ export const renderOnSiteNotification = (
       return {
         title: "SINcome-Auszahlung gestartet",
         body: `Die Auszahlungsphase für den Zeitraum ${parsed.payload.cycleTitle} wurde gestartet. Bitte stimme der Auszahlung zu.`,
+        url: `/app/sincome/${parsed.payload.cycleId}`,
+        appTitle,
+        decoration: null,
+      };
+
+    case "sincome_payout_reminder":
+      return {
+        ...getSincomePayoutReminderText(parsed.payload),
         url: `/app/sincome/${parsed.payload.cycleId}`,
         appTitle,
         decoration: null,
@@ -193,6 +289,22 @@ export const renderOnSiteNotification = (
         decoration: null,
       };
 
+    case "penalty_entry_expired":
+      return {
+        ...getPenaltyEntryExpiredText(parsed.payload),
+        url: null,
+        appTitle,
+        decoration: null,
+      };
+
+    case "penalty_entry_deleted":
+      return {
+        ...getPenaltyEntryDeletedText(parsed.payload),
+        url: null,
+        appTitle,
+        decoration: null,
+      };
+
     case "task_created":
       return {
         title: "Neuer Task",
@@ -206,6 +318,38 @@ export const renderOnSiteNotification = (
       return {
         title: "Neuer Task",
         body: `Dir wurde ein Task zugewiesen: ${parsed.payload.taskTitle}`,
+        url: `/app/tasks/${parsed.payload.taskId}`,
+        appTitle,
+        decoration: null,
+      };
+
+    case "task_accepted":
+      return {
+        ...getTaskAcceptedText(parsed.payload),
+        url: `/app/tasks/${parsed.payload.taskId}`,
+        appTitle,
+        decoration: null,
+      };
+
+    case "task_deadline_reminder":
+      return {
+        ...getTaskDeadlineReminderText(parsed.payload),
+        url: `/app/tasks/${parsed.payload.taskId}`,
+        appTitle,
+        decoration: null,
+      };
+
+    case "task_completed":
+      return {
+        ...getTaskCompletedText(parsed.payload),
+        url: `/app/tasks/${parsed.payload.taskId}`,
+        appTitle,
+        decoration: null,
+      };
+
+    case "task_cancelled":
+      return {
+        ...getTaskCancelledText(parsed.payload),
         url: `/app/tasks/${parsed.payload.taskId}`,
         appTitle,
         decoration: null,

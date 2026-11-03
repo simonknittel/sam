@@ -1,6 +1,9 @@
 "use server";
 
-import { createUseCaseAction } from "@/modules/application";
+import {
+  createUseCaseAction,
+  notificationsFailedWarning,
+} from "@/modules/application";
 import {
   createEventParticipation,
   eventParticipationInputSchema,
@@ -18,4 +21,5 @@ export const signUpForEvent = createUseCaseAction({
   }),
   texts: EVENT_ERROR_TEXTS,
   success: () => "Du bist angemeldet.",
+  warning: notificationsFailedWarning,
 });

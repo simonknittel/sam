@@ -1,6 +1,9 @@
 "use server";
 
-import { createUseCaseAction } from "@/modules/application";
+import {
+  createUseCaseAction,
+  notificationsFailedWarning,
+} from "@/modules/application";
 import {
   addEventManagers,
   addEventManagersInputSchema,
@@ -21,4 +24,5 @@ export const createManagers = createUseCaseAction({
   }),
   texts: EVENT_ERROR_TEXTS,
   success: (t) => t("Common.successfullySaved"),
+  warning: notificationsFailedWarning,
 });
