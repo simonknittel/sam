@@ -10,7 +10,12 @@ import {
   AuditEventAccess,
   listAuditEvents,
   UnknownCursorBehavior,
+  type ListAuditEventsInput,
 } from "@sam-monorepo/application";
+import {
+  AuditEventType,
+  type AuditEventDataByType,
+} from "@sam-monorepo/domain";
 import { cache } from "react";
 import {
   SystemLogOrigin,
@@ -49,22 +54,37 @@ export const getAuditEvents = cache(
       const { gte, lt } = getDateRangeFilter(from, to);
 
       try {
-        const page = await listAuditEvents(
-          getApplicationContext(),
-          await getRequestActor(),
+        const context = getApplicationContext();
+        const actor = await getRequestActor();
+        const input: ListAuditEventsInput = {
+          types: type ?? undefined,
+          created_by_user_ids: createdById ?? undefined,
+          from: gte,
+          to: lt,
+          include_high_volume: volume === SystemLogVolume.All,
+          triggered_via_mcp: getTriggeredViaMcp(origin),
+          access,
+          limit: AUDIT_EVENTS_PAGE_SIZE,
+          cursor: cursor ?? undefined,
+        };
+
+        const page = await listAuditEvents(context, actor, input, {
+          direction,
+          unknownCursor: UnknownCursorBehavior.FirstPage,
+        });
+
+        // The same read event as the MCP tool list_audit_events writes. The
+        // JSON round trip gives the dates as ISO strings and removes the
+        // filters without a value.
+        await context.audit.create([
           {
-            types: type ?? undefined,
-            created_by_user_ids: createdById ?? undefined,
-            from: gte,
-            to: lt,
-            include_high_volume: volume === SystemLogVolume.All,
-            triggered_via_mcp: getTriggeredViaMcp(origin),
-            access,
-            limit: AUDIT_EVENTS_PAGE_SIZE,
-            cursor: cursor ?? undefined,
+            type: AuditEventType.AUDIT_EVENTS_LISTED,
+            data: JSON.parse(
+              JSON.stringify({ arguments: input }),
+            ) as AuditEventDataByType[AuditEventType.AUDIT_EVENTS_LISTED],
+            createdById: actor.userId,
           },
-          { direction, unknownCursor: UnknownCursorBehavior.FirstPage },
-        );
+        ]);
 
         return {
           events: page.events,

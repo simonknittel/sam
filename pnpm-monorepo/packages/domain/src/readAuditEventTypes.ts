@@ -35,8 +35,10 @@ export type ReadAuditEventType = (typeof READ_AUDIT_EVENT_TYPE_LIST)[number];
 
 /**
  * The types of the read accesses. The MCP server writes one for each
- * successful call of a read tool. The system log and the MCP tool show them
- * only with an explicit type filter or with the access filter "read" or "all".
+ * successful call of a read tool. The system log page of the web app also
+ * writes AUDIT_EVENTS_LISTED for each view. The system log and the MCP tool
+ * show them only with an explicit type filter or with the access filter "read"
+ * or "all".
  * All other types are the writes.
  */
 export const READ_AUDIT_EVENT_TYPES: ReadonlySet<AuditEventType> = new Set(

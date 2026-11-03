@@ -84,7 +84,7 @@ export const listAuditEventsInputSchema = z.object({
     .enum(AuditEventAccess)
     .default(AuditEventAccess.Write)
     .describe(
-      "write (default): the changes and the other events, without the reads. read: only the reads, which the MCP server writes for each successful call of a read tool, one type per tool (for example CITIZEN_READ or TASKS_LISTED). all: both.",
+      "write (default): the changes and the other events, without the reads. read: only the reads. The MCP server writes one for each successful call of a read tool, one type per tool (for example CITIZEN_READ or TASKS_LISTED). The system log of the web app writes AUDIT_EVENTS_LISTED for each view. all: both.",
     ),
   limit: pageLimitSchema,
   cursor: cursorSchema.optional(),
