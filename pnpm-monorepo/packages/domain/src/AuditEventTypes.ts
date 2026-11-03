@@ -99,6 +99,8 @@ export enum AuditEventType {
    * the sign-ups and clears the assignments and applications of the lineup.
    */
   EVENT_PARTICIPATION_STATUS_CHANGED = "EVENT_PARTICIPATION_STATUS_CHANGED",
+  /** A manager told the readers of the published briefing about a change */
+  EVENT_BRIEFING_UPDATE_ANNOUNCED = "EVENT_BRIEFING_UPDATE_ANNOUNCED",
   EVENT_LINEUP_ORDER_CHANGED = "EVENT_LINEUP_ORDER_CHANGED",
   EVENT_POSITION_CITIZEN_ASSIGNED = "EVENT_POSITION_CITIZEN_ASSIGNED",
   EVENT_POSITION_CITIZEN_REMOVED = "EVENT_POSITION_CITIZEN_REMOVED",
@@ -849,6 +851,10 @@ export interface AuditEventDataByType {
     cancelledParticipantCount: number;
     clearedPositionCount: number;
     deletedApplicationCount: number;
+  };
+
+  [AuditEventType.EVENT_BRIEFING_UPDATE_ANNOUNCED]: {
+    eventId: string;
   };
 
   [AuditEventType.EVENT_LINEUP_ORDER_CHANGED]: {

@@ -1,4 +1,5 @@
 import * as z from "zod/mini";
+import { LINEUP_MAX_POSITIONS } from "../events/lineupLimits.js";
 import {
   MANUAL_NOTIFICATION_BODY_MAX_LENGTH,
   MANUAL_NOTIFICATION_TITLE_MAX_LENGTH,
@@ -31,15 +32,10 @@ export const eventDeletedPayloadSchema = z.object({
   eventName: z.string(),
 });
 
-/**
- * More positions than one citizen holds in a real lineup. The limit only stops
- * the loops over a malformed row.
- */
-const POSITION_NAMES_MAX_COUNT = 100;
-
+/** One citizen can hold each position of a lineup */
 const positionNamesSchema = z
   .array(z.string())
-  .check(z.maxLength(POSITION_NAMES_MAX_COUNT));
+  .check(z.maxLength(LINEUP_MAX_POSITIONS));
 
 /**
  * `positionNames` are the positions of the receiver at the publication. The
