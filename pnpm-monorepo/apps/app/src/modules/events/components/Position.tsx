@@ -31,7 +31,10 @@ import { DragHandle } from "./LineupOrderContext/DragHandle";
 import { DragTarget } from "./LineupOrderContext/DragTarget";
 import { useLineupVisibility } from "./LineupVisibilityContext";
 import { PasteEventPositionButton } from "./PasteEventPositionButton";
-import { PositionRequiredRoles } from "./PositionRequiredRoles";
+import {
+  getRequiredRolesHeading,
+  PositionRequiredRoles,
+} from "./PositionRequiredRoles";
 import { PositionVariants } from "./PositionVariants";
 import { ToggleEventPositionApplicationForCurrentUser } from "./ToggleEventPositionApplicationForCurrentUser";
 import { UpdateEventPositionCitizenId } from "./UpdateEventPositionCitizenId";
@@ -286,7 +289,7 @@ export const Position = ({
 
             <div className="flex flex-1 flex-col">
               <h3 className="font-mono text-xs text-white/40 uppercase">
-                Erforderliche Rolle
+                {getRequiredRolesHeading(position)}
               </h3>
               <PositionRequiredRoles position={position} className="mt-1" />
             </div>

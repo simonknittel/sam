@@ -19,7 +19,10 @@ import { useId, useTransition } from "react";
 import { FaMinus, FaPlus } from "react-icons/fa";
 import { createEventPositionApplicationForCurrentUser } from "../actions/createEventPositionApplicationForCurrentUser";
 import { deleteEventPositionApplicationForCurrentUser } from "../actions/deleteEventPositionApplicationForCurrentUser";
-import { PositionRequiredRoles } from "./PositionRequiredRoles";
+import {
+  getRequiredRolesHeading,
+  PositionRequiredRoles,
+} from "./PositionRequiredRoles";
 
 interface Props {
   readonly className?: string;
@@ -127,7 +130,7 @@ export const ToggleEventPositionApplicationForCurrentUser = ({
               {position.requiredRoles.length > 0 && (
                 <>
                   <p className="mt-4 text-sm text-gray-500">
-                    Erforderliche Rolle
+                    {getRequiredRolesHeading(position)}
                   </p>
                   <PositionRequiredRoles position={position} />
                 </>

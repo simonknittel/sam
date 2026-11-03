@@ -112,7 +112,7 @@ export {
   MAXIMUM_POSITION_NAME_LENGTH,
 } from "./events/lineupLimits.js";
 export {
-  hasRequiredRolesOfPosition,
+  getMissingRequiredRoleIds,
   type PositionRoleRequirement,
 } from "./events/positionRoleRequirement.js";
 export {

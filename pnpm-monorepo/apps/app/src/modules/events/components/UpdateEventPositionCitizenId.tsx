@@ -1,43 +1,56 @@
 "use client";
 
 import { runAction } from "@/modules/actions/utils/runAction";
-import type { EventLineupCitizen } from "@sam-monorepo/application";
-import type {
-  Citizen,
-  EventPosition,
-  EventPositionApplication,
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
+import Modal from "@/modules/common/components/Modal";
+import {
+  EventPositionRoleMatch,
+  type Citizen,
 } from "@sam-monorepo/database/browser";
 import { getCitizenDisplayName } from "@sam-monorepo/domain";
 import clsx from "clsx";
-import { useTransition, type ChangeEventHandler } from "react";
+import { useId, useState, useTransition } from "react";
+import { FaPen } from "react-icons/fa";
 import { resetEventPositionCitizenId } from "../actions/resetEventPositionCitizenId";
 import { updateEventPositionCitizenId } from "../actions/updateEventPositionCitizenId";
+import type {
+  CheckedApplication,
+  CheckedEventLineupCitizen,
+  UnmetRequirements,
+} from "../utils/checkRequirements";
+import type { PositionType } from "./Position";
+import { RequiredRoleBadges } from "./PositionRequiredRoles";
 
 type DisplayedCitizen = Pick<Citizen, "id" | "handle" | "deletedAt">;
 
-const compareByCitizenDisplayName = (
-  first: { readonly citizen: DisplayedCitizen },
-  second: { readonly citizen: DisplayedCitizen },
-) =>
+/** One citizen that the manager can assign */
+interface Choice {
+  readonly citizen: DisplayedCitizen;
+  readonly unmetRequirements: UnmetRequirements;
+}
+
+const compareByCitizenDisplayName = (first: Choice, second: Choice) =>
   getCitizenDisplayName(first.citizen).localeCompare(
     getCitizenDisplayName(second.citizen),
   );
 
+const variantNameList = new Intl.ListFormat("de", { type: "disjunction" });
+
 interface Props {
   readonly className?: string;
-  readonly position: EventPosition & {
-    readonly citizen?: DisplayedCitizen | null;
-  };
-  readonly citizensSatisfyingRequirements: EventLineupCitizen[];
-  readonly citizensNotSatisfyingRequirements: EventLineupCitizen[];
-  readonly applicationsSatisfyingRequirements: (EventPositionApplication & {
-    citizen: DisplayedCitizen;
-  })[];
-  readonly applicationsNotSatisfyingRequirements: (EventPositionApplication & {
-    citizen: DisplayedCitizen;
-  })[];
+  readonly position: PositionType;
+  readonly citizensSatisfyingRequirements: CheckedEventLineupCitizen[];
+  readonly citizensNotSatisfyingRequirements: CheckedEventLineupCitizen[];
+  readonly applicationsSatisfyingRequirements: CheckedApplication[];
+  readonly applicationsNotSatisfyingRequirements: CheckedApplication[];
 }
 
+/**
+ * The choices are in a modal and not in a select: for a citizen who does not
+ * meet the requirements, the modal shows the missing ship and the missing
+ * roles
+ */
 export const UpdateEventPositionCitizenId = ({
   className,
   position,
@@ -46,99 +59,265 @@ export const UpdateEventPositionCitizenId = ({
   applicationsSatisfyingRequirements,
   applicationsNotSatisfyingRequirements,
 }: Props) => {
+  const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  /** The citizen of the pending assignment, or null for the removal */
+  const [pendingCitizenId, setPendingCitizenId] = useState<
+    DisplayedCitizen["id"] | null
+  >(null);
 
-  /**
-   * The choices are the participants that are not deleted. The position can
-   * still have a citizen outside of them, for example a deleted citizen.
-   * The select shows this citizen, but the manager cannot choose it again.
-   */
-  const choosableCitizenIds = new Set(
-    [
-      ...citizensSatisfyingRequirements,
-      ...citizensNotSatisfyingRequirements,
-    ].map((eventCitizen) => eventCitizen.citizen.id),
-  );
-  const assignedCitizenOutsideChoices =
-    position.citizen && !choosableCitizenIds.has(position.citizen.id)
-      ? position.citizen
-      : null;
+  const assignedCitizen = position.citizen ?? null;
+  const assignedCitizenName = assignedCitizen
+    ? getCitizenDisplayName(assignedCitizen)
+    : null;
 
-  const handleChange: ChangeEventHandler<HTMLSelectElement> = (event) => {
+  const changeCitizen = (citizenId: DisplayedCitizen["id"] | null) => {
     const formData = new FormData();
     formData.set("positionId", position.id);
-    formData.set("citizenId", event.target.value);
+    if (citizenId) formData.set("citizenId", citizenId);
+    setPendingCitizenId(citizenId);
 
     startTransition(async () => {
-      await runAction(
-        event.target.value === "-"
-          ? resetEventPositionCitizenId
-          : updateEventPositionCitizenId,
+      const succeeded = await runAction(
+        citizenId ? updateEventPositionCitizenId : resetEventPositionCitizenId,
         formData,
       );
+      if (succeeded) setIsOpen(false);
     });
   };
 
+  const sections = [
+    {
+      title: "Interessenten - Voraussetzungen erfüllt",
+      choices: applicationsSatisfyingRequirements,
+    },
+    {
+      title: "Interessenten - Voraussetzungen nicht erfüllt",
+      choices: applicationsNotSatisfyingRequirements,
+    },
+    {
+      title: "Alle Teilnehmer - Voraussetzungen erfüllt",
+      choices: citizensSatisfyingRequirements,
+    },
+    {
+      title: "Alle Teilnehmer - Voraussetzungen nicht erfüllt",
+      choices: citizensNotSatisfyingRequirements,
+    },
+  ];
+
   return (
-    <div className={clsx(className)}>
-      <input type="hidden" name="positionId" value={position.id} />
-      <select
-        name="citizenId"
-        /** A lineup holds one of these per position, so it names its own */
-        aria-label={`Citizen für ${position.name}`}
-        className="block w-full cursor-pointer rounded-secondary bg-white/10 p-2 text-neutral-100"
-        onChange={handleChange}
+    <>
+      <button
+        type="button"
+        onClick={() => setIsOpen(true)}
         disabled={isPending}
-        defaultValue={position.citizenId || "-"}
-      >
-        <option value="-">-</option>
-
-        {assignedCitizenOutsideChoices && (
-          <option value={assignedCitizenOutsideChoices.id} disabled>
-            {getCitizenDisplayName(assignedCitizenOutsideChoices)}
-          </option>
+        /**
+         * A lineup holds one of these per position, so it names its own. A
+         * label and not hidden text: the text of the page has the name of
+         * each position only once.
+         */
+        aria-label={`Citizen für ${position.name}: ${assignedCitizenName ?? "-"}`}
+        title={assignedCitizenName ?? undefined}
+        className={clsx(
+          "flex w-full cursor-pointer items-center justify-between gap-2 rounded-secondary bg-white/10 p-2 text-left text-neutral-100 outline-offset-2 outline-interaction-700 hover:bg-white/15 focus-visible:outline-2 active:bg-white/5 disabled:cursor-wait",
+          className,
         )}
+      >
+        <span className="truncate">{assignedCitizenName ?? "-"}</span>
+        {isPending ? (
+          <AsciiSpinner />
+        ) : (
+          <FaPen className="flex-none text-sm text-neutral-400" />
+        )}
+      </button>
 
-        <optgroup label="Interessenten - Voraussetzungen erfüllt">
-          {applicationsSatisfyingRequirements
-            .toSorted(compareByCitizenDisplayName)
-            .map((application) => (
-              <option key={application.citizenId} value={application.citizenId}>
-                {getCitizenDisplayName(application.citizen)}
-              </option>
-            ))}
-        </optgroup>
+      <Modal
+        isOpen={isOpen}
+        onRequestClose={() => setIsOpen(false)}
+        className="w-160"
+        heading={<h2>Citizen für {position.name}</h2>}
+      >
+        <div className="flex items-center justify-between gap-4">
+          <p className="min-w-0 truncate" title={assignedCitizenName ?? ""}>
+            <span className="text-neutral-500">Zugewiesen: </span>
+            {assignedCitizenName ?? "-"}
+          </p>
 
-        <optgroup label="Interessenten - Voraussetzungen nicht erfüllt">
-          {applicationsNotSatisfyingRequirements
-            .toSorted(compareByCitizenDisplayName)
-            .map((application) => (
-              <option key={application.citizenId} value={application.citizenId}>
-                {getCitizenDisplayName(application.citizen)}
-              </option>
-            ))}
-        </optgroup>
+          {assignedCitizen && (
+            <Button2
+              variant={Button2Variant.Secondary}
+              onClick={() => changeCitizen(null)}
+              disabled={isPending}
+              className="flex-none"
+            >
+              {isPending && pendingCitizenId === null && <AsciiSpinner />}
+              Entfernen
+            </Button2>
+          )}
+        </div>
 
-        <optgroup label="Alle Teilnehmer - Voraussetzungen erfüllt">
-          {citizensSatisfyingRequirements
-            .toSorted(compareByCitizenDisplayName)
-            .map((citizen) => (
-              <option key={citizen.citizen.id} value={citizen.citizen.id}>
-                {getCitizenDisplayName(citizen.citizen)}
-              </option>
-            ))}
-        </optgroup>
+        <div className="mt-6 flex flex-col gap-6">
+          {sections.map((section) => (
+            <ChoiceSection
+              key={section.title}
+              title={section.title}
+              position={position}
+              choices={section.choices}
+              assignedCitizenId={assignedCitizen?.id ?? null}
+              pendingCitizenId={isPending ? pendingCitizenId : null}
+              isPending={isPending}
+              onAssign={changeCitizen}
+            />
+          ))}
+        </div>
+      </Modal>
+    </>
+  );
+};
 
-        <optgroup label="Alle Teilnehmer - Voraussetzungen nicht erfüllt">
-          {citizensNotSatisfyingRequirements
-            .toSorted(compareByCitizenDisplayName)
-            .map((citizen) => (
-              <option key={citizen.citizen.id} value={citizen.citizen.id}>
-                {getCitizenDisplayName(citizen.citizen)}
-              </option>
-            ))}
-        </optgroup>
-      </select>
-    </div>
+interface ChoiceSectionProps {
+  readonly title: string;
+  readonly position: PositionType;
+  readonly choices: readonly Choice[];
+  readonly assignedCitizenId: DisplayedCitizen["id"] | null;
+  readonly pendingCitizenId: DisplayedCitizen["id"] | null;
+  readonly isPending: boolean;
+  readonly onAssign: (citizenId: DisplayedCitizen["id"]) => void;
+}
+
+const ChoiceSection = ({
+  title,
+  position,
+  choices,
+  assignedCitizenId,
+  pendingCitizenId,
+  isPending,
+  onAssign,
+}: ChoiceSectionProps) => {
+  const headingId = useId();
+
+  return (
+    <section aria-labelledby={headingId}>
+      <h3
+        id={headingId}
+        className="font-mono text-xs text-neutral-500 uppercase"
+      >
+        {title}
+      </h3>
+
+      {choices.length > 0 ? (
+        <ul className="mt-2 flex flex-col gap-1">
+          {choices.toSorted(compareByCitizenDisplayName).map((choice) => (
+            <ChoiceRow
+              key={choice.citizen.id}
+              position={position}
+              choice={choice}
+              isAssigned={choice.citizen.id === assignedCitizenId}
+              isAssignmentPending={choice.citizen.id === pendingCitizenId}
+              isPending={isPending}
+              onAssign={onAssign}
+            />
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-2 text-neutral-500">Niemand</p>
+      )}
+    </section>
+  );
+};
+
+interface ChoiceRowProps {
+  readonly position: PositionType;
+  readonly choice: Choice;
+  readonly isAssigned: boolean;
+  readonly isAssignmentPending: boolean;
+  readonly isPending: boolean;
+  readonly onAssign: (citizenId: DisplayedCitizen["id"]) => void;
+}
+
+const ChoiceRow = ({
+  position,
+  choice,
+  isAssigned,
+  isAssignmentPending,
+  isPending,
+  onAssign,
+}: ChoiceRowProps) => {
+  const name = getCitizenDisplayName(choice.citizen);
+
+  return (
+    <li className="flex items-start justify-between gap-4 rounded-secondary bg-neutral-900/50 p-2">
+      <div className="min-w-0">
+        <p className="truncate font-bold" title={name}>
+          {name}
+        </p>
+        <UnmetRequirementList
+          position={position}
+          unmetRequirements={choice.unmetRequirements}
+        />
+      </div>
+
+      <Button2
+        variant={Button2Variant.Secondary}
+        onClick={() => onAssign(choice.citizen.id)}
+        disabled={isAssigned || isPending}
+        aria-label={`${name} zuweisen`}
+        className="flex-none"
+      >
+        {isAssignmentPending && <AsciiSpinner />}
+        {isAssigned ? "Zugewiesen" : "Zuweisen"}
+      </Button2>
+    </li>
+  );
+};
+
+interface UnmetRequirementListProps {
+  readonly position: PositionType;
+  readonly unmetRequirements: UnmetRequirements;
+}
+
+/** With ANY, either no role or each role is missing, and one is enough */
+const getMissingRolesLabel = (
+  position: PositionType,
+  missingRoleCount: number,
+) => {
+  if (missingRoleCount <= 1) return "Fehlende Rolle:";
+
+  return position.requiredRoleMatch === EventPositionRoleMatch.ANY
+    ? "Fehlende Rolle (eine davon):"
+    : "Fehlende Rollen:";
+};
+
+const UnmetRequirementList = ({
+  position,
+  unmetRequirements,
+}: UnmetRequirementListProps) => {
+  const { isShipMissing, missingRoleIds } = unmetRequirements;
+  if (!isShipMissing && missingRoleIds.length <= 0) return null;
+
+  return (
+    <ul className="mt-1 flex flex-col gap-1 text-sm">
+      {isShipMissing && (
+        <li>
+          <span className="text-neutral-500">
+            {position.requiredVariants.length > 1
+              ? "Fehlendes Schiff (eines davon):"
+              : "Fehlendes Schiff:"}
+          </span>{" "}
+          {variantNameList.format(
+            position.requiredVariants.map(({ variant }) => variant.name),
+          )}
+        </li>
+      )}
+
+      {missingRoleIds.length > 0 && (
+        <li className="flex flex-col gap-1">
+          <span className="text-neutral-500">
+            {getMissingRolesLabel(position, missingRoleIds.length)}
+          </span>
+          <RequiredRoleBadges roleIds={missingRoleIds} />
+        </li>
+      )}
+    </ul>
   );
 };

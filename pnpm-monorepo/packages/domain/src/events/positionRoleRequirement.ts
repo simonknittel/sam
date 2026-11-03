@@ -7,21 +7,27 @@ export interface PositionRoleRequirement {
 }
 
 /**
- * Whether a citizen with these effective roles has the required roles of the
- * position. A position without required roles is for each citizen.
+ * The required roles of the position that a citizen with these effective
+ * roles does not have. Empty when the citizen meets the requirement, and for
+ * a position without required roles. With `ANY`, the citizen needs one of
+ * the roles, thus without one of them all of them are missing.
  */
-export const hasRequiredRolesOfPosition = (
+export const getMissingRequiredRoleIds = (
   position: PositionRoleRequirement,
   roleIds: ReadonlySet<string>,
-) => {
-  if (position.requiredRoles.length <= 0) return true;
+): string[] => {
+  const missingRoleIds = position.requiredRoles
+    .map(({ roleId }) => roleId)
+    .filter((roleId) => !roleIds.has(roleId));
 
   switch (position.requiredRoleMatch) {
     case EventPositionRoleMatch.ALL:
-      return position.requiredRoles.every(({ roleId }) => roleIds.has(roleId));
+      return missingRoleIds;
 
     case EventPositionRoleMatch.ANY:
-      return position.requiredRoles.some(({ roleId }) => roleIds.has(roleId));
+      return missingRoleIds.length < position.requiredRoles.length
+        ? []
+        : missingRoleIds;
 
     default:
       throw new Error(

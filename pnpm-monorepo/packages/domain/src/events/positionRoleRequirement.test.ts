@@ -1,19 +1,19 @@
 import { EventPositionRoleMatch } from "@sam-monorepo/database/browser";
 import { describe, expect, it } from "vitest";
-import { hasRequiredRolesOfPosition } from "./positionRoleRequirement.js";
+import { getMissingRequiredRoleIds } from "./positionRoleRequirement.js";
 
 const requiredRoles = [{ roleId: "pilot" }, { roleId: "medic" }];
 const pilotOnly = new Set(["pilot", "member"]);
 const pilotAndMedic = new Set(["pilot", "medic"]);
 
-describe("hasRequiredRolesOfPosition", () => {
-  it("accepts each citizen when the position requires no role", () => {
+describe("getMissingRequiredRoleIds", () => {
+  it("misses nothing when the position requires no role", () => {
     expect(
-      hasRequiredRolesOfPosition(
+      getMissingRequiredRoleIds(
         { requiredRoles: [], requiredRoleMatch: EventPositionRoleMatch.ALL },
         new Set(),
       ),
-    ).toBe(true);
+    ).toEqual([]);
   });
 
   it("needs one of the roles with ANY", () => {
@@ -22,10 +22,11 @@ describe("hasRequiredRolesOfPosition", () => {
       requiredRoleMatch: EventPositionRoleMatch.ANY,
     };
 
-    expect(hasRequiredRolesOfPosition(position, pilotOnly)).toBe(true);
-    expect(hasRequiredRolesOfPosition(position, new Set(["member"]))).toBe(
-      false,
-    );
+    expect(getMissingRequiredRoleIds(position, pilotOnly)).toEqual([]);
+    expect(getMissingRequiredRoleIds(position, new Set(["member"]))).toEqual([
+      "pilot",
+      "medic",
+    ]);
   });
 
   it("needs each role with ALL", () => {
@@ -34,7 +35,7 @@ describe("hasRequiredRolesOfPosition", () => {
       requiredRoleMatch: EventPositionRoleMatch.ALL,
     };
 
-    expect(hasRequiredRolesOfPosition(position, pilotOnly)).toBe(false);
-    expect(hasRequiredRolesOfPosition(position, pilotAndMedic)).toBe(true);
+    expect(getMissingRequiredRoleIds(position, pilotOnly)).toEqual(["medic"]);
+    expect(getMissingRequiredRoleIds(position, pilotAndMedic)).toEqual([]);
   });
 });

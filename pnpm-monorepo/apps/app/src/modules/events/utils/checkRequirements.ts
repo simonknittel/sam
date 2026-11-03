@@ -1,7 +1,25 @@
 import type { EventLineupCitizen } from "@sam-monorepo/application";
 import type { Ship } from "@sam-monorepo/database/client";
-import { hasRequiredRolesOfPosition } from "@sam-monorepo/domain";
+import { getMissingRequiredRoleIds } from "@sam-monorepo/domain";
 import type { PositionType } from "../components/Position";
+
+/** The requirements of a position that a citizen does not meet */
+export interface UnmetRequirements {
+  /** The citizen has none of the required ships */
+  readonly isShipMissing: boolean;
+  /** See `getMissingRequiredRoleIds()` */
+  readonly missingRoleIds: readonly string[];
+}
+
+export type CheckedEventLineupCitizen = EventLineupCitizen & {
+  readonly unmetRequirements: UnmetRequirements;
+};
+
+export type CheckedApplication = NonNullable<
+  PositionType["applications"]
+>[number] & {
+  readonly unmetRequirements: UnmetRequirements;
+};
 
 const hasRequiredVariant = (
   position: PositionType,
@@ -12,17 +30,18 @@ const hasRequiredVariant = (
     ships.some((ship) => ship.variantId === requiredVariant.variantId),
   );
 
-/**
- * A citizen meets the requirements of a position with one of the required
- * ships and with the required roles
- */
-const meetsRequirements = (
+const getUnmetRequirements = (
   position: PositionType,
   ships: readonly Pick<Ship, "variantId">[],
   roleIds: readonly string[],
-) =>
-  hasRequiredVariant(position, ships) &&
-  hasRequiredRolesOfPosition(position, new Set(roleIds));
+): UnmetRequirements => ({
+  isShipMissing: !hasRequiredVariant(position, ships),
+  missingRoleIds: getMissingRequiredRoleIds(position, new Set(roleIds)),
+});
+
+export const meetsRequirements = (unmetRequirements: UnmetRequirements) =>
+  !unmetRequirements.isShipMissing &&
+  unmetRequirements.missingRoleIds.length <= 0;
 
 export const checkRequirements = (
   position: PositionType,
@@ -31,40 +50,50 @@ export const checkRequirements = (
   allEventCitizens: EventLineupCitizen[],
 ) => {
   const doesCurrentUserSatisfyRequirements = meetsRequirements(
-    position,
-    myShips,
-    myRoleIds,
+    getUnmetRequirements(position, myShips, myRoleIds),
   );
 
-  const citizensSatisfyingRequirements = allEventCitizens.filter((citizen) =>
-    meetsRequirements(position, citizen.ships, citizen.roleIds),
-  );
-  const citizensNotSatisfyingRequirements = allEventCitizens.filter(
-    (citizen) =>
-      !citizensSatisfyingRequirements.some(
-        (c) => c.citizen.id === citizen.citizen.id,
+  const checkedCitizens: CheckedEventLineupCitizen[] = allEventCitizens.map(
+    (eventCitizen) => ({
+      ...eventCitizen,
+      unmetRequirements: getUnmetRequirements(
+        position,
+        eventCitizen.ships,
+        eventCitizen.roleIds,
       ),
+    }),
+  );
+  const unmetRequirementsByCitizenId = new Map(
+    checkedCitizens.map((eventCitizen) => [
+      eventCitizen.citizen.id,
+      eventCitizen.unmetRequirements,
+    ]),
   );
 
-  const applications = position.applications ?? [];
-  const applicationsSatisfyingRequirements = applications.filter(
-    (application) =>
-      citizensSatisfyingRequirements.some(
-        (citizen) => citizen.citizen.id === application.citizen.id,
-      ),
-  );
-  const applicationsNotSatisfyingRequirements = applications.filter(
-    (application) =>
-      citizensNotSatisfyingRequirements.some(
-        (citizen) => citizen.citizen.id === application.citizen.id,
-      ),
-  );
+  /** The applications of citizens who do not participate anymore drop out */
+  const checkedApplications: CheckedApplication[] = (
+    position.applications ?? []
+  ).flatMap((application) => {
+    const unmetRequirements = unmetRequirementsByCitizenId.get(
+      application.citizen.id,
+    );
+
+    return unmetRequirements ? [{ ...application, unmetRequirements }] : [];
+  });
 
   return {
     doesCurrentUserSatisfyRequirements,
-    citizensSatisfyingRequirements,
-    citizensNotSatisfyingRequirements,
-    applicationsSatisfyingRequirements,
-    applicationsNotSatisfyingRequirements,
+    citizensSatisfyingRequirements: checkedCitizens.filter((eventCitizen) =>
+      meetsRequirements(eventCitizen.unmetRequirements),
+    ),
+    citizensNotSatisfyingRequirements: checkedCitizens.filter(
+      (eventCitizen) => !meetsRequirements(eventCitizen.unmetRequirements),
+    ),
+    applicationsSatisfyingRequirements: checkedApplications.filter(
+      (application) => meetsRequirements(application.unmetRequirements),
+    ),
+    applicationsNotSatisfyingRequirements: checkedApplications.filter(
+      (application) => !meetsRequirements(application.unmetRequirements),
+    ),
   };
 };
