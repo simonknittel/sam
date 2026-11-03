@@ -1,5 +1,5 @@
 import {
-  findEventBriefingPublishedRecipients,
+  findEventBriefingAudienceRecipients,
   type ApplicationContext,
 } from "@sam-monorepo/application";
 import { type Event } from "@sam-monorepo/database";
@@ -12,13 +12,13 @@ type Payload = {
 /**
  * The app sends this notification one time for each event: when the read
  * scope of the briefing first opens it to more citizens than the managers.
- * See `findEventBriefingPublishedRecipients()` for the recipients.
+ * See `findEventBriefingAudienceRecipients()` for the recipients.
  */
 export const EventBriefingPublishedHandler = async (
   context: ApplicationContext,
   payload: Payload,
 ) => {
-  const result = await findEventBriefingPublishedRecipients(context, {
+  const result = await findEventBriefingAudienceRecipients(context, {
     eventId: payload.eventId,
   });
   if (!result) return;
