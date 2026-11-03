@@ -4,14 +4,17 @@ import * as z from "zod";
 import { requireCitizen, requirePermission, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { ConflictError } from "../errors.js";
+import { triggerNotificationsAfterSave } from "../notifications.js";
 import { idSchema } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
 import { cancelParticipation } from "./cancelParticipation.js";
 import { createEventActivity } from "./eventActivity.js";
 import { EventErrorMessage } from "./eventErrors.js";
-import { loadEventOutput, type GetEventOutput } from "./getEvent.js";
+import { loadEventOutput } from "./getEvent.js";
 import { findActiveParticipation } from "./ownParticipation.js";
 import { requireOpenParticipatableAppEvent } from "./participatableAppEvent.js";
+import { buildCancellationNotifications } from "./participationChangeNotifications.js";
+import type { OwnParticipationWriteOutput } from "./signUpForEvent.js";
 
 export const cancelEventParticipationInputSchema = z.object({
   event_id: idSchema,
@@ -29,7 +32,7 @@ export const cancelEventParticipation = (
   context: ApplicationContext,
   actor: Actor,
   input: CancelEventParticipationInput,
-): Promise<GetEventOutput> =>
+): Promise<OwnParticipationWriteOutput> =>
   withSpan(context, "cancelEventParticipation", async () => {
     const citizenId = requireCitizen(actor).id;
     requirePermission(actor, "event", "read");
@@ -46,34 +49,34 @@ export const cancelEventParticipation = (
       citizenId,
     );
 
-    const isCancelled =
-      participant !== null &&
-      (await context.prisma.$transaction(async (transaction) => {
-        if (
-          !(await cancelParticipation(transaction, {
-            participantId: participant.id,
-            eventId: event.id,
-            citizenId,
-            cancelledById: citizenId,
-            cancelledAt: context.now(),
-          }))
-        )
-          return false;
+    const cancellation =
+      participant === null
+        ? null
+        : await context.prisma.$transaction(async (transaction) => {
+            const result = await cancelParticipation(transaction, {
+              participantId: participant.id,
+              eventId: event.id,
+              citizenId,
+              cancelledById: citizenId,
+              cancelledAt: context.now(),
+            });
+            if (result === null) return null;
 
-        await createEventActivity(transaction, {
-          eventId: event.id,
-          citizenId,
-          type: EventActivityType.PARTICIPATION_CANCELLED,
-          payload: null,
-        });
-        return true;
-      }));
+            await createEventActivity(transaction, {
+              eventId: event.id,
+              citizenId,
+              type: EventActivityType.PARTICIPATION_CANCELLED,
+              payload: null,
+            });
+            return result;
+          });
 
     /**
      * A different tab, a parallel request or a manager cancelled the
      * participation before
      */
-    if (!isCancelled) throw new ConflictError(EventErrorMessage.NotSignedUp);
+    if (cancellation === null)
+      throw new ConflictError(EventErrorMessage.NotSignedUp);
 
     await context.audit.create([
       {
@@ -86,5 +89,17 @@ export const cancelEventParticipation = (
       },
     ]);
 
-    return loadEventOutput(context, actor, event.id);
+    const notifications = buildCancellationNotifications(event, context.now(), [
+      { citizenId, vacatedPositionNames: cancellation.vacatedPositionNames },
+    ]);
+
+    const notificationsSent =
+      notifications.length > 0
+        ? await triggerNotificationsAfterSave(context, notifications)
+        : true;
+
+    return {
+      event: await loadEventOutput(context, actor, event.id),
+      notifications_sent: notificationsSent,
+    };
   });

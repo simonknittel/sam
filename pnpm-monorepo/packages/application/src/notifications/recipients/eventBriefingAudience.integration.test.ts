@@ -11,7 +11,7 @@ import {
 } from "../../../test/applicationContext.js";
 import { createCitizenWithPermissions } from "../../../test/citizensWithPermissions.js";
 import { truncateAllTables } from "../../../test/database.js";
-import { findEventBriefingPublishedRecipients } from "./eventBriefingPublished.js";
+import { findEventBriefingAudienceRecipients } from "./eventBriefingAudience.js";
 
 /** The event notifications reach the citizens who can log in and read events */
 const NOTIFIABLE_PERMISSION_STRINGS = ["login;manage", "event;read"];
@@ -55,7 +55,7 @@ test("the current position scope of the root page reaches the citizens of the su
   });
   const { context } = createTestApplicationContext();
 
-  const result = await findEventBriefingPublishedRecipients(context, {
+  const result = await findEventBriefingAudienceRecipients(context, {
     eventId: event.id,
   });
 
@@ -73,6 +73,45 @@ test("the current position scope of the root page reaches the citizens of the su
   });
 
   expect(
-    await findEventBriefingPublishedRecipients(context, { eventId: event.id }),
+    await findEventBriefingAudienceRecipients(context, { eventId: event.id }),
   ).toBeNull();
+});
+
+test("the citizen who caused the notification is not a recipient", async () => {
+  const [announcer, participant] = await Promise.all(
+    ["announcer", "participant"].map((handle) =>
+      createCitizenWithPermissions(handle, NOTIFIABLE_PERMISSION_STRINGS),
+    ),
+  );
+  const event = await prisma.event.create({
+    data: {
+      source: EventSource.APP,
+      name: "Einsatz",
+      startTime: TEST_NOW,
+      participants: {
+        create: [announcer!.id, participant!.id].map((citizenId) => ({
+          source: EventSource.APP,
+          citizenId,
+        })),
+      },
+    },
+  });
+  await prisma.wikiPage.create({
+    data: {
+      namespace: WikiPageNamespace.EVENT,
+      title: "BRIEFING",
+      slug: "briefing",
+      eventId: event.id,
+      eventReadScope: WikiPageEventScope.PARTICIPANTS,
+      eventEditScope: WikiPageEventScope.MANAGERS,
+    },
+  });
+  const { context } = createTestApplicationContext();
+
+  const result = await findEventBriefingAudienceRecipients(context, {
+    eventId: event.id,
+    excludedCitizenId: announcer!.id,
+  });
+
+  expect(result?.recipients).toEqual([{ citizenId: participant!.id }]);
 });

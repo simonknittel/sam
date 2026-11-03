@@ -1,14 +1,18 @@
 import { ACTIVE_CITIZEN_WHERE, AuditEventType } from "@sam-monorepo/domain";
 import * as z from "zod";
 import type { Actor } from "../actor.js";
-import type { ApplicationContext } from "../context.js";
+import type { ApplicationContext, Notification } from "../context.js";
 import { ConflictError, ValidationError } from "../errors.js";
 import { lockParticipationEnabledEvent } from "../events/participatableAppEvent.js";
+import { triggerNotificationsAfterSave } from "../notifications.js";
 import { idSchema } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
 import { LineupErrorMessage } from "./lineupErrors.js";
 import { requireManageableEventPosition } from "./lineupGuards.js";
-import { toLineupPositionOutput, type LineupPosition } from "./lineupOutput.js";
+import {
+  toLineupPositionOutput,
+  type NotifyingLineupPositionWriteOutput,
+} from "./lineupOutput.js";
 
 export const assignEventPositionInputSchema = z.object({
   position_id: idSchema.describe(
@@ -70,16 +74,61 @@ const requireAssignableCitizen = async (
   return citizen;
 };
 
+interface AssignmentChange {
+  readonly eventId: string;
+  readonly position: {
+    readonly id: string;
+    readonly name: string;
+    /** The citizen before the change */
+    readonly citizenId: string | null;
+  };
+  readonly assignedCitizenId: string | null;
+}
+
+/**
+ * The new citizen gets the position, the previous citizen loses it. The
+ * actor gets no notification about the own change. The router sends them
+ * only while the participants see the lineup.
+ */
+const buildAssignmentNotifications = (
+  actor: Actor,
+  { eventId, position, assignedCitizenId }: AssignmentChange,
+): Notification[] => {
+  if (assignedCitizenId === position.citizenId) return [];
+
+  const ownCitizenId = actor.citizen?.id;
+  const notifications: Notification[] = [];
+
+  if (assignedCitizenId !== null && assignedCitizenId !== ownCitizenId)
+    notifications.push({
+      type: "EventPositionAssigned",
+      payload: { positionId: position.id, citizenId: assignedCitizenId },
+    });
+
+  if (position.citizenId !== null && position.citizenId !== ownCitizenId)
+    notifications.push({
+      type: "EventPositionUnassigned",
+      payload: {
+        eventId,
+        citizenId: position.citizenId,
+        positionName: position.name,
+      },
+    });
+
+  return notifications;
+};
+
 /**
  * Assigns a citizen to a position of the lineup of an event that the actor
  * manages, or removes the assigned citizen. The citizen must participate in
- * the event or apply for the position.
+ * the event or apply for the position. The new and the previous citizen get
+ * a notification.
  */
 export const assignEventPosition = (
   context: ApplicationContext,
   actor: Actor,
   input: AssignEventPositionInput,
-): Promise<LineupPosition> =>
+): Promise<NotifyingLineupPositionWriteOutput> =>
   withSpan(context, "assignEventPosition", async () => {
     const { position, event } = await requireManageableEventPosition(
       context,
@@ -87,7 +136,16 @@ export const assignEventPosition = (
       input.position_id,
     );
 
-    if (input.citizen_id === null) {
+    const citizen =
+      input.citizen_id === null
+        ? null
+        : await requireAssignableCitizen(
+            context,
+            { eventId: event.id, positionId: position.id },
+            input.citizen_id,
+          );
+
+    if (citizen === null) {
       await context.prisma.eventPosition.update({
         where: { id: position.id },
         data: { citizen: { disconnect: true } },
@@ -106,12 +164,6 @@ export const assignEventPosition = (
           },
         ]);
     } else {
-      const citizen = await requireAssignableCitizen(
-        context,
-        { eventId: event.id, positionId: position.id },
-        input.citizen_id,
-      );
-
       /**
        * The lock keeps a switch of the participation to false from clearing
        * the assignments before this one. A removal needs no lock: the
@@ -139,5 +191,25 @@ export const assignEventPosition = (
       ]);
     }
 
-    return toLineupPositionOutput(context, position.id, true);
+    /**
+     * A change of a draft lineup sends nothing: the publication names the
+     * positions of each participant. Otherwise a publication right after the
+     * change could arrive before the notification about the change.
+     */
+    const notifications =
+      event.lineupEnabled && event.participationEnabled
+        ? buildAssignmentNotifications(actor, {
+            eventId: event.id,
+            position,
+            assignedCitizenId: citizen?.id ?? null,
+          })
+        : [];
+    const notificationsSent =
+      notifications.length <= 0 ||
+      (await triggerNotificationsAfterSave(context, notifications));
+
+    return {
+      position: await toLineupPositionOutput(context, position.id, true),
+      notifications_sent: notificationsSent,
+    };
   });

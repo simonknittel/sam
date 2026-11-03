@@ -11,10 +11,11 @@ export interface FindEventParticipationRecipientInput {
 }
 
 /**
- * The citizen whom a manager added to the event or removed from it, when the
- * citizen can see the event now (see `findEventRecipients()`). The roles of
- * the citizen and the visibility of the event can change after the request.
- * Null when the event does not exist.
+ * The citizen whom a manager added to the event, removed from it or made a
+ * manager of it, when the citizen can see the event now (see
+ * `findEventRecipients()`). The roles of the citizen and the visibility of
+ * the event can change after the request. Null when the event does not
+ * exist.
  */
 export const findEventParticipationRecipient = async (
   context: ApplicationContext,

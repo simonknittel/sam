@@ -1,6 +1,6 @@
 import { prisma } from "@sam-monorepo/database";
 import { EventSource } from "@sam-monorepo/database/browser";
-import { AuditEventType } from "@sam-monorepo/domain";
+import { AuditEventType, EventParticipationChange } from "@sam-monorepo/domain";
 import { randomUUID } from "node:crypto";
 import { beforeEach, describe, expect, test } from "vitest";
 import {
@@ -275,5 +275,93 @@ describe("syncDiscordEvents", () => {
       createdEventCount: 0,
     });
     expect(discord.calls).toEqual(["listScheduledEvents"]);
+  });
+
+  test("a new start sends rescheduled, a new location sends updated", async () => {
+    const scheduledEvent = createScheduledEvent();
+    const event = await prisma.event.create({
+      data: {
+        source: EventSource.DISCORD,
+        discordId: scheduledEvent.id,
+        discordCreatorId: CREATOR_DISCORD_ID,
+        name: scheduledEvent.name,
+        startTime: scheduledEvent.startTime,
+      },
+    });
+
+    const { notifications } = await runSync(
+      {
+        ...scheduledEvent,
+        startTime: new Date(TOMORROW.getTime() + ONE_DAY_IN_MILLISECONDS),
+        location: "Stanton",
+      },
+      [],
+    );
+
+    expect(notifications).toEqual([
+      { type: "EventRescheduled", payload: { eventId: event.id } },
+      { type: "EventUpdated", payload: { eventId: event.id } },
+    ]);
+  });
+
+  test("the organizers hear about the RSVPs and the withdrawals of citizens, but not about the RSVPs of a new event", async () => {
+    const [gunner, scout, newcomer] = await Promise.all(
+      ["gunner", "scout", "newcomer", "staying"].map((name) =>
+        createCitizen(`${name}-discord-id`),
+      ),
+    );
+    const scheduledEvent = createScheduledEvent();
+
+    const { notifications: importNotifications } = await runSync(
+      scheduledEvent,
+      ["gunner-discord-id", "scout-discord-id", "staying-discord-id"],
+    );
+    const event = await prisma.event.findUniqueOrThrow({
+      where: { discordId: scheduledEvent.id },
+    });
+    await prisma.eventPosition.create({
+      data: { eventId: event.id, name: "Turm", citizenId: gunner!.id },
+    });
+
+    const { output, notifications } = await runSync(scheduledEvent, [
+      "staying-discord-id",
+      "newcomer-discord-id",
+      "unknown-discord-id",
+    ]);
+
+    expect(importNotifications).toEqual([
+      { type: "EventCreated", payload: { eventId: event.id } },
+    ]);
+    expect(output.notificationsSent).toBe(true);
+    // The withdrawal of the gunner gave the position free
+    expect(notifications).toHaveLength(3);
+    expect(notifications).toEqual(
+      expect.arrayContaining([
+        {
+          type: "EventPositionVacated",
+          payload: {
+            eventId: event.id,
+            citizenId: gunner!.id,
+            positionNames: ["Turm"],
+          },
+        },
+        {
+          type: "EventParticipationChanged",
+          payload: {
+            eventId: event.id,
+            citizenId: scout!.id,
+            change: EventParticipationChange.Cancelled,
+          },
+        },
+        {
+          type: "EventParticipationChanged",
+          payload: {
+            eventId: event.id,
+            citizenId: newcomer!.id,
+            change: EventParticipationChange.SignedUp,
+          },
+        },
+      ]),
+    );
   });
 });

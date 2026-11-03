@@ -8,6 +8,7 @@ import { createCitizenWithPermissions } from "../../../test/citizensWithPermissi
 import { truncateAllTables } from "../../../test/database.js";
 import {
   findPayoutDisbursedRecipients,
+  findPayoutReminderRecipients,
   findPayoutStartedRecipients,
 } from "./profitDistributionPayout.js";
 
@@ -54,4 +55,50 @@ test("the payout notifications reach only the participants who can open the cycl
   expect(disbursed?.recipients).toEqual([
     { citizenId: reader.id, auecAmount: 500 },
   ]);
+});
+
+test("the payout reminder reaches only the participants who must accept their payout and can open the cycle", async () => {
+  const permissionStrings = ["login;manage", "profitDistributionCycle;read"];
+  const [awaiting, accepted, ceded, disbursed, outsider] = await Promise.all([
+    createCitizenWithPermissions("awaiting", permissionStrings),
+    createCitizenWithPermissions("accepted", permissionStrings),
+    createCitizenWithPermissions("ceded", permissionStrings),
+    createCitizenWithPermissions("disbursed", permissionStrings),
+    createCitizenWithPermissions("outsider", ["login;manage"]),
+  ]);
+  const payoutEndsAt = new Date("2026-06-16T22:00:00.000Z");
+  const cycle = await prisma.profitDistributionCycle.create({
+    data: {
+      title: "Zyklus",
+      collectionEndsAt: TEST_NOW,
+      collectionEndedAt: TEST_NOW,
+      payoutStartedAt: TEST_NOW,
+      payoutEndsAt,
+      participants: {
+        create: [
+          { citizenId: awaiting.id },
+          { citizenId: accepted.id, acceptedAt: TEST_NOW },
+          { citizenId: ceded.id, cededAt: TEST_NOW },
+          { citizenId: disbursed.id, disbursedAt: TEST_NOW },
+          { citizenId: outsider.id },
+        ],
+      },
+    },
+  });
+  const { context } = createTestApplicationContext();
+  const input = { cycleId: cycle.id };
+
+  expect(await findPayoutReminderRecipients(context, input)).toEqual({
+    cycle: { id: cycle.id, title: "Zyklus", payoutEndsAt },
+    recipients: [{ citizenId: awaiting.id }],
+  });
+
+  await prisma.profitDistributionCycle.update({
+    where: { id: cycle.id },
+    data: { payoutEndedAt: TEST_NOW },
+  });
+
+  expect(
+    (await findPayoutReminderRecipients(context, input))?.recipients,
+  ).toEqual([]);
 });

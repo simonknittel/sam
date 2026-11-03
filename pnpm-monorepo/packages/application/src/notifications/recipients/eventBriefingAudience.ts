@@ -12,8 +12,10 @@ import {
   type EventNotificationRecipients,
 } from "./eventRecipients.js";
 
-export interface FindEventBriefingPublishedRecipientsInput {
+export interface FindEventBriefingAudienceRecipientsInput {
   readonly eventId: string;
+  /** The citizen who caused the notification gets none */
+  readonly excludedCitizenId?: string;
 }
 
 const findPositionScopeRecipients = async (
@@ -61,22 +63,14 @@ const findPositionScopeRecipients = async (
   };
 };
 
-/**
- * The audience of the current read scope of the root page of the briefing
- * (the same root page as `canReadEventBriefing()`), thus nobody hears about
- * a briefing that they cannot open. The scope can change after the request,
- * thus the rule reads it again. Null when the event, the root page, the
- * position or the audience does not exist, or when only the managers can
- * read the briefing.
- */
-export const findEventBriefingPublishedRecipients = async (
+const findAudience = async (
   context: ApplicationContext,
-  input: FindEventBriefingPublishedRecipientsInput,
+  eventId: string,
 ): Promise<EventNotificationRecipients | null> => {
   const rootPage = await context.prisma.wikiPage.findFirst({
     where: {
       namespace: WikiPageNamespace.EVENT,
-      eventId: input.eventId,
+      eventId,
       parentId: null,
       deletedAt: null,
     },
@@ -87,21 +81,19 @@ export const findEventBriefingPublishedRecipients = async (
 
   switch (rootPage.eventReadScope) {
     case WikiPageEventScope.PARTICIPANTS:
-      return findEventParticipantRecipients(context, {
-        eventId: input.eventId,
-      });
+      return findEventParticipantRecipients(context, { eventId });
 
     case WikiPageEventScope.POSITION:
       if (!rootPage.eventReadScopePositionId) return null;
 
       return findPositionScopeRecipients(
         context,
-        input.eventId,
+        eventId,
         rootPage.eventReadScopePositionId,
       );
 
     case WikiPageEventScope.ALL:
-      return findEventCreatedRecipients(context, { eventId: input.eventId });
+      return findEventCreatedRecipients(context, { eventId });
 
     // Only the managers can read the briefing. A root page cannot have the
     // scope INHERIT: the resolver then gives the access only to the managers.
@@ -114,4 +106,27 @@ export const findEventBriefingPublishedRecipients = async (
         `Unknown read scope: ${rootPage.eventReadScope satisfies never}`,
       );
   }
+};
+
+/**
+ * The audience of the current read scope of the root page of the briefing
+ * (the same root page as `canReadEventBriefing()`), thus nobody hears about
+ * a briefing that they cannot open. The scope can change after the request,
+ * thus the rule reads it again. Null when the event, the root page, the
+ * position or the audience does not exist, or when only the managers can
+ * read the briefing.
+ */
+export const findEventBriefingAudienceRecipients = async (
+  context: ApplicationContext,
+  input: FindEventBriefingAudienceRecipientsInput,
+): Promise<EventNotificationRecipients | null> => {
+  const audience = await findAudience(context, input.eventId);
+  if (!audience) return null;
+
+  return {
+    event: { id: audience.event.id, name: audience.event.name },
+    recipients: audience.recipients.filter(
+      (recipient) => recipient.citizenId !== input.excludedCitizenId,
+    ),
+  };
 };

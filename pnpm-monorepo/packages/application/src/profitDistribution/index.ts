@@ -44,6 +44,10 @@ export {
 export { ParticipantAttribute } from "./participantAttributes.js";
 export { ProfitDistributionErrorMessage } from "./profitDistributionErrors.js";
 export {
+  sendSincomePayoutReminders,
+  type SendSincomePayoutRemindersOutput,
+} from "./sendSincomePayoutReminders.js";
+export {
   startPayout,
   startPayoutInputSchema,
   type StartPayoutInput,

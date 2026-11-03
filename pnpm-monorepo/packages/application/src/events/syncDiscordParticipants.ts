@@ -6,7 +6,21 @@ import {
   type DiscordScheduledEvent,
 } from "../context.js";
 import { callDiscord } from "../discord/callDiscord.js";
+import { triggerNotificationsAfterSave } from "../notifications.js";
 import { diffParticipants } from "./discordEventReconciliation.js";
+import {
+  buildCancellationNotifications,
+  buildSignUpNotifications,
+  type OwnCancellation,
+} from "./participationChangeNotifications.js";
+
+export interface SyncDiscordParticipantsOptions {
+  /**
+   * True for an event that this run imported. Its RSVPs are not changes of
+   * the participation, thus they notify nobody.
+   */
+  readonly isNewEvent: boolean;
+}
 
 export interface SyncDiscordParticipantsOutput {
   /** The new RSVPs on Discord, as in `EVENT_PARTICIPANTS_SYNCED` */
@@ -15,6 +29,7 @@ export interface SyncDiscordParticipantsOutput {
   readonly removedCount: number;
   /** The rows that got the citizen of their Discord user in this run */
   readonly linkedCount: number;
+  readonly notificationsSent: boolean;
 }
 
 const findActiveCitizensByDiscordId = (
@@ -36,12 +51,14 @@ const findActiveCitizensByDiscordId = (
 
 /**
  * Makes the participants of the event from Discord agree with the users that
- * are interested in the scheduled event on Discord. Gives null when the
- * database has no active row from Discord for the scheduled event.
+ * are interested in the scheduled event on Discord, and notifies the
+ * organizers about the new RSVPs and the withdrawals of citizens. Gives null
+ * when the database has no active row from Discord for the scheduled event.
  */
 export const syncDiscordParticipants = async (
   context: ApplicationContext,
   scheduledEvent: DiscordScheduledEvent,
+  { isNewEvent }: SyncDiscordParticipantsOptions,
 ): Promise<SyncDiscordParticipantsOutput | null> => {
   const databaseEvent = await context.prisma.event.findUnique({
     where: {
@@ -51,6 +68,7 @@ export const syncDiscordParticipants = async (
     },
     select: {
       id: true,
+      startTime: true,
     },
   });
   if (!databaseEvent) return null;
@@ -89,9 +107,27 @@ export const syncDiscordParticipants = async (
    * the active sign-ups ignores the cancelled rows, thus a later RSVP gets a
    * new row). It also deletes the position applications of the citizen and
    * removes the citizen from the lineup positions. All in one transaction.
+   * The first read gives the positions for the notifications before the
+   * clearing.
    */
+  let cancellations: OwnCancellation[] = [];
   if (removed.length > 0) {
-    await context.prisma.$transaction([
+    const [vacatedPositions] = await context.prisma.$transaction([
+      context.prisma.eventPosition.findMany({
+        where: {
+          eventId: databaseEvent.id,
+          citizen: {
+            discordId: {
+              in: removed,
+            },
+          },
+        },
+        select: {
+          name: true,
+          citizenId: true,
+        },
+      }),
+
       context.prisma.eventParticipant.updateMany({
         where: {
           eventId: databaseEvent.id,
@@ -133,6 +169,17 @@ export const syncDiscordParticipants = async (
         },
       }),
     ]);
+
+    const withdrawnCitizens = await findActiveCitizensByDiscordId(
+      context,
+      removed,
+    );
+    cancellations = withdrawnCitizens.map((citizen) => ({
+      citizenId: citizen.id,
+      vacatedPositionNames: vacatedPositions
+        .filter((position) => position.citizenId === citizen.id)
+        .map((position) => position.name),
+    }));
   }
 
   /**
@@ -141,21 +188,29 @@ export const syncDiscordParticipants = async (
    * unique rule for the active sign-ups skips the second row, thus one
    * conflict does not stop the run.
    */
+  let signedUpCitizenIds: string[] = [];
   if (added.length > 0) {
     const citizens = await findActiveCitizensByDiscordId(context, added);
     const citizenIdByDiscordId = new Map(
       citizens.map((citizen) => [citizen.discordId, citizen.id]),
     );
 
-    await context.prisma.eventParticipant.createMany({
-      data: added.map((discordUserId) => ({
-        eventId: databaseEvent.id,
-        source: EventSource.DISCORD,
-        discordUserId,
-        citizenId: citizenIdByDiscordId.get(discordUserId) ?? null,
-      })),
-      skipDuplicates: true,
-    });
+    const createdParticipants =
+      await context.prisma.eventParticipant.createManyAndReturn({
+        data: added.map((discordUserId) => ({
+          eventId: databaseEvent.id,
+          source: EventSource.DISCORD,
+          discordUserId,
+          citizenId: citizenIdByDiscordId.get(discordUserId) ?? null,
+        })),
+        skipDuplicates: true,
+        select: {
+          citizenId: true,
+        },
+      });
+    signedUpCitizenIds = createdParticipants.flatMap((participant) =>
+      participant.citizenId === null ? [] : [participant.citizenId],
+    );
   }
 
   /**
@@ -227,9 +282,23 @@ export const syncDiscordParticipants = async (
     ]);
   }
 
+  const now = context.now();
+  const notifications = isNewEvent
+    ? []
+    : [
+        ...buildCancellationNotifications(databaseEvent, now, cancellations),
+        ...buildSignUpNotifications(databaseEvent, now, signedUpCitizenIds),
+      ];
+
+  const notificationsSent =
+    notifications.length > 0
+      ? await triggerNotificationsAfterSave(context, notifications)
+      : true;
+
   return {
     addedCount: added.length,
     removedCount: removed.length,
     linkedCount,
+    notificationsSent,
   };
 };

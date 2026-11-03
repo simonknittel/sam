@@ -4,13 +4,20 @@
  * caller: the rule is the check of the receivers for its feature.
  * `storeOnSiteNotifications()` adds the clearance.
  */
-export { findEventBriefingPublishedRecipients } from "./eventBriefingPublished.js";
+export { findEventBriefingAudienceRecipients } from "./eventBriefingAudience.js";
 export { findEventCreatedRecipients } from "./eventCreated.js";
+export {
+  findEventLineupEnabledRecipients,
+  findEventPositionAssignedRecipient,
+  findEventPositionUnassignedRecipient,
+} from "./eventLineupRecipients.js";
+export { findEventOrganizerRecipients } from "./eventOrganizers.js";
 export {
   findEventDeletedRecipients,
   findEventParticipantRecipients,
 } from "./eventParticipants.js";
 export { findEventParticipationRecipient } from "./eventParticipation.js";
+export { findEventPositionApplicationRecipients } from "./eventPositionApplicationCreated.js";
 export type { EventNotificationRecipients } from "./eventRecipients.js";
 export { findFleetUpdateReminderRecipient } from "./fleetUpdateReminder.js";
 export { findGreetingRecipient } from "./greetingRecipients.js";
@@ -18,20 +25,29 @@ export {
   findManualNotificationRecipients,
   type ManualNotificationRecipients,
 } from "./manualNotificationCreated.js";
-export { findPenaltyEntryRecipient } from "./penaltyEntryCreated.js";
+export {
+  findPenaltyEntryExpiredRecipient,
+  findPenaltyEntryRecipient,
+} from "./penaltyEntryCreated.js";
 export {
   findPayoutDisbursedRecipients,
+  findPayoutReminderRecipients,
   findPayoutStartedRecipients,
 } from "./profitDistributionPayout.js";
 export type { Recipient } from "./recipient.js";
 export { findRoleAddedRecipient } from "./roleAdded.js";
+export { findRoleLevelIncreasedRecipient } from "./roleLevelIncreased.js";
 export { findSilcTransactionRecipients } from "./silcTransactionsCreated.js";
+export { findTaskAcceptedRecipients } from "./taskAccepted.js";
 export { findTaskAssignmentRecipients } from "./taskAssignmentUpdated.js";
+export { findTaskCancelledRecipients } from "./taskCancelled.js";
+export { findTaskCompletedRecipients } from "./taskCompleted.js";
 export {
   TaskCreatedRecipientKind,
   findTaskCreatedRecipients,
   type TaskCreatedRecipientGroup,
 } from "./taskCreated.js";
+export { findTaskDeadlineReminderRecipients } from "./taskDeadlineReminder.js";
 export { findTaskDeletedRecipients } from "./taskDeleted.js";
 export { findWikiCitizenMentionedRecipient } from "./wikiCitizenMentioned.js";
 export { findWikiPageReportedRecipients } from "./wikiPageReported.js";

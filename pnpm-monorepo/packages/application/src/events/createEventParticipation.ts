@@ -1,12 +1,15 @@
 import { requireCitizen, requirePermission, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
+import { triggerNotificationsAfterSave } from "../notifications.js";
 import { withSpan } from "../withSpan.js";
-import { loadEventOutput, type GetEventOutput } from "./getEvent.js";
+import { loadEventOutput } from "./getEvent.js";
 import {
   insertOwnParticipation,
   type EventParticipationInput,
 } from "./ownParticipation.js";
 import { requireOpenParticipatableAppEvent } from "./participatableAppEvent.js";
+import { buildSignUpNotifications } from "./participationChangeNotifications.js";
+import type { OwnParticipationWriteOutput } from "./signUpForEvent.js";
 
 /**
  * Signs the user up for an app event. Refuses a second sign-up, thus a
@@ -17,7 +20,7 @@ export const createEventParticipation = (
   context: ApplicationContext,
   actor: Actor,
   input: EventParticipationInput,
-): Promise<GetEventOutput> =>
+): Promise<OwnParticipationWriteOutput> =>
   withSpan(context, "createEventParticipation", async () => {
     const citizenId = requireCitizen(actor).id;
     requirePermission(actor, "event", "read");
@@ -34,5 +37,17 @@ export const createEventParticipation = (
       comment: input.comment || null,
     });
 
-    return loadEventOutput(context, actor, event.id);
+    const notifications = buildSignUpNotifications(event, context.now(), [
+      citizenId,
+    ]);
+
+    const notificationsSent =
+      notifications.length > 0
+        ? await triggerNotificationsAfterSave(context, notifications)
+        : true;
+
+    return {
+      event: await loadEventOutput(context, actor, event.id),
+      notifications_sent: notificationsSent,
+    };
   });

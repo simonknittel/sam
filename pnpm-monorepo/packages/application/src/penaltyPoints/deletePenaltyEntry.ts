@@ -3,6 +3,7 @@ import * as z from "zod";
 import { requireCitizen, requirePermission, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { NotFoundError } from "../errors.js";
+import { triggerNotificationsAfterSave } from "../notifications.js";
 import { idSchema } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
 import { PenaltyEntryErrorMessage } from "./penaltyEntryErrors.js";
@@ -16,9 +17,19 @@ export const deletePenaltyEntryInputSchema = z.object({
   penalty_entry_id: idSchema.describe("The id of the penalty entry."),
 });
 
+export interface DeletePenaltyEntryOutput {
+  /** The entry after the deletion */
+  readonly entry: PenaltyEntryOutput;
+  /**
+   * False when the entry is deleted, but the notifications failed. The
+   * deletion stands, thus the caller must not delete the entry again.
+   */
+  readonly notifications_sent: boolean;
+}
+
 /**
- * Soft-deletes a penalty entry and gives the entry after the deletion.
- * Requires `penaltyEntry;delete` and a citizen.
+ * Soft-deletes a penalty entry. When the entry still counted, it notifies
+ * the citizen of the entry. Requires `penaltyEntry;delete` and a citizen.
  *
  * @throws NotFoundError when the entry does not exist or is deleted already
  */
@@ -26,10 +37,11 @@ export const deletePenaltyEntry = (
   context: ApplicationContext,
   actor: Actor,
   input: z.infer<typeof deletePenaltyEntryInputSchema>,
-): Promise<PenaltyEntryOutput> =>
+): Promise<DeletePenaltyEntryOutput> =>
   withSpan(context, "deletePenaltyEntry", async () => {
     requirePermission(actor, "penaltyEntry", "delete");
-    const citizen = requireCitizen(actor);
+    const actorCitizen = requireCitizen(actor);
+    const now = context.now();
 
     /**
      * The condition on `deletedAt` lets only one of two parallel requests
@@ -38,7 +50,7 @@ export const deletePenaltyEntry = (
      */
     const [entry] = await context.prisma.penaltyEntry.updateManyAndReturn({
       where: { id: input.penalty_entry_id, deletedAt: null },
-      data: { deletedAt: context.now(), deletedById: citizen.id },
+      data: { deletedAt: now, deletedById: actorCitizen.id },
       select: PENALTY_ENTRY_SELECT,
     });
     if (!entry) throw new NotFoundError(PenaltyEntryErrorMessage.NotFound);
@@ -56,5 +68,25 @@ export const deletePenaltyEntry = (
       },
     ]);
 
-    return toPenaltyEntryOutput(entry);
+    // An expired entry does not count any more (see
+    // `buildActivePenaltyEntryWhere()`), thus its deletion changes nothing
+    // for the citizen
+    const notifications =
+      (entry.expiresAt === null || entry.expiresAt >= now) &&
+      entry.citizen.id !== actorCitizen.id
+        ? [
+            {
+              type: "PenaltyEntryDeleted",
+              payload: { penaltyEntryId: entry.id },
+            },
+          ]
+        : [];
+
+    return {
+      entry: toPenaltyEntryOutput(entry),
+      notifications_sent:
+        notifications.length > 0
+          ? await triggerNotificationsAfterSave(context, notifications)
+          : true,
+    };
   });

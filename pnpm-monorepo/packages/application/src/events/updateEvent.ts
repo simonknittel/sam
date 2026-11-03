@@ -6,7 +6,7 @@ import {
 import { AuditEventType, type AuditEventInput } from "@sam-monorepo/domain";
 import * as z from "zod";
 import type { Actor } from "../actor.js";
-import type { ApplicationContext, Notification } from "../context.js";
+import type { ApplicationContext } from "../context.js";
 import {
   DATE_TIME_INPUT_DESCRIPTION,
   dateTimeInputSchema,
@@ -26,6 +26,7 @@ import {
   PARTICIPATION_DISABLED_REASON,
 } from "./clearEventParticipation.js";
 import { createEventActivity } from "./eventActivity.js";
+import { buildEventChangeNotifications } from "./eventChangeNotifications.js";
 import { requireDescriptionFitsDiscord } from "./eventDescription.js";
 import {
   DiscordSyncOutcome,
@@ -276,15 +277,14 @@ export const updateEvent = (
         ? event.description
         : input.description || null;
 
+    const changesStartTime = startTime.getTime() !== event.startTime.getTime();
+    const changesEndTime = endTime?.getTime() !== event.endTime?.getTime();
+
     const changes: EventChange[] = [];
     if (name !== event.name) changes.push(EventChange.Name);
     if (description !== event.description)
       changes.push(EventChange.Description);
-    if (
-      startTime.getTime() !== event.startTime.getTime() ||
-      endTime?.getTime() !== event.endTime?.getTime()
-    )
-      changes.push(EventChange.Schedule);
+    if (changesStartTime || changesEndTime) changes.push(EventChange.Schedule);
     if (
       visibility !== event.visibility ||
       toSortedKey(previousRoleIds) !== toSortedKey(visibilityRoleIds)
@@ -482,12 +482,13 @@ export const updateEvent = (
       });
     await context.audit.create(auditEvents);
 
-    const notifications: Notification[] = [];
-    if (changesContent)
-      notifications.push({
-        type: "EventUpdated",
-        payload: { eventId: event.id },
-      });
+    const notifications = buildEventChangeNotifications(event.id, {
+      startTime: changesStartTime,
+      endTime: changesEndTime,
+      details:
+        changes.includes(EventChange.Name) ||
+        changes.includes(EventChange.Description),
+    });
     if (changesLineupEnabled && input.lineup_enabled)
       notifications.push({
         type: "EventLineupEnabled",

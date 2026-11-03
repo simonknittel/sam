@@ -1,6 +1,8 @@
 import {
   getAuecPerSilc,
+  getPayoutState,
   getTotalSilc,
+  PayoutState,
   type PermissionSet,
 } from "@sam-monorepo/domain";
 import { findCitizenIdsWithPermissions } from "../../auth/effectivePermissionsOfCitizens.js";
@@ -67,6 +69,70 @@ export const findPayoutStartedRecipients = async (
 
   return {
     cycle: { id: cycle.id, title: cycle.title },
+    recipients: Array.from(receiverIds, (citizenId) => ({ citizenId })),
+  };
+};
+
+export interface FindPayoutReminderRecipientsInput {
+  readonly cycleId: string;
+}
+
+export interface PayoutReminderRecipients {
+  readonly cycle: PayoutCycleReference & {
+    /** The planned end of the payout phase */
+    readonly payoutEndsAt: Date;
+  };
+  readonly recipients: Recipient[];
+}
+
+/**
+ * The participants of the cycle who must accept their payout now (see
+ * `getPayoutState()`) and can open the cycle. Null when the cycle does not
+ * exist or has no planned end of the payout phase.
+ */
+export const findPayoutReminderRecipients = async (
+  context: ApplicationContext,
+  input: FindPayoutReminderRecipientsInput,
+): Promise<PayoutReminderRecipients | null> => {
+  const cycle = await context.prisma.profitDistributionCycle.findUnique({
+    where: {
+      id: input.cycleId,
+    },
+    select: {
+      id: true,
+      title: true,
+      collectionEndedAt: true,
+      payoutStartedAt: true,
+      payoutEndsAt: true,
+      payoutEndedAt: true,
+      participants: {
+        select: {
+          citizenId: true,
+          cededAt: true,
+          acceptedAt: true,
+          disbursedAt: true,
+        },
+      },
+    },
+  });
+  if (!cycle?.payoutEndsAt) return null;
+
+  const receiverIds = await findPayoutReceiverIds(
+    context,
+    cycle.participants
+      .filter(
+        (participant) =>
+          getPayoutState(cycle, participant) === PayoutState.AwaitingAcceptance,
+      )
+      .map((participant) => participant.citizenId),
+  );
+
+  return {
+    cycle: {
+      id: cycle.id,
+      title: cycle.title,
+      payoutEndsAt: cycle.payoutEndsAt,
+    },
     recipients: Array.from(receiverIds, (citizenId) => ({ citizenId })),
   };
 };

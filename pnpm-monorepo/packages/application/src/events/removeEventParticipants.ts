@@ -109,13 +109,13 @@ export const removeEventParticipants = (
          * back the removals of the other citizens.
          */
         if (
-          !(await cancelParticipation(transaction, {
+          (await cancelParticipation(transaction, {
             participantId: participant.id,
             eventId: event.id,
             citizenId,
             cancelledById: managerId,
             cancelledAt,
-          }))
+          })) === null
         )
           throw new ConflictError(EventErrorMessage.CitizenNotSignedUp);
 

@@ -14,6 +14,11 @@ interface Input {
   readonly cancelledAt: Date;
 }
 
+interface CancelParticipationOutput {
+  /** The names of the lineup positions that the citizen held before */
+  readonly vacatedPositionNames: string[];
+}
+
 /**
  * Soft-cancels one participation and drops everything it granted. The
  * cancelled row stays as history; the unique rule for active sign-ups
@@ -22,13 +27,13 @@ interface Input {
  * assignments go with it. Takes the transaction client so the activity entry
  * the caller writes commits together with all of it.
  *
- * @returns false if the participation was cancelled before, for example by a
+ * @returns null if the participation was cancelled before, for example by a
  * parallel request. Then nothing changed.
  */
 export const cancelParticipation = async (
   transaction: Prisma.TransactionClient,
   { participantId, eventId, citizenId, cancelledById, cancelledAt }: Input,
-) => {
+): Promise<CancelParticipationOutput | null> => {
   const { count } = await transaction.eventParticipant.updateMany({
     where: {
       id: participantId,
@@ -39,7 +44,7 @@ export const cancelParticipation = async (
       cancelledById,
     },
   });
-  if (count === 0) return false;
+  if (count === 0) return null;
 
   await transaction.eventPositionApplication.deleteMany({
     where: {
@@ -50,7 +55,7 @@ export const cancelParticipation = async (
     },
   });
 
-  await transaction.eventPosition.updateMany({
+  const vacatedPositions = await transaction.eventPosition.updateManyAndReturn({
     where: {
       eventId,
       citizenId,
@@ -58,7 +63,12 @@ export const cancelParticipation = async (
     data: {
       citizenId: null,
     },
+    select: {
+      name: true,
+    },
   });
 
-  return true;
+  return {
+    vacatedPositionNames: vacatedPositions.map((position) => position.name),
+  };
 };

@@ -3,6 +3,13 @@
  * shares with them
  */
 export {
+  announceEventBriefingUpdate,
+  announceEventBriefingUpdateInputSchema,
+  isEventBriefingPublished,
+  type AnnounceEventBriefingUpdateInput,
+  type AnnounceEventBriefingUpdateOutput,
+} from "./announceEventBriefingUpdate.js";
+export {
   createWikiCollabToken,
   createWikiCollabTokenInputSchema,
   type CreateWikiCollabTokenInput,

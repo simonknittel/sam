@@ -16,10 +16,15 @@ import { withSpan } from "../withSpan.js";
  * event begins. `event_morning_reminder` goes out at 07:30 for the events
  * that start before 07:30 of the next day (see
  * `sendEventMorningReminders()`), so it is obsolete after one day.
+ * `task_deadline_reminder` and `sincome_payout_reminder` go out one day
+ * before the task expires or the payout phase ends, thus they are obsolete
+ * after one day.
  */
 const RELEVANCE_MINUTES_BY_TYPE = {
   event_starting: 15,
   event_morning_reminder: 24 * 60,
+  task_deadline_reminder: 24 * 60,
+  sincome_payout_reminder: 24 * 60,
 } as const satisfies Partial<Record<OnSiteNotificationType, number>>;
 
 const MILLISECONDS_PER_MINUTE = 60 * 1000;

@@ -1,3 +1,4 @@
+import type { Prisma } from "@sam-monorepo/database/client";
 import { LOGIN_MANAGE_PERMISSION_SET } from "../../auth/clearedCitizens.js";
 import { isCitizenWithPermissions } from "../../auth/effectivePermissionsOfCitizens.js";
 import type { ApplicationContext } from "../../context.js";
@@ -15,18 +16,12 @@ export interface PenaltyEntryRecipients {
   readonly recipients: Recipient[];
 }
 
-/**
- * The citizen of the penalty entry, when the citizen can log in and read the
- * own penalty entries. Null when the penalty entry does not exist.
- */
-export const findPenaltyEntryRecipient = async (
+const findRecipientOfPenaltyEntry = async (
   context: ApplicationContext,
-  input: FindPenaltyEntryRecipientInput,
+  where: Prisma.PenaltyEntryWhereUniqueInput,
 ): Promise<PenaltyEntryRecipients | null> => {
   const penaltyEntry = await context.prisma.penaltyEntry.findUnique({
-    where: {
-      id: input.penaltyEntryId,
-    },
+    where,
     select: {
       points: true,
       reason: true,
@@ -49,3 +44,26 @@ export const findPenaltyEntryRecipient = async (
     recipients: isRecipient ? [{ citizenId: penaltyEntry.citizenId }] : [],
   };
 };
+
+/**
+ * The citizen of the penalty entry, when the citizen can log in and read the
+ * own penalty entries. Null when the penalty entry does not exist.
+ */
+export const findPenaltyEntryRecipient = (
+  context: ApplicationContext,
+  input: FindPenaltyEntryRecipientInput,
+) => findRecipientOfPenaltyEntry(context, { id: input.penaltyEntryId });
+
+/**
+ * The recipient of `findPenaltyEntryRecipient()` for an expired entry. Null
+ * also when the entry is deleted: the citizen gets no notification about an
+ * entry that does not exist for the citizen any more.
+ */
+export const findPenaltyEntryExpiredRecipient = (
+  context: ApplicationContext,
+  input: FindPenaltyEntryRecipientInput,
+) =>
+  findRecipientOfPenaltyEntry(context, {
+    id: input.penaltyEntryId,
+    deletedAt: null,
+  });

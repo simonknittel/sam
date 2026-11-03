@@ -11,6 +11,7 @@ import * as z from "zod";
 import { requireCitizen, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { ConflictError, ForbiddenError, ValidationError } from "../errors.js";
+import { triggerNotificationsAfterSave } from "../notifications.js";
 import { idSchema } from "../pagination.js";
 import {
   announceSilcTransactions,
@@ -183,10 +184,10 @@ const createRepetition = async (
 
 /**
  * Completes an open task: pays the reward to the completionists, creates the
- * next repetition and notifies the receivers of the SILC. Requires
- * `task;read`, a citizen, and that the actor created the task or has
- * `task;manage`. An assignee of a task that the assignees can complete
- * themselves can complete it for the assignees.
+ * next repetition and notifies the receivers of the SILC and the creator of
+ * the task. Requires `task;read`, a citizen, and that the actor created the
+ * task or has `task;manage`. An assignee of a task that the assignees can
+ * complete themselves can complete it for the assignees.
  */
 export const completeTask = (
   context: ApplicationContext,
@@ -302,13 +303,16 @@ export const completeTask = (
       },
     ]);
 
-    const notificationsSent = await announceSilcTransactions(
-      context,
-      silcTransactionIds,
-    );
+    const [silcNotificationsSent, completionNotificationsSent] =
+      await Promise.all([
+        announceSilcTransactions(context, silcTransactionIds),
+        triggerNotificationsAfterSave(context, [
+          { type: "TaskCompleted", payload: { taskId: task.id } },
+        ]),
+      ]);
 
     return {
       task: await findTaskOutput(context, actor, task.id),
-      notifications_sent: notificationsSent,
+      notifications_sent: silcNotificationsSent && completionNotificationsSent,
     };
   });

@@ -8,6 +8,7 @@ import * as z from "zod";
 import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { NotFoundError, ValidationError } from "../errors.js";
+import { triggerNotificationsAfterSave } from "../notifications.js";
 import { idSchema } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
 import { createEventActivity } from "./eventActivity.js";
@@ -25,18 +26,30 @@ export const addEventManagersInputSchema = z.object({
     .array(idSchema)
     .max(EVENT_MAX_CITIZENS_PER_REQUEST)
     .describe(
-      "The citizens who become managers. Managers can change the event, its participants, its managers and its lineup. Citizens who already manage the event are skipped.",
+      "The citizens who become managers. Managers can change the event, its participants, its managers and its lineup. Citizens who already manage the event are skipped. Each new manager gets a notification.",
     ),
 });
 
 export type AddEventManagersInput = z.infer<typeof addEventManagersInputSchema>;
 
-/** Makes citizens managers of an event */
+export interface AddEventManagersOutput {
+  readonly event: GetEventOutput;
+  /**
+   * False when the managers are saved, but the notifications failed. The
+   * managers stand, thus the caller must not save them again.
+   */
+  readonly notifications_sent: boolean;
+}
+
+/**
+ * Makes citizens managers of an event. Each new manager gets a
+ * notification, except the actor.
+ */
 export const addEventManagers = (
   context: ApplicationContext,
   actor: Actor,
   input: AddEventManagersInput,
-): Promise<GetEventOutput> =>
+): Promise<AddEventManagersOutput> =>
   withSpan(context, "addEventManagers", async () => {
     /**
      * Authorize the request
@@ -109,5 +122,22 @@ export const addEventManagers = (
       },
     ]);
 
-    return loadEventOutput(context, actor, event.id);
+    const notifiedManagerIds = managerIdsToAdd.filter(
+      (managerId) => managerId !== actingManagerId,
+    );
+    const notificationsSent =
+      notifiedManagerIds.length > 0
+        ? await triggerNotificationsAfterSave(
+            context,
+            notifiedManagerIds.map((managerId) => ({
+              type: "EventManagerAdded",
+              payload: { eventId: event.id, citizenId: managerId },
+            })),
+          )
+        : true;
+
+    return {
+      event: await loadEventOutput(context, actor, event.id),
+      notifications_sent: notificationsSent,
+    };
   });
