@@ -22,7 +22,9 @@ import {
   fillUntilValue,
   modal,
   openRolePicker,
+  pickFilterOption,
   pickFromSearch,
+  pickRoles,
   rolePickerOption,
   rolePickerTag,
   waitForAppShellHydration,
@@ -669,50 +671,104 @@ test("the participant list sorts by the handle and by the time of the sign-up", 
     });
   }
 
+  /**
+   * The first visit of a new event refreshes the page, and a refresh closes
+   * the open list of the sort filter
+   */
+  await prisma.readMarker.create({
+    data: { citizenId: viewer.entity.id, eventId: event.id },
+  });
   const rows = page.locator("tbody tr").filter({ visible: true });
-  const headerLink = (name: string) =>
-    page.locator("thead").getByRole("link", { name, exact: true });
-  const columnHeader = (name: string) =>
-    page.locator("thead").getByRole("columnheader", { name });
 
   await signIn(viewer.user);
   await page.goto(`/app/events/${event.id}/participants`);
   await expect(rows).toHaveText([/anton/, /berta/, /zora/]);
-  await expect(columnHeader("Citizen")).toHaveAttribute(
-    "aria-sort",
-    "ascending",
+  await expect(page.getByRole("combobox", { name: "Sortierung" })).toHaveValue(
+    "Citizen A - Z",
   );
-  await expect(columnHeader("Zugesagt am")).not.toHaveAttribute("aria-sort");
 
-  await headerLink("Citizen").click();
-  await expect(page).toHaveURL(/sort=citizen-desc/);
+  await pickFilterOption(page, "Sortierung", "Citizen Z - A");
+  await expect(page).toHaveURL(/\?sort=citizen-desc$/);
   await expect(rows).toHaveText([/zora/, /berta/, /anton/]);
-  await expect(columnHeader("Citizen")).toHaveAttribute(
-    "aria-sort",
-    "descending",
-  );
 
-  await headerLink("Zugesagt am").click();
-  await expect(page).toHaveURL(/sort=joined-at-asc/);
+  await pickFilterOption(page, "Sortierung", "Zugesagt am ↑");
+  await expect(page).toHaveURL(/\?sort=joined-at-asc$/);
   await expect(rows).toHaveText([/zora/, /anton/, /berta/]);
-  await expect(columnHeader("Zugesagt am")).toHaveAttribute(
-    "aria-sort",
-    "ascending",
-  );
-  await expect(columnHeader("Citizen")).not.toHaveAttribute("aria-sort");
 
-  await headerLink("Zugesagt am").click();
-  await expect(page).toHaveURL(/sort=joined-at-desc/);
+  await pickFilterOption(page, "Sortierung", "Zugesagt am ↓");
+  await expect(page).toHaveURL(/\?sort=joined-at-desc$/);
   await expect(rows).toHaveText([/berta/, /anton/, /zora/]);
-  await expect(columnHeader("Zugesagt am")).toHaveAttribute(
-    "aria-sort",
-    "descending",
-  );
 
   // The default sort leaves no sort parameter in the URL
-  await headerLink("Citizen").click();
+  await pickFilterOption(page, "Sortierung", "Citizen A - Z");
   await expect(page).toHaveURL(
     new RegExp(`/app/events/${event.id}/participants$`),
   );
   await expect(rows).toHaveText([/anton/, /berta/, /zora/]);
+});
+
+test("the role filter of the participant list shows only the participants with a selected role that the viewer can see", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const pilotRole = await createRole(prisma, { name: "Pilot" });
+  const medicRole = await createRole(prisma, { name: "Sanitäter" });
+  const secretRole = await createRole(prisma, { name: "Geheimdienst" });
+  const creator = await createCitizen(prisma, { handle: "rollen-orga" });
+  const viewer = await createCitizen(prisma, {
+    handle: "rollen-zuschauer",
+    permissionStrings: [
+      "event;read",
+      "citizen;read",
+      `otherRole;read;roleId=${pilotRole.id}`,
+      `otherRole;read;roleId=${medicRole.id}`,
+    ],
+  });
+  const event = await createAppEvent(
+    prisma,
+    appEvent("Operation Rollenfilter", creator.entity.id),
+  );
+  for (const [handle, role] of [
+    ["pilotin", pilotRole],
+    ["sanitaeter", medicRole],
+    ["agentin", secretRole],
+  ] as const) {
+    const citizen = await createCitizen(prisma, { handle });
+    await assignRole(prisma, citizen.entity, role);
+    await createParticipant(prisma, {
+      eventId: event.id,
+      citizen,
+      source: EventSource.APP,
+    });
+  }
+  /** The first visit of a new event refreshes the page */
+  await prisma.readMarker.create({
+    data: { citizenId: viewer.entity.id, eventId: event.id },
+  });
+  const rows = page.locator("tbody tr").filter({ visible: true });
+  /** While the page streams, a hidden copy of the texts is outside of it */
+  const mainContent = page.locator("#main-content");
+
+  await signIn(viewer.user);
+  await page.goto(`/app/events/${event.id}/participants`);
+  await expect(mainContent.getByText("Teilnehmer (3)")).toBeVisible();
+  await expect(rows).toHaveCount(3);
+
+  await pickRoles(page.getByRole("button", { name: "Rolle auswählen" }), [
+    "Pilot",
+    "Sanitäter",
+  ]);
+  await expect(page).toHaveURL(
+    new RegExp(`\\?role=${pilotRole.id},${medicRole.id}$`),
+  );
+  await expect(rows).toHaveText([/pilotin/, /sanitaeter/]);
+  await expect(mainContent.getByText("Teilnehmer (2 von 3)")).toBeVisible();
+
+  /** The URL can name a role that the viewer cannot see */
+  await page.goto(`/app/events/${event.id}/participants?role=${secretRole.id}`);
+  await expect(
+    mainContent.getByText("Keine Teilnehmer für diese Filter."),
+  ).toBeVisible();
+  await expect(mainContent.getByText("Teilnehmer (0 von 3)")).toBeVisible();
 });
