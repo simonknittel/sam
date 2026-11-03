@@ -2,11 +2,12 @@ import {
   findEventParticipantRecipients,
   type ApplicationContext,
 } from "@sam-monorepo/application";
-import { type Event } from "@sam-monorepo/database";
+import { type Citizen, type Event } from "@sam-monorepo/database";
 import { publishNotifications } from "../publish.js";
 
 type Payload = {
   eventId: Event["id"];
+  actorCitizenId?: Citizen["id"] | null;
 };
 
 export const EventUpdatedHandler = async (
@@ -15,6 +16,7 @@ export const EventUpdatedHandler = async (
 ) => {
   const result = await findEventParticipantRecipients(context, {
     eventId: payload.eventId,
+    excludedCitizenId: payload.actorCitizenId,
   });
   if (!result) return;
 

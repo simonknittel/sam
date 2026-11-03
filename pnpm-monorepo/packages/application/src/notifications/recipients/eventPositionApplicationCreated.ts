@@ -1,4 +1,5 @@
 import type { ApplicationContext } from "../../context.js";
+import { LINEUP_PERMISSION_SETS } from "../../lineup/lineupGuards.js";
 import {
   EVENT_ORGANIZER_SELECT,
   findEventOrganizers,
@@ -15,8 +16,9 @@ export interface EventPositionApplicationRecipients extends EventOrganizerRecipi
 
 /**
  * The organizers of the event who hear about a new application (see
- * `findEventOrganizers()`), without the applicant. Null when the application
- * does not exist: the applicant withdrew it, or the end of the participation
+ * `findEventOrganizers()`), without the applicant, when they can see the
+ * lineup now (see `LINEUP_PERMISSION_SETS`). Null when the application does
+ * not exist: the applicant withdrew it, or the end of the participation
  * removed it.
  */
 export const findEventPositionApplicationRecipients = async (
@@ -46,10 +48,9 @@ export const findEventPositionApplicationRecipients = async (
     event: { id: event.id, name: event.name },
     position: { name: application.position.name },
     citizen: { handle: application.citizen.handle },
-    recipients: await findEventOrganizers(
-      context,
-      event,
-      application.citizenId,
-    ),
+    recipients: await findEventOrganizers(context, event, {
+      excludedCitizenId: application.citizenId,
+      additionalPermissionSets: LINEUP_PERMISSION_SETS,
+    }),
   };
 };

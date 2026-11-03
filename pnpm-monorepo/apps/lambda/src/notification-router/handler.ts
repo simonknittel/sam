@@ -1,6 +1,7 @@
 import type { ApplicationContext } from "@sam-monorepo/application";
 import {
   EventParticipationChange,
+  LINEUP_MAX_POSITIONS,
   MAXIMUM_POSITION_NAME_LENGTH,
 } from "@sam-monorepo/domain";
 import * as z from "zod";
@@ -202,6 +203,12 @@ export const bodySchema = z.discriminatedUnion("type", [
     type: z.literal("EventCreated"),
     payload: z.object({
       eventId: z.cuid(),
+      /**
+       * The citizen who caused the notification gets none. Null when no
+       * citizen caused it, for example the Discord sync. An older app does
+       * not send it.
+       */
+      actorCitizenId: z.cuid().nullable().optional(),
     }),
     requestId: z.cuid2(),
   }),
@@ -210,6 +217,12 @@ export const bodySchema = z.discriminatedUnion("type", [
     type: z.literal("EventUpdated"),
     payload: z.object({
       eventId: z.cuid(),
+      /**
+       * The citizen who caused the notification gets none. Null when no
+       * citizen caused it, for example the Discord sync. An older app does
+       * not send it.
+       */
+      actorCitizenId: z.cuid().nullable().optional(),
     }),
     requestId: z.cuid2(),
   }),
@@ -218,6 +231,11 @@ export const bodySchema = z.discriminatedUnion("type", [
     type: z.literal("EventRescheduled"),
     payload: z.object({
       eventId: z.cuid(),
+      /**
+       * The citizen who caused the notification gets none. Null when no
+       * citizen caused it, for example the Discord sync.
+       */
+      actorCitizenId: z.cuid().nullable(),
     }),
     requestId: z.cuid2(),
   }),
@@ -226,6 +244,12 @@ export const bodySchema = z.discriminatedUnion("type", [
     type: z.literal("EventDeleted"),
     payload: z.object({
       eventId: z.cuid(),
+      /**
+       * The citizen who caused the notification gets none. Null when no
+       * citizen caused it, for example the Discord sync. An older app does
+       * not send it.
+       */
+      actorCitizenId: z.cuid().nullable().optional(),
     }),
     requestId: z.cuid2(),
   }),
@@ -234,6 +258,12 @@ export const bodySchema = z.discriminatedUnion("type", [
     type: z.literal("EventLineupEnabled"),
     payload: z.object({
       eventId: z.cuid(),
+      /**
+       * The citizen who caused the notification gets none. Null when no
+       * citizen caused it, for example the Discord sync. An older app does
+       * not send it.
+       */
+      actorCitizenId: z.cuid().nullable().optional(),
     }),
     requestId: z.cuid2(),
   }),
@@ -253,6 +283,8 @@ export const bodySchema = z.discriminatedUnion("type", [
     payload: z.object({
       eventId: z.cuid(),
       citizenId: z.cuid(),
+      /** Null when the change deleted the position */
+      positionId: z.cuid().nullable(),
       positionName: z.string().max(MAXIMUM_POSITION_NAME_LENGTH),
     }),
     requestId: z.cuid2(),
@@ -321,7 +353,7 @@ export const bodySchema = z.discriminatedUnion("type", [
       citizenId: z.cuid(),
       positionNames: z
         .array(z.string().max(MAXIMUM_POSITION_NAME_LENGTH))
-        .max(MAXIMUM_EVENT_ITEM_COUNT),
+        .max(LINEUP_MAX_POSITIONS),
     }),
     requestId: z.cuid2(),
   }),
@@ -340,6 +372,12 @@ export const bodySchema = z.discriminatedUnion("type", [
     // schema drops a read scope in the payload
     payload: z.object({
       eventId: z.cuid(),
+      /**
+       * The citizen who caused the notification gets none. Null when no
+       * citizen caused it, for example the Discord sync. An older app does
+       * not send it.
+       */
+      actorCitizenId: z.cuid().nullable().optional(),
     }),
     requestId: z.cuid2(),
   }),
@@ -348,8 +386,8 @@ export const bodySchema = z.discriminatedUnion("type", [
     type: z.literal("EventBriefingUpdated"),
     payload: z.object({
       eventId: z.cuid(),
-      /** The manager who announced the update gets no notification */
-      announcedById: z.cuid(),
+      /** The citizen who caused the notification gets none */
+      actorCitizenId: z.cuid().nullable(),
     }),
     requestId: z.cuid2(),
   }),

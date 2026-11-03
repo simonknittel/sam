@@ -2,6 +2,7 @@ import { AuditEventType } from "@sam-monorepo/domain";
 import * as z from "zod";
 import type { Actor } from "../actor.js";
 import type { ApplicationContext, Notification } from "../context.js";
+import { isLineupPublished } from "../events/eventManageRules.js";
 import { triggerNotificationsAfterSave } from "../notifications.js";
 import { idSchema } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
@@ -78,18 +79,23 @@ export const deleteEventPosition = (
     ]);
 
     // A draft lineup sends nothing (see `assignEventPosition()`)
-    const isLineupPublished = event.lineupEnabled && event.participationEnabled;
     const notifications = (
-      isLineupPublished ? collectAssignments(deletedPosition) : []
+      isLineupPublished(event) ? collectAssignments(deletedPosition) : []
     )
       .filter(({ citizenId }) => citizenId !== actor.citizen?.id)
       .map(({ citizenId, positionName }): Notification => ({
         type: "EventPositionUnassigned",
-        payload: { eventId: event.id, citizenId, positionName },
+        payload: {
+          eventId: event.id,
+          citizenId,
+          positionId: null,
+          positionName,
+        },
       }));
-    const notificationsSent =
-      notifications.length <= 0 ||
-      (await triggerNotificationsAfterSave(context, notifications));
+    const notificationsSent = await triggerNotificationsAfterSave(
+      context,
+      notifications,
+    );
 
     return { position: deletedPosition, notifications_sent: notificationsSent };
   });

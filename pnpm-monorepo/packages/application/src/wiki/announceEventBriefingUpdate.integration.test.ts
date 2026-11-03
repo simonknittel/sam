@@ -12,7 +12,7 @@ import {
   TEST_NOW,
 } from "../../test/applicationContext.js";
 import { truncateAllTables } from "../../test/database.js";
-import { ConflictError } from "../errors.js";
+import { ConflictError, ForbiddenError } from "../errors.js";
 import { announceEventBriefingUpdate } from "./announceEventBriefingUpdate.js";
 import { WikiErrorMessage } from "./wikiErrors.js";
 
@@ -62,9 +62,10 @@ const createEventWithBriefing = async (
   return event;
 };
 
-const createManagerActor = async () => {
+/** A citizen who can see the events, but manages none by a permission */
+const createCitizenActor = async (handle: string) => {
   const citizen = await prisma.citizen.create({
-    data: { handle: "manager" },
+    data: { handle },
     select: { id: true, handle: true },
   });
 
@@ -76,7 +77,7 @@ const createManagerActor = async () => {
 };
 
 test("a published briefing notifies its readers without the manager who announced", async () => {
-  const actor = await createManagerActor();
+  const actor = await createCitizenActor("manager");
   const event = await createEventWithBriefing(actor.citizen!.id, {
     startTime: new Date(TEST_NOW.getTime() + HOUR_IN_MILLISECONDS),
     briefingPublishedAt: TEST_NOW,
@@ -92,7 +93,7 @@ test("a published briefing notifies its readers without the manager who announce
   expect(notifications).toEqual([
     {
       type: "EventBriefingUpdated",
-      payload: { eventId: event.id, announcedById: actor.citizen!.id },
+      payload: { eventId: event.id, actorCitizenId: actor.citizen!.id },
     },
   ]);
   expect(auditEvents).toEqual([
@@ -105,7 +106,7 @@ test("a published briefing notifies its readers without the manager who announce
 });
 
 test("an unpublished briefing and an event that ended refuse the announcement", async () => {
-  const actor = await createManagerActor();
+  const actor = await createCitizenActor("manager");
   const unpublishedEvent = await createEventWithBriefing(actor.citizen!.id, {
     startTime: new Date(TEST_NOW.getTime() + HOUR_IN_MILLISECONDS),
     briefingPublishedAt: null,
@@ -125,6 +126,24 @@ test("an unpublished briefing and an event that ended refuse the announcement", 
   await expect(
     announceEventBriefingUpdate(context, actor, { event_id: endedEvent.id }),
   ).rejects.toThrow(new ConflictError(WikiErrorMessage.BriefingFrozen));
+
+  expect(auditEvents).toEqual([]);
+  expect(notifications).toEqual([]);
+});
+
+test("a citizen who cannot manage the event cannot announce, and nothing is sent", async () => {
+  const manager = await createCitizenActor("manager");
+  const reader = await createCitizenActor("reader");
+  const event = await createEventWithBriefing(manager.citizen!.id, {
+    startTime: new Date(TEST_NOW.getTime() + HOUR_IN_MILLISECONDS),
+    briefingPublishedAt: TEST_NOW,
+  });
+  const { context, auditEvents, notifications } =
+    createTestApplicationContext();
+
+  await expect(
+    announceEventBriefingUpdate(context, reader, { event_id: event.id }),
+  ).rejects.toThrow(ForbiddenError);
 
   expect(auditEvents).toEqual([]);
   expect(notifications).toEqual([]);

@@ -2,12 +2,13 @@ import {
   findEventLineupEnabledRecipients,
   type ApplicationContext,
 } from "@sam-monorepo/application";
-import { type Event } from "@sam-monorepo/database";
+import { type Citizen, type Event } from "@sam-monorepo/database";
 import { getEventLineupEnabledText } from "@sam-monorepo/domain";
 import { publishNotifications } from "../publish.js";
 
 type Payload = {
   eventId: Event["id"];
+  actorCitizenId?: Citizen["id"] | null;
 };
 
 export const EventLineupEnabledHandler = async (
@@ -16,6 +17,7 @@ export const EventLineupEnabledHandler = async (
 ) => {
   const result = await findEventLineupEnabledRecipients(context, {
     eventId: payload.eventId,
+    excludedCitizenId: payload.actorCitizenId,
   });
   if (!result) return;
 

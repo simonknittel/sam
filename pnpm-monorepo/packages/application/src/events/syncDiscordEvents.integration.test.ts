@@ -120,7 +120,10 @@ describe("syncDiscordEvents", () => {
       },
     ]);
     expect(notifications).toEqual([
-      { type: "EventCreated", payload: { eventId: event.id } },
+      {
+        type: "EventCreated",
+        payload: { eventId: event.id, actorCitizenId: null },
+      },
     ]);
   });
 
@@ -299,12 +302,18 @@ describe("syncDiscordEvents", () => {
     );
 
     expect(notifications).toEqual([
-      { type: "EventRescheduled", payload: { eventId: event.id } },
-      { type: "EventUpdated", payload: { eventId: event.id } },
+      {
+        type: "EventRescheduled",
+        payload: { eventId: event.id, actorCitizenId: null },
+      },
+      {
+        type: "EventUpdated",
+        payload: { eventId: event.id, actorCitizenId: null },
+      },
     ]);
   });
 
-  test("the organizers hear about the RSVPs and the withdrawals of citizens, but not about the RSVPs of a new event", async () => {
+  test("the organizers hear about the RSVPs and the withdrawals of citizens, but not about the first RSVPs of an event", async () => {
     const [gunner, scout, newcomer] = await Promise.all(
       ["gunner", "scout", "newcomer", "staying"].map((name) =>
         createCitizen(`${name}-discord-id`),
@@ -330,7 +339,10 @@ describe("syncDiscordEvents", () => {
     ]);
 
     expect(importNotifications).toEqual([
-      { type: "EventCreated", payload: { eventId: event.id } },
+      {
+        type: "EventCreated",
+        payload: { eventId: event.id, actorCitizenId: null },
+      },
     ]);
     expect(output.notificationsSent).toBe(true);
     // The withdrawal of the gunner gave the position free
@@ -363,5 +375,30 @@ describe("syncDiscordEvents", () => {
         },
       ]),
     );
+  });
+
+  /**
+   * The first read of the users after the import failed. Thus the next run
+   * stores the first rows, and these are no changes of the participation.
+   */
+  test("the RSVPs after a failed first read of the users notify nobody", async () => {
+    await createCitizen("attendee-discord-id");
+    const scheduledEvent = createScheduledEvent();
+    const { context } = createTestApplicationContext({
+      discord: createTestDiscordGateway({
+        scheduledEvents: [scheduledEvent],
+        failsUserListFor: [scheduledEvent.id],
+      }),
+    });
+    await expect(syncDiscordEvents(context)).rejects.toThrow(
+      `users of the Discord event "${scheduledEvent.id}"`,
+    );
+
+    const { output, notifications } = await runSync(scheduledEvent, [
+      "attendee-discord-id",
+    ]);
+
+    expect(output.addedParticipantCount).toBe(1);
+    expect(notifications).toEqual([]);
   });
 });

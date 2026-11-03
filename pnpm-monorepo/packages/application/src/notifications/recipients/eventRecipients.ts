@@ -37,6 +37,17 @@ const EVENT_MANAGE_PERMISSION_SET = {
   operation: "manage",
 } as const satisfies PermissionSet;
 
+export interface EventRecipientOptions {
+  /** The citizen who caused the notification gets none */
+  readonly excludedCitizenId?: string | null;
+  /**
+   * The permissions of the page that the notification links to, in addition
+   * to the permissions of the event page. For example, the lineup page also
+   * needs `ship;read`.
+   */
+  readonly additionalPermissionSets?: readonly PermissionSet[];
+}
+
 /**
  * The citizens of `where` who can see the event now: the effective
  * `login;manage` and `event;read`, and `resolveEventVisibility()` with the
@@ -46,11 +57,17 @@ export const findEventRecipients = async (
   context: ApplicationContext,
   event: EventVisibilityInput,
   where: Prisma.CitizenWhereInput,
+  {
+    excludedCitizenId = null,
+    additionalPermissionSets = [],
+  }: EventRecipientOptions = {},
 ): Promise<Recipient[]> => {
   const citizens = await findCitizensWithPermissions(
     context,
-    where,
-    EVENT_RECIPIENT_PERMISSION_SETS,
+    excludedCitizenId === null
+      ? where
+      : { AND: [where, { id: { not: excludedCitizenId } }] },
+    [...EVENT_RECIPIENT_PERMISSION_SETS, ...additionalPermissionSets],
   );
 
   return Array.from(citizens)

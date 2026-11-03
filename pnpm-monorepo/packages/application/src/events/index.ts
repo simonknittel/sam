@@ -4,7 +4,6 @@ export {
   addEventManagers,
   addEventManagersInputSchema,
   type AddEventManagersInput,
-  type AddEventManagersOutput,
 } from "./addEventManagers.js";
 export {
   addEventParticipants,
@@ -91,6 +90,7 @@ export {
   type EventParticipantEntry,
   type GetEventInput,
   type GetEventOutput,
+  type NotifyingEventWriteOutput,
 } from "./getEvent.js";
 export {
   EventListStatus,
@@ -134,10 +134,7 @@ export {
   sendEventMorningReminders,
   type SendEventMorningRemindersOutput,
 } from "./sendEventMorningReminders.js";
-export {
-  signUpForEvent,
-  type OwnParticipationWriteOutput,
-} from "./signUpForEvent.js";
+export { signUpForEvent } from "./signUpForEvent.js";
 export {
   syncDiscordEvents,
   type SyncDiscordEventsOutput,

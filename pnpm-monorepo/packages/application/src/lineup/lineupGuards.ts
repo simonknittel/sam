@@ -1,4 +1,5 @@
 import type { Prisma } from "@sam-monorepo/database/client";
+import type { PermissionSet } from "@sam-monorepo/domain";
 import { requirePermission, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { ConflictError, ForbiddenError, NotFoundError } from "../errors.js";
@@ -33,13 +34,18 @@ export const LINEUP_EVENT_SELECT = {
 /**
  * The permissions of the lineup page (see `getEventLineup()`). Each guard of
  * this file requires them, thus a write needs the same permissions as the
- * read of the lineup.
- *
- * @throws ForbiddenError
+ * read of the lineup. The notifications that link to the lineup page reach
+ * only the citizens with these permissions.
  */
-const requireLineupPermissions = (actor: Actor) => {
-  requirePermission(actor, "event", "read");
-  requirePermission(actor, "ship", "read");
+export const LINEUP_PERMISSION_SETS = [
+  { resource: "event", operation: "read" },
+  { resource: "ship", operation: "read" },
+] as const satisfies readonly PermissionSet[];
+
+/** @throws ForbiddenError */
+export const requireLineupPermissions = (actor: Actor) => {
+  for (const { resource, operation } of LINEUP_PERMISSION_SETS)
+    requirePermission(actor, resource, operation);
 };
 
 /**

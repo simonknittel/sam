@@ -3,6 +3,7 @@ import * as z from "zod";
 import type { Actor } from "../actor.js";
 import type { ApplicationContext, Notification } from "../context.js";
 import { ConflictError, ValidationError } from "../errors.js";
+import { isLineupPublished } from "../events/eventManageRules.js";
 import { lockParticipationEnabledEvent } from "../events/participatableAppEvent.js";
 import { triggerNotificationsAfterSave } from "../notifications.js";
 import { idSchema } from "../pagination.js";
@@ -111,6 +112,7 @@ const buildAssignmentNotifications = (
       payload: {
         eventId,
         citizenId: position.citizenId,
+        positionId: position.id,
         positionName: position.name,
       },
     });
@@ -196,17 +198,17 @@ export const assignEventPosition = (
      * positions of each participant. Otherwise a publication right after the
      * change could arrive before the notification about the change.
      */
-    const notifications =
-      event.lineupEnabled && event.participationEnabled
-        ? buildAssignmentNotifications(actor, {
-            eventId: event.id,
-            position,
-            assignedCitizenId: citizen?.id ?? null,
-          })
-        : [];
-    const notificationsSent =
-      notifications.length <= 0 ||
-      (await triggerNotificationsAfterSave(context, notifications));
+    const notifications = isLineupPublished(event)
+      ? buildAssignmentNotifications(actor, {
+          eventId: event.id,
+          position,
+          assignedCitizenId: citizen?.id ?? null,
+        })
+      : [];
+    const notificationsSent = await triggerNotificationsAfterSave(
+      context,
+      notifications,
+    );
 
     return {
       position: await toLineupPositionOutput(context, position.id, true),

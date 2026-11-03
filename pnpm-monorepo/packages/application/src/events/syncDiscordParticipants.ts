@@ -14,14 +14,6 @@ import {
   type OwnCancellation,
 } from "./participationChangeNotifications.js";
 
-export interface SyncDiscordParticipantsOptions {
-  /**
-   * True for an event that this run imported. Its RSVPs are not changes of
-   * the participation, thus they notify nobody.
-   */
-  readonly isNewEvent: boolean;
-}
-
 export interface SyncDiscordParticipantsOutput {
   /** The new RSVPs on Discord, as in `EVENT_PARTICIPANTS_SYNCED` */
   readonly addedCount: number;
@@ -58,7 +50,6 @@ const findActiveCitizensByDiscordId = (
 export const syncDiscordParticipants = async (
   context: ApplicationContext,
   scheduledEvent: DiscordScheduledEvent,
-  { isNewEvent }: SyncDiscordParticipantsOptions,
 ): Promise<SyncDiscordParticipantsOutput | null> => {
   const databaseEvent = await context.prisma.event.findUnique({
     where: {
@@ -86,20 +77,31 @@ export const syncDiscordParticipants = async (
       `Failed to read the users of the Discord event "${scheduledEvent.id}"`,
     );
 
-  const activeParticipants = await context.prisma.eventParticipant.findMany({
+  const discordParticipants = await context.prisma.eventParticipant.findMany({
     where: {
       eventId: databaseEvent.id,
       source: EventSource.DISCORD,
-      cancelledAt: null,
     },
     select: {
       discordUserId: true,
+      cancelledAt: true,
     },
   });
 
+  /**
+   * The first rows from Discord of an event are the RSVPs from before the
+   * import, not changes of the participation, thus they notify nobody. The
+   * rule reads the rows, not the run that imported the event: else a failed
+   * read of the users after the import would make the next run notify about
+   * each RSVP.
+   */
+  const storesFirstRows = discordParticipants.length <= 0;
+
   const { added, removed } = diffParticipants(
     userIdsResult.data,
-    activeParticipants,
+    discordParticipants.filter(
+      (participant) => participant.cancelledAt === null,
+    ),
   );
 
   /**
@@ -283,17 +285,17 @@ export const syncDiscordParticipants = async (
   }
 
   const now = context.now();
-  const notifications = isNewEvent
+  const notifications = storesFirstRows
     ? []
     : [
         ...buildCancellationNotifications(databaseEvent, now, cancellations),
         ...buildSignUpNotifications(databaseEvent, now, signedUpCitizenIds),
       ];
 
-  const notificationsSent =
-    notifications.length > 0
-      ? await triggerNotificationsAfterSave(context, notifications)
-      : true;
+  const notificationsSent = await triggerNotificationsAfterSave(
+    context,
+    notifications,
+  );
 
   return {
     addedCount: added.length,

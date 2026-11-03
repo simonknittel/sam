@@ -4,12 +4,11 @@ import {
   updateEventInputSchema,
 } from "@sam-monorepo/application";
 import * as z from "zod";
-import { notificationsSentSchema } from "../../schemas.js";
 import { defineTool } from "../../toolDefinition.js";
 import { ToolGroup } from "../../toolGroup.js";
 import {
-  eventOutputSchema,
   isEventWriteToolVisible,
+  notifyingEventWriteOutputSchema,
 } from "./eventOutputSchema.js";
 
 export const updateEventTool = defineTool({
@@ -26,10 +25,8 @@ export const updateEventTool = defineTool({
     openWorldHint: false,
   },
   inputSchema: updateEventInputSchema,
-  outputSchema: z.strictObject({
-    event: eventOutputSchema,
+  outputSchema: notifyingEventWriteOutputSchema.extend({
     changes: z.array(z.enum(EventChange)),
-    notifications_sent: notificationsSentSchema,
   }),
   isVisible: isEventWriteToolVisible,
   // Without the Discord option: the MCP server cannot reach Discord

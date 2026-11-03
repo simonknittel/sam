@@ -143,7 +143,10 @@ const importDiscordEvent = async (
   ]);
 
   const notificationsSent = await triggerNotificationsAfterSave(context, [
-    { type: "EventCreated", payload: { eventId: event.id } },
+    {
+      type: "EventCreated",
+      payload: { eventId: event.id, actorCitizenId: null },
+    },
   ]);
 
   return {
@@ -190,7 +193,7 @@ const reconcileDiscordEvent = async (
   if (!existingEvent) return importDiscordEvent(context, scheduledEvent);
 
   /** A change of only the image sends no notification */
-  const notifications = buildEventChangeNotifications(existingEvent.id, {
+  const notifications = buildEventChangeNotifications(existingEvent.id, null, {
     startTime:
       existingEvent.startTime.getTime() !== scheduledEvent.startTime.getTime(),
     endTime:
@@ -235,10 +238,10 @@ const reconcileDiscordEvent = async (
     ]);
   }
 
-  const notificationsSent =
-    notifications.length > 0
-      ? await triggerNotificationsAfterSave(context, notifications)
-      : true;
+  const notificationsSent = await triggerNotificationsAfterSave(
+    context,
+    notifications,
+  );
 
   /**
    * The citizen of the Discord creator can come after the import of the
@@ -365,10 +368,6 @@ export const syncDiscordEvents = (
       const participants = await syncDiscordParticipants(
         context,
         scheduledEvent,
-        {
-          isNewEvent:
-            reconciliation.reconciliation === EventReconciliation.Created,
-        },
       );
       if (participants) {
         addedParticipantCount += participants.addedCount;

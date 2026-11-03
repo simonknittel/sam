@@ -4,12 +4,11 @@ import {
   removeEventManagers,
 } from "@sam-monorepo/application";
 import * as z from "zod";
-import { notificationsSentSchema } from "../../schemas.js";
 import { defineTool } from "../../toolDefinition.js";
 import { ToolGroup } from "../../toolGroup.js";
 import {
-  eventOutputSchema,
   isEventWriteToolVisible,
+  notifyingEventWriteOutputSchema,
 } from "./eventOutputSchema.js";
 
 export enum EventManagersAction {
@@ -36,10 +35,7 @@ export const updateEventManagersTool = defineTool({
       "The citizens who become managers or who lose the manager role. Managers can change the event, its participants, its managers and its lineup.",
     ),
   }),
-  outputSchema: z.strictObject({
-    event: eventOutputSchema,
-    notifications_sent: notificationsSentSchema,
-  }),
+  outputSchema: notifyingEventWriteOutputSchema,
   isVisible: isEventWriteToolVisible,
   handler: async (context, actor, { action, ...input }) => {
     switch (action) {

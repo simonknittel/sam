@@ -70,7 +70,7 @@ export const deleteCancelledDiscordEvents = async (
     context,
     cancelledEventIds.map((eventId) => ({
       type: "EventDeleted",
-      payload: { eventId },
+      payload: { eventId, actorCitizenId: null },
     })),
   );
 

@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { requireCitizen, requirePermission, type Actor } from "../actor.js";
+import { requireCitizen, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { ForbiddenError } from "../errors.js";
 import {
@@ -10,6 +10,7 @@ import { findVisibleEvent } from "../events/findVisibleEvent.js";
 import { requireParticipationEnabled } from "../events/participatableAppEvent.js";
 import { idSchema } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
+import { requireLineupPermissions } from "./lineupGuards.js";
 import {
   toEventLineupOutput,
   type GetEventLineupOutput,
@@ -35,8 +36,7 @@ export const getEventLineup = (
   input: GetEventLineupInput,
 ): Promise<GetEventLineupOutput> =>
   withSpan(context, "getEventLineup", async () => {
-    requirePermission(actor, "event", "read");
-    requirePermission(actor, "ship", "read");
+    requireLineupPermissions(actor);
     requireCitizen(actor);
 
     const event = await findVisibleEvent(context, actor, input.event_id);

@@ -1,9 +1,11 @@
-import type { Citizen, Prisma } from "@sam-monorepo/database/client";
+import type { Prisma } from "@sam-monorepo/database/client";
+import type { PermissionSet } from "@sam-monorepo/domain";
 import type { ApplicationContext } from "../../context.js";
 import {
   EVENT_RECIPIENT_SELECT,
   findEventRecipients,
   type EventNotificationRecipients,
+  type EventRecipientOptions,
 } from "./eventRecipients.js";
 import type { Recipient } from "./recipient.js";
 
@@ -27,20 +29,24 @@ type EventOrganizerInput = Prisma.EventGetPayload<{
 export const findEventOrganizers = (
   context: ApplicationContext,
   event: EventOrganizerInput,
-  excludedCitizenId: Citizen["id"],
+  options: EventRecipientOptions,
 ): Promise<Recipient[]> => {
   const organizerIds = event.managers.map((manager) => manager.id);
   if (event.createdById !== null) organizerIds.push(event.createdById);
 
-  return findEventRecipients(context, event, {
-    id: { not: excludedCitizenId },
-    OR: [
-      { id: { in: organizerIds } },
-      ...(event.discordCreatorId === null
-        ? []
-        : [{ discordId: event.discordCreatorId }]),
-    ],
-  });
+  return findEventRecipients(
+    context,
+    event,
+    {
+      OR: [
+        { id: { in: organizerIds } },
+        ...(event.discordCreatorId === null
+          ? []
+          : [{ discordId: event.discordCreatorId }]),
+      ],
+    },
+    options,
+  );
 };
 
 export interface FindEventOrganizerRecipientsInput {
@@ -62,6 +68,8 @@ export interface EventOrganizerRecipients extends EventNotificationRecipients {
 export const findEventOrganizerRecipients = async (
   context: ApplicationContext,
   input: FindEventOrganizerRecipientsInput,
+  /** See `EventRecipientOptions` */
+  additionalPermissionSets: readonly PermissionSet[] = [],
 ): Promise<EventOrganizerRecipients | null> => {
   const [event, citizen] = await Promise.all([
     context.prisma.event.findUnique({
@@ -78,6 +86,9 @@ export const findEventOrganizerRecipients = async (
   return {
     event: { id: event.id, name: event.name },
     citizen: { handle: citizen?.handle ?? null },
-    recipients: await findEventOrganizers(context, event, input.citizenId),
+    recipients: await findEventOrganizers(context, event, {
+      excludedCitizenId: input.citizenId,
+      additionalPermissionSets,
+    }),
   };
 };

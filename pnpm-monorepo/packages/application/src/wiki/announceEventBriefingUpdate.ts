@@ -55,10 +55,11 @@ export const isEventBriefingPublished = ({
   );
 
 /**
- * Tells the readers of the published briefing of an event that it changed.
- * The pages save each edit at once, thus a manager decides when a change is
- * ready, and the edits send no notifications themselves. The manager who
- * announces gets no notification (see `EventBriefingUpdated`).
+ * Tells the readers of the published briefing of an event and its organizers
+ * that it changed. The pages save each edit at once, thus a manager decides
+ * when a change is ready, and the edits send no notifications themselves.
+ * The manager who announces gets no notification (see
+ * `findEventBriefingUpdatedRecipients()`).
  *
  * @throws NotFoundError when the event does not exist or the actor cannot
  * see it
@@ -101,7 +102,7 @@ export const announceEventBriefingUpdate = (
     const notificationsSent = await triggerNotificationsAfterSave(context, [
       {
         type: "EventBriefingUpdated",
-        payload: { eventId: scope.event.id, announcedById: citizen.id },
+        payload: { eventId: scope.event.id, actorCitizenId: citizen.id },
       },
     ]);
 

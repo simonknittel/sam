@@ -16,7 +16,7 @@ import { EventErrorMessage } from "./eventErrors.js";
 import { participationTextSchema } from "./eventInputSchemas.js";
 import { requireManageableEvent } from "./eventManageGuard.js";
 import { isAllowedToManageEvent } from "./eventManageRules.js";
-import { loadEventOutput, type GetEventOutput } from "./getEvent.js";
+import { loadEventOutput, type NotifyingEventWriteOutput } from "./getEvent.js";
 import { requireParticipatableAppEvent } from "./participatableAppEvent.js";
 
 export const removeEventParticipantsInputSchema = z.object({
@@ -36,20 +36,14 @@ export type RemoveEventParticipantsInput = z.infer<
   typeof removeEventParticipantsInputSchema
 >;
 
-export interface RemoveEventParticipantsOutput {
-  readonly event: GetEventOutput;
+export interface RemoveEventParticipantsOutput extends NotifyingEventWriteOutput {
   readonly removed_citizen_ids: string[];
-  /**
-   * False when the participants are removed, but the notifications failed.
-   * The removal stands.
-   */
-  readonly notifications_sent: boolean;
 }
 
 /**
  * A manager cancels the sign-ups of citizens for an app event. The position
  * applications and the lineup assignments of the citizens at the event go
- * with them, and each citizen gets a notification.
+ * with them, and each citizen gets a notification, except the actor.
  */
 export const removeEventParticipants = (
   context: ApplicationContext,
@@ -139,16 +133,19 @@ export const removeEventParticipants = (
       })),
     );
 
+    // The actor gets no notification about the own removal
     const notificationsSent = await triggerNotificationsAfterSave(
       context,
-      citizenIds.map((citizenId) => ({
-        type: "EventParticipationRemoved",
-        payload: {
-          eventId: event.id,
-          citizenId,
-          reason,
-        },
-      })),
+      citizenIds
+        .filter((citizenId) => citizenId !== managerId)
+        .map((citizenId) => ({
+          type: "EventParticipationRemoved",
+          payload: {
+            eventId: event.id,
+            citizenId,
+            reason,
+          },
+        })),
     );
 
     return {

@@ -18,7 +18,7 @@ import {
   VISIBLE_EVENT_MANAGE_GUARD_SELECT,
 } from "./eventManageGuard.js";
 import { isAllowedToManageEvent } from "./eventManageRules.js";
-import { loadEventOutput, type GetEventOutput } from "./getEvent.js";
+import { loadEventOutput, type NotifyingEventWriteOutput } from "./getEvent.js";
 
 export const addEventManagersInputSchema = z.object({
   event_id: idSchema,
@@ -32,15 +32,6 @@ export const addEventManagersInputSchema = z.object({
 
 export type AddEventManagersInput = z.infer<typeof addEventManagersInputSchema>;
 
-export interface AddEventManagersOutput {
-  readonly event: GetEventOutput;
-  /**
-   * False when the managers are saved, but the notifications failed. The
-   * managers stand, thus the caller must not save them again.
-   */
-  readonly notifications_sent: boolean;
-}
-
 /**
  * Makes citizens managers of an event. Each new manager gets a
  * notification, except the actor.
@@ -49,7 +40,7 @@ export const addEventManagers = (
   context: ApplicationContext,
   actor: Actor,
   input: AddEventManagersInput,
-): Promise<AddEventManagersOutput> =>
+): Promise<NotifyingEventWriteOutput> =>
   withSpan(context, "addEventManagers", async () => {
     /**
      * Authorize the request
@@ -122,19 +113,15 @@ export const addEventManagers = (
       },
     ]);
 
-    const notifiedManagerIds = managerIdsToAdd.filter(
-      (managerId) => managerId !== actingManagerId,
+    const notificationsSent = await triggerNotificationsAfterSave(
+      context,
+      managerIdsToAdd
+        .filter((managerId) => managerId !== actingManagerId)
+        .map((managerId) => ({
+          type: "EventManagerAdded",
+          payload: { eventId: event.id, citizenId: managerId },
+        })),
     );
-    const notificationsSent =
-      notifiedManagerIds.length > 0
-        ? await triggerNotificationsAfterSave(
-            context,
-            notifiedManagerIds.map((managerId) => ({
-              type: "EventManagerAdded",
-              payload: { eventId: event.id, citizenId: managerId },
-            })),
-          )
-        : true;
 
     return {
       event: await loadEventOutput(context, actor, event.id),

@@ -96,6 +96,7 @@ test("an assignment notifies the new and the previous citizen, but not the actor
       payload: {
         eventId: event.id,
         citizenId: first!.id,
+        positionId: position.id,
         positionName: "Pilot",
       },
     },
@@ -104,6 +105,7 @@ test("an assignment notifies the new and the previous citizen, but not the actor
       payload: {
         eventId: event.id,
         citizenId: second!.id,
+        positionId: position.id,
         positionName: "Pilot",
       },
     },
@@ -146,7 +148,7 @@ test("a deletion notifies the citizens of the position and of its children, but 
         { citizenId: first!.id, positionName: "Co-Pilot" },
       ].map((payload) => ({
         type: "EventPositionUnassigned",
-        payload: { eventId: event.id, ...payload },
+        payload: { eventId: event.id, positionId: null, ...payload },
       })),
     ),
   );

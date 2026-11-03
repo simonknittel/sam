@@ -4,12 +4,11 @@ import {
   signUpForEvent,
 } from "@sam-monorepo/application";
 import * as z from "zod";
-import { notificationsSentSchema } from "../../schemas.js";
 import { defineTool } from "../../toolDefinition.js";
 import { ToolGroup } from "../../toolGroup.js";
 import {
-  eventOutputSchema,
   isEventWriteToolVisible,
+  notifyingEventWriteOutputSchema,
 } from "./eventOutputSchema.js";
 
 export enum MyEventParticipationAction {
@@ -38,10 +37,7 @@ export const updateMyEventParticipationTool = defineTool({
         action === MyEventParticipationAction.SignUp || comment === undefined,
       "comment is only for sign_up.",
     ),
-  outputSchema: z.strictObject({
-    event: eventOutputSchema,
-    notifications_sent: notificationsSentSchema,
-  }),
+  outputSchema: notifyingEventWriteOutputSchema,
   isVisible: isEventWriteToolVisible,
   handler: async (context, actor, { action, event_id, comment }) => {
     switch (action) {

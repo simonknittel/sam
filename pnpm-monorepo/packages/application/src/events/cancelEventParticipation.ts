@@ -10,11 +10,10 @@ import { withSpan } from "../withSpan.js";
 import { cancelParticipation } from "./cancelParticipation.js";
 import { createEventActivity } from "./eventActivity.js";
 import { EventErrorMessage } from "./eventErrors.js";
-import { loadEventOutput } from "./getEvent.js";
+import { loadEventOutput, type NotifyingEventWriteOutput } from "./getEvent.js";
 import { findActiveParticipation } from "./ownParticipation.js";
 import { requireOpenParticipatableAppEvent } from "./participatableAppEvent.js";
 import { buildCancellationNotifications } from "./participationChangeNotifications.js";
-import type { OwnParticipationWriteOutput } from "./signUpForEvent.js";
 
 export const cancelEventParticipationInputSchema = z.object({
   event_id: idSchema,
@@ -32,7 +31,7 @@ export const cancelEventParticipation = (
   context: ApplicationContext,
   actor: Actor,
   input: CancelEventParticipationInput,
-): Promise<OwnParticipationWriteOutput> =>
+): Promise<NotifyingEventWriteOutput> =>
   withSpan(context, "cancelEventParticipation", async () => {
     const citizenId = requireCitizen(actor).id;
     requirePermission(actor, "event", "read");
@@ -93,10 +92,10 @@ export const cancelEventParticipation = (
       { citizenId, vacatedPositionNames: cancellation.vacatedPositionNames },
     ]);
 
-    const notificationsSent =
-      notifications.length > 0
-        ? await triggerNotificationsAfterSave(context, notifications)
-        : true;
+    const notificationsSent = await triggerNotificationsAfterSave(
+      context,
+      notifications,
+    );
 
     return {
       event: await loadEventOutput(context, actor, event.id),

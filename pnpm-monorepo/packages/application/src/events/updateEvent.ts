@@ -49,7 +49,7 @@ import {
 import { toEventVisibility } from "./eventOutput.js";
 import { canActorSeeEvent } from "./eventVisibility.js";
 import { resolveVisibilityRoleIds } from "./eventVisibilityRoles.js";
-import { loadEventOutput, type GetEventOutput } from "./getEvent.js";
+import { loadEventOutput, type NotifyingEventWriteOutput } from "./getEvent.js";
 
 /** What an update changed */
 export enum EventChange {
@@ -123,15 +123,9 @@ export interface UpdateEventDiscordResult {
   readonly staysVisibleOnDiscord: boolean;
 }
 
-export interface UpdateEventOutput {
-  readonly event: GetEventOutput;
+export interface UpdateEventOutput extends NotifyingEventWriteOutput {
   /** Empty when the event already had the given values */
   readonly changes: EventChange[];
-  /**
-   * False when the changes are saved, but the notifications failed. The
-   * changes stand, thus the caller must not save them again.
-   */
-  readonly notifications_sent: boolean;
   /**
    * Only with the option `syncsDiscordPublication`. The MCP tools parse the
    * output with a strict schema, thus the key must not exist without the
@@ -482,7 +476,7 @@ export const updateEvent = (
       });
     await context.audit.create(auditEvents);
 
-    const notifications = buildEventChangeNotifications(event.id, {
+    const notifications = buildEventChangeNotifications(event.id, citizenId, {
       startTime: changesStartTime,
       endTime: changesEndTime,
       details:
@@ -492,21 +486,23 @@ export const updateEvent = (
     if (changesLineupEnabled && input.lineup_enabled)
       notifications.push({
         type: "EventLineupEnabled",
-        payload: { eventId: event.id },
+        payload: { eventId: event.id, actorCitizenId: citizenId },
       });
+    // The actor gets no notification about the own removal
     for (const cancelledCitizenId of clearedParticipation.cancelledCitizenIds)
-      notifications.push({
-        type: "EventParticipationRemoved",
-        payload: {
-          eventId: event.id,
-          citizenId: cancelledCitizenId,
-          reason: PARTICIPATION_DISABLED_REASON,
-        },
-      });
-    const notificationsSent =
-      notifications.length > 0
-        ? await triggerNotificationsAfterSave(context, notifications)
-        : true;
+      if (cancelledCitizenId !== citizenId)
+        notifications.push({
+          type: "EventParticipationRemoved",
+          payload: {
+            eventId: event.id,
+            citizenId: cancelledCitizenId,
+            reason: PARTICIPATION_DISABLED_REASON,
+          },
+        });
+    const notificationsSent = await triggerNotificationsAfterSave(
+      context,
+      notifications,
+    );
 
     /**
      * Carry the change over to Discord if the event is published there. A

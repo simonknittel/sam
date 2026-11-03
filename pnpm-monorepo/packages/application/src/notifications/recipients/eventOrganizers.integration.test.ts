@@ -13,32 +13,57 @@ import { findEventPositionApplicationRecipients } from "./eventPositionApplicati
 /** The event notifications reach the citizens who can log in and read events */
 const NOTIFIABLE_PERMISSION_STRINGS = ["login;manage", "event;read"];
 
+/** The lineup notifications also need the permission of the lineup page */
+const LINEUP_NOTIFIABLE_PERMISSION_STRINGS = [
+  ...NOTIFIABLE_PERMISSION_STRINGS,
+  "ship;read",
+];
+
 const DISCORD_CREATOR_ID = "discord-creator-id";
 
 /**
  * An event with each kind of organizer, and with a manager who causes the
- * change, a manager who cannot log in and a holder of `event;manage` who is
- * no organizer
+ * change, a manager who cannot log in, a manager who cannot open the lineup
+ * page and a holder of `event;manage` who is no organizer
  */
 const createOrganizedEvent = async () => {
-  const [creator, manager, discordCreator, actingManager, managerWithoutLogin] =
-    await Promise.all([
-      createCitizenWithPermissions("creator", NOTIFIABLE_PERMISSION_STRINGS),
-      createCitizenWithPermissions("manager", NOTIFIABLE_PERMISSION_STRINGS),
-      createCitizenWithPermissions(
-        "discord-creator",
-        NOTIFIABLE_PERMISSION_STRINGS,
-        [],
-        { discordId: DISCORD_CREATOR_ID },
-      ),
-      createCitizenWithPermissions(
-        "acting-manager",
-        NOTIFIABLE_PERMISSION_STRINGS,
-      ),
-      createCitizenWithPermissions("manager-without-login", ["event;read"]),
-    ]);
+  const [
+    creator,
+    manager,
+    discordCreator,
+    actingManager,
+    managerWithoutLogin,
+    managerWithoutShipRead,
+  ] = await Promise.all([
+    createCitizenWithPermissions(
+      "creator",
+      LINEUP_NOTIFIABLE_PERMISSION_STRINGS,
+    ),
+    createCitizenWithPermissions(
+      "manager",
+      LINEUP_NOTIFIABLE_PERMISSION_STRINGS,
+    ),
+    createCitizenWithPermissions(
+      "discord-creator",
+      LINEUP_NOTIFIABLE_PERMISSION_STRINGS,
+      [],
+      { discordId: DISCORD_CREATOR_ID },
+    ),
+    createCitizenWithPermissions(
+      "acting-manager",
+      LINEUP_NOTIFIABLE_PERMISSION_STRINGS,
+    ),
+    createCitizenWithPermissions("manager-without-login", [
+      "event;read",
+      "ship;read",
+    ]),
+    createCitizenWithPermissions(
+      "manager-without-ship-read",
+      NOTIFIABLE_PERMISSION_STRINGS,
+    ),
+  ]);
   await createCitizenWithPermissions("event-manager", [
-    ...NOTIFIABLE_PERMISSION_STRINGS,
+    ...LINEUP_NOTIFIABLE_PERMISSION_STRINGS,
     "event;manage",
     "othersEventPosition;manage",
   ]);
@@ -50,9 +75,12 @@ const createOrganizedEvent = async () => {
       createdById: creator.id,
       discordCreatorId: DISCORD_CREATOR_ID,
       managers: {
-        connect: [manager, actingManager, managerWithoutLogin].map(
-          (citizen) => ({ id: citizen.id }),
-        ),
+        connect: [
+          manager,
+          actingManager,
+          managerWithoutLogin,
+          managerWithoutShipRead,
+        ].map((citizen) => ({ id: citizen.id })),
       },
     },
   });
@@ -60,7 +88,9 @@ const createOrganizedEvent = async () => {
   return {
     event,
     actingManager,
-    expectedRecipientIds: [creator.id, manager.id, discordCreator.id],
+    /** The organizers who get a notification about the lineup */
+    lineupRecipientIds: [creator.id, manager.id, discordCreator.id],
+    managerWithoutShipRead,
   };
 };
 
@@ -73,7 +103,7 @@ beforeEach(async () => {
 });
 
 test("the organizers who can log in hear about the change of a citizen, the citizen does not", async () => {
-  const { event, actingManager, expectedRecipientIds } =
+  const { event, actingManager, lineupRecipientIds, managerWithoutShipRead } =
     await createOrganizedEvent();
   const { context } = createTestApplicationContext();
 
@@ -84,12 +114,12 @@ test("the organizers who can log in hear about the change of a citizen, the citi
 
   expect(result?.citizen).toEqual({ handle: "acting-manager" });
   expect(toSortedCitizenIds(result?.recipients)).toEqual(
-    expectedRecipientIds.toSorted(),
+    [...lineupRecipientIds, managerWithoutShipRead.id].toSorted(),
   );
 });
 
-test("a new application reaches the organizers without the applicant, a withdrawn one nobody", async () => {
-  const { event, actingManager, expectedRecipientIds } =
+test("a new application reaches the organizers who can open the lineup page without the applicant, a withdrawn one nobody", async () => {
+  const { event, actingManager, lineupRecipientIds } =
     await createOrganizedEvent();
   const position = await prisma.eventPosition.create({
     data: { eventId: event.id, name: "Pilot" },
@@ -105,7 +135,7 @@ test("a new application reaches the organizers without the applicant, a withdraw
   expect(result?.position).toEqual({ name: "Pilot" });
   expect(result?.citizen).toEqual({ handle: "acting-manager" });
   expect(toSortedCitizenIds(result?.recipients)).toEqual(
-    expectedRecipientIds.toSorted(),
+    lineupRecipientIds.toSorted(),
   );
 
   await prisma.eventPositionApplication.delete({

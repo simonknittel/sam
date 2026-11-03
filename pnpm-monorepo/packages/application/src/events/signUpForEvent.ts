@@ -4,7 +4,7 @@ import { ConflictError } from "../errors.js";
 import { triggerNotificationsAfterSave } from "../notifications.js";
 import { withSpan } from "../withSpan.js";
 import { EventErrorMessage } from "./eventErrors.js";
-import { loadEventOutput, type GetEventOutput } from "./getEvent.js";
+import { loadEventOutput, type NotifyingEventWriteOutput } from "./getEvent.js";
 import {
   findActiveParticipation,
   insertOwnParticipation,
@@ -13,17 +13,6 @@ import {
 } from "./ownParticipation.js";
 import { requireOpenParticipatableAppEvent } from "./participatableAppEvent.js";
 import { buildSignUpNotifications } from "./participationChangeNotifications.js";
-
-/** The output of the writes of the own participation */
-export interface OwnParticipationWriteOutput {
-  readonly event: GetEventOutput;
-  /**
-   * False when the change is saved, but the notifications of the organizers
-   * failed. The change stands. True also when the change needs no
-   * notification.
-   */
-  readonly notifications_sent: boolean;
-}
 
 const isAlreadySignedUp = (error: unknown) =>
   error instanceof ConflictError &&
@@ -39,7 +28,7 @@ export const signUpForEvent = (
   context: ApplicationContext,
   actor: Actor,
   input: EventParticipationInput,
-): Promise<OwnParticipationWriteOutput> =>
+): Promise<NotifyingEventWriteOutput> =>
   withSpan(context, "signUpForEvent", async () => {
     const citizenId = requireCitizen(actor).id;
     requirePermission(actor, "event", "read");
@@ -70,10 +59,10 @@ export const signUpForEvent = (
           citizenId,
         ]);
 
-        const notificationsSent =
-          notifications.length > 0
-            ? await triggerNotificationsAfterSave(context, notifications)
-            : true;
+        const notificationsSent = await triggerNotificationsAfterSave(
+          context,
+          notifications,
+        );
 
         return {
           event: await loadEventOutput(context, actor, event.id),

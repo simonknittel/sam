@@ -1,5 +1,5 @@
 import {
-  findEventParticipationRecipient,
+  findEventCitizenRecipient,
   type ApplicationContext,
 } from "@sam-monorepo/application";
 import { type Citizen, type Event } from "@sam-monorepo/database";
@@ -13,13 +13,13 @@ type Payload = {
 
 /**
  * The message links to the event page, thus only a citizen who can see the
- * event now gets it (see `findEventParticipationRecipient()`)
+ * event now gets it (see `findEventCitizenRecipient()`)
  */
 export const EventParticipationRemovedHandler = async (
   context: ApplicationContext,
   payload: Payload,
 ) => {
-  const result = await findEventParticipationRecipient(context, {
+  const result = await findEventCitizenRecipient(context, {
     eventId: payload.eventId,
     citizenId: payload.citizenId,
   });

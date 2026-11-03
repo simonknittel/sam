@@ -47,6 +47,16 @@ export const isAllowedToManagePositions = (
   actor.authorize("othersEventPosition", "manage");
 
 /**
+ * Whether a manager published the lineup and the participants see it: the
+ * lineup is enabled and the participation is not turned off (see
+ * `isLineupVisible()`). A change of a lineup that is not published notifies
+ * nobody: the publication tells each participant the own positions.
+ */
+export const isLineupPublished = (
+  event: Pick<Event, "lineupEnabled" | "participationEnabled">,
+) => event.lineupEnabled && event.participationEnabled;
+
+/**
  * The lineup shows to everybody when it is enabled, and to the managers of
  * the positions always. While the participation of the event is turned off,
  * the lineup shows to nobody.

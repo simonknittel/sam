@@ -1,6 +1,13 @@
-import type { Event, Prisma } from "@sam-monorepo/database/client";
+import type { Prisma } from "@sam-monorepo/database/client";
 import type { ApplicationContext } from "../../context.js";
+import { isLineupPublished } from "../../events/eventManageRules.js";
+import { LINEUP_PERMISSION_SETS } from "../../lineup/lineupGuards.js";
 import { findEventPositionTree } from "../../lineup/lineupOutput.js";
+import {
+  findEventOrganizerRecipients,
+  type EventOrganizerRecipients,
+  type FindEventOrganizerRecipientsInput,
+} from "./eventOrganizers.js";
 import { findEventParticipantRecipients } from "./eventParticipants.js";
 import {
   EVENT_RECIPIENT_SELECT,
@@ -8,16 +15,6 @@ import {
   type EventNotificationRecipients,
 } from "./eventRecipients.js";
 import type { Recipient } from "./recipient.js";
-
-/**
- * The participants see the lineup only after a manager published it, and
- * only while the participation is on (see `isLineupVisible()`). Thus a
- * change of a draft lineup notifies nobody: the publication tells each
- * participant the own positions.
- */
-const isLineupPublished = (
-  event: Pick<Event, "lineupEnabled" | "participationEnabled">,
-) => event.lineupEnabled && event.participationEnabled;
 
 const LINEUP_EVENT_RECIPIENT_SELECT = {
   id: true,
@@ -61,14 +58,19 @@ export interface EventLineupEnabledRecipients {
 }
 
 /**
- * The participants of the event who can see it now (see
- * `findEventParticipantRecipients()`), each with the own positions. Null
- * when the event does not exist, has no active participant, or when the
- * participants do not see the lineup anymore.
+ * The participants of the event who can see its lineup now (see
+ * `findEventParticipantRecipients()` and `LINEUP_PERMISSION_SETS`), without
+ * the excluded citizen, each with the own positions. Null when the event
+ * does not exist, has no active participant, or when the participants do
+ * not see the lineup anymore (see `isLineupPublished()`).
  */
 export const findEventLineupEnabledRecipients = async (
   context: ApplicationContext,
-  input: { readonly eventId: string },
+  input: {
+    readonly eventId: string;
+    /** The citizen who caused the notification gets none */
+    readonly excludedCitizenId?: string | null;
+  },
 ): Promise<EventLineupEnabledRecipients | null> => {
   const event = await context.prisma.event.findUnique({
     where: { id: input.eventId },
@@ -76,7 +78,11 @@ export const findEventLineupEnabledRecipients = async (
   });
   if (!event || !isLineupPublished(event)) return null;
 
-  const result = await findEventParticipantRecipients(context, input);
+  const result = await findEventParticipantRecipients(
+    context,
+    input,
+    LINEUP_PERMISSION_SETS,
+  );
   if (!result) return null;
 
   const assignedPositions = flattenPositionTree(
@@ -104,10 +110,11 @@ export interface EventPositionRecipients extends EventNotificationRecipients {
 
 /**
  * The citizen of a new assignment, when the citizen still holds the position,
- * sees the lineup and can see the event now (see `findEventRecipients()`).
- * Null when the position does not exist anymore, a later change gave it to a
- * different citizen (that change notifies on its own), or when the
- * participants do not see the lineup.
+ * the participants see the lineup (see `isLineupPublished()`) and the citizen
+ * can see the lineup now (see `findEventRecipients()` and
+ * `LINEUP_PERMISSION_SETS`). Null when the position does not exist anymore,
+ * a later change gave it to a different citizen (that change notifies on its
+ * own), or when the participants do not see the lineup.
  */
 export const findEventPositionAssignedRecipient = async (
   context: ApplicationContext,
@@ -131,32 +138,68 @@ export const findEventPositionAssignedRecipient = async (
   return {
     event: { id: position.event.id, name: position.event.name },
     positionName: position.name,
-    recipients: await findEventRecipients(context, position.event, {
-      id: input.citizenId,
-    }),
+    recipients: await findEventRecipients(
+      context,
+      position.event,
+      { id: input.citizenId },
+      { additionalPermissionSets: LINEUP_PERMISSION_SETS },
+    ),
   };
 };
 
 /**
- * The citizen who lost a position, when the citizen sees the lineup and can
- * see the event now (see `findEventRecipients()`). The position can be
- * deleted, thus the rule does not read it. Null when the event does not
- * exist or when the participants do not see the lineup.
+ * The citizen who lost a position, when the participants see the lineup
+ * (see `isLineupPublished()`) and the citizen can see the lineup now (see
+ * `findEventRecipients()` and `LINEUP_PERMISSION_SETS`). Null when the event
+ * does not exist, when the participants do not see the lineup, or when the
+ * citizen holds the position again: then the loss is not true anymore.
  */
 export const findEventPositionUnassignedRecipient = async (
   context: ApplicationContext,
-  input: { readonly eventId: string; readonly citizenId: string },
+  input: {
+    readonly eventId: string;
+    readonly citizenId: string;
+    /** Null when the change deleted the position */
+    readonly positionId: string | null;
+  },
 ): Promise<EventNotificationRecipients | null> => {
-  const event = await context.prisma.event.findUnique({
-    where: { id: input.eventId },
-    select: LINEUP_EVENT_RECIPIENT_SELECT,
-  });
-  if (!event || !isLineupPublished(event)) return null;
+  const [event, position] = await Promise.all([
+    context.prisma.event.findUnique({
+      where: { id: input.eventId },
+      select: LINEUP_EVENT_RECIPIENT_SELECT,
+    }),
+    input.positionId === null
+      ? null
+      : context.prisma.eventPosition.findUnique({
+          where: { id: input.positionId },
+          select: { citizenId: true },
+        }),
+  ]);
+  if (
+    !event ||
+    !isLineupPublished(event) ||
+    position?.citizenId === input.citizenId
+  )
+    return null;
 
   return {
     event: { id: event.id, name: event.name },
-    recipients: await findEventRecipients(context, event, {
-      id: input.citizenId,
-    }),
+    recipients: await findEventRecipients(
+      context,
+      event,
+      { id: input.citizenId },
+      { additionalPermissionSets: LINEUP_PERMISSION_SETS },
+    ),
   };
 };
+
+/**
+ * The organizers who hear that a participant cancelled and so vacated
+ * positions (see `findEventOrganizerRecipients()`), when they can see the
+ * lineup now (see `LINEUP_PERMISSION_SETS`)
+ */
+export const findEventPositionVacatedRecipients = (
+  context: ApplicationContext,
+  input: FindEventOrganizerRecipientsInput,
+): Promise<EventOrganizerRecipients | null> =>
+  findEventOrganizerRecipients(context, input, LINEUP_PERMISSION_SETS);

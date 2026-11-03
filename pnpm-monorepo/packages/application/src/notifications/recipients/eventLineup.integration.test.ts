@@ -11,10 +11,17 @@ import {
   findEventLineupEnabledRecipients,
   findEventPositionAssignedRecipient,
   findEventPositionUnassignedRecipient,
-} from "./eventLineupRecipients.js";
+} from "./eventLineup.js";
 
-/** The event notifications reach the citizens who can log in and read events */
-const NOTIFIABLE_PERMISSION_STRINGS = ["login;manage", "event;read"];
+/**
+ * The lineup notifications reach the citizens who can log in and open the
+ * lineup page
+ */
+const NOTIFIABLE_PERMISSION_STRINGS = [
+  "login;manage",
+  "event;read",
+  "ship;read",
+];
 
 const createAppEvent = (lineupEnabled: boolean) =>
   prisma.event.create({
@@ -34,7 +41,7 @@ beforeEach(async () => {
   await truncateAllTables();
 });
 
-test("a change of an assignment reaches the citizen only while the participants see the lineup", async () => {
+test("a change of an assignment reaches the citizen only while the participants see the lineup and the change is still true", async () => {
   const [pilot, replacement] = await Promise.all(
     ["pilot", "replacement"].map((handle) =>
       createCitizenWithPermissions(handle, NOTIFIABLE_PERMISSION_STRINGS),
@@ -46,13 +53,16 @@ test("a change of an assignment reaches the citizen only while the participants 
   });
   const { context } = createTestApplicationContext();
   const assignment = { positionId: position.id, citizenId: pilot!.id };
-  const loss = { eventId: event.id, citizenId: pilot!.id };
+  const loss = {
+    eventId: event.id,
+    citizenId: pilot!.id,
+    positionId: position.id,
+  };
 
   // A draft lineup: the publication tells the positions later
   expect(
     await findEventPositionAssignedRecipient(context, assignment),
   ).toBeNull();
-  expect(await findEventPositionUnassignedRecipient(context, loss)).toBeNull();
 
   await prisma.event.update({
     where: { id: event.id },
@@ -65,9 +75,8 @@ test("a change of an assignment reaches the citizen only while the participants 
   );
   expect(assignedResult?.positionName).toBe("Pilot");
   expect(toCitizenIds(assignedResult)).toEqual([pilot!.id]);
-  expect(
-    toCitizenIds(await findEventPositionUnassignedRecipient(context, loss)),
-  ).toEqual([pilot!.id]);
+  // The pilot holds the position again before the delivery of the loss
+  expect(await findEventPositionUnassignedRecipient(context, loss)).toBeNull();
 
   // A later change gave the position to a different citizen
   await prisma.eventPosition.update({
@@ -77,6 +86,9 @@ test("a change of an assignment reaches the citizen only while the participants 
   expect(
     await findEventPositionAssignedRecipient(context, assignment),
   ).toBeNull();
+  expect(
+    toCitizenIds(await findEventPositionUnassignedRecipient(context, loss)),
+  ).toEqual([pilot!.id]);
 
   // The participation is off: the lineup shows to nobody
   await prisma.event.update({
@@ -86,15 +98,19 @@ test("a change of an assignment reaches the citizen only while the participants 
   expect(await findEventPositionUnassignedRecipient(context, loss)).toBeNull();
 });
 
-test("the publication gives each participant the own positions in the order of the lineup page", async () => {
-  const [pilot, observer] = await Promise.all(
-    ["pilot", "observer"].map((handle) =>
+test("the publication gives each participant who can open the lineup page the own positions in the order of the page, without the actor", async () => {
+  const [pilot, observer, actor] = await Promise.all(
+    ["pilot", "observer", "actor"].map((handle) =>
       createCitizenWithPermissions(handle, NOTIFIABLE_PERMISSION_STRINGS),
     ),
   );
+  const withoutShipRead = await createCitizenWithPermissions(
+    "without-ship-read",
+    ["login;manage", "event;read"],
+  );
   const event = await createAppEvent(true);
   await prisma.eventParticipant.createMany({
-    data: [pilot!, observer!].map((citizen) => ({
+    data: [pilot!, observer!, actor!, withoutShipRead].map((citizen) => ({
       eventId: event.id,
       source: EventSource.APP,
       citizenId: citizen.id,
@@ -119,6 +135,7 @@ test("the publication gives each participant the own positions in the order of t
 
   const result = await findEventLineupEnabledRecipients(context, {
     eventId: event.id,
+    excludedCitizenId: actor!.id,
   });
 
   expect(result?.recipients).toHaveLength(2);

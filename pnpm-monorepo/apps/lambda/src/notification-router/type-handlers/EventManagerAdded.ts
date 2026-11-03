@@ -1,5 +1,5 @@
 import {
-  findEventParticipationRecipient,
+  findEventCitizenRecipient,
   type ApplicationContext,
 } from "@sam-monorepo/application";
 import { type Citizen, type Event } from "@sam-monorepo/database";
@@ -15,7 +15,7 @@ export const EventManagerAddedHandler = async (
   context: ApplicationContext,
   payload: Payload,
 ) => {
-  const result = await findEventParticipationRecipient(context, {
+  const result = await findEventCitizenRecipient(context, {
     eventId: payload.eventId,
     citizenId: payload.citizenId,
   });
