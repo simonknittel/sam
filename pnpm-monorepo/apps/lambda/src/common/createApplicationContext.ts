@@ -58,7 +58,11 @@ export const createApplicationContext = ({
   return {
     prisma,
     audit: createPrismaAuditWriter({ prisma, log }),
-    notifications: createEventBridgeNotificationTrigger({ emitEvents, source }),
+    notifications: createEventBridgeNotificationTrigger({
+      emitEvents,
+      source,
+      log,
+    }),
     email: createEventBridgeEmailRequester({ emitEvents, source }),
     log,
     tracer,
