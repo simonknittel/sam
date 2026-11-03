@@ -493,6 +493,110 @@
   }
 }
 
+/**
+ * A browser which supports a customizable select (`appearance: base-select`)
+ * draws the select and its open list itself, not the operating system. Then
+ * the list looks the same on all operating systems and looks like the
+ * popups of the comboboxes (see `SingleSelectComboboxFilter`). A browser
+ * without this support ignores the block. It shows the native list with the
+ * option colours of the block above.
+ */
+@layer base {
+  @supports (appearance: base-select) {
+    select,
+    ::picker(select) {
+      appearance: base-select;
+    }
+
+    /* The select clips its text at the content box, thus a long text does not
+       go below the arrow, as in a native select. The arrow is a background
+       image in the right padding: the clip also hides a `::picker-icon`
+       there. The padding is `!important`, because the padding utilities of
+       the selects do not keep space for the arrow. The arrow is the same as
+       in the triggers of the comboboxes: `FaChevronDown` in `size-3` and in
+       `brand-red-500`. */
+    select {
+      align-items: center;
+      white-space: nowrap;
+      overflow: clip;
+      overflow-clip-margin: content-box;
+      padding-inline-end: 2.25rem !important;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512' fill='%23b92222'%3E%3Cpath d='M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.875rem center;
+      background-size: 0.75rem;
+    }
+
+    select:open {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512' fill='%23b92222'%3E%3Cpath transform='rotate(180 224 256)' d='M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z'/%3E%3C/svg%3E");
+    }
+
+    select::picker-icon {
+      display: none;
+    }
+
+    ::picker(select) {
+      /* The list opens below the select, as the popups of the comboboxes. It
+         opens above the select only if below there is space for less than
+         10rem of the list (or the full list, if it is shorter). The browser
+         default opens the list on the side with more space. */
+      position-try-order: normal;
+      min-block-size: calc-size(max-content, min(size, 10rem));
+      /* The same height limit as the popups of the comboboxes. 100 % is the
+         space between the select and the edge of the viewport, which also
+         holds the two margins. */
+      max-block-size: min(20rem, 100% - 0.5rem);
+      margin-block: 0.25rem;
+      white-space: normal;
+      border: 1px solid var(--color-neutral-700);
+      border-radius: var(--radius-secondary);
+      background-color: var(--color-neutral-950);
+      padding-block: 0.25rem;
+      /* `shadow-xl shadow-black/30` */
+      box-shadow:
+        0 20px 25px -5px rgb(0 0 0 / 0.3),
+        0 8px 10px -6px rgb(0 0 0 / 0.3);
+    }
+
+    /* The horizontal padding is the same as the padding of the group label
+       of the browser, thus the check marks and the group labels align. */
+    option {
+      gap: 0.5rem;
+      background-color: transparent;
+      padding: 0.375rem 0.5rem;
+      font-weight: normal;
+      cursor: pointer;
+    }
+
+    option:enabled:hover,
+    option:focus-visible {
+      background-color: var(--color-neutral-800);
+      outline: none;
+    }
+
+    option:enabled:active {
+      background-color: var(--color-neutral-700);
+    }
+
+    option:disabled {
+      cursor: not-allowed;
+    }
+
+    option::checkmark {
+      color: var(--color-brand-red-300);
+    }
+
+    /* The group label inherits these styles. The options have their own
+       colour and font weight. */
+    optgroup {
+      background-color: transparent;
+      padding-block-start: 0.375rem;
+      color: var(--color-neutral-400);
+      font-weight: 600;
+    }
+  }
+}
+
 @utility background-primary {
   background:
     radial-gradient(hsla(0, 0%, 100%, 0.03) 1px, transparent 0),
