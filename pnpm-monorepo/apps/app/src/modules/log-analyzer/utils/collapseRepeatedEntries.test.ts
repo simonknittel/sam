@@ -23,6 +23,8 @@ const entry = (
   isoDate: new Date(second * 1000),
   message: null,
   collapseKey,
+  missionId: null,
+  contractName: null,
   citizen: { id: citizenId, handle: citizenId, deletedAt: null },
   isShared: false,
   isUploaded: false,

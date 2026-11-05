@@ -34,6 +34,47 @@ const disconnectionLine = (at: Date) =>
 const hoursAgo = (hours: number) =>
   new Date(Date.now() - hours * 60 * 60 * 1000);
 
+const HOURS_PER_DAY = 24;
+
+const daysAgo = (days: number) => hoursAgo(days * HOURS_PER_DAY);
+
+/** The value of a date input */
+const toDateValue = (date: Date) => date.toISOString().slice(0, 10);
+
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+interface BackupFile {
+  readonly name: string;
+  readonly lines: readonly string[];
+  readonly lastModified: number;
+}
+
+/** A log file which the game renamed at the start of the next session */
+const createBackupFile = (at: Date, line: string): BackupFile => {
+  const pad = (value: number) => String(value).padStart(2, "0");
+  const date = `${pad(at.getDate())} ${MONTHS[at.getMonth()]} ${pad(at.getFullYear() % 100)}`;
+  const time = `${pad(at.getHours())} ${pad(at.getMinutes())} ${pad(at.getSeconds())}`;
+
+  return {
+    name: `Game Build(12913470) ${date} (${time}).log`,
+    lines: [line],
+    lastModified: at.getTime(),
+  };
+};
+
 /** Rows the table renders on top of its header row */
 const HEADER_ROWS = 1;
 
@@ -47,9 +88,19 @@ const HEADER_ROWS = 1;
  * because it carries functions. That happens after the parse started and the
  * app catches it, thus it only leaves a message in the console.
  */
-const stubDirectoryPicker = (page: Page, lines: readonly string[]) =>
+const stubDirectoryPicker = (
+  page: Page,
+  lines: readonly string[],
+  backupFiles: readonly BackupFile[] = [],
+) =>
   page.addInitScript(
-    (fileLines: string[]) => {
+    ({
+      fileLines,
+      backups,
+    }: {
+      fileLines: string[];
+      backups: BackupFile[];
+    }) => {
       const createFile = () =>
         new File([fileLines.join("\n")], "Game.log", {
           type: "text/plain",
@@ -69,6 +120,20 @@ const stubDirectoryPicker = (page: Page, lines: readonly string[]) =>
         requestPermission: () => Promise.resolve("granted"),
         values: async function* () {
           yield fileHandle;
+
+          for (const { name, lines: backupLines, lastModified } of backups) {
+            yield {
+              kind: "file",
+              name,
+              getFile: () =>
+                Promise.resolve(
+                  new File([backupLines.join("\n")], name, {
+                    type: "text/plain",
+                    lastModified,
+                  }),
+                ),
+            };
+          }
         },
       };
 
@@ -80,7 +145,7 @@ const stubDirectoryPicker = (page: Page, lines: readonly string[]) =>
         },
       });
     },
-    [...lines],
+    { fileLines: [...lines], backups: [...backupFiles] },
   );
 
 const appendLogLines = (page: Page, lines: readonly string[]) =>
@@ -222,6 +287,34 @@ const selectFolder = (page: Page) =>
 
 const refresh = (page: Page) =>
   page.getByRole("button", { name: "Aktualisieren" }).click();
+
+const dateRangeDialog = (page: Page) =>
+  page.getByRole("dialog", { name: "Zeitraum", exact: true });
+
+/** The button names the active range after the word `Zeitraum` */
+const dateRangeButton = (page: Page) =>
+  page.getByRole("button", { name: /^Zeitraum/ });
+
+const openDateRange = (page: Page) =>
+  clickUntilVisible(dateRangeButton(page), dateRangeDialog(page));
+
+const applyDateRange = async (page: Page, from: Date, to: Date) => {
+  await openDateRange(page);
+
+  const dialog = dateRangeDialog(page);
+  await dialog.getByLabel("Von").fill(toDateValue(from));
+  await dialog.getByLabel("Bis").fill(toDateValue(to));
+  await dialog.getByRole("button", { name: "Anwenden" }).click();
+
+  await expect(dialog).toHaveCount(0);
+};
+
+const resetDateRange = async (page: Page) => {
+  await openDateRange(page);
+  await dateRangeDialog(page)
+    .getByRole("button", { name: "Zurücksetzen" })
+    .click();
+};
 
 /**
  * Collects the uploads the page sends from now on. A server action posts to
@@ -444,6 +537,240 @@ test("sharing uploads the matched entries of the selected types exactly once", a
  * (LIVE_MODE_PARSE_INTERVAL_MS in the app)
  */
 const LIVE_MODE_PARSE_INTERVAL = 10_000;
+
+test("a date range shows the entries of its files and a reset the rolling window", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, {
+    handle: "log-zeitraum",
+    permissionStrings: LOG_ANALYZER_PERMISSIONS,
+  });
+
+  await signIn(citizen.user);
+  await stubDirectoryPicker(
+    page,
+    [disconnectionLine(hoursAgo(1))],
+    [
+      createBackupFile(daysAgo(40), joinPuLine(daysAgo(40))),
+      createBackupFile(daysAgo(60), blueprintLine(daysAgo(60))),
+    ],
+  );
+  await page.goto(PAGE_PATH);
+
+  await selectFolder(page);
+  await expect(rowOf(page, "Verbindung getrennt")).toBeVisible();
+  await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 1);
+  await expect(page.getByText("1 von 3 Sessions")).toBeVisible();
+
+  await applyDateRange(page, daysAgo(42), daysAgo(38));
+
+  await expect(rowOf(page, "Shard-Beitritt")).toBeVisible();
+  await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 1);
+
+  await resetDateRange(page);
+
+  await expect(rowOf(page, "Verbindung getrennt")).toBeVisible();
+  await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 1);
+  await expect(dateRangeButton(page)).toHaveAccessibleName("Zeitraum");
+});
+
+test("a preset of the date range applies with one click", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, {
+    handle: "log-vorauswahl",
+    permissionStrings: LOG_ANALYZER_PERMISSIONS,
+  });
+
+  await signIn(citizen.user);
+  await stubDirectoryPicker(
+    page,
+    [disconnectionLine(hoursAgo(1))],
+    [
+      createBackupFile(daysAgo(20), joinPuLine(daysAgo(20))),
+      createBackupFile(daysAgo(60), blueprintLine(daysAgo(60))),
+    ],
+  );
+  await page.goto(PAGE_PATH);
+
+  await selectFolder(page);
+  await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 1);
+
+  await openDateRange(page);
+  await dateRangeDialog(page)
+    .getByRole("button", { name: "Letzte 30 Tage" })
+    .click();
+
+  await expect(dateRangeDialog(page)).toHaveCount(0);
+  await expect(rowOf(page, "Shard-Beitritt")).toBeVisible();
+  await expect(rowOf(page, "Verbindung getrennt")).toBeVisible();
+  await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 2);
+  await expect(dateRangeButton(page)).toHaveAccessibleName(/^Zeitraum: \d/);
+});
+
+test("a section sets all types of a column at once", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, {
+    handle: "log-bereich",
+    permissionStrings: LOG_ANALYZER_PERMISSIONS,
+  });
+
+  await signIn(citizen.user);
+  await page.goto(PAGE_PATH);
+  await openSettings(page);
+
+  const section = settingCheckbox(
+    page,
+    "Bereich Party",
+    SettingsColumn.ShowOthers,
+  );
+  const firstType = settingCheckbox(
+    page,
+    "Party-Einladung",
+    SettingsColumn.ShowOthers,
+  );
+  const secondType = settingCheckbox(
+    page,
+    "Party-Leader",
+    SettingsColumn.ShowOthers,
+  );
+  const otherSectionType = settingCheckbox(
+    page,
+    "Gestorben",
+    SettingsColumn.ShowOthers,
+  );
+
+  await settingToggle(page, "Bereich Party", SettingsColumn.ShowOthers).click();
+
+  await expect(section).toBeChecked();
+  await expect(firstType).toBeChecked();
+  await expect(secondType).toBeChecked();
+  await expect(otherSectionType).not.toBeChecked();
+
+  /** One type less: the section shows that only a part is on */
+  await settingToggle(
+    page,
+    "Party-Einladung",
+    SettingsColumn.ShowOthers,
+  ).click();
+
+  await expect(section).not.toBeChecked();
+  await expect(section).toHaveJSProperty("indeterminate", true);
+
+  /** A click on a section with a part of its types turns all of them on */
+  await settingToggle(page, "Bereich Party", SettingsColumn.ShowOthers).click();
+
+  await expect(firstType).toBeChecked();
+  await expect(section).toHaveJSProperty("indeterminate", false);
+
+  await settingToggle(page, "Bereich Party", SettingsColumn.ShowOthers).click();
+
+  await expect(firstType).not.toBeChecked();
+  await expect(secondType).not.toBeChecked();
+  await expect(section).not.toBeChecked();
+});
+
+test("a date range older than the rolling window uploads nothing", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, {
+    handle: "log-alt",
+    permissionStrings: LOG_ANALYZER_PERMISSIONS,
+  });
+  const recentLine = joinPuLine(hoursAgo(1));
+  const oldEventAt = daysAgo(40);
+
+  await signIn(citizen.user);
+  await stubDirectoryPicker(
+    page,
+    [recentLine],
+    [
+      createBackupFile(oldEventAt, joinPuLine(oldEventAt)),
+      /** The oldest log sets the earliest date of the range */
+      createBackupFile(daysAgo(60), blueprintLine(daysAgo(60))),
+    ],
+  );
+  await page.goto(PAGE_PATH);
+
+  await openSettings(page);
+  await settingToggle(page, "Shard-Beitritt", SettingsColumn.Share).click();
+  await closeSettings(page);
+
+  await selectFolder(page);
+
+  const sharedLines = () =>
+    prisma.logAnalyzerEntry
+      .findMany({
+        where: { createdById: citizen.entity.id },
+        select: { rawLine: true },
+      })
+      .then((entries) => entries.map((entry) => entry.rawLine));
+
+  await expect.poll(sharedLines).toEqual([recentLine]);
+
+  const uploads = recordUploads(page);
+  await applyDateRange(page, daysAgo(42), daysAgo(38));
+
+  /** The entry of the shared type is on the screen, thus the read found it */
+  await expect(
+    page.locator(`time[datetime="${oldEventAt.toISOString()}"]`),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Aktualisieren" }),
+  ).toBeEnabled();
+
+  expect(uploads).toEqual([]);
+  expect(await sharedLines()).toEqual([recentLine]);
+});
+
+test("a date range reaches shared entries older than the rolling window", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const viewer = await createCitizen(prisma, {
+    handle: "log-archiv",
+    permissionStrings: LOG_ANALYZER_PERMISSIONS,
+  });
+  const uploader = await createCitizen(prisma, { handle: "log-alt-teiler" });
+  const eventAt = daysAgo(40);
+
+  await createLogAnalyzerEntry(prisma, {
+    type: LogAnalyzerEntryType.JoinPu,
+    rawLine: joinPuLine(eventAt),
+    eventAt,
+    createdById: uploader.entity.id,
+  });
+
+  await signIn(viewer.user);
+  await page.goto(PAGE_PATH);
+
+  await openSettings(page);
+  await settingToggle(
+    page,
+    "Shard-Beitritt",
+    SettingsColumn.ShowOthers,
+  ).click();
+  await closeSettings(page);
+
+  await expect(tableRows(page)).toHaveCount(0);
+
+  await applyDateRange(page, daysAgo(42), daysAgo(38));
+
+  await expect(rowOf(page, "Shard-Beitritt")).toBeVisible();
+  await expect(
+    rowOf(page, "Shard-Beitritt").getByRole("link", { name: "log-alt-teiler" }),
+  ).toBeVisible();
+});
 
 test("live mode reads the lines which the game adds to the log", async ({
   page,

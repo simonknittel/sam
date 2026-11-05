@@ -3,6 +3,7 @@ import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import { Tooltip } from "@/modules/common/components/Tooltip";
 import clsx from "clsx";
+import type { ReactNode } from "react";
 import { FaInfoCircle } from "react-icons/fa";
 import { TfiReload } from "react-icons/tfi";
 import { EntrySettings } from "./EntrySettings";
@@ -12,15 +13,17 @@ import { OverlayButton } from "./OverlayButton";
 interface Props {
   readonly className?: string;
   readonly onRefresh: () => void;
+  readonly children: ReactNode;
 }
 
-export const Toolbar = ({ className, onRefresh }: Props) => {
+export const Toolbar = ({ className, onRefresh, children }: Props) => {
   const {
     isPending,
     isAutostartEnabled,
     setIsAutostartEnabled,
     isLiveModeEnabled,
     setIsLiveModeEnabled,
+    isLivePaused,
   } = useLogAnalyzerContext();
 
   return (
@@ -65,6 +68,7 @@ export const Toolbar = ({ className, onRefresh }: Props) => {
         }
         labelClassName="w-auto"
         checked={isLiveModeEnabled}
+        disabled={isLivePaused}
         onChange={(e) => setIsLiveModeEnabled(e.target.checked)}
       />
 
@@ -99,6 +103,8 @@ export const Toolbar = ({ className, onRefresh }: Props) => {
       <OverlayButton />
 
       <EntrySettings />
+
+      {children}
     </div>
   );
 };

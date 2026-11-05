@@ -77,7 +77,7 @@ describe("createLogFileReader", () => {
       for (let size = 1; size <= bytes.length; size += 1) {
         const content = bytes.subarray(0, size);
 
-        const matches = await readLogFiles(
+        const { matches } = await readLogFiles(
           [createLogFile(content, size)],
           false,
         );
@@ -106,15 +106,19 @@ describe("createLogFileReader", () => {
 
     await readLogFiles([createLogFile(LOG_CONTENT, 1)], false);
 
-    expect(await readLogFiles([createLogFile(LOG_CONTENT, 1)], false)).toEqual(
-      [],
+    const { matches: repeatedMatches } = await readLogFiles(
+      [createLogFile(LOG_CONTENT, 1)],
+      false,
     );
+    expect(repeatedMatches).toEqual([]);
 
     const grownFile = createLogFile(`${LOG_CONTENT}\r\n${newLine}`, 2);
-    const matches = await readLogFiles([grownFile], false);
+    const { matches } = await readLogFiles([grownFile], false);
 
     expect(matches.map((match) => match.fullMatch)).toEqual([newLine]);
-    expect(toMatchKeys(await readLogFiles([grownFile], true))).toEqual(
+
+    const { matches: allMatches } = await readLogFiles([grownFile], true);
+    expect(toMatchKeys(allMatches)).toEqual(
       toMatchKeys(matchWholeText(`${LOG_CONTENT}\r\n${newLine}`)),
     );
   });
@@ -127,13 +131,81 @@ describe("createLogFileReader", () => {
 
     /** Longer than the first file, thus only its other bytes tell it apart */
     const longerContent = `${otherContent}\n${otherContent}`;
-    expect(
-      toMatchKeys(await readLogFiles([createLogFile(longerContent, 2)], false)),
-    ).toEqual(toMatchKeys(matchWholeText(longerContent)));
+    const { matches: longerMatches } = await readLogFiles(
+      [createLogFile(longerContent, 2)],
+      false,
+    );
+    expect(toMatchKeys(longerMatches)).toEqual(
+      toMatchKeys(matchWholeText(longerContent)),
+    );
 
-    expect(
-      toMatchKeys(await readLogFiles([createLogFile(otherContent, 3)], false)),
-    ).toEqual(toMatchKeys(matchWholeText(otherContent)));
+    const { matches: otherMatches } = await readLogFiles(
+      [createLogFile(otherContent, 3)],
+      false,
+    );
+    expect(toMatchKeys(otherMatches)).toEqual(
+      toMatchKeys(matchWholeText(otherContent)),
+    );
+  });
+
+  test("does not read a file again which left the selection and came back", async () => {
+    const readLogFiles = createLogFileReader();
+    const backup = createLogFile(LOG_CONTENT, 1);
+    const otherBackup = {
+      path: "LIVE/logbackups/other.log",
+      file: new File([LOG_CONTENT], "other.log", { lastModified: 1 }),
+    };
+
+    await readLogFiles([backup], false);
+    await readLogFiles([otherBackup], false);
+
+    const { matches, readFileCount } = await readLogFiles(
+      [backup, otherBackup],
+      false,
+    );
+
+    expect(matches).toEqual([]);
+    expect(readFileCount).toBe(0);
+  });
+
+  test("a stopped read gives the matches of the files which it completed", async () => {
+    const readLogFiles = createLogFileReader();
+    const firstFile = createLogFile(LOG_CONTENT, 1);
+    const secondFile = {
+      path: "LIVE/logbackups/second.log",
+      file: new File([LOG_CONTENT], "second.log", { lastModified: 1 }),
+    };
+
+    let isStopped = false;
+    const stoppedRead = await readLogFiles([firstFile, secondFile], false, {
+      onProgress: () => {
+        isStopped = true;
+      },
+      shouldStop: () => isStopped,
+    });
+
+    expect(stoppedRead.readFileCount).toBe(1);
+    expect(toMatchKeys(stoppedRead.matches)).toEqual(
+      toMatchKeys(matchWholeText(LOG_CONTENT)),
+    );
+
+    const nextRead = await readLogFiles([firstFile, secondFile], false);
+    expect(nextRead.readFileCount).toBe(1);
+  });
+
+  test("reports the files and the bytes of a read", async () => {
+    const readLogFiles = createLogFileReader();
+    const logFile = createLogFile(LOG_CONTENT, 1);
+    const onProgress = vi.fn();
+
+    await readLogFiles([logFile], false, { onProgress });
+
+    expect(onProgress).toHaveBeenCalledExactlyOnceWith({
+      fileCount: 1,
+      readFileCount: 1,
+      byteCount: logFile.file.size,
+      readByteCount: logFile.file.size,
+    });
   });
 
   test("skips a line above the length limit of the server and counts it", async () => {
@@ -146,7 +218,7 @@ describe("createLogFileReader", () => {
     );
     const validLine = joinPuLine.replace("2025-06-22", "2026-09-02");
 
-    const matches = await readLogFiles(
+    const { matches } = await readLogFiles(
       [createLogFile([overlongLine, validLine].join("\n"), 1)],
       false,
     );

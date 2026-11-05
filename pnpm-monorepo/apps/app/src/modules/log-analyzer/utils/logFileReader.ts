@@ -4,7 +4,7 @@ import {
   MAXIMUM_LOG_ANALYZER_RAW_LINE_LENGTH,
 } from "@sam-monorepo/domain";
 import { findPrecedingIsoDate } from "./findPrecedingIsoDate";
-import type { LogFile, RawMatch } from "./types";
+import type { LogFile, RawMatch, ReadProgress, ReadResult } from "./types";
 
 const LINE_FEED = 0x0a;
 
@@ -37,11 +37,12 @@ const FILE_START: ReadPosition = {
 
 /**
  * V8 keeps a substring as a view into the string it came from. The state of a
- * file keeps its date for a long time, thus it keeps a copy that does not
- * hold the whole text of the file in memory.
+ * file and the matches of a read live longer than the text of one file, thus
+ * they keep a copy. Without it, a read of all logs of a year holds the whole
+ * text of these logs in memory until it ends.
  */
-const copyString = (value: string) =>
-  JSON.parse(JSON.stringify(value)) as string;
+const copyValue = <Value>(value: Value) =>
+  JSON.parse(JSON.stringify(value)) as Value;
 
 /**
  * The start and the end of the last line which ends with a line feed. Both
@@ -84,10 +85,34 @@ const readNewBytes = async (
 };
 
 /**
+ * The patterns of each marker. The sticky flag makes the expression try one
+ * position only, and the multiline flag makes `^` and `$` work on the lines
+ * of the whole text.
+ */
+const PATTERNS_BY_MARKER = Map.groupBy(
+  Object.values(LogAnalyzerEntryType).map((type) => {
+    const { marker, regex, takesTimeOfPrecedingLine } =
+      LOG_ANALYZER_ENTRY_PATTERNS[type];
+
+    return {
+      type,
+      marker,
+      lineRegex: new RegExp(regex.source, "my"),
+      takesTimeOfPrecedingLine,
+    };
+  }),
+  ({ marker }) => marker,
+);
+
+/**
  * Adds the matches of the text to `matches` and returns how many it skipped.
  * The server refuses a whole upload request when one raw line is longer than
  * its limit. A line above the limit is therefore not an entry, so that it
  * does not stop the upload of the other lines.
+ *
+ * The scan looks for the markers and runs the expressions only on the lines
+ * which hold one. A scan of the whole text for each expression takes about
+ * seven times as long on real logs.
  */
 const collectMatches = (
   text: string,
@@ -96,29 +121,38 @@ const collectMatches = (
 ) => {
   let skippedOverlongLineCount = 0;
 
-  for (const type of Object.values(LogAnalyzerEntryType)) {
-    const { regex, takesTimeOfPrecedingLine } =
-      LOG_ANALYZER_ENTRY_PATTERNS[type];
+  for (const [marker, patterns] of PATTERNS_BY_MARKER) {
+    for (
+      let markerIndex = text.indexOf(marker);
+      markerIndex !== -1;
+      markerIndex = text.indexOf(marker, markerIndex + marker.length)
+    ) {
+      const lineStart = text.lastIndexOf("\n", markerIndex) + 1;
 
-    for (const match of text.matchAll(regex)) {
-      if (!match.groups) continue;
+      for (const { type, lineRegex, takesTimeOfPrecedingLine } of patterns) {
+        lineRegex.lastIndex = lineStart;
+        const match = lineRegex.exec(text);
+        if (!match?.groups) continue;
 
-      const isoDate = takesTimeOfPrecedingLine
-        ? (findPrecedingIsoDate(text, match.index) ?? isoDateBeforeText)
-        : match.groups.isoDate;
-      if (!isoDate) continue;
+        const isoDate = takesTimeOfPrecedingLine
+          ? (findPrecedingIsoDate(text, match.index) ?? isoDateBeforeText)
+          : match.groups.isoDate;
+        if (!isoDate) continue;
 
-      if (match[0].length > MAXIMUM_LOG_ANALYZER_RAW_LINE_LENGTH) {
-        skippedOverlongLineCount += 1;
-        continue;
+        if (match[0].length > MAXIMUM_LOG_ANALYZER_RAW_LINE_LENGTH) {
+          skippedOverlongLineCount += 1;
+          continue;
+        }
+
+        matches.push(
+          copyValue({
+            type,
+            isoDate,
+            fullMatch: match[0],
+            groups: match.groups,
+          }),
+        );
       }
-
-      matches.push({
-        type,
-        isoDate,
-        fullMatch: match[0],
-        groups: match.groups,
-      });
     }
   }
 
@@ -167,46 +201,73 @@ const readFile = async (
     isoDateBeforeOffset:
       isoDateBeforeLastLine === null
         ? position.isoDateBeforeOffset
-        : copyString(isoDateBeforeLastLine),
+        : copyValue(isoDateBeforeLastLine),
   };
 };
+
+interface ReadOptions {
+  /** Runs after each file which the read took from the disk. */
+  readonly onProgress?: (progress: ReadProgress) => void;
+  /** Asked before each file. True stops the read. */
+  readonly shouldStop?: () => boolean;
+}
 
 /**
  * Finds the matches of all patterns in the log files. After the first read,
  * a read gives only the matches of the lines which were added since the read
  * before it, so that live mode does not read the whole window every few
- * seconds. It can give a match a second time.
+ * seconds. It can give a match a second time. A file which leaves the
+ * selection keeps its position, thus a wider window reads only what is new.
  *
  * `isFullRead` reads all files from their start and gives all matches again.
  */
 export const createLogFileReader = () => {
   const states = new Map<string, FileState>();
 
-  return async (files: readonly LogFile[], isFullRead: boolean) => {
+  return async (
+    files: readonly LogFile[],
+    isFullRead: boolean,
+    { onProgress, shouldStop }: ReadOptions = {},
+  ): Promise<ReadResult> => {
     if (isFullRead) states.clear();
 
-    /** A file which left the window is read in full when it comes back */
-    const paths = new Set(files.map((logFile) => logFile.path));
-    for (const path of states.keys()) {
-      if (!paths.has(path)) states.delete(path);
-    }
+    const changedFiles = files.filter(({ path, file }) => {
+      const state = states.get(path);
+      return (
+        state?.size !== file.size || state.lastModified !== file.lastModified
+      );
+    });
+    const byteCount = changedFiles.reduce(
+      (sum, { file }) => sum + file.size,
+      0,
+    );
 
     const matches: RawMatch[] = [];
+    let readFileCount = 0;
+    let readByteCount = 0;
 
-    for (const logFile of files) {
+    for (const logFile of changedFiles) {
+      if (shouldStop?.()) break;
+
       const { path, file } = logFile;
-      const state = states.get(path);
-      if (state?.size === file.size && state.lastModified === file.lastModified)
-        continue;
 
       try {
-        states.set(path, await readFile(logFile, state, matches));
+        states.set(path, await readFile(logFile, states.get(path), matches));
       } catch (error) {
         /** The state stays, thus the next read tries the same lines again */
         console.error("[Log Analyzer] Error reading %s:", path, error);
       }
+
+      readFileCount += 1;
+      readByteCount += file.size;
+      onProgress?.({
+        fileCount: changedFiles.length,
+        readFileCount,
+        byteCount,
+        readByteCount,
+      });
     }
 
-    return matches;
+    return { matches, readFileCount, readByteCount };
   };
 };

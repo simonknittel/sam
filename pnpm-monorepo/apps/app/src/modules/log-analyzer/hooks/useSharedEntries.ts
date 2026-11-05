@@ -1,14 +1,15 @@
 "use client";
 
+import { getDateRangeFilter } from "@/modules/common/utils/getDateRangeFilter";
 import { api, type RouterOutputs } from "@/trpc/react";
 import {
   clampLogAnalyzerDaysToLoad,
   matchLogAnalyzerEntryLine,
   toLogAnalyzerEntryType,
 } from "@sam-monorepo/domain";
-import { useEffect, useEffectEvent, useRef } from "react";
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { useLogAnalyzerContext } from "../components/LogAnalyzerContext";
-import { deleteEntriesBefore, getWindowStart } from "../utils/entryWindow";
+import { hasDateRange } from "../utils/entryWindow";
 import { LIVE_MODE_DOWNLOAD_INTERVAL_MS } from "../utils/liveMode";
 import {
   createEntryKey,
@@ -52,11 +53,20 @@ const toEntry = (row: SharedEntry, isNew: boolean): IEntry | null => {
  * One request goes out for each cycle. A response which is full leaves the
  * remaining entries for the next cycle.
  *
- * Returns the function of the refresh button.
+ * A date range reaches events which that polling does not reach, thus it
+ * loads its own entries, one page after the other.
+ *
+ * Returns the function of the refresh button, and whether the entries of the
+ * date range are on their way.
  */
 export const useSharedEntries = () => {
-  const { isSharedViewEnabled, isLiveModeEnabled, daysToLoad, setEntries } =
-    useLogAnalyzerContext();
+  const {
+    isSharedViewEnabled,
+    isLiveModeActive,
+    daysToLoad,
+    dateRange,
+    setEntries,
+  } = useLogAnalyzerContext();
 
   const utils = api.useUtils();
 
@@ -74,25 +84,39 @@ export const useSharedEntries = () => {
   /** The generation whose request is on its way, so two never overlap. */
   const fetchingGenerationRef = useRef<number | null>(null);
 
+  /** Counts the loads of a date range. A newer load stops the older one. */
+  const dateRangeLoadRef = useRef(0);
+  const isDateRangeNeeded = isSharedViewEnabled && hasDateRange(dateRange);
+  /** A new object for each load, also when the view returns to the same range */
+  const dateRangeRequest = useMemo(
+    () => ({ dateRange, isSharedViewEnabled }),
+    [dateRange, isSharedViewEnabled],
+  );
+  /** The request whose load ended. Compared by identity. */
+  const [loadedRequest, setLoadedRequest] = useState<
+    typeof dateRangeRequest | null
+  >(null);
+
+  const addEntries = (rows: readonly SharedEntry[], isNew: boolean) => {
+    if (rows.length <= 0) return;
+
+    setEntries((previousEntries) => {
+      const newEntries = new Map(previousEntries);
+
+      for (const row of rows) {
+        const entry = toEntry(row, isNew);
+        /** A local entry of the same line wins: it is the user's own event */
+        if (!entry || newEntries.has(entry.key)) continue;
+        newEntries.set(entry.key, entry);
+      }
+
+      return newEntries;
+    });
+  };
+
   const addSharedEntries = (data: SharedEntriesResponse) => {
-    const isNew = hasLoadedRef.current;
+    addEntries(data.entries, hasLoadedRef.current);
     hasLoadedRef.current = true;
-
-    if (data.entries.length > 0) {
-      setEntries((previousEntries) => {
-        const newEntries = new Map(previousEntries);
-
-        for (const row of data.entries) {
-          const entry = toEntry(row, isNew);
-          /** A local entry of the same line wins: it is the user's own event */
-          if (!entry || newEntries.has(entry.key)) continue;
-          newEntries.set(entry.key, entry);
-        }
-
-        deleteEntriesBefore(newEntries, getWindowStart(daysToLoad));
-        return newEntries;
-      });
-    }
 
     if (data.cursorId) cursorRef.current = data.cursorId;
   };
@@ -123,9 +147,47 @@ export const useSharedEntries = () => {
       fetchingGenerationRef.current = null;
   };
 
+  const loadDateRange = async () => {
+    dateRangeLoadRef.current += 1;
+    const load = dateRangeLoadRef.current;
+
+    if (!isDateRangeNeeded) return;
+
+    const { gte, lt } = getDateRangeFilter(dateRange.from, dateRange.to);
+    let cursorId: string | undefined;
+
+    try {
+      do {
+        /** The vanilla client keeps no copy of the pages in the query cache */
+        const page =
+          await utils.client.logAnalyzer.getSharedEntriesInRange.query({
+            from: gte,
+            to: lt,
+            cursorId,
+          });
+
+        if (load !== dateRangeLoadRef.current) return;
+
+        addEntries(page.entries, false);
+        cursorId = page.nextCursorId ?? undefined;
+      } while (cursorId);
+    } catch (error) {
+      console.error(
+        "[Log Analyzer] Error loading the shared entries of a date range:",
+        error,
+      );
+    }
+
+    if (load === dateRangeLoadRef.current) setLoadedRequest(dateRangeRequest);
+  };
+
   /** A changed `daysToLoad` must not restart the interval or load again */
   const fetchSharedEntriesFromEffect = useEffectEvent(() => {
     void fetchSharedEntries();
+  });
+
+  const loadDateRangeFromEffect = useEffectEvent(() => {
+    void loadDateRange();
   });
 
   useEffect(() => {
@@ -141,17 +203,27 @@ export const useSharedEntries = () => {
   }, [isSharedViewEnabled]);
 
   useEffect(() => {
-    if (!isSharedViewEnabled || !isLiveModeEnabled) return;
+    loadDateRangeFromEffect();
+  }, [dateRangeRequest]);
+
+  useEffect(() => {
+    if (!isSharedViewEnabled || !isLiveModeActive) return;
 
     const interval = window.setInterval(() => {
       fetchSharedEntriesFromEffect();
     }, LIVE_MODE_DOWNLOAD_INTERVAL_MS);
 
     return () => window.clearInterval(interval);
-  }, [isLiveModeEnabled, isSharedViewEnabled]);
+  }, [isLiveModeActive, isSharedViewEnabled]);
 
-  return () => {
+  const refreshSharedEntries = () => {
     if (!isSharedViewEnabled) return;
     void fetchSharedEntries();
+    void loadDateRange();
+  };
+
+  return {
+    refreshSharedEntries,
+    isLoadingDateRange: isDateRangeNeeded && loadedRequest !== dateRangeRequest,
   };
 };

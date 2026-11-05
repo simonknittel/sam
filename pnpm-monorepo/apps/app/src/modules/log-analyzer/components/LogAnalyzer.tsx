@@ -10,25 +10,54 @@ import { track } from "@plausible-analytics/tracker";
 import { LogAnalyzerEntryType } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { get, set } from "idb-keyval";
-import { useEffect, useEffectEvent, useRef, type MouseEvent } from "react";
+import {
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+  type MouseEvent,
+} from "react";
 import { FaFileArrowUp } from "react-icons/fa6";
 import { useEntryUpload } from "../hooks/useEntryUpload";
 import { useLogParser } from "../hooks/useLogParser";
 import { useSharedEntries } from "../hooks/useSharedEntries";
-import { deleteEntriesBefore, getWindowStart } from "../utils/entryWindow";
-import { getFilesRecursively } from "../utils/getFilesRecursively";
+import {
+  getEntryWindow,
+  hasDateRange,
+  isInWindow,
+  NO_DATE_RANGE,
+} from "../utils/entryWindow";
+import { getLogFilesRecursively } from "../utils/getLogFilesRecursively";
 import { LIVE_MODE_PARSE_INTERVAL_MS } from "../utils/liveMode";
 import {
   createEntryKey,
   deriveEntryFields,
   type IEntry,
 } from "../utils/PATTERNS";
-import type { LogFile } from "../utils/types";
+import {
+  selectLogFiles,
+  summarizeLogSelection,
+  type LogSelection,
+} from "../utils/selectLogFiles";
+import type { LogFile, ReadProgress } from "../utils/types";
+import { DateRangeSettings } from "./DateRangeSettings";
 import { Introduction } from "./Introduction";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 import { LogAnalyzerTable } from "./LogAnalyzerTable";
 import { useOverlay } from "./OverlayContext";
+import { ReadStatus } from "./ReadStatus";
 import { Toolbar } from "./Toolbar";
+
+const BYTES_PER_MEGABYTE = 1_000_000;
+const MILLISECONDS_PER_SECOND = 1_000;
+
+const trackEvent = (eventName: string, props: Record<string, string>) => {
+  try {
+    track(eventName, { props, interactive: false });
+  } catch {
+    // Tracking failure should not affect log parsing
+  }
+};
 
 interface Props {
   readonly className?: string;
@@ -42,7 +71,9 @@ export const LogAnalyzer = ({ className }: Props) => {
     startTransition,
     isAutostartEnabled,
     isLiveModeEnabled,
+    isLiveModeActive,
     daysToLoad,
+    dateRange,
     ownEntryTypes,
     entries,
     setEntries,
@@ -51,7 +82,7 @@ export const LogAnalyzer = ({ className }: Props) => {
   const authentication = useAuthentication();
   const { pipWindow } = useOverlay();
   const uploadEntries = useEntryUpload();
-  const refreshSharedEntries = useSharedEntries();
+  const { refreshSharedEntries, isLoadingDateRange } = useSharedEntries();
 
   const sessionCitizen = authentication ? authentication.session.entity : null;
   /** The signed-in citizen is never a deleted one */
@@ -59,7 +90,25 @@ export const LogAnalyzer = ({ className }: Props) => {
     ? { ...sessionCitizen, deletedAt: null }
     : null;
 
-  const parseLogFiles = useLogParser();
+  const { parseLogFiles, stopReads } = useLogParser();
+
+  const [logSelection, setLogSelection] = useState<LogSelection | null>(null);
+  const [readProgress, setReadProgress] = useState<ReadProgress | null>(null);
+
+  /** The files of the last walk through the folder, by their path. */
+  const knownLogFilesRef = useRef<ReadonlyMap<string, LogFile>>(new Map());
+
+  /**
+   * Counts the date ranges. A cycle of an older range stops after the walk
+   * through the folder, before the worker has a request to stop.
+   */
+  const dateRangeRunRef = useRef(0);
+
+  /** A read can take long, and it must upload with the settings of its end */
+  const uploadEntriesRef = useRef(uploadEntries);
+  useEffect(() => {
+    uploadEntriesRef.current = uploadEntries;
+  }, [uploadEntries]);
 
   /**
    * A cycle reads only the lines which were added since the cycle before it.
@@ -80,95 +129,119 @@ export const LogAnalyzer = ({ className }: Props) => {
     startTransition(async () => {
       if (!directoryHandleRef.current) return;
 
-      try {
-        const filterProps = Object.fromEntries(
-          Object.values(LogAnalyzerEntryType).map((type) => [
-            `log_analyzer_filter_${type}`,
-            ownEntryTypes[type],
-          ]),
-        );
+      const dateRangeRun = dateRangeRunRef.current;
 
-        track("log_analyzer_parse", {
-          props: {
-            user_id: authentication
-              ? authentication?.session.user.id
-              : "unknown",
-            log_analyzer_days_to_load: String(daysToLoad),
-            log_analyzer_live_mode: String(isLiveModeEnabled),
-            log_analyzer_autostart: String(isAutostartEnabled),
-            log_analyzer_overlay: String(!!pipWindow),
-            ...filterProps,
-          },
-          interactive: false,
-        });
-      } catch {
-        // Tracking failure should not affect log parsing
-      }
-
-      const logFiles = (
-        await Array.fromAsync(getFilesRecursively(directoryHandleRef.current))
-      ).filter((logFile): logFile is LogFile =>
-        Boolean(logFile?.file.name.endsWith(".log")),
+      /** One property: Plausible takes at most 30 for each event */
+      const hiddenTypes = Object.values(LogAnalyzerEntryType).filter(
+        (type) => !ownEntryTypes[type],
       );
 
-      const windowStart = getWindowStart(daysToLoad);
-      const windowEnd = new Date();
-      windowEnd.setHours(23, 59, 59, 999);
+      trackEvent("log_analyzer_parse", {
+        user_id: authentication ? authentication?.session.user.id : "unknown",
+        log_analyzer_days_to_load: String(daysToLoad),
+        log_analyzer_has_date_range: String(hasDateRange(dateRange)),
+        log_analyzer_live_mode: String(isLiveModeEnabled),
+        log_analyzer_autostart: String(isAutostartEnabled),
+        log_analyzer_overlay: String(!!pipWindow),
+        log_analyzer_hidden_types: hiddenTypes.join(","),
+      });
 
-      const logFilesInWindow = windowStart
-        ? logFiles.filter(
-            ({ file }) =>
-              file.lastModified >= windowStart.getTime() &&
-              file.lastModified <= windowEnd.getTime(),
-          )
-        : logFiles;
-
-      const isFullRead = requiresFullReadRef.current;
-      requiresFullReadRef.current = false;
+      const readStartedAt = performance.now();
 
       try {
-        const rawMatches = await parseLogFiles(logFilesInWindow, isFullRead);
+        const logFiles = await Array.fromAsync(
+          getLogFilesRecursively(
+            directoryHandleRef.current,
+            knownLogFilesRef.current,
+          ),
+        );
+        knownLogFilesRef.current = new Map(
+          logFiles.map((logFile) => [logFile.path, logFile]),
+        );
+
+        const logFilesInWindow = await selectLogFiles(
+          logFiles,
+          getEntryWindow(dateRange, daysToLoad),
+        );
+        if (dateRangeRun !== dateRangeRunRef.current) return;
+
+        setLogSelection(summarizeLogSelection(logFiles, logFilesInWindow));
+
+        const isFullRead = requiresFullReadRef.current;
+        requiresFullReadRef.current = false;
+
+        const {
+          matches: rawMatches,
+          readFileCount,
+          readByteCount,
+        } = await parseLogFiles(logFilesInWindow, isFullRead, setReadProgress);
+        setReadProgress(null);
+
+        /** The tracking is about large reads. A live read holds one file. */
+        if (readFileCount > 1) {
+          trackEvent("log_analyzer_read_finished", {
+            log_analyzer_read_files: String(readFileCount),
+            log_analyzer_read_megabytes: String(
+              Math.round(readByteCount / BYTES_PER_MEGABYTE),
+            ),
+            log_analyzer_read_seconds: String(
+              Math.round(
+                (performance.now() - readStartedAt) / MILLISECONDS_PER_SECOND,
+              ),
+            ),
+          });
+        }
 
         /**
-         * Map raw matches to `IEntry` on the main thread (needed for JSX rendering)
+         * Map raw matches to `IEntry` on the main thread (needed for JSX
+         * rendering). A cycle without a match keeps the map, so that the
+         * table does not sort all entries again every few seconds.
          */
-        setEntries((previousEntries) => {
-          const newEntries = new Map<string, IEntry>(previousEntries);
+        if (rawMatches.length > 0) {
+          setEntries((previousEntries) => {
+            const newEntries = new Map<string, IEntry>(previousEntries);
 
-          for (const rawMatch of rawMatches) {
-            const isoDate = new Date(rawMatch.isoDate);
-            const key = createEntryKey(rawMatch.type, rawMatch.fullMatch);
-            const existingEntry = newEntries.get(key);
-            /**
-             * A local entry replaces a shared one of the same line, because
-             * it belongs to the user and not to whoever shared it first. It
-             * keeps the highlight state of the entry it replaces.
-             */
-            if (existingEntry && !existingEntry.isShared) continue;
+            for (const rawMatch of rawMatches) {
+              const isoDate = new Date(rawMatch.isoDate);
+              const key = createEntryKey(rawMatch.type, rawMatch.fullMatch);
+              const existingEntry = newEntries.get(key);
+              /**
+               * A local entry replaces a shared one of the same line, because
+               * it belongs to the user and not to whoever shared it first. It
+               * keeps the highlight state of the entry it replaces.
+               */
+              if (existingEntry && !existingEntry.isShared) continue;
 
-            newEntries.set(key, {
-              key,
-              type: rawMatch.type,
-              isoDate,
-              isNew: existingEntry?.isNew ?? isNew,
-              ...deriveEntryFields(rawMatch.type, rawMatch.groups),
-              citizen: ownCitizen,
-              isShared: false,
-              isUploaded: false,
-            });
-          }
+              newEntries.set(key, {
+                key,
+                type: rawMatch.type,
+                isoDate,
+                isNew: existingEntry?.isNew ?? isNew,
+                ...deriveEntryFields(rawMatch.type, rawMatch.groups),
+                citizen: ownCitizen,
+                isShared: false,
+                isUploaded: false,
+              });
+            }
 
-          /** A file of the window can begin before the window */
-          deleteEntriesBefore(newEntries, windowStart);
+            return newEntries;
+          });
+        }
 
-          return newEntries;
-        });
+        /**
+         * Only the rolling window reaches the server: looking at old logs
+         * shares nothing.
+         */
+        const uploadWindow = getEntryWindow(NO_DATE_RANGE, daysToLoad);
+        const matchesToUpload = rawMatches.filter(({ isoDate }) =>
+          isInWindow(new Date(isoDate), uploadWindow),
+        );
 
         /**
          * Sharing must not hold up the rendering of the new entries. A
          * failed upload tries again with the whole window next cycle.
          */
-        void uploadEntries(rawMatches).then(
+        void uploadEntriesRef.current(matchesToUpload).then(
           (isComplete) => {
             if (!isComplete) requiresFullReadRef.current = true;
           },
@@ -177,6 +250,7 @@ export const LogAnalyzer = ({ className }: Props) => {
           },
         );
       } catch (error) {
+        setReadProgress(null);
         requiresFullReadRef.current = true;
         console.error("[Log Analyzer] Error reading files:", error);
       }
@@ -185,21 +259,36 @@ export const LogAnalyzer = ({ className }: Props) => {
 
   const openDirectory = (directoryHandle: FileSystemDirectoryHandle) => {
     directoryHandleRef.current = directoryHandle;
+    knownLogFilesRef.current = new Map();
     requiresFullReadRef.current = true;
     parseLogs();
   };
 
-  const parseNewLogLines = useEffectEvent(() => parseLogs(true));
+  /** A large read takes longer than the interval of live mode */
+  const parseNewLogLines = useEffectEvent(() => {
+    if (!isPending) parseLogs(true);
+  });
 
   useEffect(() => {
-    if (!isLiveModeEnabled) return;
+    if (!isLiveModeActive) return;
 
     const interval = window.setInterval(() => {
       parseNewLogLines();
     }, LIVE_MODE_PARSE_INTERVAL_MS);
 
     return () => window.clearInterval(interval);
-  }, [isLiveModeEnabled]);
+  }, [isLiveModeActive]);
+
+  /** A new range needs its files now, not after the read of the last range */
+  const parseLogsOfNewDateRange = useEffectEvent(() => {
+    dateRangeRunRef.current += 1;
+    stopReads();
+    parseLogs();
+  });
+
+  useEffect(() => {
+    parseLogsOfNewDateRange();
+  }, [dateRange]);
 
   const handlePreviousDirectorySelect = (
     event?: MouseEvent<HTMLButtonElement>,
@@ -302,7 +391,17 @@ export const LogAnalyzer = ({ className }: Props) => {
 
       {/* The toolbar also holds the sharing settings, thus it stays reachable
           before a folder is chosen — the shared entries need no folder. */}
-      <Toolbar onRefresh={handleRefresh} className="mt-1" />
+      <Toolbar onRefresh={handleRefresh} className="mt-1">
+        <DateRangeSettings
+          oldestSessionStart={logSelection?.oldestSessionStart ?? null}
+        />
+
+        <ReadStatus
+          logSelection={logSelection}
+          readProgress={readProgress}
+          isLoadingSharedEntries={isLoadingDateRange}
+        />
+      </Toolbar>
 
       {entries.size > 0 ? (
         <LogAnalyzerTable className="mt-0.5" />

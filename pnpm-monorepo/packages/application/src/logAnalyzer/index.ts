@@ -9,6 +9,11 @@ export {
   type SharedLogAnalyzerEntries,
   type SharedLogAnalyzerEntry,
 } from "./findSharedLogAnalyzerEntries.js";
+export {
+  findSharedLogAnalyzerEntriesInRange,
+  type FindSharedLogAnalyzerEntriesInRangeInput,
+  type SharedLogAnalyzerEntriesInRange,
+} from "./findSharedLogAnalyzerEntriesInRange.js";
 export type { LogAnalyzerSharingOptions } from "./logAnalyzerAccess.js";
 export { LogAnalyzerErrorMessage } from "./logAnalyzerErrors.js";
 export {

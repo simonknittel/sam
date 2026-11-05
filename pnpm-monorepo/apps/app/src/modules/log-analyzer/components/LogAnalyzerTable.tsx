@@ -52,6 +52,12 @@ export const LogAnalyzerTable = ({ className }: Props) => {
         </EntryClock>
       </Table>
 
+      {visibleEntries.length <= 0 && (
+        <p className="mt-4 text-center text-sm text-white/60">
+          Keine Einträge für diesen Zeitraum und diese Filter.
+        </p>
+      )}
+
       {hiddenRowCount > 0 && (
         <div className="mt-4 flex justify-center">
           <Button2

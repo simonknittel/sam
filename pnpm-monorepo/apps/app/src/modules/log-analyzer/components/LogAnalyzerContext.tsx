@@ -1,8 +1,13 @@
 "use client";
 
 import { useStoredValue } from "@/modules/common/utils/useStoredValue";
-import { LogAnalyzerEntryType } from "@sam-monorepo/domain";
+import {
+  getLocalDateKey,
+  LogAnalyzerEntryType,
+  ORGANIZATION_TIMEZONE,
+} from "@sam-monorepo/domain";
 import { useLocalStorage } from "@uidotdev/usehooks";
+import { useNow } from "next-intl";
 import type {
   Dispatch,
   ReactNode,
@@ -10,9 +15,24 @@ import type {
   TransitionStartFunction,
 } from "react";
 import { createContext, useContext, useState, useTransition } from "react";
+import {
+  getEntryWindow,
+  isInWindow,
+  NO_DATE_RANGE,
+  type DateRange,
+} from "../utils/entryWindow";
 import { createEntryTypeRecord, type IEntry } from "../utils/PATTERNS";
+import { ContractNamesContext } from "./ContractNames";
 
 type EntryTypeRecord = Record<LogAnalyzerEntryType, boolean>;
+
+type SetEntryTypes = (
+  types: readonly LogAnalyzerEntryType[],
+  isEnabled: boolean,
+) => void;
+
+/** A page which stays open over midnight must know the new day */
+const TODAY_UPDATE_INTERVAL_MS = 60_000;
 
 interface Context {
   /**
@@ -24,29 +44,29 @@ interface Context {
   readonly startTransition: TransitionStartFunction;
   readonly isLiveModeEnabled: boolean;
   readonly setIsLiveModeEnabled: Dispatch<SetStateAction<boolean>>;
+  /** True while the end of the date range keeps new lines out of the table. */
+  readonly isLivePaused: boolean;
+  /** The setting of the user, unless the date range pauses it. */
+  readonly isLiveModeActive: boolean;
   readonly isAutostartEnabled: boolean;
   readonly setIsAutostartEnabled: Dispatch<SetStateAction<boolean>>;
   readonly daysToLoad: number;
+  /** `YYYY-MM-DD`, in the time zone of the table. */
+  readonly today: string;
+  /** Not stored: a reload shows the rolling window again. */
+  readonly dateRange: DateRange;
+  readonly setDateRange: Dispatch<SetStateAction<DateRange>>;
   /** The types whose own entries the table shows. */
   readonly ownEntryTypes: EntryTypeRecord;
-  readonly setOwnEntryType: (
-    type: LogAnalyzerEntryType,
-    value: boolean,
-  ) => void;
+  readonly setOwnEntryTypes: SetEntryTypes;
   /** The types whose own entries the upload sends to the server. */
   readonly sharingEntryTypes: EntryTypeRecord;
-  readonly setSharingEntryType: (
-    type: LogAnalyzerEntryType,
-    value: boolean,
-  ) => void;
+  readonly setSharingEntryTypes: SetEntryTypes;
   /** True while the upload sends at least one type. */
   readonly isSharingEnabled: boolean;
   /** The types whose entries of the other citizens the table shows. */
   readonly othersEntryTypes: EntryTypeRecord;
-  readonly setOthersEntryType: (
-    type: LogAnalyzerEntryType,
-    value: boolean,
-  ) => void;
+  readonly setOthersEntryTypes: SetEntryTypes;
   /** True while the table shows at least one type of the other citizens. */
   readonly isSharedViewEnabled: boolean;
   /** The citizens whose shared entries the table hides. Empty shows all. */
@@ -68,6 +88,10 @@ const ALL_TYPES_OFF = createEntryTypeRecord(false);
  * read. The upload function changes with the record of the shared types,
  * thus the record must change only with the stored text (see
  * `requiresFullReadRef` in `LogAnalyzer`).
+ *
+ * The setter takes all types of a change at once: `useLocalStorage` gives each
+ * update the value of the last render, thus two updates in one event would
+ * overwrite each other.
  */
 const useStoredEntryTypes = (key: string, defaultValue: EntryTypeRecord) => {
   const [storedValue, setStoredValue] = useStoredValue<
@@ -76,11 +100,14 @@ const useStoredEntryTypes = (key: string, defaultValue: EntryTypeRecord) => {
 
   const value = { ...defaultValue, ...storedValue };
 
-  const setType = (type: LogAnalyzerEntryType, isEnabled: boolean) => {
-    setStoredValue((previous) => ({ ...previous, [type]: isEnabled }));
+  const setTypes: SetEntryTypes = (types, isEnabled) => {
+    setStoredValue((previous) => ({
+      ...previous,
+      ...Object.fromEntries(types.map((type) => [type, isEnabled])),
+    }));
   };
 
-  return [value, setType] as const;
+  return [value, setTypes] as const;
 };
 
 interface Props {
@@ -91,17 +118,17 @@ interface Props {
 export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
   const [isPending, startTransition] = useTransition();
 
-  const [ownEntryTypes, setOwnEntryType] = useStoredEntryTypes(
+  const [ownEntryTypes, setOwnEntryTypes] = useStoredEntryTypes(
     "log_analyzer_show_own_types",
     ALL_TYPES_ON,
   );
 
-  const [sharingEntryTypes, setSharingEntryType] = useStoredEntryTypes(
+  const [sharingEntryTypes, setSharingEntryTypes] = useStoredEntryTypes(
     "log_analyzer_share_types",
     ALL_TYPES_OFF,
   );
 
-  const [othersEntryTypes, setStoredOthersEntryType] = useStoredEntryTypes(
+  const [othersEntryTypes, setStoredOthersEntryTypes] = useStoredEntryTypes(
     "log_analyzer_show_others_types",
     ALL_TYPES_OFF,
   );
@@ -133,17 +160,31 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
 
   const [daysToLoad] = useLocalStorage<number>("log_analyzer_days_to_load", 14);
 
+  const today = getLocalDateKey(
+    useNow({ updateInterval: TODAY_UPDATE_INTERVAL_MS }),
+    ORGANIZATION_TIMEZONE,
+  );
+
+  const [dateRange, setDateRange] = useState(NO_DATE_RANGE);
+
+  /**
+   * The entries stay in memory when they leave the window, so that narrowing
+   * the range reads no file. This value changes only with its inputs, thus
+   * the start of the rolling window can lag on a page which stays open for
+   * days. The table then shows a little more, never less.
+   */
+  const entryWindow = getEntryWindow(dateRange, daysToLoad);
+  const isLivePaused = dateRange.to !== null && dateRange.to < today;
+  const isLiveModeActive = isLiveModeEnabled && !isLivePaused;
+
   const [entries, setEntries] = useState<Map<string, IEntry>>(new Map());
 
-  const setOthersEntryType = (
-    type: LogAnalyzerEntryType,
-    isEnabled: boolean,
-  ) => {
-    setStoredOthersEntryType(type, isEnabled);
+  const setOthersEntryTypes: SetEntryTypes = (types, isEnabled) => {
+    setStoredOthersEntryTypes(types, isEnabled);
 
     /** The entries of the other citizens leave the table with the last type */
     const isAnotherTypeEnabled = Object.values(LogAnalyzerEntryType).some(
-      (otherType) => otherType !== type && othersEntryTypes[otherType],
+      (otherType) => !types.includes(otherType) && othersEntryTypes[otherType],
     );
     if (isEnabled || isAnotherTypeEnabled) return;
 
@@ -156,6 +197,7 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
   };
 
   const entryFilterFn = (entry: IEntry) => {
+    if (!isInWindow(entry.isoDate, entryWindow)) return false;
     if (!entry.isShared) return ownEntryTypes[entry.type];
     if (!othersEntryTypes[entry.type]) return false;
     return !entry.citizen || !hiddenCitizenIds.includes(entry.citizen.id);
@@ -167,16 +209,21 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
     startTransition,
     isLiveModeEnabled,
     setIsLiveModeEnabled,
+    isLivePaused,
+    isLiveModeActive,
     isAutostartEnabled,
     setIsAutostartEnabled,
     daysToLoad,
+    today,
+    dateRange,
+    setDateRange,
     ownEntryTypes,
-    setOwnEntryType,
+    setOwnEntryTypes,
     sharingEntryTypes,
-    setSharingEntryType,
+    setSharingEntryTypes,
     isSharingEnabled,
     othersEntryTypes,
-    setOthersEntryType,
+    setOthersEntryTypes,
     isSharedViewEnabled,
     hiddenCitizenIds,
     setHiddenCitizenIds,
@@ -185,7 +232,18 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
     setEntries,
   };
 
-  return <Context value={value}>{children}</Context>;
+  const contractNames = new Map<string, string>();
+  for (const { missionId, contractName } of entries.values()) {
+    if (missionId && contractName) contractNames.set(missionId, contractName);
+  }
+
+  return (
+    <Context value={value}>
+      <ContractNamesContext value={contractNames}>
+        {children}
+      </ContractNamesContext>
+    </Context>
+  );
 };
 
 /**

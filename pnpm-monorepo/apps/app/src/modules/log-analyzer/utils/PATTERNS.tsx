@@ -5,29 +5,51 @@ import type { IconType } from "react-icons";
 import {
   FaArrowRightFromBracket,
   FaArrowRightToBracket,
+  FaArrowTrendUp,
+  FaBan,
   FaBedPulse,
   FaBomb,
+  FaBoxesStacked,
   FaCartShopping,
+  FaCoins,
   FaCompassDrafting,
   FaCrown,
   FaEnvelope,
   FaFileCircleCheck,
+  FaFileCircleExclamation,
   FaFileCircleMinus,
+  FaFileCircleQuestion,
   FaFileCircleXmark,
+  FaFileInvoiceDollar,
   FaFileSignature,
   FaGavel,
+  FaGift,
+  FaHandcuffs,
+  FaHandshake,
   FaHouseLock,
+  FaKey,
   FaPeace,
+  FaPeopleGroup,
+  FaPersonHarassing,
+  FaPersonWalkingArrowRight,
   FaPlugCircleXmark,
   FaPowerOff,
   FaRightToBracket,
   FaSatelliteDish,
   FaShareFromSquare,
+  FaShieldHalved,
   FaSkull,
+  FaTowerBroadcast,
+  FaTriangleExclamation,
+  FaTrophy,
   FaUserInjured,
   FaUserMinus,
   FaUserPlus,
+  FaUsers,
+  FaUserSlash,
+  FaUsersSlash,
 } from "react-icons/fa6";
+import { AbandonedContractName } from "../components/ContractNames";
 import { TruncatedText } from "../components/TruncatedText";
 
 /** The groups of the entry types, in the order the lists show them. */
@@ -35,6 +57,7 @@ export enum EntryCategory {
   Session = "session",
   Contracts = "contracts",
   Character = "character",
+  Crime = "crime",
   Zones = "zones",
   Party = "party",
   Commerce = "commerce",
@@ -44,6 +67,7 @@ export const ENTRY_CATEGORY_TITLES: Record<EntryCategory, string> = {
   [EntryCategory.Session]: "Session",
   [EntryCategory.Contracts]: "Contracts",
   [EntryCategory.Character]: "Charakter",
+  [EntryCategory.Crime]: "Verbrechen",
   [EntryCategory.Zones]: "Zonen",
   [EntryCategory.Party]: "Party",
   [EntryCategory.Commerce]: "Handel",
@@ -57,6 +81,10 @@ export interface IEntry {
   readonly message: ReactNode;
   /** See `Pattern.collapseKey`. Null when the type has no such key. */
   readonly collapseKey: string | null;
+  /** The mission of a contract. Null when the line names no mission. */
+  readonly missionId: string | null;
+  /** The name of a contract. Null when the line names no contract. */
+  readonly contractName: string | null;
   /**
    * The citizen the entry belongs to: the citizen who shared it, or the
    * current user for a local one. Null when the user has no linked citizen.
@@ -120,6 +148,22 @@ const BODY_PARTS = [
 const priceFormat = new Intl.NumberFormat("de-DE", {
   maximumFractionDigits: 0,
 });
+
+const scuFormat = new Intl.NumberFormat("de-DE", {
+  maximumFractionDigits: 2,
+});
+
+const CENTI_SCU_PER_SCU = 100;
+
+/** The shops of the game are all named `SCShop_<location>` */
+const toShopName = (shop: string) => shop.replace(/^SCShop_/, "");
+
+/** The two lines of a restricted area come from one alternative of the regex */
+const getRestrictedAreaLabel = (event: string) => {
+  if (event.startsWith("Leaving")) return "Verlassen";
+  if (event.includes("relocated")) return "Vom Spiel umgesetzt";
+  return "Fahrzeuge werden beschlagnahmt";
+};
 
 interface Pattern {
   title: string;
@@ -221,6 +265,7 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     renderMessage: (groups) => (
       <TruncatedText>{stripMarkup(groups.contract)}</TruncatedText>
     ),
+    collapseKey: (groups) => groups.contract,
   },
 
   contractWithdrawnNotification: {
@@ -278,7 +323,7 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     category: EntryCategory.Commerce,
     renderMessage: (groups) => (
       <TruncatedText>
-        {`${groups.quantity}× ${groups.item} für ${priceFormat.format(Number(groups.price))} aUEC (${groups.shop.replace(/^SCShop_/, "")})`}
+        {`${groups.quantity}× ${groups.item} für ${priceFormat.format(Number(groups.price))} aUEC (${toShopName(groups.shop)})`}
       </TruncatedText>
     ),
   },
@@ -383,6 +428,184 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
       <TruncatedText>{groups.exception}</TruncatedText>
     ),
   },
+
+  crimeCommittedNotification: {
+    title: "Verbrechen begangen",
+    icon: FaHandcuffs,
+    category: EntryCategory.Crime,
+    renderMessage: (groups) => (
+      <TruncatedText>{`${groups.crime} gegen ${groups.handle}`}</TruncatedText>
+    ),
+  },
+
+  crimeAgainstYouNotification: {
+    title: "Verbrechen gegen dich",
+    icon: FaPersonHarassing,
+    category: EntryCategory.Crime,
+    renderMessage: (groups) => (
+      <TruncatedText>{`${groups.crime} von ${groups.handle}`}</TruncatedText>
+    ),
+  },
+
+  crimeStatIncreasedNotification: {
+    title: "CrimeStat erhöht",
+    icon: FaArrowTrendUp,
+    category: EntryCategory.Crime,
+  },
+
+  fineNotification: {
+    title: "Strafe",
+    icon: FaFileInvoiceDollar,
+    category: EntryCategory.Crime,
+    renderMessage: (groups) => (
+      <TruncatedText>
+        {`${priceFormat.format(Number(groups.amount))} UEC`}
+      </TruncatedText>
+    ),
+  },
+
+  contractAbandoned: {
+    title: "Contract abgebrochen",
+    icon: FaFileCircleExclamation,
+    category: EntryCategory.Contracts,
+    renderMessage: (groups) => (
+      <AbandonedContractName missionId={groups.missionId} />
+    ),
+  },
+
+  contractNotAcceptedNotification: {
+    title: "Contract nicht angenommen",
+    icon: FaFileCircleQuestion,
+    category: EntryCategory.Contracts,
+    renderMessage: (groups) => <TruncatedText>{groups.reason}</TruncatedText>,
+  },
+
+  rewardNotification: {
+    title: "Belohnung",
+    icon: FaGift,
+    category: EntryCategory.Contracts,
+    renderMessage: (groups) => (
+      <TruncatedText>
+        {`${stripMarkup(groups.reward)}: ${stripMarkup(groups.items)}`}
+      </TruncatedText>
+    ),
+  },
+
+  earnedNotification: {
+    title: "Belohnung erhalten",
+    icon: FaTrophy,
+    category: EntryCategory.Contracts,
+    renderMessage: (groups) => (
+      <TruncatedText>{stripMarkup(groups.reward)}</TruncatedText>
+    ),
+  },
+
+  fundsAwardedNotification: {
+    title: "aUEC erhalten",
+    icon: FaCoins,
+    category: EntryCategory.Contracts,
+    renderMessage: (groups) => (
+      <TruncatedText>
+        {`${priceFormat.format(Number(groups.amount))} aUEC`}
+      </TruncatedText>
+    ),
+  },
+
+  restrictedAreaNotification: {
+    title: "Sperrgebiet",
+    icon: FaBan,
+    category: EntryCategory.Zones,
+    renderMessage: (groups) => (
+      <TruncatedText>{getRestrictedAreaLabel(groups.event)}</TruncatedText>
+    ),
+    collapseKey: (groups) => getRestrictedAreaLabel(groups.event),
+  },
+
+  monitoredSpaceStatusNotification: {
+    title: "Monitored Space Status",
+    icon: FaTowerBroadcast,
+    category: EntryCategory.Zones,
+    renderMessage: (groups) => (
+      <TruncatedText>
+        {groups.status === "Down" ? "Ausgefallen" : "Wiederhergestellt"}
+      </TruncatedText>
+    ),
+  },
+
+  errorPopup: {
+    title: "Fehlermeldung",
+    icon: FaTriangleExclamation,
+    category: EntryCategory.Session,
+    renderMessage: (groups) => (
+      <TruncatedText>{`Code ${groups.errorCode}`}</TruncatedText>
+    ),
+  },
+
+  shipClaimFailed: {
+    title: "Schiff-Claim fehlgeschlagen",
+    icon: FaShieldHalved,
+    category: EntryCategory.Commerce,
+    renderMessage: (groups) => <TruncatedText>{groups.reason}</TruncatedText>,
+  },
+
+  shopRental: {
+    title: "Miete",
+    icon: FaKey,
+    category: EntryCategory.Commerce,
+    renderMessage: (groups) => (
+      <TruncatedText>
+        {`${groups.item} für ${priceFormat.format(Number(groups.price))} aUEC (${toShopName(groups.shop)})`}
+      </TruncatedText>
+    ),
+  },
+
+  commodityPurchase: {
+    title: "Commodity-Einkauf",
+    icon: FaBoxesStacked,
+    category: EntryCategory.Commerce,
+    renderMessage: (groups) => (
+      <TruncatedText>
+        {`${scuFormat.format(Number(groups.centiScu) / CENTI_SCU_PER_SCU)} SCU für ${priceFormat.format(Number(groups.price))} aUEC (${toShopName(groups.shop)})`}
+      </TruncatedText>
+    ),
+  },
+
+  partyJoinedNotification: {
+    title: "Party beigetreten",
+    icon: FaPeopleGroup,
+    category: EntryCategory.Party,
+  },
+
+  partyCreatedNotification: {
+    title: "Party erstellt",
+    icon: FaUsers,
+    category: EntryCategory.Party,
+  },
+
+  partyLeftNotification: {
+    title: "Party verlassen",
+    icon: FaPersonWalkingArrowRight,
+    category: EntryCategory.Party,
+  },
+
+  partyKickedNotification: {
+    title: "Aus Party entfernt",
+    icon: FaUserSlash,
+    category: EntryCategory.Party,
+  },
+
+  partyDisbandedNotification: {
+    title: "Party aufgelöst",
+    icon: FaUsersSlash,
+    category: EntryCategory.Party,
+  },
+
+  friendAddedNotification: {
+    title: "Freund hinzugefügt",
+    icon: FaHandshake,
+    category: EntryCategory.Party,
+    renderMessage: (groups) => <TruncatedText>{groups.handle}</TruncatedText>,
+  },
 };
 
 /** The order in which every list of the entry types shows them. */
@@ -412,6 +635,8 @@ export const deriveEntryFields = (
 ) => ({
   message: PATTERNS[type].renderMessage?.(groups) ?? null,
   collapseKey: PATTERNS[type].collapseKey?.(groups) ?? null,
+  missionId: groups.missionId ?? null,
+  contractName: groups.contract ? stripMarkup(groups.contract) : null,
 });
 
 /**

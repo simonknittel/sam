@@ -3,15 +3,12 @@
 import { useHasLinkedCitizen } from "@/modules/auth/hooks/useHasLinkedCitizen";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
-import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
+import { Table, TBody, THead } from "@/modules/common/components/Table";
 import { Fragment, useState } from "react";
 import { FaFilter } from "react-icons/fa";
-import {
-  ENTRY_CATEGORY_TITLES,
-  ENTRY_TYPES_BY_CATEGORY,
-  EntryCategory,
-} from "../utils/PATTERNS";
+import { ENTRY_TYPES_BY_CATEGORY, EntryCategory } from "../utils/PATTERNS";
 import { CitizenFilters } from "./CitizenFilters";
+import { EntryCategorySettingsRow } from "./EntryCategorySettingsRow";
 import { EntryTypeSettingsRow } from "./EntryTypeSettingsRow";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 
@@ -74,11 +71,11 @@ export const EntrySettings = ({ className }: Props) => {
           <TBody className="text-sm">
             {Object.values(EntryCategory).map((category) => (
               <Fragment key={category}>
-                <TRow className="hover:bg-transparent">
-                  <td className="col-span-full pt-2 font-mono text-xs text-white/40 uppercase">
-                    {ENTRY_CATEGORY_TITLES[category]}
-                  </td>
-                </TRow>
+                <EntryCategorySettingsRow
+                  category={category}
+                  showSharingColumns={isSharingAvailable}
+                  canShare={isSharingAvailable && hasLinkedCitizen}
+                />
 
                 {ENTRY_TYPES_BY_CATEGORY[category].map((type) => (
                   <EntryTypeSettingsRow
