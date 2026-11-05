@@ -7,7 +7,10 @@ import {
 } from "@/modules/application";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { findCalendarEntries } from "@sam-monorepo/application";
-import { parseLocalDateKey } from "@sam-monorepo/domain";
+import {
+  parseLocalDateKey,
+  type CalendarListStatus,
+} from "@sam-monorepo/domain";
 import { cache } from "react";
 
 /**
@@ -22,7 +25,7 @@ export const getCalendarEntries = cache(
     async (
       startDateKey: string,
       endDateKey: string,
-      includeRunningEvents: boolean,
+      status: CalendarListStatus,
     ) => {
       const start = parseLocalDateKey(startDateKey);
       const end = parseLocalDateKey(endDateKey);
@@ -32,7 +35,7 @@ export const getCalendarEntries = cache(
         return await findCalendarEntries(
           getApplicationContext(),
           await getRequestActor(),
-          { range: { start, end }, includeRunningEvents },
+          { range: { start, end }, status },
         );
       } catch (error) {
         return throwApplicationErrorForPage(error);

@@ -22,6 +22,7 @@ export {
   CalendarEntryType,
 } from "./calendar/calendarEntryType.js";
 export {
+  CalendarListStatus,
   CalendarRangeProblem,
   MAXIMUM_CALENDAR_RANGE_MONTHS,
   compareLocalDates,
@@ -91,7 +92,10 @@ export {
   getDiscordEventDescriptionFooter,
   getEventDescriptionMaxLength,
 } from "./events/eventDescription.js";
-export { getEventEndTime } from "./events/eventEndTime.js";
+export {
+  FALLBACK_EVENT_DURATION_MILLISECONDS,
+  getEventEndTime,
+} from "./events/eventEndTime.js";
 export {
   EVENT_MAX_CITIZENS_PER_REQUEST,
   EVENT_MAX_VISIBILITY_ROLES,

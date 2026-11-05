@@ -17,7 +17,7 @@ export const CalendarDayList = async ({ className, page }: Props) => {
   const entries = await getCalendarEntries(
     toLocalDateKey(page.range.start),
     toLocalDateKey(page.range.end),
-    false,
+    page.status,
   );
 
   return (

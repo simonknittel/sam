@@ -1,11 +1,11 @@
 import type { Prisma } from "@sam-monorepo/database/client";
 import {
   CalendarEntryType,
+  FALLBACK_EVENT_DURATION_MILLISECONDS,
   getLocalDate,
   ORGANIZATION_TIMEZONE,
 } from "@sam-monorepo/domain";
 import { findEventCardRows } from "../events/listEvents.js";
-import { getOpenEventsWhere } from "../events/openEvents.js";
 import type {
   CalendarEntryCollector,
   EventCalendarEntry,
@@ -21,8 +21,19 @@ export const eventEntryCollector: CalendarEntryCollector<EventCalendarEntry> = {
     const startsInRangeWhere: Prisma.EventWhereInput = {
       startTime: { gte: from, lt: until },
     };
+    const now = context.now();
+    /** The same end as `getEventEndTime`, also for an event without an end */
     const runningWhere: Prisma.EventWhereInput = {
-      AND: [{ startTime: { lt: from } }, getOpenEventsWhere(context.now())],
+      startTime: { lt: from },
+      OR: [
+        { endTime: { gt: now } },
+        {
+          endTime: null,
+          startTime: {
+            gt: new Date(now.getTime() - FALLBACK_EVENT_DURATION_MILLISECONDS),
+          },
+        },
+      ],
     };
 
     const { events, cancelledParticipationEventIds, newEventIds } =

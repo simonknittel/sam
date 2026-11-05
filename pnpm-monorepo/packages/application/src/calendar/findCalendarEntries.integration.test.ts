@@ -9,6 +9,7 @@ import type { Prisma } from "@sam-monorepo/database/client";
 import {
   AuditEventType,
   CalendarEntryType,
+  CalendarListStatus,
   type LocalDateRange,
 } from "@sam-monorepo/domain";
 import { beforeEach, describe, expect, test } from "vitest";
@@ -33,6 +34,11 @@ const NOW = new Date("2026-06-15T10:00:00.000Z");
 const JUNE: LocalDateRange = {
   start: { year: 2026, month: 6, day: 1 },
   end: { year: 2026, month: 6, day: 30 },
+};
+
+const NEXT_SEVEN_DAYS: LocalDateRange = {
+  start: { year: 2026, month: 6, day: 15 },
+  end: { year: 2026, month: 6, day: 21 },
 };
 
 /** The permissions of all entry types */
@@ -64,6 +70,20 @@ const createViewerActor = async (permissionStrings: readonly string[]) => {
     }),
   };
 };
+
+const createEvent = (
+  name: string,
+  startTime: string,
+  endTime: string | null = null,
+) =>
+  prisma.event.create({
+    data: {
+      source: EventSource.APP,
+      name,
+      startTime: new Date(startTime),
+      endTime: endTime && new Date(endTime),
+    },
+  });
 
 const createTaskWithAssignee = (
   title: string,
@@ -274,33 +294,117 @@ describe("findCalendarEntries", () => {
     ]);
   });
 
-  test("the option of the dashboard tile adds the events that run now", async () => {
-    const { actor } = await createViewerActor(["event;read"]);
-    const runningEvent = await prisma.event.create({
-      data: {
-        source: EventSource.APP,
-        name: "Running",
-        startTime: new Date("2026-06-14T10:00:00.000Z"),
-        endTime: new Date("2026-06-16T10:00:00.000Z"),
-      },
+  test("the upcoming list holds what did not finish and the past list holds the rest", async () => {
+    const { citizen: viewer, actor } = await createViewerActor([
+      "event;read",
+      "citizen;read",
+      "task;read",
+    ]);
+    const birthdayToday = await createCitizenWithPermissions(
+      "birthday-today",
+      [LOGIN_PERMISSION],
+      [],
+      { birthdayDay: 15, birthdayMonth: 6 },
+    );
+    const birthdayYesterday = await createCitizenWithPermissions(
+      "birthday-yesterday",
+      [LOGIN_PERMISSION],
+      [],
+      { birthdayDay: 14, birthdayMonth: 6 },
+    );
+
+    const endedToday = await createEvent(
+      "Ended today",
+      "2026-06-15T07:00:00.000Z",
+      "2026-06-15T09:00:00.000Z",
+    );
+    const noEndOverFourHoursAgo = await createEvent(
+      "No end, over 4 hours ago",
+      "2026-06-15T05:59:00.000Z",
+    );
+    const noEndUnderFourHoursAgo = await createEvent(
+      "No end, under 4 hours ago",
+      "2026-06-15T06:01:00.000Z",
+    );
+    const runningSinceYesterday = await createEvent(
+      "Running since yesterday",
+      "2026-06-14T10:00:00.000Z",
+      "2026-06-16T10:00:00.000Z",
+    );
+    const laterToday = await createEvent(
+      "Later today",
+      "2026-06-15T18:00:00.000Z",
+    );
+    // A task deadline is a point in time, thus the 4 hours do not apply
+    const expiredTask = await createTaskWithAssignee("Expired", viewer.id, {
+      expiresAt: new Date("2026-06-15T09:59:00.000Z"),
+    });
+    const openTask = await createTaskWithAssignee("Open", viewer.id, {
+      expiresAt: new Date("2026-06-15T10:01:00.000Z"),
     });
     const { context } = createTestApplicationContext({ now: NOW });
-    const nextSevenDays = {
-      start: { year: 2026, month: 6, day: 15 },
-      end: { year: 2026, month: 6, day: 21 },
-    };
 
-    expect(
-      await findCalendarEntries(context, actor, { range: nextSevenDays }),
-    ).toEqual([]);
     expect(
       toKeys(
         await findCalendarEntries(context, actor, {
-          range: nextSevenDays,
-          includeRunningEvents: true,
+          range: NEXT_SEVEN_DAYS,
+          status: CalendarListStatus.Upcoming,
         }),
       ),
-    ).toEqual([`event:${runningEvent.id}`]);
+    ).toEqual([
+      `event:${runningSinceYesterday.id}`,
+      `birthday:${birthdayToday.id}:2026-06-15`,
+      `event:${noEndUnderFourHoursAgo.id}`,
+      `task_deadline:${openTask.id}`,
+      `event:${laterToday.id}`,
+    ]);
+    expect(
+      toKeys(
+        await findCalendarEntries(context, actor, {
+          range: {
+            start: { year: 2026, month: 6, day: 1 },
+            end: { year: 2026, month: 6, day: 15 },
+          },
+          status: CalendarListStatus.Past,
+        }),
+      ),
+    ).toEqual([
+      `birthday:${birthdayYesterday.id}:2026-06-14`,
+      `event:${noEndOverFourHoursAgo.id}`,
+      `event:${endedToday.id}`,
+      `task_deadline:${expiredTask.id}`,
+    ]);
+    // A later page must not show the running and the earlier entries again
+    expect(
+      await findCalendarEntries(context, actor, {
+        range: {
+          start: { year: 2026, month: 6, day: 22 },
+          end: { year: 2026, month: 6, day: 28 },
+        },
+        status: CalendarListStatus.Upcoming,
+      }),
+    ).toEqual([]);
+  });
+
+  test("an event without an end that started before midnight still shows after midnight", async () => {
+    const { actor } = await createViewerActor(["event;read"]);
+    // 23:30 in Europe/Berlin
+    const event = await createEvent("Late", "2026-06-14T21:30:00.000Z");
+    // 20:00 in Europe/Berlin, thus more than 4 hours ago
+    await createEvent("Too early", "2026-06-14T18:00:00.000Z");
+    // 00:10 in Europe/Berlin
+    const { context } = createTestApplicationContext({
+      now: new Date("2026-06-14T22:10:00.000Z"),
+    });
+
+    expect(
+      toKeys(
+        await findCalendarEntries(context, actor, {
+          range: NEXT_SEVEN_DAYS,
+          status: CalendarListStatus.Upcoming,
+        }),
+      ),
+    ).toEqual([`event:${event.id}`]);
   });
 
   test("a range can hold at most 12 months", async () => {

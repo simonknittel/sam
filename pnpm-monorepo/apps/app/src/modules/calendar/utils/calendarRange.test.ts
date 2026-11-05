@@ -1,10 +1,6 @@
-import { toLocalDateKey } from "@sam-monorepo/domain";
+import { CalendarListStatus, toLocalDateKey } from "@sam-monorepo/domain";
 import { describe, expect, test } from "vitest";
-import {
-  CALENDAR_PAGE_DAY_COUNT,
-  CalendarListStatus,
-  getCalendarPage,
-} from "./calendarRange";
+import { CALENDAR_PAGE_DAY_COUNT, getCalendarPage } from "./calendarRange";
 
 const TODAY = { year: 2026, month: 10, day: 30 };
 
@@ -22,16 +18,16 @@ describe("getCalendarPage", () => {
     expect(page.prevCursor).toBeNull();
   });
 
-  test("the first past page starts yesterday with the latest day first", () => {
+  test("the first past page starts today with the latest day first", () => {
     const page = getCalendarPage(CalendarListStatus.Past, null, TODAY);
 
     expect(page.days.map(toLocalDateKey).slice(0, 2)).toEqual([
+      "2026-10-30",
       "2026-10-29",
-      "2026-10-28",
     ]);
-    expect(toLocalDateKey(page.range.start)).toBe("2026-10-16");
-    expect(toLocalDateKey(page.range.end)).toBe("2026-10-29");
-    expect(page.nextCursor).toBe("2026-10-15");
+    expect(toLocalDateKey(page.range.start)).toBe("2026-10-17");
+    expect(toLocalDateKey(page.range.end)).toBe("2026-10-30");
+    expect(page.nextCursor).toBe("2026-10-16");
     expect(page.prevCursor).toBeNull();
   });
 
@@ -68,7 +64,7 @@ describe("getCalendarPage", () => {
         firstUpcomingDayKeys,
       );
 
-    expect(getPageDayKeys(CalendarListStatus.Past, "2026-10-30")).toEqual(
+    expect(getPageDayKeys(CalendarListStatus.Past, "2026-10-31")).toEqual(
       getPageDayKeys(CalendarListStatus.Past, null),
     );
   });

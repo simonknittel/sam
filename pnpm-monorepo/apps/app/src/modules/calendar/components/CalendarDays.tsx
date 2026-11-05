@@ -60,8 +60,10 @@ interface Props {
   readonly className?: string;
   readonly entries: readonly CalendarEntry[];
   /**
-   * The days to show in this order, also the days without an entry. Without
-   * it, only the days with an entry show, the earliest day first.
+   * The days to show in this order, also the days without an entry. The days
+   * of the other entries come first: a running event can start before these
+   * days. Without it, only the days with an entry show, the earliest day
+   * first.
    */
   readonly days?: readonly LocalDate[];
   readonly headingLevel: CalendarDayHeadingLevel;
@@ -81,9 +83,14 @@ export const CalendarDays = ({
   const entriesByDay = Map.groupBy(entries, (entry) =>
     toLocalDateKey(entry.date),
   );
-  const shownDays =
-    days ??
-    Array.from(entriesByDay.values(), (dayEntries) => dayEntries[0].date);
+  const givenDayKeys = new Set(days?.map(toLocalDateKey));
+  const shownDays = [
+    ...Array.from(
+      entriesByDay.values(),
+      (dayEntries) => dayEntries[0].date,
+    ).filter((date) => !givenDayKeys.has(toLocalDateKey(date))),
+    ...(days ?? []),
+  ];
   /** The position counts in the order of the days, which can be the reverse */
   const positionedEntriesByDay = Map.groupBy(
     shownDays

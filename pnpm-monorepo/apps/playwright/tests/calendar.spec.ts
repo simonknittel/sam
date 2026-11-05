@@ -11,6 +11,7 @@ import {
   createCitizen,
   futureEvent,
   ONE_DAY_MS,
+  ONE_HOUR_MS,
   type TestCitizen,
 } from "../fixtures/factories";
 import {
@@ -156,6 +157,48 @@ test("the dashboard tile shows the events, the birthdays and the own task deadli
   await expect(page).toHaveURL("/app/spynet/birthdays");
 });
 
+test("a finished event leaves the tile and the upcoming list for the past list, a running event stays", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const viewer = await createCitizen(prisma, {
+    handle: "kalender-status",
+    permissionStrings: ["event;read"],
+  });
+  await createAppEvent(prisma, {
+    name: "Beendete Operation",
+    createdById: viewer.entity.id,
+    startTime: new Date(Date.now() - 3 * ONE_HOUR_MS),
+    endTime: new Date(Date.now() - ONE_HOUR_MS),
+  });
+  await createAppEvent(prisma, {
+    name: "Laufende Operation",
+    createdById: viewer.entity.id,
+    startTime: new Date(Date.now() - 2 * ONE_DAY_MS),
+    endTime: new Date(Date.now() + ONE_HOUR_MS),
+  });
+  const finishedEvent = page.getByRole("heading", {
+    name: "Beendete Operation",
+  });
+  const runningEvent = page.getByRole("heading", {
+    name: "Laufende Operation",
+  });
+
+  await signIn(viewer.user);
+  await page.goto("/app/dashboard");
+  await expect(runningEvent).toBeVisible();
+  await expect(finishedEvent).toHaveCount(0);
+
+  await page.goto(CALENDAR_PAGE);
+  await expect(runningEvent).toBeVisible();
+  await expect(finishedEvent).toHaveCount(0);
+
+  await page.goto(`${CALENDAR_PAGE}?status=past`);
+  await expect(finishedEvent).toBeVisible();
+  await expect(runningEvent).toHaveCount(0);
+});
+
 test("a type switched off in the app disappears from the tile and stays off after a reload", async ({
   page,
   prisma,
@@ -199,7 +242,7 @@ test("a type switched off in the app disappears from the tile and stays off afte
   await expectAuditEvents(prisma, ["CALENDAR_ENTRY_TYPE_SETTINGS_UPDATED"]);
 });
 
-test("the list shows each day of a page of 14 days, and the past starts with yesterday", async ({
+test("the list shows each day of a page of 14 days, and the past starts today", async ({
   page,
   prisma,
   signIn,
@@ -226,11 +269,11 @@ test("the list shows each day of a page of 14 days, and the past starts with yes
   await expect(dayHeading(page, 0)).toBeVisible();
 
   await clickUntilUrl(page, toggleLabel(page, /^Vergangen$/), /status=past/);
-  await expect(dayHeading(page, -1)).toBeVisible();
-  await expect(dayHeading(page, 0)).toHaveCount(0);
-  const yesterdayBox = await dayHeading(page, -1).boundingBox();
-  const twoWeeksAgoBox = await dayHeading(page, -14).boundingBox();
-  expect(yesterdayBox!.y).toBeLessThan(twoWeeksAgoBox!.y);
+  await expect(dayHeading(page, 0)).toBeVisible();
+  await expect(dayHeading(page, 1)).toHaveCount(0);
+  const todayBox = await dayHeading(page, 0).boundingBox();
+  const lastDayBox = await dayHeading(page, -13).boundingBox();
+  expect(todayBox!.y).toBeLessThan(lastDayBox!.y);
 });
 
 test("a user without event;read sees the seasonal entries but no events", async ({

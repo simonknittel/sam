@@ -1,6 +1,6 @@
 import { Link } from "@/modules/common/components/Link";
 import { OnboardingTargetId } from "@/modules/onboarding/utils/targets";
-import { toLocalDateKey } from "@sam-monorepo/domain";
+import { CalendarListStatus, toLocalDateKey } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { getCalendarEntries } from "../queries/getCalendarEntries";
 import {
@@ -14,16 +14,16 @@ interface Props {
 }
 
 /**
- * The entries of the next days (see `DASHBOARD_CALENDAR_DAY_COUNT`) and the
- * events that run now, under a heading for each day, without a limit. The
- * type filter of the calendar app applies.
+ * The upcoming and running entries of the next days (see
+ * `DASHBOARD_CALENDAR_DAY_COUNT`), under a heading for each day, without a
+ * limit. The type filter of the calendar app applies.
  */
 export const CalendarTile = async ({ className }: Props) => {
   const { start, end } = getDashboardCalendarRange();
   const entries = await getCalendarEntries(
     toLocalDateKey(start),
     toLocalDateKey(end),
-    true,
+    CalendarListStatus.Upcoming,
   );
 
   return (

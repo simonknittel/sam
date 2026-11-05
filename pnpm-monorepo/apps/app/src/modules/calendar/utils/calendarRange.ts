@@ -1,6 +1,7 @@
 import { createCursorPaginationLoader } from "@/modules/common/CursorPagination/createCursorPaginationLoader";
 import {
   addDaysToLocalDate,
+  CalendarListStatus,
   compareLocalDates,
   fromDateColumnValue,
   getLocalDate,
@@ -13,14 +14,6 @@ import {
   type LocalDateRange,
 } from "@sam-monorepo/domain";
 import { parseAsStringEnum, type SearchParams } from "nuqs/server";
-
-/** The status filter of the calendar app */
-export enum CalendarListStatus {
-  /** From today, the earliest day first */
-  Upcoming = "upcoming",
-  /** Until yesterday, the latest day first */
-  Past = "past",
-}
 
 /** The number of days of one page of the calendar app */
 export const CALENDAR_PAGE_DAY_COUNT = 14;
@@ -46,6 +39,7 @@ const addMonthsToLocalDate = (date: LocalDate, months: number) =>
   );
 
 export interface CalendarPage {
+  readonly status: CalendarListStatus;
   /** The days of the page in the order of the list */
   readonly days: LocalDate[];
   readonly range: LocalDateRange;
@@ -58,6 +52,7 @@ export interface CalendarPage {
 /**
  * A page of the calendar app: `CALENDAR_PAGE_DAY_COUNT` days from the cursor,
  * which is the first day of the page in the order of the list. Each status
+ * starts today, because today can have upcoming and finished entries, and
  * goes `MAXIMUM_CALENDAR_RANGE_MONTHS` months from today, because the
  * birthdays and the seasonal days repeat each year without an end. A cursor
  * outside of these days counts as a missing one, like a malformed one: the
@@ -69,10 +64,6 @@ export const getCalendarPage = (
   today: LocalDate,
 ): CalendarPage => {
   const step = status === CalendarListStatus.Upcoming ? 1 : -1;
-  const firstDay =
-    status === CalendarListStatus.Upcoming
-      ? today
-      : addDaysToLocalDate(today, -1);
   const lastDay = addMonthsToLocalDate(
     today,
     step * MAXIMUM_CALENDAR_RANGE_MONTHS,
@@ -85,10 +76,10 @@ export const getCalendarPage = (
   const cursorDay = cursor ? parseLocalDateKey(cursor) : null;
   const pageStart =
     cursorDay &&
-    compareInList(cursorDay, firstDay) >= 0 &&
+    compareInList(cursorDay, today) >= 0 &&
     compareInList(cursorDay, lastDay) <= 0
       ? cursorDay
-      : firstDay;
+      : today;
 
   const fullPageEnd = addDaysToLocalDate(
     pageStart,
@@ -110,9 +101,10 @@ export const getCalendarPage = (
     -step * CALENDAR_PAGE_DAY_COUNT,
   );
   const prevStart =
-    compareInList(fullPrevStart, firstDay) < 0 ? firstDay : fullPrevStart;
+    compareInList(fullPrevStart, today) < 0 ? today : fullPrevStart;
 
   return {
+    status,
     days,
     range:
       step > 0
@@ -123,7 +115,7 @@ export const getCalendarPage = (
         ? toLocalDateKey(addDaysToLocalDate(pageEnd, step))
         : null,
     prevCursor:
-      compareInList(pageStart, firstDay) > 0 ? toLocalDateKey(prevStart) : null,
+      compareInList(pageStart, today) > 0 ? toLocalDateKey(prevStart) : null,
   };
 };
 

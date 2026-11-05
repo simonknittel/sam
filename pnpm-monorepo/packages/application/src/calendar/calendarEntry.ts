@@ -105,10 +105,7 @@ export interface CalendarQuery {
   readonly from: Date;
   /** The first moment after the range */
   readonly until: Date;
-  /**
-   * Also the events that started before the range and did not end yet (the
-   * dashboard tile)
-   */
+  /** Also the events that started before the range and did not end yet */
   readonly includeRunningEvents: boolean;
 }
 

@@ -1,9 +1,13 @@
 import {
   addDaysToLocalDate,
   CALENDAR_ENTRY_TYPES,
+  CalendarEntryType,
+  CalendarListStatus,
   CalendarRangeProblem,
   compareLocalDates,
   findCalendarRangeProblem,
+  getEventEndTime,
+  getLocalDate,
   getStartOfLocalDay,
   ORGANIZATION_TIMEZONE,
   type LocalDateRange,
@@ -35,10 +39,12 @@ const RANGE_PROBLEM_MESSAGES: Record<
 export interface FindCalendarEntriesInput {
   readonly range: LocalDateRange;
   /**
-   * Also the events that started before the range and did not end yet. The
-   * dashboard tile shows them.
+   * Upcoming: the entries of the range that did not finish. When the range
+   * starts today or earlier, also the events that started before the range
+   * and still run. Past: the entries of the range that finished. Without a
+   * status: all entries of the range.
    */
-  readonly includeRunningEvents?: boolean;
+  readonly status?: CalendarListStatus;
 }
 
 const TYPE_ORDER = new Map(
@@ -58,6 +64,25 @@ const compareCalendarEntries = (first: CalendarEntry, second: CalendarEntry) =>
   first.key.localeCompare(second.key);
 
 /**
+ * An entry of the whole day finishes at the end of its day, an event at its
+ * end (see `getEventEndTime`). Each other entry is a point in time.
+ */
+const hasEntryFinished = (entry: CalendarEntry, now: Date) => {
+  if (!entry.time)
+    return (
+      compareLocalDates(entry.date, getLocalDate(now, ORGANIZATION_TIMEZONE)) <
+      0
+    );
+
+  const endTime =
+    entry.type === CalendarEntryType.Event
+      ? getEventEndTime(entry.event)
+      : entry.time;
+
+  return endTime <= now;
+};
+
+/**
  * The entries of the calendar in the range that the actor can see, sorted
  * (see `compareCalendarEntries`). Only the collectors of the types that the
  * actor can read and did not switch off run (see
@@ -69,21 +94,26 @@ const compareCalendarEntries = (first: CalendarEntry, second: CalendarEntry) =>
 export const findCalendarEntries = (
   context: ApplicationContext,
   actor: Actor,
-  { range, includeRunningEvents = false }: FindCalendarEntriesInput,
+  { range, status }: FindCalendarEntriesInput,
 ): Promise<CalendarEntry[]> =>
   withSpan(context, "findCalendarEntries", async () => {
     const rangeProblem = findCalendarRangeProblem(range);
     if (rangeProblem)
       throw new ValidationError(RANGE_PROBLEM_MESSAGES[rangeProblem]);
 
+    const now = context.now();
+    const rangeStart = getStartOfLocalDay(range.start, ORGANIZATION_TIMEZONE);
+
     const query: CalendarQuery = {
       range,
-      from: getStartOfLocalDay(range.start, ORGANIZATION_TIMEZONE),
+      from: rangeStart,
       until: getStartOfLocalDay(
         addDaysToLocalDate(range.end, 1),
         ORGANIZATION_TIMEZONE,
       ),
-      includeRunningEvents,
+      /** A later page of the list must not show the running events again */
+      includeRunningEvents:
+        status === CalendarListStatus.Upcoming && rangeStart <= now,
     };
 
     const settings = await findOwnCalendarEntryTypeSettings(context, actor);
@@ -99,5 +129,15 @@ export const findCalendarEntries = (
         ),
     );
 
-    return entriesByType.flat().toSorted(compareCalendarEntries);
+    const entries = status
+      ? entriesByType
+          .flat()
+          .filter(
+            (entry) =>
+              hasEntryFinished(entry, now) ===
+              (status === CalendarListStatus.Past),
+          )
+      : entriesByType.flat();
+
+    return entries.toSorted(compareCalendarEntries);
   });

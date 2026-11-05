@@ -1,7 +1,7 @@
 import type { Event } from "@sam-monorepo/database/client";
 
 /** 4 hours: the assumed duration of an event without an explicit end */
-const FALLBACK_EVENT_DURATION_MILLISECONDS = 4 * 60 * 60 * 1000;
+export const FALLBACK_EVENT_DURATION_MILLISECONDS = 4 * 60 * 60 * 1000;
 
 /**
  * The end of an event. An event without an explicit end ends 4 hours after

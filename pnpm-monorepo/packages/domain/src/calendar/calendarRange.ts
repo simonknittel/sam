@@ -21,6 +21,14 @@ export interface LocalDateRange {
  */
 export const MAXIMUM_CALENDAR_RANGE_MONTHS = 12;
 
+/** Which entries of the calendar a list shows */
+export enum CalendarListStatus {
+  /** The entries that did not finish yet, the earliest day first */
+  Upcoming = "upcoming",
+  /** The entries that finished, the latest day first */
+  Past = "past",
+}
+
 /** Why the calendar refuses a range */
 export enum CalendarRangeProblem {
   EndBeforeStart = "end_before_start",

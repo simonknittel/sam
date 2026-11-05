@@ -1,6 +1,6 @@
 import { RadioFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/RadioFilter";
 import type { CalendarEntryTypeSetting } from "@sam-monorepo/application";
-import { CalendarListStatus } from "../utils/calendarRange";
+import { CalendarListStatus } from "@sam-monorepo/domain";
 import { CalendarTypeFilter } from "./CalendarTypeFilter";
 
 interface Props {
