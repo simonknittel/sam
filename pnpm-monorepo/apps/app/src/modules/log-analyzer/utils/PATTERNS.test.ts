@@ -26,6 +26,15 @@ describe("PATTERNS", () => {
   );
 
   test.each(Object.values(LogAnalyzerEntryType))(
+    "the first line of every %s sample holds its marker",
+    (type) => {
+      const [firstLine] = SAMPLE_LINES[type].split("\n");
+
+      expect(firstLine).toContain(LOG_ANALYZER_ENTRY_PATTERNS[type].marker);
+    },
+  );
+
+  test.each(Object.values(LogAnalyzerEntryType))(
     "finds every %s sample once in a file",
     (type) => {
       const fileContent = `${Object.values(SAMPLE_LINES).join("\r\n")}\r\n`;

@@ -39,9 +39,16 @@ export enum LogAnalyzerEntryType {
 
 interface LogAnalyzerEntryPattern {
   /**
-   * The expression scans whole log files, thus it carries the global and the
-   * multiline flag. It has an `isoDate` group, which gives the time of the
-   * event, unless `takesTimeOfPrecedingLine` is set.
+   * Fixed text in the first line of each match. The reader of the app finds
+   * the lines with this text and runs `regex` only on them, thus a new
+   * pattern with a marker of an existing pattern costs no additional scan of
+   * the text. A wrong marker removes all matches of the type.
+   */
+  readonly marker: string;
+  /**
+   * The expression carries the global and the multiline flag, so that it can
+   * scan a whole log file. It has an `isoDate` group, which gives the time of
+   * the event, unless `takesTimeOfPrecedingLine` is set.
    *
    * A match spans two lines at most, because a read of a file which grew
    * starts one line before the new lines (see `createLogFileReader` in the
@@ -63,17 +70,22 @@ interface LogAnalyzerEntryPattern {
   readonly takesTimeOfPrecedingLine?: true;
 }
 
+/** The tag of all notifications which the game shows on the screen */
+const NOTIFICATION_MARKER = "<SHUDEvent_OnNotification>";
+
 export const LOG_ANALYZER_ENTRY_PATTERNS: Record<
   LogAnalyzerEntryType,
   LogAnalyzerEntryPattern
 > = {
   [LogAnalyzerEntryType.JoinPu]: {
+    marker: "<Join PU>",
     // <2025-06-22T09:59:12.293Z> [Notice] <Join PU> address[35.187.166.216] port[64336] shard[pub_euw1b_9873572_100] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>[^<]+<Join PU>(?:(?!shard\[).)+shard\[(?<shard>[\d\w_]+)\].+$/gm,
   },
 
   [LogAnalyzerEntryType.OwnDeath]: {
+    marker: "<[ActorState] Dead>",
     /**
      * The game writes this line only for a death inside a vehicle which was
      * destroyed with a detached interior. A death on foot leaves no line.
@@ -84,6 +96,7 @@ export const LOG_ANALYZER_ENTRY_PATTERNS: Record<
   },
 
   [LogAnalyzerEntryType.BlueprintReceivedNotification]: {
+    marker: NOTIFICATION_MARKER,
     // <2026-05-14T14:45:40.207Z> [Notice] <SHUDEvent_OnNotification> Added notification "Received Blueprint: Morozov-SH Helmet Thule: " [25] to queue. New queue size: 3, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     // <2026-05-25T17:28:05.820Z> [Notice] <SHUDEvent_OnNotification> Added notification "<EM4>Received Blueprint: Arbor MH1 Mining Laser [BP]</EM4>: " [15] to queue. New queue size: 2, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
@@ -91,36 +104,42 @@ export const LOG_ANALYZER_ENTRY_PATTERNS: Record<
   },
 
   [LogAnalyzerEntryType.ContractAcceptedNotification]: {
+    marker: NOTIFICATION_MARKER,
     // <2026-05-25T07:45:33.982Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Accepted:  Wikelo Arrive to System: " [4] to queue. New queue size: 1, MissionId: [bf7d2465-cf1e-480b-ae5c-25040d716e5f], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "(?:(?!Contract Accepted: ).)*Contract Accepted: (?<contract>.+): ".*$/gm,
   },
 
   [LogAnalyzerEntryType.ContractCompleteNotification]: {
+    marker: NOTIFICATION_MARKER,
     // <2026-06-01T10:15:20.123Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Complete:  Wikelo Arrive to System: " [5] to queue. New queue size: 2, MissionId: [bf7d2465-cf1e-480b-ae5c-25040d716e5f], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "(?:(?!Contract Complete: ).)*Contract Complete: (?<contract>.+): ".*$/gm,
   },
 
   [LogAnalyzerEntryType.ContractFailedNotification]: {
+    marker: NOTIFICATION_MARKER,
     // <2026-05-25T18:03:03.012Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Failed: CRITICAL REFUEL REQUEST: Crusader Ares Star Fighter Ion <EM4>[200 Rep] [BP]*</EM4>: " [189] to queue. New queue size: 2, MissionId: [c54aa278-06e1-4c83-86d2-9e795f7691f3], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "(?:(?!Contract Failed: ).)*Contract Failed: (?<contract>.+): ".*$/gm,
   },
 
   [LogAnalyzerEntryType.ContractSharedNotification]: {
+    marker: NOTIFICATION_MARKER,
     // <2026-05-21T18:32:20.325Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Shared: Tactical Strike Group Needed <EM4>[300 Rep] [BP]</EM4>: " [109] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "(?:(?!Contract Shared: ).)*Contract Shared: (?<contract>.+): ".*$/gm,
   },
 
   [LogAnalyzerEntryType.ContractWithdrawnNotification]: {
+    marker: NOTIFICATION_MARKER,
     // <2026-05-21T19:02:11.481Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Withdrawn:  A Call to Arms: " [231] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "(?:(?!Contract Withdrawn: ).)*Contract Withdrawn: (?<contract>.+): ".*$/gm,
   },
 
   [LogAnalyzerEntryType.Disconnection]: {
+    marker: "<Channel Disconnected>",
     /**
      * The other reason the game writes is "Nub destroyed", an internal
      * teardown on every server change, which is no event of the player.
@@ -133,18 +152,21 @@ export const LOG_ANALYZER_ENTRY_PATTERNS: Record<
   },
 
   [LogAnalyzerEntryType.InjuryDetectedNotification]: {
+    marker: NOTIFICATION_MARKER,
     // <2026-08-27T10:22:35.005Z> [Notice] <SHUDEvent_OnNotification> Added notification "Minor Injury Detected - Left arm - Tier 3 Treatment Required : " [20] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "(?<severity>\w+) Injury Detected - (?<bodyPart>[^-]+) - Tier (?<tier>\d+) Treatment Required ?: ".*$/gm,
   },
 
   [LogAnalyzerEntryType.MedBedHeal]: {
+    marker: "<MED BED HEAL>",
     // <2026-08-27T11:08:44.651Z> [Notice] <MED BED HEAL> Actor: ... (Non-Authoritative CLIENT: ...) | [CEntityComponentMedBed::HandleComponentEvent:1101] | -> Perform surgery event Success, med bed name: Bed_Single_Medical_Instance_Hospital_SOO003, vehicle name: none, head: true torso: false leftArm: true rightArm: false leftLeg: false rightLeg: false [Team_ActorFeatures][Actor]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<MED BED HEAL>(?:(?!-> Perform surgery event ).)*-> Perform surgery event (?<result>\w+), med bed name: (?<medBed>[^,]+), vehicle name: (?<vehicle>[^,]+), head: (?<head>\w+) torso: (?<torso>\w+) leftArm: (?<leftArm>\w+) rightArm: (?<rightArm>\w+) leftLeg: (?<leftLeg>\w+) rightLeg: (?<rightLeg>\w+).*$/gm,
   },
 
   [LogAnalyzerEntryType.ShopPurchase]: {
+    marker: "<CEntityComponentShopUIProvider::SendShopBuyRequest>",
     /**
      * The line is the request of the client. The answer of the server,
      * `<CEntityComponentShopUIProvider::RmShopFlowResponse>`, names neither
@@ -156,6 +178,7 @@ export const LOG_ANALYZER_ENTRY_PATTERNS: Record<
   },
 
   [LogAnalyzerEntryType.ArmisticeZoneNotification]: {
+    marker: NOTIFICATION_MARKER,
     // <2026-08-26T18:59:25.029Z> [Notice] <SHUDEvent_OnNotification> Added notification "Entering Armistice Zone - Combat Prohibited: " [3] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     // <2026-08-26T19:34:51.380Z> [Notice] <SHUDEvent_OnNotification> Added notification "Leaving Armistice Zone - Caution Advised: " [6] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
@@ -163,6 +186,7 @@ export const LOG_ANALYZER_ENTRY_PATTERNS: Record<
   },
 
   [LogAnalyzerEntryType.JurisdictionNotification]: {
+    marker: NOTIFICATION_MARKER,
     /** The game writes no line for leaving a jurisdiction */
     // <2026-08-26T18:50:32.801Z> [Notice] <SHUDEvent_OnNotification> Added notification "Entered Crusader Industries Jurisdiction: " [1] to queue. New queue size: 2, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
@@ -170,12 +194,14 @@ export const LOG_ANALYZER_ENTRY_PATTERNS: Record<
   },
 
   [LogAnalyzerEntryType.MonitoredSpaceNotification]: {
+    marker: NOTIFICATION_MARKER,
     // <2026-08-27T10:07:25.302Z> [Notice] <SHUDEvent_OnNotification> Added notification "Exited Monitored Space: " [15] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "(?<direction>Entered|Exited) Monitored Space: ".*$/gm,
   },
 
   [LogAnalyzerEntryType.PrivatePropertyNotification]: {
+    marker: NOTIFICATION_MARKER,
     // <2026-08-26T19:06:02.117Z> [Notice] <SHUDEvent_OnNotification> Added notification "Entering Private Property: " [4] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "(?<direction>Entering|Leaving) Private Property: ".*$/gm,
@@ -187,6 +213,7 @@ export const LOG_ANALYZER_ENTRY_PATTERNS: Record<
    * with CRLF line ends.
    */
   [LogAnalyzerEntryType.PartyInviteReceivedNotification]: {
+    marker: NOTIFICATION_MARKER,
     // <2026-08-26T18:50:40.373Z> [Notice] <SHUDEvent_OnNotification> Added notification "SomeHandle
     // <2026-08-26T18:50:40.373Z> Party Invite Received: Accept Invitation?: " [2] to queue. New queue size: 2, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
@@ -194,6 +221,7 @@ export const LOG_ANALYZER_ENTRY_PATTERNS: Record<
   },
 
   [LogAnalyzerEntryType.PartyMemberJoinedNotification]: {
+    marker: NOTIFICATION_MARKER,
     // <2026-05-25T16:49:39.043Z> [Notice] <SHUDEvent_OnNotification> Added notification "New Member Joined
     // <2026-05-25T16:49:39.043Z> SomeHandle has joined the party.: " [4] to queue. New queue size: 2, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
@@ -201,6 +229,7 @@ export const LOG_ANALYZER_ENTRY_PATTERNS: Record<
   },
 
   [LogAnalyzerEntryType.PartyMemberLeftNotification]: {
+    marker: NOTIFICATION_MARKER,
     // <2026-05-25T18:36:38.835Z> [Notice] <SHUDEvent_OnNotification> Added notification "Member Left
     // <2026-05-25T18:36:38.835Z> SomeHandle has left the party.: " [285] to queue. New queue size: 3, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
@@ -208,6 +237,7 @@ export const LOG_ANALYZER_ENTRY_PATTERNS: Record<
   },
 
   [LogAnalyzerEntryType.PartyLeaderChangedNotification]: {
+    marker: NOTIFICATION_MARKER,
     // <2026-05-25T18:39:22.607Z> [Notice] <SHUDEvent_OnNotification> Added notification "New Party Leader
     // <2026-05-25T18:39:22.607Z> SomeHandle is now party leader.: " [311] to queue. New queue size: 10, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
@@ -215,24 +245,28 @@ export const LOG_ANALYZER_ENTRY_PATTERNS: Record<
   },
 
   [LogAnalyzerEntryType.InstanceEntered]: {
+    marker: "<[Instancing] Player entered instance>",
     // <2026-08-27T10:05:56.047Z> [Notice] <[Instancing] Player entered instance> [Instancing][CEntityComponentBrokeredInstance::OnPlayerEnterInstance] Player SomeHandle[...] entered instance StreamingSOC_inst_dogleg_ht_a_siege_a[788400312747], which is NOT authoritative [Team_CGP5][Code][Instancing]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<\[Instancing\] Player entered instance> (?:(?!Player ).)*Player (?<handle>.+?)\[\d+\] entered instance (?<instance>[^\[]+)\[(?<instanceId>\d+)\].*$/gm,
   },
 
   [LogAnalyzerEntryType.InstanceExited]: {
+    marker: "<[Instancing] Player exited instance>",
     // <2026-08-27T10:08:16.735Z> [Notice] <[Instancing] Player exited instance> [Instancing][CEntityComponentBrokeredInstance::OnPlayerExitInstance] Player SomeHandle[...] left instance StreamingSOC_inst_dogleg_ht_a_siege_a[788400312747], which is NOT authoritative [Team_CGP5][Code][Instancing]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<\[Instancing\] Player exited instance> (?:(?!Player ).)*Player (?<handle>.+?)\[\d+\] left instance (?<instance>[^\[]+)\[(?<instanceId>\d+)\].*$/gm,
   },
 
   [LogAnalyzerEntryType.GameQuit]: {
+    marker: "<SystemQuit>",
     /** A session which crashed has no such line, see `gameCrash` */
     // <2026-08-27T12:22:53.922Z> [Notice] <SystemQuit> CSystem::Quit invoked with - cause=30016, reason=Quit via console command, exitCode=0, thread id=2188, main thread id=2188 [Team_Unknown][System]
     regex: /^<(?<isoDate>[\d\-T:.Z]+)> \[Notice\] \<SystemQuit\>.*$/gm,
   },
 
   [LogAnalyzerEntryType.GameCrash]: {
+    marker: "Exception STATUS_",
     /**
      * The crash report at the end of a log file carries no timestamps. The
      * exception line names the kind of the crash.
