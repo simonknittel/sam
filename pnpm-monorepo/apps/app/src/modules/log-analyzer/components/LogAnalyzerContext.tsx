@@ -26,6 +26,11 @@ import { ContractNamesContext } from "./ContractNames";
 
 type EntryTypeRecord = Record<LogAnalyzerEntryType, boolean>;
 
+type SetEntryTypes = (
+  types: readonly LogAnalyzerEntryType[],
+  isEnabled: boolean,
+) => void;
+
 /** A page which stays open over midnight must know the new day */
 const TODAY_UPDATE_INTERVAL_MS = 60_000;
 
@@ -53,24 +58,15 @@ interface Context {
   readonly setDateRange: Dispatch<SetStateAction<DateRange>>;
   /** The types whose own entries the table shows. */
   readonly ownEntryTypes: EntryTypeRecord;
-  readonly setOwnEntryType: (
-    type: LogAnalyzerEntryType,
-    value: boolean,
-  ) => void;
+  readonly setOwnEntryTypes: SetEntryTypes;
   /** The types whose own entries the upload sends to the server. */
   readonly sharingEntryTypes: EntryTypeRecord;
-  readonly setSharingEntryType: (
-    type: LogAnalyzerEntryType,
-    value: boolean,
-  ) => void;
+  readonly setSharingEntryTypes: SetEntryTypes;
   /** True while the upload sends at least one type. */
   readonly isSharingEnabled: boolean;
   /** The types whose entries of the other citizens the table shows. */
   readonly othersEntryTypes: EntryTypeRecord;
-  readonly setOthersEntryType: (
-    type: LogAnalyzerEntryType,
-    value: boolean,
-  ) => void;
+  readonly setOthersEntryTypes: SetEntryTypes;
   /** True while the table shows at least one type of the other citizens. */
   readonly isSharedViewEnabled: boolean;
   /** The citizens whose shared entries the table hides. Empty shows all. */
@@ -92,6 +88,10 @@ const ALL_TYPES_OFF = createEntryTypeRecord(false);
  * read. The upload function changes with the record of the shared types,
  * thus the record must change only with the stored text (see
  * `requiresFullReadRef` in `LogAnalyzer`).
+ *
+ * The setter takes all types of a change at once: `useLocalStorage` gives each
+ * update the value of the last render, thus two updates in one event would
+ * overwrite each other.
  */
 const useStoredEntryTypes = (key: string, defaultValue: EntryTypeRecord) => {
   const [storedValue, setStoredValue] = useStoredValue<
@@ -100,11 +100,14 @@ const useStoredEntryTypes = (key: string, defaultValue: EntryTypeRecord) => {
 
   const value = { ...defaultValue, ...storedValue };
 
-  const setType = (type: LogAnalyzerEntryType, isEnabled: boolean) => {
-    setStoredValue((previous) => ({ ...previous, [type]: isEnabled }));
+  const setTypes: SetEntryTypes = (types, isEnabled) => {
+    setStoredValue((previous) => ({
+      ...previous,
+      ...Object.fromEntries(types.map((type) => [type, isEnabled])),
+    }));
   };
 
-  return [value, setType] as const;
+  return [value, setTypes] as const;
 };
 
 interface Props {
@@ -115,17 +118,17 @@ interface Props {
 export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
   const [isPending, startTransition] = useTransition();
 
-  const [ownEntryTypes, setOwnEntryType] = useStoredEntryTypes(
+  const [ownEntryTypes, setOwnEntryTypes] = useStoredEntryTypes(
     "log_analyzer_show_own_types",
     ALL_TYPES_ON,
   );
 
-  const [sharingEntryTypes, setSharingEntryType] = useStoredEntryTypes(
+  const [sharingEntryTypes, setSharingEntryTypes] = useStoredEntryTypes(
     "log_analyzer_share_types",
     ALL_TYPES_OFF,
   );
 
-  const [othersEntryTypes, setStoredOthersEntryType] = useStoredEntryTypes(
+  const [othersEntryTypes, setStoredOthersEntryTypes] = useStoredEntryTypes(
     "log_analyzer_show_others_types",
     ALL_TYPES_OFF,
   );
@@ -176,15 +179,12 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
 
   const [entries, setEntries] = useState<Map<string, IEntry>>(new Map());
 
-  const setOthersEntryType = (
-    type: LogAnalyzerEntryType,
-    isEnabled: boolean,
-  ) => {
-    setStoredOthersEntryType(type, isEnabled);
+  const setOthersEntryTypes: SetEntryTypes = (types, isEnabled) => {
+    setStoredOthersEntryTypes(types, isEnabled);
 
     /** The entries of the other citizens leave the table with the last type */
     const isAnotherTypeEnabled = Object.values(LogAnalyzerEntryType).some(
-      (otherType) => otherType !== type && othersEntryTypes[otherType],
+      (otherType) => !types.includes(otherType) && othersEntryTypes[otherType],
     );
     if (isEnabled || isAnotherTypeEnabled) return;
 
@@ -218,12 +218,12 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
     dateRange,
     setDateRange,
     ownEntryTypes,
-    setOwnEntryType,
+    setOwnEntryTypes,
     sharingEntryTypes,
-    setSharingEntryType,
+    setSharingEntryTypes,
     isSharingEnabled,
     othersEntryTypes,
-    setOthersEntryType,
+    setOthersEntryTypes,
     isSharedViewEnabled,
     hiddenCitizenIds,
     setHiddenCitizenIds,

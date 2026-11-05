@@ -2,7 +2,7 @@
 
 import clsx from "clsx";
 import { type InputHTMLAttributes, type ReactNode } from "react";
-import { FaCheck } from "react-icons/fa";
+import { FaCheck, FaMinus } from "react-icons/fa";
 
 interface Props extends InputHTMLAttributes<HTMLInputElement> {
   /**
@@ -16,6 +16,8 @@ interface Props extends InputHTMLAttributes<HTMLInputElement> {
   noLabel?: ReactNode;
   labelClassName?: string;
   id?: string;
+  /** Shows that only a part of a group is checked. `checked` stays false. */
+  isIndeterminate?: boolean;
 }
 
 export const YesNoCheckbox = (props: Props) => {
@@ -26,6 +28,7 @@ export const YesNoCheckbox = (props: Props) => {
     noLabel = "Nein",
     labelClassName,
     id,
+    isIndeterminate = false,
     ...rest
   } = props;
 
@@ -41,10 +44,23 @@ export const YesNoCheckbox = (props: Props) => {
       )}
       htmlFor={id}
     >
-      <input type="checkbox" className="peer sr-only" id={id} {...rest} />
+      <input
+        type="checkbox"
+        className="peer sr-only"
+        id={id}
+        ref={(element) => {
+          /** The browser has this state only as a property of the element */
+          if (element) element.indeterminate = isIndeterminate;
+        }}
+        {...rest}
+      />
 
       <span className="relative flex size-8 flex-none items-center justify-center rounded-secondary bg-neutral-700 peer-checked:hidden">
-        <FaCheck className="hidden size-6 text-green-500/50 group-focus-within:block group-hover:block" />
+        {isIndeterminate ? (
+          <FaMinus className="size-4 text-green-500" />
+        ) : (
+          <FaCheck className="hidden size-6 text-green-500/50 group-focus-within:block group-hover:block" />
+        )}
       </span>
 
       <span className="relative hidden size-8 flex-none items-center justify-center rounded-secondary bg-neutral-700 peer-checked:flex">

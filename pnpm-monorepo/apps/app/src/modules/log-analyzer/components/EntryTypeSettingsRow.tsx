@@ -25,11 +25,11 @@ export const EntryTypeSettingsRow = ({
 }: Props) => {
   const {
     ownEntryTypes,
-    setOwnEntryType,
+    setOwnEntryTypes,
     sharingEntryTypes,
-    setSharingEntryType,
+    setSharingEntryTypes,
     othersEntryTypes,
-    setOthersEntryType,
+    setOthersEntryTypes,
   } = useLogAnalyzerContext();
 
   const { title, icon: Icon } = PATTERNS[type];
@@ -46,7 +46,7 @@ export const EntryTypeSettingsRow = ({
           hideLabel
           aria-label={`${title}: Eigene anzeigen`}
           checked={ownEntryTypes[type]}
-          onChange={(event) => setOwnEntryType(type, event.target.checked)}
+          onChange={(event) => setOwnEntryTypes([type], event.target.checked)}
         />
       </td>
 
@@ -59,7 +59,7 @@ export const EntryTypeSettingsRow = ({
               checked={sharingEntryTypes[type]}
               disabled={!canShare}
               onChange={(event) =>
-                setSharingEntryType(type, event.target.checked)
+                setSharingEntryTypes([type], event.target.checked)
               }
             />
           </td>
@@ -70,7 +70,7 @@ export const EntryTypeSettingsRow = ({
               aria-label={`${title}: Andere anzeigen`}
               checked={othersEntryTypes[type]}
               onChange={(event) =>
-                setOthersEntryType(type, event.target.checked)
+                setOthersEntryTypes([type], event.target.checked)
               }
             />
           </td>
