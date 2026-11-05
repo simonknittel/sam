@@ -5,6 +5,9 @@ import { Tooltip } from "@/modules/common/components/Tooltip";
 import clsx from "clsx";
 import { FaInfoCircle } from "react-icons/fa";
 import { TfiReload } from "react-icons/tfi";
+import type { LogSelection } from "../utils/selectLogFiles";
+import type { ReadProgress } from "../utils/types";
+import { DateRangeForm } from "./DateRangeForm";
 import { EntrySettings } from "./EntrySettings";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 import { OverlayButton } from "./OverlayButton";
@@ -12,15 +15,23 @@ import { OverlayButton } from "./OverlayButton";
 interface Props {
   readonly className?: string;
   readonly onRefresh: () => void;
+  readonly logSelection: LogSelection | null;
+  readonly readProgress: ReadProgress | null;
 }
 
-export const Toolbar = ({ className, onRefresh }: Props) => {
+export const Toolbar = ({
+  className,
+  onRefresh,
+  logSelection,
+  readProgress,
+}: Props) => {
   const {
     isPending,
     isAutostartEnabled,
     setIsAutostartEnabled,
     isLiveModeEnabled,
     setIsLiveModeEnabled,
+    isLivePaused,
   } = useLogAnalyzerContext();
 
   return (
@@ -65,6 +76,7 @@ export const Toolbar = ({ className, onRefresh }: Props) => {
         }
         labelClassName="w-auto"
         checked={isLiveModeEnabled}
+        disabled={isLivePaused}
         onChange={(e) => setIsLiveModeEnabled(e.target.checked)}
       />
 
@@ -99,6 +111,12 @@ export const Toolbar = ({ className, onRefresh }: Props) => {
       <OverlayButton />
 
       <EntrySettings />
+
+      <DateRangeForm
+        logSelection={logSelection}
+        readProgress={readProgress}
+        className="w-full"
+      />
     </div>
   );
 };

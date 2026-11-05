@@ -86,6 +86,40 @@ const canOverlapWindow = async (
   );
 };
 
+/** What the listing of the folder alone tells about a selection. */
+export interface LogSelection {
+  readonly fileCount: number;
+  readonly selectedFileCount: number;
+  readonly selectedByteCount: number;
+  /** In milliseconds. Null when no file name has a date. */
+  readonly oldestSessionStart: number | null;
+}
+
+export const summarizeLogSelection = (
+  logFiles: readonly LogFile[],
+  selectedFiles: readonly LogFile[],
+): LogSelection => {
+  let oldestSessionStart: number | null = null;
+
+  for (const { file } of logFiles) {
+    const sessionStart = getSessionStartFromFileName(file.name);
+    if (sessionStart === null) continue;
+
+    if (oldestSessionStart === null || sessionStart < oldestSessionStart)
+      oldestSessionStart = sessionStart;
+  }
+
+  return {
+    fileCount: logFiles.length,
+    selectedFileCount: selectedFiles.length,
+    selectedByteCount: selectedFiles.reduce(
+      (sum, { file }) => sum + file.size,
+      0,
+    ),
+    oldestSessionStart,
+  };
+};
+
 /**
  * Selects the log files of the window. Only a file without a date in its name
  * needs a read, and that read takes only the first line.

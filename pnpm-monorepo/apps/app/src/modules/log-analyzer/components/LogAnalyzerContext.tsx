@@ -10,6 +10,13 @@ import type {
   TransitionStartFunction,
 } from "react";
 import { createContext, useContext, useState, useTransition } from "react";
+import {
+  endsInThePast,
+  getEntryWindow,
+  isInWindow,
+  NO_DATE_RANGE,
+  type DateRange,
+} from "../utils/entryWindow";
 import { createEntryTypeRecord, type IEntry } from "../utils/PATTERNS";
 
 type EntryTypeRecord = Record<LogAnalyzerEntryType, boolean>;
@@ -24,9 +31,14 @@ interface Context {
   readonly startTransition: TransitionStartFunction;
   readonly isLiveModeEnabled: boolean;
   readonly setIsLiveModeEnabled: Dispatch<SetStateAction<boolean>>;
+  /** True while the end of the date range keeps new lines out of the table. */
+  readonly isLivePaused: boolean;
   readonly isAutostartEnabled: boolean;
   readonly setIsAutostartEnabled: Dispatch<SetStateAction<boolean>>;
   readonly daysToLoad: number;
+  /** Not stored: a reload shows the rolling window again. */
+  readonly dateRange: DateRange;
+  readonly setDateRange: Dispatch<SetStateAction<DateRange>>;
   /** The types whose own entries the table shows. */
   readonly ownEntryTypes: EntryTypeRecord;
   readonly setOwnEntryType: (
@@ -133,6 +145,17 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
 
   const [daysToLoad] = useLocalStorage<number>("log_analyzer_days_to_load", 14);
 
+  const [dateRange, setDateRange] = useState(NO_DATE_RANGE);
+
+  /**
+   * The entries stay in memory when they leave the window, so that narrowing
+   * the range reads no file. This value changes only with its inputs, thus
+   * the start of the rolling window can lag on a page which stays open for
+   * days. The table then shows a little more, never less.
+   */
+  const entryWindow = getEntryWindow(dateRange, daysToLoad);
+  const isLivePaused = endsInThePast(entryWindow);
+
   const [entries, setEntries] = useState<Map<string, IEntry>>(new Map());
 
   const setOthersEntryType = (
@@ -156,6 +179,7 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
   };
 
   const entryFilterFn = (entry: IEntry) => {
+    if (!isInWindow(entry.isoDate, entryWindow)) return false;
     if (!entry.isShared) return ownEntryTypes[entry.type];
     if (!othersEntryTypes[entry.type]) return false;
     return !entry.citizen || !hiddenCitizenIds.includes(entry.citizen.id);
@@ -167,9 +191,12 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
     startTransition,
     isLiveModeEnabled,
     setIsLiveModeEnabled,
+    isLivePaused,
     isAutostartEnabled,
     setIsAutostartEnabled,
     daysToLoad,
+    dateRange,
+    setDateRange,
     ownEntryTypes,
     setOwnEntryType,
     sharingEntryTypes,

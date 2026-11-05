@@ -1,10 +1,28 @@
-import type { IEntry } from "./PATTERNS";
+import { getDateRangeFilter } from "@/modules/common/utils/getDateRangeFilter";
 
-/** The time span of the entries. A missing bound means no limit. */
+/**
+ * The time span of the entries. `end` is exclusive. A missing bound means no
+ * limit.
+ */
 export interface EntryWindow {
   readonly start: Date | null;
   readonly end: Date | null;
 }
+
+/**
+ * The days which the user selected, as `YYYY-MM-DD`. A missing bound means no
+ * limit. Without any bound the Log Analyzer shows the rolling window of the
+ * `daysToLoad` setting.
+ */
+export interface DateRange {
+  readonly from: string | null;
+  readonly to: string | null;
+}
+
+export const NO_DATE_RANGE: DateRange = { from: null, to: null };
+
+export const hasDateRange = ({ from, to }: DateRange) =>
+  from !== null || to !== null;
 
 /**
  * The start of the window which the `daysToLoad` setting gives: the start of
@@ -19,17 +37,20 @@ export const getWindowStart = (daysToLoad: number) => {
   return windowStart;
 };
 
-/**
- * Removes the entries, own and shared, which are older than the window. The
- * window moves on while the page stays open, for example in live mode.
- */
-export const deleteEntriesBefore = (
-  entries: Map<string, IEntry>,
-  windowStart: Date | null,
-) => {
-  if (!windowStart) return;
+/** A selected day covers that whole day as it appears in the table. */
+export const getEntryWindow = (
+  dateRange: DateRange,
+  daysToLoad: number,
+): EntryWindow => {
+  if (!hasDateRange(dateRange))
+    return { start: getWindowStart(daysToLoad), end: null };
 
-  for (const [key, entry] of entries) {
-    if (entry.isoDate < windowStart) entries.delete(key);
-  }
+  const { gte, lt } = getDateRangeFilter(dateRange.from, dateRange.to);
+  return { start: gte ?? null, end: lt ?? null };
 };
+
+export const isInWindow = (date: Date, { start, end }: EntryWindow) =>
+  (!start || date >= start) && (!end || date < end);
+
+export const endsInThePast = ({ end }: EntryWindow) =>
+  end !== null && end.getTime() <= Date.now();

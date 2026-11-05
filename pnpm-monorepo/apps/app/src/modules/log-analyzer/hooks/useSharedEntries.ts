@@ -8,7 +8,6 @@ import {
 } from "@sam-monorepo/domain";
 import { useEffect, useEffectEvent, useRef } from "react";
 import { useLogAnalyzerContext } from "../components/LogAnalyzerContext";
-import { deleteEntriesBefore, getWindowStart } from "../utils/entryWindow";
 import { LIVE_MODE_DOWNLOAD_INTERVAL_MS } from "../utils/liveMode";
 import {
   createEntryKey,
@@ -89,7 +88,6 @@ export const useSharedEntries = () => {
           newEntries.set(entry.key, entry);
         }
 
-        deleteEntriesBefore(newEntries, getWindowStart(daysToLoad));
         return newEntries;
       });
     }
