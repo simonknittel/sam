@@ -288,14 +288,33 @@ const selectFolder = (page: Page) =>
 const refresh = (page: Page) =>
   page.getByRole("button", { name: "Aktualisieren" }).click();
 
+const dateRangeDialog = (page: Page) =>
+  page.getByRole("dialog", { name: "Zeitraum", exact: true });
+
+/** The button names the active range after the word `Zeitraum` */
+const dateRangeButton = (page: Page) =>
+  page.getByRole("button", { name: /^Zeitraum/ });
+
+const openDateRange = (page: Page) =>
+  clickUntilVisible(dateRangeButton(page), dateRangeDialog(page));
+
 const applyDateRange = async (page: Page, from: Date, to: Date) => {
-  await page.getByLabel("Von").fill(toDateValue(from));
-  await page.getByLabel("Bis").fill(toDateValue(to));
-  await page.getByRole("button", { name: "Anwenden" }).click();
+  await openDateRange(page);
+
+  const dialog = dateRangeDialog(page);
+  await dialog.getByLabel("Von").fill(toDateValue(from));
+  await dialog.getByLabel("Bis").fill(toDateValue(to));
+  await dialog.getByRole("button", { name: "Anwenden" }).click();
+
+  await expect(dialog).toHaveCount(0);
 };
 
-const resetDateRange = (page: Page) =>
-  page.getByRole("button", { name: "Zurücksetzen" }).click();
+const resetDateRange = async (page: Page) => {
+  await openDateRange(page);
+  await dateRangeDialog(page)
+    .getByRole("button", { name: "Zurücksetzen" })
+    .click();
+};
 
 /**
  * Collects the uploads the page sends from now on. A server action posts to
@@ -554,7 +573,108 @@ test("a date range shows the entries of its files and a reset the rolling window
 
   await expect(rowOf(page, "Verbindung getrennt")).toBeVisible();
   await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 1);
-  await expect(page.getByLabel("Von")).toHaveValue("");
+  await expect(dateRangeButton(page)).toHaveAccessibleName("Zeitraum");
+});
+
+test("a preset of the date range applies with one click", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, {
+    handle: "log-vorauswahl",
+    permissionStrings: LOG_ANALYZER_PERMISSIONS,
+  });
+
+  await signIn(citizen.user);
+  await stubDirectoryPicker(
+    page,
+    [disconnectionLine(hoursAgo(1))],
+    [
+      createBackupFile(daysAgo(20), joinPuLine(daysAgo(20))),
+      createBackupFile(daysAgo(60), blueprintLine(daysAgo(60))),
+    ],
+  );
+  await page.goto(PAGE_PATH);
+
+  await selectFolder(page);
+  await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 1);
+
+  await openDateRange(page);
+  await dateRangeDialog(page)
+    .getByRole("button", { name: "Letzte 30 Tage" })
+    .click();
+
+  await expect(dateRangeDialog(page)).toHaveCount(0);
+  await expect(rowOf(page, "Shard-Beitritt")).toBeVisible();
+  await expect(rowOf(page, "Verbindung getrennt")).toBeVisible();
+  await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 2);
+  await expect(dateRangeButton(page)).toHaveAccessibleName(/^Zeitraum: \d/);
+});
+
+test("a section sets all types of a column at once", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, {
+    handle: "log-bereich",
+    permissionStrings: LOG_ANALYZER_PERMISSIONS,
+  });
+
+  await signIn(citizen.user);
+  await page.goto(PAGE_PATH);
+  await openSettings(page);
+
+  const section = settingCheckbox(
+    page,
+    "Bereich Party",
+    SettingsColumn.ShowOthers,
+  );
+  const firstType = settingCheckbox(
+    page,
+    "Party-Einladung",
+    SettingsColumn.ShowOthers,
+  );
+  const secondType = settingCheckbox(
+    page,
+    "Party-Leader",
+    SettingsColumn.ShowOthers,
+  );
+  const otherSectionType = settingCheckbox(
+    page,
+    "Gestorben",
+    SettingsColumn.ShowOthers,
+  );
+
+  await settingToggle(page, "Bereich Party", SettingsColumn.ShowOthers).click();
+
+  await expect(section).toBeChecked();
+  await expect(firstType).toBeChecked();
+  await expect(secondType).toBeChecked();
+  await expect(otherSectionType).not.toBeChecked();
+
+  /** One type less: the section shows that only a part is on */
+  await settingToggle(
+    page,
+    "Party-Einladung",
+    SettingsColumn.ShowOthers,
+  ).click();
+
+  await expect(section).not.toBeChecked();
+  await expect(section).toHaveJSProperty("indeterminate", true);
+
+  /** A click on a section with a part of its types turns all of them on */
+  await settingToggle(page, "Bereich Party", SettingsColumn.ShowOthers).click();
+
+  await expect(firstType).toBeChecked();
+  await expect(section).toHaveJSProperty("indeterminate", false);
+
+  await settingToggle(page, "Bereich Party", SettingsColumn.ShowOthers).click();
+
+  await expect(firstType).not.toBeChecked();
+  await expect(secondType).not.toBeChecked();
+  await expect(section).not.toBeChecked();
 });
 
 test("a date range older than the rolling window uploads nothing", async ({
@@ -567,12 +687,17 @@ test("a date range older than the rolling window uploads nothing", async ({
     permissionStrings: LOG_ANALYZER_PERMISSIONS,
   });
   const recentLine = joinPuLine(hoursAgo(1));
+  const oldEventAt = daysAgo(40);
 
   await signIn(citizen.user);
   await stubDirectoryPicker(
     page,
     [recentLine],
-    [createBackupFile(daysAgo(40), joinPuLine(daysAgo(40)))],
+    [
+      createBackupFile(oldEventAt, joinPuLine(oldEventAt)),
+      /** The oldest log sets the earliest date of the range */
+      createBackupFile(daysAgo(60), blueprintLine(daysAgo(60))),
+    ],
   );
   await page.goto(PAGE_PATH);
 
@@ -595,8 +720,10 @@ test("a date range older than the rolling window uploads nothing", async ({
   const uploads = recordUploads(page);
   await applyDateRange(page, daysAgo(42), daysAgo(38));
 
-  await expect(rowOf(page, "Shard-Beitritt")).toBeVisible();
-  await expect(page.getByText("1 von 2 Sessions")).toBeVisible();
+  /** The entry of the shared type is on the screen, thus the read found it */
+  await expect(
+    page.locator(`time[datetime="${oldEventAt.toISOString()}"]`),
+  ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Aktualisieren" }),
   ).toBeEnabled();
