@@ -37,11 +37,12 @@ const FILE_START: ReadPosition = {
 
 /**
  * V8 keeps a substring as a view into the string it came from. The state of a
- * file keeps its date for a long time, thus it keeps a copy that does not
- * hold the whole text of the file in memory.
+ * file and the matches of a read live longer than the text of one file, thus
+ * they keep a copy. Without it, a read of all logs of a year holds the whole
+ * text of these logs in memory until it ends.
  */
-const copyString = (value: string) =>
-  JSON.parse(JSON.stringify(value)) as string;
+const copyValue = <Value>(value: Value) =>
+  JSON.parse(JSON.stringify(value)) as Value;
 
 /**
  * The start and the end of the last line which ends with a line feed. Both
@@ -143,12 +144,14 @@ const collectMatches = (
           continue;
         }
 
-        matches.push({
-          type,
-          isoDate,
-          fullMatch: match[0],
-          groups: match.groups,
-        });
+        matches.push(
+          copyValue({
+            type,
+            isoDate,
+            fullMatch: match[0],
+            groups: match.groups,
+          }),
+        );
       }
     }
   }
@@ -198,7 +201,7 @@ const readFile = async (
     isoDateBeforeOffset:
       isoDateBeforeLastLine === null
         ? position.isoDateBeforeOffset
-        : copyString(isoDateBeforeLastLine),
+        : copyValue(isoDateBeforeLastLine),
   };
 };
 
