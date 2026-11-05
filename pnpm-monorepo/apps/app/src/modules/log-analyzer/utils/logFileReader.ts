@@ -4,7 +4,7 @@ import {
   MAXIMUM_LOG_ANALYZER_RAW_LINE_LENGTH,
 } from "@sam-monorepo/domain";
 import { findPrecedingIsoDate } from "./findPrecedingIsoDate";
-import type { LogFile, RawMatch } from "./types";
+import type { LogFile, RawMatch, ReadProgress, ReadResult } from "./types";
 
 const LINE_FEED = 0x0a;
 
@@ -202,42 +202,69 @@ const readFile = async (
   };
 };
 
+interface ReadOptions {
+  /** Runs after each file which the read took from the disk. */
+  readonly onProgress?: (progress: ReadProgress) => void;
+  /** Asked before each file. True stops the read. */
+  readonly shouldStop?: () => boolean;
+}
+
 /**
  * Finds the matches of all patterns in the log files. After the first read,
  * a read gives only the matches of the lines which were added since the read
  * before it, so that live mode does not read the whole window every few
- * seconds. It can give a match a second time.
+ * seconds. It can give a match a second time. A file which leaves the
+ * selection keeps its position, thus a wider window reads only what is new.
  *
  * `isFullRead` reads all files from their start and gives all matches again.
  */
 export const createLogFileReader = () => {
   const states = new Map<string, FileState>();
 
-  return async (files: readonly LogFile[], isFullRead: boolean) => {
+  return async (
+    files: readonly LogFile[],
+    isFullRead: boolean,
+    { onProgress, shouldStop }: ReadOptions = {},
+  ): Promise<ReadResult> => {
     if (isFullRead) states.clear();
 
-    /** A file which left the window is read in full when it comes back */
-    const paths = new Set(files.map((logFile) => logFile.path));
-    for (const path of states.keys()) {
-      if (!paths.has(path)) states.delete(path);
-    }
+    const changedFiles = files.filter(({ path, file }) => {
+      const state = states.get(path);
+      return (
+        state?.size !== file.size || state.lastModified !== file.lastModified
+      );
+    });
+    const byteCount = changedFiles.reduce(
+      (sum, { file }) => sum + file.size,
+      0,
+    );
 
     const matches: RawMatch[] = [];
+    let readFileCount = 0;
+    let readByteCount = 0;
 
-    for (const logFile of files) {
+    for (const logFile of changedFiles) {
+      if (shouldStop?.()) break;
+
       const { path, file } = logFile;
-      const state = states.get(path);
-      if (state?.size === file.size && state.lastModified === file.lastModified)
-        continue;
 
       try {
-        states.set(path, await readFile(logFile, state, matches));
+        states.set(path, await readFile(logFile, states.get(path), matches));
       } catch (error) {
         /** The state stays, thus the next read tries the same lines again */
         console.error("[Log Analyzer] Error reading %s:", path, error);
       }
+
+      readFileCount += 1;
+      readByteCount += file.size;
+      onProgress?.({
+        fileCount: changedFiles.length,
+        readFileCount,
+        byteCount,
+        readByteCount,
+      });
     }
 
-    return matches;
+    return { matches, readFileCount, readByteCount };
   };
 };

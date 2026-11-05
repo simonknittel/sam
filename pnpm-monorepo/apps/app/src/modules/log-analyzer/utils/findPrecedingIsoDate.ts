@@ -1,4 +1,4 @@
-const TIMESTAMP_AT_LINE_START = /^<([\d\-T:.Z]+)>/;
+export const TIMESTAMP_AT_LINE_START = /^<([\d\-T:.Z]+)>/;
 
 /** Longer than a timestamp, so the check reads only the start of a line */
 const TIMESTAMP_PREFIX_LENGTH = 40;

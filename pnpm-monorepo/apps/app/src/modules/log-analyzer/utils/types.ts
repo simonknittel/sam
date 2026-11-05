@@ -26,6 +26,27 @@ export interface ParseRequest {
   readonly isFullRead: boolean;
 }
 
+/** Stops each request with a lower id between two files. */
+export interface StopRequest {
+  readonly stopBeforeId: number;
+}
+
+/** The files of a read which had to come from the disk. */
+export interface ReadProgress {
+  readonly fileCount: number;
+  readonly readFileCount: number;
+  readonly byteCount: number;
+  readonly readByteCount: number;
+}
+
+/** A stopped read holds the matches of the files which it completed. */
+export interface ReadResult {
+  readonly matches: RawMatch[];
+  readonly readFileCount: number;
+  readonly readByteCount: number;
+}
+
 export type ResultMessage =
-  | { readonly id: number; readonly matches: RawMatch[] }
+  | ({ readonly id: number } & ReadResult)
+  | { readonly id: number; readonly progress: ReadProgress }
   | { readonly id: number; readonly error: string };

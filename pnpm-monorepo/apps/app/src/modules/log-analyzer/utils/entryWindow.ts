@@ -1,5 +1,11 @@
 import type { IEntry } from "./PATTERNS";
 
+/** The time span of the entries. A missing bound means no limit. */
+export interface EntryWindow {
+  readonly start: Date | null;
+  readonly end: Date | null;
+}
+
 /**
  * The start of the window which the `daysToLoad` setting gives: the start of
  * the day `daysToLoad` days before today. Null when the window has no limit.

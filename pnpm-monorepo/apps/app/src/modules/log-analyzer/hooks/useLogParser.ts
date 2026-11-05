@@ -4,13 +4,16 @@ import { useEffect, useRef } from "react";
 import type {
   LogFile,
   ParseRequest,
-  RawMatch,
+  ReadProgress,
+  ReadResult,
   ResultMessage,
+  StopRequest,
 } from "../utils/types";
 
 interface PendingRequest {
-  readonly resolve: (matches: RawMatch[]) => void;
+  readonly resolve: (result: ReadResult) => void;
   readonly reject: (error: Error) => void;
+  readonly onProgress?: (progress: ReadProgress) => void;
 }
 
 /**
@@ -43,11 +46,16 @@ export const useLogParser = () => {
       const request = pendingRequests.get(event.data.id);
       if (!request) return;
 
+      if ("progress" in event.data) {
+        request.onProgress?.(event.data.progress);
+        return;
+      }
+
       pendingRequests.delete(event.data.id);
       if ("error" in event.data) {
         request.reject(new Error(event.data.error));
       } else {
-        request.resolve(event.data.matches);
+        request.resolve(event.data);
       }
     });
 
@@ -76,8 +84,12 @@ export const useLogParser = () => {
     };
   }, []);
 
-  return (files: readonly LogFile[], isFullRead: boolean) =>
-    new Promise<RawMatch[]>((resolve, reject) => {
+  const parseLogFiles = (
+    files: readonly LogFile[],
+    isFullRead: boolean,
+    onProgress?: (progress: ReadProgress) => void,
+  ) =>
+    new Promise<ReadResult>((resolve, reject) => {
       const worker = workerRef.current;
       if (!worker) {
         reject(new Error("The log parser is not running"));
@@ -90,9 +102,20 @@ export const useLogParser = () => {
 
       const id = nextRequestIdRef.current;
       nextRequestIdRef.current += 1;
-      pendingRequestsRef.current.set(id, { resolve, reject });
+      pendingRequestsRef.current.set(id, { resolve, reject, onProgress });
 
       const request: ParseRequest = { id, files, isFullRead };
       worker.postMessage(request);
     });
+
+  /**
+   * Stops the reads on their way between two files. Their answers hold the
+   * matches of the files which they completed.
+   */
+  const stopReads = () => {
+    const request: StopRequest = { stopBeforeId: nextRequestIdRef.current };
+    workerRef.current?.postMessage(request);
+  };
+
+  return { parseLogFiles, stopReads };
 };

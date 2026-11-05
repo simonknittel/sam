@@ -16,13 +16,14 @@ import { useEntryUpload } from "../hooks/useEntryUpload";
 import { useLogParser } from "../hooks/useLogParser";
 import { useSharedEntries } from "../hooks/useSharedEntries";
 import { deleteEntriesBefore, getWindowStart } from "../utils/entryWindow";
-import { getFilesRecursively } from "../utils/getFilesRecursively";
+import { getLogFilesRecursively } from "../utils/getLogFilesRecursively";
 import { LIVE_MODE_PARSE_INTERVAL_MS } from "../utils/liveMode";
 import {
   createEntryKey,
   deriveEntryFields,
   type IEntry,
 } from "../utils/PATTERNS";
+import { selectLogFiles } from "../utils/selectLogFiles";
 import type { LogFile } from "../utils/types";
 import { Introduction } from "./Introduction";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
@@ -59,7 +60,10 @@ export const LogAnalyzer = ({ className }: Props) => {
     ? { ...sessionCitizen, deletedAt: null }
     : null;
 
-  const parseLogFiles = useLogParser();
+  const { parseLogFiles } = useLogParser();
+
+  /** The files of the last walk through the folder, by their path. */
+  const knownLogFilesRef = useRef<ReadonlyMap<string, LogFile>>(new Map());
 
   /**
    * A cycle reads only the lines which were added since the cycle before it.
@@ -106,28 +110,31 @@ export const LogAnalyzer = ({ className }: Props) => {
       }
 
       const logFiles = (
-        await Array.fromAsync(getFilesRecursively(directoryHandleRef.current))
-      ).filter((logFile): logFile is LogFile =>
-        Boolean(logFile?.file.name.endsWith(".log")),
+        await Array.fromAsync(
+          getLogFilesRecursively(
+            directoryHandleRef.current,
+            knownLogFilesRef.current,
+          ),
+        )
+      ).filter((logFile) => logFile !== null);
+      knownLogFilesRef.current = new Map(
+        logFiles.map((logFile) => [logFile.path, logFile]),
       );
 
       const windowStart = getWindowStart(daysToLoad);
-      const windowEnd = new Date();
-      windowEnd.setHours(23, 59, 59, 999);
-
-      const logFilesInWindow = windowStart
-        ? logFiles.filter(
-            ({ file }) =>
-              file.lastModified >= windowStart.getTime() &&
-              file.lastModified <= windowEnd.getTime(),
-          )
-        : logFiles;
+      const logFilesInWindow = await selectLogFiles(logFiles, {
+        start: windowStart,
+        end: null,
+      });
 
       const isFullRead = requiresFullReadRef.current;
       requiresFullReadRef.current = false;
 
       try {
-        const rawMatches = await parseLogFiles(logFilesInWindow, isFullRead);
+        const { matches: rawMatches } = await parseLogFiles(
+          logFilesInWindow,
+          isFullRead,
+        );
 
         /**
          * Map raw matches to `IEntry` on the main thread (needed for JSX rendering)
@@ -185,6 +192,7 @@ export const LogAnalyzer = ({ className }: Props) => {
 
   const openDirectory = (directoryHandle: FileSystemDirectoryHandle) => {
     directoryHandleRef.current = directoryHandle;
+    knownLogFilesRef.current = new Map();
     requiresFullReadRef.current = true;
     parseLogs();
   };
