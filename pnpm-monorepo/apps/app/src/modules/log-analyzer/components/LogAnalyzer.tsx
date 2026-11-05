@@ -88,6 +88,18 @@ export const LogAnalyzer = ({ className }: Props) => {
   const knownLogFilesRef = useRef<ReadonlyMap<string, LogFile>>(new Map());
 
   /**
+   * Counts the date ranges. A cycle of an older range stops after the walk
+   * through the folder, before the worker has a request to stop.
+   */
+  const dateRangeRunRef = useRef(0);
+
+  /** A read can take long, and it must upload with the settings of its end */
+  const uploadEntriesRef = useRef(uploadEntries);
+  useEffect(() => {
+    uploadEntriesRef.current = uploadEntries;
+  }, [uploadEntries]);
+
+  /**
    * A cycle reads only the lines which were added since the cycle before it.
    * This flag makes the next cycle read the whole window again.
    */
@@ -105,6 +117,8 @@ export const LogAnalyzer = ({ className }: Props) => {
   const parseLogs = (isNew = false) => {
     startTransition(async () => {
       if (!directoryHandleRef.current) return;
+
+      const dateRangeRun = dateRangeRunRef.current;
 
       try {
         /** One property: Plausible takes at most 30 for each event */
@@ -132,28 +146,30 @@ export const LogAnalyzer = ({ className }: Props) => {
 
       const readStartedAt = performance.now();
 
-      const logFiles = (
-        await Array.fromAsync(
-          getLogFilesRecursively(
-            directoryHandleRef.current,
-            knownLogFilesRef.current,
-          ),
-        )
-      ).filter((logFile) => logFile !== null);
-      knownLogFilesRef.current = new Map(
-        logFiles.map((logFile) => [logFile.path, logFile]),
-      );
-
-      const logFilesInWindow = await selectLogFiles(
-        logFiles,
-        getEntryWindow(dateRange, daysToLoad),
-      );
-      setLogSelection(summarizeLogSelection(logFiles, logFilesInWindow));
-
-      const isFullRead = requiresFullReadRef.current;
-      requiresFullReadRef.current = false;
-
       try {
+        const logFiles = (
+          await Array.fromAsync(
+            getLogFilesRecursively(
+              directoryHandleRef.current,
+              knownLogFilesRef.current,
+            ),
+          )
+        ).filter((logFile) => logFile !== null);
+        knownLogFilesRef.current = new Map(
+          logFiles.map((logFile) => [logFile.path, logFile]),
+        );
+
+        const logFilesInWindow = await selectLogFiles(
+          logFiles,
+          getEntryWindow(dateRange, daysToLoad),
+        );
+        if (dateRangeRun !== dateRangeRunRef.current) return;
+
+        setLogSelection(summarizeLogSelection(logFiles, logFilesInWindow));
+
+        const isFullRead = requiresFullReadRef.current;
+        requiresFullReadRef.current = false;
+
         const {
           matches: rawMatches,
           readFileCount,
@@ -235,7 +251,7 @@ export const LogAnalyzer = ({ className }: Props) => {
          * Sharing must not hold up the rendering of the new entries. A
          * failed upload tries again with the whole window next cycle.
          */
-        void uploadEntries(matchesToUpload).then(
+        void uploadEntriesRef.current(matchesToUpload).then(
           (isComplete) => {
             if (!isComplete) requiresFullReadRef.current = true;
           },
@@ -275,6 +291,7 @@ export const LogAnalyzer = ({ className }: Props) => {
 
   /** A new range needs its files now, not after the read of the last range */
   const parseLogsOfNewDateRange = useEffectEvent(() => {
+    dateRangeRunRef.current += 1;
     stopReads();
     parseLogs();
   });

@@ -137,6 +137,24 @@ describe("selectLogFiles", () => {
     ).toEqual([liveLog.file.name]);
   });
 
+  test("selects a file whose first line cannot be read", async () => {
+    const changedFile = {
+      name: "Game.log",
+      lastModified: new Date(2026, 4, 2).getTime(),
+      slice: () => ({
+        text: () => Promise.reject(new Error("The file changed")),
+      }),
+    } as unknown as File;
+    const logFile = { path: "LIVE/Game.log", file: changedFile };
+
+    expect(
+      await selectLogFiles([logFile], {
+        start: startOfDay(2026, 4, 1),
+        end: endOfDay(2026, 4, 1),
+      }),
+    ).toEqual([logFile]);
+  });
+
   test("selects a file without any date when its last change fits", async () => {
     const emptyLog = createLogFile("Game.log", new Date(2026, 4, 2));
 

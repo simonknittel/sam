@@ -58,9 +58,18 @@ export const getSessionStartFromFileName = (fileName: string) => {
 };
 
 const readSessionStartFromContent = async (file: File) => {
-  const content = await file.slice(0, FIRST_LINE_BYTE_COUNT).text();
-  const isoDate = TIMESTAMP_AT_LINE_START.exec(content)?.[1];
-  return isoDate ? new Date(isoDate).getTime() : null;
+  try {
+    const content = await file.slice(0, FIRST_LINE_BYTE_COUNT).text();
+    const isoDate = TIMESTAMP_AT_LINE_START.exec(content)?.[1];
+    return isoDate ? new Date(isoDate).getTime() : null;
+  } catch {
+    /**
+     * The game writes to `Game.log` all the time, thus this read can fail on
+     * a file which changed after `getFile()`. Without a start, the file stays
+     * selected, and the reader handles the same failure for its lines.
+     */
+    return null;
+  }
 };
 
 /**

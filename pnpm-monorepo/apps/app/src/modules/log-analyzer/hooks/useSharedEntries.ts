@@ -6,13 +6,9 @@ import {
   matchLogAnalyzerEntryLine,
   toLogAnalyzerEntryType,
 } from "@sam-monorepo/domain";
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { useLogAnalyzerContext } from "../components/LogAnalyzerContext";
-import {
-  getEntryWindow,
-  hasDateRange,
-  type DateRange,
-} from "../utils/entryWindow";
+import { getEntryWindow, hasDateRange } from "../utils/entryWindow";
 import { LIVE_MODE_DOWNLOAD_INTERVAL_MS } from "../utils/liveMode";
 import {
   createEntryKey,
@@ -89,11 +85,16 @@ export const useSharedEntries = () => {
 
   /** Counts the loads of a date range. A newer load stops the older one. */
   const dateRangeLoadRef = useRef(0);
-  /** The date range whose load ended. Compared by identity. */
-  const [loadedDateRange, setLoadedDateRange] = useState<DateRange | null>(
-    null,
-  );
   const isDateRangeNeeded = isSharedViewEnabled && hasDateRange(dateRange);
+  /** A new object for each load, also when the view returns to the same range */
+  const dateRangeRequest = useMemo(
+    () => ({ dateRange, isSharedViewEnabled }),
+    [dateRange, isSharedViewEnabled],
+  );
+  /** The request whose load ended. Compared by identity. */
+  const [loadedRequest, setLoadedRequest] = useState<
+    typeof dateRangeRequest | null
+  >(null);
 
   const addEntries = (rows: readonly SharedEntry[], isNew: boolean) => {
     if (rows.length <= 0) return;
@@ -176,7 +177,7 @@ export const useSharedEntries = () => {
       );
     }
 
-    if (load === dateRangeLoadRef.current) setLoadedDateRange(dateRange);
+    if (load === dateRangeLoadRef.current) setLoadedRequest(dateRangeRequest);
   };
 
   /** A changed `daysToLoad` must not restart the interval or load again */
@@ -202,7 +203,7 @@ export const useSharedEntries = () => {
 
   useEffect(() => {
     loadDateRangeFromEffect();
-  }, [dateRange, isSharedViewEnabled]);
+  }, [dateRangeRequest]);
 
   useEffect(() => {
     if (!isSharedViewEnabled || !isLiveModeActive) return;
@@ -222,6 +223,6 @@ export const useSharedEntries = () => {
 
   return {
     refreshSharedEntries,
-    isLoadingDateRange: isDateRangeNeeded && loadedDateRange !== dateRange,
+    isLoadingDateRange: isDateRangeNeeded && loadedRequest !== dateRangeRequest,
   };
 };
