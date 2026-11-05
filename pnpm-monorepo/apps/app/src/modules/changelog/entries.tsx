@@ -57,7 +57,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     date: "2026-11-05",
     title: "Zeitraum im Log Analyzer",
     tags: ["Neu", "Log Analyzer"],
-    isTracked: false,
+    isTracked: true,
     body: () => (
       <p>
         Im Log Analyzer kannst du jetzt einen Zeitraum auswählen. Außerdem
