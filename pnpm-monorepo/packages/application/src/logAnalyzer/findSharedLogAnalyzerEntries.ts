@@ -14,7 +14,17 @@ import { getEventAtWindow } from "./logAnalyzerWindow.js";
  * The upper limit of one response. A viewer who joins late gets the entries
  * which were shared last, then the cursor keeps them up to date.
  */
-const MAXIMUM_ENTRIES_PER_REQUEST = 500;
+export const MAXIMUM_SHARED_ENTRIES_PER_REQUEST = 500;
+
+export const SHARED_ENTRY_SELECT = {
+  id: true,
+  type: true,
+  rawLine: true,
+  eventAt: true,
+  createdBy: {
+    select: CITIZEN_REFERENCE_SELECT,
+  },
+} as const;
 
 export interface FindSharedLogAnalyzerEntriesInput {
   /** 0 loads without a time limit, as the local parsing does. */
@@ -68,16 +78,8 @@ export const findSharedLogAnalyzerEntries = async (
     ...(input.cursorId
       ? { cursor: { id: input.cursorId }, skip: 1 }
       : undefined),
-    take: MAXIMUM_ENTRIES_PER_REQUEST,
-    select: {
-      id: true,
-      type: true,
-      rawLine: true,
-      eventAt: true,
-      createdBy: {
-        select: CITIZEN_REFERENCE_SELECT,
-      },
-    },
+    take: MAXIMUM_SHARED_ENTRIES_PER_REQUEST,
+    select: SHARED_ENTRY_SELECT,
   });
 
   /**

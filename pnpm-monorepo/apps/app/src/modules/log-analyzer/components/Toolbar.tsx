@@ -17,6 +17,7 @@ interface Props {
   readonly onRefresh: () => void;
   readonly logSelection: LogSelection | null;
   readonly readProgress: ReadProgress | null;
+  readonly isLoadingSharedEntries: boolean;
 }
 
 export const Toolbar = ({
@@ -24,6 +25,7 @@ export const Toolbar = ({
   onRefresh,
   logSelection,
   readProgress,
+  isLoadingSharedEntries,
 }: Props) => {
   const {
     isPending,
@@ -115,6 +117,7 @@ export const Toolbar = ({
       <DateRangeForm
         logSelection={logSelection}
         readProgress={readProgress}
+        isLoadingSharedEntries={isLoadingSharedEntries}
         className="w-full"
       />
     </div>

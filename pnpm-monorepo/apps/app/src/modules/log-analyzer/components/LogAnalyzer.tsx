@@ -71,7 +71,7 @@ export const LogAnalyzer = ({ className }: Props) => {
   const authentication = useAuthentication();
   const { pipWindow } = useOverlay();
   const uploadEntries = useEntryUpload();
-  const refreshSharedEntries = useSharedEntries();
+  const { refreshSharedEntries, isLoadingDateRange } = useSharedEntries();
 
   const sessionCitizen = authentication ? authentication.session.entity : null;
   /** The signed-in citizen is never a deleted one */
@@ -392,6 +392,7 @@ export const LogAnalyzer = ({ className }: Props) => {
         onRefresh={handleRefresh}
         logSelection={logSelection}
         readProgress={readProgress}
+        isLoadingSharedEntries={isLoadingDateRange}
         className="mt-1"
       />
 

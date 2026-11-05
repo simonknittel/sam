@@ -32,6 +32,7 @@ const toDateInputValue = (instant: Date | number) =>
 interface Props {
   readonly logSelection: LogSelection | null;
   readonly readProgress: ReadProgress | null;
+  readonly isLoadingSharedEntries: boolean;
   readonly className?: string;
 }
 
@@ -43,6 +44,7 @@ interface Props {
 export const DateRangeForm = ({
   logSelection,
   readProgress,
+  isLoadingSharedEntries,
   className,
 }: Props) => {
   const { dateRange, setDateRange, isLivePaused, isSharedViewEnabled } =
@@ -138,6 +140,8 @@ export const DateRangeForm = ({
             </p>
           )
         )}
+
+        {isLoadingSharedEntries && <p>Lade geteilte Einträge …</p>}
 
         {isLivePaused && (
           <p>
