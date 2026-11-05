@@ -23,8 +23,9 @@ import { useLogParser } from "../hooks/useLogParser";
 import { useSharedEntries } from "../hooks/useSharedEntries";
 import {
   getEntryWindow,
-  getWindowStart,
   hasDateRange,
+  isInWindow,
+  NO_DATE_RANGE,
 } from "../utils/entryWindow";
 import { getLogFilesRecursively } from "../utils/getLogFilesRecursively";
 import { LIVE_MODE_PARSE_INTERVAL_MS } from "../utils/liveMode";
@@ -39,6 +40,7 @@ import {
   type LogSelection,
 } from "../utils/selectLogFiles";
 import type { LogFile, ReadProgress } from "../utils/types";
+import { DateRangeForm } from "./DateRangeForm";
 import { Introduction } from "./Introduction";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 import { LogAnalyzerTable } from "./LogAnalyzerTable";
@@ -47,6 +49,14 @@ import { Toolbar } from "./Toolbar";
 
 const BYTES_PER_MEGABYTE = 1_000_000;
 const MILLISECONDS_PER_SECOND = 1_000;
+
+const trackEvent = (eventName: string, props: Record<string, string>) => {
+  try {
+    track(eventName, { props, interactive: false });
+  } catch {
+    // Tracking failure should not affect log parsing
+  }
+};
 
 interface Props {
   readonly className?: string;
@@ -120,41 +130,30 @@ export const LogAnalyzer = ({ className }: Props) => {
 
       const dateRangeRun = dateRangeRunRef.current;
 
-      try {
-        /** One property: Plausible takes at most 30 for each event */
-        const hiddenTypes = Object.values(LogAnalyzerEntryType).filter(
-          (type) => !ownEntryTypes[type],
-        );
+      /** One property: Plausible takes at most 30 for each event */
+      const hiddenTypes = Object.values(LogAnalyzerEntryType).filter(
+        (type) => !ownEntryTypes[type],
+      );
 
-        track("log_analyzer_parse", {
-          props: {
-            user_id: authentication
-              ? authentication?.session.user.id
-              : "unknown",
-            log_analyzer_days_to_load: String(daysToLoad),
-            log_analyzer_has_date_range: String(hasDateRange(dateRange)),
-            log_analyzer_live_mode: String(isLiveModeEnabled),
-            log_analyzer_autostart: String(isAutostartEnabled),
-            log_analyzer_overlay: String(!!pipWindow),
-            log_analyzer_hidden_types: hiddenTypes.join(","),
-          },
-          interactive: false,
-        });
-      } catch {
-        // Tracking failure should not affect log parsing
-      }
+      trackEvent("log_analyzer_parse", {
+        user_id: authentication ? authentication?.session.user.id : "unknown",
+        log_analyzer_days_to_load: String(daysToLoad),
+        log_analyzer_has_date_range: String(hasDateRange(dateRange)),
+        log_analyzer_live_mode: String(isLiveModeEnabled),
+        log_analyzer_autostart: String(isAutostartEnabled),
+        log_analyzer_overlay: String(!!pipWindow),
+        log_analyzer_hidden_types: hiddenTypes.join(","),
+      });
 
       const readStartedAt = performance.now();
 
       try {
-        const logFiles = (
-          await Array.fromAsync(
-            getLogFilesRecursively(
-              directoryHandleRef.current,
-              knownLogFilesRef.current,
-            ),
-          )
-        ).filter((logFile) => logFile !== null);
+        const logFiles = await Array.fromAsync(
+          getLogFilesRecursively(
+            directoryHandleRef.current,
+            knownLogFilesRef.current,
+          ),
+        );
         knownLogFilesRef.current = new Map(
           logFiles.map((logFile) => [logFile.path, logFile]),
         );
@@ -179,25 +178,17 @@ export const LogAnalyzer = ({ className }: Props) => {
 
         /** The tracking is about large reads. A live read holds one file. */
         if (readFileCount > 1) {
-          try {
-            track("log_analyzer_read_finished", {
-              props: {
-                log_analyzer_read_files: String(readFileCount),
-                log_analyzer_read_megabytes: String(
-                  Math.round(readByteCount / BYTES_PER_MEGABYTE),
-                ),
-                log_analyzer_read_seconds: String(
-                  Math.round(
-                    (performance.now() - readStartedAt) /
-                      MILLISECONDS_PER_SECOND,
-                  ),
-                ),
-              },
-              interactive: false,
-            });
-          } catch {
-            // Tracking failure should not affect log parsing
-          }
+          trackEvent("log_analyzer_read_finished", {
+            log_analyzer_read_files: String(readFileCount),
+            log_analyzer_read_megabytes: String(
+              Math.round(readByteCount / BYTES_PER_MEGABYTE),
+            ),
+            log_analyzer_read_seconds: String(
+              Math.round(
+                (performance.now() - readStartedAt) / MILLISECONDS_PER_SECOND,
+              ),
+            ),
+          });
         }
 
         /**
@@ -240,12 +231,10 @@ export const LogAnalyzer = ({ className }: Props) => {
          * Only the rolling window reaches the server: looking at old logs
          * shares nothing.
          */
-        const uploadWindowStart = getWindowStart(daysToLoad);
-        const matchesToUpload = uploadWindowStart
-          ? rawMatches.filter(
-              (rawMatch) => new Date(rawMatch.isoDate) >= uploadWindowStart,
-            )
-          : rawMatches;
+        const uploadWindow = getEntryWindow(NO_DATE_RANGE, daysToLoad);
+        const matchesToUpload = rawMatches.filter(({ isoDate }) =>
+          isInWindow(new Date(isoDate), uploadWindow),
+        );
 
         /**
          * Sharing must not hold up the rendering of the new entries. A
@@ -401,13 +390,14 @@ export const LogAnalyzer = ({ className }: Props) => {
 
       {/* The toolbar also holds the sharing settings, thus it stays reachable
           before a folder is chosen — the shared entries need no folder. */}
-      <Toolbar
-        onRefresh={handleRefresh}
-        logSelection={logSelection}
-        readProgress={readProgress}
-        isLoadingSharedEntries={isLoadingDateRange}
-        className="mt-1"
-      />
+      <Toolbar onRefresh={handleRefresh} className="mt-1">
+        <DateRangeForm
+          logSelection={logSelection}
+          readProgress={readProgress}
+          isLoadingSharedEntries={isLoadingDateRange}
+          className="w-full"
+        />
+      </Toolbar>
 
       {entries.size > 0 ? (
         <LogAnalyzerTable className="mt-0.5" />

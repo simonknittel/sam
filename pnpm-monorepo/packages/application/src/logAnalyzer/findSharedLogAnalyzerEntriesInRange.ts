@@ -1,5 +1,6 @@
 import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
+import { paginateByDatabaseCursor } from "../pagination.js";
 import {
   MAXIMUM_SHARED_ENTRIES_PER_REQUEST,
   SHARED_ENTRY_SELECT,
@@ -38,21 +39,22 @@ export const findSharedLogAnalyzerEntriesInRange = async (
 ): Promise<SharedLogAnalyzerEntriesInRange> => {
   requireLogAnalyzerAccess(actor, options);
 
-  const entries = await context.prisma.logAnalyzerEntry.findMany({
-    where: { eventAt: { gte: input.from, lt: input.to } },
-    /** The id breaks the tie of two entries of the same moment */
-    orderBy: [{ eventAt: "desc" }, { id: "desc" }],
-    ...(input.cursorId
-      ? { cursor: { id: input.cursorId }, skip: 1 }
-      : undefined),
-    take: MAXIMUM_SHARED_ENTRIES_PER_REQUEST,
-    select: SHARED_ENTRY_SELECT,
-  });
+  const page = await paginateByDatabaseCursor(
+    {
+      cursor: input.cursorId,
+      pageSize: MAXIMUM_SHARED_ENTRIES_PER_REQUEST,
+    },
+    (cursorArguments) =>
+      context.prisma.logAnalyzerEntry.findMany({
+        where: { eventAt: { gte: input.from, lt: input.to } },
+        /** The id breaks the tie of two entries of the same moment */
+        orderBy: [{ eventAt: "desc" }, { id: "desc" }],
+        select: SHARED_ENTRY_SELECT,
+        ...cursorArguments,
+      }),
+    async (id) =>
+      (await context.prisma.logAnalyzerEntry.count({ where: { id } })) > 0,
+  );
 
-  const isLastPage = entries.length < MAXIMUM_SHARED_ENTRIES_PER_REQUEST;
-
-  return {
-    entries,
-    nextCursorId: isLastPage ? null : (entries.at(-1)?.id ?? null),
-  };
+  return { entries: page.items, nextCursorId: page.nextCursor };
 };

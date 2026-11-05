@@ -13,7 +13,7 @@ import type {
 interface PendingRequest {
   readonly resolve: (result: ReadResult) => void;
   readonly reject: (error: Error) => void;
-  readonly onProgress?: (progress: ReadProgress) => void;
+  readonly onProgress: (progress: ReadProgress) => void;
 }
 
 /**
@@ -47,7 +47,7 @@ export const useLogParser = () => {
       if (!request) return;
 
       if ("progress" in event.data) {
-        request.onProgress?.(event.data.progress);
+        request.onProgress(event.data.progress);
         return;
       }
 
@@ -87,7 +87,7 @@ export const useLogParser = () => {
   const parseLogFiles = (
     files: readonly LogFile[],
     isFullRead: boolean,
-    onProgress?: (progress: ReadProgress) => void,
+    onProgress: (progress: ReadProgress) => void,
   ) =>
     new Promise<ReadResult>((resolve, reject) => {
       const worker = workerRef.current;

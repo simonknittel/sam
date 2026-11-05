@@ -1,5 +1,6 @@
 "use client";
 
+import { getDateRangeFilter } from "@/modules/common/utils/getDateRangeFilter";
 import { api, type RouterOutputs } from "@/trpc/react";
 import {
   clampLogAnalyzerDaysToLoad,
@@ -8,7 +9,7 @@ import {
 } from "@sam-monorepo/domain";
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { useLogAnalyzerContext } from "../components/LogAnalyzerContext";
-import { getEntryWindow, hasDateRange } from "../utils/entryWindow";
+import { hasDateRange } from "../utils/entryWindow";
 import { LIVE_MODE_DOWNLOAD_INTERVAL_MS } from "../utils/liveMode";
 import {
   createEntryKey,
@@ -152,7 +153,7 @@ export const useSharedEntries = () => {
 
     if (!isDateRangeNeeded) return;
 
-    const { start, end } = getEntryWindow(dateRange, daysToLoad);
+    const { gte, lt } = getDateRangeFilter(dateRange.from, dateRange.to);
     let cursorId: string | undefined;
 
     try {
@@ -160,8 +161,8 @@ export const useSharedEntries = () => {
         /** The vanilla client keeps no copy of the pages in the query cache */
         const page =
           await utils.client.logAnalyzer.getSharedEntriesInRange.query({
-            from: start ?? undefined,
-            to: end ?? undefined,
+            from: gte,
+            to: lt,
             cursorId,
           });
 

@@ -28,7 +28,7 @@ export const hasDateRange = ({ from, to }: DateRange) =>
  * The start of the window which the `daysToLoad` setting gives: the start of
  * the day `daysToLoad` days before today. Null when the window has no limit.
  */
-export const getWindowStart = (daysToLoad: number) => {
+const getWindowStart = (daysToLoad: number) => {
   if (daysToLoad <= 0) return null;
 
   const windowStart = new Date();
@@ -51,6 +51,3 @@ export const getEntryWindow = (
 
 export const isInWindow = (date: Date, { start, end }: EntryWindow) =>
   (!start || date >= start) && (!end || date < end);
-
-export const endsInThePast = ({ end }: EntryWindow) =>
-  end !== null && end.getTime() <= Date.now();

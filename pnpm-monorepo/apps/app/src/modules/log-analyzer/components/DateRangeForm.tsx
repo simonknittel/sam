@@ -2,9 +2,8 @@
 
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { DateInput } from "@/modules/common/components/form/DateInput";
-import { instantToWallTime, ORGANIZATION_TIMEZONE } from "@sam-monorepo/domain";
+import { getLocalDateKey, ORGANIZATION_TIMEZONE } from "@sam-monorepo/domain";
 import clsx from "clsx";
-import { useNow } from "next-intl";
 import { useState, type SubmitEvent } from "react";
 import { hasDateRange, NO_DATE_RANGE } from "../utils/entryWindow";
 import type { LogSelection } from "../utils/selectLogFiles";
@@ -13,18 +12,12 @@ import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 
 const BYTES_PER_MEGABYTE = 1_000_000;
 
-/** A page which stays open over midnight must offer the new day */
-const TODAY_UPDATE_INTERVAL_MS = 60_000;
-
 const megabyteFormat = new Intl.NumberFormat("de-DE", {
   maximumFractionDigits: 1,
 });
 
 const formatMegabytes = (byteCount: number) =>
   megabyteFormat.format(byteCount / BYTES_PER_MEGABYTE);
-
-const toDateInputValue = (instant: Date | number) =>
-  instantToWallTime(new Date(instant), ORGANIZATION_TIMEZONE).slice(0, 10);
 
 interface Props {
   readonly logSelection: LogSelection | null;
@@ -44,15 +37,17 @@ export const DateRangeForm = ({
   isLoadingSharedEntries,
   className,
 }: Props) => {
-  const { dateRange, setDateRange, isLivePaused, isSharedViewEnabled } =
+  const { today, dateRange, setDateRange, isLivePaused, isSharedViewEnabled } =
     useLogAnalyzerContext();
 
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
 
+  const selectedRange = { from: from || null, to: to || null };
+
   const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setDateRange({ from: from || null, to: to || null });
+    setDateRange(selectedRange);
   };
 
   const handleReset = () => {
@@ -61,18 +56,17 @@ export const DateRangeForm = ({
     setDateRange(NO_DATE_RANGE);
   };
 
-  const today = toDateInputValue(
-    useNow({ updateInterval: TODAY_UPDATE_INTERVAL_MS }),
-  );
-
   /** The shared entries can be older than the local log files */
   const oldestDate =
     !isSharedViewEnabled && logSelection?.oldestSessionStart
-      ? toDateInputValue(logSelection.oldestSessionStart)
+      ? getLocalDateKey(
+          new Date(logSelection.oldestSessionStart),
+          ORGANIZATION_TIMEZONE,
+        )
       : undefined;
 
   const isUnchanged =
-    (from || null) === dateRange.from && (to || null) === dateRange.to;
+    selectedRange.from === dateRange.from && selectedRange.to === dateRange.to;
 
   return (
     <form

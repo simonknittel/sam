@@ -10,7 +10,7 @@ export async function* getLogFilesRecursively(
   entry: FileSystemFileHandle | FileSystemDirectoryHandle,
   knownFiles: ReadonlyMap<string, LogFile>,
   path = entry.name,
-): AsyncGenerator<LogFile | null> {
+): AsyncGenerator<LogFile> {
   if (entry.kind === "file") {
     if (!entry.name.endsWith(".log")) return;
 
@@ -21,11 +21,9 @@ export async function* getLogFilesRecursively(
     }
 
     try {
-      const file = await entry.getFile();
-      if (file) yield { path, file };
+      yield { path, file: await entry.getFile() };
     } catch (error) {
       console.error("[Log Analyzer] Error getting file: %s", entry.name, error);
-      yield null;
     }
   } else if (entry.kind === "directory") {
     // TODO: Ignore subdirectories

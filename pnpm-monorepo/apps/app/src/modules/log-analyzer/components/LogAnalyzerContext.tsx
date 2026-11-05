@@ -1,8 +1,13 @@
 "use client";
 
 import { useStoredValue } from "@/modules/common/utils/useStoredValue";
-import { LogAnalyzerEntryType } from "@sam-monorepo/domain";
+import {
+  getLocalDateKey,
+  LogAnalyzerEntryType,
+  ORGANIZATION_TIMEZONE,
+} from "@sam-monorepo/domain";
 import { useLocalStorage } from "@uidotdev/usehooks";
+import { useNow } from "next-intl";
 import type {
   Dispatch,
   ReactNode,
@@ -11,7 +16,6 @@ import type {
 } from "react";
 import { createContext, useContext, useState, useTransition } from "react";
 import {
-  endsInThePast,
   getEntryWindow,
   isInWindow,
   NO_DATE_RANGE,
@@ -21,6 +25,9 @@ import { createEntryTypeRecord, type IEntry } from "../utils/PATTERNS";
 import { ContractNamesContext } from "./ContractNames";
 
 type EntryTypeRecord = Record<LogAnalyzerEntryType, boolean>;
+
+/** A page which stays open over midnight must know the new day */
+const TODAY_UPDATE_INTERVAL_MS = 60_000;
 
 interface Context {
   /**
@@ -39,6 +46,8 @@ interface Context {
   readonly isAutostartEnabled: boolean;
   readonly setIsAutostartEnabled: Dispatch<SetStateAction<boolean>>;
   readonly daysToLoad: number;
+  /** `YYYY-MM-DD`, in the time zone of the table. */
+  readonly today: string;
   /** Not stored: a reload shows the rolling window again. */
   readonly dateRange: DateRange;
   readonly setDateRange: Dispatch<SetStateAction<DateRange>>;
@@ -148,6 +157,11 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
 
   const [daysToLoad] = useLocalStorage<number>("log_analyzer_days_to_load", 14);
 
+  const today = getLocalDateKey(
+    useNow({ updateInterval: TODAY_UPDATE_INTERVAL_MS }),
+    ORGANIZATION_TIMEZONE,
+  );
+
   const [dateRange, setDateRange] = useState(NO_DATE_RANGE);
 
   /**
@@ -157,7 +171,7 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
    * days. The table then shows a little more, never less.
    */
   const entryWindow = getEntryWindow(dateRange, daysToLoad);
-  const isLivePaused = endsInThePast(entryWindow);
+  const isLivePaused = dateRange.to !== null && dateRange.to < today;
   const isLiveModeActive = isLiveModeEnabled && !isLivePaused;
 
   const [entries, setEntries] = useState<Map<string, IEntry>>(new Map());
@@ -200,6 +214,7 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
     isAutostartEnabled,
     setIsAutostartEnabled,
     daysToLoad,
+    today,
     dateRange,
     setDateRange,
     ownEntryTypes,

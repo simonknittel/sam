@@ -31,6 +31,9 @@ const MONTHS = [
   "Dec",
 ];
 
+/** The file name gives the year with two digits */
+const FIRST_YEAR_OF_THE_CENTURY = 2000;
+
 /** For example `Game Build(12913470) 04 Nov 26 (18 48 53).log` */
 const BACKUP_FILE_NAME =
   /(?<day>\d{2}) (?<month>[A-Z][a-z]{2}) (?<year>\d{2}) \((?<hour>\d{2}) (?<minute>\d{2}) (?<second>\d{2})\)\.log$/;
@@ -48,7 +51,7 @@ export const getSessionStartFromFileName = (fileName: string) => {
   if (monthIndex === -1) return null;
 
   return new Date(
-    2000 + Number(groups.year),
+    FIRST_YEAR_OF_THE_CENTURY + Number(groups.year),
     monthIndex,
     Number(groups.day),
     Number(groups.hour),
@@ -107,15 +110,9 @@ export const summarizeLogSelection = (
   logFiles: readonly LogFile[],
   selectedFiles: readonly LogFile[],
 ): LogSelection => {
-  let oldestSessionStart: number | null = null;
-
-  for (const { file } of logFiles) {
-    const sessionStart = getSessionStartFromFileName(file.name);
-    if (sessionStart === null) continue;
-
-    if (oldestSessionStart === null || sessionStart < oldestSessionStart)
-      oldestSessionStart = sessionStart;
-  }
+  const sessionStarts = logFiles
+    .map(({ file }) => getSessionStartFromFileName(file.name))
+    .filter((sessionStart) => sessionStart !== null);
 
   return {
     fileCount: logFiles.length,
@@ -124,7 +121,8 @@ export const summarizeLogSelection = (
       (sum, { file }) => sum + file.size,
       0,
     ),
-    oldestSessionStart,
+    oldestSessionStart:
+      sessionStarts.length > 0 ? Math.min(...sessionStarts) : null,
   };
 };
 

@@ -3,11 +3,9 @@ import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import { Tooltip } from "@/modules/common/components/Tooltip";
 import clsx from "clsx";
+import type { ReactNode } from "react";
 import { FaInfoCircle } from "react-icons/fa";
 import { TfiReload } from "react-icons/tfi";
-import type { LogSelection } from "../utils/selectLogFiles";
-import type { ReadProgress } from "../utils/types";
-import { DateRangeForm } from "./DateRangeForm";
 import { EntrySettings } from "./EntrySettings";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 import { OverlayButton } from "./OverlayButton";
@@ -15,18 +13,10 @@ import { OverlayButton } from "./OverlayButton";
 interface Props {
   readonly className?: string;
   readonly onRefresh: () => void;
-  readonly logSelection: LogSelection | null;
-  readonly readProgress: ReadProgress | null;
-  readonly isLoadingSharedEntries: boolean;
+  readonly children: ReactNode;
 }
 
-export const Toolbar = ({
-  className,
-  onRefresh,
-  logSelection,
-  readProgress,
-  isLoadingSharedEntries,
-}: Props) => {
+export const Toolbar = ({ className, onRefresh, children }: Props) => {
   const {
     isPending,
     isAutostartEnabled,
@@ -114,12 +104,7 @@ export const Toolbar = ({
 
       <EntrySettings />
 
-      <DateRangeForm
-        logSelection={logSelection}
-        readProgress={readProgress}
-        isLoadingSharedEntries={isLoadingSharedEntries}
-        className="w-full"
-      />
+      {children}
     </div>
   );
 };
