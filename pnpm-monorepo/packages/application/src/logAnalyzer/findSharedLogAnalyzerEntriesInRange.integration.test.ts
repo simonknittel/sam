@@ -23,7 +23,10 @@ const createEntry = (index: number, eventAt: Date) =>
   });
 
 const createReader = () =>
-  createTestActor({ permissionStrings: ["logAnalyzer;read"] });
+  createTestActor({
+    userId: "reader",
+    permissionStrings: ["logAnalyzer;read"],
+  });
 
 beforeEach(async () => {
   await truncateAllTables();
