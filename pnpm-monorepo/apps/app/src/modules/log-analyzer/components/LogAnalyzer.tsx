@@ -40,11 +40,12 @@ import {
   type LogSelection,
 } from "../utils/selectLogFiles";
 import type { LogFile, ReadProgress } from "../utils/types";
-import { DateRangeForm } from "./DateRangeForm";
+import { DateRangeSettings } from "./DateRangeSettings";
 import { Introduction } from "./Introduction";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 import { LogAnalyzerTable } from "./LogAnalyzerTable";
 import { useOverlay } from "./OverlayContext";
+import { ReadStatus } from "./ReadStatus";
 import { Toolbar } from "./Toolbar";
 
 const BYTES_PER_MEGABYTE = 1_000_000;
@@ -391,11 +392,14 @@ export const LogAnalyzer = ({ className }: Props) => {
       {/* The toolbar also holds the sharing settings, thus it stays reachable
           before a folder is chosen — the shared entries need no folder. */}
       <Toolbar onRefresh={handleRefresh} className="mt-1">
-        <DateRangeForm
+        <DateRangeSettings
+          oldestSessionStart={logSelection?.oldestSessionStart ?? null}
+        />
+
+        <ReadStatus
           logSelection={logSelection}
           readProgress={readProgress}
           isLoadingSharedEntries={isLoadingDateRange}
-          className="w-full"
         />
       </Toolbar>
 
