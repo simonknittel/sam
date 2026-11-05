@@ -10,6 +10,7 @@ import type {
   TransitionStartFunction,
 } from "react";
 import { createContext, useContext, useState, useTransition } from "react";
+import { ContractNamesContext } from "./ContractNames";
 import {
   endsInThePast,
   getEntryWindow,
@@ -212,7 +213,18 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
     setEntries,
   };
 
-  return <Context value={value}>{children}</Context>;
+  const contractNames = new Map<string, string>();
+  for (const { missionId, contractName } of entries.values()) {
+    if (missionId && contractName) contractNames.set(missionId, contractName);
+  }
+
+  return (
+    <Context value={value}>
+      <ContractNamesContext value={contractNames}>
+        {children}
+      </ContractNamesContext>
+    </Context>
+  );
 };
 
 /**

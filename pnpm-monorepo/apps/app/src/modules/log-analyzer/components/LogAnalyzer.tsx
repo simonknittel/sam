@@ -107,11 +107,9 @@ export const LogAnalyzer = ({ className }: Props) => {
       if (!directoryHandleRef.current) return;
 
       try {
-        const filterProps = Object.fromEntries(
-          Object.values(LogAnalyzerEntryType).map((type) => [
-            `log_analyzer_filter_${type}`,
-            ownEntryTypes[type],
-          ]),
+        /** One property: Plausible takes at most 30 for each event */
+        const hiddenTypes = Object.values(LogAnalyzerEntryType).filter(
+          (type) => !ownEntryTypes[type],
         );
 
         track("log_analyzer_parse", {
@@ -124,7 +122,7 @@ export const LogAnalyzer = ({ className }: Props) => {
             log_analyzer_live_mode: String(isLiveModeEnabled),
             log_analyzer_autostart: String(isAutostartEnabled),
             log_analyzer_overlay: String(!!pipWindow),
-            ...filterProps,
+            log_analyzer_hidden_types: hiddenTypes.join(","),
           },
           interactive: false,
         });

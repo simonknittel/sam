@@ -35,6 +35,27 @@ export enum LogAnalyzerEntryType {
   InstanceExited = "instanceExited",
   GameQuit = "gameQuit",
   GameCrash = "gameCrash",
+  CrimeCommittedNotification = "crimeCommittedNotification",
+  CrimeAgainstYouNotification = "crimeAgainstYouNotification",
+  CrimeStatIncreasedNotification = "crimeStatIncreasedNotification",
+  FineNotification = "fineNotification",
+  ContractAbandoned = "contractAbandoned",
+  ContractNotAcceptedNotification = "contractNotAcceptedNotification",
+  RewardNotification = "rewardNotification",
+  EarnedNotification = "earnedNotification",
+  FundsAwardedNotification = "fundsAwardedNotification",
+  RestrictedAreaNotification = "restrictedAreaNotification",
+  MonitoredSpaceStatusNotification = "monitoredSpaceStatusNotification",
+  ErrorPopup = "errorPopup",
+  ShipClaimFailed = "shipClaimFailed",
+  ShopRental = "shopRental",
+  CommodityPurchase = "commodityPurchase",
+  PartyJoinedNotification = "partyJoinedNotification",
+  PartyCreatedNotification = "partyCreatedNotification",
+  PartyLeftNotification = "partyLeftNotification",
+  PartyKickedNotification = "partyKickedNotification",
+  PartyDisbandedNotification = "partyDisbandedNotification",
+  FriendAddedNotification = "friendAddedNotification",
 }
 
 interface LogAnalyzerEntryPattern {
@@ -107,7 +128,7 @@ export const LOG_ANALYZER_ENTRY_PATTERNS: Record<
     marker: NOTIFICATION_MARKER,
     // <2026-05-25T07:45:33.982Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Accepted:  Wikelo Arrive to System: " [4] to queue. New queue size: 1, MissionId: [bf7d2465-cf1e-480b-ae5c-25040d716e5f], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
-      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "(?:(?!Contract Accepted: ).)*Contract Accepted: (?<contract>.+): ".*$/gm,
+      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "(?:(?!Contract Accepted: ).)*Contract Accepted: (?<contract>.+): "(?:(?:(?!MissionId: \[).)*MissionId: \[(?<missionId>[0-9a-f-]+)\])?.*$/gm,
   },
 
   [LogAnalyzerEntryType.ContractCompleteNotification]: {
@@ -166,7 +187,8 @@ export const LOG_ANALYZER_ENTRY_PATTERNS: Record<
   },
 
   [LogAnalyzerEntryType.ShopPurchase]: {
-    marker: "<CEntityComponentShopUIProvider::SendShopBuyRequest>",
+    /** A ship from a kiosk has the same line under a different tag */
+    marker: "Sending SShopBuyRequest",
     /**
      * The line is the request of the client. The answer of the server,
      * `<CEntityComponentShopUIProvider::RmShopFlowResponse>`, names neither
@@ -174,7 +196,7 @@ export const LOG_ANALYZER_ENTRY_PATTERNS: Record<
      */
     // <2026-08-26T19:26:18.919Z> [Notice] <CEntityComponentShopUIProvider::SendShopBuyRequest> Sending SShopBuyRequest - playerId[...] shopId[783648035105] shopName[SCShop_Orison_KelTo] kioskId[783648035110] client_price[18117.000000] itemClassGUID[90adb28a-049e-4357-8000-a4bb75bb7f6f] itemName[behr_smg_ballistic_01_mag] quantity[61]  [Team_CoreGameplayFeatures][Shops][UI]
     regex:
-      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<CEntityComponentShopUIProvider::SendShopBuyRequest>(?:(?!shopName\[).)*shopName\[(?<shop>[^\]]+)\](?:(?!client_price\[).)*client_price\[(?<price>[\d.]+)\](?:(?!itemName\[).)*itemName\[(?<item>[^\]]+)\] quantity\[(?<quantity>\d+)\].*$/gm,
+      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<(?:CEntityComponentShopUIProvider::SendShopBuyRequest|CEntityComponentShoppingProvider::SendStandardItemBuyRequest)>(?:(?!shopName\[).)*shopName\[(?<shop>[^\]]+)\](?:(?!client_price\[).)*client_price\[(?<price>[\d.]+)\](?:(?!itemName\[).)*itemName\[(?<item>[^\]]+)\] quantity\[(?<quantity>\d+)\].*$/gm,
   },
 
   [LogAnalyzerEntryType.ArmisticeZoneNotification]: {
@@ -276,6 +298,178 @@ export const LOG_ANALYZER_ENTRY_PATTERNS: Record<
     // Exception STATUS_CRYENGINE_OUT_OF_SYSMEM(0x2BADFF61) addr=0x00007FFE2CE13CFA digest=114a1cfe538433f07c4a87c536ae0528
     regex: /^Exception (?<exception>STATUS_\w+)\(0x[0-9A-Fa-f]+\).*$/gm,
     takesTimeOfPrecedingLine: true,
+  },
+
+  [LogAnalyzerEntryType.CrimeCommittedNotification]: {
+    marker: NOTIFICATION_MARKER,
+    // <2026-02-21T18:56:55.794Z> [Notice] <SHUDEvent_OnNotification> Added notification "Crime Committed: Destruction of Vehicle
+    // <2026-02-21T18:56:55.795Z> against SomeHandle: " [387] to queue. New queue size: 2, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "Crime Committed: (?<crime>[^"\r\n]+)\r?\n<[\d\-T:.Z]+> against (?<handle>[^:"\r\n]+): ".*$/gm,
+  },
+
+  [LogAnalyzerEntryType.CrimeAgainstYouNotification]: {
+    marker: NOTIFICATION_MARKER,
+    // <2026-02-21T16:13:57.594Z> [Notice] <SHUDEvent_OnNotification> Added notification "SomeHandle committed Destruction of Vehicle against you
+    // <2026-02-21T16:13:57.594Z> Press 'Accept' to report or the crime will be forgiven: " [60] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "(?<handle>[^ "\r\n]+) committed (?<crime>[^"\r\n]+) against you\r?\n<[\d\-T:.Z]+> Press '[^'\r\n]+' to report[^"\r\n]*: ".*$/gm,
+  },
+
+  [LogAnalyzerEntryType.CrimeStatIncreasedNotification]: {
+    marker: NOTIFICATION_MARKER,
+    // <2026-02-21T18:56:55.824Z> [Notice] <SHUDEvent_OnNotification> Added notification "CrimeStat Rating Increased: " [389] to queue. New queue size: 4, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "CrimeStat Rating Increased: ".*$/gm,
+  },
+
+  [LogAnalyzerEntryType.FineNotification]: {
+    marker: NOTIFICATION_MARKER,
+    // <2026-02-21T21:55:41.872Z> [Notice] <SHUDEvent_OnNotification> Added notification "Fined 80000 UEC: " [4] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "Fined (?<amount>\d+) UEC: ".*$/gm,
+  },
+
+  [LogAnalyzerEntryType.ContractAbandoned]: {
+    /**
+     * The line names only the mission. The accepted contract with the same
+     * mission id gives the name, see `contractAcceptedNotification`.
+     */
+    marker: "<EndMission>",
+    // <2026-10-11T09:41:55.199Z> [Notice] <EndMission> Ending mission for player. MissionId[af2bbdcc-2afb-4b51-91cb-04e2b6df725c] Player[...] PlayerId[...] CompletionType[Abandon] Reason[Player left] [Team_CoreGameplayFeatures][Missions]
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<EndMission>(?:(?!MissionId\[).)*MissionId\[(?<missionId>[0-9a-f-]+)\](?:(?!CompletionType\[).)*CompletionType\[Abandon\].*$/gm,
+  },
+
+  [LogAnalyzerEntryType.ContractNotAcceptedNotification]: {
+    marker: NOTIFICATION_MARKER,
+    // <2026-10-11T08:39:26.063Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Not Accepted: Contract Limit Exceeded: " [207] to queue. New queue size: 3, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "Contract Not Accepted: (?<reason>[^"\r\n]+): ".*$/gm,
+  },
+
+  [LogAnalyzerEntryType.RewardNotification]: {
+    marker: NOTIFICATION_MARKER,
+    /**
+     * An item name can hold quotes, for example `S-38 "SecondWind" Pistol`.
+     * After a long list of items the game writes the end of the notification
+     * on a third line, which a match does not need.
+     */
+    // <2026-02-06T18:16:51.430Z> [Notice] <SHUDEvent_OnNotification> Added notification "Alliance Aid Defense Rewards - Tier 1
+    // <2026-02-06T18:16:51.430Z> You have been awarded: Silverton Jacket AA Defense: " [177] to queue. New queue size: 2, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "(?<reward>[^"\r\n]+ (?:Rewards - Tier \d+|Tier \d+ Reward))\r?\n<[\d\-T:.Z]+> You(?: have|'ve) been awarded: (?<items>(?:(?!: ").)+)(?:: ".*)?$/gm,
+  },
+
+  [LogAnalyzerEntryType.EarnedNotification]: {
+    marker: NOTIFICATION_MARKER,
+    /** The game writes a third line, which a match does not need */
+    // <2026-05-14T15:35:00.920Z> [Notice] <SHUDEvent_OnNotification> Added notification "You've Earned: MG Scrip
+    // <2026-05-14T15:35:00.920Z> Access It at Your Primary Residence's Inventory
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "You've Earned: (?<reward>[^"\r\n]+)\r?\n<[\d\-T:.Z]+> Access (?:It|Them) at [^"\r\n]*$/gm,
+  },
+
+  [LogAnalyzerEntryType.FundsAwardedNotification]: {
+    marker: NOTIFICATION_MARKER,
+    // <2026-02-21T16:27:29.082Z> [Notice] <SHUDEvent_OnNotification> Added notification "Awarded 500 aUEC: " [81] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "Awarded (?<amount>\d+) aUEC: ".*$/gm,
+  },
+
+  [LogAnalyzerEntryType.RestrictedAreaNotification]: {
+    marker: NOTIFICATION_MARKER,
+    // <2026-02-06T17:56:09.370Z> [Notice] <SHUDEvent_OnNotification> Added notification "Restricted Area - Vehicles Will Be Impounded: " [53] to queue. New queue size: 2, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+    // <2026-02-06T18:01:12.100Z> [Notice] <SHUDEvent_OnNotification> Added notification "Leaving Restricted Area: " [54] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+    // <2026-02-06T18:02:12.100Z> [Notice] <SHUDEvent_OnNotification> Added notification "Restricted Area
+    // <2026-02-06T18:02:12.100Z> For your safety, you've been relocated.: " [55] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "(?<event>Restricted Area - Vehicles Will Be Impounded|Leaving Restricted Area|Restricted Area\r?\n<[\d\-T:.Z]+> For your safety, you've been relocated\.): ".*$/gm,
+  },
+
+  [LogAnalyzerEntryType.MonitoredSpaceStatusNotification]: {
+    marker: NOTIFICATION_MARKER,
+    // <2026-02-21T19:17:50.107Z> [Notice] <SHUDEvent_OnNotification> Added notification "Monitored Space Down: " [430] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "Monitored Space (?<status>Down|Restored): ".*$/gm,
+  },
+
+  [LogAnalyzerEntryType.ErrorPopup]: {
+    marker: "<Error Popup Opened>",
+    // <2026-02-21T21:53:30.185Z> [Notice] <Error Popup Opened> errorCode=30028 [Team_UI][Disconnection]
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<Error Popup Opened> errorCode=(?<errorCode>\d+).*$/gm,
+  },
+
+  [LogAnalyzerEntryType.ShipClaimFailed]: {
+    marker: "<Claim Failed>",
+    // <2026-10-30T10:22:41.350Z> [Error] <Claim Failed> Claim failed with error: FAILED_PRECONDITION(9): 'Claim vehicle failed: ItemOnCooldown' [Team_GameServices][ASOP][Entitlement][Insurance]
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<Claim Failed>(?:(?!Claim vehicle failed: ).)*Claim vehicle failed: (?<reason>[^'\r\n]+)'.*$/gm,
+  },
+
+  [LogAnalyzerEntryType.ShopRental]: {
+    marker: "<CEntityComponentShoppingProvider::SendRentalRequest>",
+    // <2026-05-18T14:13:50.508Z> [Notice] <CEntityComponentShoppingProvider::SendRentalRequest> Sending SShopRentalRequest - playerId[...] shopId[...] shopName[SCShop_FW_Rentals] kioskId[...] client_price[0.000000] itemClassGUID[40a1f83b-3623-49e6-8168-ab8223998aa2] itemName[RSI_Perseus] offering[0] currencyType[UEC]
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<CEntityComponentShoppingProvider::SendRentalRequest>(?:(?!shopName\[).)*shopName\[(?<shop>[^\]]+)\](?:(?!client_price\[).)*client_price\[(?<price>[\d.]+)\](?:(?!itemName\[).)*itemName\[(?<item>[^\]]+)\].*$/gm,
+  },
+
+  [LogAnalyzerEntryType.CommodityPurchase]: {
+    /** The line has only a GUID for the commodity, thus no entry can name it */
+    marker: "<CEntityComponentCommodityUIProvider::SendCommodityBuyRequest>",
+    // <2026-05-19T16:31:05.430Z> [Notice] <CEntityComponentCommodityUIProvider::SendCommodityBuyRequest> Sending SShopCommodityBuyRequest - playerId[...] shopId[...] shopName[SCShop_Pyro_RestStop_Rund_Admin] kioskId[...] price[46284.000000] shopPricePerCentiSCU[28.927500] resourceGUID[a789f57a-e12b-4bcd-8132-e0c03d84fc89] autoLoading[1] quantity[1600.000000 cSCU] Cargo Box Data: boxSize[8.000000] | unitAmount[2]
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<CEntityComponentCommodityUIProvider::SendCommodityBuyRequest>(?:(?!shopName\[).)*shopName\[(?<shop>[^\]]+)\](?:(?! price\[).)* price\[(?<price>[\d.]+)\](?:(?!quantity\[).)*quantity\[(?<centiScu>[\d.]+) cSCU\].*$/gm,
+  },
+
+  [LogAnalyzerEntryType.PartyJoinedNotification]: {
+    marker: NOTIFICATION_MARKER,
+    /** The game also writes this headline for a group, which is no party */
+    // <2026-02-06T17:16:15.996Z> [Notice] <SHUDEvent_OnNotification> Added notification "You have joined
+    // <2026-02-06T17:16:15.996Z> party: " [3] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "You have joined\r?\n<[\d\-T:.Z]+> party: ".*$/gm,
+  },
+
+  [LogAnalyzerEntryType.PartyCreatedNotification]: {
+    marker: NOTIFICATION_MARKER,
+    // <2026-03-28T12:00:15.996Z> [Notice] <SHUDEvent_OnNotification> Added notification "You have created
+    // <2026-03-28T12:00:15.996Z> party: " [3] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "You have created\r?\n<[\d\-T:.Z]+> party: ".*$/gm,
+  },
+
+  [LogAnalyzerEntryType.PartyLeftNotification]: {
+    marker: NOTIFICATION_MARKER,
+    // <2026-02-06T21:23:47.327Z> [Notice] <SHUDEvent_OnNotification> Added notification "You have left the party.
+    // <2026-02-06T21:23:47.327Z> : " [12] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "You have left the party\.\r?\n<[\d\-T:.Z]+> : ".*$/gm,
+  },
+
+  [LogAnalyzerEntryType.PartyKickedNotification]: {
+    marker: NOTIFICATION_MARKER,
+    // <2026-03-28T12:11:56.502Z> [Notice] <SHUDEvent_OnNotification> Added notification "You have been kicked from the party.
+    // <2026-03-28T12:11:56.503Z> : " [74] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "You have been kicked from the party\.\r?\n<[\d\-T:.Z]+> : ".*$/gm,
+  },
+
+  [LogAnalyzerEntryType.PartyDisbandedNotification]: {
+    marker: NOTIFICATION_MARKER,
+    // <2026-03-28T12:59:29.129Z> [Notice] <SHUDEvent_OnNotification> Added notification "Party Disbanded
+    // <2026-03-28T12:59:29.130Z> The party has been disbanded.: " [3] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "Party Disbanded\r?\n<[\d\-T:.Z]+> The party has been disbanded\.: ".*$/gm,
+  },
+
+  [LogAnalyzerEntryType.FriendAddedNotification]: {
+    marker: NOTIFICATION_MARKER,
+    // <2026-02-06T17:57:09.982Z> [Notice] <SHUDEvent_OnNotification> Added notification "Friend Added
+    // <2026-02-06T17:57:09.982Z> SomeHandle: " [59] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "Friend Added\r?\n<[\d\-T:.Z]+> (?<handle>[^:"\r\n]+): ".*$/gm,
   },
 };
 

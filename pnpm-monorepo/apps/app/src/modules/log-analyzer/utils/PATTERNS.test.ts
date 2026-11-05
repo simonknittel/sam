@@ -68,6 +68,59 @@ describe("PATTERNS", () => {
     });
   });
 
+  test("a ship from a kiosk is a purchase", () => {
+    const shipPurchase = SAMPLE_LINES[LogAnalyzerEntryType.ShopPurchase].replace(
+      "CEntityComponentShopUIProvider::SendShopBuyRequest",
+      "CEntityComponentShoppingProvider::SendStandardItemBuyRequest",
+    );
+
+    expect(
+      matchLogAnalyzerEntryLine(LogAnalyzerEntryType.ShopPurchase, shipPurchase),
+    ).not.toBeNull();
+  });
+
+  test.each([
+    {
+      items: 'S-38 "SecondWind" Pistol',
+      lineEnd: ': " [48] to queue.',
+    },
+    {
+      items: "Perseus Alliance Aid Camo, ParaMed AA Support Device",
+      lineEnd: "",
+    },
+  ])("reads the items of a reward: $items", ({ items, lineEnd }) => {
+    const line = `<2026-09-17T15:43:21.192Z> [Notice] <SHUDEvent_OnNotification> Added notification "Orison Relief Rewards - Tier 1\r\n<2026-09-17T15:43:21.192Z> You have been awarded: ${items}${lineEnd}`;
+
+    const match = matchLogAnalyzerEntryLine(
+      LogAnalyzerEntryType.RewardNotification,
+      line,
+    );
+
+    expect(match?.groups?.items).toBe(items);
+  });
+
+  test("an accepted contract gives the mission id of its abandon line", () => {
+    const accepted = groupsOf(
+      LogAnalyzerEntryType.ContractAcceptedNotification,
+    );
+    const abandoned = groupsOf(LogAnalyzerEntryType.ContractAbandoned);
+
+    expect(accepted.missionId).toBe(abandoned.missionId);
+  });
+
+  test("a group is no party", () => {
+    const groupLine = SAMPLE_LINES[
+      LogAnalyzerEntryType.PartyJoinedNotification
+    ].replace("party: ", "group 'Testgroup': ");
+
+    expect(
+      matchLogAnalyzerEntryLine(
+        LogAnalyzerEntryType.PartyJoinedNotification,
+        groupLine,
+      ),
+    ).toBeNull();
+  });
+
   test("reads the severity, the body part and the tier of an injury", () => {
     expect(
       groupsOf(LogAnalyzerEntryType.InjuryDetectedNotification),
