@@ -85,8 +85,9 @@ export const Introduction = ({ className }: Props) => {
           )}
 
           <p>
-            Es können aktuell nur die Logs der letzten 14 Tage ausgewertet
-            werden.
+            Ohne Zeitraum werden die Logs der letzten 14 Tage ausgewertet. Für
+            ältere Logs wähle einen Zeitraum aus. Einträge, die älter als 14
+            Tage sind, werden nicht hochgeladen.
           </p>
 
           <p>Das Overlay kann aktuell nicht transparent gemacht werden.</p>

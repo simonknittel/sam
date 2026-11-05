@@ -53,6 +53,20 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-11-05-log-analyzer-zeitraum",
+    date: "2026-11-05",
+    title: "Zeitraum im Log Analyzer",
+    tags: ["Neu", "Log Analyzer"],
+    isTracked: false,
+    body: () => (
+      <p>
+        Im Log Analyzer kannst du jetzt einen Zeitraum auswählen. Außerdem
+        erkennt er weitere Events, zum Beispiel Verbrechen und Belohnungen.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-11-03-erforderliche-rollen-fuer-posten",
     date: "2026-11-03",
     title: "Erforderliche Rollen für Posten",

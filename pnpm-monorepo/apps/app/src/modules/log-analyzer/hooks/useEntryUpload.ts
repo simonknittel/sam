@@ -40,7 +40,8 @@ interface PendingEntry extends UploadEntry {
  * and the parser then delivers the whole window again.
  *
  * Every entry the server holds gets its badge in the table, whether this
- * cycle sent it or an earlier visit did.
+ * cycle sent it or an earlier visit did. Entries older than the rolling window
+ * never reach this hook, thus they show no badge.
  *
  * The function returns false when a match which it had to share did not reach
  * the server. The next cycle then delivers the whole window again.

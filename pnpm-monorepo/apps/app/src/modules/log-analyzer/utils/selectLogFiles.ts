@@ -81,8 +81,7 @@ const canOverlapWindow = async (
 
   const sessionStart = nameStart ?? (await readSessionStartFromContent(file));
   return (
-    sessionStart === null ||
-    sessionStart <= end.getTime() + SELECTION_MARGIN_MS
+    sessionStart === null || sessionStart <= end.getTime() + SELECTION_MARGIN_MS
   );
 };
 

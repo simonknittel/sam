@@ -60,7 +60,7 @@ export const LogAnalyzer = ({ className }: Props) => {
     startTransition,
     isAutostartEnabled,
     isLiveModeEnabled,
-    isLivePaused,
+    isLiveModeActive,
     daysToLoad,
     dateRange,
     ownEntryTypes,
@@ -161,7 +161,7 @@ export const LogAnalyzer = ({ className }: Props) => {
         } = await parseLogFiles(logFilesInWindow, isFullRead, setReadProgress);
         setReadProgress(null);
 
-        /** A live read holds one file, and tracks nothing about a large read */
+        /** The tracking is about large reads. A live read holds one file. */
         if (readFileCount > 1) {
           try {
             track("log_analyzer_read_finished", {
@@ -262,8 +262,6 @@ export const LogAnalyzer = ({ className }: Props) => {
   const parseNewLogLines = useEffectEvent(() => {
     if (!isPending) parseLogs(true);
   });
-
-  const isLiveModeActive = isLiveModeEnabled && !isLivePaused;
 
   useEffect(() => {
     if (!isLiveModeActive) return;

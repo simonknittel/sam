@@ -557,9 +557,10 @@ export const MAXIMUM_LOG_ANALYZER_UPLOAD_ENTRIES = 100;
 export const MAXIMUM_LOG_ANALYZER_RAW_LINE_LENGTH = 1_000;
 
 /**
- * The longest window the shared entries query accepts, well above the 14 days
- * the Log Analyzer reads from the local log files. The client keeps its own
- * `daysToLoad` setting inside this limit.
+ * The longest rolling window the shared entries query accepts, well above the
+ * 14 days the Log Analyzer reads by default. The client keeps its own
+ * `daysToLoad` setting inside this limit. A date range uses its own query,
+ * which has no such limit.
  */
 export const MAXIMUM_LOG_ANALYZER_DAYS_TO_LOAD = 365;
 

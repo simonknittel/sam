@@ -46,8 +46,8 @@ import {
   FaUserMinus,
   FaUserPlus,
   FaUsers,
-  FaUsersSlash,
   FaUserSlash,
+  FaUsersSlash,
 } from "react-icons/fa6";
 import { AbandonedContractName } from "../components/ContractNames";
 import { TruncatedText } from "../components/TruncatedText";
@@ -477,9 +477,7 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     title: "Contract nicht angenommen",
     icon: FaFileCircleQuestion,
     category: EntryCategory.Contracts,
-    renderMessage: (groups) => (
-      <TruncatedText>{groups.reason}</TruncatedText>
-    ),
+    renderMessage: (groups) => <TruncatedText>{groups.reason}</TruncatedText>,
   },
 
   rewardNotification: {
@@ -547,9 +545,7 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     title: "Schiff-Claim fehlgeschlagen",
     icon: FaShieldHalved,
     category: EntryCategory.Commerce,
-    renderMessage: (groups) => (
-      <TruncatedText>{groups.reason}</TruncatedText>
-    ),
+    renderMessage: (groups) => <TruncatedText>{groups.reason}</TruncatedText>,
   },
 
   shopRental: {

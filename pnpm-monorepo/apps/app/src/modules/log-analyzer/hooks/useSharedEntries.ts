@@ -65,8 +65,7 @@ const toEntry = (row: SharedEntry, isNew: boolean): IEntry | null => {
 export const useSharedEntries = () => {
   const {
     isSharedViewEnabled,
-    isLiveModeEnabled,
-    isLivePaused,
+    isLiveModeActive,
     daysToLoad,
     dateRange,
     setEntries,
@@ -158,13 +157,12 @@ export const useSharedEntries = () => {
     try {
       do {
         /** The vanilla client keeps no copy of the pages in the query cache */
-        const page = await utils.client.logAnalyzer.getSharedEntriesInRange.query(
-          {
+        const page =
+          await utils.client.logAnalyzer.getSharedEntriesInRange.query({
             from: start ?? undefined,
             to: end ?? undefined,
             cursorId,
-          },
-        );
+          });
 
         if (load !== dateRangeLoadRef.current) return;
 
@@ -205,8 +203,6 @@ export const useSharedEntries = () => {
   useEffect(() => {
     loadDateRangeFromEffect();
   }, [dateRange, isSharedViewEnabled]);
-
-  const isLiveModeActive = isLiveModeEnabled && !isLivePaused;
 
   useEffect(() => {
     if (!isSharedViewEnabled || !isLiveModeActive) return;

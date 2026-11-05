@@ -69,13 +69,18 @@ describe("PATTERNS", () => {
   });
 
   test("a ship from a kiosk is a purchase", () => {
-    const shipPurchase = SAMPLE_LINES[LogAnalyzerEntryType.ShopPurchase].replace(
+    const shipPurchase = SAMPLE_LINES[
+      LogAnalyzerEntryType.ShopPurchase
+    ].replace(
       "CEntityComponentShopUIProvider::SendShopBuyRequest",
       "CEntityComponentShoppingProvider::SendStandardItemBuyRequest",
     );
 
     expect(
-      matchLogAnalyzerEntryLine(LogAnalyzerEntryType.ShopPurchase, shipPurchase),
+      matchLogAnalyzerEntryLine(
+        LogAnalyzerEntryType.ShopPurchase,
+        shipPurchase,
+      ),
     ).not.toBeNull();
   });
 

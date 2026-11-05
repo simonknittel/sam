@@ -10,7 +10,6 @@ import type {
   TransitionStartFunction,
 } from "react";
 import { createContext, useContext, useState, useTransition } from "react";
-import { ContractNamesContext } from "./ContractNames";
 import {
   endsInThePast,
   getEntryWindow,
@@ -19,6 +18,7 @@ import {
   type DateRange,
 } from "../utils/entryWindow";
 import { createEntryTypeRecord, type IEntry } from "../utils/PATTERNS";
+import { ContractNamesContext } from "./ContractNames";
 
 type EntryTypeRecord = Record<LogAnalyzerEntryType, boolean>;
 
@@ -34,6 +34,8 @@ interface Context {
   readonly setIsLiveModeEnabled: Dispatch<SetStateAction<boolean>>;
   /** True while the end of the date range keeps new lines out of the table. */
   readonly isLivePaused: boolean;
+  /** The setting of the user, unless the date range pauses it. */
+  readonly isLiveModeActive: boolean;
   readonly isAutostartEnabled: boolean;
   readonly setIsAutostartEnabled: Dispatch<SetStateAction<boolean>>;
   readonly daysToLoad: number;
@@ -156,6 +158,7 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
    */
   const entryWindow = getEntryWindow(dateRange, daysToLoad);
   const isLivePaused = endsInThePast(entryWindow);
+  const isLiveModeActive = isLiveModeEnabled && !isLivePaused;
 
   const [entries, setEntries] = useState<Map<string, IEntry>>(new Map());
 
@@ -193,6 +196,7 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
     isLiveModeEnabled,
     setIsLiveModeEnabled,
     isLivePaused,
+    isLiveModeActive,
     isAutostartEnabled,
     setIsAutostartEnabled,
     daysToLoad,
