@@ -2,12 +2,11 @@ import type { CursorDirection } from "@/modules/common/CursorPagination/cursorPa
 import {
   FlightReadyFilter,
   ShipSort,
-  ShipVariantStatus,
+  toVariantStatus,
   type listMyShips,
   type ListShipsOutput,
   type ShipVariantOutput,
 } from "@sam-monorepo/application";
-import { VariantStatus } from "@sam-monorepo/database/browser";
 import { FLEET_PAGE_SIZE, type ShipVariant } from "../queries/shipQuery";
 import {
   FleetSortParameter,
@@ -20,19 +19,6 @@ export const toFlightReadyFilter = (flightReady: FlightReadyParameter) =>
   flightReady === FlightReadyParameter.FlightReady
     ? FlightReadyFilter.Yes
     : FlightReadyFilter.All;
-
-const toVariantStatus = (status: ShipVariantStatus): VariantStatus => {
-  switch (status) {
-    case ShipVariantStatus.FlightReady:
-      return VariantStatus.FLIGHT_READY;
-
-    case ShipVariantStatus.NotFlightReady:
-      return VariantStatus.NOT_FLIGHT_READY;
-
-    default:
-      throw new Error(`Unknown variant status: ${status satisfies never}`);
-  }
-};
 
 /** Gives the variant of a use case the form that the fleet tables use */
 export const toShipVariant = (variant: ShipVariantOutput): ShipVariant => ({

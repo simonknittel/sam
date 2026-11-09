@@ -445,6 +445,70 @@ test("a variant tag records the creating citizen as its author", async ({
   await expect(stalkerRow.getByText("Light", { exact: true })).toBeVisible();
 });
 
+test("the update of a variant without tag and link rows removes the tags and the links", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "varianten-manager",
+    permissionStrings: ["manufacturersSeriesAndVariants;manage"],
+  });
+  const { manufacturer, series, variant } = await createVariant(prisma, {
+    manufacturerName: "Aegis Dynamics",
+    seriesName: "Avenger",
+    variantName: "Avenger Titan",
+  });
+  await prisma.variant.update({
+    where: { id: variant.id },
+    data: {
+      tags: { create: { key: "Class", value: "Light" } },
+      externalLinks: {
+        create: { serviceName: "RSI", url: "https://example.com/titan" },
+      },
+    },
+  });
+
+  await signIn(manager.user);
+  await page.goto(
+    `/app/fleet/settings/manufacturer/${manufacturer.id}/series/${series.id}`,
+  );
+
+  const editButton = page.getByRole("button", {
+    name: "Bearbeiten",
+    exact: true,
+  });
+  await clickUntilVisible(
+    page
+      .getByRole("row")
+      .filter({ hasText: "Avenger Titan" })
+      .getByRole("button", { name: "Aktionen" }),
+    editButton,
+  );
+  const updateModal = modal(page, "Variante bearbeiten");
+  await clickUntilVisible(editButton, updateModal);
+  await expect(updateModal.getByLabel("Name", { exact: true })).toHaveValue(
+    "Avenger Titan",
+  );
+
+  // The tag row and the link row
+  const deleteRowButtons = updateModal.getByRole("button", { name: "Löschen" });
+  await expect(deleteRowButtons).toHaveCount(2);
+  await deleteRowButtons.first().click();
+  await deleteRowButtons.first().click();
+  await expect(deleteRowButtons).toHaveCount(0);
+
+  await updateModal.getByRole("button", { name: "Speichern" }).click();
+  await expect(updateModal).toHaveCount(0);
+
+  expect(
+    await prisma.variant.findUniqueOrThrow({
+      where: { id: variant.id },
+      select: { tags: true, externalLinks: true },
+    }),
+  ).toEqual({ tags: [], externalLinks: [] });
+});
+
 test("a variant link that is not an http or https URL is a bad request", async ({
   page,
   prisma,

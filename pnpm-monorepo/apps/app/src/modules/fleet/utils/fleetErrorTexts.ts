@@ -2,14 +2,18 @@ import type { ApplicationErrorTexts } from "@/modules/application";
 import { FleetCatalogErrorMessage } from "@sam-monorepo/application";
 
 /**
- * The texts of the create actions of the catalog for the names that exist
- * already
+ * The texts of the create and the update actions of the catalog for the
+ * names that exist already and for the links of a variant
  */
 export const FLEET_ERROR_TEXTS = {
   [FleetCatalogErrorMessage.ManufacturerNameTaken]:
     "Ein Hersteller mit diesem Namen existiert bereits.",
   [FleetCatalogErrorMessage.SeriesNameTaken]:
     "Eine Serie mit diesem Namen existiert bereits.",
+  [FleetCatalogErrorMessage.VariantNameTaken]:
+    "Eine Variante mit diesem Namen existiert in dieser Serie bereits.",
+  [FleetCatalogErrorMessage.DuplicateLinkService]:
+    "Jeder Dienst kann nur einen Link haben.",
 } satisfies ApplicationErrorTexts;
 
 /**
