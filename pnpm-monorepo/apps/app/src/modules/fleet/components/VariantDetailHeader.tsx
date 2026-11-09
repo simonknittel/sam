@@ -1,10 +1,10 @@
-import { Link } from "@/modules/common/components/Link";
 import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { StatisticTile } from "@/modules/common/components/StatisticTile";
 import { VariantStatus } from "@sam-monorepo/database/client";
-import { FaExternalLinkAlt, FaRegCheckCircle } from "react-icons/fa";
+import { FaRegCheckCircle } from "react-icons/fa";
 import { FaRegCircleXmark } from "react-icons/fa6";
 import type { getVariantDetail } from "../queries/variantDetail";
+import { VariantExternalLink } from "./VariantExternalLink";
 import { VariantTagBadge } from "./VariantTagBadge";
 import { VariantWithLogo } from "./VariantWithLogo";
 
@@ -51,17 +51,7 @@ export const VariantDetailHeader = ({ variant }: Props) => {
 
             <div>
               {variant.externalLinks.map((link) => (
-                <Link
-                  key={link.id}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-sm text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300"
-                  title={link.url}
-                >
-                  {link.serviceName}
-                  <FaExternalLinkAlt className="size-3" />
-                </Link>
+                <VariantExternalLink key={link.id} link={link} />
               ))}
             </div>
           </div>
