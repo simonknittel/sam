@@ -293,11 +293,13 @@ test("the variant popover shows the details of the variant and links its setting
     variantName: "Cutlass Black",
     status: VariantStatus.NOT_FLIGHT_READY,
   });
-  await prisma.variantTag.create({
+  await prisma.variant.update({
+    where: { id: variant.id },
     data: {
-      key: "Rolle",
-      value: "Fracht",
-      variants: { connect: { id: variant.id } },
+      tags: { create: { key: "Rolle", value: "Fracht" } },
+      externalLinks: {
+        create: { serviceName: "RSI", url: "https://example.com/cutlass" },
+      },
     },
   });
   await prisma.ship.createMany({
@@ -325,6 +327,11 @@ test("the variant popover shows the details of the variant and links its setting
     "Einzelschiffe",
   ]);
   await expect(popover.getByRole("definition")).toHaveText(["Nein", "2"]);
+  await expect(
+    popover.getByRole("list", { name: "Links" }).getByRole("link", {
+      name: "RSI",
+    }),
+  ).toHaveAttribute("href", "https://example.com/cutlass");
   await expect(
     popover.getByRole("link", { name: "Einstellungen" }),
   ).toHaveCount(0);

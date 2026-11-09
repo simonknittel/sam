@@ -19,6 +19,7 @@ import {
   ManufacturerLogo,
   type ManufacturerLogoManufacturer,
 } from "./ManufacturerLogo";
+import { VariantExternalLink } from "./VariantExternalLink";
 import { VariantTagBadge } from "./VariantTagBadge";
 
 interface Props {
@@ -142,6 +143,19 @@ export const VariantPopover = ({
             </ProfileAttribute>
           )}
         </dl>
+      )}
+
+      {details && details.externalLinks.length > 0 && (
+        <ul
+          aria-label="Links"
+          className="mt-4 flex flex-wrap gap-x-4 gap-y-1 border-t border-white/10 pt-4"
+        >
+          {details.externalLinks.map((link) => (
+            <li key={link.id}>
+              <VariantExternalLink link={link} />
+            </li>
+          ))}
+        </ul>
       )}
 
       {query.isLoading && (
