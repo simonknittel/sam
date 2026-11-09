@@ -53,6 +53,21 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-11-09-mcp-schiffsmodelle",
+    date: "2026-11-09",
+    title: "Schiffsmodelle über MCP",
+    tags: ["Neu", "MCP"],
+    isTracked: false,
+    body: () => (
+      <p>
+        Über den MCP-Server verwalten KI-Clients jetzt auch Hersteller, Serien
+        und Varianten. Dafür brauchst du wie in den Einstellungen der Flotte die
+        Berechtigung &bdquo;Schiffsmodelle verwalten&ldquo;.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-11-05-log-analyzer-zeitraum",
     date: "2026-11-05",
     title: "Zeitraum im Log Analyzer",
