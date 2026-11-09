@@ -1,4 +1,5 @@
 import { VariantStatus } from "@sam-monorepo/database/client";
+import { ExternalService } from "@sam-monorepo/domain";
 import { expectAuditEvents } from "../fixtures/audit";
 import {
   addCitizenToOrganization,
@@ -298,7 +299,10 @@ test("the variant popover shows the details of the variant and links its setting
     data: {
       tags: { create: { key: "Rolle", value: "Fracht" } },
       externalLinks: {
-        create: { serviceName: "RSI", url: "https://example.com/cutlass" },
+        create: {
+          serviceName: ExternalService.STAR_CITIZEN_WIKI,
+          url: "https://example.com/cutlass",
+        },
       },
     },
   });
@@ -329,7 +333,7 @@ test("the variant popover shows the details of the variant and links its setting
   await expect(popover.getByRole("definition")).toHaveText(["Nein", "2"]);
   await expect(
     popover.getByRole("list", { name: "Links" }).getByRole("link", {
-      name: "RSI",
+      name: "Star Citizen Wiki",
     }),
   ).toHaveAttribute("href", "https://example.com/cutlass");
   await expect(

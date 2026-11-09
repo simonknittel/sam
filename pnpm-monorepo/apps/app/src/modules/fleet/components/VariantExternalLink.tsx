@@ -1,6 +1,7 @@
 import { Link } from "@/modules/common/components/Link";
 import type { VariantExternalLink as VariantExternalLinkRow } from "@sam-monorepo/database/browser";
 import { FaExternalLinkAlt } from "react-icons/fa";
+import { getExternalServiceDisplayName } from "../types";
 
 interface Props {
   readonly link: Pick<VariantExternalLinkRow, "serviceName" | "url">;
@@ -16,7 +17,7 @@ export const VariantExternalLink = ({ link }: Props) => {
       className="flex items-center gap-1 text-sm text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300 active:text-interaction-700"
       title={link.url}
     >
-      {link.serviceName}
+      {getExternalServiceDisplayName(link.serviceName)}
       <FaExternalLinkAlt className="size-3" />
     </Link>
   );
