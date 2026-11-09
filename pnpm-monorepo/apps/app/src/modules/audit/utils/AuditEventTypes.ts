@@ -3003,6 +3003,20 @@ export const AuditEventDefinitions: {
     message: (data) => toReadMessage("Ship variants searched", data),
   },
 
+  [AuditEventType.SHIP_VARIANT_READ]: {
+    type: AuditEventType.SHIP_VARIANT_READ,
+    app: SystemLogApp.Fleet,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Ship variant read", data),
+  },
+
+  [AuditEventType.SHIP_MANUFACTURERS_LISTED]: {
+    type: AuditEventType.SHIP_MANUFACTURERS_LISTED,
+    app: SystemLogApp.Fleet,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Ship manufacturers listed", data),
+  },
+
   [AuditEventType.WIKI_PAGE_READ]: {
     type: AuditEventType.WIKI_PAGE_READ,
     app: SystemLogApp.Wiki,

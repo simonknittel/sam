@@ -295,6 +295,8 @@ export enum AuditEventType {
   OWN_SHIPS_LISTED = "OWN_SHIPS_LISTED",
   ORGANIZATION_FLEET_LISTED = "ORGANIZATION_FLEET_LISTED",
   SHIP_VARIANTS_SEARCHED = "SHIP_VARIANTS_SEARCHED",
+  SHIP_VARIANT_READ = "SHIP_VARIANT_READ",
+  SHIP_MANUFACTURERS_LISTED = "SHIP_MANUFACTURERS_LISTED",
   WIKI_PAGE_READ = "WIKI_PAGE_READ",
   WIKI_PAGES_LISTED = "WIKI_PAGES_LISTED",
   WIKI_SEARCHED = "WIKI_SEARCHED",
@@ -1936,6 +1938,8 @@ export interface AuditEventDataByType {
   [AuditEventType.OWN_SHIPS_LISTED]: ReadAuditEventData;
   [AuditEventType.ORGANIZATION_FLEET_LISTED]: ReadAuditEventData;
   [AuditEventType.SHIP_VARIANTS_SEARCHED]: ReadAuditEventData;
+  [AuditEventType.SHIP_VARIANT_READ]: ReadAuditEventData;
+  [AuditEventType.SHIP_MANUFACTURERS_LISTED]: ReadAuditEventData;
   [AuditEventType.WIKI_PAGE_READ]: ReadAuditEventData;
   [AuditEventType.WIKI_PAGES_LISTED]: ReadAuditEventData;
   [AuditEventType.WIKI_SEARCHED]: ReadAuditEventData;
