@@ -12,7 +12,9 @@ import { catalogNameSchema } from "./catalogName.js";
 import { FleetCatalogErrorMessage } from "./fleetCatalogErrors.js";
 
 export const createSeriesInputSchema = z.object({
-  manufacturer_id: idSchema,
+  manufacturer_id: idSchema.describe(
+    "The manufacturer from list_ship_manufacturers.",
+  ),
   name: catalogNameSchema,
 });
 

@@ -156,6 +156,34 @@ const toShipVariantStatus = (status: VariantStatus): ShipVariantStatus => {
   }
 };
 
+/** The status of the database for a status of the catalog */
+export const toVariantStatus = (status: ShipVariantStatus): VariantStatus => {
+  switch (status) {
+    case ShipVariantStatus.FlightReady:
+      return VariantStatus.FLIGHT_READY;
+
+    case ShipVariantStatus.NotFlightReady:
+      return VariantStatus.NOT_FLIGHT_READY;
+
+    default:
+      throw new Error(`Unknown ship variant status: ${status satisfies never}`);
+  }
+};
+
+/** The uploaded logo of a manufacturer */
+export interface ManufacturerLogoOutput {
+  readonly upload_id: string;
+  readonly mime_type: string;
+}
+
+export const toManufacturerLogoOutput = (image: {
+  readonly id: string;
+  readonly mimeType: string;
+}): ManufacturerLogoOutput => ({
+  upload_id: image.id,
+  mime_type: image.mimeType,
+});
+
 export interface VariantTagOutput {
   readonly id: string;
   readonly key: string;
@@ -174,11 +202,7 @@ export interface ShipVariantOutput {
   readonly manufacturer: {
     readonly id: string;
     readonly name: string;
-    /** The uploaded logo of the manufacturer */
-    readonly logo: {
-      readonly upload_id: string;
-      readonly mime_type: string;
-    } | null;
+    readonly logo: ManufacturerLogoOutput | null;
   };
   readonly tags: VariantTagOutput[];
 }
@@ -196,10 +220,7 @@ export const toShipVariantOutput = (
     manufacturer: {
       id: manufacturer.id,
       name: manufacturer.name,
-      logo: manufacturer.image && {
-        upload_id: manufacturer.image.id,
-        mime_type: manufacturer.image.mimeType,
-      },
+      logo: manufacturer.image && toManufacturerLogoOutput(manufacturer.image),
     },
     tags: variant.tags.map((tag) => ({
       id: tag.id,

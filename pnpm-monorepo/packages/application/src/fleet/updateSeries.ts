@@ -2,7 +2,11 @@ import { AuditEventType } from "@sam-monorepo/domain";
 import * as z from "zod";
 import { requirePermission, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
-import { NotFoundError, rethrowRecordNotFound } from "../errors.js";
+import {
+  NotFoundError,
+  rethrowRecordNotFound,
+  rethrowUniqueConstraintFailed,
+} from "../errors.js";
 import { idSchema } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
 import { catalogNameSchema } from "./catalogName.js";
@@ -14,16 +18,18 @@ import {
 import { FleetCatalogErrorMessage } from "./fleetCatalogErrors.js";
 
 export const updateSeriesInputSchema = z.object({
-  series_id: idSchema,
-  /** An absent name stays */
-  name: catalogNameSchema.optional(),
+  series_id: idSchema.describe(
+    "The series from list_ship_manufacturers or search_ship_variants.",
+  ),
+  name: catalogNameSchema,
 });
 
 /**
- * Changes the name of a series. A name that a different series has already
- * fails with the unique constraint of the names.
+ * Changes the name of a series
  *
  * @throws NotFoundError when the series does not exist
+ * @throws ValidationError when a different series of any manufacturer has the
+ * name already
  */
 export const updateSeries = (
   context: ApplicationContext,
@@ -42,11 +48,15 @@ export const updateSeries = (
 
     const series = await rethrowRecordNotFound(
       () =>
-        context.prisma.series.update({
-          where: { id: input.series_id },
-          data: { name: input.name },
-          select: SERIES_OUTPUT_SELECT,
-        }),
+        rethrowUniqueConstraintFailed(
+          () =>
+            context.prisma.series.update({
+              where: { id: input.series_id },
+              data: { name: input.name },
+              select: SERIES_OUTPUT_SELECT,
+            }),
+          FleetCatalogErrorMessage.SeriesNameTaken,
+        ),
       FleetCatalogErrorMessage.SeriesNotFound,
     );
 

@@ -42,6 +42,11 @@ export { deleteSeries, deleteSeriesInputSchema } from "./deleteSeries.js";
 export { deleteShip, deleteShipInputSchema } from "./deleteShip.js";
 export { deleteVariant, deleteVariantInputSchema } from "./deleteVariant.js";
 export { FleetCatalogErrorMessage } from "./fleetCatalogErrors.js";
+export {
+  getShipVariant,
+  getShipVariantInputSchema,
+  type ShipVariantDetailOutput,
+} from "./getShipVariant.js";
 export { listCitizenShips } from "./listCitizenShips.js";
 export { listMyShips, listMyShipsInputSchema } from "./listMyShips.js";
 export {
@@ -51,6 +56,12 @@ export {
   type ListOrgFleetOutput,
   type OrgFleetEntryOutput,
 } from "./listOrgFleet.js";
+export {
+  listShipManufacturers,
+  listShipManufacturersInputSchema,
+  type ListShipManufacturersOutput,
+  type ShipManufacturerOutput,
+} from "./listShipManufacturers.js";
 export {
   ShipSort,
   type ListShipsOutput,
@@ -75,13 +86,14 @@ export {
   SHIP_VARIANT_SELECT,
   ShipVariantStatus,
   VARIANT_TAG_SELECT,
+  toVariantStatus,
+  type ManufacturerLogoOutput,
   type ShipVariantOutput,
   type VariantTagOutput,
 } from "./shipVariant.js";
 export {
   updateManufacturer,
   updateManufacturerInputSchema,
-  type UpdateManufacturerOutput,
 } from "./updateManufacturer.js";
 export { updateSeries, updateSeriesInputSchema } from "./updateSeries.js";
 export { updateVariant, updateVariantInputSchema } from "./updateVariant.js";
@@ -102,4 +114,3 @@ export {
   findOrgFleetVariantTags,
   findOwnFleetVariantTags,
 } from "./variantTagRows.js";
-export type { VariantOutput } from "./variantWrites.js";

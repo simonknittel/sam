@@ -15,10 +15,10 @@ import { FleetCatalogErrorMessage } from "./fleetCatalogErrors.js";
 import { VARIANT_TAG_SELECT } from "./shipVariant.js";
 
 /**
- * The tag rows and the link rows of one variant form. A variant has few tags,
- * and one link for each external service.
+ * The tags or the links of one variant. A variant has few tags, and one link
+ * for each external service.
  */
-const MAXIMUM_VARIANT_FORM_ROWS = 50;
+const MAXIMUM_VARIANT_ROWS = 50;
 
 /**
  * A practical cap of the browsers for the length of a URL. A link of a
@@ -26,66 +26,58 @@ const MAXIMUM_VARIANT_FORM_ROWS = 50;
  */
 const MAXIMUM_VARIANT_LINK_URL_LENGTH = 2048;
 
-const formRowsSchema = z
-  .array(z.string().trim())
-  .max(MAXIMUM_VARIANT_FORM_ROWS);
+/**
+ * Arbitrary cap of the key and of the value of a tag, the same as the cap of
+ * the catalog names. The badges show short texts.
+ */
+const MAXIMUM_VARIANT_TAG_TEXT_LENGTH = 255;
+
+const tagTextSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(MAXIMUM_VARIANT_TAG_TEXT_LENGTH);
 
 /**
- * The fields of the variant forms that the create and the update share. The
- * tag keys and the tag values are pairs by their position, the same for the
- * services and the URLs of the links.
+ * The fields of the variant that the create and the update share. An absent
+ * field stays at an update.
  */
 export const variantFieldsInputShape = {
   status: z
     .enum([VariantStatus.FLIGHT_READY, VariantStatus.NOT_FLIGHT_READY])
     .optional(),
-  tag_keys: formRowsSchema.optional(),
-  tag_values: formRowsSchema.optional(),
-  link_service_names: z
-    .array(z.enum(ExternalService))
-    .max(MAXIMUM_VARIANT_FORM_ROWS)
-    .nullish(),
-  link_urls: z
-    .array(z.httpUrl().max(MAXIMUM_VARIANT_LINK_URL_LENGTH))
-    .max(MAXIMUM_VARIANT_FORM_ROWS)
-    .nullish(),
-  /** An empty value removes the link to the wiki page */
-  wiki_page_id: z.union([idSchema, z.literal("")]).optional(),
+  tags: z
+    .array(z.object({ key: tagTextSchema, value: tagTextSchema }))
+    .max(MAXIMUM_VARIANT_ROWS)
+    .optional()
+    .describe(
+      "All tags of the variant, each a key and a value. At an update, they replace all tags of the variant, and an empty array removes them.",
+    ),
+  links: z
+    .array(
+      z.object({
+        service: z.enum(ExternalService),
+        url: z.httpUrl().max(MAXIMUM_VARIANT_LINK_URL_LENGTH),
+      }),
+    )
+    .max(MAXIMUM_VARIANT_ROWS)
+    .optional()
+    .describe(
+      "All links of the variant to external websites, at most one for each service. At an update, they replace all links of the variant, and an empty array removes them.",
+    ),
+  wiki_page_id: z
+    .union([idSchema, z.literal("")])
+    .optional()
+    .describe(
+      "The page of the global wiki (from list_wiki_pages or search_wiki) that the variant page embeds. At an update, an empty text removes the link.",
+    ),
 };
 
-/** The variant after a write */
-export interface VariantOutput {
-  readonly id: string;
-  readonly series_id: string;
-  readonly name: string;
-  /** Null when nobody set the status of the variant */
-  readonly status: VariantStatus | null;
-  /** The wiki page that the variant page embeds */
-  readonly wiki_page_id: string | null;
-}
+type VariantFieldsInput = z.infer<z.ZodObject<typeof variantFieldsInputShape>>;
 
-export const VARIANT_OUTPUT_SELECT = {
-  id: true,
-  seriesId: true,
-  name: true,
-  status: true,
-  wikiPageId: true,
-} as const satisfies Prisma.VariantSelect;
+type VariantTagInput = NonNullable<VariantFieldsInput["tags"]>[number];
 
-export const toVariantOutput = (
-  variant: Prisma.VariantGetPayload<{ select: typeof VARIANT_OUTPUT_SELECT }>,
-): VariantOutput => ({
-  id: variant.id,
-  series_id: variant.seriesId,
-  name: variant.name,
-  status: variant.status,
-  wiki_page_id: variant.wikiPageId,
-});
-
-interface VariantTagPair {
-  readonly key: string;
-  readonly value: string;
-}
+type VariantLinkInput = NonNullable<VariantFieldsInput["links"]>[number];
 
 /** An external link of a variant, also in the audit events */
 export interface VariantLink {
@@ -93,25 +85,16 @@ export interface VariantLink {
   readonly url: string;
 }
 
-/** The tag pairs of the form. A pair without a key or a value is left out. */
-export const toVariantTags = (
-  tagKeys: readonly string[] = [],
-  tagValues: readonly string[] = [],
-): VariantTagPair[] =>
-  tagKeys.flatMap((key, index) => {
-    const value = tagValues[index];
-
-    return key && value ? [{ key, value }] : [];
-  });
+const isSameTag = (first: VariantTagInput, second: VariantTagInput) =>
+  first.key === second.key && first.value === second.value;
 
 /**
  * The ids of the tags, for the tags of the variant. Creates the tags that do
- * not exist yet. The same pair two times in one form fails with the unique
- * constraint of the tags.
+ * not exist yet. The same tag two times in the input is one tag.
  */
 export const findOrCreateVariantTagIds = async (
   transaction: Prisma.TransactionClient,
-  tags: readonly VariantTagPair[],
+  tags: readonly VariantTagInput[],
   authorCitizenId: string,
 ): Promise<string[]> => {
   if (tags.length === 0) return [];
@@ -122,11 +105,9 @@ export const findOrCreateVariantTagIds = async (
   });
 
   const missingTags = tags.filter(
-    (tag) =>
-      !existingTags.some(
-        (existingTag) =>
-          existingTag.key === tag.key && existingTag.value === tag.value,
-      ),
+    (tag, index) =>
+      !existingTags.some((existingTag) => isSameTag(existingTag, tag)) &&
+      tags.findIndex((otherTag) => isSameTag(otherTag, tag)) === index,
   );
 
   const createdTags = await transaction.variantTag.createManyAndReturn({
@@ -145,18 +126,18 @@ export const findOrCreateVariantTagIds = async (
 };
 
 /**
- * The links of the form. A link without a service or a URL is left out.
- * Undefined when the form has no link rows.
+ * The links of the input in the format of the audit events
+ *
+ * @throws ValidationError when two links have the same service
  */
 export const toVariantLinks = (
-  serviceNames: readonly ExternalService[] | null | undefined,
-  urls: readonly string[] | null | undefined,
-): VariantLink[] | undefined =>
-  serviceNames?.flatMap((serviceName, index) => {
-    const url = urls?.[index];
+  links: readonly VariantLinkInput[],
+): VariantLink[] => {
+  if (new Set(links.map((link) => link.service)).size < links.length)
+    throw new ValidationError(FleetCatalogErrorMessage.DuplicateLinkService);
 
-    return serviceName && url ? [{ serviceName, url }] : [];
-  });
+  return links.map((link) => ({ serviceName: link.service, url: link.url }));
+};
 
 /**
  * Makes the external links of the variant the given links: one link for each
@@ -165,10 +146,10 @@ export const toVariantLinks = (
 export const syncVariantExternalLinks = async (
   transaction: Prisma.TransactionClient,
   variantId: string,
-  links: readonly VariantLink[] | undefined,
+  links: readonly VariantLink[],
   authorCitizenId: string,
 ) => {
-  if (!links || links.length === 0) {
+  if (links.length === 0) {
     await transaction.variantExternalLink.deleteMany({ where: { variantId } });
     return;
   }

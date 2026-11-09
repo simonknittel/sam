@@ -17,6 +17,10 @@ export enum FleetCatalogErrorMessage {
   SeriesNameTaken = "A series with this name exists already",
   /** A `NotFoundError` */
   VariantNotFound = "The variant does not exist",
+  /** A `ValidationError`: the name of a variant is unique in its series */
+  VariantNameTaken = "A variant of the series with this name exists already",
+  /** A `ValidationError`: a variant has at most one link for each service */
+  DuplicateLinkService = "Two links have the same service",
   /**
    * A `ValidationError`: one answer for an unknown page, a page in the trash
    * and a page that the actor cannot read, thus the existence of a page

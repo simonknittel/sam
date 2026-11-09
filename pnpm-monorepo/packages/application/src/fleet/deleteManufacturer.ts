@@ -8,7 +8,9 @@ import type { ManufacturerOutput } from "./createManufacturer.js";
 import { FleetCatalogErrorMessage } from "./fleetCatalogErrors.js";
 
 export const deleteManufacturerInputSchema = z.object({
-  manufacturer_id: idSchema,
+  manufacturer_id: idSchema.describe(
+    "The manufacturer from list_ship_manufacturers.",
+  ),
 });
 
 /**

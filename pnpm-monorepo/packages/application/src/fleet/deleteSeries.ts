@@ -12,7 +12,9 @@ import {
 import { FleetCatalogErrorMessage } from "./fleetCatalogErrors.js";
 
 export const deleteSeriesInputSchema = z.object({
-  series_id: idSchema,
+  series_id: idSchema.describe(
+    "The series from list_ship_manufacturers or search_ship_variants.",
+  ),
 });
 
 /**

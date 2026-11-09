@@ -2,43 +2,49 @@ import { AuditEventType } from "@sam-monorepo/domain";
 import * as z from "zod";
 import { requireCitizen, requirePermission, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
-import { NotFoundError, rethrowRecordNotFound } from "../errors.js";
+import {
+  NotFoundError,
+  rethrowRecordNotFound,
+  rethrowUniqueConstraintFailed,
+} from "../errors.js";
 import { idSchema } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
 import { catalogNameSchema } from "./catalogName.js";
 import { FleetCatalogErrorMessage } from "./fleetCatalogErrors.js";
 import {
+  SHIP_VARIANT_DETAIL_SELECT,
+  toShipVariantDetailOutput,
+  type ShipVariantDetailOutput,
+} from "./getShipVariant.js";
+import {
   findOrCreateVariantTagIds,
   requireReadableGlobalWikiPage,
   syncVariantExternalLinks,
   toVariantLinks,
-  toVariantOutput,
-  toVariantTags,
-  VARIANT_OUTPUT_SELECT,
   variantFieldsInputShape,
-  type VariantOutput,
 } from "./variantWrites.js";
 
 export const updateVariantInputSchema = z.object({
-  variant_id: idSchema,
+  variant_id: idSchema.describe("The variant from search_ship_variants."),
   /** An absent name stays */
   name: catalogNameSchema.optional(),
   ...variantFieldsInputShape,
 });
 
 /**
- * Changes a variant. The tags and the external links of the variant become
- * the tags and the links of the input. A name that a different variant of
- * the series has already fails with the unique constraint of the names.
+ * Changes a variant. The given tags and the given external links replace all
+ * tags or all links of the variant.
  *
  * @throws NotFoundError when the variant does not exist
- * @throws ValidationError when the actor cannot read a new wiki page
+ * @throws ValidationError when a different variant of the series has the name
+ * already, when two links have the same service or when the actor cannot read
+ * a new wiki page
  */
 export const updateVariant = (
   context: ApplicationContext,
   actor: Actor,
   input: z.infer<typeof updateVariantInputSchema>,
-): Promise<VariantOutput> =>
+): Promise<ShipVariantDetailOutput> =>
   withSpan(context, "updateVariant", async () => {
     requirePermission(actor, "manufacturersSeriesAndVariants", "manage");
     const author = requireCitizen(actor);
@@ -65,38 +71,44 @@ export const updateVariant = (
     if (wikiPageId && wikiPageId !== existingVariant.wikiPageId)
       await requireReadableGlobalWikiPage(context, actor, wikiPageId);
 
-    const links = toVariantLinks(input.link_service_names, input.link_urls);
+    const links = input.links && toVariantLinks(input.links);
 
     const variant = await context.prisma.$transaction(async (transaction) => {
-      const tagIds = await findOrCreateVariantTagIds(
-        transaction,
-        toVariantTags(input.tag_keys, input.tag_values),
-        author.id,
-      );
+      const tagIds =
+        input.tags &&
+        (await findOrCreateVariantTagIds(transaction, input.tags, author.id));
 
       const updatedVariant = await rethrowRecordNotFound(
         () =>
-          transaction.variant.update({
-            where: { id: input.variant_id },
-            data: {
-              name: input.name,
-              status: input.status,
-              wikiPageId,
-              tags: { set: tagIds.map((id) => ({ id })) },
-            },
-            select: VARIANT_OUTPUT_SELECT,
-          }),
+          rethrowUniqueConstraintFailed(
+            () =>
+              transaction.variant.update({
+                where: { id: input.variant_id },
+                data: {
+                  name: input.name,
+                  status: input.status,
+                  wikiPageId,
+                  tags: tagIds && { set: tagIds.map((id) => ({ id })) },
+                },
+                select: { id: true },
+              }),
+            FleetCatalogErrorMessage.VariantNameTaken,
+          ),
         FleetCatalogErrorMessage.VariantNotFound,
       );
 
-      await syncVariantExternalLinks(
-        transaction,
-        updatedVariant.id,
-        links,
-        author.id,
-      );
+      if (links)
+        await syncVariantExternalLinks(
+          transaction,
+          updatedVariant.id,
+          links,
+          author.id,
+        );
 
-      return updatedVariant;
+      return transaction.variant.findUniqueOrThrow({
+        where: { id: updatedVariant.id },
+        select: SHIP_VARIANT_DETAIL_SELECT,
+      });
     });
 
     await context.audit.create([
@@ -104,13 +116,13 @@ export const updateVariant = (
         type: AuditEventType.VARIANT_UPDATED_V3,
         data: {
           variantId: variant.id,
-          seriesId: variant.seriesId,
+          seriesId: variant.series.id,
           previousName: existingVariant.name,
           newName: variant.name,
           previousStatus: existingVariant.status,
           newStatus: variant.status,
           previousLinks: existingVariant.externalLinks,
-          newLinks: links ?? [],
+          newLinks: variant.externalLinks,
           previousWikiPageId: existingVariant.wikiPageId,
           newWikiPageId: variant.wikiPageId,
         },
@@ -118,5 +130,5 @@ export const updateVariant = (
       },
     ]);
 
-    return toVariantOutput(variant);
+    return toShipVariantDetailOutput(variant);
   });

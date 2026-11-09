@@ -29,13 +29,25 @@ export interface SearchShipVariantsOutput {
 
 /**
  * The catalog is not secret, but only the features that use ship variants
- * need it: the own ships, the fleet of the organization and the lineups of
- * the events.
+ * need it: the own ships, the fleet of the organization, the lineups of the
+ * events and the management of the catalog.
  */
 export const canSearchShipVariants = (actor: Actor) =>
   actor.authorize("ship", "read") ||
   actor.authorize("orgFleet", "read") ||
-  actor.authorize("event", "read");
+  actor.authorize("event", "read") ||
+  actor.authorize("manufacturersSeriesAndVariants", "manage");
+
+/**
+ * @throws ForbiddenError when the actor cannot use the catalog, see
+ * `canSearchShipVariants()`
+ */
+export const requireShipCatalogAccess = (actor: Actor) => {
+  if (!canSearchShipVariants(actor))
+    throw new ForbiddenError(
+      "One of the permissions ship;read, orgFleet;read, event;read or manufacturersSeriesAndVariants;manage is missing",
+    );
+};
 
 /** The variants of the catalog that agree with the query, sorted by name */
 export const searchShipVariants = async (
@@ -43,10 +55,7 @@ export const searchShipVariants = async (
   actor: Actor,
   input: z.infer<typeof searchShipVariantsInputSchema>,
 ): Promise<SearchShipVariantsOutput> => {
-  if (!canSearchShipVariants(actor))
-    throw new ForbiddenError(
-      "One of the permissions ship;read, orgFleet;read or event;read is missing",
-    );
+  requireShipCatalogAccess(actor);
 
   const where: Prisma.VariantWhereInput = {};
 
