@@ -92,7 +92,7 @@ flowchart TB
   end
 
   subgraph infrastructure [Infrastructure]
-    infrastructurePackage["packages/infrastructure (ports)"]
+    infrastructurePackage["packages/infrastructure (adapters)"]
     database["packages/database (Prisma)"]
   end
 
@@ -126,6 +126,18 @@ Each package except `database` and `emails` (they have no test runner) has the t
 - **Adapters**: the server actions and tRPC procedures of the Next.js app, the MCP tools and request handler, the Lambda handlers. They parse the transport-specific input, call the use cases and map the typed errors.
 - **Infrastructure** (`database`, `infrastructure`): the Prisma schema and client, and the shared implementations of the ports. Each host composes the implementations in its composition root.
 - **Hosts**: the deployables. Each host has one composition root that builds its context. The logger and the tracer are per host: the app logs in `after()`, and the Lambda functions log to the console.
+
+The names of Clean Architecture and their locations in the code:
+
+| Clean Architecture | In the code |
+| - | - |
+| Entity | The Prisma models of `database` and the rules of `domain` |
+| Use case | A function of `application` with the signature `(context, actor, input) => output` |
+| Request model and response model (Data Transfer Object, DTO) | The Zod input schema and the output type of a use case |
+| Port | A field of `ApplicationContext` ([`context.ts`](../pnpm-monorepo/packages/application/src/context.ts)) |
+| Driven adapter | The implementations of the ports in `infrastructure` and in the composition roots |
+| Driving adapter | The server actions, the tRPC procedures and the route handlers of the Next.js app, the MCP tools, the Lambda handlers |
+| Composition root | `apps/app/src/modules/application` and `apps/lambda/src/common/createApplicationContext.ts` |
 
 ## How to add a piece of logic
 
