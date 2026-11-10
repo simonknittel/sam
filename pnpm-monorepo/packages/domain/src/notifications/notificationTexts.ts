@@ -1,6 +1,7 @@
 import { ORGANIZATION_TIMEZONE } from "../timeZone.js";
 import {
   EventParticipationChange,
+  FLEET_UPDATE_REMINDER_UNCHANGED_MONTHS,
   type OnSiteNotificationPayload,
 } from "./onSiteNotificationPayloads.js";
 
@@ -369,6 +370,6 @@ export const getWikiCitizenMentionedText = ({
 
 /** The text is the same for each citizen, thus the payload is empty */
 export const getFleetUpdateReminderText = (): NotificationText => ({
-  title: "Willkommen zurück!",
-  body: "Ist deine Flotte noch aktuell? Prüfe deine Schiffe unter „Meine Schiffe“.",
+  title: "Ist deine Flotte noch aktuell?",
+  body: `Du hast deine Schiffe seit mindestens ${FLEET_UPDATE_REMINDER_UNCHANGED_MONTHS} Monaten nicht geändert. Prüfe sie unter „Meine Schiffe“.`,
 });

@@ -75,6 +75,10 @@ export {
   type SearchShipVariantsOutput,
 } from "./searchShipVariants.js";
 export {
+  sendDueFleetUpdateReminder,
+  type SendDueFleetUpdateReminderInput,
+} from "./sendDueFleetUpdateReminder.js";
+export {
   ShipChangeFilter,
   ShipChangeType,
   findShipChangePage,
