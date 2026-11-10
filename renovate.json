@@ -16,6 +16,18 @@
         "\"(?<depName>[^\"@:]+):(?<currentValue>[^\"@]+)@(?<currentDigest>sha256:[0-9a-f]{64})\""
       ],
       "datasourceTemplate": "docker"
+    },
+    {
+      "description": "The launch configuration of VS Code pins the Node.js version of the debugger, and no built-in manager reads it. The dependency name and the datasource are those of the nvm manager, thus this version and pnpm-monorepo/.nvmrc get the same update in the same pull request.",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "pnpm-monorepo/apps/app/.vscode/launch.json"
+      ],
+      "matchStrings": [
+        "\"runtimeVersion\": \"(?<currentValue>[^\"]+)\""
+      ],
+      "depNameTemplate": "node",
+      "datasourceTemplate": "node-version"
     }
   ],
   "packageRules": [

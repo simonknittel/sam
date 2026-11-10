@@ -18,5 +18,4 @@ Renovate opens the update pull requests (see [renovate.json](../renovate.json)).
 
 ## Manual steps
 
-- Keep `runtimeVersion` in `pnpm-monorepo/apps/app/.vscode/launch.json` equal to `pnpm-monorepo/.nvmrc`. Renovate does not update this file.
 - pnpm and Renovate add entries to `minimumReleaseAgeExclude` in `pnpm-workspace.yaml`, but they do not remove them. Remove an entry when its version is older than 7 days.
