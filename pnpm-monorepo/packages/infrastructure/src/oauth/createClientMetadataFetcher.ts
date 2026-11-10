@@ -1,3 +1,7 @@
+import type {
+  ClientMetadataDocumentResponse,
+  ClientMetadataFetcher,
+} from "@sam-monorepo/application";
 import { request as httpRequest, type IncomingMessage } from "node:http";
 import { request as httpsRequest } from "node:https";
 import { isIP } from "node:net";
@@ -11,11 +15,6 @@ import {
 const MAX_DOCUMENT_SIZE_IN_BYTES = 5 * 1024;
 
 const TIMEOUT_IN_MILLISECONDS = 5000;
-
-export interface ClientMetadataDocumentResponse {
-  readonly body: string;
-  readonly cacheControl: string | undefined;
-}
 
 const isJsonMediaType = (contentType: string | undefined) => {
   const mediaType = contentType?.split(";")[0]?.trim().toLowerCase();
@@ -45,17 +44,7 @@ const readBody = (response: IncomingMessage) =>
     });
   });
 
-/**
- * Fetches the Client ID Metadata Document of an OAuth client without a
- * Server-Side Request Forgery: only public addresses (or the loopback
- * interface, when `allowLoopback` is set), no redirects, a timeout and a
- * size limit. `fetch()` cannot validate the address at connect time, thus
- * this function uses `node:http` with a validating `lookup`.
- *
- * Throws an `Error` with an English message for each failure. The message
- * can contain the hostname, but no data of the response.
- */
-export const fetchClientMetadataDocument = async (
+const fetchDocument = async (
   url: URL,
   { allowLoopback }: { readonly allowLoopback: boolean },
 ): Promise<ClientMetadataDocumentResponse> => {
@@ -105,3 +94,14 @@ export const fetchClientMetadataDocument = async (
     response.destroy();
   }
 };
+
+/**
+ * Fetches the Client ID Metadata Documents without a Server-Side Request
+ * Forgery: only public addresses (or the loopback interface, when
+ * `allowLoopback` is set), no redirects, a timeout and a size limit.
+ * `fetch()` cannot validate the address at connect time, thus the fetcher
+ * uses `node:http` with a validating `lookup`.
+ */
+export const createClientMetadataFetcher = (): ClientMetadataFetcher => ({
+  fetchDocument,
+});

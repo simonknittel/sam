@@ -75,6 +75,7 @@ export const createApplicationContext = ({
     images: null,
     urls: createApplicationUrls({ baseUrl, publicUploadBaseUrl }),
     signingKey: async () => null,
+    clientMetadata: null,
     allowInsecureLoopbackClientIds: false,
   };
 };

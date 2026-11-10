@@ -8,7 +8,6 @@ import {
   parseClientId,
 } from "./clientMetadataDocument.js";
 import { isLoopbackHostname, MAX_URL_LENGTH } from "./constants.js";
-import { fetchClientMetadataDocument } from "./fetchClientMetadataDocument.js";
 
 export enum ClientMetadataErrorReason {
   InvalidClientId = "invalid_client_id",
@@ -74,7 +73,10 @@ export const resolveClientMetadata = (
 
     let response;
     try {
-      response = await fetchClientMetadataDocument(url, {
+      if (!context.clientMetadata)
+        throw new Error("The host cannot fetch client metadata documents");
+
+      response = await context.clientMetadata.fetchDocument(url, {
         allowLoopback:
           context.allowInsecureLoopbackClientIds &&
           isLoopbackHostname(url.hostname),

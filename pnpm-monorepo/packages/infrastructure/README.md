@@ -15,6 +15,7 @@ This package holds the shared implementations of the ports of the use cases. The
 | `createCollabClient`                   | `collab`                                                                                  |
 | `createS3Storage`                      | `storage`: [`FileStorage`](../application/src/ports/storage.ts)                           |
 | `createS3Client`                       | none: the client of the storage, with timeouts, for an R2 account or an explicit endpoint |
+| `createClientMetadataFetcher`          | `clientMetadata`: [`ClientMetadataFetcher`](../application/src/ports/clientMetadata.ts)   |
 
 ## Rules
 

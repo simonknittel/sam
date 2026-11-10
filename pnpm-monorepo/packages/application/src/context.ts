@@ -9,11 +9,13 @@ import type {
 import type { JWK } from "jose";
 import type { KeyObject } from "node:crypto";
 import type { ChangelogSource } from "./ports/changelog.js";
+import type { ClientMetadataFetcher } from "./ports/clientMetadata.js";
 import type { EmailRequester } from "./ports/email.js";
 import type { ImageReader } from "./ports/images.js";
 import type { FileStorage } from "./ports/storage.js";
 
 export * from "./ports/changelog.js";
+export * from "./ports/clientMetadata.js";
 export * from "./ports/email.js";
 export * from "./ports/images.js";
 export * from "./ports/storage.js";
@@ -216,6 +218,11 @@ export interface ApplicationContext {
    * tokens.
    */
   readonly signingKey: () => Promise<SigningKey | null>;
+  /**
+   * Null when the host does not run the OAuth authorization server (the
+   * Lambda functions)
+   */
+  readonly clientMetadata: ClientMetadataFetcher | null;
   /** Permits client ids with plain HTTP on a loopback host (tests only) */
   readonly allowInsecureLoopbackClientIds: boolean;
 }

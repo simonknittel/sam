@@ -82,6 +82,7 @@ export const createTestApplicationContext = ({
       publicUploadBaseUrl: "https://uploads.example.com",
     }),
     signingKey: async () => null,
+    clientMetadata: null,
     allowInsecureLoopbackClientIds: false,
     ...overrides,
   };

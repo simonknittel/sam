@@ -33,6 +33,7 @@ export {
   createEventBridgeNotificationTrigger,
   type EventBridgeNotificationTriggerOptions,
 } from "./notifications/createEventBridgeNotificationTrigger.js";
+export { createClientMetadataFetcher } from "./oauth/createClientMetadataFetcher.js";
 export {
   createS3Client,
   type S3ClientOptions,

@@ -27,6 +27,8 @@ export {
   createApplicationUrls,
   type ApplicationContext,
   type ChangelogEntrySource,
+  type ClientMetadataDocumentResponse,
+  type ClientMetadataFetcher,
   type DiscordGateway,
   type DiscordGuildChannel,
   type DiscordResult,

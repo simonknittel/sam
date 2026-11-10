@@ -19,6 +19,7 @@ import {
 } from "@sam-monorepo/application";
 import { prisma } from "@sam-monorepo/database";
 import {
+  createClientMetadataFetcher,
   createCollabClient,
   createDiscordGateway,
   createEventBridgeEmailRequester,
@@ -114,6 +115,7 @@ const createApplicationContext = (): ApplicationContext => ({
 
     return { ...signingKey, algorithm: EMBED_TOKEN_ALGORITHM };
   },
+  clientMetadata: createClientMetadataFetcher(),
   allowInsecureLoopbackClientIds:
     env.OAUTH_ALLOW_INSECURE_LOOPBACK_CLIENT_IDS === "1",
 });
