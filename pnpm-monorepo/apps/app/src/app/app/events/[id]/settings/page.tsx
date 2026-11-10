@@ -14,6 +14,7 @@ import { getEventUrl } from "@/modules/events/utils/eventConstraints";
 import { isAllowedToManageEvent } from "@/modules/events/utils/isAllowedToManageEvent";
 import { isAllowedToManagePositions } from "@/modules/events/utils/isAllowedToManagePositions";
 import { isEventUpdatable } from "@/modules/events/utils/isEventUpdatable";
+import type { EventDetails } from "@sam-monorepo/application";
 import { EventSource } from "@sam-monorepo/database/client";
 import { instantToWallTime, ORGANIZATION_TIMEZONE } from "@sam-monorepo/domain";
 import { forbidden, notFound } from "next/navigation";
@@ -123,7 +124,7 @@ export default async function Page({
 }
 
 interface DiscordCardProps {
-  readonly event: NonNullable<Awaited<ReturnType<typeof getEventById>>>;
+  readonly event: EventDetails;
 }
 
 const DiscordCard = async ({ event }: DiscordCardProps) => {

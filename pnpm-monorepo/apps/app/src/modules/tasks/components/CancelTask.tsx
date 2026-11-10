@@ -1,13 +1,13 @@
 "use client";
 
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
-import { type Task } from "@sam-monorepo/database/browser";
+import type { VisibleTask } from "@sam-monorepo/application";
 import { TbCancel } from "react-icons/tb";
 import { cancelTask } from "../actions/cancelTask";
 
 interface Props {
   readonly className?: string;
-  readonly task: Task;
+  readonly task: Pick<VisibleTask, "id" | "title">;
 }
 
 export const CancelTask = ({ className, task }: Props) => {

@@ -59,7 +59,9 @@ export default async function Page({
 
   return (
     <LineupTab
-      event={event}
+      eventId={event.id}
+      eventSource={event.source}
+      lineupEnabled={event.lineupEnabled}
       positions={positions}
       canManagePositions={showManagePositions}
       variants={variants}

@@ -4,10 +4,9 @@ import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
 import { Link } from "@/modules/common/components/Link";
 import { Tile } from "@/modules/common/components/Tile";
-import type { EventCitizenReference } from "@/modules/events/queries/eventRelationSelects";
 import { CreateOrUpdateSilcTransaction } from "@/modules/silc/components/CreateOrUpdateSilcTransaction";
-import type { EventParticipantRow } from "@sam-monorepo/application";
-import { EventSource, type Event } from "@sam-monorepo/database/client";
+import type { EventDetails } from "@sam-monorepo/application";
+import { EventSource } from "@sam-monorepo/database/client";
 import { DELETED_CITIZEN_LABEL } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { forbidden } from "next/navigation";
@@ -22,11 +21,7 @@ import { ParticipantsTableTile } from "./ParticipantsTableTile";
 
 interface Props {
   readonly className?: string;
-  readonly event: Event & {
-    readonly participants: EventParticipantRow[];
-    readonly managers: EventCitizenReference[];
-    readonly createdBy?: EventCitizenReference | null;
-  };
+  readonly event: EventDetails;
   readonly searchParams: Promise<SearchParams>;
 }
 
@@ -61,7 +56,9 @@ export const ParticipantsTab = async ({
 
       <Tile
         heading="Manager"
-        cta={isAllowedToManageEvent ? <CreateManagers event={event} /> : null}
+        cta={
+          isAllowedToManageEvent ? <CreateManagers eventId={event.id} /> : null
+        }
       >
         {event.managers.length > 0 ? (
           <div className="flex flex-wrap gap-x-3 gap-y-1">

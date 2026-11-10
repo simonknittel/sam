@@ -14,7 +14,7 @@ import {
 import type { ApplicationContext } from "../context.js";
 import { isEventUpdatable } from "../events/eventManageRules.js";
 import { compareRoleNames, isRoleVisible } from "../roles/roleVisibility.js";
-import { POSITION_TREE_INCLUDE } from "./positionTreeInclude.js";
+import { POSITION_TREE_SELECT } from "./positionTreeSelect.js";
 
 export interface LineupPosition {
   readonly id: string;
@@ -47,7 +47,7 @@ export interface GetEventLineupOutput {
 }
 
 export type EventPositionTreeRow = Prisma.EventPositionGetPayload<{
-  include: typeof POSITION_TREE_INCLUDE;
+  select: typeof POSITION_TREE_SELECT;
 }>;
 
 /**
@@ -62,7 +62,7 @@ export const findEventPositionTree = (
   context.prisma.eventPosition.findMany({
     where: { eventId, parentPositionId: null },
     orderBy: { order: "asc" },
-    include: POSITION_TREE_INCLUDE,
+    select: POSITION_TREE_SELECT,
   });
 
 type PositionCitizen = Pick<Citizen, "id" | "handle" | "deletedAt">;
@@ -72,7 +72,7 @@ interface RoleReference {
   readonly name: string;
 }
 
-/** One level of the position tree, as `POSITION_TREE_INCLUDE` loads it */
+/** One level of the position tree, as `POSITION_TREE_SELECT` loads it */
 interface PositionTreeRow {
   readonly id: string;
   readonly name: string;
@@ -183,7 +183,7 @@ export const toLineupPositionOutput = async (
 ): Promise<LineupPosition> => {
   const position = await context.prisma.eventPosition.findUniqueOrThrow({
     where: { id: positionId },
-    include: POSITION_TREE_INCLUDE,
+    select: POSITION_TREE_SELECT,
   });
 
   return toLineupPosition(

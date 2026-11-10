@@ -14,7 +14,7 @@ import {
   type CitizenReferenceRow,
 } from "../citizenReference.js";
 import type { ApplicationContext } from "../context.js";
-import { TEMPLATE_POSITION_TREE_INCLUDE } from "../lineup/positionTreeInclude.js";
+import { TEMPLATE_POSITION_TREE_SELECT } from "../lineup/positionTreeSelect.js";
 import {
   buildVisibleEventTemplatesWhere,
   requireReadableEventTemplate,
@@ -287,7 +287,7 @@ export const canAccessEventTemplates = async (
 };
 
 export type EventTemplatePosition = Prisma.EventPositionGetPayload<{
-  include: typeof TEMPLATE_POSITION_TREE_INCLUDE;
+  select: typeof TEMPLATE_POSITION_TREE_SELECT;
 }>;
 
 /**
@@ -314,6 +314,6 @@ export const findEventTemplatePositionTree = async (
     orderBy: {
       order: "asc",
     },
-    include: TEMPLATE_POSITION_TREE_INCLUDE,
+    select: TEMPLATE_POSITION_TREE_SELECT,
   });
 };

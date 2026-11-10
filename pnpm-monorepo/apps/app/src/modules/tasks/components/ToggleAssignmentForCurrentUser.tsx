@@ -6,12 +6,8 @@ import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import { Tooltip } from "@/modules/common/components/Tooltip";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
-import {
-  TaskVisibility,
-  type Role,
-  type Task,
-  type TaskAssignment,
-} from "@sam-monorepo/database/browser";
+import type { VisibleTask } from "@sam-monorepo/application";
+import { TaskVisibility } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useId, useTransition } from "react";
 import { FaMinus, FaPlus } from "react-icons/fa";
@@ -20,10 +16,10 @@ import { deleteTaskAssignmentForCurrentUser } from "../actions/deleteTaskAssignm
 
 interface Props {
   readonly className?: string;
-  readonly task: Task & {
-    readonly assignments: readonly Pick<TaskAssignment, "citizenId">[];
-    readonly requiredRoles: readonly Pick<Role, "id">[];
-  };
+  readonly task: Pick<
+    VisibleTask,
+    "id" | "visibility" | "assignmentLimit" | "assignments" | "requiredRoles"
+  >;
   readonly isCurrentUserAssigned?: boolean;
   readonly hasCurrentUserRequiredRole: boolean;
 }

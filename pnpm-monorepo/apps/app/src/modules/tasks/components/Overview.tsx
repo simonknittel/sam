@@ -11,14 +11,8 @@ import { Tile } from "@/modules/common/components/Tile";
 import { Tooltip } from "@/modules/common/components/Tooltip";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
-import {
-  TaskRewardType,
-  TaskVisibility,
-  type Citizen,
-  type Role,
-  type Task,
-  type TaskAssignment,
-} from "@sam-monorepo/database/browser";
+import type { VisibleTask } from "@sam-monorepo/application";
+import { TaskRewardType, TaskVisibility } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { forbidden } from "next/navigation";
 import { FaEye, FaInfoCircle } from "react-icons/fa";
@@ -35,19 +29,32 @@ import { UpdateTaskAssignments } from "./UpdateTaskAssignments";
 import { UpdateTaskDescription } from "./UpdateTaskDescription";
 import { UpdateTaskRepeatable } from "./UpdateTaskRepeatable";
 
-interface TaskWithIncludes extends Task {
-  createdBy: Pick<Citizen, "id" | "handle" | "deletedAt"> | null;
-  assignments: (Pick<TaskAssignment, "id" | "citizenId"> & {
-    citizen: Pick<Citizen, "id" | "handle" | "deletedAt">;
-  })[];
-  completionists?: Pick<Citizen, "id" | "handle" | "deletedAt">[];
-  requiredRoles: Pick<Role, "id">[];
-  hasCurrentUserRequiredRole: boolean;
-}
+/** The fields of the task that the overview shows and changes */
+type OverviewTask = Pick<
+  VisibleTask,
+  | "id"
+  | "title"
+  | "description"
+  | "visibility"
+  | "assignmentLimit"
+  | "canSelfComplete"
+  | "hiddenForOtherRoles"
+  | "repeatable"
+  | "rewardType"
+  | "rewardSilcValue"
+  | "rewardTypeTextValue"
+  | "createdAt"
+  | "expiresAt"
+  | "createdBy"
+  | "assignments"
+  | "completionists"
+  | "requiredRoles"
+  | "hasCurrentUserRequiredRole"
+>;
 
 interface Props {
   readonly className?: string;
-  readonly task: TaskWithIncludes;
+  readonly task: OverviewTask;
   readonly isAllowedToManageTask: boolean;
   readonly isAllowedToDeleteTask: boolean;
   readonly isTaskUpdatable: boolean;
@@ -295,7 +302,7 @@ export const Overview = ({
             </div>
           </div>
 
-          {task.completionists && task.completionists.length > 0 && (
+          {task.completionists.length > 0 && (
             <div className="flex gap-2">
               <div className="flex flex-col items-start">
                 <span className="text-sm text-neutral-400">Erfüllt durch</span>

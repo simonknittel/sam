@@ -8,8 +8,11 @@ import {
   sortDescAndNullLast,
 } from "@/modules/common/utils/sorting";
 import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
-import type { ResolvedEventParticipant } from "@sam-monorepo/application";
-import type { Citizen, Event } from "@sam-monorepo/database/client";
+import type {
+  EventDetails,
+  ResolvedEventParticipant,
+} from "@sam-monorepo/application";
+import type { Citizen } from "@sam-monorepo/database/client";
 import type { SearchParams } from "nuqs/server";
 import { FaInfoCircle } from "react-icons/fa";
 import {
@@ -108,7 +111,7 @@ const getEmptyMessage = (isAppEvent: boolean, hasParticipants: boolean) => {
 
 interface Props {
   readonly className?: string;
-  readonly event: Pick<Event, "id">;
+  readonly event: Pick<EventDetails, "id">;
   readonly participants: readonly ResolvedEventParticipant[];
   readonly currentCitizenId: Citizen["id"];
   readonly isAppEvent: boolean;

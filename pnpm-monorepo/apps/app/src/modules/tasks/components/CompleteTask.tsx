@@ -5,11 +5,8 @@ import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import { SubmitButton } from "@/modules/common/components/SubmitButton";
-import {
-  TaskRewardType,
-  type Task,
-  type TaskAssignment,
-} from "@sam-monorepo/database/browser";
+import type { VisibleTask } from "@sam-monorepo/application";
+import { TaskRewardType } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useState } from "react";
 import { FaCheck, FaSave } from "react-icons/fa";
@@ -17,9 +14,7 @@ import { completeTask } from "../actions/completeTask";
 
 interface Props {
   readonly className?: string;
-  readonly task: Task & {
-    readonly assignments: readonly Pick<TaskAssignment, "citizenId">[];
-  };
+  readonly task: Pick<VisibleTask, "id" | "rewardType" | "assignments">;
 }
 
 export const CompleteTask = ({ className, task }: Props) => {

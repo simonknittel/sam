@@ -1,19 +1,15 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { Tile, TileVariant } from "@/modules/common/components/Tile";
-import type { EventCitizenReference } from "@/modules/events/queries/eventRelationSelects";
 import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
-import type { EventParticipantRow } from "@sam-monorepo/application";
-import { EventSource, type Event } from "@sam-monorepo/database/client";
+import type { EventDetails } from "@sam-monorepo/application";
+import { EventSource } from "@sam-monorepo/database/client";
 import { FaCheck, FaTimes } from "react-icons/fa";
 import { getOwnEventParticipation } from "../queries/getOwnEventParticipation";
 import { EventParticipationControls } from "./EventParticipationControls";
 
 interface Props {
   readonly className?: string;
-  readonly event: Event & {
-    readonly participants: EventParticipantRow[];
-    readonly managers: EventCitizenReference[];
-  };
+  readonly event: EventDetails;
 }
 
 /**

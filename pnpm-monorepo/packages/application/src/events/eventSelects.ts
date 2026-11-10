@@ -36,15 +36,37 @@ export const EVENT_PAGE_RELATIONS_SELECT = {
 } as const satisfies Prisma.EventSelect;
 
 /**
- * One event with everything its layout and its subpages share. The position
+ * One event with everything its layout and its subpages share, and with the
+ * fields of `getEvent()` and of the visibility and manage rules. The position
  * tree is deliberately not part of it: only the lineup renders it.
  */
-export const EVENT_DETAILS_INCLUDE = {
+export const EVENT_DETAILS_SELECT = {
+  id: true,
+  source: true,
+  name: true,
+  description: true,
+  startTime: true,
+  endTime: true,
+  location: true,
+  visibility: true,
+  lineupEnabled: true,
+  participationEnabled: true,
+  createdAt: true,
+  createdById: true,
+  deletedAt: true,
+  discordId: true,
+  discordCreatorId: true,
+  discordGuildId: true,
+  discordImage: true,
+  discordPublishedId: true,
+  discordPublishedAt: true,
+  discordPublishedChannelId: true,
+  discordPublishedLocation: true,
   ...EVENT_PAGE_RELATIONS_SELECT,
   visibilityRoles: { select: { roleId: true } },
   createdBy: { select: CITIZEN_REFERENCE_SELECT },
-} as const satisfies Prisma.EventInclude;
+} as const satisfies Prisma.EventSelect;
 
 export type EventDetails = Prisma.EventGetPayload<{
-  include: typeof EVENT_DETAILS_INCLUDE;
+  select: typeof EVENT_DETAILS_SELECT;
 }>;

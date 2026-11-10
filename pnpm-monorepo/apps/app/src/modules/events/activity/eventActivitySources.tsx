@@ -11,8 +11,9 @@ import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
   findEventActivityRows,
   type EventActivityRow,
+  type EventDetails,
 } from "@sam-monorepo/application";
-import { EventActivityType, type Event } from "@sam-monorepo/database/client";
+import { EventActivityType } from "@sam-monorepo/database/client";
 import {
   compareMergedCursorEntries,
   isBeyondCursorPosition,
@@ -60,7 +61,7 @@ const participantRemovedPayloadSchema = z.object({
 });
 
 interface Input {
-  readonly eventId: Event["id"];
+  readonly eventId: EventDetails["id"];
   readonly filters?: ActivityFilters;
 }
 
@@ -92,7 +93,7 @@ export const createEventActivitySource = ({
   );
 
 interface ScheduleInput {
-  readonly event: Pick<Event, "startTime" | "endTime">;
+  readonly event: Pick<EventDetails, "startTime" | "endTime">;
   readonly filters?: ActivityFilters;
 }
 

@@ -32,7 +32,26 @@ export default async function Page({ params }: PageProps<"/app/tasks/[id]">) {
   return (
     <>
       <Overview
-        task={task}
+        task={{
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          visibility: task.visibility,
+          assignmentLimit: task.assignmentLimit,
+          canSelfComplete: task.canSelfComplete,
+          hiddenForOtherRoles: task.hiddenForOtherRoles,
+          repeatable: task.repeatable,
+          rewardType: task.rewardType,
+          rewardSilcValue: task.rewardSilcValue,
+          rewardTypeTextValue: task.rewardTypeTextValue,
+          createdAt: task.createdAt,
+          expiresAt: task.expiresAt,
+          createdBy: task.createdBy,
+          assignments: task.assignments,
+          completionists: task.completionists,
+          requiredRoles: task.requiredRoles,
+          hasCurrentUserRequiredRole: task.hasCurrentUserRequiredRole,
+        }}
         isAllowedToManageTask={await isAllowedToManageTask(task)}
         isAllowedToDeleteTask={await isAllowedToDeleteTask()}
         isTaskUpdatable={isTaskUpdatable(task)}

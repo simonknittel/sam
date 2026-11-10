@@ -5,20 +5,12 @@ import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import { Tooltip } from "@/modules/common/components/Tooltip";
 import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
-import type {
-  EventPosition,
-  EventPositionRequiredRole,
-  EventPositionRequiredVariant,
-  Manufacturer,
-  Series,
-  Upload,
-  Variant,
-} from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useId, useTransition } from "react";
 import { FaMinus, FaPlus } from "react-icons/fa";
 import { createEventPositionApplicationForCurrentUser } from "../actions/createEventPositionApplicationForCurrentUser";
 import { deleteEventPositionApplicationForCurrentUser } from "../actions/deleteEventPositionApplicationForCurrentUser";
+import type { PositionType } from "./Position";
 import {
   getRequiredRolesHeading,
   PositionRequiredRoles,
@@ -26,18 +18,10 @@ import {
 
 interface Props {
   readonly className?: string;
-  readonly position: EventPosition & {
-    requiredVariants: (EventPositionRequiredVariant & {
-      variant: Variant & {
-        series: Series & {
-          manufacturer: Manufacturer & {
-            image: Pick<Upload, "id" | "mimeType"> | null;
-          };
-        };
-      };
-    })[];
-    requiredRoles: Pick<EventPositionRequiredRole, "roleId">[];
-  };
+  readonly position: Pick<
+    PositionType,
+    "id" | "requiredVariants" | "requiredRoles" | "requiredRoleMatch"
+  >;
   readonly hasCurrentUserAlreadyApplied?: boolean;
   readonly doesCurrentUserSatisfyRequirements?: boolean;
   readonly showDiscordWarning?: boolean;

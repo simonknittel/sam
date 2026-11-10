@@ -1,5 +1,5 @@
 import { markdownToPlainText } from "@/modules/common/utils/markdownToPlainText";
-import type { Event } from "@sam-monorepo/database/client";
+import type { CalendarExportEvent } from "./calendarExportEvent";
 
 /**
  * The basic ISO 8601 format in UTC that Google Calendar reads, for example
@@ -8,7 +8,7 @@ import type { Event } from "@sam-monorepo/database/client";
 const formatGoogleCalendarDate = (date: Date) =>
   date.toISOString().replace(/[-:]|\.\d{3}/g, "");
 
-export const getGoogleCalendarUrl = (event: Event) => {
+export const getGoogleCalendarUrl = (event: CalendarExportEvent) => {
   const start = formatGoogleCalendarDate(event.startTime);
   const end = formatGoogleCalendarDate(event.endTime ?? event.startTime);
 

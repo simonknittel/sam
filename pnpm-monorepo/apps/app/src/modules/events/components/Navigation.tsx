@@ -1,9 +1,9 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SubNavigation } from "@/modules/common/components/SubNavigation";
-import type { EventCitizenReference } from "@/modules/events/queries/eventRelationSelects";
 import { toEventContainer } from "@/modules/events/utils/eventContainer";
 import { getEventWikiContext } from "@/modules/wiki/queries/getEventWikiContext";
-import { EventSource, type Event } from "@sam-monorepo/database/client";
+import type { EventDetails } from "@sam-monorepo/application";
+import { EventSource } from "@sam-monorepo/database/client";
 import { getBriefingPath } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { FaBook, FaCog, FaHistory, FaHome, FaUsers } from "react-icons/fa";
@@ -13,9 +13,7 @@ import { isLineupVisible } from "../utils/isLineupVisible";
 
 interface Props {
   readonly className?: string;
-  readonly event: Event & {
-    readonly managers: EventCitizenReference[];
-  };
+  readonly event: EventDetails;
 }
 
 export const Navigation = async ({ className, event }: Props) => {

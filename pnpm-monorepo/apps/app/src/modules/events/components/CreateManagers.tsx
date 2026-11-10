@@ -5,7 +5,6 @@ import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import { SubmitButton } from "@/modules/common/components/SubmitButton";
-import type { Event } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useState } from "react";
 import { FaPlus, FaSave } from "react-icons/fa";
@@ -13,7 +12,7 @@ import { createManagers } from "../actions/createManagers";
 
 interface Props {
   readonly className?: string;
-  readonly event: Event;
+  readonly eventId: string;
 }
 
 export const CreateManagers = (props: Props) => {
@@ -50,7 +49,7 @@ export const CreateManagers = (props: Props) => {
         heading={<h2>Manager hinzufügen</h2>}
       >
         <form action={formAction}>
-          <input type="hidden" name="eventId" value={props.event.id} />
+          <input type="hidden" name="eventId" value={props.eventId} />
 
           <CitizenInput name="managerId" multiple autoFocus />
 

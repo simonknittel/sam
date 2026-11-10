@@ -2,15 +2,15 @@
 
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
 import { Tooltip } from "@/modules/common/components/Tooltip";
-import { type EventPosition } from "@sam-monorepo/database/browser";
 import { FaTrash } from "react-icons/fa";
 import { deleteEventPosition } from "../actions/deleteEventPosition";
+import type { PositionType } from "./Position";
 
 const LABEL = "Posten löschen";
 
 interface Props {
   readonly className?: string;
-  readonly position: EventPosition;
+  readonly position: Pick<PositionType, "id" | "name">;
 }
 
 export const DeleteEventPosition = ({ className, position }: Props) => {

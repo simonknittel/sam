@@ -27,7 +27,7 @@ const LINEUP_EVENT_RECIPIENT_SELECT = {
 /** One level of the tree of `findEventPositionTree()` */
 interface PositionTreeNode {
   readonly name: string;
-  readonly citizenId: string | null;
+  readonly citizen: { readonly id: string } | null;
   /** Missing on the deepest level */
   readonly childPositions?: readonly PositionTreeNode[];
 }
@@ -87,7 +87,9 @@ export const findEventLineupEnabledRecipients = async (
 
   const assignedPositions = flattenPositionTree(
     await findEventPositionTree(context, input.eventId),
-  ).filter((position) => position.citizenId !== null);
+  ).flatMap(({ name, citizen }) =>
+    citizen ? [{ citizenId: citizen.id, name }] : [],
+  );
   const positionsByCitizenId = Map.groupBy(
     assignedPositions,
     (position) => position.citizenId,

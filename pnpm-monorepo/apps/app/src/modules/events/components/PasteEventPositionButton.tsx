@@ -4,7 +4,6 @@ import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { Popover, usePopover } from "@/modules/common/components/Popover";
-import type { EventPosition } from "@sam-monorepo/database/browser";
 import {
   canPasteSubtree,
   LINEUP_MAX_DEPTH,
@@ -20,10 +19,11 @@ import {
   type LineupClipboardEntry,
 } from "./LineupClipboardContext";
 import { useLineupOrder } from "./LineupOrderContext/Context";
+import type { PositionType } from "./Position";
 
 interface Props {
   readonly className?: string;
-  readonly position: EventPosition;
+  readonly position: Pick<PositionType, "id">;
   readonly groupLevel: number;
 }
 
@@ -69,7 +69,7 @@ export const PasteEventPositionButton = ({
 
 interface PasteMenuProps {
   readonly clipboard: LineupClipboardEntry;
-  readonly position: EventPosition;
+  readonly position: Pick<PositionType, "id">;
   readonly groupLevel: number;
 }
 

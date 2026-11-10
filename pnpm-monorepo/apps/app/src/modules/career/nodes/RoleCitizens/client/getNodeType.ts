@@ -1,11 +1,12 @@
 "use client";
 
-import { type FlowNode, FlowNodeType } from "@sam-monorepo/database/browser";
+import type { FlowDiagramNode } from "@sam-monorepo/application";
+import { FlowNodeType } from "@sam-monorepo/database/browser";
 import { isUnlocked } from "../../shared/isUnlocked";
 import type { AdditionalDataType } from "./additionalDataType";
 
 export const getNodeType = (
-  node: FlowNode,
+  node: FlowDiagramNode,
   additionalData: AdditionalDataType,
 ) => {
   const role = additionalData.roles.find((role) => role.id === node.roleId);

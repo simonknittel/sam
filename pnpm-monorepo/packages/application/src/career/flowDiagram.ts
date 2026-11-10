@@ -1,13 +1,41 @@
-import type { FlowEdge, FlowNode } from "@sam-monorepo/database/client";
+import type { Prisma } from "@sam-monorepo/database/client";
 import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { resolveFlowPermissionsOfActor } from "./flowContext.js";
 
+/** The diagram gives each column of an edge to React Flow */
+const FLOW_DIAGRAM_EDGE_SELECT = {
+  id: true,
+  sourceId: true,
+  sourceHandle: true,
+  targetId: true,
+  targetHandle: true,
+} as const satisfies Prisma.FlowEdgeSelect;
+
+export const FLOW_DIAGRAM_NODE_SELECT = {
+  id: true,
+  type: true,
+  positionX: true,
+  positionY: true,
+  width: true,
+  height: true,
+  roleId: true,
+  roleImage: true,
+  roleCitizensAlignment: true,
+  roleCitizensHideRole: true,
+  showUnlocked: true,
+  markdown: true,
+  markdownPosition: true,
+  backgroundColor: true,
+  backgroundTransparency: true,
+  sources: { select: FLOW_DIAGRAM_EDGE_SELECT },
+  targets: { select: FLOW_DIAGRAM_EDGE_SELECT },
+} as const satisfies Prisma.FlowNodeSelect;
+
 /** A node of the diagram with its outgoing (`sources`) and incoming edges */
-export type FlowDiagramNode = FlowNode & {
-  sources: FlowEdge[];
-  targets: FlowEdge[];
-};
+export type FlowDiagramNode = Prisma.FlowNodeGetPayload<{
+  select: typeof FLOW_DIAGRAM_NODE_SELECT;
+}>;
 
 export interface FlowDiagram {
   readonly id: string;
@@ -31,7 +59,7 @@ export const findReadableFlowDiagram = async (
       id: true,
       deletedAt: true,
       roleAccess: { select: { roleId: true, type: true } },
-      nodes: { include: { sources: true, targets: true } },
+      nodes: { select: FLOW_DIAGRAM_NODE_SELECT },
     },
   });
   if (!flow) return null;

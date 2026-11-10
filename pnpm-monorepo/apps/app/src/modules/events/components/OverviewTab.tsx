@@ -1,11 +1,10 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { Tile } from "@/modules/common/components/Tile";
-import type { EventCitizenReference } from "@/modules/events/queries/eventRelationSelects";
 import type { VariantTagBadgeItem } from "@/modules/fleet/queries/shipQuery";
 import type { BadgeRole } from "@/modules/roles/queries/getRoles";
 import { getAssignedRoles } from "@/modules/roles/utils/getRoles";
-import type { EventParticipantRow } from "@sam-monorepo/application";
-import { EventSource, type Event } from "@sam-monorepo/database/client";
+import type { EventDetails } from "@sam-monorepo/application";
+import { EventSource } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { getEventFleet } from "../utils/getEventFleet";
 import { getParticipants } from "../utils/getParticipants";
@@ -18,10 +17,7 @@ import { VariantTagsTable } from "./VariantTagsTable";
 
 interface Props {
   readonly className?: string;
-  readonly event: Event & {
-    readonly participants: EventParticipantRow[];
-    readonly managers: EventCitizenReference[];
-  };
+  readonly event: EventDetails;
 }
 
 export const OverviewTab = async ({ className, event }: Props) => {
@@ -72,9 +68,7 @@ export const OverviewTab = async ({ className, event }: Props) => {
 
 type FleetSummaryProps = Readonly<{
   className?: string;
-  event: Event & {
-    participants: EventParticipantRow[];
-  };
+  event: Pick<EventDetails, "id">;
 }>;
 
 const FleetSummary = async ({ className, event }: FleetSummaryProps) => {
@@ -116,9 +110,7 @@ const FleetSummary = async ({ className, event }: FleetSummaryProps) => {
 
 type ParticipantsSummaryProps = Readonly<{
   className?: string;
-  event: Event & {
-    participants: EventParticipantRow[];
-  };
+  event: Pick<EventDetails, "id">;
 }>;
 
 const ParticipantsSummary = async ({

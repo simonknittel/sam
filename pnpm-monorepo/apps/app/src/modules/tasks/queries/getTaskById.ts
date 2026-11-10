@@ -4,8 +4,11 @@ import {
   throwApplicationErrorForPage,
 } from "@/modules/application";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import { findVisibleTask, NotFoundError } from "@sam-monorepo/application";
-import type { Task } from "@sam-monorepo/database/client";
+import {
+  findVisibleTask,
+  NotFoundError,
+  type VisibleTask,
+} from "@sam-monorepo/application";
 import { cache } from "react";
 
 /**
@@ -13,7 +16,7 @@ import { cache } from "react";
  * cannot see it. The deletion of a task uses the same row.
  */
 export const getTaskById = cache(
-  withTrace("getTaskById", async (id: Task["id"]) => {
+  withTrace("getTaskById", async (id: VisibleTask["id"]) => {
     try {
       return await findVisibleTask(
         getApplicationContext(),

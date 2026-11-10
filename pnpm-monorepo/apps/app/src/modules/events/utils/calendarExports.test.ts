@@ -2,8 +2,8 @@
  * The results must not depend on the time zone of the system. Run this
  * suite with the environment variable TZ set to different zones.
  */
-import type { Event } from "@sam-monorepo/database/client";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import type { CalendarExportEvent } from "./calendarExportEvent";
 import { getGoogleCalendarUrl } from "./getGoogleCalendarUrl";
 import { getIcsFile } from "./getIcsFile";
 import { getOutlookUrl } from "./getOutlookUrl";
@@ -12,31 +12,31 @@ vi.mock("server-only", () => ({}));
 
 const ICS_DATA_URL_PREFIX = "data:text/calendar;charset=utf-8,";
 
-const SUMMER_EVENT = {
+const SUMMER_EVENT: CalendarExportEvent = {
   name: "Polaris-Einsatz",
   startTime: new Date("2026-09-04T12:30:00Z"),
   endTime: new Date("2026-09-04T15:00:00Z"),
   description: "**Treffpunkt** am Hangar",
   location: "Stanton",
-} as Event;
+};
 
 /** The end is in the second 02:30 of the fall-back night in Europe/Berlin */
-const FALL_BACK_EVENT = {
+const FALL_BACK_EVENT: CalendarExportEvent = {
   ...SUMMER_EVENT,
   startTime: new Date("2026-10-25T00:30:00Z"),
   endTime: new Date("2026-10-25T01:30:00Z"),
-} as Event;
+};
 
-const EVENT_WITHOUT_END = {
+const EVENT_WITHOUT_END: CalendarExportEvent = {
   name: "Polaris-Einsatz",
   startTime: new Date("2026-12-04T18:30:00Z"),
   endTime: null,
   description: null,
   location: null,
-} as Event;
+};
 
 /** `ics` gives each event a random UID */
-const readIcsFile = (event: Event) =>
+const readIcsFile = (event: CalendarExportEvent) =>
   decodeURIComponent(
     getIcsFile(event).slice(ICS_DATA_URL_PREFIX.length),
   ).replace(/^UID:.+$/m, "UID:random");

@@ -20,7 +20,7 @@ import {
   type EventSourceType,
   type EventVisibilityType,
 } from "./eventOutput.js";
-import { EVENT_DETAILS_INCLUDE, type EventDetails } from "./eventSelects.js";
+import { EVENT_DETAILS_SELECT, type EventDetails } from "./eventSelects.js";
 import { findVisibleEvent } from "./findVisibleEvent.js";
 import { buildParticipantCitizenWhere } from "./participantCitizenWhere.js";
 
@@ -168,7 +168,7 @@ export const loadEventOutput = async (
     actor,
     await context.prisma.event.findUniqueOrThrow({
       where: { id: eventId },
-      include: EVENT_DETAILS_INCLUDE,
+      select: EVENT_DETAILS_SELECT,
     }),
   );
 

@@ -11,7 +11,7 @@ import {
   type VisibleTask,
 } from "./taskDetails.js";
 import { TaskErrorMessage } from "./taskErrors.js";
-import { TASK_DETAILS_INCLUDE } from "./taskListSelect.js";
+import { TASK_DETAILS_SELECT } from "./taskListSelect.js";
 import { getVisibleTasksWhere } from "./taskWhere.js";
 
 export const taskIdSchema = idSchema.describe(
@@ -43,7 +43,7 @@ export const findVisibleTask = async (
     where: {
       AND: [{ id: taskId, deletedAt: null }, getVisibleTasksWhere(actor)],
     },
-    include: TASK_DETAILS_INCLUDE,
+    select: TASK_DETAILS_SELECT,
   });
   if (!task) throw new NotFoundError(TaskErrorMessage.NotFound);
 

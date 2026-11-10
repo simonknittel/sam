@@ -17,9 +17,6 @@ import { RolePicker } from "@/modules/roles/components/RolePicker/RolePicker";
 import { useRolesContext } from "@/modules/roles/components/RolesContext";
 import {
   EventPositionRoleMatch,
-  type EventPosition,
-  type EventPositionRequiredRole,
-  type EventPositionRequiredVariant,
   type Variant,
 } from "@sam-monorepo/database/browser";
 import {
@@ -49,6 +46,7 @@ import {
   eventContainerFormValues,
   type EventContainer,
 } from "../utils/eventContainer";
+import type { PositionType } from "./Position";
 import { getRoleMatchLabel, RequiredRoleBadges } from "./PositionRequiredRoles";
 
 const ADD_LABEL = "Posten hinzufügen";
@@ -62,14 +60,22 @@ interface BaseProps {
 interface CreateProps {
   /** The event or template the new position is added to */
   readonly container: EventContainer;
-  readonly parentPositionId?: EventPosition["id"] | null;
+  readonly parentPositionId?: PositionType["id"] | null;
 }
 
 interface UpdateProps {
-  readonly position: EventPosition & {
-    requiredVariants: EventPositionRequiredVariant[];
-    requiredRoles: Pick<EventPositionRequiredRole, "roleId">[];
-  };
+  readonly position: Pick<
+    PositionType,
+    | "id"
+    | "name"
+    | "description"
+    | "requiredVariants"
+    | "requiredRoles"
+    | "requiredRoleMatch"
+    | "fontSize"
+    | "backgroundColor"
+    | "textColor"
+  >;
 }
 
 type Props = (CreateProps | UpdateProps) & BaseProps;

@@ -4,11 +4,7 @@ import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import Note from "@/modules/common/components/Note";
 import type { VariantCatalogManufacturer } from "@/modules/fleet/queries/getVariantCatalog";
 import type { EventLineupCitizen } from "@sam-monorepo/application";
-import {
-  EventSource,
-  type Event,
-  type Ship,
-} from "@sam-monorepo/database/browser";
+import { EventSource, type Ship } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
 import { toEventContainer } from "../utils/eventContainer";
@@ -27,7 +23,9 @@ const Positions = dynamic(
 
 interface Props {
   readonly className?: string;
-  readonly event: Event;
+  readonly eventId: string;
+  readonly eventSource: EventSource;
+  readonly lineupEnabled: boolean;
   readonly positions: PositionType[];
   readonly canManagePositions?: boolean;
   readonly variants: readonly VariantCatalogManufacturer[];
@@ -39,7 +37,9 @@ interface Props {
 
 export const LineupTab = ({
   className,
-  event,
+  eventId,
+  eventSource,
+  lineupEnabled,
   positions,
   canManagePositions,
   variants,
@@ -62,14 +62,17 @@ export const LineupTab = ({
 
         {canManagePositions && (
           <div className="flex items-center gap-4">
-            <UpdateEventLineupEnabled event={event} />
+            <UpdateEventLineupEnabled
+              eventId={eventId}
+              lineupEnabled={lineupEnabled}
+            />
 
             <CreateOrUpdateEventPosition
-              container={toEventContainer(event.id)}
+              container={toEventContainer(eventId)}
               variants={variants}
             />
 
-            <CopyLineupFromEventButton targetEvent={event} />
+            <CopyLineupFromEventButton targetEventId={eventId} />
           </div>
         )}
       </div>
@@ -77,7 +80,7 @@ export const LineupTab = ({
       <Unassigned positions={positions} allEventCitizens={allEventCitizens} />
 
       {!isCurrentUserEventCitizen &&
-        (event.source === EventSource.DISCORD ? (
+        (eventSource === EventSource.DISCORD ? (
           <DiscordWarning />
         ) : (
           <Note
@@ -94,7 +97,7 @@ export const LineupTab = ({
 
       {positions.length > 0 ? (
         <Positions
-          container={toEventContainer(event.id)}
+          container={toEventContainer(eventId)}
           positions={positions}
           canManagePositions={canManagePositions}
           variants={variants}

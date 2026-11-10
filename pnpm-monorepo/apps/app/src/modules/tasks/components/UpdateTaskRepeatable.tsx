@@ -4,7 +4,7 @@ import { useAction } from "@/modules/actions/utils/useAction";
 import { NumberInput } from "@/modules/common/components/form/NumberInput";
 import Modal from "@/modules/common/components/Modal";
 import { SubmitButton } from "@/modules/common/components/SubmitButton";
-import { type Task, type TaskAssignment } from "@sam-monorepo/database/browser";
+import type { VisibleTask } from "@sam-monorepo/application";
 import clsx from "clsx";
 import { useState } from "react";
 import { FaPen, FaSave } from "react-icons/fa";
@@ -12,9 +12,7 @@ import { updateTaskRepeatable } from "../actions/updateTaskRepeatable";
 
 interface Props {
   readonly className?: string;
-  readonly task: Task & {
-    readonly assignments: readonly Pick<TaskAssignment, "citizenId">[];
-  };
+  readonly task: Pick<VisibleTask, "id" | "repeatable">;
 }
 
 export const UpdateTaskRepeatable = ({ className, task }: Props) => {

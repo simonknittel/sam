@@ -1,5 +1,4 @@
 import { createId } from "@paralleldrive/cuid2";
-import type { FlowEdge } from "@sam-monorepo/database/client";
 import { AuditEventType } from "@sam-monorepo/domain";
 import * as z from "zod";
 import { requirePermission, type Actor } from "../actor.js";
@@ -9,6 +8,10 @@ import { withSpan } from "../withSpan.js";
 import { CareerErrorMessage } from "./careerErrors.js";
 import { FLOW_OUTPUT_SELECT, createFlowInputSchema } from "./createFlow.js";
 import { flowIdSchema } from "./flowContext.js";
+import {
+  FLOW_DIAGRAM_NODE_SELECT,
+  type FlowDiagramNode,
+} from "./flowDiagram.js";
 import { requireUsableFlowSlug } from "./flowSlugs.js";
 
 export const duplicateFlowInputSchema = z.object({
@@ -53,7 +56,7 @@ export const duplicateFlow = (
 
     const sourceNodes = await context.prisma.flowNode.findMany({
       where: { flowId: source.id },
-      include: { sources: true, targets: true },
+      select: FLOW_DIAGRAM_NODE_SELECT,
     });
 
     /**
@@ -69,7 +72,7 @@ export const duplicateFlow = (
       copiedNodes.map(({ sourceNode, id }) => [sourceNode.id, id]),
     );
 
-    const sourceEdges = new Map<string, FlowEdge>();
+    const sourceEdges = new Map<string, FlowDiagramNode["sources"][number]>();
     for (const node of sourceNodes) {
       for (const edge of [...node.sources, ...node.targets])
         sourceEdges.set(edge.id, edge);

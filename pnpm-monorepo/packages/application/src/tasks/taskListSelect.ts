@@ -78,8 +78,28 @@ export const toTaskListRow = ({
   completionists,
 });
 
-/** The relations of the task page and of the task actions */
-export const TASK_DETAILS_INCLUDE = {
+/**
+ * The fields of the task page, of `getTask` and of the guards and the writes
+ * of the task actions
+ */
+export const TASK_DETAILS_SELECT = {
+  id: true,
+  title: true,
+  description: true,
+  visibility: true,
+  assignmentLimit: true,
+  canSelfComplete: true,
+  hiddenForOtherRoles: true,
+  repeatable: true,
+  rewardType: true,
+  rewardSilcValue: true,
+  rewardTypeTextValue: true,
+  createdAt: true,
+  createdById: true,
+  expiresAt: true,
+  completedAt: true,
+  cancelledAt: true,
+  deletedAt: true,
   assignments: {
     select: {
       id: true,
@@ -90,8 +110,8 @@ export const TASK_DETAILS_INCLUDE = {
   requiredRoles: { select: { id: true } },
   completionists: { select: CITIZEN_REFERENCE_SELECT },
   createdBy: { select: CITIZEN_REFERENCE_SELECT },
-} as const satisfies Prisma.TaskInclude;
+} as const satisfies Prisma.TaskSelect;
 
 export type TaskDetailsRow = Prisma.TaskGetPayload<{
-  include: typeof TASK_DETAILS_INCLUDE;
+  select: typeof TASK_DETAILS_SELECT;
 }>;

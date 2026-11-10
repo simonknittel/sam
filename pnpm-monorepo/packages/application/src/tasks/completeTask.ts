@@ -38,13 +38,26 @@ export const completeTaskInputSchema = z.object({
 export type CompleteTaskInput = z.infer<typeof completeTaskInputSchema>;
 
 /** The columns of the claimed task that the completion copies or pays */
-const CLAIMED_TASK_INCLUDE = {
+const CLAIMED_TASK_SELECT = {
+  id: true,
+  title: true,
+  description: true,
+  visibility: true,
+  assignmentLimit: true,
+  canSelfComplete: true,
+  hiddenForOtherRoles: true,
+  repeatable: true,
+  rewardType: true,
+  rewardSilcValue: true,
+  rewardTypeTextValue: true,
+  createdById: true,
+  expiresAt: true,
   assignments: { select: { citizenId: true } },
   requiredRoles: { select: { id: true } },
-} as const satisfies Prisma.TaskInclude;
+} as const satisfies Prisma.TaskSelect;
 
 type TaskToComplete = Prisma.TaskGetPayload<{
-  include: typeof CLAIMED_TASK_INCLUDE;
+  select: typeof CLAIMED_TASK_SELECT;
 }>;
 
 /**
@@ -269,7 +282,7 @@ export const completeTask = (
               connect: completionistIds.map((id) => ({ id })),
             },
           },
-          include: CLAIMED_TASK_INCLUDE,
+          select: CLAIMED_TASK_SELECT,
         });
 
         if (claimedTask.repeatable > 1)

@@ -4,8 +4,7 @@ import {
   throwApplicationErrorForPage,
 } from "@/modules/application";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import { findEventFleet } from "@sam-monorepo/application";
-import type { Event } from "@sam-monorepo/database/client";
+import { findEventFleet, type EventDetails } from "@sam-monorepo/application";
 import { cache } from "react";
 
 /**
@@ -13,7 +12,7 @@ import { cache } from "react";
  * cached, thus `cache` dedupes the calls of one render by its reference.
  */
 export const getEventFleet = cache(
-  withTrace("getEventFleet", async (event: Pick<Event, "id">) => {
+  withTrace("getEventFleet", async (event: Pick<EventDetails, "id">) => {
     try {
       return await findEventFleet(
         getApplicationContext(),

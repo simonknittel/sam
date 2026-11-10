@@ -1,8 +1,8 @@
 import { markdownToPlainText } from "@/modules/common/utils/markdownToPlainText";
-import type { Event } from "@sam-monorepo/database/client";
 import { createEvent } from "ics";
+import type { CalendarExportEvent } from "./calendarExportEvent";
 
-export const getIcsFile = (event: Event) => {
+export const getIcsFile = (event: CalendarExportEvent) => {
   const description = markdownToPlainText(event.description);
 
   const { error, value } = createEvent({

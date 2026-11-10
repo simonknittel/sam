@@ -2,7 +2,6 @@ import { useAction } from "@/modules/actions/utils/useAction";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import { SubmitButton } from "@/modules/common/components/SubmitButton";
-import { type Event } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { useState } from "react";
 import { FaCopy } from "react-icons/fa";
@@ -11,12 +10,12 @@ import { EventSelectionInput } from "./EventSelectionInput";
 
 interface Props {
   readonly className?: string;
-  readonly targetEvent: Pick<Event, "id">;
+  readonly targetEventId: string;
 }
 
 export const CopyLineupFromEventButton = ({
   className,
-  targetEvent,
+  targetEventId,
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const { formAction } = useAction(copyLineupFromEvent, {
@@ -45,7 +44,7 @@ export const CopyLineupFromEventButton = ({
           heading={<h2>Aufstellung aus einem anderen Event kopieren</h2>}
         >
           <form action={formAction} className="flex flex-col gap-4">
-            <input type="hidden" name="targetEventId" value={targetEvent.id} />
+            <input type="hidden" name="targetEventId" value={targetEventId} />
 
             <EventSelectionInput name="sourceEventId" autoFocus />
 

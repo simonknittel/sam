@@ -1,14 +1,11 @@
 import { FleetTable } from "@/modules/fleet/components/FleetTable";
-import type { EventParticipantRow } from "@sam-monorepo/application";
-import type { Event } from "@sam-monorepo/database/client";
+import type { EventDetails } from "@sam-monorepo/application";
 import clsx from "clsx";
 import { getEventFleet } from "../utils/getEventFleet";
 
 interface Props {
   readonly className?: string;
-  readonly event: Event & {
-    participants: EventParticipantRow[];
-  };
+  readonly event: Pick<EventDetails, "id">;
 }
 
 export const FleetTab = async ({ className, event }: Props) => {

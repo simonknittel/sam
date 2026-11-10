@@ -1,17 +1,10 @@
-import {
-  type Flow,
-  type FlowEdge,
-  type FlowNode,
-} from "@sam-monorepo/database/browser";
+import type { FlowDiagram, FlowDiagramNode } from "@sam-monorepo/application";
 import { nodeDefinitions } from "../nodes/client";
 
+type FlowDiagramEdge = FlowDiagramNode["sources"][number];
+
 export const getInitialNodesAndEdges = (
-  flow: Pick<Flow, "id"> & {
-    nodes: (FlowNode & {
-      sources: FlowEdge[];
-      targets: FlowEdge[];
-    })[];
-  },
+  flow: FlowDiagram,
   additionalData: Record<string, unknown>,
 ) => {
   const initialNodes = flow.nodes.map((node) => {
@@ -25,7 +18,7 @@ export const getInitialNodesAndEdges = (
     return matchingNodeDefinition.getNodeType(node, additionalData);
   });
 
-  const uniqueEdges = new Map<FlowEdge["id"], FlowEdge>();
+  const uniqueEdges = new Map<FlowDiagramEdge["id"], FlowDiagramEdge>();
   for (const node of flow.nodes) {
     for (const source of node.sources) {
       uniqueEdges.set(source.id, source);

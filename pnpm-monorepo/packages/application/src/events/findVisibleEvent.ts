@@ -4,7 +4,7 @@ import type { ApplicationContext } from "../context.js";
 import { NotFoundError } from "../errors.js";
 import { EventErrorMessage } from "./eventErrors.js";
 import { VISIBLE_EVENT_MANAGE_GUARD_SELECT } from "./eventManageGuard.js";
-import { EVENT_DETAILS_INCLUDE, type EventDetails } from "./eventSelects.js";
+import { EVENT_DETAILS_SELECT, type EventDetails } from "./eventSelects.js";
 import { canActorSeeEvent } from "./eventVisibility.js";
 
 /**
@@ -21,7 +21,7 @@ export const findVisibleEvent = async (
 
   const event = await context.prisma.event.findUnique({
     where: { id: eventId },
-    include: EVENT_DETAILS_INCLUDE,
+    select: EVENT_DETAILS_SELECT,
   });
 
   if (!event || !canActorSeeEvent(actor, event))

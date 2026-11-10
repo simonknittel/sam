@@ -1,8 +1,9 @@
 "use client";
 
-import { type FlowNode, FlowNodeType } from "@sam-monorepo/database/browser";
+import type { FlowDiagramNode } from "@sam-monorepo/application";
+import { FlowNodeType } from "@sam-monorepo/database/browser";
 
-export const getNodeType = (node: FlowNode) => {
+export const getNodeType = (node: FlowDiagramNode) => {
   const data = {
     markdown: node.markdown,
     markdownPosition: node.markdownPosition,

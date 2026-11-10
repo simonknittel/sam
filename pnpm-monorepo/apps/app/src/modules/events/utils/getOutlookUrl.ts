@@ -1,5 +1,5 @@
 import { markdownToPlainText } from "@/modules/common/utils/markdownToPlainText";
-import type { Event } from "@sam-monorepo/database/client";
+import type { CalendarExportEvent } from "./calendarExportEvent";
 
 /**
  * The exact time in UTC, for example "2026-09-04T12:30:00Z". Outlook reads a
@@ -8,7 +8,7 @@ import type { Event } from "@sam-monorepo/database/client";
 const formatOutlookDate = (date: Date) =>
   date.toISOString().replace(/\.\d{3}/, "");
 
-export const getOutlookUrl = (event: Event) => {
+export const getOutlookUrl = (event: CalendarExportEvent) => {
   const start = formatOutlookDate(event.startTime);
   const end = formatOutlookDate(event.endTime ?? event.startTime);
 

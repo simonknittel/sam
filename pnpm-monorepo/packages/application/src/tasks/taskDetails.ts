@@ -8,7 +8,7 @@ import type { ApplicationContext } from "../context.js";
 import { buildUnreadWhere } from "../readMarkers/unreadWhere.js";
 import { isRoleVisible } from "../roles/roleVisibility.js";
 import { findNewTaskIds } from "./findNewTaskIds.js";
-import { TASK_DETAILS_INCLUDE, type TaskDetailsRow } from "./taskListSelect.js";
+import { TASK_DETAILS_SELECT, type TaskDetailsRow } from "./taskListSelect.js";
 import { toTaskListItem, type TaskListItem } from "./taskOutput.js";
 import {
   hasRequiredRole,
@@ -142,7 +142,7 @@ export const findTaskOutput = async (
 ): Promise<GetTaskOutput> => {
   const task = await context.prisma.task.findUniqueOrThrow({
     where: { id: taskId },
-    include: TASK_DETAILS_INCLUDE,
+    select: TASK_DETAILS_SELECT,
   });
   const [output] = await toTaskOutputs(context, actor, [
     toVisibleTask(actor, task),

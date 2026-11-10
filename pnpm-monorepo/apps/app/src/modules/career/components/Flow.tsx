@@ -3,11 +3,7 @@
 import { runAction } from "@/modules/actions/utils/runAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Note from "@/modules/common/components/Note";
-import {
-  type FlowEdge,
-  type FlowNode,
-  type Flow as FlowPrisma,
-} from "@sam-monorepo/database/browser";
+import type { FlowDiagram } from "@sam-monorepo/application";
 import {
   addEdge,
   applyEdgeChanges,
@@ -49,12 +45,7 @@ const DEFAULT_EDGE_OPTIONS: DefaultEdgeOptions = {
 
 interface Props {
   readonly className?: string;
-  readonly flow: Pick<FlowPrisma, "id"> & {
-    nodes: (FlowNode & {
-      sources: FlowEdge[];
-      targets: FlowEdge[];
-    })[];
-  };
+  readonly flow: FlowDiagram;
   readonly canUpdate?: boolean;
   readonly isUpdating?: boolean;
   readonly additionalData: Record<string, unknown>;

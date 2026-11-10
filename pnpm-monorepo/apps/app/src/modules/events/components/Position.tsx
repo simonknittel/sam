@@ -4,19 +4,12 @@ import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { EditableInput } from "@/modules/common/components/form/EditableInput";
 import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
 import type { VariantCatalogManufacturer } from "@/modules/fleet/queries/getVariantCatalog";
-import type { EventLineupCitizen } from "@sam-monorepo/application";
-import {
-  type Citizen,
-  type EventPosition,
-  type EventPositionApplication,
-  type EventPositionRequiredRole,
-  type EventPositionRequiredVariant,
-  type Manufacturer,
-  type Series,
-  type Ship,
-  type Upload,
-  type Variant,
-} from "@sam-monorepo/database/client";
+import type {
+  EventLineupCitizen,
+  EventPositionTreeRow,
+  EventTemplatePosition,
+} from "@sam-monorepo/application";
+import type { Ship } from "@sam-monorepo/database/client";
 import { LINEUP_MAX_DEPTH } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { updateEventPositionName } from "../actions/updateEventPositionName";
@@ -44,23 +37,10 @@ import { UpdateEventPositionCitizenId } from "./UpdateEventPositionCitizenId";
  * a template blueprint's positions can never have either — its query omits
  * both joins rather than always resolving them to nothing.
  */
-export type PositionType = EventPosition & {
-  applications?: (EventPositionApplication & {
-    citizen: Pick<Citizen, "id" | "handle" | "deletedAt">;
-  })[];
-  requiredVariants: (EventPositionRequiredVariant & {
-    variant: Variant & {
-      series: Series & {
-        manufacturer: Manufacturer & {
-          image: Pick<Upload, "id" | "mimeType"> | null;
-        };
-      };
-    };
-  })[];
-  requiredRoles: Pick<EventPositionRequiredRole, "roleId">[];
-  citizen?: Pick<Citizen, "id" | "handle" | "deletedAt"> | null;
-  childPositions?: PositionType[];
-};
+export type PositionType = Omit<EventTemplatePosition, "childPositions"> &
+  Partial<Pick<EventPositionTreeRow, "applications" | "citizen">> & {
+    childPositions?: PositionType[];
+  };
 
 interface Props {
   readonly className?: string;

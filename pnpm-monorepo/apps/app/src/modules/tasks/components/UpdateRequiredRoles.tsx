@@ -5,7 +5,7 @@ import Button from "@/modules/common/components/Button";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import Modal from "@/modules/common/components/Modal";
 import { SubmitButton } from "@/modules/common/components/SubmitButton";
-import { type Role, type Task } from "@sam-monorepo/database/browser";
+import type { VisibleTask } from "@sam-monorepo/application";
 import clsx from "clsx";
 import { useState } from "react";
 import { FaPen, FaSave } from "react-icons/fa";
@@ -14,9 +14,10 @@ import { RequiredRoles } from "./CreateTask/RequiredRoles";
 
 interface Props {
   readonly className?: string;
-  readonly task: Task & {
-    readonly requiredRoles: readonly Pick<Role, "id">[];
-  };
+  readonly task: Pick<
+    VisibleTask,
+    "id" | "requiredRoles" | "hiddenForOtherRoles"
+  >;
 }
 
 export const UpdateRequiredRoles = ({ className, task }: Props) => {

@@ -1,15 +1,15 @@
 "use client";
 
 import { useStoredValue } from "@/modules/common/utils/useStoredValue";
-import type { EventPosition } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import type { ReactNode } from "react";
 import { createContext, startTransition, useContext } from "react";
+import type { PositionType } from "./Position";
 
 interface LineupVisibilityContext {
-  openItems: EventPosition["id"][];
-  open: (itemId: EventPosition["id"]) => void;
-  close: (itemId: EventPosition["id"]) => void;
+  openItems: PositionType["id"][];
+  open: (itemId: PositionType["id"]) => void;
+  close: (itemId: PositionType["id"]) => void;
   closeAll: () => void;
   openAll: () => void;
 }
@@ -18,29 +18,29 @@ const LineupVisibilityContext = createContext<
   LineupVisibilityContext | undefined
 >(undefined);
 
-type PositionType = EventPosition & {
-  childPositions?: PositionType[];
+type VisibilityItem = Pick<PositionType, "id"> & {
+  readonly childPositions?: readonly VisibilityItem[];
 };
 
 interface Props {
   readonly children: ReactNode;
-  readonly items: PositionType[];
+  readonly items: readonly VisibilityItem[];
 }
 
 export const LineupVisibilityProvider = ({ children, items }: Props) => {
-  const [openItems, setOpenItems] = useStoredValue<EventPosition["id"][]>(
+  const [openItems, setOpenItems] = useStoredValue<PositionType["id"][]>(
     "open_positions",
     [],
   );
 
-  const open = (itemId: EventPosition["id"]) => {
+  const open = (itemId: PositionType["id"]) => {
     setOpenItems((prev) => [...prev, itemId]);
   };
 
   const openAll = () => {
-    const allItemIds: EventPosition["id"][] = [];
+    const allItemIds: PositionType["id"][] = [];
 
-    const loop = (items: PositionType[]) => {
+    const loop = (items: readonly VisibilityItem[]) => {
       for (const item of items) {
         allItemIds.push(item.id);
 
@@ -56,7 +56,7 @@ export const LineupVisibilityProvider = ({ children, items }: Props) => {
     });
   };
 
-  const close = (itemId: EventPosition["id"]) => {
+  const close = (itemId: PositionType["id"]) => {
     setOpenItems((prev) => prev.filter((id) => id !== itemId));
   };
 

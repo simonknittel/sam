@@ -2,11 +2,10 @@ import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import Note from "@/modules/common/components/Note";
 import type { EventLineupCitizen } from "@sam-monorepo/application";
-import type { Citizen, EventPosition } from "@sam-monorepo/database/client";
 import clsx from "clsx";
+import type { PositionType } from "./Position";
 
-type Position = EventPosition & {
-  citizen?: Pick<Citizen, "id" | "handle" | "deletedAt"> | null;
+type Position = Pick<PositionType, "citizen"> & {
   childPositions?: Position[];
 };
 

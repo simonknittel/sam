@@ -9,7 +9,7 @@ import {
 } from "@/modules/common/components/Button2";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import { Markdown } from "@/modules/common/components/Markdown";
-import type { Task } from "@sam-monorepo/database/browser";
+import type { VisibleTask } from "@sam-monorepo/application";
 import { TASK_DESCRIPTION_MAX_LENGTH } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { useState } from "react";
@@ -19,7 +19,7 @@ import { TaskDescriptionHint } from "./TaskDescriptionHint";
 
 interface Props {
   readonly className?: string;
-  readonly task: Pick<Task, "id" | "description">;
+  readonly task: Pick<VisibleTask, "id" | "description">;
 }
 
 /**

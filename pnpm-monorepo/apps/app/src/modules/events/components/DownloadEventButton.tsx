@@ -1,17 +1,17 @@
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Link } from "@/modules/common/components/Link";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import type { Event } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { FaDownload, FaExternalLinkAlt } from "react-icons/fa";
 import { LuCalendarArrowDown } from "react-icons/lu";
+import type { CalendarExportEvent } from "../utils/calendarExportEvent";
 import { getGoogleCalendarUrl } from "../utils/getGoogleCalendarUrl";
 import { getIcsFile } from "../utils/getIcsFile";
 import { getOutlookUrl } from "../utils/getOutlookUrl";
 
 interface Props {
   readonly className?: string;
-  readonly event: Event;
+  readonly event: CalendarExportEvent;
 }
 
 export const DownloadEventButton = ({ className, event }: Props) => {

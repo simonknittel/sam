@@ -4,8 +4,11 @@ import {
   throwApplicationErrorForPage,
 } from "@/modules/application";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import { findVisibleEvent, NotFoundError } from "@sam-monorepo/application";
-import type { Event } from "@sam-monorepo/database/client";
+import {
+  findVisibleEvent,
+  NotFoundError,
+  type EventDetails,
+} from "@sam-monorepo/application";
 import { cache } from "react";
 
 /**
@@ -18,7 +21,7 @@ import { cache } from "react";
  * null into a 404.
  */
 export const getEventById = cache(
-  withTrace("getEventById", async (id: Event["id"]) => {
+  withTrace("getEventById", async (id: EventDetails["id"]) => {
     try {
       return await findVisibleEvent(
         getApplicationContext(),

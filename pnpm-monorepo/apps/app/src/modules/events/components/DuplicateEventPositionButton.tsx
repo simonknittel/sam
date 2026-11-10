@@ -4,16 +4,16 @@ import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { Tooltip } from "@/modules/common/components/Tooltip";
-import type { EventPosition } from "@sam-monorepo/database/browser";
 import { PastePlacement } from "@sam-monorepo/domain";
 import { FaClone } from "react-icons/fa";
 import { pasteEventPosition } from "../actions/pasteEventPosition";
+import type { PositionType } from "./Position";
 
 const LABEL = "Posten duplizieren";
 
 interface Props {
   readonly className?: string;
-  readonly position: EventPosition;
+  readonly position: Pick<PositionType, "id">;
 }
 
 /**

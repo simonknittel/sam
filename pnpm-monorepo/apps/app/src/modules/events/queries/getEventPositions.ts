@@ -1,7 +1,9 @@
 import { getApplicationContext } from "@/modules/application";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import { findEventPositionTree } from "@sam-monorepo/application";
-import type { Event } from "@sam-monorepo/database/client";
+import {
+  findEventPositionTree,
+  type EventDetails,
+} from "@sam-monorepo/application";
 import { cache } from "react";
 
 /**
@@ -11,7 +13,7 @@ import { cache } from "react";
  * Carries no permission check — the caller resolves the event first.
  */
 export const getEventPositions = cache(
-  withTrace("getEventPositions", async (eventId: Event["id"]) =>
+  withTrace("getEventPositions", async (eventId: EventDetails["id"]) =>
     findEventPositionTree(getApplicationContext(), eventId),
   ),
 );
