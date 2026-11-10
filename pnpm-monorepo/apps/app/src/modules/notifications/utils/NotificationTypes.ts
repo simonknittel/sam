@@ -1,5 +1,5 @@
 import {
-  FLEET_UPDATE_REMINDER_ABSENCE_MONTHS,
+  FLEET_UPDATE_REMINDER_UNCHANGED_MONTHS,
   NotificationSettingType,
 } from "@sam-monorepo/domain";
 
@@ -137,7 +137,7 @@ export const NOTIFICATIONS_APPS: NotificationApp[] = [
       {
         id: NotificationSettingType.FleetUpdateReminder,
         title: "Erinnerung",
-        description: `Beim ersten Besuch nach mindestens ${FLEET_UPDATE_REMINDER_ABSENCE_MONTHS} Monaten Abwesenheit`,
+        description: `Beim ersten Besuch, nachdem du deine Schiffe mindestens ${FLEET_UPDATE_REMINDER_UNCHANGED_MONTHS} Monate nicht geändert hast`,
         category: "Flotte",
       },
     ],

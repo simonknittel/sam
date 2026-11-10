@@ -15,8 +15,8 @@ interface Payload {
 
 /**
  * Asks the citizen to check their own ships. The app sends the request on
- * the first visit after a long absence (see
- * `FLEET_UPDATE_REMINDER_ABSENCE_MONTHS`).
+ * the first visit of the day after a long time without a change to the
+ * ships (see `sendDueFleetUpdateReminder()`).
  */
 export const FleetUpdateReminderHandler = async (
   context: ApplicationContext,
