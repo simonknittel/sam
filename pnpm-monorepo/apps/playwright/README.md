@@ -80,6 +80,19 @@ can have no effect.
   its token request gives a 404 (the page is gone). A test that changes the
   target right after a load can pass because of this refresh. Wait for these actions (for example the visit row or the
   editor), or seed the read marker.
+- While a page streams, React keeps a hidden copy of the content next to the
+  visible copy. A strict locator then finds two elements ("strict mode
+  violation"). Scope the locator of a text that streams in (for example an
+  empty state or a note) to `#main-content`, or add
+  `.filter({ visible: true })`.
+- The app shell is on each page, and its mobile drawer is in the DOM also on
+  a desktop viewport. `getByLabel()` and `getByText()` find substrings and
+  ignore the case, thus a loose locator can find an element of the shell. Use
+  the full text or `exact: true`. After a change to the shell, run the full
+  suite.
+- After a change of a filter or of the sort order, wait for the new rows
+  before you click a pagination control. Until the new render arrives, the
+  control holds the cursor of the old render.
 - The suite sets `reducedMotion: "reduce"`. A test of an animation must call
   `page.emulateMedia({ reducedMotion: "no-preference" })`.
 - The stack runs no Lambda functions and sends no EventBridge events. Test
@@ -89,7 +102,14 @@ can have no effect.
 
 - Run the test with `--repeat-each=3` or more. The first test of a new
   worker most frequently loses a fill before hydration.
-- Do not trust a full run while the dev stack or a Docker build also runs.
+- Do not trust a full run while the dev stack or a Docker build also runs,
+  or while `pnpm install` runs in the same checkout.
+- Two tests fail from time to time for a known reason. Run them again, and
+  do not search for the cause in your change: the keyboard tests of
+  `wiki-block-menu.spec.ts` (ProseMirror reads a selection change too slowly
+  in the collab editor) and the "replace mode" test of
+  `wiki-copy-paste.spec.ts` (the count in the database races the debounce of
+  the collab store).
 - To reproduce a hydration problem, make the CPU slower in a temporary spec:
 
   ```ts

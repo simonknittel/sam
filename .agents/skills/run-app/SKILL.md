@@ -115,9 +115,20 @@ curl -s -o /dev/null -w '%{http_code}\n' --cookie "sam-dev-3001.session-token=${
 
 Print only the status code — the token is a credential and must never go
 into the transcript. If no valid session exists, sign in once with the dev
-login first.
+login first. Do the same if the request redirects to
+`/two-factor-authentication`: the dev login sets the two-factor flag of that
+admin.
 
 Admin pages also require the cookie `enable_admin=1`.
+
+## Personal data
+
+The database of the main checkout can be a mirror of production (see
+`docs/mirror-database.md`), and the seed copies it into each new stack. The
+mirror has no tokens and no email addresses, but it has the citizens, their
+notes and their Discord IDs. Do not print rows of these databases into the
+transcript. Print counts or status codes, and create your own rows for a
+test.
 
 ## Copy rows between stacks
 
@@ -231,6 +242,16 @@ rebuildable, but tell the user.
   is old. Run `pnpm run build` in `packages/database`, `pnpm exec next
   typegen` in `apps/app`, or
   `pnpm run --filter "@sam-monorepo/app^..." build` in `pnpm-monorepo`.
+- **`has no exported member` stays after the build, or the dev server does
+  not find a module that the `dist` of a workspace package has** — the app
+  uses copies of the workspace packages (`injectWorkspacePackages`). An
+  install links the files that exist at that time, thus a NEW file in a
+  `dist` directory does not get to the app. Run
+  `SKIP_VALIDATION=1 corepack pnpm install --frozen-lockfile --offline` in
+  `pnpm-monorepo` again.
+- **`Cannot read properties of undefined (reading 'findMany')` after a schema
+  change** — the dev server keeps the old Prisma client, also after the
+  build of `packages/database`. Kill the dev server and run `up.sh` again.
 - **An event URL has port 3000 in a worktree** — `NEXT_PUBLIC_BASE_URL` is
   not set locally, thus the app uses `http://localhost:3000` in each slot.
 - **Queries fail on columns that exist in the Prisma schema** — the

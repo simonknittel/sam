@@ -7,7 +7,7 @@
    - `prisma migrate dev` asks to reset the local database. This is the expected behavior: `db push` (step 3) made the local schema different from the migration history. The reset applies all migrations again, together with the new one.
 5. Commit
 6. Apply the migration to the other developer databases: `pnpm run migrate:dev`
-7. Apply the migration to the production database with one of these options:
+7. Apply the migration to the production database at the correct time (see [Database migrations](./releasing.md#database-migrations): usually before the push to `main`) with one of these options:
    - ~~Run the "Production database migrations" GitHub workflow~~ (currently disabled)
    - fish: `bwu && bw sync && DATABASE_URL=(bw get password "SAM (Prod) | PostgreSQL") pnpm exec prisma migrate deploy; bw lock`
    - bash: `bwu && bw sync && DATABASE_URL=$(bw get password "SAM (Prod) | PostgreSQL") pnpm exec prisma migrate deploy; bw lock`

@@ -92,6 +92,20 @@ test worker serves the CIMD document of the test client, with loopback
 redirect URIs. The tests then do the consent in the browser, exchange the
 code with `fetch` and call the MCP endpoint with the MCP client SDK.
 
+## Rules for tools
+
+The tests of `packages/mcp` do not check these rules:
+
+- **No full email address in an output.** The model of the client reads
+  each output. Use `redactEmailAddress()` for a field and
+  `redactEmailAddressesInJson()` for stored JSON (`packages/domain`).
+- **One tool for a pair of opposite operations.** Add and remove, sign up
+  and cancel, or mark as read and mark as unread are one tool with an
+  `action` parameter (example: `update_event_participants`), not two tools.
+- **The audit event type of a read tool has no "MCP" in its name**
+  (example: `CITIZENS_LISTED`). The web app can write the same type for the
+  same read.
+
 ## Skills
 
 The server serves [Agent Skills](https://agentskills.io) with the

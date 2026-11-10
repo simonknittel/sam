@@ -38,6 +38,11 @@ Start the Release workflow manually. The `git_ref` input selects the commit that
 - Keep the input empty to release the latest commit of `main`
 - Enter an older commit SHA to roll back
 
+## Database migrations
+
 Database migrations are not part of the Release workflow. The [Production database migrations workflow](../.github/workflows/production-database-migrations.yml) is currently disabled, because GitHub runners cannot connect to the production database. Apply migrations manually (see [Change the database schema](./changing-database-schema.md)).
 
-Apply the migration before the release if a layout reads the new schema. Example: `app/app/layout.tsx` runs on each page under `/app`, thus a missing column breaks all these pages.
+By default, the Prisma client names all columns of a model in its queries. Thus a release that knows a column that the database does not have fails on the reads and the writes of that model. Example: with a missing column of `User`, the session callback fails on each request.
+
+- **A migration that adds a column or a table:** apply it before the push to `main`. The weekly release deploys the latest commit of `main`, also when nobody starts it. The release that is in production continues to operate if the new column is nullable or has a default value.
+- **A migration that removes or renames a column or a table:** the release that is in production fails on that model from the moment of the migration. Start the Release workflow immediately after the migration.
