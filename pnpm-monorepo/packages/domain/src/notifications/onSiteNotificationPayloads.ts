@@ -308,19 +308,20 @@ export const ONBOARDING_POPOVER_SEARCH_PARAM = "erste-schritte";
 export const ONBOARDING_POPOVER_PATH = `/app/dashboard?${ONBOARDING_POPOVER_SEARCH_PARAM}=1`;
 
 /**
- * The time without a visit after which the first visit of a citizen brings
- * the fleet update reminder: a long absence makes it likely that the ships
- * of the citizen in the game and in the SAM are different
+ * The time without a change to the own ships after which the first visit of
+ * a citizen brings the fleet update reminder: after a long time without a
+ * change, it is likely that the ships of the citizen in the game and in the
+ * SAM are different
  */
-export const FLEET_UPDATE_REMINDER_ABSENCE_MONTHS = 6;
+export const FLEET_UPDATE_REMINDER_UNCHANGED_MONTHS = 4;
 
 /** The page of the own ships, which the fleet update reminder links to */
 export const MY_SHIPS_PATH = "/app/fleet/my-ships";
 
 /**
- * The reminder to check the own ships on the first visit after an absence
- * of `FLEET_UPDATE_REMINDER_ABSENCE_MONTHS`. It carries nothing, see
- * `getFleetUpdateReminderText()`.
+ * The reminder to check the own ships after
+ * `FLEET_UPDATE_REMINDER_UNCHANGED_MONTHS` without a change to them. It
+ * carries nothing, see `getFleetUpdateReminderText()`.
  */
 export const fleetUpdateReminderPayloadSchema = z.object({});
 

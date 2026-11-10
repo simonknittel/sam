@@ -14,6 +14,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import {
   hasBirthdayTodaySafely,
   linkCitizenOfSignedInUser,
+  sendDueFleetUpdateReminder,
   sendEmailConfirmation,
 } from "@sam-monorepo/application";
 import { prisma } from "@sam-monorepo/database";
@@ -26,7 +27,6 @@ import {
   ACTIVE_CITIZEN_WHERE,
   ASSUMABLE_USER_WHERE,
   comparePermissionSets,
-  FLEET_UPDATE_REMINDER_ABSENCE_MONTHS,
   getLocalDateKey,
   isMissingTwoFactorAuthentication,
   ORGANIZATION_TIMEZONE,
@@ -226,9 +226,8 @@ const welcomeCitizen = async (
 
 /**
  * Moves `lastSeenAt` of the user to now on their first request of the day.
- * After an absence of `FLEET_UPDATE_REMINDER_ABSENCE_MONTHS` or more, the
- * citizen of the user also gets the reminder to check their ships. A user
- * without `lastSeenAt` is new and gets the welcome instead.
+ * The citizen of the user then also gets the reminder to check their ships,
+ * when it is due (see `sendDueFleetUpdateReminder()`).
  *
  * Only the request that moves `lastSeenAt` from the value of its session
  * continues, thus parallel requests of the same visit write one audit event
@@ -240,12 +239,11 @@ const recordFirstVisitOfTheDay = async (
   citizenId: Citizen["id"] | null,
 ) => {
   try {
-    const now = new Date();
     const previousLastSeenAt = user.lastSeenAt ?? null;
 
     const { count } = await prisma.user.updateMany({
       where: { id: user.id, lastSeenAt: previousLastSeenAt },
-      data: { lastSeenAt: now },
+      data: { lastSeenAt: new Date() },
     });
     if (count !== 1) return;
 
@@ -261,16 +259,9 @@ const recordFirstVisitOfTheDay = async (
       },
     ]);
 
-    const absenceStart = new Date(now);
-    absenceStart.setUTCMonth(
-      absenceStart.getUTCMonth() - FLEET_UPDATE_REMINDER_ABSENCE_MONTHS,
-    );
-    if (!citizenId || !previousLastSeenAt || previousLastSeenAt > absenceStart)
-      return;
+    if (!citizenId) return;
 
-    await getApplicationContext().notifications.trigger([
-      { type: "FleetUpdateReminder", payload: { citizenId } },
-    ]);
+    await sendDueFleetUpdateReminder(getApplicationContext(), { citizenId });
   } catch (error) {
     log.warn("Failed to update user's lastSeenAt", {
       userId: user.id,

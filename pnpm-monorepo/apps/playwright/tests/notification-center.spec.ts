@@ -215,10 +215,12 @@ test("a fleet update reminder opens the own ships", async ({
 
   await expect(
     popover(page).getByText(
-      "Ist deine Flotte noch aktuell? Prüfe deine Schiffe unter „Meine Schiffe“.",
+      "Du hast deine Schiffe seit mindestens 4 Monaten nicht geändert. Prüfe sie unter „Meine Schiffe“.",
     ),
   ).toBeVisible();
-  await popover(page).getByRole("link", { name: "Willkommen zurück!" }).click();
+  await popover(page)
+    .getByRole("link", { name: "Ist deine Flotte noch aktuell?" })
+    .click();
 
   await expect(page).toHaveURL("/app/fleet/my-ships");
 });
