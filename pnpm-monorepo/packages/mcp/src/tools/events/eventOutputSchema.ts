@@ -3,6 +3,7 @@ import {
   EventVisibilityType,
   type Actor,
 } from "@sam-monorepo/application";
+import { EventInvitationStatus } from "@sam-monorepo/domain";
 import * as z from "zod";
 import { citizenReferenceSchema, dateTimeOutputSchema } from "../../schemas.js";
 
@@ -34,6 +35,26 @@ export const eventOutputSchema = z.strictObject({
       created_at: dateTimeOutputSchema,
     }),
   ),
+  invitations: z
+    .array(
+      z.strictObject({
+        citizen: citizenReferenceSchema.nullable(),
+        status: z.enum(EventInvitationStatus),
+        message: z
+          .string()
+          .nullable()
+          .describe("The note of the manager to the citizen."),
+        decline_comment: z
+          .string()
+          .nullable()
+          .describe("The note of the citizen when they declined."),
+        invited_by: citizenReferenceSchema.nullable(),
+        created_at: dateTimeOutputSchema,
+      }),
+    )
+    .describe(
+      "The open invitations, and the declined invitations of citizens who did not sign up later. The newest first.",
+    ),
   can_manage: z.boolean(),
   can_manage_positions: z.boolean(),
   is_updatable: z.boolean(),
