@@ -244,6 +244,10 @@ export enum AuditEventType {
   EVENT_PARTICIPATION_CANCELLED = "EVENT_PARTICIPATION_CANCELLED",
   EVENT_PARTICIPANT_ADDED_BY_MANAGER = "EVENT_PARTICIPANT_ADDED_BY_MANAGER",
   EVENT_PARTICIPANT_REMOVED_BY_MANAGER = "EVENT_PARTICIPANT_REMOVED_BY_MANAGER",
+  EVENT_PARTICIPANT_INVITED = "EVENT_PARTICIPANT_INVITED",
+  EVENT_INVITATION_ACCEPTED = "EVENT_INVITATION_ACCEPTED",
+  EVENT_INVITATION_DECLINED = "EVENT_INVITATION_DECLINED",
+  EVENT_INVITATION_WITHDRAWN = "EVENT_INVITATION_WITHDRAWN",
   CITIZENS_PER_ROLE_COUNTED = "CITIZENS_PER_ROLE_COUNTED",
   SHIPS_PER_VARIANT_COUNTED = "SHIPS_PER_VARIANT_COUNTED",
   UNIQUE_LOGINS_COUNTED = "UNIQUE_LOGINS_COUNTED",
@@ -1679,6 +1683,40 @@ export interface AuditEventDataByType {
   [AuditEventType.EVENT_PARTICIPANT_REMOVED_BY_MANAGER]: {
     eventId: string;
     citizenId: string;
+  };
+
+  /**
+   * One event per invited citizen. The message of the manager stays out of
+   * the immutable log, like the comment of an added participant.
+   */
+  [AuditEventType.EVENT_PARTICIPANT_INVITED]: {
+    eventId: string;
+    citizenId: string;
+    invitationId: string;
+  };
+
+  /** The sign-up of the citizen accepted the invitation */
+  [AuditEventType.EVENT_INVITATION_ACCEPTED]: {
+    eventId: string;
+    citizenId: string;
+    invitationId: string;
+  };
+
+  /** The comment of the citizen stays out of the immutable log */
+  [AuditEventType.EVENT_INVITATION_DECLINED]: {
+    eventId: string;
+    citizenId: string;
+    invitationId: string;
+  };
+
+  /**
+   * A manager withdrew the invitation, added the citizen directly or turned
+   * off the participation of the event
+   */
+  [AuditEventType.EVENT_INVITATION_WITHDRAWN]: {
+    eventId: string;
+    citizenId: string;
+    invitationId: string;
   };
 
   [AuditEventType.CITIZENS_PER_ROLE_COUNTED]: {

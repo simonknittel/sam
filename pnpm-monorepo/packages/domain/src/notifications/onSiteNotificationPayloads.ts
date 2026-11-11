@@ -137,6 +137,40 @@ export const eventParticipationRemovedPayloadSchema = z.object({
   reason: z.nullable(z.string()),
 });
 
+/**
+ * `invitationId` lets the notification center ask for the current state of
+ * the invitation, thus it shows the buttons only while the invitation is
+ * open. `invitedByHandle` is null for a manager without a handle or without
+ * a citizen.
+ */
+export const eventInvitationCreatedPayloadSchema = z.object({
+  eventId: z.string(),
+  eventName: z.string(),
+  invitationId: z.string(),
+  invitedByHandle: z.nullable(z.string()),
+  /** The optional message of the manager */
+  message: z.nullable(z.string()),
+});
+
+/** The answer of a citizen to an invitation, which the organizers hear about */
+export enum EventInvitationAnswer {
+  Accepted = "accepted",
+  Declined = "declined",
+}
+
+/**
+ * `citizenHandle` is null for a citizen without a handle. `comment` is the
+ * comment of the sign-up for an accepted invitation and the comment of the
+ * decline for a declined one.
+ */
+export const eventInvitationAnsweredPayloadSchema = z.object({
+  eventId: z.string(),
+  eventName: z.string(),
+  citizenHandle: z.nullable(z.string()),
+  answer: z.enum(EventInvitationAnswer),
+  comment: z.nullable(z.string()),
+});
+
 export const roleAddedPayloadSchema = z.object({
   roleId: z.string(),
   roleName: z.string(),
@@ -357,6 +391,8 @@ export const onSiteNotificationPayloadSchemas = {
   event_starting: eventStartingPayloadSchema,
   event_participation_added: eventParticipationAddedPayloadSchema,
   event_participation_removed: eventParticipationRemovedPayloadSchema,
+  event_invitation_created: eventInvitationCreatedPayloadSchema,
+  event_invitation_answered: eventInvitationAnsweredPayloadSchema,
   event_manager_added: eventManagerAddedPayloadSchema,
   event_participation_changed: eventParticipationChangedPayloadSchema,
   event_position_vacated: eventPositionVacatedPayloadSchema,
@@ -410,6 +446,8 @@ export const ON_SITE_NOTIFICATION_PAYLOAD_VERSIONS: Record<
   event_starting: 1,
   event_participation_added: 1,
   event_participation_removed: 1,
+  event_invitation_created: 1,
+  event_invitation_answered: 1,
   event_manager_added: 1,
   event_participation_changed: 1,
   event_position_vacated: 1,

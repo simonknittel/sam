@@ -1,5 +1,6 @@
 import { ORGANIZATION_TIMEZONE } from "../timeZone.js";
 import {
+  EventInvitationAnswer,
   EventParticipationChange,
   FLEET_UPDATE_REMINDER_UNCHANGED_MONTHS,
   type OnSiteNotificationPayload,
@@ -106,6 +107,51 @@ export const getEventParticipationRemovedText = ({
     title: "Vom Event entfernt",
     body: reason ? `${body} Grund: ${reason}` : body,
   };
+};
+
+export const getEventInvitationCreatedText = ({
+  eventName,
+  invitedByHandle,
+  message,
+}: OnSiteNotificationPayload<"event_invitation_created">): NotificationText => {
+  const body = `${invitedByHandle ?? UNKNOWN_CITIZEN} hat dich zum Event "${eventName}" eingeladen.`;
+
+  return {
+    title: "Einladung zum Event",
+    body: message ? `${body} Nachricht: ${message}` : body,
+  };
+};
+
+export const getEventInvitationAnsweredText = ({
+  eventName,
+  citizenHandle,
+  answer,
+  comment,
+}: OnSiteNotificationPayload<"event_invitation_answered">): NotificationText => {
+  const handle = citizenHandle ?? UNKNOWN_CITIZEN;
+  const withComment = (body: string) =>
+    comment ? `${body} Kommentar: ${comment}` : body;
+
+  switch (answer) {
+    case EventInvitationAnswer.Accepted:
+      return {
+        title: "Einladung angenommen",
+        body: withComment(
+          `${handle} hat die Einladung angenommen – ${eventName}`,
+        ),
+      };
+
+    case EventInvitationAnswer.Declined:
+      return {
+        title: "Einladung abgelehnt",
+        body: withComment(
+          `${handle} hat die Einladung abgelehnt – ${eventName}`,
+        ),
+      };
+
+    default:
+      throw new Error(`Unknown invitation answer: ${answer satisfies never}`);
+  }
 };
 
 export const getEventLineupEnabledText = ({
