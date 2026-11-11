@@ -17,6 +17,7 @@ import { isAllowedToManageEvent as _isAllowedToManageEvent } from "../utils/isAl
 import { isEventUpdatable } from "../utils/isEventUpdatable";
 import { CreateManagers } from "./CreateManagers";
 import { DeleteManager } from "./DeleteManager";
+import { EventInvitationsTableFilters } from "./EventInvitationsTableFilters";
 import { EventInvitationsTableTile } from "./EventInvitationsTableTile";
 import { ParticipantsTableFilters } from "./ParticipantsTableFilters";
 import { ParticipantsTableTile } from "./ParticipantsTableTile";
@@ -143,11 +144,17 @@ export const ParticipantsTab = async ({
       </SidebarLayout>
 
       {invitations.length > 0 && (
-        <EventInvitationsTableTile
-          event={event}
-          invitations={invitations}
-          canManageParticipants={canManageParticipants}
-        />
+        <SidebarLayout
+          sidebar={<EventInvitationsTableFilters />}
+          mobileToggleLabel="Einladungen filtern"
+        >
+          <EventInvitationsTableTile
+            event={event}
+            invitations={invitations}
+            canManageParticipants={canManageParticipants}
+            searchParams={searchParams}
+          />
+        </SidebarLayout>
       )}
     </div>
   );

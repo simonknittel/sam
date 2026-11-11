@@ -5,11 +5,25 @@ import {
   type TableColumn,
 } from "@/modules/common/components/TableTile";
 import { formatDate } from "@/modules/common/utils/formatDate";
+import {
+  sortAscWithAndNullLast,
+  sortDescAndNullLast,
+} from "@/modules/common/utils/sorting";
+import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
 import type {
   EventDetails,
   EventInvitationRow,
 } from "@sam-monorepo/application";
 import { EventInvitationStatus } from "@sam-monorepo/domain";
+import type { SearchParams } from "nuqs/server";
+import {
+  INVITATIONS_TABLE_ROLE_PARAM,
+  INVITATIONS_TABLE_SORT_PARAM,
+  INVITATIONS_TABLE_STATUS_PARAM,
+  InvitationsTableSort,
+  InvitationsTableStatus,
+  loadInvitationsTableSearchParams,
+} from "../utils/invitationsTableSearchParams";
 import { WithdrawEventInvitation } from "./WithdrawEventInvitation";
 
 const CITIZEN_COLUMN: TableColumn = {
@@ -49,7 +63,7 @@ const MESSAGE_COLUMN: TableColumn = {
 
 const DECLINE_COMMENT_COLUMN: TableColumn = {
   key: "declineComment",
-  label: "Kommentar der Absage",
+  label: "Antwort",
   track: "minmax(200px,1fr)",
   minWidth: 200,
 };
@@ -62,20 +76,91 @@ const ACTIONS_COLUMN: TableColumn = {
   headerClassName: "sr-only",
 };
 
+const matchesStatus = (
+  status: InvitationsTableStatus,
+  invitation: EventInvitationRow,
+) => {
+  switch (status) {
+    case InvitationsTableStatus.All:
+      return true;
+    case InvitationsTableStatus.Open:
+      return invitation.status === EventInvitationStatus.Open;
+    case InvitationsTableStatus.Declined:
+      return invitation.status === EventInvitationStatus.Declined;
+    default:
+      throw new Error(`Unknown status: ${status satisfies never}`);
+  }
+};
+
+const compareInvitations = (
+  sort: InvitationsTableSort,
+  first: EventInvitationRow,
+  second: EventInvitationRow,
+) => {
+  switch (sort) {
+    case InvitationsTableSort.InvitedAtDescending:
+      return sortDescAndNullLast(first.createdAt, second.createdAt);
+    case InvitationsTableSort.InvitedAtAscending:
+      return sortAscWithAndNullLast(first.createdAt, second.createdAt);
+    case InvitationsTableSort.CitizenAscending:
+      return sortAscWithAndNullLast(
+        first.citizen.handle,
+        second.citizen.handle,
+      );
+    case InvitationsTableSort.CitizenDescending:
+      return sortDescAndNullLast(first.citizen.handle, second.citizen.handle);
+    default:
+      throw new Error(`Unknown sort: ${sort satisfies never}`);
+  }
+};
+
 interface Props {
   readonly className?: string;
   readonly event: Pick<EventDetails, "id">;
   readonly invitations: readonly EventInvitationRow[];
   readonly canManageParticipants: boolean;
+  readonly searchParams: Promise<SearchParams>;
 }
 
 /** The open invitations, and the declined ones of citizens who did not sign up */
-export const EventInvitationsTableTile = ({
+export const EventInvitationsTableTile = async ({
   className,
   event,
   invitations,
   canManageParticipants,
+  searchParams,
 }: Props) => {
+  const [params, visibleRoles] = await Promise.all([
+    loadInvitationsTableSearchParams(searchParams),
+    getVisibleRoles(),
+  ]);
+  const status = params[INVITATIONS_TABLE_STATUS_PARAM];
+  const sort = params[INVITATIONS_TABLE_SORT_PARAM];
+
+  /**
+   * Only the roles that the viewer can see match, like in the participants
+   * table
+   */
+  const visibleRoleIds = new Set(
+    visibleRoles.map((visibleRole) => visibleRole.id),
+  );
+  const selectedRoleIds = new Set(params[INVITATIONS_TABLE_ROLE_PARAM]);
+  const hasRoleFilter = selectedRoleIds.size > 0;
+  const isFiltered = hasRoleFilter || status !== InvitationsTableStatus.All;
+
+  const shownInvitations = invitations
+    .filter((invitation) => matchesStatus(status, invitation))
+    .filter(
+      ({ citizen }) =>
+        !hasRoleFilter ||
+        citizen.roleAssignments.some(
+          (assignment) =>
+            visibleRoleIds.has(assignment.roleId) &&
+            selectedRoleIds.has(assignment.roleId),
+        ),
+    )
+    .toSorted((first, second) => compareInvitations(sort, first, second));
+
   const columns = [
     CITIZEN_COLUMN,
     STATUS_COLUMN,
@@ -89,12 +174,16 @@ export const EventInvitationsTableTile = ({
   return (
     <TableTile
       className={className}
-      heading={`Einladungen (${invitations.length})`}
+      heading={
+        isFiltered
+          ? `Einladungen (${shownInvitations.length} von ${invitations.length})`
+          : `Einladungen (${invitations.length})`
+      }
       columns={columns}
-      isEmpty={invitations.length === 0}
-      emptyMessage="Keine offenen oder abgelehnten Einladungen."
+      isEmpty={shownInvitations.length === 0}
+      emptyMessage="Keine Einladungen für diese Filter."
     >
-      {invitations.map((invitation) => (
+      {shownInvitations.map((invitation) => (
         <EventInvitationsTableRow
           key={invitation.id}
           eventId={event.id}
