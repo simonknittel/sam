@@ -16,7 +16,7 @@ syncInjectedDepsAfterScripts:
 
 overrides:
   bn.js@<4.12.3: ">=4.12.3"
-  fast-xml-parser@>=5.0.0 <5.3.8: ">=5.3.8"
+  fast-xml-parser@>=5.0.0 <5.3.8: ">=5.12.0"
   jws@=4.0.0: ">=4.0.1"
   # Migrated from apps/app's former npm `overrides`.
   "@auth/core": 0.41.3
@@ -72,4 +72,8 @@ audit:
   level: critical
 # Versions that `pnpm install` can resolve before they reach
 # `minimumReleaseAge`. pnpm appends to this list on its own.
-minimumReleaseAgeExclude: []
+minimumReleaseAgeExclude:
+  [
+    # Renovate security update: fast-xml-parser@5.12.0
+    fast-xml-parser@5.12.0
+  ]
