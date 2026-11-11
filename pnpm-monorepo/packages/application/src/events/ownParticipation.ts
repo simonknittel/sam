@@ -10,6 +10,8 @@ import { idSchema } from "../pagination.js";
 import { createEventActivity } from "./eventActivity.js";
 import { EventErrorMessage } from "./eventErrors.js";
 import { participationTextSchema } from "./eventInputSchemas.js";
+import { OPEN_INVITATION_WHERE } from "./eventInvitationStatus.js";
+import { buildInvitationAuditEvents } from "./eventInvitations.js";
 import { lockParticipationEnabledEvent } from "./participatableAppEvent.js";
 
 /**
@@ -36,6 +38,19 @@ interface OwnParticipation {
   readonly comment: string | null;
 }
 
+export interface OwnSignUp extends OwnParticipation {
+  /** The open invitation that the sign-up accepted, or null */
+  readonly acceptedInvitationId: string | null;
+}
+
+interface InsertOwnParticipationOptions {
+  /**
+   * Refuses the sign-up without an open invitation, for example when a
+   * manager withdrew it in the meantime
+   */
+  readonly requireOpenInvitation?: boolean;
+}
+
 /** The active participation of the citizen at the event, or null */
 export const findActiveParticipation = (
   context: ApplicationContext,
@@ -56,38 +71,67 @@ export const findActiveParticipation = (
 
 /**
  * Creates a fresh participation row. The unique index for active sign-ups
- * rejects a second active sign-up.
+ * rejects a second active sign-up. The sign-up is the answer to an open
+ * invitation of the citizen, thus it accepts the invitation.
  *
  * @throws ConflictError `EventErrorMessage.AlreadySignedUp` when the citizen has an active
- * participation, for example from a different tab, or
+ * participation, for example from a different tab,
  * `EventErrorMessage.ParticipationDisabled` when a manager turned the
- * participation off in the meantime
+ * participation off in the meantime, or `EventErrorMessage.NoOpenInvitation`
+ * (see `requireOpenInvitation`)
  */
 export const insertOwnParticipation = async (
   context: ApplicationContext,
   actor: Actor,
-  { eventId, citizenId, comment }: OwnParticipation,
-) => {
+  participation: OwnParticipation,
+  { requireOpenInvitation = false }: InsertOwnParticipationOptions = {},
+): Promise<OwnSignUp> => {
+  const { eventId, citizenId, comment } = participation;
+
+  let acceptedInvitationId: string | null;
   try {
-    await context.prisma.$transaction(async (transaction) => {
-      await lockParticipationEnabledEvent(transaction, eventId);
+    acceptedInvitationId = await context.prisma.$transaction(
+      async (transaction) => {
+        await lockParticipationEnabledEvent(transaction, eventId);
 
-      await transaction.eventParticipant.create({
-        data: {
+        await transaction.eventParticipant.create({
+          data: {
+            eventId,
+            source: EventSource.APP,
+            citizenId,
+            comment,
+          },
+        });
+
+        const [acceptedInvitation] =
+          await transaction.eventInvitation.updateManyAndReturn({
+            where: { eventId, citizenId, ...OPEN_INVITATION_WHERE },
+            data: { acceptedAt: context.now() },
+            select: { id: true },
+          });
+
+        if (!acceptedInvitation) {
+          if (requireOpenInvitation)
+            throw new ConflictError(EventErrorMessage.NoOpenInvitation);
+
+          await createEventActivity(transaction, {
+            eventId,
+            citizenId,
+            type: EventActivityType.PARTICIPATION_SIGNED_UP,
+            payload: { comment },
+          });
+          return null;
+        }
+
+        await createEventActivity(transaction, {
           eventId,
-          source: EventSource.APP,
           citizenId,
-          comment,
-        },
-      });
-
-      await createEventActivity(transaction, {
-        eventId,
-        citizenId,
-        type: EventActivityType.PARTICIPATION_SIGNED_UP,
-        payload: { comment },
-      });
-    });
+          type: EventActivityType.INVITATION_ACCEPTED,
+          payload: { comment },
+        });
+        return acceptedInvitation.id;
+      },
+    );
   } catch (error) {
     if (isPrismaError(error, PrismaErrorCode.UniqueConstraintFailed))
       throw new ConflictError(EventErrorMessage.AlreadySignedUp);
@@ -100,7 +144,17 @@ export const insertOwnParticipation = async (
       data: { eventId, citizenId },
       createdById: actor.userId,
     },
+    ...(acceptedInvitationId
+      ? buildInvitationAuditEvents(
+          AuditEventType.EVENT_INVITATION_ACCEPTED,
+          eventId,
+          [{ id: acceptedInvitationId, citizenId }],
+          actor.userId,
+        )
+      : []),
   ]);
+
+  return { ...participation, acceptedInvitationId };
 };
 
 /** Replaces the comment of an active participation */

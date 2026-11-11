@@ -6,6 +6,9 @@ import {
 } from "@sam-monorepo/domain";
 import { requirePermission, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
+import { ValidationError } from "../errors.js";
+import { EventErrorMessage } from "./eventErrors.js";
+import { OPEN_INVITATION_WHERE } from "./eventInvitationStatus.js";
 import { requireManageableEvent } from "./eventManageGuard.js";
 import { isAllowedToManageEvent } from "./eventManageRules.js";
 import {
@@ -125,6 +128,61 @@ export const findAddableParticipantIds = async (
 };
 
 /**
+ * The requested citizens of an add or an invitation without the active
+ * participants. The picker offers exactly the addable set, so anything
+ * outside it either raced with a sign-up or bypassed the UI: citizens who
+ * signed up in the meantime are skipped, the rest fails the whole batch.
+ *
+ * @throws ValidationError
+ */
+export const selectNewParticipantIds = async (
+  prisma: ApplicationContext["prisma"],
+  event: AddableParticipantsEvent,
+  citizenIds: readonly string[],
+): Promise<string[]> => {
+  const requestedCitizenIds = Array.from(new Set(citizenIds));
+  if (requestedCitizenIds.length <= 0)
+    throw new ValidationError(EventErrorMessage.NoCitizenSelected);
+
+  const [addableCitizenIds, activeParticipants] = await Promise.all([
+    findAddableParticipantIds(prisma, event, requestedCitizenIds),
+    prisma.eventParticipant.findMany({
+      where: {
+        eventId: event.id,
+        cancelledAt: null,
+        citizenId: { in: requestedCitizenIds },
+      },
+      select: { citizenId: true },
+    }),
+  ]);
+
+  const addable = new Set(addableCitizenIds);
+  const alreadyActive = new Set(
+    activeParticipants.map((participant) => participant.citizenId!),
+  );
+
+  const unknownCitizenId = requestedCitizenIds.find(
+    (citizenId) => !addable.has(citizenId) && !alreadyActive.has(citizenId),
+  );
+  if (unknownCitizenId)
+    throw new ValidationError(EventErrorMessage.CitizenCannotSeeEvent);
+
+  return requestedCitizenIds.filter(
+    (citizenId) => !alreadyActive.has(citizenId),
+  );
+};
+
+export interface AddableEventParticipants {
+  /** The citizens who can see the event and are not participating */
+  readonly citizenIds: string[];
+  /**
+   * The citizens of `citizenIds` with an open invitation. An invitation
+   * skips them, a direct add withdraws their invitation.
+   */
+  readonly invitedCitizenIds: string[];
+}
+
+/**
  * The citizens that the actor may add as participants to an app event, for
  * the picker of the app. The checks are the checks of
  * `addEventParticipants()`, thus the picker cannot list a set that the use
@@ -135,15 +193,30 @@ export const findAddableParticipantIds = async (
  * ConflictError `EventErrorMessage.EventEnded` or
  * `EventErrorMessage.ParticipationDisabled`
  */
-export const findAddableEventParticipantIds = async (
+export const findAddableEventParticipants = async (
   context: ApplicationContext,
   actor: Actor,
   { eventId }: { readonly eventId: string },
-): Promise<string[]> => {
+): Promise<AddableEventParticipants> => {
   requirePermission(actor, "event", "read");
 
   const event = await requireParticipatableAppEvent(context, actor, eventId);
   requireManageableEvent(context, actor, event, isAllowedToManageEvent);
 
-  return findAddableParticipantIds(context.prisma, event);
+  const [citizenIds, openInvitations] = await Promise.all([
+    findAddableParticipantIds(context.prisma, event),
+    context.prisma.eventInvitation.findMany({
+      where: { eventId: event.id, ...OPEN_INVITATION_WHERE },
+      select: { citizenId: true },
+    }),
+  ]);
+
+  const addable = new Set(citizenIds);
+
+  return {
+    citizenIds,
+    invitedCitizenIds: openInvitations
+      .map((invitation) => invitation.citizenId)
+      .filter((citizenId) => addable.has(citizenId)),
+  };
 };

@@ -1,3 +1,4 @@
+import type { EventInvitationStatus } from "@sam-monorepo/domain";
 import * as z from "zod";
 import { requireCitizen, requirePermission, type Actor } from "../actor.js";
 import {
@@ -9,6 +10,7 @@ import {
 import type { ApplicationContext } from "../context.js";
 import { idSchema } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
+import { loadEventInvitationRows } from "./eventInvitationRows.js";
 import {
   isAllowedToManageEvent,
   isAllowedToManagePositions,
@@ -34,6 +36,17 @@ export interface EventParticipantEntry {
   /** Null when the citizen is deleted */
   readonly citizen: CitizenReference | null;
   readonly comment: string | null;
+  readonly created_at: string;
+}
+
+export interface EventInvitationEntry {
+  /** Null when the citizen is deleted */
+  readonly citizen: CitizenReference | null;
+  /** Only open and declined invitations, see `loadEventInvitationRows()` */
+  readonly status: EventInvitationStatus;
+  readonly message: string | null;
+  readonly decline_comment: string | null;
+  readonly invited_by: CitizenReference | null;
   readonly created_at: string;
 }
 
@@ -66,6 +79,11 @@ export interface GetEventOutput {
    * Discord id.
    */
   readonly participants: EventParticipantEntry[];
+  /**
+   * The open invitations, and the declined invitations of citizens who did
+   * not sign up later. The newest first.
+   */
+  readonly invitations: EventInvitationEntry[];
   readonly can_manage: boolean;
   readonly can_manage_positions: boolean;
   /** False when the event has ended: then nothing can change */
@@ -120,7 +138,10 @@ const toEventOutput = async (
   const citizenId = actor.citizen?.id ?? null;
   const { discordUserId } = actor;
 
-  const participants = await getParticipantEntries(context, event.participants);
+  const [participants, invitations] = await Promise.all([
+    getParticipantEntries(context, event.participants),
+    loadEventInvitationRows(context.prisma, event.id),
+  ]);
 
   const canManage = isAllowedToManageEvent(actor, event);
 
@@ -141,6 +162,14 @@ const toEventOutput = async (
     created_by: toCitizenReference(event.createdBy),
     managers: toCitizenReferences(event.managers),
     participants,
+    invitations: invitations.map((invitation) => ({
+      citizen: toCitizenReference(invitation.citizen),
+      status: invitation.status,
+      message: invitation.message,
+      decline_comment: invitation.declineComment,
+      invited_by: toCitizenReference(invitation.invitedBy),
+      created_at: invitation.createdAt.toISOString(),
+    })),
     can_manage: canManage,
     can_manage_positions: isAllowedToManagePositions(actor, event),
     is_updatable: isEventUpdatable(event, context.now()),

@@ -8,12 +8,13 @@ import {
   type EventParticipationInput,
 } from "./ownParticipation.js";
 import { requireOpenParticipatableAppEvent } from "./participatableAppEvent.js";
-import { buildSignUpNotifications } from "./participationChangeNotifications.js";
+import { buildOwnSignUpNotifications } from "./participationChangeNotifications.js";
 
 /**
  * Signs the user up for an app event. Refuses a second sign-up, thus a
  * different tab cannot overwrite the comment unnoticed. See
- * `signUpForEvent()` for the variant that also updates the comment.
+ * `signUpForEvent()` for the variant that also updates the comment. The
+ * sign-up accepts an open invitation of the user.
  */
 export const createEventParticipation = (
   context: ApplicationContext,
@@ -30,17 +31,16 @@ export const createEventParticipation = (
       input.event_id,
     );
 
-    await insertOwnParticipation(context, actor, {
+    const signUp = await insertOwnParticipation(context, actor, {
       eventId: event.id,
       citizenId,
       comment: input.comment || null,
     });
 
-    const notifications = buildSignUpNotifications(event, context.now(), [
-      citizenId,
-    ]);
-
-    await triggerNotificationsAfterSave(context, notifications);
+    await triggerNotificationsAfterSave(
+      context,
+      buildOwnSignUpNotifications(event, context.now(), signUp),
+    );
 
     return loadEventOutput(context, actor, event.id);
   });

@@ -1,6 +1,11 @@
 import type { Event } from "@sam-monorepo/database/client";
-import { EventParticipationChange } from "@sam-monorepo/domain";
+import {
+  EventInvitationAnswer,
+  EventParticipationChange,
+} from "@sam-monorepo/domain";
 import type { Notification } from "../context.js";
+import { buildInvitationAnsweredNotification } from "./eventInvitations.js";
+import type { OwnSignUp } from "./ownParticipation.js";
 
 /**
  * The organizers hear about a sign-up, or about a cancellation that vacated
@@ -34,6 +39,26 @@ export const buildSignUpNotifications = (
         },
       }))
     : [];
+
+/**
+ * The notifications of the organizers about an own sign-up: about the
+ * accepted invitation at each time, else like `buildSignUpNotifications()`
+ */
+export const buildOwnSignUpNotifications = (
+  event: Pick<Event, "id" | "startTime">,
+  now: Date,
+  signUp: OwnSignUp,
+): Notification[] =>
+  signUp.acceptedInvitationId
+    ? [
+        buildInvitationAnsweredNotification(
+          event.id,
+          signUp.citizenId,
+          EventInvitationAnswer.Accepted,
+          signUp.comment,
+        ),
+      ]
+    : buildSignUpNotifications(event, now, [signUp.citizenId]);
 
 /** The cancellation of a participant, not the removal by a manager */
 export interface OwnCancellation {

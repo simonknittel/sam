@@ -51,6 +51,8 @@ const TYPES_WITH_AFFECTED_CITIZEN_IN_PAYLOAD: ReadonlySet<EventActivityType> =
     EventActivityType.PARTICIPATION_REMOVED_BY_MANAGER,
     EventActivityType.MANAGER_ADDED,
     EventActivityType.MANAGER_REMOVED,
+    EventActivityType.INVITATION_CREATED,
+    EventActivityType.INVITATION_WITHDRAWN,
   ]);
 
 /** The types where the actor changes their own participation */
@@ -58,6 +60,8 @@ const SELF_APPLIED_TYPES: ReadonlySet<EventActivityType> = new Set([
   EventActivityType.PARTICIPATION_SIGNED_UP,
   EventActivityType.PARTICIPATION_COMMENT_UPDATED,
   EventActivityType.PARTICIPATION_CANCELLED,
+  EventActivityType.INVITATION_ACCEPTED,
+  EventActivityType.INVITATION_DECLINED,
 ]);
 
 const affectedCitizenPayloadSchema = z.object({ citizenId: z.string() });

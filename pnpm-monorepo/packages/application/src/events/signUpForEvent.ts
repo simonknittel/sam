@@ -12,7 +12,7 @@ import {
   type EventParticipationInput,
 } from "./ownParticipation.js";
 import { requireOpenParticipatableAppEvent } from "./participatableAppEvent.js";
-import { buildSignUpNotifications } from "./participationChangeNotifications.js";
+import { buildOwnSignUpNotifications } from "./participationChangeNotifications.js";
 
 const isAlreadySignedUp = (error: unknown) =>
   error instanceof ConflictError &&
@@ -22,7 +22,7 @@ const isAlreadySignedUp = (error: unknown) =>
  * Signs the user up for an app event, or updates the comment of the existing
  * sign-up. A second call with the same input changes nothing. Without a
  * comment, an existing sign-up keeps its comment. Only a new sign-up notifies
- * the organizers.
+ * the organizers. A new sign-up accepts an open invitation of the user.
  */
 export const signUpForEvent = (
   context: ApplicationContext,
@@ -49,17 +49,16 @@ export const signUpForEvent = (
 
     if (!participant) {
       try {
-        await insertOwnParticipation(context, actor, {
+        const signUp = await insertOwnParticipation(context, actor, {
           eventId: event.id,
           citizenId,
           comment: comment ?? null,
         });
 
-        const notifications = buildSignUpNotifications(event, context.now(), [
-          citizenId,
-        ]);
-
-        await triggerNotificationsAfterSave(context, notifications);
+        await triggerNotificationsAfterSave(
+          context,
+          buildOwnSignUpNotifications(event, context.now(), signUp),
+        );
 
         return loadEventOutput(context, actor, event.id);
       } catch (error) {

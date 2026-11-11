@@ -29,6 +29,15 @@ export enum EventErrorMessage {
   CitizenNotSignedUp = "The citizen is not signed up",
   /** A `ConflictError` */
   CitizenNotManager = "The citizen is not a manager of the event",
+  /**
+   * A `ConflictError`: the user has no open invitation to the event, for
+   * example because a manager withdrew it or a different tab answered it
+   */
+  NoOpenInvitation = "The user has no open invitation to the event",
+  /** A `ConflictError` */
+  CitizenNotInvited = "The citizen has no open invitation to the event",
+  /** A `NotFoundError`: the invitation does not exist or is not for the user */
+  InvitationNotFound = "The invitation does not exist",
   /** A `ValidationError` */
   EndBeforeStart = "The end must be after the start",
   /**

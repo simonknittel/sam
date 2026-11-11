@@ -40,6 +40,7 @@ import {
   eventVisibilitySchema,
   visibilityRoleIdsSchema,
 } from "./eventInputSchemas.js";
+import { buildInvitationAuditEvents } from "./eventInvitations.js";
 import { VISIBLE_EVENT_MANAGE_GUARD_SELECT } from "./eventManageGuard.js";
 import {
   isAllowedToManageEvent,
@@ -475,6 +476,14 @@ export const updateEvent = (
         },
         createdById: actor.userId,
       });
+    auditEvents.push(
+      ...buildInvitationAuditEvents(
+        AuditEventType.EVENT_INVITATION_WITHDRAWN,
+        event.id,
+        clearedParticipation.withdrawnInvitations,
+        actor.userId,
+      ),
+    );
     await context.audit.create(auditEvents);
 
     const notifications = buildEventChangeNotifications(event.id, citizenId, {

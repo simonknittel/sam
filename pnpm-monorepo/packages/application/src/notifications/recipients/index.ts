@@ -11,6 +11,10 @@ export {
 export { findEventCitizenRecipient } from "./eventCitizen.js";
 export { findEventCreatedRecipients } from "./eventCreated.js";
 export {
+  findEventInvitationRecipient,
+  type EventInvitationRecipient,
+} from "./eventInvitationCreated.js";
+export {
   findEventLineupEnabledRecipients,
   findEventPositionAssignedRecipient,
   findEventPositionUnassignedRecipient,

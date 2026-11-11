@@ -6,14 +6,16 @@ import {
 import * as z from "zod";
 import { requirePermission, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
-import { ValidationError } from "../errors.js";
 import { triggerNotificationsAfterSave } from "../notifications.js";
 import { idSchema } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
-import { findAddableParticipantIds } from "./addableParticipants.js";
+import { selectNewParticipantIds } from "./addableParticipants.js";
 import { createEventActivity } from "./eventActivity.js";
-import { EventErrorMessage } from "./eventErrors.js";
 import { participationTextSchema } from "./eventInputSchemas.js";
+import {
+  buildInvitationAuditEvents,
+  withdrawOpenInvitations,
+} from "./eventInvitations.js";
 import { requireManageableEvent } from "./eventManageGuard.js";
 import { isAllowedToManageEvent } from "./eventManageRules.js";
 import { loadEventOutput, type GetEventOutput } from "./getEvent.js";
@@ -28,7 +30,7 @@ export const addEventParticipantsInputSchema = z.object({
     .array(idSchema)
     .max(EVENT_MAX_CITIZENS_PER_REQUEST)
     .describe(
-      "The citizens to sign up. Each must be able to see the event, log in and get event notifications. Citizens who are already signed up are skipped.",
+      "The citizens to sign up. Each must be able to see the event, log in and get event notifications. Citizens who are already signed up are skipped. An open invitation of an added citizen is withdrawn.",
     ),
   comment: participationTextSchema
     .optional()
@@ -48,7 +50,8 @@ export interface AddEventParticipantsOutput {
 
 /**
  * A manager signs citizens up for an app event. Each added citizen gets a
- * notification, except the actor.
+ * notification, except the actor. The direct sign-up replaces an open
+ * invitation of the citizen, thus the use case withdraws it.
  */
 export const addEventParticipants = (
   context: ApplicationContext,
@@ -70,40 +73,10 @@ export const addEventParticipants = (
 
     const managerId = actor.citizen?.id ?? null;
 
-    /**
-     * Validate the citizens. The picker offers exactly this set, so anything
-     * outside it either raced with a sign-up or bypassed the UI: citizens who
-     * signed up in the meantime are skipped, the rest fails the whole batch.
-     */
-    const requestedCitizenIds = Array.from(new Set(input.citizen_ids));
-    if (requestedCitizenIds.length <= 0)
-      throw new ValidationError(EventErrorMessage.NoCitizenSelected);
-
-    const [addableCitizenIds, activeParticipants] = await Promise.all([
-      findAddableParticipantIds(context.prisma, event, requestedCitizenIds),
-      context.prisma.eventParticipant.findMany({
-        where: {
-          eventId: event.id,
-          cancelledAt: null,
-          citizenId: { in: requestedCitizenIds },
-        },
-        select: { citizenId: true },
-      }),
-    ]);
-
-    const addable = new Set(addableCitizenIds);
-    const alreadyActive = new Set(
-      activeParticipants.map((participant) => participant.citizenId!),
-    );
-
-    const unknownCitizenId = requestedCitizenIds.find(
-      (citizenId) => !addable.has(citizenId) && !alreadyActive.has(citizenId),
-    );
-    if (unknownCitizenId)
-      throw new ValidationError(EventErrorMessage.CitizenCannotSeeEvent);
-
-    const citizenIdsToAdd = requestedCitizenIds.filter(
-      (citizenId) => !alreadyActive.has(citizenId),
+    const citizenIdsToAdd = await selectNewParticipantIds(
+      context.prisma,
+      event,
+      input.citizen_ids,
     );
 
     /**
@@ -115,7 +88,7 @@ export const addEventParticipants = (
      */
     const comment = input.comment || null;
 
-    const addedCitizenIds =
+    const { addedCitizenIds, withdrawnInvitations } =
       citizenIdsToAdd.length > 0
         ? await context.prisma.$transaction(async (transaction) => {
             await lockParticipationEnabledEvent(transaction, event.id);
@@ -144,9 +117,17 @@ export const addEventParticipants = (
                 payload: { citizenId, comment },
               });
 
-            return citizenIds;
+            return {
+              addedCitizenIds: citizenIds,
+              withdrawnInvitations: await withdrawOpenInvitations(transaction, {
+                eventId: event.id,
+                citizenIds,
+                withdrawnById: managerId,
+                withdrawnAt: context.now(),
+              }),
+            };
           })
-        : [];
+        : { addedCitizenIds: [], withdrawnInvitations: [] };
 
     if (addedCitizenIds.length <= 0)
       return {
@@ -154,16 +135,22 @@ export const addEventParticipants = (
         added_citizen_ids: [],
       };
 
-    await context.audit.create(
-      addedCitizenIds.map((citizenId) => ({
-        type: AuditEventType.EVENT_PARTICIPANT_ADDED_BY_MANAGER,
+    await context.audit.create([
+      ...addedCitizenIds.map((citizenId) => ({
+        type: AuditEventType.EVENT_PARTICIPANT_ADDED_BY_MANAGER as const,
         data: {
           eventId: event.id,
           citizenId,
         },
         createdById: actor.userId,
       })),
-    );
+      ...buildInvitationAuditEvents(
+        AuditEventType.EVENT_INVITATION_WITHDRAWN,
+        event.id,
+        withdrawnInvitations,
+        actor.userId,
+      ),
+    ]);
 
     // The actor gets no notification about the own sign-up
     await triggerNotificationsAfterSave(

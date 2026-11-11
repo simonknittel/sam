@@ -1,5 +1,9 @@
 import { EventSource } from "@sam-monorepo/database/browser";
 import type { Citizen, Event, Prisma } from "@sam-monorepo/database/client";
+import {
+  withdrawOpenInvitations,
+  type InvitationOfCitizen,
+} from "./eventInvitations.js";
 
 /**
  * The reason of the "removed from the event" notification of each citizen
@@ -22,6 +26,7 @@ export interface ClearedEventParticipation {
   readonly cancelledCitizenIds: string[];
   readonly clearedPositionCount: number;
   readonly deletedApplicationCount: number;
+  readonly withdrawnInvitations: InvitationOfCitizen[];
 }
 
 export const NO_CLEARED_EVENT_PARTICIPATION: ClearedEventParticipation = {
@@ -29,13 +34,14 @@ export const NO_CLEARED_EVENT_PARTICIPATION: ClearedEventParticipation = {
   cancelledCitizenIds: [],
   clearedPositionCount: 0,
   deletedApplicationCount: 0,
+  withdrawnInvitations: [],
 };
 
 /**
  * The switch of the participation of an app event to false: soft-cancels
  * all active sign-ups (like a removal by a manager, the rows stay as
- * history), removes the assigned citizens of all positions and deletes all
- * applications. The positions stay. Takes the transaction client, thus the
+ * history), withdraws all open invitations, removes the assigned citizens of
+ * all positions and deletes all applications. The positions stay. Takes the transaction client, thus the
  * change of the switch and the activity entry commit together with all of
  * it.
  */
@@ -77,6 +83,12 @@ export const clearEventParticipation = async (
       },
     });
 
+  const withdrawnInvitations = await withdrawOpenInvitations(transaction, {
+    eventId,
+    withdrawnById: cancelledById,
+    withdrawnAt: cancelledAt,
+  });
+
   return {
     cancelledParticipantCount: cancelledParticipants.length,
     cancelledCitizenIds: cancelledParticipants.flatMap((participant) =>
@@ -84,5 +96,6 @@ export const clearEventParticipation = async (
     ),
     clearedPositionCount,
     deletedApplicationCount,
+    withdrawnInvitations,
   };
 };

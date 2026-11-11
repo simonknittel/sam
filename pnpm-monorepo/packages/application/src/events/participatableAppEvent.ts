@@ -12,7 +12,7 @@ import { canActorSeeEvent } from "./eventVisibility.js";
  * does not exist, is not an app event, is soft-deleted or is not visible to
  * the actor — deliberately indistinguishable cases.
  */
-const findParticipatableAppEvent = async (
+export const findParticipatableAppEvent = async (
   context: ApplicationContext,
   actor: Actor,
   eventId: string,

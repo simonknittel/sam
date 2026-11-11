@@ -1,5 +1,9 @@
 import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
+import {
+  loadOwnEventInvitation,
+  type EventInvitationDetails,
+} from "./eventInvitationRows.js";
 import { isLineupVisible } from "./eventManageRules.js";
 import { requireVisibleEvent } from "./findVisibleEvent.js";
 
@@ -35,11 +39,14 @@ export interface OwnEventParticipation {
   readonly hasCancelledParticipation: boolean;
   /** Empty when the actor cannot see the lineup */
   readonly assignedPositions: AssignedEventPosition[];
+  /** The latest invitation of the citizen of the actor to the event, or null */
+  readonly invitation: EventInvitationDetails | null;
 }
 
 const NO_PARTICIPATION: OwnEventParticipation = {
   hasCancelledParticipation: false,
   assignedPositions: [],
+  invitation: null,
 };
 
 /**
@@ -63,41 +70,43 @@ export const findOwnEventParticipation = async (
   const citizenId = actor.citizen?.id ?? null;
   if (citizenId === null) return NO_PARTICIPATION;
 
-  const [cancelledParticipation, assignedPositions] = await Promise.all([
-    context.prisma.eventParticipant.findFirst({
-      where: {
-        eventId: event.id,
-        citizenId,
-        cancelledAt: { not: null },
-      },
-      select: { id: true },
-    }),
-    isLineupVisible(actor, event)
-      ? context.prisma.eventPosition.findMany({
-          where: {
-            eventId: event.id,
-            citizenId,
-          },
-          orderBy: { order: "asc" },
-          select: {
-            id: true,
-            name: true,
-            description: true,
-            requiredVariants: {
-              orderBy: { order: "asc" },
-              select: {
-                id: true,
-                variant: {
-                  select: {
-                    id: true,
-                    name: true,
-                    series: {
-                      select: {
-                        manufacturer: {
-                          select: {
-                            id: true,
-                            name: true,
-                            image: { select: { id: true, mimeType: true } },
+  const [cancelledParticipation, assignedPositions, invitation] =
+    await Promise.all([
+      context.prisma.eventParticipant.findFirst({
+        where: {
+          eventId: event.id,
+          citizenId,
+          cancelledAt: { not: null },
+        },
+        select: { id: true },
+      }),
+      isLineupVisible(actor, event)
+        ? context.prisma.eventPosition.findMany({
+            where: {
+              eventId: event.id,
+              citizenId,
+            },
+            orderBy: { order: "asc" },
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              requiredVariants: {
+                orderBy: { order: "asc" },
+                select: {
+                  id: true,
+                  variant: {
+                    select: {
+                      id: true,
+                      name: true,
+                      series: {
+                        select: {
+                          manufacturer: {
+                            select: {
+                              id: true,
+                              name: true,
+                              image: { select: { id: true, mimeType: true } },
+                            },
                           },
                         },
                       },
@@ -106,13 +115,14 @@ export const findOwnEventParticipation = async (
                 },
               },
             },
-          },
-        })
-      : [],
-  ]);
+          })
+        : [],
+      loadOwnEventInvitation(context.prisma, event.id, citizenId),
+    ]);
 
   return {
     hasCancelledParticipation: cancelledParticipation !== null,
     assignedPositions,
+    invitation,
   };
 };

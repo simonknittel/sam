@@ -61,6 +61,25 @@ export interface EventActivityPayloadByType {
     enabled: boolean;
     cancelledParticipantCount: number;
   };
+  /**
+   * The invitations follow the convention of the manager-driven changes: the
+   * row's citizen column holds the acting manager, the payload the invited
+   * citizen. The answers are the own changes of the invited citizen.
+   */
+  [EventActivityType.INVITATION_CREATED]: {
+    citizenId: string;
+    message: string | null;
+  };
+  /** The comment of the sign-up that accepted the invitation */
+  [EventActivityType.INVITATION_ACCEPTED]: {
+    comment: string | null;
+  };
+  [EventActivityType.INVITATION_DECLINED]: {
+    comment: string | null;
+  };
+  [EventActivityType.INVITATION_WITHDRAWN]: {
+    citizenId: string;
+  };
 }
 
 /**

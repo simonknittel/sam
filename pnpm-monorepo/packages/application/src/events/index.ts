@@ -1,5 +1,8 @@
 /** The use cases of the events, with the event rules that the app and the other groups share */
-export { findAddableEventParticipantIds } from "./addableParticipants.js";
+export {
+  findAddableEventParticipants,
+  type AddableEventParticipants,
+} from "./addableParticipants.js";
 export {
   addEventManagers,
   addEventManagersInputSchema,
@@ -11,6 +14,12 @@ export {
   type AddEventParticipantsInput,
   type AddEventParticipantsOutput,
 } from "./addEventParticipants.js";
+export {
+  acceptEventInvitation,
+  answerEventInvitationInputSchema,
+  declineEventInvitation,
+  type AnswerEventInvitationInput,
+} from "./answerEventInvitation.js";
 export {
   cancelEventParticipation,
   cancelEventParticipationInputSchema,
@@ -52,6 +61,13 @@ export {
 } from "./eventDiscordPublication.js";
 export { EventErrorMessage } from "./eventErrors.js";
 export {
+  findEventInvitationRows,
+  findOwnEventInvitationState,
+  type EventInvitationDetails,
+  type EventInvitationRow,
+  type OwnEventInvitationState,
+} from "./eventInvitationRows.js";
+export {
   isAllowedToManageEvent,
   isAllowedToManagePositions,
   isEventUpdatable,
@@ -87,10 +103,17 @@ export { findVisibleEvent } from "./findVisibleEvent.js";
 export {
   getEvent,
   getEventInputSchema,
+  type EventInvitationEntry,
   type EventParticipantEntry,
   type GetEventInput,
   type GetEventOutput,
 } from "./getEvent.js";
+export {
+  inviteEventParticipants,
+  inviteEventParticipantsInputSchema,
+  type InviteEventParticipantsInput,
+  type InviteEventParticipantsOutput,
+} from "./inviteEventParticipants.js";
 export {
   EventListStatus,
   EventParticipationFilter,
@@ -148,3 +171,9 @@ export {
   type UpdateEventOutput,
 } from "./updateEvent.js";
 export { updateEventParticipationComment } from "./updateEventParticipationComment.js";
+export {
+  withdrawEventInvitations,
+  withdrawEventInvitationsInputSchema,
+  type WithdrawEventInvitationsInput,
+  type WithdrawEventInvitationsOutput,
+} from "./withdrawEventInvitations.js";
