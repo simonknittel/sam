@@ -5,8 +5,10 @@ import { VariantWikiSidebar } from "@/modules/wiki/components/VariantWikiSidebar
 import type { SearchParams } from "nuqs/server";
 import type { ReactNode } from "react";
 import { FaSitemap } from "react-icons/fa";
+import { getCanLinkVariantWikiPage } from "../queries/canLinkVariantWikiPage";
 import { VariantDetailHeader, type VariantDetail } from "./VariantDetailHeader";
 import { VariantShipsTile } from "./VariantShipsTile";
+import { VariantWikiPagePrompt } from "./VariantWikiPagePrompt";
 
 interface Props {
   readonly variant: VariantDetail;
@@ -32,16 +34,24 @@ export const VariantDetailFrame = async ({
   searchParams,
 }: Props) => {
   const authentication = await requireAuthenticationPage();
-  const hasOtherShipsRead = await authentication.authorize(
-    "otherShips",
-    "read",
-  );
+  const hasWikiContent = wikiContent !== undefined && wikiContent !== null;
+  const [hasOtherShipsRead, canManageCatalog, canCreateTopLevelWikiPage] =
+    await Promise.all([
+      authentication.authorize("otherShips", "read"),
+      authentication.authorize("manufacturersSeriesAndVariants", "manage"),
+      authentication.authorize("wiki", "create"),
+    ]);
+  const showWikiPagePrompt =
+    !hasWikiContent && (await getCanLinkVariantWikiPage(variant.id));
 
   return (
     <div className="flex flex-col gap-0.5">
-      <VariantDetailHeader variant={variant} />
+      <VariantDetailHeader
+        variant={variant}
+        showSettingsLink={canManageCatalog}
+      />
 
-      {wikiContent !== undefined && wikiContent !== null && (
+      {hasWikiContent && (
         <div className="mt-2">
           <SidebarLayout
             sidebar={<VariantWikiSidebar variantId={variant.id} />}
@@ -53,6 +63,14 @@ export const VariantDetailFrame = async ({
             {wikiContent}
           </SidebarLayout>
         </div>
+      )}
+
+      {showWikiPagePrompt && (
+        <VariantWikiPagePrompt
+          className="mt-2"
+          variant={{ id: variant.id, name: variant.name }}
+          allowTopLevel={canCreateTopLevelWikiPage}
+        />
       )}
 
       {hasOtherShipsRead && (

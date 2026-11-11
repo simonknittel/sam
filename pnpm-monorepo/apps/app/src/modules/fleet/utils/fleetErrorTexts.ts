@@ -3,7 +3,7 @@ import { FleetCatalogErrorMessage } from "@sam-monorepo/application";
 
 /**
  * The texts of the create and the update actions of the catalog for the
- * names that exist already and for the links of a variant
+ * names that exist already, and for the links and the wiki page of a variant
  */
 export const FLEET_ERROR_TEXTS = {
   [FleetCatalogErrorMessage.ManufacturerNameTaken]:
@@ -14,6 +14,10 @@ export const FLEET_ERROR_TEXTS = {
     "Eine Variante mit diesem Namen existiert in dieser Serie bereits.",
   [FleetCatalogErrorMessage.DuplicateLinkService]:
     "Jeder Dienst kann nur einen Link haben.",
+  [FleetCatalogErrorMessage.WikiPageNotReadable]:
+    "Die Wiki-Seite existiert nicht mehr oder ist für dich nicht sichtbar.",
+  [FleetCatalogErrorMessage.VariantWikiPageLinked]:
+    "Die Variante hat bereits eine Wiki-Seite. Die Seite ist jetzt aktuell.",
 } satisfies ApplicationErrorTexts;
 
 /**

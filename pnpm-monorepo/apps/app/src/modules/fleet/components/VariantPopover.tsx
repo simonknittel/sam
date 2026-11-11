@@ -3,6 +3,7 @@
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { ProfileAttribute } from "@/modules/citizen/components/ProfileAttribute";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Link } from "@/modules/common/components/Link";
 import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import { api } from "@/trpc/react";
@@ -11,9 +12,10 @@ import {
   type Ship,
   type Variant,
 } from "@sam-monorepo/database/browser";
+import { getVariantWikiRootPath } from "@sam-monorepo/domain";
 import { useState, type ReactNode } from "react";
 import { BsExclamationOctagonFill } from "react-icons/bs";
-import { FaCog, FaRegCheckCircle } from "react-icons/fa";
+import { FaBookOpen, FaCog, FaRegCheckCircle } from "react-icons/fa";
 import { FaRegCircleXmark } from "react-icons/fa6";
 import {
   ManufacturerLogo,
@@ -113,6 +115,20 @@ export const VariantPopover = ({
             )}
           </div>
         </div>
+
+        {/* The variant page shows the wiki page: this link makes it visible */}
+        {details?.hasWikiPage && (
+          <Button2
+            as={Link}
+            href={getVariantWikiRootPath(variant.id)}
+            variant={Button2Variant.Secondary}
+            className="ml-auto shrink-0"
+            prefetch={false}
+          >
+            <FaBookOpen />
+            Wiki
+          </Button2>
+        )}
       </div>
 
       {details && details.tags.length > 0 && (
