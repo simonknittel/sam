@@ -53,6 +53,22 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-11-11-event-einladungen",
+    date: "2026-11-11",
+    title: "Einladungen zu Events",
+    tags: ["Neu", "Events"],
+    isTracked: false,
+    body: () => (
+      <p>
+        Manager können Citizen jetzt zu einem Event einladen, mit einer
+        optionalen Nachricht. Die Einladung nimmst du in der Benachrichtigung
+        oder in der Kachel &bdquo;Meine Teilnahme&ldquo; an oder lehnst sie mit
+        einem Kommentar ab.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-11-09-mcp-schiffsmodelle",
     date: "2026-11-09",
     title: "Schiffsmodelle über MCP",
