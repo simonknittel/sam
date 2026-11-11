@@ -85,6 +85,7 @@ model Event {
   /// switch to false cancels the sign-ups and clears the lineup
   /// assignments and applications.
   participationEnabled Boolean            @default(true)
+  invitations          EventInvitation[]
   managers             Citizen[]          @relation("eventManagers")
   activities           EventActivity[]
 
@@ -145,6 +146,42 @@ model EventParticipant {
   @@index([discordUserId])
 }
 
+/// The invitation of a manager to a citizen to sign up for an app event. The
+/// citizen accepts it with a sign-up or declines it. A manager can withdraw
+/// it. An invitation is open while `acceptedAt`, `declinedAt` and
+/// `withdrawnAt` are NULL; a CHECK constraint permits at most one of them
+/// (see the migration event_invitations). Like the participations, the rows
+/// stay as history, and a new invitation creates a new row.
+model EventInvitation {
+  id        String  @id @default(cuid(2))
+  eventId   String
+  event     Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  citizenId String
+  citizen   Citizen @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
+
+  /// The note of the manager to the citizen
+  message String?
+
+  createdAt      DateTime  @default(now()) @db.Timestamptz(3)
+  createdById    String?
+  createdBy      Citizen?  @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedAt      DateTime  @updatedAt @db.Timestamptz(3)
+  /// The sign-up of the citizen accepted the invitation
+  acceptedAt     DateTime? @db.Timestamptz(3)
+  declinedAt     DateTime? @db.Timestamptz(3)
+  /// The note of the citizen to the managers when they decline
+  declineComment String?
+  /// A manager withdrew the invitation, added the citizen directly or turned
+  /// off the participation of the event
+  withdrawnAt    DateTime? @db.Timestamptz(3)
+  withdrawnById  String?
+  withdrawnBy    Citizen?  @relation("withdrawnBy", fields: [withdrawnById], references: [id], onDelete: SetNull)
+
+  /// At most one open invitation for each citizen and event
+  @@unique([eventId, citizenId], map: "EventInvitation_open_key", where: { acceptedAt: null, declinedAt: null, withdrawnAt: null })
+  @@index([citizenId])
+}
+
 /// The in-event activity feed of app events, visible to everyone who can
 /// see the event — deliberately separate from the admin-gated, immutable
 /// AuditEvent system log. "Event start"/"event end" entries are rendered
@@ -163,6 +200,10 @@ enum EventActivityType {
   MANAGER_REMOVED
   LINEUP_TOGGLED
   PARTICIPATION_TOGGLED
+  INVITATION_CREATED
+  INVITATION_ACCEPTED
+  INVITATION_DECLINED
+  INVITATION_WITHDRAWN
 }
 
 model EventActivity {
