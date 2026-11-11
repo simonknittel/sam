@@ -257,7 +257,7 @@ test("a manager invites a citizen with a message, and the citizen accepts on the
   await expect(acceptedRow).toContainText("Mit der Gladius.");
 });
 
-test("an invited citizen declines in the notification center with a comment, and the manager sees it", async ({
+test("an invited citizen declines from the notification with a comment, and the manager sees it", async ({
   page,
   prisma,
   signIn,
@@ -307,11 +307,21 @@ test("an invited citizen declines in the notification center with a comment, and
   await expect(row).toContainText(
     'absage-manager hat dich zum Event "Operation Absage" eingeladen.',
   );
-  await row.getByRole("button", { name: "Ablehnen" }).click();
-  await fillUntilValue(row.getByLabel("Kommentar"), "Da bin ich im Urlaub.");
-  await row.getByRole("button", { name: "Ablehnen" }).click();
+  /** The buttons of the notification open the participation modal */
+  const answerModal = modal(page, "Teilnahme - Operation Absage");
+  await clickUntilVisible(
+    row.getByRole("button", { name: "Ablehnen" }),
+    answerModal,
+  );
+  await expect(answerModal.getByText("Kommst du mit?")).toBeVisible();
+  await fillUntilValue(
+    answerModal.getByLabel("Kommentar"),
+    "Da bin ich im Urlaub.",
+  );
+  await answerModal.getByRole("button", { name: "Ablehnen" }).click();
 
   await expect(page.getByText("Einladung abgelehnt.")).toBeVisible();
+  await expect(answerModal).toHaveCount(0);
   await expect(row.getByText("Einladung: Abgelehnt")).toBeVisible();
 
   const declinedInvitation = await prisma.eventInvitation.findUniqueOrThrow({
@@ -336,6 +346,55 @@ test("an invited citizen declines in the notification center with a comment, and
     .filter({ hasText: "Einladung abgelehnt" });
   await expect(declinedRow).toContainText("absager");
   await expect(declinedRow).toContainText("Da bin ich im Urlaub.");
+});
+
+test("the status filter of the invitations shows the open or the declined invitations", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "filter-manager",
+    permissionStrings: MANAGER_PERMISSIONS,
+  });
+  const open = await createCitizen(prisma, { handle: "noch-offen" });
+  const declined = await createCitizen(prisma, { handle: "schon-abgesagt" });
+  const event = await createAppEvent(
+    prisma,
+    appEvent("Operation Filter", manager.entity.id),
+  );
+  await prisma.eventInvitation.createMany({
+    data: [
+      { eventId: event.id, citizenId: open.entity.id },
+      {
+        eventId: event.id,
+        citizenId: declined.entity.id,
+        declinedAt: new Date(),
+        declineComment: "Keine Zeit",
+      },
+    ],
+  });
+  /** The first visit of a new event refreshes the page */
+  await prisma.readMarker.create({
+    data: { citizenId: manager.entity.id, eventId: event.id },
+  });
+  const invitationRows = sectionByHeading(page, /^Einladungen/).locator(
+    "tbody tr",
+  );
+
+  await signIn(manager.user);
+  await page.goto(`/app/events/${event.id}/participants`);
+  await expect(invitationRows).toHaveCount(2);
+
+  const statusFilter = page.getByRole("radiogroup", { name: "Status" });
+  await toggleLabel(statusFilter, "Abgelehnt").click();
+  await expect(page).toHaveURL(/\?invitation_status=declined$/);
+  await expect(invitationRows).toHaveText([/schon-abgesagt/]);
+  await expect(page.getByText("Einladungen (1 von 2)")).toBeVisible();
+
+  await toggleLabel(statusFilter, "Offen").click();
+  await expect(page).toHaveURL(/\?invitation_status=open$/);
+  await expect(invitationRows).toHaveText([/noch-offen/]);
 });
 
 test("a manager withdraws an open invitation", async ({
