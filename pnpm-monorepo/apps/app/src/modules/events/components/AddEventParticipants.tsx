@@ -101,13 +101,13 @@ export const AddEventParticipants = ({ className, eventId }: Props) => {
                   value: AddMode.Invite,
                   label: "Einladen",
                   icon: <FaEnvelope />,
-                  hint: "Die Citizen bekommen eine Benachrichtigung und nehmen die Einladung an oder lehnen sie ab.",
+                  hint: "Die Citizen bekommen eine Benachrichtigung, um die Einladung anzunehmen oder abzulehnen.",
                 },
                 {
                   value: AddMode.Add,
                   label: "Direkt hinzufügen",
                   icon: <FaUserCheck />,
-                  hint: "Die Citizen werden sofort angemeldet. Eine offene Einladung wird dabei zurückgezogen.",
+                  hint: "Die Citizen werden sofort dem Event hinzugefügt.",
                 },
               ]}
               value={mode}
@@ -139,7 +139,7 @@ export const AddEventParticipants = ({ className, eventId }: Props) => {
               className="mt-4"
               name="message"
               label="Nachricht"
-              hint={`optional, max. ${EVENT_PARTICIPATION_TEXT_MAX_LENGTH} Zeichen, steht in der Benachrichtigung`}
+              hint={`optional, max. ${EVENT_PARTICIPATION_TEXT_MAX_LENGTH} Zeichen`}
               maxLength={EVENT_PARTICIPATION_TEXT_MAX_LENGTH}
               classNameTextarea="h-20"
             />
