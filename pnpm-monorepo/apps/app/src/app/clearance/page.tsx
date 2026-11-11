@@ -2,7 +2,6 @@ import { AdminToolbar } from "@/modules/admin-toolbar/components/AdminToolbar";
 import { authenticate } from "@/modules/auth/server";
 import { requireConfirmedEmailForPage } from "@/modules/auth/utils/emailConfirmation";
 import { requireTwoFactorAuthenticationForPage } from "@/modules/auth/utils/twoFactorAuthentication";
-import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { ClearanceLogout } from "@/modules/iam/components/ClearanceLogout";
 import { HumanResourcesPopover } from "@/modules/iam/components/HumanResourcesPopover";
 import { getHumanResourcesContacts } from "@/modules/iam/queries/getHumanResourcesContacts";
@@ -50,9 +49,9 @@ export default async function Page() {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center background-primary py-8">
       <main className="w-full max-w-lg">
-        <h1 className="mx-8 mb-4 text-center font-mono text-xl font-bold text-brand-red-500 uppercase">
+        <h1 className="mx-8 mb-4 text-center font-mono text-xl font-bold uppercase">
           <FaRegCheckCircle className="relative -top-0.5 inline text-green-500" />{" "}
-          <ScrambleIn text="Anmeldung erfolgreich" />
+          Anmeldung erfolgreich
         </h1>
 
         <div className="mx-4 flex flex-col gap-2 corners-secondary bg-neutral-800/50 p-4">

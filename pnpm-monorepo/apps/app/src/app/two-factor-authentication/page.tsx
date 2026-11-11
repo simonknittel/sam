@@ -38,7 +38,7 @@ export default async function Page() {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center background-primary py-8">
       <main className="w-full max-w-lg">
-        <h1 className="mx-8 mb-4 text-center text-xl font-bold text-brand-red-500">
+        <h1 className="mx-8 mb-4 text-center text-xl font-bold">
           <RiShieldKeyholeLine className="inline align-text-bottom text-2xl text-sky-500" />{" "}
           Zwei-Faktor-Authentifizierung erforderlich
         </h1>
