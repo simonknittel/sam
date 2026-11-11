@@ -27,4 +27,9 @@ export enum FleetCatalogErrorMessage {
    * never leaks
    */
   WikiPageNotReadable = "The wiki page does not exist or the actor cannot read it",
+  /**
+   * A `ConflictError`: a different user linked a wiki page to the variant
+   * after the page showed the variant without a link
+   */
+  VariantWikiPageLinked = "The variant has a linked wiki page already",
 }

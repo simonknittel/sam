@@ -2,9 +2,9 @@ import { VariantStatus } from "@sam-monorepo/database/browser";
 import type { Prisma } from "@sam-monorepo/database/client";
 import { ExternalService } from "@sam-monorepo/domain";
 import * as z from "zod";
-import type { Actor } from "../actor.js";
+import { requireCitizen, requirePermission, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
-import { ValidationError } from "../errors.js";
+import { ConflictError, NotFoundError, ValidationError } from "../errors.js";
 import { idSchema } from "../pagination.js";
 import {
   getAccessibleWikiPage,
@@ -190,6 +190,32 @@ export const syncVariantExternalLinks = async (
         },
       });
   }
+};
+
+/**
+ * The check before a first link of a wiki page to a variant: the actor
+ * manages the ship catalog, and the variant has no linked page
+ *
+ * @throws NotFoundError when the variant does not exist
+ * @throws ConflictError when the variant has a linked page already, for
+ * example from a different user
+ */
+export const requireVariantWithoutWikiPage = async (
+  context: Pick<ApplicationContext, "prisma">,
+  actor: Actor,
+  variantId: string,
+) => {
+  requirePermission(actor, "manufacturersSeriesAndVariants", "manage");
+  requireCitizen(actor);
+
+  const variant = await context.prisma.variant.findUnique({
+    where: { id: variantId },
+    select: { wikiPageId: true },
+  });
+  if (!variant)
+    throw new NotFoundError(FleetCatalogErrorMessage.VariantNotFound);
+  if (variant.wikiPageId)
+    throw new ConflictError(FleetCatalogErrorMessage.VariantWikiPageLinked);
 };
 
 /**

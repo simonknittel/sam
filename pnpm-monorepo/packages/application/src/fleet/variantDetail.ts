@@ -2,6 +2,7 @@ import type { Prisma } from "@sam-monorepo/database/client";
 import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { ForbiddenError } from "../errors.js";
+import { buildVariantWikiContext } from "../wiki/variantWikiContext.js";
 import {
   ACTIVE_OWNER_SHIP_WHERE,
   VARIANT_EXTERNAL_LINK_SELECT,
@@ -57,6 +58,57 @@ export const findVariantDetail = async (
     where: { id: variantId },
     select: VARIANT_DETAIL_SELECT,
   });
+};
+
+export interface VariantPopoverDetail extends VariantDetailRow {
+  /** Whether the variant page embeds a wiki page that the actor can read */
+  readonly hasWikiPage: boolean;
+}
+
+/**
+ * The details of the variant popover, or null when the variant does not
+ * exist. Like the variant page, the popover never tells about a linked page
+ * that the actor cannot read.
+ *
+ * @throws ForbiddenError when the actor cannot see the variant pages
+ */
+export const findVariantPopoverDetail = async (
+  context: ApplicationContext,
+  actor: Actor,
+  { variantId }: { readonly variantId: string },
+): Promise<VariantPopoverDetail | null> => {
+  const [variant, wikiContext] = await Promise.all([
+    findVariantDetail(context, actor, { variantId }),
+    buildVariantWikiContext(context, actor, variantId),
+  ]);
+  if (!variant) return null;
+
+  return { ...variant, hasWikiPage: wikiContext !== null };
+};
+
+/**
+ * Whether the actor can link a wiki page to the variant now: the actor
+ * manages the ship catalog and the variant has no linked page. A link to a
+ * page that the actor cannot read or that is in the trash also gives false,
+ * thus the variant page never asks the actor to replace a link that the
+ * actor cannot see.
+ */
+export const canLinkVariantWikiPage = async (
+  context: Pick<ApplicationContext, "prisma">,
+  actor: Actor,
+  { variantId }: { readonly variantId: string },
+): Promise<boolean> => {
+  if (
+    !actor.authorize("manufacturersSeriesAndVariants", "manage") ||
+    actor.citizen === null
+  )
+    return false;
+
+  const variant = await context.prisma.variant.findUnique({
+    where: { id: variantId },
+    select: { wikiPageId: true },
+  });
+  return variant?.wikiPageId === null;
 };
 
 /** A variant that embeds a wiki page */

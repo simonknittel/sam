@@ -35,6 +35,10 @@ export {
 export { createShip, createShipInputSchema } from "./createShip.js";
 export { createVariant, createVariantInputSchema } from "./createVariant.js";
 export {
+  createVariantWikiPage,
+  createVariantWikiPageInputSchema,
+} from "./createVariantWikiPage.js";
+export {
   deleteManufacturer,
   deleteManufacturerInputSchema,
 } from "./deleteManufacturer.js";
@@ -47,6 +51,10 @@ export {
   getShipVariantInputSchema,
   type ShipVariantDetailOutput,
 } from "./getShipVariant.js";
+export {
+  linkVariantWikiPage,
+  linkVariantWikiPageInputSchema,
+} from "./linkVariantWikiPage.js";
 export { listCitizenShips } from "./listCitizenShips.js";
 export { listMyShips, listMyShipsInputSchema } from "./listMyShips.js";
 export {
@@ -102,10 +110,13 @@ export {
 export { updateSeries, updateSeriesInputSchema } from "./updateSeries.js";
 export { updateVariant, updateVariantInputSchema } from "./updateVariant.js";
 export {
+  canLinkVariantWikiPage,
   findVariantBacklinks,
   findVariantDetail,
+  findVariantPopoverDetail,
   type VariantBacklinkRow,
   type VariantDetailRow,
+  type VariantPopoverDetail,
 } from "./variantDetail.js";
 export { canViewVariantPages } from "./variantPageAccess.js";
 export {
