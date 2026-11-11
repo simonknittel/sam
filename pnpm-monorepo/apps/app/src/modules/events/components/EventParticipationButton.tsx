@@ -1,11 +1,10 @@
 "use client";
 
 import { Button2 } from "@/modules/common/components/Button2";
-import Modal from "@/modules/common/components/Modal";
 import clsx from "clsx";
 import { useState } from "react";
 import { FaCheck, FaSignInAlt } from "react-icons/fa";
-import { EventParticipationControls } from "./EventParticipationControls";
+import { EventParticipationModal } from "./EventParticipationModal";
 
 interface Props {
   readonly className?: string;
@@ -48,21 +47,14 @@ export const EventParticipationButton = ({
       </Button2>
 
       {isOpen && (
-        <Modal
-          isOpen={true}
+        <EventParticipationModal
+          eventId={eventId}
+          eventName={eventName}
+          isSignedUp={isSignedUp}
+          hasCancelled={hasCancelled}
+          comment={comment}
           onRequestClose={() => setIsOpen(false)}
-          className="w-120"
-          heading={<h2>{`Teilnahme - ${eventName}`}</h2>}
-        >
-          <EventParticipationControls
-            eventId={eventId}
-            isSignedUp={isSignedUp}
-            hasCancelled={hasCancelled}
-            comment={comment}
-            participationOpen={true}
-            autoFocusComment
-          />
-        </Modal>
+        />
       )}
     </>
   );

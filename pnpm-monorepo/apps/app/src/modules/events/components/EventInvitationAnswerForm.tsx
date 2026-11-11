@@ -22,6 +22,9 @@ interface Props {
   readonly className?: string;
   readonly eventId: string;
   readonly invitation: OpenEventInvitation;
+  readonly onAnswered?: () => void;
+  /** See `EventParticipationControls` */
+  readonly autoFocusComment?: boolean;
 }
 
 /**
@@ -32,13 +35,15 @@ export const EventInvitationAnswerForm = ({
   className,
   eventId,
   invitation,
+  onAnswered,
+  autoFocusComment,
 }: Props) => {
   /**
    * The errors show as toasts: an error such as "no open invitation"
    * refreshes the page, which then shows the current state
    */
-  const accept = useAction(acceptEventInvitation);
-  const decline = useAction(declineEventInvitation);
+  const accept = useAction(acceptEventInvitation, { onSuccess: onAnswered });
+  const decline = useAction(declineEventInvitation, { onSuccess: onAnswered });
   const isPending = accept.isPending || decline.isPending;
 
   /** Controlled, see the sign-up form of `EventParticipationControls` */
@@ -67,6 +72,7 @@ export const EventInvitationAnswerForm = ({
           value={comment}
           onChange={(changeEvent) => setComment(changeEvent.target.value)}
           classNameTextarea="h-20"
+          autoFocus={autoFocusComment}
         />
 
         <div className="mt-2 flex justify-end gap-2">

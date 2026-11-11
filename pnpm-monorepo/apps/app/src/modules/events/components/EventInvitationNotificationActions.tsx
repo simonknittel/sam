@@ -1,18 +1,11 @@
 "use client";
 
-import { runAction } from "@/modules/actions/utils/runAction";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
-import { Textarea } from "@/modules/common/components/form/Textarea";
 import { api } from "@/trpc/react";
-import {
-  EVENT_PARTICIPATION_TEXT_MAX_LENGTH,
-  EventInvitationStatus,
-} from "@sam-monorepo/domain";
+import { EventInvitationStatus } from "@sam-monorepo/domain";
 import { useState } from "react";
 import { FaCheck, FaTimes } from "react-icons/fa";
-import { acceptEventInvitation } from "../actions/acceptEventInvitation";
-import { declineEventInvitation } from "../actions/declineEventInvitation";
+import { EventParticipationModal } from "./EventParticipationModal";
 
 const STATUS_LABELS: Record<EventInvitationStatus, string> = {
   [EventInvitationStatus.Open]: "Nicht mehr möglich",
@@ -21,25 +14,23 @@ const STATUS_LABELS: Record<EventInvitationStatus, string> = {
   [EventInvitationStatus.Withdrawn]: "Zurückgezogen",
 };
 
-enum AnswerAction {
-  Accept = "accept",
-  Decline = "decline",
-}
-
 interface Props {
   readonly eventId: string;
+  readonly eventName: string;
   readonly invitationId: string;
   /** Called after an answer, for example to mark the notification as read */
   readonly onAnswered: () => void;
 }
 
 /**
- * The answer to an invitation in its notification. The buttons show only
- * while the invitation can be answered, else the row shows the result. The
- * decline asks for an optional comment first.
+ * The answer to an invitation from its notification. The buttons show only
+ * while the invitation can be answered, else the row shows the result. Both
+ * buttons open the participation modal of the event, where the citizen can
+ * write a comment before the answer.
  */
 export const EventInvitationNotificationActions = ({
   eventId,
+  eventName,
   invitationId,
   onAnswered,
 }: Props) => {
@@ -47,10 +38,7 @@ export const EventInvitationNotificationActions = ({
   const { data: state } = api.events.getOwnInvitationState.useQuery({
     invitationId,
   });
-
-  const [isDeclining, setIsDeclining] = useState(false);
-  const [comment, setComment] = useState("");
-  const [pendingAction, setPendingAction] = useState<AnswerAction | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   if (!state) return null;
 
@@ -61,87 +49,49 @@ export const EventInvitationNotificationActions = ({
       </p>
     );
 
-  const answer = async (answerAction: AnswerAction) => {
-    const formData = new FormData();
-    formData.set("eventId", eventId);
-    if (answerAction === AnswerAction.Decline) formData.set("comment", comment);
-
-    setPendingAction(answerAction);
-    const response = await runAction(
-      answerAction === AnswerAction.Accept
-        ? acceptEventInvitation
-        : declineEventInvitation,
-      formData,
-    );
-    /** Also after an error: a different tab can have answered */
-    await utils.events.getOwnInvitationState.invalidate({ invitationId });
-    setPendingAction(null);
-    if (response) onAnswered();
+  /** Also after an error: a different tab can have answered */
+  const closeModal = () => {
+    setIsModalOpen(false);
+    void utils.events.getOwnInvitationState.invalidate({ invitationId });
   };
 
-  const isPending = pendingAction !== null;
-
-  /** `relative` lifts the controls above the link of the row */
-  if (isDeclining)
-    return (
-      <div className="relative mt-2">
-        <Textarea
-          name="comment"
-          label="Kommentar"
-          hint={`optional, max. ${EVENT_PARTICIPATION_TEXT_MAX_LENGTH} Zeichen`}
-          maxLength={EVENT_PARTICIPATION_TEXT_MAX_LENGTH}
-          value={comment}
-          onChange={(changeEvent) => setComment(changeEvent.target.value)}
-          classNameTextarea="h-16"
-          autoFocus
-        />
-
-        <div className="mt-2 flex justify-end gap-2">
-          <Button2
-            type="button"
-            variant={Button2Variant.Secondary}
-            onClick={() => setIsDeclining(false)}
-            disabled={isPending}
-          >
-            Abbrechen
-          </Button2>
-
-          <Button2
-            type="button"
-            onClick={() => void answer(AnswerAction.Decline)}
-            disabled={isPending}
-          >
-            {pendingAction === AnswerAction.Decline ? (
-              <AsciiSpinner />
-            ) : (
-              <FaTimes />
-            )}
-            Ablehnen
-          </Button2>
-        </div>
-      </div>
-    );
-
   return (
-    <div className="relative mt-2 flex gap-2">
-      <Button2
-        type="button"
-        variant={Button2Variant.Secondary}
-        onClick={() => setIsDeclining(true)}
-        disabled={isPending}
-      >
-        <FaTimes />
-        Ablehnen
-      </Button2>
+    <>
+      {/* `relative` lifts the buttons above the link of the row */}
+      <div className="relative mt-2 flex gap-2">
+        <Button2
+          type="button"
+          variant={Button2Variant.Secondary}
+          onClick={() => setIsModalOpen(true)}
+        >
+          <FaTimes />
+          Ablehnen
+        </Button2>
 
-      <Button2
-        type="button"
-        onClick={() => void answer(AnswerAction.Accept)}
-        disabled={isPending}
-      >
-        {pendingAction === AnswerAction.Accept ? <AsciiSpinner /> : <FaCheck />}
-        Annehmen
-      </Button2>
-    </div>
+        <Button2 type="button" onClick={() => setIsModalOpen(true)}>
+          <FaCheck />
+          Annehmen
+        </Button2>
+      </div>
+
+      {isModalOpen && (
+        <EventParticipationModal
+          eventId={eventId}
+          eventName={eventName}
+          isSignedUp={false}
+          hasCancelled={false}
+          comment={null}
+          openInvitation={{
+            message: state.message,
+            invitedBy: state.invitedBy,
+          }}
+          onInvitationAnswered={() => {
+            closeModal();
+            onAnswered();
+          }}
+          onRequestClose={closeModal}
+        />
+      )}
+    </>
   );
 };

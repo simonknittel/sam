@@ -24,7 +24,7 @@ import {
   type OpenEventInvitation,
 } from "./EventInvitationAnswerForm";
 
-interface Props {
+export interface EventParticipationControlsProps {
   readonly className?: string;
   readonly eventId: string;
   readonly isSignedUp: boolean;
@@ -35,6 +35,8 @@ interface Props {
   readonly openInvitation?: OpenEventInvitation | null;
   /** True when the latest invitation of the viewer is declined */
   readonly hasDeclinedInvitation?: boolean;
+  /** Called after the viewer accepted or declined the open invitation */
+  readonly onInvitationAnswered?: () => void;
   /**
    * Only the sign-up dialog sets this. On the event page, the focus would
    * scroll the page and open the keyboard of a phone.
@@ -51,8 +53,9 @@ export const EventParticipationControls = ({
   participationOpen,
   openInvitation = null,
   hasDeclinedInvitation = false,
+  onInvitationAnswered,
   autoFocusComment,
-}: Props) => {
+}: EventParticipationControlsProps) => {
   /**
    * The errors show as toasts, not in the forms: an error such as "already
    * signed up" refreshes the page, which then shows the other form.
@@ -133,6 +136,8 @@ export const EventParticipationControls = ({
         <EventInvitationAnswerForm
           eventId={eventId}
           invitation={openInvitation}
+          onAnswered={onInvitationAnswered}
+          autoFocusComment={autoFocusComment}
           className="mt-2"
         />
       )}

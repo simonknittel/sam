@@ -65,6 +65,7 @@ interface OnSiteNotificationRendering {
   /** The invitation which the row lets the citizen answer */
   readonly eventInvitation?: {
     readonly eventId: string;
+    readonly eventName: string;
     readonly invitationId: string;
   };
 }
@@ -216,6 +217,7 @@ export const renderOnSiteNotification = (
         decoration: null,
         eventInvitation: {
           eventId: parsed.payload.eventId,
+          eventName: parsed.payload.eventName,
           invitationId: parsed.payload.invitationId,
         },
       };

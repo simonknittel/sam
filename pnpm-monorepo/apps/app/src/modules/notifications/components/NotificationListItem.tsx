@@ -98,6 +98,7 @@ export const NotificationListItem = ({
       {rendering.eventInvitation && (
         <EventInvitationNotificationActions
           eventId={rendering.eventInvitation.eventId}
+          eventName={rendering.eventInvitation.eventName}
           invitationId={rendering.eventInvitation.invitationId}
           onAnswered={() => {
             if (isUnread) onMarkRead(notification);
