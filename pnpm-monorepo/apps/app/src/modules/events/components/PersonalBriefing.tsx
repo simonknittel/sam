@@ -3,6 +3,7 @@ import { Tile, TileVariant } from "@/modules/common/components/Tile";
 import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
 import type { EventDetails } from "@sam-monorepo/application";
 import { EventSource } from "@sam-monorepo/database/client";
+import { EventInvitationStatus } from "@sam-monorepo/domain";
 import { FaCheck, FaTimes } from "react-icons/fa";
 import { getOwnEventParticipation } from "../queries/getOwnEventParticipation";
 import { EventParticipationControls } from "./EventParticipationControls";
@@ -31,7 +32,7 @@ export const PersonalBriefing = async ({ className, event }: Props) => {
           participant.discordUserId === discordUserId),
     ) ?? null;
 
-  const { assignedPositions, ...ownParticipation } =
+  const { assignedPositions, invitation, ...ownParticipation } =
     await getOwnEventParticipation(event.id);
   /**
    * Only the viewer's own state distinguishes "cancelled" from "never
@@ -77,6 +78,18 @@ export const PersonalBriefing = async ({ className, event }: Props) => {
           comment={activeParticipation?.comment ?? null}
           participationOpen={
             event.endTime !== null && event.endTime > new Date()
+          }
+          /** Only the fields of the form reach the browser */
+          openInvitation={
+            invitation?.status === EventInvitationStatus.Open
+              ? {
+                  message: invitation.message,
+                  invitedBy: invitation.invitedBy,
+                }
+              : null
+          }
+          hasDeclinedInvitation={
+            invitation?.status === EventInvitationStatus.Declined
           }
         />
       )}

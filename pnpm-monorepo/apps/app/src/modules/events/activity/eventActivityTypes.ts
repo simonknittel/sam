@@ -29,6 +29,10 @@ export const EVENT_ACTIVITY_TYPE_LABELS: Record<EventActivityType, string> = {
   [EventActivityType.MANAGER_REMOVED]: "Manager entfernt",
   [EventActivityType.LINEUP_TOGGLED]: "Aufstellung",
   [EventActivityType.PARTICIPATION_TOGGLED]: "Teilnahme",
+  [EventActivityType.INVITATION_CREATED]: "Einladung",
+  [EventActivityType.INVITATION_ACCEPTED]: "Einladung angenommen",
+  [EventActivityType.INVITATION_DECLINED]: "Einladung abgelehnt",
+  [EventActivityType.INVITATION_WITHDRAWN]: "Einladung zurückgezogen",
 };
 
 export const EVENT_SCHEDULE_TYPE_LABEL = "Beginn/Ende";

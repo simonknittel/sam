@@ -5,14 +5,24 @@ import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import { SubmitButton } from "@/modules/common/components/SubmitButton";
+import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import { api } from "@/trpc/react";
 import type { Event } from "@sam-monorepo/database/browser";
 import { EVENT_PARTICIPATION_TEXT_MAX_LENGTH } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { useState } from "react";
-import { FaPlus, FaSave } from "react-icons/fa";
+import { FaEnvelope, FaPlus, FaUserCheck } from "react-icons/fa";
 import { addEventParticipants } from "../actions/addEventParticipants";
+import { inviteEventParticipants } from "../actions/inviteEventParticipants";
+
+enum AddMode {
+  Invite = "invite",
+  Add = "add",
+}
+
+const isAddMode = (value: string): value is AddMode =>
+  Object.values<string>(AddMode).includes(value);
 
 interface Props {
   readonly className?: string;
@@ -21,6 +31,7 @@ interface Props {
 
 export const AddEventParticipants = ({ className, eventId }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [mode, setMode] = useState(AddMode.Invite);
   const utils = api.useUtils();
 
   /**
@@ -28,24 +39,36 @@ export const AddEventParticipants = ({ className, eventId }: Props) => {
    * Resolved server-side while the modal is open so a sign-up between two
    * openings does not leave a stale option behind.
    */
-  const { isPending, data: addableCitizenIds } =
-    api.events.getAddableParticipantIds.useQuery(
+  const { isPending, data: addableParticipants } =
+    api.events.getAddableParticipants.useQuery(
       { eventId },
       {
         enabled: isOpen,
       },
     );
 
+  /** A second invitation of a citizen with an open invitation is skipped */
+  const invitedCitizenIds = new Set(addableParticipants?.invitedCitizenIds);
+  const selectableCitizenIds =
+    mode === AddMode.Invite
+      ? addableParticipants?.citizenIds.filter(
+          (citizenId) => !invitedCitizenIds.has(citizenId),
+        )
+      : addableParticipants?.citizenIds;
+
   const handleRequestClose = () => {
     setIsOpen(false);
   };
 
   const formAction = async (formData: FormData) => {
-    if (!(await runAction(addEventParticipants, formData))) return;
+    const action =
+      mode === AddMode.Invite ? inviteEventParticipants : addEventParticipants;
+    if (!(await runAction(action, formData))) return;
 
     setIsOpen(false);
-    /** Whoever was just added must not show up in the next opening */
-    await utils.events.getAddableParticipantIds.invalidate({ eventId });
+    setMode(AddMode.Invite);
+    /** Whoever was just added or invited must not show up in the next opening */
+    await utils.events.getAddableParticipants.invalidate({ eventId });
   };
 
   return (
@@ -69,7 +92,33 @@ export const AddEventParticipants = ({ className, eventId }: Props) => {
         <form action={formAction}>
           <input type="hidden" name="eventId" value={eventId} />
 
-          {isPending || !addableCitizenIds ? (
+          <div className="mb-4">
+            <RadioGroup
+              label="Art"
+              name="mode"
+              items={[
+                {
+                  value: AddMode.Invite,
+                  label: "Einladen",
+                  icon: <FaEnvelope />,
+                  hint: "Die Citizen bekommen eine Benachrichtigung und nehmen die Einladung an oder lehnen sie ab.",
+                },
+                {
+                  value: AddMode.Add,
+                  label: "Direkt hinzufügen",
+                  icon: <FaUserCheck />,
+                  hint: "Die Citizen werden sofort angemeldet. Eine offene Einladung wird dabei zurückgezogen.",
+                },
+              ]}
+              value={mode}
+              onChange={(value) => {
+                if (isAddMode(value)) setMode(value);
+              }}
+              equalWidth
+            />
+          </div>
+
+          {isPending || !selectableCitizenIds ? (
             /** Mirrors CitizenInput's own pending state, label included */
             <div>
               <span className="mb-1 block">Citizen (Handle)</span>
@@ -79,22 +128,39 @@ export const AddEventParticipants = ({ className, eventId }: Props) => {
             <CitizenInput
               name="citizenId"
               multiple
-              selectableCitizenIds={addableCitizenIds}
+              selectableCitizenIds={selectableCitizenIds}
               autoFocus
             />
           )}
 
-          <Textarea
-            className="mt-4"
-            name="comment"
-            label="Kommentar"
-            hint={`optional, max. ${EVENT_PARTICIPATION_TEXT_MAX_LENGTH} Zeichen`}
-            maxLength={EVENT_PARTICIPATION_TEXT_MAX_LENGTH}
-            classNameTextarea="h-20"
-          />
+          {mode === AddMode.Invite ? (
+            <Textarea
+              key={AddMode.Invite}
+              className="mt-4"
+              name="message"
+              label="Nachricht"
+              hint={`optional, max. ${EVENT_PARTICIPATION_TEXT_MAX_LENGTH} Zeichen, steht in der Benachrichtigung`}
+              maxLength={EVENT_PARTICIPATION_TEXT_MAX_LENGTH}
+              classNameTextarea="h-20"
+            />
+          ) : (
+            <Textarea
+              key={AddMode.Add}
+              className="mt-4"
+              name="comment"
+              label="Kommentar"
+              hint={`optional, max. ${EVENT_PARTICIPATION_TEXT_MAX_LENGTH} Zeichen`}
+              maxLength={EVENT_PARTICIPATION_TEXT_MAX_LENGTH}
+              classNameTextarea="h-20"
+            />
+          )}
 
           <div className="mt-4 flex flex-col gap-2">
-            <SubmitButton icon={<FaSave />}>Speichern</SubmitButton>
+            {mode === AddMode.Invite ? (
+              <SubmitButton icon={<FaEnvelope />}>Einladen</SubmitButton>
+            ) : (
+              <SubmitButton icon={<FaUserCheck />}>Hinzufügen</SubmitButton>
+            )}
           </div>
         </form>
       </Modal>

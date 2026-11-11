@@ -11,11 +11,13 @@ import { DELETED_CITIZEN_LABEL } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { forbidden } from "next/navigation";
 import type { SearchParams } from "nuqs/server";
+import { getEventInvitations } from "../queries/getEventInvitations";
 import { getParticipants } from "../utils/getParticipants";
 import { isAllowedToManageEvent as _isAllowedToManageEvent } from "../utils/isAllowedToManageEvent";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
 import { CreateManagers } from "./CreateManagers";
 import { DeleteManager } from "./DeleteManager";
+import { EventInvitationsTableTile } from "./EventInvitationsTableTile";
 import { ParticipantsTableFilters } from "./ParticipantsTableFilters";
 import { ParticipantsTableTile } from "./ParticipantsTableTile";
 
@@ -46,7 +48,10 @@ export const ParticipantsTab = async ({
   const canManageParticipants =
     isAppEvent && isAllowedToManageEvent && isEventUpdatable(event);
 
-  const resolvedParticipants = await getParticipants(event);
+  const [resolvedParticipants, invitations] = await Promise.all([
+    getParticipants(event),
+    getEventInvitations(event),
+  ]);
 
   return (
     <div className={clsx("flex flex-col gap-2", className)}>
@@ -136,6 +141,14 @@ export const ParticipantsTab = async ({
           searchParams={searchParams}
         />
       </SidebarLayout>
+
+      {invitations.length > 0 && (
+        <EventInvitationsTableTile
+          event={event}
+          invitations={invitations}
+          canManageParticipants={canManageParticipants}
+        />
+      )}
     </div>
   );
 };

@@ -2529,6 +2529,54 @@ export const AuditEventDefinitions: {
       `Citizen ${data.citizenId} was removed as a participant from event ${data.eventId} by a manager`,
   },
 
+  [AuditEventType.EVENT_PARTICIPANT_INVITED]: {
+    type: AuditEventType.EVENT_PARTICIPANT_INVITED,
+    app: SystemLogApp.Events,
+    data: {
+      eventId: "string",
+      citizenId: "string",
+      invitationId: "string",
+    },
+    message: (data) =>
+      `Citizen ${data.citizenId} was invited to event ${data.eventId} by a manager (invitation: ${data.invitationId})`,
+  },
+
+  [AuditEventType.EVENT_INVITATION_ACCEPTED]: {
+    type: AuditEventType.EVENT_INVITATION_ACCEPTED,
+    app: SystemLogApp.Events,
+    data: {
+      eventId: "string",
+      citizenId: "string",
+      invitationId: "string",
+    },
+    message: (data) =>
+      `Citizen ${data.citizenId} accepted the invitation to event ${data.eventId} (invitation: ${data.invitationId})`,
+  },
+
+  [AuditEventType.EVENT_INVITATION_DECLINED]: {
+    type: AuditEventType.EVENT_INVITATION_DECLINED,
+    app: SystemLogApp.Events,
+    data: {
+      eventId: "string",
+      citizenId: "string",
+      invitationId: "string",
+    },
+    message: (data) =>
+      `Citizen ${data.citizenId} declined the invitation to event ${data.eventId} (invitation: ${data.invitationId})`,
+  },
+
+  [AuditEventType.EVENT_INVITATION_WITHDRAWN]: {
+    type: AuditEventType.EVENT_INVITATION_WITHDRAWN,
+    app: SystemLogApp.Events,
+    data: {
+      eventId: "string",
+      citizenId: "string",
+      invitationId: "string",
+    },
+    message: (data) =>
+      `The invitation of citizen ${data.citizenId} to event ${data.eventId} was withdrawn (invitation: ${data.invitationId})`,
+  },
+
   [AuditEventType.CITIZENS_PER_ROLE_COUNTED]: {
     type: AuditEventType.CITIZENS_PER_ROLE_COUNTED,
     app: SystemLogApp.Statistics,

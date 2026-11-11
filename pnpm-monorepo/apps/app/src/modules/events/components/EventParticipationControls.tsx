@@ -12,7 +12,17 @@ import { updateEventParticipationComment } from "@/modules/events/actions/update
 import { EVENT_PARTICIPATION_TEXT_MAX_LENGTH } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { useState } from "react";
-import { FaCheck, FaSave, FaSignInAlt, FaTimes } from "react-icons/fa";
+import {
+  FaCheck,
+  FaEnvelope,
+  FaSave,
+  FaSignInAlt,
+  FaTimes,
+} from "react-icons/fa";
+import {
+  EventInvitationAnswerForm,
+  type OpenEventInvitation,
+} from "./EventInvitationAnswerForm";
 
 interface Props {
   readonly className?: string;
@@ -21,6 +31,10 @@ interface Props {
   readonly hasCancelled: boolean;
   readonly comment: string | null;
   readonly participationOpen: boolean;
+  /** The open invitation of the viewer, which replaces the sign-up form */
+  readonly openInvitation?: OpenEventInvitation | null;
+  /** True when the latest invitation of the viewer is declined */
+  readonly hasDeclinedInvitation?: boolean;
   /**
    * Only the sign-up dialog sets this. On the event page, the focus would
    * scroll the page and open the keyboard of a phone.
@@ -35,6 +49,8 @@ export const EventParticipationControls = ({
   hasCancelled,
   comment,
   participationOpen,
+  openInvitation = null,
+  hasDeclinedInvitation = false,
   autoFocusComment,
 }: Props) => {
   /**
@@ -72,17 +88,12 @@ export const EventParticipationControls = ({
     <div className={clsx(className)}>
       <div className="flex items-center justify-between gap-2">
         <p className="flex items-center gap-2">
-          {isSignedUp ? (
-            <>
-              <FaCheck className="text-green-500" />
-              Zugesagt
-            </>
-          ) : (
-            <>
-              <FaTimes className="text-red-500" />
-              {hasCancelled ? "Abgemeldet" : "Nicht angemeldet"}
-            </>
-          )}
+          <ParticipationState
+            isSignedUp={isSignedUp}
+            hasOpenInvitation={openInvitation !== null}
+            hasDeclinedInvitation={hasDeclinedInvitation}
+            hasCancelled={hasCancelled}
+          />
         </p>
 
         {participationOpen && isSignedUp && (
@@ -118,7 +129,15 @@ export const EventParticipationControls = ({
         </>
       )}
 
-      {participationOpen && !isSignedUp && (
+      {participationOpen && !isSignedUp && openInvitation && (
+        <EventInvitationAnswerForm
+          eventId={eventId}
+          invitation={openInvitation}
+          className="mt-2"
+        />
+      )}
+
+      {participationOpen && !isSignedUp && !openInvitation && (
         <form action={signUp.formAction} className="mt-2">
           <input type="hidden" name="eventId" value={eventId} />
 
@@ -165,5 +184,44 @@ export const EventParticipationControls = ({
         </>
       )}
     </div>
+  );
+};
+
+interface ParticipationStateProps {
+  readonly isSignedUp: boolean;
+  readonly hasOpenInvitation: boolean;
+  readonly hasDeclinedInvitation: boolean;
+  readonly hasCancelled: boolean;
+}
+
+const ParticipationState = ({
+  isSignedUp,
+  hasOpenInvitation,
+  hasDeclinedInvitation,
+  hasCancelled,
+}: ParticipationStateProps) => {
+  if (isSignedUp)
+    return (
+      <>
+        <FaCheck className="text-green-500" />
+        Zugesagt
+      </>
+    );
+
+  if (hasOpenInvitation)
+    return (
+      <>
+        <FaEnvelope className="text-yellow-500" />
+        Eingeladen
+      </>
+    );
+
+  return (
+    <>
+      <FaTimes className="text-red-500" />
+      {hasDeclinedInvitation && "Einladung abgelehnt"}
+      {!hasDeclinedInvitation &&
+        (hasCancelled ? "Abgemeldet" : "Nicht angemeldet")}
+    </>
   );
 };

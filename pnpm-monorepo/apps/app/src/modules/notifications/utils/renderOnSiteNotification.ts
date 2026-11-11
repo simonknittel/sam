@@ -4,6 +4,8 @@ import {
   getEventBriefingUpdatedText,
   getEventCreatedText,
   getEventDeletedText,
+  getEventInvitationAnsweredText,
+  getEventInvitationCreatedText,
   getEventLineupEnabledText,
   getEventManagerAddedText,
   getEventMorningReminderText,
@@ -60,6 +62,11 @@ interface OnSiteNotificationRendering {
   readonly url: string | null;
   readonly appTitle: string | null;
   readonly decoration: NotificationDecoration | null;
+  /** The invitation which the row lets the citizen answer */
+  readonly eventInvitation?: {
+    readonly eventId: string;
+    readonly invitationId: string;
+  };
 }
 
 const appTitleByNotificationTypeId = new Map<string, string>(
@@ -197,6 +204,26 @@ export const renderOnSiteNotification = (
       return {
         ...getEventParticipationRemovedText(parsed.payload),
         url: `/app/events/${parsed.payload.eventId}`,
+        appTitle,
+        decoration: null,
+      };
+
+    case "event_invitation_created":
+      return {
+        ...getEventInvitationCreatedText(parsed.payload),
+        url: `/app/events/${parsed.payload.eventId}`,
+        appTitle,
+        decoration: null,
+        eventInvitation: {
+          eventId: parsed.payload.eventId,
+          invitationId: parsed.payload.invitationId,
+        },
+      };
+
+    case "event_invitation_answered":
+      return {
+        ...getEventInvitationAnsweredText(parsed.payload),
+        url: `/app/events/${parsed.payload.eventId}/participants`,
         appTitle,
         decoration: null,
       };

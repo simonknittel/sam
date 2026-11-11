@@ -3,6 +3,7 @@
 import { Link } from "@/modules/common/components/Link";
 import { RelativeDate } from "@/modules/common/components/RelativeDate";
 import { UnreadEdge } from "@/modules/common/components/UnreadEdge";
+import { EventInvitationNotificationActions } from "@/modules/events/components/EventInvitationNotificationActions";
 import { OnSiteNotificationTab } from "@sam-monorepo/domain";
 import type { ComponentType } from "react";
 import { FaArchive, FaEnvelope, FaEnvelopeOpen, FaUndo } from "react-icons/fa";
@@ -92,6 +93,16 @@ export const NotificationListItem = ({
         <p className="mt-0.5 text-sm wrap-break-word text-neutral-300">
           {rendering.body}
         </p>
+      )}
+
+      {rendering.eventInvitation && (
+        <EventInvitationNotificationActions
+          eventId={rendering.eventInvitation.eventId}
+          invitationId={rendering.eventInvitation.invitationId}
+          onAnswered={() => {
+            if (isUnread) onMarkRead(notification);
+          }}
+        />
       )}
 
       <div className="mt-0.5 flex min-h-6 items-center justify-between gap-2">

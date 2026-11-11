@@ -1,7 +1,7 @@
 import { getApplicationContext, toActor } from "@/modules/application";
 import {
   ConflictError,
-  findAddableEventParticipantIds,
+  findAddableEventParticipants,
   idSchema,
   NotFoundError,
 } from "@sam-monorepo/application";
@@ -10,16 +10,16 @@ import * as z from "zod";
 import { protectedProcedure, toTrpcError } from "../../trpc";
 
 /**
- * The citizens the viewer may add as participants to the event. Loaded
- * lazily by the add modal, which only queries while it is open. Gated like
- * `addEventParticipants` itself, so the modal cannot enumerate a set the
- * action would refuse to act on.
+ * The citizens the viewer may add as participants to the event, and which of
+ * them have an open invitation. Loaded lazily by the add modal, which only
+ * queries while it is open. Gated like `addEventParticipants` itself, so the
+ * modal cannot enumerate a set the action would refuse to act on.
  */
-export const getAddableParticipantIds = protectedProcedure
+export const getAddableParticipants = protectedProcedure
   .input(z.object({ eventId: idSchema }))
   .query(async ({ ctx, input }) => {
     try {
-      return await findAddableEventParticipantIds(
+      return await findAddableEventParticipants(
         getApplicationContext(),
         await toActor(ctx.session),
         { eventId: input.eventId },

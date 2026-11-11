@@ -60,6 +60,11 @@ const participantRemovedPayloadSchema = z.object({
   reason: z.string().nullable(),
 });
 
+const invitationCreatedPayloadSchema = z.object({
+  citizenId: z.string(),
+  message: z.string().nullable(),
+});
+
 interface Input {
   readonly eventId: EventDetails["id"];
   readonly filters?: ActivityFilters;
@@ -298,6 +303,45 @@ const buildActivityEntry = (activity: EventActivityRow): ActivityEntry => {
         } storniert)`,
       };
     }
+
+    case EventActivityType.INVITATION_CREATED: {
+      const payload = invitationCreatedPayloadSchema.safeParse(
+        activity.payload,
+      );
+      return {
+        ...base,
+        message: "Eingeladen",
+        target: affectedCitizenTarget,
+        comment: payload.data?.message ?? null,
+      };
+    }
+
+    case EventActivityType.INVITATION_ACCEPTED: {
+      const payload = commentPayloadSchema.safeParse(activity.payload);
+      return {
+        ...base,
+        message: "Einladung angenommen",
+        target: affectedCitizenTarget,
+        comment: payload.data?.comment ?? null,
+      };
+    }
+
+    case EventActivityType.INVITATION_DECLINED: {
+      const payload = commentPayloadSchema.safeParse(activity.payload);
+      return {
+        ...base,
+        message: "Einladung abgelehnt",
+        target: affectedCitizenTarget,
+        comment: payload.data?.comment ?? null,
+      };
+    }
+
+    case EventActivityType.INVITATION_WITHDRAWN:
+      return {
+        ...base,
+        message: "Einladung zurückgezogen",
+        target: affectedCitizenTarget,
+      };
 
     default:
       throw new Error(

@@ -102,6 +102,12 @@ export const NOTIFICATIONS_APPS: NotificationApp[] = [
         category: "Events",
       },
       {
+        id: NotificationSettingType.EventInvitationCreated,
+        title: "Einladung",
+        description: "Wenn mich ein Manager zu einem Event einlädt",
+        category: "Events",
+      },
+      {
         id: NotificationSettingType.EventManagerAdded,
         title: "Als Manager eingetragen",
         description: "Wenn mich jemand als Manager eines Events einträgt",
@@ -126,6 +132,13 @@ export const NOTIFICATIONS_APPS: NotificationApp[] = [
         title: "Neue Bewerbung",
         description:
           "Nur als Manager oder Ersteller eines Events. Wenn sich jemand für einen Posten bewirbt.",
+        category: "Events",
+      },
+      {
+        id: NotificationSettingType.EventInvitationAnswered,
+        title: "Antwort auf Einladung",
+        description:
+          "Nur als Manager oder Ersteller eines Events. Wenn jemand eine Einladung annimmt oder ablehnt.",
         category: "Events",
       },
     ],

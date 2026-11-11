@@ -31,7 +31,7 @@ export const RemoveEventParticipant = ({
       action={removeEventParticipant}
       /** The removed citizen becomes addable again */
       onSuccess={() =>
-        void utils.events.getAddableParticipantIds.invalidate({ eventId })
+        void utils.events.getAddableParticipants.invalidate({ eventId })
       }
       hiddenFields={[
         { name: "eventId", value: eventId },

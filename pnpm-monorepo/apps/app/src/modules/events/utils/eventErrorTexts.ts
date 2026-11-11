@@ -38,6 +38,11 @@ export const EVENT_ERROR_TEXTS = {
   [EventErrorMessage.CitizenNotSignedUp]: "Der Citizen ist nicht angemeldet.",
   [EventErrorMessage.CitizenNotManager]:
     "Der Citizen ist kein Manager des Events.",
+  [EventErrorMessage.NoOpenInvitation]:
+    "Du hast keine offene Einladung zu diesem Event.",
+  [EventErrorMessage.CitizenNotInvited]:
+    "Der Citizen hat keine offene Einladung zu diesem Event.",
+  [EventErrorMessage.InvitationNotFound]: "Einladung nicht gefunden",
   [EventErrorMessage.EndBeforeStart]: "Das Ende muss nach dem Start liegen.",
   [EventErrorMessage.DescriptionTooLong]: DESCRIPTION_TOO_LONG_TEXT,
   [EventErrorMessage.NoVisibilityRole]: "Wähle mindestens eine Rolle aus.",

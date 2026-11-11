@@ -3,8 +3,9 @@ import { getHistory } from "./routers/citizenLog/getHistory";
 import { getAllCitizens } from "./routers/citizens/getAllCitizens";
 import { getCitizenById } from "./routers/citizens/getCitizenById";
 import { getCitizensGroupedByVisibleRoles } from "./routers/citizens/getCitizensGroupedByVisibleRoles";
-import { getAddableParticipantIds } from "./routers/events/getAddableParticipantIds";
+import { getAddableParticipants } from "./routers/events/getAddableParticipants";
 import { getAllEvents } from "./routers/events/getAllEvents";
+import { getOwnInvitationState } from "./routers/events/getOwnInvitationState";
 import { getPublishableDiscordChannels } from "./routers/events/getPublishableDiscordChannels";
 import { getUsableEventTemplates } from "./routers/events/getUsableEventTemplates";
 import { getOwnEntryHashes } from "./routers/logAnalyzer/getOwnEntryHashes";
@@ -48,8 +49,9 @@ export const appRouter = createTRPCRouter({
     getHistory,
   }),
   events: createTRPCRouter({
-    getAddableParticipantIds,
+    getAddableParticipants,
     getAllEvents,
+    getOwnInvitationState,
     getPublishableDiscordChannels,
     getUsableEventTemplates,
   }),
