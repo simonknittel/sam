@@ -92,8 +92,10 @@
     }
   ],
   "osvVulnerabilityAlerts": true,
-  "dependencyDashboardOSVVulnerabilitySummary": "all",
-  "dependencyDashboardReportAbandonment": true,
+  "dependencyDashboard": {
+    "osvVulnerabilitySummary": "all",
+    "reportAbandonment": true
+  },
   "configMigration": true,
   "prHourlyLimit": 10,
   "prConcurrentLimit": 5,
