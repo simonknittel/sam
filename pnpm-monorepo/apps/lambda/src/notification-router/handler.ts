@@ -1,5 +1,7 @@
 import type { ApplicationContext } from "@sam-monorepo/application";
 import {
+  EVENT_PARTICIPATION_TEXT_MAX_LENGTH,
+  EventInvitationAnswer,
   EventParticipationChange,
   LINEUP_MAX_POSITIONS,
   MAXIMUM_POSITION_NAME_LENGTH,
@@ -11,6 +13,8 @@ import { EventBriefingPublishedHandler } from "./type-handlers/EventBriefingPubl
 import { EventBriefingUpdatedHandler } from "./type-handlers/EventBriefingUpdated";
 import { EventCreatedHandler } from "./type-handlers/EventCreated";
 import { EventDeletedHandler } from "./type-handlers/EventDeleted";
+import { EventInvitationAnsweredHandler } from "./type-handlers/EventInvitationAnswered";
+import { EventInvitationCreatedHandler } from "./type-handlers/EventInvitationCreated";
 import { EventLineupEnabledHandler } from "./type-handlers/EventLineupEnabled";
 import { EventManagerAddedHandler } from "./type-handlers/EventManagerAdded";
 import { EventMorningReminderHandler } from "./type-handlers/EventMorningReminder";
@@ -95,6 +99,12 @@ export const notificationRouterHandler = async (
       break;
     case "EventParticipationRemoved":
       await EventParticipationRemovedHandler(context, body.payload);
+      break;
+    case "EventInvitationCreated":
+      await EventInvitationCreatedHandler(context, body.payload);
+      break;
+    case "EventInvitationAnswered":
+      await EventInvitationAnsweredHandler(context, body.payload);
       break;
     case "EventManagerAdded":
       await EventManagerAddedHandler(context, body.payload);
@@ -321,6 +331,25 @@ export const bodySchema = z.discriminatedUnion("type", [
       eventId: z.cuid(),
       citizenId: z.cuid(),
       reason: z.string().max(500).nullable(),
+    }),
+    requestId: z.cuid2(),
+  }),
+
+  z.object({
+    type: z.literal("EventInvitationCreated"),
+    payload: z.object({
+      invitationId: z.cuid2(),
+    }),
+    requestId: z.cuid2(),
+  }),
+
+  z.object({
+    type: z.literal("EventInvitationAnswered"),
+    payload: z.object({
+      eventId: z.cuid(),
+      citizenId: z.cuid(),
+      answer: z.enum(EventInvitationAnswer),
+      comment: z.string().max(EVENT_PARTICIPATION_TEXT_MAX_LENGTH).nullable(),
     }),
     requestId: z.cuid2(),
   }),
