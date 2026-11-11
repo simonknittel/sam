@@ -1,4 +1,4 @@
-import type { Prisma } from "@sam-monorepo/database/client";
+import type { Prisma, RoleAssignment } from "@sam-monorepo/database/client";
 import { EventInvitationStatus } from "@sam-monorepo/domain";
 import { requireCitizen, requirePermission, type Actor } from "../actor.js";
 import {
@@ -56,8 +56,13 @@ const toEventInvitationDetails = (
   invitedBy: invitation.createdBy,
 });
 
+/** An invited citizen with the roles for the role filter of the page */
+export interface EventInvitationCitizen extends CitizenReferenceRow {
+  readonly roleAssignments: Pick<RoleAssignment, "roleId" | "currentLevel">[];
+}
+
 export interface EventInvitationRow extends EventInvitationDetails {
-  readonly citizen: CitizenReferenceRow;
+  readonly citizen: EventInvitationCitizen;
 }
 
 /**
@@ -77,7 +82,12 @@ export const loadEventInvitationRows = async (
       orderBy: [{ citizenId: "asc" }, { createdAt: "desc" }],
       select: {
         ...EVENT_INVITATION_SELECT,
-        citizen: { select: CITIZEN_REFERENCE_SELECT },
+        citizen: {
+          select: {
+            ...CITIZEN_REFERENCE_SELECT,
+            roleAssignments: { select: { roleId: true, currentLevel: true } },
+          },
+        },
       },
     }),
     prisma.eventParticipant.findMany({
@@ -141,6 +151,10 @@ export const loadOwnEventInvitation = async (
 export interface OwnEventInvitationState {
   readonly eventId: string;
   readonly status: EventInvitationStatus;
+  /** The note of the manager */
+  readonly message: string | null;
+  /** Null when the manager has no citizen or the citizen was deleted */
+  readonly invitedBy: CitizenReferenceRow | null;
   /**
    * False when the invitation is not open, or when the event ended, is
    * deleted, turned off the participation or is not visible to the actor
@@ -169,17 +183,24 @@ export const findOwnEventInvitationState = async (
     where: { id: invitationId, citizenId },
     select: {
       eventId: true,
+      message: true,
       acceptedAt: true,
       declinedAt: true,
       withdrawnAt: true,
+      createdBy: { select: CITIZEN_REFERENCE_SELECT },
     },
   });
   if (!invitation)
     throw new NotFoundError(EventErrorMessage.InvitationNotFound);
 
-  const status = toEventInvitationStatus(invitation);
-  if (status !== EventInvitationStatus.Open)
-    return { eventId: invitation.eventId, status, isAnswerable: false };
+  const state = {
+    eventId: invitation.eventId,
+    status: toEventInvitationStatus(invitation),
+    message: invitation.message,
+    invitedBy: invitation.createdBy,
+  };
+  if (state.status !== EventInvitationStatus.Open)
+    return { ...state, isAnswerable: false };
 
   const event = await findParticipatableAppEvent(
     context,
@@ -188,8 +209,7 @@ export const findOwnEventInvitationState = async (
   );
 
   return {
-    eventId: invitation.eventId,
-    status,
+    ...state,
     isAnswerable:
       event !== null &&
       event.participationEnabled &&

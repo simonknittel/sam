@@ -63,6 +63,7 @@ export { EventErrorMessage } from "./eventErrors.js";
 export {
   findEventInvitationRows,
   findOwnEventInvitationState,
+  type EventInvitationCitizen,
   type EventInvitationDetails,
   type EventInvitationRow,
   type OwnEventInvitationState,
