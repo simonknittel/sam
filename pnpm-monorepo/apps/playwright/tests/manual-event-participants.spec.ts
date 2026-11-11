@@ -8,6 +8,7 @@ import {
   createAppEvent,
   createCitizen,
   createEvent,
+  createOnSiteNotification,
   createParticipant,
   createRole,
   createRoleTag,
@@ -27,6 +28,8 @@ import {
   pickRoles,
   rolePickerOption,
   rolePickerTag,
+  sectionByHeading,
+  toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -53,7 +56,13 @@ const pickCitizen = async (dialog: Locator, page: Page, handle: string) => {
   await expect(dialog.getByRole("link", { name: handle })).toBeVisible();
 };
 
-const openAddModal = async (page: Page) => {
+enum AddMode {
+  Invite = "Einladen",
+  Add = "Direkt hinzufügen",
+}
+
+/** The dialog opens with an invitation; a direct add needs the other choice */
+const openAddModal = async (page: Page, mode = AddMode.Add) => {
   const addModal = modal(page, "Teilnehmer hinzufügen");
   /**
    * The dialog is the click's immediate reaction — the picker inside it is
@@ -64,6 +73,8 @@ const openAddModal = async (page: Page) => {
   await expect(
     addModal.getByRole("combobox", { name: "Citizens" }),
   ).toBeVisible();
+  await toggleLabel(addModal, mode).click();
+  await expect(addModal.getByRole("radio", { name: mode })).toBeChecked();
   return addModal;
 };
 
@@ -105,7 +116,7 @@ test("a manager adds citizens with a shared comment", async ({
     addModal.getByLabel("Kommentar"),
     "Vom Manager nachgetragen",
   );
-  await addModal.getByRole("button", { name: "Speichern" }).click();
+  await addModal.getByRole("button", { name: "Hinzufügen" }).click();
 
   await expect(page.getByText("2 Teilnehmer hinzugefügt.")).toBeVisible();
   await expect(page.getByText("Teilnehmer (2)")).toBeVisible();
@@ -151,6 +162,229 @@ test("a manager adds citizens with a shared comment", async ({
   await expect(addedRow).toBeVisible();
   await expect(addedRow).toContainText("teilnehmer-manager");
   await expect(addedRow).toContainText("Vom Manager nachgetragen");
+});
+
+test("a manager invites a citizen with a message, and the citizen accepts on the event page with a comment", async ({
+  page,
+  prisma,
+  signIn,
+  switchUser,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "einlade-manager",
+    permissionStrings: MANAGER_PERMISSIONS,
+  });
+  const guest = await createCitizen(prisma, {
+    handle: "gastpilotin",
+    permissionStrings: ["event;read"],
+  });
+  const event = await createAppEvent(
+    prisma,
+    appEvent("Operation Einladung", manager.entity.id),
+  );
+
+  await signIn(manager.user);
+  await page.goto(`/app/events/${event.id}/participants`);
+
+  const inviteModal = await openAddModal(page, AddMode.Invite);
+  await pickCitizen(inviteModal, page, "gastpilotin");
+  await fillUntilValue(
+    inviteModal.getByLabel("Nachricht"),
+    "Wir brauchen dich als Pilot.",
+  );
+  await inviteModal
+    .getByRole("button", { name: "Einladen", exact: true })
+    .click();
+
+  await expect(page.getByText("1 Citizen eingeladen.")).toBeVisible();
+  await expect(page.getByText("Teilnehmer (0)")).toBeVisible();
+  await expect(
+    sectionByHeading(page, "Einladungen (1)")
+      .getByRole("row")
+      .filter({ hasText: "gastpilotin" }),
+  ).toContainText("Offen");
+
+  const invitation = await prisma.eventInvitation.findFirstOrThrow({
+    where: { eventId: event.id },
+  });
+  expect(invitation).toMatchObject({
+    citizenId: guest.entity.id,
+    createdById: manager.entity.id,
+    message: "Wir brauchen dich als Pilot.",
+    acceptedAt: null,
+    declinedAt: null,
+    withdrawnAt: null,
+  });
+
+  await switchUser(guest.user);
+  await page.goto(`/app/events/${event.id}`);
+  await waitForAppShellHydration(page);
+
+  const tile = sectionByHeading(page, "Meine Teilnahme");
+  await expect(
+    tile.getByText("Eingeladen", { exact: true }).filter({ visible: true }),
+  ).toBeVisible();
+  await expect(tile.getByText("Wir brauchen dich als Pilot.")).toBeVisible();
+  await fillUntilValue(tile.getByLabel("Kommentar"), "Mit der Gladius.");
+  await tile.getByRole("button", { name: "Annehmen" }).click();
+
+  await expect(
+    page.getByText("Einladung angenommen. Du bist angemeldet."),
+  ).toBeVisible();
+  await expect(
+    tile.getByText("Zugesagt", { exact: true }).filter({ visible: true }),
+  ).toBeVisible();
+
+  const participant = await prisma.eventParticipant.findFirstOrThrow({
+    where: { eventId: event.id, citizenId: guest.entity.id },
+  });
+  expect(participant.comment).toBe("Mit der Gladius.");
+  expect(participant.cancelledAt).toBeNull();
+  const acceptedInvitation = await prisma.eventInvitation.findUniqueOrThrow({
+    where: { id: invitation.id },
+  });
+  expect(acceptedInvitation.acceptedAt).not.toBeNull();
+
+  await page.goto(`/app/events/${event.id}/activity`);
+  const invitedRow = page.getByRole("row").filter({ hasText: "Eingeladen" });
+  await expect(invitedRow).toContainText("einlade-manager");
+  await expect(invitedRow).toContainText("gastpilotin");
+  await expect(invitedRow).toContainText("Wir brauchen dich als Pilot.");
+  const acceptedRow = page
+    .getByRole("row")
+    .filter({ hasText: "Einladung angenommen" });
+  await expect(acceptedRow).toContainText("gastpilotin");
+  await expect(acceptedRow).toContainText("Mit der Gladius.");
+});
+
+test("an invited citizen declines in the notification center with a comment, and the manager sees it", async ({
+  page,
+  prisma,
+  signIn,
+  switchUser,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "absage-manager",
+    permissionStrings: MANAGER_PERMISSIONS,
+  });
+  const guest = await createCitizen(prisma, {
+    handle: "absager",
+    permissionStrings: ["event;read"],
+  });
+  const event = await createAppEvent(
+    prisma,
+    appEvent("Operation Absage", manager.entity.id),
+  );
+  const invitation = await prisma.eventInvitation.create({
+    data: {
+      eventId: event.id,
+      citizenId: guest.entity.id,
+      createdById: manager.entity.id,
+      message: "Kommst du mit?",
+    },
+  });
+  /** The notification router does not run in the test stack */
+  await createOnSiteNotification(prisma, {
+    citizenId: guest.entity.id,
+    notificationType: "event_invitation_created",
+    payload: {
+      eventId: event.id,
+      eventName: event.name,
+      invitationId: invitation.id,
+      invitedByHandle: "absage-manager",
+      message: "Kommst du mit?",
+    },
+  });
+
+  await signIn(guest.user);
+  await page.goto("/app");
+
+  /** With an unread notification, the inbox opens by itself */
+  const row = page
+    .getByRole("dialog", { name: "Benachrichtigungen" })
+    .getByRole("listitem")
+    .filter({ hasText: "Kommst du mit?" });
+  await expect(row).toContainText(
+    'absage-manager hat dich zum Event "Operation Absage" eingeladen.',
+  );
+  await row.getByRole("button", { name: "Ablehnen" }).click();
+  await fillUntilValue(row.getByLabel("Kommentar"), "Da bin ich im Urlaub.");
+  await row.getByRole("button", { name: "Ablehnen" }).click();
+
+  await expect(page.getByText("Einladung abgelehnt.")).toBeVisible();
+  await expect(row.getByText("Einladung: Abgelehnt")).toBeVisible();
+
+  const declinedInvitation = await prisma.eventInvitation.findUniqueOrThrow({
+    where: { id: invitation.id },
+  });
+  expect(declinedInvitation.declinedAt).not.toBeNull();
+  expect(declinedInvitation.declineComment).toBe("Da bin ich im Urlaub.");
+
+  await switchUser(manager.user);
+  await page.goto(`/app/events/${event.id}/participants`);
+  const invitationRow = page.getByRole("row").filter({ hasText: "absager" });
+  await expect(invitationRow).toContainText("Abgelehnt");
+  await expect(invitationRow).toContainText("Da bin ich im Urlaub.");
+  /** A declined invitation has nothing to withdraw */
+  await expect(
+    invitationRow.getByRole("button", { name: "Zurückziehen" }),
+  ).toHaveCount(0);
+
+  await page.goto(`/app/events/${event.id}/activity`);
+  const declinedRow = page
+    .getByRole("row")
+    .filter({ hasText: "Einladung abgelehnt" });
+  await expect(declinedRow).toContainText("absager");
+  await expect(declinedRow).toContainText("Da bin ich im Urlaub.");
+});
+
+test("a manager withdraws an open invitation", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "rueckzieh-manager",
+    permissionStrings: MANAGER_PERMISSIONS,
+  });
+  const guest = await createCitizen(prisma, {
+    handle: "ausgeladener",
+    permissionStrings: ["event;read"],
+  });
+  const event = await createAppEvent(
+    prisma,
+    appEvent("Operation Ausladung", manager.entity.id),
+  );
+  const invitation = await prisma.eventInvitation.create({
+    data: {
+      eventId: event.id,
+      citizenId: guest.entity.id,
+      createdById: manager.entity.id,
+    },
+  });
+
+  await signIn(manager.user);
+  await page.goto(`/app/events/${event.id}/participants`);
+
+  const invitationRow = page
+    .getByRole("row")
+    .filter({ hasText: "ausgeladener" });
+  await expect(invitationRow).toContainText("Offen");
+  const confirmDialog = page.getByRole("alertdialog");
+  await clickUntilVisible(
+    invitationRow.getByRole("button", { name: "Zurückziehen" }),
+    confirmDialog,
+  );
+  await confirmDialog.getByRole("button", { name: "Zurückziehen" }).click();
+
+  await expect(page.getByText("Einladung zurückgezogen.")).toBeVisible();
+  await expect(page.getByText("Einladungen (1)")).toHaveCount(0);
+
+  const withdrawnInvitation = await prisma.eventInvitation.findUniqueOrThrow({
+    where: { id: invitation.id },
+  });
+  expect(withdrawnInvitation.withdrawnAt).not.toBeNull();
+  expect(withdrawnInvitation.withdrawnById).toBe(manager.entity.id);
 });
 
 /**
@@ -274,7 +508,7 @@ test("a tag in the role shortcut of the citizen picker filters the roles, and a 
     await expect(addModal.getByRole("link", { name: handle })).toHaveCount(0);
   }
 
-  await addModal.getByRole("button", { name: "Speichern" }).click();
+  await addModal.getByRole("button", { name: "Hinzufügen" }).click();
   await expect(page.getByText("2 Teilnehmer hinzugefügt.")).toBeVisible();
   const rows = await prisma.eventParticipant.findMany({
     where: { eventId: event.id },
@@ -514,7 +748,7 @@ test("adding an already signed-up citizen neither duplicates nor fails the batch
   ).toHaveCount(0);
 
   await pickCitizen(addModal, page, "noch-nicht-angemeldet");
-  await addModal.getByRole("button", { name: "Speichern" }).click();
+  await addModal.getByRole("button", { name: "Hinzufügen" }).click();
 
   await expect(page.getByText("1 Teilnehmer hinzugefügt.")).toBeVisible();
   await expect(page.getByText("Teilnehmer (2)")).toBeVisible();
@@ -610,7 +844,7 @@ test("a citizen below their role's max level is not addable to a restricted even
 
   const atMaxModal = await openAddModal(page);
   await pickCitizen(atMaxModal, page, "aufsteiger");
-  await atMaxModal.getByRole("button", { name: "Speichern" }).click();
+  await atMaxModal.getByRole("button", { name: "Hinzufügen" }).click();
 
   await expect(page.getByText("1 Teilnehmer hinzugefügt.")).toBeVisible();
 });

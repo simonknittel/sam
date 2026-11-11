@@ -304,6 +304,140 @@ test.describe("the event write tools of the MCP server", () => {
     ).toBe(2);
   });
 
+  test("a manager invites over MCP, and the citizen declines, then accepts a new invitation", async ({
+    prisma,
+    authorizeMcpClient,
+    connectMcpClient,
+  }) => {
+    const organizer = await createMcpCitizen(prisma, {
+      handle: "mcp-einladerin",
+      permissionStrings: ["event;read"],
+    });
+    const guest = await createMcpCitizen(prisma, {
+      handle: "mcp-gast",
+      permissionStrings: ["event;read"],
+    });
+    const event = await createAppEvent(prisma, {
+      name: "Konvoi mit Einladung",
+      createdById: organizer.entity.id,
+      ...futureEvent(),
+    });
+    const organizerClient = await connectMcpClient(
+      (await authorizeMcpClient(organizer.user)).accessToken,
+    );
+    const guestClient = await connectMcpClient(
+      (await authorizeMcpClient(guest.user)).accessToken,
+    );
+    const guestReference = { id: guest.entity.id, handle: "mcp-gast" };
+    const invite = {
+      event_id: event.id,
+      action: "invite",
+      citizen_ids: [guest.entity.id],
+      message: "Bist du dabei?",
+    };
+
+    expect(
+      await callForContent(
+        organizerClient,
+        "update_event_participants",
+        invite,
+      ),
+    ).toMatchObject({
+      event: {
+        participants: [],
+        invitations: [
+          {
+            citizen: guestReference,
+            status: "open",
+            message: "Bist du dabei?",
+            invited_by: { id: organizer.entity.id, handle: "mcp-einladerin" },
+          },
+        ],
+      },
+      changed_citizen_ids: [guest.entity.id],
+    });
+    // A second invitation of the same citizen is skipped
+    expect(
+      await callForContent(
+        organizerClient,
+        "update_event_participants",
+        invite,
+      ),
+    ).toMatchObject({ changed_citizen_ids: [] });
+
+    expect(
+      await callForContent(guestClient, "update_my_event_participation", {
+        event_id: event.id,
+        action: "decline_invitation",
+        comment: "Keine Zeit.",
+      }),
+    ).toMatchObject({
+      is_participating: false,
+      invitations: [
+        {
+          citizen: guestReference,
+          status: "declined",
+          decline_comment: "Keine Zeit.",
+        },
+      ],
+    });
+    expect(
+      await callForError(guestClient, "update_my_event_participation", {
+        event_id: event.id,
+        action: "accept_invitation",
+      }),
+    ).toMatch(CONFLICT_RESULT);
+
+    await callForContent(organizerClient, "update_event_participants", invite);
+    expect(
+      await callForContent(organizerClient, "update_event_participants", {
+        event_id: event.id,
+        action: "withdraw_invitation",
+        citizen_ids: [guest.entity.id],
+      }),
+    ).toMatchObject({
+      // The latest invitation of the citizen counts, thus the decline is gone
+      event: { invitations: [] },
+      changed_citizen_ids: [guest.entity.id],
+    });
+
+    await callForContent(organizerClient, "update_event_participants", invite);
+    expect(
+      await callForContent(guestClient, "update_my_event_participation", {
+        event_id: event.id,
+        action: "accept_invitation",
+        comment: "Doch Zeit.",
+      }),
+    ).toMatchObject({
+      is_participating: true,
+      participants: [{ citizen: guestReference, comment: "Doch Zeit." }],
+      invitations: [],
+    });
+
+    await expectAuditEvents(prisma, [
+      "EVENT_PARTICIPANT_INVITED",
+      "EVENT_INVITATION_DECLINED",
+      "EVENT_INVITATION_WITHDRAWN",
+      "EVENT_INVITATION_ACCEPTED",
+      "EVENT_PARTICIPATION_SIGNED_UP",
+    ]);
+    expect(
+      await prisma.eventActivity.count({
+        where: {
+          eventId: event.id,
+          type: {
+            in: [
+              EventActivityType.INVITATION_CREATED,
+              EventActivityType.INVITATION_DECLINED,
+              EventActivityType.INVITATION_WITHDRAWN,
+              EventActivityType.INVITATION_ACCEPTED,
+            ],
+          },
+        },
+      }),
+    ).toBe(6);
+  });
+
   test("update_event turns the participation off, and then the sign-up is refused", async ({
     prisma,
     authorizeMcpClient,
