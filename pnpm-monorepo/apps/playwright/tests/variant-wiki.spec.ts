@@ -64,6 +64,9 @@ const seedLinkedVariant = async (
 const sidebarSearch = (page: Page) =>
   page.getByRole("combobox", { name: "Seiten durchsuchen" });
 
+/** The heading of the prompt for the managers of the ship catalog */
+const WIKI_PAGE_PROMPT_TEXT = "Diese Variante hat noch keine Wiki-Seite";
+
 test("the linked subtree renders on the variant page, limited to the subtree", async ({
   page,
   prisma,
@@ -162,6 +165,8 @@ test("a variant without a linked page shows no wiki section", async ({
 
   await expect(page.getByTitle(variant.name, { exact: true })).toBeVisible();
   await expect(sidebarSearch(page)).toHaveCount(0);
+  // Only the managers of the ship catalog get the prompt
+  await expect(page.getByText(WIKI_PAGE_PROMPT_TEXT)).toHaveCount(0);
 
   // A readable page outside any linked subtree stays out of the embed routes
   await page.goto(
@@ -362,6 +367,99 @@ test("the update variant modal links a wiki page", async ({
 
   await page.goto(`/app/fleet/variant/${variant.id}`);
   await expect(page.getByText("Alles über die Polaris.")).toBeVisible();
+});
+
+test("the prompt on the variant page links an existing page", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "flottenchef",
+    permissionStrings: [
+      "manufacturersSeriesAndVariants;manage",
+      "orgFleet;read",
+    ],
+  });
+  const rootPage = await createWikiPage(prisma, {
+    title: "Polaris Handbuch",
+    visibility: WikiPageVisibility.PUBLIC,
+    content: wikiDocument(wikiParagraph("Alles über die Polaris.")),
+  });
+  const { manufacturer, series, variant } = await createVariant(prisma, {
+    manufacturerName: "RSI",
+    seriesName: "Polaris",
+    variantName: "Polaris",
+  });
+  await signIn(manager.user);
+
+  await page.goto(`/app/fleet/variant/${variant.id}`);
+  const mainContent = page.locator("#main-content");
+  await expect(
+    mainContent.getByRole("link", { name: "Einstellungen" }),
+  ).toHaveAttribute(
+    "href",
+    `/app/fleet/settings/manufacturer/${manufacturer.id}/series/${series.id}`,
+  );
+
+  const linkModal = modal(page, "Wiki-Seite verknüpfen");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Seite verknüpfen" }),
+    linkModal,
+  );
+  await linkModal.getByLabel("Wiki-Seite").selectOption({ value: rootPage.id });
+  await linkModal.getByRole("button", { name: "Verknüpfen" }).click();
+  await expect(linkModal).toHaveCount(0);
+
+  await expect
+    .poll(() => prisma.variant.findUniqueOrThrow({ where: { id: variant.id } }))
+    .toMatchObject({ wikiPageId: rootPage.id });
+  await expect(page.getByText("Alles über die Polaris.")).toBeVisible();
+  await expect(page.getByText(WIKI_PAGE_PROMPT_TEXT)).toHaveCount(0);
+});
+
+test("the prompt on the variant page creates and links a new page", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "flottenchef",
+    permissionStrings: [
+      "manufacturersSeriesAndVariants;manage",
+      "orgFleet;read",
+      "wiki;create",
+    ],
+  });
+  const { variant } = await createVariant(prisma, {
+    manufacturerName: "RSI",
+    seriesName: "Polaris",
+    variantName: "Polaris",
+  });
+  await signIn(manager.user);
+
+  await page.goto(`/app/fleet/variant/${variant.id}`);
+  const createModal = modal(page, "Neue Wiki-Seite");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Neue Seite" }),
+    createModal,
+  );
+  // The title starts as the name of the variant, the page at the top level
+  await expect(createModal.getByLabel("Titel")).toHaveValue(variant.name);
+  await createModal.getByRole("button", { name: "Erstellen" }).click();
+  await expect(createModal).toHaveCount(0);
+
+  await expect
+    .poll(async () => {
+      const { wikiPage } = await prisma.variant.findUniqueOrThrow({
+        where: { id: variant.id },
+        select: { wikiPage: { select: { title: true, parentId: true } } },
+      });
+      return wikiPage;
+    })
+    .toEqual({ title: variant.name, parentId: null });
+  await expect(sidebarSearch(page)).toBeVisible();
+  await expect(page.getByText(WIKI_PAGE_PROMPT_TEXT)).toHaveCount(0);
 });
 
 test("linked root pages show fleet-gated backlink chips in the global wiki", async ({

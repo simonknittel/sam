@@ -5,6 +5,8 @@ import {
   addCitizenToOrganization,
   createCitizen,
   createVariant,
+  createWikiPage,
+  WikiPageVisibility,
 } from "../fixtures/factories";
 import {
   BAD_REQUEST_TEXT,
@@ -269,7 +271,7 @@ test("the variant popover shows the custom name only for an individual ship", as
   await expect(popover).not.toContainText("Sternenfaust");
 });
 
-test("the variant popover shows the details of the variant and links its settings only for a manager", async ({
+test("the variant popover shows the details of the variant, its wiki page and only for a manager its settings", async ({
   page,
   prisma,
   signIn,
@@ -294,9 +296,14 @@ test("the variant popover shows the details of the variant and links its setting
     variantName: "Cutlass Black",
     status: VariantStatus.NOT_FLIGHT_READY,
   });
+  const wikiPage = await createWikiPage(prisma, {
+    title: "Cutlass Handbuch",
+    visibility: WikiPageVisibility.PUBLIC,
+  });
   await prisma.variant.update({
     where: { id: variant.id },
     data: {
+      wikiPageId: wikiPage.id,
       tags: { create: { key: "Rolle", value: "Fracht" } },
       externalLinks: {
         create: {
@@ -336,6 +343,9 @@ test("the variant popover shows the details of the variant and links its setting
       name: "Star Citizen Wiki",
     }),
   ).toHaveAttribute("href", "https://example.com/cutlass");
+  await expect(
+    popover.getByRole("link", { name: "Wiki", exact: true }),
+  ).toHaveAttribute("href", `/app/fleet/variant/${variant.id}`);
   await expect(
     popover.getByRole("link", { name: "Einstellungen" }),
   ).toHaveCount(0);
