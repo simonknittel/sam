@@ -10,7 +10,7 @@
     "@sam-monorepo/wiki-editor": "workspace:*",
     "csv": "6.6.4",
     "date-fns": "4.4.0",
-    "fast-xml-parser": "5.11.2",
+    "fast-xml-parser": "5.12.0",
     "sharp": "0.35.5"
   },
   "devDependencies": {
