@@ -5,6 +5,7 @@ import {
   clickUntilUrl,
   clickUntilVisible,
   collectHydrationErrors,
+  swipe,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
@@ -29,46 +30,6 @@ const controlledElement = async (toggle: Locator) => {
   const id = await toggle.getAttribute("aria-controls");
   expect(id).toBeTruthy();
   return toggle.page().locator(`[id="${id}"]`);
-};
-
-interface Point {
-  readonly x: number;
-  readonly y: number;
-}
-
-/**
- * A swipe with a finger. Playwright has no touch swipe, thus the gesture
- * goes through the Chrome DevTools Protocol (as `sortByTouch`).
- */
-const swipe = async (page: Page, from: Point, to: Point) => {
-  const session = await page.context().newCDPSession(page);
-  try {
-    await session.send("Emulation.setTouchEmulationEnabled", {
-      enabled: true,
-    });
-    await session.send("Input.dispatchTouchEvent", {
-      type: "touchStart",
-      touchPoints: [from],
-    });
-    const stepCount = 10;
-    for (let step = 1; step <= stepCount; step++) {
-      await session.send("Input.dispatchTouchEvent", {
-        type: "touchMove",
-        touchPoints: [
-          {
-            x: from.x + ((to.x - from.x) * step) / stepCount,
-            y: from.y + ((to.y - from.y) * step) / stepCount,
-          },
-        ],
-      });
-    }
-    await session.send("Input.dispatchTouchEvent", {
-      type: "touchEnd",
-      touchPoints: [],
-    });
-  } finally {
-    await session.detach();
-  }
 };
 
 test("the closed flyout is out of reach and Escape closes the open one", async ({
