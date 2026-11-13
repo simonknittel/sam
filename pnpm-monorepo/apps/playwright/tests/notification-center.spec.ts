@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { TaskRewardType, TaskVisibility } from "@sam-monorepo/database/client";
 import {
   createAppEvent,
@@ -11,6 +11,7 @@ import {
   clickUntilUrl,
   clickUntilVisible,
   sectionByHeading,
+  swipe,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
@@ -650,4 +651,83 @@ test.describe("mobile", () => {
     await expect(popover(page).getByText("Neues Event")).toBeVisible();
     await expect(unreadRowDots(page)).toHaveCount(1);
   });
+
+  test("a swipe to the right marks a notification as read, a swipe to the left archives it", async ({
+    page,
+    prisma,
+    signIn,
+  }) => {
+    const citizen = await createCitizen(prisma, { handle: "wisch-leser" });
+    const notification = await createOnSiteNotification(prisma, {
+      citizenId: citizen.entity.id,
+    });
+    await signIn(citizen.user);
+
+    await page.goto("/app");
+    await expect(page).toHaveTitle(/^\(1\)/);
+    await clickUntilVisible(
+      page.locator("nav").getByRole("button", { name: "Inbox" }),
+      popover(page).getByRole("tab", { name: "Inbox" }),
+    );
+
+    const urlBeforeSwipes = page.url();
+    const row = notificationRow(page, "Operation Testlauf");
+    await swipeAcross(row, SwipeDirection.Right);
+
+    await expect(unreadRowDots(page)).toHaveCount(0);
+    await expect(page).toHaveTitle(/^[^(]/);
+    await expect
+      .poll(async () => {
+        const storedRow = await prisma.onSiteNotification.findUnique({
+          where: { id: notification.id },
+        });
+        return storedRow?.readAt;
+      })
+      .not.toBeNull();
+    // The swipe did not open the target of the notification
+    await expect(page).toHaveURL(urlBeforeSwipes);
+
+    await swipeAcross(row, SwipeDirection.Left);
+
+    await expect(
+      popover(page).getByText("Keine Benachrichtigungen", { exact: true }),
+    ).toBeVisible();
+    await expect
+      .poll(async () => {
+        const storedRow = await prisma.onSiteNotification.findUnique({
+          where: { id: notification.id },
+        });
+        return storedRow?.archivedAt;
+      })
+      .not.toBeNull();
+  });
 });
+
+enum SwipeDirection {
+  Left = "left",
+  Right = "right",
+}
+
+/** A swipe from one side of the element to the other, at its middle */
+const swipeAcross = async (element: Locator, direction: SwipeDirection) => {
+  const box = await element.boundingBox();
+  if (!box) throw new Error("The element to swipe is not visible");
+
+  /** Inside the element, away from the edges of the viewport */
+  const inset = 40;
+  const left = { x: box.x + inset, y: box.y + box.height / 2 };
+  const right = { x: box.x + box.width - inset, y: box.y + box.height / 2 };
+
+  switch (direction) {
+    case SwipeDirection.Left:
+      await swipe(element.page(), right, left);
+      break;
+
+    case SwipeDirection.Right:
+      await swipe(element.page(), left, right);
+      break;
+
+    default:
+      throw new Error(`Unknown swipe direction: ${direction satisfies never}`);
+  }
+};
