@@ -1,5 +1,6 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Link } from "@/modules/common/components/Link";
 import Tab from "@/modules/common/components/tabs/Tab";
 import TabList from "@/modules/common/components/tabs/TabList";
@@ -9,6 +10,7 @@ import {
   useTabsContext,
 } from "@/modules/common/components/tabs/TabsContext";
 import { OnSiteNotificationTab } from "@sam-monorepo/domain";
+import { useTransition, type ReactNode } from "react";
 import { FaArchive, FaCheckDouble, FaCog } from "react-icons/fa";
 import { useOnSiteNotificationMutations } from "../hooks/useOnSiteNotificationMutations";
 import { NotificationList } from "./NotificationList";
@@ -65,26 +67,18 @@ const HeaderActions = ({ onNavigate }: HeaderActionsProps) => {
     <div className="flex items-center gap-1">
       {activeTab === OnSiteNotificationTab.Inbox && (
         <>
-          <button
-            type="button"
-            onClick={() => void markAllRead()}
+          <HeaderActionButton
+            label="Alle als gelesen markieren"
+            icon={<FaCheckDouble />}
+            onClick={markAllRead}
             disabled={unreadCount <= 0}
-            title="Alle als gelesen markieren"
-            aria-label="Alle als gelesen markieren"
-            className="p-2 text-neutral-500 transition-colors enabled:cursor-pointer enabled:hover:text-interaction-500 enabled:focus-visible:text-interaction-500 enabled:active:scale-95 disabled:opacity-50"
-          >
-            <FaCheckDouble />
-          </button>
+          />
 
-          <button
-            type="button"
-            onClick={() => void archiveAllRead()}
-            title="Gelesene archivieren"
-            aria-label="Gelesene archivieren"
-            className="cursor-pointer p-2 text-neutral-500 transition-colors hover:text-interaction-500 focus-visible:text-interaction-500 active:scale-95"
-          >
-            <FaArchive />
-          </button>
+          <HeaderActionButton
+            label="Gelesene archivieren"
+            icon={<FaArchive />}
+            onClick={archiveAllRead}
+          />
         </>
       )}
 
@@ -98,5 +92,39 @@ const HeaderActions = ({ onNavigate }: HeaderActionsProps) => {
         <FaCog />
       </Link>
     </div>
+  );
+};
+
+interface HeaderActionButtonProps {
+  readonly label: string;
+  readonly icon: ReactNode;
+  readonly onClick: () => Promise<void>;
+  readonly disabled?: boolean;
+}
+
+/**
+ * While its action runs, the button is disabled and shows a spinner. The
+ * fixed size keeps the other buttons in place when the spinner replaces the
+ * icon.
+ */
+const HeaderActionButton = ({
+  label,
+  icon,
+  onClick,
+  disabled = false,
+}: HeaderActionButtonProps) => {
+  const [isPending, startTransition] = useTransition();
+
+  return (
+    <button
+      type="button"
+      onClick={() => startTransition(onClick)}
+      disabled={disabled || isPending}
+      title={label}
+      aria-label={label}
+      className="flex size-8 items-center justify-center text-neutral-500 transition-colors enabled:cursor-pointer enabled:hover:text-interaction-500 enabled:focus-visible:text-interaction-500 enabled:active:scale-95 disabled:opacity-50"
+    >
+      {isPending ? <AsciiSpinner /> : icon}
+    </button>
   );
 };
