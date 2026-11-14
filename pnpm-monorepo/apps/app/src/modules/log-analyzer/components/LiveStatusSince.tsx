@@ -27,7 +27,7 @@ export const LiveStatusSince = ({
     <time
       dateTime={since.toISOString()}
       title={formatDate(since) || undefined}
-      className={clsx("shrink-0 font-mono text-white/40", className)}
+      className={clsx("shrink-0 font-mono text-xs text-white/40", className)}
     >
       {prefix} {formatDuration(seconds)}
     </time>
