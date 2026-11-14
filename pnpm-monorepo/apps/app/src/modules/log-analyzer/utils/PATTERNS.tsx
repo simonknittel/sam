@@ -166,7 +166,8 @@ const renderDirection = (groups: Record<string, string>) => (
 const SECONDS_PER_MINUTE = 60;
 const MINUTES_PER_HOUR = 60;
 
-const formatDuration = (seconds: number) => {
+/** A duration in whole minutes, for example `1 h 5 min` */
+export const formatDuration = (seconds: number) => {
   const totalMinutes = Math.round(seconds / SECONDS_PER_MINUTE);
   const hours = Math.floor(totalMinutes / MINUTES_PER_HOUR);
   const minutes = totalMinutes % MINUTES_PER_HOUR;

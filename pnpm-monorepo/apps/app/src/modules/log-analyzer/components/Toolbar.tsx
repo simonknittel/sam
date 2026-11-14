@@ -24,6 +24,8 @@ export const Toolbar = ({ className, onRefresh, children }: Props) => {
     isLiveModeEnabled,
     setIsLiveModeEnabled,
     isLivePaused,
+    isLiveStatusVisible,
+    setIsLiveStatusVisible,
   } = useLogAnalyzerContext();
 
   return (
@@ -98,6 +100,14 @@ export const Toolbar = ({ className, onRefresh, children }: Props) => {
         labelClassName="w-auto"
         checked={isAutostartEnabled}
         onChange={(e) => setIsAutostartEnabled(e.target.checked)}
+      />
+
+      <YesNoCheckbox
+        yesLabel={<span className="text-sm">Live-Status</span>}
+        noLabel={<span className="text-sm">Live-Status</span>}
+        labelClassName="w-auto"
+        checked={isLiveStatusVisible}
+        onChange={(event) => setIsLiveStatusVisible(event.target.checked)}
       />
 
       <OverlayButton />

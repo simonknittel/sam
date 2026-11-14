@@ -55,6 +55,8 @@ interface Context {
   readonly isLiveModeActive: boolean;
   readonly isAutostartEnabled: boolean;
   readonly setIsAutostartEnabled: Dispatch<SetStateAction<boolean>>;
+  readonly isLiveStatusVisible: boolean;
+  readonly setIsLiveStatusVisible: Dispatch<SetStateAction<boolean>>;
   readonly daysToLoad: number;
   /** `YYYY-MM-DD`, in the time zone of the table. */
   readonly today: string;
@@ -168,6 +170,11 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
     false,
   );
 
+  const [isLiveStatusVisible, setIsLiveStatusVisible] = useLocalStorage(
+    "log_analyzer_show_live_status",
+    true,
+  );
+
   /**
    * The kill switch wins over the stored settings, so that no hook uploads
    * or fetches while it is set. The stored values stay untouched: the
@@ -240,6 +247,8 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
     isLiveModeActive,
     isAutostartEnabled,
     setIsAutostartEnabled,
+    isLiveStatusVisible,
+    setIsLiveStatusVisible,
     daysToLoad,
     today,
     dateRange,
