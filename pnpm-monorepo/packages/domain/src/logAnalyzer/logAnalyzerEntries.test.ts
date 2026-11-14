@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   clampLogAnalyzerDaysToLoad,
+  collectLogAnalyzerEntryVersions,
   createLogAnalyzerEntryHash,
   LOG_ANALYZER_ENTRY_HASH_PATTERN,
   LogAnalyzerEntryType,
@@ -18,6 +19,51 @@ describe("toLogAnalyzerEntryType", () => {
 
   test("gives nothing for a type which no longer has a pattern", () => {
     expect(toLogAnalyzerEntryType("aTypeWhichWasRemoved")).toBeUndefined();
+  });
+});
+
+describe("collectLogAnalyzerEntryVersions", () => {
+  test("gives the newer versions and the oldest version of each type", () => {
+    expect(
+      collectLogAnalyzerEntryVersions({
+        versionThree: { supersedes: "versionTwo" },
+        versionOne: {},
+        versionTwo: { supersedes: "versionOne" },
+        otherType: {},
+      }),
+    ).toEqual({
+      newerVersionsByType: {
+        versionOne: ["versionThree", "versionTwo"],
+        versionTwo: ["versionThree"],
+        versionThree: [],
+        otherType: [],
+      },
+      oldestVersionByType: {
+        versionOne: "versionOne",
+        versionTwo: "versionOne",
+        versionThree: "versionOne",
+        otherType: "otherType",
+      },
+    });
+  });
+
+  test("refuses two newer versions of one type", () => {
+    expect(() =>
+      collectLogAnalyzerEntryVersions({
+        versionOne: {},
+        versionTwo: { supersedes: "versionOne" },
+        otherVersionTwo: { supersedes: "versionOne" },
+      }),
+    ).toThrow("two newer versions");
+  });
+
+  test("refuses versions which form a cycle", () => {
+    expect(() =>
+      collectLogAnalyzerEntryVersions({
+        versionOne: { supersedes: "versionTwo" },
+        versionTwo: { supersedes: "versionOne" },
+      }),
+    ).toThrow("cycle");
   });
 });
 

@@ -9,6 +9,9 @@
  * `LOG_ANALYZER_ENTRY_PATTERNS` below, and its title, icon and category in
  * `PATTERNS` of the app. Nothing else: the database keeps the value of this
  * enum verbatim, thus a new type needs no migration.
+ *
+ * Do not change or delete an existing value or its pattern. A changed pattern
+ * is a new value with a version, for example `JoinPuV2` (see `AGENTS.md`).
  */
 export enum LogAnalyzerEntryType {
   JoinPu = "joinPu",
@@ -89,6 +92,16 @@ interface LogAnalyzerEntryPattern {
    * server cannot read it from the raw line.
    */
   readonly takesTimeOfPrecedingLine?: true;
+  /**
+   * The older version of this pattern (see `AGENTS.md`). Both versions stay
+   * active, so that old log files keep their entries. For one line, only the
+   * newest version that matches gives an entry: the local parsing skips an
+   * older version when a newer version matches the same line, and a shared
+   * entry of an older version shows as the newest version that matches its
+   * raw line. Thus a new version must cover the same lines as the old
+   * version. Else a shared entry of the old version cannot move to it.
+   */
+  readonly supersedes?: LogAnalyzerEntryType;
 }
 
 /** The tag of all notifications which the game shows on the screen */
@@ -477,6 +490,75 @@ export const LOG_ANALYZER_ENTRY_PATTERNS: Record<
 export const takesTimeOfPrecedingLine = (type: LogAnalyzerEntryType) =>
   LOG_ANALYZER_ENTRY_PATTERNS[type].takesTimeOfPrecedingLine === true;
 
+/**
+ * The newer versions of each type, newest first, and the oldest version of
+ * each type, from the `supersedes` links of the patterns. Throws when two
+ * patterns supersede the same type, or when the links form a cycle, because
+ * then no version is the newest.
+ */
+export const collectLogAnalyzerEntryVersions = <Type extends string>(
+  patterns: Readonly<
+    Record<Type, { readonly supersedes?: NoInfer<Type> | undefined }>
+  >,
+) => {
+  const types = Object.keys(patterns) as Type[];
+
+  const newerVersionByType = new Map<Type, Type>();
+  for (const type of types) {
+    const olderVersion = patterns[type].supersedes;
+    if (olderVersion === undefined) continue;
+
+    const otherNewerVersion = newerVersionByType.get(olderVersion);
+    if (otherNewerVersion !== undefined) {
+      throw new Error(
+        `Log Analyzer pattern ${olderVersion} has two newer versions: ${otherNewerVersion} and ${type}`,
+      );
+    }
+    newerVersionByType.set(olderVersion, type);
+  }
+
+  const newerVersionsByType = {} as Record<Type, readonly Type[]>;
+  const oldestVersionByType = {} as Record<Type, Type>;
+  for (const type of types) {
+    const newerVersions: Type[] = [];
+    for (
+      let version = newerVersionByType.get(type);
+      version !== undefined;
+      version = newerVersionByType.get(version)
+    ) {
+      if (version === type || newerVersions.includes(version)) {
+        throw new Error(
+          `The versions of Log Analyzer pattern ${type} form a cycle`,
+        );
+      }
+      newerVersions.unshift(version);
+    }
+    newerVersionsByType[type] = newerVersions;
+
+    if (patterns[type].supersedes === undefined) {
+      oldestVersionByType[type] = type;
+      for (const version of newerVersions) oldestVersionByType[version] = type;
+    }
+  }
+
+  return { newerVersionsByType, oldestVersionByType };
+};
+
+const VERSIONS = collectLogAnalyzerEntryVersions(LOG_ANALYZER_ENTRY_PATTERNS);
+
+/** See `LogAnalyzerEntryPattern.supersedes` */
+export const getNewerLogAnalyzerEntryVersions = (type: LogAnalyzerEntryType) =>
+  VERSIONS.newerVersionsByType[type];
+
+/**
+ * The first version of the given type. It is the given type itself when the
+ * type supersedes no other type. The settings of the Log Analyzer keep one
+ * value for all versions, under the oldest version, so that a new version
+ * keeps the settings of the user.
+ */
+export const getOldestLogAnalyzerEntryVersion = (type: LogAnalyzerEntryType) =>
+  VERSIONS.oldestVersionByType[type];
+
 const ENTRY_TYPES_BY_VALUE = new Map<string, LogAnalyzerEntryType>(
   Object.values(LogAnalyzerEntryType).map((type) => [type, type]),
 );
@@ -516,6 +598,24 @@ export const matchLogAnalyzerEntryLine = (
   type: LogAnalyzerEntryType,
   rawLine: string,
 ) => SINGLE_LINE_REGEXES[type].exec(rawLine);
+
+/**
+ * Matches one raw line against the newest version of the given type that
+ * matches it (see `LogAnalyzerEntryPattern.supersedes`). Returns null when no
+ * version matches.
+ */
+export const matchNewestLogAnalyzerEntryVersion = (
+  type: LogAnalyzerEntryType,
+  rawLine: string,
+) => {
+  for (const version of getNewerLogAnalyzerEntryVersions(type)) {
+    const match = matchLogAnalyzerEntryLine(version, rawLine);
+    if (match) return { type: version, match };
+  }
+
+  const match = matchLogAnalyzerEntryLine(type, rawLine);
+  return match ? { type, match } : null;
+};
 
 /**
  * The value of `LogAnalyzerEntry.hash`. Together with the uploading citizen

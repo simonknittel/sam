@@ -7,7 +7,10 @@ import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
 import { track } from "@plausible-analytics/tracker";
-import { LogAnalyzerEntryType } from "@sam-monorepo/domain";
+import {
+  getOldestLogAnalyzerEntryVersion,
+  LogAnalyzerEntryType,
+} from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { get, set } from "idb-keyval";
 import {
@@ -131,9 +134,15 @@ export const LogAnalyzer = ({ className }: Props) => {
 
       const dateRangeRun = dateRangeRunRef.current;
 
-      /** One property: Plausible takes at most 30 for each event */
+      /**
+       * One property: Plausible takes at most 30 for each event. A type with
+       * versions counts once, under its oldest version, so that the value
+       * stays the same when a new version comes.
+       */
       const hiddenTypes = Object.values(LogAnalyzerEntryType).filter(
-        (type) => !ownEntryTypes[type],
+        (type) =>
+          getOldestLogAnalyzerEntryVersion(type) === type &&
+          !ownEntryTypes[type],
       );
 
       trackEvent("log_analyzer_parse", {

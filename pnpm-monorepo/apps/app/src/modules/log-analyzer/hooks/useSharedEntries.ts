@@ -4,7 +4,7 @@ import { getDateRangeFilter } from "@/modules/common/utils/getDateRangeFilter";
 import { api, type RouterOutputs } from "@/trpc/react";
 import {
   clampLogAnalyzerDaysToLoad,
-  matchLogAnalyzerEntryLine,
+  matchNewestLogAnalyzerEntryVersion,
   toLogAnalyzerEntryType,
 } from "@sam-monorepo/domain";
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
@@ -22,15 +22,27 @@ type SharedEntry = SharedEntriesResponse["entries"][number];
 
 /**
  * Rebuilds the capture groups and the message of a shared entry. An entry of
- * an unknown type, or a raw line which no longer matches its type, is
- * dropped — which happens when a pattern changes after the entry was shared.
+ * an older version shows as the newest version that matches its raw line.
+ * Thus it gets the key of the same line from the local parsing or from an
+ * upload of the newer version, and shows only once (see
+ * `LogAnalyzerEntryPattern.supersedes`).
+ *
+ * An entry of an unknown type, or a raw line which no longer matches its
+ * type, is dropped. This happens only when a pattern was changed or removed
+ * on an explicit request after the entry was shared (see `AGENTS.md`).
  */
 const toEntry = (row: SharedEntry, isNew: boolean): IEntry | null => {
-  const type = toLogAnalyzerEntryType(row.type);
-  if (!type) return null;
+  const storedType = toLogAnalyzerEntryType(row.type);
+  if (!storedType) return null;
 
-  const groups = matchLogAnalyzerEntryLine(type, row.rawLine)?.groups;
-  if (!groups) return null;
+  const newestVersion = matchNewestLogAnalyzerEntryVersion(
+    storedType,
+    row.rawLine,
+  );
+  const groups = newestVersion?.match.groups;
+  if (!newestVersion || !groups) return null;
+
+  const { type } = newestVersion;
 
   return {
     key: createEntryKey(type, row.rawLine),

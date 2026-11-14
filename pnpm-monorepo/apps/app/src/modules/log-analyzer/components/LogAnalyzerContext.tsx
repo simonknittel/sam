@@ -3,6 +3,7 @@
 import { useStoredValue } from "@/modules/common/utils/useStoredValue";
 import {
   getLocalDateKey,
+  getOldestLogAnalyzerEntryVersion,
   LogAnalyzerEntryType,
   ORGANIZATION_TIMEZONE,
 } from "@sam-monorepo/domain";
@@ -21,7 +22,11 @@ import {
   NO_DATE_RANGE,
   type DateRange,
 } from "../utils/entryWindow";
-import { createEntryTypeRecord, type IEntry } from "../utils/PATTERNS";
+import {
+  createEntryTypeRecord,
+  shareValueAcrossVersions,
+  type IEntry,
+} from "../utils/PATTERNS";
 import { ContractNamesContext } from "./ContractNames";
 
 type EntryTypeRecord = Record<LogAnalyzerEntryType, boolean>;
@@ -89,6 +94,10 @@ const ALL_TYPES_OFF = createEntryTypeRecord(false);
  * thus the record must change only with the stored text (see
  * `requiresFullReadRef` in `LogAnalyzer`).
  *
+ * All versions of a type share one stored value, under the oldest version
+ * (see `shareValueAcrossVersions`). Thus a new version of a pattern keeps the
+ * settings of the user.
+ *
  * The setter takes all types of a change at once: `useLocalStorage` gives each
  * update the value of the last render, thus two updates in one event would
  * overwrite each other.
@@ -98,12 +107,17 @@ const useStoredEntryTypes = (key: string, defaultValue: EntryTypeRecord) => {
     Partial<EntryTypeRecord>
   >(key, defaultValue);
 
-  const value = { ...defaultValue, ...storedValue };
+  const value = shareValueAcrossVersions({ ...defaultValue, ...storedValue });
 
   const setTypes: SetEntryTypes = (types, isEnabled) => {
     setStoredValue((previous) => ({
       ...previous,
-      ...Object.fromEntries(types.map((type) => [type, isEnabled])),
+      ...Object.fromEntries(
+        types.map((type) => [
+          getOldestLogAnalyzerEntryVersion(type),
+          isEnabled,
+        ]),
+      ),
     }));
   };
 
@@ -182,9 +196,15 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
   const setOthersEntryTypes: SetEntryTypes = (types, isEnabled) => {
     setStoredOthersEntryTypes(types, isEnabled);
 
-    /** The entries of the other citizens leave the table with the last type */
+    /**
+     * The entries of the other citizens leave the table with the last type.
+     * The versions of a changed type change with it.
+     */
+    const changedTypes = new Set(types.map(getOldestLogAnalyzerEntryVersion));
     const isAnotherTypeEnabled = Object.values(LogAnalyzerEntryType).some(
-      (otherType) => !types.includes(otherType) && othersEntryTypes[otherType],
+      (otherType) =>
+        !changedTypes.has(getOldestLogAnalyzerEntryVersion(otherType)) &&
+        othersEntryTypes[otherType],
     );
     if (isEnabled || isAnotherTypeEnabled) return;
 

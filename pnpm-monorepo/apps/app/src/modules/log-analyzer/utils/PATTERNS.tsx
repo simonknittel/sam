@@ -1,5 +1,9 @@
 import type { Citizen } from "@sam-monorepo/database/browser";
-import { LogAnalyzerEntryType } from "@sam-monorepo/domain";
+import {
+  getNewerLogAnalyzerEntryVersions,
+  getOldestLogAnalyzerEntryVersion,
+  LogAnalyzerEntryType,
+} from "@sam-monorepo/domain";
 import type { ReactNode } from "react";
 import type { IconType } from "react-icons";
 import {
@@ -608,11 +612,16 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
   },
 };
 
-/** The order in which every list of the entry types shows them. */
-export const SORTED_ENTRY_TYPES = Object.values(LogAnalyzerEntryType).toSorted(
-  (first, second) =>
+/**
+ * The order in which every list of the entry types shows them. A list shows
+ * only the newest version of a type, because the settings of a version apply
+ * to all versions (see `shareValueAcrossVersions`).
+ */
+export const SORTED_ENTRY_TYPES = Object.values(LogAnalyzerEntryType)
+  .filter((type) => getNewerLogAnalyzerEntryVersions(type).length === 0)
+  .toSorted((first, second) =>
     PATTERNS[first].title.localeCompare(PATTERNS[second].title),
-);
+  );
 
 /** The entry types of each category, in the order of `SORTED_ENTRY_TYPES`. */
 export const ENTRY_TYPES_BY_CATEGORY = Object.fromEntries(
@@ -626,6 +635,21 @@ export const ENTRY_TYPES_BY_CATEGORY = Object.fromEntries(
 export const createEntryTypeRecord = (value: boolean) =>
   Object.fromEntries(
     Object.values(LogAnalyzerEntryType).map((type) => [type, value]),
+  ) as Record<LogAnalyzerEntryType, boolean>;
+
+/**
+ * The settings keep one value for all versions of a type, under the oldest
+ * version (see `getOldestLogAnalyzerEntryVersion`). This gives each version
+ * the value of its oldest version.
+ */
+export const shareValueAcrossVersions = (
+  record: Record<LogAnalyzerEntryType, boolean>,
+) =>
+  Object.fromEntries(
+    Object.values(LogAnalyzerEntryType).map((type) => [
+      type,
+      record[getOldestLogAnalyzerEntryVersion(type)],
+    ]),
   ) as Record<LogAnalyzerEntryType, boolean>;
 
 /** The parts of an entry which its pattern derives from the capture groups. */

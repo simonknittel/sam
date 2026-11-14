@@ -3,16 +3,18 @@
 /// columns: an opt-out only stops new uploads.
 ///
 /// The capture groups and the rendered message are not stored. Every viewer
-/// runs the type's regex on `rawLine` again, so one pattern change applies to
-/// the whole history at once.
+/// runs the type's regex on `rawLine` again, so a change of the presentation
+/// applies to the whole history at once. The patterns themselves do not change
+/// (see `AGENTS.md`), so that the old rows stay readable.
 model LogAnalyzerEntry {
   id        String   @id @default(cuid(2))
   /// A value of the `LogAnalyzerEntryType` enum of the domain package
   /// (`packages/domain/src/logAnalyzer/logAnalyzerEntries.ts`), for example
   /// "joinPu". The types come from the static pattern config of the Log
   /// Analyzer and are not an enum of the database, so that a new pattern
-  /// needs no migration. A value which no longer belongs to a pattern is
-  /// ignored when read, but kept, in case the pattern returns.
+  /// needs no migration. A pattern is removed only on an explicit request
+  /// (see `AGENTS.md`). A value without a pattern is then ignored when read,
+  /// but kept, in case the pattern returns.
   type      String
   /// The full log line the regex matched. Contains data of other players
   /// (nicknames, IP addresses), thus it must never be written to the logs.

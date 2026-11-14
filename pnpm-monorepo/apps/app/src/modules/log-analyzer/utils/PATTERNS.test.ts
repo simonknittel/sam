@@ -1,4 +1,5 @@
 import {
+  getOldestLogAnalyzerEntryVersion,
   LOG_ANALYZER_ENTRY_PATTERNS,
   LogAnalyzerEntryType,
   matchLogAnalyzerEntryLine,
@@ -37,7 +38,17 @@ describe("PATTERNS", () => {
   test.each(Object.values(LogAnalyzerEntryType))(
     "finds every %s sample once in a file",
     (type) => {
-      const fileContent = `${Object.values(SAMPLE_LINES).join("\r\n")}\r\n`;
+      /**
+       * The other versions of the type can match the same lines (see
+       * `LogAnalyzerEntryPattern.supersedes`), thus their samples stay out.
+       */
+      const sampleTypes = Object.values(LogAnalyzerEntryType).filter(
+        (sampleType) =>
+          sampleType === type ||
+          getOldestLogAnalyzerEntryVersion(sampleType) !==
+            getOldestLogAnalyzerEntryVersion(type),
+      );
+      const fileContent = `${sampleTypes.map((sampleType) => SAMPLE_LINES[sampleType]).join("\r\n")}\r\n`;
 
       const matches = Array.from(
         fileContent.matchAll(LOG_ANALYZER_ENTRY_PATTERNS[type].regex),
