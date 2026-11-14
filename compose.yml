@@ -4,7 +4,7 @@
 services:
 
   psql:
-    image: postgres:18.6-alpine3.23@sha256:1a0c23d53c1ad77468c8653fa6eed4f4105cfbef9e6f027bc1dfeb16949a8c29
+    image: postgres:18.7-alpine3.23@sha256:e6014245dccbc0f28b07dac8e3f793c94a18420f78690e9db547957514a524f1
     restart: no
     environment:
       POSTGRES_PASSWORD: admin
@@ -70,7 +70,7 @@ services:
   # the anonymous-read policy and the CORS rules (the browser PUTs to
   # presigned URLs cross-origin). Safe to re-run.
   rustfs-bootstrap:
-    image: amazon/aws-cli:2.39.3@sha256:d557b3524475d70dd3104cf44d96568ee3188897b73a6ece2b37aa50e1af362f
+    image: amazon/aws-cli:2.40.3@sha256:33a16c53ea442e918b58df67301ad76a8fb57082c39f7e78753b898c3f3e87c2
     restart: no
     depends_on:
       rustfs:
@@ -97,7 +97,7 @@ services:
   # `unleash` database of the psql service (see the psql-create-unleash-db
   # config).
   unleash:
-    image: unleashorg/unleash-server:8.2.1@sha256:c6eaaede7242144f1674343ccd94224dab04a48723e8d94746288741f327fd5c
+    image: unleashorg/unleash-server:8.3.1@sha256:025cd8b003a70cceb88427ca393c377ca6503a210d95fdee54d21610d51f7ed0
     restart: no
     depends_on:
       psql:
@@ -129,7 +129,7 @@ services:
   # startup so they can be toggled in the Unleash admin UI right away. Safe
   # to re-run.
   unleash-bootstrap:
-    image: unleashorg/unleash-server:8.2.1@sha256:c6eaaede7242144f1674343ccd94224dab04a48723e8d94746288741f327fd5c
+    image: unleashorg/unleash-server:8.3.1@sha256:025cd8b003a70cceb88427ca393c377ca6503a210d95fdee54d21610d51f7ed0
     restart: no
     depends_on:
       unleash:
@@ -159,7 +159,7 @@ services:
   # docs/setup-local-machine.md). Without the OTEL_* variables of the app, it
   # receives nothing and idles.
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.164.0@sha256:340c9ca6a36617084c6661bdc4f0fe92b7cda5a805d61673ec8db375fddc522b
+    image: otel/opentelemetry-collector-contrib:0.165.0@sha256:e40d61f10c9a617cca1ffd1be4d7e2b3a4b0f0001798ff07e58cabe82e618cea
     restart: no
     # The image runs as uid 10001, which cannot write to the volume below: a
     # named volume of a path that the image does not contain belongs to root.
