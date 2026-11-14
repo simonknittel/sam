@@ -23,7 +23,8 @@ type SharedEntry = SharedEntriesResponse["entries"][number];
 /**
  * Rebuilds the capture groups and the message of a shared entry. An entry of
  * an unknown type, or a raw line which no longer matches its type, is
- * dropped — which happens when a pattern changes after the entry was shared.
+ * dropped. This happens only when a pattern was changed or removed on an
+ * explicit request after the entry was shared (see `AGENTS.md`).
  */
 const toEntry = (row: SharedEntry, isNew: boolean): IEntry | null => {
   const type = toLogAnalyzerEntryType(row.type);

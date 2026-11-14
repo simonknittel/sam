@@ -9,6 +9,9 @@
  * `LOG_ANALYZER_ENTRY_PATTERNS` below, and its title, icon and category in
  * `PATTERNS` of the app. Nothing else: the database keeps the value of this
  * enum verbatim, thus a new type needs no migration.
+ *
+ * Do not change or delete an existing value or its pattern. A changed pattern
+ * is a new value with a version, for example `JoinPuV2` (see `AGENTS.md`).
  */
 export enum LogAnalyzerEntryType {
   JoinPu = "joinPu",
