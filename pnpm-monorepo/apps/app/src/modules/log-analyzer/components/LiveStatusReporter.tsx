@@ -27,7 +27,7 @@ const Presence = ({ reporter, now }: PresenceProps) => {
 
   return (
     <span
-      className={clsx("shrink-0 text-xs", {
+      className={clsx("shrink-0 font-mono text-xs", {
         "text-green-500": presence === LiveStatusPresence.Online,
         "text-amber-300": presence === LiveStatusPresence.Uncertain,
         "text-white/60": presence === LiveStatusPresence.Offline,
