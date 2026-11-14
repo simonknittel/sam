@@ -1,8 +1,6 @@
-import clsx from "clsx";
 import { FaCrown, FaPeopleGroup } from "react-icons/fa6";
 import type { LiveStatusParty } from "../utils/liveStatus";
-import { LiveStatusSince } from "./LiveStatusSince";
-import { LiveStatusUncertainLabel } from "./LiveStatusUncertainLabel";
+import { LiveStatusRow } from "./LiveStatusRow";
 
 interface Props {
   readonly party: LiveStatusParty;
@@ -13,14 +11,13 @@ export const LiveStatusPartyRow = ({ party, now }: Props) => {
   const members = party.members.join(", ");
 
   return (
-    <li className={clsx({ "opacity-60": party.isUncertain })}>
-      <div className="flex items-center gap-2">
-        <FaPeopleGroup className="shrink-0 text-white/40" aria-hidden />
-        <span className="min-w-0 flex-1 truncate">Party</span>
-        {party.isUncertain && <LiveStatusUncertainLabel />}
-        <LiveStatusSince since={party.since} now={now} />
-      </div>
-
+    <LiveStatusRow
+      icon={FaPeopleGroup}
+      label="Party"
+      since={party.since}
+      now={now}
+      isUncertain={party.isUncertain}
+    >
       {party.leader && (
         <p
           className="ml-6 flex items-center gap-1 text-xs text-white/60"
@@ -40,6 +37,6 @@ export const LiveStatusPartyRow = ({ party, now }: Props) => {
           Bekannte Mitglieder: {members}
         </p>
       )}
-    </li>
+    </LiveStatusRow>
   );
 };

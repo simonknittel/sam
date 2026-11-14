@@ -7,6 +7,7 @@ import {
 } from "../utils/liveStatus";
 import { formatShard } from "../utils/PATTERNS";
 import { LiveStatusPartyRow } from "./LiveStatusPartyRow";
+import { LiveStatusRow } from "./LiveStatusRow";
 import { LiveStatusSince } from "./LiveStatusSince";
 import { LiveStatusStateRow } from "./LiveStatusStateRow";
 
@@ -26,20 +27,28 @@ const Presence = ({ reporter, now }: PresenceProps) => {
 
   return (
     <span
-      className={clsx("flex shrink-0 items-center gap-1 text-xs", {
+      className={clsx("shrink-0 text-xs", {
         "text-green-500": presence === LiveStatusPresence.Online,
         "text-amber-300": presence === LiveStatusPresence.Uncertain,
         "text-white/60": presence === LiveStatusPresence.Offline,
       })}
     >
+      {/* `align-middle` centers the dot on the lowercase letters of the text */}
       <span
         aria-hidden
-        className={clsx("size-2 rounded-full", {
-          "bg-green-500": presence === LiveStatusPresence.Online,
-          "bg-amber-300": presence === LiveStatusPresence.Uncertain,
-          "bg-white/40": presence === LiveStatusPresence.Offline,
-        })}
-      />
+        className="relative mr-1 inline-flex size-2 align-middle"
+      >
+        {presence === LiveStatusPresence.Online && (
+          <span className="absolute inline-flex size-full animate-ping rounded-full bg-green-500 opacity-75 motion-reduce:hidden" />
+        )}
+        <span
+          className={clsx("relative inline-flex size-2 rounded-full", {
+            "bg-green-500": presence === LiveStatusPresence.Online,
+            "bg-amber-300": presence === LiveStatusPresence.Uncertain,
+            "bg-white/40": presence === LiveStatusPresence.Offline,
+          })}
+        />
+      </span>
       {PRESENCE_LABELS[presence]}
       {offlineSince && (
         <>
@@ -81,21 +90,6 @@ export const LiveStatusReporter = ({
         <Presence reporter={reporter} now={now} />
       </div>
 
-      {shardName && (
-        <p className="mt-1 flex items-center gap-2 text-white/60">
-          <FaServer className="shrink-0 text-white/40" aria-hidden />
-          <span
-            className="min-w-0 flex-1 truncate"
-            title={`Shard ${shardName} (${reporter.shard})`}
-          >
-            Shard {shardName}
-          </span>
-          {reporter.shardSince && (
-            <LiveStatusSince since={reporter.shardSince} now={now} />
-          )}
-        </p>
-      )}
-
       {reporter.isOwn && !isLiveModeActive && !isOffline && (
         <p className="mt-1 text-xs text-white/40">
           Für einen genauen Status &bdquo;Automatisch aktualisieren&ldquo;
@@ -103,8 +97,18 @@ export const LiveStatusReporter = ({
         </p>
       )}
 
-      {(reporter.states.length > 0 || reporter.party) && (
+      {(shardName || reporter.states.length > 0 || reporter.party) && (
         <ul className="mt-2 flex flex-col gap-1">
+          {shardName && (
+            <LiveStatusRow
+              icon={FaServer}
+              label="Shard"
+              value={shardName}
+              title={`Shard: ${shardName} (${reporter.shard})`}
+              since={reporter.shardSince}
+              now={now}
+            />
+          )}
           {reporter.states.map((state) => (
             <LiveStatusStateRow
               key={`${state.kind}_${state.key ?? state.label ?? ""}_${state.since.toISOString()}`}
