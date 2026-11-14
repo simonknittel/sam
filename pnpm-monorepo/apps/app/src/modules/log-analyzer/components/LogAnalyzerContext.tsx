@@ -80,6 +80,12 @@ interface Context {
   readonly entryFilterFn: (entry: IEntry) => boolean;
   readonly entries: Map<string, IEntry>;
   readonly setEntries: Dispatch<SetStateAction<Map<string, IEntry>>>;
+  /**
+   * The newest line of the own log files (see `ReadResult.newestIsoDate`).
+   * Null before the first read of a folder.
+   */
+  readonly ownLogLineAt: Date | null;
+  readonly setOwnLogLineAt: Dispatch<SetStateAction<Date | null>>;
 }
 
 const Context = createContext<Context | undefined>(undefined);
@@ -192,6 +198,7 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
   const isLiveModeActive = isLiveModeEnabled && !isLivePaused;
 
   const [entries, setEntries] = useState<Map<string, IEntry>>(new Map());
+  const [ownLogLineAt, setOwnLogLineAt] = useState<Date | null>(null);
 
   const setOthersEntryTypes: SetEntryTypes = (types, isEnabled) => {
     setStoredOthersEntryTypes(types, isEnabled);
@@ -250,6 +257,8 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
     entryFilterFn,
     entries,
     setEntries,
+    ownLogLineAt,
+    setOwnLogLineAt,
   };
 
   const contractNames = new Map<string, string>();

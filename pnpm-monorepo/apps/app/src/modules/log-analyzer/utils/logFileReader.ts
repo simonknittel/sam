@@ -28,6 +28,8 @@ interface ReadPosition {
 interface FileState extends ReadPosition {
   readonly size: number;
   readonly lastModified: number;
+  /** The time of the last timestamped line of the file */
+  readonly newestIsoDate: string | null;
 }
 
 const FILE_START: ReadPosition = {
@@ -217,6 +219,7 @@ const readFile = async (
     text,
     lastLineInText.start,
   );
+  const newestIsoDate = findPrecedingIsoDate(text, text.length);
 
   return {
     size: file.size,
@@ -228,7 +231,27 @@ const readFile = async (
       isoDateBeforeLastLine === null
         ? position.isoDateBeforeOffset
         : copyValue(isoDateBeforeLastLine),
+    newestIsoDate:
+      newestIsoDate === null
+        ? position.isoDateBeforeOffset
+        : copyValue(newestIsoDate),
   };
+};
+
+/**
+ * The game writes all timestamps in one format, thus the newest timestamp is
+ * the largest text.
+ */
+const findNewestIsoDate = (states: Iterable<FileState>) => {
+  let newestIsoDate: string | null = null;
+  for (const state of states) {
+    if (
+      state.newestIsoDate !== null &&
+      (newestIsoDate === null || state.newestIsoDate > newestIsoDate)
+    )
+      newestIsoDate = state.newestIsoDate;
+  }
+  return newestIsoDate;
 };
 
 interface ReadOptions {
@@ -239,7 +262,8 @@ interface ReadOptions {
 }
 
 /**
- * Finds the matches of all patterns in the log files. After the first read,
+ * Finds the matches of all patterns in the log files, and the time of the
+ * newest line of the files which it read so far. After the first read,
  * a read gives only the matches of the lines which were added since the read
  * before it, so that live mode does not read the whole window every few
  * seconds. It can give a match a second time. A file which leaves the
@@ -294,6 +318,11 @@ export const createLogFileReader = () => {
       });
     }
 
-    return { matches, readFileCount, readByteCount };
+    return {
+      matches,
+      readFileCount,
+      readByteCount,
+      newestIsoDate: findNewestIsoDate(states.values()),
+    };
   };
 };

@@ -44,6 +44,11 @@ export interface ReadResult {
   readonly matches: RawMatch[];
   readonly readFileCount: number;
   readonly readByteCount: number;
+  /**
+   * The time of the newest timestamped line of all files which the reader
+   * read so far. It moves forward while the game runs and writes its log.
+   */
+  readonly newestIsoDate: string | null;
 }
 
 export type ResultMessage =

@@ -80,6 +80,7 @@ export const LogAnalyzer = ({ className }: Props) => {
     ownEntryTypes,
     entries,
     setEntries,
+    setOwnLogLineAt,
   } = useLogAnalyzerContext();
 
   const authentication = useAuthentication();
@@ -183,8 +184,17 @@ export const LogAnalyzer = ({ className }: Props) => {
           matches: rawMatches,
           readFileCount,
           readByteCount,
+          newestIsoDate,
         } = await parseLogFiles(logFilesInWindow, isFullRead, setReadProgress);
         setReadProgress(null);
+
+        /** A read of an older date range must not move the time back */
+        if (newestIsoDate) {
+          const newestLineAt = new Date(newestIsoDate);
+          setOwnLogLineAt((previous) =>
+            previous && previous >= newestLineAt ? previous : newestLineAt,
+          );
+        }
 
         /** The tracking is about large reads. A live read holds one file. */
         if (readFileCount > 1) {
@@ -269,6 +279,7 @@ export const LogAnalyzer = ({ className }: Props) => {
   const openDirectory = (directoryHandle: FileSystemDirectoryHandle) => {
     directoryHandleRef.current = directoryHandle;
     knownLogFilesRef.current = new Map();
+    setOwnLogLineAt(null);
     requiresFullReadRef.current = true;
     parseLogs();
   };
