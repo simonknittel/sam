@@ -1,4 +1,5 @@
 import {
+  getNewerLogAnalyzerEntryVersions,
   LOG_ANALYZER_ENTRY_PATTERNS,
   LogAnalyzerEntryType,
   MAXIMUM_LOG_ANALYZER_RAW_LINE_LENGTH,
@@ -85,24 +86,48 @@ const readNewBytes = async (
 };
 
 /**
- * The patterns of each marker. The sticky flag makes the expression try one
+ * The expression of each type. The sticky flag makes the expression try one
  * position only, and the multiline flag makes `^` and `$` work on the lines
  * of the whole text.
  */
+const LINE_REGEXES = Object.fromEntries(
+  Object.values(LogAnalyzerEntryType).map((type) => [
+    type,
+    new RegExp(LOG_ANALYZER_ENTRY_PATTERNS[type].regex.source, "my"),
+  ]),
+) as Record<LogAnalyzerEntryType, RegExp>;
+
+/** The patterns of each marker */
 const PATTERNS_BY_MARKER = Map.groupBy(
   Object.values(LogAnalyzerEntryType).map((type) => {
-    const { marker, regex, takesTimeOfPrecedingLine } =
+    const { marker, takesTimeOfPrecedingLine } =
       LOG_ANALYZER_ENTRY_PATTERNS[type];
 
     return {
       type,
       marker,
-      lineRegex: new RegExp(regex.source, "my"),
+      lineRegex: LINE_REGEXES[type],
       takesTimeOfPrecedingLine,
     };
   }),
   ({ marker }) => marker,
 );
+
+/**
+ * True when a newer version of the type matches the line at `lineStart`.
+ * Then only the newer version gives an entry for the line (see
+ * `LogAnalyzerEntryPattern.supersedes`).
+ */
+const hasNewerVersionMatch = (
+  type: LogAnalyzerEntryType,
+  text: string,
+  lineStart: number,
+) =>
+  getNewerLogAnalyzerEntryVersions(type).some((version) => {
+    const lineRegex = LINE_REGEXES[version];
+    lineRegex.lastIndex = lineStart;
+    return lineRegex.test(text);
+  });
 
 /**
  * Adds the matches of the text to `matches` and returns how many it skipped.
@@ -133,6 +158,7 @@ const collectMatches = (
         lineRegex.lastIndex = lineStart;
         const match = lineRegex.exec(text);
         if (!match?.groups) continue;
+        if (hasNewerVersionMatch(type, text, lineStart)) continue;
 
         const isoDate = takesTimeOfPrecedingLine
           ? (findPrecedingIsoDate(text, match.index) ?? isoDateBeforeText)
