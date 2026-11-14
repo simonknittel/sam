@@ -89,7 +89,7 @@ test("the live status shows the open states and closes them with their end lines
   ).toBeVisible();
   await expect(panel.getByText("online", { exact: true })).toBeVisible();
   await expect(panel.getByText("Shard: EU 100")).toBeVisible();
-  await expect(panel.getByText("Armistice Zone: in")).toBeVisible();
+  await expect(panel.getByText("Armistice Zone: Betreten")).toBeVisible();
   /** A player can have more than one contract at the same time */
   await expect(
     panel.getByText("Contract: Wikelo Arrive to System"),
@@ -115,7 +115,7 @@ test("the live status shows the open states and closes them with their end lines
     panel.getByText("Contract: Wikelo Arrive to System"),
   ).toHaveCount(0);
   /** The armistice zone shows also outside of it */
-  await expect(panel.getByText("Armistice Zone: out")).toBeVisible();
+  await expect(panel.getByText("Armistice Zone: Verlassen")).toBeVisible();
   await expect(panel.getByText("Contract: Bounty Hunt")).toBeVisible();
 
   /** A contract continues after the end of the session, a zone does not */

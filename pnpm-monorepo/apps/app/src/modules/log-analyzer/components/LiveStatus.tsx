@@ -41,7 +41,7 @@ export const LiveStatus = ({ className }: Props) => {
         <Tooltip triggerChildren={<FaInfoCircle />}>
           <p>
             Zeigt, was bei jedem Reporter gerade aktiv ist: Session, Zonen,
-            Instanzen, Contracts und Party.
+            Instanzen und Contracts.
           </p>
           <p className="mt-1">
             Nach einem Absturz oder bei nicht geteilten Typen können Log-Zeilen

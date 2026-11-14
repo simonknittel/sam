@@ -12,8 +12,6 @@ import {
 import {
   LiveStatusKind,
   LiveStatusSignalType,
-  PARTY_END_SIGNAL,
-  PARTY_START_SIGNAL,
   SESSION_END_SIGNAL,
   type LiveStatusSignal,
 } from "./liveStatusSignals";
@@ -98,12 +96,11 @@ const statesOf = (reporters: ReturnType<typeof evaluate>) =>
   }));
 
 describe("Live-Status", () => {
-  test("the end of a session closes its zones, but not its contracts and party", () => {
+  test("the end of a session closes its zones, but not its contracts", () => {
     const entries = [
       entry(0, sessionStart()),
       entry(1, stateStart(LiveStatusKind.ArmisticeZone)),
       entry(2, stateStart(LiveStatusKind.Contract, "mission", "Delivery")),
-      entry(3, PARTY_START_SIGNAL),
       entry(4, SESSION_END_SIGNAL),
     ];
 
@@ -115,7 +112,6 @@ describe("Live-Status", () => {
     expect(statesOf([reporter])).toEqual([
       { kind: LiveStatusKind.Contract, label: "Delivery", isUncertain: false },
     ]);
-    expect(reporter.party).not.toBeNull();
   });
 
   test("a new server closes the zones of the old server", () => {
@@ -233,44 +229,14 @@ describe("Live-Status", () => {
     expect(reporter.presence).toBe(LiveStatusPresence.Uncertain);
   });
 
-  test("a member line tells that the reporter is in a party", () => {
-    const join = (minute: number, handle: string) =>
-      entry(minute, { type: LiveStatusSignalType.PartyMemberJoin, handle });
-
-    const entries = [
-      join(0, "Bob"),
-      join(1, "Carol"),
-      entry(2, { type: LiveStatusSignalType.PartyMemberLeave, handle: "Bob" }),
-      entry(3, {
-        type: LiveStatusSignalType.PartyLeaderChange,
-        handle: "Dave",
-      }),
-    ];
-
-    expect(evaluate(entries, 4)[0].party).toEqual({
-      isInside: true,
-      since: at(0),
-      isUncertain: false,
-      members: ["Carol"],
-      leader: "Dave",
-    });
-    expect(
-      evaluate([...entries, entry(5, PARTY_END_SIGNAL)], 6)[0].party,
-    ).toEqual({
-      isInside: false,
-      since: at(5),
-      isUncertain: false,
-      members: [],
-      leader: null,
-    });
-  });
-
   test("after the end of a session, only the next join of a server starts a session", () => {
     const entries = [
       entry(0, sessionStart()),
+      /** The contract keeps the offline reporter in the list */
+      entry(0, stateStart(LiveStatusKind.Contract, "mission", "Delivery")),
       entry(1, SESSION_END_SIGNAL),
       /** A line in the menu */
-      entry(5, { type: LiveStatusSignalType.PartyMemberJoin, handle: "Bob" }),
+      entry(5, null),
     ];
 
     const [inMenu] = evaluate(entries, 6, {
@@ -367,7 +333,7 @@ describe("Live-Status signals of the patterns", () => {
     ).toMatchObject({ key: null, label: "A Call to Arms" });
   });
 
-  test("the armistice zone and the monitored space show in and out", () => {
+  test("a zone shows the message of its newest line, as the table does", () => {
     /** The samples enter the armistice zone and leave the monitored space */
     const armisticeZone = signalOf(
       LogAnalyzerEntryType.ArmisticeZoneNotification,
@@ -375,8 +341,8 @@ describe("Live-Status signals of the patterns", () => {
     const monitoredSpace = signalOf(
       LogAnalyzerEntryType.MonitoredSpaceNotification,
     );
-    expect(armisticeZone).toMatchObject({ label: "in" });
-    expect(monitoredSpace).toMatchObject({ label: "out" });
+    expect(armisticeZone).toMatchObject({ label: "Betreten" });
+    expect(monitoredSpace).toMatchObject({ label: "Verlassen" });
 
     const leftArmisticeZone = signalOf(
       LogAnalyzerEntryType.ArmisticeZoneNotification,
@@ -388,11 +354,11 @@ describe("Live-Status signals of the patterns", () => {
     const entries = [entry(0, armisticeZone), entry(5, leftArmisticeZone)];
 
     expect(evaluate(entries, 6)[0].states).toMatchObject([
-      { kind: LiveStatusKind.ArmisticeZone, label: "out", since: at(5) },
+      { kind: LiveStatusKind.ArmisticeZone, label: "Verlassen", since: at(5) },
     ]);
   });
 
-  test("a relocation moves the reporter out of the restricted area", () => {
+  test("the restricted area shows the relocation", () => {
     const relocated = SAMPLE_LINES[
       LogAnalyzerEntryType.RestrictedAreaNotification
     ].replace(
@@ -402,9 +368,9 @@ describe("Live-Status signals of the patterns", () => {
 
     expect(
       signalOf(LogAnalyzerEntryType.RestrictedAreaNotification),
-    ).toMatchObject({ label: "in" });
+    ).toMatchObject({ label: "Fahrzeuge werden beschlagnahmt" });
     expect(
       signalOf(LogAnalyzerEntryType.RestrictedAreaNotification, relocated),
-    ).toMatchObject({ label: "out" });
+    ).toMatchObject({ label: "Vom Spiel umgesetzt" });
   });
 });

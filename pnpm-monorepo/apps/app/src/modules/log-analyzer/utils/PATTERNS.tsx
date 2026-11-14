@@ -56,12 +56,9 @@ import {
 import { AbandonedContractName } from "../components/ContractNames";
 import { TruncatedText } from "../components/TruncatedText";
 import {
-  createZoneSignal,
-  isEnteringDirection,
+  createLatestMessageSignal,
   LiveStatusKind,
   LiveStatusSignalType,
-  PARTY_END_SIGNAL,
-  PARTY_START_SIGNAL,
   SESSION_END_SIGNAL,
   toMissionKey,
   type LiveStatusSignal,
@@ -155,13 +152,14 @@ const DIRECTION_LABELS: Record<string, string> = {
   Exited: "Verlassen",
 };
 
+const toDirectionLabel = (direction: string) =>
+  DIRECTION_LABELS[direction] ?? direction;
+
 const toInstanceName = (instance: string) =>
   instance.replace(/^StreamingSOC_/, "");
 
 const renderDirection = (groups: Record<string, string>) => (
-  <TruncatedText>
-    {DIRECTION_LABELS[groups.direction] ?? groups.direction}
-  </TruncatedText>
+  <TruncatedText>{toDirectionLabel(groups.direction)}</TruncatedText>
 );
 
 const SECONDS_PER_MINUTE = 60;
@@ -414,9 +412,9 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     renderMessage: renderDirection,
     collapseKey: (groups) => groups.direction,
     liveStatusSignal: (groups) =>
-      createZoneSignal(
+      createLatestMessageSignal(
         LiveStatusKind.ArmisticeZone,
-        isEnteringDirection(groups.direction),
+        toDirectionLabel(groups.direction),
       ),
   },
 
@@ -428,12 +426,11 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
       <TruncatedText>{groups.jurisdiction}</TruncatedText>
     ),
     collapseKey: (groups) => groups.jurisdiction,
-    liveStatusSignal: (groups) => ({
-      type: LiveStatusSignalType.StateStart,
-      kind: LiveStatusKind.Jurisdiction,
-      key: null,
-      label: groups.jurisdiction,
-    }),
+    liveStatusSignal: (groups) =>
+      createLatestMessageSignal(
+        LiveStatusKind.Jurisdiction,
+        groups.jurisdiction,
+      ),
   },
 
   monitoredSpaceNotification: {
@@ -443,9 +440,9 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     renderMessage: renderDirection,
     collapseKey: (groups) => groups.direction,
     liveStatusSignal: (groups) =>
-      createZoneSignal(
+      createLatestMessageSignal(
         LiveStatusKind.MonitoredSpace,
-        isEnteringDirection(groups.direction),
+        toDirectionLabel(groups.direction),
       ),
   },
 
@@ -456,9 +453,9 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     renderMessage: renderDirection,
     collapseKey: (groups) => groups.direction,
     liveStatusSignal: (groups) =>
-      createZoneSignal(
+      createLatestMessageSignal(
         LiveStatusKind.PrivateProperty,
-        isEnteringDirection(groups.direction),
+        toDirectionLabel(groups.direction),
       ),
   },
 
@@ -474,10 +471,6 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     icon: FaUserPlus,
     category: EntryCategory.Party,
     renderMessage: (groups) => <TruncatedText>{groups.handle}</TruncatedText>,
-    liveStatusSignal: (groups) => ({
-      type: LiveStatusSignalType.PartyMemberJoin,
-      handle: groups.handle,
-    }),
   },
 
   partyMemberLeftNotification: {
@@ -485,10 +478,6 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     icon: FaUserMinus,
     category: EntryCategory.Party,
     renderMessage: (groups) => <TruncatedText>{groups.handle}</TruncatedText>,
-    liveStatusSignal: (groups) => ({
-      type: LiveStatusSignalType.PartyMemberLeave,
-      handle: groups.handle,
-    }),
   },
 
   partyLeaderChangedNotification: {
@@ -496,10 +485,6 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     icon: FaCrown,
     category: EntryCategory.Party,
     renderMessage: (groups) => <TruncatedText>{groups.handle}</TruncatedText>,
-    liveStatusSignal: (groups) => ({
-      type: LiveStatusSignalType.PartyLeaderChange,
-      handle: groups.handle,
-    }),
   },
 
   instanceEntered: {
@@ -638,11 +623,10 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
       </TruncatedText>
     ),
     collapseKey: (groups) => toRestrictedAreaEvent(groups.event),
-    /** The game relocates the player out of the area, or the player leaves */
     liveStatusSignal: (groups) =>
-      createZoneSignal(
+      createLatestMessageSignal(
         LiveStatusKind.RestrictedArea,
-        toRestrictedAreaEvent(groups.event) === RestrictedAreaEvent.Impoundment,
+        RESTRICTED_AREA_LABELS[toRestrictedAreaEvent(groups.event)],
       ),
   },
 
@@ -699,35 +683,30 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     title: "Party beigetreten",
     icon: FaPeopleGroup,
     category: EntryCategory.Party,
-    liveStatusSignal: () => PARTY_START_SIGNAL,
   },
 
   partyCreatedNotification: {
     title: "Party erstellt",
     icon: FaUsers,
     category: EntryCategory.Party,
-    liveStatusSignal: () => PARTY_START_SIGNAL,
   },
 
   partyLeftNotification: {
     title: "Party verlassen",
     icon: FaPersonWalkingArrowRight,
     category: EntryCategory.Party,
-    liveStatusSignal: () => PARTY_END_SIGNAL,
   },
 
   partyKickedNotification: {
     title: "Aus Party entfernt",
     icon: FaUserSlash,
     category: EntryCategory.Party,
-    liveStatusSignal: () => PARTY_END_SIGNAL,
   },
 
   partyDisbandedNotification: {
     title: "Party aufgelöst",
     icon: FaUsersSlash,
     category: EntryCategory.Party,
-    liveStatusSignal: () => PARTY_END_SIGNAL,
   },
 
   friendAddedNotification: {

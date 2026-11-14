@@ -135,15 +135,6 @@ const SESSION_TIMEOUT: Timeout = {
 };
 
 /**
- * Measured from the last party line. A party continues after a relog, thus
- * its session does not close it.
- */
-const PARTY_TIMEOUT: Timeout = {
-  fadeAfterMs: 6 * MILLISECONDS_PER_HOUR,
-  hideAfterMs: 24 * MILLISECONDS_PER_HOUR,
-};
-
-/**
  * While the game runs, it writes a line at least every 5.5 minutes (the
  * longest gap in the real logs). After a longer silence of the own log, the
  * game does not run.
@@ -160,16 +151,6 @@ interface TrackedState {
   readonly since: Date;
   /** The last line which started or repeated the state */
   readonly lastSeenAt: Date;
-}
-
-interface TrackedParty {
-  /** False after the reporter left the party */
-  readonly isInside: boolean;
-  readonly since: Date;
-  readonly lastSeenAt: Date;
-  /** The game names only the members who join after the reporter */
-  readonly members: Set<string>;
-  readonly leader: string | null;
 }
 
 /** The states of a reporter after the last entry, before any timeout. */
@@ -189,24 +170,17 @@ export interface TrackedReporter {
   /** Null after a join, thus not null only while no session runs */
   sessionEndedAt: Date | null;
   states: TrackedState[];
-  party: TrackedParty | null;
 }
 
 /**
  * The order of the signals of one instant: the end of a session comes before
- * the start of the next one, an end of a state before a start, and the start
- * of a party before the lines about its members.
+ * the start of the next one, and an end of a state before a start.
  */
 const SIGNAL_ORDER: Record<LiveStatusSignalType, number> = {
   [LiveStatusSignalType.SessionEnd]: 0,
   [LiveStatusSignalType.SessionStart]: 1,
   [LiveStatusSignalType.StateEnd]: 2,
-  [LiveStatusSignalType.PartyEnd]: 2,
-  [LiveStatusSignalType.PartyMemberLeave]: 2,
-  [LiveStatusSignalType.PartyStart]: 3,
-  [LiveStatusSignalType.StateStart]: 4,
-  [LiveStatusSignalType.PartyMemberJoin]: 4,
-  [LiveStatusSignalType.PartyLeaderChange]: 4,
+  [LiveStatusSignalType.StateStart]: 3,
 };
 
 const getSignalOrder = (entry: IEntry) =>
@@ -290,22 +264,6 @@ const findStateToEnd = (
   );
 };
 
-const createParty = (at: Date, isInside: boolean): TrackedParty => ({
-  isInside,
-  since: at,
-  lastSeenAt: at,
-  members: new Set(),
-  leader: null,
-});
-
-const continueParty = (reporter: TrackedReporter, at: Date) => {
-  const party: TrackedParty = reporter.party?.isInside
-    ? { ...reporter.party, lastSeenAt: at }
-    : createParty(at, true);
-  reporter.party = party;
-  return party;
-};
-
 const applySignal = (
   reporter: TrackedReporter,
   signal: LiveStatusSignal,
@@ -337,34 +295,6 @@ const applySignal = (
       if (index >= 0) reporter.states.splice(index, 1);
       break;
     }
-
-    case LiveStatusSignalType.PartyStart:
-      reporter.party = createParty(at, true);
-      break;
-
-    /** The party shows as "out" after the reporter left it */
-    case LiveStatusSignalType.PartyEnd:
-      reporter.party =
-        reporter.party?.isInside === false
-          ? { ...reporter.party, lastSeenAt: at }
-          : createParty(at, false);
-      break;
-
-    /** A line about a member also tells that the reporter is in a party */
-    case LiveStatusSignalType.PartyMemberJoin:
-      continueParty(reporter, at).members.add(signal.handle);
-      break;
-
-    case LiveStatusSignalType.PartyMemberLeave:
-      continueParty(reporter, at).members.delete(signal.handle);
-      break;
-
-    case LiveStatusSignalType.PartyLeaderChange:
-      reporter.party = {
-        ...continueParty(reporter, at),
-        leader: signal.handle,
-      };
-      break;
 
     default:
       throw new Error(`Unknown Live-Status signal: ${signal satisfies never}`);
@@ -398,7 +328,6 @@ export const trackLiveStatus = (entries: Iterable<IEntry>) => {
         shardSince: null,
         sessionEndedAt: null,
         states: [],
-        party: null,
       };
       reporters.set(key, reporter);
     }
@@ -426,14 +355,6 @@ export interface LiveStatusState {
   readonly isUncertain: boolean;
 }
 
-export interface LiveStatusParty {
-  readonly isInside: boolean;
-  readonly since: Date;
-  readonly isUncertain: boolean;
-  readonly members: readonly string[];
-  readonly leader: string | null;
-}
-
 export interface LiveStatusReporter {
   readonly key: string;
   readonly citizen: IEntry["citizen"];
@@ -445,7 +366,6 @@ export interface LiveStatusReporter {
   readonly shardSince: Date | null;
   readonly lastActivityAt: Date;
   readonly states: readonly LiveStatusState[];
-  readonly party: LiveStatusParty | null;
 }
 
 export interface LiveStatusOptions {
@@ -561,21 +481,6 @@ const evaluateStates = (
     })
     .toSorted(compareStates);
 
-const evaluateParty = (party: TrackedParty | null, now: Date) => {
-  if (!party) return null;
-
-  const stage = getTimeoutStage(PARTY_TIMEOUT, party.lastSeenAt, now);
-  if (stage === TimeoutStage.Expired) return null;
-
-  return {
-    isInside: party.isInside,
-    since: party.since,
-    isUncertain: stage === TimeoutStage.Faded,
-    members: Array.from(party.members),
-    leader: party.leader,
-  };
-};
-
 const PRESENCE_ORDER = Object.values(LiveStatusPresence);
 
 const compareReporters = (
@@ -588,9 +493,9 @@ const compareReporters = (
 
 /**
  * The Live-Status at the given time: the reporters who are online, and the
- * offline reporters with a state which continues after a session (a contract
- * or a party). Online reporters come first, then the uncertain ones, then the
- * offline ones; the most recent activity first in each group.
+ * offline reporters with a contract, which continues after a session. Online
+ * reporters come first, then the uncertain ones, then the offline ones; the
+ * most recent activity first in each group.
  */
 export const evaluateLiveStatus = (
   reporters: readonly TrackedReporter[],
@@ -600,10 +505,9 @@ export const evaluateLiveStatus = (
     .flatMap((reporter): LiveStatusReporter[] => {
       const { presence, offlineSince } = evaluateSession(reporter, options);
       const states = evaluateStates(reporter.states, presence, options.now);
-      const party = evaluateParty(reporter.party, options.now);
       const isOffline = presence === LiveStatusPresence.Offline;
 
-      if (isOffline && states.length <= 0 && !party?.isInside) return [];
+      if (isOffline && states.length <= 0) return [];
 
       return [
         {
@@ -616,7 +520,6 @@ export const evaluateLiveStatus = (
           shardSince: isOffline ? null : reporter.shardSince,
           lastActivityAt: reporter.lastActivityAt,
           states,
-          party,
         },
       ];
     })

@@ -7,7 +7,6 @@ import {
   type LiveStatusReporter as Reporter,
 } from "../utils/liveStatus";
 import { formatShard } from "../utils/PATTERNS";
-import { LiveStatusPartyRow } from "./LiveStatusPartyRow";
 import { LiveStatusRow } from "./LiveStatusRow";
 import { LiveStatusSince } from "./LiveStatusSince";
 import { LiveStatusStateRow } from "./LiveStatusStateRow";
@@ -104,7 +103,7 @@ export const LiveStatusReporter = ({
         </p>
       )}
 
-      {(shardName || reporter.states.length > 0 || reporter.party) && (
+      {(shardName || reporter.states.length > 0) && (
         <ul className="mt-2 flex flex-col gap-1">
           {shardName && (
             <LiveStatusRow
@@ -123,9 +122,6 @@ export const LiveStatusReporter = ({
               now={now}
             />
           ))}
-          {reporter.party && (
-            <LiveStatusPartyRow party={reporter.party} now={now} />
-          )}
         </ul>
       )}
     </li>
