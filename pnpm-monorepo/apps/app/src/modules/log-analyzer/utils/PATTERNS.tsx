@@ -183,6 +183,16 @@ interface Pattern {
   collapseKey?: (groups: Record<string, string>) => string;
 }
 
+/** All versions of the type, see `LogAnalyzerEntryPattern.supersedes` */
+const EARNED_PATTERN: Pattern = {
+  title: "Belohnung erhalten",
+  icon: FaTrophy,
+  category: EntryCategory.Contracts,
+  renderMessage: (groups) => (
+    <TruncatedText>{stripMarkup(groups.reward)}</TruncatedText>
+  ),
+};
+
 /**
  * The presentation of each entry type. The expressions are in
  * `LOG_ANALYZER_ENTRY_PATTERNS` of the domain package.
@@ -495,14 +505,8 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     ),
   },
 
-  earnedNotification: {
-    title: "Belohnung erhalten",
-    icon: FaTrophy,
-    category: EntryCategory.Contracts,
-    renderMessage: (groups) => (
-      <TruncatedText>{stripMarkup(groups.reward)}</TruncatedText>
-    ),
-  },
+  earnedNotification: EARNED_PATTERN,
+  earnedNotificationV2: EARNED_PATTERN,
 
   fundsAwardedNotification: {
     title: "aUEC erhalten",
