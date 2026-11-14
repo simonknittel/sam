@@ -33,10 +33,11 @@ const Presence = ({ reporter, now }: PresenceProps) => {
         "text-white/60": presence === LiveStatusPresence.Offline,
       })}
     >
-      {/* `align-middle` centers the dot on the lowercase letters of the text */}
+      {/* `align-middle` centers the dot on the lowercase letters of the text.
+          The monospace font needs one more pixel. */}
       <span
         aria-hidden
-        className="relative mr-1 inline-flex size-2 align-middle"
+        className="relative mr-1 inline-flex size-2 -translate-y-px align-middle"
       >
         {presence === LiveStatusPresence.Online && (
           <span className="absolute inline-flex size-full animate-ping rounded-full bg-green-500 opacity-75 motion-reduce:hidden" />
