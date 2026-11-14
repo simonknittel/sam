@@ -1,4 +1,5 @@
 import {
+  getNewerLogAnalyzerEntryVersions,
   LOG_ANALYZER_ENTRY_PATTERNS,
   LogAnalyzerEntryType,
   MAXIMUM_LOG_ANALYZER_RAW_LINE_LENGTH,
@@ -25,6 +26,25 @@ const LOG_CONTENT = [
   SAMPLE_CRASH_FILE_END,
 ].join("\r\n");
 
+/**
+ * True when a newer version of the type matches at the given position. Then
+ * only the newer version gives an entry (see
+ * `LogAnalyzerEntryPattern.supersedes`).
+ */
+const hasNewerVersionMatch = (
+  type: LogAnalyzerEntryType,
+  text: string,
+  index: number,
+) =>
+  getNewerLogAnalyzerEntryVersions(type).some((version) => {
+    const regex = new RegExp(
+      LOG_ANALYZER_ENTRY_PATTERNS[version].regex.source,
+      "my",
+    );
+    regex.lastIndex = index;
+    return regex.test(text);
+  });
+
 /** The parse before the reader: one match run over the whole text */
 const matchWholeText = (text: string) => {
   const matches: RawMatch[] = [];
@@ -35,6 +55,7 @@ const matchWholeText = (text: string) => {
 
     for (const match of text.matchAll(regex)) {
       if (!match.groups) continue;
+      if (hasNewerVersionMatch(type, text, match.index)) continue;
 
       const isoDate = takesTimeOfPrecedingLine
         ? findPrecedingIsoDate(text, match.index)

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   clampLogAnalyzerDaysToLoad,
-  collectNewerLogAnalyzerEntryVersions,
+  collectLogAnalyzerEntryVersions,
   createLogAnalyzerEntryHash,
   LOG_ANALYZER_ENTRY_HASH_PATTERN,
   LogAnalyzerEntryType,
@@ -22,26 +22,34 @@ describe("toLogAnalyzerEntryType", () => {
   });
 });
 
-describe("collectNewerLogAnalyzerEntryVersions", () => {
-  test("gives the newer versions of each type, newest first", () => {
+describe("collectLogAnalyzerEntryVersions", () => {
+  test("gives the newer versions and the oldest version of each type", () => {
     expect(
-      collectNewerLogAnalyzerEntryVersions({
+      collectLogAnalyzerEntryVersions({
         versionThree: { supersedes: "versionTwo" },
         versionOne: {},
         versionTwo: { supersedes: "versionOne" },
         otherType: {},
       }),
     ).toEqual({
-      versionOne: ["versionThree", "versionTwo"],
-      versionTwo: ["versionThree"],
-      versionThree: [],
-      otherType: [],
+      newerVersionsByType: {
+        versionOne: ["versionThree", "versionTwo"],
+        versionTwo: ["versionThree"],
+        versionThree: [],
+        otherType: [],
+      },
+      oldestVersionByType: {
+        versionOne: "versionOne",
+        versionTwo: "versionOne",
+        versionThree: "versionOne",
+        otherType: "otherType",
+      },
     });
   });
 
   test("refuses two newer versions of one type", () => {
     expect(() =>
-      collectNewerLogAnalyzerEntryVersions({
+      collectLogAnalyzerEntryVersions({
         versionOne: {},
         versionTwo: { supersedes: "versionOne" },
         otherVersionTwo: { supersedes: "versionOne" },
@@ -51,7 +59,7 @@ describe("collectNewerLogAnalyzerEntryVersions", () => {
 
   test("refuses versions which form a cycle", () => {
     expect(() =>
-      collectNewerLogAnalyzerEntryVersions({
+      collectLogAnalyzerEntryVersions({
         versionOne: { supersedes: "versionTwo" },
         versionTwo: { supersedes: "versionOne" },
       }),

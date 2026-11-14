@@ -491,11 +491,12 @@ export const takesTimeOfPrecedingLine = (type: LogAnalyzerEntryType) =>
   LOG_ANALYZER_ENTRY_PATTERNS[type].takesTimeOfPrecedingLine === true;
 
 /**
- * The newer versions of each type, newest first, from the `supersedes` links
- * of the patterns. Throws when two patterns supersede the same type, or when
- * the links form a cycle, because then no version is the newest.
+ * The newer versions of each type, newest first, and the oldest version of
+ * each type, from the `supersedes` links of the patterns. Throws when two
+ * patterns supersede the same type, or when the links form a cycle, because
+ * then no version is the newest.
  */
-export const collectNewerLogAnalyzerEntryVersions = <Type extends string>(
+export const collectLogAnalyzerEntryVersions = <Type extends string>(
   patterns: Readonly<
     Record<Type, { readonly supersedes?: NoInfer<Type> | undefined }>
   >,
@@ -517,6 +518,7 @@ export const collectNewerLogAnalyzerEntryVersions = <Type extends string>(
   }
 
   const newerVersionsByType = {} as Record<Type, readonly Type[]>;
+  const oldestVersionByType = {} as Record<Type, Type>;
   for (const type of types) {
     const newerVersions: Type[] = [];
     for (
@@ -532,18 +534,30 @@ export const collectNewerLogAnalyzerEntryVersions = <Type extends string>(
       newerVersions.unshift(version);
     }
     newerVersionsByType[type] = newerVersions;
+
+    if (patterns[type].supersedes === undefined) {
+      oldestVersionByType[type] = type;
+      for (const version of newerVersions) oldestVersionByType[version] = type;
+    }
   }
 
-  return newerVersionsByType;
+  return { newerVersionsByType, oldestVersionByType };
 };
 
-const NEWER_VERSIONS = collectNewerLogAnalyzerEntryVersions(
-  LOG_ANALYZER_ENTRY_PATTERNS,
-);
+const VERSIONS = collectLogAnalyzerEntryVersions(LOG_ANALYZER_ENTRY_PATTERNS);
 
 /** See `LogAnalyzerEntryPattern.supersedes` */
 export const getNewerLogAnalyzerEntryVersions = (type: LogAnalyzerEntryType) =>
-  NEWER_VERSIONS[type];
+  VERSIONS.newerVersionsByType[type];
+
+/**
+ * The first version of the given type. It is the given type itself when the
+ * type supersedes no other type. The settings of the Log Analyzer keep one
+ * value for all versions, under the oldest version, so that a new version
+ * keeps the settings of the user.
+ */
+export const getOldestLogAnalyzerEntryVersion = (type: LogAnalyzerEntryType) =>
+  VERSIONS.oldestVersionByType[type];
 
 const ENTRY_TYPES_BY_VALUE = new Map<string, LogAnalyzerEntryType>(
   Object.values(LogAnalyzerEntryType).map((type) => [type, type]),
@@ -594,7 +608,7 @@ export const matchNewestLogAnalyzerEntryVersion = (
   type: LogAnalyzerEntryType,
   rawLine: string,
 ) => {
-  for (const version of NEWER_VERSIONS[type]) {
+  for (const version of getNewerLogAnalyzerEntryVersions(type)) {
     const match = matchLogAnalyzerEntryLine(version, rawLine);
     if (match) return { type: version, match };
   }
