@@ -42,6 +42,7 @@ import image20261030CalendarApp from "@/modules/changelog/assets/2026-10-30-cale
 import image20261030CalendarTile from "@/modules/changelog/assets/2026-10-30-calendar-tile.png";
 import image20261030EventParticipationDialog from "@/modules/changelog/assets/2026-10-30-event-participation-dialog.png";
 import image20261030EventParticipation from "@/modules/changelog/assets/2026-10-30-event-participation.png";
+import image20261114LiveStatus from "@/modules/changelog/assets/2026-11-14-live-status.png";
 import {
   ChangelogImage,
   ChangelogImageWidth,
@@ -73,6 +74,16 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
           und verschwindet später. Mit &bdquo;Automatisch aktualisieren&ldquo;
           erkennt er auch, wenn dein Spiel nicht mehr läuft.
         </p>
+
+        {/* The screenshot shows the panel in its real size */}
+        <ChangelogImage
+          src={image20261114LiveStatus}
+          alt=""
+          className="max-w-98 self-center"
+          isAboveTheFold
+        />
+
+        <p className="text-sm text-neutral-500">#socialToolsBeforeCIG</p>
       </>
     ),
   },
