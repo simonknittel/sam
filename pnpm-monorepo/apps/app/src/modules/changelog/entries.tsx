@@ -64,8 +64,8 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
         <p>
           Neben den Einträgen zeigt der Log Analyzer jetzt den Live-Status: Für
           dich und jeden Citizen, dessen Einträge du siehst, steht dort, was
-          gerade aktiv ist, zum Beispiel der Shard, Zonen, Instanzen, laufende
-          Contracts und die Party mit ihren Mitgliedern.
+          gerade aktiv ist, zum Beispiel der Shard, Zonen, Instanzen und
+          laufende Contracts.
         </p>
         <p>
           Nach einem Absturz oder bei nicht geteilten Einträgen können
