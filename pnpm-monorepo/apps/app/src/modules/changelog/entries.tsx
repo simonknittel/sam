@@ -42,6 +42,7 @@ import image20261030CalendarApp from "@/modules/changelog/assets/2026-10-30-cale
 import image20261030CalendarTile from "@/modules/changelog/assets/2026-10-30-calendar-tile.png";
 import image20261030EventParticipationDialog from "@/modules/changelog/assets/2026-10-30-event-participation-dialog.png";
 import image20261030EventParticipation from "@/modules/changelog/assets/2026-10-30-event-participation.png";
+import image20261114LiveStatus from "@/modules/changelog/assets/2026-11-14-live-status.png";
 import {
   ChangelogImage,
   ChangelogImageWidth,
@@ -52,6 +53,41 @@ import { AiFillAppstore } from "react-icons/ai";
 import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
+  {
+    key: "2026-11-14-log-analyzer-live-status",
+    date: "2026-11-14",
+    title: "Live-Status im Log Analyzer",
+    tags: ["Neu", "Log Analyzer"],
+    isTracked: true,
+    body: () => (
+      <>
+        <p>
+          Neben den Einträgen zeigt der Log Analyzer jetzt den Live-Status: Für
+          dich und jeden Citizen, dessen Einträge du siehst, steht dort, was
+          gerade aktiv ist, zum Beispiel der Shard, Zonen, Instanzen und
+          laufende Contracts.
+        </p>
+        <p>
+          Nach einem Absturz oder bei nicht geteilten Einträgen können
+          Log-Zeilen fehlen. Der Live-Status ist dann eine Schätzung: Ein
+          Zustand ohne neue Zeile wird erst als &bdquo;unsicher&ldquo; markiert
+          und verschwindet später. Mit &bdquo;Automatisch aktualisieren&ldquo;
+          erkennt er auch, wenn dein Spiel nicht mehr läuft.
+        </p>
+
+        {/* The screenshot shows the panel in its real size */}
+        <ChangelogImage
+          src={image20261114LiveStatus}
+          alt=""
+          className="max-w-98 self-center"
+          isAboveTheFold
+        />
+
+        <p className="text-sm text-neutral-500">#socialToolsBeforeCIG</p>
+      </>
+    ),
+  },
+
   {
     key: "2026-11-11-event-einladungen",
     date: "2026-11-11",

@@ -45,6 +45,7 @@ import {
 import type { LogFile, ReadProgress } from "../utils/types";
 import { DateRangeSettings } from "./DateRangeSettings";
 import { Introduction } from "./Introduction";
+import { LiveStatus } from "./LiveStatus";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 import { LogAnalyzerTable } from "./LogAnalyzerTable";
 import { useOverlay } from "./OverlayContext";
@@ -80,6 +81,8 @@ export const LogAnalyzer = ({ className }: Props) => {
     ownEntryTypes,
     entries,
     setEntries,
+    setOwnLogLineAt,
+    isLiveStatusVisible,
   } = useLogAnalyzerContext();
 
   const authentication = useAuthentication();
@@ -183,8 +186,17 @@ export const LogAnalyzer = ({ className }: Props) => {
           matches: rawMatches,
           readFileCount,
           readByteCount,
+          newestIsoDate,
         } = await parseLogFiles(logFilesInWindow, isFullRead, setReadProgress);
         setReadProgress(null);
+
+        /** A read of an older date range must not move the time back */
+        if (newestIsoDate) {
+          const newestLineAt = new Date(newestIsoDate);
+          setOwnLogLineAt((previous) =>
+            previous && previous >= newestLineAt ? previous : newestLineAt,
+          );
+        }
 
         /** The tracking is about large reads. A live read holds one file. */
         if (readFileCount > 1) {
@@ -269,6 +281,7 @@ export const LogAnalyzer = ({ className }: Props) => {
   const openDirectory = (directoryHandle: FileSystemDirectoryHandle) => {
     directoryHandleRef.current = directoryHandle;
     knownLogFilesRef.current = new Map();
+    setOwnLogLineAt(null);
     requiresFullReadRef.current = true;
     parseLogs();
   };
@@ -280,6 +293,12 @@ export const LogAnalyzer = ({ className }: Props) => {
 
   useEffect(() => {
     if (!isLiveModeActive) return;
+
+    /**
+     * The newest line of the last read can be old. Without this read, the
+     * Live-Status shows the own session as offline until the first interval.
+     */
+    parseNewLogLines();
 
     const interval = window.setInterval(() => {
       parseNewLogLines();
@@ -413,7 +432,20 @@ export const LogAnalyzer = ({ className }: Props) => {
       </Toolbar>
 
       {entries.size > 0 ? (
-        <LogAnalyzerTable className="mt-0.5" />
+        /* Below `2xl`, three quarters of the width are less than the minimum
+           width of the table, thus the Live-Status moves above the table.
+           Without the Live-Status, the table takes the full width. */
+        <div
+          className={clsx("mt-0.5 flex flex-col gap-0.5", {
+            "2xl:grid 2xl:grid-cols-[3fr_1fr] 2xl:items-start":
+              isLiveStatusVisible,
+          })}
+        >
+          {isLiveStatusVisible && (
+            <LiveStatus className="2xl:sticky 2xl:top-32 2xl:order-2 2xl:max-h-[calc(100dvh-9rem)] 2xl:overflow-y-auto 2xl:overscroll-contain" />
+          )}
+          <LogAnalyzerTable className="min-w-0 2xl:order-1" />
+        </div>
       ) : (
         <Introduction className="mt-1" />
       )}

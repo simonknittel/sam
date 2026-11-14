@@ -1,16 +1,37 @@
-import type { Locator, Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { LogAnalyzerEntryType } from "@sam-monorepo/domain";
 import {
   createCitizen,
   createLogAnalyzerEntry,
   createUserWithoutCitizen,
 } from "../fixtures/factories";
-import { clickUntilVisible, toggleLabel } from "../fixtures/interactions";
+import { toggleLabel } from "../fixtures/interactions";
+import {
+  LIVE_MODE_PARSE_INTERVAL,
+  LOG_ANALYZER_PAGE_PATH,
+  LOG_ANALYZER_PERMISSIONS,
+  SettingsColumn,
+  appendLogLines,
+  applyDateRange,
+  closeSettings,
+  dateRangeButton,
+  dateRangeDialog,
+  daysAgo,
+  hoursAgo,
+  joinPuLine,
+  openDateRange,
+  openSettings,
+  resetDateRange,
+  rowOf,
+  selectFolder,
+  settingCheckbox,
+  settingToggle,
+  settingsDialog,
+  stubDirectoryPicker,
+  tableRows,
+  type BackupFile,
+} from "../fixtures/log-analyzer";
 import { expect, test } from "../fixtures/test";
-
-const LOG_ANALYZER_PERMISSIONS = ["logAnalyzer;read"];
-
-const PAGE_PATH = "/app/tools/log-analyzer";
 
 /**
  * Real log lines, one for each pattern this spec needs. The upload action
@@ -22,24 +43,12 @@ const PAGE_PATH = "/app/tools/log-analyzer";
  * shared entries query (14 days). The lines therefore carry a time relative
  * to the moment of the test.
  */
-const joinPuLine = (at: Date) =>
-  `<${at.toISOString()}> [Notice] <Join PU> address[35.187.166.216] port[64336] shard[pub_euw1b_9873572_100] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]`;
 const ownDeathLine = (at: Date) =>
   `<${at.toISOString()}> [Notice] <[ActorState] Dead> [ACTOR STATE][CSCActorControlStateDead::PrePhysicsUpdate] Actor 'Testpilot' [123] ejected from zone 'RSI_Zeus_CL_1' [456] to zone 'pyro4' [789] due to previous zone being in a destroyed vehicle with detached interior. [Team_ActorFeatures][Actor]`;
 const blueprintLine = (at: Date) =>
   `<${at.toISOString()}> [Notice] <SHUDEvent_OnNotification> Added notification "Received Blueprint: Morozov-SH Helmet Thule: " [25] to queue. New queue size: 3, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]`;
 const disconnectionLine = (at: Date) =>
   `<${at.toISOString()}> [Notice] <Channel Disconnected> cause=30016 reason="Remote Disconnect - Player requested disconnect" frame=220001 isRemote=1 map="megamap" gamerules="SC_Default" hostType="Replicant" remoteAddr=1.2.3.4:64090 localAddr=0.0.0.0:64090 connection={4, 0} session=abc node_id=bc4da5d3-3f05-e19e-4aa0-702432234095 nickname="Testpilot" playerGEID=200123456789 uptime_secs=3636.990234 [Team_Network][Network][Gateway][Disconnection]`;
-
-const hoursAgo = (hours: number) =>
-  new Date(Date.now() - hours * 60 * 60 * 1000);
-
-const HOURS_PER_DAY = 24;
-
-const daysAgo = (days: number) => hoursAgo(days * HOURS_PER_DAY);
-
-/** The value of a date input */
-const toDateValue = (date: Date) => date.toISOString().slice(0, 10);
 
 const MONTHS = [
   "Jan",
@@ -56,12 +65,6 @@ const MONTHS = [
   "Dec",
 ];
 
-interface BackupFile {
-  readonly name: string;
-  readonly lines: readonly string[];
-  readonly lastModified: number;
-}
-
 /** A log file which the game renamed at the start of the next session */
 const createBackupFile = (at: Date, line: string): BackupFile => {
   const pad = (value: number) => String(value).padStart(2, "0");
@@ -77,85 +80,6 @@ const createBackupFile = (at: Date, line: string): BackupFile => {
 
 /** Rows the table renders on top of its header row */
 const HEADER_ROWS = 1;
-
-/**
- * Replaces the folder picker of the browser, which no test can answer. The
- * handle gives back one log file with the given lines, so a parse finds one
- * entry for each of them. `appendLogLines` adds lines to the file, as the
- * game does while it runs.
- *
- * The app also stores the handle in IndexedDB, which fails for this object
- * because it carries functions. That happens after the parse started and the
- * app catches it, thus it only leaves a message in the console.
- */
-const stubDirectoryPicker = (
-  page: Page,
-  lines: readonly string[],
-  backupFiles: readonly BackupFile[] = [],
-) =>
-  page.addInitScript(
-    ({
-      fileLines,
-      backups,
-    }: {
-      fileLines: string[];
-      backups: BackupFile[];
-    }) => {
-      const createFile = () =>
-        new File([fileLines.join("\n")], "Game.log", {
-          type: "text/plain",
-          lastModified: Date.now(),
-        });
-      let file = createFile();
-
-      const fileHandle = {
-        kind: "file",
-        name: "Game.log",
-        getFile: () => Promise.resolve(file),
-      };
-
-      const directoryHandle = {
-        kind: "directory",
-        name: "StarCitizen",
-        requestPermission: () => Promise.resolve("granted"),
-        values: async function* () {
-          yield fileHandle;
-
-          for (const { name, lines: backupLines, lastModified } of backups) {
-            yield {
-              kind: "file",
-              name,
-              getFile: () =>
-                Promise.resolve(
-                  new File([backupLines.join("\n")], name, {
-                    type: "text/plain",
-                    lastModified,
-                  }),
-                ),
-            };
-          }
-        },
-      };
-
-      Object.assign(window, {
-        showDirectoryPicker: () => Promise.resolve(directoryHandle),
-        appendLogLines: (newLines: string[]) => {
-          fileLines.push(...newLines);
-          file = createFile();
-        },
-      });
-    },
-    { fileLines: [...lines], backups: [...backupFiles] },
-  );
-
-const appendLogLines = (page: Page, lines: readonly string[]) =>
-  page.evaluate(
-    (newLines) =>
-      (
-        window as unknown as { appendLogLines: (lines: string[]) => void }
-      ).appendLogLines(newLines),
-    [...lines],
-  );
 
 /**
  * Records for each request to the log parser worker whether it reads the
@@ -218,103 +142,14 @@ const readOverlayWindow = (page: Page) =>
     return { text: overlayDocument.body.textContent, closeCount };
   });
 
-const settingsDialog = (page: Page) =>
-  page.getByRole("dialog", { name: "Filter & Teilen", exact: true });
-
-const openSettings = (page: Page) =>
-  clickUntilVisible(
-    page.getByRole("button", { name: "Filter & Teilen", exact: true }),
-    settingsDialog(page),
-  );
-
-const closeSettings = async (page: Page) => {
-  await page.keyboard.press("Escape");
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-};
-
-/** The columns of the settings table, as the checkboxes name them */
-enum SettingsColumn {
-  ShowOwn = "Eigene anzeigen",
-  Share = "Teilen",
-  ShowOthers = "Andere anzeigen",
-}
-
-const settingCheckbox = (
-  page: Page,
-  typeTitle: string,
-  column: SettingsColumn,
-) =>
-  settingsDialog(page).getByRole("checkbox", {
-    name: `${typeTitle}: ${column}`,
-    exact: true,
-  });
-
-/**
- * The label around the checkbox, because the checkbox itself is `sr-only`.
- * The inner locator is queried inside each label, thus it must not carry the
- * dialog in its chain.
- */
-const settingToggle = (page: Page, typeTitle: string, column: SettingsColumn) =>
-  toggleLabel(
-    settingsDialog(page),
-    page.getByRole("checkbox", {
-      name: `${typeTitle}: ${column}`,
-      exact: true,
-    }),
-  );
-
 const SHARED_TYPE_TITLES = [
   "Shard-Beitritt",
   "Gestorben",
   "Blueprint erhalten",
 ];
 
-const tableRows = (page: Page) => page.getByRole("row");
-
-const rowOf = (page: Page, text: string): Locator =>
-  tableRows(page).filter({ hasText: text });
-
-/**
- * A click which lands before React hydrates is swallowed, so it is retried
- * until the table shows the parsed entries. A repeated parse is harmless: it
- * finds the same entries and shares none of them a second time.
- */
-const selectFolder = (page: Page) =>
-  clickUntilVisible(
-    page.getByRole("button", { name: "Ordner auswählen" }),
-    tableRows(page).first(),
-  );
-
 const refresh = (page: Page) =>
   page.getByRole("button", { name: "Aktualisieren" }).click();
-
-const dateRangeDialog = (page: Page) =>
-  page.getByRole("dialog", { name: "Zeitraum", exact: true });
-
-/** The button names the active range after the word `Zeitraum` */
-const dateRangeButton = (page: Page) =>
-  page.getByRole("button", { name: /^Zeitraum/ });
-
-const openDateRange = (page: Page) =>
-  clickUntilVisible(dateRangeButton(page), dateRangeDialog(page));
-
-const applyDateRange = async (page: Page, from: Date, to: Date) => {
-  await openDateRange(page);
-
-  const dialog = dateRangeDialog(page);
-  await dialog.getByLabel("Von").fill(toDateValue(from));
-  await dialog.getByLabel("Bis").fill(toDateValue(to));
-  await dialog.getByRole("button", { name: "Anwenden" }).click();
-
-  await expect(dialog).toHaveCount(0);
-};
-
-const resetDateRange = async (page: Page) => {
-  await openDateRange(page);
-  await dateRangeDialog(page)
-    .getByRole("button", { name: "Zurücksetzen" })
-    .click();
-};
 
 /**
  * Collects the uploads the page sends from now on. A server action posts to
@@ -328,7 +163,10 @@ const recordUploads = (page: Page) => {
   const uploads: string[] = [];
 
   page.on("request", (request) => {
-    if (request.method() === "POST" && request.url().includes(PAGE_PATH))
+    if (
+      request.method() === "POST" &&
+      request.url().includes(LOG_ANALYZER_PAGE_PATH)
+    )
       uploads.push(request.url());
   });
 
@@ -373,7 +211,7 @@ test("shared entries mix into the table with a citizen column and a citizen filt
   });
 
   await signIn(viewer.user);
-  await page.goto(PAGE_PATH);
+  await page.goto(LOG_ANALYZER_PAGE_PATH);
 
   /** Without the viewer setting the page stays exactly as it was before */
   await expect(page.getByRole("heading", { name: "Anleitung" })).toBeVisible();
@@ -458,7 +296,7 @@ test("sharing uploads the matched entries of the selected types exactly once", a
     blueprintLine(hoursAgo(2)),
     disconnectionLine(hoursAgo(1)),
   ]);
-  await page.goto(PAGE_PATH);
+  await page.goto(LOG_ANALYZER_PAGE_PATH);
 
   /** One type stays out, to prove the selection decides what goes out */
   await openSettings(page);
@@ -532,12 +370,6 @@ test("sharing uploads the matched entries of the selected types exactly once", a
   expect(reloadUploads).toEqual([]);
 });
 
-/**
- * Live mode reads the log files again at this interval
- * (LIVE_MODE_PARSE_INTERVAL_MS in the app)
- */
-const LIVE_MODE_PARSE_INTERVAL = 10_000;
-
 test("a date range shows the entries of its files and a reset the rolling window", async ({
   page,
   prisma,
@@ -557,7 +389,7 @@ test("a date range shows the entries of its files and a reset the rolling window
       createBackupFile(daysAgo(60), blueprintLine(daysAgo(60))),
     ],
   );
-  await page.goto(PAGE_PATH);
+  await page.goto(LOG_ANALYZER_PAGE_PATH);
 
   await selectFolder(page);
   await expect(rowOf(page, "Verbindung getrennt")).toBeVisible();
@@ -595,7 +427,7 @@ test("a preset of the date range applies with one click", async ({
       createBackupFile(daysAgo(60), blueprintLine(daysAgo(60))),
     ],
   );
-  await page.goto(PAGE_PATH);
+  await page.goto(LOG_ANALYZER_PAGE_PATH);
 
   await selectFolder(page);
   await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 1);
@@ -623,7 +455,7 @@ test("a section sets all types of a column at once", async ({
   });
 
   await signIn(citizen.user);
-  await page.goto(PAGE_PATH);
+  await page.goto(LOG_ANALYZER_PAGE_PATH);
   await openSettings(page);
 
   const section = settingCheckbox(
@@ -699,7 +531,7 @@ test("a date range older than the rolling window uploads nothing", async ({
       createBackupFile(daysAgo(60), blueprintLine(daysAgo(60))),
     ],
   );
-  await page.goto(PAGE_PATH);
+  await page.goto(LOG_ANALYZER_PAGE_PATH);
 
   await openSettings(page);
   await settingToggle(page, "Shard-Beitritt", SettingsColumn.Share).click();
@@ -752,7 +584,7 @@ test("a date range reaches shared entries older than the rolling window", async 
   });
 
   await signIn(viewer.user);
-  await page.goto(PAGE_PATH);
+  await page.goto(LOG_ANALYZER_PAGE_PATH);
 
   await openSettings(page);
   await settingToggle(
@@ -787,7 +619,7 @@ test("live mode reads the lines which the game adds to the log", async ({
   await page.clock.install();
   await stubDirectoryPicker(page, [joinPuLine(hoursAgo(2))]);
   await recordFullReads(page);
-  await page.goto(PAGE_PATH);
+  await page.goto(LOG_ANALYZER_PAGE_PATH);
 
   await selectFolder(page);
   await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 1);
@@ -832,7 +664,7 @@ test("the overlay stays open while the page renders again", async ({
   await signIn(citizen.user);
   await stubDirectoryPicker(page, [joinPuLine(hoursAgo(2))]);
   await stubPictureInPicture(page);
-  await page.goto(PAGE_PATH);
+  await page.goto(LOG_ANALYZER_PAGE_PATH);
 
   await selectFolder(page);
   await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 1);
@@ -912,7 +744,7 @@ test("a user without a linked citizen cannot share", async ({
     joinPuLine(hoursAgo(2)),
     blueprintLine(hoursAgo(1)),
   ]);
-  await page.goto(PAGE_PATH);
+  await page.goto(LOG_ANALYZER_PAGE_PATH);
 
   await openSettings(page);
   await expect(

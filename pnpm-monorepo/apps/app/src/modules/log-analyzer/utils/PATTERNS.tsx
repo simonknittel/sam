@@ -55,6 +55,14 @@ import {
 } from "react-icons/fa6";
 import { AbandonedContractName } from "../components/ContractNames";
 import { TruncatedText } from "../components/TruncatedText";
+import {
+  createLatestMessageSignal,
+  LiveStatusKind,
+  LiveStatusSignalType,
+  SESSION_END_SIGNAL,
+  toMissionKey,
+  type LiveStatusSignal,
+} from "./liveStatusSignals";
 
 /** The groups of the entry types, in the order the lists show them. */
 export enum EntryCategory {
@@ -102,9 +110,30 @@ export interface IEntry {
    * server already holds.
    */
   readonly isUploaded: boolean;
+  /** See `Pattern.liveStatusSignal`. Null when the type tells nothing. */
+  readonly liveStatusSignal: LiveStatusSignal | null;
 }
 
 const shardRegex = /^pub_(?<region>[a-z0-9]+)_\w+_(?<number>\d+)$/m;
+
+/**
+ * The short name of a shard, for example `EU 100` for
+ * `pub_euw1b_9873572_100`. Null when the name has an unknown form.
+ */
+export const formatShard = (shard: string) => {
+  const match = shardRegex.exec(shard);
+  if (!match?.groups) return null;
+
+  let region = match.groups.region;
+  if (region.startsWith("eu")) region = "EU";
+  if (region.startsWith("us")) region = "USA";
+  if (region.startsWith("ape")) region = "ASIA";
+  if (region.startsWith("apse")) region = "AUS";
+
+  const number = match.groups.number.replace(/^0+/, "");
+
+  return `${region} ${number}`;
+};
 
 /** The game wraps parts of a notification text in markup such as `<EM4>` */
 const stripMarkup = (text: string) => text.replaceAll(/<.+?>/g, "").trim();
@@ -123,16 +152,21 @@ const DIRECTION_LABELS: Record<string, string> = {
   Exited: "Verlassen",
 };
 
+const toDirectionLabel = (direction: string) =>
+  DIRECTION_LABELS[direction] ?? direction;
+
+const toInstanceName = (instance: string) =>
+  instance.replace(/^StreamingSOC_/, "");
+
 const renderDirection = (groups: Record<string, string>) => (
-  <TruncatedText>
-    {DIRECTION_LABELS[groups.direction] ?? groups.direction}
-  </TruncatedText>
+  <TruncatedText>{toDirectionLabel(groups.direction)}</TruncatedText>
 );
 
 const SECONDS_PER_MINUTE = 60;
 const MINUTES_PER_HOUR = 60;
 
-const formatDuration = (seconds: number) => {
+/** A duration in whole minutes, for example `1 h 5 min` */
+export const formatDuration = (seconds: number) => {
   const totalMinutes = Math.round(seconds / SECONDS_PER_MINUTE);
   const hours = Math.floor(totalMinutes / MINUTES_PER_HOUR);
   const minutes = totalMinutes % MINUTES_PER_HOUR;
@@ -162,11 +196,23 @@ const CENTI_SCU_PER_SCU = 100;
 /** The shops of the game are all named `SCShop_<location>` */
 const toShopName = (shop: string) => shop.replace(/^SCShop_/, "");
 
+enum RestrictedAreaEvent {
+  Impoundment = "impoundment",
+  Leaving = "leaving",
+  Relocation = "relocation",
+}
+
 /** The two lines of a restricted area come from one alternative of the regex */
-const getRestrictedAreaLabel = (event: string) => {
-  if (event.startsWith("Leaving")) return "Verlassen";
-  if (event.includes("relocated")) return "Vom Spiel umgesetzt";
-  return "Fahrzeuge werden beschlagnahmt";
+const toRestrictedAreaEvent = (event: string) => {
+  if (event.startsWith("Leaving")) return RestrictedAreaEvent.Leaving;
+  if (event.includes("relocated")) return RestrictedAreaEvent.Relocation;
+  return RestrictedAreaEvent.Impoundment;
+};
+
+const RESTRICTED_AREA_LABELS: Record<RestrictedAreaEvent, string> = {
+  [RestrictedAreaEvent.Impoundment]: "Fahrzeuge werden beschlagnahmt",
+  [RestrictedAreaEvent.Leaving]: "Verlassen",
+  [RestrictedAreaEvent.Relocation]: "Vom Spiel umgesetzt",
 };
 
 interface Pattern {
@@ -181,7 +227,44 @@ interface Pattern {
    * as one entry.
    */
   collapseKey?: (groups: Record<string, string>) => string;
+  /** What the entry tells the Live-Status about its reporter */
+  liveStatusSignal?: (groups: Record<string, string>) => LiveStatusSignal;
 }
+
+/** The first versions of an end line name only the contract */
+const createContractEndSignal = (
+  groups: Record<string, string>,
+): LiveStatusSignal => ({
+  type: LiveStatusSignalType.StateEnd,
+  kind: LiveStatusKind.Contract,
+  key: toMissionKey(groups.missionId),
+  label: groups.contract ? stripMarkup(groups.contract) : null,
+});
+
+/** The end lines of a contract differ only in their title and icon */
+const createContractEndPattern = (title: string, icon: IconType): Pattern => ({
+  title,
+  icon,
+  category: EntryCategory.Contracts,
+  renderMessage: (groups) => (
+    <TruncatedText>{stripMarkup(groups.contract)}</TruncatedText>
+  ),
+  liveStatusSignal: createContractEndSignal,
+});
+
+/** All versions of each type, see `LogAnalyzerEntryPattern.supersedes` */
+const CONTRACT_COMPLETE_PATTERN = createContractEndPattern(
+  "Contract abgeschlossen",
+  FaFileCircleCheck,
+);
+const CONTRACT_FAILED_PATTERN = createContractEndPattern(
+  "Contract fehlgeschlagen",
+  FaFileCircleXmark,
+);
+const CONTRACT_WITHDRAWN_PATTERN = createContractEndPattern(
+  "Contract zurückgezogen",
+  FaFileCircleMinus,
+);
 
 /** All versions of the type, see `LogAnalyzerEntryPattern.supersedes` */
 const EARNED_PATTERN: Pattern = {
@@ -203,28 +286,19 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     icon: FaRightToBracket,
     category: EntryCategory.Session,
     renderMessage: (groups) => {
-      const match = shardRegex.exec(groups.shard);
-      if (!match?.groups) return <TruncatedText>{groups.shard}</TruncatedText>;
-
-      let region = match.groups.region;
-      if (region.startsWith("eu")) region = "EU";
-      if (region.startsWith("us")) region = "USA";
-      if (region.startsWith("ape")) region = "ASIA";
-      if (region.startsWith("apse")) region = "AUS";
-
-      let number = match.groups.number;
-      number = number.replace(/^0+/, "");
+      const shardName = formatShard(groups.shard);
+      if (!shardName) return <TruncatedText>{groups.shard}</TruncatedText>;
 
       return (
-        <span
-          className="truncate"
-          title={`${region} ${number} (${groups.shard})`}
-        >
-          {region} {number}{" "}
-          <span className="text-white/40">({groups.shard})</span>
+        <span className="truncate" title={`${shardName} (${groups.shard})`}>
+          {shardName} <span className="text-white/40">({groups.shard})</span>
         </span>
       );
     },
+    liveStatusSignal: (groups) => ({
+      type: LiveStatusSignalType.SessionStart,
+      shard: groups.shard,
+    }),
   },
 
   ownDeath: {
@@ -252,25 +326,19 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     renderMessage: (groups) => (
       <TruncatedText>{stripMarkup(groups.contract)}</TruncatedText>
     ),
+    liveStatusSignal: (groups) => ({
+      type: LiveStatusSignalType.StateStart,
+      kind: LiveStatusKind.Contract,
+      key: toMissionKey(groups.missionId),
+      label: stripMarkup(groups.contract),
+    }),
   },
 
-  contractCompleteNotification: {
-    title: "Contract abgeschlossen",
-    icon: FaFileCircleCheck,
-    category: EntryCategory.Contracts,
-    renderMessage: (groups) => (
-      <TruncatedText>{stripMarkup(groups.contract)}</TruncatedText>
-    ),
-  },
+  contractCompleteNotification: CONTRACT_COMPLETE_PATTERN,
+  contractCompleteNotificationV2: CONTRACT_COMPLETE_PATTERN,
 
-  contractFailedNotification: {
-    title: "Contract fehlgeschlagen",
-    icon: FaFileCircleXmark,
-    category: EntryCategory.Contracts,
-    renderMessage: (groups) => (
-      <TruncatedText>{stripMarkup(groups.contract)}</TruncatedText>
-    ),
-  },
+  contractFailedNotification: CONTRACT_FAILED_PATTERN,
+  contractFailedNotificationV2: CONTRACT_FAILED_PATTERN,
 
   contractSharedNotification: {
     title: "Contract geteilt",
@@ -282,14 +350,8 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     collapseKey: (groups) => groups.contract,
   },
 
-  contractWithdrawnNotification: {
-    title: "Contract zurückgezogen",
-    icon: FaFileCircleMinus,
-    category: EntryCategory.Contracts,
-    renderMessage: (groups) => (
-      <TruncatedText>{stripMarkup(groups.contract)}</TruncatedText>
-    ),
-  },
+  contractWithdrawnNotification: CONTRACT_WITHDRAWN_PATTERN,
+  contractWithdrawnNotificationV2: CONTRACT_WITHDRAWN_PATTERN,
 
   disconnection: {
     title: "Verbindung getrennt",
@@ -300,6 +362,7 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
         {`${groups.reason} nach ${formatDuration(Number(groups.uptimeSeconds))}`}
       </TruncatedText>
     ),
+    liveStatusSignal: () => SESSION_END_SIGNAL,
   },
 
   injuryDetectedNotification: {
@@ -348,6 +411,11 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     category: EntryCategory.Zones,
     renderMessage: renderDirection,
     collapseKey: (groups) => groups.direction,
+    liveStatusSignal: (groups) =>
+      createLatestMessageSignal(
+        LiveStatusKind.ArmisticeZone,
+        toDirectionLabel(groups.direction),
+      ),
   },
 
   jurisdictionNotification: {
@@ -358,6 +426,11 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
       <TruncatedText>{groups.jurisdiction}</TruncatedText>
     ),
     collapseKey: (groups) => groups.jurisdiction,
+    liveStatusSignal: (groups) =>
+      createLatestMessageSignal(
+        LiveStatusKind.Jurisdiction,
+        groups.jurisdiction,
+      ),
   },
 
   monitoredSpaceNotification: {
@@ -366,6 +439,11 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     category: EntryCategory.Zones,
     renderMessage: renderDirection,
     collapseKey: (groups) => groups.direction,
+    liveStatusSignal: (groups) =>
+      createLatestMessageSignal(
+        LiveStatusKind.MonitoredSpace,
+        toDirectionLabel(groups.direction),
+      ),
   },
 
   privatePropertyNotification: {
@@ -374,6 +452,11 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     category: EntryCategory.Zones,
     renderMessage: renderDirection,
     collapseKey: (groups) => groups.direction,
+    liveStatusSignal: (groups) =>
+      createLatestMessageSignal(
+        LiveStatusKind.PrivateProperty,
+        toDirectionLabel(groups.direction),
+      ),
   },
 
   partyInviteReceivedNotification: {
@@ -409,11 +492,15 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     icon: FaArrowRightToBracket,
     category: EntryCategory.Zones,
     renderMessage: (groups) => (
-      <TruncatedText>
-        {groups.instance.replace(/^StreamingSOC_/, "")}
-      </TruncatedText>
+      <TruncatedText>{toInstanceName(groups.instance)}</TruncatedText>
     ),
     collapseKey: (groups) => groups.instanceId,
+    liveStatusSignal: (groups) => ({
+      type: LiveStatusSignalType.StateStart,
+      kind: LiveStatusKind.Instance,
+      key: groups.instanceId,
+      label: toInstanceName(groups.instance),
+    }),
   },
 
   instanceExited: {
@@ -421,17 +508,22 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     icon: FaArrowRightFromBracket,
     category: EntryCategory.Zones,
     renderMessage: (groups) => (
-      <TruncatedText>
-        {groups.instance.replace(/^StreamingSOC_/, "")}
-      </TruncatedText>
+      <TruncatedText>{toInstanceName(groups.instance)}</TruncatedText>
     ),
     collapseKey: (groups) => groups.instanceId,
+    liveStatusSignal: (groups) => ({
+      type: LiveStatusSignalType.StateEnd,
+      kind: LiveStatusKind.Instance,
+      key: groups.instanceId,
+      label: null,
+    }),
   },
 
   gameQuit: {
     title: "Spiel beendet",
     icon: FaPowerOff,
     category: EntryCategory.Session,
+    liveStatusSignal: () => SESSION_END_SIGNAL,
   },
 
   gameCrash: {
@@ -441,6 +533,7 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     renderMessage: (groups) => (
       <TruncatedText>{groups.exception}</TruncatedText>
     ),
+    liveStatusSignal: () => SESSION_END_SIGNAL,
   },
 
   crimeCommittedNotification: {
@@ -485,6 +578,7 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     renderMessage: (groups) => (
       <AbandonedContractName missionId={groups.missionId} />
     ),
+    liveStatusSignal: createContractEndSignal,
   },
 
   contractNotAcceptedNotification: {
@@ -524,9 +618,16 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     icon: FaBan,
     category: EntryCategory.Zones,
     renderMessage: (groups) => (
-      <TruncatedText>{getRestrictedAreaLabel(groups.event)}</TruncatedText>
+      <TruncatedText>
+        {RESTRICTED_AREA_LABELS[toRestrictedAreaEvent(groups.event)]}
+      </TruncatedText>
     ),
-    collapseKey: (groups) => getRestrictedAreaLabel(groups.event),
+    collapseKey: (groups) => toRestrictedAreaEvent(groups.event),
+    liveStatusSignal: (groups) =>
+      createLatestMessageSignal(
+        LiveStatusKind.RestrictedArea,
+        RESTRICTED_AREA_LABELS[toRestrictedAreaEvent(groups.event)],
+      ),
   },
 
   monitoredSpaceStatusNotification: {
@@ -665,6 +766,7 @@ export const deriveEntryFields = (
   collapseKey: PATTERNS[type].collapseKey?.(groups) ?? null,
   missionId: groups.missionId ?? null,
   contractName: groups.contract ? stripMarkup(groups.contract) : null,
+  liveStatusSignal: PATTERNS[type].liveStatusSignal?.(groups) ?? null,
 });
 
 /**

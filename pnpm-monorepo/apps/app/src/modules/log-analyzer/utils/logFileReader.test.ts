@@ -144,6 +144,28 @@ describe("createLogFileReader", () => {
     );
   });
 
+  test("gives the time of the newest line, also after a crash report", async () => {
+    const readLogFiles = createLogFileReader();
+    const newLine =
+      "<2026-09-02T08:00:00.000Z> [Notice] A line without a match";
+
+    /** The crash report at the end of the content has no timestamps */
+    const { newestIsoDate } = await readLogFiles(
+      [createLogFile(LOG_CONTENT, 1)],
+      false,
+    );
+    expect(newestIsoDate).toBe("2026-09-01T16:15:11.246Z");
+
+    /** The game can still write the end of the last line */
+    const grownFile = createLogFile(`${LOG_CONTENT}\r\n${newLine}`, 2);
+    expect((await readLogFiles([grownFile], false)).newestIsoDate).toBe(
+      "2026-09-02T08:00:00.000Z",
+    );
+    expect((await readLogFiles([grownFile], false)).newestIsoDate).toBe(
+      "2026-09-02T08:00:00.000Z",
+    );
+  });
+
   test("reads a file in full again when it was replaced", async () => {
     const readLogFiles = createLogFileReader();
     const otherContent = [...Object.values(SAMPLE_LINES)].reverse().join("\n");

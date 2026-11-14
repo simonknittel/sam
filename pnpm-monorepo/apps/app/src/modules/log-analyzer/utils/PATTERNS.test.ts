@@ -148,6 +148,17 @@ describe("PATTERNS", () => {
     expect(accepted.missionId).toBe(abandoned.missionId);
   });
 
+  test("an accepted contract gives the mission id of its complete line", () => {
+    const accepted = groupsOf(
+      LogAnalyzerEntryType.ContractAcceptedNotification,
+    );
+    const completed = groupsOf(
+      LogAnalyzerEntryType.ContractCompleteNotificationV2,
+    );
+
+    expect(accepted.missionId).toBe(completed.missionId);
+  });
+
   test("a group is no party", () => {
     const groupLine = SAMPLE_LINES[
       LogAnalyzerEntryType.PartyJoinedNotification

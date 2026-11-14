@@ -55,6 +55,8 @@ interface Context {
   readonly isLiveModeActive: boolean;
   readonly isAutostartEnabled: boolean;
   readonly setIsAutostartEnabled: Dispatch<SetStateAction<boolean>>;
+  readonly isLiveStatusVisible: boolean;
+  readonly setIsLiveStatusVisible: Dispatch<SetStateAction<boolean>>;
   readonly daysToLoad: number;
   /** `YYYY-MM-DD`, in the time zone of the table. */
   readonly today: string;
@@ -80,6 +82,12 @@ interface Context {
   readonly entryFilterFn: (entry: IEntry) => boolean;
   readonly entries: Map<string, IEntry>;
   readonly setEntries: Dispatch<SetStateAction<Map<string, IEntry>>>;
+  /**
+   * The newest line of the own log files (see `ReadResult.newestIsoDate`).
+   * Null before the first read of a folder.
+   */
+  readonly ownLogLineAt: Date | null;
+  readonly setOwnLogLineAt: Dispatch<SetStateAction<Date | null>>;
 }
 
 const Context = createContext<Context | undefined>(undefined);
@@ -162,6 +170,11 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
     false,
   );
 
+  const [isLiveStatusVisible, setIsLiveStatusVisible] = useLocalStorage(
+    "log_analyzer_show_live_status",
+    true,
+  );
+
   /**
    * The kill switch wins over the stored settings, so that no hook uploads
    * or fetches while it is set. The stored values stay untouched: the
@@ -192,6 +205,7 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
   const isLiveModeActive = isLiveModeEnabled && !isLivePaused;
 
   const [entries, setEntries] = useState<Map<string, IEntry>>(new Map());
+  const [ownLogLineAt, setOwnLogLineAt] = useState<Date | null>(null);
 
   const setOthersEntryTypes: SetEntryTypes = (types, isEnabled) => {
     setStoredOthersEntryTypes(types, isEnabled);
@@ -233,6 +247,8 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
     isLiveModeActive,
     isAutostartEnabled,
     setIsAutostartEnabled,
+    isLiveStatusVisible,
+    setIsLiveStatusVisible,
     daysToLoad,
     today,
     dateRange,
@@ -250,6 +266,8 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
     entryFilterFn,
     entries,
     setEntries,
+    ownLogLineAt,
+    setOwnLogLineAt,
   };
 
   const contractNames = new Map<string, string>();
