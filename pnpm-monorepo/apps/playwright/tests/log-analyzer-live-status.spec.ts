@@ -89,7 +89,7 @@ test("the live status shows the open states and closes them with their end lines
   ).toBeVisible();
   await expect(panel.getByText("online", { exact: true })).toBeVisible();
   await expect(panel.getByText("Shard: EU 100")).toBeVisible();
-  await expect(panel.getByText("Armistice Zone")).toBeVisible();
+  await expect(panel.getByText("Armistice Zone: in")).toBeVisible();
   /** A player can have more than one contract at the same time */
   await expect(
     panel.getByText("Contract: Wikelo Arrive to System"),
@@ -114,15 +114,17 @@ test("the live status shows the open states and closes them with their end lines
   await expect(
     panel.getByText("Contract: Wikelo Arrive to System"),
   ).toHaveCount(0);
-  await expect(panel.getByText("Armistice Zone")).toHaveCount(0);
+  /** The armistice zone shows also outside of it */
+  await expect(panel.getByText("Armistice Zone: out")).toBeVisible();
   await expect(panel.getByText("Contract: Bounty Hunt")).toBeVisible();
 
-  /** A contract continues after the end of the session */
+  /** A contract continues after the end of the session, a zone does not */
   await appendLogLines(page, [gameQuitLine(minutesAgo(0))]);
   await page.clock.fastForward(LIVE_MODE_PARSE_INTERVAL);
 
   await expect(panel.getByText(/^offline seit/)).toBeVisible();
   await expect(panel.getByText("Shard: EU 100")).toHaveCount(0);
+  await expect(panel.getByText("Armistice Zone")).toHaveCount(0);
   await expect(panel.getByText("Contract: Bounty Hunt")).toBeVisible();
 });
 
@@ -156,8 +158,9 @@ test("the live status ends the session when the own log stops, and a contract fa
   await expect(panel.getByText("Contract: Bounty Hunt")).toBeVisible();
   await expect(panel.getByText("unsicher")).toHaveCount(0);
 
+  /** The row is muted, and only a screen reader reads the word */
   await page.clock.fastForward(80 * MILLISECONDS_PER_MINUTE);
-  await expect(panel.getByText("unsicher")).toBeVisible();
+  await expect(panel.getByText("unsicher")).toHaveCount(1);
 
   await page.clock.fastForward(5 * MINUTES_PER_HOUR * MILLISECONDS_PER_MINUTE);
   await expect(panel.getByText("Gerade ist niemand aktiv.")).toBeVisible();

@@ -248,6 +248,7 @@ describe("Live-Status", () => {
     ];
 
     expect(evaluate(entries, 4)[0].party).toEqual({
+      isInside: true,
       since: at(0),
       isUncertain: false,
       members: ["Carol"],
@@ -255,7 +256,13 @@ describe("Live-Status", () => {
     });
     expect(
       evaluate([...entries, entry(5, PARTY_END_SIGNAL)], 6)[0].party,
-    ).toBeNull();
+    ).toEqual({
+      isInside: false,
+      since: at(5),
+      isUncertain: false,
+      members: [],
+      leader: null,
+    });
   });
 
   test("after the end of a session, only the next join of a server starts a session", () => {
@@ -360,7 +367,32 @@ describe("Live-Status signals of the patterns", () => {
     ).toMatchObject({ key: null, label: "A Call to Arms" });
   });
 
-  test("a relocation ends the restricted area", () => {
+  test("the armistice zone and the monitored space show in and out", () => {
+    /** The samples enter the armistice zone and leave the monitored space */
+    const armisticeZone = signalOf(
+      LogAnalyzerEntryType.ArmisticeZoneNotification,
+    );
+    const monitoredSpace = signalOf(
+      LogAnalyzerEntryType.MonitoredSpaceNotification,
+    );
+    expect(armisticeZone).toMatchObject({ label: "in" });
+    expect(monitoredSpace).toMatchObject({ label: "out" });
+
+    const leftArmisticeZone = signalOf(
+      LogAnalyzerEntryType.ArmisticeZoneNotification,
+      SAMPLE_LINES[LogAnalyzerEntryType.ArmisticeZoneNotification].replace(
+        "Entering Armistice Zone - Combat Prohibited",
+        "Leaving Armistice Zone - Caution Advised",
+      ),
+    );
+    const entries = [entry(0, armisticeZone), entry(5, leftArmisticeZone)];
+
+    expect(evaluate(entries, 6)[0].states).toMatchObject([
+      { kind: LiveStatusKind.ArmisticeZone, label: "out", since: at(5) },
+    ]);
+  });
+
+  test("a relocation moves the reporter out of the restricted area", () => {
     const relocated = SAMPLE_LINES[
       LogAnalyzerEntryType.RestrictedAreaNotification
     ].replace(
@@ -370,9 +402,9 @@ describe("Live-Status signals of the patterns", () => {
 
     expect(
       signalOf(LogAnalyzerEntryType.RestrictedAreaNotification),
-    ).toMatchObject({ type: LiveStatusSignalType.StateStart });
+    ).toMatchObject({ label: "in" });
     expect(
       signalOf(LogAnalyzerEntryType.RestrictedAreaNotification, relocated),
-    ).toMatchObject({ type: LiveStatusSignalType.StateEnd });
+    ).toMatchObject({ label: "out" });
   });
 });

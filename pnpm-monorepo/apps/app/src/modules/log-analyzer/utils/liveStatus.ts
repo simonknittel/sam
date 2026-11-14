@@ -163,6 +163,8 @@ interface TrackedState {
 }
 
 interface TrackedParty {
+  /** False after the reporter left the party */
+  readonly isInside: boolean;
   readonly since: Date;
   readonly lastSeenAt: Date;
   /** The game names only the members who join after the reporter */
@@ -288,10 +290,18 @@ const findStateToEnd = (
   );
 };
 
+const createParty = (at: Date, isInside: boolean): TrackedParty => ({
+  isInside,
+  since: at,
+  lastSeenAt: at,
+  members: new Set(),
+  leader: null,
+});
+
 const continueParty = (reporter: TrackedReporter, at: Date) => {
-  const party: TrackedParty = reporter.party
+  const party: TrackedParty = reporter.party?.isInside
     ? { ...reporter.party, lastSeenAt: at }
-    : { since: at, lastSeenAt: at, members: new Set(), leader: null };
+    : createParty(at, true);
   reporter.party = party;
   return party;
 };
@@ -329,16 +339,15 @@ const applySignal = (
     }
 
     case LiveStatusSignalType.PartyStart:
-      reporter.party = {
-        since: at,
-        lastSeenAt: at,
-        members: new Set(),
-        leader: null,
-      };
+      reporter.party = createParty(at, true);
       break;
 
+    /** The party shows as "out" after the reporter left it */
     case LiveStatusSignalType.PartyEnd:
-      reporter.party = null;
+      reporter.party =
+        reporter.party?.isInside === false
+          ? { ...reporter.party, lastSeenAt: at }
+          : createParty(at, false);
       break;
 
     /** A line about a member also tells that the reporter is in a party */
@@ -418,6 +427,7 @@ export interface LiveStatusState {
 }
 
 export interface LiveStatusParty {
+  readonly isInside: boolean;
   readonly since: Date;
   readonly isUncertain: boolean;
   readonly members: readonly string[];
@@ -558,6 +568,7 @@ const evaluateParty = (party: TrackedParty | null, now: Date) => {
   if (stage === TimeoutStage.Expired) return null;
 
   return {
+    isInside: party.isInside,
     since: party.since,
     isUncertain: stage === TimeoutStage.Faded,
     members: Array.from(party.members),
@@ -592,7 +603,7 @@ export const evaluateLiveStatus = (
       const party = evaluateParty(reporter.party, options.now);
       const isOffline = presence === LiveStatusPresence.Offline;
 
-      if (isOffline && states.length <= 0 && !party) return [];
+      if (isOffline && states.length <= 0 && !party?.isInside) return [];
 
       return [
         {

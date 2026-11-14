@@ -77,18 +77,29 @@ const NO_MISSION_ID = "00000000-0000-0000-0000-000000000000";
 export const toMissionKey = (missionId: string | undefined) =>
   missionId && missionId !== NO_MISSION_ID ? missionId : null;
 
+/** The value of a zone or a party while the reporter is in it */
+export const INSIDE_LABEL = "in";
+
+/** The value of a zone or a party after the reporter left it */
+export const OUTSIDE_LABEL = "out";
+
+/**
+ * A zone shows inside and outside of it. Leaving the zone replaces "in" with
+ * "out", as a new jurisdiction replaces the old one. A zone has one state at
+ * most, thus it needs no key.
+ */
+export const createZoneSignal = (
+  kind: LiveStatusKind,
+  isInside: boolean,
+): LiveStatusSignal => ({
+  type: LiveStatusSignalType.StateStart,
+  kind,
+  key: null,
+  label: isInside ? INSIDE_LABEL : OUTSIDE_LABEL,
+});
+
 /** The game writes "Entering" and "Leaving", or "Entered" and "Exited" */
 const ENTERING_DIRECTIONS = new Set(["Entering", "Entered"]);
 
-/** A zone has one state at most, thus it needs no key. */
-export const createZoneSignal = (
-  kind: LiveStatusKind,
-  direction: string,
-): LiveStatusSignal => ({
-  type: ENTERING_DIRECTIONS.has(direction)
-    ? LiveStatusSignalType.StateStart
-    : LiveStatusSignalType.StateEnd,
-  kind,
-  key: null,
-  label: null,
-});
+export const isEnteringDirection = (direction: string) =>
+  ENTERING_DIRECTIONS.has(direction);

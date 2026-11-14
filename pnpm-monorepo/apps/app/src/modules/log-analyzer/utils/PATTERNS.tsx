@@ -57,6 +57,7 @@ import { AbandonedContractName } from "../components/ContractNames";
 import { TruncatedText } from "../components/TruncatedText";
 import {
   createZoneSignal,
+  isEnteringDirection,
   LiveStatusKind,
   LiveStatusSignalType,
   PARTY_END_SIGNAL,
@@ -413,7 +414,10 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     renderMessage: renderDirection,
     collapseKey: (groups) => groups.direction,
     liveStatusSignal: (groups) =>
-      createZoneSignal(LiveStatusKind.ArmisticeZone, groups.direction),
+      createZoneSignal(
+        LiveStatusKind.ArmisticeZone,
+        isEnteringDirection(groups.direction),
+      ),
   },
 
   jurisdictionNotification: {
@@ -439,7 +443,10 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     renderMessage: renderDirection,
     collapseKey: (groups) => groups.direction,
     liveStatusSignal: (groups) =>
-      createZoneSignal(LiveStatusKind.MonitoredSpace, groups.direction),
+      createZoneSignal(
+        LiveStatusKind.MonitoredSpace,
+        isEnteringDirection(groups.direction),
+      ),
   },
 
   privatePropertyNotification: {
@@ -449,7 +456,10 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     renderMessage: renderDirection,
     collapseKey: (groups) => groups.direction,
     liveStatusSignal: (groups) =>
-      createZoneSignal(LiveStatusKind.PrivateProperty, groups.direction),
+      createZoneSignal(
+        LiveStatusKind.PrivateProperty,
+        isEnteringDirection(groups.direction),
+      ),
   },
 
   partyInviteReceivedNotification: {
@@ -629,15 +639,11 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     ),
     collapseKey: (groups) => toRestrictedAreaEvent(groups.event),
     /** The game relocates the player out of the area, or the player leaves */
-    liveStatusSignal: (groups) => ({
-      type:
-        toRestrictedAreaEvent(groups.event) === RestrictedAreaEvent.Impoundment
-          ? LiveStatusSignalType.StateStart
-          : LiveStatusSignalType.StateEnd,
-      kind: LiveStatusKind.RestrictedArea,
-      key: null,
-      label: null,
-    }),
+    liveStatusSignal: (groups) =>
+      createZoneSignal(
+        LiveStatusKind.RestrictedArea,
+        toRestrictedAreaEvent(groups.event) === RestrictedAreaEvent.Impoundment,
+      ),
   },
 
   monitoredSpaceStatusNotification: {

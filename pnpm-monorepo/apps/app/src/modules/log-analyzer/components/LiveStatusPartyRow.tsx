@@ -1,5 +1,6 @@
 import { FaCrown, FaPeopleGroup } from "react-icons/fa6";
 import type { LiveStatusParty } from "../utils/liveStatus";
+import { INSIDE_LABEL, OUTSIDE_LABEL } from "../utils/liveStatusSignals";
 import { LiveStatusRow } from "./LiveStatusRow";
 
 interface Props {
@@ -14,6 +15,7 @@ export const LiveStatusPartyRow = ({ party, now }: Props) => {
     <LiveStatusRow
       icon={FaPeopleGroup}
       label="Party"
+      value={party.isInside ? INSIDE_LABEL : OUTSIDE_LABEL}
       since={party.since}
       now={now}
       isUncertain={party.isUncertain}

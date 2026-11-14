@@ -2,7 +2,6 @@ import clsx from "clsx";
 import type { ReactNode } from "react";
 import type { IconType } from "react-icons";
 import { LiveStatusSince } from "./LiveStatusSince";
-import { LiveStatusUncertainLabel } from "./LiveStatusUncertainLabel";
 
 interface Props {
   readonly icon: IconType;
@@ -41,8 +40,9 @@ export const LiveStatusRow = ({
           {value && ":"}
         </span>
         {value && ` ${value}`}
+        {/* The muted row shows it on the screen */}
+        {isUncertain && <span className="sr-only"> (unsicher)</span>}
       </span>
-      {isUncertain && <LiveStatusUncertainLabel />}
       {since && <LiveStatusSince since={since} now={now} />}
     </div>
 
