@@ -1,4 +1,5 @@
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
+import { getCitizenDisplayName } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { FaServer } from "react-icons/fa6";
 import {
@@ -84,8 +85,13 @@ export const LiveStatusReporter = ({
       })}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="min-w-0 truncate font-bold">
-          {/* The own entries of a user without a linked citizen */}
+        {/* "Du" stands for the own entries of a user without a citizen */}
+        <span
+          className="min-w-0 truncate font-bold"
+          title={
+            reporter.citizen ? getCitizenDisplayName(reporter.citizen) : "Du"
+          }
+        >
           {reporter.citizen ? <CitizenLink citizen={reporter.citizen} /> : "Du"}
         </span>
         <Presence reporter={reporter} now={now} />

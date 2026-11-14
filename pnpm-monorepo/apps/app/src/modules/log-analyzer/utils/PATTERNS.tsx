@@ -119,7 +119,7 @@ export interface IEntry {
 const shardRegex = /^pub_(?<region>[a-z0-9]+)_\w+_(?<number>\d+)$/m;
 
 /**
- * The short name of a shard, for example `EU 9873572` for
+ * The short name of a shard, for example `EU 100` for
  * `pub_euw1b_9873572_100`. Null when the name has an unknown form.
  */
 export const formatShard = (shard: string) => {
@@ -197,16 +197,24 @@ const CENTI_SCU_PER_SCU = 100;
 /** The shops of the game are all named `SCShop_<location>` */
 const toShopName = (shop: string) => shop.replace(/^SCShop_/, "");
 
+enum RestrictedAreaEvent {
+  Impoundment = "impoundment",
+  Leaving = "leaving",
+  Relocation = "relocation",
+}
+
 /** The two lines of a restricted area come from one alternative of the regex */
-const getRestrictedAreaLabel = (event: string) => {
-  if (event.startsWith("Leaving")) return "Verlassen";
-  if (event.includes("relocated")) return "Vom Spiel umgesetzt";
-  return "Fahrzeuge werden beschlagnahmt";
+const toRestrictedAreaEvent = (event: string) => {
+  if (event.startsWith("Leaving")) return RestrictedAreaEvent.Leaving;
+  if (event.includes("relocated")) return RestrictedAreaEvent.Relocation;
+  return RestrictedAreaEvent.Impoundment;
 };
 
-/** The game relocates the player out of the area, or the player leaves it */
-const isRestrictedAreaEntry = (event: string) =>
-  !event.startsWith("Leaving") && !event.includes("relocated");
+const RESTRICTED_AREA_LABELS: Record<RestrictedAreaEvent, string> = {
+  [RestrictedAreaEvent.Impoundment]: "Fahrzeuge werden beschlagnahmt",
+  [RestrictedAreaEvent.Leaving]: "Verlassen",
+  [RestrictedAreaEvent.Relocation]: "Vom Spiel umgesetzt",
+};
 
 interface Pattern {
   title: string;
@@ -234,38 +242,30 @@ const createContractEndSignal = (
   label: groups.contract ? stripMarkup(groups.contract) : null,
 });
 
-/** All versions of the type, see `LogAnalyzerEntryPattern.supersedes` */
-const CONTRACT_COMPLETE_PATTERN: Pattern = {
-  title: "Contract abgeschlossen",
-  icon: FaFileCircleCheck,
+/** The end lines of a contract differ only in their title and icon */
+const createContractEndPattern = (title: string, icon: IconType): Pattern => ({
+  title,
+  icon,
   category: EntryCategory.Contracts,
   renderMessage: (groups) => (
     <TruncatedText>{stripMarkup(groups.contract)}</TruncatedText>
   ),
   liveStatusSignal: createContractEndSignal,
-};
+});
 
-/** All versions of the type, see `LogAnalyzerEntryPattern.supersedes` */
-const CONTRACT_FAILED_PATTERN: Pattern = {
-  title: "Contract fehlgeschlagen",
-  icon: FaFileCircleXmark,
-  category: EntryCategory.Contracts,
-  renderMessage: (groups) => (
-    <TruncatedText>{stripMarkup(groups.contract)}</TruncatedText>
-  ),
-  liveStatusSignal: createContractEndSignal,
-};
-
-/** All versions of the type, see `LogAnalyzerEntryPattern.supersedes` */
-const CONTRACT_WITHDRAWN_PATTERN: Pattern = {
-  title: "Contract zurückgezogen",
-  icon: FaFileCircleMinus,
-  category: EntryCategory.Contracts,
-  renderMessage: (groups) => (
-    <TruncatedText>{stripMarkup(groups.contract)}</TruncatedText>
-  ),
-  liveStatusSignal: createContractEndSignal,
-};
+/** All versions of each type, see `LogAnalyzerEntryPattern.supersedes` */
+const CONTRACT_COMPLETE_PATTERN = createContractEndPattern(
+  "Contract abgeschlossen",
+  FaFileCircleCheck,
+);
+const CONTRACT_FAILED_PATTERN = createContractEndPattern(
+  "Contract fehlgeschlagen",
+  FaFileCircleXmark,
+);
+const CONTRACT_WITHDRAWN_PATTERN = createContractEndPattern(
+  "Contract zurückgezogen",
+  FaFileCircleMinus,
+);
 
 /** All versions of the type, see `LogAnalyzerEntryPattern.supersedes` */
 const EARNED_PATTERN: Pattern = {
@@ -623,13 +623,17 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     icon: FaBan,
     category: EntryCategory.Zones,
     renderMessage: (groups) => (
-      <TruncatedText>{getRestrictedAreaLabel(groups.event)}</TruncatedText>
+      <TruncatedText>
+        {RESTRICTED_AREA_LABELS[toRestrictedAreaEvent(groups.event)]}
+      </TruncatedText>
     ),
-    collapseKey: (groups) => getRestrictedAreaLabel(groups.event),
+    collapseKey: (groups) => toRestrictedAreaEvent(groups.event),
+    /** The game relocates the player out of the area, or the player leaves */
     liveStatusSignal: (groups) => ({
-      type: isRestrictedAreaEntry(groups.event)
-        ? LiveStatusSignalType.StateStart
-        : LiveStatusSignalType.StateEnd,
+      type:
+        toRestrictedAreaEvent(groups.event) === RestrictedAreaEvent.Impoundment
+          ? LiveStatusSignalType.StateStart
+          : LiveStatusSignalType.StateEnd,
       kind: LiveStatusKind.RestrictedArea,
       key: null,
       label: null,
