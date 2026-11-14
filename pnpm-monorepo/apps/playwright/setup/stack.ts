@@ -9,7 +9,7 @@ export const appDirectory = path.join(monorepoRoot, "apps", "app");
  * the dev stack and production use.
  */
 export const postgresImage =
-  "postgres:18.6-alpine3.23@sha256:1a0c23d53c1ad77468c8653fa6eed4f4105cfbef9e6f027bc1dfeb16949a8c29";
+  "postgres:18.7-alpine3.23@sha256:e6014245dccbc0f28b07dac8e3f793c94a18420f78690e9db547957514a524f1";
 
 /** Same pinned image as compose.yml (S3-compatible upload storage). */
 export const rustfsImage =
@@ -66,7 +66,7 @@ export const s3Environment = (s3Port: number) =>
 
 /** Same pinned image as compose.yml (feature flag server). */
 export const unleashImage =
-  "unleashorg/unleash-server:8.2.1@sha256:c6eaaede7242144f1674343ccd94224dab04a48723e8d94746288741f327fd5c";
+  "unleashorg/unleash-server:8.3.1@sha256:025cd8b003a70cceb88427ca393c377ca6503a210d95fdee54d21610d51f7ed0";
 
 export const unleashContainerPort = 4242;
 /** Lives next to the app databases in the stack's Postgres container. */
