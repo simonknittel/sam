@@ -184,6 +184,36 @@ interface Pattern {
 }
 
 /** All versions of the type, see `LogAnalyzerEntryPattern.supersedes` */
+const CONTRACT_COMPLETE_PATTERN: Pattern = {
+  title: "Contract abgeschlossen",
+  icon: FaFileCircleCheck,
+  category: EntryCategory.Contracts,
+  renderMessage: (groups) => (
+    <TruncatedText>{stripMarkup(groups.contract)}</TruncatedText>
+  ),
+};
+
+/** All versions of the type, see `LogAnalyzerEntryPattern.supersedes` */
+const CONTRACT_FAILED_PATTERN: Pattern = {
+  title: "Contract fehlgeschlagen",
+  icon: FaFileCircleXmark,
+  category: EntryCategory.Contracts,
+  renderMessage: (groups) => (
+    <TruncatedText>{stripMarkup(groups.contract)}</TruncatedText>
+  ),
+};
+
+/** All versions of the type, see `LogAnalyzerEntryPattern.supersedes` */
+const CONTRACT_WITHDRAWN_PATTERN: Pattern = {
+  title: "Contract zurückgezogen",
+  icon: FaFileCircleMinus,
+  category: EntryCategory.Contracts,
+  renderMessage: (groups) => (
+    <TruncatedText>{stripMarkup(groups.contract)}</TruncatedText>
+  ),
+};
+
+/** All versions of the type, see `LogAnalyzerEntryPattern.supersedes` */
 const EARNED_PATTERN: Pattern = {
   title: "Belohnung erhalten",
   icon: FaTrophy,
@@ -254,23 +284,11 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     ),
   },
 
-  contractCompleteNotification: {
-    title: "Contract abgeschlossen",
-    icon: FaFileCircleCheck,
-    category: EntryCategory.Contracts,
-    renderMessage: (groups) => (
-      <TruncatedText>{stripMarkup(groups.contract)}</TruncatedText>
-    ),
-  },
+  contractCompleteNotification: CONTRACT_COMPLETE_PATTERN,
+  contractCompleteNotificationV2: CONTRACT_COMPLETE_PATTERN,
 
-  contractFailedNotification: {
-    title: "Contract fehlgeschlagen",
-    icon: FaFileCircleXmark,
-    category: EntryCategory.Contracts,
-    renderMessage: (groups) => (
-      <TruncatedText>{stripMarkup(groups.contract)}</TruncatedText>
-    ),
-  },
+  contractFailedNotification: CONTRACT_FAILED_PATTERN,
+  contractFailedNotificationV2: CONTRACT_FAILED_PATTERN,
 
   contractSharedNotification: {
     title: "Contract geteilt",
@@ -282,14 +300,8 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     collapseKey: (groups) => groups.contract,
   },
 
-  contractWithdrawnNotification: {
-    title: "Contract zurückgezogen",
-    icon: FaFileCircleMinus,
-    category: EntryCategory.Contracts,
-    renderMessage: (groups) => (
-      <TruncatedText>{stripMarkup(groups.contract)}</TruncatedText>
-    ),
-  },
+  contractWithdrawnNotification: CONTRACT_WITHDRAWN_PATTERN,
+  contractWithdrawnNotificationV2: CONTRACT_WITHDRAWN_PATTERN,
 
   disconnection: {
     title: "Verbindung getrennt",

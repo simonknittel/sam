@@ -19,9 +19,12 @@ export enum LogAnalyzerEntryType {
   BlueprintReceivedNotification = "blueprintReceivedNotification",
   ContractAcceptedNotification = "contractAcceptedNotification",
   ContractCompleteNotification = "contractCompleteNotification",
+  ContractCompleteNotificationV2 = "contractCompleteNotificationV2",
   ContractFailedNotification = "contractFailedNotification",
+  ContractFailedNotificationV2 = "contractFailedNotificationV2",
   ContractSharedNotification = "contractSharedNotification",
   ContractWithdrawnNotification = "contractWithdrawnNotification",
+  ContractWithdrawnNotificationV2 = "contractWithdrawnNotificationV2",
   Disconnection = "disconnection",
   InjuryDetectedNotification = "injuryDetectedNotification",
   MedBedHeal = "medBedHeal",
@@ -152,11 +155,35 @@ export const LOG_ANALYZER_ENTRY_PATTERNS: Record<
       /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "(?:(?!Contract Complete: ).)*Contract Complete: (?<contract>.+): ".*$/gm,
   },
 
+  [LogAnalyzerEntryType.ContractCompleteNotificationV2]: {
+    marker: NOTIFICATION_MARKER,
+    /**
+     * The mission id connects the end of a contract to its start, see
+     * `contractAcceptedNotification`.
+     */
+    // <2026-06-01T10:15:20.123Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Complete:  Wikelo Arrive to System: " [5] to queue. New queue size: 2, MissionId: [bf7d2465-cf1e-480b-ae5c-25040d716e5f], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "(?:(?!Contract Complete: ).)*Contract Complete: (?<contract>.+): "(?:(?:(?!MissionId: \[).)*MissionId: \[(?<missionId>[0-9a-f-]+)\])?.*$/gm,
+    supersedes: LogAnalyzerEntryType.ContractCompleteNotification,
+  },
+
   [LogAnalyzerEntryType.ContractFailedNotification]: {
     marker: NOTIFICATION_MARKER,
     // <2026-05-25T18:03:03.012Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Failed: CRITICAL REFUEL REQUEST: Crusader Ares Star Fighter Ion <EM4>[200 Rep] [BP]*</EM4>: " [189] to queue. New queue size: 2, MissionId: [c54aa278-06e1-4c83-86d2-9e795f7691f3], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "(?:(?!Contract Failed: ).)*Contract Failed: (?<contract>.+): ".*$/gm,
+  },
+
+  [LogAnalyzerEntryType.ContractFailedNotificationV2]: {
+    marker: NOTIFICATION_MARKER,
+    /**
+     * The mission id connects the end of a contract to its start, see
+     * `contractAcceptedNotification`.
+     */
+    // <2026-05-18T06:34:31.016Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Failed: Defend InterSec Operative: " [21] to queue. New queue size: 22, MissionId: [2d9c9ff5-cf3a-43cd-95b0-c89e4c7eac56], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "(?:(?!Contract Failed: ).)*Contract Failed: (?<contract>.+): "(?:(?:(?!MissionId: \[).)*MissionId: \[(?<missionId>[0-9a-f-]+)\])?.*$/gm,
+    supersedes: LogAnalyzerEntryType.ContractFailedNotification,
   },
 
   [LogAnalyzerEntryType.ContractSharedNotification]: {
@@ -171,6 +198,19 @@ export const LOG_ANALYZER_ENTRY_PATTERNS: Record<
     // <2026-05-21T19:02:11.481Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Withdrawn:  A Call to Arms: " [231] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "(?:(?!Contract Withdrawn: ).)*Contract Withdrawn: (?<contract>.+): ".*$/gm,
+  },
+
+  [LogAnalyzerEntryType.ContractWithdrawnNotificationV2]: {
+    marker: NOTIFICATION_MARKER,
+    /**
+     * The mission id connects the end of a contract to its start, see
+     * `contractAcceptedNotification`. Some lines give only zeros as the
+     * mission id.
+     */
+    // <2026-05-22T09:09:53.391Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Withdrawn:  A Call to Arms: " [73] to queue. New queue size: 1, MissionId: [95fc3b2f-8cb6-4bce-aa4b-bae5771e7f6b], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "(?:(?!Contract Withdrawn: ).)*Contract Withdrawn: (?<contract>.+): "(?:(?:(?!MissionId: \[).)*MissionId: \[(?<missionId>[0-9a-f-]+)\])?.*$/gm,
+    supersedes: LogAnalyzerEntryType.ContractWithdrawnNotification,
   },
 
   [LogAnalyzerEntryType.Disconnection]: {

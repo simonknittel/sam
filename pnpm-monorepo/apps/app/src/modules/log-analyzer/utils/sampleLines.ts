@@ -15,12 +15,18 @@ export const SAMPLE_LINES: Record<LogAnalyzerEntryType, string> = {
     '<2026-05-25T07:45:33.982Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Accepted:  Wikelo Arrive to System: " [4] to queue. New queue size: 1, MissionId: [bf7d2465-cf1e-480b-ae5c-25040d716e5f], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]',
   [LogAnalyzerEntryType.ContractCompleteNotification]:
     '<2026-06-01T10:15:20.123Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Complete:  Wikelo Arrive to System: " [5] to queue. New queue size: 2, MissionId: [bf7d2465-cf1e-480b-ae5c-25040d716e5f], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]',
+  [LogAnalyzerEntryType.ContractCompleteNotificationV2]:
+    '<2026-06-01T10:15:20.123Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Complete:  Wikelo Arrive to System: " [5] to queue. New queue size: 2, MissionId: [bf7d2465-cf1e-480b-ae5c-25040d716e5f], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]',
   [LogAnalyzerEntryType.ContractFailedNotification]:
     '<2026-05-25T18:03:03.012Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Failed: CRITICAL REFUEL REQUEST: Crusader Ares Star Fighter Ion <EM4>[200 Rep] [BP]*</EM4>: " [189] to queue. New queue size: 2, MissionId: [c54aa278-06e1-4c83-86d2-9e795f7691f3], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]',
+  [LogAnalyzerEntryType.ContractFailedNotificationV2]:
+    '<2026-05-18T06:34:31.016Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Failed: Defend InterSec Operative: " [21] to queue. New queue size: 22, MissionId: [2d9c9ff5-cf3a-43cd-95b0-c89e4c7eac56], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]',
   [LogAnalyzerEntryType.ContractSharedNotification]:
     '<2026-05-21T18:32:20.325Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Shared: Tactical Strike Group Needed <EM4>[300 Rep] [BP]</EM4>: " [109] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]',
   [LogAnalyzerEntryType.ContractWithdrawnNotification]:
     '<2026-05-21T19:02:11.481Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Withdrawn:  A Call to Arms: " [231] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]',
+  [LogAnalyzerEntryType.ContractWithdrawnNotificationV2]:
+    '<2026-05-22T09:09:53.391Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Withdrawn:  A Call to Arms: " [73] to queue. New queue size: 1, MissionId: [95fc3b2f-8cb6-4bce-aa4b-bae5771e7f6b], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]',
   [LogAnalyzerEntryType.Disconnection]:
     '<2026-05-25T08:40:17.864Z> [Notice] <Channel Disconnected> cause=30016 reason="Remote Disconnect - Player requested disconnect" frame=220001 isRemote=1 map="megamap" gamerules="SC_Default" hostType="Replicant" remoteAddr=1.2.3.4:64090 localAddr=0.0.0.0:64090 connection={4, 0} session=abc node_id=bc4da5d3-3f05-e19e-4aa0-702432234095 nickname="Testpilot" playerGEID=200123456789 uptime_secs=3636.990234 [Team_Network][Network][Gateway][Disconnection]',
   [LogAnalyzerEntryType.InjuryDetectedNotification]:
