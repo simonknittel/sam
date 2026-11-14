@@ -258,6 +258,51 @@ describe("Live-Status", () => {
     ).toBeNull();
   });
 
+  test("after the end of a session, only the next join of a server starts a session", () => {
+    const entries = [
+      entry(0, sessionStart()),
+      entry(1, SESSION_END_SIGNAL),
+      /** A line in the menu */
+      entry(5, { type: LiveStatusSignalType.PartyMemberJoin, handle: "Bob" }),
+    ];
+
+    const [inMenu] = evaluate(entries, 6, {
+      ownLogLineAt: at(6),
+      isLiveModeActive: true,
+    });
+    expect(inMenu.presence).toBe(LiveStatusPresence.Offline);
+    expect(inMenu.offlineSince).toEqual(at(1));
+
+    const [inGame] = evaluate([...entries, entry(7, sessionStart())], 8);
+    expect(inGame.presence).toBe(LiveStatusPresence.Online);
+  });
+
+  test("a running game does not bring back a session which ended long ago", () => {
+    /** The session of yesterday crashed without a line */
+    const entries = [
+      entry(0, sessionStart()),
+      entry(1, stateStart(LiveStatusKind.Jurisdiction, null, "Stanton")),
+    ];
+
+    expect(
+      evaluate(entries, 300, { ownLogLineAt: at(299), isLiveModeActive: true }),
+    ).toEqual([]);
+  });
+
+  test("the own log does not end a session which the citizen shares from another computer", () => {
+    const entries = [
+      entry(0, sessionStart()),
+      entry(30, stateStart(LiveStatusKind.ArmisticeZone), { isShared: true }),
+    ];
+
+    const [reporter] = evaluate(entries, 31, {
+      ownLogLineAt: at(0),
+      isLiveModeActive: true,
+    });
+
+    expect(reporter.presence).toBe(LiveStatusPresence.Online);
+  });
+
   test("online reporters come first, then the most recent activity", () => {
     const entries = [
       entry(0, sessionStart(), { citizenId: "offline", isShared: true }),

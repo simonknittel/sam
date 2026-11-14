@@ -148,7 +148,7 @@ const PARTY_TIMEOUT: Timeout = {
  * longest gap in the real logs). After a longer silence of the own log, the
  * game does not run.
  */
-export const OWN_LOG_SILENCE_THRESHOLD_MS = 10 * MILLISECONDS_PER_MINUTE;
+const OWN_LOG_SILENCE_THRESHOLD_MS = 10 * MILLISECONDS_PER_MINUTE;
 
 /** The own entries of a user without a linked citizen */
 const OWN_REPORTER_KEY = "own";
@@ -177,8 +177,14 @@ export interface TrackedReporter {
   /** True when the local parser read entries of this reporter */
   isOwn: boolean;
   lastActivityAt: Date;
+  /**
+   * True when the reporter shares the joins of a server. Then only a join
+   * starts a session after the end of the last one.
+   */
+  hasSessionStart: boolean;
   shard: string | null;
   shardSince: Date | null;
+  /** Null after a join, thus not null only while no session runs */
   sessionEndedAt: Date | null;
   states: TrackedState[];
   party: TrackedParty | null;
@@ -186,7 +192,8 @@ export interface TrackedReporter {
 
 /**
  * The order of the signals of one instant: the end of a session comes before
- * the start of the next one, and an end of a state before a start.
+ * the start of the next one, an end of a state before a start, and the start
+ * of a party before the lines about its members.
  */
 const SIGNAL_ORDER: Record<LiveStatusSignalType, number> = {
   [LiveStatusSignalType.SessionEnd]: 0,
@@ -194,18 +201,20 @@ const SIGNAL_ORDER: Record<LiveStatusSignalType, number> = {
   [LiveStatusSignalType.StateEnd]: 2,
   [LiveStatusSignalType.PartyEnd]: 2,
   [LiveStatusSignalType.PartyMemberLeave]: 2,
-  [LiveStatusSignalType.StateStart]: 3,
   [LiveStatusSignalType.PartyStart]: 3,
-  [LiveStatusSignalType.PartyMemberJoin]: 3,
-  [LiveStatusSignalType.PartyLeaderChange]: 3,
+  [LiveStatusSignalType.StateStart]: 4,
+  [LiveStatusSignalType.PartyMemberJoin]: 4,
+  [LiveStatusSignalType.PartyLeaderChange]: 4,
 };
 
 const getSignalOrder = (entry: IEntry) =>
   entry.liveStatusSignal ? SIGNAL_ORDER[entry.liveStatusSignal.type] : 0;
 
+/** The key makes the order of the same instant the same on each run */
 const compareEntries = (first: IEntry, second: IEntry) =>
   first.isoDate.getTime() - second.isoDate.getTime() ||
-  getSignalOrder(first) - getSignalOrder(second);
+  getSignalOrder(first) - getSignalOrder(second) ||
+  first.key.localeCompare(second.key);
 
 /** A shared entry of a deleted citizen belongs to nobody */
 const getReporterKey = (entry: IEntry) => {
@@ -296,6 +305,7 @@ const applySignal = (
     case LiveStatusSignalType.SessionStart:
       /** A join of a server is a new session for the zones and instances */
       closeSessionBoundStates(reporter);
+      reporter.hasSessionStart = true;
       reporter.shard = signal.shard;
       reporter.shardSince = at;
       reporter.sessionEndedAt = null;
@@ -373,6 +383,7 @@ export const trackLiveStatus = (entries: Iterable<IEntry>) => {
         key,
         citizen: entry.citizen,
         isOwn: false,
+        hasSessionStart: false,
         lastActivityAt: entry.isoDate,
         shard: null,
         shardSince: null,
@@ -457,20 +468,35 @@ const evaluateSession = (
   reporter: TrackedReporter,
   { now, ownLogLineAt, isLiveModeActive }: LiveStatusOptions,
 ) => {
+  const { sessionEndedAt, lastActivityAt } = reporter;
+
+  /**
+   * After the end of a session, for example in the menu, only the next join
+   * of a server starts a session. For a reporter who shares no joins, any
+   * later entry tells that the reporter plays again.
+   */
   if (
-    reporter.sessionEndedAt &&
-    reporter.sessionEndedAt >= reporter.lastActivityAt
+    sessionEndedAt &&
+    (reporter.hasSessionStart || sessionEndedAt >= lastActivityAt)
   )
     return {
       presence: LiveStatusPresence.Offline,
-      offlineSince: reporter.sessionEndedAt,
+      offlineSince: sessionEndedAt,
     };
 
-  const stage = getTimeoutStage(SESSION_TIMEOUT, reporter.lastActivityAt, now);
-  const offlineSince =
-    stage === TimeoutStage.Expired ? reporter.lastActivityAt : null;
+  /** A running game does not bring back a session which ended long ago */
+  const stage = getTimeoutStage(SESSION_TIMEOUT, lastActivityAt, now);
+  if (stage === TimeoutStage.Expired)
+    return {
+      presence: LiveStatusPresence.Offline,
+      offlineSince: lastActivityAt,
+    };
 
-  if (reporter.isOwn && ownLogLineAt) {
+  /**
+   * The own log tells only about this computer, not about the entries which
+   * the citizen shares from another one.
+   */
+  if (reporter.isOwn && ownLogLineAt && ownLogLineAt >= lastActivityAt) {
     const silence = now.getTime() - ownLogLineAt.getTime();
     if (silence < OWN_LOG_SILENCE_THRESHOLD_MS)
       return { presence: LiveStatusPresence.Online, offlineSince: null };
@@ -482,11 +508,10 @@ const evaluateSession = (
       };
 
     /** Without live mode, the game can have written lines since the read */
-    if (stage === TimeoutStage.Fresh)
-      return { presence: LiveStatusPresence.Uncertain, offlineSince };
+    return { presence: LiveStatusPresence.Uncertain, offlineSince: null };
   }
 
-  return { presence: PRESENCE_BY_STAGE[stage], offlineSince };
+  return { presence: PRESENCE_BY_STAGE[stage], offlineSince: null };
 };
 
 const KIND_ORDER = Object.values(LiveStatusKind);
