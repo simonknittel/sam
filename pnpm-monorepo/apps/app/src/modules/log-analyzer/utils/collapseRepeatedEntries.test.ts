@@ -28,6 +28,7 @@ const entry = (
   citizen: { id: citizenId, handle: citizenId, deletedAt: null },
   isShared: false,
   isUploaded: false,
+  liveStatusSignal: null,
 });
 
 /** The entries from the newest to the oldest, as the table shows them */
