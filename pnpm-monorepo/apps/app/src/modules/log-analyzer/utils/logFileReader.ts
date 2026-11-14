@@ -4,7 +4,7 @@ import {
   LogAnalyzerEntryType,
   MAXIMUM_LOG_ANALYZER_RAW_LINE_LENGTH,
 } from "@sam-monorepo/domain";
-import { findPrecedingIsoDate } from "./findPrecedingIsoDate";
+import { findLastIsoDate, findPrecedingIsoDate } from "./findPrecedingIsoDate";
 import type { LogFile, RawMatch, ReadProgress, ReadResult } from "./types";
 
 const LINE_FEED = 0x0a;
@@ -219,7 +219,7 @@ const readFile = async (
     text,
     lastLineInText.start,
   );
-  const newestIsoDate = findPrecedingIsoDate(text, text.length);
+  const newestIsoDate = findLastIsoDate(text);
 
   return {
     size: file.size,

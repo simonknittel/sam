@@ -29,3 +29,17 @@ export const findPrecedingIsoDate = (
 
   return null;
 };
+
+/**
+ * The time of the last timestamped line of the file, also of a last line
+ * which has no line end yet. The game writes the timestamp first, thus the
+ * timestamp of a line which it still writes is complete.
+ */
+export const findLastIsoDate = (fileContent: string): string | null => {
+  const lastLineStart = fileContent.lastIndexOf("\n") + 1;
+  const match = TIMESTAMP_AT_LINE_START.exec(
+    fileContent.slice(lastLineStart, lastLineStart + TIMESTAMP_PREFIX_LENGTH),
+  );
+
+  return match ? match[1] : findPrecedingIsoDate(fileContent, lastLineStart);
+};

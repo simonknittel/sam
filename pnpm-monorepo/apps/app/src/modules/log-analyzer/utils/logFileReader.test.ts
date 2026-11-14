@@ -156,7 +156,8 @@ describe("createLogFileReader", () => {
     );
     expect(newestIsoDate).toBe("2026-09-01T16:15:11.246Z");
 
-    const grownFile = createLogFile(`${LOG_CONTENT}\r\n${newLine}\r\n`, 2);
+    /** The game can still write the end of the last line */
+    const grownFile = createLogFile(`${LOG_CONTENT}\r\n${newLine}`, 2);
     expect((await readLogFiles([grownFile], false)).newestIsoDate).toBe(
       "2026-09-02T08:00:00.000Z",
     );
