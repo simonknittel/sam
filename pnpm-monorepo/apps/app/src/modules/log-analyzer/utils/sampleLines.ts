@@ -69,6 +69,8 @@ export const SAMPLE_LINES: Record<LogAnalyzerEntryType, string> = {
     '<2026-02-06T18:16:51.430Z> [Notice] <SHUDEvent_OnNotification> Added notification "Alliance Aid Defense Rewards - Tier 1\r\n<2026-02-06T18:16:51.430Z> You have been awarded: Silverton Jacket AA Defense: " [177] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]',
   [LogAnalyzerEntryType.EarnedNotification]:
     "<2026-05-14T15:35:00.920Z> [Notice] <SHUDEvent_OnNotification> Added notification \"You've Earned: MG Scrip\r\n<2026-05-14T15:35:00.920Z> Access It at Your Primary Residence's Inventory",
+  [LogAnalyzerEntryType.EarnedNotificationV2]:
+    '<2026-11-14T15:01:15.490Z> [Notice] <SHUDEvent_OnNotification> Added notification "You\'ve earned: Falston Jumpsuit "People\'s Alliance Edition"\r\n<2026-11-14T15:01:15.490Z>  Access it at a destination Freight Elevator',
   [LogAnalyzerEntryType.FundsAwardedNotification]:
     '<2026-02-21T16:27:29.082Z> [Notice] <SHUDEvent_OnNotification> Added notification "Awarded 500 aUEC: " [81] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]',
   [LogAnalyzerEntryType.RestrictedAreaNotification]:

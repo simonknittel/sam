@@ -46,6 +46,7 @@ export enum LogAnalyzerEntryType {
   ContractNotAcceptedNotification = "contractNotAcceptedNotification",
   RewardNotification = "rewardNotification",
   EarnedNotification = "earnedNotification",
+  EarnedNotificationV2 = "earnedNotificationV2",
   FundsAwardedNotification = "fundsAwardedNotification",
   RestrictedAreaNotification = "restrictedAreaNotification",
   MonitoredSpaceStatusNotification = "monitoredSpaceStatusNotification",
@@ -381,6 +382,20 @@ export const LOG_ANALYZER_ENTRY_PATTERNS: Record<
     // <2026-05-14T15:35:00.920Z> Access It at Your Primary Residence's Inventory
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "You've Earned: (?<reward>[^"\r\n]+)\r?\n<[\d\-T:.Z]+> Access (?:It|Them) at [^"\r\n]*$/gm,
+  },
+
+  [LogAnalyzerEntryType.EarnedNotificationV2]: {
+    marker: NOTIFICATION_MARKER,
+    /**
+     * Since build 4.10.200, the game writes "earned" in lowercase, adds a
+     * space at the start of the second line and gives item names with
+     * quotes. The game writes a third line, which a match does not need.
+     */
+    // <2026-11-14T15:01:15.490Z> [Notice] <SHUDEvent_OnNotification> Added notification "You've earned: Falston Jumpsuit "People's Alliance Edition"
+    // <2026-11-14T15:01:15.490Z>  Access it at a destination Freight Elevator
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "You've [Ee]arned: (?<reward>[^\r\n]+)\r?\n<[\d\-T:.Z]+> +Access (?:[Ii]t|[Tt]hem) at [^"\r\n]*$/gm,
+    supersedes: LogAnalyzerEntryType.EarnedNotification,
   },
 
   [LogAnalyzerEntryType.FundsAwardedNotification]: {

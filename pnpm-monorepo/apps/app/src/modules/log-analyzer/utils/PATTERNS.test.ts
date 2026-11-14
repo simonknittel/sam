@@ -1,4 +1,5 @@
 import {
+  getNewerLogAnalyzerEntryVersions,
   getOldestLogAnalyzerEntryVersion,
   LOG_ANALYZER_ENTRY_PATTERNS,
   LogAnalyzerEntryType,
@@ -59,6 +60,23 @@ describe("PATTERNS", () => {
     },
   );
 
+  /**
+   * Else a shared entry of the older version cannot move to the newer
+   * version (see `LogAnalyzerEntryPattern.supersedes`).
+   */
+  test.each(
+    Object.values(LogAnalyzerEntryType).flatMap((type) =>
+      getNewerLogAnalyzerEntryVersions(type).map((version) => ({
+        type,
+        version,
+      })),
+    ),
+  )("$version matches the whole $type sample", ({ type, version }) => {
+    const match = matchLogAnalyzerEntryLine(version, SAMPLE_LINES[type]);
+
+    expect(match?.[0]).toBe(SAMPLE_LINES[type]);
+  });
+
   test("only the crash takes its time from the preceding line", () => {
     expect(
       Object.values(LogAnalyzerEntryType).filter(takesTimeOfPrecedingLine),
@@ -113,6 +131,12 @@ describe("PATTERNS", () => {
     );
 
     expect(match?.groups?.items).toBe(items);
+  });
+
+  test("reads a reward with quotes in its name", () => {
+    expect(groupsOf(LogAnalyzerEntryType.EarnedNotificationV2).reward).toBe(
+      `Falston Jumpsuit "People's Alliance Edition"`,
+    );
   });
 
   test("an accepted contract gives the mission id of its abandon line", () => {
