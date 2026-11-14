@@ -36,7 +36,7 @@ export const LiveStatusRow = ({
         className="min-w-0 flex-1 truncate"
         title={title ?? (value ? `${label}: ${value}` : label)}
       >
-        <span className="font-mono uppercase">
+        <span className="font-mono text-white/40 uppercase">
           {label}
           {value && ":"}
         </span>
