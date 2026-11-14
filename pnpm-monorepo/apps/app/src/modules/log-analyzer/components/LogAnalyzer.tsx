@@ -294,6 +294,12 @@ export const LogAnalyzer = ({ className }: Props) => {
   useEffect(() => {
     if (!isLiveModeActive) return;
 
+    /**
+     * The newest line of the last read can be old. Without this read, the
+     * Live-Status shows the own session as offline until the first interval.
+     */
+    parseNewLogLines();
+
     const interval = window.setInterval(() => {
       parseNewLogLines();
     }, LIVE_MODE_PARSE_INTERVAL_MS);
