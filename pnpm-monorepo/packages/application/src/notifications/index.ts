@@ -22,6 +22,12 @@ export {
   authorizeRealtimeChannelInputSchema,
   type AuthorizeRealtimeChannelInput,
 } from "./authorizeRealtimeChannel.js";
+export {
+  deleteOwnWebPushSubscription,
+  deleteOwnWebPushSubscriptionInputSchema,
+  type DeleteOwnWebPushSubscriptionInput,
+  type DeleteOwnWebPushSubscriptionOutput,
+} from "./deleteOwnWebPushSubscription.js";
 export * from "./delivery/index.js";
 export {
   MyNotificationArchivedFilter,
@@ -58,15 +64,17 @@ export {
 export { NotificationErrorMessage } from "./notificationErrors.js";
 export {
   countOwnUnreadOnSiteNotifications,
-  countOwnWebPushSubscriptions,
   findOwnNotificationSettings,
+  listOwnWebPushSubscriptions,
   type OwnNotificationSetting,
+  type OwnWebPushSubscription,
 } from "./ownNotificationReads.js";
 export * from "./recipients/index.js";
 export {
   subscribeWebPush,
   subscribeWebPushInputSchema,
   type SubscribeWebPushInput,
+  type SubscribeWebPushOptions,
   type SubscribeWebPushOutput,
 } from "./subscribeWebPush.js";
 export {
@@ -75,10 +83,6 @@ export {
   type UnarchiveOnSiteNotificationInput,
   type UnarchiveOnSiteNotificationOutput,
 } from "./unarchiveOnSiteNotification.js";
-export {
-  unsubscribeWebPush,
-  type UnsubscribeWebPushOutput,
-} from "./unsubscribeWebPush.js";
 export {
   updateNotificationSettings,
   updateNotificationSettingsInputSchema,

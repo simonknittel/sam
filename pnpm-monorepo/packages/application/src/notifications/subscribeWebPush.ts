@@ -2,6 +2,7 @@ import { isPrismaError, PrismaErrorCode } from "@sam-monorepo/database/client";
 import {
   AuditEventType,
   isAllowedWebPushEndpointUrl,
+  USER_AGENT_MAXIMUM_LENGTH,
 } from "@sam-monorepo/domain";
 import * as z from "zod";
 import { requireCitizen, type Actor } from "../actor.js";
@@ -39,6 +40,11 @@ export type SubscribeWebPushInput = z.output<
   typeof subscribeWebPushInputSchema
 >;
 
+export interface SubscribeWebPushOptions {
+  /** The `User-Agent` header of the request, or null */
+  readonly userAgent: string | null;
+}
+
 export interface SubscribeWebPushOutput {
   readonly subscription_id: string;
 }
@@ -48,17 +54,21 @@ interface SubscriptionData {
   readonly endpoint: string;
   readonly p256dh: string;
   readonly auth: string;
+  readonly userAgent: string | null;
 }
 
-/** Changes the keys of the subscription of the endpoint of the own citizen */
+/**
+ * Changes the keys and the user agent of the subscription of the endpoint of
+ * the own citizen
+ */
 const updateOwnSubscription = async (
   context: ApplicationContext,
-  { citizenId, endpoint, p256dh, auth }: SubscriptionData,
+  { citizenId, endpoint, p256dh, auth, userAgent }: SubscriptionData,
 ) => {
   const [subscription] =
     await context.prisma.webPushSubscription.updateManyAndReturn({
       where: { endpoint, citizenId },
-      data: { p256dh, auth },
+      data: { p256dh, auth, userAgent },
       select: { id: true },
     });
 
@@ -100,8 +110,8 @@ const saveSubscription = async (
 /**
  * Saves the web push subscription of a browser for the citizen of the actor.
  * The endpoint identifies the subscription: a second save of the same
- * endpoint changes only its keys. A test notification confirms the
- * subscription on the device.
+ * endpoint changes only its keys and its user agent. A test notification
+ * confirms the subscription on the device.
  *
  * @throws ForbiddenError for a user without a citizen, or when the endpoint
  * is the subscription of a different citizen
@@ -110,6 +120,7 @@ export const subscribeWebPush = (
   context: ApplicationContext,
   actor: Actor,
   input: SubscribeWebPushInput,
+  options: SubscribeWebPushOptions,
 ): Promise<SubscribeWebPushOutput> =>
   withSpan(context, "subscribeWebPush", async () => {
     const citizenId = requireCitizen(actor).id;
@@ -119,6 +130,7 @@ export const subscribeWebPush = (
       endpoint: input.subscription.endpoint,
       p256dh: input.subscription.keys.p256dh,
       auth: input.subscription.keys.auth,
+      userAgent: options.userAgent?.slice(0, USER_AGENT_MAXIMUM_LENGTH) ?? null,
     });
 
     await context.audit.create([
