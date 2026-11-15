@@ -8,7 +8,7 @@ interface Props {
 }
 
 /**
- * The tools of the catalog with a switch for each tool. The MCP app and the
+ * The tools of the catalog with a switch for each tool. The app KI-Agenten and the
  * consent page use it in a modal.
  */
 export const McpToolList = ({ groups, renderSwitch }: Props) => {

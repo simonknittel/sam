@@ -32,7 +32,7 @@ export const ConsentToolsButton = ({
       label="Auswählen"
       ariaLabel="Tools auswählen"
       heading="Tools auswählen"
-      description="Der Client kann nur die aktiven Tools nutzen. Du kannst die Auswahl später in der MCP-App ändern."
+      description="Der Client kann nur die aktiven Tools nutzen. Du kannst die Auswahl später in der App KI-Agenten ändern."
     >
       <McpToolList
         groups={toolGroups}

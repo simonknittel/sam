@@ -4,14 +4,14 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: {
-    template: "%s - MCP",
-    default: "MCP",
+    template: "%s - KI-Agenten",
+    default: "KI-Agenten",
   },
 };
 
-export default function Layout({ children }: LayoutProps<"/app/mcp">) {
+export default function Layout({ children }: LayoutProps<"/app/ai-agents">) {
   return (
-    <DefaultLayout title="MCP" slug="mcp">
+    <DefaultLayout title="KI-Agenten" slug="ai-agents">
       <MaxWidthContent>{children}</MaxWidthContent>
     </DefaultLayout>
   );

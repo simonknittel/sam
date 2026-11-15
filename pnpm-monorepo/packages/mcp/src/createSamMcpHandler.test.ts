@@ -263,7 +263,7 @@ describe("tools/call", () => {
         admin_mode: false,
         permission_count: 1,
         tool_groups: ["users"],
-        settings_page_url: "http://localhost/app/mcp",
+        settings_page_url: "http://localhost/app/ai-agents",
       },
     });
     expect(body.result?.content).toEqual([

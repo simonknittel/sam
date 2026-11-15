@@ -14,11 +14,12 @@ the files of its skills.
 The permission `mcp;use` ("MCP-Server nutzen" in the role settings) and the
 clearance of the app (a confirmed email, `login;manage` and the Discord
 two-factor authentication that some permissions require) gate the whole
-server: the consent page, the MCP app, the token endpoint and each
+server: the consent page, the app KI-Agenten, the token endpoint and each
 request with an access token. Only the removal of access stays open without
 `mcp;use`: a user can always disconnect a client and deny a consent. Each
 user with it finds the URL and the steps for the supported clients in the
-MCP app (`/app/mcp`). In the same app, the user names and disconnects
+app KI-Agenten (`/app/ai-agents`), also for the Claude plugin and the skills
+(see [Files for AI agents](#files-for-ai-agents)). In the same app, the user names and disconnects
 clients and disables tools for each client. A client opens the consent page
 `/app/oauth/authorize` of SAM; the user signs in to SAM if necessary, can
 give the client a name and disable tools, and allows the access.
@@ -33,7 +34,7 @@ app.
   cache. There is no Dynamic Client Registration and there are no
   pre-registered clients.
 - **Grant:** the authorization code grant with PKCE (`S256` only). Each
-  consent makes a new grant (a "connected client" in the MCP app). The tool
+  consent makes a new grant (a "connected client" in the app KI-Agenten). The tool
   settings and the name belong to the grant. The grant keeps the user agent
   of the browser of the consent, thus the user can tell two grants of the
   same client apart.
@@ -52,7 +53,7 @@ app.
   an abandoned authorization) and cached client metadata documents that
   expired more than 24 hours ago.
 - **Permissions:** the own roles of the user. Admin mode is off. An admin
-  can enable admin mode for one client in the MCP app.
+  can enable admin mode for one client in the app KI-Agenten.
 
 Endpoints:
 
@@ -76,7 +77,8 @@ Endpoints:
 
 The Unleash flag `DisableMcpServer` is the kill switch. While it is on, the
 MCP endpoint and the OAuth endpoints answer `503`, and the consent page
-shows a notice. The MCP app stays available.
+shows a notice. The app KI-Agenten and the files for AI agents stay
+available.
 
 Use the standard strategy for all users on this flag. The MCP endpoint and
 the OAuth endpoints have no session, thus a strategy for some users does not
@@ -117,7 +119,30 @@ without the extension can read them as resources.
 
 The skills are in `packages/mcp/src/skills`. Write a skill in English and
 keep it short: give the concepts, the processes and the rules of an app that
-the tool descriptions do not give, not each field or option.
+the tool descriptions do not give, not each field or option. A description
+has at most 200 characters, because Claude.ai refuses a longer one on upload.
+
+## Files for AI agents
+
+Few clients support the Skills extension (in 2026-11, no Claude client and
+no Codex, see the [client matrix](https://modelcontextprotocol.io/extensions/client-matrix)).
+Thus the app also serves the skills and the MCP server as files.
+`packages/mcp` makes them from the same skills.
+
+| Path                                     | Content                                                                                                                                                      |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/api/ai-agents/claude/marketplace.json` | A Claude Code marketplace with the plugin `sam`. The source of the plugin is the archive below.                                                              |
+| `/api/ai-agents/claude/sam.zip`          | The Claude plugin: the MCP server of the environment and all skills. The upload in Claude Desktop and Claude.ai uses the same file.                          |
+| `/.well-known/agent-skills/index.json`   | The index of the [Agent Skills Discovery RFC](https://github.com/cloudflare/agent-skills-discovery-rfc) v0.2.0, for example for `npx skills add <base URL>`. |
+| `/.well-known/agent-skills/<skill>.zip`  | One skill with `SKILL.md` at the root of the archive.                                                                                                        |
+
+- The files are public: Claude Code cannot send credentials to a
+  marketplace, and the content comes from the public repository. The build
+  makes them as static files. They ignore the kill switch.
+- The archives must be deterministic (a fixed file order and a fixed
+  timestamp). The plugin has no version, thus Claude Code uses the SHA-256
+  digest of the archive as the version. The marketplace and the index give
+  the digests of the archives.
 
 ## Code layout
 

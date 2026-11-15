@@ -3,9 +3,17 @@ import { requireAuthenticationPage } from "@/modules/auth/server";
 import { isAdminModeActive } from "@/modules/auth/utils/isAdminModeActive";
 import Note from "@/modules/common/components/Note";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
+import { ClaudePluginTile } from "@/modules/mcp-settings/components/ClaudePluginTile";
 import { ConnectedClientsTile } from "@/modules/mcp-settings/components/ConnectedClientsTile";
-import { McpConnectionTile } from "@/modules/mcp-settings/components/McpConnectionTile";
+import { ManualSetupTile } from "@/modules/mcp-settings/components/ManualSetupTile";
+import {
+  getClaudeMarketplaceUrl,
+  getClaudePluginArchiveUrl,
+  getSkillArchiveUrl,
+  SKILL_ARCHIVE_EXTENSION,
+} from "@/modules/mcp-settings/utils/agentDistributionUrls";
 import { isMcpServerDisabled } from "@/modules/oauth/utils/isMcpServerDisabled";
+import { listSkillNames } from "@sam-monorepo/mcp";
 
 /**
  * The page stays available while the kill switch is on: it only manages
@@ -13,8 +21,10 @@ import { isMcpServerDisabled } from "@/modules/oauth/utils/isMcpServerDisabled";
  */
 export default async function Page() {
   const { session, authorizePage } =
-    await requireAuthenticationPage("/app/mcp");
+    await requireAuthenticationPage("/app/ai-agents");
   await authorizePage("mcp", "use");
+
+  const { baseUrl, mcpResourceUrl } = getApplicationContext().urls;
 
   return (
     <div className="flex flex-col gap-4">
@@ -25,8 +35,18 @@ export default async function Page() {
         />
       )}
 
-      <McpConnectionTile
-        mcpUrl={getApplicationContext().urls.mcpResourceUrl.href}
+      <ClaudePluginTile
+        marketplaceUrl={getClaudeMarketplaceUrl(baseUrl).href}
+        pluginArchiveUrl={getClaudePluginArchiveUrl(baseUrl).href}
+      />
+
+      <ManualSetupTile
+        mcpUrl={mcpResourceUrl.href}
+        baseUrl={baseUrl.origin}
+        skillArchives={listSkillNames().map((skillName) => ({
+          fileName: `${skillName}${SKILL_ARCHIVE_EXTENSION}`,
+          url: getSkillArchiveUrl(baseUrl, skillName).href,
+        }))}
       />
 
       <SuspenseWithErrorBoundaryTile>

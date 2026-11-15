@@ -1,24 +1,58 @@
-import { CopyToClipboard } from "@/modules/common/components/CopyToClipboard";
 import { Tile } from "@/modules/common/components/Tile";
-import type { ReactNode } from "react";
+import { ClientSteps } from "./ClientSteps";
+import { CopyableCode } from "./CopyableCode";
+import { DownloadLink } from "./DownloadLink";
+
+export interface SkillArchiveLink {
+  readonly fileName: string;
+  readonly url: string;
+}
 
 interface Props {
   readonly className?: string;
   /** The canonical URL of the MCP endpoint */
   readonly mcpUrl: string;
+  /** `npx skills add` finds the skills at this URL */
+  readonly baseUrl: string;
+  readonly skillArchives: readonly SkillArchiveLink[];
 }
 
-export const McpConnectionTile = ({ className, mcpUrl }: Props) => {
+export const ManualSetupTile = ({
+  className,
+  mcpUrl,
+  baseUrl,
+  skillArchives,
+}: Props) => {
+  const skillsCommand = `npx skills add ${baseUrl} -g -a`;
+
   return (
     <Tile
       className={className}
-      heading="Verbinden"
+      heading="Manuell: MCP-Server und Skills"
       childrenClassName="flex flex-col gap-6"
     >
       <div>
         <p>Das SAM stellt einen remote MCP Server zur Verfügung.</p>
         <p className="mt-4 text-sm text-neutral-500">URL</p>
         <CopyableCode value={mcpUrl} />
+      </div>
+
+      <div>
+        <p>
+          Die Skills erklären dem Modell die Apps und die Berechtigungen von
+          SAM. Nur wenige Clients laden sie vom MCP-Server, deshalb installierst
+          du sie zusätzlich.
+        </p>
+        <ul className="mt-4 flex flex-wrap gap-2">
+          {skillArchives.map((skillArchive) => (
+            <li key={skillArchive.fileName}>
+              <DownloadLink
+                href={skillArchive.url}
+                fileName={skillArchive.fileName}
+              />
+            </li>
+          ))}
+        </ul>
       </div>
 
       <details className="group">
@@ -40,6 +74,11 @@ export const McpConnectionTile = ({ className, mcpUrl }: Props) => {
               Beispiel &bdquo;SAM&ldquo;) und die URL ein.
             </li>
             <li>Wähle &bdquo;Connect&ldquo; und erlaube den Zugriff in SAM.</li>
+            <li>
+              Lade die Skills herunter und lade jede Datei unter
+              &bdquo;Customize&ldquo; &rarr; &bdquo;Skills&ldquo; &rarr;
+              &bdquo;Upload a skill&ldquo; hoch.
+            </li>
           </ClientSteps>
 
           <ClientSteps title="Claude Code">
@@ -54,6 +93,10 @@ export const McpConnectionTile = ({ className, mcpUrl }: Props) => {
               und melde dich an.
             </li>
             <li>Erlaube den Zugriff in SAM.</li>
+            <li>
+              Installiere die Skills mit diesem Befehl:
+              <CopyableCode value={`${skillsCommand} claude-code`} />
+            </li>
           </ClientSteps>
 
           <ClientSteps title="ChatGPT">
@@ -68,6 +111,11 @@ export const McpConnectionTile = ({ className, mcpUrl }: Props) => {
               &bdquo;OAuth&ldquo;.
             </li>
             <li>Wähle &bdquo;Create&ldquo; und erlaube den Zugriff in SAM.</li>
+            <li>
+              Wenn dein Plan Skills hat: Lade die Skills herunter und lade jede
+              Datei unter &bdquo;Skills&ldquo; &rarr; &bdquo;Create&ldquo;
+              &rarr; &bdquo;Upload from your computer&ldquo; hoch.
+            </li>
           </ClientSteps>
 
           <ClientSteps title="Codex">
@@ -80,40 +128,13 @@ export const McpConnectionTile = ({ className, mcpUrl }: Props) => {
               <CopyableCode value="codex mcp login sam" />
             </li>
             <li>Erlaube den Zugriff in SAM.</li>
+            <li>
+              Installiere die Skills mit diesem Befehl:
+              <CopyableCode value={`${skillsCommand} codex`} />
+            </li>
           </ClientSteps>
         </div>
       </details>
     </Tile>
-  );
-};
-
-interface CopyableCodeProps {
-  readonly value: string;
-}
-
-const CopyableCode = ({ value }: CopyableCodeProps) => {
-  return (
-    <div className="mt-1 flex items-start gap-2 rounded-secondary bg-neutral-800 px-3 py-2">
-      <code className="flex-1 font-mono text-sm wrap-anywhere">{value}</code>
-      <CopyToClipboard value={value} className="mt-0.5 flex-none" />
-    </div>
-  );
-};
-
-interface ClientStepsProps {
-  readonly title: string;
-  /** The `<li>` elements of the steps */
-  readonly children: ReactNode;
-}
-
-const ClientSteps = ({ title, children }: ClientStepsProps) => {
-  return (
-    <section className="min-w-0">
-      <h3 className="font-bold">{title}</h3>
-
-      <ol className="mt-2 flex list-decimal flex-col gap-2 pl-5 text-sm">
-        {children}
-      </ol>
-    </section>
   );
 };

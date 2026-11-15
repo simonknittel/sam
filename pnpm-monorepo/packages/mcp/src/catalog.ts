@@ -62,7 +62,7 @@ export interface ToolCatalogGroup {
 
 /**
  * The groups of the catalog with the tools that are visible for the actor, in
- * the order of `tools/list`. The MCP app and the consent page show them.
+ * the order of `tools/list`. The app KI-Agenten and the consent page show them.
  */
 export const listToolCatalogGroups = (actor: Actor): ToolCatalogGroup[] => {
   const catalog = TOOL_CATALOG.filter((tool) => tool.isVisible(actor)).map(

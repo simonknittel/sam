@@ -10,7 +10,7 @@ interface Props extends Pick<
   readonly clientName: string;
 }
 
-/** The own name of a connected client. The MCP app and the consent page use it. */
+/** The own name of a connected client. The app KI-Agenten and the consent page use it. */
 export const GrantCustomNameInput = ({ clientName, ...rest }: Props) => {
   return (
     <TextInput
