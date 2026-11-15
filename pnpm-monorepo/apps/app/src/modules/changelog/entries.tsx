@@ -69,9 +69,9 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
           KI-Agenten
         </Link>
         . Dort installierst du jetzt das Plugin für Claude, das den MCP-Server
-        und die Skills von SAM in einem Schritt verbindet. Für andere Clients
-        lädst du die Skills herunter oder installierst sie mit{" "}
-        <code>npx skills</code>.
+        und die Skills von SAM in einem Paket enthält. Für andere Clients lädst
+        du die Skills herunter oder installierst sie mit <code>npx skills</code>
+        .
       </p>
     ),
   },
