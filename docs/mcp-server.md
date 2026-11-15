@@ -138,7 +138,7 @@ Thus the app also serves the skills and the MCP server as files.
 
 - The files are public: Claude Code cannot send credentials to a
   marketplace, and the content comes from the public repository. The build
-  makes them as static files. They ignore the kill switch.
+  makes them as static files.
 - The archives must be deterministic (a fixed file order and a fixed
   timestamp). The plugin has no version, thus Claude Code uses the SHA-256
   digest of the archive as the version. The marketplace and the index give

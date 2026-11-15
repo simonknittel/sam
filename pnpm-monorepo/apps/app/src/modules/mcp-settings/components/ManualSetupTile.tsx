@@ -3,7 +3,7 @@ import { ClientSteps } from "./ClientSteps";
 import { CopyableCode } from "./CopyableCode";
 import { DownloadLink } from "./DownloadLink";
 
-export interface SkillArchiveLink {
+interface SkillArchiveLink {
   readonly fileName: string;
   readonly url: string;
 }
@@ -13,17 +13,19 @@ interface Props {
   /** The canonical URL of the MCP endpoint */
   readonly mcpUrl: string;
   /** `npx skills add` finds the skills at this URL */
-  readonly baseUrl: string;
+  readonly skillsUrl: string;
   readonly skillArchives: readonly SkillArchiveLink[];
 }
 
 export const ManualSetupTile = ({
   className,
   mcpUrl,
-  baseUrl,
+  skillsUrl,
   skillArchives,
 }: Props) => {
-  const skillsCommand = `npx skills add ${baseUrl} -g -a`;
+  /** `agent` is a name of the agent list of `npx skills` */
+  const getSkillsCommand = (agent: string) =>
+    `npx skills add ${skillsUrl} -a ${agent} -g`;
 
   return (
     <Tile
@@ -95,7 +97,7 @@ export const ManualSetupTile = ({
             <li>Erlaube den Zugriff in SAM.</li>
             <li>
               Installiere die Skills mit diesem Befehl:
-              <CopyableCode value={`${skillsCommand} claude-code`} />
+              <CopyableCode value={getSkillsCommand("claude-code")} />
             </li>
           </ClientSteps>
 
@@ -111,11 +113,6 @@ export const ManualSetupTile = ({
               &bdquo;OAuth&ldquo;.
             </li>
             <li>Wähle &bdquo;Create&ldquo; und erlaube den Zugriff in SAM.</li>
-            <li>
-              Wenn dein Plan Skills hat: Lade die Skills herunter und lade jede
-              Datei unter &bdquo;Skills&ldquo; &rarr; &bdquo;Create&ldquo;
-              &rarr; &bdquo;Upload from your computer&ldquo; hoch.
-            </li>
           </ClientSteps>
 
           <ClientSteps title="Codex">
@@ -130,7 +127,7 @@ export const ManualSetupTile = ({
             <li>Erlaube den Zugriff in SAM.</li>
             <li>
               Installiere die Skills mit diesem Befehl:
-              <CopyableCode value={`${skillsCommand} codex`} />
+              <CopyableCode value={getSkillsCommand("codex")} />
             </li>
           </ClientSteps>
         </div>

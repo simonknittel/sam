@@ -9,9 +9,9 @@ import { ManualSetupTile } from "@/modules/mcp-settings/components/ManualSetupTi
 import {
   getClaudeMarketplaceUrl,
   getClaudePluginArchiveUrl,
+  getSkillArchiveFileName,
   getSkillArchiveUrl,
-  SKILL_ARCHIVE_EXTENSION,
-} from "@/modules/mcp-settings/utils/agentDistributionUrls";
+} from "@/modules/mcp-settings/utils/agentFileUrls";
 import { isMcpServerDisabled } from "@/modules/oauth/utils/isMcpServerDisabled";
 import { listSkillNames } from "@sam-monorepo/mcp";
 
@@ -42,9 +42,9 @@ export default async function Page() {
 
       <ManualSetupTile
         mcpUrl={mcpResourceUrl.href}
-        baseUrl={baseUrl.origin}
+        skillsUrl={baseUrl.origin}
         skillArchives={listSkillNames().map((skillName) => ({
-          fileName: `${skillName}${SKILL_ARCHIVE_EXTENSION}`,
+          fileName: getSkillArchiveFileName(skillName),
           url: getSkillArchiveUrl(baseUrl, skillName).href,
         }))}
       />

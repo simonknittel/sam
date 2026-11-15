@@ -1,17 +1,18 @@
-import { SKILL_ARCHIVE_EXTENSION } from "@/modules/mcp-settings/utils/agentDistributionUrls";
+import { getSkillArchiveFileName } from "@/modules/mcp-settings/utils/agentFileUrls";
 import { archiveResponse } from "@/modules/mcp-settings/utils/archiveResponse";
-import { buildSkillArchive, listSkillNames } from "@sam-monorepo/mcp";
+import { createSkillArchive, listSkillNames } from "@sam-monorepo/mcp";
 
 /**
- * The archive of one skill (`<skill name>.zip`). Public and static like the
- * Claude marketplace. A different file name gives a 404.
+ * The archive of one skill. Public and static, see
+ * `docs/mcp-server.md#files-for-ai-agents`. A different file name gives a
+ * 404.
  */
 export const dynamic = "force-static";
 export const dynamicParams = false;
 
 export const generateStaticParams = () =>
   listSkillNames().map((skillName) => ({
-    fileName: `${skillName}${SKILL_ARCHIVE_EXTENSION}`,
+    fileName: getSkillArchiveFileName(skillName),
   }));
 
 export const GET = async (
@@ -19,9 +20,10 @@ export const GET = async (
   { params }: RouteContext<"/.well-known/agent-skills/[fileName]">,
 ) => {
   const { fileName } = await params;
-  const archive = fileName.endsWith(SKILL_ARCHIVE_EXTENSION)
-    ? buildSkillArchive(fileName.slice(0, -SKILL_ARCHIVE_EXTENSION.length))
-    : null;
+  const skillName = listSkillNames().find(
+    (name) => getSkillArchiveFileName(name) === fileName,
+  );
+  const archive = skillName ? createSkillArchive(skillName) : null;
   if (!archive) return new Response(null, { status: 404 });
 
   return archiveResponse(archive, fileName);

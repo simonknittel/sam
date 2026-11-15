@@ -521,7 +521,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
           Die Tools arbeiten mit deinen eigenen Rollen: Ein Client darf nur, was
           du in SAM selbst darfst. Unter{" "}
           <Link
-            href="/app/account/mcp"
+            href="/app/ai-agents"
             className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300 active:text-interaction-700"
           >
             Account &rarr; MCP

@@ -1,17 +1,14 @@
 import { Note } from "@/modules/common/components/Note";
 import { Tile } from "@/modules/common/components/Tile";
-import { CLAUDE_PLUGIN_NAME } from "@sam-monorepo/mcp";
+import { CLAUDE_PLUGIN_ARCHIVE_FILE_NAME } from "@/modules/mcp-settings/utils/agentFileUrls";
+import {
+  CLAUDE_MARKETPLACE_NAME,
+  CLAUDE_PLUGIN_ID,
+  CLAUDE_PLUGIN_MCP_SERVER_LABEL,
+} from "@sam-monorepo/mcp";
 import { ClientSteps } from "./ClientSteps";
 import { CopyableCode } from "./CopyableCode";
 import { DownloadLink } from "./DownloadLink";
-
-/** `<plugin>@<marketplace>`: the plugin and its marketplace have the same name */
-const PLUGIN_ID = `${CLAUDE_PLUGIN_NAME}@${CLAUDE_PLUGIN_NAME}`;
-
-/** The name that Claude Code gives to the MCP server of the plugin */
-const PLUGIN_MCP_SERVER_NAME = `plugin:${CLAUDE_PLUGIN_NAME}:${CLAUDE_PLUGIN_NAME}`;
-
-const PLUGIN_ARCHIVE_FILE_NAME = `${CLAUDE_PLUGIN_NAME}.zip`;
 
 interface Props {
   readonly className?: string;
@@ -38,7 +35,7 @@ export const ClaudePluginTile = ({
 
       <Note
         type="warning"
-        message="Entferne zuerst eine manuelle Verbindung mit SAM. Sonst sind alle Tools doppelt vorhanden."
+        message="Entferne zuerst jede manuelle Verbindung mit SAM, auch einen eigenen Connector in Claude.ai: Claude Code zeigt auch die Connectors aus Claude.ai. Sonst sind alle Tools doppelt vorhanden."
       />
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -48,8 +45,9 @@ export const ClaudePluginTile = ({
             <>
               Claude Code aktualisiert das Plugin nicht von selbst. Schalte
               unter &bdquo;/plugin&ldquo; &rarr; &bdquo;Marketplaces&ldquo; die
-              automatischen Updates ein, oder führe &bdquo;claude plugin update{" "}
-              {PLUGIN_ID}&ldquo; aus.
+              automatischen Updates ein, oder führe &bdquo;claude plugin
+              marketplace update {CLAUDE_MARKETPLACE_NAME}&ldquo; und dann
+              &bdquo;claude plugin update {CLAUDE_PLUGIN_ID}&ldquo; aus.
             </>
           }
         >
@@ -61,11 +59,11 @@ export const ClaudePluginTile = ({
           </li>
           <li>
             Installiere das Plugin:
-            <CopyableCode value={`claude plugin install ${PLUGIN_ID}`} />
+            <CopyableCode value={`claude plugin install ${CLAUDE_PLUGIN_ID}`} />
           </li>
           <li>
             Gib in Claude Code &bdquo;/mcp&ldquo; ein, wähle &bdquo;
-            {PLUGIN_MCP_SERVER_NAME}&ldquo; und melde dich an.
+            {CLAUDE_PLUGIN_MCP_SERVER_LABEL}&ldquo; und melde dich an.
           </li>
           <li>Erlaube den Zugriff in SAM.</li>
         </ClientSteps>
@@ -78,7 +76,7 @@ export const ClaudePluginTile = ({
             Lade das Plugin herunter:
             <DownloadLink
               href={pluginArchiveUrl}
-              fileName={PLUGIN_ARCHIVE_FILE_NAME}
+              fileName={CLAUDE_PLUGIN_ARCHIVE_FILE_NAME}
             />
           </li>
           <li>

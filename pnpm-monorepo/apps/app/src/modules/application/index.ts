@@ -1,6 +1,7 @@
 export { ActionRefresh, createUseCaseAction } from "./createUseCaseAction";
 export {
   getApplicationContext,
+  getApplicationUrls,
   getMcpApplicationContext,
 } from "./getApplicationContext";
 export { getOptionalRequestActor, getRequestActor } from "./getRequestActor";

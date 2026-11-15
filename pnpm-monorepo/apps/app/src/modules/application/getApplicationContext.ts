@@ -55,6 +55,16 @@ const createStorage = (): ApplicationContext["storage"] => {
   });
 };
 
+/**
+ * The URLs of the context. A static route handler that needs only the URLs
+ * uses this function, thus the build does not make the other ports.
+ */
+export const getApplicationUrls = (): ApplicationContext["urls"] =>
+  createApplicationUrls({
+    baseUrl: env.NEXT_PUBLIC_BASE_URL,
+    publicUploadBaseUrl: getPublicUploadBaseUrl(),
+  });
+
 // The emitter has its own span, thus the two ports need no span of their own
 const createApplicationContext = (): ApplicationContext => ({
   prisma,
@@ -104,10 +114,7 @@ const createApplicationContext = (): ApplicationContext => ({
   }),
   storage: createStorage(),
   images: sharpImageReader,
-  urls: createApplicationUrls({
-    baseUrl: env.NEXT_PUBLIC_BASE_URL,
-    publicUploadBaseUrl: getPublicUploadBaseUrl(),
-  }),
+  urls: getApplicationUrls(),
   // The embed tokens and the access tokens use the same key
   signingKey: async () => {
     const signingKey = await getEmbedSigningKey();
