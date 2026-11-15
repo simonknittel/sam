@@ -327,6 +327,15 @@ test("sharing uploads the matched entries of the selected types exactly once", a
     ]);
   await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 3);
 
+  /** The line numbers order the lines of one instant for the other viewers */
+  expect(
+    await prisma.logAnalyzerEntry.findMany({
+      where: { createdById: citizen.entity.id },
+      orderBy: { eventAt: "asc" },
+      select: { lineNumber: true },
+    }),
+  ).toEqual([{ lineNumber: 2 }, { lineNumber: 3 }]);
+
   /** A second cycle finds nothing new, thus it sends nothing */
   const secondCycleUploads = recordUploads(page);
 
