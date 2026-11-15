@@ -112,6 +112,12 @@ export interface IEntry {
   readonly isUploaded: boolean;
   /** See `Pattern.liveStatusSignal`. Null when the type tells nothing. */
   readonly liveStatusSignal: LiveStatusSignal | null;
+  /**
+   * The number of the line in its log file. It orders the lines of one
+   * instant (see `compareEntries`). Null for an entry which was shared before
+   * the upload sent the number.
+   */
+  readonly lineNumber: number | null;
 }
 
 const shardRegex = /^pub_(?<region>[a-z0-9]+)_\w+_(?<number>\d+)$/m;

@@ -29,6 +29,7 @@ const entry = (
   isShared: false,
   isUploaded: false,
   liveStatusSignal: null,
+  lineNumber: null,
 });
 
 /** The entries from the newest to the oldest, as the table shows them */

@@ -18,6 +18,7 @@ import {
   settingsDialog,
   settingToggle,
   stubDirectoryPicker,
+  tableRows,
 } from "../fixtures/log-analyzer";
 import { expect, test } from "../fixtures/test";
 
@@ -246,4 +247,85 @@ test("the live status of another citizen ignores the type filters, and follows t
   await expect(
     panel.getByText(/für einen vergangenen Zeitraum ausgeblendet/),
   ).toBeVisible();
+});
+
+test("the table and the live status show the lines of one instant in the order of the log file", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, {
+    handle: "log-live-instant",
+    permissionStrings: LOG_ANALYZER_PERMISSIONS,
+  });
+  const uploader = await createCitizen(prisma, {
+    handle: "log-live-instant-teiler",
+  });
+
+  /**
+   * The line of the other citizen which leaves comes first in its file. The
+   * order of the keys alone would put it last.
+   */
+  const joinPuAt = minutesAgo(9);
+  const sharedAt = minutesAgo(8);
+  await createLogAnalyzerEntry(prisma, {
+    type: LogAnalyzerEntryType.JoinPu,
+    rawLine: joinPuLine(joinPuAt),
+    eventAt: joinPuAt,
+    createdById: uploader.entity.id,
+    lineNumber: 1,
+  });
+  await createLogAnalyzerEntry(prisma, {
+    type: LogAnalyzerEntryType.ArmisticeZoneNotification,
+    rawLine: leavingArmisticeLine(sharedAt),
+    eventAt: sharedAt,
+    createdById: uploader.entity.id,
+    lineNumber: 20,
+  });
+  await createLogAnalyzerEntry(prisma, {
+    type: LogAnalyzerEntryType.ArmisticeZoneNotification,
+    rawLine: enteringArmisticeLine(sharedAt),
+    eventAt: sharedAt,
+    createdById: uploader.entity.id,
+    lineNumber: 21,
+  });
+
+  await signIn(citizen.user);
+  /** At the spawn, the game writes both lines in the same millisecond */
+  const spawnedAt = minutesAgo(5);
+  await stubDirectoryPicker(page, [
+    joinPuLine(minutesAgo(6)),
+    enteringArmisticeLine(spawnedAt),
+    leavingArmisticeLine(spawnedAt),
+  ]);
+  await page.goto(LOG_ANALYZER_PAGE_PATH);
+
+  /** Without a type of other citizens, the page loads none of their entries */
+  await openSettings(page);
+  await settingToggle(
+    page,
+    "Armistice Zone",
+    SettingsColumn.ShowOthers,
+  ).click();
+  await closeSettings(page);
+
+  await selectFolder(page);
+
+  const reporter = (handle: string) =>
+    liveStatus(page)
+      .getByRole("listitem")
+      .filter({ has: page.getByRole("link", { name: handle, exact: true }) });
+  await expect(
+    reporter("log-live-instant").getByText("Armistice Zone: Verlassen"),
+  ).toBeVisible();
+  await expect(
+    reporter("log-live-instant-teiler").getByText("Armistice Zone: Betreten"),
+  ).toBeVisible();
+  /** The first row holds the column headings, then the newest line follows */
+  await expect(tableRows(page).nth(1)).toContainText("Verlassen");
+  await expect(tableRows(page).nth(2)).toContainText("Betreten");
+
+  const sharedRows = rowOf(page, "log-live-instant-teiler");
+  await expect(sharedRows.nth(0)).toContainText("Betreten");
+  await expect(sharedRows.nth(1)).toContainText("Verlassen");
 });

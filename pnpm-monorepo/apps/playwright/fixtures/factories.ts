@@ -1031,6 +1031,8 @@ interface CreateLogAnalyzerEntryOptions {
   readonly eventAt: Date;
   /** Citizen id of the citizen who shared the entry */
   readonly createdById: string;
+  /** The number of the line in its log file */
+  readonly lineNumber?: number;
 }
 
 /**
@@ -1040,13 +1042,20 @@ interface CreateLogAnalyzerEntryOptions {
  */
 export const createLogAnalyzerEntry = (
   prisma: PrismaClient,
-  { type, rawLine, eventAt, createdById }: CreateLogAnalyzerEntryOptions,
+  {
+    type,
+    rawLine,
+    eventAt,
+    createdById,
+    lineNumber,
+  }: CreateLogAnalyzerEntryOptions,
 ) =>
   prisma.logAnalyzerEntry.create({
     data: {
       type,
       rawLine,
       eventAt,
+      lineNumber,
       hash: createHash("sha256").update(`${type}\n${rawLine}`).digest("hex"),
       createdById,
     },

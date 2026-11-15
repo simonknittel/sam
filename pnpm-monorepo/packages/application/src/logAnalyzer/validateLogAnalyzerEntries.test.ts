@@ -140,17 +140,19 @@ describe("validateLogAnalyzerEntries", () => {
     expect(entries?.[0]?.eventAt).toEqual(new Date("2025-06-22T09:59:12.293Z"));
   });
 
-  test("keeps the type and the raw line, and gives the hash of the entry", async () => {
+  test("keeps the type, the raw line and the line number, and gives the hash of the entry", async () => {
     const entries = await validateLogAnalyzerEntries([
       {
         type: LogAnalyzerEntryType.OwnDeath,
         raw_line: sampleLine(LogAnalyzerEntryType.OwnDeath),
+        line_number: 10_694,
       },
     ]);
 
     expect(entries?.[0]).toMatchObject({
       type: LogAnalyzerEntryType.OwnDeath,
       rawLine: sampleLine(LogAnalyzerEntryType.OwnDeath),
+      lineNumber: 10_694,
       hash: expect.stringMatching(/^[0-9a-f]{64}$/),
     });
   });
@@ -191,6 +193,27 @@ describe("shareLogAnalyzerEntriesInputSchema", () => {
         entries: [entry("x".repeat(MAXIMUM_LOG_ANALYZER_RAW_LINE_LENGTH + 1))],
       }).success,
     ).toBe(false);
+  });
+
+  test("rejects a line number which a column of integers cannot hold", () => {
+    const withLineNumber = (lineNumber: number) => ({
+      entries: [
+        {
+          ...entry(sampleLine(LogAnalyzerEntryType.OwnDeath)),
+          line_number: lineNumber,
+        },
+      ],
+    });
+
+    expect(
+      shareLogAnalyzerEntriesInputSchema.safeParse(withLineNumber(1)).success,
+    ).toBe(true);
+    for (const lineNumber of [0, 1.5, 2 ** 31]) {
+      expect(
+        shareLogAnalyzerEntriesInputSchema.safeParse(withLineNumber(lineNumber))
+          .success,
+      ).toBe(false);
+    }
   });
 
   test("accepts a raw line which spans two log lines", () => {

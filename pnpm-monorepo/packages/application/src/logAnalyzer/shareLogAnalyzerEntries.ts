@@ -32,6 +32,11 @@ export const shareLogAnalyzerEntriesInputSchema = z.object({
          * of their own. See `takesTimeOfPrecedingLine`.
          */
         event_at: z.iso.datetime().optional(),
+        /**
+         * The number of the line in its log file. A client of an older
+         * release does not send it.
+         */
+        line_number: z.int32().min(1).optional(),
       }),
     )
     .min(1)
@@ -74,6 +79,7 @@ export const shareLogAnalyzerEntries = (
           type: entry.type,
           rawLine: entry.rawLine,
           eventAt: entry.eventAt,
+          lineNumber: entry.lineNumber,
           hash: entry.hash,
           createdById: citizen.id,
         })),

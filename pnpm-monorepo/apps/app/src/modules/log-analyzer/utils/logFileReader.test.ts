@@ -67,6 +67,7 @@ const matchWholeText = (text: string) => {
         isoDate,
         fullMatch: match[0],
         groups: match.groups,
+        lineNumber: text.slice(0, match.index).split("\n").length,
       });
     }
   }
@@ -76,7 +77,10 @@ const matchWholeText = (text: string) => {
 
 const toMatchKeys = (matches: readonly RawMatch[]) =>
   new Set(
-    matches.map((match) => `${match.type} ${match.isoDate} ${match.fullMatch}`),
+    matches.map(
+      (match) =>
+        `${match.type} ${match.isoDate} ${match.lineNumber} ${match.fullMatch}`,
+    ),
   );
 
 const createLogFile = (content: BlobPart, lastModified: number) => ({

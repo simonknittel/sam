@@ -27,13 +27,18 @@ const at = (minute: number) =>
 interface EntryOptions {
   readonly citizenId?: string;
   readonly isShared?: boolean;
+  readonly lineNumber?: number | null;
 }
 
 /** An entry with the given signal, at the given minute after `START` */
 const entry = (
   minute: number,
   liveStatusSignal: LiveStatusSignal | null,
-  { citizenId = "alice", isShared = false }: EntryOptions = {},
+  {
+    citizenId = "alice",
+    isShared = false,
+    lineNumber = null,
+  }: EntryOptions = {},
 ): IEntry => ({
   key: `${minute}_${citizenId}_${JSON.stringify(liveStatusSignal)}`,
   type: LogAnalyzerEntryType.JoinPu,
@@ -46,6 +51,7 @@ const entry = (
   isShared,
   isUploaded: false,
   liveStatusSignal,
+  lineNumber,
 });
 
 const sessionStart = (shard = "pub_euw1b_9873572_100"): LiveStatusSignal => ({
@@ -305,6 +311,14 @@ describe("Live-Status signals of the patterns", () => {
     return deriveEntryFields(type, groups).liveStatusSignal;
   };
 
+  const LEAVING_ARMISTICE_ZONE = [
+    LogAnalyzerEntryType.ArmisticeZoneNotification,
+    SAMPLE_LINES[LogAnalyzerEntryType.ArmisticeZoneNotification].replace(
+      "Entering Armistice Zone - Combat Prohibited",
+      "Leaving Armistice Zone - Caution Advised",
+    ),
+  ] as const;
+
   test("the complete line of a contract gives the key of its accepted line", () => {
     expect(
       signalOf(LogAnalyzerEntryType.ContractCompleteNotificationV2),
@@ -344,17 +358,27 @@ describe("Live-Status signals of the patterns", () => {
     expect(armisticeZone).toMatchObject({ label: "Betreten" });
     expect(monitoredSpace).toMatchObject({ label: "Verlassen" });
 
-    const leftArmisticeZone = signalOf(
-      LogAnalyzerEntryType.ArmisticeZoneNotification,
-      SAMPLE_LINES[LogAnalyzerEntryType.ArmisticeZoneNotification].replace(
-        "Entering Armistice Zone - Combat Prohibited",
-        "Leaving Armistice Zone - Caution Advised",
-      ),
-    );
-    const entries = [entry(0, armisticeZone), entry(5, leftArmisticeZone)];
+    const entries = [
+      entry(0, armisticeZone),
+      entry(5, signalOf(...LEAVING_ARMISTICE_ZONE)),
+    ];
 
     expect(evaluate(entries, 6)[0].states).toMatchObject([
       { kind: LiveStatusKind.ArmisticeZone, label: "Verlassen", since: at(5) },
+    ]);
+  });
+
+  test("the lines of one instant keep their order in the log file", () => {
+    /** The order of the keys puts the line which leaves last */
+    const entries = [
+      entry(5, signalOf(...LEAVING_ARMISTICE_ZONE), { lineNumber: 100 }),
+      entry(5, signalOf(LogAnalyzerEntryType.ArmisticeZoneNotification), {
+        lineNumber: 200,
+      }),
+    ];
+
+    expect(evaluate(entries, 6)[0].states).toMatchObject([
+      { kind: LiveStatusKind.ArmisticeZone, label: "Betreten" },
     ]);
   });
 

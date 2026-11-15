@@ -8,6 +8,7 @@ import {
   FaPeace,
   FaSatelliteDish,
 } from "react-icons/fa6";
+import { compareEntries } from "./compareEntries";
 import {
   LiveStatusKind,
   LiveStatusSignalType,
@@ -171,26 +172,6 @@ export interface TrackedReporter {
   sessionEndedAt: Date | null;
   states: TrackedState[];
 }
-
-/**
- * The order of the signals of one instant: the end of a session comes before
- * the start of the next one, and an end of a state before a start.
- */
-const SIGNAL_ORDER: Record<LiveStatusSignalType, number> = {
-  [LiveStatusSignalType.SessionEnd]: 0,
-  [LiveStatusSignalType.SessionStart]: 1,
-  [LiveStatusSignalType.StateEnd]: 2,
-  [LiveStatusSignalType.StateStart]: 3,
-};
-
-const getSignalOrder = (entry: IEntry) =>
-  entry.liveStatusSignal ? SIGNAL_ORDER[entry.liveStatusSignal.type] : 0;
-
-/** The key makes the order of the same instant the same on each run */
-const compareEntries = (first: IEntry, second: IEntry) =>
-  first.isoDate.getTime() - second.isoDate.getTime() ||
-  getSignalOrder(first) - getSignalOrder(second) ||
-  first.key.localeCompare(second.key);
 
 /** A shared entry of a deleted citizen belongs to nobody */
 const getReporterKey = (entry: IEntry) => {

@@ -6,6 +6,7 @@ import {
 const TYPE_FIELD = "type";
 const RAW_LINE_FIELD = "rawLine";
 const EVENT_AT_FIELD = "eventAt";
+const LINE_NUMBER_FIELD = "lineNumber";
 
 export interface UploadEntry {
   readonly type: LogAnalyzerEntryType;
@@ -15,16 +16,18 @@ export interface UploadEntry {
    * their own. See `takesTimeOfPrecedingLine` of the domain package.
    */
   readonly eventAt?: string;
+  readonly lineNumber: number;
 }
 
 export const createUploadFormData = (entries: readonly UploadEntry[]) => {
   const formData = new FormData();
 
-  /** Every entry appends every field, so the three lists stay aligned */
+  /** Every entry appends every field, so the lists stay aligned */
   for (const entry of entries) {
     formData.append(TYPE_FIELD, entry.type);
     formData.append(RAW_LINE_FIELD, entry.rawLine);
     formData.append(EVENT_AT_FIELD, entry.eventAt ?? "");
+    formData.append(LINE_NUMBER_FIELD, String(entry.lineNumber));
   }
 
   return formData;
@@ -34,6 +37,7 @@ export const parseUploadFormData = (formData: FormData) => {
   const types = formData.getAll(TYPE_FIELD);
   const rawLines = formData.getAll(RAW_LINE_FIELD);
   const eventAts = formData.getAll(EVENT_AT_FIELD);
+  const lineNumbers = formData.getAll(LINE_NUMBER_FIELD);
 
   /**
    * One entry above the cap is enough to make the schema reject an oversized
@@ -51,6 +55,8 @@ export const parseUploadFormData = (formData: FormData) => {
       type: types[index],
       raw_line: rawLines[index],
       event_at: eventAts[index] || undefined,
+      /** The schema rejects a value which is no number, also a file */
+      line_number: lineNumbers[index] ? Number(lineNumbers[index]) : undefined,
     })),
   };
 };

@@ -4,6 +4,7 @@ import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { useEffect, useEffectEvent, type MouseEventHandler } from "react";
 import { FaRegWindowRestore } from "react-icons/fa";
 import { collapseRepeatedEntries } from "../utils/collapseRepeatedEntries";
+import { compareEntriesNewestFirst } from "../utils/compareEntries";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 import { useOverlay } from "./OverlayContext";
 import { OverlayEntry } from "./OverlayEntry";
@@ -55,7 +56,7 @@ export const OverlayButton = ({ className }: Props) => {
       repeat of an older entry does not show as new. */
   const newEntries = collapseRepeatedEntries(
     Array.from(entries.values().filter(entryFilterFn)).toSorted(
-      (first, second) => second.isoDate.getTime() - first.isoDate.getTime(),
+      compareEntriesNewestFirst,
     ),
   )
     .filter((entry) => entry.isNew)
