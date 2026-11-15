@@ -1,0 +1,94 @@
+import type { APIRequestContext } from "@playwright/test";
+import { createHash } from "node:crypto";
+import { readMcpServerMetadata } from "../fixtures/oauth";
+import { expect, test } from "../fixtures/test";
+
+const sha256 = (bytes: Buffer) =>
+  createHash("sha256").update(bytes).digest("hex");
+
+/**
+ * The app takes the URLs in the files from NEXT_PUBLIC_BASE_URL, which the
+ * build inlines. The workers of the stack listen on other ports. Thus the
+ * tests make sure that a URL has the origin of the issuer, and request its
+ * path from the worker.
+ */
+const getFromIssuer = async (
+  request: APIRequestContext,
+  url: string,
+  issuer: string,
+) => {
+  expect(new URL(url).origin).toBe(new URL(issuer).origin);
+  const response = await request.get(new URL(url).pathname);
+  expect(response.status()).toBe(200);
+
+  return response;
+};
+
+interface ClaudeMarketplace {
+  readonly name: string;
+  readonly plugins: readonly {
+    readonly name: string;
+    readonly source: {
+      readonly source: string;
+      readonly url: string;
+      readonly sha256: string;
+    };
+  }[];
+}
+
+interface SkillDiscoveryIndex {
+  readonly skills: readonly {
+    readonly name: string;
+    readonly type: string;
+    readonly url: string;
+    readonly digest: string;
+  }[];
+}
+
+test.describe("the files for AI agents", () => {
+  test("the Claude marketplace is public and gives the digest of the plugin archive", async ({
+    request,
+  }) => {
+    const { issuer } = await readMcpServerMetadata(request);
+    const marketplaceResponse = await request.get(
+      "/api/ai-agents/claude/marketplace.json",
+    );
+    expect(marketplaceResponse.status()).toBe(200);
+    const marketplace = (await marketplaceResponse.json()) as ClaudeMarketplace;
+    expect(marketplace.name).toBe("sam");
+    const [plugin] = marketplace.plugins;
+    if (!plugin) throw new Error("The marketplace has no plugin");
+    expect(plugin.source.source).toBe("archive");
+
+    const archiveResponse = await getFromIssuer(
+      request,
+      plugin.source.url,
+      issuer,
+    );
+    expect(archiveResponse.headers()["content-type"]).toBe("application/zip");
+    expect(sha256(await archiveResponse.body())).toBe(plugin.source.sha256);
+  });
+
+  test("the skill index is public and gives the digest of each skill archive", async ({
+    request,
+  }) => {
+    const { issuer } = await readMcpServerMetadata(request);
+    const indexResponse = await request.get(
+      "/.well-known/agent-skills/index.json",
+    );
+    expect(indexResponse.status()).toBe(200);
+    const index = (await indexResponse.json()) as SkillDiscoveryIndex;
+    expect(index.skills.map((entry) => entry.name)).toEqual([
+      "sam-overview",
+      "sam-permissions",
+    ]);
+
+    for (const entry of index.skills) {
+      expect(entry.type).toBe("archive");
+      const archiveResponse = await getFromIssuer(request, entry.url, issuer);
+      expect(`sha256:${sha256(await archiveResponse.body())}`).toBe(
+        entry.digest,
+      );
+    }
+  });
+});

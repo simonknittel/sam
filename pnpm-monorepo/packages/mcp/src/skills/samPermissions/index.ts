@@ -21,7 +21,7 @@ const twoFactorAuthenticationPermissions = [
 export const samPermissionsSkill: SkillDefinition = {
   name: "sam-permissions",
   description:
-    "Explains the roles and permissions of SAM: how a citizen gets permissions, the format of the permission strings, the rules for other roles and notes, and the catalog of all permissions with their German titles. Use it when the user asks what a permission does, which permission an action needs, why somebody has or does not have access, or before you change the permissions of a role.",
+    "Explains the roles and permissions of SAM and lists them all. Use it when the user asks what a permission does, which one an action needs or why somebody has access, and before you change a role.",
   instructions: `# Permissions in SAM
 
 SAM gives access only through roles. A role has a list of permission strings. A user gets the permissions of the roles of their citizen. A user without a citizen gets no permissions from roles.

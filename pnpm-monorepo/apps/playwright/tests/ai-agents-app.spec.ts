@@ -13,11 +13,36 @@ import {
   structuredContentOf,
   UNKNOWN_TOOL_ERROR_CODE,
 } from "../fixtures/mcp-client";
+import { readMcpServerMetadata } from "../fixtures/oauth";
 import { expect, test } from "../fixtures/test";
 
-const MCP_APP_PAGE = "/app/mcp";
+const CLIENTS_PAGE = "/app/ai-agents/clients";
 
-test.describe("the MCP app", () => {
+test.describe("the app KI-Agenten", () => {
+  test("the page shows the Claude plugin with the URLs of the environment", async ({
+    page,
+    prisma,
+    request,
+    signIn,
+  }) => {
+    const citizen = await createMcpCitizen(prisma, { handle: "ki-agent" });
+    await signIn(citizen.user);
+    const { issuer } = await readMcpServerMetadata(request);
+
+    await page.goto("/app/ai-agents/claude-plugin");
+
+    await expect(
+      page.getByText(
+        `claude plugin marketplace add ${new URL("/api/ai-agents/claude/marketplace.json", issuer).href}`,
+        { exact: true },
+      ),
+    ).toBeVisible();
+    await expect(page.getByRole("link", { name: "sam.zip" })).toHaveAttribute(
+      "href",
+      new URL("/api/ai-agents/claude/sam.zip", issuer).href,
+    );
+  });
+
   test("the page lists a connected client, and its disconnection stops the client", async ({
     page,
     prisma,
@@ -35,9 +60,7 @@ test.describe("the MCP app", () => {
     );
     expect(callBefore.status()).toBe(200);
 
-    // The settings were on the account page before the MCP app
-    await page.goto("/app/account/mcp");
-    await expect(page).toHaveURL(MCP_APP_PAGE);
+    await page.goto(CLIENTS_PAGE);
     const clientRow = page
       .getByRole("row")
       .filter({ hasText: cimdServer.host });
@@ -87,7 +110,7 @@ test.describe("the MCP app", () => {
       (await authorizeMcpClient(citizen.user)).accessToken,
     );
 
-    await page.goto(MCP_APP_PAGE);
+    await page.goto(CLIENTS_PAGE);
     await waitForAppShellHydration(page);
     const clientRows = page
       .getByRole("row")
@@ -167,7 +190,7 @@ test.describe("the MCP app", () => {
       .filter({ hasText: cimdServer.host });
 
     await authorizeMcpClient(member.user);
-    await page.goto(MCP_APP_PAGE);
+    await page.goto(CLIENTS_PAGE);
     await expect(clientRow).toBeVisible();
     await expect(adminModeSwitch).toHaveCount(0);
 
@@ -179,12 +202,12 @@ test.describe("the MCP app", () => {
     );
 
     // The switch shows only while the admin mode of the toolbar is active
-    await page.goto(MCP_APP_PAGE);
+    await page.goto(CLIENTS_PAGE);
     await expect(clientRow).toBeVisible();
     await expect(adminModeSwitch).toHaveCount(0);
 
     await enableAdminMode();
-    await page.goto(MCP_APP_PAGE);
+    await page.goto(CLIENTS_PAGE);
     await expect(clientRow).toBeVisible();
     await waitForAppShellHydration(page);
     await expect(adminModeSwitch).not.toBeChecked();
@@ -245,7 +268,7 @@ test.describe("the MCP app", () => {
       },
     ]);
 
-    await page.goto(MCP_APP_PAGE);
+    await page.goto(CLIENTS_PAGE);
     await expect(page.getByText("Assuming mcp-vertretener")).toBeVisible();
     const clientRow = page
       .getByRole("row")

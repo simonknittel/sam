@@ -54,6 +54,29 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-11-15-ki-agenten",
+    date: "2026-11-15",
+    title: "KI-Agenten: Plugin für Claude und Skills",
+    tags: ["Neu", "MCP"],
+    isTracked: false,
+    body: () => (
+      <p>
+        Aus der App MCP wird die App{" "}
+        <Link
+          href="/app/ai-agents"
+          className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300 active:text-interaction-700"
+        >
+          KI-Agenten
+        </Link>
+        . Dort installierst du jetzt das Plugin für Claude, das den MCP-Server
+        und die Skills von SAM in einem Paket enthält. Für andere Clients lädst
+        du die Skills herunter oder installierst sie mit <code>npx skills</code>
+        .
+      </p>
+    ),
+  },
+
+  {
     key: "2026-11-15-browser-benachrichtigungen-verwalten",
     date: "2026-11-15",
     title: "Browser-Benachrichtigungen verwalten",
@@ -459,7 +482,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
         <p>
           Die MCP-Einstellungen sind aus dem Account in die neue App{" "}
           <Link
-            href="/app/mcp"
+            href="/app/ai-agents"
             className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300 active:text-interaction-700"
           >
             MCP
@@ -514,7 +537,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
           Die Tools arbeiten mit deinen eigenen Rollen: Ein Client darf nur, was
           du in SAM selbst darfst. Unter{" "}
           <Link
-            href="/app/account/mcp"
+            href="/app/ai-agents"
             className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300 active:text-interaction-700"
           >
             Account &rarr; MCP
