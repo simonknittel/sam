@@ -49,6 +49,7 @@ import { LiveStatus } from "./LiveStatus";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 import { LogAnalyzerTable } from "./LogAnalyzerTable";
 import { useOverlay } from "./OverlayContext";
+import { QuickLookBar } from "./QuickLookBar";
 import { ReadStatus } from "./ReadStatus";
 import { Toolbar } from "./Toolbar";
 
@@ -431,6 +432,8 @@ export const LogAnalyzer = ({ className }: Props) => {
           isLoadingSharedEntries={isLoadingDateRange}
         />
       </Toolbar>
+
+      <QuickLookBar className="mt-0.5" />
 
       {entries.size > 0 ? (
         /* Below `2xl`, three quarters of the width are less than the minimum

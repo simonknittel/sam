@@ -28,6 +28,7 @@ import {
   type IEntry,
 } from "../utils/PATTERNS";
 import { ContractNamesContext } from "./ContractNames";
+import { QuickLookContext } from "./QuickLookContext";
 
 type EntryTypeRecord = Record<LogAnalyzerEntryType, boolean>;
 
@@ -79,7 +80,13 @@ interface Context {
   /** The citizens whose shared entries the table hides. Empty shows all. */
   readonly hiddenCitizenIds: string[];
   readonly setHiddenCitizenIds: Dispatch<SetStateAction<string[]>>;
+  /** The filter of the settings. The overlay uses it. */
   readonly entryFilterFn: (entry: IEntry) => boolean;
+  /**
+   * The filter of the table: the quick look (see `QuickLookContext`)
+   * replaces the type settings.
+   */
+  readonly tableEntryFilterFn: (entry: IEntry) => boolean;
   readonly entries: Map<string, IEntry>;
   readonly setEntries: Dispatch<SetStateAction<Map<string, IEntry>>>;
   /**
@@ -194,6 +201,10 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
 
   const [dateRange, setDateRange] = useState(NO_DATE_RANGE);
 
+  const [quickLookTypes, setQuickLookTypes] = useState<LogAnalyzerEntryType[]>(
+    [],
+  );
+
   /**
    * The entries stay in memory when they leave the window, so that narrowing
    * the range reads no file. This value changes only with its inputs, thus
@@ -230,11 +241,31 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
     );
   };
 
+  const isHiddenCitizen = (entry: IEntry) =>
+    entry.isShared &&
+    !!entry.citizen &&
+    hiddenCitizenIds.includes(entry.citizen.id);
+
   const entryFilterFn = (entry: IEntry) => {
     if (!isInWindow(entry.isoDate, entryWindow)) return false;
-    if (!entry.isShared) return ownEntryTypes[entry.type];
-    if (!othersEntryTypes[entry.type]) return false;
-    return !entry.citizen || !hiddenCitizenIds.includes(entry.citizen.id);
+    if (isHiddenCitizen(entry)) return false;
+    return entry.isShared
+      ? othersEntryTypes[entry.type]
+      : ownEntryTypes[entry.type];
+  };
+
+  const quickLookTypeSet = new Set(quickLookTypes);
+
+  /**
+   * The quick look also shows a type which the settings hide, with all its
+   * versions. The entries of the other citizens load only while the settings
+   * show at least one of their types, thus only then the quick look has them.
+   */
+  const tableEntryFilterFn = (entry: IEntry) => {
+    if (quickLookTypeSet.size <= 0) return entryFilterFn(entry);
+    if (!isInWindow(entry.isoDate, entryWindow)) return false;
+    if (isHiddenCitizen(entry)) return false;
+    return quickLookTypeSet.has(getOldestLogAnalyzerEntryVersion(entry.type));
   };
 
   const value = {
@@ -264,6 +295,7 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
     hiddenCitizenIds,
     setHiddenCitizenIds,
     entryFilterFn,
+    tableEntryFilterFn,
     entries,
     setEntries,
     ownLogLineAt,
@@ -275,11 +307,15 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
     if (missionId && contractName) contractNames.set(missionId, contractName);
   }
 
+  const quickLook = { quickLookTypes, setQuickLookTypes };
+
   return (
     <Context value={value}>
-      <ContractNamesContext value={contractNames}>
-        {children}
-      </ContractNamesContext>
+      <QuickLookContext value={quickLook}>
+        <ContractNamesContext value={contractNames}>
+          {children}
+        </ContractNamesContext>
+      </QuickLookContext>
     </Context>
   );
 };
