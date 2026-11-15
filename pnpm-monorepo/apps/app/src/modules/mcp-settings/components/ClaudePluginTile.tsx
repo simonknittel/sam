@@ -1,4 +1,3 @@
-import { Note } from "@/modules/common/components/Note";
 import { Tile } from "@/modules/common/components/Tile";
 import { CLAUDE_PLUGIN_ARCHIVE_FILE_NAME } from "@/modules/mcp-settings/utils/agentFileUrls";
 import {
@@ -32,11 +31,6 @@ export const ClaudePluginTile = ({
         verbindest du Claude Code, Claude Desktop oder Claude.ai in einem
         Schritt.
       </p>
-
-      <Note
-        type="warning"
-        message="Entferne zuerst jede manuelle Verbindung mit SAM, auch einen eigenen Connector in Claude.ai: Claude Code zeigt auch die Connectors aus Claude.ai. Sonst sind alle Tools doppelt vorhanden."
-      />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <ClientSteps
@@ -72,12 +66,14 @@ export const ClaudePluginTile = ({
           title="Claude Desktop und Claude.ai"
           note="Ein hochgeladenes Plugin aktualisiert sich nicht von selbst."
         >
-          <li className="flex flex-col gap-1">
+          <li>
             Lade das Plugin herunter:
-            <DownloadLink
-              href={pluginArchiveUrl}
-              fileName={CLAUDE_PLUGIN_ARCHIVE_FILE_NAME}
-            />
+            <div className="mt-1">
+              <DownloadLink
+                href={pluginArchiveUrl}
+                fileName={CLAUDE_PLUGIN_ARCHIVE_FILE_NAME}
+              />
+            </div>
           </li>
           <li>
             Öffne in Claude &bdquo;Customize&ldquo; &rarr;

@@ -1,6 +1,6 @@
 import type { ApplicationContext } from "@sam-monorepo/application";
 import { createArchive, type Archive } from "./archive.js";
-import { getSettingsPageUrl } from "./settingsPageUrl.js";
+import { getAiAgentsAppUrl } from "./settingsPageUrl.js";
 import { SKILL_CATALOG } from "./skillCatalog.js";
 
 /**
@@ -62,7 +62,7 @@ export const createClaudePluginArchive = (context: UrlContext) =>
         name: CLAUDE_PLUGIN_NAME,
         description: CLAUDE_PLUGIN_DESCRIPTION,
         author: CLAUDE_PLUGIN_AUTHOR,
-        homepage: getSettingsPageUrl(context),
+        homepage: getAiAgentsAppUrl(context),
       }),
     },
     {
@@ -101,7 +101,7 @@ export const createClaudeMarketplace = (
     {
       name: CLAUDE_PLUGIN_NAME,
       description: CLAUDE_PLUGIN_DESCRIPTION,
-      homepage: getSettingsPageUrl(context),
+      homepage: getAiAgentsAppUrl(context),
       source: {
         source: "archive",
         url: pluginArchiveUrl.href,

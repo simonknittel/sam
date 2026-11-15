@@ -1,60 +1,24 @@
 import { Tile } from "@/modules/common/components/Tile";
 import { ClientSteps } from "./ClientSteps";
 import { CopyableCode } from "./CopyableCode";
-import { DownloadLink } from "./DownloadLink";
-
-interface SkillArchiveLink {
-  readonly fileName: string;
-  readonly url: string;
-}
 
 interface Props {
   readonly className?: string;
   /** The canonical URL of the MCP endpoint */
   readonly mcpUrl: string;
-  /** `npx skills add` finds the skills at this URL */
-  readonly skillsUrl: string;
-  readonly skillArchives: readonly SkillArchiveLink[];
 }
 
-export const ManualSetupTile = ({
-  className,
-  mcpUrl,
-  skillsUrl,
-  skillArchives,
-}: Props) => {
-  /** `agent` is a name of the agent list of `npx skills` */
-  const getSkillsCommand = (agent: string) =>
-    `npx skills add ${skillsUrl} -a ${agent} -g`;
-
+export const McpServerTile = ({ className, mcpUrl }: Props) => {
   return (
     <Tile
       className={className}
-      heading="Manuell: MCP-Server und Skills"
+      heading="MCP-Server"
       childrenClassName="flex flex-col gap-6"
     >
       <div>
         <p>Das SAM stellt einen remote MCP Server zur Verfügung.</p>
         <p className="mt-4 text-sm text-neutral-500">URL</p>
         <CopyableCode value={mcpUrl} />
-      </div>
-
-      <div>
-        <p>
-          Die Skills erklären dem Modell die Apps und die Berechtigungen von
-          SAM. Nur wenige Clients laden sie vom MCP-Server, deshalb installierst
-          du sie zusätzlich.
-        </p>
-        <ul className="mt-4 flex flex-wrap gap-2">
-          {skillArchives.map((skillArchive) => (
-            <li key={skillArchive.fileName}>
-              <DownloadLink
-                href={skillArchive.url}
-                fileName={skillArchive.fileName}
-              />
-            </li>
-          ))}
-        </ul>
       </div>
 
       <details className="group">
@@ -76,11 +40,6 @@ export const ManualSetupTile = ({
               Beispiel &bdquo;SAM&ldquo;) und die URL ein.
             </li>
             <li>Wähle &bdquo;Connect&ldquo; und erlaube den Zugriff in SAM.</li>
-            <li>
-              Lade die Skills herunter und lade jede Datei unter
-              &bdquo;Customize&ldquo; &rarr; &bdquo;Skills&ldquo; &rarr;
-              &bdquo;Upload a skill&ldquo; hoch.
-            </li>
           </ClientSteps>
 
           <ClientSteps title="Claude Code">
@@ -95,10 +54,6 @@ export const ManualSetupTile = ({
               und melde dich an.
             </li>
             <li>Erlaube den Zugriff in SAM.</li>
-            <li>
-              Installiere die Skills mit diesem Befehl:
-              <CopyableCode value={getSkillsCommand("claude-code")} />
-            </li>
           </ClientSteps>
 
           <ClientSteps title="ChatGPT">
@@ -125,10 +80,6 @@ export const ManualSetupTile = ({
               <CopyableCode value="codex mcp login sam" />
             </li>
             <li>Erlaube den Zugriff in SAM.</li>
-            <li>
-              Installiere die Skills mit diesem Befehl:
-              <CopyableCode value={getSkillsCommand("codex")} />
-            </li>
           </ClientSteps>
         </div>
       </details>

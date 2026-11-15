@@ -263,7 +263,7 @@ describe("tools/call", () => {
         admin_mode: false,
         permission_count: 1,
         tool_groups: ["users"],
-        settings_page_url: "http://localhost/app/ai-agents",
+        settings_page_url: "http://localhost/app/ai-agents/clients",
       },
     });
     expect(body.result?.content).toEqual([
