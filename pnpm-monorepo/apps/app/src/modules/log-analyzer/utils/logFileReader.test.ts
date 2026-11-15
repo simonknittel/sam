@@ -67,6 +67,7 @@ const matchWholeText = (text: string) => {
         isoDate,
         fullMatch: match[0],
         groups: match.groups,
+        linePosition: match.index,
       });
     }
   }
@@ -142,6 +143,41 @@ describe("createLogFileReader", () => {
     expect(toMatchKeys(allMatches)).toEqual(
       toMatchKeys(matchWholeText(`${LOG_CONTENT}\r\n${newLine}`)),
     );
+  });
+
+  test("gives each line a position which grows with its place in the file, also over two reads", async () => {
+    const readLogFiles = createLogFileReader();
+    /** The reader scans one marker after the other, not line by line */
+    const firstLines = [
+      SAMPLE_LINES[LogAnalyzerEntryType.InstanceExited],
+      "<2026-09-01T12:00:00.000Z> [Notice] Grüße aus Área 18 ✓",
+      SAMPLE_LINES[LogAnalyzerEntryType.ArmisticeZoneNotification],
+      "",
+    ].join("\r\n");
+    const lastLine = `${SAMPLE_LINES[LogAnalyzerEntryType.JoinPu]}\r\n`;
+
+    const { matches: firstMatches } = await readLogFiles(
+      [createLogFile(firstLines, 1)],
+      false,
+    );
+    const { matches: lastMatches } = await readLogFiles(
+      [createLogFile(`${firstLines}${lastLine}`, 2)],
+      false,
+    );
+
+    const positionOf = (
+      matches: readonly RawMatch[],
+      type: LogAnalyzerEntryType,
+    ) => matches.find((match) => match.type === type)?.linePosition;
+
+    expect(
+      positionOf(firstMatches, LogAnalyzerEntryType.InstanceExited),
+    ).toBeLessThan(
+      positionOf(firstMatches, LogAnalyzerEntryType.ArmisticeZoneNotification)!,
+    );
+    expect(
+      positionOf(firstMatches, LogAnalyzerEntryType.ArmisticeZoneNotification),
+    ).toBeLessThan(positionOf(lastMatches, LogAnalyzerEntryType.JoinPu)!);
   });
 
   test("gives the time of the newest line, also after a crash report", async () => {

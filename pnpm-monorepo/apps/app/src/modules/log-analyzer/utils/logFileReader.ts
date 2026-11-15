@@ -143,7 +143,7 @@ const hasNewerVersionMatch = (
  */
 const collectMatches = (
   text: string,
-  isoDateBeforeText: string | null,
+  { offset, isoDateBeforeOffset }: ReadPosition,
   matches: RawMatch[],
 ) => {
   let skippedOverlongLineCount = 0;
@@ -163,7 +163,7 @@ const collectMatches = (
         if (hasNewerVersionMatch(type, text, lineStart)) continue;
 
         const isoDate = takesTimeOfPrecedingLine
-          ? (findPrecedingIsoDate(text, match.index) ?? isoDateBeforeText)
+          ? (findPrecedingIsoDate(text, match.index) ?? isoDateBeforeOffset)
           : match.groups.isoDate;
         if (!isoDate) continue;
 
@@ -178,6 +178,12 @@ const collectMatches = (
             isoDate,
             fullMatch: match[0],
             groups: match.groups,
+            /**
+             * The offset counts bytes and the index counts characters. A
+             * text has at least as many bytes as characters, thus a line of
+             * a later read does not get a smaller position.
+             */
+            linePosition: offset + lineStart,
           }),
         );
       }
@@ -196,11 +202,7 @@ const readFile = async (
   const decoder = position.offset === 0 ? DECODER_AT_FILE_START : DECODER;
   const text = decoder.decode(bytes);
 
-  const skippedOverlongLineCount = collectMatches(
-    text,
-    position.isoDateBeforeOffset,
-    matches,
-  );
+  const skippedOverlongLineCount = collectMatches(text, position, matches);
   if (skippedOverlongLineCount > 0) {
     console.warn(
       `[Log Analyzer] Skipped lines longer than ${MAXIMUM_LOG_ANALYZER_RAW_LINE_LENGTH} characters in ${path}: ${skippedOverlongLineCount}`,

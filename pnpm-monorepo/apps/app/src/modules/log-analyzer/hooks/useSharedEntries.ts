@@ -53,6 +53,7 @@ const toEntry = (row: SharedEntry, isNew: boolean): IEntry | null => {
     citizen: row.createdBy,
     isShared: true,
     isUploaded: false,
+    linePosition: null,
   };
 };
 

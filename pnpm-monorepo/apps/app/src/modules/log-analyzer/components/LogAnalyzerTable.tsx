@@ -3,6 +3,7 @@ import { Table, TBody, THead } from "@/modules/common/components/Table";
 import clsx from "clsx";
 import { useState } from "react";
 import { collapseRepeatedEntries } from "../utils/collapseRepeatedEntries";
+import { compareEntriesNewestFirst } from "../utils/compareEntries";
 import { Entry } from "./Entry";
 import { EntryClock } from "./EntryClock";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
@@ -24,9 +25,7 @@ export const LogAnalyzerTable = ({ className }: Props) => {
   const sortedFilteredEntries = collapseRepeatedEntries(
     Array.from(entries.values())
       .filter(entryFilterFn)
-      .toSorted(
-        (first, second) => second.isoDate.getTime() - first.isoDate.getTime(),
-      ),
+      .toSorted(compareEntriesNewestFirst),
   );
 
   const visibleEntries = sortedFilteredEntries.slice(0, visibleRowCount);
