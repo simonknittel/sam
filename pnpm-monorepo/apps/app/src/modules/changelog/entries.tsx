@@ -54,6 +54,29 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-11-15-ki-agenten",
+    date: "2026-11-15",
+    title: "KI-Agenten: Plugin für Claude und Skills",
+    tags: ["Neu", "MCP"],
+    isTracked: false,
+    body: () => (
+      <p>
+        Aus der App MCP wird die App{" "}
+        <Link
+          href="/app/ai-agents"
+          className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300 active:text-interaction-700"
+        >
+          KI-Agenten
+        </Link>
+        . Dort installierst du jetzt das Plugin für Claude, das den MCP-Server
+        und die Skills von SAM in einem Schritt verbindet. Für andere Clients
+        lädst du die Skills herunter oder installierst sie mit{" "}
+        <code>npx skills</code>.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-11-15-log-analyzer-schnellansicht",
     date: "2026-11-15",
     title: "Schnellansicht im Log Analyzer",
@@ -443,7 +466,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
         <p>
           Die MCP-Einstellungen sind aus dem Account in die neue App{" "}
           <Link
-            href="/app/mcp"
+            href="/app/ai-agents"
             className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300 active:text-interaction-700"
           >
             MCP
