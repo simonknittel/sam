@@ -9,6 +9,7 @@ import { memo } from "react";
 import { PATTERNS, type IEntry } from "../utils/PATTERNS";
 import styles from "./Entry.module.css";
 import { useEntryClock } from "./EntryClock";
+import { QuickLookToggle } from "./QuickLookToggle";
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -54,7 +55,10 @@ export const Entry = memo(function Entry({ entry }: Props) {
 
   return (
     <TRow
-      className={clsx({ [styles.Row]: entry.isNew, relative: entry.isNew })}
+      className={clsx("group", {
+        [styles.Row]: entry.isNew,
+        relative: entry.isNew,
+      })}
     >
       <td>
         <EntryDate date={entry.isoDate} />
@@ -88,9 +92,16 @@ export const Entry = memo(function Entry({ entry }: Props) {
 
       <td className="flex items-center gap-2 text-white/40">
         <Icon className="shrink-0" />
-        <span className="truncate" title={title}>
+        <span className="min-w-0 truncate" title={title}>
           {title}
         </span>
+
+        {/* Shows on the hover of the row, so that 200 rows do not repeat it.
+            The negative margin keeps the height of the row. */}
+        <QuickLookToggle
+          type={entry.type}
+          className="-my-1 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 aria-pressed:opacity-100"
+        />
       </td>
 
       <td className="truncate">{entry.message}</td>

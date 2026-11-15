@@ -18,13 +18,13 @@ interface Props {
 }
 
 export const LogAnalyzerTable = ({ className }: Props) => {
-  const { entryFilterFn, entries } = useLogAnalyzerContext();
+  const { tableEntryFilterFn, entries } = useLogAnalyzerContext();
   const [visibleRowCount, setVisibleRowCount] = useState(ROWS_PER_PAGE);
 
   /** The filter runs first, so the sort works on the smaller list */
   const sortedFilteredEntries = collapseRepeatedEntries(
     Array.from(entries.values())
-      .filter(entryFilterFn)
+      .filter(tableEntryFilterFn)
       .toSorted(compareEntriesNewestFirst),
   );
 

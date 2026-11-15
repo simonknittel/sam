@@ -5,6 +5,7 @@ import { TRow } from "@/modules/common/components/Table";
 import type { LogAnalyzerEntryType } from "@sam-monorepo/domain";
 import { PATTERNS } from "../utils/PATTERNS";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
+import { QuickLookToggle } from "./QuickLookToggle";
 
 interface Props {
   readonly type: LogAnalyzerEntryType;
@@ -36,9 +37,14 @@ export const EntryTypeSettingsRow = ({
 
   return (
     <TRow>
-      <td className="flex items-center gap-2 truncate" title={title}>
+      <td className="flex items-center gap-2">
         <Icon className="shrink-0 text-white/40" />
-        {title}
+
+        <span className="min-w-0 flex-1 truncate" title={title}>
+          {title}
+        </span>
+
+        <QuickLookToggle type={type} />
       </td>
 
       <td className="text-center">

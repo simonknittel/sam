@@ -518,6 +518,80 @@ test("a section sets all types of a column at once", async ({
   await expect(section).not.toBeChecked();
 });
 
+test("a quick look shows only its types until it ends, also hidden types", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, {
+    handle: "log-schnellansicht",
+    permissionStrings: LOG_ANALYZER_PERMISSIONS,
+  });
+
+  await signIn(citizen.user);
+  await stubDirectoryPicker(page, [
+    joinPuLine(hoursAgo(3)),
+    blueprintLine(hoursAgo(2)),
+    disconnectionLine(hoursAgo(1)),
+  ]);
+  await page.goto(LOG_ANALYZER_PAGE_PATH);
+  await selectFolder(page);
+  await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 3);
+
+  const quickLookToggle = (typeTitle: string) =>
+    settingsDialog(page).getByRole("button", {
+      name: `Schnellansicht: ${typeTitle}`,
+      exact: true,
+    });
+  const quickLookBar = page.getByRole("region", { name: "Schnellansicht" });
+
+  await openSettings(page);
+  await settingToggle(
+    page,
+    "Blueprint erhalten",
+    SettingsColumn.ShowOwn,
+  ).click();
+
+  /** The dialog stays open, so that more types can follow */
+  await quickLookToggle("Blueprint erhalten").click();
+  await quickLookToggle("Shard-Beitritt").click();
+  await expect(quickLookToggle("Blueprint erhalten")).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await closeSettings(page);
+
+  await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 2);
+  await expect(rowOf(page, "Blueprint erhalten")).toBeVisible();
+  await expect(rowOf(page, "Shard-Beitritt")).toBeVisible();
+
+  await quickLookBar
+    .getByRole("button", { name: "Blueprint erhalten" })
+    .click();
+
+  await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 1);
+  await expect(rowOf(page, "Shard-Beitritt")).toBeVisible();
+
+  /** The end brings back the settings, which still hide the type */
+  await quickLookBar.getByRole("button", { name: "Beenden" }).click();
+
+  await expect(quickLookBar).toHaveCount(0);
+  await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 2);
+  await expect(rowOf(page, "Blueprint erhalten")).toHaveCount(0);
+
+  /** The table also starts a quick look. It is not stored. */
+  await rowOf(page, "Shard-Beitritt")
+    .getByRole("button", { name: "Schnellansicht: Shard-Beitritt" })
+    .click();
+  await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 1);
+
+  await page.reload();
+  await selectFolder(page);
+
+  await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 2);
+  await expect(quickLookBar).toHaveCount(0);
+});
+
 test("a date range older than the rolling window uploads nothing", async ({
   page,
   prisma,

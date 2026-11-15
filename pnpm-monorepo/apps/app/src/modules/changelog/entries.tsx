@@ -54,6 +54,21 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-11-15-log-analyzer-schnellansicht",
+    date: "2026-11-15",
+    title: "Schnellansicht im Log Analyzer",
+    tags: ["Neu", "Log Analyzer"],
+    isTracked: false,
+    body: () => (
+      <p>
+        Mit dem Auge neben einem Typ in den Filtern des Log Analyzers zeigst du
+        vorübergehend nur die Einträge der gewählten Typen an, auch wenn du sie
+        ausgeblendet hast.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-11-14-log-analyzer-live-status",
     date: "2026-11-14",
     title: "Live-Status im Log Analyzer",
