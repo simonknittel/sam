@@ -19,20 +19,21 @@ export const InstallationOptionsTile = ({ className }: Props) => {
           href="/app/ai-agents/claude-plugin"
           title="Plugin für Claude"
         >
-          Der MCP-Server und die Skills in einem Schritt, für Claude Code,
-          Claude Desktop und Claude.ai.
+          Der MCP-Server und die Skills in einem Paket, für Claude Code, Claude
+          Desktop und Claude.ai.
         </InstallationOption>
 
         <InstallationOption href="/app/ai-agents/manual" title="Manuell">
-          Der MCP-Server und die Skills einzeln, für jeden Client, zum Beispiel
-          auch ChatGPT und Codex.
+          Der MCP-Server und die Skills einzeln, zum Beispiel auch für ChatGPT
+          und Codex.
         </InstallationOption>
       </ul>
 
       <p className="text-sm text-neutral-500">
         Unter{" "}
         <PageLink href="/app/ai-agents/clients">Verbundene Clients</PageLink>{" "}
-        benennst und trennst du deine Clients und wählst ihre Tools.
+        kannst du deine KI-Agenten verwalten, die mit dem MCP-Server verbunden
+        sind.
       </p>
     </Tile>
   );

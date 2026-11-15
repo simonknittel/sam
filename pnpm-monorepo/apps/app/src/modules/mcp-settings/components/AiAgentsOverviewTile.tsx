@@ -8,12 +8,12 @@ export const AiAgentsOverviewTile = ({ className }: Props) => {
   return (
     <Tile
       className={className}
-      heading="Was SAM für KI-Agenten bereitstellt"
+      heading="SAM mit KI-Agenten nutzen"
       childrenClassName="flex flex-col gap-6"
     >
       <p>
         KI-Agenten wie Claude, ChatGPT oder Codex können mit SAM arbeiten. SAM
-        gibt ihnen dafür zwei Dinge.
+        stellt dafür einen MCP-Server und Skills zur Verfügung.
       </p>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -23,8 +23,9 @@ export const AiAgentsOverviewTile = ({ className }: Props) => {
           examples={[
             "Welche Events finden diese Woche statt?",
             "Melde mich für das Event am Samstag an.",
-            "Welche Tasks kann ich gerade annehmen?",
-            "Fasse die Wiki-Seite über Mining zusammen.",
+            "Vergleiche die Flotte der Organisation mit den Schiffen, die die Aufstellung des Events am Samstag braucht. Welche Positionen können wir nicht besetzen?",
+            "Fasse die Wiki-Seiten über Mining zusammen und erstelle daraus einen Task mit einer Checkliste für neue Mitglieder.",
+            "Welche Strafpunkte verfallen diesen Monat? Benachrichtige die betroffenen Citizens.",
           ]}
         />
 
@@ -34,7 +35,7 @@ export const AiAgentsOverviewTile = ({ className }: Props) => {
           examples={[
             "Welche Berechtigung braucht ein Mitglied, um Events zu erstellen?",
             "Wie funktioniert SINcome?",
-            "Wo finde ich in SAM die Strafpunkte?",
+            "Welche Rolle muss ich ändern, damit alle Piloten Tasks erstellen können, und wen betrifft die Änderung?",
           ]}
         />
       </div>
