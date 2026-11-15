@@ -5,6 +5,8 @@ import {
 } from "@sam-monorepo/database/client";
 import { createCitizen } from "../fixtures/factories";
 import {
+  clickUntilVisible,
+  DELETED_TEXT,
   SAVED_TEXT,
   toggleLabel,
   waitForAppShellHydration,
@@ -216,33 +218,33 @@ test("a checkbox toggled right before a navigation is still saved", async ({
     .toEqual(["event_created"]);
 });
 
-test("disabling web push entirely removes all subscriptions", async ({
+const CHROME_ON_WINDOWS =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36";
+
+test("a browser is removed from the list of the browsers with notifications", async ({
   page,
   prisma,
   signIn,
 }) => {
-  const citizen = await createCitizen(prisma, { handle: "push-unsubscriber" });
-  await prisma.webPushSubscription.createMany({
-    data: [
-      {
-        citizenId: citizen.entity.id,
-        endpoint: "https://push.example.com/push-unsubscriber-device-1",
-        p256dh: "test-p256dh-1",
-        auth: "test-auth-1",
-      },
-      {
-        citizenId: citizen.entity.id,
-        endpoint: "https://push.example.com/push-unsubscriber-device-2",
-        p256dh: "test-p256dh-2",
-        auth: "test-auth-2",
-      },
-    ],
-  });
-  await prisma.notificationSetting.create({
+  const citizen = await createCitizen(prisma, { handle: "push-aufraeumer" });
+  const chromeSubscription = await prisma.webPushSubscription.create({
     data: {
       citizenId: citizen.entity.id,
-      notificationType: "event_created",
-      channel: NotificationChannel.WEB_PUSH,
+      endpoint: "https://fcm.googleapis.com/fcm/send/push-aufraeumer-1",
+      p256dh: "test-p256dh-1",
+      auth: "test-auth-1",
+      userAgent: CHROME_ON_WINDOWS,
+    },
+    select: { id: true },
+  });
+  // A subscription from the time before the user agent was stored
+  const remainingEndpoint = "https://push.example.com/push-aufraeumer-2";
+  await prisma.webPushSubscription.create({
+    data: {
+      citizenId: citizen.entity.id,
+      endpoint: remainingEndpoint,
+      p256dh: "test-p256dh-2",
+      auth: "test-auth-2",
     },
   });
   await signIn(citizen.user);
@@ -250,33 +252,44 @@ test("disabling web push entirely removes all subscriptions", async ({
   await page.goto(NOTIFICATIONS_PAGE);
   await waitForAppShellHydration(page);
 
-  await page
-    .getByRole("button", { name: "Auf allen Geräten deaktivieren" })
-    .click();
+  const chromeRow = page
+    .getByRole("row")
+    .filter({ hasText: "Chrome 141 · Windows 10" });
+  await expect(chromeRow.getByText("Google", { exact: true })).toBeVisible();
+  const remainingRow = page
+    .getByRole("row")
+    .filter({ hasText: "push.example.com" });
   await expect(
-    page.getByText(
-      "Die Benachrichtigungen wurden auf allen Geräten deaktiviert.",
-    ),
+    remainingRow.getByText("Unbekannt", { exact: true }),
   ).toBeVisible();
 
+  await clickUntilVisible(
+    chromeRow.getByRole("button", { name: "Browser entfernen" }),
+    page.getByRole("alertdialog"),
+  );
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Entfernen" })
+    .click();
+
+  await expect(page.getByText(DELETED_TEXT)).toBeVisible();
+  await expect(chromeRow).toHaveCount(0);
+  await expect(remainingRow).toHaveCount(1);
+
   await expect
     .poll(() =>
-      prisma.webPushSubscription.count({
+      prisma.webPushSubscription.findMany({
         where: { citizenId: citizen.entity.id },
+        select: { endpoint: true },
       }),
     )
-    .toBe(0);
-
-  // The per-type disabled setting survives so it is restored when the citizen
-  // subscribes again.
-  const settingsCount = await prisma.notificationSetting.count({
-    where: { citizenId: citizen.entity.id },
-  });
-  expect(settingsCount).toBe(1);
-
+    .toEqual([{ endpoint: remainingEndpoint }]);
   await expect
     .poll(() =>
-      prisma.auditEvent.findFirst({ where: { type: "WEB_PUSH_UNSUBSCRIBED" } }),
+      prisma.auditEvent.findFirst({
+        where: { type: "WEB_PUSH_SUBSCRIPTION_DELETED" },
+        select: { data: true },
+      }),
     )
-    .not.toBeNull();
+    .toMatchObject({ data: { subscriptionId: chromeSubscription.id } });
 });
