@@ -15,6 +15,7 @@ export interface ValidatedLogAnalyzerEntry {
   readonly type: LogAnalyzerEntryType;
   readonly rawLine: string;
   readonly eventAt: Date;
+  readonly lineNumber: number | null;
   readonly hash: string;
 }
 
@@ -36,7 +37,7 @@ export const validateLogAnalyzerEntries = async (
 ): Promise<ValidatedLogAnalyzerEntry[] | null> => {
   const validatedEntries: ValidatedLogAnalyzerEntry[] = [];
 
-  for (const { type, raw_line, event_at } of entries) {
+  for (const { type, raw_line, event_at, line_number } of entries) {
     const match = matchLogAnalyzerEntryLine(type, raw_line);
     if (!match?.groups) return null;
     if (match.index !== 0 || match[0].length !== raw_line.length) return null;
@@ -54,6 +55,7 @@ export const validateLogAnalyzerEntries = async (
       type,
       rawLine: raw_line,
       eventAt,
+      lineNumber: line_number ?? null,
       hash: await createLogAnalyzerEntryHash(type, raw_line),
     });
   }

@@ -21,6 +21,7 @@ export const SHARED_ENTRY_SELECT = {
   type: true,
   rawLine: true,
   eventAt: true,
+  lineNumber: true,
   createdBy: {
     select: CITIZEN_REFERENCE_SELECT,
   },
@@ -42,6 +43,8 @@ export interface SharedLogAnalyzerEntry {
   readonly type: string;
   readonly rawLine: string;
   readonly eventAt: Date;
+  /** Null for an entry which was shared before the upload sent the number */
+  readonly lineNumber: number | null;
   /** Null after the citizen was deleted */
   readonly createdBy: CitizenReferenceRow | null;
 }
