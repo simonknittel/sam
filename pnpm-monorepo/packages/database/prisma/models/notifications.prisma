@@ -36,6 +36,9 @@ model WebPushSubscription {
   citizenId String
   citizen   Citizen  @relation(fields: [citizenId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
+  /// User agent of the browser that saved the subscription. NULL for
+  /// subscriptions older than this column and for saves without the header.
+  userAgent String?
 
   // Subscription details
   endpoint String @unique

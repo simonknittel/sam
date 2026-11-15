@@ -1,10 +1,10 @@
 import { getRequestActor } from "@/modules/application";
-import { formatUserAgent } from "@/modules/auth/utils/formatUserAgent";
 import { TRow } from "@/modules/common/components/Table";
 import {
   TableTile,
   type TableColumn,
 } from "@/modules/common/components/TableTile";
+import { UserAgentCell } from "@/modules/common/components/UserAgentCell";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import type { OwnGrant } from "@sam-monorepo/application";
 import type { ToolCatalogGroup } from "@sam-monorepo/mcp";
@@ -116,7 +116,6 @@ const ConnectedClientRow = ({
   canManageAdminMode,
 }: ConnectedClientRowProps) => {
   const displayName = getGrantDisplayName(grant);
-  const userAgent = formatUserAgent(grant.userAgent) ?? grant.userAgent;
 
   return (
     <TRow className="min-h-10">
@@ -126,12 +125,7 @@ const ConnectedClientRow = ({
         {grant.clientHost}
       </td>
 
-      <td
-        className={clsx("truncate", { "text-neutral-500": !userAgent })}
-        title={grant.userAgent ?? undefined}
-      >
-        {userAgent ?? "Unbekannt"}
-      </td>
+      <UserAgentCell userAgent={grant.userAgent} />
 
       <td>{formatDate(grant.createdAt)}</td>
 

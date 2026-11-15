@@ -426,6 +426,17 @@ export const AuditEventDefinitions: {
       `Unsubscribed from web push notifications (${data.count} subscription(s) removed)`,
   },
 
+  [AuditEventType.WEB_PUSH_SUBSCRIPTION_DELETED]: {
+    type: AuditEventType.WEB_PUSH_SUBSCRIPTION_DELETED,
+    app: SystemLogApp.Notifications,
+    data: {
+      subscriptionId: "string",
+      citizenId: "string",
+    },
+    message: (data) =>
+      `Web push subscription deleted for citizen ${data.citizenId} (${data.subscriptionId})`,
+  },
+
   [AuditEventType.ROLE_CREATED]: {
     type: AuditEventType.ROLE_CREATED,
     app: SystemLogApp.Iam,

@@ -12,6 +12,7 @@ const ENDPOINT = "https://push.example.com/send/subscription-1";
 
 const SAVED_KEYS = { p256dh: "saved-p256dh", auth: "saved-auth" };
 const NEW_KEYS = { p256dh: "new-p256dh", auth: "new-auth" };
+const USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64; rv:145.0) Firefox/145.0";
 
 beforeEach(async () => {
   await truncateAllTables();
@@ -32,7 +33,7 @@ const createCitizenWithSubscription = async (handle: string) => {
 // The client of the database omits the keys by default
 const findSubscriptions = () =>
   prisma.webPushSubscription.findMany({
-    select: { citizenId: true, p256dh: true, auth: true },
+    select: { citizenId: true, p256dh: true, auth: true, userAgent: true },
   });
 
 const subscribe = async (
@@ -43,16 +44,17 @@ const subscribe = async (
     context,
     createTestActor({ userId: citizen.userId!, citizen }),
     { subscription: { endpoint: ENDPOINT, keys: NEW_KEYS } },
+    { userAgent: USER_AGENT },
   );
 
-test("a second save of the own endpoint changes its keys", async () => {
+test("a second save of the own endpoint changes its keys and its user agent", async () => {
   const citizen = await createCitizenWithSubscription("owner");
   const { context, notifications } = createTestApplicationContext();
 
   await subscribe(context, citizen);
 
   await expect(findSubscriptions()).resolves.toEqual([
-    { citizenId: citizen.id, ...NEW_KEYS },
+    { citizenId: citizen.id, ...NEW_KEYS, userAgent: USER_AGENT },
   ]);
   expect(notifications).toHaveLength(1);
 });
@@ -71,7 +73,7 @@ test("refuses the endpoint of a different citizen and keeps its keys", async () 
   );
 
   await expect(findSubscriptions()).resolves.toEqual([
-    { citizenId: owner.id, ...SAVED_KEYS },
+    { citizenId: owner.id, ...SAVED_KEYS, userAgent: null },
   ]);
   expect(auditEvents).toEqual([]);
   expect(notifications).toEqual([]);

@@ -3,11 +3,11 @@ import {
   TableTile,
   type TableColumn,
 } from "@/modules/common/components/TableTile";
+import { UserAgentCell } from "@/modules/common/components/UserAgentCell";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import clsx from "clsx";
 import { createLoader, type SearchParams } from "nuqs/server";
 import { getMySessions } from "../queries/getMySessions";
-import { formatUserAgent } from "../utils/formatUserAgent";
 import {
   SESSION_SORT_PARAM,
   SESSION_STATUS_PARAM,
@@ -79,8 +79,6 @@ interface SessionRowProps {
 }
 
 const SessionRow = ({ session }: SessionRowProps) => {
-  const userAgent = formatUserAgent(session.userAgent) ?? session.userAgent;
-
   return (
     <TRow className="h-10">
       <td className="overflow-hidden font-mono text-neutral-400">
@@ -103,12 +101,7 @@ const SessionRow = ({ session }: SessionRowProps) => {
         {formatDate(session.createdAt) ?? UNKNOWN}
       </td>
 
-      <td
-        title={session.userAgent ?? undefined}
-        className={clsx("truncate", { "text-neutral-500": !userAgent })}
-      >
-        {userAgent ?? UNKNOWN}
-      </td>
+      <UserAgentCell userAgent={session.userAgent} />
 
       <td>{formatDate(session.expires)}</td>
 

@@ -54,6 +54,22 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-11-15-browser-benachrichtigungen-verwalten",
+    date: "2026-11-15",
+    title: "Browser-Benachrichtigungen verwalten",
+    tags: ["Neu", "Benachrichtigungen"],
+    isTracked: false,
+    body: () => (
+      <p>
+        Die Benachrichtigungseinstellungen in deinem Account zeigen jetzt, ob
+        dein aktueller Browser Benachrichtigungen erhält, und listen alle
+        Browser auf, in denen du sie aktiviert hast. Einzelne Browser kannst du
+        dort entfernen.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-11-15-log-analyzer-schnellansicht",
     date: "2026-11-15",
     title: "Schnellansicht im Log Analyzer",
