@@ -13,11 +13,39 @@ import {
   structuredContentOf,
   UNKNOWN_TOOL_ERROR_CODE,
 } from "../fixtures/mcp-client";
+import { readMcpServerMetadata } from "../fixtures/oauth";
 import { expect, test } from "../fixtures/test";
 
-const MCP_APP_PAGE = "/app/mcp";
+const MCP_APP_PAGE = "/app/ai-agents";
 
-test.describe("the MCP app", () => {
+test.describe("the app KI-Agenten", () => {
+  test("the page shows the Claude plugin with the URLs of the marketplace", async ({
+    page,
+    prisma,
+    request,
+    signIn,
+  }) => {
+    const citizen = await createMcpCitizen(prisma, { handle: "ki-agent" });
+    await signIn(citizen.user);
+    const { issuer } = await readMcpServerMetadata(request);
+    const marketplaceUrl = `${issuer}/api/ai-agents/claude/marketplace.json`;
+    const marketplace = (await (
+      await request.get(new URL(marketplaceUrl).pathname)
+    ).json()) as { plugins: { source: { url: string } }[] };
+
+    await page.goto(MCP_APP_PAGE);
+
+    await expect(
+      page.getByText(`claude plugin marketplace add ${marketplaceUrl}`, {
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(page.getByRole("link", { name: "sam.zip" })).toHaveAttribute(
+      "href",
+      marketplace.plugins[0]?.source.url ?? "",
+    );
+  });
+
   test("the page lists a connected client, and its disconnection stops the client", async ({
     page,
     prisma,
@@ -35,9 +63,7 @@ test.describe("the MCP app", () => {
     );
     expect(callBefore.status()).toBe(200);
 
-    // The settings were on the account page before the MCP app
-    await page.goto("/app/account/mcp");
-    await expect(page).toHaveURL(MCP_APP_PAGE);
+    await page.goto(MCP_APP_PAGE);
     const clientRow = page
       .getByRole("row")
       .filter({ hasText: cimdServer.host });
