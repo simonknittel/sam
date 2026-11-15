@@ -518,6 +518,6 @@ test.describe("the read tools of the MCP server", () => {
       is_tracked: true,
       title: "MCP-Server für KI-Clients",
     });
-    expect(entry?.markdown).toContain("/app/account/mcp");
+    expect(entry?.markdown).toContain("/app/ai-agents");
   });
 });

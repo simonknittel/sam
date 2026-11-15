@@ -184,7 +184,7 @@ test.describe("the user tools of the MCP server", () => {
         admin_mode: false,
         permission_count: 2,
         tool_groups: expect.arrayContaining(["users"]),
-        settings_page_url: expect.stringMatching(/\/app\/mcp$/),
+        settings_page_url: expect.stringMatching(/\/app\/ai-agents$/),
       },
     };
     expect(await callForContent(client, "get_user")).toMatchObject(ownUser);

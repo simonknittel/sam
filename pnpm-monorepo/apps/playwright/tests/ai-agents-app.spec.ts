@@ -16,10 +16,10 @@ import {
 import { readMcpServerMetadata } from "../fixtures/oauth";
 import { expect, test } from "../fixtures/test";
 
-const MCP_APP_PAGE = "/app/ai-agents";
+const AI_AGENTS_PAGE = "/app/ai-agents";
 
 test.describe("the app KI-Agenten", () => {
-  test("the page shows the Claude plugin with the URLs of the marketplace", async ({
+  test("the page shows the Claude plugin with the URLs of the environment", async ({
     page,
     prisma,
     request,
@@ -28,21 +28,18 @@ test.describe("the app KI-Agenten", () => {
     const citizen = await createMcpCitizen(prisma, { handle: "ki-agent" });
     await signIn(citizen.user);
     const { issuer } = await readMcpServerMetadata(request);
-    const marketplaceUrl = `${issuer}/api/ai-agents/claude/marketplace.json`;
-    const marketplace = (await (
-      await request.get(new URL(marketplaceUrl).pathname)
-    ).json()) as { plugins: { source: { url: string } }[] };
 
-    await page.goto(MCP_APP_PAGE);
+    await page.goto(AI_AGENTS_PAGE);
 
     await expect(
-      page.getByText(`claude plugin marketplace add ${marketplaceUrl}`, {
-        exact: true,
-      }),
+      page.getByText(
+        `claude plugin marketplace add ${new URL("/api/ai-agents/claude/marketplace.json", issuer).href}`,
+        { exact: true },
+      ),
     ).toBeVisible();
     await expect(page.getByRole("link", { name: "sam.zip" })).toHaveAttribute(
       "href",
-      marketplace.plugins[0]?.source.url ?? "",
+      new URL("/api/ai-agents/claude/sam.zip", issuer).href,
     );
   });
 
@@ -63,7 +60,7 @@ test.describe("the app KI-Agenten", () => {
     );
     expect(callBefore.status()).toBe(200);
 
-    await page.goto(MCP_APP_PAGE);
+    await page.goto(AI_AGENTS_PAGE);
     const clientRow = page
       .getByRole("row")
       .filter({ hasText: cimdServer.host });
@@ -113,7 +110,7 @@ test.describe("the app KI-Agenten", () => {
       (await authorizeMcpClient(citizen.user)).accessToken,
     );
 
-    await page.goto(MCP_APP_PAGE);
+    await page.goto(AI_AGENTS_PAGE);
     await waitForAppShellHydration(page);
     const clientRows = page
       .getByRole("row")
@@ -193,7 +190,7 @@ test.describe("the app KI-Agenten", () => {
       .filter({ hasText: cimdServer.host });
 
     await authorizeMcpClient(member.user);
-    await page.goto(MCP_APP_PAGE);
+    await page.goto(AI_AGENTS_PAGE);
     await expect(clientRow).toBeVisible();
     await expect(adminModeSwitch).toHaveCount(0);
 
@@ -205,12 +202,12 @@ test.describe("the app KI-Agenten", () => {
     );
 
     // The switch shows only while the admin mode of the toolbar is active
-    await page.goto(MCP_APP_PAGE);
+    await page.goto(AI_AGENTS_PAGE);
     await expect(clientRow).toBeVisible();
     await expect(adminModeSwitch).toHaveCount(0);
 
     await enableAdminMode();
-    await page.goto(MCP_APP_PAGE);
+    await page.goto(AI_AGENTS_PAGE);
     await expect(clientRow).toBeVisible();
     await waitForAppShellHydration(page);
     await expect(adminModeSwitch).not.toBeChecked();
@@ -271,7 +268,7 @@ test.describe("the app KI-Agenten", () => {
       },
     ]);
 
-    await page.goto(MCP_APP_PAGE);
+    await page.goto(AI_AGENTS_PAGE);
     await expect(page.getByText("Assuming mcp-vertretener")).toBeVisible();
     const clientRow = page
       .getByRole("row")
