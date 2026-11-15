@@ -1,8 +1,10 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { NotificationSettings } from "@/modules/notifications/components/NotificationSettings";
+import { WebPushBrowserProvider } from "@/modules/notifications/components/WebPushBrowserProvider";
 import { WebPushSubscriberClient } from "@/modules/notifications/components/WebPushSubscriberClient";
+import { WebPushSubscriptionsTable } from "@/modules/notifications/components/WebPushSubscriptionsTable";
 import { getMyNotificationSettings } from "@/modules/notifications/utils/queries/getMyNotificationSettings";
-import { getMyWebPushSubscriptionCount } from "@/modules/notifications/utils/queries/getMyWebPushSubscriptionCount";
+import { getMyWebPushSubscriptions } from "@/modules/notifications/utils/queries/getMyWebPushSubscriptions";
 import { type Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -16,16 +18,22 @@ export default async function Page() {
   );
   if (!authentication.session.entity) notFound();
 
-  const [myNotificationSettings, myWebPushSubscriptionCount] =
-    await Promise.all([
-      getMyNotificationSettings(),
-      getMyWebPushSubscriptionCount(),
-    ]);
+  const [myNotificationSettings, myWebPushSubscriptions] = await Promise.all([
+    getMyNotificationSettings(),
+    getMyWebPushSubscriptions(),
+  ]);
   return (
     <div className="flex flex-col gap-4">
-      <WebPushSubscriberClient
-        hasSubscriptions={myWebPushSubscriptionCount > 0}
-      />
+      <WebPushBrowserProvider
+        subscriptions={myWebPushSubscriptions.map(({ id, endpoint }) => ({
+          id,
+          endpoint,
+        }))}
+      >
+        <WebPushSubscriberClient />
+
+        <WebPushSubscriptionsTable subscriptions={myWebPushSubscriptions} />
+      </WebPushBrowserProvider>
 
       <NotificationSettings settings={myNotificationSettings} />
 
