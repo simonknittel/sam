@@ -262,7 +262,7 @@ test.describe("the OAuth server and the MCP endpoint", () => {
     const client = await connectMcpClient(authorization.accessToken);
     expect(await client.listToolNames()).not.toContain("get_user");
 
-    await page.goto("/app/ai-agents");
+    await page.goto("/app/ai-agents/clients");
     const clientRow = page
       .getByRole("row")
       .filter({ hasText: cimdServer.host });

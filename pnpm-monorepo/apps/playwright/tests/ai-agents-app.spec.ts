@@ -16,7 +16,7 @@ import {
 import { readMcpServerMetadata } from "../fixtures/oauth";
 import { expect, test } from "../fixtures/test";
 
-const AI_AGENTS_PAGE = "/app/ai-agents";
+const CLIENTS_PAGE = "/app/ai-agents/clients";
 
 test.describe("the app KI-Agenten", () => {
   test("the page shows the Claude plugin with the URLs of the environment", async ({
@@ -29,7 +29,7 @@ test.describe("the app KI-Agenten", () => {
     await signIn(citizen.user);
     const { issuer } = await readMcpServerMetadata(request);
 
-    await page.goto(AI_AGENTS_PAGE);
+    await page.goto("/app/ai-agents/claude-plugin");
 
     await expect(
       page.getByText(
@@ -60,7 +60,7 @@ test.describe("the app KI-Agenten", () => {
     );
     expect(callBefore.status()).toBe(200);
 
-    await page.goto(AI_AGENTS_PAGE);
+    await page.goto(CLIENTS_PAGE);
     const clientRow = page
       .getByRole("row")
       .filter({ hasText: cimdServer.host });
@@ -110,7 +110,7 @@ test.describe("the app KI-Agenten", () => {
       (await authorizeMcpClient(citizen.user)).accessToken,
     );
 
-    await page.goto(AI_AGENTS_PAGE);
+    await page.goto(CLIENTS_PAGE);
     await waitForAppShellHydration(page);
     const clientRows = page
       .getByRole("row")
@@ -190,7 +190,7 @@ test.describe("the app KI-Agenten", () => {
       .filter({ hasText: cimdServer.host });
 
     await authorizeMcpClient(member.user);
-    await page.goto(AI_AGENTS_PAGE);
+    await page.goto(CLIENTS_PAGE);
     await expect(clientRow).toBeVisible();
     await expect(adminModeSwitch).toHaveCount(0);
 
@@ -202,12 +202,12 @@ test.describe("the app KI-Agenten", () => {
     );
 
     // The switch shows only while the admin mode of the toolbar is active
-    await page.goto(AI_AGENTS_PAGE);
+    await page.goto(CLIENTS_PAGE);
     await expect(clientRow).toBeVisible();
     await expect(adminModeSwitch).toHaveCount(0);
 
     await enableAdminMode();
-    await page.goto(AI_AGENTS_PAGE);
+    await page.goto(CLIENTS_PAGE);
     await expect(clientRow).toBeVisible();
     await waitForAppShellHydration(page);
     await expect(adminModeSwitch).not.toBeChecked();
@@ -268,7 +268,7 @@ test.describe("the app KI-Agenten", () => {
       },
     ]);
 
-    await page.goto(AI_AGENTS_PAGE);
+    await page.goto(CLIENTS_PAGE);
     await expect(page.getByText("Assuming mcp-vertretener")).toBeVisible();
     const clientRow = page
       .getByRole("row")
