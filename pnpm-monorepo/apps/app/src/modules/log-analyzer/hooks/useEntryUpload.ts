@@ -173,6 +173,7 @@ export const useEntryUpload = () => {
         eventAt: takesTimeOfPrecedingLine(rawMatch.type)
           ? rawMatch.isoDate
           : undefined,
+        lineNumber: rawMatch.lineNumber,
       });
     }
 

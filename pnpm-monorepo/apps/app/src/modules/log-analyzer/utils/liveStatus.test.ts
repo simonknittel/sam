@@ -27,7 +27,7 @@ const at = (minute: number) =>
 interface EntryOptions {
   readonly citizenId?: string;
   readonly isShared?: boolean;
-  readonly linePosition?: number | null;
+  readonly lineNumber?: number | null;
 }
 
 /** An entry with the given signal, at the given minute after `START` */
@@ -37,7 +37,7 @@ const entry = (
   {
     citizenId = "alice",
     isShared = false,
-    linePosition = null,
+    lineNumber = null,
   }: EntryOptions = {},
 ): IEntry => ({
   key: `${minute}_${citizenId}_${JSON.stringify(liveStatusSignal)}`,
@@ -51,7 +51,7 @@ const entry = (
   isShared,
   isUploaded: false,
   liveStatusSignal,
-  linePosition,
+  lineNumber,
 });
 
 const sessionStart = (shard = "pub_euw1b_9873572_100"): LiveStatusSignal => ({
@@ -371,9 +371,9 @@ describe("Live-Status signals of the patterns", () => {
   test("the lines of one instant keep their order in the log file", () => {
     /** The order of the keys puts the line which leaves last */
     const entries = [
-      entry(5, signalOf(...LEAVING_ARMISTICE_ZONE), { linePosition: 100 }),
+      entry(5, signalOf(...LEAVING_ARMISTICE_ZONE), { lineNumber: 100 }),
       entry(5, signalOf(LogAnalyzerEntryType.ArmisticeZoneNotification), {
-        linePosition: 200,
+        lineNumber: 200,
       }),
     ];
 

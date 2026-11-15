@@ -242,7 +242,7 @@ export const LogAnalyzer = ({ className }: Props) => {
                 citizen: ownCitizen,
                 isShared: false,
                 isUploaded: false,
-                linePosition: rawMatch.linePosition,
+                lineNumber: rawMatch.lineNumber,
               });
             }
 

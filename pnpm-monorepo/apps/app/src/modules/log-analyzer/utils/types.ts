@@ -5,8 +5,8 @@ export interface RawMatch {
   readonly isoDate: string;
   readonly fullMatch: string;
   readonly groups: Record<string, string>;
-  /** See `IEntry.linePosition` */
-  readonly linePosition: number;
+  /** See `IEntry.lineNumber` */
+  readonly lineNumber: number;
 }
 
 /**

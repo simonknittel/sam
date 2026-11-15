@@ -23,6 +23,8 @@ interface ReadPosition {
   readonly anchor: Uint8Array;
   /** The time of the last timestamped line before `offset` */
   readonly isoDateBeforeOffset: string | null;
+  /** The number of the line at `offset`. The first line has the number 1. */
+  readonly lineNumberAtOffset: number;
 }
 
 interface FileState extends ReadPosition {
@@ -36,6 +38,7 @@ const FILE_START: ReadPosition = {
   offset: 0,
   anchor: new Uint8Array(),
   isoDateBeforeOffset: null,
+  lineNumberAtOffset: 1,
 };
 
 /**
@@ -132,6 +135,38 @@ const hasNewerVersionMatch = (
   });
 
 /**
+ * Gives the number of the line which holds an index of the text. The scan
+ * finds the matches marker by marker and not line by line, thus a binary
+ * search over the line feeds of the text gives the numbers.
+ */
+const createLineNumbering = (text: string, firstLineNumber: number) => {
+  const lineFeedIndexes: number[] = [];
+  for (
+    let index = text.indexOf("\n");
+    index !== -1;
+    index = text.indexOf("\n", index + 1)
+  ) {
+    lineFeedIndexes.push(index);
+  }
+
+  return (textIndex: number) => {
+    /** The count of the line feeds before the index */
+    let low = 0;
+    let high = lineFeedIndexes.length;
+    while (low < high) {
+      const middle = Math.floor((low + high) / 2);
+      if (lineFeedIndexes[middle] < textIndex) {
+        low = middle + 1;
+      } else {
+        high = middle;
+      }
+    }
+
+    return firstLineNumber + low;
+  };
+};
+
+/**
  * Adds the matches of the text to `matches` and returns how many it skipped.
  * The server refuses a whole upload request when one raw line is longer than
  * its limit. A line above the limit is therefore not an entry, so that it
@@ -143,7 +178,8 @@ const hasNewerVersionMatch = (
  */
 const collectMatches = (
   text: string,
-  { offset, isoDateBeforeOffset }: ReadPosition,
+  isoDateBeforeText: string | null,
+  getLineNumber: (textIndex: number) => number,
   matches: RawMatch[],
 ) => {
   let skippedOverlongLineCount = 0;
@@ -163,7 +199,7 @@ const collectMatches = (
         if (hasNewerVersionMatch(type, text, lineStart)) continue;
 
         const isoDate = takesTimeOfPrecedingLine
-          ? (findPrecedingIsoDate(text, match.index) ?? isoDateBeforeOffset)
+          ? (findPrecedingIsoDate(text, match.index) ?? isoDateBeforeText)
           : match.groups.isoDate;
         if (!isoDate) continue;
 
@@ -178,12 +214,7 @@ const collectMatches = (
             isoDate,
             fullMatch: match[0],
             groups: match.groups,
-            /**
-             * The offset counts bytes and the index counts characters. A
-             * text has at least as many bytes as characters, thus a line of
-             * a later read does not get a smaller position.
-             */
-            linePosition: offset + lineStart,
+            lineNumber: getLineNumber(lineStart),
           }),
         );
       }
@@ -202,7 +233,14 @@ const readFile = async (
   const decoder = position.offset === 0 ? DECODER_AT_FILE_START : DECODER;
   const text = decoder.decode(bytes);
 
-  const skippedOverlongLineCount = collectMatches(text, position, matches);
+  const getLineNumber = createLineNumbering(text, position.lineNumberAtOffset);
+
+  const skippedOverlongLineCount = collectMatches(
+    text,
+    position.isoDateBeforeOffset,
+    getLineNumber,
+    matches,
+  );
   if (skippedOverlongLineCount > 0) {
     console.warn(
       `[Log Analyzer] Skipped lines longer than ${MAXIMUM_LOG_ANALYZER_RAW_LINE_LENGTH} characters in ${path}: ${skippedOverlongLineCount}`,
@@ -237,6 +275,7 @@ const readFile = async (
       newestIsoDate === null
         ? position.isoDateBeforeOffset
         : copyValue(newestIsoDate),
+    lineNumberAtOffset: getLineNumber(lastLineInText.start),
   };
 };
 
