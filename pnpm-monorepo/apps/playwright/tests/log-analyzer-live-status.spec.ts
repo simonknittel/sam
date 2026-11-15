@@ -18,6 +18,7 @@ import {
   settingsDialog,
   settingToggle,
   stubDirectoryPicker,
+  tableRows,
 } from "../fixtures/log-analyzer";
 import { expect, test } from "../fixtures/test";
 
@@ -246,4 +247,33 @@ test("the live status of another citizen ignores the type filters, and follows t
   await expect(
     panel.getByText(/für einen vergangenen Zeitraum ausgeblendet/),
   ).toBeVisible();
+});
+
+test("the table and the live status show the lines of one instant in the order of the log file", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, {
+    handle: "log-live-instant",
+    permissionStrings: LOG_ANALYZER_PERMISSIONS,
+  });
+
+  await signIn(citizen.user);
+  /** At the spawn, the game writes both lines in the same millisecond */
+  const spawnedAt = minutesAgo(5);
+  await stubDirectoryPicker(page, [
+    joinPuLine(minutesAgo(6)),
+    enteringArmisticeLine(spawnedAt),
+    leavingArmisticeLine(spawnedAt),
+  ]);
+  await page.goto(LOG_ANALYZER_PAGE_PATH);
+  await selectFolder(page);
+
+  await expect(
+    liveStatus(page).getByText("Armistice Zone: Verlassen"),
+  ).toBeVisible();
+  /** The first row holds the column headings, then the newest line follows */
+  await expect(tableRows(page).nth(1)).toContainText("Verlassen");
+  await expect(tableRows(page).nth(2)).toContainText("Betreten");
 });
