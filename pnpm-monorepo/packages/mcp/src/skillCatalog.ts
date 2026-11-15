@@ -8,6 +8,8 @@ export const SKILL_FILE_NAME = "SKILL.md";
 /** A file of a skill with the text that `resources/read` gives */
 export interface ServedSkillFile {
   readonly uri: string;
+  /** Relative to the root of the skill, for example `SKILL.md` */
+  readonly path: string;
   /** The name of the resource in `resources/list` */
   readonly name: string;
   readonly description: string;
@@ -65,6 +67,7 @@ const toServedSkill = (skill: SkillDefinition): ServedSkill => {
     files: [
       toServedFile({
         uri: toUri(SKILL_FILE_NAME),
+        path: SKILL_FILE_NAME,
         name: skill.name,
         description: skill.description,
         text: renderSkillFile(skill),
@@ -72,6 +75,7 @@ const toServedSkill = (skill: SkillDefinition): ServedSkill => {
       ...skill.files.map((file) =>
         toServedFile({
           uri: toUri(file.path),
+          path: file.path,
           name: `${skill.name}/${file.path}`,
           description: file.description,
           text: file.content,

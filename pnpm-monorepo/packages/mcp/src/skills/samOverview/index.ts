@@ -10,7 +10,7 @@ import { wikiReference } from "./wikiReference.js";
 export const samOverviewSkill: SkillDefinition = {
   name: "sam-overview",
   description:
-    "Explains what SAM is, its apps, and the core concepts and processes of each app. Use it when the user asks what SAM or one of its apps does, where a feature is, or how a process of the organization works in SAM, and before you use the tools of an app that you do not know.",
+    "Explains SAM, its apps and their concepts and processes. Use it when the user asks what an app does, where a feature is or how a process works, and before you use the tools of an unknown app.",
   instructions: `# SAM overview
 
 SAM (Sinister Administration Module) is the internal tooling, ERP and CRM of our Star Citizen organization. It consists of various tools for managing our organization.
@@ -52,7 +52,7 @@ The paths are on the host of this MCP server. \`/app/apps\` lists all apps of th
 | Statistiken | \`/app/statistics\` | Statistics about the use of SAM | – |
 | Log Analyzer | \`/app/tools/log-analyzer\` | Finds events in the Game.log of Star Citizen; members can share them | – |
 | Account | \`/app/account\` | Profile (time zone, birthday), notification settings, seasonal themes and sessions | – |
-| MCP | \`/app/mcp\` | Connect AI clients via MCP | – |
+| KI-Agenten | \`/app/ai-agents\` | Connect AI clients via MCP, and download the Claude plugin and the skills of this server | – |
 | Uploads | \`/app/uploads\` | Overview of all file uploads | – |
 | Timezones, Avatar Creator, Dogfight Trainer, Cornerstone Image Browser | see \`/app/apps\` | Small tools and a game | – |
 | SILO-Anfrage, Scrapper's Codex, Projekte | see \`/app/apps\` | External apps: material requests and price lists, sale of loot on the black market of the organization, and the progress of the projects of the organization | – |

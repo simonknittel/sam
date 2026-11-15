@@ -5,6 +5,15 @@
  * the application context and calls the request handler.
  */
 export {
+  CLAUDE_PLUGIN_NAME,
+  buildClaudePluginArchive,
+  buildSkillArchive,
+  createClaudeMarketplace,
+  createSkillDiscoveryIndex,
+  listSkillNames,
+} from "./agentDistribution.js";
+export type { Archive } from "./archive.js";
+export {
   isCatalogToolName,
   listToolCatalogGroups,
   type ToolCatalogGroup,

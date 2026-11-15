@@ -9,7 +9,11 @@ import {
 /** The naming rule of the Agent Skills specification */
 const SKILL_NAME_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const MAXIMUM_SKILL_NAME_LENGTH = 64;
-const MAXIMUM_SKILL_DESCRIPTION_LENGTH = 1024;
+/**
+ * The Agent Skills specification permits 1024 characters, but Claude.ai
+ * refuses an uploaded skill with more than 200
+ */
+const MAXIMUM_SKILL_DESCRIPTION_LENGTH = 200;
 
 /**
  * The targets of the Markdown links, without the links to a website. A client
