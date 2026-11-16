@@ -204,6 +204,7 @@ export {
   type ParsedOnSiteNotificationPayload,
 } from "./notifications/onSiteNotificationPayloads.js";
 export * from "./notifications/onSiteNotificationTab.js";
+export { WebPushPruneReason } from "./notifications/webPushPruneReason.js";
 export { OAUTH_GRANT_CUSTOM_NAME_MAXIMUM_LENGTH } from "./oauth/oauthGrantLimits.js";
 export * from "./onboarding/onboardingTasks.js";
 export { ORG_ID } from "./ORG_ID.js";

@@ -1,4 +1,5 @@
 import type { EventPositionRoleMatch } from "@sam-monorepo/database/browser";
+import type { WebPushPruneReason } from "./notifications/webPushPruneReason.js";
 import type { ReadAuditEventType } from "./readAuditEventTypes.js";
 import type { ReadMarkerSubject } from "./readMarkers/ReadMarkerSubject.js";
 
@@ -223,7 +224,9 @@ export enum AuditEventType {
   ON_SITE_NOTIFICATIONS_READ_ARCHIVED = "ON_SITE_NOTIFICATIONS_READ_ARCHIVED",
   ON_SITE_NOTIFICATION_UNARCHIVED = "ON_SITE_NOTIFICATION_UNARCHIVED",
   IRRELEVANT_ON_SITE_NOTIFICATIONS_ARCHIVED = "IRRELEVANT_ON_SITE_NOTIFICATIONS_ARCHIVED",
+  /** @deprecated Superseded by WEB_PUSH_SUBSCRIPTIONS_PRUNED_V2 (adds each deleted subscription) */
   WEB_PUSH_SUBSCRIPTIONS_PRUNED = "WEB_PUSH_SUBSCRIPTIONS_PRUNED",
+  WEB_PUSH_SUBSCRIPTIONS_PRUNED_V2 = "WEB_PUSH_SUBSCRIPTIONS_PRUNED_V2",
   /** @deprecated Superseded by READ_MARKERS_CREATED (the changelog entries became a subject of the read markers) */
   CHANGELOG_ENTRIES_SEEN = "CHANGELOG_ENTRIES_SEEN",
   UNUSED_UPLOADS_DELETED = "UNUSED_UPLOADS_DELETED",
@@ -1556,6 +1559,21 @@ export interface AuditEventDataByType {
     count: number;
     /** Why the endpoints were dropped by their push service */
     reason: "expired" | "invalid";
+  };
+
+  [AuditEventType.WEB_PUSH_SUBSCRIPTIONS_PRUNED_V2]: {
+    reason: WebPushPruneReason;
+    subscriptions: {
+      subscriptionId: string;
+      citizenId: string;
+      /** The raw `User-Agent` header of the subscribe, or null when it is unknown */
+      userAgent: string | null;
+      /**
+       * The HTTP status of the answer of the push service, or null when no
+       * push service answered (a ban)
+       */
+      statusCode: number | null;
+    }[];
   };
 
   [AuditEventType.CHANGELOG_ENTRIES_SEEN]: {
