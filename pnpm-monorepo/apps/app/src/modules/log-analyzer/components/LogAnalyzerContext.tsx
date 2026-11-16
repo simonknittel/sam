@@ -80,6 +80,11 @@ interface Context {
   /** The citizens whose shared entries the table hides. Empty shows all. */
   readonly hiddenCitizenIds: string[];
   readonly setHiddenCitizenIds: Dispatch<SetStateAction<string[]>>;
+  /**
+   * The filter of the date range alone. The repeats collapse after it and
+   * before the other filters (see `collapseRepeatedEntries`).
+   */
+  readonly entryWindowFilterFn: (entry: IEntry) => boolean;
   /** The filter of the settings. The overlay uses it. */
   readonly entryFilterFn: (entry: IEntry) => boolean;
   /**
@@ -246,8 +251,11 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
     !!entry.citizen &&
     hiddenCitizenIds.includes(entry.citizen.id);
 
+  const entryWindowFilterFn = (entry: IEntry) =>
+    isInWindow(entry.isoDate, entryWindow);
+
   const entryFilterFn = (entry: IEntry) => {
-    if (!isInWindow(entry.isoDate, entryWindow)) return false;
+    if (!entryWindowFilterFn(entry)) return false;
     if (isHiddenCitizen(entry)) return false;
     return entry.isShared
       ? othersEntryTypes[entry.type]
@@ -263,7 +271,7 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
    */
   const tableEntryFilterFn = (entry: IEntry) => {
     if (quickLookTypeSet.size <= 0) return entryFilterFn(entry);
-    if (!isInWindow(entry.isoDate, entryWindow)) return false;
+    if (!entryWindowFilterFn(entry)) return false;
     if (isHiddenCitizen(entry)) return false;
     return quickLookTypeSet.has(getOldestLogAnalyzerEntryVersion(entry.type));
   };
@@ -294,6 +302,7 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
     isSharedViewEnabled,
     hiddenCitizenIds,
     setHiddenCitizenIds,
+    entryWindowFilterFn,
     entryFilterFn,
     tableEntryFilterFn,
     entries,

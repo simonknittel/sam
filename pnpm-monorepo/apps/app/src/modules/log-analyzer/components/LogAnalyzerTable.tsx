@@ -18,15 +18,19 @@ interface Props {
 }
 
 export const LogAnalyzerTable = ({ className }: Props) => {
-  const { tableEntryFilterFn, entries } = useLogAnalyzerContext();
+  const { entryWindowFilterFn, tableEntryFilterFn, entries } =
+    useLogAnalyzerContext();
   const [visibleRowCount, setVisibleRowCount] = useState(ROWS_PER_PAGE);
 
-  /** The filter runs first, so the sort works on the smaller list */
+  /**
+   * The repeats collapse before the filters of the types: a hidden type, for
+   * example the end of a session, still ends a repeat
+   */
   const sortedFilteredEntries = collapseRepeatedEntries(
     Array.from(entries.values())
-      .filter(tableEntryFilterFn)
+      .filter(entryWindowFilterFn)
       .toSorted(compareEntriesNewestFirst),
-  );
+  ).filter(tableEntryFilterFn);
 
   const visibleEntries = sortedFilteredEntries.slice(0, visibleRowCount);
   const hiddenRowCount = sortedFilteredEntries.length - visibleEntries.length;

@@ -24,7 +24,8 @@ export const OverlayButton = ({ className }: Props) => {
   const { isSupported, requestPipWindow, pipWindow, closePipWindow } =
     useOverlay();
 
-  const { entries, entryFilterFn } = useLogAnalyzerContext();
+  const { entries, entryWindowFilterFn, entryFilterFn } =
+    useLogAnalyzerContext();
 
   /**
    * The overlay closes only when the button unmounts. A cleanup with
@@ -53,13 +54,14 @@ export const OverlayButton = ({ className }: Props) => {
   };
 
   /** The repeats collapse before the pick of the new entries, so that a
-      repeat of an older entry does not show as new. */
+      repeat of an older entry does not show as new. The filters of the types
+      come after them (see `collapseRepeatedEntries`). */
   const newEntries = collapseRepeatedEntries(
-    Array.from(entries.values().filter(entryFilterFn)).toSorted(
+    Array.from(entries.values().filter(entryWindowFilterFn)).toSorted(
       compareEntriesNewestFirst,
     ),
   )
-    .filter((entry) => entry.isNew)
+    .filter((entry) => entry.isNew && entryFilterFn(entry))
     .slice(0, MAXIMUM_OVERLAY_ENTRIES);
 
   return (

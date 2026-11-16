@@ -468,9 +468,7 @@ export const LogAnalyzer = ({ className }: Props) => {
               isLiveStatusVisible,
           })}
         >
-          {isLiveStatusVisible && (
-            <LiveStatus className="2xl:sticky 2xl:top-32 2xl:order-2 2xl:max-h-[calc(100dvh-9rem)] 2xl:overflow-y-auto 2xl:overscroll-contain" />
-          )}
+          {isLiveStatusVisible && <LiveStatus className="2xl:order-2" />}
           <LogAnalyzerTable className="min-w-0 2xl:order-1" />
         </div>
       ) : (

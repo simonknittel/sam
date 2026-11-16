@@ -267,7 +267,14 @@ const ChoiceRow = ({
   return (
     <li className="flex items-start justify-between gap-4 rounded-secondary bg-neutral-900/50 p-2">
       <div className="min-w-0">
-        <p className="truncate font-bold" title={name}>
+        <p
+          /**
+           * The line has the height of the button (`min-h-8`), so the name
+           * and the button align also above the unmet requirements
+           */
+          className="truncate leading-8 font-bold"
+          title={name}
+        >
           <CitizenLink citizen={choice.citizen} />
         </p>
         <UnmetRequirementList
