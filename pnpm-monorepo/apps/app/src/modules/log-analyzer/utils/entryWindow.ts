@@ -51,3 +51,25 @@ export const getEntryWindow = (
 
 export const isInWindow = (date: Date, { start, end }: EntryWindow) =>
   (!start || date >= start) && (!end || date < end);
+
+/**
+ * The part of the date range before the rolling window. The upload of each
+ * read reaches only the rolling window, thus the entries of this part are
+ * shared only on request (see `useOlderEntrySharing`). Null without a date
+ * range, and when the range has no such part.
+ */
+export const getOlderEntryWindow = (
+  dateRange: DateRange,
+  daysToLoad: number,
+): EntryWindow | null => {
+  if (!hasDateRange(dateRange)) return null;
+
+  const rollingWindowStart = getWindowStart(daysToLoad);
+  if (!rollingWindowStart) return null;
+
+  const { start, end } = getEntryWindow(dateRange, daysToLoad);
+  const olderEnd = end && end < rollingWindowStart ? end : rollingWindowStart;
+  if (start && start >= olderEnd) return null;
+
+  return { start, end: olderEnd };
+};

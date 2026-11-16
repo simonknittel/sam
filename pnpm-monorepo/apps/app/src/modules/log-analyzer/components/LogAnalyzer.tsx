@@ -23,6 +23,7 @@ import {
 import { FaFileArrowUp } from "react-icons/fa6";
 import { useEntryUpload } from "../hooks/useEntryUpload";
 import { useLogParser } from "../hooks/useLogParser";
+import { useOlderEntrySharing } from "../hooks/useOlderEntrySharing";
 import { useSharedEntries } from "../hooks/useSharedEntries";
 import {
   getEntryWindow,
@@ -42,7 +43,7 @@ import {
   summarizeLogSelection,
   type LogSelection,
 } from "../utils/selectLogFiles";
-import type { LogFile, ReadProgress } from "../utils/types";
+import type { LogFile, RawMatch, ReadProgress } from "../utils/types";
 import { DateRangeSettings } from "./DateRangeSettings";
 import { Introduction } from "./Introduction";
 import { LiveStatus } from "./LiveStatus";
@@ -51,6 +52,7 @@ import { LogAnalyzerTable } from "./LogAnalyzerTable";
 import { useOverlay } from "./OverlayContext";
 import { QuickLookBar } from "./QuickLookBar";
 import { ReadStatus } from "./ReadStatus";
+import { ShareOlderEntriesButton } from "./ShareOlderEntriesButton";
 import { Toolbar } from "./Toolbar";
 
 const BYTES_PER_MEGABYTE = 1_000_000;
@@ -89,6 +91,8 @@ export const LogAnalyzer = ({ className }: Props) => {
   const authentication = useAuthentication();
   const { pipWindow } = useOverlay();
   const uploadEntries = useEntryUpload();
+  const { addOlderMatches, sharableEntries, shareOlderEntries } =
+    useOlderEntrySharing();
   const { refreshSharedEntries, isLoadingDateRange } = useSharedEntries();
 
   const sessionCitizen = authentication ? authentication.session.entity : null;
@@ -116,6 +120,11 @@ export const LogAnalyzer = ({ className }: Props) => {
   useEffect(() => {
     uploadEntriesRef.current = uploadEntries;
   }, [uploadEntries]);
+
+  const addOlderMatchesRef = useRef(addOlderMatches);
+  useEffect(() => {
+    addOlderMatchesRef.current = addOlderMatches;
+  }, [addOlderMatches]);
 
   /**
    * A cycle reads only the lines which were added since the cycle before it.
@@ -252,13 +261,22 @@ export const LogAnalyzer = ({ className }: Props) => {
         }
 
         /**
-         * Only the rolling window reaches the server: looking at old logs
-         * shares nothing.
+         * Only the rolling window reaches the server by itself: looking at
+         * old logs shares nothing. The older entries wait for the request of
+         * the user.
          */
         const uploadWindow = getEntryWindow(NO_DATE_RANGE, daysToLoad);
-        const matchesToUpload = rawMatches.filter(({ isoDate }) =>
-          isInWindow(new Date(isoDate), uploadWindow),
-        );
+        const matchesToUpload: RawMatch[] = [];
+        const olderMatches: RawMatch[] = [];
+        for (const rawMatch of rawMatches) {
+          if (isInWindow(new Date(rawMatch.isoDate), uploadWindow)) {
+            matchesToUpload.push(rawMatch);
+          } else {
+            olderMatches.push(rawMatch);
+          }
+        }
+
+        addOlderMatchesRef.current(olderMatches);
 
         /**
          * Sharing must not hold up the rendering of the new entries. A
@@ -424,6 +442,11 @@ export const LogAnalyzer = ({ className }: Props) => {
       <Toolbar onRefresh={handleRefresh} className="mt-1">
         <DateRangeSettings
           oldestSessionStart={logSelection?.oldestSessionStart ?? null}
+        />
+
+        <ShareOlderEntriesButton
+          entries={sharableEntries}
+          onShare={shareOlderEntries}
         />
 
         <ReadStatus
