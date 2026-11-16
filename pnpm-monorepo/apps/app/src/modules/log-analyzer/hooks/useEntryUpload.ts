@@ -1,25 +1,19 @@
 "use client";
 
-import { runAction } from "@/modules/actions/utils/runAction";
 import { useHasLinkedCitizen } from "@/modules/auth/hooks/useHasLinkedCitizen";
 import { api } from "@/trpc/react";
-import {
-  clampLogAnalyzerDaysToLoad,
-  createLogAnalyzerEntryHash,
-  MAXIMUM_LOG_ANALYZER_UPLOAD_ENTRIES,
-  takesTimeOfPrecedingLine,
-} from "@sam-monorepo/domain";
+import { clampLogAnalyzerDaysToLoad } from "@sam-monorepo/domain";
 import { useRef } from "react";
-import { uploadLogAnalyzerEntries } from "../actions/uploadLogAnalyzerEntries";
 import { useLogAnalyzerContext } from "../components/LogAnalyzerContext";
-import { createEntryKey, type IEntry } from "../utils/PATTERNS";
+import { createEntryKey } from "../utils/PATTERNS";
+import {
+  createPendingEntries,
+  loadStoredHashes,
+  markEntriesUploaded,
+  type PendingEntry,
+  uploadInChunks,
+} from "../utils/shareEntries";
 import type { RawMatch } from "../utils/types";
-import { createUploadFormData, type UploadEntry } from "../utils/uploadEntries";
-
-interface PendingEntry extends UploadEntry {
-  readonly key: string;
-  readonly hash: string;
-}
 
 /**
  * Shares the matched entries of the selected types with the other citizens.
@@ -41,7 +35,7 @@ interface PendingEntry extends UploadEntry {
  *
  * Every entry the server holds gets its badge in the table, whether this
  * cycle sent it or an earlier visit did. Entries older than the rolling window
- * never reach this hook, thus they show no badge.
+ * never reach this hook: `useOlderEntrySharing` handles them.
  *
  * The function returns false when a match which it had to share did not reach
  * the server. The next cycle then delivers the whole window again.
@@ -60,7 +54,7 @@ export const useEntryUpload = () => {
   /** The keys of the entries the server verifiably holds. */
   const settledKeysRef = useRef(new Set<string>());
 
-  const loadStoredHashes = () => {
+  const loadStoredHashesOnce = () => {
     if (storedHashesRef.current)
       return Promise.resolve(storedHashesRef.current);
 
@@ -69,24 +63,17 @@ export const useEntryUpload = () => {
      * LogAnalyzer needs a stable upload function.
      */
     if (!loadingRef.current) {
-      loadingRef.current = (async () => {
-        const hashes = new Set<string>();
-        let cursorHash: string | undefined;
-
-        do {
-          /** The vanilla client keeps no copy of the pages in the query cache */
-          const page = await utils.client.logAnalyzer.getOwnEntryHashes.query({
-            daysToLoad: clampLogAnalyzerDaysToLoad(daysToLoad),
-            cursorHash,
-          });
-
-          for (const hash of page.hashes) hashes.add(hash);
-          cursorHash = page.cursorHash ?? undefined;
-        } while (cursorHash);
-
-        storedHashesRef.current = hashes;
-        return hashes;
-      })()
+      loadingRef.current = loadStoredHashes((cursorHash) =>
+        /** The vanilla client keeps no copy of the pages in the query cache */
+        utils.client.logAnalyzer.getOwnEntryHashes.query({
+          daysToLoad: clampLogAnalyzerDaysToLoad(daysToLoad),
+          cursorHash,
+        }),
+      )
+        .then((hashes) => {
+          storedHashesRef.current = hashes;
+          return hashes;
+        })
         .catch((error: unknown) => {
           console.error(
             "[Log Analyzer] Error loading the hashes of the own entries:",
@@ -103,23 +90,9 @@ export const useEntryUpload = () => {
     return loadingRef.current;
   };
 
-  const markEntriesUploaded = (keys: readonly string[]) => {
+  const markKeysUploaded = (keys: readonly string[]) => {
     if (keys.length <= 0) return;
-
-    setEntries((previousEntries) => {
-      /** Keys the table does not hold leave it untouched */
-      let newEntries: Map<string, IEntry> | null = null;
-
-      for (const key of keys) {
-        const existingEntry = previousEntries.get(key);
-        if (!existingEntry || existingEntry.isUploaded) continue;
-
-        if (!newEntries) newEntries = new Map(previousEntries);
-        newEntries.set(key, { ...existingEntry, isUploaded: true });
-      }
-
-      return newEntries ?? previousEntries;
-    });
+    setEntries((previousEntries) => markEntriesUploaded(previousEntries, keys));
   };
 
   return async (rawMatches: readonly RawMatch[]) => {
@@ -139,74 +112,32 @@ export const useEntryUpload = () => {
     }
     if (newMatchesByKey.size <= 0) return true;
 
-    const storedHashes = await loadStoredHashes();
+    const storedHashes = await loadStoredHashesOnce();
     /** Without the set the upload would offer the whole window again */
     if (!storedHashes) return false;
-
-    /** One batch, because a hash per await would walk thousands of turns */
-    const hashedMatches = await Promise.all(
-      Array.from(newMatchesByKey, async ([key, rawMatch]) => ({
-        key,
-        rawMatch,
-        hash: await createLogAnalyzerEntryHash(
-          rawMatch.type,
-          rawMatch.fullMatch,
-        ),
-      })),
-    );
 
     const pendingEntries: PendingEntry[] = [];
     const storedKeys: string[] = [];
 
-    for (const { key, rawMatch, hash } of hashedMatches) {
-      if (storedHashes.has(hash)) {
-        settledKeys.add(key);
-        storedKeys.push(key);
-        continue;
+    for (const entry of await createPendingEntries(newMatchesByKey)) {
+      if (storedHashes.has(entry.hash)) {
+        settledKeys.add(entry.key);
+        storedKeys.push(entry.key);
+      } else {
+        pendingEntries.push(entry);
       }
-
-      pendingEntries.push({
-        key,
-        hash,
-        type: rawMatch.type,
-        rawLine: rawMatch.fullMatch,
-        eventAt: takesTimeOfPrecedingLine(rawMatch.type)
-          ? rawMatch.isoDate
-          : undefined,
-        lineNumber: rawMatch.lineNumber,
-      });
     }
 
     /** The badge of an entry of an earlier visit needs no request */
-    markEntriesUploaded(storedKeys);
+    markKeysUploaded(storedKeys);
 
-    for (
-      let index = 0;
-      index < pendingEntries.length;
-      index += MAXIMUM_LOG_ANALYZER_UPLOAD_ENTRIES
-    ) {
-      const chunk = pendingEntries.slice(
-        index,
-        index + MAXIMUM_LOG_ANALYZER_UPLOAD_ENTRIES,
-      );
-
-      const succeeded = await runAction(
-        uploadLogAnalyzerEntries,
-        createUploadFormData(chunk),
-        { successToast: false },
-      );
-
-      /**
-       * The keys of a failed chunk stay unsettled, so the next cycle sends
-       * its entries again. Stopping here keeps one broken cycle down to
-       * one message for the user.
-       */
-      if (!succeeded) return false;
-
+    /**
+     * The keys of a failed chunk stay unsettled, so the next cycle sends
+     * its entries again.
+     */
+    return uploadInChunks(pendingEntries, (chunk) => {
       for (const entry of chunk) settledKeys.add(entry.key);
-      markEntriesUploaded(chunk.map((entry) => entry.key));
-    }
-
-    return true;
+      markKeysUploaded(chunk.map((entry) => entry.key));
+    });
   };
 };
