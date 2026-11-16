@@ -27,11 +27,15 @@ export interface OwnLogAnalyzerEntryHashes {
   readonly cursorHash: string | null;
 }
 
+/** The filter on `eventAt`. Undefined loads without a time limit. */
+interface EventAtFilter {
+  readonly gte?: Date | undefined;
+  readonly lt?: Date | undefined;
+}
+
 /**
- * The hashes of the entries the citizen of the actor already shared. The
- * client hashes what it parsed from the local log files and sends only what
- * is missing here, so a page load no longer offers the whole window to the
- * server again.
+ * One page of the hashes of the entries the citizen of the actor already
+ * shared, inside the given time span.
  *
  * Only hashes leave the server: they identify an entry for the unique index
  * without carrying the raw log line, which holds data of other players.
@@ -39,10 +43,11 @@ export interface OwnLogAnalyzerEntryHashes {
  * The cursor runs along the hash. It is unique per citizen, thus it orders
  * the rows without a tiebreaker and the unique index serves the paging.
  */
-export const findOwnLogAnalyzerEntryHashes = async (
+export const findOwnLogAnalyzerEntryHashPage = async (
   context: ApplicationContext,
   actor: Actor,
-  input: FindOwnLogAnalyzerEntryHashesInput,
+  eventAt: EventAtFilter | undefined,
+  cursorHash: string | undefined,
   options: LogAnalyzerSharingOptions,
 ): Promise<OwnLogAnalyzerEntryHashes> => {
   requireLogAnalyzerAccess(actor, options);
@@ -52,18 +57,12 @@ export const findOwnLogAnalyzerEntryHashes = async (
   const citizenId = actor.citizen.id;
 
   const entries = await context.prisma.logAnalyzerEntry.findMany({
-    where: {
-      createdById: citizenId,
-      eventAt: getEventAtWindow(input.daysToLoad, context.now()),
-    },
+    where: { createdById: citizenId, eventAt },
     orderBy: { hash: "asc" },
-    ...(input.cursorHash
+    ...(cursorHash
       ? {
           cursor: {
-            createdById_hash: {
-              createdById: citizenId,
-              hash: input.cursorHash,
-            },
+            createdById_hash: { createdById: citizenId, hash: cursorHash },
           },
           skip: 1,
         }
@@ -74,8 +73,28 @@ export const findOwnLogAnalyzerEntryHashes = async (
   const hashes = entries.map((entry) => entry.hash);
 
   /** A page below the limit holds the last rows */
-  const cursorHash =
+  const nextCursorHash =
     hashes.length < MAXIMUM_HASHES_PER_REQUEST ? null : (hashes.at(-1) ?? null);
 
-  return { hashes, cursorHash };
+  return { hashes, cursorHash: nextCursorHash };
 };
+
+/**
+ * The hashes of the entries of the rolling window which the citizen of the
+ * actor already shared. The client hashes what it parsed from the local log
+ * files and sends only what is missing here, so a page load no longer offers
+ * the whole window to the server again.
+ */
+export const findOwnLogAnalyzerEntryHashes = (
+  context: ApplicationContext,
+  actor: Actor,
+  input: FindOwnLogAnalyzerEntryHashesInput,
+  options: LogAnalyzerSharingOptions,
+) =>
+  findOwnLogAnalyzerEntryHashPage(
+    context,
+    actor,
+    getEventAtWindow(input.daysToLoad, context.now()),
+    input.cursorHash,
+    options,
+  );

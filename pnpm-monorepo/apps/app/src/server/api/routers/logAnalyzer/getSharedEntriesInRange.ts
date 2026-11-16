@@ -7,6 +7,7 @@ import {
 } from "@sam-monorepo/application";
 import * as z from "zod";
 import { protectedProcedure, toTrpcError } from "../../trpc";
+import { dateRangeInputSchema } from "./dateRangeInputSchema";
 
 /**
  * The log entries of a date range. The kill switch closes the read path of
@@ -14,20 +15,12 @@ import { protectedProcedure, toTrpcError } from "../../trpc";
  */
 export const getSharedEntriesInRange = protectedProcedure
   .input(
-    z
-      .object({
-        from: z.date().optional(),
-        /** Exclusive */
-        to: z.date().optional(),
+    dateRangeInputSchema.and(
+      z.object({
         /** The last entry of the previous page. Absent for the first page. */
         cursorId: idSchema.optional(),
-      })
-      .refine(({ from, to }) => from !== undefined || to !== undefined, {
-        error: "A date range needs at least one bound",
-      })
-      .refine(({ from, to }) => !from || !to || from < to, {
-        error: "The start of a date range must be before its end",
       }),
+    ),
   )
   .query(async ({ ctx, input }) => {
     try {
