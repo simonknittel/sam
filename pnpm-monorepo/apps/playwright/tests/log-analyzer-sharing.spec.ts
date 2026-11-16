@@ -592,7 +592,7 @@ test("a quick look shows only its types until it ends, also hidden types", async
   await expect(quickLookBar).toHaveCount(0);
 });
 
-test("a date range older than the rolling window uploads nothing", async ({
+test("a date range older than the rolling window shares only on request", async ({
   page,
   prisma,
   signIn,
@@ -603,13 +603,14 @@ test("a date range older than the rolling window uploads nothing", async ({
   });
   const recentLine = joinPuLine(hoursAgo(1));
   const oldEventAt = daysAgo(40);
+  const oldLine = joinPuLine(oldEventAt);
 
   await signIn(citizen.user);
   await stubDirectoryPicker(
     page,
     [recentLine],
     [
-      createBackupFile(oldEventAt, joinPuLine(oldEventAt)),
+      createBackupFile(oldEventAt, oldLine),
       /** The oldest log sets the earliest date of the range */
       createBackupFile(daysAgo(60), blueprintLine(daysAgo(60))),
     ],
@@ -626,6 +627,7 @@ test("a date range older than the rolling window uploads nothing", async ({
     prisma.logAnalyzerEntry
       .findMany({
         where: { createdById: citizen.entity.id },
+        orderBy: { eventAt: "asc" },
         select: { rawLine: true },
       })
       .then((entries) => entries.map((entry) => entry.rawLine));
@@ -643,8 +645,37 @@ test("a date range older than the rolling window uploads nothing", async ({
     page.getByRole("button", { name: "Aktualisieren" }),
   ).toBeEnabled();
 
+  const shareButton = page.getByRole("button", {
+    name: "1 älteren Eintrag teilen",
+  });
+  await expect(shareButton).toBeVisible();
+
   expect(uploads).toEqual([]);
   expect(await sharedLines()).toEqual([recentLine]);
+
+  /** Only the confirmation shares, and a shared entry gets its badge */
+  await shareButton.click();
+  const confirmation = page.getByRole("alertdialog", {
+    name: "Ältere Einträge teilen?",
+  });
+  await expect(confirmation).toContainText("Shard-Beitritt");
+  await confirmation.getByRole("button", { name: "Teilen" }).click();
+
+  await expect.poll(sharedLines).toEqual([oldLine, recentLine]);
+  await expect(shareButton).toHaveCount(0);
+  await expect(
+    rowOf(page, "Shard-Beitritt").getByText("Hochgeladen"),
+  ).toBeVisible();
+
+  /** The server tells a new visit which older entries it holds */
+  await page.reload();
+  await selectFolder(page);
+  await applyDateRange(page, daysAgo(42), daysAgo(38));
+
+  await expect(
+    rowOf(page, "Shard-Beitritt").getByText("Hochgeladen"),
+  ).toBeVisible();
+  await expect(shareButton).toHaveCount(0);
 });
 
 test("a date range reaches shared entries older than the rolling window", async ({

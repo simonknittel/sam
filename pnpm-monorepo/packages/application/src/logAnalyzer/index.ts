@@ -4,6 +4,10 @@ export {
   type OwnLogAnalyzerEntryHashes,
 } from "./findOwnLogAnalyzerEntryHashes.js";
 export {
+  findOwnLogAnalyzerEntryHashesInRange,
+  type FindOwnLogAnalyzerEntryHashesInRangeInput,
+} from "./findOwnLogAnalyzerEntryHashesInRange.js";
+export {
   findSharedLogAnalyzerEntries,
   type FindSharedLogAnalyzerEntriesInput,
   type SharedLogAnalyzerEntries,

@@ -9,6 +9,7 @@ import { getOwnInvitationState } from "./routers/events/getOwnInvitationState";
 import { getPublishableDiscordChannels } from "./routers/events/getPublishableDiscordChannels";
 import { getUsableEventTemplates } from "./routers/events/getUsableEventTemplates";
 import { getOwnEntryHashes } from "./routers/logAnalyzer/getOwnEntryHashes";
+import { getOwnEntryHashesInRange } from "./routers/logAnalyzer/getOwnEntryHashesInRange";
 import { getSharedEntries } from "./routers/logAnalyzer/getSharedEntries";
 import { getSharedEntriesInRange } from "./routers/logAnalyzer/getSharedEntriesInRange";
 import { getManufacturerById } from "./routers/manufacturer/getById";
@@ -57,6 +58,7 @@ export const appRouter = createTRPCRouter({
   }),
   logAnalyzer: createTRPCRouter({
     getOwnEntryHashes,
+    getOwnEntryHashesInRange,
     getSharedEntries,
     getSharedEntriesInRange,
   }),

@@ -54,6 +54,20 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-11-16-log-analyzer-aeltere-eintraege-teilen",
+    date: "2026-11-16",
+    title: "Ältere Einträge im Log Analyzer teilen",
+    tags: ["Neu", "Log Analyzer"],
+    isTracked: false,
+    body: () => (
+      <p>
+        Wählst du im Log Analyzer einen Zeitraum vor den letzten Tagen, kannst
+        du deine älteren Einträge jetzt mit einem Klick nachträglich teilen.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-11-15-ki-agenten",
     date: "2026-11-15",
     title: "KI-Agenten: Plugin für Claude und Skills",
