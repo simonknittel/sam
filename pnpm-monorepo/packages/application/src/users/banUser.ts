@@ -2,11 +2,14 @@ import { UserRole } from "@sam-monorepo/database/browser";
 import {
   AuditEventType,
   BAN_REASON_MAXIMUM_LENGTH,
+  WebPushPruneReason,
+  type AuditEventInput,
 } from "@sam-monorepo/domain";
 import * as z from "zod";
 import { requireAdmin, requireCitizen, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { ConflictError, NotFoundError, ValidationError } from "../errors.js";
+import type { DeletedWebPushSubscription } from "../notifications/delivery/webPushDeliveries.js";
 import { idSchema } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
 import { UserErrorMessage } from "./userErrors.js";
@@ -94,25 +97,34 @@ export const banUser = (
     const bannedAt = context.now();
 
     // Only one of two parallel bans finds the user not banned
-    const isBanned = await context.prisma.$transaction(async (transaction) => {
-      const { count } = await transaction.user.updateMany({
-        where: { id: input.user_id, bannedAt: null },
-        data: { bannedAt, bannedById: bannedBy.id, bannedReason: reason },
-      });
-      if (count === 0) return false;
+    const deletedSubscriptions = await context.prisma.$transaction(
+      async (transaction) => {
+        const { count } = await transaction.user.updateMany({
+          where: { id: input.user_id, bannedAt: null },
+          data: { bannedAt, bannedById: bannedBy.id, bannedReason: reason },
+        });
+        if (count === 0) return null;
 
-      await transaction.session.deleteMany({
-        where: { userId: input.user_id },
-      });
-      await transaction.webPushSubscription.deleteMany({
-        where: { citizen: { userId: input.user_id } },
-      });
+        await transaction.session.deleteMany({
+          where: { userId: input.user_id },
+        });
 
-      return true;
-    });
-    if (!isBanned) throw new ConflictError(UserErrorMessage.AlreadyBanned);
+        return transaction.$queryRaw<DeletedWebPushSubscription[]>`
+          DELETE FROM "WebPushSubscription" AS "subscription"
+          USING "Citizen" AS "citizen"
+          WHERE "citizen"."id" = "subscription"."citizenId"
+            AND "citizen"."userId" = ${input.user_id}
+          RETURNING
+            "subscription"."id",
+            "subscription"."citizenId",
+            "subscription"."userAgent"
+        `;
+      },
+    );
+    if (!deletedSubscriptions)
+      throw new ConflictError(UserErrorMessage.AlreadyBanned);
 
-    await context.audit.create([
+    const auditEvents: AuditEventInput[] = [
       {
         type: AuditEventType.USER_BANNED,
         data: {
@@ -121,7 +133,22 @@ export const banUser = (
         },
         createdById: actor.userId,
       },
-    ]);
+    ];
+    if (deletedSubscriptions.length > 0)
+      auditEvents.push({
+        type: AuditEventType.WEB_PUSH_SUBSCRIPTIONS_PRUNED_V2,
+        data: {
+          reason: WebPushPruneReason.Banned,
+          subscriptions: deletedSubscriptions.map((subscription) => ({
+            subscriptionId: subscription.id,
+            citizenId: subscription.citizenId,
+            userAgent: subscription.userAgent,
+            statusCode: null,
+          })),
+        },
+        createdById: actor.userId,
+      });
+    await context.audit.create(auditEvents);
 
     await endLiveConnections(context, input.user_id);
 

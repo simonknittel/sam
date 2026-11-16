@@ -1,9 +1,10 @@
 import {
   findWebPushDeliveries,
   pruneWebPushSubscriptions,
-  WebPushPruneReason,
   type ApplicationContext,
+  type RejectedWebPushSubscription,
 } from "@sam-monorepo/application";
+import { WebPushPruneReason } from "@sam-monorepo/domain";
 import { setTimeout } from "node:timers/promises";
 import {
   sendNotification,
@@ -66,7 +67,7 @@ export const publishWebPushNotifications = async (
     count: deliveries.length,
   });
 
-  const subscriptionsToRemove: string[] = [];
+  const subscriptionsToRemove: RejectedWebPushSubscription[] = [];
   for (const { draft, subscription } of deliveries) {
     const payload = JSON.stringify({
       title: `${draft.title} | SAM`,
@@ -91,7 +92,10 @@ export const publishWebPushNotifications = async (
           error instanceof WebPushError &&
           (error.statusCode === 410 || error.statusCode === 404)
         ) {
-          subscriptionsToRemove.push(subscription.id);
+          subscriptionsToRemove.push({
+            subscriptionId: subscription.id,
+            statusCode: error.statusCode,
+          });
           break;
         }
 
@@ -132,7 +136,7 @@ export const publishWebPushNotifications = async (
     count: subscriptionsToRemove.length,
   });
   await pruneWebPushSubscriptions(context, {
-    subscriptionIds: subscriptionsToRemove,
+    subscriptions: subscriptionsToRemove,
     reason: WebPushPruneReason.Expired,
   });
 };

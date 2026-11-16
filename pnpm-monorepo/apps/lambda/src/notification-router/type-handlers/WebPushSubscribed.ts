@@ -1,10 +1,10 @@
 import {
   findWebPushSubscription,
   pruneWebPushSubscriptions,
-  WebPushPruneReason,
   type ApplicationContext,
 } from "@sam-monorepo/application";
 import { type WebPushSubscription } from "@sam-monorepo/database";
+import { WebPushPruneReason } from "@sam-monorepo/domain";
 import { sendNotification, setVapidDetails, WebPushError } from "web-push";
 import { log } from "../../common/logger";
 import { env } from "../setup";
@@ -64,7 +64,9 @@ export const WebPushSubscribedHandler = async (
       });
 
       await pruneWebPushSubscriptions(context, {
-        subscriptionIds: [subscription.id],
+        subscriptions: [
+          { subscriptionId: subscription.id, statusCode: error.statusCode },
+        ],
         reason: WebPushPruneReason.Invalid,
       });
     } else {

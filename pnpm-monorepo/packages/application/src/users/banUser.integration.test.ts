@@ -1,4 +1,5 @@
 import { prisma } from "@sam-monorepo/database";
+import { AuditEventType, WebPushPruneReason } from "@sam-monorepo/domain";
 import { beforeEach, expect, test } from "vitest";
 import {
   createTestActor,
@@ -51,11 +52,11 @@ test("deletes the sessions and the web push subscriptions and ends the live conn
   const bannedUser = await createUserWithDevices("banned");
   const otherUser = await createUserWithDevices("other");
   const { collab, disconnectedUserIds } = createTestCollabServer();
-  const { context, terminatedRealtimeUserIds } = createTestApplicationContext({
-    collab,
-  });
+  const { context, auditEvents, terminatedRealtimeUserIds } =
+    createTestApplicationContext({ collab });
+  const admin = await createAdmin();
 
-  await banUser(context, await createAdmin(), {
+  await banUser(context, admin, {
     user_id: bannedUser.id,
   });
 
@@ -65,6 +66,21 @@ test("deletes the sessions and the web push subscriptions and ends the live conn
   await expect(
     prisma.webPushSubscription.findMany({ select: { citizenId: true } }),
   ).resolves.toEqual([{ citizenId: otherUser.citizen!.id }]);
+  expect(auditEvents).toContainEqual({
+    type: AuditEventType.WEB_PUSH_SUBSCRIPTIONS_PRUNED_V2,
+    data: {
+      reason: WebPushPruneReason.Banned,
+      subscriptions: [
+        {
+          subscriptionId: expect.any(String),
+          citizenId: bannedUser.citizen!.id,
+          userAgent: null,
+          statusCode: null,
+        },
+      ],
+    },
+    createdById: admin.userId,
+  });
   expect(terminatedRealtimeUserIds).toEqual([bannedUser.id]);
   expect(disconnectedUserIds).toEqual([bannedUser.id]);
 });

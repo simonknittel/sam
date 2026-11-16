@@ -2,10 +2,12 @@ export {
   AuditEventType,
   type AuditEventDataByType,
 } from "@sam-monorepo/domain";
+import { formatUserAgent } from "@/modules/common/utils/formatUserAgent";
 import { EventPositionRoleMatch } from "@sam-monorepo/database/browser";
 import {
   AuditEventType,
   ReadMarkerSubject,
+  WebPushPruneReason,
   type AuditEventDataByType,
 } from "@sam-monorepo/domain";
 
@@ -41,6 +43,20 @@ const formatDiscordTwoFactorStatus = (enabled: boolean | null) => {
   if (enabled === null) return "unknown";
 
   return enabled ? "enabled" : "disabled";
+};
+
+const formatPrunedWebPushSubscription = (
+  subscription: AuditEventDataByType[AuditEventType.WEB_PUSH_SUBSCRIPTIONS_PRUNED_V2]["subscriptions"][number],
+) => {
+  const details = [
+    formatUserAgent(subscription.userAgent) ??
+      subscription.userAgent ??
+      "unknown user agent",
+  ];
+  if (subscription.statusCode !== null)
+    details.push(`HTTP ${subscription.statusCode}`);
+
+  return `${subscription.subscriptionId} of citizen ${subscription.citizenId} (${details.join(", ")})`;
 };
 
 /** A read access gives the query parameters of the read */
@@ -2299,6 +2315,24 @@ export const AuditEventDefinitions: {
     },
     message: (data) =>
       `Deleted ${data.count} ${data.reason} Web Push subscription(s)`,
+  },
+
+  [AuditEventType.WEB_PUSH_SUBSCRIPTIONS_PRUNED_V2]: {
+    type: AuditEventType.WEB_PUSH_SUBSCRIPTIONS_PRUNED_V2,
+    app: SystemLogApp.Notifications,
+    data: {
+      reason: WebPushPruneReason.Expired,
+      subscriptions: [
+        {
+          subscriptionId: "string",
+          citizenId: "string",
+          userAgent: "string",
+          statusCode: 410,
+        },
+      ],
+    },
+    message: (data) =>
+      `Deleted ${data.subscriptions.length} Web Push subscription(s) (reason: ${data.reason}): ${data.subscriptions.map(formatPrunedWebPushSubscription).join(", ")}`,
   },
 
   [AuditEventType.CHANGELOG_ENTRIES_SEEN]: {

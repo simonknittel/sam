@@ -2,22 +2,9 @@ import { NotificationChannel } from "@sam-monorepo/database/browser";
 import {
   AuditEventType,
   isAllowedWebPushEndpointUrl,
+  type WebPushPruneReason,
 } from "@sam-monorepo/domain";
 import type { ApplicationContext } from "../../context.js";
-
-/**
- * Why the notification router removes web push subscriptions. The values are
- * the reasons of the audit event.
- */
-export enum WebPushPruneReason {
-  /** A push service answered that the subscription is gone */
-  Expired = "expired",
-  /**
-   * The push service answered the confirmation push of a new subscription
-   * that the subscription is gone
-   */
-  Invalid = "invalid",
-}
 
 export interface WebPushSubscriptionTarget {
   readonly id: string;
@@ -137,30 +124,68 @@ export const findWebPushSubscription = async (
   };
 };
 
+export interface RejectedWebPushSubscription {
+  readonly subscriptionId: string;
+  /** The HTTP status of the answer of the push service */
+  readonly statusCode: number;
+}
+
 export interface PruneWebPushSubscriptionsInput {
-  readonly subscriptionIds: readonly string[];
+  readonly subscriptions: readonly RejectedWebPushSubscription[];
   readonly reason: WebPushPruneReason;
 }
 
+/** The columns of a deleted subscription that its audit event needs */
+export interface DeletedWebPushSubscription {
+  readonly id: string;
+  readonly citizenId: string;
+  readonly userAgent: string | null;
+}
+
 /**
- * Deletes the subscriptions, and writes the audit event with the number of
- * deleted rows (also 0, when the rows were gone)
+ * Deletes the subscriptions, and writes one audit event with each deleted
+ * subscription, its citizen and its user agent. When no subscription was
+ * deleted (all rows were gone), the function writes no audit event.
  */
 export const pruneWebPushSubscriptions = async (
   context: ApplicationContext,
   input: PruneWebPushSubscriptionsInput,
 ): Promise<{ readonly count: number }> => {
-  const { count } = await context.prisma.webPushSubscription.deleteMany({
-    where: { id: { in: [...input.subscriptionIds] } },
-  });
+  const statusCodesBySubscriptionId = new Map(
+    input.subscriptions.map((subscription) => [
+      subscription.subscriptionId,
+      subscription.statusCode,
+    ]),
+  );
+
+  /**
+   * RETURNING gives only the rows that this statement deleted, not a row
+   * that a different transaction deleted first
+   */
+  const deletedSubscriptions = await context.prisma.$queryRaw<
+    DeletedWebPushSubscription[]
+  >`
+    DELETE FROM "WebPushSubscription"
+    WHERE "id" = ANY(${[...statusCodesBySubscriptionId.keys()]}::text[])
+    RETURNING "id", "citizenId", "userAgent"
+  `;
+  if (deletedSubscriptions.length <= 0) return { count: 0 };
 
   await context.audit.create([
     {
-      type: AuditEventType.WEB_PUSH_SUBSCRIPTIONS_PRUNED,
-      data: { count, reason: input.reason },
+      type: AuditEventType.WEB_PUSH_SUBSCRIPTIONS_PRUNED_V2,
+      data: {
+        reason: input.reason,
+        subscriptions: deletedSubscriptions.map((subscription) => ({
+          subscriptionId: subscription.id,
+          citizenId: subscription.citizenId,
+          userAgent: subscription.userAgent,
+          statusCode: statusCodesBySubscriptionId.get(subscription.id)!,
+        })),
+      },
       createdById: null,
     },
   ]);
 
-  return { count };
+  return { count: deletedSubscriptions.length };
 };
