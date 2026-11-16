@@ -1,4 +1,5 @@
 import { getDateRangeFilter } from "@/modules/common/utils/getDateRangeFilter";
+import { getLogAnalyzerWindowStart } from "@sam-monorepo/domain";
 
 /**
  * The time span of the entries. `end` is exclusive. A missing bound means no
@@ -24,20 +25,15 @@ export const NO_DATE_RANGE: DateRange = { from: null, to: null };
 export const hasDateRange = ({ from, to }: DateRange) =>
   from !== null || to !== null;
 
+/** The start of the window which the `daysToLoad` setting gives */
+const getWindowStart = (daysToLoad: number) =>
+  getLogAnalyzerWindowStart(daysToLoad, new Date());
+
 /**
- * The start of the window which the `daysToLoad` setting gives: the start of
- * the day `daysToLoad` days before today. Null when the window has no limit.
+ * A selected day covers that whole day as it appears in the table. Without a
+ * date range, the window is the one of the server (see
+ * `getLogAnalyzerWindowStart`).
  */
-const getWindowStart = (daysToLoad: number) => {
-  if (daysToLoad <= 0) return null;
-
-  const windowStart = new Date();
-  windowStart.setDate(windowStart.getDate() - daysToLoad);
-  windowStart.setHours(0, 0, 0, 0);
-  return windowStart;
-};
-
-/** A selected day covers that whole day as it appears in the table. */
 export const getEntryWindow = (
   dateRange: DateRange,
   daysToLoad: number,
