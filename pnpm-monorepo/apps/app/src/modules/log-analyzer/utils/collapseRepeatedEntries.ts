@@ -1,9 +1,25 @@
-import type { IEntry } from "./PATTERNS";
+import type { LogAnalyzerEntryType } from "@sam-monorepo/domain";
+import { LiveStatusSignalType } from "./liveStatusSignals";
+import { PATTERNS, type IEntry } from "./PATTERNS";
 
 /**
- * Hides the repeats of an entry: an entry whose type, citizen and collapse
- * key equal those of the entry before it in the order of time. An entry
- * without a collapse key always stays. See `Pattern.collapseKey`.
+ * A join of a shard and the end of a session end all repeats of the citizen:
+ * after them, a line tells the state of a new session, also when it has the
+ * same text as the line before.
+ */
+const isRepeatBoundary = (entry: IEntry) =>
+  entry.liveStatusSignal?.type === LiveStatusSignalType.SessionStart ||
+  entry.liveStatusSignal?.type === LiveStatusSignalType.SessionEnd;
+
+/**
+ * Hides the repeats of an entry: an entry whose type and collapse key equal
+ * those of the entry before it in its sequence. A sequence holds the entries
+ * of one citizen and one type (see `Pattern.collapseSequenceOf`), and a
+ * boundary (see `isRepeatBoundary`) ends it. An entry without a collapse key
+ * always stays. See `Pattern.collapseKey`.
+ *
+ * The boundaries are entries of other types, thus the filters of the types
+ * must run after this function.
  *
  * Takes and returns the entries from the newest to the oldest, as the table
  * shows them.
@@ -11,22 +27,32 @@ import type { IEntry } from "./PATTERNS";
 export const collapseRepeatedEntries = (
   entriesNewestFirst: readonly IEntry[],
 ): IEntry[] => {
-  /** The collapse key of the last kept entry, per type and citizen */
-  const lastCollapseKeys = new Map<string, string>();
+  /** The type and the collapse key of the last entry, per citizen and sequence */
+  const lastRepeatKeys = new Map<string, Map<LogAnalyzerEntryType, string>>();
   const keptEntriesOldestFirst: IEntry[] = [];
 
   for (let index = entriesNewestFirst.length - 1; index >= 0; index -= 1) {
     const entry = entriesNewestFirst[index];
+    const citizenKey = entry.citizen?.id ?? "";
+
+    if (isRepeatBoundary(entry)) lastRepeatKeys.delete(citizenKey);
 
     if (entry.collapseKey === null) {
       keptEntriesOldestFirst.push(entry);
       continue;
     }
 
-    const sequenceKey = `${entry.type}_${entry.citizen?.id ?? ""}`;
-    if (lastCollapseKeys.get(sequenceKey) === entry.collapseKey) continue;
+    let citizenRepeatKeys = lastRepeatKeys.get(citizenKey);
+    if (!citizenRepeatKeys) {
+      citizenRepeatKeys = new Map();
+      lastRepeatKeys.set(citizenKey, citizenRepeatKeys);
+    }
 
-    lastCollapseKeys.set(sequenceKey, entry.collapseKey);
+    const sequence = PATTERNS[entry.type].collapseSequenceOf ?? entry.type;
+    const repeatKey = `${entry.type}_${entry.collapseKey}`;
+    if (citizenRepeatKeys.get(sequence) === repeatKey) continue;
+
+    citizenRepeatKeys.set(sequence, repeatKey);
     keptEntriesOldestFirst.push(entry);
   }
 

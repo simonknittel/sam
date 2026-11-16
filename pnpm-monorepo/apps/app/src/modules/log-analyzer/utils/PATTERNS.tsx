@@ -227,12 +227,17 @@ interface Pattern {
   category: EntryCategory;
   renderMessage?: (groups: Record<string, string>) => ReactNode;
   /**
-   * The game repeats some lines: every zone notification on a shard change,
-   * and the instance entry while the instance streams in and out. Entries of
-   * one type and one citizen which follow each other with the same key show
-   * as one entry.
+   * The game repeats some lines: a zone notification while the player stays
+   * in the zone, and the instance entry while the instance streams in and
+   * out. Entries of one type and one citizen which follow each other with the
+   * same key show as one entry (see `collapseRepeatedEntries`).
    */
   collapseKey?: (groups: Record<string, string>) => string;
+  /**
+   * The entries of this type continue the repeats of another type, thus they
+   * end a repeat of that type. By default, each type has its own repeats.
+   */
+  collapseSequenceOf?: LogAnalyzerEntryType;
   /** What the entry tells the Live-Status about its reporter */
   liveStatusSignal?: (groups: Record<string, string>) => LiveStatusSignal;
 }
@@ -517,6 +522,8 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
       <TruncatedText>{toInstanceName(groups.instance)}</TruncatedText>
     ),
     collapseKey: (groups) => groups.instanceId,
+    /** An entry of the instance after its exit is no repeat */
+    collapseSequenceOf: LogAnalyzerEntryType.InstanceEntered,
     liveStatusSignal: (groups) => ({
       type: LiveStatusSignalType.StateEnd,
       kind: LiveStatusKind.Instance,
