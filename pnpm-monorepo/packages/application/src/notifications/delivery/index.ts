@@ -9,10 +9,10 @@ export {
   type StoredOnSiteNotification,
 } from "./onSiteNotificationStore.js";
 export {
-  WebPushPruneReason,
   findWebPushDeliveries,
   findWebPushSubscription,
   pruneWebPushSubscriptions,
+  type RejectedWebPushSubscription,
   type WebPushDelivery,
   type WebPushSubscriptionTarget,
 } from "./webPushDeliveries.js";
