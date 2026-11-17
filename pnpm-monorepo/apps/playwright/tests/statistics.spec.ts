@@ -11,6 +11,8 @@ import { expect, test } from "../fixtures/test";
 const CHART_TITLES = [
   "Flotte gesamt",
   "Flotte",
+  "Flottenwert (USD)",
+  "Flottenwert (aUEC)",
   "Logins",
   "Citizens",
   "Organisationen",
@@ -49,7 +51,7 @@ const countPaintedPixels = (page: Page, title: string) =>
 /** Axis lines alone already paint far more than this. */
 const MIN_PAINTED_PIXELS = 1_000;
 
-test("all ten statistics charts paint their canvases", async ({
+test("all twelve statistics charts paint their canvases", async ({
   page,
   prisma,
   signIn,
@@ -60,8 +62,8 @@ test("all ten statistics charts paint their canvases", async ({
   });
 
   /**
-   * The snapshot charts (Flotte gesamt, Flotte, Rollen, Logins,
-   * MCP-Nutzung) only have data for days with rows. The chart axis ends
+   * The snapshot charts (Flotte gesamt, Flotte, both Flottenwert, Rollen,
+   * Logins, MCP-Nutzung) only have data for days with rows. The chart axis ends
    * yesterday. A `@db.Date` column keeps the UTC date of the value, which is
    * yesterday in UTC and yesterday or earlier in Europe/Berlin.
    */
@@ -83,6 +85,17 @@ test("all ten statistics charts paint their canvases", async ({
   });
   await prisma.dailyMcpUsageCount.create({
     data: { day: snapshotDay, count: 4 },
+  });
+  await prisma.dailyFleetValue.create({
+    data: {
+      day: snapshotDay,
+      storeValueUsdCents: 60_000,
+      inGameValueUsdCents: 2_500,
+      unknownValueUsdCents: 0,
+      storeValueAuec: 26_400_000,
+      inGameValueAuec: 1_250_000,
+      unknownValueAuec: 0,
+    },
   });
 
   await signIn(viewer.user);

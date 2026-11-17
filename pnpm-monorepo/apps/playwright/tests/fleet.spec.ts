@@ -1,4 +1,7 @@
-import { VariantStatus } from "@sam-monorepo/database/client";
+import {
+  ShipAcquisitionSource,
+  VariantStatus,
+} from "@sam-monorepo/database/client";
 import { ExternalService } from "@sam-monorepo/domain";
 import { expectAuditEvents } from "../fixtures/audit";
 import {
@@ -18,6 +21,7 @@ import {
   inlineEditorTrigger,
   modal,
   NOT_FOUND_TEXT,
+  pickFilterOption,
   RESOURCE_NOT_FOUND_TEXT,
   SAVED_TEXT,
   saveInlineEditor,
@@ -98,7 +102,7 @@ test("the org fleet filters narrow the server-rendered table", async ({
   await expect(page.locator("tbody tr").first()).toContainText("Carrack");
 });
 
-test("my ships can be added, renamed and deleted with consistent org counts", async ({
+test("my ships can be added, edited and deleted with consistent org counts and values", async ({
   page,
   prisma,
   signIn,
@@ -112,7 +116,7 @@ test("my ships can be added, renamed and deleted with consistent org counts", as
     ],
   });
   await addCitizenToOrganization(prisma, owner);
-  await createVariant(prisma, {
+  const { variant } = await createVariant(prisma, {
     manufacturerName: "Roberts Space Industries",
     seriesName: "Polaris",
     variantName: "Polaris",
@@ -129,6 +133,11 @@ test("my ships can be added, renamed and deleted with consistent org counts", as
       value: "Erkundung",
       variants: { connect: { id: carrack.id } },
     },
+  });
+  await prisma.variant.update({
+    where: { id: variant.id },
+    // USD 975
+    data: { storePriceUsdCents: 97_500, inGamePriceAuec: 26_400_000 },
   });
 
   await signIn(owner.user);
@@ -167,19 +176,35 @@ test("my ships can be added, renamed and deleted with consistent org counts", as
   await expect(shipPicker).toBeHidden();
   await expect(addModal.getByText("Wähle ein Schiff aus.")).toBeHidden();
 
+  await addModal.getByLabel("Herkunft").selectOption({ label: "Store" });
   await addModal.getByLabel("Schiffsname").fill("Sternenfaust");
+  await addModal.getByLabel("Notiz").fill("Mit Snub-Fighter");
   await addModal.getByRole("button", { name: "Hinzufügen" }).click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   await expect(addModal).not.toBeVisible();
 
   const shipRow = page.getByRole("row").filter({ hasText: "Polaris" });
   await expect(shipRow).toContainText("Sternenfaust");
-  await expect(page.getByText("Anzahl: 1")).toBeVisible();
+  await expect(shipRow).toContainText("Store");
+  await expect(shipRow).toContainText("Mit Snub-Fighter");
+  await expect(statisticTile(page, "Schiffe")).toContainText("1");
+  await expect(statisticTile(page, "Wert (Herkunft: Store)")).toContainText(
+    "$975",
+  );
+  await expect(statisticTile(page, "Wert (Herkunft: Store)")).toContainText(
+    "26.400.000 aUEC",
+  );
 
-  // The org fleet counts the new ship
+  // The org fleet counts the new ship and its value
   await page.goto("/app/fleet/org");
   await expect(statisticTile(page, "Schiffe")).toContainText("1");
   await expect(statisticTile(page, "Citizen")).toContainText("1");
+  await expect(statisticTile(page, "Wert (Herkunft: Store)")).toContainText(
+    "$975",
+  );
+  await expect(statisticTile(page, "Wert (Herkunft: Store)")).toContainText(
+    "26.400.000 aUEC",
+  );
   await expect(
     page
       .getByRole("row")
@@ -190,13 +215,43 @@ test("my ships can be added, renamed and deleted with consistent org counts", as
   // Rename
   await page.goto("/app/fleet/my-ships");
   const nameInput = page.locator('input[name="name"]');
-  await clickUntilVisible(inlineEditorTrigger(shipRow), nameInput);
+  await clickUntilVisible(
+    inlineEditorTrigger(shipRow).filter({ hasText: "Sternenfaust" }),
+    nameInput,
+  );
   await nameInput.fill("Sternenhammer");
   await saveInlineEditor(page);
   await expect(shipRow).toContainText("Sternenhammer");
+
+  // Change the Herkunft
+  const acquisitionSourceSelect = page.locator(
+    'select[name="acquisitionSource"]',
+  );
+  await clickUntilVisible(
+    inlineEditorTrigger(shipRow).filter({ hasText: "Store" }),
+    acquisitionSourceSelect,
+  );
+  await acquisitionSourceSelect.selectOption({ label: "In-game" });
+  await saveInlineEditor(page);
+  // The options of the open select contain "In-game" too
+  await expect(acquisitionSourceSelect).toBeHidden();
+  await expect(shipRow).toContainText("In-game");
+
   const ship = await prisma.ship.findFirst();
-  expect(ship?.name).toBe("Sternenhammer");
-  expect(ship?.ownerId).toBe(owner.entity.id);
+  expect(ship).toMatchObject({
+    name: "Sternenhammer",
+    ownerId: owner.entity.id,
+    acquisitionSource: ShipAcquisitionSource.IN_GAME,
+    note: "Mit Snub-Fighter",
+  });
+
+  // The Herkunft filter
+  await pickFilterOption(page, "Herkunft", "Store");
+  await expect(page).toHaveURL(/acquisition_source=store/);
+  await expect(shipRow).not.toBeVisible();
+  await pickFilterOption(page, "Herkunft", "In-game");
+  await expect(page).toHaveURL(/acquisition_source=in_game/);
+  await expect(shipRow).toBeVisible();
 
   // Delete (soft) — the list empties and the org count follows
   await clickUntilVisible(
@@ -221,23 +276,24 @@ test("my ships can be added, renamed and deleted with consistent org counts", as
   await page.goto("/app/fleet/org");
   await expect(statisticTile(page, "Schiffe")).toContainText("0");
 
-  // The three writes log the V2 event types, whose ownerId is a citizen id
+  // The writes log the event types whose ownerId is a citizen id
   await expectAuditEvents(prisma, [
-    "SHIP_CREATED_V2",
-    "SHIP_UPDATED_V2",
+    "SHIP_CREATED_V3",
+    "SHIP_UPDATED_V3",
     "SHIP_DELETED_V2",
   ]);
   const auditEvents = await prisma.auditEvent.findMany({
     where: {
       type: {
-        in: ["SHIP_CREATED_V2", "SHIP_UPDATED_V2", "SHIP_DELETED_V2"],
+        in: ["SHIP_CREATED_V3", "SHIP_UPDATED_V3", "SHIP_DELETED_V2"],
       },
     },
     orderBy: { createdAt: "asc" },
   });
   expect(auditEvents.map((auditEvent) => auditEvent.type)).toEqual([
-    "SHIP_CREATED_V2",
-    "SHIP_UPDATED_V2",
+    "SHIP_CREATED_V3",
+    "SHIP_UPDATED_V3",
+    "SHIP_UPDATED_V3",
     "SHIP_DELETED_V2",
   ]);
   for (const auditEvent of auditEvents) {
@@ -248,7 +304,7 @@ test("my ships can be added, renamed and deleted with consistent org counts", as
   }
 });
 
-test("the variant popover shows the custom name only for an individual ship", async ({
+test("the variant popover shows the name, the Herkunft and the Notiz only for an individual ship", async ({
   page,
   prisma,
   signIn,
@@ -273,6 +329,8 @@ test("the variant popover shows the custom name only for an individual ship", as
       ownerId: owner.entity.id,
       variantId: variant.id,
       name: "Sternenfaust",
+      acquisitionSource: ShipAcquisitionSource.STORE,
+      note: "Mit Snub-Fighter",
     },
   });
 
@@ -290,6 +348,8 @@ test("the variant popover shows the custom name only for an individual ship", as
 
   await expect(popover).toContainText("Anvil Aerospace");
   await expect(popover).toContainText("Sternenfaust");
+  await expect(popover).toContainText("Store");
+  await expect(popover).toContainText("Mit Snub-Fighter");
   await expect(popover.getByRole("link", { name: "Carrack" })).toHaveAttribute(
     "href",
     `/app/fleet/variant/${variant.id}`,
@@ -306,6 +366,7 @@ test("the variant popover shows the custom name only for an individual ship", as
   );
   await expect(popover).toContainText("Anvil Aerospace");
   await expect(popover).not.toContainText("Sternenfaust");
+  await expect(popover).not.toContainText("Mit Snub-Fighter");
 });
 
 test("the variant popover shows the details of the variant, its wiki page and only for a manager its settings", async ({
