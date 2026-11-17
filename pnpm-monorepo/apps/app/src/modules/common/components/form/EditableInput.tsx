@@ -16,6 +16,8 @@ interface Props {
     | { error: string }
   >;
   readonly type?: Exclude<ComponentProps<"input">["type"], "datetime-local">;
+  /** Shows the value in one line, with an ellipsis when it is too long */
+  readonly truncate?: boolean;
 }
 
 export const EditableInput = ({
@@ -25,11 +27,14 @@ export const EditableInput = ({
   initialValue,
   action,
   type = "text",
+  truncate = false,
 }: Props) => {
   return (
     <EditableField
-      className={className}
-      displayButtonClassName="hover:cursor-pointer"
+      className={clsx({ "max-w-full min-w-0": truncate }, className)}
+      displayButtonClassName={clsx("hover:cursor-pointer", {
+        "min-w-0": truncate,
+      })}
       saveButtonClassName="hover:cursor-pointer"
       rowId={rowId}
       columnName={columnName}
@@ -52,7 +57,15 @@ export const EditableInput = ({
           ref={setInputElement}
         />
       )}
-      renderDisplay={(value) => value || "-"}
+      renderDisplay={(value) =>
+        truncate ? (
+          <span className="truncate" title={String(value)}>
+            {value || "-"}
+          </span>
+        ) : (
+          value || "-"
+        )
+      }
     />
   );
 };

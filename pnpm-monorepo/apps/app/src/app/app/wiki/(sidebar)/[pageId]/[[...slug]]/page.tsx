@@ -4,6 +4,7 @@ import { VariantWikiBacklinks } from "@/modules/fleet/components/VariantWikiBack
 import { WikiPageContent } from "@/modules/wiki/components/WikiPageContent";
 import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
 import {
+  collectVisibleWikiPageAncestors,
   getAccessibleWikiPage,
   WikiPageAccessTier,
 } from "@sam-monorepo/application";
@@ -55,6 +56,7 @@ export default async function Page(
         context={context}
         page={page}
         permissions={permissions}
+        ancestors={collectVisibleWikiPageAncestors(context, page)}
         headerExtra={<VariantWikiBacklinks pageId={page.id} />}
       />
     </SuspenseWithErrorBoundaryTile>

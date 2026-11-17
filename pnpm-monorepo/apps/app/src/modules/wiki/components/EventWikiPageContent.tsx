@@ -1,7 +1,7 @@
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
-import { EditableInput } from "@/modules/common/components/form/EditableInput";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
+import { collectVisibleWikiPageAncestors } from "@sam-monorepo/application";
 import { WikiPageEventScope } from "@sam-monorepo/database/browser";
 import {
   EventWikiScopeTier,
@@ -13,7 +13,6 @@ import {
   type ResolvedEventWikiPagePermissions,
 } from "@sam-monorepo/domain";
 import { FaHistory } from "react-icons/fa";
-import { renameWikiPage } from "../actions/renameWikiPage";
 import {
   type EventWikiContext,
   type EventWikiContextPage,
@@ -33,10 +32,11 @@ import { ReportWikiPageModal } from "./ReportWikiPageModal";
 import { TrackWikiPageVisit } from "./TrackWikiPageVisit";
 import { WikiEditModeProvider } from "./WikiEditModeProvider";
 import { WikiEditModeToggle } from "./WikiEditModeToggle";
+import { WikiPageBreadcrumbs } from "./WikiPageBreadcrumbs";
 import { WikiPageEditorSection } from "./WikiPageEditorSection";
 import { WikiPageExportImportModal } from "./WikiPageExportImportModal";
 import { WikiPageFavoriteButton } from "./WikiPageFavoriteButton";
-import { WikiPageIconButton } from "./WikiPageIconButton";
+import { WikiPageHeading } from "./WikiPageHeading";
 import { WikiPagePermissionsButton } from "./WikiPagePermissionsButton";
 import { WikiPageReadAudienceBadge } from "./WikiPageReadAudienceBadge";
 import { WikiPageSidebarModeModal } from "./WikiPageSidebarModeModal";
@@ -110,26 +110,20 @@ export const EventWikiPageContent = async ({
 
   const article = (
     <article className="rounded-primary bg-secondary p-4">
-      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold">
-            <WikiPageIconButton
-              pageId={page.id}
-              iconId={page.iconId}
-              canAdmin={canAdministrate && !context.frozen}
-            />
+      <WikiPageBreadcrumbs
+        hrefMode={hrefMode}
+        ancestors={collectVisibleWikiPageAncestors(context, page)}
+      />
 
-            {canMutateStructure ? (
-              <EditableInput
-                rowId={page.id}
-                columnName="title"
-                initialValue={page.title}
-                action={renameWikiPage}
-              />
-            ) : (
-              page.title
-            )}
-          </h1>
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+        <div className="max-w-full min-w-0">
+          <WikiPageHeading
+            pageId={page.id}
+            iconId={page.iconId}
+            title={page.title}
+            canChangeIcon={canAdministrate && !context.frozen}
+            canRename={canMutateStructure}
+          />
 
           {/**
            * Unlike the global page header there is no details popover:

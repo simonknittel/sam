@@ -1,7 +1,6 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
-import { EditableInput } from "@/modules/common/components/form/EditableInput";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { WikiPageAccessType } from "@sam-monorepo/database/client";
@@ -15,8 +14,11 @@ import {
 } from "@sam-monorepo/domain";
 import type { ReactNode } from "react";
 import { FaExternalLinkAlt, FaHistory } from "react-icons/fa";
-import { renameWikiPage } from "../actions/renameWikiPage";
-import type { WikiContext, WikiContextPage } from "../queries/getWikiContext";
+import type {
+  WikiContext,
+  WikiContextPage,
+  WikiSharedContextPage,
+} from "../queries/getWikiContext";
 import { getWikiFavoritePageIds } from "../queries/getWikiFavorites";
 import { getWikiPageOwner } from "../queries/getWikiPageOwner";
 import type { WikiPageStaticContent } from "../queries/getWikiPageStaticContent";
@@ -42,11 +44,12 @@ import { ReportWikiPageModal } from "./ReportWikiPageModal";
 import { TrackWikiPageVisit } from "./TrackWikiPageVisit";
 import { WikiEditModeProvider } from "./WikiEditModeProvider";
 import { WikiEditModeToggle } from "./WikiEditModeToggle";
+import { WikiPageBreadcrumbs } from "./WikiPageBreadcrumbs";
 import { WikiPageDetailsPopover } from "./WikiPageDetailsPopover";
 import { WikiPageEditorSection } from "./WikiPageEditorSection";
 import { WikiPageExportImportModal } from "./WikiPageExportImportModal";
 import { WikiPageFavoriteButton } from "./WikiPageFavoriteButton";
-import { WikiPageIconButton } from "./WikiPageIconButton";
+import { WikiPageHeading } from "./WikiPageHeading";
 import { WikiPagePermissionsButton } from "./WikiPagePermissionsButton";
 import { WikiPagePermissionsProvider } from "./WikiPagePermissionsProvider";
 import { WikiPageReadAudienceBadge } from "./WikiPageReadAudienceBadge";
@@ -58,6 +61,11 @@ interface Props {
   readonly context: WikiContext;
   readonly page: WikiContextPage;
   readonly permissions: ResolvedWikiPagePermissions;
+  /**
+   * The ancestors in the view scope (see `collectVisibleWikiPageAncestors()`):
+   * the context above is always global, but an embed stops at its root page
+   */
+  readonly ancestors: readonly WikiSharedContextPage[];
   /** The view scope the page renders under; the global wiki by default */
   readonly hrefMode?: WikiPageHrefMode;
   /**
@@ -81,6 +89,7 @@ export const WikiPageContent = async ({
   context,
   page,
   permissions,
+  ancestors,
   hrefMode = GLOBAL_WIKI_HREF_MODE,
   staticContent,
   headerExtra,
@@ -175,26 +184,17 @@ export const WikiPageContent = async ({
 
   const article = (
     <article className="rounded-primary bg-secondary p-4">
-      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold">
-            <WikiPageIconButton
-              pageId={page.id}
-              iconId={page.iconId}
-              canAdmin={permissions.canAdmin}
-            />
+      <WikiPageBreadcrumbs hrefMode={hrefMode} ancestors={ancestors} />
 
-            {permissions.canAdmin && !isLockedRoot ? (
-              <EditableInput
-                rowId={page.id}
-                columnName="title"
-                initialValue={page.title}
-                action={renameWikiPage}
-              />
-            ) : (
-              page.title
-            )}
-          </h1>
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+        <div className="max-w-full min-w-0">
+          <WikiPageHeading
+            pageId={page.id}
+            iconId={page.iconId}
+            title={page.title}
+            canChangeIcon={permissions.canAdmin}
+            canRename={permissions.canAdmin && !isLockedRoot}
+          />
 
           <p className="mt-1 text-xs text-white/20">
             <WikiPageDetailsPopover pageId={page.id} />{" "}

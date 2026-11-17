@@ -225,6 +225,7 @@ export {
   type CreateWikiAttachmentDownloadUrlInput,
   type CreateWikiAttachmentDownloadUrlOutput,
 } from "./wikiAttachments.js";
+export { collectVisibleWikiPageAncestors } from "./wikiBreadcrumb.js";
 export type { WikiCitizen } from "./wikiCitizen.js";
 export {
   buildWikiContext,
