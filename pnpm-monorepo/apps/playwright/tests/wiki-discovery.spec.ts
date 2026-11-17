@@ -85,6 +85,46 @@ test("search finds readable pages and never the others", async ({
   );
 });
 
+test("the breadcrumbs above the heading link to the ancestors of the page", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, { handle: "reader" });
+  const grandparent = await createWikiPage(prisma, {
+    title: "Handbuch",
+    visibility: WikiPageVisibility.PUBLIC,
+  });
+  const parent = await createWikiPage(prisma, {
+    title: "Schiffe",
+    parentId: grandparent.id,
+  });
+  const wikiPage = await createWikiPage(prisma, {
+    title: "Polaris",
+    parentId: parent.id,
+  });
+  await signIn(citizen.user);
+
+  await page.goto(`/app/wiki/${wikiPage.id}/${wikiPage.slug}`);
+  const breadcrumbs = page.getByRole("navigation", {
+    name: "Übergeordnete Seiten",
+  });
+  await expect(breadcrumbs.getByRole("link")).toHaveText([
+    "Handbuch",
+    "Schiffe",
+  ]);
+
+  await clickUntilUrl(
+    page,
+    breadcrumbs.getByRole("link", { name: "Schiffe" }),
+    `/app/wiki/${parent.id}/${parent.slug}`,
+  );
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Schiffe" }),
+  ).toBeVisible();
+  await expect(breadcrumbs.getByRole("link")).toHaveText(["Handbuch"]);
+});
+
 test("tags are shown on the page and list their pages", async ({
   page,
   prisma,

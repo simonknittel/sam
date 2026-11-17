@@ -101,7 +101,7 @@ test("tree navigation opens subpages under the variant URL, keeping the metadata
     handle: "leser",
     permissionStrings: ["orgFleet;read"],
   });
-  const { childPage, variant } = await seedLinkedVariant(prisma);
+  const { rootPage, childPage, variant } = await seedLinkedVariant(prisma);
   await signIn(citizen.user);
 
   await page.goto(`/app/fleet/variant/${variant.id}`);
@@ -114,6 +114,12 @@ test("tree navigation opens subpages under the variant URL, keeping the metadata
   await expect(page.getByText("Torpedos richtig nachladen.")).toBeVisible();
   // The variant metadata stays above the embedded page
   await expect(page.getByTitle(variant.name, { exact: true })).toBeVisible();
+  // The breadcrumb of the root page leads to the variant, not to the wiki
+  await expect(
+    page
+      .getByRole("navigation", { name: "Übergeordnete Seiten" })
+      .getByRole("link", { name: rootPage.title }),
+  ).toHaveAttribute("href", `/app/fleet/variant/${variant.id}`);
 });
 
 test("the embed search only finds subtree pages", async ({
