@@ -8,6 +8,8 @@ interface VariantShipRow {
   id: Ship["id"];
   ownerId: Ship["ownerId"];
   name: Ship["name"];
+  acquisitionSource: Ship["acquisitionSource"];
+  note: Ship["note"];
   owner: {
     handle: Citizen["handle"];
     deletedAt: Citizen["deletedAt"];
@@ -57,7 +59,7 @@ export const VariantShipsTable = ({ className, ships, variant }: Props) => {
                 <VariantPopover
                   variant={popoverVariant}
                   manufacturer={popoverManufacturer}
-                  ship={{ name: ship.name }}
+                  ship={ship}
                   triggerClassName="max-w-full cursor-pointer underline decoration-dotted underline-offset-4 hover:text-interaction-500 focus-visible:text-interaction-500 active:text-interaction-300"
                 >
                   <span className="block truncate" title={ship.name}>

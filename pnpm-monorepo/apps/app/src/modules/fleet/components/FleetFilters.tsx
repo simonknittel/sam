@@ -2,9 +2,17 @@ import { MultiSelectComboboxFilter } from "@/modules/common/components/layouts/S
 import { RadioFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/RadioFilter";
 import { SingleSelectComboboxFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/SingleSelectComboboxFilter";
 import { TextSearchFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/TextSearchFilter";
-import type { Manufacturer } from "@sam-monorepo/database/browser";
+import {
+  ShipAcquisitionSource,
+  type Manufacturer,
+} from "@sam-monorepo/database/browser";
 import type { VariantTagBadgeItem } from "../queries/shipQuery";
 import {
+  ACQUISITION_SOURCE_LABEL,
+  UNKNOWN_ACQUISITION_SOURCE_LABEL,
+} from "../utils/acquisitionSourceLabel";
+import {
+  AcquisitionSourceParameter,
   FleetSortParameter,
   FlightReadyParameter,
   ShowDeletedParameter,
@@ -46,6 +54,27 @@ export const FleetFilters = ({
         items={[
           { value: FlightReadyParameter.All, label: "Alle", default: true },
           { value: FlightReadyParameter.FlightReady, label: "Flight ready" },
+        ]}
+        resetCursorPagination
+      />
+
+      <SingleSelectComboboxFilter
+        name="acquisition_source"
+        label="Herkunft"
+        items={[
+          { value: AcquisitionSourceParameter.All, label: "Alle" },
+          {
+            value: AcquisitionSourceParameter.Store,
+            label: ACQUISITION_SOURCE_LABEL[ShipAcquisitionSource.STORE],
+          },
+          {
+            value: AcquisitionSourceParameter.InGame,
+            label: ACQUISITION_SOURCE_LABEL[ShipAcquisitionSource.IN_GAME],
+          },
+          {
+            value: AcquisitionSourceParameter.Unknown,
+            label: UNKNOWN_ACQUISITION_SOURCE_LABEL,
+          },
         ]}
         resetCursorPagination
       />

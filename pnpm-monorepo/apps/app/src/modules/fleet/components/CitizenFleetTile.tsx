@@ -19,6 +19,7 @@ export const CitizenFleetTile = async ({
 }: Props) => {
   const {
     flight_ready,
+    acquisition_source,
     sort,
     variantTags,
     manufacturerIds,
@@ -32,6 +33,7 @@ export const CitizenFleetTile = async ({
     citizenId,
     {
       flightReady: flight_ready,
+      acquisitionSource: acquisition_source,
       variantTagIds: variantTags?.length ? variantTags : [],
       manufacturerIds: manufacturerIds?.length ? manufacturerIds : [],
       sort,

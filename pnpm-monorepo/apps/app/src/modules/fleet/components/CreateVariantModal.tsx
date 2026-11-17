@@ -10,6 +10,7 @@ import { useId, useTransition } from "react";
 import { FaSave } from "react-icons/fa";
 import { createVariant } from "../actions/createVariant";
 import { VariantExternalLinkFields } from "./VariantExternalLinkFields";
+import { VariantPriceFields } from "./VariantPriceFields";
 import { VariantTagFields } from "./VariantTagFields";
 import { VariantWikiPageField } from "./VariantWikiPageField";
 
@@ -109,6 +110,8 @@ export const CreateVariantModal = ({
           <option value="NOT_FLIGHT_READY">Nicht flight ready</option>
         </select>
         <small className="text-white/40">optional</small>
+
+        <VariantPriceFields />
 
         <VariantTagFields />
 

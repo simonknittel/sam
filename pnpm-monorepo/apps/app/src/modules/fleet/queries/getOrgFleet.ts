@@ -11,8 +11,14 @@ import {
   UnknownCursorBehavior,
 } from "@sam-monorepo/application";
 import { cache } from "react";
-import { toFlightReadyFilter, toShipVariant } from "../utils/fleetListMapping";
 import {
+  toAcquisitionSourceFilter,
+  toFleetValue,
+  toFlightReadyFilter,
+  toShipVariant,
+} from "../utils/fleetListMapping";
+import {
+  AcquisitionSourceParameter,
   FleetSortParameter,
   FlightReadyParameter,
 } from "../utils/fleetSearchParameters";
@@ -39,6 +45,7 @@ const toOrgFleetSort = (sort: FleetSortParameter) => {
 
 interface OrgFleetOptions {
   readonly flightReady?: FlightReadyParameter;
+  readonly acquisitionSource?: AcquisitionSourceParameter;
   readonly variantTagIds?: string[];
   readonly manufacturerIds?: string[];
   readonly sort?: FleetSortParameter;
@@ -52,6 +59,7 @@ export const getOrgFleet = cache(
     "getOrgFleet",
     async ({
       flightReady = FlightReadyParameter.All,
+      acquisitionSource = AcquisitionSourceParameter.All,
       variantTagIds = [],
       manufacturerIds = [],
       sort = FleetSortParameter.CountDescending,
@@ -65,6 +73,7 @@ export const getOrgFleet = cache(
           await getRequestActor(),
           {
             flight_ready: toFlightReadyFilter(flightReady),
+            acquisition_source: toAcquisitionSourceFilter(acquisitionSource),
             variant_tag_ids: variantTagIds,
             manufacturer_ids: manufacturerIds,
             query: searchQuery || undefined,
@@ -82,6 +91,7 @@ export const getOrgFleet = cache(
           })),
           totalCitizens: output.total_citizens,
           totalShips: output.total_ships,
+          value: toFleetValue(output.value),
           nextCursor: output.next_cursor,
           prevCursor: output.previous_cursor,
         };

@@ -9,6 +9,7 @@ import clsx from "clsx";
 import { FaRegCheckCircle } from "react-icons/fa";
 import { FaRegCircleXmark } from "react-icons/fa6";
 import { getVariantsBySeriesId } from "../queries/getVariantsBySeriesId";
+import { formatAuec, formatUsdPrice } from "../utils/formatPrice";
 import { CreateVariantButton } from "./CreateVariantButton";
 import { DeleteVariantButton } from "./DeleteVariantButton";
 import { UpdateVariantButton } from "./UpdateVariantButton";
@@ -20,7 +21,7 @@ interface Props {
   readonly seriesId: Series["id"];
 }
 
-const GRID_COLS = "grid-cols-[256px_1fr_56px_44px]";
+const GRID_COLS = "grid-cols-[256px_1fr_128px_160px_56px_44px]";
 
 export const VariantsTile = async ({
   className,
@@ -41,7 +42,7 @@ export const VariantsTile = async ({
       className={clsx(className)}
       childrenClassName="overflow-auto"
     >
-      <table className="w-full min-w-80">
+      <table className="w-full min-w-200">
         <thead>
           <tr
             className={clsx(
@@ -52,6 +53,10 @@ export const VariantsTile = async ({
             <th>Name</th>
 
             <th>Tags</th>
+
+            <th className="text-right">Wert (USD)</th>
+
+            <th className="text-right">Wert (aUEC)</th>
 
             <th>Status</th>
           </tr>
@@ -77,6 +82,18 @@ export const VariantsTile = async ({
                     .map((tag) => (
                       <VariantTagBadge key={tag.id} tag={tag} />
                     ))}
+                </td>
+
+                <td className="text-right">
+                  {row.storePriceUsdCents === null
+                    ? "-"
+                    : formatUsdPrice(row.storePriceUsdCents)}
+                </td>
+
+                <td className="text-right">
+                  {row.inGamePriceAuec === null
+                    ? "-"
+                    : formatAuec(row.inGamePriceAuec)}
                 </td>
 
                 <td

@@ -1,6 +1,7 @@
 import { createCursorPaginationLoader } from "@/modules/common/CursorPagination/createCursorPaginationLoader";
 import { parseAsArrayOf, parseAsString, parseAsStringEnum } from "nuqs/server";
 import {
+  AcquisitionSourceParameter,
   FleetSortParameter,
   FlightReadyParameter,
   SHIP_SORT_PARAMETERS,
@@ -15,6 +16,9 @@ export const loadFleetListSearchParams = createCursorPaginationLoader({
   sort: parseAsStringEnum([...SHIP_SORT_PARAMETERS]).withDefault(
     FleetSortParameter.NameAscending,
   ),
+  acquisition_source: parseAsStringEnum(
+    Object.values(AcquisitionSourceParameter),
+  ).withDefault(AcquisitionSourceParameter.All),
   variantTags: parseAsArrayOf(parseAsString),
   manufacturerIds: parseAsArrayOf(parseAsString),
   showDeleted: parseAsStringEnum(

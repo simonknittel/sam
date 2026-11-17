@@ -31,7 +31,7 @@ interface Props {
    */
   readonly disablePopover?: boolean;
   /** The individual ship of a citizen, for the popover */
-  readonly ship?: Pick<Ship, "name">;
+  readonly ship?: Pick<Ship, "name" | "acquisitionSource" | "note">;
   /** The link fills the width of its container, for example a table cell */
   readonly fullWidth?: boolean;
 }
@@ -107,7 +107,13 @@ export const VariantWithLogo = ({
       variant={{ id: variant.id, name: variant.name }}
       manufacturer={{ name: manufacturer.name, image: manufacturer.image }}
       logo={logo}
-      ship={ship && { name: ship.name }}
+      ship={
+        ship && {
+          name: ship.name,
+          acquisitionSource: ship.acquisitionSource,
+          note: ship.note,
+        }
+      }
       triggerClassName={clsx({
         "block w-full": fullWidth,
         "max-w-full": !fullWidth,

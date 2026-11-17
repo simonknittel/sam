@@ -9,6 +9,7 @@ import { useId } from "react";
 import { FaSave } from "react-icons/fa";
 import { updateVariant } from "../actions/updateVariant";
 import { VariantExternalLinkFields } from "./VariantExternalLinkFields";
+import { VariantPriceFields } from "./VariantPriceFields";
 import { VariantTagFields } from "./VariantTagFields";
 import { VariantWikiPageField } from "./VariantWikiPageField";
 
@@ -71,6 +72,12 @@ export const UpdateVariantModal = ({ onRequestClose, variant }: Props) => {
           </select>
         )}
         <small className="text-white/40">optional</small>
+
+        <VariantPriceFields
+          storePriceUsdCents={_variant.data?.storePriceUsdCents}
+          inGamePriceAuec={_variant.data?.inGamePriceAuec}
+          loading={_variant.isFetching}
+        />
 
         <VariantTagFields
           initialTags={variant.tags.map((tag) => ({

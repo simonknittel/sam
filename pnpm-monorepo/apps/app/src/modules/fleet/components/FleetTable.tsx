@@ -3,6 +3,7 @@ import { VariantStatus } from "@sam-monorepo/database/client";
 import { FaRegCheckCircle } from "react-icons/fa";
 import { FaRegCircleXmark } from "react-icons/fa6";
 import type { ShipVariant } from "../queries/shipQuery";
+import { formatAuec, formatUsdPrice } from "../utils/formatPrice";
 import { VariantTagBadge } from "./VariantTagBadge";
 import { VariantWithLogo } from "./VariantWithLogo";
 
@@ -11,7 +12,7 @@ interface FleetRow {
   count: number;
 }
 
-const COLUMNS = "256px 1fr 80px 80px";
+const COLUMNS = "256px 1fr 80px 128px 160px 80px";
 
 interface Props {
   readonly className?: string;
@@ -20,11 +21,13 @@ interface Props {
 
 export const FleetTable = ({ className, fleet }: Props) => {
   return (
-    <Table className={className} columns={COLUMNS} minWidth={560}>
+    <Table className={className} columns={COLUMNS} minWidth={800}>
       <THead>
         <th>Schiff</th>
         <th>Tags</th>
         <th className="text-center">Status</th>
+        <th className="text-right">Wert (USD)</th>
+        <th className="text-right">Wert (aUEC)</th>
         <th className="text-right">Anzahl</th>
       </THead>
 
@@ -59,6 +62,18 @@ export const FleetTable = ({ className, fleet }: Props) => {
                   className="text-brand-red-500"
                 />
               )}
+            </td>
+
+            <td className="overflow-hidden text-right">
+              {row.variant.storePriceUsdCents === null
+                ? "-"
+                : formatUsdPrice(row.variant.storePriceUsdCents)}
+            </td>
+
+            <td className="overflow-hidden text-right">
+              {row.variant.inGamePriceAuec === null
+                ? "-"
+                : formatAuec(row.variant.inGamePriceAuec)}
             </td>
 
             <td className="overflow-hidden text-right">{row.count || null}</td>

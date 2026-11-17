@@ -11,15 +11,20 @@ import {
 } from "nuqs/server";
 import { getOrgFleet } from "../queries/getOrgFleet";
 import {
+  AcquisitionSourceParameter,
   FleetSortParameter,
   FlightReadyParameter,
 } from "../utils/fleetSearchParameters";
 import { FleetTable } from "./FleetTable";
+import { FleetValueTiles } from "./FleetValueTiles";
 
 const loadSearchParams = createCursorPaginationLoader({
   flight_ready: parseAsStringEnum(
     Object.values(FlightReadyParameter),
   ).withDefault(FlightReadyParameter.All),
+  acquisition_source: parseAsStringEnum(
+    Object.values(AcquisitionSourceParameter),
+  ).withDefault(AcquisitionSourceParameter.All),
   sort: parseAsStringEnum(Object.values(FleetSortParameter)).withDefault(
     FleetSortParameter.CountDescending,
   ),
@@ -36,6 +41,7 @@ interface Props {
 export const OrgFleetTile = async ({ className, searchParams }: Props) => {
   const {
     flight_ready,
+    acquisition_source,
     sort,
     variantTags,
     manufacturerIds,
@@ -44,9 +50,10 @@ export const OrgFleetTile = async ({ className, searchParams }: Props) => {
     direction,
   } = await loadSearchParams(searchParams);
 
-  const { fleet, totalCitizens, totalShips, nextCursor, prevCursor } =
+  const { fleet, totalCitizens, totalShips, value, nextCursor, prevCursor } =
     await getOrgFleet({
       flightReady: flight_ready,
+      acquisitionSource: acquisition_source,
       variantTagIds: variantTags?.length ? variantTags : [],
       manufacturerIds: manufacturerIds?.length ? manufacturerIds : [],
       sort,
@@ -60,20 +67,22 @@ export const OrgFleetTile = async ({ className, searchParams }: Props) => {
       className={className}
       data-onboarding-target={OnboardingTargetId.OrgFleet}
     >
-      <section className="mb-0.5 flex flex-wrap gap-0.5">
-        <StatisticTile label="Schiffe" className="flex-1">
+      <section className="mb-0.5 grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-0.5">
+        <StatisticTile label="Schiffe">
           <ScrambleIn
             text={totalShips.toLocaleString("de-de")}
             characters="1234567890."
           />
         </StatisticTile>
 
-        <StatisticTile label="Citizen" className="flex-1">
+        <StatisticTile label="Citizen">
           <ScrambleIn
             text={totalCitizens.toLocaleString("de-de")}
             characters="1234567890."
           />
         </StatisticTile>
+
+        <FleetValueTiles value={value} />
       </section>
 
       <div className="overflow-x-auto rounded-primary bg-neutral-800/50 p-4">
