@@ -51,7 +51,7 @@ const WikiPageBreadcrumb = ({
   isFirst,
 }: WikiPageBreadcrumbProps) => {
   return (
-    <li className="flex items-center gap-2">
+    <li className="flex min-w-0 items-center gap-2">
       {!isFirst && (
         <FaChevronRight
           className="flex-none text-[0.5rem] text-neutral-600"
@@ -61,7 +61,7 @@ const WikiPageBreadcrumb = ({
 
       <Link
         href={href}
-        className="inline-flex items-center gap-1.5 text-neutral-400 hover:text-interaction-500 focus-visible:text-interaction-500 active:text-interaction-300"
+        className="inline-flex min-w-0 items-center gap-1.5 wrap-anywhere text-neutral-400 hover:text-interaction-500 focus-visible:text-interaction-500 active:text-interaction-300"
       >
         {ancestor.iconId && (
           <WikiPageIcon iconId={ancestor.iconId} className="size-3" size={12} />
