@@ -1,7 +1,6 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
-import { EditableInput } from "@/modules/common/components/form/EditableInput";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { WikiPageAccessType } from "@sam-monorepo/database/client";
@@ -15,7 +14,6 @@ import {
 } from "@sam-monorepo/domain";
 import type { ReactNode } from "react";
 import { FaExternalLinkAlt, FaHistory } from "react-icons/fa";
-import { renameWikiPage } from "../actions/renameWikiPage";
 import type {
   WikiContext,
   WikiContextPage,
@@ -51,7 +49,7 @@ import { WikiPageDetailsPopover } from "./WikiPageDetailsPopover";
 import { WikiPageEditorSection } from "./WikiPageEditorSection";
 import { WikiPageExportImportModal } from "./WikiPageExportImportModal";
 import { WikiPageFavoriteButton } from "./WikiPageFavoriteButton";
-import { WikiPageIconButton } from "./WikiPageIconButton";
+import { WikiPageHeading } from "./WikiPageHeading";
 import { WikiPagePermissionsButton } from "./WikiPagePermissionsButton";
 import { WikiPagePermissionsProvider } from "./WikiPagePermissionsProvider";
 import { WikiPageReadAudienceBadge } from "./WikiPageReadAudienceBadge";
@@ -189,25 +187,14 @@ export const WikiPageContent = async ({
       <WikiPageBreadcrumbs hrefMode={hrefMode} ancestors={ancestors} />
 
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold">
-            <WikiPageIconButton
-              pageId={page.id}
-              iconId={page.iconId}
-              canAdmin={permissions.canAdmin}
-            />
-
-            {permissions.canAdmin && !isLockedRoot ? (
-              <EditableInput
-                rowId={page.id}
-                columnName="title"
-                initialValue={page.title}
-                action={renameWikiPage}
-              />
-            ) : (
-              page.title
-            )}
-          </h1>
+        <div className="max-w-full min-w-0">
+          <WikiPageHeading
+            pageId={page.id}
+            iconId={page.iconId}
+            title={page.title}
+            canChangeIcon={permissions.canAdmin}
+            canRename={permissions.canAdmin && !isLockedRoot}
+          />
 
           <p className="mt-1 text-xs text-white/20">
             <WikiPageDetailsPopover pageId={page.id} />{" "}
