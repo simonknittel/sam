@@ -23,6 +23,8 @@ import {
   saveInlineEditor,
   statisticTile,
   toggleLabel,
+  variantPickerPopover,
+  variantPickerSearchField,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
@@ -116,20 +118,55 @@ test("my ships can be added, renamed and deleted with consistent org counts", as
     variantName: "Polaris",
     status: VariantStatus.FLIGHT_READY,
   });
+  const { variant: carrack } = await createVariant(prisma, {
+    manufacturerName: "Anvil Aerospace",
+    seriesName: "Carrack",
+    variantName: "Carrack",
+  });
+  await prisma.variantTag.create({
+    data: {
+      key: "Rolle",
+      value: "Erkundung",
+      variants: { connect: { id: carrack.id } },
+    },
+  });
 
   await signIn(owner.user);
   await page.goto("/app/fleet/my-ships");
   await expect(page.getByText("Keine Schiffe gefunden")).toBeVisible();
 
-  // Add
+  // Add: the ship is a required field, and a tag or the search filters the ships
   const addModal = modal(page, "Schiff hinzufügen");
   await clickUntilVisible(
     page.getByRole("button", { name: "Hinzufügen" }).first(),
     addModal,
   );
-  await addModal.getByLabel("Schiff", { exact: true }).selectOption({
-    label: "Polaris",
-  });
+  await addModal.getByRole("button", { name: "Hinzufügen" }).click();
+  await expect(addModal.getByText("Wähle ein Schiff aus.")).toBeVisible();
+
+  const shipPicker = variantPickerPopover(page);
+  const shipOptions = shipPicker.getByRole("option");
+  const tag = shipPicker.getByRole("button", { name: "Rolle: Erkundung" });
+  await clickUntilVisible(
+    addModal.getByRole("button", { name: "Schiff auswählen" }),
+    shipPicker,
+  );
+  await expect(shipOptions).toHaveCount(2);
+  await expect(
+    shipPicker
+      .getByRole("group", { name: "Anvil Aerospace" })
+      .getByRole("option"),
+  ).toHaveText("Carrack");
+  await tag.click();
+  await expect(shipOptions).toHaveCount(1);
+  await expect(shipOptions).toContainText("Carrack");
+  await tag.click();
+  await variantPickerSearchField(shipPicker).fill("polaris");
+  await expect(shipOptions).toHaveCount(1);
+  await shipOptions.click();
+  await expect(shipPicker).toBeHidden();
+  await expect(addModal.getByText("Wähle ein Schiff aus.")).toBeHidden();
+
   await addModal.getByLabel("Schiffsname").fill("Sternenfaust");
   await addModal.getByRole("button", { name: "Hinzufügen" }).click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();

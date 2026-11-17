@@ -1,4 +1,4 @@
-import type { Prisma } from "@sam-monorepo/database/client";
+import type { Prisma, Variant } from "@sam-monorepo/database/client";
 import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import type { ApplicationContext } from "../context.js";
 
@@ -61,36 +61,87 @@ export const findManufacturerRows = (
     orderBy: { name: "asc" },
   });
 
-const VARIANT_CATALOG_SELECT = {
+const VARIANT_CATALOG_MANUFACTURER_SELECT = {
   id: true,
   name: true,
-  series: {
-    select: {
-      name: true,
-      variants: { select: { id: true, name: true } },
-    },
-  },
+  image: { select: UPLOAD_IMAGE_SELECT },
 } as const satisfies Prisma.ManufacturerSelect;
 
 export type VariantCatalogManufacturer = Prisma.ManufacturerGetPayload<{
-  select: typeof VARIANT_CATALOG_SELECT;
+  select: typeof VARIANT_CATALOG_MANUFACTURER_SELECT;
 }>;
 
-/** One selectable variant of the catalog above */
-export type VariantCatalogVariant =
-  VariantCatalogManufacturer["series"][number]["variants"][number];
+const VARIANT_CATALOG_TAG_SELECT = {
+  id: true,
+  key: true,
+  value: true,
+} as const satisfies Prisma.VariantTagSelect;
+
+export type VariantCatalogTag = Prisma.VariantTagGetPayload<{
+  select: typeof VARIANT_CATALOG_TAG_SELECT;
+}>;
+
+export interface VariantCatalogVariant extends Pick<Variant, "id" | "name"> {
+  readonly manufacturerId: VariantCatalogManufacturer["id"];
+  readonly tagIds: readonly VariantCatalogTag["id"][];
+}
 
 /**
- * All manufacturers with their variants, for the pickers of the ships and of
- * the required variants. The pickers group the variants by the name of the
- * manufacturer and show the id and the name of each variant. The catalog has
- * no limit and goes into a client component on each page that uses it, thus
- * the select has only these fields.
+ * The catalog of the variant pickers. A variant refers to its manufacturer
+ * and its tags by id: the catalog has no limit and goes into a client
+ * component on each page that uses it, thus each manufacturer and each tag
+ * is in it only one time.
  */
-export const findVariantCatalog = (
+export interface VariantCatalog {
+  readonly manufacturers: readonly VariantCatalogManufacturer[];
+  /** Sorted by name */
+  readonly variants: readonly VariantCatalogVariant[];
+  /** The tags of at least one variant, sorted by key and value */
+  readonly tags: readonly VariantCatalogTag[];
+}
+
+/**
+ * All variants with their manufacturers and tags, for the pickers of the
+ * ships, of the required variants and of the variant links of the wiki, and
+ * for the variant links that a different user inserted after the wiki page
+ * loaded. Variant links render for every authenticated user (only the
+ * variant page itself has the fleet gate), thus the catalog has no fleet
+ * gate.
+ */
+export const findVariantCatalog = async (
   context: Pick<ApplicationContext, "prisma">,
-): Promise<VariantCatalogManufacturer[]> =>
-  context.prisma.manufacturer.findMany({ select: VARIANT_CATALOG_SELECT });
+): Promise<VariantCatalog> => {
+  const [manufacturers, variants, tags] = await Promise.all([
+    context.prisma.manufacturer.findMany({
+      select: VARIANT_CATALOG_MANUFACTURER_SELECT,
+    }),
+    context.prisma.variant.findMany({
+      select: {
+        id: true,
+        name: true,
+        series: { select: { manufacturerId: true } },
+        tags: { select: { id: true } },
+      },
+      orderBy: { name: "asc" },
+    }),
+    context.prisma.variantTag.findMany({
+      where: { variants: { some: {} } },
+      select: VARIANT_CATALOG_TAG_SELECT,
+      orderBy: [{ key: "asc" }, { value: "asc" }],
+    }),
+  ]);
+
+  return {
+    manufacturers,
+    variants: variants.map((variant) => ({
+      id: variant.id,
+      name: variant.name,
+      manufacturerId: variant.series.manufacturerId,
+      tagIds: variant.tags.map((tag) => tag.id),
+    })),
+    tags,
+  };
+};
 
 /** The name of a variant and the name and the logo of its manufacturer */
 export const VARIANT_LINK_SELECT = {
@@ -98,37 +149,3 @@ export const VARIANT_LINK_SELECT = {
   name: true,
   ...VARIANT_MANUFACTURER_SELECT,
 } as const satisfies Prisma.VariantSelect;
-
-/** A variant that a wiki page can link to */
-export interface VariantLinkOption {
-  readonly id: string;
-  readonly name: string;
-  readonly manufacturerName: string;
-  readonly manufacturerImage: {
-    readonly id: string;
-    readonly mimeType: string;
-  } | null;
-}
-
-/**
- * All variants with their manufacturer, sorted by name, for the variant link
- * picker of the wiki and for the links that a different user inserted after
- * the page loaded. Variant links render for every authenticated user (only
- * the variant page itself has the fleet gate), thus the list has no fleet
- * gate.
- */
-export const findVariantLinkOptions = async (
-  context: Pick<ApplicationContext, "prisma">,
-): Promise<VariantLinkOption[]> => {
-  const variants = await context.prisma.variant.findMany({
-    select: VARIANT_LINK_SELECT,
-    orderBy: { name: "asc" },
-  });
-
-  return variants.map((variant) => ({
-    id: variant.id,
-    name: variant.name,
-    manufacturerName: variant.series.manufacturer.name,
-    manufacturerImage: variant.series.manufacturer.image,
-  }));
-};

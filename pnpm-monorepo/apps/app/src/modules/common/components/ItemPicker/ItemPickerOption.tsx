@@ -3,6 +3,7 @@
 import clsx from "clsx";
 import type { ReactNode } from "react";
 import { FaCheck } from "react-icons/fa";
+import type { ItemPickerItemGroup } from "./ItemPickerGroup";
 
 export interface ItemPickerItem {
   readonly id: string;
@@ -16,6 +17,11 @@ export interface ItemPickerItem {
   readonly icon?: ReactNode;
   /** Disables the item. The title of the row gives this reason. */
   readonly disabledReason?: string;
+  /**
+   * The group of the item. The list shows a heading above each run of items
+   * with the same group, thus the owner sorts the items by group.
+   */
+  readonly group?: ItemPickerItemGroup;
 }
 
 interface Props {

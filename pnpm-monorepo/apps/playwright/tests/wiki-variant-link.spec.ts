@@ -1,6 +1,10 @@
 import type { Locator, Page } from "@playwright/test";
 import { createCitizen, createVariant } from "../fixtures/factories";
-import { clickUntilVisible, modal } from "../fixtures/interactions";
+import {
+  clickUntilVisible,
+  modal,
+  variantPickerSearchField,
+} from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 import {
   enterEditMode,
@@ -8,9 +12,6 @@ import {
   focusEditor,
   seedEditablePage,
 } from "../fixtures/wiki-editor";
-
-const pickerInput = (picker: Locator) =>
-  picker.getByRole("combobox", { name: "Schiff suchen" });
 
 /**
  * Opens the ship picker through the slash palette. The palette opens only
@@ -28,7 +29,7 @@ const openShipPicker = async (
   await expect(entry).toBeVisible();
   await pickEntry(entry);
   const picker = modal(page, /^Schiff$/);
-  await expect(pickerInput(picker)).toBeFocused();
+  await expect(variantPickerSearchField(picker)).toBeFocused();
   return picker;
 };
 
@@ -81,12 +82,12 @@ test("the ship picker filters, and the keyboard or the mouse picks a ship", asyn
   await page.keyboard.type("drake");
   await expect(shipOptions(picker)).toHaveCount(2);
   await expect(shipOptions(picker).first()).toContainText("Cutlass Black");
-  await expect(shipOptions(picker).first()).toHaveAttribute("data-highlighted");
+  await expect(shipOptions(picker).first()).toHaveAttribute("data-active");
 
   await page.keyboard.press("ArrowDown");
   await expect(
     shipOptions(picker).filter({ hasText: "Cutlass Red" }),
-  ).toHaveAttribute("data-highlighted");
+  ).toHaveAttribute("data-active");
   await page.keyboard.press("Enter");
   await expect(picker).toBeHidden();
   await expect(variantLink(cutlassRed.id)).toBeVisible();
@@ -152,7 +153,7 @@ test("Enter in the ship picker changes a link to the first ship", async ({
     page.getByRole("button", { name: "Schiff ändern" }),
   );
   await page.getByRole("button", { name: "Schiff ändern" }).click();
-  await expect(pickerInput(picker)).toBeFocused();
+  await expect(variantPickerSearchField(picker)).toBeFocused();
 
   await page.keyboard.type("cutlass");
   await expect(shipOptions(picker)).toHaveCount(1);

@@ -3,7 +3,10 @@ import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/Suspe
 import { EventTemplateLineupTab } from "@/modules/event-templates/components/EventTemplateLineupTab";
 import { getEventTemplateById } from "@/modules/event-templates/queries/getEventTemplateById";
 import { getEventTemplateLineup } from "@/modules/event-templates/queries/getEventTemplateLineup";
-import { getVariantCatalog } from "@/modules/fleet/queries/getVariantCatalog";
+import {
+  EMPTY_VARIANT_CATALOG,
+  getVariantCatalog,
+} from "@/modules/fleet/queries/getVariantCatalog";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -35,11 +38,11 @@ const EventTemplateLineup = async ({ templateId }: Props) => {
   const canEdit =
     context.permissions.canEdit && context.template.deletedAt === null;
 
-  const [positions, variants] = await Promise.all([
+  const [positions, variantCatalog] = await Promise.all([
     getEventTemplateLineup(templateId),
     // Only the position forms use the catalog. It is large, thus a viewer
     // who cannot edit the template does not get it.
-    canEdit ? getVariantCatalog() : [],
+    canEdit ? getVariantCatalog() : EMPTY_VARIANT_CATALOG,
   ]);
 
   return (
@@ -47,7 +50,7 @@ const EventTemplateLineup = async ({ templateId }: Props) => {
       templateId={templateId}
       positions={positions}
       canEdit={canEdit}
-      variants={variants}
+      variantCatalog={variantCatalog}
     />
   );
 };

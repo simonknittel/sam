@@ -28,7 +28,7 @@ export const MyFleetTile = async ({ className, searchParams }: Props) => {
     direction,
   } = await loadFleetListSearchParams(searchParams);
 
-  const [{ ships, total, nextCursor, prevCursor }, allVariants] =
+  const [{ ships, total, nextCursor, prevCursor }, variantCatalog] =
     await Promise.all([
       getMyFleet({
         flightReady: flight_ready,
@@ -48,7 +48,7 @@ export const MyFleetTile = async ({ className, searchParams }: Props) => {
       <div className="mb-1 flex items-center gap-4">
         <p className="text-sm text-neutral-500">Anzahl: {total}</p>
 
-        <AssignShip data={allVariants} />
+        <AssignShip catalog={variantCatalog} />
       </div>
 
       <div className="mt-2 overflow-x-auto rounded-primary bg-neutral-800/50 p-4">

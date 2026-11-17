@@ -3,6 +3,7 @@
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
 import { ItemPickerPopover } from "@/modules/common/components/ItemPicker/ItemPickerPopover";
+import { ItemPickerRequiredInput } from "@/modules/common/components/ItemPicker/ItemPickerRequiredInput";
 import type { BadgeRole } from "@/modules/roles/queries/getRoles";
 import clsx from "clsx";
 import { useId, useRef, useState, type ReactNode } from "react";
@@ -244,24 +245,12 @@ export const RolePicker = (props: Props) => {
       </ItemPickerPopover>
 
       {props.mode === ItemPickerMode.Single && props.required && (
-        /**
-         * The browser does not submit the form while this field is empty. The
-         * field has no name, thus the form does not submit its value. The
-         * message of the browser would show at this hidden field, thus the
-         * picker shows its own message and focuses its trigger.
-         */
-        <input
-          required
-          tabIndex={-1}
-          aria-hidden
+        <ItemPickerRequiredInput
           value={selectedRoleId ?? ""}
-          onChange={() => undefined}
-          onInvalid={(event) => {
-            event.preventDefault();
+          onInvalid={() => {
             setIsInvalid(true);
             triggerRef.current?.focus();
           }}
-          className="sr-only"
         />
       )}
 

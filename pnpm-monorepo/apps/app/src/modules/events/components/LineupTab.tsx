@@ -2,7 +2,7 @@
 
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import Note from "@/modules/common/components/Note";
-import type { VariantCatalogManufacturer } from "@/modules/fleet/queries/getVariantCatalog";
+import type { VariantCatalog } from "@/modules/fleet/queries/getVariantCatalog";
 import type { EventLineupCitizen } from "@sam-monorepo/application";
 import { EventSource, type Ship } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
@@ -28,7 +28,7 @@ interface Props {
   readonly lineupEnabled: boolean;
   readonly positions: PositionType[];
   readonly canManagePositions?: boolean;
-  readonly variants: readonly VariantCatalogManufacturer[];
+  readonly variantCatalog: VariantCatalog;
   readonly myShips: readonly Pick<Ship, "variantId">[];
   readonly myRoleIds: readonly string[];
   readonly allEventCitizens: EventLineupCitizen[];
@@ -42,7 +42,7 @@ export const LineupTab = ({
   lineupEnabled,
   positions,
   canManagePositions,
-  variants,
+  variantCatalog,
   myShips,
   myRoleIds,
   allEventCitizens,
@@ -69,7 +69,7 @@ export const LineupTab = ({
 
             <CreateOrUpdateEventPosition
               container={toEventContainer(eventId)}
-              variants={variants}
+              variantCatalog={variantCatalog}
             />
 
             <CopyLineupFromEventButton targetEventId={eventId} />
@@ -100,7 +100,7 @@ export const LineupTab = ({
           container={toEventContainer(eventId)}
           positions={positions}
           canManagePositions={canManagePositions}
-          variants={variants}
+          variantCatalog={variantCatalog}
           myShips={myShips}
           myRoleIds={myRoleIds}
           allEventCitizens={allEventCitizens}

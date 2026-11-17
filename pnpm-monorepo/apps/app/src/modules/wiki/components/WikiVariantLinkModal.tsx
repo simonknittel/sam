@@ -1,23 +1,13 @@
 "use client";
 
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import { TextInput } from "@/modules/common/components/form/TextInput";
+import { ItemPickerListHeight } from "@/modules/common/components/ItemPicker/ItemPickerListHeight";
+import { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
 import Modal from "@/modules/common/components/Modal";
-import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
-import { api, type RouterOutputs } from "@/trpc/react";
-import { Autocomplete } from "@base-ui/react/autocomplete";
+import { VariantPanel } from "@/modules/fleet/components/VariantPicker/VariantPanel";
+import type { VariantCatalogVariant } from "@/modules/fleet/queries/getVariantCatalog";
+import { api } from "@/trpc/react";
 import type { Editor } from "@tiptap/react";
-import { useState } from "react";
-import { getWikiImageUrl } from "../utils/uploadWikiPageFile";
-
-/**
- * Rows shown at once — every row renders a manufacturer logo, and a list
- * of hundreds of them is neither fast nor useful. Narrowing the filter
- * reaches everything else.
- */
-const MAX_RESULTS = 25;
-
-type VariantOption = RouterOutputs["variant"]["getAll"][number];
 
 interface Props {
   readonly editor: Editor;
@@ -31,34 +21,22 @@ interface Props {
 
 /**
  * Ship picker behind the palettes' "Schiff" entry and the edit menu's
- * "Schiff ändern" button: filtering by ship or manufacturer name, picking
- * one inserts (or retargets) the inline variant link. The document stores
- * the id plus the name at insertion time — the name only serves as the
- * label fallback and the searchable text.
+ * "Schiff ändern" button: picking a ship inserts (or retargets) the inline
+ * variant link. The document stores the id plus the name at insertion time
+ * — the name only serves as the label fallback and the searchable text.
  */
 export const WikiVariantLinkModal = ({
   editor,
   position,
   onRequestClose,
 }: Props) => {
-  const [query, setQuery] = useState("");
-
-  const { data, isPending } = api.variant.getAll.useQuery(undefined);
-
-  const normalized = query.toLowerCase().trim();
-  const matches = (data ?? []).filter(
-    (variant) =>
-      !normalized ||
-      variant.name.toLowerCase().includes(normalized) ||
-      variant.manufacturerName.toLowerCase().includes(normalized),
-  );
-  const results = matches.slice(0, MAX_RESULTS);
+  const { data, isPending, isError } = api.variant.getAll.useQuery(undefined);
 
   /**
    * Inserting at the caret parks it behind the atom with a trailing space
    * (mirrors the page link); with a selection the link replaces it.
    */
-  const insertVariantLink = (variant: VariantOption) => {
+  const insertVariantLink = (variant: VariantCatalogVariant) => {
     editor
       .chain()
       .focus()
@@ -82,7 +60,7 @@ export const WikiVariantLinkModal = ({
   };
 
   const retargetVariantLink = (
-    variant: VariantOption,
+    variant: VariantCatalogVariant,
     nodePosition: number,
   ) => {
     /**
@@ -102,7 +80,10 @@ export const WikiVariantLinkModal = ({
       .run();
   };
 
-  const pick = (variant: VariantOption) => {
+  const pick = (variantId: VariantCatalogVariant["id"]) => {
+    const variant = data?.variants.find((variant) => variant.id === variantId);
+    if (!variant) return;
+
     if (position === undefined) insertVariantLink(variant);
     else retargetVariantLink(variant, position);
     onRequestClose();
@@ -115,75 +96,27 @@ export const WikiVariantLinkModal = ({
       className="w-120"
       heading={<h2>{position === undefined ? "Schiff" : "Schiff ändern"}</h2>}
     >
-      <Autocomplete.Root
-        items={results}
-        // The modal filters by ship and manufacturer name itself
-        filter={null}
-        value={query}
-        onValueChange={setQuery}
-        inline
-        open
-        // Enter picks the highlighted ship, by default the first one
-        autoHighlight="always"
-      >
-        <Autocomplete.Input
-          render={<TextInput hint="Nach Schiff oder Hersteller filtern" />}
-          aria-label="Schiff suchen"
-          placeholder="Carrack, Drake, …"
-          autoFocus
+      {data && (
+        <VariantPanel
+          mode={ItemPickerMode.Single}
+          catalog={data}
+          selectedVariantIds={[]}
+          onVariantClick={pick}
+          listHeight={ItemPickerListHeight.Tall}
         />
+      )}
 
-        {isPending ? (
-          <div className="flex justify-center p-4">
-            <AsciiSpinner className="text-2xl text-neutral-500" />
-          </div>
-        ) : results.length > 0 ? (
-          <>
-            <Autocomplete.List
-              aria-label="Schiffe"
-              className="mt-4 max-h-80 overflow-y-auto"
-            >
-              {(variant: VariantOption) => (
-                <Autocomplete.Item
-                  key={variant.id}
-                  value={variant}
-                  onClick={() => pick(variant)}
-                  className="flex cursor-pointer items-center gap-2 rounded-secondary p-1 hover:bg-neutral-700 active:bg-neutral-600 data-highlighted:bg-neutral-700"
-                >
-                  <VariantWithLogo
-                    className="min-w-0 flex-1"
-                    variant={variant}
-                    manufacturer={{ name: variant.manufacturerName }}
-                    logo={
-                      variant.manufacturerImage
-                        ? {
-                            src: getWikiImageUrl(variant.manufacturerImage.id),
-                            mimeType: variant.manufacturerImage.mimeType,
-                          }
-                        : null
-                    }
-                    size={32}
-                    disableLink
-                  />
+      {isPending && (
+        <div className="flex justify-center p-4">
+          <AsciiSpinner className="text-2xl text-neutral-500" />
+        </div>
+      )}
 
-                  <span className="flex-none text-xs text-neutral-400">
-                    {variant.manufacturerName}
-                  </span>
-                </Autocomplete.Item>
-              )}
-            </Autocomplete.List>
-
-            {matches.length > results.length && (
-              <p className="mt-2 text-xs text-white/40">
-                {matches.length - results.length} weitere Treffer — Filter
-                eingrenzen.
-              </p>
-            )}
-          </>
-        ) : (
-          <p className="mt-4 text-sm text-neutral-400">Keine Treffer.</p>
-        )}
-      </Autocomplete.Root>
+      {isError && (
+        <p className="text-sm text-brand-red-300">
+          Die Schiffe konnten nicht geladen werden.
+        </p>
+      )}
     </Modal>
   );
 };

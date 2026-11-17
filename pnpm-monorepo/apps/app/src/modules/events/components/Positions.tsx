@@ -14,7 +14,7 @@ export const Positions = ({
   container,
   positions,
   canManagePositions,
-  variants,
+  variantCatalog,
   myShips,
   myRoleIds,
   allEventCitizens,
@@ -29,7 +29,7 @@ export const Positions = ({
           container={container}
           positions={positions}
           showManage={canManagePositions}
-          variants={variants}
+          variantCatalog={variantCatalog}
           myShips={myShips}
           myRoleIds={myRoleIds}
           allEventCitizens={allEventCitizens}

@@ -1,6 +1,10 @@
 import type { Locator, Page } from "@playwright/test";
 import { createCitizen } from "../fixtures/factories";
-import { hoverUntilVisible, modal } from "../fixtures/interactions";
+import {
+  hoverUntilVisible,
+  modal,
+  variantPickerSearchField,
+} from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 import {
   enterEditMode,
@@ -50,8 +54,7 @@ const DIALOG_ENTRIES: readonly DialogEntry[] = [
   {
     title: "Schiff",
     dialogName: /^Schiff$/,
-    focusTarget: (dialog) =>
-      dialog.getByRole("combobox", { name: "Schiff suchen" }),
+    focusTarget: (dialog) => variantPickerSearchField(dialog),
   },
 ];
 

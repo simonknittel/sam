@@ -25,6 +25,7 @@ import {
   rolePickerChips,
   saveInlineEditor,
   toggleLabel,
+  variantPickerPopover,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -73,27 +74,31 @@ test("a manager builds a lineup: create, rename, require a ship, duplicate, dele
   await createDialog
     .getByLabel("Beschreibung (optional)")
     .fill("Fliegt das Schiff.");
-  await createDialog
-    .getByRole("button", { name: "Hinzufügen", exact: true })
-    .click();
-
   /**
-   * The browser shows the open list of a select in the page. Escape closes
-   * only the list, not the dialog with the text that the manager typed.
+   * Escape closes only the popover of the ship picker, not the dialog with
+   * the text that the manager typed.
    */
-  const requiredShip = createDialog.getByLabel("Benötigtes Schiff");
-  const bomberOption = requiredShip.getByRole("option", {
+  const shipPickerTrigger = createDialog.getByRole("button", {
+    name: "Schiff auswählen",
+  });
+  const shipPicker = variantPickerPopover(page);
+  const bomberOption = shipPicker.getByRole("option", {
     name: "Retaliator Bomber",
   });
-  await requiredShip.click();
+  await clickUntilVisible(shipPickerTrigger, shipPicker);
   await expect(bomberOption).toBeVisible();
   await page.keyboard.press("Escape");
-  await expect(bomberOption).toBeHidden();
+  await expect(shipPicker).toBeHidden();
   await expect(createDialog.getByLabel("Name")).toHaveValue("Pilot");
 
-  await requiredShip.click();
+  await clickUntilVisible(shipPickerTrigger, shipPicker);
   await bomberOption.click();
-  await expect(requiredShip).toHaveValue(variant.id);
+  await expect(bomberOption).toHaveAttribute("aria-selected", "true");
+  await page.keyboard.press("Escape");
+  await expect(shipPicker).toBeHidden();
+  await expect(
+    createDialog.getByRole("list", { name: "Erforderliche Schiffe" }),
+  ).toContainText("Retaliator Bomber");
   await createDialog
     .getByRole("button", { name: "Speichern", exact: true })
     .click();

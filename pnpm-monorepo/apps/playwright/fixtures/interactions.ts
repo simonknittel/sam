@@ -338,6 +338,17 @@ export const rolePickerSearchField = (scope: Locator) =>
 export const searchRolePicker = (popover: Locator, query: string) =>
   rolePickerSearchField(popover).fill(query);
 
+/** The popover of a variant picker */
+export const variantPickerPopover = (page: Page) =>
+  page.getByRole("dialog", { name: "Schiff auswählen" });
+
+/**
+ * The search field of a variant picker or of a variant panel. The scope is
+ * the popover or the dialog that holds the panel.
+ */
+export const variantPickerSearchField = (scope: Locator) =>
+  scope.getByRole("combobox", { name: "Schiff, Hersteller oder Tag suchen …" });
+
 /** Closes an open role picker with Escape */
 export const closeRolePicker = async (popover: Locator) => {
   await popover.page().keyboard.press("Escape");

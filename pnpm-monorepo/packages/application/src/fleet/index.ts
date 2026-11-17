@@ -15,11 +15,11 @@ export {
 export {
   findManufacturerRows,
   findVariantCatalog,
-  findVariantLinkOptions,
   type ManufacturerRow,
+  type VariantCatalog,
   type VariantCatalogManufacturer,
+  type VariantCatalogTag,
   type VariantCatalogVariant,
-  type VariantLinkOption,
 } from "./catalogRows.js";
 export { countShips, type CountShipsOutput } from "./countShips.js";
 export {
