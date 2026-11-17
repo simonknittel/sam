@@ -195,13 +195,17 @@ interface FlightReadyAttributeProps {
   readonly status: VariantStatus;
 }
 
+/**
+ * An icon has no text baseline. Thus the text, not the icon, aligns the value
+ * with the name: else this row is lower than the other rows.
+ */
 const FlightReadyAttribute = ({ status }: FlightReadyAttributeProps) => {
   switch (status) {
     case VariantStatus.FLIGHT_READY:
       return (
         <ProfileAttribute name="Flight ready">
-          <span className="flex items-center gap-1">
-            <FaRegCheckCircle />
+          <span className="flex items-baseline gap-1">
+            <FaRegCheckCircle className="self-center" />
             Ja
           </span>
         </ProfileAttribute>
@@ -210,8 +214,8 @@ const FlightReadyAttribute = ({ status }: FlightReadyAttributeProps) => {
     case VariantStatus.NOT_FLIGHT_READY:
       return (
         <ProfileAttribute name="Flight ready">
-          <span className="flex items-center gap-1">
-            <FaRegCircleXmark className="text-brand-red-500" />
+          <span className="flex items-baseline gap-1">
+            <FaRegCircleXmark className="self-center text-brand-red-500" />
             Nein
           </span>
         </ProfileAttribute>
