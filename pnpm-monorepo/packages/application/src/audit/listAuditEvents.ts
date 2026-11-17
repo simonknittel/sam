@@ -42,7 +42,7 @@ export const listAuditEventsInputSchema = z.object({
     .max(MAXIMUM_FILTER_VALUES)
     .optional()
     .describe(
-      "Only the events of these types, for example TASK_CREATED, SHIP_CREATED_V2 or ROLE_ASSIGNMENT_CREATED. Use the type values of earlier results. A type filter also shows the high-volume types and the reads (it ignores include_high_volume and access).",
+      "Only the events of these types, for example TASK_CREATED, SHIP_CREATED_V3 or ROLE_ASSIGNMENT_CREATED. Use the type values of earlier results. A type filter also shows the high-volume types and the reads (it ignores include_high_volume and access).",
     ),
   created_by_user_ids: z
     .array(idSchema)

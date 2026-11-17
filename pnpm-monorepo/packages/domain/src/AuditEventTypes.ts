@@ -26,17 +26,25 @@ export enum AuditEventType {
   SHIP_UPDATED = "SHIP_UPDATED",
   /** @deprecated Superseded by SHIP_DELETED_V2 (ownerId became a citizen id) */
   SHIP_DELETED = "SHIP_DELETED",
+  /** @deprecated Superseded by SHIP_CREATED_V3 (adds the acquisition source and the note) */
   SHIP_CREATED_V2 = "SHIP_CREATED_V2",
+  /** @deprecated Superseded by SHIP_UPDATED_V3 (adds the acquisition source and the note) */
   SHIP_UPDATED_V2 = "SHIP_UPDATED_V2",
   SHIP_DELETED_V2 = "SHIP_DELETED_V2",
+  SHIP_CREATED_V3 = "SHIP_CREATED_V3",
+  SHIP_UPDATED_V3 = "SHIP_UPDATED_V3",
   VARIANT_CREATED = "VARIANT_CREATED",
   /** @deprecated Superseded by VARIANT_CREATED_V3 (adds the wiki page link) */
   VARIANT_CREATED_V2 = "VARIANT_CREATED_V2",
+  /** @deprecated Superseded by VARIANT_CREATED_V4 (adds the store price) */
   VARIANT_CREATED_V3 = "VARIANT_CREATED_V3",
+  VARIANT_CREATED_V4 = "VARIANT_CREATED_V4",
   VARIANT_UPDATED = "VARIANT_UPDATED",
   /** @deprecated Superseded by VARIANT_UPDATED_V3 (adds the wiki page link) */
   VARIANT_UPDATED_V2 = "VARIANT_UPDATED_V2",
+  /** @deprecated Superseded by VARIANT_UPDATED_V4 (adds the store price) */
   VARIANT_UPDATED_V3 = "VARIANT_UPDATED_V3",
+  VARIANT_UPDATED_V4 = "VARIANT_UPDATED_V4",
   VARIANT_DELETED = "VARIANT_DELETED",
   SERIES_UPDATED = "SERIES_UPDATED",
   SERIES_DELETED = "SERIES_DELETED",
@@ -257,6 +265,7 @@ export enum AuditEventType {
   SHIPS_PER_VARIANT_COUNTED = "SHIPS_PER_VARIANT_COUNTED",
   UNIQUE_LOGINS_COUNTED = "UNIQUE_LOGINS_COUNTED",
   MCP_USAGE_COUNTED = "MCP_USAGE_COUNTED",
+  FLEET_VALUE_MEASURED = "FLEET_VALUE_MEASURED",
   APP_FAVORITE_ADDED = "APP_FAVORITE_ADDED",
   APP_FAVORITE_REMOVED = "APP_FAVORITE_REMOVED",
   CITIZEN_PROFILE_UPDATED = "CITIZEN_PROFILE_UPDATED",
@@ -438,6 +447,29 @@ export interface AuditEventDataByType {
     variantId: string;
   };
 
+  [AuditEventType.SHIP_CREATED_V3]: {
+    shipId: string;
+    /** Citizen id */
+    ownerId: string;
+    variantId: string;
+    /** A value of the `ShipAcquisitionSource` enum of the database */
+    acquisitionSource: string;
+    note: string | null;
+  };
+
+  [AuditEventType.SHIP_UPDATED_V3]: {
+    shipId: string;
+    /** Citizen id */
+    ownerId: string;
+    previousName: string | null;
+    newName: string | null;
+    /** A value of the `ShipAcquisitionSource` enum of the database */
+    previousAcquisitionSource: string | null;
+    newAcquisitionSource: string | null;
+    previousNote: string | null;
+    newNote: string | null;
+  };
+
   [AuditEventType.VARIANT_CREATED]: {
     variantId: string;
     seriesId: string;
@@ -460,6 +492,17 @@ export interface AuditEventDataByType {
     status: string | null;
     links: { serviceName: string; url: string }[];
     wikiPageId: string | null;
+  };
+
+  [AuditEventType.VARIANT_CREATED_V4]: {
+    variantId: string;
+    seriesId: string;
+    name: string;
+    status: string | null;
+    links: { serviceName: string; url: string }[];
+    wikiPageId: string | null;
+    storePriceUsdCents: number | null;
+    inGamePriceAuec: number | null;
   };
 
   [AuditEventType.VARIANT_UPDATED]: {
@@ -493,6 +536,23 @@ export interface AuditEventDataByType {
     newLinks: { serviceName: string; url: string }[];
     previousWikiPageId: string | null;
     newWikiPageId: string | null;
+  };
+
+  [AuditEventType.VARIANT_UPDATED_V4]: {
+    variantId: string;
+    seriesId: string;
+    previousName: string;
+    newName: string;
+    previousStatus: string | null;
+    newStatus: string | null;
+    previousLinks: { serviceName: string; url: string }[];
+    newLinks: { serviceName: string; url: string }[];
+    previousWikiPageId: string | null;
+    newWikiPageId: string | null;
+    previousStorePriceUsdCents: number | null;
+    newStorePriceUsdCents: number | null;
+    previousInGamePriceAuec: number | null;
+    newInGamePriceAuec: number | null;
   };
 
   [AuditEventType.VARIANT_DELETED]: {
@@ -1762,6 +1822,19 @@ export interface AuditEventDataByType {
     date: string;
     /** The number of the audit events of the day through the MCP server */
     count: number;
+  };
+
+  [AuditEventType.FLEET_VALUE_MEASURED]: {
+    /** The start of the measured day */
+    date: string;
+    storeValueUsdCents: number;
+    inGameValueUsdCents: number;
+    /** The ships without an acquisition source */
+    unknownValueUsdCents: number;
+    storeValueAuec: number;
+    inGameValueAuec: number;
+    /** The ships without an acquisition source */
+    unknownValueAuec: number;
   };
 
   [AuditEventType.APP_FAVORITE_ADDED]: {
