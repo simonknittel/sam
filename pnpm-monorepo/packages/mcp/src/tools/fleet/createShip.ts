@@ -8,7 +8,7 @@ export const createShipTool = defineTool({
   group: ToolGroup.Fleet,
   title: "Add a ship",
   description:
-    "Adds a ship of a variant (variant_id from search_ship_variants) to the fleet of the citizen of the signed-in user, with an optional name. Gives the new ship in the format of list_my_ships.",
+    "Adds a ship of a variant (variant_id from search_ship_variants) to the fleet of the citizen of the signed-in user, with its acquisition source and an optional name and note. Gives the new ship in the format of list_my_ships.",
   annotations: {
     readOnlyHint: false,
     destructiveHint: false,

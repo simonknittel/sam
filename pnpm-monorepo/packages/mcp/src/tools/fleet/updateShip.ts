@@ -1,23 +1,23 @@
-import { renameShip, renameShipInputSchema } from "@sam-monorepo/application";
+import { updateShip, updateShipInputSchema } from "@sam-monorepo/application";
 import { defineTool } from "../../toolDefinition.js";
 import { ToolGroup } from "../../toolGroup.js";
 import { shipOutputSchema } from "./shipOutputSchema.js";
 
-export const renameShipTool = defineTool({
-  name: "rename_ship",
+export const updateShipTool = defineTool({
+  name: "update_ship",
   group: ToolGroup.Fleet,
-  title: "Rename a ship",
+  title: "Update a ship",
   description:
-    "Changes the name of a ship of the signed-in user (ship_id from list_my_ships). Gives the ship in the format of list_my_ships.",
+    "Changes the name, the acquisition source or the note of a ship of the signed-in user (ship_id from list_my_ships). An absent field stays. Gives the ship in the format of list_my_ships.",
   annotations: {
     readOnlyHint: false,
     destructiveHint: false,
     idempotentHint: true,
     openWorldHint: false,
   },
-  inputSchema: renameShipInputSchema,
+  inputSchema: updateShipInputSchema,
   outputSchema: shipOutputSchema,
   isVisible: (actor) =>
     actor.authorize("ship", "manage") && actor.citizen !== null,
-  handler: renameShip,
+  handler: updateShip,
 });

@@ -11,8 +11,8 @@ import { getShipVariantTool } from "./getShipVariant.js";
 import { listMyShipsTool } from "./listMyShips.js";
 import { listOrgFleetTool } from "./listOrgFleet.js";
 import { listShipManufacturersTool } from "./listShipManufacturers.js";
-import { renameShipTool } from "./renameShip.js";
 import { searchShipVariantsTool } from "./searchShipVariants.js";
+import { updateShipTool } from "./updateShip.js";
 import { updateShipManufacturerTool } from "./updateShipManufacturer.js";
 import { updateShipSeriesTool } from "./updateShipSeries.js";
 import { updateShipVariantTool } from "./updateShipVariant.js";
@@ -30,8 +30,8 @@ export const fleetTools: readonly CatalogTool[] = [
   listMyShipsTool,
   listOrgFleetTool,
   listShipManufacturersTool,
-  renameShipTool,
   searchShipVariantsTool,
+  updateShipTool,
   updateShipManufacturerTool,
   updateShipSeriesTool,
   updateShipVariantTool,
