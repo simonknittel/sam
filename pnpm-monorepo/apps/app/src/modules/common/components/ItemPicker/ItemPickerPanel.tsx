@@ -2,6 +2,7 @@
 
 import clsx from "clsx";
 import {
+  Fragment,
   useEffect,
   useId,
   useRef,
@@ -9,6 +10,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react";
+import { ItemPickerGroup, type ItemPickerItemGroup } from "./ItemPickerGroup";
 import { ItemPickerListHeight } from "./ItemPickerListHeight";
 import { ItemPickerMode } from "./ItemPickerMode";
 import { ItemPickerOption, type ItemPickerItem } from "./ItemPickerOption";
@@ -27,6 +29,25 @@ const scrollIntoList = (list: HTMLElement, option: HTMLElement) => {
     list.scrollTop = option.offsetTop + option.offsetHeight - list.clientHeight;
   }
 };
+
+interface Section {
+  readonly group?: ItemPickerItemGroup;
+  readonly items: ItemPickerItem[];
+}
+
+/** Divides the items into runs of items with the same group */
+const toSections = (items: readonly ItemPickerItem[]) =>
+  items.reduce<Section[]>((sections, item) => {
+    const lastSection = sections.at(-1);
+
+    if (lastSection && lastSection.group?.id === item.group?.id) {
+      lastSection.items.push(item);
+    } else {
+      sections.push({ group: item.group, items: [item] });
+    }
+
+    return sections;
+  }, []);
 
 interface Props {
   readonly mode: ItemPickerMode;
@@ -248,7 +269,15 @@ export const ItemPickerPanel = ({
           <div aria-hidden className="my-1 border-t border-white/10" />
         )}
 
-        {items.map(renderOption)}
+        {toSections(items).map((section, index) =>
+          section.group ? (
+            <ItemPickerGroup key={section.group.id} group={section.group}>
+              {section.items.map(renderOption)}
+            </ItemPickerGroup>
+          ) : (
+            <Fragment key={index}>{section.items.map(renderOption)}</Fragment>
+          ),
+        )}
       </div>
 
       {allItems.length === 0 && (
