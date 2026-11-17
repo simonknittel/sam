@@ -1,27 +1,50 @@
-import { Actions } from "@/modules/common/components/Actions";
-import { Tile } from "@/modules/common/components/Tile";
 import {
-  VariantStatus,
-  type Manufacturer,
-  type Series,
-} from "@sam-monorepo/database/client";
-import clsx from "clsx";
-import { FaRegCheckCircle } from "react-icons/fa";
-import { FaRegCircleXmark } from "react-icons/fa6";
+  TableTile,
+  type TableColumn,
+} from "@/modules/common/components/TableTile";
+import { type Manufacturer, type Series } from "@sam-monorepo/database/client";
 import { getVariantsBySeriesId } from "../queries/getVariantsBySeriesId";
-import { formatAuec, formatUsdPrice } from "../utils/formatPrice";
 import { CreateVariantButton } from "./CreateVariantButton";
-import { DeleteVariantButton } from "./DeleteVariantButton";
-import { UpdateVariantButton } from "./UpdateVariantButton";
-import { VariantTagBadge } from "./VariantTagBadge";
+import { VariantRow } from "./VariantRow";
+
+const COLUMNS: TableColumn[] = [
+  { key: "name", label: "Name", track: "minmax(256px,1fr)", minWidth: 256 },
+  { key: "tags", label: "Tags", track: "minmax(200px,1fr)", minWidth: 200 },
+  {
+    key: "storePrice",
+    label: "Wert (USD)",
+    track: "128px",
+    minWidth: 128,
+    headerClassName: "text-right",
+  },
+  {
+    key: "inGamePrice",
+    label: "Wert (aUEC)",
+    track: "160px",
+    minWidth: 160,
+    headerClassName: "text-right",
+  },
+  {
+    key: "status",
+    label: "Status",
+    track: "80px",
+    minWidth: 80,
+    headerClassName: "text-center",
+  },
+  {
+    key: "actions",
+    label: "Aktionen",
+    track: "44px",
+    minWidth: 44,
+    headerClassName: "sr-only",
+  },
+];
 
 interface Props {
   readonly className?: string;
   readonly manufacturerId: Manufacturer["id"];
   readonly seriesId: Series["id"];
 }
-
-const GRID_COLS = "grid-cols-[256px_1fr_128px_160px_56px_44px]";
 
 export const VariantsTile = async ({
   className,
@@ -31,7 +54,8 @@ export const VariantsTile = async ({
   const variants = await getVariantsBySeriesId(seriesId);
 
   return (
-    <Tile
+    <TableTile
+      className={className}
       heading="Varianten"
       cta={
         <CreateVariantButton
@@ -39,97 +63,13 @@ export const VariantsTile = async ({
           seriesId={seriesId}
         />
       }
-      className={clsx(className)}
-      childrenClassName="overflow-auto"
+      columns={COLUMNS}
+      isEmpty={variants.length === 0}
+      emptyMessage="Keine Varianten vorhanden"
     >
-      <table className="w-full min-w-200">
-        <thead>
-          <tr
-            className={clsx(
-              "grid items-center gap-4 text-left text-neutral-500",
-              GRID_COLS,
-            )}
-          >
-            <th>Name</th>
-
-            <th>Tags</th>
-
-            <th className="text-right">Wert (USD)</th>
-
-            <th className="text-right">Wert (aUEC)</th>
-
-            <th>Status</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {variants.map((row) => {
-            return (
-              <tr
-                key={row.id}
-                className={clsx(
-                  "-mx-2 grid h-14 items-center gap-4 rounded-secondary px-2 first:mt-2",
-                  GRID_COLS,
-                )}
-              >
-                <td className="truncate" title={row.name}>
-                  {row.name}
-                </td>
-
-                <td className="flex gap-1 overflow-hidden">
-                  {row.tags
-                    .toSorted((a, b) => a.key.localeCompare(b.key))
-                    .map((tag) => (
-                      <VariantTagBadge key={tag.id} tag={tag} />
-                    ))}
-                </td>
-
-                <td className="text-right">
-                  {row.storePriceUsdCents === null
-                    ? "-"
-                    : formatUsdPrice(row.storePriceUsdCents)}
-                </td>
-
-                <td className="text-right">
-                  {row.inGamePriceAuec === null
-                    ? "-"
-                    : formatAuec(row.inGamePriceAuec)}
-                </td>
-
-                <td
-                  className="truncate"
-                  title={
-                    row.status === VariantStatus.FLIGHT_READY
-                      ? "Flight ready"
-                      : row.status === VariantStatus.NOT_FLIGHT_READY
-                        ? "Nicht flight ready"
-                        : undefined
-                  }
-                >
-                  {row.status === VariantStatus.FLIGHT_READY ? (
-                    <FaRegCheckCircle title="Flight ready" />
-                  ) : row.status === VariantStatus.NOT_FLIGHT_READY ? (
-                    <FaRegCircleXmark
-                      title="Nicht flight ready"
-                      className="text-brand-red-500"
-                    />
-                  ) : null}
-                </td>
-
-                <td>
-                  <Actions>
-                    <UpdateVariantButton variant={row} />
-                    <DeleteVariantButton
-                      variant={row}
-                      shipCount={row._count.ships}
-                    />
-                  </Actions>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </Tile>
+      {variants.map((variant) => (
+        <VariantRow key={variant.id} variant={variant} />
+      ))}
+    </TableTile>
   );
 };

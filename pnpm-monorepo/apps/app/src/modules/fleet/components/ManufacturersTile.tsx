@@ -1,104 +1,43 @@
-import { Actions } from "@/modules/common/components/Actions";
-import { Link } from "@/modules/common/components/Link";
-import { Tile } from "@/modules/common/components/Tile";
-import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
-import clsx from "clsx";
-import Image from "next/image";
+import {
+  TableTile,
+  type TableColumn,
+} from "@/modules/common/components/TableTile";
 import { getManufacturers } from "../queries/getManufacturers";
 import { CreateManufacturereButton } from "./CreateManufacturerButton";
-import { DeleteManufacturerButton } from "./DeleteManufacturerButton";
+import { ManufacturerRow } from "./ManufacturerRow";
 
-const GRID_COLS = "grid-cols-[48px_192px_1fr_44px]";
+const COLUMNS: TableColumn[] = [
+  { key: "logo", label: "Logo", track: "48px", minWidth: 48 },
+  { key: "name", label: "Name", track: "minmax(192px,1fr)", minWidth: 192 },
+  {
+    key: "series",
+    label: "Serien",
+    track: "minmax(240px,3fr)",
+    minWidth: 240,
+  },
+  {
+    key: "actions",
+    label: "Aktionen",
+    track: "44px",
+    minWidth: 44,
+    headerClassName: "sr-only",
+  },
+];
 
 export const ManufacturersTile = async () => {
-  const rows = await getManufacturers();
+  const manufacturers = await getManufacturers();
 
   return (
-    <Tile
+    <TableTile
       heading="Hersteller"
       cta={<CreateManufacturereButton />}
-      childrenClassName="overflow-auto"
+      columns={COLUMNS}
+      isEmpty={manufacturers.length === 0}
+      emptyMessage="Keine Hersteller vorhanden"
     >
-      <table className="w-full min-w-80">
-        <thead>
-          <tr
-            className={clsx(
-              "grid items-center gap-4 text-left text-neutral-500",
-              GRID_COLS,
-            )}
-          >
-            <th>Logo</th>
-
-            <th>Name</th>
-
-            <th>Serien</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {rows.map((row) => {
-            return (
-              <tr
-                key={row.id}
-                className={clsx(
-                  "-mx-2 grid h-14 items-center gap-4 rounded-secondary px-2 first:mt-2",
-                  GRID_COLS,
-                )}
-              >
-                <td>
-                  {row.image && (
-                    <Image
-                      src={getPublicUploadUrl(row.image.id)}
-                      width={48}
-                      height={48}
-                      alt={`Logo of ${row.name}`}
-                      className="size-12 object-contain object-center"
-                      unoptimized={["image/svg+xml", "image/gif"].includes(
-                        row.image.mimeType,
-                      )}
-                    />
-                  )}
-                </td>
-
-                <td className="truncate" title={row.name}>
-                  <Link
-                    href={`/app/fleet/settings/manufacturer/${row.id}`}
-                    className="text-brand-red-500 hover:underline"
-                    prefetch={false}
-                  >
-                    {row.name}
-                  </Link>
-                </td>
-
-                <td
-                  className="line-clamp-2"
-                  title={row.series.map((series) => series.name).join(", ")}
-                >
-                  {row.series.map((series, index) => (
-                    <span key={series.id}>
-                      {index > 0 && ", "}
-                      <Link
-                        key={series.id}
-                        href={`/app/fleet/settings/manufacturer/${row.id}/series/${series.id}`}
-                        className="text-brand-red-500 hover:underline"
-                        prefetch={false}
-                      >
-                        {series.name}
-                      </Link>
-                    </span>
-                  ))}
-                </td>
-
-                <td>
-                  <Actions>
-                    <DeleteManufacturerButton manufacturer={row} />
-                  </Actions>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </Tile>
+      {manufacturers.map((manufacturer) => (
+        <ManufacturerRow key={manufacturer.id} manufacturer={manufacturer} />
+      ))}
+    </TableTile>
   );
 };
