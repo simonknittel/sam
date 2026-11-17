@@ -146,9 +146,14 @@ psql_local() { docker compose exec -T psql psql -U postgres -d db "$@"; }
 if [ "$SLOT" -ne 0 ] && [ "$SEED" -eq 1 ]; then
   if [ "$(psql_local -tAc "SELECT to_regclass('public.\"User\"') IS NOT NULL")" != "t" ]; then
     echo "==> seeding from the main checkout's database"
+    MAIN_PSQL_WAS_RUNNING="$(docker inspect -f '{{.State.Running}}' sam-psql-1)"
     docker start sam-psql-1 >/dev/null
     until docker exec sam-psql-1 pg_isready -U postgres >/dev/null 2>&1; do sleep 1; done
     docker exec sam-psql-1 pg_dump -U postgres db | psql_local -q >/dev/null
+    # The dump is the only reason to start the database of the main checkout
+    if [ "$MAIN_PSQL_WAS_RUNNING" != "true" ]; then
+      docker stop sam-psql-1 >/dev/null
+    fi
   else
     echo "==> database already seeded, skipping"
   fi
