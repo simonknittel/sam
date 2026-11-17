@@ -7,6 +7,7 @@ import {
   ownerShipsInputShape,
   type ListShipsOutput,
 } from "./ownerShips.js";
+import { EMPTY_FLEET_VALUE } from "./shipAcquisitionSource.js";
 
 export const listMyShipsInputSchema = z.object(ownerShipsInputShape);
 
@@ -23,7 +24,13 @@ export const listMyShips = async (
   requirePermission(actor, "ship", "manage");
 
   if (!actor.citizen)
-    return { ships: [], total: 0, next_cursor: null, previous_cursor: null };
+    return {
+      ships: [],
+      total: 0,
+      value: EMPTY_FLEET_VALUE,
+      next_cursor: null,
+      previous_cursor: null,
+    };
 
   return listOwnerShips(context, actor.citizen.id, input, options);
 };

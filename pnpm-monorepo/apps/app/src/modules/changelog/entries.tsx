@@ -54,6 +54,29 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-11-17-schiffe-herkunft-und-notiz",
+    date: "2026-11-17",
+    title: "Herkunft und Notiz für Schiffe",
+    tags: ["Neu", "Flotte"],
+    isTracked: true,
+    body: () => (
+      <p>
+        Unter{" "}
+        <Link
+          href="/app/fleet/my-ships"
+          className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300 active:text-interaction-700"
+        >
+          Meine Schiffe
+        </Link>{" "}
+        gibst du jetzt für jedes Schiff die Herkunft an (Store oder In-game) und
+        kannst eine kurze Notiz hinterlegen. Varianten haben jetzt einen
+        aktuellen Wert in USD und in aUEC, und die Flotte zeigt die Summe dieser
+        Werte pro Herkunft.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-11-16-log-analyzer-aeltere-eintraege-teilen",
     date: "2026-11-16",
     title: "Ältere Einträge im Log Analyzer teilen",

@@ -26,6 +26,14 @@ model Variant {
   shipCounts                    VariantShipCount[]
   externalLinks                 VariantExternalLink[]
 
+  /// The current price of the variant in the Star Citizen store, in USD
+  /// cents. NULL when nobody entered a price: the fleet value counts the
+  /// ships of the variant with 0.
+  storePriceUsdCents Int?
+  /// The current price of the variant in the game, in aUEC. NULL when nobody
+  /// entered a price: the fleet value counts the ships of the variant with 0.
+  inGamePriceAuec    Int?
+
   /// Wiki page whose subtree is embedded on the variant's detail page, NULL
   /// for no embed. Always a WIKI-namespace page that stays a normal page of
   /// the global wiki; several variants may link the same page. SetNull
@@ -76,13 +84,23 @@ enum VariantStatus {
   NOT_FLIGHT_READY
 }
 
+/// Where the owner got the ship
+enum ShipAcquisitionSource {
+  /// The Star Citizen store, for real money
+  STORE
+  IN_GAME
+}
+
 model Ship {
-  id        String  @id @default(cuid())
-  ownerId   String
-  owner     Citizen @relation("owner", fields: [ownerId], references: [id], onDelete: Cascade)
-  variantId String
-  variant   Variant @relation(fields: [variantId], references: [id], onDelete: Cascade)
-  name      String?
+  id                String                 @id @default(cuid())
+  ownerId           String
+  owner             Citizen                @relation("owner", fields: [ownerId], references: [id], onDelete: Cascade)
+  variantId         String
+  variant           Variant                @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  name              String?
+  /// NULL for the ships from before the app recorded the acquisition source
+  acquisitionSource ShipAcquisitionSource?
+  note              String?
 
   createdAt   DateTime? @default(now()) @db.Timestamptz(3)
   createdById String?

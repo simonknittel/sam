@@ -28,6 +28,8 @@ export enum ShipChangeFilter {
 const CHANGED_SHIP_SELECT = {
   id: true,
   name: true,
+  acquisitionSource: true,
+  note: true,
   createdAt: true,
   deletedAt: true,
   variant: {

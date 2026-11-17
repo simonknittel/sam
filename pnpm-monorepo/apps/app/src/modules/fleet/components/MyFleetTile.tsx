@@ -1,4 +1,7 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
+import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
+import { StatisticTile } from "@/modules/common/components/StatisticTile";
+import { Tile } from "@/modules/common/components/Tile";
 import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
 import { forbidden } from "next/navigation";
 import { type SearchParams } from "nuqs/server";
@@ -6,6 +9,7 @@ import { getMyFleet } from "../queries/getMyFleet";
 import { getVariantCatalog } from "../queries/getVariantCatalog";
 import { loadFleetListSearchParams } from "../utils/loadFleetListSearchParams";
 import { AssignShip } from "./AssignShip";
+import { FleetValueTiles } from "./FleetValueTiles";
 import { ShipsTable } from "./ShipsTable";
 
 interface Props {
@@ -19,6 +23,7 @@ export const MyFleetTile = async ({ className, searchParams }: Props) => {
 
   const {
     flight_ready,
+    acquisition_source,
     sort,
     variantTags,
     manufacturerIds,
@@ -28,10 +33,11 @@ export const MyFleetTile = async ({ className, searchParams }: Props) => {
     direction,
   } = await loadFleetListSearchParams(searchParams);
 
-  const [{ ships, total, nextCursor, prevCursor }, variantCatalog] =
+  const [{ ships, total, value, nextCursor, prevCursor }, variantCatalog] =
     await Promise.all([
       getMyFleet({
         flightReady: flight_ready,
+        acquisitionSource: acquisition_source,
         variantTagIds: variantTags?.length ? variantTags : [],
         manufacturerIds: manufacturerIds?.length ? manufacturerIds : [],
         sort,
@@ -45,29 +51,34 @@ export const MyFleetTile = async ({ className, searchParams }: Props) => {
 
   return (
     <section className={className}>
-      <div className="mb-1 flex items-center gap-4">
-        <p className="text-sm text-neutral-500">Anzahl: {total}</p>
+      <section className="mb-0.5 grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-0.5">
+        <StatisticTile label="Schiffe">
+          <ScrambleIn
+            text={total.toLocaleString("de-de")}
+            characters="1234567890."
+          />
+        </StatisticTile>
 
-        <AssignShip catalog={variantCatalog} />
-      </div>
+        <FleetValueTiles value={value} />
+      </section>
 
-      <div className="mt-2 overflow-x-auto rounded-primary bg-neutral-800/50 p-4">
+      <Tile
+        heading="Meine Schiffe"
+        cta={<AssignShip catalog={variantCatalog} />}
+      >
         {ships.length === 0 ? (
-          <div className="grid place-content-center">
-            <p className="text-white/90">Keine Schiffe gefunden</p>
-          </div>
+          <p className="italic">Keine Schiffe gefunden.</p>
         ) : (
-          <>
+          <div className="flex flex-col gap-4">
             <ShipsTable ships={ships} editable />
 
             <CursorPaginationControls
               nextCursor={nextCursor}
               prevCursor={prevCursor}
-              className="mt-4"
             />
-          </>
+          </div>
         )}
-      </div>
+      </Tile>
     </section>
   );
 };

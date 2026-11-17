@@ -6,6 +6,8 @@ interface Props {
   readonly children: ReactNode;
   readonly label: ReactNode;
   readonly preLabel?: ReactNode;
+  /** A smaller value below the main value, for example in a second unit */
+  readonly secondaryValue?: ReactNode;
 }
 
 export const StatisticTile = ({
@@ -13,6 +15,7 @@ export const StatisticTile = ({
   children,
   label,
   preLabel,
+  secondaryValue,
 }: Props) => {
   return (
     <div
@@ -25,6 +28,11 @@ export const StatisticTile = ({
       <span className="font-mono text-4xl font-black uppercase">
         {children}
       </span>
+      {secondaryValue && (
+        <span className="font-mono text-lg font-bold text-white/60">
+          {secondaryValue}
+        </span>
+      )}
       <p className="text-white/20">{label}</p>
     </div>
   );

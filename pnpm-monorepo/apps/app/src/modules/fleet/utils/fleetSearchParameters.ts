@@ -22,6 +22,15 @@ export const SHIP_SORT_PARAMETERS: readonly ShipSortParameter[] = [
   FleetSortParameter.NameDescending,
 ];
 
+/** The values of the `acquisition_source` search parameter of the fleet filters */
+export enum AcquisitionSourceParameter {
+  All = "all",
+  Store = "store",
+  InGame = "in_game",
+  /** The ships from before the app recorded the acquisition source */
+  Unknown = "unknown",
+}
+
 /** The values of the `showDeleted` search parameter of the ship lists */
 export enum ShowDeletedParameter {
   All = "all",

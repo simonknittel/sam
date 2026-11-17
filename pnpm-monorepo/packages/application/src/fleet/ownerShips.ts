@@ -8,6 +8,14 @@ import {
   type PageOptions,
 } from "../pagination.js";
 import {
+  acquisitionSourceFilterInputShape,
+  buildAcquisitionSourceWhere,
+  sumFleetValue,
+  toAcquisitionSource,
+  type AcquisitionSource,
+  type FleetValueOutput,
+} from "./shipAcquisitionSource.js";
+import {
   buildVariantFilterWhere,
   SHIP_VARIANT_SELECT,
   toShipVariantOutput,
@@ -24,6 +32,7 @@ export enum ShipSort {
 /** The input fields of the ship list of one citizen */
 export const ownerShipsInputShape = {
   ...variantFilterInputShape,
+  ...acquisitionSourceFilterInputShape,
   deleted: z
     .boolean()
     .default(false)
@@ -41,6 +50,10 @@ export interface ShipOutput {
   readonly id: string;
   /** The name that the owner gave the ship */
   readonly name: string | null;
+  /** Null for the ships from before the app recorded the acquisition source */
+  readonly acquisition_source: AcquisitionSource | null;
+  /** The note of the owner about the ship */
+  readonly note: string | null;
   readonly variant: ShipVariantOutput;
   /** Null for the ships from before the app recorded the time */
   readonly created_at: string | null;
@@ -51,6 +64,8 @@ export interface ListShipsOutput {
   readonly ships: ShipOutput[];
   /** The ships that agree with the filters */
   readonly total: number;
+  /** The value of the ships that agree with the filters */
+  readonly value: FleetValueOutput;
   readonly next_cursor: string | null;
   readonly previous_cursor: string | null;
 }
@@ -59,6 +74,8 @@ export interface ListShipsOutput {
 export const SHIP_SELECT = {
   id: true,
   name: true,
+  acquisitionSource: true,
+  note: true,
   createdAt: true,
   deletedAt: true,
   variant: { select: SHIP_VARIANT_SELECT },
@@ -70,6 +87,9 @@ export const toShipOutput = (
 ): ShipOutput => ({
   id: ship.id,
   name: ship.name,
+  acquisition_source:
+    ship.acquisitionSource && toAcquisitionSource(ship.acquisitionSource),
+  note: ship.note,
   variant: toShipVariantOutput(ship.variant),
   created_at: ship.createdAt?.toISOString() ?? null,
   deleted_at: ship.deletedAt?.toISOString() ?? null,
@@ -108,6 +128,7 @@ export const listOwnerShips = async (
     where: {
       ownerId,
       deletedAt: input.deleted ? { not: null } : null,
+      ...buildAcquisitionSourceWhere(input.acquisition_source),
       variant: buildVariantFilterWhere({
         flightReady: input.flight_ready,
         variantTagIds: input.variant_tag_ids,
@@ -133,6 +154,13 @@ export const listOwnerShips = async (
   return {
     ships: page.items,
     total: ships.length,
+    value: sumFleetValue(
+      ships.map((ship) => ({
+        acquisitionSource: ship.acquisitionSource,
+        storePriceUsdCents: ship.variant.storePriceUsdCents,
+        inGamePriceAuec: ship.variant.inGamePriceAuec,
+      })),
+    ),
     next_cursor: page.nextCursor,
     previous_cursor: page.previousCursor,
   };

@@ -7,6 +7,7 @@ import {
 } from "../../toolDefinition.js";
 import { ToolGroup } from "../../toolGroup.js";
 import { shipOutputSchema } from "./shipOutputSchema.js";
+import { valueOutputSchema } from "./valueOutputSchema.js";
 
 export const listMyShipsTool = defineTool({
   name: "list_my_ships",
@@ -20,16 +21,17 @@ export const listMyShipsTool = defineTool({
   outputSchema: z.strictObject({
     ships: z.array(shipOutputSchema),
     total: z.number().int().min(0),
+    value: valueOutputSchema,
     next_cursor: z.string().nullable(),
   }),
   isVisible: (actor) => actor.authorize("ship", "manage"),
   handler: async (context, actor, input) => {
-    const { ships, total, next_cursor } = await listMyShips(
+    const { ships, total, value, next_cursor } = await listMyShips(
       context,
       actor,
       input,
     );
 
-    return { ships, total, next_cursor };
+    return { ships, total, value, next_cursor };
   },
 });

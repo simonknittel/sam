@@ -11,6 +11,13 @@ import {
 } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
 import {
+  acquisitionSourceFilterInputShape,
+  buildAcquisitionSourceWhere,
+  EMPTY_FLEET_VALUE,
+  sumFleetValue,
+  type FleetValueOutput,
+} from "./shipAcquisitionSource.js";
+import {
   buildVariantFilterWhere,
   SHIP_VARIANT_SELECT,
   toShipVariantOutput,
@@ -27,6 +34,7 @@ export enum OrgFleetSort {
 
 export const listOrgFleetInputSchema = z.object({
   ...variantFilterInputShape,
+  ...acquisitionSourceFilterInputShape,
   sort: z.enum(OrgFleetSort).default(OrgFleetSort.CountDescending),
   limit: pageLimitSchema,
   cursor: cursorSchema.optional(),
@@ -44,6 +52,8 @@ export interface ListOrgFleetOutput {
   readonly total_citizens: number;
   /** The ships that agree with the filters */
   readonly total_ships: number;
+  /** The value of the ships that agree with the filters */
+  readonly value: FleetValueOutput;
   readonly next_cursor: string | null;
   readonly previous_cursor: string | null;
 }
@@ -96,6 +106,7 @@ export const listOrgFleet = (
         fleet: [],
         total_citizens: 0,
         total_ships: 0,
+        value: EMPTY_FLEET_VALUE,
         next_cursor: null,
         previous_cursor: null,
       };
@@ -113,9 +124,10 @@ export const listOrgFleet = (
         where: {
           ownerId: { in: citizenIds },
           deletedAt: null,
+          ...buildAcquisitionSourceWhere(input.acquisition_source),
           variant: variantWhere,
         },
-        select: { ownerId: true, variantId: true },
+        select: { ownerId: true, variantId: true, acquisitionSource: true },
       }),
       context.prisma.variant.findMany({
         where: variantWhere,
@@ -127,6 +139,9 @@ export const listOrgFleet = (
     ]);
 
     const shipsByVariantId = Map.groupBy(ships, (ship) => ship.variantId);
+    const variantById = new Map(
+      variants.map((variant) => [variant.id, variant]),
+    );
 
     const sortedFleet = variants
       .map((variant) => ({
@@ -146,6 +161,15 @@ export const listOrgFleet = (
       fleet: page.items,
       total_citizens: new Set(ships.map((ship) => ship.ownerId)).size,
       total_ships: ships.length,
+      value: sumFleetValue(
+        ships.map((ship) => ({
+          acquisitionSource: ship.acquisitionSource,
+          storePriceUsdCents:
+            variantById.get(ship.variantId)?.storePriceUsdCents ?? null,
+          inGamePriceAuec:
+            variantById.get(ship.variantId)?.inGamePriceAuec ?? null,
+        })),
+      ),
       next_cursor: page.nextCursor,
       previous_cursor: page.previousCursor,
     };

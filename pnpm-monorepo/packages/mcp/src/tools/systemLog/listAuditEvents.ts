@@ -18,7 +18,7 @@ const auditEventOutputSchema = z.strictObject({
   id: z.string(),
   type: z
     .string()
-    .describe("The event type, for example TASK_CREATED or SHIP_CREATED_V2."),
+    .describe("The event type, for example TASK_CREATED or SHIP_CREATED_V3."),
   created_at: dateTimeOutputSchema,
   created_by: z
     .strictObject({

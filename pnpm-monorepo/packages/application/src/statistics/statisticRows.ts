@@ -34,6 +34,16 @@ export interface DailyLoginCountRow {
   readonly count: number;
 }
 
+export interface DailyFleetValueRow {
+  readonly day: Date;
+  readonly storeValueUsdCents: number;
+  readonly inGameValueUsdCents: number;
+  readonly unknownValueUsdCents: number;
+  readonly storeValueAuec: number;
+  readonly inGameValueAuec: number;
+  readonly unknownValueAuec: number;
+}
+
 export interface DailyMcpUsageCountRow {
   readonly day: Date;
   readonly count: number;
@@ -109,6 +119,49 @@ export const findDailyMcpUsageCountRows = async (
     orderBy: { day: "asc" },
     select: { day: true, count: true },
   });
+};
+
+/**
+ * The fleet values of the window, with the last day before it. The change of
+ * the first day of the chart compares with that day.
+ */
+export const findDailyFleetValueRows = async (
+  context: ApplicationContext,
+  actor: Actor,
+  { fromDay }: StatisticDayWindow,
+): Promise<DailyFleetValueRow[]> => {
+  requirePermission(actor, "globalStatistics", "read");
+
+  const previousDay = await context.prisma.dailyFleetValue.findFirst({
+    where: { day: { lt: fromDay } },
+    orderBy: { day: "desc" },
+    select: { day: true },
+  });
+
+  const rows = await context.prisma.dailyFleetValue.findMany({
+    where: { day: { gte: previousDay?.day ?? fromDay } },
+    orderBy: { day: "asc" },
+    select: {
+      day: true,
+      storeValueUsdCents: true,
+      inGameValueUsdCents: true,
+      unknownValueUsdCents: true,
+      storeValueAuec: true,
+      inGameValueAuec: true,
+      unknownValueAuec: true,
+    },
+  });
+
+  // The values of an organization stay far below Number.MAX_SAFE_INTEGER
+  return rows.map((row) => ({
+    day: row.day,
+    storeValueUsdCents: Number(row.storeValueUsdCents),
+    inGameValueUsdCents: Number(row.inGameValueUsdCents),
+    unknownValueUsdCents: Number(row.unknownValueUsdCents),
+    storeValueAuec: Number(row.storeValueAuec),
+    inGameValueAuec: Number(row.inGameValueAuec),
+    unknownValueAuec: Number(row.unknownValueAuec),
+  }));
 };
 
 /** The transactions with a positive value inside the window */

@@ -18,6 +18,11 @@ interface Props {
   readonly type?: Exclude<ComponentProps<"input">["type"], "datetime-local">;
   /** Shows the value in one line, with an ellipsis when it is too long */
   readonly truncate?: boolean;
+  /** Shows the value in at most two lines, with an ellipsis after them */
+  readonly twoLines?: boolean;
+  /** False permits an empty value, for example to remove an optional text */
+  readonly required?: boolean;
+  readonly maxLength?: number;
 }
 
 export const EditableInput = ({
@@ -28,12 +33,18 @@ export const EditableInput = ({
   action,
   type = "text",
   truncate = false,
+  twoLines = false,
+  required = true,
+  maxLength,
 }: Props) => {
   return (
     <EditableField
-      className={clsx({ "max-w-full min-w-0": truncate }, className)}
+      className={clsx(
+        { "max-w-full min-w-0": truncate || twoLines },
+        className,
+      )}
       displayButtonClassName={clsx("hover:cursor-pointer", {
-        "min-w-0": truncate,
+        "min-w-0": truncate || twoLines,
       })}
       saveButtonClassName="hover:cursor-pointer"
       rowId={rowId}
@@ -53,13 +64,20 @@ export const EditableInput = ({
             "animate-pulse": isPending,
           })}
           autoFocus
-          required
+          required={required}
+          maxLength={maxLength}
           ref={setInputElement}
         />
       )}
       renderDisplay={(value) =>
-        truncate ? (
-          <span className="truncate" title={String(value)}>
+        truncate || twoLines ? (
+          <span
+            className={clsx({
+              truncate,
+              "line-clamp-2 wrap-break-word": twoLines,
+            })}
+            title={String(value)}
+          >
             {value || "-"}
           </span>
         ) : (

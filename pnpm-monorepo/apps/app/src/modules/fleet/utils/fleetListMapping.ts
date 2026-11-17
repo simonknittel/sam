@@ -1,14 +1,18 @@
 import type { CursorDirection } from "@/modules/common/CursorPagination/cursorPaginationParsers";
 import {
+  AcquisitionSourceFilter,
   FlightReadyFilter,
   ShipSort,
+  toShipAcquisitionSource,
   toVariantStatus,
+  type FleetValueOutput,
   type listMyShips,
   type ListShipsOutput,
   type ShipVariantOutput,
 } from "@sam-monorepo/application";
 import { FLEET_PAGE_SIZE, type ShipVariant } from "../queries/shipQuery";
 import {
+  AcquisitionSourceParameter,
   FleetSortParameter,
   FlightReadyParameter,
   ShowDeletedParameter,
@@ -20,11 +24,55 @@ export const toFlightReadyFilter = (flightReady: FlightReadyParameter) =>
     ? FlightReadyFilter.Yes
     : FlightReadyFilter.All;
 
+export const toAcquisitionSourceFilter = (
+  acquisitionSource: AcquisitionSourceParameter,
+) => {
+  switch (acquisitionSource) {
+    case AcquisitionSourceParameter.All:
+      return AcquisitionSourceFilter.All;
+
+    case AcquisitionSourceParameter.Store:
+      return AcquisitionSourceFilter.Store;
+
+    case AcquisitionSourceParameter.InGame:
+      return AcquisitionSourceFilter.InGame;
+
+    case AcquisitionSourceParameter.Unknown:
+      return AcquisitionSourceFilter.Unknown;
+
+    default:
+      throw new Error(
+        `Unknown acquisition source: ${acquisitionSource satisfies never}`,
+      );
+  }
+};
+
+/** The value of the filtered ships of one acquisition source */
+export interface SourceValue {
+  readonly usdCents: number;
+  readonly auec: number;
+}
+
+/** The value of the filtered ships for each acquisition source */
+export interface FleetValue {
+  readonly store: SourceValue;
+  readonly inGame: SourceValue;
+  readonly unknown: SourceValue;
+}
+
+export const toFleetValue = (value: FleetValueOutput): FleetValue => ({
+  store: { usdCents: value.usd_cents.store, auec: value.auec.store },
+  inGame: { usdCents: value.usd_cents.in_game, auec: value.auec.in_game },
+  unknown: { usdCents: value.usd_cents.unknown, auec: value.auec.unknown },
+});
+
 /** Gives the variant of a use case the form that the fleet tables use */
 export const toShipVariant = (variant: ShipVariantOutput): ShipVariant => ({
   id: variant.id,
   name: variant.name,
   status: variant.status && toVariantStatus(variant.status),
+  storePriceUsdCents: variant.store_price_usd_cents,
+  inGamePriceAuec: variant.in_game_price_auec,
   series: {
     id: variant.series.id,
     name: variant.series.name,
@@ -43,6 +91,7 @@ export const toShipVariant = (variant: ShipVariantOutput): ShipVariant => ({
 /** The search parameters of the ship list of one citizen */
 export interface OwnerFleetOptions {
   readonly flightReady?: FlightReadyParameter;
+  readonly acquisitionSource?: AcquisitionSourceParameter;
   readonly variantTagIds?: string[];
   readonly manufacturerIds?: string[];
   readonly sort?: ShipSortParameter;
@@ -54,6 +103,7 @@ export interface OwnerFleetOptions {
 
 export const toOwnerShipsInput = ({
   flightReady = FlightReadyParameter.All,
+  acquisitionSource = AcquisitionSourceParameter.All,
   variantTagIds = [],
   manufacturerIds = [],
   sort = FleetSortParameter.NameAscending,
@@ -62,6 +112,7 @@ export const toOwnerShipsInput = ({
   cursor,
 }: OwnerFleetOptions): Parameters<typeof listMyShips>[2] => ({
   flight_ready: toFlightReadyFilter(flightReady),
+  acquisition_source: toAcquisitionSourceFilter(acquisitionSource),
   variant_tag_ids: variantTagIds,
   manufacturer_ids: manufacturerIds,
   query: searchQuery || undefined,
@@ -80,10 +131,15 @@ export const toShipsPage = (output: ListShipsOutput) => ({
   ships: output.ships.map((ship) => ({
     id: ship.id,
     name: ship.name,
+    acquisitionSource:
+      ship.acquisition_source &&
+      toShipAcquisitionSource(ship.acquisition_source),
+    note: ship.note,
     deletedAt: ship.deleted_at === null ? null : new Date(ship.deleted_at),
     variant: toShipVariant(ship.variant),
   })),
   total: output.total,
+  value: toFleetValue(output.value),
   nextCursor: output.next_cursor,
   prevCursor: output.previous_cursor,
 });

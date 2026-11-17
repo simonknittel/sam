@@ -17,6 +17,8 @@ import { useState, type ReactNode } from "react";
 import { BsExclamationOctagonFill } from "react-icons/bs";
 import { FaBookOpen, FaCog, FaRegCheckCircle } from "react-icons/fa";
 import { FaRegCircleXmark } from "react-icons/fa6";
+import { ACQUISITION_SOURCE_LABEL } from "../utils/acquisitionSourceLabel";
+import { formatAuec, formatUsdPrice } from "../utils/formatPrice";
 import {
   ManufacturerLogo,
   type ManufacturerLogoManufacturer,
@@ -36,7 +38,7 @@ interface Props {
    * The individual ship of a citizen. Without it, the popover shows only the
    * variant.
    */
-  readonly ship?: Pick<Ship, "name">;
+  readonly ship?: Pick<Ship, "name" | "acquisitionSource" | "note">;
   /**
    * For a trigger that is a link itself: a click follows the link, only a
    * hover opens the popover.
@@ -141,7 +143,7 @@ export const VariantPopover = ({
         </ul>
       )}
 
-      {(ship?.name || details) && (
+      {(ship?.name || ship?.acquisitionSource || details) && (
         <dl className="mt-4 flex flex-col gap-1 border-t border-white/10 pt-4 text-sm">
           {ship?.name && (
             <ProfileAttribute name="Name">
@@ -151,7 +153,25 @@ export const VariantPopover = ({
             </ProfileAttribute>
           )}
 
+          {ship?.acquisitionSource && (
+            <ProfileAttribute name="Herkunft">
+              {ACQUISITION_SOURCE_LABEL[ship.acquisitionSource]}
+            </ProfileAttribute>
+          )}
+
           {details?.status && <FlightReadyAttribute status={details.status} />}
+
+          {typeof details?.storePriceUsdCents === "number" && (
+            <ProfileAttribute name="Aktueller Wert (USD)">
+              {formatUsdPrice(details.storePriceUsdCents)}
+            </ProfileAttribute>
+          )}
+
+          {typeof details?.inGamePriceAuec === "number" && (
+            <ProfileAttribute name="Aktueller Wert (aUEC)">
+              {formatAuec(details.inGamePriceAuec)}
+            </ProfileAttribute>
+          )}
 
           {details && (
             <ProfileAttribute name="Einzelschiffe">
@@ -159,6 +179,15 @@ export const VariantPopover = ({
             </ProfileAttribute>
           )}
         </dl>
+      )}
+
+      {ship?.note && (
+        <section className="mt-4 border-t border-white/10 pt-4 text-sm">
+          <h3 className="font-mono text-xs text-white/40 uppercase">Notiz</h3>
+          <p className="mt-1 wrap-break-word whitespace-pre-wrap">
+            {ship.note}
+          </p>
+        </section>
       )}
 
       {details && details.externalLinks.length > 0 && (
@@ -195,13 +224,17 @@ interface FlightReadyAttributeProps {
   readonly status: VariantStatus;
 }
 
+/**
+ * An icon has no text baseline. Thus the text, not the icon, aligns the value
+ * with the name: else this row is lower than the other rows.
+ */
 const FlightReadyAttribute = ({ status }: FlightReadyAttributeProps) => {
   switch (status) {
     case VariantStatus.FLIGHT_READY:
       return (
         <ProfileAttribute name="Flight ready">
-          <span className="flex items-center gap-1">
-            <FaRegCheckCircle />
+          <span className="flex items-baseline gap-1">
+            <FaRegCheckCircle className="self-center" />
             Ja
           </span>
         </ProfileAttribute>
@@ -210,8 +243,8 @@ const FlightReadyAttribute = ({ status }: FlightReadyAttributeProps) => {
     case VariantStatus.NOT_FLIGHT_READY:
       return (
         <ProfileAttribute name="Flight ready">
-          <span className="flex items-center gap-1">
-            <FaRegCircleXmark className="text-brand-red-500" />
+          <span className="flex items-baseline gap-1">
+            <FaRegCircleXmark className="self-center text-brand-red-500" />
             Nein
           </span>
         </ProfileAttribute>

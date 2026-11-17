@@ -32,6 +32,18 @@ const MAXIMUM_VARIANT_LINK_URL_LENGTH = 2048;
  */
 const MAXIMUM_VARIANT_TAG_TEXT_LENGTH = 255;
 
+/**
+ * USD 1,000,000. The most expensive packages of the Star Citizen store cost
+ * less than USD 50,000.
+ */
+const MAXIMUM_STORE_PRICE_USD_CENTS = 100_000_000;
+
+/**
+ * 1,000,000,000 aUEC, below the limit of the integer column. The most
+ * expensive ships of the game cost less than 100,000,000 aUEC.
+ */
+const MAXIMUM_IN_GAME_PRICE_AUEC = 1_000_000_000;
+
 const tagTextSchema = z
   .string()
   .trim()
@@ -46,6 +58,26 @@ export const variantFieldsInputShape = {
   status: z
     .enum([VariantStatus.FLIGHT_READY, VariantStatus.NOT_FLIGHT_READY])
     .optional(),
+  store_price_usd_cents: z
+    .number()
+    .int()
+    .min(0)
+    .max(MAXIMUM_STORE_PRICE_USD_CENTS)
+    .nullable()
+    .optional()
+    .describe(
+      "The current price of the variant in the Star Citizen store, in USD cents. At an update, null removes the price.",
+    ),
+  in_game_price_auec: z
+    .number()
+    .int()
+    .min(0)
+    .max(MAXIMUM_IN_GAME_PRICE_AUEC)
+    .nullable()
+    .optional()
+    .describe(
+      "The current price of the variant in the game, in aUEC. At an update, null removes the price.",
+    ),
   tags: z
     .array(z.object({ key: tagTextSchema, value: tagTextSchema }))
     .max(MAXIMUM_VARIANT_ROWS)

@@ -6,6 +6,7 @@ import { getDailyLoginStatisticChart } from "@/modules/statistics/queries/getDai
 import { getDailyMcpUsageStatisticChart } from "@/modules/statistics/queries/getDailyMcpUsageStatisticChart";
 import { getDailySilcStatisticChart } from "@/modules/statistics/queries/getDailySilcStatisticChart";
 import { getEventsPerDayStatisticChart } from "@/modules/statistics/queries/getEventsPerDayStatisticChart";
+import { getFleetValueStatisticCharts } from "@/modules/statistics/queries/getFleetValueStatisticCharts";
 import { getRegisteredUserStatisticChart } from "@/modules/statistics/queries/getRegisteredUserStatisticChart";
 import { getRoleCitizenStatisticChart } from "@/modules/statistics/queries/getRoleCitizenStatisticChart";
 import { getTotalCitizenStatisticChart } from "@/modules/statistics/queries/getTotalCitizenStatisticChart";
@@ -26,6 +27,7 @@ export default async function Page() {
     roleChart,
     variantChart,
     totalShipsChart,
+    fleetValueCharts,
     totalCitizensChart,
     totalOrganizationsChart,
     registeredUsersChart,
@@ -37,6 +39,7 @@ export default async function Page() {
     getRoleCitizenStatisticChart(),
     getVariantShipStatisticChart(),
     getTotalShipStatisticChart(),
+    getFleetValueStatisticCharts(),
     getTotalCitizenStatisticChart(),
     getTotalOrganizationStatisticChart(),
     getRegisteredUserStatisticChart(),
@@ -65,6 +68,20 @@ export default async function Page() {
           title="Flotte"
           description="Anzahl eingetragener Schiffe pro Variante"
           chart={variantChart}
+          className="flex-1"
+        />
+
+        <StatisticSection
+          title="Flottenwert (USD)"
+          description="Aktueller Wert der eingetragenen Schiffe im Store, gesamt und pro Herkunft"
+          chart={fleetValueCharts.usd}
+          className="flex-1"
+        />
+
+        <StatisticSection
+          title="Flottenwert (aUEC)"
+          description="Aktueller Wert der eingetragenen Schiffe im Spiel, gesamt und pro Herkunft"
+          chart={fleetValueCharts.auec}
           className="flex-1"
         />
 

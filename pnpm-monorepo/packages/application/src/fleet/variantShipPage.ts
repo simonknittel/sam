@@ -1,3 +1,4 @@
+import type { ShipAcquisitionSource } from "@sam-monorepo/database/client";
 import { ORG_ID } from "@sam-monorepo/domain";
 import { requirePermission, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
@@ -15,6 +16,8 @@ export interface VariantShipRow {
   readonly id: string;
   readonly ownerId: string;
   readonly name: string | null;
+  readonly acquisitionSource: ShipAcquisitionSource | null;
+  readonly note: string | null;
   readonly owner: {
     readonly handle: string | null;
     readonly deletedAt: Date | null;
@@ -80,6 +83,8 @@ export const findVariantShipPage = (
         id: true,
         ownerId: true,
         name: true,
+        acquisitionSource: true,
+        note: true,
         owner: { select: { handle: true, deletedAt: true } },
       },
     });

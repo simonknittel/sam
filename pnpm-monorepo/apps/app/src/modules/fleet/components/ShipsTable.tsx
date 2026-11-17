@@ -3,20 +3,27 @@ import { VariantStatus, type Ship } from "@sam-monorepo/database/client";
 import { FaRegCheckCircle } from "react-icons/fa";
 import { FaRegCircleXmark } from "react-icons/fa6";
 import type { ShipVariant } from "../queries/shipQuery";
+import { ACQUISITION_SOURCE_LABEL } from "../utils/acquisitionSourceLabel";
 import { DeleteShip } from "./DeleteShip";
+import { EditableShipAcquisitionSource } from "./EditableShipAcquisitionSource";
 import { EditableShipName } from "./EditableShipName";
+import { EditableShipNote } from "./EditableShipNote";
 import { VariantTagBadge } from "./VariantTagBadge";
 import { VariantWithLogo } from "./VariantWithLogo";
 
 interface ShipsTableRow {
   id: Ship["id"];
   name: Ship["name"];
+  acquisitionSource: Ship["acquisitionSource"];
+  note: Ship["note"];
   deletedAt?: Date | null;
   variant: ShipVariant;
 }
 
-const EDITABLE_COLUMNS = "256px 256px minmax(256px,1fr) 80px 80px";
-const READONLY_COLUMNS = "256px 256px minmax(256px,1fr) 80px";
+const EDITABLE_COLUMNS =
+  "256px 200px 160px minmax(200px,1fr) minmax(200px,1fr) 80px 80px";
+const READONLY_COLUMNS =
+  "256px 200px 160px minmax(200px,1fr) minmax(200px,1fr) 80px";
 
 interface Props {
   readonly className?: string;
@@ -33,6 +40,8 @@ export const ShipsTable = ({ className, ships, editable = false }: Props) => {
       <THead>
         <th>Schiff</th>
         <th>Name</th>
+        <th>Herkunft</th>
+        <th>Notiz</th>
         <th>Tags</th>
         <th className="text-center">Status</th>
         {editable && <th className="text-center">Aktionen</th>}
@@ -66,6 +75,39 @@ export const ShipsTable = ({ className, ships, editable = false }: Props) => {
             ) : (
               <td title={ship.name || undefined} className="truncate">
                 {ship.name || null}
+              </td>
+            )}
+
+            <td className="overflow-hidden">
+              {editable && !ship.deletedAt ? (
+                <EditableShipAcquisitionSource
+                  key={ship.id}
+                  shipId={ship.id}
+                  acquisitionSource={ship.acquisitionSource}
+                  className="[&>button]:text-left"
+                />
+              ) : ship.acquisitionSource ? (
+                ACQUISITION_SOURCE_LABEL[ship.acquisitionSource]
+              ) : (
+                "-"
+              )}
+            </td>
+
+            {editable && !ship.deletedAt ? (
+              <td className="overflow-hidden">
+                <EditableShipNote
+                  key={ship.id}
+                  shipId={ship.id}
+                  note={ship.note || ""}
+                  className="[&>button]:text-left"
+                />
+              </td>
+            ) : (
+              <td
+                title={ship.note || undefined}
+                className="line-clamp-2 wrap-break-word"
+              >
+                {ship.note}
               </td>
             )}
 

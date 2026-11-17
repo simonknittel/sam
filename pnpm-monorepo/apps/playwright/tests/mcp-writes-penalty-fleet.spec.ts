@@ -117,7 +117,7 @@ test.describe("the penalty points and fleet write tools of the MCP server", () =
     expect(await prisma.penaltyEntry.count()).toBe(0);
   });
 
-  test("create_ship and rename_ship change the own fleet with the audit events of the web app", async ({
+  test("create_ship and update_ship change the own fleet with the audit events of the web app", async ({
     prisma,
     authorizeMcpClient,
     connectMcpClient,
@@ -137,26 +137,42 @@ test.describe("the penalty points and fleet write tools of the MCP server", () =
 
     const createdShip = await callForContent(client, "create_ship", {
       variant_id: variant.id,
+      acquisition_source: "store",
       name: "Sternenfaust",
+      note: "Mit Snub-Fighter",
     });
     const ship = await prisma.ship.findFirstOrThrow();
     expect(createdShip).toMatchObject({
       id: ship.id,
       name: "Sternenfaust",
+      acquisition_source: "store",
+      note: "Mit Snub-Fighter",
       variant: { id: variant.id, name: "Polaris" },
       deleted_at: null,
     });
 
+    // An absent field stays, an empty note removes the note
     expect(
-      await callForContent(client, "rename_ship", {
+      await callForContent(client, "update_ship", {
         ship_id: ship.id,
         name: "Sternenhammer",
+        acquisition_source: "in_game",
+        note: "",
       }),
-    ).toMatchObject({ id: ship.id, name: "Sternenhammer" });
+    ).toMatchObject({
+      id: ship.id,
+      name: "Sternenhammer",
+      acquisition_source: "in_game",
+      note: null,
+    });
 
     const myShips = await callForContent(client, "list_my_ships");
     expect(myShips.ships).toEqual([
-      expect.objectContaining({ id: ship.id, name: "Sternenhammer" }),
+      expect.objectContaining({
+        id: ship.id,
+        name: "Sternenhammer",
+        acquisition_source: "in_game",
+      }),
     ]);
     expect(
       await prisma.ship.findUniqueOrThrow({
@@ -172,33 +188,40 @@ test.describe("the penalty points and fleet write tools of the MCP server", () =
     expect(
       await callForError(client, "create_ship", {
         variant_id: "unknownvariant000000000000",
+        acquisition_source: "store",
       }),
     ).toMatch(NOT_FOUND_RESULT);
 
-    await expectAuditEvents(prisma, ["SHIP_CREATED_V2", "SHIP_UPDATED_V2"]);
+    await expectAuditEvents(prisma, ["SHIP_CREATED_V3", "SHIP_UPDATED_V3"]);
     const auditEvents = await prisma.auditEvent.findMany({
-      where: { type: { in: ["SHIP_CREATED_V2", "SHIP_UPDATED_V2"] } },
+      where: { type: { in: ["SHIP_CREATED_V3", "SHIP_UPDATED_V3"] } },
       orderBy: { createdAt: "asc" },
       select: { type: true, createdById: true, data: true },
     });
     expect(auditEvents).toEqual([
       {
-        type: "SHIP_CREATED_V2",
+        type: "SHIP_CREATED_V3",
         createdById: owner.user.id,
         data: {
           shipId: ship.id,
           ownerId: owner.entity.id,
           variantId: variant.id,
+          acquisitionSource: "STORE",
+          note: "Mit Snub-Fighter",
         },
       },
       {
-        type: "SHIP_UPDATED_V2",
+        type: "SHIP_UPDATED_V3",
         createdById: owner.user.id,
         data: {
           shipId: ship.id,
           ownerId: owner.entity.id,
           previousName: "Sternenfaust",
           newName: "Sternenhammer",
+          previousAcquisitionSource: "STORE",
+          newAcquisitionSource: "IN_GAME",
+          previousNote: "Mit Snub-Fighter",
+          newNote: null,
         },
       },
     ]);

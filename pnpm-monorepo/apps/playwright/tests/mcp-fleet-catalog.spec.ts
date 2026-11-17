@@ -70,6 +70,8 @@ test.describe("the ship catalog tools of the MCP server", () => {
       series_id: series.id,
       name: "Cutlass Black",
       status: "flight_ready",
+      store_price_usd_cents: 11_000,
+      in_game_price_auec: 1_800_000,
       tags: [
         { key: "Rolle", value: "Frachter" },
         { key: "Rolle", value: "Frachter" },
@@ -79,6 +81,8 @@ test.describe("the ship catalog tools of the MCP server", () => {
     expect(variant).toMatchObject({
       name: "Cutlass Black",
       status: "flight_ready",
+      store_price_usd_cents: 11_000,
+      in_game_price_auec: 1_800_000,
       series: { id: series.id, name: "Cutlass" },
       manufacturer: { id: manufacturer.id, name: "Drake Interplanetary" },
       tags: [{ key: "Rolle", value: "Frachter" }],
@@ -93,10 +97,12 @@ test.describe("the ship catalog tools of the MCP server", () => {
         variant_id: variant.id,
         name: "Cutlass Red",
         status: "not_flight_ready",
+        store_price_usd_cents: 12_500,
       }),
     ).toMatchObject({
       name: "Cutlass Red",
       status: "not_flight_ready",
+      store_price_usd_cents: 12_500,
       tags: [{ key: "Rolle", value: "Frachter" }],
       links: [RSI_LINK],
     });
@@ -191,8 +197,8 @@ test.describe("the ship catalog tools of the MCP server", () => {
       "SERIES_CREATED",
       "SERIES_UPDATED",
       "SERIES_DELETED",
-      "VARIANT_CREATED_V3",
-      "VARIANT_UPDATED_V3",
+      "VARIANT_CREATED_V4",
+      "VARIANT_UPDATED_V4",
       "VARIANT_DELETED",
       "SHIP_MANUFACTURERS_LISTED",
       "SHIP_VARIANT_READ",
@@ -201,7 +207,7 @@ test.describe("the ship catalog tools of the MCP server", () => {
     const rsiAuditLinks = [{ serviceName: "RSI", url: RSI_LINK.url }];
     expect(
       await prisma.auditEvent.findMany({
-        where: { type: "VARIANT_UPDATED_V3" },
+        where: { type: "VARIANT_UPDATED_V4" },
         orderBy: { createdAt: "asc" },
         select: { createdById: true, data: true },
       }),
@@ -215,6 +221,8 @@ test.describe("the ship catalog tools of the MCP server", () => {
           newStatus: "NOT_FLIGHT_READY",
           previousLinks: rsiAuditLinks,
           newLinks: rsiAuditLinks,
+          previousStorePriceUsdCents: 11_000,
+          newStorePriceUsdCents: 12_500,
         }),
       },
       {

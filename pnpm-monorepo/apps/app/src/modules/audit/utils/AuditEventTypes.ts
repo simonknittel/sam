@@ -236,6 +236,37 @@ export const AuditEventDefinitions: {
       `Ship deleted: "${data.name}" (owner citizen: ${data.ownerId})`,
   },
 
+  [AuditEventType.SHIP_CREATED_V3]: {
+    type: AuditEventType.SHIP_CREATED_V3,
+    app: SystemLogApp.Fleet,
+    data: {
+      shipId: "string",
+      ownerId: "string",
+      variantId: "string",
+      acquisitionSource: "STORE",
+      note: "string",
+    },
+    message: (data) =>
+      `Ship created (owner citizen: ${data.ownerId}, variant: ${data.variantId}, acquisition source: ${data.acquisitionSource})`,
+  },
+
+  [AuditEventType.SHIP_UPDATED_V3]: {
+    type: AuditEventType.SHIP_UPDATED_V3,
+    app: SystemLogApp.Fleet,
+    data: {
+      shipId: "string",
+      ownerId: "string",
+      previousName: "string",
+      newName: "string",
+      previousAcquisitionSource: "STORE",
+      newAcquisitionSource: "IN_GAME",
+      previousNote: "string",
+      newNote: "string",
+    },
+    message: (data) =>
+      `Ship updated: "${data.previousName}" → "${data.newName}" (acquisition source: ${data.previousAcquisitionSource ?? "none"} → ${data.newAcquisitionSource ?? "none"})`,
+  },
+
   [AuditEventType.VARIANT_CREATED]: {
     type: AuditEventType.VARIANT_CREATED,
     app: SystemLogApp.Fleet,
@@ -286,6 +317,28 @@ export const AuditEventDefinitions: {
     },
     message: (data) =>
       `Variant created: "${data.name}" (series: ${data.seriesId}, links: ${data.links.length}, wiki page: ${data.wikiPageId ?? "none"})`,
+  },
+
+  [AuditEventType.VARIANT_CREATED_V4]: {
+    type: AuditEventType.VARIANT_CREATED_V4,
+    app: SystemLogApp.Fleet,
+    data: {
+      variantId: "string",
+      seriesId: "string",
+      name: "string",
+      status: "FLIGHT_READY",
+      links: [
+        {
+          serviceName: "SPVIEWER",
+          url: "https://example.com",
+        },
+      ],
+      wikiPageId: "string",
+      storePriceUsdCents: 0,
+      inGamePriceAuec: 0,
+    },
+    message: (data) =>
+      `Variant created: "${data.name}" (series: ${data.seriesId}, links: ${data.links.length}, wiki page: ${data.wikiPageId ?? "none"}, store price: ${data.storePriceUsdCents ?? "none"} USD cents, in-game price: ${data.inGamePriceAuec ?? "none"} aUEC)`,
   },
 
   [AuditEventType.VARIANT_UPDATED]: {
@@ -357,6 +410,39 @@ export const AuditEventDefinitions: {
     },
     message: (data) =>
       `Variant updated: "${data.previousName}" → "${data.newName}" (links: ${data.previousLinks.length} → ${data.newLinks.length}, wiki page: ${data.previousWikiPageId ?? "none"} → ${data.newWikiPageId ?? "none"})`,
+  },
+
+  [AuditEventType.VARIANT_UPDATED_V4]: {
+    type: AuditEventType.VARIANT_UPDATED_V4,
+    app: SystemLogApp.Fleet,
+    data: {
+      variantId: "string",
+      seriesId: "string",
+      previousName: "string",
+      newName: "string",
+      previousStatus: "FLIGHT_READY",
+      newStatus: "NOT_FLIGHT_READY",
+      previousLinks: [
+        {
+          serviceName: "SPVIEWER",
+          url: "https://example.com",
+        },
+      ],
+      newLinks: [
+        {
+          serviceName: "SPVIEWER",
+          url: "https://example.com",
+        },
+      ],
+      previousWikiPageId: "string",
+      newWikiPageId: "string",
+      previousStorePriceUsdCents: 0,
+      newStorePriceUsdCents: 0,
+      previousInGamePriceAuec: 0,
+      newInGamePriceAuec: 0,
+    },
+    message: (data) =>
+      `Variant updated: "${data.previousName}" → "${data.newName}" (links: ${data.previousLinks.length} → ${data.newLinks.length}, wiki page: ${data.previousWikiPageId ?? "none"} → ${data.newWikiPageId ?? "none"}, store price: ${data.previousStorePriceUsdCents ?? "none"} → ${data.newStorePriceUsdCents ?? "none"} USD cents, in-game price: ${data.previousInGamePriceAuec ?? "none"} → ${data.newInGamePriceAuec ?? "none"} aUEC)`,
   },
 
   [AuditEventType.VARIANT_DELETED]: {
@@ -2661,6 +2747,22 @@ export const AuditEventDefinitions: {
     },
     message: (data) =>
       `Counted ${data.count} system log entries through the MCP server on ${data.date}`,
+  },
+
+  [AuditEventType.FLEET_VALUE_MEASURED]: {
+    type: AuditEventType.FLEET_VALUE_MEASURED,
+    app: SystemLogApp.Statistics,
+    data: {
+      date: "string",
+      storeValueUsdCents: 0,
+      inGameValueUsdCents: 0,
+      unknownValueUsdCents: 0,
+      storeValueAuec: 0,
+      inGameValueAuec: 0,
+      unknownValueAuec: 0,
+    },
+    message: (data) =>
+      `Saved the fleet value statistic of ${data.date} (USD cents: store ${data.storeValueUsdCents}, in-game ${data.inGameValueUsdCents}, unknown ${data.unknownValueUsdCents}; aUEC: store ${data.storeValueAuec}, in-game ${data.inGameValueAuec}, unknown ${data.unknownValueAuec})`,
   },
 
   [AuditEventType.APP_FAVORITE_ADDED]: {
