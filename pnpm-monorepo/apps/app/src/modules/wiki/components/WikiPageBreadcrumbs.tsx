@@ -24,7 +24,7 @@ export const WikiPageBreadcrumbs = ({ hrefMode, ancestors }: Props) => {
   if (ancestors.length === 0) return null;
 
   return (
-    <nav aria-label="Übergeordnete Seiten" className="mb-2 text-sm">
+    <nav aria-label="Übergeordnete Seiten" className="mb-2 text-xs">
       <ol className="flex flex-wrap items-center gap-x-2 gap-y-1">
         {ancestors.map((ancestor, index) => (
           <WikiPageBreadcrumb
@@ -54,7 +54,7 @@ const WikiPageBreadcrumb = ({
     <li className="flex items-center gap-2">
       {!isFirst && (
         <FaChevronRight
-          className="flex-none text-[0.625rem] text-neutral-600"
+          className="flex-none text-[0.5rem] text-neutral-600"
           aria-hidden
         />
       )}
@@ -63,7 +63,9 @@ const WikiPageBreadcrumb = ({
         href={href}
         className="inline-flex items-center gap-1.5 text-neutral-400 hover:text-interaction-500 focus-visible:text-interaction-500 active:text-interaction-300"
       >
-        {ancestor.iconId && <WikiPageIcon iconId={ancestor.iconId} />}
+        {ancestor.iconId && (
+          <WikiPageIcon iconId={ancestor.iconId} className="size-3" size={12} />
+        )}
         {ancestor.title}
       </Link>
     </li>
