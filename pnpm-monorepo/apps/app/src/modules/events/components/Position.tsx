@@ -276,20 +276,7 @@ export const Position = ({
           </div>
 
           {((supportsStaffing && showActions) || showManage) && (
-            <div className="flex flex-row-reverse justify-between border-t border-white/10 p-2">
-              {supportsStaffing && (
-                <div className="justify-self-end">
-                  <ToggleEventPositionApplicationForCurrentUser
-                    position={position}
-                    hasCurrentUserAlreadyApplied={hasCurrentUserAlreadyApplied}
-                    doesCurrentUserSatisfyRequirements={
-                      doesCurrentUserSatisfyRequirements
-                    }
-                    showDiscordWarning={!isCurrentUserEventCitizen}
-                  />
-                </div>
-              )}
-
+            <div className="flex border-t border-white/10 p-2">
               {showManage && (
                 <div className="flex items-center justify-center gap-2">
                   {groupLevel < LINEUP_MAX_DEPTH && (
@@ -321,6 +308,19 @@ export const Position = ({
                   <DeleteEventPosition
                     position={position}
                     className="flex-none"
+                  />
+                </div>
+              )}
+
+              {supportsStaffing && (
+                <div className="ml-auto">
+                  <ToggleEventPositionApplicationForCurrentUser
+                    position={position}
+                    hasCurrentUserAlreadyApplied={hasCurrentUserAlreadyApplied}
+                    doesCurrentUserSatisfyRequirements={
+                      doesCurrentUserSatisfyRequirements
+                    }
+                    showDiscordWarning={!isCurrentUserEventCitizen}
                   />
                 </div>
               )}
