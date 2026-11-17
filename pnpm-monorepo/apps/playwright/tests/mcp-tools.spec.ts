@@ -510,7 +510,12 @@ test.describe("the read tools of the MCP server", () => {
     );
     const key = "2026-10-18-mcp-server";
 
-    const list = (await callForContent(client, "list_changelog_entries")) as {
+    // The quarter of the entry and the maximum page size: without them, the
+    // newer entries push the entry to the next page
+    const list = (await callForContent(client, "list_changelog_entries", {
+      quarter: "2026-q4",
+      limit: 100,
+    })) as {
       entries: { key: string; title: string; markdown: string }[];
     };
     const entry = list.entries.find((candidate) => candidate.key === key);
