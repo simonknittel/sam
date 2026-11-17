@@ -1,4 +1,5 @@
 import {
+  collectVisibleWikiPageAncestors,
   getAccessibleWikiPage,
   WikiPageAccessTier,
 } from "@sam-monorepo/application";
@@ -34,6 +35,7 @@ export const VariantWikiPageContent = async ({ variantId, pageId }: Props) => {
       context={context.globalContext}
       page={page}
       permissions={permissions}
+      ancestors={collectVisibleWikiPageAncestors(context, page)}
       hrefMode={context.hrefMode}
       staticContent={staticContent}
     />

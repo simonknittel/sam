@@ -16,7 +16,11 @@ import {
 import type { ReactNode } from "react";
 import { FaExternalLinkAlt, FaHistory } from "react-icons/fa";
 import { renameWikiPage } from "../actions/renameWikiPage";
-import type { WikiContext, WikiContextPage } from "../queries/getWikiContext";
+import type {
+  WikiContext,
+  WikiContextPage,
+  WikiSharedContextPage,
+} from "../queries/getWikiContext";
 import { getWikiFavoritePageIds } from "../queries/getWikiFavorites";
 import { getWikiPageOwner } from "../queries/getWikiPageOwner";
 import type { WikiPageStaticContent } from "../queries/getWikiPageStaticContent";
@@ -42,6 +46,7 @@ import { ReportWikiPageModal } from "./ReportWikiPageModal";
 import { TrackWikiPageVisit } from "./TrackWikiPageVisit";
 import { WikiEditModeProvider } from "./WikiEditModeProvider";
 import { WikiEditModeToggle } from "./WikiEditModeToggle";
+import { WikiPageBreadcrumbs } from "./WikiPageBreadcrumbs";
 import { WikiPageDetailsPopover } from "./WikiPageDetailsPopover";
 import { WikiPageEditorSection } from "./WikiPageEditorSection";
 import { WikiPageExportImportModal } from "./WikiPageExportImportModal";
@@ -58,6 +63,11 @@ interface Props {
   readonly context: WikiContext;
   readonly page: WikiContextPage;
   readonly permissions: ResolvedWikiPagePermissions;
+  /**
+   * The ancestors in the view scope (see `collectVisibleWikiPageAncestors()`):
+   * the context above is always global, but an embed stops at its root page
+   */
+  readonly ancestors: readonly WikiSharedContextPage[];
   /** The view scope the page renders under; the global wiki by default */
   readonly hrefMode?: WikiPageHrefMode;
   /**
@@ -81,6 +91,7 @@ export const WikiPageContent = async ({
   context,
   page,
   permissions,
+  ancestors,
   hrefMode = GLOBAL_WIKI_HREF_MODE,
   staticContent,
   headerExtra,
@@ -175,6 +186,8 @@ export const WikiPageContent = async ({
 
   const article = (
     <article className="rounded-primary bg-secondary p-4">
+      <WikiPageBreadcrumbs hrefMode={hrefMode} ancestors={ancestors} />
+
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold">

@@ -2,6 +2,7 @@ import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { EditableInput } from "@/modules/common/components/form/EditableInput";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
+import { collectVisibleWikiPageAncestors } from "@sam-monorepo/application";
 import { WikiPageEventScope } from "@sam-monorepo/database/browser";
 import {
   EventWikiScopeTier,
@@ -33,6 +34,7 @@ import { ReportWikiPageModal } from "./ReportWikiPageModal";
 import { TrackWikiPageVisit } from "./TrackWikiPageVisit";
 import { WikiEditModeProvider } from "./WikiEditModeProvider";
 import { WikiEditModeToggle } from "./WikiEditModeToggle";
+import { WikiPageBreadcrumbs } from "./WikiPageBreadcrumbs";
 import { WikiPageEditorSection } from "./WikiPageEditorSection";
 import { WikiPageExportImportModal } from "./WikiPageExportImportModal";
 import { WikiPageFavoriteButton } from "./WikiPageFavoriteButton";
@@ -110,6 +112,11 @@ export const EventWikiPageContent = async ({
 
   const article = (
     <article className="rounded-primary bg-secondary p-4">
+      <WikiPageBreadcrumbs
+        hrefMode={hrefMode}
+        ancestors={collectVisibleWikiPageAncestors(context, page)}
+      />
+
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold">
