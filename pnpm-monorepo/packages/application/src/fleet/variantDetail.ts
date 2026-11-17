@@ -16,6 +16,8 @@ const VARIANT_DETAIL_SELECT = {
   id: true,
   name: true,
   status: true,
+  storePriceUsdCents: true,
+  inGamePriceAuec: true,
   seriesId: true,
   series: {
     select: {

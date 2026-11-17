@@ -73,6 +73,8 @@ export const createVariant = (
               seriesId: series.id,
               name: input.name,
               status: input.status,
+              storePriceUsdCents: input.store_price_usd_cents,
+              inGamePriceAuec: input.in_game_price_auec,
               wikiPageId,
               tags: { connect: tagIds.map((id) => ({ id })) },
             },
@@ -96,7 +98,7 @@ export const createVariant = (
 
     await context.audit.create([
       {
-        type: AuditEventType.VARIANT_CREATED_V3,
+        type: AuditEventType.VARIANT_CREATED_V4,
         data: {
           variantId: variant.id,
           seriesId: variant.series.id,
@@ -104,6 +106,8 @@ export const createVariant = (
           status: variant.status,
           links: variant.externalLinks,
           wikiPageId: variant.wikiPageId,
+          storePriceUsdCents: variant.storePriceUsdCents,
+          inGamePriceAuec: variant.inGamePriceAuec,
         },
         createdById: actor.userId,
       },

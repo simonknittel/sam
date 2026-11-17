@@ -117,6 +117,8 @@ export const SHIP_VARIANT_SELECT = {
   id: true,
   name: true,
   status: true,
+  storePriceUsdCents: true,
+  inGamePriceAuec: true,
   series: {
     select: {
       id: true,
@@ -195,6 +197,13 @@ export interface ShipVariantOutput {
   readonly name: string;
   /** Null when nobody set the status of the variant */
   readonly status: ShipVariantStatus | null;
+  /**
+   * The current price of the variant in the Star Citizen store, in USD cents.
+   * Null when nobody entered a price.
+   */
+  readonly store_price_usd_cents: number | null;
+  /** The current price of the variant in the game, in aUEC */
+  readonly in_game_price_auec: number | null;
   readonly series: {
     readonly id: string;
     readonly name: string;
@@ -216,6 +225,8 @@ export const toShipVariantOutput = (
     id: variant.id,
     name: variant.name,
     status: variant.status && toShipVariantStatus(variant.status),
+    store_price_usd_cents: variant.storePriceUsdCents,
+    in_game_price_auec: variant.inGamePriceAuec,
     series: { id: variant.series.id, name: variant.series.name },
     manufacturer: {
       id: manufacturer.id,

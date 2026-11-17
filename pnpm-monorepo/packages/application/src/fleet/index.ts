@@ -71,11 +71,14 @@ export {
   type ShipManufacturerOutput,
 } from "./listShipManufacturers.js";
 export {
+  measureFleetValue,
+  type MeasureFleetValueOutput,
+} from "./measureFleetValue.js";
+export {
   ShipSort,
   type ListShipsOutput,
   type ShipOutput,
 } from "./ownerShips.js";
-export { renameShip, renameShipInputSchema } from "./renameShip.js";
 export {
   canSearchShipVariants,
   searchShipVariants,
@@ -86,6 +89,14 @@ export {
   sendDueFleetUpdateReminder,
   type SendDueFleetUpdateReminderInput,
 } from "./sendDueFleetUpdateReminder.js";
+export {
+  AcquisitionSource,
+  AcquisitionSourceFilter,
+  toAcquisitionSource,
+  toShipAcquisitionSource,
+  type AcquisitionSourceValues,
+  type FleetValueOutput,
+} from "./shipAcquisitionSource.js";
 export {
   ShipChangeFilter,
   ShipChangeType,
@@ -108,6 +119,7 @@ export {
   updateManufacturerInputSchema,
 } from "./updateManufacturer.js";
 export { updateSeries, updateSeriesInputSchema } from "./updateSeries.js";
+export { updateShip, updateShipInputSchema } from "./updateShip.js";
 export { updateVariant, updateVariantInputSchema } from "./updateVariant.js";
 export {
   canLinkVariantWikiPage,

@@ -107,6 +107,8 @@ const SERIES_VARIANT_ROW_SELECT = {
   id: true,
   name: true,
   status: true,
+  storePriceUsdCents: true,
+  inGamePriceAuec: true,
   tags: { select: VARIANT_TAG_SELECT },
   externalLinks: { select: VARIANT_EXTERNAL_LINK_SELECT },
   _count: { select: { ships: { where: ACTIVE_OWNER_SHIP_WHERE } } },
@@ -140,6 +142,8 @@ const MANAGED_VARIANT_SELECT = {
   name: true,
   seriesId: true,
   status: true,
+  storePriceUsdCents: true,
+  inGamePriceAuec: true,
   wikiPageId: true,
   externalLinks: { select: VARIANT_EXTERNAL_LINK_SELECT },
 } as const satisfies Prisma.VariantSelect;

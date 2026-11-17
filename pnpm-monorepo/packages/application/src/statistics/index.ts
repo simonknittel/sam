@@ -1,5 +1,6 @@
 export {
   findCitizenCreationRows,
+  findDailyFleetValueRows,
   findDailyLoginCountRows,
   findDailyMcpUsageCountRows,
   findEventStartTimes,
@@ -9,6 +10,7 @@ export {
   findTotalShipCountRows,
   findUserRegistrationRows,
   findVariantShipCountRows,
+  type DailyFleetValueRow,
   type DailyLoginCountRow,
   type DailyMcpUsageCountRow,
   type PositiveSilcTransactionRow,

@@ -54,6 +54,8 @@ export const updateVariant = (
       select: {
         name: true,
         status: true,
+        storePriceUsdCents: true,
+        inGamePriceAuec: true,
         wikiPageId: true,
         externalLinks: { select: { serviceName: true, url: true } },
       },
@@ -87,6 +89,8 @@ export const updateVariant = (
                 data: {
                   name: input.name,
                   status: input.status,
+                  storePriceUsdCents: input.store_price_usd_cents,
+                  inGamePriceAuec: input.in_game_price_auec,
                   wikiPageId,
                   tags: tagIds && { set: tagIds.map((id) => ({ id })) },
                 },
@@ -113,7 +117,7 @@ export const updateVariant = (
 
     await context.audit.create([
       {
-        type: AuditEventType.VARIANT_UPDATED_V3,
+        type: AuditEventType.VARIANT_UPDATED_V4,
         data: {
           variantId: variant.id,
           seriesId: variant.series.id,
@@ -125,6 +129,10 @@ export const updateVariant = (
           newLinks: variant.externalLinks,
           previousWikiPageId: existingVariant.wikiPageId,
           newWikiPageId: variant.wikiPageId,
+          previousStorePriceUsdCents: existingVariant.storePriceUsdCents,
+          newStorePriceUsdCents: variant.storePriceUsdCents,
+          previousInGamePriceAuec: existingVariant.inGamePriceAuec,
+          newInGamePriceAuec: variant.inGamePriceAuec,
         },
         createdById: actor.userId,
       },
