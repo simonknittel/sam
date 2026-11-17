@@ -36,22 +36,28 @@ const WikiVariantLinkNodeView = ({ node, extension }: NodeViewProps) => {
   });
 
   const fetched = isMissing
-    ? data?.find((variant) => variant.id === variantId)
+    ? data?.variants.find((variant) => variant.id === variantId)
+    : undefined;
+  const fetchedManufacturer = fetched
+    ? data?.manufacturers.find(
+        (manufacturer) => manufacturer.id === fetched.manufacturerId,
+      )
     : undefined;
 
-  const resolved = fetched
-    ? {
-        variantId,
-        name: fetched.name,
-        manufacturerName: fetched.manufacturerName,
-        logo: fetched.manufacturerImage
-          ? {
-              src: getWikiImageUrl(fetched.manufacturerImage.id),
-              mimeType: fetched.manufacturerImage.mimeType,
-            }
-          : null,
-      }
-    : resolveWikiVariantLink(variants, node.attrs);
+  const resolved =
+    fetched && fetchedManufacturer
+      ? {
+          variantId,
+          name: fetched.name,
+          manufacturerName: fetchedManufacturer.name,
+          logo: fetchedManufacturer.image
+            ? {
+                src: getWikiImageUrl(fetchedManufacturer.image.id),
+                mimeType: fetchedManufacturer.image.mimeType,
+              }
+            : null,
+        }
+      : resolveWikiVariantLink(variants, node.attrs);
 
   return (
     <NodeViewWrapper as="span">

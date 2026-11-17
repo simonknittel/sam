@@ -3,7 +3,7 @@ import { AccordeonToggle } from "@/modules/common/components/Accordeon";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { EditableInput } from "@/modules/common/components/form/EditableInput";
 import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
-import type { VariantCatalogManufacturer } from "@/modules/fleet/queries/getVariantCatalog";
+import type { VariantCatalog } from "@/modules/fleet/queries/getVariantCatalog";
 import type {
   EventLineupCitizen,
   EventPositionTreeRow,
@@ -46,7 +46,7 @@ interface Props {
   readonly className?: string;
   readonly position: PositionType;
   readonly showManage?: boolean;
-  readonly variants: readonly VariantCatalogManufacturer[];
+  readonly variantCatalog: VariantCatalog;
   readonly myShips: readonly Pick<Ship, "variantId">[];
   readonly myRoleIds: readonly string[];
   readonly allEventCitizens: EventLineupCitizen[];
@@ -59,7 +59,7 @@ export const Position = ({
   className,
   position,
   showManage,
-  variants,
+  variantCatalog,
   myShips,
   myRoleIds,
   allEventCitizens,
@@ -296,7 +296,7 @@ export const Position = ({
                     <CreateOrUpdateEventPosition
                       container={container}
                       parentPositionId={position.id}
-                      variants={variants}
+                      variantCatalog={variantCatalog}
                       className="flex-none"
                     />
                   )}
@@ -315,7 +315,7 @@ export const Position = ({
                   />
                   <CreateOrUpdateEventPosition
                     position={position}
-                    variants={variants}
+                    variantCatalog={variantCatalog}
                     className="flex-none"
                   />
                   <DeleteEventPosition
@@ -345,7 +345,7 @@ export const Position = ({
               key={position.id}
               position={position}
               showManage={showManage}
-              variants={variants}
+              variantCatalog={variantCatalog}
               myShips={myShips}
               myRoleIds={myRoleIds}
               allEventCitizens={allEventCitizens}

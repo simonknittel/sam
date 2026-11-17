@@ -5,7 +5,7 @@ import {
   updateEventLineupOrder,
   type MappedPosition,
 } from "@/modules/events/actions/updateEventLineupOrder";
-import type { VariantCatalogManufacturer } from "@/modules/fleet/queries/getVariantCatalog";
+import type { VariantCatalog } from "@/modules/fleet/queries/getVariantCatalog";
 import type { EventLineupCitizen } from "@sam-monorepo/application";
 import type { Ship } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
@@ -46,7 +46,7 @@ interface Props {
   readonly container: EventContainer;
   readonly positions: PositionType[];
   readonly showManage?: boolean;
-  readonly variants: readonly VariantCatalogManufacturer[];
+  readonly variantCatalog: VariantCatalog;
   readonly myShips: readonly Pick<Ship, "variantId">[];
   /** The roles of the signed-in citizen that the lineup requires */
   readonly myRoleIds: readonly string[];
@@ -59,7 +59,7 @@ export const LineupOrderProvider = ({
   container,
   positions,
   showManage,
-  variants,
+  variantCatalog,
   myShips,
   myRoleIds,
   allEventCitizens,
@@ -208,7 +208,7 @@ export const LineupOrderProvider = ({
             key={position.id}
             position={position}
             showManage={showManage}
-            variants={variants}
+            variantCatalog={variantCatalog}
             myShips={myShips}
             myRoleIds={myRoleIds}
             allEventCitizens={allEventCitizens}

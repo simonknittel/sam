@@ -4,7 +4,7 @@ import { CreateOrUpdateEventPosition } from "@/modules/events/components/CreateO
 import type { PositionType } from "@/modules/events/components/Position";
 import { PositionSkeleton } from "@/modules/events/components/PositionSkeleton";
 import { toTemplateContainer } from "@/modules/events/utils/eventContainer";
-import type { VariantCatalogManufacturer } from "@/modules/fleet/queries/getVariantCatalog";
+import type { VariantCatalog } from "@/modules/fleet/queries/getVariantCatalog";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
 
@@ -21,7 +21,7 @@ interface Props {
   readonly templateId: string;
   readonly positions: PositionType[];
   readonly canEdit: boolean;
-  readonly variants: readonly VariantCatalogManufacturer[];
+  readonly variantCatalog: VariantCatalog;
 }
 
 /**
@@ -35,7 +35,7 @@ export const EventTemplateLineupTab = ({
   templateId,
   positions,
   canEdit,
-  variants,
+  variantCatalog,
 }: Props) => {
   const container = toTemplateContainer(templateId);
 
@@ -47,7 +47,7 @@ export const EventTemplateLineupTab = ({
         {canEdit && (
           <CreateOrUpdateEventPosition
             container={container}
-            variants={variants}
+            variantCatalog={variantCatalog}
           />
         )}
       </div>
@@ -57,7 +57,7 @@ export const EventTemplateLineupTab = ({
           container={container}
           positions={positions}
           canManagePositions={canEdit}
-          variants={variants}
+          variantCatalog={variantCatalog}
           myShips={[]}
           myRoleIds={[]}
           allEventCitizens={[]}

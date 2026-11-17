@@ -3,43 +3,23 @@
 import { runAction } from "@/modules/actions/utils/runAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
-import { Button2, Button2Variant } from "@/modules/common/components/Button2";
+import { Button2 } from "@/modules/common/components/Button2";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
 import Modal from "@/modules/common/components/Modal";
 import { Tooltip } from "@/modules/common/components/Tooltip";
-import type {
-  VariantCatalogManufacturer,
-  VariantCatalogVariant,
-} from "@/modules/fleet/queries/getVariantCatalog";
+import type { VariantCatalog } from "@/modules/fleet/queries/getVariantCatalog";
 import { RolePicker } from "@/modules/roles/components/RolePicker/RolePicker";
 import { useRolesContext } from "@/modules/roles/components/RolesContext";
-import {
-  EventPositionRoleMatch,
-  type Variant,
-} from "@sam-monorepo/database/browser";
+import { EventPositionRoleMatch } from "@sam-monorepo/database/browser";
 import {
   MAXIMUM_POSITION_DESCRIPTION_LENGTH,
   MAXIMUM_POSITION_NAME_LENGTH,
 } from "@sam-monorepo/domain";
 import clsx from "clsx";
-import {
-  useId,
-  useRef,
-  useState,
-  useTransition,
-  type ChangeEvent,
-} from "react";
-import {
-  FaChevronDown,
-  FaChevronUp,
-  FaInfoCircle,
-  FaPen,
-  FaPlus,
-  FaSave,
-  FaTrash,
-} from "react-icons/fa";
+import { useId, useRef, useState, useTransition } from "react";
+import { FaPen, FaPlus, FaSave } from "react-icons/fa";
 import { createEventPosition } from "../actions/createEventPosition";
 import { updateEventPosition } from "../actions/updateEventPosition";
 import {
@@ -48,13 +28,14 @@ import {
 } from "../utils/eventContainer";
 import type { PositionType } from "./Position";
 import { getRoleMatchLabel, RequiredRoleBadges } from "./PositionRequiredRoles";
+import { RequiredVariants } from "./RequiredVariants";
 
 const ADD_LABEL = "Posten hinzufügen";
 const EDIT_LABEL = "Posten bearbeiten";
 
 interface BaseProps {
   readonly className?: string;
-  readonly variants: readonly VariantCatalogManufacturer[];
+  readonly variantCatalog: VariantCatalog;
 }
 
 interface CreateProps {
@@ -218,7 +199,7 @@ export const CreateOrUpdateEventPosition = (props: Props) => {
           />
 
           <RequiredVariants
-            variants={props.variants}
+            catalog={props.variantCatalog}
             defaultValue={
               "position" in props
                 ? props.position.requiredVariants.map(
@@ -274,172 +255,6 @@ export const CreateOrUpdateEventPosition = (props: Props) => {
           </div>
         </form>
       </Modal>
-    </>
-  );
-};
-
-interface RequiredVariantsProps {
-  readonly className?: string;
-  readonly variants: readonly VariantCatalogManufacturer[];
-  readonly defaultValue?: Variant["id"][];
-}
-
-const RequiredVariants = ({
-  className,
-  variants,
-  defaultValue,
-}: RequiredVariantsProps) => {
-  const [items, setItems] = useState<Variant["id"][]>(defaultValue || []);
-
-  const variantOptions: {
-    manufacturer: VariantCatalogManufacturer;
-    variants: VariantCatalogVariant[];
-  }[] = variants
-    .toSorted((a, b) => a.name.localeCompare(b.name))
-    .map((manufacturer) => {
-      return {
-        manufacturer,
-        variants: manufacturer.series
-          .toSorted((a, b) => a.name.localeCompare(b.name))
-          .map((series) =>
-            series.variants.toSorted((a, b) => a.name.localeCompare(b.name)),
-          )
-          .flat(),
-      };
-    });
-
-  const handleCreate = () => {
-    setItems((previous) => [...previous, "-"]);
-  };
-
-  const handleChange = (
-    event: ChangeEvent<HTMLSelectElement>,
-    index: number,
-  ) => {
-    setItems((previous) => previous.with(index, event.target.value));
-  };
-
-  const handleDelete = (index: number) => {
-    setItems((previous) => previous.toSpliced(index, 1));
-  };
-
-  /**
-   * The first item cannot move up and the last item cannot move down (the
-   * buttons are disabled), thus the other index is always in the list.
-   */
-  const handleMoveUp = (index: number) => {
-    setItems((previous) =>
-      previous
-        .with(index, previous[index - 1])
-        .with(index - 1, previous[index]),
-    );
-  };
-  const handleMoveDown = (index: number) => {
-    setItems((previous) =>
-      previous
-        .with(index, previous[index + 1])
-        .with(index + 1, previous[index]),
-    );
-  };
-
-  return (
-    <>
-      <label className={clsx("flex items-center gap-2", className)}>
-        Erforderliches Schiff (optional)
-        <Tooltip triggerChildren={<FaInfoCircle />}>
-          Für ein Multicrew-Schiff sollte das erforderliche Schiff nur bei einem
-          Posten angegeben werden, bspw. für den Piloten.
-          <br />
-          <br />
-          Bei den übrigen Posten, bspw. Turmschütze, sollte kein Schiff
-          angegeben werden.
-        </Tooltip>
-      </label>
-
-      {items.map((item, index) => (
-        <div key={item} className="mt-2 flex gap-2">
-          <div className="flex flex-col justify-center">
-            <Button
-              variant="tertiary"
-              onClick={() => handleMoveUp(index)}
-              type="button"
-              title="Hoch verschieben"
-              className="h-auto p-1 disabled:grayscale"
-              disabled={index === 0}
-            >
-              <FaChevronUp />
-            </Button>
-
-            <Button
-              variant="tertiary"
-              onClick={() => handleMoveDown(index)}
-              type="button"
-              title="Runter verschieben"
-              className="h-auto p-1 disabled:grayscale"
-              disabled={index === items.length - 1}
-            >
-              <FaChevronDown />
-            </Button>
-          </div>
-
-          <select
-            aria-label="Benötigtes Schiff"
-            className="w-full rounded-secondary bg-neutral-900 p-2"
-            defaultValue={item}
-            onChange={(e) => handleChange(e, index)}
-          >
-            <option value="-" disabled>
-              -
-            </option>
-
-            {variantOptions.map((option) => (
-              <optgroup
-                key={option.manufacturer.id}
-                label={option.manufacturer.name}
-              >
-                {option.variants.map((variant) => (
-                  <option
-                    key={variant.id}
-                    value={variant.id}
-                    disabled={items.includes(variant.id)}
-                  >
-                    {variant.name}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-
-          <Button
-            variant="tertiary"
-            onClick={() => handleDelete(index)}
-            type="button"
-            title="Löschen"
-            className="h-auto px-1"
-          >
-            <FaTrash />
-          </Button>
-        </div>
-      ))}
-
-      <Button2
-        onClick={handleCreate}
-        type="button"
-        variant={Button2Variant.Secondary}
-        className={clsx("mt-2", {
-          "pointer-events-none grayscale": items.some((item) => item === "-"),
-        })}
-        disabled={items.some((item) => item === "-")}
-      >
-        <FaPlus />
-        {items.length > 0 ? "Alternative hinzufügen" : "Hinzufügen"}
-      </Button2>
-
-      {items
-        .filter((item) => item !== "-")
-        .map((item) => (
-          <input type="hidden" name="variantId[]" value={item} key={item} />
-        ))}
     </>
   );
 };

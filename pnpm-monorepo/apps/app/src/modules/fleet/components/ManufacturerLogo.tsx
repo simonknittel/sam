@@ -15,7 +15,7 @@ interface Props {
   /** See VariantWithLogo's `logo` */
   readonly logo?: { readonly src: string; readonly mimeType: string } | null;
   /** See VariantWithLogo's `size` */
-  readonly size: 32 | 48 | 80 | "inline";
+  readonly size: 24 | 32 | 48 | 80 | "inline";
 }
 
 export const ManufacturerLogo = ({ manufacturer, logo, size }: Props) => {
@@ -39,6 +39,7 @@ export const ManufacturerLogo = ({ manufacturer, logo, size }: Props) => {
             ? "mr-1 inline-block h-[1em] w-[3em] align-[-0.15em]"
             : "block flex-none",
           {
+            "size-6": size === 24,
             "size-8": size === 32,
             "size-12": size === 48,
             "size-20": size === 80,
@@ -61,6 +62,7 @@ export const ManufacturerLogo = ({ manufacturer, logo, size }: Props) => {
             "mr-1 inline-block h-[1em] w-[3em] align-[-0.15em]"
           : "flex-none",
         {
+          "size-6": size === 24,
           "size-8": size === 32,
           "size-12": size === 48,
           "size-20": size === 80,
