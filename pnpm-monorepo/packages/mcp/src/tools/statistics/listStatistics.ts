@@ -18,7 +18,7 @@ export const listStatisticsTool = defineTool({
   name: "list_statistics",
   group: ToolGroup.Statistics,
   title: "List the statistics",
-  description: `Gives the statistics of the app Statistiken, with the same numbers as its dashboard: the key, the German title of the chart, the description, the unit, the kind of value, whether it has more than one series and which ids select its series. Also gives the first and the last day of the statistics. Use it before get_statistic to find the key. A day is a calendar day in ${ORGANIZATION_TIMEZONE}, and the last day is yesterday. The role statistic holds only the roles that the user can see.`,
+  description: `Gives the statistics of the dashboard of the app Statistiken: the key, the German title of the chart, the description, the unit, the kind of value, whether it has more than one series and which ids select its series. Also gives the first and the last day of the statistics. Use it before get_statistic to find the key. A day is a calendar day in ${ORGANIZATION_TIMEZONE}, and the last day is yesterday. The role statistic holds only the roles that the user can see.`,
   annotations: READ_ONLY_TOOL_ANNOTATIONS,
   readAuditEventType: AuditEventType.STATISTICS_LISTED,
   inputSchema: listStatisticsInputSchema,
