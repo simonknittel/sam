@@ -9,4 +9,3 @@ providers:
     allowUiUpdates: false
     options:
       path: /etc/grafana/dashboards
-      foldersFromFilesStructure: false

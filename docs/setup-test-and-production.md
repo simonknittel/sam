@@ -115,9 +115,19 @@ the page shows a note. A Grafana that shows the dashboard must have:
    this environment: `ALTER ROLE sam_statistics_grafana PASSWORD '<password>'`.
    Each viewer can send any SQL to the data source. The role can only read
    the views of the schema `statistics`. The file also removes rights that
-   PostgreSQL gives to PUBLIC (advisory locks, large objects, temporary
-   tables) and gives them to the role of the app. A different role that
-   needs them needs its own `GRANT`.
+   PostgreSQL gives to PUBLIC (advisory locks, WAL messages, large objects,
+   temporary tables) and gives them to the role of the app. A different role
+   that needs them needs its own `GRANT`.
+   - A viewer can change the role defaults and the password of the role.
+     Therefore, run the file again at each deploy, and set the password
+     again. The file removes the role defaults that a viewer changed.
+   - Let the role log in only from the network of the Grafana: a
+     `pg_hba.conf` rule with the address range of that network. A changed
+     password is then useless outside this network.
+   - PostgreSQL has no memory limit for each role. Therefore, one query of a
+     viewer can make a backend allocate much memory. Isolate the data source
+     (a separate PostgreSQL), limit the memory of a backend, or accept the
+     risk.
 3. A PostgreSQL data source with the UID `sam-statistics-postgres` that
    logs in with this role and that a user cannot edit (example:
    [grafana/provisioning/datasources/statistics.yaml](../grafana/provisioning/datasources/statistics.yaml)).

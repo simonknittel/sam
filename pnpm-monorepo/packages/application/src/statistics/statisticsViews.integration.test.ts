@@ -588,12 +588,12 @@ describe("the reader role", () => {
       WHERE pronamespace = 'pg_catalog'::regnamespace
         AND (
           proname LIKE '%advisory%'
-          OR proname IN ('lo_creat', 'lo_create', 'lo_from_bytea', 'lo_put', 'lowrite', 'lo_truncate', 'lo_truncate64')
+          OR proname IN ('lo_creat', 'lo_create', 'lo_from_bytea', 'lo_put', 'lowrite', 'lo_truncate', 'lo_truncate64', 'pg_logical_emit_message')
         )
     `;
 
   /** All signatures of PostgreSQL 18, see the file */
-  const REVOKED_FUNCTION_COUNT = 28;
+  const REVOKED_FUNCTION_COUNT = 30;
 
   test("reads each view", async () => {
     const views = await prisma.$queryRaw<{ name: string }[]>`
@@ -655,7 +655,7 @@ describe("the reader role", () => {
     ).toEqual(["false"]);
   });
 
-  test("cannot hold an advisory lock, make a large object or a temporary table", async () => {
+  test("cannot hold an advisory lock, write a WAL message, make a large object or a temporary table", async () => {
     for (const lock of [
       // The lock of the SILC ledger (lockSilcLedger)
       "pg_advisory_lock(hashtext('SilcLedger'))",
@@ -665,6 +665,16 @@ describe("the reader role", () => {
     ])
       await expect(queryAsReader(`SELECT ${lock}::text`)).rejects.toThrow(
         /permission denied for function pg_(try_)?advisory_(xact_)?lock/,
+      );
+    // Without the revoke, both signatures write WAL also in a read-only
+    // transaction
+    for (const message of ["'message'", "'\\x01'::bytea"])
+      await expect(
+        queryAsReader(
+          `SELECT pg_logical_emit_message(false, 'prefix', ${message})::text`,
+        ),
+      ).rejects.toThrow(
+        /permission denied for function pg_logical_emit_message/,
       );
     await expect(
       executeAsReader(
@@ -697,6 +707,38 @@ describe("the reader role", () => {
     );
   }, 20_000);
 
+  test("removes the role defaults that a viewer changed, also the defaults for one database", async () => {
+    const [database] = await prisma.$queryRaw<{ name: string }[]>`
+      SELECT quote_ident(current_database()) AS "name"
+    `;
+    await executeAsReader(
+      `BEGIN READ WRITE; ALTER ROLE CURRENT_USER SET statement_timeout = 0; ALTER ROLE CURRENT_USER SET work_mem = '1GB'; ALTER ROLE CURRENT_USER IN DATABASE ${database!.name} SET default_transaction_read_only = off; COMMIT`,
+    );
+    expect(await queryAsReader("SHOW default_transaction_read_only")).toEqual([
+      "off",
+    ]);
+
+    await executeSqlFile(readerRoleFile);
+
+    expect(
+      await prisma.$queryRaw`
+        SELECT setdatabase::integer AS "database", setconfig AS "settings"
+        FROM pg_catalog.pg_db_role_setting
+        WHERE setrole = 'sam_statistics_grafana'::regrole
+      `,
+    ).toEqual([
+      {
+        database: 0,
+        settings: [
+          "statement_timeout=5s",
+          "default_transaction_read_only=on",
+          "idle_in_transaction_session_timeout=10s",
+          "temp_file_limit=100MB",
+        ],
+      },
+    ]);
+  });
+
   test("refuses to run when the role can make objects in the schema public", async () => {
     await prisma.$executeRawUnsafe("GRANT CREATE ON SCHEMA public TO PUBLIC");
 
@@ -707,6 +749,27 @@ describe("the reader role", () => {
     } finally {
       await prisma.$executeRawUnsafe(
         "REVOKE CREATE ON SCHEMA public FROM PUBLIC",
+      );
+    }
+  });
+
+  /**
+   * A later version of PostgreSQL can add a signature that the file does not
+   * revoke. The test makes such a signature: PUBLIC gets EXECUTE on each new
+   * function.
+   */
+  test("refuses to run when PUBLIC can execute a signature that the file does not revoke", async () => {
+    await prisma.$executeRawUnsafe(
+      "CREATE FUNCTION pg_catalog.pg_advisory_lock(text) RETURNS void LANGUAGE sql AS 'SELECT'",
+    );
+
+    try {
+      await expect(executeSqlFile(readerRoleFile)).rejects.toThrow(
+        /PUBLIC can execute these functions of pg_catalog: pg_advisory_lock\(text\)/,
+      );
+    } finally {
+      await prisma.$executeRawUnsafe(
+        "DROP FUNCTION pg_catalog.pg_advisory_lock(text)",
       );
     }
   });
