@@ -375,38 +375,7 @@
           },
           "unit": "locale"
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Veränderung zur Vorperiode"
-            },
-            "properties": [
-              {
-                "id": "custom.axisPlacement",
-                "value": "right"
-              },
-              {
-                "id": "custom.axisLabel",
-                "value": "Δ Vorperiode"
-              },
-              {
-                "id": "custom.lineWidth",
-                "value": 1
-              },
-              {
-                "id": "custom.lineStyle",
-                "value": {
-                  "dash": [
-                    10,
-                    10
-                  ],
-                  "fill": "dash"
-                }
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 9,
@@ -436,7 +405,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "WITH resolution AS (\n  SELECT CASE\n    WHEN ${resolution:sqlstring} IN ('day', 'week', 'month', 'quarter', 'year') THEN ${resolution:sqlstring}\n    WHEN range_days <= 92 THEN 'day'\n    WHEN range_days <= 731 THEN 'week'\n    ELSE 'month'\n  END AS unit\n  FROM (\n    SELECT ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date - ($__timeFrom()::timestamptz AT TIME ZONE 'Europe/Berlin')::date AS range_days\n  ) AS time_range\n),\nperiod_values AS (\n  SELECT max(day) AS day, round(avg(value), 1) AS value\n  FROM (\n    SELECT date_trunc((SELECT unit FROM resolution), day::timestamp) AS period, day, login_count AS value\n    FROM statistics.daily_login_counts\n    WHERE day <= ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date\n  ) AS daily_values\n  GROUP BY period\n)\nSELECT time, value AS \"Logins\", change AS \"Veränderung zur Vorperiode\"\nFROM (\n  SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, value, value - lag(value) OVER (ORDER BY day) AS change\n  FROM period_values\n) AS period_changes\nWHERE $__timeFilter(time)\nORDER BY time",
+          "rawSql": "WITH resolution AS (\n  SELECT CASE\n    WHEN ${resolution:sqlstring} IN ('day', 'week', 'month', 'quarter', 'year') THEN ${resolution:sqlstring}\n    WHEN range_days <= 92 THEN 'day'\n    WHEN range_days <= 731 THEN 'week'\n    ELSE 'month'\n  END AS unit\n  FROM (\n    SELECT ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date - ($__timeFrom()::timestamptz AT TIME ZONE 'Europe/Berlin')::date AS range_days\n  ) AS time_range\n),\nperiod_values AS (\n  SELECT max(day) AS day, round(avg(value), 1) AS value\n  FROM (\n    SELECT date_trunc((SELECT unit FROM resolution), day::timestamp) AS period, day, login_count AS value\n    FROM statistics.daily_login_counts\n    WHERE day <= ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date\n  ) AS daily_values\n  GROUP BY period\n)\nSELECT time, value AS \"Logins\"\nFROM (\n  SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, value\n  FROM period_values\n) AS period_points\nWHERE $__timeFilter(time)\nORDER BY time",
           "refId": "A"
         }
       ],
@@ -798,38 +767,7 @@
           },
           "unit": "locale"
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Veränderung zur Vorperiode"
-            },
-            "properties": [
-              {
-                "id": "custom.axisPlacement",
-                "value": "right"
-              },
-              {
-                "id": "custom.axisLabel",
-                "value": "Δ Vorperiode"
-              },
-              {
-                "id": "custom.lineWidth",
-                "value": 1
-              },
-              {
-                "id": "custom.lineStyle",
-                "value": {
-                  "dash": [
-                    10,
-                    10
-                  ],
-                  "fill": "dash"
-                }
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 9,
@@ -859,7 +797,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "WITH resolution AS (\n  SELECT CASE\n    WHEN ${resolution:sqlstring} IN ('day', 'week', 'month', 'quarter', 'year') THEN ${resolution:sqlstring}\n    WHEN range_days <= 92 THEN 'day'\n    WHEN range_days <= 731 THEN 'week'\n    ELSE 'month'\n  END AS unit\n  FROM (\n    SELECT ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date - ($__timeFrom()::timestamptz AT TIME ZONE 'Europe/Berlin')::date AS range_days\n  ) AS time_range\n),\nperiod_values AS (\n  SELECT max(day) AS day, round(avg(value), 1) AS value\n  FROM (\n    SELECT date_trunc((SELECT unit FROM resolution), day::timestamp) AS period, day, event_count AS value\n    FROM statistics.daily_event_counts\n    WHERE day <= ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date\n  ) AS daily_values\n  GROUP BY period\n)\nSELECT time, value AS \"Events\", change AS \"Veränderung zur Vorperiode\"\nFROM (\n  SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, value, value - lag(value) OVER (ORDER BY day) AS change\n  FROM period_values\n) AS period_changes\nWHERE $__timeFilter(time)\nORDER BY time",
+          "rawSql": "WITH resolution AS (\n  SELECT CASE\n    WHEN ${resolution:sqlstring} IN ('day', 'week', 'month', 'quarter', 'year') THEN ${resolution:sqlstring}\n    WHEN range_days <= 92 THEN 'day'\n    WHEN range_days <= 731 THEN 'week'\n    ELSE 'month'\n  END AS unit\n  FROM (\n    SELECT ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date - ($__timeFrom()::timestamptz AT TIME ZONE 'Europe/Berlin')::date AS range_days\n  ) AS time_range\n),\nperiod_values AS (\n  SELECT max(day) AS day, round(avg(value), 1) AS value\n  FROM (\n    SELECT date_trunc((SELECT unit FROM resolution), day::timestamp) AS period, day, event_count AS value\n    FROM statistics.daily_event_counts\n    WHERE day <= ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date\n  ) AS daily_values\n  GROUP BY period\n)\nSELECT time, value AS \"Events\"\nFROM (\n  SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, value\n  FROM period_values\n) AS period_points\nWHERE $__timeFilter(time)\nORDER BY time",
           "refId": "A"
         }
       ],
@@ -885,38 +823,7 @@
           },
           "unit": "locale"
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Veränderung zur Vorperiode"
-            },
-            "properties": [
-              {
-                "id": "custom.axisPlacement",
-                "value": "right"
-              },
-              {
-                "id": "custom.axisLabel",
-                "value": "Δ Vorperiode"
-              },
-              {
-                "id": "custom.lineWidth",
-                "value": 1
-              },
-              {
-                "id": "custom.lineStyle",
-                "value": {
-                  "dash": [
-                    10,
-                    10
-                  ],
-                  "fill": "dash"
-                }
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 9,
@@ -946,7 +853,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "WITH resolution AS (\n  SELECT CASE\n    WHEN ${resolution:sqlstring} IN ('day', 'week', 'month', 'quarter', 'year') THEN ${resolution:sqlstring}\n    WHEN range_days <= 92 THEN 'day'\n    WHEN range_days <= 731 THEN 'week'\n    ELSE 'month'\n  END AS unit\n  FROM (\n    SELECT ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date - ($__timeFrom()::timestamptz AT TIME ZONE 'Europe/Berlin')::date AS range_days\n  ) AS time_range\n),\nperiod_values AS (\n  SELECT max(day) AS day, round(avg(value), 1) AS value\n  FROM (\n    SELECT date_trunc((SELECT unit FROM resolution), day::timestamp) AS period, day, new_silc AS value\n    FROM statistics.daily_new_silc\n    WHERE day <= ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date\n  ) AS daily_values\n  GROUP BY period\n)\nSELECT time, value AS \"SILC\", change AS \"Veränderung zur Vorperiode\"\nFROM (\n  SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, value, value - lag(value) OVER (ORDER BY day) AS change\n  FROM period_values\n) AS period_changes\nWHERE $__timeFilter(time)\nORDER BY time",
+          "rawSql": "WITH resolution AS (\n  SELECT CASE\n    WHEN ${resolution:sqlstring} IN ('day', 'week', 'month', 'quarter', 'year') THEN ${resolution:sqlstring}\n    WHEN range_days <= 92 THEN 'day'\n    WHEN range_days <= 731 THEN 'week'\n    ELSE 'month'\n  END AS unit\n  FROM (\n    SELECT ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date - ($__timeFrom()::timestamptz AT TIME ZONE 'Europe/Berlin')::date AS range_days\n  ) AS time_range\n),\nperiod_values AS (\n  SELECT max(day) AS day, round(avg(value), 1) AS value\n  FROM (\n    SELECT date_trunc((SELECT unit FROM resolution), day::timestamp) AS period, day, new_silc AS value\n    FROM statistics.daily_new_silc\n    WHERE day <= ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date\n  ) AS daily_values\n  GROUP BY period\n)\nSELECT time, value AS \"SILC\"\nFROM (\n  SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, value\n  FROM period_values\n) AS period_points\nWHERE $__timeFilter(time)\nORDER BY time",
           "refId": "A"
         }
       ],
@@ -972,38 +879,7 @@
           },
           "unit": "locale"
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Veränderung zur Vorperiode"
-            },
-            "properties": [
-              {
-                "id": "custom.axisPlacement",
-                "value": "right"
-              },
-              {
-                "id": "custom.axisLabel",
-                "value": "Δ Vorperiode"
-              },
-              {
-                "id": "custom.lineWidth",
-                "value": 1
-              },
-              {
-                "id": "custom.lineStyle",
-                "value": {
-                  "dash": [
-                    10,
-                    10
-                  ],
-                  "fill": "dash"
-                }
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 9,
@@ -1033,7 +909,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "WITH resolution AS (\n  SELECT CASE\n    WHEN ${resolution:sqlstring} IN ('day', 'week', 'month', 'quarter', 'year') THEN ${resolution:sqlstring}\n    WHEN range_days <= 92 THEN 'day'\n    WHEN range_days <= 731 THEN 'week'\n    ELSE 'month'\n  END AS unit\n  FROM (\n    SELECT ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date - ($__timeFrom()::timestamptz AT TIME ZONE 'Europe/Berlin')::date AS range_days\n  ) AS time_range\n),\nperiod_values AS (\n  SELECT max(day) AS day, round(avg(value), 1) AS value\n  FROM (\n    SELECT date_trunc((SELECT unit FROM resolution), day::timestamp) AS period, day, audit_event_count AS value\n    FROM statistics.daily_mcp_usage_counts\n    WHERE day <= ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date\n  ) AS daily_values\n  GROUP BY period\n)\nSELECT time, value AS \"Einträge\", change AS \"Veränderung zur Vorperiode\"\nFROM (\n  SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, value, value - lag(value) OVER (ORDER BY day) AS change\n  FROM period_values\n) AS period_changes\nWHERE $__timeFilter(time)\nORDER BY time",
+          "rawSql": "WITH resolution AS (\n  SELECT CASE\n    WHEN ${resolution:sqlstring} IN ('day', 'week', 'month', 'quarter', 'year') THEN ${resolution:sqlstring}\n    WHEN range_days <= 92 THEN 'day'\n    WHEN range_days <= 731 THEN 'week'\n    ELSE 'month'\n  END AS unit\n  FROM (\n    SELECT ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date - ($__timeFrom()::timestamptz AT TIME ZONE 'Europe/Berlin')::date AS range_days\n  ) AS time_range\n),\nperiod_values AS (\n  SELECT max(day) AS day, round(avg(value), 1) AS value\n  FROM (\n    SELECT date_trunc((SELECT unit FROM resolution), day::timestamp) AS period, day, audit_event_count AS value\n    FROM statistics.daily_mcp_usage_counts\n    WHERE day <= ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date\n  ) AS daily_values\n  GROUP BY period\n)\nSELECT time, value AS \"Einträge\"\nFROM (\n  SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, value\n  FROM period_values\n) AS period_points\nWHERE $__timeFilter(time)\nORDER BY time",
           "refId": "A"
         }
       ],
