@@ -25,7 +25,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "sam-statistics-postgres"
       },
-      "description": "Gesamtanzahl eingetragener Schiffe",
+      "description": "Gesamtanzahl eingetragener Schiffe. Bei Woche oder Monat: Stand am Ende der Woche bzw. des Monats.",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -44,7 +44,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Veränderung zum Vortag"
+              "options": "Veränderung zur Vorperiode"
             },
             "properties": [
               {
@@ -53,7 +53,7 @@
               },
               {
                 "id": "custom.axisLabel",
-                "value": "Δ Vortag"
+                "value": "Δ Vorperiode"
               },
               {
                 "id": "custom.lineWidth",
@@ -101,7 +101,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT time, value AS \"Gesamt\", change AS \"Veränderung zum Vortag\"\nFROM (\n  SELECT time, value, value - lag(value) OVER (ORDER BY time) AS change\n  FROM (\n    SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, sum(ship_count) AS value\n    FROM statistics.daily_ship_counts GROUP BY day\n  ) AS daily_values\n) AS daily_changes\nWHERE $__timeFilter(time)\nORDER BY time",
+          "rawSql": "WITH resolution AS (\n  SELECT CASE\n    WHEN ${resolution:sqlstring} IN ('day', 'week', 'month') THEN ${resolution:sqlstring}\n    WHEN range_days <= 92 THEN 'day'\n    WHEN range_days <= 731 THEN 'week'\n    ELSE 'month'\n  END AS unit\n  FROM (\n    SELECT ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date - ($__timeFrom()::timestamptz AT TIME ZONE 'Europe/Berlin')::date AS range_days\n  ) AS time_range\n),\nperiod_values AS (\n  SELECT DISTINCT ON (period) day, value\n  FROM (\n    SELECT date_trunc((SELECT unit FROM resolution), day::timestamp) AS period, day, sum(ship_count) AS value\n    FROM statistics.daily_ship_counts\n    WHERE day <= ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date\n    GROUP BY day\n  ) AS daily_values\n  ORDER BY period, day DESC\n)\nSELECT time, value AS \"Gesamt\", change AS \"Veränderung zur Vorperiode\"\nFROM (\n  SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, value, value - lag(value) OVER (ORDER BY day) AS change\n  FROM period_values\n) AS period_changes\nWHERE $__timeFilter(time)\nORDER BY time",
           "refId": "A"
         }
       ],
@@ -113,7 +113,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "sam-statistics-postgres"
       },
-      "description": "Anzahl eingetragener Schiffe pro Variante",
+      "description": "Anzahl eingetragener Schiffe pro Variante. Bei Woche oder Monat: Stand am Ende der Woche bzw. des Monats.",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -158,7 +158,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH counts AS (\n  SELECT * FROM (\n    SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, variant_id AS id, variant_name AS name, ship_count AS value\n    FROM statistics.daily_ship_counts\n    WHERE variant_id IN (${variants:sqlstring})\n  ) AS daily_counts\n  WHERE $__timeFilter(time)\n),\nlast_values AS (\n  SELECT DISTINCT ON (id) id, name, value\n  FROM counts\n  ORDER BY id, time DESC\n),\nselection AS (\n  SELECT count(*) = (SELECT count(*) FROM statistics.ship_variants) AS is_all\n  FROM statistics.ship_variants\n  WHERE variant_id IN (${variants:sqlstring})\n),\ntop_series AS (\n  SELECT id, row_number() OVER (ORDER BY value DESC, name COLLATE \"und-x-icu\", id COLLATE \"und-x-icu\") AS position\n  FROM last_values\n  WHERE id IN (\n    SELECT id FROM counts GROUP BY id\n    HAVING max(value) > 0 OR NOT (SELECT is_all FROM selection)\n  )\n  ORDER BY position\n  LIMIT ${top:sqlstring}::integer\n)\nSELECT time, id, name, value\nFROM counts\nJOIN top_series USING (id)\nORDER BY position, time",
+          "rawSql": "WITH resolution AS (\n  SELECT CASE\n    WHEN ${resolution:sqlstring} IN ('day', 'week', 'month') THEN ${resolution:sqlstring}\n    WHEN range_days <= 92 THEN 'day'\n    WHEN range_days <= 731 THEN 'week'\n    ELSE 'month'\n  END AS unit\n  FROM (\n    SELECT ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date - ($__timeFrom()::timestamptz AT TIME ZONE 'Europe/Berlin')::date AS range_days\n  ) AS time_range\n),\ncounts AS (\n  SELECT * FROM (\n    SELECT DISTINCT ON (id, period) day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, id, name, value\n    FROM (\n      SELECT date_trunc((SELECT unit FROM resolution), day::timestamp) AS period, day, variant_id AS id, variant_name AS name, ship_count AS value\n      FROM statistics.daily_ship_counts\n      WHERE variant_id IN (${variants:sqlstring})\n        AND day <= ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date\n    ) AS daily_counts\n    ORDER BY id, period, day DESC\n  ) AS period_counts\n  WHERE $__timeFilter(time)\n),\nlast_values AS (\n  SELECT DISTINCT ON (id) id, name, value\n  FROM counts\n  ORDER BY id, time DESC\n),\nselection AS (\n  SELECT count(*) = (SELECT count(*) FROM statistics.ship_variants) AS is_all\n  FROM statistics.ship_variants\n  WHERE variant_id IN (${variants:sqlstring})\n),\ntop_series AS (\n  SELECT id, row_number() OVER (ORDER BY value DESC, name COLLATE \"und-x-icu\", id COLLATE \"und-x-icu\") AS position\n  FROM last_values\n  WHERE id IN (\n    SELECT id FROM counts GROUP BY id\n    HAVING max(value) > 0 OR NOT (SELECT is_all FROM selection)\n  )\n  ORDER BY position\n  LIMIT ${top:sqlstring}::integer\n)\nSELECT time, id, name, value\nFROM counts\nJOIN top_series USING (id)\nORDER BY position, time",
           "refId": "A"
         }
       ],
@@ -185,7 +185,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "sam-statistics-postgres"
       },
-      "description": "Aktueller Wert der eingetragenen Schiffe im Store, gesamt und pro Herkunft",
+      "description": "Aktueller Wert der eingetragenen Schiffe im Store, gesamt und pro Herkunft. Bei Woche oder Monat: Stand am Ende der Woche bzw. des Monats.",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -204,7 +204,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Veränderung zum Vortag"
+              "options": "Veränderung zur Vorperiode"
             },
             "properties": [
               {
@@ -213,7 +213,7 @@
               },
               {
                 "id": "custom.axisLabel",
-                "value": "Δ Vortag"
+                "value": "Δ Vorperiode"
               },
               {
                 "id": "custom.lineWidth",
@@ -261,7 +261,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT time, total AS \"Gesamt (USD)\", change AS \"Veränderung zum Vortag\", store AS \"Store\", in_game AS \"In-game\", unknown AS \"Nicht angegeben\"\nFROM (\n  SELECT *, total - lag(total) OVER (ORDER BY time) AS change\n  FROM (\n    SELECT\n      day::timestamp AT TIME ZONE 'Europe/Berlin' AS time,\n      round((store_value_usd_cents + in_game_value_usd_cents + unknown_value_usd_cents) / 100.0) AS total,\n      round(store_value_usd_cents / 100.0) AS store,\n      round(in_game_value_usd_cents / 100.0) AS in_game,\n      round(unknown_value_usd_cents / 100.0) AS unknown\n    FROM statistics.daily_fleet_values\n  ) AS daily_values\n) AS daily_changes\nWHERE $__timeFilter(time)\nORDER BY time",
+          "rawSql": "WITH resolution AS (\n  SELECT CASE\n    WHEN ${resolution:sqlstring} IN ('day', 'week', 'month') THEN ${resolution:sqlstring}\n    WHEN range_days <= 92 THEN 'day'\n    WHEN range_days <= 731 THEN 'week'\n    ELSE 'month'\n  END AS unit\n  FROM (\n    SELECT ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date - ($__timeFrom()::timestamptz AT TIME ZONE 'Europe/Berlin')::date AS range_days\n  ) AS time_range\n),\nperiod_values AS (\n  SELECT DISTINCT ON (period) day, total, store, in_game, unknown\n  FROM (\n    SELECT\n      date_trunc((SELECT unit FROM resolution), day::timestamp) AS period,\n      day,\n      round((store_value_usd_cents + in_game_value_usd_cents + unknown_value_usd_cents) / 100.0) AS total,\n      round(store_value_usd_cents / 100.0) AS store,\n      round(in_game_value_usd_cents / 100.0) AS in_game,\n      round(unknown_value_usd_cents / 100.0) AS unknown\n    FROM statistics.daily_fleet_values\n    WHERE day <= ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date\n  ) AS daily_values\n  ORDER BY period, day DESC\n)\nSELECT time, total AS \"Gesamt (USD)\", change AS \"Veränderung zur Vorperiode\", store AS \"Store\", in_game AS \"In-game\", unknown AS \"Nicht angegeben\"\nFROM (\n  SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, total, store, in_game, unknown, total - lag(total) OVER (ORDER BY day) AS change\n  FROM period_values\n) AS period_changes\nWHERE $__timeFilter(time)\nORDER BY time",
           "refId": "A"
         }
       ],
@@ -273,7 +273,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "sam-statistics-postgres"
       },
-      "description": "Aktueller Wert der eingetragenen Schiffe im Spiel, gesamt und pro Herkunft",
+      "description": "Aktueller Wert der eingetragenen Schiffe im Spiel, gesamt und pro Herkunft. Bei Woche oder Monat: Stand am Ende der Woche bzw. des Monats.",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -292,7 +292,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Veränderung zum Vortag"
+              "options": "Veränderung zur Vorperiode"
             },
             "properties": [
               {
@@ -301,7 +301,7 @@
               },
               {
                 "id": "custom.axisLabel",
-                "value": "Δ Vortag"
+                "value": "Δ Vorperiode"
               },
               {
                 "id": "custom.lineWidth",
@@ -349,7 +349,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT time, total AS \"Gesamt (aUEC)\", change AS \"Veränderung zum Vortag\", store AS \"Store\", in_game AS \"In-game\", unknown AS \"Nicht angegeben\"\nFROM (\n  SELECT *, total - lag(total) OVER (ORDER BY time) AS change\n  FROM (\n    SELECT\n      day::timestamp AT TIME ZONE 'Europe/Berlin' AS time,\n      store_value_auec + in_game_value_auec + unknown_value_auec AS total,\n      store_value_auec AS store,\n      in_game_value_auec AS in_game,\n      unknown_value_auec AS unknown\n    FROM statistics.daily_fleet_values\n  ) AS daily_values\n) AS daily_changes\nWHERE $__timeFilter(time)\nORDER BY time",
+          "rawSql": "WITH resolution AS (\n  SELECT CASE\n    WHEN ${resolution:sqlstring} IN ('day', 'week', 'month') THEN ${resolution:sqlstring}\n    WHEN range_days <= 92 THEN 'day'\n    WHEN range_days <= 731 THEN 'week'\n    ELSE 'month'\n  END AS unit\n  FROM (\n    SELECT ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date - ($__timeFrom()::timestamptz AT TIME ZONE 'Europe/Berlin')::date AS range_days\n  ) AS time_range\n),\nperiod_values AS (\n  SELECT DISTINCT ON (period) day, total, store, in_game, unknown\n  FROM (\n    SELECT\n      date_trunc((SELECT unit FROM resolution), day::timestamp) AS period,\n      day,\n      store_value_auec + in_game_value_auec + unknown_value_auec AS total,\n      store_value_auec AS store,\n      in_game_value_auec AS in_game,\n      unknown_value_auec AS unknown\n    FROM statistics.daily_fleet_values\n    WHERE day <= ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date\n  ) AS daily_values\n  ORDER BY period, day DESC\n)\nSELECT time, total AS \"Gesamt (aUEC)\", change AS \"Veränderung zur Vorperiode\", store AS \"Store\", in_game AS \"In-game\", unknown AS \"Nicht angegeben\"\nFROM (\n  SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, total, store, in_game, unknown, total - lag(total) OVER (ORDER BY day) AS change\n  FROM period_values\n) AS period_changes\nWHERE $__timeFilter(time)\nORDER BY time",
           "refId": "A"
         }
       ],
@@ -361,7 +361,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "sam-statistics-postgres"
       },
-      "description": "Anzahl unique Logins pro Tag",
+      "description": "Anzahl unique Logins pro Tag. Bei Woche oder Monat: Durchschnitt pro Tag in der Woche bzw. im Monat.",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -373,14 +373,13 @@
             "showPoints": "auto",
             "spanNulls": false
           },
-          "decimals": 0,
           "unit": "locale"
         },
         "overrides": [
           {
             "matcher": {
               "id": "byName",
-              "options": "Veränderung zum Vortag"
+              "options": "Veränderung zur Vorperiode"
             },
             "properties": [
               {
@@ -389,7 +388,7 @@
               },
               {
                 "id": "custom.axisLabel",
-                "value": "Δ Vortag"
+                "value": "Δ Vorperiode"
               },
               {
                 "id": "custom.lineWidth",
@@ -437,7 +436,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT time, value AS \"Logins\", change AS \"Veränderung zum Vortag\"\nFROM (\n  SELECT time, value, value - lag(value) OVER (ORDER BY time) AS change\n  FROM (\n    SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, login_count AS value\n    FROM statistics.daily_login_counts\n  ) AS daily_values\n) AS daily_changes\nWHERE $__timeFilter(time)\nORDER BY time",
+          "rawSql": "WITH resolution AS (\n  SELECT CASE\n    WHEN ${resolution:sqlstring} IN ('day', 'week', 'month') THEN ${resolution:sqlstring}\n    WHEN range_days <= 92 THEN 'day'\n    WHEN range_days <= 731 THEN 'week'\n    ELSE 'month'\n  END AS unit\n  FROM (\n    SELECT ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date - ($__timeFrom()::timestamptz AT TIME ZONE 'Europe/Berlin')::date AS range_days\n  ) AS time_range\n),\nperiod_values AS (\n  SELECT max(day) AS day, round(avg(value), 1) AS value\n  FROM (\n    SELECT date_trunc((SELECT unit FROM resolution), day::timestamp) AS period, day, login_count AS value\n    FROM statistics.daily_login_counts\n    WHERE day <= ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date\n  ) AS daily_values\n  GROUP BY period\n)\nSELECT time, value AS \"Logins\", change AS \"Veränderung zur Vorperiode\"\nFROM (\n  SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, value, value - lag(value) OVER (ORDER BY day) AS change\n  FROM period_values\n) AS period_changes\nWHERE $__timeFilter(time)\nORDER BY time",
           "refId": "A"
         }
       ],
@@ -449,7 +448,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "sam-statistics-postgres"
       },
-      "description": "Gesamtanzahl erfasster Citizens",
+      "description": "Gesamtanzahl erfasster Citizens. Bei Woche oder Monat: Stand am Ende der Woche bzw. des Monats.",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -468,7 +467,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Veränderung zum Vortag"
+              "options": "Veränderung zur Vorperiode"
             },
             "properties": [
               {
@@ -477,7 +476,7 @@
               },
               {
                 "id": "custom.axisLabel",
-                "value": "Δ Vortag"
+                "value": "Δ Vorperiode"
               },
               {
                 "id": "custom.lineWidth",
@@ -525,7 +524,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT time, value AS \"Citizens\", change AS \"Veränderung zum Vortag\"\nFROM (\n  SELECT time, value, value - lag(value) OVER (ORDER BY time) AS change\n  FROM (\n    SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, citizen_total AS value\n    FROM statistics.daily_citizen_totals\n  ) AS daily_values\n) AS daily_changes\nWHERE $__timeFilter(time)\nORDER BY time",
+          "rawSql": "WITH resolution AS (\n  SELECT CASE\n    WHEN ${resolution:sqlstring} IN ('day', 'week', 'month') THEN ${resolution:sqlstring}\n    WHEN range_days <= 92 THEN 'day'\n    WHEN range_days <= 731 THEN 'week'\n    ELSE 'month'\n  END AS unit\n  FROM (\n    SELECT ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date - ($__timeFrom()::timestamptz AT TIME ZONE 'Europe/Berlin')::date AS range_days\n  ) AS time_range\n),\nperiod_values AS (\n  SELECT DISTINCT ON (period) day, value\n  FROM (\n    SELECT date_trunc((SELECT unit FROM resolution), day::timestamp) AS period, day, citizen_total AS value\n    FROM statistics.daily_citizen_totals\n    WHERE day <= ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date\n  ) AS daily_values\n  ORDER BY period, day DESC\n)\nSELECT time, value AS \"Citizens\", change AS \"Veränderung zur Vorperiode\"\nFROM (\n  SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, value, value - lag(value) OVER (ORDER BY day) AS change\n  FROM period_values\n) AS period_changes\nWHERE $__timeFilter(time)\nORDER BY time",
           "refId": "A"
         }
       ],
@@ -537,7 +536,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "sam-statistics-postgres"
       },
-      "description": "Gesamtanzahl erfasster Organisationen",
+      "description": "Gesamtanzahl erfasster Organisationen. Bei Woche oder Monat: Stand am Ende der Woche bzw. des Monats.",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -556,7 +555,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Veränderung zum Vortag"
+              "options": "Veränderung zur Vorperiode"
             },
             "properties": [
               {
@@ -565,7 +564,7 @@
               },
               {
                 "id": "custom.axisLabel",
-                "value": "Δ Vortag"
+                "value": "Δ Vorperiode"
               },
               {
                 "id": "custom.lineWidth",
@@ -613,7 +612,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT time, value AS \"Organisationen\", change AS \"Veränderung zum Vortag\"\nFROM (\n  SELECT time, value, value - lag(value) OVER (ORDER BY time) AS change\n  FROM (\n    SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, organization_total AS value\n    FROM statistics.daily_organization_totals\n  ) AS daily_values\n) AS daily_changes\nWHERE $__timeFilter(time)\nORDER BY time",
+          "rawSql": "WITH resolution AS (\n  SELECT CASE\n    WHEN ${resolution:sqlstring} IN ('day', 'week', 'month') THEN ${resolution:sqlstring}\n    WHEN range_days <= 92 THEN 'day'\n    WHEN range_days <= 731 THEN 'week'\n    ELSE 'month'\n  END AS unit\n  FROM (\n    SELECT ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date - ($__timeFrom()::timestamptz AT TIME ZONE 'Europe/Berlin')::date AS range_days\n  ) AS time_range\n),\nperiod_values AS (\n  SELECT DISTINCT ON (period) day, value\n  FROM (\n    SELECT date_trunc((SELECT unit FROM resolution), day::timestamp) AS period, day, organization_total AS value\n    FROM statistics.daily_organization_totals\n    WHERE day <= ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date\n  ) AS daily_values\n  ORDER BY period, day DESC\n)\nSELECT time, value AS \"Organisationen\", change AS \"Veränderung zur Vorperiode\"\nFROM (\n  SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, value, value - lag(value) OVER (ORDER BY day) AS change\n  FROM period_values\n) AS period_changes\nWHERE $__timeFilter(time)\nORDER BY time",
           "refId": "A"
         }
       ],
@@ -625,7 +624,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "sam-statistics-postgres"
       },
-      "description": "Gesamtanzahl registrierter Benutzer",
+      "description": "Gesamtanzahl registrierter Benutzer. Bei Woche oder Monat: Stand am Ende der Woche bzw. des Monats.",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -644,7 +643,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Veränderung zum Vortag"
+              "options": "Veränderung zur Vorperiode"
             },
             "properties": [
               {
@@ -653,7 +652,7 @@
               },
               {
                 "id": "custom.axisLabel",
-                "value": "Δ Vortag"
+                "value": "Δ Vorperiode"
               },
               {
                 "id": "custom.lineWidth",
@@ -701,7 +700,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT time, value AS \"Registrierte Benutzer\", change AS \"Veränderung zum Vortag\"\nFROM (\n  SELECT time, value, value - lag(value) OVER (ORDER BY time) AS change\n  FROM (\n    SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, user_total AS value\n    FROM statistics.daily_user_totals\n  ) AS daily_values\n) AS daily_changes\nWHERE $__timeFilter(time)\nORDER BY time",
+          "rawSql": "WITH resolution AS (\n  SELECT CASE\n    WHEN ${resolution:sqlstring} IN ('day', 'week', 'month') THEN ${resolution:sqlstring}\n    WHEN range_days <= 92 THEN 'day'\n    WHEN range_days <= 731 THEN 'week'\n    ELSE 'month'\n  END AS unit\n  FROM (\n    SELECT ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date - ($__timeFrom()::timestamptz AT TIME ZONE 'Europe/Berlin')::date AS range_days\n  ) AS time_range\n),\nperiod_values AS (\n  SELECT DISTINCT ON (period) day, value\n  FROM (\n    SELECT date_trunc((SELECT unit FROM resolution), day::timestamp) AS period, day, user_total AS value\n    FROM statistics.daily_user_totals\n    WHERE day <= ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date\n  ) AS daily_values\n  ORDER BY period, day DESC\n)\nSELECT time, value AS \"Registrierte Benutzer\", change AS \"Veränderung zur Vorperiode\"\nFROM (\n  SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, value, value - lag(value) OVER (ORDER BY day) AS change\n  FROM period_values\n) AS period_changes\nWHERE $__timeFilter(time)\nORDER BY time",
           "refId": "A"
         }
       ],
@@ -713,7 +712,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "sam-statistics-postgres"
       },
-      "description": "Anzahl Citizens pro Rolle",
+      "description": "Anzahl Citizens pro Rolle. Bei Woche oder Monat: Stand am Ende der Woche bzw. des Monats.",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -758,7 +757,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH counts AS (\n  SELECT * FROM (\n    SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, role_id AS id, role_name AS name, citizen_count AS value\n    FROM statistics.daily_role_citizen_counts\n    WHERE role_id IN (${roles:sqlstring})\n  ) AS daily_counts\n  WHERE $__timeFilter(time)\n),\nlast_values AS (\n  SELECT DISTINCT ON (id) id, name, value\n  FROM counts\n  ORDER BY id, time DESC\n),\nselection AS (\n  SELECT count(*) = (SELECT count(*) FROM statistics.roles) AS is_all\n  FROM statistics.roles\n  WHERE role_id IN (${roles:sqlstring})\n),\ntop_series AS (\n  SELECT id, row_number() OVER (ORDER BY value DESC, name COLLATE \"und-x-icu\", id COLLATE \"und-x-icu\") AS position\n  FROM last_values\n  WHERE id IN (\n    SELECT id FROM counts GROUP BY id\n    HAVING max(value) > 0 OR NOT (SELECT is_all FROM selection)\n  )\n  ORDER BY position\n  LIMIT ${top:sqlstring}::integer\n)\nSELECT time, id, name, value\nFROM counts\nJOIN top_series USING (id)\nORDER BY position, time",
+          "rawSql": "WITH resolution AS (\n  SELECT CASE\n    WHEN ${resolution:sqlstring} IN ('day', 'week', 'month') THEN ${resolution:sqlstring}\n    WHEN range_days <= 92 THEN 'day'\n    WHEN range_days <= 731 THEN 'week'\n    ELSE 'month'\n  END AS unit\n  FROM (\n    SELECT ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date - ($__timeFrom()::timestamptz AT TIME ZONE 'Europe/Berlin')::date AS range_days\n  ) AS time_range\n),\ncounts AS (\n  SELECT * FROM (\n    SELECT DISTINCT ON (id, period) day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, id, name, value\n    FROM (\n      SELECT date_trunc((SELECT unit FROM resolution), day::timestamp) AS period, day, role_id AS id, role_name AS name, citizen_count AS value\n      FROM statistics.daily_role_citizen_counts\n      WHERE role_id IN (${roles:sqlstring})\n        AND day <= ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date\n    ) AS daily_counts\n    ORDER BY id, period, day DESC\n  ) AS period_counts\n  WHERE $__timeFilter(time)\n),\nlast_values AS (\n  SELECT DISTINCT ON (id) id, name, value\n  FROM counts\n  ORDER BY id, time DESC\n),\nselection AS (\n  SELECT count(*) = (SELECT count(*) FROM statistics.roles) AS is_all\n  FROM statistics.roles\n  WHERE role_id IN (${roles:sqlstring})\n),\ntop_series AS (\n  SELECT id, row_number() OVER (ORDER BY value DESC, name COLLATE \"und-x-icu\", id COLLATE \"und-x-icu\") AS position\n  FROM last_values\n  WHERE id IN (\n    SELECT id FROM counts GROUP BY id\n    HAVING max(value) > 0 OR NOT (SELECT is_all FROM selection)\n  )\n  ORDER BY position\n  LIMIT ${top:sqlstring}::integer\n)\nSELECT time, id, name, value\nFROM counts\nJOIN top_series USING (id)\nORDER BY position, time",
           "refId": "A"
         }
       ],
@@ -785,7 +784,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "sam-statistics-postgres"
       },
-      "description": "Anzahl Events pro Tag",
+      "description": "Anzahl Events pro Tag. Bei Woche oder Monat: Durchschnitt pro Tag in der Woche bzw. im Monat.",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -797,14 +796,13 @@
             "showPoints": "auto",
             "spanNulls": false
           },
-          "decimals": 0,
           "unit": "locale"
         },
         "overrides": [
           {
             "matcher": {
               "id": "byName",
-              "options": "Veränderung zum Vortag"
+              "options": "Veränderung zur Vorperiode"
             },
             "properties": [
               {
@@ -813,7 +811,7 @@
               },
               {
                 "id": "custom.axisLabel",
-                "value": "Δ Vortag"
+                "value": "Δ Vorperiode"
               },
               {
                 "id": "custom.lineWidth",
@@ -861,7 +859,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT time, value AS \"Events\", change AS \"Veränderung zum Vortag\"\nFROM (\n  SELECT time, value, value - lag(value) OVER (ORDER BY time) AS change\n  FROM (\n    SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, event_count AS value\n    FROM statistics.daily_event_counts\n  ) AS daily_values\n) AS daily_changes\nWHERE $__timeFilter(time)\nORDER BY time",
+          "rawSql": "WITH resolution AS (\n  SELECT CASE\n    WHEN ${resolution:sqlstring} IN ('day', 'week', 'month') THEN ${resolution:sqlstring}\n    WHEN range_days <= 92 THEN 'day'\n    WHEN range_days <= 731 THEN 'week'\n    ELSE 'month'\n  END AS unit\n  FROM (\n    SELECT ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date - ($__timeFrom()::timestamptz AT TIME ZONE 'Europe/Berlin')::date AS range_days\n  ) AS time_range\n),\nperiod_values AS (\n  SELECT max(day) AS day, round(avg(value), 1) AS value\n  FROM (\n    SELECT date_trunc((SELECT unit FROM resolution), day::timestamp) AS period, day, event_count AS value\n    FROM statistics.daily_event_counts\n    WHERE day <= ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date\n  ) AS daily_values\n  GROUP BY period\n)\nSELECT time, value AS \"Events\", change AS \"Veränderung zur Vorperiode\"\nFROM (\n  SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, value, value - lag(value) OVER (ORDER BY day) AS change\n  FROM period_values\n) AS period_changes\nWHERE $__timeFilter(time)\nORDER BY time",
           "refId": "A"
         }
       ],
@@ -873,7 +871,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "sam-statistics-postgres"
       },
-      "description": "Neu generierte SILC-Menge pro Tag",
+      "description": "Neu generierte SILC-Menge pro Tag. Bei Woche oder Monat: Durchschnitt pro Tag in der Woche bzw. im Monat.",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -885,14 +883,13 @@
             "showPoints": "auto",
             "spanNulls": false
           },
-          "decimals": 0,
           "unit": "locale"
         },
         "overrides": [
           {
             "matcher": {
               "id": "byName",
-              "options": "Veränderung zum Vortag"
+              "options": "Veränderung zur Vorperiode"
             },
             "properties": [
               {
@@ -901,7 +898,7 @@
               },
               {
                 "id": "custom.axisLabel",
-                "value": "Δ Vortag"
+                "value": "Δ Vorperiode"
               },
               {
                 "id": "custom.lineWidth",
@@ -949,7 +946,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT time, value AS \"SILC\", change AS \"Veränderung zum Vortag\"\nFROM (\n  SELECT time, value, value - lag(value) OVER (ORDER BY time) AS change\n  FROM (\n    SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, new_silc AS value\n    FROM statistics.daily_new_silc\n  ) AS daily_values\n) AS daily_changes\nWHERE $__timeFilter(time)\nORDER BY time",
+          "rawSql": "WITH resolution AS (\n  SELECT CASE\n    WHEN ${resolution:sqlstring} IN ('day', 'week', 'month') THEN ${resolution:sqlstring}\n    WHEN range_days <= 92 THEN 'day'\n    WHEN range_days <= 731 THEN 'week'\n    ELSE 'month'\n  END AS unit\n  FROM (\n    SELECT ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date - ($__timeFrom()::timestamptz AT TIME ZONE 'Europe/Berlin')::date AS range_days\n  ) AS time_range\n),\nperiod_values AS (\n  SELECT max(day) AS day, round(avg(value), 1) AS value\n  FROM (\n    SELECT date_trunc((SELECT unit FROM resolution), day::timestamp) AS period, day, new_silc AS value\n    FROM statistics.daily_new_silc\n    WHERE day <= ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date\n  ) AS daily_values\n  GROUP BY period\n)\nSELECT time, value AS \"SILC\", change AS \"Veränderung zur Vorperiode\"\nFROM (\n  SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, value, value - lag(value) OVER (ORDER BY day) AS change\n  FROM period_values\n) AS period_changes\nWHERE $__timeFilter(time)\nORDER BY time",
           "refId": "A"
         }
       ],
@@ -961,7 +958,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "sam-statistics-postgres"
       },
-      "description": "Anzahl Einträge im System Log über den MCP-Server pro Tag",
+      "description": "Anzahl Einträge im System Log über den MCP-Server pro Tag. Bei Woche oder Monat: Durchschnitt pro Tag in der Woche bzw. im Monat.",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -973,14 +970,13 @@
             "showPoints": "auto",
             "spanNulls": false
           },
-          "decimals": 0,
           "unit": "locale"
         },
         "overrides": [
           {
             "matcher": {
               "id": "byName",
-              "options": "Veränderung zum Vortag"
+              "options": "Veränderung zur Vorperiode"
             },
             "properties": [
               {
@@ -989,7 +985,7 @@
               },
               {
                 "id": "custom.axisLabel",
-                "value": "Δ Vortag"
+                "value": "Δ Vorperiode"
               },
               {
                 "id": "custom.lineWidth",
@@ -1037,7 +1033,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT time, value AS \"Einträge\", change AS \"Veränderung zum Vortag\"\nFROM (\n  SELECT time, value, value - lag(value) OVER (ORDER BY time) AS change\n  FROM (\n    SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, audit_event_count AS value\n    FROM statistics.daily_mcp_usage_counts\n  ) AS daily_values\n) AS daily_changes\nWHERE $__timeFilter(time)\nORDER BY time",
+          "rawSql": "WITH resolution AS (\n  SELECT CASE\n    WHEN ${resolution:sqlstring} IN ('day', 'week', 'month') THEN ${resolution:sqlstring}\n    WHEN range_days <= 92 THEN 'day'\n    WHEN range_days <= 731 THEN 'week'\n    ELSE 'month'\n  END AS unit\n  FROM (\n    SELECT ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date - ($__timeFrom()::timestamptz AT TIME ZONE 'Europe/Berlin')::date AS range_days\n  ) AS time_range\n),\nperiod_values AS (\n  SELECT max(day) AS day, round(avg(value), 1) AS value\n  FROM (\n    SELECT date_trunc((SELECT unit FROM resolution), day::timestamp) AS period, day, audit_event_count AS value\n    FROM statistics.daily_mcp_usage_counts\n    WHERE day <= ($__timeTo()::timestamptz AT TIME ZONE 'Europe/Berlin')::date\n  ) AS daily_values\n  GROUP BY period\n)\nSELECT time, value AS \"Einträge\", change AS \"Veränderung zur Vorperiode\"\nFROM (\n  SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, value, value - lag(value) OVER (ORDER BY day) AS change\n  FROM period_values\n) AS period_changes\nWHERE $__timeFilter(time)\nORDER BY time",
           "refId": "A"
         }
       ],
@@ -1064,6 +1060,20 @@
   "tags": [],
   "templating": {
     "list": [
+      {
+        "allowCustomValue": false,
+        "current": {
+          "text": "Automatisch",
+          "value": "auto"
+        },
+        "description": "Ein Punkt der Diagramme fasst einen Tag, eine Woche oder einen Monat zusammen. Automatisch wählt nach der Länge des Zeitraums: Tag bis 92 Tage, Woche bis 731 Tage, sonst Monat",
+        "includeAll": false,
+        "label": "Auflösung",
+        "multi": false,
+        "name": "resolution",
+        "query": "Automatisch : auto,Tag : day,Woche : week,Monat : month",
+        "type": "custom"
+      },
       {
         "allValue": "SELECT role_id FROM statistics.roles",
         "current": {
