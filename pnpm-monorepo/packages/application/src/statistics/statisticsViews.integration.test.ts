@@ -1,6 +1,11 @@
 import { prisma } from "@sam-monorepo/database";
 import { EventSource } from "@sam-monorepo/database/client";
-import { getYesterdayDateColumnValue } from "@sam-monorepo/domain";
+import {
+  addDaysToLocalDate,
+  getLocalDatesOfRange,
+  toDateColumnValue,
+  toLocalDateKey,
+} from "@sam-monorepo/domain";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { fileURLToPath } from "node:url";
@@ -13,28 +18,32 @@ import {
   test,
 } from "vitest";
 import { truncateAllTables } from "../../test/database.js";
+import {
+  FIRST_STATISTICS_DATE,
+  FIRST_STATISTICS_DAY,
+  getLastStatisticsDate,
+} from "./statisticCatalog.js";
 
 /**
  * The views of the schema `statistics` (migration `statistics_views`) and
  * the reader role of `prisma/statistics-reader-role.sql`. The views give the
  * days until yesterday, thus the rows of the tests are on fixed days in the
- * past. Only the checks of the last day use the date of the test run.
+ * past. Only the checks of the last day use the date of the test run. The
+ * first and the last day come from the catalog of the MCP tools, thus the
+ * tests also prove that the SQL and the TypeScript agree.
  */
-
-const FIRST_DAY = "2025-12-02";
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
-/** Yesterday in Europe/Berlin as a `@db.Date` value */
-const yesterdayColumnValue = getYesterdayDateColumnValue(new Date());
-const YESTERDAY = yesterdayColumnValue.toISOString().slice(0, 10);
-const todayColumnValue = new Date(
-  yesterdayColumnValue.getTime() + MILLISECONDS_PER_DAY,
-);
-const DAY_COUNT =
-  (yesterdayColumnValue.getTime() - new Date(FIRST_DAY).getTime()) /
-    MILLISECONDS_PER_DAY +
-  1;
+/** Yesterday in Europe/Berlin on the clock of the test run */
+const lastDate = getLastStatisticsDate({ now: () => new Date() });
+const YESTERDAY = toLocalDateKey(lastDate);
+const yesterdayColumnValue = toDateColumnValue(lastDate);
+const todayColumnValue = toDateColumnValue(addDaysToLocalDate(lastDate, 1));
+const DAY_COUNT = getLocalDatesOfRange({
+  start: FIRST_STATISTICS_DATE,
+  end: lastDate,
+}).length;
 
 const monorepoRoot = fileURLToPath(new URL("../../../..", import.meta.url));
 const readerRoleFile = fileURLToPath(
@@ -84,7 +93,11 @@ const createVariant = async (name: string) => {
   return prisma.variant.create({ data: { name, seriesId: series.id } });
 };
 
-/** Runs the SQL file like an operator, with the role of the migrations */
+/**
+ * Runs the SQL file like an operator, with the superuser of the test
+ * database. The error has the output of Prisma, thus a test can check the
+ * message of the database.
+ */
 const executeSqlFile = async (path: string) => {
   const child = spawn(
     "pnpm",
@@ -98,11 +111,15 @@ const executeSqlFile = async (path: string) => {
       "--file",
       path,
     ],
-    { cwd: monorepoRoot, env: process.env, stdio: "inherit" },
+    { cwd: monorepoRoot, env: process.env, stdio: ["ignore", "pipe", "pipe"] },
   );
+  let output = "";
+  child.stdout.on("data", (chunk) => (output += chunk));
+  child.stderr.on("data", (chunk) => (output += chunk));
 
   const [code] = await once(child, "exit");
-  if (code !== 0) throw new Error(`prisma db execute exited with code ${code}`);
+  if (code !== 0)
+    throw new Error(`prisma db execute exited with code ${code}: ${output}`);
 };
 
 beforeEach(async () => {
@@ -191,7 +208,7 @@ test("gives each live-table view one row for each day from the first day until y
     expect({ view, ...range }).toEqual({
       view,
       dayCount: DAY_COUNT,
-      firstDay: FIRST_DAY,
+      firstDay: FIRST_STATISTICS_DAY,
       lastDay: YESTERDAY,
     });
   }
@@ -337,10 +354,10 @@ test("gives the running totals of the active citizens, the organizations and the
     await readDays(
       "daily_organization_totals",
       "organization_total",
-      FIRST_DAY,
-      FIRST_DAY,
+      FIRST_STATISTICS_DAY,
+      FIRST_STATISTICS_DAY,
     ),
-  ).toEqual({ [FIRST_DAY]: 1 });
+  ).toEqual({ [FIRST_STATISTICS_DAY]: 1 });
   expect(
     await readDays(
       "daily_organization_totals",
@@ -500,6 +517,7 @@ test("gives the rows of the snapshot tables for the days of the statistics with 
 
 describe("the reader role", () => {
   const READER_PASSWORD = "reader-password";
+  let serverAddress: string;
   let readerConnection: string;
 
   /**
@@ -520,16 +538,16 @@ describe("the reader role", () => {
       "CREATE EXTENSION dblink SCHEMA reader_session",
     );
 
-    const [server] = await prisma.$queryRaw<{ connection: string }[]>`
+    const [server] = await prisma.$queryRaw<{ address: string }[]>`
       SELECT format(
-        'host=%s port=%s dbname=%s user=sam_statistics_grafana password=%s',
+        'host=%s port=%s dbname=%s',
         host(inet_server_addr()),
         inet_server_port(),
-        current_database(),
-        ${READER_PASSWORD}::text
-      ) AS "connection"
+        current_database()
+      ) AS "address"
     `;
-    readerConnection = server!.connection;
+    serverAddress = server!.address;
+    readerConnection = `${serverAddress} user=sam_statistics_grafana password=${READER_PASSWORD}`;
   });
 
   afterAll(async () => {
@@ -549,11 +567,33 @@ describe("the reader role", () => {
     return rows.map((row) => row.value);
   };
 
-  /** Runs the SQL in a new session of the reader role, without a result */
-  const executeAsReader = (sql: string) =>
+  /** Runs the SQL in a new session, without a result */
+  const execute = (connection: string, sql: string) =>
     prisma.$queryRaw`
-      SELECT reader_session.dblink_exec(${readerConnection}, ${sql})
+      SELECT reader_session.dblink_exec(${connection}, ${sql})
     `;
+
+  const executeAsReader = (sql: string) => execute(readerConnection, sql);
+
+  /**
+   * The functions of `pg_catalog` that the file revokes from PUBLIC, with the
+   * rights of a role on them
+   */
+  const readFunctionRights = (role: string) =>
+    prisma.$queryRaw<{ name: string; hasExecute: boolean }[]>`
+      SELECT
+        oid::regprocedure::text AS "name",
+        has_function_privilege(${role}::name, oid, 'EXECUTE') AS "hasExecute"
+      FROM pg_catalog.pg_proc
+      WHERE pronamespace = 'pg_catalog'::regnamespace
+        AND (
+          proname LIKE '%advisory%'
+          OR proname IN ('lo_creat', 'lo_create', 'lo_from_bytea', 'lo_put', 'lowrite', 'lo_truncate', 'lo_truncate64')
+        )
+    `;
+
+  /** All signatures of PostgreSQL 18, see the file */
+  const REVOKED_FUNCTION_COUNT = 28;
 
   test("reads each view", async () => {
     const views = await prisma.$queryRaw<{ name: string }[]>`
@@ -603,9 +643,46 @@ describe("the reader role", () => {
         "BEGIN READ WRITE; CREATE VIEW statistics.reader_view AS SELECT 1; COMMIT",
       ),
     ).rejects.toThrow(/permission denied for schema statistics/);
+    await expect(
+      executeAsReader(
+        "BEGIN READ WRITE; CREATE TABLE public.reader_table (id integer); COMMIT",
+      ),
+    ).rejects.toThrow(/permission denied for schema public/);
+    expect(
+      await queryAsReader(
+        "SELECT has_schema_privilege('public', 'CREATE')::text",
+      ),
+    ).toEqual(["false"]);
   });
 
-  test("stops a long statement at the timeout", async () => {
+  test("cannot hold an advisory lock, make a large object or a temporary table", async () => {
+    for (const lock of [
+      // The lock of the SILC ledger (lockSilcLedger)
+      "pg_advisory_lock(hashtext('SilcLedger'))",
+      // The lock of prisma migrate
+      "pg_try_advisory_lock(72707369)",
+      "pg_advisory_xact_lock(hashtext('WikiPage_hierarchy'))",
+    ])
+      await expect(queryAsReader(`SELECT ${lock}::text`)).rejects.toThrow(
+        /permission denied for function pg_(try_)?advisory_(xact_)?lock/,
+      );
+    await expect(
+      executeAsReader(
+        "BEGIN READ WRITE; SELECT lo_from_bytea(0, '\\x01'); COMMIT",
+      ),
+    ).rejects.toThrow(/permission denied for function lo_from_bytea/);
+    await expect(
+      executeAsReader(
+        "BEGIN READ WRITE; CREATE TEMP TABLE reader_table (id integer); COMMIT",
+      ),
+    ).rejects.toThrow(/permission denied to create temporary tables/);
+
+    const functionRights = await readFunctionRights("sam_statistics_grafana");
+    expect(functionRights).toHaveLength(REVOKED_FUNCTION_COUNT);
+    expect(functionRights.filter((right) => right.hasExecute)).toEqual([]);
+  });
+
+  test("stops a long statement at the timeout, and limits the temporary files", async () => {
     const start = performance.now();
 
     await expect(queryAsReader("SELECT pg_sleep(30)::text")).rejects.toThrow(
@@ -613,5 +690,60 @@ describe("the reader role", () => {
     );
     // The timeout of the role is 5 seconds
     expect(performance.now() - start).toBeLessThan(10_000);
+
+    expect(await queryAsReader("SHOW temp_file_limit")).toEqual(["100MB"]);
+    await expect(executeAsReader("SET temp_file_limit = -1")).rejects.toThrow(
+      /permission denied to set parameter "temp_file_limit"/,
+    );
   }, 20_000);
+
+  test("refuses to run when the role can make objects in the schema public", async () => {
+    await prisma.$executeRawUnsafe("GRANT CREATE ON SCHEMA public TO PUBLIC");
+
+    try {
+      await expect(executeSqlFile(readerRoleFile)).rejects.toThrow(
+        /The role sam_statistics_grafana has the right CREATE on the schema public/,
+      );
+    } finally {
+      await prisma.$executeRawUnsafe(
+        "REVOKE CREATE ON SCHEMA public FROM PUBLIC",
+      );
+    }
+  });
+
+  /**
+   * In production, the owner of the schema `statistics` is the role of the
+   * app, which is not a superuser. The superuser of the test database is the
+   * owner here, thus the test lends the schema to such a role.
+   */
+  test("gives the owner of the schema statistics the rights that it revokes from PUBLIC", async () => {
+    const OWNER_PASSWORD = "owner-password";
+    await prisma.$executeRawUnsafe(
+      `CREATE ROLE statistics_owner LOGIN PASSWORD '${OWNER_PASSWORD}'`,
+    );
+    await prisma.$executeRawUnsafe(
+      "ALTER SCHEMA statistics OWNER TO statistics_owner",
+    );
+
+    try {
+      await executeSqlFile(readerRoleFile);
+
+      expect(
+        (await readFunctionRights("statistics_owner")).filter(
+          (right) => !right.hasExecute,
+        ),
+      ).toEqual([]);
+      await execute(
+        `${serverAddress} user=statistics_owner password=${OWNER_PASSWORD}`,
+        "BEGIN; SELECT pg_advisory_xact_lock(hashtext('SilcLedger')); SELECT pg_try_advisory_lock(72707369); CREATE TEMP TABLE owner_table (id integer); SELECT lo_from_bytea(0, '\\x01'); ROLLBACK",
+      );
+    } finally {
+      await prisma.$executeRawUnsafe(
+        "ALTER SCHEMA statistics OWNER TO CURRENT_USER",
+      );
+      // Also removes the rights and the default privileges of the role
+      await prisma.$executeRawUnsafe("DROP OWNED BY statistics_owner");
+      await prisma.$executeRawUnsafe("DROP ROLE statistics_owner");
+    }
+  });
 });

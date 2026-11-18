@@ -18,8 +18,11 @@ CREATE SCHEMA IF NOT EXISTS statistics;
 -- The snapshot tables: the midnight jobs write the values of a day after its
 -- end. The name of a variant or a role is its current name.
 
--- The total number of ships of a day is the sum of all variants
-CREATE VIEW statistics.daily_ship_counts AS
+-- The total number of ships of a day is the sum of all variants.
+-- security_barrier: a function in the WHERE of a reader sees only the rows of
+-- the view. Without it, the function can run before the join, thus also on
+-- the name of a variant without a count row.
+CREATE VIEW statistics.daily_ship_counts WITH (security_barrier) AS
 SELECT
     ship_count."day",
     ship_count."variantId" AS variant_id,
@@ -48,7 +51,8 @@ SELECT
 FROM "DailyLoginCount"
 WHERE "date" BETWEEN DATE '2025-12-02' AND (now() AT TIME ZONE 'Europe/Berlin')::date - 1;
 
-CREATE VIEW statistics.daily_role_citizen_counts AS
+-- security_barrier: see statistics.daily_ship_counts
+CREATE VIEW statistics.daily_role_citizen_counts WITH (security_barrier) AS
 SELECT
     citizen_count."day",
     citizen_count."roleId" AS role_id,

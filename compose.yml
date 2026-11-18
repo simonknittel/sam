@@ -224,8 +224,8 @@ services:
 
   # One-shot helper which makes the read-only database role of the grafana
   # service and sets its local password. The SQL file expects the schema and
-  # must run as the owner of the views (locally the postgres superuser, which
-  # also applies the migrations). Safe to re-run.
+  # must run as a superuser (locally postgres, which also applies the
+  # migrations, thus it owns the views). Safe to re-run.
   grafana-bootstrap:
     image: postgres:18.7-alpine3.23@sha256:e6014245dccbc0f28b07dac8e3f793c94a18420f78690e9db547957514a524f1
     restart: no
