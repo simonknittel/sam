@@ -13,6 +13,11 @@ export const archiveOnSiteNotification = createUseCaseAction({
   parseFormData: (formData) => ({
     notification_id: formData.get("notificationId"),
   }),
+  /**
+   * The client refreshes the router when the notification announced a new
+   * item (see `useOnSiteNotificationMutations()`)
+   */
   refresh: ActionRefresh.Never,
   success: () => "Archiviert",
+  responseFields: (output) => ({ newItemRead: output.new_item_read }),
 });

@@ -383,15 +383,32 @@ test("a read notification can be marked unread again", async ({
     .toBeNull();
 });
 
-test("a notification can be archived and restored again", async ({
+test("an archived notification is read with its announced event and can be restored again", async ({
   page,
   prisma,
   signIn,
 }) => {
-  const citizen = await createCitizen(prisma, { handle: "archiver" });
+  const citizen = await createCitizen(prisma, {
+    handle: "archiver",
+    permissionStrings: ["event;read"],
+  });
+  const creator = await createCitizen(prisma, { handle: "archive-creator" });
+  const event = await createAppEvent(prisma, {
+    name: "Operation Ablage",
+    createdById: creator.entity.id,
+    ...futureEvent(),
+  });
   const notification = await createOnSiteNotification(prisma, {
     citizenId: citizen.entity.id,
+    payload: { eventId: event.id, eventName: event.name },
   });
+  const findState = async () => {
+    const row = await prisma.onSiteNotification.findUniqueOrThrow({
+      where: { id: notification.id },
+      select: { readAt: true, archivedAt: true },
+    });
+    return { read: row.readAt !== null, archived: row.archivedAt !== null };
+  };
   await signIn(citizen.user);
 
   await page.goto("/app");
@@ -407,16 +424,16 @@ test("a notification can be archived and restored again", async ({
     popover(page).getByText("Keine Benachrichtigungen", { exact: true }),
   ).toBeVisible();
   await expect(page).toHaveTitle(/^[^(]/);
+  await expect.poll(findState).toEqual({ read: true, archived: true });
   await expect
-    .poll(async () => {
-      const row = await prisma.onSiteNotification.findUnique({
-        where: { id: notification.id },
-      });
-      return row?.archivedAt;
-    })
-    .not.toBeNull();
+    .poll(() =>
+      prisma.readMarker.count({
+        where: { eventId: event.id, citizenId: citizen.entity.id },
+      }),
+    )
+    .toBe(1);
 
-  // Restoring it in the archive puts it back into the inbox
+  // Restoring it in the archive puts it back into the inbox, still read
   await popover(page).getByRole("tab", { name: "Archiv", exact: true }).click();
   await expect(popover(page).getByText("Neues Event")).toBeVisible();
   await popover(page).getByText("Neues Event").hover();
@@ -430,15 +447,10 @@ test("a notification can be archived and restored again", async ({
 
   await popover(page).getByRole("tab", { name: "Inbox", exact: true }).click();
   await expect(popover(page).getByText("Neues Event")).toBeVisible();
+  await expect(unreadRowDots(page)).toHaveCount(0);
+  await expect(page).toHaveTitle(/^[^(]/);
 
-  await expect
-    .poll(async () => {
-      const row = await prisma.onSiteNotification.findUnique({
-        where: { id: notification.id },
-      });
-      return row?.archivedAt;
-    })
-    .toBeNull();
+  await expect.poll(findState).toEqual({ read: true, archived: false });
 });
 
 test("the bulk actions mark everything read with the announced events and archive what is read", async ({

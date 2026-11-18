@@ -92,8 +92,11 @@ export const useOnSiteNotificationMutations = () => {
     const formData = new FormData();
     formData.set("notificationId", notification.id);
 
-    const succeeded = await runAction(archiveOnSiteNotification, formData);
-    if (!succeeded) return;
+    const response = await runAction(archiveOnSiteNotification, formData);
+    if (!response) return;
+
+    // The archive also reads the announced item, as `markRead()` does
+    if (response.newItemRead) router.refresh();
 
     updateListItems(OnSiteNotificationTab.Inbox, (item) =>
       item.id === notification.id ? null : item,

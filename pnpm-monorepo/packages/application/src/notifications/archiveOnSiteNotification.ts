@@ -3,6 +3,7 @@ import * as z from "zod";
 import { requireCitizen, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { idSchema } from "../pagination.js";
+import { markOwnNotificationsAsRead } from "./markOwnNotificationsAsRead.js";
 
 export const archiveOnSiteNotificationInputSchema = z.object({
   notification_id: idSchema,
@@ -19,11 +20,17 @@ export interface ArchiveOnSiteNotificationOutput {
    * already
    */
   readonly changed: boolean;
+  /**
+   * Whether the notification was unread and announced an item which was new
+   * for the actor. The item is read now.
+   */
+  readonly new_item_read: boolean;
 }
 
 /**
- * Moves an own notification from the inbox to the archive. The read state
- * does not change.
+ * Moves an own notification from the inbox to the archive and marks it as
+ * read. A notification which announces a new item also marks its item as
+ * read.
  *
  * @throws ForbiddenError for a user without a citizen
  */
@@ -44,18 +51,38 @@ export const archiveOnSiteNotification = async (
       archivedAt: context.now(),
     },
   });
+  if (count === 0)
+    return {
+      notification_id: input.notification_id,
+      changed: false,
+      new_item_read: false,
+    };
 
-  if (count > 0)
-    await context.audit.create([
-      {
-        type: AuditEventType.ON_SITE_NOTIFICATION_ARCHIVED,
-        data: {
-          citizenId,
-          notificationId: input.notification_id,
-        },
-        createdById: actor.userId,
+  await context.audit.create([
+    {
+      type: AuditEventType.ON_SITE_NOTIFICATION_ARCHIVED,
+      data: {
+        citizenId,
+        notificationId: input.notification_id,
       },
-    ]);
+      createdById: actor.userId,
+    },
+  ]);
 
-  return { notification_id: input.notification_id, changed: count > 0 };
+  const { newItemRead } = await markOwnNotificationsAsRead(
+    context,
+    actor,
+    { id: input.notification_id },
+    (readerCitizenId, readCount) => ({
+      type: AuditEventType.ON_SITE_NOTIFICATIONS_READ,
+      data: { citizenId: readerCitizenId, count: readCount },
+      createdById: actor.userId,
+    }),
+  );
+
+  return {
+    notification_id: input.notification_id,
+    changed: true,
+    new_item_read: newItemRead,
+  };
 };

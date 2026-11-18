@@ -21,7 +21,7 @@ export const updateNotificationTool = defineTool({
   group: ToolGroup.Notifications,
   title: "Update a notification",
   description:
-    "Changes the state of one notification of the user (notification_id from list_my_notifications). mark_read and mark_unread change the read state. archive moves the notification from the inbox to the archive, unarchive moves it back. The archive actions do not change the read state. mark_read also marks the new event or task that the notification announced as read. A repeated call changes nothing.",
+    "Changes the state of one notification of the user (notification_id from list_my_notifications). mark_read and mark_unread change the read state. archive moves the notification from the inbox to the archive and marks it as read. unarchive moves it back to the inbox and does not change the read state. mark_read and archive also mark the new event or task that the notification announced as read. A repeated call changes nothing.",
   annotations: {
     readOnlyHint: false,
     destructiveHint: false,
@@ -42,7 +42,7 @@ export const updateNotificationTool = defineTool({
     new_item_read: z
       .boolean()
       .describe(
-        "True when mark_read also marked the announced event or task as read. Always false for the other actions.",
+        "True when mark_read or archive also marked the announced event or task as read. Always false for the other actions.",
       ),
   }),
   isVisible: (actor) => actor.citizen !== null,
@@ -60,12 +60,7 @@ export const updateNotificationTool = defineTool({
         };
 
       case NotificationAction.Archive:
-        return {
-          ...(await archiveOnSiteNotification(context, actor, {
-            notification_id,
-          })),
-          new_item_read: false,
-        };
+        return archiveOnSiteNotification(context, actor, { notification_id });
 
       case NotificationAction.Unarchive:
         return {
