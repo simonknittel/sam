@@ -14,7 +14,7 @@
 2. Copy [pnpm-monorepo/apps/app/.env.example](../pnpm-monorepo/apps/app/.env.example) to `pnpm-monorepo/apps/app/.env`
 3. Copy [pnpm-monorepo/packages/database/.env.example](../pnpm-monorepo/packages/database/.env.example) to `pnpm-monorepo/packages/database/.env`
 4. Set the values in the two `.env` files. If you have a copy of your `.env` files in Bitwarden, you can download them instead (see [Sync the .env files with Bitwarden](./sync-env-files-with-bitwarden.md)).
-5. Start the database, Soketi, the wiki collaboration server, the S3-compatible upload storage and the Unleash feature flag server: `docker compose up`
+5. Start the database, Soketi, the wiki collaboration server, the S3-compatible upload storage, the Unleash feature flag server and the Grafana of the statistics page: `docker compose up`
 6. Open a second terminal and go to the `pnpm-monorepo` directory: `cd pnpm-monorepo`
 7. Install the necessary Node.js version: `nvm install`
 8. Enable pnpm: `corepack enable && corepack install`
@@ -132,6 +132,56 @@ With one shared key, a token from a preview deployment can verify as a
 production token. Deployments read the variable from Vercel (see
 [Test and Production](./setup-test-and-production.md#7-set-up-vercel)).
 
+### Statistics dashboard (Grafana)
+
+The statistics page shows the dashboard of the `grafana` container from
+[compose.yml](../compose.yml) in a frame. The container has the settings of
+a production Grafana (see
+[Test and Production](./setup-test-and-production.md#9-optional-set-up-a-grafana-for-the-statistics-dashboard)):
+only an embed token of the app opens it, with the role Viewer. Without
+`STATISTICS_GRAFANA_URL` or `EMBED_JWT_PRIVATE_KEY` in
+`pnpm-monorepo/apps/app/.env`, the page shows a note. To show the
+dashboard:
+
+1. Set `EMBED_JWT_PRIVATE_KEY` (see
+   [Embedded app authentication](#embedded-app-authentication)).
+2. Set `STATISTICS_GRAFANA_URL="http://127.0.0.1:3100"` in
+   `pnpm-monorepo/apps/app/.env`. Use `127.0.0.1`, not `localhost`: then
+   the frame is on a different site than the app, like in production.
+3. Put the two lines that
+   `node .agents/skills/run-app/scripts/grafana-env.mjs pnpm-monorepo/apps/app/.env`
+   prints into the `.env` file next to [compose.yml](../compose.yml). They
+   contain the public key set of `EMBED_JWT_PRIVATE_KEY`
+   (`SAM_GRAFANA_JWK_SET_VALUE`) and the issuer of the tokens
+   (`SAM_GRAFANA_APP_BASE_URL`, the `NEXT_PUBLIC_BASE_URL` of the app).
+   Without the key set, Grafana refuses each token. After a change of the
+   key, replace the two lines.
+4. Run `docker compose up -d grafana`.
+
+The `up.sh` script of the [run-app skill](../.agents/skills/run-app/SKILL.md)
+does the steps 2 to 4. Before Grafana starts, the one-shot
+`grafana-bootstrap` service makes the database role of
+[statistics-reader-role.sql](../pnpm-monorepo/packages/database/prisma/statistics-reader-role.sql).
+Grafana reads the database with this role, thus a query that works locally
+also works in production.
+
+To change the dashboard:
+
+1. Set `SAM_GRAFANA_ADMIN_PASSWORD=<a password>` in the `.env` file next to
+   [compose.yml](../compose.yml), and run `docker compose up -d grafana`.
+   Grafana then has the user `admin` and a login form (editor mode). Without
+   the variable, Grafana has no admin and no login form, like in
+   production.
+2. Log in at <http://127.0.0.1:3100/login> as `admin`, and change the
+   dashboard "Statistiken".
+3. Export the dashboard as JSON. Do not use the export for a different
+   Grafana instance: it replaces the UID of the data source. Replace
+   [grafana/dashboards/statistics.json](../grafana/dashboards/statistics.json)
+   with the JSON. Grafana reads the file again after some seconds. You
+   cannot save the dashboard in Grafana, because it comes from the file.
+4. Remove the variable, and run `docker compose up -d grafana` again. This
+   also removes the admin.
+
 ### Optional environment settings
 
 - `SKIP_VALIDATION=1` skips the environment variable validation of the app
@@ -141,11 +191,14 @@ production token. Deployments read the variable from Vercel (see
 - You can override the host ports of the Docker services, so that multiple
   checkouts (for example git worktrees) can run their stacks at the same
   time. Set `SAM_PSQL_PORT`, `SAM_SOKETI_PORT`, `SAM_SOKETI_METRICS_PORT`,
-  `SAM_COLLAB_PORT`, `SAM_RUSTFS_PORT`, `SAM_UNLEASH_PORT` and/or
-  `SAM_OTEL_COLLECTOR_PORT` in a gitignored `.env` file next to
-  [compose.yml](../compose.yml). Set `NEXTAUTH_URL` to the URL of the dev
-  server of the checkout. Each port has its own login, because in
-  development the name of the session cookie contains the port.
+  `SAM_COLLAB_PORT`, `SAM_RUSTFS_PORT`, `SAM_UNLEASH_PORT`,
+  `SAM_OTEL_COLLECTOR_PORT` and/or `SAM_GRAFANA_PORT` in a gitignored `.env`
+  file next to [compose.yml](../compose.yml). Set `NEXTAUTH_URL` to the URL
+  of the dev server of the checkout. Each port has its own login, because in
+  development the name of the session cookie contains the port. For the
+  [statistics dashboard](#statistics-dashboard-grafana), also set the port
+  of `STATISTICS_GRAFANA_URL`, and set `SAM_GRAFANA_APP_ORIGIN` to the URL of
+  the dev server (default: `http://localhost:3000`).
 
 ## Bot invite link with required scopes
 

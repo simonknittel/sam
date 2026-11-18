@@ -92,3 +92,42 @@
    - Select budgets: `Total monthly budget`
    - Report frequency: `Monthly`
    - Day of month: `1`
+
+## 9. Optional: Set up a Grafana for the statistics dashboard
+
+The statistics page shows a Grafana dashboard in a frame. Without a Grafana,
+the page shows a note. A Grafana that shows the dashboard must have:
+
+1. The settings of [grafana/grafana.ini](../grafana/grafana.ini), and the
+   Grafana version of the `grafana` service in [compose.yml](../compose.yml).
+   Replace the `$__env{...}` values: `root_url` is the public HTTPS URL of
+   the Grafana, `SAM_GRAFANA_APP_ORIGIN` is the origin of SAM, and
+   `SAM_GRAFANA_APP_BASE_URL` is the base URL of SAM (`NEXT_PUBLIC_BASE_URL`,
+   the issuer of the tokens). Replace `jwk_set_value` with
+   `jwk_set_url = <base URL of SAM>/.well-known/jwks.json`: Grafana then
+   loads the public key from SAM over HTTPS. The Grafana has no admin, no
+   login form and no anonymous access. Each citizen gets an account with the
+   role Viewer at the first visit.
+2. The database role `sam_statistics_grafana`. Run
+   [statistics-reader-role.sql](../pnpm-monorepo/packages/database/prisma/statistics-reader-role.sql)
+   in the database of SAM (its comments give the conditions), and set a
+   password of this environment:
+   `ALTER ROLE sam_statistics_grafana PASSWORD '<password>'`. Each viewer
+   can send any SQL to the data source. The role can only read the views of
+   the schema `statistics`.
+3. A PostgreSQL data source with the UID `sam-statistics-postgres` that
+   logs in with this role and that a user cannot edit (example:
+   [grafana/provisioning/datasources/statistics.yaml](../grafana/provisioning/datasources/statistics.yaml)).
+   Keep its maximum number of open connections below the connection limit
+   of the role.
+4. The dashboard file
+   [grafana/dashboards/statistics.json](../grafana/dashboards/statistics.json)
+   (UID `sam-statistics`) from a fixed commit of this repository, through a
+   file provider that does not permit changes in the user interface
+   (example:
+   [grafana/provisioning/dashboards/statistics.yaml](../grafana/provisioning/dashboards/statistics.yaml)).
+   A change of the dashboard goes live when you update the file.
+
+Then set `STATISTICS_GRAFANA_URL` (the base URL of the Grafana) for the
+environment in Vercel. The page also needs `EMBED_JWT_PRIVATE_KEY` (see
+[7. Set up Vercel](#7-set-up-vercel)).

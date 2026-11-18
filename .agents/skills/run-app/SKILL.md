@@ -39,12 +39,14 @@ the parts that are intentionally manual.
 The app is a Next.js app at `pnpm-monorepo/apps/app` (package
 `@sam-monorepo/app`). `compose.yml` at the repo root defines `psql` (Postgres),
 `soketi` (websockets), `sam-collab` (wiki realtime backend), `rustfs`
-(S3-compatible upload storage), `unleash` (feature flags) and
+(S3-compatible upload storage), `unleash` (feature flags),
 `otel-collector` (headless OpenTelemetry sink, see
-`docs/setup-local-machine.md`). The one-shot
+`docs/setup-local-machine.md`) and `grafana` (the dashboard of the statistics
+page). The one-shot
 `rustfs-bootstrap` and `unleash-bootstrap` services create the bucket —
 together with the anonymous-read policy and the CORS rules — and the flags of
-the app, all disabled.
+the app, all disabled. The one-shot `grafana-bootstrap` service makes the
+read-only database role of Grafana.
 
 Multiple worktrees can run at the same time: each checkout runs its OWN
 compose stack and dev server. Compose derives the project name from the
@@ -75,6 +77,11 @@ defaults apply.
 | rustfs S3          | 9000          | 9000 + N |
 | unleash flags      | 4242          | 4242 + N |
 | otel collector     | 4318          | 4318 + N |
+| grafana            | 3100          | 3100 + N |
+
+Grafana listens on `127.0.0.1` only, and the app opens it as
+`http://127.0.0.1:<port>`: a different site than the app on `localhost`,
+like in production.
 
 `NEXTAUTH_URL` is pinned to the port of the dev server, thus auth breaks if
 Next moves to the next free port. Therefore the script refuses to continue
@@ -193,6 +200,24 @@ because the flag data lives in the same Postgres instance.
 everything — but all flags are then disabled again, thus toggle the flags
 that you tested again.
 
+## Statistics dashboard (Grafana)
+
+The script also writes the Grafana values: `STATISTICS_GRAFANA_URL` into
+the app `.env` (only if it is missing; port of the slot), and into the root
+`.env` the key set of `EMBED_JWT_PRIVATE_KEY` (`SAM_GRAFANA_JWK_SET_VALUE`),
+the issuer (`SAM_GRAFANA_APP_BASE_URL`) and the origin of the dev server
+(`SAM_GRAFANA_APP_ORIGIN`). Do not print these lines. The root `.env` keeps
+its other lines, for example `SAM_GRAFANA_ADMIN_PASSWORD` of the editor
+mode. Without `EMBED_JWT_PRIVATE_KEY`, the statistics page shows a note.
+See `docs/setup-local-machine.md` for the details and for a change of the
+dashboard.
+
+The issuer is the `NEXT_PUBLIC_BASE_URL` of the app, which is not set
+locally. Thus it is `http://localhost:3000` also in a worktree, and only the
+origin has the port of the slot. In the main checkout, the script starts the
+two Grafana containers with `docker compose up --no-deps`: this makes them
+if they are missing, and it never recreates `psql`.
+
 ## Shutdown
 
 Kill the dev server that you started; `up.sh` prints its log path.
@@ -215,7 +240,7 @@ If the directory is already gone, address the stack with the project name:
 `docker compose -p <project> down --rmi local --volumes --remove-orphans`.
 
 **Main stack:** keep it in operation. Stop it with
-`docker stop sam-psql-1 sam-soketi-1 sam-sam-collab-1 sam-rustfs-1 sam-unleash-1`
+`docker stop sam-psql-1 sam-soketi-1 sam-sam-collab-1 sam-rustfs-1 sam-unleash-1 sam-grafana-1`
 only when the user asks, and NEVER `docker compose down` it — its containers
 hold the only copy of the dev data.
 

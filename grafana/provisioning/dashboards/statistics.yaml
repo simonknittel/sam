@@ -1,0 +1,12 @@
+apiVersion: 1
+
+providers:
+  - name: sam-statistics
+    type: file
+    disableDeletion: true
+    # A change goes into grafana/dashboards/statistics.json, not into the
+    # database of Grafana (see docs/setup-local-machine.md)
+    allowUiUpdates: false
+    options:
+      path: /etc/grafana/dashboards
+      foldersFromFilesStructure: false

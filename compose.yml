@@ -173,6 +173,81 @@ services:
     ports:
       - ${SAM_OTEL_COLLECTOR_PORT:-4318}:4318
 
+  # Grafana that shows the statistics dashboard on /app/statistics (see
+  # docs/setup-local-machine.md). It has the settings of a production
+  # Grafana: only a valid embed token of the app opens it, with the role
+  # Viewer. Grafana reads a changed dashboard file in some seconds. After a
+  # change of a different file under grafana/, do
+  # `docker compose restart grafana`.
+  grafana:
+    image: grafana/grafana:13.3.0@sha256:488984b716c0862639f91a698adbe2862677a5a07bad42da5f03f3030883b205
+    restart: no
+    depends_on:
+      grafana-bootstrap:
+        condition: service_completed_successfully
+    # The `run-app` skill (up.sh) writes the SAM_GRAFANA_* variables into the
+    # .env next to this file
+    environment:
+      SAM_GRAFANA_ROOT_URL: http://127.0.0.1:${SAM_GRAFANA_PORT:-3100}/
+      # The issuer of the embed tokens: NEXT_PUBLIC_BASE_URL of the app
+      SAM_GRAFANA_APP_BASE_URL: ${SAM_GRAFANA_APP_BASE_URL:-http://localhost:3000}
+      # The origin of the app in the browser, the only origin that can show
+      # Grafana in a frame
+      SAM_GRAFANA_APP_ORIGIN: ${SAM_GRAFANA_APP_ORIGIN:-http://localhost:3000}
+      # The base64 of the JSON Web Key Set of the EMBED_JWT_PRIVATE_KEY of
+      # the app. The default is an empty key set: Grafana then refuses each
+      # token.
+      SAM_GRAFANA_JWK_SET_VALUE: ${SAM_GRAFANA_JWK_SET_VALUE:-eyJrZXlzIjpbXX0=}
+      # Editor mode, off by default like in production. With a password,
+      # Grafana makes the user `admin` and shows the login form, so that you
+      # can change the dashboard and export it. Without a password, these
+      # three values are empty, and Grafana ignores an empty variable.
+      GF_SECURITY_DISABLE_INITIAL_ADMIN_CREATION: ${SAM_GRAFANA_ADMIN_PASSWORD:+false}
+      GF_SECURITY_ADMIN_PASSWORD: ${SAM_GRAFANA_ADMIN_PASSWORD:-}
+      GF_AUTH_DISABLE_LOGIN_FORM: ${SAM_GRAFANA_ADMIN_PASSWORD:+false}
+    # Only the two provisioning files: a mount of the full provisioning
+    # directory without the other subdirectories causes errors in the log
+    configs:
+      - source: grafana-ini
+        target: /etc/grafana/grafana.ini
+      - source: grafana-datasources
+        target: /etc/grafana/provisioning/datasources/statistics.yaml
+      - source: grafana-dashboards
+        target: /etc/grafana/provisioning/dashboards/statistics.yaml
+    volumes:
+      - ./grafana/dashboards:/etc/grafana/dashboards:ro
+    # Only on the loopback interface, also in editor mode. The app opens
+    # 127.0.0.1, which is a different site than localhost, like a production
+    # Grafana on its own domain.
+    ports:
+      - 127.0.0.1:${SAM_GRAFANA_PORT:-3100}:3000
+
+  # One-shot helper which makes the read-only database role of the grafana
+  # service and sets its local password. The SQL file expects the schema and
+  # must run as the owner of the views (locally the postgres superuser, which
+  # also applies the migrations). Safe to re-run.
+  grafana-bootstrap:
+    image: postgres:18.7-alpine3.23@sha256:e6014245dccbc0f28b07dac8e3f793c94a18420f78690e9db547957514a524f1
+    restart: no
+    depends_on:
+      psql:
+        condition: service_healthy
+    environment:
+      PGHOST: psql
+      PGUSER: postgres
+      PGPASSWORD: admin
+      PGDATABASE: db
+    configs:
+      - source: statistics-reader-role
+        target: /bootstrap/statistics-reader-role.sql
+    # The password must match grafana/provisioning/datasources/statistics.yaml
+    entrypoint:
+      - psql
+      - --set=ON_ERROR_STOP=1
+      - --command=CREATE SCHEMA IF NOT EXISTS statistics
+      - --file=/bootstrap/statistics-reader-role.sql
+      - --command=ALTER ROLE sam_statistics_grafana PASSWORD 'sam-statistics-local-insecure'
+
 volumes:
   # Holds the received telemetry (see docs/setup-local-machine.md).
   otel-collector-output:
@@ -270,3 +345,12 @@ configs:
           logs:
             receivers: [otlp]
             exporters: [file/logs]
+
+  grafana-ini:
+    file: ./grafana/grafana.ini
+  grafana-datasources:
+    file: ./grafana/provisioning/datasources/statistics.yaml
+  grafana-dashboards:
+    file: ./grafana/provisioning/dashboards/statistics.yaml
+  statistics-reader-role:
+    file: ./pnpm-monorepo/packages/database/prisma/statistics-reader-role.sql

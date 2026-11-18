@@ -1,0 +1,21 @@
+apiVersion: 1
+
+datasources:
+  - name: SAM
+    # The dashboard finds the data source with this UID
+    uid: sam-statistics-postgres
+    type: grafana-postgresql-datasource
+    url: psql:5432
+    # The read-only role of
+    # pnpm-monorepo/packages/database/prisma/statistics-reader-role.sql. The
+    # grafana-bootstrap service of compose.yml sets this local password.
+    user: sam_statistics_grafana
+    secureJsonData:
+      password: sam-statistics-local-insecure
+    jsonData:
+      database: db
+      sslmode: disable
+      # Below the connection limit of the role
+      maxOpenConns: 5
+    isDefault: true
+    editable: false

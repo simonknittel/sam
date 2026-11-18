@@ -9,6 +9,7 @@
 # Prints the URL to hand the user on the last lines, plus how to log in.
 set -euo pipefail
 
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CHECKOUT="$(git rev-parse --show-toplevel)"
 cd "$CHECKOUT"
 
@@ -37,7 +38,8 @@ elif [ -z "$SLOT" ]; then
       ports="( sport = :$((3000 + candidate)) or sport = :$((5432 + candidate)) \
 or sport = :$((6001 + candidate)) or sport = :$((9601 + candidate)) \
 or sport = :$((5210 + candidate)) or sport = :$((9000 + candidate)) \
-or sport = :$((4242 + candidate)) or sport = :$((4318 + candidate)) )"
+or sport = :$((4242 + candidate)) or sport = :$((4318 + candidate)) \
+or sport = :$((3100 + candidate)) )"
       if [ -z "$(ss -ltn "$ports" | tail -n +2)" ]; then SLOT=$candidate; break; fi
     done
   fi
@@ -52,6 +54,7 @@ COLLAB_PORT=$((5210 + SLOT))
 RUSTFS_PORT=$((9000 + SLOT))
 UNLEASH_PORT=$((4242 + SLOT))
 OTEL_COLLECTOR_PORT=$((4318 + SLOT))
+GRAFANA_PORT=$((3100 + SLOT))
 echo "==> slot $SLOT (app :$APP_PORT, psql :$PSQL_PORT)"
 
 # ------------------------------------------------------------------- config
@@ -61,8 +64,20 @@ echo "==> slot $SLOT (app :$APP_PORT, psql :$PSQL_PORT)"
 # would silently repoint the main stack at this checkout's database.
 write_fresh() { rm -f "$1"; cat > "$1"; }
 
+# Writes the KEY=value lines from stdin into an env file and keeps its other
+# lines, for example SAM_GRAFANA_ADMIN_PASSWORD in the root .env.
+set_env_lines() {
+  local file="$1" lines keys kept=""
+  lines="$(cat)"
+  keys="$(printf '%s\n' "$lines" | cut -d= -f1 | paste -sd'|')"
+  [ -f "$file" ] && kept="$(grep -vE "^($keys)=" "$file" || true)"
+  { [ -n "$kept" ] && printf '%s\n' "$kept"; printf '%s\n' "$lines"; } | write_fresh "$file"
+}
+
+APP_ENV="$CHECKOUT/pnpm-monorepo/apps/app/.env"
+
 if [ "$SLOT" -ne 0 ]; then
-  write_fresh "$CHECKOUT/.env" <<EOF
+  set_env_lines "$CHECKOUT/.env" <<EOF
 SAM_PSQL_PORT=$PSQL_PORT
 SAM_SOKETI_PORT=$SOKETI_PORT
 SAM_SOKETI_METRICS_PORT=$SOKETI_METRICS_PORT
@@ -70,13 +85,13 @@ SAM_COLLAB_PORT=$COLLAB_PORT
 SAM_RUSTFS_PORT=$RUSTFS_PORT
 SAM_UNLEASH_PORT=$UNLEASH_PORT
 SAM_OTEL_COLLECTOR_PORT=$OTEL_COLLECTOR_PORT
+SAM_GRAFANA_PORT=$GRAFANA_PORT
 EOF
 
   write_fresh "$CHECKOUT/pnpm-monorepo/packages/database/.env" <<EOF
 DATABASE_URL="postgresql://postgres:admin@localhost:$PSQL_PORT/db"
 EOF
 
-  APP_ENV="$CHECKOUT/pnpm-monorepo/apps/app/.env"
   [ -f "$APP_ENV" ] || { echo "missing $APP_ENV — copy it from $MAIN_CHECKOUT" >&2; exit 1; }
 
   # Rewrite whatever port each key currently carries, not the slot-0 default:
@@ -91,6 +106,7 @@ EOF
     -e "s|^(COLLAB_URL=.*localhost:)[0-9]+|\1$COLLAB_PORT|" \
     -e "s|^(OTEL_EXPORTER_OTLP_ENDPOINT=.*localhost:)[0-9]+|\1$OTEL_COLLECTOR_PORT|" \
     -e "s|^(NEXT_PUBLIC_PUSHER_CHANNELS_PORT=\")[0-9]+|\1$SOKETI_PORT|" \
+    -e "s|^(STATISTICS_GRAFANA_URL=.*127\.0\.0\.1:)[0-9]+|\1$GRAFANA_PORT|" \
     "$APP_ENV")"
   printf '%s\n' "$PATCHED" | write_fresh "$APP_ENV"
 
@@ -101,6 +117,20 @@ EOF
   grep -qE "^NEXTAUTH_URL=\"?http://localhost:$APP_PORT" "$APP_ENV" \
     || { echo "NEXTAUTH_URL in $APP_ENV is not http://localhost:$APP_PORT — auth callbacks would break; fix it by hand" >&2; exit 1; }
 fi
+
+# The local Grafana of the statistics page. In the main checkout, the append
+# keeps the inode: hardlinked copies get the line too, and the up.sh run of
+# their worktree changes the port.
+if [ -f "$APP_ENV" ] && ! grep -q '^STATISTICS_GRAFANA_URL=' "$APP_ENV"; then
+  printf '\nSTATISTICS_GRAFANA_URL="http://127.0.0.1:%s"\n' "$GRAFANA_PORT" >> "$APP_ENV"
+fi
+
+# Grafana verifies the embed tokens with the public key of
+# EMBED_JWT_PRIVATE_KEY and the issuer of the app, and permits only the
+# origin of the app to show it in a frame.
+GRAFANA_ENV_LINES="$(node "$SCRIPTS_DIR/grafana-env.mjs" "$APP_ENV")"
+printf '%s\nSAM_GRAFANA_APP_ORIGIN=http://localhost:%s\n' "$GRAFANA_ENV_LINES" "$APP_PORT" \
+  | set_env_lines "$CHECKOUT/.env"
 
 # ------------------------------------------------------------------ install
 
@@ -139,6 +169,19 @@ for attempt in $(seq 1 60); do
   sleep 1
 done
 
+if [ "$SLOT" -eq 0 ]; then
+  # `up` and not `docker start`: it makes the two containers in a main
+  # checkout that is older than them, and applies a changed root .env.
+  # --no-deps keeps psql as it is (see above). Compose waits until
+  # grafana-bootstrap made the database role, thus before the migrations.
+  GRAFANA_LOG="$(mktemp /tmp/sam-grafana-XXXXXX.log)"
+  if ! docker compose up -d --no-deps grafana-bootstrap grafana >"$GRAFANA_LOG" 2>&1; then
+    echo "the start of grafana failed; log: $GRAFANA_LOG" >&2
+    tail -20 "$GRAFANA_LOG" >&2
+    exit 1
+  fi
+fi
+
 psql_local() { docker compose exec -T psql psql -U postgres -d db "$@"; }
 
 # --------------------------------------------------------------------- seed
@@ -149,7 +192,10 @@ if [ "$SLOT" -ne 0 ] && [ "$SEED" -eq 1 ]; then
     MAIN_PSQL_WAS_RUNNING="$(docker inspect -f '{{.State.Running}}' sam-psql-1)"
     docker start sam-psql-1 >/dev/null
     until docker exec sam-psql-1 pg_isready -U postgres >/dev/null 2>&1; do sleep 1; done
-    docker exec sam-psql-1 pg_dump -U postgres db | psql_local -q >/dev/null
+    # grafana-bootstrap made the schema `statistics` already
+    docker exec sam-psql-1 pg_dump -U postgres db \
+      | sed 's/^CREATE SCHEMA statistics;$/CREATE SCHEMA IF NOT EXISTS statistics;/' \
+      | psql_local -q >/dev/null
     # The dump is the only reason to start the database of the main checkout
     if [ "$MAIN_PSQL_WAS_RUNNING" != "true" ]; then
       docker stop sam-psql-1 >/dev/null
