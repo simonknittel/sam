@@ -60,7 +60,7 @@ test("an admin's pages stay redacted until admin mode is enabled", async ({
   await toolbarPanel(page)
     .getByRole("button", { name: "Enable admin" })
     .click();
-  await expect(page.getByText("Zeitraum:")).toBeVisible();
+  await expect(page.locator("#main-content iframe")).toBeVisible();
   await expect(page.getByText(FORBIDDEN_TEXT)).not.toBeVisible();
   await expect(toolbarButton(page)).toContainText("Admin mode");
 

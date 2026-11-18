@@ -165,6 +165,25 @@ export const env = createEnv({
      */
     EMBED_JWT_PRIVATE_KEY: z.optional(z.string()),
     /**
+     * Base URL of the Grafana that shows the statistics dashboard in a frame
+     * on /app/statistics, for example http://127.0.0.1:3100 for the Grafana
+     * of compose.yml. The page also needs EMBED_JWT_PRIVATE_KEY: the Grafana
+     * examines a token of the app (see docs/embedded-app-authentication.md).
+     * The page shows a note instead of the dashboard if unset. Plain HTTP is
+     * refused unless it points at the local machine, because the frame URL
+     * carries the token.
+     */
+    STATISTICS_GRAFANA_URL: z.optional(
+      z
+        .url({ protocol: /^https?$/ })
+        .check(
+          z.refine(
+            isEncryptedOrLoopbackUrl,
+            "must use https unless it is loopback",
+          ),
+        ),
+    ),
+    /**
      * Set to "1" to permit OAuth client ids (Client ID Metadata Document
      * URLs) with plain HTTP on a loopback host, and the fetch of these
      * documents from the loopback interface. Only the Playwright stack sets

@@ -54,6 +54,27 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-11-18-statistiken-ueberarbeitet",
+    date: "2026-11-18",
+    title: "Statistiken überarbeitet",
+    tags: ["Änderung", "Statistiken"],
+    isTracked: false,
+    requiresAuth: { resource: "globalStatistics", action: "read" },
+    body: () => (
+      <p>
+        Die App{" "}
+        <Link
+          href="/app/statistics"
+          className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300 active:text-interaction-700"
+        >
+          Statistiken
+        </Link>{" "}
+        ist überarbeitet, damit die Bedienung einfacher ist.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-11-17-schiffe-herkunft-und-notiz",
     date: "2026-11-17",
     title: "Herkunft und Notiz für Schiffe",

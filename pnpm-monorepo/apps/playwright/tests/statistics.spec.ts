@@ -1,57 +1,42 @@
-import type { Page } from "@playwright/test";
-import { VariantStatus } from "@sam-monorepo/database/client";
-import {
-  createCitizen,
-  createVariant,
-  ONE_DAY_MS,
-} from "../fixtures/factories";
-import { sectionByHeading } from "../fixtures/interactions";
+import type { Locator } from "@playwright/test";
+import { createCitizen, createUserWithoutCitizen } from "../fixtures/factories";
+import { waitForAppShellHydration } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
+import { appDummyEnvironment } from "../setup/stack";
 
-const CHART_TITLES = [
-  "Flotte gesamt",
-  "Flotte",
-  "Flottenwert (USD)",
-  "Flottenwert (aUEC)",
-  "Logins",
-  "Citizens",
-  "Organisationen",
-  "Registrierte Benutzer",
-  "Rollen",
-  "Events",
-  "SILC",
-  "MCP-Nutzung",
-];
+const EXPIRY_NOTE_TEXT = "Die Anmeldung für die Statistiken läuft ab.";
+
+const ONE_HOUR_IN_SECONDS = 60 * 60;
+
+interface TokenClaims {
+  readonly sub: string;
+  readonly aud: string;
+  readonly iat: number;
+  readonly exp: number;
+  readonly jti: string;
+}
 
 /**
- * Counts non-transparent pixels. An empty-but-mounted canvas passes
- * DOM-only checks — this catches the "flatlined chart" class of bug.
+ * Reads the frame URL and the claims of its token. The stack has no
+ * Grafana, thus the test only decodes the token, and the unit tests of the
+ * app verify the signature. The assertions compare single values, so that
+ * a failure never prints the token.
  */
-const countPaintedPixels = (page: Page, title: string) =>
-  sectionByHeading(page, title)
-    .locator("canvas")
-    .first()
-    .evaluate((element) => {
-      const canvas = element as HTMLCanvasElement;
-      const context = canvas.getContext("2d");
-      if (!context || canvas.width === 0 || canvas.height === 0) return 0;
-      const pixels = context.getImageData(
-        0,
-        0,
-        canvas.width,
-        canvas.height,
-      ).data;
-      let painted = 0;
-      for (let index = 3; index < pixels.length; index += 4) {
-        if ((pixels[index] ?? 0) > 0) painted += 1;
-      }
-      return painted;
-    });
+const readFrame = async (frame: Locator) => {
+  const url = new URL((await frame.getAttribute("src")) ?? "");
+  const [, encodedClaims = ""] = (
+    url.searchParams.get("auth_token") ?? ""
+  ).split(".");
 
-/** Axis lines alone already paint far more than this. */
-const MIN_PAINTED_PIXELS = 1_000;
+  return {
+    url,
+    claims: JSON.parse(
+      Buffer.from(encodedClaims, "base64url").toString("utf8"),
+    ) as TokenClaims,
+  };
+};
 
-test("all twelve statistics charts paint their canvases", async ({
+test("the statistics page shows the dashboard and signs a new token after the expiry", async ({
   page,
   prisma,
   signIn,
@@ -60,65 +45,78 @@ test("all twelve statistics charts paint their canvases", async ({
     handle: "statistiker",
     permissionStrings: ["globalStatistics;read"],
   });
-
-  /**
-   * The snapshot charts (Flotte gesamt, Flotte, both Flottenwert, Rollen,
-   * Logins, MCP-Nutzung) only have data for days with rows. The chart axis ends
-   * yesterday. A `@db.Date` column keeps the UTC date of the value, which is
-   * yesterday in UTC and yesterday or earlier in Europe/Berlin.
-   */
-  const snapshotDay = new Date(Date.now() - ONE_DAY_MS);
-  const { variant } = await createVariant(prisma, {
-    manufacturerName: "Roberts Space Industries",
-    seriesName: "Polaris",
-    variantName: "Polaris",
-    status: VariantStatus.FLIGHT_READY,
-  });
-  await prisma.variantShipCount.create({
-    data: { variantId: variant.id, count: 7, day: snapshotDay },
-  });
-  await prisma.roleCitizenCount.create({
-    data: { roleId: viewer.role.id, count: 3, day: snapshotDay },
-  });
-  await prisma.dailyLoginCount.create({
-    data: { date: snapshotDay, count: 5 },
-  });
-  await prisma.dailyMcpUsageCount.create({
-    data: { day: snapshotDay, count: 4 },
-  });
-  await prisma.dailyFleetValue.create({
-    data: {
-      day: snapshotDay,
-      storeValueUsdCents: 60_000,
-      inGameValueUsdCents: 2_500,
-      unknownValueUsdCents: 0,
-      storeValueAuec: 26_400_000,
-      inGameValueAuec: 1_250_000,
-      unknownValueAuec: 0,
-    },
-  });
-
   await signIn(viewer.user);
+
+  /** The test moves the clock of the page forward instead of waiting */
+  await page.clock.install();
   await page.goto("/app/statistics");
 
-  await expect(page.getByText("Zeitraum:")).toBeVisible();
-  for (const title of CHART_TITLES) {
-    await expect(
-      page.getByRole("heading", { name: title, exact: true }),
-    ).toBeVisible();
-  }
-  await expect(
-    page.getByText("Keine Daten für den ausgewählten Zeitraum vorhanden."),
-  ).toHaveCount(0);
+  const frame = page.locator("#main-content iframe");
+  await expect(frame).toHaveAttribute("title", "Statistiken");
 
-  for (const title of CHART_TITLES) {
-    await expect(
-      sectionByHeading(page, title).locator("canvas").first(),
-    ).toBeVisible();
-    await expect
-      .poll(() => countPaintedPixels(page, title), {
-        message: `chart "${title}" should paint pixels`,
-      })
-      .toBeGreaterThan(MIN_PAINTED_PIXELS);
-  }
+  const first = await readFrame(frame);
+  expect(first.url.origin).toBe(
+    new URL(appDummyEnvironment.STATISTICS_GRAFANA_URL).origin,
+  );
+  expect(first.url.pathname).toBe("/d/sam-statistics/statistiken");
+  expect(first.url.searchParams.get("kiosk")).toBe("1");
+  expect(first.claims.aud).toBe("sam-statistics-grafana");
+  expect(first.claims.sub).toBe(viewer.entity.id);
+  expect(first.claims.exp - first.claims.iat).toBe(ONE_HOUR_IN_SECONDS);
+
+  /** The timer of the note starts at the hydration */
+  await waitForAppShellHydration(page);
+  const expiryNote = page.getByText(EXPIRY_NOTE_TEXT);
+  await expect(expiryNote).toHaveCount(0);
+
+  await page.clock.fastForward("01:00:00");
+
+  await expect(expiryNote).toBeVisible();
+  await expect(frame).toHaveAttribute("inert");
+
+  await page.getByRole("button", { name: "Statistiken neu laden" }).click();
+
+  await expect(expiryNote).toHaveCount(0);
+  await expect(frame).not.toHaveAttribute("inert");
+
+  const second = await readFrame(frame);
+  expect(second.claims.jti).not.toBe(first.claims.jti);
+  expect(second.claims.exp - second.claims.iat).toBe(ONE_HOUR_IN_SECONDS);
+
+  /**
+   * A sleeping tab: the time goes on, but the timer does not fire. The page
+   * finds the expiry when the tab becomes visible again.
+   */
+  await page.clock.setSystemTime(
+    (await page.evaluate(() => Date.now())) + ONE_HOUR_IN_SECONDS * 1000,
+  );
+  await page.evaluate(() =>
+    document.dispatchEvent(new Event("visibilitychange")),
+  );
+  await expect(expiryNote).toBeVisible();
+});
+
+test("the statistics page shows a note instead of the dashboard to a user without a citizen", async ({
+  page,
+  prisma,
+  signIn,
+  enableAdminMode,
+}) => {
+  const user = await createUserWithoutCitizen(prisma, {
+    name: "statistik-admin",
+    admin: true,
+  });
+  await signIn(user);
+  await enableAdminMode();
+
+  await page.goto("/app/statistics");
+
+  await expect(
+    page
+      .locator("#main-content")
+      .getByText(
+        "Die Statistiken benötigen einen Citizen, der mit deinem Account verknüpft ist.",
+      ),
+  ).toBeVisible();
+  await expect(page.locator("iframe")).toHaveCount(0);
 });
