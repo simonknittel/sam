@@ -205,6 +205,13 @@ const CENTI_SCU_PER_SCU = 100;
 /** The shops of the game are all named `SCShop_<location>` */
 const toShopName = (shop: string) => shop.replace(/^SCShop_/, "");
 
+/** The price and the shop of a purchase or a rental, after its goods */
+const formatShopPrice = (groups: Record<string, string>) => [
+  muted("für"),
+  `${priceFormat.format(Number(groups.price))} aUEC`,
+  muted(`(${toShopName(groups.shop)})`),
+];
+
 enum RestrictedAreaEvent {
   Impoundment = "impoundment",
   Leaving = "leaving",
@@ -445,7 +452,7 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     category: EntryCategory.Commerce,
     renderMessage: (groups) => (
       <TruncatedText>
-        {`${groups.quantity}× ${groups.item} für ${priceFormat.format(Number(groups.price))} aUEC (${toShopName(groups.shop)})`}
+        {[`${groups.quantity}× ${groups.item}`, ...formatShopPrice(groups)]}
       </TruncatedText>
     ),
   },
@@ -709,9 +716,7 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     icon: FaKey,
     category: EntryCategory.Commerce,
     renderMessage: (groups) => (
-      <TruncatedText>
-        {`${groups.item} für ${priceFormat.format(Number(groups.price))} aUEC (${toShopName(groups.shop)})`}
-      </TruncatedText>
+      <TruncatedText>{[groups.item, ...formatShopPrice(groups)]}</TruncatedText>
     ),
   },
 
@@ -721,7 +726,10 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     category: EntryCategory.Commerce,
     renderMessage: (groups) => (
       <TruncatedText>
-        {`${scuFormat.format(Number(groups.centiScu) / CENTI_SCU_PER_SCU)} SCU für ${priceFormat.format(Number(groups.price))} aUEC (${toShopName(groups.shop)})`}
+        {[
+          `${scuFormat.format(Number(groups.centiScu) / CENTI_SCU_PER_SCU)} SCU`,
+          ...formatShopPrice(groups),
+        ]}
       </TruncatedText>
     ),
   },
