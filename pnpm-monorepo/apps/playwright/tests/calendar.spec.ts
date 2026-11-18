@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import type { PrismaClient } from "@sam-monorepo/database/client";
 import {
   EventSource,
@@ -26,6 +26,9 @@ import { expect, test } from "../fixtures/test";
 const CALENDAR_PAGE = "/app/calendar";
 
 const calendarTile = (page: Page) => sectionByHeading(page, "Kalender");
+
+const birthdayRow = (scope: Page | Locator, handle: string) =>
+  scope.getByRole("article").filter({ hasText: `Geburtstag von ${handle}` });
 
 /**
  * The checkbox itself is sr-only — the visible control is the box its
@@ -132,9 +135,7 @@ test("the dashboard tile shows the events, the birthdays and the own task deadli
   await expect(
     tile.getByRole("heading", { name: "Kalender-Operation" }),
   ).toBeVisible();
-  await expect(
-    tile.getByRole("link", { name: "Geburtstag von kalender-geburtstag" }),
-  ).toBeVisible();
+  await expect(birthdayRow(tile, "kalender-geburtstag")).toBeVisible();
   await expect(
     tile.getByRole("link", { name: "Task-Frist: Eigener Auftrag" }),
   ).toBeVisible();
@@ -150,11 +151,21 @@ test("the dashboard tile shows the events, the birthdays and the own task deadli
   ).toBeVisible();
 
   // The whole row is clickable: a click into its padding, not on its title
-  await page
-    .getByRole("article")
-    .filter({ hasText: "Geburtstag von kalender-geburtstag" })
-    .click({ position: { x: 8, y: 8 } });
+  await birthdayRow(page, "kalender-geburtstag").click({
+    position: { x: 8, y: 8 },
+  });
   await expect(page).toHaveURL("/app/spynet/birthdays");
+
+  // The link of the citizen is above the link of the row
+  await page.goto(CALENDAR_PAGE);
+  await clickUntilUrl(
+    page,
+    birthdayRow(page, "kalender-geburtstag").getByRole("link", {
+      name: "kalender-geburtstag",
+      exact: true,
+    }),
+    `/app/spynet/citizen/${other.entity.id}`,
+  );
 });
 
 test("a finished event leaves the tile and the upcoming list for the past list, a running event stays", async ({
@@ -209,31 +220,29 @@ test("a type switched off in the app disappears from the tile and stays off afte
     permissionStrings: ["citizen;read"],
   });
   await createBirthdayCitizen(prisma, "kalender-gefiltert");
-  const birthdayRow = page.getByRole("link", {
-    name: "Geburtstag von kalender-gefiltert",
-  });
+  const filteredBirthdayRow = birthdayRow(page, "kalender-gefiltert");
 
   await signIn(viewer.user);
   await page.goto(CALENDAR_PAGE);
-  await expect(birthdayRow).toBeVisible();
+  await expect(filteredBirthdayRow).toBeVisible();
   await expect(typeCheckbox(page, "birthday")).toBeChecked();
   // The checkbox saves once, thus the page has to be hydrated first
   await waitForAppShellHydration(page);
 
   await toggleLabel(page, typeCheckbox(page, "birthday")).click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
-  await expect(birthdayRow).toHaveCount(0);
+  await expect(filteredBirthdayRow).toHaveCount(0);
 
   await page.reload();
   await expect(typeCheckbox(page, "birthday")).not.toBeChecked();
   await expect(typeCheckbox(page, "seasonal")).toBeChecked();
-  await expect(birthdayRow).toHaveCount(0);
+  await expect(filteredBirthdayRow).toHaveCount(0);
 
   await page.goto("/app/dashboard");
   await expect(
     calendarTile(page).getByRole("link", { name: "Zum Kalender" }),
   ).toBeVisible();
-  await expect(birthdayRow).toHaveCount(0);
+  await expect(filteredBirthdayRow).toHaveCount(0);
 
   const settings = await prisma.calendarEntryTypeSetting.findMany({
     where: { citizenId: viewer.entity.id },

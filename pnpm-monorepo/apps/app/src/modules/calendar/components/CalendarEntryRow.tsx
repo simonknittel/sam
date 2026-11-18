@@ -1,5 +1,6 @@
 import "server-only";
 
+import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { Link } from "@/modules/common/components/Link";
 import { SmallBadge } from "@/modules/common/components/SmallBadge";
 import { SEASONAL_THEMES } from "@/modules/seasonal-events/utils/SEASONAL_THEMES";
@@ -11,6 +12,7 @@ import {
 } from "@sam-monorepo/application";
 import { CalendarEntryType } from "@sam-monorepo/domain";
 import clsx from "clsx";
+import type { ReactNode } from "react";
 import { formatCalendarTime } from "../utils/formatCalendarDate";
 import { CalendarEntryTypeIcon } from "./CalendarEntryTypeIcon";
 
@@ -18,7 +20,13 @@ import { CalendarEntryTypeIcon } from "./CalendarEntryTypeIcon";
 type RowEntry = Exclude<CalendarEntry, EventCalendarEntry>;
 
 interface RowContent {
+  /** The name of the link of the row */
   readonly title: string;
+  /**
+   * The part of the title after the link of the row, for example a citizen
+   * with a link of its own
+   */
+  readonly titleSuffix?: ReactNode;
   /** More facts of the entry, for example the roles of a salary */
   readonly details: string | null;
   readonly badge: string | null;
@@ -41,7 +49,14 @@ const getRowContent = (entry: RowEntry): RowContent => {
   switch (entry.type) {
     case CalendarEntryType.Birthday:
       return {
-        title: `Geburtstag von ${entry.citizen.handle || entry.citizen.id}`,
+        title: "Geburtstag",
+        titleSuffix: (
+          <>
+            {" von "}
+            {/* Positioned, thus it is above the link of the row */}
+            <CitizenLink citizen={entry.citizen} className="relative" />
+          </>
+        ),
         details: null,
         badge: null,
       };
@@ -101,10 +116,10 @@ interface Props {
 /**
  * A compact row for each entry that is not an event. With a link, the whole
  * row is clickable: the link stretches over the row, but its name stays the
- * title.
+ * title. A link in the title suffix must be positioned to be above it.
  */
 export const CalendarEntryRow = ({ className, entry }: Props) => {
-  const { title, details, badge } = getRowContent(entry);
+  const { title, titleSuffix, details, badge } = getRowContent(entry);
 
   return (
     <article
@@ -134,6 +149,7 @@ export const CalendarEntryRow = ({ className, entry }: Props) => {
           ) : (
             title
           )}
+          {titleSuffix}
         </h3>
 
         <p className="text-sm text-neutral-500">
