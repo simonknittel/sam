@@ -1,5 +1,4 @@
 import { DefaultLayout } from "@/modules/common/components/layouts/DefaultLayout";
-import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthContent";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -9,10 +8,14 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * Without a width limit: the frame of the dashboard uses the full content
+ * area, like the frame of an external app
+ */
 export default function Layout({ children }: LayoutProps<"/app/statistics">) {
   return (
     <DefaultLayout title="Statistiken" slug="statistics">
-      <MaxWidthContent>{children}</MaxWidthContent>
+      {children}
     </DefaultLayout>
   );
 }

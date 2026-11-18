@@ -4,6 +4,7 @@ import { createLocalJWKSet, jwtVerify } from "jose";
 import type { Session } from "next-auth";
 import { generateKeyPairSync } from "node:crypto";
 import { describe, expect, test, vi } from "vitest";
+import { DEFAULT_EMBED_TOKEN_LIFETIME_IN_SECONDS } from "./constants";
 import {
   createEmbedJsonWebKeySet,
   createEmbedSigningKey,
@@ -50,7 +51,7 @@ const logWarn = vi.fn();
  * so each case gets its own module graph. This is also what lets the tests
  * cover the deployment without a configured key.
  */
-const importResolveEmbedUrl = async (base64EncodedPrivateKeyPem?: string) => {
+const importModule = async (base64EncodedPrivateKeyPem?: string) => {
   vi.resetModules();
   vi.doMock("server-only", () => ({}));
   vi.doMock("@/env", () => ({
@@ -63,8 +64,11 @@ const importResolveEmbedUrl = async (base64EncodedPrivateKeyPem?: string) => {
     log: { info: vi.fn(), warn: logWarn, error: vi.fn() },
   }));
 
-  return (await import("./resolveEmbedUrl")).resolveEmbedUrl;
+  return import("./resolveEmbedUrl");
 };
+
+const importResolveEmbedUrl = async (base64EncodedPrivateKeyPem?: string) =>
+  (await importModule(base64EncodedPrivateKeyPem)).resolveEmbedUrl;
 
 describe("resolve embed URL", () => {
   test("appends a token an embedded app can verify", async () => {
@@ -100,8 +104,53 @@ describe("resolve embed URL", () => {
       // Not the `wiki;manage` the session also holds
       permissions: ["event;read"],
     });
+    expect(payload.exp! - payload.iat!).toBe(
+      DEFAULT_EMBED_TOKEN_LIFETIME_IN_SECONDS,
+    );
     expect(new URL(resolvedUrl).searchParams.get("view")).toBe("all");
     expect(logWarn).not.toHaveBeenCalled();
+  });
+
+  test("signs the token with the parameter and the lifetime of the configuration", async () => {
+    const base64EncodedPrivateKeyPem = generateBase64EncodedPrivateKeyPem();
+    const { authenticateEmbedUrl, AuthenticatedEmbedUrlStatus } =
+      await importModule(base64EncodedPrivateKeyPem);
+
+    const authenticatedEmbedUrl = await authenticateEmbedUrl(
+      EMBED_URL,
+      buildSession(buildEntity("ind3x")),
+      {
+        ...EMBED_AUTHENTICATION,
+        queryParameter: "auth_token",
+        lifetimeInSeconds: 3600,
+      },
+    );
+    if (authenticatedEmbedUrl.status !== AuthenticatedEmbedUrlStatus.Signed)
+      throw new Error(`No token: ${authenticatedEmbedUrl.status}`);
+
+    const searchParams = new URL(authenticatedEmbedUrl.url).searchParams;
+    expect(searchParams.has("jwt")).toBe(false);
+
+    const { payload } = await jwtVerify(
+      searchParams.get("auth_token")!,
+      createLocalJWKSet(
+        createEmbedJsonWebKeySet(
+          await createEmbedSigningKey(base64EncodedPrivateKeyPem),
+        ),
+      ),
+      {
+        issuer: ISSUER,
+        audience: EMBED_AUTHENTICATION.audience,
+        algorithms: ["ES256"],
+      },
+    );
+
+    expect(payload).toMatchObject({
+      sub: "clog1zezo04isul0nfes57hmo",
+      permissions: ["event;read"],
+    });
+    expect(payload.exp! - payload.iat!).toBe(3600);
+    expect(authenticatedEmbedUrl.expiresAt.getTime()).toBe(payload.exp! * 1000);
   });
 
   test("leaves the URL of an app that did not opt in untouched", async () => {

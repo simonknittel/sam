@@ -1,0 +1,1142 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": false,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sam-statistics-postgres"
+      },
+      "description": "Gesamtanzahl eingetragener Schiffe",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "axisLabel": "Gesamt",
+            "fillOpacity": 0,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 4,
+            "showPoints": "auto",
+            "spanNulls": false
+          },
+          "decimals": 0,
+          "unit": "locale"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Veränderung zum Vortag"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Δ Vortag"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sam-statistics-postgres"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time, value AS \"Gesamt\", change AS \"Veränderung zum Vortag\"\nFROM (\n  SELECT time, value, value - lag(value) OVER (ORDER BY time) AS change\n  FROM (\n    SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, sum(ship_count) AS value\n    FROM statistics.daily_ship_counts GROUP BY day\n  ) AS daily_values\n) AS daily_changes\nWHERE $__timeFilter(time)\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Flotte gesamt",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sam-statistics-postgres"
+      },
+      "description": "Anzahl eingetragener Schiffe pro Variante",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 0,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 4,
+            "showPoints": "auto",
+            "spanNulls": false
+          },
+          "decimals": 0,
+          "displayName": "${__field.labels.name}",
+          "unit": "locale"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 8,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sam-statistics-postgres"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH counts AS (\n  SELECT * FROM (\n    SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, variant_id AS id, variant_name AS name, ship_count AS value\n    FROM statistics.daily_ship_counts\n    WHERE variant_id IN (${variants:sqlstring})\n  ) AS daily_counts\n  WHERE $__timeFilter(time)\n),\nlast_values AS (\n  SELECT DISTINCT ON (id) id, name, value\n  FROM counts\n  ORDER BY id, time DESC\n),\nselection AS (\n  SELECT count(*) = (SELECT count(*) FROM statistics.ship_variants) AS is_all\n  FROM statistics.ship_variants\n  WHERE variant_id IN (${variants:sqlstring})\n),\ntop_series AS (\n  SELECT id, row_number() OVER (ORDER BY value DESC, name COLLATE \"und-x-icu\", id COLLATE \"und-x-icu\") AS position\n  FROM last_values\n  WHERE id IN (\n    SELECT id FROM counts GROUP BY id\n    HAVING max(value) > 0 OR NOT (SELECT is_all FROM selection)\n  )\n  ORDER BY position\n  LIMIT ${top:sqlstring}::integer\n)\nSELECT time, id, name, value\nFROM counts\nJOIN top_series USING (id)\nORDER BY position, time",
+          "refId": "A"
+        }
+      ],
+      "title": "Flotte",
+      "transformations": [
+        {
+          "id": "partitionByValues",
+          "options": {
+            "fields": [
+              "id",
+              "name"
+            ],
+            "keepFields": false,
+            "naming": {
+              "asLabels": true
+            }
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sam-statistics-postgres"
+      },
+      "description": "Aktueller Wert der eingetragenen Schiffe im Store, gesamt und pro Herkunft",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "axisLabel": "Gesamt (USD)",
+            "fillOpacity": 0,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 4,
+            "showPoints": "auto",
+            "spanNulls": false
+          },
+          "decimals": 0,
+          "unit": "locale"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Veränderung zum Vortag"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Δ Vortag"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 16,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sam-statistics-postgres"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time, total AS \"Gesamt (USD)\", change AS \"Veränderung zum Vortag\", store AS \"Store\", in_game AS \"In-game\", unknown AS \"Nicht angegeben\"\nFROM (\n  SELECT *, total - lag(total) OVER (ORDER BY time) AS change\n  FROM (\n    SELECT\n      day::timestamp AT TIME ZONE 'Europe/Berlin' AS time,\n      round((store_value_usd_cents + in_game_value_usd_cents + unknown_value_usd_cents) / 100.0) AS total,\n      round(store_value_usd_cents / 100.0) AS store,\n      round(in_game_value_usd_cents / 100.0) AS in_game,\n      round(unknown_value_usd_cents / 100.0) AS unknown\n    FROM statistics.daily_fleet_values\n  ) AS daily_values\n) AS daily_changes\nWHERE $__timeFilter(time)\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Flottenwert (USD)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sam-statistics-postgres"
+      },
+      "description": "Aktueller Wert der eingetragenen Schiffe im Spiel, gesamt und pro Herkunft",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "axisLabel": "Gesamt (aUEC)",
+            "fillOpacity": 0,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 4,
+            "showPoints": "auto",
+            "spanNulls": false
+          },
+          "decimals": 0,
+          "unit": "locale"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Veränderung zum Vortag"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Δ Vortag"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 0,
+        "y": 9
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sam-statistics-postgres"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time, total AS \"Gesamt (aUEC)\", change AS \"Veränderung zum Vortag\", store AS \"Store\", in_game AS \"In-game\", unknown AS \"Nicht angegeben\"\nFROM (\n  SELECT *, total - lag(total) OVER (ORDER BY time) AS change\n  FROM (\n    SELECT\n      day::timestamp AT TIME ZONE 'Europe/Berlin' AS time,\n      store_value_auec + in_game_value_auec + unknown_value_auec AS total,\n      store_value_auec AS store,\n      in_game_value_auec AS in_game,\n      unknown_value_auec AS unknown\n    FROM statistics.daily_fleet_values\n  ) AS daily_values\n) AS daily_changes\nWHERE $__timeFilter(time)\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Flottenwert (aUEC)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sam-statistics-postgres"
+      },
+      "description": "Anzahl unique Logins pro Tag",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "axisLabel": "Logins",
+            "fillOpacity": 0,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 4,
+            "showPoints": "auto",
+            "spanNulls": false
+          },
+          "decimals": 0,
+          "unit": "locale"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Veränderung zum Vortag"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Δ Vortag"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 8,
+        "y": 9
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sam-statistics-postgres"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time, value AS \"Logins\", change AS \"Veränderung zum Vortag\"\nFROM (\n  SELECT time, value, value - lag(value) OVER (ORDER BY time) AS change\n  FROM (\n    SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, login_count AS value\n    FROM statistics.daily_login_counts\n  ) AS daily_values\n) AS daily_changes\nWHERE $__timeFilter(time)\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Logins",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sam-statistics-postgres"
+      },
+      "description": "Gesamtanzahl erfasster Citizens",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "axisLabel": "Citizens",
+            "fillOpacity": 0,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 4,
+            "showPoints": "auto",
+            "spanNulls": false
+          },
+          "decimals": 0,
+          "unit": "locale"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Veränderung zum Vortag"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Δ Vortag"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 16,
+        "y": 9
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sam-statistics-postgres"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time, value AS \"Citizens\", change AS \"Veränderung zum Vortag\"\nFROM (\n  SELECT time, value, value - lag(value) OVER (ORDER BY time) AS change\n  FROM (\n    SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, citizen_total AS value\n    FROM statistics.daily_citizen_totals\n  ) AS daily_values\n) AS daily_changes\nWHERE $__timeFilter(time)\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Citizens",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sam-statistics-postgres"
+      },
+      "description": "Gesamtanzahl erfasster Organisationen",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "axisLabel": "Organisationen",
+            "fillOpacity": 0,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 4,
+            "showPoints": "auto",
+            "spanNulls": false
+          },
+          "decimals": 0,
+          "unit": "locale"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Veränderung zum Vortag"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Δ Vortag"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 0,
+        "y": 18
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sam-statistics-postgres"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time, value AS \"Organisationen\", change AS \"Veränderung zum Vortag\"\nFROM (\n  SELECT time, value, value - lag(value) OVER (ORDER BY time) AS change\n  FROM (\n    SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, organization_total AS value\n    FROM statistics.daily_organization_totals\n  ) AS daily_values\n) AS daily_changes\nWHERE $__timeFilter(time)\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Organisationen",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sam-statistics-postgres"
+      },
+      "description": "Gesamtanzahl registrierter Benutzer",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "axisLabel": "Registrierte Benutzer",
+            "fillOpacity": 0,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 4,
+            "showPoints": "auto",
+            "spanNulls": false
+          },
+          "decimals": 0,
+          "unit": "locale"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Veränderung zum Vortag"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Δ Vortag"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 8,
+        "y": 18
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sam-statistics-postgres"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time, value AS \"Registrierte Benutzer\", change AS \"Veränderung zum Vortag\"\nFROM (\n  SELECT time, value, value - lag(value) OVER (ORDER BY time) AS change\n  FROM (\n    SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, user_total AS value\n    FROM statistics.daily_user_totals\n  ) AS daily_values\n) AS daily_changes\nWHERE $__timeFilter(time)\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Registrierte Benutzer",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sam-statistics-postgres"
+      },
+      "description": "Anzahl Citizens pro Rolle",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 0,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 4,
+            "showPoints": "auto",
+            "spanNulls": false
+          },
+          "decimals": 0,
+          "displayName": "${__field.labels.name}",
+          "unit": "locale"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 16,
+        "y": 18
+      },
+      "id": 9,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sam-statistics-postgres"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH counts AS (\n  SELECT * FROM (\n    SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, role_id AS id, role_name AS name, citizen_count AS value\n    FROM statistics.daily_role_citizen_counts\n    WHERE role_id IN (${roles:sqlstring})\n  ) AS daily_counts\n  WHERE $__timeFilter(time)\n),\nlast_values AS (\n  SELECT DISTINCT ON (id) id, name, value\n  FROM counts\n  ORDER BY id, time DESC\n),\nselection AS (\n  SELECT count(*) = (SELECT count(*) FROM statistics.roles) AS is_all\n  FROM statistics.roles\n  WHERE role_id IN (${roles:sqlstring})\n),\ntop_series AS (\n  SELECT id, row_number() OVER (ORDER BY value DESC, name COLLATE \"und-x-icu\", id COLLATE \"und-x-icu\") AS position\n  FROM last_values\n  WHERE id IN (\n    SELECT id FROM counts GROUP BY id\n    HAVING max(value) > 0 OR NOT (SELECT is_all FROM selection)\n  )\n  ORDER BY position\n  LIMIT ${top:sqlstring}::integer\n)\nSELECT time, id, name, value\nFROM counts\nJOIN top_series USING (id)\nORDER BY position, time",
+          "refId": "A"
+        }
+      ],
+      "title": "Rollen",
+      "transformations": [
+        {
+          "id": "partitionByValues",
+          "options": {
+            "fields": [
+              "id",
+              "name"
+            ],
+            "keepFields": false,
+            "naming": {
+              "asLabels": true
+            }
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sam-statistics-postgres"
+      },
+      "description": "Anzahl Events pro Tag",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "axisLabel": "Events",
+            "fillOpacity": 0,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 4,
+            "showPoints": "auto",
+            "spanNulls": false
+          },
+          "decimals": 0,
+          "unit": "locale"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Veränderung zum Vortag"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Δ Vortag"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 0,
+        "y": 27
+      },
+      "id": 10,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sam-statistics-postgres"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time, value AS \"Events\", change AS \"Veränderung zum Vortag\"\nFROM (\n  SELECT time, value, value - lag(value) OVER (ORDER BY time) AS change\n  FROM (\n    SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, event_count AS value\n    FROM statistics.daily_event_counts\n  ) AS daily_values\n) AS daily_changes\nWHERE $__timeFilter(time)\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Events",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sam-statistics-postgres"
+      },
+      "description": "Neu generierte SILC-Menge pro Tag",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "axisLabel": "SILC",
+            "fillOpacity": 0,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 4,
+            "showPoints": "auto",
+            "spanNulls": false
+          },
+          "decimals": 0,
+          "unit": "locale"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Veränderung zum Vortag"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Δ Vortag"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 8,
+        "y": 27
+      },
+      "id": 11,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sam-statistics-postgres"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time, value AS \"SILC\", change AS \"Veränderung zum Vortag\"\nFROM (\n  SELECT time, value, value - lag(value) OVER (ORDER BY time) AS change\n  FROM (\n    SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, new_silc AS value\n    FROM statistics.daily_new_silc\n  ) AS daily_values\n) AS daily_changes\nWHERE $__timeFilter(time)\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "SILC",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sam-statistics-postgres"
+      },
+      "description": "Anzahl Einträge im System Log über den MCP-Server pro Tag",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "axisLabel": "Einträge",
+            "fillOpacity": 0,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 4,
+            "showPoints": "auto",
+            "spanNulls": false
+          },
+          "decimals": 0,
+          "unit": "locale"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Veränderung zum Vortag"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Δ Vortag"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 16,
+        "y": 27
+      },
+      "id": 12,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sam-statistics-postgres"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time, value AS \"Einträge\", change AS \"Veränderung zum Vortag\"\nFROM (\n  SELECT time, value, value - lag(value) OVER (ORDER BY time) AS change\n  FROM (\n    SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, audit_event_count AS value\n    FROM statistics.daily_mcp_usage_counts\n  ) AS daily_values\n) AS daily_changes\nWHERE $__timeFilter(time)\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "MCP-Nutzung",
+      "type": "timeseries"
+    },
+    {
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 36
+      },
+      "id": 13,
+      "options": {
+        "content": "Diese Darstellung der Statistiken kann nicht die Rollen des aktuellen Benutzers berücksichtigen. Daher werden bspw. die Berechtigungen für die Sichtbarkeit von Rollen hier ausgehebelt.",
+        "mode": "markdown"
+      },
+      "type": "text"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 42,
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "allValue": "SELECT role_id FROM statistics.roles",
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "sam-statistics-postgres"
+        },
+        "definition": "SELECT role_name AS __text, role_id AS __value FROM statistics.roles ORDER BY role_name COLLATE \"und-x-icu\", role_id COLLATE \"und-x-icu\"",
+        "includeAll": true,
+        "label": "Rollen",
+        "multi": true,
+        "name": "roles",
+        "options": [],
+        "query": "SELECT role_name AS __text, role_id AS __value FROM statistics.roles ORDER BY role_name COLLATE \"und-x-icu\", role_id COLLATE \"und-x-icu\"",
+        "refresh": 1,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "allValue": "SELECT variant_id FROM statistics.ship_variants",
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "sam-statistics-postgres"
+        },
+        "definition": "SELECT variant_name AS __text, variant_id AS __value FROM statistics.ship_variants ORDER BY variant_name COLLATE \"und-x-icu\", variant_id COLLATE \"und-x-icu\"",
+        "includeAll": true,
+        "label": "Varianten",
+        "multi": true,
+        "name": "variants",
+        "options": [],
+        "query": "SELECT variant_name AS __text, variant_id AS __value FROM statistics.ship_variants ORDER BY variant_name COLLATE \"und-x-icu\", variant_id COLLATE \"und-x-icu\"",
+        "refresh": 1,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "allowCustomValue": false,
+        "current": {
+          "text": "15",
+          "value": "15"
+        },
+        "description": "Die Diagramme der Rollen und der Varianten zeigen höchstens so viele Linien: die mit dem höchsten letzten Wert",
+        "includeAll": false,
+        "label": "Anzahl Linien",
+        "multi": false,
+        "name": "top",
+        "query": "5,10,15,20,30,50",
+        "type": "custom"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-365d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "Europe/Berlin",
+  "title": "Statistiken",
+  "weekStart": "monday",
+  "uid": "sam-statistics"
+}

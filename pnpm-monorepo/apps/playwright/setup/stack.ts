@@ -210,6 +210,12 @@ export const appDummyEnvironment = {
   EMBED_JWT_PRIVATE_KEY:
     "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZzhSVWJ1VHIwcjRJUmdNSi8KQ3FxRlRYMnJWQW41ZDBXbjBCbkpxTXFnMFZTaFJBTkNBQVNwTlpuekQxZXh5NkdDMWVBM2xmYWVSam4vRGNpVAptRkxyVnVWZjJTZ3hHZXdkWkRLS3FWMTVteVJoaWxmT1lXcmNRNEYvKzFaTDFDMU9uUDYrVm9ocAotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0tCg==",
   /**
+   * The stack has no Grafana. The statistics page builds its frame URL from
+   * this origin without a server, and the tests read only that URL and its
+   * token (see tests/statistics.spec.ts).
+   */
+  STATISTICS_GRAFANA_URL: "http://127.0.0.1:9",
+  /**
    * The test client of the MCP tests serves its Client ID Metadata Document
    * on the local machine with plain HTTP (see fixtures/cimd-server.ts and
    * docs/mcp-server.md). The same key as above signs the access tokens.

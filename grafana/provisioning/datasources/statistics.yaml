@@ -1,0 +1,25 @@
+apiVersion: 1
+
+datasources:
+  - name: SAM
+    # The dashboard finds the data source with this UID
+    uid: sam-statistics-postgres
+    type: grafana-postgresql-datasource
+    url: psql:5432
+    # The read-only role of
+    # pnpm-monorepo/packages/database/prisma/statistics-reader-role.sql. The
+    # grafana-bootstrap service of compose.yml sets this local password.
+    user: sam_statistics_grafana
+    secureJsonData:
+      password: sam-statistics-local-insecure
+    jsonData:
+      database: db
+      sslmode: disable
+      # At most the connection limit of the role (10)
+      maxOpenConns: 5
+      # Seconds. Grafana closes a connection after this time. This ends the
+      # session state that a viewer can set on a pooled connection (for
+      # example SET statement_timeout = 0).
+      connMaxLifetime: 60
+    isDefault: true
+    editable: false

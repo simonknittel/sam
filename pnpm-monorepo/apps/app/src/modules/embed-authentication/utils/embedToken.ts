@@ -5,9 +5,9 @@ import {
 } from "@sam-monorepo/domain";
 import { SignJWT } from "jose";
 import {
+  DEFAULT_EMBED_TOKEN_LIFETIME_IN_SECONDS,
+  DEFAULT_EMBED_TOKEN_QUERY_PARAMETER,
   EMBED_TOKEN_ALGORITHM,
-  EMBED_TOKEN_LIFETIME_IN_SECONDS,
-  EMBED_TOKEN_QUERY_PARAMETER,
 } from "./constants";
 import type { EmbedSigningKey } from "./embedSigningKey";
 
@@ -43,17 +43,31 @@ interface SignEmbedTokenParameters {
    */
   readonly handle: string | null;
   readonly permissionStrings: readonly string[];
+  /** Default: `DEFAULT_EMBED_TOKEN_LIFETIME_IN_SECONDS` */
+  readonly lifetimeInSeconds?: number;
 }
 
-export const signEmbedToken = ({
+export interface SignedEmbedToken {
+  readonly token: string;
+  /** The `exp` claim of the token */
+  readonly expiresAt: Date;
+}
+
+export const signEmbedToken = async ({
   signingKey,
   issuer,
   audience,
   subject,
   handle,
   permissionStrings,
-}: SignEmbedTokenParameters) =>
-  new SignJWT({
+  lifetimeInSeconds = DEFAULT_EMBED_TOKEN_LIFETIME_IN_SECONDS,
+}: SignEmbedTokenParameters): Promise<SignedEmbedToken> => {
+  // One reading of the clock for both claims, thus `exp` is always `iat`
+  // plus the lifetime
+  const issuedAtInSeconds = Math.floor(Date.now() / 1000);
+  const expiresAtInSeconds = issuedAtInSeconds + lifetimeInSeconds;
+
+  const token = await new SignJWT({
     // OIDC's name for "the shorthand name the user wishes to be referred
     // to by" — omitted rather than null so consumers write an absence
     // check instead of rendering the string "null"
@@ -77,20 +91,20 @@ export const signEmbedToken = ({
      * matching the token lifetime.
      */
     .setJti(createId())
-    .setIssuedAt()
-    .setExpirationTime(`${EMBED_TOKEN_LIFETIME_IN_SECONDS}s`)
+    .setIssuedAt(issuedAtInSeconds)
+    .setExpirationTime(expiresAtInSeconds)
     .sign(signingKey.privateKey);
 
-/**
- * Returns the URL unchanged when there is no token, so an app that did not
- * opt in — or a render without a usable identity — embeds exactly the URL
- * it always did.
- */
-export const appendEmbedToken = (embedUrl: string, token: string | null) => {
-  if (!token) return embedUrl;
+  return { token, expiresAt: new Date(expiresAtInSeconds * 1000) };
+};
 
+export const appendEmbedToken = (
+  embedUrl: string,
+  token: string,
+  queryParameter = DEFAULT_EMBED_TOKEN_QUERY_PARAMETER,
+) => {
   const url = new URL(embedUrl);
-  url.searchParams.set(EMBED_TOKEN_QUERY_PARAMETER, token);
+  url.searchParams.set(queryParameter, token);
 
   return url.toString();
 };

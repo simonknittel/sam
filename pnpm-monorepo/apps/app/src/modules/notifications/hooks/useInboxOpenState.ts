@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useIsHydrated } from "@/modules/common/utils/useIsHydrated";
+import { useEffect, useState } from "react";
 import { useOnSiteNotifications } from "../components/OnSiteNotificationsProvider";
-
-const subscribeToNothing = () => () => undefined;
 
 /**
  * The open state of one inbox surface. While a request of the provider is
@@ -22,11 +21,7 @@ export const useInboxOpenState = (canActOnRequest: boolean) => {
    * The request of the page load is pending already during the hydration.
    * The server renders the inbox closed, thus it opens after the hydration.
    */
-  const isHydrated = useSyncExternalStore(
-    subscribeToNothing,
-    () => true,
-    () => false,
-  );
+  const isHydrated = useIsHydrated();
 
   const isActingOnRequest =
     isInboxOpenRequested && canActOnRequest && isHydrated;

@@ -2,7 +2,7 @@ import type { PermissionSet } from "@sam-monorepo/domain";
 import { createLocalJWKSet, decodeProtectedHeader, jwtVerify } from "jose";
 import { generateKeyPairSync } from "node:crypto";
 import { describe, expect, test } from "vitest";
-import { EMBED_TOKEN_LIFETIME_IN_SECONDS } from "./constants";
+import { DEFAULT_EMBED_TOKEN_LIFETIME_IN_SECONDS } from "./constants";
 import {
   createEmbedJsonWebKeySet,
   createEmbedSigningKey,
@@ -87,20 +87,13 @@ describe("append embed token", () => {
       ),
     ).toBe("https://embedded-app.example.com/?embedded=true&jwt=a.b");
   });
-
-  test("returns the URL byte-identical without a token", () => {
-    const embedUrl =
-      "https://docs.google.com/forms/d/e/1FAIpQLSeHEgpv4/viewform";
-
-    expect(appendEmbedToken(embedUrl, null)).toBe(embedUrl);
-  });
 });
 
 describe("sign embed token", () => {
   test("verifies against the JWKS the app publishes for the same key", async () => {
     const signingKey = await generateSigningKey();
 
-    const token = await signEmbedToken({
+    const { token, expiresAt } = await signEmbedToken({
       signingKey,
       issuer: ISSUER,
       audience: AUDIENCE,
@@ -127,13 +120,16 @@ describe("sign embed token", () => {
       permissions: ["event;read"],
     });
     expect(payload.jti).toEqual(expect.any(String));
-    expect(payload.exp! - payload.iat!).toBe(EMBED_TOKEN_LIFETIME_IN_SECONDS);
+    expect(payload.exp! - payload.iat!).toBe(
+      DEFAULT_EMBED_TOKEN_LIFETIME_IN_SECONDS,
+    );
+    expect(expiresAt.getTime()).toBe(payload.exp! * 1000);
   });
 
   test("omits preferred_username for an entity without a handle", async () => {
     const signingKey = await generateSigningKey();
 
-    const token = await signEmbedToken({
+    const { token } = await signEmbedToken({
       signingKey,
       issuer: ISSUER,
       audience: AUDIENCE,
@@ -158,7 +154,7 @@ describe("sign embed token", () => {
       generateSigningKey(),
     ]);
 
-    const token = await signEmbedToken({
+    const { token } = await signEmbedToken({
       signingKey,
       issuer: ISSUER,
       audience: AUDIENCE,
@@ -179,7 +175,7 @@ describe("sign embed token", () => {
   test("does not verify for another audience", async () => {
     const signingKey = await generateSigningKey();
 
-    const token = await signEmbedToken({
+    const { token } = await signEmbedToken({
       signingKey,
       issuer: ISSUER,
       audience: AUDIENCE,
@@ -220,8 +216,8 @@ describe("sign embed token", () => {
 
     const keySet = createLocalJWKSet(createEmbedJsonWebKeySet(signingKey));
     const [firstPayload, secondPayload] = await Promise.all([
-      jwtVerify(first, keySet, { issuer: ISSUER, audience: AUDIENCE }),
-      jwtVerify(second, keySet, { issuer: ISSUER, audience: AUDIENCE }),
+      jwtVerify(first.token, keySet, { issuer: ISSUER, audience: AUDIENCE }),
+      jwtVerify(second.token, keySet, { issuer: ISSUER, audience: AUDIENCE }),
     ]);
 
     expect(firstPayload.payload.jti).not.toBe(secondPayload.payload.jti);
@@ -230,7 +226,7 @@ describe("sign embed token", () => {
   test("announces the key id in the header so a verifier can pick the key", async () => {
     const signingKey = await generateSigningKey();
 
-    const token = await signEmbedToken({
+    const { token } = await signEmbedToken({
       signingKey,
       issuer: ISSUER,
       audience: AUDIENCE,

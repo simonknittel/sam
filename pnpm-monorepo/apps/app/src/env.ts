@@ -15,6 +15,15 @@ const isEncryptedOrLoopbackUrl = (value: string) => {
   );
 };
 
+/**
+ * Whether a URL is an origin only: without user information, a path, a
+ * query and a fragment
+ */
+const isOriginUrl = (value: string) => {
+  const { username, password, pathname, search, hash } = new URL(value);
+  return !username && !password && pathname === "/" && !search && !hash;
+};
+
 export const env = createEnv({
   /*
    * Serverside Environment variables, not available on the client.
@@ -164,6 +173,32 @@ export const env = createEnv({
      * `openssl ecparam -name prime256v1 -genkey -noout | openssl pkcs8 -topk8 -nocrypt | base64 -w0`
      */
     EMBED_JWT_PRIVATE_KEY: z.optional(z.string()),
+    /**
+     * Origin of the Grafana that shows the statistics dashboard in a frame on
+     * /app/statistics, for example http://127.0.0.1:3100 for the Grafana of
+     * compose.yml. The page also needs EMBED_JWT_PRIVATE_KEY: the Grafana
+     * examines a token of the app (see docs/embedded-app-authentication.md).
+     * The page shows a note instead of the dashboard if unset.
+     *
+     * The frame URL carries the token, thus plain HTTP is refused unless it
+     * points at the local machine. A path is refused, because the page
+     * replaces it with the path of the dashboard. User information is
+     * refused, because each viewer would see it in the frame URL.
+     */
+    STATISTICS_GRAFANA_URL: z.optional(
+      z
+        .url({ protocol: /^https?$/ })
+        .check(
+          z.refine(
+            isEncryptedOrLoopbackUrl,
+            "must use https unless it is loopback",
+          ),
+          z.refine(
+            isOriginUrl,
+            "must be an origin, without a path, a query, a fragment or user information",
+          ),
+        ),
+    ),
     /**
      * Set to "1" to permit OAuth client ids (Client ID Metadata Document
      * URLs) with plain HTTP on a loopback host, and the fetch of these

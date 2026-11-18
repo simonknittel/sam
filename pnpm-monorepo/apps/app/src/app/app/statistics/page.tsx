@@ -1,18 +1,6 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
-import Note from "@/modules/common/components/Note";
-import { formatDate } from "@/modules/common/utils/formatDate";
-import { StatisticSection } from "@/modules/statistics/components/StatisticSection";
-import { getDailyLoginStatisticChart } from "@/modules/statistics/queries/getDailyLoginStatisticChart";
-import { getDailyMcpUsageStatisticChart } from "@/modules/statistics/queries/getDailyMcpUsageStatisticChart";
-import { getDailySilcStatisticChart } from "@/modules/statistics/queries/getDailySilcStatisticChart";
-import { getEventsPerDayStatisticChart } from "@/modules/statistics/queries/getEventsPerDayStatisticChart";
-import { getFleetValueStatisticCharts } from "@/modules/statistics/queries/getFleetValueStatisticCharts";
-import { getRegisteredUserStatisticChart } from "@/modules/statistics/queries/getRegisteredUserStatisticChart";
-import { getRoleCitizenStatisticChart } from "@/modules/statistics/queries/getRoleCitizenStatisticChart";
-import { getTotalCitizenStatisticChart } from "@/modules/statistics/queries/getTotalCitizenStatisticChart";
-import { getTotalOrganizationStatisticChart } from "@/modules/statistics/queries/getTotalOrganizationStatisticChart";
-import { getTotalShipStatisticChart } from "@/modules/statistics/queries/getTotalShipStatisticChart";
-import { getVariantShipStatisticChart } from "@/modules/statistics/queries/getVariantShipStatisticChart";
+import { StatisticsDashboard } from "@/modules/statistics/components/StatisticsDashboard";
+import { resolveStatisticsDashboard } from "@/modules/statistics/utils/resolveStatisticsDashboard";
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -23,130 +11,9 @@ export default async function Page() {
   const authentication = await requireAuthenticationPage("/app/statistics");
   await authentication.authorizePage("globalStatistics", "read");
 
-  const [
-    roleChart,
-    variantChart,
-    totalShipsChart,
-    fleetValueCharts,
-    totalCitizensChart,
-    totalOrganizationsChart,
-    registeredUsersChart,
-    loginChart,
-    eventsChart,
-    silcChart,
-    mcpUsageChart,
-  ] = await Promise.all([
-    getRoleCitizenStatisticChart(),
-    getVariantShipStatisticChart(),
-    getTotalShipStatisticChart(),
-    getFleetValueStatisticCharts(),
-    getTotalCitizenStatisticChart(),
-    getTotalOrganizationStatisticChart(),
-    getRegisteredUserStatisticChart(),
-    getDailyLoginStatisticChart(),
-    getEventsPerDayStatisticChart(),
-    getDailySilcStatisticChart(),
-    getDailyMcpUsageStatisticChart(),
-  ]);
-
   return (
-    <>
-      <p className="text-right text-sm text-neutral-500">
-        <strong>Zeitraum:</strong>{" "}
-        {formatDate(roleChart.dateRange.from, "short")} - jetzt
-      </p>
-
-      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <StatisticSection
-          title="Flotte gesamt"
-          description="Gesamtanzahl eingetragener Schiffe"
-          chart={totalShipsChart}
-          className="flex-1"
-        />
-
-        <StatisticSection
-          title="Flotte"
-          description="Anzahl eingetragener Schiffe pro Variante"
-          chart={variantChart}
-          className="flex-1"
-        />
-
-        <StatisticSection
-          title="Flottenwert (USD)"
-          description="Aktueller Wert der eingetragenen Schiffe im Store, gesamt und pro Herkunft"
-          chart={fleetValueCharts.usd}
-          className="flex-1"
-        />
-
-        <StatisticSection
-          title="Flottenwert (aUEC)"
-          description="Aktueller Wert der eingetragenen Schiffe im Spiel, gesamt und pro Herkunft"
-          chart={fleetValueCharts.auec}
-          className="flex-1"
-        />
-
-        <StatisticSection
-          title="Logins"
-          description="Anzahl unique Logins pro Tag"
-          chart={loginChart}
-          className="flex-1"
-        />
-
-        <StatisticSection
-          title="Citizens"
-          description="Gesamtanzahl erfasster Citizens"
-          chart={totalCitizensChart}
-          className="flex-1"
-        />
-
-        <StatisticSection
-          title="Organisationen"
-          description="Gesamtanzahl erfasster Organisationen"
-          chart={totalOrganizationsChart}
-          className="flex-1"
-        />
-
-        <StatisticSection
-          title="Registrierte Benutzer"
-          description="Gesamtanzahl registrierter Benutzer"
-          chart={registeredUsersChart}
-          className="flex-1"
-        />
-
-        <StatisticSection
-          title="Rollen"
-          description="Anzahl Citizens pro Rolle"
-          chart={roleChart}
-          className="flex-1"
-        />
-
-        <StatisticSection
-          title="Events"
-          description="Anzahl Events pro Tag"
-          chart={eventsChart}
-          className="flex-1"
-        />
-
-        <StatisticSection
-          title="SILC"
-          description="Neu generierte SILC-Menge pro Tag"
-          chart={silcChart}
-          className="flex-1"
-        />
-
-        <StatisticSection
-          title="MCP-Nutzung"
-          description="Anzahl Einträge im System Log über den MCP-Server pro Tag"
-          chart={mcpUsageChart}
-          className="flex-1"
-        />
-      </div>
-
-      <Note
-        type="info"
-        message="Diese Darstellung der Statistiken kann nicht die Rollen des aktuellen Benutzers berücksichtigen. Daher werden bspw. die Berechtigungen für die Sichtbarkeit von Rollen hier ausgehebelt."
-        className="mt-4"
-      />
-    </>
+    <StatisticsDashboard
+      dashboard={await resolveStatisticsDashboard(authentication.session)}
+    />
   );
 }

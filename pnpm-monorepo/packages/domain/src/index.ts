@@ -27,6 +27,7 @@ export {
   MAXIMUM_CALENDAR_RANGE_MONTHS,
   compareLocalDates,
   findCalendarRangeProblem,
+  getLocalDatesOfRange,
   parseLocalDateKey,
   type LocalDateRange,
 } from "./calendar/calendarRange.js";

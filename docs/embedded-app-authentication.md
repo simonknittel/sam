@@ -18,14 +18,14 @@ key of SAM.
 
 ## Overview
 
-|                  |                                                                   |
-| ---------------- | ----------------------------------------------------------------- |
-| Transport        | Query parameter `jwt` on the iframe URL                           |
-| Algorithm        | `ES256` (ECDSA on P-256), and no other                            |
-| Key set          | `https://<sam-host>/.well-known/jwks.json` (public, CORS-enabled) |
-| Issuer (`iss`)   | `https://<sam-host>`                                              |
-| Audience (`aud`) | A string agreed with us for each app                              |
-| Lifetime         | 5 minutes                                                         |
+|                  |                                                                                  |
+| ---------------- | -------------------------------------------------------------------------------- |
+| Transport        | Query parameter `jwt` on the iframe URL (default, see [Exceptions](#exceptions)) |
+| Algorithm        | `ES256` (ECDSA on P-256), and no other                                           |
+| Key set          | `https://<sam-host>/.well-known/jwks.json` (public, CORS-enabled)                |
+| Issuer (`iss`)   | `https://<sam-host>`                                                             |
+| Audience (`aud`) | A string agreed with us for each app                                             |
+| Lifetime         | 5 minutes (default, see [Exceptions](#exceptions))                               |
 
 Each SAM environment (production, preview, local development) signs with
 its own key. Thus a token from a preview deployment can never verify as a
@@ -165,9 +165,9 @@ Requirements, with the most important first:
 
 ## The 5-minute lifetime
 
-The token is a **handshake credential**. SAM makes the token while it
-renders the page that contains your iframe on the server. Thus the token is
-fresh when your app loads.
+With the default lifetime, the token is a **handshake credential**. SAM
+makes the token while it renders the page that contains your iframe on the
+server. Thus the token is fresh when your app loads.
 
 Exchange the token for your own session immediately:
 
@@ -178,7 +178,7 @@ Exchange the token for your own session immediately:
 
 Thus the expiry only limits that first load, not the time that the iframe
 can stay open: when you have your own session, the token is used up.
-SAM does not refresh the token and never will. A new token would mean a new
+SAM does not refresh the token of such an app. A new token would mean a new
 iframe `src`, which reloads the frame and destroys form state that is in
 progress.
 
@@ -186,6 +186,42 @@ Step 3 is mandatory. The token is in a query string. Thus it goes into your
 access logs, into the browser history of the user, and into the `Referer`
 header of each outbound link on your page. Early removal limits that
 exposure; the short lifetime limits the remainder.
+
+## Exceptions
+
+An embed configuration (`EmbedAuthentication` in
+`apps/app/src/modules/embed-authentication/utils/types.ts`) can set its own
+query parameter and its own lifetime. Use these settings only for an app
+that cannot do the handshake.
+
+The statistics page (`/app/statistics`) is the only exception. It shows a
+Grafana dashboard in its frame:
+
+|                  |                                                |
+| ---------------- | ---------------------------------------------- |
+| Transport        | Query parameter `auth_token`                   |
+| Audience (`aud`) | `sam-statistics-grafana`                       |
+| Lifetime         | 1 hour                                         |
+| `permissions`    | Empty: the page checks `globalStatistics;read` |
+
+The reasons:
+
+- Grafana reads the token only from the parameter `auth_token`.
+- Grafana makes no session from the token. Its frontend keeps the token in
+  memory and sends it with each request. Grafana examines the token each
+  time, thus the dashboard stops at the expiry of the token. A lifetime of
+  1 hour keeps the dashboard usable for a normal session.
+
+The cost of the longer lifetime: a token from a log or from the browser
+history stays valid for a longer time.
+
+A new frame URL loads the dashboard again and resets its time range and
+its filters. Thus the frame keeps its token until the user opens the page
+again or clicks the button of the expiry note. Each render of the page on
+the server signs a token, also a render that a different action starts,
+but the frame ignores that token. Shortly before the expiry, a note covers
+the frame. Its button renders the page again on the server and gives the
+new token to the frame.
 
 ## Replay protection
 
@@ -202,8 +238,8 @@ A page reload _inside_ the iframe requests the identical URL with the
 identical token. A simple "`jti` was seen → reject" rule makes that reload
 fail.
 
-You can remove recorded entries after 5 minutes. The `exp` claim rejects a
-token that is older.
+You can remove recorded entries after the lifetime of the token. The `exp`
+claim rejects a token that is older.
 
 ## Key rotation
 
@@ -218,17 +254,27 @@ reason to keep your JWKS cache short-lived and to not pin a key.
 `createRemoteJWKSet` and its equivalents get the JWKS again when they see
 an unknown `kid`.
 
+The Grafana of the statistics page does not get the JWKS again for an
+unknown `kid`. It keeps the JWKS for `cache_ttl` (60 minutes) and refuses
+the tokens of a new key until then. SAM publishes only the key that it signs
+with, thus it cannot publish a new key 60 minutes before it uses it. Restart
+the Grafana after a key rotation. After the restart, a statistics token of
+the previous key stops before its expiry: a reload of the statistics page
+signs a token with the new key.
+
 ## What SAM does not do
 
 - No token refresh, and no mechanism that keeps the embed authenticated
-  after the handshake.
+  after the handshake. The frame of the statistics page takes a new token
+  only when the user clicks its button (see [Exceptions](#exceptions)).
 - No introspection endpoint and no revocation. A token is valid until it
   expires.
 - No encryption (JWE). The claims are the identity and the permissions of
   the user, shown to an app that will operate on them.
 - No token for a user without a linked SAM entity (an admin can be in this
   state). The iframe then renders without the parameter. We recommend that
-  your app then shows its anonymous behavior.
+  your app then shows its anonymous behavior. The statistics page shows a
+  note instead of its frame.
 - No token when the signing key of SAM is not configured in an
   environment. The JWKS then serves `{"keys":[]}`. This is a valid document
   with the meaning "this issuer currently publishes no keys".

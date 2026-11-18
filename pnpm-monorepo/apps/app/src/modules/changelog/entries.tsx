@@ -54,6 +54,42 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-11-18-mcp-statistiken",
+    date: "2026-11-18",
+    title: "Statistiken über MCP",
+    tags: ["Neu", "MCP"],
+    isTracked: false,
+    body: () => (
+      <p>
+        Über den MCP-Server lesen KI-Clients jetzt auch die Statistiken. Dafür
+        brauchst du wie in der App Statistiken die Berechtigung &bdquo;Globale
+        Statistiken lesen&ldquo;.
+      </p>
+    ),
+  },
+
+  {
+    key: "2026-11-18-statistiken-ueberarbeitet",
+    date: "2026-11-18",
+    title: "Statistiken überarbeitet",
+    tags: ["Änderung", "Statistiken"],
+    isTracked: false,
+    requiresAuth: { resource: "globalStatistics", action: "read" },
+    body: () => (
+      <p>
+        Die App{" "}
+        <Link
+          href="/app/statistics"
+          className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300 active:text-interaction-700"
+        >
+          Statistiken
+        </Link>{" "}
+        ist überarbeitet, damit die Bedienung einfacher ist.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-11-17-schiffe-herkunft-und-notiz",
     date: "2026-11-17",
     title: "Herkunft und Notiz für Schiffe",

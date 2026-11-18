@@ -327,6 +327,8 @@ export enum AuditEventType {
   OWN_NOTIFICATIONS_LISTED = "OWN_NOTIFICATIONS_LISTED",
   CHANGELOG_ENTRIES_LISTED = "CHANGELOG_ENTRIES_LISTED",
   AUDIT_EVENTS_LISTED = "AUDIT_EVENTS_LISTED",
+  STATISTICS_LISTED = "STATISTICS_LISTED",
+  STATISTIC_READ = "STATISTIC_READ",
 }
 
 /** A type alias for the same reason as `WikiPageAuditScope` */
@@ -2088,6 +2090,8 @@ export interface AuditEventDataByType {
   [AuditEventType.OWN_NOTIFICATIONS_LISTED]: ReadAuditEventData;
   [AuditEventType.CHANGELOG_ENTRIES_LISTED]: ReadAuditEventData;
   [AuditEventType.AUDIT_EVENTS_LISTED]: ReadAuditEventData;
+  [AuditEventType.STATISTICS_LISTED]: ReadAuditEventData;
+  [AuditEventType.STATISTIC_READ]: ReadAuditEventData;
 }
 
 /**

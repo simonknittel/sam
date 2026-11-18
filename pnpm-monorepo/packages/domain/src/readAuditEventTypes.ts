@@ -31,6 +31,8 @@ const READ_AUDIT_EVENT_TYPE_LIST = [
   AuditEventType.OWN_NOTIFICATIONS_LISTED,
   AuditEventType.CHANGELOG_ENTRIES_LISTED,
   AuditEventType.AUDIT_EVENTS_LISTED,
+  AuditEventType.STATISTICS_LISTED,
+  AuditEventType.STATISTIC_READ,
 ] as const;
 
 export type ReadAuditEventType = (typeof READ_AUDIT_EVENT_TYPE_LIST)[number];

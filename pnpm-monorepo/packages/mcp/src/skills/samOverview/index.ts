@@ -49,7 +49,7 @@ The paths are on the host of this MCP server. \`/app/apps\` lists all apps of th
 | Benachrichtigungen | \`/app/manual-notifications\` | Notifications with an own title and text to citizens or roles. | ${ToolGroup.ManualNotifications} |
 | Changelog | \`/app/changelog\` | The changes of SAM | ${ToolGroup.Changelog} |
 | System Log | \`/app/system-log\` | The audit log of all actions. It may show personal or sensitive data. | ${ToolGroup.SystemLog} |
-| Statistiken | \`/app/statistics\` | Statistics about the use of SAM | – |
+| Statistiken | \`/app/statistics\` | Daily statistics of the organization and of the use of SAM, for example the fleet, the roles and the logins | ${ToolGroup.Statistics} |
 | Log Analyzer | \`/app/tools/log-analyzer\` | Finds events in the Game.log of Star Citizen; members can share them | – |
 | Account | \`/app/account\` | Profile (time zone, birthday), notification settings, seasonal themes and sessions | – |
 | KI-Agenten | \`/app/ai-agents\` | Connect AI clients via MCP, and download the Claude plugin and the skills of this server | – |
