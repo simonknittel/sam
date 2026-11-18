@@ -2,6 +2,7 @@ import {
   fromDateColumnValue,
   getYesterdayDateColumnValue,
   toLocalDateKey,
+  type LocalDate,
 } from "@sam-monorepo/domain";
 import type { ApplicationContext } from "../context.js";
 
@@ -11,22 +12,23 @@ import type { ApplicationContext } from "../context.js";
  * this one list.
  */
 
-/**
- * The first day of the statistics (`YYYY-MM-DD`). The views have no earlier
- * day.
- */
-export const FIRST_STATISTICS_DAY = "2025-12-02";
+/** The first day of the statistics. The views have no earlier day. */
+export const FIRST_STATISTICS_DATE: LocalDate = {
+  year: 2025,
+  month: 12,
+  day: 2,
+};
+
+/** `FIRST_STATISTICS_DATE` as `YYYY-MM-DD`, for descriptions and output */
+export const FIRST_STATISTICS_DAY = toLocalDateKey(FIRST_STATISTICS_DATE);
 
 /**
- * The last day of the statistics (`YYYY-MM-DD`): yesterday in the time zone
- * of the organization. The views give only complete days.
+ * The last day of the statistics: yesterday in the time zone of the
+ * organization. The views give only complete days.
  */
-export const getLastStatisticsDay = (
+export const getLastStatisticsDate = (
   context: Pick<ApplicationContext, "now">,
-) =>
-  toLocalDateKey(
-    fromDateColumnValue(getYesterdayDateColumnValue(context.now())),
-  );
+): LocalDate => fromDateColumnValue(getYesterdayDateColumnValue(context.now()));
 
 /** The order of the members is the order of the charts of the dashboard */
 export enum StatisticKey {

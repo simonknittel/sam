@@ -22,8 +22,9 @@ import { StatisticKey } from "./statisticCatalog.js";
  * The use cases read the views of the schema `statistics`. The views give
  * the days until the real yesterday, and the clock of the test context
  * (`TEST_NOW`, 2026-06-15) is earlier, thus the rows of the days below are in
- * the views. The values of the views themselves are the subject of
- * `statisticsViews.integration.test.ts`.
+ * the views. The rules of the views (the day in Europe/Berlin, the deleted
+ * and the negative rows) are the subject of
+ * `statisticsViews.integration.test.ts`, thus the rows here are plain.
  */
 
 const FIRST_DAY = "2026-06-12";
@@ -115,13 +116,7 @@ const seedStatistics = async () => {
   await prisma.citizen.createMany({
     data: [
       { handle: "first", createdAt: new Date("2026-06-12T10:00:00Z") },
-      // 00:30 CEST on the last day
-      { handle: "midnight", createdAt: new Date("2026-06-13T22:30:00Z") },
-      {
-        handle: "deleted",
-        createdAt: new Date("2026-06-12T10:00:00Z"),
-        deletedAt: new Date("2026-06-12T11:00:00Z"),
-      },
+      { handle: "second", createdAt: new Date("2026-06-14T10:00:00Z") },
     ],
   });
   await prisma.organization.create({
@@ -131,20 +126,15 @@ const seedStatistics = async () => {
       createdAt: new Date("2026-06-13T12:00:00Z"),
     },
   });
-  await prisma.user.createMany({
-    data: [
-      { createdAt: new Date("2026-06-12T08:00:00Z") },
-      { createdAt: null },
-    ],
+  await prisma.user.create({
+    data: { createdAt: new Date("2026-06-12T08:00:00Z") },
   });
-  await prisma.event.createMany({
-    data: [
-      { startTime: new Date("2026-06-14T12:00:00Z") },
-      {
-        startTime: new Date("2026-06-13T12:00:00Z"),
-        deletedAt: new Date("2026-06-13T13:00:00Z"),
-      },
-    ].map((event) => ({ ...event, source: EventSource.APP, name: "Event" })),
+  await prisma.event.create({
+    data: {
+      source: EventSource.APP,
+      name: "Event",
+      startTime: new Date("2026-06-14T12:00:00Z"),
+    },
   });
   // The receiver is created now, thus after the range
   const receiver = await prisma.citizen.create({
@@ -153,12 +143,6 @@ const seedStatistics = async () => {
   await prisma.silcTransaction.createMany({
     data: [
       { value: 20, createdAt: new Date("2026-06-12T10:00:00Z") },
-      { value: -5, createdAt: new Date("2026-06-12T11:00:00Z") },
-      {
-        value: 50,
-        createdAt: new Date("2026-06-13T10:00:00Z"),
-        deletedAt: new Date("2026-06-13T11:00:00Z"),
-      },
       { value: 100, createdAt: new Date("2026-06-14T10:00:00Z") },
     ].map((transaction) => ({ ...transaction, receiverId: receiver.id })),
   });
@@ -386,6 +370,21 @@ test("the series limit keeps the series with the highest last value, and the ids
   await expect(
     read(reader, { key: StatisticKey.Logins, ids: [carrack.id] }),
   ).rejects.toThrow(ValidationError);
+});
+
+test("the last day is yesterday in Europe/Berlin, also shortly before and after midnight", async () => {
+  const lastDayAt = async (now: string) => {
+    const { context: clockContext } = createTestApplicationContext({
+      now: new Date(now),
+    });
+
+    return (await listStatistics(clockContext, reader)).last_day;
+  };
+
+  // 00:30 CEST on 2026-03-30, the day after the change to summer time
+  expect(await lastDayAt("2026-03-29T22:30:00Z")).toBe("2026-03-29");
+  // 23:30 CEST on 2026-03-29
+  expect(await lastDayAt("2026-03-29T21:30:00Z")).toBe("2026-03-28");
 });
 
 test("an actor without globalStatistics;read gets the permission error", async () => {

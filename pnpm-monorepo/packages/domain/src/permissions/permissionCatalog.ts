@@ -624,7 +624,7 @@ export const PERMISSION_CATALOG = [
     title: "Globale Statistiken lesen",
     permissionString: "globalStatistics;read",
     description:
-      "Diese Darstellung der Statistiken kann nicht die Rollen des aktuellen Benutzers berücksichtigen. Daher werden bspw. die Berechtigungen für die Sichtbarkeit von Rollen hier ausgehebelt.",
+      "Das Dashboard der Statistiken zeigt alle Rollen, auch Rollen, die der Benutzer nicht sehen darf. Die MCP-Tools geben nur die sichtbaren Rollen.",
   },
   {
     section: "Sonstiges",

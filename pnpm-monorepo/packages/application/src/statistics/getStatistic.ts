@@ -14,8 +14,9 @@ import { idSchema } from "../pagination.js";
 import { isRoleVisible } from "../roles/roleVisibility.js";
 import { withSpan } from "../withSpan.js";
 import {
+  FIRST_STATISTICS_DATE,
   FIRST_STATISTICS_DAY,
-  getLastStatisticsDay,
+  getLastStatisticsDate,
   getStatisticDefinition,
   STATISTIC_CATALOG,
   StatisticIdsFilter,
@@ -33,7 +34,7 @@ export const DEFAULT_STATISTIC_DAY_COUNT = 30;
 /** One year, also a leap year. It keeps the answer small. */
 export const MAXIMUM_STATISTIC_DAY_COUNT = 366;
 
-/** The number of series of the charts of the old statistics page */
+/** The default of the variable `top` of the dashboard */
 const DEFAULT_STATISTIC_SERIES_LIMIT = 15;
 
 /** With the maximum range, 50 series give at most 18,300 values */
@@ -142,18 +143,18 @@ const resolveRange = (
   context: Pick<ApplicationContext, "now">,
   input: Pick<GetStatisticInput, "from" | "to">,
 ): StatisticRange => {
-  const lastDay = parseDay(getLastStatisticsDay(context));
-  const to = input.to ? earlierOf(parseDay(input.to), lastDay) : lastDay;
+  const lastDate = getLastStatisticsDate(context);
+  const to = input.to ? earlierOf(parseDay(input.to), lastDate) : lastDate;
   const from = laterOf(
     input.from
       ? parseDay(input.from)
       : addDaysToLocalDate(to, -(DEFAULT_STATISTIC_DAY_COUNT - 1)),
-    parseDay(FIRST_STATISTICS_DAY),
+    FIRST_STATISTICS_DATE,
   );
 
   if (compareLocalDates(from, to) > 0)
     throw new ValidationError(
-      `The range from ${toLocalDateKey(from)} to ${toLocalDateKey(to)} has no day. The statistics have the days from ${FIRST_STATISTICS_DAY} until yesterday (${toLocalDateKey(lastDay)}), and from must not be after to.`,
+      `The range from ${toLocalDateKey(from)} to ${toLocalDateKey(to)} has no day. The statistics have the days from ${FIRST_STATISTICS_DAY} until yesterday (${toLocalDateKey(lastDate)}), and from must not be after to.`,
     );
 
   // The range starts at the earliest on the first day of the statistics,
@@ -196,13 +197,22 @@ const toSeries = (
   );
 
 /**
- * Like the charts of the old statistics page. The name and the id break the
- * ties, thus each call gives the same order.
+ * The ICU collation of the order of the dashboard panels (`und-x-icu` in
+ * PostgreSQL). V8 replaces the root locale `und` with the default locale of
+ * the process, thus the collator uses English: its collation is the root
+ * collation without changes.
+ */
+const seriesCollator = new Intl.Collator("en");
+
+/**
+ * The order of the panels of the dashboard (`ORDER BY value DESC, name
+ * COLLATE "und-x-icu", id COLLATE "und-x-icu"`). The name and the id break
+ * the ties, thus each call gives the same order.
  */
 const compareSeries = (first: RankedSeries, second: RankedSeries) =>
   second.lastValue - first.lastValue ||
-  first.name.localeCompare(second.name) ||
-  first.id.localeCompare(second.id);
+  seriesCollator.compare(first.name, second.name) ||
+  seriesCollator.compare(first.id, second.id);
 
 /**
  * The daily values of one statistic of the dashboard of the app Statistiken

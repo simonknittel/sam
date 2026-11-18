@@ -1,9 +1,10 @@
+import { toLocalDateKey } from "@sam-monorepo/domain";
 import * as z from "zod";
 import { requirePermission, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import {
   FIRST_STATISTICS_DAY,
-  getLastStatisticsDay,
+  getLastStatisticsDate,
   STATISTIC_CATALOG,
   type StatisticIdsFilter,
   type StatisticKey,
@@ -56,6 +57,6 @@ export const listStatistics = async (
       ids_filter: statistic.idsFilter,
     })),
     first_day: FIRST_STATISTICS_DAY,
-    last_day: getLastStatisticsDay(context),
+    last_day: toLocalDateKey(getLastStatisticsDate(context)),
   };
 };

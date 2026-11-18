@@ -12,7 +12,7 @@ export interface StatisticValueRow {
   readonly value: number;
 }
 
-export interface StatisticRowQuery {
+interface StatisticRowQuery {
   readonly key: StatisticKey;
   /** The first day, `YYYY-MM-DD` */
   readonly from: string;
@@ -67,7 +67,7 @@ enum AcquisitionSourceSeries {
   Unknown = "unknown",
 }
 
-/** The names of the dashboard */
+/** The series names of the fleet value panels, without the currency */
 const ACQUISITION_SOURCE_SERIES_NAMES: Readonly<
   Record<AcquisitionSourceSeries, string>
 > = {
