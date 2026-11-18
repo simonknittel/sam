@@ -7,7 +7,7 @@ import {
   takesTimeOfPrecedingLine,
 } from "@sam-monorepo/domain";
 import { describe, expect, test } from "vitest";
-import { deriveEntryFields } from "./PATTERNS";
+import { deriveEntryFields, formatVehicleDestructionCause } from "./PATTERNS";
 import { SAMPLE_LINES } from "./sampleLines";
 
 const groupsOf = (type: LogAnalyzerEntryType) => {
@@ -222,6 +222,37 @@ describe("PATTERNS", () => {
       instanceId: "788400312747",
     });
   });
+
+  test("reads the vehicle, the reason and the killer of a vehicle destruction", () => {
+    expect(groupsOf(LogAnalyzerEntryType.VehicleDestroyed)).toMatchObject({
+      vehicle: "ANVL_Asgard_932957595142",
+      vehicleClass: "ANVL_Asgard",
+      reason: "Collision",
+      fromLevel: "0",
+      toLevel: "2",
+      killer: "Testpilot",
+    });
+  });
+
+  test.each([
+    { killer: "Test_pilot", expected: "Kollision mit Test_pilot" },
+    {
+      killer: "DRAK_Ironclad_Assault_936827114181",
+      expected: "Kollision mit DRAK Ironclad Assault",
+    },
+    { killer: "ANVL_Asgard_932957595142", expected: "Kollision" },
+    { killer: "none", expected: "Kollision" },
+  ])(
+    "shows the killer $killer of a vehicle destruction",
+    ({ killer, expected }) => {
+      expect(
+        formatVehicleDestructionCause({
+          ...groupsOf(LogAnalyzerEntryType.VehicleDestroyed),
+          killer,
+        }),
+      ).toBe(expected);
+    },
+  );
 
   test("reads the exception of a crash", () => {
     expect(groupsOf(LogAnalyzerEntryType.GameCrash).exception).toBe(

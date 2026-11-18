@@ -54,6 +54,21 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-11-18-log-analyzer-fahrzeugzerstoerung",
+    date: "2026-11-18",
+    title: "Fahrzeugzerstörungen im Log Analyzer",
+    tags: ["Neu", "Log Analyzer"],
+    isTracked: false,
+    body: () => (
+      <p>
+        Der Log Analyzer zeigt jetzt zerstörte Fahrzeuge in deiner Nähe mit dem
+        Grund und dem Verursacher, zum Beispiel eine Kollision oder eine
+        Selbstzerstörung.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-11-18-mcp-statistiken",
     date: "2026-11-18",
     title: "Statistiken über MCP",

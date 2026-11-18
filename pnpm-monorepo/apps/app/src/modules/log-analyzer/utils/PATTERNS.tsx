@@ -19,6 +19,7 @@ import {
   FaCompassDrafting,
   FaCrown,
   FaEnvelope,
+  FaExplosion,
   FaFileCircleCheck,
   FaFileCircleExclamation,
   FaFileCircleMinus,
@@ -54,7 +55,7 @@ import {
   FaUsersSlash,
 } from "react-icons/fa6";
 import { AbandonedContractName } from "../components/ContractNames";
-import { TruncatedText } from "../components/TruncatedText";
+import { muted, TruncatedText } from "../components/TruncatedText";
 import {
   createLatestMessageSignal,
   LiveStatusKind,
@@ -69,6 +70,7 @@ export enum EntryCategory {
   Session = "session",
   Contracts = "contracts",
   Character = "character",
+  Vehicles = "vehicles",
   Crime = "crime",
   Zones = "zones",
   Party = "party",
@@ -79,6 +81,7 @@ export const ENTRY_CATEGORY_TITLES: Record<EntryCategory, string> = {
   [EntryCategory.Session]: "Session",
   [EntryCategory.Contracts]: "Contracts",
   [EntryCategory.Character]: "Charakter",
+  [EntryCategory.Vehicles]: "Fahrzeuge",
   [EntryCategory.Crime]: "Verbrechen",
   [EntryCategory.Zones]: "Zonen",
   [EntryCategory.Party]: "Party",
@@ -202,6 +205,13 @@ const CENTI_SCU_PER_SCU = 100;
 /** The shops of the game are all named `SCShop_<location>` */
 const toShopName = (shop: string) => shop.replace(/^SCShop_/, "");
 
+/** The price and the shop of a purchase or a rental, after its goods */
+const formatShopPrice = (groups: Record<string, string>) => [
+  muted("für"),
+  `${priceFormat.format(Number(groups.price))} aUEC`,
+  muted(`(${toShopName(groups.shop)})`),
+];
+
 enum RestrictedAreaEvent {
   Impoundment = "impoundment",
   Leaving = "leaving",
@@ -219,6 +229,39 @@ const RESTRICTED_AREA_LABELS: Record<RestrictedAreaEvent, string> = {
   [RestrictedAreaEvent.Impoundment]: "Fahrzeuge werden beschlagnahmt",
   [RestrictedAreaEvent.Leaving]: "Verlassen",
   [RestrictedAreaEvent.Relocation]: "Vom Spiel umgesetzt",
+};
+
+/**
+ * A reason without a label, for example `GameRules` or an unknown reason, shows
+ * as the game writes it.
+ */
+const VEHICLE_DESTRUCTION_REASON_LABELS: Record<string, string> = {
+  Combat: "Kampf",
+  Collision: "Kollision",
+  SelfDestruct: "Selbstzerstörung",
+};
+
+/**
+ * The killer of a vehicle destruction, or null when the line names none. Only
+ * an entity has a numeric id at the end of its name: a handle can hold
+ * underscores, which must stay.
+ */
+const toVehicleKiller = (groups: Record<string, string>) => {
+  /** A self-destruction names the vehicle itself as the killer */
+  if (groups.killer === "none" || groups.killer === groups.vehicle) return null;
+  return /_\d+$/.test(groups.killer)
+    ? toEntityClass(groups.killer)
+    : groups.killer;
+};
+
+/** The reason of a vehicle destruction, with its killer if there is one */
+export const formatVehicleDestructionCause = (
+  groups: Record<string, string>,
+) => {
+  const reason =
+    VEHICLE_DESTRUCTION_REASON_LABELS[groups.reason] ?? groups.reason;
+  const killer = toVehicleKiller(groups);
+  return killer ? `${reason} mit ${killer}` : reason;
 };
 
 interface Pattern {
@@ -301,9 +344,7 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
       if (!shardName) return <TruncatedText>{groups.shard}</TruncatedText>;
 
       return (
-        <span className="truncate" title={`${shardName} (${groups.shard})`}>
-          {shardName} <span className="text-white/40">({groups.shard})</span>
-        </span>
+        <TruncatedText>{[shardName, muted(`(${groups.shard})`)]}</TruncatedText>
       );
     },
     liveStatusSignal: (groups) => ({
@@ -411,7 +452,7 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     category: EntryCategory.Commerce,
     renderMessage: (groups) => (
       <TruncatedText>
-        {`${groups.quantity}× ${groups.item} für ${priceFormat.format(Number(groups.price))} aUEC (${toShopName(groups.shop)})`}
+        {[`${groups.quantity}× ${groups.item}`, ...formatShopPrice(groups)]}
       </TruncatedText>
     ),
   },
@@ -675,9 +716,7 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     icon: FaKey,
     category: EntryCategory.Commerce,
     renderMessage: (groups) => (
-      <TruncatedText>
-        {`${groups.item} für ${priceFormat.format(Number(groups.price))} aUEC (${toShopName(groups.shop)})`}
-      </TruncatedText>
+      <TruncatedText>{[groups.item, ...formatShopPrice(groups)]}</TruncatedText>
     ),
   },
 
@@ -687,7 +726,10 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     category: EntryCategory.Commerce,
     renderMessage: (groups) => (
       <TruncatedText>
-        {`${scuFormat.format(Number(groups.centiScu) / CENTI_SCU_PER_SCU)} SCU für ${priceFormat.format(Number(groups.price))} aUEC (${toShopName(groups.shop)})`}
+        {[
+          `${scuFormat.format(Number(groups.centiScu) / CENTI_SCU_PER_SCU)} SCU`,
+          ...formatShopPrice(groups),
+        ]}
       </TruncatedText>
     ),
   },
@@ -727,6 +769,20 @@ export const PATTERNS: Record<LogAnalyzerEntryType, Pattern> = {
     icon: FaHandshake,
     category: EntryCategory.Party,
     renderMessage: (groups) => <TruncatedText>{groups.handle}</TruncatedText>,
+  },
+
+  vehicleDestroyed: {
+    title: "Fahrzeugzerstörung",
+    icon: FaExplosion,
+    category: EntryCategory.Vehicles,
+    renderMessage: (groups) => (
+      <TruncatedText>
+        {[
+          toEntityClass(groups.vehicleClass),
+          muted(`(${formatVehicleDestructionCause(groups)})`),
+        ]}
+      </TruncatedText>
+    ),
   },
 };
 
