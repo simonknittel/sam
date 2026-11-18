@@ -16,6 +16,13 @@ import { useEffect, useState, useTransition } from "react";
 const EXPIRY_MARGIN_IN_MILLISECONDS = 60 * 1000;
 
 /**
+ * Without `allow-top-navigation`: the dashboard cannot navigate the page of
+ * SAM. `allow-downloads` is for the CSV export of a panel.
+ */
+const SANDBOX =
+  "allow-scripts allow-same-origin allow-downloads allow-popups allow-popups-to-escape-sandbox";
+
+/**
  * The deadline of each frame URL on the clock of the browser, from the first
  * render of the URL. The deadline starts from the lifetime that was left at
  * the render on the server, not from the `exp` claim, because the clock of
@@ -51,14 +58,37 @@ export const StatisticsDashboardFrame = ({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   /**
-   * A new render on the server gives a new `src`, thus the note goes away
-   * without a reset of this state
+   * Each render on the server gives a new `src`, also a render that a
+   * different action starts (for example a `router.refresh()` of the shell).
+   * A new URL loads the dashboard again and resets its time range and its
+   * filters, thus the frame keeps its URL until the user clicks the button.
    */
+  const [shownFrame, setShownFrame] = useState({
+    src,
+    remainingLifetimeInMilliseconds,
+  });
+  /** The `src` at the click on the button. The frame takes the next `src`. */
+  const [srcBeforeReload, setSrcBeforeReload] = useState<string | null>(null);
   const [expiredSrc, setExpiredSrc] = useState<string | null>(null);
-  const isExpired = expiredSrc === src;
+
+  if (srcBeforeReload !== null && src !== srcBeforeReload) {
+    setShownFrame({ src, remainingLifetimeInMilliseconds });
+    setSrcBeforeReload(null);
+  }
+
+  const isExpired = expiredSrc === shownFrame.src;
 
   useEffect(() => {
-    const deadline = getDeadline(src, remainingLifetimeInMilliseconds);
+    // Also for a URL that the frame does not show: a back navigation can
+    // show the cached page with this URL
+    getDeadline(src, remainingLifetimeInMilliseconds);
+  }, [src, remainingLifetimeInMilliseconds]);
+
+  useEffect(() => {
+    const deadline = getDeadline(
+      shownFrame.src,
+      shownFrame.remainingLifetimeInMilliseconds,
+    );
     let timeout: number | undefined;
 
     const check = () => {
@@ -66,7 +96,7 @@ export const StatisticsDashboardFrame = ({
 
       const remainingMilliseconds = deadline - Date.now();
       if (remainingMilliseconds <= 0) {
-        setExpiredSrc(src);
+        setExpiredSrc(shownFrame.src);
         return;
       }
 
@@ -82,9 +112,10 @@ export const StatisticsDashboardFrame = ({
       window.clearTimeout(timeout);
       document.removeEventListener("visibilitychange", check);
     };
-  }, [src, remainingLifetimeInMilliseconds]);
+  }, [shownFrame]);
 
   const reload = () => {
+    setSrcBeforeReload(src);
     // A new render on the server signs a new token
     startTransition(() => {
       router.refresh();
@@ -94,8 +125,12 @@ export const StatisticsDashboardFrame = ({
   return (
     <div className="relative isolate">
       <IframeLayout
-        src={src}
-        iframeProps={{ title: "Statistiken", inert: isExpired }}
+        src={shownFrame.src}
+        iframeProps={{
+          title: "Statistiken",
+          inert: isExpired,
+          sandbox: SANDBOX,
+        }}
       />
 
       {isExpired && (

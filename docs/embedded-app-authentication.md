@@ -215,10 +215,13 @@ The reasons:
 The cost of the longer lifetime: a token from a log or from the browser
 history stays valid for a longer time.
 
-At the expiry, the statistics page does not reload the frame without a
-warning, because a reload resets the time range and the filters of the
-dashboard. Shortly before the expiry, a note covers the frame. Its button
-renders the page again on the server, which signs a new token.
+A new frame URL loads the dashboard again and resets its time range and
+its filters. Thus the frame keeps its token until the user opens the page
+again or clicks the button of the expiry note. Each render of the page on
+the server signs a token, also a render that a different action starts,
+but the frame ignores that token. Shortly before the expiry, a note covers
+the frame. Its button renders the page again on the server and gives the
+new token to the frame.
 
 ## Replay protection
 
@@ -249,15 +252,21 @@ second deploy. In the time between the two deploys, the previous public key
 is not published. This is acceptable with 5-minute tokens, and it is a
 reason to keep your JWKS cache short-lived and to not pin a key.
 `createRemoteJWKSet` and its equivalents get the JWKS again when they see
-an unknown `kid`. A statistics token of the previous key can stop before
-its expiry. A reload of the statistics page then signs a token with the new
-key.
+an unknown `kid`.
+
+The Grafana of the statistics page does not get the JWKS again for an
+unknown `kid`. It keeps the JWKS for `cache_ttl` (60 minutes) and refuses
+the tokens of a new key until then. SAM publishes only the key that it signs
+with, thus it cannot publish a new key 60 minutes before it uses it. Restart
+the Grafana after a key rotation. After the restart, a statistics token of
+the previous key stops before its expiry: a reload of the statistics page
+signs a token with the new key.
 
 ## What SAM does not do
 
 - No token refresh, and no mechanism that keeps the embed authenticated
-  after the handshake. The statistics page signs a new token only when the
-  user clicks its button (see [Exceptions](#exceptions)).
+  after the handshake. The frame of the statistics page takes a new token
+  only when the user clicks its button (see [Exceptions](#exceptions)).
 - No introspection endpoint and no revocation. A token is valid until it
   expires.
 - No encryption (JWE). The claims are the identity and the permissions of

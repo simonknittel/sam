@@ -20,10 +20,6 @@ export const STATISTICS_EMBED_AUTHENTICATION: EmbedAuthentication = {
   permissionResources: [],
   /** Grafana reads the token only from this parameter (`url_login`) */
   queryParameter: "auth_token",
-  /**
-   * Grafana makes no session from the token. Its frontend sends the token
-   * with each request, thus the dashboard stops at the expiry. The page then
-   * covers the frame with a note and signs a new token on request.
-   */
+  /** For the reason, see "Exceptions" in docs/embedded-app-authentication.md */
   lifetimeInSeconds: 60 * 60,
 };
