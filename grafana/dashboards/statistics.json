@@ -51,7 +51,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT first_day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, ((last_day + 1)::timestamp AT TIME ZONE 'Europe/Berlin') - interval '1 millisecond' AS timeend, text\nFROM (VALUES\n  (DATE '2025-11-20', DATE '2025-12-03', 'IAE 2955'),\n  (DATE '2026-05-14', DATE '2026-05-27', 'Drake DefenseCon 2956 (anstelle der Invictus Launch Week)'),\n  (DATE '2026-11-13', DATE '2026-11-27', 'IAE 2956')\n) AS sales (first_day, last_day, text)\nWHERE first_day::timestamp AT TIME ZONE 'Europe/Berlin' <= $__timeTo()\n  AND (last_day + 1)::timestamp AT TIME ZONE 'Europe/Berlin' >= $__timeFrom()\nORDER BY 1",
+          "rawSql": "SELECT first_day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, ((last_day + 1)::timestamp AT TIME ZONE 'Europe/Berlin') - interval '1 millisecond' AS timeend, text\nFROM (VALUES\n  (DATE '2025-11-20', DATE '2025-12-03', 'IAE 2955'),\n  (DATE '2026-05-14', DATE '2026-05-27', 'Drake DefenseCon 2956'),\n  (DATE '2026-11-13', DATE '2026-11-27', 'IAE 2956')\n) AS sales (first_day, last_day, text)\nWHERE first_day::timestamp AT TIME ZONE 'Europe/Berlin' <= $__timeTo()\n  AND (last_day + 1)::timestamp AT TIME ZONE 'Europe/Berlin' >= $__timeFrom()\nORDER BY 1",
           "refId": "Anno"
         }
       }
