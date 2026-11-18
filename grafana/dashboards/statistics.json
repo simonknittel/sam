@@ -12,6 +12,48 @@
         "iconColor": "rgba(0, 211, 255, 1)",
         "name": "Annotations & Alerts",
         "type": "dashboard"
+      },
+      {
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "sam-statistics-postgres"
+        },
+        "enable": true,
+        "hide": false,
+        "iconColor": "blue",
+        "name": "Patches",
+        "target": {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sam-statistics-postgres"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, text\nFROM (VALUES\n  (DATE '2025-12-18', 'LIVE: Alpha 4.5: Dawn of Engineering'),\n  (DATE '2026-01-28', 'LIVE: Alpha 4.6: Lifeline for Levski'),\n  (DATE '2026-03-25', 'LIVE: Alpha 4.7: Welcome to the Rock'),\n  (DATE '2026-04-08', 'LIVE: Alpha 4.7.1'),\n  (DATE '2026-04-22', 'LIVE: Alpha 4.7.2'),\n  (DATE '2026-05-14', 'LIVE: Alpha 4.8: Tactical Strike'),\n  (DATE '2026-06-03', 'LIVE: Alpha 4.8.1'),\n  (DATE '2026-06-17', 'LIVE: Alpha 4.8.2'),\n  (DATE '2026-07-01', 'LIVE: Alpha 4.8.3: The Return of Xenothreat'),\n  (DATE '2026-07-16', 'LIVE: Alpha 4.9: Frontier Tensions'),\n  (DATE '2026-08-26', 'LIVE: Alpha 4.10: Siege of Orison'),\n  (DATE '2026-09-16', 'LIVE: Alpha 4.10.1'),\n  (DATE '2026-10-09', 'LIVE: Alpha 4.10.2: RSI Discovery Month'),\n  (DATE '2026-11-12', 'LIVE: Alpha 4.10.3: Vanduul Incursion')\n) AS releases (day, text)\nWHERE $__timeFilter(day::timestamp AT TIME ZONE 'Europe/Berlin')\nORDER BY 1",
+          "refId": "Anno"
+        }
+      },
+      {
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "sam-statistics-postgres"
+        },
+        "enable": true,
+        "hide": false,
+        "iconColor": "orange",
+        "name": "Sales",
+        "target": {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sam-statistics-postgres"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT first_day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, ((last_day + 1)::timestamp AT TIME ZONE 'Europe/Berlin') - interval '1 millisecond' AS timeend, text\nFROM (VALUES\n  (DATE '2025-11-20', DATE '2025-12-03', 'IAE 2955'),\n  (DATE '2026-05-14', DATE '2026-05-27', 'Drake DefenseCon 2956 (anstelle der Invictus Launch Week)'),\n  (DATE '2026-11-13', DATE '2026-11-27', 'IAE 2956')\n) AS sales (first_day, last_day, text)\nWHERE first_day::timestamp AT TIME ZONE 'Europe/Berlin' <= $__timeTo()\n  AND (last_day + 1)::timestamp AT TIME ZONE 'Europe/Berlin' >= $__timeFrom()\nORDER BY 1",
+          "refId": "Anno"
+        }
       }
     ]
   },
