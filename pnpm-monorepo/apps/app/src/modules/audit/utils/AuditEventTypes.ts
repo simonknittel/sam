@@ -3295,4 +3295,18 @@ export const AuditEventDefinitions: {
     data: { arguments: {} },
     message: (data) => toReadMessage("System log listed", data),
   },
+
+  [AuditEventType.STATISTICS_LISTED]: {
+    type: AuditEventType.STATISTICS_LISTED,
+    app: SystemLogApp.Statistics,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Statistics listed", data),
+  },
+
+  [AuditEventType.STATISTIC_READ]: {
+    type: AuditEventType.STATISTIC_READ,
+    app: SystemLogApp.Statistics,
+    data: { arguments: {} },
+    message: (data) => toReadMessage("Statistic read", data),
+  },
 };
