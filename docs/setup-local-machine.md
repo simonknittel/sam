@@ -146,8 +146,9 @@ dashboard:
 1. Set `EMBED_JWT_PRIVATE_KEY` (see
    [Embedded app authentication](#embedded-app-authentication)).
 2. Set `STATISTICS_GRAFANA_URL="http://127.0.0.1:3100"` in
-   `pnpm-monorepo/apps/app/.env`. Use `127.0.0.1`, not `localhost`: then
-   the frame is on a different site than the app, like in production.
+   `pnpm-monorepo/apps/app/.env`. The value is an origin, without a path.
+   Use `127.0.0.1`, not `localhost`: then the frame is on a different site
+   than the app, like in production.
 3. Put the two lines that
    `node .agents/skills/run-app/scripts/grafana-env.mjs pnpm-monorepo/apps/app/.env`
    prints into the `.env` file next to [compose.yml](../compose.yml). They

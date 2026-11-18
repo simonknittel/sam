@@ -158,7 +158,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH counts AS (\n  SELECT * FROM (\n    SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, variant_id AS id, variant_name AS name, ship_count AS value\n    FROM statistics.daily_ship_counts\n    WHERE variant_id IN (${variants:sqlstring})\n  ) AS daily_counts\n  WHERE $__timeFilter(time)\n),\nlast_values AS (\n  SELECT DISTINCT ON (id) id, name, value\n  FROM counts\n  ORDER BY id, time DESC\n),\ntop_series AS (\n  SELECT id, row_number() OVER (ORDER BY value DESC, name, id) AS position\n  FROM last_values\n  WHERE id IN (SELECT id FROM counts GROUP BY id HAVING max(value) > 0)\n  ORDER BY position\n  LIMIT ${top:sqlstring}::integer\n)\nSELECT time, id, name, value\nFROM counts\nJOIN top_series USING (id)\nORDER BY position, time",
+          "rawSql": "WITH counts AS (\n  SELECT * FROM (\n    SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, variant_id AS id, variant_name AS name, ship_count AS value\n    FROM statistics.daily_ship_counts\n    WHERE variant_id IN (${variants:sqlstring})\n  ) AS daily_counts\n  WHERE $__timeFilter(time)\n),\nlast_values AS (\n  SELECT DISTINCT ON (id) id, name, value\n  FROM counts\n  ORDER BY id, time DESC\n),\nselection AS (\n  SELECT count(*) = (SELECT count(*) FROM statistics.ship_variants) AS is_all\n  FROM statistics.ship_variants\n  WHERE variant_id IN (${variants:sqlstring})\n),\ntop_series AS (\n  SELECT id, row_number() OVER (ORDER BY value DESC, name COLLATE \"und-x-icu\", id COLLATE \"und-x-icu\") AS position\n  FROM last_values\n  WHERE id IN (\n    SELECT id FROM counts GROUP BY id\n    HAVING max(value) > 0 OR NOT (SELECT is_all FROM selection)\n  )\n  ORDER BY position\n  LIMIT ${top:sqlstring}::integer\n)\nSELECT time, id, name, value\nFROM counts\nJOIN top_series USING (id)\nORDER BY position, time",
           "refId": "A"
         }
       ],
@@ -758,7 +758,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH counts AS (\n  SELECT * FROM (\n    SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, role_id AS id, role_name AS name, citizen_count AS value\n    FROM statistics.daily_role_citizen_counts\n    WHERE role_id IN (${roles:sqlstring})\n  ) AS daily_counts\n  WHERE $__timeFilter(time)\n),\nlast_values AS (\n  SELECT DISTINCT ON (id) id, name, value\n  FROM counts\n  ORDER BY id, time DESC\n),\ntop_series AS (\n  SELECT id, row_number() OVER (ORDER BY value DESC, name, id) AS position\n  FROM last_values\n  WHERE id IN (SELECT id FROM counts GROUP BY id HAVING max(value) > 0)\n  ORDER BY position\n  LIMIT ${top:sqlstring}::integer\n)\nSELECT time, id, name, value\nFROM counts\nJOIN top_series USING (id)\nORDER BY position, time",
+          "rawSql": "WITH counts AS (\n  SELECT * FROM (\n    SELECT day::timestamp AT TIME ZONE 'Europe/Berlin' AS time, role_id AS id, role_name AS name, citizen_count AS value\n    FROM statistics.daily_role_citizen_counts\n    WHERE role_id IN (${roles:sqlstring})\n  ) AS daily_counts\n  WHERE $__timeFilter(time)\n),\nlast_values AS (\n  SELECT DISTINCT ON (id) id, name, value\n  FROM counts\n  ORDER BY id, time DESC\n),\nselection AS (\n  SELECT count(*) = (SELECT count(*) FROM statistics.roles) AS is_all\n  FROM statistics.roles\n  WHERE role_id IN (${roles:sqlstring})\n),\ntop_series AS (\n  SELECT id, row_number() OVER (ORDER BY value DESC, name COLLATE \"und-x-icu\", id COLLATE \"und-x-icu\") AS position\n  FROM last_values\n  WHERE id IN (\n    SELECT id FROM counts GROUP BY id\n    HAVING max(value) > 0 OR NOT (SELECT is_all FROM selection)\n  )\n  ORDER BY position\n  LIMIT ${top:sqlstring}::integer\n)\nSELECT time, id, name, value\nFROM counts\nJOIN top_series USING (id)\nORDER BY position, time",
           "refId": "A"
         }
       ],
@@ -1078,13 +1078,13 @@
           "type": "grafana-postgresql-datasource",
           "uid": "sam-statistics-postgres"
         },
-        "definition": "SELECT role_name AS __text, role_id AS __value FROM statistics.roles ORDER BY role_name, role_id",
+        "definition": "SELECT role_name AS __text, role_id AS __value FROM statistics.roles ORDER BY role_name COLLATE \"und-x-icu\", role_id COLLATE \"und-x-icu\"",
         "includeAll": true,
         "label": "Rollen",
         "multi": true,
         "name": "roles",
         "options": [],
-        "query": "SELECT role_name AS __text, role_id AS __value FROM statistics.roles ORDER BY role_name, role_id",
+        "query": "SELECT role_name AS __text, role_id AS __value FROM statistics.roles ORDER BY role_name COLLATE \"und-x-icu\", role_id COLLATE \"und-x-icu\"",
         "refresh": 1,
         "sort": 0,
         "type": "query"
@@ -1103,13 +1103,13 @@
           "type": "grafana-postgresql-datasource",
           "uid": "sam-statistics-postgres"
         },
-        "definition": "SELECT variant_name AS __text, variant_id AS __value FROM statistics.ship_variants ORDER BY variant_name, variant_id",
+        "definition": "SELECT variant_name AS __text, variant_id AS __value FROM statistics.ship_variants ORDER BY variant_name COLLATE \"und-x-icu\", variant_id COLLATE \"und-x-icu\"",
         "includeAll": true,
         "label": "Varianten",
         "multi": true,
         "name": "variants",
         "options": [],
-        "query": "SELECT variant_name AS __text, variant_id AS __value FROM statistics.ship_variants ORDER BY variant_name, variant_id",
+        "query": "SELECT variant_name AS __text, variant_id AS __value FROM statistics.ship_variants ORDER BY variant_name COLLATE \"und-x-icu\", variant_id COLLATE \"und-x-icu\"",
         "refresh": 1,
         "sort": 0,
         "type": "query"

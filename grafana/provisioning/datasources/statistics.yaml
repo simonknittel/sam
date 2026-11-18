@@ -15,7 +15,11 @@ datasources:
     jsonData:
       database: db
       sslmode: disable
-      # Below the connection limit of the role
+      # At most the connection limit of the role (10)
       maxOpenConns: 5
+      # Seconds. Grafana closes a connection after this time. This ends the
+      # session state that a viewer can set on a pooled connection (for
+      # example SET statement_timeout = 0).
+      connMaxLifetime: 60
     isDefault: true
     editable: false

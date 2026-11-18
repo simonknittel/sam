@@ -110,16 +110,21 @@ the page shows a note. A Grafana that shows the dashboard must have:
    role Viewer at the first visit.
 2. The database role `sam_statistics_grafana`. Run
    [statistics-reader-role.sql](../pnpm-monorepo/packages/database/prisma/statistics-reader-role.sql)
-   in the database of SAM (its comments give the conditions), and set a
-   password of this environment:
-   `ALTER ROLE sam_statistics_grafana PASSWORD '<password>'`. Each viewer
-   can send any SQL to the data source. The role can only read the views of
-   the schema `statistics`.
+   as a superuser in the database of SAM (its comments give the conditions:
+   the role of the app owns the schema `statistics`), and set a password of
+   this environment: `ALTER ROLE sam_statistics_grafana PASSWORD '<password>'`.
+   Each viewer can send any SQL to the data source. The role can only read
+   the views of the schema `statistics`. The file also removes rights that
+   PostgreSQL gives to PUBLIC (advisory locks, large objects, temporary
+   tables) and gives them to the role of the app. A different role that
+   needs them needs its own `GRANT`.
 3. A PostgreSQL data source with the UID `sam-statistics-postgres` that
    logs in with this role and that a user cannot edit (example:
    [grafana/provisioning/datasources/statistics.yaml](../grafana/provisioning/datasources/statistics.yaml)).
-   Keep its maximum number of open connections below the connection limit
-   of the role.
+   It opens at most the connection limit of the role (`maxOpenConns`, 10 or
+   less), and it closes a connection after 60 seconds
+   (`connMaxLifetime: 60`). This ends the session settings that a viewer can
+   change with `SET`.
 4. The dashboard file
    [grafana/dashboards/statistics.json](../grafana/dashboards/statistics.json)
    (UID `sam-statistics`) from a fixed commit of this repository, through a
@@ -128,6 +133,8 @@ the page shows a note. A Grafana that shows the dashboard must have:
    [grafana/provisioning/dashboards/statistics.yaml](../grafana/provisioning/dashboards/statistics.yaml)).
    A change of the dashboard goes live when you update the file.
 
-Then set `STATISTICS_GRAFANA_URL` (the base URL of the Grafana) for the
-environment in Vercel. The page also needs `EMBED_JWT_PRIVATE_KEY` (see
+Then set `STATISTICS_GRAFANA_URL` for the environment in Vercel. The value
+is the origin of the Grafana (scheme, host and port, for example
+`https://statistics.example.com`), without a path and without a user name
+or password. The page also needs `EMBED_JWT_PRIVATE_KEY` (see
 [7. Set up Vercel](#7-set-up-vercel)).
