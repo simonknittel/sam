@@ -5,17 +5,18 @@
 export const EMBED_TOKEN_ALGORITHM = "ES256";
 
 /**
- * Query parameter the token is appended to an embed URL under. Shared
- * between minting and docs/embedded-app-authentication.md rather than
- * configurable per app, since nothing currently needs a second name.
+ * Query parameter of the token in an embed URL, unless the embed
+ * configuration of the app sets a different one (see `EmbedAuthentication`).
  */
-export const EMBED_TOKEN_QUERY_PARAMETER = "jwt";
+export const DEFAULT_EMBED_TOKEN_QUERY_PARAMETER = "jwt";
 
 /**
- * The token is a handshake credential: the embedded app exchanges it for
- * its own session while loading, so this only constrains the initial load,
- * not how long the iframe may stay open. Kept short because the token rides
- * in a query string and therefore reaches access logs, browser history and
+ * Lifetime of a token, unless the embed configuration of the app sets a
+ * different one (see `EmbedAuthentication`). For an app that exchanges the
+ * token for its own session while it loads, the token is a handshake
+ * credential: the lifetime only limits the first load, not the time that the
+ * iframe can stay open. The lifetime is short because the token is in a
+ * query string and thus goes into access logs, the browser history and
  * outbound `Referer` headers.
  */
-export const EMBED_TOKEN_LIFETIME_IN_SECONDS = 5 * 60;
+export const DEFAULT_EMBED_TOKEN_LIFETIME_IN_SECONDS = 5 * 60;
