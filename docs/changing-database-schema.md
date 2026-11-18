@@ -20,3 +20,12 @@ Step 4 resets the local database. To keep the data, use one of these options:
 - Do step 3. Then create the SQL with `pnpm exec prisma migrate diff --from-migrations prisma/migrations --to-schema prisma --script -o <temporary file>`. This command requires a shadow database in the Prisma config. Move the file to `prisma/migrations/<name>/migration.sql`. Then mark the migration as applied: `pnpm exec prisma migrate resolve --applied <name>`.
 
 Do not change a migration that a database already applied. `prisma migrate deploy` compares the checksums and fails.
+
+## Views of the schema `statistics`
+
+The schema `statistics` holds views for the readers of the statistics (the dashboard and the MCP tools). The views are not in the Prisma models, thus Prisma ignores them in a diff. The migration `statistics_views` makes them.
+
+- PostgreSQL refuses to change the type of a column, or to drop a column or a table, that a view uses (`cannot alter type of a column used by a view or rule`). The error names the views. `prisma db push` (step 3) then fails too. Skip step 3 and make the migration with `pnpm exec prisma migrate dev --create-only`. Add the statements for the views to the migration: first drop the views (`DROP VIEW statistics.<name>`; a view that reads a different view goes first), then the change of Prisma, then make the views again. Then do step 4. A rename of a column or a table needs no change: the view follows it.
+- Each view must read a table of the schema `public`. A reset of Prisma drops the schema `public` with `CASCADE`, thus it drops only the views that use it. A view that reads no table stays, and its migration fails when the reset applies the migrations again.
+- A view that a migration makes again gets the `SELECT` right of the reader role from the default privileges in `pnpm-monorepo/packages/database/prisma/statistics-reader-role.sql`.
+- A change of the columns or the rows of a view changes the data of its readers. Update the dashboard (`grafana/dashboards/statistics.json`) and the MCP tools too.
