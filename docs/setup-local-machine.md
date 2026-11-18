@@ -174,11 +174,15 @@ To change the dashboard:
    production.
 2. Log in at <http://127.0.0.1:3100/login> as `admin`, and change the
    dashboard "Statistiken".
-3. Export the dashboard as JSON. Do not use the export for a different
-   Grafana instance: it replaces the UID of the data source. Replace
+3. Export the dashboard: "Exportieren" > "Als Code exportieren". Under
+   "Erweiterte Optionen", select "Klassisch" and "JSON": the file has the
+   classic format. Keep "Dashboard mit einer anderen Instanz teilen" off,
+   because this option replaces the UID of the data source. Download the
+   file, remove its keys `id` and `version` (they are values of the local
+   Grafana), and replace
    [grafana/dashboards/statistics.json](../grafana/dashboards/statistics.json)
-   with the JSON. Grafana reads the file again after some seconds. You
-   cannot save the dashboard in Grafana, because it comes from the file.
+   with it. Grafana reads the file again after some seconds. You cannot
+   save the dashboard in Grafana, because it comes from the file.
 4. Remove the variable, and run `docker compose up -d grafana` again. This
    also removes the admin.
 
