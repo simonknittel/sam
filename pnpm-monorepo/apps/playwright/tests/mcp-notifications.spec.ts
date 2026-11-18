@@ -126,7 +126,7 @@ test.describe("the notification tools of the MCP server", () => {
       });
   });
 
-  test("update_notification marks an own notification as read and unread and moves it to the archive and back, and a repeated call changes nothing", async ({
+  test("update_notification moves an own notification to the archive as read and back, marks it as unread and read, and a repeated call changes nothing", async ({
     prisma,
     authorizeMcpClient,
     connectMcpClient,
@@ -154,14 +154,11 @@ test.describe("the notification tools of the MCP server", () => {
         select: { readAt: true, archivedAt: true },
       });
 
-    expect(await update("mark_read")).toEqual({
+    expect(await update("archive")).toEqual({
       notification_id: notification.id,
       changed: true,
       new_item_read: false,
     });
-    expect(await update("mark_read")).toMatchObject({ changed: false });
-
-    expect(await update("archive")).toMatchObject({ changed: true });
     expect(await update("archive")).toMatchObject({ changed: false });
     expect(await findState()).toEqual({
       readAt: expect.any(Date),
@@ -175,6 +172,13 @@ test.describe("the notification tools of the MCP server", () => {
     expect(await update("mark_unread")).toMatchObject({ changed: false });
     expect(await findState()).toEqual({ readAt: null, archivedAt: null });
 
+    expect(await update("mark_read")).toEqual({
+      notification_id: notification.id,
+      changed: true,
+      new_item_read: false,
+    });
+    expect(await update("mark_read")).toMatchObject({ changed: false });
+
     for (const action of ["mark_read", "archive"])
       expect(await update(action, strangerNotification.id)).toMatchObject({
         changed: false,
@@ -186,7 +190,8 @@ test.describe("the notification tools of the MCP server", () => {
       }),
     ).toEqual({ readAt: null, archivedAt: null });
 
-    // One event for each change, none for the calls that changed nothing
+    // One event for each change, none for the calls that changed nothing. The
+    // archive writes two: the archive and the read.
     await expectAuditEvents(prisma, [
       "ON_SITE_NOTIFICATIONS_READ",
       "ON_SITE_NOTIFICATION_ARCHIVED",
@@ -198,6 +203,6 @@ test.describe("the notification tools of the MCP server", () => {
         where: { type: { startsWith: "ON_SITE_NOTIFICATION" } },
         select: { triggeredViaMcp: true },
       }),
-    ).toEqual(Array.from({ length: 4 }, () => ({ triggeredViaMcp: true })));
+    ).toEqual(Array.from({ length: 5 }, () => ({ triggeredViaMcp: true })));
   });
 });
