@@ -16,6 +16,7 @@ export enum ToolGroup {
   ManualNotifications = "manual_notifications",
   Changelog = "changelog",
   SystemLog = "system_log",
+  Statistics = "statistics",
 }
 
 export const TOOL_GROUP_TITLES: Readonly<Record<ToolGroup, string>> = {
@@ -32,6 +33,7 @@ export const TOOL_GROUP_TITLES: Readonly<Record<ToolGroup, string>> = {
   [ToolGroup.ManualNotifications]: "Manual notifications",
   [ToolGroup.Changelog]: "Changelog",
   [ToolGroup.SystemLog]: "System log",
+  [ToolGroup.Statistics]: "Statistics",
 };
 
 export const TOOL_GROUP_ORDER: readonly ToolGroup[] = Object.values(ToolGroup);
