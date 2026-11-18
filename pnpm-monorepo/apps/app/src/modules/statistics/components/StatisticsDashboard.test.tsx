@@ -52,21 +52,19 @@ const renderDashboard = async (environment: {
 };
 
 describe("statistics dashboard", () => {
-  test("shows a note and no frame without a Grafana URL", async () => {
+  test("shows a note without a Grafana URL", async () => {
     const html = await renderDashboard({
       EMBED_JWT_PRIVATE_KEY: generateBase64EncodedPrivateKeyPem(),
     });
 
     expect(html).toContain(NOT_CONFIGURED_TEXT);
-    expect(html).not.toContain("<iframe");
   });
 
-  test("shows a note and no frame without a signing key", async () => {
+  test("shows a note without a signing key", async () => {
     const html = await renderDashboard({
       STATISTICS_GRAFANA_URL: "http://127.0.0.1:3100",
     });
 
     expect(html).toContain(NOT_CONFIGURED_TEXT);
-    expect(html).not.toContain("<iframe");
   });
 });

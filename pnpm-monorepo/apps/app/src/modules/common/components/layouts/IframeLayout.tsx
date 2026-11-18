@@ -1,4 +1,7 @@
+"use client";
+
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
+import { useIsHydrated } from "@/modules/common/utils/useIsHydrated";
 import type { ComponentProps } from "react";
 
 interface Props {
@@ -7,18 +10,29 @@ interface Props {
 }
 
 export const IframeLayout = ({ src, iframeProps }: Props) => {
+  /**
+   * On a full page load, the page streams in after the shell (the Suspense
+   * boundary of `app/loading.tsx`). React then moves the streamed content
+   * into its place, and the move of an iframe stops its first navigation
+   * and starts a second one. Thus the iframe renders only after the
+   * hydration, and the frame loads one time.
+   */
+  const isHydrated = useIsHydrated();
+
   return (
-    <div className="relative">
+    <div className="relative h-[calc(100dvh-64px-48px)] lg:h-[calc(100dvh-112px)]">
       {/*
        * `scheme-normal`: with the dark scheme of the app, the browser paints
        * an embedded light page without a background on an opaque white canvas.
        */}
-      <iframe
-        src={src}
-        className="relative z-10 h-[calc(100dvh-64px-48px)] w-full scheme-normal lg:h-[calc(100dvh-112px)]"
-        title="Formular für eine SILO-Anfrage"
-        {...iframeProps}
-      />
+      {isHydrated && (
+        <iframe
+          src={src}
+          className="relative z-10 block size-full scheme-normal"
+          title="Formular für eine SILO-Anfrage"
+          {...iframeProps}
+        />
+      )}
 
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
         <AsciiSpinner className="text-5xl text-neutral-500" />

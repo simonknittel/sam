@@ -1,7 +1,7 @@
 "use client";
 
+import { useIsHydrated } from "@/modules/common/utils/useIsHydrated";
 import { useNow } from "next-intl";
-import { useSyncExternalStore } from "react";
 
 /**
  * The time in the given IANA time zone. Returns null when the browser does
@@ -20,9 +20,6 @@ const formatLocalTime = (timezone: string, now: Date) => {
   }
 };
 
-/** The value never changes, thus nothing has to subscribe to it. */
-const subscribeToNothing = () => () => undefined;
-
 interface Props {
   readonly timezone: string;
 }
@@ -34,12 +31,8 @@ interface Props {
  */
 export const LocalTime = ({ timezone }: Props) => {
   const now = useNow();
-  const isBrowser = useSyncExternalStore(
-    subscribeToNothing,
-    () => true,
-    () => false,
-  );
-  if (!isBrowser) return null;
+  const isHydrated = useIsHydrated();
+  if (!isHydrated) return null;
 
   const localTime = formatLocalTime(timezone, now);
   if (!localTime) return null;
