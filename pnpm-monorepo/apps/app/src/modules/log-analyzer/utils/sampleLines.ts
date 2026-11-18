@@ -103,6 +103,8 @@ export const SAMPLE_LINES: Record<LogAnalyzerEntryType, string> = {
     '<2026-03-28T12:59:29.129Z> [Notice] <SHUDEvent_OnNotification> Added notification "Party Disbanded\r\n<2026-03-28T12:59:29.130Z> The party has been disbanded.: " [3] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]',
   [LogAnalyzerEntryType.FriendAddedNotification]:
     '<2026-02-06T17:57:09.982Z> [Notice] <SHUDEvent_OnNotification> Added notification "Friend Added\r\n<2026-02-06T17:57:09.982Z> Testfriend: " [59] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]',
+  [LogAnalyzerEntryType.VehicleDestroyed]:
+    "<2026-11-17T15:21:23.898Z> [Notice] <Vehicle Destroyed> Vehicle 'ANVL_Asgard_932957595142' [932957595142] class 'ANVL_Asgard' (owner player [200123456789], driver [0]) destroyed: reason [Collision] level [0] -> [2] flags [4066] killer 'Testpilot' [200123456789] authority [0] [Team_CGP4][Vehicle]",
 };
 
 /** The end of a log file of a session which crashed, as the game writes it. */

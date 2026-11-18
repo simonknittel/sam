@@ -63,6 +63,7 @@ export enum LogAnalyzerEntryType {
   PartyKickedNotification = "partyKickedNotification",
   PartyDisbandedNotification = "partyDisbandedNotification",
   FriendAddedNotification = "friendAddedNotification",
+  VehicleDestroyed = "vehicleDestroyed",
 }
 
 interface LogAnalyzerEntryPattern {
@@ -538,6 +539,20 @@ export const LOG_ANALYZER_ENTRY_PATTERNS: Record<
     // <2026-02-06T17:57:09.982Z> SomeHandle: " [59] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "Friend Added\r?\n<[\d\-T:.Z]+> (?<handle>[^:"\r\n]+): ".*$/gm,
+  },
+
+  [LogAnalyzerEntryType.VehicleDestroyed]: {
+    marker: "<Vehicle Destroyed>",
+    /**
+     * Since build 4.10.200. The game writes the line for each vehicle near the
+     * player, not only for the vehicles of the player. The killer is a handle,
+     * an entity (for example the vehicle itself at a self-destruction or a
+     * hangar door) or `none`.
+     */
+    // <2026-11-16T16:41:54.995Z> [Notice] <Vehicle Destroyed> Vehicle 'DRAK_Ironclad_Assault_936827114181' [936827114181] class 'DRAK_Ironclad_Assault' (owner player [...], driver [0]) destroyed: reason [SelfDestruct] level [0] -> [2] flags [16482] killer 'DRAK_Ironclad_Assault_936827114181' [936827114181] authority [0] [Team_CGP4][Vehicle]
+    // <2026-11-17T15:21:23.898Z> [Notice] <Vehicle Destroyed> Vehicle 'ANVL_Asgard_932957595142' [932957595142] class 'ANVL_Asgard' (owner player [...], driver [0]) destroyed: reason [Collision] level [0] -> [2] flags [4066] killer 'SomeHandle' [...] authority [0] [Team_CGP4][Vehicle]
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<Vehicle Destroyed> Vehicle '(?<vehicle>[^']+)' \[\d+\] class '(?<vehicleClass>[^']+)'(?:(?!destroyed: reason \[).)*destroyed: reason \[(?<reason>[^\]]+)\] level \[(?<fromLevel>\d+)\] -> \[(?<toLevel>\d+)\](?:(?!killer ').)*killer '(?<killer>[^']+)'.*$/gm,
   },
 };
 
