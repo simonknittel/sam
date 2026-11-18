@@ -34,9 +34,9 @@ export const FORBIDDEN_ACTION_TEXT =
 export const BAD_REQUEST_TEXT = "Ungültige Anfrage";
 
 /**
- * Scopes a lookup to the tile/section carrying the given heading. Tiles,
- * statistic tiles and chart cards all render as a `section` named by their
- * heading, so one helper covers them all.
+ * Scopes a lookup to the tile/section carrying the given heading. Tiles and
+ * statistic tiles both render as a `section` named by their heading, so one
+ * helper covers both.
  */
 export const sectionByHeading = (page: Page, heading: string | RegExp) =>
   page.locator("section").filter({

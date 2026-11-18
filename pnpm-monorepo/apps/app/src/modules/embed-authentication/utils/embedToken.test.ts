@@ -87,13 +87,6 @@ describe("append embed token", () => {
       ),
     ).toBe("https://embedded-app.example.com/?embedded=true&jwt=a.b");
   });
-
-  test("returns the URL byte-identical without a token", () => {
-    const embedUrl =
-      "https://docs.google.com/forms/d/e/1FAIpQLSeHEgpv4/viewform";
-
-    expect(appendEmbedToken(embedUrl, null)).toBe(embedUrl);
-  });
 });
 
 describe("sign embed token", () => {

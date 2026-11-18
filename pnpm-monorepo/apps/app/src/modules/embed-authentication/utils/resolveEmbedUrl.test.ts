@@ -1,4 +1,3 @@
-import { STATISTICS_EMBED_AUTHENTICATION } from "@/modules/statistics/utils/constants";
 import { UserRole } from "@sam-monorepo/database/client";
 import type { PermissionSet } from "@sam-monorepo/domain";
 import { createLocalJWKSet, jwtVerify } from "jose";
@@ -112,7 +111,7 @@ describe("resolve embed URL", () => {
     expect(logWarn).not.toHaveBeenCalled();
   });
 
-  test("signs the token of the statistics dashboard with its own parameter and lifetime", async () => {
+  test("signs the token with the parameter and the lifetime of the configuration", async () => {
     const base64EncodedPrivateKeyPem = generateBase64EncodedPrivateKeyPem();
     const { authenticateEmbedUrl, AuthenticatedEmbedUrlStatus } =
       await importModule(base64EncodedPrivateKeyPem);
@@ -120,7 +119,11 @@ describe("resolve embed URL", () => {
     const authenticatedEmbedUrl = await authenticateEmbedUrl(
       EMBED_URL,
       buildSession(buildEntity("ind3x")),
-      STATISTICS_EMBED_AUTHENTICATION,
+      {
+        ...EMBED_AUTHENTICATION,
+        queryParameter: "auth_token",
+        lifetimeInSeconds: 3600,
+      },
     );
     if (authenticatedEmbedUrl.status !== AuthenticatedEmbedUrlStatus.Signed)
       throw new Error(`No token: ${authenticatedEmbedUrl.status}`);
@@ -137,16 +140,15 @@ describe("resolve embed URL", () => {
       ),
       {
         issuer: ISSUER,
-        audience: "sam-statistics-grafana",
+        audience: EMBED_AUTHENTICATION.audience,
         algorithms: ["ES256"],
       },
     );
 
     expect(payload).toMatchObject({
       sub: "clog1zezo04isul0nfes57hmo",
-      permissions: [],
+      permissions: ["event;read"],
     });
-    // One hour
     expect(payload.exp! - payload.iat!).toBe(3600);
     expect(authenticatedEmbedUrl.expiresAt.getTime()).toBe(payload.exp! * 1000);
   });

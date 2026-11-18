@@ -98,18 +98,11 @@ export const signEmbedToken = async ({
   return { token, expiresAt: new Date(expiresAtInSeconds * 1000) };
 };
 
-/**
- * Returns the URL unchanged when there is no token, so an app that did not
- * opt in — or a render without a usable identity — embeds exactly the URL
- * it always did.
- */
 export const appendEmbedToken = (
   embedUrl: string,
-  token: string | null,
+  token: string,
   queryParameter = DEFAULT_EMBED_TOKEN_QUERY_PARAMETER,
 ) => {
-  if (!token) return embedUrl;
-
   const url = new URL(embedUrl);
   url.searchParams.set(queryParameter, token);
 
