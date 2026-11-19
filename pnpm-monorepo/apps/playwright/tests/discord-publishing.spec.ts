@@ -21,6 +21,7 @@ import {
   NOT_FOUND_TEXT,
   openFormSection,
   SAVED_TEXT,
+  sectionByHeading,
   toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
@@ -121,7 +122,10 @@ for (const { channel, entityType } of CHANNEL_KINDS) {
     await expect(page.getByText(`Sprachkanal: ${channel.name}`)).toBeVisible();
     // Exact: the description field's hint links to "Formatierungen wie auf Discord"
     await expect(
-      page.getByRole("link", { name: "Discord", exact: true }).first(),
+      sectionByHeading(page, "Discord").getByRole("link", {
+        name: "Discord",
+        exact: true,
+      }),
     ).toHaveAttribute(
       "href",
       new RegExp(`/events/.+/${published!.discordPublishedId}$`),
@@ -249,7 +253,9 @@ test("editing a published event updates it on Discord, deleting it removes it", 
   await waitForAppShellHydration(page);
   await page.getByLabel("Titel").fill("Operation Zweitfassung");
   await page.getByLabel("Beschreibung").fill("Jetzt mit Beschreibung.");
-  await page.getByRole("button", { name: "Speichern" }).click();
+  await sectionByHeading(page, "Stammdaten")
+    .getByRole("button", { name: "Speichern" })
+    .click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   expect(discordMock.scheduledEvents.get(scheduledEventId)).toMatchObject({
@@ -307,7 +313,9 @@ test("an event deleted on Discord's side is marked as unpublished again", async 
   await page.reload();
   await waitForAppShellHydration(page);
   await page.getByLabel("Titel").fill("Operation Abdrift II");
-  await page.getByRole("button", { name: "Speichern" }).click();
+  await sectionByHeading(page, "Stammdaten")
+    .getByRole("button", { name: "Speichern" })
+    .click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   await expect(
     page.getByText(
@@ -522,8 +530,8 @@ test("a template's publish preference prefills the create form and publishes the
 });
 
 /**
- * The publish preference the test above reads is edited in the template's
- * Stammdaten form — the only place it is written by hand.
+ * The publish preference the test above reads is edited in the Discord tile
+ * of the template's Stammdaten page — the only place it is written by hand.
  */
 test("the owner switches a template's publishing on and picks its channel", async ({
   page,
@@ -550,7 +558,9 @@ test("the owner switches a template's publishing on and picks its channel", asyn
     .getByLabel("Kanal", { exact: true })
     .selectOption({ label: MOCK_STAGE_CHANNEL.name });
 
-  await page.getByRole("button", { name: "Speichern" }).click();
+  await sectionByHeading(page, "Discord")
+    .getByRole("button", { name: "Speichern" })
+    .click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   await expect
@@ -613,7 +623,9 @@ test("a template's saved publish preference is edited, switched and cleared", as
 
   /** An edit that does not touch publishing leaves the preference alone */
   await fillUntilValue(page.getByLabel("Name"), "Patrouille Bravo");
-  await page.getByRole("button", { name: "Speichern" }).click();
+  await sectionByHeading(page, "Stammdaten")
+    .getByRole("button", { name: "Speichern" })
+    .click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   await expect.poll(readTemplate).toMatchObject({
     name: "Patrouille Bravo",
@@ -625,7 +637,9 @@ test("a template's saved publish preference is edited, switched and cleared", as
   await page
     .getByLabel("Kanal", { exact: true })
     .selectOption({ label: MOCK_VOICE_CHANNEL.name });
-  await page.getByRole("button", { name: "Speichern" }).click();
+  await sectionByHeading(page, "Discord")
+    .getByRole("button", { name: "Speichern" })
+    .click();
   await expect.poll(readTemplate).toMatchObject({
     discordPublishTarget: EventDiscordPublishTarget.CHANNEL,
     discordPublishChannelId: MOCK_VOICE_CHANNEL.id,
@@ -636,7 +650,9 @@ test("a template's saved publish preference is edited, switched and cleared", as
   await page.reload();
   await waitForAppShellHydration(page);
   await toggleLabel(page, /^Auf Discord veröffentlichen$/).click();
-  await page.getByRole("button", { name: "Speichern" }).click();
+  await sectionByHeading(page, "Discord")
+    .getByRole("button", { name: "Speichern" })
+    .click();
   await expect.poll(readTemplate).toMatchObject({
     discordPublishTarget: null,
     discordPublishChannelId: null,
@@ -672,7 +688,9 @@ test("a restricted template keeps its roles while publishing is switched on", as
   await waitForAppShellHydration(page);
 
   await toggleLabel(page, /^Auf Discord veröffentlichen$/).click();
-  await page.getByRole("button", { name: "Speichern" }).click();
+  await sectionByHeading(page, "Discord")
+    .getByRole("button", { name: "Speichern" })
+    .click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   await expect

@@ -15,6 +15,16 @@ import {
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
+/**
+ * The application switch on the settings page. Its tile also has the switch
+ * of the participation.
+ */
+const applicationSwitch = (page: Page) =>
+  toggleLabel(
+    page,
+    page.getByRole("checkbox", { name: "Teilnahmeanfragen", exact: true }),
+  );
+
 /** The row of a citizen in the applications tile of the participants page */
 const applicationRow = (page: Page, handle: string) =>
   sectionByHeading(page, /^Teilnahmeanfragen/)
@@ -44,8 +54,7 @@ test("a manager requires applications, a citizen applies with a comment, and the
   await signIn(manager.user);
   await page.goto(`/app/events/${event.id}/settings`);
   await waitForAppShellHydration(page);
-  const applicationTile = sectionByHeading(page, "Teilnahmeanfragen");
-  await toggleLabel(applicationTile, "Deaktiviert").click();
+  await applicationSwitch(page).click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   await expect
     .poll(async () =>
@@ -239,10 +248,7 @@ test("the switch of the applications to false approves the open applications aft
   await signIn(manager.user);
   await page.goto(`/app/events/${event.id}/settings`);
   await waitForAppShellHydration(page);
-  await toggleLabel(
-    sectionByHeading(page, "Teilnahmeanfragen"),
-    "Aktiviert",
-  ).click();
+  await applicationSwitch(page).click();
   const confirmation = page.getByRole("alertdialog", {
     name: "Teilnahmeanfragen abschalten?",
   });

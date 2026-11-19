@@ -13,6 +13,7 @@ import {
   modal,
   pickRoles,
   SAVED_TEXT,
+  sectionByHeading,
   toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
@@ -106,7 +107,10 @@ test("a radio group keeps its selection after the action of its form", async ({
   await waitForAppShellHydration(page);
 
   const restricted = page.getByRole("radio", { name: "Eingeschränkt" });
-  const saveButton = page.getByRole("button", { name: "Speichern" });
+  const saveButton = sectionByHeading(page, "Sichtbarkeit").getByRole(
+    "button",
+    { name: "Speichern" },
+  );
   await toggleLabel(page, /^Eingeschränkt$/).click();
   await pickRoles(page.getByRole("button", { name: "Rolle auswählen" }), [
     role.name,
@@ -133,8 +137,11 @@ test("a radio group keeps its selection after the action of its form", async ({
     })
     .toEqual({ visibility: EventVisibility.RESTRICTED, roleIds: [role.id] });
 
+  /** The save of a different tile refreshes the page */
   await page.getByLabel("Titel").fill("Operation Auswahl II");
-  await saveButton.click();
+  await sectionByHeading(page, "Stammdaten")
+    .getByRole("button", { name: "Speichern" })
+    .click();
   await expect
     .poll(() =>
       prisma.event.findUniqueOrThrow({

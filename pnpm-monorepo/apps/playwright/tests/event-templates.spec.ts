@@ -35,6 +35,8 @@ import {
   rolePickerOption,
   rolePickerTag,
   SAVED_TEXT,
+  sectionByHeading,
+  toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -92,13 +94,30 @@ test("an owner creates a template, edits it, deletes it and restores it", async 
    * Edit
    */
   await page.getByLabel("Name").fill("Patrouille");
-  await page.getByRole("button", { name: "Speichern" }).click();
+  await sectionByHeading(page, "Stammdaten")
+    .getByRole("button", { name: "Speichern" })
+    .click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   await expect
     .poll(() =>
       prisma.eventTemplate.findUniqueOrThrow({ where: { id: template.id } }),
     )
     .toMatchObject({ name: "Patrouille" });
+
+  /** Each tile saves only its own fields */
+  await toggleLabel(page, /^Teilnahmeanfragen$/).click();
+  await sectionByHeading(page, "Teilnahme")
+    .getByRole("button", { name: "Speichern" })
+    .click();
+  await expect
+    .poll(() =>
+      prisma.eventTemplate.findUniqueOrThrow({ where: { id: template.id } }),
+    )
+    .toMatchObject({
+      name: "Patrouille",
+      participationEnabled: true,
+      applicationRequired: true,
+    });
 
   /**
    * Delete and restore through the status filter
@@ -171,12 +190,14 @@ test("saving a template that a different user deleted shows the error and the de
   });
 
   await page.getByLabel("Name").fill("Patrouille Neu");
-  await page.getByRole("button", { name: "Speichern" }).click();
+  await sectionByHeading(page, "Stammdaten")
+    .getByRole("button", { name: "Speichern" })
+    .click();
 
   await expect(page.getByText("Die Vorlage ist gelöscht.")).toBeVisible();
   /** The page shows the current state without a reload */
   await expect(page.getByText("Diese Vorlage wurde gelöscht.")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Speichern" })).toBeHidden();
+  await expect(page.getByRole("button", { name: "Speichern" })).toHaveCount(0);
 
   const unchangedTemplate = await prisma.eventTemplate.findUniqueOrThrow({
     where: { id: template.id },
@@ -284,7 +305,9 @@ test("a share lets a role use the template, and only an edit share change it", a
   await page.goto(`/app/events/templates/${template.id}`);
 
   await fillUntilValue(page.getByLabel("Name"), "Von der Redaktion");
-  await page.getByRole("button", { name: "Speichern" }).click();
+  await sectionByHeading(page, "Stammdaten")
+    .getByRole("button", { name: "Speichern" })
+    .click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   await expect
     .poll(() =>
@@ -977,9 +1000,7 @@ test("saving an event as a template follows the settings gate", async ({
   });
   await signIn(coManager.user);
   await page.goto(`/app/events/${event.id}/settings`);
-  await expect(
-    page.getByRole("heading", { name: "Event bearbeiten" }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Stammdaten" })).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Als Vorlage speichern" }),
   ).toHaveCount(0);
@@ -1057,7 +1078,9 @@ test("a tag in the visibility picker of a template filters its roles, and the sa
     secondRole.name,
   ]);
 
-  await page.getByRole("button", { name: "Speichern" }).click();
+  await sectionByHeading(page, "Sichtbarkeit")
+    .getByRole("button", { name: "Speichern" })
+    .click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   await expect
