@@ -4,6 +4,7 @@ import { Link } from "@/modules/common/components/Link";
 import type { WikiTreeNode } from "@sam-monorepo/wiki-editor/helpers";
 import clsx from "clsx";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
 import { FaChevronDown, FaChevronRight, FaPlus } from "react-icons/fa";
 import { buildWikiPageHref, getActiveWikiPageId } from "../utils/wikiPageHref";
 import { useCreateWikiPage } from "./CreateWikiPageProvider";
@@ -37,12 +38,70 @@ export const WikiPageTree = ({ className, nodes, dimmedPageIds }: Props) => {
   );
 };
 
+/**
+ * The sidebar scrolls the tree from `md` up. Below `md` the tree is in a
+ * flyout that the page scrolls, thus there is no container and the tree does
+ * not move the page.
+ */
+const findScrollContainer = (element: HTMLElement) => {
+  for (
+    let ancestor = element.parentElement;
+    ancestor;
+    ancestor = ancestor.parentElement
+  ) {
+    const { overflowY } = getComputedStyle(ancestor);
+    if (overflowY === "auto" || overflowY === "scroll") return ancestor;
+  }
+
+  return null;
+};
+
+/**
+ * Centers the row, so that its ancestors and its expanded subpages are also
+ * visible. A row that is fully visible stays where it is, thus a click in the
+ * tree does not move the tree. Not `scrollIntoView()`: it also scrolls the
+ * page, and its `container` option is only in Chromium.
+ */
+const revealInScrollContainer = (container: HTMLElement, row: HTMLElement) => {
+  const containerRect = container.getBoundingClientRect();
+  const rowRect = row.getBoundingClientRect();
+  if (
+    rowRect.top >= containerRect.top &&
+    rowRect.bottom <= containerRect.bottom
+  )
+    return;
+
+  container.scrollTop +=
+    rowRect.top -
+    containerRect.top -
+    (container.clientHeight - rowRect.height) / 2;
+};
+
 const RootList = ({ className, nodes, dimmedPageIds }: Props) => {
   const { isPending } = useWikiPageDnd();
   const dimmedIds = new Set(dimmedPageIds ?? []);
+  const pathname = usePathname();
+  const hrefMode = useWikiPageHrefMode();
+  const activePageId = getActiveWikiPageId(hrefMode, pathname);
+  const listRef = useRef<HTMLUListElement>(null);
+
+  /**
+   * Only the opened page moves the tree. If a row came into view each time
+   * it mounts, "Alle ausklappen" would move the tree to the opened page.
+   */
+  useEffect(() => {
+    const activeLink = listRef.current?.querySelector<HTMLElement>(
+      '[aria-current="page"]',
+    );
+    if (!activeLink) return;
+
+    const container = findScrollContainer(activeLink);
+    if (container) revealInScrollContainer(container, activeLink);
+  }, [activePageId]);
 
   return (
     <ul
+      ref={listRef}
       // Root rows are the only ones separated by a gap; WikiPageDropTargets
       // spans it from both sides, so changing it means adjusting those too
       className={clsx(
@@ -207,6 +266,7 @@ const TreeItem = ({
             // prefetch is a full server render of the target page — too much
             // for links the viewer mostly never opens
             prefetch={false}
+            aria-current={isActive ? "page" : undefined}
             className={clsx(
               "block flex-1 truncate py-1 pr-2 hover:text-interaction-500",
               {
