@@ -1,4 +1,5 @@
 import type { WikiTreeNode } from "@sam-monorepo/wiki-editor/helpers";
+import { findWikiTreePath } from "./findWikiTreePath";
 
 /**
  * Ids the sidebar has to expand so that `pageId` and its direct subpages are
@@ -6,29 +7,14 @@ import type { WikiTreeNode } from "@sam-monorepo/wiki-editor/helpers";
  * has children. Childless pages are left out on purpose — expanding them
  * would show nothing and only fill up the state they are stored in.
  *
- * Empty when the page is not part of the tree, e.g. because a sidebar mode
- * hides it.
+ * Empty when the page is not part of the tree.
  */
 export const collectWikiPagesToExpand = (
   nodes: readonly WikiTreeNode[],
   pageId: string | undefined,
 ): string[] => {
-  if (!pageId) return [];
+  const path = findWikiTreePath(nodes, pageId);
+  if (path.at(-1)?.children.length === 0) path.pop();
 
-  const walk = (
-    candidates: readonly WikiTreeNode[],
-    ancestorIds: string[],
-  ): string[] | undefined => {
-    for (const candidate of candidates) {
-      if (candidate.id === pageId)
-        return candidate.children.length > 0
-          ? [...ancestorIds, candidate.id]
-          : ancestorIds;
-
-      const path = walk(candidate.children, [...ancestorIds, candidate.id]);
-      if (path) return path;
-    }
-  };
-
-  return walk(nodes, []) ?? [];
+  return path.map((node) => node.id);
 };
