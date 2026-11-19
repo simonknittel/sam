@@ -147,6 +147,16 @@ export const createCitizen = async (
 };
 
 /**
+ * The redacted email address of a user of `createCitizen()`. The redaction
+ * keeps the first and the last character of the local part and of the domain
+ * name, and the top-level domain.
+ */
+export const redactedEmailOf = (user: User) => {
+  const localPart = user.email?.split("@")[0] ?? "";
+  return `${localPart.at(0)}***${localPart.at(-1)}@e***e.com`;
+};
+
+/**
  * The permission that gates the MCP server: the consent page, the creation
  * of a grant, each request with an access token and the app KI-Agenten.
  */
