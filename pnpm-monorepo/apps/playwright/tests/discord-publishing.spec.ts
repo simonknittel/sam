@@ -715,8 +715,11 @@ test("creating a restricted event with publishing needs the same confirmation", 
   await fillUntilValue(page.getByLabel("Start"), "2027-06-01T20:00");
   await fillUntilValue(page.getByLabel("Ende"), "2027-06-01T22:00");
 
+  // The new event goes to Discord by default
   await openFormSection(page, "Discord");
-  await toggleLabel(page, /^Auf Discord veröffentlichen$/).click();
+  await expect(
+    page.getByLabel("Auf Discord veröffentlichen", { exact: true }),
+  ).toBeChecked();
   await expect(page.getByRole("textbox", { name: "Ort" })).toBeVisible();
 
   // Publishing a public event still saves in one click

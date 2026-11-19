@@ -54,6 +54,9 @@ test("an authorized user creates a public event via the modal", async ({
   // Wall time is interpreted as Europe/Berlin (2027-03-05 is CET, UTC+1)
   await fillUntilValue(page.getByLabel("Start"), "2027-03-05T20:00");
   await fillUntilValue(page.getByLabel("Ende"), "2027-03-05T22:00");
+  // A new event goes to Discord by default; this one stays in the app
+  await openFormSection(page, "Discord");
+  await toggleLabel(page, /^Auf Discord veröffentlichen$/).click();
   await page.getByRole("button", { name: "Speichern" }).click();
 
   // Creating redirects straight to the new event's overview
@@ -79,7 +82,7 @@ test("an authorized user creates a public event via the modal", async ({
   // Times render in Europe/Berlin
   await expect(page.getByText("20:00").first()).toBeVisible();
   await expect(page.getByText("Wir treffen uns am Sammelpunkt.")).toBeVisible();
-  // No Discord affordances on app events
+  // No Discord affordances on an app event that is not published
   await expect(page.getByRole("link", { name: "Discord" })).toHaveCount(0);
   // The creator gets the manager-scoped briefing tab and the settings tab
   await expect(page.getByRole("link", { name: "Briefing" })).toBeVisible();

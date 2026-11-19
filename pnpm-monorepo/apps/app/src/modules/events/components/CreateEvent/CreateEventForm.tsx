@@ -35,6 +35,18 @@ import { RestrictedDiscordPublishDialog } from "../RestrictedDiscordPublishDialo
 /** The "no template" option of the picker */
 const NO_TEMPLATE = "";
 
+/**
+ * A new event goes to Discord too, unless the user switches it off. A
+ * template decides itself: one without a publish preference does not
+ * publish, so that the template never publishes behind the back of the
+ * organizer.
+ */
+const isPublishingByDefault = (
+  template: {
+    readonly discordPublishTarget: EventDiscordPublishTarget | null;
+  } | null,
+) => (template ? template.discordPublishTarget !== null : true);
+
 interface Props {
   readonly className?: string;
   readonly onSuccess?: () => void;
@@ -89,7 +101,7 @@ export const CreateEventForm = ({
     selectedTemplate?.visibility ?? EventVisibility.PUBLIC,
   );
   const [isPublishing, setIsPublishing] = useState(
-    selectedTemplate?.discordPublishTarget != null,
+    isPublishingByDefault(selectedTemplate),
   );
   /** Only for the summary of the participation section: the switches are uncontrolled */
   const [participationEnabled, setParticipationEnabled] = useState(
@@ -102,7 +114,7 @@ export const CreateEventForm = ({
   if (prefillKey !== previousPrefillKey) {
     setPreviousPrefillKey(prefillKey);
     setVisibility(selectedTemplate?.visibility ?? EventVisibility.PUBLIC);
-    setIsPublishing(selectedTemplate?.discordPublishTarget != null);
+    setIsPublishing(isPublishingByDefault(selectedTemplate));
     setParticipationEnabled(selectedTemplate?.participationEnabled ?? true);
     setApplicationRequired(selectedTemplate?.applicationRequired ?? false);
   }
@@ -336,10 +348,9 @@ interface DiscordPublishFieldsProps {
 }
 
 /**
- * Publishing the new event to Discord right after creation, off by default.
- * A template that carries a publish preference switches it on and prefills
- * the target; clearing the checkbox still wins, so the template never
- * publishes behind the organizer's back.
+ * Publishing the new event to Discord right after creation (see
+ * `isPublishingByDefault()`). A template with a publish preference prefills
+ * the target.
  */
 const DiscordPublishFields = ({
   isPublishing,
@@ -351,8 +362,8 @@ const DiscordPublishFields = ({
   const checkboxId = useId();
 
   /**
-   * Fetched lazily like the templates above, and only while the section is
-   * open — a manager who does not publish never waits on Discord.
+   * Fetched lazily like the templates above, and only while publishing is
+   * on — a manager who switches it off never waits on Discord.
    */
   const { data: channels, isPending } =
     api.events.getPublishableDiscordChannels.useQuery(undefined, {
