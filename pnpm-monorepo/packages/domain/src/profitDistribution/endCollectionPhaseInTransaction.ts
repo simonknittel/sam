@@ -1,5 +1,8 @@
 import type { Prisma } from "@sam-monorepo/database/client";
-import { bookPositiveBalancesAway } from "../silc/bookPositiveBalancesAway.js";
+import {
+  BalancesToBook,
+  bookBalancesToZero,
+} from "../silc/bookBalancesToZero.js";
 import { lockSilcLedger } from "../silc/lockSilcLedger.js";
 import { CYCLE_PHASE_WHERE, CyclePhase } from "./cyclePhase.js";
 
@@ -11,9 +14,9 @@ interface Options {
 }
 
 /**
- * Ends the collection phase of a cycle. It books the positive SILC balance
- * of each citizen that is not deleted away and keeps the balance as the
- * snapshot of the participant.
+ * Ends the collection phase of a cycle. It books the SILC balance of each
+ * citizen that is not deleted to 0, also a negative one. A positive balance
+ * becomes the snapshot of the participant.
  *
  * Call it in one interactive transaction:
  * - It takes the ledger lock first (see `lockSilcLedger()`), before the
@@ -22,7 +25,7 @@ interface Options {
  * - The guarded update then claims the cycle. Thus a second call for the
  *   same cycle, also a parallel call, changes nothing.
  * - The balances come from the ledger in the same transaction, not from the
- *   cached copy on the citizen (see `bookPositiveBalancesAway()`).
+ *   cached copy on the citizen (see `bookBalancesToZero()`).
  * - If a booking of the cycle exists already, the unique index
  *   `SilcTransaction_profitDistributionCycle_key` makes the whole
  *   transaction fail.
@@ -45,14 +48,14 @@ export const endCollectionPhaseInTransaction = async (
   );
   if (!cycle) return null;
 
-  const { balances, transactionIds } = await bookPositiveBalancesAway(
-    transaction,
-    {
-      description: `SINcome: ${cycle.title}`,
-      createdById: endedById,
-      profitDistributionCycleId: cycleId,
-    },
-  );
+  const { balances, transactionIds } = await bookBalancesToZero(transaction, {
+    balances: BalancesToBook.All,
+    description: `SINcome: ${cycle.title}`,
+    createdById: endedById,
+    profitDistributionCycleId: cycleId,
+  });
+  /** A negative balance goes to 0, but it earns no share */
+  const snapshots = balances.filter(({ value }) => value > 0);
 
   /**
    * Two statements for all snapshots, not one upsert for each citizen: the
@@ -60,7 +63,7 @@ export const endCollectionPhaseInTransaction = async (
    * snapshot of a participant who ceded their share before.
    */
   await transaction.profitDistributionCycleParticipant.createMany({
-    data: balances.map(({ citizenId, value }) => ({
+    data: snapshots.map(({ citizenId, value }) => ({
       cycleId,
       citizenId,
       silcBalanceSnapshot: value,
@@ -71,8 +74,8 @@ export const endCollectionPhaseInTransaction = async (
     UPDATE "ProfitDistributionCycleParticipant" AS "participant"
     SET "silcBalanceSnapshot" = "balance"."value"
     FROM unnest(
-      ${balances.map(({ citizenId }) => citizenId)}::text[],
-      ${balances.map(({ value }) => value)}::integer[]
+      ${snapshots.map(({ citizenId }) => citizenId)}::text[],
+      ${snapshots.map(({ value }) => value)}::integer[]
     ) AS "balance"("citizenId", "value")
     WHERE "participant"."cycleId" = ${cycleId}
       AND "participant"."citizenId" = "balance"."citizenId"

@@ -49,7 +49,8 @@ export const GuideScreenshot = ({
         src={src}
         alt={alt}
         sizes={sizes}
-        placeholder="blur"
+        // An SVG import has no small preview to blur
+        placeholder={src.blurDataURL ? "blur" : "empty"}
         className={clsx("size-full", {
           "object-contain": fit === GuideScreenshotFit.Contain,
           "object-cover": fit === GuideScreenshotFit.Cover,

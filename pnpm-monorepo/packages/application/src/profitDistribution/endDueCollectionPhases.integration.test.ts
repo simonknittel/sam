@@ -104,6 +104,29 @@ describe("endDueCollectionPhases", () => {
     ]);
   });
 
+  test("a negative balance is booked to 0, without a share and without earned SILC", async () => {
+    const citizen = await createCitizenWithLedger("debtor", [40, -100]);
+    const cycle = await createDueCycle();
+    const { context } = createTestApplicationContext({ now: NOW });
+
+    await endDueCollectionPhases(context);
+
+    const bookings = await getBookings(cycle.id);
+    expect(bookings).toHaveLength(1);
+    expect(bookings[0]).toMatchObject({ receiverId: citizen.id, value: 60 });
+    expect(
+      await prisma.profitDistributionCycleParticipant.count({
+        where: { cycleId: cycle.id },
+      }),
+    ).toBe(0);
+    expect(
+      await prisma.citizen.findUniqueOrThrow({
+        where: { id: citizen.id },
+        select: { silcBalance: true, totalEarnedSilc: true },
+      }),
+    ).toEqual({ silcBalance: 0, totalEarnedSilc: 40 });
+  });
+
   test("two parallel runs book a due cycle one time", async () => {
     await createCitizenWithLedger("citizen", [100]);
     const cycle = await createDueCycle();

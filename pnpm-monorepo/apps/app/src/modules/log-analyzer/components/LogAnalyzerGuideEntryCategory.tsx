@@ -1,5 +1,5 @@
 import type { LogAnalyzerEntryType } from "@sam-monorepo/domain";
-import { PATTERNS } from "../../utils/PATTERNS";
+import { PATTERNS } from "../utils/PATTERNS";
 
 interface EntryTypeProps {
   readonly type: LogAnalyzerEntryType;
@@ -21,7 +21,7 @@ interface Props {
   readonly types: readonly LogAnalyzerEntryType[];
 }
 
-export const GuideEntryCategory = ({ title, types }: Props) => {
+export const LogAnalyzerGuideEntryCategory = ({ title, types }: Props) => {
   return (
     <li className="mb-4 break-inside-avoid rounded-secondary border border-white/5 p-3">
       <h4 className="flex items-baseline justify-between gap-2 font-mono text-sm text-white/40 uppercase">

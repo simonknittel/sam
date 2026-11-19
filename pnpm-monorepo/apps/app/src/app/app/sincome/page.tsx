@@ -1,11 +1,9 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
-import { svgToStaticImageData } from "@/modules/common/utils/svgToStaticImageData";
-import diagramSvg from "@/modules/profit-distribution/assets/diagram.svg";
 import { ProfitDistributionCycleExcerptList } from "@/modules/profit-distribution/components/ProfitDistributionCycleExcerptList";
 import { ProfitDistributionCycleSidebar } from "@/modules/profit-distribution/components/ProfitDistributionCycleSidebar";
-import Image from "next/image";
+import { SincomeGuide } from "@/modules/profit-distribution/components/SincomeGuide";
 
 export default async function Page({
   searchParams,
@@ -15,16 +13,11 @@ export default async function Page({
 
   return (
     <>
-      <Image
-        src={svgToStaticImageData(diagramSvg)}
-        unoptimized
-        alt=""
-        className="mx-auto mt-4 mb-8"
-      />
+      <h1 className="sr-only">SINcome</h1>
+
+      <SincomeGuide className="mb-4" />
 
       <SidebarLayout sidebar={<ProfitDistributionCycleSidebar />}>
-        <h1 className="sr-only">SINcome</h1>
-
         <SuspenseWithErrorBoundaryTile>
           <ProfitDistributionCycleExcerptList searchParams={searchParams} />
         </SuspenseWithErrorBoundaryTile>
