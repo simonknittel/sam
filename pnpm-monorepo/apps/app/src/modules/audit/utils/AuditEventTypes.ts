@@ -2293,6 +2293,19 @@ export const AuditEventDefinitions: {
       `Expired ${data.expiredValue} SILC of ${data.citizenCount} citizen(s)`,
   },
 
+  [AuditEventType.SILC_ALL_EXPIRED_V2]: {
+    type: AuditEventType.SILC_ALL_EXPIRED_V2,
+    app: SystemLogApp.Silc,
+    data: {
+      expiredCitizenCount: 0,
+      expiredValue: 0,
+      resetCitizenCount: 0,
+      resetValue: 0,
+    },
+    message: (data) =>
+      `Expired ${data.expiredValue} SILC of ${data.expiredCitizenCount} citizen(s) and booked the negative balances of ${data.resetCitizenCount} citizen(s) (${data.resetValue} SILC) to 0`,
+  },
+
   [AuditEventType.SILC_BALANCES_REFRESHED]: {
     type: AuditEventType.SILC_BALANCES_REFRESHED,
     app: SystemLogApp.Silc,

@@ -222,7 +222,9 @@ export enum AuditEventType {
   CAREER_FLOW_ROLE_ACCESS_UPDATED = "CAREER_FLOW_ROLE_ACCESS_UPDATED",
   IAM_SETTING_UPDATED = "IAM_SETTING_UPDATED",
   SILC_SETTING_UPDATED = "SILC_SETTING_UPDATED",
+  /** @deprecated Superseded by SILC_ALL_EXPIRED_V2 (adds the negative balances that were booked to 0) */
   SILC_ALL_EXPIRED = "SILC_ALL_EXPIRED",
+  SILC_ALL_EXPIRED_V2 = "SILC_ALL_EXPIRED_V2",
   SILC_BALANCES_REFRESHED = "SILC_BALANCES_REFRESHED",
   ROLE_SALARIES_DISBURSED = "ROLE_SALARIES_DISBURSED",
   NOTIFICATION_SETTINGS_UPDATED = "NOTIFICATION_SETTINGS_UPDATED",
@@ -1578,6 +1580,17 @@ export interface AuditEventDataByType {
     citizenCount: number;
     /** Sum of the balances that were written off, as a positive number */
     expiredValue: number;
+  };
+
+  [AuditEventType.SILC_ALL_EXPIRED_V2]: {
+    /** The citizens with a positive balance */
+    expiredCitizenCount: number;
+    /** Sum of the positive balances that were written off */
+    expiredValue: number;
+    /** The citizens with a negative balance */
+    resetCitizenCount: number;
+    /** Sum of the negative balances that were booked to 0, as a positive number */
+    resetValue: number;
   };
 
   [AuditEventType.SILC_BALANCES_REFRESHED]: {

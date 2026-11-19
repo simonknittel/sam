@@ -3,28 +3,7 @@ import { ACTIVE_CITIZEN_WHERE } from "../citizen/activeCitizen.js";
 import { lockSilcLedger } from "./lockSilcLedger.js";
 import { updateSilcBalances } from "./updateSilcBalances.js";
 
-/** Which balances `bookBalancesToZero()` books to 0 */
-export enum BalancesToBook {
-  /** The SILC of the positive balances expire, a negative balance stays */
-  Positive = "positive",
-  /**
-   * Also a negative balance goes to 0, with a positive booking. Only the end
-   * of a SINcome collection phase does this: such a booking has the cycle,
-   * thus it does not count as earned SILC (see `updateSilcBalances()`).
-   */
-  All = "all",
-}
-
-const BALANCE_HAVING: Record<
-  BalancesToBook,
-  Prisma.SilcTransactionScalarWhereWithAggregatesInput
-> = {
-  [BalancesToBook.Positive]: { value: { _sum: { gt: 0 } } },
-  [BalancesToBook.All]: { value: { _sum: { not: 0 } } },
-};
-
 interface Options {
-  readonly balances: BalancesToBook;
   readonly description: string;
   /** The citizen who starts the booking, NULL for the midnight job */
   readonly createdById: string | null;
@@ -39,7 +18,9 @@ interface BookedBalance {
 
 /**
  * Books the SILC balance of each citizen that is not deleted to 0: one
- * booking of the opposite value for each citizen, then the balance update.
+ * booking of the opposite value for each citizen, then the balance update. A
+ * positive booking of a negative balance has `resetsNegativeBalance`, thus
+ * it does not count as earned SILC.
  *
  * The balances come from the ledger in the transaction of the caller, not
  * from the cached copy on the citizen. The ledger lock makes sure that no
@@ -49,12 +30,7 @@ interface BookedBalance {
  */
 export const bookBalancesToZero = async (
   transaction: Prisma.TransactionClient,
-  {
-    balances: balancesToBook,
-    description,
-    createdById,
-    profitDistributionCycleId,
-  }: Options,
+  { description, createdById, profitDistributionCycleId }: Options,
 ) => {
   await lockSilcLedger(transaction);
 
@@ -62,7 +38,7 @@ export const bookBalancesToZero = async (
     by: ["receiverId"],
     where: { deletedAt: null, receiver: ACTIVE_CITIZEN_WHERE },
     _sum: { value: true },
-    having: BALANCE_HAVING[balancesToBook],
+    having: { value: { _sum: { not: 0 } } },
   });
   const balances: BookedBalance[] = sums.map((sum) => ({
     citizenId: sum.receiverId,
@@ -74,6 +50,7 @@ export const bookBalancesToZero = async (
       data: balances.map(({ citizenId, value }) => ({
         receiverId: citizenId,
         value: -value,
+        resetsNegativeBalance: value < 0,
         description,
         createdById,
         profitDistributionCycleId,

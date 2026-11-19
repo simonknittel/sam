@@ -5,8 +5,8 @@ import { lockSilcLedger } from "./lockSilcLedger.js";
  * Rebuilds the cached SILC balance and lifetime earnings of the given
  * citizens from the ledger in one statement: the balance sums all
  * transactions that are not deleted, the lifetime earnings sum the positive
- * ones. A positive booking of a SINcome cycle is not earned: it books a
- * negative balance to 0 at the end of the collection phase. Call it with the
+ * ones. A positive booking with `resetsNegativeBalance` is not earned: it
+ * books a negative balance to 0 (see `bookBalancesToZero()`). Call it with the
  * client of the transaction that changes the ledger (after
  * `lockSilcLedger()`), so that the copy can never differ from the ledger.
  */
@@ -37,7 +37,7 @@ export const updateSilcBalances = async (
         "receiverId",
         SUM("value")::integer AS "balance",
         (SUM("value") FILTER (
-          WHERE "value" > 0 AND "profitDistributionCycleId" IS NULL
+          WHERE "value" > 0 AND NOT "resetsNegativeBalance"
         ))::integer AS "earned"
       FROM "SilcTransaction"
       WHERE "deletedAt" IS NULL AND "receiverId" = ANY(${ids}::text[])

@@ -177,7 +177,7 @@ const STATISTIC_DEFINITIONS: Readonly<
   [StatisticKey.NewSilc]: {
     title: "SILC",
     description:
-      "The new SILC of the day: the sum of the positive SILC transactions that are not deleted, without the transactions that book a negative balance to 0 at the end of a SINcome collection phase.",
+      "The new SILC of the day: the sum of the positive SILC transactions that are not deleted, without the transactions that book a negative balance to 0 (at the end of a SINcome collection phase and when all SILC expire).",
     unit: StatisticUnit.Silc,
     valueKind: StatisticValueKind.AmountOfDay,
     ...SINGLE_SERIES,

@@ -113,7 +113,11 @@ describe("endDueCollectionPhases", () => {
 
     const bookings = await getBookings(cycle.id);
     expect(bookings).toHaveLength(1);
-    expect(bookings[0]).toMatchObject({ receiverId: citizen.id, value: 60 });
+    expect(bookings[0]).toMatchObject({
+      receiverId: citizen.id,
+      value: 60,
+      resetsNegativeBalance: true,
+    });
     expect(
       await prisma.profitDistributionCycleParticipant.count({
         where: { cycleId: cycle.id },

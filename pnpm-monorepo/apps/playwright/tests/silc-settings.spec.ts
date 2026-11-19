@@ -226,9 +226,14 @@ test("expiring all SILC zeroes every balance, and the refresh recomputes them", 
   });
   const rich = await createCitizen(prisma, { handle: "silc-reicher" });
   const poor = await createCitizen(prisma, { handle: "silc-armer" });
+  const debtor = await createCitizen(prisma, { handle: "silc-schuldner" });
   await createSilcTransaction(prisma, {
     receiverId: rich.entity.id,
     value: 120,
+  });
+  await createSilcTransaction(prisma, {
+    receiverId: debtor.entity.id,
+    value: -40,
   });
 
   await signIn(admin.user);
@@ -246,7 +251,7 @@ test("expiring all SILC zeroes every balance, and the refresh recomputes them", 
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   await expect(silcSum).toHaveText("SILC0");
 
-  // Every positive balance is booked away, the untouched one stays as it is
+  // Every balance is booked to 0, a balance of 0 stays as it is
   await expect
     .poll(() =>
       prisma.citizen.findUniqueOrThrow({
@@ -264,6 +269,21 @@ test("expiring all SILC zeroes every balance, and the refresh recomputes them", 
       where: { receiverId: poor.entity.id },
     }),
   ).toBe(0);
+  /** The reset of a negative balance is not earned SILC */
+  const reset = await prisma.silcTransaction.findFirstOrThrow({
+    where: { receiverId: debtor.entity.id, value: { gt: 0 } },
+  });
+  expect(reset).toMatchObject({
+    value: 40,
+    description: "Verfallen",
+    resetsNegativeBalance: true,
+  });
+  expect(
+    await prisma.citizen.findUniqueOrThrow({
+      where: { id: debtor.entity.id },
+      select: { silcBalance: true, totalEarnedSilc: true },
+    }),
+  ).toEqual({ silcBalance: 0, totalEarnedSilc: 0 });
 
   /**
    * The refresh recomputes the denormalized balances from the transactions,
@@ -292,13 +312,14 @@ test("expiring all SILC zeroes every balance, and the refresh recomputes them", 
     )
     .toMatchObject({ silcBalance: 0 });
 
+  /** The expiry of the positive balance and the reset of the negative one */
   await page.goto("/app/silc/transactions");
   await expect(
     page.getByRole("row").filter({ hasText: "Verfallen" }),
-  ).toBeVisible();
+  ).toHaveCount(2);
 
   await expectAuditEvents(prisma, [
-    "SILC_ALL_EXPIRED",
+    "SILC_ALL_EXPIRED_V2",
     "SILC_BALANCES_REFRESHED",
   ]);
 });

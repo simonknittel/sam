@@ -1,8 +1,5 @@
 import type { Prisma } from "@sam-monorepo/database/client";
-import {
-  BalancesToBook,
-  bookBalancesToZero,
-} from "../silc/bookBalancesToZero.js";
+import { bookBalancesToZero } from "../silc/bookBalancesToZero.js";
 import { lockSilcLedger } from "../silc/lockSilcLedger.js";
 import { CYCLE_PHASE_WHERE, CyclePhase } from "./cyclePhase.js";
 
@@ -49,7 +46,6 @@ export const endCollectionPhaseInTransaction = async (
   if (!cycle) return null;
 
   const { balances, transactionIds } = await bookBalancesToZero(transaction, {
-    balances: BalancesToBook.All,
     description: `SINcome: ${cycle.title}`,
     createdById: endedById,
     profitDistributionCycleId: cycleId,
