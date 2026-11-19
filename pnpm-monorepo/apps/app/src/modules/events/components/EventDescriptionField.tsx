@@ -40,14 +40,14 @@ export const EventDescriptionTextarea = ({
     <div className={clsx(className)}>
       <Textarea
         name="description"
-        label="Kurzbeschreibung"
+        label="Öffentliche Kurzbeschreibung"
         hint={
           <span className="flex flex-wrap items-baseline gap-x-4">
             <span>
               optional, max.{" "}
               {EVENT_DESCRIPTION_MAX_LENGTH.toLocaleString("de-DE")} Zeichen
               &ndash; der Rest ist für den Hinweis zur Anmeldung reserviert, den
-              Discord automatisch erhält. <DiscordFormattingHint />. {hint}
+              Discord automatisch erhält. <DiscordFormattingHint /> {hint}
             </span>
 
             <span
