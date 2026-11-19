@@ -3,29 +3,25 @@ import type { ReactNode } from "react";
 import type { IconType } from "react-icons";
 import { GuideScreenshot, type GuideScreenshotFit } from "./GuideScreenshot";
 
-/**
- * The cards are in a grid with up to three columns, see `Guide`. Each card
- * takes a third of the content of the page from the `xl` breakpoint, half of
- * it from `md` and all of it below.
- */
-const SCREENSHOT_SIZES =
-  "(min-width: 80rem) 33vw, (min-width: 48rem) 50vw, 100vw";
-
 interface Props {
   readonly icon: IconType;
   readonly title: string;
   readonly screenshot: StaticImageData;
   readonly screenshotAlt: string;
   readonly screenshotFit?: GuideScreenshotFit;
+  /** The `sizes` of the screenshot, see `GuideFeatureList` */
+  readonly screenshotSizes: string;
   readonly children: ReactNode;
 }
 
+/** One card of `GuideFeatureList` */
 export const GuideFeature = ({
   icon: Icon,
   title,
   screenshot,
   screenshotAlt,
   screenshotFit,
+  screenshotSizes,
   children,
 }: Props) => {
   return (
@@ -33,7 +29,7 @@ export const GuideFeature = ({
       <GuideScreenshot
         src={screenshot}
         alt={screenshotAlt}
-        sizes={SCREENSHOT_SIZES}
+        sizes={screenshotSizes}
         fit={screenshotFit}
         className="aspect-16/10 border-b"
       />
