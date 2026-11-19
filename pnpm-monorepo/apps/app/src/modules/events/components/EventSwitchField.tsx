@@ -11,6 +11,8 @@ interface Props {
   readonly label: string;
   readonly hint: string;
   readonly defaultChecked: boolean;
+  /** Gets each change of the user, for example for a summary of the form */
+  readonly onCheckedChange?: (checked: boolean) => void;
 }
 
 /**
@@ -24,6 +26,7 @@ export const EventSwitchField = ({
   label,
   hint,
   defaultChecked,
+  onCheckedChange,
 }: Props) => {
   const checkboxId = useId();
 
@@ -40,6 +43,9 @@ export const EventSwitchField = ({
         value="true"
         className="mt-2"
         defaultChecked={defaultChecked}
+        onChange={(changeEvent) =>
+          onCheckedChange?.(changeEvent.target.checked)
+        }
       />
     </div>
   );
