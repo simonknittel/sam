@@ -304,6 +304,60 @@ test("my ships can be added, edited and deleted with consistent org counts and v
   }
 });
 
+test("the Neu menu of the top bar adds a ship to my fleet only with the ship permission", async ({
+  page,
+  prisma,
+  signIn,
+  switchUser,
+}) => {
+  const owner = await createCitizen(prisma, {
+    handle: "menue-besitzer",
+    permissionStrings: ["ship;manage"],
+  });
+  await createVariant(prisma, {
+    manufacturerName: "Drake Interplanetary",
+    seriesName: "Cutlass",
+    variantName: "Cutlass Black",
+  });
+
+  await signIn(owner.user);
+  /** Somewhere outside the fleet app, since the menu is in the shell */
+  await page.goto("/app/apps");
+
+  const createMenu = page.getByRole("dialog", { name: "Neu erstellen" });
+  const openCreateMenu = () =>
+    clickUntilVisible(
+      /** Only the trigger of the menu has an expanded state */
+      page.getByRole("button", { name: "Neu", exact: true, expanded: false }),
+      createMenu,
+    );
+  await openCreateMenu();
+  await createMenu.getByRole("button", { name: "Schiff", exact: true }).click();
+
+  const addModal = modal(page, "Schiff hinzufügen");
+  const shipPicker = variantPickerPopover(page);
+  await clickUntilVisible(
+    addModal.getByRole("button", { name: "Schiff auswählen" }),
+    shipPicker,
+  );
+  await shipPicker.getByRole("option", { name: "Cutlass Black" }).click();
+  await addModal.getByLabel("Herkunft").selectOption({ label: "Store" });
+  await addModal.getByRole("button", { name: "Hinzufügen" }).click();
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+  await expect(addModal).not.toBeVisible();
+  await expect
+    .poll(() => prisma.ship.count({ where: { ownerId: owner.entity.id } }))
+    .toBe(1);
+
+  const outsider = await createCitizen(prisma, { handle: "ohne-schiffe" });
+  await switchUser(outsider.user);
+  await page.goto("/app/apps");
+  await openCreateMenu();
+  await expect(
+    createMenu.getByRole("button", { name: "Schiff", exact: true }),
+  ).toHaveCount(0);
+});
+
 test("the variant popover shows the name, the Herkunft and the Notiz only for an individual ship", async ({
   page,
   prisma,
