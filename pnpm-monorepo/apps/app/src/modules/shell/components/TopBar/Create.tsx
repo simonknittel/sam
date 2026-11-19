@@ -79,10 +79,14 @@ export const Create = ({
   const showCreateManualNotification = Boolean(
     authentication && authentication.authorize("manualNotification", "manage"),
   );
+  const showCreateShip = Boolean(
+    authentication && authentication.authorize("ship", "manage"),
+  );
 
   if (
     !showCreateFlow &&
     !showCreateManualNotification &&
+    !showCreateShip &&
     !showCreateCitizen &&
     !showCreateDistributionCycle &&
     !showCreateOrganization &&
@@ -132,6 +136,7 @@ export const Create = ({
           showCreateWikiPage={showCreateWikiPage}
           showCreateFlow={showCreateFlow}
           showCreateManualNotification={showCreateManualNotification}
+          showCreateShip={showCreateShip}
           onSelect={onSelect}
         />
       </PopoverBaseUI>
@@ -152,6 +157,7 @@ interface PopoverChildrenProps {
   readonly showCreateWikiPage: boolean;
   readonly showCreateFlow: boolean;
   readonly showCreateManualNotification: boolean;
+  readonly showCreateShip: boolean;
   readonly onSelect?: () => void;
 }
 
@@ -168,6 +174,7 @@ const PopoverChildren = ({
   showCreateWikiPage,
   showCreateFlow,
   showCreateManualNotification,
+  showCreateShip,
   onSelect,
 }: PopoverChildrenProps) => {
   const { closePopover } = usePopoverBaseUI();
@@ -260,6 +267,8 @@ const PopoverChildren = ({
       type: "button",
       modalId: "manualNotification",
     });
+  if (showCreateShip)
+    items.push({ label: "Schiff", type: "button", modalId: "ship" });
 
   items = items.toSorted((a, b) => a.label.localeCompare(b.label));
 
