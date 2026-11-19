@@ -325,10 +325,7 @@ export {
   getNextSeasonalThemeStart,
   isSeasonalGreetingDay,
 } from "./seasonal/seasonalCalendar.js";
-export {
-  BalancesToBook,
-  bookBalancesToZero,
-} from "./silc/bookBalancesToZero.js";
+export { bookBalancesToZero } from "./silc/bookBalancesToZero.js";
 export {
   createSilcTransactionsInTransaction,
   type NewSilcTransaction,

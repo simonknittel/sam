@@ -1,6 +1,5 @@
 import { prisma } from "@sam-monorepo/database";
 import {
-  BalancesToBook,
   bookBalancesToZero,
   endCollectionPhaseInTransaction,
   updateSilcBalances,
@@ -59,7 +58,6 @@ describe("bookBalancesToZero", () => {
     const [firstRun, secondRun] = await runAgainstLockHolder(
       (transaction) =>
         bookBalancesToZero(transaction, {
-          balances: BalancesToBook.Positive,
           description: "Verfallen",
           createdById: null,
         }),
@@ -72,7 +70,12 @@ describe("bookBalancesToZero", () => {
       { citizenId: miner.id, value: 50 },
       { citizenId: pilot.id, value: 70 },
     ]);
-    expect(secondRun).toEqual({ citizen_count: 0, expired_value: 0 });
+    expect(secondRun).toEqual({
+      citizen_count: 0,
+      expired_value: 0,
+      reset_citizen_count: 0,
+      reset_value: 0,
+    });
     expect(
       await prisma.silcTransaction.count({
         where: { description: "Verfallen" },
@@ -101,7 +104,12 @@ describe("bookBalancesToZero", () => {
     );
 
     expect(collectionBookingIds).toHaveLength(1);
-    expect(expired).toEqual({ citizen_count: 0, expired_value: 0 });
+    expect(expired).toEqual({
+      citizen_count: 0,
+      expired_value: 0,
+      reset_citizen_count: 0,
+      reset_value: 0,
+    });
     expect(
       await prisma.silcTransaction.findMany({
         where: { value: { lt: 0 } },
