@@ -16,7 +16,6 @@ import {
   modal,
   NOT_FOUND_TEXT,
   SAVED_TEXT,
-  sectionByHeading,
   toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
@@ -33,14 +32,25 @@ const eventTab = (page: Page, eventId: string, path: string) =>
   page.locator(`a[href="/app/events/${eventId}/${path}"]`);
 
 /**
- * The visible state of the participation switch on the settings page. The
- * switch is disabled while its action runs, and React resets the form when
- * the action ends: thus the state is read after that.
+ * The participation switch on the settings page. Its tile also has the
+ * switch of the applications.
+ */
+const participationCheckbox = (page: Page) =>
+  page.getByRole("checkbox", { name: "Teilnahme", exact: true });
+
+const participationSwitch = (page: Page) =>
+  toggleLabel(page, participationCheckbox(page));
+
+/**
+ * The visible state of the participation switch. The switch is disabled
+ * while its action runs, and React resets the form when the action ends:
+ * thus the state is read after that.
  */
 const expectParticipationSwitch = async (page: Page, stateLabel: string) => {
-  const tile = sectionByHeading(page, "Teilnahme");
-  await expect(tile.getByRole("checkbox", { name: "Teilnahme" })).toBeEnabled();
-  await expect(tile.getByText(stateLabel, { exact: true })).toBeVisible();
+  await expect(participationCheckbox(page)).toBeEnabled();
+  await expect(
+    participationSwitch(page).getByText(stateLabel, { exact: true }),
+  ).toBeVisible();
 };
 
 test("a manager turns the participation off: the sign-ups are cancelled and the participation pages are gone", async ({
@@ -83,18 +93,17 @@ test("a manager turns the participation off: the sign-ups are cancelled and the 
 
   await page.goto(`/app/events/${event.id}/settings`);
   await waitForAppShellHydration(page);
-  const participationTile = sectionByHeading(page, "Teilnahme");
   const confirmation = page.getByRole("alertdialog", {
     name: "Teilnahme abschalten?",
   });
 
   /** The dialog names the sign-ups, and a cancel keeps everything */
-  await toggleLabel(participationTile, "Aktiviert").click();
+  await participationSwitch(page).click();
   await expect(confirmation).toContainText("1 aktive Anmeldung wird storniert");
   await confirmation.getByRole("button", { name: "Abbrechen" }).click();
   await expectParticipationSwitch(page, "Aktiviert");
 
-  await toggleLabel(participationTile, "Aktiviert").click();
+  await participationSwitch(page).click();
   await confirmation.getByRole("button", { name: "Abschalten" }).click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   await expectParticipationSwitch(page, "Deaktiviert");
@@ -166,7 +175,7 @@ test("a manager turns the participation off: the sign-ups are cancelled and the 
   await page.goto(`/app/events/${event.id}/settings`);
   await waitForAppShellHydration(page);
   await expectParticipationSwitch(page, "Deaktiviert");
-  await toggleLabel(sectionByHeading(page, "Teilnahme"), "Deaktiviert").click();
+  await participationSwitch(page).click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   await expectParticipationSwitch(page, "Aktiviert");
   await expect

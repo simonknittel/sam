@@ -8,7 +8,6 @@ import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionBu
 import { DiscordButton } from "@/modules/common/components/DiscordButton";
 import Note from "@/modules/common/components/Note";
 import { SubmitButton } from "@/modules/common/components/SubmitButton";
-import { Tile } from "@/modules/common/components/Tile";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { EventVisibility } from "@sam-monorepo/database/browser";
 import {
@@ -43,7 +42,8 @@ interface Props {
 /**
  * Publishing the event to the Discord guild as a guild scheduled event.
  * While it is published, the app keeps title, description, times and cover
- * image in sync; participants stay separate on both sides.
+ * image in sync; participants stay separate on both sides. The content of the
+ * Discord tile of the settings page (see `EventSettings`).
  */
 export const EventDiscordSettings = ({
   className,
@@ -101,7 +101,7 @@ const PublishedState = ({
     : event.discordPublishedLocation;
 
   return (
-    <Tile heading="Discord" className={clsx(className)}>
+    <div className={clsx(className)}>
       <Note
         type="success"
         message={
@@ -151,7 +151,7 @@ const PublishedState = ({
           confirmLabel="Entfernen"
         />
       </div>
-    </Tile>
+    </div>
   );
 };
 
@@ -178,40 +178,42 @@ const UnpublishedState = ({
   );
 
   return (
-    <Tile heading="Discord" className={clsx(className)}>
-      <form action={formAction} onSubmit={restrictedConfirmation.onSubmit}>
-        <input type="hidden" name="eventId" value={event.id} />
+    <form
+      action={formAction}
+      onSubmit={restrictedConfirmation.onSubmit}
+      className={clsx(className)}
+    >
+      <input type="hidden" name="eventId" value={event.id} />
 
-        <p className="text-sm text-neutral-500">
-          Veröffentliche das Event als Termin auf dem Discord-Server. Titel,
-          Beschreibung, Zeitraum und Titelbild werden danach automatisch
-          aktualisiert; Anmeldungen werden nicht übertragen.
-        </p>
+      <p className="text-sm text-neutral-500">
+        Veröffentliche das Event als Termin auf dem Discord-Server. Titel,
+        Beschreibung, Zeitraum und Titelbild werden danach automatisch
+        aktualisiert; Anmeldungen werden nicht übertragen.
+      </p>
 
-        <DiscordPublishTargetFields
-          channels={channels}
-          locationPlaceholder={defaultLocation}
-          className="mt-4"
-        />
+      <DiscordPublishTargetFields
+        channels={channels}
+        locationPlaceholder={defaultLocation}
+        className="mt-4"
+      />
 
-        <SubmitButton icon={<FaDiscord />} className="mt-4 ml-auto">
-          Auf Discord veröffentlichen
-        </SubmitButton>
+      <SubmitButton icon={<FaDiscord />} className="mt-4 ml-auto">
+        Auf Discord veröffentlichen
+      </SubmitButton>
 
-        <RestrictedDiscordPublishDialog
-          isOpen={restrictedConfirmation.isOpen}
-          onClose={restrictedConfirmation.close}
-          description={
-            <>
-              Das Event <span className="font-bold">{event.name}</span> ist in
-              dieser App nur für ausgewählte Rollen sichtbar. Auf Discord sehen
-              es alle Mitglieder des Servers — inklusive Titel, Beschreibung und
-              Zeitraum.
-            </>
-          }
-          confirmLabel="Trotzdem veröffentlichen"
-        />
-      </form>
-    </Tile>
+      <RestrictedDiscordPublishDialog
+        isOpen={restrictedConfirmation.isOpen}
+        onClose={restrictedConfirmation.close}
+        description={
+          <>
+            Das Event <span className="font-bold">{event.name}</span> ist in
+            dieser App nur für ausgewählte Rollen sichtbar. Auf Discord sehen es
+            alle Mitglieder des Servers — inklusive Titel, Beschreibung und
+            Zeitraum.
+          </>
+        }
+        confirmLabel="Trotzdem veröffentlichen"
+      />
+    </form>
   );
 };

@@ -11,6 +11,8 @@ export enum TileVariant {
 
 interface Props {
   readonly className?: string;
+  /** The target of a link to the tile, for example from a table of contents */
+  readonly id?: string;
   /** Omitted on tiles whose page already names their content, e.g. the system log */
   readonly heading?: ReactNode;
   readonly subheading?: ReactNode;
@@ -22,6 +24,7 @@ interface Props {
 
 export const Tile = ({
   className,
+  id,
   cta,
   heading,
   subheading,
@@ -31,9 +34,15 @@ export const Tile = ({
 }: Props) => {
   return (
     <section
+      id={id}
       className={clsx(
         "corners-primary",
         {
+          /**
+           * The fixed bar of the shell covers the top of the page, thus a
+           * link stops below it (the offsets of the sticky `SidebarLayout`)
+           */
+          "scroll-mt-16 lg:scroll-mt-32": id,
           "bg-secondary": variant === TileVariant.Default,
           "tile-accent-surface": variant !== TileVariant.Default,
           "[--tile-accent-color:var(--color-red-500)]":

@@ -1,5 +1,7 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
+import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
+import { TableOfContents } from "@/modules/common/components/layouts/SidebarLayout/TableOfContents";
 import { SmallBadge } from "@/modules/common/components/SmallBadge";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { Tile, TileVariant } from "@/modules/common/components/Tile";
@@ -8,12 +10,14 @@ import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMet
 import { getPublishableGuildChannels } from "@/modules/discord/utils/getPublishableGuildChannels";
 import { DeleteEventTemplateButton } from "@/modules/event-templates/components/DeleteEventTemplateButton";
 import { DuplicateEventTemplateButton } from "@/modules/event-templates/components/DuplicateEventTemplateButton";
+import { EventTemplateSettings } from "@/modules/event-templates/components/EventTemplateSettings";
 import { RestoreEventTemplateButton } from "@/modules/event-templates/components/RestoreEventTemplateButton";
-import { UpdateEventTemplateForm } from "@/modules/event-templates/components/UpdateEventTemplateForm";
 import { UseEventTemplateButton } from "@/modules/event-templates/components/UseEventTemplateButton";
 import { getEventTemplateById } from "@/modules/event-templates/queries/getEventTemplateById";
+import { SETTINGS_SECTIONS } from "@/modules/events/utils/settingsSections";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
+import { FaListUl } from "react-icons/fa";
 
 export const generateMetadata = generateMetadataWithTryCatch(
   async (props: PageProps<"/app/events/templates/[templateId]">) => {
@@ -54,6 +58,8 @@ const EventTemplateDetails = async ({ templateId }: DetailsProps) => {
   const isDeleted = template.deletedAt !== null;
   const isShared = template.roleAccess.length > 0;
   const isEditable = !isDeleted && permissions.canEdit;
+  /** Both actions end in a create the viewer may not be allowed */
+  const showsActions = !isDeleted && canCreate;
 
   /**
    * A live Discord call, so it only runs for the viewers who actually get
@@ -64,41 +70,65 @@ const EventTemplateDetails = async ({ templateId }: DetailsProps) => {
     : null;
 
   return (
-    <div className="flex flex-col gap-4">
-      <Tile heading="Stammdaten">
-        {isDeleted ? (
+    <SidebarLayout
+      sidebar={
+        <TableOfContents
+          items={[
+            SETTINGS_SECTIONS.masterData,
+            ...(isEditable
+              ? [
+                  SETTINGS_SECTIONS.visibility,
+                  SETTINGS_SECTIONS.participation,
+                  SETTINGS_SECTIONS.discord,
+                ]
+              : []),
+            SETTINGS_SECTIONS.details,
+            ...(showsActions ? [SETTINGS_SECTIONS.actions] : []),
+            ...(permissions.canManage ? [SETTINGS_SECTIONS.dangerZone] : []),
+          ]}
+        />
+      }
+      mobileToggleLabel="Inhalt"
+      mobileToggleIcon={<FaListUl />}
+      isSticky
+      childrenContainerClassName="flex flex-col gap-4"
+    >
+      {isEditable ? (
+        <EventTemplateSettings
+          template={{
+            id: template.id,
+            name: template.name,
+            description: template.description,
+            coverImageId: template.coverImageId,
+            visibility: template.visibility,
+            visibilityRoleIds: template.visibilityRoles.map(
+              (visibilityRole) => visibilityRole.roleId,
+            ),
+            participationEnabled: template.participationEnabled,
+            applicationRequired: template.applicationRequired,
+            discordPublishTarget: template.discordPublishTarget,
+            discordPublishChannelId: template.discordPublishChannelId,
+            discordPublishLocation: template.discordPublishLocation,
+          }}
+          channels={discordChannels}
+        />
+      ) : (
+        <Tile
+          id={SETTINGS_SECTIONS.masterData.id}
+          heading={SETTINGS_SECTIONS.masterData.label}
+        >
           <p className="text-neutral-500">
-            Diese Vorlage wurde gelöscht. Sie erscheint in keiner Übersicht und
-            in keiner Eventerstellung mehr; bis zur Wiederherstellung lässt sie
-            sich nicht bearbeiten.
+            {isDeleted
+              ? "Diese Vorlage wurde gelöscht. Sie erscheint in keiner Übersicht und in keiner Eventerstellung mehr; bis zur Wiederherstellung lässt sie sich nicht bearbeiten."
+              : "Du kannst diese Vorlage verwenden, aber nicht bearbeiten."}
           </p>
-        ) : isEditable ? (
-          <UpdateEventTemplateForm
-            template={{
-              id: template.id,
-              name: template.name,
-              description: template.description,
-              coverImageId: template.coverImageId,
-              visibility: template.visibility,
-              visibilityRoleIds: template.visibilityRoles.map(
-                (visibilityRole) => visibilityRole.roleId,
-              ),
-              participationEnabled: template.participationEnabled,
-              applicationRequired: template.applicationRequired,
-              discordPublishTarget: template.discordPublishTarget,
-              discordPublishChannelId: template.discordPublishChannelId,
-              discordPublishLocation: template.discordPublishLocation,
-            }}
-            channels={discordChannels}
-          />
-        ) : (
-          <p className="text-neutral-500">
-            Du kannst diese Vorlage verwenden, aber nicht bearbeiten.
-          </p>
-        )}
-      </Tile>
+        </Tile>
+      )}
 
-      <Tile heading="Details">
+      <Tile
+        id={SETTINGS_SECTIONS.details.id}
+        heading={SETTINGS_SECTIONS.details.label}
+      >
         <dl className="flex flex-col gap-3 text-sm">
           <MetadataRow label="Besitzer">
             <CitizenLink citizen={template.ownedBy} />
@@ -127,9 +157,11 @@ const EventTemplateDetails = async ({ templateId }: DetailsProps) => {
         </dl>
       </Tile>
 
-      {/* Both actions end in a create the viewer may not be allowed */}
-      {!isDeleted && canCreate && (
-        <Tile heading="Aktionen">
+      {showsActions && (
+        <Tile
+          id={SETTINGS_SECTIONS.actions.id}
+          heading={SETTINGS_SECTIONS.actions.label}
+        >
           <div className="flex flex-wrap gap-2">
             <UseEventTemplateButton templateId={template.id} withLabel />
 
@@ -143,7 +175,11 @@ const EventTemplateDetails = async ({ templateId }: DetailsProps) => {
       )}
 
       {permissions.canManage && (
-        <Tile heading="Danger Zone" variant={TileVariant.Danger}>
+        <Tile
+          id={SETTINGS_SECTIONS.dangerZone.id}
+          heading={SETTINGS_SECTIONS.dangerZone.label}
+          variant={TileVariant.Danger}
+        >
           {isDeleted ? (
             <RestoreEventTemplateButton
               templateId={template.id}
@@ -158,7 +194,7 @@ const EventTemplateDetails = async ({ templateId }: DetailsProps) => {
           )}
         </Tile>
       )}
-    </div>
+    </SidebarLayout>
   );
 };
 

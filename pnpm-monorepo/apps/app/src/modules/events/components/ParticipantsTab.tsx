@@ -59,70 +59,78 @@ export const ParticipantsTab = async ({
 
   return (
     <div className={clsx("flex flex-col gap-2", className)}>
-      <Tile heading="Organisator">
-        {event.createdBy ? <CitizenLink citizen={event.createdBy} /> : "-"}
-      </Tile>
+      {/*
+        The organizer is one citizen, the managers can be many. The columns
+        are those of the sidebar and the table below (see `SidebarLayout`).
+      */}
+      <div className="grid gap-x-4 gap-y-2 md:grid-cols-[16rem_minmax(0,1fr)]">
+        <Tile heading="Organisator">
+          {event.createdBy ? <CitizenLink citizen={event.createdBy} /> : "-"}
+        </Tile>
 
-      <Tile
-        heading="Manager"
-        cta={
-          isAllowedToManageEvent ? <CreateManagers eventId={event.id} /> : null
-        }
-      >
-        {event.managers.length > 0 ? (
-          <div className="flex flex-wrap gap-x-3 gap-y-1">
-            {event.managers
-              .toSorted((a, b) =>
-                (a.handle || a.id).localeCompare(b.handle || b.id),
-              )
-              .map((manager) => {
-                if (isAllowedToManageEvent) {
-                  return (
-                    <div
-                      key={manager.id}
-                      className="flex rounded-secondary bg-neutral-700/50"
-                    >
-                      {manager.deletedAt ? (
-                        <span className="px-2 py-1 text-neutral-500">
-                          {DELETED_CITIZEN_LABEL}
-                        </span>
-                      ) : (
-                        <CitizenPopover citizenId={manager.id}>
-                          <Link
-                            href={`/app/spynet/citizen/${manager.id}`}
-                            className={clsx(
-                              "inline-block px-2 py-1 hover:underline",
-                              {
-                                "text-green-500":
-                                  manager.id ===
-                                  authentication.session.entity!.id,
-                                "text-brand-red-500":
-                                  manager.id !==
-                                  authentication.session.entity!.id,
-                              },
-                            )}
-                            prefetch={false}
-                          >
-                            {manager.handle || manager.id}
-                          </Link>
-                        </CitizenPopover>
-                      )}
+        <Tile
+          heading="Manager"
+          cta={
+            isAllowedToManageEvent ? (
+              <CreateManagers eventId={event.id} />
+            ) : null
+          }
+        >
+          {event.managers.length > 0 ? (
+            <div className="flex flex-wrap gap-x-3 gap-y-1">
+              {event.managers
+                .toSorted((a, b) =>
+                  (a.handle || a.id).localeCompare(b.handle || b.id),
+                )
+                .map((manager) => {
+                  if (isAllowedToManageEvent) {
+                    return (
+                      <div
+                        key={manager.id}
+                        className="flex rounded-secondary bg-neutral-700/50"
+                      >
+                        {manager.deletedAt ? (
+                          <span className="px-2 py-1 text-neutral-500">
+                            {DELETED_CITIZEN_LABEL}
+                          </span>
+                        ) : (
+                          <CitizenPopover citizenId={manager.id}>
+                            <Link
+                              href={`/app/spynet/citizen/${manager.id}`}
+                              className={clsx(
+                                "inline-block px-2 py-1 hover:underline",
+                                {
+                                  "text-green-500":
+                                    manager.id ===
+                                    authentication.session.entity!.id,
+                                  "text-brand-red-500":
+                                    manager.id !==
+                                    authentication.session.entity!.id,
+                                },
+                              )}
+                              prefetch={false}
+                            >
+                              {manager.handle || manager.id}
+                            </Link>
+                          </CitizenPopover>
+                        )}
 
-                      <DeleteManager
-                        eventId={event.id}
-                        managerId={manager.id}
-                      />
-                    </div>
-                  );
-                }
+                        <DeleteManager
+                          eventId={event.id}
+                          managerId={manager.id}
+                        />
+                      </div>
+                    );
+                  }
 
-                return <CitizenLink key={manager.id} citizen={manager} />;
-              })}
-          </div>
-        ) : (
-          <span className="text-neutral-500">-</span>
-        )}
-      </Tile>
+                  return <CitizenLink key={manager.id} citizen={manager} />;
+                })}
+            </div>
+          ) : (
+            <span className="text-neutral-500">-</span>
+          )}
+        </Tile>
+      </div>
 
       {showCreateSilcTransactionButton && (
         <Tile heading="SILC-Belohnung">

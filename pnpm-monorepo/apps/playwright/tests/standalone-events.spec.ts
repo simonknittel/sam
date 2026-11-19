@@ -19,6 +19,7 @@ import {
   NOT_FOUND_TEXT,
   openFormSection,
   SAVED_TEXT,
+  sectionByHeading,
   toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
@@ -173,7 +174,9 @@ test("a user without event;create sees no create button and cannot open foreign 
 
   await page.goto(`/app/events/${event.id}/settings`);
   await expect(page.getByRole("heading", { name: "Redacted" })).toBeVisible();
-  await expect(page.getByText("Event bearbeiten")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Stammdaten" })).toHaveCount(
+    0,
+  );
 
   // Only the tab content is rejected — the event stays navigable
   await expect(page.getByRole("link", { name: "Übersicht" })).toBeVisible();
@@ -235,9 +238,15 @@ test("the organizer edits the event via the settings tab", async ({
 
   await page.getByLabel("Titel").fill("Operation Neuer Name");
   await page.getByLabel("Beschreibung").fill("Jetzt mit Beschreibung.");
+  /** The preview of the description is in the Discord tile */
+  await expect(
+    sectionByHeading(page, "Discord").getByRole("region", { name: "Vorschau" }),
+  ).toContainText("Jetzt mit Beschreibung.");
   await page.getByLabel("Start").fill("2027-07-10T18:30");
   await page.getByLabel("Ende").fill("2027-07-10T21:30");
-  await page.getByRole("button", { name: "Speichern" }).click();
+  await sectionByHeading(page, "Stammdaten")
+    .getByRole("button", { name: "Speichern" })
+    .click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   await page.goto(`/app/events/${event.id}`);
@@ -394,7 +403,9 @@ test("saving an event that a different manager deleted shows the error and the m
   });
 
   await page.getByLabel("Titel").fill("Operation Zu Spät");
-  await page.getByRole("button", { name: "Speichern" }).click();
+  await sectionByHeading(page, "Stammdaten")
+    .getByRole("button", { name: "Speichern" })
+    .click();
 
   await expect(
     page.getByText("Event nicht gefunden", { exact: true }),

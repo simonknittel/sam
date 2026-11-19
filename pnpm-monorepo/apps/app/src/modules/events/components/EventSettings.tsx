@@ -4,23 +4,24 @@ import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
-import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import { TextInput } from "@/modules/common/components/form/TextInput";
-import { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
 import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { Tile, TileVariant } from "@/modules/common/components/Tile";
 import { deleteEvent } from "@/modules/events/actions/deleteEvent";
 import { updateEvent } from "@/modules/events/actions/updateEvent";
-import { EventDescriptionField } from "@/modules/events/components/EventDescriptionField";
+import { EventDescriptionTextarea } from "@/modules/events/components/EventDescriptionField";
 import { EventDescriptionHint } from "@/modules/events/components/EventDescriptionHint";
-import { RolePicker } from "@/modules/roles/components/RolePicker/RolePicker";
-import { EventVisibility } from "@sam-monorepo/database/browser";
+import { EventDescriptionPreview } from "@/modules/events/components/EventDescriptionPreview";
+import { useEventDescription } from "@/modules/events/hooks/useEventDescription";
+import { type EventVisibility } from "@sam-monorepo/database/browser";
 import { EVENT_NAME_MAX_LENGTH } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import { FaGlobe, FaLock, FaSave, FaTrash } from "react-icons/fa";
+import { FaSave, FaTrash } from "react-icons/fa";
+import { SETTINGS_SECTIONS } from "../utils/settingsSections";
 import { EventDateTimeField } from "./EventDateTimeField";
+import { EventVisibilityFields } from "./EventVisibilityFields";
 
 interface Props {
   readonly className?: string;
@@ -36,20 +37,17 @@ interface Props {
     readonly visibilityRoleIds: string[];
   };
   /**
-   * The participation switch, rendered by the page: it needs the count of
-   * the active sign-ups
+   * The tile of the participation and the application switches, rendered by
+   * the page: it needs the count of the active sign-ups and the rules of the
+   * positions
    */
-  readonly participationTile?: ReactNode;
+  readonly participationTile: ReactNode;
   /**
-   * The application switch, rendered by the page: it needs the count of the
-   * open applications
+   * The Discord publishing, rendered by the page: it needs a live channel
+   * list from Discord and therefore stays a Server Component. The Discord
+   * tile shows it above the preview of the description.
    */
-  readonly applicationTile?: ReactNode;
-  /**
-   * The Discord publishing card, rendered by the page: it needs a live
-   * channel list from Discord and therefore stays a Server Component.
-   */
-  readonly discordCard?: ReactNode;
+  readonly discordPublishing: ReactNode;
   /**
    * The "Aktionen" tile, rendered by the page: its contents are permission
    * gated, and the page shows the same tile on events that are over — where
@@ -58,12 +56,15 @@ interface Props {
   readonly actionsTile?: ReactNode;
 }
 
+/**
+ * The tiles of the settings page of an event. Each tile saves only its own
+ * fields.
+ */
 export const EventSettings = ({
   className,
   event,
   participationTile,
-  applicationTile,
-  discordCard,
+  discordPublishing,
   actionsTile,
 }: Props) => {
   const router = useRouter();
@@ -72,11 +73,21 @@ export const EventSettings = ({
    * event that a different manager deleted, can remove this form.
    */
   const { formAction, getDefaultValueWithFallback } = useAction(updateEvent);
-  const [visibility, setVisibility] = useState<string>(event.visibility);
+
+  /** The preview of the description is only for Discord, thus it is in the Discord tile */
+  const defaultDescription = getDefaultValueWithFallback(
+    "description",
+    event.description ?? "",
+  );
+  const { description, setDescription, textareaRef } =
+    useEventDescription(defaultDescription);
 
   return (
     <div className={clsx("flex flex-col gap-2", className)}>
-      <Tile heading="Event bearbeiten">
+      <Tile
+        id={SETTINGS_SECTIONS.masterData.id}
+        heading={SETTINGS_SECTIONS.masterData.label}
+      >
         <form action={formAction}>
           <input type="hidden" name="eventId" value={event.id} />
 
@@ -88,13 +99,12 @@ export const EventSettings = ({
             required
           />
 
-          <EventDescriptionField
+          <EventDescriptionTextarea
             hint={<EventDescriptionHint />}
-            defaultValue={getDefaultValueWithFallback(
-              "description",
-              event.description ?? "",
-            )}
-            eventId={event.id}
+            defaultValue={defaultDescription}
+            description={description}
+            onDescriptionChange={setDescription}
+            ref={textareaRef}
             className="mt-4"
           />
 
@@ -122,53 +132,36 @@ export const EventSettings = ({
             />
           </div>
 
-          <p className="mt-4">Sichtbarkeit</p>
-          <RadioGroup
-            label="Sichtbarkeit"
-            name="visibility"
-            items={[
-              {
-                value: EventVisibility.PUBLIC,
-                label: "Öffentlich",
-                icon: <FaGlobe />,
-                hint: "Alle mit Events-Berechtigung können das Event sehen.",
-              },
-              {
-                value: EventVisibility.RESTRICTED,
-                label: "Eingeschränkt",
-                icon: <FaLock />,
-                hint: "Nur ausgewählte Rollen sowie die Organisatoren können das Event sehen.",
-              },
-            ]}
-            value={visibility}
-            onChange={setVisibility}
-            className="mt-2"
-          />
-
-          {visibility === EventVisibility.RESTRICTED && (
-            <RolePicker
-              mode={ItemPickerMode.Multiple}
-              name="visibilityRole[]"
-              defaultValue={event.visibilityRoleIds}
-              className="mt-2"
-            />
-          )}
-
           <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
             Speichern
           </SubmitButton>
         </form>
       </Tile>
 
+      <VisibilityTile event={event} />
+
       {participationTile}
 
-      {applicationTile}
+      <Tile
+        id={SETTINGS_SECTIONS.discord.id}
+        heading={SETTINGS_SECTIONS.discord.label}
+      >
+        {discordPublishing}
 
-      {discordCard}
+        <EventDescriptionPreview
+          description={description}
+          eventId={event.id}
+          className="mt-6"
+        />
+      </Tile>
 
       {actionsTile}
 
-      <Tile heading="Danger Zone" variant={TileVariant.Danger}>
+      <Tile
+        id={SETTINGS_SECTIONS.dangerZone.id}
+        heading={SETTINGS_SECTIONS.dangerZone.label}
+        variant={TileVariant.Danger}
+      >
         <ConfirmActionButton
           action={deleteEvent}
           hiddenFields={[{ name: "eventId", value: event.id }]}
@@ -190,5 +183,37 @@ export const EventSettings = ({
         />
       </Tile>
     </div>
+  );
+};
+
+interface VisibilityTileProps {
+  readonly event: Props["event"];
+}
+
+/** Its own form: `updateEvent()` changes only the fields that it gets */
+const VisibilityTile = ({ event }: VisibilityTileProps) => {
+  const { formAction } = useAction(updateEvent);
+  const [visibility, setVisibility] = useState<string>(event.visibility);
+
+  return (
+    <Tile
+      id={SETTINGS_SECTIONS.visibility.id}
+      heading={SETTINGS_SECTIONS.visibility.label}
+    >
+      <form action={formAction}>
+        <input type="hidden" name="eventId" value={event.id} />
+
+        <EventVisibilityFields
+          label="Sichtbarkeit"
+          visibility={visibility}
+          onVisibilityChange={setVisibility}
+          defaultRoleIds={event.visibilityRoleIds}
+        />
+
+        <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
+          Speichern
+        </SubmitButton>
+      </form>
+    </Tile>
   );
 };
