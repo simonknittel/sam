@@ -5,18 +5,15 @@ import { useAction } from "@/modules/actions/utils/useAction";
 import { useSubmitConfirmation } from "@/modules/common/components/AlertDialog";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { FormSection } from "@/modules/common/components/form/FormSection";
-import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import { Select } from "@/modules/common/components/form/Select";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
-import { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
 import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { createEvent } from "@/modules/events/actions/createEvent";
 import { EventDescriptionTextarea } from "@/modules/events/components/EventDescriptionField";
 import { EventDescriptionHint } from "@/modules/events/components/EventDescriptionHint";
 import { EventDescriptionPreview } from "@/modules/events/components/EventDescriptionPreview";
 import { useEventDescription } from "@/modules/events/hooks/useEventDescription";
-import { RolePicker } from "@/modules/roles/components/RolePicker/RolePicker";
 import { api } from "@/trpc/react";
 import {
   EventVisibility,
@@ -25,11 +22,12 @@ import {
 import { EVENT_NAME_MAX_LENGTH } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { useId, useState } from "react";
-import { FaGlobe, FaLock, FaSave } from "react-icons/fa";
+import { FaSave } from "react-icons/fa";
 import { DiscordPublishTargetFields } from "../DiscordPublishTargetFields";
 import { EventCoverImageField } from "../EventCoverImageField";
 import { EventDateTimeField } from "../EventDateTimeField";
 import { EventSwitchField } from "../EventSwitchField";
+import { EventVisibilityFields } from "../EventVisibilityFields";
 import { RestrictedDiscordPublishDialog } from "../RestrictedDiscordPublishDialog";
 
 /** The "no template" option of the picker */
@@ -224,8 +222,9 @@ export const CreateEventForm = ({
               : "Öffentlich"
           }
         >
-          <VisibilityFields
+          <EventVisibilityFields
             key={`visibility-${prefillKey}`}
+            label="Sichtbarkeit"
             visibility={visibility}
             onVisibilityChange={setVisibility}
             defaultRoleIds={selectedTemplate?.visibilityRoleIds ?? []}
@@ -402,52 +401,6 @@ const DiscordPublishFields = ({
             className="mt-2"
           />
         ))}
-    </div>
-  );
-};
-
-interface VisibilityFieldsProps {
-  readonly visibility: string;
-  readonly onVisibilityChange: (visibility: string) => void;
-  readonly defaultRoleIds: readonly string[];
-}
-
-const VisibilityFields = ({
-  visibility,
-  onVisibilityChange,
-  defaultRoleIds,
-}: VisibilityFieldsProps) => {
-  return (
-    <div>
-      <RadioGroup
-        label="Sichtbarkeit"
-        name="visibility"
-        items={[
-          {
-            value: EventVisibility.PUBLIC,
-            label: "Öffentlich",
-            icon: <FaGlobe />,
-            hint: "Alle mit Events-Berechtigung können das Event sehen.",
-          },
-          {
-            value: EventVisibility.RESTRICTED,
-            label: "Eingeschränkt",
-            icon: <FaLock />,
-            hint: "Nur ausgewählte Rollen sowie die Organisatoren können das Event sehen.",
-          },
-        ]}
-        value={visibility}
-        onChange={onVisibilityChange}
-      />
-
-      {visibility === EventVisibility.RESTRICTED && (
-        <RolePicker
-          mode={ItemPickerMode.Multiple}
-          name="visibilityRole[]"
-          defaultValue={defaultRoleIds}
-          className="mt-2"
-        />
-      )}
     </div>
   );
 };
