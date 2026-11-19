@@ -27,6 +27,12 @@ model SilcTransaction {
   /// The calendar day (Europe/Berlin) of the salary payout
   salaryDate                DateTime?                @db.Date
 
+  /// True for a positive booking that books a negative balance to 0: at the
+  /// end of a SINcome collection phase and when all SILC expire. It is not
+  /// earned SILC, thus the lifetime earnings and the new SILC of the
+  /// statistics leave it out.
+  resetsNegativeBalance Boolean @default(false)
+
   @@unique([receiverId, salaryRoleId, salaryDate], map: "SilcTransaction_salary_key", where: { deletedAt: null, salaryDate: { not: null } })
   @@unique([receiverId, profitDistributionCycleId], map: "SilcTransaction_profitDistributionCycle_key", where: { deletedAt: null, profitDistributionCycleId: { not: null } })
   @@index([receiverId, createdAt])
