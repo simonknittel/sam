@@ -72,7 +72,7 @@ test("the tile finds a citizen by a part of the handle and opens the citizen", a
   await hitOf(page, target.entity.id).click();
 
   await expect(
-    page.getByRole("heading", { name: "wanderfalke" }),
+    page.getByRole("heading", { level: 1, name: "wanderfalke" }),
   ).toBeVisible();
   await expect(page).toHaveURL(`/app/spynet/citizen/${target.entity.id}`);
 });
@@ -345,7 +345,7 @@ test("the Cmd+K search opens a citizen", async ({ page, prisma, signIn }) => {
   await page.keyboard.press("Enter");
 
   await expect(
-    page.getByRole("heading", { name: "wanderfalke" }),
+    page.getByRole("heading", { level: 1, name: "wanderfalke" }),
   ).toBeVisible();
   await expect(page).toHaveURL(`/app/spynet/citizen/${target.entity.id}`);
 });
