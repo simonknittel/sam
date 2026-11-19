@@ -1,4 +1,7 @@
 pnpm-lock.yaml
+# pnpm and Renovate write to this file (for example to minimumReleaseAgeExclude)
+# in a YAML format that is different from the format of Prettier
+pnpm-workspace.yaml
 apps/playwright/playwright-report/
 apps/playwright/test-results/
 # The app formats itself via its own `format` script (invoked by
