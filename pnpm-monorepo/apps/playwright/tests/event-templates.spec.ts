@@ -27,6 +27,7 @@ import {
   fillUntilValue,
   modal,
   NOT_FOUND_TEXT,
+  openFormSection,
   openRolePicker,
   pickFromSearch,
   pickRoles,
@@ -1095,6 +1096,7 @@ test("the role picker of the new event follows the template that the picker of t
   const createDialog = modal(page, "Neues Event");
   const templatePicker = createDialog.getByLabel("Vorlage (optional)");
   await expect(templatePicker).toBeVisible();
+  await openFormSection(createDialog, "Sichtbarkeit");
   const chips = rolePickerChips(createDialog);
   await expect(chips).toHaveCount(0);
 

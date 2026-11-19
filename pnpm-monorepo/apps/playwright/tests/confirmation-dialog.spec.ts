@@ -16,6 +16,7 @@ import {
   DELETED_TEXT,
   fillUntilValue,
   modal,
+  openFormSection,
   toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
@@ -305,7 +306,9 @@ test("Escape in a confirmation dialog in a modal closes only the dialog", async 
   await fillUntilValue(page.getByLabel("Titel"), "Operation Escape");
   await fillUntilValue(page.getByLabel("Start"), "2027-06-01T20:00");
   await fillUntilValue(page.getByLabel("Ende"), "2027-06-01T22:00");
+  await openFormSection(page, "Discord");
   await toggleLabel(page, /^Auf Discord veröffentlichen$/).click();
+  await openFormSection(page, "Sichtbarkeit");
   await toggleLabel(page, /^Eingeschränkt$/).click();
   const trigger = page.getByRole("button", { name: "Speichern" });
   await trigger.click();
@@ -339,7 +342,9 @@ test("the browser validates the form before the confirmation dialog opens", asyn
 
   await fillUntilValue(page.getByLabel("Start"), "2027-06-01T20:00");
   await fillUntilValue(page.getByLabel("Ende"), "2027-06-01T22:00");
+  await openFormSection(page, "Discord");
   await toggleLabel(page, /^Auf Discord veröffentlichen$/).click();
+  await openFormSection(page, "Sichtbarkeit");
   await toggleLabel(page, /^Eingeschränkt$/).click();
 
   /** The title is empty: the browser shows the error, the dialog stays closed */

@@ -12,6 +12,7 @@ import {
 import {
   clickUntilVisible,
   fillUntilValue,
+  formSection,
   modal,
   NOT_FOUND_TEXT,
   SAVED_TEXT,
@@ -210,12 +211,20 @@ test("the create dialog offers the participation switch, and a template prefills
 
   const createDialog = modal(page, "Neues Event");
   const participation = createDialog.getByLabel("Teilnahme", { exact: true });
+  const participationSection = formSection(createDialog, "Teilnahme");
   await expect(participation).toBeChecked();
+  await expect(participationSection.locator("summary")).toContainText(
+    "Aktiviert",
+  );
 
+  /** The closed section shows the value of the template in its summary */
   await createDialog
     .getByLabel("Vorlage (optional)")
     .selectOption({ label: "Briefing ohne Anmeldung" });
   await expect(participation).not.toBeChecked();
+  await expect(participationSection.locator("summary")).toContainText(
+    "Deaktiviert",
+  );
 
   await fillUntilValue(createDialog.getByLabel("Start"), "2999-01-01T18:00");
   await fillUntilValue(createDialog.getByLabel("Ende"), "2999-01-01T20:00");

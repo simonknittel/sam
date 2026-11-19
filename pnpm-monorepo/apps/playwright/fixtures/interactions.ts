@@ -262,6 +262,33 @@ export const toggleLabel = (
     .filter({ visible: true });
 
 /**
+ * A collapsible section of a form (`FormSection`), found by its heading. Its
+ * summary shows the current values also while it is closed.
+ */
+export const formSection = (scope: Page | Locator, heading: string) => {
+  /** The inner locator of `has` starts at the root, not at the scope */
+  const page = "goto" in scope ? scope : scope.page();
+
+  return scope.locator("details").filter({
+    has: page.locator("summary").getByText(heading, { exact: true }),
+  });
+};
+
+/**
+ * Opens a collapsible section of a form. A closed section hides its fields.
+ * The section is a native `details` element, thus it opens also before the
+ * hydration.
+ */
+export const openFormSection = async (
+  scope: Page | Locator,
+  heading: string,
+) => {
+  const section = formSection(scope, heading);
+  await section.locator("summary").click();
+  await expect(section).toHaveAttribute("open");
+};
+
+/**
  * Picks an entry from one of the app's search pickers (citizens, users).
  * Their options render in a portal outside the picker and carry the entry's
  * id next to its handle, so they are looked up on the page and matched by
