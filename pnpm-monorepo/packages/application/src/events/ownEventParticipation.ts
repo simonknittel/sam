@@ -1,6 +1,10 @@
 import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import {
+  loadOwnEventApplication,
+  type EventApplicationDetails,
+} from "./eventApplicationRows.js";
+import {
   loadOwnEventInvitation,
   type EventInvitationDetails,
 } from "./eventInvitationRows.js";
@@ -41,12 +45,15 @@ export interface OwnEventParticipation {
   readonly assignedPositions: AssignedEventPosition[];
   /** The latest invitation of the citizen of the actor to the event, or null */
   readonly invitation: EventInvitationDetails | null;
+  /** The latest application of the citizen of the actor for the event, or null */
+  readonly application: EventApplicationDetails | null;
 }
 
 const NO_PARTICIPATION: OwnEventParticipation = {
   hasCancelledParticipation: false,
   assignedPositions: [],
   invitation: null,
+  application: null,
 };
 
 /**
@@ -70,7 +77,7 @@ export const findOwnEventParticipation = async (
   const citizenId = actor.citizen?.id ?? null;
   if (citizenId === null) return NO_PARTICIPATION;
 
-  const [cancelledParticipation, assignedPositions, invitation] =
+  const [cancelledParticipation, assignedPositions, invitation, application] =
     await Promise.all([
       context.prisma.eventParticipant.findFirst({
         where: {
@@ -118,11 +125,13 @@ export const findOwnEventParticipation = async (
           })
         : [],
       loadOwnEventInvitation(context.prisma, event.id, citizenId),
+      loadOwnEventApplication(context.prisma, event.id, citizenId),
     ]);
 
   return {
     hasCancelledParticipation: cancelledParticipation !== null,
     assignedPositions,
     invitation,
+    application,
   };
 };

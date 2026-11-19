@@ -1,5 +1,7 @@
 import {
   BIRTHDAY_FALLBACK_WORDING,
+  getEventApplicationAnsweredText,
+  getEventApplicationCreatedText,
   getEventBriefingPublishedText,
   getEventBriefingUpdatedText,
   getEventCreatedText,
@@ -226,6 +228,22 @@ export const renderOnSiteNotification = (
       return {
         ...getEventInvitationAnsweredText(parsed.payload),
         url: `/app/events/${parsed.payload.eventId}/participants`,
+        appTitle,
+        decoration: null,
+      };
+
+    case "event_application_created":
+      return {
+        ...getEventApplicationCreatedText(parsed.payload),
+        url: `/app/events/${parsed.payload.eventId}/participants`,
+        appTitle,
+        decoration: null,
+      };
+
+    case "event_application_answered":
+      return {
+        ...getEventApplicationAnsweredText(parsed.payload),
+        url: `/app/events/${parsed.payload.eventId}`,
         appTitle,
         decoration: null,
       };

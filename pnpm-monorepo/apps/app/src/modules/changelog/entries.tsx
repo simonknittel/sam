@@ -43,6 +43,9 @@ import image20261030CalendarTile from "@/modules/changelog/assets/2026-10-30-cal
 import image20261030EventParticipationDialog from "@/modules/changelog/assets/2026-10-30-event-participation-dialog.png";
 import image20261030EventParticipation from "@/modules/changelog/assets/2026-10-30-event-participation.png";
 import image20261114LiveStatus from "@/modules/changelog/assets/2026-11-14-live-status.png";
+import image20261119EventApplicationRequest from "@/modules/changelog/assets/2026-11-19-event-application-request.png";
+import image20261119EventApplicationSettings from "@/modules/changelog/assets/2026-11-19-event-application-settings.png";
+import image20261119EventApplications from "@/modules/changelog/assets/2026-11-19-event-applications.png";
 import {
   ChangelogImage,
   ChangelogImageWidth,
@@ -53,6 +56,46 @@ import { AiFillAppstore } from "react-icons/ai";
 import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
+  {
+    key: "2026-11-19-event-teilnahmeanfragen",
+    date: "2026-11-19",
+    title: "Teilnahmeanfragen für Events",
+    tags: ["Neu", "Events"],
+    isTracked: true,
+    body: () => (
+      <>
+        <p>Manager können für ein Event Teilnahmeanfragen einschalten.</p>
+
+        <Link href={image20261119EventApplicationSettings.src}>
+          <ChangelogImage
+            src={image20261119EventApplicationSettings}
+            alt=""
+            isAboveTheFold
+          />
+        </Link>
+
+        <p>
+          Dann fragst du die Teilnahme an, statt dich direkt anzumelden.
+          Optional schreibst du einen Kommentar für die Manager dazu.
+        </p>
+
+        <Link href={image20261119EventApplicationRequest.src}>
+          <ChangelogImage src={image20261119EventApplicationRequest} alt="" />
+        </Link>
+
+        <p>
+          Ein Manager nimmt die Anfrage an oder lehnt sie ab. Über beides wirst
+          du benachrichtigt. Auch über den MCP-Server sind Teilnahmeanfragen
+          möglich.
+        </p>
+
+        <Link href={image20261119EventApplications.src}>
+          <ChangelogImage src={image20261119EventApplications} alt="" />
+        </Link>
+      </>
+    ),
+  },
+
   {
     key: "2026-11-18-log-analyzer-fahrzeugzerstoerung",
     date: "2026-11-18",

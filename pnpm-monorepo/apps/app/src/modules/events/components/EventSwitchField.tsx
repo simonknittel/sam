@@ -6,36 +6,46 @@ import { useId } from "react";
 
 interface Props {
   readonly className?: string;
+  /** The field has the value `true` only while it is checked */
+  readonly name: string;
+  readonly label: string;
   readonly hint: string;
   readonly defaultChecked: boolean;
+  /** Gets each change of the user, for example for a summary of the form */
+  readonly onCheckedChange?: (checked: boolean) => void;
 }
 
 /**
- * The participation switch of the create form of an event and of the form
- * of a template. The field `participationEnabled` has a value only while it
- * is checked. Uncontrolled, thus a reset of the form after an action shows
- * the value that the form sends next.
+ * A switch of the create form of an event and of the form of a template, for
+ * example the participation. Uncontrolled, thus a reset of the form after an
+ * action shows the value that the form sends next.
  */
-export const EventParticipationField = ({
+export const EventSwitchField = ({
   className,
+  name,
+  label,
   hint,
   defaultChecked,
+  onCheckedChange,
 }: Props) => {
   const checkboxId = useId();
 
   return (
     <div className={clsx(className)}>
       <label htmlFor={checkboxId} className="block">
-        Teilnahme
+        {label}
       </label>
       <p className="mt-1 text-xs text-white/40">{hint}</p>
 
       <YesNoCheckbox
         id={checkboxId}
-        name="participationEnabled"
+        name={name}
         value="true"
         className="mt-2"
         defaultChecked={defaultChecked}
+        onChange={(changeEvent) =>
+          onCheckedChange?.(changeEvent.target.checked)
+        }
       />
     </div>
   );

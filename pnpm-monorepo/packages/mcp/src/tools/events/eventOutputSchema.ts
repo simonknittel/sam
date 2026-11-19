@@ -3,7 +3,10 @@ import {
   EventVisibilityType,
   type Actor,
 } from "@sam-monorepo/application";
-import { EventInvitationStatus } from "@sam-monorepo/domain";
+import {
+  EventApplicationStatus,
+  EventInvitationStatus,
+} from "@sam-monorepo/domain";
 import * as z from "zod";
 import { citizenReferenceSchema, dateTimeOutputSchema } from "../../schemas.js";
 
@@ -24,7 +27,12 @@ export const eventOutputSchema = z.strictObject({
   participation_enabled: z
     .boolean()
     .describe(
-      "False when a manager turned off the participation: nobody can sign up or be added, and the lineup is not available.",
+      "False when a manager turned off the participation: nobody can sign up, apply or be added, and the lineup is not available.",
+    ),
+  application_required: z
+    .boolean()
+    .describe(
+      "True when a citizen cannot sign up without an invitation, but applies, and a manager approves or declines the application. A user with can_manage (see get_event) signs up directly.",
     ),
   created_by: citizenReferenceSchema.nullable(),
   managers: z.array(citizenReferenceSchema),
@@ -54,6 +62,26 @@ export const eventOutputSchema = z.strictObject({
     )
     .describe(
       "The open invitations, and the declined invitations of citizens who did not sign up later. The newest first.",
+    ),
+  applications: z
+    .array(
+      z.strictObject({
+        citizen: citizenReferenceSchema.nullable(),
+        status: z.enum(EventApplicationStatus),
+        comment: z
+          .string()
+          .nullable()
+          .describe("The note of the citizen to the managers."),
+        decline_reason: z
+          .string()
+          .nullable()
+          .describe("The note of the manager when they declined."),
+        declined_by: citizenReferenceSchema.nullable(),
+        created_at: dateTimeOutputSchema,
+      }),
+    )
+    .describe(
+      "The open applications to take part, and the declined applications of citizens who were not signed up later. The newest first.",
     ),
   can_manage: z.boolean(),
   can_manage_positions: z.boolean(),

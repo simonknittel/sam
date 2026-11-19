@@ -38,6 +38,32 @@ export enum EventErrorMessage {
   CitizenNotInvited = "The citizen has no open invitation to the event",
   /** A `NotFoundError`: the invitation does not exist or is not for the user */
   InvitationNotFound = "The invitation does not exist",
+  /**
+   * A `ConflictError`: the sign-up of the event needs the approval of a
+   * manager, and the user has no open invitation
+   */
+  ApplicationRequired = "The sign-up of the event needs the approval of a manager: apply for the event",
+  /**
+   * A `ConflictError`: the event requires no applications, or the user
+   * manages it
+   */
+  ApplicationNotRequired = "The user needs no application for the event: sign up directly",
+  /** A `ConflictError` */
+  AlreadyApplied = "The user has already applied for the event",
+  /**
+   * A `ConflictError`: a manager declined the latest application of the
+   * user. Only a manager can add or invite the user now.
+   */
+  ApplicationDeclined = "A manager declined the application of the user. Only a manager can add or invite the user now.",
+  /** A `ConflictError`: the user must answer the invitation instead */
+  InvitedInsteadOfApplication = "The user has an open invitation to the event: accept the invitation instead of an application",
+  /**
+   * A `ConflictError`: the user has no open application, for example because
+   * a manager answered it or a different tab withdrew it
+   */
+  NoOpenApplication = "The user has no open application for the event",
+  /** A `ConflictError` */
+  CitizenNotApplied = "The citizen has no open application for the event",
   /** A `ValidationError` */
   EndBeforeStart = "The end must be after the start",
   /**

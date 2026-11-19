@@ -3,7 +3,11 @@ import {
   EventSource,
   EventVisibility,
 } from "@sam-monorepo/database/browser";
-import { AuditEventType, type AuditEventInput } from "@sam-monorepo/domain";
+import {
+  AuditEventType,
+  EventApplicationAnswer,
+  type AuditEventInput,
+} from "@sam-monorepo/domain";
 import * as z from "zod";
 import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
@@ -26,6 +30,13 @@ import {
   PARTICIPATION_DISABLED_REASON,
 } from "./clearEventParticipation.js";
 import { createEventActivity } from "./eventActivity.js";
+import {
+  buildApplicationAnsweredNotifications,
+  buildApplicationAuditEvents,
+  closeOpenApplications,
+  NO_ADMITTED_APPLICANTS,
+  type ClosedApplications,
+} from "./eventApplications.js";
 import { buildEventChangeNotifications } from "./eventChangeNotifications.js";
 import { requireDescriptionFitsDiscord } from "./eventDescription.js";
 import {
@@ -62,13 +73,14 @@ export enum EventChange {
   Visibility = "visibility",
   LineupEnabled = "lineup_enabled",
   ParticipationEnabled = "participation_enabled",
+  ApplicationRequired = "application_required",
 }
 
 /**
  * Only the fields of the input change. The fields of an event that comes
  * from Discord stay as Discord gives them: only `lineup_enabled` can change.
- * The participation of a Discord event is always on: its sign-ups come from
- * Discord.
+ * The participation of a Discord event is always on and needs no
+ * application: its sign-ups come from Discord.
  */
 export const updateEventInputSchema = z.object({
   event_id: idSchema,
@@ -94,7 +106,13 @@ export const updateEventInputSchema = z.object({
     .boolean()
     .optional()
     .describe(
-      "Only for an event of SAM (source app). False cancels all sign-ups (each participant gets a notification), removes the assigned citizens and the applications of all positions (the positions stay) and hides the lineup; while it is false, nobody can sign up or be added. True opens the sign-up again, but restores nothing. Needs can_manage_positions.",
+      "Only for an event of SAM (source app). False cancels all sign-ups (each participant gets a notification), withdraws the open invitations and applications, removes the assigned citizens and the applications of all positions (the positions stay) and hides the lineup; while it is false, nobody can sign up, apply or be added. True opens the sign-up again, but restores nothing. Needs can_manage_positions.",
+    ),
+  application_required: z
+    .boolean()
+    .optional()
+    .describe(
+      "Only for an event of SAM (source app). True: a citizen cannot sign up without an invitation, but applies, and a manager approves or declines the application. False approves all open applications: each applicant is signed up and gets a notification. An applicant who cannot see the event anymore is not signed up; the application is withdrawn.",
     ),
 });
 
@@ -158,10 +176,11 @@ const CONTENT_CHANGES: ReadonlySet<EventChange> = new Set([
   EventChange.Schedule,
 ]);
 
-/** The changes of the two switches: they write no detail field */
+/** The changes of the switches: they write no detail field */
 const SWITCH_CHANGES: ReadonlySet<EventChange> = new Set([
   EventChange.LineupEnabled,
   EventChange.ParticipationEnabled,
+  EventChange.ApplicationRequired,
 ]);
 
 const toSortedKey = (roleIds: readonly string[]) =>
@@ -169,13 +188,17 @@ const toSortedKey = (roleIds: readonly string[]) =>
 
 /**
  * Changes the details of an app event (name, description, schedule,
- * visibility), whether its lineup is visible and whether its participation
- * is on. Writes nothing when the values are the same.
+ * visibility), whether its lineup is visible, whether its participation is
+ * on and whether the sign-up needs an application. Writes nothing when the
+ * values are the same.
  *
  * The switch of the participation to false cancels all sign-ups and clears
  * the lineup assignments and applications in the same transaction (see
  * `clearEventParticipation()`), and each cancelled participant gets the
- * "removed from the event" notification.
+ * "removed from the event" notification. The switch of the applications to
+ * false approves the open applications in the same transaction (see
+ * `closeOpenApplications()`), and each approved applicant gets the
+ * "approved" notification.
  */
 export const updateEvent = (
   context: ApplicationContext,
@@ -189,6 +212,7 @@ export const updateEvent = (
     );
     const changesLineup = input.lineup_enabled !== undefined;
     const changesParticipation = input.participation_enabled !== undefined;
+    const changesApplication = input.application_required !== undefined;
 
     /**
      * Authorize the request
@@ -205,6 +229,7 @@ export const updateEvent = (
         description: true,
         lineupEnabled: true,
         participationEnabled: true,
+        applicationRequired: true,
         discordPublishedId: true,
       },
     });
@@ -216,13 +241,16 @@ export const updateEvent = (
     )
       throw new NotFoundError(EventErrorMessage.NotFound);
     if (
-      (changesDetails || changesParticipation) &&
+      (changesDetails || changesParticipation || changesApplication) &&
       event.source !== EventSource.APP
     )
       throw new ConflictError(EventErrorMessage.DiscordEvent);
     if (!isEventUpdatable(event, context.now()))
       throw new ConflictError(EventErrorMessage.EventEnded);
-    if (changesDetails && !isAllowedToManageEvent(actor, event))
+    if (
+      (changesDetails || changesApplication) &&
+      !isAllowedToManageEvent(actor, event)
+    )
       throw new ForbiddenError("The user cannot manage the event");
     if (changesLineup && !isAllowedToManagePositions(actor, event))
       throw new ForbiddenError("The user cannot manage the lineup");
@@ -293,6 +321,10 @@ export const updateEvent = (
       input.participation_enabled ?? event.participationEnabled;
     if (participationEnabled !== event.participationEnabled)
       changes.push(EventChange.ParticipationEnabled);
+    const applicationRequired =
+      input.application_required ?? event.applicationRequired;
+    if (applicationRequired !== event.applicationRequired)
+      changes.push(EventChange.ApplicationRequired);
 
     const changesContent = changes.some((change) =>
       CONTENT_CHANGES.has(change),
@@ -303,6 +335,9 @@ export const updateEvent = (
     const changesLineupEnabled = changes.includes(EventChange.LineupEnabled);
     const changesParticipationEnabled = changes.includes(
       EventChange.ParticipationEnabled,
+    );
+    const changesApplicationRequired = changes.includes(
+      EventChange.ApplicationRequired,
     );
 
     /**
@@ -336,8 +371,8 @@ export const updateEvent = (
     /**
      * Update the event and record the activity entries atomically
      */
-    const clearedParticipation = await context.prisma.$transaction(
-      async (transaction) => {
+    const { clearedParticipation, closedApplications } =
+      await context.prisma.$transaction(async (transaction) => {
         await transaction.event.update({
           where: {
             id: event.id,
@@ -360,6 +395,7 @@ export const updateEvent = (
               ? { lineupEnabled: input.lineup_enabled }
               : {}),
             ...(changesParticipationEnabled ? { participationEnabled } : {}),
+            ...(changesApplicationRequired ? { applicationRequired } : {}),
           },
         });
 
@@ -407,30 +443,64 @@ export const updateEvent = (
             payload: { enabled: input.lineup_enabled === true },
           });
 
-        if (!changesParticipationEnabled) return NO_CLEARED_EVENT_PARTICIPATION;
-
         // The switch to true restores nothing
-        const cleared = participationEnabled
-          ? NO_CLEARED_EVENT_PARTICIPATION
-          : await clearEventParticipation(transaction, {
-              eventId: event.id,
-              cancelledById: citizenId,
-              cancelledAt: context.now(),
-            });
+        const cleared =
+          changesParticipationEnabled && !participationEnabled
+            ? await clearEventParticipation(transaction, {
+                eventId: event.id,
+                cancelledById: citizenId,
+                cancelledAt: context.now(),
+              })
+            : NO_CLEARED_EVENT_PARTICIPATION;
 
-        await createEventActivity(transaction, {
-          eventId: event.id,
-          citizenId,
-          type: EventActivityType.PARTICIPATION_TOGGLED,
-          payload: {
-            enabled: participationEnabled,
-            cancelledParticipantCount: cleared.cancelledParticipantCount,
-          },
-        });
+        if (changesParticipationEnabled)
+          await createEventActivity(transaction, {
+            eventId: event.id,
+            citizenId,
+            type: EventActivityType.PARTICIPATION_TOGGLED,
+            payload: {
+              enabled: participationEnabled,
+              cancelledParticipantCount: cleared.cancelledParticipantCount,
+            },
+          });
 
-        return cleared;
-      },
-    );
+        /**
+         * The update of the row above locked the event, thus no new
+         * application can come before the approval. While the participation
+         * is off, there is no open application: its switch withdrew them.
+         */
+        const closed: ClosedApplications =
+          changesApplicationRequired && !applicationRequired
+            ? await closeOpenApplications(
+                transaction,
+                context.prisma,
+                {
+                  id: event.id,
+                  visibility,
+                  createdById: event.createdById,
+                  deletedAt: event.deletedAt,
+                  managers: event.managers,
+                  visibilityRoles: visibilityRoleIds.map((roleId) => ({
+                    roleId,
+                  })),
+                },
+                { actorId: citizenId, closedAt: context.now() },
+              )
+            : { ...NO_ADMITTED_APPLICANTS, withdrawnApplications: [] };
+
+        if (changesApplicationRequired)
+          await createEventActivity(transaction, {
+            eventId: event.id,
+            citizenId,
+            type: EventActivityType.APPLICATION_REQUIREMENT_TOGGLED,
+            payload: {
+              enabled: applicationRequired,
+              approvedApplicationCount: closed.approvedApplications.length,
+            },
+          });
+
+        return { clearedParticipation: cleared, closedApplications: closed };
+      });
 
     const auditEvents: AuditEventInput[] = [];
     if (changesContent)
@@ -476,11 +546,38 @@ export const updateEvent = (
         },
         createdById: actor.userId,
       });
+    if (changesApplicationRequired)
+      auditEvents.push({
+        type: AuditEventType.EVENT_APPLICATION_REQUIREMENT_CHANGED,
+        data: {
+          eventId: event.id,
+          enabled: applicationRequired,
+        },
+        createdById: actor.userId,
+      });
     auditEvents.push(
       ...buildInvitationAuditEvents(
         AuditEventType.EVENT_INVITATION_WITHDRAWN,
         event.id,
-        clearedParticipation.withdrawnInvitations,
+        [
+          ...clearedParticipation.withdrawnInvitations,
+          ...closedApplications.withdrawnInvitations,
+        ],
+        actor.userId,
+      ),
+      ...buildApplicationAuditEvents(
+        AuditEventType.EVENT_APPLICATION_WITHDRAWN,
+        event.id,
+        [
+          ...clearedParticipation.withdrawnApplications,
+          ...closedApplications.withdrawnApplications,
+        ],
+        actor.userId,
+      ),
+      ...buildApplicationAuditEvents(
+        AuditEventType.EVENT_APPLICATION_APPROVED,
+        event.id,
+        closedApplications.approvedApplications,
         actor.userId,
       ),
     );
@@ -509,6 +606,14 @@ export const updateEvent = (
             reason: PARTICIPATION_DISABLED_REASON,
           },
         });
+    notifications.push(
+      ...buildApplicationAnsweredNotifications(
+        event.id,
+        closedApplications.approvedApplications,
+        EventApplicationAnswer.Approved,
+        { reason: null, actorCitizenId: citizenId },
+      ),
+    );
     await triggerNotificationsAfterSave(context, notifications);
 
     /**

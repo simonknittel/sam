@@ -5,6 +5,10 @@
  * `storeOnSiteNotifications()` adds the clearance.
  */
 export {
+  findEventApplicationRecipients,
+  type EventApplicationRecipients,
+} from "./eventApplicationCreated.js";
+export {
   findEventBriefingAudienceRecipients,
   findEventBriefingUpdatedRecipients,
 } from "./eventBriefingAudience.js";

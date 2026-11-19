@@ -59,6 +59,7 @@ export const acceptEventInvitation = (
     const signUp = await insertOwnParticipation(
       context,
       actor,
+      event,
       {
         eventId: event.id,
         citizenId,

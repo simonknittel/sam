@@ -19,6 +19,7 @@ import {
   clickUntilVisible,
   fillUntilValue,
   NOT_FOUND_TEXT,
+  openFormSection,
   SAVED_TEXT,
   toggleLabel,
   waitForAppShellHydration,
@@ -118,7 +119,7 @@ for (const { channel, entityType } of CHANNEL_KINDS) {
 
     // The published state replaces the form and links to the Discord event
     await expect(page.getByText(`Sprachkanal: ${channel.name}`)).toBeVisible();
-    // Exact: the description field's hint links to "Hilfe von Discord"
+    // Exact: the description field's hint links to "Formatierungen wie auf Discord"
     await expect(
       page.getByRole("link", { name: "Discord", exact: true }).first(),
     ).toHaveAttribute(
@@ -714,12 +715,17 @@ test("creating a restricted event with publishing needs the same confirmation", 
   await fillUntilValue(page.getByLabel("Start"), "2027-06-01T20:00");
   await fillUntilValue(page.getByLabel("Ende"), "2027-06-01T22:00");
 
-  await toggleLabel(page, /^Auf Discord veröffentlichen$/).click();
+  // The new event goes to Discord by default
+  await openFormSection(page, "Discord");
+  await expect(
+    page.getByLabel("Auf Discord veröffentlichen", { exact: true }),
+  ).toBeChecked();
   await expect(page.getByRole("textbox", { name: "Ort" })).toBeVisible();
 
   // Publishing a public event still saves in one click
   await expect(page.getByRole("alertdialog")).toHaveCount(0);
 
+  await openFormSection(page, "Sichtbarkeit");
   await toggleLabel(page, /^Eingeschränkt$/).click();
   await page.getByRole("button", { name: "Speichern" }).click();
 

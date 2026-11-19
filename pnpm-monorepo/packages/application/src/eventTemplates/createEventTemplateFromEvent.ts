@@ -130,6 +130,7 @@ export const createEventTemplateFromEvent = (
         description: true,
         coverImage: { select: COPYABLE_UPLOAD_SELECT },
         participationEnabled: true,
+        applicationRequired: true,
         discordPublishedChannelId: true,
         discordPublishedLocation: true,
       },
@@ -162,6 +163,7 @@ export const createEventTemplateFromEvent = (
             (visibilityRole) => visibilityRole.roleId,
           ),
           participationEnabled: sourceEvent.participationEnabled,
+          applicationRequired: sourceEvent.applicationRequired,
           ...toDiscordPublishPrefill(context, sourceEvent),
         },
       );

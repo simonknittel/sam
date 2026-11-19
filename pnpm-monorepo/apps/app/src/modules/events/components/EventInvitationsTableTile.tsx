@@ -1,4 +1,4 @@
-import { CitizenLink } from "@/modules/common/components/CitizenLink";
+import { CitizenCellLink } from "@/modules/common/components/CitizenCellLink";
 import { TableRowAlignment, TRow } from "@/modules/common/components/Table";
 import {
   TableTile,
@@ -210,16 +210,24 @@ const EventInvitationsTableRow = ({
 
   return (
     <TRow alignment={TableRowAlignment.Top}>
-      <td className="flex h-8 items-center overflow-hidden px-2">
-        <CitizenLink citizen={invitation.citizen} className="truncate" />
+      <td className="min-w-0">
+        <CitizenCellLink
+          className="h-8"
+          /** Only these fields: the citizen also has the roles of the filter */
+          citizen={{
+            id: invitation.citizen.id,
+            handle: invitation.citizen.handle,
+            deletedAt: invitation.citizen.deletedAt,
+          }}
+        />
       </td>
 
       <td className="flex h-8 items-center">
         {isOpen ? "Offen" : "Abgelehnt"}
       </td>
 
-      <td className="flex h-8 items-center overflow-hidden">
-        <CitizenLink citizen={invitation.invitedBy} className="truncate" />
+      <td className="min-w-0">
+        <CitizenCellLink className="h-8" citizen={invitation.invitedBy} />
       </td>
 
       <td className="flex h-8 items-center">
@@ -237,7 +245,12 @@ const EventInvitationsTableRow = ({
           {isOpen && (
             <WithdrawEventInvitation
               eventId={eventId}
-              citizen={invitation.citizen}
+              /** The client component gets only these fields */
+              citizen={{
+                id: invitation.citizen.id,
+                handle: invitation.citizen.handle,
+                deletedAt: invitation.citizen.deletedAt,
+              }}
             />
           )}
         </td>

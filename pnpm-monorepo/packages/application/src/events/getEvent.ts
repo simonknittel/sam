@@ -1,4 +1,7 @@
-import type { EventInvitationStatus } from "@sam-monorepo/domain";
+import type {
+  EventApplicationStatus,
+  EventInvitationStatus,
+} from "@sam-monorepo/domain";
 import * as z from "zod";
 import { requireCitizen, requirePermission, type Actor } from "../actor.js";
 import {
@@ -10,6 +13,7 @@ import {
 import type { ApplicationContext } from "../context.js";
 import { idSchema } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
+import { loadEventApplicationRows } from "./eventApplicationRows.js";
 import { loadEventInvitationRows } from "./eventInvitationRows.js";
 import {
   isAllowedToManageEvent,
@@ -50,6 +54,17 @@ export interface EventInvitationEntry {
   readonly created_at: string;
 }
 
+export interface EventApplicationEntry {
+  /** Null when the citizen is deleted */
+  readonly citizen: CitizenReference | null;
+  /** Only open and declined applications, see `loadEventApplicationRows()` */
+  readonly status: EventApplicationStatus;
+  readonly comment: string | null;
+  readonly decline_reason: string | null;
+  readonly declined_by: CitizenReference | null;
+  readonly created_at: string;
+}
+
 export interface GetEventOutput {
   readonly id: string;
   readonly name: string;
@@ -71,6 +86,12 @@ export interface GetEventOutput {
    * or be added, and the lineup is hidden. Always true for a Discord event.
    */
   readonly participation_enabled: boolean;
+  /**
+   * True when a citizen cannot sign up without an invitation, but applies,
+   * and a manager approves or declines the application. Always false for a
+   * Discord event.
+   */
+  readonly application_required: boolean;
   readonly created_by: CitizenReference | null;
   readonly managers: CitizenReference[];
   /**
@@ -84,6 +105,11 @@ export interface GetEventOutput {
    * not sign up later. The newest first.
    */
   readonly invitations: EventInvitationEntry[];
+  /**
+   * The open applications, and the declined applications of citizens who
+   * were not signed up later. The newest first.
+   */
+  readonly applications: EventApplicationEntry[];
   readonly can_manage: boolean;
   readonly can_manage_positions: boolean;
   /** False when the event has ended: then nothing can change */
@@ -138,9 +164,10 @@ const toEventOutput = async (
   const citizenId = actor.citizen?.id ?? null;
   const { discordUserId } = actor;
 
-  const [participants, invitations] = await Promise.all([
+  const [participants, invitations, applications] = await Promise.all([
     getParticipantEntries(context, event.participants),
     loadEventInvitationRows(context.prisma, event.id),
+    loadEventApplicationRows(context.prisma, event.id),
   ]);
 
   const canManage = isAllowedToManageEvent(actor, event);
@@ -159,6 +186,7 @@ const toEventOutput = async (
     source: toEventSourceType(event.source),
     lineup_enabled: event.lineupEnabled,
     participation_enabled: event.participationEnabled,
+    application_required: event.applicationRequired,
     created_by: toCitizenReference(event.createdBy),
     managers: toCitizenReferences(event.managers),
     participants,
@@ -169,6 +197,14 @@ const toEventOutput = async (
       decline_comment: invitation.declineComment,
       invited_by: toCitizenReference(invitation.invitedBy),
       created_at: invitation.createdAt.toISOString(),
+    })),
+    applications: applications.map((application) => ({
+      citizen: toCitizenReference(application.citizen),
+      status: application.status,
+      comment: application.comment,
+      decline_reason: application.declineReason,
+      declined_by: toCitizenReference(application.declinedBy),
+      created_at: application.createdAt.toISOString(),
     })),
     can_manage: canManage,
     can_manage_positions: isAllowedToManagePositions(actor, event),

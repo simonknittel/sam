@@ -4,6 +4,7 @@ import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { useSubmitConfirmation } from "@/modules/common/components/AlertDialog";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
+import { FormSection } from "@/modules/common/components/form/FormSection";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import { Select } from "@/modules/common/components/form/Select";
 import { TextInput } from "@/modules/common/components/form/TextInput";
@@ -11,8 +12,10 @@ import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
 import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { createEvent } from "@/modules/events/actions/createEvent";
-import { EventDescriptionField } from "@/modules/events/components/EventDescriptionField";
+import { EventDescriptionTextarea } from "@/modules/events/components/EventDescriptionField";
 import { EventDescriptionHint } from "@/modules/events/components/EventDescriptionHint";
+import { EventDescriptionPreview } from "@/modules/events/components/EventDescriptionPreview";
+import { useEventDescription } from "@/modules/events/hooks/useEventDescription";
 import { RolePicker } from "@/modules/roles/components/RolePicker/RolePicker";
 import { api } from "@/trpc/react";
 import {
@@ -26,11 +29,23 @@ import { FaGlobe, FaLock, FaSave } from "react-icons/fa";
 import { DiscordPublishTargetFields } from "../DiscordPublishTargetFields";
 import { EventCoverImageField } from "../EventCoverImageField";
 import { EventDateTimeField } from "../EventDateTimeField";
-import { EventParticipationField } from "../EventParticipationField";
+import { EventSwitchField } from "../EventSwitchField";
 import { RestrictedDiscordPublishDialog } from "../RestrictedDiscordPublishDialog";
 
 /** The "no template" option of the picker */
 const NO_TEMPLATE = "";
+
+/**
+ * A new event goes to Discord too, unless the user switches it off. A
+ * template decides itself: one without a publish preference does not
+ * publish, so that the template never publishes behind the back of the
+ * organizer.
+ */
+const isPublishingByDefault = (
+  template: {
+    readonly discordPublishTarget: EventDiscordPublishTarget | null;
+  } | null,
+) => (template ? template.discordPublishTarget !== null : true);
 
 interface Props {
   readonly className?: string;
@@ -86,13 +101,22 @@ export const CreateEventForm = ({
     selectedTemplate?.visibility ?? EventVisibility.PUBLIC,
   );
   const [isPublishing, setIsPublishing] = useState(
-    selectedTemplate?.discordPublishTarget != null,
+    isPublishingByDefault(selectedTemplate),
+  );
+  /** Only for the summary of the participation section: the switches are uncontrolled */
+  const [participationEnabled, setParticipationEnabled] = useState(
+    selectedTemplate?.participationEnabled ?? true,
+  );
+  const [applicationRequired, setApplicationRequired] = useState(
+    selectedTemplate?.applicationRequired ?? false,
   );
   const [previousPrefillKey, setPreviousPrefillKey] = useState(prefillKey);
   if (prefillKey !== previousPrefillKey) {
     setPreviousPrefillKey(prefillKey);
     setVisibility(selectedTemplate?.visibility ?? EventVisibility.PUBLIC);
-    setIsPublishing(selectedTemplate?.discordPublishTarget != null);
+    setIsPublishing(isPublishingByDefault(selectedTemplate));
+    setParticipationEnabled(selectedTemplate?.participationEnabled ?? true);
+    setApplicationRequired(selectedTemplate?.applicationRequired ?? false);
   }
 
   /**
@@ -106,6 +130,14 @@ export const CreateEventForm = ({
   const restrictedConfirmation = useSubmitConfirmation(
     visibility === EventVisibility.RESTRICTED && isPublishing,
   );
+
+  /** The preview of the description is only for Discord, thus it is in the Discord section */
+  const defaultDescription = getDefaultValueWithFallback(
+    "description",
+    selectedTemplate?.description ?? "",
+  );
+  const { description, setDescription, textareaRef } =
+    useEventDescription(defaultDescription);
 
   return (
     <form
@@ -148,12 +180,12 @@ export const CreateEventForm = ({
           autoFocus
         />
 
-        <EventDescriptionField
+        <EventDescriptionTextarea
           hint={<EventDescriptionHint />}
-          defaultValue={getDefaultValueWithFallback(
-            "description",
-            selectedTemplate?.description ?? "",
-          )}
+          defaultValue={defaultDescription}
+          description={description}
+          onDescriptionChange={setDescription}
+          ref={textareaRef}
           className="mt-4"
         />
 
@@ -164,49 +196,94 @@ export const CreateEventForm = ({
         )}
       </div>
 
-      <EventDateTimeField
-        name="startTime"
-        label="Start"
-        defaultValue={getDefaultValueWithFallback("startTime", "")}
-        className="mt-4"
-        required
-      />
+      {/* A phone has no room for two date fields side by side */}
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <EventDateTimeField
+          name="startTime"
+          label="Start"
+          defaultValue={getDefaultValueWithFallback("startTime", "")}
+          className="min-w-0"
+          required
+        />
 
-      <EventDateTimeField
-        name="endTime"
-        label="Ende"
-        defaultValue={getDefaultValueWithFallback("endTime", "")}
-        className="mt-4"
-        required
-      />
-
-      <div key={`visibility-${prefillKey}`}>
-        <VisibilityFields
-          visibility={visibility}
-          onVisibilityChange={setVisibility}
-          defaultRoleIds={selectedTemplate?.visibilityRoleIds ?? []}
+        <EventDateTimeField
+          name="endTime"
+          label="Ende"
+          defaultValue={getDefaultValueWithFallback("endTime", "")}
+          className="min-w-0"
+          required
         />
       </div>
 
-      <EventParticipationField
-        key={`participation-${prefillKey}`}
-        hint="Mitglieder können sich anmelden und für Posten der Aufstellung eingetragen werden. Ohne Teilnahme sind die Aufstellung und die Teilnehmer ausgeblendet."
-        defaultChecked={
-          submittedForm
-            ? submittedForm.get("participationEnabled") === "true"
-            : (selectedTemplate?.participationEnabled ?? true)
-        }
-        className="mt-4"
-      />
+      <div className="mt-4 flex flex-col gap-2">
+        <FormSection
+          heading="Sichtbarkeit"
+          summary={
+            visibility === EventVisibility.RESTRICTED
+              ? "Eingeschränkt"
+              : "Öffentlich"
+          }
+        >
+          <VisibilityFields
+            key={`visibility-${prefillKey}`}
+            visibility={visibility}
+            onVisibilityChange={setVisibility}
+            defaultRoleIds={selectedTemplate?.visibilityRoleIds ?? []}
+          />
+        </FormSection>
 
-      <div key={`discord-${prefillKey}`}>
-        <DiscordPublishFields
-          isPublishing={isPublishing}
-          onIsPublishingChange={setIsPublishing}
-          defaultTarget={selectedTemplate?.discordPublishTarget ?? null}
-          defaultChannelId={selectedTemplate?.discordPublishChannelId ?? null}
-          defaultLocation={selectedTemplate?.discordPublishLocation ?? null}
-        />
+        <FormSection
+          heading="Teilnahme"
+          summary={
+            participationEnabled
+              ? applicationRequired
+                ? "Mit Teilnahmeanfragen"
+                : "Aktiviert"
+              : "Deaktiviert"
+          }
+        >
+          <EventSwitchField
+            key={`participation-${prefillKey}`}
+            name="participationEnabled"
+            label="Teilnahme"
+            hint="Mitglieder können sich anmelden und für Posten der Aufstellung eingetragen werden. Ohne Teilnahme sind die Aufstellung und die Teilnehmer ausgeblendet."
+            defaultChecked={
+              submittedForm
+                ? submittedForm.get("participationEnabled") === "true"
+                : (selectedTemplate?.participationEnabled ?? true)
+            }
+            onCheckedChange={setParticipationEnabled}
+          />
+
+          <EventSwitchField
+            key={`application-${prefillKey}`}
+            name="applicationRequired"
+            label="Teilnahmeanfragen"
+            hint="Mitglieder fragen die Teilnahme an, und ein Manager nimmt jede Anfrage an oder lehnt sie ab. Manager und eingeladene Mitglieder können sich direkt anmelden."
+            defaultChecked={
+              submittedForm
+                ? submittedForm.get("applicationRequired") === "true"
+                : (selectedTemplate?.applicationRequired ?? false)
+            }
+            onCheckedChange={setApplicationRequired}
+          />
+        </FormSection>
+
+        <FormSection
+          heading="Discord"
+          summary={isPublishing ? "Veröffentlichen" : "Nicht veröffentlichen"}
+        >
+          <DiscordPublishFields
+            key={`discord-${prefillKey}`}
+            isPublishing={isPublishing}
+            onIsPublishingChange={setIsPublishing}
+            defaultTarget={selectedTemplate?.discordPublishTarget ?? null}
+            defaultChannelId={selectedTemplate?.discordPublishChannelId ?? null}
+            defaultLocation={selectedTemplate?.discordPublishLocation ?? null}
+          />
+
+          <EventDescriptionPreview description={description} />
+        </FormSection>
       </div>
 
       <SubmitButton icon={<FaSave />} className="mt-4 ml-auto">
@@ -271,10 +348,9 @@ interface DiscordPublishFieldsProps {
 }
 
 /**
- * Publishing the new event to Discord right after creation, off by default.
- * A template that carries a publish preference switches it on and prefills
- * the target; clearing the checkbox still wins, so the template never
- * publishes behind the organizer's back.
+ * Publishing the new event to Discord right after creation (see
+ * `isPublishingByDefault()`). A template with a publish preference prefills
+ * the target.
  */
 const DiscordPublishFields = ({
   isPublishing,
@@ -286,8 +362,8 @@ const DiscordPublishFields = ({
   const checkboxId = useId();
 
   /**
-   * Fetched lazily like the templates above, and only while the section is
-   * open — a manager who does not publish never waits on Discord.
+   * Fetched lazily like the templates above, and only while publishing is
+   * on — a manager who switches it off never waits on Discord.
    */
   const { data: channels, isPending } =
     api.events.getPublishableDiscordChannels.useQuery(undefined, {
@@ -295,8 +371,8 @@ const DiscordPublishFields = ({
     });
 
   return (
-    <>
-      <label htmlFor={checkboxId} className="mt-4 block">
+    <div>
+      <label htmlFor={checkboxId} className="block">
         Auf Discord veröffentlichen
       </label>
       <p className="mt-1 text-xs text-white/40">
@@ -326,7 +402,7 @@ const DiscordPublishFields = ({
             className="mt-2"
           />
         ))}
-    </>
+    </div>
   );
 };
 
@@ -342,8 +418,7 @@ const VisibilityFields = ({
   defaultRoleIds,
 }: VisibilityFieldsProps) => {
   return (
-    <>
-      <p className="mt-4">Sichtbarkeit</p>
+    <div>
       <RadioGroup
         label="Sichtbarkeit"
         name="visibility"
@@ -363,7 +438,6 @@ const VisibilityFields = ({
         ]}
         value={visibility}
         onChange={onVisibilityChange}
-        className="mt-2"
       />
 
       {visibility === EventVisibility.RESTRICTED && (
@@ -374,6 +448,6 @@ const VisibilityFields = ({
           className="mt-2"
         />
       )}
-    </>
+    </div>
   );
 };

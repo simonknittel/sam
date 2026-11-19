@@ -15,6 +15,16 @@ export {
   type AddEventParticipantsOutput,
 } from "./addEventParticipants.js";
 export {
+  approveEventApplications,
+  approveEventApplicationsInputSchema,
+  declineEventApplications,
+  declineEventApplicationsInputSchema,
+  type ApproveEventApplicationsInput,
+  type ApproveEventApplicationsOutput,
+  type DeclineEventApplicationsInput,
+  type DeclineEventApplicationsOutput,
+} from "./answerEventApplications.js";
+export {
   acceptEventInvitation,
   answerEventInvitationInputSchema,
   declineEventInvitation,
@@ -48,6 +58,12 @@ export {
   type EventActivityRowsInput,
 } from "./eventActivityRows.js";
 export {
+  findEventApplicationRows,
+  type EventApplicationDetails,
+  type EventApplicationRow,
+} from "./eventApplicationRows.js";
+export { toEventApplicationStatus } from "./eventApplicationStatus.js";
+export {
   DiscordSyncOutcome,
   discordPublishFieldsShape,
   publishEventToDiscord,
@@ -73,6 +89,8 @@ export {
   isAllowedToManagePositions,
   isEventUpdatable,
   isLineupVisible,
+  mustApplyForEvent,
+  type EventApplicationRequirementInput,
   type EventManageInput,
 } from "./eventManageRules.js";
 export {
@@ -104,6 +122,7 @@ export { findVisibleEvent } from "./findVisibleEvent.js";
 export {
   getEvent,
   getEventInputSchema,
+  type EventApplicationEntry,
   type EventInvitationEntry,
   type EventParticipantEntry,
   type GetEventInput,
@@ -133,6 +152,14 @@ export {
   notifyEventsStartingSoon,
   type NotifyEventsStartingSoonOutput,
 } from "./notifyEventsStartingSoon.js";
+export {
+  applyForEvent,
+  applyForEventInputSchema,
+  withdrawEventApplication,
+  withdrawEventApplicationInputSchema,
+  type ApplyForEventInput,
+  type WithdrawEventApplicationInput,
+} from "./ownEventApplication.js";
 export {
   findOwnEventParticipation,
   type AssignedEventPosition,

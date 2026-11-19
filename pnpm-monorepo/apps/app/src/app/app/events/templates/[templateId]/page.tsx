@@ -84,6 +84,7 @@ const EventTemplateDetails = async ({ templateId }: DetailsProps) => {
                 (visibilityRole) => visibilityRole.roleId,
               ),
               participationEnabled: template.participationEnabled,
+              applicationRequired: template.applicationRequired,
               discordPublishTarget: template.discordPublishTarget,
               discordPublishChannelId: template.discordPublishChannelId,
               discordPublishLocation: template.discordPublishLocation,

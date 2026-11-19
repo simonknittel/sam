@@ -11,7 +11,7 @@ import { EventTemplateDescriptionHint } from "@/modules/event-templates/componen
 import { DiscordPublishTargetFields } from "@/modules/events/components/DiscordPublishTargetFields";
 import { EventCoverImageField } from "@/modules/events/components/EventCoverImageField";
 import { EventDescriptionField } from "@/modules/events/components/EventDescriptionField";
-import { EventParticipationField } from "@/modules/events/components/EventParticipationField";
+import { EventSwitchField } from "@/modules/events/components/EventSwitchField";
 import { RolePicker } from "@/modules/roles/components/RolePicker/RolePicker";
 import {
   EventVisibility,
@@ -34,6 +34,7 @@ interface Props {
     readonly visibility: EventVisibility;
     readonly visibilityRoleIds: readonly string[];
     readonly participationEnabled: boolean;
+    readonly applicationRequired: boolean;
     readonly discordPublishTarget: EventDiscordPublishTarget | null;
     readonly discordPublishChannelId: string | null;
     readonly discordPublishLocation: string | null;
@@ -124,9 +125,19 @@ export const UpdateEventTemplateForm = ({
         />
       )}
 
-      <EventParticipationField
+      <EventSwitchField
+        name="participationEnabled"
+        label="Teilnahme"
         hint="Bei Events aus dieser Vorlage können sich Mitglieder anmelden und für Posten der Aufstellung eingetragen werden."
         defaultChecked={template.participationEnabled}
+        className="mt-4"
+      />
+
+      <EventSwitchField
+        name="applicationRequired"
+        label="Teilnahmeanfragen"
+        hint="Bei Events aus dieser Vorlage fragen Mitglieder die Teilnahme an, und ein Manager nimmt jede Anfrage an oder lehnt sie ab."
+        defaultChecked={template.applicationRequired}
         className="mt-4"
       />
 

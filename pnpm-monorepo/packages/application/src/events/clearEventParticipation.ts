@@ -1,6 +1,10 @@
 import { EventSource } from "@sam-monorepo/database/browser";
 import type { Citizen, Event, Prisma } from "@sam-monorepo/database/client";
 import {
+  withdrawOpenApplications,
+  type ApplicationOfCitizen,
+} from "./eventApplications.js";
+import {
   withdrawOpenInvitations,
   type InvitationOfCitizen,
 } from "./eventInvitations.js";
@@ -27,6 +31,7 @@ export interface ClearedEventParticipation {
   readonly clearedPositionCount: number;
   readonly deletedApplicationCount: number;
   readonly withdrawnInvitations: InvitationOfCitizen[];
+  readonly withdrawnApplications: ApplicationOfCitizen[];
 }
 
 export const NO_CLEARED_EVENT_PARTICIPATION: ClearedEventParticipation = {
@@ -35,13 +40,15 @@ export const NO_CLEARED_EVENT_PARTICIPATION: ClearedEventParticipation = {
   clearedPositionCount: 0,
   deletedApplicationCount: 0,
   withdrawnInvitations: [],
+  withdrawnApplications: [],
 };
 
 /**
  * The switch of the participation of an app event to false: soft-cancels
  * all active sign-ups (like a removal by a manager, the rows stay as
- * history), withdraws all open invitations, removes the assigned citizens of
- * all positions and deletes all applications. The positions stay. Takes the transaction client, thus the
+ * history), withdraws all open invitations and event applications, removes
+ * the assigned citizens of all positions and deletes all position
+ * applications. The positions stay. Takes the transaction client, thus the
  * change of the switch and the activity entry commit together with all of
  * it.
  */
@@ -89,6 +96,12 @@ export const clearEventParticipation = async (
     withdrawnAt: cancelledAt,
   });
 
+  const withdrawnApplications = await withdrawOpenApplications(transaction, {
+    eventId,
+    actorId: cancelledById,
+    closedAt: cancelledAt,
+  });
+
   return {
     cancelledParticipantCount: cancelledParticipants.length,
     cancelledCitizenIds: cancelledParticipants.flatMap((participant) =>
@@ -97,5 +110,6 @@ export const clearEventParticipation = async (
     clearedPositionCount,
     deletedApplicationCount,
     withdrawnInvitations,
+    withdrawnApplications,
   };
 };

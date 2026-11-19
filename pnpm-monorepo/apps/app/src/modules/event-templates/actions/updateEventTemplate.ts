@@ -70,6 +70,7 @@ export const updateEventTemplate = createAuthenticatedAction(
         visibility_role_ids,
         // The checkbox sends a value only while it is checked
         participation_enabled: formData.get("participationEnabled") === "true",
+        application_required: formData.get("applicationRequired") === "true",
         ...parseDiscordPublishFields(formData),
       };
     },

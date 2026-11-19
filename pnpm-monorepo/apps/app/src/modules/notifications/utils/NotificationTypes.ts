@@ -108,6 +108,13 @@ export const NOTIFICATIONS_APPS: NotificationApp[] = [
         category: "Events",
       },
       {
+        id: NotificationSettingType.EventApplicationAnswered,
+        title: "Antwort auf Teilnahmeanfrage",
+        description:
+          "Wenn ein Manager meine Teilnahmeanfrage annimmt oder ablehnt",
+        category: "Events",
+      },
+      {
         id: NotificationSettingType.EventManagerAdded,
         title: "Als Manager eingetragen",
         description: "Wenn mich jemand als Manager eines Events einträgt",
@@ -139,6 +146,13 @@ export const NOTIFICATIONS_APPS: NotificationApp[] = [
         title: "Antwort auf Einladung",
         description:
           "Nur als Manager oder Ersteller eines Events. Wenn jemand eine Einladung annimmt oder ablehnt.",
+        category: "Events",
+      },
+      {
+        id: NotificationSettingType.EventApplicationCreated,
+        title: "Neue Teilnahmeanfrage",
+        description:
+          "Nur als Manager oder Ersteller eines Events. Wenn jemand die Teilnahme anfragt.",
         category: "Events",
       },
     ],

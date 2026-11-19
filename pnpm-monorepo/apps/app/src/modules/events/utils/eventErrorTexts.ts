@@ -43,6 +43,20 @@ export const EVENT_ERROR_TEXTS = {
   [EventErrorMessage.CitizenNotInvited]:
     "Der Citizen hat keine offene Einladung zu diesem Event.",
   [EventErrorMessage.InvitationNotFound]: "Einladung nicht gefunden",
+  [EventErrorMessage.ApplicationRequired]:
+    "Für dieses Event musst du die Teilnahme anfragen.",
+  [EventErrorMessage.ApplicationNotRequired]:
+    "Für dieses Event kannst du dich direkt anmelden.",
+  [EventErrorMessage.AlreadyApplied]:
+    "Du hast die Teilnahme bereits angefragt.",
+  [EventErrorMessage.ApplicationDeclined]:
+    "Deine Teilnahmeanfrage wurde abgelehnt. Nur ein Manager kann dich noch hinzufügen oder einladen.",
+  [EventErrorMessage.InvitedInsteadOfApplication]:
+    "Du bist zu diesem Event eingeladen. Nimm die Einladung an.",
+  [EventErrorMessage.NoOpenApplication]:
+    "Du hast keine offene Teilnahmeanfrage für dieses Event.",
+  [EventErrorMessage.CitizenNotApplied]:
+    "Der Citizen hat keine offene Teilnahmeanfrage für dieses Event.",
   [EventErrorMessage.EndBeforeStart]: "Das Ende muss nach dem Start liegen.",
   [EventErrorMessage.DescriptionTooLong]: DESCRIPTION_TOO_LONG_TEXT,
   [EventErrorMessage.NoVisibilityRole]: "Wähle mindestens eine Rolle aus.",

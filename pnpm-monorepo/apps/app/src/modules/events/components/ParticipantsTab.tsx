@@ -11,12 +11,14 @@ import { DELETED_CITIZEN_LABEL } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { forbidden } from "next/navigation";
 import type { SearchParams } from "nuqs/server";
+import { getEventApplications } from "../queries/getEventApplications";
 import { getEventInvitations } from "../queries/getEventInvitations";
 import { getParticipants } from "../utils/getParticipants";
 import { isAllowedToManageEvent as _isAllowedToManageEvent } from "../utils/isAllowedToManageEvent";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
 import { CreateManagers } from "./CreateManagers";
 import { DeleteManager } from "./DeleteManager";
+import { EventApplicationsTableTile } from "./EventApplicationsTableTile";
 import { EventInvitationsTableFilters } from "./EventInvitationsTableFilters";
 import { EventInvitationsTableTile } from "./EventInvitationsTableTile";
 import { ParticipantsTableFilters } from "./ParticipantsTableFilters";
@@ -49,9 +51,10 @@ export const ParticipantsTab = async ({
   const canManageParticipants =
     isAppEvent && isAllowedToManageEvent && isEventUpdatable(event);
 
-  const [resolvedParticipants, invitations] = await Promise.all([
+  const [resolvedParticipants, invitations, applications] = await Promise.all([
     getParticipants(event),
     getEventInvitations(event),
+    getEventApplications(event),
   ]);
 
   return (
@@ -142,6 +145,14 @@ export const ParticipantsTab = async ({
           searchParams={searchParams}
         />
       </SidebarLayout>
+
+      {applications.length > 0 && (
+        <EventApplicationsTableTile
+          event={event}
+          applications={applications}
+          canManageParticipants={canManageParticipants}
+        />
+      )}
 
       {invitations.length > 0 && (
         <SidebarLayout

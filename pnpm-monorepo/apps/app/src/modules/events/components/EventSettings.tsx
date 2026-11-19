@@ -41,6 +41,11 @@ interface Props {
    */
   readonly participationTile?: ReactNode;
   /**
+   * The application switch, rendered by the page: it needs the count of the
+   * open applications
+   */
+  readonly applicationTile?: ReactNode;
+  /**
    * The Discord publishing card, rendered by the page: it needs a live
    * channel list from Discord and therefore stays a Server Component.
    */
@@ -57,6 +62,7 @@ export const EventSettings = ({
   className,
   event,
   participationTile,
+  applicationTile,
   discordCard,
   actionsTile,
 }: Props) => {
@@ -155,6 +161,8 @@ export const EventSettings = ({
       </Tile>
 
       {participationTile}
+
+      {applicationTile}
 
       {discordCard}
 

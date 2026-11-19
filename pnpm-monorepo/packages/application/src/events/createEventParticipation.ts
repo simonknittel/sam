@@ -31,7 +31,7 @@ export const createEventParticipation = (
       input.event_id,
     );
 
-    const signUp = await insertOwnParticipation(context, actor, {
+    const signUp = await insertOwnParticipation(context, actor, event, {
       eventId: event.id,
       citizenId,
       comment: input.comment || null,

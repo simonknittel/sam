@@ -5,8 +5,8 @@ export enum EventInvitationStatus {
   Accepted = "accepted",
   Declined = "declined",
   /**
-   * A manager withdrew it, added the citizen directly or turned off the
-   * participation of the event
+   * A manager withdrew it, added the citizen directly, approved the
+   * application of the citizen or turned off the participation of the event
    */
   Withdrawn = "withdrawn",
 }

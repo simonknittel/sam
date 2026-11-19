@@ -33,6 +33,11 @@ export const EVENT_ACTIVITY_TYPE_LABELS: Record<EventActivityType, string> = {
   [EventActivityType.INVITATION_ACCEPTED]: "Einladung angenommen",
   [EventActivityType.INVITATION_DECLINED]: "Einladung abgelehnt",
   [EventActivityType.INVITATION_WITHDRAWN]: "Einladung zurückgezogen",
+  [EventActivityType.APPLICATION_CREATED]: "Teilnahmeanfrage",
+  [EventActivityType.APPLICATION_APPROVED]: "Teilnahmeanfrage angenommen",
+  [EventActivityType.APPLICATION_DECLINED]: "Teilnahmeanfrage abgelehnt",
+  [EventActivityType.APPLICATION_WITHDRAWN]: "Teilnahmeanfrage zurückgezogen",
+  [EventActivityType.APPLICATION_REQUIREMENT_TOGGLED]: "Teilnahmeanfragen",
 };
 
 export const EVENT_SCHEDULE_TYPE_LABEL = "Beginn/Ende";
