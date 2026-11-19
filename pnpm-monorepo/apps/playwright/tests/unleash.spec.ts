@@ -115,14 +115,13 @@ test("the kill switch flag takes the log analyzer offline, and the retry of the 
   /** Tests on other workers open the log analyzer at the same time */
   const userScope = { userId: citizen.user.id };
 
-  const introduction = page.getByText(
-    "Der Log Analyzer wertet die Game Logs von Star Citizen aus",
-  );
+  /** The guide stays outside of the error tile, thus the button is the mark */
+  const folderButton = page.getByRole("button", { name: "Ordner auswählen" });
   const tileError = page.getByText("Ein unerwarteter Fehler ist aufgetreten");
 
   await setUnleashFlag(UNLEASH_FLAG.CrashLogAnalyzer, false, userScope);
   await expectFlagPropagation
-    .poll(() => pageShows(page, "/app/tools/log-analyzer", () => introduction))
+    .poll(() => pageShows(page, "/app/tools/log-analyzer", () => folderButton))
     .toBe(true);
 
   await setUnleashFlag(UNLEASH_FLAG.CrashLogAnalyzer, true, userScope);
@@ -152,9 +151,9 @@ test("the kill switch flag takes the log analyzer offline, and the retry of the 
    */
   await setUnleashFlag(UNLEASH_FLAG.CrashLogAnalyzer, false, userScope);
   await expect(async () => {
-    if (!(await introduction.isVisible()))
+    if (!(await folderButton.isVisible()))
       await retryButton.click({ timeout: RETRY_CLICK_TIMEOUT });
-    await expect(introduction).toBeVisible({
+    await expect(folderButton).toBeVisible({
       timeout: RETRY_RENDER_TIMEOUT,
     });
   }).toPass({ timeout: FLAG_PROPAGATION_TIMEOUT });
