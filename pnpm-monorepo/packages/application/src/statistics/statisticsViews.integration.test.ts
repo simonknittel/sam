@@ -269,9 +269,13 @@ test("counts an event that is not deleted on its start day in Europe/Berlin, als
   ).toEqual({ "2026-10-24": 0, "2026-10-25": 2, "2026-10-26": 0 });
 });
 
-test("sums the new SILC of each day without the deleted and the negative transactions", async () => {
+test("sums the new SILC of each day without the deleted, the negative and the SINcome transactions", async () => {
   const receiver = await prisma.citizen.create({
     data: { handle: "receiver" },
+  });
+  /** The end of its collection phase books a negative balance to 0 */
+  const cycle = await prisma.profitDistributionCycle.create({
+    data: { title: "Q3", collectionEndsAt: new Date("2026-10-25T10:00:00Z") },
   });
   await prisma.silcTransaction.createMany({
     data: [
@@ -282,6 +286,11 @@ test("sums the new SILC of each day without the deleted and the negative transac
         value: 50,
         createdAt: new Date("2026-10-25T12:00:00Z"),
         deletedAt: new Date("2026-10-25T13:00:00Z"),
+      },
+      {
+        value: 40,
+        createdAt: new Date("2026-10-25T14:00:00Z"),
+        profitDistributionCycleId: cycle.id,
       },
       // 23:30 CET on 2026-10-25
       { value: 100, createdAt: new Date("2026-10-25T22:30:00Z") },
