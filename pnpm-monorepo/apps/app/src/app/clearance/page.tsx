@@ -61,74 +61,28 @@ export default async function Page() {
           </p>
         </div>
 
-        <details>
-          <summary className="mt-4 cursor-pointer text-center text-xs text-neutral-500 hover:text-interaction-500 hover:underline focus-visible:text-interaction-500 focus-visible:underline active:text-interaction-300 active:underline">
-            Benutzerdetails anzeigen
-          </summary>
+        <div className="mt-4 flex flex-col items-center gap-4 px-4">
+          <dl className="flex max-w-full flex-col text-xs text-neutral-500">
+            <UserDetail
+              label="Discord-ID"
+              value={authentication.session.discordId}
+            />
+            <UserDetail
+              label="User-ID"
+              value={authentication.session.user.id}
+            />
+            <UserDetail
+              label="E-Mail-Adresse"
+              value={authentication.session.user.email}
+            />
+            <UserDetail
+              label="Spynet-Eintrag"
+              value={authentication.session.entity?.id}
+            />
+          </dl>
 
-          <div className="mt-4 flex flex-col items-center gap-4 px-4">
-            <section className="flex max-w-full flex-col gap-2 text-xs text-neutral-500">
-              <div>
-                <p className="mb-1 font-bold">Discord</p>
-
-                <div className="flex gap-1">
-                  <p className="w-28 flex-none">ID:</p>
-                  <p
-                    className="flex-1 truncate"
-                    title={authentication.session.discordId ?? undefined}
-                  >
-                    {authentication.session.discordId}
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <p className="mb-1 font-bold">Benutzer</p>
-
-                <div className="flex gap-1">
-                  <p className="w-28 flex-none">User ID:</p>
-
-                  <p
-                    className="flex-1 truncate"
-                    title={authentication.session.user.id}
-                  >
-                    {authentication.session.user.id}
-                  </p>
-                </div>
-
-                <div className="flex gap-1">
-                  <p className="w-28 flex-none">E-Mail-Adresse:</p>
-                  <p
-                    className="flex-1 truncate"
-                    title={authentication.session.user.email || undefined}
-                  >
-                    {authentication.session.user.email}
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <p className="mb-1 font-bold">Citizen</p>
-
-                {authentication.session.entity ? (
-                  <div className="flex gap-1">
-                    <p className="w-28 flex-none">Internal ID:</p>
-                    <p
-                      className="flex-1 truncate"
-                      title={authentication.session.entity.id}
-                    >
-                      {authentication.session.entity.id}
-                    </p>
-                  </div>
-                ) : (
-                  "-"
-                )}
-              </div>
-            </section>
-
-            <ClearanceLogout />
-          </div>
-        </details>
+          <ClearanceLogout />
+        </div>
       </main>
 
       <div className="mt-4 h-px w-2 bg-neutral-700" />
@@ -139,3 +93,19 @@ export default async function Page() {
     </div>
   );
 }
+
+interface UserDetailProps {
+  readonly label: string;
+  readonly value: string | null | undefined;
+}
+
+const UserDetail = ({ label, value }: UserDetailProps) => {
+  return (
+    <div className="flex gap-1">
+      <dt className="w-28 flex-none">{label}:</dt>
+      <dd className="flex-1 truncate" title={value || undefined}>
+        {value || "-"}
+      </dd>
+    </div>
+  );
+};
