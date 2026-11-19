@@ -5,7 +5,7 @@ import type { ApplicationContext } from "../context.js";
 import { NotFoundError } from "../errors.js";
 import { idSchema } from "../pagination.js";
 import { canChangeRoleAssignment } from "../roles/roleAssignmentPermissions.js";
-import { loadVisibleRoleIds } from "../roles/roleVisibility.js";
+import { isRoleVisible, loadVisibleRoleIds } from "../roles/roleVisibility.js";
 import { getMonthlySalaryOfRoles } from "../silc/monthlySalaryOfRoles.js";
 import { withSpan } from "../withSpan.js";
 import { hasBirthdayTodaySafely } from "./birthdays.js";
@@ -153,10 +153,15 @@ export const getCitizenProfile = (
           citizen,
           context.now(),
         ),
-        roleAssignments: citizen.roleAssignments.map((roleAssignment) => ({
-          roleId: roleAssignment.roleId,
-          currentLevel: roleAssignment.currentLevel,
-        })),
+        /** The ids of the roles that the actor cannot see stay on the server */
+        roleAssignments: citizen.roleAssignments
+          .filter((roleAssignment) =>
+            isRoleVisible(actor, roleAssignment.roleId),
+          )
+          .map((roleAssignment) => ({
+            roleId: roleAssignment.roleId,
+            currentLevel: roleAssignment.currentLevel,
+          })),
       },
       avatarUrl: citizen.user?.image ?? null,
       isCurrentCitizen,
