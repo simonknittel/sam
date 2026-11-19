@@ -116,6 +116,7 @@ export const createEvent = createAuthenticatedAction(
       ...parseEventDetailsFormData(formData),
       // The checkbox sends a value only while it is checked
       participation_enabled: formData.get("participationEnabled") === "true",
+      application_required: formData.get("applicationRequired") === "true",
       coverImageId: formData.get("coverImageId") || undefined,
       templateId: formData.get("templateId") || undefined,
       keepTemplateCover: formData.get("keepTemplateCover") === "1",

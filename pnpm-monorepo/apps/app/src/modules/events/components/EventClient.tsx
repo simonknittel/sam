@@ -27,7 +27,9 @@ import { useNow } from "next-intl";
 import Image from "next/image";
 import { FaBook, FaCheck, FaClock, FaUser } from "react-icons/fa";
 import { MdWorkspaces } from "react-icons/md";
+import type { OwnEventApplication } from "./EventApplicationControls";
 import styles from "./EventClient.module.css";
+import type { OpenEventInvitation } from "./EventInvitationAnswerForm";
 import { EventParticipationButton } from "./EventParticipationButton";
 
 /**
@@ -57,6 +59,11 @@ interface EventCard extends Readonly<
     | "participationEnabled"
   >
 > {
+  /**
+   * True when the viewer cannot sign up without an invitation, but applies
+   * (see `mustApplyForEvent()`)
+   */
+  readonly applicationRequired: boolean;
   readonly coverImage: EventCoverImage | null;
   readonly participantCount: number;
 }
@@ -66,6 +73,10 @@ interface Props {
   readonly event: EventCard;
   /** The active participation of the viewer, if there is one */
   readonly ownParticipation: Pick<EventParticipantRow, "comment"> | null;
+  /** The open invitation of the viewer, if there is one */
+  readonly openInvitation: OpenEventInvitation | null;
+  /** The latest application of the viewer, if there is one */
+  readonly ownApplication: OwnEventApplication | null;
   readonly index: number;
   readonly showLineupButton?: boolean;
   readonly showBriefingButton?: boolean;
@@ -77,6 +88,8 @@ export const EventClient = ({
   className,
   event,
   ownParticipation,
+  openInvitation,
+  ownApplication,
   index,
   showLineupButton,
   showBriefingButton,
@@ -262,6 +275,9 @@ export const EventClient = ({
                 isSignedUp={isCurrentCitizenParticipating}
                 hasCancelled={hasCancelledParticipation}
                 comment={ownParticipation?.comment ?? null}
+                openInvitation={openInvitation}
+                applicationRequired={event.applicationRequired}
+                ownApplication={ownApplication}
               />
             )}
           </div>

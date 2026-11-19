@@ -65,6 +65,16 @@ const invitationCreatedPayloadSchema = z.object({
   message: z.string().nullable(),
 });
 
+const applicationDeclinedPayloadSchema = z.object({
+  citizenId: z.string(),
+  reason: z.string().nullable(),
+});
+
+const applicationRequirementToggledPayloadSchema = z.object({
+  enabled: z.boolean(),
+  approvedApplicationCount: z.number(),
+});
+
 interface Input {
   readonly eventId: EventDetails["id"];
   readonly filters?: ActivityFilters;
@@ -342,6 +352,60 @@ const buildActivityEntry = (activity: EventActivityRow): ActivityEntry => {
         message: "Einladung zurückgezogen",
         target: affectedCitizenTarget,
       };
+
+    case EventActivityType.APPLICATION_CREATED: {
+      const payload = commentPayloadSchema.safeParse(activity.payload);
+      return {
+        ...base,
+        message: "Teilnahme angefragt",
+        target: affectedCitizenTarget,
+        comment: payload.data?.comment ?? null,
+      };
+    }
+
+    case EventActivityType.APPLICATION_APPROVED:
+      return {
+        ...base,
+        message: "Teilnahmeanfrage angenommen",
+        target: affectedCitizenTarget,
+      };
+
+    case EventActivityType.APPLICATION_DECLINED: {
+      const payload = applicationDeclinedPayloadSchema.safeParse(
+        activity.payload,
+      );
+      return {
+        ...base,
+        message: "Teilnahmeanfrage abgelehnt",
+        target: affectedCitizenTarget,
+        comment: payload.data?.reason ?? null,
+      };
+    }
+
+    case EventActivityType.APPLICATION_WITHDRAWN:
+      return {
+        ...base,
+        message: "Teilnahmeanfrage zurückgezogen",
+        target: affectedCitizenTarget,
+      };
+
+    case EventActivityType.APPLICATION_REQUIREMENT_TOGGLED: {
+      const payload = applicationRequirementToggledPayloadSchema.safeParse(
+        activity.payload,
+      );
+      if (!payload.success)
+        return { ...base, message: "Teilnahmeanfragen geändert" };
+      if (payload.data.enabled)
+        return { ...base, message: "Teilnahmeanfragen eingeschaltet" };
+
+      const count = payload.data.approvedApplicationCount;
+      return {
+        ...base,
+        message: `Teilnahmeanfragen abgeschaltet (${count} ${
+          count === 1 ? "Anfrage" : "Anfragen"
+        } angenommen)`,
+      };
+    }
 
     default:
       throw new Error(

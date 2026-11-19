@@ -1434,6 +1434,23 @@ export const AuditEventDefinitions: {
       `Event template "${data.name}" updated (${data.templateId})`,
   },
 
+  [AuditEventType.EVENT_TEMPLATE_UPDATED_V3]: {
+    type: AuditEventType.EVENT_TEMPLATE_UPDATED_V3,
+    app: SystemLogApp.Events,
+    data: {
+      templateId: "string",
+      previousName: "string",
+      name: "string",
+      visibility: "PUBLIC",
+      visibilityRoleIds: ["string"],
+      coverImageChanged: false,
+      participationEnabled: true,
+      applicationRequired: false,
+    },
+    message: (data) =>
+      `Event template "${data.name}" updated (${data.templateId})`,
+  },
+
   [AuditEventType.EVENT_TEMPLATE_DUPLICATED]: {
     type: AuditEventType.EVENT_TEMPLATE_DUPLICATED,
     app: SystemLogApp.Events,
@@ -2706,6 +2723,67 @@ export const AuditEventDefinitions: {
     },
     message: (data) =>
       `The invitation of citizen ${data.citizenId} to event ${data.eventId} was withdrawn (invitation: ${data.invitationId})`,
+  },
+
+  [AuditEventType.EVENT_APPLICATION_REQUIREMENT_CHANGED]: {
+    type: AuditEventType.EVENT_APPLICATION_REQUIREMENT_CHANGED,
+    app: SystemLogApp.Events,
+    data: {
+      eventId: "string",
+      enabled: false,
+    },
+    message: (data) =>
+      data.enabled
+        ? `Event applications required (event: ${data.eventId})`
+        : `Event applications no longer required (event: ${data.eventId})`,
+  },
+
+  [AuditEventType.EVENT_APPLICATION_CREATED]: {
+    type: AuditEventType.EVENT_APPLICATION_CREATED,
+    app: SystemLogApp.Events,
+    data: {
+      eventId: "string",
+      citizenId: "string",
+      applicationId: "string",
+    },
+    message: (data) =>
+      `Citizen ${data.citizenId} applied for event ${data.eventId} (application: ${data.applicationId})`,
+  },
+
+  [AuditEventType.EVENT_APPLICATION_APPROVED]: {
+    type: AuditEventType.EVENT_APPLICATION_APPROVED,
+    app: SystemLogApp.Events,
+    data: {
+      eventId: "string",
+      citizenId: "string",
+      applicationId: "string",
+    },
+    message: (data) =>
+      `The application of citizen ${data.citizenId} for event ${data.eventId} was approved (application: ${data.applicationId})`,
+  },
+
+  [AuditEventType.EVENT_APPLICATION_DECLINED]: {
+    type: AuditEventType.EVENT_APPLICATION_DECLINED,
+    app: SystemLogApp.Events,
+    data: {
+      eventId: "string",
+      citizenId: "string",
+      applicationId: "string",
+    },
+    message: (data) =>
+      `The application of citizen ${data.citizenId} for event ${data.eventId} was declined (application: ${data.applicationId})`,
+  },
+
+  [AuditEventType.EVENT_APPLICATION_WITHDRAWN]: {
+    type: AuditEventType.EVENT_APPLICATION_WITHDRAWN,
+    app: SystemLogApp.Events,
+    data: {
+      eventId: "string",
+      citizenId: "string",
+      applicationId: "string",
+    },
+    message: (data) =>
+      `The application of citizen ${data.citizenId} for event ${data.eventId} was withdrawn (application: ${data.applicationId})`,
   },
 
   [AuditEventType.CITIZENS_PER_ROLE_COUNTED]: {

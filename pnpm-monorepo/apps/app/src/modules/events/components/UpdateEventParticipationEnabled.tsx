@@ -1,14 +1,7 @@
 "use client";
 
-import { useAction } from "@/modules/actions/utils/useAction";
-import {
-  AlertDialog,
-  useSubmitConfirmation,
-} from "@/modules/common/components/AlertDialog";
-import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
-import clsx from "clsx";
-import { useRef, useState, type FormEvent } from "react";
 import { updateEventParticipationEnabled } from "../actions/updateEventParticipationEnabled";
+import { EventSwitchForm } from "./EventSwitchForm";
 
 interface Props {
   readonly className?: string;
@@ -37,70 +30,17 @@ export const UpdateEventParticipationEnabled = ({
   eventId,
   participationEnabled,
   activeParticipantCount,
-}: Props) => {
-  const { isPending, formAction } = useAction(updateEventParticipationEnabled);
-  const confirmation = useSubmitConfirmation();
-  /**
-   * "Abbrechen" mounts a new switch with the value of the page. A reset of
-   * the form would change the value without React noticing (React follows
-   * only the writes to the `checked` property), and the next click would
-   * then send no change event.
-   */
-  const [switchKey, setSwitchKey] = useState(0);
-  /**
-   * True after the confirm button submitted the form. The dialog closes
-   * after the submission too, and then the switch must stay off.
-   */
-  const isConfirmedRef = useRef(false);
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    // Only the switch to false asks for a confirmation
-    if (new FormData(event.currentTarget).has("value")) return;
-
-    confirmation.onSubmit(event);
-    // The dialog opens with a prevented submission, the confirm button submits
-    isConfirmedRef.current = !event.defaultPrevented;
-  };
-
-  const handleClose = () => {
-    confirmation.close();
-    // "Abbrechen" or Escape: the participation stays on
-    if (!isConfirmedRef.current) setSwitchKey((key) => key + 1);
-  };
-
-  /**
-   * Uncontrolled: React resets the form after the action, thus the switch
-   * shows the value of the page that the action refreshed
-   */
-  return (
-    <form
-      action={formAction}
-      onSubmit={handleSubmit}
-      className={clsx("flex items-center", className)}
-    >
-      <input type="hidden" name="eventId" value={eventId} />
-
-      {/* Before the switch, thus the confirm button is the default button */}
-      <AlertDialog
-        isOpen={confirmation.isOpen}
-        onClose={handleClose}
-        title="Teilnahme abschalten?"
-        description={`${getCancellationText(activeParticipantCount)} Die Zuweisungen und Bewerbungen der Aufstellung werden entfernt, die Posten bleiben erhalten. Beim Einschalten wird nichts wiederhergestellt.`}
-        confirmLabel="Abschalten"
-      />
-
-      <YesNoCheckbox
-        key={switchKey}
-        name="value"
-        value="true"
-        aria-label="Teilnahme"
-        disabled={isPending}
-        defaultChecked={participationEnabled}
-        onChange={(changeEvent) => changeEvent.target.form?.requestSubmit()}
-        yesLabel="Aktiviert"
-        noLabel="Deaktiviert"
-        labelClassName="w-auto"
-      />
-    </form>
-  );
-};
+}: Props) => (
+  <EventSwitchForm
+    className={className}
+    action={updateEventParticipationEnabled}
+    eventId={eventId}
+    ariaLabel="Teilnahme"
+    defaultChecked={participationEnabled}
+    switchOffConfirmation={{
+      title: "Teilnahme abschalten?",
+      description: `${getCancellationText(activeParticipantCount)} Offene Einladungen und Teilnahmeanfragen werden zurückgezogen. Die Zuweisungen und Bewerbungen der Aufstellung werden entfernt, die Posten bleiben erhalten. Beim Einschalten wird nichts wiederhergestellt.`,
+      confirmLabel: "Abschalten",
+    }}
+  />
+);

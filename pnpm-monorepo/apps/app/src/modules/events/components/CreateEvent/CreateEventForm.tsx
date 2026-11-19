@@ -26,7 +26,7 @@ import { FaGlobe, FaLock, FaSave } from "react-icons/fa";
 import { DiscordPublishTargetFields } from "../DiscordPublishTargetFields";
 import { EventCoverImageField } from "../EventCoverImageField";
 import { EventDateTimeField } from "../EventDateTimeField";
-import { EventParticipationField } from "../EventParticipationField";
+import { EventSwitchField } from "../EventSwitchField";
 import { RestrictedDiscordPublishDialog } from "../RestrictedDiscordPublishDialog";
 
 /** The "no template" option of the picker */
@@ -188,13 +188,28 @@ export const CreateEventForm = ({
         />
       </div>
 
-      <EventParticipationField
+      <EventSwitchField
         key={`participation-${prefillKey}`}
+        name="participationEnabled"
+        label="Teilnahme"
         hint="Mitglieder können sich anmelden und für Posten der Aufstellung eingetragen werden. Ohne Teilnahme sind die Aufstellung und die Teilnehmer ausgeblendet."
         defaultChecked={
           submittedForm
             ? submittedForm.get("participationEnabled") === "true"
             : (selectedTemplate?.participationEnabled ?? true)
+        }
+        className="mt-4"
+      />
+
+      <EventSwitchField
+        key={`application-${prefillKey}`}
+        name="applicationRequired"
+        label="Teilnahmeanfragen"
+        hint="Mitglieder fragen die Teilnahme an, und ein Manager nimmt jede Anfrage an oder lehnt sie ab. Manager und eingeladene Mitglieder können sich direkt anmelden."
+        defaultChecked={
+          submittedForm
+            ? submittedForm.get("applicationRequired") === "true"
+            : (selectedTemplate?.applicationRequired ?? false)
         }
         className="mt-4"
       />

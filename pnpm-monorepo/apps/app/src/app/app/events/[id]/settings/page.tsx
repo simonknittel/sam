@@ -8,6 +8,7 @@ import { getPublishableGuildChannels } from "@/modules/discord/utils/getPublisha
 import { SaveEventAsTemplateButton } from "@/modules/event-templates/components/SaveEventAsTemplateButton";
 import { EventDiscordSettings } from "@/modules/events/components/EventDiscordSettings";
 import { EventSettings } from "@/modules/events/components/EventSettings";
+import { UpdateEventApplicationRequired } from "@/modules/events/components/UpdateEventApplicationRequired";
 import { UpdateEventParticipationEnabled } from "@/modules/events/components/UpdateEventParticipationEnabled";
 import { getEventById } from "@/modules/events/queries/getEventById";
 import { getEventUrl } from "@/modules/events/utils/eventConstraints";
@@ -107,6 +108,22 @@ export default async function Page({
               />
             </Tile>
           ) : null
+        }
+        applicationTile={
+          <Tile heading="Teilnahmeanfragen">
+            <p className="text-sm text-neutral-400">
+              Mitglieder können sich nicht selbst anmelden, sondern fragen die
+              Teilnahme an. Ein Manager nimmt jede Anfrage an oder lehnt sie ab.
+              Manager und eingeladene Mitglieder können sich direkt anmelden.
+              Beim Abschalten werden die offenen Anfragen angenommen.
+            </p>
+
+            <UpdateEventApplicationRequired
+              eventId={event.id}
+              applicationRequired={event.applicationRequired}
+              className="mt-4"
+            />
+          </Tile>
         }
         /**
          * Its own boundary: the channel list is a live Discord call, so the

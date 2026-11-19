@@ -9,16 +9,24 @@ import { SubmitButton } from "@/modules/common/components/SubmitButton";
 import { cancelEventParticipation } from "@/modules/events/actions/cancelEventParticipation";
 import { signUpForEvent } from "@/modules/events/actions/signUpForEvent";
 import { updateEventParticipationComment } from "@/modules/events/actions/updateEventParticipationComment";
-import { EVENT_PARTICIPATION_TEXT_MAX_LENGTH } from "@sam-monorepo/domain";
+import {
+  EVENT_PARTICIPATION_TEXT_MAX_LENGTH,
+  EventApplicationStatus,
+} from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { useState } from "react";
 import {
   FaCheck,
   FaEnvelope,
+  FaHourglassHalf,
   FaSave,
   FaSignInAlt,
   FaTimes,
 } from "react-icons/fa";
+import {
+  EventApplicationControls,
+  type OwnEventApplication,
+} from "./EventApplicationControls";
 import {
   EventInvitationAnswerForm,
   type OpenEventInvitation,
@@ -38,6 +46,13 @@ export interface EventParticipationControlsProps {
   /** Called after the viewer accepted or declined the open invitation */
   readonly onInvitationAnswered?: () => void;
   /**
+   * True when the viewer cannot sign up without an invitation, but applies
+   * (see `mustApplyForEvent()`)
+   */
+  readonly applicationRequired?: boolean;
+  /** The latest application of the viewer */
+  readonly ownApplication?: OwnEventApplication | null;
+  /**
    * Only the sign-up dialog sets this. On the event page, the focus would
    * scroll the page and open the keyboard of a phone.
    */
@@ -54,6 +69,8 @@ export const EventParticipationControls = ({
   openInvitation = null,
   hasDeclinedInvitation = false,
   onInvitationAnswered,
+  applicationRequired = false,
+  ownApplication = null,
   autoFocusComment,
 }: EventParticipationControlsProps) => {
   /**
@@ -95,6 +112,10 @@ export const EventParticipationControls = ({
             isSignedUp={isSignedUp}
             hasOpenInvitation={openInvitation !== null}
             hasDeclinedInvitation={hasDeclinedInvitation}
+            /** A declined application says nothing while the viewer can sign up */
+            applicationStatus={
+              applicationRequired ? (ownApplication?.status ?? null) : null
+            }
             hasCancelled={hasCancelled}
           />
         </p>
@@ -114,7 +135,11 @@ export const EventParticipationControls = ({
               </Button2>
             )}
             title="Vom Event abmelden?"
-            description="Deine Posten in der Aufstellung und deine Bewerbungen werden dabei entfernt."
+            description={
+              applicationRequired
+                ? "Deine Posten in der Aufstellung und deine Bewerbungen werden dabei entfernt. Für eine erneute Teilnahme musst du die Teilnahme wieder anfragen."
+                : "Deine Posten in der Aufstellung und deine Bewerbungen werden dabei entfernt."
+            }
             confirmLabel="Abmelden"
           />
         )}
@@ -142,28 +167,43 @@ export const EventParticipationControls = ({
         />
       )}
 
-      {participationOpen && !isSignedUp && !openInvitation && (
-        <form action={signUp.formAction} className="mt-2">
-          <input type="hidden" name="eventId" value={eventId} />
-
-          <Textarea
-            name="comment"
-            label="Kommentar"
-            hint={`optional, max. ${EVENT_PARTICIPATION_TEXT_MAX_LENGTH} Zeichen`}
-            maxLength={EVENT_PARTICIPATION_TEXT_MAX_LENGTH}
-            value={signUpComment}
-            onChange={(changeEvent) =>
-              setSignUpComment(changeEvent.target.value)
-            }
-            classNameTextarea="h-20"
-            autoFocus={autoFocusComment}
+      {participationOpen &&
+        !isSignedUp &&
+        !openInvitation &&
+        applicationRequired && (
+          <EventApplicationControls
+            eventId={eventId}
+            ownApplication={ownApplication}
+            autoFocusComment={autoFocusComment}
+            className="mt-2"
           />
+        )}
 
-          <SubmitButton icon={<FaSignInAlt />} className="mt-2 ml-auto">
-            Anmelden
-          </SubmitButton>
-        </form>
-      )}
+      {participationOpen &&
+        !isSignedUp &&
+        !openInvitation &&
+        !applicationRequired && (
+          <form action={signUp.formAction} className="mt-2">
+            <input type="hidden" name="eventId" value={eventId} />
+
+            <Textarea
+              name="comment"
+              label="Kommentar"
+              hint={`optional, max. ${EVENT_PARTICIPATION_TEXT_MAX_LENGTH} Zeichen`}
+              maxLength={EVENT_PARTICIPATION_TEXT_MAX_LENGTH}
+              value={signUpComment}
+              onChange={(changeEvent) =>
+                setSignUpComment(changeEvent.target.value)
+              }
+              classNameTextarea="h-20"
+              autoFocus={autoFocusComment}
+            />
+
+            <SubmitButton icon={<FaSignInAlt />} className="mt-2 ml-auto">
+              Anmelden
+            </SubmitButton>
+          </form>
+        )}
 
       {participationOpen && isSignedUp && (
         <>
@@ -196,6 +236,7 @@ interface ParticipationStateProps {
   readonly isSignedUp: boolean;
   readonly hasOpenInvitation: boolean;
   readonly hasDeclinedInvitation: boolean;
+  readonly applicationStatus: EventApplicationStatus | null;
   readonly hasCancelled: boolean;
 }
 
@@ -203,6 +244,7 @@ const ParticipationState = ({
   isSignedUp,
   hasOpenInvitation,
   hasDeclinedInvitation,
+  applicationStatus,
   hasCancelled,
 }: ParticipationStateProps) => {
   if (isSignedUp)
@@ -218,6 +260,22 @@ const ParticipationState = ({
       <>
         <FaEnvelope className="text-yellow-500" />
         Eingeladen
+      </>
+    );
+
+  if (applicationStatus === EventApplicationStatus.Open)
+    return (
+      <>
+        <FaHourglassHalf className="text-yellow-500" />
+        Teilnahme angefragt
+      </>
+    );
+
+  if (applicationStatus === EventApplicationStatus.Declined)
+    return (
+      <>
+        <FaTimes className="text-red-500" />
+        Teilnahmeanfrage abgelehnt
       </>
     );
 

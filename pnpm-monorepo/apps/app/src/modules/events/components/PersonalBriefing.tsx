@@ -6,6 +6,7 @@ import { EventSource } from "@sam-monorepo/database/client";
 import { EventInvitationStatus } from "@sam-monorepo/domain";
 import { FaCheck, FaTimes } from "react-icons/fa";
 import { getOwnEventParticipation } from "../queries/getOwnEventParticipation";
+import { mustApplyForEvent } from "../utils/mustApplyForEvent";
 import { EventParticipationControls } from "./EventParticipationControls";
 
 interface Props {
@@ -32,8 +33,13 @@ export const PersonalBriefing = async ({ className, event }: Props) => {
           participant.discordUserId === discordUserId),
     ) ?? null;
 
-  const { assignedPositions, invitation, ...ownParticipation } =
-    await getOwnEventParticipation(event.id);
+  const [
+    { assignedPositions, invitation, application, ...ownParticipation },
+    applicationRequired,
+  ] = await Promise.all([
+    getOwnEventParticipation(event.id),
+    mustApplyForEvent(event),
+  ]);
   /**
    * Only the viewer's own state distinguishes "cancelled" from "never
    * signed up" — the loaded event carries active rows only.
@@ -90,6 +96,16 @@ export const PersonalBriefing = async ({ className, event }: Props) => {
           }
           hasDeclinedInvitation={
             invitation?.status === EventInvitationStatus.Declined
+          }
+          applicationRequired={applicationRequired}
+          ownApplication={
+            application
+              ? {
+                  status: application.status,
+                  comment: application.comment,
+                  declineReason: application.declineReason,
+                }
+              : null
           }
         />
       )}
