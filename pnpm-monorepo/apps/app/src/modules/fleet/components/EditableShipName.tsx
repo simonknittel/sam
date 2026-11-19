@@ -18,6 +18,7 @@ export const EditableShipName = ({ className, shipId, name }: Props) => {
       columnName="name"
       initialValue={name}
       action={updateShipAction}
+      required={false}
     />
   );
 };
