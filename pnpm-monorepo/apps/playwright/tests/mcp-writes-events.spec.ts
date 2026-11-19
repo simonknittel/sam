@@ -438,6 +438,137 @@ test.describe("the event write tools of the MCP server", () => {
     ).toBe(6);
   });
 
+  test("update_event requires applications, and a manager declines one application and approves another", async ({
+    prisma,
+    authorizeMcpClient,
+    connectMcpClient,
+  }) => {
+    const organizer = await createMcpCitizen(prisma, {
+      handle: "mcp-tuersteherin",
+      permissionStrings: ["event;read"],
+    });
+    const welcomeGuest = await createMcpCitizen(prisma, {
+      handle: "mcp-willkommen",
+      permissionStrings: ["event;read"],
+    });
+    const declinedGuest = await createMcpCitizen(prisma, {
+      handle: "mcp-abgewiesen",
+      permissionStrings: ["event;read"],
+    });
+    const event = await createAppEvent(prisma, {
+      name: "Konvoi auf Anfrage",
+      createdById: organizer.entity.id,
+      ...futureEvent(),
+    });
+    // One after the other: the authorization of each client uses the same page
+    const organizerClient = await connectMcpClient(
+      (await authorizeMcpClient(organizer.user)).accessToken,
+    );
+    const welcomeClient = await connectMcpClient(
+      (await authorizeMcpClient(welcomeGuest.user)).accessToken,
+    );
+    const declinedClient = await connectMcpClient(
+      (await authorizeMcpClient(declinedGuest.user)).accessToken,
+    );
+
+    expect(
+      await callForContent(organizerClient, "update_event", {
+        event_id: event.id,
+        application_required: true,
+      }),
+    ).toMatchObject({
+      event: { application_required: true },
+      changes: ["application_required"],
+    });
+
+    // Without an invitation, a sign-up needs an application
+    expect(
+      await callForError(welcomeClient, "update_my_event_participation", {
+        event_id: event.id,
+        action: "sign_up",
+      }),
+    ).toMatch(CONFLICT_RESULT);
+    await callForContent(welcomeClient, "update_my_event_participation", {
+      event_id: event.id,
+      action: "apply",
+      comment: "Mit der Hornet.",
+    });
+    expect(
+      await callForContent(declinedClient, "update_my_event_participation", {
+        event_id: event.id,
+        action: "apply",
+      }),
+    ).toMatchObject({
+      is_participating: false,
+      applications: [
+        {
+          citizen: { id: declinedGuest.entity.id, handle: "mcp-abgewiesen" },
+          status: "open",
+        },
+        {
+          citizen: { id: welcomeGuest.entity.id, handle: "mcp-willkommen" },
+          status: "open",
+          comment: "Mit der Hornet.",
+        },
+      ],
+    });
+
+    expect(
+      await callForContent(organizerClient, "update_event_participants", {
+        event_id: event.id,
+        action: "decline_application",
+        citizen_ids: [declinedGuest.entity.id],
+        reason: "Kein Platz mehr.",
+      }),
+    ).toMatchObject({
+      event: {
+        participants: [],
+        applications: [
+          {
+            citizen: { id: declinedGuest.entity.id },
+            status: "declined",
+            decline_reason: "Kein Platz mehr.",
+            declined_by: { id: organizer.entity.id },
+          },
+          { citizen: { id: welcomeGuest.entity.id }, status: "open" },
+        ],
+      },
+      changed_citizen_ids: [declinedGuest.entity.id],
+    });
+    expect(
+      await callForError(declinedClient, "update_my_event_participation", {
+        event_id: event.id,
+        action: "apply",
+      }),
+    ).toMatch(CONFLICT_RESULT);
+
+    expect(
+      await callForContent(organizerClient, "update_event_participants", {
+        event_id: event.id,
+        action: "approve_application",
+        citizen_ids: [welcomeGuest.entity.id],
+      }),
+    ).toMatchObject({
+      event: {
+        participants: [
+          {
+            citizen: { id: welcomeGuest.entity.id },
+            comment: "Mit der Hornet.",
+          },
+        ],
+        applications: [{ citizen: { id: declinedGuest.entity.id } }],
+      },
+      changed_citizen_ids: [welcomeGuest.entity.id],
+    });
+
+    await expectAuditEvents(prisma, [
+      "EVENT_APPLICATION_REQUIREMENT_CHANGED",
+      "EVENT_APPLICATION_CREATED",
+      "EVENT_APPLICATION_DECLINED",
+      "EVENT_APPLICATION_APPROVED",
+    ]);
+  });
+
   test("update_event turns the participation off, and then the sign-up is refused", async ({
     prisma,
     authorizeMcpClient,

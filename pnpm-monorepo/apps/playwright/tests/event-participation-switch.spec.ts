@@ -209,7 +209,7 @@ test("the create dialog offers the participation switch, and a template prefills
   );
 
   const createDialog = modal(page, "Neues Event");
-  const participation = createDialog.getByLabel("Teilnahme");
+  const participation = createDialog.getByLabel("Teilnahme", { exact: true });
   await expect(participation).toBeChecked();
 
   await createDialog

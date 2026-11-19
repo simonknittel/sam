@@ -926,7 +926,10 @@ test("a Discord event keeps its participant list read-only", async ({
   await signIn(manager.user);
   await page.goto(`/app/events/${event.id}/participants`);
 
-  await expect(page.getByText("Teilnehmer (0)")).toBeVisible();
+  // While the page streams, React keeps a hidden copy of the heading
+  await expect(
+    page.getByText("Teilnehmer (0)").filter({ visible: true }),
+  ).toBeVisible();
   await expect(page.getByTitle("Teilnehmer hinzufügen")).toHaveCount(0);
 });
 
