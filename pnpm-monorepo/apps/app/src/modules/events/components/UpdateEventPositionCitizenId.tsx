@@ -5,7 +5,6 @@ import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import Modal from "@/modules/common/components/Modal";
-import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
 import {
   EventPositionRoleMatch,
   type Citizen,
@@ -48,8 +47,8 @@ interface Props {
 
 /**
  * The choices are in a modal and not in a select: for a citizen who does not
- * meet the requirements, the modal shows the missing ship and the missing
- * roles
+ * meet the requirements, the modal shows whether the ship is missing and the
+ * missing roles
  */
 export const UpdateEventPositionCitizenId = ({
   className,
@@ -323,25 +322,11 @@ const UnmetRequirementList = ({
 
   return (
     <ul className="mt-1 flex flex-col gap-1 text-sm">
-      {isShipMissing && (
-        <li className="flex flex-col gap-1">
-          <span className="text-neutral-500">
-            {position.requiredVariants.length > 1
-              ? "Fehlendes Schiff (eines davon):"
-              : "Fehlendes Schiff:"}
-          </span>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-            {position.requiredVariants.map((requiredVariant) => (
-              <VariantWithLogo
-                key={requiredVariant.id}
-                variant={requiredVariant.variant}
-                manufacturer={requiredVariant.variant.series.manufacturer}
-                size={32}
-              />
-            ))}
-          </div>
-        </li>
-      )}
+      {/**
+       * Without a list of the ships: a citizen without one of them misses all
+       * of them, thus each row would show the same list
+       */}
+      {isShipMissing && <li>Erforderliches Schiff fehlt</li>}
 
       {missingRoleIds.length > 0 && (
         <li className="flex flex-col gap-1">
