@@ -2,6 +2,7 @@ import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { FleetFilters } from "@/modules/fleet/components/FleetFilters";
+import { FleetGuide } from "@/modules/fleet/components/FleetGuide";
 import { MyFleetTile } from "@/modules/fleet/components/MyFleetTile";
 import { getManufacturers } from "@/modules/fleet/queries/getManufacturers";
 import { getMyFleetVariantTags } from "@/modules/fleet/queries/getMyFleetVariantTags";
@@ -23,18 +24,22 @@ export default async function Page({
   ]);
 
   return (
-    <SidebarLayout
-      sidebar={
-        <FleetFilters
-          showDeletedFilter
-          variantTags={variantTags}
-          manufacturers={manufacturers}
-        />
-      }
-    >
-      <SuspenseWithErrorBoundaryTile>
-        <MyFleetTile searchParams={searchParams} />
-      </SuspenseWithErrorBoundaryTile>
-    </SidebarLayout>
+    <>
+      <FleetGuide className="mb-4" />
+
+      <SidebarLayout
+        sidebar={
+          <FleetFilters
+            showDeletedFilter
+            variantTags={variantTags}
+            manufacturers={manufacturers}
+          />
+        }
+      >
+        <SuspenseWithErrorBoundaryTile>
+          <MyFleetTile searchParams={searchParams} />
+        </SuspenseWithErrorBoundaryTile>
+      </SidebarLayout>
+    </>
   );
 }

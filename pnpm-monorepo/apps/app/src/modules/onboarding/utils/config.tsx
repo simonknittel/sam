@@ -202,6 +202,11 @@ const ONBOARDING_STEP_CONTENT: Record<
           Halte deine Schiffe deshalb am besten immer aktuell – so wissen wir,
           mit welchen Schiffen wir rechnen können.
         </p>
+
+        <p className="mt-2">
+          Welche Schiffe du besitzt, sehen nur ausgewählte Rollen. Alle anderen
+          sehen nur, wie viele Schiffe eines Modells es in der Org gibt.
+        </p>
       </>
     ),
   },
