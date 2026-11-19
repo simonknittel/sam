@@ -1,9 +1,11 @@
 import { externalApps } from "@/modules/apps/utils/externalApps";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
+import { useCreateContext } from "@/modules/common/components/CreateContext";
 import { cornerstoneImageBrowserItemTypes } from "@/modules/cornerstone-image-browser/utils/config";
 import { Command } from "cmdk";
 import type { Session } from "next-auth";
 import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import type { ReactElement } from "react";
 import { AiFillAppstore } from "react-icons/ai";
 import {
@@ -16,6 +18,7 @@ import {
   FaHome,
   FaLock,
   FaPiggyBank,
+  FaPlus,
   FaRobot,
   FaTools,
   FaUser,
@@ -30,6 +33,11 @@ import { IoDocuments } from "react-icons/io5";
 import { MdEvent, MdTaskAlt, MdWorkspaces } from "react-icons/md";
 import { RiLogoutCircleRLine, RiSpyFill } from "react-icons/ri";
 import { TbMilitaryRank } from "react-icons/tb";
+import {
+  CreateItemType,
+  useCreateItems,
+  type CreateItem,
+} from "../../hooks/useCreateItems";
 import { useCmdKContext } from "./CmdKContext";
 import { CommandItem, LinkItem, PageItem } from "./Item";
 import { SpynetSearchPage } from "./SpynetSearchPage";
@@ -73,6 +81,7 @@ export const List = () => {
 
   const { setOpen, search, setSearch, pages, setPages, canReadCareer } =
     useCmdKContext();
+  const createItems = useCreateItems();
 
   const [
     citizenRead,
@@ -129,6 +138,7 @@ export const List = () => {
     systemLogRead,
     manualNotificationManage,
     mcpUse,
+    create: createItems.length > 0,
   };
 
   const menuItems: MenuItem[] = [
@@ -177,6 +187,15 @@ export const List = () => {
       icon: <FaTools />,
       type: MenuItemType.Page,
       page: "cornerstone-image-browser",
+    },
+    {
+      id: "create",
+      label: "Neu erstellen",
+      keywords: ["Neu", "Erstellen", "Anlegen", "Create", "New"],
+      icon: <FaPlus />,
+      type: MenuItemType.Page,
+      page: "create",
+      authKey: "create",
     },
     {
       id: "dashboard",
@@ -429,6 +448,8 @@ export const List = () => {
 
       {page === "cornerstone-image-browser" && <CornerstoneImageBrowserPage />}
 
+      {page === "create" && <CreatePage items={createItems} />}
+
       {page === "iam" && (
         <IAMPage userRead={userRead} roleManage={roleManage} />
       )}
@@ -468,6 +489,51 @@ const CornerstoneImageBrowserPage = () => {
           href={`/app/tools/cornerstone-image-browser/${item.page}`}
           setOpen={setOpen}
           setSearch={setSearch}
+        />
+      ))}
+    </Command.Group>
+  );
+};
+
+interface CreatePageProps {
+  readonly items: CreateItem[];
+}
+
+const CreatePage = ({ items }: CreatePageProps) => {
+  const { setOpen, setSearch, setPages } = useCmdKContext();
+  const { openCreateModal } = useCreateContext();
+  const router = useRouter();
+
+  const handleSelect = (item: CreateItem) => {
+    setOpen(false);
+    setSearch("");
+    /** The menu starts on its first page the next time */
+    setPages([]);
+
+    switch (item.type) {
+      case CreateItemType.Link:
+        router.push(item.href);
+        break;
+
+      case CreateItemType.Modal:
+        openCreateModal(item.modalId);
+        break;
+
+      default:
+        throw new Error(`Unknown item.type: ${item satisfies never}`);
+    }
+  };
+
+  return (
+    <Command.Group
+      heading={<div className="flex items-baseline gap-2">Neu erstellen</div>}
+    >
+      {items.map((item) => (
+        <CommandItem
+          key={item.label}
+          label={item.label}
+          icon={<FaPlus />}
+          onSelect={() => handleSelect(item)}
         />
       ))}
     </Command.Group>

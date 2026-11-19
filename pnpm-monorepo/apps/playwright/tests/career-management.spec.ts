@@ -256,6 +256,39 @@ test("the top bar's Neu menu creates a flow for managers only", async ({
   ).toHaveCount(0);
 });
 
+test("the Cmd+K menu opens the create modal of a flow with the focus in it", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createManager(prisma);
+  await signIn(manager.user);
+
+  await page.goto("/app/apps");
+  /** The shortcut listener is only available after the hydration */
+  await waitForAppShellHydration(page);
+
+  const cmdK = page.getByRole("dialog", { name: "Navigation" });
+  await page.keyboard.press("ControlOrMeta+k");
+  await expect(cmdK).toBeVisible();
+
+  await page.keyboard.type("Neu erstellen");
+  await page.keyboard.press("Enter");
+  await expect(
+    cmdK.getByRole("option", { name: "Karrierebaum" }),
+  ).toBeVisible();
+  await page.keyboard.type("Karriere");
+  await page.keyboard.press("Enter");
+
+  const dialog = modal(page, "Neuer Karrierebaum");
+  await expect(dialog).toBeVisible();
+  await expect(cmdK).toBeHidden();
+  /** The closed menu must not take the focus from the modal */
+  await expect(dialog.getByLabel("Name")).toBeFocused();
+  await page.keyboard.type("Aus der Suche");
+  await expect(dialog.getByLabel("Slug")).toHaveValue("aus-der-suche");
+});
+
 test("the settings pages hydrate cleanly and never scroll the page sideways", async ({
   page,
   prisma,
