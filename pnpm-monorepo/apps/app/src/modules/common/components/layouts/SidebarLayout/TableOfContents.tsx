@@ -18,9 +18,12 @@ export const TableOfContents = ({ className, items }: Props) => {
       aria-label="Inhalt"
       className={clsx("corners-secondary bg-secondary p-2", className)}
     >
-      <p className="font-mono text-sm text-white/40 uppercase">Inhalt</p>
+      {/* Below md, the toggle button of `SidebarLayout` already names the list */}
+      <p className="hidden font-mono text-sm text-white/40 uppercase md:block">
+        Inhalt
+      </p>
 
-      <ul className="mt-1 flex flex-col gap-0.5">
+      <ul className="flex flex-col gap-0.5 md:mt-1">
         {items.map((item) => (
           <li key={item.id}>
             <a
