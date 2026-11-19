@@ -1,6 +1,8 @@
 import {
   addEventParticipants,
   addEventParticipantsInputSchema,
+  approveEventApplications,
+  declineEventApplications,
   inviteEventParticipants,
   inviteEventParticipantsInputSchema,
   removeEventParticipants,
@@ -20,6 +22,8 @@ export enum EventParticipantsAction {
   Remove = "remove",
   Invite = "invite",
   WithdrawInvitation = "withdraw_invitation",
+  ApproveApplication = "approve_application",
+  DeclineApplication = "decline_application",
 }
 
 /** The text input of each action. The other actions refuse it. */
@@ -28,6 +32,8 @@ const TEXT_INPUT_BY_ACTION = {
   [EventParticipantsAction.Remove]: "reason",
   [EventParticipantsAction.Invite]: "message",
   [EventParticipantsAction.WithdrawInvitation]: null,
+  [EventParticipantsAction.ApproveApplication]: null,
+  [EventParticipantsAction.DeclineApplication]: "reason",
 } as const satisfies Record<
   EventParticipantsAction,
   "comment" | "reason" | "message" | null
@@ -38,7 +44,7 @@ export const updateEventParticipantsTool = defineTool({
   group: ToolGroup.Events,
   title: "Update the participants of an event",
   description:
-    "Changes the participants of an event of SAM (event_id from list_events) that has not ended, and notifies each changed citizen. Needs can_manage. invite: invites citizens (citizen_ids from search_citizens_and_organizations or get_event) to sign up; each citizen gets a notification with the message and accepts or declines in SAM; the citizens who are already signed up or invited are skipped. add: signs citizens up directly and withdraws their open invitations; the citizens who are already signed up are skipped. For invite and add, each citizen must be able to see the event, log in and get event notifications, else nothing changes. remove: each citizen must be a participant (from get_event), else nothing is removed; the position applications and the lineup assignments of the citizens at the event are removed too. withdraw_invitation: each citizen must have an open invitation (from get_event), else nothing is withdrawn; the citizens get no notification. message is only for invite, comment only for add, reason only for remove. An event with participation_enabled false refuses all actions. Gives the event like get_event and the ids of the changed citizens.",
+    "Changes the participants of an event of SAM (event_id from list_events) that has not ended, and notifies each changed citizen. Needs can_manage. invite: invites citizens (citizen_ids from search_citizens_and_organizations or get_event) to sign up; each citizen gets a notification with the message and accepts or declines in SAM; the citizens who are already signed up or invited are skipped. add: signs citizens up directly, withdraws their open invitations and approves their open applications; the citizens who are already signed up are skipped. For invite and add, each citizen must be able to see the event, log in and get event notifications, else nothing changes. remove: each citizen must be a participant (from get_event), else nothing is removed; the position applications and the lineup assignments of the citizens at the event are removed too. withdraw_invitation: each citizen must have an open invitation (from get_event), else nothing is withdrawn; the citizens get no notification. approve_application: each citizen must have an open application (from applications of get_event), else nothing changes; each citizen is signed up with the comment of the application. decline_application: like approve_application, but nobody is signed up, and the citizens cannot apply again. For add and approve_application, each citizen must be able to see the event, log in and get event notifications. message is only for invite, comment only for add, reason only for remove and decline_application. An event with participation_enabled false refuses all actions. Gives the event like get_event and the ids of the changed citizens.",
   annotations: {
     readOnlyHint: false,
     destructiveHint: true,
@@ -49,9 +55,11 @@ export const updateEventParticipantsTool = defineTool({
     .extend({
       action: z.enum(EventParticipantsAction),
       citizen_ids: addEventParticipantsInputSchema.shape.citizen_ids.describe(
-        "The citizens to invite, to sign up, to remove or whose invitation to withdraw.",
+        "The citizens to invite, to sign up, to remove, whose invitation to withdraw or whose application to answer.",
       ),
-      reason: removeEventParticipantsInputSchema.shape.reason,
+      reason: removeEventParticipantsInputSchema.shape.reason.describe(
+        "For remove: why the citizens are removed. For decline_application: why the applications are declined. Each citizen gets it in the notification.",
+      ),
       message: inviteEventParticipantsInputSchema.shape.message,
     })
     .refine(
@@ -61,14 +69,14 @@ export const updateEventParticipantsTool = defineTool({
             input[field] === undefined ||
             TEXT_INPUT_BY_ACTION[input.action] === field,
         ),
-      "message is only for invite, comment only for add, reason only for remove.",
+      "message is only for invite, comment only for add, reason only for remove and decline_application.",
     ),
   outputSchema: z.strictObject({
     event: eventOutputSchema,
     changed_citizen_ids: z
       .array(z.string())
       .describe(
-        "The citizens whose sign-up or invitation changed: for invite and add without the skipped citizens, for remove and withdraw_invitation all citizen_ids.",
+        "The citizens whose sign-up, invitation or application changed: for invite and add without the skipped citizens, for the other actions all citizen_ids.",
       ),
   }),
   isVisible: isEventWriteToolVisible,
@@ -105,6 +113,25 @@ export const updateEventParticipantsTool = defineTool({
             message,
           });
         return { ...output, changed_citizen_ids: invited_citizen_ids };
+      }
+
+      case EventParticipantsAction.ApproveApplication: {
+        const { approved_citizen_ids, ...output } =
+          await approveEventApplications(context, actor, {
+            event_id,
+            citizen_ids,
+          });
+        return { ...output, changed_citizen_ids: approved_citizen_ids };
+      }
+
+      case EventParticipantsAction.DeclineApplication: {
+        const { declined_citizen_ids, ...output } =
+          await declineEventApplications(context, actor, {
+            event_id,
+            citizen_ids,
+            reason,
+          });
+        return { ...output, changed_citizen_ids: declined_citizen_ids };
       }
 
       case EventParticipantsAction.WithdrawInvitation: {
