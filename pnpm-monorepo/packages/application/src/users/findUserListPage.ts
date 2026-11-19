@@ -1,4 +1,5 @@
 import type { Prisma } from "@sam-monorepo/database/client";
+import { redactEmailAddress } from "@sam-monorepo/domain";
 import { requirePermission, type Actor } from "../actor.js";
 import { CITIZEN_REFERENCE_SELECT } from "../citizenReference.js";
 import type { ApplicationContext } from "../context.js";
@@ -28,10 +29,10 @@ export enum UserTwoFactorStatus {
 }
 
 /**
- * Longer than any handle. The search comes from the URL, thus the host cuts
- * it to this length.
+ * Longer than any handle, Discord ID and TeamSpeak ID. The search comes from
+ * the URL, thus the host cuts it to this length.
  */
-export const USER_LIST_HANDLE_QUERY_MAXIMUM_LENGTH = 100;
+export const USER_LIST_SEARCH_QUERY_MAXIMUM_LENGTH = 100;
 
 /** The largest offset that the database accepts (32-bit integer) */
 const MAXIMUM_OFFSET = 2_147_483_647;
@@ -39,6 +40,7 @@ const MAXIMUM_OFFSET = 2_147_483_647;
 const USER_LIST_SELECT = {
   id: true,
   name: true,
+  email: true,
   image: true,
   createdAt: true,
   emailVerified: true,
@@ -68,8 +70,11 @@ export interface UserListInput {
   readonly sort: UserSort;
   readonly banStatus: UserBanStatus;
   readonly twoFactorStatus: UserTwoFactorStatus;
-  /** At most `USER_LIST_HANDLE_QUERY_MAXIMUM_LENGTH` characters */
-  readonly handleQuery: string | null;
+  /**
+   * A part of the handle, of the Discord ID or of the TeamSpeak ID. At most
+   * `USER_LIST_SEARCH_QUERY_MAXIMUM_LENGTH` characters.
+   */
+  readonly searchQuery: string | null;
   /** The `nextCursor` or the `prevCursor` of a page */
   readonly cursor: string | null;
 }
@@ -80,7 +85,9 @@ export interface UserListPageOptions {
 }
 
 export interface UserListEntry {
-  readonly user: Omit<UserListRow, "accounts" | "citizen">;
+  readonly user: Omit<UserListRow, "accounts" | "citizen" | "email">;
+  /** See `redactEmailAddress()` */
+  readonly redactedEmail: string | null;
   readonly discordId: string | null;
   readonly entity: { readonly id: string } | undefined;
 }
@@ -160,24 +167,43 @@ const getTwoFactorStatusWhere = (
   }
 };
 
-/** The handle belongs to the citizen of the user */
-const getHandleWhere = (handleQuery: string): Prisma.UserWhereInput => ({
-  citizen: {
-    handle: { contains: handleQuery, mode: "insensitive" },
-  },
-});
+/**
+ * The handle and the TeamSpeak ID belong to the citizen of the user, the
+ * Discord ID to the Discord login of the user. A search by a TeamSpeak ID
+ * would show which citizen has this ID, thus it requires `teamspeak-id;read`.
+ */
+const getSearchWhere = (
+  actor: Actor,
+  searchQuery: string,
+): Prisma.UserWhereInput => {
+  const contains = { contains: searchQuery, mode: "insensitive" } as const;
 
-export const getUserListWhere = ({
-  banStatus,
-  twoFactorStatus,
-  handleQuery,
-}: Pick<
-  UserListInput,
-  "banStatus" | "twoFactorStatus" | "handleQuery"
->): Prisma.UserWhereInput => ({
+  return {
+    OR: [
+      { citizen: { handle: contains } },
+      {
+        accounts: {
+          some: { provider: "discord", providerAccountId: contains },
+        },
+      },
+      ...(actor.authorize("teamspeak-id", "read")
+        ? [{ citizen: { teamspeakId: contains } }]
+        : []),
+    ],
+  };
+};
+
+export const getUserListWhere = (
+  actor: Actor,
+  {
+    banStatus,
+    twoFactorStatus,
+    searchQuery,
+  }: Pick<UserListInput, "banStatus" | "twoFactorStatus" | "searchQuery">,
+): Prisma.UserWhereInput => ({
   ...getBanStatusWhere(banStatus),
   ...getTwoFactorStatusWhere(twoFactorStatus),
-  ...(handleQuery ? getHandleWhere(handleQuery) : {}),
+  ...(searchQuery ? getSearchWhere(actor, searchQuery) : {}),
 });
 
 /**
@@ -203,7 +229,7 @@ export const parseUserListOffset = (cursor: string) => {
 export const findUserListPage = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,
-  { sort, banStatus, twoFactorStatus, handleQuery, cursor }: UserListInput,
+  { sort, banStatus, twoFactorStatus, searchQuery, cursor }: UserListInput,
   { pageSize }: UserListPageOptions,
 ): Promise<UserListPage> => {
   requirePermission(actor, "user", "read");
@@ -212,7 +238,11 @@ export const findUserListPage = async (
   const offset = (cursor === null ? null : parseUserListOffset(cursor)) ?? 0;
 
   const rows = await context.prisma.user.findMany({
-    where: getUserListWhere({ banStatus, twoFactorStatus, handleQuery }),
+    where: getUserListWhere(actor, {
+      banStatus,
+      twoFactorStatus,
+      searchQuery,
+    }),
     orderBy: getUserListOrderBy(sort),
     skip: offset,
     take: pageSize + 1,
@@ -222,8 +252,9 @@ export const findUserListPage = async (
   const hasNextPage = rows.length > pageSize;
   const pageRows = rows.slice(0, pageSize);
 
-  const users = pageRows.map(({ accounts, citizen, ...user }) => ({
+  const users = pageRows.map(({ accounts, citizen, email, ...user }) => ({
     user,
+    redactedEmail: email === null ? null : redactEmailAddress(email),
     discordId: accounts[0]?.providerAccountId ?? null,
     entity: citizen ?? undefined,
   }));

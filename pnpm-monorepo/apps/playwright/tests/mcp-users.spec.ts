@@ -3,6 +3,7 @@ import {
   createCitizen,
   createMcpCitizen,
   ONE_MINUTE_MS,
+  redactedEmailOf,
 } from "../fixtures/factories";
 import {
   callForContent,
@@ -17,15 +18,7 @@ import { expect, test } from "../fixtures/test";
 const minutesAgo = (minutes: number) =>
   new Date(Date.now() - minutes * ONE_MINUTE_MS);
 
-/**
- * The factories give each user the address `<handle>-<suffix>@example.com`.
- * The redaction keeps the first and the last character of the local part and
- * of the domain name, and the top-level domain.
- */
-const redactedEmailOf = (user: User) => {
-  const localPart = user.email?.split("@")[0] ?? "";
-  return `${localPart.at(0)}***${localPart.at(-1)}@e***e.com`;
-};
+const BANNED_TEAMSPEAK_ID = "mcpTeamspeakKennung";
 
 /** Matches the users with these ids in this order, and no other user */
 const usersWithIds = (...users: readonly User[]) => ({
@@ -52,6 +45,10 @@ test.describe("the user tools of the MCP server", () => {
     await prisma.user.update({
       where: { id: viewer.user.id },
       data: { createdAt: minutesAgo(30) },
+    });
+    await prisma.citizen.update({
+      where: { id: banned.entity.id },
+      data: { teamspeakId: BANNED_TEAMSPEAK_ID },
     });
     const bannedUser = await prisma.user.update({
       where: { id: banned.user.id },
@@ -103,6 +100,17 @@ test.describe("the user tools of the MCP server", () => {
     expect(
       await callForContent(client, "list_users", { query: "GESPERRT" }),
     ).toEqual({ users: [bannedOutput], next_cursor: null });
+    expect(
+      await callForContent(client, "list_users", {
+        query: banned.entity.discordId?.slice(0, 8),
+      }),
+    ).toMatchObject(usersWithIds(banned.user));
+    // Without teamspeak-id;read the search ignores the TeamSpeak IDs
+    expect(
+      await callForContent(client, "list_users", {
+        query: BANNED_TEAMSPEAK_ID,
+      }),
+    ).toEqual({ users: [], next_cursor: null });
 
     expect(
       await callForContent(client, "list_users", { ban_status: "banned" }),

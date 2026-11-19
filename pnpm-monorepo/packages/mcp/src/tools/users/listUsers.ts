@@ -13,7 +13,7 @@ export const listUsersTool = defineTool({
   group: ToolGroup.Users,
   title: "List the users",
   description:
-    "Gives the users of SAM, the newest first, with the fields of get_user (without client). Filter by a part of the handle of the citizen, by the ban status and by the two-factor status of the last Discord login.",
+    "Gives the users of SAM, the newest first, with the fields of get_user (without client). Filter by a part of the handle, of the Discord ID or of the TeamSpeak ID, by the ban status and by the two-factor status of the last Discord login.",
   annotations: READ_ONLY_TOOL_ANNOTATIONS,
   readAuditEventType: AuditEventType.USERS_LISTED,
   inputSchema: listUsersInputSchema,

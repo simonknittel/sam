@@ -6,7 +6,7 @@ import {
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
   findUserListPage,
-  USER_LIST_HANDLE_QUERY_MAXIMUM_LENGTH,
+  USER_LIST_SEARCH_QUERY_MAXIMUM_LENGTH,
   type UserListInput,
 } from "@sam-monorepo/application";
 
@@ -14,7 +14,7 @@ const USERS_PAGE_SIZE = 50;
 
 export const getUsersWithEntities = withTrace(
   "getUsersWithEntities",
-  async ({ handleQuery, ...input }: UserListInput) => {
+  async ({ searchQuery, ...input }: UserListInput) => {
     try {
       return await findUserListPage(
         getApplicationContext(),
@@ -22,8 +22,8 @@ export const getUsersWithEntities = withTrace(
         {
           ...input,
           // The query comes from the URL, thus it can be longer
-          handleQuery:
-            handleQuery?.slice(0, USER_LIST_HANDLE_QUERY_MAXIMUM_LENGTH) ??
+          searchQuery:
+            searchQuery?.slice(0, USER_LIST_SEARCH_QUERY_MAXIMUM_LENGTH) ??
             null,
         },
         { pageSize: USERS_PAGE_SIZE },

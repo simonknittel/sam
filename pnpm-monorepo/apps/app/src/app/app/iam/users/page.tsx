@@ -15,10 +15,16 @@ export default async function Page({
 }: PageProps<"/app/iam/users">) {
   const authentication = await requireAuthenticationPage("/app/users");
   await authentication.authorizePage("user", "read");
+  const canSearchTeamspeakId = await authentication.authorize(
+    "teamspeak-id",
+    "read",
+  );
 
   return (
     <MaxWidthContent>
-      <SidebarLayout sidebar={<UsersFilters />}>
+      <SidebarLayout
+        sidebar={<UsersFilters canSearchTeamspeakId={canSearchTeamspeakId} />}
+      >
         <SuspenseWithErrorBoundaryTile>
           <UsersTile searchParams={searchParams} />
         </SuspenseWithErrorBoundaryTile>

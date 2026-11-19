@@ -7,7 +7,7 @@ import {
   getUserListOrderBy,
   getUserListWhere,
   parseUserListOffset,
-  USER_LIST_HANDLE_QUERY_MAXIMUM_LENGTH,
+  USER_LIST_SEARCH_QUERY_MAXIMUM_LENGTH,
   UserBanStatus,
   UserSort,
   UserTwoFactorStatus,
@@ -23,10 +23,10 @@ export const listUsersInputSchema = z.object({
     .string()
     .trim()
     .min(1)
-    .max(USER_LIST_HANDLE_QUERY_MAXIMUM_LENGTH)
+    .max(USER_LIST_SEARCH_QUERY_MAXIMUM_LENGTH)
     .optional()
     .describe(
-      "A part of the handle of the citizen of the user, without regard to the case.",
+      "A part of the handle of the citizen of the user, of the Discord ID of the user or of the TeamSpeak ID of the citizen, without regard to the case. The TeamSpeak ID requires the permission to read TeamSpeak IDs.",
     ),
   ban_status: z
     .enum(UserBanStatus)
@@ -68,10 +68,10 @@ export const listUsers = async (
   if (offset === null) throw new ValidationError("Unknown cursor");
 
   const rows = await context.prisma.user.findMany({
-    where: getUserListWhere({
+    where: getUserListWhere(actor, {
       banStatus: input.ban_status,
       twoFactorStatus: input.two_factor_status,
-      handleQuery: input.query ?? null,
+      searchQuery: input.query ?? null,
     }),
     orderBy: getUserListOrderBy(UserSort.CreatedAtDescending),
     skip: offset,

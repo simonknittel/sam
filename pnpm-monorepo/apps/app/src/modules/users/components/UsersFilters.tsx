@@ -7,10 +7,22 @@ import {
   UserTwoFactorStatus,
 } from "../utils/userListSearchParams";
 
-export const UsersFilters = () => {
+interface Props {
+  /** The search ignores the TeamSpeak IDs without `teamspeak-id;read` */
+  readonly canSearchTeamspeakId: boolean;
+}
+
+export const UsersFilters = ({ canSearchTeamspeakId }: Props) => {
   return (
     <>
-      <TextSearchFilter label="Handle" resetCursorPagination />
+      <TextSearchFilter
+        label={
+          canSearchTeamspeakId
+            ? "Handle, Discord ID oder TeamSpeak ID"
+            : "Handle oder Discord ID"
+        }
+        resetCursorPagination
+      />
 
       <SingleSelectComboboxFilter
         name="sort"

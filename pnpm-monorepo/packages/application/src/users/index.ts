@@ -13,7 +13,7 @@ export {
   type CountUniqueLoginsOutput,
 } from "./countUniqueLogins.js";
 export {
-  USER_LIST_HANDLE_QUERY_MAXIMUM_LENGTH,
+  USER_LIST_SEARCH_QUERY_MAXIMUM_LENGTH,
   UserBanStatus,
   UserSort,
   UserTwoFactorStatus,

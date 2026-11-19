@@ -1,8 +1,9 @@
 import { expectAuditEvents } from "../fixtures/audit";
-import { createCitizen } from "../fixtures/factories";
+import { createCitizen, redactedEmailOf } from "../fixtures/factories";
 import {
   clickUntilUrl,
   clickUntilVisible,
+  fillUntilUrl,
   SAVED_TEXT,
   toggleLabel,
 } from "../fixtures/interactions";
@@ -277,5 +278,44 @@ test("the users table shows and filters the Discord two-factor authentication of
       if (otherFilter === filter) await expect(row).toBeVisible();
       else await expect(row).toHaveCount(0);
     }
+  }
+});
+
+test("the users table shows the redacted email addresses, and the search finds a user by the Discord ID and by the TeamSpeak ID", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const viewer = await createCitizen(prisma, {
+    handle: "benutzer-sucher",
+    permissionStrings: ["user;read", "teamspeak-id;read"],
+  });
+  const target = await createCitizen(prisma, { handle: "gesuchter" });
+  const other = await createCitizen(prisma, { handle: "anderer" });
+  const teamspeakId = "TeamspeakKennung42";
+  await prisma.citizen.update({
+    where: { id: target.entity.id },
+    data: { teamspeakId },
+  });
+  const rowOf = (userId: string) =>
+    page.getByRole("row").filter({ hasText: userId });
+
+  await signIn(viewer.user);
+  await page.goto("/app/iam/users");
+
+  await expect(
+    rowOf(target.user.id).getByText(redactedEmailOf(target.user), {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(page.getByText("@example.com")).toHaveCount(0);
+
+  const search = page.getByLabel("Handle, Discord ID oder TeamSpeak ID");
+  const discordId = target.entity.discordId ?? "";
+  for (const query of [discordId, teamspeakId]) {
+    await fillUntilUrl(page, search, query, new RegExp(`q=${query}`));
+    await expect(rowOf(target.user.id)).toBeVisible();
+    await expect(rowOf(other.user.id)).toHaveCount(0);
+    await expect(rowOf(viewer.user.id)).toHaveCount(0);
   }
 });
