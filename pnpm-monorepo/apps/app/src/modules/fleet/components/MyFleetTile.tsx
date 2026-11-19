@@ -6,9 +6,8 @@ import { CursorPaginationControls } from "@/modules/common/CursorPagination/Curs
 import { forbidden } from "next/navigation";
 import { type SearchParams } from "nuqs/server";
 import { getMyFleet } from "../queries/getMyFleet";
-import { getVariantCatalog } from "../queries/getVariantCatalog";
 import { loadFleetListSearchParams } from "../utils/loadFleetListSearchParams";
-import { AssignShip } from "./AssignShip";
+import { CreateShipButton } from "./CreateShipButton";
 import { FleetValueTiles } from "./FleetValueTiles";
 import { ShipsTable } from "./ShipsTable";
 
@@ -33,21 +32,17 @@ export const MyFleetTile = async ({ className, searchParams }: Props) => {
     direction,
   } = await loadFleetListSearchParams(searchParams);
 
-  const [{ ships, total, value, nextCursor, prevCursor }, variantCatalog] =
-    await Promise.all([
-      getMyFleet({
-        flightReady: flight_ready,
-        acquisitionSource: acquisition_source,
-        variantTagIds: variantTags?.length ? variantTags : [],
-        manufacturerIds: manufacturerIds?.length ? manufacturerIds : [],
-        sort,
-        showDeleted,
-        searchQuery: q,
-        cursor,
-        direction,
-      }),
-      getVariantCatalog(),
-    ]);
+  const { ships, total, value, nextCursor, prevCursor } = await getMyFleet({
+    flightReady: flight_ready,
+    acquisitionSource: acquisition_source,
+    variantTagIds: variantTags?.length ? variantTags : [],
+    manufacturerIds: manufacturerIds?.length ? manufacturerIds : [],
+    sort,
+    showDeleted,
+    searchQuery: q,
+    cursor,
+    direction,
+  });
 
   return (
     <section className={className}>
@@ -62,10 +57,7 @@ export const MyFleetTile = async ({ className, searchParams }: Props) => {
         <FleetValueTiles value={value} />
       </section>
 
-      <Tile
-        heading="Meine Schiffe"
-        cta={<AssignShip catalog={variantCatalog} />}
-      >
+      <Tile heading="Meine Schiffe" cta={<CreateShipButton />}>
         {ships.length === 0 ? (
           <p className="italic">Keine Schiffe gefunden.</p>
         ) : (

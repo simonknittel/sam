@@ -78,6 +78,12 @@ const CreateManualNotificationForm = dynamic(() =>
   ),
 );
 
+const CreateShipForm = dynamic(() =>
+  import("@/modules/fleet/components/CreateShipForm").then(
+    (mod) => mod.CreateShipForm,
+  ),
+);
+
 export const createForms = {
   citizen: {
     formComponent: CreateCitizenForm,
@@ -138,6 +144,11 @@ export const createForms = {
     formComponent: CreateManualNotificationForm,
     modalHeading: "Neue Benachrichtigung",
     modalWidth: "w-3xl",
+  },
+  ship: {
+    formComponent: CreateShipForm,
+    modalHeading: "Schiff hinzufügen",
+    modalWidth: "w-120",
   },
 };
 
