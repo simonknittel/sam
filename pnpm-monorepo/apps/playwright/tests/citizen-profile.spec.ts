@@ -376,6 +376,35 @@ test("the dashboard tile hides what the own permissions do not cover", async ({
   );
 });
 
+test("the Spynet overview shows the profile next to the attributes", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const owner = await createCitizen(prisma, { handle: "spynet-profilinhaber" });
+  await seedProfile(prisma, owner);
+  const viewer = await createCitizen(prisma, {
+    handle: "spynet-profilbetrachter",
+    permissionStrings: FULL_VIEWER_PERMISSIONS,
+  });
+
+  await signIn(viewer.user);
+  await page.goto(`/app/spynet/citizen/${owner.entity.id}`);
+
+  const profileTile = sectionByHeading(page, new RegExp(owner.entity.handle!));
+  await expect(profileTile).toContainText("1.234");
+  await expect(profileTile).toContainText("+50 monatlich");
+  await expect(profileTile).toContainText("Europe/Berlin");
+  await expectMetricLinks(profileTile, owner.entity.id);
+
+  /** The link would open the same page */
+  await expect(
+    profileTile.getByRole("link", { name: "Spynet öffnen" }),
+  ).toHaveCount(0);
+
+  await expect(sectionByHeading(page, "Übersicht")).toBeVisible();
+});
+
 test("the account popover shows the profile of the own citizen", async ({
   page,
   prisma,

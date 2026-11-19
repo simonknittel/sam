@@ -48,7 +48,9 @@ test("the citizen detail tabs render for a fully permitted viewer", async ({
   await signIn(viewer.user);
   await page.goto(`/app/spynet/citizen/${target.entity.id}`);
 
-  await expect(page.getByRole("heading", { name: "zielperson" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 1, name: "zielperson" }),
+  ).toBeVisible();
 
   const tabs = [
     { label: "Übersicht", path: "" },
@@ -60,13 +62,15 @@ test("the citizen detail tabs render for a fully permitted viewer", async ({
     { label: "Strafpunkte", path: "/penalty-points" },
   ];
   for (const tab of tabs) {
-    await expect(page.getByRole("link", { name: tab.label })).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: tab.label, exact: true }),
+    ).toBeVisible();
   }
 
   for (const tab of tabs.slice(1)) {
     await clickUntilUrl(
       page,
-      page.getByRole("link", { name: tab.label }),
+      page.getByRole("link", { name: tab.label, exact: true }),
       `/app/spynet/citizen/${target.entity.id}${tab.path}`,
     );
     /**

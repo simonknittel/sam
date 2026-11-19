@@ -136,7 +136,9 @@ test("a known Spectrum ID opens its citizen and creates no second one", async ({
   await createDialog.getByLabel("Spectrum ID").fill("BEKANNTER");
   await createDialog.getByRole("button", { name: "Anlegen" }).click();
 
-  await expect(page.getByRole("heading", { name: "bekannter" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 1, name: "bekannter" }),
+  ).toBeVisible();
   await expect(createDialog).toHaveCount(0);
   await expect(page).toHaveURL(`/app/spynet/citizen/${known.id}`);
 
@@ -217,7 +219,7 @@ test("a citizen that a different user creates at the same time opens, and no sec
     `/app/spynet/citizen/${parallelCreate.result.id}`,
   );
   await expect(
-    page.getByRole("heading", { name: "gleichzeitiger" }),
+    page.getByRole("heading", { level: 1, name: "gleichzeitiger" }),
   ).toBeVisible();
   await expect(createDialog).toHaveCount(0);
 
