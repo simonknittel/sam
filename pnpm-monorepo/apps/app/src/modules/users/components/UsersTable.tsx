@@ -19,10 +19,10 @@ import {
 import { FaExternalLinkAlt } from "react-icons/fa";
 import { FaCircleXmark } from "react-icons/fa6";
 
-const COLUMNS = "240px 240px 150px 200px 120px 150px 150px 24px";
+const COLUMNS = "240px 240px 200px 150px 200px 120px 150px 150px 24px";
 /** The actions column only fits its labels from `sm` upwards */
 const SM_COLUMNS =
-  "sm:[--table-columns:240px_240px_150px_200px_120px_150px_150px_110px]";
+  "sm:[--table-columns:240px_240px_200px_150px_200px_120px_150px_150px_110px]";
 
 interface Props {
   readonly className?: string;
@@ -41,6 +41,8 @@ interface Props {
     > & {
       readonly bannedBy: Pick<Citizen, "id" | "handle" | "deletedAt"> | null;
     };
+    /** Only the redacted email address reaches the browser */
+    readonly redactedEmail: string | null;
     readonly discordId: string | null;
     readonly entity?: Pick<Citizen, "id">;
   }[];
@@ -64,6 +66,7 @@ export const UsersTable = ({
       <THead>
         <th>Discord ID</th>
         <th>User ID</th>
+        <th>E-Mail</th>
         <th>Registriert am</th>
         <th>Datenschutzerklärung</th>
         <th>Discord 2FA</th>
@@ -75,7 +78,7 @@ export const UsersTable = ({
       </THead>
 
       <TBody>
-        {users.map(({ user, discordId, entity }) => (
+        {users.map(({ user, redactedEmail, discordId, entity }) => (
           <TRow key={user.id} className="h-14">
             <td className="overflow-hidden">
               <div className="flex items-center gap-2">
@@ -99,6 +102,16 @@ export const UsersTable = ({
               <span title={user.id} className="block truncate">
                 {user.id}
               </span>
+            </td>
+
+            <td className="overflow-hidden">
+              {redactedEmail ? (
+                <span title={redactedEmail} className="block truncate">
+                  {redactedEmail}
+                </span>
+              ) : (
+                <span className="text-neutral-500 italic">-</span>
+              )}
             </td>
 
             <td className="overflow-hidden">

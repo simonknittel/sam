@@ -25,7 +25,7 @@ export const UsersTile = async ({ className, searchParams }: Props) => {
     sort,
     banStatus: banned,
     twoFactorStatus: two_factor,
-    handleQuery: q,
+    searchQuery: q,
     cursor,
   });
 
