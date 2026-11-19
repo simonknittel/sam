@@ -1,27 +1,38 @@
-import { requireAuthenticationPage } from "@/modules/auth/server";
+import type { Citizen } from "@sam-monorepo/database/client";
 import clsx from "clsx";
-import { forbidden } from "next/navigation";
 import { getCitizenProfile } from "../queries/getCitizenProfile";
 import { ProfileContent } from "./ProfileContent";
 
-export const ProfileTile = async () => {
-  const authentication = await requireAuthenticationPage();
-  if (!authentication.session.entity) forbidden();
+interface Props {
+  readonly className?: string;
+  readonly citizenId: Citizen["id"];
+  /** On the Spynet page of the citizen, the link would open the same page */
+  readonly hideSpynetLink?: boolean;
+}
 
-  const profile = await getCitizenProfile(authentication.session.entity.id);
-  if (!profile) throw new Error("The citizen of the session does not exist");
+export const ProfileTile = async ({
+  className,
+  citizenId,
+  hideSpynetLink,
+}: Props) => {
+  const profile = await getCitizenProfile(citizenId);
+  if (!profile) throw new Error("The citizen does not exist");
 
   return (
     <section
-      className={clsx("w-full corners-primary bg-secondary p-4", {
-        /** The whole tile celebrates with the citizen: the colour clouds of
-        the surface, and an isolated box for the confetti behind the
-        profile. */
-        "relative isolate background-birthday":
-          profile.citizen.hasBirthdayToday,
-      })}
+      className={clsx(
+        "w-full corners-primary bg-secondary p-4",
+        {
+          /** The whole tile celebrates with the citizen: the colour clouds
+          of the surface, and an isolated box for the confetti behind the
+          profile. */
+          "relative isolate background-birthday":
+            profile.citizen.hasBirthdayToday,
+        },
+        className,
+      )}
     >
-      <ProfileContent profile={profile} />
+      <ProfileContent profile={profile} hideSpynetLink={hideSpynetLink} />
     </section>
   );
 };

@@ -56,17 +56,19 @@ interface Props {
    * actions refresh the page.
    */
   readonly onRoleAssignmentsChanged?: () => void;
+  readonly hideSpynetLink?: boolean;
 }
 
 /**
  * The profile of a citizen. All surfaces which show a profile — the citizen
- * popover, the account popover of the top bar and the dashboard tile —
- * render this component, so that they cannot drift apart. Each surface adds
- * its own chrome around it.
+ * popover, the account popover of the top bar, the dashboard tile and the
+ * Spynet overview — render this component, so that they cannot drift apart.
+ * Each surface adds its own chrome around it.
  */
 export const ProfileContent = ({
   profile,
   onRoleAssignmentsChanged,
+  hideSpynetLink,
 }: Props) => {
   const { citizen, metrics } = profile;
   const name = citizen.handle || citizen.id;
@@ -126,7 +128,7 @@ export const ProfileContent = ({
             <CopyToClipboard value={name} />
           </h2>
 
-          {profile.spynetHref && (
+          {profile.spynetHref && !hideSpynetLink && (
             <Link
               href={profile.spynetHref}
               className="font-mono text-xs text-interaction-500 uppercase hover:underline focus-visible:underline"

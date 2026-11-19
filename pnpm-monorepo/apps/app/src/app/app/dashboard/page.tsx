@@ -11,10 +11,12 @@ import { SpynetSearchTile } from "@/modules/spynet/components/SpynetSearchTile/S
 import { TasksDashboardTile } from "@/modules/tasks/components/DashboardTile";
 import { NewTasksDashboardTile } from "@/modules/tasks/components/NewTasksDashboardTile";
 import { WikiDashboardPageTile } from "@/modules/wiki/components/WikiDashboardPageTile";
+import { forbidden } from "next/navigation";
 import { Suspense } from "react";
 
 export default async function Page() {
   const authentication = await requireAuthenticationPage("/app/dashboard");
+  if (!authentication.session.entity) forbidden();
 
   const [canCitizenRead, canOrgRead, canTaskRead] = await Promise.all([
     authentication.authorize("citizen", "read"),
@@ -62,7 +64,7 @@ export default async function Page() {
             )}
 
             <SuspenseWithErrorBoundaryTile>
-              <ProfileTile />
+              <ProfileTile citizenId={authentication.session.entity.id} />
             </SuspenseWithErrorBoundaryTile>
           </section>
 
