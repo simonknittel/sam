@@ -11,6 +11,10 @@ import { idSchema } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
 import { selectNewParticipantIds } from "./addableParticipants.js";
 import { createEventActivity } from "./eventActivity.js";
+import {
+  approveOpenApplications,
+  buildApplicationAuditEvents,
+} from "./eventApplications.js";
 import { participationTextSchema } from "./eventInputSchemas.js";
 import {
   buildInvitationAuditEvents,
@@ -30,7 +34,7 @@ export const addEventParticipantsInputSchema = z.object({
     .array(idSchema)
     .max(EVENT_MAX_CITIZENS_PER_REQUEST)
     .describe(
-      "The citizens to sign up. Each must be able to see the event, log in and get event notifications. Citizens who are already signed up are skipped. An open invitation of an added citizen is withdrawn.",
+      "The citizens to sign up. Each must be able to see the event, log in and get event notifications. Citizens who are already signed up are skipped. An open invitation of an added citizen is withdrawn, and an open application is approved.",
     ),
   comment: participationTextSchema
     .optional()
@@ -51,7 +55,8 @@ export interface AddEventParticipantsOutput {
 /**
  * A manager signs citizens up for an app event. Each added citizen gets a
  * notification, except the actor. The direct sign-up replaces an open
- * invitation of the citizen, thus the use case withdraws it.
+ * invitation of the citizen, thus the use case withdraws it, and it answers
+ * an open application of the citizen, thus the use case approves it.
  */
 export const addEventParticipants = (
   context: ApplicationContext,
@@ -88,10 +93,22 @@ export const addEventParticipants = (
      */
     const comment = input.comment || null;
 
-    const { addedCitizenIds, withdrawnInvitations } =
+    const { addedCitizenIds, withdrawnInvitations, approvedApplications } =
       citizenIdsToAdd.length > 0
         ? await context.prisma.$transaction(async (transaction) => {
             await lockParticipationEnabledEvent(transaction, event.id);
+
+            /**
+             * Before the sign-ups: each write that closes an application
+             * locks the application first, thus two writes cannot wait for
+             * each other
+             */
+            const approved = await approveOpenApplications(transaction, {
+              eventId: event.id,
+              citizenIds: citizenIdsToAdd,
+              actorId: managerId,
+              closedAt: context.now(),
+            });
 
             const created =
               await transaction.eventParticipant.createManyAndReturn({
@@ -125,9 +142,14 @@ export const addEventParticipants = (
                 withdrawnById: managerId,
                 withdrawnAt: context.now(),
               }),
+              approvedApplications: approved,
             };
           })
-        : { addedCitizenIds: [], withdrawnInvitations: [] };
+        : {
+            addedCitizenIds: [],
+            withdrawnInvitations: [],
+            approvedApplications: [],
+          };
 
     if (addedCitizenIds.length <= 0)
       return {
@@ -148,6 +170,12 @@ export const addEventParticipants = (
         AuditEventType.EVENT_INVITATION_WITHDRAWN,
         event.id,
         withdrawnInvitations,
+        actor.userId,
+      ),
+      ...buildApplicationAuditEvents(
+        AuditEventType.EVENT_APPLICATION_APPROVED,
+        event.id,
+        approvedApplications,
         actor.userId,
       ),
     ]);

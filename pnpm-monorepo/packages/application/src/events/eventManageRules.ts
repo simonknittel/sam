@@ -39,6 +39,19 @@ const isEventOrganizer = (actor: Actor, event: EventManageInput) => {
 export const isAllowedToManageEvent = (actor: Actor, event: EventManageInput) =>
   isEventOrganizer(actor, event) || actor.authorize("event", "manage");
 
+export type EventApplicationRequirementInput = EventManageInput &
+  Pick<Event, "applicationRequired">;
+
+/**
+ * Whether the actor must apply to take part in the event instead of a direct
+ * sign-up: the event requires applications, and the actor cannot manage the
+ * event. An open invitation also signs the actor up without an application.
+ */
+export const mustApplyForEvent = (
+  actor: Actor,
+  event: EventApplicationRequirementInput,
+) => event.applicationRequired && !isAllowedToManageEvent(actor, event);
+
 export const isAllowedToManagePositions = (
   actor: Actor,
   event: EventManageInput,

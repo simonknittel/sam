@@ -49,7 +49,7 @@ export const signUpForEvent = (
 
     if (!participant) {
       try {
-        const signUp = await insertOwnParticipation(context, actor, {
+        const signUp = await insertOwnParticipation(context, actor, event, {
           eventId: event.id,
           citizenId,
           comment: comment ?? null,

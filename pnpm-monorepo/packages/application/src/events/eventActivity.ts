@@ -80,6 +80,31 @@ export interface EventActivityPayloadByType {
   [EventActivityType.INVITATION_WITHDRAWN]: {
     citizenId: string;
   };
+  /** An own change of the applicant: the comment of the application */
+  [EventActivityType.APPLICATION_CREATED]: {
+    comment: string | null;
+  };
+  /**
+   * The answers and the withdrawals follow the convention of the
+   * manager-driven changes: the row's citizen column holds the actor (the
+   * manager, or the applicant who withdrew the own application), the payload
+   * the applicant.
+   */
+  [EventActivityType.APPLICATION_APPROVED]: {
+    citizenId: string;
+  };
+  [EventActivityType.APPLICATION_DECLINED]: {
+    citizenId: string;
+    reason: string | null;
+  };
+  [EventActivityType.APPLICATION_WITHDRAWN]: {
+    citizenId: string;
+  };
+  /** The count of the open applications that the switch to false approved */
+  [EventActivityType.APPLICATION_REQUIREMENT_TOGGLED]: {
+    enabled: boolean;
+    approvedApplicationCount: number;
+  };
 }
 
 /**

@@ -26,6 +26,7 @@ export const findParticipatableAppEvent = async (
     select: {
       ...VISIBLE_EVENT_MANAGE_GUARD_SELECT,
       participationEnabled: true,
+      applicationRequired: true,
     },
   });
   if (!event || !canActorSeeEvent(actor, event)) return null;
@@ -48,13 +49,31 @@ export const requireParticipationEnabled = (
     throw new ConflictError(EventErrorMessage.ParticipationDisabled);
 };
 
+type LockedEventSwitches = Pick<
+  Event,
+  "participationEnabled" | "applicationRequired"
+>;
+
+interface LockParticipationEnabledEventOptions {
+  /**
+   * Takes `FOR NO KEY UPDATE` instead of `FOR SHARE`: the lock then also
+   * waits for the other participation writes, and they wait for it. A new
+   * application needs it, because its checks read the sign-ups and the
+   * invitations of the citizen, which a parallel write can add.
+   */
+  readonly excludesParticipationWrites?: boolean;
+}
+
 /**
  * The check of `requireParticipationEnabled()` again, in the transaction of
  * a write that adds a participant, an application or an assignment. The
- * shared lock on the row of the event waits for a switch to false that
- * changed the row first, and a switch that comes later waits for this
- * transaction. Thus the switch cannot clear the participation before the
- * write adds a row that it then keeps. Call it first in the transaction.
+ * shared lock on the row of the event waits for a switch that changed the
+ * row first, and a switch that comes later waits for this transaction. Thus
+ * the switch of the participation to false cannot clear the participation
+ * before the write adds a row that it then keeps, and the switch of the
+ * applications to false cannot approve the open applications before a new
+ * one. Call it first in the transaction. Gives the switches of the locked
+ * row.
  *
  * PostgreSQL releases the lock at the commit or the rollback.
  *
@@ -63,13 +82,22 @@ export const requireParticipationEnabled = (
 export const lockParticipationEnabledEvent = async (
   transaction: Prisma.TransactionClient,
   eventId: Event["id"],
-) => {
-  const [event] = await transaction.$queryRaw<
-    Pick<Event, "participationEnabled">[]
-  >`SELECT "participationEnabled" FROM "Event" WHERE "id" = ${eventId} FOR SHARE`;
+  {
+    excludesParticipationWrites = false,
+  }: LockParticipationEnabledEventOptions = {},
+): Promise<LockedEventSwitches> => {
+  const [event] = excludesParticipationWrites
+    ? await transaction.$queryRaw<
+        LockedEventSwitches[]
+      >`SELECT "participationEnabled", "applicationRequired" FROM "Event" WHERE "id" = ${eventId} FOR NO KEY UPDATE`
+    : await transaction.$queryRaw<
+        LockedEventSwitches[]
+      >`SELECT "participationEnabled", "applicationRequired" FROM "Event" WHERE "id" = ${eventId} FOR SHARE`;
   if (!event) throw new NotFoundError(EventErrorMessage.NotFound);
 
   requireParticipationEnabled(event);
+
+  return event;
 };
 
 /**

@@ -3,6 +3,7 @@ import type { Prisma } from "@sam-monorepo/database/client";
 import { CursorDirection, ReadMarkerSubject } from "@sam-monorepo/domain";
 import * as z from "zod";
 import { requirePermission, type Actor } from "../actor.js";
+import { CITIZEN_REFERENCE_SELECT } from "../citizenReference.js";
 import type { ApplicationContext } from "../context.js";
 import {
   cursorSchema,
@@ -15,6 +16,7 @@ import {
   type UnreadWhere,
 } from "../readMarkers/unreadWhere.js";
 import { withSpan } from "../withSpan.js";
+import { OPEN_INVITATION_WHERE } from "./eventInvitationStatus.js";
 import {
   toEventSourceType,
   toEventVisibilityType,
@@ -82,6 +84,8 @@ export interface EventListEntry {
   readonly participant_count: number;
   /** False when a manager turned off the participation (see `get_event`) */
   readonly participation_enabled: boolean;
+  /** True when the sign-up needs an application (see `get_event`) */
+  readonly application_required: boolean;
   readonly is_participating: boolean;
   /** Open and unread for the actor (see the read markers) */
   readonly is_new: boolean;
@@ -96,10 +100,12 @@ export interface ListEventsOutput {
 /**
  * An event card shows how many citizens take part and whether the viewer is
  * one of them. Thus the query counts the participants and loads only the
- * participation rows of the viewer, not a row for each participant.
+ * participation rows, the open invitation and the latest application of the
+ * viewer, not a row for each participant.
  */
 const eventListSelect = (
   viewerParticipationWhere: Prisma.EventParticipantWhereInput,
+  viewerCitizenWhere: ViewerCitizenWhere,
 ) =>
   ({
     id: true,
@@ -116,6 +122,28 @@ const eventListSelect = (
     lineupEnabled: true,
     // Also hides the sign-up and the participant count of the event card
     participationEnabled: true,
+    // With the invitation and the application of the viewer, for the sign-up of the event card
+    applicationRequired: true,
+    invitations: {
+      where: { ...viewerCitizenWhere, ...OPEN_INVITATION_WHERE },
+      take: 1,
+      select: {
+        message: true,
+        createdBy: { select: CITIZEN_REFERENCE_SELECT },
+      },
+    },
+    applications: {
+      where: viewerCitizenWhere,
+      orderBy: { createdAt: "desc" },
+      take: 1,
+      select: {
+        comment: true,
+        approvedAt: true,
+        declinedAt: true,
+        declineReason: true,
+        withdrawnAt: true,
+      },
+    },
     discordCreatorId: true,
     createdById: true,
     managers: EVENT_PAGE_RELATIONS_SELECT.managers,
@@ -136,6 +164,20 @@ const eventListSelect = (
 export type EventListRow = Prisma.EventGetPayload<{
   select: ReturnType<typeof eventListSelect>;
 }>;
+
+/** The where of the invitations and the applications of the viewer */
+type ViewerCitizenWhere =
+  { readonly citizenId: string } | { readonly id: { readonly in: string[] } };
+
+/**
+ * The rows of the citizen of the actor. An actor without a citizen has none:
+ * an empty where would match the rows of all citizens.
+ */
+const buildViewerCitizenWhere = (actor: Actor): ViewerCitizenWhere => {
+  const citizenId = actor.citizen?.id ?? null;
+
+  return citizenId === null ? { id: { in: [] } } : { citizenId };
+};
 
 /** The rows of the event cards of a list */
 export interface EventCardRows {
@@ -347,7 +389,10 @@ export const findEventListPage = (
               buildVisibleEventsWhere(toEventViewer(actor)),
             ],
           },
-          select: eventListSelect(viewerParticipationWhere),
+          select: eventListSelect(
+            viewerParticipationWhere,
+            buildViewerCitizenWhere(actor),
+          ),
           // Events with the same start keep one order on all pages
           orderBy: [{ startTime: orderDirection }, { id: orderDirection }],
           ...cursorArguments,
@@ -386,7 +431,10 @@ export const findEventCardRows = (
       where: {
         AND: [eventWhere, buildVisibleEventsWhere(toEventViewer(actor))],
       },
-      select: eventListSelect(buildViewerParticipationWhere(actor)),
+      select: eventListSelect(
+        buildViewerParticipationWhere(actor),
+        buildViewerCitizenWhere(actor),
+      ),
       orderBy: [{ startTime: "asc" }, { id: "asc" }],
     });
 
@@ -416,6 +464,7 @@ export const listEvents = async (
       visibility: toEventVisibilityType(event.visibility),
       participant_count: event._count.participants,
       participation_enabled: event.participationEnabled,
+      application_required: event.applicationRequired,
       is_participating: event.participants.length > 0,
       is_new: page.newEventIds.has(event.id),
     })),

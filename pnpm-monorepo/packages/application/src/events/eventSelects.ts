@@ -51,6 +51,7 @@ export const EVENT_DETAILS_SELECT = {
   visibility: true,
   lineupEnabled: true,
   participationEnabled: true,
+  applicationRequired: true,
   createdAt: true,
   createdById: true,
   deletedAt: true,

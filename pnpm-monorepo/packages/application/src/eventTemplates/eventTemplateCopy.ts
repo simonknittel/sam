@@ -25,6 +25,7 @@ export interface EventTemplateCopyFields {
   readonly visibility: EventVisibility;
   readonly visibilityRoleIds: readonly string[];
   readonly participationEnabled: boolean;
+  readonly applicationRequired: boolean;
   readonly discordPublishTarget: EventDiscordPublishTarget | null;
   readonly discordPublishChannelId: string | null;
   readonly discordPublishLocation: string | null;
@@ -95,6 +96,7 @@ export const createEventTemplateCopy = async (
             create: fields.visibilityRoleIds.map((roleId) => ({ roleId })),
           },
           participationEnabled: fields.participationEnabled,
+          applicationRequired: fields.applicationRequired,
           discordPublishTarget: fields.discordPublishTarget,
           discordPublishChannelId: fields.discordPublishChannelId,
           discordPublishLocation: fields.discordPublishLocation,

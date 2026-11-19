@@ -67,6 +67,12 @@ export const createEventInputSchema = z.object({
     .describe(
       "False creates the event without sign-up and without lineup: nobody can sign up or be added. Default true (or the value of the template).",
     ),
+  application_required: z
+    .boolean()
+    .optional()
+    .describe(
+      "True: a citizen cannot sign up without an invitation, but applies, and a manager approves or declines the application. Default false (or the value of the template).",
+    ),
 });
 
 export type CreateEventInput = z.infer<typeof createEventInputSchema>;
@@ -131,6 +137,7 @@ const loadTemplateCopySource = async (
         name: true,
         coverImage: { select: COPYABLE_UPLOAD_SELECT },
         participationEnabled: true,
+        applicationRequired: true,
       },
     },
   );
@@ -146,6 +153,7 @@ const loadTemplateCopySource = async (
     name: template.name,
     coverImage: copiesCover ? template.coverImage : null,
     participationEnabled: template.participationEnabled,
+    applicationRequired: template.applicationRequired,
     content: copiesBriefing ? content : { ...content, briefingPages: [] },
     copiesBriefing,
     /**
@@ -260,6 +268,10 @@ export const createEvent = (
               input.participation_enabled ??
               templateSource?.participationEnabled ??
               true,
+            applicationRequired:
+              input.application_required ??
+              templateSource?.applicationRequired ??
+              false,
             createdById: citizenId,
             coverImageId: coverImageId ?? copiedCoverImage?.id ?? null,
             briefingPublishedAt: templateSource?.isBriefingPublished
