@@ -3,7 +3,28 @@ import { ACTIVE_CITIZEN_WHERE } from "../citizen/activeCitizen.js";
 import { lockSilcLedger } from "./lockSilcLedger.js";
 import { updateSilcBalances } from "./updateSilcBalances.js";
 
+/** Which balances `bookBalancesToZero()` books to 0 */
+export enum BalancesToBook {
+  /** The SILC of the positive balances expire, a negative balance stays */
+  Positive = "positive",
+  /**
+   * Also a negative balance goes to 0, with a positive booking. Only the end
+   * of a SINcome collection phase does this: such a booking has the cycle,
+   * thus it does not count as earned SILC (see `updateSilcBalances()`).
+   */
+  All = "all",
+}
+
+const BALANCE_HAVING: Record<
+  BalancesToBook,
+  Prisma.SilcTransactionScalarWhereWithAggregatesInput
+> = {
+  [BalancesToBook.Positive]: { value: { _sum: { gt: 0 } } },
+  [BalancesToBook.All]: { value: { _sum: { not: 0 } } },
+};
+
 interface Options {
+  readonly balances: BalancesToBook;
   readonly description: string;
   /** The citizen who starts the booking, NULL for the midnight job */
   readonly createdById: string | null;
@@ -12,13 +33,13 @@ interface Options {
 
 interface BookedBalance {
   readonly citizenId: string;
-  /** The positive balance before the booking */
+  /** The balance before the booking, never 0 */
   readonly value: number;
 }
 
 /**
- * Books the positive SILC balance of each citizen that is not deleted away:
- * one negative booking for each citizen, then the balance update.
+ * Books the SILC balance of each citizen that is not deleted to 0: one
+ * booking of the opposite value for each citizen, then the balance update.
  *
  * The balances come from the ledger in the transaction of the caller, not
  * from the cached copy on the citizen. The ledger lock makes sure that no
@@ -26,9 +47,14 @@ interface BookedBalance {
  * parallel calls cannot book the same balance two times: the second call
  * waits and then reads a balance of 0.
  */
-export const bookPositiveBalancesAway = async (
+export const bookBalancesToZero = async (
   transaction: Prisma.TransactionClient,
-  { description, createdById, profitDistributionCycleId }: Options,
+  {
+    balances: balancesToBook,
+    description,
+    createdById,
+    profitDistributionCycleId,
+  }: Options,
 ) => {
   await lockSilcLedger(transaction);
 
@@ -36,7 +62,7 @@ export const bookPositiveBalancesAway = async (
     by: ["receiverId"],
     where: { deletedAt: null, receiver: ACTIVE_CITIZEN_WHERE },
     _sum: { value: true },
-    having: { value: { _sum: { gt: 0 } } },
+    having: BALANCE_HAVING[balancesToBook],
   });
   const balances: BookedBalance[] = sums.map((sum) => ({
     citizenId: sum.receiverId,

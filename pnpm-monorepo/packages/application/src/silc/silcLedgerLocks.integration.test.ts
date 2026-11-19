@@ -1,6 +1,7 @@
 import { prisma } from "@sam-monorepo/database";
 import {
-  bookPositiveBalancesAway,
+  BalancesToBook,
+  bookBalancesToZero,
   endCollectionPhaseInTransaction,
   updateSilcBalances,
 } from "@sam-monorepo/domain";
@@ -48,7 +49,7 @@ beforeEach(async () => {
   await truncateAllTables();
 });
 
-describe("bookPositiveBalancesAway", () => {
+describe("bookBalancesToZero", () => {
   test("two parallel runs book each balance one time", async () => {
     const pilot = await createCitizenWithLedger("pilot", [100, -30]);
     const miner = await createCitizenWithLedger("miner", [50]);
@@ -57,7 +58,8 @@ describe("bookPositiveBalancesAway", () => {
 
     const [firstRun, secondRun] = await runAgainstLockHolder(
       (transaction) =>
-        bookPositiveBalancesAway(transaction, {
+        bookBalancesToZero(transaction, {
+          balances: BalancesToBook.Positive,
           description: "Verfallen",
           createdById: null,
         }),

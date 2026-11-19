@@ -1,4 +1,8 @@
-import { AuditEventType, bookPositiveBalancesAway } from "@sam-monorepo/domain";
+import {
+  AuditEventType,
+  BalancesToBook,
+  bookBalancesToZero,
+} from "@sam-monorepo/domain";
 import { requireCitizen, requirePermission, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { withSpan } from "../withSpan.js";
@@ -27,7 +31,8 @@ export const expireAllSilc = (
     const citizen = requireCitizen(actor);
 
     const { balances } = await context.prisma.$transaction((transaction) =>
-      bookPositiveBalancesAway(transaction, {
+      bookBalancesToZero(transaction, {
+        balances: BalancesToBook.Positive,
         description: EXPIRED_BOOKING_DESCRIPTION,
         createdById: citizen.id,
       }),

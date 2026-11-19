@@ -77,8 +77,8 @@ export const SincomeGuide = ({ className }: Props) => {
         <GuideStepList>
           <GuideStep number={1} icon={FaCoins} title="Sammelphase">
             Du verdienst SILC. Am Ende der Phase merkt sich das SAM deinen
-            positiven Kontostand für die Auszahlung und setzt ihn auf 0. Ein
-            negativer Kontostand bleibt.
+            positiven Kontostand für die Auszahlung. Dann setzt es jeden
+            Kontostand auf 0, auch einen negativen.
           </GuideStep>
 
           <GuideStep
