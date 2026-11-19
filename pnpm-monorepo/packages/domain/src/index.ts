@@ -78,6 +78,7 @@ export {
   type GuildScheduledEventTarget,
   type PublishableGuildChannel,
 } from "./discord/guildScheduledEvent.js";
+export { EventApplicationStatus } from "./events/eventApplicationStatus.js";
 export {
   EventContainerKind,
   eventContainerColumns,
@@ -149,6 +150,7 @@ export * from "./notifications/notificationSettings.js";
 export * from "./notifications/notificationTexts.js";
 export {
   BIRTHDAY_FALLBACK_WORDING,
+  EventApplicationAnswer,
   EventInvitationAnswer,
   EventParticipationChange,
   FLEET_UPDATE_REMINDER_UNCHANGED_MONTHS,
@@ -157,6 +159,8 @@ export {
   ONBOARDING_POPOVER_SEARCH_PARAM,
   ON_SITE_NOTIFICATION_PAYLOAD_VERSIONS,
   birthdayPayloadSchema,
+  eventApplicationAnsweredPayloadSchema,
+  eventApplicationCreatedPayloadSchema,
   eventBriefingPublishedPayloadSchema,
   eventBriefingUpdatedPayloadSchema,
   eventCreatedPayloadSchema,

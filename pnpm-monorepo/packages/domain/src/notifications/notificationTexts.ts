@@ -1,5 +1,6 @@
 import { ORGANIZATION_TIMEZONE } from "../timeZone.js";
 import {
+  EventApplicationAnswer,
   EventInvitationAnswer,
   EventParticipationChange,
   FLEET_UPDATE_REMINDER_UNCHANGED_MONTHS,
@@ -151,6 +152,45 @@ export const getEventInvitationAnsweredText = ({
 
     default:
       throw new Error(`Unknown invitation answer: ${answer satisfies never}`);
+  }
+};
+
+export const getEventApplicationCreatedText = ({
+  eventName,
+  citizenHandle,
+  comment,
+}: OnSiteNotificationPayload<"event_application_created">): NotificationText => {
+  const body = `${citizenHandle ?? UNKNOWN_CITIZEN} möchte teilnehmen – ${eventName}`;
+
+  return {
+    title: "Neue Teilnahmeanfrage",
+    body: comment ? `${body} Kommentar: ${comment}` : body,
+  };
+};
+
+export const getEventApplicationAnsweredText = ({
+  eventName,
+  answer,
+  reason,
+}: OnSiteNotificationPayload<"event_application_answered">): NotificationText => {
+  switch (answer) {
+    case EventApplicationAnswer.Approved:
+      return {
+        title: "Teilnahmeanfrage angenommen",
+        body: `Du bist jetzt für das Event "${eventName}" angemeldet.`,
+      };
+
+    case EventApplicationAnswer.Declined: {
+      const body = `Deine Teilnahmeanfrage für das Event "${eventName}" wurde abgelehnt.`;
+
+      return {
+        title: "Teilnahmeanfrage abgelehnt",
+        body: reason ? `${body} Grund: ${reason}` : body,
+      };
+    }
+
+    default:
+      throw new Error(`Unknown application answer: ${answer satisfies never}`);
   }
 };
 

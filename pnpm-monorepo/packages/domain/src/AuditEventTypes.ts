@@ -138,7 +138,9 @@ export enum AuditEventType {
   EVENT_TEMPLATE_CREATED = "EVENT_TEMPLATE_CREATED",
   /** @deprecated Superseded by EVENT_TEMPLATE_UPDATED_V2 (adds the participation switch) */
   EVENT_TEMPLATE_UPDATED = "EVENT_TEMPLATE_UPDATED",
+  /** @deprecated Superseded by EVENT_TEMPLATE_UPDATED_V3 (adds the application switch) */
   EVENT_TEMPLATE_UPDATED_V2 = "EVENT_TEMPLATE_UPDATED_V2",
+  EVENT_TEMPLATE_UPDATED_V3 = "EVENT_TEMPLATE_UPDATED_V3",
   EVENT_TEMPLATE_DUPLICATED = "EVENT_TEMPLATE_DUPLICATED",
   /**
    * The reverse direction of EVENT_CREATED_FROM_TEMPLATE: a manager turned
@@ -261,6 +263,11 @@ export enum AuditEventType {
   EVENT_INVITATION_ACCEPTED = "EVENT_INVITATION_ACCEPTED",
   EVENT_INVITATION_DECLINED = "EVENT_INVITATION_DECLINED",
   EVENT_INVITATION_WITHDRAWN = "EVENT_INVITATION_WITHDRAWN",
+  EVENT_APPLICATION_REQUIREMENT_CHANGED = "EVENT_APPLICATION_REQUIREMENT_CHANGED",
+  EVENT_APPLICATION_CREATED = "EVENT_APPLICATION_CREATED",
+  EVENT_APPLICATION_APPROVED = "EVENT_APPLICATION_APPROVED",
+  EVENT_APPLICATION_DECLINED = "EVENT_APPLICATION_DECLINED",
+  EVENT_APPLICATION_WITHDRAWN = "EVENT_APPLICATION_WITHDRAWN",
   CITIZENS_PER_ROLE_COUNTED = "CITIZENS_PER_ROLE_COUNTED",
   SHIPS_PER_VARIANT_COUNTED = "SHIPS_PER_VARIANT_COUNTED",
   UNIQUE_LOGINS_COUNTED = "UNIQUE_LOGINS_COUNTED",
@@ -1085,6 +1092,17 @@ export interface AuditEventDataByType {
     participationEnabled: boolean;
   };
 
+  [AuditEventType.EVENT_TEMPLATE_UPDATED_V3]: {
+    templateId: string;
+    previousName: string;
+    name: string;
+    visibility: string;
+    visibilityRoleIds: string[];
+    coverImageChanged: boolean;
+    participationEnabled: boolean;
+    applicationRequired: boolean;
+  };
+
   [AuditEventType.EVENT_TEMPLATE_DUPLICATED]: {
     templateId: string;
     name: string;
@@ -1797,13 +1815,58 @@ export interface AuditEventDataByType {
   };
 
   /**
-   * A manager withdrew the invitation, added the citizen directly or turned
-   * off the participation of the event
+   * A manager withdrew the invitation, added the citizen directly, approved
+   * the application of the citizen or turned off the participation of the
+   * event
    */
   [AuditEventType.EVENT_INVITATION_WITHDRAWN]: {
     eventId: string;
     citizenId: string;
     invitationId: string;
+  };
+
+  /**
+   * The switch of the applications of an event. The switch to false approves
+   * the open applications, which have their own events.
+   */
+  [AuditEventType.EVENT_APPLICATION_REQUIREMENT_CHANGED]: {
+    eventId: string;
+    enabled: boolean;
+  };
+
+  /** The comment of the citizen stays out of the immutable log */
+  [AuditEventType.EVENT_APPLICATION_CREATED]: {
+    eventId: string;
+    citizenId: string;
+    applicationId: string;
+  };
+
+  /**
+   * A manager approved the application or added the citizen directly, or the
+   * switch of the requirement to false approved it
+   */
+  [AuditEventType.EVENT_APPLICATION_APPROVED]: {
+    eventId: string;
+    citizenId: string;
+    applicationId: string;
+  };
+
+  /** The reason of the manager stays out of the immutable log */
+  [AuditEventType.EVENT_APPLICATION_DECLINED]: {
+    eventId: string;
+    citizenId: string;
+    applicationId: string;
+  };
+
+  /**
+   * The citizen withdrew the application or signed up with an invitation, or
+   * a manager turned off the participation of the event, or turned off the
+   * applications while the citizen could not see the event
+   */
+  [AuditEventType.EVENT_APPLICATION_WITHDRAWN]: {
+    eventId: string;
+    citizenId: string;
+    applicationId: string;
   };
 
   [AuditEventType.CITIZENS_PER_ROLE_COUNTED]: {

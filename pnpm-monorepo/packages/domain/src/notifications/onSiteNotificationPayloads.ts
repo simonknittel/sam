@@ -171,6 +171,32 @@ export const eventInvitationAnsweredPayloadSchema = z.object({
   comment: z.nullable(z.string()),
 });
 
+/** The answer of a manager to an application, which the applicant hears about */
+export enum EventApplicationAnswer {
+  Approved = "approved",
+  Declined = "declined",
+}
+
+/**
+ * The new application of a citizen, which the organizers hear about.
+ * `citizenHandle` is null for a citizen without a handle. `comment` is the
+ * note of the citizen.
+ */
+export const eventApplicationCreatedPayloadSchema = z.object({
+  eventId: z.string(),
+  eventName: z.string(),
+  citizenHandle: z.nullable(z.string()),
+  comment: z.nullable(z.string()),
+});
+
+/** `reason` is the optional note of the manager to a declined application */
+export const eventApplicationAnsweredPayloadSchema = z.object({
+  eventId: z.string(),
+  eventName: z.string(),
+  answer: z.enum(EventApplicationAnswer),
+  reason: z.nullable(z.string()),
+});
+
 export const roleAddedPayloadSchema = z.object({
   roleId: z.string(),
   roleName: z.string(),
@@ -393,6 +419,8 @@ export const onSiteNotificationPayloadSchemas = {
   event_participation_removed: eventParticipationRemovedPayloadSchema,
   event_invitation_created: eventInvitationCreatedPayloadSchema,
   event_invitation_answered: eventInvitationAnsweredPayloadSchema,
+  event_application_created: eventApplicationCreatedPayloadSchema,
+  event_application_answered: eventApplicationAnsweredPayloadSchema,
   event_manager_added: eventManagerAddedPayloadSchema,
   event_participation_changed: eventParticipationChangedPayloadSchema,
   event_position_vacated: eventPositionVacatedPayloadSchema,
@@ -448,6 +476,8 @@ export const ON_SITE_NOTIFICATION_PAYLOAD_VERSIONS: Record<
   event_participation_removed: 1,
   event_invitation_created: 1,
   event_invitation_answered: 1,
+  event_application_created: 1,
+  event_application_answered: 1,
   event_manager_added: 1,
   event_participation_changed: 1,
   event_position_vacated: 1,
