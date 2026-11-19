@@ -2,6 +2,7 @@
 
 import type { WikiTreeNode } from "@sam-monorepo/wiki-editor/helpers";
 import clsx from "clsx";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   FaAngleDoubleDown,
@@ -9,7 +10,9 @@ import {
   FaRegEye,
   FaRegEyeSlash,
 } from "react-icons/fa";
+import { findWikiTreePath } from "../utils/findWikiTreePath";
 import { pruneWikiTree } from "../utils/pruneWikiTree";
+import { getActiveWikiPageId } from "../utils/wikiPageHref";
 import { serializeWikiShowHiddenPagesCookie } from "../utils/wikiShowHiddenPagesCookie";
 import { useWikiPageHrefMode } from "./WikiPageHrefModeProvider";
 import { WikiPageTree } from "./WikiPageTree";
@@ -26,8 +29,8 @@ interface Props {
   /** The tree including sidebar-hidden pages */
   readonly tree: WikiTreeNode[];
   /**
-   * Readable pages the sidebar mode hides — pruned from the default view,
-   * dimmed when shown
+   * Readable pages the sidebar mode hides — pruned from the default view
+   * (except the path to an opened one), dimmed when shown
    */
   readonly hiddenPageIds: readonly string[];
   /** The toggle's remembered state, read from the cookie during SSR */
@@ -44,6 +47,10 @@ interface Props {
  * The server sends the full tree only once, and the default view is
  * derived from it here, so toggling needs no refetch — the cookie write
  * only carries the choice into the next server render.
+ *
+ * An opened hidden page also shows in the default view, together with its
+ * hidden ancestors, so that the sidebar shows where the viewer is. Their
+ * other subpages stay hidden.
  */
 export const WikiSidebarTree = ({
   tree,
@@ -52,8 +59,21 @@ export const WikiSidebarTree = ({
   expandedPagesCookie,
 }: Props) => {
   const hrefMode = useWikiPageHrefMode();
+  const pathname = usePathname();
   const [showHidden, setShowHidden] = useState(initialShowHidden);
-  const defaultTree = pruneWikiTree(tree, new Set(hiddenPageIds));
+  const hiddenIds = new Set(hiddenPageIds);
+  const revealedPageIds = findWikiTreePath(
+    tree,
+    getActiveWikiPageId(hrefMode, pathname),
+  )
+    .map((node) => node.id)
+    .filter((pageId) => hiddenIds.has(pageId));
+  const defaultTree = pruneWikiTree(
+    tree,
+    new Set(
+      hiddenPageIds.filter((pageId) => !revealedPageIds.includes(pageId)),
+    ),
+  );
   const nodes = showHidden ? tree : defaultTree;
   const hasCollapsiblePages = nodes.some((node) => node.children.length > 0);
 
@@ -103,7 +123,7 @@ export const WikiSidebarTree = ({
       {nodes.length > 0 ? (
         <WikiPageTree
           nodes={nodes}
-          dimmedPageIds={showHidden ? hiddenPageIds : undefined}
+          dimmedPageIds={showHidden ? hiddenPageIds : revealedPageIds}
         />
       ) : (
         <p className="text-sm text-neutral-400">Keine Seiten vorhanden.</p>

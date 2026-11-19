@@ -9,6 +9,7 @@ import {
   setWikiFeaturedPages,
   wikiDocument,
   WikiPageAccessType,
+  WikiPageSidebarMode,
   WikiPageVisibility,
   wikiParagraph,
 } from "../fixtures/factories";
@@ -123,6 +124,48 @@ test("the breadcrumbs above the heading link to the ancestors of the page", asyn
     page.getByRole("heading", { level: 1, name: "Schiffe" }),
   ).toBeVisible();
   await expect(breadcrumbs.getByRole("link")).toHaveText(["Handbuch"]);
+});
+
+test("the sidebar tree scrolls to the opened page, also to a page that a sidebar mode hides", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, { handle: "reader" });
+  // More root pages than the sidebar shows without a scroll
+  for (let chapter = 1; chapter <= 30; chapter++) {
+    await createWikiPage(prisma, {
+      title: `Kapitel ${String(chapter).padStart(2, "0")}`,
+      visibility: WikiPageVisibility.PUBLIC,
+    });
+  }
+  const archive = await createWikiPage(prisma, {
+    title: "Archiv",
+    visibility: WikiPageVisibility.PUBLIC,
+    sidebarMode: WikiPageSidebarMode.CHILDREN_HIDDEN,
+    sortOrder: 1,
+  });
+  await createWikiPage(prisma, { title: "Protokoll 1", parentId: archive.id });
+  const openedPage = await createWikiPage(prisma, {
+    title: "Protokoll 2",
+    parentId: archive.id,
+  });
+  await signIn(citizen.user);
+
+  await page.goto("/app/wiki");
+  await clickUntilUrl(
+    page,
+    sectionByHeading(page, "Zuletzt erstellt").getByRole("link", {
+      name: "Protokoll 2",
+    }),
+    `/app/wiki/${openedPage.id}/${openedPage.slug}`,
+  );
+
+  const treeLink = page.getByRole("link", { name: "Protokoll 2" });
+  await expect(treeLink).toHaveAttribute("aria-current", "page");
+  await expect(treeLink).toBeInViewport();
+  // Only the path to the opened page leaves the hidden subtree
+  await expect(page.getByRole("link", { name: "Protokoll 1" })).toHaveCount(0);
 });
 
 test("tags are shown on the page and list their pages", async ({
