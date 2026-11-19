@@ -13,8 +13,11 @@ interface Props {
   readonly mobileToggleIcon?: ReactNode;
   /** Sidebar width class(es). Defaults to "md:w-64". */
   readonly sidebarWidthClassName?: string;
-  /** Additional class(es) for the sidebar container, e.g. to make it sticky. */
-  readonly sidebarClassName?: string;
+  /**
+   * The sidebar stays in view while the page scrolls, below the fixed bar of
+   * the shell. A sidebar that is higher than the window scrolls on its own.
+   */
+  readonly isSticky?: boolean;
 }
 
 export const SidebarLayout = ({
@@ -25,16 +28,15 @@ export const SidebarLayout = ({
   mobileToggleLabel,
   mobileToggleIcon,
   sidebarWidthClassName = "md:w-64",
-  sidebarClassName,
+  isSticky = false,
 }: Props) => {
   return (
     <div className={clsx("flex flex-col gap-4 md:flex-row", className)}>
       <SidebarContainer
-        className={clsx(
-          "md:flex-none",
-          sidebarWidthClassName,
-          sidebarClassName,
-        )}
+        className={clsx("md:flex-none", sidebarWidthClassName, {
+          "md:sticky md:top-16 md:max-h-[calc(100dvh-9rem)] md:self-start md:overflow-y-auto md:overscroll-contain lg:top-32":
+            isSticky,
+        })}
         mobileToggleLabel={mobileToggleLabel}
         mobileToggleIcon={mobileToggleIcon}
       >

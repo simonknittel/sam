@@ -58,7 +58,7 @@ export const VariantDetailFrame = async ({
             mobileToggleLabel="Seiten"
             mobileToggleIcon={<FaSitemap />}
             sidebarWidthClassName="md:w-80"
-            sidebarClassName="md:sticky md:top-16 lg:top-32 md:self-start md:max-h-[calc(100dvh-9rem)] md:overflow-y-auto md:overscroll-contain"
+            isSticky
           >
             {wikiContent}
           </SidebarLayout>
