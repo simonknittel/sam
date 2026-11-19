@@ -1,6 +1,7 @@
 import type { ApplicationContext } from "@sam-monorepo/application";
 import {
   EVENT_PARTICIPATION_TEXT_MAX_LENGTH,
+  EventApplicationAnswer,
   EventInvitationAnswer,
   EventParticipationChange,
   LINEUP_MAX_POSITIONS,
@@ -9,6 +10,8 @@ import {
 import * as z from "zod";
 import { log } from "../common/logger";
 import { BirthdayGreetingHandler } from "./type-handlers/BirthdayGreeting";
+import { EventApplicationAnsweredHandler } from "./type-handlers/EventApplicationAnswered";
+import { EventApplicationCreatedHandler } from "./type-handlers/EventApplicationCreated";
 import { EventBriefingPublishedHandler } from "./type-handlers/EventBriefingPublished";
 import { EventBriefingUpdatedHandler } from "./type-handlers/EventBriefingUpdated";
 import { EventCreatedHandler } from "./type-handlers/EventCreated";
@@ -105,6 +108,12 @@ export const notificationRouterHandler = async (
       break;
     case "EventInvitationAnswered":
       await EventInvitationAnsweredHandler(context, body.payload);
+      break;
+    case "EventApplicationCreated":
+      await EventApplicationCreatedHandler(context, body.payload);
+      break;
+    case "EventApplicationAnswered":
+      await EventApplicationAnsweredHandler(context, body.payload);
       break;
     case "EventManagerAdded":
       await EventManagerAddedHandler(context, body.payload);
@@ -350,6 +359,25 @@ export const bodySchema = z.discriminatedUnion("type", [
       citizenId: z.cuid(),
       answer: z.enum(EventInvitationAnswer),
       comment: z.string().max(EVENT_PARTICIPATION_TEXT_MAX_LENGTH).nullable(),
+    }),
+    requestId: z.cuid2(),
+  }),
+
+  z.object({
+    type: z.literal("EventApplicationCreated"),
+    payload: z.object({
+      applicationId: z.cuid2(),
+    }),
+    requestId: z.cuid2(),
+  }),
+
+  z.object({
+    type: z.literal("EventApplicationAnswered"),
+    payload: z.object({
+      eventId: z.cuid(),
+      citizenId: z.cuid(),
+      answer: z.enum(EventApplicationAnswer),
+      reason: z.string().max(EVENT_PARTICIPATION_TEXT_MAX_LENGTH).nullable(),
     }),
     requestId: z.cuid2(),
   }),
