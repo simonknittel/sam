@@ -45,7 +45,6 @@ import {
 } from "../utils/selectLogFiles";
 import type { LogFile, RawMatch, ReadProgress } from "../utils/types";
 import { DateRangeSettings } from "./DateRangeSettings";
-import { Introduction } from "./Introduction";
 import { LiveStatus } from "./LiveStatus";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 import { LogAnalyzerTable } from "./LogAnalyzerTable";
@@ -472,7 +471,10 @@ export const LogAnalyzer = ({ className }: Props) => {
           <LogAnalyzerTable className="min-w-0 2xl:order-1" />
         </div>
       ) : (
-        <Introduction className="mt-1" />
+        <p className="mt-1 rounded-primary border border-dashed border-white/10 p-8 text-center text-sm text-white/60">
+          Noch keine Einträge. Wähle den Ordner deiner Star Citizen-Installation
+          aus. Die Anleitung oben erklärt alle Schritte.
+        </p>
       )}
     </div>
   );

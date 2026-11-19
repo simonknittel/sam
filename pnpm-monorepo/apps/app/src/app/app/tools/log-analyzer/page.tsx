@@ -3,6 +3,7 @@ import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/Suspe
 import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
 import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
 import { BundleLoader } from "@/modules/log-analyzer/components/BundleLoader";
+import { Guide } from "@/modules/log-analyzer/components/Guide/Guide";
 
 export default async function Page() {
   const authentication = await requireAuthenticationPage(
@@ -16,11 +17,17 @@ export default async function Page() {
   ]);
 
   return (
-    <SuspenseWithErrorBoundaryTile>
-      <BundleLoader
-        crashLogAnalyzer={crashLogAnalyzer}
-        isSharingAvailable={!disableLogAnalyzerSharing}
-      />
-    </SuspenseWithErrorBoundaryTile>
+    <>
+      {/* The guide is outside of the error boundary, thus it also shows
+          while the Log Analyzer fails */}
+      <Guide isSharingAvailable={!disableLogAnalyzerSharing} className="mb-4" />
+
+      <SuspenseWithErrorBoundaryTile>
+        <BundleLoader
+          crashLogAnalyzer={crashLogAnalyzer}
+          isSharingAvailable={!disableLogAnalyzerSharing}
+        />
+      </SuspenseWithErrorBoundaryTile>
+    </>
   );
 }
