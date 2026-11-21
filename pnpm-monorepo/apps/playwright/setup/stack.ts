@@ -9,7 +9,7 @@ export const appDirectory = path.join(monorepoRoot, "apps", "app");
  * the dev stack and production use.
  */
 export const postgresImage =
-  "postgres:18.7-alpine3.23@sha256:e6014245dccbc0f28b07dac8e3f793c94a18420f78690e9db547957514a524f1";
+  "postgres:18.7-alpine3.23@sha256:f3ee138d5fce80ffaeb315b8bea7610f0c4f2304fb2aceb4ec8e457b92fc41a0";
 
 /** Same pinned image as compose.yml (S3-compatible upload storage). */
 export const rustfsImage =
