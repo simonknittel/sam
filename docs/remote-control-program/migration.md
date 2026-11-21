@@ -9,10 +9,10 @@ In this document, "decision 13 of the architecture" refers to the [decisions of 
 
 This is not a plan. Each step gets its own implementation plan. The order can change.
 
-1. **Database:** the dedicated PostgreSQL service with TimescaleDB on host1 (decision 13 of the architecture), and the move of the SAM databases to it (see [The move of the databases](#the-move-of-the-databases)).
+1. **Database:** PostgreSQL with TimescaleDB (decision 13 of the architecture), and the move of the SAM databases to such a server (see [The move of the databases](#the-move-of-the-databases)). Done on 2026-11-21.
 2. **Foundation and Log Analyzer:**
    - First, an estimate of the sizes: the connections, the messages and the rows of the history for each day.
-   - The relay service on host1 with the WebSocket connection of the runtimes (decision 14 of the architecture), the announcement, the catalog, the relay for states with their history in TimescaleDB, feeds and grants.
+   - The relay service with the WebSocket connection of the runtimes (decision 14 of the architecture), the announcement, the catalog, the relay for states with their history in TimescaleDB, feeds and grants.
    - The browser runtime with the log file connector, the local access layer and the sharing popover.
    - The Log Analyzer as a control UI (see [The Log Analyzer](#the-log-analyzer)), the reset of the sharing with an entry in the changelog (M1), and the migration of the stored log entries (M3).
    - The new Log Analyzer replaces the old one in one deployment (M2). The shared test data makes sure that the new log file connector finds the same entries as the old parser.
@@ -47,8 +47,8 @@ The Log Analyzer moves completely into the Remote Control Program. No old path s
 
 ### The move of the databases
 
-- The databases `sinister_prod` and `sinister_develop` move from the shared PostgreSQL cluster of host1 to the dedicated service (decision 13 of the architecture). The shared cluster of the other services does not change.
-- Each client of the SAM databases gets the new address: the app on Vercel, the Lambda functions, `sam-collab`, the reader role of `sam-statistics` (Grafana) and the mirror scripts.
+- The databases of SAM move to a PostgreSQL server with TimescaleDB (decision 13 of the architecture).
+- Each client of the SAM databases gets the new address: the app on Vercel, the Lambda functions, `sam-collab`, the reader role of the Grafana of the statistics and the mirror scripts.
 
 ## Decisions of the migration
 

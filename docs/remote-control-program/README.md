@@ -246,7 +246,7 @@ A channel is the transport of a capability. The catalog gives the timing. The ru
 | Out: relay to consumer | New values, new entries and action results within seconds. | Polling, for example each 60 seconds. |
 
 - An action is a pair of messages: the request goes down, and the result goes up.
-- Up and down: each runtime keeps one WebSocket connection open to the relay service on host1 (see decision 14). The connection carries both directions, for the browser runtime and for the desktop companion.
+- Up and down: each runtime keeps one WebSocket connection open to the relay service (see decision 14). The connection carries both directions, for the browser runtime and for the desktop companion.
 - Out: the relay service sends the messages to the consumers through Soketi with the Pusher protocol (`apps/app/src/modules/pusher`). Each viewer has a private channel (`private-citizen-<id>`). The relay checks the grants for each message and sends one copy to each viewer with access.
 - Out: the relay collects the changes for each viewer and sends a maximum of one message to each viewer in a short interval (for example 2 seconds). Example: a lineup with 30 citizens, who all watch the lineup and send one update each second, gives 900 messages each second without this rule, and 15 messages each second with it.
 
@@ -260,7 +260,7 @@ A channel is the transport of a capability. The catalog gives the timing. The ru
 ## Relay
 
 - The relay is a set of use cases in `application`: publish state, append feed entries, read the current state, the history and the feeds, announce a runtime, request an action, report an action result, manage grants, manage access requests.
-- The relay service is a separate host on host1, outside of the Next.js app and Vercel (see decision 14). It keeps the WebSocket connections of the runtimes and calls the use cases. It builds its own application context, like each host (see [Architecture](../architecture.md#the-layers)).
+- The relay service is a separate host, outside of the Next.js app and Vercel (see decision 14). It keeps the WebSocket connections of the runtimes and calls the use cases. It builds its own application context, like each host (see [Architecture](../architecture.md#the-layers)).
 - The app and the MCP server call the read use cases and the grant use cases directly. They send an action request to the relay service through an internal HTTP endpoint. The endpoint answers immediately with the id of the request. The result arrives through Soketi in the private channel of the requester, and it is in the action log. The endpoint accepts only requests with a secret or a signed token of the app, like the collab server.
 - Each use case validates its input with the schema of the catalog.
 - Each use case applies the switches and the remote access layer.
@@ -485,13 +485,13 @@ The implementation plans decide the final locations. Update this table and [Arch
 | A package, for example `packages/remote-control-program-runtime` | The core of the browser runtime: the base types of the connectors, the TypeScript connectors, the local access layer and the channel client. No `next` and no `react`. |
 | `apps/app/src/modules/remote-control-program/` | The browser runtime, the consumer client and the sharing popover. |
 | `packages/mcp/src/tools/remoteControlProgram/` | The MCP tools. |
-| A host, for example `apps/relay` | The relay service: a Node.js container on host1, like `apps/collab`. |
+| A host, for example `apps/relay` | The relay service: a Node.js container, like `apps/collab`. |
 | A Rust project next to `pnpm-monorepo/`, for example `companion/` | The desktop companion. It is not a part of the pnpm monorepo. |
 | A shared folder, for example `remote-control-program-fixtures/` | The shared test data for the TypeScript and the Rust implementations. |
 
 ## Operations and tests
 
-- The relay service has metrics (the connections, the messages, the errors, the delays) and alerts, like the other services on host1.
+- The relay service has metrics (the connections, the messages, the errors, the delays) and alerts, like `sam-collab`.
 - The relay service reads the Unleash flags of the switches.
 - A fake gRPC server replays recorded frames. Thus the tests of the gRPC connector need no game.
 - The Playwright stack contains the relay service and TimescaleDB.
@@ -516,7 +516,7 @@ These ideas have no use case or no reliable source yet. They are not part of the
 - When the gRPC server of the game client is on, each local program can trigger each listed game action, also `v_self_destruct` (see [TriggerGameAction](./grpc-interface.md#triggergameaction)). The Remote Control Program cannot prevent this. It must not make it larger: it accepts only actions from the catalog.
 - The history keeps personal data permanently, for example the location, the vitals and the wallet balance. The owner cannot delete it (see [Decisions](#decisions)). Thus the defaults, the sensitivity and the grants must keep this data under the control of the owner. A request for deletion under data protection law (for example Article 17 of the GDPR) is then a manual task.
 - The history can become large (see decision 7).
-- The relay service is one more service on host1. While it is not available, no runtime can upload data, and no action can reach a runtime. The runtimes must connect again automatically.
+- The relay service is one more service to operate. While it is not available, no runtime can upload data, and no action can reach a runtime. The runtimes must connect again automatically.
 - The connector ideas (simulated input, screen reading) can conflict with the terms of service of CIG and with the anti-cheat software. Do a check before a plan for one of them.
 
 ## Decisions
@@ -539,14 +539,14 @@ All decisions of 2026-11-21. The decisions that apply only to the migration are 
 10. **No finer grants for feeds.** A grant always covers a full capability. The filter of a feed exists only in the local access layer. When a finer split becomes necessary, the catalog splits the feed into more capabilities.
 11. **Identity in the game.** The connector reports the in-game handle. The consumers show a note when it is different from the handle of the owner in SAM. The Remote Control Program does not block the data.
 12. **No deletion of the history.** The owner cannot delete the own history and the own feed entries.
-13. **A dedicated PostgreSQL service for SAM on host1.** A service in the repository `host1.simonknittel.de` runs a PostgreSQL cluster with TimescaleDB only for SAM (the databases `sinister_prod` and `sinister_develop`), with its own backups. Thus SAM has one database and one Prisma data source, and the shared cluster of the other services needs no TimescaleDB. Results:
+13. **PostgreSQL with TimescaleDB.** The databases of SAM run on a PostgreSQL server with the extension TimescaleDB (see [Test and Production](../setup-test-and-production.md#1-set-up-a-postgresql-database)). Thus SAM has one database and one Prisma data source. Results:
     - The image contains the community edition of TimescaleDB for PostgreSQL 18 (the Apache 2 edition has no compression and no continuous aggregates). `shared_preload_libraries` contains `timescaledb`.
-    - The backups and their verification use `timescaledb_pre_restore()` and `timescaledb_post_restore()` for each restore. The mirror scripts of SAM do the same (see [Mirror the database](../mirror-database.md)).
+    - A restore of a dump with hypertables uses `timescaledb_pre_restore()` and `timescaledb_post_restore()`. The mirror scripts of SAM leave out the extension from the dump while the databases have no hypertables. With the first hypertable, they also use these functions (see [Mirror the database](../mirror-database.md)).
 14. **Realtime transport.**
-    - Up and down: a relay service on host1, outside of the Next.js app and Vercel, like `sam-collab`. Each runtime keeps one WebSocket connection open to it. The connection carries the uploads, the action requests and the action results. The app on Vercel cannot keep such connections open, and an HTTPS request for each update would cost much.
+    - Up and down: a relay service outside of the Next.js app and Vercel, like `sam-collab`. Each runtime keeps one WebSocket connection open to it. The connection carries the uploads, the action requests and the action results. The app on Vercel cannot keep such connections open, and an HTTPS request for each update would cost much.
     - Out: Soketi, with one private channel for each viewer. The relay checks the grants for each message. Thus an expired or revoked grant stops the data immediately (principle 5). With one channel for each owner, Soketi would check the access only at the subscription, and it cannot remove one subscription.
-    - Results: the relay service is a host with its own application context (see [Relay](#relay)). The desktop companion signs in with its OAuth access token. The browser runtime gets a short-lived token from the app. Both tokens are ES256 tokens of SAM, thus the relay service verifies them with the public key of SAM (see [Embedded App Authentication](../embedded-app-authentication.md)). The relay service also checks the revocations and the bans (see [Connection and tokens](#connection-and-tokens)). The deployment follows `sam-collab`: an image from the continuous integration, and a service in the repository `host1.simonknittel.de`.
-15. **The relay service and `sam-collab` stay separate services.** Both keep WebSocket connections in both directions on host1, but the similarity ends at the transport:
+    - Results: the relay service is a host with its own application context (see [Relay](#relay)). The desktop companion signs in with its OAuth access token. The browser runtime gets a short-lived token from the app. Both tokens are ES256 tokens of SAM, thus the relay service verifies them with the public key of SAM (see [Embedded App Authentication](../embedded-app-authentication.md)). The relay service also checks the revocations and the bans (see [Connection and tokens](#connection-and-tokens)). The deployment follows `sam-collab`: an image from the continuous integration.
+15. **The relay service and `sam-collab` stay separate services.** Both keep WebSocket connections in both directions, but the similarity ends at the transport:
     - Different protocols: Hocuspocus owns the WebSocket server of `sam-collab` and speaks the Yjs protocol of the wiki documents. The relay service speaks its own protocol with the runtimes, also with the Rust program.
     - Different load: the relay service gets small messages from each online player all the time, and writes the history. `sam-collab` has few editors at the same time.
     - Separate failures and releases: an error or an overload in the relay service does not stop the wiki editor. The relay service can change without a restart of the wiki editor.
