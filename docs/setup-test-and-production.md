@@ -2,26 +2,12 @@
 
 ## 1. Set up a PostgreSQL database
 
-The databases `sinister_prod` (production) and `sinister_develop` (develop)
-run in the PostgreSQL cluster `sam-psql`, a service of host1. Clients outside
-of host1 (for example Vercel) connect with TLS to `sam-psql.simonknittel.de`.
-The cluster runs PostgreSQL 18 with the extension TimescaleDB, with the image
-of the `psql` service in [compose.yml](../compose.yml).
+Create a database for each environment. The server must have:
 
-A PostgreSQL server for SAM must have:
-
-1. PostgreSQL 18 with TimescaleDB in the community edition. The Apache 2
-   edition (the image tags with `-oss`) has no compression and no continuous
-   aggregates.
-2. `timescaledb` in `shared_preload_libraries` (a change needs a restart of
-   the server), and `timescaledb.telemetry_level = off`.
-3. The extension in each database of SAM, before the first
-   `prisma migrate deploy`. The extension is not trusted, thus a superuser
-   must create it: `CREATE EXTENSION IF NOT EXISTS timescaledb;`. The
-   migration `add_timescaledb_extension` then finds the extension and changes
-   nothing.
-4. The user of the app as the owner of the database. With this user, the
-   migrations create the trusted extensions `pg_trgm` and `citext`.
+1. PostgreSQL 18 with TimescaleDB in the community edition, like the image of the `psql` service in [compose.yml](../compose.yml). The Apache 2 edition (the image tags with `-oss`) has no compression and no continuous aggregates.
+2. `timescaledb` in `shared_preload_libraries` (a change needs a restart of the server), and `timescaledb.telemetry_level = off`.
+3. The extension in each database of SAM, before the first `prisma migrate deploy`. Only a superuser can create it: `CREATE EXTENSION IF NOT EXISTS timescaledb;`.
+4. The user of the app as the owner of the database. With this user, the migrations create the extensions `pg_trgm` and `citext`.
 
 ## 2. Set up Cloudflare R2
 

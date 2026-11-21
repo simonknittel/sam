@@ -87,7 +87,7 @@
       ]
     },
     {
-      "description": "SAM must not run a newer TimescaleDB than the servers. host1 has the same group without automerge, thus the owner merges both updates together.",
+      "description": "The local and test databases must not run a newer TimescaleDB than the deployed databases. Merge an update only together with the update of the deployed servers.",
       "matchDepNames": [
         "timescale/timescaledb"
       ],
