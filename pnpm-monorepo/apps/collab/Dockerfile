@@ -3,7 +3,7 @@
 # The base images are Docker Hardened Images (see the requirements in
 # docs/setup-local-machine.md). The runtime image has no shell and no package
 # manager and runs as the user node.
-FROM dhi.io/node:24.22.3-alpine3.23-dev@sha256:abe5e2eb4166f422dea213c4181c1ab069f63bb5d4b4bb0878abba2039fefec6 AS build
+FROM dhi.io/node:26.13.1-alpine3.23-dev@sha256:bb2a985e11f1f0ae9019873a264e28e4c5ea8de59229e849dbc34f4b7eb7a3ae AS build
 RUN corepack enable
 WORKDIR /monorepo
 
@@ -27,7 +27,7 @@ RUN pnpm --filter "@sam-monorepo/collab..." run build
 # scripts, which are not in allowBuilds.
 RUN pnpm --filter "@sam-monorepo/collab" deploy --prod --ignore-scripts /deploy
 
-FROM dhi.io/node:24.22.3-alpine3.23@sha256:056085462c7ee6d47db4e10ab26a9ff63c6cb4c1b88473096ec9c3660345cb54
+FROM dhi.io/node:26.13.1-alpine3.23@sha256:9810cc00c2c7662a61c491d374065121f991222cedd2b8f7c5bb39cd658f429c
 ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=build /deploy ./
