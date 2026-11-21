@@ -27,6 +27,62 @@
     redirects. To get access to the admin functions, set the `role` of your
     user to `admin` in the database.
 
+### Database (PostgreSQL with TimescaleDB)
+
+The `psql` container from [compose.yml](../compose.yml) runs PostgreSQL 18
+with the extension TimescaleDB (the image `timescale/timescaledb`), like the
+servers (see
+[Test and Production](./setup-test-and-production.md#1-set-up-a-postgresql-database)).
+The command line of the container loads the extension
+(`shared_preload_libraries`) and sets the telemetry of TimescaleDB to off.
+In a new data folder, the image creates the extension. In an earlier data
+folder, the first of these creates it: the one-shot service
+`grafana-bootstrap` (at `docker compose up`, before the migrations) or the
+migration `add_timescaledb_extension` (step 10).
+
+The container keeps its data in an anonymous volume, not in a named volume:
+
+- When `docker compose up` makes the container again (for example for a new
+  image), it gives the new container the same volume. The data stays.
+- `docker compose down` and `docker compose rm` remove the container. The
+  next container gets a new, empty volume. In the main checkout, this
+  destroys the only copy of the dev data.
+- A new stack (for example of a git worktree) starts with an empty
+  database.
+
+A data folder of the earlier image `postgres` works with the new image,
+because the PostgreSQL major version is the same. To change to a new image:
+
+1. Run `docker compose up --detach psql`.
+2. Update the extension (see below).
+3. Apply the migrations (step 10).
+
+`docker start` does not change the image of a container. With the earlier
+image `postgres`, the migration fails with
+`extension "timescaledb" is not available`. Then run
+`docker compose up --detach psql`, mark the migration as rolled back, and
+apply the migrations again (step 10):
+
+```sh
+pnpm --filter @sam-monorepo/database exec prisma migrate resolve --rolled-back 20261121120000_add_timescaledb_extension
+```
+
+A new version of the image can have a new version of TimescaleDB. The
+database keeps the earlier version of the extension until you update it.
+TimescaleDB must get the update as the first command of a new session
+(`-X` does not read a `.psqlrc`). You can run the command again without a
+problem:
+
+```sh
+docker compose exec psql psql -X -U postgres -d db -c "ALTER EXTENSION timescaledb UPDATE"
+```
+
+The `up.sh` script of the
+[run-app skill](../.agents/skills/run-app/SKILL.md) does the steps 1 and 2
+itself. In the main checkout, it makes the `psql` container again when its
+image is not the image of `compose.yml`. In each checkout, it updates the
+extension when the image has a newer version of TimescaleDB.
+
 ### Development login
 
 In development, the login page has a "Dev login" control at the top. It
