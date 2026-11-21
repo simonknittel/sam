@@ -32,7 +32,8 @@ The dumps of both scripts do not include the extension `timescaledb`
   superuser.
 - The target database has the extension already. The local database gets it
   from the image of the `psql` service in [compose.yml](../compose.yml), and
-  the stage database from the deploy of the cluster `sam-psql`.
+  the stage database from the setup of its server (see
+  [Test and Production](./setup-test-and-production.md#1-set-up-a-postgresql-database)).
 
 `--exclude-extension` needs `pg_dump` 17 or later. The scripts run `pg_dump`
 in a container of the image of the `psql` service in

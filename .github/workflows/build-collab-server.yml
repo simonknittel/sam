@@ -53,7 +53,7 @@ jobs:
       # One build pushes 3 package versions: the image index, the amd64 image and
       # the attestation. The action counts package versions, not images, so a
       # multiple of 3 deletes only complete images. 15 keeps the 5 newest images,
-      # so the image that host1.simonknittel.de pins stays available.
+      # so that a deployment that pins one of these images can still pull it.
       - uses: actions/delete-package-versions@e5bc658cc4c965c472efe991f8beea3981499c55 # v5.0.0
         with:
           package-name: sam-collab

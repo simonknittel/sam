@@ -3,275 +3,111 @@
 ## Requirements
 
 - [nvm](https://github.com/nvm-sh/nvm)
-- [Docker](https://www.docker.com/), logged in to the registry of the
-  [Docker Hardened Images](https://docs.docker.com/dhi/) with a Docker Hub
-  account: `docker login dhi.io`. The build of the wiki collaboration server
-  uses base images from this registry.
+- [Docker](https://www.docker.com/), logged in to the registry of the [Docker Hardened Images](https://docs.docker.com/dhi/) with a Docker Hub account (`docker login dhi.io`). The wiki collaboration server uses its base images.
 
 ## Setup
 
 1. Clone the repository
 2. Copy [pnpm-monorepo/apps/app/.env.example](../pnpm-monorepo/apps/app/.env.example) to `pnpm-monorepo/apps/app/.env`
 3. Copy [pnpm-monorepo/packages/database/.env.example](../pnpm-monorepo/packages/database/.env.example) to `pnpm-monorepo/packages/database/.env`
-4. Set the values in the two `.env` files. If you have a copy of your `.env` files in Bitwarden, you can download them instead (see [Sync the .env files with Bitwarden](./sync-env-files-with-bitwarden.md)).
-5. Start the database, Soketi, the wiki collaboration server, the S3-compatible upload storage, the Unleash feature flag server and the Grafana of the statistics page: `docker compose up`
-6. Open a second terminal and go to the `pnpm-monorepo` directory: `cd pnpm-monorepo`
-7. Install the necessary Node.js version: `nvm install`
+4. Set the values in the two `.env` files, or download them from Bitwarden (see [Sync the .env files with Bitwarden](./sync-env-files-with-bitwarden.md))
+5. Start the Docker services: `docker compose up`
+6. In a second terminal, go to the `pnpm-monorepo` directory: `cd pnpm-monorepo`
+7. Install Node.js: `nvm install`
 8. Enable pnpm: `corepack enable && corepack install`
 9. Install the dependencies: `pnpm install`
-10. Update the database schema: `pnpm --filter @sam-monorepo/database run migrate:dev`
-11. Start the app (this command first builds the workspace packages of the app): `pnpm run dev:app`
-12. Open the app at: <http://localhost:3000>
-13. Log in with Discord. The Discord application must have
-    `http://localhost:3000/api/auth/callback/discord` in its OAuth2
-    redirects. To get access to the admin functions, set the `role` of your
-    user to `admin` in the database.
+10. Apply the migrations: `pnpm --filter @sam-monorepo/database run migrate:dev`
+11. Start the app: `pnpm run dev:app`
+12. Open <http://localhost:3000>
+13. Log in with Discord. The Discord application must have `http://localhost:3000/api/auth/callback/discord` in its OAuth2 redirects. For the admin functions, set the `role` of your user to `admin` in the database.
 
-### Database (PostgreSQL with TimescaleDB)
+### Database
 
-The `psql` container from [compose.yml](../compose.yml) runs PostgreSQL 18
-with the extension TimescaleDB (the image `timescale/timescaledb`), like the
-servers (see
-[Test and Production](./setup-test-and-production.md#1-set-up-a-postgresql-database)).
-The command line of the container loads the extension
-(`shared_preload_libraries`) and sets the telemetry of TimescaleDB to off.
-In a new data folder, the image creates the extension. In an earlier data
-folder, the first of these creates it: the one-shot service
-`grafana-bootstrap` (at `docker compose up`, before the migrations) or the
-migration `add_timescaledb_extension` (step 10).
+The `psql` container runs PostgreSQL 18 with TimescaleDB (see the [requirements of a server](./setup-test-and-production.md#1-set-up-a-postgresql-database)). Its data is in an anonymous volume: `docker compose down` and `docker compose rm` delete the data, and the stack of a new git worktree starts with an empty database.
 
-The container keeps its data in an anonymous volume, not in a named volume:
+After a change of the image in [compose.yml](../compose.yml), make the container again, update the extension, and apply the migrations (step 10). The `up.sh` script of the [run-app skill](../.agents/skills/run-app/SKILL.md) does the first two commands itself.
 
-- When `docker compose up` makes the container again (for example for a new
-  image), it gives the new container the same volume. The data stays.
-- `docker compose down` and `docker compose rm` remove the container. The
-  next container gets a new, empty volume. In the main checkout, this
-  destroys the only copy of the dev data.
-- A new stack (for example of a git worktree) starts with an empty
-  database.
+```sh
+docker compose up --detach psql
+docker compose exec psql psql -X -U postgres -d db -c "ALTER EXTENSION timescaledb UPDATE"
+```
 
-A data folder of the earlier image `postgres` works with the new image,
-because the PostgreSQL major version is the same. To change to a new image:
-
-1. Run `docker compose up --detach psql`.
-2. Update the extension (see below).
-3. Apply the migrations (step 10).
-
-`docker start` does not change the image of a container. With the earlier
-image `postgres`, the migration fails with
-`extension "timescaledb" is not available`. Then run
-`docker compose up --detach psql`, mark the migration as rolled back, and
-apply the migrations again (step 10):
+If the migration `add_timescaledb_extension` fails with `extension "timescaledb" is not available`, the container still has the earlier image (`docker start` keeps the image). Run `docker compose up --detach psql` and this command, then do step 10 again:
 
 ```sh
 pnpm --filter @sam-monorepo/database exec prisma migrate resolve --rolled-back 20261121120000_add_timescaledb_extension
 ```
 
-A new version of the image can have a new version of TimescaleDB. The
-database keeps the earlier version of the extension until you update it.
-TimescaleDB must get the update as the first command of a new session
-(`-X` does not read a `.psqlrc`). You can run the command again without a
-problem:
-
-```sh
-docker compose exec psql psql -X -U postgres -d db -c "ALTER EXTENSION timescaledb UPDATE"
-```
-
-The `up.sh` script of the
-[run-app skill](../.agents/skills/run-app/SKILL.md) does the steps 1 and 2
-itself. In the main checkout, it makes the `psql` container again when its
-image is not the image of `compose.yml`. In each checkout, it updates the
-extension when the image has a newer version of TimescaleDB.
-
 ### Development login
 
-In development, the login page has a "Dev login" control at the top. It
-signs in as an admin of the local database without Discord, for example on
-the dev server of a worktree or for an AI agent. It lists only admins that
-have a Discord account. On a fresh database, log in with Discord first (see
-step 13). To test as a different user, sign in as an admin and use "Assume
-user" in the admin toolbar. The control and its server action do not
-operate outside of development.
+In development, the "Dev login" control at the top of the login page signs in as an admin without Discord. It lists only admins with a Discord account, so log in with Discord once on a new database (step 13). To test as a different user, use "Assume user" in the admin toolbar.
 
 ### Wiki realtime collaboration
 
-All wiki page edits go through the `sam-collab` container from
-[compose.yml](../compose.yml). The `COLLAB_JWT_SECRET` and `COLLAB_URL`
-defaults from `pnpm-monorepo/apps/app/.env.example` match the configuration
-of the container. Keep these defaults. Without these variables, the wiki is
-read-only. This also applies to deployments, for example previews without
-these variables. After a change to `pnpm-monorepo/apps/collab`, build the
-container again: `docker compose build sam-collab`. As an alternative, run
-the server without Docker: `pnpm --filter @sam-monorepo/collab run dev`.
-This command uses `pnpm-monorepo/apps/collab/.env` (see its
-[.env.example](../pnpm-monorepo/apps/collab/.env.example)).
+Wiki edits go through the `sam-collab` container. Keep the defaults of `COLLAB_JWT_SECRET` and `COLLAB_URL` from `.env.example`. Without these variables, the wiki is read-only, also in a deployment. After a change in `pnpm-monorepo/apps/collab`, run `docker compose build sam-collab`. Or run the server without Docker: `pnpm --filter @sam-monorepo/collab run dev` (with `pnpm-monorepo/apps/collab/.env`, see its [.env.example](../pnpm-monorepo/apps/collab/.env.example)).
 
-### Uploads (S3-compatible storage)
+### Uploads
 
-The app sends file uploads (for example role icons, wiki images and
-attachments) to the `rustfs` container from [compose.yml](../compose.yml). The `S3_*` defaults
-from `pnpm-monorepo/apps/app/.env.example` match the credentials and the
-bucket of the container. Keep these defaults. On `docker compose up`, the
-one-shot `rustfs-bootstrap` service creates the bucket together with its
-anonymous-read policy and its CORS rules. Uploaded files stay only inside
-the container. As an alternative, point the variables to any S3-compatible
-provider (for example Cloudflare R2, see the comments in `.env.example`).
+Uploads go to the S3-compatible `rustfs` container. Keep the `S3_*` defaults from `.env.example`. `docker compose up` creates the bucket. You can also use a different S3-compatible provider, for example Cloudflare R2 (see the comments in `.env.example`).
 
 ### Feature flags (Unleash)
 
-The app reads feature flags from the `unleash` container from
-[compose.yml](../compose.yml). The `UNLEASH_*` defaults from
-`pnpm-monorepo/apps/app/.env.example` match the backend token of the
-container. Keep these defaults. On `docker compose up`, the one-shot
-`unleash-bootstrap` service creates all flags of the app's `UNLEASH_FLAG`
-enum in the disabled state. Toggle the flags in the Unleash admin UI at
-<http://localhost:4242> (login: `admin` / `unleash4all`). Without the
-`UNLEASH_*` variables, all flags are disabled. As an alternative, point the
-variables to any Unleash-compatible provider (for example GitLab feature
-flags).
+The app reads its feature flags from the `unleash` container. Keep the `UNLEASH_*` defaults from `.env.example`. `docker compose up` creates all flags of the `UNLEASH_FLAG` enum, disabled. Toggle them at <http://localhost:4242> (`admin` / `unleash4all`). Without the `UNLEASH_*` variables, all flags are disabled.
 
 ### Tracing and logs (OpenTelemetry)
 
-The app sends spans and log records over OTLP when
-`ENABLE_INSTRUMENTATION` and the `OTEL_EXPORTER_OTLP_*` variables from
-`pnpm-monorepo/apps/app/.env.example` are all set. Without them, the app
-creates no spans and sends no log records. A deployment sends the data to
-the endpoint of its own variables; locally, the `otel-collector` container
-from [compose.yml](../compose.yml) receives it.
-
-The container has no user interface. It writes every received OTLP request
-as one JSON line to `/output/traces.jsonl` and `/output/logs.jsonl` in its
-volume. This script copies the traces and the log records out of the
-container and examines them:
+When `ENABLE_INSTRUMENTATION` and the `OTEL_EXPORTER_OTLP_*` variables are set, the app sends spans and log records over OTLP. Locally, the `otel-collector` container writes them to `/output/traces.jsonl` and `/output/logs.jsonl`. To examine them, wait some seconds after the last request, and run:
 
 ```sh
 node scripts/check-telemetry-export.mjs
 ```
 
-It prints the number of spans of each trace, the span names and the
-received log records. It fails when a span references a parent span that
-the collector never received. Such an orphan span is the symptom of an
-export problem: a trace viewer cannot find the parent and shows the span at
-the root of the trace. Wait some seconds after the last request before you
-run the check.
-
-The files only grow. To begin a clean measurement, restart the container —
-this truncates them:
-
-```sh
-docker compose restart otel-collector
-```
+The script prints the spans of each trace and the log records. It fails when a span has a parent span that the collector did not receive (a problem of the export). `docker compose restart otel-collector` empties the files.
 
 ### Notifications (EventBridge)
 
-The app sends notification events to AWS EventBridge only when
-`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_EVENT_BUS_ARN` are all
-set. Do not set them locally. The only event bus is the production bus, thus
-a local action can send real notifications to real users.
+The app sends notification events to AWS EventBridge only when `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_EVENT_BUS_ARN` are set. Do not set them locally: the only event bus is the production bus, so a local action can send notifications to real users.
 
 ### Embedded app authentication
 
-External apps embedded under `/app/external/…` can receive a signed JWT
-that identifies the current user (see
-[Embedded App Authentication](./embedded-app-authentication.md)). Without
-`EMBED_JWT_PRIVATE_KEY`, the feature is disabled: the app appends no token
-to an embed URL, and <http://localhost:3000/.well-known/jwks.json>
-publishes an empty key set. To work on the feature, generate a key and put
-it in `pnpm-monorepo/apps/app/.env`:
+Apps embedded under `/app/external/…` can get a signed JWT of the current user (see [Embedded App Authentication](./embedded-app-authentication.md)). Without `EMBED_JWT_PRIVATE_KEY`, the feature is off. To work on it, put a new key into `pnpm-monorepo/apps/app/.env`:
 
 ```sh
 openssl ecparam -name prime256v1 -genkey -noout | openssl pkcs8 -topk8 -nocrypt | base64 -w0
 ```
 
-**Each environment must have its own key** — local, preview and production.
-With one shared key, a token from a preview deployment can verify as a
-production token. Deployments read the variable from Vercel (see
-[Test and Production](./setup-test-and-production.md#7-set-up-vercel)).
+**Each environment must have its own key** (local, preview and production). Else a token of a preview deployment is also valid in production. For deployments, see [Test and Production](./setup-test-and-production.md#7-set-up-vercel).
 
 ### Statistics dashboard (Grafana)
 
-The statistics page shows the dashboard of the `grafana` container from
-[compose.yml](../compose.yml) in a frame. The container has the settings of
-a production Grafana (see
-[Test and Production](./setup-test-and-production.md#9-optional-set-up-a-grafana-for-the-statistics-dashboard)):
-only an embed token of the app opens it, with the role Viewer. Without
-`STATISTICS_GRAFANA_URL` or `EMBED_JWT_PRIVATE_KEY` in
-`pnpm-monorepo/apps/app/.env`, the page shows a note. To show the
-dashboard:
+The statistics page shows the dashboard of the `grafana` container in a frame. Like in production, only an embed token of the app opens it. Without `STATISTICS_GRAFANA_URL` or `EMBED_JWT_PRIVATE_KEY`, the page shows a note. To show the dashboard:
 
-1. Set `EMBED_JWT_PRIVATE_KEY` (see
-   [Embedded app authentication](#embedded-app-authentication)).
-2. Set `STATISTICS_GRAFANA_URL="http://127.0.0.1:3100"` in
-   `pnpm-monorepo/apps/app/.env`. The value is an origin, without a path.
-   Use `127.0.0.1`, not `localhost`: then the frame is on a different site
-   than the app, like in production.
-3. Put the two lines that
-   `node .agents/skills/run-app/scripts/grafana-env.mjs pnpm-monorepo/apps/app/.env`
-   prints into the `.env` file next to [compose.yml](../compose.yml). They
-   contain the public key set of `EMBED_JWT_PRIVATE_KEY`
-   (`SAM_GRAFANA_JWK_SET_VALUE`) and the issuer of the tokens
-   (`SAM_GRAFANA_APP_BASE_URL`, the `NEXT_PUBLIC_BASE_URL` of the app).
-   Without the key set, Grafana refuses each token. After a change of the
-   key, replace the two lines.
+1. Set `EMBED_JWT_PRIVATE_KEY` (see [Embedded app authentication](#embedded-app-authentication)).
+2. Set `STATISTICS_GRAFANA_URL="http://127.0.0.1:3100"` (an origin, without a path) in `pnpm-monorepo/apps/app/.env`. Use `127.0.0.1`, not `localhost`, so that the frame is on a different site, like in production.
+3. Put the two lines of `node .agents/skills/run-app/scripts/grafana-env.mjs pnpm-monorepo/apps/app/.env` into the `.env` file next to [compose.yml](../compose.yml). Do this again after a change of the key.
 4. Run `docker compose up -d grafana`.
 
-The `up.sh` script of the [run-app skill](../.agents/skills/run-app/SKILL.md)
-does the steps 2 to 4. Before Grafana starts, the one-shot
-`grafana-bootstrap` service makes the database role of
-[statistics-reader-role.sql](../pnpm-monorepo/packages/database/prisma/statistics-reader-role.sql).
-Grafana reads the database with this role, thus a query that works locally
-also works in production.
+The `up.sh` script of the [run-app skill](../.agents/skills/run-app/SKILL.md) does steps 2 to 4. Grafana reads the database with the role of [statistics-reader-role.sql](../pnpm-monorepo/packages/database/prisma/statistics-reader-role.sql), like in production.
 
 To change the dashboard:
 
-1. Set `SAM_GRAFANA_ADMIN_PASSWORD=<a password>` in the `.env` file next to
-   [compose.yml](../compose.yml), and run `docker compose up -d grafana`.
-   Grafana then has the user `admin` and a login form (editor mode). Without
-   the variable, Grafana has no admin and no login form, like in
-   production.
-2. Log in at <http://127.0.0.1:3100/login> as `admin`, and change the
-   dashboard "Statistiken".
-3. Export the dashboard: "Exportieren" > "Als Code exportieren". Under
-   "Erweiterte Optionen", select "Klassisch" and "JSON": the file has the
-   classic format. Keep "Dashboard mit einer anderen Instanz teilen" off,
-   because this option replaces the UID of the data source. Download the
-   file, remove its keys `id` and `version` (they are values of the local
-   Grafana), and replace
-   [grafana/dashboards/statistics.json](../grafana/dashboards/statistics.json)
-   with it. Grafana reads the file again after some seconds. You cannot
-   save the dashboard in Grafana, because it comes from the file.
-4. Remove the variable, and run `docker compose up -d grafana` again. This
-   also removes the admin.
+1. Set `SAM_GRAFANA_ADMIN_PASSWORD=<a password>` in the `.env` file next to [compose.yml](../compose.yml), and run `docker compose up -d grafana`.
+2. Log in at <http://127.0.0.1:3100/login> as `admin`, and change the dashboard "Statistiken".
+3. Export it with "Exportieren" > "Als Code exportieren": under "Erweiterte Optionen", select "Klassisch" and "JSON", and keep "Dashboard mit einer anderen Instanz teilen" off (it replaces the UID of the data source). Remove the keys `id` and `version` from the file, and replace [grafana/dashboards/statistics.json](../grafana/dashboards/statistics.json) with it.
+4. Remove the variable, and run `docker compose up -d grafana` again.
 
 ### Optional environment settings
 
-- `SKIP_VALIDATION=1` skips the environment variable validation of the app
-  (`pnpm-monorepo/apps/app/src/env.ts`), for example to build without a
-  fully configured `.env`:
-  `SKIP_VALIDATION=1 pnpm --filter @sam-monorepo/app run build`
-- You can override the host ports of the Docker services, so that multiple
-  checkouts (for example git worktrees) can run their stacks at the same
-  time. Set `SAM_PSQL_PORT`, `SAM_SOKETI_PORT`, `SAM_SOKETI_METRICS_PORT`,
-  `SAM_COLLAB_PORT`, `SAM_RUSTFS_PORT`, `SAM_UNLEASH_PORT`,
-  `SAM_OTEL_COLLECTOR_PORT` and/or `SAM_GRAFANA_PORT` in a gitignored `.env`
-  file next to [compose.yml](../compose.yml). Set `NEXTAUTH_URL` to the URL
-  of the dev server of the checkout. Each port has its own login, because in
-  development the name of the session cookie contains the port. For the
-  [statistics dashboard](#statistics-dashboard-grafana), also set the port
-  of `STATISTICS_GRAFANA_URL`, and set `SAM_GRAFANA_APP_ORIGIN` to the URL of
-  the dev server (default: `http://localhost:3000`).
+- `SKIP_VALIDATION=1` skips the validation of the environment variables, for example for a build without a complete `.env`: `SKIP_VALIDATION=1 pnpm --filter @sam-monorepo/app run build`
+- To run the stacks of more than one checkout (for example git worktrees) at the same time, set other host ports in a gitignored `.env` file next to [compose.yml](../compose.yml): `SAM_PSQL_PORT`, `SAM_SOKETI_PORT`, `SAM_SOKETI_METRICS_PORT`, `SAM_COLLAB_PORT`, `SAM_RUSTFS_PORT`, `SAM_UNLEASH_PORT`, `SAM_OTEL_COLLECTOR_PORT` and `SAM_GRAFANA_PORT`. Set `NEXTAUTH_URL` to the URL of the dev server. Each port has its own login, because the name of the session cookie contains the port. For the [statistics dashboard](#statistics-dashboard-grafana), also change the port of `STATISTICS_GRAFANA_URL`, and set `SAM_GRAFANA_APP_ORIGIN` to the URL of the dev server (default: `http://localhost:3000`).
 
 ## Bot invite link with required scopes
 
-Replace `XXX` with the client id of the Discord application
-(`DISCORD_CLIENT_ID`):
+Replace `XXX` with the client id of the Discord application (`DISCORD_CLIENT_ID`):
 
 ```
 https://discord.com/oauth2/authorize?client_id=XXX&scope=bot&permissions=17600777028608
 ```
-
-The `bot` scope includes all functions that the app uses on the bot. The
-permission integer is the sum of four flags:
 
 | Permission      | Bit       | Value          | Necessary for                                                                                       |
 | --------------- | --------- | -------------- | --------------------------------------------------------------------------------------------------- |
@@ -280,34 +116,8 @@ permission integer is the sum of four flags:
 | `MANAGE_EVENTS` | `1 << 33` | 8589934592     | Edit and delete guild scheduled events, also events that the bot did not create                     |
 | `CREATE_EVENTS` | `1 << 44` | 17592186044416 | Create guild scheduled events                                                                       |
 
-The [Discord event publication code](../pnpm-monorepo/apps/app/src/modules/events/utils/discordPublishing.ts)
-needs these permissions. Without them, the publish step fails with
-`Missing Permissions`, and all other functions continue to operate. The
-`@everyone` role of the guild usually already includes `VIEW_CHANNEL`.
-Grant it to the bot's own role also, so that the bot keeps the permission
-if the guild removes it from `@everyone`.
+Without these permissions, only the [publication of events](../pnpm-monorepo/apps/app/src/modules/events/utils/discordPublishing.ts) fails (`Missing Permissions`). `@everyone` usually has `VIEW_CHANNEL`, but give it to the role of the bot too.
 
-Discord requires
-[different permissions for each event entity type](https://docs.discord.com/developers/resources/guild-scheduled-event):
-an external event needs only `CREATE_EVENTS`; a voice event also needs
-`VIEW_CHANNEL` and `CONNECT`; a **stage** event also needs
-`MANAGE_CHANNELS`, `MUTE_MEMBERS` and `MOVE_MEMBERS`
-(`permissions=17600798000144`). The link above does not include these three
-permissions. They are moderation permissions, and guilds without stage
-channels never need them. The channel picker does offer stage channels, and
-an event publication into a stage channel needs these permissions. Thus
-grant them only if the guild has stage channels.
-
-`MANAGE_EVENTS` is redundant: the app only edits events that the bot
-created, and `CREATE_EVENTS` already permits that. The link includes
-`MANAGE_EVENTS` so that a rotation of `DISCORD_TOKEN` to a different
-Discord application does not make the events that were published before
-unmanageable.
-
-It is safe to invite a bot again that is already in the guild. This is also
-the procedure to add permissions later: the invite updates the managed role
-of the bot and does not add a second membership. First examine which
-permissions the bot has (`Server Settings → Roles`, or the `roles` endpoint
-of the guild). A bot without a managed role operates with the permissions
-of `@everyone` only. Thus the invite link must include all necessary
-permissions, not only the new ones.
+- An event in a **stage** channel also needs `MANAGE_CHANNELS`, `MUTE_MEMBERS` and `MOVE_MEMBERS` (`permissions=17600798000144`, see the [permissions of each event type](https://docs.discord.com/developers/resources/guild-scheduled-event)). Give these moderation permissions only if the guild has stage channels.
+- `MANAGE_EVENTS` is not necessary, because the bot edits only its own events. It keeps the earlier events editable after a change of `DISCORD_TOKEN` to a different Discord application.
+- To add permissions later, invite the bot again with all necessary permissions, not only the new ones. The invite updates the managed role of the bot. A bot without a managed role has only the permissions of `@everyone`.
