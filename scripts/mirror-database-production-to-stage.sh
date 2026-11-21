@@ -14,7 +14,9 @@ TARGET_CONNECTION_STRING=$2
 # has no `~/.postgresql/root.crt`, thus `pg_dump` uses the system CA roots.
 # Only `pg_dump`: with `sslrootcert=system`, libpq refuses a weaker `sslmode`,
 # which the stage connection string can have.
-docker container run -it --rm postgres:18.6-alpine3.23@sha256:885cf05d376c7cf27afef02073e6bdac3841252537f16e244fd1c1e6a7c99fb1 bash \
-	-c "PGSSLROOTCERT=system pg_dump --dbname=$SOURCE_CONNECTION_STRING --no-owner --no-privileges --no-acl --no-tablespaces --format=custom --file dump && pg_restore --dbname=$TARGET_CONNECTION_STRING --no-owner --clean --if-exists dump"
+# The dump leaves out the extension timescaledb. See docs/mirror-database.md,
+# also before the first hypertable.
+docker container run -it --rm "timescale/timescaledb:2.32.1-pg18@sha256:70e6526ad8e31e3f4833f2c5863b50b92d7a6bee4d432ad1f660e2c6dd956d94" bash \
+	-c "PGSSLROOTCERT=system pg_dump --dbname=$SOURCE_CONNECTION_STRING --no-owner --no-privileges --no-acl --no-tablespaces --exclude-extension=timescaledb --format=custom --file dump && pg_restore --dbname=$TARGET_CONNECTION_STRING --no-owner --clean --if-exists dump"
 
 echo "✅ Successfully mirrored database (production to stage)"

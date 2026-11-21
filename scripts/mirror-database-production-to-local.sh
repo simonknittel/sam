@@ -10,7 +10,7 @@ CONNECTION_STRING=$1
 SCRIPT_DIRECTORY=$(dirname "$0")
 
 docker compose rm --stop --force psql
-docker compose up --detach psql
+docker compose up --detach --wait psql
 
 # The excluded tables only contain live credentials (session tokens, email
 # confirmation tokens, web push subscriptions) which must not leave
@@ -20,8 +20,10 @@ docker compose up --detach psql
 # has no `~/.postgresql/root.crt`, thus `pg_dump` uses the system CA roots.
 # Only `pg_dump`: with `sslrootcert=system`, libpq refuses a weaker `sslmode`,
 # and the local `pg_restore` connects without TLS.
+# The dump leaves out the extension timescaledb. See docs/mirror-database.md,
+# also before the first hypertable.
 docker container exec --interactive sam-psql-1 /bin/bash <<EOF
-	PGSSLROOTCERT=system pg_dump --dbname=$CONNECTION_STRING --no-owner --no-privileges --no-acl --no-tablespaces --exclude-table-data='"Session"' --exclude-table-data='"VerificationToken"' --exclude-table-data='"EmailConfirmationToken"' --exclude-table-data='"WebPushSubscription"' --format=custom --file dump && \
+	PGSSLROOTCERT=system pg_dump --dbname=$CONNECTION_STRING --no-owner --no-privileges --no-acl --no-tablespaces --exclude-extension=timescaledb --exclude-table-data='"Session"' --exclude-table-data='"VerificationToken"' --exclude-table-data='"EmailConfirmationToken"' --exclude-table-data='"WebPushSubscription"' --format=custom --file dump && \
 		pg_restore --dbname=postgresql://postgres:admin@localhost:5432/db --no-owner --clean --if-exists dump && \
 		rm dump
 EOF
