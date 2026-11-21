@@ -9,7 +9,7 @@ In this document, "decision 13 of the architecture" refers to the [decisions of 
 
 This is not a plan. Each step gets its own implementation plan. The order can change.
 
-1. **Database:** PostgreSQL with TimescaleDB (decision 13 of the architecture), and the move of the SAM databases to such a server (see [The move of the databases](#the-move-of-the-databases)). Done on 2026-11-21.
+1. **Database:** PostgreSQL with TimescaleDB (decision 13 of the architecture), and the move of the SAM databases to such a server (see [The move of the databases](#the-move-of-the-databases)). Done on 2026-11-21 ([#2252](https://github.com/simonknittel/sam/pull/2252)).
 2. **Foundation and Log Analyzer:**
    - First, an estimate of the sizes: the connections, the messages and the rows of the history for each day.
    - The relay service with the WebSocket connection of the runtimes (decision 14 of the architecture), the announcement, the catalog, the relay for states with their history in TimescaleDB, feeds and grants.
@@ -47,8 +47,11 @@ The Log Analyzer moves completely into the Remote Control Program. No old path s
 
 ### The move of the databases
 
-- The databases of SAM move to a PostgreSQL server with TimescaleDB (decision 13 of the architecture).
-- Each client of the SAM databases gets the new address: the app on Vercel, the Lambda functions, `sam-collab`, the reader role of the Grafana of the statistics and the mirror scripts.
+Done on 2026-11-21:
+
+- The databases of SAM moved to a PostgreSQL server with TimescaleDB (decision 13 of the architecture), with a dump and a restore. Production was read-only for approximately 8 minutes.
+- The row counts of all tables were the same after the restore, and `add_timescaledb_extension` was the only new migration.
+- Each client of the SAM databases got the new address: the app on Vercel, the Lambda functions, `sam-collab`, the reader role of the Grafana of the statistics and the mirror scripts.
 
 ## Decisions of the migration
 
@@ -64,3 +67,4 @@ All decisions of 2026-11-21:
 Changes outside of the Remote Control Program that the work on the concept showed:
 
 - **`DailyMcpUsageCount` as a view.** The midnight job counts the audit events with `triggeredViaMcp` of each day and stores the count in `DailyMcpUsageCount`. The view `statistics.daily_mcp_usage_counts` reads this table. `AuditEvent` is small (see decision 7 of the architecture), and it already has a partial index for `triggeredViaMcp`. Thus the view can count the audit events directly, with the same day boundaries (Europe/Berlin). The view then also covers the days before the job existed. The table and the job can then be removed.
+- **The mirror into a stage database with extra tables.** `scripts/mirror-database-production-to-stage.sh` restores with `pg_restore --clean`. When the stage database has tables that production does not have (for example `Entity`, `EntityLog` and `EntityLogAttribute` of an old migration), their foreign keys stop the drop of the tables of production, and the restore fails with errors. The stage database is then a mix of both. A fix: drop the schema `public` and make it again before the restore. Until then, [Mirror the database](../mirror-database.md) does not tell this limit.
