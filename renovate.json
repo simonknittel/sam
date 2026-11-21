@@ -7,10 +7,12 @@
   ],
   "customManagers": [
     {
-      "description": "The Playwright stack pins the same container images as compose.yml, but as TypeScript constants that no built-in manager reads.",
+      "description": "The Playwright stack, the integration tests of the application package and the mirror script of the stage database pin the same container images as compose.yml, but as TypeScript constants and in a shell script that no built-in manager reads.",
       "customType": "regex",
       "managerFilePatterns": [
-        "pnpm-monorepo/apps/playwright/setup/stack.ts"
+        "pnpm-monorepo/apps/playwright/setup/stack.ts",
+        "pnpm-monorepo/packages/application/test/postgres.ts",
+        "scripts/mirror-database-production-to-stage.sh"
       ],
       "matchStrings": [
         "\"(?<depName>[^\"@:]+):(?<currentValue>[^\"@]+)@(?<currentDigest>sha256:[0-9a-f]{64})\""
@@ -83,6 +85,14 @@
       "schedule": [
         "before 7am on Tuesday"
       ]
+    },
+    {
+      "description": "SAM must not run a newer TimescaleDB than the servers. host1 has the same group without automerge, thus the owner merges both updates together.",
+      "matchDepNames": [
+        "timescale/timescaledb"
+      ],
+      "groupName": "TimescaleDB",
+      "automerge": false
     },
     {
       "matchUpdateTypes": [

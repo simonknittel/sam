@@ -4,9 +4,23 @@ import { once } from "node:events";
 import { fileURLToPath } from "node:url";
 import type { TestProject } from "vitest/node";
 
-/** Same pinned image as compose.yml and the Playwright stack */
+/**
+ * Same pinned image, command line and environment as the psql service of
+ * compose.yml and the Playwright stack: PostgreSQL with TimescaleDB (see
+ * compose.yml).
+ */
 const POSTGRES_IMAGE =
-  "postgres:18.6-alpine3.23@sha256:885cf05d376c7cf27afef02073e6bdac3841252537f16e244fd1c1e6a7c99fb1";
+  "timescale/timescaledb:2.32.1-pg18@sha256:70e6526ad8e31e3f4833f2c5863b50b92d7a6bee4d432ad1f660e2c6dd956d94";
+
+const POSTGRES_COMMAND = [
+  "postgres",
+  "-c",
+  "shared_preload_libraries=timescaledb",
+  "-c",
+  "timescaledb.telemetry_level=off",
+];
+
+const POSTGRES_ENVIRONMENT = { NO_TS_TUNE: "true" } as const;
 
 const monorepoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 
@@ -44,7 +58,10 @@ const applyMigrations = async (databaseUrl: string) => {
  * migrations to it.
  */
 export default async function setup(project: TestProject) {
-  const container = await new PostgreSqlContainer(POSTGRES_IMAGE).start();
+  const container = await new PostgreSqlContainer(POSTGRES_IMAGE)
+    .withCommand(POSTGRES_COMMAND)
+    .withEnvironment(POSTGRES_ENVIRONMENT)
+    .start();
   const databaseUrl = container.getConnectionUri();
 
   await applyMigrations(databaseUrl);

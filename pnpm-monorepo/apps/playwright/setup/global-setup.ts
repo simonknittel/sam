@@ -17,6 +17,8 @@ import {
   appDummyEnvironment,
   collabImageTag,
   monorepoRoot,
+  postgresCommand,
+  postgresEnvironment,
   postgresImage,
   postgresNetworkAlias,
   postgresPassword,
@@ -153,6 +155,8 @@ const globalSetup = async () => {
 
   console.log("[stack] Starting Postgres…");
   const postgres = await new PostgreSqlContainer(postgresImage)
+    .withCommand(postgresCommand)
+    .withEnvironment(postgresEnvironment)
     .withNetwork(network)
     .withNetworkAliases(postgresNetworkAlias)
     .withUsername(postgresUser)
