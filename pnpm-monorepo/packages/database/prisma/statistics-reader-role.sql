@@ -11,6 +11,10 @@
 --    infrastructure makes it). Its owner is the role of the app: the role
 --    that applies the migrations (thus it owns the views) and that uses the
 --    advisory locks. The file reads this role from the database.
+-- 3. The extension timescaledb exists (the migration
+--    `add_timescaledb_extension` or the infrastructure makes it). Run the
+--    file again after an update of the extension: an update can make the
+--    functions of the jobs again, with the rights of PUBLIC.
 --
 -- The file runs again without an error. It sets no password: each
 -- environment sets its own password with ALTER ROLE ... PASSWORD.
@@ -21,11 +25,14 @@
 --   the schema `public`, thus the role can see the names of the tables, but
 --   it cannot read a table. Do not revoke this USAGE from PUBLIC, because
 --   other roles can need it.
--- - The rights that PostgreSQL gives to PUBLIC and that this file removes:
---   the advisory locks (a viewer could block the app and the migrations),
---   the WAL messages, the large objects and the temporary tables (a viewer
---   could write data). The owner of `statistics` gets them back. Each other
---   role that needs one of them needs its own GRANT. A dump keeps these
+-- - The rights that PostgreSQL and TimescaleDB give to PUBLIC and that this
+--   file removes: the advisory locks (a viewer could block the app and the
+--   migrations), the WAL messages, the large objects and the temporary
+--   tables (a viewer could write data), and the functions of TimescaleDB
+--   that make, change or run a job or a policy (a job runs in the background
+--   with the rights of the role that made it, also after the end of the
+--   session). The owner of `statistics` gets them back. Each other role
+--   that needs one of them needs its own GRANT. A dump keeps these
 --   rights only when its restore applies the privileges: run this file again
 --   after a restore.
 -- - temp_file_limit and the connection limit: a viewer cannot change them.
@@ -66,6 +73,15 @@ BEGIN
     IF has_schema_privilege('sam_statistics_grafana', 'public', 'CREATE') THEN
         RAISE EXCEPTION 'The role sam_statistics_grafana has the right CREATE on the schema public (through PUBLIC, or through a GRANT to the role).'
             USING HINT = 'Make sure that the role of the app owns the schema public or has its own CREATE right on it. Then run REVOKE CREATE ON SCHEMA public FROM PUBLIC (and from sam_statistics_grafana), and run this file again.';
+    END IF;
+END
+$$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_extension WHERE extname = 'timescaledb') THEN
+        RAISE EXCEPTION 'The extension timescaledb is not in this database.'
+            USING HINT = 'A superuser must create it: CREATE EXTENSION IF NOT EXISTS timescaledb. Then run this file again.';
     END IF;
 END
 $$;
@@ -246,17 +262,81 @@ DO $$
 DECLARE
     open_functions text;
 BEGIN
-    SELECT string_agg(p.oid::regprocedure::text, ', ' ORDER BY p.oid::regprocedure::text)
+    SELECT string_agg(catalog_function.oid::regprocedure::text, ', ' ORDER BY catalog_function.oid::regprocedure::text)
     INTO open_functions
-    FROM pg_catalog.pg_proc p
-    WHERE p.pronamespace = 'pg_catalog'::regnamespace
-      AND (p.proname LIKE '%advisory%'
-           OR p.proname IN ('lo_creat', 'lo_create', 'lo_from_bytea', 'lo_put', 'lowrite', 'lo_truncate', 'lo_truncate64', 'pg_logical_emit_message'))
-      AND has_function_privilege('public', p.oid, 'EXECUTE');
+    FROM pg_catalog.pg_proc AS catalog_function
+    WHERE catalog_function.pronamespace = 'pg_catalog'::regnamespace
+      AND (catalog_function.proname LIKE '%advisory%'
+           OR catalog_function.proname IN ('lo_creat', 'lo_create', 'lo_from_bytea', 'lo_put', 'lowrite', 'lo_truncate', 'lo_truncate64', 'pg_logical_emit_message'))
+      AND has_function_privilege('public', catalog_function.oid, 'EXECUTE');
 
     IF open_functions IS NOT NULL THEN
         RAISE EXCEPTION 'PUBLIC can execute these functions of pg_catalog: %', open_functions
             USING HINT = 'Add each function to the GRANT to the owner of the schema statistics and to the REVOKE from PUBLIC in this file. Then run this file again.';
     END IF;
+END
+$$;
+
+-- The jobs of TimescaleDB: add_job, alter_job, delete_job and run_job, each
+-- function that adds, changes or removes a policy (for example
+-- add_retention_policy and timescaledb_experimental.add_policies; a policy
+-- is a job), and the functions that start or stop the background workers.
+-- TimescaleDB gives PUBLIC EXECUTE on them. The block selects the functions
+-- by their names, thus it also gets each signature of a later version of
+-- TimescaleDB. The role of the app gets the rights first, like above.
+DO $$
+DECLARE
+    owner_name name;
+    owner_is_superuser boolean;
+    job_function_oids oid[];
+    job_function_oid oid;
+BEGIN
+    SELECT pg_roles.rolname, pg_roles.rolsuper
+    INTO STRICT owner_name, owner_is_superuser
+    FROM pg_catalog.pg_namespace
+    JOIN pg_catalog.pg_roles ON pg_roles.oid = pg_namespace.nspowner
+    WHERE pg_namespace.nspname = 'statistics';
+
+    SELECT coalesce(array_agg(job_function.oid), '{}')
+    INTO job_function_oids
+    FROM pg_catalog.pg_proc AS job_function
+    JOIN pg_catalog.pg_namespace AS function_schema ON function_schema.oid = job_function.pronamespace
+    JOIN pg_catalog.pg_depend AS extension_membership
+        ON extension_membership.classid = 'pg_catalog.pg_proc'::regclass
+        AND extension_membership.objid = job_function.oid
+        AND extension_membership.deptype = 'e'
+    JOIN pg_catalog.pg_extension AS timescaledb_extension
+        ON timescaledb_extension.oid = extension_membership.refobjid
+    WHERE timescaledb_extension.extname = 'timescaledb'
+      AND (
+          (
+              (function_schema.oid = timescaledb_extension.extnamespace OR function_schema.nspname = 'timescaledb_experimental')
+              AND (
+                  job_function.proname IN ('add_job', 'alter_job', 'delete_job', 'run_job')
+                  OR job_function.proname ~ '^(add|alter|remove)_([a-z_]+_)?polic(y|ies)$'
+              )
+          )
+          OR (
+              function_schema.nspname IN ('_timescaledb_functions', '_timescaledb_internal')
+              AND job_function.proname IN ('start_background_workers', 'stop_background_workers', 'restart_background_workers')
+          )
+      );
+
+    -- A later version of TimescaleDB can rename the functions. Without a
+    -- match, the block would protect nothing and give no error.
+    IF NOT EXISTS (
+        SELECT FROM pg_catalog.pg_proc AS job_function
+        WHERE job_function.oid = ANY (job_function_oids) AND job_function.proname = 'add_job'
+    ) THEN
+        RAISE EXCEPTION 'The selection of the job functions of TimescaleDB finds no function add_job.'
+            USING HINT = 'Correct the selection in this file for the names of the installed version of TimescaleDB. Then run this file again.';
+    END IF;
+
+    FOREACH job_function_oid IN ARRAY job_function_oids LOOP
+        IF NOT owner_is_superuser THEN
+            EXECUTE format('GRANT EXECUTE ON ROUTINE %s TO %I', job_function_oid::regprocedure, owner_name);
+        END IF;
+        EXECUTE format('REVOKE EXECUTE ON ROUTINE %s FROM PUBLIC', job_function_oid::regprocedure);
+    END LOOP;
 END
 $$;

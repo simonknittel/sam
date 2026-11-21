@@ -21,3 +21,27 @@ The production-to-stage mirror copies the database without changes.
 
 - fish: `bwu && bw sync && ./scripts/mirror-database-production-to-stage.sh (bw get password "SAM (Prod) | PostgreSQL") (bw get password "SAM (develop) | PostgreSQL"); bw lock`
 - bash: `bwu && bw sync && ./scripts/mirror-database-production-to-stage.sh $(bw get password "SAM (Prod) | PostgreSQL") $(bw get password "SAM (develop) | PostgreSQL"); bw lock`
+
+## The extension TimescaleDB
+
+The dumps of both scripts do not include the extension `timescaledb`
+(`pg_dump --exclude-extension=timescaledb`):
+
+- Only a superuser can drop or create the extension. The restore into the
+  stage database runs as the owner of that database, which is not a
+  superuser.
+- The target database has the extension already. The local database gets it
+  from the image of the `psql` service in [compose.yml](../compose.yml), and
+  the stage database from the deploy of the cluster `sam-psql`.
+
+`--exclude-extension` needs `pg_dump` 17 or later. The scripts run `pg_dump`
+in a container of the image of the `psql` service in
+[compose.yml](../compose.yml), which has `pg_dump` 18.
+
+The databases have no hypertables yet. A dump of a hypertable needs the
+extension and a different restore (`timescaledb_pre_restore()` and
+`timescaledb_post_restore()`). Before the first hypertable, change the three
+dumps that leave out the extension: the two scripts, and the seed of a
+worktree stack in the `up.sh` script of the
+[run-app skill](../.agents/skills/run-app/SKILL.md), which copies the
+database of the main checkout.

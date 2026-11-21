@@ -2,6 +2,27 @@
 
 ## 1. Set up a PostgreSQL database
 
+The databases `sinister_prod` (production) and `sinister_develop` (develop)
+run in the PostgreSQL cluster `sam-psql`, a service of host1. Clients outside
+of host1 (for example Vercel) connect with TLS to `sam-psql.simonknittel.de`.
+The cluster runs PostgreSQL 18 with the extension TimescaleDB, with the image
+of the `psql` service in [compose.yml](../compose.yml).
+
+A PostgreSQL server for SAM must have:
+
+1. PostgreSQL 18 with TimescaleDB in the community edition. The Apache 2
+   edition (the image tags with `-oss`) has no compression and no continuous
+   aggregates.
+2. `timescaledb` in `shared_preload_libraries` (a change needs a restart of
+   the server), and `timescaledb.telemetry_level = off`.
+3. The extension in each database of SAM, before the first
+   `prisma migrate deploy`. The extension is not trusted, thus a superuser
+   must create it: `CREATE EXTENSION IF NOT EXISTS timescaledb;`. The
+   migration `add_timescaledb_extension` then finds the extension and changes
+   nothing.
+4. The user of the app as the owner of the database. With this user, the
+   migrations create the trusted extensions `pg_trgm` and `citext`.
+
 ## 2. Set up Cloudflare R2
 
 ## 3. Set up Mailgun
@@ -111,16 +132,19 @@ the page shows a note. A Grafana that shows the dashboard must have:
 2. The database role `sam_statistics_grafana`. Run
    [statistics-reader-role.sql](../pnpm-monorepo/packages/database/prisma/statistics-reader-role.sql)
    as a superuser in the database of SAM (its comments give the conditions:
-   the role of the app owns the schema `statistics`), and set a password of
-   this environment: `ALTER ROLE sam_statistics_grafana PASSWORD '<password>'`.
+   the role of the app owns the schema `statistics`, and the extension
+   `timescaledb` exists), and set a password of this environment:
+   `ALTER ROLE sam_statistics_grafana PASSWORD '<password>'`.
    Each viewer can send any SQL to the data source. The role can only read
    the views of the schema `statistics`. The file also removes rights that
-   PostgreSQL gives to PUBLIC (advisory locks, WAL messages, large objects,
-   temporary tables) and gives them to the role of the app. A different role
-   that needs them needs its own `GRANT`.
+   PostgreSQL and TimescaleDB give to PUBLIC (advisory locks, WAL messages,
+   large objects, temporary tables, and the functions that make, change or
+   run a job or a policy of TimescaleDB) and gives them to the role of the
+   app. A different role that needs them needs its own `GRANT`.
    - A viewer can change the role defaults and the password of the role.
      Therefore, run the file again at each deploy, and set the password
      again. The file removes the role defaults that a viewer changed.
+     Also run it again after an update of the extension `timescaledb`.
    - Let the role log in only from the network of the Grafana: a
      `pg_hba.conf` rule with the address range of that network. A changed
      password is then useless outside this network.

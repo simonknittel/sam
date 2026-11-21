@@ -600,6 +600,27 @@ describe("the reader role", () => {
   /** All signatures of PostgreSQL 18, see the file */
   const REVOKED_FUNCTION_COUNT = 30;
 
+  /**
+   * Some functions of the jobs of TimescaleDB that the file revokes from
+   * PUBLIC (each signature), with the rights of a role on them
+   */
+  const readJobFunctionRights = (role: string) =>
+    prisma.$queryRaw<{ name: string; hasExecute: boolean }[]>`
+      SELECT
+        oid::regprocedure::text AS "name",
+        has_function_privilege(${role}::name, oid, 'EXECUTE') AS "hasExecute"
+      FROM pg_catalog.pg_proc
+      WHERE (
+          pronamespace = 'public'::regnamespace
+          AND proname IN ('add_job', 'alter_job', 'delete_job', 'run_job', 'add_retention_policy', 'add_continuous_aggregate_policy')
+        )
+        OR (pronamespace = 'timescaledb_experimental'::regnamespace AND proname = 'add_policies')
+        OR (pronamespace = '_timescaledb_functions'::regnamespace AND proname = 'start_background_workers')
+    `;
+
+  /** The functions of readJobFunctionRights in TimescaleDB 2.32 */
+  const JOB_FUNCTION_COUNT = 8;
+
   test("reads each view", async () => {
     const views = await prisma.$queryRaw<{ name: string }[]>`
       SELECT table_name AS "name" FROM information_schema.views
@@ -697,6 +718,20 @@ describe("the reader role", () => {
     expect(functionRights.filter((right) => right.hasExecute)).toEqual([]);
   });
 
+  test("cannot make a job of TimescaleDB, which would run in the background", async () => {
+    await expect(
+      executeAsReader(
+        "BEGIN READ WRITE; SELECT add_job('pg_catalog.now', '1 hour', scheduled => false); COMMIT",
+      ),
+    ).rejects.toThrow(/permission denied for function add_job/);
+
+    const jobFunctionRights = await readJobFunctionRights(
+      "sam_statistics_grafana",
+    );
+    expect(jobFunctionRights).toHaveLength(JOB_FUNCTION_COUNT);
+    expect(jobFunctionRights.filter((right) => right.hasExecute)).toEqual([]);
+  });
+
   test("stops a long statement at the timeout, and limits the temporary files", async () => {
     const start = performance.now();
 
@@ -792,6 +827,10 @@ describe("the reader role", () => {
     await prisma.$executeRawUnsafe(
       "ALTER SCHEMA statistics OWNER TO statistics_owner",
     );
+    // The procedure of a job: TimescaleDB calls it with these two arguments
+    await prisma.$executeRawUnsafe(
+      "CREATE PROCEDURE public.statistics_owner_job(job_id integer, config jsonb) LANGUAGE sql AS 'SELECT 1'",
+    );
 
     try {
       await executeSqlFile(readerRoleFile);
@@ -801,11 +840,19 @@ describe("the reader role", () => {
           (right) => !right.hasExecute,
         ),
       ).toEqual([]);
+      expect(
+        (await readJobFunctionRights("statistics_owner")).filter(
+          (right) => !right.hasExecute,
+        ),
+      ).toEqual([]);
       await execute(
         `${serverAddress} user=statistics_owner password=${OWNER_PASSWORD}`,
-        "BEGIN; SELECT pg_advisory_xact_lock(hashtext('SilcLedger')); SELECT pg_try_advisory_lock(72707369); CREATE TEMP TABLE owner_table (id integer); SELECT lo_from_bytea(0, '\\x01'); ROLLBACK",
+        "BEGIN; SELECT pg_advisory_xact_lock(hashtext('SilcLedger')); SELECT pg_try_advisory_lock(72707369); CREATE TEMP TABLE owner_table (id integer); SELECT lo_from_bytea(0, '\\x01'); SELECT delete_job(add_job('public.statistics_owner_job', '1 hour', scheduled => false)); ROLLBACK",
       );
     } finally {
+      await prisma.$executeRawUnsafe(
+        "DROP PROCEDURE public.statistics_owner_job(integer, jsonb)",
+      );
       await prisma.$executeRawUnsafe(
         "ALTER SCHEMA statistics OWNER TO CURRENT_USER",
       );

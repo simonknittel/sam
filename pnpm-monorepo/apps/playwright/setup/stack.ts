@@ -6,10 +6,22 @@ export const appDirectory = path.join(monorepoRoot, "apps", "app");
 
 /**
  * Same pinned image as compose.yml so tests run against the Postgres version
- * the dev stack and production use.
+ * the dev stack and production use: PostgreSQL with TimescaleDB.
  */
 export const postgresImage =
-  "postgres:18.7-alpine3.23@sha256:f3ee138d5fce80ffaeb315b8bea7610f0c4f2304fb2aceb4ec8e457b92fc41a0";
+  "timescale/timescaledb:2.32.1-pg18@sha256:70e6526ad8e31e3f4833f2c5863b50b92d7a6bee4d432ad1f660e2c6dd956d94";
+
+/** The command line of the psql service of compose.yml (see there). */
+export const postgresCommand = [
+  "postgres",
+  "-c",
+  "shared_preload_libraries=timescaledb",
+  "-c",
+  "timescaledb.telemetry_level=off",
+];
+
+/** The environment of the psql service of compose.yml (see there). */
+export const postgresEnvironment = { NO_TS_TUNE: "true" } as const;
 
 /** Same pinned image as compose.yml (S3-compatible upload storage). */
 export const rustfsImage =
