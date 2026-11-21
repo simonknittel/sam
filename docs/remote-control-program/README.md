@@ -1,18 +1,19 @@
-# Remote Control Program (concept)
+# Remote Control Program
 
 > [!NOTE]
-> Status: concept, draft of 2026-11-21. Nothing in this document exists yet. "Remote Control Program" is a working title, and the code can use it (see [Decisions](#decisions)). The implementation plans build on this document. When a plan changes a decision, update this document.
+> This document describes the architecture of the Remote Control Program. In 2026-11, the implementation has not started. [Migration](./migration.md) describes the steps from the current state of SAM to this architecture. When a plan or the code changes a decision, update this document. "Remote Control Program" is a working title, and the code can use it (see [Decisions](#decisions)).
 
 The Remote Control Program connects the Star Citizen game client on the machine of a user with SAM. It moves the state of the game client (for example the health, the location or the log entries) to SAM. It moves actions from SAM to the game client (for example "open the doors of my ship"). The user decides what leaves the machine, who in SAM can read it, and which actions the game client applies.
 
-The [Log Analyzer](#the-log-analyzer-in-the-remote-control-program) is the first user of the Remote Control Program. The [gRPC connector](#the-grpc-connector) follows directly after it.
+The control UIs are the [Log Analyzer](#log-analyzer) and the [lineup status](#lineup-status).
 
 Documents in this folder:
 
 | Document | Content |
 | - | - |
-| This document | The architecture: the terms, the principles, the parts and the order of the steps. |
+| This document | The architecture: the terms, the principles, the parts and the decisions. |
 | [The gRPC interface of the game client](./grpc-interface.md) | All that we know about the gRPC server of the game client: the setup, the transport, the calls, the messages, the actions and the test results. |
+| [Migration](./migration.md) | The steps from the current state of SAM to this architecture, and the decisions that apply only to the migration. |
 
 ## Goals
 
@@ -97,7 +98,7 @@ The diagram shows the logical flow. The [Channels](#channels) section tells whic
 
 ## Principles
 
-The implementation plans must obey these rules.
+Each part of the Remote Control Program obeys these rules.
 
 1. **Capabilities decouple the parts.** A connector knows only the capabilities that it supplies. A consumer knows only the capabilities that it uses. A connector and a consumer never know each other.
 2. **All is off by default.** A capability leaves the machine only after the owner turns it on in the local access layer. A different citizen reads it only with a grant.
@@ -109,7 +110,7 @@ The implementation plans must obey these rules.
 8. **Actions expire.** Each action request has an expiry time. A runtime does not apply an expired request (result `expired`). When no runtime of the owner can apply a request, the relay answers immediately (result `unavailable`).
 9. **Each action request goes into the action log.** The relay stores each action request with its result in the database and writes audit events. The desktop companion also writes a local log file (see [Action log](#action-log)).
 10. **A released capability version does not change.** To change a capability, release a new version. This is the same rule as for the audit event types and the patterns of the Log Analyzer (see [AGENTS.md](../../AGENTS.md)).
-11. **One definition for all languages.** The browser runtime and the relay use TypeScript. The desktop companion uses Rust (see [Decisions](#decisions)). Thus a connector can have two implementations, for example the log file connector. The catalog, the patterns of the log file, the rule for the IP addresses (decision 23) and the protocol of the relay service (see [Protocol](#protocol)) have one definition, and both languages use it. Shared test data (for example log lines and gRPC messages with the expected results) makes sure that each implementation gives the same result.
+11. **One definition for all languages.** The browser runtime and the relay use TypeScript. The desktop companion uses Rust (see [Decisions](#decisions)). Thus a connector can have two implementations, for example the log file connector. The catalog, the patterns of the log file, the rule for the IP addresses (decision 22) and the protocol of the relay service (see [Protocol](#protocol)) have one definition, and both languages use it. Shared test data (for example log lines and gRPC messages with the expected results) makes sure that each implementation gives the same result.
 12. **The connectors parse on the machine.** Only capability data leaves the machine, never a full log file or a full stream.
 13. **Each stored value has its context:** the runtime, the connector with its version, and the capability version.
 14. **A connector never depends on a different connector.** Each connector supplies only what it knows itself. Thus each connector works alone, and the owner can turn off each connector without effects on the data of the other connectors.
@@ -120,7 +121,7 @@ The implementation plans must obey these rules.
 | Runtime | Location | Connectors | Limits |
 | - | - | - | - |
 | Browser runtime | A SAM tab in the browser | Log file | Runs only in Chromium browsers (the File System Access API), and only while a SAM tab is open. A tab in the background continues to work. Cannot use the gRPC interface (see [Browser access](./grpc-interface.md#browser-access)). After a restart of the browser, the owner must give the file access again with a click. |
-| Desktop companion | A Rust program on the machine (Windows and Linux) | Log file, gRPC | The owner must download it (a portable program, see decision 21). It needs its own login and updates. |
+| Desktop companion | A Rust program on the machine (Windows and Linux) | Log file, gRPC | The owner must download it (a portable program, see decision 20). It needs its own login and updates. |
 
 ### Browser runtime
 
@@ -133,15 +134,15 @@ The implementation plans must obey these rules.
 ### Desktop companion
 
 - A separate Rust program (see [Decisions](#decisions)). Its local access layer protects also against a compromised SAM deployment, because SAM cannot change the code or the rules on the machine. This is true only when SAM cannot deliver a changed program or changed rules:
-  - Each update has a signature with a key that only the release process holds, not the SAM deployment. The desktop companion verifies the signature before it installs an update. This signature is separate from a code signing certificate of Windows (decision 27).
+  - Each update has a signature with a key that only the release process holds, not the SAM deployment. The desktop companion verifies the signature before it installs an update. This signature is separate from a code signing certificate of Windows (decision 25).
   - The catalog of the actions is compiled into the program. SAM cannot change it at runtime.
 - Only one copy of the program runs for each folder of settings (a lock). Two copies would use the same refresh token, and the reuse of a refresh token revokes the OAuth grant (see [OAuth design](../mcp-server.md#oauth-design)).
-- It supports Windows and Linux. It is a portable program without an installation (see decision 21). The releases, the updates and the tray icon must work on both operating systems.
+- It supports Windows and Linux. It is a portable program without an installation (see decision 20). The releases, the updates and the tray icon must work on both operating systems.
 - It connects directly to SAM, not through a browser tab. Thus it works without an open tab.
-- It signs in with OAuth 2.1 as a native client of the authorization server of SAM (see [OAuth design](../mcp-server.md#oauth-design)): the authorization code grant with PKCE and a loopback redirect. Today, the authorization server issues tokens only for the MCP server. Thus it needs these changes:
-  - the relay service as a second resource, with its own audience (resource indicators, RFC 8707) and its own scope,
-  - a consent that requires `remoteControlProgram;use`, not `mcp;use`,
-  - a Client ID Metadata Document of the desktop companion on an HTTPS URL of SAM, because the client ids are such documents.
+- It signs in with OAuth 2.1 as a native client of the authorization server of SAM (see [OAuth design](../mcp-server.md#oauth-design)): the authorization code grant with PKCE and a loopback redirect.
+  - The relay service is a resource of the authorization server, with its own audience (resource indicators, RFC 8707) and its own scope.
+  - The consent requires `remoteControlProgram;use`, not `mcp;use`.
+  - The client id of the desktop companion is a Client ID Metadata Document on an HTTPS URL of SAM.
 - It contains the log file connector next to the gRPC connector. The log file connector supplies `log_entries`, and uploads them only when the local access layer permits it.
 - Its UI controls the local access layer and has the button "Stop all". It asks the questions of "ask each time". It shows no data of the game: the control UIs in SAM show the data.
 
@@ -164,7 +165,7 @@ The relay keeps the announcement while the runtime is online (see [Presence](#pr
 
 - A connector supplies capabilities and applies actions. It does not know the channels, the relay or the consumers.
 - A connector uploads raw values and derives nothing (principle 15). Example: the log file connector uploads the matched lines. The Log Analyzer derives the Live-Status from them.
-- A connector reads its interface at its own rate. Example: the Log Analyzer reads the log file each 10 seconds today. This rate is internal. It is not the timing of a channel.
+- A connector reads its interface at its own rate, for example the log file each 10 seconds. This rate is internal. It is not the timing of a channel.
 - More connectors are ideas (see [Ideas](#ideas)).
 
 ### The gRPC connector
@@ -200,7 +201,7 @@ All parts share one catalog of capabilities: the runtimes, the relay and the con
 The kinds:
 
 - **State:** a value that changes, for example the health. The latest value is the current state. The relay keeps the history of the values.
-- **Feed:** entries that the relay appends, for example the log entries. Each entry has a time and a unique key. The relay uses the key to remove duplicates (the Log Analyzer uses a hash of the line today).
+- **Feed:** entries that the relay appends, for example the log entries. Each entry has a time and a unique key. The relay uses the key to remove duplicates (for `log_entries`, see [Log Analyzer](#log-analyzer)).
 - **Action:** a request from a consumer to the game client, and a result from the runtime.
 
 When more than one runtime or connector supplies the same state, one rule decides which value applies:
@@ -242,7 +243,7 @@ A channel is the transport of a capability. The catalog gives the timing. The ru
 | - | - | - |
 | Up: runtime to relay | State and feed entries within seconds. The runtime sends a maximum of one update for each capability in the minimum interval. | A batch at a fixed interval, for example each minute. |
 | Down: relay to runtime | Action requests. Changes of the switches. | Not for actions: an action that waits for the next interval is stale. |
-| Out: relay to consumer | New values, new entries and action results within seconds. | Polling, for example the 60-second download of the Log Analyzer today. |
+| Out: relay to consumer | New values, new entries and action results within seconds. | Polling, for example each 60 seconds. |
 
 - An action is a pair of messages: the request goes down, and the result goes up.
 - Up and down: each runtime keeps one WebSocket connection open to the relay service on host1 (see decision 14). The connection carries both directions, for the browser runtime and for the desktop companion.
@@ -259,7 +260,7 @@ A channel is the transport of a capability. The catalog gives the timing. The ru
 ## Relay
 
 - The relay is a set of use cases in `application`: publish state, append feed entries, read the current state, the history and the feeds, announce a runtime, request an action, report an action result, manage grants, manage access requests.
-- The relay service is a new host on host1, outside of the Next.js app and Vercel (see decision 14). It keeps the WebSocket connections of the runtimes and calls the use cases. It builds its own application context, like each host (see [Architecture](../architecture.md#the-layers)).
+- The relay service is a separate host on host1, outside of the Next.js app and Vercel (see decision 14). It keeps the WebSocket connections of the runtimes and calls the use cases. It builds its own application context, like each host (see [Architecture](../architecture.md#the-layers)).
 - The app and the MCP server call the read use cases and the grant use cases directly. They send an action request to the relay service through an internal HTTP endpoint. The endpoint answers immediately with the id of the request. The result arrives through Soketi in the private channel of the requester, and it is in the action log. The endpoint accepts only requests with a secret or a signed token of the app, like the collab server.
 - Each use case validates its input with the schema of the catalog.
 - Each use case applies the switches and the remote access layer.
@@ -351,7 +352,7 @@ A runtime that breaks a limit gets an error. Repeated errors close the connectio
 A consumer can read a capability of an owner only when all these conditions are true:
 
 1. The switches of the organization permit the Remote Control Program, the connector and the capability.
-2. The consumer has the permission to use the Remote Control Program (`remoteControlProgram;use`), and the permission of the control UI, if it has one (for example `logAnalyzer;read` for the Log Analyzer, see decision 25).
+2. The consumer has the permission to use the Remote Control Program (`remoteControlProgram;use`), and the permission of the control UI, if it has one (for example `logAnalyzer;read` for the Log Analyzer, see decision 24).
 3. The consumer is the owner, or a valid grant of the owner gives the operation `read` on the capability to the consumer.
 4. The local access layer of a runtime of the owner lets the capability leave the machine. Without this condition, there is no data.
 
@@ -363,7 +364,7 @@ A consumer can request an action of an owner only when the conditions 1 and 2 ar
 ### Local access layer
 
 - Each runtime has one local access layer. The connectors do not have their own. Thus one rule applies to a capability, independent of the connector that supplies it.
-- A rule for a state or a feed is "off" or "on". A rule for a feed can have a filter. Example: the log entry types that the owner shares, like the share settings of the Log Analyzer today. The filter exists only in the local access layer. A grant always covers a full capability (see [Decisions](#decisions)).
+- A rule for a state or a feed is "off" or "on". A rule for a feed can have a filter. Example: the log entry types that the owner shares. The filter exists only in the local access layer. A grant always covers a full capability (see [Decisions](#decisions)).
 - A rule for an action is "off", "ask each time" or "automatic". The rule also tells which requesters it accepts: only the owner, or also other citizens with a grant.
 - The button "Stop all" stops all uploads of the runtime and refuses all actions at the same time. A second button starts them again. The sharing popover also has a button "Stop all" for all runtimes of the owner (see [Sharing popover](#sharing-popover)).
 - The runtime keeps its rules on the machine: in the browser storage, or in a file of the desktop companion. The relay never writes them.
@@ -387,7 +388,7 @@ The grantee kinds:
 | - | - |
 | Citizen | One citizen. |
 | Role | All citizens with a role, at the time of each access. |
-| Everyone | All citizens who can use the Remote Control Program. This is the sharing of the Log Analyzer today. |
+| Everyone | All citizens who can use the Remote Control Program. |
 | Event participants | The participants and the managers of one SAM event, at the time of each access (see decision 16). The validity can follow the time of the event. |
 
 - The owner needs no grant for the own data and the own actions. The local access layer still applies to the own actions.
@@ -397,7 +398,7 @@ The grantee kinds:
 
 ## Sharing popover
 
-- A new item in the top bar (`apps/app/src/modules/shell/components/TopBar/`) and in the action bar for mobile devices. It follows the notifications popover.
+- An item in the top bar (`apps/app/src/modules/shell/components/TopBar/`) and in the action bar for mobile devices. It follows the notifications popover.
 - It has these sections:
   1. **Status:** the runtimes of the owner that are online and their connectors. A note when the browser runtime needs a click (for example to give the file access again). A button "Stop all" for all runtimes of the owner: the relay tells each runtime to stop, and refuses their uploads and actions until the owner starts them again.
   2. **Settings of this browser:** the settings of the browser runtime in this browser: the autostart, the log folder, the local access layer and the button "Stop all" of this browser. For the desktop companion: a read-only summary from its announcement, and a note that the owner changes these settings in the desktop companion.
@@ -421,19 +422,33 @@ The grantee kinds:
 ### Control UIs
 
 - A control UI uses a consumer client of the app. The consumer client combines two sources: the browser runtime in the same browser, and the relay. A control UI does not know where a value comes from.
-- The own data of the browser runtime in the same browser needs no upload. Thus the Log Analyzer shows the own log without sharing, as it does today. The data of the desktop companion reaches the browser only through the relay.
+- The own data of the browser runtime in the same browser needs no upload. Thus the Log Analyzer shows the own log without sharing. The data of the desktop companion reaches the browser only through the relay.
 - A control UI can show the current state, the history and statistics.
 - A control UI shows the age of each value, and marks a value as stale after the stale time.
 - A control UI tells why data is missing: no runtime is online, no connector supplies the capability, the local access layer blocks it, or there is no grant.
 
+### Log Analyzer
+
+The Log Analyzer is the control UI of the feed `log_entries`. Its permission is `logAnalyzer;read` (decision 24).
+
+- The log file connector reads `Game.log` and the old log files. In the browser runtime, it uses the File System Access API: the handle of the log folder is in IndexedDB, a Web Worker parses the files, and a reader reads only the new bytes of a file.
+- The local access layer tells which log entry types leave the machine, also for older entries.
+- Before the upload, the connector replaces each IP address in a raw line with a fixed marker (decision 22).
+- The relay use case "append feed entries" checks each line against its pattern again. The patterns are `LOG_ANALYZER_ENTRY_PATTERNS` (`packages/domain/src/logAnalyzer/`). The connector and the relay share them, and the rules in [AGENTS.md](../../AGENTS.md) apply to them.
+- The hash for duplicates must not depend on the version of a pattern: it uses the oldest type of a pattern chain (`supersedes`) and the raw line. Thus two runtimes with different pattern versions do not store the same line twice.
+- The shared test data contains lines with `\r\n` and with `\n`, and partly written lines, because `Game.log` has mixed line ends, and `.` matches `\r` in Rust, but not in JavaScript.
+- The model `LogAnalyzerEntry` stores the feed.
+- The Log Analyzer derives the Live-Status from `log_entries` (principle 15).
+- The overlay (Document Picture-in-Picture) is a view of the Log Analyzer.
+
 ### Lineup status
 
-The lineup status is the second control UI, after the Log Analyzer. It shows the current status of the citizens in the lineup of a SAM event (`/app/events/[id]/lineup`).
+The lineup status shows the current status of the citizens in the lineup of a SAM event (`/app/events/[id]/lineup`).
 
 - Each position with a citizen (`EventPosition.citizenId`) shows the status of this citizen:
   - in the game or not (the gRPC connector of the citizen is connected to the game client),
   - the vitals (`player_vitals`, for example the health, and "downed" or "dead"),
-  - the vehicle (`ship_status`, for example the name, the health and the shields),
+  - the vehicle (`ship_status`, for example the name, the health and the shields).
 
   No test has seen the `vehicle` frame and the death events of the gRPC interface yet (see [Open questions](./grpc-interface.md#open-questions)).
 - The values arrive in realtime through the private channel of the viewer (see [Channels](#channels)). Each value shows its age. A stale value looks different.
@@ -443,7 +458,7 @@ The lineup status is the second control UI, after the Log Analyzer. It shows the
 
 ### AI agents
 
-The MCP server is stateless and has no subscriptions (see [MCP Server](../mcp-server.md)). The MCP extensions Tasks and Events can improve this later (see [Ideas](#ideas)). For the start:
+The MCP server is stateless and has no subscriptions (see [MCP Server](../mcp-server.md)). The MCP extensions Tasks and Events can improve this later (see [Ideas](#ideas)). Without these extensions:
 
 - Read tools give the current state, the history and the feed entries, with their age.
 - An action tool sends a request and waits a short time for the result. When the result is not there yet, the tool gives the id of the request, and a read tool gives the result later.
@@ -459,71 +474,36 @@ The MCP server is stateless and has no subscriptions (see [MCP Server](../mcp-se
 | Owner on the machine | Owner | What leaves the machine, which actions the runtime applies, the button "Stop all" of the runtime | Local access layer |
 | Code | Developers | Which connectors a runtime contains | Each connector is a separate module |
 
-## The Log Analyzer in the Remote Control Program
-
-The Log Analyzer moves completely into the Remote Control Program. No old path stays next to it.
-
-| Today | In the Remote Control Program |
-| - | - |
-| `apps/app/src/modules/log-analyzer`: the File System Access API, the folder handle in IndexedDB, the parser in a Web Worker, the incremental file reader | The log file connector. Its core moves into the runtime package, so that the desktop companion can also use it. |
-| The share settings in the browser storage (`log_analyzer_share_types`, all off by default), "share older entries" | The rule and the filter of the `log_entries` feed in the local access layer of the browser runtime. |
-| The server action `uploadLogAnalyzerEntries` and the use case `shareLogAnalyzerEntries`: the check of the line against the pattern on the server, the hash for duplicates | The relay use case "append feed entries" for `log_entries`, with the same check of the patterns. The hash for duplicates must not depend on the version of a pattern: it uses the oldest type of a pattern chain (`supersedes`) and the raw line. Thus two runtimes with different pattern versions do not store the same line twice. The shared test data contains lines with `\r\n` and with `\n`, and partly written lines, because `Game.log` has mixed line ends, and `.` matches `\r` in Rust, but not in JavaScript. |
-| The model `LogAnalyzerEntry` | The storage of the `log_entries` feed. |
-| All citizens with `logAnalyzer;read` see all shared entries | Grants. The sharing starts from zero (see below). |
-| The tRPC routes `getSharedEntries…` and the 60-second download | The consumer client, which reads through the relay. Later realtime through Soketi. |
-| "Live-Status" from the shared entries | No change: the Log Analyzer derives the Live-Status from `log_entries` (principle 15). |
-| The overlay (Document Picture-in-Picture) | It stays a view of the Log Analyzer control UI. |
-| The Unleash flag `DisableLogAnalyzerSharing` | A switch of the `log_entries` capability. |
-| The patterns `LOG_ANALYZER_ENTRY_PATTERNS` | No change. The connector and the relay share them. The rules in [AGENTS.md](../../AGENTS.md) continue to apply. |
-
-The sharing starts from zero (see decision 20):
-
-- The deployment resets all share settings of the Log Analyzer. The browser runtime ignores and removes the old browser storage `log_analyzer_share_types`.
-- No grant comes from the old sharing. After the deployment, only the owner sees the own shared entries until the owner makes a grant. A grant with a start time in the past can share the old entries again (decision 8).
-- The changelog of SAM announces the change.
-
 ## Location in the repository
 
-This is a first proposal. The plans decide. Update [Architecture](../architecture.md) when the packages exist. The paths of the pnpm monorepo are relative to `pnpm-monorepo/`.
+The implementation plans decide the final locations. Update this table and [Architecture](../architecture.md) when the packages exist. The paths of the pnpm monorepo are relative to `pnpm-monorepo/`.
 
 | Location | Content |
 | - | - |
 | `packages/domain/src/remoteControlProgram/` | The catalog of the capabilities, the pure rules of the grants, and the export of the shared definitions for Rust. The patterns of the Log Analyzer stay in `packages/domain/src/logAnalyzer/`. |
 | `packages/application/src/remoteControlProgram/` | The use cases of the relay. |
-| A new package, for example `packages/remote-control-program-runtime` | The core of the browser runtime: the base types of the connectors, the TypeScript connectors, the local access layer and the channel client. No `next` and no `react`. |
+| A package, for example `packages/remote-control-program-runtime` | The core of the browser runtime: the base types of the connectors, the TypeScript connectors, the local access layer and the channel client. No `next` and no `react`. |
 | `apps/app/src/modules/remote-control-program/` | The browser runtime, the consumer client and the sharing popover. |
 | `packages/mcp/src/tools/remoteControlProgram/` | The MCP tools. |
-| A new host, for example `apps/relay` | The relay service: a Node.js container on host1, like `apps/collab`. |
-| A new Rust project next to `pnpm-monorepo/`, for example `companion/` | The desktop companion. It is not a part of the pnpm monorepo. |
+| A host, for example `apps/relay` | The relay service: a Node.js container on host1, like `apps/collab`. |
+| A Rust project next to `pnpm-monorepo/`, for example `companion/` | The desktop companion. It is not a part of the pnpm monorepo. |
 | A shared folder, for example `remote-control-program-fixtures/` | The shared test data for the TypeScript and the Rust implementations. |
 
 ## Operations and tests
 
-- Before step 2, an estimate of the sizes: the connections, the messages and the rows of the history for each day.
 - The relay service has metrics (the connections, the messages, the errors, the delays) and alerts, like the other services on host1.
 - The relay service reads the Unleash flags of the switches.
 - A fake gRPC server replays recorded frames. Thus the tests of the gRPC connector need no game.
 - The Playwright stack contains the relay service and TimescaleDB.
 
-## Order of the steps
-
-This is not a plan. Each step gets its own implementation plan. The order can change.
-
-1. **Database:** the dedicated PostgreSQL service with TimescaleDB on host1, and the move of the SAM databases to it (decision 13).
-2. **Foundation and Log Analyzer:** the relay service on host1 with the WebSocket connection of the runtimes (decision 14), the announcement, the catalog, the relay for states with their history in TimescaleDB, feeds and grants, the browser runtime with the log file connector, the local access layer, the sharing popover, the Log Analyzer as a control UI, the reset of the sharing with an entry in the changelog, the migration of the stored log entries (decision 29). The new Log Analyzer replaces the old one in one deployment (decision 26). The shared test data makes sure that the new log file connector finds the same entries as the old parser.
-3. **Desktop companion and gRPC connector:** the Rust program for Windows and Linux, the shared definitions and test data, the native OAuth client, the first gRPC capabilities (for example `player_vitals`; `ship_status` and the death states need a test of the `vehicle` and `events` frames first), the log file connector in the desktop companion (`log_entries`).
-4. **Lineup status:** the control UI in the lineup of an event (see [Lineup status](#lineup-status)), and the grantee kind "Event participants".
-5. **Actions:** the down channel, the action lifecycle, "ask each time", the action log, the first action through the gRPC interface.
-6. **AI agents:** the MCP read tools first, the action tool later.
-
 ## Ideas
 
-These ideas have no use case or no reliable source yet. They are not part of the steps. They show that the architecture accepts more parts without a change to the other parts.
+These ideas have no use case or no reliable source yet. They are not part of the [migration](./migration.md). They show that the architecture accepts more parts without a change to the other parts.
 
 - **Input connector:** simulated keyboard and mouse input in the desktop companion, for game actions that the gRPC interface does not supply.
 - **Screen connector:** screen capture with optical character recognition (OCR), for values that no other interface supplies.
 - **Grantee kind "In-game party":** the current members of the in-game party of the owner. The gRPC interface supplies no party state (see [TelemetryStream](./grpc-interface.md#telemetrystream)), and the party lines of `Game.log` are not reliable enough. A reliable source of the party state makes this idea possible.
-- **The location in the lineup status:** a separate feed for the location lines of the log file. Then the owner can share the location without the other log entries (decision 28).
+- **The location in the lineup status:** a separate feed for the location lines of the log file. Then the owner can share the location without the other log entries (decision 26).
 - **Required variants in the lineup status:** the lineup status shows if a citizen sits in one of the required variants of the position (`EventPosition.requiredVariants`). This needs a mapping from the class name of the vehicle in the gRPC interface to the variants of SAM.
 - **The MCP extensions Tasks and Events** (see [Extensions](https://modelcontextprotocol.io/extensions/overview), both in beta in 2026-11):
   - Tasks (`io.modelcontextprotocol/tasks`): an action request becomes a task that the client asks for until the result is there. This fits "ask each time", which can take longer than a tool call. The server must keep the tasks, for example in the database.
@@ -541,7 +521,7 @@ These ideas have no use case or no reliable source yet. They are not part of the
 
 ## Decisions
 
-All decisions of 2026-11-21:
+All decisions of 2026-11-21. The decisions that apply only to the migration are in [Migration](./migration.md#decisions-of-the-migration).
 
 1. **Name.** The working title is "Remote Control Program". The code can use it, for example `remoteControlProgram` and `remote_control_program`.
 2. **Rust for the desktop companion.** It uses little memory and processor time while the game runs. It has a mature native gRPC client. It builds one executable file for each operating system, without a separate runtime. Result: the log file connector and the catalog need one definition for TypeScript and Rust (principle 11, decision 5).
@@ -553,61 +533,42 @@ All decisions of 2026-11-21:
    - Rust uses a regular expression engine with lookahead (for example `fancy-regex`), because 21 of the 50 patterns use `(?!…)`. The standard `regex` crate does not support lookahead.
    - The two engines differ in details. Example: in Rust, `\d` and `\w` also match Unicode characters, and in JavaScript only ASCII characters. The shared test data finds such differences.
 6. **The log file connector of the desktop companion only uploads.** It supplies `log_entries` when the local access layer permits it. The desktop companion has no UI that shows data of the game. Its UI controls the local access layer. Result: the Rust implementation contains all patterns of the log file (decision 5).
-7. **TimescaleDB for the history of the states.** The history is time-stamped rows that the relay only appends, and the queries select time ranges and calculate aggregates. TimescaleDB gives compression and continuous aggregates for this. Results: the rows are never changed (see [History](#history)), the history tables are Prisma models that SQL migrations make hypertables (see [History](#history)), and each environment needs the extension: the local Docker Compose stack, the Playwright stack, develop and production (see decision 13). The existing tables of SAM stay normal tables. In 2026-11, the largest table (`AuditEvent`) had approximately 40,000 rows and 25 MB. At this size, TimescaleDB gives no advantage.
+7. **TimescaleDB for the history of the states.** The history is time-stamped rows that the relay only appends, and the queries select time ranges and calculate aggregates. TimescaleDB gives compression and continuous aggregates for this. Results: the rows are never changed, the history tables are Prisma models that SQL migrations make hypertables (see [History](#history)), and each environment needs the extension: the local Docker Compose stack, the Playwright stack, develop and production (see decision 13). The existing tables of SAM stay normal tables. In 2026-11, the largest table (`AuditEvent`) had approximately 40,000 rows and 25 MB. At this size, TimescaleDB gives no advantage.
 8. **Grants and history.** A grant gives access only to data from its validity period. The owner can set a start time in the past.
 9. **AI agents.** An AI agent acts as the citizen who connected it. A grant to a citizen also applies to the AI agents of this citizen, for `read` and for `request`. No layer has a separate setting for AI agents.
 10. **No finer grants for feeds.** A grant always covers a full capability. The filter of a feed exists only in the local access layer. When a finer split becomes necessary, the catalog splits the feed into more capabilities.
 11. **Identity in the game.** The connector reports the in-game handle. The consumers show a note when it is different from the handle of the owner in SAM. The Remote Control Program does not block the data.
 12. **No deletion of the history.** The owner cannot delete the own history and the own feed entries.
-13. **A dedicated PostgreSQL service for SAM on host1.** A new service in the repository `host1.simonknittel.de` runs a PostgreSQL cluster with TimescaleDB only for SAM, with its own backups. The databases `sinister_prod` and `sinister_develop` move from the shared cluster to it. Thus SAM keeps one database and one Prisma data source, and the shared cluster of the other services does not change. Results:
+13. **A dedicated PostgreSQL service for SAM on host1.** A service in the repository `host1.simonknittel.de` runs a PostgreSQL cluster with TimescaleDB only for SAM (the databases `sinister_prod` and `sinister_develop`), with its own backups. Thus SAM has one database and one Prisma data source, and the shared cluster of the other services needs no TimescaleDB. Results:
     - The image contains the community edition of TimescaleDB for PostgreSQL 18 (the Apache 2 edition has no compression and no continuous aggregates). `shared_preload_libraries` contains `timescaledb`.
     - The backups and their verification use `timescaledb_pre_restore()` and `timescaledb_post_restore()` for each restore. The mirror scripts of SAM do the same (see [Mirror the database](../mirror-database.md)).
-    - Each client of the SAM databases gets the new address: the app on Vercel, the Lambda functions, `sam-collab`, the reader role of `sam-statistics` (Grafana) and the mirror scripts.
 14. **Realtime transport.**
-    - Up and down: a new relay service on host1, outside of the Next.js app and Vercel, like `sam-collab`. Each runtime keeps one WebSocket connection open to it. The connection carries the uploads, the action requests and the action results. The app on Vercel cannot keep such connections open, and an HTTPS request for each update would cost much.
+    - Up and down: a relay service on host1, outside of the Next.js app and Vercel, like `sam-collab`. Each runtime keeps one WebSocket connection open to it. The connection carries the uploads, the action requests and the action results. The app on Vercel cannot keep such connections open, and an HTTPS request for each update would cost much.
     - Out: Soketi, with one private channel for each viewer. The relay checks the grants for each message. Thus an expired or revoked grant stops the data immediately (principle 5). With one channel for each owner, Soketi would check the access only at the subscription, and it cannot remove one subscription.
-    - Results: the relay service is a new host with its own application context (see [Relay](#relay)). The desktop companion signs in with its OAuth access token. The browser runtime gets a short-lived token from the app. Both tokens are ES256 tokens of SAM, thus the relay service verifies them with the public key of SAM (see [Embedded App Authentication](../embedded-app-authentication.md)). The relay service also checks the revocations and the bans (see [Connection and tokens](#connection-and-tokens)). The deployment follows `sam-collab`: an image from the continuous integration, and a service in the repository `host1.simonknittel.de`.
-
+    - Results: the relay service is a host with its own application context (see [Relay](#relay)). The desktop companion signs in with its OAuth access token. The browser runtime gets a short-lived token from the app. Both tokens are ES256 tokens of SAM, thus the relay service verifies them with the public key of SAM (see [Embedded App Authentication](../embedded-app-authentication.md)). The relay service also checks the revocations and the bans (see [Connection and tokens](#connection-and-tokens)). The deployment follows `sam-collab`: an image from the continuous integration, and a service in the repository `host1.simonknittel.de`.
 15. **The relay service and `sam-collab` stay separate services.** Both keep WebSocket connections in both directions on host1, but the similarity ends at the transport:
     - Different protocols: Hocuspocus owns the WebSocket server of `sam-collab` and speaks the Yjs protocol of the wiki documents. The relay service speaks its own protocol with the runtimes, also with the Rust program.
     - Different load: the relay service gets small messages from each online player all the time, and writes the history. `sam-collab` has few editors at the same time.
-    - Separate failures and releases: an error or an overload in the relay service does not stop the wiki editor. The relay service can change with each step without a restart of the wiki editor.
+    - Separate failures and releases: an error or an overload in the relay service does not stop the wiki editor. The relay service can change without a restart of the wiki editor.
     - Different positions in the architecture: the relay service calls the use cases of `application`, and `sam-collab` uses Prisma directly. The relay service verifies ES256 tokens, and `sam-collab` verifies HS256 tokens with a shared secret.
     - The common parts (the deployment pattern, the check of the tokens, the logging) are shared through packages, not through one process.
 16. **The grantee kind "Event participants" includes the managers of the event.** The managers (`Event.managers`) lead the lineup, but they are not always participants. They need the lineup status most, and the owner sees the managers of the event before the grant.
 17. **No game version for now.** The gRPC interface is the source of truth for the state of the game client. `Game.log` does not always show the actual state. The gRPC interface does not supply the game version yet, and a connector does not take data from a different connector (principle 14). Thus the rows have no game version until the gRPC interface supplies it (see [Game version](./grpc-interface.md#game-version)). The rows have fields for the game version and the environment (LIVE or PTU), and the fields stay empty. Each consumer decides how it treats an empty value. Result: until then, a statistic cannot tell the game builds apart, and cannot exclude a test environment such as PTU.
 18. **The browser runtime runs on all SAM pages.** The tabs elect one runtime with the Web Locks API. The settings of the browser runtime (the autostart, the log folder, the local access layer) are a section of the sharing popover.
 19. **The action log is in the database.** The relay stores each action request with its result. The browser runtime keeps no log of its own. Only the desktop companion also writes a local log file.
-20. **The sharing starts from zero.** The deployment resets all share settings of the Log Analyzer, and no grant comes from the old sharing. The changelog of SAM announces the change.
-21. **The desktop companion is a portable program.** It needs no installation: a portable `.exe` for Windows and an AppImage for Linux work from each folder. The program does these things itself:
+20. **The desktop companion is a portable program.** It needs no installation: a portable `.exe` for Windows and an AppImage for Linux work from each folder. The program does these things itself:
     - the start with the operating system (an entry in the autostart of the user),
     - the updates (the program replaces its own file),
     - the login (the loopback redirect of OAuth needs no registration).
 
     "Ask each time" uses a small window of the program, not a notification of the operating system. On Windows, these notifications need a registered app identity (AppUserModelID), which an installation normally makes. Add an installer only when a need appears.
-22. **Consumers derive, connectors upload raw values** (principle 15). Derived values are specific to a consumer. Thus the connectors stay small, and the Rust connector needs no second implementation of a derivation. A derivation that more than one consumer needs goes into `domain` as a shared helper.
-23. **No IP addresses leave the machine.** The log file connector replaces each IP address in a raw line with a fixed marker before the upload. The marker keeps the server check of the patterns valid, because no pattern captures an IP address in a named group. The rule for the marker is a part of the shared definitions (decision 5), thus TypeScript and Rust give the same line and the same hash. The relay refuses a line that still contains an IP address.
-24. **"Stop all" instead of an emergency stop.** It is a normal button for comfort: on each machine for its runtime, and in the sharing popover for all runtimes of the owner. A second button starts all again.
-25. **Permissions.** One permission for the use of the Remote Control Program: `remoteControlProgram;use`. An owner needs it to connect a runtime, and a consumer needs it to read or to request. Each consumer can have its own permission for what it shows (for example `logAnalyzer;read` stays the permission of the Log Analyzer). The existing permissions do not change, and no migration gives the new permission to roles. The admins assign it.
-26. **The new Log Analyzer replaces the old one in one deployment.** No version runs next to the old one, and no Unleash flag switches between them. The move of the database is a separate step before it (step 1).
-27. **No code signing certificate for Windows.** The releases have no certificate for the code signing of Windows, thus Windows shows a warning at the first start. SAM tells the users how to start the program, and what the risks are.
-28. **No location in the lineup status for now.** The gRPC interface supplies no location, and a location from `log_entries` would need a grant for all uploaded log entries (decision 10). See [Ideas](#ideas).
-29. **A migration removes the IP addresses from the stored log entries.** The rows of `LogAnalyzerEntry` from before decision 23 contain IP addresses. The migration of step 2 replaces them once with the marker of decision 23, and calculates the new hash (see [The Log Analyzer in the Remote Control Program](#the-log-analyzer-in-the-remote-control-program)). When two rows of the same owner then have the same hash, the migration keeps the oldest row. This is the only change of existing rows.
-30. **The recommendations of the review of 2026-11-21 apply.** These sections contain them:
-    - [Desktop companion](#desktop-companion): the changes of the OAuth server, the signature of the updates, the catalog in the program, one running copy.
-    - [Delivery to the consumers](#delivery-to-the-consumers): the viewers that watch, the snapshot with a cursor, the size of the batches, the data for the other tabs.
-    - [Relay](#relay): the internal endpoint answers with the id of the request.
-    - [Protocol](#protocol), [Connection and tokens](#connection-and-tokens), [Presence](#presence), [Time](#time) and [Limits](#limits).
-    - [History](#history): the history tables as Prisma models.
-    - [The Log Analyzer in the Remote Control Program](#the-log-analyzer-in-the-remote-control-program): the hash for duplicates and the test data for the line ends.
-    - [Operations and tests](#operations-and-tests).
+21. **Consumers derive, connectors upload raw values** (principle 15). Derived values are specific to a consumer. Thus the connectors stay small, and the Rust connector needs no second implementation of a derivation. A derivation that more than one consumer needs goes into `domain` as a shared helper.
+22. **No IP addresses leave the machine.** The log file connector replaces each IP address in a raw line with a fixed marker before the upload. The marker keeps the server check of the patterns valid, because no pattern captures an IP address in a named group. The rule for the marker is a part of the shared definitions (decision 5), thus TypeScript and Rust give the same line and the same hash. The relay refuses a line that still contains an IP address.
+23. **"Stop all" instead of an emergency stop.** It is a normal button for comfort: on each machine for its runtime, and in the sharing popover for all runtimes of the owner. A second button starts all again.
+24. **Permissions.** One permission for the use of the Remote Control Program: `remoteControlProgram;use`. An owner needs it to connect a runtime, and a consumer needs it to read or to request. Each consumer can have its own permission for what it shows (for example `logAnalyzer;read` for the Log Analyzer).
+25. **No code signing certificate for Windows.** The releases have no certificate for the code signing of Windows, thus Windows shows a warning at the first start. SAM tells the users how to start the program, and what the risks are.
+26. **No location in the lineup status for now.** The gRPC interface supplies no location, and a location from `log_entries` would need a grant for all uploaded log entries (decision 10). See [Ideas](#ideas).
 
 ## Open questions
 
 There are no open questions at the moment. Add each new question with a recommendation. The user decides.
-
-## Related follow-ups
-
-Changes outside of the Remote Control Program that the work on this concept showed:
-
-- **`DailyMcpUsageCount` as a view.** The midnight job counts the audit events with `triggeredViaMcp` of each day and stores the count in `DailyMcpUsageCount`. The view `statistics.daily_mcp_usage_counts` reads this table. `AuditEvent` is small (see decision 7), and it already has a partial index for `triggeredViaMcp`. Thus the view can count the audit events directly, with the same day boundaries (Europe/Berlin). The view then also covers the days before the job existed. The table and the job can then be removed.
