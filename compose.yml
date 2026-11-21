@@ -248,7 +248,7 @@ services:
   # timescaledb itself (the migrations then find them): a data folder of the
   # earlier postgres image does not have the extension yet.
   grafana-bootstrap:
-    image: postgres:18.7-alpine3.23@sha256:f3ee138d5fce80ffaeb315b8bea7610f0c4f2304fb2aceb4ec8e457b92fc41a0
+    image: postgres:19.0-alpine3.23@sha256:8b9e23fd0652e6857367455c41fd6624823995fa120a2f912222d29203ab1b6a
     restart: no
     depends_on:
       psql:
