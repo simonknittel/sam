@@ -54,11 +54,16 @@ checkout directory, thus the container sets never collide — only the host
 ports must differ. Always run `docker compose` from the root of the checkout
 that you want to address.
 
-The database has no named volume, thus the data of each stack lives inside
-its own `psql` container. Two consequences: a fresh worktree stack starts
-with an EMPTY database, and a recreation of the `psql` container of the main
-checkout destroys the only copy of the dev data. (The one named volume,
-`otel-collector-output`, holds throw-away telemetry.)
+Each stack keeps its database in the anonymous volume of its own `psql`
+container. A new worktree stack starts with an EMPTY database. A `down` or
+an `rm` of the `psql` container of the main checkout destroys the only copy
+of the dev data. The database section of `docs/setup-local-machine.md` has
+the details. In the main checkout, the script starts the containers with
+`docker start`. When the image of `sam-psql-1` is not the `psql` image of
+`compose.yml`, the script first makes the container again. In each
+checkout, the script updates the extension `timescaledb` when the image has
+a newer version. The one named volume, `otel-collector-output`, holds
+throw-away telemetry.
 
 ### Port slots
 
@@ -193,9 +198,10 @@ new flag (create it first with `POST .../features` and body
 `{"name":"<flag>"}`). The app caches flag definitions for up to ~30 s — wait
 or poll before you conclude that a toggle had no effect.
 
-If the `psql` container gets RECREATED (for example by
-`scripts/mirror-database-production-to-local.sh`), `unleash` crashes with it,
-because the flag data lives in the same Postgres instance.
+If the `psql` container gets REMOVED and made again (for example by
+`scripts/mirror-database-production-to-local.sh`), its volume is new and
+empty, and `unleash` crashes with it, because the flag data lives in the same
+Postgres instance.
 `docker compose up -d unleash-bootstrap` from the affected checkout repairs
 everything — but all flags are then disabled again, thus toggle the flags
 that you tested again.

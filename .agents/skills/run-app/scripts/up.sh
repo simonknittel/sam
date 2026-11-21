@@ -145,9 +145,20 @@ fi
 
 echo "==> starting containers"
 if [ "$SLOT" -eq 0 ]; then
-  # Deliberately `docker start` and not `docker compose up`: the database has
-  # no named volume, so recreating psql would destroy the only copy of the
-  # main checkout's dev data.
+  # Deliberately `docker start` and not `docker compose up`: the main stack
+  # stays as it is. Only a changed psql image in compose.yml gets a
+  # recreation, which keeps the data (see the database section of
+  # docs/setup-local-machine.md).
+  PSQL_IMAGE="$(docker compose config --images psql)"
+  if [ "$(docker inspect -f '{{.Config.Image}}' sam-psql-1 2>/dev/null || true)" != "$PSQL_IMAGE" ]; then
+    echo "==> recreating psql with the image of compose.yml (the data stays)"
+    PSQL_LOG="$(mktemp /tmp/sam-psql-XXXXXX.log)"
+    if ! docker compose up --detach psql >"$PSQL_LOG" 2>&1; then
+      echo "the recreation of psql failed; log: $PSQL_LOG" >&2
+      tail -20 "$PSQL_LOG" >&2
+      exit 1
+    fi
+  fi
   docker start sam-psql-1 sam-soketi-1 sam-sam-collab-1 sam-rustfs-1 sam-unleash-1 >/dev/null
   # Only exists after someone worked on tracing here
   # (`docker compose up -d otel-collector`), thus never fatal.
@@ -163,11 +174,24 @@ else
   fi
 fi
 
+# TCP and not the Unix socket: the temporary server of the first start of a
+# new data folder answers only on the socket, while it runs the init scripts.
 for attempt in $(seq 1 60); do
-  docker compose exec -T psql pg_isready -U postgres >/dev/null 2>&1 && break
+  docker compose exec -T psql pg_isready --host 127.0.0.1 -U postgres >/dev/null 2>&1 && break
   [ "$attempt" -eq 60 ] && { echo "postgres did not become ready" >&2; exit 1; }
   sleep 1
 done
+
+psql_local() { docker compose exec -T psql psql -X -U postgres -d db "$@"; }
+
+# The database keeps the version of TimescaleDB of an earlier image until this
+# update (see the database section of docs/setup-local-machine.md).
+# TimescaleDB wants the update as the first command of a new session, thus
+# the check has its own session.
+if [ -n "$(psql_local -tAc "SELECT 1 FROM pg_extension AS installed JOIN pg_available_extensions AS available ON available.name = installed.extname WHERE installed.extname = 'timescaledb' AND installed.extversion <> available.default_version")" ]; then
+  echo "==> updating the extension timescaledb"
+  psql_local --set ON_ERROR_STOP=1 -qc "ALTER EXTENSION timescaledb UPDATE"
+fi
 
 if [ "$SLOT" -eq 0 ]; then
   # `up` and not `docker start`: it makes the two containers in a main
@@ -182,8 +206,6 @@ if [ "$SLOT" -eq 0 ]; then
   fi
 fi
 
-psql_local() { docker compose exec -T psql psql -U postgres -d db "$@"; }
-
 # --------------------------------------------------------------------- seed
 
 if [ "$SLOT" -ne 0 ] && [ "$SEED" -eq 1 ]; then
@@ -192,8 +214,10 @@ if [ "$SLOT" -ne 0 ] && [ "$SEED" -eq 1 ]; then
     MAIN_PSQL_WAS_RUNNING="$(docker inspect -f '{{.State.Running}}' sam-psql-1)"
     docker start sam-psql-1 >/dev/null
     until docker exec sam-psql-1 pg_isready -U postgres >/dev/null 2>&1; do sleep 1; done
-    # grafana-bootstrap made the schema `statistics` already
-    docker exec sam-psql-1 pg_dump -U postgres db \
+    # grafana-bootstrap made the schema `statistics` already. The database
+    # of this stack has the extension timescaledb already (see
+    # docs/mirror-database.md).
+    docker exec sam-psql-1 pg_dump -U postgres --exclude-extension=timescaledb db \
       | sed 's/^CREATE SCHEMA statistics;$/CREATE SCHEMA IF NOT EXISTS statistics;/' \
       | psql_local -q >/dev/null
     # The dump is the only reason to start the database of the main checkout
