@@ -5,6 +5,7 @@ import type {
 import type { ActivityFilters } from "@/modules/activity/utils/activityFilterParams";
 import { getApplicationContext, getRequestActor } from "@/modules/application";
 import { CursorDirection } from "@/modules/common/CursorPagination/cursorPaginationParsers";
+import { CitizenAvatarSize } from "@/modules/common/components/CitizenAvatarSize";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
@@ -185,7 +186,11 @@ const buildActivityEntry = (activity: EventActivityRow): ActivityEntry => {
    * row does not resolve renders as "Unbekannt".
    */
   const affectedCitizenTarget = (
-    <CitizenLink citizen={activity.affectedCitizen} className="truncate" />
+    <CitizenLink
+      citizen={activity.affectedCitizen}
+      avatarSize={CitizenAvatarSize.Row}
+      className="truncate"
+    />
   );
 
   switch (activity.type) {

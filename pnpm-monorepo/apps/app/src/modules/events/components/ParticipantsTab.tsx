@@ -1,8 +1,6 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
-import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
-import { Link } from "@/modules/common/components/Link";
 import { Tile } from "@/modules/common/components/Tile";
 import { CreateOrUpdateSilcTransaction } from "@/modules/silc/components/CreateOrUpdateSilcTransaction";
 import type { EventDetails } from "@sam-monorepo/application";
@@ -94,25 +92,10 @@ export const ParticipantsTab = async ({
                             {DELETED_CITIZEN_LABEL}
                           </span>
                         ) : (
-                          <CitizenPopover citizenId={manager.id}>
-                            <Link
-                              href={`/app/spynet/citizen/${manager.id}`}
-                              className={clsx(
-                                "inline-block px-2 py-1 hover:underline",
-                                {
-                                  "text-green-500":
-                                    manager.id ===
-                                    authentication.session.entity!.id,
-                                  "text-brand-red-500":
-                                    manager.id !==
-                                    authentication.session.entity!.id,
-                                },
-                              )}
-                              prefetch={false}
-                            >
-                              {manager.handle || manager.id}
-                            </Link>
-                          </CitizenPopover>
+                          <CitizenLink
+                            citizen={manager}
+                            className="inline-block px-2 py-1"
+                          />
                         )}
 
                         <DeleteManager
@@ -147,7 +130,6 @@ export const ParticipantsTab = async ({
         <ParticipantsTableTile
           event={event}
           participants={resolvedParticipants}
-          currentCitizenId={authentication.session.entity.id}
           isAppEvent={isAppEvent}
           canManageParticipants={canManageParticipants}
           searchParams={searchParams}

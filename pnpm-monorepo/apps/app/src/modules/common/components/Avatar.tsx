@@ -1,3 +1,7 @@
+import {
+  DiscordAvatarMotion,
+  getDiscordAvatarSource,
+} from "@/modules/discord/utils/getDiscordAvatarSource";
 import clsx from "clsx";
 import Image from "next/image";
 import { BirthdayHat } from "./BirthdayHat";
@@ -54,6 +58,9 @@ interface Props {
 
 const Avatar = ({ className, name, image, size, decoration }: Props) => {
   const imageSize = size || 64;
+  const source = image
+    ? getDiscordAvatarSource(image, imageSize, DiscordAvatarMotion.Animated)
+    : null;
 
   return (
     /* The outer element carries the size and does not clip, thus a
@@ -77,19 +84,21 @@ const Avatar = ({ className, name, image, size, decoration }: Props) => {
           },
         )}
         style={{
-          backgroundColor: image
+          backgroundColor: source
             ? undefined
             : name
               ? stringToColor(name)
               : "#dedfe0",
         }}
       >
-        {image ? (
+        {source ? (
           <Image
-            src={`${image}?size=${imageSize}`}
+            src={source}
             alt={name ? `Image of ${name}` : ""}
             width={imageSize}
             height={imageSize}
+            /* Discord sends the image in the size of the URL */
+            unoptimized
             loading="lazy"
           />
         ) : name ? (

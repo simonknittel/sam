@@ -1,4 +1,4 @@
-import Avatar from "@/modules/common/components/Avatar";
+import { CitizenAvatarSize } from "@/modules/common/components/CitizenAvatarSize";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import type { VisibleTask } from "@sam-monorepo/application";
 import clsx from "clsx";
@@ -7,30 +7,22 @@ interface Props {
   readonly className?: string;
   /** The assignments and the completionists select the same fields */
   readonly citizen: VisibleTask["completionists"][number];
-  /** The Discord avatar; without it, the avatar shows the initials */
-  readonly avatarUrl?: string;
 }
 
 /** One citizen in the participant lists of the task page */
-export const TaskCitizenListItem = ({
-  className,
-  citizen,
-  avatarUrl,
-}: Props) => {
+export const TaskCitizenListItem = ({ className, citizen }: Props) => {
   return (
     <li
       className={clsx(
-        "flex items-center gap-2 rounded-secondary bg-white/5 px-2 py-1",
+        "flex min-h-10 items-center rounded-secondary bg-white/5 px-2 py-1",
         className,
       )}
     >
-      <Avatar
-        name={citizen.deletedAt ? null : citizen.handle}
-        image={avatarUrl}
-        size={32}
-        className="flex-none"
+      <CitizenLink
+        citizen={citizen}
+        avatarSize={CitizenAvatarSize.List}
+        className="min-w-0 wrap-break-word"
       />
-      <CitizenLink citizen={citizen} className="min-w-0 wrap-break-word" />
     </li>
   );
 };

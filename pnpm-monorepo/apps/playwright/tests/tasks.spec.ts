@@ -264,12 +264,17 @@ test("a citizen without management permission cannot edit a task", async ({
   );
 });
 
-test("the participants show the Discord avatars only of the citizens that the viewer can read", async ({
+/** A PNG of one pixel, thus the tests do not load the Discord CDN */
+const PIXEL_PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+  "base64",
+);
+
+test("the participants show the Discord avatars, also for a viewer without citizen;read", async ({
   page,
   prisma,
   signIn,
 }) => {
-  /** The avatar URL holds the Discord id, like on the profile */
   const creator = await createCitizen(prisma, { handle: "avatar-ersteller" });
   const participant = await createCitizen(prisma, {
     handle: "avatar-teilnehmer",
@@ -279,16 +284,16 @@ test("the participants show the Discord avatars only of the citizens that the vi
     handle: "avatar-fluegelmann",
     permissionStrings: ["task;read"],
   });
-  const spynetReader = await createCitizen(prisma, {
-    handle: "avatar-spynet",
-    permissionStrings: ["task;read", "citizen;read"],
+  const withoutAvatar = await createCitizen(prisma, {
+    handle: "avatar-ohne-bild",
+    permissionStrings: ["task;read"],
   });
+  const avatarUrl = (citizen: TestCitizen) =>
+    `https://cdn.discordapp.com/avatars/${citizen.user.id}/avatar.png`;
   for (const citizen of [participant, wingman]) {
     await prisma.user.update({
       where: { id: citizen.user.id },
-      data: {
-        image: `https://cdn.discordapp.com/avatars/${citizen.user.id}/avatar.png`,
-      },
+      data: { image: avatarUrl(citizen) },
     });
   }
   const task = await createNewSilcTask(
@@ -298,29 +303,37 @@ test("the participants show the Discord avatars only of the citizens that the vi
     "Avatare zeigen",
     {
       assignments: {
-        create: [participant, wingman].map((citizen) => ({
+        create: [participant, wingman, withoutAvatar].map((citizen) => ({
           citizenId: citizen.entity.id,
           createdById: creator.entity.id,
         })),
       },
     },
   );
-  const avatar = (handle: string) =>
-    sectionByHeading(page, "Teilnehmer").getByRole("img", {
-      name: `Image of ${handle}`,
+  await page.route("https://cdn.discordapp.com/**", (route) =>
+    route.fulfill({ contentType: "image/png", body: PIXEL_PNG }),
+  );
+  const citizenLink = (handle: string) =>
+    sectionByHeading(page, "Teilnehmer").getByRole("link", {
+      name: handle,
+      exact: true,
     });
 
-  // The own avatar, but not the avatar of a citizen without citizen;read
   await signIn(participant.user);
   await page.goto(`/app/tasks/${task.id}`);
   await expect(page.getByText("Avatare zeigen", { exact: true })).toBeVisible();
-  await expect(avatar("avatar-teilnehmer")).toBeAttached();
-  await expect(avatar("avatar-fluegelmann")).toHaveCount(0);
+  /** Twice the size of the largest link avatar, for a pixel ratio of 2 */
+  await expect(citizenLink("avatar-teilnehmer").locator("img")).toHaveAttribute(
+    "src",
+    `${avatarUrl(participant)}?size=64`,
+  );
+  await expect(
+    citizenLink("avatar-fluegelmann").locator("img"),
+  ).toHaveAttribute("src", `${avatarUrl(wingman)}?size=64`);
 
-  await signIn(spynetReader.user);
-  await page.goto(`/app/tasks/${task.id}`);
-  await expect(avatar("avatar-teilnehmer")).toBeAttached();
-  await expect(avatar("avatar-fluegelmann")).toBeAttached();
+  // A citizen without an avatar gets the placeholder
+  await expect(citizenLink("avatar-ohne-bild")).toBeVisible();
+  await expect(citizenLink("avatar-ohne-bild").locator("img")).toHaveCount(0);
 });
 
 test("completing a task with a new SILC reward pays the completionists", async ({

@@ -1,5 +1,6 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
+import { CitizenAvatarSize } from "@/modules/common/components/CitizenAvatarSize";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
@@ -204,7 +205,10 @@ export const WikiPageContent = async ({
               <>
                 {" · "}
                 <span className="font-mono uppercase">Besitzer:</span>{" "}
-                <CitizenLink citizen={effectiveOwner} />
+                <CitizenLink
+                  citizen={effectiveOwner}
+                  avatarSize={CitizenAvatarSize.None}
+                />
               </>
             )}
             {" · "}

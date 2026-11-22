@@ -3,6 +3,7 @@
 import { runAction } from "@/modules/actions/utils/runAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
+import { CitizenAvatarSize } from "@/modules/common/components/CitizenAvatarSize";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import Modal from "@/modules/common/components/Modal";
 import {
@@ -274,7 +275,10 @@ const ChoiceRow = ({
           className="truncate leading-8 font-bold"
           title={name}
         >
-          <CitizenLink citizen={choice.citizen} />
+          <CitizenLink
+            citizen={choice.citizen}
+            avatarSize={CitizenAvatarSize.Row}
+          />
         </p>
         <UnmetRequirementList
           position={position}

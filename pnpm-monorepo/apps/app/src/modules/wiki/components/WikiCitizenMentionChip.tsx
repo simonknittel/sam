@@ -1,4 +1,9 @@
+"use client";
+
+import { useIsOwnCitizen } from "@/modules/auth/hooks/useIsOwnCitizen";
 import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
+import { CitizenAvatarSize } from "@/modules/common/components/CitizenAvatarSize";
+import { CitizenLinkAvatar } from "@/modules/common/components/CitizenLinkAvatar";
 import type { ResolvedWikiCitizenMention } from "@sam-monorepo/wiki-editor/helpers";
 
 interface Props {
@@ -12,6 +17,10 @@ interface Props {
  * so both look and behave the same. Loads no editor code.
  */
 export const WikiCitizenMentionChip = ({ resolved }: Props) => {
+  const isOwnCitizen = useIsOwnCitizen(
+    resolved && !resolved.deleted ? resolved.citizenId : undefined,
+  );
+
   if (!resolved)
     return (
       <span data-wiki-citizen-mention="" data-unavailable="">
@@ -30,8 +39,13 @@ export const WikiCitizenMentionChip = ({ resolved }: Props) => {
     <CitizenPopover citizenId={resolved.citizenId}>
       <a
         data-wiki-citizen-mention={resolved.citizenId}
+        data-own-citizen={isOwnCitizen ? "" : undefined}
         href={`/app/spynet/citizen/${encodeURIComponent(resolved.citizenId)}`}
       >
+        <CitizenLinkAvatar
+          citizenId={resolved.citizenId}
+          size={CitizenAvatarSize.Text}
+        />
         @{resolved.label}
       </a>
     </CitizenPopover>

@@ -1,10 +1,9 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
-import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
-import { Link } from "@/modules/common/components/Link";
+import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { DeleteOrganizationMembership } from "@/modules/spynet/components/DeleteOrganizationMembership";
 import clsx from "clsx";
 import { forbidden } from "next/navigation";
-import { FaExternalLinkAlt, FaUsers } from "react-icons/fa";
+import { FaUsers } from "react-icons/fa";
 import { getOrganizationById } from "../queries/getOrganizationById";
 import { CreateMembership } from "./CreateMembership";
 
@@ -47,15 +46,10 @@ export const MembershipsTile = async ({ className, id }: Props) => {
               key={membership.citizen.id}
               className="flex rounded-secondary bg-neutral-700/50"
             >
-              <CitizenPopover citizenId={membership.citizen.id}>
-                <Link
-                  href={`/app/spynet/citizen/${membership.citizen.id}`}
-                  className="inline-flex items-center gap-2 px-2 py-1"
-                >
-                  {membership.citizen.handle || membership.citizen.id}
-                  <FaExternalLinkAlt className="text-xs text-brand-red-500 hover:text-brand-red-300" />
-                </Link>
-              </CitizenPopover>
+              <CitizenLink
+                citizen={membership.citizen}
+                className="inline-block px-2 py-1"
+              />
 
               {showDeleteButton && (
                 <div className="flex items-center border-l border-neutral-700">

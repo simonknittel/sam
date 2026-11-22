@@ -1,6 +1,7 @@
 "use client";
 
 import { Handles } from "@/modules/career/components/Handles";
+import { CitizenAvatarSize } from "@/modules/common/components/CitizenAvatarSize";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import {
@@ -176,6 +177,7 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
                   <CitizenLink
                     key={citizen.id}
                     citizen={citizen}
+                    avatarSize={CitizenAvatarSize.None}
                     className="py-0.5"
                   />
                 ))}

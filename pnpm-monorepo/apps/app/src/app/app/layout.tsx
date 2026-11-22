@@ -8,6 +8,8 @@ import { requireAuthenticationPage } from "@/modules/auth/server";
 import { isAdminModeActive } from "@/modules/auth/utils/isAdminModeActive";
 import { hasAnyReadableFlow } from "@/modules/career/queries/getMyReadableFlows";
 import { BirthdayCitizensProvider } from "@/modules/citizen/components/BirthdayCitizensProvider";
+import { CitizenAvatarsProvider } from "@/modules/citizen/components/CitizenAvatarsProvider";
+import { getCitizenAvatarUrls } from "@/modules/citizen/queries/getCitizenAvatarUrls";
 import { getCitizenIdsWithBirthdayToday } from "@/modules/citizen/queries/getCitizenIdsWithBirthdayToday";
 import { CreateContextProvider } from "@/modules/common/components/CreateContext";
 import { NewReleaseToast } from "@/modules/common/components/NewReleaseToast";
@@ -49,6 +51,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     canReadCareer,
     onboardingState,
     birthdayCitizenIds,
+    citizenAvatarUrls,
     seasonalTheme,
     newItemCountsByAppSlug,
   ] = await Promise.all([
@@ -62,6 +65,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     hasAnyReadableFlow(),
     getOnboardingState(),
     getCitizenIdsWithBirthdayToday(),
+    getCitizenAvatarUrls(),
     getActiveSeasonalTheme(),
     getNewItemCountsByAppSlug(),
   ]);
@@ -84,47 +88,49 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
             <NextIntlClientProvider>
               <RolesContextProvider roles={visibleRoles} tags={visibleRoleTags}>
                 <BirthdayCitizensProvider citizenIds={birthdayCitizenIds}>
-                  <div {...seasonalThemeRootProps}>
-                    <SkipToContentLink />
+                  <CitizenAvatarsProvider avatarUrls={citizenAvatarUrls}>
+                    <div {...seasonalThemeRootProps}>
+                      <SkipToContentLink />
 
-                    <AppsContextProvider
-                      apps={apps}
-                      appDotBadgeCounts={addCountsByAppSlug(
-                        { wiki: openWikiReportCount },
-                        newItemCountsByAppSlug,
-                      )}
-                      favoriteAppKeys={[...favoriteAppKeys]}
-                    >
-                      <OnSiteNotificationsProvider
-                        initialUnreadCount={unreadOnSiteNotificationCount}
+                      <AppsContextProvider
+                        apps={apps}
+                        appDotBadgeCounts={addCountsByAppSlug(
+                          { wiki: openWikiReportCount },
+                          newItemCountsByAppSlug,
+                        )}
+                        favoriteAppKeys={[...favoriteAppKeys]}
                       >
-                        <OnboardingProvider initialState={onboardingState}>
-                          <CreateContextProvider>
-                            <CmdKProvider canReadCareer={canReadCareer}>
-                              <TopBar />
-                              <MobileActionBarLoader />
-                            </CmdKProvider>
+                        <OnSiteNotificationsProvider
+                          initialUnreadCount={unreadOnSiteNotificationCount}
+                        >
+                          <OnboardingProvider initialState={onboardingState}>
+                            <CreateContextProvider>
+                              <CmdKProvider canReadCareer={canReadCareer}>
+                                <TopBar />
+                                <MobileActionBarLoader />
+                              </CmdKProvider>
 
-                            <div className="min-h-dvh pt-12 pb-16 lg:pt-28 lg:pb-0">
-                              {children}
-                            </div>
+                              <div className="min-h-dvh pt-12 pb-16 lg:pt-28 lg:pb-0">
+                                {children}
+                              </div>
 
-                            <SeasonalViewportLayer />
+                              <SeasonalViewportLayer />
 
-                            <OnboardingTour />
+                              <OnboardingTour />
 
-                            <Suspense>
-                              <OnboardingPopoverOpener />
-                            </Suspense>
-                          </CreateContextProvider>
-                        </OnboardingProvider>
-                      </OnSiteNotificationsProvider>
-                    </AppsContextProvider>
-                  </div>
+                              <Suspense>
+                                <OnboardingPopoverOpener />
+                              </Suspense>
+                            </CreateContextProvider>
+                          </OnboardingProvider>
+                        </OnSiteNotificationsProvider>
+                      </AppsContextProvider>
+                    </div>
 
-                  <AdminToolbar />
+                    <AdminToolbar />
 
-                  <NewReleaseToast />
+                    <NewReleaseToast />
+                  </CitizenAvatarsProvider>
                 </BirthdayCitizensProvider>
               </RolesContextProvider>
             </NextIntlClientProvider>

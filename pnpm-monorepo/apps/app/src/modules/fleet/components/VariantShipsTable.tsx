@@ -1,3 +1,4 @@
+import { CitizenAvatarSize } from "@/modules/common/components/CitizenAvatarSize";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
 import { type Citizen, type Ship } from "@sam-monorepo/database/client";
@@ -50,6 +51,7 @@ export const VariantShipsTable = ({ className, ships, variant }: Props) => {
                   handle: ship.owner.handle,
                   deletedAt: ship.owner.deletedAt,
                 }}
+                avatarSize={CitizenAvatarSize.Row}
                 className="block rounded-secondary p-2 hover:bg-white/10 hover:no-underline! focus-visible:bg-white/10"
               />
             </td>

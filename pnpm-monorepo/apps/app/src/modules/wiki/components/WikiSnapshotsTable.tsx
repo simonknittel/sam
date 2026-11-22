@@ -1,3 +1,4 @@
+import { CitizenAvatarSize } from "@/modules/common/components/CitizenAvatarSize";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { Link } from "@/modules/common/components/Link";
 import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
@@ -121,7 +122,10 @@ const SnapshotRow = ({ snapshot, canRestore }: SnapshotRowProps) => {
       </td>
 
       <td className="truncate">
-        <CitizenLink citizen={snapshot.createdBy} />
+        <CitizenLink
+          citizen={snapshot.createdBy}
+          avatarSize={CitizenAvatarSize.Row}
+        />
       </td>
 
       <td>

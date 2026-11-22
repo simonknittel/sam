@@ -1,3 +1,4 @@
+import { CitizenAvatarSize } from "@/modules/common/components/CitizenAvatarSize";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { RelativeDate } from "@/modules/common/components/RelativeDate";
 import { SmallBadge } from "@/modules/common/components/SmallBadge";
@@ -80,7 +81,10 @@ export const Entry = memo(function Entry({ entry }: Props) {
         title={entry.citizen ? getCitizenDisplayName(entry.citizen) : undefined}
       >
         {entry.citizen ? (
-          <CitizenLink citizen={entry.citizen} />
+          <CitizenLink
+            citizen={entry.citizen}
+            avatarSize={CitizenAvatarSize.Row}
+          />
         ) : (
           <span className="text-white/40">-</span>
         )}

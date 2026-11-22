@@ -63,7 +63,6 @@ export {
   deleteNoteTypeInputSchema,
   type DeleteNoteTypeInput,
 } from "./deleteNoteType.js";
-export { findCitizenAvatarUrls } from "./findCitizenAvatarUrls.js";
 export {
   findCitizenNoteTabs,
   type CitizenNoteTab,
@@ -105,6 +104,7 @@ export {
   type OwnProfileSettings,
 } from "./getOwnProfileSettings.js";
 export { listAllCitizens, type PickableCitizen } from "./listAllCitizens.js";
+export { listCitizenAvatarUrls } from "./listCitizenAvatarUrls.js";
 export { listCitizenIdsWithBirthdayToday } from "./listCitizenIdsWithBirthdayToday.js";
 export {
   listCitizenLogHistory,

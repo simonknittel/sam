@@ -1,3 +1,4 @@
+import { CitizenAvatarSize } from "@/modules/common/components/CitizenAvatarSize";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { TRow } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
@@ -43,6 +44,7 @@ export const ShipChangeRow = ({ change }: Props) => {
         {change.actor && (
           <CitizenLink
             citizen={change.actor}
+            avatarSize={CitizenAvatarSize.Row}
             className="block rounded-secondary p-2 hover:bg-white/10 hover:no-underline! focus-visible:bg-white/10"
           />
         )}

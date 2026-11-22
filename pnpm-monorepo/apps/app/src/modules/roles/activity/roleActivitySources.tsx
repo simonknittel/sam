@@ -1,6 +1,7 @@
 import type { ActivitySource } from "@/modules/activity/utils/activityEntry";
 import type { ActivityFilters } from "@/modules/activity/utils/activityFilterParams";
 import { getApplicationContext, getRequestActor } from "@/modules/application";
+import { CitizenAvatarSize } from "@/modules/common/components/CitizenAvatarSize";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
@@ -57,7 +58,10 @@ export const createRoleAssignmentSource = (input: Input = {}): ActivitySource =>
         date: change.createdAt,
         actor: change.createdBy,
         target: input.withTarget ? (
-          <CitizenLink citizen={change.citizen} />
+          <CitizenLink
+            citizen={change.citizen}
+            avatarSize={CitizenAvatarSize.Row}
+          />
         ) : undefined,
         message: buildAssignmentMessage(change.type, change.roleId),
       }));
@@ -87,7 +91,10 @@ export const createRoleAssignmentLevelSource = (
         date: change.createdAt,
         actor: change.createdBy,
         target: input.withTarget ? (
-          <CitizenLink citizen={change.citizen} />
+          <CitizenLink
+            citizen={change.citizen}
+            avatarSize={CitizenAvatarSize.Row}
+          />
         ) : undefined,
         message: buildLevelMessage(change.type, change.roleId),
       }));

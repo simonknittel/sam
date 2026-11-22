@@ -1,17 +1,14 @@
-import { getApplicationContext, getRequestActor } from "@/modules/application";
+import { getApplicationContext } from "@/modules/application";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import { findCitizenAvatarUrls } from "@sam-monorepo/application";
+import { listCitizenAvatarUrls } from "@sam-monorepo/application";
+import { cache } from "react";
 
 /**
- * The Discord avatars of the citizens that the viewer can read (see
- * `findCitizenAvatarUrls` of the application package)
+ * The Discord avatars of the citizens for the citizen links (see
+ * `CitizenAvatarsProvider`)
  */
-export const getCitizenAvatarUrls = withTrace(
-  "getCitizenAvatarUrls",
-  async (citizenIds: readonly string[]) =>
-    findCitizenAvatarUrls(
-      getApplicationContext(),
-      await getRequestActor(),
-      citizenIds,
-    ),
+export const getCitizenAvatarUrls = cache(
+  withTrace("getCitizenAvatarUrls", async () =>
+    listCitizenAvatarUrls(getApplicationContext()),
+  ),
 );

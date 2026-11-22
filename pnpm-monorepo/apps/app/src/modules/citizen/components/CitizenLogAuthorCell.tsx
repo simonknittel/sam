@@ -1,3 +1,4 @@
+import { CitizenAvatarSize } from "@/modules/common/components/CitizenAvatarSize";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import type { CitizenLogTableRow } from "@sam-monorepo/application";
 import {
@@ -34,7 +35,14 @@ export const CitizenLogAuthorCell = ({ author, fallback }: Props) => {
 
   return (
     <td className="truncate" title={name}>
-      {author?.citizen ? <CitizenLink citizen={author.citizen} /> : name}
+      {author?.citizen ? (
+        <CitizenLink
+          citizen={author.citizen}
+          avatarSize={CitizenAvatarSize.Row}
+        />
+      ) : (
+        name
+      )}
     </td>
   );
 };

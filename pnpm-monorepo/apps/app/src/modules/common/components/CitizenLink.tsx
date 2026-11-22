@@ -1,12 +1,14 @@
 "use client";
 
-import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
+import { useIsOwnCitizen } from "@/modules/auth/hooks/useIsOwnCitizen";
 import { useHasBirthdayToday } from "@/modules/citizen/components/BirthdayCitizensProvider";
 import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import type { Citizen } from "@sam-monorepo/database/browser";
 import { DELETED_CITIZEN_LABEL } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { BirthdayHat } from "./BirthdayHat";
+import { CitizenAvatarSize } from "./CitizenAvatarSize";
+import { CitizenLinkAvatar } from "./CitizenLinkAvatar";
 import { Link } from "./Link";
 
 interface Props {
@@ -21,15 +23,17 @@ interface Props {
       })
     | null;
   readonly page?: string;
+  /** The Discord avatar in front of the name */
+  readonly avatarSize?: CitizenAvatarSize;
 }
 
-export const CitizenLink = ({ className, citizen, page = "" }: Props) => {
-  const authentication = useAuthentication();
-  const isCitizenCurrentUser =
-    authentication && authentication.session.entity && citizen
-      ? citizen.id === authentication.session.entity.id
-      : false;
-
+export const CitizenLink = ({
+  className,
+  citizen,
+  page = "",
+  avatarSize = CitizenAvatarSize.Text,
+}: Props) => {
+  const isOwnCitizen = useIsOwnCitizen(citizen?.id);
   const hasBirthdayToday = useHasBirthdayToday(citizen?.id);
 
   if (!citizen) return <span className="text-neutral-500">Unbekannt</span>;
@@ -46,13 +50,16 @@ export const CitizenLink = ({ className, citizen, page = "" }: Props) => {
           {
             /** The birthday of a citizen outranks both other colours */
             "text-birthday": hasBirthdayToday,
-            "text-me": !hasBirthdayToday && isCitizenCurrentUser,
-            "text-interaction-500": !hasBirthdayToday && !isCitizenCurrentUser,
+            "text-me": !hasBirthdayToday && isOwnCitizen,
+            "text-interaction-500": !hasBirthdayToday && !isOwnCitizen,
           },
           className,
         )}
         prefetch={false}
+        /* For the link colour of the wiki, which outranks `text-me` */
+        data-own-citizen={!hasBirthdayToday && isOwnCitizen ? "" : undefined}
       >
+        <CitizenLinkAvatar citizenId={citizen.id} size={avatarSize} />
         {citizen.handle || citizen.id}
       </Link>
 

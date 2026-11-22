@@ -1,6 +1,7 @@
 import type { ActivitySource } from "@/modules/activity/utils/activityEntry";
 import type { ActivityFilters } from "@/modules/activity/utils/activityFilterParams";
 import { getApplicationContext, getRequestActor } from "@/modules/application";
+import { CitizenAvatarSize } from "@/modules/common/components/CitizenAvatarSize";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
@@ -157,7 +158,10 @@ export const createOrganizationMembershipSource = (
         date: entry.createdAt,
         actor: entry.createdBy,
         target: input.withTarget ? (
-          <CitizenLink citizen={entry.citizen} />
+          <CitizenLink
+            citizen={entry.citizen}
+            avatarSize={CitizenAvatarSize.Row}
+          />
         ) : undefined,
         message: buildMembershipMessage(
           entry.type,

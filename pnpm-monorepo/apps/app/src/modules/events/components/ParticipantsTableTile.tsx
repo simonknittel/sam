@@ -12,7 +12,6 @@ import type {
   EventDetails,
   ResolvedEventParticipant,
 } from "@sam-monorepo/application";
-import type { Citizen } from "@sam-monorepo/database/client";
 import type { SearchParams } from "nuqs/server";
 import { FaInfoCircle } from "react-icons/fa";
 import {
@@ -113,7 +112,6 @@ interface Props {
   readonly className?: string;
   readonly event: Pick<EventDetails, "id">;
   readonly participants: readonly ResolvedEventParticipant[];
-  readonly currentCitizenId: Citizen["id"];
   readonly isAppEvent: boolean;
   readonly canManageParticipants: boolean;
   readonly searchParams: Promise<SearchParams>;
@@ -123,7 +121,6 @@ export const ParticipantsTableTile = async ({
   className,
   event,
   participants,
-  currentCitizenId,
   isAppEvent,
   canManageParticipants,
   searchParams,
@@ -193,7 +190,6 @@ export const ParticipantsTableTile = async ({
           key={resolvedParticipant.citizen.id}
           eventId={event.id}
           resolvedParticipant={resolvedParticipant}
-          currentCitizenId={currentCitizenId}
           showCommentColumn={isAppEvent}
           showRemoveButton={canManageParticipants}
         />

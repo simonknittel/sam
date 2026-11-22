@@ -1,19 +1,15 @@
-import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import { RolesCell } from "@/modules/citizen/components/RolesCell";
-import { Link } from "@/modules/common/components/Link";
+import { CitizenCellLink } from "@/modules/common/components/CitizenCellLink";
 import { TableRowAlignment, TRow } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import type { ResolvedEventParticipant } from "@sam-monorepo/application";
-import type { Citizen, Event } from "@sam-monorepo/database/client";
-import { DELETED_CITIZEN_LABEL } from "@sam-monorepo/domain";
-import clsx from "clsx";
+import type { Event } from "@sam-monorepo/database/client";
 import { Suspense } from "react";
 import { RemoveEventParticipant } from "./RemoveEventParticipant";
 
 interface Props {
   readonly eventId: Event["id"];
   readonly resolvedParticipant: ResolvedEventParticipant;
-  readonly currentCitizenId: Citizen["id"];
   readonly showCommentColumn: boolean;
   readonly showRemoveButton: boolean;
 }
@@ -22,7 +18,6 @@ interface Props {
 export const ParticipantsTableRow = ({
   eventId,
   resolvedParticipant,
-  currentCitizenId,
   showCommentColumn,
   showRemoveButton,
 }: Props) => {
@@ -31,33 +26,15 @@ export const ParticipantsTableRow = ({
   return (
     <TRow alignment={TableRowAlignment.Top}>
       <td className="overflow-hidden">
-        {citizen.deletedAt ? (
-          <span className="flex h-8 items-center px-2 text-neutral-500">
-            {DELETED_CITIZEN_LABEL}
-          </span>
-        ) : (
-          <CitizenPopover citizenId={citizen.id}>
-            <Link
-              href={`/app/spynet/citizen/${citizen.id}`}
-              className={clsx(
-                "flex h-8 items-center rounded-secondary px-2 hover:bg-white/10 focus-visible:bg-white/10 active:bg-white/15",
-                {
-                  "text-green-500": citizen.id === currentCitizenId,
-                  "text-brand-red-500": citizen.id !== currentCitizenId,
-                },
-              )}
-              prefetch={false}
-            >
-              {citizen.handle ? (
-                <span className="truncate" title={citizen.handle}>
-                  {citizen.handle}
-                </span>
-              ) : (
-                <span className="text-neutral-500 italic">-</span>
-              )}
-            </Link>
-          </CitizenPopover>
-        )}
+        <CitizenCellLink
+          /* A client component: the browser gets each field */
+          citizen={{
+            id: citizen.id,
+            handle: citizen.handle,
+            deletedAt: citizen.deletedAt,
+          }}
+          className="h-8"
+        />
       </td>
 
       <td className="flex h-8 items-center">
