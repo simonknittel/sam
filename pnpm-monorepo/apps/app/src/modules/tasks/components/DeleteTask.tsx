@@ -1,5 +1,7 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
+import { Button2 } from "@/modules/common/components/Button2";
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
 import type { VisibleTask } from "@sam-monorepo/application";
 import { useRouter } from "next/navigation";
@@ -20,14 +22,10 @@ export const DeleteTask = ({ className, task }: Props) => {
       action={deleteTask}
       hiddenFields={[{ name: "id", value: task.id }]}
       trigger={(isPending) => (
-        <button
-          type="submit"
-          disabled={isPending}
-          className="flex h-full items-center px-2 text-brand-red-500 hover:text-brand-red-300 enabled:cursor-pointer"
-          title="Task löschen"
-        >
-          <FaTrash />
-        </button>
+        <Button2 type="submit" disabled={isPending}>
+          {isPending ? <AsciiSpinner /> : <FaTrash />}
+          Task löschen
+        </Button2>
       )}
       title="Task löschen?"
       description={

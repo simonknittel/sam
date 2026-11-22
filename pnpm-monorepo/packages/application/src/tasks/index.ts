@@ -76,6 +76,7 @@ export {
 } from "./taskOutput.js";
 export {
   TaskStatus,
+  getTaskStatus,
   isAllowedToManageTask,
   isTaskUpdatable,
 } from "./taskRules.js";

@@ -80,7 +80,7 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
             },
           )}
         >
-          1. Beschreibung
+          1. Briefing
         </button>
 
         <button
@@ -146,7 +146,7 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
 
         <Textarea
           name="description"
-          label="Beschreibung"
+          label="Briefing"
           hint={<TaskDescriptionHint />}
           maxLength={TASK_DESCRIPTION_MAX_LENGTH}
           defaultValue={getDefaultValueWithFallback("description", "")}

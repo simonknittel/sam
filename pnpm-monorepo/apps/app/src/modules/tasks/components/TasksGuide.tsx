@@ -144,11 +144,12 @@ export const TasksGuide = ({ className }: Props) => {
               title: "Details eines Tasks",
               screenshot: detailScreenshot,
               screenshotAlt:
-                "Die Seite eines Tasks mit Beschreibung, Zielgruppe, Belohnung und dem Button zum Annehmen",
+                "Die Seite eines Tasks mit Status, Belohnung, Teilnehmern, Zielgruppe, Briefing und dem Button zum Annehmen",
               content: (
                 <>
-                  Beschreibung, Zielgruppe, Belohnung und Ablaufdatum auf einen
-                  Blick. Unter „Aktionen“ nimmst du den Task an.
+                  Status, Belohnung, freie Plätze und Ablaufdatum auf einen
+                  Blick, darunter die Teilnehmer, die Zielgruppe und das
+                  Briefing. Unter „Meine Teilnahme“ nimmst du den Task an.
                 </>
               ),
             },
@@ -162,8 +163,7 @@ export const TasksGuide = ({ className }: Props) => {
                 <>
                   Mitglieder mit der passenden Rolle erstellen über{" "}
                   <UiLabel icon={FaPlus}>Neuer Task</UiLabel> eigene Tasks, in
-                  vier Schritten: Beschreibung, Zielgruppe, Belohnung und
-                  Sonstiges.
+                  vier Schritten: Briefing, Zielgruppe, Belohnung und Sonstiges.
                 </>
               ),
             },

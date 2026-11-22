@@ -23,6 +23,11 @@ interface Props {
   /** False permits an empty value, for example to remove an optional text */
   readonly required?: boolean;
   readonly maxLength?: number;
+  /**
+   * The input fills the width of the field while it is open, instead of its
+   * default width of about 20 characters
+   */
+  readonly fillWidth?: boolean;
 }
 
 export const EditableInput = ({
@@ -36,6 +41,7 @@ export const EditableInput = ({
   twoLines = false,
   required = true,
   maxLength,
+  fillWidth = false,
 }: Props) => {
   return (
     <EditableField
@@ -43,6 +49,7 @@ export const EditableInput = ({
         { "max-w-full min-w-0": truncate || twoLines },
         className,
       )}
+      formClassName={clsx({ "min-w-0 flex-1": fillWidth })}
       displayButtonClassName={clsx("hover:cursor-pointer", {
         "min-w-0": truncate || twoLines,
       })}
