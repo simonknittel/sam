@@ -57,6 +57,21 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-11-22-tasks-belohnung-silc-entfernt",
+    date: "2026-11-22",
+    title: "Task-Belohnung „SILC“ entfernt",
+    tags: ["Änderung", "Tasks"],
+    isTracked: false,
+    body: () => (
+      <p>
+        Die Belohnung &bdquo;SILC&ldquo;, die der Ersteller eines Tasks von
+        seinem Konto zahlt, gibt es nicht mehr. Ein Task hat jetzt als Belohnung
+        einen Freitext oder neue SILC.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-11-19-event-teilnahmeanfragen",
     date: "2026-11-19",
     title: "Teilnahmeanfragen für Events",
