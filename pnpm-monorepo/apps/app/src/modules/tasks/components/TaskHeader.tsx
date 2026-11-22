@@ -1,0 +1,141 @@
+import "server-only";
+
+import { Badge } from "@/modules/common/components/Badge";
+import { CitizenLink } from "@/modules/common/components/CitizenLink";
+import { EditableInput } from "@/modules/common/components/form/EditableInput";
+import { formatDate } from "@/modules/common/utils/formatDate";
+import { TaskStatus, type VisibleTask } from "@sam-monorepo/application";
+import clsx from "clsx";
+import type { ReactNode } from "react";
+import { BsExclamationOctagonFill } from "react-icons/bs";
+import { FaCheckSquare, FaInfoCircle, FaRegCircle } from "react-icons/fa";
+import { updateTaskTitle } from "../actions/updateTaskTitle";
+
+interface StatusPresentation {
+  readonly label: string;
+  readonly icon: ReactNode;
+  readonly textClassName?: string;
+  /** The surface of the header: a closed task tints it in its status colour */
+  readonly surfaceClassName: string;
+}
+
+/** The colours and icons agree with the status badges of the task list */
+const STATUS_PRESENTATIONS: Record<TaskStatus, StatusPresentation> = {
+  [TaskStatus.Open]: {
+    label: "Offen",
+    icon: <FaRegCircle />,
+    surfaceClassName: "bg-secondary",
+  },
+  [TaskStatus.Completed]: {
+    label: "Erfüllt",
+    icon: <FaCheckSquare />,
+    textClassName: "text-green-500",
+    surfaceClassName:
+      "tile-accent-surface [--tile-accent-color:var(--color-green-500)]",
+  },
+  [TaskStatus.Cancelled]: {
+    label: "Abgebrochen",
+    icon: <FaInfoCircle />,
+    textClassName: "text-blue-500",
+    surfaceClassName:
+      "tile-accent-surface [--tile-accent-color:var(--color-blue-500)]",
+  },
+  [TaskStatus.Expired]: {
+    label: "Abgelaufen",
+    icon: <BsExclamationOctagonFill />,
+    textClassName: "text-red-500",
+    surfaceClassName:
+      "tile-accent-surface [--tile-accent-color:var(--color-red-500)]",
+  },
+};
+
+type HeaderTask = Pick<
+  VisibleTask,
+  | "id"
+  | "title"
+  | "createdAt"
+  | "createdBy"
+  | "completedAt"
+  | "cancelledAt"
+  | "expiresAt"
+>;
+
+/** The text with the date at which the task closed, for a closed task */
+const getClosingText = (task: HeaderTask, status: TaskStatus) => {
+  switch (status) {
+    case TaskStatus.Open:
+      return null;
+
+    case TaskStatus.Completed:
+      return `Erfüllt am ${formatDate(task.completedAt)}`;
+
+    case TaskStatus.Cancelled:
+      return `Abgebrochen am ${formatDate(task.cancelledAt)}`;
+
+    case TaskStatus.Expired:
+      return `Abgelaufen am ${formatDate(task.expiresAt)}`;
+
+    default:
+      throw new Error(`Unknown task status: ${status satisfies never}`);
+  }
+};
+
+interface Props {
+  readonly className?: string;
+  readonly task: HeaderTask;
+  readonly status: TaskStatus;
+  /** Shows the title as an inline editor */
+  readonly isEditable: boolean;
+}
+
+/** The head of the task page: the status, the title and the creation */
+export const TaskHeader = ({ className, task, status, isEditable }: Props) => {
+  const presentation = STATUS_PRESENTATIONS[status];
+  const closingText = getClosingText(task, status);
+
+  return (
+    <section
+      className={clsx(
+        "flex flex-col items-start gap-3 corners-primary p-4",
+        presentation.surfaceClassName,
+        className,
+      )}
+    >
+      <Badge
+        label="Status"
+        value={presentation.label}
+        icon={presentation.icon}
+        className={clsx("text-sm", presentation.textClassName)}
+      />
+
+      <h1 className="font-mono text-2xl font-bold wrap-break-word">
+        <span className="text-neutral-500 uppercase">Task //</span>{" "}
+        {isEditable ? (
+          <EditableInput
+            rowId={task.id}
+            columnName="title"
+            initialValue={task.title}
+            action={updateTaskTitle}
+          />
+        ) : (
+          <span>{task.title}</span>
+        )}
+      </h1>
+
+      <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-neutral-400">
+        <span>
+          Erstellt
+          {task.createdBy && (
+            <>
+              {" "}
+              von <CitizenLink citizen={task.createdBy} />
+            </>
+          )}{" "}
+          am {formatDate(task.createdAt)}
+        </span>
+
+        {closingText && <span>{closingText}</span>}
+      </p>
+    </section>
+  );
+};

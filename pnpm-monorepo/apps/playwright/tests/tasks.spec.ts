@@ -254,7 +254,7 @@ test("a citizen without management permission cannot edit a task", async ({
   await expect(
     page.getByText("Fracht ausliefern", { exact: true }),
   ).toBeVisible();
-  // The self-service block of the Aktionen tile is there …
+  // The own actions of the "Meine Teilnahme" tile are there …
   await expect(page.getByRole("button", { name: "Aufgeben" })).toBeVisible();
   // … but no editors and no management actions are rendered
   await expect(editButtons(page)).toHaveCount(0);
@@ -296,7 +296,8 @@ test("completing a task with a SILC reward pays the completionists", async ({
   await completeModal.getByRole("button", { name: "Speichern" }).click();
 
   await expect(page.getByText("Erfolgreich abgeschlossen.")).toBeVisible();
-  await expect(page.getByText("Erfüllt")).toBeVisible();
+  // The status badge in the head of the page
+  await expect(page.getByText("Erfüllt", { exact: true })).toBeVisible();
 
   const completedTask = await prisma.task.findUnique({
     where: { id: task.id },
