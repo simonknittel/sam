@@ -116,11 +116,6 @@ export const TasksGuide = ({ className }: Props) => {
 
       <GuideSection heading="Belohnungen" lead="Was du für einen Task bekommst">
         <GuideCardList>
-          <GuideCard icon={FaCoins} title="SILC">
-            Der Ersteller zahlt die SILC von seinem eigenen Konto. Der Task
-            zeigt dann „SILC (Tausch)“.
-          </GuideCard>
-
           <GuideCard icon={FaSeedling} title="Neue SILC">
             Die SILC werden neu ausgegeben. Diese Belohnung können nur bestimmte
             Rollen vergeben.

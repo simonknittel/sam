@@ -270,11 +270,6 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
                 </>
               ),
             },
-            {
-              value: TaskRewardType.SILC,
-              label: "SILC",
-              hint: "Diese SILC werden von deinem Konto abgezogen.",
-            },
             ...(showNewSilc
               ? [
                   {
@@ -290,8 +285,7 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
           className="mt-2"
         />
 
-        {(rewardType === TaskRewardType.SILC ||
-          rewardType === TaskRewardType.NEW_SILC) && (
+        {rewardType === TaskRewardType.NEW_SILC && (
           <NumberInput
             name="rewardSilcValue"
             label="SILC (pro Citizen)"

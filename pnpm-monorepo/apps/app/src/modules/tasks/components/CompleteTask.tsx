@@ -65,8 +65,7 @@ export const CompleteTask = ({ className, task }: Props) => {
               Bitte denke daran den Citizen ihre Belohnung zu geben.
             </p>
           )}
-          {(task.rewardType === TaskRewardType.SILC ||
-            task.rewardType === TaskRewardType.NEW_SILC) && (
+          {task.rewardType === TaskRewardType.NEW_SILC && (
             <p className="mt-4">
               SILC-Belohnungen werden automatisiert denen zugeschrieben, die den
               Task angenommen haben.

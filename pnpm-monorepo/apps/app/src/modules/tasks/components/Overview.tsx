@@ -223,22 +223,6 @@ export const Overview = ({
           ) : (
             <Markdown>{task.rewardTypeTextValue || "-"}</Markdown>
           ))}
-        {task.rewardType === TaskRewardType.SILC &&
-          (isTaskUpdatable && isAllowedToManageTask ? (
-            <div className="flex gap-2">
-              <EditableInput
-                type="number"
-                rowId={task.id}
-                columnName="rewardSilcValue"
-                initialValue={task.rewardSilcValue ?? 1}
-                action={updateTaskRewardSilcValue}
-                className="flex-initial"
-              />
-              <span className="flex-none">SILC (Tausch)</span>
-            </div>
-          ) : (
-            <span>{task.rewardSilcValue} SILC (Tausch)</span>
-          ))}
         {task.rewardType === TaskRewardType.NEW_SILC &&
           (isTaskUpdatable && isAllowedToManageTask ? (
             <div className="flex gap-2">
