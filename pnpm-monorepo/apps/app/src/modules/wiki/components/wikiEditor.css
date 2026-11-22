@@ -764,6 +764,20 @@
   font-weight: 600;
 }
 
+/* The own citizen in a mention or a citizen link, like outside of the wiki */
+.prose a[data-own-citizen] {
+  color: var(--color-me);
+}
+
+/*
+ * Discord avatar of a citizen link or a citizen mention — inline in the
+ * line of the name (see CitizenLinkAvatar), not a block image
+ */
+.prose img[data-citizen-avatar] {
+  display: inline-block;
+  margin-block: 0;
+}
+
 .prose span[data-wiki-page-link][data-unavailable],
 .prose span[data-wiki-citizen-mention][data-unavailable],
 .prose span[data-wiki-variant-link][data-unavailable] {
