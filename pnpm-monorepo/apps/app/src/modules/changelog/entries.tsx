@@ -46,6 +46,7 @@ import image20261114LiveStatus from "@/modules/changelog/assets/2026-11-14-live-
 import image20261119EventApplicationRequest from "@/modules/changelog/assets/2026-11-19-event-application-request.png";
 import image20261119EventApplicationSettings from "@/modules/changelog/assets/2026-11-19-event-application-settings.png";
 import image20261119EventApplications from "@/modules/changelog/assets/2026-11-19-event-applications.png";
+import image20261122TaskDetail from "@/modules/changelog/assets/2026-11-22-task-detail.png";
 import {
   ChangelogImage,
   ChangelogImageWidth,
@@ -56,6 +57,24 @@ import { AiFillAppstore } from "react-icons/ai";
 import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
+  {
+    key: "2026-11-22-task-detailseite-redesign",
+    date: "2026-11-22",
+    title: "Task-Detailseite Redesign",
+    tags: ["Änderung", "Tasks"],
+    isTracked: false,
+    requiresAuth: { resource: "task", action: "read" },
+    body: () => (
+      <>
+        <p>Die Detailseite eines Tasks wurde neu gestaltet.</p>
+
+        <Link href={image20261122TaskDetail.src}>
+          <ChangelogImage src={image20261122TaskDetail} alt="" isAboveTheFold />
+        </Link>
+      </>
+    ),
+  },
+
   {
     key: "2026-11-19-event-teilnahmeanfragen",
     date: "2026-11-19",
