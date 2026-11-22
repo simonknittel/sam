@@ -97,7 +97,7 @@ test("a task can be created and three of its fields edited inline", async ({
   );
 
   // … and description, which is edited through its own toggled textarea
-  const descriptionSection = sectionByHeading(page, "Beschreibung");
+  const descriptionSection = sectionByHeading(page, "Briefing");
   const descriptionInput = descriptionSection.locator(
     'textarea[name="description"]',
   );
@@ -262,6 +262,65 @@ test("a citizen without management permission cannot edit a task", async ({
   await expect(page.getByRole("button", { name: "Abschließen" })).toHaveCount(
     0,
   );
+});
+
+test("the participants show the Discord avatars only of the citizens that the viewer can read", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  /** The avatar URL holds the Discord id, like on the profile */
+  const creator = await createCitizen(prisma, { handle: "avatar-ersteller" });
+  const participant = await createCitizen(prisma, {
+    handle: "avatar-teilnehmer",
+    permissionStrings: ["task;read"],
+  });
+  const wingman = await createCitizen(prisma, {
+    handle: "avatar-fluegelmann",
+    permissionStrings: ["task;read"],
+  });
+  const spynetReader = await createCitizen(prisma, {
+    handle: "avatar-spynet",
+    permissionStrings: ["task;read", "citizen;read"],
+  });
+  for (const citizen of [participant, wingman]) {
+    await prisma.user.update({
+      where: { id: citizen.user.id },
+      data: {
+        image: `https://cdn.discordapp.com/avatars/${citizen.user.id}/avatar.png`,
+      },
+    });
+  }
+  const task = await createSilcTask(
+    prisma,
+    creator,
+    participant,
+    "Avatare zeigen",
+    {
+      assignments: {
+        create: [participant, wingman].map((citizen) => ({
+          citizenId: citizen.entity.id,
+          createdById: creator.entity.id,
+        })),
+      },
+    },
+  );
+  const avatar = (handle: string) =>
+    sectionByHeading(page, "Teilnehmer").getByRole("img", {
+      name: `Image of ${handle}`,
+    });
+
+  // The own avatar, but not the avatar of a citizen without citizen;read
+  await signIn(participant.user);
+  await page.goto(`/app/tasks/${task.id}`);
+  await expect(page.getByText("Avatare zeigen", { exact: true })).toBeVisible();
+  await expect(avatar("avatar-teilnehmer")).toBeAttached();
+  await expect(avatar("avatar-fluegelmann")).toHaveCount(0);
+
+  await signIn(spynetReader.user);
+  await page.goto(`/app/tasks/${task.id}`);
+  await expect(avatar("avatar-teilnehmer")).toBeAttached();
+  await expect(avatar("avatar-fluegelmann")).toBeAttached();
 });
 
 test("completing a task with a SILC reward pays the completionists", async ({

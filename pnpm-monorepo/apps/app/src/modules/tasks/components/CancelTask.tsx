@@ -1,5 +1,11 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
+import {
+  Button2,
+  Button2ColorSchema,
+  Button2Variant,
+} from "@/modules/common/components/Button2";
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
 import type { VisibleTask } from "@sam-monorepo/application";
 import { TbCancel } from "react-icons/tb";
@@ -17,14 +23,15 @@ export const CancelTask = ({ className, task }: Props) => {
       action={cancelTask}
       hiddenFields={[{ name: "id", value: task.id }]}
       trigger={(isPending) => (
-        <button
+        <Button2
           type="submit"
           disabled={isPending}
-          className="flex h-full items-center px-2 text-brand-red-500 hover:text-brand-red-300 enabled:cursor-pointer"
-          title="Task abbrechen"
+          variant={Button2Variant.Secondary}
+          colorSchema={Button2ColorSchema.InteractionMuted}
         >
-          <TbCancel />
-        </button>
+          {isPending ? <AsciiSpinner /> : <TbCancel />}
+          Task abbrechen
+        </Button2>
       )}
       title="Task abbrechen?"
       description={

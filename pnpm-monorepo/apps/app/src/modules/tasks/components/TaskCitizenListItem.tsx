@@ -7,10 +7,16 @@ interface Props {
   readonly className?: string;
   /** The assignments and the completionists select the same fields */
   readonly citizen: VisibleTask["completionists"][number];
+  /** The Discord avatar; without it, the avatar shows the initials */
+  readonly avatarUrl?: string;
 }
 
 /** One citizen in the participant lists of the task page */
-export const TaskCitizenListItem = ({ className, citizen }: Props) => {
+export const TaskCitizenListItem = ({
+  className,
+  citizen,
+  avatarUrl,
+}: Props) => {
   return (
     <li
       className={clsx(
@@ -20,6 +26,7 @@ export const TaskCitizenListItem = ({ className, citizen }: Props) => {
     >
       <Avatar
         name={citizen.deletedAt ? null : citizen.handle}
+        image={avatarUrl}
         size={32}
         className="flex-none"
       />

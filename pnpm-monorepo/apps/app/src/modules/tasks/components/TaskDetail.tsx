@@ -25,9 +25,9 @@ interface Props {
 
 /**
  * The task page: the head with the key figures, the own participation, the
- * participants and the audience, then the description. The description
- * tile takes the full width, thus a wiki can replace it later, like on the
- * variant pages.
+ * participants and the audience, then the description as the briefing. The
+ * briefing tile takes the full width, thus a wiki can replace it later, like
+ * on the variant pages.
  */
 export const TaskDetail = ({
   className,
@@ -67,7 +67,7 @@ export const TaskDetail = ({
         <TaskAudience task={task} isEditable={isEditable} />
       </div>
 
-      <Tile heading="Beschreibung">
+      <Tile heading="Briefing">
         {isEditable ? (
           <UpdateTaskDescription
             task={{ id: task.id, description: task.description }}

@@ -1,3 +1,4 @@
+import { getCitizenAvatarUrls } from "@/modules/citizen/queries/getCitizenAvatarUrls";
 import { Tile } from "@/modules/common/components/Tile";
 import type { VisibleTask } from "@sam-monorepo/application";
 import { TaskVisibility } from "@sam-monorepo/database/client";
@@ -17,7 +18,7 @@ interface Props {
 }
 
 /** The citizens who accepted the task, its free places and its completionists */
-export const TaskParticipants = ({
+export const TaskParticipants = async ({
   className,
   task,
   isTaskUpdatable,
@@ -29,6 +30,10 @@ export const TaskParticipants = ({
     isPublic && isTaskUpdatable && task.assignmentLimit
       ? Math.max(task.assignmentLimit - task.assignments.length, 0)
       : 0;
+  const avatarUrls = await getCitizenAvatarUrls([
+    ...task.assignments.map((assignment) => assignment.citizenId),
+    ...task.completionists.map((completionist) => completionist.id),
+  ]);
 
   return (
     <Tile
@@ -46,6 +51,8 @@ export const TaskParticipants = ({
         )
       }
       className={className}
+      /** A long list scrolls, thus the tiles of the row stay short */
+      childrenClassName="max-h-96 overflow-y-auto overscroll-contain"
     >
       {task.assignments.length > 0 ? (
         <ul className="flex flex-col gap-1">
@@ -53,6 +60,7 @@ export const TaskParticipants = ({
             <TaskCitizenListItem
               key={assignment.id}
               citizen={assignment.citizen}
+              avatarUrl={avatarUrls.get(assignment.citizenId)}
             />
           ))}
         </ul>
@@ -81,6 +89,7 @@ export const TaskParticipants = ({
               <TaskCitizenListItem
                 key={completionist.id}
                 citizen={completionist}
+                avatarUrl={avatarUrls.get(completionist.id)}
               />
             ))}
           </ul>

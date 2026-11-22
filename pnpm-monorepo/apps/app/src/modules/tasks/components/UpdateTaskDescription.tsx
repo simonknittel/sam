@@ -58,7 +58,7 @@ export const UpdateTaskDescription = ({ className, task }: Props) => {
 
       <Textarea
         name="description"
-        label="Beschreibung"
+        label="Briefing"
         hint={<TaskDescriptionHint />}
         maxLength={TASK_DESCRIPTION_MAX_LENGTH}
         defaultValue={getDefaultValueWithFallback(
