@@ -459,7 +459,7 @@ test.describe("the read tools of the MCP server", () => {
       data: {
         title: "Frachter eskortieren",
         visibility: TaskVisibility.PUBLIC,
-        rewardType: TaskRewardType.SILC,
+        rewardType: TaskRewardType.NEW_SILC,
         rewardSilcValue: 50,
         createdById: creator.entity.id,
       },
@@ -490,7 +490,7 @@ test.describe("the read tools of the MCP server", () => {
     ).toMatchObject({
       title: "Frachter eskortieren",
       status: "open",
-      reward: { type: "silc", value: 50 },
+      reward: { type: "new_silc", value: 50 },
       created_by: { id: creator.entity.id, handle: "mcp-auftraggeber" },
     });
 

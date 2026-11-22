@@ -28,7 +28,7 @@ const editButtons = (scope: Locator | Page) => inlineEditorTrigger(scope);
 /** The error of each task action for a task that is not open anymore */
 const CLOSED_TASK_TEXT = "Der Task ist bereits abgeschlossen.";
 
-const createSilcTask = (
+const createNewSilcTask = (
   prisma: PrismaClient,
   creator: TestCitizen,
   worker: TestCitizen,
@@ -39,7 +39,7 @@ const createSilcTask = (
     data: {
       title,
       visibility: TaskVisibility.PUBLIC,
-      rewardType: TaskRewardType.SILC,
+      rewardType: TaskRewardType.NEW_SILC,
       rewardSilcValue: 50,
       createdById: creator.entity.id,
       assignments: {
@@ -241,7 +241,7 @@ test("a citizen without management permission cannot edit a task", async ({
     handle: "task-beobachter",
     permissionStrings: ["task;read"],
   });
-  const task = await createSilcTask(
+  const task = await createNewSilcTask(
     prisma,
     creator,
     bystander,
@@ -264,7 +264,7 @@ test("a citizen without management permission cannot edit a task", async ({
   );
 });
 
-test("completing a task with a SILC reward pays the completionists", async ({
+test("completing a task with a new SILC reward pays the completionists", async ({
   page,
   prisma,
   signIn,
@@ -276,7 +276,7 @@ test("completing a task with a SILC reward pays the completionists", async ({
     permissionStrings: ["task;read", "citizen;read"],
   });
   const worker = await createCitizen(prisma, { handle: "silc-arbeiter" });
-  const task = await createSilcTask(
+  const task = await createNewSilcTask(
     prisma,
     manager,
     worker,
@@ -303,7 +303,7 @@ test("completing a task with a SILC reward pays the completionists", async ({
   });
   expect(completedTask?.completedAt).not.toBeNull();
 
-  // The worker gets the reward, the creator funds it
+  // The worker gets the new SILC, the creator pays nothing
   const workerEntity = await prisma.citizen.findUnique({
     where: { id: worker.entity.id },
   });
@@ -312,7 +312,7 @@ test("completing a task with a SILC reward pays the completionists", async ({
   const managerEntity = await prisma.citizen.findUnique({
     where: { id: manager.entity.id },
   });
-  expect(managerEntity?.silcBalance).toBe(-50);
+  expect(managerEntity?.silcBalance).toBe(0);
 
   const reward = await prisma.silcTransaction.findFirst({
     where: { receiverId: worker.entity.id },
@@ -339,9 +339,15 @@ test("a completion that waits for a parallel completion pays no reward", async (
     permissionStrings: ["task;read", "citizen;read"],
   });
   const worker = await createCitizen(prisma, { handle: "silc-arbeiter" });
-  const task = await createSilcTask(prisma, manager, worker, "Konvoi sichern", {
-    repeatable: 2,
-  });
+  const task = await createNewSilcTask(
+    prisma,
+    manager,
+    worker,
+    "Konvoi sichern",
+    {
+      repeatable: 2,
+    },
+  );
 
   await signIn(manager.user);
   await page.goto(`/app/tasks/${task.id}`);
@@ -418,7 +424,12 @@ test("a completion of a task that a different user completed shows the completed
     permissionStrings: ["task;read", "citizen;read"],
   });
   const worker = await createCitizen(prisma, { handle: "silc-arbeiter" });
-  const task = await createSilcTask(prisma, manager, worker, "Konvoi sichern");
+  const task = await createNewSilcTask(
+    prisma,
+    manager,
+    worker,
+    "Konvoi sichern",
+  );
 
   await signIn(manager.user);
   await page.goto(`/app/tasks/${task.id}`);
@@ -458,7 +469,12 @@ test("an edit of a task that a different user completed shows the message and th
     permissionStrings: ["task;read", "citizen;read"],
   });
   const worker = await createCitizen(prisma, { handle: "silc-arbeiter" });
-  const task = await createSilcTask(prisma, manager, worker, "Konvoi sichern");
+  const task = await createNewSilcTask(
+    prisma,
+    manager,
+    worker,
+    "Konvoi sichern",
+  );
 
   await signIn(manager.user);
   await page.goto(`/app/tasks/${task.id}`);
@@ -555,7 +571,7 @@ test("the dashboard shows its task tiles exactly to those with task permission",
     handle: "task-arbeiter",
     permissionStrings: ["task;read"],
   });
-  await createSilcTask(prisma, creator, worker, "Patrouille fliegen");
+  await createNewSilcTask(prisma, creator, worker, "Patrouille fliegen");
 
   await signIn(outsider.user);
   await page.goto("/app/dashboard");

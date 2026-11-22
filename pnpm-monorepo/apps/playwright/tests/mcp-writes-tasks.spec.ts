@@ -12,14 +12,18 @@ import {
 import { expect, test } from "../fixtures/test";
 
 test.describe("the task write tools of the MCP server", () => {
-  test("create_task creates a public task with a SILC reward like the form, with the audit event", async ({
+  test("create_task creates a public task with a new SILC reward like the form, with the audit event", async ({
     prisma,
     authorizeMcpClient,
     connectMcpClient,
   }) => {
     const creator = await createMcpCitizen(prisma, {
       handle: "mcp-auftraggeber",
-      permissionStrings: ["task;read", "task;create"],
+      permissionStrings: [
+        "task;read",
+        "task;create",
+        "task;create;taskRewardType=NEW_SILC",
+      ],
     });
     const client = await connectMcpClient(
       (await authorizeMcpClient(creator.user)).accessToken,
@@ -29,7 +33,7 @@ test.describe("the task write tools of the MCP server", () => {
       title: "Frachter eskortieren",
       description: "Von Lorville nach Area18.",
       visibility: "public",
-      reward: { type: "silc", value: 50 },
+      reward: { type: "new_silc", value: 50 },
       /**
        * A time without an offset is a wall time in Europe/Berlin, like the
        * value of the form. Summer time: Berlin is two hours ahead of UTC.
@@ -44,7 +48,7 @@ test.describe("the task write tools of the MCP server", () => {
         description: "Von Lorville nach Area18.",
         status: "open",
         visibility: "public",
-        reward: { type: "silc", value: 50 },
+        reward: { type: "new_silc", value: 50 },
         expires_at: "2099-07-15T18:00:00.000Z",
         created_by: { id: creator.entity.id, handle: "mcp-auftraggeber" },
         assignees: [],
@@ -57,7 +61,7 @@ test.describe("the task write tools of the MCP server", () => {
 
     expect(task).toMatchObject({
       visibility: TaskVisibility.PUBLIC,
-      rewardType: TaskRewardType.SILC,
+      rewardType: TaskRewardType.NEW_SILC,
       rewardSilcValue: 50,
       rewardTypeTextValue: null,
       createdById: creator.entity.id,
@@ -72,7 +76,11 @@ test.describe("the task write tools of the MCP server", () => {
     ).toEqual({
       createdById: creator.user.id,
       triggeredViaMcp: true,
-      data: { taskIds: [task.id], visibility: "PUBLIC", rewardType: "SILC" },
+      data: {
+        taskIds: [task.id],
+        visibility: "PUBLIC",
+        rewardType: "NEW_SILC",
+      },
     });
   });
 
@@ -266,7 +274,7 @@ test.describe("the task write tools of the MCP server", () => {
     ).toBe(1);
   });
 
-  test("complete_task pays the SILC reward of the creator and creates the next repetition", async ({
+  test("complete_task pays the new SILC reward and creates the next repetition", async ({
     prisma,
     authorizeMcpClient,
     connectMcpClient,
@@ -280,7 +288,7 @@ test.describe("the task write tools of the MCP server", () => {
       data: {
         title: "Station verteidigen",
         visibility: TaskVisibility.PUBLIC,
-        rewardType: TaskRewardType.SILC,
+        rewardType: TaskRewardType.NEW_SILC,
         rewardSilcValue: 50,
         repeatable: 2,
         createdById: creator.entity.id,
@@ -319,7 +327,7 @@ test.describe("the task write tools of the MCP server", () => {
       prisma.citizen.findUniqueOrThrow({ where: { id: creator.entity.id } }),
     ]);
     expect(workerEntity.silcBalance).toBe(50);
-    expect(creatorEntity.silcBalance).toBe(-50);
+    expect(creatorEntity.silcBalance).toBe(0);
     expect(
       await prisma.task.findFirstOrThrow({
         where: { title: "Station verteidigen", completedAt: null },
