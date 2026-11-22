@@ -95,15 +95,17 @@ export const TaskStatistics = ({
             </Tooltip>
           </span>
         }
-        secondaryValue={
-          isEditable && (
+      >
+        {/* The pen has the size of the pens of the inline editors */}
+        <span className="inline-flex items-center gap-2">
+          {task.repeatable}×
+          {isEditable && (
             <UpdateTaskRepeatable
               task={{ id: task.id, repeatable: task.repeatable }}
+              className="text-sm"
             />
-          )
-        }
-      >
-        {task.repeatable}×
+          )}
+        </span>
       </StatisticTile>
     </div>
   );

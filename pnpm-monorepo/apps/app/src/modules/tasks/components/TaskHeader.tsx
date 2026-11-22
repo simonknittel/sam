@@ -108,17 +108,20 @@ export const TaskHeader = ({ className, task, status, isEditable }: Props) => {
         className={clsx("text-sm", presentation.textClassName)}
       />
 
-      <h1 className="font-mono text-2xl font-bold wrap-break-word">
-        <span className="text-neutral-500 uppercase">Task //</span>{" "}
+      {/* A row: the editor of the title stays next to the prefix */}
+      <h1 className="flex w-full items-baseline gap-2 font-mono text-2xl font-bold wrap-break-word">
+        <span className="flex-none text-neutral-500 uppercase">Task //</span>
         {isEditable ? (
           <EditableInput
             rowId={task.id}
             columnName="title"
             initialValue={task.title}
             action={updateTaskTitle}
+            className="min-w-0 flex-1"
+            fillWidth
           />
         ) : (
-          <span>{task.title}</span>
+          <span className="min-w-0">{task.title}</span>
         )}
       </h1>
 

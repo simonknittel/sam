@@ -1,6 +1,5 @@
 import "server-only";
 
-import { Markdown } from "@/modules/common/components/Markdown";
 import { Tile, TileVariant } from "@/modules/common/components/Tile";
 import type { TaskStatus, VisibleTask } from "@sam-monorepo/application";
 import clsx from "clsx";
@@ -8,10 +7,10 @@ import { CancelTask } from "./CancelTask";
 import { DeleteTask } from "./DeleteTask";
 import { MyTaskParticipation } from "./MyTaskParticipation";
 import { TaskAudience } from "./TaskAudience";
+import { TaskBriefing } from "./TaskBriefing";
 import { TaskHeader } from "./TaskHeader";
 import { TaskParticipants } from "./TaskParticipants";
 import { TaskStatistics } from "./TaskStatistics";
-import { UpdateTaskDescription } from "./UpdateTaskDescription";
 
 interface Props {
   readonly className?: string;
@@ -67,15 +66,10 @@ export const TaskDetail = ({
         <TaskAudience task={task} isEditable={isEditable} />
       </div>
 
-      <Tile heading="Briefing">
-        {isEditable ? (
-          <UpdateTaskDescription
-            task={{ id: task.id, description: task.description }}
-          />
-        ) : (
-          <Markdown>{task.description || "-"}</Markdown>
-        )}
-      </Tile>
+      <TaskBriefing
+        task={{ id: task.id, description: task.description }}
+        isEditable={isEditable}
+      />
 
       {isManagementShown && (
         <Tile heading="Verwaltung" variant={TileVariant.Danger}>
