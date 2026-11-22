@@ -1,3 +1,4 @@
+import { CitizenAvatarSize } from "@/modules/common/components/CitizenAvatarSize";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { TableRowAlignment, TRow } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
@@ -60,7 +61,11 @@ export const ActivityRow = ({ entry, columns }: Props) => {
 
       {columns.includes(ActivityColumn.Actor) && (
         <td className={clsx(FIRST_LINE, "min-w-0")}>
-          <CitizenLink citizen={entry.actor} className="truncate" />
+          <CitizenLink
+            citizen={entry.actor}
+            avatarSize={CitizenAvatarSize.Row}
+            className="truncate"
+          />
         </td>
       )}
 

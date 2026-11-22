@@ -1,3 +1,4 @@
+import { CitizenAvatarSize } from "@/modules/common/components/CitizenAvatarSize";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { Link } from "@/modules/common/components/Link";
 import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
@@ -166,7 +167,10 @@ const ReportRow = ({ report }: ReportRowProps) => {
       </td>
 
       <td className="truncate">
-        <CitizenLink citizen={report.createdBy} />
+        <CitizenLink
+          citizen={report.createdBy}
+          avatarSize={CitizenAvatarSize.Row}
+        />
       </td>
 
       <td>{formatDate(report.createdAt)}</td>

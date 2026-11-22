@@ -1,5 +1,6 @@
 import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
 import { createCursorPaginationLoader } from "@/modules/common/CursorPagination/createCursorPaginationLoader";
+import { CitizenAvatarSize } from "@/modules/common/components/CitizenAvatarSize";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { TableRowAlignment, TRow } from "@/modules/common/components/Table";
 import {
@@ -71,7 +72,10 @@ export const ManualNotificationsTable = async ({
           </td>
 
           <td className="truncate leading-8">
-            <CitizenLink citizen={notification.created_by} />
+            <CitizenLink
+              citizen={notification.created_by}
+              avatarSize={CitizenAvatarSize.Row}
+            />
           </td>
 
           <td title={notification.title} className="truncate leading-8">

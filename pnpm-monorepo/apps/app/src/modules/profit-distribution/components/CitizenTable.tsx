@@ -1,5 +1,6 @@
 "use client";
 
+import { CitizenAvatarSize } from "@/modules/common/components/CitizenAvatarSize";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import { SortableTable } from "@/modules/common/components/SortableTable";
@@ -118,7 +119,12 @@ export const CitizenTable = ({ className, cycleData }: Props) => {
       header: "Member",
       id: "displayName",
       cell: (row) => {
-        return <CitizenLink citizen={row.row.original.citizen} />;
+        return (
+          <CitizenLink
+            citizen={row.row.original.citizen}
+            avatarSize={CitizenAvatarSize.Row}
+          />
+        );
       },
       sortingFn: "alphanumeric",
     }),

@@ -1,3 +1,4 @@
+import { CitizenAvatarSize } from "@/modules/common/components/CitizenAvatarSize";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { TRow } from "@/modules/common/components/Table";
 import clsx from "clsx";
@@ -33,7 +34,10 @@ export const UpcomingBirthdayRow = ({ birthday }: Props) => {
       </td>
 
       <td className="overflow-hidden">
-        <CitizenLink citizen={birthday.citizen} />
+        <CitizenLink
+          citizen={birthday.citizen}
+          avatarSize={CitizenAvatarSize.Row}
+        />
       </td>
 
       <td className={clsx("font-mono", { "font-bold": isToday })}>

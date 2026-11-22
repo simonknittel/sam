@@ -1,5 +1,6 @@
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { AccordeonToggle } from "@/modules/common/components/Accordeon";
+import { CitizenAvatarSize } from "@/modules/common/components/CitizenAvatarSize";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { EditableInput } from "@/modules/common/components/form/EditableInput";
 import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
@@ -242,7 +243,10 @@ export const Position = ({
                   }
                 />
               ) : position.citizen ? (
-                <CitizenLink citizen={position.citizen} />
+                <CitizenLink
+                  citizen={position.citizen}
+                  avatarSize={CitizenAvatarSize.Row}
+                />
               ) : (
                 <p className="text-neutral-500">-</p>
               )}
