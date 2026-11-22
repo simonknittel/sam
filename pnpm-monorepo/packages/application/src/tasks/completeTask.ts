@@ -61,8 +61,8 @@ type TaskToComplete = Prisma.TaskGetPayload<{
 }>;
 
 /**
- * Each completionist gets the reward. With the reward type SILC, the creator
- * of the task pays it. A reward of the type TEXT has no SILC transactions.
+ * Each completionist gets the new SILC of the reward. A reward of the type
+ * TEXT has no SILC transactions.
  */
 const getRewardTransactions = (
   task: TaskToComplete,
@@ -75,43 +75,19 @@ const getRewardTransactions = (
     throw new Error(`The SILC reward of task ${task.id} has no value`);
 
   const rewardSilcValue = task.rewardSilcValue;
-  const rewards = completionistIds.map((receiverId) => ({
+  return completionistIds.map((receiverId) => ({
     receiverId,
     value: rewardSilcValue,
     description: `Task erfüllt: ${task.title}`,
     createdById,
     taskId: task.id,
   }));
-
-  switch (task.rewardType) {
-    case TaskRewardType.NEW_SILC:
-      return rewards;
-
-    case TaskRewardType.SILC:
-      if (!task.createdById) return rewards;
-
-      return [
-        ...rewards,
-        {
-          receiverId: task.createdById,
-          value: -(rewardSilcValue * completionistIds.length),
-          description: `Task abgeschlossen: ${task.title}`,
-          createdById,
-          taskId: task.id,
-        },
-      ];
-
-    default:
-      throw new Error(
-        `Unknown task reward type: ${task.rewardType satisfies never}`,
-      );
-  }
 };
 
 /**
  * Creates the next repetition of a task that can be completed again. The
- * repetition keeps the creator of the task: the creator manages it and pays
- * a SILC reward. The completer is only the author of the copied assignments.
+ * repetition keeps the creator of the task: the creator manages it. The
+ * completer is only the author of the copied assignments.
  */
 const createRepetition = async (
   transaction: Prisma.TransactionClient,

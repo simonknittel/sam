@@ -34,12 +34,12 @@ export const createTaskInputSchema = z.object({
         value: taskFieldSchemas.reward_text,
       }),
       z.object({
-        type: z.literal([TaskRewardKind.Silc, TaskRewardKind.NewSilc]),
+        type: z.literal(TaskRewardKind.NewSilc),
         value: taskFieldSchemas.reward_silc_value,
       }),
     ])
     .describe(
-      "silc: the creator of the task pays the SILC to each completionist. new_silc: each completionist gets new SILC, this needs an extra permission. text: a reward that is no SILC.",
+      "new_silc: each completionist gets new SILC, this needs an extra permission. text: a reward that is no SILC.",
     ),
   expires_at: taskFieldSchemas.expires_at
     .optional()

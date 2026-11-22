@@ -9,8 +9,6 @@ import {
 import { getTaskStatus, type TaskStatus } from "./taskRules.js";
 
 export enum TaskRewardKind {
-  /** SILC that the creator of the task pays */
-  Silc = "silc",
   /** New SILC */
   NewSilc = "new_silc",
   /** A reward that is no SILC, described in a text */
@@ -29,7 +27,7 @@ export enum TaskVisibilityKind {
 export interface TaskReward {
   readonly type: TaskRewardKind;
   /**
-   * The SILC for each completionist (`silc`, `new_silc`) or the Markdown
+   * The SILC for each completionist (`new_silc`) or the Markdown
    * text of the reward (`text`)
    */
   readonly value: number | string | null;
@@ -81,9 +79,6 @@ export const toTaskRewardKind = (
   rewardType: TaskRewardType,
 ): TaskRewardKind => {
   switch (rewardType) {
-    case TaskRewardType.SILC:
-      return TaskRewardKind.Silc;
-
     case TaskRewardType.NEW_SILC:
       return TaskRewardKind.NewSilc;
 

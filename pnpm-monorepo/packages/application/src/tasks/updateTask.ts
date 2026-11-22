@@ -38,7 +38,7 @@ export const updateTaskInputSchema = z.object({
   reward_silc_value: taskFieldSchemas.reward_silc_value
     .optional()
     .describe(
-      "The SILC for each completionist. Only for a task with a silc or new_silc reward; a new_silc reward needs the permission to create new SILC.",
+      "The SILC for each completionist. Only for a task with a new_silc reward; needs the permission to create new SILC.",
     ),
   reward_text: taskFieldSchemas.reward_text
     .optional()
@@ -78,29 +78,6 @@ interface TaskChange {
   readonly auditEvent: AuditEventInput;
   readonly notification?: Notification;
 }
-
-/**
- * The system log keeps one event type for each SILC reward type, because it
- * had one value column for each type before
- */
-const getSilcRewardAuditEventType = (task: VisibleTask) => {
-  switch (task.rewardType) {
-    case TaskRewardType.SILC:
-      return AuditEventType.TASK_REWARD_SILC_UPDATED;
-
-    case TaskRewardType.NEW_SILC:
-      return AuditEventType.TASK_REWARD_NEW_SILC_UPDATED;
-
-    // The reward CHECK constraint refuses a SILC value on a text reward
-    case TaskRewardType.TEXT:
-      throw new ValidationError(TaskErrorMessage.TextRewardOnly);
-
-    default:
-      throw new Error(
-        `Unknown task reward type: ${task.rewardType satisfies never}`,
-      );
-  }
-};
 
 /** The assignments that the new list of assignees adds and removes */
 const getAssignmentWrites = (
@@ -191,11 +168,15 @@ const getTaskChanges = (
       },
     });
 
-  if (input.reward_silc_value !== undefined)
+  if (input.reward_silc_value !== undefined) {
+    // The reward CHECK constraint refuses a SILC value on a text reward
+    if (task.rewardType !== TaskRewardType.NEW_SILC)
+      throw new ValidationError(TaskErrorMessage.TextRewardOnly);
+
     changes.push({
       data: { rewardSilcValue: input.reward_silc_value },
       auditEvent: {
-        type: getSilcRewardAuditEventType(task),
+        type: AuditEventType.TASK_REWARD_NEW_SILC_UPDATED,
         data: {
           taskId,
           previousValue: task.rewardSilcValue,
@@ -204,6 +185,7 @@ const getTaskChanges = (
         createdById: actor.userId,
       },
     });
+  }
 
   if (input.reward_text !== undefined) {
     // The reward CHECK constraint refuses a text on a SILC reward

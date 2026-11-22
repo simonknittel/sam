@@ -15,7 +15,7 @@ Tasks (\`/app/tasks\`) are the quest system of the organization. A member posts 
   - Group (Gruppe): one task for the citizens that the creator selects.
   - Personalized (Personalisiert): a separate task for each citizen that the creator selects.
   - Group and personalized tasks need \`task;create;taskVisibility=PERSONALIZED\`, public tasks need \`task;create\`.
-- **Reward (Belohnung)**: SILC from the balance of the creator ("SILC (Tausch)"), new SILC ("Neue SILC", needs its own permission) or a text. Each citizen who completed the task gets the SILC.
+- **Reward (Belohnung)**: new SILC ("Neue SILC", needs its own permission) or a text. Each citizen who completed the task gets the SILC.
 - **States**: open (Offen), then completed (Erfüllt), cancelled (Abgebrochen) or expired (Abgelaufen, after the expiry date). Only an open task can change.
 - **Completion**: the creator (or \`task;manage\`) completes the task and selects who did it (Erfüllt durch). A group or personalized task can let its citizens complete it themselves. A repeatable task (Wiederholbar) makes the next repetition when it is completed.
 

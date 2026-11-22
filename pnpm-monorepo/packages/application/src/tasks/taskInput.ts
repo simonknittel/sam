@@ -75,7 +75,6 @@ export const TASK_VISIBILITY_BY_KIND: Readonly<
 export const TASK_REWARD_TYPE_BY_KIND: Readonly<
   Record<TaskRewardKind, TaskRewardType>
 > = {
-  [TaskRewardKind.Silc]: TaskRewardType.SILC,
   [TaskRewardKind.NewSilc]: TaskRewardType.NEW_SILC,
   [TaskRewardKind.Text]: TaskRewardType.TEXT,
 };
