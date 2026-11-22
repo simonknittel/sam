@@ -4,6 +4,7 @@ import {
   throwApplicationErrorForPage,
 } from "@/modules/application";
 import { requireAuthenticationPage } from "@/modules/auth/server";
+import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import {
@@ -15,7 +16,6 @@ import {
 import { ConfirmationStatus } from "@sam-monorepo/database/client";
 import {
   CITIZEN_MENTION_PATTERN,
-  DELETED_CITIZEN_LABEL,
   getOrganizationLogoUrl,
   NOTE_MENTION_PATTERN,
   ORGANIZATION_MENTION_PATTERN,
@@ -72,21 +72,15 @@ export const SingleNote = async ({ note }: Props) => {
           );
           if (!citizen) return part;
 
-          if (citizen.deletedAt)
-            return (
-              <span className="text-neutral-500" key={index}>
-                {DELETED_CITIZEN_LABEL}
-              </span>
-            );
-
           return (
-            <Link
-              href={`/app/spynet/citizen/${citizen.id}`}
-              className="text-brand-red-500 hover:text-brand-red-300"
+            <CitizenLink
               key={index}
-            >
-              {citizen.handle || citizen.spectrumId}
-            </Link>
+              citizen={{
+                id: citizen.id,
+                handle: citizen.handle || citizen.spectrumId,
+                deletedAt: citizen.deletedAt,
+              }}
+            />
           );
         } else if (organizationMatch?.[1]) {
           const organization = organizations.find(
