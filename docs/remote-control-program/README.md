@@ -197,6 +197,7 @@ All parts share one catalog of capabilities: the runtimes, the relay and the con
 | Risk | For an action: low or high. For an action with high risk, the default rule of the local access layer is "ask each time". |
 | Expiry | For an action: the time after which a runtime does not apply the request (result `expired`). |
 | Game actions | For an action of the gRPC connector: the names of the game actions that it uses. |
+| Switch | The name of the Unleash flag that turns off the capability (see [Switches](#switches)). |
 
 The kinds:
 
@@ -365,6 +366,7 @@ A consumer can request an action of an owner only when the conditions 1 and 2 ar
 
 - Each runtime has one local access layer. The connectors do not have their own. Thus one rule applies to a capability, independent of the connector that supplies it.
 - A rule for a state or a feed is "off" or "on". A rule for a feed can have a filter. Example: the log entry types that the owner shares. The filter exists only in the local access layer. A grant always covers a full capability (see [Decisions](#decisions)).
+- A feed entry leaves the machine automatically only when a running runtime reads it live, while the rule is on and the runtime is not stopped. The entries from a time without a running runtime or from a time of "Stop all" stay on the machine. Older entries leave only on an explicit request of the owner with a confirmation (decision 27).
 - A rule for an action is "off", "ask each time" or "automatic". The rule also tells which requesters it accepts: only the owner, or also other citizens with a grant.
 - The button "Stop all" stops all uploads of the runtime and refuses all actions at the same time. A second button starts them again. The sharing popover also has a button "Stop all" for all runtimes of the owner (see [Sharing popover](#sharing-popover)).
 - The runtime keeps its rules on the machine: in the browser storage, or in a file of the desktop companion. The relay never writes them.
@@ -429,10 +431,10 @@ The grantee kinds:
 
 ### Log Analyzer
 
-The Log Analyzer is the control UI of the feed `log_entries`. Its permission is `logAnalyzer;read` (decision 24).
+The Log Analyzer is the control UI of the feed `log_entries`. It needs `logAnalyzer;read` and `remoteControlProgram;use`, also for the own log (decision 24).
 
 - The log file connector reads `Game.log` and the old log files. In the browser runtime, it uses the File System Access API: the handle of the log folder is in IndexedDB, a Web Worker parses the files, and a reader reads only the new bytes of a file.
-- The local access layer tells which log entry types leave the machine, also for older entries.
+- The local access layer tells which log entry types leave the machine. Older entries leave only on an explicit request (decision 27).
 - Before the upload, the connector replaces each IP address in a raw line with a fixed marker (decision 22).
 - The relay use case "append feed entries" checks each line against its pattern again. The patterns are `LOG_ANALYZER_ENTRY_PATTERNS` (`packages/domain/src/logAnalyzer/`). The connector and the relay share them, and the rules in [AGENTS.md](../../AGENTS.md) apply to them.
 - The hash for duplicates must not depend on the version of a pattern: it uses the oldest type of a pattern chain (`supersedes`) and the raw line. Thus two runtimes with different pattern versions do not store the same line twice.
@@ -469,7 +471,7 @@ The MCP server is stateless and has no subscriptions (see [MCP Server](../mcp-se
 
 | Level | Who | What | How |
 | - | - | - | - |
-| Organization | Admins | The Remote Control Program, a connector, a capability | Unleash flags. The relay refuses the data and the actions of a disabled part, and tells the runtimes. A permission for the use of the Remote Control Program. |
+| Organization | Admins | The Remote Control Program, a connector, a capability | Unleash flags: one for the Remote Control Program, and one for each connector and each capability, with the name from the catalog. The relay refuses the data and the actions of a disabled part, and tells the runtimes. A permission for the use of the Remote Control Program. |
 | Owner in SAM | Owner | Who can read a capability, who can request an action | Grants |
 | Owner on the machine | Owner | What leaves the machine, which actions the runtime applies, the button "Stop all" of the runtime | Local access layer |
 | Code | Developers | Which connectors a runtime contains | Each connector is a separate module |
@@ -491,10 +493,11 @@ The implementation plans decide the final locations. Update this table and [Arch
 
 ## Operations and tests
 
-- The relay service has metrics (the connections, the messages, the errors, the delays) and alerts, like `sam-collab`.
-- The relay service reads the Unleash flags of the switches.
+- The relay service sends metrics (the connections, the messages, the errors, the delays) and traces with OpenTelemetry. Its logs go to the output of the container. The alerts are in Grafana (decision 28).
+- The relay service reads the Unleash flags of the switches with its own Unleash client.
+- The relay service runs in production and in the local stack. The preview deployments have no relay service. The browser runtime then works only on the machine (decision 29).
 - A fake gRPC server replays recorded frames. Thus the tests of the gRPC connector need no game.
-- The Playwright stack contains the relay service and TimescaleDB.
+- The Playwright stack contains the relay service, Soketi and TimescaleDB.
 
 ## Ideas
 
@@ -521,7 +524,7 @@ These ideas have no use case or no reliable source yet. They are not part of the
 
 ## Decisions
 
-All decisions of 2026-11-21. The decisions that apply only to the migration are in [Migration](./migration.md#decisions-of-the-migration).
+Decisions 1 to 26 are of 2026-11-21. Decisions 27 to 29 are of 2026-11-22. The decisions that apply only to the migration are in [Migration](./migration.md#decisions-of-the-migration).
 
 1. **Name.** The working title is "Remote Control Program". The code can use it, for example `remoteControlProgram` and `remote_control_program`.
 2. **Rust for the desktop companion.** It uses little memory and processor time while the game runs. It has a mature native gRPC client. It builds one executable file for each operating system, without a separate runtime. Result: the log file connector and the catalog need one definition for TypeScript and Rust (principle 11, decision 5).
@@ -565,9 +568,12 @@ All decisions of 2026-11-21. The decisions that apply only to the migration are 
 21. **Consumers derive, connectors upload raw values** (principle 15). Derived values are specific to a consumer. Thus the connectors stay small, and the Rust connector needs no second implementation of a derivation. A derivation that more than one consumer needs goes into `domain` as a shared helper.
 22. **No IP addresses leave the machine.** The log file connector replaces each IP address in a raw line with a fixed marker before the upload. The marker keeps the server check of the patterns valid, because no pattern captures an IP address in a named group. The rule for the marker is a part of the shared definitions (decision 5), thus TypeScript and Rust give the same line and the same hash. The relay refuses a line that still contains an IP address.
 23. **"Stop all" instead of an emergency stop.** It is a normal button for comfort: on each machine for its runtime, and in the sharing popover for all runtimes of the owner. A second button starts all again.
-24. **Permissions.** One permission for the use of the Remote Control Program: `remoteControlProgram;use`. An owner needs it to connect a runtime, and a consumer needs it to read or to request. Each consumer can have its own permission for what it shows (for example `logAnalyzer;read` for the Log Analyzer).
+24. **Permissions.** One permission for the use of the Remote Control Program: `remoteControlProgram;use`. An owner needs it to connect a runtime, and a consumer needs it to read or to request. Each consumer can have its own permission for what it shows (for example `logAnalyzer;read` for the Log Analyzer). The Log Analyzer needs both permissions, also for the own log on the machine.
 25. **No code signing certificate for Windows.** The releases have no certificate for the code signing of Windows, thus Windows shows a warning at the first start. SAM tells the users how to start the program, and what the risks are.
 26. **No location in the lineup status for now.** The gRPC interface supplies no location, and a location from `log_entries` would need a grant for all uploaded log entries (decision 10). See [Ideas](#ideas).
+27. **Only live feed entries leave the machine automatically.** A runtime uploads a feed entry automatically only when it reads the entry live: while it runs, the rule is on and the runtime is not stopped. Thus a closed SAM tab or "Stop all" also stops the upload of the entries of that time, also after the next start. Older entries leave only on an explicit request of the owner with a confirmation. Shared entries cannot be deleted (decision 12), thus the owner decides on each older entry.
+28. **Telemetry of the relay service.** OpenTelemetry metrics and traces. The logs go to the output of the container. The alerts are set up in Grafana, outside of this repository.
+29. **Environments of the relay service.** Production and the local stack (Docker Compose and the Playwright stack). The relay service must run fully with the rest of the local stack. The preview deployments have no relay service.
 
 ## Open questions
 
