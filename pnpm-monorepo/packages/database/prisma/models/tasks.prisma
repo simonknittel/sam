@@ -2,7 +2,6 @@
 /// the app). A rename of a value needs a migration that also updates the
 /// rows of PermissionString, or the permission silently stops working.
 enum TaskRewardType {
-  SILC
   NEW_SILC
   TEXT
 }
@@ -23,12 +22,11 @@ model Task {
   createdAt           DateTime          @default(now()) @db.Timestamptz(3)
   createdById         String?
   createdBy           Citizen?          @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
-  /// SILC: the creator of the task pays the reward. NEW_SILC: the reward is
-  /// new SILC. TEXT: a reward that is no SILC. A CHECK constraint makes sure
-  /// that exactly the value column of the reward type is set (see the
-  /// migration transactional_money).
+  /// NEW_SILC: the reward is new SILC. TEXT: a reward that is no SILC. A
+  /// CHECK constraint makes sure that exactly the value column of the reward
+  /// type is set (see the migration transactional_money).
   rewardType          TaskRewardType
-  /// The reward for each completionist of a SILC or NEW_SILC task
+  /// The reward for each completionist of a NEW_SILC task
   rewardSilcValue     Int?
   rewardTypeTextValue String?
   expiresAt           DateTime?         @db.Timestamptz(3)
