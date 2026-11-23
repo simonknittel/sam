@@ -1,6 +1,5 @@
-import type { EntryWindow } from "./entryWindow";
-import { TIMESTAMP_AT_LINE_START } from "./findPrecedingIsoDate";
-import type { LogFile } from "./types";
+import { TIMESTAMP_AT_LINE_START } from "./findPrecedingIsoDate.js";
+import type { EntryWindow, LogFile } from "./types.js";
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -47,7 +46,7 @@ export const getSessionStartFromFileName = (fileName: string) => {
   const groups = BACKUP_FILE_NAME.exec(fileName)?.groups;
   if (!groups) return null;
 
-  const monthIndex = MONTHS.indexOf(groups.month);
+  const monthIndex = MONTHS.indexOf(groups.month!);
   if (monthIndex === -1) return null;
 
   return new Date(

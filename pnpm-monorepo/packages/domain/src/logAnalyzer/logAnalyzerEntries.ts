@@ -80,8 +80,8 @@ interface LogAnalyzerEntryPattern {
    * the event, unless `takesTimeOfPrecedingLine` is set.
    *
    * A match spans two lines at most, because a read of a file which grew
-   * starts one line before the new lines (see `createLogFileReader` in the
-   * app).
+   * starts one line before the new lines (see `createLogFileReader` in
+   * `packages/remote-control-program-runtime`).
    *
    * The server runs the expression on the raw lines that a client sends,
    * thus it must not backtrack without a limit. A gap up to the tag of the

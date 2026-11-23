@@ -1,5 +1,7 @@
-import type { LogSelection } from "../utils/selectLogFiles";
-import type { ReadProgress } from "../utils/types";
+import type {
+  LogSelection,
+  ReadProgress,
+} from "@sam-monorepo/remote-control-program-runtime";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 
 const BYTES_PER_MEGABYTE = 1_000_000;

@@ -21,7 +21,7 @@ export const findPrecedingIsoDate = (
     const match = TIMESTAMP_AT_LINE_START.exec(
       fileContent.slice(lineStart, lineStart + TIMESTAMP_PREFIX_LENGTH),
     );
-    if (match) return match[1];
+    if (match) return match[1]!;
 
     lineEnd = lineStart - 1;
   }
@@ -39,5 +39,5 @@ export const findLastIsoDate = (fileContent: string): string | null => {
     fileContent.slice(lastLineStart, lastLineStart + TIMESTAMP_PREFIX_LENGTH),
   );
 
-  return match ? match[1] : findPrecedingIsoDate(fileContent, lastLineStart);
+  return match ? match[1]! : findPrecedingIsoDate(fileContent, lastLineStart);
 };

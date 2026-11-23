@@ -3,9 +3,34 @@ import type { LogAnalyzerEntryType } from "@sam-monorepo/domain";
 export interface RawMatch {
   readonly type: LogAnalyzerEntryType;
   readonly isoDate: string;
-  readonly fullMatch: string;
+  /**
+   * The text of the match with the IP marker (`replaceIpAddresses` of the
+   * domain package). No IP address leaves the connector, also not to the
+   * local view. Thus the local entries and the uploaded entries have the same
+   * lines (decision 22 of the concept).
+   */
+  readonly rawLine: string;
+  /**
+   * The key of the entry (`createLogEntryHash` of the domain package). The
+   * upload, the local view and the removal of duplicates use it.
+   */
+  readonly hash: string;
+  /** The capture groups of `rawLine` */
   readonly groups: Record<string, string>;
+  /**
+   * The number of the first line of the match in its log file. The first
+   * line has the number 1. It orders the lines of one instant.
+   */
   readonly lineNumber: number;
+}
+
+/**
+ * The time span of the entries. `end` is exclusive. A missing bound means no
+ * limit.
+ */
+export interface EntryWindow {
+  readonly start: Date | null;
+  readonly end: Date | null;
 }
 
 /**

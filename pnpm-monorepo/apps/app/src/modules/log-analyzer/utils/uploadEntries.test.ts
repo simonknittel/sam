@@ -1,6 +1,6 @@
 import { LogAnalyzerEntryType } from "@sam-monorepo/domain";
+import { SAMPLE_LINES } from "@sam-monorepo/remote-control-program-runtime";
 import { describe, expect, test } from "vitest";
-import { SAMPLE_LINES } from "./sampleLines";
 import { createUploadFormData, parseUploadFormData } from "./uploadEntries";
 
 describe("parseUploadFormData", () => {

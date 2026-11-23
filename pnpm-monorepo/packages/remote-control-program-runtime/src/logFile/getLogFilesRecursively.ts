@@ -1,5 +1,5 @@
-import { getSessionStartFromFileName } from "./selectLogFiles";
-import type { LogFile } from "./types";
+import { getSessionStartFromFileName } from "./selectLogFiles.js";
+import type { LogFile } from "./types.js";
 
 /**
  * A backup with a date in its name no longer changes, thus `knownFiles` saves

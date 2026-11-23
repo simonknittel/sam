@@ -61,6 +61,7 @@ allowBuilds:
   "@sam-monorepo/domain@file:packages/domain": false
   "@sam-monorepo/infrastructure@file:packages/infrastructure": false
   "@sam-monorepo/mcp@file:packages/mcp": false
+  "@sam-monorepo/remote-control-program-runtime@file:packages/remote-control-program-runtime": false
   "@sam-monorepo/wiki-editor@file:packages/wiki-editor": false
   # Optional native accelerators of testcontainers' ssh2 dependency — the
   # pure-JS fallbacks are fine for the test stack.

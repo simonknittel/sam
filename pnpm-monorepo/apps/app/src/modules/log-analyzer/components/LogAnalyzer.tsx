@@ -11,6 +11,15 @@ import {
   getOldestLogAnalyzerEntryVersion,
   LogAnalyzerEntryType,
 } from "@sam-monorepo/domain";
+import {
+  getLogFilesRecursively,
+  selectLogFiles,
+  summarizeLogSelection,
+  type LogFile,
+  type LogSelection,
+  type RawMatch,
+  type ReadProgress,
+} from "@sam-monorepo/remote-control-program-runtime";
 import clsx from "clsx";
 import { get, set } from "idb-keyval";
 import {
@@ -31,19 +40,12 @@ import {
   isInWindow,
   NO_DATE_RANGE,
 } from "../utils/entryWindow";
-import { getLogFilesRecursively } from "../utils/getLogFilesRecursively";
 import { LIVE_MODE_PARSE_INTERVAL_MS } from "../utils/liveMode";
 import {
   createEntryKey,
   deriveEntryFields,
   type IEntry,
 } from "../utils/PATTERNS";
-import {
-  selectLogFiles,
-  summarizeLogSelection,
-  type LogSelection,
-} from "../utils/selectLogFiles";
-import type { LogFile, RawMatch, ReadProgress } from "../utils/types";
 import { DateRangeSettings } from "./DateRangeSettings";
 import { LiveStatus } from "./LiveStatus";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
@@ -231,7 +233,7 @@ export const LogAnalyzer = ({ className }: Props) => {
 
             for (const rawMatch of rawMatches) {
               const isoDate = new Date(rawMatch.isoDate);
-              const key = createEntryKey(rawMatch.type, rawMatch.fullMatch);
+              const key = createEntryKey(rawMatch.type, rawMatch.rawLine);
               const existingEntry = newEntries.get(key);
               /**
                * A local entry replaces a shared one of the same line, because

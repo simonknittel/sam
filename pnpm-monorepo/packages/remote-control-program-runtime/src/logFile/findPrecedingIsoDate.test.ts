@@ -1,7 +1,7 @@
 import { LogAnalyzerEntryType } from "@sam-monorepo/domain";
 import { describe, expect, test } from "vitest";
-import { findPrecedingIsoDate } from "./findPrecedingIsoDate";
-import { SAMPLE_CRASH_FILE_END, SAMPLE_LINES } from "./sampleLines";
+import { findPrecedingIsoDate } from "./findPrecedingIsoDate.js";
+import { SAMPLE_CRASH_FILE_END, SAMPLE_LINES } from "./sampleLines.js";
 
 describe("findPrecedingIsoDate", () => {
   test("gives the time of the last timestamped line before a crash", () => {

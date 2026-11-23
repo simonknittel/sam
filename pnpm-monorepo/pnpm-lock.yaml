@@ -122,6 +122,9 @@ importers:
       '@sam-monorepo/mcp':
         specifier: workspace:*
         version: file:packages/mcp(@tiptap/extension-code-block@3.34.0(@tiptap/core@3.34.0(@tiptap/pm@3.34.0))(@tiptap/pm@3.34.0))(@tiptap/extension-text-style@3.34.0(@tiptap/core@3.34.0(@tiptap/pm@3.34.0)))(@types/react@19.3.0)(prisma@7.10.1(@types/node@24.19.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(magicast@0.5.5)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3)
+      '@sam-monorepo/remote-control-program-runtime':
+        specifier: workspace:*
+        version: file:packages/remote-control-program-runtime(prisma@7.10.1(@types/node@24.19.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(magicast@0.5.5)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3))(typescript@6.0.3)
       '@sam-monorepo/wiki-editor':
         specifier: workspace:*
         version: link:../../packages/wiki-editor
@@ -786,6 +789,28 @@ importers:
       fflate:
         specifier: 0.8.3
         version: 0.8.3
+      zod:
+        specifier: 4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@types/node':
+        specifier: 24.19.2
+        version: 24.19.2
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
+      vite:
+        specifier: 8.3.8
+        version: 8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)
+      vitest:
+        specifier: 5.1.0
+        version: 5.1.0(@edge-runtime/vm@3.2.0)(@opentelemetry/api@1.9.1)(@types/node@24.19.2)(@vitest/coverage-v8@5.1.0)(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
+
+  packages/remote-control-program-runtime:
+    dependencies:
+      '@sam-monorepo/domain':
+        specifier: workspace:*
+        version: link:../domain
       zod:
         specifier: 4.6.7
         version: 4.6.7
@@ -3641,6 +3666,9 @@ packages:
 
   '@sam-monorepo/mcp@file:packages/mcp':
     resolution: {directory: packages/mcp, type: directory}
+
+  '@sam-monorepo/remote-control-program-runtime@file:packages/remote-control-program-runtime':
+    resolution: {directory: packages/remote-control-program-runtime, type: directory}
 
   '@sam-monorepo/wiki-editor@file:packages/wiki-editor':
     resolution: {directory: packages/wiki-editor, type: directory}
@@ -11929,6 +11957,15 @@ snapshots:
       - prisma
       - react
       - react-dom
+      - typescript
+
+  '@sam-monorepo/remote-control-program-runtime@file:packages/remote-control-program-runtime(prisma@7.10.1(@types/node@24.19.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(magicast@0.5.5)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3))(typescript@6.0.3)':
+    dependencies:
+      '@sam-monorepo/domain': file:packages/domain(prisma@7.10.1(@types/node@24.19.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(magicast@0.5.5)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3))(typescript@6.0.3)
+      zod: 4.6.7
+    transitivePeerDependencies:
+      - pg-native
+      - prisma
       - typescript
 
   '@sam-monorepo/wiki-editor@file:packages/wiki-editor(@tiptap/extension-code-block@3.34.0(@tiptap/core@3.34.0(@tiptap/pm@3.34.0))(@tiptap/pm@3.34.0))(@tiptap/extension-text-style@3.34.0(@tiptap/core@3.34.0(@tiptap/pm@3.34.0)))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':

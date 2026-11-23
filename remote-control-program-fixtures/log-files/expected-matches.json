@@ -43,14 +43,6 @@
           "raw_line": "<2026-11-23T17:36:19.277Z> [Notice] <Channel Disconnected> cause=30016 reason=\"Remote Disconnect - Player requested disconnect\" frame=220001 isRemote=1 map=\"megamap\" gamerules=\"SC_Default\" hostType=\"Replicant\" remoteAddr=198.51.100.23:64312 localAddr=0.0.0.0:64090 connection={4, 0} session=f948a738-a221-5666-983e-234f5e500ebd node_id=bc4da5d3-3f05-e19e-4aa0-702432234095 nickname=\"Testpilot\" playerGEID=200123456789 uptime_secs=3636.990234 [Team_Network][Network][Gateway][Disconnection]",
           "raw_line_with_marker": "<2026-11-23T17:36:19.277Z> [Notice] <Channel Disconnected> cause=30016 reason=\"Remote Disconnect - Player requested disconnect\" frame=220001 isRemote=1 map=\"megamap\" gamerules=\"SC_Default\" hostType=\"Replicant\" remoteAddr=IP_REDACTED localAddr=IP_REDACTED connection={4, 0} session=f948a738-a221-5666-983e-234f5e500ebd node_id=bc4da5d3-3f05-e19e-4aa0-702432234095 nickname=\"Testpilot\" playerGEID=200123456789 uptime_secs=3636.990234 [Team_Network][Network][Gateway][Disconnection]",
           "hash": "2d2e8bbca961ec72f137a93404611448d1759670f0c82816e7e850916df59bc1"
-        },
-        {
-          "line_number": 12,
-          "type": "joinPu",
-          "iso_date": "2026-11-23T17:37:01.151Z",
-          "raw_line": "<2026-11-23T17:37:01.151Z> [Notice] <Join PU> address[203.0.113.77] port[64301] shard[pub_euw1b_10512345_101] locationId[-2814706",
-          "raw_line_with_marker": "<2026-11-23T17:37:01.151Z> [Notice] <Join PU> address[IP_REDACTED] port[64301] shard[pub_euw1b_10512345_101] locationId[-2814706",
-          "hash": "e859f8a263d23375c1bbb3ca3ef584eae12b634f6036776a7a0abbb5dab2bc50"
         }
       ]
     },

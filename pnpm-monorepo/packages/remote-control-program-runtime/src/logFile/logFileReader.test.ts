@@ -3,14 +3,16 @@ import {
   LOG_ANALYZER_ENTRY_PATTERNS,
   LogAnalyzerEntryType,
   MAXIMUM_LOG_ANALYZER_RAW_LINE_LENGTH,
+  replaceIpAddresses,
 } from "@sam-monorepo/domain";
 import { describe, expect, test, vi } from "vitest";
-import { findPrecedingIsoDate } from "./findPrecedingIsoDate";
-import { createLogFileReader } from "./logFileReader";
-import { SAMPLE_CRASH_FILE_END, SAMPLE_LINES } from "./sampleLines";
-import type { RawMatch } from "./types";
+import { findPrecedingIsoDate } from "./findPrecedingIsoDate.js";
+import { createLogFileReader } from "./logFileReader.js";
+import { SAMPLE_CRASH_FILE_END, SAMPLE_LINES } from "./sampleLines.js";
+import type { RawMatch } from "./types.js";
 
 const PATH = "LIVE/Game.log";
+const LINE_FEED = 0x0a;
 
 /**
  * The walk reads and parses the sample log once per byte (about 15,000
@@ -39,9 +41,15 @@ const hasNewerVersionMatch = (
     return regex.test(text);
   });
 
+/** The fields of a match without the fields that come from the line */
+type MatchKeyFields = Pick<
+  RawMatch,
+  "type" | "isoDate" | "lineNumber" | "rawLine"
+>;
+
 /** One match run over the whole text, for the comparison with the reader */
 const matchWholeText = (text: string) => {
-  const matches: RawMatch[] = [];
+  const matches: MatchKeyFields[] = [];
 
   for (const type of Object.values(LogAnalyzerEntryType)) {
     const { regex, takesTimeOfPrecedingLine } =
@@ -59,8 +67,7 @@ const matchWholeText = (text: string) => {
       matches.push({
         type,
         isoDate,
-        fullMatch: match[0],
-        groups: match.groups,
+        rawLine: replaceIpAddresses(match[0]),
         lineNumber: text.slice(0, match.index).split("\n").length,
       });
     }
@@ -69,11 +76,18 @@ const matchWholeText = (text: string) => {
   return matches;
 };
 
-const toMatchKeys = (matches: readonly RawMatch[]) =>
+/**
+ * The game can still write a last line without a line end, thus the reader
+ * gives no match for it in a live file
+ */
+const matchCompleteLines = (text: string) =>
+  matchWholeText(text.slice(0, text.lastIndexOf("\n") + 1));
+
+const toMatchKeys = (matches: readonly MatchKeyFields[]) =>
   new Set(
     matches.map(
       (match) =>
-        `${match.type} ${match.isoDate} ${match.lineNumber} ${match.fullMatch}`,
+        `${match.type} ${match.isoDate} ${match.lineNumber} ${match.rawLine}`,
     ),
   );
 
@@ -102,9 +116,12 @@ describe("createLogFileReader", () => {
         );
         for (const key of toMatchKeys(matches)) foundMatchKeys.add(key);
 
-        const wholeText = new TextDecoder().decode(content);
-        for (const key of toMatchKeys(matchWholeText(wholeText)))
-          expectedMatchKeys.add(key);
+        /** The expected matches change only with a new line end */
+        if (content.at(-1) === LINE_FEED) {
+          const wholeText = new TextDecoder().decode(content);
+          for (const key of toMatchKeys(matchCompleteLines(wholeText)))
+            expectedMatchKeys.add(key);
+        }
 
         expect(foundMatchKeys).toEqual(expectedMatchKeys);
       }
@@ -131,14 +148,17 @@ describe("createLogFileReader", () => {
     );
     expect(repeatedMatches).toEqual([]);
 
-    const grownFile = createLogFile(`${LOG_CONTENT}\r\n${newLine}`, 2);
+    const grownContent = `${LOG_CONTENT}\r\n${newLine}\r\n`;
+    const grownFile = createLogFile(grownContent, 2);
     const { matches } = await readLogFiles([grownFile], false);
 
-    expect(matches.map((match) => match.fullMatch)).toEqual([newLine]);
+    expect(matches.map((match) => match.rawLine)).toEqual([
+      replaceIpAddresses(newLine),
+    ]);
 
     const { matches: allMatches } = await readLogFiles([grownFile], true);
     expect(toMatchKeys(allMatches)).toEqual(
-      toMatchKeys(matchWholeText(`${LOG_CONTENT}\r\n${newLine}`)),
+      toMatchKeys(matchCompleteLines(grownContent)),
     );
   });
 
@@ -177,7 +197,7 @@ describe("createLogFileReader", () => {
       false,
     );
     expect(toMatchKeys(longerMatches)).toEqual(
-      toMatchKeys(matchWholeText(longerContent)),
+      toMatchKeys(matchCompleteLines(longerContent)),
     );
 
     const { matches: otherMatches } = await readLogFiles(
@@ -185,7 +205,7 @@ describe("createLogFileReader", () => {
       false,
     );
     expect(toMatchKeys(otherMatches)).toEqual(
-      toMatchKeys(matchWholeText(otherContent)),
+      toMatchKeys(matchCompleteLines(otherContent)),
     );
   });
 
@@ -227,7 +247,7 @@ describe("createLogFileReader", () => {
 
     expect(stoppedRead.readFileCount).toBe(1);
     expect(toMatchKeys(stoppedRead.matches)).toEqual(
-      toMatchKeys(matchWholeText(LOG_CONTENT)),
+      toMatchKeys(matchCompleteLines(LOG_CONTENT)),
     );
 
     const nextRead = await readLogFiles([firstFile, secondFile], false);
@@ -249,23 +269,71 @@ describe("createLogFileReader", () => {
     });
   });
 
-  test("skips a line above the length limit of the server and counts it", async () => {
+  test("skips a line with the IP marker above the length limit of the relay and counts it", async () => {
     const readLogFiles = createLogFileReader();
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     const joinPuLine = SAMPLE_LINES[LogAnalyzerEntryType.JoinPu];
-    const overlongLine = joinPuLine.padEnd(
-      MAXIMUM_LOG_ANALYZER_RAW_LINE_LENGTH + 1,
-      "x",
-    );
+    /** The marker is longer than this address */
+    const lineAtLimit = joinPuLine
+      .replace("35.187.166.216", "1.2.3.4")
+      .padEnd(MAXIMUM_LOG_ANALYZER_RAW_LINE_LENGTH, "x");
     const validLine = joinPuLine.replace("2025-06-22", "2026-09-02");
 
     const { matches } = await readLogFiles(
-      [createLogFile([overlongLine, validLine].join("\n"), 1)],
+      [createLogFile(`${lineAtLimit}\n${validLine}\n`, 1)],
       false,
     );
 
-    expect(matches.map((match) => match.fullMatch)).toEqual([validLine]);
+    expect(matches.map((match) => match.rawLine)).toEqual([
+      replaceIpAddresses(validLine),
+    ]);
     expect(warn).toHaveBeenCalledOnce();
     expect(warn).toHaveBeenCalledWith(expect.stringMatching(/: 1$/));
+  });
+
+  test("gives a last line without a line end only for a backup", async () => {
+    const firstLine = "<2025-06-22T09:00:00.000Z> Log started";
+    const joinPuLine = SAMPLE_LINES[LogAnalyzerEntryType.JoinPu];
+    /** The pattern of the type accepts this part of the line */
+    const partOfLine = joinPuLine.slice(0, joinPuLine.indexOf("locationId"));
+    const toRawLines = (matches: readonly RawMatch[]) =>
+      matches.map((match) => match.rawLine);
+
+    const readLiveFile = createLogFileReader();
+    const liveMatches = [
+      ...(
+        await readLiveFile(
+          [createLogFile(`${firstLine}\r\n${partOfLine}`, 1)],
+          false,
+        )
+      ).matches,
+      ...(
+        await readLiveFile(
+          [createLogFile(`${firstLine}\r\n${joinPuLine}`, 2)],
+          false,
+        )
+      ).matches,
+      ...(
+        await readLiveFile(
+          [createLogFile(`${firstLine}\r\n${joinPuLine}\r\n`, 3)],
+          false,
+        )
+      ).matches,
+    ];
+    expect(toRawLines(liveMatches)).toEqual([replaceIpAddresses(joinPuLine)]);
+
+    const backupName = "Game Build(9873572) 22 Jun 25 (11 00 00).log";
+    const { matches: backupMatches } = await createLogFileReader()(
+      [
+        {
+          path: `LIVE/logbackups/${backupName}`,
+          file: new File([`${firstLine}\r\n${partOfLine}`], backupName, {
+            lastModified: 1,
+          }),
+        },
+      ],
+      false,
+    );
+    expect(toRawLines(backupMatches)).toEqual([replaceIpAddresses(partOfLine)]);
   });
 });

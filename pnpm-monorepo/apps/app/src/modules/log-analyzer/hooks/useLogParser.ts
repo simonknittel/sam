@@ -1,14 +1,15 @@
 "use client";
 
+import {
+  createLogParserWorker,
+  type LogFile,
+  type ParseRequest,
+  type ReadProgress,
+  type ReadResult,
+  type ResultMessage,
+  type StopRequest,
+} from "@sam-monorepo/remote-control-program-runtime";
 import { useEffect, useRef } from "react";
-import type {
-  LogFile,
-  ParseRequest,
-  ReadProgress,
-  ReadResult,
-  ResultMessage,
-  StopRequest,
-} from "../utils/types";
 
 interface PendingRequest {
   readonly resolve: (result: ReadResult) => void;
@@ -31,10 +32,7 @@ export const useLogParser = () => {
   const workerErrorRef = useRef<Error | null>(null);
 
   useEffect(() => {
-    const worker = new Worker(
-      new URL("../utils/logParser.worker.ts", import.meta.url),
-      { type: "module" },
-    );
+    const worker = createLogParserWorker();
     const pendingRequests = pendingRequestsRef.current;
 
     const rejectPendingRequests = (error: Error) => {

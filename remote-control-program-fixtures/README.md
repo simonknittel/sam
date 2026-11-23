@@ -7,7 +7,7 @@ The expected values are immutable data, like the patterns of the Log Analyzer. D
 Tests that use this data:
 
 - `pnpm-monorepo/packages/domain/src/remoteControlProgram/fixtures.test.ts`
-- `pnpm-monorepo/apps/app/src/modules/log-analyzer/utils/logFileReader.fixtures.test.ts`
+- `pnpm-monorepo/packages/remote-control-program-runtime/src/logFile/logFileReader.fixtures.test.ts`
 
 ## `ip-address-marker/`
 
@@ -34,7 +34,7 @@ Log files of the game in the folders of the game. The handles are invented. The 
 
 | File | Contents |
 | - | - |
-| `LIVE/Game.log` | The running session. CRLF line ends. The last line is not complete: it has no line end. |
+| `LIVE/Game.log` | The running session. CRLF line ends. The game still writes the last line: it has no line end. |
 | `LIVE/logbackups/Game Build(10498765) 21 Nov 26 (17 58 43).log` | A session that crashed. CRLF line ends. At the end, the crash report without timestamps. |
 | `LIVE/logbackups/Game Build(10512345) 22 Nov 26 (20 14 05).log` | A session that ended. LF line ends. IPv6 addresses, also after a key (`ipv6:`, `peer_addr:`). |
 
@@ -42,7 +42,7 @@ Log files of the game in the folders of the game. The handles are invented. The 
 
 - `path`: relative to `log-files/`.
 - `session_start_from_file_name`: the local time in the name of a backup (without a time zone), or null.
-- `matches`: the matches of the reader of the app (`createLogFileReader`, a full read of the file), sorted by `line_number` and `type`.
+- `matches`: the matches of the log file connector (`createLogFileReader` of the browser runtime, a full read of the file), sorted by `line_number` and `type`.
 
 Each match has:
 
@@ -53,4 +53,4 @@ Each match has:
 - `raw_line_with_marker`: `raw_line` after the IP rule.
 - `hash`: the hash of the entry (see `log-entry-hash/`).
 
-The reader also gives a match for a last line that is not complete, when the pattern of the type accepts the part that the game wrote (see `LIVE/Game.log`).
+A last line without a line end gives no match in a file that the game still writes (`Game.log`), also when the pattern of the type accepts the part that the game wrote. The connector waits for the line end. Else the part and the full line would give two entries with different hashes. A backup (a file with the start of its session in its name, in `logbackups/`) is finished: its last line gives a match also without a line end.

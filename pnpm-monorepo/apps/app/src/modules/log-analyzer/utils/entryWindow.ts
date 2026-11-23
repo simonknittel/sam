@@ -1,11 +1,6 @@
 import { getDateRangeFilter } from "@/modules/common/utils/getDateRangeFilter";
 import { getLogAnalyzerWindowStart } from "@sam-monorepo/domain";
-
-/** `end` is exclusive. A missing bound means no limit. */
-export interface EntryWindow {
-  readonly start: Date | null;
-  readonly end: Date | null;
-}
+import type { EntryWindow } from "@sam-monorepo/remote-control-program-runtime";
 
 /**
  * Days as `YYYY-MM-DD`. A missing bound means no limit. Without any bound the

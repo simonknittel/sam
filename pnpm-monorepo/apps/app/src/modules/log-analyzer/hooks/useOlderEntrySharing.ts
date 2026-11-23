@@ -2,6 +2,7 @@
 
 import { useHasLinkedCitizen } from "@/modules/auth/hooks/useHasLinkedCitizen";
 import { api } from "@/trpc/react";
+import type { RawMatch } from "@sam-monorepo/remote-control-program-runtime";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { useLogAnalyzerContext } from "../components/LogAnalyzerContext";
 import { getOlderEntryWindow, isInWindow } from "../utils/entryWindow";
@@ -13,7 +14,6 @@ import {
   type PendingEntry,
   uploadInChunks,
 } from "../utils/shareEntries";
-import type { RawMatch } from "../utils/types";
 
 /**
  * Shares the own entries older than the rolling window, but only on request:
@@ -129,7 +129,7 @@ export const useOlderEntrySharing = () => {
 
     for (const rawMatch of rawMatches) {
       olderMatchesRef.current.set(
-        createEntryKey(rawMatch.type, rawMatch.fullMatch),
+        createEntryKey(rawMatch.type, rawMatch.rawLine),
         rawMatch,
       );
     }

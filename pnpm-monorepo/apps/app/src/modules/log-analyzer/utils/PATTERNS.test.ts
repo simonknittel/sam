@@ -6,9 +6,9 @@ import {
   matchLogAnalyzerEntryLine,
   takesTimeOfPrecedingLine,
 } from "@sam-monorepo/domain";
+import { SAMPLE_LINES } from "@sam-monorepo/remote-control-program-runtime";
 import { describe, expect, test } from "vitest";
 import { deriveEntryFields, formatVehicleDestructionCause } from "./PATTERNS";
-import { SAMPLE_LINES } from "./sampleLines";
 
 const groupsOf = (type: LogAnalyzerEntryType) => {
   const groups = matchLogAnalyzerEntryLine(type, SAMPLE_LINES[type])?.groups;

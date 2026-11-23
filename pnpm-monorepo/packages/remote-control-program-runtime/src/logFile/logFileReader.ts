@@ -1,11 +1,21 @@
 import {
+  createLogEntryHash,
   getNewerLogAnalyzerEntryVersions,
   LOG_ANALYZER_ENTRY_PATTERNS,
   LogAnalyzerEntryType,
+  matchLogAnalyzerEntryLine,
   MAXIMUM_LOG_ANALYZER_RAW_LINE_LENGTH,
+  replaceIpAddresses,
 } from "@sam-monorepo/domain";
-import { findLastIsoDate, findPrecedingIsoDate } from "./findPrecedingIsoDate";
-import type { LogFile, RawMatch, ReadProgress, ReadResult } from "./types";
+import {
+  findLastIsoDate,
+  findPrecedingIsoDate,
+} from "./findPrecedingIsoDate.js";
+import { getSessionStartFromFileName } from "./selectLogFiles.js";
+import type { LogFile, RawMatch, ReadProgress, ReadResult } from "./types.js";
+
+/** A match before its hash. The hash needs an asynchronous call. */
+type MatchWithoutHash = Omit<RawMatch, "hash">;
 
 const LINE_FEED = 0x0a;
 
@@ -140,7 +150,7 @@ const createLineNumbering = (text: string, firstLineNumber: number) => {
     let high = lineFeedIndexes.length;
     while (low < high) {
       const middle = Math.floor((low + high) / 2);
-      if (lineFeedIndexes[middle] < textIndex) {
+      if (lineFeedIndexes[middle]! < textIndex) {
         low = middle + 1;
       } else {
         high = middle;
@@ -165,7 +175,7 @@ const collectMatches = (
   text: string,
   isoDateBeforeText: string | null,
   getLineNumber: (textIndex: number) => number,
-  matches: RawMatch[],
+  matches: MatchWithoutHash[],
 ) => {
   let skippedOverlongLineCount = 0;
 
@@ -188,17 +198,33 @@ const collectMatches = (
           : match.groups.isoDate;
         if (!isoDate) continue;
 
-        if (match[0].length > MAXIMUM_LOG_ANALYZER_RAW_LINE_LENGTH) {
+        /**
+         * The marker can make a line longer, thus the limit applies to the
+         * line with the marker. The relay checks this line.
+         */
+        const rawLine = replaceIpAddresses(match[0]);
+        if (rawLine.length > MAXIMUM_LOG_ANALYZER_RAW_LINE_LENGTH) {
           skippedOverlongLineCount += 1;
           continue;
         }
+
+        /**
+         * No pattern captures an IP address, thus the line with the marker
+         * still matches its pattern (decision 22 of the concept). The tests
+         * of the sample lines make sure of it.
+         */
+        const groups =
+          rawLine === match[0]
+            ? match.groups
+            : matchLogAnalyzerEntryLine(type, rawLine)?.groups;
+        if (!groups) continue;
 
         matches.push(
           copyValue({
             type,
             isoDate,
-            fullMatch: match[0],
-            groups: match.groups,
+            rawLine,
+            groups,
             lineNumber: getLineNumber(lineStart),
           }),
         );
@@ -208,6 +234,23 @@ const collectMatches = (
 
   return skippedOverlongLineCount;
 };
+
+/**
+ * The game gives `Game.log` the start of its session as its name when it
+ * moves the file into `logbackups/` at the start of the next session. It never
+ * writes a backup again.
+ */
+const isBackup = (file: File) =>
+  getSessionStartFromFileName(file.name) !== null;
+
+/** One batch, because a hash for each await would walk thousands of turns */
+const addHashes = (matches: readonly MatchWithoutHash[]) =>
+  Promise.all(
+    matches.map(async (match): Promise<RawMatch> => ({
+      ...match,
+      hash: await createLogEntryHash(match.type, match.rawLine),
+    })),
+  );
 
 const readFile = async (
   { path, file }: LogFile,
@@ -220,18 +263,6 @@ const readFile = async (
 
   const getLineNumber = createLineNumbering(text, position.lineNumberAtOffset);
 
-  const skippedOverlongLineCount = collectMatches(
-    text,
-    position.isoDateBeforeOffset,
-    getLineNumber,
-    matches,
-  );
-  if (skippedOverlongLineCount > 0) {
-    console.warn(
-      `[Log Analyzer] Skipped lines longer than ${MAXIMUM_LOG_ANALYZER_RAW_LINE_LENGTH} characters in ${path}: ${skippedOverlongLineCount}`,
-    );
-  }
-
   /**
    * The next read starts at the last complete line again. A match spans two
    * lines at most, thus this line can start a match whose second line is not
@@ -240,6 +271,31 @@ const readFile = async (
    */
   const lastLineInBytes = findLastCompleteLine(bytes, LINE_FEED);
   const lastLineInText = findLastCompleteLine(text, "\n");
+
+  /**
+   * The game can still write a line of a live file which has no line end. A
+   * match of the part of the line has a different line and hash than the
+   * match of the full line, thus both would go up. The scan of a live file
+   * therefore stops at the last line end. A backup is finished, thus its
+   * last line gives a match also without a line end.
+   */
+  const scannedText = isBackup(file) ? text : text.slice(0, lastLineInText.end);
+
+  const fileMatches: MatchWithoutHash[] = [];
+  const skippedOverlongLineCount = collectMatches(
+    scannedText,
+    position.isoDateBeforeOffset,
+    getLineNumber,
+    fileMatches,
+  );
+  if (skippedOverlongLineCount > 0) {
+    console.warn(
+      `[Log Analyzer] Skipped lines longer than ${MAXIMUM_LOG_ANALYZER_RAW_LINE_LENGTH} characters in ${path}: ${skippedOverlongLineCount}`,
+    );
+  }
+
+  for (const match of await addHashes(fileMatches)) matches.push(match);
+
   const isoDateBeforeLastLine = findPrecedingIsoDate(
     text,
     lastLineInText.start,
@@ -292,6 +348,10 @@ interface ReadOptions {
  * before it, so that live mode does not read the whole window every few
  * seconds. It can give a match a second time. A file which leaves the
  * selection keeps its position, thus a wider window reads only what is new.
+ *
+ * Each match has the line with the IP marker and its hash (see `RawMatch`).
+ * The last line of a live file without a line end gives no match until the
+ * game writes its line end (see `readFile`).
  *
  * `isFullRead` reads all files from their start and gives all matches again.
  */

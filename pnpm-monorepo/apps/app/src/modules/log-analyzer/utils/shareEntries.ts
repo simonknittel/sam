@@ -4,9 +4,9 @@ import {
   MAXIMUM_LOG_ANALYZER_UPLOAD_ENTRIES,
   takesTimeOfPrecedingLine,
 } from "@sam-monorepo/domain";
+import type { RawMatch } from "@sam-monorepo/remote-control-program-runtime";
 import { uploadLogAnalyzerEntries } from "../actions/uploadLogAnalyzerEntries";
 import type { IEntry } from "./PATTERNS";
-import type { RawMatch } from "./types";
 import { createUploadFormData, type UploadEntry } from "./uploadEntries";
 
 export interface PendingEntry extends UploadEntry {
@@ -24,13 +24,10 @@ export const createPendingEntries = (
       matchesByKey,
       async ([key, rawMatch]): Promise<PendingEntry> => ({
         key,
-        hash: await createLogAnalyzerEntryHash(
-          rawMatch.type,
-          rawMatch.fullMatch,
-        ),
+        hash: await createLogAnalyzerEntryHash(rawMatch.type, rawMatch.rawLine),
         isoDate: rawMatch.isoDate,
         type: rawMatch.type,
-        rawLine: rawMatch.fullMatch,
+        rawLine: rawMatch.rawLine,
         eventAt: takesTimeOfPrecedingLine(rawMatch.type)
           ? rawMatch.isoDate
           : undefined,

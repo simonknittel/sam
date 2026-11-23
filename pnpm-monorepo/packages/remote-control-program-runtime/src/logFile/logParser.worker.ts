@@ -1,5 +1,5 @@
-import { createLogFileReader } from "./logFileReader";
-import type { ParseRequest, ResultMessage, StopRequest } from "./types";
+import { createLogFileReader } from "./logFileReader.js";
+import type { ParseRequest, ResultMessage, StopRequest } from "./types.js";
 
 /**
  * The shortest time between two progress messages. A read of many small files

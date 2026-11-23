@@ -3,6 +3,7 @@
 import { useHasLinkedCitizen } from "@/modules/auth/hooks/useHasLinkedCitizen";
 import { api } from "@/trpc/react";
 import { clampLogAnalyzerDaysToLoad } from "@sam-monorepo/domain";
+import type { RawMatch } from "@sam-monorepo/remote-control-program-runtime";
 import { useRef } from "react";
 import { useLogAnalyzerContext } from "../components/LogAnalyzerContext";
 import { createEntryKey } from "../utils/PATTERNS";
@@ -13,7 +14,6 @@ import {
   type PendingEntry,
   uploadInChunks,
 } from "../utils/shareEntries";
-import type { RawMatch } from "../utils/types";
 
 /**
  * Shares the matched entries of the selected types with the other citizens.
@@ -103,7 +103,7 @@ export const useEntryUpload = () => {
     for (const rawMatch of rawMatches) {
       if (!sharingEntryTypes[rawMatch.type]) continue;
 
-      const key = createEntryKey(rawMatch.type, rawMatch.fullMatch);
+      const key = createEntryKey(rawMatch.type, rawMatch.rawLine);
       if (settledKeys.has(key) || newMatchesByKey.has(key)) continue;
 
       newMatchesByKey.set(key, rawMatch);

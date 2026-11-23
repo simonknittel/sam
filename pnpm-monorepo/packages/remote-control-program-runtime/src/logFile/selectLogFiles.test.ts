@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { getSessionStartFromFileName, selectLogFiles } from "./selectLogFiles";
+import {
+  getSessionStartFromFileName,
+  selectLogFiles,
+} from "./selectLogFiles.js";
 
 const createLogFile = (name: string, lastModified: Date, content = "") => ({
   path: `LIVE/logbackups/${name}`,

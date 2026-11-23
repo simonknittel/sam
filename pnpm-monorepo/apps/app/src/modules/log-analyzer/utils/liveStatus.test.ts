@@ -2,6 +2,7 @@ import {
   LogAnalyzerEntryType,
   matchLogAnalyzerEntryLine,
 } from "@sam-monorepo/domain";
+import { SAMPLE_LINES } from "@sam-monorepo/remote-control-program-runtime";
 import { describe, expect, test } from "vitest";
 import {
   evaluateLiveStatus,
@@ -16,7 +17,6 @@ import {
   type LiveStatusSignal,
 } from "./liveStatusSignals";
 import { deriveEntryFields, type IEntry } from "./PATTERNS";
-import { SAMPLE_LINES } from "./sampleLines";
 
 const MILLISECONDS_PER_MINUTE = 60_000;
 const START = new Date("2026-11-14T12:00:00.000Z");
