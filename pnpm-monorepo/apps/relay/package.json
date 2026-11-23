@@ -1,0 +1,37 @@
+{
+  "name": "@sam-monorepo/relay",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=.env src/index.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node --env-file-if-exists=.env dist/index.js",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@opentelemetry/api": "1.9.1",
+    "@opentelemetry/exporter-metrics-otlp-proto": "0.223.2",
+    "@opentelemetry/exporter-trace-otlp-proto": "0.223.2",
+    "@opentelemetry/sdk-metrics": "2.12.0",
+    "@opentelemetry/sdk-node": "0.223.2",
+    "@opentelemetry/sdk-trace": "2.12.0",
+    "@sam-monorepo/application": "workspace:*",
+    "@sam-monorepo/database": "workspace:*",
+    "@sam-monorepo/domain": "workspace:*",
+    "@sam-monorepo/infrastructure": "workspace:*",
+    "jose": "6.2.17",
+    "unleash-client": "6.12.2",
+    "ws": "8.23.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@testcontainers/postgresql": "12.2.1",
+    "@types/node": "24.19.2",
+    "@types/ws": "8.18.2",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vite": "8.3.8",
+    "vitest": "5.1.0"
+  }
+}
