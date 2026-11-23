@@ -107,6 +107,19 @@ can have no effect.
   After `pickFilterOption()`, press Escape only while the list is open.
 - The suite sets `reducedMotion: "reduce"`. A test of an animation must call
   `page.emulateMedia({ reducedMotion: "no-preference" })`.
+- The browser runtime of the Remote Control Program reads a log folder in
+  the origin private file system of the browser (`stubDirectoryPicker()` in
+  `fixtures/log-analyzer.ts`). It reads the folder each 10 seconds, thus a
+  new line needs `LIVE_UPLOAD_TIMEOUT` or `page.clock.fastForward()`. The
+  tabs of one browser share one runtime: a second citizen with a runtime
+  needs a second browser (`openSignedInBrowser()`). Use the helpers of
+  `fixtures/remote-control-program.ts` for the sharing popover. The name of
+  its trigger is also a part of the name of the permission "Remote Control
+  Program nutzen".
+- A test that turns off a part of the Remote Control Program uses the scope
+  of the stack, because the relay service reads the flag without a user. The
+  test turns the part on again in a `finally` block, because the next tests
+  of the worker use the same relay service.
 - The stack runs no Lambda functions and sends no EventBridge events. Test
   the delivery of notifications with unit tests.
 

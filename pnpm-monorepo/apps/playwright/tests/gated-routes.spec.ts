@@ -3,10 +3,19 @@ import { WikiPageVisibility } from "@sam-monorepo/database/client";
 import {
   createAppEvent,
   createCitizen,
+  createUserWithoutCitizen,
   createWikiPage,
   futureEvent,
 } from "../fixtures/factories";
-import { FORBIDDEN_TEXT } from "../fixtures/interactions";
+import {
+  FORBIDDEN_TEXT,
+  waitForAppShellHydration,
+} from "../fixtures/interactions";
+import {
+  LOG_ANALYZER_PAGE_PATH,
+  LOG_ANALYZER_PERMISSIONS,
+} from "../fixtures/log-analyzer";
+import { sharingPopoverTrigger } from "../fixtures/remote-control-program";
 import { expect, test } from "../fixtures/test";
 
 /**
@@ -105,6 +114,97 @@ test("permission-gated routes are closed to a citizen without permissions", asyn
     await expect(marker(page), `${route} must stay open`).toBeVisible();
     await expect(forbidden, `${route} must stay open`).toHaveCount(0);
   }
+});
+
+enum LogAnalyzerAccess {
+  Open = "open",
+  Gated = "gated",
+}
+
+/**
+ * Where the Log Analyzer shows for the signed-in user: the page, the list of
+ * the apps, the Cmd+K menu, and the trigger of the sharing popover in the
+ * top bar
+ */
+const expectLogAnalyzerAccess = async (
+  page: Page,
+  access: LogAnalyzerAccess,
+) => {
+  const isOpen = access === LogAnalyzerAccess.Open;
+
+  await page.goto(LOG_ANALYZER_PAGE_PATH);
+  /** The marker of the page is in the bundle of the Log Analyzer */
+  await expect(
+    isOpen
+      ? page.getByRole("button", { name: "Filter", exact: true })
+      : page.getByText(FORBIDDEN_TEXT),
+  ).toBeVisible();
+
+  await page.goto("/app/apps");
+  await expect(
+    page.getByRole("link", { name: "Changelog", exact: true }).first(),
+  ).toBeVisible();
+  const appLink = page
+    .locator("#main-content")
+    .getByRole("link", { name: "Log Analyzer", exact: true });
+  if (isOpen) await expect(appLink.first()).toBeVisible();
+  else await expect(appLink).toHaveCount(0);
+
+  /** The shortcut listener is only available after the hydration */
+  await waitForAppShellHydration(page);
+  await expect(sharingPopoverTrigger(page)).toHaveCount(isOpen ? 1 : 0);
+
+  const cmdK = page.getByRole("dialog", { name: "Navigation" });
+  await page.keyboard.press("ControlOrMeta+k");
+  await expect(cmdK).toBeVisible();
+  await page.keyboard.type("Log Analyzer");
+  /** The Cmd+K menu filters in the browser, thus the list is final at once */
+  await expect(
+    cmdK.getByRole("option", { name: "Log Analyzer", exact: true }),
+  ).toHaveCount(isOpen ? 1 : 0);
+  await page.keyboard.press("Escape");
+  await expect(cmdK).toBeHidden();
+};
+
+/**
+ * The Log Analyzer is a control UI of the Remote Control Program. Thus it
+ * needs `remoteControlProgram;use` next to `logAnalyzer;read`, also for the
+ * own log (M7 of the migration). The program needs a citizen, and admin mode
+ * does not replace the permission.
+ */
+test("the Log Analyzer and the sharing popover need remoteControlProgram;use", async ({
+  page,
+  prisma,
+  signIn,
+  switchUser,
+  enableAdminMode,
+}) => {
+  const withProgram = await createCitizen(prisma, {
+    handle: "mit-programm",
+    permissionStrings: LOG_ANALYZER_PERMISSIONS,
+  });
+  const withoutProgram = await createCitizen(prisma, {
+    handle: "ohne-programm",
+    permissionStrings: ["logAnalyzer;read"],
+  });
+  const adminWithoutCitizen = await createUserWithoutCitizen(prisma, {
+    name: "admin-ohne-citizen",
+    admin: true,
+  });
+
+  // The control: the same checks find the Log Analyzer with both permissions
+  await signIn(withProgram.user);
+  await expectLogAnalyzerAccess(page, LogAnalyzerAccess.Open);
+
+  await switchUser(withoutProgram.user);
+  await expectLogAnalyzerAccess(page, LogAnalyzerAccess.Gated);
+
+  await switchUser(adminWithoutCitizen);
+  await enableAdminMode();
+  await page.goto(LOG_ANALYZER_PAGE_PATH);
+  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible();
+  await waitForAppShellHydration(page);
+  await expect(sharingPopoverTrigger(page)).toHaveCount(0);
 });
 
 /**

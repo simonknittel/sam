@@ -1,16 +1,23 @@
 import type { Page } from "@playwright/test";
+import type { PrismaClient } from "@sam-monorepo/database/client";
 import { LogAnalyzerEntryType } from "@sam-monorepo/domain";
-import { createCitizen, createLogAnalyzerEntry } from "../fixtures/factories";
+import {
+  createCitizen,
+  createLogAnalyzerEntry,
+  createShareGrant,
+  type TestCitizen,
+} from "../fixtures/factories";
 import { toggleLabel } from "../fixtures/interactions";
 import {
   appendLogLines,
   applyDateRange,
+  blueprintLine,
   closeSettings,
   daysAgo,
   joinPuLine,
-  LIVE_MODE_PARSE_INTERVAL,
   LOG_ANALYZER_PAGE_PATH,
   LOG_ANALYZER_PERMISSIONS,
+  minutesAgo,
   openSettings,
   rowOf,
   selectFolder,
@@ -20,6 +27,7 @@ import {
   stubDirectoryPicker,
   tableRows,
 } from "../fixtures/log-analyzer";
+import { LOG_FOLDER_READ_INTERVAL } from "../fixtures/remote-control-program";
 import { expect, test } from "../fixtures/test";
 
 const MILLISECONDS_PER_MINUTE = 60 * 1000;
@@ -30,9 +38,6 @@ const MINUTES_PER_HOUR = 60;
  * quarters, thus it grows by a third. The factor leaves room for the gap.
  */
 const TABLE_WIDTH_GROWTH_WITHOUT_PANEL = 1.25;
-
-const minutesAgo = (minutes: number) =>
-  new Date(Date.now() - minutes * MILLISECONDS_PER_MINUTE);
 
 const FIRST_MISSION_ID = "bf7d2465-cf1e-480b-ae5c-25040d716e5f";
 const SECOND_MISSION_ID = "2d9c9ff5-cf3a-43cd-95b0-c89e4c7eac56";
@@ -51,12 +56,17 @@ const gameQuitLine = (at: Date) =>
 const liveStatus = (page: Page) =>
   page.getByRole("region", { name: "Live-Status" });
 
-const enableLiveMode = async (page: Page) => {
-  await toggleLabel(page, "Automatisch aktualisieren").click();
-  await expect(
-    page.getByRole("checkbox", { name: /Automatisch aktualisieren/ }),
-  ).toBeChecked();
-};
+/** The owner shares the log entries of the last week with the viewer */
+const shareWith = (
+  prisma: PrismaClient,
+  owner: TestCitizen,
+  viewer: TestCitizen,
+) =>
+  createShareGrant(prisma, {
+    ownerId: owner.entity.id,
+    granteeCitizenId: viewer.entity.id,
+    startsAt: daysAgo(7),
+  });
 
 test("the live status shows the open states and closes them with their end lines", async ({
   page,
@@ -94,9 +104,7 @@ test("the live status shows the open states and closes them with their end lines
     panel.getByText("Contract: Wikelo Arrive to System"),
   ).toBeVisible();
   await expect(panel.getByText("Contract: Bounty Hunt")).toBeVisible();
-  await expect(panel.getByText(/Für einen genauen Status/)).toBeVisible();
-
-  await enableLiveMode(page);
+  /** The runtime reads the own log live, thus the status needs no hint */
   await expect(panel.getByText(/Für einen genauen Status/)).toHaveCount(0);
 
   await appendLogLines(page, [
@@ -107,7 +115,7 @@ test("the live status shows the open states and closes them with their end lines
     ),
     leavingArmisticeLine(minutesAgo(0)),
   ]);
-  await page.clock.fastForward(LIVE_MODE_PARSE_INTERVAL);
+  await page.clock.fastForward(LOG_FOLDER_READ_INTERVAL);
 
   await expect(
     panel.getByText("Contract: Wikelo Arrive to System"),
@@ -116,7 +124,7 @@ test("the live status shows the open states and closes them with their end lines
   await expect(panel.getByText("Contract: Bounty Hunt")).toBeVisible();
 
   await appendLogLines(page, [gameQuitLine(minutesAgo(0))]);
-  await page.clock.fastForward(LIVE_MODE_PARSE_INTERVAL);
+  await page.clock.fastForward(LOG_FOLDER_READ_INTERVAL);
 
   await expect(panel.getByText(/^offline seit/)).toBeVisible();
   await expect(panel.getByText("Shard: EU 100")).toHaveCount(0);
@@ -142,7 +150,6 @@ test("the live status ends the session when the own log stops, and a contract fa
   ]);
   await page.goto(LOG_ANALYZER_PAGE_PATH);
   await selectFolder(page);
-  await enableLiveMode(page);
 
   const panel = liveStatus(page);
   await expect(panel.getByText("online", { exact: true })).toBeVisible();
@@ -172,6 +179,7 @@ test("the live status of another citizen ignores the type filters, and follows t
     permissionStrings: LOG_ANALYZER_PERMISSIONS,
   });
   const uploader = await createCitizen(prisma, { handle: "log-live-teiler" });
+  await shareWith(prisma, uploader, viewer);
 
   const joinPuAt = minutesAgo(20);
   const contractAt = minutesAgo(10);
@@ -187,6 +195,14 @@ test("the live status of another citizen ignores the type filters, and follows t
     eventAt: contractAt,
     createdById: uploader.entity.id,
   });
+  /** An entry of the past date range at the end of the test */
+  const pastEntryAt = daysAgo(2.5);
+  await createLogAnalyzerEntry(prisma, {
+    type: LogAnalyzerEntryType.BlueprintReceivedNotification,
+    rawLine: blueprintLine(pastEntryAt),
+    eventAt: pastEntryAt,
+    createdById: uploader.entity.id,
+  });
 
   await signIn(viewer.user);
   /** The Live-Status stands next to the table from the `2xl` breakpoint */
@@ -196,7 +212,7 @@ test("the live status of another citizen ignores the type filters, and follows t
   await openSettings(page);
   await settingToggle(
     page,
-    "Shard-Beitritt",
+    "Contract angenommen",
     SettingsColumn.ShowOthers,
   ).click();
   await closeSettings(page);
@@ -254,6 +270,7 @@ test("the table and the live status show the lines of one instant in the order o
   const uploader = await createCitizen(prisma, {
     handle: "log-live-instant-teiler",
   });
+  await shareWith(prisma, uploader, citizen);
 
   /**
    * The line of the other citizen which leaves comes first in its file. The
@@ -292,16 +309,6 @@ test("the table and the live status show the lines of one instant in the order o
     leavingArmisticeLine(spawnedAt),
   ]);
   await page.goto(LOG_ANALYZER_PAGE_PATH);
-
-  /** Without a type of other citizens, the page loads none of their entries */
-  await openSettings(page);
-  await settingToggle(
-    page,
-    "Armistice Zone",
-    SettingsColumn.ShowOthers,
-  ).click();
-  await closeSettings(page);
-
   await selectFolder(page);
 
   const reporter = (handle: string) =>

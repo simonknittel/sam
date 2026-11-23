@@ -7,23 +7,49 @@ import {
   SAVED_TEXT,
   toggleLabel,
 } from "../fixtures/interactions";
+import { stubDirectoryPicker } from "../fixtures/log-analyzer";
+import {
+  recordRelayConnections,
+  relayConnectionState,
+  REMOTE_CONTROL_PROGRAM_PERMISSION,
+  sharingPopoverSection,
+  SharingPopoverSection,
+  startBrowserRuntime,
+} from "../fixtures/remote-control-program";
 import { expect, test } from "../fixtures/test";
 
 const USER_MANAGER_PERMISSIONS = ["user;read", "user;manage"];
 
-test("banning a user revokes their sessions, unbanning lets them back in", async ({
+test("banning a user revokes their sessions and closes their runtimes, unbanning lets them back in", async ({
   page,
   prisma,
   signIn,
   switchUser,
   context,
+  openSignedInBrowser,
+  relayUrl,
 }) => {
   const admin = await createCitizen(prisma, {
     handle: "benutzer-verwalter",
     admin: true,
     permissionStrings: ["user;read"],
   });
-  const target = await createCitizen(prisma, { handle: "zu-sperrender" });
+  const target = await createCitizen(prisma, {
+    handle: "zu-sperrender",
+    permissionStrings: [REMOTE_CONTROL_PROGRAM_PERMISSION],
+  });
+
+  /**
+   * The browser runtime of the Remote Control Program in a second browser
+   * of the target holds a connection to the relay
+   */
+  const runtimePage = await openSignedInBrowser(target.user);
+  await stubDirectoryPicker(runtimePage, []);
+  const relayConnections = recordRelayConnections(runtimePage, relayUrl);
+  await runtimePage.goto("/app/dashboard");
+  await startBrowserRuntime(runtimePage);
+  await expect(relayConnectionState(runtimePage, "Verbunden")).toBeVisible();
+  expect(relayConnections.openCount()).toBe(1);
 
   /**
    * The ban's mechanism is session revocation, so the target needs a live
@@ -73,6 +99,21 @@ test("banning a user revokes their sessions, unbanning lets them back in", async
     await prisma.session.count({ where: { userId: target.user.id } }),
   ).toBe(0);
   await expect(targetRow.getByText("Gesperrt")).toBeVisible();
+
+  /**
+   * The relay closes the connection of the runtime at once, and the runtime
+   * gets no new token
+   */
+  await expect.poll(relayConnections.openCount).toBe(0);
+  await expect(relayConnectionState(runtimePage, "Getrennt")).toBeVisible();
+  await expect(
+    sharingPopoverSection(
+      runtimePage,
+      SharingPopoverSection.ThisBrowser,
+    ).getByText(
+      "Das Relay lehnt diesen Browser ab: Dir fehlt die Berechtigung, oder dein Account ist gesperrt.",
+    ),
+  ).toBeVisible();
 
   await context.clearCookies();
   await context.addCookies(targetCookies);

@@ -27,7 +27,12 @@ import {
   WikiPageUploadKind,
   WikiPageVisibility,
 } from "@sam-monorepo/database/client";
-import type { LogAnalyzerEntryType } from "@sam-monorepo/domain";
+import {
+  CapabilityId,
+  GranteeKind,
+  GrantOperation,
+  type LogAnalyzerEntryType,
+} from "@sam-monorepo/domain";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 
 export const ONE_MINUTE_MS = 60 * 1000;
@@ -1007,6 +1012,42 @@ export const createLogAnalyzerEntry = (
       lineNumber,
       hash: createHash("sha256").update(`${type}\n${rawLine}`).digest("hex"),
       createdById,
+    },
+  });
+
+interface CreateShareGrantOptions {
+  /** Citizen id of the owner of the entries */
+  readonly ownerId: string;
+  /** Citizen id of the grantee */
+  readonly granteeCitizenId: string;
+  /** A grant shows only the entries from its start (decision 8 of the concept) */
+  readonly startsAt: Date;
+  /** Null: no end */
+  readonly endsAt?: Date | null;
+}
+
+/**
+ * A grant of the Remote Control Program, as the sharing popover makes it: a
+ * citizen reads the log entries of the owner
+ */
+export const createShareGrant = (
+  prisma: PrismaClient,
+  {
+    ownerId,
+    granteeCitizenId,
+    startsAt,
+    endsAt = null,
+  }: CreateShareGrantOptions,
+) =>
+  prisma.shareGrant.create({
+    data: {
+      ownerId,
+      granteeKind: GranteeKind.citizen,
+      granteeCitizenId,
+      capabilityIds: [CapabilityId.LogEntries],
+      operations: [GrantOperation.Read],
+      startsAt,
+      endsAt,
     },
   });
 
