@@ -31,6 +31,7 @@ SAM gives access only through roles. A role has a list of permission strings. A 
 - **Role assignment**: a citizen has roles. A role can have levels. Then the role counts only when the citizen has the maximum level. A role without levels always counts.
 - **Inheritance**: a role can inherit other roles. The citizen also gets the permissions of the inherited roles, but only of the roles that the role inherits directly (one level). Thus a change of a role also changes the roles that inherit it.
 - **Clearance**: to use SAM at all, a user needs \`login;manage\` and a confirmed email. Some permissions also need the two-factor authentication (see below). The MCP server also needs \`mcp;use\`.
+- **Permissions that work only together**: the Log Analyzer needs \`logAnalyzer;read\` and \`remoteControlProgram;use\`, also for the own log. Without one of them, the Log Analyzer is not in the list of apps, and its page refuses the access. An admin who assumes a different user cannot use the Remote Control Program, thus also not the Log Analyzer.
 
 ## Two-factor authentication
 

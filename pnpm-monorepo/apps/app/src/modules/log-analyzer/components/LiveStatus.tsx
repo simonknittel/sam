@@ -20,7 +20,7 @@ export const LiveStatus = ({ className }: Props) => {
    * The clock of the list renders only the list again, thus this step runs
    * only when the entries change.
    */
-  const trackedReporters = trackLiveStatus(entries.values());
+  const trackedReporters = trackLiveStatus(entries);
 
   return (
     <section

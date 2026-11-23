@@ -64,13 +64,13 @@ const Presence = ({ reporter, now }: PresenceProps) => {
 interface Props {
   readonly reporter: Reporter;
   readonly now: Date;
-  readonly isLiveModeActive: boolean;
+  readonly isOwnLogReadLive: boolean;
 }
 
 export const LiveStatusReporter = ({
   reporter,
   now,
-  isLiveModeActive,
+  isOwnLogReadLive,
 }: Props) => {
   const isOffline = reporter.presence === LiveStatusPresence.Offline;
   const shardName = reporter.shard
@@ -84,22 +84,19 @@ export const LiveStatusReporter = ({
       })}
     >
       <div className="flex items-center justify-between gap-2">
-        {/* "Du" stands for the own entries of a user without a citizen */}
         <span
           className="min-w-0 truncate font-bold"
-          title={
-            reporter.citizen ? getCitizenDisplayName(reporter.citizen) : "Du"
-          }
+          title={getCitizenDisplayName(reporter.citizen)}
         >
-          {reporter.citizen ? <CitizenLink citizen={reporter.citizen} /> : "Du"}
+          <CitizenLink citizen={reporter.citizen} />
         </span>
         <Presence reporter={reporter} now={now} />
       </div>
 
-      {reporter.isOwn && !isLiveModeActive && !isOffline && (
+      {reporter.isOwn && !isOwnLogReadLive && !isOffline && (
         <p className="mt-1 text-xs text-white/40">
-          Für einen genauen Status &bdquo;Automatisch aktualisieren&ldquo;
-          einschalten.
+          Für einen genauen Status die Laufzeit im Remote Control Program
+          starten.
         </p>
       )}
 

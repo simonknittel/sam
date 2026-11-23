@@ -9,24 +9,16 @@ import { QuickLookToggle } from "./QuickLookToggle";
 
 interface Props {
   readonly type: LogAnalyzerEntryType;
-  readonly showSharingColumns: boolean;
-  readonly canShare: boolean;
 }
 
 /**
  * The checkboxes carry the title of the type in their name, because their
  * Ja/Nein text is their state.
  */
-export const EntryTypeSettingsRow = ({
-  type,
-  showSharingColumns,
-  canShare,
-}: Props) => {
+export const EntryTypeSettingsRow = ({ type }: Props) => {
   const {
     ownEntryTypes,
     setOwnEntryTypes,
-    sharingEntryTypes,
-    setSharingEntryTypes,
     othersEntryTypes,
     setOthersEntryTypes,
   } = useLogAnalyzerContext();
@@ -54,32 +46,16 @@ export const EntryTypeSettingsRow = ({
         />
       </td>
 
-      {showSharingColumns && (
-        <>
-          <td className="text-center">
-            <YesNoCheckbox
-              hideLabel
-              aria-label={`${title}: Teilen`}
-              checked={sharingEntryTypes[type]}
-              disabled={!canShare}
-              onChange={(event) =>
-                setSharingEntryTypes([type], event.target.checked)
-              }
-            />
-          </td>
-
-          <td className="text-center">
-            <YesNoCheckbox
-              hideLabel
-              aria-label={`${title}: Andere anzeigen`}
-              checked={othersEntryTypes[type]}
-              onChange={(event) =>
-                setOthersEntryTypes([type], event.target.checked)
-              }
-            />
-          </td>
-        </>
-      )}
+      <td className="text-center">
+        <YesNoCheckbox
+          hideLabel
+          aria-label={`${title}: Andere anzeigen`}
+          checked={othersEntryTypes[type]}
+          onChange={(event) =>
+            setOthersEntryTypes([type], event.target.checked)
+          }
+        />
+      </td>
     </TRow>
   );
 };

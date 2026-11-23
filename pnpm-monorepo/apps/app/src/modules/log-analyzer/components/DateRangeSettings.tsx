@@ -2,6 +2,7 @@
 
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
+import { useBrowserRuntime } from "@/modules/remote-control-program/runtime/useBrowserRuntime";
 import { useState } from "react";
 import { FaCalendarDays } from "react-icons/fa6";
 import type { DateRange } from "../utils/entryWindow";
@@ -18,16 +19,17 @@ const formatDateRange = ({ from, to }: DateRange) => {
 };
 
 interface Props {
-  /** See `LogSelection` */
-  readonly oldestSessionStart: number | null;
   readonly className?: string;
 }
 
 /**
  * Only the dates of the range show, so that the status stays next to the button
  */
-export const DateRangeSettings = ({ oldestSessionStart, className }: Props) => {
+export const DateRangeSettings = ({ className }: Props) => {
   const { dateRange } = useLogAnalyzerContext();
+  const runtime = useBrowserRuntime();
+  const oldestSessionStart =
+    runtime?.state.logSelection?.oldestSessionStart ?? null;
   const [isOpen, setIsOpen] = useState(false);
 
   const activeRange = formatDateRange(dateRange);

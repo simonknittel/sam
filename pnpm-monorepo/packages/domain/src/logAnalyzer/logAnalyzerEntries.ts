@@ -699,8 +699,7 @@ export const MAXIMUM_LOG_ANALYZER_UPLOAD_ENTRIES = 100;
 export const MAXIMUM_LOG_ANALYZER_RAW_LINE_LENGTH = 1_000;
 
 /**
- * Well above the 14 days the Log Analyzer reads by default. A date range uses
- * its own query, which has no such limit.
+ * Well above the 14 days that the Log Analyzer shows by default.
  */
 export const MAXIMUM_LOG_ANALYZER_DAYS_TO_LOAD = 365;
 

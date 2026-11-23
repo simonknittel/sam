@@ -100,15 +100,9 @@ export interface IEntry {
   readonly missionId: string | null;
   /** Null when the line names no contract */
   readonly contractName: string | null;
-  /**
-   * The citizen the entry belongs to: the citizen who shared it, or the
-   * current user for a local one. Null when the user has no linked citizen.
-   */
-  readonly citizen: Pick<Citizen, "id" | "handle" | "deletedAt"> | null;
-  /** True when the entry came from the server and not from the local parser. */
+  readonly citizen: Pick<Citizen, "id" | "handle" | "deletedAt">;
+  /** True when a different citizen owns the entry and shares it */
   readonly isShared: boolean;
-  /** Also true when an earlier visit shared the entry */
-  readonly isUploaded: boolean;
   /** Null when the type tells nothing */
   readonly liveStatusSignal: LiveStatusSignal | null;
   /**
@@ -823,13 +817,3 @@ export const deriveEntryFields = (
   contractName: groups.contract ? stripMarkup(groups.contract) : null,
   liveStatusSignal: PATTERNS[type].liveStatusSignal?.(groups) ?? null,
 });
-
-/**
- * The same line of the same type is one entry, also when the local parser and
- * the server deliver it.
- *
- * No value of `LogAnalyzerEntryType` holds an underscore, thus the separator
- * cannot make two different entries collide.
- */
-export const createEntryKey = (type: LogAnalyzerEntryType, rawLine: string) =>
-  `${type}_${rawLine}`;

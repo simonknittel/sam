@@ -8,7 +8,7 @@ import { Entry } from "./Entry";
 import { EntryClock } from "./EntryClock";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 
-const COLUMNS = "120px 140px 100px 200px 1fr";
+const COLUMNS = "120px 140px 200px 1fr";
 
 const ROWS_PER_PAGE = 200;
 
@@ -17,8 +17,7 @@ interface Props {
 }
 
 export const LogAnalyzerTable = ({ className }: Props) => {
-  const { entryWindowFilterFn, tableEntryFilterFn, entries } =
-    useLogAnalyzerContext();
+  const { tableEntryFilterFn, entries } = useLogAnalyzerContext();
   const [visibleRowCount, setVisibleRowCount] = useState(ROWS_PER_PAGE);
 
   /**
@@ -26,9 +25,7 @@ export const LogAnalyzerTable = ({ className }: Props) => {
    * example the end of a session, still ends a repeat
    */
   const sortedFilteredEntries = collapseRepeatedEntries(
-    Array.from(entries.values())
-      .filter(entryWindowFilterFn)
-      .toSorted(compareEntriesNewestFirst),
+    entries.toSorted(compareEntriesNewestFirst),
   ).filter(tableEntryFilterFn);
 
   const visibleEntries = sortedFilteredEntries.slice(0, visibleRowCount);
@@ -36,11 +33,10 @@ export const LogAnalyzerTable = ({ className }: Props) => {
 
   return (
     <div className={clsx("rounded-primary bg-secondary p-4", className)}>
-      <Table columns={COLUMNS} minWidth={950}>
+      <Table columns={COLUMNS} minWidth={850}>
         <THead>
           <th>Datum</th>
           <th>Reporter</th>
-          <th>Status</th>
           <th>Typ</th>
           <th>Nachricht</th>
         </THead>

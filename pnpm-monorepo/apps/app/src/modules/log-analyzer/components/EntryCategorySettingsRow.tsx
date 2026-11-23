@@ -14,7 +14,6 @@ interface CheckboxCellProps {
   readonly label: string;
   readonly types: readonly LogAnalyzerEntryType[];
   readonly enabledTypes: Record<LogAnalyzerEntryType, boolean>;
-  readonly disabled?: boolean;
   readonly onChange: (
     types: readonly LogAnalyzerEntryType[],
     isEnabled: boolean,
@@ -25,7 +24,6 @@ const CheckboxCell = ({
   label,
   types,
   enabledTypes,
-  disabled,
   onChange,
 }: CheckboxCellProps) => {
   const enabledTypeCount = types.filter((type) => enabledTypes[type]).length;
@@ -39,7 +37,6 @@ const CheckboxCell = ({
         isIndeterminate={
           enabledTypeCount > 0 && enabledTypeCount < types.length
         }
-        disabled={disabled}
         onChange={(event) => onChange(types, event.target.checked)}
       />
     </td>
@@ -48,20 +45,12 @@ const CheckboxCell = ({
 
 interface Props {
   readonly category: EntryCategory;
-  readonly showSharingColumns: boolean;
-  readonly canShare: boolean;
 }
 
-export const EntryCategorySettingsRow = ({
-  category,
-  showSharingColumns,
-  canShare,
-}: Props) => {
+export const EntryCategorySettingsRow = ({ category }: Props) => {
   const {
     ownEntryTypes,
     setOwnEntryTypes,
-    sharingEntryTypes,
-    setSharingEntryTypes,
     othersEntryTypes,
     setOthersEntryTypes,
   } = useLogAnalyzerContext();
@@ -82,24 +71,12 @@ export const EntryCategorySettingsRow = ({
         onChange={setOwnEntryTypes}
       />
 
-      {showSharingColumns && (
-        <>
-          <CheckboxCell
-            label={`Bereich ${title}: Teilen`}
-            types={types}
-            enabledTypes={sharingEntryTypes}
-            disabled={!canShare}
-            onChange={setSharingEntryTypes}
-          />
-
-          <CheckboxCell
-            label={`Bereich ${title}: Andere anzeigen`}
-            types={types}
-            enabledTypes={othersEntryTypes}
-            onChange={setOthersEntryTypes}
-          />
-        </>
-      )}
+      <CheckboxCell
+        label={`Bereich ${title}: Andere anzeigen`}
+        types={types}
+        enabledTypes={othersEntryTypes}
+        onChange={setOthersEntryTypes}
+      />
     </TRow>
   );
 };

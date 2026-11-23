@@ -19,8 +19,8 @@ import { FaChrome } from "react-icons/fa";
 import {
   FaBolt,
   FaCalendarDays,
+  FaCloudArrowUp,
   FaEye,
-  FaFileArrowUp,
   FaFilter,
   FaFolderOpen,
   FaHourglassHalf,
@@ -47,10 +47,13 @@ import { LogAnalyzerGuideEntryCategory } from "./LogAnalyzerGuideEntryCategory";
 
 interface Props {
   readonly className?: string;
-  readonly isSharingAvailable: boolean;
 }
 
-export const LogAnalyzerGuide = ({ className, isSharingAvailable }: Props) => {
+/**
+ * The rules of the sharing are the rules of the Remote Control Program (see
+ * "Log Analyzer" of `docs/remote-control-program/README.md`)
+ */
+export const LogAnalyzerGuide = ({ className }: Props) => {
   return (
     <Guide
       subtitle="Was der Log Analyzer kann und wie du ihn benutzt"
@@ -62,22 +65,20 @@ export const LogAnalyzerGuide = ({ className, isSharingAvailable }: Props) => {
         highlights={
           <>
             <GuideHighlight icon={FaLock} title="Lokal ausgewertet">
-              Deine Log-Dateien verlassen deinen Computer nicht. Der Browser
-              wertet sie aus.
+              Deine Log-Dateien verlassen deinen Computer nie. Der Browser
+              wertet sie aus, und nur die Einträge, die du teilst, gehen an SAM.
             </GuideHighlight>
 
             <GuideHighlight icon={FaBolt} title="Live während du spielst">
-              Mit <UiLabel>Automatisch aktualisieren</UiLabel> erscheinen neue
-              Einträge alle 10 Sekunden, auf Wunsch auch in einem Overlay über
+              Solange die Laufzeit des Remote Control Programs läuft, erscheinen
+              neue Einträge von selbst, auf Wunsch auch in einem Overlay über
               dem Spiel.
             </GuideHighlight>
 
-            {isSharingAvailable && (
-              <GuideHighlight icon={FaUsers} title="Gemeinsam mit anderen">
-                Teile ausgewählte Einträge und sieh, was bei den anderen
-                passiert.
-              </GuideHighlight>
-            )}
+            <GuideHighlight icon={FaUsers} title="Gemeinsam mit anderen">
+              Gib anderen Zugriff auf deine Einträge, und sieh, was bei denen
+              passiert, die mit dir teilen.
+            </GuideHighlight>
           </>
         }
         screenshot={overviewScreenshot}
@@ -90,14 +91,18 @@ export const LogAnalyzerGuide = ({ className, isSharingAvailable }: Props) => {
       >
         <GuideStepList>
           <GuideStep number={1} icon={FaChrome} title="Browser wählen">
-            Der Log Analyzer funktioniert in Google Chrome, Microsoft Edge und
-            Opera GX. Mozilla Firefox, Safari und Brave werden nicht
+            Der Log Analyzer liest deine Logs in Google Chrome, Microsoft Edge
+            und Opera GX. Mozilla Firefox, Safari und Brave werden nicht
             unterstützt.
           </GuideStep>
 
           <GuideStep number={2} icon={FaFolderOpen} title="Ordner auswählen">
-            Wähle <UiLabel icon={FaFileArrowUp}>Ordner auswählen</UiLabel> und
-            dann den Ordner deiner Star Citizen-Installation, zum Beispiel{" "}
+            Öffne das{" "}
+            <UiLabel icon={FaTowerBroadcast}>Remote Control Program</UiLabel> in
+            der oberen Leiste, auf dem Handy in der unteren. Wähle unter{" "}
+            <UiLabel>Dieser Browser</UiLabel> mit{" "}
+            <UiLabel icon={FaFolderOpen}>Ordner wählen</UiLabel> den Ordner
+            deiner Star Citizen-Installation, zum Beispiel{" "}
             {/* A path wraps only after a backslash, not inside a name */}
             <code className="font-mono text-white/90">
               …\
@@ -110,8 +115,7 @@ export const LogAnalyzerGuide = ({ className, isSharingAvailable }: Props) => {
             <code className="font-mono text-white/90">
               C:\Program Files
             </code>{" "}
-            liegen. Beim nächsten Mal genügt{" "}
-            <UiLabel>Letzten Ordner verwenden</UiLabel>.
+            liegen.
           </GuideStep>
 
           <GuideStep
@@ -119,16 +123,17 @@ export const LogAnalyzerGuide = ({ className, isSharingAvailable }: Props) => {
             icon={FaHourglassHalf}
             title="Auswertung abwarten"
           >
-            Die Auswertung beginnt sofort und liest die Logs der letzten 14
-            Tage. In der Leiste über der Tabelle siehst du, wie viele Sessions
-            der Log Analyzer liest.
+            Die Laufzeit liest sofort die Logs der letzten 14 Tage und danach
+            jede neue Zeile. Sie läuft auf jeder Seite von SAM, solange ein Tab
+            offen ist. In der Leiste über der Tabelle siehst du, wie viele
+            Sessions sie liest.
           </GuideStep>
 
           <GuideStep number={4} icon={FaRotate} title="Live bleiben">
-            Schalte <UiLabel>Automatisch aktualisieren</UiLabel> ein, damit neue
-            Einträge während des Spiels erscheinen. Mit{" "}
-            <UiLabel>Autostart</UiLabel> startet der Log Analyzer beim nächsten
-            Besuch selbst mit dem letzten Ordner.
+            Mit <UiLabel>Beim Öffnen von SAM starten</UiLabel> startet die
+            Laufzeit beim nächsten Besuch selbst mit dem letzten Ordner. Nach
+            einem Neustart des Browsers fragt er einmal nach dem Zugriff:
+            Erlaube ihn mit <UiLabel>Zugriff erlauben</UiLabel>.
           </GuideStep>
         </GuideStepList>
       </GuideSection>
@@ -142,21 +147,20 @@ export const LogAnalyzerGuide = ({ className, isSharingAvailable }: Props) => {
           features={[
             {
               icon: FaRotate,
-              title: "Automatisch aktualisieren",
+              title: "Neue Einträge",
               screenshot: liveModeScreenshot,
               screenshotAlt:
                 "Neue Einträge mit der Markierung „Neu“ oben in der Tabelle",
               content:
-                "Der Log Analyzer liest die Logs alle 10 Sekunden. Neue Einträge bekommen für kurze Zeit eine Markierung, damit du sie sofort siehst.",
+                "Die Laufzeit liest neue Zeilen sofort, und die Einträge der anderen kommen in Echtzeit. Neue Einträge bekommen für kurze Zeit eine Markierung, damit du sie sofort siehst.",
             },
             {
               icon: FaFilter,
-              title: isSharingAvailable ? "Filter & Teilen" : "Filter",
+              title: "Filter",
               screenshot: filterScreenshot,
-              screenshotAlt: "Der Dialog mit den Einstellungen für jeden Typ",
-              content: isSharingAvailable
-                ? "Lege für jeden Typ fest, ob die Tabelle deine Einträge zeigt, ob du sie teilst und ob du die Einträge anderer siehst. Einzelne Citizens kannst du ausblenden."
-                : "Lege für jeden Typ fest, ob die Tabelle seine Einträge zeigt.",
+              screenshotAlt: "Der Dialog mit den Filtern für jeden Typ",
+              content:
+                "Lege für jeden Typ fest, ob die Tabelle deine Einträge und die Einträge anderer zeigt. Einzelne Citizens kannst du ausblenden. Die Filter ändern nicht, was du teilst.",
             },
             {
               icon: FaEye,
@@ -172,18 +176,25 @@ export const LogAnalyzerGuide = ({ className, isSharingAvailable }: Props) => {
               title: "Live-Status",
               screenshot: liveStatusScreenshot,
               screenshotAlt: "Der Live-Status mit drei Citizens",
-              content: isSharingAvailable
-                ? "Zeigt für dich und jeden Citizen, dessen Einträge du siehst, was gerade aktiv ist: Shard, Zonen, Instanzen und laufende Contracts."
-                : "Zeigt, was bei dir gerade aktiv ist: Shard, Zonen, Instanzen und laufende Contracts.",
+              content:
+                "Zeigt für dich und jeden Citizen, der mit dir teilt, was gerade aktiv ist: Shard, Zonen, Instanzen und laufende Contracts.",
             },
             {
               icon: FaCalendarDays,
               title: "Zeitraum",
               screenshot: dateRangeScreenshot,
               screenshotAlt: "Der Dialog für den Zeitraum mit den Vorlagen",
-              content: isSharingAvailable
-                ? "Ohne Zeitraum siehst du die letzten 14 Tage. Wähle einen Zeitraum, um ältere Logs auszuwerten. Deine älteren Einträge kannst du danach mit einem Klick teilen."
-                : "Ohne Zeitraum siehst du die letzten 14 Tage. Wähle einen Zeitraum, um ältere Logs auszuwerten.",
+              content: (
+                <>
+                  Ohne Zeitraum siehst du die letzten 14 Tage. Wähle einen
+                  Zeitraum, um ältere Logs auszuwerten. Mit{" "}
+                  <UiLabel icon={FaCloudArrowUp}>
+                    Ältere Einträge teilen
+                  </UiLabel>{" "}
+                  teilst du die Einträge des Zeitraums, die nicht automatisch
+                  hochgeladen wurden.
+                </>
+              ),
             },
             {
               icon: FaWindowRestore,
@@ -214,29 +225,48 @@ export const LogAnalyzerGuide = ({ className, isSharingAvailable }: Props) => {
         </ul>
       </GuideSection>
 
-      {isSharingAvailable && (
-        <GuideSection heading="Was geteilt wird">
-          <GuideNoteList>
-            <GuideNote>
-              Es werden nie Log-Dateien hochgeladen. Nur die Einträge der Typen,
-              die du unter{" "}
-              <UiLabel icon={FaFilter}>Filter &amp; Teilen</UiLabel> teilst,
-              gehen an den Server.
-            </GuideNote>
+      <GuideSection
+        heading="Was geteilt wird"
+        lead="Du entscheidest im Remote Control Program, was deinen Computer verlässt und wer es sieht."
+      >
+        <GuideNoteList>
+          <GuideNote>
+            Es werden nie Log-Dateien hochgeladen. Nur die Einträge der Typen,
+            die du unter <UiLabel>Was dieser Browser hochlädt</UiLabel>{" "}
+            einschaltest, gehen an SAM. Alle Typen sind zuerst aus. IP-Adressen
+            entfernt der Browser vorher aus den Einträgen.
+          </GuideNote>
 
-            <GuideNote>
-              Geteilte Einträge sind für alle mit Zugriff auf den Log Analyzer
-              sichtbar. Einträge, die älter als 14 Tage sind, teilt der Log
-              Analyzer nur, wenn du es selbst auslöst.
-            </GuideNote>
+          <GuideNote>
+            Automatisch geht nur hoch, was die Laufzeit live liest. Die Zeilen
+            aus einer Zeit, in der kein Tab von SAM offen war oder du alles
+            gestoppt hattest, bleiben auf deinem Computer. Ältere Einträge gehen
+            nur hoch, wenn du sie mit{" "}
+            <UiLabel icon={FaCloudArrowUp}>Ältere Einträge teilen</UiLabel>{" "}
+            anforderst und bestätigst.
+          </GuideNote>
 
-            <GuideNote variant={GuideNoteVariant.Warning}>
-              Ein geteilter Eintrag kann nicht zurückgezogen werden. Wenn du das
-              Teilen ausschaltest, werden keine weiteren Einträge hochgeladen.
-            </GuideNote>
-          </GuideNoteList>
-        </GuideSection>
-      )}
+          <GuideNote>
+            Deine Einträge sehen nur die, denen du unter{" "}
+            <UiLabel>Mit anderen geteilt</UiLabel> Zugriff gibst: einzelne
+            Citizens, eine Rolle oder alle, auf Wunsch nur für eine bestimmte
+            Zeit. Ebenso siehst du die Einträge anderer nur, wenn sie dir
+            Zugriff geben. Einen Zugriff kannst du jederzeit beenden.
+          </GuideNote>
+
+          <GuideNote>
+            Mit dem Remote Control Program hat das Teilen neu begonnen. Deine
+            alten Einstellungen zum Teilen gelten nicht mehr, und deine früher
+            geteilten Einträge sehen andere erst wieder, wenn du ihnen Zugriff
+            gibst. Ein Zugriff kann auch in der Vergangenheit beginnen.
+          </GuideNote>
+
+          <GuideNote variant={GuideNoteVariant.Warning}>
+            Ein hochgeladener Eintrag kann nicht gelöscht werden. Wenn du einen
+            Typ ausschaltest oder alles stoppst, geht nichts Neues mehr hoch.
+          </GuideNote>
+        </GuideNoteList>
+      </GuideSection>
     </Guide>
   );
 };

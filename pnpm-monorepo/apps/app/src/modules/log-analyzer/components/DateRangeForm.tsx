@@ -24,7 +24,7 @@ interface Props {
  * would then read all logs. A preset has no such step, thus it applies at once.
  */
 export const DateRangeForm = ({ oldestSessionStart, onClose }: Props) => {
-  const { today, daysToLoad, dateRange, setDateRange, isSharedViewEnabled } =
+  const { today, daysToLoad, dateRange, setDateRange } =
     useLogAnalyzerContext();
 
   const [from, setFrom] = useState(dateRange.from ?? "");
@@ -42,14 +42,14 @@ export const DateRangeForm = ({ oldestSessionStart, onClose }: Props) => {
     applyDateRange(selectedRange);
   };
 
+  /**
+   * Only for the preset of all log files: the entries of the relay can be
+   * older than the log files of this browser, thus the inputs have no lower
+   * limit
+   */
   const oldestLogDay = oldestSessionStart
     ? getLocalDateKey(new Date(oldestSessionStart), ORGANIZATION_TIMEZONE)
     : null;
-
-  /** The shared entries can be older than the local log files */
-  const oldestDate = isSharedViewEnabled
-    ? undefined
-    : (oldestLogDay ?? undefined);
 
   const isUnchanged =
     selectedRange.from === dateRange.from && selectedRange.to === dateRange.to;
@@ -66,16 +66,7 @@ export const DateRangeForm = ({ oldestSessionStart, onClose }: Props) => {
             key={preset.label}
             type="button"
             variant={Button2Variant.Secondary}
-            disabled={oldestDate !== undefined && preset.to < oldestDate}
-            onClick={() =>
-              applyDateRange({
-                from:
-                  oldestDate && preset.from < oldestDate
-                    ? oldestDate
-                    : preset.from,
-                to: preset.to,
-              })
-            }
+            onClick={() => applyDateRange({ from: preset.from, to: preset.to })}
           >
             {preset.label}
           </Button2>
@@ -89,7 +80,6 @@ export const DateRangeForm = ({ oldestSessionStart, onClose }: Props) => {
             labelClassName="text-sm text-white/60"
             className="mt-1"
             value={from}
-            min={oldestDate}
             max={to || today}
             onChange={(event) => setFrom(event.target.value)}
           />
@@ -101,7 +91,7 @@ export const DateRangeForm = ({ oldestSessionStart, onClose }: Props) => {
             labelClassName="text-sm text-white/60"
             className="mt-1"
             value={to}
-            min={from || oldestDate}
+            min={from || undefined}
             max={today}
             onChange={(event) => setTo(event.target.value)}
           />

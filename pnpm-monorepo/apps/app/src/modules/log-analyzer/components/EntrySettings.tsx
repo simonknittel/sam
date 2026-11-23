@@ -1,6 +1,5 @@
 "use client";
 
-import { useHasLinkedCitizen } from "@/modules/auth/hooks/useHasLinkedCitizen";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import { Table, TBody, THead } from "@/modules/common/components/Table";
@@ -10,19 +9,13 @@ import { ENTRY_TYPES_BY_CATEGORY, EntryCategory } from "../utils/PATTERNS";
 import { CitizenFilters } from "./CitizenFilters";
 import { EntryCategorySettingsRow } from "./EntryCategorySettingsRow";
 import { EntryTypeSettingsRow } from "./EntryTypeSettingsRow";
-import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 
 interface Props {
   readonly className?: string;
 }
 
 export const EntrySettings = ({ className }: Props) => {
-  const { isSharingAvailable } = useLogAnalyzerContext();
-  const hasLinkedCitizen = useHasLinkedCitizen();
   const [isOpen, setIsOpen] = useState(false);
-
-  const title = isSharingAvailable ? "Filter & Teilen" : "Filter";
-  const columns = isSharingAvailable ? "1fr 8rem 8rem 8rem" : "1fr 8rem";
 
   return (
     <>
@@ -33,60 +26,41 @@ export const EntrySettings = ({ className }: Props) => {
         className={className}
       >
         <FaFilter />
-        {title}
+        Filter
       </Button2>
 
       <Modal
         isOpen={isOpen}
         onRequestClose={() => setIsOpen(false)}
-        heading={title}
-        className="w-200"
+        heading="Filter"
+        className="w-160"
       >
-        {isSharingAvailable && (
-          <p className="mb-4 text-sm text-white/60">
-            {hasLinkedCitizen
-              ? "Die Einträge der Typen mit aktiviertem Teilen werden auf den Server hochgeladen und sind für andere sichtbar."
-              : "Zum Teilen muss dein Account mit einem Spynet-Citizen verknüpft sein."}
-          </p>
-        )}
+        <p className="mb-4 text-sm text-white/60">
+          Die Filter ändern nur, was die Tabelle zeigt. Was du teilst, stellst
+          du im Remote Control Program ein.
+        </p>
 
-        <Table columns={columns}>
+        <Table columns="1fr 8rem 8rem">
           <THead>
             <th>Typ</th>
             <th className="text-center">Eigene anzeigen</th>
-            {isSharingAvailable && (
-              <>
-                <th className="text-center">Teilen</th>
-                <th className="text-center">Andere anzeigen</th>
-              </>
-            )}
+            <th className="text-center">Andere anzeigen</th>
           </THead>
 
           <TBody className="text-sm">
             {Object.values(EntryCategory).map((category) => (
               <Fragment key={category}>
-                <EntryCategorySettingsRow
-                  category={category}
-                  showSharingColumns={isSharingAvailable}
-                  canShare={isSharingAvailable && hasLinkedCitizen}
-                />
+                <EntryCategorySettingsRow category={category} />
 
                 {ENTRY_TYPES_BY_CATEGORY[category].map((type) => (
-                  <EntryTypeSettingsRow
-                    key={type}
-                    type={type}
-                    showSharingColumns={isSharingAvailable}
-                    canShare={isSharingAvailable && hasLinkedCitizen}
-                  />
+                  <EntryTypeSettingsRow key={type} type={type} />
                 ))}
               </Fragment>
             ))}
           </TBody>
         </Table>
 
-        {isSharingAvailable && (
-          <CitizenFilters className="mt-4 border-t border-white/20 pt-4" />
-        )}
+        <CitizenFilters className="mt-4 border-t border-white/20 pt-4" />
       </Modal>
     </>
   );

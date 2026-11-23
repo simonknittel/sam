@@ -11,7 +11,7 @@ import { OverlayEntry } from "./OverlayEntry";
 import { OverlayWindow } from "./OverlayWindow";
 
 /**
- * Live mode marks entries as new for the whole session. The small overlay
+ * The entries since the open of the Log Analyzer are new. The small overlay
  * shows only the newest of them.
  */
 const MAXIMUM_OVERLAY_ENTRIES = 200;
@@ -24,8 +24,7 @@ export const OverlayButton = ({ className }: Props) => {
   const { isSupported, requestPipWindow, pipWindow, closePipWindow } =
     useOverlay();
 
-  const { entries, entryWindowFilterFn, entryFilterFn } =
-    useLogAnalyzerContext();
+  const { entries, entryFilterFn } = useLogAnalyzerContext();
 
   /**
    * The overlay closes only when the button unmounts. A cleanup with
@@ -57,9 +56,7 @@ export const OverlayButton = ({ className }: Props) => {
       repeat of an older entry does not show as new. The filters of the types
       come after them (see `collapseRepeatedEntries`). */
   const newEntries = collapseRepeatedEntries(
-    Array.from(entries.values().filter(entryWindowFilterFn)).toSorted(
-      compareEntriesNewestFirst,
-    ),
+    entries.toSorted(compareEntriesNewestFirst),
   )
     .filter((entry) => entry.isNew && entryFilterFn(entry))
     .slice(0, MAXIMUM_OVERLAY_ENTRIES);
@@ -85,7 +82,7 @@ export const OverlayButton = ({ className }: Props) => {
               ))
             ) : (
               <div className="p-2 text-center text-sm text-neutral-500">
-                Neue Logs aus der aktuellen Session werden hier angezeigt.
+                Neue Einträge seit dem Öffnen des Log Analyzers erscheinen hier.
               </div>
             )}
           </section>

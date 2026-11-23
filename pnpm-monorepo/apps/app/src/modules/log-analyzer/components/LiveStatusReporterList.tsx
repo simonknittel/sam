@@ -30,7 +30,7 @@ export const LiveStatusReporterList = ({
     isSharedViewEnabled,
     hiddenCitizenIds,
     ownLogLineAt,
-    isLiveModeActive,
+    isOwnLogReadLive,
   } = useLogAnalyzerContext();
   const now = useNow({ updateInterval: CLOCK_INTERVAL_MS });
 
@@ -38,16 +38,14 @@ export const LiveStatusReporterList = ({
   const isReporterVisible = (reporter: Reporter) => {
     if (reporter.isOwn) return isOwnReporterVisible;
     return (
-      isSharedViewEnabled &&
-      reporter.citizen !== null &&
-      !hiddenCitizenIds.includes(reporter.citizen.id)
+      isSharedViewEnabled && !hiddenCitizenIds.includes(reporter.citizen.id)
     );
   };
 
   const reporters = evaluateLiveStatus(trackedReporters, {
     now,
     ownLogLineAt,
-    isLiveModeActive,
+    isOwnLogReadLive,
   }).filter(isReporterVisible);
 
   if (reporters.length <= 0)
@@ -64,7 +62,7 @@ export const LiveStatusReporterList = ({
           key={reporter.key}
           reporter={reporter}
           now={now}
-          isLiveModeActive={isLiveModeActive}
+          isOwnLogReadLive={isOwnLogReadLive}
         />
       ))}
     </ul>

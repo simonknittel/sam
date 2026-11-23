@@ -18,7 +18,7 @@ export const OverlayEntry = ({ entry }: Props) => {
         </span>{" "}
         {/* The overlay lives in its own window, thus it uses plain text
             instead of the citizen link with its popover. */}
-        {entry.isShared && entry.citizen && (
+        {entry.isShared && (
           <span className="text-white/40">
             {getCitizenDisplayName(entry.citizen)}{" "}
           </span>

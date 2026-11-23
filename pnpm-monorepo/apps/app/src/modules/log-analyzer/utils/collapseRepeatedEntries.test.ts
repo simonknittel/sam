@@ -33,7 +33,6 @@ const entry = (
   contractName: null,
   citizen: { id: citizenId, handle: citizenId, deletedAt: null },
   isShared: false,
-  isUploaded: false,
   liveStatusSignal,
   lineNumber: null,
 });

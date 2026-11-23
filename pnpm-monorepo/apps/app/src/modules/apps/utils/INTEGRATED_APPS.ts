@@ -1,4 +1,5 @@
 import accountScreenshot from "@/modules/account/assets/screenshot.png";
+import { getOptionalRequestActor } from "@/modules/application";
 import avatarCreatorScreenshot from "@/modules/avatar-creator/assets/screenshot.png";
 import calendarScreenshot from "@/modules/calendar/assets/screenshot.png";
 import careerScreenshot from "@/modules/career/assets/screenshot.png";
@@ -19,6 +20,7 @@ import spynetScreenshot from "@/modules/spynet/assets/screenshot.png";
 import tasksScreenshot from "@/modules/tasks/assets/screenshot.png";
 import timezonesScreenshot from "@/modules/timezones/assets/screenshot.png";
 import wikiScreenshot from "@/modules/wiki/assets/screenshot.png";
+import { canUseRemoteControlProgram } from "@sam-monorepo/application";
 import type { IntegratedApp } from "./types";
 
 /**
@@ -148,6 +150,11 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
       "Wertet die Game Logs von Star Citizen aus um wichtige Ereignisse zu erkennen.",
     tags: ["security"],
     permissionStrings: ["logAnalyzer;read"],
+    /** The page also needs the Remote Control Program (M7) */
+    hasAccess: async () => {
+      const actor = await getOptionalRequestActor();
+      return actor !== null && canUseRemoteControlProgram(actor);
+    },
   },
   {
     name: "Benachrichtigungen",

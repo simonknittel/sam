@@ -1,7 +1,4 @@
-import type {
-  LogSelection,
-  ReadProgress,
-} from "@sam-monorepo/remote-control-program-runtime";
+import { useBrowserRuntime } from "@/modules/remote-control-program/runtime/useBrowserRuntime";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 
 const BYTES_PER_MEGABYTE = 1_000_000;
@@ -13,22 +10,15 @@ const megabyteFormat = new Intl.NumberFormat("de-DE", {
 const formatMegabytes = (byteCount: number) =>
   megabyteFormat.format(byteCount / BYTES_PER_MEGABYTE);
 
-interface Props {
-  readonly logSelection: LogSelection | null;
-  readonly readProgress: ReadProgress | null;
-  readonly isLoadingSharedEntries: boolean;
-}
-
 /**
  * The lines are items of the toolbar, thus the short ones stay next to the
  * buttons.
  */
-export const ReadStatus = ({
-  logSelection,
-  readProgress,
-  isLoadingSharedEntries,
-}: Props) => {
-  const { isLivePaused } = useLogAnalyzerContext();
+export const ReadStatus = () => {
+  const { isLivePaused, feed } = useLogAnalyzerContext();
+  const runtime = useBrowserRuntime();
+  const readProgress = runtime?.state.readProgress ?? null;
+  const logSelection = runtime?.state.logSelection ?? null;
 
   /** A live read holds one file and ends at once */
   const isLargeRead = readProgress !== null && readProgress.fileCount > 1;
@@ -50,14 +40,14 @@ export const ReadStatus = ({
         )
       )}
 
-      {isLoadingSharedEntries && (
-        <p className="text-sm text-white/60">Lade geteilte Einträge …</p>
+      {feed.isLoading && (
+        <p className="text-sm text-white/60">Lade Einträge …</p>
       )}
 
       {isLivePaused && (
         <p className="w-full text-sm text-white/60">
-          Automatisch aktualisieren ist pausiert, weil der Zeitraum in der
-          Vergangenheit endet.
+          Neue Einträge erscheinen nicht, weil der Zeitraum in der Vergangenheit
+          endet.
         </p>
       )}
     </>
