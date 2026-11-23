@@ -3,6 +3,7 @@
 import type { ActionResponse } from "@/modules/actions/utils/createAction";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { loadSharingPopover } from "../../actions/loadSharingPopover";
+import { useIsRemoteControlProgramAvailable } from "../../runtime/useBrowserRuntime";
 
 const SHARING_POPOVER_QUERY_KEY = ["remoteControlProgram", "sharingPopover"];
 
@@ -21,12 +22,14 @@ const fetchSharingPopover = async () => {
  * mark of the "Stop all". The content of the popover mounts at each open,
  * and the data is stale at once, thus each open fetches it again: the
  * presence of the runtimes changes all the time. The actions of the popover
- * refresh no page (see `useSharingPopoverAction()`).
+ * refresh no page (see `useSharingPopoverAction()`). Without the Remote
+ * Control Program, nothing reads the data.
  */
 export const useSharingPopoverQuery = () =>
   useQuery({
     queryKey: SHARING_POPOVER_QUERY_KEY,
     queryFn: fetchSharingPopover,
+    enabled: useIsRemoteControlProgramAvailable(),
     // A retry does not repair a failed server action, for example after a release. The popover shows a button to try again.
     retry: false,
   });

@@ -46,6 +46,11 @@ export interface LogFolderStatus {
 
 /** The state that the tab of the runtime sends to the other tabs */
 export interface LeaderState extends BrowserRuntimeState {
+  /**
+   * The id of the runtime of this browser (`OwnRuntime.runtimeId` of the
+   * sharing popover). Null until a tab has the runtime.
+   */
+  readonly runtimeId: string | null;
   readonly folder: LogFolderStatus;
   /**
    * The runtime must run (the autostart, a start, or the continuation after

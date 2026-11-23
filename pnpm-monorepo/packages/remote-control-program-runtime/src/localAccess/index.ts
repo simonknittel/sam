@@ -11,6 +11,7 @@ export {
   type LocalAccessSettings,
   type OlderEntriesRequest,
   type OlderEntriesTimeRange,
+  type StopReadingOptions,
 } from "./localAccessLayer.js";
 export {
   LIVE_PERIODS_STORAGE_KEY,

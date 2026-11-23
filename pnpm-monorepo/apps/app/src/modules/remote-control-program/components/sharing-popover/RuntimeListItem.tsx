@@ -10,10 +10,12 @@ import {
 
 interface Props {
   readonly runtime: OwnRuntime;
+  /** The runtime of the browser that shows the popover */
+  readonly isThisBrowser: boolean;
 }
 
 /** A runtime of the owner in the status section */
-export const RuntimeListItem = ({ runtime }: Props) => {
+export const RuntimeListItem = ({ runtime, isThisBrowser }: Props) => {
   const versionText = `Version ${runtime.runtimeVersion}`;
 
   return (
@@ -36,6 +38,12 @@ export const RuntimeListItem = ({ runtime }: Props) => {
           {RUNTIME_KIND_LABELS[runtime.kind]}
           {runtime.isOnline ? " (online)" : " (offline)"}
         </span>
+
+        {isThisBrowser && (
+          <span className="flex-none rounded-secondary bg-white/10 px-1.5 text-xs text-neutral-300">
+            dieser Browser
+          </span>
+        )}
 
         <span
           className="ml-auto min-w-0 truncate text-neutral-500"

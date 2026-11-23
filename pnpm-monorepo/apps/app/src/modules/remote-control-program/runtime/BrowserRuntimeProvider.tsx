@@ -2,6 +2,7 @@
 
 import { env } from "@/env";
 import { createContext, useEffect, useState, type ReactNode } from "react";
+import { SharingPopoverProvider } from "../components/sharing-popover/SharingPopoverProvider";
 import { BrowserRuntimeController } from "./BrowserRuntimeController";
 
 /** The version in the `hello` of the relay protocol */
@@ -22,7 +23,8 @@ interface Props {
 
 /**
  * The browser runtime of the Remote Control Program on all SAM pages (see
- * `README.md`)
+ * `README.md`), and the open state of the sharing popover, which the control
+ * UIs share with the items of the shell
  */
 export const BrowserRuntimeProvider = ({ isEnabled, children }: Props) => {
   const [controller] = useState(
@@ -40,7 +42,9 @@ export const BrowserRuntimeProvider = ({ isEnabled, children }: Props) => {
 
   return (
     <BrowserRuntimeContext value={isEnabled ? controller : null}>
-      {children}
+      <SharingPopoverProvider isEnabled={isEnabled}>
+        {children}
+      </SharingPopoverProvider>
     </BrowserRuntimeContext>
   );
 };

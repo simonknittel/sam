@@ -30,6 +30,7 @@ import {
   type LocalAccessLayer,
   type LocalAccessSettings,
   type OlderEntriesTimeRange,
+  type StopReadingOptions,
 } from "../localAccess/localAccessLayer.js";
 import type { LocalAccessStorage } from "../localAccess/localAccessStorage.js";
 import type { LogSelection } from "../logFile/selectLogFiles.js";
@@ -502,7 +503,8 @@ export class BrowserRuntime {
     if (this.#isDisposed) return;
     if (this.#state.isRunning) {
       if (folder === this.#folder) return;
-      this.#stopReading();
+      // The owner selected a different folder: no line of the new folder continues the period of the previous folder
+      this.#stopReading({ canContinue: false });
     }
 
     if (folder !== this.#folder) this.#useFolder(folder);
@@ -529,10 +531,23 @@ export class BrowserRuntime {
     void this.#read();
   }
 
-  /** The owner stops the runtime. The next runtime of this browser stays stopped. */
+  /**
+   * The owner stops the runtime, or the tab lost the access to the folder.
+   * The live period ends without a continuation: a next start, also within
+   * `TAB_CHANGE_GAP_MILLISECONDS`, starts a new period, and the entries of
+   * the stopped time stay on the machine (decision 6 of the plan). The next
+   * runtime of this browser stays stopped.
+   */
   stop() {
+    if (this.#isDisposed) return;
+
     this.#isWaitingForStart = false;
-    if (this.#state.isRunning) this.#stopReading();
+    if (this.#state.isRunning) {
+      this.#stopReading({ canContinue: false });
+    } else {
+      // A runtime that did not read yet must not let a next start continue the period of the previous runtime
+      this.#layer.stopReading({ canContinue: false });
+    }
     this.#writeRunRecord();
   }
 
@@ -550,13 +565,14 @@ export class BrowserRuntime {
 
   /**
    * The tab loses the runtime, for example when it closes. The next runtime
-   * continues the state of this runtime.
+   * continues the state of this runtime, and its live period within
+   * `TAB_CHANGE_GAP_MILLISECONDS`.
    */
   handOver() {
     if (this.#isDisposed) return;
 
     const shouldRun = this.#state.isRunning || this.#isWaitingForStart;
-    if (this.#state.isRunning) this.#stopReading();
+    if (this.#state.isRunning) this.#stopReading({ canContinue: true });
     this.#writeRunRecord(shouldRun);
     this.#dispose();
   }
@@ -729,17 +745,17 @@ export class BrowserRuntime {
   }
 
   /**
-   * A stop of the owner and a hand-over end the live period in the same way:
-   * a next runtime can continue it within `TAB_CHANGE_GAP_MILLISECONDS`
+   * Only a hand-over lets a next runtime continue the live period (see
+   * `LocalAccessLayer.stopReading`)
    */
-  #stopReading() {
+  #stopReading(options: StopReadingOptions) {
     this.#runGeneration += 1;
     this.#cancelReadTimer?.();
     this.#cancelReadTimer = null;
     this.#cancelRelayRetry?.();
     this.#cancelRelayRetry = null;
     this.#reader?.stopRead();
-    this.#layer.stopReading();
+    this.#layer.stopReading(options);
 
     this.#channel?.disconnect();
     this.#prefetchedToken = null;

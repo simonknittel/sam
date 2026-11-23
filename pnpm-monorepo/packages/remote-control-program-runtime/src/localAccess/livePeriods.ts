@@ -20,8 +20,9 @@ export const LIVE_PERIOD_HEARTBEAT_INTERVAL_MILLISECONDS = 10_000;
 
 /**
  * A new runtime continues the last period when the previous runtime ended
- * it, or sent its last heartbeat, not more than this time before. Thus a
- * change of the active tab makes no gap: the Web Locks API gives the lock to
+ * it for a change of the active tab, or sent its last heartbeat, not more
+ * than this time before. A stop of the owner ends the period without a
+ * continuation. Thus a change of the active tab makes no gap: the Web Locks API gives the lock to
  * the next tab immediately, and the next tab needs some seconds for the
  * `welcome` of the relay. A crashed tab ended its period at its last
  * heartbeat, thus the limit is 3 heartbeat intervals. The limit is short,
@@ -50,8 +51,8 @@ export const OWN_HEARTBEAT_GAP_MILLISECONDS = 180_000;
 export const LIVE_PERIOD_RETENTION_MILLISECONDS = 7 * 24 * 60 * 60 * 1_000;
 
 /**
- * Only a start without a continuation, a "Stop all" and a stop of the relay
- * start a new period. 100 periods are approximately 14 periods each day
+ * Only a start without a continuation, a stop of the owner, a "Stop all" and
+ * a stop of the relay start a new period. 100 periods are approximately 14 periods each day
  * during the retention time, and approximately 8 KB in the storage, which the
  * runtime writes at each heartbeat. Above the limit, the oldest periods go:
  * their entries then go up only on an explicit request.
@@ -72,8 +73,9 @@ export interface LivePeriods {
   readonly periods: readonly LivePeriod[];
   /**
    * A runtime read live until the end of the last period, and no "Stop all"
-   * ended it: the period is open or the runtime ended. A runtime can
-   * continue the period (see `TAB_CHANGE_GAP_MILLISECONDS`).
+   * and no stop of the owner ended it: the period is open, or the runtime
+   * ended for a change of the active tab. A runtime can continue the period
+   * (see `TAB_CHANGE_GAP_MILLISECONDS`).
    */
   readonly canContinueLastPeriod: boolean;
 }

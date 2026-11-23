@@ -2,6 +2,8 @@
 
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useBrowserRuntime } from "../../runtime/useBrowserRuntime";
+import { useSharingPopoverOpenState } from "./SharingPopoverProvider";
 import { useSharingPopoverQuery } from "./useSharingPopoverQuery";
 
 /** The accessible name of the popover and of its triggers */
@@ -10,10 +12,15 @@ export const SHARING_POPOVER_TITLE = "Remote Control Program";
 /**
  * The open state of the sharing popover and the state of its trigger, for
  * the item of the top bar and the item of the mobile action bar
+ *
+ * @param canActOnRequest The surface is visible: it opens when a control UI
+ * opens the popover (see `useSharingPopoverOpenState()`)
  */
-export const useSharingPopoverTrigger = () => {
+export const useSharingPopoverTrigger = (canActOnRequest: boolean) => {
   const { data } = useSharingPopoverQuery();
-  const [isOpen, setIsOpen] = useState(false);
+  const runtime = useBrowserRuntime();
+  const { isOpen, setIsOpen, changeOpenByUser } =
+    useSharingPopoverOpenState(canActOnRequest);
 
   /**
    * The links of the popover (for example a citizen of a grant) do not close
@@ -28,13 +35,22 @@ export const useSharingPopoverTrigger = () => {
   }
 
   const isStopped = Boolean(data?.stoppedAt);
+  /** The owner does not see the runtime, thus the trigger shows the note */
+  const isWaitingForFolderPermission =
+    runtime?.state.isWaitingForFolderPermission ?? false;
+  const notes = [
+    ...(isStopped ? ["alles gestoppt"] : []),
+    ...(isWaitingForFolderPermission ? ["Ordnerzugriff nötig"] : []),
+  ];
 
   return {
     isOpen,
-    setIsOpen,
+    onOpenChange: changeOpenByUser,
     isStopped,
-    triggerLabel: isStopped
-      ? `${SHARING_POPOVER_TITLE}: alles gestoppt`
-      : SHARING_POPOVER_TITLE,
+    isWaitingForFolderPermission,
+    triggerLabel:
+      notes.length > 0
+        ? `${SHARING_POPOVER_TITLE}: ${notes.join(", ")}`
+        : SHARING_POPOVER_TITLE,
   };
 };

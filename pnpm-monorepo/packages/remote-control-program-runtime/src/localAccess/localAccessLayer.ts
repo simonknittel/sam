@@ -59,6 +59,11 @@ export interface LocalAccessSettings {
   readonly stoppedAt: Date | null;
 }
 
+export interface StopReadingOptions {
+  /** Only a change of the active tab lets a next runtime continue the period */
+  readonly canContinue: boolean;
+}
+
 export interface LocalAccessLayerOptions {
   readonly storage: LocalAccessStorage;
   /** The clock. The tests give their own clock. */
@@ -160,8 +165,11 @@ export const createLocalAccessLayer = ({
   /**
    * Brings the stored periods in line with the reading, the stops and the
    * clock
+   *
+   * @param canContinue False when the end of the reading must not let a
+   * next runtime continue the last period (see `stopReading`)
    */
-  const updatePeriods = () => {
+  const updatePeriods = (canContinue = true) => {
     const time = getTime();
     const rules = readLocalAccessRules(storage);
     const livePeriods = readPeriods(time);
@@ -178,15 +186,15 @@ export const createLocalAccessLayer = ({
     if (isOpenWanted) {
       nextLivePeriods = continueOrStartPeriod(livePeriods, time, gapLimit);
     } else if (isOwnPeriodStillOpen) {
-      // Only the end of the reading lets a next runtime continue the period
+      // Only the end of the reading for a change of the active tab lets a next runtime continue the period
       nextLivePeriods = endLastPeriod(
         livePeriods,
         rules.stoppedAt ?? time,
         gapLimit,
-        rules.stoppedAt === null && isRelayStopped === false,
+        canContinue && rules.stoppedAt === null && isRelayStopped === false,
       );
-    } else if (rules.stoppedAt !== null) {
-      // A "Stop all" in a tab that does not extend the period: no runtime can continue it
+    } else if (rules.stoppedAt !== null || !canContinue) {
+      // A "Stop all" in a tab that does not extend the period, or a stop before the period opened (for example a period of the previous runtime): no runtime can continue it
       nextLivePeriods = { ...livePeriods, canContinueLastPeriod: false };
     }
 
@@ -296,13 +304,21 @@ export const createLocalAccessLayer = ({
     },
 
     /**
-     * The runtime of this tab stops to read: the owner stops it, the tab
-     * loses the Web Lock, or the tab closes (`pagehide`). A next runtime can
-     * continue the period.
+     * The runtime of this tab stops to read.
+     *
+     * - `canContinue: true`: a change of the active tab. The tab loses the
+     *   Web Lock or closes (`pagehide`), and a next runtime can continue the
+     *   period within `TAB_CHANGE_GAP_MILLISECONDS`.
+     * - `canContinue: false`: the owner stops the runtime, or the runtime
+     *   lost the access to the folder. The period ends, and the next start
+     *   starts a new period, also within `TAB_CHANGE_GAP_MILLISECONDS`. Thus
+     *   the entries of the stopped time stay on the machine (decision 27).
+     *   Call it also when the runtime of this tab does not read, so that a
+     *   next start does not continue the period of a previous runtime.
      */
-    stopReading: () => {
+    stopReading: ({ canContinue }: StopReadingOptions) => {
       isReading = false;
-      updatePeriods();
+      updatePeriods(canContinue);
     },
 
     /**

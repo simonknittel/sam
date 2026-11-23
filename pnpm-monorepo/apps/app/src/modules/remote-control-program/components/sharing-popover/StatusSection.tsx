@@ -1,6 +1,7 @@
 "use client";
 
 import type { OwnRuntime } from "@sam-monorepo/application";
+import { useBrowserRuntime } from "../../runtime/useBrowserRuntime";
 import { RuntimeListItem } from "./RuntimeListItem";
 import { SharingPopoverSection } from "./SharingPopoverSection";
 import { StopAllControl } from "./StopAllControl";
@@ -16,12 +17,18 @@ interface Props {
 
 /** The section "Status": the runtimes of the owner and the "Stop all" for all of them */
 export const StatusSection = ({ runtimes, stoppedAt, isRefreshing }: Props) => {
+  const ownRuntimeId = useBrowserRuntime()?.state.runtimeId ?? null;
+
   return (
     <SharingPopoverSection heading="Status" isRefreshing={isRefreshing}>
       {runtimes.length > 0 ? (
         <ul className="flex flex-col gap-2">
           {runtimes.map((runtime) => (
-            <RuntimeListItem key={runtime.runtimeId} runtime={runtime} />
+            <RuntimeListItem
+              key={runtime.runtimeId}
+              runtime={runtime}
+              isThisBrowser={runtime.runtimeId === ownRuntimeId}
+            />
           ))}
         </ul>
       ) : (

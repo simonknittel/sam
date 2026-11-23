@@ -299,6 +299,72 @@ test("after a change of the active tab, the next runtime sends only the entries 
   expect(browser.openTab().runtime.shouldRun(true)).toBe(false);
 });
 
+test.each([
+  {
+    end: "a stop of the owner",
+    isGapUploaded: false,
+    endAndStartAgain: async (
+      browser: ReturnType<typeof createBrowser>,
+      tab: ReturnType<ReturnType<typeof createBrowser>["openTab"]>,
+      writeGapLine: () => RawMatch,
+    ) => {
+      tab.runtime.stop();
+      await vi.advanceTimersByTimeAsync(5 * SECOND);
+      const gapLine = writeGapLine();
+      await vi.advanceTimersByTimeAsync(5 * SECOND);
+
+      return { gapLine, socket: await tab.start() };
+    },
+  },
+  {
+    end: "a change of the active tab",
+    isGapUploaded: true,
+    endAndStartAgain: async (
+      browser: ReturnType<typeof createBrowser>,
+      tab: ReturnType<ReturnType<typeof createBrowser>["openTab"]>,
+      writeGapLine: () => RawMatch,
+    ) => {
+      tab.runtime.handOver();
+      await vi.advanceTimersByTimeAsync(5 * SECOND);
+      const gapLine = writeGapLine();
+      await vi.advanceTimersByTimeAsync(5 * SECOND);
+
+      const nextTab = browser.openTab();
+      expect(nextTab.runtime.shouldRun(false)).toBe(true);
+      return { gapLine, socket: await nextTab.start() };
+    },
+  },
+])(
+  "after $end and a start within 30 seconds, the lines of the gap go up: $isGapUploaded",
+  async ({ isGapUploaded, endAndStartAgain }) => {
+    const browser = createBrowser();
+    createLocalAccessLayer({ storage: browser.storage }).setLogEntryTypes(
+      [LogAnalyzerEntryType.JoinPu],
+      true,
+    );
+
+    const tab = browser.openTab();
+    const firstSocket = await tab.start();
+    await vi.advanceTimersByTimeAsync(5 * SECOND);
+    const liveLine = browser.folder.write(Date.now());
+    await vi.advanceTimersByTimeAsync(10 * SECOND);
+    expect(firstSocket.getSentRawLines()).toEqual([liveLine.rawLine]);
+    browser.acknowledgeUploads(firstSocket);
+
+    const { gapLine, socket } = await endAndStartAgain(browser, tab, () =>
+      browser.folder.write(Date.now()),
+    );
+    const lineAfterStart = browser.folder.write(Date.now());
+    await vi.advanceTimersByTimeAsync(10 * SECOND);
+
+    expect(socket.getSentRawLines()).toEqual(
+      isGapUploaded
+        ? [gapLine.rawLine, lineAfterStart.rawLine]
+        : [lineAfterStart.rawLine],
+    );
+  },
+);
+
 test("a request for older entries leaves out the entries that go up automatically and the entries that the relay has", async () => {
   const browser = createBrowser();
   createLocalAccessLayer({ storage: browser.storage }).setLogEntryTypes(

@@ -2,8 +2,10 @@
 
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Note from "@/modules/common/components/Note";
+import { Fragment } from "react";
 import { BrowserSettingsSection } from "./BrowserSettingsSection";
 import { SharedWithOthersSection } from "./SharedWithOthersSection";
+import { useOlderEntriesRequest } from "./SharingPopoverProvider";
 import { StatusSection } from "./StatusSection";
 import {
   SharingPopoverReadError,
@@ -14,14 +16,17 @@ import {
  * The content of the sharing popover in the top bar and in the bottom sheet
  * of the mobile action bar. The sections of the server data show after the
  * first read. The section of this browser shows at once, because it reads
- * only the browser.
+ * only the browser. With a request for older entries of a control UI, the
+ * section of this browser is the first section.
  */
 export const SharingPopoverContent = () => {
   const query = useSharingPopoverQuery();
   const { data } = query;
+  const olderEntriesRequest = useOlderEntriesRequest();
 
-  return (
-    <div className="flex flex-col gap-6">
+  // The keys keep the sections mounted when their order changes
+  const statusPart = (
+    <Fragment key="status">
       {query.isPending && (
         <p className="flex items-center gap-2 text-sm text-neutral-500">
           <AsciiSpinner />
@@ -57,8 +62,15 @@ export const SharingPopoverContent = () => {
           isRefreshing={query.isFetching}
         />
       )}
+    </Fragment>
+  );
+  const browserPart = <BrowserSettingsSection key="browser" />;
 
-      <BrowserSettingsSection />
+  return (
+    <div className="flex flex-col gap-6">
+      {olderEntriesRequest.request
+        ? [browserPart, statusPart]
+        : [statusPart, browserPart]}
 
       {data && (
         <SharedWithOthersSection

@@ -9,6 +9,15 @@ const subscribeToNothing = () => () => undefined;
 const NO_ENTRIES: ReadonlyMap<string, RawMatch> = new Map();
 
 /**
+ * The gate of the items of the Remote Control Program in the shell: true when
+ * the layout enabled the runtime provider, thus when the server decided
+ * `canUseRemoteControlProgram()` for the user. The browser does not check the
+ * permission itself.
+ */
+export const useIsRemoteControlProgramAvailable = () =>
+  useContext(BrowserRuntimeContext) !== null;
+
+/**
  * The state and the commands of the browser runtime of this browser, in each
  * tab. Null when the user cannot use the Remote Control Program (see
  * `README.md`).
