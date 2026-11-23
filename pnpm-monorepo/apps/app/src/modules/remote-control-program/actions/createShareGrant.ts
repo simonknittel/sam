@@ -6,11 +6,11 @@ import {
   createShareGrant as createShareGrantUseCase,
   ShareGrantValidityKind,
 } from "@sam-monorepo/application";
-import { SHARE_GRANT_ERROR_TEXTS } from "../components/sharing-popover/remoteControlProgramErrorTexts";
+import { SHARE_GRANT_ERROR_TEXTS } from "../utils/remoteControlProgramErrorTexts";
 import {
-  CUSTOM_VALIDITY_CHOICE,
+  CustomValidityChoice,
   ShareGrantFormField,
-} from "../components/sharing-popover/shareGrantFormFields";
+} from "../utils/shareGrantFormFields";
 
 /** The use case reads only the grantee field of the kind */
 const parseShareGrantFormData = (formData: FormData) => ({
@@ -21,7 +21,7 @@ const parseShareGrantFormData = (formData: FormData) => ({
   },
   capability_ids: formData.getAll(ShareGrantFormField.CapabilityIds),
   validity:
-    formData.get(ShareGrantFormField.Validity) === CUSTOM_VALIDITY_CHOICE
+    formData.get(ShareGrantFormField.Validity) === CustomValidityChoice.Custom
       ? {
           kind: ShareGrantValidityKind.Custom,
           starts_at: formData.get(ShareGrantFormField.StartsAt),

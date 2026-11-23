@@ -3,14 +3,24 @@
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Note from "@/modules/common/components/Note";
 import { Fragment } from "react";
+import { SESSION_EXPIRED_TEXT } from "../../utils/remoteControlProgramTexts";
 import { BrowserSettingsSection } from "./BrowserSettingsSection";
 import { SharedWithOthersSection } from "./SharedWithOthersSection";
 import { useOlderEntriesRequest } from "./SharingPopoverProvider";
 import { StatusSection } from "./StatusSection";
-import {
-  SharingPopoverReadError,
-  useSharingPopoverQuery,
-} from "./useSharingPopoverQuery";
+import { useSharingPopoverQuery } from "./useSharingPopoverQuery";
+
+type ReadError = NonNullable<
+  ReturnType<typeof useSharingPopoverQuery>["error"]
+>;
+
+/** The text of a failed read of the data of the server */
+const getReadErrorText = ({ data, message }: ReadError) => {
+  if (data?.code === "UNAUTHORIZED") return SESSION_EXPIRED_TEXT;
+  // The procedure gives a German text (see `getSharingPopover`)
+  if (data?.code === "FORBIDDEN") return message;
+  return "Der Status konnte nicht geladen werden.";
+};
 
 /**
  * The content of the sharing popover in the top bar and in the bottom sheet
@@ -36,14 +46,7 @@ export const SharingPopoverContent = () => {
 
       {query.isError && (
         <div role="alert" className="flex flex-col gap-2">
-          <Note
-            type="error"
-            message={
-              query.error instanceof SharingPopoverReadError
-                ? query.error.message
-                : "Der Status konnte nicht geladen werden."
-            }
-          />
+          <Note type="error" message={getReadErrorText(query.error)} />
 
           <button
             type="button"

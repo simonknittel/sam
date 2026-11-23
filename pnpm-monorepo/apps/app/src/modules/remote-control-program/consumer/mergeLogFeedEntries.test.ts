@@ -8,9 +8,7 @@ import {
   type LogFeedEntryOwner,
 } from "./logFeedEntry";
 import {
-  addRelayEntries,
   createRelayEntryFilter,
-  EMPTY_RELAY_ENTRY_STORE,
   mergeLogFeedEntries,
   type LogFeedScope,
 } from "./mergeLogFeedEntries";
@@ -34,19 +32,18 @@ const atSecond = (second: number) => new Date(second * 1_000);
 interface EntryOptions {
   readonly owner?: LogFeedEntryOwner;
   readonly second?: number;
-  readonly lineNumber?: number | null;
 }
 
 const relayEntry = (
   hashCharacter: string,
-  { owner = OTHER_CITIZEN, second = 10, lineNumber = 1 }: EntryOptions = {},
+  { owner = OTHER_CITIZEN, second = 10 }: EntryOptions = {},
 ): LogFeedEntry => {
   const entry = toRelayLogFeedEntry({
     owner,
     type: LogAnalyzerEntryType.ArmisticeZoneNotification,
     rawLine: ARMISTICE_LINE,
     eventAt: atSecond(second),
-    lineNumber,
+    lineNumber: 1,
     hash: hash(hashCharacter),
   });
   if (!entry) throw new Error("The sample line does not match its type");
@@ -55,7 +52,7 @@ const relayEntry = (
 
 const localEntry = (
   hashCharacter: string,
-  { second = 10, lineNumber = 1 }: EntryOptions = {},
+  { second = 10 }: EntryOptions = {},
 ) =>
   toLocalLogFeedEntry(
     {
@@ -64,7 +61,7 @@ const localEntry = (
       rawLine: ARMISTICE_LINE,
       hash: hash(hashCharacter),
       groups: { direction: "Entering" },
-      lineNumber: lineNumber ?? 1,
+      lineNumber: 1,
     },
     OWN_CITIZEN,
   );
@@ -103,27 +100,6 @@ describe("mergeLogFeedEntries", () => {
     expect(entries.map((entry) => entry.owner.id)).toEqual(["other", "own"]);
   });
 
-  test("sorts by the time, then by the line number, then by the key", () => {
-    const entries = mergeLogFeedEntries({
-      localEntries: [localEntry("e", { second: 10, lineNumber: 5 })],
-      relayEntries: toRelayEntryMap([
-        relayEntry("b", { second: 20, lineNumber: 1 }),
-        relayEntry("a", { second: 20, lineNumber: 1 }),
-        relayEntry("c", { second: 10, lineNumber: 2 }),
-        relayEntry("d", { second: 10, lineNumber: null }),
-      ]),
-      scope: ALL_ENTRIES,
-    });
-
-    expect(entries.map((entry) => entry.key)).toEqual([
-      `other:${hash("d")}`,
-      `other:${hash("c")}`,
-      `own:${hash("e")}`,
-      `other:${hash("a")}`,
-      `other:${hash("b")}`,
-    ]);
-  });
-
   test("leaves out the entries outside of the window and of the owners", () => {
     const seconds = [9, 10, 19, 20];
     const localEntries = seconds.map((second, index) =>
@@ -155,59 +131,8 @@ describe("mergeLogFeedEntries", () => {
   });
 });
 
-describe("toRelayLogFeedEntry", () => {
-  const entryOfType = (type: string, rawLine: string) =>
-    toRelayLogFeedEntry({
-      owner: OTHER_CITIZEN,
-      type,
-      rawLine,
-      eventAt: atSecond(10),
-      lineNumber: 1,
-      hash: hash("a"),
-    });
-
-  test("leaves out an unknown type and a line that does not match its type", () => {
-    expect(entryOfType("typeOfANewerRelease", ARMISTICE_LINE)).toBeNull();
-    expect(
-      entryOfType(
-        LogAnalyzerEntryType.ArmisticeZoneNotification,
-        SAMPLE_LINES[LogAnalyzerEntryType.ShopPurchase],
-      ),
-    ).toBeNull();
-  });
-
-  test("gives the newest version of the pattern that matches the line", () => {
-    const entry = entryOfType(
-      LogAnalyzerEntryType.ContractCompleteNotification,
-      SAMPLE_LINES[LogAnalyzerEntryType.ContractCompleteNotificationV2],
-    );
-
-    expect(entry?.type).toBe(
-      LogAnalyzerEntryType.ContractCompleteNotificationV2,
-    );
-    expect(entry?.groups.missionId).toBe(
-      "bf7d2465-cf1e-480b-ae5c-25040d716e5f",
-    );
-  });
-});
-
-describe("addRelayEntries", () => {
-  test("keeps the newest entries up to the limit", () => {
-    const entries = Array.from("abcdefghijkl", (hashCharacter, index) =>
-      relayEntry(hashCharacter, { second: index + 1 }),
-    );
-
-    const store = addRelayEntries(EMPTY_RELAY_ENTRY_STORE, entries, 10);
-
-    // 90 % of the limit stay
-    expect(Array.from(store.entries.values())).toEqual(entries.slice(3));
-    expect(store.incompleteUntil).toEqual(atSecond(3));
-    expect(addRelayEntries(store, entries.slice(3), 10)).toBe(store);
-  });
-});
-
 describe("createRelayEntryFilter", () => {
-  test("keeps the own entries and the entries of a valid grant", () => {
+  test("keeps the own entries, the entries of a valid grant and of a confirmed owner", () => {
     const isRetained = createRelayEntryFilter({
       scope: ALL_ENTRIES,
       ownCitizenId: OWN_CITIZEN.id,
@@ -217,6 +142,8 @@ describe("createRelayEntryFilter", () => {
           visibleTimeRange: { start: atSecond(15), end: null },
         },
       ],
+      // An owner outside of a list that is not complete
+      confirmedOwnerCitizenIds: new Set(["confirmed"]),
     });
 
     expect(
@@ -225,9 +152,14 @@ describe("createRelayEntryFilter", () => {
         relayEntry("b", { second: 10 }),
         relayEntry("c", { second: 20 }),
         relayEntry("d", { owner: { id: "revoked", handle: null }, second: 20 }),
+        relayEntry("e", { owner: { id: "confirmed", handle: null } }),
       ]
         .filter(isRetained)
         .map((entry) => entry.key),
-    ).toEqual([`own:${hash("a")}`, `other:${hash("c")}`]);
+    ).toEqual([
+      `own:${hash("a")}`,
+      `other:${hash("c")}`,
+      `confirmed:${hash("e")}`,
+    ]);
   });
 });

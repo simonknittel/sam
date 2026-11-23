@@ -5,11 +5,18 @@ import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import { Select } from "@/modules/common/components/form/Select";
 import { useRolesContext } from "@/modules/roles/components/RolesContext";
 import { GranteeKind } from "@sam-monorepo/domain";
-import { useId, useState } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { FaGlobe, FaUser, FaUsers } from "react-icons/fa";
-import { ShareGrantFormField } from "./shareGrantFormFields";
+import { ShareGrantFormField } from "../../utils/shareGrantFormFields";
 
-const GRANTEE_KIND_ITEMS = [
+interface GranteeKindItem {
+  readonly value: GranteeKind;
+  readonly label: string;
+  readonly icon: ReactNode;
+  readonly hint: string;
+}
+
+const GRANTEE_KIND_ITEMS: GranteeKindItem[] = [
   {
     value: GranteeKind.citizen,
     label: "Citizen",
@@ -53,7 +60,7 @@ export const GranteeFields = ({
       (item.value !== GranteeKind.role || canChooseRole),
   );
   // "Everyone" is always in the list. The most narrow kind is the default.
-  const [granteeKind, setGranteeKind] = useState<string>(
+  const [granteeKind, setGranteeKind] = useState<GranteeKind>(
     items[0]?.value ?? GranteeKind.everyone,
   );
 
@@ -67,7 +74,7 @@ export const GranteeFields = ({
           label={GRANTEE_KIND_LABEL}
           items={items}
           value={granteeKind}
-          onChange={setGranteeKind}
+          onChange={(value) => setGranteeKind(value as GranteeKind)}
           equalWidth
         />
       </div>

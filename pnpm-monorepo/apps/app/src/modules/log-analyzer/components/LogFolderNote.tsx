@@ -8,6 +8,7 @@ import {
   type BrowserRuntimeSnapshot,
 } from "@/modules/remote-control-program/runtime/types";
 import { useBrowserRuntime } from "@/modules/remote-control-program/runtime/useBrowserRuntime";
+import { BROWSER_NOT_SUPPORTED_TEXT } from "@/modules/remote-control-program/utils/remoteControlProgramTexts";
 import type { ComponentProps } from "react";
 import { FaTowerBroadcast } from "react-icons/fa6";
 
@@ -30,7 +31,7 @@ const getFolderNote = ({
     case LogFolderState.NotSupported:
       return {
         type: "warning",
-        text: "Dieser Browser kann deinen Log-Ordner nicht lesen. Du siehst nur die Einträge, die andere mit dir teilen, und deine Einträge von anderen Rechnern. Nutze Google Chrome, Microsoft Edge oder Opera GX.",
+        text: `${BROWSER_NOT_SUPPORTED_TEXT} Du siehst nur die Einträge, die andere mit dir teilen, und deine Einträge von anderen Rechnern.`,
         canOpenPopover: false,
       };
 

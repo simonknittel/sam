@@ -8,10 +8,10 @@ import {
 } from "@sam-monorepo/application";
 
 /**
- * The texts of the actions of the sharing popover for the errors of the use
- * cases. Only the server actions import this module, because it loads the
- * `application` package. A message without a text gets the common text of
- * its error class.
+ * The texts of the actions and the procedures of the sharing popover for
+ * the errors of the use cases. Only the server imports this module, because
+ * it loads the `application` package. A message without a text gets the
+ * common text of its error class.
  */
 export const REMOTE_CONTROL_PROGRAM_ERROR_TEXTS: ApplicationErrorTexts = {
   [RemoteControlProgramErrorMessage.CitizenMissing]:

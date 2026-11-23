@@ -1,11 +1,13 @@
+import type { AppRouter } from "@/server/api/root";
 import type { api, RouterOutputs } from "@/trpc/react";
-import type { SharingOwner } from "@sam-monorepo/application";
+import type { SharingOwner, SharingOwners } from "@sam-monorepo/application";
 import {
   CapabilityId,
   feedDeliveryEventPayloadSchema,
   type FeedDeliveryEventPayload,
 } from "@sam-monorepo/domain";
 import { TRPCClientError } from "@trpc/client";
+import type { inferRouterInputs } from "@trpc/server";
 import { toRelayLogFeedEntry, type RelayLogEntry } from "./logFeedEntry";
 import {
   addRelayEntries,
@@ -20,30 +22,35 @@ import type { RealtimeChannelHandlers } from "./realtimeChannel";
 
 type TrpcClient = ReturnType<typeof api.useUtils>["client"];
 
-/** The snapshot and the changes give the same page */
-type FeedEntriesPage =
-  RouterOutputs["remoteControlProgram"]["readFeedSnapshot"];
+/** One page of a snapshot (without `cursor`), or of the changes since `cursor` */
+type FeedEntriesInput =
+  inferRouterInputs<AppRouter>["remoteControlProgram"]["readFeedEntries"];
+
+type FeedEntriesPage = RouterOutputs["remoteControlProgram"]["readFeedEntries"];
 
 /**
- * The upper limit of the pages of one snapshot: 10,000 entries in pages of
- * 500 (`MAXIMUM_FEED_ENTRIES_PER_READ` of the application package). The
- * snapshot reads the newest entries first, thus the limit cuts the oldest
- * entries of a large window (see `RelayEntryStore.incompleteUntil`). A
- * window of the Log Analyzer usually has far fewer entries.
+ * The upper limit of the pages of one read: 10,000 entries in pages of 500
+ * (`MAXIMUM_FEED_ENTRIES_PER_READ` of the application package). The snapshot
+ * reads the newest entries first, thus the limit cuts the oldest entries of
+ * a large window (see `RelayEntryStore.incompleteUntil`). A window of the
+ * Log Analyzer usually has far fewer entries. More changes than a snapshot
+ * can hold come after a long gap: then the consumer reads a new snapshot,
+ * which gives the newest entries first.
  */
-const MAXIMUM_SNAPSHOT_PAGES = 20;
-
-/**
- * More changes than a snapshot can hold come after a long gap. Then the
- * consumer reads a new snapshot, which gives the newest entries first.
- */
-const MAXIMUM_CHANGES_PAGES = MAXIMUM_SNAPSHOT_PAGES;
+const MAXIMUM_PAGES_PER_READ = 20;
 
 /**
  * The renewal interval before the first answer of the app. The answer of
  * `renewWatchLease()` gives the interval of the application package.
  */
 const DEFAULT_RENEWAL_INTERVAL_MILLISECONDS = 60_000;
+
+/**
+ * The interval of the reads of the sharing owners, separate from the
+ * renewal of the lease: when a grant ends, the entries of its owner leave
+ * the view within this time (principle 5)
+ */
+const SHARING_OWNERS_READ_INTERVAL_MILLISECONDS = 15_000;
 
 /** The renewal and the list of the owners need some small queries */
 const RENEWAL_TIMEOUT_MILLISECONDS = 10_000;
@@ -79,6 +86,8 @@ export enum LogEntriesFeedProblem {
    * or `logAnalyzer;read`, a switch is off, or an admin assumes the user
    */
   Forbidden = "forbidden",
+  /** The session of the browser ended: the user must log in again */
+  SessionExpired = "session_expired",
 }
 
 /** The state shows the most severe problem */
@@ -86,7 +95,13 @@ const PROBLEM_SEVERITY: Record<LogEntriesFeedProblem, number> = {
   [LogEntriesFeedProblem.RequestFailed]: 0,
   [LogEntriesFeedProblem.TooManyConsumers]: 1,
   [LogEntriesFeedProblem.Forbidden]: 2,
+  [LogEntriesFeedProblem.SessionExpired]: 3,
 };
+
+/** The viewer cannot read the entries of the other owners */
+const isAccessProblem = (problem: LogEntriesFeedProblem | null | undefined) =>
+  problem === LogEntriesFeedProblem.Forbidden ||
+  problem === LogEntriesFeedProblem.SessionExpired;
 
 enum ProblemSource {
   Lease = "lease",
@@ -96,6 +111,8 @@ enum ProblemSource {
 
 enum ReadOutcome {
   Completed = "completed",
+  /** The read stopped at `MAXIMUM_PAGES_PER_READ`, and there are more pages */
+  Truncated = "truncated",
   /** A new snapshot replaced the read */
   Superseded = "superseded",
   Failed = "failed",
@@ -134,6 +151,8 @@ interface Session {
   hasLease: boolean;
   /** The relay sends the new entries to the channel of this consumer */
   isLeaseValid: boolean;
+  sharingOwnersTimeout: number | undefined;
+  isSharingOwnersReadRunning: boolean;
   /**
    * The cursor of the changes. It moves only with the reads, never with a
    * realtime event. Null before the first page of the first snapshot.
@@ -141,6 +160,13 @@ interface Session {
   cursor: string | null;
   /** The owners and their visible time ranges. Null before the first list. */
   sharingOwnersSignature: string | null;
+  /**
+   * The other owners of the entries of the last full snapshot. The snapshot
+   * gives only the entries that the viewer can read, thus it confirms the
+   * access of the owners that the list of the sharing owners does not
+   * contain (`hasMoreSharingOwners`).
+   */
+  snapshotOwnerCitizenIds: ReadonlySet<string>;
   isSnapshotRequested: boolean;
   isChangesReadRequested: boolean;
   isSyncRunning: boolean;
@@ -148,11 +174,18 @@ interface Session {
   readAbortController: AbortController | null;
 }
 
+/** What a snapshot learns from its pages */
+interface SnapshotProgress {
+  /** The snapshot reads the newest entries first */
+  oldestEventAt: Date | null;
+  readonly ownerCitizenIds: Set<string>;
+}
+
 const toProblem = (error: unknown) => {
   if (error instanceof TRPCClientError) {
     const code: unknown = (error.data as { code?: unknown } | undefined)?.code;
-    if (code === "UNAUTHORIZED" || code === "FORBIDDEN")
-      return LogEntriesFeedProblem.Forbidden;
+    if (code === "UNAUTHORIZED") return LogEntriesFeedProblem.SessionExpired;
+    if (code === "FORBIDDEN") return LogEntriesFeedProblem.Forbidden;
     if (code === "CONFLICT") return LogEntriesFeedProblem.TooManyConsumers;
   }
 
@@ -187,6 +220,19 @@ const createSharingOwnersSignature = (owners: readonly SharingOwner[]) =>
     .toSorted()
     .join(",");
 
+/** Null after the last page of the read */
+const getNextPageInput = (
+  input: FeedEntriesInput,
+  page: FeedEntriesPage,
+): FeedEntriesInput | null => {
+  if (!page.hasMore) return null;
+  if ("cursor" in input) return { ...input, cursor: page.cursor };
+
+  return page.nextPageCursor === null
+    ? null
+    : { ...input, page_cursor: page.nextPageCursor };
+};
+
 const toDeliveredRelayLogEntries = (
   payload: FeedDeliveryEventPayload,
 ): RelayLogEntry[] => {
@@ -210,17 +256,18 @@ const toDeliveredRelayLogEntries = (
 
 /**
  * The relay part of the consumer client of `log_entries` (see
- * `useLogEntriesFeed()`): the watch lease, the snapshot with its cursor, the
- * realtime events of the own channel, and the reads of the changes since the
- * cursor. `useSyncExternalStore()` reads its state.
+ * `useLogEntriesFeed()`): the watch lease, the list of the sharing owners,
+ * the snapshot with its cursor, the realtime events of the own channel, and
+ * the reads of the changes since the cursor. `useSyncExternalStore()` reads
+ * its state.
  *
- * The order: first the watch lease and the list of the sharing owners, then
- * the snapshot, thus no entry falls between the snapshot and the first
- * delivery. At each renewal of the lease, the consumer reads the list of
- * the sharing owners again. It reads the changes since the cursor when the
- * lease was not continuous, after each subscription of the channel (also
- * after a reconnect of the realtime service), after dropped entries of the
- * relay, and at each renewal while the realtime delivery does not work.
+ * The order: first the watch lease, then the snapshot, thus no entry falls
+ * between the snapshot and the first delivery. The consumer reads the list
+ * of the sharing owners at short intervals, and a new snapshot when the
+ * list changes. It reads the changes since the cursor when the lease was not
+ * continuous, after each subscription of the channel (also after a
+ * reconnect of the realtime service), after dropped entries of the relay,
+ * and at each renewal while the realtime delivery does not work.
  */
 export class LogEntriesFeedConsumer {
   readonly #client: TrpcClient;
@@ -286,8 +333,11 @@ export class LogEntriesFeedConsumer {
       isRenewalRequested: false,
       hasLease: false,
       isLeaseValid: false,
+      sharingOwnersTimeout: undefined,
+      isSharingOwnersReadRunning: false,
       cursor: null,
       sharingOwnersSignature: null,
+      snapshotOwnerCitizenIds: new Set(),
       isSnapshotRequested: false,
       isChangesReadRequested: false,
       isSyncRunning: false,
@@ -301,6 +351,7 @@ export class LogEntriesFeedConsumer {
     window.addEventListener("pageshow", this.#handlePageShow);
 
     void this.#renew(session);
+    void this.#readSharingOwners(session);
   }
 
   /** Ends the session and its watch lease */
@@ -311,6 +362,7 @@ export class LogEntriesFeedConsumer {
     this.#session = null;
     session.abortController.abort();
     window.clearTimeout(session.renewalTimeout);
+    window.clearTimeout(session.sharingOwnersTimeout);
     window.removeEventListener("pagehide", this.#handlePageHide);
     window.removeEventListener("pageshow", this.#handlePageShow);
 
@@ -359,6 +411,20 @@ export class LogEntriesFeedConsumer {
 
     if (mostSevereProblem !== this.#state.problem)
       this.#setState({ problem: mostSevereProblem });
+
+    if (isAccessProblem(problem) && this.#session)
+      this.#forgetOtherOwners(this.#session);
+  }
+
+  /**
+   * The app refused the lease or the list of the owners, thus it refuses the
+   * reads too. A refused read does not count: the next renewal tries it
+   * again.
+   */
+  #isAccessRefused() {
+    return [ProblemSource.Lease, ProblemSource.SharingOwners].some((source) =>
+      isAccessProblem(this.#problems.get(source)),
+    );
   }
 
   #isCurrent(session: Session) {
@@ -372,10 +438,7 @@ export class LogEntriesFeedConsumer {
     ]);
   }
 
-  /**
-   * Renews the watch lease and reads the list of the sharing owners, then
-   * plans the next renewal
-   */
+  /** Renews the watch lease, starts the requested reads, then plans the next renewal */
   async #renew(session: Session) {
     if (session.isRenewalRunning) {
       session.isRenewalRequested = true;
@@ -385,32 +448,27 @@ export class LogEntriesFeedConsumer {
     session.isRenewalRunning = true;
     window.clearTimeout(session.renewalTimeout);
 
-    const signal = this.#createSignal(session, RENEWAL_TIMEOUT_MILLISECONDS);
-    const [leaseResult, sharingOwnersResult] = await Promise.allSettled([
-      this.#client.remoteControlProgram.renewWatchLease.mutate(
-        {
-          consumer_id: session.consumerId,
-          capability_id: CapabilityId.LogEntries,
-          owner_citizen_ids: [...(this.#state.scope.ownerCitizenIds ?? [])],
-        },
-        { signal },
-      ),
-      this.#client.remoteControlProgram.listSharingOwners.query(
-        { capability_id: CapabilityId.LogEntries },
-        { signal },
-      ),
-    ]);
-    if (!this.#isCurrent(session)) return;
+    try {
+      const { lease } =
+        await this.#client.remoteControlProgram.renewWatchLease.mutate(
+          {
+            consumer_id: session.consumerId,
+            capability_id: CapabilityId.LogEntries,
+            owner_citizen_ids: [...(this.#state.scope.ownerCitizenIds ?? [])],
+          },
+          { signal: this.#createSignal(session, RENEWAL_TIMEOUT_MILLISECONDS) },
+        );
+      if (!this.#isCurrent(session)) return;
 
-    session.isRenewalRunning = false;
-
-    if (leaseResult.status === "fulfilled") {
-      const { lease } = leaseResult.value;
       if (lease === null) {
+        session.isRenewalRunning = false;
+        window.clearTimeout(session.sharingOwnersTimeout);
         this.#setProblem(ProblemSource.Lease, null);
         this.#setState({
           relayAvailability: RelayFeedAvailability.NotConfigured,
           isLoading: false,
+          sharingOwners: [],
+          hasMoreSharingOwners: false,
         });
         // Without a relay service, nothing changes until the next deploy
         return;
@@ -422,8 +480,10 @@ export class LogEntriesFeedConsumer {
       this.#setProblem(ProblemSource.Lease, null);
       this.#setState({ relayAvailability: RelayFeedAvailability.Available });
       if (!lease.isContinuous) this.#requestChanges(session);
-    } else {
-      const problem = toProblem(leaseResult.reason);
+    } catch (error) {
+      if (!this.#isCurrent(session)) return;
+
+      const problem = toProblem(error);
       session.isLeaseValid = false;
       this.#setProblem(ProblemSource.Lease, problem);
       // The use case refused the lease, thus the app has a relay service
@@ -431,21 +491,9 @@ export class LogEntriesFeedConsumer {
         this.#setState({ relayAvailability: RelayFeedAvailability.Available });
     }
 
-    if (sharingOwnersResult.status === "fulfilled") {
-      this.#applySharingOwners(session, sharingOwnersResult.value);
-      this.#setProblem(ProblemSource.SharingOwners, null);
-    } else {
-      this.#setProblem(
-        ProblemSource.SharingOwners,
-        toProblem(sharingOwnersResult.reason),
-      );
-    }
+    session.isRenewalRunning = false;
 
-    const isForbidden = [ProblemSource.Lease, ProblemSource.SharingOwners].some(
-      (source) =>
-        this.#problems.get(source) === LogEntriesFeedProblem.Forbidden,
-    );
-    if (isForbidden) {
+    if (this.#isAccessRefused()) {
       this.#setState({ isLoading: false });
     } else if (
       this.#state.relayAvailability === RelayFeedAvailability.Available
@@ -474,13 +522,47 @@ export class LogEntriesFeedConsumer {
     }
   }
 
+  /** Reads the list of the sharing owners, then plans the next read */
+  async #readSharingOwners(session: Session) {
+    if (session.isSharingOwnersReadRunning) return;
+
+    session.isSharingOwnersReadRunning = true;
+    window.clearTimeout(session.sharingOwnersTimeout);
+
+    try {
+      const sharingOwners =
+        await this.#client.remoteControlProgram.listSharingOwners.query(
+          { capability_id: CapabilityId.LogEntries },
+          { signal: this.#createSignal(session, RENEWAL_TIMEOUT_MILLISECONDS) },
+        );
+      if (!this.#isCurrent(session)) return;
+
+      this.#setProblem(ProblemSource.SharingOwners, null);
+      this.#applySharingOwners(session, sharingOwners);
+    } catch (error) {
+      if (!this.#isCurrent(session)) return;
+
+      this.#setProblem(ProblemSource.SharingOwners, toProblem(error));
+    }
+
+    session.isSharingOwnersReadRunning = false;
+
+    // Without a relay service, the consumer shows only the own entries of the browser runtime
+    if (this.#state.relayAvailability === RelayFeedAvailability.NotConfigured)
+      return;
+
+    session.sharingOwnersTimeout = window.setTimeout(() => {
+      void this.#readSharingOwners(session);
+    }, SHARING_OWNERS_READ_INTERVAL_MILLISECONDS);
+  }
+
   #applySharingOwners(
     session: Session,
-    {
-      owners,
-      hasMoreOwners,
-    }: { readonly owners: SharingOwner[]; readonly hasMoreOwners: boolean },
+    { owners, hasMoreOwners }: SharingOwners,
   ) {
+    if (this.#state.relayAvailability === RelayFeedAvailability.NotConfigured)
+      return;
+
     const signature = createSharingOwnersSignature(owners);
     const previousSignature = session.sharingOwnersSignature;
     session.sharingOwnersSignature = signature;
@@ -496,6 +578,31 @@ export class LogEntriesFeedConsumer {
     this.#requestSnapshot(session);
   }
 
+  /**
+   * Without access, the consumer keeps only the own entries of the relay
+   * (principle 5). A list of owners after the access comes back gives a new
+   * snapshot.
+   */
+  #forgetOtherOwners(session: Session) {
+    session.sharingOwnersSignature = createSharingOwnersSignature([]);
+    session.snapshotOwnerCitizenIds = new Set();
+
+    const relayEntries = retainRelayEntries(
+      this.#state.relayEntries,
+      (entry) => entry.owner.id === session.ownCitizenId,
+    );
+    if (
+      relayEntries !== this.#state.relayEntries ||
+      this.#state.sharingOwners.length > 0 ||
+      this.#state.hasMoreSharingOwners
+    )
+      this.#setState({
+        sharingOwners: [],
+        hasMoreSharingOwners: false,
+        relayEntries,
+      });
+  }
+
   #retainVisibleRelayEntries(session: Session) {
     const { scope, relayEntries, sharingOwners, hasMoreSharingOwners } =
       this.#state;
@@ -503,9 +610,10 @@ export class LogEntriesFeedConsumer {
       scope,
       ownCitizenId: session.ownCitizenId,
       sharingOwners:
-        session.sharingOwnersSignature === null || hasMoreSharingOwners
-          ? null
-          : sharingOwners,
+        session.sharingOwnersSignature === null ? null : sharingOwners,
+      confirmedOwnerCitizenIds: hasMoreSharingOwners
+        ? session.snapshotOwnerCitizenIds
+        : undefined,
     });
 
     this.#setState({ relayEntries: retainRelayEntries(relayEntries, filter) });
@@ -553,7 +661,10 @@ export class LogEntriesFeedConsumer {
   /** The page comes back from the back-forward cache */
   #handlePageShow = (event: PageTransitionEvent) => {
     const session = this.#session;
-    if (session && event.persisted) void this.#renew(session);
+    if (!session || !event.persisted) return;
+
+    void this.#renew(session);
+    void this.#readSharingOwners(session);
   };
 
   #handleRealtimeEvent(data: unknown) {
@@ -612,19 +723,6 @@ export class LogEntriesFeedConsumer {
     session.isSyncRunning = false;
   }
 
-  #startRead(session: Session) {
-    const readAbortController = new AbortController();
-    session.readAbortController = readAbortController;
-
-    return {
-      readAbortController,
-      signal: AbortSignal.any([
-        readAbortController.signal,
-        this.#createSignal(session, READ_TIMEOUT_MILLISECONDS),
-      ]),
-    };
-  }
-
   #getReadOutcomeAfterError(
     session: Session,
     readAbortController: AbortController,
@@ -638,10 +736,64 @@ export class LogEntriesFeedConsumer {
     return ReadOutcome.Failed;
   }
 
-  async #readSnapshot(session: Session): Promise<ReadOutcome> {
-    const { readAbortController, signal } = this.#startRead(session);
+  /** The time window of the reads. Without a limit, the input has no time. */
+  #getEntryWindowInput() {
     const { start, end } = this.#state.scope.entryWindow;
+    return { start: start ?? undefined, end: end ?? undefined };
+  }
 
+  /**
+   * Reads the pages of a snapshot or of the changes and adds their entries.
+   * A snapshot keeps the cursor of its first page, which covers all its
+   * pages. Each page of the changes moves the cursor.
+   */
+  async #readPages(
+    session: Session,
+    firstInput: FeedEntriesInput,
+    onPage?: (page: FeedEntriesPage) => void,
+  ): Promise<ReadOutcome> {
+    const readAbortController = new AbortController();
+    session.readAbortController = readAbortController;
+    const signal = AbortSignal.any([
+      readAbortController.signal,
+      this.#createSignal(session, READ_TIMEOUT_MILLISECONDS),
+    ]);
+    let input = firstInput;
+
+    for (
+      let pageIndex = 0;
+      pageIndex < MAXIMUM_PAGES_PER_READ;
+      pageIndex += 1
+    ) {
+      let page: FeedEntriesPage;
+      try {
+        page = await this.#client.remoteControlProgram.readFeedEntries.query(
+          input,
+          { signal },
+        );
+      } catch (error) {
+        return this.#getReadOutcomeAfterError(
+          session,
+          readAbortController,
+          error,
+        );
+      }
+      if (!this.#isCurrent(session)) return ReadOutcome.Ended;
+      if (readAbortController.signal.aborted) return ReadOutcome.Superseded;
+
+      if (pageIndex === 0 || "cursor" in input) session.cursor = page.cursor;
+      this.#addRelayEntries(session, page.entries);
+      onPage?.(page);
+
+      const nextInput = getNextPageInput(input, page);
+      if (nextInput === null) return ReadOutcome.Completed;
+      input = nextInput;
+    }
+
+    return ReadOutcome.Truncated;
+  }
+
+  async #readSnapshot(session: Session): Promise<ReadOutcome> {
     this.#retainVisibleRelayEntries(session);
     this.#setState({
       isLoading: true,
@@ -651,96 +803,62 @@ export class LogEntriesFeedConsumer {
       },
     });
 
-    let pageCursor: string | undefined;
-    let oldestEventAt: Date | null = null;
+    const progress: SnapshotProgress = {
+      oldestEventAt: null,
+      ownerCitizenIds: new Set(),
+    };
+    const outcome = await this.#readPages(
+      session,
+      this.#getEntryWindowInput(),
+      (page) => {
+        progress.oldestEventAt =
+          page.entries.at(-1)?.eventAt ?? progress.oldestEventAt;
+        for (const entry of page.entries)
+          progress.ownerCitizenIds.add(entry.owner.id);
+      },
+    );
+    if (outcome !== ReadOutcome.Completed && outcome !== ReadOutcome.Truncated)
+      return outcome;
 
-    for (
-      let pageIndex = 0;
-      pageIndex < MAXIMUM_SNAPSHOT_PAGES;
-      pageIndex += 1
-    ) {
-      let page: FeedEntriesPage;
-      try {
-        page = await this.#client.remoteControlProgram.readFeedSnapshot.query(
-          {
-            start: start ?? undefined,
-            end: end ?? undefined,
-            page_cursor: pageCursor,
-          },
-          { signal },
-        );
-      } catch (error) {
-        return this.#getReadOutcomeAfterError(
-          session,
-          readAbortController,
-          error,
-        );
-      }
-      if (!this.#isCurrent(session)) return ReadOutcome.Ended;
-      if (readAbortController.signal.aborted) return ReadOutcome.Superseded;
-
-      // The cursor of the first page covers all pages
-      if (pageIndex === 0) session.cursor = page.cursor;
-      this.#addRelayEntries(session, page.entries);
-      oldestEventAt = page.entries.at(-1)?.eventAt ?? oldestEventAt;
-
-      if (!page.hasMore || page.nextPageCursor === null) {
-        this.#completeRead();
-        return ReadOutcome.Completed;
-      }
-      pageCursor = page.nextPageCursor;
-    }
-
-    if (oldestEventAt !== null)
+    if (outcome === ReadOutcome.Truncated && progress.oldestEventAt !== null)
       this.#setState({
         relayEntries: markRelayEntriesIncomplete(
           this.#state.relayEntries,
-          oldestEventAt,
+          progress.oldestEventAt,
         ),
       });
+
+    // Removes the entries of the owners outside of the list that the snapshot did not confirm
+    session.snapshotOwnerCitizenIds = progress.ownerCitizenIds;
+    if (this.#state.hasMoreSharingOwners)
+      this.#retainVisibleRelayEntries(session);
+
     this.#completeRead();
     return ReadOutcome.Completed;
   }
 
   async #readChanges(session: Session, cursor: string): Promise<ReadOutcome> {
-    const { readAbortController, signal } = this.#startRead(session);
-    const { start, end } = this.#state.scope.entryWindow;
-    let pageCursor = cursor;
+    const outcome = await this.#readPages(session, {
+      ...this.#getEntryWindowInput(),
+      cursor,
+    });
 
-    for (let pageIndex = 0; ; pageIndex += 1) {
-      if (pageIndex >= MAXIMUM_CHANGES_PAGES) {
+    switch (outcome) {
+      case ReadOutcome.Completed:
+        this.#completeRead();
+        return outcome;
+
+      case ReadOutcome.Truncated:
         this.#requestSnapshot(session);
         return ReadOutcome.Completed;
-      }
 
-      let page: FeedEntriesPage;
-      try {
-        page = await this.#client.remoteControlProgram.readFeedChanges.query(
-          {
-            start: start ?? undefined,
-            end: end ?? undefined,
-            cursor: pageCursor,
-          },
-          { signal },
-        );
-      } catch (error) {
-        return this.#getReadOutcomeAfterError(
-          session,
-          readAbortController,
-          error,
-        );
-      }
-      if (!this.#isCurrent(session)) return ReadOutcome.Ended;
-      if (readAbortController.signal.aborted) return ReadOutcome.Superseded;
+      case ReadOutcome.Superseded:
+      case ReadOutcome.Failed:
+      case ReadOutcome.Ended:
+        return outcome;
 
-      session.cursor = page.cursor;
-      pageCursor = page.cursor;
-      this.#addRelayEntries(session, page.entries);
-
-      if (!page.hasMore) {
-        this.#completeRead();
-        return ReadOutcome.Completed;
-      }
+      default:
+        throw new Error(`Unknown read outcome: ${outcome satisfies never}`);
     }
   }
 

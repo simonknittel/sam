@@ -5,7 +5,7 @@ import {
   revokeShareGrantInputSchema,
   revokeShareGrant as revokeShareGrantUseCase,
 } from "@sam-monorepo/application";
-import { SHARE_GRANT_ERROR_TEXTS } from "../components/sharing-popover/remoteControlProgramErrorTexts";
+import { SHARE_GRANT_ERROR_TEXTS } from "../utils/remoteControlProgramErrorTexts";
 
 /**
  * The form sends the field `grant_id`. The client fetches the popover again

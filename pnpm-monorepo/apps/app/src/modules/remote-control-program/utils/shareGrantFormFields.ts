@@ -1,3 +1,5 @@
+import type { GrantValidityPreset } from "@sam-monorepo/domain";
+
 /**
  * The fields of the form for a new grant. The form in the browser writes
  * them, and the action `createShareGrant` maps them to the input of the use
@@ -8,7 +10,7 @@ export enum ShareGrantFormField {
   CitizenId = "citizen_id",
   RoleId = "role_id",
   CapabilityIds = "capability_ids",
-  /** A `GrantValidityPreset`, or `CUSTOM_VALIDITY_CHOICE` */
+  /** A `ShareGrantValidityChoice` */
   Validity = "validity",
   /** A wall time in the time zone of the organization */
   StartsAt = "starts_at",
@@ -16,5 +18,12 @@ export enum ShareGrantFormField {
   EndsAt = "ends_at",
 }
 
-/** The value of `ShareGrantFormField.Validity` for a start and an end of the owner */
-export const CUSTOM_VALIDITY_CHOICE = "custom";
+/** The value of `ShareGrantFormField.Validity` in addition to the presets */
+export enum CustomValidityChoice {
+  /** A start and an end of the owner */
+  Custom = "custom",
+}
+
+/** A value of `ShareGrantFormField.Validity` */
+export type ShareGrantValidityChoice =
+  GrantValidityPreset | CustomValidityChoice;

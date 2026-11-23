@@ -15,6 +15,7 @@ import { GuideSection } from "@/modules/common/components/Guide/GuideSection";
 import { GuideStep } from "@/modules/common/components/Guide/GuideStep";
 import { GuideStepList } from "@/modules/common/components/Guide/GuideStepList";
 import { UiLabel } from "@/modules/common/components/Guide/UiLabel";
+import { SUPPORTED_BROWSERS_TEXT } from "@/modules/remote-control-program/utils/remoteControlProgramTexts";
 import { FaChrome } from "react-icons/fa";
 import {
   FaBolt,
@@ -91,9 +92,7 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
       >
         <GuideStepList>
           <GuideStep number={1} icon={FaChrome} title="Browser wählen">
-            Der Log Analyzer liest deine Logs in Google Chrome, Microsoft Edge
-            und Opera GX. Mozilla Firefox, Safari und Brave werden nicht
-            unterstützt.
+            {SUPPORTED_BROWSERS_TEXT}
           </GuideStep>
 
           <GuideStep number={2} icon={FaFolderOpen} title="Ordner auswählen">

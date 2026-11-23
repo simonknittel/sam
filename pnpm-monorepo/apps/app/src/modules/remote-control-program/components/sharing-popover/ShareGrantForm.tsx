@@ -13,9 +13,9 @@ import { GranteeKind } from "@sam-monorepo/domain";
 import { useState, type FormEvent } from "react";
 import { FaShareNodes } from "react-icons/fa6";
 import { createShareGrant } from "../../actions/createShareGrant";
+import { ShareGrantFormField } from "../../utils/shareGrantFormFields";
 import { CapabilityFields } from "./CapabilityFields";
 import { GranteeFields } from "./GranteeFields";
-import { ShareGrantFormField } from "./shareGrantFormFields";
 import { useSharingPopoverAction } from "./useSharingPopoverQuery";
 import { ValidityFields } from "./ValidityFields";
 

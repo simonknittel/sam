@@ -4,8 +4,8 @@ import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import Note from "@/modules/common/components/Note";
 import { CapabilityId } from "@sam-monorepo/domain";
 import { useId, useState } from "react";
+import { ShareGrantFormField } from "../../utils/shareGrantFormFields";
 import { CAPABILITY_LABELS, getSensitivityWarning } from "./catalogTexts";
-import { ShareGrantFormField } from "./shareGrantFormFields";
 
 const CAPABILITY_IDS = Object.values(CapabilityId);
 
@@ -76,7 +76,10 @@ const CapabilityOption = ({
         onChange={(event) => onChange(capabilityId, event.target.checked)}
       />
 
-      <label htmlFor={id} className="cursor-pointer">
+      <label
+        htmlFor={id}
+        className="cursor-pointer hover:text-white active:text-neutral-300"
+      >
         {CAPABILITY_LABELS[capabilityId]}
       </label>
     </li>

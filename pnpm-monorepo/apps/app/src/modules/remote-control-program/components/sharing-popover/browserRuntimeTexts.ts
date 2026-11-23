@@ -2,10 +2,17 @@ import { RelayCloseReason } from "@sam-monorepo/domain";
 import {
   BrowserRuntimeError,
   BrowserRuntimeErrorCode,
+  ChannelEndReason,
   ChannelStatus,
-  RelayAvailability,
   type BrowserRuntimeState,
+  type ChannelCloseReason,
 } from "@sam-monorepo/remote-control-program-runtime";
+import {
+  ACCESS_DENIED_TEXT,
+  BROWSER_NOT_SUPPORTED_TEXT,
+  NO_RELAY_TEXT,
+  SESSION_EXPIRED_TEXT,
+} from "../../utils/remoteControlProgramTexts";
 
 /** The texts of the section "Dieser Browser" for the states of the browser runtime */
 
@@ -14,8 +21,7 @@ export const BROWSER_RUNTIME_ERROR_TEXTS: Readonly<
 > = {
   [BrowserRuntimeErrorCode.ReadFailed]:
     "Der Log-Ordner konnte nicht gelesen werden.",
-  [BrowserRuntimeErrorCode.NotSupported]:
-    "Dieser Browser unterstützt die Laufzeit nicht.",
+  [BrowserRuntimeErrorCode.NotSupported]: BROWSER_NOT_SUPPORTED_TEXT,
   [BrowserRuntimeErrorCode.NoAnswer]:
     "Der Tab mit der Laufzeit hat nicht geantwortet. Versuche es erneut.",
   [BrowserRuntimeErrorCode.FolderNotGranted]:
@@ -37,32 +43,13 @@ export const getBrowserRuntimeErrorText = (error: unknown) =>
     : "Das hat nicht geklappt. Versuche es erneut.";
 
 /** The short state of the connection to the relay */
-export const getRelayStatusText = (state: BrowserRuntimeState) => {
-  switch (state.relayAvailability) {
-    case RelayAvailability.Unknown:
-      return state.isRunning ? "Verbinde …" : "Nicht verbunden";
-
-    case RelayAvailability.NotConfigured:
-      return "Nur auf diesem Rechner";
-
-    case RelayAvailability.Refused:
-      return "Abgelehnt";
-
-    case RelayAvailability.Available:
-      break;
-
-    default:
-      throw new Error(
-        `Unknown relay availability: ${state.relayAvailability satisfies never}`,
-      );
-  }
-
-  const { channel } = state;
-  if (!channel) return "Nicht verbunden";
-
+export const getRelayStatusText = ({
+  isRunning,
+  channel,
+}: BrowserRuntimeState) => {
   switch (channel.status) {
     case ChannelStatus.Idle:
-      return "Nicht verbunden";
+      return isRunning ? "Verbinde …" : "Nicht verbunden";
 
     case ChannelStatus.Connecting:
       return "Verbinde …";
@@ -75,8 +62,11 @@ export const getRelayStatusText = (state: BrowserRuntimeState) => {
     case ChannelStatus.WaitingForReconnect:
       return "Verbinde gleich neu …";
 
+    // The note of the close reason tells why
     case ChannelStatus.Ended:
-      return "Getrennt";
+      return channel.closeReason === ChannelEndReason.NoRelay
+        ? "Nur auf diesem Rechner"
+        : "Getrennt";
 
     default:
       throw new Error(
@@ -85,9 +75,9 @@ export const getRelayStatusText = (state: BrowserRuntimeState) => {
   }
 };
 
-/** Why the relay refused or closed the connection */
-export const RELAY_CLOSE_REASON_TEXTS: Readonly<
-  Record<RelayCloseReason, string>
+/** Why the app or the relay refused or closed the connection */
+export const CHANNEL_CLOSE_REASON_TEXTS: Readonly<
+  Record<ChannelCloseReason, string>
 > = {
   [RelayCloseReason.TokenNotValid]:
     "Die Anmeldung beim Relay ist abgelaufen. Der Browser verbindet sich neu.",
@@ -101,13 +91,16 @@ export const RELAY_CLOSE_REASON_TEXTS: Readonly<
     "Das Relay hat die Verbindung nach zu vielen Fehlern getrennt.",
   [RelayCloseReason.TooManyRuntimes]:
     "Zu viele deiner Laufzeiten sind verbunden. Stoppe eine andere Laufzeit.",
-  [RelayCloseReason.AccessDenied]:
-    "Das Relay lehnt diesen Browser ab: Dir fehlt die Berechtigung, oder dein Account ist gesperrt.",
+  [RelayCloseReason.AccessDenied]: ACCESS_DENIED_TEXT,
   [RelayCloseReason.ProgramTurnedOff]:
     "Die Organisation hat das Remote Control Program abgeschaltet.",
   [RelayCloseReason.Replaced]:
     "Eine neuere Verbindung dieses Browsers hat übernommen.",
   [RelayCloseReason.HeartbeatMissing]: "Die Verbindung war unterbrochen.",
+  [ChannelEndReason.NoRelay]: NO_RELAY_TEXT,
+  [ChannelEndReason.SessionExpired]: SESSION_EXPIRED_TEXT,
+  [ChannelEndReason.CitizenChanged]:
+    "In diesem Browser ist jetzt ein anderer Account angemeldet. Lade die Seite neu.",
 };
 
 export const formatEntryCount = (count: number) =>

@@ -11,9 +11,10 @@ import Note from "@/modules/common/components/Note";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { RelayCloseReason } from "@sam-monorepo/domain";
 import {
+  ChannelEndReason,
   ChannelStatus,
-  RelayAvailability,
   type BrowserRuntimeState,
+  type ChannelCloseReason,
 } from "@sam-monorepo/remote-control-program-runtime";
 import clsx from "clsx";
 import { useId } from "react";
@@ -32,9 +33,9 @@ import {
 } from "../../runtime/types";
 import {
   BROWSER_RUNTIME_ERROR_TEXTS,
+  CHANNEL_CLOSE_REASON_TEXTS,
   formatEntryCount,
   getRelayStatusText,
-  RELAY_CLOSE_REASON_TEXTS,
 } from "./browserRuntimeTexts";
 import { CAPABILITY_LABELS, CONNECTOR_LABELS } from "./catalogTexts";
 import { useRuntimeCommand } from "./useRuntimeCommand";
@@ -169,7 +170,7 @@ export const BrowserRuntimeControl = ({ runtime }: Props) => {
             : (formatDate(state.lastReadAt) ?? "noch nicht")}
         </dd>
 
-        {state.relayAvailability === RelayAvailability.Available && (
+        {state.channel.closeReason !== ChannelEndReason.NoRelay && (
           <>
             <dt className="text-neutral-500">Hochgeladen</dt>
             <dd>
@@ -298,38 +299,7 @@ const UploadCountsText = ({ state }: StateProps) => {
 
 /** Why this browser uploads nothing: no relay, a refusal, a close or a switch */
 const RelayNotes = ({ state }: StateProps) => {
-  switch (state.relayAvailability) {
-    case RelayAvailability.Unknown:
-      return null;
-
-    case RelayAvailability.NotConfigured:
-      return (
-        <Note
-          type="info"
-          message="Hier gibt es kein Relay. Dieser Browser liest das Log nur für dich und lädt nichts hoch."
-        />
-      );
-
-    case RelayAvailability.Refused:
-      return (
-        <Note
-          type="error"
-          message="SAM hat die Verbindung abgelehnt: Dir fehlt die Berechtigung, oder dein Account ist gesperrt."
-        />
-      );
-
-    case RelayAvailability.Available:
-      break;
-
-    default:
-      throw new Error(
-        `Unknown relay availability: ${state.relayAvailability satisfies never}`,
-      );
-  }
-
   const { channel } = state;
-  if (!channel || !state.isRunning) return null;
-
   const turnedOffLabels = [
     ...channel.turnedOffConnectorIds.map(
       (connectorId) => CONNECTOR_LABELS[connectorId],
@@ -344,7 +314,7 @@ const RelayNotes = ({ state }: StateProps) => {
 
   return (
     <>
-      {turnedOffLabels.length > 0 && (
+      {state.isRunning && turnedOffLabels.length > 0 && (
         <Note
           type="warning"
           message={`Die Organisation hat abgeschaltet: ${turnedOffLabels.join(", ")}. Dieser Browser lädt davon nichts hoch.`}
@@ -357,14 +327,16 @@ const RelayNotes = ({ state }: StateProps) => {
 };
 
 interface CloseReasonNoteProps {
-  readonly closeReason: RelayCloseReason;
+  readonly closeReason: ChannelCloseReason;
 }
 
 const CloseReasonNote = ({ closeReason }: CloseReasonNoteProps) => {
-  const text = RELAY_CLOSE_REASON_TEXTS[closeReason];
+  const text = CHANNEL_CLOSE_REASON_TEXTS[closeReason];
 
   switch (closeReason) {
     case RelayCloseReason.UpdateNecessary:
+    case ChannelEndReason.SessionExpired:
+    case ChannelEndReason.CitizenChanged:
       return (
         <div className="flex flex-col gap-2">
           <Note type="warning" message={text} />
@@ -392,6 +364,7 @@ const CloseReasonNote = ({ closeReason }: CloseReasonNoteProps) => {
     case RelayCloseReason.TooManyErrors:
     case RelayCloseReason.Replaced:
     case RelayCloseReason.HeartbeatMissing:
+    case ChannelEndReason.NoRelay:
       return <Note type="info" message={text} />;
 
     default:

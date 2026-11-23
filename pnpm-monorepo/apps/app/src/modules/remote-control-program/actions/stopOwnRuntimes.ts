@@ -2,7 +2,7 @@
 
 import { ActionRefresh, createUseCaseAction } from "@/modules/application";
 import { stopOwnRuntimes as stopOwnRuntimesUseCase } from "@sam-monorepo/application";
-import { REMOTE_CONTROL_PROGRAM_ERROR_TEXTS } from "../components/sharing-popover/remoteControlProgramErrorTexts";
+import { REMOTE_CONTROL_PROGRAM_ERROR_TEXTS } from "../utils/remoteControlProgramErrorTexts";
 
 /**
  * The "Stop all" of the sharing popover for all runtimes of the owner. The

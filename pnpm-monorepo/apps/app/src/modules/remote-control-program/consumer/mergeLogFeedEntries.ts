@@ -85,17 +85,18 @@ export const mergeLogFeedEntries = ({
  * characters, the capture groups and the hash), thus the limit keeps them
  * below approximately 20 MB, in addition to the own entries of the browser
  * runtime (`MAXIMUM_OWN_ENTRIES`). The snapshot reads a maximum of 10,000
- * entries (see `MAXIMUM_SNAPSHOT_PAGES`), thus 10,000 more entries can
+ * entries (see `MAXIMUM_PAGES_PER_READ`), thus 10,000 more entries can
  * arrive while the consumer is open: for example 10 owners with one entry
  * each 30 seconds for more than 8 hours. Above the limit, the oldest
  * entries leave first.
  */
-export const MAXIMUM_RELAY_ENTRIES = 20_000;
+const MAXIMUM_RELAY_ENTRIES = 20_000;
 
 /**
  * Above the limit, the store removes the oldest entries down to this share
  * of the limit. Thus it sorts the entries only one time for many new
- * entries.
+ * entries. The store of the own entries of the browser runtime uses the
+ * same idea, but this value belongs to the limit of this store.
  */
 const SHARE_KEPT_AFTER_PRUNE = 0.9;
 
@@ -105,7 +106,7 @@ export interface RelayEntryStore {
   /**
    * Null: the store has all entries of the relay for its scope. Else, the
    * scope has more entries than the store keeps (`MAXIMUM_RELAY_ENTRIES`,
-   * `MAXIMUM_SNAPSHOT_PAGES`): the entries up to this time can be missing,
+   * `MAXIMUM_PAGES_PER_READ`): the entries up to this time can be missing,
    * and the newer entries are complete.
    */
   readonly incompleteUntil: Date | null;
@@ -130,13 +131,12 @@ export const markRelayEntriesIncomplete = (
 /**
  * Adds the entries that the store does not have. The copies of one entry
  * are the same (the resend of the relay, the reads after a reconnect), thus
- * the first copy stays. Above `maximumEntryCount`, the oldest entries leave.
- * Gives the same store when it got no new entry.
+ * the first copy stays. Above `MAXIMUM_RELAY_ENTRIES`, the oldest entries
+ * leave. Gives the same store when it got no new entry.
  */
 export const addRelayEntries = (
   store: RelayEntryStore,
   entries: Iterable<LogFeedEntry>,
-  maximumEntryCount = MAXIMUM_RELAY_ENTRIES,
 ): RelayEntryStore => {
   let nextEntries: Map<string, LogFeedEntry> | null = null;
 
@@ -148,7 +148,7 @@ export const addRelayEntries = (
   }
 
   if (nextEntries === null) return store;
-  if (nextEntries.size <= maximumEntryCount)
+  if (nextEntries.size <= MAXIMUM_RELAY_ENTRIES)
     return { entries: nextEntries, incompleteUntil: store.incompleteUntil };
 
   const sortedEntries = Array.from(nextEntries.values()).sort(
@@ -156,7 +156,7 @@ export const addRelayEntries = (
   );
   const removedEntryCount =
     sortedEntries.length -
-    Math.floor(maximumEntryCount * SHARE_KEPT_AFTER_PRUNE);
+    Math.floor(MAXIMUM_RELAY_ENTRIES * SHARE_KEPT_AFTER_PRUNE);
   const newestRemovedEntry = sortedEntries[removedEntryCount - 1];
 
   return {
@@ -196,22 +196,30 @@ interface RelayEntryFilterInput {
   readonly ownCitizenId: string;
   /**
    * The other owners who share with the viewer now. Null when the list is
-   * not known or not complete: then the filter keeps the entries of all
-   * owners.
+   * not known: then the filter keeps the entries of all owners.
    */
   readonly sharingOwners: readonly SharingOwnerRange[] | null;
+  /**
+   * The other owners outside of `sharingOwners` whose access a read of the
+   * app confirmed, when the list of the owners is not complete
+   * (`hasMoreOwners` of `listSharingOwners()`). The filter keeps all their
+   * entries: the read gave only the entries that the viewer can read.
+   */
+  readonly confirmedOwnerCitizenIds?: ReadonlySet<string>;
 }
 
 /**
  * The entries of the relay that the consumer can keep: in its scope, and
- * the own entries or the entries in the visible time range of a sharing
- * owner. When a grant ends or the owner revokes it, the entries of the
- * owner leave the memory, also the older ones (principle 5).
+ * the own entries, the entries in the visible time range of a sharing
+ * owner, or the entries of a confirmed owner. When a grant ends or the
+ * owner revokes it, the entries of the owner leave the memory, also the
+ * older ones (principle 5).
  */
 export const createRelayEntryFilter = ({
   scope,
   ownCitizenId,
   sharingOwners,
+  confirmedOwnerCitizenIds,
 }: RelayEntryFilterInput) => {
   const isInScope = createScopeFilter(scope);
   const visibleTimeRangeByOwnerCitizenId =
@@ -235,9 +243,9 @@ export const createRelayEntryFilter = ({
     const visibleTimeRange = visibleTimeRangeByOwnerCitizenId.get(
       entry.owner.id,
     );
-    return (
-      visibleTimeRange !== undefined &&
-      isInVisibleTimeRange(visibleTimeRange, entry.eventAt)
-    );
+    if (visibleTimeRange === undefined)
+      return confirmedOwnerCitizenIds?.has(entry.owner.id) ?? false;
+
+    return isInVisibleTimeRange(visibleTimeRange, entry.eventAt);
   };
 };

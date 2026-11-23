@@ -18,9 +18,8 @@ interface Props {
 }
 
 /**
- * A bottom sheet with a trigger of the mobile action bar. A swipe down
- * closes it. The same sheet as the notification center of the mobile action
- * bar.
+ * A bottom sheet with a trigger of the mobile action bar, for example the
+ * notification center. A swipe down closes it.
  */
 export const BottomSheet = ({
   title,

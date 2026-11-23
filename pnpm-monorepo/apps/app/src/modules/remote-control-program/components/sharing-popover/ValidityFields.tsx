@@ -9,12 +9,19 @@ import {
 } from "@sam-monorepo/domain";
 import { useState } from "react";
 import {
-  CUSTOM_VALIDITY_CHOICE,
+  CustomValidityChoice,
   ShareGrantFormField,
-} from "./shareGrantFormFields";
+  type ShareGrantValidityChoice,
+} from "../../utils/shareGrantFormFields";
+
+interface ValidityItem {
+  readonly value: ShareGrantValidityChoice;
+  readonly label: string;
+  readonly hint: string;
+}
 
 /** The presets of step 2. "Until the end of an event" comes in step 4. */
-const VALIDITY_ITEMS = [
+const VALIDITY_ITEMS: ValidityItem[] = [
   {
     value: GrantValidityPreset.OneHour,
     label: "1 Stunde",
@@ -31,7 +38,7 @@ const VALIDITY_ITEMS = [
     hint: "Ab jetzt, bis du die Freigabe widerrufst.",
   },
   {
-    value: CUSTOM_VALIDITY_CHOICE,
+    value: CustomValidityChoice.Custom,
     label: "Zeitraum",
     hint: "Ein eigener Start und ein eigenes Ende.",
   },
@@ -42,14 +49,16 @@ const VALIDITY_LABEL = "Wie lange?";
 /** The validity of a new grant: a preset, or a custom start and end */
 export const ValidityFields = () => {
   // The shortest preset is the default
-  const [choice, setChoice] = useState<string>(GrantValidityPreset.OneHour);
+  const [choice, setChoice] = useState<ShareGrantValidityChoice>(
+    GrantValidityPreset.OneHour,
+  );
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
 
-  const changeChoice = (nextChoice: string) => {
+  const changeChoice = (nextChoice: ShareGrantValidityChoice) => {
     setChoice(nextChoice);
 
-    if (nextChoice === CUSTOM_VALIDITY_CHOICE && !startsAt)
+    if (nextChoice === CustomValidityChoice.Custom && !startsAt)
       setStartsAt(instantToWallTime(new Date(), ORGANIZATION_TIMEZONE));
   };
 
@@ -63,12 +72,14 @@ export const ValidityFields = () => {
           label={VALIDITY_LABEL}
           items={VALIDITY_ITEMS}
           value={choice}
-          onChange={changeChoice}
+          onChange={(nextChoice) =>
+            changeChoice(nextChoice as ShareGrantValidityChoice)
+          }
           className="flex-wrap"
         />
       </div>
 
-      {choice === CUSTOM_VALIDITY_CHOICE && (
+      {choice === CustomValidityChoice.Custom && (
         <>
           <div>
             <DateTimeInput

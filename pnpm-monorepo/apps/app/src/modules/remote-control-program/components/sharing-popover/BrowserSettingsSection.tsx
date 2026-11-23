@@ -4,6 +4,7 @@ import Note from "@/modules/common/components/Note";
 import { useRef } from "react";
 import { LogFolderState } from "../../runtime/types";
 import { useBrowserRuntime } from "../../runtime/useBrowserRuntime";
+import { BROWSER_NOT_SUPPORTED_TEXT } from "../../utils/remoteControlProgramTexts";
 import { BrowserRuntimeControl } from "./BrowserRuntimeControl";
 import { LocalAccessControl } from "./LocalAccessControl";
 import { OlderEntriesRequestPanel } from "./OlderEntriesRequestPanel";
@@ -35,10 +36,7 @@ export const BrowserSettingsSection = () => {
   return (
     <SharingPopoverSection heading="Dieser Browser" headingRef={headingRef}>
       {runtime.state.folder.state === LogFolderState.NotSupported ? (
-        <Note
-          type="info"
-          message="Dieser Browser kann den Log-Ordner nicht lesen. Nutze am Computer einen Chromium-Browser, zum Beispiel Chrome, Edge oder Opera."
-        />
+        <Note type="info" message={BROWSER_NOT_SUPPORTED_TEXT} />
       ) : (
         <>
           {olderEntriesRequest.request && (

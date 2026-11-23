@@ -6,6 +6,11 @@ import {
   LogEntriesFeedProblem,
   RelayFeedAvailability,
 } from "@/modules/remote-control-program/consumer/LogEntriesFeedConsumer";
+import {
+  NO_RELAY_TEXT,
+  SESSION_EXPIRED_TEXT,
+} from "@/modules/remote-control-program/utils/remoteControlProgramTexts";
+import type { ComponentProps } from "react";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 
 const PROBLEM_TEXTS: Readonly<Record<LogEntriesFeedProblem, string>> = {
@@ -15,6 +20,19 @@ const PROBLEM_TEXTS: Readonly<Record<LogEntriesFeedProblem, string>> = {
     "Der Log Analyzer ist in zu vielen Tabs offen. In diesem Tab erscheinen neue Einträge anderer nur etwa einmal in der Minute. Schließe die anderen Tabs.",
   [LogEntriesFeedProblem.Forbidden]:
     "Du kannst keine geteilten Einträge lesen: Dir fehlt eine Berechtigung, oder die Organisation hat das Remote Control Program oder die Log-Einträge abgeschaltet. Deine eigenen Einträge aus diesem Browser siehst du weiterhin.",
+  [LogEntriesFeedProblem.SessionExpired]: SESSION_EXPIRED_TEXT,
+};
+
+const PROBLEM_NOTE_TYPES: Readonly<
+  Record<
+    LogEntriesFeedProblem,
+    NonNullable<ComponentProps<typeof Note>["type"]>
+  >
+> = {
+  [LogEntriesFeedProblem.RequestFailed]: "warning",
+  [LogEntriesFeedProblem.TooManyConsumers]: "warning",
+  [LogEntriesFeedProblem.Forbidden]: "error",
+  [LogEntriesFeedProblem.SessionExpired]: "error",
 };
 
 /**
@@ -28,17 +46,12 @@ export const FeedNotes = () => {
   return (
     <>
       {relayAvailability === RelayFeedAvailability.NotConfigured && (
-        <Note
-          type="info"
-          message="Diese Umgebung hat kein Relay. Der Log Analyzer zeigt deshalb nur deine eigenen Einträge, und nur auf diesem Rechner. Nichts wird geteilt."
-        />
+        <Note type="info" message={NO_RELAY_TEXT} />
       )}
 
       {problem && (
         <Note
-          type={
-            problem === LogEntriesFeedProblem.Forbidden ? "error" : "warning"
-          }
+          type={PROBLEM_NOTE_TYPES[problem]}
           message={PROBLEM_TEXTS[problem]}
         />
       )}
