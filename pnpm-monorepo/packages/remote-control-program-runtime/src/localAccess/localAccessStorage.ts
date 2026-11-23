@@ -1,0 +1,220 @@
+import {
+  getOldestLogAnalyzerEntryVersion,
+  type LogAnalyzerEntryType,
+  toLogAnalyzerEntryType,
+} from "@sam-monorepo/domain";
+import * as z from "zod";
+import { type LivePeriods, NO_LIVE_PERIODS } from "./livePeriods.js";
+
+/**
+ * The browser storage of the local access layer. `localStorage` has this
+ * shape. The app gives it, thus the package does not read the globals of the
+ * browser. The methods can throw the errors of the storage (for example a
+ * full storage), and the layer does not catch them.
+ */
+export interface LocalAccessStorage {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+  removeItem(key: string): void;
+}
+
+/**
+ * The settings of the owner in this browser: the rules for each log entry
+ * type and the "Stop all" of this browser. Each tab can write it (for example
+ * the sharing popover).
+ */
+export const LOCAL_ACCESS_LAYER_STORAGE_KEY =
+  "remote_control_program_local_access_layer";
+
+/**
+ * The live periods (see `livePeriods.ts`). Only the tab with the running
+ * runtime extends them. A "Stop all" in a different tab ends them.
+ */
+export const LIVE_PERIODS_STORAGE_KEY = "remote_control_program_live_periods";
+
+/**
+ * The share settings of the old Log Analyzer. The layer removes them and does
+ * not take them over (M1 of `docs/remote-control-program/migration.md`).
+ */
+export const LEGACY_SHARE_TYPES_STORAGE_KEY = "log_analyzer_share_types";
+
+/** A stored value of a different version gives the defaults */
+const STORAGE_VERSION = 1;
+
+/** Far above the number of log entry types (50 in 2026-11) */
+const MAXIMUM_STORED_TYPE_RULES = 1_000;
+
+/** The longest value of `LogAnalyzerEntryType` has 33 characters */
+const MAXIMUM_TYPE_LENGTH = 100;
+
+/**
+ * Far above `MAXIMUM_LIVE_PERIODS`, thus a value with more periods (for
+ * example of a later version of the app) still gives its newest periods
+ */
+const MAXIMUM_STORED_PERIODS = 1_000;
+
+const storedLocalAccessLayerSchema = z.object({
+  version: z.literal(STORAGE_VERSION),
+  /** The time of the "Stop all" of this browser. Null when it is not active. */
+  stopped_at: z.iso.datetime().nullable(),
+  /** The types that are on. A type that is off has no item. */
+  log_entry_types: z
+    .array(
+      z.object({
+        /** The oldest version of the type (`supersedes`) */
+        type: z.string().max(MAXIMUM_TYPE_LENGTH),
+        turned_on_at: z.iso.datetime(),
+      }),
+    )
+    .max(MAXIMUM_STORED_TYPE_RULES),
+});
+
+const storedLivePeriodsSchema = z.object({
+  version: z.literal(STORAGE_VERSION),
+  periods: z
+    .array(
+      z.object({
+        started_at: z.iso.datetime(),
+        ended_at: z.iso.datetime(),
+      }),
+    )
+    .max(MAXIMUM_STORED_PERIODS),
+  /** See `LivePeriods.canContinueLastPeriod` */
+  can_continue_last_period: z.boolean(),
+});
+
+export interface LocalAccessRules {
+  /** The time of the "Stop all" of this browser. Null when it is not active. */
+  readonly stoppedAt: number | null;
+  /**
+   * The log entry types that are on, by their oldest version, with the time
+   * when the owner turned them on. All versions of a type share one rule, so
+   * that a new version of a pattern keeps the rule of the owner.
+   */
+  readonly turnedOnAtByType: ReadonlyMap<LogAnalyzerEntryType, number>;
+}
+
+/** All types are off, and "Stop all" is not active */
+const DEFAULT_RULES: LocalAccessRules = {
+  stoppedAt: null,
+  turnedOnAtByType: new Map(),
+};
+
+/**
+ * Null when there is no value, or the value is not valid JSON or does not
+ * match the schema
+ */
+const readStoredValue = <Value>(
+  storage: LocalAccessStorage,
+  key: string,
+  schema: z.ZodType<Value>,
+) => {
+  const text = storage.getItem(key);
+  if (text === null) return null;
+
+  let value: unknown;
+  try {
+    value = JSON.parse(text);
+  } catch {
+    return null;
+  }
+
+  const result = schema.safeParse(value);
+  return result.success ? result.data : null;
+};
+
+/**
+ * Writes only a changed value. Thus a method without a change fires no
+ * `storage` event in the other tabs.
+ */
+const writeStoredValue = (
+  storage: LocalAccessStorage,
+  key: string,
+  value: unknown,
+) => {
+  const text = JSON.stringify(value);
+  if (storage.getItem(key) !== text) storage.setItem(key, text);
+};
+
+const toTime = (isoDate: string) => new Date(isoDate).getTime();
+
+const toIsoDate = (time: number) => new Date(time).toISOString();
+
+/** A broken value gives the defaults: all types are off */
+export const readLocalAccessRules = (
+  storage: LocalAccessStorage,
+): LocalAccessRules => {
+  const storedValue = readStoredValue(
+    storage,
+    LOCAL_ACCESS_LAYER_STORAGE_KEY,
+    storedLocalAccessLayerSchema,
+  );
+  if (!storedValue) return DEFAULT_RULES;
+
+  const turnedOnAtByType = new Map<LogAnalyzerEntryType, number>();
+  for (const rule of storedValue.log_entry_types) {
+    // A type that this version of the app does not know stays off
+    const type = toLogAnalyzerEntryType(rule.type);
+    if (type === undefined) continue;
+
+    turnedOnAtByType.set(
+      getOldestLogAnalyzerEntryVersion(type),
+      toTime(rule.turned_on_at),
+    );
+  }
+
+  return {
+    stoppedAt:
+      storedValue.stopped_at === null ? null : toTime(storedValue.stopped_at),
+    turnedOnAtByType,
+  };
+};
+
+export const writeLocalAccessRules = (
+  storage: LocalAccessStorage,
+  rules: LocalAccessRules,
+) => {
+  writeStoredValue(storage, LOCAL_ACCESS_LAYER_STORAGE_KEY, {
+    version: STORAGE_VERSION,
+    stopped_at: rules.stoppedAt === null ? null : toIsoDate(rules.stoppedAt),
+    log_entry_types: Array.from(
+      rules.turnedOnAtByType,
+      ([type, turnedOnAt]) => ({
+        type,
+        turned_on_at: toIsoDate(turnedOnAt),
+      }),
+    ),
+  } satisfies z.input<typeof storedLocalAccessLayerSchema>);
+};
+
+/** A broken value gives no periods: no entry goes up automatically */
+export const readLivePeriods = (storage: LocalAccessStorage): LivePeriods => {
+  const storedValue = readStoredValue(
+    storage,
+    LIVE_PERIODS_STORAGE_KEY,
+    storedLivePeriodsSchema,
+  );
+  if (!storedValue) return NO_LIVE_PERIODS;
+
+  return {
+    periods: storedValue.periods.map((period) => ({
+      startedAt: toTime(period.started_at),
+      endedAt: toTime(period.ended_at),
+    })),
+    canContinueLastPeriod: storedValue.can_continue_last_period,
+  };
+};
+
+export const writeLivePeriods = (
+  storage: LocalAccessStorage,
+  livePeriods: LivePeriods,
+) => {
+  writeStoredValue(storage, LIVE_PERIODS_STORAGE_KEY, {
+    version: STORAGE_VERSION,
+    periods: livePeriods.periods.map((period) => ({
+      started_at: toIsoDate(period.startedAt),
+      ended_at: toIsoDate(period.endedAt),
+    })),
+    can_continue_last_period: livePeriods.canContinueLastPeriod,
+  } satisfies z.input<typeof storedLivePeriodsSchema>);
+};
