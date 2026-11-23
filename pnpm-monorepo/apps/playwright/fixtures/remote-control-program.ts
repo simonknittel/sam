@@ -1,4 +1,6 @@
 import type { Locator, Page, WebSocket } from "@playwright/test";
+import type { PrismaClient } from "@sam-monorepo/database/client";
+import type { TestCitizen } from "./factories";
 import { clickUntilVisible, pickFromSearch, toggleLabel } from "./interactions";
 import { expect } from "./test";
 
@@ -7,8 +9,9 @@ import { expect } from "./test";
 export const REMOTE_CONTROL_PROGRAM_PERMISSION = "remoteControlProgram;use";
 
 /**
- * The browser runtime reads the log folder again at this interval
- * (`LOG_FOLDER_READ_INTERVAL_MILLISECONDS` of the runtime package)
+ * The browser runtime reads the log folder again at this interval. A copy of
+ * `LOG_FOLDER_READ_INTERVAL_MILLISECONDS` in `browserRuntime.ts` of the
+ * runtime package, which the package does not export.
  */
 export const LOG_FOLDER_READ_INTERVAL = 10_000;
 
@@ -25,6 +28,26 @@ export const LIVE_UPLOAD_TIMEOUT = LOG_FOLDER_READ_INTERVAL + 15_000;
  * did not arrive does not arrive.
  */
 export const REALTIME_DELIVERY_GRACE = 6_000;
+
+/** The raw lines of the owner in the database, in the order of the log file */
+export const uploadedLines = (prisma: PrismaClient, owner: TestCitizen) =>
+  prisma.logAnalyzerEntry
+    .findMany({
+      where: { createdById: owner.entity.id },
+      orderBy: [{ eventAt: "asc" }, { lineNumber: "asc" }],
+      select: { rawLine: true },
+    })
+    .then((entries) => entries.map((entry) => entry.rawLine));
+
+/** Waits until the raw lines of the owner in the database are the lines */
+export const expectUploadedLines = (
+  prisma: PrismaClient,
+  owner: TestCitizen,
+  lines: readonly string[],
+) =>
+  expect
+    .poll(() => uploadedLines(prisma, owner), { timeout: LIVE_UPLOAD_TIMEOUT })
+    .toEqual(lines);
 
 /** The accessible name of the popover */
 const SHARING_POPOVER_TITLE = "Remote Control Program";

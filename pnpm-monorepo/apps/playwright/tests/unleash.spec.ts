@@ -9,11 +9,13 @@ import {
   stubDirectoryPicker,
 } from "../fixtures/log-analyzer";
 import {
+  expectUploadedLines,
   LIVE_UPLOAD_TIMEOUT,
   sharingPopoverSection,
   SharingPopoverSection,
   startBrowserRuntime,
   turnOnLogEntryTypes,
+  uploadedLines,
 } from "../fixtures/remote-control-program";
 import { expect, test } from "../fixtures/test";
 import {
@@ -184,14 +186,6 @@ test("the flag of the log entries stops their uploads, and the sharing popover t
   });
   await signIn(owner.user);
 
-  const uploadedLines = () =>
-    prisma.logAnalyzerEntry
-      .findMany({
-        where: { createdById: owner.entity.id },
-        orderBy: { eventAt: "asc" },
-        select: { rawLine: true },
-      })
-      .then((entries) => entries.map((entry) => entry.rawLine));
   const turnedOffNote = sharingPopoverSection(
     page,
     SharingPopoverSection.ThisBrowser,
@@ -218,7 +212,9 @@ test("the flag of the log entries stops their uploads, and the sharing popover t
     const lineBefore = blueprintLine(new Date(), "Vor der Abschaltung");
     await appendLogLines(page, [lineBefore]);
     await expectFlagPropagation
-      .poll(uploadedLines, { timeout: FLAG_PROPAGATION_TIMEOUT })
+      .poll(() => uploadedLines(prisma, owner), {
+        timeout: FLAG_PROPAGATION_TIMEOUT,
+      })
       .toEqual([lineBefore]);
 
     await setUnleashFlag(
@@ -246,9 +242,7 @@ test("the flag of the log entries stops their uploads, and the sharing popover t
     /** The lines of the time in which the part was off stay on the machine */
     const lineAfter = blueprintLine(new Date(), "Nach der Abschaltung");
     await appendLogLines(page, [lineAfter]);
-    await expect
-      .poll(uploadedLines, { timeout: LIVE_UPLOAD_TIMEOUT })
-      .toEqual([lineBefore, lineAfter]);
+    await expectUploadedLines(prisma, owner, [lineBefore, lineAfter]);
   } finally {
     await setUnleashFlag(
       UNLEASH_FLAG.DisableLogEntriesCapability,

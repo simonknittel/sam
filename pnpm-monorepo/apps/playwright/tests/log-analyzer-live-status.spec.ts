@@ -5,6 +5,8 @@ import {
   createCitizen,
   createLogAnalyzerEntry,
   createShareGrant,
+  ONE_HOUR_MS,
+  ONE_MINUTE_MS,
   type TestCitizen,
 } from "../fixtures/factories";
 import { toggleLabel } from "../fixtures/interactions";
@@ -29,9 +31,6 @@ import {
 } from "../fixtures/log-analyzer";
 import { LOG_FOLDER_READ_INTERVAL } from "../fixtures/remote-control-program";
 import { expect, test } from "../fixtures/test";
-
-const MILLISECONDS_PER_MINUTE = 60 * 1000;
-const MINUTES_PER_HOUR = 60;
 
 /**
  * Without the panel the table takes the full width instead of three
@@ -155,17 +154,17 @@ test("the live status ends the session when the own log stops, and a contract fa
   await expect(panel.getByText("online", { exact: true })).toBeVisible();
 
   /** The game writes a line every few minutes while it runs */
-  await page.clock.fastForward(11 * MILLISECONDS_PER_MINUTE);
+  await page.clock.fastForward(11 * ONE_MINUTE_MS);
   await expect(panel.getByText(/^offline seit/)).toBeVisible();
   await expect(panel.getByText("Shard: EU 100")).toHaveCount(0);
   await expect(panel.getByText("Contract: Bounty Hunt")).toBeVisible();
   await expect(panel.getByText("unsicher")).toHaveCount(0);
 
   /** The row is muted, and only a screen reader reads the word */
-  await page.clock.fastForward(80 * MILLISECONDS_PER_MINUTE);
+  await page.clock.fastForward(80 * ONE_MINUTE_MS);
   await expect(panel.getByText("unsicher")).toHaveCount(1);
 
-  await page.clock.fastForward(5 * MINUTES_PER_HOUR * MILLISECONDS_PER_MINUTE);
+  await page.clock.fastForward(5 * ONE_HOUR_MS);
   await expect(panel.getByText("Gerade ist niemand aktiv.")).toBeVisible();
 });
 

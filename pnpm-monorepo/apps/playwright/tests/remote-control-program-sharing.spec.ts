@@ -1,7 +1,6 @@
 import type { Page } from "@playwright/test";
-import type { PrismaClient } from "@sam-monorepo/database/client";
 import { instantToWallTime, ORGANIZATION_TIMEZONE } from "@sam-monorepo/domain";
-import { createCitizen, type TestCitizen } from "../fixtures/factories";
+import { createCitizen } from "../fixtures/factories";
 import { toggleLabel } from "../fixtures/interactions";
 import {
   appendLogLines,
@@ -20,6 +19,7 @@ import {
 import {
   closeSharingPopover,
   createShareGrantInPopover,
+  expectUploadedLines,
   LIVE_UPLOAD_TIMEOUT,
   openShareGrantForm,
   openSharingPopover,
@@ -33,6 +33,7 @@ import {
   startBrowserRuntime,
   submitShareGrantForm,
   turnOnLogEntryTypes,
+  uploadedLines,
 } from "../fixtures/remote-control-program";
 import { expect, test } from "../fixtures/test";
 
@@ -59,25 +60,6 @@ const MISSION_ID = "bf7d2465-cf1e-480b-ae5c-25040d716e5f";
 /** The name of the contract is the message of the entry */
 const contractAcceptedLine = (at: Date, contract: string) =>
   `<${at.toISOString()}> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Accepted:  ${contract}: " [4] to queue. New queue size: 1, MissionId: [${MISSION_ID}], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]`;
-
-/** The raw lines of the owner in the database, in the order of the log file */
-const uploadedLines = (prisma: PrismaClient, owner: TestCitizen) =>
-  prisma.logAnalyzerEntry
-    .findMany({
-      where: { createdById: owner.entity.id },
-      orderBy: [{ eventAt: "asc" }, { lineNumber: "asc" }],
-      select: { rawLine: true },
-    })
-    .then((entries) => entries.map((entry) => entry.rawLine));
-
-const expectUploadedLines = (
-  prisma: PrismaClient,
-  owner: TestCitizen,
-  lines: readonly string[],
-) =>
-  expect
-    .poll(() => uploadedLines(prisma, owner), { timeout: LIVE_UPLOAD_TIMEOUT })
-    .toEqual(lines);
 
 /**
  * The owner opens the Log Analyzer, selects the folder in the sharing

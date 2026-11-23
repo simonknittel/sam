@@ -111,11 +111,13 @@ can have no effect.
   the origin private file system of the browser (`stubDirectoryPicker()` in
   `fixtures/log-analyzer.ts`). It reads the folder each 10 seconds, thus a
   new line needs `LIVE_UPLOAD_TIMEOUT` or `page.clock.fastForward()`. The
-  tabs of one browser share one runtime: a second citizen with a runtime
-  needs a second browser (`openSignedInBrowser()`). Use the helpers of
-  `fixtures/remote-control-program.ts` for the sharing popover. The name of
-  its trigger is also a part of the name of the permission "Remote Control
-  Program nutzen".
+  tabs of one citizen in one browser share one runtime. Each citizen has its
+  own runtime, folder and settings in the browser, but a browser context has
+  only one session. Thus two citizens whose runtimes run at the same time
+  need a second browser (`openSignedInBrowser()`). Use the helpers of
+  `fixtures/remote-control-program.ts` for the sharing popover and for the
+  uploaded lines in the database. The name of the trigger of the popover is
+  also a part of the name of the permission "Remote Control Program nutzen".
 - A test that turns off a part of the Remote Control Program uses the scope
   of the stack, because the relay service reads the flag without a user. The
   test turns the part on again in a `finally` block, because the next tests

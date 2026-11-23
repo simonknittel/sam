@@ -1,4 +1,5 @@
 import type { Locator, Page } from "@playwright/test";
+import { ONE_DAY_MS, ONE_HOUR_MS, ONE_MINUTE_MS } from "./factories";
 import { clickUntilVisible, toggleLabel } from "./interactions";
 import {
   closeSharingPopover,
@@ -28,16 +29,14 @@ export const blueprintLine = (
 ) =>
   `<${at.toISOString()}> [Notice] <SHUDEvent_OnNotification> Added notification "Received Blueprint: ${blueprint}: " [25] to queue. New queue size: 3, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]`;
 
-const MILLISECONDS_PER_MINUTE = 60 * 1000;
-const MINUTES_PER_HOUR = 60;
-const HOURS_PER_DAY = 24;
-
 export const minutesAgo = (minutes: number) =>
-  new Date(Date.now() - minutes * MILLISECONDS_PER_MINUTE);
+  new Date(Date.now() - minutes * ONE_MINUTE_MS);
 
-export const hoursAgo = (hours: number) => minutesAgo(hours * MINUTES_PER_HOUR);
+export const hoursAgo = (hours: number) =>
+  new Date(Date.now() - hours * ONE_HOUR_MS);
 
-export const daysAgo = (days: number) => hoursAgo(days * HOURS_PER_DAY);
+export const daysAgo = (days: number) =>
+  new Date(Date.now() - days * ONE_DAY_MS);
 
 const toDateValue = (date: Date) => date.toISOString().slice(0, 10);
 

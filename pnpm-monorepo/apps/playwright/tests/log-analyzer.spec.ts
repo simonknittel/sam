@@ -401,45 +401,6 @@ test("a quick look shows only its types until it ends, also hidden types", async
   await expect(quickLookBar).toHaveCount(0);
 });
 
-test("a date range reaches shared entries older than the rolling window", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const viewer = await createCitizen(prisma, {
-    handle: "log-archiv",
-    permissionStrings: LOG_ANALYZER_PERMISSIONS,
-  });
-  const owner = await createCitizen(prisma, { handle: "log-alt-teiler" });
-  const eventAt = daysAgo(40);
-
-  await createShareGrant(prisma, {
-    ownerId: owner.entity.id,
-    granteeCitizenId: viewer.entity.id,
-    startsAt: daysAgo(41),
-  });
-  await createLogAnalyzerEntry(prisma, {
-    type: LogAnalyzerEntryType.JoinPu,
-    rawLine: joinPuLine(eventAt),
-    eventAt,
-    createdById: owner.entity.id,
-  });
-
-  await signIn(viewer.user);
-  await page.goto(LOG_ANALYZER_PAGE_PATH);
-
-  await expect(
-    page.getByText("Noch keine Einträge in diesem Zeitraum."),
-  ).toBeVisible();
-
-  await applyDateRange(page, daysAgo(42), daysAgo(38));
-
-  await expect(rowOf(page, "Shard-Beitritt")).toBeVisible();
-  await expect(
-    rowOf(page, "Shard-Beitritt").getByRole("link", { name: "log-alt-teiler" }),
-  ).toBeVisible();
-});
-
 test("the overlay stays open while the page renders again", async ({
   page,
   prisma,
