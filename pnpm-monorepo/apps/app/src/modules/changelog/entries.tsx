@@ -58,6 +58,50 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-11-23-log-analyzer-freigaben",
+    date: "2026-11-23",
+    title: "Log Analyzer: Teilen mit Freigaben",
+    tags: ["Änderung", "Log Analyzer"],
+    isTracked: true,
+    requiresAuth: { resource: "logAnalyzer", action: "read" },
+    body: () => (
+      <>
+        <p>
+          Der Log Analyzer ist jetzt ein Teil des Remote Control Program. Das
+          neue Symbol neben den Benachrichtigungen öffnet seine Einstellungen.
+        </p>
+
+        <ul>
+          <li>
+            Dort wählst du den Log-Ordner und den Start beim Öffnen von SAM. Die
+            Laufzeit liest dein Log auf jeder Seite von SAM, nicht nur im Log
+            Analyzer.
+          </li>
+          <li>
+            Mit Freigaben entscheidest du, wer deine Einträge sieht: ein
+            Citizen, eine Rolle oder alle, für 1 Stunde, für 2 Stunden, ohne
+            Ende oder für einen eigenen Zeitraum. Eine Freigabe kannst du
+            jederzeit widerrufen.
+          </li>
+          <li>
+            Automatisch hochgeladen werden nur die Zeilen, die die Laufzeit live
+            liest. Ältere Einträge lädst du nur auf Anfrage und nach einer
+            Bestätigung hoch.
+          </li>
+          <li>SAM entfernt die IP-Adressen vor dem Hochladen.</li>
+        </ul>
+
+        <p>
+          Die bisherigen Einstellungen zum Teilen gelten nicht mehr: Bis du eine
+          Freigabe erstellst, sieht niemand deine Einträge. Für den Log Analyzer
+          brauchst du zusätzlich die Berechtigung &bdquo;Remote Control Program
+          nutzen&ldquo;.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-11-22-task-detailseite-redesign",
     date: "2026-11-22",
     title: "Task-Detailseite Redesign",
