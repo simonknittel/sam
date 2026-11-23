@@ -1,4 +1,5 @@
 import { AdminToolbar } from "@/modules/admin-toolbar/components/AdminToolbar";
+import { getRequestActor } from "@/modules/application";
 import { AppsContextProvider } from "@/modules/apps/components/AppsContext";
 import { addCountsByAppSlug } from "@/modules/apps/utils/addCountsByAppSlug";
 import { getAppFavoriteKeys } from "@/modules/apps/utils/queries/getAppFavoriteKeys";
@@ -21,6 +22,7 @@ import { OnboardingTour } from "@/modules/onboarding/components/OnboardingTour";
 import { getOnboardingState } from "@/modules/onboarding/utils/queries/getOnboardingState";
 import { ChannelsProvider } from "@/modules/pusher/components/ChannelsContext";
 import { getNewItemCountsByAppSlug } from "@/modules/read-markers/queries/getNewItemCountsByAppSlug";
+import { BrowserRuntimeProvider } from "@/modules/remote-control-program/runtime/BrowserRuntimeProvider";
 import { RolesContextProvider } from "@/modules/roles/components/RolesContext";
 import {
   getVisibleRoles,
@@ -35,6 +37,7 @@ import { SkipToContentLink } from "@/modules/shell/components/SkipToContentLink"
 import { TopBar } from "@/modules/shell/components/TopBar";
 import { getOpenWikiReportCount } from "@/modules/wiki/queries/getOpenWikiReportCount";
 import { TRPCReactProvider } from "@/trpc/react";
+import { canUseRemoteControlProgram } from "@sam-monorepo/application";
 import { NextIntlClientProvider } from "next-intl";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Suspense } from "react";
@@ -54,6 +57,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     citizenAvatarUrls,
     seasonalTheme,
     newItemCountsByAppSlug,
+    actor,
   ] = await Promise.all([
     requireAuthenticationPage(),
     getAppLinks(),
@@ -68,6 +72,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     getCitizenAvatarUrls(),
     getActiveSeasonalTheme(),
     getNewItemCountsByAppSlug(),
+    getRequestActor(),
   ]);
 
   const adminModeActive = await isAdminModeActive(authentication.session);
@@ -89,50 +94,54 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
               <RolesContextProvider roles={visibleRoles} tags={visibleRoleTags}>
                 <BirthdayCitizensProvider citizenIds={birthdayCitizenIds}>
                   <CitizenAvatarsProvider avatarUrls={citizenAvatarUrls}>
-                    <div {...seasonalThemeRootProps}>
-                      <SkipToContentLink />
+                    <BrowserRuntimeProvider
+                      isEnabled={canUseRemoteControlProgram(actor)}
+                    >
+                      <div {...seasonalThemeRootProps}>
+                        <SkipToContentLink />
 
-                      <AppsContextProvider
-                        apps={apps}
-                        appDotBadgeCounts={addCountsByAppSlug(
-                          { wiki: openWikiReportCount },
-                          newItemCountsByAppSlug,
-                        )}
-                        favoriteAppKeys={[...favoriteAppKeys]}
-                      >
-                        <OnSiteNotificationsProvider
-                          initialUnreadCount={unreadOnSiteNotificationCount}
+                        <AppsContextProvider
+                          apps={apps}
+                          appDotBadgeCounts={addCountsByAppSlug(
+                            { wiki: openWikiReportCount },
+                            newItemCountsByAppSlug,
+                          )}
+                          favoriteAppKeys={[...favoriteAppKeys]}
                         >
-                          <OnboardingProvider initialState={onboardingState}>
-                            <CreateContextProvider>
-                              <CmdKProvider canReadCareer={canReadCareer}>
-                                <TopBar />
-                                <MobileActionBarLoader />
-                              </CmdKProvider>
+                          <OnSiteNotificationsProvider
+                            initialUnreadCount={unreadOnSiteNotificationCount}
+                          >
+                            <OnboardingProvider initialState={onboardingState}>
+                              <CreateContextProvider>
+                                <CmdKProvider canReadCareer={canReadCareer}>
+                                  <TopBar />
+                                  <MobileActionBarLoader />
+                                </CmdKProvider>
 
-                              {/*
-                               * The heights of the bars of the shell repeat in
-                               * the DefaultLayout and its Navigation, the
-                               * IframeLayout, the SidebarLayout, the Tile, the
-                               * scroll padding of the root layout and the
-                               * drawings of Halloween.
-                               */}
-                              <div className="min-h-dvh pt-12 pb-16 lg:pt-28 lg:pb-0">
-                                {children}
-                              </div>
+                                {/*
+                                 * The heights of the bars of the shell repeat in
+                                 * the DefaultLayout and its Navigation, the
+                                 * IframeLayout, the SidebarLayout, the Tile, the
+                                 * scroll padding of the root layout and the
+                                 * drawings of Halloween.
+                                 */}
+                                <div className="min-h-dvh pt-12 pb-16 lg:pt-28 lg:pb-0">
+                                  {children}
+                                </div>
 
-                              <SeasonalViewportLayer />
+                                <SeasonalViewportLayer />
 
-                              <OnboardingTour />
+                                <OnboardingTour />
 
-                              <Suspense>
-                                <OnboardingPopoverOpener />
-                              </Suspense>
-                            </CreateContextProvider>
-                          </OnboardingProvider>
-                        </OnSiteNotificationsProvider>
-                      </AppsContextProvider>
-                    </div>
+                                <Suspense>
+                                  <OnboardingPopoverOpener />
+                                </Suspense>
+                              </CreateContextProvider>
+                            </OnboardingProvider>
+                          </OnSiteNotificationsProvider>
+                        </AppsContextProvider>
+                      </div>
+                    </BrowserRuntimeProvider>
 
                     <AdminToolbar />
 
