@@ -35,9 +35,7 @@ const MAXIMUM_INT32 = 2_147_483_647;
 const getJsonByteLength = (value: unknown) =>
   Buffer.byteLength(JSON.stringify(value), "utf8");
 
-export const toDeliveredLogEntry = (
-  entry: FeedLogEntry,
-): DeliveredLogEntry => ({
+const toDeliveredLogEntry = (entry: FeedLogEntry): DeliveredLogEntry => ({
   id: entry.id,
   owner: { id: entry.owner.id, handle: entry.owner.handle },
   type: entry.type,

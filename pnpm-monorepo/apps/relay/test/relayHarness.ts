@@ -10,21 +10,19 @@ import {
   DownMessageType,
   getRemoteControlProgramSwitches,
   transformPermissionStringToPermissionSet,
-  type RemoteControlProgramSwitches,
   type RemoteControlProgramUnleashFlag,
 } from "@sam-monorepo/domain";
 import { createRelayClient } from "@sam-monorepo/infrastructure";
-import { exportJWK } from "jose";
-import { generateKeyPairSync } from "node:crypto";
 import { once } from "node:events";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
+import { createTestSigningKey } from "../../../packages/application/test/signingKey.js";
 import { createRelayApplicationContext } from "../src/applicationContext.js";
 import type { FeedEntryDelivery } from "../src/delivery/index.js";
 import { parseRelayEnvironment } from "../src/env.js";
 import type { RelayTiming } from "../src/relayConnection.js";
 import { createRelayServer } from "../src/relayServer.js";
-import { ALL_PARTS_ON, type SwitchesSource } from "../src/switches.js";
+import { createSwitchesSource } from "../src/switches.js";
 import { OWNER_PERMISSION_STRINGS } from "./database.js";
 import { TestRuntimeClient } from "./runtimeClient.js";
 
@@ -33,23 +31,19 @@ export const APP_BASE_URL = "https://sam.example.com";
 
 const REQUEST_TIMEOUT_MILLISECONDS = 5_000;
 
-/** A new ES256 key, like the signing key of the app */
-export const createTestSigningKey = async (): Promise<SigningKey> => {
-  const { privateKey, publicKey } = generateKeyPairSync("ec", {
-    namedCurve: "P-256",
-  });
-
-  return {
-    privateKey,
-    publicJwk: await exportJWK(publicKey),
-    keyId: "test-key",
-    algorithm: "ES256",
-  };
-};
-
-/** The JSON Web Key Set of the app, like `/.well-known/jwks.json` */
+/**
+ * The JSON Web Key Set of the app, like `/.well-known/jwks.json`. A test can
+ * make it fail like an app that does not answer correctly.
+ */
 const startKeySetServer = async (signingKey: SigningKey) => {
+  let isAvailable = true;
   const server = createServer((_request, response) => {
+    if (!isAvailable) {
+      response.writeHead(500);
+      response.end();
+      return;
+    }
+
     response.writeHead(200, { "content-type": "application/json" });
     response.end(
       JSON.stringify({
@@ -67,39 +61,16 @@ const startKeySetServer = async (signingKey: SigningKey) => {
   server.listen(0, "127.0.0.1");
   await once(server, "listening");
 
-  return server;
+  return {
+    server,
+    setAvailable: (nextIsAvailable: boolean) => {
+      isAvailable = nextIsAvailable;
+    },
+  };
 };
 
 const getUrl = (server: Server, path: string) =>
   new URL(path, `http://127.0.0.1:${(server.address() as AddressInfo).port}`);
-
-/** The switches of Unleash, which a test can change */
-const createTestSwitches = () => {
-  const listeners = new Set<(switches: RemoteControlProgramSwitches) => void>();
-  let switches = ALL_PARTS_ON;
-
-  const source: SwitchesSource = {
-    getSwitches: () => switches,
-    subscribe: (listener) => {
-      listeners.add(listener);
-      return () => {
-        listeners.delete(listener);
-      };
-    },
-    close: () => listeners.clear(),
-  };
-
-  return {
-    source,
-    /** Turns on the flags (kill switches), and turns off all other flags */
-    setEnabledFlags: (flags: readonly RemoteControlProgramUnleashFlag[]) => {
-      switches = getRemoteControlProgramSwitches((flag) =>
-        flags.includes(flag),
-      );
-      for (const listener of listeners) listener(switches);
-    },
-  };
-};
 
 /** Records the deliveries instead of the publication to the realtime server */
 const createTestDelivery = () => {
@@ -127,15 +98,23 @@ interface Owner {
   readonly handle: string;
 }
 
+interface TestRelayOptions {
+  readonly timing?: Partial<RelayTiming>;
+  readonly maximumUnauthenticatedSockets?: number;
+}
+
 /**
  * Starts a relay service with its composition root, the database of the
- * testcontainer, a local key set of the app, the test switches and a
- * recording delivery
+ * testcontainer, a local key set of the app, switches that the test sets and
+ * a recording delivery
  */
-export const startRelay = async (timing: Partial<RelayTiming> = {}) => {
+export const startRelay = async ({
+  timing,
+  maximumUnauthenticatedSockets,
+}: TestRelayOptions = {}) => {
   const signingKey = await createTestSigningKey();
-  const keySetServer = await startKeySetServer(signingKey);
-  const switches = createTestSwitches();
+  const keySet = await startKeySetServer(signingKey);
+  const switches = createSwitchesSource();
   const { delivery, deliveries } = createTestDelivery();
   const logRecords: LogRecord[] = [];
   const log: Logger = {
@@ -149,22 +128,23 @@ export const startRelay = async (timing: Partial<RelayTiming> = {}) => {
     NODE_ENV: "test",
     DATABASE_URL: process.env.DATABASE_URL,
     APP_BASE_URL,
-    APP_JWKS_URL: getUrl(keySetServer, "/.well-known/jwks.json").href,
+    APP_JWKS_URL: getUrl(keySet.server, "/.well-known/jwks.json").href,
   });
-  const { context, keySet, isDatabaseAvailable } =
-    createRelayApplicationContext({
-      environment,
-      log,
-      switches: switches.source,
-    });
+  const relayContext = createRelayApplicationContext({
+    environment,
+    log,
+    switches,
+  });
+  const { context } = relayContext;
   const server = createRelayServer({
     context,
     delivery,
-    switches: switches.source,
-    keySet,
-    isDatabaseAvailable,
+    switches,
+    keySet: relayContext.keySet,
+    isDatabaseAvailable: relayContext.isDatabaseAvailable,
     appOrigin: new URL(APP_BASE_URL).origin,
     timing,
+    maximumUnauthenticatedSockets,
   });
   const port = await server.listen(0);
   const relayUrl = `ws://127.0.0.1:${port}`;
@@ -214,7 +194,14 @@ export const startRelay = async (timing: Partial<RelayTiming> = {}) => {
     logRecords,
     context,
     deliveries,
-    setEnabledFlags: switches.setEnabledFlags,
+    /** Turns on the flags (kill switches) of Unleash, and turns off all other flags */
+    setEnabledFlags: (flags: readonly RemoteControlProgramUnleashFlag[]) => {
+      switches.set(
+        getRemoteControlProgramSwitches((flag) => flags.includes(flag)),
+      );
+    },
+    /** False: the key set of the app answers with an error */
+    setKeySetAvailable: keySet.setAvailable,
     createAppContext,
     createOwnerActor,
     issueToken,
@@ -230,7 +217,7 @@ export const startRelay = async (timing: Partial<RelayTiming> = {}) => {
     },
     stop: async () => {
       await server.close();
-      keySetServer.close();
+      keySet.server.close();
     },
   };
 };

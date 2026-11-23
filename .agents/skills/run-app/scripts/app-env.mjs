@@ -6,9 +6,9 @@
 // SAM_APP_JWK_SET_VALUE is the base64 of the JSON Web Key Set that the app
 // publishes at /.well-known/jwks.json (see createEmbedJsonWebKeySet() in
 // pnpm-monorepo/apps/app/src/modules/embed-authentication/utils/embedSigningKey.ts).
-// Without EMBED_JWT_PRIVATE_KEY, the key set is empty and Grafana and the
-// relay service refuse every token. SAM_APP_BASE_URL is the issuer of the
-// tokens.
+// Without EMBED_JWT_PRIVATE_KEY, the key set is empty (see
+// docs/setup-local-machine.md#embedded-app-authentication). SAM_APP_BASE_URL
+// is the issuer of the tokens.
 //
 // The output contains only the public key. Do not print the output.
 import { createHash, createPrivateKey, createPublicKey } from "node:crypto";

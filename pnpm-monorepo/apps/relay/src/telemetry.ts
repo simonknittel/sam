@@ -33,8 +33,9 @@ const createDiagLogger = (log: Logger): DiagLogger => {
 };
 
 /**
- * Starts the OpenTelemetry SDK with the metrics and the traces (decision 9
- * of the plan), only when `OTEL_EXPORTER_OTLP_ENDPOINT` is set. The
+ * Starts the OpenTelemetry SDK with the metrics and the traces (decision 28
+ * of `docs/remote-control-program/README.md`), only when
+ * `OTEL_EXPORTER_OTLP_ENDPOINT` is set. The
  * exporters send `http/protobuf`, like the app, and read the endpoint and
  * the headers from the `OTEL_EXPORTER_OTLP_*` variables. Without the SDK,
  * the API of OpenTelemetry records nothing. The logs go to the standard

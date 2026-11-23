@@ -7,6 +7,7 @@ import type {
 } from "@sam-monorepo/application";
 import {
   CapabilityId,
+  CitizenRealtimeChannel,
   FEED_DELIVERY_EVENT_NAME,
   feedDeliveryEventPayloadSchema,
 } from "@sam-monorepo/domain";
@@ -28,7 +29,8 @@ const createEntry = (
 ): FeedLogEntry => {
   entryNumber += 1;
   return {
-    id: `entry${entryNumber}`,
+    // The delivery sorts the entries of one time by the id
+    id: `entry${String(entryNumber).padStart(8, "0")}`,
     owner: { id: OWNER_ID, handle: "Owner" },
     type: "joinPu",
     rawLine,
@@ -98,6 +100,8 @@ const setUp = ({
 /** The payloads of one publication, as the consumer client reads them */
 const parsePublication = (events: readonly CitizenRealtimeEvent[]) =>
   events.map((event) => {
+    // The channel that refuses an admin who assumes the user
+    expect(event.channel).toBe(CitizenRealtimeChannel.RemoteControlProgram);
     expect(event.name).toBe(FEED_DELIVERY_EVENT_NAME);
     return {
       citizenId: event.citizenId,

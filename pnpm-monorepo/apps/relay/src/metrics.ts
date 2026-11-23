@@ -77,6 +77,14 @@ export const createRelayMetrics = () => {
       description:
         "The entries of the uploaded batches, with the attributes capability_id and result",
     }),
+    uploadBudgetRefusals: meter.createCounter(
+      "sam.relay.upload.budget_refusals",
+      {
+        unit: "{batch}",
+        description:
+          "The batches that the relay service refused, because their owner used the hourly budget of entries, with the attribute capability_id",
+      },
+    ),
     uploadDuration: meter.createHistogram("sam.relay.upload.duration", {
       unit: "s",
       description:

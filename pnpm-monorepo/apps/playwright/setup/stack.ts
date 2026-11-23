@@ -317,10 +317,10 @@ interface RelayEnvironmentOptions {
 /**
  * Environment of the relay container of one worker (see
  * apps/relay/src/env.ts). The relay service gets the key set of the app
- * inline, not from the URL of the app: a container cannot always open a
- * connection to the app on the host (for example, a firewall of the host
- * blocks it). The relay service and the app of a worker have the same
- * Unleash app name, thus a flag of the worker scope changes both.
+ * inline, not from the URL of the app (see
+ * docs/setup-local-machine.md#remote-control-program-relay-service). The
+ * relay service and the app of a worker have the same Unleash app name, thus
+ * a flag of the worker scope changes both.
  */
 export const relayEnvironment = ({
   databaseName,

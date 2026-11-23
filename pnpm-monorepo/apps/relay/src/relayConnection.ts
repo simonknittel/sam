@@ -1,26 +1,28 @@
-import { SpanStatusCode, trace, type Span } from "@opentelemetry/api";
+import { SpanStatusCode, trace } from "@opentelemetry/api";
 import {
-  announceRuntime,
   appendFeedEntries,
   authenticateRuntimeConnection,
+  checkRuntimeHello,
+  claimRuntimePresence,
   ConflictError,
   endRuntimeLease,
   ForbiddenError,
-  getOwnRuntimeStop,
+  getRuntimeStopOfOwner,
   recordFeedEntryUploadCounts,
   RemoteControlProgramErrorMessage,
   renewRuntimeLease,
   storeRuntimeAnnouncement,
-  type Actor,
-  type AnnounceRuntimeOutput,
+  withSpan,
   type AppendFeedEntriesOutput,
   type ApplicationContext,
+  type Logger,
+  type OwnRuntime,
   type RuntimeConnection,
+  type RuntimeHelloCheck,
 } from "@sam-monorepo/application";
 import {
   AcknowledgementErrorCode,
   AcknowledgementResult,
-  CAPABILITY_CATALOG,
   createDownMessage,
   DownMessageType,
   getRefusalReasonOfProtocolVersion,
@@ -30,7 +32,6 @@ import {
   RelayCloseReason,
   UpMessageType,
   type AnnounceContent,
-  type CapabilityId,
   type DownMessage,
   type FeedEntriesContent,
   type RemoteControlProgramSwitches,
@@ -47,16 +48,22 @@ import {
   UploadResult,
   type RelayMetrics,
 } from "./metrics.js";
+import {
+  createRateLimiter,
+  type OwnerRateLimits,
+  type Rate,
+} from "./rateLimits.js";
 import type { SwitchesSource } from "./switches.js";
+import {
+  MILLISECONDS_PER_SECOND,
+  ONE_HOUR_MILLISECONDS,
+  ONE_MINUTE_MILLISECONDS,
+} from "./time.js";
 import { UploadCounts } from "./uploadCounts.js";
-import { UploadRateLimiter } from "./uploadRateLimiter.js";
 
 /** The times of the relay service. The tests make them shorter. */
 export interface RelayTiming {
-  /**
-   * The time from the start of the socket to the `hello` and to the end of
-   * the handshake
-   */
+  /** The time from the start of the socket to the `welcome` */
   readonly handshakeTimeoutMilliseconds: number;
   /** The time after the expiry of the last valid token of a connection */
   readonly tokenRenewalGraceMilliseconds: number;
@@ -64,14 +71,12 @@ export interface RelayTiming {
   readonly presenceLeaseMilliseconds: number;
   /** The relay service writes the upload counts of a connection at the latest after this time */
   readonly uploadCountPeriodMilliseconds: number;
-  /** The interval of the check of the times of all connections */
+  /** The interval of the check of the times of the open connections */
   readonly connectionCheckIntervalMilliseconds: number;
 }
 
-const ONE_HOUR_MILLISECONDS = 60 * 60 * 1_000;
-
 export const DEFAULT_RELAY_TIMING: RelayTiming = {
-  handshakeTimeoutMilliseconds: RELAY_LIMITS.tokenRenewalGraceMilliseconds,
+  handshakeTimeoutMilliseconds: RELAY_LIMITS.handshakeTimeoutMilliseconds,
   tokenRenewalGraceMilliseconds: RELAY_LIMITS.tokenRenewalGraceMilliseconds,
   presenceLeaseMilliseconds: RELAY_LIMITS.presenceLeaseMilliseconds,
   uploadCountPeriodMilliseconds: ONE_HOUR_MILLISECONDS,
@@ -86,6 +91,15 @@ export interface ConnectionHub {
   readonly delivery: FeedEntryDelivery;
   readonly switches: SwitchesSource;
   readonly timing: RelayTiming;
+  /** The limits of the owners and the runtimes, for all connections */
+  readonly rateLimits: OwnerRateLimits;
+  /**
+   * The log of the events that clients without a valid token can cause: the
+   * refusals, and the sockets without an authenticated runtime
+   */
+  readonly throttledLog: Logger;
+  /** True after the request of the app to close the connections of the user */
+  readonly isUserDisconnected: (userId: string) => boolean;
   /** Increases with each request of the app about a changed stop of an owner */
   readonly getOwnerStopChangeCount: () => number;
   /**
@@ -115,7 +129,31 @@ const INTERNAL_ERROR_CLOSE_CODE = 1011;
 /** The code of the error of `ws` for a message above `maxPayload` */
 const MESSAGE_TOO_LARGE_ERROR_CODE = "WS_ERR_UNSUPPORTED_MESSAGE_LENGTH";
 
-const ONE_MINUTE_MILLISECONDS = 60_000;
+/**
+ * The rates of the control messages of one connection. Each rate is far
+ * above a correct runtime, and bounds the work for the database:
+ *
+ * - `heartbeat`: one each `RELAY_LIMITS.heartbeatIntervalMilliseconds`
+ *   (15 seconds).
+ * - `token_renewal`: one each `RELAY_LIMITS.tokenRenewalIntervalMilliseconds`,
+ *   and one each 10 seconds after a refused renewal.
+ * - `announce`: one after each change of the settings of the owner.
+ */
+const CONTROL_MESSAGE_RATES = {
+  heartbeat: { intervalMilliseconds: 5_000, burstSize: 3 },
+  tokenRenewal: { intervalMilliseconds: 10_000, burstSize: 3 },
+  announce: { intervalMilliseconds: 1_000, burstSize: 5 },
+} as const satisfies Record<string, Rate>;
+
+/**
+ * A `heartbeat` renews the lease in the database only when the last renewal
+ * is older. A correct runtime sends one `heartbeat` each 15 seconds, thus
+ * each of its heartbeats renews the lease, and the lease
+ * (`RELAY_LIMITS.presenceLeaseMilliseconds`) stays far longer.
+ */
+const MINIMUM_LEASE_RENEWAL_INTERVAL_MILLISECONDS = 10_000;
+
+const RUNTIME_ID_SPAN_ATTRIBUTE = "remote_control_program.runtime_id";
 
 /**
  * A correct runtime has at most one `heartbeat`, one `token_renewal` and some
@@ -127,8 +165,6 @@ const MAXIMUM_WAITING_MESSAGES_PER_LANE = 8;
 
 /** The value of the attribute `message_type` for a message that the relay service cannot read */
 const MESSAGE_TYPE_NOT_VALID = "not_valid";
-
-const MILLISECONDS_PER_SECOND = 1_000;
 
 /**
  * Null for an error that is not a decision about the connection: a
@@ -220,35 +256,48 @@ const isAnnounced = (
  *   announcement that the runtime sent before the batch, and stores the
  *   batches in the sequence in which the runtime sent them.
  *
- * The rate limit of the uploads applies at the arrival of a batch: a batch
- * above the rate gets its `ack` at once and does not go into the data lane.
+ * The rate limits apply at the arrival of a message: a message above its
+ * rate gets its `ack` at once and does not go into a lane. The limits of the
+ * uploads are in the hub (`OwnerRateLimits`), thus a new connection does not
+ * reset them.
  */
 export class RelayConnection {
   readonly #socket: WebSocket;
   readonly #hub: ConnectionHub;
-  readonly #openedAt = Date.now();
   readonly #controlLane: MessageLane;
   readonly #dataLane: MessageLane;
-  readonly #rateLimiters = new Map<CapabilityId, UploadRateLimiter>();
+  readonly #heartbeatRate = createRateLimiter(CONTROL_MESSAGE_RATES.heartbeat);
+  readonly #tokenRenewalRate = createRateLimiter(
+    CONTROL_MESSAGE_RATES.tokenRenewal,
+  );
+  readonly #announceRate = createRateLimiter(CONTROL_MESSAGE_RATES.announce);
   readonly #finished = Promise.withResolvers<void>();
+  /** The end of the time for the `welcome` */
+  readonly #handshakeTimer: ReturnType<typeof setTimeout>;
   #phase = ConnectionPhase.AwaitingHello;
   /** The running handshake. It does not reject. */
   #handshake: Promise<void> = Promise.resolve();
   /** The result of the last accepted token. Null before the authentication. */
   #runtime: RuntimeConnection | null = null;
-  /** The `connectedAt` of `announceRuntime()`: the lease of this connection */
+  /** The `connectedAt` of `claimRuntimePresence()`: the lease of this connection */
   #connectedAt: Date | null = null;
   /** The last announcement that the relay service stored */
   #announcement: AnnounceContent | null = null;
   #uploadCounts: UploadCounts | null = null;
   #isUploadCountRecordWaiting = false;
   #lastHeartbeatAt = 0;
+  /** The time of the last write of the lease */
+  #leaseRenewedAt = 0;
   /** The times of the errors of the runtime in the last minute */
   #errorTimes: number[] = [];
 
   constructor(socket: WebSocket, hub: ConnectionHub) {
     this.#socket = socket;
     this.#hub = hub;
+    this.#handshakeTimer = setTimeout(
+      () => this.#handleHandshakeTimeout(),
+      hub.timing.handshakeTimeoutMilliseconds,
+    );
 
     const logLaneError = (error: unknown) => {
       hub.context.log.error("A task of a runtime connection failed", {
@@ -296,11 +345,6 @@ export class RelayConnection {
     return this.#runtime?.runtimeId ?? null;
   }
 
-  /** The actor of the last accepted token. Null before the authentication. */
-  get actor(): Actor | null {
-    return this.#runtime?.actor ?? null;
-  }
-
   /**
    * Sends `close` (or `refusal` in the handshake) with the reason, and closes
    * the socket with the code of the reason
@@ -314,59 +358,34 @@ export class RelayConnection {
     );
   }
 
-  /** Applies the time limits. The relay server calls it at an interval. */
+  /**
+   * Applies the time limits of an open connection. The relay server calls it
+   * at an interval. The time limit of the handshake has its own timer.
+   */
   check(now: number) {
     const { timing } = this.#hub;
+    const runtime = this.#runtime;
+    if (this.#phase !== ConnectionPhase.Open || runtime === null) return;
 
-    switch (this.#phase) {
-      case ConnectionPhase.AwaitingHello:
-        if (now - this.#openedAt > timing.handshakeTimeoutMilliseconds)
-          this.close(RelayCloseReason.TokenNotValid);
-        break;
-
-      case ConnectionPhase.Handshake:
-        // The use cases of the handshake did not answer in time, for example a database that does not answer
-        if (now - this.#openedAt > timing.handshakeTimeoutMilliseconds) {
-          this.#hub.context.log.error(
-            "The handshake of a runtime took too long",
-            {
-              ...this.#getLogIds(),
-            },
-          );
-          this.#closeWithInternalError();
-        }
-        break;
-
-      case ConnectionPhase.Open:
-        if (
-          this.#runtime !== null &&
-          now >
-            this.#runtime.tokenExpiresAt.getTime() +
-              timing.tokenRenewalGraceMilliseconds
-        )
-          this.close(RelayCloseReason.TokenNotValid);
-        else if (now - this.#lastHeartbeatAt > timing.presenceLeaseMilliseconds)
-          this.close(RelayCloseReason.HeartbeatMissing);
-        else if (
-          this.#uploadCounts !== null &&
-          now - this.#uploadCounts.periodStartedAt.getTime() >=
-            timing.uploadCountPeriodMilliseconds
-        )
-          this.#scheduleUploadCountRecord();
-        break;
-
-      case ConnectionPhase.Closed:
-        break;
-
-      default:
-        throw new Error(`Unknown phase: ${this.#phase satisfies never}`);
-    }
+    if (
+      now >
+      runtime.tokenExpiresAt.getTime() + timing.tokenRenewalGraceMilliseconds
+    )
+      this.close(RelayCloseReason.TokenNotValid);
+    else if (now - this.#lastHeartbeatAt > timing.presenceLeaseMilliseconds)
+      this.close(RelayCloseReason.HeartbeatMissing);
+    else if (
+      this.#uploadCounts !== null &&
+      now - this.#uploadCounts.periodStartedAt.getTime() >=
+        timing.uploadCountPeriodMilliseconds
+    )
+      this.#scheduleUploadCountRecord();
   }
 
   /**
    * Sends the switches, with only the parts that the runtime announced (see
-   * `protocol.ts`). Nothing before the first `announce`: the `ack` of the
-   * `announce` brings the switches.
+   * `protocol.ts`). Nothing before the first `announce`: the switches come
+   * before the `ack` of each `announce`.
    */
   sendSwitches(switches: RemoteControlProgramSwitches) {
     const announcement = this.#announcement;
@@ -430,16 +449,47 @@ export class RelayConnection {
     }
   }
 
+  /** The socket did not get its `welcome` in time */
+  #handleHandshakeTimeout() {
+    switch (this.#phase) {
+      case ConnectionPhase.AwaitingHello:
+        this.close(RelayCloseReason.TokenNotValid);
+        break;
+
+      // The use cases of the handshake did not answer in time, for example a database that does not answer
+      case ConnectionPhase.Handshake:
+        this.#hub.context.log.error(
+          "The handshake of a runtime took too long",
+          this.#getLogIds(),
+        );
+        this.#closeWithInternalError();
+        break;
+
+      case ConnectionPhase.Open:
+      case ConnectionPhase.Closed:
+        break;
+
+      default:
+        throw new Error(`Unknown phase: ${this.#phase satisfies never}`);
+    }
+  }
+
   #handleFirstMessage(text: string | null) {
     const result = text === null ? null : parseUpMessage(text);
     if (result?.success && result.message.type === UpMessageType.Hello) {
       const hello = result.message;
       this.#hub.metrics.messages.add(1, { message_type: hello.type });
       this.#phase = ConnectionPhase.Handshake;
-      this.#handshake = this.#runInSpan(
+      this.#handshake = withSpan(
+        this.#hub.context,
         "handleRuntimeHello",
-        hello.content.runtime_id,
-        () => this.#runHandshake(hello),
+        async (span) => {
+          span.setAttribute(
+            RUNTIME_ID_SPAN_ATTRIBUTE,
+            hello.content.runtime_id,
+          );
+          await this.#runHandshake(hello);
+        },
       ).catch((error: unknown) => {
         // The handshake handles the errors of the use cases. This is a defect of the relay service.
         this.#hub.context.log.error("The handshake of a runtime failed", {
@@ -481,11 +531,33 @@ export class RelayConnection {
     if (this.#isClosed()) return;
     // From now on, the internal request "disconnect user" finds the connection
     this.#runtime = runtime;
+    // The use case can read the user before a ban, and the request "disconnect user" can come before this line
+    if (this.#hub.isUserDisconnected(runtime.userId)) {
+      this.close(RelayCloseReason.AccessDenied);
+      return;
+    }
+    // The runtime connects again after its delay
+    if (!this.#hub.rateLimits.tryTakeHello(runtime.citizenId, Date.now())) {
+      this.close(RelayCloseReason.TooManyErrors);
+      return;
+    }
 
     const ownerStopChangeCount = this.#hub.getOwnerStopChangeCount();
-    let announced: AnnounceRuntimeOutput;
+    let helloCheck: RuntimeHelloCheck;
     try {
-      announced = await announceRuntime(context, runtime.actor, {
+      helloCheck = await checkRuntimeHello(context, runtime.actor, {
+        runtime_id: runtime.runtimeId,
+      });
+    } catch (error) {
+      this.#closeAfterHandshakeError(error, runtime.runtimeId);
+      return;
+    }
+    // Until the claim, the handshake changes nothing of an open connection of the same runtime
+    if (this.#isClosed()) return;
+
+    let presence: OwnRuntime;
+    try {
+      presence = await claimRuntimePresence(context, runtime.actor, {
         runtime_id: runtime.runtimeId,
         runtime_kind: hello.content.runtime_kind,
         runtime_version: hello.content.runtime_version,
@@ -496,26 +568,30 @@ export class RelayConnection {
       return;
     }
     // Also for a connection that closed in the meantime: the cleanup ends its lease
-    this.#connectedAt = announced.runtime.connectedAt;
+    this.#connectedAt = presence.connectedAt;
     if (this.#isClosed()) return;
 
-    this.#open(hello, announced, ownerStopChangeCount);
+    this.#open(hello, presence, helloCheck, ownerStopChangeCount);
   }
 
   #open(
     hello: UpMessageOfType<UpMessageType.Hello>,
-    announced: AnnounceRuntimeOutput,
+    presence: OwnRuntime,
+    helloCheck: RuntimeHelloCheck,
     ownerStopChangeCount: number,
   ) {
     const { context, metrics, switches } = this.#hub;
 
     this.#phase = ConnectionPhase.Open;
-    this.#lastHeartbeatAt = Date.now();
-    this.#uploadCounts = new UploadCounts(announced.runtime.connectedAt);
+    clearTimeout(this.#handshakeTimer);
+    const now = Date.now();
+    this.#lastHeartbeatAt = now;
+    this.#leaseRenewedAt = now;
+    this.#uploadCounts = new UploadCounts(presence.connectedAt);
     this.#hub.registerOpenConnection(this)?.close(RelayCloseReason.Replaced);
     this.#send(
       createDownMessage(DownMessageType.Welcome, {
-        is_stopped: announced.isOwnerStopped,
+        is_stopped: helloCheck.isOwnerStopped,
       }),
     );
     metrics.openConnections.add(1);
@@ -526,7 +602,7 @@ export class RelayConnection {
       protocolVersion: hello.protocol_version,
     });
 
-    // A change in the handshake: `announceRuntime()` read the older values
+    // A change in the handshake: `checkRuntimeHello()` read the older values
     if (switches.getSwitches().isProgramTurnedOff) {
       this.close(RelayCloseReason.ProgramTurnedOff);
       return;
@@ -557,10 +633,9 @@ export class RelayConnection {
     const runtime = this.#requireRuntime();
 
     try {
-      const { stoppedAt } = await getOwnRuntimeStop(
-        this.#hub.context,
-        runtime.actor,
-      );
+      const { stoppedAt } = await getRuntimeStopOfOwner(this.#hub.context, {
+        ownerCitizenId: runtime.citizenId,
+      });
       this.sendOwnerStop(stoppedAt !== null);
     } catch (error) {
       this.#hub.context.log.error("Failed to read the stop of an owner", {
@@ -587,6 +662,7 @@ export class RelayConnection {
 
     const { message } = result;
     metrics.messages.add(1, { message_type: message.type });
+    const now = Date.now();
 
     switch (message.type) {
       case UpMessageType.Hello:
@@ -595,41 +671,42 @@ export class RelayConnection {
         break;
 
       case UpMessageType.Heartbeat:
-        this.#lastHeartbeatAt = Date.now();
-        this.#enqueue(this.#controlLane, message, () =>
-          this.#renewLease(message),
-        );
+        this.#lastHeartbeatAt = now;
+        if (this.#isWithinRate(this.#heartbeatRate.tryTake(now), message))
+          this.#enqueue(this.#controlLane, message, () =>
+            this.#renewLease(message),
+          );
         break;
 
       case UpMessageType.TokenRenewal:
-        this.#enqueue(this.#controlLane, message, () =>
-          this.#renewToken(message),
-        );
+        if (this.#isWithinRate(this.#tokenRenewalRate.tryTake(now), message))
+          this.#enqueue(this.#controlLane, message, () =>
+            this.#renewToken(message),
+          );
         break;
 
       case UpMessageType.Announce:
-        this.#enqueue(this.#dataLane, message, () =>
-          this.#storeAnnouncement(message),
-        );
+        if (this.#isWithinRate(this.#announceRate.tryTake(now), message))
+          this.#enqueue(this.#dataLane, message, () =>
+            this.#storeAnnouncement(message),
+          );
         break;
 
       case UpMessageType.FeedEntries:
-        if (!this.#takeUploadSlot(message.content.capability_id)) {
-          this.#refuseMessage(
-            message,
-            AcknowledgementErrorCode.RateLimitExceeded,
+        if (this.#isUploadPermitted(message, now))
+          this.#enqueue(this.#dataLane, message, () =>
+            withSpan(
+              this.#hub.context,
+              "handleRuntimeFeedEntries",
+              async (span) => {
+                span.setAttribute(
+                  RUNTIME_ID_SPAN_ATTRIBUTE,
+                  this.#requireRuntime().runtimeId,
+                );
+                await this.#appendFeedEntries(message);
+              },
+            ),
           );
-          // A correct runtime stays one batch below the burst of the relay service
-          this.#recordError();
-          break;
-        }
-        this.#enqueue(this.#dataLane, message, () =>
-          this.#runInSpan(
-            "handleRuntimeFeedEntries",
-            this.#requireRuntime().runtimeId,
-            () => this.#appendFeedEntries(message),
-          ),
-        );
         break;
 
       default:
@@ -650,26 +727,68 @@ export class RelayConnection {
     if (lane === this.#controlLane) this.#recordError();
   }
 
-  #takeUploadSlot(capabilityId: CapabilityId) {
-    let rateLimiter = this.#rateLimiters.get(capabilityId);
-    if (rateLimiter === undefined) {
-      rateLimiter = new UploadRateLimiter(
-        CAPABILITY_CATALOG[capabilityId].minimumUploadIntervalMilliseconds,
-        RELAY_LIMITS.uploadBurstBatches,
-      );
-      this.#rateLimiters.set(capabilityId, rateLimiter);
-    }
+  /**
+   * Refuses a message above its rate with `rate_limit_exceeded`. The refusal
+   * counts as an error: a correct runtime stays below each rate (for the
+   * uploads, one batch below the burst of the relay service).
+   */
+  #isWithinRate(isAllowed: boolean, message: UpMessage) {
+    if (isAllowed) return true;
 
-    return rateLimiter.tryTake(Date.now());
+    this.#refuseMessage(message, AcknowledgementErrorCode.RateLimitExceeded);
+    this.#recordError();
+    return false;
+  }
+
+  /**
+   * The rate of the capability of the runtime, then the hourly budget of the
+   * entries of the owner. A batch above the budget is not an error: the
+   * runtime sends it again after a pause, until the budget has space.
+   */
+  #isUploadPermitted(
+    message: UpMessageOfType<UpMessageType.FeedEntries>,
+    now: number,
+  ) {
+    const { rateLimits, metrics } = this.#hub;
+    const runtime = this.#requireRuntime();
+    const batch = message.content;
+
+    const isWithinRate = rateLimits.tryTakeUpload(
+      {
+        ownerCitizenId: runtime.citizenId,
+        runtimeId: runtime.runtimeId,
+        capabilityId: batch.capability_id,
+      },
+      now,
+    );
+    if (!this.#isWithinRate(isWithinRate, message)) return false;
+
+    if (rateLimits.tryTakeEntries(runtime.citizenId, batch.entries.length, now))
+      return true;
+
+    metrics.uploadBudgetRefusals.add(1, {
+      capability_id: batch.capability_id,
+    });
+    this.#refuseMessage(message, AcknowledgementErrorCode.RateLimitExceeded);
+    return false;
   }
 
   async #renewLease(message: UpMessageOfType<UpMessageType.Heartbeat>) {
     const runtime = this.#requireRuntime();
+    const now = Date.now();
+    if (
+      now - this.#leaseRenewedAt <
+      MINIMUM_LEASE_RENEWAL_INTERVAL_MILLISECONDS
+    ) {
+      this.#acknowledge(message);
+      return;
+    }
 
     try {
       await renewRuntimeLease(this.#hub.context, runtime.actor, {
         runtime_id: runtime.runtimeId,
       });
+      this.#leaseRenewedAt = now;
       this.#acknowledge(message);
     } catch (error) {
       this.#handleUseCaseError(error, message);
@@ -726,9 +845,10 @@ export class RelayConnection {
       return;
     }
 
+    // The runtime starts its uploads after the `ack`, thus it knows the parts that are off before
     this.#announcement = message.content;
-    this.#acknowledge(message);
     this.sendSwitches(this.#hub.switches.getSwitches());
+    this.#acknowledge(message);
   }
 
   async #appendFeedEntries(
@@ -842,9 +962,7 @@ export class RelayConnection {
         await recordFeedEntryUploadCounts(this.#hub.context, runtime.actor, {
           runtime_id: runtime.runtimeId,
           capability_id: capabilityId,
-          new_entry_count: counts.newEntryCount,
-          duplicate_entry_count: counts.duplicateEntryCount,
-          refused_entry_count: counts.refusedEntryCount,
+          counts,
           period_started_at: period.startedAt,
           period_ended_at: period.endedAt,
         });
@@ -922,7 +1040,7 @@ export class RelayConnection {
     this.#socket.close(RELAY_CLOSE_CODES[reason], reason);
 
     (isRefusal ? metrics.refusals : metrics.closes).add(1, { reason });
-    context.log.info(
+    (isRefusal ? this.#hub.throttledLog : this.#getLog()).info(
       isRefusal
         ? "Refused a runtime connection"
         : "Closed a runtime connection",
@@ -952,7 +1070,7 @@ export class RelayConnection {
         ? UnexplainedCloseReason.MessageTooLarge
         : UnexplainedCloseReason.ProtocolError;
     this.#hub.metrics.closes.add(1, { reason });
-    this.#hub.context.log.warn("A runtime connection failed", {
+    this.#getLog().warn("A runtime connection failed", {
       ...this.#getLogIds(),
       reason,
       errorCode: code,
@@ -966,7 +1084,7 @@ export class RelayConnection {
     this.#hub.metrics.closes.add(1, {
       reason: UnexplainedCloseReason.ClosedByRuntime,
     });
-    this.#hub.context.log.info("The runtime closed its connection", {
+    this.#getLog().info("The runtime closed its connection", {
       ...this.#getLogIds(),
       code,
     });
@@ -976,6 +1094,7 @@ export class RelayConnection {
   #end() {
     const wasOpen = this.#phase === ConnectionPhase.Open;
     this.#phase = ConnectionPhase.Closed;
+    clearTimeout(this.#handshakeTimer);
     this.#hub.removeConnection(this);
 
     this.#cleanUp(wasOpen)
@@ -1030,6 +1149,13 @@ export class RelayConnection {
     return this.#runtime;
   }
 
+  /** A socket without an authenticated runtime can come from a client without a valid token */
+  #getLog() {
+    return this.#runtime === null
+      ? this.#hub.throttledLog
+      : this.#hub.context.log;
+  }
+
   /** The ids of the user, the citizen and the runtime. Never a token. */
   #getLogIds() {
     const runtime = this.#runtime;
@@ -1040,20 +1166,5 @@ export class RelayConnection {
           citizenId: runtime.citizenId,
           runtimeId: runtime.runtimeId,
         };
-  }
-
-  /** A span for the work of one message. The use cases add their own spans in it. */
-  #runInSpan(name: string, runtimeId: string, callback: () => Promise<void>) {
-    return this.#hub.context.tracer.startActiveSpan(
-      name,
-      { attributes: { "remote_control_program.runtime_id": runtimeId } },
-      async (span: Span) => {
-        try {
-          await callback();
-        } finally {
-          span.end();
-        }
-      },
-    );
   }
 }

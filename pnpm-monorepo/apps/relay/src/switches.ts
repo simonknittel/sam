@@ -1,17 +1,19 @@
 import type { Logger } from "@sam-monorepo/application";
 import {
+  ALL_REMOTE_CONTROL_PROGRAM_PARTS_ON,
   getRemoteControlProgramSwitches,
   type RemoteControlProgramSwitches,
 } from "@sam-monorepo/domain";
 import { InMemStorageProvider, Unleash, UnleashEvents } from "unleash-client";
 import { describeError } from "./logger.js";
+import { resolveWithin } from "./time.js";
 
 /**
  * The switches of the organization (the Unleash flags of
- * `RemoteControlProgramUnleashFlag`, decision 7 of the plan). The relay
- * service gives them to the use cases (the port
- * `remoteControlProgramSwitches`), sends them to the runtimes, and closes
- * all connections when the full program turns off.
+ * `RemoteControlProgramUnleashFlag`, see "Switches" of
+ * `docs/remote-control-program/README.md`). The relay service gives them to
+ * the use cases (the port `remoteControlProgramSwitches`), sends them to the
+ * runtimes, and closes all connections when the full program turns off.
  */
 export interface SwitchesSource {
   /** The current switches. All parts are on until Unleash answers. */
@@ -26,21 +28,14 @@ export interface SwitchesSource {
   readonly close: () => void;
 }
 
-/** Each part is on: the switches without Unleash */
-export const ALL_PARTS_ON: RemoteControlProgramSwitches =
-  getRemoteControlProgramSwitches(() => false);
-
-/** The relay service without the configuration of Unleash */
-export const createFixedSwitchesSource = (
-  switches: RemoteControlProgramSwitches = ALL_PARTS_ON,
-): SwitchesSource => ({
-  getSwitches: () => switches,
-  subscribe: () => () => undefined,
-  close: () => undefined,
-});
-
-/** The maximum time of one request to Unleash */
-const UNLEASH_REQUEST_TIMEOUT_MILLISECONDS = 5_000;
+export interface SettableSwitchesSource extends SwitchesSource {
+  /**
+   * Replaces the switches, and calls the listeners when they changed
+   *
+   * @returns false when the switches did not change
+   */
+  readonly set: (switches: RemoteControlProgramSwitches) => boolean;
+}
 
 const areSwitchesEqual = (
   first: RemoteControlProgramSwitches,
@@ -49,6 +44,36 @@ const areSwitchesEqual = (
   first.isProgramTurnedOff === second.isProgramTurnedOff &&
   first.turnedOffConnectorIds.join() === second.turnedOffConnectorIds.join() &&
   first.turnedOffCapabilityIds.join() === second.turnedOffCapabilityIds.join();
+
+/**
+ * The switches in memory, with all parts on at the start: the relay service
+ * without the configuration of Unleash, the Unleash client and the tests
+ */
+export const createSwitchesSource = (): SettableSwitchesSource => {
+  const listeners = new Set<(switches: RemoteControlProgramSwitches) => void>();
+  let switches = ALL_REMOTE_CONTROL_PROGRAM_PARTS_ON;
+
+  return {
+    getSwitches: () => switches,
+    subscribe: (listener) => {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+    set: (nextSwitches) => {
+      if (areSwitchesEqual(switches, nextSwitches)) return false;
+
+      switches = nextSwitches;
+      for (const listener of listeners) listener(switches);
+      return true;
+    },
+    close: () => listeners.clear(),
+  };
+};
+
+/** The maximum time of one request to Unleash */
+const UNLEASH_REQUEST_TIMEOUT_MILLISECONDS = 5_000;
 
 interface UnleashSwitchesSourceOptions {
   readonly url: string;
@@ -82,10 +107,9 @@ export const createUnleashSwitchesSource = ({
   refreshIntervalMilliseconds,
   log,
 }: UnleashSwitchesSourceOptions): UnleashSwitchesSource => {
-  const listeners = new Set<(switches: RemoteControlProgramSwitches) => void>();
+  const source = createSwitchesSource();
   const ready = Promise.withResolvers<void>();
   let isReady = false;
-  let switches = ALL_PARTS_ON;
 
   const unleash = new Unleash({
     url,
@@ -102,18 +126,16 @@ export const createUnleashSwitchesSource = ({
     if (!isReady) return;
 
     // The client adds the app name to the context of each flag
-    const nextSwitches = getRemoteControlProgramSwitches((flag) =>
+    const switches = getRemoteControlProgramSwitches((flag) =>
       unleash.isEnabled(flag),
     );
-    if (areSwitchesEqual(switches, nextSwitches)) return;
+    if (!source.set(switches)) return;
 
-    switches = nextSwitches;
     log.info("The switches of the Remote Control Program changed", {
       isProgramTurnedOff: switches.isProgramTurnedOff,
       turnedOffConnectorIds: switches.turnedOffConnectorIds,
       turnedOffCapabilityIds: switches.turnedOffCapabilityIds,
     });
-    for (const listener of listeners) listener(switches);
   };
 
   unleash.on(UnleashEvents.Ready, () => {
@@ -132,29 +154,17 @@ export const createUnleashSwitchesSource = ({
   });
 
   return {
-    getSwitches: () => switches,
-    subscribe: (listener) => {
-      listeners.add(listener);
-      return () => {
-        listeners.delete(listener);
-      };
-    },
+    getSwitches: source.getSwitches,
+    subscribe: source.subscribe,
     close: () => {
-      listeners.clear();
+      source.close();
       unleash.destroy();
     },
-    waitUntilReady: async (timeoutMilliseconds) => {
-      let timeout: ReturnType<typeof setTimeout> | undefined;
-      try {
-        return await Promise.race([
-          ready.promise.then(() => true),
-          new Promise<boolean>((resolve) => {
-            timeout = setTimeout(() => resolve(false), timeoutMilliseconds);
-          }),
-        ]);
-      } finally {
-        clearTimeout(timeout);
-      }
-    },
+    waitUntilReady: (timeoutMilliseconds) =>
+      resolveWithin(
+        ready.promise.then(() => true),
+        timeoutMilliseconds,
+        false,
+      ),
   };
 };

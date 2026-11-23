@@ -11,10 +11,12 @@ import {
 } from "@sam-monorepo/application";
 import {
   CapabilityId,
+  CitizenRealtimeChannel,
   FEED_DELIVERY_EVENT_NAME,
   isInVisibleTimeRange,
   type FeedDeliveryEventPayload,
 } from "@sam-monorepo/domain";
+import { MILLISECONDS_PER_SECOND } from "../time.js";
 import {
   createDeliveryMetrics,
   DeliveryStage,
@@ -89,8 +91,8 @@ export interface FeedEntryDeliveryOptions {
   readonly context: ApplicationContext;
   /**
    * The size limit of the realtime server for the data of one event, in
-   * bytes: `PUSHER_CHANNELS_MAXIMUM_EVENT_PAYLOAD_KILOBYTES` × 1,024 (Soketi
-   * counts 1 KB as 1,024 bytes)
+   * bytes (see `PUSHER_CHANNELS_MAXIMUM_EVENT_PAYLOAD_KILOBYTES` and
+   * docs/setup-test-and-production.md#10-set-up-the-relay-service-of-the-remote-control-program)
    */
   readonly maximumEventPayloadBytes: number;
   /** For the tests. The default is the use case `findWatchingViewers`. */
@@ -99,6 +101,16 @@ export interface FeedEntryDeliveryOptions {
     input: FindWatchingViewersInput,
   ) => Promise<readonly WatchingViewer[]>;
 }
+
+const compareWaitingEntries = (
+  { entry: first }: WaitingEntry,
+  { entry: second }: WaitingEntry,
+) => {
+  const timeDifference = first.createdAt.getTime() - second.createdAt.getTime();
+  if (timeDifference !== 0) return timeDifference;
+  if (first.id === second.id) return 0;
+  return first.id < second.id ? -1 : 1;
+};
 
 /** The waiting entries and the timing of one viewer */
 interface ViewerQueue {
@@ -117,14 +129,15 @@ interface ViewerQueue {
 }
 
 /**
- * The realtime delivery of the new feed entries to the watching viewers
- * (see "Delivery to the consumers" of the plan and of the concept). Each
+ * The realtime delivery of the new feed entries to the watching viewers (see
+ * "Delivery to the consumers" of `docs/remote-control-program/README.md`). Each
  * `deliver` checks the access at once (`findWatchingViewers`, no cache) and
  * puts the visible entries into the queue of each viewer. A viewer gets a
  * maximum of one publication in the interval: the first entries of a quiet
  * viewer go out at once, the next entries at the end of the interval. A
  * publication sends one or more events of `FEED_DELIVERY_EVENT_NAME` to the
- * private channel of the viewer, each below the size limit.
+ * private channel of the Remote Control Program of the viewer, each below
+ * the size limit.
  *
  * The state is in memory. The consumer client reads the changes since its
  * cursor after a reconnect of the realtime service and after an event with
@@ -228,7 +241,7 @@ const createActiveDelivery = ({
       const oldestAcceptedAt = Math.min(
         ...batch.map(({ waitingEntry }) => waitingEntry.acceptedAt),
       );
-      metrics.delay.record((now - oldestAcceptedAt) / 1_000);
+      metrics.delay.record((now - oldestAcceptedAt) / MILLISECONDS_PER_SECOND);
       metrics.deliveredEntries.add(batch.length);
     }
     metrics.deliveredEvents.add(batches.length);
@@ -239,7 +252,8 @@ const createActiveDelivery = ({
       const now = Date.now();
       queue.lastFlushStartedAt = now;
 
-      const takenEntries = queue.waitingEntries;
+      // The order of the changes of `readFeedEntries`. The uploads of parallel runtimes and the entries of a failed publication can come in a different order.
+      const takenEntries = queue.waitingEntries.sort(compareWaitingEntries);
       queue.waitingEntries = [];
       waitingEntryCount -= takenEntries.length;
 
@@ -272,6 +286,7 @@ const createActiveDelivery = ({
       queue.droppedEntryCount = 0;
 
       const events = batches.map((batch, index): CitizenRealtimeEvent => ({
+        channel: CitizenRealtimeChannel.RemoteControlProgram,
         citizenId: viewerCitizenId,
         name: FEED_DELIVERY_EVENT_NAME,
         data: {

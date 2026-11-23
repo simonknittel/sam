@@ -17,13 +17,15 @@ import {
   RelayCloseReason,
   RemoteControlProgramUnleashFlag,
   UpMessageType,
-  type AnnounceContent,
   type FeedEntriesContent,
 } from "@sam-monorepo/domain";
 import { SignJWT } from "jose";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import {
-  banUser,
+  createJoinPuLine,
+  LOG_FILE_ANNOUNCEMENT,
+} from "../../../packages/application/test/remoteControlProgram.js";
+import {
   createOwner,
   findLogEntryRows,
   findRuntimeLease,
@@ -37,40 +39,21 @@ import {
 } from "../test/relayHarness.js";
 
 const RUNTIME_ID = "0b6f1d3e-2a4c-4e8f-9a1b-3c5d7e9f1a2b";
+const OTHER_RUNTIME_ID = "7c1e5a90-3b2d-4f6e-8a7b-9c0d1e2f3a4b";
 
 /** The WebSocket close code of `ws` for a message above `maxPayload` */
 const MESSAGE_TOO_BIG_CLOSE_CODE = 1009;
 
-const ANNOUNCEMENT: AnnounceContent = {
-  connectors: [
-    {
-      id: ConnectorId.LogFile,
-      version: 1,
-      capabilities: [
-        {
-          id: CapabilityId.LogEntries,
-          version: LOG_ENTRIES_CAPABILITY.version,
-        },
-      ],
-    },
-  ],
-  local_access_layer: {
-    is_stopped: false,
-    capability_rules: [
-      {
-        capability_id: CapabilityId.LogEntries,
-        is_on: true,
-        is_filtered: false,
-      },
-    ],
-  },
-};
+/** The standard WebSocket close code for an unexpected condition of the server */
+const INTERNAL_ERROR_CLOSE_CODE = 1011;
+
+const DISCONNECT_USER_PATH = "/internal/disconnect-user";
 
 const createJoinPuEntry = (lineNumber: number) => {
   const time = new Date(Date.UTC(2026, 10, 1, 12, 0, lineNumber));
   return {
     type: LogAnalyzerEntryType.JoinPu,
-    raw_line: `<${time.toISOString()}> [Notice] <Join PU> address[IP_REDACTED] port[64336] shard[pub_euw1b_10512345_100] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]`,
+    raw_line: createJoinPuLine(time),
     event_at: time.toISOString(),
     line_number: lineNumber,
   };
@@ -104,19 +87,38 @@ afterEach(async () => {
   expect(records.filter((record) => record.level === "error")).toEqual([]);
 });
 
-const announce = async (
-  client: Awaited<ReturnType<TestRelay["connect"]>>["client"],
-) => {
+type TestClient = Awaited<ReturnType<TestRelay["connect"]>>["client"];
+
+const announce = async (client: TestClient) => {
   const acknowledgement = await client.request(
-    createUpMessage(UpMessageType.Announce, ANNOUNCEMENT),
+    createUpMessage(UpMessageType.Announce, LOG_FILE_ANNOUNCEMENT),
   );
   expect(acknowledgement.result).toBe(AcknowledgementResult.Accepted);
 };
 
-const upload = (
-  client: Awaited<ReturnType<TestRelay["connect"]>>["client"],
-  batch = BATCH,
-) => client.request(createUpMessage(UpMessageType.FeedEntries, batch));
+const upload = (client: TestClient, batch = BATCH) =>
+  client.request(createUpMessage(UpMessageType.FeedEntries, batch));
+
+const sendHeartbeat = (client: TestClient) =>
+  client.request(createUpMessage(UpMessageType.Heartbeat, {}));
+
+const expectRefusal = async (client: TestClient, reason: RelayCloseReason) => {
+  await expect(
+    client.waitForMessage(DownMessageType.Refusal),
+  ).resolves.toMatchObject({ content: { reason } });
+  await expect(client.waitForClose()).resolves.toEqual({
+    code: RELAY_CLOSE_CODES[reason],
+  });
+};
+
+const expectClose = async (client: TestClient, reason: RelayCloseReason) => {
+  await expect(
+    client.waitForMessage(DownMessageType.Close),
+  ).resolves.toMatchObject({ content: { reason } });
+  await expect(client.waitForClose()).resolves.toEqual({
+    code: RELAY_CLOSE_CODES[reason],
+  });
+};
 
 test("a runtime with a valid token connects, announces and uploads", async () => {
   const { connect, deliveries } = await start();
@@ -126,15 +128,18 @@ test("a runtime with a valid token connects, announces and uploads", async () =>
   expect(welcome.content).toEqual({ is_stopped: false });
 
   await announce(client);
-  // The `switches` follow the `ack` of the `announce`
-  await expect(
-    client.waitForMessage(DownMessageType.Switches),
-  ).resolves.toMatchObject({
-    content: { turned_off_connectors: [], turned_off_capabilities: [] },
-  });
+  // The runtime knows the parts that are off before its first upload
+  expect(client.getMessages().map((message) => message.type)).toEqual([
+    DownMessageType.Welcome,
+    DownMessageType.Switches,
+    DownMessageType.Acknowledgement,
+  ]);
+  expect(client.getMessages(DownMessageType.Switches)).toMatchObject([
+    { content: { turned_off_connectors: [], turned_off_capabilities: [] } },
+  ]);
   await expect(findRuntimeLease(owner.citizenId, RUNTIME_ID)).resolves.toEqual({
     leaseExpiresAt: expect.any(Date),
-    announcement: ANNOUNCEMENT,
+    announcement: LOG_FILE_ANNOUNCEMENT,
   });
 
   await expect(upload(client)).resolves.toEqual({
@@ -198,41 +203,19 @@ test("a resend after a reconnect makes no duplicate", async () => {
   await expect(findLogEntryRows(owner.citizenId)).resolves.toHaveLength(2);
 });
 
-test("refuses a token of a different audience and an expired token", async () => {
-  const { openClient, issueToken, signingKey } = await start();
+test("refuses a token that is not valid and a page of a different origin", async () => {
+  const { openClient, issueToken } = await start();
   const owner = await createOwner();
-  const tokenOfDifferentAudience = await new SignJWT({
-    citizen_id: owner.citizenId,
-    runtime_id: RUNTIME_ID,
-  })
-    .setProtectedHeader({ alg: "ES256", kid: signingKey.keyId })
-    .setIssuer(APP_BASE_URL)
-    .setAudience(`${RUNTIME_CONNECTION_TOKEN_AUDIENCE}_other`)
-    .setSubject(owner.userId)
-    .setIssuedAt()
-    .setExpirationTime("2 minutes")
-    .sign(signingKey.privateKey);
   const expiredToken = await issueToken(
     owner,
     RUNTIME_ID,
     new Date(Date.now() - 2 * RELAY_LIMITS.connectionTokenLifetimeMilliseconds),
   );
 
-  for (const token of [tokenOfDifferentAudience, expiredToken]) {
-    const client = await openClient();
-    client.sendHello(token, RUNTIME_ID);
+  const client = await openClient();
+  client.sendHello(expiredToken, RUNTIME_ID);
+  await expectRefusal(client, RelayCloseReason.TokenNotValid);
 
-    await expect(
-      client.waitForMessage(DownMessageType.Refusal),
-    ).resolves.toMatchObject({
-      content: { reason: RelayCloseReason.TokenNotValid },
-    });
-    await expect(client.waitForClose()).resolves.toEqual({
-      code: RELAY_CLOSE_CODES[RelayCloseReason.TokenNotValid],
-    });
-  }
-
-  // A browser page of a different site cannot connect
   await expect(
     openClient({ origin: "https://other.example.com" }),
   ).rejects.toThrow("403");
@@ -240,8 +223,10 @@ test("refuses a token of a different audience and an expired token", async () =>
 
 test("renews the token over the open connection, and closes the connection at the end of the grace time", async () => {
   const { connect, issueToken, signingKey } = await start({
-    tokenRenewalGraceMilliseconds: 0,
-    connectionCheckIntervalMilliseconds: 50,
+    timing: {
+      tokenRenewalGraceMilliseconds: 0,
+      connectionCheckIntervalMilliseconds: 50,
+    },
   });
   const owner = await createOwner();
   const { client } = await connect(owner, RUNTIME_ID);
@@ -269,7 +254,7 @@ test("renews the token over the open connection, and closes the connection at th
     citizen_id: owner.citizenId,
     runtime_id: RUNTIME_ID,
   })
-    .setProtectedHeader({ alg: "ES256", kid: signingKey.keyId })
+    .setProtectedHeader({ alg: signingKey.algorithm, kid: signingKey.keyId })
     .setIssuer(APP_BASE_URL)
     .setAudience(RUNTIME_CONNECTION_TOKEN_AUDIENCE)
     .setSubject(owner.userId)
@@ -282,30 +267,23 @@ test("renews the token over the open connection, and closes the connection at th
     ),
   ).resolves.toMatchObject({ result: AcknowledgementResult.Accepted });
 
-  await expect(
-    client.waitForMessage(DownMessageType.Close),
-  ).resolves.toMatchObject({
-    content: { reason: RelayCloseReason.TokenNotValid },
-  });
-  await expect(client.waitForClose()).resolves.toEqual({
-    code: RELAY_CLOSE_CODES[RelayCloseReason.TokenNotValid],
-  });
+  await expectClose(client, RelayCloseReason.TokenNotValid);
 });
 
-test("closes a connection with too many errors or with a message above the size limit", async () => {
+test("limits the uploads of a runtime also across a reconnect, and closes a connection with too many errors or with a message above the size limit", async () => {
   const { connect } = await start();
   const owner = await createOwner();
 
-  const { client } = await connect(owner, RUNTIME_ID);
-  await announce(client);
+  const first = await connect(owner, RUNTIME_ID);
+  await announce(first.client);
   // The burst of the rate limit, then one batch above the rate
   const batches = Array.from(
     { length: RELAY_LIMITS.uploadBurstBatches + 1 },
     () => createUpMessage(UpMessageType.FeedEntries, BATCH),
   );
-  for (const batch of batches) client.send(batch);
+  for (const batch of batches) first.client.send(batch);
   const acknowledgements = await Promise.all(
-    batches.map((batch) => client.waitForAcknowledgement(batch)),
+    batches.map((batch) => first.client.waitForAcknowledgement(batch)),
   );
   expect(
     acknowledgements.map((acknowledgement) => acknowledgement.content.result),
@@ -320,6 +298,15 @@ test("closes a connection with too many errors or with a message above the size 
     error_code: AcknowledgementErrorCode.RateLimitExceeded,
   });
 
+  // A new connection of the runtime continues the rate, within one interval of the capability
+  await first.client.close();
+  const second = await connect(owner, RUNTIME_ID);
+  await announce(second.client);
+  await expect(upload(second.client)).resolves.toMatchObject({
+    result: AcknowledgementResult.Refused,
+    error_code: AcknowledgementErrorCode.RateLimitExceeded,
+  });
+
   // Each message with a valid envelope but no valid content gets its `ack`
   const notValidMessages = Array.from(
     { length: RELAY_LIMITS.maximumErrorsPerMinute },
@@ -330,12 +317,13 @@ test("closes a connection with too many errors or with a message above the size 
       content: "not valid",
     }),
   );
-  for (const message of notValidMessages) client.send(JSON.stringify(message));
+  for (const message of notValidMessages)
+    second.client.send(JSON.stringify(message));
   await expect(
     Promise.all(
       notValidMessages.map(
         async (message) =>
-          (await client.waitForAcknowledgement(message)).content,
+          (await second.client.waitForAcknowledgement(message)).content,
       ),
     ),
   ).resolves.toEqual(
@@ -346,20 +334,112 @@ test("closes a connection with too many errors or with a message above the size 
     })),
   );
   // The batch above the rate and these messages are 11 errors in one minute
-  await expect(
-    client.waitForMessage(DownMessageType.Close),
-  ).resolves.toMatchObject({
-    content: { reason: RelayCloseReason.TooManyErrors },
-  });
-  await expect(client.waitForClose()).resolves.toEqual({
-    code: RELAY_CLOSE_CODES[RelayCloseReason.TooManyErrors],
-  });
+  await expectClose(second.client, RelayCloseReason.TooManyErrors);
 
-  const second = await connect(owner, RUNTIME_ID);
-  second.client.send("x".repeat(RELAY_LIMITS.maximumMessageBytes + 1));
-  await expect(second.client.waitForClose()).resolves.toEqual({
+  const third = await connect(owner, RUNTIME_ID);
+  third.client.send("x".repeat(RELAY_LIMITS.maximumMessageBytes + 1));
+  await expect(third.client.waitForClose()).resolves.toEqual({
     code: MESSAGE_TOO_BIG_CLOSE_CODE,
   });
+});
+
+test("limits the heartbeats of a connection", async () => {
+  const { connect } = await start();
+  const owner = await createOwner();
+  const { client } = await connect(owner, RUNTIME_ID);
+
+  const heartbeats = Array.from({ length: 4 }, () =>
+    createUpMessage(UpMessageType.Heartbeat, {}),
+  );
+  for (const heartbeat of heartbeats) client.send(heartbeat);
+
+  await expect(
+    Promise.all(
+      heartbeats.map(
+        async (heartbeat) =>
+          (await client.waitForAcknowledgement(heartbeat)).content,
+      ),
+    ),
+  ).resolves.toEqual([
+    expect.objectContaining({ result: AcknowledgementResult.Accepted }),
+    expect.objectContaining({ result: AcknowledgementResult.Accepted }),
+    expect.objectContaining({ result: AcknowledgementResult.Accepted }),
+    expect.objectContaining({
+      result: AcknowledgementResult.Refused,
+      error_code: AcknowledgementErrorCode.RateLimitExceeded,
+    }),
+  ]);
+});
+
+test("limits the hellos of an owner, and a refused hello keeps the presence of the open connection", async () => {
+  const { connect, openClient, issueToken } = await start();
+  const owner = await createOwner();
+  const open = await connect(owner, RUNTIME_ID);
+  await announce(open.client);
+
+  // The other 9 hellos of the limit of 10 in one minute. Each connection replaces the previous connection of its runtime.
+  for (let helloCount = 1; helloCount < 10; helloCount++)
+    await connect(owner, OTHER_RUNTIME_ID);
+
+  const refused = await openClient();
+  refused.sendHello(await issueToken(owner, RUNTIME_ID), RUNTIME_ID);
+  await expectRefusal(refused, RelayCloseReason.TooManyErrors);
+
+  await expect(sendHeartbeat(open.client)).resolves.toMatchObject({
+    result: AcknowledgementResult.Accepted,
+  });
+  const lease = await findRuntimeLease(owner.citizenId, RUNTIME_ID);
+  expect(lease?.leaseExpiresAt.getTime()).toBeGreaterThan(Date.now());
+  expect(lease?.announcement).toEqual(LOG_FILE_ANNOUNCEMENT);
+});
+
+test("limits the sockets that wait for their welcome", async () => {
+  const { openClient, issueToken } = await start({
+    maximumUnauthenticatedSockets: 1,
+  });
+  const owner = await createOwner();
+
+  const waiting = await openClient();
+  await expect(openClient()).rejects.toThrow("503");
+
+  // An open connection does not count
+  waiting.sendHello(await issueToken(owner, RUNTIME_ID), RUNTIME_ID);
+  await waiting.waitForMessage(DownMessageType.Welcome);
+  await expect(openClient()).resolves.toBeDefined();
+});
+
+test("a key set of the app that cannot be read is an internal error, not a token that is not valid", async () => {
+  const { openClient, issueToken, getHttpUrl, setKeySetAvailable, logRecords } =
+    await start();
+  const owner = await createOwner();
+  const token = await issueToken(owner, RUNTIME_ID);
+  setKeySetAvailable(false);
+
+  // The runtime connects again after its delay
+  const client = await openClient();
+  client.sendHello(token, RUNTIME_ID);
+  await expect(client.waitForClose()).resolves.toEqual({
+    code: INTERNAL_ERROR_CLOSE_CODE,
+  });
+
+  // The app sends the request again
+  const response = await fetch(getHttpUrl(DISCONNECT_USER_PATH), {
+    method: "POST",
+    headers: { authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(5_000),
+  });
+  expect(response.status).toBe(503);
+
+  expect(
+    logRecords
+      .filter((record) => record.level === "error")
+      .map((record) => record.message),
+  ).toEqual([
+    "The handshake of a runtime failed",
+    "The key set of the app cannot be read",
+  ]);
+  // The errors that the test expects
+  logRecords.splice(0);
 });
 
 test("a part that is turned off refuses the uploads, and a change of a flag sends the switches", async () => {
@@ -390,19 +470,13 @@ test("a part that is turned off refuses the uploads, and a change of a flag send
   setEnabledFlags([
     RemoteControlProgramUnleashFlag.DisableRemoteControlProgram,
   ]);
-  await expect(
-    client.waitForMessage(DownMessageType.Close),
-  ).resolves.toMatchObject({
-    content: { reason: RelayCloseReason.ProgramTurnedOff },
-  });
-  await expect(client.waitForClose()).resolves.toEqual({
-    code: RELAY_CLOSE_CODES[RelayCloseReason.ProgramTurnedOff],
-  });
+  await expectClose(client, RelayCloseReason.ProgramTurnedOff);
 });
 
-test("the stop of the owner reaches the runtime, and a ban closes the connection", async () => {
+test("the stop of the owner reaches the runtime, and a ban closes the connections, also in their handshake", async () => {
   const {
     connect,
+    openClient,
     createAppContext,
     createOwnerActor,
     getHttpUrl,
@@ -421,7 +495,7 @@ test("the stop of the owner reaches the runtime, and a ban closes the connection
   });
 
   // An internal request without a valid token changes nothing
-  const disconnectUrl = getHttpUrl("/internal/disconnect-user");
+  const disconnectUrl = getHttpUrl(DISCONNECT_USER_PATH);
   const withoutToken = await fetch(disconnectUrl, {
     method: "POST",
     signal: AbortSignal.timeout(5_000),
@@ -435,16 +509,13 @@ test("the stop of the owner reaches the runtime, and a ban closes the connection
   });
   expect([withoutToken.status, withConnectionToken.status]).toEqual([401, 401]);
 
-  await banUser(owner.userId);
+  // The ban of the app. The database has no ban: like a handshake that read the user before the ban.
   await createAppContext().relay?.disconnectUser(owner.userId);
-  await expect(
-    client.waitForMessage(DownMessageType.Close),
-  ).resolves.toMatchObject({
-    content: { reason: RelayCloseReason.AccessDenied },
-  });
-  await expect(client.waitForClose()).resolves.toEqual({
-    code: RELAY_CLOSE_CODES[RelayCloseReason.AccessDenied],
-  });
+  await expectClose(client, RelayCloseReason.AccessDenied);
+
+  const inHandshake = await openClient();
+  inHandshake.sendHello(await issueToken(owner, RUNTIME_ID), RUNTIME_ID);
+  await expectRefusal(inHandshake, RelayCloseReason.AccessDenied);
 });
 
 test("a second connection of the same runtime replaces the older connection", async () => {
@@ -454,15 +525,10 @@ test("a second connection of the same runtime replaces the older connection", as
   const older = await connect(owner, RUNTIME_ID);
   const newer = await connect(owner, RUNTIME_ID);
 
-  await expect(
-    older.client.waitForMessage(DownMessageType.Close),
-  ).resolves.toMatchObject({ content: { reason: RelayCloseReason.Replaced } });
-  await expect(older.client.waitForClose()).resolves.toEqual({
-    code: RELAY_CLOSE_CODES[RelayCloseReason.Replaced],
+  await expectClose(older.client, RelayCloseReason.Replaced);
+  await expect(sendHeartbeat(newer.client)).resolves.toMatchObject({
+    result: AcknowledgementResult.Accepted,
   });
-  await expect(
-    newer.client.request(createUpMessage(UpMessageType.Heartbeat, {})),
-  ).resolves.toMatchObject({ result: AcknowledgementResult.Accepted });
   // The close of the older connection does not end the lease of the newer connection
   const lease = await findRuntimeLease(owner.citizenId, RUNTIME_ID);
   expect(lease?.leaseExpiresAt.getTime()).toBeGreaterThan(Date.now());

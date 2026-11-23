@@ -1,4 +1,5 @@
-import type { Logger } from "@sam-monorepo/application";
+import { KeySetUnavailableError, type Logger } from "@sam-monorepo/application";
+import { connectionTokenSchema } from "@sam-monorepo/domain";
 import {
   RELAY_INTERNAL_PATHS,
   RelayInternalOperation,
@@ -8,22 +9,16 @@ import {
 import type { JWTVerifyGetKey } from "jose";
 import type { IncomingMessage, ServerResponse } from "node:http";
 
-export const HEALTH_PATH = "/health";
-
-/**
- * The internal requests have no body (see `createRelayClient()` of
- * `infrastructure`). The limit stops a large body before the check of the
- * token.
- */
-const MAXIMUM_INTERNAL_REQUEST_BODY_BYTES = 1_024;
-
-/** The limit of the connection tokens of the protocol, far above an ES256 token */
-const MAXIMUM_TOKEN_LENGTH = 4_096;
+const HEALTH_PATH = "/health";
 
 const BEARER_PREFIX = "Bearer ";
 
 /** Only for the parse of the path */
 const PATH_BASE_URL = "http://localhost";
+
+/** The path of the request. Undefined when the request has no valid URL. */
+export const getRequestPath = (request: IncomingMessage) =>
+  URL.parse(request.url ?? "", PATH_BASE_URL)?.pathname;
 
 enum HttpStatus {
   Ok = 200,
@@ -39,6 +34,8 @@ enum HttpStatus {
 
 export interface HttpEndpointOptions {
   readonly log: Logger;
+  /** The log of the refused requests, which clients without a valid token can cause */
+  readonly throttledLog: Logger;
   /** The JSON Web Key Set of the app */
   readonly keySet: JWTVerifyGetKey;
   /** The issuer of the tokens of the app (`urls.issuer` of the context) */
@@ -65,39 +62,21 @@ const respond = (
 };
 
 /**
- * Reads and drops the body. False when the body is larger than the limit:
- * then the request stays paused, and the answer closes the connection.
+ * The internal requests have no body (see `createRelayClient()` of
+ * `infrastructure`). The relay service never reads a body.
  */
-const discardBody = (request: IncomingMessage, maximumBytes: number) =>
-  new Promise<boolean>((resolve, reject) => {
-    const contentLength = Number(request.headers["content-length"] ?? 0);
-    if (contentLength > maximumBytes) {
-      resolve(false);
-      return;
-    }
-
-    let receivedBytes = 0;
-    const onData = (chunk: Buffer) => {
-      receivedBytes += chunk.length;
-      if (receivedBytes <= maximumBytes) return;
-
-      request.off("data", onData);
-      request.pause();
-      resolve(false);
-    };
-    request.on("data", onData);
-    request.once("end", () => resolve(true));
-    request.once("error", reject);
-  });
+const hasBody = (request: IncomingMessage) =>
+  request.headers["transfer-encoding"] !== undefined ||
+  Number(request.headers["content-length"] ?? 0) > 0;
 
 const readBearerToken = (request: IncomingMessage) => {
   const authorization = request.headers.authorization;
   if (!authorization?.startsWith(BEARER_PREFIX)) return null;
 
-  const token = authorization.slice(BEARER_PREFIX.length);
-  return token.length > 0 && token.length <= MAXIMUM_TOKEN_LENGTH
-    ? token
-    : null;
+  const token = connectionTokenSchema.safeParse(
+    authorization.slice(BEARER_PREFIX.length),
+  );
+  return token.success ? token.data : null;
 };
 
 /**
@@ -107,11 +86,13 @@ const readBearerToken = (request: IncomingMessage) => {
  *   503. The body has no details.
  * - The internal endpoints of the app (`RELAY_INTERNAL_PATHS`): `POST`
  *   with a short-lived ES256 token of the app for the operation of the
- *   endpoint (`verifyRelayInternalRequestToken()`). 401 without a valid
- *   token, 204 after the operation.
+ *   endpoint (`verifyRelayInternalRequestToken()`) and without a body. 401
+ *   without a valid token, 503 when the key set of the app cannot be read,
+ *   413 with a body, 204 after the operation.
  */
 export const createHttpRequestHandler = ({
   log,
+  throttledLog,
   keySet,
   issuer,
   isHealthy,
@@ -123,14 +104,10 @@ export const createHttpRequestHandler = ({
     response: ServerResponse,
     operation: RelayInternalOperation,
   ) => {
-    if (!(await discardBody(request, MAXIMUM_INTERNAL_REQUEST_BODY_BYTES))) {
-      respond(response, HttpStatus.ContentTooLarge, { connection: "close" });
-      return;
-    }
-
+    // The answers before the end of the operation close the connection: the relay service does not read a body
     const token = readBearerToken(request);
     if (token === null) {
-      respond(response, HttpStatus.Unauthorized);
+      respond(response, HttpStatus.Unauthorized, { connection: "close" });
       return;
     }
 
@@ -143,12 +120,30 @@ export const createHttpRequestHandler = ({
         operation,
       });
     } catch (error) {
+      if (error instanceof KeySetUnavailableError) {
+        log.error("The key set of the app cannot be read", {
+          operation,
+          error,
+        });
+        respond(response, HttpStatus.ServiceUnavailable, {
+          connection: "close",
+        });
+        return;
+      }
       if (!(error instanceof RelayInternalRequestTokenError)) throw error;
 
-      log.warn("Refused an internal request with a token that is not valid", {
-        operation,
-      });
-      respond(response, HttpStatus.Unauthorized);
+      throttledLog.warn(
+        "Refused an internal request with a token that is not valid",
+        {
+          operation,
+        },
+      );
+      respond(response, HttpStatus.Unauthorized, { connection: "close" });
+      return;
+    }
+
+    if (hasBody(request)) {
+      respond(response, HttpStatus.ContentTooLarge, { connection: "close" });
       return;
     }
 
@@ -174,7 +169,7 @@ export const createHttpRequestHandler = ({
     request: IncomingMessage,
     response: ServerResponse,
   ) => {
-    const path = URL.parse(request.url ?? "", PATH_BASE_URL)?.pathname;
+    const path = getRequestPath(request);
     const internalOperation = Object.values(RelayInternalOperation).find(
       (operation) => RELAY_INTERNAL_PATHS[operation] === path,
     );

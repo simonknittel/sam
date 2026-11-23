@@ -18,6 +18,7 @@ import {
 import * as z from "zod";
 import type { RelayEnvironment } from "./env.js";
 import type { SwitchesSource } from "./switches.js";
+import { ONE_MINUTE_MILLISECONDS, resolveWithin } from "./time.js";
 
 /** The maximum time of one request of the key set of the app */
 const KEY_SET_REQUEST_TIMEOUT_MILLISECONDS = 5_000;
@@ -27,7 +28,7 @@ const KEY_SET_REQUEST_TIMEOUT_MILLISECONDS = 5_000;
  * the app is also read at once: an unknown `kid` makes `jose` read the key
  * set again (at most once in `KEY_SET_COOLDOWN_MILLISECONDS`).
  */
-const KEY_SET_MAXIMUM_AGE_MILLISECONDS = 10 * 60 * 1_000;
+const KEY_SET_MAXIMUM_AGE_MILLISECONDS = 10 * ONE_MINUTE_MILLISECONDS;
 
 /** Bounds the requests of the key set when tokens with unknown keys arrive */
 const KEY_SET_COOLDOWN_MILLISECONDS = 30_000;
@@ -200,24 +201,15 @@ export const createRelayApplicationContext = ({
   return {
     context,
     keySet,
-    isDatabaseAvailable: async () => {
-      let timeout: ReturnType<typeof setTimeout> | undefined;
-      try {
-        return await Promise.race([
-          prisma.$queryRaw`SELECT 1`.then(() => true),
-          new Promise<boolean>((resolve) => {
-            timeout = setTimeout(
-              () => resolve(false),
-              DATABASE_CHECK_TIMEOUT_MILLISECONDS,
-            );
-          }),
-        ]);
-      } catch {
-        return false;
-      } finally {
-        clearTimeout(timeout);
-      }
-    },
+    isDatabaseAvailable: () =>
+      resolveWithin(
+        prisma.$queryRaw`SELECT 1`.then(
+          () => true,
+          () => false,
+        ),
+        DATABASE_CHECK_TIMEOUT_MILLISECONDS,
+        false,
+      ),
     disconnectDatabase: () => prisma.$disconnect(),
   };
 };

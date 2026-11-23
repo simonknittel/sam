@@ -63,7 +63,7 @@ export class TestRuntimeClient {
       createUpMessage(UpMessageType.Hello, {
         token,
         runtime_id: runtimeId,
-        runtime_kind: RuntimeKind.Browser,
+        runtime_kind: RuntimeKind.browser,
         runtime_version: "1.0.0",
       }),
     );
@@ -118,8 +118,11 @@ export class TestRuntimeClient {
     return (await this.waitForAcknowledgement(message)).content;
   }
 
-  getMessages(type: DownMessageType) {
-    return this.#messages.filter((message) => message.type === type);
+  /** The messages of the type, or all messages, in the order of their arrival */
+  getMessages(type?: DownMessageType) {
+    return this.#messages.filter(
+      (message) => type === undefined || message.type === type,
+    );
   }
 
   async waitForClose() {

@@ -4,16 +4,15 @@ import { createFeedEntryDelivery } from "./delivery/index.js";
 import type { RelayEnvironment } from "./env.js";
 import { createRelayServer } from "./relayServer.js";
 import {
-  createFixedSwitchesSource,
+  createSwitchesSource,
   createUnleashSwitchesSource,
   type SwitchesSource,
 } from "./switches.js";
 import type { Telemetry } from "./telemetry.js";
+import { MILLISECONDS_PER_SECOND } from "./time.js";
 
 /** Soketi counts 1 KB as 1,024 bytes */
 const BYTES_PER_KILOBYTE = 1_024;
-
-const MILLISECONDS_PER_SECOND = 1_000;
 
 /**
  * The relay service accepts connections after the first answer of Unleash,
@@ -68,7 +67,7 @@ export const runRelayService = async ({
     switches = unleashSwitches;
   } else {
     log.warn("No Unleash is configured: all parts of the program are on");
-    switches = createFixedSwitchesSource();
+    switches = createSwitchesSource();
   }
 
   const { context, keySet, isDatabaseAvailable, disconnectDatabase } =

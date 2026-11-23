@@ -2,9 +2,9 @@
 # stack side by side (each worktree sets the SAM_*_PORT variables in a
 # gitignored .env next to this file, see .agents/skills/run-app/SKILL.md).
 
-# The largest event that Soketi accepts, in kilobytes. 100 is the default of
-# the Soketi version below. The soketi service and the relay service use the
-# same value, thus the relay service splits a larger batch into more events.
+# The largest event that Soketi accepts, in kilobytes, for the soketi service
+# and the relay service (see
+# docs/setup-test-and-production.md#10-set-up-the-relay-service-of-the-remote-control-program)
 x-soketi-maximum-event-payload-kilobytes: &soketi-maximum-event-payload-kilobytes "100"
 
 services:
@@ -204,9 +204,8 @@ services:
       DATABASE_URL: postgresql://postgres:admin@psql:5432/db
       APP_BASE_URL: ${SAM_APP_BASE_URL:-http://localhost:3000}
       APP_ORIGIN: ${SAM_APP_ORIGIN:-http://localhost:3000}
-      # The key set inline, not from the URL of the app: a container cannot
-      # always open a connection to the dev server on the host (for example,
-      # a firewall of the host blocks it)
+      # The key set inline, not from the URL of the app (see
+      # docs/setup-local-machine.md#remote-control-program-relay-service)
       APP_JWKS_BASE64: ${SAM_APP_JWK_SET_VALUE:-eyJrZXlzIjpbXX0=}
       # The default app of the soketi service
       PUSHER_CHANNELS_APP_ID: app-id

@@ -33,9 +33,8 @@ const schema = z.object({
   APP_JWKS_URL: z.optional(z.url({ protocol: /^https?$/ })),
   /**
    * The JSON Web Key Set of the app as base64 JSON. When set, the relay
-   * service uses it and does not read APP_JWKS_URL. The local stacks set it,
-   * because a container cannot always open a connection to the app on the
-   * host (for example, a firewall of the host blocks it).
+   * service uses it and does not read APP_JWKS_URL. The local stacks set it
+   * (see docs/setup-local-machine.md#remote-control-program-relay-service).
    */
   APP_JWKS_BASE64: z.optional(z.base64().max(16_384)),
   /**
@@ -49,9 +48,9 @@ const schema = z.object({
   PUSHER_CHANNELS_PORT: z.optional(z.coerce.number().int().positive()),
   PUSHER_CHANNELS_USE_TLS: booleanFlagSchema,
   /**
-   * The largest event that the realtime server accepts, in kilobytes. The
-   * default of Soketi is 100. Set the same value as the realtime server of
-   * the stack. The delivery splits a larger batch into more events.
+   * The largest event that the realtime server accepts, in kilobytes (see
+   * docs/setup-test-and-production.md#10-set-up-the-relay-service-of-the-remote-control-program).
+   * The delivery splits a larger batch into more events.
    */
   PUSHER_CHANNELS_MAXIMUM_EVENT_PAYLOAD_KILOBYTES: z.coerce
     .number()

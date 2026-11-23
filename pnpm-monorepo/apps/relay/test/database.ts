@@ -6,19 +6,7 @@ import { AuditEventType } from "@sam-monorepo/domain";
  * in its composition root (see `src/boundaries.test.ts`).
  */
 
-/** Gives each test an empty database */
-export const truncateAllTables = async () => {
-  const tables = await prisma.$queryRaw<{ tablename: string }[]>`
-    SELECT tablename FROM pg_tables
-    WHERE schemaname = 'public' AND tablename <> '_prisma_migrations'
-  `;
-
-  const quotedNames = tables
-    .map(({ tablename }) => `"${tablename}"`)
-    .join(", ");
-
-  await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${quotedNames} CASCADE`);
-};
+export { truncateAllTables } from "../../../packages/application/test/database.js";
 
 export const OWNER_PERMISSION_STRINGS = [
   "login;manage",
@@ -55,13 +43,6 @@ export const createOwner = async (handle = "owner") => {
 
   return { citizenId: citizen.id, handle, userId: citizen.userId };
 };
-
-export const banUser = (userId: string) =>
-  prisma.user.update({
-    where: { id: userId },
-    data: { bannedAt: new Date() },
-    select: { id: true },
-  });
 
 export const findLogEntryRows = (ownerCitizenId: string) =>
   prisma.logAnalyzerEntry.findMany({
