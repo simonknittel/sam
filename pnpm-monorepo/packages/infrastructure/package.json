@@ -22,11 +22,12 @@
     "@paralleldrive/cuid2": "3.3.0",
     "@sam-monorepo/application": "workspace:*",
     "@sam-monorepo/database": "workspace:*",
+    "@sam-monorepo/domain": "workspace:*",
     "jose": "6.2.17",
+    "pusher": "5.3.4",
     "zod": "4.6.7"
   },
   "devDependencies": {
-    "@sam-monorepo/domain": "workspace:*",
     "@sam-monorepo/wiki-editor": "workspace:*",
     "@types/node": "24.19.2",
     "typescript": "7.0.2",

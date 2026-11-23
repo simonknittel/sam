@@ -31,6 +31,27 @@ export {
 } from "./notifications/createEventBridgeNotificationTrigger.js";
 export { createClientMetadataFetcher } from "./oauth/createClientMetadataFetcher.js";
 export {
+  createPusherClient,
+  type PusherClient,
+  type PusherClientOptions,
+} from "./realtime/createPusherClient.js";
+export {
+  createPusherRealtimeServer,
+  type PusherRealtimeServerOptions,
+} from "./realtime/createPusherRealtimeServer.js";
+export {
+  createRelayClient,
+  type RelayClientOptions,
+} from "./relay/createRelayClient.js";
+export {
+  RELAY_INTERNAL_PATHS,
+  RELAY_INTERNAL_REQUEST_TOKEN_AUDIENCE,
+  RelayInternalOperation,
+  RelayInternalRequestTokenError,
+  verifyRelayInternalRequestToken,
+  type RelayInternalRequest,
+} from "./relay/relayInternalRequestToken.js";
+export {
   createS3Client,
   type S3ClientOptions,
 } from "./storage/createS3Client.js";

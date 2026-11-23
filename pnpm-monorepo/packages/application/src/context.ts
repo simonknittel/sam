@@ -5,8 +5,9 @@ import type {
   GuildScheduledEventChange,
   GuildScheduledEventContent,
   GuildScheduledEventTarget,
+  RemoteControlProgramSwitches,
 } from "@sam-monorepo/domain";
-import type { JWK } from "jose";
+import type { JWK, JWTVerifyGetKey } from "jose";
 import type { KeyObject } from "node:crypto";
 import type { ChangelogSource } from "./ports/changelog.js";
 import type { ClientMetadataFetcher } from "./ports/clientMetadata.js";
@@ -62,9 +63,26 @@ export interface WikiCollabSession {
   readonly canEdit: boolean;
 }
 
+/** One event for the private realtime channel of a citizen */
+export interface CitizenRealtimeEvent {
+  /**
+   * The event goes to the private channel of this citizen
+   * (`getCitizenChannelName()` of the domain)
+   */
+  readonly citizenId: string;
+  /** The name of the event that the subscriber listens to */
+  readonly name: string;
+  /**
+   * The implementation sends it as JSON. The JSON must stay below the size
+   * limit of the server for one event.
+   */
+  readonly data: unknown;
+}
+
 /**
  * The realtime server (Pusher Channels or Soketi) that sends the on-site
- * notifications to the open tabs. Each tab signs in with the id of its user.
+ * notifications and the data of the Remote Control Program to the open
+ * tabs. Each tab signs in with the id of its user.
  */
 export interface RealtimeServer {
   /**
@@ -72,6 +90,37 @@ export interface RealtimeServer {
    * server refuses the request.
    */
   readonly terminateUserConnections: (userId: string) => Promise<void>;
+  /**
+   * Sends the events to the private channels of the citizens. It sends all
+   * events, also after a failure. Then it throws when the server refused an
+   * event or could not be reached.
+   */
+  readonly publishToCitizens: (
+    events: readonly CitizenRealtimeEvent[],
+  ) => Promise<void>;
+}
+
+/**
+ * The internal endpoints of the relay service of the Remote Control Program
+ * (`apps/relay`). Each request carries a short-lived token that the
+ * implementation signs with the signing key of the app, thus the app and
+ * the relay service share no secret.
+ */
+export interface RelayService {
+  /** The public WebSocket URL of the relay service. The runtimes connect to it. */
+  readonly webSocketUrl: URL;
+  /**
+   * Closes all runtime connections of the user. Throws when the relay
+   * service refuses the request or cannot be reached.
+   */
+  readonly disconnectUser: (userId: string) => Promise<void>;
+  /**
+   * Tells the relay service that the "Stop all" of the owner changed. The
+   * relay service reads the stop again and sends `stop` or `start` to the
+   * runtimes of the owner. Throws when the relay service refuses the request
+   * or cannot be reached.
+   */
+  readonly notifyOwnerStopChanged: (ownerCitizenId: string) => Promise<void>;
 }
 
 /** The key that signs the access tokens. Its public key is in the JWKS. */
@@ -225,6 +274,26 @@ export interface ApplicationContext {
    * expired are accepted.
    */
   readonly clientMetadata: ClientMetadataFetcher | null;
+  /**
+   * The switches of the organization for the Remote Control Program (the
+   * Unleash flags of `RemoteControlProgramUnleashFlag`). A host without
+   * Unleash gives all parts on: `getRemoteControlProgramSwitches(() =>
+   * false)` of the domain.
+   */
+  readonly remoteControlProgramSwitches: () => Promise<RemoteControlProgramSwitches>;
+  /**
+   * Null when the host has no relay service (no URL of the relay service, or
+   * the relay service itself). Then the browser runtime works only on the
+   * machine, and the use cases skip the calls of the relay service.
+   */
+  readonly relay: RelayService | null;
+  /**
+   * The keys that verify the connection tokens of the Remote Control Program
+   * in a host without the private key: the relay service gives the JSON Web
+   * Key Set of the app (`createRemoteJWKSet()` of `jose`). Null: the use
+   * cases verify with the public key of `signingKey`.
+   */
+  readonly connectionTokenVerificationKey: JWTVerifyGetKey | null;
   /** Permits client ids with plain HTTP on a loopback host (tests only) */
   readonly allowInsecureLoopbackClientIds: boolean;
 }

@@ -5,6 +5,7 @@ import {
   type FileStorage,
 } from "@sam-monorepo/application";
 import { prisma } from "@sam-monorepo/database";
+import { getRemoteControlProgramSwitches } from "@sam-monorepo/domain";
 import {
   createEventBridgeClient,
   createEventBridgeEmailRequester,
@@ -63,5 +64,10 @@ export const createApplicationContext = ({
     signingKey: async () => null,
     clientMetadata: null,
     allowInsecureLoopbackClientIds: false,
+    // No Unleash in the Lambda functions: all parts are on
+    remoteControlProgramSwitches: async () =>
+      getRemoteControlProgramSwitches(() => false),
+    relay: null,
+    connectionTokenVerificationKey: null,
   };
 };

@@ -22,6 +22,7 @@ export {
   createApplicationUrls,
   type ApplicationContext,
   type ChangelogEntrySource,
+  type CitizenRealtimeEvent,
   type ClientMetadataDocumentResponse,
   type ClientMetadataFetcher,
   type DiscordGateway,
@@ -36,6 +37,7 @@ export {
   type Logger,
   type Notification,
   type RealtimeServer,
+  type RelayService,
   type SigningKey,
   type StorageDeleteFailure,
   type StoredObject,
@@ -79,6 +81,7 @@ export {
 export * from "./penaltyPoints/index.js";
 export * from "./profitDistribution/index.js";
 export * from "./readMarkers/index.js";
+export * from "./remoteControlProgram/index.js";
 export * from "./roles/index.js";
 export * from "./seasonal/index.js";
 export * from "./silc/index.js";
