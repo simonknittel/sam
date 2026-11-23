@@ -38,7 +38,8 @@ the parts that are intentionally manual.
 
 The app is a Next.js app at `pnpm-monorepo/apps/app` (package
 `@sam-monorepo/app`). `compose.yml` at the repo root defines `psql` (Postgres),
-`soketi` (websockets), `sam-collab` (wiki realtime backend), `rustfs`
+`soketi` (websockets), `sam-collab` (wiki realtime backend), `sam-relay`
+(the relay service of the Remote Control Program), `rustfs`
 (S3-compatible upload storage), `unleash` (feature flags),
 `otel-collector` (headless OpenTelemetry sink, see
 `docs/setup-local-machine.md`) and `grafana` (the dashboard of the statistics
@@ -79,6 +80,7 @@ defaults apply.
 | soketi websockets  | 6001          | 6001 + N |
 | soketi metrics     | 9601          | 9601 + N |
 | collab (wiki)      | 5210          | 5210 + N |
+| relay              | 5220          | 5220 + N |
 | rustfs S3          | 9000          | 9000 + N |
 | unleash flags      | 4242          | 4242 + N |
 | otel collector     | 4318          | 4318 + N |
@@ -210,9 +212,9 @@ that you tested again.
 
 The script also writes the Grafana values: `STATISTICS_GRAFANA_URL` into
 the app `.env` (only if it is missing; port of the slot), and into the root
-`.env` the key set of `EMBED_JWT_PRIVATE_KEY` (`SAM_GRAFANA_JWK_SET_VALUE`),
-the issuer (`SAM_GRAFANA_APP_BASE_URL`) and the origin of the dev server
-(`SAM_GRAFANA_APP_ORIGIN`). Do not print these lines. The root `.env` keeps
+`.env` the key set of `EMBED_JWT_PRIVATE_KEY` (`SAM_APP_JWK_SET_VALUE`),
+the issuer (`SAM_APP_BASE_URL`) and the origin of the dev server
+(`SAM_APP_ORIGIN`). Do not print these lines. The root `.env` keeps
 its other lines, for example `SAM_GRAFANA_ADMIN_PASSWORD` of the editor
 mode. Without `EMBED_JWT_PRIVATE_KEY`, the statistics page shows a note.
 See `docs/setup-local-machine.md` for the details and for a change of the
@@ -224,6 +226,18 @@ origin has the port of the slot. In the main checkout, the script starts the
 two Grafana containers with `docker compose up --no-deps`: this makes them
 if they are missing, and it never recreates `psql`.
 
+## Relay service
+
+The script starts `sam-relay` after the migrations, with `--build` (the
+image comes from this checkout) and `--no-deps`, and appends
+`RELAY_URL="ws://localhost:<port of the slot>"` to the app `.env` if it is
+missing. The relay service verifies the tokens of the app with the
+`SAM_APP_*` values of the root `.env` (see above), thus it also needs
+`EMBED_JWT_PRIVATE_KEY`. When `/health` does not answer, the script prints a
+`WARNING` with a log path and continues: the app works without the relay
+service. Logs: `docker compose logs sam-relay`. After a change of
+`pnpm-monorepo/apps/relay` or of its packages, run the script again.
+
 ## Shutdown
 
 Kill the dev server that you started; `up.sh` prints its log path.
@@ -232,9 +246,9 @@ Kill the dev server that you started; `up.sh` prints its log path.
 seeded database for the next time.
 
 **Worktree that you remove:** remove the stack fully BEFORE you delete the
-directory. A plain `down` leaves two things behind: the `sam-collab` image
-built from this worktree, and the anonymous volume that holds its Postgres
-data.
+directory. A plain `down` leaves two things behind: the `sam-collab` and
+`sam-relay` images built from this worktree, and the anonymous volume that
+holds its Postgres data.
 
 ```bash
 cd <worktree>
@@ -246,13 +260,13 @@ If the directory is already gone, address the stack with the project name:
 `docker compose -p <project> down --rmi local --volumes --remove-orphans`.
 
 **Main stack:** keep it in operation. Stop it with
-`docker stop sam-psql-1 sam-soketi-1 sam-sam-collab-1 sam-rustfs-1 sam-unleash-1 sam-grafana-1`
+`docker stop sam-psql-1 sam-soketi-1 sam-sam-collab-1 sam-sam-relay-1 sam-rustfs-1 sam-unleash-1 sam-grafana-1`
 only when the user asks, and NEVER `docker compose down` it — its containers
 hold the only copy of the dev data.
 
 Heavy worktree use still fills the disk: stacks of worktrees that were
-deleted without the full `down`, `sam-collab` images that each `--build`
-replaces, and build cache. `docker system df` shows the usage;
+deleted without the full `down`, `sam-collab` and `sam-relay` images that
+each `--build` replaces, and build cache. `docker system df` shows the usage;
 `docker image prune -f`, `docker builder prune -f` and
 `docker volume prune -f` clear it. The main stack survives all three prunes —
 its containers exist also when they are stopped, thus their image and data

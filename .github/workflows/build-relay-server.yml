@@ -1,0 +1,65 @@
+name: Build relay server
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - pnpm-monorepo/apps/relay/**
+      - pnpm-monorepo/packages/application/**
+      - pnpm-monorepo/packages/database/**
+      - pnpm-monorepo/packages/domain/**
+      - pnpm-monorepo/packages/infrastructure/**
+      - pnpm-monorepo/packages/wiki-editor/**
+      - pnpm-monorepo/pnpm-lock.yaml
+      - pnpm-monorepo/tsconfig.base.json
+      - .github/workflows/build-relay-server.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # The base images of the Dockerfile are Docker Hardened Images
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: dhi.io
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: pnpm-monorepo
+          file: pnpm-monorepo/apps/relay/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/sam-relay:latest
+            ghcr.io/${{ github.repository_owner }}/sam-relay:${{ github.sha }}
+          # Its own scope: the collab server uses the default scope, and one
+          # cache index of two images would replace the other one
+          cache-from: type=gha,scope=sam-relay
+          cache-to: type=gha,mode=max,scope=sam-relay
+
+      # One build pushes 3 package versions: the image index, the amd64 image and
+      # the attestation. The action counts package versions, not images, so a
+      # multiple of 3 deletes only complete images. 15 keeps the 5 newest images,
+      # so the image that the deployment pins stays available.
+      - uses: actions/delete-package-versions@e5bc658cc4c965c472efe991f8beea3981499c55 # v5.0.0
+        with:
+          package-name: sam-relay
+          package-type: container
+          min-versions-to-keep: 15

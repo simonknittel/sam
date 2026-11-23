@@ -1,7 +1,7 @@
 name: Playwright tests
 
-# The paths cover everything the test stack is built from: the app and the
-# collab image (built from the checkout), the workspace packages, and the
+# The paths cover everything the test stack is built from: the app, the
+# collab image and the relay image (built from the checkout), the workspace packages, and the
 # workspace plumbing. Lambda- or scripts-only changes don't run the suite.
 on:
   pull_request:
@@ -13,6 +13,7 @@ on:
       - pnpm-monorepo/package.json
       - pnpm-monorepo/apps/app/**
       - pnpm-monorepo/apps/collab/**
+      - pnpm-monorepo/apps/relay/**
       - pnpm-monorepo/apps/playwright/**
       - pnpm-monorepo/packages/**
       - pnpm-monorepo/pnpm-lock.yaml
@@ -27,6 +28,7 @@ on:
       - pnpm-monorepo/package.json
       - pnpm-monorepo/apps/app/**
       - pnpm-monorepo/apps/collab/**
+      - pnpm-monorepo/apps/relay/**
       - pnpm-monorepo/apps/playwright/**
       - pnpm-monorepo/packages/**
       - pnpm-monorepo/pnpm-lock.yaml
@@ -76,16 +78,17 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm --filter @sam-monorepo/playwright exec playwright install --with-deps chromium
 
-      # The base images of the collab Dockerfile are Docker Hardened Images
+      # The base images of the collab and relay Dockerfiles are Docker Hardened
+      # Images
       - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
         with:
           registry: dhi.io
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Spawns the whole stack itself: Postgres and collab containers via
-      # testcontainers (the runner's Docker daemon) plus a production build
-      # of the app per worker.
+      # Spawns the whole stack itself: Postgres, Soketi, collab and relay
+      # containers via testcontainers (the runner's Docker daemon) plus a
+      # production build of the app per worker.
       - name: Run tests
         run: pnpm --filter @sam-monorepo/playwright test
 

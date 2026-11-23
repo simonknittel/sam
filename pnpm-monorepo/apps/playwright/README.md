@@ -8,21 +8,29 @@ database for each test case.
 
 - **Global setup** (`setup/global-setup.ts`): starts one Postgres container
   (through testcontainers) and applies the Prisma migrations to a template
-  database. It also starts one RustFS (S3) container and one Unleash
-  (feature flags) container, builds the collab image from
-  `apps/collab/Dockerfile` and runs `next build` for the app. The values of
-  `appDummyEnvironment` (`setup/stack.ts`) win over the developer `.env`, for
-  example the pinned `NEXT_PUBLIC_BASE_URL`.
+  database. It also starts one RustFS (S3) container, one Unleash (feature
+  flags) container and one Soketi (realtime) container, builds the collab
+  image from `apps/collab/Dockerfile` and the relay image from
+  `apps/relay/Dockerfile`, and runs `next build` for the app. The values of
+  `appDummyEnvironment` and `soketiEnvironment` (`setup/stack.ts`) win over
+  the developer `.env`, for example the pinned `NEXT_PUBLIC_BASE_URL` and
+  the Soketi settings, which the build inlines. Thus Soketi has a fixed host
+  port for each checkout (`soketiHostPort`).
 - **Per worker** (`fixtures/test.ts`): each Playwright worker clones its own
   database from the template. It also starts its own collab container, its
+  own relay container (the relay service of the Remote Control Program), its
   own Discord mock, its own server for the client documents of the MCP test
   client (`fixtures/cimd-server.ts`) and its own `next start` instance.
   Tests of different workers can never interfere with each other — except
-  through the shared Unleash server and the shared RustFS container with its
-  `uploads` bucket. For the flags, the rule is: tests may only toggle flags
-  (through `fixtures/unleash.ts`) that no other test depends on, or toggle a
-  flag only for their own user or for the app of their worker (the scopes of
-  `setUnleashFlag()`).
+  through the shared Unleash server, the shared Soketi app and the shared
+  RustFS container with its `uploads` bucket. The channels of Soketi contain
+  the random ids of the rows of the worker database, thus a worker never
+  gets the events of a different worker. For the flags, the rule is: tests
+  may only toggle flags (through `fixtures/unleash.ts`) that no other test
+  depends on, or toggle a flag only for their own user or for the app of
+  their worker (the scopes of `setUnleashFlag()`). The relay container of a
+  worker has the Unleash app name of the app of the worker, thus the scope
+  of the worker also changes the flags of its relay service.
 - **Per test**: an automatic fixture truncates all tables and resets the
   Discord mock. Thus each test starts from an empty database and seeds
   exactly what it needs through the factories in `fixtures/factories.ts`.
@@ -41,8 +49,8 @@ database for each test case.
 ## Run the tests
 
 ```bash
-pnpm test                          # full suite (builds app + collab image)
-PLAYWRIGHT_SKIP_BUILD=1 pnpm test  # reuse the previous app build and collab image
+pnpm test                          # full suite (builds app, collab and relay images)
+PLAYWRIGHT_SKIP_BUILD=1 pnpm test  # reuse the previous app build and images
 pnpm exec playwright test tests/wiki-editing.spec.ts   # single file
 ```
 
@@ -55,7 +63,8 @@ and the Playwright browsers are installed
 (`pnpm exec playwright install chromium`).
 
 The suite is fully independent of the dev stack (`compose.yml`) — both can
-run at the same time.
+run at the same time. To see the logs of the containers (for example of
+the relay service), set `DEBUG=testcontainers:containers`.
 
 ## Write a test
 

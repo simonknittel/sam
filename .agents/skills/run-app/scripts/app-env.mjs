@@ -1,13 +1,14 @@
-// Prints the lines of the root .env that let the local Grafana verify the
-// embed tokens of the app:
+// Prints the lines of the root .env that let the local Grafana and the local
+// relay service verify the tokens of the app:
 //
-//   node grafana-env.mjs <path of the app .env>
+//   node app-env.mjs <path of the app .env>
 //
-// SAM_GRAFANA_JWK_SET_VALUE is the base64 of the JSON Web Key Set that the
-// app publishes at /.well-known/jwks.json (see createEmbedJsonWebKeySet() in
+// SAM_APP_JWK_SET_VALUE is the base64 of the JSON Web Key Set that the app
+// publishes at /.well-known/jwks.json (see createEmbedJsonWebKeySet() in
 // pnpm-monorepo/apps/app/src/modules/embed-authentication/utils/embedSigningKey.ts).
-// Without EMBED_JWT_PRIVATE_KEY, the key set is empty and Grafana refuses
-// every token. SAM_GRAFANA_APP_BASE_URL is the issuer of the tokens.
+// Without EMBED_JWT_PRIVATE_KEY, the key set is empty and Grafana and the
+// relay service refuse every token. SAM_APP_BASE_URL is the issuer of the
+// tokens.
 //
 // The output contains only the public key. Do not print the output.
 import { createHash, createPrivateKey, createPublicKey } from "node:crypto";
@@ -49,8 +50,8 @@ const jsonWebKeySet = createJsonWebKeySet(appEnv.EMBED_JWT_PRIVATE_KEY);
 
 process.stdout.write(
   [
-    `SAM_GRAFANA_JWK_SET_VALUE=${Buffer.from(JSON.stringify(jsonWebKeySet)).toString("base64")}`,
-    `SAM_GRAFANA_APP_BASE_URL=${appEnv.NEXT_PUBLIC_BASE_URL || DEFAULT_APP_BASE_URL}`,
+    `SAM_APP_JWK_SET_VALUE=${Buffer.from(JSON.stringify(jsonWebKeySet)).toString("base64")}`,
+    `SAM_APP_BASE_URL=${appEnv.NEXT_PUBLIC_BASE_URL || DEFAULT_APP_BASE_URL}`,
     "",
   ].join("\n"),
 );

@@ -9,6 +9,7 @@ on:
       - pnpm-monorepo/.nvmrc
       - pnpm-monorepo/apps/app/**
       - pnpm-monorepo/apps/lambda/**
+      - pnpm-monorepo/apps/relay/**
       - pnpm-monorepo/apps/scripts/**
       - pnpm-monorepo/packages/**
       - pnpm-monorepo/pnpm-lock.yaml
@@ -24,6 +25,7 @@ on:
       - pnpm-monorepo/.nvmrc
       - pnpm-monorepo/apps/app/**
       - pnpm-monorepo/apps/lambda/**
+      - pnpm-monorepo/apps/relay/**
       - pnpm-monorepo/apps/scripts/**
       - pnpm-monorepo/packages/**
       - pnpm-monorepo/pnpm-lock.yaml
@@ -126,7 +128,7 @@ jobs:
         working-directory: pnpm-monorepo
 
       - name: Install dependencies
-        run: pnpm install --filter @sam-monorepo/app... --filter @sam-monorepo/lambda...
+        run: pnpm install --filter @sam-monorepo/app... --filter @sam-monorepo/lambda... --filter @sam-monorepo/relay...
         working-directory: pnpm-monorepo
         env:
           # See the lint job's install step
@@ -142,6 +144,12 @@ jobs:
 
       - name: Test Lambda functions
         run: pnpm --filter @sam-monorepo/lambda run test
+        working-directory: pnpm-monorepo
+
+      # The integration tests start a PostgreSQL container (Testcontainers),
+      # like the tests of the application package
+      - name: Test relay service
+        run: pnpm --filter @sam-monorepo/relay run test
         working-directory: pnpm-monorepo
 
       # The production server runs in UTC, thus a date rule that works only
@@ -174,7 +182,7 @@ jobs:
         working-directory: pnpm-monorepo
 
       - name: Install dependencies
-        run: pnpm install --filter @sam-monorepo/app... --filter @sam-monorepo/lambda... --filter @sam-monorepo/scripts... --filter @sam-monorepo/mcp...
+        run: pnpm install --filter @sam-monorepo/app... --filter @sam-monorepo/lambda... --filter @sam-monorepo/scripts... --filter @sam-monorepo/mcp... --filter @sam-monorepo/relay...
         working-directory: pnpm-monorepo
         env:
           # See the lint job's install step
@@ -194,4 +202,8 @@ jobs:
 
       - name: Typecheck Lambda functions
         run: pnpm --filter @sam-monorepo/lambda run typecheck
+        working-directory: pnpm-monorepo
+
+      - name: Typecheck relay service
+        run: pnpm --filter @sam-monorepo/relay run typecheck
         working-directory: pnpm-monorepo

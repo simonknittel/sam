@@ -39,7 +39,7 @@ elif [ -z "$SLOT" ]; then
 or sport = :$((6001 + candidate)) or sport = :$((9601 + candidate)) \
 or sport = :$((5210 + candidate)) or sport = :$((9000 + candidate)) \
 or sport = :$((4242 + candidate)) or sport = :$((4318 + candidate)) \
-or sport = :$((3100 + candidate)) )"
+or sport = :$((3100 + candidate)) or sport = :$((5220 + candidate)) )"
       if [ -z "$(ss -ltn "$ports" | tail -n +2)" ]; then SLOT=$candidate; break; fi
     done
   fi
@@ -55,6 +55,7 @@ RUSTFS_PORT=$((9000 + SLOT))
 UNLEASH_PORT=$((4242 + SLOT))
 OTEL_COLLECTOR_PORT=$((4318 + SLOT))
 GRAFANA_PORT=$((3100 + SLOT))
+RELAY_PORT=$((5220 + SLOT))
 echo "==> slot $SLOT (app :$APP_PORT, psql :$PSQL_PORT)"
 
 # ------------------------------------------------------------------- config
@@ -86,6 +87,7 @@ SAM_RUSTFS_PORT=$RUSTFS_PORT
 SAM_UNLEASH_PORT=$UNLEASH_PORT
 SAM_OTEL_COLLECTOR_PORT=$OTEL_COLLECTOR_PORT
 SAM_GRAFANA_PORT=$GRAFANA_PORT
+SAM_RELAY_PORT=$RELAY_PORT
 EOF
 
   write_fresh "$CHECKOUT/pnpm-monorepo/packages/database/.env" <<EOF
@@ -107,6 +109,7 @@ EOF
     -e "s|^(OTEL_EXPORTER_OTLP_ENDPOINT=.*localhost:)[0-9]+|\1$OTEL_COLLECTOR_PORT|" \
     -e "s|^(NEXT_PUBLIC_PUSHER_CHANNELS_PORT=\")[0-9]+|\1$SOKETI_PORT|" \
     -e "s|^(STATISTICS_GRAFANA_URL=.*127\.0\.0\.1:)[0-9]+|\1$GRAFANA_PORT|" \
+    -e "s|^(RELAY_URL=.*localhost:)[0-9]+|\1$RELAY_PORT|" \
     "$APP_ENV")"
   printf '%s\n' "$PATCHED" | write_fresh "$APP_ENV"
 
@@ -125,11 +128,16 @@ if [ -f "$APP_ENV" ] && ! grep -q '^STATISTICS_GRAFANA_URL=' "$APP_ENV"; then
   printf '\nSTATISTICS_GRAFANA_URL="http://127.0.0.1:%s"\n' "$GRAFANA_PORT" >> "$APP_ENV"
 fi
 
-# Grafana verifies the embed tokens with the public key of
-# EMBED_JWT_PRIVATE_KEY and the issuer of the app, and permits only the
-# origin of the app to show it in a frame.
-GRAFANA_ENV_LINES="$(node "$SCRIPTS_DIR/grafana-env.mjs" "$APP_ENV")"
-printf '%s\nSAM_GRAFANA_APP_ORIGIN=http://localhost:%s\n' "$GRAFANA_ENV_LINES" "$APP_PORT" \
+# The relay service of the Remote Control Program. The same append as above.
+if [ -f "$APP_ENV" ] && ! grep -q '^RELAY_URL=' "$APP_ENV"; then
+  printf '\nRELAY_URL="ws://localhost:%s"\n' "$RELAY_PORT" >> "$APP_ENV"
+fi
+
+# Grafana and the relay service verify the tokens of the app with the public
+# key of EMBED_JWT_PRIVATE_KEY and the issuer of the app, and accept only the
+# origin of the app.
+APP_ENV_LINES="$(node "$SCRIPTS_DIR/app-env.mjs" "$APP_ENV")"
+printf '%s\nSAM_APP_ORIGIN=http://localhost:%s\n' "$APP_ENV_LINES" "$APP_PORT" \
   | set_env_lines "$CHECKOUT/.env"
 
 # ------------------------------------------------------------------ install
@@ -166,8 +174,10 @@ if [ "$SLOT" -eq 0 ]; then
 else
   # --build is ~2s once the layers are cached and guarantees the collab image
   # comes from THIS checkout's source, so it is not worth making conditional.
+  # The relay service starts after the migrations (see below).
+  mapfile -t SERVICES < <(docker compose config --services | grep -vx sam-relay)
   COMPOSE_LOG="$(mktemp /tmp/sam-compose-XXXXXX.log)"
-  if ! docker compose up -d --build >"$COMPOSE_LOG" 2>&1; then
+  if ! docker compose up -d --build "${SERVICES[@]}" >"$COMPOSE_LOG" 2>&1; then
     echo "docker compose up failed; log: $COMPOSE_LOG" >&2
     tail -30 "$COMPOSE_LOG" >&2
     exit 1
@@ -239,6 +249,29 @@ else
   echo "prisma migrate deploy failed; log: $MIGRATE_LOG" >&2
   tail -20 "$MIGRATE_LOG" >&2
   exit 1
+fi
+
+# -------------------------------------------------------------------- relay
+
+# After the migrations, thus the relay service finds its tables. --no-deps
+# keeps psql as it is (see above), and --build takes the image from the
+# source of this checkout. The app works without the relay service (the
+# browser runtime then works only on the machine), thus a failure only warns.
+echo "==> starting the relay service"
+RELAY_LOG="$(mktemp /tmp/sam-relay-XXXXXX.log)"
+RELAY_STATUS=""
+if docker compose up -d --build --no-deps sam-relay >"$RELAY_LOG" 2>&1; then
+  for _ in $(seq 1 30); do
+    RELAY_STATUS=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:$RELAY_PORT/health" || true)
+    [ "$RELAY_STATUS" = "200" ] && break
+    # A relay service that exited does not come back (restart: no)
+    [ -n "$(docker compose ps --quiet --status running sam-relay)" ] || break
+    sleep 1
+  done
+fi
+if [ "$RELAY_STATUS" != "200" ]; then
+  docker compose logs --tail 20 sam-relay >>"$RELAY_LOG" 2>&1 || true
+  echo "WARNING: the relay service does not answer on :$RELAY_PORT/health; log: $RELAY_LOG" >&2
 fi
 
 # --------------------------------------------------------------- dev server

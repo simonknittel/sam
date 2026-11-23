@@ -33,6 +33,18 @@ The wiki collaboration server is not part of the Release workflow. The [Build co
 
 The app and the collab server do not deploy together. For a change of the tokens between them, release the app first: the collab server closes each connection whose client does not send a token that it accepts.
 
+## Relay service
+
+The relay service of the [Remote Control Program](./remote-control-program/README.md) is not part of the Release workflow, like the collab server. The [Build relay server workflow](../.github/workflows/build-relay-server.yml) builds and pushes the `ghcr.io/simonknittel/sam-relay` image on each push to `main` that changes the relay service or its workspace dependencies. The image has two tags: `latest` and the commit SHA. You can also start this workflow manually, for example on a branch. The workflow keeps the 5 newest images. In production, an externally managed host pulls this image and runs the service (see [Set up the relay service](./setup-test-and-production.md#10-set-up-the-relay-service-of-the-remote-control-program)).
+
+To deploy a new version:
+
+1. Apply the database migrations that the new version needs (see [Database migrations](#database-migrations)). The relay service uses the tables of the app.
+2. Pin the deployment to the tag of the commit SHA, and restart the container. The relay service closes the connections of the runtimes at the stop, and the runtimes connect again after a random delay.
+3. Make sure that `/health` answers.
+
+The browser runtime is a part of the app. When a release of the app needs a new version of the relay service (for example a new message of the protocol), deploy the relay service first.
+
 ## Ad-hoc releases and rollbacks
 
 Start the Release workflow manually. The `git_ref` input selects the commit that the workflow deploys:
