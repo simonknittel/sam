@@ -37,6 +37,7 @@ test("refuses a batch above the limit of the capability, with the id of the mess
     success: false,
     problem: RelayMessageParseProblem.ContentNotValid,
     messageId: batch.id,
+    protocolVersion: batch.protocol_version,
   });
 });
 
@@ -49,6 +50,7 @@ test("refuses an unknown message type", () => {
     success: false,
     problem: RelayMessageParseProblem.UnknownType,
     messageId: heartbeat.id,
+    protocolVersion: heartbeat.protocol_version,
   });
 });
 

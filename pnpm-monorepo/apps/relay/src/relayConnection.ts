@@ -39,7 +39,6 @@ import {
   type UpMessageOfType,
 } from "@sam-monorepo/domain";
 import { WebSocket, type RawData } from "ws";
-import * as z from "zod";
 import type { FeedEntryDelivery } from "./delivery/index.js";
 import { MessageLane } from "./messageLane.js";
 import {
@@ -195,27 +194,17 @@ const isTokenNotValidError = (error: unknown) =>
   error instanceof ForbiddenError &&
   error.message === RemoteControlProgramErrorMessage.ConnectionTokenNotValid;
 
-const protocolVersionSchema = z.object({ protocol_version: z.number() });
-
 /**
  * The reason for a first message that is not a valid `hello`. A runtime of a
  * newer protocol version can send a `hello` that this relay service cannot
  * read: it gets `protocol_version_too_new`. All other runtimes did not send
  * a valid token.
  */
-const getRefusalReasonOfInvalidHello = (text: string | null) => {
-  if (text === null) return RelayCloseReason.TokenNotValid;
-
-  try {
-    const envelope = protocolVersionSchema.safeParse(JSON.parse(text));
-    const reason = envelope.success
-      ? getRefusalReasonOfProtocolVersion(envelope.data.protocol_version)
-      : null;
-    return reason ?? RelayCloseReason.TokenNotValid;
-  } catch {
-    return RelayCloseReason.TokenNotValid;
-  }
-};
+const getRefusalReasonOfInvalidHello = (protocolVersion: number | null) =>
+  (protocolVersion === null
+    ? null
+    : getRefusalReasonOfProtocolVersion(protocolVersion)) ??
+  RelayCloseReason.TokenNotValid;
 
 const toText = (data: RawData) => {
   if (Buffer.isBuffer(data)) return data.toString("utf8");
@@ -503,7 +492,13 @@ export class RelayConnection {
 
     this.#hub.metrics.messages.add(1, { message_type: MESSAGE_TYPE_NOT_VALID });
     this.#closeWithReason(
-      getRefusalReasonOfInvalidHello(text),
+      getRefusalReasonOfInvalidHello(
+        result === null
+          ? null
+          : result.success
+            ? result.message.protocol_version
+            : result.protocolVersion,
+      ),
       DownMessageType.Refusal,
     );
   }

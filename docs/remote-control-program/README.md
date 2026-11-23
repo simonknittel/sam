@@ -339,13 +339,17 @@ The runtimes and the relay service use one protocol over the WebSocket connectio
 
 The relay service limits:
 
-- the upload rate for each capability and runtime (the minimum interval of the catalog),
+- the upload rate for each capability and runtime (the minimum interval of the catalog), also across reconnects,
+- the uploaded entries of each owner in each hour,
+- the `hello`s of each owner,
+- the `heartbeat`s, the token renewals and the `announce`s of each connection,
 - the size of each message,
 - the number of runtimes for each owner,
+- the connections that wait for their `welcome` (the proxy limits the connections for each address),
 - the number of access requests for each citizen,
 - the action requests for each requester and action.
 
-A runtime that breaks a limit gets an error. Repeated errors close the connection. A message that is larger than the limit closes the connection at once with the WebSocket code 1009 (message too big), before the relay service reads the message. The values are in `RELAY_LIMITS` in [catalog.ts](../../pnpm-monorepo/packages/domain/src/remoteControlProgram/catalog.ts).
+A runtime that breaks a limit gets an error. Repeated errors close the connection. A message that is larger than the limit closes the connection at once with the WebSocket code 1009 (message too big), before the relay service reads the message. The values are in `RELAY_LIMITS` in [catalog.ts](../../pnpm-monorepo/packages/domain/src/remoteControlProgram/catalog.ts). The values of the limits that only the relay service applies are in [rateLimits.ts](../../pnpm-monorepo/apps/relay/src/rateLimits.ts) and [relayServer.ts](../../pnpm-monorepo/apps/relay/src/relayServer.ts).
 
 ## Access layers
 

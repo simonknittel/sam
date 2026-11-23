@@ -501,6 +501,12 @@ export type RelayMessageParseResult<Message> =
        * it with an `ack`
        */
       readonly messageId: string | null;
+      /**
+       * The protocol version of a message with a valid envelope, thus the
+       * relay can refuse a `hello` of a newer version that it cannot read
+       * with `protocol_version_too_new`
+       */
+      readonly protocolVersion: number | null;
     };
 
 const parseMessage = <Message>(
@@ -516,6 +522,7 @@ const parseMessage = <Message>(
       success: false,
       problem: RelayMessageParseProblem.NotJson,
       messageId: null,
+      protocolVersion: null,
     };
   }
 
@@ -525,6 +532,7 @@ const parseMessage = <Message>(
       success: false,
       problem: RelayMessageParseProblem.EnvelopeNotValid,
       messageId: null,
+      protocolVersion: null,
     };
 
   if (!messageTypes.has(envelope.data.type))
@@ -532,6 +540,7 @@ const parseMessage = <Message>(
       success: false,
       problem: RelayMessageParseProblem.UnknownType,
       messageId: envelope.data.id,
+      protocolVersion: envelope.data.protocol_version,
     };
 
   const message = schema.safeParse(value);
@@ -540,6 +549,7 @@ const parseMessage = <Message>(
       success: false,
       problem: RelayMessageParseProblem.ContentNotValid,
       messageId: envelope.data.id,
+      protocolVersion: envelope.data.protocol_version,
     };
 
   return { success: true, message: message.data };
