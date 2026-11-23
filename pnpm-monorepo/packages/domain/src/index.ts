@@ -295,6 +295,11 @@ export {
   type ReadAuditEventType,
 } from "./readAuditEventTypes.js";
 export { ReadMarkerSubject } from "./readMarkers/ReadMarkerSubject.js";
+export * from "./remoteControlProgram/catalog.js";
+export * from "./remoteControlProgram/grantAccess.js";
+export * from "./remoteControlProgram/ipAddressMarker.js";
+export * from "./remoteControlProgram/logEntryHash.js";
+export * from "./remoteControlProgram/protocol.js";
 export {
   ROLE_DESCRIPTION_MAXIMUM_LENGTH,
   ROLE_INACTIVITY_DAYS_MAXIMUM,
