@@ -132,8 +132,9 @@ model RemoteControlProgramRuntime {
 /// Log Analyzer is open (see "Delivery to the consumers" of the concept). The
 /// relay sends new entries only to the viewers with a valid lease, and checks
 /// the access of each viewer at each delivery. The consumer renews the lease
-/// while it is open. One row for each viewer and capability, thus the renewal
-/// is an upsert and the table stays small.
+/// while it is open. One row for each consumer (for example a tab with the
+/// Log Analyzer), thus the tabs and the devices of one viewer do not
+/// overwrite or end the leases of each other. The renewal is an upsert.
 model RemoteControlProgramWatchLease {
   id           String   @id @default(cuid(2))
   viewerId     String
@@ -141,6 +142,8 @@ model RemoteControlProgramWatchLease {
   /// A value of `CapabilityId` of the domain. Text for the same reason as
   /// `ShareGrant.capabilityIds`.
   capabilityId String
+  /// A random id that the consumer keeps while it is open
+  consumerId   String   @db.Uuid
   /// The citizen ids of the owners that the viewer watches. Empty: all
   /// owners that the viewer can read. No foreign key, because the column is
   /// a list. This list does not give access: the relay checks the access
@@ -151,7 +154,7 @@ model RemoteControlProgramWatchLease {
   createdAt    DateTime @default(now()) @db.Timestamptz(3)
   updatedAt    DateTime @updatedAt @db.Timestamptz(3)
 
-  @@unique([viewerId, capabilityId])
+  @@unique([viewerId, capabilityId, consumerId])
   /// The valid leases of a capability, at each delivery
   @@index([capabilityId, expiresAt])
 }

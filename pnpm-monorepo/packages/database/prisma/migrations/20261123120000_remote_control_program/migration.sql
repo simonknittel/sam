@@ -55,6 +55,7 @@ CREATE TABLE "RemoteControlProgramWatchLease" (
     "id" TEXT NOT NULL,
     "viewerId" TEXT NOT NULL,
     "capabilityId" TEXT NOT NULL,
+    "consumerId" UUID NOT NULL,
     "ownerIds" TEXT[] DEFAULT ARRAY[]::TEXT[],
     "expiresAt" TIMESTAMPTZ(3) NOT NULL,
     "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -91,7 +92,7 @@ CREATE UNIQUE INDEX "RemoteControlProgramRuntime_ownerId_runtimeId_key" ON "Remo
 CREATE INDEX "RemoteControlProgramWatchLease_capabilityId_expiresAt_idx" ON "RemoteControlProgramWatchLease"("capabilityId", "expiresAt");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "RemoteControlProgramWatchLease_viewerId_capabilityId_key" ON "RemoteControlProgramWatchLease"("viewerId", "capabilityId");
+CREATE UNIQUE INDEX "RemoteControlProgramWatchLease_viewerId_capabilityId_consum_key" ON "RemoteControlProgramWatchLease"("viewerId", "capabilityId", "consumerId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "RemoteControlProgramOwnerStop_ownerId_key" ON "RemoteControlProgramOwnerStop"("ownerId");
