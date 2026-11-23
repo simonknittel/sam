@@ -1,0 +1,172 @@
+// The tables of the relay of the Remote Control Program (see
+// `docs/remote-control-program/README.md`). The relay service and the app
+// use them only through the use cases in
+// `packages/application/src/remoteControlProgram/`.
+
+/// The values of `GranteeKind` in
+/// `packages/domain/src/remoteControlProgram/grantAccess.ts`. The values are
+/// the same as in the domain, thus the code maps nothing. "Event
+/// participants" comes in step 4 with a new value.
+enum ShareGrantGranteeKind {
+  citizen
+  role
+  everyone
+}
+
+/// The values of `RuntimeKind` in
+/// `packages/domain/src/remoteControlProgram/catalog.ts` and of
+/// `runtime_kind` in the protocol. The desktop companion comes in step 3
+/// with a new value.
+enum RemoteControlProgramRuntimeKind {
+  browser
+}
+
+/// A grant of the remote access layer: an owner shares capabilities with a
+/// grantee. The name is different from `OAuthGrant`, which is the consent
+/// for an OAuth client. The rule of the access is `getEffectiveReadAccess()`
+/// in `packages/domain/src/remoteControlProgram/grantAccess.ts`. The relay
+/// applies it at each delivery and at each read (principle 5), thus a
+/// revocation or the end stops the data within seconds.
+///
+/// A grant gives access only to the data of its validity period (decision
+/// 8). The rows are never deleted: a revocation sets `revokedAt`.
+///
+/// `granteeKind` tells which grantee column is set. A hand-written CHECK
+/// constraint (see the migration remote_control_program) makes sure that a
+/// grant to a citizen has only `granteeCitizenId`, a grant to a role has
+/// only `granteeRoleId`, and a grant to everyone has neither. A second CHECK
+/// constraint makes sure that the end is after the start.
+model ShareGrant {
+  id               String                @id @default(cuid(2))
+  /// The deletion of the owner deletes the grants
+  ownerId          String
+  owner            Citizen               @relation("ownedShareGrants", fields: [ownerId], references: [id], onDelete: Cascade)
+  granteeKind      ShareGrantGranteeKind
+  /// Only for the grantee kind "citizen". The deletion of the citizen
+  /// deletes the grant. NULL is not possible for this kind (see the CHECK
+  /// constraint), thus a grant never changes into a grant for somebody else.
+  granteeCitizenId String?
+  granteeCitizen   Citizen?              @relation("receivedShareGrants", fields: [granteeCitizenId], references: [id], onDelete: Cascade)
+  /// Only for the grantee kind "role". The grant applies to all citizens
+  /// with the role (also through inheritance) at the time of each access.
+  /// The deletion of the role deletes the grant, for the same reason as for
+  /// `granteeCitizenId`.
+  granteeRoleId    String?
+  granteeRole      Role?                 @relation(fields: [granteeRoleId], references: [id], onDelete: Cascade)
+  /// Values of `CapabilityId` of the domain, for example "log_entries". Text,
+  /// not an enum of the database, thus a new capability needs no migration.
+  /// An unknown value gives no access.
+  capabilityIds    String[]
+  /// Values of `GrantOperation` of the domain: "read" in step 2, "request"
+  /// for actions in step 5. Text for the same reason as `capabilityIds`. An
+  /// unknown value gives no access.
+  operations       String[]
+  /// The time of the relay. Can be in the past (decision 8).
+  startsAt         DateTime              @db.Timestamptz(3)
+  /// The grant is valid until before this time. NULL: no end.
+  endsAt           DateTime?             @db.Timestamptz(3)
+  revokedAt        DateTime?             @db.Timestamptz(3)
+  /// The citizen who revoked the grant: the owner in step 2. NULL when the
+  /// grant is not revoked, or when the citizen who revoked it was deleted.
+  revokedById      String?
+  revokedBy        Citizen?              @relation("revokedShareGrants", fields: [revokedById], references: [id], onDelete: SetNull)
+  createdAt        DateTime              @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime              @updatedAt @db.Timestamptz(3)
+
+  /// The grants of an owner: the list in the sharing popover, and the
+  /// viewers of new entries of an owner at the delivery
+  @@index([ownerId, revokedAt, endsAt])
+  /// The grants that give a viewer access: one index for each grantee kind
+  @@index([granteeCitizenId, revokedAt, endsAt])
+  @@index([granteeRoleId, revokedAt, endsAt])
+  @@index([granteeKind, revokedAt, endsAt])
+}
+
+/// A runtime of an owner (see "Runtimes" and "Presence" of the concept): a
+/// browser runtime now, the desktop companion in step 3. The relay service
+/// writes the row at the connection and renews the lease at each heartbeat.
+/// A runtime with an expired lease is offline. The row stays after the
+/// connection closes, thus the next connection of the same runtime updates
+/// it.
+model RemoteControlProgramRuntime {
+  id              String                          @id @default(cuid(2))
+  /// The id that the runtime makes one time and keeps (`runtimeIdSchema` of
+  /// the protocol, a UUID). It is unique only together with the owner: two
+  /// citizens can use the same browser, and a runtime of a different owner
+  /// cannot take over the row.
+  runtimeId       String                          @db.Uuid
+  /// The deletion of the owner deletes the runtimes
+  ownerId         String
+  owner           Citizen                         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  kind            RemoteControlProgramRuntimeKind
+  /// The version of the program of the runtime from the `hello`, for example
+  /// "1.2.3" or the short hash of a commit
+  runtimeVersion  String
+  /// The protocol version of the current connection. The reader of
+  /// `announcement` uses the schema of this version.
+  protocolVersion Int
+  /// The content of the last `announce` of the current connection
+  /// (`announceContentSchema` of the protocol, with its snake_case JSON
+  /// keys): the connectors with their capabilities and versions, and the
+  /// summary of the local access layer. Validate it with the schema when you
+  /// read it. NULL from the `hello` until the first `announce` of the
+  /// connection.
+  announcement    Json?
+  /// The time of the `hello` of the current or last connection
+  connectedAt     DateTime                        @db.Timestamptz(3)
+  /// The lease of the presence. Each heartbeat sets it to the time of the
+  /// relay plus `RELAY_LIMITS.presenceLeaseMilliseconds`. A controlled close
+  /// sets it to the time of the close. The runtime is online only until this
+  /// time.
+  leaseExpiresAt  DateTime                        @db.Timestamptz(3)
+  createdAt       DateTime                        @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime                        @updatedAt @db.Timestamptz(3)
+
+  /// The owner comes first, thus the same index also serves the runtimes of
+  /// an owner (the status in the sharing popover, the limit of the runtimes
+  /// for each owner)
+  @@unique([ownerId, runtimeId])
+}
+
+/// A viewer watches the new entries of a capability, for example while the
+/// Log Analyzer is open (see "Delivery to the consumers" of the concept). The
+/// relay sends new entries only to the viewers with a valid lease, and checks
+/// the access of each viewer at each delivery. The consumer renews the lease
+/// while it is open. One row for each viewer and capability, thus the renewal
+/// is an upsert and the table stays small.
+model RemoteControlProgramWatchLease {
+  id           String   @id @default(cuid(2))
+  viewerId     String
+  viewer       Citizen  @relation(fields: [viewerId], references: [id], onDelete: Cascade)
+  /// A value of `CapabilityId` of the domain. Text for the same reason as
+  /// `ShareGrant.capabilityIds`.
+  capabilityId String
+  /// The citizen ids of the owners that the viewer watches. Empty: all
+  /// owners that the viewer can read. No foreign key, because the column is
+  /// a list. This list does not give access: the relay checks the access
+  /// for each owner.
+  ownerIds     String[] @default([])
+  /// The relay sends nothing to the viewer after this time
+  expiresAt    DateTime @db.Timestamptz(3)
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @db.Timestamptz(3)
+
+  @@unique([viewerId, capabilityId])
+  /// The valid leases of a capability, at each delivery
+  @@index([capabilityId, expiresAt])
+}
+
+/// The "Stop all" of the sharing popover for all runtimes of an owner. A row
+/// means that the stop is active: the relay refuses the uploads of all
+/// runtimes of the owner, and tells them over their connections. "Start all"
+/// deletes the row. This is the same opt-out form as `McpToolSetting`: the
+/// table holds only the owners that stopped, and a check at each upload is
+/// one lookup of the unique key.
+model RemoteControlProgramOwnerStop {
+  id        String   @id @default(cuid(2))
+  ownerId   String   @unique
+  owner     Citizen  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  /// The start of the stop. The entries of the time of the stop stay on the
+  /// machine (decision 27).
+  stoppedAt DateTime @default(now()) @db.Timestamptz(3)
+}
