@@ -36,7 +36,7 @@ Log files of the game in the folders of the game. The handles are invented. The 
 | - | - |
 | `LIVE/Game.log` | The running session. CRLF line ends. The last line is not complete: it has no line end. |
 | `LIVE/logbackups/Game Build(10498765) 21 Nov 26 (17 58 43).log` | A session that crashed. CRLF line ends. At the end, the crash report without timestamps. |
-| `LIVE/logbackups/Game Build(10512345) 22 Nov 26 (20 14 05).log` | A session that ended. LF line ends. IPv6 addresses. |
+| `LIVE/logbackups/Game Build(10512345) 22 Nov 26 (20 14 05).log` | A session that ended. LF line ends. IPv6 addresses, also after a key (`ipv6:`, `peer_addr:`). |
 
 `expected-matches.json` contains `files`. Each file has:
 

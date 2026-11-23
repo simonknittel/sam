@@ -101,14 +101,21 @@
     {
       "description": "IPv6 address in brackets with a port",
       "input": "remoteAddr=[2001:db8::42]:64090 peer=ipv6:[2001:db8::43]:443",
-      "output": "remoteAddr=IP_REDACTED peer=ipv6:[IP_REDACTED]:443",
+      "output": "remoteAddr=IP_REDACTED peer=ipv6:IP_REDACTED",
       "input_contains_ip_address": true,
       "output_contains_ip_address": false
     },
     {
-      "description": "IPv6 address in brackets with a port directly after a different address: the brackets and the port stay",
+      "description": "IPv6 address in brackets with a port directly after an IPv4 address",
       "input": "192.0.2.1,[2001:db8::44]:443",
       "output": "IP_REDACTED,IP_REDACTED",
+      "input_contains_ip_address": true,
+      "output_contains_ip_address": false
+    },
+    {
+      "description": "IPv6 address in brackets with a port directly after a different IPv6 address: the brackets and the port stay",
+      "input": "2001:db8::1,[2001:db8::44]:443",
+      "output": "IP_REDACTED,[IP_REDACTED]:443",
       "input_contains_ip_address": true,
       "output_contains_ip_address": false
     },
@@ -141,6 +148,62 @@
       "output_contains_ip_address": false
     },
     {
+      "description": "IPv6 addresses after a key with a letter from G to Z",
+      "input": "addr:2001:db8::1 ip:2001:db8::2 key:2001:db8:0:0:0:0:0:1 remote_addr:2001:db8::3 x",
+      "output": "addr:IP_REDACTED ip:IP_REDACTED key:IP_REDACTED remote_addr:IP_REDACTED x",
+      "input_contains_ip_address": true,
+      "output_contains_ip_address": false
+    },
+    {
+      "description": "IPv6 addresses after a key that ends with hexadecimal digits",
+      "input": "id:2001:db8::1 ipv6:2001:db8::2 src:fe80::1ff:fe23:4567:890a",
+      "output": "id:IP_REDACTED ipv6:IP_REDACTED src:IP_REDACTED",
+      "input_contains_ip_address": true,
+      "output_contains_ip_address": false
+    },
+    {
+      "description": "IPv6 address in brackets with a port after a key",
+      "input": "ip:[2001:db8::1]:443",
+      "output": "ip:IP_REDACTED",
+      "input_contains_ip_address": true,
+      "output_contains_ip_address": false
+    },
+    {
+      "description": "IPv6 addresses with a port and with the last 32 bits as an IPv4 address after a key",
+      "input": "remote:2001:db8::1:64090 mapped:::ffff:192.0.2.1",
+      "output": "remote:IP_REDACTED mapped:IP_REDACTED",
+      "input_contains_ip_address": true,
+      "output_contains_ip_address": false
+    },
+    {
+      "description": "IPv6 addresses after a key in brackets, after a colon alone and after a key of five or more hexadecimal digits",
+      "input": "peer[3]:2001:db8::1 :2001:db8::2 10512345:2001:db8::3",
+      "output": "peer[3]:IP_REDACTED :IP_REDACTED 10512345:IP_REDACTED",
+      "input_contains_ip_address": true,
+      "output_contains_ip_address": false
+    },
+    {
+      "description": "IPv6 addresses after a dot and a key of hexadecimal digits, and after an IPv4 address and a colon",
+      "input": "peer.fd:2001:db8::1 192.0.2.1:2001:db8::2 192.0.2.3:64090:2001:db8::4",
+      "output": "peer.fd:IP_REDACTED IP_REDACTED:IP_REDACTED IP_REDACTED:IP_REDACTED",
+      "input_contains_ip_address": true,
+      "output_contains_ip_address": false
+    },
+    {
+      "description": "IPv6 address of eight groups after an IPv4 address with a port and a colon",
+      "input": "192.0.2.1:443:2001:db8:1:2:3:4:5:abcd",
+      "output": "IP_REDACTED:IP_REDACTED",
+      "input_contains_ip_address": true,
+      "output_contains_ip_address": false
+    },
+    {
+      "description": "IPv6 addresses after keys with only one character between them (the second pass)",
+      "input": "ip:2001:db8::1,ip:2001:db8::2;id:2001:db8::3/addr:[2001:db8::4]:443",
+      "output": "ip:IP_REDACTED,ip:IP_REDACTED;id:IP_REDACTED/addr:IP_REDACTED",
+      "input_contains_ip_address": true,
+      "output_contains_ip_address": false
+    },
+    {
       "description": "Raw line of two log lines with an address in each line",
       "input": "<2026-11-23T18:01:02.003Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Relay 192.0.2.7\r\n<2026-11-23T18:01:02.003Z> Relay [2001:db8::7]:443: \" [2] to queue.",
       "output": "<2026-11-23T18:01:02.003Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Relay IP_REDACTED\r\n<2026-11-23T18:01:02.003Z> Relay IP_REDACTED: \" [2] to queue.",
@@ -166,6 +229,34 @@
       "input": "[Bad::Face]",
       "output": "[IP_REDACTED]",
       "input_contains_ip_address": true,
+      "output_contains_ip_address": false
+    },
+    {
+      "description": "Word with a letter from G to Z before a colon is a key, also when its end looks like a part of an address",
+      "input": "x2001:db8::1",
+      "output": "x2001:IP_REDACTED",
+      "input_contains_ip_address": true,
+      "output_contains_ip_address": false
+    },
+    {
+      "description": "Key of one to four hexadecimal digits: the rule replaces the key with the address when they are together an IPv6 address",
+      "input": "fd:2001:db8::1 1:2001:db8::2",
+      "output": "IP_REDACTED IP_REDACTED",
+      "input_contains_ip_address": true,
+      "output_contains_ip_address": false
+    },
+    {
+      "description": "Accepted false match: a name of letters from A to F with :: after a key",
+      "input": "Foo:Bad::Face",
+      "output": "Foo:IP_REDACTED",
+      "input_contains_ip_address": true,
+      "output_contains_ip_address": false
+    },
+    {
+      "description": "Known limit: a key of one to four hexadecimal digits before an address of eight groups with a letter in the last group is no IPv6 address",
+      "input": "fd:2001:db8:1:2:3:4:5:abcd",
+      "output": "fd:2001:db8:1:2:3:4:5:abcd",
+      "input_contains_ip_address": false,
       "output_contains_ip_address": false
     },
     {
@@ -242,6 +333,20 @@
       "description": "Names of shards and servers",
       "input": "shard[pub_euw1b_10512345_100] host pub-sc-alpha-440-10512345.cloudimperiumgames.com",
       "output": "shard[pub_euw1b_10512345_100] host pub-sc-alpha-440-10512345.cloudimperiumgames.com",
+      "input_contains_ip_address": false,
+      "output_contains_ip_address": false
+    },
+    {
+      "description": "Keys before times, dates, GUIDs, hexadecimal ids, MAC addresses and versions",
+      "input": "time:12:34:56.789 date:2026-11-23 id:bf7d2465-cf1e-480b-ae5c-25040d716e5f addr:0x00007FFE2CE13CFA mac:00:1A:2B:3C:4D:5E version:1.2.3.4.5 build:4.4.159.10512345 uptime_secs:3636.990234",
+      "output": "time:12:34:56.789 date:2026-11-23 id:bf7d2465-cf1e-480b-ae5c-25040d716e5f addr:0x00007FFE2CE13CFA mac:00:1A:2B:3C:4D:5E version:1.2.3.4.5 build:4.4.159.10512345 uptime_secs:3636.990234",
+      "input_contains_ip_address": false,
+      "output_contains_ip_address": false
+    },
+    {
+      "description": "Keys before C++ names and before the address :: alone",
+      "input": "ns:CEntity::OnSpawn localAddr=ipv6:[::]:64090 addr:: ip:::",
+      "output": "ns:CEntity::OnSpawn localAddr=ipv6:[::]:64090 addr:: ip:::",
       "input_contains_ip_address": false,
       "output_contains_ip_address": false
     }

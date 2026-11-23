@@ -26,8 +26,8 @@
  *   PostgreSQL, `replace_all` in Rust. No other flag: the classes contain both
  *   cases, and without the multiline flag, `^` and `$` are the start and the
  *   end of the whole raw line, also when the raw line contains two log lines.
- * - The replacement puts the boundary characters (groups 1 and 2) back around
- *   the marker. JavaScript: `$1IP_REDACTED$2`, PostgreSQL:
+ * - The replacement puts the text before and after the address (groups 1 and
+ *   2) back around the marker. JavaScript: `$1IP_REDACTED$2`, PostgreSQL:
  *   `\1IP_REDACTED\2`, Rust: `${1}IP_REDACTED${2}`.
  * - Two passes: an engine cannot use one character for two matches. In
  *   `192.0.2.1 192.0.2.2`, the first match uses the space as its end, thus the
@@ -39,15 +39,18 @@
  *   could replace only the IPv4 part of an IPv6 address such as
  *   `::ffff:192.0.2.1`.
  *
- * A match starts and ends at a boundary character, thus it contains the full
- * address. At one position, two matches are possible only with a port (the
- * IPv4 address with the port, or without the port and with the `:` as the end)
- * or with brackets at the start of the line (the bracket form, or the address
- * in the brackets). JavaScript and Rust take the first alternative that
- * matches, and the alternatives are in an order in which this is also the
- * longest match, which PostgreSQL takes. Thus the engines give the same
- * result. A one-time comparison of JavaScript and PostgreSQL 18 on 20,000
- * random lines and on the shared cases found no difference.
+ * A match starts at the start of the line, at a boundary character or at a
+ * key before the address, and it ends at a boundary character, thus it
+ * contains the full address. The alternatives of the start exclude each
+ * other: at one position, only one of them can give a match. At one position,
+ * two matches are possible only with a port (the IPv4 address with the port,
+ * or without the port and with the `:` as the end) or with brackets at the
+ * start of the line (the bracket form, or the address in the brackets).
+ * JavaScript and Rust take the first alternative that matches, and the
+ * alternatives are in an order in which this is also the longest match, which
+ * PostgreSQL takes. Thus the engines give the same result. A one-time
+ * comparison of JavaScript and PostgreSQL 18 on 110,000 random lines (also
+ * with keys) and on the shared cases found no difference.
  *
  * Decisions:
  *
@@ -60,8 +63,29 @@
  * - The start of an address: the start of the line, or a character that is
  *   not a letter, a digit, `_` or `.`. Thus `v1.2.3.4` (a part of a name) and
  *   `10.4.0.1.9` (a part of a longer number) stay. Before an IPv4 address, a
- *   `:` is permitted (`ipv4:192.0.2.1:443`). Before an IPv6 address, a `:` is
- *   not permitted, thus the match cannot start in the middle of an address.
+ *   `:` is permitted (`ipv4:192.0.2.1:443`).
+ * - Before an IPv6 address, a `:` can be a part of the address. Thus a `:`
+ *   directly before an IPv6 address is permitted only after text that cannot
+ *   be a part of an address: the start of the line or a character that is not
+ *   a letter, a digit, `_`, `.` or `:` (`[3]:`), a key with a letter from G
+ *   to Z or `_` (`addr:`, `id:`, `ipv6:`, `remote_addr:`), a key of five or
+ *   more hexadecimal digits (`10512345:`), an IPv4 address with a port
+ *   (`192.0.2.1:443:`), or a `.` and an optional key of hexadecimal digits
+ *   (`192.0.2.1:`, `peer.fd:`). An IPv6 address has no letter from G to Z, no
+ *   `_`, no group of five digits, and a `.` only in its last 32 bits, thus a
+ *   match cannot start in the middle of an address. A word with a letter from
+ *   G to Z before the `:` is a key, also when its end looks like a part of an
+ *   address (`x2001:IP_REDACTED`).
+ * - After the IPv4 passes, `IP_REDACTED:` is a key. The IPv6 expression
+ *   starts after each IPv4 address (with or without a port) that the IPv4
+ *   expression replaces, thus the result contains no new start, and a second
+ *   application of the rule changes nothing.
+ * - A key of one to four hexadecimal digits after the start of the line, a
+ *   boundary character or a `:` (`fd:`, `1:`) can be the first group of an
+ *   address. The rule cannot separate it from the address. When the key and
+ *   the address are together an IPv6 address (also with a port), the rule
+ *   replaces them together (`fd:2001:db8::1`). Else the rule does not find
+ *   the address (`fd:2001:db8:1:2:3:4:5:abcd`).
  * - The end of an address: the end of the line, or a character that is not a
  *   letter, a digit, `_` or `.`. After an IPv4 address, this includes a `:`
  *   (`192.0.2.1: refused`, `192.0.2.1:198.51.100.2`). After an IPv6 address, a
@@ -74,10 +98,12 @@
  *   after an IPv6 address in brackets (`[2001:db8::1]:443`) and after an IPv6
  *   address without brackets (`2001:db8::1:64090`, some programs write it).
  *   An IPv6 address in brackets without a port keeps the brackets
- *   (`address[IP_REDACTED]`), like the tag `address[…]` of the game. When a
- *   different address is directly before the bracket form, with only one
- *   character between them, the first pass replaces only the address in the
- *   brackets, and the brackets and the port stay (`[IP_REDACTED]:443`).
+ *   (`address[IP_REDACTED]`), like the tag `address[…]` of the game. A key
+ *   before the bracket form is a start (`ipv6:[2001:db8::1]:443` gives
+ *   `ipv6:IP_REDACTED`). When a different IPv6 address is directly before the
+ *   bracket form, with only one character between them, the first pass
+ *   replaces only the address in the brackets, and the brackets and the port
+ *   stay (`[IP_REDACTED]:443`).
  * - IPv6: all text forms of RFC 4291 (eight groups, the `::` compression, the
  *   last 32 bits as an IPv4 address, for example `::ffff:192.0.2.1`), with the
  *   hexadecimal digits in both cases. A zone stays after the marker
@@ -85,13 +111,15 @@
  *   (`IP_REDACTED/32`).
  * - The address `::` alone stays. It is also the scope operator of C++ and a
  *   separator in a text, and it identifies nobody.
- * - C++ names (`CEntity::OnSpawn`) stay, because a letter is directly before
- *   the `::`. A name of which each part has a maximum of four letters from A
- *   to F (for example `[Bad::Face]`) is a valid IPv6 address. The rule
- *   replaces it. No name of the patterns has this form.
+ * - C++ names (`CEntity::OnSpawn`) stay: `y:` is a key, but the text after it
+ *   (`:OnSpawn`) is not an address. A name of which each part has a maximum
+ *   of four letters from A to F (for example `[Bad::Face]`, also after a key:
+ *   `Foo:Bad::Face`) is a valid IPv6 address. The rule replaces it. No name of
+ *   the patterns has this form.
  * - Times (`12:34:56.789`), dates, GUIDs, hexadecimal ids
  *   (`0x00007FFE2CE13CFA`), MAC addresses (six groups) and decimal numbers with
- *   two or three parts (prices, coordinates) are not addresses. They stay.
+ *   two or three parts (prices, coordinates) are not addresses, also not after
+ *   a key (`time:12:34:56.789`). They stay.
  * - No pattern captures an IP address in a named group, thus each line still
  *   matches its pattern with the same groups after the replacement.
  */
@@ -137,13 +165,45 @@ const IPV6 = `(?:${IPV6_FORMS.join("|")})`;
 
 const PORT = ":[0-9]+";
 
+/** A character that is not a letter, a digit, `_`, `.` or `:` */
+const BOUNDARY = "[^0-9A-Za-z_.:]";
+
+/**
+ * The text before an IPv6 address (group 1). A `:` directly before the
+ * address must come after text that cannot be a part of the address (see the
+ * decisions at the top of this file). At one position, only one of the
+ * alternatives can start a match.
+ */
+const IPV6_START = [
+  /** The start of the line or a boundary character, and optionally a `:` */
+  `(?:^|${BOUNDARY}):?`,
+  /**
+   * A key with a letter from G to Z or `_`. The match starts at the last of
+   * these letters, thus the hexadecimal digits after it (the `d` of `id:`)
+   * are a part of the key.
+   */
+  "[G-Zg-z_][0-9A-Fa-f]*:",
+  /**
+   * A key of five or more hexadecimal digits (`10512345:`), or an IPv4
+   * address with a port (`192.0.2.1:443:`), after the start of the line, a
+   * boundary character or a `:`. After a letter from G to Z, `_` or a `.`,
+   * the alternatives above and below take the key. Without the character
+   * before the key, each digit of a long run of digits starts a new try, and
+   * the time of the expression is quadratic. The IPv4 address has the start
+   * of the IPv4 expression, thus the IPv4 passes replace it with the port.
+   */
+  `(?:^|[^0-9A-Za-z_.])(?:[0-9A-Fa-f]{5,}|${IPV4}${PORT}):`,
+  /** A `.` and a key of hexadecimal digits (`192.0.2.1:`, `peer.fd:`) */
+  "\\.[0-9A-Fa-f]*:",
+].join("|");
+
 /**
  * The source of the IPv6 expression (see the comment at the top of this
- * file). Group 1 is the character before the address, group 2 the characters
- * after it. The bracket form is the first alternative: at the start of the
- * line, it is the longer match.
+ * file). Group 1 is the text before the address, group 2 the characters after
+ * it. The bracket form is the first alternative: at the start of the line, it
+ * is the longer match.
  */
-export const IPV6_ADDRESS_PATTERN_SOURCE = `(^|[^0-9A-Za-z_.:])(?:\\[${IPV6}\\]${PORT}|${IPV6}(?:${PORT})?)([^0-9A-Za-z_.:]|[.:][^0-9A-Za-z_]|[.:]?$)`;
+export const IPV6_ADDRESS_PATTERN_SOURCE = `(${IPV6_START})(?:\\[${IPV6}\\]${PORT}|${IPV6}(?:${PORT})?)(${BOUNDARY}|[.:][^0-9A-Za-z_]|[.:]?$)`;
 
 /**
  * The source of the IPv4 expression (see the comment at the top of this

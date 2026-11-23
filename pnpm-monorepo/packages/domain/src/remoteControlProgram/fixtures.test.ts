@@ -69,6 +69,21 @@ const { cases: hashCases } = await readJson<{
   readonly cases: readonly HashCase[];
 }>("log-entry-hash/cases.json");
 
+/**
+ * Applies `rule.json` like a different engine, as its `README.md` tells. Thus
+ * the shared test data alone gives the expected results.
+ */
+const applyIpRuleOfSharedTestData = (line: string) => {
+  let result = line;
+  for (const { source } of ipRule.patterns) {
+    const regex = new RegExp(source, "g");
+    for (let pass = 0; pass < ipRule.passes_per_pattern; pass += 1) {
+      result = result.replace(regex, ipRule.replacement.javascript);
+    }
+  }
+  return result;
+};
+
 describe("the IP rule", () => {
   /** The rule is immutable data, see `ipAddressMarker.ts` */
   test("is the rule of the shared test data", () => {
@@ -94,6 +109,7 @@ describe("the IP rule", () => {
       output_contains_ip_address,
     }) => {
       expect(replaceIpAddresses(input)).toBe(output);
+      expect(applyIpRuleOfSharedTestData(input)).toBe(output);
       expect(containsIpAddress(input)).toBe(input_contains_ip_address);
       expect(containsIpAddress(output)).toBe(output_contains_ip_address);
     },
