@@ -6,6 +6,7 @@ import type { App, RedactedApp } from "@/modules/apps/utils/types";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { Link } from "@/modules/common/components/Link";
 import { UnreadDot } from "@/modules/common/components/UnreadDot";
+import { useCanUseRemoteControlProgram } from "@/modules/remote-control-program/components/sharing-popover/useCanUseRemoteControlProgram";
 import clsx from "clsx";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
@@ -17,6 +18,7 @@ import { BarItemContent, barItemClassName } from "./BarItemContent";
 import { Create } from "./Create";
 import { MobileActionBarFlyout } from "./MobileActionBarFlyout";
 import { Notifications } from "./Notifications";
+import { RemoteControlProgram } from "./RemoteControlProgram";
 
 type LinkedApp = Exclude<App, RedactedApp>;
 
@@ -30,6 +32,7 @@ export const MobileActionBarClient = ({ supportHref }: Props) => {
 
   const { apps, appDotBadgeCounts } = useAppsContext();
   const pathname = usePathname();
+  const canUseRemoteControlProgram = useCanUseRemoteControlProgram();
   if (!apps) return null;
   const { featured, other } = groupByFeatured(apps);
   const currentApp = findCurrentApp(apps.filter(isLinkedApp), pathname);
@@ -65,6 +68,12 @@ export const MobileActionBarClient = ({ supportHref }: Props) => {
       )}
 
       <BarLink href="/app/wiki" icon={<FaBookOpen />} label="Wiki" />
+
+      {canUseRemoteControlProgram && (
+        <li className="h-full min-w-fit flex-1 py-1">
+          <RemoteControlProgram />
+        </li>
+      )}
 
       <li className="h-full min-w-fit flex-1 py-1">
         <Notifications />
