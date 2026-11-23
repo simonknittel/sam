@@ -23,14 +23,12 @@ const ROUTE_PATH = "/api/remote-control-program/connection-token";
  *
  * Body: `{ "runtime_id": "<uuid>" }`. Answer: `{ "token", "expires_at",
  * "relay_url" }`, with `relay_url` null when the app has no relay service.
+ * 403 also for an admin who assumes a user (see
+ * `issueRuntimeConnectionToken()`).
  */
 export async function POST(request: Request) {
   try {
     const authentication = await requireAuthenticationApi(ROUTE_PATH, "POST");
-
-    // The runtime would upload the log of the admin as data of the assumed user
-    if (authentication.session.assumedByAdminId !== null)
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     const body: unknown = await request.json().catch(() => null);
     const input = issueRuntimeConnectionTokenInputSchema.parse(body);

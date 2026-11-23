@@ -8,6 +8,7 @@ import {
   GrantOperation,
   GrantValidityPreset,
   GrantValidityProblem,
+  lockCitizen,
   type GrantValidity,
 } from "@sam-monorepo/domain";
 import * as z from "zod";
@@ -28,7 +29,6 @@ import {
   MAXIMUM_ACTIVE_SHARE_GRANTS_PER_OWNER,
   OWN_SHARE_GRANT_SELECT,
   toOwnShareGrant,
-  toShareGrantGranteeKindOfDatabase,
   type OwnShareGrant,
 } from "./ownShareGrant.js";
 import { ShareGrantErrorMessage } from "./shareGrantErrors.js";
@@ -43,9 +43,9 @@ export enum ShareGrantValidityKind {
 export const createShareGrantInputSchema = z.object({
   grantee: z
     .discriminatedUnion("kind", [
-      z.object({ kind: z.literal(GranteeKind.Citizen), citizen_id: idSchema }),
-      z.object({ kind: z.literal(GranteeKind.Role), role_id: idSchema }),
-      z.object({ kind: z.literal(GranteeKind.Everyone) }),
+      z.object({ kind: z.literal(GranteeKind.citizen), citizen_id: idSchema }),
+      z.object({ kind: z.literal(GranteeKind.role), role_id: idSchema }),
+      z.object({ kind: z.literal(GranteeKind.everyone) }),
     ])
     .describe(
       "citizen: one citizen. role: all citizens with the role at the time of each access. everyone: all citizens who can use the Remote Control Program.",
@@ -126,7 +126,7 @@ const toGranteeColumns = async (
   grantee: CreateShareGrantInput["grantee"],
 ) => {
   switch (grantee.kind) {
-    case GranteeKind.Citizen:
+    case GranteeKind.citizen:
       if (grantee.citizen_id === ownerCitizenId)
         throw new ValidationError(ShareGrantErrorMessage.GranteeIsOwner);
 
@@ -137,7 +137,7 @@ const toGranteeColumns = async (
       );
       return { granteeCitizenId: grantee.citizen_id, granteeRoleId: null };
 
-    case GranteeKind.Role:
+    case GranteeKind.role:
       // The same choices as the role pickers of the other forms
       await requireVisibleRoles(
         context,
@@ -147,7 +147,7 @@ const toGranteeColumns = async (
       );
       return { granteeCitizenId: null, granteeRoleId: grantee.role_id };
 
-    case GranteeKind.Everyone:
+    case GranteeKind.everyone:
       return { granteeCitizenId: null, granteeRoleId: null };
 
     default:
@@ -161,8 +161,8 @@ const toGranteeColumns = async (
  * now. A custom validity can start in the past (decision 8). Writes
  * `REMOTE_CONTROL_PROGRAM_SHARE_GRANT_CREATED`.
  *
- * @throws ForbiddenError without `remoteControlProgram;use` or a citizen
- * (`RemoteControlProgramErrorMessage`)
+ * @throws ForbiddenError without `remoteControlProgram;use` or a citizen, or
+ * for an admin who assumes the user (`RemoteControlProgramErrorMessage`)
  * @throws ValidationError with a `ShareGrantErrorMessage`: the grantee is
  * the owner, the citizen does not exist or is deleted, the role does not
  * exist or the owner cannot see it, or the custom validity is not valid
@@ -191,9 +191,7 @@ export const createShareGrant = (
 
     const grant = await context.prisma.$transaction(async (transaction) => {
       // Two parallel creations of one owner wait for each other, thus they cannot both pass the limit
-      await transaction.$queryRaw`
-        SELECT 1 FROM "Citizen" WHERE "id" = ${citizen.id} FOR NO KEY UPDATE
-      `;
+      await lockCitizen(transaction, citizen.id);
 
       const activeGrantCount = await transaction.shareGrant.count({
         where: createActiveOwnShareGrantWhere(citizen.id, now),
@@ -204,7 +202,7 @@ export const createShareGrant = (
       return transaction.shareGrant.create({
         data: {
           ownerId: citizen.id,
-          granteeKind: toShareGrantGranteeKindOfDatabase(input.grantee.kind),
+          granteeKind: input.grantee.kind,
           ...granteeColumns,
           capabilityIds,
           operations,

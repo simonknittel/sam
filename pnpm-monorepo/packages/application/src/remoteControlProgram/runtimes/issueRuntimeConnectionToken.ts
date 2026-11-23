@@ -35,8 +35,9 @@ export interface IssueRuntimeConnectionTokenOutput {
  * each renewal (see `RELAY_LIMITS.tokenRenewalIntervalMilliseconds`). The
  * caller does the gate of the app (`actor.requireClearance()`).
  *
- * @throws ForbiddenError without a citizen, without `remoteControlProgram;use`
- * or for a banned user
+ * @throws ForbiddenError without a citizen, without `remoteControlProgram;use`,
+ * for a banned user, or for an admin who assumes the user: the runtime would
+ * upload the log of the admin as the data of the user
  * @throws ConflictError when the host has no signing key
  * (`RemoteControlProgramErrorMessage.TokenKeyNotConfigured`)
  */

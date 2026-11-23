@@ -1,23 +1,25 @@
 import {
-  CapabilityId,
-  ConnectorId,
   getRemoteControlProgramSwitches,
   RELAY_LIMITS,
   RemoteControlProgramUnleashFlag,
   RuntimeKind,
-  type AnnounceContent,
 } from "@sam-monorepo/domain";
 import { beforeEach, expect, test } from "vitest";
 import {
-  createTestActor,
   createTestApplicationContext,
   TEST_NOW,
 } from "../../../test/applicationContext.js";
-import { createCitizenWithPermissions } from "../../../test/citizensWithPermissions.js";
 import { truncateAllTables } from "../../../test/database.js";
+import {
+  createCitizenActor,
+  LOG_FILE_ANNOUNCEMENT,
+} from "../../../test/remoteControlProgram.js";
+import type { Actor } from "../../actor.js";
+import type { ApplicationContext } from "../../context.js";
 import { ConflictError, ForbiddenError } from "../../errors.js";
 import { RemoteControlProgramErrorMessage } from "../access/remoteControlProgramErrors.js";
-import { announceRuntime } from "./announceRuntime.js";
+import { checkRuntimeHello } from "./checkRuntimeHello.js";
+import { claimRuntimePresence } from "./claimRuntimePresence.js";
 import { endRuntimeLease } from "./endRuntimeLease.js";
 import { listOwnRuntimes } from "./listOwnRuntimes.js";
 import { renewRuntimeLease } from "./renewRuntimeLease.js";
@@ -25,88 +27,78 @@ import { storeRuntimeAnnouncement } from "./storeRuntimeAnnouncement.js";
 
 const RUNTIME_ID = "0b6f1d3e-2a4c-4e8f-9a1b-3c5d7e9f1a2b";
 
-const ANNOUNCEMENT: AnnounceContent = {
-  connectors: [
-    {
-      id: ConnectorId.LogFile,
-      version: 1,
-      capabilities: [{ id: CapabilityId.LogEntries, version: 1 }],
-    },
-  ],
-  local_access_layer: {
-    is_stopped: false,
-    capability_rules: [
-      {
-        capability_id: CapabilityId.LogEntries,
-        is_on: true,
-        is_filtered: true,
-      },
-    ],
-  },
-};
-
 beforeEach(async () => {
   await truncateAllTables();
 });
 
-const createOwner = async () => {
-  const citizen = await createCitizenWithPermissions("owner", [
-    "remoteControlProgram;use",
-  ]);
-
-  return createTestActor({
-    userId: "owner-user",
-    citizen,
-    permissionStrings: ["remoteControlProgram;use"],
-  });
-};
+const createOwner = () =>
+  createCitizenActor("owner", ["remoteControlProgram;use"]);
 
 const createHello = (runtimeId: string, runtimeVersion = "1.0.0") => ({
   runtime_id: runtimeId,
-  runtime_kind: RuntimeKind.Browser,
+  runtime_kind: RuntimeKind.browser,
   runtime_version: runtimeVersion,
   protocol_version: 1,
 });
 
+/** The handshake of the relay service: the check of the `hello`, then the claim at the open */
+const connect = async (
+  context: ApplicationContext,
+  owner: Actor,
+  hello: ReturnType<typeof createHello>,
+) => {
+  await checkRuntimeHello(context, owner, { runtime_id: hello.runtime_id });
+  return claimRuntimePresence(context, owner, hello);
+};
+
 const addMilliseconds = (date: Date, milliseconds: number) =>
   new Date(date.getTime() + milliseconds);
 
-test("announces a runtime, stores its announcement, and renews and ends its lease", async () => {
+test("claims the presence of a runtime at the open, stores its announcement, and renews and ends its lease", async () => {
   const owner = await createOwner();
   const { context } = createTestApplicationContext();
 
-  const first = await announceRuntime(context, owner, createHello(RUNTIME_ID));
+  const first = await connect(context, owner, createHello(RUNTIME_ID));
   expect(first).toEqual({
-    runtime: {
-      runtimeId: RUNTIME_ID,
-      kind: RuntimeKind.Browser,
-      runtimeVersion: "1.0.0",
-      protocolVersion: 1,
-      isOnline: true,
-      connectedAt: TEST_NOW,
-      leaseExpiresAt: addMilliseconds(
-        TEST_NOW,
-        RELAY_LIMITS.presenceLeaseMilliseconds,
-      ),
-      announcement: null,
-    },
-    isOwnerStopped: false,
+    runtimeId: RUNTIME_ID,
+    kind: RuntimeKind.browser,
+    runtimeVersion: "1.0.0",
+    protocolVersion: 1,
+    isOnline: true,
+    connectedAt: TEST_NOW,
+    leaseExpiresAt: addMilliseconds(
+      TEST_NOW,
+      RELAY_LIMITS.presenceLeaseMilliseconds,
+    ),
+    announcement: null,
   });
   await expect(
     storeRuntimeAnnouncement(context, owner, {
       runtime_id: RUNTIME_ID,
-      announcement: ANNOUNCEMENT,
+      announcement: LOG_FILE_ANNOUNCEMENT,
     }),
-  ).resolves.toMatchObject({ announcement: ANNOUNCEMENT });
+  ).resolves.toMatchObject({ announcement: LOG_FILE_ANNOUNCEMENT });
 
-  // The next connection of the same runtime starts without the announcement
+  // The hello of a second connection that then fails changes nothing
   const reconnectedAt = addMilliseconds(TEST_NOW, 60_000);
-  const second = await announceRuntime(
-    createTestApplicationContext({ now: reconnectedAt }).context,
+  const reconnectContext = createTestApplicationContext({
+    now: reconnectedAt,
+  }).context;
+  await expect(
+    checkRuntimeHello(reconnectContext, owner, { runtime_id: RUNTIME_ID }),
+  ).resolves.toEqual({ isOwnerStopped: false });
+  await expect(listOwnRuntimes(reconnectContext, owner)).resolves.toEqual({
+    runtimes: [{ ...first, announcement: LOG_FILE_ANNOUNCEMENT }],
+    stoppedAt: null,
+  });
+
+  // The next open connection of the same runtime starts without the announcement
+  const second = await claimRuntimePresence(
+    reconnectContext,
     owner,
     createHello(RUNTIME_ID, "1.1.0"),
   );
-  expect(second.runtime).toMatchObject({
+  expect(second).toMatchObject({
     runtimeVersion: "1.1.0",
     connectedAt: reconnectedAt,
     announcement: null,
@@ -130,13 +122,13 @@ test("announces a runtime, stores its announcement, and renews and ends its leas
   await expect(
     endRuntimeLease(heartbeatContext, owner, {
       runtime_id: RUNTIME_ID,
-      connected_at: first.runtime.connectedAt,
+      connected_at: first.connectedAt,
     }),
   ).resolves.toEqual({ isEnded: false });
   await expect(
     endRuntimeLease(heartbeatContext, owner, {
       runtime_id: RUNTIME_ID,
-      connected_at: second.runtime.connectedAt,
+      connected_at: second.connectedAt,
     }),
   ).resolves.toEqual({ isEnded: true });
 
@@ -162,17 +154,22 @@ test("refuses a runtime above the limit of the owner until a different runtime g
   const onlineRuntimeIds = runtimeIds.slice(0, -1);
   const extraRuntimeId = runtimeIds.at(-1)!;
   for (const runtimeId of onlineRuntimeIds)
-    await announceRuntime(context, owner, createHello(runtimeId));
+    await connect(context, owner, createHello(runtimeId));
 
-  await expect(
-    announceRuntime(context, owner, createHello(extraRuntimeId)),
-  ).rejects.toThrow(
-    new ConflictError(RemoteControlProgramErrorMessage.TooManyRuntimes),
+  const tooManyRuntimes = new ConflictError(
+    RemoteControlProgramErrorMessage.TooManyRuntimes,
   );
+  await expect(
+    checkRuntimeHello(context, owner, { runtime_id: extraRuntimeId }),
+  ).rejects.toThrow(tooManyRuntimes);
+  // Two parallel connections can both pass the hello, thus the claim checks the limit again
+  await expect(
+    claimRuntimePresence(context, owner, createHello(extraRuntimeId)),
+  ).rejects.toThrow(tooManyRuntimes);
   // A runtime that is online already connects again
   await expect(
-    announceRuntime(context, owner, createHello(onlineRuntimeIds[0]!)),
-  ).resolves.toMatchObject({ runtime: { isOnline: true } });
+    connect(context, owner, createHello(onlineRuntimeIds[0]!)),
+  ).resolves.toMatchObject({ isOnline: true });
 
   const [, offlineRuntimeId] = onlineRuntimeIds;
   await endRuntimeLease(context, owner, {
@@ -180,8 +177,8 @@ test("refuses a runtime above the limit of the owner until a different runtime g
     connected_at: TEST_NOW,
   });
   await expect(
-    announceRuntime(context, owner, createHello(extraRuntimeId)),
-  ).resolves.toMatchObject({ runtime: { runtimeId: extraRuntimeId } });
+    connect(context, owner, createHello(extraRuntimeId)),
+  ).resolves.toMatchObject({ runtimeId: extraRuntimeId });
 });
 
 test("refuses the hello when the switch of the Remote Control Program is off", async () => {
@@ -195,7 +192,7 @@ test("refuses the hello when the switch of the Remote Control Program is off", a
   });
 
   await expect(
-    announceRuntime(context, owner, createHello(RUNTIME_ID)),
+    checkRuntimeHello(context, owner, { runtime_id: RUNTIME_ID }),
   ).rejects.toThrow(
     new ForbiddenError(RemoteControlProgramErrorMessage.ProgramTurnedOff),
   );

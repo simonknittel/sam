@@ -1,9 +1,8 @@
-import { RemoteControlProgramRuntimeKind } from "@sam-monorepo/database/browser";
 import type { Prisma } from "@sam-monorepo/database/client";
 import {
   announceContentSchema,
-  RuntimeKind,
   type AnnounceContent,
+  type RuntimeKind,
 } from "@sam-monorepo/domain";
 
 /** A runtime of the owner, for the status in the sharing popover and the relay */
@@ -14,7 +13,7 @@ export interface OwnRuntime {
   readonly protocolVersion: number;
   /** The lease of the presence is valid now */
   readonly isOnline: boolean;
-  /** The `hello` of the current or last connection */
+  /** The open of the current or last connection (`claimRuntimePresence()`) */
   readonly connectedAt: Date;
   readonly leaseExpiresAt: Date;
   /**
@@ -38,28 +37,6 @@ type OwnRuntimeRow = Prisma.RemoteControlProgramRuntimeGetPayload<{
   select: typeof OWN_RUNTIME_SELECT;
 }>;
 
-export const toRuntimeKindOfDatabase = (
-  kind: RuntimeKind,
-): RemoteControlProgramRuntimeKind => {
-  switch (kind) {
-    case RuntimeKind.Browser:
-      return RemoteControlProgramRuntimeKind.browser;
-
-    default:
-      throw new Error(`Unknown runtime kind: ${kind satisfies never}`);
-  }
-};
-
-const toRuntimeKind = (kind: RemoteControlProgramRuntimeKind): RuntimeKind => {
-  switch (kind) {
-    case RemoteControlProgramRuntimeKind.browser:
-      return RuntimeKind.Browser;
-
-    default:
-      throw new Error(`Unknown runtime kind: ${kind satisfies never}`);
-  }
-};
-
 /**
  * Protocol version 1 is the only version. A later version that changes the
  * announcement selects the schema with `protocolVersion`. A stored value
@@ -76,7 +53,7 @@ const parseAnnouncement = (
 
 export const toOwnRuntime = (row: OwnRuntimeRow, now: Date): OwnRuntime => ({
   runtimeId: row.runtimeId,
-  kind: toRuntimeKind(row.kind),
+  kind: row.kind,
   runtimeVersion: row.runtimeVersion,
   protocolVersion: row.protocolVersion,
   isOnline: row.leaseExpiresAt > now,

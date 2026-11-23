@@ -6,7 +6,9 @@ import { formatUserAgent } from "@/modules/common/utils/formatUserAgent";
 import { EventPositionRoleMatch } from "@sam-monorepo/database/browser";
 import {
   AuditEventType,
+  CapabilityId,
   GranteeKind,
+  GrantOperation,
   ReadMarkerSubject,
   WebPushPruneReason,
   type AuditEventDataByType,
@@ -64,13 +66,13 @@ const formatShareGrantGrantee = (
   data: AuditEventDataByType[AuditEventType.REMOTE_CONTROL_PROGRAM_SHARE_GRANT_CREATED],
 ) => {
   switch (data.granteeKind) {
-    case GranteeKind.Citizen:
+    case GranteeKind.citizen:
       return `citizen ${data.granteeCitizenId}`;
 
-    case GranteeKind.Role:
+    case GranteeKind.role:
       return `role ${data.granteeRoleId}`;
 
-    case GranteeKind.Everyone:
+    case GranteeKind.everyone:
       return "everyone";
 
     default:
@@ -3203,11 +3205,11 @@ export const AuditEventDefinitions: {
     data: {
       grantId: "string",
       ownerCitizenId: "string",
-      granteeKind: GranteeKind.Citizen,
+      granteeKind: GranteeKind.citizen,
       granteeCitizenId: "string",
       granteeRoleId: null,
-      capabilityIds: ["string"],
-      operations: ["string"],
+      capabilityIds: [CapabilityId.LogEntries],
+      operations: [GrantOperation.Read],
       startsAt: new Date(),
       endsAt: null,
     },
@@ -3232,7 +3234,7 @@ export const AuditEventDefinitions: {
     data: {
       ownerCitizenId: "string",
       runtimeId: "string",
-      capabilityId: "string",
+      capabilityId: CapabilityId.LogEntries,
       newEntryCount: 0,
       duplicateEntryCount: 0,
       refusedEntryCount: 0,

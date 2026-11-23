@@ -8,18 +8,19 @@ import { requireCitizen, type Actor } from "../../actor.js";
 import type { ApplicationContext } from "../../context.js";
 import { ValidationError } from "../../errors.js";
 import { withSpan } from "../../withSpan.js";
+import type { FeedEntryUploadCounts } from "../feeds/appendFeedEntries.js";
 
 const countSchema = z.int().min(0);
 
 export const recordFeedEntryUploadCountsInputSchema = z.object({
   runtime_id: runtimeIdSchema,
   capability_id: z.enum(CapabilityId),
-  /** The entries that the relay stored as new entries */
-  new_entry_count: countSchema,
-  /** The entries that the relay already held */
-  duplicate_entry_count: countSchema,
-  /** The entries that the relay did not accept */
-  refused_entry_count: countSchema,
+  /** The sums of the counts of `appendFeedEntries()` in the period */
+  counts: z.object({
+    newEntryCount: countSchema,
+    duplicateEntryCount: countSchema,
+    refusedEntryCount: countSchema,
+  }) satisfies z.ZodType<FeedEntryUploadCounts>,
   /** The connection, or the end of the previous count of the connection */
   period_started_at: z.date(),
   period_ended_at: z.date(),
@@ -56,10 +57,11 @@ export const recordFeedEntryUploadCounts = (
     if (input.period_ended_at < input.period_started_at)
       throw new ValidationError("The period ends before it starts");
 
+    const { counts } = input;
     if (
-      input.new_entry_count === 0 &&
-      input.duplicate_entry_count === 0 &&
-      input.refused_entry_count === 0
+      counts.newEntryCount === 0 &&
+      counts.duplicateEntryCount === 0 &&
+      counts.refusedEntryCount === 0
     )
       return { isRecorded: false };
 
@@ -70,9 +72,9 @@ export const recordFeedEntryUploadCounts = (
           ownerCitizenId: citizen.id,
           runtimeId: input.runtime_id,
           capabilityId: input.capability_id,
-          newEntryCount: input.new_entry_count,
-          duplicateEntryCount: input.duplicate_entry_count,
-          refusedEntryCount: input.refused_entry_count,
+          newEntryCount: counts.newEntryCount,
+          duplicateEntryCount: counts.duplicateEntryCount,
+          refusedEntryCount: counts.refusedEntryCount,
           periodStartedAt: input.period_started_at,
           periodEndedAt: input.period_ended_at,
         },

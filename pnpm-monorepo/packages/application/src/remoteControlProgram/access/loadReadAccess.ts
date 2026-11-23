@@ -1,6 +1,6 @@
-import { ShareGrantGranteeKind } from "@sam-monorepo/database/browser";
 import {
   getEffectiveReadAccess,
+  GranteeKind,
   ReadAccessRefusal,
   type CapabilityId,
   type EffectiveReadAccess,
@@ -11,17 +11,15 @@ import {
 import type { Actor } from "../../actor.js";
 import { findClearedCitizens } from "../../auth/clearedCitizens.js";
 import type { ApplicationContext } from "../../context.js";
-import { ForbiddenError } from "../../errors.js";
 import { withSpan } from "../../withSpan.js";
-import { RemoteControlProgramErrorMessage } from "./remoteControlProgramErrors.js";
 import {
   hasConsumerPermission,
   hasRemoteControlProgramUse,
+  requireRemoteControlProgramCitizen,
 } from "./remoteControlProgramPermissions.js";
 import {
   createReadableGrantWhere,
   SHARE_GRANT_SOURCE_SELECT,
-  toShareGrantSource,
 } from "./shareGrantSource.js";
 
 /**
@@ -72,8 +70,9 @@ export interface ViewerReadAccess {
  * `remoteControlProgramPermissions.ts`). The rows of deleted owners give no
  * grant.
  *
- * @throws ForbiddenError when the actor has no citizen
- * (`RemoteControlProgramErrorMessage.CitizenMissing`)
+ * @throws ForbiddenError for the errors of
+ * `requireRemoteControlProgramCitizen()`: no citizen, or an admin who assumes
+ * the user
  */
 export const loadReadAccessOfViewer = (
   context: ApplicationContext,
@@ -81,11 +80,9 @@ export const loadReadAccessOfViewer = (
   { capabilityId, ownerCitizenIds }: ViewerReadAccessInput,
 ): Promise<ViewerReadAccess> =>
   withSpan(context, "loadReadAccessOfViewer", async () => {
-    if (!actor.citizen)
-      throw new ForbiddenError(RemoteControlProgramErrorMessage.CitizenMissing);
-
+    const citizen = requireRemoteControlProgramCitizen(actor);
     const viewer = toViewer(
-      actor.citizen.id,
+      citizen.id,
       actor.roleIds,
       actor.permissionSets,
       capabilityId,
@@ -102,14 +99,14 @@ export const loadReadAccessOfViewer = (
             {
               OR: [
                 {
-                  granteeKind: ShareGrantGranteeKind.citizen,
+                  granteeKind: GranteeKind.citizen,
                   granteeCitizenId: viewer.citizenId,
                 },
                 {
-                  granteeKind: ShareGrantGranteeKind.role,
+                  granteeKind: GranteeKind.role,
                   granteeRoleId: { in: [...viewer.roleIds] },
                 },
-                { granteeKind: ShareGrantGranteeKind.everyone },
+                { granteeKind: GranteeKind.everyone },
               ],
             },
           ],
@@ -119,8 +116,8 @@ export const loadReadAccessOfViewer = (
     ]);
 
     const grantsByOwnerCitizenId = Map.groupBy(
-      grantRows.map(toShareGrantSource),
-      (grant) => grant.ownerCitizenId,
+      grantRows,
+      (grant) => grant.ownerId,
     );
     const owners = new Set(
       ownerCitizenIds ?? [viewer.citizenId, ...grantsByOwnerCitizenId.keys()],
@@ -172,7 +169,7 @@ export const loadReadAccessToOwner = (
     if (viewerCitizenIds.length === 0) return new Map();
 
     const now = context.now();
-    const [switches, grantRows, clearedViewers] = await Promise.all([
+    const [switches, grants, clearedViewers] = await Promise.all([
       context.remoteControlProgramSwitches(),
       context.prisma.shareGrant.findMany({
         where: {
@@ -185,7 +182,6 @@ export const loadReadAccessToOwner = (
       }),
       findClearedCitizens(context, { id: { in: [...viewerCitizenIds] } }),
     ]);
-    const grants = grantRows.map(toShareGrantSource);
 
     return new Map(
       viewerCitizenIds.map((viewerCitizenId) => {

@@ -1,9 +1,7 @@
-import { ShareGrantGranteeKind } from "@sam-monorepo/database/browser";
 import type { Prisma } from "@sam-monorepo/database/client";
 import {
   ACTIVE_CITIZEN_WHERE,
   GrantOperation,
-  GranteeKind,
   type CapabilityId,
   type ShareGrantSource,
 } from "@sam-monorepo/domain";
@@ -20,42 +18,8 @@ export const SHARE_GRANT_SOURCE_SELECT = {
   startsAt: true,
   endsAt: true,
   revokedAt: true,
-} as const satisfies Prisma.ShareGrantSelect;
-
-type ShareGrantSourceRow = Prisma.ShareGrantGetPayload<{
-  select: typeof SHARE_GRANT_SOURCE_SELECT;
-}>;
-
-export const toGranteeKind = (kind: ShareGrantGranteeKind): GranteeKind => {
-  switch (kind) {
-    case ShareGrantGranteeKind.citizen:
-      return GranteeKind.Citizen;
-
-    case ShareGrantGranteeKind.role:
-      return GranteeKind.Role;
-
-    case ShareGrantGranteeKind.everyone:
-      return GranteeKind.Everyone;
-
-    default:
-      throw new Error(`Unknown grantee kind: ${kind satisfies never}`);
-  }
-};
-
-export const toShareGrantSource = (
-  row: ShareGrantSourceRow,
-): ShareGrantSource => ({
-  id: row.id,
-  ownerCitizenId: row.ownerId,
-  granteeKind: toGranteeKind(row.granteeKind),
-  granteeCitizenId: row.granteeCitizenId,
-  granteeRoleId: row.granteeRoleId,
-  capabilityIds: row.capabilityIds,
-  operations: row.operations,
-  startsAt: row.startsAt,
-  endsAt: row.endsAt,
-  revokedAt: row.revokedAt,
-});
+} as const satisfies Record<keyof ShareGrantSource, true> &
+  Prisma.ShareGrantSelect;
 
 /**
  * The grants of owners that are not deleted, which give `read` on the

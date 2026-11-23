@@ -1,10 +1,11 @@
 import { AuditEventType } from "@sam-monorepo/domain";
 import * as z from "zod";
-import { requireCitizen, type Actor } from "../../actor.js";
+import type { Actor } from "../../actor.js";
 import type { ApplicationContext } from "../../context.js";
 import { NotFoundError } from "../../errors.js";
 import { idSchema } from "../../pagination.js";
 import { withSpan } from "../../withSpan.js";
+import { requireRemoteControlProgramCitizen } from "../access/remoteControlProgramPermissions.js";
 import { ShareGrantErrorMessage } from "./shareGrantErrors.js";
 
 export const revokeShareGrantInputSchema = z.object({
@@ -32,7 +33,8 @@ export interface RevokeShareGrantOutput {
  * of the access keep no cache, thus the next read and the next delivery
  * (`findWatchingViewers()`) load the grants again.
  *
- * @throws ForbiddenError when the actor has no citizen
+ * @throws ForbiddenError without a citizen, or for an admin who assumes the
+ * user (`RemoteControlProgramErrorMessage`)
  * @throws NotFoundError when the actor has no grant with the id, also for the
  * grant of a different owner (`ShareGrantErrorMessage.GrantNotFound`)
  */
@@ -42,7 +44,7 @@ export const revokeShareGrant = (
   input: RevokeShareGrantInput,
 ): Promise<RevokeShareGrantOutput> =>
   withSpan(context, "revokeShareGrant", async () => {
-    const citizen = requireCitizen(actor);
+    const citizen = requireRemoteControlProgramCitizen(actor);
     const now = context.now();
     const ownGrantWhere = { id: input.grant_id, ownerId: citizen.id };
 

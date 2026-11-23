@@ -1,27 +1,27 @@
 import * as z from "zod";
+import { LOG_ANALYZER_ENTRY_HASH_PATTERN } from "../logAnalyzer/logAnalyzerEntries.js";
 import { CapabilityId, LOG_ENTRIES_CAPABILITY } from "./catalog.js";
 
 /**
  * The realtime event with the new entries of a feed for one viewer (see
  * "Delivery to the consumers" of `docs/remote-control-program/README.md`).
- * The relay service sends it to the private channel of the viewer
- * (`getCitizenChannelName()`). The consumer client of the app parses it with
- * `feedDeliveryEventPayloadSchema`.
+ * The relay service sends it to the private Remote Control Program channel
+ * of the viewer (`getRemoteControlProgramChannelName()`). The consumer client
+ * of the app parses it with `feedDeliveryEventPayloadSchema`.
  *
- * The name is in lowercase snake_case, because the relay service and the app
- * read it (see `docs/coding-guidelines.md`). The prefix keeps it apart from the
- * other events of the private channel, for example
- * `ON_SITE_NOTIFICATION_CREATED_EVENT`.
+ * The prefix keeps the name apart from the events of the other channels, for
+ * example `ON_SITE_NOTIFICATION_CREATED_EVENT`.
  */
 export const FEED_DELIVERY_EVENT_NAME = "remote_control_program_feed_entries";
 
 /**
  * The upper limit of the entries in one event. Usually the size limit of the
- * realtime server (100 KB in Soketi) gives fewer entries: one entry of
- * `log_entries` is at least approximately 280 bytes of JSON, thus 100 KB
- * hold a maximum of approximately 370 entries. The relay service also splits
- * by this number, thus a higher size limit of the realtime server does not
- * make an event that the schema refuses.
+ * realtime server for one event (see
+ * `docs/setup-test-and-production.md#10-set-up-the-relay-service-of-the-remote-control-program`)
+ * gives fewer entries: one entry of `log_entries` is at least approximately
+ * 280 bytes of JSON. The relay service also splits by this number, thus a
+ * higher size limit of the realtime server does not make an event that the
+ * schema refuses.
  */
 export const MAXIMUM_FEED_DELIVERY_EVENT_ENTRIES = 500;
 
@@ -30,9 +30,6 @@ const MAXIMUM_ID_LENGTH = 64;
 
 /** The values of `LogAnalyzerEntryType` are much shorter */
 const MAXIMUM_TYPE_LENGTH = 128;
-
-/** The hash of `createLogEntryHash()` has 64 hexadecimal characters */
-const MAXIMUM_HASH_LENGTH = 128;
 
 /** The handle of a citizen has no limit in the database. It is a display text. */
 const MAXIMUM_HANDLE_LENGTH = 256;
@@ -59,7 +56,7 @@ const deliveredLogEntrySchema = z.object({
    * The key of the entry for the owner (`createLogEntryHash()`). The consumer
    * client removes the duplicates with it. Never write it to the logs.
    */
-  hash: z.string().min(1).max(MAXIMUM_HASH_LENGTH),
+  hash: z.string().regex(LOG_ANALYZER_ENTRY_HASH_PATTERN),
   /** The time of the arrival at the relay */
   created_at: z.iso.datetime(),
 });

@@ -3,7 +3,8 @@ import { readStackState, unleashAdminToken } from "../setup/stack";
 
 /**
  * Mirrors apps/app/src/modules/common/utils/UNLEASH_FLAG.ts, which this package
- * cannot import. Only the flags that the tests toggle are listed.
+ * cannot import, and `RemoteControlProgramUnleashFlag` of the domain package.
+ * Only the flags that the tests toggle are listed.
  */
 export enum UNLEASH_FLAG {
   EnableCareBearShooter = "EnableCareBearShooter",

@@ -2,7 +2,7 @@ import type {
   CitizenRealtimeEvent,
   RealtimeServer,
 } from "@sam-monorepo/application";
-import { getCitizenChannelName } from "@sam-monorepo/domain";
+import { getCitizenRealtimeChannelName } from "@sam-monorepo/domain";
 import * as z from "zod";
 import type { PusherClient } from "./createPusherClient.js";
 
@@ -36,8 +36,8 @@ const toBatches = <Item>(items: readonly Item[]): Item[][] => {
 /**
  * The realtime port with the HTTP API of Pusher Channels or Soketi. The
  * tabs of the app sign in with the id of their user (see the route
- * `/api/pusher/user-auth` of the app), and subscribe to the private channel
- * of their citizen.
+ * `/api/pusher/user-auth` of the app), and subscribe to the private channels
+ * of their citizen (see `CitizenRealtimeChannel` of the domain).
  */
 export const createPusherRealtimeServer = ({
   client,
@@ -55,7 +55,7 @@ export const createPusherRealtimeServer = ({
   publishToCitizens: async (events: readonly CitizenRealtimeEvent[]) => {
     const batches = toBatches(
       events.map((event) => ({
-        channel: getCitizenChannelName(event.citizenId),
+        channel: getCitizenRealtimeChannelName(event.channel, event.citizenId),
         name: event.name,
         data: JSON.stringify(event.data),
       })),

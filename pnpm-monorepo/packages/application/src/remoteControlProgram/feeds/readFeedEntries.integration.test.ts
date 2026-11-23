@@ -1,22 +1,27 @@
 import { prisma } from "@sam-monorepo/database";
-import { ShareGrantGranteeKind } from "@sam-monorepo/database/browser";
-import {
-  CapabilityId,
-  createLogEntryHash,
-  GrantOperation,
-  LogAnalyzerEntryType,
-} from "@sam-monorepo/domain";
+import { LogAnalyzerEntryType } from "@sam-monorepo/domain";
 import { beforeEach, expect, test } from "vitest";
 import {
   createTestActor,
   createTestApplicationContext,
   TEST_NOW,
 } from "../../../test/applicationContext.js";
-import {
-  CLEARED_USER,
-  createCitizenWithPermissions,
-} from "../../../test/citizensWithPermissions.js";
 import { truncateAllTables } from "../../../test/database.js";
+import {
+  createCitizenActor,
+  createClearedCitizen,
+  createJoinPuLine,
+  createLogEntryRow,
+  createLogEntryRowData,
+  createShareGrantRow,
+  DAY_MILLISECONDS,
+  getTimeAfterNow,
+  getTimeBeforeNow,
+  HOUR_MILLISECONDS,
+  MINUTE_MILLISECONDS,
+  toCitizenGrantee,
+  VIEWER_PERMISSIONS,
+} from "../../../test/remoteControlProgram.js";
 import type { Actor } from "../../actor.js";
 import type { ApplicationContext } from "../../context.js";
 import { ForbiddenError } from "../../errors.js";
@@ -29,80 +34,17 @@ import {
   readFeedEntriesInputSchema,
 } from "./readFeedEntries.js";
 
-const MINUTE_MILLISECONDS = 60 * 1000;
-const HOUR_MILLISECONDS = 60 * MINUTE_MILLISECONDS;
-const DAY_MILLISECONDS = 24 * HOUR_MILLISECONDS;
-
-const getTimeBeforeNow = (milliseconds: number) =>
-  new Date(TEST_NOW.getTime() - milliseconds);
-const getTimeAfterNow = (milliseconds: number) =>
-  new Date(TEST_NOW.getTime() + milliseconds);
-
-const PERMISSIONS = [
-  "login;manage",
-  "remoteControlProgram;use",
-  "logAnalyzer;read",
-];
-
 beforeEach(async () => {
   await truncateAllTables();
 });
 
-const createCitizen = (handle: string) =>
-  createCitizenWithPermissions(handle, PERMISSIONS, [], CLEARED_USER);
-
-const createViewer = async (permissionStrings = PERMISSIONS) => {
-  const citizen = await createCitizen("viewer");
-
-  return createTestActor({
-    userId: citizen.userId!,
-    citizen,
-    permissionStrings,
-  });
-};
+const createViewer = () => createCitizenActor("viewer");
 
 const createCitizenGrant = (
   ownerId: string,
   granteeCitizenId: string,
   validity: { startsAt: Date; endsAt?: Date; revokedAt?: Date },
-) =>
-  prisma.shareGrant.create({
-    data: {
-      ownerId,
-      granteeKind: ShareGrantGranteeKind.citizen,
-      granteeCitizenId,
-      capabilityIds: [CapabilityId.LogEntries],
-      operations: [GrantOperation.Read],
-      ...validity,
-    },
-  });
-
-const createJoinPuLine = (time: Date) =>
-  `<${time.toISOString()}> [Notice] <Join PU> address[IP_REDACTED] port[64336] shard[pub_euw1b_10512345_100] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]`;
-
-/** The relay stores the entry at `createdAt` */
-const createEntryData = async (
-  ownerId: string,
-  eventAt: Date,
-  createdAt = TEST_NOW,
-) => {
-  const rawLine = createJoinPuLine(eventAt);
-
-  return {
-    type: LogAnalyzerEntryType.JoinPu,
-    rawLine,
-    eventAt,
-    lineNumber: 1,
-    hash: await createLogEntryHash(LogAnalyzerEntryType.JoinPu, rawLine),
-    createdById: ownerId,
-    createdAt,
-  };
-};
-
-const createEntry = async (ownerId: string, eventAt: Date, createdAt?: Date) =>
-  prisma.logAnalyzerEntry.create({
-    data: await createEntryData(ownerId, eventAt, createdAt),
-  });
+) => createShareGrantRow(ownerId, toCitizenGrantee(granteeCitizenId), validity);
 
 const readSnapshot = (
   context: ApplicationContext,
@@ -152,7 +94,7 @@ test("gives the own entries and the entries of the valid grants in their time ra
         "endedGrantOwner",
         "revokedGrantOwner",
         "ownerWithoutGrant",
-      ].map(createCitizen),
+      ].map((handle) => createClearedCitizen(handle)),
     );
   // A start in the past shares the older entries from the start (decision 8)
   await createCitizenGrant(grantOwner!.id, viewerId, {
@@ -167,20 +109,26 @@ test("gives the own entries and the entries of the valid grants in their time ra
     revokedAt: getTimeBeforeNow(HOUR_MILLISECONDS),
   });
 
-  await createEntry(viewerId, getTimeBeforeNow(10 * DAY_MILLISECONDS));
-  await createEntry(viewerId, getTimeBeforeNow(HOUR_MILLISECONDS));
-  await createEntry(grantOwner!.id, getTimeBeforeNow(3 * DAY_MILLISECONDS));
-  await createEntry(grantOwner!.id, getTimeBeforeNow(DAY_MILLISECONDS));
-  await createEntry(grantOwner!.id, getTimeBeforeNow(HOUR_MILLISECONDS));
-  await createEntry(
+  await createLogEntryRow(viewerId, getTimeBeforeNow(10 * DAY_MILLISECONDS));
+  await createLogEntryRow(viewerId, getTimeBeforeNow(HOUR_MILLISECONDS));
+  await createLogEntryRow(
+    grantOwner!.id,
+    getTimeBeforeNow(3 * DAY_MILLISECONDS),
+  );
+  await createLogEntryRow(grantOwner!.id, getTimeBeforeNow(DAY_MILLISECONDS));
+  await createLogEntryRow(grantOwner!.id, getTimeBeforeNow(HOUR_MILLISECONDS));
+  await createLogEntryRow(
     endedGrantOwner!.id,
     getTimeBeforeNow(2 * DAY_MILLISECONDS),
   );
-  await createEntry(
+  await createLogEntryRow(
     revokedGrantOwner!.id,
     getTimeBeforeNow(2 * DAY_MILLISECONDS),
   );
-  await createEntry(ownerWithoutGrant!.id, getTimeBeforeNow(HOUR_MILLISECONDS));
+  await createLogEntryRow(
+    ownerWithoutGrant!.id,
+    getTimeBeforeNow(HOUR_MILLISECONDS),
+  );
   const { context } = createTestApplicationContext();
 
   const snapshot = await readSnapshot(context, viewer);
@@ -213,7 +161,7 @@ test("gives the own entries and the entries of the valid grants in their time ra
   ]);
 });
 
-test("gives no data to a viewer without one of the two permissions", async () => {
+test("gives no data to a viewer without one of the two permissions, and to an admin who assumes the viewer", async () => {
   const viewer = await createViewer();
   const { context } = createTestApplicationContext();
 
@@ -243,18 +191,31 @@ test("gives no data to a viewer without one of the two permissions", async () =>
   ).rejects.toThrow(
     new ForbiddenError(RemoteControlProgramErrorMessage.PermissionMissing),
   );
+  await expect(
+    readSnapshot(
+      context,
+      createTestActor({
+        userId: viewer.userId,
+        citizen: viewer.citizen,
+        permissionStrings: VIEWER_PERMISSIONS,
+        assumedByAdminId: "admin-user",
+      }),
+    ),
+  ).rejects.toThrow(
+    new ForbiddenError(RemoteControlProgramErrorMessage.AssumedUser),
+  );
 });
 
 test("gives the changes after the cursor", async () => {
   const viewer = await createViewer();
   const viewerId = viewer.citizen!.id;
-  const grantOwner = await createCitizen("grantOwner");
-  const ownerWithoutGrant = await createCitizen("ownerWithoutGrant");
+  const grantOwner = await createClearedCitizen("grantOwner");
+  const ownerWithoutGrant = await createClearedCitizen("ownerWithoutGrant");
   await createCitizenGrant(grantOwner.id, viewerId, {
     startsAt: getTimeBeforeNow(DAY_MILLISECONDS),
   });
-  await createEntry(viewerId, getTimeBeforeNow(HOUR_MILLISECONDS));
-  await createEntry(grantOwner.id, getTimeBeforeNow(HOUR_MILLISECONDS));
+  await createLogEntryRow(viewerId, getTimeBeforeNow(HOUR_MILLISECONDS));
+  await createLogEntryRow(grantOwner.id, getTimeBeforeNow(HOUR_MILLISECONDS));
 
   const snapshot = await readSnapshot(
     createTestApplicationContext({ now: getTimeAfterNow(MINUTE_MILLISECONDS) })
@@ -264,9 +225,9 @@ test("gives the changes after the cursor", async () => {
   expect(snapshot.entries).toHaveLength(2);
 
   const arrivedAt = getTimeAfterNow(2 * MINUTE_MILLISECONDS);
-  await createEntry(viewerId, TEST_NOW, arrivedAt);
-  await createEntry(grantOwner.id, TEST_NOW, arrivedAt);
-  await createEntry(ownerWithoutGrant.id, TEST_NOW, arrivedAt);
+  await createLogEntryRow(viewerId, TEST_NOW, arrivedAt);
+  await createLogEntryRow(grantOwner.id, TEST_NOW, arrivedAt);
+  await createLogEntryRow(ownerWithoutGrant.id, TEST_NOW, arrivedAt);
   const later = createTestApplicationContext({
     now: getTimeAfterNow(3 * MINUTE_MILLISECONDS),
   }).context;
@@ -305,7 +266,7 @@ test("tells when a read has more entries than its maximum", async () => {
   await prisma.logAnalyzerEntry.createMany({
     data: await Promise.all(
       Array.from({ length: MAXIMUM_FEED_ENTRIES_PER_READ + 1 }, (_, index) =>
-        createEntryData(viewerId, getTimeBeforeNow((index + 1) * 1_000)),
+        createLogEntryRowData(viewerId, getTimeBeforeNow((index + 1) * 1_000)),
       ),
     ),
   });

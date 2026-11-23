@@ -134,11 +134,12 @@ export const env = createEnv({
     COLLAB_URL: z.optional(z.url({ protocol: /^wss?$/ })),
     /**
      * WebSocket URL of the relay service of the Remote Control Program
-     * (apps/relay), e.g. wss://sam-relay.example.com. The internal endpoints
-     * of the relay service (the disconnect after a ban, the "Stop all" of an
-     * owner) are on the same host. If unset, the browser runtime works only
-     * on the machine. The relay service verifies the tokens of the app with
-     * /.well-known/jwks.json, thus it also needs EMBED_JWT_PRIVATE_KEY.
+     * (apps/relay), for example wss://sam-relay.example.com. The internal
+     * endpoints of the relay service (the disconnect after a ban, the "Stop
+     * all" of an owner) are on the same host. If unset, the browser runtime
+     * works only on the machine. The relay service verifies the tokens of the
+     * app with /.well-known/jwks.json (see
+     * docs/setup-local-machine.md#embedded-app-authentication for the key).
      * Server-only on purpose: the browser runtime receives the URL with its
      * connection token, and a runtime variable lets several instances of
      * one build talk to different relay services (used by the Playwright

@@ -1,4 +1,9 @@
-import type { SigningKey } from "@sam-monorepo/application";
+import {
+  isKeySetFetchError,
+  KeySetUnavailableError,
+  SIGNING_KEY_ALGORITHM,
+  type SigningKey,
+} from "@sam-monorepo/application";
 import { errors, jwtVerify, SignJWT, type JWTVerifyGetKey } from "jose";
 import * as z from "zod";
 
@@ -19,7 +24,7 @@ import * as z from "zod";
  * - `iat` and `exp`: a lifetime of `TOKEN_LIFETIME_SECONDS`.
  */
 
-export const RELAY_INTERNAL_REQUEST_TOKEN_AUDIENCE = "sam_relay_internal";
+const RELAY_INTERNAL_REQUEST_TOKEN_AUDIENCE = "sam_relay_internal";
 
 export enum RelayInternalOperation {
   /** Closes all runtime connections of a user, after a ban */
@@ -46,8 +51,6 @@ export type RelayInternalRequest =
 
 /** The app sends the request at once after it signs the token */
 const TOKEN_LIFETIME_SECONDS = 60;
-
-const ALGORITHM = "ES256";
 
 const toClaims = (request: RelayInternalRequest) => {
   switch (request.operation) {
@@ -78,7 +81,7 @@ export const signRelayInternalRequestToken = ({
   readonly request: RelayInternalRequest;
 }): Promise<string> =>
   new SignJWT(toClaims(request))
-    .setProtectedHeader({ alg: ALGORITHM, kid: signingKey.keyId })
+    .setProtectedHeader({ alg: signingKey.algorithm, kid: signingKey.keyId })
     .setIssuer(issuer)
     .setAudience(RELAY_INTERNAL_REQUEST_TOKEN_AUDIENCE)
     .setIssuedAt()
@@ -114,7 +117,9 @@ export class RelayInternalRequestTokenError extends Error {
  * operation of the token.
  *
  * @throws RelayInternalRequestTokenError when the token is not valid or is for
- * a different operation
+ * a different operation. The endpoint answers 401.
+ * @throws KeySetUnavailableError when the key set of the app cannot be read.
+ * The endpoint answers 503.
  */
 export const verifyRelayInternalRequestToken = async ({
   token,
@@ -134,10 +139,13 @@ export const verifyRelayInternalRequestToken = async ({
     ({ payload } = await jwtVerify(token, key, {
       issuer,
       audience: RELAY_INTERNAL_REQUEST_TOKEN_AUDIENCE,
-      algorithms: [ALGORITHM],
+      algorithms: [SIGNING_KEY_ALGORITHM],
       requiredClaims: ["iat", "exp"],
     }));
   } catch (error) {
+    if (isKeySetFetchError(error))
+      throw new KeySetUnavailableError(undefined, { cause: error });
+
     if (error instanceof errors.JOSEError)
       throw new RelayInternalRequestTokenError(undefined, { cause: error });
 

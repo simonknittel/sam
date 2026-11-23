@@ -32,6 +32,12 @@ export interface Actor {
   readonly permissionSets: PermissionSet[];
   /** True only for an admin who enabled admin mode */
   readonly adminMode: boolean;
+  /**
+   * The id of the admin behind the session when the admin assumes this user
+   * (the admin toolbar of the app). Null for the own session of the user, and
+   * for the hosts that cannot assume a user.
+   */
+  readonly assumedByAdminId: string | null;
   readonly authorize: (
     resource: PermissionSet["resource"],
     operation: PermissionSet["operation"],
@@ -48,10 +54,15 @@ export interface Actor {
   readonly requireClearance: () => void;
 }
 
+/**
+ * Only the session of the app can assume a user, thus the other hosts leave
+ * out `assumedByAdminId`
+ */
 export type ActorFields = Omit<
   Actor,
-  "authorize" | "hasClearance" | "requireClearance"
->;
+  "authorize" | "hasClearance" | "requireClearance" | "assumedByAdminId"
+> &
+  Partial<Pick<Actor, "assumedByAdminId">>;
 
 /**
  * `adminMode` applies only to an admin. The caller resolves the admin mode
@@ -80,6 +91,7 @@ export const createActor = (fields: ActorFields): Actor => {
   return {
     ...fields,
     adminMode,
+    assumedByAdminId: fields.assumedByAdminId ?? null,
     authorize,
     hasClearance: () =>
       hasConfirmedEmail() &&

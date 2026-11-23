@@ -3,12 +3,9 @@ import { CapabilityId, type RemoteControlProgramSwitches } from "./catalog.js";
 import {
   findGrantValidityProblem,
   getEffectiveReadAccess,
-  getGrantValidityOfPreset,
   GranteeKind,
   GrantOperation,
-  GrantValidityPreset,
   GrantValidityProblem,
-  ReadAccessBasis,
   ReadAccessRefusal,
   type ReadAccessInput,
   type ShareGrantSource,
@@ -30,8 +27,8 @@ const createGrant = (
   overrides: Partial<ShareGrantSource> = {},
 ): ShareGrantSource => ({
   id: "grant",
-  ownerCitizenId: "owner",
-  granteeKind: GranteeKind.Citizen,
+  ownerId: "owner",
+  granteeKind: GranteeKind.citizen,
   granteeCitizenId: "viewer",
   granteeRoleId: null,
   capabilityIds: [CapabilityId.LogEntries],
@@ -69,7 +66,6 @@ describe("getEffectiveReadAccess", () => {
       ),
     ).toEqual({
       isGranted: true,
-      basis: ReadAccessBasis.Owner,
       visibleTimeRange: { start: null, end: null },
     });
   });
@@ -113,7 +109,7 @@ describe("getEffectiveReadAccess", () => {
     [
       "a role grant",
       createGrant({
-        granteeKind: GranteeKind.Role,
+        granteeKind: GranteeKind.role,
         granteeCitizenId: null,
         granteeRoleId: "pilot",
       }),
@@ -121,14 +117,13 @@ describe("getEffectiveReadAccess", () => {
     [
       "a grant to everyone",
       createGrant({
-        granteeKind: GranteeKind.Everyone,
+        granteeKind: GranteeKind.everyone,
         granteeCitizenId: null,
       }),
     ],
   ])("%s shows the entries of its validity period", (_, grant) => {
     expect(getEffectiveReadAccess(createInput({ grants: [grant] }))).toEqual({
       isGranted: true,
-      basis: ReadAccessBasis.Grant,
       visibleTimeRange: { start: ONE_HOUR_AGO, end: IN_ONE_HOUR },
     });
   });
@@ -143,16 +138,13 @@ describe("getEffectiveReadAccess", () => {
       "a grant to a role of a different citizen",
       [
         createGrant({
-          granteeKind: GranteeKind.Role,
+          granteeKind: GranteeKind.role,
           granteeCitizenId: null,
           granteeRoleId: "medic",
         }),
       ],
     ],
-    [
-      "a grant of a different owner",
-      [createGrant({ ownerCitizenId: "other" })],
-    ],
+    ["a grant of a different owner", [createGrant({ ownerId: "other" })]],
     ["a revoked grant", [createGrant({ revokedAt: ONE_HOUR_AGO })]],
     ["an expired grant", [createGrant({ startsAt: YESTERDAY, endsAt: NOW })]],
     ["a grant that starts later", [createGrant({ startsAt: IN_ONE_HOUR })]],
@@ -172,7 +164,7 @@ describe("getEffectiveReadAccess", () => {
           grants: [
             createGrant({ startsAt: YESTERDAY, endsAt: IN_ONE_HOUR }),
             createGrant({
-              granteeKind: GranteeKind.Everyone,
+              granteeKind: GranteeKind.everyone,
               granteeCitizenId: null,
               startsAt: ONE_HOUR_AGO,
               endsAt: null,
@@ -182,27 +174,12 @@ describe("getEffectiveReadAccess", () => {
       ),
     ).toEqual({
       isGranted: true,
-      basis: ReadAccessBasis.Grant,
       visibleTimeRange: { start: YESTERDAY, end: null },
     });
   });
 });
 
 describe("grant validity", () => {
-  test("a preset starts now", () => {
-    expect(getGrantValidityOfPreset(GrantValidityPreset.OneHour, NOW)).toEqual({
-      startsAt: NOW,
-      endsAt: IN_ONE_HOUR,
-    });
-    expect(getGrantValidityOfPreset(GrantValidityPreset.TwoHours, NOW)).toEqual(
-      { startsAt: NOW, endsAt: IN_TWO_HOURS },
-    );
-    expect(getGrantValidityOfPreset(GrantValidityPreset.NoEnd, NOW)).toEqual({
-      startsAt: NOW,
-      endsAt: null,
-    });
-  });
-
   test.each([
     [{ startsAt: YESTERDAY, endsAt: IN_ONE_HOUR }, null],
     [{ startsAt: YESTERDAY, endsAt: null }, null],

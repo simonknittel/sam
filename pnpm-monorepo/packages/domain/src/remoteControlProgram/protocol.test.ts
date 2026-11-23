@@ -5,7 +5,6 @@ import {
   ConnectorId,
   LOG_ENTRIES_CAPABILITY,
   RELAY_LIMITS,
-  RuntimeKind,
 } from "./catalog.js";
 import {
   RelayMessageParseProblem,
@@ -27,20 +26,6 @@ const createLogEntriesBatch = (entryCount: number, rawLine: string) =>
       line_number: index + 1,
     })),
   });
-
-test("reads a valid hello", () => {
-  const hello = createUpMessage(UpMessageType.Hello, {
-    token: "header.payload.signature",
-    runtime_id: crypto.randomUUID(),
-    runtime_kind: RuntimeKind.Browser,
-    runtime_version: "1.0.0",
-  });
-
-  expect(parseUpMessage(JSON.stringify(hello))).toEqual({
-    success: true,
-    message: hello,
-  });
-});
 
 test("refuses a batch above the limit of the capability, with the id of the message", () => {
   const batch = createLogEntriesBatch(

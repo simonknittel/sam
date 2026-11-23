@@ -9,7 +9,8 @@ import { notifyRelayOfOwnerStop, type OwnRuntimeStop } from "./ownerStop.js";
  * actor. The runtimes upload again only the entries that they read live
  * after the start (decision 27).
  *
- * @throws ForbiddenError without `remoteControlProgram;use` or a citizen
+ * @throws ForbiddenError without `remoteControlProgram;use` or a citizen, or
+ * for an admin who assumes the user
  */
 export const startOwnRuntimes = (
   context: ApplicationContext,

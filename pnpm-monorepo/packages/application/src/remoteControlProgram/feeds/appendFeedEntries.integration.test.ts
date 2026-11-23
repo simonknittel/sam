@@ -17,8 +17,13 @@ import {
   createTestApplicationContext,
   TEST_NOW,
 } from "../../../test/applicationContext.js";
-import { createCitizenWithPermissions } from "../../../test/citizensWithPermissions.js";
 import { truncateAllTables } from "../../../test/database.js";
+import {
+  createCitizenActor,
+  createJoinPuLine,
+  HOUR_MILLISECONDS,
+  ONE_HOUR_AGO,
+} from "../../../test/remoteControlProgram.js";
 import { ForbiddenError } from "../../errors.js";
 import { RemoteControlProgramErrorMessage } from "../access/remoteControlProgramErrors.js";
 import {
@@ -26,8 +31,6 @@ import {
   type AppendFeedEntriesInput,
 } from "./appendFeedEntries.js";
 
-const HOUR_MILLISECONDS = 60 * 60 * 1000;
-const ONE_HOUR_AGO = new Date(TEST_NOW.getTime() - HOUR_MILLISECONDS);
 const RUNTIME_ID = "0d4c1a52-6b0e-4f7a-9c1e-2f3b4a5c6d7e";
 
 type LogEntryOfBatch = AppendFeedEntriesInput["batch"]["entries"][number];
@@ -36,23 +39,8 @@ beforeEach(async () => {
   await truncateAllTables();
 });
 
-const createOwner = async (
-  permissionStrings = ["remoteControlProgram;use"],
-) => {
-  const citizen = await createCitizenWithPermissions(
-    "owner",
-    permissionStrings,
-  );
-
-  return createTestActor({
-    userId: "owner-user",
-    citizen,
-    permissionStrings,
-  });
-};
-
-const createJoinPuLine = (time: Date, address = "IP_REDACTED") =>
-  `<${time.toISOString()}> [Notice] <Join PU> address[${address}] port[64336] shard[pub_euw1b_10512345_100] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]`;
+const createOwner = () =>
+  createCitizenActor("owner", ["remoteControlProgram;use"]);
 
 const createJoinPuEntry = (
   time: Date,
@@ -327,7 +315,7 @@ test("refuses the batches of a turned-off part, of a stopped owner, of an unknow
   await expect(
     appendFeedEntries(
       context,
-      createTestActor({ userId: "owner-user", citizen: owner.citizen }),
+      createTestActor({ userId: owner.userId, citizen: owner.citizen }),
       input,
     ),
   ).rejects.toThrow(

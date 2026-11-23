@@ -1,4 +1,8 @@
-import { CapabilityId, runtimeIdSchema } from "@sam-monorepo/domain";
+import {
+  CapabilityId,
+  lockCitizen,
+  runtimeIdSchema,
+} from "@sam-monorepo/domain";
 import * as z from "zod";
 import type { Actor } from "../../actor.js";
 import type { ApplicationContext } from "../../context.js";
@@ -61,7 +65,8 @@ const coversOwners = (
  * falls between the snapshot and the first delivery.
  *
  * @throws ForbiddenError without a citizen, `remoteControlProgram;use` or the
- * permission of the consumer of the capability (`RemoteControlProgramErrorMessage`)
+ * permission of the consumer of the capability, or for an admin who assumes
+ * the user (`RemoteControlProgramErrorMessage`)
  * @throws ConflictError for a new lease when the viewer has
  * `MAXIMUM_WATCH_LEASES_PER_VIEWER` other valid leases for the capability
  * (`ShareGrantErrorMessage.TooManyWatchLeases`)
@@ -89,9 +94,7 @@ export const renewWatchLease = (
     const previousLease = await context.prisma.$transaction(
       async (transaction) => {
         // Two parallel new leases of one viewer wait for each other, thus they cannot both pass the limit
-        await transaction.$queryRaw`
-          SELECT 1 FROM "Citizen" WHERE "id" = ${citizen.id} FOR NO KEY UPDATE
-        `;
+        await lockCitizen(transaction, citizen.id);
 
         await transaction.remoteControlProgramWatchLease.deleteMany({
           where: { ...viewerLeasesWhere, expiresAt: { lte: now } },

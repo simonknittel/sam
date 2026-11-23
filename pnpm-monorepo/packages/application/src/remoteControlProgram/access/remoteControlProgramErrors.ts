@@ -7,6 +7,12 @@
 export enum RemoteControlProgramErrorMessage {
   /** A `ForbiddenError`: the user has no citizen */
   CitizenMissing = "The user has no citizen",
+  /**
+   * A `ForbiddenError`: an admin assumes the user. The data of the Remote
+   * Control Program is personal (decision 4): an assumed session does not
+   * read, share, stop or upload it.
+   */
+  AssumedUser = "An admin who assumes a user cannot use the Remote Control Program",
   /** A `ForbiddenError` */
   PermissionMissing = "The permission remoteControlProgram;use is missing",
   /**

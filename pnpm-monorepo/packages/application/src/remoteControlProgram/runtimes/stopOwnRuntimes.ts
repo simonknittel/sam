@@ -11,7 +11,8 @@ import { notifyRelayOfOwnerStop, type OwnRuntimeStop } from "./ownerStop.js";
  * the stop stay on the machine (decision 27). A second stop keeps the start
  * time of the first stop.
  *
- * @throws ForbiddenError without `remoteControlProgram;use` or a citizen
+ * @throws ForbiddenError without `remoteControlProgram;use` or a citizen, or
+ * for an admin who assumes the user
  */
 export const stopOwnRuntimes = (
   context: ApplicationContext,

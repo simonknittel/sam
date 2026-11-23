@@ -13,7 +13,6 @@ export { RemoteControlProgramErrorMessage } from "./remoteControlProgramErrors.j
 export {
   REMOTE_CONTROL_PROGRAM_USE_PERMISSION_SET,
   canUseRemoteControlProgram,
-  getConsumerPermissionSet,
   requireRemoteControlProgramUse,
 } from "./remoteControlProgramPermissions.js";
 export {

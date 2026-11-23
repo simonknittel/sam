@@ -1,17 +1,20 @@
 import { prisma } from "@sam-monorepo/database";
-import { ShareGrantGranteeKind } from "@sam-monorepo/database/browser";
-import { CapabilityId, GrantOperation } from "@sam-monorepo/domain";
+import { CapabilityId, GranteeKind } from "@sam-monorepo/domain";
 import { beforeEach, expect, test } from "vitest";
 import {
   createTestActor,
   createTestApplicationContext,
   TEST_NOW,
 } from "../../../test/applicationContext.js";
-import {
-  CLEARED_USER,
-  createCitizenWithPermissions,
-} from "../../../test/citizensWithPermissions.js";
 import { truncateAllTables } from "../../../test/database.js";
+import {
+  createClearedCitizen,
+  createShareGrantRow,
+  IN_ONE_HOUR,
+  ONE_HOUR_AGO,
+  toCitizenGrantee,
+  VIEWER_PERMISSIONS,
+} from "../../../test/remoteControlProgram.js";
 import { ConflictError, ForbiddenError } from "../../errors.js";
 import { RemoteControlProgramErrorMessage } from "../access/remoteControlProgramErrors.js";
 import { endWatchLease } from "./endWatchLease.js";
@@ -24,32 +27,11 @@ import {
   WATCH_LEASE_RENEWAL_INTERVAL_MILLISECONDS,
 } from "./watchLease.js";
 
-const HOUR_MILLISECONDS = 60 * 60 * 1000;
-const ONE_HOUR_AGO = new Date(TEST_NOW.getTime() - HOUR_MILLISECONDS);
-const IN_ONE_HOUR = new Date(TEST_NOW.getTime() + HOUR_MILLISECONDS);
 const LEASE_EXPIRY = new Date(TEST_NOW.getTime() + WATCH_LEASE_MILLISECONDS);
-
-const PERMISSIONS = [
-  "login;manage",
-  "remoteControlProgram;use",
-  "logAnalyzer;read",
-];
 
 beforeEach(async () => {
   await truncateAllTables();
 });
-
-const createViewer = (
-  handle: string,
-  permissionStrings: readonly string[] = PERMISSIONS,
-  roleIds: readonly string[] = [],
-) =>
-  createCitizenWithPermissions(
-    handle,
-    permissionStrings,
-    roleIds,
-    CLEARED_USER,
-  );
 
 const createLease = (
   viewerId: string,
@@ -68,25 +50,6 @@ const createLease = (
     },
   });
 
-const createGrant = (
-  ownerId: string,
-  grantee:
-    | { granteeKind: "citizen"; granteeCitizenId: string }
-    | { granteeKind: "role"; granteeRoleId: string },
-  validity: { startsAt: Date; endsAt?: Date; revokedAt?: Date } = {
-    startsAt: ONE_HOUR_AGO,
-  },
-) =>
-  prisma.shareGrant.create({
-    data: {
-      ownerId,
-      ...grantee,
-      capabilityIds: [CapabilityId.LogEntries],
-      operations: [GrantOperation.Read],
-      ...validity,
-    },
-  });
-
 const findViewerRanges = async (
   context: ReturnType<typeof createTestApplicationContext>["context"],
   ownerCitizenId: string,
@@ -101,11 +64,11 @@ const findViewerRanges = async (
   );
 
 test("renews and ends the lease of one consumer, tells when the relay can have skipped entries, and limits the leases of a viewer", async () => {
-  const citizen = await createViewer("viewer");
+  const citizen = await createClearedCitizen("viewer");
   const viewer = createTestActor({
     userId: citizen.userId!,
     citizen,
-    permissionStrings: PERMISSIONS,
+    permissionStrings: VIEWER_PERMISSIONS,
   });
   const { context } = createTestApplicationContext();
   const consumerId = crypto.randomUUID();
@@ -197,21 +160,18 @@ test("renews and ends the lease of one consumer, tells when the relay can have s
 });
 
 test("combines the leases of the consumers of one viewer", async () => {
-  const citizen = await createViewer("viewer");
+  const citizen = await createClearedCitizen("viewer");
   const [firstOwner, secondOwner, thirdOwner] = await Promise.all(
     ["firstOwner", "secondOwner", "thirdOwner"].map((handle) =>
-      createViewer(handle),
+      createClearedCitizen(handle),
     ),
   );
   for (const owner of [firstOwner, secondOwner, thirdOwner])
-    await createGrant(owner!.id, {
-      granteeKind: ShareGrantGranteeKind.citizen,
-      granteeCitizenId: citizen.id,
-    });
+    await createShareGrantRow(owner!.id, toCitizenGrantee(citizen.id));
   const viewer = createTestActor({
     userId: citizen.userId!,
     citizen,
-    permissionStrings: PERMISSIONS,
+    permissionStrings: VIEWER_PERMISSIONS,
   });
   const { context } = createTestApplicationContext();
   const firstConsumerId = crypto.randomUUID();
@@ -251,11 +211,13 @@ test("combines the leases of the consumers of one viewer", async () => {
 
 test("gives the viewers with a valid lease and a valid grant, with their time ranges", async () => {
   const role = await prisma.role.create({ data: { name: "Pilots" } });
-  const owner = await createViewer("owner");
-  const citizenGrantViewer = await createViewer("citizenGrantViewer");
-  const roleGrantViewer = await createViewer("roleGrantViewer", PERMISSIONS, [
-    role.id,
-  ]);
+  const owner = await createClearedCitizen("owner");
+  const citizenGrantViewer = await createClearedCitizen("citizenGrantViewer");
+  const roleGrantViewer = await createClearedCitizen(
+    "roleGrantViewer",
+    VIEWER_PERMISSIONS,
+    [role.id],
+  );
   const [
     withoutLease,
     expiredLease,
@@ -265,29 +227,26 @@ test("gives the viewers with a valid lease and a valid grant, with their time ra
     withoutConsumerPermission,
     withoutRemoteControlProgramUse,
   ] = await Promise.all([
-    createViewer("withoutLease"),
-    createViewer("expiredLease"),
-    createViewer("otherOwnerLease"),
-    createViewer("revokedGrant"),
-    createViewer("endedGrant"),
-    createViewer("withoutConsumerPermission", [
+    createClearedCitizen("withoutLease"),
+    createClearedCitizen("expiredLease"),
+    createClearedCitizen("otherOwnerLease"),
+    createClearedCitizen("revokedGrant"),
+    createClearedCitizen("endedGrant"),
+    createClearedCitizen("withoutConsumerPermission", [
       "login;manage",
       "remoteControlProgram;use",
     ]),
-    createViewer("withoutRemoteControlProgramUse", [
+    createClearedCitizen("withoutRemoteControlProgramUse", [
       "login;manage",
       "logAnalyzer;read",
     ]),
   ]);
 
   // A start in the past shares the older entries
-  await createGrant(owner.id, {
-    granteeKind: ShareGrantGranteeKind.citizen,
-    granteeCitizenId: citizenGrantViewer.id,
-  });
-  await createGrant(
+  await createShareGrantRow(owner.id, toCitizenGrantee(citizenGrantViewer.id));
+  await createShareGrantRow(
     owner.id,
-    { granteeKind: ShareGrantGranteeKind.role, granteeRoleId: role.id },
+    { granteeKind: GranteeKind.role, granteeRoleId: role.id },
     { startsAt: ONE_HOUR_AGO, endsAt: IN_ONE_HOUR },
   );
   for (const viewer of [
@@ -297,26 +256,15 @@ test("gives the viewers with a valid lease and a valid grant, with their time ra
     withoutConsumerPermission,
     withoutRemoteControlProgramUse,
   ])
-    await createGrant(owner.id, {
-      granteeKind: ShareGrantGranteeKind.citizen,
-      granteeCitizenId: viewer!.id,
-    });
-  await createGrant(
-    owner.id,
-    {
-      granteeKind: ShareGrantGranteeKind.citizen,
-      granteeCitizenId: revokedGrant!.id,
-    },
-    { startsAt: ONE_HOUR_AGO, revokedAt: TEST_NOW },
-  );
-  await createGrant(
-    owner.id,
-    {
-      granteeKind: ShareGrantGranteeKind.citizen,
-      granteeCitizenId: endedGrant!.id,
-    },
-    { startsAt: ONE_HOUR_AGO, endsAt: TEST_NOW },
-  );
+    await createShareGrantRow(owner.id, toCitizenGrantee(viewer!.id));
+  await createShareGrantRow(owner.id, toCitizenGrantee(revokedGrant!.id), {
+    startsAt: ONE_HOUR_AGO,
+    revokedAt: TEST_NOW,
+  });
+  await createShareGrantRow(owner.id, toCitizenGrantee(endedGrant!.id), {
+    startsAt: ONE_HOUR_AGO,
+    endsAt: TEST_NOW,
+  });
 
   await createLease(owner.id);
   await createLease(citizenGrantViewer.id);

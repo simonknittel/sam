@@ -17,20 +17,13 @@ import { requireRemoteControlProgramUse } from "../access/remoteControlProgramPe
  */
 export const MAXIMUM_FEED_ENTRY_KEYS_PER_READ = 2_000;
 
-/** The length of a hash of `createLogEntryHash` */
-const HASH_LENGTH = 64;
-
 export const findOwnFeedEntryKeysInputSchema = z.object({
   /** The start of the time window of the observation. Without it: no limit. */
   start: z.date().optional(),
   /** Exclusive. Without it: no limit. */
   end: z.date().optional(),
   /** The `nextPageCursor` of the previous page. Absent for the first page. */
-  page_cursor: z
-    .string()
-    .length(HASH_LENGTH)
-    .regex(LOG_ANALYZER_ENTRY_HASH_PATTERN)
-    .optional(),
+  page_cursor: z.string().regex(LOG_ANALYZER_ENTRY_HASH_PATTERN).optional(),
 });
 
 export type FindOwnFeedEntryKeysInput = z.output<
@@ -53,8 +46,9 @@ export interface OwnFeedEntryKeys {
  * the raw lines. The cursor is the last key: the unique index of the owner
  * and the hash orders the rows.
  *
- * @throws ForbiddenError without `remoteControlProgram;use` or a citizen, or
- * when a switch turned off the Remote Control Program or the capability
+ * @throws ForbiddenError without `remoteControlProgram;use` or a citizen, for
+ * an admin who assumes the user, or when a switch turned off the Remote
+ * Control Program or the capability
  */
 export const findOwnFeedEntryKeys = (
   context: ApplicationContext,

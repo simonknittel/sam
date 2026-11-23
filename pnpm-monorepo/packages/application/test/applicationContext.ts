@@ -2,7 +2,7 @@ import { trace } from "@opentelemetry/api";
 import { prisma } from "@sam-monorepo/database";
 import { UserRole } from "@sam-monorepo/database/browser";
 import {
-  getRemoteControlProgramSwitches,
+  ALL_REMOTE_CONTROL_PROGRAM_PARTS_ON,
   transformPermissionStringToPermissionSet,
   type AuditEventInput,
 } from "@sam-monorepo/domain";
@@ -82,7 +82,7 @@ export const createTestApplicationContext = ({
     clientMetadata: null,
     allowInsecureLoopbackClientIds: false,
     remoteControlProgramSwitches: async () =>
-      getRemoteControlProgramSwitches(() => false),
+      ALL_REMOTE_CONTROL_PROGRAM_PARTS_ON,
     relay: null,
     connectionTokenVerificationKey: null,
     ...overrides,
@@ -108,6 +108,8 @@ interface TestActorOptions {
   readonly admin?: boolean;
   /** Gives the actor the admin role with admin mode */
   readonly adminMode?: boolean;
+  /** An admin with this user id assumes the actor */
+  readonly assumedByAdminId?: string | null;
 }
 
 export const createTestActor = ({
@@ -117,6 +119,7 @@ export const createTestActor = ({
   roleIds = [],
   admin = false,
   adminMode = false,
+  assumedByAdminId = null,
 }: TestActorOptions): Actor =>
   createActor({
     userId,
@@ -130,4 +133,5 @@ export const createTestActor = ({
       transformPermissionStringToPermissionSet,
     ),
     adminMode,
+    assumedByAdminId,
   });

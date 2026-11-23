@@ -18,10 +18,14 @@ import {
  * concept). Each flag is a kill switch: when the flag is on, its part is off.
  * Without a value of the flag (no Unleash in the stack, or Unleash is not
  * available), all parts stay on. The flags `DisableLogAnalyzerSharing` and
- * `DisableMcpServer` of the app work the same way.
+ * `DisableMcpServer` of the app work the same way. The flags are switches of
+ * the organization: the app and the relay service read them without the
+ * context of a user, thus a strategy can only select an app name (for example
+ * the app of one Playwright worker).
  *
- * Add each new flag also to `UNLEASH_FLAG` of the app and to the flag list of
- * the Unleash bootstrap in `compose.yml`.
+ * Add each new flag also to the flag list of the Unleash bootstrap in
+ * `compose.yml` and to `UNLEASH_FLAG` of `apps/playwright/fixtures/unleash.ts`.
+ * The app and the relay service read the flags of this enum directly.
  */
 export enum RemoteControlProgramUnleashFlag {
   /**
@@ -62,13 +66,13 @@ export enum ConnectorId {
 }
 
 /**
- * The desktop companion comes in step 3. A new kind is a compatible change
- * of the protocol: a runtime of an older release never sends it.
+ * The kinds of the runtimes: the values of the Prisma enum of the table of
+ * the runtimes, which `runtime_kind` of the protocol also uses. The browser
+ * runtime runs in a SAM tab of a Chromium browser. The desktop companion
+ * comes in step 3. A new kind is a compatible change of the protocol: a
+ * runtime of an older release never sends it.
  */
-export enum RuntimeKind {
-  /** The runtime in a SAM tab of a Chromium browser */
-  Browser = "browser",
-}
+export { RemoteControlProgramRuntimeKind as RuntimeKind } from "@sam-monorepo/database/browser";
 
 export interface FeedCapabilityDefinition {
   readonly id: CapabilityId;
@@ -168,6 +172,17 @@ export const getRemoteControlProgramSwitches = (
     .map((capability) => capability.id),
 });
 
+/**
+ * All parts are on: the switches of a host without Unleash, and the switches
+ * until the first answer of Unleash
+ */
+export const ALL_REMOTE_CONTROL_PROGRAM_PARTS_ON: RemoteControlProgramSwitches =
+  {
+    isProgramTurnedOff: false,
+    turnedOffConnectorIds: [],
+    turnedOffCapabilityIds: [],
+  };
+
 /** The limits of the relay service, which the runtimes also obey */
 export const RELAY_LIMITS = {
   /**
@@ -197,12 +212,19 @@ export const RELAY_LIMITS = {
   tokenRenewalIntervalMilliseconds: 60_000,
   /**
    * The relay closes a connection this time after the expiry of its last
-   * token, and a connection without a valid `hello` this time after its
-   * start. The time covers the request for the next token, and the timers of
+   * token. The time covers the request for the next token, and the timers of
    * a hidden browser tab, which the browser can delay to one run in each
    * minute. The same time as the collab server.
    */
   tokenRenewalGraceMilliseconds: 30_000,
+  /**
+   * The relay closes a connection without a `welcome` this time after its
+   * start, and the runtime stops to wait for the `welcome` after this time.
+   * The runtime sends the `hello` at once after the connection opens, and
+   * the handshake needs some queries of the database. A short time limits the
+   * sockets that wait without a valid token.
+   */
+  handshakeTimeoutMilliseconds: 10_000,
   /** The interval of the `heartbeat` of a runtime (see "Presence" of the concept) */
   heartbeatIntervalMilliseconds: 15_000,
   /**

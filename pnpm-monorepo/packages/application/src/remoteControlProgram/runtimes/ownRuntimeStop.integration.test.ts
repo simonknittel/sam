@@ -1,16 +1,14 @@
 import { prisma } from "@sam-monorepo/database";
-import { RuntimeKind } from "@sam-monorepo/domain";
 import { beforeEach, expect, test } from "vitest";
 import {
-  createTestActor,
   createTestApplicationContext,
   TEST_NOW,
 } from "../../../test/applicationContext.js";
-import { createCitizenWithPermissions } from "../../../test/citizensWithPermissions.js";
 import { truncateAllTables } from "../../../test/database.js";
 import { createTestRelayService } from "../../../test/relayService.js";
-import { announceRuntime } from "./announceRuntime.js";
-import { getOwnRuntimeStop } from "./getOwnRuntimeStop.js";
+import { createCitizenActor } from "../../../test/remoteControlProgram.js";
+import { checkRuntimeHello } from "./checkRuntimeHello.js";
+import { getRuntimeStopOfOwner } from "./getRuntimeStopOfOwner.js";
 import { startOwnRuntimes } from "./startOwnRuntimes.js";
 import { stopOwnRuntimes } from "./stopOwnRuntimes.js";
 
@@ -18,17 +16,8 @@ beforeEach(async () => {
   await truncateAllTables();
 });
 
-const createOwner = async () => {
-  const citizen = await createCitizenWithPermissions("owner", [
-    "remoteControlProgram;use",
-  ]);
-
-  return createTestActor({
-    userId: "owner-user",
-    citizen,
-    permissionStrings: ["remoteControlProgram;use"],
-  });
-};
+const createOwner = () =>
+  createCitizenActor("owner", ["remoteControlProgram;use"]);
 
 test("stops and starts all runtimes of the owner and tells the relay service", async () => {
   const owner = await createOwner();
@@ -50,24 +39,20 @@ test("stops and starts all runtimes of the owner and tells the relay service", a
       owner,
     ),
   ).resolves.toEqual({ stoppedAt: TEST_NOW });
-  await expect(getOwnRuntimeStop(context, owner)).resolves.toEqual({
-    stoppedAt: TEST_NOW,
-  });
+  const ownerStopInput = { ownerCitizenId: owner.citizen!.id };
+  await expect(getRuntimeStopOfOwner(context, ownerStopInput)).resolves.toEqual(
+    { stoppedAt: TEST_NOW },
+  );
   await expect(
-    announceRuntime(context, owner, {
-      runtime_id: crypto.randomUUID(),
-      runtime_kind: RuntimeKind.Browser,
-      runtime_version: "1.0.0",
-      protocol_version: 1,
-    }),
-  ).resolves.toMatchObject({ isOwnerStopped: true });
+    checkRuntimeHello(context, owner, { runtime_id: crypto.randomUUID() }),
+  ).resolves.toEqual({ isOwnerStopped: true });
 
   await expect(startOwnRuntimes(context, owner)).resolves.toEqual({
     stoppedAt: null,
   });
-  await expect(getOwnRuntimeStop(context, owner)).resolves.toEqual({
-    stoppedAt: null,
-  });
+  await expect(getRuntimeStopOfOwner(context, ownerStopInput)).resolves.toEqual(
+    { stoppedAt: null },
+  );
   expect(relayService.ownerStopChangeCitizenIds).toEqual([
     owner.citizen!.id,
     owner.citizen!.id,

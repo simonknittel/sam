@@ -1,3 +1,7 @@
+import {
+  ShareGrantGranteeKind as GranteeKind,
+  type ShareGrant,
+} from "@sam-monorepo/database/browser";
 import type { CapabilityId, RemoteControlProgramSwitches } from "./catalog.js";
 
 /**
@@ -7,37 +11,38 @@ import type { CapabilityId, RemoteControlProgramSwitches } from "./catalog.js";
  * relay, not of the runtimes.
  */
 
-/** Who a grant gives access to. "Event participants" comes in step 4. */
-export enum GranteeKind {
-  Citizen = "citizen",
-  /** All citizens with the role, at the time of each access */
-  Role = "role",
-  /** All citizens who can use the Remote Control Program */
-  Everyone = "everyone",
-}
+/**
+ * Who a grant gives access to: the values of the Prisma enum of the grants.
+ * `citizen`: one citizen. `role`: all citizens with the role, at the time of
+ * each access. `everyone`: all citizens who can use the Remote Control
+ * Program. "Event participants" comes in step 4.
+ */
+export { GranteeKind };
 
 /** The operation "request" for actions comes in step 5 */
 export enum GrantOperation {
   Read = "read",
 }
 
-export interface ShareGrantSource {
-  readonly id: string;
-  readonly ownerCitizenId: string;
-  readonly granteeKind: GranteeKind;
-  /** Only for the grantee kind "citizen" */
-  readonly granteeCitizenId: string | null;
-  /** Only for the grantee kind "role" */
-  readonly granteeRoleId: string | null;
-  /** The values of the database. An unknown value gives no access. */
-  readonly capabilityIds: readonly string[];
-  /** The values of the database. An unknown value gives no access. */
-  readonly operations: readonly string[];
-  readonly startsAt: Date;
-  /** Null: no end */
-  readonly endsAt: Date | null;
-  readonly revokedAt: Date | null;
-}
+/**
+ * The columns of a grant that the rule reads. An unknown value of
+ * `capabilityIds` or `operations` gives no access.
+ */
+export type ShareGrantSource = Readonly<
+  Pick<
+    ShareGrant,
+    | "id"
+    | "ownerId"
+    | "granteeKind"
+    | "granteeCitizenId"
+    | "granteeRoleId"
+    | "capabilityIds"
+    | "operations"
+    | "startsAt"
+    | "endsAt"
+    | "revokedAt"
+  >
+>;
 
 export interface RemoteControlProgramViewer {
   readonly citizenId: string;
@@ -61,11 +66,6 @@ export interface VisibleTimeRange {
   readonly end: Date | null;
 }
 
-export enum ReadAccessBasis {
-  Owner = "owner",
-  Grant = "grant",
-}
-
 export enum ReadAccessRefusal {
   ProgramTurnedOff = "program_turned_off",
   CapabilityTurnedOff = "capability_turned_off",
@@ -75,11 +75,7 @@ export enum ReadAccessRefusal {
 }
 
 export type EffectiveReadAccess =
-  | {
-      readonly isGranted: true;
-      readonly basis: ReadAccessBasis;
-      readonly visibleTimeRange: VisibleTimeRange;
-    }
+  | { readonly isGranted: true; readonly visibleTimeRange: VisibleTimeRange }
   | { readonly isGranted: false; readonly refusal: ReadAccessRefusal };
 
 export interface ReadAccessInput {
@@ -99,15 +95,15 @@ const isGrantee = (
   viewer: RemoteControlProgramViewer,
 ) => {
   switch (grant.granteeKind) {
-    case GranteeKind.Citizen:
+    case GranteeKind.citizen:
       return grant.granteeCitizenId === viewer.citizenId;
 
-    case GranteeKind.Role:
+    case GranteeKind.role:
       return (
         grant.granteeRoleId !== null && viewer.roleIds.has(grant.granteeRoleId)
       );
 
-    case GranteeKind.Everyone:
+    case GranteeKind.everyone:
       return true;
 
     default:
@@ -158,15 +154,11 @@ export const getEffectiveReadAccess = ({
     };
 
   if (viewer.citizenId === ownerCitizenId)
-    return {
-      isGranted: true,
-      basis: ReadAccessBasis.Owner,
-      visibleTimeRange: UNLIMITED_TIME_RANGE,
-    };
+    return { isGranted: true, visibleTimeRange: UNLIMITED_TIME_RANGE };
 
   const validGrants = grants.filter(
     (grant) =>
-      grant.ownerCitizenId === ownerCitizenId &&
+      grant.ownerId === ownerCitizenId &&
       grant.capabilityIds.includes(capabilityId) &&
       grant.operations.includes(GrantOperation.Read) &&
       isValidAt(grant, now) &&
@@ -185,11 +177,7 @@ export const getEffectiveReadAccess = ({
       end = grant.endsAt;
   }
 
-  return {
-    isGranted: true,
-    basis: ReadAccessBasis.Grant,
-    visibleTimeRange: { start, end },
-  };
+  return { isGranted: true, visibleTimeRange: { start, end } };
 };
 
 export const isInVisibleTimeRange = (range: VisibleTimeRange, time: Date) =>

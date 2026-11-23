@@ -1,4 +1,4 @@
-import { runtimeIdSchema } from "@sam-monorepo/domain";
+import { connectionTokenSchema, runtimeIdSchema } from "@sam-monorepo/domain";
 import * as z from "zod";
 import { createActor, type Actor } from "../../actor.js";
 import { getEffectiveRolesOfCitizen } from "../../auth/getEffectiveRolesOfCitizen.js";
@@ -9,11 +9,9 @@ import { RemoteControlProgramErrorMessage } from "../access/remoteControlProgram
 import { requireRemoteControlProgramUse } from "../access/remoteControlProgramPermissions.js";
 import { verifyRuntimeConnectionToken } from "./connectionToken.js";
 
-/** The limit of the token in the `hello` and the `token_renewal` of the protocol */
-const MAXIMUM_CONNECTION_TOKEN_LENGTH = 4_096;
-
 export const authenticateRuntimeConnectionInputSchema = z.object({
-  token: z.string().min(1).max(MAXIMUM_CONNECTION_TOKEN_LENGTH),
+  /** The token of the `hello` or of the `token_renewal` */
+  token: connectionTokenSchema,
   /** The id of the `hello` of the connection */
   runtime_id: runtimeIdSchema,
 });
@@ -55,6 +53,8 @@ export interface RuntimeConnection {
  * the Remote Control Program (banned, deleted, no citizen, no clearance, no
  * permission). The relay service closes with `access_denied`.
  * @throws ConflictError when the host has no key to verify the token
+ * @throws KeySetUnavailableError when the key set of the app cannot be read.
+ * The relay service closes with the code 1011 and logs an error.
  */
 export const authenticateRuntimeConnection = (
   context: ApplicationContext,

@@ -1,4 +1,3 @@
-import { ShareGrantGranteeKind } from "@sam-monorepo/database/browser";
 import type { Prisma } from "@sam-monorepo/database/client";
 import {
   CapabilityId,
@@ -10,7 +9,6 @@ import {
   toCitizenReference,
   type CitizenReference,
 } from "../../citizenReference.js";
-import { toGranteeKind } from "../access/shareGrantSource.js";
 
 /**
  * The active grants of one owner. The sharing popover shows all of them in
@@ -30,12 +28,12 @@ export interface ShareGrantRole {
 /** Who a grant gives access to, for the display */
 export type ShareGrantGrantee =
   | {
-      readonly kind: GranteeKind.Citizen;
+      readonly kind: typeof GranteeKind.citizen;
       /** Null when the citizen was deleted: the grant gives no access */
       readonly citizen: CitizenReference | null;
     }
-  | { readonly kind: GranteeKind.Role; readonly role: ShareGrantRole }
-  | { readonly kind: GranteeKind.Everyone };
+  | { readonly kind: typeof GranteeKind.role; readonly role: ShareGrantRole }
+  | { readonly kind: typeof GranteeKind.everyone };
 
 /** A grant of the owner, for the section "Shared with others" */
 export interface OwnShareGrant {
@@ -79,33 +77,15 @@ export const createActiveOwnShareGrantWhere = (
   OR: [{ endsAt: null }, { endsAt: { gt: now } }],
 });
 
-export const toShareGrantGranteeKindOfDatabase = (
-  kind: GranteeKind,
-): ShareGrantGranteeKind => {
-  switch (kind) {
-    case GranteeKind.Citizen:
-      return ShareGrantGranteeKind.citizen;
-
-    case GranteeKind.Role:
-      return ShareGrantGranteeKind.role;
-
-    case GranteeKind.Everyone:
-      return ShareGrantGranteeKind.everyone;
-
-    default:
-      throw new Error(`Unknown grantee kind: ${kind satisfies never}`);
-  }
-};
-
 /** The CHECK constraint of the table makes sure that the grantee column of the kind is set */
 const toShareGrantGrantee = (row: OwnShareGrantRow): ShareGrantGrantee => {
-  const kind = toGranteeKind(row.granteeKind);
+  const kind = row.granteeKind;
 
   switch (kind) {
-    case GranteeKind.Citizen:
+    case GranteeKind.citizen:
       return { kind, citizen: toCitizenReference(row.granteeCitizen) };
 
-    case GranteeKind.Role:
+    case GranteeKind.role:
       if (!row.granteeRole)
         throw new Error(`The grant ${row.id} to a role has no role`);
 
@@ -114,7 +94,7 @@ const toShareGrantGrantee = (row: OwnShareGrantRow): ShareGrantGrantee => {
         role: { id: row.granteeRole.id, name: row.granteeRole.name },
       };
 
-    case GranteeKind.Everyone:
+    case GranteeKind.everyone:
       return { kind };
 
     default:

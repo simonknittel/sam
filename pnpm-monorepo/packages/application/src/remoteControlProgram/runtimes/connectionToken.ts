@@ -2,9 +2,14 @@ import { RELAY_LIMITS, runtimeIdSchema } from "@sam-monorepo/domain";
 import { errors, jwtVerify, SignJWT, type JWTVerifyGetKey } from "jose";
 import { createPublicKey } from "node:crypto";
 import * as z from "zod";
-import type { ApplicationContext } from "../../context.js";
+import {
+  SIGNING_KEY_ALGORITHM,
+  type ApplicationContext,
+} from "../../context.js";
 import { ConflictError, ForbiddenError } from "../../errors.js";
+import { requireSigningKey } from "../../oauth/accessToken.js";
 import { RemoteControlProgramErrorMessage } from "../access/remoteControlProgramErrors.js";
+import { isKeySetFetchError, KeySetUnavailableError } from "./keySetErrors.js";
 
 /**
  * The connection token of a runtime: an ES256 token of the app (see "Connection
@@ -30,9 +35,10 @@ import { RemoteControlProgramErrorMessage } from "../access/remoteControlProgram
  */
 export const RUNTIME_CONNECTION_TOKEN_AUDIENCE = "sam_relay_connection";
 
-const ALGORITHM = "ES256";
-
 const MILLISECONDS_PER_SECOND = 1_000;
+
+const createKeyNotConfiguredError = () =>
+  new ConflictError(RemoteControlProgramErrorMessage.TokenKeyNotConfigured);
 
 export interface RuntimeConnectionTokenClaims {
   readonly userId: string;
@@ -55,11 +61,10 @@ export const signRuntimeConnectionToken = async (
   context: Pick<ApplicationContext, "signingKey" | "urls" | "now">,
   { userId, citizenId, runtimeId }: RuntimeConnectionTokenClaims,
 ): Promise<SignedRuntimeConnectionToken> => {
-  const signingKey = await context.signingKey();
-  if (!signingKey)
-    throw new ConflictError(
-      RemoteControlProgramErrorMessage.TokenKeyNotConfigured,
-    );
+  const signingKey = await requireSigningKey(
+    context,
+    createKeyNotConfiguredError,
+  );
 
   const issuedAtSeconds = Math.floor(
     context.now().getTime() / MILLISECONDS_PER_SECOND,
@@ -72,7 +77,7 @@ export const signRuntimeConnectionToken = async (
     citizen_id: citizenId,
     runtime_id: runtimeId,
   })
-    .setProtectedHeader({ alg: ALGORITHM, kid: signingKey.keyId })
+    .setProtectedHeader({ alg: signingKey.algorithm, kid: signingKey.keyId })
     .setIssuer(context.urls.issuer)
     .setAudience(RUNTIME_CONNECTION_TOKEN_AUDIENCE)
     .setSubject(userId)
@@ -107,12 +112,10 @@ const getVerificationKey = async (
   if (context.connectionTokenVerificationKey)
     return context.connectionTokenVerificationKey;
 
-  const signingKey = await context.signingKey();
-  if (!signingKey)
-    throw new ConflictError(
-      RemoteControlProgramErrorMessage.TokenKeyNotConfigured,
-    );
-
+  const signingKey = await requireSigningKey(
+    context,
+    createKeyNotConfiguredError,
+  );
   const publicKey = createPublicKey(signingKey.privateKey);
   return async () => publicKey;
 };
@@ -124,6 +127,7 @@ const getVerificationKey = async (
  * @throws ForbiddenError when the token is not valid
  * (`RemoteControlProgramErrorMessage.ConnectionTokenNotValid`)
  * @throws ConflictError when the host has no key to verify the token
+ * @throws KeySetUnavailableError when the key set of the app cannot be read
  */
 export const verifyRuntimeConnectionToken = async (
   context: Pick<
@@ -139,17 +143,13 @@ export const verifyRuntimeConnectionToken = async (
     ({ payload } = await jwtVerify(token, key, {
       issuer: context.urls.issuer,
       audience: RUNTIME_CONNECTION_TOKEN_AUDIENCE,
-      algorithms: [ALGORITHM],
+      algorithms: [SIGNING_KEY_ALGORITHM],
       currentDate: context.now(),
       requiredClaims: ["sub", "iat", "exp"],
     }));
   } catch (error) {
-    // The key set of the app cannot be read: a temporary error of the host
-    if (
-      error instanceof errors.JWKSTimeout ||
-      error instanceof errors.JWKSInvalid
-    )
-      throw error;
+    if (isKeySetFetchError(error))
+      throw new KeySetUnavailableError(undefined, { cause: error });
 
     if (error instanceof errors.JOSEError)
       throw new ForbiddenError(

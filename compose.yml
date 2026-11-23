@@ -328,7 +328,9 @@ configs:
     content: |
       CREATE DATABASE unleash;
   # The flag names must match the UNLEASH_FLAG enum in
-  # pnpm-monorepo/apps/app/src/modules/common/utils/UNLEASH_FLAG.ts
+  # pnpm-monorepo/apps/app/src/modules/common/utils/UNLEASH_FLAG.ts and
+  # RemoteControlProgramUnleashFlag in
+  # pnpm-monorepo/packages/domain/src/remoteControlProgram/catalog.ts
   unleash-create-flags:
     content: |
       const flagNames = [

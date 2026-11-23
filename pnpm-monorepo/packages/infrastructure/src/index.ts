@@ -45,7 +45,6 @@ export {
 } from "./relay/createRelayClient.js";
 export {
   RELAY_INTERNAL_PATHS,
-  RELAY_INTERNAL_REQUEST_TOKEN_AUDIENCE,
   RelayInternalOperation,
   RelayInternalRequestTokenError,
   verifyRelayInternalRequestToken,

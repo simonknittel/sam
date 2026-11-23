@@ -21,9 +21,10 @@ import {
  *    change of its connectors or of its local access layer.
  * 3. The relay answers each later message of the runtime with an `ack`. The
  *    runtime sends a batch again until it gets the `ack`.
- * 4. The relay sends `switches` after each `announce` and after each change
- *    of a flag, `stop` and `start` for the "Stop all" of the owner, and
- *    `close` before it closes the connection.
+ * 4. The relay sends `switches` for each `announce` before its `ack` (thus
+ *    the runtime knows the parts that are off before its first upload), and
+ *    after each change of a flag. It sends `stop` and `start` for the "Stop
+ *    all" of the owner, and `close` before it closes the connection.
  *
  * Compatibility: the relay accepts the protocol versions from
  * `MINIMUM_RELAY_PROTOCOL_VERSION` to `RELAY_PROTOCOL_VERSION`. The schemas
@@ -219,7 +220,7 @@ const MAXIMUM_MESSAGE_TYPE_LENGTH = 64;
  * An ES256 token of SAM has approximately 600 characters. The limit leaves
  * space for more claims.
  */
-const MAXIMUM_CONNECTION_TOKEN_LENGTH = 4_096;
+const MAXIMUM_TOKEN_LENGTH = 4_096;
 
 /** For example "1.2.3" or the short hash of a commit */
 const MAXIMUM_RUNTIME_VERSION_LENGTH = 64;
@@ -240,10 +241,25 @@ const RUNTIME_VERSION_PATTERN = /^[0-9A-Za-z._+-]+$/;
 
 export const runtimeIdSchema = z.string().regex(RUNTIME_ID_PATTERN);
 
+/**
+ * A connection token of the protocol. The internal requests of the app to the
+ * relay service have tokens of the same kind and size.
+ */
+export const connectionTokenSchema = z
+  .string()
+  .min(1)
+  .max(MAXIMUM_TOKEN_LENGTH);
+
+export const runtimeVersionSchema = z
+  .string()
+  .min(1)
+  .max(MAXIMUM_RUNTIME_VERSION_LENGTH)
+  .regex(RUNTIME_VERSION_PATTERN);
+
+export const protocolVersionSchema = z.int32().min(1);
+
 const messageIdSchema = z.uuid();
-const protocolVersionSchema = z.int32().min(1);
 const versionSchema = z.int32().min(1);
-const tokenSchema = z.string().min(1).max(MAXIMUM_CONNECTION_TOKEN_LENGTH);
 
 const envelopeSchema = z.object({
   type: z.string().max(MAXIMUM_MESSAGE_TYPE_LENGTH),
@@ -273,15 +289,11 @@ const helloContentSchema = z.object({
    * cannot set a header on a WebSocket request, and a token in the URL goes
    * into the access logs.
    */
-  token: tokenSchema,
+  token: connectionTokenSchema,
   /** The relay refuses an id that is different from the id in the token */
   runtime_id: runtimeIdSchema,
   runtime_kind: z.enum(RuntimeKind),
-  runtime_version: z
-    .string()
-    .min(1)
-    .max(MAXIMUM_RUNTIME_VERSION_LENGTH)
-    .regex(RUNTIME_VERSION_PATTERN),
+  runtime_version: runtimeVersionSchema,
 });
 
 export const announceContentSchema = z.object({
@@ -385,7 +397,7 @@ export const upMessageSchema = z.discriminatedUnion("type", [
   createMessageSchema(UpMessageType.Heartbeat, z.object({})),
   createMessageSchema(
     UpMessageType.TokenRenewal,
-    z.object({ token: tokenSchema }),
+    z.object({ token: connectionTokenSchema }),
   ),
   createMessageSchema(UpMessageType.FeedEntries, feedEntriesContentSchema),
 ]);

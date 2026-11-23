@@ -1,10 +1,8 @@
 import { prisma } from "@sam-monorepo/database";
-import { ShareGrantGranteeKind } from "@sam-monorepo/database/browser";
 import {
   CapabilityId,
   getRemoteControlProgramSwitches,
-  GrantOperation,
-  ReadAccessBasis,
+  GranteeKind,
   ReadAccessRefusal,
   RemoteControlProgramUnleashFlag,
 } from "@sam-monorepo/domain";
@@ -14,49 +12,25 @@ import {
   createTestApplicationContext,
   TEST_NOW,
 } from "../../../test/applicationContext.js";
-import {
-  CLEARED_USER,
-  createCitizenWithPermissions,
-} from "../../../test/citizensWithPermissions.js";
+import { createCitizenWithPermissions } from "../../../test/citizensWithPermissions.js";
 import { truncateAllTables } from "../../../test/database.js";
+import {
+  createClearedCitizen,
+  createShareGrantRow,
+  EVERYONE_GRANTEE,
+  IN_ONE_HOUR,
+  ONE_HOUR_AGO,
+  toCitizenGrantee,
+  VIEWER_PERMISSIONS,
+} from "../../../test/remoteControlProgram.js";
 import {
   loadReadAccessOfViewer,
   loadReadAccessToOwner,
 } from "./loadReadAccess.js";
 
-const HOUR_MILLISECONDS = 60 * 60 * 1000;
-const ONE_HOUR_AGO = new Date(TEST_NOW.getTime() - HOUR_MILLISECONDS);
-const IN_ONE_HOUR = new Date(TEST_NOW.getTime() + HOUR_MILLISECONDS);
-
-const PERMISSIONS = [
-  "login;manage",
-  "remoteControlProgram;use",
-  "logAnalyzer;read",
-];
-
 beforeEach(async () => {
   await truncateAllTables();
 });
-
-const createGrant = (
-  ownerId: string,
-  grantee:
-    | { granteeKind: "citizen"; granteeCitizenId: string }
-    | { granteeKind: "role"; granteeRoleId: string }
-    | { granteeKind: "everyone" },
-  validity: { startsAt: Date; endsAt?: Date; revokedAt?: Date } = {
-    startsAt: ONE_HOUR_AGO,
-  },
-) =>
-  prisma.shareGrant.create({
-    data: {
-      ownerId,
-      ...grantee,
-      capabilityIds: [CapabilityId.LogEntries],
-      operations: [GrantOperation.Read],
-      ...validity,
-    },
-  });
 
 /**
  * The viewer has a role. The owners share with the viewer through each
@@ -64,53 +38,39 @@ const createGrant = (
  */
 const createSharingCitizens = async () => {
   const viewerRole = await prisma.role.create({ data: { name: "Pilots" } });
-  const viewer = await createCitizenWithPermissions(
-    "viewer",
-    PERMISSIONS,
-    [viewerRole.id],
-    CLEARED_USER,
-  );
+  const viewer = await createClearedCitizen("viewer", VIEWER_PERMISSIONS, [
+    viewerRole.id,
+  ]);
   const [citizenGrantOwner, roleGrantOwner, everyoneGrantOwner] =
     await Promise.all(
       ["citizenGrantOwner", "roleGrantOwner", "everyoneGrantOwner"].map(
-        (handle) => createCitizenWithPermissions(handle, PERMISSIONS),
+        (handle) => createCitizenWithPermissions(handle, VIEWER_PERMISSIONS),
       ),
     );
   const [revokedGrantOwner, expiredGrantOwner, deletedOwner] =
     await Promise.all(
       ["revokedGrantOwner", "expiredGrantOwner", "deletedOwner"].map((handle) =>
-        createCitizenWithPermissions(handle, PERMISSIONS),
+        createCitizenWithPermissions(handle, VIEWER_PERMISSIONS),
       ),
     );
 
-  await createGrant(citizenGrantOwner!.id, {
-    granteeKind: ShareGrantGranteeKind.citizen,
-    granteeCitizenId: viewer.id,
-  });
-  await createGrant(
+  await createShareGrantRow(citizenGrantOwner!.id, toCitizenGrantee(viewer.id));
+  await createShareGrantRow(
     roleGrantOwner!.id,
-    { granteeKind: ShareGrantGranteeKind.role, granteeRoleId: viewerRole.id },
+    { granteeKind: GranteeKind.role, granteeRoleId: viewerRole.id },
     { startsAt: ONE_HOUR_AGO, endsAt: IN_ONE_HOUR },
   );
-  await createGrant(everyoneGrantOwner!.id, {
-    granteeKind: ShareGrantGranteeKind.everyone,
+  await createShareGrantRow(everyoneGrantOwner!.id, EVERYONE_GRANTEE);
+  await createShareGrantRow(revokedGrantOwner!.id, EVERYONE_GRANTEE, {
+    startsAt: ONE_HOUR_AGO,
+    revokedAt: TEST_NOW,
   });
-  await createGrant(
-    revokedGrantOwner!.id,
-    { granteeKind: ShareGrantGranteeKind.everyone },
-    { startsAt: ONE_HOUR_AGO, revokedAt: TEST_NOW },
-  );
-  await createGrant(
+  await createShareGrantRow(
     expiredGrantOwner!.id,
-    {
-      granteeKind: ShareGrantGranteeKind.citizen,
-      granteeCitizenId: viewer.id,
-    },
+    toCitizenGrantee(viewer.id),
     { startsAt: new Date(ONE_HOUR_AGO.getTime() - 1), endsAt: TEST_NOW },
   );
-  await createGrant(deletedOwner!.id, {
-    granteeKind: ShareGrantGranteeKind.everyone,
-  });
+  await createShareGrantRow(deletedOwner!.id, EVERYONE_GRANTEE);
   await prisma.citizen.update({
     where: { id: deletedOwner!.id },
     data: { deletedAt: TEST_NOW },
@@ -132,7 +92,7 @@ test("gives one viewer the own entries and the entries of the owners with a vali
   const viewer = createTestActor({
     userId: citizens.viewer.userId!,
     citizen: citizens.viewer,
-    permissionStrings: PERMISSIONS,
+    permissionStrings: VIEWER_PERMISSIONS,
     roleIds: [citizens.viewerRoleId],
   });
   const { context } = createTestApplicationContext();
@@ -144,22 +104,18 @@ test("gives one viewer the own entries and the entries of the owners with a vali
   expect(Object.fromEntries(access.accessByOwnerCitizenId)).toEqual({
     [citizens.viewer.id]: {
       isGranted: true,
-      basis: ReadAccessBasis.Owner,
       visibleTimeRange: { start: null, end: null },
     },
     [citizens.citizenGrantOwner.id]: {
       isGranted: true,
-      basis: ReadAccessBasis.Grant,
       visibleTimeRange: { start: ONE_HOUR_AGO, end: null },
     },
     [citizens.roleGrantOwner.id]: {
       isGranted: true,
-      basis: ReadAccessBasis.Grant,
       visibleTimeRange: { start: ONE_HOUR_AGO, end: IN_ONE_HOUR },
     },
     [citizens.everyoneGrantOwner.id]: {
       isGranted: true,
-      basis: ReadAccessBasis.Grant,
       visibleTimeRange: { start: ONE_HOUR_AGO, end: null },
     },
   });
@@ -185,16 +141,11 @@ test("gives one viewer the own entries and the entries of the owners with a vali
 
 test("gives the access of many viewers to one owner, with the current roles and the clearance", async () => {
   const citizens = await createSharingCitizens();
-  const otherViewer = await createCitizenWithPermissions(
-    "otherViewer",
-    PERMISSIONS,
-    [],
-    CLEARED_USER,
-  );
+  const otherViewer = await createClearedCitizen("otherViewer");
   // Without a user, the citizen does not pass the clearance page
   const viewerWithoutUser = await createCitizenWithPermissions(
     "viewerWithoutUser",
-    PERMISSIONS,
+    VIEWER_PERMISSIONS,
     [citizens.viewerRoleId],
   );
   const { context } = createTestApplicationContext();
@@ -213,7 +164,6 @@ test("gives the access of many viewers to one owner, with the current roles and 
   expect(Object.fromEntries(access)).toEqual({
     [citizens.viewer.id]: {
       isGranted: true,
-      basis: ReadAccessBasis.Grant,
       visibleTimeRange: { start: ONE_HOUR_AGO, end: IN_ONE_HOUR },
     },
     [otherViewer.id]: {

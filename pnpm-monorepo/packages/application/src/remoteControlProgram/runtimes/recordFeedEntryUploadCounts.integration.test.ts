@@ -27,17 +27,21 @@ test("writes the counts of a connection into the system log, but no event withou
   await expect(
     recordFeedEntryUploadCounts(context, owner, {
       ...period,
-      new_entry_count: 0,
-      duplicate_entry_count: 0,
-      refused_entry_count: 0,
+      counts: {
+        newEntryCount: 0,
+        duplicateEntryCount: 0,
+        refusedEntryCount: 0,
+      },
     }),
   ).resolves.toEqual({ isRecorded: false });
   await expect(
     recordFeedEntryUploadCounts(context, owner, {
       ...period,
-      new_entry_count: 12,
-      duplicate_entry_count: 3,
-      refused_entry_count: 1,
+      counts: {
+        newEntryCount: 12,
+        duplicateEntryCount: 3,
+        refusedEntryCount: 1,
+      },
     }),
   ).resolves.toEqual({ isRecorded: true });
 

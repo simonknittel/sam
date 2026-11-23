@@ -1,5 +1,4 @@
 import { prisma } from "@sam-monorepo/database";
-import { ShareGrantGranteeKind } from "@sam-monorepo/database/browser";
 import {
   AuditEventType,
   CapabilityId,
@@ -13,11 +12,17 @@ import {
   createTestApplicationContext,
   TEST_NOW,
 } from "../../../test/applicationContext.js";
-import {
-  CLEARED_USER,
-  createCitizenWithPermissions,
-} from "../../../test/citizensWithPermissions.js";
 import { truncateAllTables } from "../../../test/database.js";
+import {
+  createCitizenActor,
+  createShareGrantRow,
+  EVERYONE_GRANTEE,
+  IN_ONE_HOUR,
+  ONE_HOUR_AGO,
+  toCitizenGrantee,
+  TWO_HOURS_AGO,
+  VIEWER_PERMISSIONS,
+} from "../../../test/remoteControlProgram.js";
 import {
   ConflictError,
   ForbiddenError,
@@ -36,60 +41,12 @@ import { MAXIMUM_ACTIVE_SHARE_GRANTS_PER_OWNER } from "./ownShareGrant.js";
 import { revokeShareGrant } from "./revokeShareGrant.js";
 import { ShareGrantErrorMessage } from "./shareGrantErrors.js";
 
-const HOUR_MILLISECONDS = 60 * 60 * 1000;
-const TWO_HOURS_AGO = new Date(TEST_NOW.getTime() - 2 * HOUR_MILLISECONDS);
-const ONE_HOUR_AGO = new Date(TEST_NOW.getTime() - HOUR_MILLISECONDS);
-const IN_ONE_HOUR = new Date(TEST_NOW.getTime() + HOUR_MILLISECONDS);
-
-const PERMISSIONS = [
-  "login;manage",
-  "remoteControlProgram;use",
-  "logAnalyzer;read",
-];
-
 /** The owner can see all roles, like the role picker of the sharing popover */
-const OWNER_PERMISSIONS = [...PERMISSIONS, "otherRole;read;roleId=*"];
+const OWNER_PERMISSIONS = [...VIEWER_PERMISSIONS, "otherRole;read;roleId=*"];
 
 beforeEach(async () => {
   await truncateAllTables();
 });
-
-const createCitizenActor = async (
-  handle: string,
-  permissionStrings: readonly string[] = PERMISSIONS,
-  roleIds: readonly string[] = [],
-) => {
-  const citizen = await createCitizenWithPermissions(
-    handle,
-    permissionStrings,
-    roleIds,
-    CLEARED_USER,
-  );
-
-  return createTestActor({
-    userId: citizen.userId!,
-    citizen,
-    permissionStrings,
-    roleIds,
-  });
-};
-
-const createGrantRow = (
-  ownerId: string,
-  validity: { startsAt: Date; endsAt?: Date; revokedAt?: Date },
-  granteeCitizenId?: string,
-) =>
-  prisma.shareGrant.create({
-    data: {
-      ownerId,
-      ...(granteeCitizenId
-        ? { granteeKind: ShareGrantGranteeKind.citizen, granteeCitizenId }
-        : { granteeKind: ShareGrantGranteeKind.everyone }),
-      capabilityIds: [CapabilityId.LogEntries],
-      operations: [GrantOperation.Read],
-      ...validity,
-    },
-  });
 
 test("creates a grant to a citizen, to a role and to everyone, and writes the audit events", async () => {
   const owner = await createCitizenActor("owner", OWNER_PERMISSIONS);
@@ -99,7 +56,7 @@ test("creates a grant to a citizen, to a role and to everyone, and writes the au
   const capabilityIds = [CapabilityId.LogEntries];
 
   const citizenGrant = await createShareGrant(context, owner, {
-    grantee: { kind: GranteeKind.Citizen, citizen_id: grantee.citizen!.id },
+    grantee: { kind: GranteeKind.citizen, citizen_id: grantee.citizen!.id },
     capability_ids: capabilityIds,
     operations: [GrantOperation.Read],
     validity: {
@@ -108,7 +65,7 @@ test("creates a grant to a citizen, to a role and to everyone, and writes the au
     },
   });
   const roleGrant = await createShareGrant(context, owner, {
-    grantee: { kind: GranteeKind.Role, role_id: role.id },
+    grantee: { kind: GranteeKind.role, role_id: role.id },
     capability_ids: capabilityIds,
     operations: [GrantOperation.Read],
     validity: {
@@ -118,7 +75,7 @@ test("creates a grant to a citizen, to a role and to everyone, and writes the au
   });
   // A start in the past also shares the older entries (decision 8)
   const everyoneGrant = await createShareGrant(context, owner, {
-    grantee: { kind: GranteeKind.Everyone },
+    grantee: { kind: GranteeKind.everyone },
     capability_ids: capabilityIds,
     operations: [GrantOperation.Read],
     validity: {
@@ -137,7 +94,7 @@ test("creates a grant to a citizen, to a role and to everyone, and writes the au
     ...shared,
     id: expect.any(String),
     grantee: {
-      kind: GranteeKind.Citizen,
+      kind: GranteeKind.citizen,
       citizen: { id: grantee.citizen!.id, handle: "grantee" },
     },
     startsAt: TEST_NOW,
@@ -146,14 +103,14 @@ test("creates a grant to a citizen, to a role and to everyone, and writes the au
   expect(roleGrant).toEqual({
     ...shared,
     id: expect.any(String),
-    grantee: { kind: GranteeKind.Role, role: { id: role.id, name: "Pilots" } },
+    grantee: { kind: GranteeKind.role, role: { id: role.id, name: "Pilots" } },
     startsAt: TEST_NOW,
     endsAt: null,
   });
   expect(everyoneGrant).toEqual({
     ...shared,
     id: expect.any(String),
-    grantee: { kind: GranteeKind.Everyone },
+    grantee: { kind: GranteeKind.everyone },
     startsAt: TWO_HOURS_AGO,
     endsAt: IN_ONE_HOUR,
   });
@@ -184,7 +141,7 @@ test("creates a grant to a citizen, to a role and to everyone, and writes the au
     createdEvent(
       citizenGrant.id,
       {
-        granteeKind: GranteeKind.Citizen,
+        granteeKind: GranteeKind.citizen,
         granteeCitizenId: grantee.citizen!.id,
         granteeRoleId: null,
       },
@@ -194,7 +151,7 @@ test("creates a grant to a citizen, to a role and to everyone, and writes the au
     createdEvent(
       roleGrant.id,
       {
-        granteeKind: GranteeKind.Role,
+        granteeKind: GranteeKind.role,
         granteeCitizenId: null,
         granteeRoleId: role.id,
       },
@@ -204,7 +161,7 @@ test("creates a grant to a citizen, to a role and to everyone, and writes the au
     createdEvent(
       everyoneGrant.id,
       {
-        granteeKind: GranteeKind.Everyone,
+        granteeKind: GranteeKind.everyone,
         granteeCitizenId: null,
         granteeRoleId: null,
       },
@@ -222,7 +179,7 @@ test("refuses a grant to the owner, a grant without the permission, an ended val
   ]);
   const { context, auditEvents } = createTestApplicationContext();
   const input: CreateShareGrantInput = {
-    grantee: { kind: GranteeKind.Everyone },
+    grantee: { kind: GranteeKind.everyone },
     capability_ids: [CapabilityId.LogEntries],
     operations: [GrantOperation.Read],
     validity: {
@@ -234,7 +191,7 @@ test("refuses a grant to the owner, a grant without the permission, an ended val
   await expect(
     createShareGrant(context, owner, {
       ...input,
-      grantee: { kind: GranteeKind.Citizen, citizen_id: owner.citizen!.id },
+      grantee: { kind: GranteeKind.citizen, citizen_id: owner.citizen!.id },
     }),
   ).rejects.toThrow(new ValidationError(ShareGrantErrorMessage.GranteeIsOwner));
   await expect(
@@ -256,7 +213,7 @@ test("refuses a grant to the owner, a grant without the permission, an ended val
   );
 
   // The revoked and the ended grants do not count
-  await createGrantRow(owner.citizen!.id, {
+  await createShareGrantRow(owner.citizen!.id, EVERYONE_GRANTEE, {
     startsAt: TWO_HOURS_AGO,
     revokedAt: ONE_HOUR_AGO,
   });
@@ -265,7 +222,7 @@ test("refuses a grant to the owner, a grant without the permission, an ended val
       { length: MAXIMUM_ACTIVE_SHARE_GRANTS_PER_OWNER - 1 },
       () => ({
         ownerId: owner.citizen!.id,
-        granteeKind: ShareGrantGranteeKind.everyone,
+        granteeKind: GranteeKind.everyone,
         capabilityIds: [CapabilityId.LogEntries],
         operations: [GrantOperation.Read],
         startsAt: TWO_HOURS_AGO,
@@ -283,9 +240,7 @@ test("refuses a grant to the owner, a grant without the permission, an ended val
 test("revokes a grant only for its owner, and a second revocation changes nothing", async () => {
   const owner = await createCitizenActor("owner");
   const otherCitizen = await createCitizenActor("otherCitizen");
-  const grant = await createGrantRow(owner.citizen!.id, {
-    startsAt: ONE_HOUR_AGO,
-  });
+  const grant = await createShareGrantRow(owner.citizen!.id, EVERYONE_GRANTEE);
   const { context, auditEvents } = createTestApplicationContext();
 
   await expect(
@@ -318,64 +273,83 @@ test("revokes a grant only for its owner, and a second revocation changes nothin
   ]);
 });
 
-test("lists the own grants that are not revoked and did not end", async () => {
+test("lists the own grants that are not revoked and did not end, also without the permission", async () => {
   const owner = await createCitizenActor("owner");
   const otherOwner = await createCitizenActor("otherOwner");
-  const validGrant = await createGrantRow(owner.citizen!.id, {
-    startsAt: ONE_HOUR_AGO,
-    endsAt: IN_ONE_HOUR,
-  });
-  const futureGrant = await createGrantRow(owner.citizen!.id, {
-    startsAt: IN_ONE_HOUR,
-  });
-  await createGrantRow(owner.citizen!.id, {
+  const validGrant = await createShareGrantRow(
+    owner.citizen!.id,
+    EVERYONE_GRANTEE,
+    { startsAt: ONE_HOUR_AGO, endsAt: IN_ONE_HOUR },
+  );
+  const futureGrant = await createShareGrantRow(
+    owner.citizen!.id,
+    EVERYONE_GRANTEE,
+    { startsAt: IN_ONE_HOUR },
+  );
+  await createShareGrantRow(owner.citizen!.id, EVERYONE_GRANTEE, {
     startsAt: TWO_HOURS_AGO,
     revokedAt: ONE_HOUR_AGO,
   });
-  await createGrantRow(owner.citizen!.id, {
+  await createShareGrantRow(owner.citizen!.id, EVERYONE_GRANTEE, {
     startsAt: TWO_HOURS_AGO,
     endsAt: TEST_NOW,
   });
-  await createGrantRow(otherOwner.citizen!.id, { startsAt: ONE_HOUR_AGO });
+  await createShareGrantRow(otherOwner.citizen!.id, EVERYONE_GRANTEE);
   const { context } = createTestApplicationContext();
+  // An owner who lost the permission can still see and end the own grants
+  const ownerWithoutPermission = createTestActor({
+    userId: owner.userId,
+    citizen: owner.citizen,
+    permissionStrings: ["login;manage"],
+  });
 
-  const { grants } = await listOwnShareGrants(context, owner);
+  const { grants } = await listOwnShareGrants(context, ownerWithoutPermission);
 
   expect(grants.map((grant) => grant.id).toSorted()).toEqual(
     [validGrant.id, futureGrant.id].toSorted(),
+  );
+  // The grants are personal: an admin who assumes the owner does not see them
+  await expect(
+    listOwnShareGrants(
+      context,
+      createTestActor({
+        userId: owner.userId,
+        citizen: owner.citizen,
+        permissionStrings: VIEWER_PERMISSIONS,
+        assumedByAdminId: "admin-user",
+      }),
+    ),
+  ).rejects.toThrow(
+    new ForbiddenError(RemoteControlProgramErrorMessage.AssumedUser),
   );
 });
 
 test("lists the other owners that share with the viewer now, with their time ranges", async () => {
   const role = await prisma.role.create({ data: { name: "Pilots" } });
-  const viewer = await createCitizenActor("viewer", PERMISSIONS, [role.id]);
+  const viewer = await createCitizenActor("viewer", VIEWER_PERMISSIONS, [
+    role.id,
+  ]);
   const [citizenOwner, roleOwner, everyoneOwner, revokedOwner] =
     await Promise.all(
       ["citizenOwner", "roleOwner", "everyoneOwner", "revokedOwner"].map(
         (handle) => createCitizenActor(handle),
       ),
     );
-  await createGrantRow(
+  await createShareGrantRow(
     citizenOwner!.citizen!.id,
+    toCitizenGrantee(viewer.citizen!.id),
     { startsAt: TWO_HOURS_AGO },
-    viewer.citizen!.id,
   );
-  await prisma.shareGrant.create({
-    data: {
-      ownerId: roleOwner!.citizen!.id,
-      granteeKind: ShareGrantGranteeKind.role,
-      granteeRoleId: role.id,
-      capabilityIds: [CapabilityId.LogEntries],
-      operations: [GrantOperation.Read],
-      startsAt: ONE_HOUR_AGO,
-      endsAt: IN_ONE_HOUR,
-    },
-  });
-  await createGrantRow(everyoneOwner!.citizen!.id, { startsAt: ONE_HOUR_AGO });
-  await createGrantRow(
+  await createShareGrantRow(
+    roleOwner!.citizen!.id,
+    { granteeKind: GranteeKind.role, granteeRoleId: role.id },
+    { startsAt: ONE_HOUR_AGO, endsAt: IN_ONE_HOUR },
+  );
+  await createShareGrantRow(everyoneOwner!.citizen!.id, EVERYONE_GRANTEE);
+  await createShareGrantRow(
     revokedOwner!.citizen!.id,
+    toCitizenGrantee(viewer.citizen!.id),
     { startsAt: ONE_HOUR_AGO, revokedAt: TEST_NOW },
-    viewer.citizen!.id,
   );
   const { context } = createTestApplicationContext();
   const input = { capability_id: CapabilityId.LogEntries };

@@ -29,11 +29,6 @@ const CONSUMER_PERMISSION_SETS: Readonly<
   [CapabilityId.LogEntries]: { resource: "logAnalyzer", operation: "read" },
 };
 
-/** Null for a capability whose consumer has no permission of its own */
-export const getConsumerPermissionSet = (
-  capabilityId: CapabilityId,
-): PermissionSet | null => CONSUMER_PERMISSION_SETS[capabilityId];
-
 /** Whether the effective permissions contain `remoteControlProgram;use` */
 export const hasRemoteControlProgramUse = (
   permissionSets: PermissionSet[],
@@ -48,7 +43,8 @@ export const hasConsumerPermission = (
   permissionSets: PermissionSet[],
   capabilityId: CapabilityId,
 ): boolean => {
-  const consumerPermissionSet = getConsumerPermissionSet(capabilityId);
+  // Null for a capability whose consumer has no permission of its own
+  const consumerPermissionSet = CONSUMER_PERMISSION_SETS[capabilityId];
 
   return (
     consumerPermissionSet === null ||
@@ -58,27 +54,52 @@ export const hasConsumerPermission = (
 
 /**
  * Whether the actor can use the Remote Control Program: a citizen and
- * `remoteControlProgram;use`, without admin mode. The gates of the app (the
- * browser runtime, the sharing popover) use it.
+ * `remoteControlProgram;use`, without admin mode, and not an admin who
+ * assumes the user. The gates of the app (the browser runtime, the sharing
+ * popover) use it.
  */
 export const canUseRemoteControlProgram = (actor: Actor): boolean =>
-  actor.citizen !== null && hasRemoteControlProgramUse(actor.permissionSets);
+  actor.assumedByAdminId === null &&
+  actor.citizen !== null &&
+  hasRemoteControlProgramUse(actor.permissionSets);
+
+/**
+ * Gives the citizen of the actor, for the use cases that the owner can use
+ * also without the permission, for example the revocation of an own grant.
+ * An admin who assumes the user gets no access: the runtime of the admin
+ * would upload the log of the admin as the data of the user, and the
+ * grants and the reads of the user are personal (decision 4).
+ *
+ * @throws ForbiddenError for an admin who assumes the user
+ * (`RemoteControlProgramErrorMessage.AssumedUser`) or without a citizen
+ * (`RemoteControlProgramErrorMessage.CitizenMissing`)
+ */
+export const requireRemoteControlProgramCitizen = (
+  actor: Actor,
+): ActorCitizen => {
+  if (actor.assumedByAdminId !== null)
+    throw new ForbiddenError(RemoteControlProgramErrorMessage.AssumedUser);
+
+  if (!actor.citizen)
+    throw new ForbiddenError(RemoteControlProgramErrorMessage.CitizenMissing);
+
+  return actor.citizen;
+};
 
 /**
  * Gives the citizen of the actor
  *
- * @throws ForbiddenError without a citizen
- * (`RemoteControlProgramErrorMessage.CitizenMissing`) or without
+ * @throws ForbiddenError for the errors of
+ * `requireRemoteControlProgramCitizen()`, or without
  * `remoteControlProgram;use` (`RemoteControlProgramErrorMessage.PermissionMissing`)
  */
 export const requireRemoteControlProgramUse = (actor: Actor): ActorCitizen => {
-  if (!actor.citizen)
-    throw new ForbiddenError(RemoteControlProgramErrorMessage.CitizenMissing);
+  const citizen = requireRemoteControlProgramCitizen(actor);
 
   if (!hasRemoteControlProgramUse(actor.permissionSets))
     throw new ForbiddenError(
       RemoteControlProgramErrorMessage.PermissionMissing,
     );
 
-  return actor.citizen;
+  return citizen;
 };

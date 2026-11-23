@@ -304,8 +304,9 @@ const readChanges = async (
  * of its owner to the changes: the control UI reads a new snapshot for them.
  *
  * @throws ForbiddenError without a citizen, without `remoteControlProgram;use`
- * or `logAnalyzer;read`, or when a switch turned off the Remote Control
- * Program or the capability (the message of `RemoteControlProgramErrorMessage`)
+ * or `logAnalyzer;read`, for an admin who assumes the user, or when a switch
+ * turned off the Remote Control Program or the capability (the message of
+ * `RemoteControlProgramErrorMessage`)
  */
 export const readFeedEntries = (
   context: ApplicationContext,

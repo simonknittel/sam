@@ -1,4 +1,5 @@
 import type { CapabilityId } from "@sam-monorepo/domain";
+import { MAXIMUM_PAGE_LIMIT } from "../../pagination.js";
 
 /**
  * The times of the watch leases (see "Delivery to the consumers" of
@@ -20,11 +21,10 @@ export const WATCH_LEASE_RENEWAL_INTERVAL_MILLISECONDS = 60_000;
 export const WATCH_LEASE_MILLISECONDS = 3 * 60_000;
 
 /**
- * The same maximum as the page size of the lists (`MAXIMUM_PAGE_LIMIT`) and
- * the list of `listSharingOwners()`, thus a consumer can watch each owner of
- * that list
+ * The same maximum as the list of `listSharingOwners()`, thus a consumer can
+ * watch each owner of that list
  */
-export const MAXIMUM_WATCHED_OWNERS = 100;
+export const MAXIMUM_WATCHED_OWNERS = MAXIMUM_PAGE_LIMIT;
 
 /**
  * The valid leases of one viewer for one capability: one for each open

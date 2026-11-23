@@ -1,7 +1,6 @@
 import {
   AcknowledgementErrorCode,
   AcknowledgementResult,
-  CAPABILITY_CATALOG,
   CONNECTOR_CATALOG,
   containsIpAddress,
   createLogEntryHash,
@@ -39,9 +38,9 @@ export type AppendFeedEntriesInput = z.output<
 
 /**
  * The error codes of the `ack` of a refused batch. `message_not_valid`: the
- * connector does not supply the capability, the relay does not know the
- * version of the connector or of the capability, or the batch has too many
- * entries. `entries_not_valid`: no entry of the batch is valid.
+ * connector does not supply the capability, or the relay does not know the
+ * version of the connector. `entries_not_valid`: no entry of the batch is
+ * valid.
  */
 export type FeedEntriesRefusal =
   | AcknowledgementErrorCode.MessageNotValid
@@ -101,7 +100,7 @@ const refuse = (problem: LogEntryProblem): LogEntryCheck => ({
  * `event_at`: the raw line is the source, and the hash contains it.
  */
 const checkLogEntry = (entry: LogEntryOfBatch): LogEntryCheck => {
-  // The schema has the same limit. This check bounds the work of the patterns also for a caller without the schema.
+  // The schema has the same limit. The check stays, because the work of the patterns and the stored line depend on it.
   if (entry.raw_line.length > LOG_ENTRIES_CAPABILITY.maximumRawLineLength)
     return refuse(LogEntryProblem.TooLong);
 
@@ -126,17 +125,14 @@ const checkLogEntry = (entry: LogEntryOfBatch): LogEntryCheck => {
 };
 
 /**
- * Null when the catalog accepts the batch. The schema already refuses an
- * unknown capability version and too many entries. The check here also
- * bounds the work for each caller.
+ * Null when the catalog accepts the connector of the batch. The schema of the
+ * protocol (`feedEntriesContentSchema`) already refuses an unknown capability
+ * version and too many entries.
  */
 const findBatchProblem = (batch: FeedEntriesContent) => {
-  const capability = CAPABILITY_CATALOG[batch.capability_id];
   const connector = CONNECTOR_CATALOG[batch.connector_id];
 
   if (
-    batch.capability_version !== capability.version ||
-    batch.entries.length > capability.maximumEntriesPerBatch ||
     !connector.capabilityIds.includes(batch.capability_id) ||
     batch.connector_version > connector.version
   )
@@ -179,6 +175,9 @@ const toRefusal = (
  * No audit event for each batch: the relay service writes the counts with
  * `recordFeedEntryUploadCounts()`. The logs get no raw line and no hash,
  * because the raw lines contain data of other players.
+ *
+ * The relay service parses the batch with the schema of the protocol before
+ * the call.
  *
  * @throws ForbiddenError without `remoteControlProgram;use` or a citizen
  * (the relay service closes with `access_denied`), or when the switch of the

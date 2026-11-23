@@ -19,6 +19,7 @@ export {
   EmailTemplate,
   FIRST_IMAGE_BYTES_LENGTH,
   MAXIMUM_STORAGE_DELETE_KEYS,
+  SIGNING_KEY_ALGORITHM,
   createApplicationUrls,
   type ApplicationContext,
   type ChangelogEntrySource,

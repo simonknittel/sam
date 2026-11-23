@@ -3,20 +3,19 @@
 // use them only through the use cases in
 // `packages/application/src/remoteControlProgram/`.
 
-/// The values of `GranteeKind` in
-/// `packages/domain/src/remoteControlProgram/grantAccess.ts`. The values are
-/// the same as in the domain, thus the code maps nothing. "Event
-/// participants" comes in step 4 with a new value.
+/// Who a grant gives access to. The domain gives this enum to the code as
+/// `GranteeKind` (`packages/domain/src/remoteControlProgram/grantAccess.ts`).
+/// "Event participants" comes in step 4 with a new value.
 enum ShareGrantGranteeKind {
   citizen
   role
   everyone
 }
 
-/// The values of `RuntimeKind` in
-/// `packages/domain/src/remoteControlProgram/catalog.ts` and of
-/// `runtime_kind` in the protocol. The desktop companion comes in step 3
-/// with a new value.
+/// The kind of a runtime, also `runtime_kind` of the protocol. The domain
+/// gives this enum to the code as `RuntimeKind`
+/// (`packages/domain/src/remoteControlProgram/catalog.ts`). The desktop
+/// companion comes in step 3 with a new value.
 enum RemoteControlProgramRuntimeKind {
   browser
 }
@@ -109,10 +108,11 @@ model RemoteControlProgramRuntime {
   /// (`announceContentSchema` of the protocol, with its snake_case JSON
   /// keys): the connectors with their capabilities and versions, and the
   /// summary of the local access layer. Validate it with the schema when you
-  /// read it. NULL from the `hello` until the first `announce` of the
-  /// connection.
+  /// read it. NULL from the open of the connection until its first
+  /// `announce`.
   announcement    Json?
-  /// The time of the `hello` of the current or last connection
+  /// The time when the current or last connection opened
+  /// (`claimRuntimePresence()`)
   connectedAt     DateTime                        @db.Timestamptz(3)
   /// The lease of the presence. Each heartbeat sets it to the time of the
   /// relay plus `RELAY_LIMITS.presenceLeaseMilliseconds`. A controlled close

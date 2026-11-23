@@ -1,6 +1,6 @@
 import type { Actor } from "../../actor.js";
 import type { ApplicationContext } from "../../context.js";
-import { requireRemoteControlProgramUse } from "../access/remoteControlProgramPermissions.js";
+import { requireRemoteControlProgramCitizen } from "../access/remoteControlProgramPermissions.js";
 import {
   createActiveOwnShareGrantWhere,
   MAXIMUM_ACTIVE_SHARE_GRANTS_PER_OWNER,
@@ -21,15 +21,18 @@ export interface OwnShareGrants {
 
 /**
  * The active grants of the actor: the section "Shared with others" of the
- * sharing popover
+ * sharing popover. It needs no permission, like `revokeShareGrant()`: an
+ * owner who lost `remoteControlProgram;use` can still see and end the own
+ * grants. The app keeps the gate of the popover.
  *
- * @throws ForbiddenError without `remoteControlProgram;use` or a citizen
+ * @throws ForbiddenError without a citizen, or for an admin who assumes the
+ * user (`RemoteControlProgramErrorMessage`)
  */
 export const listOwnShareGrants = async (
   context: ApplicationContext,
   actor: Actor,
 ): Promise<OwnShareGrants> => {
-  const citizen = requireRemoteControlProgramUse(actor);
+  const citizen = requireRemoteControlProgramCitizen(actor);
 
   const grants = await context.prisma.shareGrant.findMany({
     where: createActiveOwnShareGrantWhere(citizen.id, context.now()),

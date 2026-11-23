@@ -23,7 +23,8 @@ export interface OwnRuntimes extends OwnRuntimeStop {
  * The runtimes of the actor with their presence and their announcement, and
  * the "Stop all" of the actor: the status section of the sharing popover
  *
- * @throws ForbiddenError without `remoteControlProgram;use` or a citizen
+ * @throws ForbiddenError without `remoteControlProgram;use` or a citizen, or
+ * for an admin who assumes the user
  */
 export const listOwnRuntimes = async (
   context: ApplicationContext,

@@ -2,7 +2,11 @@ import type { EventPositionRoleMatch } from "@sam-monorepo/database/browser";
 import type { WebPushPruneReason } from "./notifications/webPushPruneReason.js";
 import type { ReadAuditEventType } from "./readAuditEventTypes.js";
 import type { ReadMarkerSubject } from "./readMarkers/ReadMarkerSubject.js";
-import type { GranteeKind } from "./remoteControlProgram/grantAccess.js";
+import type { CapabilityId } from "./remoteControlProgram/catalog.js";
+import type {
+  GranteeKind,
+  GrantOperation,
+} from "./remoteControlProgram/grantAccess.js";
 
 /**
  * The system log is immutable: event type definitions are only ever added —
@@ -2083,8 +2087,8 @@ export interface AuditEventDataByType {
     granteeKind: GranteeKind;
     granteeCitizenId: string | null;
     granteeRoleId: string | null;
-    capabilityIds: string[];
-    operations: string[];
+    capabilityIds: CapabilityId[];
+    operations: GrantOperation[];
     startsAt: Date;
     /** Null: no end */
     endsAt: Date | null;
@@ -2110,7 +2114,7 @@ export interface AuditEventDataByType {
   [AuditEventType.REMOTE_CONTROL_PROGRAM_FEED_ENTRIES_UPLOADED]: {
     ownerCitizenId: string;
     runtimeId: string;
-    capabilityId: string;
+    capabilityId: CapabilityId;
     /** The entries that the relay stored as new entries */
     newEntryCount: number;
     /** The entries that the relay already held */

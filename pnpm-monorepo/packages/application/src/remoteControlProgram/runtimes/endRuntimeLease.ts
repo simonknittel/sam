@@ -6,7 +6,7 @@ import type { ApplicationContext } from "../../context.js";
 export const endRuntimeLeaseInputSchema = z.object({
   runtime_id: runtimeIdSchema,
   /**
-   * The `connectedAt` of the connection (from `announceRuntime()`). A newer
+   * The `connectedAt` of the connection (from `claimRuntimePresence()`). A newer
    * connection of the same runtime has a different time, thus the close of
    * the replaced connection does not end the lease of the newer connection.
    */

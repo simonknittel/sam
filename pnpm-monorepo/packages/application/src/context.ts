@@ -2,6 +2,7 @@ import type { Tracer } from "@opentelemetry/api";
 import type { PrismaClientType } from "@sam-monorepo/database";
 import type {
   AuditEventInput,
+  CitizenRealtimeChannel,
   GuildScheduledEventChange,
   GuildScheduledEventContent,
   GuildScheduledEventTarget,
@@ -63,12 +64,14 @@ export interface WikiCollabSession {
   readonly canEdit: boolean;
 }
 
-/** One event for the private realtime channel of a citizen */
+/** One event for a private realtime channel of a citizen */
 export interface CitizenRealtimeEvent {
   /**
-   * The event goes to the private channel of this citizen
-   * (`getCitizenChannelName()` of the domain)
+   * The event goes to this private channel of the citizen
+   * (`getCitizenRealtimeChannelName()` of the domain): the on-site
+   * notifications, or the data of the Remote Control Program
    */
+  readonly channel: CitizenRealtimeChannel;
   readonly citizenId: string;
   /** The name of the event that the subscriber listens to */
   readonly name: string;
@@ -91,9 +94,9 @@ export interface RealtimeServer {
    */
   readonly terminateUserConnections: (userId: string) => Promise<void>;
   /**
-   * Sends the events to the private channels of the citizens. It sends all
-   * events, also after a failure. Then it throws when the server refused an
-   * event or could not be reached.
+   * Sends the events to the private channels of the citizens, each event to
+   * its `channel`. It sends all events, also after a failure. Then it throws
+   * when the server refused an event or could not be reached.
    */
   readonly publishToCitizens: (
     events: readonly CitizenRealtimeEvent[],
@@ -123,13 +126,19 @@ export interface RelayService {
   readonly notifyOwnerStopChanged: (ownerCitizenId: string) => Promise<void>;
 }
 
+/**
+ * The algorithm of the signing key. A verification of a token of the app
+ * accepts only this algorithm.
+ */
+export const SIGNING_KEY_ALGORITHM = "ES256";
+
 /** The key that signs the access tokens. Its public key is in the JWKS. */
 export interface SigningKey {
   readonly privateKey: KeyObject;
   readonly publicJwk: JWK;
   /** The `kid` of the tokens and of the JWKS */
   readonly keyId: string;
-  readonly algorithm: "ES256";
+  readonly algorithm: typeof SIGNING_KEY_ALGORITHM;
 }
 
 export enum DiscordOutcome {
@@ -277,8 +286,8 @@ export interface ApplicationContext {
   /**
    * The switches of the organization for the Remote Control Program (the
    * Unleash flags of `RemoteControlProgramUnleashFlag`). A host without
-   * Unleash gives all parts on: `getRemoteControlProgramSwitches(() =>
-   * false)` of the domain.
+   * Unleash gives all parts on: `ALL_REMOTE_CONTROL_PROGRAM_PARTS_ON` of the
+   * domain.
    */
   readonly remoteControlProgramSwitches: () => Promise<RemoteControlProgramSwitches>;
   /**
