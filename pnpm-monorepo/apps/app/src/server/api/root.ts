@@ -16,6 +16,11 @@ import { getManufacturerById } from "./routers/manufacturer/getById";
 import { getSeriesByManufacturerId } from "./routers/manufacturer/getSeriesByManufacturerId";
 import { list as listOnSiteNotifications } from "./routers/onSiteNotifications/list";
 import { unreadCount as countUnreadOnSiteNotifications } from "./routers/onSiteNotifications/unreadCount";
+import { endWatchLease } from "./routers/remoteControlProgram/endWatchLease";
+import { listSharingOwners } from "./routers/remoteControlProgram/listSharingOwners";
+import { readFeedChanges } from "./routers/remoteControlProgram/readFeedChanges";
+import { readFeedSnapshot } from "./routers/remoteControlProgram/readFeedSnapshot";
+import { renewWatchLease } from "./routers/remoteControlProgram/renewWatchLease";
 import { getAssignableRoles } from "./routers/roles/getAssignableRoles";
 import { getRolesForSalaries } from "./routers/silc/getRolesForSalaries";
 import { search as searchSpynet } from "./routers/spynet/search";
@@ -64,6 +69,13 @@ export const appRouter = createTRPCRouter({
   onSiteNotifications: createTRPCRouter({
     list: listOnSiteNotifications,
     unreadCount: countUnreadOnSiteNotifications,
+  }),
+  remoteControlProgram: createTRPCRouter({
+    endWatchLease,
+    listSharingOwners,
+    readFeedChanges,
+    readFeedSnapshot,
+    renewWatchLease,
   }),
   roles: createTRPCRouter({
     getAssignableRoles,
