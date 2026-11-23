@@ -1,6 +1,6 @@
 # Infrastructure
 
-This package holds the shared implementations of the ports of the use cases. The ports are the fields of `ApplicationContext` in [`application/src/context.ts`](../application/src/context.ts). Each host composes the implementations in its composition root: the Next.js app in `apps/app/src/modules/application`, the Lambda functions in `apps/lambda/src/common/createApplicationContext.ts`.
+This package holds the shared implementations of the ports of the use cases. The ports are the fields of `ApplicationContext` in [`application/src/context.ts`](../application/src/context.ts). Each host composes the implementations in its composition root: the Next.js app in `apps/app/src/modules/application`, the Lambda functions in `apps/lambda/src/common/createApplicationContext.ts`, and the relay service in `apps/relay/src/applicationContext.ts`.
 
 ## Exports
 

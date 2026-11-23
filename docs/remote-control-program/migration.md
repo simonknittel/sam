@@ -45,7 +45,7 @@ The Log Analyzer moves completely into the Remote Control Program. No old path s
 ## Changes of existing parts
 
 - **OAuth server:** today, it issues tokens only for the MCP server. The audience is the URL of the MCP server, `mcp` is the only scope, and the consent and the token endpoint require `mcp;use`. Step 3 adds the relay service as a resource with its own audience and scope, a consent with `remoteControlProgram;use`, and the Client ID Metadata Document of the desktop companion (see [Desktop companion](./README.md#desktop-companion)).
-- **Ban:** today, a ban closes only the connections of Soketi. Step 2 adds the connections of the relay service.
+- **Ban:** today, a ban closes the connections of Soketi and of the wiki editor. Step 2 adds the connections of the relay service.
 - **Permissions:** the existing permissions do not change (M4).
 
 ### The move of the databases

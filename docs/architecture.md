@@ -30,7 +30,6 @@ A host is a deployable program. It owns its runtime, its configuration and its e
 | `application` | use cases | The use cases: one read or one write of a feature, with the permission checks, the audit events and the notifications inside. The actor, the application context and the typed errors. The OAuth use cases. The use cases of the relay of the [Remote Control Program](./remote-control-program/README.md#relay) (`src/remoteControlProgram/`), which the app and the relay service call. See the [package README](../pnpm-monorepo/packages/application/README.md). | `database`, `domain`, `wiki-editor`. Never `infrastructure` or `mcp`. |
 | `infrastructure` | infrastructure | The shared implementations of the ports of `application`: the Prisma audit writer, the EventBridge client, emitter, notification trigger and email requester, the Discord gateway, the collab client of the wiki editor, the S3 storage (the port [`FileStorage`](../pnpm-monorepo/packages/application/src/ports/storage.ts)), the fetcher of the OAuth client metadata documents (the port [`ClientMetadataFetcher`](../pnpm-monorepo/packages/application/src/ports/clientMetadata.ts)), the Pusher client of the realtime server (the port `realtime`) and the client of the internal endpoints of the relay service (the port `relay`). See the [package README](../pnpm-monorepo/packages/infrastructure/README.md). | `application` (the port types), `domain` (types and the names of the realtime channels), `wiki-editor` (the types of the collab tokens), `database`, the AWS SDK, `pusher` |
 | `mcp` | interface adapter | The MCP server: the tool registry, the tools, the request handler with the bearer verification. The files for AI agents (see [Files for AI agents](./mcp-server.md#files-for-ai-agents)). See [mcp-server.md](./mcp-server.md). | `application`, `domain`, `database` |
-| `remote-control-program-runtime` | interface adapter | The core of the browser runtime of the [Remote Control Program](./remote-control-program/README.md#browser-runtime): the log file connector, the local access layer and the channel client of the relay service. The app runs it in the browser. No `next` and no `react`. | `domain` |
 
 Four callers use the use cases of `application`: the Next.js app, the MCP server (`mcp`, which the app mounts at `/api/mcp`), the Lambda functions and the relay service. Each caller has a composition root that builds its `ApplicationContext`.
 
@@ -90,7 +89,6 @@ flowchart TB
     lambdaHandlers["Lambda handlers"]
     relayServer["WebSocket server and internal endpoints"]
     mcp["packages/mcp"]
-    runtime["packages/remote-control-program-runtime"]
     controllers["HTTP controllers"]
   end
 
@@ -109,7 +107,6 @@ flowchart TB
 
   app --> nextAdapters
   app --> mcp
-  app --> runtime
   lambda --> lambdaHandlers
   relay --> relayServer
   mcpService --> mcp
@@ -127,7 +124,6 @@ flowchart TB
   infrastructurePackage --> database
   application --> domainPackages
   application --> database
-  runtime --> domainPackages
   domainPackages --> database
 ```
 
@@ -139,7 +135,7 @@ Each package except `database` and `emails` (they have no test runner) has the t
 
 - **Domain** (`domain`, `emails`, `wiki-editor`): the rules, without other I/O than the database. The packages create no database client and read no environment. A function that reads or writes the database takes the client or the transaction of its caller, for example a row lock or a transaction step. Prisma types and selects are permitted. `wiki-editor` is a separate domain-level package because it depends on Tiptap and has a browser entry (`helpers`): inside `domain` it would pull Tiptap into the Lambda functions and the collab server. `emails` is a separate package because email templates are presentation, not rules: a use case asks the context to send a notification, and the template renders it.
 - **Use cases** (`application`): `(context, actor, input) => output`, with the context and its ports as the [package README](../pnpm-monorepo/packages/application/README.md) describes them. The use cases check the permissions, thus a new host cannot forget a check. The use cases call Prisma directly; there are no repository ports. This is the one intentional break of the dependency rule.
-- **Adapters**: the server actions and tRPC procedures of the Next.js app, the MCP tools and request handler, the Lambda handlers, the WebSocket server and the internal endpoints of the relay service. They parse the transport-specific input, call the use cases and map the typed errors. The core of the browser runtime (`remote-control-program-runtime`) is an adapter in the browser: it reads the data of the game on the machine and sends it to the relay service. It calls no use case.
+- **Adapters**: the server actions and tRPC procedures of the Next.js app, the MCP tools and request handler, the Lambda handlers, the WebSocket server and the internal endpoints of the relay service. They parse the transport-specific input, call the use cases and map the typed errors.
 - **Infrastructure** (`database`, `infrastructure`): the Prisma schema and client, and the shared implementations of the ports. Each host composes the implementations in its composition root.
 - **Hosts**: the deployables. Each host has one composition root that builds its context. The logger and the tracer are per host: the app logs in `after()`, and the Lambda functions and the relay service log to the console.
 

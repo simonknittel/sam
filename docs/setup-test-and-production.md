@@ -177,7 +177,10 @@ works only on the machine. The preview deployments have no relay service.
    connection for longer than the heartbeat interval of the runtimes, and
    must pass `GET /health`, `POST /internal/disconnect-user` and
    `POST /internal/owner-stop-changed`. The app calls the internal
-   endpoints with a short-lived token that the relay service verifies.
+   endpoints with a short-lived token that the relay service verifies. The
+   relay service does not limit the connections for each IP address, thus
+   the proxy must limit the open connections and the new connections for
+   each address.
 3. Set the environment variables of the container.
    [env.ts](../pnpm-monorepo/apps/relay/src/env.ts) describes each variable
    and its default. In production:
@@ -185,8 +188,8 @@ works only on the machine. The preview deployments have no relay service.
      you deploy an image that needs it.
    - `APP_BASE_URL`: the `NEXT_PUBLIC_BASE_URL` of the app, the issuer of
      the tokens. The relay service reads the public key set at
-     `<APP_BASE_URL>/.well-known/jwks.json`, thus the app needs
-     `EMBED_JWT_PRIVATE_KEY` (see [7. Set up Vercel](#7-set-up-vercel)).
+     `<APP_BASE_URL>/.well-known/jwks.json`. The key of the app is in
+     [7. Set up Vercel](#7-set-up-vercel).
    - `PUSHER_CHANNELS_*`: the Soketi app of the app, thus the values of
      `NEXT_PUBLIC_PUSHER_CHANNELS_*` and `PUSHER_CHANNELS_APP_SECRET` of the
      app. `PUSHER_CHANNELS_HOST` is a host name without a scheme. For a

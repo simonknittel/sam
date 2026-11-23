@@ -1,6 +1,6 @@
 # Application
 
-This package holds the use cases of SAM. A use case is one read or one write of a feature. The Next.js app, the MCP server and the Lambda functions call the same use cases. The package does not know Next.js, React or the MCP transport.
+This package holds the use cases of SAM. A use case is one read or one write of a feature. The Next.js app, the MCP server, the Lambda functions and the relay service call the same use cases. The package does not know Next.js, React or the MCP transport.
 
 ## Use cases
 
@@ -11,7 +11,7 @@ Each use case has this signature:
 ```
 
 - `context` gives the services of the app that runs the use case: the ports of [`src/context.ts`](src/context.ts) and [`src/ports/`](src/ports). Their doc comments describe the calls and the meaning of a null port. A use case that needs a null `changelog` or `collab` throws a `ConflictError`. The shared implementations of the ports are in [`packages/infrastructure`](../infrastructure/README.md).
-- `actor` is the user for whom the use case runs (`src/actor.ts`). The Next.js app builds it from the session, the MCP server from the access token.
+- `actor` is the user for whom the use case runs (`src/actor.ts`). The Next.js app builds it from the session, the MCP server from the access token, and the relay service from the connection token of a runtime.
 - A use case without a user, for example the public token endpoint of the OAuth server, takes `(context, input)`.
 - The use cases of a feature live in `src/<feature>/` with a barrel `index.ts` that the package index re-exports.
 

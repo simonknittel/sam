@@ -1,7 +1,7 @@
 # Remote Control Program
 
 > [!NOTE]
-> This document describes the architecture of the Remote Control Program. In 2026-11, the implementation has not started. [Migration](./migration.md) describes the steps from the current state of SAM to this architecture. When a plan or the code changes a decision, update this document. "Remote Control Program" is a working title, and the code can use it (see [Decisions](#decisions)).
+> This document describes the architecture of the Remote Control Program. In 2026-11, the implementation is in progress: step 2 of the [migration](./migration.md#order-of-the-steps) builds the relay service and the browser runtime. [Migration](./migration.md) describes the steps from the current state of SAM to this architecture. When a plan or the code changes a decision, update this document. "Remote Control Program" is a working title, and the code can use it (see [Decisions](#decisions)).
 
 The Remote Control Program connects the Star Citizen game client on the machine of a user with SAM. It moves the state of the game client (for example the health, the location or the log entries) to SAM. It moves actions from SAM to the game client (for example "open the doors of my ship"). The user decides what leaves the machine, who in SAM can read it, and which actions the game client applies.
 
@@ -304,12 +304,12 @@ The result of a request is one of these:
 
 ### Protocol
 
-The runtimes and the relay service use one protocol over the WebSocket connection. It is a part of the shared definitions (principle 11), because TypeScript and Rust implement it.
+The runtimes and the relay service use one protocol over the WebSocket connection. It is a part of the shared definitions (principle 11), because TypeScript and Rust implement it. [protocol.ts](../../pnpm-monorepo/packages/domain/src/remoteControlProgram/protocol.ts) defines the messages, the reasons to close a connection and their close codes.
 
 - Each message has an envelope: the type of the message, an id, the version of the protocol and the content.
 - The handshake: the runtime sends the version of the protocol and its own version. The relay service refuses a version that is older than a minimum version. The runtime then tells the owner to update.
 - The relay service acknowledges each upload. The runtime sends an upload again until it gets the acknowledgement.
-- Each upload and each action request has a unique key. The relay ignores a second message with the same key. Thus a resend after a reconnect makes no duplicate.
+- A resend is a new message with a new id. Thus the relay cannot remove duplicates with the id of a message. Each feed entry has a unique key (for `log_entries`, the hash of the entry, see [Log Analyzer](#log-analyzer)), and the relay stores an entry with a key that it already has only once. Each action request has a unique key too, and the relay ignores a second request with the same key. Thus a resend after a reconnect makes no duplicate.
 - The runtime keeps the results of its last action requests and sends them again after a reconnect. A late result replaces an `expired` in the action log. Thus an applied action does not stay `expired`.
 
 ### Connection and tokens
@@ -317,7 +317,7 @@ The runtimes and the relay service use one protocol over the WebSocket connectio
 - A runtime connects with a short-lived connection token (for example 120 seconds), and renews it over the open connection, like the collab tokens of the wiki. The relay service closes a connection without a valid token.
 - The desktop companion gets the connection token with its OAuth access token. The browser runtime gets it from the app.
 - When a runtime connects and at each renewal, the relay service checks the OAuth grant of the desktop companion and the ban of the user. Thus a revocation or a ban stops a connection within one renewal interval.
-- A ban also closes the connections of the relay service, next to the connections of Soketi.
+- A ban also closes the connections of the relay service, next to the connections of Soketi and of the wiki editor.
 
 ### Presence
 
@@ -329,7 +329,8 @@ The runtimes and the relay service use one protocol over the WebSocket connectio
 
 ### Time
 
-- Each value has two times: the time of the observation (from the runtime) and the time of the arrival (from the relay). The relay limits the difference between the two times, and replaces an observation time in the future with the arrival time.
+- Each value has two times: the time of the observation and the time of the arrival (from the relay). The relay replaces a time of the observation in the future with the time of the arrival. It does not limit how old an observation is, because the owner can upload older entries on an explicit request (decision 27).
+- A log entry has the time of its raw line when the pattern has one. Only an entry whose pattern has no time of its own (`takesTimeOfPrecedingLine`) takes the time of the observation from the runtime.
 - The gRPC frames contain no time. Thus the gRPC connector uses the time when it receives a frame.
 - The grant windows, the stale time and the history use the time of the relay.
 - An action request has a relative time to live (for example 10 seconds), not an absolute expiry time. Thus a wrong clock on the machine does not change the expiry.
@@ -344,7 +345,7 @@ The relay service limits:
 - the number of access requests for each citizen,
 - the action requests for each requester and action.
 
-A runtime that breaks a limit gets an error. Repeated errors close the connection.
+A runtime that breaks a limit gets an error. Repeated errors close the connection. A message that is larger than the limit closes the connection at once with the WebSocket code 1009 (message too big), before the relay service reads the message. The values are in `RELAY_LIMITS` in [catalog.ts](../../pnpm-monorepo/packages/domain/src/remoteControlProgram/catalog.ts).
 
 ## Access layers
 
@@ -478,18 +479,18 @@ The MCP server is stateless and has no subscriptions (see [MCP Server](../mcp-se
 
 ## Location in the repository
 
-The implementation plans decide the final locations. Update this table and [Architecture](../architecture.md) when the packages exist. The paths of the pnpm monorepo are relative to `pnpm-monorepo/`.
+The paths of the pnpm monorepo are relative to `pnpm-monorepo/`. The runtime package and the app module come with the browser runtime in step 2, the Rust project comes in step 3, and the MCP tools come in step 6 (see the [order of the steps](./migration.md#order-of-the-steps)). Update this table and [Architecture](../architecture.md) when a location changes.
 
 | Location | Content |
 | - | - |
-| `packages/domain/src/remoteControlProgram/` | The catalog of the capabilities, the pure rules of the grants, and the export of the shared definitions for Rust. The patterns of the Log Analyzer stay in `packages/domain/src/logAnalyzer/`. |
+| `packages/domain/src/remoteControlProgram/` | The catalog of the capabilities, the protocol of the relay service, the pure rules of the grants, the rule for the IP addresses and the hash of the feed entries. Step 3 adds the export of the shared definitions for Rust. The patterns of the Log Analyzer stay in `packages/domain/src/logAnalyzer/`. |
 | `packages/application/src/remoteControlProgram/` | The use cases of the relay. |
-| A package, for example `packages/remote-control-program-runtime` | The core of the browser runtime: the base types of the connectors, the TypeScript connectors, the local access layer and the channel client. No `next` and no `react`. |
+| `packages/remote-control-program-runtime` | The core of the browser runtime: the base types of the connectors, the TypeScript connectors, the local access layer and the channel client. No `next` and no `react`. |
 | `apps/app/src/modules/remote-control-program/` | The browser runtime, the consumer client and the sharing popover. |
 | `packages/mcp/src/tools/remoteControlProgram/` | The MCP tools. |
-| A host, for example `apps/relay` | The relay service: a Node.js container, like `apps/collab`. |
+| `apps/relay` | The relay service: a Node.js container, like `apps/collab`. |
 | A Rust project next to `pnpm-monorepo/`, for example `companion/` | The desktop companion. It is not a part of the pnpm monorepo. |
-| A shared folder, for example `remote-control-program-fixtures/` | The shared test data for the TypeScript and the Rust implementations. |
+| `remote-control-program-fixtures/` next to `pnpm-monorepo/` | The shared test data for the TypeScript and the Rust implementations. |
 
 ## Operations and tests
 

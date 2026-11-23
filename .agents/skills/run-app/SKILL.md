@@ -232,11 +232,12 @@ The script starts `sam-relay` after the migrations, with `--build` (the
 image comes from this checkout) and `--no-deps`, and appends
 `RELAY_URL="ws://localhost:<port of the slot>"` to the app `.env` if it is
 missing. The relay service verifies the tokens of the app with the
-`SAM_APP_*` values of the root `.env` (see above), thus it also needs
-`EMBED_JWT_PRIVATE_KEY`. When `/health` does not answer, the script prints a
-`WARNING` with a log path and continues: the app works without the relay
-service. Logs: `docker compose logs sam-relay`. After a change of
-`pnpm-monorepo/apps/relay` or of its packages, run the script again.
+`SAM_APP_*` values of the root `.env` (see above, and
+`docs/setup-local-machine.md` for the key). When `/health` does not answer,
+the script prints a `WARNING` with a log path and continues: the app works
+without the relay service. Logs: `docker compose logs sam-relay`. After a
+change of `pnpm-monorepo/apps/relay` or of its packages, run the script
+again.
 
 ## Shutdown
 
