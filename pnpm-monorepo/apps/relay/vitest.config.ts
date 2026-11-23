@@ -13,14 +13,15 @@ export default defineConfig({
       {
         /**
          * Runs the relay service against a real PostgreSQL with all
-         * migrations (see `test/postgres.ts`) and real WebSocket clients. The
+         * migrations and real WebSocket clients. The database comes from the
+         * helpers of the integration tests of `packages/application`. The
          * files share one database, thus they run one after the other.
          */
         test: {
           name: "integration",
           include: ["src/**/*.integration.test.ts"],
-          globalSetup: ["./test/postgres.ts"],
-          setupFiles: ["./test/databaseUrl.ts"],
+          globalSetup: ["../../packages/application/test/postgres.ts"],
+          setupFiles: ["../../packages/application/test/databaseUrl.ts"],
           fileParallelism: false,
           hookTimeout: 120_000,
         },
