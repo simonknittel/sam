@@ -4,6 +4,8 @@ The implementations of the log file connector (TypeScript now, Rust in step 3), 
 
 The expected values are immutable data, like the patterns of the Log Analyzer. Do not change an expected value to make a test pass. A different result needs a new version of the rule (see `pnpm-monorepo/packages/domain/src/remoteControlProgram/ipAddressMarker.ts`). You can add files and cases. Check a new expected value with a second implementation or by hand.
 
+Before the first release, step 2 removed one expected match from `expected-matches.json`: the match of the partly written last line of `LIVE/Game.log` (line 12). The connector now waits for the line end (see the end of [`log-files/`](#log-files)). The Rust connector of step 3 must obey this rule.
+
 Tests that use this data:
 
 - `pnpm-monorepo/packages/domain/src/remoteControlProgram/fixtures.test.ts`
