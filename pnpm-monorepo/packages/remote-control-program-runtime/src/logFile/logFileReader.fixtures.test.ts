@@ -71,10 +71,9 @@ describe("createLogFileReader with the shared test data", () => {
       const bytes = await readFile(new URL(path, LOG_FILES_DIRECTORY));
       const readLogFiles = createLogFileReader();
 
-      const result = await readLogFiles(
-        [{ path, file: new File([bytes], fileName, { lastModified: 1 }) }],
-        true,
-      );
+      const result = await readLogFiles([
+        { path, file: new File([bytes], fileName, { lastModified: 1 }) },
+      ]);
 
       /** The connector gives only the line with the marker */
       const foundMatches = result.matches.map((match) => ({

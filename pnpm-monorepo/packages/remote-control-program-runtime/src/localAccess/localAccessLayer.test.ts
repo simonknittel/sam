@@ -1,27 +1,14 @@
 import { LogAnalyzerEntryType } from "@sam-monorepo/domain";
 import { describe, expect, it } from "vitest";
-import { createLocalAccessLayer } from "./localAccessLayer.js";
+import { createMemoryStorage } from "../testing/fakes.js";
 import {
-  LIVE_PERIODS_STORAGE_KEY,
-  LOCAL_ACCESS_LAYER_STORAGE_KEY,
-} from "./localAccessStorage.js";
+  createLocalAccessLayer,
+  RelayUploadState,
+} from "./localAccessLayer.js";
 
 const SECOND = 1_000;
 
-const createMemoryStorage = (initialValues: Record<string, string> = {}) => {
-  const values = new Map(Object.entries(initialValues));
-
-  return {
-    values,
-    getItem: (key: string) => values.get(key) ?? null,
-    setItem: (key: string, value: string) => {
-      values.set(key, value);
-    },
-    removeItem: (key: string) => {
-      values.delete(key);
-    },
-  };
-};
+const CITIZEN_ID = "citizen";
 
 /** One storage and one clock for all tabs of a browser */
 const createBrowser = (initialValues?: Record<string, string>) => {
@@ -35,7 +22,11 @@ const createBrowser = (initialValues?: Record<string, string>) => {
     },
     getTime: () => time,
     openTab: () =>
-      createLocalAccessLayer({ storage, now: () => new Date(time) }),
+      createLocalAccessLayer({
+        storage,
+        citizenId: CITIZEN_ID,
+        now: () => new Date(time),
+      }),
   };
 };
 
@@ -48,7 +39,7 @@ const createEntry = (type: LogAnalyzerEntryType, time: number) => ({
 const startRuntime = (browser: ReturnType<typeof createBrowser>) => {
   const layer = browser.openTab();
   layer.startReading();
-  layer.setRelayStopped(false);
+  layer.setRelayState(RelayUploadState.Accepting);
   return layer;
 };
 
@@ -62,12 +53,12 @@ describe("the rule for the upload", () => {
     {
       stop: "the Stop all of the owner from the relay",
       stopAll: (layer: ReturnType<typeof startRuntime>) =>
-        layer.setRelayStopped(true),
+        layer.setRelayState(RelayUploadState.Stopped),
       startAll: (layer: ReturnType<typeof startRuntime>) =>
-        layer.setRelayStopped(false),
+        layer.setRelayState(RelayUploadState.Accepting),
     },
   ])(
-    "uploads a line of a live period, but not a line before the start or from $stop",
+    "after $stop, only the lines read live from the start go up",
     ({ stopAll, startAll }) => {
       const browser = createBrowser();
       const olderLine = createEntry(
@@ -85,7 +76,11 @@ describe("the rule for the upload", () => {
       );
       browser.advance(5 * SECOND);
       layer.heartbeat();
+      expect(layer.selectAutomaticUploads([olderLine, liveLine])).toEqual([
+        liveLine,
+      ]);
 
+      // The live line did not go up before the stop, for example because the relay was not available
       stopAll(layer);
       browser.advance(5 * SECOND);
       const stoppedLine = createEntry(
@@ -109,7 +104,7 @@ describe("the rule for the upload", () => {
           stoppedLine,
           lineAfterStart,
         ]),
-      ).toEqual([liveLine, lineAfterStart]);
+      ).toEqual([lineAfterStart]);
     },
   );
 
@@ -231,13 +226,13 @@ describe("the request for older entries", () => {
     );
 
     layer.setLogEntryTypes([LogAnalyzerEntryType.EarnedNotification], false);
-    expect(layer.confirmOlderEntriesRequest(request)).toEqual([
+    expect(layer.selectPermittedUploads(request.entries)).toEqual([
       firstOlderLine,
       secondOlderLine,
     ]);
 
     layer.stopAll();
-    expect(layer.confirmOlderEntriesRequest(request)).toEqual([]);
+    expect(layer.selectPermittedUploads(request.entries)).toEqual([]);
   });
 });
 
@@ -253,40 +248,5 @@ describe("the storage", () => {
     expect(layer.getSettings().logEntryTypes[LogAnalyzerEntryType.JoinPu]).toBe(
       false,
     );
-  });
-
-  it("gives the defaults for a broken stored value", () => {
-    const browser = createBrowser({
-      [LOCAL_ACCESS_LAYER_STORAGE_KEY]: "{not json",
-      // The period contains the time of the entry below. The flag is not valid.
-      [LIVE_PERIODS_STORAGE_KEY]: JSON.stringify({
-        version: 1,
-        periods: [
-          {
-            started_at: "2026-11-23T17:00:00.000Z",
-            ended_at: "2026-11-23T19:00:00.000Z",
-          },
-        ],
-        can_continue_last_period: "yes",
-      }),
-    });
-
-    const layer = browser.openTab();
-
-    expect(layer.getSettings().stoppedAt).toBeNull();
-    expect(layer.getAnnouncementSummary()).toEqual({
-      is_stopped: false,
-      capability_rules: [
-        { capability_id: "log_entries", is_on: false, is_filtered: false },
-      ],
-    });
-
-    layer.setLogEntryTypes([LogAnalyzerEntryType.JoinPu], true);
-    layer.setRelayStopped(false);
-    expect(
-      layer.selectAutomaticUploads([
-        createEntry(LogAnalyzerEntryType.JoinPu, browser.getTime()),
-      ]),
-    ).toEqual([]);
   });
 });

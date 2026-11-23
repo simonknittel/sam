@@ -24,6 +24,7 @@ import {
   createDownMessage,
   DownMessageType,
   getRefusalReasonOfProtocolVersion,
+  isFeedSourceAnnounced,
   parseUpMessage,
   RELAY_CLOSE_CODES,
   RELAY_LIMITS,
@@ -31,7 +32,6 @@ import {
   UpMessageType,
   type AnnounceContent,
   type DownMessage,
-  type FeedEntriesContent,
   type RemoteControlProgramSwitches,
   type UpMessage,
   type UpMessageOfType,
@@ -207,22 +207,6 @@ const toText = (data: RawData) => {
   if (Array.isArray(data)) return Buffer.concat(data).toString("utf8");
   return Buffer.from(data).toString("utf8");
 };
-
-/** The connector, the capability and both versions are in the announcement */
-const isAnnounced = (
-  announcement: AnnounceContent | null,
-  batch: FeedEntriesContent,
-) =>
-  announcement?.connectors.some(
-    (connector) =>
-      connector.id === batch.connector_id &&
-      connector.version === batch.connector_version &&
-      connector.capabilities.some(
-        (capability) =>
-          capability.id === batch.capability_id &&
-          capability.version === batch.capability_version,
-      ),
-  ) ?? false;
 
 /**
  * One WebSocket connection of a runtime (see the protocol in `protocol.ts`
@@ -807,7 +791,10 @@ export class RelayConnection {
     const runtime = this.#requireRuntime();
     const batch = message.content;
 
-    if (!isAnnounced(this.#announcement, batch)) {
+    if (
+      this.#announcement === null ||
+      !isFeedSourceAnnounced(this.#announcement, batch)
+    ) {
       this.#refuseMessage(
         message,
         AcknowledgementErrorCode.CapabilityNotAnnounced,

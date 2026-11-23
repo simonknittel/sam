@@ -82,6 +82,11 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     "min-h-dvh background-primary",
   );
 
+  // Each citizen has an own browser runtime, also in a shared browser profile
+  const runtimeCitizenId = canUseRemoteControlProgram(actor)
+    ? (actor.citizen?.id ?? null)
+    : null;
+
   return (
     <SessionProviderContainer
       session={authentication.session}
@@ -94,9 +99,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
               <RolesContextProvider roles={visibleRoles} tags={visibleRoleTags}>
                 <BirthdayCitizensProvider citizenIds={birthdayCitizenIds}>
                   <CitizenAvatarsProvider avatarUrls={citizenAvatarUrls}>
-                    <BrowserRuntimeProvider
-                      isEnabled={canUseRemoteControlProgram(actor)}
-                    >
+                    <BrowserRuntimeProvider citizenId={runtimeCitizenId}>
                       <div {...seasonalThemeRootProps}>
                         <SkipToContentLink />
 

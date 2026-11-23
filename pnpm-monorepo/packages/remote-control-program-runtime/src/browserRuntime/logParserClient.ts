@@ -24,30 +24,31 @@ interface PendingRequest {
  * the data of its request in memory for as long as the worker lives.
  */
 export class LogParserClient {
-  readonly #worker: Worker;
+  readonly #worker = createLogParserWorker();
   readonly #pendingRequests = new Map<number, PendingRequest>();
   #nextRequestId = 0;
   #workerError: Error | null = null;
 
-  constructor(worker: Worker = createLogParserWorker()) {
-    this.#worker = worker;
+  constructor() {
+    this.#worker.addEventListener(
+      "message",
+      (event: MessageEvent<ResultMessage>) => {
+        const request = this.#pendingRequests.get(event.data.id);
+        if (!request) return;
 
-    worker.addEventListener("message", (event: MessageEvent<ResultMessage>) => {
-      const request = this.#pendingRequests.get(event.data.id);
-      if (!request) return;
+        if ("progress" in event.data) {
+          request.onProgress(event.data.progress);
+          return;
+        }
 
-      if ("progress" in event.data) {
-        request.onProgress(event.data.progress);
-        return;
-      }
-
-      this.#pendingRequests.delete(event.data.id);
-      if ("error" in event.data) {
-        request.reject(new Error(event.data.error));
-      } else {
-        request.resolve(event.data);
-      }
-    });
+        this.#pendingRequests.delete(event.data.id);
+        if ("error" in event.data) {
+          request.reject(new Error(event.data.error));
+        } else {
+          request.resolve(event.data);
+        }
+      },
+    );
 
     /**
      * The worker answers the errors of a request itself. Thus this error
@@ -55,12 +56,12 @@ export class LogParserClient {
      * did not load. It then answers no request, and the next requests must
      * fail at once.
      */
-    worker.addEventListener("error", (event) => {
+    this.#worker.addEventListener("error", (event) => {
       this.#workerError = new Error(event.message);
       this.#rejectPendingRequests(this.#workerError);
     });
 
-    worker.addEventListener("messageerror", () => {
+    this.#worker.addEventListener("messageerror", () => {
       this.#rejectPendingRequests(
         new Error("The log parser sent no valid answer"),
       );
@@ -82,7 +83,7 @@ export class LogParserClient {
       this.#nextRequestId += 1;
       this.#pendingRequests.set(id, { resolve, reject, onProgress });
 
-      const request: ParseRequest = { id, files, isFullRead: false };
+      const request: ParseRequest = { id, files };
       this.#worker.postMessage(request);
     });
   }

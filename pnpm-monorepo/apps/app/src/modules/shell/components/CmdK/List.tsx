@@ -2,7 +2,10 @@ import { externalApps } from "@/modules/apps/utils/externalApps";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { useCreateContext } from "@/modules/common/components/CreateContext";
 import { cornerstoneImageBrowserItemTypes } from "@/modules/cornerstone-image-browser/utils/config";
-import { useIsRemoteControlProgramAvailable } from "@/modules/remote-control-program/runtime/useBrowserRuntime";
+import {
+  useEndBrowserRuntimeSession,
+  useIsRemoteControlProgramAvailable,
+} from "@/modules/remote-control-program/runtime/useBrowserRuntime";
 import { Command } from "cmdk";
 import type { Session } from "next-auth";
 import { signOut } from "next-auth/react";
@@ -84,6 +87,7 @@ export const List = () => {
     useCmdKContext();
   const createItems = useCreateItems();
   const canUseRemoteControlProgram = useIsRemoteControlProgramAvailable();
+  const endBrowserRuntimeSession = useEndBrowserRuntimeSession();
 
   const [
     citizenRead,
@@ -152,6 +156,7 @@ export const List = () => {
       icon: <RiLogoutCircleRLine />,
       type: MenuItemType.Command,
       onSelect: async () => {
+        endBrowserRuntimeSession();
         await signOut({ callbackUrl: "/" });
       },
     },

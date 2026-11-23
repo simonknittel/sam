@@ -36,6 +36,18 @@ export const useBrowserRuntime = (): BrowserRuntimeHandle | null => {
 };
 
 /**
+ * For the logout, before the end of the session: the runtime of the citizen
+ * stops without a continuation in all tabs of this browser (see
+ * `BrowserRuntimeController.endSession()`). Thus it does not read or upload
+ * for a different citizen who logs in next in the same browser.
+ */
+export const useEndBrowserRuntimeSession = () => {
+  const controller = useContext(BrowserRuntimeContext);
+
+  return () => controller?.endSession();
+};
+
+/**
  * The own entries of this browser by their key (`RawMatch.hash`), from the
  * tab of the runtime. Empty when the user cannot use the Remote Control
  * Program. The map changes only with the entries.

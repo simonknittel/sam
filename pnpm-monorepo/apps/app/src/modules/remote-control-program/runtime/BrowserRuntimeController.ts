@@ -4,34 +4,39 @@ import {
   BrowserRuntimeError,
   BrowserRuntimeErrorCode,
   createLocalAccessLayer,
+  getLocalAccessLayerStorageKey,
   INITIAL_BROWSER_RUNTIME_STATE,
-  LOCAL_ACCESS_LAYER_STORAGE_KEY,
   OwnEntriesChangeMode,
   OwnEntryStore,
   type AppliedOwnEntriesChange,
   type LocalAccessLayer,
+  type OwnEntryKeysPage,
+  type OwnEntryKeysQuery,
 } from "@sam-monorepo/remote-control-program-runtime";
 import {
-  AUTOSTART_STORAGE_KEY,
+  claimLegacyAutostart,
+  getAutostartStorageKey,
   getRuntimeId,
   readAutostart,
   writeAutostart,
 } from "./browserSettings";
 import {
+  claimLegacyLogFolder,
   isBrowserRuntimeSupported,
   loadLogFolder,
+  LogFolderPick,
   pickLogFolder,
   requestLogFolderPermission,
 } from "./logFolder";
-import { findOwnEntryKeys, requestConnectionToken } from "./serverRequests";
+import { requestConnectionToken } from "./serverRequests";
+import { PendingTabCommands, toTabCommandResult } from "./tabCommands";
 import {
-  BROWSER_RUNTIME_CHANNEL_NAME,
+  getBrowserRuntimeChannelName,
   isTabMessage,
   TAB_MESSAGE_VERSION,
   TabCommandType,
   TabMessageType,
   type TabCommand,
-  type TabCommandResult,
   type TabCommandValues,
   type TabMessage,
   type TabMessageContent,
@@ -44,31 +49,6 @@ import {
   type LeaderState,
   type LogFolderStatus,
 } from "./types";
-
-/** The time for the answer of the tab of the runtime to a command */
-const COMMAND_TIMEOUT_MILLISECONDS = 15_000;
-
-/**
- * A request for older entries reads the log files of its range first. A read
- * of the logs of one year can take some minutes.
- */
-const READING_COMMAND_TIMEOUT_MILLISECONDS = 10 * 60_000;
-
-const getCommandTimeout = (type: TabCommandType) => {
-  switch (type) {
-    case TabCommandType.PrepareOlderEntriesRequest:
-      return READING_COMMAND_TIMEOUT_MILLISECONDS;
-
-    case TabCommandType.Start:
-    case TabCommandType.Stop:
-    case TabCommandType.SetRequestedWindow:
-    case TabCommandType.ConfirmOlderEntriesRequest:
-      return COMMAND_TIMEOUT_MILLISECONDS;
-
-    default:
-      throw new Error(`Unknown command type: ${type satisfies never}`);
-  }
-};
 
 const ALL_TYPES_OFF = Object.fromEntries(
   Object.values(LogAnalyzerEntryType).map((type) => [type, false]),
@@ -84,10 +64,15 @@ const INITIAL_SNAPSHOT: BrowserRuntimeSnapshot = {
   localAccess: { logEntryTypes: ALL_TYPES_OFF, stoppedAt: null },
 };
 
-interface PendingCommand {
-  readonly resolve: (value: unknown) => void;
-  readonly reject: (error: Error) => void;
-  readonly cancelTimeout: () => void;
+export interface BrowserRuntimeControllerOptions {
+  /** The version in the `hello` of the relay protocol */
+  readonly runtimeVersion: string;
+  /** The user of the session. Each citizen has an own runtime. */
+  readonly citizenId: string;
+  /** The keys of the own entries that the relay has */
+  readonly findOwnEntryKeys: (
+    query: OwnEntryKeysQuery,
+  ) => Promise<OwnEntryKeysPage>;
 }
 
 /** The runtime of this tab while it holds the Web Lock */
@@ -107,52 +92,71 @@ interface TabConnection {
   readonly broadcastChannel: BroadcastChannel;
   /** For the settings in each tab. The runtime has its own layer. */
   readonly layer: LocalAccessLayer;
-  readonly pendingCommands: Map<string, PendingCommand>;
+  readonly pendingCommands: PendingTabCommands;
   lockRequest: AbortController | null;
   releaseLock: (() => void) | null;
   leadership: Leadership | null;
 }
 
 /**
- * The browser runtime in the SAM tabs of one browser (see `README.md`). The
- * tabs elect one tab with the Web Locks API. The tab that holds the lock (the
- * leader) runs the `BrowserRuntime`. The other tabs (the followers) get its
- * state and the own entries through a BroadcastChannel, and send their
- * commands to it. When the leader closes, a follower gets the lock and
- * continues the runtime.
+ * The browser runtime of a citizen in the SAM tabs of one browser (see
+ * `README.md`). The tabs of the citizen elect one tab with the Web Locks
+ * API. The tab that holds the lock (the leader) runs the `BrowserRuntime`.
+ * The other tabs (the followers) get its state and the own entries through a
+ * BroadcastChannel, and send their commands to it. When the leader closes, a
+ * follower gets the lock and continues the runtime.
  */
 export class BrowserRuntimeController {
-  readonly #runtimeVersion: string;
+  readonly #options: BrowserRuntimeControllerOptions;
   readonly #entryStore = new OwnEntryStore();
   readonly #listeners = new Set<() => void>();
   #snapshot = INITIAL_SNAPSHOT;
   #connection: TabConnection | null = null;
+  /** After a logout, the tab does not join the election again */
+  #isSessionEnded = false;
   #entrySubscriberCount = 0;
   readonly commands: BrowserRuntimeCommands;
 
-  constructor({ runtimeVersion }: { readonly runtimeVersion: string }) {
-    this.#runtimeVersion = runtimeVersion;
+  constructor(options: BrowserRuntimeControllerOptions) {
+    this.#options = options;
     this.#entryStore.subscribe((change) => this.#broadcastEntries(change));
 
+    const { citizenId } = options;
     this.commands = {
       start: () => this.#sendCommand({ type: TabCommandType.Start }),
       stop: () => this.#sendCommand({ type: TabCommandType.Stop }),
       setAutostartEnabled: (isEnabled) => {
         if (this.#connection === null) return;
 
-        writeAutostart(localStorage, isEnabled);
+        writeAutostart(localStorage, citizenId, isEnabled);
         this.#update({ isAutostartEnabled: isEnabled });
       },
       selectFolder: async () => {
-        this.#requireConnection();
-        if (!(await pickLogFolder())) return false;
+        const connection = this.#requireConnection();
+        const pick = await pickLogFolder(citizenId);
+
+        switch (pick) {
+          case LogFolderPick.Cancelled:
+            return false;
+
+          // The live periods are the times of the previous folder
+          case LogFolderPick.OtherFolder:
+            connection.layer.removeLivePeriods();
+            break;
+
+          case LogFolderPick.SameFolder:
+            break;
+
+          default:
+            throw new Error(`Unknown folder pick: ${pick satisfies never}`);
+        }
 
         await this.#sendCommand({ type: TabCommandType.Start });
         return true;
       },
       restoreFolderPermission: async () => {
         this.#requireConnection();
-        if (!(await requestLogFolderPermission())) return false;
+        if (!(await requestLogFolderPermission(citizenId))) return false;
 
         await this.#sendCommand({ type: TabCommandType.Start });
         return true;
@@ -232,7 +236,7 @@ export class BrowserRuntimeController {
   getEntriesSnapshot = () => this.#entryStore.getSnapshot();
 
   connect() {
-    if (this.#connection !== null) return;
+    if (this.#connection !== null || this.#isSessionEnded) return;
 
     if (!isBrowserRuntimeSupported()) {
       this.#update({
@@ -241,11 +245,14 @@ export class BrowserRuntimeController {
       return;
     }
 
+    const { citizenId } = this.#options;
     const connection: TabConnection = {
       tabId: crypto.randomUUID(),
-      broadcastChannel: new BroadcastChannel(BROWSER_RUNTIME_CHANNEL_NAME),
-      layer: createLocalAccessLayer({ storage: localStorage }),
-      pendingCommands: new Map(),
+      broadcastChannel: new BroadcastChannel(
+        getBrowserRuntimeChannelName(citizenId),
+      ),
+      layer: createLocalAccessLayer({ storage: localStorage, citizenId }),
+      pendingCommands: new PendingTabCommands(),
       lockRequest: null,
       releaseLock: null,
       leadership: null,
@@ -263,7 +270,7 @@ export class BrowserRuntimeController {
     window.addEventListener("pageshow", this.#handlePageShow);
 
     this.#update({
-      isAutostartEnabled: readAutostart(localStorage),
+      isAutostartEnabled: readAutostart(localStorage, citizenId),
       localAccess: connection.layer.getSettings(),
     });
     this.#post(connection, {
@@ -273,25 +280,36 @@ export class BrowserRuntimeController {
     this.#joinElection(connection);
   }
 
+  /** The runtime continues in a different tab (see `handOver()`) */
   disconnect() {
+    const connection = this.#connection;
+    if (connection !== null) this.#close(connection, false);
+  }
+
+  /**
+   * The user logs out: the runtime of the citizen stops without a
+   * continuation, and all tabs of the citizen leave the election. A tab
+   * starts the runtime again only after a new page load.
+   */
+  endSession() {
     const connection = this.#connection;
     if (connection === null) return;
 
-    this.#leaveElection(connection);
+    this.#post(connection, { type: TabMessageType.SessionEnded });
+    this.#close(connection, true);
+  }
+
+  #close(connection: TabConnection, endsSession: boolean) {
+    if (endsSession) this.#isSessionEnded = true;
+
+    this.#leaveElection(connection, endsSession);
     this.#connection = null;
 
     connection.broadcastChannel.close();
     window.removeEventListener("storage", this.#handleStorage);
     window.removeEventListener("pagehide", this.#handlePageHide);
     window.removeEventListener("pageshow", this.#handlePageShow);
-
-    for (const pendingCommand of connection.pendingCommands.values()) {
-      pendingCommand.cancelTimeout();
-      pendingCommand.reject(
-        new BrowserRuntimeError(BrowserRuntimeErrorCode.NoAnswer),
-      );
-    }
-    connection.pendingCommands.clear();
+    connection.pendingCommands.rejectAll();
 
     this.#update(INITIAL_SNAPSHOT);
   }
@@ -304,6 +322,7 @@ export class BrowserRuntimeController {
   #requireConnection() {
     if (this.#connection === null)
       throw new BrowserRuntimeError(BrowserRuntimeErrorCode.NotSupported);
+    return this.#connection;
   }
 
   #post(connection: TabConnection, content: TabMessageContent) {
@@ -345,7 +364,7 @@ export class BrowserRuntimeController {
 
     navigator.locks
       .request(
-        BROWSER_RUNTIME_CHANNEL_NAME,
+        getBrowserRuntimeChannelName(this.#options.citizenId),
         { signal: lockRequest.signal },
         // The tab holds the lock until it resolves the promise
         () =>
@@ -375,9 +394,10 @@ export class BrowserRuntimeController {
 
   /**
    * The runtime gives its live period and its run record to the next tab
-   * before the tab releases the lock
+   * before the tab releases the lock. At a logout, it ends without a
+   * continuation.
    */
-  #leaveElection(connection: TabConnection) {
+  #leaveElection(connection: TabConnection, endsSession = false) {
     connection.lockRequest?.abort();
     connection.lockRequest = null;
 
@@ -385,7 +405,8 @@ export class BrowserRuntimeController {
     if (leadership !== null) {
       connection.leadership = null;
       leadership.unsubscribe();
-      leadership.runtime.handOver();
+      if (endsSession) leadership.runtime.endSession();
+      else leadership.runtime.handOver();
       this.#update({ tabRole: BrowserRuntimeTabRole.Inactive });
     }
 
@@ -408,25 +429,37 @@ export class BrowserRuntimeController {
     const connection = this.#connection;
     if (connection === null || event.storageArea !== localStorage) return;
 
+    const { citizenId } = this.#options;
+
     // A null key: a different tab cleared the storage
-    if (event.key === null || event.key === LOCAL_ACCESS_LAYER_STORAGE_KEY) {
+    if (
+      event.key === null ||
+      event.key === getLocalAccessLayerStorageKey(citizenId)
+    ) {
       connection.leadership?.runtime.handleLocalAccessChange();
       this.#update({ localAccess: connection.layer.getSettings() });
     }
 
-    if (event.key === null || event.key === AUTOSTART_STORAGE_KEY)
-      this.#update({ isAutostartEnabled: readAutostart(localStorage) });
+    if (event.key === null || event.key === getAutostartStorageKey(citizenId))
+      this.#update({
+        isAutostartEnabled: readAutostart(localStorage, citizenId),
+      });
   };
 
   async #becomeLeader(connection: TabConnection) {
-    const runtimeId = getRuntimeId(localStorage);
+    const { citizenId, runtimeVersion, findOwnEntryKeys } = this.#options;
+    // The previous leader does not answer the commands of this tab any more
+    connection.pendingCommands.setLeader(connection.tabId);
+
+    const runtimeId = getRuntimeId(localStorage, citizenId);
     const runtime = new BrowserRuntime({
+      citizenId,
       runtimeId,
-      runtimeVersion: this.#runtimeVersion,
+      runtimeVersion,
       storage: localStorage,
       entryStore: this.#entryStore,
       requestConnectionToken: (signal) =>
-        requestConnectionToken(runtimeId, signal),
+        requestConnectionToken(runtimeId, citizenId, signal),
       findOwnEntryKeys,
     });
 
@@ -454,10 +487,23 @@ export class BrowserRuntimeController {
     this.#update({ tabRole: BrowserRuntimeTabRole.Leader });
     this.#publishLeaderState(connection, leadership);
 
+    try {
+      claimLegacyAutostart(localStorage, citizenId);
+      await claimLegacyLogFolder(citizenId);
+    } catch (error) {
+      console.error(
+        "[Remote Control Program] Error taking over the settings of the old Log Analyzer:",
+        error,
+      );
+    }
+    if (connection.leadership !== leadership) return;
+
+    const isAutostartEnabled = readAutostart(localStorage, citizenId);
+    this.#update({ isAutostartEnabled });
     await this.#applyFolder(
       connection,
       leadership,
-      runtime.shouldRun(readAutostart(localStorage)),
+      runtime.shouldRun(isAutostartEnabled),
     );
   }
 
@@ -493,7 +539,7 @@ export class BrowserRuntimeController {
     let folderHandle: FileSystemDirectoryHandle | null;
     let folder: LogFolderStatus;
     try {
-      const loadedFolder = await loadLogFolder();
+      const loadedFolder = await loadLogFolder(this.#options.citizenId);
       folderHandle = loadedFolder.handle;
       folder = loadedFolder.status;
 
@@ -547,6 +593,7 @@ export class BrowserRuntimeController {
         // A late message of the previous leader
         if (leadership !== null) return;
 
+        connection.pendingCommands.setLeader(data.senderTabId);
         this.#update({
           ...data.state,
           tabRole: BrowserRuntimeTabRole.Follower,
@@ -593,7 +640,11 @@ export class BrowserRuntimeController {
 
       case TabMessageType.CommandAnswered:
         if (data.recipientTabId === connection.tabId)
-          this.#settleCommand(connection, data.commandId, data.result);
+          connection.pendingCommands.settle(data.commandId, data.result);
+        return;
+
+      case TabMessageType.SessionEnded:
+        this.#close(connection, true);
         return;
 
       default:
@@ -618,24 +669,13 @@ export class BrowserRuntimeController {
         TabCommandValues[Command["type"]]
       >;
 
-    return new Promise((resolve, reject) => {
-      const commandId = crypto.randomUUID();
-      const timeout = window.setTimeout(() => {
-        connection.pendingCommands.delete(commandId);
-        reject(new BrowserRuntimeError(BrowserRuntimeErrorCode.NoAnswer));
-      }, getCommandTimeout(command.type));
-
-      connection.pendingCommands.set(commandId, {
-        resolve: resolve as (value: unknown) => void,
-        reject,
-        cancelTimeout: () => window.clearTimeout(timeout),
-      });
+    return connection.pendingCommands.wait(command, (commandId) =>
       this.#post(connection, {
         type: TabMessageType.CommandSent,
         commandId,
         command,
-      });
-    });
+      }),
+    );
   }
 
   async #runCommand(
@@ -686,27 +726,9 @@ export class BrowserRuntimeController {
     commandId: string,
     command: TabCommand,
   ) {
-    let result: TabCommandResult;
-    try {
-      result = {
-        isSuccess: true,
-        value: await this.#runCommand(connection, command),
-      };
-    } catch (error) {
-      if (!(error instanceof BrowserRuntimeError))
-        console.error(
-          "[Remote Control Program] Error in a command of a different tab:",
-          error,
-        );
-
-      result = {
-        isSuccess: false,
-        errorCode:
-          error instanceof BrowserRuntimeError
-            ? error.code
-            : BrowserRuntimeErrorCode.NoAnswer,
-      };
-    }
+    const result = await toTabCommandResult(() =>
+      this.#runCommand(connection, command),
+    );
     if (this.#connection !== connection) return;
 
     this.#post(connection, {
@@ -717,24 +739,9 @@ export class BrowserRuntimeController {
     });
   }
 
-  #settleCommand(
-    connection: TabConnection,
-    commandId: string,
-    result: TabCommandResult,
-  ) {
-    const pendingCommand = connection.pendingCommands.get(commandId);
-    if (pendingCommand === undefined) return;
-
-    connection.pendingCommands.delete(commandId);
-    pendingCommand.cancelTimeout();
-
-    if (result.isSuccess) pendingCommand.resolve(result.value);
-    else pendingCommand.reject(new BrowserRuntimeError(result.errorCode));
-  }
-
   /**
-   * The tab of the runtime changes the rules through the runtime: it ends
-   * its live period at the exact time of a "Stop all", and tells the relay
+   * The tab of the runtime changes the rules through the runtime: it removes
+   * the live periods at the exact time of a "Stop all", and tells the relay
    * at once. The other tabs change the storage, and the runtime gets the
    * `storage` event.
    */

@@ -3,13 +3,9 @@ import {
   RELAY_LIMITS,
   UpMessageType,
   createUpMessage,
-  type FeedEntriesContent,
+  type FeedEntriesSource,
 } from "@sam-monorepo/domain";
-
-type FeedEntry = FeedEntriesContent["entries"][number];
-
-/** The capability and the connector of a batch, with their versions */
-export type FeedEntriesSource = Omit<FeedEntriesContent, "entries">;
+import type { FeedEntry } from "./channelTypes.js";
 
 export interface QueuedBatch {
   readonly source: FeedEntriesSource;
@@ -39,6 +35,17 @@ const getEmptyBatchByteLength = (source: FeedEntriesSource) =>
     JSON.stringify(
       createUpMessage(UpMessageType.FeedEntries, { ...source, entries: [] }),
     ),
+  );
+
+/** The bytes of a `feed_entries` message with the entries */
+const getBatchByteLength = (
+  source: FeedEntriesSource,
+  entries: readonly FeedEntry[],
+) =>
+  entries.reduce(
+    (byteLength, entry, index) =>
+      byteLength + (index > 0 ? 1 : 0) + getByteLength(JSON.stringify(entry)),
+    getEmptyBatchByteLength(source),
   );
 
 export interface AddedEntries {
@@ -162,6 +169,24 @@ export class UploadQueue {
       ...this.#waitingBatches,
     ];
     this.#sentBatches.clear();
+  }
+
+  /**
+   * Keeps only the given entries of a waiting batch. A batch without entries
+   * leaves the queue.
+   */
+  keepEntries(batch: QueuedBatch, entries: readonly FeedEntry[]) {
+    this.#entryCount -= batch.entries.length - entries.length;
+
+    if (entries.length === 0) {
+      this.#waitingBatches = this.#waitingBatches.filter(
+        (waitingBatch) => waitingBatch !== batch,
+      );
+      return;
+    }
+
+    batch.entries.splice(0, batch.entries.length, ...entries);
+    batch.byteLength = getBatchByteLength(batch.source, entries);
   }
 
   removeWaiting(shouldRemove: (batch: QueuedBatch) => boolean) {

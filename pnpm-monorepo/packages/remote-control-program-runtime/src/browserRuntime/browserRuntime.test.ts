@@ -1,110 +1,42 @@
 import {
-  AcknowledgementResult,
   DownMessageType,
   LogAnalyzerEntryType,
   UpMessageType,
   createDownMessage,
-  upMessageSchema,
-  type DownMessage,
-  type UpMessage,
-  type UpMessageOfType,
 } from "@sam-monorepo/domain";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
-import type {
-  ChannelTimers,
-  ChannelWebSocket,
-  ChannelWebSocketHandlers,
-} from "../channel/channelClient.js";
 import { createLocalAccessLayer } from "../localAccess/localAccessLayer.js";
 import type { RawMatch } from "../logFile/types.js";
 import {
-  BrowserRuntime,
+  FAKE_TIMERS,
+  FakeWebSocket,
+  createMemoryStorage,
+} from "../testing/fakes.js";
+import { BrowserRuntime } from "./browserRuntime.js";
+import {
   BrowserRuntimeError,
   BrowserRuntimeErrorCode,
-  type OwnEntryKeysPage,
-  type OwnEntryKeysQuery,
-} from "./browserRuntime.js";
+} from "./browserRuntimeState.js";
 import type { LogFolderReader } from "./logFolderReader.js";
 import { OwnEntryStore } from "./ownEntryStore.js";
+import type { OwnEntryKeysPage, OwnEntryKeysQuery } from "./relayKeys.js";
 
+const CITIZEN_ID = "citizen";
 const RUNTIME_ID = "0b9f8a52-6d3e-4c55-9b7a-2f1c4d8e6a10";
 const START_TIME = Date.parse("2026-11-23T18:00:00.000Z");
 const SECOND = 1_000;
-const DAY = 24 * 60 * 60 * SECOND;
+const MINUTE = 60 * SECOND;
+const DAY = 24 * 60 * MINUTE;
 
 /** The runtime only gives the handle to the reader */
 const FOLDER = {} as FileSystemDirectoryHandle;
-
-/** The clock of the fake timers of Vitest, for the runtime and the channel */
-const TIMERS: ChannelTimers = {
-  now: () => Date.now(),
-  schedule: (callback, delayMilliseconds) => {
-    const handle = setTimeout(callback, delayMilliseconds);
-    return () => clearTimeout(handle);
-  },
-};
-
-const createMemoryStorage = () => {
-  const values = new Map<string, string>();
-
-  return {
-    getItem: (key: string) => values.get(key) ?? null,
-    setItem: (key: string, value: string) => {
-      values.set(key, value);
-    },
-    removeItem: (key: string) => {
-      values.delete(key);
-    },
-  };
-};
-
-class FakeWebSocket implements ChannelWebSocket {
-  readonly sentMessages: UpMessage[] = [];
-
-  constructor(readonly handlers: ChannelWebSocketHandlers) {}
-
-  send(data: string) {
-    const message = upMessageSchema.parse(JSON.parse(data));
-    this.sentMessages.push(message);
-
-    // Answers each heartbeat like a working relay
-    if (message.type === UpMessageType.Heartbeat)
-      queueMicrotask(() => this.acknowledge(message));
-  }
-
-  close() {}
-
-  receive(message: DownMessage) {
-    this.handlers.onMessage(JSON.stringify(message));
-  }
-
-  acknowledge(message: UpMessage) {
-    this.receive(
-      createDownMessage(DownMessageType.Acknowledgement, {
-        message_id: message.id,
-        result: AcknowledgementResult.Accepted,
-      }),
-    );
-  }
-
-  getSent<Type extends UpMessageType>(type: Type) {
-    return this.sentMessages.filter(
-      (message): message is UpMessageOfType<Type> => message.type === type,
-    );
-  }
-
-  getSentRawLines() {
-    return this.getSent(UpMessageType.FeedEntries).flatMap((message) =>
-      message.content.entries.map((entry) => entry.raw_line),
-    );
-  }
-}
+const OTHER_FOLDER = {} as FileSystemDirectoryHandle;
 
 /**
- * The log folder of the game. Each tab has its own reader, and each read
+ * A log folder of the game. Each tab has its own reader, and each read
  * gives the lines since the last read of that reader.
  */
-const createLogFolder = () => {
+const createLogFolder = (name: string) => {
   const matches: RawMatch[] = [];
 
   return {
@@ -114,8 +46,8 @@ const createLogFolder = () => {
       const match: RawMatch = {
         type: LogAnalyzerEntryType.JoinPu,
         isoDate,
-        rawLine: `<${isoDate}> line ${lineNumber}`,
-        hash: `hash-${lineNumber}`,
+        rawLine: `<${isoDate}> ${name} line ${lineNumber}`,
+        hash: `${name}-hash-${lineNumber}`,
         groups: {},
         lineNumber,
       };
@@ -123,11 +55,8 @@ const createLogFolder = () => {
       return match;
     },
     /** The relay calculates the key from the line */
-    getHash: (rawLine: string) => {
-      const match = matches.find((candidate) => candidate.rawLine === rawLine);
-      if (!match) throw new Error("Unknown line");
-      return match.hash;
-    },
+    findHash: (rawLine: string) =>
+      matches.find((candidate) => candidate.rawLine === rawLine)?.hash,
     createReader: (): LogFolderReader => {
       let readCount = 0;
 
@@ -154,10 +83,11 @@ const createLogFolder = () => {
   };
 };
 
-/** One browser: the storage and the log folder that all tabs share */
+/** One browser profile: the storage and the log folders that all tabs share */
 const createBrowser = () => {
   const storage = createMemoryStorage();
-  const folder = createLogFolder();
+  const folder = createLogFolder("live");
+  const otherFolder = createLogFolder("ptu");
   /** The keys of the entries that the relay has */
   const relayKeys = new Set<string>();
   const findOwnEntryKeys = vi.fn(
@@ -167,11 +97,19 @@ const createBrowser = () => {
     }),
   );
 
-  /** The runtime of the tab that holds the Web Lock */
-  const openTab = () => {
+  /** Turns on the type of the lines for the citizen */
+  const turnOnLines = (citizenId = CITIZEN_ID) =>
+    createLocalAccessLayer({ storage, citizenId }).setLogEntryTypes(
+      [LogAnalyzerEntryType.JoinPu],
+      true,
+    );
+
+  /** The runtime of the tab that holds the Web Lock of the citizen */
+  const openTab = (citizenId = CITIZEN_ID) => {
     const sockets: FakeWebSocket[] = [];
 
     const runtime = new BrowserRuntime({
+      citizenId,
       runtimeId: RUNTIME_ID,
       runtimeVersion: "1",
       storage,
@@ -181,27 +119,25 @@ const createBrowser = () => {
         relayUrl: new URL("wss://relay.example.test/"),
       }),
       findOwnEntryKeys,
-      createLogFolderReader: () => folder.createReader(),
+      createLogFolderReader: (handle) =>
+        (handle === OTHER_FOLDER ? otherFolder : folder).createReader(),
       createWebSocket: (_url, handlers) => {
         const socket = new FakeWebSocket(handlers);
         sockets.push(socket);
         return socket;
       },
-      timers: TIMERS,
+      timers: FAKE_TIMERS,
       random: () => 1,
     });
 
-    /** Starts the runtime, and answers the handshake like the relay */
-    const start = async () => {
-      runtime.start(FOLDER);
-      await vi.advanceTimersByTimeAsync(0);
-
+    /** Answers the handshake of the last connection like the relay */
+    const handshake = async (isStopped = false) => {
       const socket = sockets.at(-1);
       if (!socket) throw new Error("No socket");
 
       socket.handlers.onOpen();
       socket.receive(
-        createDownMessage(DownMessageType.Welcome, { is_stopped: false }),
+        createDownMessage(DownMessageType.Welcome, { is_stopped: isStopped }),
       );
       const announcement = socket.getSent(UpMessageType.Announce).at(-1);
       if (!announcement) throw new Error("No announce");
@@ -211,23 +147,39 @@ const createBrowser = () => {
       return socket;
     };
 
-    return { runtime, start };
+    const start = async (handle = FOLDER) => {
+      runtime.start(handle);
+      await vi.advanceTimersByTimeAsync(0);
+      return handshake();
+    };
+
+    /** All lines that the connections of the runtime sent */
+    const getSentRawLines = () =>
+      sockets.flatMap((socket) => socket.getSentRawLines());
+
+    return { runtime, start, handshake, getSentRawLines };
   };
 
   /** The relay accepts the sent entries */
   const acknowledgeUploads = (socket: FakeWebSocket) => {
     for (const message of socket.getSent(UpMessageType.FeedEntries)) {
       socket.acknowledge(message);
-      for (const entry of message.content.entries)
-        relayKeys.add(folder.getHash(entry.raw_line));
+      for (const entry of message.content.entries) {
+        const hash =
+          folder.findHash(entry.raw_line) ??
+          otherFolder.findHash(entry.raw_line);
+        if (hash === undefined) throw new Error("Unknown line");
+        relayKeys.add(hash);
+      }
     }
   };
 
   return {
-    storage,
     folder,
+    otherFolder,
     relayKeys,
     findOwnEntryKeys,
+    turnOnLines,
     openTab,
     acknowledgeUploads,
   };
@@ -243,10 +195,7 @@ afterEach(() => {
 
 test("after a change of the active tab, the next runtime sends only the entries that the relay does not have", async () => {
   const browser = createBrowser();
-  createLocalAccessLayer({ storage: browser.storage }).setLogEntryTypes(
-    [LogAnalyzerEntryType.JoinPu],
-    true,
-  );
+  browser.turnOnLines();
   // From a time without a running runtime: it stays on the machine
   browser.folder.write(START_TIME - 60 * SECOND);
 
@@ -338,10 +287,7 @@ test.each([
   "after $end and a start within 30 seconds, the lines of the gap go up: $isGapUploaded",
   async ({ isGapUploaded, endAndStartAgain }) => {
     const browser = createBrowser();
-    createLocalAccessLayer({ storage: browser.storage }).setLogEntryTypes(
-      [LogAnalyzerEntryType.JoinPu],
-      true,
-    );
+    browser.turnOnLines();
 
     const tab = browser.openTab();
     const firstSocket = await tab.start();
@@ -367,10 +313,7 @@ test.each([
 
 test("a request for older entries leaves out the entries that go up automatically and the entries that the relay has", async () => {
   const browser = createBrowser();
-  createLocalAccessLayer({ storage: browser.storage }).setLogEntryTypes(
-    [LogAnalyzerEntryType.JoinPu],
-    true,
-  );
+  browser.turnOnLines();
   const sharedEntry = browser.folder.write(START_TIME - 2 * DAY);
   const olderEntry = browser.folder.write(START_TIME - DAY);
   browser.relayKeys.add(sharedEntry.hash);
@@ -405,4 +348,85 @@ test("a request for older entries leaves out the entries that go up automaticall
   expect(() => tab.runtime.confirmOlderEntriesRequest(request.id)).toThrow(
     new BrowserRuntimeError(BrowserRuntimeErrorCode.RequestExpired),
   );
+});
+
+test("a Stop all of the owner that the runtime learns at a reconnect keeps the lines of the disconnect on the machine, also after the start and a change of the active tab", async () => {
+  const browser = createBrowser();
+  browser.turnOnLines();
+
+  const tab = browser.openTab();
+  const firstSocket = await tab.start();
+  firstSocket.handlers.onClose(1006);
+  await vi.advanceTimersByTimeAsync(5 * SECOND);
+  // The line of the disconnect
+  browser.folder.write(Date.now());
+  await vi.advanceTimersByTimeAsync(10 * SECOND);
+
+  // The owner stopped all during the disconnect, and starts again later
+  const secondSocket = await tab.handshake(true);
+  secondSocket.receive(createDownMessage(DownMessageType.Start, {}));
+  await vi.advanceTimersByTimeAsync(10 * SECOND);
+
+  tab.runtime.handOver();
+  const nextTab = browser.openTab();
+  await nextTab.start();
+  await vi.advanceTimersByTimeAsync(10 * SECOND);
+
+  expect([...tab.getSentRawLines(), ...nextTab.getSentRawLines()]).toEqual([]);
+});
+
+test("after a change of the log folder, no line of the new folder goes up from the live periods of the previous folder", async () => {
+  const browser = createBrowser();
+  browser.turnOnLines();
+
+  const tab = browser.openTab();
+  await tab.start(FOLDER);
+  await vi.advanceTimersByTimeAsync(10 * MINUTE);
+  // No runtime reads the other folder live
+  browser.otherFolder.write(Date.now());
+  await vi.advanceTimersByTimeAsync(10 * MINUTE);
+
+  await tab.start(OTHER_FOLDER);
+  const lineAfterChange = browser.otherFolder.write(Date.now());
+  await vi.advanceTimersByTimeAsync(10 * SECOND);
+
+  expect(tab.getSentRawLines()).toEqual([lineAfterChange.rawLine]);
+});
+
+test("the citizens of one browser profile do not share the run record, the rules or the live periods", async () => {
+  const browser = createBrowser();
+  browser.turnOnLines("first-citizen");
+
+  const firstTab = browser.openTab("first-citizen");
+  await firstTab.start();
+  await vi.advanceTimersByTimeAsync(5 * SECOND);
+  const lineOfFirstCitizen = browser.folder.write(Date.now());
+  await vi.advanceTimersByTimeAsync(10 * SECOND);
+  // The relay did not confirm the line yet
+  expect(firstTab.getSentRawLines()).toEqual([lineOfFirstCitizen.rawLine]);
+
+  // The first citizen closes the tab, and a second citizen logs in
+  firstTab.runtime.handOver();
+  await vi.advanceTimersByTimeAsync(2 * SECOND);
+
+  const secondTab = browser.openTab("second-citizen");
+  expect(secondTab.runtime.shouldRun(false)).toBe(false);
+  expect(
+    secondTab.runtime.getLocalAccessSettings().logEntryTypes[
+      LogAnalyzerEntryType.JoinPu
+    ],
+  ).toBe(false);
+
+  browser.turnOnLines("second-citizen");
+  await secondTab.start();
+  await vi.advanceTimersByTimeAsync(10 * SECOND);
+  expect(secondTab.getSentRawLines()).toEqual([]);
+
+  // The first citizen continues the own live period
+  const nextTabOfFirstCitizen = browser.openTab("first-citizen");
+  await nextTabOfFirstCitizen.start();
+  await vi.advanceTimersByTimeAsync(10 * SECOND);
+  expect(nextTabOfFirstCitizen.getSentRawLines()).toEqual([
+    lineOfFirstCitizen.rawLine,
+  ]);
 });

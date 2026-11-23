@@ -42,14 +42,10 @@ export interface LogFile {
   readonly file: File;
 }
 
+/** Reads the lines of the files which were added since the last request */
 export interface ParseRequest {
   readonly id: number;
   readonly files: readonly LogFile[];
-  /**
-   * Reads the files from their start, not only the lines which were added
-   * since the last request.
-   */
-  readonly isFullRead: boolean;
 }
 
 /** Stops each request with a lower id between two files. */
@@ -68,8 +64,6 @@ export interface ReadProgress {
 /** A stopped read holds the matches of the files which it completed. */
 export interface ReadResult {
   readonly matches: RawMatch[];
-  readonly readFileCount: number;
-  readonly readByteCount: number;
   /**
    * The time of the newest timestamped line of all files which the reader
    * read so far. It moves forward while the game runs and writes its log.

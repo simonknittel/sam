@@ -352,19 +352,14 @@ interface ReadOptions {
  * Each match has the line with the IP marker and its hash (see `RawMatch`).
  * The last line of a live file without a line end gives no match until the
  * game writes its line end (see `readFile`).
- *
- * `isFullRead` reads all files from their start and gives all matches again.
  */
 export const createLogFileReader = () => {
   const states = new Map<string, FileState>();
 
   return async (
     files: readonly LogFile[],
-    isFullRead: boolean,
     { onProgress, shouldStop }: ReadOptions = {},
   ): Promise<ReadResult> => {
-    if (isFullRead) states.clear();
-
     const changedFiles = files.filter(({ path, file }) => {
       const state = states.get(path);
       return (
@@ -404,8 +399,6 @@ export const createLogFileReader = () => {
 
     return {
       matches,
-      readFileCount,
-      readByteCount,
       newestIsoDate: findNewestIsoDate(states.values()),
     };
   };

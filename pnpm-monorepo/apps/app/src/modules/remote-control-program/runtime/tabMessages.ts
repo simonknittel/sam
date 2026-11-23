@@ -1,21 +1,28 @@
-import type {
-  BrowserRuntimeErrorCode,
-  EntryWindow,
-  OlderEntriesTimeRange,
-  OwnEntriesChange,
-  PreparedOlderEntriesRequest,
+import {
+  toCitizenKey,
+  type BrowserRuntimeErrorCode,
+  type EntryWindow,
+  type OlderEntriesTimeRange,
+  type OwnEntriesChange,
+  type PreparedOlderEntriesRequest,
 } from "@sam-monorepo/remote-control-program-runtime";
 import type { LeaderState } from "./types";
 
 /**
- * The messages between the SAM tabs of one browser. The tab that holds the
- * Web Lock runs the runtime (the leader). It sends its state and the own
- * entries to the other tabs (the followers), and runs their commands.
+ * The messages between the SAM tabs of one citizen in one browser. The tab
+ * that holds the Web Lock runs the runtime (the leader). It sends its state
+ * and the own entries to the other tabs (the followers), and runs their
+ * commands.
  */
 
-/** The name of the Web Lock and of the BroadcastChannel */
-export const BROWSER_RUNTIME_CHANNEL_NAME =
-  "remote_control_program_browser_runtime";
+const BROWSER_RUNTIME_CHANNEL_NAME = "remote_control_program_browser_runtime";
+
+/**
+ * The name of the Web Lock and of the BroadcastChannel of the citizen. The
+ * tabs of a different citizen in the same browser elect their own runtime.
+ */
+export const getBrowserRuntimeChannelName = (citizenId: string) =>
+  toCitizenKey(BROWSER_RUNTIME_CHANNEL_NAME, citizenId);
 
 /**
  * A tab ignores the messages of a different version, for example of a tab
@@ -34,6 +41,11 @@ export enum TabMessageType {
   CommandSent = "command_sent",
   /** Leader to the follower of the command */
   CommandAnswered = "command_answered",
+  /**
+   * Any tab to all: the user logs out. The runtime stops without a
+   * continuation, and all tabs leave the election.
+   */
+  SessionEnded = "session_ended",
 }
 
 export enum TabCommandType {
@@ -98,7 +110,8 @@ export type TabMessageContent =
       readonly commandId: string;
       readonly recipientTabId: string;
       readonly result: TabCommandResult;
-    };
+    }
+  | { readonly type: TabMessageType.SessionEnded };
 
 export type TabMessage = TabMessageContent & {
   readonly version: typeof TAB_MESSAGE_VERSION;

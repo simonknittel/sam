@@ -2,6 +2,7 @@
 
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
+import { useEndBrowserRuntimeSession } from "@/modules/remote-control-program/runtime/useBrowserRuntime";
 import { signOut } from "next-auth/react";
 import { useState } from "react";
 import { RiLogoutCircleRLine } from "react-icons/ri";
@@ -12,9 +13,11 @@ interface Props {
 
 export const LogoutButton = ({ className }: Props) => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const endBrowserRuntimeSession = useEndBrowserRuntimeSession();
 
   const handleClick = async () => {
     setIsLoggingOut(true);
+    endBrowserRuntimeSession();
     await signOut({
       callbackUrl: "/",
     });

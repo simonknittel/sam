@@ -1,11 +1,9 @@
 import { describe, expect, test } from "vitest";
 import {
-  clampLogAnalyzerDaysToLoad,
   collectLogAnalyzerEntryVersions,
   createLogAnalyzerEntryHash,
   LOG_ANALYZER_ENTRY_HASH_PATTERN,
   LogAnalyzerEntryType,
-  MAXIMUM_LOG_ANALYZER_DAYS_TO_LOAD,
   toLogAnalyzerEntryType,
 } from "./logAnalyzerEntries.js";
 
@@ -97,15 +95,5 @@ describe("createLogAnalyzerEntryHash", () => {
     );
 
     expect(hash).toMatch(LOG_ANALYZER_ENTRY_HASH_PATTERN);
-  });
-});
-
-describe("clampLogAnalyzerDaysToLoad", () => {
-  test("keeps a setting inside the accepted range", () => {
-    expect(clampLogAnalyzerDaysToLoad(-1)).toBe(0);
-    expect(clampLogAnalyzerDaysToLoad(14)).toBe(14);
-    expect(
-      clampLogAnalyzerDaysToLoad(MAXIMUM_LOG_ANALYZER_DAYS_TO_LOAD + 1),
-    ).toBe(MAXIMUM_LOG_ANALYZER_DAYS_TO_LOAD);
   });
 });

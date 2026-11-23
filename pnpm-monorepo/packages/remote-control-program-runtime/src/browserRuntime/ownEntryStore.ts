@@ -53,15 +53,10 @@ const compareByAge = (first: RawMatch, second: RawMatch) => {
  * `useSyncExternalStore`.
  */
 export class OwnEntryStore {
-  readonly #maximumEntryCount: number;
   #entries = new Map<string, RawMatch>();
   #snapshot: ReadonlyMap<string, RawMatch> = new Map();
   #isSnapshotCurrent = true;
   readonly #listeners = new Set<OwnEntriesListener>();
-
-  constructor(maximumEntryCount = MAXIMUM_OWN_ENTRIES) {
-    this.#maximumEntryCount = maximumEntryCount;
-  }
 
   get size() {
     return this.#entries.size;
@@ -146,11 +141,9 @@ export class OwnEntryStore {
 
   /** Removes the oldest entries above the limit, and returns their keys */
   #prune() {
-    if (this.#entries.size <= this.#maximumEntryCount) return [];
+    if (this.#entries.size <= MAXIMUM_OWN_ENTRIES) return [];
 
-    const keptCount = Math.floor(
-      this.#maximumEntryCount * SHARE_KEPT_AFTER_PRUNE,
-    );
+    const keptCount = Math.floor(MAXIMUM_OWN_ENTRIES * SHARE_KEPT_AFTER_PRUNE);
     const prunedEntries = Array.from(this.#entries.values())
       .sort(compareByAge)
       .slice(0, this.#entries.size - keptCount);

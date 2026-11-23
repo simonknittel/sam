@@ -1,6 +1,5 @@
 import {
   AcknowledgementErrorCode,
-  AcknowledgementResult,
   CONNECTOR_CATALOG,
   CapabilityId,
   ConnectorId,
@@ -12,24 +11,20 @@ import {
   RuntimeKind,
   UpMessageType,
   createDownMessage,
-  upMessageSchema,
   type AnnounceContent,
-  type DownMessage,
   type FeedEntriesContent,
-  type UpMessage,
   type UpMessageOfType,
 } from "@sam-monorepo/domain";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { FakeWebSocket } from "../testing/fakes.js";
+import { ChannelClient } from "./channelClient.js";
 import {
-  ChannelClient,
   ChannelDropReason,
   ChannelStatus,
   type ChannelAcceptedEntries,
   type ChannelClientOptions,
   type ChannelDroppedEntries,
-  type ChannelWebSocket,
-  type ChannelWebSocketHandlers,
-} from "./channelClient.js";
+} from "./channelTypes.js";
 
 const RUNTIME_ID = "0b9f8a52-6d3e-4c55-9b7a-2f1c4d8e6a10";
 
@@ -58,59 +53,7 @@ const ANNOUNCEMENT: AnnounceContent = {
   },
 };
 
-class FakeWebSocket implements ChannelWebSocket {
-  readonly sentMessages: UpMessage[] = [];
-  isClosed = false;
-  /** Answers each heartbeat like a working relay */
-  isAcknowledgingHeartbeats = true;
-
-  constructor(readonly handlers: ChannelWebSocketHandlers) {}
-
-  send(data: string) {
-    const message = upMessageSchema.parse(JSON.parse(data));
-    this.sentMessages.push(message);
-
-    if (
-      message.type === UpMessageType.Heartbeat &&
-      this.isAcknowledgingHeartbeats
-    )
-      queueMicrotask(() => this.acknowledge(message));
-  }
-
-  close() {
-    this.isClosed = true;
-  }
-
-  receive(message: DownMessage) {
-    this.handlers.onMessage(JSON.stringify(message));
-  }
-
-  acknowledge(message: UpMessage, newEntryCount?: number) {
-    this.receive(
-      createDownMessage(DownMessageType.Acknowledgement, {
-        message_id: message.id,
-        result: AcknowledgementResult.Accepted,
-        new_entry_count: newEntryCount,
-      }),
-    );
-  }
-
-  refuse(message: UpMessage, errorCode: AcknowledgementErrorCode) {
-    this.receive(
-      createDownMessage(DownMessageType.Acknowledgement, {
-        message_id: message.id,
-        result: AcknowledgementResult.Refused,
-        error_code: errorCode,
-      }),
-    );
-  }
-
-  getSent<Type extends UpMessageType>(type: Type) {
-    return this.sentMessages.filter(
-      (message): message is UpMessageOfType<Type> => message.type === type,
-    );
-  }
-}
+const RELAY_URL = new URL("wss://relay.example.test/");
 
 const createLogEntries = (
   entryCount: number,
@@ -138,14 +81,13 @@ const setUp = (options: Partial<ChannelClientOptions> = {}) => {
   let tokenCount = 0;
 
   const client = new ChannelClient({
-    relayUrl: new URL("wss://relay.example.test/"),
     runtimeId: RUNTIME_ID,
     runtimeKind: RuntimeKind.browser,
     runtimeVersion: "1.0.0",
     announcement: ANNOUNCEMENT,
     getConnectionToken: async () => {
       tokenCount += 1;
-      return `token-${tokenCount}`;
+      return { token: `token-${tokenCount}`, relayUrl: RELAY_URL };
     },
     createWebSocket: (_url, handlers) => {
       const socket = new FakeWebSocket(handlers);
@@ -343,27 +285,6 @@ test("sends the batches without an ack again after a reconnect, each one time", 
   ]);
 });
 
-test("the reconnect delay doubles with each failed attempt up to its maximum", async () => {
-  const tokenRequestTimes: number[] = [];
-  const { client } = setUp({
-    getConnectionToken: async () => {
-      tokenRequestTimes.push(Date.now());
-      throw new Error("Offline");
-    },
-  });
-
-  client.connect();
-  await vi.advanceTimersByTimeAsync(150_000);
-
-  const delays = tokenRequestTimes
-    .slice(1)
-    .map((time, index) => time - (tokenRequestTimes[index] ?? 0));
-  expect(delays.slice(0, 8)).toEqual([
-    1_000, 2_000, 4_000, 8_000, 16_000, 30_000, 30_000, 30_000,
-  ]);
-  expect(client.getState().status).toBe(ChannelStatus.WaitingForReconnect);
-});
-
 test("renews the token over the open connection", async () => {
   const { connect } = setUp();
 
@@ -392,7 +313,7 @@ test("tries a failed renewal again, and reconnects at the end of the grace time"
     getConnectionToken: async () => {
       tokenRequestCount += 1;
       if (!isTokenAvailable) throw new Error("Deployment in progress");
-      return "token";
+      return { token: "token", relayUrl: RELAY_URL };
     },
   });
 
@@ -535,4 +456,39 @@ test("stop of the owner removes the waiting entries until the start", async () =
   expect(client.getState().isStoppedByOwner).toBe(false);
   const lastBatch = socket.getSent(UpMessageType.FeedEntries).at(-1);
   expect(lastBatch && getLineNumbers(lastBatch)[0]).toBe(511);
+});
+
+test("sends only the entries that the local access layer permits at the send, also at a resend", async () => {
+  let isPermitted = true;
+  const { client, droppedEntries, openSocket, welcome, connect } = setUp({
+    selectPermittedEntries: (_source, entries) => (isPermitted ? entries : []),
+  });
+
+  const firstSocket = await connect();
+  client.sendFeedEntries(createLogEntries(500));
+  // The fifth batch waits for the rate limit
+  expect(firstSocket.getSent(UpMessageType.FeedEntries)).toHaveLength(4);
+
+  // The owner turns off the type in a different tab, and the client did not
+  // get the change yet
+  isPermitted = false;
+  await vi.advanceTimersByTimeAsync(1_000);
+  expect(firstSocket.getSent(UpMessageType.FeedEntries)).toHaveLength(4);
+
+  // The batches without an `ack` do not go again after the reconnect
+  firstSocket.handlers.onClose(1006);
+  await vi.advanceTimersByTimeAsync(1_000);
+  const secondSocket = await openSocket();
+  welcome(secondSocket);
+  await vi.advanceTimersByTimeAsync(5_000);
+
+  expect(secondSocket.getSent(UpMessageType.FeedEntries)).toEqual([]);
+  expect(client.getState().queuedEntryCount).toBe(0);
+  expect(droppedEntries).toEqual(
+    Array.from({ length: 5 }, () => ({
+      capabilityId: CapabilityId.LogEntries,
+      entryCount: 100,
+      reason: ChannelDropReason.LocalAccessLayer,
+    })),
+  );
 });

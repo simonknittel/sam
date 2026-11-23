@@ -9,185 +9,37 @@ import {
   UpMessageType,
   createUpMessage,
   getRelayCloseReasonOfCode,
+  isFeedSourceAnnounced,
   parseDownMessage,
   shouldReconnectAfterClose,
   type AnnounceContent,
   type CapabilityId,
-  type ConnectorId,
   type DownMessageOfType,
   type FeedEntriesContent,
-  type RuntimeKind,
+  type FeedEntriesSource,
   type UpMessage,
 } from "@sam-monorepo/domain";
 import { CHANNEL_CLIENT_LIMITS } from "./channelLimits.js";
-import { getReconnectDelayMilliseconds } from "./reconnectDelay.js";
 import {
-  UploadQueue,
-  type FeedEntriesSource,
-  type QueuedBatch,
-} from "./uploadQueue.js";
-
-/**
- * The channel client: the WebSocket client of a runtime for the protocol of
- * the relay service (see `protocol.ts` of the domain package). It does the
- * handshake and the announcement, sends the heartbeats, renews the token,
- * uploads the feed entries until their `ack`, connects again after a lost
- * connection, and obeys the switches and the "Stop all" of the owner.
- */
-
-export enum ChannelStatus {
-  /** `connect()` did not start the client, or `disconnect()` stopped it */
-  Idle = "idle",
-  /** The client gets a token, opens the connection and waits for the `welcome` */
-  Connecting = "connecting",
-  /** The relay sent the `welcome` */
-  Connected = "connected",
-  /** The client waits for the delay before the next attempt */
-  WaitingForReconnect = "waiting_for_reconnect",
-  /**
-   * The client does not connect again, for example after `update_necessary`
-   * (see `closeReason`). A call of `connect()` starts a new attempt.
-   */
-  Ended = "ended",
-}
-
-export interface ChannelState {
-  readonly status: ChannelStatus;
-  /**
-   * The last reason of a refusal or a close since the last `welcome`. A close
-   * without a reason (for example a lost network connection) keeps the
-   * previous reason. `access_denied` also comes from a token that the app
-   * refused, and `token_not_valid` from a token renewal that did not succeed
-   * within the grace time.
-   */
-  readonly closeReason: RelayCloseReason | null;
-  /** The "Stop all" of the owner is active (`stop` of the relay) */
-  readonly isStoppedByOwner: boolean;
-  /** The parts that the switches of the organization turned off */
-  readonly turnedOffConnectorIds: readonly ConnectorId[];
-  readonly turnedOffCapabilityIds: readonly CapabilityId[];
-  /** The entries that wait for the upload or for their `ack` */
-  readonly queuedEntryCount: number;
-}
-
-export enum ChannelDropReason {
-  /**
-   * The queue was full (`CHANNEL_CLIENT_LIMITS.maximumQueuedEntries`), thus
-   * the client removed the oldest waiting entries
-   */
-  QueueFull = "queue_full",
-  /**
-   * One entry does not fit into one message
-   * (`RELAY_LIMITS.maximumMessageBytes`)
-   */
-  MessageTooLarge = "message_too_large",
-  /**
-   * A switch of the organization turned off the connector, the capability or
-   * the full Remote Control Program
-   */
-  TurnedOff = "turned_off",
-  /** The "Stop all" of the owner is active */
-  StoppedByOwner = "stopped_by_owner",
-  /**
-   * The "Stop all" of the runtime is active, or the rule of the capability is
-   * off
-   */
-  LocalAccessLayer = "local_access_layer",
-  /** The relay refused the entries, and the protocol says: do not send again */
-  RefusedByRelay = "refused_by_relay",
-}
-
-export interface ChannelAcceptedEntries {
-  readonly capabilityId: CapabilityId;
-  readonly entryCount: number;
-  /**
-   * The entries that the relay did not have before. Null when the relay did
-   * not tell.
-   */
-  readonly newEntryCount: number | null;
-}
-
-export interface ChannelDroppedEntries {
-  readonly capabilityId: CapabilityId;
-  readonly entryCount: number;
-  readonly reason: ChannelDropReason;
-}
-
-/**
- * The token source throws this error when the app refuses the connection
- * token, for example without `remoteControlProgram;use`, without a citizen,
- * or after a ban. The client then stops like after `access_denied` of the
- * relay. After a different error of the token source, the client tries
- * again.
- */
-export class ConnectionTokenRefusedError extends Error {
-  constructor(options?: ErrorOptions) {
-    super("The app refused the connection token", options);
-    this.name = "ConnectionTokenRefusedError";
-  }
-}
-
-/** The calls of the WebSocket that the client receives */
-export interface ChannelWebSocketHandlers {
-  readonly onOpen: () => void;
-  readonly onMessage: (data: unknown) => void;
-  readonly onClose: (code: number) => void;
-}
-
-/** The part of a WebSocket that the client uses */
-export interface ChannelWebSocket {
-  send(data: string): void;
-  close(): void;
-}
-
-export type CreateChannelWebSocket = (
-  url: URL,
-  handlers: ChannelWebSocketHandlers,
-) => ChannelWebSocket;
-
-export interface ChannelTimers {
-  /**
-   * A time in milliseconds that does not go back, as `performance.now()`
-   * gives it
-   */
-  readonly now: () => number;
-  /**
-   * Calls the callback once after the delay. The returned function cancels
-   * the call.
-   */
-  readonly schedule: (
-    callback: () => void,
-    delayMilliseconds: number,
-  ) => () => void;
-}
-
-export interface ChannelClientOptions {
-  /** The WebSocket URL of the relay service */
-  readonly relayUrl: URL;
-  /** The id that the runtime makes once and keeps (see `runtimeIdSchema`) */
-  readonly runtimeId: string;
-  readonly runtimeKind: RuntimeKind;
-  readonly runtimeVersion: string;
-  /** The first announcement. `updateAnnouncement()` changes it. */
-  readonly announcement: AnnounceContent;
-  /**
-   * Gives a new connection token for the `hello` and for each renewal. It
-   * throws `ConnectionTokenRefusedError` when the app refuses the token. The
-   * client aborts the signal after
-   * `CHANNEL_CLIENT_LIMITS.tokenRequestTimeoutMilliseconds`.
-   */
-  readonly getConnectionToken: (signal: AbortSignal) => Promise<string>;
-  /** The browser `WebSocket` by default */
-  readonly createWebSocket?: CreateChannelWebSocket;
-  /** `performance.now()` and `setTimeout()` by default */
-  readonly timers?: ChannelTimers;
-  /** `Math.random()` by default */
-  readonly random?: () => number;
-  readonly onEntriesAccepted?: (entries: ChannelAcceptedEntries) => void;
-  readonly onEntriesDropped?: (entries: ChannelDroppedEntries) => void;
-}
-
-export type ChannelStateListener = (state: ChannelState) => void;
+  ChannelDropReason,
+  ChannelEndReason,
+  ChannelStatus,
+  ConnectionTokenRefusedError,
+  DEFAULT_TIMERS,
+  INITIAL_CHANNEL_STATE,
+  isSourceTurnedOff,
+  type ChannelClientOptions,
+  type ChannelCloseReason,
+  type ChannelState,
+  type ChannelStateListener,
+  type ChannelTimers,
+  type ChannelWebSocket,
+  type ConnectionTokenGrant,
+  type CreateChannelWebSocket,
+  type FeedEntry,
+} from "./channelTypes.js";
+import { getReconnectDelayMilliseconds } from "./reconnectDelay.js";
+import { UploadQueue, type QueuedBatch } from "./uploadQueue.js";
 
 const createBrowserWebSocket: CreateChannelWebSocket = (url, handlers) => {
   const socket = new WebSocket(url);
@@ -197,13 +49,26 @@ const createBrowserWebSocket: CreateChannelWebSocket = (url, handlers) => {
   return socket;
 };
 
-const defaultTimers: ChannelTimers = {
-  now: () => performance.now(),
-  schedule: (callback, delayMilliseconds) => {
-    const handle = setTimeout(callback, delayMilliseconds);
-    return () => clearTimeout(handle);
-  },
-};
+const CHANNEL_END_REASONS = new Set<ChannelCloseReason | null>(
+  Object.values(ChannelEndReason),
+);
+
+const isChannelEndReason = (
+  reason: ChannelCloseReason | null,
+): reason is ChannelEndReason => CHANNEL_END_REASONS.has(reason);
+
+/** The client connects again after a close for this reason */
+const shouldReconnect = (reason: ChannelCloseReason | null) =>
+  !isChannelEndReason(reason) && shouldReconnectAfterClose(reason);
+
+/** The runtime makes each announcement in the same way */
+const isSameAnnouncement = (first: AnnounceContent, second: AnnounceContent) =>
+  JSON.stringify(first) === JSON.stringify(second);
+
+const keepAllEntries = (
+  _source: FeedEntriesSource,
+  entries: readonly FeedEntry[],
+) => entries;
 
 enum ConnectionTimer {
   Handshake = "handshake",
@@ -223,45 +88,41 @@ interface Connection {
   tokenRequestedAt: number;
   outstandingHeartbeatId: string | null;
   renewal: { readonly messageId: string; readonly requestedAt: number } | null;
-  readonly sentAnnouncements: Map<string, AnnounceContent>;
+  /**
+   * The `announce` without an `ack`. The client sends one at a time, and
+   * after its `ack` the newest announcement when it is different.
+   */
+  pendingAnnouncement: {
+    readonly messageId: string;
+    readonly content: AnnounceContent;
+  } | null;
   /** The client sends batches only for the parts of this announcement */
   acknowledgedAnnouncement: AnnounceContent | null;
   readonly cancelTimers: Map<ConnectionTimer, () => void>;
   readonly tokenRequests: Set<AbortController>;
 }
 
-const isAnnounced = (
-  announcement: AnnounceContent,
-  source: FeedEntriesSource,
-) =>
-  announcement.connectors.some(
-    (connector) =>
-      connector.id === source.connector_id &&
-      connector.version === source.connector_version &&
-      connector.capabilities.some(
-        (capability) =>
-          capability.id === source.capability_id &&
-          capability.version === source.capability_version,
-      ),
-  );
-
+/**
+ * The channel client: the WebSocket client of a runtime for the protocol of
+ * the relay service (see `protocol.ts` of the domain package). It does the
+ * handshake and the announcement, sends the heartbeats, renews the token,
+ * uploads the feed entries until their `ack`, connects again after a lost
+ * connection, and obeys the switches, the "Stop all" of the owner and the
+ * local access layer.
+ */
 export class ChannelClient {
   readonly #options: ChannelClientOptions;
   readonly #timers: ChannelTimers;
   readonly #random: () => number;
   readonly #createWebSocket: CreateChannelWebSocket;
+  readonly #selectPermittedEntries: NonNullable<
+    ChannelClientOptions["selectPermittedEntries"]
+  >;
   readonly #queue = new UploadQueue(CHANNEL_CLIENT_LIMITS.maximumQueuedEntries);
   readonly #rateLimiters = new Map<CapabilityId, RateLimiter>();
   readonly #listeners = new Set<ChannelStateListener>();
   #announcement: AnnounceContent;
-  #state: ChannelState = {
-    status: ChannelStatus.Idle,
-    closeReason: null,
-    isStoppedByOwner: false,
-    turnedOffConnectorIds: [],
-    turnedOffCapabilityIds: [],
-    queuedEntryCount: 0,
-  };
+  #state: ChannelState = INITIAL_CHANNEL_STATE;
   #connection: Connection | null = null;
   #failedAttemptCount = 0;
   #cancelReconnect: (() => void) | null = null;
@@ -269,9 +130,11 @@ export class ChannelClient {
 
   constructor(options: ChannelClientOptions) {
     this.#options = options;
-    this.#timers = options.timers ?? defaultTimers;
+    this.#timers = options.timers ?? DEFAULT_TIMERS;
     this.#random = options.random ?? Math.random;
     this.#createWebSocket = options.createWebSocket ?? createBrowserWebSocket;
+    this.#selectPermittedEntries =
+      options.selectPermittedEntries ?? keepAllEntries;
     this.#announcement = options.announcement;
   }
 
@@ -312,15 +175,17 @@ export class ChannelClient {
   }
 
   /**
-   * Sends the changed announcement to the relay. The client also removes the
-   * waiting entries that the local access layer does not permit any more.
+   * After a change of the local access layer: the client removes the waiting
+   * entries that the local access layer does not permit any more, and sends
+   * the announcement to the relay when its content changed.
    */
   updateAnnouncement(announcement: AnnounceContent) {
+    const isChanged = !isSameAnnouncement(announcement, this.#announcement);
     this.#announcement = announcement;
     this.#applyAccessChange();
 
     const connection = this.#connection;
-    if (connection?.isWelcomed) this.#sendAnnouncement(connection);
+    if (isChanged && connection?.isWelcomed) this.#sendAnnouncement(connection);
   }
 
   /**
@@ -371,25 +236,13 @@ export class ChannelClient {
    * does not keep them for later: an automatic upload after the part is on
    * again would send entries of a time in which the part was off. The lines
    * stay in the log file on the machine, and only an explicit request of the
-   * owner sends older entries (decision 6 of the plan, "Switches" of the
-   * concept).
+   * owner sends older entries (decision 27 and "Switches" of the concept).
    */
   #getDropReason(source: FeedEntriesSource) {
-    const {
-      closeReason,
-      turnedOffConnectorIds,
-      turnedOffCapabilityIds,
-      isStoppedByOwner,
-    } = this.#state;
-
-    if (
-      closeReason === RelayCloseReason.ProgramTurnedOff ||
-      turnedOffConnectorIds.includes(source.connector_id) ||
-      turnedOffCapabilityIds.includes(source.capability_id)
-    )
+    if (isSourceTurnedOff(this.#state, source))
       return ChannelDropReason.TurnedOff;
 
-    if (isStoppedByOwner) return ChannelDropReason.StoppedByOwner;
+    if (this.#state.isStoppedByOwner) return ChannelDropReason.StoppedByOwner;
 
     // All is off by default (principle 2): a capability without a rule does
     // not upload
@@ -419,6 +272,28 @@ export class ChannelClient {
     );
   }
 
+  /**
+   * Removes the entries of the batch that the local access layer does not
+   * permit now (`selectPermittedEntries`). False when no entry stays.
+   */
+  #keepPermittedEntries(batch: QueuedBatch) {
+    const permittedEntries = this.#selectPermittedEntries(
+      batch.source,
+      batch.entries,
+    );
+    const removedCount = batch.entries.length - permittedEntries.length;
+    if (removedCount > 0) {
+      this.#queue.keepEntries(batch, permittedEntries);
+      this.#reportDropped(
+        batch.source.capability_id,
+        removedCount,
+        ChannelDropReason.LocalAccessLayer,
+      );
+    }
+
+    return permittedEntries.length > 0;
+  }
+
   /** After a change of the switches, of the stop or of the local access layer */
   #applyAccessChange() {
     const droppedBatches = this.#queue.removeWaiting(
@@ -428,6 +303,8 @@ export class ChannelClient {
       const reason = this.#getDropReason(batch.source);
       if (reason !== null) this.#reportDroppedBatch(batch, reason);
     }
+    for (const batch of [...this.#queue.waitingBatches])
+      this.#keepPermittedEntries(batch);
 
     this.#updateQueuedEntryCount();
     this.#sendWaitingBatches();
@@ -441,7 +318,7 @@ export class ChannelClient {
       tokenRequestedAt: this.#timers.now(),
       outstandingHeartbeatId: null,
       renewal: null,
-      sentAnnouncements: new Map(),
+      pendingAnnouncement: null,
       acknowledgedAnnouncement: null,
       cancelTimers: new Map(),
       tokenRequests: new Set(),
@@ -453,22 +330,26 @@ export class ChannelClient {
   }
 
   async #openConnection(connection: Connection) {
-    let token: string;
+    let grant: ConnectionTokenGrant;
     try {
-      token = await this.#requestToken(connection);
+      grant = await this.#requestToken(connection);
     } catch (error) {
       this.#endConnection(
         connection,
-        error instanceof ConnectionTokenRefusedError
-          ? RelayCloseReason.AccessDenied
-          : null,
+        error instanceof ConnectionTokenRefusedError ? error.reason : null,
       );
       return;
     }
     if (this.#connection !== connection) return;
 
+    const { token, relayUrl } = grant;
+    if (relayUrl === null) {
+      this.#endConnection(connection, ChannelEndReason.NoRelay);
+      return;
+    }
+
     try {
-      connection.socket = this.#createWebSocket(this.#options.relayUrl, {
+      connection.socket = this.#createWebSocket(relayUrl, {
         onOpen: () => {
           if (this.#connection !== connection) return;
 
@@ -567,17 +448,17 @@ export class ChannelClient {
     this.#cancelUploadTimer?.();
     this.#cancelUploadTimer = null;
     // The relay removes the duplicates with the key of each entry, thus a
-    // resend is safe
+    // resend is safe. The local access layer applies again before it.
     this.#queue.returnSent();
   }
 
   /** @param reason Null for a close without a reason of the relay */
-  #endConnection(connection: Connection, reason: RelayCloseReason | null) {
+  #endConnection(connection: Connection, reason: ChannelCloseReason | null) {
     if (this.#connection !== connection) return;
 
     this.#closeConnection(connection);
 
-    if (shouldReconnectAfterClose(reason)) {
+    if (shouldReconnect(reason)) {
       this.#failedAttemptCount += 1;
       this.#cancelReconnect = this.#timers.schedule(
         () => {
@@ -736,12 +617,12 @@ export class ChannelClient {
     const requestedAt = this.#timers.now();
     let token: string;
     try {
-      token = await this.#requestToken(connection);
+      ({ token } = await this.#requestToken(connection));
     } catch (error) {
       if (this.#connection !== connection) return;
 
       if (error instanceof ConnectionTokenRefusedError)
-        this.#endConnection(connection, RelayCloseReason.AccessDenied);
+        this.#endConnection(connection, error.reason);
       else this.#scheduleTokenRenewalRetry(connection);
       return;
     }
@@ -752,11 +633,21 @@ export class ChannelClient {
     this.#send(connection, message);
   }
 
+  /**
+   * Sends the newest announcement. While an `announce` waits for its `ack`,
+   * the `ack` sends the newest announcement. Thus many quick changes send
+   * few messages, and the relay does not count them as errors of its rate
+   * limit.
+   */
   #sendAnnouncement(connection: Connection) {
+    if (connection.pendingAnnouncement !== null) return;
     this.#cancelConnectionTimer(connection, ConnectionTimer.AnnounceRetry);
 
     const message = createUpMessage(UpMessageType.Announce, this.#announcement);
-    connection.sentAnnouncements.set(message.id, message.content);
+    connection.pendingAnnouncement = {
+      messageId: message.id,
+      content: message.content,
+    };
     this.#send(connection, message);
   }
 
@@ -791,12 +682,16 @@ export class ChannelClient {
       return;
     }
 
-    const announcement = connection.sentAnnouncements.get(content.message_id);
-    if (announcement !== undefined) {
-      connection.sentAnnouncements.delete(content.message_id);
+    const { pendingAnnouncement } = connection;
+    if (content.message_id === pendingAnnouncement?.messageId) {
+      connection.pendingAnnouncement = null;
 
       if (isAccepted) {
-        connection.acknowledgedAnnouncement = announcement;
+        connection.acknowledgedAnnouncement = pendingAnnouncement.content;
+        if (
+          !isSameAnnouncement(pendingAnnouncement.content, this.#announcement)
+        )
+          this.#sendAnnouncement(connection);
         this.#sendWaitingBatches();
       } else if (
         content.error_code !== AcknowledgementErrorCode.MessageNotValid
@@ -933,7 +828,7 @@ export class ChannelClient {
       const capabilityId = batch.source.capability_id;
       if (
         blockedCapabilityIds.has(capabilityId) ||
-        !isAnnounced(announcement, batch.source)
+        !isFeedSourceAnnounced(announcement, batch.source)
       )
         continue;
 
@@ -944,6 +839,8 @@ export class ChannelClient {
         nextBatchAt = Math.min(nextBatchAt, batchAt);
         continue;
       }
+
+      if (!this.#keepPermittedEntries(batch)) continue;
 
       rateLimiter.record(now);
       const message = createUpMessage(UpMessageType.FeedEntries, {
@@ -959,5 +856,7 @@ export class ChannelClient {
         this.#cancelUploadTimer = null;
         this.#sendWaitingBatches();
       }, nextBatchAt - now);
+    // Last: the listeners can send new entries
+    this.#updateQueuedEntryCount();
   }
 }

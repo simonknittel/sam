@@ -20,7 +20,7 @@ self.onmessage = (event: MessageEvent<ParseRequest | StopRequest>) => {
     return;
   }
 
-  const { id, files, isFullRead } = event.data;
+  const { id, files } = event.data;
 
   /**
    * Each request gets an answer, also when `postMessage` fails. A rejected
@@ -30,7 +30,7 @@ self.onmessage = (event: MessageEvent<ParseRequest | StopRequest>) => {
     let lastProgressAt = 0;
 
     try {
-      const result = await readLogFiles(files, isFullRead, {
+      const result = await readLogFiles(files, {
         shouldStop: () => id < stopBeforeId,
         onProgress: (progress) => {
           const now = performance.now();

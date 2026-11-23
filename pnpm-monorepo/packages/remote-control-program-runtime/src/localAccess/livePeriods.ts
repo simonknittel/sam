@@ -4,7 +4,8 @@
  * runtime of this browser read the log live and no "Stop all" was active. A
  * log entry goes up automatically only when its time is in a live period and
  * its type was on at that time. The types are not a part of the periods:
- * `turnedOnAt` of each rule limits the periods for its type.
+ * `turnedOnAt` of each rule limits the periods for its type. Each "Stop all"
+ * (of this browser, of the owner, or a switch) removes all periods.
  *
  * The times are milliseconds since the epoch.
  */
@@ -22,12 +23,12 @@ export const LIVE_PERIOD_HEARTBEAT_INTERVAL_MILLISECONDS = 10_000;
  * A new runtime continues the last period when the previous runtime ended
  * it for a change of the active tab, or sent its last heartbeat, not more
  * than this time before. A stop of the owner ends the period without a
- * continuation. Thus a change of the active tab makes no gap: the Web Locks API gives the lock to
- * the next tab immediately, and the next tab needs some seconds for the
- * `welcome` of the relay. A crashed tab ended its period at its last
- * heartbeat, thus the limit is 3 heartbeat intervals. The limit is short,
- * because the entries of the gap go up automatically, although no runtime
- * read them live.
+ * continuation. Thus a change of the active tab makes no gap: the Web Locks
+ * API gives the lock to the next tab immediately, and the next tab needs
+ * some seconds for the `welcome` of the relay. A crashed tab ended its
+ * period at its last heartbeat, thus the limit is 3 heartbeat intervals. The
+ * limit is short, because the entries of the gap go up automatically,
+ * although no runtime read them live.
  */
 export const TAB_CHANGE_GAP_MILLISECONDS = 30_000;
 
@@ -51,11 +52,11 @@ export const OWN_HEARTBEAT_GAP_MILLISECONDS = 180_000;
 export const LIVE_PERIOD_RETENTION_MILLISECONDS = 7 * 24 * 60 * 60 * 1_000;
 
 /**
- * Only a start without a continuation, a stop of the owner, a "Stop all" and
- * a stop of the relay start a new period. 100 periods are approximately 14 periods each day
- * during the retention time, and approximately 8 KB in the storage, which the
- * runtime writes at each heartbeat. Above the limit, the oldest periods go:
- * their entries then go up only on an explicit request.
+ * Only a start without a continuation, a stop of the reading and the end of
+ * a "Stop all" start a new period. 100 periods are approximately 14 periods
+ * each day during the retention time, and approximately 8 KB in the storage,
+ * which the runtime writes at each heartbeat. Above the limit, the oldest
+ * periods go: their entries then go up only on an explicit request.
  */
 export const MAXIMUM_LIVE_PERIODS = 100;
 
@@ -72,10 +73,10 @@ export interface LivePeriods {
   /** Ordered by time, without an overlap */
   readonly periods: readonly LivePeriod[];
   /**
-   * A runtime read live until the end of the last period, and no "Stop all"
-   * and no stop of the owner ended it: the period is open, or the runtime
-   * ended for a change of the active tab. A runtime can continue the period
-   * (see `TAB_CHANGE_GAP_MILLISECONDS`).
+   * A runtime read live until the end of the last period, and no stop ended
+   * it: the period is open, or the runtime ended for a change of the active
+   * tab. A runtime can continue the period (see
+   * `TAB_CHANGE_GAP_MILLISECONDS`).
    */
   readonly canContinueLastPeriod: boolean;
 }
@@ -128,8 +129,7 @@ export const continueOrStartPeriod = (
 /**
  * Ends the last period at `endAt`. A later end than the stored end needs a
  * gap that is not more than the limit, because the runtime must have read
- * until then. An earlier end cuts the period, for example a "Stop all" of a
- * different tab before the last heartbeat.
+ * until then. An earlier end cuts the period.
  */
 export const endLastPeriod = (
   livePeriods: LivePeriods,

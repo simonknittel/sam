@@ -689,6 +689,7 @@ export const createLogAnalyzerEntryHash = async (
 
 export const LOG_ANALYZER_ENTRY_HASH_PATTERN = /^[0-9a-f]{64}$/;
 
+/** The limit of one batch of the capability `log_entries` */
 export const MAXIMUM_LOG_ANALYZER_UPLOAD_ENTRIES = 100;
 
 /**
@@ -697,11 +698,3 @@ export const MAXIMUM_LOG_ANALYZER_UPLOAD_ENTRIES = 100;
  * line that a client sends.
  */
 export const MAXIMUM_LOG_ANALYZER_RAW_LINE_LENGTH = 1_000;
-
-/**
- * Well above the 14 days that the Log Analyzer shows by default.
- */
-export const MAXIMUM_LOG_ANALYZER_DAYS_TO_LOAD = 365;
-
-export const clampLogAnalyzerDaysToLoad = (daysToLoad: number) =>
-  Math.min(Math.max(daysToLoad, 0), MAXIMUM_LOG_ANALYZER_DAYS_TO_LOAD);

@@ -7,10 +7,8 @@ import * as z from "zod";
 import { type LivePeriods, NO_LIVE_PERIODS } from "./livePeriods.js";
 
 /**
- * The browser storage of the local access layer. `localStorage` has this
- * shape. The app gives it, thus the package does not read the globals of the
- * browser. The methods can throw the errors of the storage (for example a
- * full storage), and the layer does not catch them.
+ * The browser storage of the runtime. `localStorage` has this shape. The app
+ * gives it, thus the package does not read the globals of the browser.
  */
 export interface LocalAccessStorage {
   getItem(key: string): string | null;
@@ -19,24 +17,43 @@ export interface LocalAccessStorage {
 }
 
 /**
+ * The name of a value in the browser storage, of a Web Lock or of a
+ * BroadcastChannel of one citizen. More than one citizen can use one browser
+ * profile, one after the other: they never share a value, a Web Lock or a
+ * BroadcastChannel, thus the runtime of a citizen never uploads with the
+ * settings, the live periods or the log folder of a different citizen.
+ *
+ * Example: `remote_control_program_live_periods:<citizen id>`
+ */
+export const toCitizenKey = (key: string, citizenId: string) =>
+  `${key}:${citizenId}`;
+
+/**
  * The settings of the owner in this browser: the rules for each log entry
  * type and the "Stop all" of this browser. Each tab can write it (for example
  * the sharing popover).
  */
-export const LOCAL_ACCESS_LAYER_STORAGE_KEY =
+const LOCAL_ACCESS_LAYER_STORAGE_KEY =
   "remote_control_program_local_access_layer";
 
 /**
  * The live periods (see `livePeriods.ts`). Only the tab with the running
- * runtime extends them. A "Stop all" in a different tab ends them.
+ * runtime extends them. A "Stop all" in a different tab removes them.
  */
-export const LIVE_PERIODS_STORAGE_KEY = "remote_control_program_live_periods";
+const LIVE_PERIODS_STORAGE_KEY = "remote_control_program_live_periods";
 
 /**
  * The share settings of the old Log Analyzer. The layer removes them and does
  * not take them over (M1 of `docs/remote-control-program/migration.md`).
  */
 export const LEGACY_SHARE_TYPES_STORAGE_KEY = "log_analyzer_share_types";
+
+/** For the `storage` event of the other tabs */
+export const getLocalAccessLayerStorageKey = (citizenId: string) =>
+  toCitizenKey(LOCAL_ACCESS_LAYER_STORAGE_KEY, citizenId);
+
+const getLivePeriodsStorageKey = (citizenId: string) =>
+  toCitizenKey(LIVE_PERIODS_STORAGE_KEY, citizenId);
 
 /** A stored value of a different version gives the defaults */
 const STORAGE_VERSION = 1;
@@ -104,7 +121,7 @@ const DEFAULT_RULES: LocalAccessRules = {
  * Null when there is no value, or the value is not valid JSON or does not
  * match the schema
  */
-const readStoredValue = <Value>(
+export const readStoredValue = <Value>(
   storage: LocalAccessStorage,
   key: string,
   schema: z.ZodType<Value>,
@@ -126,14 +143,28 @@ const readStoredValue = <Value>(
 /**
  * Writes only a changed value. Thus a method without a change fires no
  * `storage` event in the other tabs.
+ *
+ * When the write fails (for example in a full storage), the value goes away:
+ * no value is the safe default of each key (all types off, no live period,
+ * no run record). Thus a failed write never keeps a stale value that permits
+ * an upload.
  */
-const writeStoredValue = (
+export const writeStoredValue = (
   storage: LocalAccessStorage,
   key: string,
   value: unknown,
 ) => {
   const text = JSON.stringify(value);
-  if (storage.getItem(key) !== text) storage.setItem(key, text);
+
+  try {
+    if (storage.getItem(key) !== text) storage.setItem(key, text);
+  } catch (error) {
+    console.error(
+      "[Remote Control Program] Error writing the browser storage:",
+      error,
+    );
+    storage.removeItem(key);
+  }
 };
 
 const toTime = (isoDate: string) => new Date(isoDate).getTime();
@@ -143,10 +174,11 @@ const toIsoDate = (time: number) => new Date(time).toISOString();
 /** A broken value gives the defaults: all types are off */
 export const readLocalAccessRules = (
   storage: LocalAccessStorage,
+  citizenId: string,
 ): LocalAccessRules => {
   const storedValue = readStoredValue(
     storage,
-    LOCAL_ACCESS_LAYER_STORAGE_KEY,
+    getLocalAccessLayerStorageKey(citizenId),
     storedLocalAccessLayerSchema,
   );
   if (!storedValue) return DEFAULT_RULES;
@@ -172,9 +204,10 @@ export const readLocalAccessRules = (
 
 export const writeLocalAccessRules = (
   storage: LocalAccessStorage,
+  citizenId: string,
   rules: LocalAccessRules,
 ) => {
-  writeStoredValue(storage, LOCAL_ACCESS_LAYER_STORAGE_KEY, {
+  writeStoredValue(storage, getLocalAccessLayerStorageKey(citizenId), {
     version: STORAGE_VERSION,
     stopped_at: rules.stoppedAt === null ? null : toIsoDate(rules.stoppedAt),
     log_entry_types: Array.from(
@@ -188,10 +221,13 @@ export const writeLocalAccessRules = (
 };
 
 /** A broken value gives no periods: no entry goes up automatically */
-export const readLivePeriods = (storage: LocalAccessStorage): LivePeriods => {
+export const readLivePeriods = (
+  storage: LocalAccessStorage,
+  citizenId: string,
+): LivePeriods => {
   const storedValue = readStoredValue(
     storage,
-    LIVE_PERIODS_STORAGE_KEY,
+    getLivePeriodsStorageKey(citizenId),
     storedLivePeriodsSchema,
   );
   if (!storedValue) return NO_LIVE_PERIODS;
@@ -207,9 +243,10 @@ export const readLivePeriods = (storage: LocalAccessStorage): LivePeriods => {
 
 export const writeLivePeriods = (
   storage: LocalAccessStorage,
+  citizenId: string,
   livePeriods: LivePeriods,
 ) => {
-  writeStoredValue(storage, LIVE_PERIODS_STORAGE_KEY, {
+  writeStoredValue(storage, getLivePeriodsStorageKey(citizenId), {
     version: STORAGE_VERSION,
     periods: livePeriods.periods.map((period) => ({
       started_at: toIsoDate(period.startedAt),
