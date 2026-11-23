@@ -120,6 +120,12 @@ interface PopoverBaseUIContextProviderProps {
   readonly open?: boolean;
   /** Also reports a close through `closePopover` */
   readonly onOpenChange?: (open: boolean) => void;
+  /**
+   * Moves the focus to the first element of the popup when it opens. Set it
+   * when a different control than the trigger opened the popover, else a
+   * keyboard user cannot reach the popup.
+   */
+  readonly moveFocusIntoPopup?: boolean;
   readonly hoverOnly?: boolean;
   readonly openOnHover?: boolean;
   readonly disabled?: boolean;
@@ -142,6 +148,7 @@ export const PopoverBaseUI = ({
   childrenClassName,
   open,
   onOpenChange,
+  moveFocusIntoPopup,
   hoverOnly = false,
   openOnHover = true,
   disabled = false,
@@ -241,7 +248,10 @@ export const PopoverBaseUI = ({
             align={align}
             className={positionerClassName ?? "z-30"}
           >
-            <Popover.Popup className="z-30 outline-hidden" initialFocus={false}>
+            <Popover.Popup
+              className="z-30 outline-hidden"
+              initialFocus={moveFocusIntoPopup ?? false}
+            >
               <PopoverChrome
                 title={title}
                 childrenClassName={childrenClassName}

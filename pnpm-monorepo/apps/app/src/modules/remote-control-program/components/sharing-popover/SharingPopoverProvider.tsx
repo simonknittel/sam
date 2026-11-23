@@ -137,9 +137,17 @@ export const useSharingPopoverOpenState = (canActOnRequest: boolean) => {
   const { isOpenRequested, settleOpenRequest, endOlderEntriesRequest } =
     useSharingPopoverContext();
   const [isOpen, setIsOpen] = useState(false);
+  /**
+   * A control UI opened the popover, not its trigger. Then the focus must
+   * move into the popover, else a keyboard user cannot reach it.
+   */
+  const [isOpenedByControlUi, setIsOpenedByControlUi] = useState(false);
 
   const isActingOnRequest = isOpenRequested && canActOnRequest;
-  if (isActingOnRequest && !isOpen) setIsOpen(true);
+  if (isActingOnRequest && !isOpen) {
+    setIsOpen(true);
+    setIsOpenedByControlUi(true);
+  }
 
   useEffect(() => {
     // eslint-disable-next-line react-you-might-not-need-an-effect/no-event-handler -- The request comes from a different component, and a render must not change the state of the provider.
@@ -153,8 +161,9 @@ export const useSharingPopoverOpenState = (canActOnRequest: boolean) => {
    */
   const changeOpenByUser = (nextIsOpen: boolean) => {
     setIsOpen(nextIsOpen);
+    setIsOpenedByControlUi(false);
     endOlderEntriesRequest();
   };
 
-  return { isOpen, setIsOpen, changeOpenByUser };
+  return { isOpen, isOpenedByControlUi, setIsOpen, changeOpenByUser };
 };

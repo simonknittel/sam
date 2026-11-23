@@ -26,6 +26,7 @@ const SharingPopover = () => {
   const isLargeViewport = useIsLargeViewport();
   const {
     isOpen,
+    isOpenedByControlUi,
     onOpenChange,
     isStopped,
     isWaitingForFolderPermission,
@@ -50,6 +51,7 @@ const SharingPopover = () => {
       childrenClassName="w-[26rem] max-w-[calc(100vw-1rem)] max-h-[calc(100dvh-5rem)] overflow-y-auto overscroll-contain"
       open={isOpen}
       onOpenChange={onOpenChange}
+      moveFocusIntoPopup={isOpenedByControlUi}
     >
       <LazySharingPopoverContent />
     </PopoverBaseUI>
