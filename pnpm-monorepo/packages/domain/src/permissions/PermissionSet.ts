@@ -72,6 +72,7 @@ export interface PermissionSet {
     | "upload"
     | "wiki"
     | "mcp"
+    | "remoteControlProgram"
     | "manualNotification";
   operation:
     | "create"
