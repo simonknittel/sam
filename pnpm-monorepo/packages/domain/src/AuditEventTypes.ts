@@ -2,6 +2,7 @@ import type { EventPositionRoleMatch } from "@sam-monorepo/database/browser";
 import type { WebPushPruneReason } from "./notifications/webPushPruneReason.js";
 import type { ReadAuditEventType } from "./readAuditEventTypes.js";
 import type { ReadMarkerSubject } from "./readMarkers/ReadMarkerSubject.js";
+import type { GranteeKind } from "./remoteControlProgram/grantAccess.js";
 
 /**
  * The system log is immutable: event type definitions are only ever added —
@@ -265,6 +266,7 @@ export enum AuditEventType {
   BIRTHDAY_GREETINGS_SENT = "BIRTHDAY_GREETINGS_SENT",
   NEW_YEAR_GREETINGS_SENT = "NEW_YEAR_GREETINGS_SENT",
   ONBOARDING_TASK_COMPLETED = "ONBOARDING_TASK_COMPLETED",
+  /** @deprecated Superseded by REMOTE_CONTROL_PROGRAM_FEED_ENTRIES_UPLOADED (the Remote Control Program counts the uploads for each runtime connection). The old Log Analyzer upload wrote this type. */
   LOG_ANALYZER_ENTRIES_UPLOADED = "LOG_ANALYZER_ENTRIES_UPLOADED",
   SEASONAL_THEME_SETTINGS_UPDATED = "SEASONAL_THEME_SETTINGS_UPDATED",
   CALENDAR_ENTRY_TYPE_SETTINGS_UPDATED = "CALENDAR_ENTRY_TYPE_SETTINGS_UPDATED",
@@ -288,6 +290,9 @@ export enum AuditEventType {
   ROLE_TAG_UPDATED = "ROLE_TAG_UPDATED",
   ROLE_TAG_DELETED = "ROLE_TAG_DELETED",
   ROLE_TAG_ASSIGNMENTS_UPDATED = "ROLE_TAG_ASSIGNMENTS_UPDATED",
+  REMOTE_CONTROL_PROGRAM_SHARE_GRANT_CREATED = "REMOTE_CONTROL_PROGRAM_SHARE_GRANT_CREATED",
+  REMOTE_CONTROL_PROGRAM_SHARE_GRANT_REVOKED = "REMOTE_CONTROL_PROGRAM_SHARE_GRANT_REVOKED",
+  REMOTE_CONTROL_PROGRAM_FEED_ENTRIES_UPLOADED = "REMOTE_CONTROL_PROGRAM_FEED_ENTRIES_UPLOADED",
   // The read accesses, see `READ_AUDIT_EVENT_TYPES`
   /** @deprecated Superseded by USER_READ (the tool get_user replaced get_current_user) */
   CURRENT_USER_READ = "CURRENT_USER_READ",
@@ -1896,6 +1901,10 @@ export interface AuditEventDataByType {
    * The raw lines and their hashes hold data of other players, thus the log
    * records only the counts. `newEntryCount` counts the entries the server
    * stored; the rest were duplicates it already held.
+   *
+   * Deprecated: the old Log Analyzer upload wrote this type. The Remote
+   * Control Program writes `REMOTE_CONTROL_PROGRAM_FEED_ENTRIES_UPLOADED`.
+   * Historical entries stay valid.
    */
   [AuditEventType.LOG_ANALYZER_ENTRIES_UPLOADED]: {
     citizenId: string;
@@ -2061,6 +2070,56 @@ export interface AuditEventDataByType {
       roleId: string;
       tagId: string;
     }[];
+  };
+
+  /**
+   * The owner made a grant. The actor is the owner. The times are the times
+   * of the relay. `granteeCitizenId` is set only for the grantee kind
+   * "citizen", and `granteeRoleId` only for the grantee kind "role".
+   */
+  [AuditEventType.REMOTE_CONTROL_PROGRAM_SHARE_GRANT_CREATED]: {
+    grantId: string;
+    ownerCitizenId: string;
+    granteeKind: GranteeKind;
+    granteeCitizenId: string | null;
+    granteeRoleId: string | null;
+    capabilityIds: string[];
+    operations: string[];
+    startsAt: Date;
+    /** Null: no end */
+    endsAt: Date | null;
+  };
+
+  /**
+   * A grant was revoked. The actor is the user who revoked it: the owner now,
+   * an admin later. Thus the owner is in the payload.
+   */
+  [AuditEventType.REMOTE_CONTROL_PROGRAM_SHARE_GRANT_REVOKED]: {
+    grantId: string;
+    ownerCitizenId: string;
+  };
+
+  /**
+   * The counts of the uploads of one capability on one runtime connection in
+   * one period. The relay writes one event for each runtime connection and
+   * capability, when the connection closes and at the latest each hour. The
+   * actor is the owner. The raw lines hold data of other players, thus the
+   * log records only the counts. Each entry of the uploads is in exactly one
+   * of the three counts.
+   */
+  [AuditEventType.REMOTE_CONTROL_PROGRAM_FEED_ENTRIES_UPLOADED]: {
+    ownerCitizenId: string;
+    runtimeId: string;
+    capabilityId: string;
+    /** The entries that the relay stored as new entries */
+    newEntryCount: number;
+    /** The entries that the relay already held */
+    duplicateEntryCount: number;
+    /** The entries that the relay did not accept */
+    refusedEntryCount: number;
+    /** The times of the relay. The period starts at the connection or at the end of the previous event of the connection. */
+    periodStartedAt: Date;
+    periodEndedAt: Date;
   };
 
   [AuditEventType.CURRENT_USER_READ]: ReadAuditEventData;

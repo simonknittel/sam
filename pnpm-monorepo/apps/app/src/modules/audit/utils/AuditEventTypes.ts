@@ -6,6 +6,7 @@ import { formatUserAgent } from "@/modules/common/utils/formatUserAgent";
 import { EventPositionRoleMatch } from "@sam-monorepo/database/browser";
 import {
   AuditEventType,
+  GranteeKind,
   ReadMarkerSubject,
   WebPushPruneReason,
   type AuditEventDataByType,
@@ -29,6 +30,7 @@ export enum SystemLogApp {
   Other = "Sonstiges",
   PenaltyPoints = "Strafpunkte",
   ProfitDistribution = "SINcome",
+  RemoteControlProgram = "Remote Control Program",
   Silc = "SILC",
   Spynet = "Spynet",
   Statistics = "Statistiken",
@@ -56,6 +58,26 @@ const formatPrunedWebPushSubscription = (
     details.push(`HTTP ${subscription.statusCode}`);
 
   return `${subscription.subscriptionId} of citizen ${subscription.citizenId} (${details.join(", ")})`;
+};
+
+const formatShareGrantGrantee = (
+  data: AuditEventDataByType[AuditEventType.REMOTE_CONTROL_PROGRAM_SHARE_GRANT_CREATED],
+) => {
+  switch (data.granteeKind) {
+    case GranteeKind.Citizen:
+      return `citizen ${data.granteeCitizenId}`;
+
+    case GranteeKind.Role:
+      return `role ${data.granteeRoleId}`;
+
+    case GranteeKind.Everyone:
+      return "everyone";
+
+    default:
+      throw new Error(
+        `Unknown grantee kind: ${data.granteeKind satisfies never}`,
+      );
+  }
 };
 
 const toReadMessage = (subject: string, data: { arguments: object }) =>
@@ -2920,6 +2942,7 @@ export const AuditEventDefinitions: {
       })`,
   },
 
+  /** Deprecated: the old Log Analyzer upload wrote this type. Historical entries stay valid. */
   [AuditEventType.LOG_ANALYZER_ENTRIES_UPLOADED]: {
     type: AuditEventType.LOG_ANALYZER_ENTRIES_UPLOADED,
     app: SystemLogApp.LogAnalyzer,
@@ -3172,6 +3195,52 @@ export const AuditEventDefinitions: {
     },
     message: (data) =>
       `Role tags updated: ${data.added.length} link(s) added, ${data.removed.length} link(s) removed`,
+  },
+
+  [AuditEventType.REMOTE_CONTROL_PROGRAM_SHARE_GRANT_CREATED]: {
+    type: AuditEventType.REMOTE_CONTROL_PROGRAM_SHARE_GRANT_CREATED,
+    app: SystemLogApp.RemoteControlProgram,
+    data: {
+      grantId: "string",
+      ownerCitizenId: "string",
+      granteeKind: GranteeKind.Citizen,
+      granteeCitizenId: "string",
+      granteeRoleId: null,
+      capabilityIds: ["string"],
+      operations: ["string"],
+      startsAt: new Date(),
+      endsAt: null,
+    },
+    message: (data) =>
+      `Citizen ${data.ownerCitizenId} shared ${data.capabilityIds.join(", ")} (${data.operations.join(", ")}) with ${formatShareGrantGrantee(data)} (grant ${data.grantId})`,
+  },
+
+  [AuditEventType.REMOTE_CONTROL_PROGRAM_SHARE_GRANT_REVOKED]: {
+    type: AuditEventType.REMOTE_CONTROL_PROGRAM_SHARE_GRANT_REVOKED,
+    app: SystemLogApp.RemoteControlProgram,
+    data: {
+      grantId: "string",
+      ownerCitizenId: "string",
+    },
+    message: (data) =>
+      `Share grant ${data.grantId} of citizen ${data.ownerCitizenId} revoked`,
+  },
+
+  [AuditEventType.REMOTE_CONTROL_PROGRAM_FEED_ENTRIES_UPLOADED]: {
+    type: AuditEventType.REMOTE_CONTROL_PROGRAM_FEED_ENTRIES_UPLOADED,
+    app: SystemLogApp.RemoteControlProgram,
+    data: {
+      ownerCitizenId: "string",
+      runtimeId: "string",
+      capabilityId: "string",
+      newEntryCount: 0,
+      duplicateEntryCount: 0,
+      refusedEntryCount: 0,
+      periodStartedAt: new Date(),
+      periodEndedAt: new Date(),
+    },
+    message: (data) =>
+      `Runtime ${data.runtimeId} of citizen ${data.ownerCitizenId} uploaded ${data.capabilityId} entries (${data.newEntryCount} new, ${data.duplicateEntryCount} duplicate, ${data.refusedEntryCount} refused)`,
   },
 
   [AuditEventType.CURRENT_USER_READ]: {

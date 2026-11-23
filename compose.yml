@@ -286,6 +286,9 @@ configs:
         "CrashLogAnalyzer",
         "DisableLogAnalyzerSharing",
         "DisableMcpServer",
+        "DisableRemoteControlProgram",
+        "DisableLogFileConnector",
+        "DisableLogEntriesCapability",
       ];
 
       const FLAG_ALREADY_EXISTS_STATUS = 409;

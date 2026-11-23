@@ -10,6 +10,9 @@ export enum UNLEASH_FLAG {
   CrashLogAnalyzer = "CrashLogAnalyzer",
   DisableLogAnalyzerSharing = "DisableLogAnalyzerSharing",
   DisableMcpServer = "DisableMcpServer",
+  DisableRemoteControlProgram = "DisableRemoteControlProgram",
+  DisableLogFileConnector = "DisableLogFileConnector",
+  DisableLogEntriesCapability = "DisableLogEntriesCapability",
 }
 
 /**
