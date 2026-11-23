@@ -1,0 +1,3 @@
+# The line ends (CRLF and LF) and the missing line end at the end of
+# `Game.log` are a part of the test data. Git must not change them.
+log-files/**/*.log -text

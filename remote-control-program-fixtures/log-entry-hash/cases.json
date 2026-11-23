@@ -1,0 +1,53 @@
+{
+  "cases": [
+    {
+      "description": "Line with the IP marker",
+      "type": "joinPu",
+      "oldest_type": "joinPu",
+      "raw_line_with_marker": "<2026-11-23T17:32:05.001Z> [Notice] <Join PU> address[IP_REDACTED] port[64336] shard[pub_euw1b_10512345_100] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]",
+      "hash": "520afce977d14ceb5d6b41914b119311848d61129db7dbb69b7e1206049bd2e5"
+    },
+    {
+      "description": "Newer version of a pattern: the hash uses the oldest type",
+      "type": "contractCompleteNotificationV2",
+      "oldest_type": "contractCompleteNotification",
+      "raw_line_with_marker": "<2026-11-21T17:15:00.120Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Contract Complete:  Wikelo Arrive to System: \" [5] to queue. New queue size: 2, MissionId: [bf7d2465-cf1e-480b-ae5c-25040d716e5f], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+      "hash": "da85f2cb88ecdbd877d17b7ecea4d3fd351b963f2db9b7d3923f83c26f2cccf4"
+    },
+    {
+      "description": "Oldest version of the same pattern and line: the same hash",
+      "type": "contractCompleteNotification",
+      "oldest_type": "contractCompleteNotification",
+      "raw_line_with_marker": "<2026-11-21T17:15:00.120Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Contract Complete:  Wikelo Arrive to System: \" [5] to queue. New queue size: 2, MissionId: [bf7d2465-cf1e-480b-ae5c-25040d716e5f], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+      "hash": "da85f2cb88ecdbd877d17b7ecea4d3fd351b963f2db9b7d3923f83c26f2cccf4"
+    },
+    {
+      "description": "Raw line of two log lines with CRLF",
+      "type": "earnedNotificationV2",
+      "oldest_type": "earnedNotification",
+      "raw_line_with_marker": "<2026-11-22T19:40:00.500Z> [Notice] <SHUDEvent_OnNotification> Added notification \"You've earned: Falston Jumpsuit \"People's Alliance Edition\"\r\n<2026-11-22T19:40:00.500Z>  Access it at a destination Freight Elevator",
+      "hash": "28431290b69775d39bb1a286ca19477803d732778ae641abeba76213cba4db01"
+    },
+    {
+      "description": "Raw line of two log lines with LF: a different hash than with CRLF",
+      "type": "earnedNotificationV2",
+      "oldest_type": "earnedNotification",
+      "raw_line_with_marker": "<2026-11-22T19:40:00.500Z> [Notice] <SHUDEvent_OnNotification> Added notification \"You've earned: Falston Jumpsuit \"People's Alliance Edition\"\n<2026-11-22T19:40:00.500Z>  Access it at a destination Freight Elevator",
+      "hash": "edb48926768985352b0c8281121496c2810899239f4575b7b0478e70a82654c6"
+    },
+    {
+      "description": "Line without a timestamp",
+      "type": "gameCrash",
+      "oldest_type": "gameCrash",
+      "raw_line_with_marker": "Exception STATUS_CRYENGINE_OUT_OF_SYSMEM(0x2BADFF61) addr=0x00007FFE2CE13CFA digest=114a1cfe538433f07c4a87c536ae0528",
+      "hash": "976bca33c9c5585710825ed7566e999fff35ad32a30d2fcf8e81f088c05b3580"
+    },
+    {
+      "description": "Line with non-ASCII characters (the hash uses UTF-8)",
+      "type": "contractAcceptedNotification",
+      "oldest_type": "contractAcceptedNotification",
+      "raw_line_with_marker": "<2026-11-23T18:05:00.000Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Contract Accepted:  Kurierdienst für Área 18 ✓: \" [4] to queue. New queue size: 1, MissionId: [bf7d2465-cf1e-480b-ae5c-25040d716e5f], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+      "hash": "cd4a6aeb110a9d168861b62f72d6f0b60be172c542d81957bf997e14daaf2f15"
+    }
+  ]
+}

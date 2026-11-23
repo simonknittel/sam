@@ -1,0 +1,46 @@
+<2026-11-21T16:58:43.612Z> Log started on Sat Nov 21 17:58:43 2026
+<2026-11-21T16:59:25.284Z> Executable: C:\Program Files\Roberts Space Industries\StarCitizen\LIVE\Bin64\StarCitizen.exe
+<2026-11-21T17:00:06.928Z> FileVersion: 4.4.158.10498765
+<2026-11-21T17:00:48.539Z> ProductVersion: 4.4.158.10498765
+<2026-11-21T17:01:30.112Z> Branch: sc-alpha-4.4.0
+<2026-11-21T17:02:11.642Z> Changelist: 10498765
+<2026-11-21T17:02:53.123Z> Windows 10 Pro 64 bit (10.0.26100)
+<2026-11-21T17:03:34.548Z> Vulkan instance version 1.3.280, driver version 32.0.15.6094
+<2026-11-21T17:04:15.909Z> [Notice] <Join PU> address[192.0.2.44] port[64336] shard[pub_euw1b_10498765_100] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]
+<2026-11-21T17:04:57.196Z> [Notice] <Channel Connection Complete> map="megamap" gamerules="SC_Default" remoteAddr=192.0.2.44:64336 localAddr=0.0.0.0:64090 connection={1, 0} session=bc4da5d3-3f05-e19e-4aa0-702432234095 [Team_Network][Network][Gateway]
+<2026-11-21T17:05:38.400Z> [Notice] <SHUDEvent_OnNotification> Added notification "Entered Crusader Industries Jurisdiction: " [1] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-21T17:06:19.508Z> [Notice] <SHUDEvent_OnNotification> Added notification "Entering Armistice Zone - Combat Prohibited: " [3] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-21T17:07:01.503Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Accepted:  Wikelo Arrive to System: " [4] to queue. New queue size: 1, MissionId: [bf7d2465-cf1e-480b-ae5c-25040d716e5f], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-21T17:07:42.519Z> [Notice] <[Instancing] Player entered instance> [Instancing][CEntityComponentBrokeredInstance::OnPlayerEnterInstance] Player Testpilot[200123456789] entered instance StreamingSOC_inst_dogleg_ht_a_siege_a[788400312747], which is NOT authoritative [Team_CGP5][Code][Instancing]
+<2026-11-21T17:08:24.409Z> [Notice] <[Instancing] Player exited instance> [Instancing][CEntityComponentBrokeredInstance::OnPlayerExitInstance] Player Testpilot[200123456789] left instance StreamingSOC_inst_dogleg_ht_a_siege_a[788400312747], which is NOT authoritative [Team_CGP5][Code][Instancing]
+<2026-11-21T17:09:06.301Z> [Notice] <[ActorState] Dead> [ACTOR STATE][CSCActorControlStateDead::PrePhysicsUpdate] Actor 'Testpilot' [123] ejected from zone 'RSI_Zeus_CL_1' [456] to zone 'pyro4' [7610665712799] due to previous zone being in a destroyed vehicle with detached interior. [Team_ActorFeatures][Actor]
+<2026-11-21T17:09:48.196Z> [Notice] <MED BED HEAL> Actor: Testpilot (Non-Authoritative CLIENT: Testpilot) | [CEntityComponentMedBed::HandleComponentEvent:1101] | -> Perform surgery event Success, med bed name: Bed_Single_Medical_Instance_Hospital_SOO003, vehicle name: none, head: true torso: false leftArm: true rightArm: false leftLeg: false rightLeg: false [Team_ActorFeatures][Actor]
+<2026-11-21T17:10:30.094Z> [Notice] <SHUDEvent_OnNotification> Added notification "Minor Injury Detected - Left arm - Tier 3 Treatment Required : " [20] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-21T17:11:11.995Z> [Notice] <Spawn Flow> Spawned the player at pos x: -18930.411 y: -2617401.25 z: 1.125 in zone 'OOC_Stanton_1_Hurston' uptime 01:02:03.456 entity [7610665712799] guid {9a8b7c6d-1234-4321-abcd-0123456789ab} [Team_ActorFeatures][Actor]
+<2026-11-21T17:11:53.900Z> [Notice] <CEntityComponentShopUIProvider::SendShopBuyRequest> Sending SShopBuyRequest - playerId[200123456789] shopId[783648035105] shopName[SCShop_Orison_KelTo] kioskId[783648035110] client_price[18117.000000] itemClassGUID[90adb28a-049e-4357-8000-a4bb75bb7f6f] itemName[behr_smg_ballistic_01_mag] quantity[61]  [Team_CoreGameplayFeatures][Shops][UI]
+<2026-11-21T17:12:35.810Z> [Notice] <CEntityComponentShoppingProvider::SendRentalRequest> Sending SShopRentalRequest - playerId[200123456789] shopId[783648035105] shopName[SCShop_FW_Rentals] kioskId[783648035110] client_price[0.000000] itemClassGUID[40a1f83b-3623-49e6-8168-ab8223998aa2] itemName[RSI_Perseus] offering[0] currencyType[UEC] [Team_CoreGameplayFeatures][Shops][UI]
+<2026-11-21T17:13:17.725Z> [Notice] <CEntityComponentCommodityUIProvider::SendCommodityBuyRequest> Sending SShopCommodityBuyRequest - playerId[200123456789] shopId[783648035105] shopName[SCShop_Pyro_RestStop_Rund_Admin] kioskId[783648035110] price[46284.000000] shopPricePerCentiSCU[28.927500] resourceGUID[a789f57a-e12b-4bcd-8132-e0c03d84fc89] autoLoading[1] quantity[1600.000000 cSCU] Cargo Box Data: boxSize[8.000000] | unitAmount[2] [Team_CoreGameplayFeatures][Shops][UI]
+<2026-11-21T17:13:59.646Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Complete:  Wikelo Arrive to System: " [5] to queue. New queue size: 2, MissionId: [bf7d2465-cf1e-480b-ae5c-25040d716e5f], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-21T17:14:41.573Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Failed: CRITICAL REFUEL REQUEST: Crusader Ares Star Fighter Ion <EM4>[200 Rep] [BP]*</EM4>: " [189] to queue. New queue size: 2, MissionId: [c54aa278-06e1-4c83-86d2-9e795f7691f3], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-21T17:15:23.508Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Failed: Defend InterSec Operative: " [21] to queue. New queue size: 22, MissionId: [2d9c9ff5-cf3a-43cd-95b0-c89e4c7eac56], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-21T17:16:05.452Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Shared: Tactical Strike Group Needed <EM4>[300 Rep] [BP]</EM4>: " [109] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-21T17:16:47.406Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Withdrawn:  A Call to Arms: " [231] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-21T17:17:29.371Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Withdrawn:  A Call to Arms: " [73] to queue. New queue size: 1, MissionId: [95fc3b2f-8cb6-4bce-aa4b-bae5771e7f6b], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-21T17:18:11.349Z> [Notice] <SHUDEvent_OnNotification> Added notification "Crime Committed: Destruction of Vehicle
+<2026-11-21T17:18:11.349Z> against Testvictim: " [387] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-21T17:18:53.342Z> [Notice] <SHUDEvent_OnNotification> Added notification "Testattacker committed Negligent Homicide against you
+<2026-11-21T17:18:53.342Z> Press 'Accept' to report or the crime will be forgiven: " [60] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-21T17:19:34.355Z> [Notice] <SHUDEvent_OnNotification> Added notification "CrimeStat Rating Increased: " [389] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-21T17:20:16.242Z> [Notice] <SHUDEvent_OnNotification> Added notification "Fined 80000 UEC: " [4] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-21T17:20:58.131Z> [Notice] <EndMission> Ending mission for player. MissionId[bf7d2465-cf1e-480b-ae5c-25040d716e5f] Player[Testpilot] PlayerId[200123456789] CompletionType[Abandon] Reason[Player left] [Team_CoreGameplayFeatures][Missions]
+<2026-11-21T17:21:40.022Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Not Accepted: Contract Limit Exceeded: " [207] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-21T17:22:21.915Z> [Notice] <SHUDEvent_OnNotification> Added notification "Monitored Space Down: " [430] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-21T17:23:03.811Z> [Notice] <StatObjLoad 0x800 Format> 'data/objectcontainers/pu/loc/mod/pyro/station/ser/reststop_comms/physicsgrid_objectcontainerpivot.cgf' - File exists [Team_Unknown][Unknown]
+
+Process Memory Status: 11507MB working set size, 19855MB commit size (19860MB peak), 8MB left to commit
+
+Cloud Imperium Games public crash handler taking over...
+Details for StarCitizen.exe (md5=cbeee95d79239ff9c8b1bbf9f37f1145)...
+Exception STATUS_CRYENGINE_OUT_OF_SYSMEM(0x2BADFF61) addr=0x00007FFE2CE13CFA digest=114a1cfe538433f07c4a87c536ae0528
+Is fatal error: No
+Is out of system memory: Yes
