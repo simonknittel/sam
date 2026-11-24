@@ -247,10 +247,10 @@ The JWKS publishes a `keys` array, but SAM currently holds exactly one key
 for each environment. The `kid` is the RFC 7638 thumbprint of the public
 key. Thus it changes automatically when the key changes.
 
-The rotation procedure is: deploy the new key, then remove the old key in a
-second deploy. In the time between the two deploys, the previous public key
-is not published. This is acceptable with 5-minute tokens, and it is a
-reason to keep your JWKS cache short-lived and to not pin a key.
+The rotation procedure is one deploy with the new key. After the deploy, the
+JWKS does not have the previous public key, thus a verifier refuses the
+tokens of the previous key. This is acceptable with 5-minute tokens, and it
+is a reason to keep your JWKS cache short-lived and to not pin a key.
 `createRemoteJWKSet` and its equivalents get the JWKS again when they see
 an unknown `kid`.
 

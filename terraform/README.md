@@ -1,6 +1,6 @@
 # Terraform
 
-Infrastructure for the AWS-hosted parts of the project: the Lambda functions with their triggers, and account-level monitoring and security services.
+Infrastructure for the AWS-hosted parts of the project: the Lambda functions with their triggers, the hosting of the builds of the Dogfight Trainer (the repository `care-bear-shooter`), and account-level monitoring and security services.
 
 > [!NOTE]
 > Everything deploys to the test AWS account only. A production AWS account does not exist yet, thus the test environment intentionally also operates as production. See [docs/setup-test-and-production.md](../docs/setup-test-and-production.md) and [docs/releasing.md](../docs/releasing.md).

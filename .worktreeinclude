@@ -5,11 +5,10 @@
 # rebuild. Everything installable — node_modules, .next, .terraform — is left
 # out and recreated with `pnpm install` / `terraform init`.
 
-# Local environment files. Without these the app, the lambdas and the Playwright
-# suite fail at startup on env validation.
+# Local environment files. Without the file of the app, it fails at startup on
+# the validation of the environment.
 pnpm-monorepo/apps/app/.env
 pnpm-monorepo/apps/lambda/.env
-pnpm-monorepo/apps/playwright/.env
 pnpm-monorepo/packages/database/.env
 
 # Generated Prisma client. Required for typecheck and build to resolve until

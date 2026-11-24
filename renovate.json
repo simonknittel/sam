@@ -41,7 +41,7 @@
       "pinDigests": false
     },
     {
-      "description": "OpenTelemetry 0.300.0 breaks the app on Vercel: the ESM build of @opentelemetry/instrumentation-http loads forwarded-parse through createRequire, thus the build does not include it (https://github.com/open-telemetry/opentelemetry-js/issues/7229). Remove these rules when a release fixes the issue.",
+      "description": "OpenTelemetry 0.300.0 breaks the app on Vercel: the ESM build of @opentelemetry/instrumentation-http loads forwarded-parse through createRequire, thus the build does not include it (https://github.com/open-telemetry/opentelemetry-js/issues/7229). Release 0.301.0 fixes the issue, but the releases since 0.300.0 are for the OpenTelemetry SDK 3.x. Remove these rules together with the migration to the SDK 3.x: without the migration, Renovate raises only a part of the packages, and the app mixes the SDK 2.x and 3.x.",
       "matchDepNames": [
         "@opentelemetry/api-logs",
         "@opentelemetry/exporter-trace-otlp-proto",
