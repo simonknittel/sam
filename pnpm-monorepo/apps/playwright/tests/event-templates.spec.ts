@@ -1021,7 +1021,7 @@ test("saving an event as a template follows the settings gate", async ({
   await page.goto(`/app/events/${event.id}/settings`);
   await expect(page.getByRole("heading", { name: "Redacted" })).toBeVisible();
 
-  /** A Discord event has neither an app briefing nor a settings tab */
+  /** A Discord event has no settings tab */
   const discordEvent = await createEvent(prisma, {
     name: "Discord-Event",
     discordCreatorId: owner.entity.discordId!,

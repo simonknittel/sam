@@ -25,8 +25,9 @@ test("the fleet tab counts the ships of both participation kinds", async ({
   const organizer = await createCitizen(prisma, { handle: "organisator" });
   /**
    * The two ways a participation row identifies its citizen: an app sign-up
-   * carries the citizen id, a Discord RSVP only the Discord id. The fleet
-   * has to find the owner through either one.
+   * carries the citizen id, a Discord RSVP that the Discord sync has not
+   * matched to a citizen only the Discord id. The fleet has to find the owner
+   * through either one.
    */
   const appSignUp = await createCitizen(prisma, { handle: "app-anmeldung" });
   const discordRsvp = await createCitizen(prisma, { handle: "discord-zusage" });

@@ -194,8 +194,8 @@ const setScopeStrategy = async (
  * adds a strategy for all users, which also turns on the flag for each
  * scope.
  *
- * The app caches the flag definitions for up to 30 seconds (see the app's
- * getUnleashFlag) — callers have to poll for propagation.
+ * The app caches the flag definitions (see FLAG_PROPAGATION_TIMEOUT) —
+ * callers have to poll for propagation.
  */
 export const setUnleashFlag = async (
   flagName: UNLEASH_FLAG,

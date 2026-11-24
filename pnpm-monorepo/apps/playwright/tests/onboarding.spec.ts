@@ -13,7 +13,7 @@ const onboardingDot = (page: Page) =>
 /**
  * The task list is mounted twice (top bar popover and the hidden mobile
  * flyout), so assertions are scoped to the open popover — Base UI renders
- * its popup with `role="dialog"`, named after its trigger.
+ * its popup with `role="dialog"`, named by its hidden title.
  */
 const popover = (page: Page) =>
   page.getByRole("dialog", { name: "Erste Schritte" });

@@ -351,7 +351,7 @@ test("a legacy description longer than Discord allows blocks publishing", async 
     handle: "langtext-orga",
     permissionStrings: ["event;read"],
   });
-  // Written before the app-wide limit dropped to Discord's 1000 characters
+  // Written before the app-wide limit, now below Discord's 1000 characters
   const event = await createAppEvent(prisma, {
     name: "Operation Wortreich",
     description: "a".repeat(1400),

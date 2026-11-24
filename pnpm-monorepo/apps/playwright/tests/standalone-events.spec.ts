@@ -817,9 +817,9 @@ test("the description renders the formats of Discord and exports plain text", as
 });
 
 /**
- * Sync safety ("a sync cycle leaves app events untouched") is covered at
- * the unit level in the lambda's reconciliation tests — the sync itself
- * needs Discord credentials and cannot run against the local stack.
+ * Sync safety ("a sync cycle leaves app events untouched") is covered in
+ * syncDiscordEvents.integration.test.ts of the application package — this
+ * stack does not run the Lambda function that starts the sync.
  */
 
 test("the events list preview manages participation without leaving the list", async ({

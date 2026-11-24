@@ -966,8 +966,8 @@ test("a citizen deleted while the page was open gets no removal and no decision"
 });
 
 /**
- * This test pins the current behavior, it does not approve it (known defect
- * 9, kept on purpose): the memberships tile calls `forbidden()`, and the
+ * This test pins the current behavior, it does not approve it (a known
+ * defect, kept on purpose): the memberships tile calls `forbidden()`, and the
  * error boundary of the tile lets it through to Next.js. Thus a viewer who
  * can read the organization but not its memberships gets the 403 page for
  * the full organization page, not the error fallback of one tile.

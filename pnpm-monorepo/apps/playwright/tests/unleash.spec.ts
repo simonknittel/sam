@@ -8,7 +8,7 @@ import {
   UNLEASH_FLAG,
 } from "../fixtures/unleash";
 
-/** Two polled flag states plus navigations per test */
+/** Up to four polls for a flag state plus their navigations per test */
 const FLAG_TEST_TIMEOUT = 120_000;
 
 /**

@@ -300,9 +300,9 @@ test("a viewer without a citizen has no appearance page", async ({
   await enableAdminMode();
 
   /**
-   * The sessions are the one account page such a viewer can open: the
-   * profile, the notifications and the appearance all need a citizen. The
-   * navigation of the account renders there, thus the missing entry shows.
+   * The sessions need no citizen, unlike the profile, the notifications and
+   * the appearance. The navigation of the account renders there, thus the
+   * missing entry shows.
    */
   await page.goto("/app/account/sessions");
   await expect(page.getByRole("link", { name: "Sitzungen" })).toBeVisible();

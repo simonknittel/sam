@@ -54,11 +54,6 @@ const monthSelect = (page: Page) => page.getByLabel("Monat", { exact: true });
 const saveButton = (page: Page) =>
   page.getByRole("button", { name: "Speichern" });
 
-/**
- * Gives the citizen one of every metric the profile shows, plus the time
- * zone they set themselves. The counted values are seeded next to
- * deleted and expired ones, which none of the metrics may count.
- */
 /** Every metric box links to the Spynet page which holds its details */
 const expectMetricLinks = async (scope: Locator, citizenId: string) => {
   const spynetHref = `/app/spynet/citizen/${citizenId}`;
@@ -75,6 +70,11 @@ const expectMetricLinks = async (scope: Locator, citizenId: string) => {
   }
 };
 
+/**
+ * Gives the citizen one of every metric the profile shows, plus the time
+ * zone they set themselves. The counted values are seeded next to
+ * deleted and expired ones, which none of the metrics may count.
+ */
 const seedProfile = async (prisma: PrismaClient, citizen: TestCitizen) => {
   await prisma.citizen.update({
     where: { id: citizen.entity.id },

@@ -153,8 +153,7 @@ test("the log renders its events and the filters narrow the table", async ({
   await expect(rowOfType("TASK_CREATED")).toBeVisible();
   await expect(rowOfType("ROLE_CREATED")).toHaveCount(0);
 
-  // The access filter keeps only the reads. The other MCP specs write reads
-  // at the same time, thus the page shows only the reads of this user.
+  // The access filter keeps only the reads
   await page.goto(`/app/system-log?createdById=${admin.user.id}`);
   await clickUntilUrl(
     page,

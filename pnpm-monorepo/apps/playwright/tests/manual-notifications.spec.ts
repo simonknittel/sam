@@ -308,8 +308,8 @@ test("the notification center shows a manual notification with its title and tex
 
   await page.goto("/app");
   /**
-   * Base UI renders the popover with `role="dialog"`, named after its
-   * trigger. The assertions are scoped to the open popover. The unread
+   * Base UI renders the popover with `role="dialog"`, named by its hidden
+   * title. The assertions are scoped to the open popover. The unread
    * notification opens the popover by itself.
    */
   const popover = page.getByRole("dialog", { name: "Benachrichtigungen" });

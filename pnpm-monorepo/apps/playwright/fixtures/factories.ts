@@ -36,7 +36,7 @@ export const ONE_DAY_MS = 24 * ONE_HOUR_MS;
 
 /**
  * Start and end of an event far enough ahead that sign-up is still open,
- * spread for createAppEvent()/createEventTemplate() call sites.
+ * spread for createAppEvent() call sites.
  */
 export const futureEvent = () => ({
   startTime: new Date(Date.now() + ONE_DAY_MS),
@@ -69,7 +69,8 @@ interface CreateCitizenOptions {
   readonly admin?: boolean;
   /**
    * When the citizen confirmed their email. Features which treat older
-   * content as not new to a citizen (the changelog) read this.
+   * content as not new to a citizen (the changelog, tasks and events) read
+   * this.
    */
   readonly emailVerified?: Date;
   /**
@@ -293,7 +294,8 @@ export const wikiHeading = (level: number, text: string): TiptapNode => ({
 /**
  * A generic website embed — the kind the iframe allowlist of the wiki
  * settings decides about. The dedicated providers (YouTube, Twitch, …) carry
- * their host patterns in the app and never consult the allowlist.
+ * their host patterns in the wiki-editor package and never consult the
+ * allowlist.
  */
 export const wikiEmbed = (src: string): TiptapNode => ({
   type: "wikiEmbed",

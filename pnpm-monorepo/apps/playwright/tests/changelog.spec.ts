@@ -50,10 +50,11 @@ test("entries are marked as seen in view and keep their indicator", async ({
     });
 
   /**
-   * The newest entry needs a permission this citizen does not have, thus it
-   * is redacted and marked without ever carrying an indicator. Scrolling to
-   * an entry further down makes sure that indicators are marked as well —
-   * more than one seen entry can then only mean an entry with an indicator.
+   * One entry between the first indicators needs a permission this citizen
+   * does not have, thus it is redacted and marked without ever carrying an
+   * indicator. Scrolling to an entry further down makes sure that indicators
+   * are marked as well — more than one seen entry can then only mean an entry
+   * with an indicator.
    */
   await newEntryIndicators(page).nth(3).scrollIntoViewIfNeeded();
   await expect

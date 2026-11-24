@@ -252,7 +252,7 @@ test("replace mode transplants the copy onto an existing page", async ({
   ).toBe(1);
   /**
    * The action copies the children only after the collab replace, whose
-   * store debounce already satisfies the searchText poll above — so the
+   * store already satisfies the searchText poll above — so the
    * action may still be running here. Poll until the child copy lands;
    * this also orders the "no (Kopie) page" check below after the action.
    */

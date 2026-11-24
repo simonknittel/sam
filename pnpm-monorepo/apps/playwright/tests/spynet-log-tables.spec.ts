@@ -18,7 +18,7 @@ import {
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
-/** The page size of the tables, see `PER_PAGE` of the app */
+/** Mirrors `PAGE_SIZE` of the app's OtherTableTile and NotesTableTile */
 const PER_PAGE = 50;
 
 const OTHER_TABLE_PERMISSIONS = ["citizen;read", "spynetOther;read"];

@@ -170,11 +170,12 @@ export const containerDatabaseUrl = (database: string) =>
 
 /**
  * The app validates its environment with non-empty strings for services the
- * test stack doesn't provide (Discord OAuth and bot). The features degrade
- * gracefully at runtime; tests must not depend on them. S3 and Unleash are
- * real though — uploads go to the stack's RustFS container (see
- * s3Environment) and feature flags come from the stack's Unleash container
- * (see unleashEnvironment).
+ * test stack doesn't provide (Discord OAuth). The features degrade
+ * gracefully at runtime; tests must not depend on them. The requests with
+ * the bot token go to the Discord mock of the worker (see
+ * fixtures/discord-mock.ts). S3 and Unleash are real though — uploads go to
+ * the stack's RustFS container (see s3Environment) and feature flags come
+ * from the stack's Unleash container (see unleashEnvironment).
  *
  * The Care Bear Shooter build URL is a NEXT_PUBLIC_ variable, so it must be
  * present at build time for the flag-released page to render at all; the

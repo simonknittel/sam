@@ -34,9 +34,8 @@ export const FORBIDDEN_ACTION_TEXT =
 export const BAD_REQUEST_TEXT = "Ungültige Anfrage";
 
 /**
- * Scopes a lookup to the tile/section carrying the given heading. Tiles and
- * statistic tiles both render as a `section` named by their heading, so one
- * helper covers both.
+ * Scopes a lookup to the tile/section carrying the given heading. Tiles
+ * render as a `section` that contains their heading.
  */
 export const sectionByHeading = (page: Page, heading: string | RegExp) =>
   page.locator("section").filter({
@@ -100,9 +99,9 @@ export const themeRoot = (page: Page) => page.locator("[data-seasonal-event]");
  * Interactions landing before React hydrates are swallowed: clicks fall on
  * dead DOM and fill() never reaches a controlled input's state. These
  * helpers retry the interaction until its expected reaction shows up. The
- * underlying hydration race is a product issue (tracked in the maintenance
- * backlog) — new tests should prefer these helpers over hand-rolled
- * `toPass` loops so the workaround stays in one place.
+ * underlying hydration race is a product issue — new tests should prefer
+ * these helpers over hand-rolled `toPass` loops so the workaround stays in
+ * one place.
  */
 
 const REACTION_TIMEOUT = 2_000;
@@ -228,7 +227,7 @@ export const tabUntilFocused = (page: Page, target: Locator) =>
 
 /**
  * Opens an inline editor (EditableField). The whole field is the trigger and
- * carries the hint as its title, which is also its accessible name.
+ * carries the hint as its title.
  */
 export const inlineEditorTrigger = (scope: Page | Locator) =>
   scope.getByTitle("Klicken, um zu bearbeiten");
@@ -290,16 +289,17 @@ export const openFormSection = async (
 
 /**
  * Picks an entry from one of the app's search pickers (citizens, users).
- * Their options render in a portal outside the picker and carry the entry's
- * id next to its handle, so they are looked up on the page and matched by
- * substring — as a plain string, which Playwright never reads as a pattern.
+ * The options of the citizen picker render in a portal outside the picker.
+ * The options carry the id (citizens) or the email (users) next to the name.
+ * So they are looked up on the page and matched by substring — as a plain
+ * string, which Playwright never reads as a pattern.
  */
 export const pickFromSearch = async (
   page: Page,
   combobox: Locator,
   handle: string,
 ) => {
-  /** The list loads through tRPC before the picker becomes searchable */
+  /** The citizen picker shows its input after its list loaded through tRPC */
   await expect(combobox).toBeVisible();
   await combobox.fill(handle);
 
