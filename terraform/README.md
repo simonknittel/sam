@@ -15,4 +15,4 @@ The code of the Lambda functions is in `pnpm-monorepo/apps/lambda`, and the GitH
 
 ## Usage
 
-See [docs/setup-test-and-production.md](../docs/setup-test-and-production.md) for the backend and variable setup. The terraform-validate, terraform-plan and terraform-apply GitHub workflows validate, plan and apply changes.
+See [docs/setup-test-and-production.md](../docs/setup-test-and-production.md) for the backend and variable setup. The terraform-validate, terraform-plan and terraform-apply GitHub workflows validate, plan and apply changes. The terraform-apply workflow has no approval gate, and it applies to the live account: start the terraform-plan workflow first.

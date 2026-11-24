@@ -8,6 +8,7 @@ Create a database for each environment. The server must have:
 2. `timescaledb` in `shared_preload_libraries` (a change needs a restart of the server), and `timescaledb.telemetry_level = off`.
 3. The extension in each database of SAM, before the first `prisma migrate deploy`. Only a superuser can create it: `CREATE EXTENSION IF NOT EXISTS timescaledb;`.
 4. The user of the app as the owner of the database. With this user, the migrations create the extensions `pg_trgm` and `citext`.
+5. A connection limit of the user of the app that is much higher than the normal use. Each function instance of Vercel and the collab server keep a pool of up to 10 connections (the default of `pg`). During a deployment, the instances of the old and of the new deployment hold their pools at the same time, because a frozen instance does not close its idle connections.
 
 ## 2. Set up Cloudflare R2
 
@@ -19,10 +20,11 @@ Create a database for each environment. The server must have:
 
 ## 4. Set up GitHub
 
-1. Create the environments with their variables and secrets
+1. Create the variables and secrets of the repository and the environments with their variables and secrets
 
    | Environment             | Variables                                                                                                            | Secrets                                                                                                                                                    |
    | ----------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+   | (repository)            | `DOCKERHUB_USERNAME`                                                                                                 | `DOCKERHUB_TOKEN`, `RENOVATE_TOKEN`                                                                                                                        |
    | `terraform-test`        | `IAM_ROLE_ARN`, `TFVARS`                                                                                             |                                                                                                                                                            |
    | `lambda-functions-test` | `IAM_ROLE_ARN`                                                                                                       |                                                                                                                                                            |
    | `Production`            | `SOKETI_APP_ID`, `SOKETI_APP_KEY`, `SOKETI_HOST`                                                                     | `DATABASE_URL`, `SOKETI_APP_SECRET`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` (for the Vercel values see [7. Set up Vercel](#7-set-up-vercel)) |

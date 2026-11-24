@@ -29,7 +29,9 @@ Do not delete the tag with the highest number: the next release then uses its nu
 
 ## Collab server
 
-The wiki collaboration server is not part of the Release workflow. The [Build collab server workflow](../.github/workflows/build-collab-server.yml) builds and pushes the `ghcr.io/simonknittel/sam-collab` image on each push to `main` that changes the collab server or its workspace dependencies. You can also start this workflow manually. In production, an externally managed host pulls this image and runs the server.
+The wiki collaboration server is not part of the Release workflow. The [Build collab server workflow](../.github/workflows/build-collab-server.yml) builds and pushes the `ghcr.io/simonknittel/sam-collab` image on each push to `main` that changes the collab server or its workspace dependencies. You can also start this workflow manually. In production, an externally managed host pins an image and runs the server.
+
+The app and the collab server do not deploy together. For a change of the tokens between them, release the app first: the collab server closes each connection whose client does not send a token that it accepts.
 
 ## Ad-hoc releases and rollbacks
 
