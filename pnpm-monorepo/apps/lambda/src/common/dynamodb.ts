@@ -4,6 +4,7 @@ import {
   PutItemCommand,
 } from "@aws-sdk/client-dynamodb";
 
+/** The table and its TTL attribute `ExpiresAt` are in `terraform/dynamodb.tf` */
 export const dynamoDB = new DynamoDBClient({});
 
 export const isRequestProcessed = async (requestId: string) => {

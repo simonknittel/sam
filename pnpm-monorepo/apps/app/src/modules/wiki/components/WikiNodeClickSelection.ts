@@ -3,6 +3,7 @@
 import { Extension } from "@tiptap/core";
 import { NodeSelection, Plugin, PluginKey } from "@tiptap/pm/state";
 
+/** For a new node, see `getWikiEditorExtensions()` */
 const ANCHOR_NODE_TYPES = [
   // Linked to the original file it displays
   "image",

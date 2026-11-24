@@ -6,8 +6,8 @@ import slug from "slug";
 
 /**
  * Same slug rules as the page slugs (`slugifyWikiPageTitle()` of the domain
- * package), so heading anchors look consistent with page URLs. Here, a cut
- * slug can end with a dash.
+ * package), so heading anchors look consistent with page URLs: 64 is
+ * `SLUG_MAX_LENGTH`. Here, a cut slug can end with a dash.
  */
 const slugifyWikiHeading = (text: string): string => {
   const result = slug(text, { locale: "de" }).slice(0, 64);

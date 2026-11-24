@@ -20,6 +20,13 @@ export * from "./ports/email.js";
 export * from "./ports/images.js";
 export * from "./ports/storage.js";
 
+/**
+ * The compiler does not check the type and the payload: they must agree with
+ * `bodySchema` of the notification router. Else the event goes to the
+ * dead-letter queue, and nobody gets the notification. An id in the payload
+ * needs `z.cuid()` or `z.cuid2()` there, like `@default(cuid())` or
+ * `@default(cuid(2))` of its model.
+ */
 export interface Notification {
   readonly type: string;
   readonly payload: unknown;
@@ -181,12 +188,20 @@ export interface ApplicationContext {
   } | null;
   /**
    * Null when the host has no client of the realtime server (the Lambda
-   * functions, or an app without the configuration of Pusher)
+   * functions, or an app without the configuration of Pusher). Then `banUser`
+   * does not close the connections.
    */
   readonly realtime: RealtimeServer | null;
-  /** Null when the host has no bot token */
+  /**
+   * Null when the host has no bot token. Then a use case behaves as if Discord
+   * cannot be reached.
+   */
   readonly discord: DiscordGateway | null;
-  /** Null when the host has no access to the bucket of the uploads */
+  /**
+   * Null when the host has no access to the bucket of the uploads. Then a copy,
+   * a presigned URL and a list throw a `ConflictError`, and the background
+   * steps skip with a warning.
+   */
   readonly storage: FileStorage | null;
   /** Null when the host cannot decode images (the Lambda functions) */
   readonly images: ImageReader | null;
@@ -206,7 +221,8 @@ export interface ApplicationContext {
   readonly signingKey: () => Promise<SigningKey | null>;
   /**
    * Null when the host does not run the OAuth authorization server (the
-   * Lambda functions)
+   * Lambda functions). Then only the clients whose cached document is not
+   * expired are accepted.
    */
   readonly clientMetadata: ClientMetadataFetcher | null;
   /** Permits client ids with plain HTTP on a loopback host (tests only) */

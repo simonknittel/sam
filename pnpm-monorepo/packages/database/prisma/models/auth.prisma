@@ -37,6 +37,8 @@ model Session {
 
 model User {
   id                      String                   @id @default(cuid())
+  /// The handle of the citizen, its id, or the label of a deleted citizen. Never
+  /// the Discord name.
   name                    String?
   email                   String?                  @unique
   emailVerified           DateTime?                @db.Timestamptz(3)
@@ -96,6 +98,7 @@ model Role {
   thumbnail                 Upload?                       @relation(name: "thumbnail", fields: [thumbnailId], references: [id], onDelete: SetNull)
   permissionStrings         PermissionString[]
   flowNodes                 FlowNode[]                    @relation("flowNodes")
+  /// Never the role itself (CHECK `_inheritance_no_self`)
   inherits                  Role[]                        @relation("inheritance")
   inheritedBy               Role[]                        @relation("inheritance")
   eventVisibilities         EventVisibilityRole[]
@@ -166,6 +169,7 @@ model PermissionString {
   id               String @id @default(cuid())
   roleId           String
   role             Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  /// The format is a CHECK (`PermissionString_format_check`)
   permissionString String
 
   @@unique([roleId, permissionString])

@@ -138,7 +138,8 @@ export const getApplicationContext = () =>
 
 /**
  * Only for the MCP endpoint. The OAuth endpoints and the consent page use
- * `getApplicationContext()`.
+ * `getApplicationContext()`. The context has the live Discord gateway: the MCP
+ * tools do not write to Discord only because they give no app-only option.
  */
 export const getMcpApplicationContext = () =>
   (mcpContext ??= {

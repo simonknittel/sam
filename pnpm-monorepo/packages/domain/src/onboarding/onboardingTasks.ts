@@ -1,4 +1,7 @@
-/** The order is the order in which the app shows the tasks */
+/**
+ * The order is the order in which the app shows the tasks. The database stores
+ * the keys of the tasks and the steps, thus a value must never change.
+ */
 export enum OnboardingTaskKey {
   Events = "events",
   Fleet = "fleet",

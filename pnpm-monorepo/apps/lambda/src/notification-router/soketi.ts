@@ -50,6 +50,7 @@ export const publishOnSiteNotificationEvents = async (
   const events = rows.map((row) => ({
     channel: getCitizenChannelName(row.citizenId),
     name: ON_SITE_NOTIFICATION_CREATED_EVENT,
+    // `realtimeNotificationSchema` of the app drops a mismatch without an error
     data: JSON.stringify({
       id: row.id,
       notificationType: row.notificationType,

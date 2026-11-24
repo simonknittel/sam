@@ -27,6 +27,8 @@ model Event {
   id     String      @id @default(cuid())
   source EventSource
 
+  /// `discordId` is set exactly for the source DISCORD (CHECK
+  /// `Event_source_check`)
   // Discord-sourced events only (source DISCORD)
   discordId        String? @unique
   discordCreatorId String?

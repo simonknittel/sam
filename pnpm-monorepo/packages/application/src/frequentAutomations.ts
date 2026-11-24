@@ -26,7 +26,9 @@ export interface RunWindow {
 
 /**
  * The windows of two runs one interval apart touch, thus each instant is in
- * the window of exactly one run
+ * the window of exactly one run. But `now` is the real start of the run, not the
+ * scheduled one: with different start delays, an instant can be in no window or
+ * in two.
  */
 export const getRunWindow = (
   now: Date,

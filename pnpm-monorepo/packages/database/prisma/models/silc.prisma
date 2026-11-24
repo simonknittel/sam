@@ -41,6 +41,8 @@ model SilcTransaction {
 
 model SilcSetting {
   key         SilcSettingKey @id
+  /// The conversion rate is a positive whole number (CHECK
+  /// `SilcSetting_value_check`)
   value       String
   updatedAt   DateTime?      @updatedAt @db.Timestamptz(3)
   updatedBy   Citizen?       @relation("updatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
@@ -56,7 +58,8 @@ model SilcRoleSalary {
   roleId     String
   role       Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
   value      Int
-  /// 1 to 31. In a shorter month, a day after its end pays on its last day.
+  /// 1 to 31 (CHECK `SilcRoleSalary_dayOfMonth_check`). In a shorter month, a
+  /// day after its end pays on its last day.
   dayOfMonth Int
 
   @@unique([roleId, dayOfMonth])

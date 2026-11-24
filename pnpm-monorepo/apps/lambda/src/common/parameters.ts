@@ -3,6 +3,11 @@ import { log } from "./logger";
 
 const ssmClient = new SSMClient({});
 
+/**
+ * Each parameter name must also be in `parameters` of the function in
+ * `terraform/*.tf`. Else IAM refuses the read, and each invocation fails at the
+ * cold start.
+ */
 export const fetchParameters = async <T extends Record<string, string>>(
   parameters: T,
 ): Promise<T> => {

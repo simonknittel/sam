@@ -8,6 +8,10 @@ export interface FindNewItemIdsInput {
   readonly subjectIds: readonly string[];
 }
 
+/**
+ * No permission check: the caller has applied the visibility and the read
+ * permission to the ids
+ */
 export const findNewItemIds = async (
   context: ApplicationContext,
   actor: Actor,

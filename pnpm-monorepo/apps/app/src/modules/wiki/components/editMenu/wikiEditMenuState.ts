@@ -24,6 +24,7 @@ import {
 } from "../wikiEditorTargets";
 
 export const URL_NODE_TYPES = ["wikiEmbed"];
+/** For a new node, see `getWikiEditorExtensions()` */
 const MENU_NODE_TYPES = [
   ...URL_NODE_TYPES,
   "image",

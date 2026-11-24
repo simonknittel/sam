@@ -2,6 +2,13 @@
 
 @plugin "@tailwindcss/typography";
 
+/*
+ * The z-index scale of the app: 10 parts of the content, 20 the header of a
+ * sub-app and the seasonal layer, 30 the top bar, modals, popovers and select
+ * lists, 40 the mobile bar and pickers in a modal, 50 the mobile flyout and the
+ * admin toolbar, 60 popovers in the flyout.
+ */
+
 @theme {
   --color-text-primary: hsl(0, 0%, 95%);
 

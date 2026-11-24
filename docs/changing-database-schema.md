@@ -21,6 +21,10 @@ Step 4 resets the local database. To keep the data, use one of these options:
 
 Do not change a migration that a database already applied. `prisma migrate deploy` does not examine the checksums: it succeeds, and the database does not get the change. `prisma migrate dev` asks to reset the local database.
 
+## Database rules outside of the Prisma models
+
+CHECK constraints, triggers and expression indexes are only in the migrations. `prisma db push` does not create them, and a write that breaks a CHECK fails only at runtime. Name a new CHECK in a comment at its model. To find them: `grep -rE "CHECK \(|CREATE TRIGGER|USING GIN" prisma/migrations`.
+
 ## Views of the schema `statistics`
 
 The schema `statistics` holds views for the readers of the statistics (the dashboard and the MCP tools). The views are not in the Prisma models, thus Prisma ignores them in a diff. The migration `statistics_views` makes them.

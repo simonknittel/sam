@@ -69,6 +69,7 @@ export const publishWebPushNotifications = async (
 
   const subscriptionsToRemove: RejectedWebPushSubscription[] = [];
   for (const { draft, subscription } of deliveries) {
+    // The keys of `public/service-worker.js` of the app
     const payload = JSON.stringify({
       title: `${draft.title} | SAM`,
       body: draft.body,

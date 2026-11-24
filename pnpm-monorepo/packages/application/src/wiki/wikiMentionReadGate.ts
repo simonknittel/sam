@@ -134,6 +134,10 @@ const loadCitizenGrants = async (
  * citizen can see (`resolveEventVisibility()`, thus not deleted), like the
  * briefing of the app (`buildEventWikiContext()`). Then it uses the event
  * resolver, which keeps unpublished briefings silent.
+ *
+ * A second implementation of the gate of `buildEventWikiContext()`: it matches
+ * the participants and the managers only by the citizen id, not by the Discord
+ * id. Change the two together.
  */
 export const createWikiMentionReadGate = async (
   context: ApplicationContext,

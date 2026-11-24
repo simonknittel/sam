@@ -1,6 +1,9 @@
 import { NotificationChannel } from "@sam-monorepo/database/browser";
 
-/** The values are the `notificationType` of the settings rows. */
+/**
+ * The values are the `notificationType` of the settings rows, thus a value must
+ * never change
+ */
 export enum NotificationSettingType {
   EventCreated = "event_created",
   EventUpdated = "event_updated",

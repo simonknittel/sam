@@ -174,6 +174,11 @@ const WikiDetails = withWikiBlockLayout(Details).extend({
  * and the server-side content validation so all of them always agree on the
  * schema. All options only affect editor behavior or rendering — never the
  * schema itself.
+ *
+ * A new node also needs entries in the app, which no compiler checks:
+ * `NODE_TYPE_LABELS`, `MENU_NODE_TYPES`, `TARGET_SELECTOR`,
+ * `ANCHOR_NODE_TYPES` (when it renders an anchor) and `nodeMapping` of the
+ * static render (when it has a node view).
  */
 export const getWikiEditorExtensions = (
   options?: WikiEditorExtensionsOptions,

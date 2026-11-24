@@ -43,5 +43,6 @@ export const resolveWikiVariantLink = (
   };
 };
 
+/** Like `getVariantWikiRootPath()` of the domain package */
 export const wikiVariantLinkHref = (variantId: string) =>
   `/app/fleet/variant/${encodeURIComponent(variantId)}`;

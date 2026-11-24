@@ -57,6 +57,7 @@ const getFamily = (address: string) => {
   }
 };
 
+/** The SSRF protection refuses all other addresses */
 export const isPublicAddress = (address: string) => {
   const family = getFamily(address);
   if (!family) return false;

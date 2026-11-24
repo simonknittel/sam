@@ -46,6 +46,7 @@ export interface WikiSettings {
   readonly pageLinkPageIds: Record<WikiPageLinkKey, string | null>;
 }
 
+/** No permission check: the values are raw */
 export const findWikiSettings = async (
   context: Pick<ApplicationContext, "prisma">,
 ): Promise<WikiSettings> => {

@@ -22,6 +22,7 @@ import {
 import * as z from "zod/mini";
 import type { OnSiteNotificationRow } from "../utils/types";
 
+/** The event data of `soketi.ts` of the notification router */
 const realtimeNotificationSchema = z.object({
   id: z.cuid2(),
   notificationType: z.string(),

@@ -175,14 +175,15 @@ model CitizenLog {
   submittedById String?
   submittedBy   User?    @relation("submittedBy", fields: [submittedById], references: [id], onDelete: SetNull)
 
-  /// NULL while nobody decided about the log
+  /// NULL while nobody decided about the log. `confirmedAt` is NULL in the same
+  /// rows (CHECK `CitizenLog_confirmation_check`).
   confirmed     ConfirmationStatus?
   confirmedAt   DateTime?           @db.Timestamptz(3)
   confirmedById String?
   confirmedBy   User?               @relation("confirmedBy", fields: [confirmedById], references: [id], onDelete: SetNull)
 
-  /// Notes only. NULL after the note type or the classification level was
-  /// deleted.
+  /// Notes only (CHECK `CitizenLog_note_classification_check`). NULL after the
+  /// note type or the classification level was deleted.
   noteTypeId            String?
   noteType              NoteType?            @relation(fields: [noteTypeId], references: [id], onDelete: SetNull)
   classificationLevelId String?

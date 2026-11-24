@@ -57,7 +57,11 @@ export const resolveFlowPermissionsOfActor = (
   flow: FlowPermissionSource,
 ) => createFlowPermissionResolver([flow], toFlowViewer(actor)).get(flow.id);
 
-/** The management pages have their own reads (see `findManageableFlows()`) */
+/**
+ * No permission check: gives all flows with the effective permissions of the
+ * actor. The management pages have their own reads (see
+ * `findManageableFlows()`).
+ */
 export const loadFlowContext = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,

@@ -711,6 +711,7 @@ const server = new Server<ConnectionContext>({
     try {
       await prisma.auditEvent.create({
         data: {
+          // A plain string: no compiler check against `AuditEventDataByType`
           type: "WIKI_PAGE_UPDATED",
           data: { pageId: data.documentName },
           createdById: data.context.userId,

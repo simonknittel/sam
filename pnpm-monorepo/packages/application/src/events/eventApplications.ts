@@ -148,8 +148,9 @@ export interface ClosedApplications extends AdmittedApplicants {
 /**
  * The switch of the applications to false: approves the open applications of
  * the citizens who can still see the event (see `findAddableParticipantIds()`),
- * and withdraws the others. The event has the values of the update, for example
- * a new visibility. The transaction locked the event.
+ * and withdraws the others. The transaction locked the event. `prisma` is a
+ * second connection that does not see the writes of the transaction, thus
+ * `event` must have the values of the update, for example a new visibility.
  */
 export const closeOpenApplications = async (
   transaction: Prisma.TransactionClient,

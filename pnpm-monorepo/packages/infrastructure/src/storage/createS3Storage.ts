@@ -22,6 +22,7 @@ import * as z from "zod";
  */
 const READ_TIMEOUT_MILLISECONDS = 10_000;
 
+/** See `copyUploadInTransaction()` of the application package */
 const COPY_TIMEOUT_MILLISECONDS = 30_000;
 
 const HEAD_TIMEOUT_MILLISECONDS = 10_000;

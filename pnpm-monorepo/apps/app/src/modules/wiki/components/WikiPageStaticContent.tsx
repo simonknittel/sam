@@ -82,6 +82,7 @@ const renderWikiPageContent = (
       variants: linkedVariants,
     }),
     options: {
+      /** For a new node, see `getWikiEditorExtensions()` */
       nodeMapping: {
         /**
          * The mapping replaces the node's renderHTML entirely, so the

@@ -3,7 +3,11 @@ import {
   type EventContainer,
 } from "../events/eventContainer.js";
 
-/** Relative to the base URL of the app */
+/**
+ * The routes are relative to the base URL of the app. The nodes of `wiki-editor`
+ * repeat them, because `wiki-editor` cannot import this package: a change here
+ * without a change there breaks the links and the paste rules.
+ */
 export const GLOBAL_WIKI_BASE_PATH = "/app/wiki";
 
 export const getBriefingPath = (container: EventContainer) => {

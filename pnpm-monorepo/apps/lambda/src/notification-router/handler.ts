@@ -213,8 +213,9 @@ export const notificationRouterHandler = async (
 const MAXIMUM_EVENT_ITEM_COUNT = 10_000;
 
 /**
- * The app and this function deploy independently (see docs/releasing.md),
- * thus a field that one side adds must be optional here.
+ * The contract of `Notification` of the application package. The app and this
+ * function deploy independently (see docs/releasing.md), thus a field that one
+ * side adds must be optional here.
  */
 export const bodySchema = z.discriminatedUnion("type", [
   z.object({

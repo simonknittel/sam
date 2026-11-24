@@ -1,6 +1,9 @@
 import slug from "slug";
 
-/** Wiki pages and career flows share it */
+/**
+ * Wiki pages and career flows share it. `wikiHeadingIds.ts` of `wiki-editor`
+ * repeats it: a change breaks the stored links to headings.
+ */
 export const SLUG_MAX_LENGTH = 64;
 
 /**

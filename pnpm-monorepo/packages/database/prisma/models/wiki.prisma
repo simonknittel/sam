@@ -97,7 +97,9 @@ model WikiPage {
   searchText String @default("")
   /// Space-joined names of the page's tags. Denormalized because the FTS
   /// GIN index is an expression index on this table and cannot span the tag
-  /// tables. Kept in sync by setWikiPageTags and the page copies.
+  /// tables. Kept in sync by setWikiPageTags and the page copies. The index
+  /// `WikiPage_fts_idx` is only in the migrations, and its expression must be
+  /// the same as in `wikiSearchQuery.ts`.
   tagsText   String @default("")
 
   /// PUBLIC only on a top-level page (CHECK constraint)

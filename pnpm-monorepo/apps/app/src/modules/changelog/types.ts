@@ -7,6 +7,10 @@ interface AuthRequirement {
 }
 
 export interface ChangelogEntry {
+  /**
+   * The read markers store the key of a tracked entry: an entry with a changed
+   * key is new again for everybody
+   */
   key: string;
   date: string;
   title: string;

@@ -33,6 +33,9 @@ export interface DeleteUnusedUploadsOutput {
  * the upload manager failed at the bucket. This also deletes the objects of
  * the rows that the first step deleted.
  *
+ * The bucket must belong to this database alone: the sweep deletes each older
+ * object whose key is not the id of an upload.
+ *
  * A failure of the bucket fails the run after the audit event of the deleted
  * rows and objects.
  */

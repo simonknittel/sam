@@ -18,7 +18,8 @@ import {
 /**
  * For an interactive transaction that writes many rows one after the other. The
  * default of Prisma (5 seconds) is possibly too short for this (an assumption,
- * not measured).
+ * not measured). The transaction can include a copy of an upload (see
+ * `copyUploadInTransaction()`).
  */
 export const LONG_TRANSACTION_TIMEOUT_IN_MILLISECONDS = 30_000;
 

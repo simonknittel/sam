@@ -1,6 +1,6 @@
 /**
  * The database stores the value in `serviceName` of the external link of a
- * variant.
+ * variant, thus a value must never change.
  */
 export enum ExternalService {
   SPVIEWER = "SPVIEWER",

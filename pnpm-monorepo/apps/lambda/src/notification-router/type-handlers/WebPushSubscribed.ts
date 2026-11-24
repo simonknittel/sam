@@ -34,6 +34,7 @@ export const WebPushSubscribedHandler = async (
 
   // A confirmation goes directly to the new device. The notification
   // settings do not apply to it.
+  // The keys of `public/service-worker.js` of the app
   const notificationPayload = JSON.stringify({
     title: "Browser-Benachrichtigungen aktiviert | SAM",
     body: "Du erhältst ab sofort Benachrichtigungen auf diesem Gerät.",

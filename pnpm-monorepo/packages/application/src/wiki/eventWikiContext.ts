@@ -147,6 +147,7 @@ export interface BuildEventWikiContextInput {
   readonly event_id: string;
 }
 
+/** `createWikiMentionReadGate()` has its own implementation of this gate */
 export const buildEventWikiContext = (
   context: ApplicationContext,
   actor: Actor,

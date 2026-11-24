@@ -6,6 +6,8 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 
+// The payload of `web-push.ts` and `WebPushSubscribed.ts` of the notification
+// router
 self.addEventListener("push", (event) => {
   const data = event.data ? event.data.json() : {};
 

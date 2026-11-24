@@ -53,6 +53,11 @@ const context = createApplicationContext({
 
 const createJob = createJobFactory(context);
 
+/**
+ * The order matters: the end of a collection phase books all balances to 0
+ * before the salaries of the day, and the expired roles go away before the
+ * counts and the salaries.
+ */
 export const handler: ScheduledHandler = async () =>
   runJobsInIsolation({
     endCollectionPhases: createJob(endDueCollectionPhases),

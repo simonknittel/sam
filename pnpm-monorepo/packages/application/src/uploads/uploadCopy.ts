@@ -29,7 +29,8 @@ export const COPYABLE_UPLOAD_SELECT = {
  * resolved, never from user input. Runs on the caller's transaction so a
  * failed surrounding operation leaves no orphaned row; the object copy itself
  * cannot be rolled back, but an object without a row is exactly what the
- * nightly upload cleanup removes.
+ * nightly upload cleanup removes. The timeout of the copy in the S3 storage must
+ * not be longer than the timeout of the transaction.
  */
 export const copyUploadInTransaction = async (
   context: Pick<ApplicationContext, "storage">,

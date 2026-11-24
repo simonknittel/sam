@@ -45,6 +45,7 @@ export const resolveWikiPageLink = (
   return {
     pageId,
     title: page.title,
+    // The route is in `wikiRoutes.ts` of the domain package
     href:
       page.href ??
       `/app/wiki/${encodeURIComponent(pageId)}/${encodeURIComponent(page.slug)}`,
