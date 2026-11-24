@@ -163,7 +163,7 @@ export const findWikiPageIndex = async (
   { pageId, variantId, ...config }: FindWikiPageIndexInput,
 ): Promise<WikiPageIndexEntry[]> => {
   /**
-   * The id comes from the content of the document, thus a stale variant
+   * The id comes from the embed that shows the editor, thus a stale variant
    * gives the global resolution and not an error
    */
   const variantScope = variantId

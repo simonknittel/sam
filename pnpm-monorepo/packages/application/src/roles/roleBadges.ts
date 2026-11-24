@@ -34,8 +34,8 @@ export type OwnAssignedRoleBadge = RoleBadge & {
 
 /**
  * The badges of all roles, sorted by name. The helper has no permission
- * check: its callers check their own permission (the role pages
- * `role;manage`, the career editor the update of the flow).
+ * check: its callers check their own permission (the role pages and the tag
+ * pages `role;manage`, the career editor the update of the flow).
  */
 export const findAllRoleBadges = (
   context: Pick<ApplicationContext, "prisma">,

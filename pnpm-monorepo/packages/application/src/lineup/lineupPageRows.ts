@@ -151,9 +151,9 @@ const findVisibleRequiredRoleIdsOfCitizens = async (
  * The citizens of the active participants of an event, with their ships of
  * the required variants and, for a manager of the positions, their visible
  * required roles. The lineup offers these citizens for its positions,
- * thus a deleted citizen is not one of them. The same checks as the lineup
- * page: `event;read`, the visibility of the event, and a lineup that is
- * enabled or that the actor can manage.
+ * thus a deleted citizen is not one of them. Requires `event;read`, an event
+ * that the actor can see, and a lineup that is visible for the actor (see
+ * `isLineupVisible()`).
  *
  * @throws NotFoundError or ForbiddenError
  */

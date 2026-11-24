@@ -43,7 +43,7 @@ const getCategoryRule = (category: UploadCategory) => {
 
 export const createUploadInputSchema = z
   .object({
-    /** The callers that upload images send no category */
+    /** The image uploads outside the wiki editor send no category */
     category: z.enum(UploadCategory).default(UploadCategory.Image),
     file_name: z.string().trim().min(1).max(MAXIMUM_UPLOAD_FILE_NAME_LENGTH),
     mime_type: z.string().trim().max(MAXIMUM_MIME_TYPE_LENGTH),

@@ -75,9 +75,10 @@ interface CopyBriefingTreeParams {
 
 /**
  * Copies a whole briefing — the blueprint of an event template into a new
- * event, or one template's briefing into its duplicate. Unlike the
- * subtree copy this carries the pages' scopes over: reproducing who will be
- * able to read which page is the entire point of a briefing blueprint.
+ * event, an event's briefing into a new template, or one template's briefing
+ * into its duplicate. Unlike the subtree copy this carries the pages' scopes
+ * over: reproducing who will be able to read which page is the entire point
+ * of a briefing blueprint.
  *
  * Runs on the caller's transaction, so the copied briefing commits together
  * with whatever it belongs to.

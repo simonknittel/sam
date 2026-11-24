@@ -28,8 +28,8 @@ export interface ValidateWikiIframeSrcOutput {
  * early. It is not the only check. The use case needs no permission other
  * than the clearance that the caller checks.
  *
- * @throws ValidationError when the URL is not one of the dedicated providers
- * and its host is not on the allowlist
+ * @throws ValidationError when the URL is not an HTTPS URL, or when its host
+ * is not on the allowlist and is not a subdomain of an entry
  */
 export const validateWikiIframeSrc = async (
   context: ApplicationContext,

@@ -46,7 +46,7 @@ export class InvalidTokenError extends Error {
 
 /**
  * The app has no signing key, thus it cannot issue or verify access tokens.
- * The OAuth endpoints answer `503`.
+ * The token endpoint answers `503`.
  */
 export class SigningKeyUnavailableError extends Error {
   override readonly name = "SigningKeyUnavailableError";

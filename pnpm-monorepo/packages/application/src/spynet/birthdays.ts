@@ -11,10 +11,10 @@ import type { ApplicationContext } from "../context.js";
 
 /**
  * The citizens whose birthday the lists show: the ones who filled in the
- * birthday. Citizens who can no longer sign in are left out, the same
- * condition the greeting job applies. Thus a list holds no birthday which
- * never gets a greeting. The list of the upcoming birthdays and the calendar
- * use it.
+ * birthday. Citizens who can no longer sign in are left out, but only
+ * approximately (see `CAN_LOGIN_CITIZEN_WHERE`): the greeting job applies the
+ * exact rule (`findClearedCitizens()`). The list of the upcoming birthdays
+ * and the calendar use it.
  */
 export const LISTED_BIRTHDAY_CITIZEN_WHERE: Prisma.CitizenWhereInput = {
   /** `AND` composes the imported fragment without a key collision */

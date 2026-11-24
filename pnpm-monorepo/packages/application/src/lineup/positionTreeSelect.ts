@@ -3,8 +3,8 @@ import { CITIZEN_REFERENCE_SELECT } from "../citizenReference.js";
 
 /**
  * The variant catalog of one position, down to the manufacturer logo the
- * lineup renders. The logo is a `VariantWithLogo`, which is exactly
- * `Pick<Upload, "id" | "mimeType">`.
+ * lineup renders. The logo has the shape that `VariantWithLogo` of the app
+ * takes: `Pick<Upload, "id" | "mimeType">`.
  */
 const REQUIRED_VARIANTS_SELECT = {
   orderBy: {

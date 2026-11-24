@@ -5,9 +5,9 @@ import { expect, test } from "vitest";
 /**
  * The hosts compose the implementations of this package. Thus the package
  * must not import Next.js, React, the modules of the app (`@/…`),
- * `server-only` (a marker of Next.js) or a host. The package `mcp` is in the
- * layer above this package: `mcp` imports this package, thus this package
- * must not import `mcp`.
+ * `server-only` (a marker of Next.js) or a host. This package and the package
+ * `mcp` do not import each other: the host gives the application context to
+ * `mcp`.
  */
 const FORBIDDEN_IMPORT =
   /^(?:next|next\/.*|react|react\/.*|react-dom|react-dom\/.*|server-only|@\/.*|@sam-monorepo\/(?:app|lambda|collab|scripts|playwright|mcp)(?:\/.*)?)$/;

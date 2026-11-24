@@ -52,8 +52,8 @@ describe("resolveWikiPagePlacement", () => {
   });
 
   test("reports a page in the trash as missing, not forbidden", () => {
-    // The actions map missing onto "not found"/"bad request" and forbidden
-    // onto "forbidden", so the two must stay distinguishable.
+    // The use cases give a NotFoundError or a ConflictError for missing and
+    // a ForbiddenError for forbidden, so the two must stay distinguishable.
     expect(
       resolveWikiPagePlacement(
         context([

@@ -4,7 +4,7 @@ import { requireCitizen, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { READ_MARKER_SUBJECT_RULES } from "./readMarkerSubjects.js";
 
-/** The longest changelog key has 71 characters */
+/** The longest changelog key has 64 characters (2026-11) */
 const MAXIMUM_SUBJECT_ID_LENGTH = 100;
 
 /**

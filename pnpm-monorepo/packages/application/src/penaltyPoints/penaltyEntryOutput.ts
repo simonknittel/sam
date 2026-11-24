@@ -44,7 +44,7 @@ const toCitizenOutput = (
   deleted_at: citizen.deletedAt?.toISOString() ?? null,
 });
 
-/** A penalty entry in the outputs of the list and of the create use case */
+/** A penalty entry in the outputs of the list and of the writes */
 export const toPenaltyEntryOutput = (
   entry: Prisma.PenaltyEntryGetPayload<{ select: typeof PENALTY_ENTRY_SELECT }>,
 ): PenaltyEntryOutput => ({

@@ -169,8 +169,9 @@ const buildContent = async (
 };
 
 /**
- * All five publish columns at once — the CHECK constraint rejects any
- * partial reset, so the two places that unpublish write the same set.
+ * All five publish columns at once — the CHECK constraint rejects a reset of
+ * the id without the channel and the location, so the two places that
+ * unpublish write the same set.
  */
 const NO_PUBLICATION = {
   discordPublishedId: null,

@@ -31,9 +31,9 @@ const REQUIRED_PERMISSION_STRINGS = [
 /**
  * The citizens a manager may add to an event: everyone who can see it and is
  * reachable for its notifications, minus everyone already participating.
- * Both the picker of the app and `addEventParticipants()` resolve through
- * this, so what the modal offers and what the use case accepts cannot drift
- * apart.
+ * The picker of the app, the adds, the invitations and the approvals of
+ * applications all resolve through this, so what the modal offers and what
+ * the use cases accept cannot drift apart.
  *
  * The two shared where-fragments only narrow the scan — they cannot express
  * the role-level gate (comparing `RoleAssignment.currentLevel` against

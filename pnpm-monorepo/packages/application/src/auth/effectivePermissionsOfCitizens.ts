@@ -15,7 +15,8 @@ import type { EffectiveRoles } from "./getEffectiveRolesOfCitizen.js";
  * the session of the app: the level gate and the inherited roles (see
  * `resolveEffectiveRoles()`). The result has only the citizens that match
  * `where`, are not deleted and have role assignments. No permission check:
- * the automations and the notification router use it to find the receivers.
+ * the automations and the notification router use it to find the receivers,
+ * and the lineup page and the wiki mentions use it for their own checks.
  */
 export const loadEffectivePermissionsOfCitizens = async (
   context: Pick<ApplicationContext, "prisma">,

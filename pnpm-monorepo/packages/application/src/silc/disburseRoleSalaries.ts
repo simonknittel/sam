@@ -84,8 +84,8 @@ export const disburseRoleSalaries = (
         await lockSilcLedger(transaction);
 
         /**
-         * A run that repeats (for example after an error in a later job)
-         * skips the bookings that exist already, see
+         * A run that repeats (for example a manual second run on the same
+         * day) skips the bookings that exist already, see
          * `SilcTransaction_salary_key`.
          */
         const created = await transaction.silcTransaction.createManyAndReturn({

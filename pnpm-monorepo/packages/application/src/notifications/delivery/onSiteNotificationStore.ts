@@ -29,8 +29,10 @@ export interface StoredOnSiteNotification {
  * `login;manage` gets no notification on any channel. This is the only
  * place that must check this clearance rule: a recipient rule checks the
  * rules of its feature, and the other channels send only to the receivers of
- * the written rows. On-site is always on, thus the settings of the citizen
- * do not filter the rows (they filter only web push).
+ * the written rows. The one exception is the confirmation of a new web push
+ * subscription, which has no row and no clearance check. On-site is always
+ * on, thus the settings of the citizen do not filter the rows (they filter
+ * only web push).
  */
 export const storeOnSiteNotifications = async (
   context: ApplicationContext,

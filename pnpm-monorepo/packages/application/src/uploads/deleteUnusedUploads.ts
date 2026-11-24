@@ -26,8 +26,8 @@ export interface DeleteUnusedUploadsOutput {
 /**
  * Deletes the uploads that nothing uses, from the database and from the
  * bucket. A new upload (for example a new role icon) only changes the
- * foreign key, and the delete of a resource only sets it to null. Without
- * the sweep, the previous upload would stay forever.
+ * foreign key, and the delete of a resource does not delete its uploads.
+ * Without the sweep, the previous upload would stay forever.
  *
  * The rule of the upload usage is `UPLOAD_USAGE_RELATION_BY_TYPE` of the
  * domain package.

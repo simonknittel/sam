@@ -47,7 +47,10 @@ export interface ReadableCitizenNote {
   readonly redacted: false;
   readonly id: string;
   readonly note_type: NamedReference;
-  /** Null after the classification level was deleted */
+  /**
+   * Null only when the classification level is deleted during the read: the
+   * list leaves out the notes of a deleted level
+   */
   readonly classification_level: NamedReference | null;
   readonly confirmed: CitizenNoteConfirmation;
   /** Null without `spynetNotes;read`, like the notes tab of a citizen */

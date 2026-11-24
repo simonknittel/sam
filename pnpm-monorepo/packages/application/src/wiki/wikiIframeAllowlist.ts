@@ -10,7 +10,7 @@ export const WIKI_SETTING_IFRAME_ALLOWLIST = "iframeAllowlist";
 
 /**
  * The most hostnames of the allowlist. The renders compare each iframe with
- * each hostname, and the settings page shows one field for each hostname:
+ * each hostname, and the settings page shows one entry for each hostname:
  * 100 is much more than the organization needs, and it keeps both small.
  */
 export const MAXIMUM_WIKI_IFRAME_ALLOWLIST_ENTRIES = 100;

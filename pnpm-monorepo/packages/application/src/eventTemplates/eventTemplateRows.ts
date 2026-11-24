@@ -120,10 +120,7 @@ export interface EventTemplateListFilters {
   readonly query: string | null;
 }
 
-/**
- * The bound of the search term of the list, which comes from the URL. Longer
- * terms are pointless: the name has at most 128 characters.
- */
+/** The bound of the search term of the list, which comes from the URL */
 export const EVENT_TEMPLATE_LIST_QUERY_MAXIMUM_LENGTH = 255;
 
 /**

@@ -45,9 +45,9 @@ export const updateFlow = (
 ): Promise<UpdateFlowOutput> =>
   withSpan(context, "updateFlow", async () => {
     /**
-     * The only write path into the contents of a flow, thus it checks the
-     * access per flow: the check of the edges below depends on this
-     * boundary
+     * The only write path into the contents of an existing flow, thus it
+     * checks the access per flow: the check of the edges below depends on
+     * this boundary
      */
     const flow = await context.prisma.flow.findUnique({
       where: { id: input.flow_id },

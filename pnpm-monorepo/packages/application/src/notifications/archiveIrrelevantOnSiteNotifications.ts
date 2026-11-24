@@ -11,8 +11,8 @@ import { withSpan } from "../withSpan.js";
  * archives them; only list a type here whose notification says nothing worth
  * acting on once its window has passed.
  *
- * `event_starting` goes out 15 minutes before the event starts (see the
- * frequent automation of the same name), so it is obsolete the moment the
+ * `event_starting` goes out at most 15 minutes before the event starts (see
+ * `notifyEventsStartingSoon()`), so it is obsolete the moment the
  * event begins. `event_morning_reminder` goes out at 07:30 for the events
  * that start before 07:30 of the next day (see
  * `sendEventMorningReminders()`), so it is obsolete after one day.

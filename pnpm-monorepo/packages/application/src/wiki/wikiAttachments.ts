@@ -26,7 +26,7 @@ const ATTACHMENT_DOWNLOAD_URL_EXPIRY_SECONDS = 5 * 60;
  * kind counts, also the link of an image.
  *
  * @throws NotFoundError when the upload does not exist, when no wiki page
- * links it, or when the actor cannot read one of its pages. A page that the
+ * links it, or when the actor cannot read any of its pages. A page that the
  * actor cannot see and an upload outside the wiki give the same answer, thus
  * the answer does not show that they exist.
  */

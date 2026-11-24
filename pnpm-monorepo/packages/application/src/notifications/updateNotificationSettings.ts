@@ -14,7 +14,7 @@ import { withSpan } from "../withSpan.js";
 import { findOwnNotificationSettings } from "./ownNotificationReads.js";
 
 /**
- * The longest input name has 36 characters. The limit bounds the input.
+ * The longest input name has 43 characters. The limit bounds the input.
  */
 const MAXIMUM_SETTING_INPUT_NAME_LENGTH = 100;
 

@@ -43,8 +43,9 @@ export interface ProfitDistributionCycleDetails {
 /**
  * The cycle of the page and of the management page. Requires
  * `profitDistributionCycle;read`. In the collection phase it also requires
- * `silcBalanceOfCurrentCitizen;read`, and for a manager
- * (`profitDistributionCycle;manage`) `silcBalanceOfOtherCitizen;read`.
+ * `silcBalanceOfCurrentCitizen;read`. For a manager
+ * (`profitDistributionCycle;manage`), it requires
+ * `silcBalanceOfOtherCitizen;read` in each phase.
  *
  * @returns null when the cycle does not exist
  */

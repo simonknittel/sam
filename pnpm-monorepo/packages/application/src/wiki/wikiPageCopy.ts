@@ -54,7 +54,7 @@ interface CopyWikiPagesParams {
   /**
    * Carries the source pages' briefing scopes and upload tiers over instead
    * of resetting them to INHERIT, remapping POSITION references through this
-   * map. Used when an event is seeded from a template, where those scopes
+   * map. Used by the briefing copy (`copyBriefingTree`), where those scopes
    * are the point of the blueprint; a reference that is not in the map
    * degrades to managers-only, which is how a dangling POSITION scope
    * behaves anyway.

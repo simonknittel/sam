@@ -64,9 +64,8 @@ export const createEventTemplateCopy = async (
   const content = await loadContainerCopySource(context, source.columns);
 
   /**
-   * Keyed on the root page, like the creation of an event: an event
-   * predating the briefing feature has pages to copy but no root, and a
-   * template without a root page has no briefing and no way back to one.
+   * Keyed on the root page, like the creation of an event: a template
+   * without a root page has no briefing and no way back to one.
    */
   const copiesBriefing =
     !source.seedsMissingBriefingRoot || content.rootPage !== null;

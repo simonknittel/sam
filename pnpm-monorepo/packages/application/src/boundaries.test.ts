@@ -3,11 +3,11 @@ import { join } from "node:path";
 import { expect, test } from "vitest";
 
 /**
- * The MCP server and a later backend use this package without Next.js and
- * without React. Thus the package must not import them, the modules of the
- * app (`@/…`), `server-only` (a marker of Next.js) or a host. The packages
- * `infrastructure` and `mcp` are in the layers above this package: they
- * import it, thus it must not import them.
+ * The MCP server, the Lambda functions and a later backend use this package
+ * without Next.js and without React. Thus the package must not import them,
+ * the modules of the app (`@/…`), `server-only` (a marker of Next.js) or a
+ * host. The packages `infrastructure` and `mcp` are in the layers above this
+ * package: they import it, thus it must not import them.
  */
 const FORBIDDEN_IMPORT =
   /^(?:next|next\/.*|react|react\/.*|react-dom|react-dom\/.*|server-only|@\/.*|@sam-monorepo\/(?:app|lambda|collab|scripts|playwright|infrastructure|mcp)(?:\/.*)?)$/;

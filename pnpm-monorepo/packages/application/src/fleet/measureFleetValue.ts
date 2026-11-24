@@ -33,8 +33,8 @@ export interface MeasureFleetValueOutput {
  * Saves the value of the ships of the members of the organization for each
  * acquisition source, for the day that just ended: the day before the time
  * of the run in the time zone of the organization. A ship counts with the
- * current store price of its variant. The members are the same as the
- * members of `countShips()`. Without members the run saves nothing.
+ * current prices of its variant. The members are the same as the members of
+ * `countShips()`. Without members the run saves nothing.
  */
 export const measureFleetValue = (
   context: ApplicationContext,

@@ -5,7 +5,7 @@ const CONNECTION_TIMEOUT_MILLISECONDS = 5_000;
 
 /**
  * The maximum time of one request with its response. It is the longest
- * timeout of a single storage operation (a copy of an object). A caller that
+ * timeout of a single storage operation (a copy or a delete). A caller that
  * needs a shorter time passes an `abortSignal` to `send()`.
  */
 const REQUEST_TIMEOUT_MILLISECONDS = 30_000;

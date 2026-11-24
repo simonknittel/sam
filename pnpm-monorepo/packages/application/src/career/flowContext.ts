@@ -72,8 +72,9 @@ export const resolveFlowPermissionsOfActor = (
 
 /**
  * Loads all career flows and resolves the effective permissions of the
- * actor. All career reads of the app (the navigation, the flow page, the
- * management pages, the entry points) derive from this context.
+ * actor. The navigation, the flow page and the entry points of the app derive
+ * from this context. The management pages have their own reads (see
+ * `findManageableFlows()`).
  */
 export const loadFlowContext = async (
   context: Pick<ApplicationContext, "prisma">,

@@ -45,7 +45,10 @@ export interface SharedLogAnalyzerEntry {
   readonly eventAt: Date;
   /** Null for an entry which was shared before the upload sent the number */
   readonly lineNumber: number | null;
-  /** Null after the citizen was deleted */
+  /**
+   * Null only when the row of the citizen is gone. A soft-deleted citizen
+   * stays, with `deletedAt`.
+   */
   readonly createdBy: CitizenReferenceRow | null;
 }
 
@@ -56,9 +59,10 @@ export interface SharedLogAnalyzerEntries {
 }
 
 /**
- * The log entries other citizens shared. The cursor moves along the creation
- * time and not along the event time, because a citizen who shares their
- * history for the first time adds old events with a new creation time.
+ * The log entries which the citizens shared, also the own entries of the
+ * actor. The cursor moves along the creation time and not along the event
+ * time, because a citizen who shares their history for the first time adds
+ * old events with a new creation time.
  */
 export const findSharedLogAnalyzerEntries = async (
   context: ApplicationContext,

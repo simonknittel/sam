@@ -8,8 +8,8 @@ import type { ApplicationContext, Notification } from "./context.js";
  * and gives `true`.
  *
  * The Next.js app sends the notifications after its response, thus the
- * outputs of the use cases do not report the result. Only an automation that
- * tries again after a failure uses it.
+ * outputs of the use cases do not report the result. Only the automations
+ * use it: for their outputs, or to try again after a failure.
  */
 export const triggerNotificationsAfterSave = async (
   context: ApplicationContext,

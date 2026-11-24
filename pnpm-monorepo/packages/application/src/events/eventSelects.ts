@@ -23,7 +23,7 @@ const EVENT_PARTICIPANT_SELECT = {
 } as const satisfies Prisma.EventParticipantSelect;
 
 /**
- * Spread into every query that loads an event for a page: the active
+ * Shared by the queries that load an event for a page: the active
  * participants, the managers and the cover image.
  */
 export const EVENT_PAGE_RELATIONS_SELECT = {

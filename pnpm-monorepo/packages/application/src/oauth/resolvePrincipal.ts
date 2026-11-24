@@ -8,7 +8,10 @@ import { InvalidTokenError } from "./errors.js";
 import { createGrantActor, GRANT_ACTOR_SELECT } from "./grantActor.js";
 import { resetStaleGrantAdminModes } from "./resetStaleGrantAdminModes.js";
 
-/** The app updates `lastUsedAt` of a grant at most one time in this interval */
+/**
+ * The MCP requests update `lastUsedAt` of a grant at most one time in this
+ * interval
+ */
 const LAST_USED_AT_INTERVAL_IN_MILLISECONDS = 60 * 60 * 1000;
 
 export interface PrincipalGrant {

@@ -45,7 +45,7 @@ export interface CreateEventTemplateFromEventOutput {
 /**
  * What the template stores so that an event created from it publishes itself
  * the same way the source event was published. Both columns NULL means the
- * source was never published, which prefills "do not publish". Keeping the
+ * source is not published, which prefills "do not publish". Keeping the
  * three fields in one object satisfies the CHECK constraint by construction
  * (see migration publish_events_to_discord).
  */
@@ -94,7 +94,8 @@ const toDiscordPublishPrefill = (
 /**
  * Turns a past or upcoming app event into a personal template of the acting
  * manager: core data, cover, visibility prefill, participation switch,
- * lineup and briefing carry over — the reverse direction of the template in `createEvent`.
+ * application switch, Discord target, lineup and briefing carry over — the
+ * reverse direction of the template in `createEvent`.
  *
  * Managing the event is the gate, not merely seeing it: the briefing's
  * MANAGERS-scoped pages and a disabled lineup are readable inside the
@@ -116,7 +117,7 @@ export const createEventTemplateFromEvent = (
 
     /**
      * Only app events: a Discord event has its cover on Discord's CDN
-     * without an `Upload` row of its own and carries no app briefing.
+     * without an `Upload` row of its own.
      */
     const sourceEvent = await context.prisma.event.findUnique({
       where: {

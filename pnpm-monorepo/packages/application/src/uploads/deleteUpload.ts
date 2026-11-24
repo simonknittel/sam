@@ -83,9 +83,9 @@ const deleteObject = async (
 };
 
 /**
- * Deletes an upload, also when it is still in use. The places that use it
- * keep their references, which show nothing after the delete. The audit
- * event names these places.
+ * Deletes an upload, also when it is still in use. The content of a wiki
+ * page keeps its reference, which shows nothing after the delete. The audit
+ * event names the places that used the upload.
  *
  * @throws ForbiddenError when the actor does not have `upload;manage`
  * @throws NotFoundError `UploadErrorMessage.UploadNotFound`, also when a

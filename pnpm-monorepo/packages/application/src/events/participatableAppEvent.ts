@@ -66,14 +66,14 @@ interface LockParticipationEnabledEventOptions {
 
 /**
  * The check of `requireParticipationEnabled()` again, in the transaction of
- * a write that adds a participant, an application or an assignment. The
- * shared lock on the row of the event waits for a switch that changed the
- * row first, and a switch that comes later waits for this transaction. Thus
- * the switch of the participation to false cannot clear the participation
- * before the write adds a row that it then keeps, and the switch of the
- * applications to false cannot approve the open applications before a new
- * one. Call it first in the transaction. Gives the switches of the locked
- * row.
+ * a write that adds a participant, an invitation, an application or an
+ * assignment. The shared lock on the row of the event waits for a switch
+ * that changed the row first, and a switch that comes later waits for this
+ * transaction. Thus the switch of the participation to false cannot clear
+ * the participation before the write adds a row that it then keeps, and the
+ * switch of the applications to false cannot approve the open applications
+ * before a new one. Call it first in the transaction. Gives the switches of
+ * the locked row.
  *
  * PostgreSQL releases the lock at the commit or the rollback.
  *
@@ -120,9 +120,9 @@ export const requireParticipatableAppEvent = async (
 
 /**
  * Participation (sign-up, comment updates, cancellation) stays open until
- * the event's end — deliberately longer than the `isEventUpdatable` freeze
- * used for management writes. App events always have an end time; a
- * missing one closes participation defensively.
+ * the event's end, like the management writes (see `isEventUpdatable`). App
+ * events always have an end time; a missing one closes participation
+ * defensively.
  */
 export const isParticipationOpen = (
   event: Pick<Event, "endTime">,

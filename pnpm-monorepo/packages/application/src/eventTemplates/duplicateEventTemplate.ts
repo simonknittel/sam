@@ -29,9 +29,10 @@ export interface DuplicateEventTemplateOutput {
 
 /**
  * Copies a template the actor may read into a personal template of their
- * own: fields, visibility prefill, participation switch, cover, lineup and
- * briefing carry over, the role shares deliberately do not. Handing a copy
- * out again is the duplicator's decision, not an inherited one.
+ * own: fields, visibility prefill, participation switch, application switch,
+ * Discord target, cover, lineup and briefing carry over, the role shares
+ * deliberately do not. Handing a copy out again is the duplicator's
+ * decision, not an inherited one.
  */
 export const duplicateEventTemplate = (
   context: ApplicationContext,

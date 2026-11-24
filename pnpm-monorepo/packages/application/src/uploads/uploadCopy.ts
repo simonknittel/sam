@@ -25,9 +25,9 @@ export const COPYABLE_UPLOAD_SELECT = {
  * key. The probed dimensions carry over — the bytes are identical, so
  * re-probing would only cost another round trip.
  *
- * Used where a reference would be wrong: an event created from a template
- * gets its own cover, so editing or deleting one never touches the other and
- * the upload manager accounts for both independently.
+ * Used where a reference would be wrong: for example, an event created from a
+ * template gets its own cover, so editing or deleting one never touches the
+ * other and the upload manager accounts for both independently.
  *
  * The source key is always derived server-side from a row the caller already
  * resolved, never from user input. Runs on the caller's transaction so a

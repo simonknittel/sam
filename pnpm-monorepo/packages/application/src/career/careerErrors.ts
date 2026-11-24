@@ -4,8 +4,8 @@
  */
 export enum CareerErrorMessage {
   /**
-   * A `NotFoundError`: the flow does not exist, is deleted, or the actor
-   * cannot read it
+   * A `NotFoundError`: the flow does not exist, is deleted (for a restore: is
+   * not deleted), or the actor cannot read it
    */
   FlowNotFound = "The career flow does not exist or is deleted",
   /** A `ValidationError` */

@@ -201,9 +201,8 @@ export const updateEventWikiPagePermissions = (
      * null) and commits together with the change of the scope. Thus two
      * submits at the same time cannot publish two times, and a failed update
      * of the scope cannot use the guard. A crash between the commit and the
-     * notification, or a failed notification (the answer then has a
-     * warning), loses the notification. This is better than the opposite
-     * (a notification without a change of the scope).
+     * notification, or a failed notification, loses the notification. This is
+     * better than the opposite (a notification without a change of the scope).
      */
     const previousReadScope = scope.pagesById.get(page.id)?.eventReadScope;
     const leavesManagers =

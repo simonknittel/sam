@@ -42,8 +42,9 @@ export interface EventActivityRow {
 }
 
 /**
- * The types whose payload names a citizen other than the row's own actor:
- * the row's citizen column holds the acting manager
+ * The types whose payload names the affected citizen: the row's citizen
+ * column holds the actor (a manager, or the applicant who withdrew the own
+ * application)
  */
 const TYPES_WITH_AFFECTED_CITIZEN_IN_PAYLOAD: ReadonlySet<EventActivityType> =
   new Set([

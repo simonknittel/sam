@@ -18,7 +18,6 @@ import {
   type ManualNotificationOutput,
 } from "./manualNotificationOutput.js";
 
-/** The length of the search field of the filter sidebar */
 const MAXIMUM_SEARCH_LENGTH = 100;
 
 export const listManualNotificationsInputSchema = z.object({

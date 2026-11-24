@@ -14,8 +14,9 @@ interface MarkedOwnNotifications {
 /**
  * Marks the unread notifications of the actor which match the filter as
  * read, and also the items which they announce (see
- * `markAnnouncedItemsAsRead()`). Each read of notifications goes through
- * here, thus no read can forget the items.
+ * `markAnnouncedItemsAsRead()`). Each read that starts from notifications
+ * goes through here, thus no read can forget the items. For the read of an
+ * item, see `markAnnouncementsAsRead()`.
  *
  * @param createAuditEvent the event of the read, only called for a change
  */
