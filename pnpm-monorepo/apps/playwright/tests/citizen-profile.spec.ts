@@ -23,9 +23,8 @@ import { expect, test } from "../fixtures/test";
 const NOT_SET_LABEL = "Nicht angegeben";
 
 /**
- * Everything the profile of another citizen can show. The `…Transaction…`
- * permission shows no metric of its own; it opens the Spynet page behind the
- * SILC box.
+ * The `…Transaction…` permission shows no metric of its own; it opens the
+ * Spynet page behind the SILC box.
  */
 const FULL_VIEWER_PERMISSIONS = [
   "event;read",
@@ -36,7 +35,6 @@ const FULL_VIEWER_PERMISSIONS = [
   "otherShips;read",
 ];
 
-/** The same profile, seen through the permissions for the own citizen */
 const OWN_PROFILE_PERMISSIONS = [
   "citizen;read",
   "silcBalanceOfCurrentCitizen;read",
@@ -54,7 +52,6 @@ const monthSelect = (page: Page) => page.getByLabel("Monat", { exact: true });
 const saveButton = (page: Page) =>
   page.getByRole("button", { name: "Speichern" });
 
-/** Every metric box links to the Spynet page which holds its details */
 const expectMetricLinks = async (scope: Locator, citizenId: string) => {
   const spynetHref = `/app/spynet/citizen/${citizenId}`;
 
@@ -71,9 +68,8 @@ const expectMetricLinks = async (scope: Locator, citizenId: string) => {
 };
 
 /**
- * Gives the citizen one of every metric the profile shows, plus the time
- * zone they set themselves. The counted values are seeded next to
- * deleted and expired ones, which none of the metrics may count.
+ * The counted values are seeded next to deleted and expired ones, which none of
+ * the metrics may count.
  */
 const seedProfile = async (prisma: PrismaClient, citizen: TestCitizen) => {
   await prisma.citizen.update({
@@ -86,7 +82,6 @@ const seedProfile = async (prisma: PrismaClient, citizen: TestCitizen) => {
     value: 1234,
   });
 
-  /** The SILC box carries the monthly salary of the citizen's roles */
   await prisma.silcRoleSalary.create({
     data: { roleId: citizen.role.id, value: 50, dayOfMonth: 1 },
   });
@@ -167,25 +162,18 @@ test("a citizen sets, keeps and clears their time zone and birthday", async ({
 
   await expectAuditEvents(prisma, ["CITIZEN_PROFILE_UPDATED"]);
 
-  /**
-   * The selects keep the saved values instead of falling back to
-   * "Nicht angegeben" …
-   */
   await expect(timezoneSelect(page)).toHaveValue("Europe/Berlin");
   await expect(monthSelect(page)).toHaveValue("12");
   await expect(daySelect(page)).toHaveValue("24");
 
-  /**
-   * … the values survive a reload …
-   */
   await page.reload();
   await expect(timezoneSelect(page)).toHaveValue("Europe/Berlin");
   await expect(monthSelect(page)).toHaveValue("12");
   await expect(daySelect(page)).toHaveValue("24");
 
   /**
-   * … and both attributes can be cleared again. Clearing the month clears
-   * the day with it, because a birthday is only ever complete or absent.
+   * Clearing the month clears the day with it, because a birthday is only ever
+   * complete or absent.
    */
   await waitForAppShellHydration(page);
   await timezoneSelect(page).selectOption({ label: NOT_SET_LABEL });
@@ -214,10 +202,6 @@ test("a birthday without a month is rejected", async ({
   await page.goto("/app/account/profile");
   await waitForAppShellHydration(page);
 
-  /**
-   * A day that the chosen month does not have cannot even be picked: the
-   * day list follows the month.
-   */
   await monthSelect(page).selectOption({ label: "Februar" });
   await expect(daySelect(page).locator("option")).toHaveCount(
     1 /* Nicht angegeben */ + 29,
@@ -231,7 +215,6 @@ test("a birthday without a month is rejected", async ({
     page.getByText("Gib für den Geburtstag den Tag und den Monat an."),
   ).toBeVisible();
 
-  /** The rejected input stays in the form, ready to be corrected */
   await expect(daySelect(page)).toHaveValue("15");
 
   expect(
@@ -279,7 +262,6 @@ test("the popover shows the profile of another citizen", async ({
   await expect(popover).toContainText("Europe/Berlin");
   await expect(popover).toContainText(/\d{2}:\d{2} Uhr/);
 
-  /** Every metric opens its Spynet page */
   await expectMetricLinks(popover, owner.entity.id);
 });
 
@@ -310,10 +292,8 @@ test("the popover hides the metrics a viewer must not see", async ({
     popover,
   );
 
-  /** The time zone needs no permission of its own … */
   await expect(popover).toContainText("Europe/Berlin");
 
-  /** … but every metric does, and none of them is shown as a zero */
   await expect(popover).not.toContainText("SILC");
   await expect(popover).not.toContainText("Strafpunkte");
   await expect(popover).not.toContainText("Flotte");
@@ -341,7 +321,6 @@ test("the dashboard tile shows the profile of the own citizen", async ({
   await expect(spynetSection).toContainText("Strafpunkte");
   await expect(spynetSection).toContainText("Flotte");
   await expect(spynetSection).toContainText("Europe/Berlin");
-  /** The header of the tile is the way into Spynet */
   await expect(
     spynetSection.getByRole("link", { name: "Spynet öffnen" }),
   ).toHaveAttribute("href", `/app/spynet/citizen/${citizen.entity.id}`);
@@ -369,7 +348,6 @@ test("the dashboard tile hides what the own permissions do not cover", async ({
   await expect(spynetSection).not.toContainText("SILC");
   await expect(spynetSection).not.toContainText("Strafpunkte");
 
-  /** The metric shows, but it stays a plain box: its page stays closed */
   await expect(spynetSection).toContainText("Flotte");
   await expect(spynetSection.getByRole("link", { name: "Flotte" })).toHaveCount(
     0,
@@ -434,7 +412,6 @@ test("the account popover shows the profile of the own citizen", async ({
   ).toBeVisible();
   await expect(popover.getByRole("button", { name: "Abmelden" })).toBeVisible();
 
-  /** The top bar stays after a navigation, but the popover closes */
   await popover.getByRole("link", { name: "Flotte" }).click();
   await expect(page).toHaveURL(
     `/app/spynet/citizen/${citizen.entity.id}/fleet`,
@@ -442,7 +419,6 @@ test("the account popover shows the profile of the own citizen", async ({
   await expect(popover).toBeHidden();
 });
 
-/** The birthday list reads the day in the time zone of the organization */
 const BIRTHDAY_LIST_TIMEZONE = "Europe/Berlin";
 
 /**
@@ -477,8 +453,7 @@ interface BirthdayCitizenOptions {
 }
 
 /**
- * A citizen who can sign in and whose birthday falls on the given day. The
- * time zone is the one of the organization, thus the list and the avatar of
+ * The time zone is the one of the organization, thus the list and the avatar of
  * the citizen name the same day.
  */
 const createCitizenWithBirthday = async (
@@ -525,7 +500,6 @@ test("the birthday list names every citizen once, sorted by the next birthday", 
     handle: "geburtstagskind-spaeter",
     ...inTenDays,
   });
-  /** Without a birthday nobody appears in the list */
   await createCitizen(prisma, { handle: "ohne-geburtstag" });
 
   /**
@@ -559,7 +533,6 @@ test("the birthday list names every citizen once, sorted by the next birthday", 
   await expect(page.getByText("ohne-geburtstag")).toHaveCount(0);
   await expect(page.getByText(lockedOut.handle!)).toHaveCount(0);
 
-  /** Every citizen stands in the list exactly once, the nearest one first */
   const handles = await rows.allInnerTexts();
   const listed = handles.filter((row) => row.includes("geburtstagskind"));
   expect(listed).toHaveLength(3);
@@ -569,9 +542,8 @@ test("the birthday list names every citizen once, sorted by the next birthday", 
 });
 
 /**
- * The mark of a citizen who has their birthday today, wherever it sits. A
- * profile carries more than one: the avatar wears a hat and the header
- * repeats it next to "Happy Birthday".
+ * A profile carries more than one: the avatar wears a hat and the header
+ * repeats it.
  */
 const birthdayHats = (scope: Page | Locator) =>
   scope.getByRole("img", { name: "Hat heute Geburtstag" });
@@ -597,7 +569,6 @@ test("the party hat marks the citizen whose birthday is today", async ({
 
   await signIn(birthdayChild.user);
 
-  /** The own profile tile of the dashboard and the account avatar above it */
   await page.goto("/app/dashboard");
   const profileTile = sectionByHeading(page, "Spynet");
   await expect(birthdayHats(profileTile).first()).toBeVisible();
@@ -606,7 +577,6 @@ test("the party hat marks the citizen whose birthday is today", async ({
     birthdayHats(page.getByRole("button", { name: "Account" })),
   ).toBeVisible();
 
-  /** The list marks the row of today, and only that row */
   await page.goto("/app/spynet/birthdays");
   const rows = page.getByRole("row");
   await expect(
@@ -654,7 +624,6 @@ test("the popover carries the party hat of the citizen it is about", async ({
   await expect(birthdayHats(popover).first()).toBeVisible();
   await expect(popover).toContainText("Happy Birthday");
 
-  /** The popover closes with the pointer, thus the next one stands alone */
   await page.mouse.move(0, 0);
   await expect(popover).toHaveCount(0);
 

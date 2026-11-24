@@ -18,14 +18,12 @@ test("the skip link is revealed by focus and jumps past both navigations", async
   const skipLink = page.getByRole("link", { name: "Zum Inhalt springen" });
   await expect(skipLink).not.toBeInViewport();
 
-  // It has to be the very first tab stop, ahead of the top bar
   await tabUntilFocused(page, skipLink);
   await expect(skipLink).toBeInViewport();
 
   await page.keyboard.press("Enter");
   await expect(page.locator("#main-content")).toBeFocused();
 
-  // Both navigations sit before the content, so tabbing on must not reach them
   await page.keyboard.press("Tab");
   await expect(subNavigationLink).not.toBeFocused();
   await expect(page.getByRole("button", { name: "Apps" })).not.toBeFocused();

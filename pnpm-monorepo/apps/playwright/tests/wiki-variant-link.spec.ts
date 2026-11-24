@@ -14,9 +14,8 @@ import {
 } from "../fixtures/wiki-editor";
 
 /**
- * Opens the ship picker through the slash palette. The palette opens only
- * when "/" follows a space or a block start. The palette must not take the
- * focus back from the input of the picker when it closes.
+ * The palette must not take the focus back from the input of the picker when it
+ * closes.
  */
 const openShipPicker = async (
   page: Page,
@@ -68,7 +67,6 @@ test("the ship picker filters, and the keyboard or the mouse picks a ship", asyn
   const variantLink = (variantId: string) =>
     editorElement.locator(`[data-wiki-variant-link="${variantId}"]`);
 
-  // Escape closes the picker without a link
   let picker = await openShipPicker(page, pickWithEnter(page));
   await page.keyboard.press("Escape");
   await expect(picker).toBeHidden();
@@ -76,7 +74,6 @@ test("the ship picker filters, and the keyboard or the mouse picks a ship", asyn
     0,
   );
 
-  // The filter also matches the manufacturer, and the first ship is highlighted
   await focusEditor(page);
   picker = await openShipPicker(page, pickWithEnter(page));
   await page.keyboard.type("drake");
@@ -92,7 +89,6 @@ test("the ship picker filters, and the keyboard or the mouse picks a ship", asyn
   await expect(picker).toBeHidden();
   await expect(variantLink(cutlassRed.id)).toBeVisible();
 
-  // After a click on the palette entry, the picker keeps the focus too, and a click picks the ship under the mouse
   await focusEditor(page);
   picker = await openShipPicker(page, pickWithClick);
   await expect(shipOptions(picker)).toHaveCount(3);

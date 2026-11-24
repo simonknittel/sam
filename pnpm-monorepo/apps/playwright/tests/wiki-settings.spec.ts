@@ -50,9 +50,6 @@ test("the settings curate the featured pages, the dashboard page and the support
   await page.goto("/app/wiki/settings");
   await waitForAppShellHydration(page);
 
-  /**
-   * Featured pages are curated as a list and stored in one go
-   */
   const featuredTile = sectionByHeading(page, "Featured Seiten");
   await featuredTile
     .getByLabel("Seite hinzufügen")
@@ -60,16 +57,10 @@ test("the settings curate the featured pages, the dashboard page and the support
   await featuredTile.getByRole("button", { name: "Hinzufügen" }).click();
   await featuredTile.getByRole("button", { name: "Speichern" }).click();
 
-  /**
-   * The dashboard tile renders the picked page's content
-   */
   const dashboardTile = sectionByHeading(page, "Dashboard");
   await dashboardTile.getByLabel("Seite").selectOption({ value: dashboard.id });
   await dashboardTile.getByRole("button", { name: "Speichern" }).click();
 
-  /**
-   * The support link resolves through its stable URL
-   */
   const linkTile = sectionByHeading(page, "Verknüpfte Seiten");
   await linkTile
     .getByLabel("Support-Seite")
@@ -101,7 +92,6 @@ test("the settings curate the featured pages, the dashboard page and the support
     page.getByRole("link", { name: "Support", exact: true }),
   ).toHaveAttribute("href", `/app/wiki/${support.id}/${support.slug}`);
 
-  /** All three settings drive their surface */
   await page.goto("/app/wiki");
   await expect(
     sectionByHeading(page, "Featured").getByRole("link", {
@@ -115,7 +105,6 @@ test("the settings curate the featured pages, the dashboard page and the support
   await page.goto("/app/wiki/link/support");
   await expect(page).toHaveURL(`/app/wiki/${support.id}/${support.slug}`);
 
-  /** An unconfigured link key falls back to the wiki's home */
   await prisma.wikiSetting.delete({ where: { key: "pageLink:support" } });
   await page.goto("/app/wiki/link/support");
   await expect(page).toHaveURL("/app/wiki");
@@ -126,7 +115,6 @@ const featuredPageHandle = (page: Page, title: string) =>
     name: `"${title}" verschieben`,
   });
 
-/** Each gesture moves the first page below the second page */
 const REORDER_GESTURES = [
   {
     name: "keyboard",
@@ -177,7 +165,6 @@ for (const { name, drag } of REORDER_GESTURES) {
     await page.goto("/app/wiki/settings");
     await waitForAppShellHydration(page);
 
-    /** Screen readers get German texts with the title, not with the id */
     await expect(
       featuredPageHandle(page, "Einsteigerguide"),
     ).toHaveAccessibleDescription(/Leertaste/);
@@ -258,10 +245,6 @@ test("the iframe allowlist decides which domains a page may embed", async ({
     )
     .toMatchObject({ value: [ALLOWED_DOMAIN] });
 
-  /**
-   * What the list is for: a page embedding both domains renders only the
-   * allowed one, and names the other in its place.
-   */
   const embedPage = await createWikiPage(prisma, {
     title: "Eingebettetes",
     content: wikiDocument(
@@ -281,10 +264,6 @@ test("the iframe allowlist decides which domains a page may embed", async ({
     ),
   ).toBeVisible();
 
-  /**
-   * Removing it again empties the list — the editor keeps the whole list in
-   * local state until it is stored, so this proves the round trip.
-   */
   await page.goto("/app/wiki/settings");
   await waitForAppShellHydration(page);
   await allowlistTile

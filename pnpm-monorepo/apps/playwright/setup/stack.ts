@@ -62,10 +62,9 @@ export const s3CorsConfiguration = {
 };
 
 /**
- * S3 environment of the app — all runtime-read server variables, so the
- * RustFS container's random host port only needs to be known when a
- * worker's `next start` launches (the app build merely needs the variables
- * present for its env validation).
+ * All of them are runtime-read server variables, so the RustFS container's
+ * random host port only needs to be known when a worker's `next start`
+ * launches.
  */
 export const s3Environment = (s3Port: number) =>
   ({
@@ -81,28 +80,18 @@ export const unleashImage =
   "unleashorg/unleash-server:8.3.1@sha256:025cd8b003a70cceb88427ca393c377ca6503a210d95fdee54d21610d51f7ed0";
 
 export const unleashContainerPort = 4242;
-/** Lives next to the app databases in the stack's Postgres container. */
 export const unleashDatabase = "unleash";
-/** Reads the flags of the default project's development environment. */
 export const unleashBackendToken =
   "default:development.playwright-insecure-backend-token";
-/** Used by tests to create and toggle flags (see fixtures/unleash.ts). */
 export const unleashAdminToken = "*:*.playwright-insecure-admin-token";
 
 /**
- * The name that the app of one worker gives to Unleash as `appName`. Thus a
- * flag strategy can match the app of one worker only (see the scopes of
- * fixtures/unleash.ts).
+ * A flag strategy can match the app of one worker only with this name (see the
+ * scopes of fixtures/unleash.ts).
  */
 export const unleashAppName = (workerIndex: number) =>
   `sam-playwright-worker-${workerIndex}`;
 
-/**
- * Unleash environment of the app — runtime-read server variables like
- * s3Environment. All workers share one Unleash container, so tests must
- * only toggle flags no other test depends on, or toggle them for one user
- * or for the app of one worker.
- */
 export const unleashEnvironment = (unleashPort: number, appName: string) =>
   ({
     UNLEASH_SERVER_API_URL: `http://localhost:${unleashPort}/api`,
@@ -127,18 +116,14 @@ export const collabPort = 5210;
 
 export const postgresUser = "postgres";
 export const postgresPassword = "admin";
-/** Runs the migrations once and serves as the template for the worker databases. */
 export const templateDatabase = "template_sam";
-/** Network alias of the Postgres container, resolvable by the collab containers. */
 export const postgresNetworkAlias = "psql";
 
 export interface StackState {
   readonly postgresHost: string;
   readonly postgresPort: number;
   readonly networkName: string;
-  /** Host port of the RustFS S3 endpoint (see s3Environment) */
   readonly s3Port: number;
-  /** Host port of the Unleash server (see unleashEnvironment) */
   readonly unleashPort: number;
 }
 
@@ -170,25 +155,21 @@ export const containerDatabaseUrl = (database: string) =>
 
 /**
  * The app validates its environment with non-empty strings for services the
- * test stack doesn't provide (Discord OAuth). The features degrade
- * gracefully at runtime; tests must not depend on them. The requests with
- * the bot token go to the Discord mock of the worker (see
- * fixtures/discord-mock.ts). S3 and Unleash are real though — uploads go to
- * the stack's RustFS container (see s3Environment) and feature flags come
- * from the stack's Unleash container (see unleashEnvironment).
+ * test stack doesn't provide (Discord OAuth). Tests must not depend on them.
+ * The requests with the bot token go to the Discord mock of the worker.
  *
  * The Care Bear Shooter build URL is a NEXT_PUBLIC_ variable, so it must be
- * present at build time for the flag-released page to render at all; the
- * Unity build behind it never loads in tests.
+ * present at build time for the flag-released page to render at all; the Unity
+ * build behind it never loads in tests.
  *
- * RSI_BASE_URL points the organization logo scrape at a dead port: creating
- * an organization must never reach out to the real website from a test.
+ * RSI_BASE_URL points the organization logo scrape at a dead port: creating an
+ * organization must never reach out to the real website from a test.
  *
- * The AWS variables of a developer's `.env` point at the production event
- * bus, and `next start` loads that file. An empty value here wins over the
- * file (Next never overrides a variable which the process already has), and
- * the app treats an empty value as unset, thus the EventBridge client stays
- * off and no test sends a notification event to production.
+ * The AWS variables of a developer's `.env` point at the production event bus,
+ * and `next start` loads that file. An empty value here wins over the file
+ * (Next never overrides a variable which the process already has), and the app
+ * treats an empty value as unset, thus the EventBridge client stays off and no
+ * test sends a notification event to production.
  */
 export const appDummyEnvironment = {
   /**
@@ -223,9 +204,8 @@ export const appDummyEnvironment = {
   EMBED_JWT_PRIVATE_KEY:
     "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZzhSVWJ1VHIwcjRJUmdNSi8KQ3FxRlRYMnJWQW41ZDBXbjBCbkpxTXFnMFZTaFJBTkNBQVNwTlpuekQxZXh5NkdDMWVBM2xmYWVSam4vRGNpVAptRkxyVnVWZjJTZ3hHZXdkWkRLS3FWMTVteVJoaWxmT1lXcmNRNEYvKzFaTDFDMU9uUDYrVm9ocAotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0tCg==",
   /**
-   * The stack has no Grafana. The statistics page builds its frame URL from
-   * this origin without a server, and the tests read only that URL and its
-   * token (see tests/statistics.spec.ts).
+   * The stack has no Grafana: the tests read only the frame URL and its token
+   * (see tests/statistics.spec.ts).
    */
   STATISTICS_GRAFANA_URL: "http://127.0.0.1:9",
   /**

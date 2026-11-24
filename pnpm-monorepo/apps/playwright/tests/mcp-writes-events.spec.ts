@@ -22,7 +22,6 @@ import {
 } from "../fixtures/mcp-client";
 import { expect, test } from "../fixtures/test";
 
-/** Summer time: Berlin is two hours ahead of UTC */
 const START_TIME = "2099-07-15T20:00:00+02:00";
 const END_TIME = "2099-07-15T22:00:00+02:00";
 
@@ -36,7 +35,6 @@ test.describe("the event write tools of the MCP server", () => {
     const hiddenRole = await createRole(prisma, { name: "Geheimdienst" });
     const organizer = await createMcpCitizen(prisma, {
       handle: "mcp-organisatorin",
-      // The role picker of the form offers only the roles that the user can see
       permissionStrings: [
         "event;read",
         "event;create",
@@ -122,7 +120,6 @@ test.describe("the event write tools of the MCP server", () => {
       visibility: EventVisibility.RESTRICTED,
       createdById: organizer.entity.id,
     });
-    // The briefing root page, like the form creates it
     expect(event.wikiPages).toHaveLength(1);
     expect(event.activities.map((activity) => activity.type)).toEqual([
       EventActivityType.CREATED,
@@ -257,7 +254,6 @@ test.describe("the event write tools of the MCP server", () => {
         { citizen: pilotReference, comment: "Mit meiner Mustang Alpha." },
       ],
     });
-    // The same input again changes nothing
     await callForContent(client, "update_my_event_participation", signUp);
     expect(
       await callForContent(client, "update_my_event_participation", {
@@ -356,7 +352,6 @@ test.describe("the event write tools of the MCP server", () => {
       },
       changed_citizen_ids: [guest.entity.id],
     });
-    // A second invitation of the same citizen is skipped
     expect(
       await callForContent(
         organizerClient,
@@ -481,7 +476,6 @@ test.describe("the event write tools of the MCP server", () => {
       changes: ["application_required"],
     });
 
-    // Without an invitation, a sign-up needs an application
     expect(
       await callForError(welcomeClient, "update_my_event_participation", {
         event_id: event.id,
@@ -733,7 +727,6 @@ test.describe("the event write tools of the MCP server", () => {
       createdById: organizer.entity.id,
       ...futureEvent(),
     });
-    // Published to Discord like the publish action records it
     await prisma.event.update({
       where: { id: publishedEvent.id },
       data: {

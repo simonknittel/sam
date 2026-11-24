@@ -8,10 +8,7 @@ import {
   seedEditablePage,
 } from "../fixtures/wiki-editor";
 
-/**
- * Types "@<handle>" and picks the suggestion showing it. The full handle is
- * typed on purpose: a prefix would also offer everyone sharing it.
- */
+/** The full handle, because a prefix would also offer everyone sharing it. */
 const insertMention = async (page: Page, handle: string) => {
   await page.keyboard.type(`@${handle}`);
   const menu = page.getByRole("dialog", { name: "Vorschläge" });
@@ -52,7 +49,6 @@ test("@mentions link the mentioned citizens, a self-mention already suppressed",
       },
     });
 
-  // The collab server persists and syncs with a 2s store debounce
   await expect
     .poll(() => mentionOf(mentioned.entity.id), {
       timeout: COLLAB_PERSISTENCE_TIMEOUT,
@@ -74,13 +70,11 @@ test("@mentions link the mentioned citizens, a self-mention already suppressed",
       suppressedAt: expect.any(Date),
     });
 
-  /** What the mention is for: the reader gets a link to the citizen */
   await page.goto(`/app/wiki/${wikiPage.id}/${wikiPage.slug}`);
   await expect(
     page.getByRole("link", { name: "@Zielperson", exact: true }),
   ).toHaveAttribute("href", `/app/spynet/citizen/${mentioned.entity.id}`);
 
-  // Removing the mentions again cancels the pending links
   await enterEditMode(page);
   await focusEditor(page);
   await page.keyboard.press("ControlOrMeta+a");

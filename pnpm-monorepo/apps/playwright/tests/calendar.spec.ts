@@ -30,14 +30,9 @@ const calendarTile = (page: Page) => sectionByHeading(page, "Kalender");
 const birthdayRow = (scope: Page | Locator, handle: string) =>
   scope.getByRole("article").filter({ hasText: `Geburtstag von ${handle}` });
 
-/**
- * The checkbox itself is sr-only — the visible control is the box its
- * wrapping label draws, thus a toggle goes through that label.
- */
 const typeCheckbox = (page: Page, type: string) =>
   page.locator(`input[name="${type}"]`);
 
-/** The day and the month some days after today, in the time zone of the app */
 const monthDayFromToday = (days: number) => {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: "Europe/Berlin",
@@ -50,7 +45,6 @@ const monthDayFromToday = (days: number) => {
   return { birthdayDay: readPart("day"), birthdayMonth: readPart("month") };
 };
 
-/** The heading of a day of the list, some days after today */
 const dayHeading = (page: Page, days: number) =>
   page.getByRole("heading", {
     level: 2,
@@ -63,10 +57,7 @@ const dayHeading = (page: Page, days: number) =>
     }).format(new Date(Date.now() + days * ONE_DAY_MS)),
   });
 
-/**
- * The next December 24 in the time zone of the app ("YYYY-MM-DD"). It is
- * always less than 12 months away, thus the list can show it.
- */
+/** Always less than 12 months away, thus the list can show it */
 const nextChristmasEve = () => {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: "Europe/Berlin",
@@ -81,7 +72,6 @@ const nextChristmasEve = () => {
   return `${readPart("year") + Number(isAfterChristmasEve)}-12-24`;
 };
 
-/** A citizen who can sign in, with a birthday in two days */
 const createBirthdayCitizen = async (prisma: PrismaClient, handle: string) => {
   const citizen = await createCitizen(prisma, { handle });
   await prisma.citizen.update({
@@ -92,7 +82,6 @@ const createBirthdayCitizen = async (prisma: PrismaClient, handle: string) => {
   return citizen;
 };
 
-/** A public task that the assignee accepted, which expires in three days */
 const createAcceptedTask = (
   prisma: PrismaClient,
   assignee: TestCitizen,
@@ -156,7 +145,6 @@ test("the dashboard tile shows the events, the birthdays and the own task deadli
   });
   await expect(page).toHaveURL("/app/spynet/birthdays");
 
-  // The link of the citizen is above the link of the row
   await page.goto(CALENDAR_PAGE);
   await clickUntilUrl(
     page,
@@ -226,7 +214,6 @@ test("a type switched off in the app disappears from the tile and stays off afte
   await page.goto(CALENDAR_PAGE);
   await expect(filteredBirthdayRow).toBeVisible();
   await expect(typeCheckbox(page, "birthday")).toBeChecked();
-  // The checkbox saves once, thus the page has to be hydrated first
   await waitForAppShellHydration(page);
 
   await toggleLabel(page, typeCheckbox(page, "birthday")).click();
@@ -261,7 +248,6 @@ test("the list shows each day of a page of 14 days, and the past starts today", 
 
   await page.goto(CALENDAR_PAGE);
   await waitForAppShellHydration(page);
-  // Also the days without an entry show
   await expect(dayHeading(page, 0)).toBeVisible();
   await expect(dayHeading(page, 13)).toBeVisible();
   await expect(dayHeading(page, 14)).toHaveCount(0);
@@ -309,11 +295,9 @@ test("a user without event;read sees the seasonal entries but no events", async 
     3,
   );
   await expect(page.getByText("Weihnachtsfeier")).toHaveCount(0);
-  // The filter offers only the types that the user can read
   await expect(typeCheckbox(page, "seasonal")).toBeChecked();
   await expect(typeCheckbox(page, "event")).toHaveCount(0);
 
-  // The tile shows for everybody, also without `event;read`
   await page.goto("/app/dashboard");
   await expect(
     calendarTile(page).getByRole("link", { name: "Zum Kalender" }),

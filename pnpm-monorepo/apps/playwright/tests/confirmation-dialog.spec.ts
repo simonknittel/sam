@@ -23,18 +23,17 @@ import {
 import { expect, test } from "../fixtures/test";
 
 /**
- * The confirmation dialog (`AlertDialog`) is a native modal `<dialog>`
- * inside the form that it submits. These tests examine the dialog itself;
- * the specs of the features examine what their confirmations do.
+ * These tests examine the dialog itself; the specs of the features examine what
+ * their confirmations do.
  */
 
 const rootOverflow = (page: Page) =>
   page.evaluate(() => getComputedStyle(document.documentElement).overflow);
 
 /**
- * Presses Tab a number of times. For each press: true when the focus is in
- * the dialog, false when it is on the page outside the dialog, null when no
- * element of the page has the focus (the focus is in the browser).
+ * For each press: true when the focus is in the dialog, false when it is on the
+ * page outside the dialog, null when no element of the page has the focus (the
+ * focus is in the browser).
  */
 const tabStops = async (page: Page, dialog: Locator, presses: number) => {
   const stops: (boolean | null)[] = [];
@@ -51,10 +50,7 @@ const tabStops = async (page: Page, dialog: Locator, presses: number) => {
   return stops;
 };
 
-/**
- * The names of the buttons in the accessibility tree. The names are in lower
- * case: the tree applies the CSS `uppercase`.
- */
+/** In lower case: the tree applies the CSS `uppercase`. */
 const accessibleButtonNames = async (page: Page) =>
   (await accessibilityTree(page))
     .filter((node) => node.role === "button")
@@ -86,16 +82,13 @@ test("the keyboard and the page behind an open confirmation dialog", async ({
   );
   await expect(dialog.getByRole("button", { name: "Abbrechen" })).toBeFocused();
 
-  /** The focus goes through the dialog and the browser, never to the page */
   const stops = await tabStops(page, dialog, 5);
   expect(stops).toContain(true);
   expect(stops).not.toContain(false);
 
-  /** The page behind the dialog is inert and does not scroll */
   expect(await accessibleButtonNames(page)).toEqual(["abbrechen", "löschen"]);
   expect(await rootOverflow(page)).toBe("hidden");
 
-  /** A click on the backdrop does not close a confirmation dialog */
   await page.mouse.click(5, 5);
   await expect(dialog).toBeVisible();
 
@@ -159,12 +152,10 @@ test("an invalid field in the confirmation dialog stops the submission", async (
     ),
   ).toBe(true);
 
-  /** "Abbrechen" discards the input */
   await dialog.getByRole("button", { name: "Abbrechen" }).click();
   await trigger.click();
   await expect(slug).toHaveValue("flotte");
 
-  /** Enter in a field of the dialog submits */
   await slug.fill("flotte-neu");
   await slug.press("Enter");
   await expect(page.getByText("wiederhergestellt")).toBeVisible();
@@ -205,18 +196,15 @@ test("a confirmation dialog in a popover keeps the popover open", async ({
   await trigger.click();
   await expect(dialog).toBeVisible();
 
-  /** The popover opens on hover, but the pointer on the backdrop keeps it */
   await page.mouse.move(5, 5);
   await expect(dialog).toBeVisible();
   await expect(popover).toBeVisible();
 
-  /** Escape closes only the dialog, and the focus goes back into the popover */
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
   await expect(popover).toBeVisible();
   await expect(trigger).toBeFocused();
 
-  /** Also after a click on the backdrop or on the text of the dialog */
   for (const clickInDialog of [
     () => page.mouse.click(5, 5),
     () => dialog.getByRole("heading").click(),
@@ -306,7 +294,8 @@ test("Escape in a confirmation dialog in a modal closes only the dialog", async 
   await fillUntilValue(page.getByLabel("Titel"), "Operation Escape");
   await fillUntilValue(page.getByLabel("Start"), "2027-06-01T20:00");
   await fillUntilValue(page.getByLabel("Ende"), "2027-06-01T22:00");
-  // The new event goes to Discord by default
+  // A restricted event that goes to Discord (the default) needs the
+  // confirmation.
   await openFormSection(page, "Sichtbarkeit");
   await toggleLabel(page, /^Eingeschränkt$/).click();
   const trigger = page.getByRole("button", { name: "Speichern" });
@@ -341,11 +330,9 @@ test("the browser validates the form before the confirmation dialog opens", asyn
 
   await fillUntilValue(page.getByLabel("Start"), "2027-06-01T20:00");
   await fillUntilValue(page.getByLabel("Ende"), "2027-06-01T22:00");
-  // The new event goes to Discord by default
   await openFormSection(page, "Sichtbarkeit");
   await toggleLabel(page, /^Eingeschränkt$/).click();
 
-  /** The title is empty: the browser shows the error, the dialog stays closed */
   const title = page.getByLabel("Titel");
   await page.getByRole("button", { name: "Speichern" }).click();
   await expect(title).toBeFocused();

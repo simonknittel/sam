@@ -53,7 +53,6 @@ test.describe("the wiki write tool of the MCP server", () => {
       path: `/app/wiki/${page.id}/einsatzplan`,
       parent_id: null,
       event_id: null,
-      // The owner of the private page manages it
       can_add_children: true,
     });
     expect(created.markdown).toContain("## Ablauf");
@@ -152,7 +151,6 @@ test.describe("the wiki write tool of the MCP server", () => {
       ownerId: null,
     });
 
-    // The briefing of an event that is over does not change
     expect(
       await callForError(client, "create_wiki_page", {
         title: "Nachtrag",

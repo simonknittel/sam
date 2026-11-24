@@ -69,7 +69,6 @@ test("banning a user revokes their sessions, unbanning lets them back in", async
       bannedReason: "Regelverstoß",
     });
 
-  // Their sessions are gone, so the browser they were using is logged out
   expect(
     await prisma.session.count({ where: { userId: target.user.id } }),
   ).toBe(0);
@@ -87,9 +86,8 @@ test("banning a user revokes their sessions, unbanning lets them back in", async
   await expect(page.getByRole("button", { name: "Login" })).toBeVisible();
 
   /**
-   * Unbanning clears the block. That a banned user is also refused at the
-   * login itself lives in the OAuth callback, which the suite deliberately
-   * does not drive (see the README's auth section).
+   * That a banned user is also refused at the login itself lives in the OAuth
+   * callback, which the suite does not drive (see the README).
    */
   await switchUser(admin.user);
   await page.goto("/app/iam/users");
@@ -151,7 +149,6 @@ test("banning a user whom a different admin banned first shows the message and t
   await expect(
     page.getByText("Dieser Benutzer ist bereits gesperrt."),
   ).toBeVisible();
-  // The refresh shows the ban of the other admin
   await expect(targetRow.getByText("Gesperrt")).toBeVisible();
   expect(
     await prisma.user.findUniqueOrThrow({
@@ -174,7 +171,6 @@ test("a user manager confirms the privacy policy on behalf of a user, but cannot
     permissionStrings: USER_MANAGER_PERMISSIONS,
   });
   const target = await createCitizen(prisma, { handle: "unbestaetigter" });
-  /** Whoever never confirmed it: the factory confirms it for sign-in's sake */
   await prisma.user.update({
     where: { id: target.user.id },
     data: { emailVerified: null },
@@ -185,7 +181,6 @@ test("a user manager confirms the privacy policy on behalf of a user, but cannot
 
   const targetRow = page.getByRole("row").filter({ hasText: target.user.id });
   await expect(targetRow).toBeVisible();
-  // Only the admin role gives the ban, no role permission
   await expect(
     targetRow.getByRole("button", { name: "Benutzer sperren" }),
   ).toHaveCount(0);
@@ -262,7 +257,6 @@ test("the users table shows and filters the Discord two-factor authentication of
     ).toBeVisible();
   }
 
-  // Each option of the filter keeps only the users with its status
   for (const { text, filter } of users) {
     await clickUntilUrl(
       page,

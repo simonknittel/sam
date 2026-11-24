@@ -13,7 +13,6 @@ import { expect, test } from "../fixtures/test";
 
 const DELETED_CITIZEN_LABEL = "Gelöschter Citizen";
 
-/** The citizen picker of the create form loads the roster through tRPC. */
 const KEEPER_PERMISSIONS = [
   "penaltyEntry;read",
   "penaltyEntry;create",
@@ -36,9 +35,6 @@ test("an entry is booked on a citizen, shows on their tab and is deleted again",
   await page.goto("/app/penalty-points");
   await expect(page.getByText("Keine Strafpunkte gefunden.")).toBeVisible();
 
-  /**
-   * Create
-   */
   const createDialog = modal(page, "Neue Strafpunkte");
   await clickUntilVisible(
     page.getByRole("button", { name: "Neue Strafpunkte" }),
@@ -73,14 +69,10 @@ test("an entry is booked on a citizen, shows on their tab and is deleted again",
   await expect(
     entryRow.getByRole("cell", { name: "3", exact: true }),
   ).toBeVisible();
-  /** An entry without an expiry time does not expire */
   await expect(
     entryRow.getByRole("cell", { name: "-", exact: true }),
   ).toBeVisible();
 
-  /**
-   * The citizen's own tab lists it without repeating their name
-   */
   await page.goto(`/app/spynet/citizen/${offender.entity.id}/penalty-points`);
   const citizenTile = sectionByHeading(page, "Strafpunkte");
   await expect(citizenTile).toContainText("Beschuss eines Members");
@@ -88,9 +80,6 @@ test("an entry is booked on a citizen, shows on their tab and is deleted again",
     citizenTile.getByRole("columnheader", { name: "Citizen" }),
   ).toHaveCount(0);
 
-  /**
-   * Delete — the entry only leaves the active list, it stays in the deleted one
-   */
   await page.goto("/app/penalty-points");
   const deleteDialog = page.getByRole("alertdialog");
   await clickUntilVisible(
@@ -153,7 +142,6 @@ test("deleting an entry that a different tab deleted shows the error and the cur
     .filter({ hasText: "Doppelt gelöscht" });
   await expect(entryRow).toBeVisible();
 
-  /** A different tab deletes the entry after the page loaded */
   await prisma.penaltyEntry.update({
     where: { id: entry.id },
     data: { deletedAt: new Date(), deletedById: keeper.entity.id },
@@ -204,8 +192,8 @@ test.describe("in a browser outside the time zone of the organization", () => {
     );
     await createDialog.getByLabel("Strafpunkte").fill("1");
     /**
-     * Summer time: Berlin is two hours ahead of UTC. The year is far in the
-     * future, thus the entry does not expire and stays in the active list.
+     * Far in the future, thus the entry does not expire and stays in the active
+     * list. Summer time: Berlin is two hours ahead of UTC.
      */
     await createDialog.getByLabel("Verfällt am").fill("2099-07-15T08:15");
     await createDialog.getByRole("button", { name: "Speichern" }).click();
@@ -293,7 +281,6 @@ test("an entry names a deleted author as deleted, without a link", async ({
       reason: "Autor gelöscht",
     },
   });
-  /** The Spynet delete is a soft delete, which also removes the login */
   await prisma.citizen.update({
     where: { id: author.entity.id },
     data: { deletedAt: new Date(), userId: null },
@@ -304,7 +291,6 @@ test("an entry names a deleted author as deleted, without a link", async ({
 
   const row = page.getByRole("row").filter({ hasText: "Autor gelöscht" });
   await expect(row).toBeVisible();
-  /** The penalized citizen is active, thus a link */
   await expect(row.getByRole("link", { name: "delinquent" })).toBeVisible();
   await expect(row.getByText(DELETED_CITIZEN_LABEL)).toBeVisible();
   await expect(

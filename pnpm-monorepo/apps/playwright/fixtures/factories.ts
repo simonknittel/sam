@@ -34,10 +34,7 @@ export const ONE_MINUTE_MS = 60 * 1000;
 export const ONE_HOUR_MS = 60 * ONE_MINUTE_MS;
 export const ONE_DAY_MS = 24 * ONE_HOUR_MS;
 
-/**
- * Start and end of an event far enough ahead that sign-up is still open,
- * spread for createAppEvent() call sites.
- */
+/** Far enough ahead that sign-up is still open */
 export const futureEvent = () => ({
   startTime: new Date(Date.now() + ONE_DAY_MS),
   endTime: new Date(Date.now() + ONE_DAY_MS + 2 * ONE_HOUR_MS),
@@ -57,26 +54,22 @@ export interface TestCitizen {
 
 interface CreateCitizenOptions {
   readonly handle: string;
-  /** Permission strings for the role of the citizen. */
   readonly permissionStrings?: readonly string[];
   /**
-   * Whether the role of the citizen grants the login permission. Pass
-   * `false` for a new member who waits for the clearance: such a citizen
+   * Pass `false` for a new member who waits for the clearance: such a citizen
    * sees only the clearance page.
    */
   readonly canLogIn?: boolean;
-  /** Grants the all-permissions override once enableAdminMode() is used. */
+  /** Takes effect only after enableAdminMode() */
   readonly admin?: boolean;
   /**
-   * When the citizen confirmed their email. Features which treat older
-   * content as not new to a citizen (the changelog, tasks and events) read
-   * this.
+   * Features which treat older content as not new to a citizen (the changelog,
+   * tasks and events) read this.
    */
   readonly emailVerified?: Date;
   /**
-   * When the citizen first opened the app. A past date by default, so that
-   * the dashboard shows no welcome banner. Pass `null` for a citizen who is
-   * about to open the app for the first time.
+   * A past date by default, so that the dashboard shows no welcome banner.
+   * `null`: the citizen opens the app for the first time.
    */
   readonly welcomedAt?: Date | null;
   /**
@@ -87,13 +80,8 @@ interface CreateCitizenOptions {
   readonly discordTwoFactorEnabled?: boolean | null;
 }
 
-/** Long before every test, so that the welcome day of the citizen is over */
 const WELCOMED_LONG_AGO = new Date("2020-01-01T00:00:00Z");
 
-/**
- * A fully sign-in-able user: the session callback resolves the Citizen via
- * its link to the user and builds permissions from the assigned roles.
- */
 export const createCitizen = async (
   prisma: PrismaClient,
   {
@@ -147,23 +135,14 @@ export const createCitizen = async (
   return { user, entity, role };
 };
 
-/**
- * The redacted email address of a user of `createCitizen()`. The redaction
- * keeps the first and the last character of the local part and of the domain
- * name, and the top-level domain.
- */
+/** See `redactEmailAddress()` of the domain package */
 export const redactedEmailOf = (user: User) => {
   const localPart = user.email?.split("@")[0] ?? "";
   return `${localPart.at(0)}***${localPart.at(-1)}@e***e.com`;
 };
 
-/**
- * The permission that gates the MCP server: the consent page, the creation
- * of a grant, each request with an access token and the app KI-Agenten.
- */
 export const MCP_USE_PERMISSION = "mcp;use";
 
-/** A citizen who can connect an MCP client and use it */
 export const createMcpCitizen = (
   prisma: PrismaClient,
   { permissionStrings = [], ...options }: CreateCitizenOptions,
@@ -175,15 +154,12 @@ export const createMcpCitizen = (
 
 interface CreateUserWithoutCitizenOptions {
   readonly name: string;
-  /** Grants the all-permissions override once enableAdminMode() is used. */
   readonly admin?: boolean;
 }
 
 /**
- * A user without a linked Citizen, thus `session.entity` stays
- * null. Such a user gets no permissions from roles, so only an admin in admin
- * mode gets past the clearance gate — which is what makes the state testable
- * at all.
+ * `session.entity` stays null. Such a user gets no permissions from roles, so
+ * only an admin in admin mode gets past the clearance gate.
  */
 export const createUserWithoutCitizen = (
   prisma: PrismaClient,
@@ -231,11 +207,9 @@ export const createRole = async (
 interface CreateRoleTagOptions {
   readonly name?: string;
   readonly description?: string;
-  /** The roles that get the tag */
   readonly roles?: readonly Pick<Role, "id">[];
 }
 
-/** A tag without an icon */
 export const createRoleTag = async (
   prisma: PrismaClient,
   { name, description, roles = [] }: CreateRoleTagOptions = {},
@@ -267,9 +241,8 @@ export const assignRole = (
   });
 
 /**
- * Managing or reading a lineup. ship;read is part of it because the lineup
- * page loads the viewer's own fleet for the requirement checks — without it
- * the whole tab is forbidden.
+ * `ship;read`, because the lineup page loads the viewer's own ships for the
+ * requirement checks: without it the whole tab is forbidden.
  */
 export const LINEUP_PERMISSIONS = ["event;read", "ship;read"];
 
@@ -318,7 +291,6 @@ interface CreateWikiPageOptions {
   readonly visibility?: WikiPageVisibility;
   readonly editability?: WikiPageEditability;
   readonly sidebarMode?: WikiPageSidebarMode;
-  /** Tiptap JSON, see wikiDocument()/wikiParagraph()/wikiHeading() */
   readonly content?: TiptapNode;
   readonly ownerId?: string;
   readonly sortOrder?: number;
@@ -436,10 +408,6 @@ interface CreateOnSiteNotificationsOptions {
   readonly readAt?: Date | null;
 }
 
-/**
- * A batch of event notifications named "Event 1" … "Event n", newest first
- * — one insert instead of one per row, which matters at list-length counts.
- */
 export const createOnSiteNotifications = (
   prisma: PrismaClient,
   { citizenId, count, readAt = null }: CreateOnSiteNotificationsOptions,
@@ -490,9 +458,8 @@ interface CreateSilcTransactionOptions {
 }
 
 /**
- * Creates a transaction and keeps the denormalized balance columns on
- * Citizen in sync with the same result as `updateSilcBalances()` of the
- * domain package (totalEarnedSilc only counts positive values).
+ * The balance columns get the same result as from `updateSilcBalances()` of the
+ * domain package.
  */
 export const createSilcTransaction = async (
   prisma: PrismaClient,
@@ -515,7 +482,7 @@ export const createSilcTransaction = async (
 
 interface CreateEventOptions {
   readonly name: string;
-  /** Discord id of the organizer — managing rights key off this. */
+  /** Managing rights key off this. */
   readonly discordCreatorId: string;
   readonly startTime: Date;
   readonly lineupEnabled?: boolean;
@@ -523,10 +490,8 @@ interface CreateEventOptions {
 }
 
 /**
- * Discord-sourced events are only ever written by the Discord-scraping
- * lambda, so seeding them directly is the intended route in tests.
- * discordImage stays unset on purpose — it would make the page fetch from
- * the Discord CDN.
+ * discordImage stays unset on purpose: it would make the page fetch from the
+ * Discord CDN.
  */
 export const createEvent = (
   prisma: PrismaClient,
@@ -553,7 +518,7 @@ export const createEvent = (
 
 interface CreateAppEventOptions {
   readonly name: string;
-  /** Citizen id of the creating citizen — managing rights key off this. */
+  /** Managing rights key off this. */
   readonly createdById: string;
   readonly startTime: Date;
   readonly endTime: Date;
@@ -620,7 +585,6 @@ interface CreateEventBriefingPageOptions {
   readonly editScope?: WikiPageEventScope;
 }
 
-/** A child page of an event's briefing, as the create action writes it. */
 export const createEventBriefingPage = (
   prisma: PrismaClient,
   {
@@ -638,7 +602,6 @@ export const createEventBriefingPage = (
       eventId,
       parentId,
       title,
-      // Cosmetic only — pages are resolved by id
       slug: title
         .toLowerCase()
         .replaceAll(/[^a-z0-9]+/g, "-")
@@ -664,7 +627,6 @@ interface CreateParticipantOptions {
    * history, and the unique rule for active sign-ups ignores it.
    */
   readonly cancelled?: boolean;
-  /** Citizen id of whoever cancelled; defaults to the participant themselves. */
   readonly cancelledById?: string;
   /**
    * Set to false for a Discord RSVP whose Discord account the app has not
@@ -673,11 +635,6 @@ interface CreateParticipantOptions {
   readonly citizenResolved?: boolean;
 }
 
-/**
- * Attendance is written either by the Discord-scraping lambda or by the
- * app's own sign-up action, so seeding it directly is the intended route in
- * tests.
- */
 export const createParticipant = (
   prisma: PrismaClient,
   {
@@ -713,11 +670,10 @@ export const createParticipant = (
 
 interface CreateProfitDistributionCycleOptions {
   readonly title: string;
-  /** Citizen id of the creating manager */
   readonly createdById: string;
   /**
-   * The planned end of the collection phase, two days out by default. The
-   * cycle stays in its collection phase until something sets the actual end.
+   * The cycle stays in its collection phase until something sets the actual
+   * end.
    */
   readonly collectionEndsAt?: Date;
 }
@@ -748,11 +704,8 @@ interface CreateUploadOptions {
 }
 
 /**
- * A row of the uploads table without an object in the bucket — enough for
- * everything that only lists or filters uploads. `Upload.fileName` is stored
- * URI-encoded, so seeded rows have to encode like the upload endpoints do;
- * the table decodes it for display again. The author of an upload is a
- * citizen.
+ * A row without an object in the bucket. `Upload.fileName` is stored
+ * URI-encoded, so seeded rows have to encode like the upload endpoints do.
  */
 export const createUpload = (
   prisma: PrismaClient,
@@ -787,11 +740,6 @@ interface CreateVariantOptions {
   readonly status?: VariantStatus;
 }
 
-/**
- * Seeds the Manufacturer → Series → Variant chain a Ship hangs off of.
- * Manufacturer and Series names are globally unique, but every test starts
- * from a truncated database, so plain names are fine.
- */
 export const createVariant = async (
   prisma: PrismaClient,
   { manufacturerName, seriesName, variantName, status }: CreateVariantOptions,
@@ -864,10 +812,6 @@ interface CreateFlowOptions {
     readonly roleId: string;
     readonly type: FlowRoleAccessType;
   }[];
-  /**
-   * Markdown nodes stacked in a column and connected top to bottom, so a
-   * flow has something recognizable to render, copy and save again.
-   */
   readonly markdownNodes?: readonly string[];
 }
 
@@ -939,11 +883,8 @@ interface CreateEventTemplateOptions {
     readonly type: EventTemplateAccessType;
   }[];
   readonly deletedAt?: Date;
-  /** Top-level position names, in order */
   readonly positionNames?: readonly string[];
-  /** Additional briefing pages under the seeded root */
   readonly briefingPageTitles?: readonly string[];
-  /** Prefills the created event's Discord publishing */
   readonly discordPublishTarget?: EventDiscordPublishTarget;
   readonly discordPublishChannelId?: string;
   readonly discordPublishLocation?: string;
@@ -1038,19 +979,15 @@ export const createEventTemplate = async (
 
 interface CreateLogAnalyzerEntryOptions {
   readonly type: LogAnalyzerEntryType;
-  /** The full log line the pattern of the type matched */
   readonly rawLine: string;
   readonly eventAt: Date;
-  /** Citizen id of the citizen who shared the entry */
   readonly createdById: string;
-  /** The number of the line in its log file */
   readonly lineNumber?: number;
 }
 
 /**
- * A log entry as the upload action of the Log Analyzer writes it. The hash
- * only has to be unique for one citizen — a seeded entry never has to match
- * the value the app computes.
+ * The hash only has to be unique for one citizen: a seeded entry never has to
+ * match the value the app computes.
  */
 export const createLogAnalyzerEntry = (
   prisma: PrismaClient,

@@ -37,10 +37,6 @@ test("a page travels to the trash, back out of it and finally out of existence",
   });
   await signIn(manager.user);
 
-  /**
-   * Delete — the whole subtree goes down with the page, like deleting a
-   * directory, and the action takes the user back to the wiki's home.
-   */
   await page.goto(`/app/wiki/${parent.id}/${parent.slug}`);
   const deleteDialog = modal(page, "Seite löschen");
   await clickUntilVisible(
@@ -64,10 +60,6 @@ test("a page travels to the trash, back out of it and finally out of existence",
   await page.goto(`/app/wiki/${parent.id}/${parent.slug}`);
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
 
-  /**
-   * The trash lists the subtree's root only — restoring or destroying it
-   * covers everything below it.
-   */
   await page.goto("/app/wiki/trash");
   const trashRow = page.getByRole("row").filter({ hasText: "Handbuch" });
   await expect(trashRow).toBeVisible();
@@ -75,9 +67,6 @@ test("a page travels to the trash, back out of it and finally out of existence",
     page.getByRole("row").filter({ hasText: "Kapitel" }),
   ).toHaveCount(0);
 
-  /**
-   * Restore
-   */
   await trashRow.getByRole("button", { name: "Wiederherstellen" }).click();
   await expect(page.getByText("Erfolgreich wiederhergestellt.")).toBeVisible();
   await expect
@@ -91,9 +80,6 @@ test("a page travels to the trash, back out of it and finally out of existence",
   await page.goto(`/app/wiki/${parent.id}/${parent.slug}`);
   await expect(page.getByText("Grundlagen des Bergbaus.")).toBeVisible();
 
-  /**
-   * Delete again, then destroy it for good
-   */
   await clickUntilVisible(
     page.getByRole("button", { name: "Seite löschen" }),
     deleteDialog,
@@ -114,7 +100,6 @@ test("a page travels to the trash, back out of it and finally out of existence",
   await expect(page.getByText("Endgültig gelöscht.")).toBeVisible();
   await expect(page.getByText("Der Papierkorb ist leer")).toBeVisible();
 
-  // The subtree is gone from the database, children included
   await expect
     .poll(() =>
       prisma.wikiPage.count({ where: { id: { in: [parent.id, child.id] } } }),
@@ -150,19 +135,13 @@ test("a page that a different manager restored first leaves the trash", async ({
   await page.goto("/app/wiki/trash");
   const trashRow = page.getByRole("row").filter({ hasText: "Handbuch" });
   await expect(trashRow).toBeVisible();
-  /** Before hydration, a click on the button has no effect */
   await waitForAppShellHydration(page);
 
-  /** A different manager restores the page in the meantime */
   await prisma.wikiPage.update({
     where: { id: wikiPage.id },
     data: { deletedAt: null },
   });
 
-  /**
-   * The error refreshes the page: the trash no longer lists the page, without
-   * a navigation
-   */
   await trashRow.getByRole("button", { name: "Wiederherstellen" }).click();
   await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
   await expect(page.getByText("Der Papierkorb ist leer")).toBeVisible();
@@ -215,10 +194,6 @@ test("a page that a different manager restores during the permanent delete stays
     await parallelRestore.commit();
   }
 
-  /**
-   * The page stays, and the error refreshes the trash: it shows the restore
-   * without a navigation
-   */
   await expect(
     page.getByText(
       "Der Papierkorb war veraltet. Er ist jetzt aktuell, bitte versuche es erneut.",

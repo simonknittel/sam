@@ -3,10 +3,6 @@ import { createCitizen } from "../fixtures/factories";
 import { clickUntilVisible } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
-/**
- * Base UI renders the popup with `role="dialog"`; its name keeps the
- * assertions away from the mobile flyout, which lists the same apps.
- */
 const appsPopover = (page: Page) =>
   page.getByRole("dialog", { name: "Apps", exact: true });
 
@@ -19,13 +15,11 @@ const openAppsPopover = (page: Page) =>
 const favoritesHeading = (page: Page) =>
   appsPopover(page).getByText("Favoriten", { exact: true });
 
-/** The app is listed once per section it appears in */
 const appLinks = (page: Page) =>
   appsPopover(page).getByRole("link", { name: "Dashboard", exact: true });
 
 /**
- * The tile carrying the app's link — every app is one item of a list. The
- * `has` locator is resolved against each list item, so it must not carry
+ * The `has` locator is resolved against each list item, so it must not carry
  * the popover scope of appLinks().
  */
 const appTile = (page: Page) =>
@@ -55,7 +49,6 @@ test("favoriting an app adds it to the popover's favorites section and persists"
   await tile.getByRole("button", { name: "Als Favorit speichern" }).click();
 
   await expect(favoritesHeading(page)).toBeVisible();
-  // Once under "Favoriten" and still once under "Featured"
   await expect(appLinks(page)).toHaveCount(2);
 
   // The star flips optimistically — reloading before the action has landed
@@ -109,14 +102,12 @@ test.describe("mobile", () => {
         actionBar.getByText("Featured", { exact: true }),
       );
 
-    /** The start page of an app */
     await page.goto("/app/dashboard");
     await openFlyout();
     await expect(currentLinks).toHaveCount(1);
     await expect(currentLinks).toHaveAccessibleName("Dashboard");
     await expect(currentLinks).toHaveAttribute("aria-current", "page");
 
-    /** A different page of the same app marks the app as the current section */
     await page.goto("/app/account/profile");
     await openFlyout();
     await expect(currentLinks).toHaveCount(1);

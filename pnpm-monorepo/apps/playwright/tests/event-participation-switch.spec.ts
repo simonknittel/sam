@@ -22,19 +22,15 @@ import {
 import { expect, test } from "../fixtures/test";
 
 /**
- * The paths of the tabs of an event that exist only while its participation
- * is on. The main navigation can have a "Flotte" link too, thus the tabs are
- * found by their URL.
+ * The main navigation can have a "Flotte" link too, thus the tabs are found by
+ * their URL.
  */
 const PARTICIPATION_TAB_PATHS = ["lineup", "participants", "fleet"] as const;
 
 const eventTab = (page: Page, eventId: string, path: string) =>
   page.locator(`a[href="/app/events/${eventId}/${path}"]`);
 
-/**
- * The participation switch on the settings page. Its tile also has the
- * switch of the applications.
- */
+/** The tile also has the switch of the applications. */
 const participationCheckbox = (page: Page) =>
   page.getByRole("checkbox", { name: "Teilnahme", exact: true });
 
@@ -42,9 +38,8 @@ const participationSwitch = (page: Page) =>
   toggleLabel(page, participationCheckbox(page));
 
 /**
- * The visible state of the participation switch. The switch is disabled
- * while its action runs, and React resets the form when the action ends:
- * thus the state is read after that.
+ * The switch is disabled while its action runs, and React resets the form when
+ * the action ends: thus the state is read after that.
  */
 const expectParticipationSwitch = async (page: Page, stateLabel: string) => {
   await expect(participationCheckbox(page)).toBeEnabled();
@@ -97,7 +92,6 @@ test("a manager turns the participation off: the sign-ups are cancelled and the 
     name: "Teilnahme abschalten?",
   });
 
-  /** The dialog names the sign-ups, and a cancel keeps everything */
   await participationSwitch(page).click();
   await expect(confirmation).toContainText("1 aktive Anmeldung wird storniert");
   await confirmation.getByRole("button", { name: "Abbrechen" }).click();
@@ -115,7 +109,6 @@ test("a manager turns the participation off: the sign-ups are cancelled and the 
         select: { participationEnabled: true, lineupEnabled: true },
       }),
     )
-    // The stored lineup switch stays
     .toEqual({ participationEnabled: false, lineupEnabled: true });
   expect(
     await prisma.eventParticipant.findFirstOrThrow({
@@ -126,7 +119,6 @@ test("a manager turns the participation off: the sign-ups are cancelled and the 
     cancelledAt: expect.any(Date),
     cancelledById: organizer.entity.id,
   });
-  // The position stays, without its citizen
   expect(
     await prisma.eventPosition.findUniqueOrThrow({
       where: { id: position.id },
@@ -135,7 +127,6 @@ test("a manager turns the participation off: the sign-ups are cancelled and the 
   ).toEqual({ citizenId: null });
   await expectAuditEvents(prisma, ["EVENT_PARTICIPATION_STATUS_CHANGED"]);
 
-  /** The overview keeps only what has no participants */
   await page.goto(`/app/events/${event.id}`);
   await expect(
     page.getByText("Für dieses Event gibt es keine Anmeldung."),
@@ -160,7 +151,6 @@ test("a manager turns the participation off: the sign-ups are cancelled and the 
     page.getByText("Teilnahme abgeschaltet (1 Anmeldung storniert)"),
   ).toBeVisible();
 
-  /** The card of the events list has no sign-up and no participant count */
   await switchUser(participant.user);
   await page.goto("/app/events");
   const card = page
@@ -170,7 +160,6 @@ test("a manager turns the participation off: the sign-ups are cancelled and the 
   await expect(card.getByRole("button", { name: "Anmelden" })).toHaveCount(0);
   await expect(card.getByTitle(/^Teilnehmer:/)).toHaveCount(0);
 
-  /** The switch to true needs no confirmation and restores nothing */
   await switchUser(organizer.user);
   await page.goto(`/app/events/${event.id}/settings`);
   await waitForAppShellHydration(page);
@@ -226,7 +215,6 @@ test("the create dialog offers the participation switch, and a template prefills
     "Aktiviert",
   );
 
-  /** The closed section shows the value of the template in its summary */
   await createDialog
     .getByLabel("Vorlage (optional)")
     .selectOption({ label: "Briefing ohne Anmeldung" });

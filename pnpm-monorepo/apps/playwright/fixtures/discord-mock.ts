@@ -8,7 +8,6 @@ import { text } from "node:stream/consumers";
  * request path without a guild, a bot token or network access.
  */
 
-/** Guild voice channel — the app offers these in the channel picker */
 export const MOCK_VOICE_CHANNEL = {
   id: "900000000000000001",
   name: "Einsatzraum",
@@ -16,7 +15,6 @@ export const MOCK_VOICE_CHANNEL = {
   position: 1,
 };
 
-/** Guild stage channel — also offered, with a different Discord entity type */
 export const MOCK_STAGE_CHANNEL = {
   id: "900000000000000002",
   name: "Bühne",
@@ -24,7 +22,6 @@ export const MOCK_STAGE_CHANNEL = {
   position: 2,
 };
 
-/** Text channel — must never show up in the picker */
 export const MOCK_TEXT_CHANNEL = {
   id: "900000000000000003",
   name: "allgemein",
@@ -39,11 +36,9 @@ export interface MockDiscordRequest {
 }
 
 export interface DiscordMock {
-  /** Value for the app's DISCORD_API_BASE_URL */
   readonly baseUrl: string;
-  /** The guild scheduled events that currently exist, by Discord id */
+  /** By Discord id */
   readonly scheduledEvents: Map<string, Record<string, unknown>>;
-  /** Every request the app made, oldest first */
   readonly requests: MockDiscordRequest[];
   /**
    * Deletes an event behind the app's back, the way a guild admin would —

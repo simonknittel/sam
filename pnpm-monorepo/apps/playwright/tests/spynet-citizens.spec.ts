@@ -26,17 +26,13 @@ import {
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
-/**
- * The value of one row of the Übersicht tile. Each row names the attribute
- * on the left and holds its value on the right.
- */
 const overviewAttribute = (page: Page, name: string) =>
   sectionByHeading(page, "Übersicht")
     .locator("dl > div")
     .filter({ has: page.getByText(name, { exact: true }) })
     .locator("dd");
 
-/** A different user deletes the citizen: a soft delete, as the action does */
+/** A soft delete, as the action does */
 const markCitizenDeleted = (
   prisma: Prisma.TransactionClient,
   citizenId: string,
@@ -72,9 +68,7 @@ test("a citizen is created from a Spectrum ID and deleted again", async ({
   const created = await prisma.citizen.findFirstOrThrow({
     where: { spectrumId: "NEWCOMER" },
   });
-  /** The creator of a citizen is the citizen of the login */
   expect(created.createdById).toBe(admin.entity.id);
-  /** The Spectrum ID is recorded as the citizen's first log entry */
   const spectrumIdLog = await prisma.citizenLog.findFirstOrThrow({
     where: { citizenId: created.id, type: "spectrum-id" },
   });
@@ -82,9 +76,6 @@ test("a citizen is created from a Spectrum ID and deleted again", async ({
 
   await expect(page.getByText("NEWCOMER").first()).toBeVisible();
 
-  /**
-   * Delete — a soft delete: the citizen and its logs stay, hidden
-   */
   const deleteDialog = page.getByRole("alertdialog");
   await clickUntilVisible(
     page.getByRole("button", { name: "Löschen" }),
@@ -277,7 +268,6 @@ test("a deleted member leaves the member list of its organization", async ({
   await deleteDialog.getByRole("button", { name: "Löschen" }).click();
   await expect(page.getByText(DELETED_TEXT)).toBeVisible();
 
-  /** The membership stays in the database, only the list hides it */
   expect(
     await prisma.activeOrganizationMembership.count({
       where: { citizenId: member.entity.id },
@@ -314,9 +304,6 @@ test("a log entry is confirmed, and a second one marked a false report", async (
     historyDialog,
   );
 
-  /**
-   * Two entries, both unconfirmed until somebody decides about them
-   */
   for (const content of ["ersterhandle", "zweiterhandle"]) {
     await historyDialog.getByPlaceholder("Neuer Eintrag ...").fill(content);
     await historyDialog.getByRole("button", { name: "Speichern" }).click();
@@ -337,7 +324,6 @@ test("a log entry is confirmed, and a second one marked a false report", async (
     0,
   );
 
-  /** Deciding removes the entry's own decision buttons */
   await entryOf("ersterhandle")
     .getByRole("button", { name: "Falschmeldung" })
     .click();
@@ -361,7 +347,6 @@ test("a log entry is confirmed, and a second one marked a false report", async (
     })
     .toEqual({ ersterhandle: "FALSE_REPORT", zweiterhandle: "CONFIRMED" });
 
-  /** Only the confirmed one becomes the citizen's handle */
   await expect
     .poll(async () => {
       const entity = await prisma.citizen.findUniqueOrThrow({
@@ -424,7 +409,6 @@ test("a deleted log entry leaves the history, and the overview shows the previou
   await expect(entryOf("neuerhandle")).toHaveCount(0);
   await expect(entryOf("alterhandle")).toBeVisible();
 
-  /** The page behind the modal shows the change without a new load */
   await page.keyboard.press("Escape");
   await expect(historyDialog).not.toBeVisible();
   await expect(overviewAttribute(page, "Handle")).toContainText("alterhandle");
@@ -434,7 +418,6 @@ test("a deleted log entry leaves the history, and the overview shows the previou
       where: { citizenId: target.entity.id, content: "neuerhandle" },
     }),
   ).toBe(0);
-  /** The login takes the handle that is confirmed now */
   expect(
     await prisma.user.findUniqueOrThrow({
       where: { id: target.user.id },
@@ -454,7 +437,6 @@ test("deleting the confirmed Discord ID log removes the link to the login", asyn
     handle: "spynet-aufraeumer",
     permissionStrings: ["citizen;read", "discord-id;read", "discord-id;delete"],
   });
-  /** The roles of the citizen give the login its clearance */
   const target = await createCitizen(prisma, { handle: "verknuepfter" });
   const discordId = target.entity.discordId!;
   await prisma.citizenLog.create({
@@ -498,7 +480,6 @@ test("deleting the confirmed Discord ID log removes the link to the login", asyn
   ).toEqual({ discordId: null, userId: null });
   await expectAuditEvents(prisma, ["ENTITY_LOG_DELETED"]);
 
-  /** The login continues as a login without a citizen, thus without roles */
   await switchUser(target.user);
   await page.goto("/app/dashboard");
   await expect(page).toHaveURL("/clearance");
@@ -569,7 +550,6 @@ test("a confirmation of the own Discord ID shows a message and changes no login,
       "discord-id;confirm",
     ],
   });
-  /** The roles of the target would go to the login that the confirmation links */
   const target = await createCitizen(prisma, { handle: "zielperson" });
   const ownDiscordId = reviewer.entity.discordId!;
   const newcomer = await createUserWithoutCitizen(prisma, { name: "neuling" });
@@ -829,20 +809,12 @@ test("a decision about a Discord ID, Citizen ID or Community Moniker needs the c
       entry.getByRole("button", { name: "Bestätigen" }),
     ).toBeVisible();
 
-    /**
-     * A different user removes the confirm permission after the page loaded.
-     * The create permission stays.
-     */
     await prisma.permissionString.deleteMany({
       where: { permissionString: `${type};confirm` },
     });
 
     await entry.getByRole("button", { name: "Bestätigen" }).click();
     await expect(page.getByText(FORBIDDEN_ACTION_TEXT)).toBeVisible();
-    /**
-     * Without the confirm permission, the history hides a log without a
-     * decision
-     */
     await expect(entry).toHaveCount(0);
   }
 
@@ -919,7 +891,6 @@ test("a decision about a Discord ID that a different user decided after the page
     .filter({ hasText: providerAccountId });
   await expect(entry.getByText("Unbestätigt")).toBeVisible();
 
-  /** A different user confirms the log after the page loaded */
   await prisma.$transaction([
     prisma.citizenLog.update({
       where: { id: discordIdLog.id },
@@ -944,7 +915,6 @@ test("a decision about a Discord ID that a different user decided after the page
   ).toHaveCount(0);
   await expect(entry.getByText("Bestätigt von anderer-pruefer")).toBeVisible();
 
-  /** The refresh shows the decision of the other user behind the modal */
   await page.keyboard.press("Escape");
   await expect(historyDialog).not.toBeVisible();
   await expect(overviewAttribute(page, "Discord ID")).toContainText(
@@ -1021,14 +991,12 @@ test("a new citizen gets the confirmed Discord ID of a deleted citizen and its l
       }),
     )
     .toEqual({ discordId, userId: former.user.id });
-  /** The deleted citizen keeps its Discord ID, but not the login */
   expect(
     await prisma.citizen.findUniqueOrThrow({
       where: { id: former.entity.id },
       select: { discordId: true, userId: true },
     }),
   ).toEqual({ discordId, userId: null });
-  /** The login takes the handle of its new citizen */
   expect(
     await prisma.user.findUniqueOrThrow({
       where: { id: former.user.id },
@@ -1072,7 +1040,6 @@ test("a decision about a log of a citizen that a different user deleted after th
 
   await historyDialog.getByRole("button", { name: "Bestätigen" }).click();
   await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
-  /** The refresh shows that the citizen is gone */
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
   await expect(historyDialog).toHaveCount(0);
 
@@ -1134,13 +1101,11 @@ test("a delete of a log of a citizen that a different user deleted after the pag
 
   await deleteDialog.getByRole("button", { name: "Löschen" }).click();
   await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
-  /** The refresh shows that the citizen is gone */
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
 
   expect(
     await prisma.citizenLog.count({ where: { id: confirmedLog.id } }),
   ).toBe(1);
-  /** The copy of the confirmed handle stays */
   expect(
     await prisma.citizen.findUniqueOrThrow({
       where: { id: target.id },
@@ -1192,7 +1157,6 @@ test("a new log that waits for a parallel delete of its citizen is not saved", a
   }
 
   await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
-  /** The refresh shows that the citizen is gone */
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
 
   expect(
@@ -1237,10 +1201,6 @@ test("the log table shows no decision buttons for a log of a deleted citizen", a
       },
     ],
   });
-  /**
-   * Only the visible rows: while the page streams, React keeps a hidden copy
-   * of the table next to the visible one
-   */
   const rowOf = (content: string) =>
     page
       .locator("tbody tr")
@@ -1429,7 +1389,6 @@ test("a note is saved, confirmed, moved to a different note type and deleted", a
       },
     });
 
-  /** The panels are keep-mounted, thus each lookup names its panel */
   const notePanel = (name: string) => page.getByRole("tabpanel", { name });
   const noteIn = (panelName: string) =>
     notePanel(panelName).getByRole("article").filter({ hasText: noteContent });
@@ -1438,7 +1397,6 @@ test("a note is saved, confirmed, moved to a different note type and deleted", a
   await page.goto(`/app/spynet/citizen/${target.entity.id}/notes`);
   await waitForAppShellHydration(page);
 
-  // Save
   const contentInput = notePanel("Beobachtung").getByRole("textbox", {
     name: "Neue Notiz",
   });
@@ -1453,7 +1411,6 @@ test("a note is saved, confirmed, moved to a different note type and deleted", a
     .click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   await expect(noteIn("Beobachtung").getByText("Unbestätigt")).toBeVisible();
-  /** The next note starts with the same classification level */
   await expect(contentInput).toHaveValue("");
   await expect(classificationLevelSelect).toHaveValue(topSecret.id);
   expect(await findNote()).toEqual({
@@ -1463,14 +1420,12 @@ test("a note is saved, confirmed, moved to a different note type and deleted", a
     confirmed: null,
   });
 
-  // Confirm
   await noteIn("Beobachtung")
     .getByRole("button", { name: "Bestätigen" })
     .click();
   await expect(noteIn("Beobachtung").getByText("Unbestätigt")).toHaveCount(0);
   expect((await findNote()).confirmed).toBe(ConfirmationStatus.CONFIRMED);
 
-  // Move to a different note type and classification level
   const updateDialog = modal(page, "Bearbeiten");
   await clickUntilVisible(
     noteIn("Beobachtung").getByRole("button", { name: "Bearbeiten" }),
@@ -1493,7 +1448,6 @@ test("a note is saved, confirmed, moved to a different note type and deleted", a
     classificationLevelId: secret.id,
   });
 
-  // Delete
   const deleteDialog = page.getByRole("alertdialog", {
     name: "Eintrag löschen?",
   });
@@ -1534,10 +1488,6 @@ test("a decision, a move or a delete of a note without a decision needs the perm
   const withUnconfirmed = (operation: string) =>
     `note;${operation};${allNotes};alsoUnconfirmed=true`;
   const operations = ["confirm", "update", "delete"];
-  /**
-   * Each operation for the note type and the classification level of the
-   * note, without and with the notes without a decision
-   */
   const analyst = await createCitizen(prisma, {
     handle: "notiz-analyst",
     permissionStrings: [
@@ -1611,10 +1561,6 @@ test("a decision, a move or a delete of a note without a decision needs the perm
       noteIn("Beobachtung").getByRole("button", { name: button }),
     ).toBeVisible();
 
-    /**
-     * A different user removes the permission for notes without a decision
-     * after the page loaded. The permission without them stays.
-     */
     await prisma.permissionString.deleteMany({
       where: { permissionString: withUnconfirmed(operation) },
     });
@@ -1643,7 +1589,6 @@ test("a decision, a move or a delete of a note without a decision needs the perm
     }),
   ).toBe(0);
 
-  /** With the permissions for notes without a decision again */
   await prisma.permissionString.createMany({
     data: operations.map((operation) => ({
       roleId: analyst.role.id,
@@ -1707,7 +1652,6 @@ test("a note in a classification level that a different user deleted shows a mes
 
   await notePanel.getByRole("button", { name: "Speichern" }).click();
   await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
-  /** The refresh shows the one level that is left, thus no select */
   await expect(classificationLevelSelect).toHaveCount(0);
   await expect(contentInput).toHaveValue(noteContent);
 
@@ -1768,7 +1712,6 @@ test("a move of a note to a note type that a different user deleted shows a mess
 
   await updateDialog.getByRole("button", { name: "Speichern" }).click();
   await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
-  /** The refresh removes the deleted note type from the select and the tabs */
   await expect(
     noteTypeSelect.getByRole("option", { name: "Gerücht" }),
   ).toHaveCount(0);
@@ -1887,18 +1830,13 @@ test("the change modal of a note opens with the values of the note again after a
   await noteTypeSelect.selectOption({ label: "Gerücht" });
   await classificationLevelSelect.selectOption({ label: "Streng geheim" });
 
-  /**
-   * A different user removes the permission for notes of the note type
-   * "Gerücht" after the page loaded. The error refreshes nothing, thus the
-   * options stay.
-   */
+  /** The error refreshes nothing, thus the options stay. */
   await prisma.permissionString.deleteMany({
     where: { permissionString: createRumourPermission },
   });
 
   await updateDialog.getByRole("button", { name: "Speichern" }).click();
   await expect(page.getByText(FORBIDDEN_ACTION_TEXT)).toBeVisible();
-  /** The error keeps the chosen values */
   await expect(noteTypeSelect).toHaveValue(rumour.id);
   await expect(classificationLevelSelect).toHaveValue(topSecret.id);
 
@@ -2231,7 +2169,6 @@ test("a move of a note of a citizen that a different user deleted after the page
 
   await updateDialog.getByRole("button", { name: "Speichern" }).click();
   await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
-  /** The refresh shows that the citizen is gone */
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
 
   expect(
@@ -2308,7 +2245,6 @@ test("a move of a note that waits for a parallel delete of its citizen changes n
   }
 
   await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
-  /** The refresh shows that the citizen is gone */
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
 
   expect(

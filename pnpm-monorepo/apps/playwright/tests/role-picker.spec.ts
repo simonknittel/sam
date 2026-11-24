@@ -35,7 +35,6 @@ import { expect, test } from "../fixtures/test";
 const readPermissions = (roles: readonly Pick<Role, "id">[]) =>
   roles.map((role) => `otherRole;read;roleId=${role.id}`);
 
-/** The setting of the Human Resources roles, a role picker with a maximum */
 const openHumanResourcesSetting = async (page: Page) => {
   await page.goto("/app/iam/settings");
   await waitForAppShellHydration(page);
@@ -110,9 +109,6 @@ test("the role picker finds roles by name and by tag, a tag filters the list wit
     "Alle Rollen im Cockpit",
   );
 
-  /**
-   * The search
-   */
   await searchRolePicker(popover, "Navi");
   await expect(options).toHaveText(["Navigator"]);
 
@@ -129,10 +125,6 @@ test("the role picker finds roles by name and by tag, a tag filters the list wit
   await searchRolePicker(popover, "");
   await expect(options).toHaveCount(4);
 
-  /**
-   * A tag shows only its offered roles and selects none of them. A selected
-   * role outside of the tag stays selected.
-   */
   await rolePickerOption(popover, "Bordarzt").click();
   const flightCrewTag = rolePickerTag(popover, "Flugcrew");
   const workshopTag = rolePickerTag(popover, "Werkstatt");
@@ -144,7 +136,6 @@ test("the role picker finds roles by name and by tag, a tag filters the list wit
   await expect(rolePickerChips(settingTile)).toHaveText(["Bordarzt"]);
   await expect(popover).toBeVisible();
 
-  /** The search finds only the roles of the tag */
   await searchRolePicker(popover, "Mechaniker");
   await expect(options).toHaveCount(0);
   await searchRolePicker(popover, "Pilot");
@@ -153,7 +144,6 @@ test("the role picker finds roles by name and by tag, a tag filters the list wit
   await searchRolePicker(popover, "");
   await expect(rolePickerChips(settingTile)).toHaveText(["Bordarzt", "Pilot"]);
 
-  /** A different tag replaces the filter, and a second click clears it */
   await workshopTag.click();
   await expect(flightCrewTag).toHaveAttribute("aria-pressed", "false");
   await expect(options).toHaveText(["Mechaniker"]);
@@ -161,9 +151,6 @@ test("the role picker finds roles by name and by tag, a tag filters the list wit
   await expect(workshopTag).toHaveAttribute("aria-pressed", "false");
   await expect(options).toHaveCount(4);
 
-  /**
-   * A click on a selected role deselects it
-   */
   await rolePickerOption(popover, "Bordarzt").click();
   await expect(rolePickerOption(popover, "Bordarzt")).toHaveAttribute(
     "aria-selected",
@@ -199,7 +186,6 @@ test("the role picker works with the keyboard and gives the focus back to its tr
   const popover = rolePickerPopover(page);
   const searchField = rolePickerSearchField(popover);
 
-  /** A key press before the hydration of the setting has no effect */
   await expect(async () => {
     await trigger.focus();
     await page.keyboard.press("Enter");
@@ -216,16 +202,11 @@ test("the role picker works with the keyboard and gives the focus back to its tr
   await page.keyboard.press("Home");
   await expectActiveOption(popover, "Bordarzt");
 
-  /** Enter selects the active role, and a second Enter deselects it */
   await page.keyboard.press("Enter");
   await expect(rolePickerChips(settingTile)).toHaveText(["Bordarzt"]);
   await page.keyboard.press("Enter");
   await expect(rolePickerChips(settingTile)).toHaveCount(0);
 
-  /**
-   * During a search, the list stays in name order, and Enter selects the
-   * best match
-   */
   await page.keyboard.type("Pilot");
   await expect(popover.getByRole("option")).toHaveText(["Co-Pilot", "Pilot"]);
   await expectActiveOption(popover, "Pilot");
@@ -261,7 +242,6 @@ test("a required role picker stops the submit of its form without a role and sho
   await page.goto("/app/silc/settings");
   await waitForAppShellHydration(page);
 
-  /** A role salary needs a role */
   const salaryTile = sectionByHeading(page, "Gehälter");
   const addSalaryRow = salaryTile.getByRole("button", { name: "Neu" });
   await expect(addSalaryRow).toBeVisible();
@@ -313,7 +293,7 @@ test("in the edit dialog of a task, Escape closes only the role picker, and a ro
       requiredRoles: { connect: [{ id: pilot.id }, { id: secretRole.id }] },
     },
   });
-  /** Without the read marker, the first visit refreshes the page */
+  /** Stops the refresh of the first visit (see the README) */
   await prisma.readMarker.create({
     data: { citizenId: creator.entity.id, taskId: task.id },
   });
@@ -340,7 +320,6 @@ test("in the edit dialog of a task, Escape closes only the role picker, and a ro
   await expect(dialog).toBeVisible();
   await expect(trigger).toBeFocused();
 
-  /** The tag shows only the roles that the viewer can see */
   await openRolePicker(trigger);
   await rolePickerTag(popover, "Flugcrew").click();
   await expect(popover.getByRole("option")).toHaveText(["Navigator", "Pilot"]);
@@ -396,7 +375,6 @@ test("the role picker of the Human Resources roles disables the roles above the 
   await expect(rolePickerChips(settingTile)).toHaveCount(19);
   const popover = await openRolePicker(trigger);
 
-  /** At the maximum, the roles that are not selected are disabled */
   await rolePickerOption(popover, "Rolle 20").click();
   const lastRole = rolePickerOption(popover, "Rolle 21");
   await expect(lastRole).toBeDisabled();
@@ -404,7 +382,6 @@ test("the role picker of the Human Resources roles disables the roles above the 
   await lastRole.click({ force: true });
   await expect(lastRole).toHaveAttribute("aria-selected", "false");
 
-  /** Below the maximum, the role is enabled again */
   await rolePickerOption(popover, "Rolle 01").click();
   await expect(lastRole).toBeEnabled();
   await lastRole.click();

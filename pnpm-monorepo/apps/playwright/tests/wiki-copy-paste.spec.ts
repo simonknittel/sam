@@ -129,10 +129,8 @@ test("copy'n'paste inserts a page with its readable children under another page"
   });
   expect(chapterCopy.content).toEqual(chapter.content);
   expect(chapterCopy.visibility).toBe(WikiPageVisibility.INHERIT);
-  /** The unreadable child was left where it was — only the original exists */
   expect(await prisma.wikiPage.count({ where: { title: "Geheim" } })).toBe(1);
 
-  // The insert consumed the clipboard
   const cookies = await page.context().cookies();
   expect(
     cookies.find((cookie) => cookie.name === "wiki_clipboard"),
@@ -166,7 +164,6 @@ test("a new page can start as a copy of an existing page", async ({
   await openCreatePageModal(page);
 
   await page.locator('input[name="title"]').fill("Neu aus Vorlage");
-  // The select waits for the lazily fetched readable pages
   await page
     .getByLabel("Inhalt kopieren von (optional)")
     .selectOption({ label: "Vorlage" });
@@ -216,14 +213,12 @@ test("replace mode transplants the copy onto an existing page", async ({
 
   await page.goto(`/app/wiki/${target.id}/${target.slug}`);
   await openCreatePageModal(page);
-  /** The label is the visible half of the radio, which is `sr-only` */
   await toggleLabel(page, /^Seite ersetzen$/).click();
   await expect(
     page.getByRole("radio", { name: "Seite ersetzen" }),
   ).toBeChecked();
   await page.getByRole("button", { name: "Einfügen", exact: true }).click();
 
-  // The page keeps its identity; only its content is transplanted
   await expect(page).toHaveURL(new RegExp(`/app/wiki/${target.id}/`));
   await expect(page.getByText("Muster-Inhalt.")).toBeVisible();
 
@@ -237,14 +232,12 @@ test("replace mode transplants the copy onto an existing page", async ({
     "Muster-Inhalt.",
   );
 
-  // The old content survives as an automatic snapshot
   expect(
     await prisma.wikiPageSnapshot.count({
       where: { pageId: target.id, name: "Automatische Sicherung vor Ersetzen" },
     }),
   ).toBe(1);
 
-  // Existing children are kept, copied children appended
   expect(
     await prisma.wikiPage.count({
       where: { title: "Altes Kind", parentId: target.id },
@@ -263,7 +256,6 @@ test("replace mode transplants the copy onto an existing page", async ({
       }),
     )
     .toBe(1);
-  // No "(Kopie)" page was created — the target itself was replaced
   expect(
     await prisma.wikiPage.count({ where: { title: "Muster (Kopie)" } }),
   ).toBe(0);
@@ -360,10 +352,7 @@ test("a pasted copy keeps an image in use after the source removes it", async ({
 
   await page.goto("/app/uploads");
   const row = page.getByRole("row").filter({ hasText: "Kopiertes Bild.png" });
-  /**
-   * Not the usage as a snapshot: the first store of the copy in the collab
-   * editor can write an automatic snapshot, which links the image too.
-   */
+  /** Not the usage as a snapshot, for the same reason. */
   const attachmentUsage = row
     .getByRole("listitem")
     .filter({ hasText: "Wiki-Bild/-Anhang" });
@@ -372,7 +361,6 @@ test("a pasted copy keeps an image in use after the source removes it", async ({
   ).toHaveAttribute("href", `/app/wiki/${copy.id}/${copy.slug}`);
 
   await page.goto("/app/uploads?usage=unused");
-  // While the page streams, a hidden copy of the text can also exist
   await expect(
     page.locator("#main-content").getByText("Keine Uploads für diese Filter."),
   ).toBeVisible();

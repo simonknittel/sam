@@ -18,15 +18,10 @@ import {
 } from "../fixtures/server-actions";
 import { expect, test } from "../fixtures/test";
 
-/** A day of the Halloween range, thus every visit here carries that theme */
 const HALLOWEEN_DATE = "2026-10-15";
 
 const APPEARANCE_PAGE = "/app/account/appearance";
 
-/**
- * Every switch of the page, with the title which names it and the label of
- * its range, as a citizen reads them.
- */
 const SEASONAL_EVENT_SWITCHES = [
   {
     title: "Halloween",
@@ -42,18 +37,12 @@ const SEASONAL_EVENT_SWITCHES = [
   },
 ] as const;
 
-/**
- * The checkbox itself is sr-only — the visible control is the box its
- * wrapping label draws, thus a toggle goes through that label the way a
- * click does.
- */
 const eventCheckbox = (page: Page, eventKey: string) =>
   page.locator(`input[name="${eventKey}"]`);
 
 const toggleEvent = (page: Page, eventKey: string) =>
   toggleLabel(page, eventCheckbox(page, eventKey)).click();
 
-/** The keys of the events which the citizen switched off, sorted */
 const switchedOffEvents = (prisma: PrismaClient, citizenId: string) =>
   prisma.seasonalThemeSetting
     .findMany({
@@ -79,8 +68,6 @@ test("the appearance page offers a switch for every seasonal event", async ({
   const tile = sectionByHeading(page, "Saisonale Events");
   for (const { title, rangeLabel } of SEASONAL_EVENT_SWITCHES) {
     await expect(tile.getByText(rangeLabel)).toBeVisible();
-    // Every event is on by default, thus a citizen who never visited this
-    // page has no row at all
     await expect(tile.getByRole("checkbox", { name: title })).toBeChecked();
   }
 
@@ -107,13 +94,8 @@ test("switching the active event off strips its theme and switching it on restor
     "data-seasonal-event",
     "halloween",
   );
-  /**
-   * Each toggle saves once, thus the page has to be hydrated before the
-   * first one — a retried click would save more than once.
-   */
   await waitForAppShellHydration(page);
 
-  // Another event's switch leaves the theme of the day alone
   await toggleEvent(page, "christmas");
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   await expect(eventCheckbox(page, "christmas")).not.toBeChecked();
@@ -139,9 +121,7 @@ test("switching the active event off strips its theme and switching it on restor
   );
   await expect(eventCheckbox(page, "halloween")).toBeChecked();
 
-  // A fresh visit shows what the rows say, not what the browser remembers
   await page.goto(APPEARANCE_PAGE);
-  // A whole request tells the same as the answer of the action above
   await expect(themeRoot(page)).toHaveAttribute(
     "data-seasonal-event",
     "halloween",
@@ -150,7 +130,6 @@ test("switching the active event off strips its theme and switching it on restor
   await expect(eventCheckbox(page, "halloween")).toBeChecked();
   await expect(eventCheckbox(page, "new-year")).toBeChecked();
 
-  // Opt-out model: only the switched-off event keeps a row
   const settings = await prisma.seasonalThemeSetting.findMany({
     where: { citizenId: citizen.entity.id },
   });
@@ -170,7 +149,6 @@ test("a switch toggled while the save of another switch runs is saved too", asyn
   await signIn(citizen.user);
 
   await page.goto(APPEARANCE_PAGE);
-  // Each toggle saves once, thus the page has to be hydrated first
   await waitForAppShellHydration(page);
 
   const releaseSaves = await holdServerActions(page, APPEARANCE_PAGE);
@@ -258,7 +236,6 @@ test("the login page keeps its theme although the citizen switched it off", asyn
     "data-seasonal-event",
     "halloween",
   );
-  // One save, thus the page has to be hydrated first
   await waitForAppShellHydration(page);
 
   await toggleEvent(page, "halloween");
@@ -288,10 +265,6 @@ test("a viewer without a citizen has no appearance page", async ({
   signIn,
   enableAdminMode,
 }) => {
-  /**
-   * A user without a citizen gets no permissions from roles, thus admin mode
-   * is the only way such a user reaches the account at all.
-   */
   const user = await createUserWithoutCitizen(prisma, {
     name: "ohne-citizen-darstellung",
     admin: true,
@@ -306,7 +279,6 @@ test("a viewer without a citizen has no appearance page", async ({
    */
   await page.goto("/app/account/sessions");
   await expect(page.getByRole("link", { name: "Sitzungen" })).toBeVisible();
-  // The opt-outs belong to a citizen, thus the entry stays away
   await expect(page.getByRole("link", { name: "Darstellung" })).toHaveCount(0);
 
   await page.goto(APPEARANCE_PAGE);

@@ -9,7 +9,6 @@ interface RunCommandOptions {
   readonly label: string;
 }
 
-/** Runs a command to completion, inheriting stdout/stderr for visibility. */
 export const runCommand = async (
   command: string,
   commandArguments: readonly string[],
@@ -43,8 +42,8 @@ const APP_READY_TIMEOUT_MS = 90_000;
 const APP_POLL_INTERVAL_MS = 250;
 
 /**
- * Polls the app until it responds. The child process exiting early (e.g. a
- * missing build) fails fast instead of waiting for the full timeout.
+ * A child process that exits early (for example a missing build) fails fast
+ * instead of waiting for the full timeout.
  */
 export const waitForHttpOk = async (url: string, child: ChildProcess) => {
   const deadline = Date.now() + APP_READY_TIMEOUT_MS;

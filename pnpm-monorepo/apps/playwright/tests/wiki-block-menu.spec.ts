@@ -19,11 +19,9 @@ const SECOND_TEXT = "Zweiter Absatz";
 const blockMenu = (page: Page) =>
   page.getByRole("button", { name: "Duplizieren" });
 
-/** The formatting menu of a text selection, which has no duplicate button */
 const formattingMenu = (page: Page) =>
   page.getByRole("button", { name: "Fett" });
 
-/** A page with two paragraphs, opened in the collab editor */
 const openTwoParagraphPage = async (
   page: Page,
   prisma: PrismaClient,
@@ -86,7 +84,6 @@ test("clicking another block moves the single popover over, Escape closes it", a
   await clickUntilVisible(editorRoot.locator("p").first(), blockMenu(page));
   await editorRoot.locator("p").nth(1).click();
 
-  // Still exactly one popover, and its actions now hit the second paragraph
   await expect(blockMenu(page)).toHaveCount(1);
   await page.getByRole("button", { name: "Überschrift 2" }).click();
   await expect(editorRoot.locator("h2")).toHaveText(SECOND_TEXT);
@@ -198,7 +195,6 @@ test("selecting text replaces the block popover with the formatting menu", async
   await expect(formattingMenu(page)).toBeVisible();
   await expect(blockMenu(page)).toBeHidden();
 
-  // Collapsing the selection does not bring the block popover back
   await page.keyboard.press("ArrowRight");
   await expect(formattingMenu(page)).toBeHidden();
   await expect(blockMenu(page)).toBeHidden();

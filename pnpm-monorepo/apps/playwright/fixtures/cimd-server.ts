@@ -25,20 +25,14 @@ const CACHE_MAX_AGE_IN_SECONDS = 60;
 
 enum CimdPath {
   Valid = "/client.json",
-  /** A document whose `client_id` names a different URL */
   MismatchingClientId = "/mismatching-client.json",
-  /** No document: the server answers 404 */
   Missing = "/missing-client.json",
 }
 
 export interface CimdServer {
-  /** The client id of the test client: the URL of its document */
   readonly clientId: string;
-  /** The URL of a document whose `client_id` is a different URL */
   readonly mismatchingClientId: string;
-  /** The URL of a document that does not exist */
   readonly missingClientId: string;
-  /** The host of the client ids, which the consent page shows */
   readonly host: string;
   readonly close: () => Promise<void>;
 }

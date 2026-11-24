@@ -56,15 +56,8 @@ test("a manager builds a lineup: create, rename, require a ship, duplicate, dele
   await page.goto(`/app/events/${event.id}/lineup`);
   await waitForAppShellHydration(page);
 
-  /**
-   * The lineup starts switched off — the organizer publishes it once it is
-   * staffed, so managing it has to work before that.
-   */
   await expect(page.getByText("Keine Posten vorhanden.")).toBeVisible();
 
-  /**
-   * Create a position, with the ship it requires right away
-   */
   const createDialog = modal(page, "Posten hinzufügen");
   await clickUntilVisible(
     page.getByRole("button", { name: "Posten hinzufügen" }).first(),
@@ -74,10 +67,6 @@ test("a manager builds a lineup: create, rename, require a ship, duplicate, dele
   await createDialog
     .getByLabel("Beschreibung (optional)")
     .fill("Fliegt das Schiff.");
-  /**
-   * Escape closes only the popover of the ship picker, not the dialog with
-   * the text that the manager typed.
-   */
   const shipPickerTrigger = createDialog.getByRole("button", {
     name: "Schiff auswählen",
   });
@@ -123,8 +112,7 @@ test("a manager builds a lineup: create, rename, require a ship, duplicate, dele
   ).toBeVisible();
 
   /**
-   * Rename it through the row's inline editor — the only one on the page
-   * while the lineup holds a single position.
+   * The only inline editor on the page while the lineup holds a single position
    */
   const nameInput = page.locator('input[name="name"]');
   await clickUntilVisible(inlineEditorTrigger(page), nameInput);
@@ -137,8 +125,8 @@ test("a manager builds a lineup: create, rename, require a ship, duplicate, dele
     .toMatchObject({ name: "Chefpilot" });
 
   /**
-   * A position's actions live behind its accordion, so only an opened one
-   * offers them — which keeps every action button unambiguous.
+   * Only an opened accordion offers the actions of its position, thus each
+   * action button is unambiguous.
    */
   await clickUntilVisible(
     page.getByTitle("Details öffnen"),
@@ -158,16 +146,11 @@ test("a manager builds a lineup: create, rename, require a ship, duplicate, dele
     "Chefpilot",
     "Chefpilot",
   ]);
-  /** The copy sits right below its source and brings its requirements */
   expect(positions[0]!.id).toBe(pilot.id);
   expect(
     positions[1]!.requiredVariants.map(({ variantId }) => variantId),
   ).toEqual([variant.id]);
 
-  /**
-   * Delete the original — its accordion is the open one, so its delete
-   * button is the only one rendered.
-   */
   const deleteDialog = page.getByRole("alertdialog");
   await clickUntilVisible(
     page.getByRole("button", { name: "Posten löschen" }),
@@ -216,7 +199,6 @@ test("the lineup toggle publishes the aufstellung to the participants", async ({
     data: { eventId: event.id, name: "Navigator" },
   });
 
-  /** Without the toggle the tab does not exist for anybody but its managers */
   await signIn(viewer.user);
   await page.goto(`/app/events/${event.id}`);
   await expect(page.getByRole("link", { name: "Übersicht" })).toBeVisible();
@@ -224,7 +206,6 @@ test("the lineup toggle publishes the aufstellung to the participants", async ({
     page.getByRole("link", { name: "Aufstellung", exact: true }),
   ).toHaveCount(0);
 
-  /** The URL is rejected too, but the event around it stays navigable */
   await page.goto(`/app/events/${event.id}/lineup`);
   await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible();
   await expect(page.getByRole("link", { name: "Übersicht" })).toBeVisible();
@@ -313,10 +294,6 @@ test("positions are reordered by dragging and copied into another lineup", async
     "Erster Posten",
   ]);
 
-  /**
-   * Copying puts a position on a clipboard that survives the walk to
-   * another event, where every position offers to take it in.
-   */
   await page.reload();
   await waitForAppShellHydration(page);
   await clickUntilVisible(
@@ -338,7 +315,6 @@ test("positions are reordered by dragging and copied into another lineup", async
     page.getByRole("button", { name: pasteLabel }),
     page.getByRole("button", { name: "In diese Gruppe einfügen" }),
   );
-  /** The menu names where the copy came from */
   await expect(
     page.getByText("Aus einem anderen Event kopiert."),
   ).toBeVisible();
@@ -351,7 +327,6 @@ test("positions are reordered by dragging and copied into another lineup", async
     where: { eventId: target.id, parentPositionId: host.id },
   });
   expect(pasted.name).toBe("Zweiter Posten");
-  /** The source keeps its own copy — pasting never moves a position */
   expect(await lineupOf(event.id)).toEqual(["Zweiter Posten", "Erster Posten"]);
 
   await expectAuditEvents(prisma, [
@@ -396,8 +371,8 @@ test("a manager cannot copy the lineup of a restricted event that they cannot se
     data: { eventId: secretEvent.id, name: "Geheimer Posten", order: 0 },
   });
   /**
-   * The first visit of a new event marks it as read and refreshes the page
-   * at an unknown time. That render would undo the changed field below.
+   * The refresh of the first visit (see the README) would undo the changed
+   * field below.
    */
   await prisma.readMarker.create({
     data: { citizenId: manager.entity.id, eventId: target.id },
@@ -419,8 +394,8 @@ test("a manager cannot copy the lineup of a restricted event that they cannot se
   await page.getByRole("option", { name: /Operation Öffentlich/ }).click();
 
   /**
-   * The picker offers only the events that the manager can see. A request
-   * outside the picker sends the id of the restricted event.
+   * A request outside the picker, which offers only the events that the manager
+   * can see
    */
   await copyDialog
     .locator('input[type="hidden"][name="sourceEventId"]')
@@ -435,10 +410,7 @@ test("a manager cannot copy the lineup of a restricted event that they cannot se
   ).toBe(0);
 });
 
-/**
- * The ships on one page of the fleet list. The requirement check read only
- * the first page before.
- */
+/** Mirrors `FLEET_PAGE_SIZE` of the app */
 const FLEET_PAGE_SIZE = 100;
 
 test("the requirement check finds a ship after the first page of the fleet, but no deleted ship", async ({
@@ -512,9 +484,8 @@ test("the requirement check finds a ship after the first page of the fleet, but 
     );
 
   /**
-   * A deleted ship does not meet the requirement. The hint opens on focus,
-   * which React renders at once, thus the later check without a hint is
-   * sure.
+   * The hint opens on focus, which React renders at once, thus the later check
+   * without a hint is sure.
    */
   await signIn(applicant.user);
   await page.goto(`/app/events/${event.id}/lineup`);
@@ -529,7 +500,6 @@ test("the requirement check finds a ship after the first page of the fleet, but 
   );
   await expect(unmetChoice).toContainText("Erforderliches Schiff fehlt");
 
-  // The ship after the first page of the fleet meets the requirement
   await prisma.ship.update({
     where: { id: requiredShip.id },
     data: { deletedAt: null },
@@ -567,7 +537,6 @@ test("a position requires all of its roles or one of them", async ({
       `otherRole;read;roleId=${medicRole.id}`,
     ],
   });
-  /** The applicant cannot see the two roles */
   const applicant = await createCitizen(prisma, {
     handle: "posten-bewerber",
     permissionStrings: LINEUP_PERMISSIONS,
@@ -635,7 +604,6 @@ test("a position requires all of its roles or one of them", async ({
     .poll(findRequiredRoles)
     .toEqual({ match: EventPositionRoleMatch.ALL, roleIds: requiredRoleIds });
 
-  /** The applicant has only one of the two roles */
   await page.goto(lineupUrl);
   const unmetChoice = await applicantChoice(
     "Alle Teilnehmer - Voraussetzungen nicht erfüllt",
@@ -659,10 +627,6 @@ test("a position requires all of its roles or one of them", async ({
   await applyButton.focus();
   await expect(unmetRequirementHint).toBeVisible();
 
-  /**
-   * The lineup keeps the open positions in the local storage of the
-   * browser, which the switch of the user keeps
-   */
   await switchUser(organizer.user);
   await page.goto(lineupUrl);
   const editDialog = modal(page, "Posten bearbeiten");
@@ -792,7 +756,6 @@ test("a deleted participant is not a choice in the position picker", async ({
       citizenId: deletedParticipant.entity.id,
     },
   });
-  /** The delete keeps the sign-up, the application and the assignment */
   await prisma.citizen.update({
     where: { id: deletedParticipant.entity.id },
     data: { deletedAt: new Date(), userId: null },
@@ -813,10 +776,6 @@ test("a deleted participant is not a choice in the position picker", async ({
   await page.keyboard.press("Escape");
   await expect(pilotDialog).toBeHidden();
 
-  /**
-   * The position keeps its deleted citizen and shows the label, but the
-   * manager cannot choose it again
-   */
   await expect(
     page.getByRole("button", { name: "Citizen für Schütze:" }),
   ).toHaveText(DELETED_CITIZEN_LABEL);

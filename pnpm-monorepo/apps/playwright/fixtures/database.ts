@@ -2,7 +2,6 @@ import { Prisma, type PrismaClient } from "@sam-monorepo/database/client";
 import { ACTION_FEEDBACK_TIMEOUT } from "./interactions";
 import { expect } from "./test";
 
-/** The statements of the database of the worker that wait for a lock */
 export const countLockWaits = async (prisma: PrismaClient) => {
   const waits = await prisma.$queryRaw<{ count: number }[]>`
     SELECT count(*)::int AS "count"
@@ -12,7 +11,6 @@ export const countLockWaits = async (prisma: PrismaClient) => {
   return waits[0]?.count;
 };
 
-/** The types of locks in `pg_locks` that a test can wait for */
 export enum LockType {
   /** For example the lock of the wiki page tree */
   Advisory = "advisory",
@@ -60,12 +58,7 @@ export const startParallelChange = async <Result>(
   ]);
 
   return {
-    /** The result of the change, for example the row that it created */
     result,
-    /**
-     * Waits until a statement of the app waits for a lock of the change.
-     * With a lock type, only a wait for a lock of that type counts.
-     */
     waitForBlockedStatement: (lockType?: LockType) =>
       expect
         .poll(async () => {
@@ -79,7 +72,6 @@ export const startParallelChange = async <Result>(
           return waitingLocks[0]?.count;
         })
         .toBe(1),
-    /** Runs `beforeCommit`, if there is one, and commits the change */
     commit: async () => {
       allowCommit();
       await parallelTransaction;

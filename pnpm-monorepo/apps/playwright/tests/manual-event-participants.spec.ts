@@ -34,10 +34,6 @@ import {
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
-/**
- * The picker resolves its options through the citizen list, so a manager
- * needs `citizen;read` on top of the event permissions.
- */
 const MANAGER_PERMISSIONS = ["event;read", "citizen;read"];
 
 const appEvent = (name: string, createdById: string) => ({
@@ -52,7 +48,6 @@ const pickCitizen = async (dialog: Locator, page: Page, handle: string) => {
     dialog.getByRole("combobox", { name: "Citizens" }),
     handle,
   );
-  /** The picked citizen becomes a chip linking to their profile */
   await expect(dialog.getByRole("link", { name: handle })).toBeVisible();
 };
 
@@ -61,7 +56,6 @@ enum AddMode {
   Add = "Direkt hinzufügen",
 }
 
-/** The dialog opens with an invitation; a direct add needs the other choice */
 const openAddModal = async (page: Page, mode = AddMode.Add) => {
   const addModal = modal(page, "Teilnehmer hinzufügen");
   /**
@@ -138,7 +132,6 @@ test("a manager adds citizens with a shared comment", async ({
     [first.entity.id, second.entity.id].toSorted(),
   );
 
-  /** The manager is the actor, the added citizen the payload's subject */
   const activities = await prisma.eventActivity.findMany({
     where: {
       eventId: event.id,
@@ -283,7 +276,6 @@ test("an invited citizen declines from the notification with a comment, and the 
       message: "Kommst du mit?",
     },
   });
-  /** The notification router does not run in the test stack */
   await createOnSiteNotification(prisma, {
     citizenId: guest.entity.id,
     notificationType: "event_invitation_created",
@@ -307,7 +299,6 @@ test("an invited citizen declines from the notification with a comment, and the 
   await expect(row).toContainText(
     'absage-manager hat dich zum Event "Operation Absage" eingeladen.',
   );
-  /** The buttons of the notification open the participation modal */
   const answerModal = modal(page, "Teilnahme - Operation Absage");
   await clickUntilVisible(
     row.getByRole("button", { name: "Ablehnen" }),
@@ -335,7 +326,6 @@ test("an invited citizen declines from the notification with a comment, and the 
   const invitationRow = page.getByRole("row").filter({ hasText: "absager" });
   await expect(invitationRow).toContainText("Abgelehnt");
   await expect(invitationRow).toContainText("Da bin ich im Urlaub.");
-  /** A declined invitation has nothing to withdraw */
   await expect(
     invitationRow.getByRole("button", { name: "Zurückziehen" }),
   ).toHaveCount(0);
@@ -374,7 +364,7 @@ test("the status filter of the invitations shows the open or the declined invita
       },
     ],
   });
-  /** The first visit of a new event refreshes the page */
+  /** Stops the refresh of the first visit (see the README) */
   await prisma.readMarker.create({
     data: { citizenId: manager.entity.id, eventId: event.id },
   });
@@ -447,11 +437,8 @@ test("a manager withdraws an open invitation", async ({
 });
 
 /**
- * A manager with an event, and the citizens of the roles "Pilot",
- * "Ingenieur" and "Händler". The roles "Pilot" and "Ingenieur" have the tag
- * "Crew". The citizen "allrounder" has both roles of the tag, the citizen
- * "zuvor-gewaehlt" has no role, and the citizen "schon-dabei" is a
- * participant.
+ * "allrounder" has both roles of the tag "Crew", "zuvor-gewaehlt" has no role,
+ * and "schon-dabei" is a participant.
  */
 const seedRoleShortcut = async (prisma: PrismaClient) => {
   const pilotRole = await createRole(prisma, { name: "Pilot" });
@@ -475,9 +462,9 @@ const seedRoleShortcut = async (prisma: PrismaClient) => {
     appEvent("Operation Crew", manager.entity.id),
   );
   /**
-   * The first visit of a new event marks it as read and refreshes the page
-   * at an unknown time. The refresh can drop the citizen that the test
-   * picked before, and then the replacement would not be proven.
+   * Stops the refresh of the first visit (see the README): it can drop the
+   * citizen that the test picked before, and then the replacement is not
+   * proven.
    */
   await prisma.readMarker.create({
     data: { citizenId: manager.entity.id, eventId: event.id },
@@ -502,7 +489,6 @@ const seedRoleShortcut = async (prisma: PrismaClient) => {
   ]);
   await citizenWithRoles("haendler", [traderRole]);
   await citizenWithRoles("zuvor-gewaehlt", []);
-  /** The picker does not offer a participant */
   const participant = await citizenWithRoles("schon-dabei", [pilotRole]);
   await createParticipant(prisma, {
     eventId: event.id,
@@ -514,9 +500,8 @@ const seedRoleShortcut = async (prisma: PrismaClient) => {
 };
 
 /**
- * Opens the add dialog, picks the citizen "zuvor-gewaehlt" and opens the role
- * shortcut. The picked citizen must still be there when the popover is open,
- * so that a replacement is a change that the test can see.
+ * The picked citizen must still be there when the popover is open, so that a
+ * replacement is a change that the test can see.
  */
 const openRoleShortcutAfterPick = async (page: Page) => {
   const addModal = await openAddModal(page);
@@ -543,7 +528,6 @@ test("a tag in the role shortcut of the citizen picker filters the roles, and a 
 
   const { addModal, popover } = await openRoleShortcutAfterPick(page);
 
-  /** The tag picks no citizen */
   const crewTag = rolePickerTag(popover, "Crew");
   await crewTag.click();
   await expect(crewTag).toHaveAttribute("aria-pressed", "true");
@@ -688,7 +672,6 @@ test("a removed citizen can sign up again", async ({
   await page.goto(`/app/events/${event.id}`);
   await waitForAppShellHydration(page);
 
-  /** A hidden copy of the streamed participation state can match too */
   await expect(
     page.getByText("Abgemeldet", { exact: true }).filter({ visible: true }),
   ).toBeVisible();
@@ -703,9 +686,8 @@ test("a removed citizen can sign up again", async ({
 });
 
 /**
- * The unique rule for active sign-ups ignores cancelled rows, but it stops a
- * second active sign-up. A second tab still shows the old state, thus only
- * the database can stop its sign-up.
+ * A second tab still shows the old state, thus only the unique rule of the
+ * database can stop its sign-up.
  */
 test("a citizen who cancelled signs up again, but a second tab cannot sign up a second time", async ({
   context,
@@ -748,7 +730,6 @@ test("a citizen who cancelled signs up again, but a second tab cannot sign up a 
   await expect(
     secondTab.getByText("Du bist bereits angemeldet."),
   ).toBeVisible();
-  /** The refresh of the failed sign-up shows the sign-up of the first tab */
   await expect(
     secondTab.getByText("Zugesagt", { exact: true }).filter({ visible: true }),
   ).toBeVisible();
@@ -794,7 +775,6 @@ test("adding an already signed-up citizen neither duplicates nor fails the batch
   await signIn(manager.user);
   await page.goto(`/app/events/${event.id}/participants`);
 
-  /** The picker does not even offer an active participant */
   const addModal = await openAddModal(page);
   const citizenSearch = addModal.getByRole("combobox", { name: "Citizens" });
   /** A citizen it does offer proves the list is loaded and searched */
@@ -812,7 +792,6 @@ test("adding an already signed-up citizen neither duplicates nor fails the batch
   await expect(page.getByText("1 Teilnehmer hinzugefügt.")).toBeVisible();
   await expect(page.getByText("Teilnehmer (2)")).toBeVisible();
 
-  /** The existing sign-up keeps its own comment and its single row */
   const rows = await prisma.eventParticipant.findMany({
     where: { eventId: event.id, citizenId: alreadySignedUp.entity.id },
   });
@@ -852,12 +831,6 @@ test("a non-manager gets no participant controls", async ({
   await expect(removeButtonOf(page, participant)).toHaveCount(0);
 });
 
-/**
- * The shared where-fragments cannot express the role-level gate, so the
- * offered set is narrowed in memory afterwards. Without that a manager could
- * enroll someone the event 404s for — who then cannot even cancel, because
- * cancelling needs to see the event too.
- */
 test("a citizen below their role's max level is not addable to a restricted event", async ({
   page,
   prisma,
@@ -887,14 +860,12 @@ test("a citizen below their role's max level is not addable to a restricted even
   await signIn(manager.user);
   await page.goto(`/app/events/${event.id}/participants`);
 
-  /** Below the max level the role grants nothing, so the event stays hidden */
   const belowMaxModal = await openAddModal(page);
   await belowMaxModal
     .getByRole("combobox", { name: "Citizens" })
     .fill("aufsteiger");
   await expect(page.getByRole("option", { name: /aufsteiger/ })).toHaveCount(0);
 
-  /** Reaching the max level makes the same citizen addable */
   await prisma.roleAssignment.update({
     where: { id: assignment.id },
     data: { currentLevel: 3 },
@@ -926,7 +897,6 @@ test("a Discord event keeps its participant list read-only", async ({
   await signIn(manager.user);
   await page.goto(`/app/events/${event.id}/participants`);
 
-  // While the page streams, React keeps a hidden copy of the heading
   await expect(
     page.getByText("Teilnehmer (0)").filter({ visible: true }),
   ).toBeVisible();
@@ -948,7 +918,6 @@ test("the participant list sorts by the handle and by the time of the sign-up", 
     appEvent("Operation Reihenfolge", creator.entity.id),
   );
 
-  /** Zora signs up first, Berta last */
   const now = Date.now();
   for (const [handle, minutesAgo] of [
     ["anton", 2],
@@ -968,8 +937,8 @@ test("the participant list sorts by the handle and by the time of the sign-up", 
   }
 
   /**
-   * The first visit of a new event refreshes the page, and a refresh closes
-   * the open list of the sort filter
+   * Stops the refresh of the first visit (see the README), which closes the
+   * open list of the sort filter.
    */
   await prisma.readMarker.create({
     data: { citizenId: viewer.entity.id, eventId: event.id },
@@ -995,7 +964,6 @@ test("the participant list sorts by the handle and by the time of the sign-up", 
   await expect(page).toHaveURL(/\?sort=joined-at-desc$/);
   await expect(rows).toHaveText([/berta/, /anton/, /zora/]);
 
-  // The default sort leaves no sort parameter in the URL
   await pickFilterOption(page, "Sortierung", "Citizen A - Z");
   await expect(page).toHaveURL(
     new RegExp(`/app/events/${event.id}/participants$`),
@@ -1038,12 +1006,11 @@ test("the role filter of the participant list shows only the participants with a
       source: EventSource.APP,
     });
   }
-  /** The first visit of a new event refreshes the page */
+  /** Stops the refresh of the first visit (see the README) */
   await prisma.readMarker.create({
     data: { citizenId: viewer.entity.id, eventId: event.id },
   });
   const rows = page.locator("tbody tr").filter({ visible: true });
-  /** While the page streams, a hidden copy of the texts is outside of it */
   const mainContent = page.locator("#main-content");
 
   await signIn(viewer.user);
@@ -1061,7 +1028,6 @@ test("the role filter of the participant list shows only the participants with a
   await expect(rows).toHaveText([/pilotin/, /sanitaeter/]);
   await expect(mainContent.getByText("Teilnehmer (2 von 3)")).toBeVisible();
 
-  /** The URL can name a role that the viewer cannot see */
   await page.goto(`/app/events/${event.id}/participants?role=${secretRole.id}`);
   await expect(
     mainContent.getByText("Keine Teilnehmer für diese Filter."),

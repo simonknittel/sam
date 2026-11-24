@@ -21,8 +21,7 @@ export const focusEditor = async (page: Page) => {
 };
 
 /**
- * Toggles a wiki page from the read view into the collab editor. The toggle
- * is found by its name: the buttons of the editor toolbar also carry
+ * Found by its name, because the buttons of the editor toolbar also carry
  * `aria-pressed`.
  */
 export const enterEditMode = (page: Page) =>
@@ -35,10 +34,6 @@ export const enterEditMode = (page: Page) =>
       .getByRole("button", { name: "Bearbeitung beenden", exact: true }),
   );
 
-/**
- * A page everybody may read and edit — the starting point of every test
- * that opens the collab editor.
- */
 export const seedEditablePage = (
   prisma: PrismaClient,
   options: Omit<
@@ -53,12 +48,10 @@ export const seedEditablePage = (
   });
 
 /**
- * Polls the persisted document of a page until it matches, e.g.
- * `await expectPersisted(prisma, page.id, "searchText").toContain("…")`.
- * The collab server stores on a 2s debounce, so nothing about the document
- * is in the database right after the last keystroke — reading once always
- * races it. The content column comes back JSON-serialized, so both columns
- * are asserted the same way.
+ * For example
+ * `await expectPersisted(prisma, page.id, "searchText").toContain("…")`. The
+ * content column comes back JSON-serialized, so both columns are asserted the
+ * same way.
  */
 export const expectPersisted = (
   prisma: PrismaClient,

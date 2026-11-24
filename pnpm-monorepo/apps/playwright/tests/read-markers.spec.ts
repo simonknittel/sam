@@ -49,19 +49,16 @@ const createTask = (
     },
   });
 
-/** The row of a task, found through the link on its title */
 const taskRow = (scope: Page | Locator, page: Page, title: string) =>
   scope
     .locator("article")
     .filter({ has: page.getByRole("link", { name: title, exact: true }) });
 
-/** The card of an event, found through its heading */
 const eventCard = (scope: Page | Locator, page: Page, name: string) =>
   scope
     .locator("article")
     .filter({ has: page.getByRole("heading", { name, exact: true }) });
 
-/** The "Neu" badge, independent of the classes drawing it */
 const newBadge = (scope: Locator) => scope.locator("[data-new-badge]");
 
 const newMarkerButton = (scope: Locator) =>
@@ -77,8 +74,7 @@ const openAppsPopover = (page: Page) =>
   );
 
 /**
- * The dot badge of an app in the Apps popover. Not the dot of the Apps
- * button: it also counts the unseen changelog entries.
+ * Not the dot of the Apps button: it also counts the unseen changelog entries.
  */
 const appDot = (page: Page, appName: string) =>
   appsPopover(page)
@@ -157,7 +153,6 @@ test("a new task stays new until the viewer opens it, also after a back navigati
   ).toHaveCount(0);
 
   /**
-   * A second visit writes neither a second marker nor a second audit event.
    * The page shows no change, thus the test waits for the response of the
    * server action which the page sends after it mounted.
    */
@@ -268,7 +263,6 @@ test("the marker in the dashboard tile marks a task as read, and the next new ta
     }),
   ).toBe(1);
 
-  // Without new tasks, the tile disappears
   for (let remaining = 4; remaining >= 0; remaining--) {
     await newMarkerButton(newTasksTile.locator("article").first()).click();
     await expect(newTasksTile.locator("article")).toHaveCount(remaining);
@@ -377,7 +371,6 @@ test("tasks from before the start of the read markers and invisible tasks are no
   await openAppsPopover(page);
   await expect(appDot(page, "Tasks")).toHaveCount(0);
 
-  // A visible new task lights up the dot badge of the Tasks app
   await createTask(prisma, creator, "Sichtbarer Auftrag");
   await page.reload();
   await openAppsPopover(page);
@@ -413,7 +406,6 @@ test("a new event stays new until one of its pages is opened", async ({
   await openAppsPopover(page);
   await expect(appDot(page, "Events")).toBeVisible();
 
-  // A subpage counts as well, not only the overview
   await page.goto(`/app/events/${event.id}/participants`);
   await expect
     .poll(() =>

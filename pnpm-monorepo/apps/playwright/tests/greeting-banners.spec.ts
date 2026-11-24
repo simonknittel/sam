@@ -4,21 +4,15 @@ import { assignRole, createCitizen, ONE_DAY_MS } from "../fixtures/factories";
 import { clickUntilVisible, themeRoot } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
-/**
- * The attributes which tell the occasion of the greeting banner. Only one
- * banner shows at a time.
- */
 enum GreetingBanner {
   Welcome = "data-welcome-banner",
   Birthday = "data-birthday-banner",
   Seasonal = "data-seasonal-banner",
 }
 
-/** The greeting banner of the given occasion on the dashboard */
 const greetingBanner = (page: Page, occasion: GreetingBanner) =>
   page.getByRole("main").locator(`[${occasion}]`);
 
-/** Asserts that the dashboard shows this banner and none of the others */
 const expectOnlyBanner = async (page: Page, expected: GreetingBanner) => {
   await expect(greetingBanner(page, expected)).toBeVisible();
 
@@ -30,10 +24,9 @@ const expectOnlyBanner = async (page: Page, expected: GreetingBanner) => {
 };
 
 /**
- * The profile tile of the dashboard carries the handle of the viewer. A
- * missing banner proves nothing before the dashboard of that viewer is there.
- * The name of the heading also contains the copy button and a hint for
- * screen readers, thus the handle is only a part of it.
+ * A missing banner proves nothing before the dashboard of the viewer is there.
+ * The name of the heading also contains the copy button and a hint for screen
+ * readers, thus the handle is only a part of it.
  */
 const profileHeading = (page: Page, handle: string) =>
   page.getByRole("main").getByRole("heading", { name: handle });
@@ -54,15 +47,14 @@ const countWelcomeAuditEvents = (prisma: PrismaClient) =>
 
 interface CitizenInUtcOptions {
   readonly handle: string;
-  /** See createCitizen. Without a value, the welcome day is long over. */
   readonly welcomedAt?: Date | null;
-  /** Only the day and the month count. Without a value, no birthday. */
+  /** Only the day and the month count. */
   readonly birthday?: Date;
 }
 
 /**
- * A citizen in the time zone UTC. The welcome day and the birthday then
- * follow the UTC date of the test, at each time of day.
+ * In the time zone UTC, the welcome day and the birthday follow the UTC date of
+ * the test, at each time of day.
  */
 const createCitizenInUtc = async (
   prisma: PrismaClient,
@@ -110,7 +102,6 @@ test("a new member gets the welcome banner on the first visit of the dashboard",
   const welcomedAt = await readWelcomedAt(prisma, citizen.entity);
   expect(welcomedAt).not.toBeNull();
 
-  // The banner stays for the full day, but the citizen gets one welcome only
   await page.reload();
   await expect(greetingBanner(page, GreetingBanner.Welcome)).toBeVisible();
   expect(await readWelcomedAt(prisma, citizen.entity)).toEqual(welcomedAt);
@@ -145,7 +136,6 @@ test("a citizen without the login permission is not welcomed until they get it",
     handle: "ohne-freigabe",
     welcomedAt: null,
   });
-  // Without a role, the citizen has no login permission
   await prisma.roleAssignment.deleteMany({
     where: { citizenId: citizen.entity.id },
   });
@@ -159,7 +149,6 @@ test("a citizen without the login permission is not welcomed until they get it",
   expect(await readWelcomedAt(prisma, citizen.entity)).toBeNull();
   expect(await countWelcomeAuditEvents(prisma)).toBe(0);
 
-  // The same citizen with the login permission gets the welcome
   await assignRole(prisma, citizen.entity, citizen.role);
 
   await page.goto("/app/dashboard");
@@ -197,7 +186,6 @@ test("the birthday banner greets the citizen on their birthday only", async ({
 interface PriorityCase {
   readonly title: string;
   readonly handle: string;
-  /** A new member opens the app for the first time */
   readonly isNewMember: boolean;
   readonly hasBirthdayToday: boolean;
   readonly expected: GreetingBanner;
@@ -236,7 +224,6 @@ for (const priorityCase of PRIORITY_CASES) {
   }) => {
     const citizen = await createCitizenInUtc(prisma, {
       handle: priorityCase.handle,
-      // Without a value, the factory gives a welcome day which is long over
       welcomedAt: priorityCase.isNewMember ? null : undefined,
       birthday: priorityCase.hasBirthdayToday ? new Date() : undefined,
     });
@@ -245,7 +232,6 @@ for (const priorityCase of PRIORITY_CASES) {
 
     await page.goto("/app/dashboard");
     await expectOnlyBanner(page, priorityCase.expected);
-    // A banner replaces only the seasonal banner, the theme stays
     await expect(themeRoot(page)).toHaveAttribute(
       "data-seasonal-event",
       "halloween",
@@ -273,7 +259,6 @@ test("an admin previews the welcome banner through the admin toolbar", async ({
     page.getByRole("button", { name: /^Admin tools/ }),
     toolbarPanel,
   );
-  // The tool reloads the page after the change
   await toolbarPanel
     .getByLabel("Greeting banner preview")
     .selectOption({ label: "Welcome" });

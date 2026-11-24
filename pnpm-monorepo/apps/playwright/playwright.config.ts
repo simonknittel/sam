@@ -6,8 +6,8 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
-  // Every worker runs its own app instance, collab container and database
-  // (see README.md and fixtures/test.ts), so more workers cost real memory.
+  // Every worker runs its own stack (see README.md), so more workers cost real
+  // memory.
   workers: 2,
   reporter: "html",
 
@@ -30,9 +30,8 @@ export default defineConfig({
   use: {
     trace: "on-first-retry",
     viewport: { width: 1280, height: 720 },
-    // The Hero glitch animation and similar effects respect
-    // prefers-reduced-motion; without this, screenshots and text assertions
-    // catch elements mid-animation.
+    // Without this, screenshots and text assertions catch elements
+    // mid-animation, for example the Hero glitch.
     contextOptions: { reducedMotion: "reduce" },
   },
 

@@ -30,7 +30,6 @@ test("a page is reached through its canonical URL and through the sidebar tree",
   });
   await signIn(citizen.user);
 
-  // A URL without the slug redirects to the canonical one
   await page.goto(`/app/wiki/${parent.id}`);
   await expect(page).toHaveURL(`/app/wiki/${parent.id}/${parent.slug}`);
 
@@ -60,13 +59,10 @@ test("an unknown page id renders the 404 next to the sidebar", async ({
   });
   await signIn(citizen.user);
 
-  // The layout streams before the page 404s, so the HTTP status is already
-  // 200 — the rendered 404 UI is the observable behavior
   await page.goto("/app/wiki/does-not-exist");
 
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
 
-  // Only the page content 404s — the wiki keeps its table of contents
   await expect(
     page.getByRole("combobox", { name: "Seiten durchsuchen" }),
   ).toBeVisible();

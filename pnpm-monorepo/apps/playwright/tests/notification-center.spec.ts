@@ -18,17 +18,12 @@ import { expect, test } from "../fixtures/test";
 const bellButton = (page: Page) =>
   page.getByRole("button", { name: "Benachrichtigungen" });
 
-/** The unread indicator of the bell, independent of the classes drawing it */
 const bellDot = (page: Page) => bellButton(page).locator("[data-unread-dot]");
 
-/**
- * The open popover, or on mobile the bottom sheet. Base UI renders both with
- * `role="dialog"` and the name "Benachrichtigungen".
- */
+/** On mobile, the bottom sheet has the same role and name. */
 const popover = (page: Page) =>
   page.getByRole("dialog", { name: "Benachrichtigungen" });
 
-/** Without unread notifications, the popover opens only through the bell */
 const openNotificationCenter = (page: Page) =>
   clickUntilVisible(
     bellButton(page),
@@ -49,11 +44,9 @@ const waitForOpenedNotificationCenter = (page: Page) =>
 const unreadRowDots = (page: Page) =>
   popover(page).getByTitle("Ungelesen", { exact: true });
 
-/** The row of a notification, found through a text of its body */
 const notificationRow = (page: Page, text: string) =>
   popover(page).getByRole("listitem").filter({ hasText: text });
 
-/** The "Erste Schritte" popover, which the welcome greeting opens */
 const onboardingPopover = (page: Page) =>
   page.getByRole("dialog", { name: "Erste Schritte" });
 
@@ -107,7 +100,6 @@ test("a birthday greeting reads its wording", async ({
       body: "Zum Geburtstag wünschen wir dir nur das Beste und immer volle Tanks.",
     },
   });
-  /** A greeting without a wording */
   await createOnSiteNotification(prisma, {
     citizenId: citizen.entity.id,
     notificationType: "birthday",
@@ -264,7 +256,6 @@ test("opening the popover marks nothing as read, the toggle marks one notificati
   await signIn(citizen.user);
 
   await page.goto("/app");
-  // The unread count drives the bell dot and the tab title
   await expect(page).toHaveTitle(/^\(2\)/);
   await expect(bellDot(page)).toBeVisible();
 
@@ -345,7 +336,6 @@ test("reading the notification about a new task marks the task as read", async (
       }),
     )
     .toBe(1);
-  // The refresh removes the tile, which shows only new tasks
   await expect(sectionByHeading(page, "Neue Tasks")).toHaveCount(0);
   await expect(page).toHaveTitle(/^[^(]/);
 });
@@ -433,7 +423,6 @@ test("an archived notification is read with its announced event and can be resto
     )
     .toBe(1);
 
-  // Restoring it in the archive puts it back into the inbox, still read
   await popover(page).getByRole("tab", { name: "Archiv", exact: true }).click();
   await expect(popover(page).getByText("Neues Event")).toBeVisible();
   await popover(page).getByText("Neues Event").hover();
@@ -500,7 +489,6 @@ test("the bulk actions mark everything read with the announced events and archiv
     )
     .toBe(1);
 
-  // Everything is read by now, so archiving the read ones empties the inbox
   await popover(page)
     .getByRole("button", { name: "Gelesene archivieren", exact: true })
     .click();
@@ -587,7 +575,6 @@ test("a notification about a new event leads to the event and marks it as read",
   await expect(
     page.getByRole("heading", { name: "Operation Zielsprung" }).first(),
   ).toBeVisible();
-  /** Following a notification closes the popover it came from */
   await expect(popover(page)).toHaveCount(0);
   await expect
     .poll(async () => ({
@@ -625,7 +612,6 @@ test("after a close, the popover stays closed until the next page load", async (
   await expect(
     page.getByRole("checkbox", { name: "Browser: Neues Event" }),
   ).toBeVisible();
-  // The navigation through the popover closed it, and it stays closed
   await expect(popover(page)).toHaveCount(0);
   await expect(bellDot(page)).toBeVisible();
 
@@ -652,7 +638,6 @@ test.describe("mobile", () => {
       .locator("nav")
       .getByRole("button", { name: "Inbox" });
     await expect(inboxButton.locator("[data-unread-dot]")).toBeVisible();
-    // Unlike the popover of the top bar, the bottom sheet never opens by itself
     await expect(popover(page)).toHaveCount(0);
 
     await clickUntilVisible(
@@ -696,7 +681,6 @@ test.describe("mobile", () => {
         return storedRow?.readAt;
       })
       .not.toBeNull();
-    // The swipe did not open the target of the notification
     await expect(page).toHaveURL(urlBeforeSwipes);
 
     await swipeAcross(row, SwipeDirection.Left);
@@ -720,7 +704,6 @@ enum SwipeDirection {
   Right = "right",
 }
 
-/** A swipe from one side of the element to the other, at its middle */
 const swipeAcross = async (element: Locator, direction: SwipeDirection) => {
   const box = await element.boundingBox();
   if (!box) throw new Error("The element to swipe is not visible");

@@ -8,7 +8,6 @@ const ONE_HOUR_IN_MILLISECONDS = 60 * 60 * 1000;
 /** The route accepts only lowercase letters and digits (`z.cuid2()`) */
 const createToken = () => randomUUID().replaceAll("-", "");
 
-/** The test reads the redirect instead of following it */
 const openConfirmationLink = (request: APIRequestContext, token: string) =>
   request.get("/api/confirm-email", { params: { token }, maxRedirects: 0 });
 
@@ -27,14 +26,12 @@ test("an email confirmation link verifies the email once and leads to the cleara
   const otherCitizen = await createCitizen(prisma, {
     handle: "anderer-bestaetiger",
   });
-  /** The factory confirms the email for the sake of the sign-in */
   await prisma.user.updateMany({
     where: { id: { in: [citizen.user.id, otherCitizen.user.id] } },
     data: { emailVerified: null },
   });
 
   const expires = new Date(Date.now() + ONE_HOUR_IN_MILLISECONDS);
-  /** The user asked for a second link, thus an older token also exists */
   const olderToken = createToken();
   const token = createToken();
   await prisma.emailConfirmationToken.createMany({
@@ -66,14 +63,12 @@ test("an email confirmation link verifies the email once and leads to the cleara
       { id: otherCitizen.user.id, emailVerified: null },
     ]),
   );
-  /** All tokens of the user are used up, the tokens of others stay */
   expect(
     await prisma.emailConfirmationToken.findMany({
       select: { userId: true },
     }),
   ).toEqual([{ userId: otherCitizen.user.id }]);
 
-  /** A used token and the older token lead back to the request of a link */
   expectRedirect(
     await openConfirmationLink(request, token),
     "/email-confirmation",

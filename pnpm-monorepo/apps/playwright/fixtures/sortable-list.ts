@@ -1,8 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 /**
- * The texts of the live region of dnd-kit (see `useSortableList` in the
- * app). They tell screen readers each step of a drag.
+ * The live region of dnd-kit, which tells screen readers each step of a drag
  */
 export const dragNarration = async (page: Page) =>
   (await page.getByRole("status").allTextContents()).join(" ");
@@ -31,10 +30,8 @@ const boundingBoxOf = async (locator: Locator) => {
 };
 
 /**
- * Moves the entry of the handle one position down, as a keyboard user does:
- * the space bar picks it up, the arrow key moves it, and the space bar drops
- * it. Each key waits until dnd-kit processed the previous key. A key before
- * that does not move the entry, which no real keyboard user could do.
+ * Moves the entry of the handle one position down. Each key waits until dnd-kit
+ * processed the previous key: a key before that does not move the entry.
  */
 export const sortByKeyboard = async (handle: Locator) => {
   const page = handle.page();
@@ -52,9 +49,8 @@ export const sortByKeyboard = async (handle: Locator) => {
 };
 
 /**
- * Drags the entry of the source handle with the mouse to the far edge of the
- * target handle, thus the entry moves past the target. `whileDragging` runs
- * before the drop.
+ * The drag goes to the far edge of the target handle, thus the entry moves past
+ * the target.
  */
 export const sortByMouse = async (
   source: Locator,
@@ -89,10 +85,9 @@ export const sortByMouse = async (
 };
 
 /**
- * The same move as `sortByMouse` with a finger. Playwright has no touch
- * drag, thus the gesture goes through the Chrome DevTools Protocol. If the
- * browser scrolls the page instead, it cancels the drag and the order does
- * not change.
+ * Playwright has no touch drag, thus the gesture goes through the Chrome
+ * DevTools Protocol. If the browser scrolls the page instead, it cancels the
+ * drag and the order does not change.
  */
 export const sortByTouch = async (source: Locator, target: Locator) => {
   const page = source.page();

@@ -64,7 +64,6 @@ test("ending the collection phase debits every participant", async ({
     createdById: admin.entity.id,
   });
 
-  // A citizen cedes their share during the collection phase
   await signIn(firstParticipant.user);
   await page.goto(`/app/sincome/${cycle.id}`);
   await expect(page.getByText("Sammelphase").first()).toBeVisible();
@@ -82,7 +81,6 @@ test("ending the collection phase debits every participant", async ({
     });
   expect(participantRow?.cededAt).not.toBeNull();
 
-  // The manager ends the collection phase
   await switchUser(admin.user);
   await page.goto(`/app/sincome/${cycle.id}/management`);
   await clickUntilVisible(
@@ -96,7 +94,6 @@ test("ending the collection phase debits every participant", async ({
     .click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
-  // Every citizen with a positive balance got debited down to zero
   const debits = await prisma.silcTransaction.findMany({
     where: { value: { lt: 0 } },
   });
@@ -140,7 +137,6 @@ test("ending the collection phase debits every participant", async ({
   });
   expect(balances.map(({ silcBalance }) => silcBalance)).toEqual([0, 0]);
 
-  // The actual end is set, the planned end stays
   const endedCycle = await prisma.profitDistributionCycle.findUniqueOrThrow({
     where: { id: cycle.id },
   });
@@ -174,10 +170,6 @@ test("a manager runs a cycle from its creation to a closed payout", async ({
     value: 100,
   });
 
-  /**
-   * Create — the collection phase ends tomorrow, so the new cycle starts
-   * where every cycle starts.
-   */
   await signIn(admin.user);
   await page.goto("/app/sincome");
 
@@ -203,9 +195,6 @@ test("a manager runs a cycle from its creation to a closed payout", async ({
     payoutEndedAt: null,
   });
 
-  /**
-   * Collection ends, which snapshots the balances into participants
-   */
   await page.goto(`/app/sincome/${cycle.id}/management`);
   await clickUntilVisible(
     page.getByRole("button", { name: "Phase beenden" }),
@@ -220,9 +209,6 @@ test("a manager runs a cycle from its creation to a closed payout", async ({
     page.getByRole("heading", { name: "Vorbereitung der Auszahlung" }),
   ).toBeVisible();
 
-  /**
-   * Payout preparation: the surplus is entered and the phase started
-   */
   await page.getByLabel("Gesamter aUEC-Überschuss").fill("500.000");
   await page
     .getByLabel("Auszahlungsphase endet am")
@@ -260,9 +246,6 @@ test("a manager runs a cycle from its creation to a closed payout", async ({
       where: { id: cycle.id },
     });
 
-  /**
-   * The member has to accept their payout themselves
-   */
   await switchUser(participant.user);
   await page.goto(`/app/sincome/${cycle.id}`);
   await waitForAppShellHydration(page);
@@ -287,17 +270,10 @@ test("a manager runs a cycle from its creation to a closed payout", async ({
   await page.reload();
   await expect(page.getByText("Auszahlung ausstehend")).toBeVisible();
 
-  /**
-   * The manager records the payout and closes the cycle
-   */
   await switchUser(admin.user);
   await page.goto(`/app/sincome/${cycle.id}/management`);
   await waitForAppShellHydration(page);
 
-  /**
-   * The checkbox input itself is sr-only — the visible control is the box
-   * its wrapping label draws, so toggling goes through the label.
-   */
   const disbursedCheckbox = page.getByRole("checkbox", {
     name: "Ausgezahlt: sincome-teilnehmer",
   });
@@ -335,7 +311,6 @@ test("a manager runs a cycle from its creation to a closed payout", async ({
   await expect(page.getByText("Auszahlung beenden?")).toBeVisible();
   await endPayoutDialog.getByRole("button", { name: "Beenden" }).click();
 
-  /** The actual end is set, which closes the cycle. The planned end stays. */
   await expect
     .poll(async () => {
       const closed = await prisma.profitDistributionCycle.findUniqueOrThrow({
@@ -378,7 +353,6 @@ test("the payout checkboxes keep the focus while their saves refresh the table",
     handle: "sincome-zweiter",
   });
 
-  /** A cycle in its payout phase, in which both citizens accepted */
   const cycle = await prisma.profitDistributionCycle.create({
     data: {
       title: "Auszahlungszyklus",
@@ -402,7 +376,6 @@ test("the payout checkboxes keep the focus while their saves refresh the table",
 
   await signIn(manager.user);
   await page.goto(managementPage);
-  /** Each toggle saves once, thus the page has to be hydrated first */
   await waitForAppShellHydration(page);
 
   const firstCheckbox = page.getByRole("checkbox", {

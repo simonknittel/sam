@@ -5,9 +5,8 @@ import type { CimdServer } from "./cimd-server";
 import { waitForAppShellHydration } from "./interactions";
 
 /**
- * The redirect URI of the authorization requests of the tests. The client
- * document registers it without a port. Nothing listens on the port: the
- * test answers the navigation of the browser itself (see
+ * The client document registers the URI without a port. Nothing listens on the
+ * port: the test answers the navigation of the browser itself (see
  * interceptAuthorizationResponse).
  */
 export const MCP_CALLBACK_URL = "http://127.0.0.1:47613/callback";
@@ -21,7 +20,6 @@ const STATE_BYTE_COUNT = 16;
 
 export interface PkcePair {
   readonly verifier: string;
-  /** The S256 challenge of the verifier */
   readonly challenge: string;
 }
 
@@ -38,19 +36,16 @@ export const createState = () =>
   randomBytes(STATE_BYTE_COUNT).toString("base64url");
 
 export interface McpServerMetadata {
-  /** The URL of the authorization server, also the `iss` of its responses */
+  /** Also the `iss` of the authorization responses */
   readonly issuer: string;
-  /** The canonical URL of the MCP server, also the audience of the tokens */
+  /** Also the audience of the tokens */
   readonly resource: string;
 }
 
 /**
- * Reads the protected resource metadata of the MCP endpoint (RFC 9728).
- *
- * The app takes the issuer and the resource from NEXT_PUBLIC_BASE_URL, which
- * the build inlines. The workers of the stack listen on other ports. Thus the
- * tests take both values from the metadata, and send their requests to the
- * URL of the worker.
+ * The issuer and the resource come from NEXT_PUBLIC_BASE_URL (see
+ * setup/stack.ts). Thus the tests take both values from the metadata (RFC
+ * 9728), and send their requests to the URL of the worker.
  */
 export const readMcpServerMetadata = async (
   request: APIRequestContext,
@@ -79,7 +74,6 @@ export interface AuthorizationRequest {
   readonly resource: string;
 }
 
-/** The URL of the consent page for an authorization request of a client */
 export const buildAuthorizationUrl = (
   baseUrl: string,
   {
@@ -108,10 +102,7 @@ export const buildAuthorizationUrl = (
 
 const isCallbackUrl = (url: URL) => url.origin === CALLBACK_ORIGIN;
 
-/**
- * Answers the navigation of the browser to the redirect URI, as the client
- * would. Call it before the navigation to the consent page.
- */
+/** Call it before the navigation to the consent page. */
 export const interceptAuthorizationResponse = (page: Page) =>
   page.route(isCallbackUrl, (route) =>
     route.fulfill({
@@ -121,10 +112,6 @@ export const interceptAuthorizationResponse = (page: Page) =>
     }),
   );
 
-/**
- * Waits until the consent page sends the browser to the redirect URI, and
- * gives the parameters of the authorization response.
- */
 export const waitForAuthorizationResponse = async (page: Page) => {
   await page.waitForURL(isCallbackUrl);
 
@@ -145,12 +132,11 @@ export interface McpTokens {
  */
 export interface TokenEndpointResult {
   readonly status: number;
-  /** The `error` code of RFC 6749 section 5.2, or null */
   readonly error: string | null;
   readonly tokens: McpTokens | null;
 }
 
-/** Reads a token response without a value in the error message */
+/** No value of the response gets into the error message. */
 const parseTokens = (body: Record<string, unknown>): McpTokens => {
   const {
     access_token: accessToken,
@@ -194,35 +180,25 @@ export const postTokenEndpoint = async (
 export interface McpAuthorization {
   readonly clientId: string;
   readonly metadata: McpServerMetadata;
-  /** The parameters of the redirect to the client: `code`, `state`, `iss` */
   readonly authorizationResponse: URLSearchParams;
   readonly accessToken: string;
   readonly refreshToken: string;
   readonly tokenResponse: McpTokens;
-  /** Exchanges a refresh token of this client for a new pair */
   readonly refresh: (refreshToken: string) => Promise<TokenEndpointResult>;
-  /** Revokes a token (RFC 7009) and gives the status code */
   readonly revoke: (token: string) => Promise<number>;
 }
 
 export interface AuthorizeMcpClientOptions {
   readonly page: Page;
   readonly request: APIRequestContext;
-  /** The URL of the app of the worker */
   readonly baseUrl: string;
   readonly signIn: (user: Pick<User, "id">) => Promise<void>;
   readonly cimdServer: CimdServer;
   readonly user: Pick<User, "id">;
-  /** Changes the settings of the consent page before the approval */
   readonly beforeApprove?: (page: Page) => Promise<void>;
 }
 
-/**
- * Connects the test client like a real MCP client: a PKCE pair, the consent
- * of the user on the consent page, the authorization response at the
- * loopback redirect URI, and the exchange of the code at the token endpoint.
- * Signs the user in (and replaces the session of an earlier user).
- */
+/** Signs the user in (and replaces the session of an earlier user). */
 export const authorizeMcpClient = async ({
   page,
   request,

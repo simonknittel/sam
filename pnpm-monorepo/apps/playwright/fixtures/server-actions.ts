@@ -6,7 +6,6 @@ export const isServerActionRequest = (request: Request, path: string) =>
   new URL(request.url()).pathname === path &&
   request.headers()["next-action"] !== undefined;
 
-/** Collects the server actions that the page at the path sends from now on */
 export const recordServerActions = (page: Page, path: string) => {
   const requests: Request[] = [];
   page.on("request", (request) => {
@@ -16,8 +15,8 @@ export const recordServerActions = (page: Page, path: string) => {
 };
 
 /**
- * Holds the server actions of the page at the path in the browser until the
- * test calls the returned function. Thus the test can act while a save runs.
+ * The server actions wait until the test calls the returned function. Thus the
+ * test can act while a save runs.
  */
 export const holdServerActions = async (page: Page, path: string) => {
   const { promise: released, resolve: release } = Promise.withResolvers<void>();

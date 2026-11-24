@@ -34,14 +34,12 @@ import {
 import { expect, test } from "../fixtures/test";
 
 /**
- * Real log lines, one for each pattern this spec needs. The upload action
- * runs the pattern of the given type against the line again, thus a line
- * which is not exactly of its type is refused.
+ * The upload action runs the pattern of the given type against the line again,
+ * thus the lines are real log lines.
  *
- * The time of the event lives inside the line and decides two things: the
- * order of the table, and whether the entry is inside the window of the
- * shared entries query (14 days). The lines therefore carry a time relative
- * to the moment of the test.
+ * The time inside the line decides the order of the table, and whether the
+ * entry is inside the window of the shared entries query (14 days). The lines
+ * therefore carry a time relative to the moment of the test.
  */
 const ownDeathLine = (at: Date) =>
   `<${at.toISOString()}> [Notice] <[ActorState] Dead> [ACTOR STATE][CSCActorControlStateDead::PrePhysicsUpdate] Actor 'Testpilot' [123] ejected from zone 'RSI_Zeus_CL_1' [456] to zone 'pyro4' [789] due to previous zone being in a destroyed vehicle with detached interior. [Team_ActorFeatures][Actor]`;
@@ -78,13 +76,9 @@ const createBackupFile = (at: Date, line: string): BackupFile => {
   };
 };
 
-/** Rows the table renders on top of its header row */
 const HEADER_ROWS = 1;
 
-/**
- * Records for each request to the log parser worker whether it reads the
- * whole window again (`isFullRead`).
- */
+/** `isFullRead`: the worker reads the whole window again. */
 const recordFullReads = (page: Page) =>
   page.addInitScript(() => {
     const fullReads: boolean[] = [];
@@ -109,11 +103,7 @@ const fullReads = (page: Page) =>
     () => (window as unknown as { fullReads: boolean[] }).fullReads,
   );
 
-/**
- * Replaces the picture-in-picture window of the browser, which no test can
- * open. The overlay renders into a document of its own, and the stub counts
- * how often the app closes the window.
- */
+/** No test can open the picture-in-picture window of the browser. */
 const stubPictureInPicture = (page: Page) =>
   page.addInitScript(() => {
     const overlayWindow = {
@@ -152,9 +142,8 @@ const refresh = (page: Page) =>
   page.getByRole("button", { name: "Aktualisieren" }).click();
 
 /**
- * Collects the uploads the page sends from now on. A server action posts to
- * the address of the page it runs on, and the upload is the only action this
- * page sends by itself, thus such a request stands for a share.
+ * The upload is the only action that this page sends by itself, thus such a
+ * request stands for a share.
  *
  * The listener records instead of racing a timeout, so the assertion holds no
  * matter how long the steps in between take.
@@ -213,17 +202,14 @@ test("shared entries mix into the table with a citizen column and a citizen filt
   await signIn(viewer.user);
   await page.goto(LOG_ANALYZER_PAGE_PATH);
 
-  /** Without the viewer setting the page stays exactly as it was before */
   await expect(page.getByRole("heading", { name: "Anleitung" })).toBeVisible();
   await expect(tableRows(page)).toHaveCount(0);
 
-  /** Every type of the others starts hidden; a checked box shows it */
   await openSettings(page);
   for (const typeTitle of SHARED_TYPE_TITLES)
     await settingToggle(page, typeTitle, SettingsColumn.ShowOthers).click();
   await closeSettings(page);
 
-  /** No folder was ever chosen: the shared entries stand on their own */
   await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 3);
 
   await expect(
@@ -235,11 +221,9 @@ test("shared entries mix into the table with a citizen column and a citizen filt
     rowOf(page, "Shard-Beitritt").getByRole("link", { name: "log-teiler-1" }),
   ).toBeVisible();
 
-  /** Newest first, by the time of the event inside the raw line */
   await expect(tableRows(page).nth(1)).toContainText("Blueprint erhalten");
   await expect(tableRows(page).nth(3)).toContainText("Shard-Beitritt");
 
-  /** Every reporter starts checked; an unchecked box hides its entries */
   await openSettings(page);
   await toggleLabel(settingsDialog(page), "log-teiler-2").click();
   await closeSettings(page);
@@ -255,7 +239,6 @@ test("shared entries mix into the table with a citizen column and a citizen filt
 
   await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 3);
 
-  /** Hiding a type hides its entries, hiding the last type empties the table */
   await openSettings(page);
   await settingToggle(page, "Gestorben", SettingsColumn.ShowOthers).click();
   await closeSettings(page);
@@ -298,7 +281,6 @@ test("sharing uploads the matched entries of the selected types exactly once", a
   ]);
   await page.goto(LOG_ANALYZER_PAGE_PATH);
 
-  /** One type stays out, to prove the selection decides what goes out */
   await openSettings(page);
   await settingToggle(page, "Blueprint erhalten", SettingsColumn.Share).click();
   await settingToggle(
@@ -336,7 +318,6 @@ test("sharing uploads the matched entries of the selected types exactly once", a
     }),
   ).toEqual([{ lineNumber: 2 }, { lineNumber: 3 }]);
 
-  /** A second cycle finds nothing new, thus it sends nothing */
   const secondCycleUploads = recordUploads(page);
 
   await refresh(page);
@@ -348,7 +329,6 @@ test("sharing uploads the matched entries of the selected types exactly once", a
     ]);
   expect(secondCycleUploads).toEqual([]);
 
-  /** Turning a type on shares the entries of that type which are parsed */
   await openSettings(page);
   await settingToggle(page, "Shard-Beitritt", SettingsColumn.Share).click();
   await closeSettings(page);
@@ -495,7 +475,6 @@ test("a section sets all types of a column at once", async ({
   await expect(secondType).toBeChecked();
   await expect(otherSectionType).not.toBeChecked();
 
-  /** One type less: the section shows that only a part is on */
   await settingToggle(
     page,
     "Party-Einladung",
@@ -505,7 +484,6 @@ test("a section sets all types of a column at once", async ({
   await expect(section).not.toBeChecked();
   await expect(section).toHaveJSProperty("indeterminate", true);
 
-  /** A click on a section with a part of its types turns all of them on */
   await settingToggle(page, "Bereich Party", SettingsColumn.ShowOthers).click();
 
   await expect(firstType).toBeChecked();
@@ -552,7 +530,6 @@ test("a quick look shows only its types until it ends, also hidden types", async
     SettingsColumn.ShowOwn,
   ).click();
 
-  /** The dialog stays open, so that more types can follow */
   await quickLookToggle("Blueprint erhalten").click();
   await quickLookToggle("Shard-Beitritt").click();
   await expect(quickLookToggle("Blueprint erhalten")).toHaveAttribute(
@@ -572,14 +549,12 @@ test("a quick look shows only its types until it ends, also hidden types", async
   await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 1);
   await expect(rowOf(page, "Shard-Beitritt")).toBeVisible();
 
-  /** The end brings back the settings, which still hide the type */
   await quickLookBar.getByRole("button", { name: "Beenden" }).click();
 
   await expect(quickLookBar).toHaveCount(0);
   await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 2);
   await expect(rowOf(page, "Blueprint erhalten")).toHaveCount(0);
 
-  /** The table also starts a quick look. It is not stored. */
   await rowOf(page, "Shard-Beitritt")
     .getByRole("button", { name: "Schnellansicht: Shard-Beitritt" })
     .click();
@@ -653,7 +628,6 @@ test("a date range older than the rolling window shares only on request", async 
   expect(uploads).toEqual([]);
   expect(await sharedLines()).toEqual([recentLine]);
 
-  /** Only the confirmation shares, and a shared entry gets its badge */
   await shareButton.click();
   const confirmation = page.getByRole("alertdialog", {
     name: "Ältere Einträge teilen?",
@@ -667,7 +641,6 @@ test("a date range older than the rolling window shares only on request", async 
     rowOf(page, "Shard-Beitritt").getByText("Hochgeladen"),
   ).toBeVisible();
 
-  /** The server tells a new visit which older entries it holds */
   await page.reload();
   await selectFolder(page);
   await applyDateRange(page, daysAgo(42), daysAgo(38));
@@ -729,7 +702,6 @@ test("live mode reads the lines which the game adds to the log", async ({
   });
 
   await signIn(citizen.user);
-  /** The test moves the time of the page forward instead of waiting */
   await page.clock.install();
   await stubDirectoryPicker(page, [joinPuLine(hoursAgo(2))]);
   await recordFullReads(page);
@@ -747,7 +719,6 @@ test("live mode reads the lines which the game adds to the log", async ({
     page.getByRole("checkbox", { name: /Automatisch aktualisieren/ }),
   ).toBeChecked();
 
-  /** Nothing but the interval of live mode reads the file again */
   await appendLogLines(page, [blueprintLine(hoursAgo(1))]);
   await page.clock.fastForward(LIVE_MODE_PARSE_INTERVAL);
 
@@ -788,7 +759,6 @@ test("the overlay stays open while the page renders again", async ({
     .poll(async () => (await readOverlayWindow(page)).text)
     .toContain("Neue Logs aus der aktuellen Session");
 
-  /** The overlay shows the entries which a refresh of the folder adds */
   await appendLogLines(page, [blueprintLine(hoursAgo(1))]);
   await refresh(page);
   await expect
@@ -796,11 +766,9 @@ test("the overlay stays open while the page renders again", async ({
     .toContain("Blueprint erhalten");
 
   /**
-   * No control of the page loads it again from the server. The router of
-   * Next.js, which the page shows as `window.next.router` for debugging,
-   * does that like a server action with `refresh()`, and it writes a new
-   * history state when it renders the answer. That render reaches the whole
-   * log analyzer.
+   * No control of the page loads it again from the server. `refresh()` of the
+   * Next.js router does that like a server action, and it writes a new history
+   * state when it renders the answer.
    */
   await page.evaluate(() => {
     Object.assign(window, { historyStateBeforeRefresh: window.history.state });
@@ -833,10 +801,6 @@ test("a user without a linked citizen cannot share", async ({
   signIn,
   enableAdminMode,
 }) => {
-  /**
-   * A user without a citizen gets no permissions from roles, thus admin mode
-   * is the only way such a user reaches the page at all.
-   */
   const user = await createUserWithoutCitizen(prisma, {
     name: "ohne-citizen",
     admin: true,
@@ -874,7 +838,6 @@ test("a user without a linked citizen cannot share", async ({
   await selectFolder(page);
 
   await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 2);
-  /** Own entries without a citizen carry a dash in the citizen column */
   await expect(rowOf(page, "Shard-Beitritt")).toContainText("-");
   expect(await prisma.logAnalyzerEntry.count()).toBe(0);
 });

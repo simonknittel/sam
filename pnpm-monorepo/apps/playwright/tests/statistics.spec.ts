@@ -50,10 +50,7 @@ const readFrame = async (frame: Locator) => {
   };
 };
 
-/**
- * Counts the requests to the Grafana of the stack. The stack has no
- * Grafana, thus each request fails, but it still counts.
- */
+/** The stack has no Grafana, thus each request fails, but it still counts. */
 const countFrameRequests = (page: Page) => {
   let count = 0;
   page.on("request", (request) => {
@@ -88,7 +85,6 @@ test("the statistics page shows the dashboard and signs a new token after the ex
   });
   await signIn(viewer.user);
 
-  /** The test moves the clock of the page forward instead of waiting */
   await page.clock.install();
   const frameRequestCount = countFrameRequests(page);
   await page.goto("/app/statistics");
@@ -106,7 +102,6 @@ test("the statistics page shows the dashboard and signs a new token after the ex
 
   /** The timer of the note starts at the hydration */
   await waitForAppShellHydration(page);
-  /** A full page load loads the frame one time */
   await expect.poll(frameRequestCount).toBe(1);
   const expiryNote = page.getByText(EXPIRY_NOTE_TEXT);
   await expect(expiryNote).toHaveCount(0);
@@ -137,7 +132,6 @@ test("the statistics page shows the dashboard and signs a new token after the ex
   );
   await expect(expiryNote).toBeVisible();
 
-  /** One load for each token */
   expect(frameRequestCount()).toBe(2);
 });
 

@@ -24,7 +24,6 @@ import { expect, test } from "../fixtures/test";
 
 const NAME_TAKEN_TEXT = "Ein Tag mit diesem Namen existiert bereits.";
 
-/** 64x48 PNG */
 const imagePath = path.join(
   __dirname,
   "..",
@@ -33,25 +32,19 @@ const imagePath = path.join(
   "upload.png",
 );
 
-/**
- * The dimension probe runs after the assign response and needs S3 round
- * trips of its own (see uploads.spec.ts)
- */
+/** See PROBE_TIMEOUT in uploads.spec.ts */
 const UPLOAD_TIMEOUT = 20_000;
 
-/** The navigation link of the IAM page "Tags" */
 const tagsNavigationLink = (page: Page) =>
   page
     .getByRole("link", { name: "Tags", exact: true })
     .filter({ visible: true });
 
-/** The row of a tag in the table of the IAM page "Tags" */
 const tagRow = (page: Page, name: string) =>
   page
     .getByRole("row")
     .filter({ has: page.getByRole("link", { name, exact: true }) });
 
-/** The links between roles and tags as "role:tag", sorted */
 const readLinks = async (prisma: PrismaClient) => {
   const assignments = await prisma.roleTagAssignment.findMany({
     select: {
@@ -93,7 +86,6 @@ test("a manager creates a tag, and a name that a tag has in a different case sho
     .fill("Alle Rollen der Flugstaffel");
   await createDialog.getByRole("button", { name: "Speichern" }).click();
 
-  // The action opens the page of the new tag
   const form = sectionByHeading(page, "Tag bearbeiten");
   await expect(form.getByLabel("Name", { exact: true })).toHaveValue("Flug");
   await expect(page).toHaveURL(/\/app\/iam\/tags\/[a-z0-9]+$/);
@@ -120,7 +112,6 @@ test("a manager creates a tag, and a name that a tag has in a different case sho
   await nameInput.fill("flug");
   await createDialog.getByRole("button", { name: "Speichern" }).click();
 
-  // The dialog stays open, thus it shows the error itself
   await expect(createDialog.getByRole("alert")).toHaveText(NAME_TAKEN_TEXT);
   await expect(nameInput).toHaveValue("flug");
   expect(await prisma.roleTag.count()).toBe(1);
@@ -147,7 +138,6 @@ test("a manager renames, describes and deletes a tag and changes its roles on th
   const nameInput = form.getByLabel("Name", { exact: true });
   const saveButton = form.getByRole("button", { name: "Speichern" });
 
-  // The name of a different tag in a different case
   await nameInput.fill("FLUG");
   await saveButton.click();
   await expect(form.getByRole("alert")).toHaveText(NAME_TAKEN_TEXT);
@@ -156,7 +146,6 @@ test("a manager renames, describes and deletes a tag and changes its roles on th
     await prisma.roleTag.findUniqueOrThrow({ where: { id: tag.id } }),
   ).toMatchObject({ name: "Kampf", description: null });
 
-  // The roles of the tag show as chips: one role more, one role less
   await expect(rolePickerChips(form)).toHaveText(["Scout"]);
   await pickRoles(form.getByRole("button", { name: "Rolle auswählen" }), [
     "Pilot",
@@ -181,7 +170,6 @@ test("a manager renames, describes and deletes a tag and changes its roles on th
     "ROLE_TAG_ASSIGNMENTS_UPDATED",
   ]);
 
-  // The table: sorted by name, each tag with its description and roles
   await page.goto("/app/iam/tags");
   await expect(page.getByRole("link", { name: /^(Flug|Gefecht)$/ })).toHaveText(
     ["Flug", "Gefecht"],
@@ -192,7 +180,6 @@ test("a manager renames, describes and deletes a tag and changes its roles on th
     row.getByRole("list", { name: "Rollen" }).getByRole("link"),
   ).toHaveText(["Pilot"]);
 
-  // The delete removes only the tag, and the roles stay
   await page.goto(`/app/iam/tags/${tag.id}`);
   await waitForAppShellHydration(page);
   const deleteDialog = page.getByRole("alertdialog", { name: "Tag löschen?" });
@@ -257,7 +244,6 @@ test("the icon of a tag is uploaded on the tag page and shows in the tag list", 
     .getByRole("link", { name: "Flug", exact: true })
     .locator(`img[src*="${iconId}"]`);
   await expect(icon).toBeVisible();
-  // The natural width stays 0 until the browser has loaded the image
   await expect(icon).not.toHaveJSProperty("naturalWidth", 0);
 });
 
@@ -283,7 +269,6 @@ test("the role page saves the tags of the role", async ({
   const chips = tile.getByTitle("Tag entfernen");
   await expect(chips).toHaveText(["Flug"]);
 
-  // The search finds the tag, and a click selects it
   const popover = page.getByRole("dialog", { name: "Tag auswählen" });
   await clickUntilVisible(
     tile.getByRole("button", { name: "Tag auswählen" }),
@@ -345,7 +330,6 @@ test("a save of the tag page or of the role page keeps a link that a different u
     "Pilot:Kampf",
     "Scout:Kampf",
   ]);
-  // The form takes the saved roles, thus a next save keeps them
   await expect(rolePickerChips(form)).toHaveText([
     "Logistiker",
     "Pilot",
@@ -409,7 +393,6 @@ test("a selected tag that a different user deleted shows as an unknown tag on th
     .click();
   await expect(chips).toHaveText(["Flug", "Unbekannter Tag"]);
 
-  // Without the unknown tag, the save of the tags does not fail
   await chips.filter({ hasText: "Unbekannter Tag" }).click();
   await chips.filter({ hasText: "Flug" }).click();
   await expect(chips).toHaveCount(0);
@@ -457,7 +440,6 @@ test("the tag table shows the roles of each tag, and the name search filters it"
     tagRow(page, "Logistik").getByText("Keine Rollen"),
   ).toBeVisible();
 
-  // The search ignores the case and filters on the server
   const search = page.getByRole("textbox", { name: "Name", exact: true });
   await fillUntilUrl(page, search, "KAM", /q=KAM/);
   await expect(tagLinks).toHaveText(["Kampf"]);
@@ -468,7 +450,6 @@ test("the tag table shows the roles of each tag, and the name search filters it"
     page.getByText("Kein Tag passt zu dieser Suche.").filter({ visible: true }),
   ).toBeVisible();
   await expect(tagLinks).toHaveCount(0);
-  // The call to action stays, also without a hit
   await expect(page.getByRole("button", { name: "Neuer Tag" })).toBeVisible();
 
   await page.getByRole("button", { name: "Suche löschen" }).click();
@@ -498,7 +479,6 @@ test("the roles table shows the tags of each role and filters by tag", async ({
       .getByRole("row")
       .filter({ has: page.getByRole("link", { name, exact: true }) });
 
-  /** The tags in the row of a role */
   const tagNames = (roleName: string) =>
     roleRow(roleName).getByText(/^(Flug|Kampf)$/);
 
@@ -520,7 +500,6 @@ test("the roles table shows the tags of each role and filters by tag", async ({
   await expect(roleRow("Logistiker")).toHaveCount(0);
   await expect(page).toHaveURL(new RegExp(`tags=${combat.id}`));
 
-  // A role with one of the tags passes
   await page.goto(`/app/iam/roles?tags=${flight.id},${combat.id}`);
   await expect(roleRow("Pilot")).toBeVisible();
   await expect(roleRow("Scout")).toBeVisible();

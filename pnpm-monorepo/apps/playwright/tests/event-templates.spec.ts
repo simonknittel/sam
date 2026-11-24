@@ -78,21 +78,16 @@ test("an owner creates a template, edits it, deletes it and restores it", async 
     .fill("Standardablauf der Patrouille");
   await createDialog.getByRole("button", { name: "Speichern" }).click();
 
-  /** The action redirects to the new template's Stammdaten page */
   await expect(page.getByRole("heading", { name: "Stammdaten" })).toBeVisible();
   const template = await prisma.eventTemplate.findFirstOrThrow();
   expect(template.ownedById).toBe(owner.entity.id);
   await expect(page).toHaveURL(new RegExp(`/templates/${template.id}$`));
 
-  /** Creating seeds the briefing root page an event gets */
   const rootPage = await prisma.wikiPage.findFirstOrThrow({
     where: { templateId: template.id },
   });
   expect(rootPage.title).toBe("BRIEFING");
 
-  /**
-   * Edit
-   */
   await page.getByLabel("Name").fill("Patrouille");
   await sectionByHeading(page, "Stammdaten")
     .getByRole("button", { name: "Speichern" })
@@ -104,7 +99,6 @@ test("an owner creates a template, edits it, deletes it and restores it", async 
     )
     .toMatchObject({ name: "Patrouille" });
 
-  /** Each tile saves only its own fields */
   await toggleLabel(page, /^Teilnahmeanfragen$/).click();
   await sectionByHeading(page, "Teilnahme")
     .getByRole("button", { name: "Speichern" })
@@ -119,9 +113,6 @@ test("an owner creates a template, edits it, deletes it and restores it", async 
       applicationRequired: true,
     });
 
-  /**
-   * Delete and restore through the status filter
-   */
   const deleteDialog = page.getByRole("alertdialog", {
     name: "Vorlage löschen?",
   });
@@ -183,7 +174,6 @@ test("saving a template that a different user deleted shows the error and the de
   await expect(page.getByRole("heading", { name: "Stammdaten" })).toBeVisible();
   await waitForAppShellHydration(page);
 
-  /** A different user deletes the template after the page loaded */
   await prisma.eventTemplate.update({
     where: { id: template.id },
     data: { deletedAt: new Date(), deletedById: manager.entity.id },
@@ -195,7 +185,6 @@ test("saving a template that a different user deleted shows the error and the de
     .click();
 
   await expect(page.getByText("Die Vorlage ist gelöscht.")).toBeVisible();
-  /** The page shows the current state without a reload */
   await expect(page.getByText("Diese Vorlage wurde gelöscht.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Speichern" })).toHaveCount(0);
 
@@ -229,13 +218,11 @@ test("a template is invisible to everyone it is not shared with", async ({
 
   await page.goto(`/app/events/templates/${template.id}`);
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
-  /** The layout itself rejects, so not even the tabs are rendered */
   await expect(page.getByRole("link", { name: "Aufstellung" })).toHaveCount(0);
 });
 
 /**
- * Neither share tier may hand the template on or destroy it. The sharing
- * route answers 404 rather than 403 — its absence must not be a hint that
+ * 404 and not 403: the absence of the sharing route must not be a hint that
  * there is something to find.
  */
 const expectSharingAndDeletingStayWithTheOwner = async (
@@ -250,7 +237,6 @@ const expectSharingAndDeletingStayWithTheOwner = async (
 
   await page.goto(`/app/events/templates/${templateId}/sharing`);
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
-  /** Only the tab is missing — the template stays navigable around it */
   await expect(page.getByRole("link", { name: "Aufstellung" })).toBeVisible();
 };
 
@@ -291,7 +277,6 @@ test("a share lets a role use the template, and only an edit share change it", a
     page.getByText("Du kannst diese Vorlage verwenden, aber nicht bearbeiten."),
   ).toBeVisible();
 
-  /** Reading includes seeing the lineup it would create, but not editing it */
   await page.goto(`/app/events/templates/${template.id}/lineup`);
   await expect(page.getByText("Pilot")).toBeVisible();
   await expect(
@@ -300,7 +285,6 @@ test("a share lets a role use the template, and only an edit share change it", a
 
   await expectSharingAndDeletingStayWithTheOwner(page, template.id);
 
-  /** An edit share may change the content … */
   await switchUser(editor.user);
   await page.goto(`/app/events/templates/${template.id}`);
 
@@ -315,7 +299,6 @@ test("a share lets a role use the template, and only an edit share change it", a
     )
     .toMatchObject({ name: "Von der Redaktion" });
 
-  /** … but sharing and deleting stay with the owner, for both tiers */
   await expectSharingAndDeletingStayWithTheOwner(page, template.id);
 });
 
@@ -359,14 +342,12 @@ test("transferring a template keeps its shares and drops the previous owner", as
     )
     .toMatchObject({ ownedById: successor.entity.id });
 
-  /** The share survived the transfer */
   expect(
     await prisma.eventTemplateRoleAccess.count({
       where: { templateId: template.id },
     }),
   ).toBe(1);
 
-  /** The previous owner holds neither the role nor `event;manage` */
   await page.goto(`/app/events/templates/${template.id}`);
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
 });
@@ -419,7 +400,6 @@ test("duplicating copies the content but not the shares", async ({
     "Anflug",
     "BRIEFING",
   ]);
-  /** The source is untouched */
   expect(
     await prisma.eventTemplateRoleAccess.count({
       where: { templateId: template.id },
@@ -452,7 +432,6 @@ test("`event;manage` manages a foreign personal template", async ({
   await expect(
     page.getByRole("link", { name: "Fremde Vorlage" }),
   ).toBeVisible();
-  /** The owner column only exists for viewers who see foreign templates */
   await expect(
     page.getByRole("columnheader", { name: "Besitzer" }),
   ).toBeVisible();
@@ -588,7 +567,6 @@ test("an event created from a template gets its lineup, briefing and prefill", a
     briefingPageTitles: ["Anflug"],
   });
 
-  /** A page scoped to a template position must land on the event's copy */
   await prisma.wikiPage.updateMany({
     where: { templateId: template.id, title: "Anflug" },
     data: {
@@ -606,7 +584,6 @@ test("an event created from a template gets its lineup, briefing and prefill", a
   );
 
   const createDialog = modal(page, "Neues Event");
-  /** Prefilled but editable */
   await expect(createDialog.getByLabel("Titel")).toHaveValue("Patrouille");
   await expect(createDialog.getByLabel("Kurzbeschreibung")).toHaveValue(
     "Standardablauf",
@@ -625,9 +602,7 @@ test("an event created from a template gets its lineup, briefing and prefill", a
     where: { name: "Patrouille am Freitag" },
     include: { positions: true, wikiPages: true },
   });
-  /** The submitted title won over the template's */
   expect(event.description).toBe("Standardablauf");
-  /** The organizer publishes the lineup when it is staffed */
   expect(event.lineupEnabled).toBe(false);
   expect(event.positions.map((position) => position.name)).toEqual(["Pilot"]);
   expect(event.wikiPages.map((wikiPage) => wikiPage.title).toSorted()).toEqual([
@@ -635,13 +610,11 @@ test("an event created from a template gets its lineup, briefing and prefill", a
     "BRIEFING",
   ]);
 
-  /** The copied page points at the event's own position, not the template's */
   const copiedPage = event.wikiPages.find(
     (wikiPage) => wikiPage.title === "Anflug",
   )!;
   expect(copiedPage.eventReadScopePositionId).toBe(event.positions[0]!.id);
 
-  /** Nothing on the event references the template afterwards */
   expect(await prisma.eventTemplate.count()).toBe(1);
   await expectAuditEvents(prisma, [
     "EVENT_CREATED_IN_APP",
@@ -726,7 +699,6 @@ test("a template position is edited through the shared lineup editor", async ({
   const position = await prisma.eventPosition.findFirstOrThrow({
     where: { templateId: template.id },
   });
-  /** Blueprint positions belong to no event and are never staffed */
   expect(position.eventId).toBeNull();
   expect(position.citizenId).toBeNull();
 
@@ -764,7 +736,6 @@ test("a template's briefing root page is locked like an event's", async ({
   );
   await expect(page.getByRole("button", { name: "Löschen" })).toBeVisible();
 
-  /** A dead link inside the briefing keeps both the sidebar and the tabs */
   await page.goto(
     `/app/events/templates/${template.id}/briefing/gibt-es-nicht`,
   );
@@ -794,7 +765,6 @@ test("a manager saves a past event as a template", async ({
     visibilityRoleIds: [visibilityRole.id],
   });
 
-  /** Published to a channel — the template prefills the same target */
   await prisma.event.update({
     where: { id: event.id },
     data: {
@@ -804,7 +774,6 @@ test("a manager saves a past event as a template", async ({
     },
   });
 
-  /** A staffed position with an open application: neither may travel */
   const position = await prisma.eventPosition.create({
     data: {
       eventId: event.id,
@@ -838,7 +807,6 @@ test("a manager saves a past event as a template", async ({
   await signIn(owner.user);
   await page.goto(`/app/events/${event.id}/settings`);
 
-  /** The event is over: the form is gone, the action stays */
   await expect(page.getByText("Das Event ist bereits vorbei")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Aktionen" })).toBeVisible();
 
@@ -852,7 +820,6 @@ test("a manager saves a past event as a template", async ({
   await fillUntilValue(dialog.getByLabel("Name"), "Patrouille");
   await dialog.getByRole("button", { name: "Speichern" }).click();
 
-  /** The action redirects to the new template's Stammdaten page */
   await expect(page.getByRole("heading", { name: "Stammdaten" })).toBeVisible();
 
   const template = await prisma.eventTemplate.findFirstOrThrow({
@@ -866,13 +833,11 @@ test("a manager saves a past event as a template", async ({
   expect(template.discordPublishChannelId).toBe("channel-123");
   expect(template.discordPublishLocation).toBeNull();
 
-  /** The visibility of the event becomes the prefill of the template */
   expect(template.visibility).toBe(EventVisibility.RESTRICTED);
   expect(template.visibilityRoles.map((role) => role.roleId)).toEqual([
     visibilityRole.id,
   ]);
 
-  /** A blueprint position is never staffed and carries no applications */
   expect(template.positions).toHaveLength(1);
   const copiedPosition = template.positions[0]!;
   expect(copiedPosition.name).toBe("Pilot");
@@ -886,13 +851,11 @@ test("a manager saves a past event as a template", async ({
   expect(
     template.wikiPages.map((wikiPage) => wikiPage.title).toSorted(),
   ).toEqual(["Anflug", "BRIEFING"]);
-  /** The copied page points at the template's own position */
   const copiedPage = template.wikiPages.find(
     (wikiPage) => wikiPage.title === "Anflug",
   )!;
   expect(copiedPage.eventReadScopePositionId).toBe(copiedPosition.id);
 
-  /** The source event is untouched */
   expect(
     await prisma.eventPosition.count({ where: { eventId: event.id } }),
   ).toBe(1);
@@ -1021,7 +984,6 @@ test("saving an event as a template follows the settings gate", async ({
   await page.goto(`/app/events/${event.id}/settings`);
   await expect(page.getByRole("heading", { name: "Redacted" })).toBeVisible();
 
-  /** A Discord event has no settings tab */
   const discordEvent = await createEvent(prisma, {
     name: "Discord-Event",
     discordCreatorId: owner.entity.discordId!,
@@ -1123,7 +1085,6 @@ test("the role picker of the new event follows the template that the picker of t
   const chips = rolePickerChips(createDialog);
   await expect(chips).toHaveCount(0);
 
-  /** The template prefills the roles, and a different choice removes them */
   await templatePicker.selectOption({ label: "Eingeschränkte Vorlage" });
   await expect(chips).toHaveText([templateRole.name]);
   await templatePicker.selectOption({ label: "Ohne Vorlage" });

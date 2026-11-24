@@ -2,10 +2,8 @@ import { expect } from "@playwright/test";
 import { readStackState, unleashAdminToken } from "../setup/stack";
 
 /**
- * Flag names from the app's UNLEASH_FLAG enum
- * (apps/app/src/modules/common/utils/UNLEASH_FLAG.ts), mirrored here
- * because the app package's internals are not importable from this
- * package. Only the flags the tests actually toggle are listed.
+ * Mirrors apps/app/src/modules/common/utils/UNLEASH_FLAG.ts, which this package
+ * cannot import. Only the flags that the tests toggle are listed.
  */
 export enum UNLEASH_FLAG {
   EnableCareBearShooter = "EnableCareBearShooter",
@@ -23,7 +21,6 @@ export enum UNLEASH_FLAG {
  */
 export const FLAG_PROPAGATION_TIMEOUT = 30_000;
 
-/** Polls an assertion until the app picked up a flag toggle */
 export const expectFlagPropagation = expect.configure({
   timeout: FLAG_PROPAGATION_TIMEOUT,
 });
@@ -45,18 +42,15 @@ const ADMIN_HEADERS = {
 };
 
 interface UserScope {
-  /** The ID of the user, which the app gives to Unleash as `userId` */
   readonly userId: string;
 }
 
 /**
- * The app of one worker (see unleashAppName in setup/stack.ts). For a flag
- * that the app also reads without a session, for example in a route handler
- * for API clients. The tests of one worker run one after the other, thus
- * only the test that toggles the flag sees it.
+ * For a flag that the app also reads without a session, for example in a route
+ * handler for API clients. The tests of one worker run one after the other,
+ * thus only the test that toggles the flag sees it.
  */
 export interface StackScope {
-  /** The name that the app gives to Unleash as `appName` */
   readonly appName: string;
 }
 
@@ -186,16 +180,12 @@ const setScopeStrategy = async (
 };
 
 /**
- * Creates the flag if it is missing and sets its state in the environment
- * the app reads. All workers share one Unleash server. Thus without a
- * `scope`, a test may only toggle a flag that no other test depends on. With
- * a scope, the flag changes only for the user of the test or for the app of
- * its worker. Do not toggle one flag in the two ways: a toggle for all users
- * adds a strategy for all users, which also turns on the flag for each
- * scope.
+ * See the README for the rule of the scopes. Do not toggle one flag with and
+ * without a `scope`: a toggle for all users adds a strategy for all users,
+ * which also turns on the flag for each scope.
  *
- * The app caches the flag definitions (see FLAG_PROPAGATION_TIMEOUT) —
- * callers have to poll for propagation.
+ * The app caches the flag definitions (see FLAG_PROPAGATION_TIMEOUT), thus
+ * callers have to poll for the propagation.
  */
 export const setUnleashFlag = async (
   flagName: UNLEASH_FLAG,

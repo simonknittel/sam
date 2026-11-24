@@ -22,11 +22,6 @@ import {
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
-/**
- * Creating an organization also scrapes its logo from the Star Citizen
- * website. The Playwright stack points that base URL at a dead port, so the
- * scrape fails fast and the create carries on without a logo.
- */
 const ORGANIZATION_ADMIN_PERMISSIONS = [
   "organization;create",
   "organization;read",
@@ -65,14 +60,12 @@ const getActiveMembershipWriters = (prisma: PrismaClient, citizenId: string) =>
     ORDER BY "organizationId"
   `;
 
-/** The ID of the transaction that wrote the history entry last */
 const getHistoryEntryWriters = (prisma: PrismaClient, historyEntryId: string) =>
   prisma.$queryRaw<{ writer: string }[]>`
     SELECT xmin::text AS writer FROM "OrganizationMembershipHistoryEntry"
     WHERE "id" = ${historyEntryId}
   `;
 
-/** The decision buttons of the entry that waits for its confirmation */
 const unconfirmedRow = (page: Page, handle: string) =>
   page.getByRole("row").filter({ hasText: "Unbestätigt" }).filter({
     hasText: handle,
@@ -92,9 +85,6 @@ test("an organization is created, staffed and cleared out again", async ({
   await signIn(admin.user);
   await page.goto("/app/spynet");
 
-  /**
-   * Create
-   */
   const createDialog = modal(page, "Neue Organisation");
   await clickUntilVisible(
     page.getByRole("button", { name: "Organisation" }),
@@ -117,9 +107,6 @@ test("an organization is created, staffed and cleared out again", async ({
   ).toBeVisible();
   await expect(page.getByText("Keine Mitglieder")).toBeVisible();
 
-  /**
-   * A confirmed membership, entered by its internal id
-   */
   const membershipDialog = modal(page, "Citizen hinzufügen");
   await clickUntilVisible(
     membershipsTile(page).getByRole("button", { name: "Hinzufügen" }),
@@ -154,9 +141,6 @@ test("an organization is created, staffed and cleared out again", async ({
     createdById: admin.entity.id,
   });
 
-  /**
-   * Removing the membership keeps the history but empties the tile
-   */
   await removeMembership(page);
 
   await expect(page.getByText(REMOVED_TEXT)).toBeVisible();
@@ -220,7 +204,6 @@ test("an organization with a known Spectrum ID is not created again", async ({
   await createDialog.getByLabel("Name").fill("Zweite Organisation");
   await createDialog.getByRole("button", { name: "Anlegen" }).click();
 
-  /** The modal stays open with the error and the entered values */
   await expect(
     createDialog.getByText(
       "Eine Organisation mit dieser Spectrum ID existiert bereits.",
@@ -243,7 +226,6 @@ test("a membership reported on the page of a citizen waits for its confirmation"
   prisma,
   signIn,
 }) => {
-  /** Without the permission to confirm, a report stays unconfirmed */
   const reporter = await createCitizen(prisma, {
     handle: "spynet-melder",
     permissionStrings: [
@@ -263,7 +245,6 @@ test("a membership reported on the page of a citizen waits for its confirmation"
 
   await signIn(reporter.user);
   await page.goto(`/app/spynet/citizen/${member.entity.id}/organizations`);
-  /** While the page streams, React keeps a hidden copy of the tile */
   const noOrganizations = page
     .getByText("Keine Organisationen")
     .filter({ visible: true });
@@ -280,9 +261,6 @@ test("a membership reported on the page of a citizen waits for its confirmation"
     dialog.getByRole("button", { name: "Speichern und bestätigen" }),
   ).toHaveCount(0);
 
-  /**
-   * An unknown organization: the modal stays open and keeps the values
-   */
   const organizationInput = dialog.getByLabel("Organisation (Internal ID)");
   const unknownOrganizationId = `c${"0".repeat(24)}`;
   await organizationInput.fill(unknownOrganizationId);
@@ -298,9 +276,6 @@ test("a membership reported on the page of a citizen waits for its confirmation"
   );
   await expect(dialog.getByLabel("Redacted")).toBeChecked();
 
-  /**
-   * The correct organization
-   */
   await organizationInput.fill(organization.id);
   await dialog.getByRole("button", { name: "Speichern" }).click();
 
@@ -371,7 +346,6 @@ test("a confirmed report becomes an active membership, a false report does not",
   await page.goto(`/app/spynet/organization/${organization.id}`);
   await expect(page.getByText("Keine Mitglieder")).toBeVisible();
 
-  /** A second click would confirm again, thus the page must hydrate first */
   await waitForAppShellHydration(page);
   await unconfirmedRow(page, "org-mitglied")
     .getByRole("button", { name: "Bestätigen" })
@@ -505,13 +479,11 @@ test("two confirmations of a reported membership at the same time: one wins, the
         await expect(feedback).toBeVisible();
         const feedbackText = await feedback.innerText();
 
-        /** The conflict also refreshes the page */
         await expect(currentPage.getByText("Mitglieder (1)")).toBeVisible();
 
         return feedbackText;
       }),
     );
-    /** One confirmation wins. The other one finds the entry confirmed. */
     expect(feedbacks.toSorted()).toEqual(
       [SAVED_TEXT, ALREADY_CONFIRMED_TEXT].toSorted(),
     );
@@ -717,7 +689,6 @@ test("a membership that a different tab removed before is not removed again", as
   await expect(otherTab.getByText(REMOVED_TEXT)).toBeVisible();
   await expect(otherTab.getByText("Keine Mitglieder")).toBeVisible();
 
-  /** The first tab still shows the member until its own request */
   await expect(page.getByText("Mitglieder (1)")).toBeVisible();
   const writersBefore = await getActiveMembershipWriters(
     prisma,
@@ -784,7 +755,6 @@ test("a deleted citizen gets no new membership", async ({
     .getByRole("button", { name: "Speichern und bestätigen" })
     .click();
 
-  /** The same answer as for an unknown ID */
   await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
   await expect(dialog).toBeVisible();
   expect(await prisma.organizationMembershipHistoryEntry.count()).toBe(0);
@@ -826,7 +796,6 @@ test("a citizen deleted while its page was open gets no new membership", async (
   );
   await dialog.getByLabel("Organisation (Internal ID)").fill(organization.id);
 
-  /** A different user deletes the citizen */
   await prisma.citizen.update({
     where: { id: member.entity.id },
     data: { deletedAt: new Date(), userId: null },
@@ -836,7 +805,6 @@ test("a citizen deleted while its page was open gets no new membership", async (
     .click();
 
   await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
-  /** The refresh shows that the citizen is gone */
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
   expect(await prisma.organizationMembershipHistoryEntry.count()).toBe(0);
   expect(await prisma.activeOrganizationMembership.count()).toBe(0);
@@ -908,7 +876,6 @@ test("a citizen deleted while the page was open gets no removal and no decision"
     prisma,
     member.entity.id,
   );
-  /** A different user deletes both citizens */
   await prisma.citizen.updateMany({
     where: { id: { in: [member.entity.id, rumoredMember.entity.id] } },
     data: { deletedAt: new Date(), userId: null },
@@ -916,14 +883,12 @@ test("a citizen deleted while the page was open gets no removal and no decision"
 
   await removeMembership(page);
   await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
-  /** The refresh shows the list without the deleted citizen */
   await expect(page.getByText("Keine Mitglieder")).toBeVisible();
 
   await unconfirmedRow(decisionTab, "org-geruecht")
     .getByRole("button", { name: "Bestätigen", exact: true })
     .click();
   await expect(decisionTab.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
-  /** After the refresh, the entry of the deleted citizen offers no decision */
   await expect(
     decisionTab.getByRole("row").filter({ hasText: "Unbestätigt" }),
   ).toHaveCount(1);

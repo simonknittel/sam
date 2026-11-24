@@ -102,7 +102,6 @@ test.describe("the role tools of the MCP server", () => {
     expect(
       await callForContent(client, "list_roles", { query: "KOMM" }),
     ).toMatchObject({ roles: [{ id: command.id }] });
-    // The tag filter also leaves out the hidden role "Bergung"
     expect(
       await callForContent(client, "list_roles", { tag_id: leadership.id }),
     ).toMatchObject({ roles: [{ id: command.id }], next_cursor: null });
@@ -261,7 +260,6 @@ test.describe("the role tools of the MCP server", () => {
     authorizeMcpClient,
     connectMcpClient,
   }) => {
-    // The catalog needs no permission besides mcp;use
     const member = await createMcpCitizen(prisma, {
       handle: "mcp-rollen-mitglied",
     });
@@ -380,7 +378,6 @@ test.describe("the role tools of the MCP server", () => {
       description: "Leitende Rollen",
       roles: [command, salvage],
     });
-    // Only a hidden role, and no role
     const hiddenOnly = await createRoleTag(prisma, {
       name: "Bergungsdienst",
       roles: [salvage],
@@ -390,7 +387,6 @@ test.describe("the role tools of the MCP server", () => {
       handle: "mcp-tags-betrachter",
       permissionStrings: [`otherRole;read;roleId=${command.id}`],
     });
-    // The manager sees no role, but manages the tags of all roles
     const manager = await createMcpCitizen(prisma, {
       handle: "mcp-tags-verwalter",
       permissionStrings: ["role;manage"],
@@ -399,7 +395,6 @@ test.describe("the role tools of the MCP server", () => {
     const viewerClient = await connectMcpClient(
       (await authorizeMcpClient(viewer.user)).accessToken,
     );
-    // Without role;manage, the tag tools that change a tag are not visible
     const viewerToolNames = await viewerClient.listToolNames();
     expect(viewerToolNames).toContain("list_role_tags");
     for (const toolName of [
@@ -414,7 +409,6 @@ test.describe("the role tools of the MCP server", () => {
     }
     expect(await prisma.roleTag.count()).toBe(3);
 
-    // The roles of a tag are only the visible roles
     expect(await callForContent(viewerClient, "list_role_tags")).toEqual({
       tags: [
         {
@@ -555,7 +549,6 @@ test.describe("the role tools of the MCP server", () => {
         },
       ]);
 
-    // The names are unique without regard to the case
     expect(
       await callForError(client, "create_role_tag", { name: "FÜHRUNG" }),
     ).toMatch(VALIDATION_RESULT);
@@ -567,8 +560,6 @@ test.describe("the role tools of the MCP server", () => {
     ).toMatch(NOT_FOUND_RESULT);
     expect(await prisma.roleTag.count()).toBe(1);
 
-    // One call changes the name, removes the description and moves the tag
-    // from one role to the other
     expect(
       await callForContent(client, "update_role_tag", {
         tag_id: tagId,
@@ -611,7 +602,6 @@ test.describe("the role tools of the MCP server", () => {
       triggeredViaMcp: true,
     });
 
-    // A repeated call changes nothing and writes no event
     expect(
       await callForContent(client, "update_role_tag", {
         tag_id: tagId,
@@ -650,7 +640,6 @@ test.describe("the role tools of the MCP server", () => {
     expect(
       await callForContent(client, "delete_role_tag", { tag_id: tagId }),
     ).toEqual({ id: tagId, name: "Leitung" });
-    // The roles stay, and only the tag and its links are gone
     expect(
       await prisma.role.count({
         where: { id: { in: [command.id, salvage.id] } },
@@ -712,8 +701,6 @@ test.describe("the role tools of the MCP server", () => {
         select: { type: true, createdById: true, triggeredViaMcp: true },
       });
 
-    // A call with only tags writes only the event of the links, and the
-    // output has no tags
     expect(
       await callForContent(client, "update_role", {
         role_id: logistics.id,
@@ -761,7 +748,6 @@ test.describe("the role tools of the MCP server", () => {
       },
     ]);
 
-    // The filter gives the roles with one tag
     expect(
       await callForContent(client, "list_roles", { tag_id: support.id }),
     ).toMatchObject({
@@ -772,7 +758,6 @@ test.describe("the role tools of the MCP server", () => {
       await callForContent(client, "list_roles", { tag_id: leadership.id }),
     ).toMatchObject({ roles: [{ id: logistics.id }], next_cursor: null });
 
-    // A field and the tags in one call write both events
     expect(
       await callForContent(client, "update_role", {
         role_id: logistics.id,

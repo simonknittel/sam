@@ -16,22 +16,17 @@ import {
 import { expect, test } from "../fixtures/test";
 
 /**
- * The role dialog opens from the citizen popover, and the popover opens on
- * hover. The dialog is in a portal outside of the popover, thus the pointer
- * on the dialog is outside of the popover. The dialog must hold the popover
- * open: a close of the popover also removes the dialog.
+ * The role dialog is in a portal outside of the popover, thus the pointer on
+ * the dialog is outside of the popover. The dialog must hold the popover open:
+ * a close of the popover also removes the dialog.
  */
 
 const FIRST_ROLE = "Erste Rolle";
 const SECOND_ROLE = "Zweite Rolle";
 
-/** The number of pointer moves from the start point to the target */
 const POINTER_STEPS = 10;
 
-/**
- * Moves the pointer in steps to the middle of the target, as a hand does,
- * and clicks there.
- */
+/** Moves the pointer in steps, as a hand does. */
 const clickWithPointerSteps = async (target: Locator) => {
   const box = await target.boundingBox();
   if (!box) throw new Error("The target has no bounding box");
@@ -44,10 +39,6 @@ const clickWithPointerSteps = async (target: Locator) => {
   await mouse.up();
 };
 
-/**
- * A viewer who may assign each role opens the popover of the citizen who
- * created the event.
- */
 const openCitizenPopover = async (
   page: Page,
   prisma: PrismaClient,
@@ -140,10 +131,7 @@ const SCENARIOS: readonly InteractionScenario[] = [
       await editButton.focus();
       await editButton.page().keyboard.press("Enter");
     },
-    /**
-     * The search field has the focus. During a search, Enter ticks the
-     * first match.
-     */
+    /** During a search, Enter ticks the first match. */
     tickRole: async (rolesDialog, roleName) => {
       const search = rolePickerSearchField(rolesDialog);
       await expect(search).toBeFocused();
@@ -182,7 +170,6 @@ for (const scenario of SCENARIOS) {
     } = await openCitizenPopover(page, prisma, signIn);
 
     await scenario.openDialog(editButton);
-    /** The roles load only after the dialog opened */
     await expect(rolePickerOption(rolesDialog, FIRST_ROLE)).toBeVisible();
 
     await scenario.tickRole(rolesDialog, FIRST_ROLE);
@@ -203,7 +190,6 @@ for (const scenario of SCENARIOS) {
 
     await scenario.closeDialog(rolesDialog);
     await expect(rolesDialog).not.toBeVisible();
-    /** The popover closes together with the dialog */
     await expect(popover).not.toBeVisible();
   });
 }
@@ -225,7 +211,6 @@ test("a role ticked right before the role dialog of the citizen popover closes i
   await editButton.click();
   await expect(rolePickerOption(rolesDialog, FIRST_ROLE)).toBeVisible();
 
-  /** The dialog closes before the debounced save of the role */
   await rolePickerOption(rolesDialog, FIRST_ROLE).click();
   await closeButton(rolesDialog).click();
   await expect(rolesDialog).not.toBeVisible();

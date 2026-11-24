@@ -10,11 +10,10 @@ import {
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
-/** The answer of the report action when a user has too many open reports */
 const TOO_MANY_REPORTS_ERROR =
   "Du hast bereits zu viele offene Meldungen. Bitte warte, bis diese bearbeitet wurden.";
 
-/** The limit of the open reports of a user (see createWikiPageReport) */
+/** See createWikiPageReport */
 const MAX_OPEN_REPORTS_PER_USER = 5;
 
 test("an error toast stays in the accessibility tree while a modal dialog is open", async ({
@@ -46,7 +45,6 @@ test("an error toast stays in the accessibility tree while a modal dialog is ope
   await dialog.getByLabel("Grund").fill("Inhalt ist veraltet");
   await dialog.getByRole("button", { name: "Melden" }).click();
 
-  /** The error does not close the dialog, and only the toast shows it */
   await expect(page.getByText(TOO_MANY_REPORTS_ERROR)).toBeVisible();
   await expect(dialog).toBeVisible();
 

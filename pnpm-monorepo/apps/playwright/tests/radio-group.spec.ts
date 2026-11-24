@@ -20,8 +20,7 @@ import {
 import { expect, test } from "../fixtures/test";
 
 /**
- * The radio group (`RadioGroup`) is a group of native radio inputs. These
- * tests examine the group itself; the specs of the features examine what
+ * These tests examine the group itself; the specs of the features examine what
  * their choices do.
  */
 
@@ -57,7 +56,6 @@ test("the keyboard moves the selection of a radio group, and the form submits it
   });
   const saveButton = dialog.getByRole("button", { name: "Speichern" });
 
-  /** The group is one stop of the tab order, on the checked radio */
   await dialog.getByRole("button", { name: "Schließen" }).focus();
   await page.keyboard.press("Tab");
   await expect(visible).toBeFocused();

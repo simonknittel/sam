@@ -62,7 +62,6 @@ test("the dialog of a role member block picks, changes and removes the role", as
 
   await expect(page.getByText("Keine Rolle ausgewählt")).toBeVisible();
 
-  /** Pick */
   await openDialog();
   await pickRole(
     dialog.getByRole("button", { name: "Rolle auswählen" }),
@@ -73,7 +72,6 @@ test("the dialog of a role member block picks, changes and removes the role", as
   await expect(roleCitizensBlock(page)).toContainText(firstRole.name);
   await expectPersisted(prisma, wikiPage.id, "content").toContain(firstRole.id);
 
-  /** Change: a pick replaces the role */
   await openDialog();
   await pickRole(
     dialog.getByRole("button", { name: firstRole.name }),
@@ -88,7 +86,6 @@ test("the dialog of a role member block picks, changes and removes the role", as
     firstRole.id,
   );
 
-  /** Remove: the block falls back to its state without a role */
   await openDialog();
   await pickRole(
     dialog.getByRole("button", { name: secondRole.name }),

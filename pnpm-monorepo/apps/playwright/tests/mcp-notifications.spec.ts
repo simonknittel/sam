@@ -190,8 +190,7 @@ test.describe("the notification tools of the MCP server", () => {
       }),
     ).toEqual({ readAt: null, archivedAt: null });
 
-    // One event for each change, none for the calls that changed nothing. The
-    // archive writes two: the archive and the read.
+    // The archive writes two events: the archive and the read.
     await expectAuditEvents(prisma, [
       "ON_SITE_NOTIFICATIONS_READ",
       "ON_SITE_NOTIFICATION_ARCHIVED",

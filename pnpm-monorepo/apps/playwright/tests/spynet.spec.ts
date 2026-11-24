@@ -127,7 +127,6 @@ test("notes respect their classification level", async ({
 
   const noteContent = "Wurde bei Port Olisar gesichtet.";
 
-  // The writer creates a note through the UI
   /**
    * The note-type panels are keep-mounted, so inactive panels keep their
    * textareas around in ways Playwright's visibility filter does not treat
@@ -157,8 +156,6 @@ test("notes respect their classification level", async ({
     confirmed: null,
   });
 
-  // The note-type tabs are Base UI keep-mounted tabs: an unsaved draft
-  // survives switching tabs
   const draft = "Unbestätigtes Gerücht über Schmuggelware";
   await page.getByRole("tab", { name: "Gerücht" }).click();
   await notePanel("Gerücht").getByRole("textbox").fill(draft);
@@ -167,14 +164,12 @@ test("notes respect their classification level", async ({
   await page.getByRole("tab", { name: "Gerücht" }).click();
   await expect(notePanel("Gerücht").getByRole("textbox")).toHaveValue(draft);
 
-  // A reader with only readRedacted sees a redacted note, not the content
   await switchUser(redactedReader.user);
   await page.goto(`/app/spynet/citizen/${target.entity.id}/notes`);
   await page.getByRole("tab", { name: "Beobachtung" }).click();
   await expect(page.getByText("Redacted").first()).toBeVisible();
   await expect(page.getByText(noteContent)).toHaveCount(0);
 
-  // A citizen without the classification does not get the note at all
   await switchUser(outsider.user);
   await page.goto(`/app/spynet/citizen/${target.entity.id}/notes`);
   await expect(page.getByRole("heading", { name: "zielperson" })).toBeVisible();
@@ -234,10 +229,6 @@ interface SettingsRecordScenario {
   readonly countRecords: (prisma: PrismaClient) => Promise<number>;
 }
 
-/**
- * Note types and classification levels run through one parameterized
- * component trio — the same walk guards both record types.
- */
 const exerciseSettingsRecordCrud = async (
   page: Page,
   prisma: PrismaClient,
@@ -246,7 +237,6 @@ const exerciseSettingsRecordCrud = async (
   const tile = sectionByHeading(page, scenario.tileHeading);
   await expect(tile).toBeVisible();
 
-  // Create
   const createModal = modal(page, "Hinzufügen");
   await clickUntilVisible(
     tile.getByRole("button", { name: "Hinzufügen" }),
@@ -276,7 +266,6 @@ const exerciseSettingsRecordCrud = async (
     await expect(reaction).toBeVisible();
   };
 
-  // Update
   const updateModal = modal(page, "Bearbeiten");
   await openRowAction(scenario.createdName, "Bearbeiten", updateModal);
   await updateModal.getByLabel("Name").fill(scenario.updatedName);
@@ -284,7 +273,6 @@ const exerciseSettingsRecordCrud = async (
   await expect(page.getByText("Erfolgreich bearbeitet")).toBeVisible();
   await expect(tile.getByText(scenario.updatedName)).toBeVisible();
 
-  // Delete
   await openRowAction(
     scenario.updatedName,
     "Löschen",
@@ -307,7 +295,6 @@ const exerciseSettingsRecordCrud = async (
     )
     .not.toBeNull();
 
-  // The delete shows up in the system log with its rendered message
   await page.goto("/app/system-log");
   await expect(page.getByText(scenario.deletedLogMessage)).toBeVisible();
 };
@@ -318,7 +305,6 @@ const SETTINGS_ADMIN_PERMISSIONS = [
   "systemLog;read",
 ];
 
-/** Both record types of the settings page, in the order they render */
 const SETTINGS_RECORD_SCENARIOS: SettingsRecordScenario[] = [
   {
     tileHeading: "Notizarten",
@@ -376,7 +362,6 @@ test("deleting a settings record that a different user deleted shows the error a
   const tile = sectionByHeading(page, "Notizarten");
   await expect(tile.getByText("Doppelt gelöscht")).toBeVisible();
 
-  /** A different user deletes the note type after the page loaded */
   await prisma.noteType.delete({ where: { id: noteType.id } });
 
   const deleteButton = page.getByRole("button", { name: "Löschen" });
@@ -442,10 +427,6 @@ test("the citizen table paginates and filters", async ({
   await expect(page.locator("tbody tr")).toHaveCount(5);
   await expect(nextPageButton(page)).toBeDisabled();
 
-  /**
-   * The "Unbekannt" filter narrows the table to citizens without a handle and
-   * goes back to the first page
-   */
   await pickFilterOption(page, "Unbekannt", "Handles");
   await expect(page).toHaveURL(/\/app\/spynet\/citizen\?unknown=handle$/);
   await expect(page.locator("tbody tr")).toHaveCount(UNNAMED_CITIZENS);
@@ -534,10 +515,6 @@ test("the citizen page sends no Discord ID, no TeamSpeak ID, no login and no rol
   await expectNoHiddenValues("Danger Zone");
 });
 
-/**
- * Only the visible rows: while the page streams, React keeps a hidden copy of
- * the table next to the visible one
- */
 const citizenTableRows = (page: Page) =>
   page.locator("tbody tr").filter({ visible: true });
 
@@ -639,14 +616,12 @@ test("the citizen table sorts by the sort filter and keeps the sort on the other
   await expect(rows).toHaveCount(50);
   await expect(rows.first()).toContainText("bewohner-01");
 
-  // A different sort goes back to the first page
   await pickFilterOption(page, "Sortierung", "Handle Z - A");
   await expect(page).toHaveURL(/\/app\/spynet\/citizen\?sort=handle-desc$/);
   await expect(previousPageButton(page)).toBeDisabled();
   await expect(rows.first()).toContainText("tabellen-sortierer");
   await expect(rows.nth(1)).toContainText("bewohner-51");
 
-  // The default sort leaves no sort parameter in the URL
   await pickFilterOption(page, "Sortierung", "Erstellt am ↓");
   await expect(page).toHaveURL(/\/app\/spynet\/citizen$/);
   await expect(rows.nth(1)).toContainText("bewohner-01");
@@ -758,15 +733,10 @@ test("the citizen table combines its filters, and a removed role goes back to th
 
   await signIn(viewer.user);
 
-  /** Only the citizen without a handle and with the role matches both filters */
   await page.goto(`/app/spynet/citizen?unknown=handle&role=${miningRole.id}`);
   await expect(rows).toHaveCount(1);
   await expect(rows.first()).toContainText("OHNE-HANDLE-MIT-ROLLE");
 
-  /**
-   * The role filter shows the roles of the URL, and a removal goes back to
-   * the first page
-   */
   await page.goto(
     `/app/spynet/citizen?unknown=handle&role=${miningRole.id}&cursor=${unnamedWithRole.id}`,
   );
@@ -815,7 +785,6 @@ test("the role filter of the citizen table applies when its popover closes, and 
   await page.goto("/app/spynet/citizen");
   await expect(rows).toHaveCount(4);
 
-  /** The URL and the table stay while the popover is open */
   const popover = await openRolePicker(
     page.getByRole("button", { name: "Rolle auswählen" }),
   );
@@ -829,7 +798,6 @@ test("the role filter of the citizen table applies when its popover closes, and 
     "aria-selected",
     "false",
   );
-  /** The tag filters the list and selects nothing */
   await rolePickerTag(popover, "Wirtschaft").click();
   await expect(popover.getByRole("option")).toHaveText(["Bergbau", "Handel"]);
   await expect(popover.getByRole("option", { selected: true })).toHaveCount(0);
@@ -842,7 +810,6 @@ test("the role filter of the citizen table applies when its popover closes, and 
   await expect(page).toHaveURL(/\/app\/spynet\/citizen$/);
   await expect(rows).toHaveCount(4);
 
-  /** A click outside closes the popover and applies the filter */
   await page
     .locator("section")
     .filter({ has: page.getByRole("table") })

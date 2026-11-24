@@ -33,67 +33,37 @@ import type { StackScope } from "./unleash";
 interface WorkerStack {
   readonly baseURL: string;
   readonly prisma: PrismaClient;
-  /** HTTP base of the worker's collab container (e.g. for /replace) */
   readonly collabHttpUrl: string;
   readonly discordMock: DiscordMock;
-  /** The name that the app of the worker gives to Unleash as `appName` */
   readonly unleashAppName: string;
 }
 
 interface Fixtures {
   readonly prisma: PrismaClient;
-  /** HTTP base of the worker's collab container (e.g. for /replace) */
   readonly collabHttpUrl: string;
-  /**
-   * The worker's stand-in for Discord's REST API, reset between tests like
-   * the database.
-   */
   readonly discordMock: DiscordMock;
-  /**
-   * Signs the given user in by inserting a database session and setting the
-   * session cookie (next-auth v4 database sessions).
-   */
   readonly signIn: (user: Pick<User, "id">) => Promise<void>;
   /**
-   * Signs the given user in instead of the current one. Only the session
-   * cookie is dropped, so everything else the test set up — admin mode, the
-   * wiki clipboard — survives the switch.
+   * Drops only the session cookie: the admin mode and the wiki clipboard
+   * survive the switch.
    */
   readonly switchUser: (user: Pick<User, "id">) => Promise<void>;
-  /**
-   * Sets the cookie of the admin mode tool. Only effective for users whose
-   * `User.role` is ADMIN.
-   */
+  /** Only effective for users whose `User.role` is ADMIN. */
   readonly enableAdminMode: () => Promise<void>;
-  /**
-   * Names the local calendar date (`YYYY-MM-DD`) the seasonal themes resolve
-   * for, which lets a test walk a date range without waiting for it.
-   */
+  /** Overrides the date (`YYYY-MM-DD`) that the seasonal themes resolve for. */
   readonly setSeasonalDate: (date: string) => Promise<void>;
-  /**
-   * Limits a toggle of `setUnleashFlag()` to the app of this worker. For a
-   * flag that the app also reads without a session.
-   */
   readonly stackFlagScope: StackScope;
-  /**
-   * Connects the MCP test client for the user through the consent page (see
-   * fixtures/oauth.ts). Signs the user in.
-   */
+  /** Signs the user in. */
   readonly authorizeMcpClient: (
     user: Pick<User, "id">,
     options?: Pick<AuthorizeMcpClientOptions, "beforeApprove">,
   ) => Promise<McpAuthorization>;
-  /**
-   * Connects the MCP client SDK with an access token. The fixture closes the
-   * client after the test.
-   */
   readonly connectMcpClient: (accessToken: string) => Promise<McpTestClient>;
   readonly databaseReset: undefined;
 }
 
 interface WorkerFixtures {
   readonly stack: WorkerStack;
-  /** Serves the Client ID Metadata Documents of the MCP test client */
   readonly cimdServer: CimdServer;
 }
 
@@ -109,8 +79,7 @@ const createPrismaClient = (databaseUrl: string) =>
   });
 
 /**
- * Worker databases are cloned from the migrated template. Concurrent clones
- * of the same template can briefly conflict, hence the retry.
+ * Concurrent clones of the same template can briefly conflict, hence the retry.
  */
 const createWorkerDatabase = async (
   adminDatabaseUrl: string,
@@ -195,7 +164,6 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
             NEXTAUTH_URL: baseURL,
             COLLAB_URL: `ws://localhost:${collabContainer.getMappedPort(collabPort)}`,
             COLLAB_JWT_SECRET: collabJwtSecret,
-            // Publishing events talks to the worker's mock, never to Discord
             DISCORD_API_BASE_URL: discordMock.baseUrl,
           },
           stdio: "inherit",

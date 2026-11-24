@@ -4,7 +4,6 @@ import { createCitizen } from "../fixtures/factories";
 import { clickUntilVisible, sectionByHeading } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
-/** The copy button of the "Internal ID" row in the overview of a citizen */
 const copyButton = (page: Page) =>
   sectionByHeading(page, "Übersicht").getByRole("button", {
     name: "Kopieren",

@@ -18,12 +18,7 @@ import {
 } from "../fixtures/server-actions";
 import { expect, test } from "../fixtures/test";
 
-/**
- * The checkbox input itself is sr-only — the visible control is the box its
- * wrapping label draws, so toggling goes through the label the way a click
- * does. State is read off the input, located by its form field name
- * (ONSITE_<type> / WEB_PUSH_<type>) so the cases stay written in ids.
- */
+/** Located by the form field name, so the cases stay written in ids. */
 const browserCheckbox = (page: Page, notificationType: string) =>
   page.locator(`input[name="WEB_PUSH_${notificationType}"]`);
 
@@ -32,7 +27,6 @@ const browserCheckboxLabel = (page: Page, notificationType: string) =>
 
 const NOTIFICATIONS_PAGE = "/app/account/notifications";
 
-/** The types whose browser notifications the citizen turned off, sorted */
 const disabledBrowserNotifications = (
   prisma: PrismaClient,
   citizenId: string,
@@ -61,7 +55,6 @@ test("browser notifications are enabled by default", async ({
   await expect(browserCheckbox(page, "event_created")).toBeChecked();
   await expect(browserCheckbox(page, "wiki_page_reported")).toBeChecked();
 
-  // The birthday greeting sits in its own "Spynet" group
   await expect(
     page.getByRole("heading", { name: "Spynet", exact: true }),
   ).toBeVisible();
@@ -70,13 +63,10 @@ test("browser notifications are enabled by default", async ({
     page.getByRole("checkbox", { name: "Browser: Geburtstag" }),
   ).toBeChecked();
 
-  // Each box names its channel and its notification type; the visible
-  // Ja/Nein text is the state, never the name
   await expect(
     page.getByRole("checkbox", { name: "Browser: Neues Event" }),
   ).toBeChecked();
 
-  // The on-site channel is always on and cannot be turned off
   const onSiteCheckbox = page.getByRole("checkbox", {
     name: "On-site: Neues Event",
   });
@@ -100,7 +90,6 @@ test("toggling a browser notification off and on again is a round trip", async (
   await page.goto(NOTIFICATIONS_PAGE);
   await waitForAppShellHydration(page);
 
-  // Disabling persists a "disabled" row …
   await expect(browserCheckbox(page, "event_created")).toBeChecked();
   await browserCheckboxLabel(page, "event_created").click();
   await expect(browserCheckbox(page, "event_created")).not.toBeChecked();
@@ -123,7 +112,6 @@ test("toggling a browser notification off and on again is a round trip", async (
     )
     .not.toBeNull();
 
-  // … and re-enabling deletes it again, back to the default
   await browserCheckboxLabel(page, "event_created").click();
   await expect(browserCheckbox(page, "event_created")).toBeChecked();
 
@@ -237,7 +225,6 @@ test("a browser is removed from the list of the browsers with notifications", as
     },
     select: { id: true },
   });
-  // A subscription from the time before the user agent was stored
   const remainingEndpoint = "https://push.example.com/push-aufraeumer-2";
   await prisma.webPushSubscription.create({
     data: {

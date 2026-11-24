@@ -84,7 +84,6 @@ test("an admin without a known two-factor authentication stops at the gate and g
 
   await page.goto("/app/dashboard");
 
-  // The session ignores the assume and stays the one of the admin
   await expect(page).toHaveURL("/two-factor-authentication");
   await expect(
     page.getByText("Wir kennen den Status der Zwei-Faktor-Authentifizierung"),

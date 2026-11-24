@@ -29,10 +29,8 @@ enum PickMethod {
 }
 
 interface DialogEntry {
-  /** Title of the palette entry */
   readonly title: string;
   readonly dialogName: RegExp;
-  /** The element of the dialog that must have the focus */
   readonly focusTarget: (dialog: Locator) => Locator;
 }
 
@@ -58,7 +56,6 @@ const DIALOG_ENTRIES: readonly DialogEntry[] = [
   },
 ];
 
-/** Opens the palette, types the filter and returns the palette */
 const openFilteredPalette = async (
   page: Page,
   palette: Palette,
@@ -66,7 +63,6 @@ const openFilteredPalette = async (
 ) => {
   switch (palette) {
     case Palette.Slash:
-      // The palette opens only when "/" follows a space or a block start
       await focusEditor(page);
       await page.keyboard.type(`/${filter}`);
       return page.getByRole("dialog", { name: "Vorschläge" });
@@ -96,7 +92,6 @@ const openFilteredPalette = async (
 const pickEntry = async (page: Page, entry: Locator, method: PickMethod) => {
   switch (method) {
     case PickMethod.Keyboard:
-      // The palette highlights its first entry
       await page.keyboard.press("Enter");
       break;
 

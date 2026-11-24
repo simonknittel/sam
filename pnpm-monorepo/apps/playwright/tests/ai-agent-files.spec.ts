@@ -7,10 +7,8 @@ const sha256 = (bytes: Buffer) =>
   createHash("sha256").update(bytes).digest("hex");
 
 /**
- * The app takes the URLs in the files from NEXT_PUBLIC_BASE_URL, which the
- * build inlines. The workers of the stack listen on other ports. Thus the
- * tests make sure that a URL has the origin of the issuer, and request its
- * path from the worker.
+ * The URLs in the files come from NEXT_PUBLIC_BASE_URL (see setup/stack.ts).
+ * Thus the test requests only the path of a URL from the worker.
  */
 const getFromIssuer = async (
   request: APIRequestContext,

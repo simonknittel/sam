@@ -4,19 +4,17 @@ import { themeRoot } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 /**
- * A day next to a theme range, together with the event it belongs to.
- * Halloween stands alone in October, while New Year follows Christmas
- * without a gap: the day after the Christmas range already carries the New
- * Year theme, and the day before the New Year range still carries Christmas.
+ * New Year follows Christmas without a gap: the day after the Christmas range
+ * already carries the New Year theme, and the day before the New Year range
+ * still carries Christmas.
  */
 interface NeighbouringDay {
   readonly date: string;
-  /** The event of that day, or nothing while no theme is active */
+  /** Null while no theme is active */
   readonly event: string | null;
 }
 
 interface SeasonalEventCase {
-  /** Value of `data-seasonal-event` on the theme root */
   readonly event: string;
   /** A day of the theme range which is not a greeting day */
   readonly insideDate: string;
@@ -49,7 +47,6 @@ const SEASONAL_EVENTS: readonly SeasonalEventCase[] = [
   },
 ];
 
-/** A page of a sub-app */
 const THEMED_PAGE = "/app/account/profile";
 const THEMED_PAGE_TITLE = "Account";
 
@@ -130,7 +127,6 @@ test("the login page wears the theme of the day", async ({
     await setSeasonalDate(seasonalEvent.insideDate);
     await page.goto("/");
 
-    // The login page has no viewer and thus no opt-out; it is always themed
     await expect(themeRoot(page)).toHaveAttribute(
       "data-seasonal-event",
       seasonalEvent.event,
@@ -144,7 +140,6 @@ test("the login page wears the theme of the day", async ({
  */
 const UNUSABLE_DATES = ["not-a-date", "2026-02-30"];
 
-/** The event of the theme root of the page, or nothing without a theme */
 const readSeasonalEvent = async (page: Page) => {
   const root = themeRoot(page);
   if ((await root.count()) === 0) return null;
@@ -164,9 +159,8 @@ test("a date override which names no day behaves like no override", async ({
   const dashboardHeading = page.getByRole("heading", { name: "Spynet" });
 
   /**
-   * The real date of the run decides the baseline, and that date may well
-   * lie inside a theme range. The other tests of this file prove that the
-   * override works; this one proves that an unusable value is no override.
+   * The real date of the run decides the baseline, and that date may well lie
+   * inside a theme range.
    */
   await page.goto("/app/dashboard");
   await expect(dashboardHeading).toBeVisible();

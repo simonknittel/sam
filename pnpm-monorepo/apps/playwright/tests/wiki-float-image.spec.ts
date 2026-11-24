@@ -22,7 +22,6 @@ const FLOW_TEXT =
   "Float ausrichtet. So bleibt die Umflussgeometrie auch dann stimmig, " +
   "wenn der Absatz eine eigene Breite und Position hat.";
 
-/** A paragraph narrower than the content column, so it sits centered */
 const narrowParagraph = () => ({
   type: "paragraph",
   attrs: { widthPx: 480 },
@@ -86,7 +85,6 @@ test("the image menu floats a block image into the neighboring paragraph", async
     '"wikiFloatImage"',
   );
 
-  // The static read view renders the same float
   await page.reload();
   await expect(
     page.locator("[data-wiki-static-content] p a[data-wiki-float-image]"),
@@ -129,12 +127,10 @@ test("a floated image switches sides and unfloats back into a block image", asyn
   await expect(floatedImage).toHaveAttribute("data-float-side", "right");
   await expect(floatedImage).toHaveCSS("float", "right");
 
-  // The popover stays on the block it just changed
   await page
     .getByRole("button", { name: "Nicht mehr vom Text umfließen" })
     .click();
 
-  // Back to a block image at the top level, before the paragraph
   await expect(floatedImage).toHaveCount(0);
   const blockImage = editorRoot.locator("> a[data-wiki-image]");
   await expect(blockImage).toBeVisible();

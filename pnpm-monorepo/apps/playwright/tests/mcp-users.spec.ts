@@ -20,7 +20,6 @@ const minutesAgo = (minutes: number) =>
 
 const BANNED_TEAMSPEAK_ID = "mcpTeamspeakKennung";
 
-/** Matches the users with these ids in this order, and no other user */
 const usersWithIds = (...users: readonly User[]) => ({
   users: users.map((user) => ({ id: user.id })),
 });
@@ -105,7 +104,6 @@ test.describe("the user tools of the MCP server", () => {
         query: banned.entity.discordId?.slice(0, 8),
       }),
     ).toMatchObject(usersWithIds(banned.user));
-    // Without teamspeak-id;read the search ignores the TeamSpeak IDs
     expect(
       await callForContent(client, "list_users", {
         query: BANNED_TEAMSPEAK_ID,
@@ -145,7 +143,6 @@ test.describe("the user tools of the MCP server", () => {
       }),
     ).toMatch(NOT_FOUND_RESULT);
 
-    // Each successful call wrote its read with the parsed arguments
     await expect
       .poll(() =>
         prisma.auditEvent.findMany({

@@ -44,7 +44,6 @@ test.describe("the statistics tools of the MCP server", () => {
       expect.arrayContaining(["get_statistic", "list_statistics"]),
     );
 
-    // Only the two ship and role statistics take ids
     expect(
       await callForError(client, "get_statistic", {
         key: "logins",

@@ -23,7 +23,6 @@ const tileInput = (page: Page) =>
 /** The popup of the tile is in a portal, thus the hits are not in the tile */
 const tileHits = (page: Page) => page.getByRole("listbox").getByRole("option");
 
-/** Each hit shows the internal ID of its citizen or organization */
 const hitOf = (scope: Page | Locator, id: string) =>
   scope.getByRole("option").filter({ hasText: `Internal ID: ${id}` });
 
@@ -133,7 +132,6 @@ test("the arrow keys and Enter open an organization from the tile", async ({
   await signIn(viewer.user);
   await searchInTile(page, "sirius", hitOf(page, organization.id));
 
-  /** The exact handle ranks above the prefix of the name */
   await expect(tileHits(page)).toHaveCount(2);
   await expect(tileHits(page).first()).toContainText(citizen.entity.id);
 
@@ -144,7 +142,6 @@ test("the arrow keys and Enter open an organization from the tile", async ({
   );
   await page.keyboard.press("Enter");
 
-  /** The Algolia tile opened the citizen page with the organization ID */
   await expect(
     page.getByRole("heading", { name: "Sirius Kartell" }),
   ).toBeVisible();
@@ -201,7 +198,6 @@ test("the search finds the latest confirmed handle without an index sync", async
 test.describe("permissions", () => {
   const MATCHING_QUERY = "merkur";
 
-  /** A citizen and an organization which both match the same query */
   const createMatchingCitizenAndOrganization = async (
     prisma: PrismaClient,
     creator: TestCitizen,
@@ -234,8 +230,8 @@ test.describe("permissions", () => {
     await expect(tileHits(page)).toHaveCount(1);
 
     /**
-     * This makes sure that the request gets to the procedure. The test for a
-     * viewer with neither permission sends the same request.
+     * The request gets to the procedure. The test for a viewer with neither
+     * permission sends the same request.
      */
     const response = await requestSearch(page, MATCHING_QUERY);
     expect(response.status()).toBe(200);
@@ -321,7 +317,6 @@ test("the Cmd+K search opens a citizen", async ({ page, prisma, signIn }) => {
 
   await signIn(viewer.user);
   await page.goto("/app/dashboard");
-  /** The shortcut listener is only available after the hydration */
   await waitForAppShellHydration(page);
 
   const dialog = page.getByRole("dialog", { name: "Navigation" });

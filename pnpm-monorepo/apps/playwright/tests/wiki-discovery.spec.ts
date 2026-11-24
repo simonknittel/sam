@@ -68,7 +68,6 @@ test("search finds readable pages and never the others", async ({
   await results.getByRole("option", { name: /Bergbau/ }).click();
   await expect(page).toHaveURL(`/app/wiki/${openPage.id}/${openPage.slug}`);
 
-  // The role member finds the restricted page too …
   await page.goto("/app/wiki");
   await searchUntilReaction(
     page,
@@ -76,7 +75,6 @@ test("search finds readable pages and never the others", async ({
     results.getByRole("option", { name: /Vorstandsprotokoll/ }),
   );
 
-  // … while everyone else gets nothing, not even a hint that it exists
   await switchUser(outsider.user);
   await page.goto("/app/wiki");
   await searchUntilReaction(
@@ -164,7 +162,6 @@ test("the sidebar tree scrolls to the opened page, also to a page that a sidebar
   const treeLink = page.getByRole("link", { name: "Protokoll 2" });
   await expect(treeLink).toHaveAttribute("aria-current", "page");
   await expect(treeLink).toBeInViewport();
-  // Only the path to the opened page leaves the hidden subtree
   await expect(page.getByRole("link", { name: "Protokoll 1" })).toHaveCount(0);
 });
 
@@ -242,10 +239,8 @@ test("the keyboard opens search results, and Escape closes them", async ({
     .getByRole("group", { name: "Seiten" })
     .getByRole("option", { name: /Handelsrouten/ });
 
-  // The first result is highlighted without an arrow key
   await page.goto(`/app/wiki/${wikiPage.id}/${wikiPage.slug}`);
   await fillUntilVisible(search, "Wirtschaft", pageResult);
-  // The input keeps its name while the results are open
   await expect(search).toHaveAttribute("aria-expanded", "true");
   await expect(tagResult).toHaveAttribute("data-highlighted");
   await page.keyboard.press("Enter");
@@ -292,7 +287,6 @@ test("the search shows no results of an older query while the new results load",
   await page.keyboard.press("Escape");
   await expect(results).toBeHidden();
 
-  /** The test holds the response of the next search until it releases it */
   let isRequested = false;
   const response = Promise.withResolvers<void>();
   await page.route(
@@ -306,10 +300,7 @@ test("the search shows no results of an older query while the new results load",
     },
   );
 
-  /**
-   * Enter while the debounce runs and Enter while the new results load open
-   * nothing. Without a highlighted result, Enter closes the results.
-   */
+  /** Without a highlighted result, Enter closes the results. */
   const search = landingSearch(page);
   await search.fill("Handelsrouten");
   await page.keyboard.press("Enter");
@@ -321,7 +312,6 @@ test("the search shows no results of an older query while the new results load",
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL("/app/wiki");
 
-  // The new results open with the keyboard
   response.resolve();
   await search.click();
   await expect(tradeResult).toHaveAttribute("data-highlighted");
@@ -356,7 +346,6 @@ test("a tag name in other letter case uses the existing tag", async ({
     page.getByRole("button", { name: /Tags bearbeiten/ }),
     tagsDialog,
   );
-  /** The dialog suggests the tags that existed when it opened */
   await expect(
     tagsDialog.getByRole("button", { name: "Bergbau" }),
   ).toBeVisible();
@@ -378,7 +367,6 @@ test("a tag name in other letter case uses the existing tag", async ({
   await newTagButton.click();
   await tagsDialog.getByRole("button", { name: "Speichern" }).click();
 
-  /** The letter case of the existing tag wins */
   await expect(
     page.getByRole("link", { name: "Wirtschaft", exact: true }),
   ).toBeVisible();
@@ -432,17 +420,12 @@ test("the tags of a page that a different user deleted are not saved", async ({
   );
   await newTagButton.click();
 
-  /** A different user moves the page into the trash in the meantime */
   await prisma.wikiPage.update({
     where: { id: wikiPage.id },
     data: { deletedAt: new Date() },
   });
 
-  /**
-   * The error refreshes the page: it shows that the page is gone, without a
-   * navigation. The dialog goes away with the page, thus a toast shows the
-   * error.
-   */
+  /** The dialog goes away with the page, thus a toast shows the error. */
   await tagsDialog.getByRole("button", { name: "Speichern" }).click();
   await expect(page.getByText(RESOURCE_NOT_FOUND_TEXT)).toBeVisible();
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
@@ -477,7 +460,6 @@ test("featured pages show on the landing page, filtered by read access", async (
   ).toBeVisible();
   await expect(page.getByRole("link", { name: /Interna/ })).toHaveCount(0);
 
-  // The landing page's other lists are filtered the same way
   const recentlyUpdated = sectionByHeading(page, "Zuletzt aktualisiert");
   await expect(
     recentlyUpdated.getByRole("link", { name: /Einsteigerguide/ }),
@@ -512,7 +494,6 @@ test("recently visited counts opened pages, not prefetched ones", async ({
   await signIn(citizen.user);
 
   await page.goto(`/app/wiki/${openedPage.id}/${openedPage.slug}`);
-  // The visit is reported from the client after the page mounted
   await expect
     .poll(() =>
       prisma.wikiPageVisit.count({ where: { pageId: openedPage.id } }),

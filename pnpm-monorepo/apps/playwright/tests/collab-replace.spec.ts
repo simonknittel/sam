@@ -8,15 +8,9 @@ import { COLLAB_PERSISTENCE_TIMEOUT } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 import { collabJwtSecret } from "../setup/stack";
 
-/**
- * The internal replace endpoint authenticates with a short-lived HS256 JWT
- * (claims: scope/pageId/entityId) signed with the shared collab secret —
- * hand-rolled here so the test needs no jose dependency.
- */
+/** The token is hand-rolled, so that the test needs no jose dependency. */
 interface ReplaceTokenOptions {
-  /** Signs with a secret the server does not know */
   readonly secret?: string;
-  /** Seconds from now the token stops being valid */
   readonly expiresInSeconds?: number;
 }
 
@@ -40,7 +34,6 @@ const signReplaceToken = (
   return `${header}.${payload}.${signature}`;
 };
 
-/** The transplanted document every request below carries */
 const replaceBody = (citizenId: string) => ({
   content: {
     type: "doc",
@@ -60,13 +53,7 @@ const replaceBody = (citizenId: string) => ({
 
 const REQUEST_TIMEOUT = 15_000;
 
-/**
- * Runs in its own Playwright project (see playwright.config.ts) and
- * therefore in its own worker with a fresh stack: a websocket editing
- * session's teardown writes (final store, audit event) race the next test's
- * TRUNCATE and can deadlock the collab container, killing direct HTTP
- * requests — so this test must never share a stack with editor tests.
- */
+/** Runs in its own Playwright project, see playwright.config.ts. */
 test("a programmatic /replace creates suppressed links only", async ({
   collabHttpUrl,
   prisma,
@@ -79,9 +66,8 @@ test("a programmatic /replace creates suppressed links only", async ({
   });
 
   /**
-   * Node's fetch instead of Playwright's request fixture, whose client
-   * trips over Hocuspocus' plain-HTTP handling. The container is waited on
-   * with its /health route, so the endpoint is serving by now.
+   * Node's fetch, because the client of Playwright's request fixture trips over
+   * Hocuspocus' plain-HTTP handling.
    */
   const response = await fetch(`${collabHttpUrl}/replace`, {
     method: "POST",
@@ -116,10 +102,6 @@ test("a programmatic /replace creates suppressed links only", async ({
   expect(pendingCount).toBe(0);
 });
 
-/**
- * The endpoint replaces a page's whole content, so anything but a token this
- * server itself could have minted has to bounce off it.
- */
 const REJECTED_TOKENS = [
   {
     name: "a signature from a foreign secret",
