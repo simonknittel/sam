@@ -94,6 +94,8 @@ can have no effect.
 - After a change of a filter or of the sort order, wait for the new rows
   before you click a pagination control. Until the new render arrives, the
   control holds the cursor of the old render.
+- Escape in a Base UI combobox whose list is closed clears the selection.
+  After `pickFilterOption()`, press Escape only while the list is open.
 - The suite sets `reducedMotion: "reduce"`. A test of an animation must call
   `page.emulateMedia({ reducedMotion: "no-preference" })`.
 - The stack runs no Lambda functions and sends no EventBridge events. Test
@@ -105,11 +107,19 @@ can have no effect.
   worker most frequently loses a fill before hydration.
 - Do not trust a full run while the dev stack or a Docker build also runs,
   or while `pnpm install` runs in the same checkout.
-- Two tests fail from time to time. Run them again, and
-  do not search for the cause in your change: the keyboard tests of
-  `wiki-block-menu.spec.ts` (ProseMirror reads a selection change too slowly
-  in the collab editor) and the "replace mode" test of
-  `wiki-copy-paste.spec.ts` (cause unknown).
+- Some tests fail from time to time. Run them again, and do not search for
+  the cause in your change:
+  - The keyboard tests of `wiki-block-menu.spec.ts`: ProseMirror reads a
+    selection change too slowly in the collab editor.
+  - The "replace mode" test of `wiki-copy-paste.spec.ts`: cause unknown.
+  - The pagination test of `activity.spec.ts`: only in full runs.
+  - `notification-center.spec.ts`: `ERR_NETWORK_CHANGED`.
+  - The popover tests of `citizen-profile.spec.ts`: after a new build.
+  - Under load, a dialog or the bell popover of `waitForAppShellHydration()`
+    does not open in the reaction timeout (seen in
+    `seasonal-theme-settings.spec.ts`, `spynet-organizations.spec.ts`,
+    `wiki-permissions.spec.ts`, `discord-publishing.spec.ts`,
+    `event-lineup.spec.ts` and `event-applications.spec.ts`).
 - To reproduce a hydration problem, make the CPU slower in a temporary spec:
 
   ```ts
