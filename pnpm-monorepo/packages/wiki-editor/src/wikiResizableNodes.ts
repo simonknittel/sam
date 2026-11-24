@@ -43,7 +43,7 @@ export const WIKI_WIDE_WIDTH_PX = 1080;
 /**
  *`widthPx` value for explicitly full column width. A distinct marker
  * (not NULL) because Tiptap ignores NULL returned from an attribute's
- * parseHTML — the schema default (the wide preset) would win and pasted
+ * parseHTML — the schema default (a width preset) would win and pasted
  * full-width blocks would silently narrow.
  */
 export const WIKI_FULL_WIDTH = "full";

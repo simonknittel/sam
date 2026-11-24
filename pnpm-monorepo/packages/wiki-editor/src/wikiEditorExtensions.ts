@@ -199,9 +199,10 @@ const WikiDetails = withWikiBlockLayout(Details).extend({
 
 /**
  * The wiki's Tiptap extensions. Shared between the editor, the static
- * renderer for readers and the server-side content validation so all three
- * always agree on the schema. All options only affect editor behavior or
- * rendering — never the schema itself.
+ * renderer for readers, the Markdown renderer and parser, the collab server
+ * and the server-side content validation so all of them always agree on the
+ * schema. All options only affect editor behavior or rendering — never the
+ * schema itself.
  */
 export const getWikiEditorExtensions = (
   options?: WikiEditorExtensionsOptions,

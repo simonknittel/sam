@@ -36,8 +36,8 @@ import { env } from "./env.js";
  * JWTs per page and viewer, this server only verifies them and persists
  * documents. An open editor sends a new token before its token expires,
  * and the server closes a connection without a valid token. The editor
- * schema is shared with the app through @sam-monorepo/wiki-editor. Deployed
- * next to Soketi via the core-services repository.
+ * schema is shared with the app through @sam-monorepo/wiki-editor. The
+ * production deployment is in docs/releasing.md.
  */
 
 const replaceBodySchema = z.object({
@@ -363,10 +363,11 @@ const syncCitizenMentionLinks = async (
 
 /**
  * Internal "replace document content" command from the Next.js app
- * (snapshot restore, JSON import). Goes through a direct connection so a
- * live editing session converges on the new content; without one the
- * document is loaded, replaced and persisted the same way. Authenticated
- * with a short-lived JWT signed with the shared secret.
+ * (snapshot restore, JSON import, paste over a page, content of a new page).
+ * Goes through a direct connection so a live editing session converges on
+ * the new content; without one the document is loaded, replaced and
+ * persisted the same way. Authenticated with a short-lived JWT signed with
+ * the shared secret.
  */
 const handleReplaceRequest = async (
   request: IncomingMessage,
@@ -641,7 +642,7 @@ const server = new Server<ConnectionContext>({
 
     /**
      * Before overwriting, preserve the stored state as an automatic
-     * snapshot when the 30-minute cadence has passed. Never lets a failed
+     * snapshot when the 5-minute cadence has passed. Never lets a failed
      * snapshot block the store itself.
      */
     try {
@@ -729,8 +730,8 @@ const server = new Server<ConnectionContext>({
   async onDisconnect(data) {
     /**
      * One audit event per editing session, mirroring the app's
-     * AuditEventType.WIKI_PAGE_UPDATED (the enum lives in the app; the
-     * database column is a plain string). Internal connections (replace
+     * AuditEventType.WIKI_PAGE_UPDATED (the enum lives in the domain package;
+     * the database column is a plain string). Internal connections (replace
      * endpoint) skip this — the app writes its own, more specific event.
      */
     if (!data.context?.state?.didEdit || data.context.isInternal) return;

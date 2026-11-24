@@ -3,8 +3,8 @@ import { join } from "node:path";
 import { expect, test } from "vitest";
 
 /**
- * The Lambda functions, the collab server and the browser use this package
- * without Next.js and without React. Thus the package must not import them,
+ * The collab server and the browser use this package without Next.js and
+ * without React. Thus the package must not import them,
  * the modules of the app (`@/…`), `server-only` (a marker of Next.js) or a
  * host. The package is the lowest layer: it must not import any other
  * package of the monorepo, either.

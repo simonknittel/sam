@@ -20,7 +20,6 @@ export const TASK_MAX_REQUIRED_ROLES = 50;
 
 /**
  * Arbitrary (untested) cap of the assignees and of the completionists of one
- * task, to prevent a denial of service. The largest SILC booking of a task
- * depends on it (see `SILC_VALUE_MAXIMUM`).
+ * task, to prevent a denial of service
  */
 export const TASK_MAX_CITIZENS = 250;

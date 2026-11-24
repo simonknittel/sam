@@ -25,10 +25,9 @@ export type EventRecipientInput = Pick<Event, "visibility" | "createdById"> & {
  * creator or be a manager.
  *
  * No role-level gating is applied — the permission-string join cannot
- * express levels; the app's `resolveEventVisibility()` remains the
- * authoritative gate. A leveled role holder below their max level can
- * therefore be offered as a participant while the event page still 404s for
- * them.
+ * express levels, thus the fragment matches a superset. The
+ * `resolveEventVisibility()` of the application package remains the
+ * authoritative gate.
  */
 export const buildEventRecipientWhere = (
   event: EventRecipientInput,

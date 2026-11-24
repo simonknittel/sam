@@ -1,14 +1,16 @@
-/// Permission strings store values of this enum (see STATIC_PERMISSIONS in
-/// the app). A rename of a value needs a migration that also updates the
-/// rows of PermissionString, or the permission silently stops working.
+/// Permission strings store values of this enum (see PERMISSION_CATALOG in
+/// the domain package). A rename of a value needs a migration that also
+/// updates the rows of PermissionString, or the permission silently stops
+/// working.
 enum TaskRewardType {
   NEW_SILC
   TEXT
 }
 
-/// Permission strings store values of this enum (see STATIC_PERMISSIONS in
-/// the app). A rename of a value needs a migration that also updates the
-/// rows of PermissionString, or the permission silently stops working.
+/// Permission strings store values of this enum (see PERMISSION_CATALOG in
+/// the domain package). A rename of a value needs a migration that also
+/// updates the rows of PermissionString, or the permission silently stops
+/// working.
 enum TaskVisibility {
   PUBLIC
   PERSONALIZED
@@ -24,7 +26,7 @@ model Task {
   createdBy           Citizen?          @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
   /// NEW_SILC: the reward is new SILC. TEXT: a reward that is no SILC. A
   /// CHECK constraint makes sure that exactly the value column of the reward
-  /// type is set (see the migration transactional_money).
+  /// type is set (see the migration remove_task_reward_silc).
   rewardType          TaskRewardType
   /// The reward for each completionist of a NEW_SILC task
   rewardSilcValue     Int?

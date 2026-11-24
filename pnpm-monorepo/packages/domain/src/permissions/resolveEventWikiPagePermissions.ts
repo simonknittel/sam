@@ -21,7 +21,7 @@ export interface EventWikiPagePermissionSource {
 }
 
 export interface EventWikiViewer {
-  /** Has a Discord RSVP on the event */
+  /** Has an active participation (a Discord RSVP or an in-app sign-up) */
   readonly isParticipant: boolean;
   /** Organizer, event manager or `event;manage` — the fixed manage tier */
   readonly isEventManager: boolean;

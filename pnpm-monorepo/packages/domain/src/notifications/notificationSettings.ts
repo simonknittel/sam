@@ -2,8 +2,7 @@ import { NotificationChannel } from "@sam-monorepo/database/browser";
 
 /**
  * The notification types that a citizen can switch off for a channel. The
- * values are the `notificationType` of the settings rows. The order is the
- * order of the settings page.
+ * values are the `notificationType` of the settings rows.
  */
 export enum NotificationSettingType {
   EventCreated = "event_created",
@@ -51,7 +50,7 @@ export enum NotificationSettingType {
   ManualNotification = "manual_notification",
 }
 
-/** All notification types of the settings, in the order of the settings page */
+/** All notification types of the settings */
 export const NOTIFICATION_SETTING_TYPES: readonly NotificationSettingType[] =
   Object.values(NotificationSettingType);
 

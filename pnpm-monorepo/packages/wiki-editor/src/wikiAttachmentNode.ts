@@ -22,7 +22,7 @@ declare module "@tiptap/core" {
 /**
  * A non-image file attachment rendered as a downloadable card. The href
  * points at the app's permission-checked download route which redirects to
- * a short-lived presigned URL — the file itself is not public.
+ * a short-lived presigned URL.
  */
 export const WikiAttachment = Node.create({
   name: "wikiAttachment",

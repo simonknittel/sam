@@ -4,7 +4,7 @@ model Citizen {
   updatedAt                                    DateTime                             @updatedAt @db.Timestamptz(3)
   /// Soft delete: a deleted citizen is hidden from all lists, pickers,
   /// searches, statistics, notifications and payouts, and records that name
-  /// it show "Deleted citizen". Nothing is deleted and there is no restore.
+  /// it show "Gelöschter Citizen". Nothing is deleted and there is no restore.
   /// The delete also removes the link to the login (`userId`); a CHECK
   /// constraint refuses a deleted citizen with a login.
   deletedAt                                    DateTime?                            @db.Timestamptz(3)

@@ -26,7 +26,7 @@ import { runJobsInIsolation } from "./common/runJobsInIsolation";
 
 /**
  * The S3 parameters are optional: without them, the context has no storage
- * and `deleteUnusedUploads` skips the bucket.
+ * and `deleteUnusedUploads` skips itself.
  */
 const createStorage = () => {
   const {

@@ -1,9 +1,8 @@
 /**
- * Domain vocabulary and pure domain logic shared between the Next.js app
- * and the Lambdas. The package creates no database client and reads no
+ * Domain vocabulary and pure domain logic shared between the hosts and the
+ * other packages. The package creates no database client and reads no
  * environment: a function that reads or writes the database takes the
- * client or the transaction of its caller. Sharing these definitions
- * replaces the former copy-mirrored files in both apps.
+ * client or the transaction of its caller.
  */
 export * from "./apps/appKeys.js";
 export {

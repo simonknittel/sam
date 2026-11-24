@@ -27,8 +27,9 @@ model VariantShipCount {
 }
 
 /// The value of the ships of the members of the organization at the end of a
-/// day, for each acquisition source. A ship counts with the store price of its
-/// variant at the time of the measurement.
+/// day, for each acquisition source. A ship counts with the prices of its
+/// variant at the time of the measurement: the store price (USD) and the
+/// in-game price (aUEC).
 model DailyFleetValue {
   id                   String   @id @default(cuid())
   /// The calendar day (Europe/Berlin) that the values are for, see

@@ -42,8 +42,8 @@ export const encodeCursor = (entry: MergedCursorEntry) =>
   [entry.date.toISOString(), entry.sourceKey, entry.id].join(CURSOR_SEPARATOR);
 
 /**
- * Cursors come from the URL, so anything malformed resolves to "no position"
- * — the first page — instead of throwing.
+ * Cursors come from the URL or from an MCP client, so anything malformed
+ * resolves to "no position" — the first page — instead of throwing.
  */
 export const decodeCursor = (cursor?: string | null): CursorPosition | null => {
   if (!cursor) return null;

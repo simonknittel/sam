@@ -1,7 +1,7 @@
-/// WIKI is the global wiki app. EVENT pages belong to exactly one event
-/// (see WikiPage.eventId) and are fully isolated from the global wiki: they
-/// never appear in its sidebar, search, settings or link suggestions. A
-/// TASK namespace is expected to follow the same pattern later.
+/// WIKI is the global wiki app. EVENT pages belong to exactly one event or
+/// event template (see WikiPage.eventId) and are fully isolated from the
+/// global wiki: they never appear in its sidebar, search, settings or link
+/// suggestions. A TASK namespace is expected to follow the same pattern later.
 enum WikiPageNamespace {
   WIKI
   EVENT
@@ -10,15 +10,15 @@ enum WikiPageNamespace {
 /// Permission scopes for pages in the EVENT namespace, where the role-based
 /// tiers (visibility/editability/roleAccess) are unused. Read and edit are
 /// configured independently and edit never exceeds read; the uploadability
-/// tiers above apply to event pages too. Manage access is not configurable:
+/// tiers below apply to event pages too. Manage access is not configurable:
 /// the event's organizer, its managers and holders of `event;manage` always
 /// manage every page.
 /// MANAGERS grants only to that fixed manage set. PARTICIPANTS grants to the
-/// event's Discord participants. POSITION grants to citizens assigned to a
+/// event's active participants. POSITION grants to citizens assigned to a
 /// position inside the referenced lineup subtree; a dangling reference
-/// degrades to MANAGERS (fail closed). ALL grants to everyone with
-/// `event;read`. INHERIT takes the nearest ancestor's explicit scope and is
-/// not allowed on top-level pages.
+/// degrades to MANAGERS (fail closed). ALL grants to everyone who can see the
+/// event. INHERIT takes the nearest ancestor's explicit scope and is not
+/// allowed on top-level pages.
 enum WikiPageEventScope {
   INHERIT
   MANAGERS
@@ -103,7 +103,7 @@ model WikiPage {
   searchText String @default("")
   /// Space-joined names of the page's tags. Denormalized because the FTS
   /// GIN index is an expression index on this table and cannot span the tag
-  /// tables. Kept in sync by updateWikiPageTags.
+  /// tables. Kept in sync by setWikiPageTags and the page copies.
   tagsText   String @default("")
 
   /// PUBLIC only on a top-level page (CHECK constraint)
@@ -151,9 +151,9 @@ model WikiPage {
   /// tiers, implicit inclusion in RESTRICTED). NULL means the owner is
   /// inherited from the nearest ancestor with an explicit owner ("nearest
   /// setting wins", like visibility and editability); NULL at the root means
-  /// no owner (only `wiki;manage` retains access). An own owner does not cut
-  /// the ancestors' owners off — they keep managing the page either way — and
-  /// only holds their rights while they may read the page's parent.
+  /// no owner. An own owner does not cut the ancestors' owners off — they
+  /// keep managing the page either way — and only holds their rights while
+  /// they may read the page's parent.
   /// Top-level pages start with their creator as explicit owner, child pages
   /// start inheriting.
   /// Transferable by page admins, e.g. when the owner leaves the org or
@@ -388,9 +388,10 @@ model WikiPageCitizenMention {
   /// Set when the notification for this mention was sent.
   notifiedAt   DateTime? @db.Timestamptz(3)
   /// Set when the row was consumed without sending a notification:
-  /// programmatic /replace writes (snapshot restores, paste transplants,
-  /// briefing seeding), self-mentions, the backfill of pre-existing
-  /// mentions, and mentions failing the read-permission gate at send time.
+  /// programmatic /replace writes (snapshot restores, imports, paste
+  /// transplants), self-mentions, the backfill of pre-existing mentions, and
+  /// mentions that fail the read-permission gate or are on a trashed page at
+  /// send time.
   suppressedAt DateTime? @db.Timestamptz(3)
 
   @@unique([pageId, citizenId])

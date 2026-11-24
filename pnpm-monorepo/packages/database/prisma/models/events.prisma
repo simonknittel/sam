@@ -37,7 +37,7 @@ model Event {
   /// reverse direction of the sync. Deliberately NOT discordId: that column
   /// is the sync's upsert key, so reusing it would make the sync re-import
   /// the app's own event as a duplicate DISCORD row. The sync skips these
-  /// ids instead (see the scrape-discord-events Lambda).
+  /// ids instead (see `syncDiscordEvents()` of the application package).
   discordPublishedId   String?   @unique
   discordPublishedAt   DateTime? @db.Timestamptz(3)
   discordPublishedById String?
@@ -86,10 +86,10 @@ model Event {
   /// and applications and clears the lineup assignments and position
   /// applications.
   participationEnabled Boolean            @default(true)
-  /// Only for app events. While true, a citizen cannot sign up without an
-  /// invitation: the citizen sends an application (Teilnahmeanfrage), and
-  /// a manager approves or declines it. The switch to false approves the
-  /// open applications.
+  /// Only for app events. While true, a citizen who cannot manage the event
+  /// cannot sign up without an invitation: the citizen sends an application
+  /// (Teilnahmeanfrage), and a manager approves or declines it. The switch to
+  /// false approves the open applications.
   applicationRequired  Boolean            @default(false)
   invitations          EventInvitation[]
   applications         EventApplication[]
@@ -279,8 +279,9 @@ model EventActivity {
 
 /// A reusable blueprint for standalone app events. Holds everything an event
 /// creator would otherwise retype — title, description, cover, visibility
-/// prefill, lineup and briefing — and stays detached from the events created
-/// from it: nothing on an Event references its template.
+/// prefill, Discord target, participation switches, lineup and briefing — and
+/// stays detached from the events created from it: nothing on an Event
+/// references its template.
 ///
 /// Templates are personal by default and shared to roles via
 /// EventTemplateRoleAccess. `ownedById` is the live permission-bearing owner
@@ -338,8 +339,9 @@ model EventTemplate {
   updatedAt   DateTime  @updatedAt @db.Timestamptz(3)
   updatedById String?
   updatedBy   Citizen?  @relation("updatedEventTemplates", fields: [updatedById], references: [id], onDelete: SetNull)
-  /// The live owner. NULL only when the owning citizen was deleted, which
-  /// leaves the template manageable by `event;manage` holders alone.
+  /// The live owner. NULL only after a hard delete of the owning citizen,
+  /// which the app does not do. A template without an owner is manageable by
+  /// `event;manage` holders alone.
   ownedById   String?
   ownedBy     Citizen?  @relation("ownedEventTemplates", fields: [ownedById], references: [id], onDelete: SetNull)
   deletedAt   DateTime? @db.Timestamptz(3)

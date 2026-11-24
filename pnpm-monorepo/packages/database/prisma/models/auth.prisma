@@ -27,7 +27,7 @@ model Session {
   user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   /// Deliberately without a database default: sessions created before this
   /// column existed must stay NULL rather than claim the timestamp of the
-  /// migration. Set by the NextAuth adapter, the only writer.
+  /// migration. Set by `createSession()` of the app, the only writer.
   createdAt    DateTime? @db.Timestamptz(3)
   /// User agent of the browser the session was created from. NULL for
   /// sessions predating this column and for sign-ins without the header.

@@ -8,8 +8,8 @@ import {
 /**
  * Payload schemas for on-site notifications, shared between the
  * notification-router Lambda (writer) and the app (reader/renderer) so the
- * two sides cannot drift. Keyed by the user-facing notification type ids from
- * the app's `NotificationTypes.ts`.
+ * two sides cannot drift. Keyed by the values of `NotificationSettingType`,
+ * and `welcome`, which has no setting.
  *
  * Rows live forever, so payload shapes must stay parseable: never change a
  * schema in a breaking way — add a new version instead and bump the type's

@@ -40,7 +40,7 @@ interface FlatPosition {
  * Whether `inner`'s audience is contained in `outer`'s — the rule that
  * keeps a page's edit scope a subset of its read scope. The scopes order as
  * MANAGERS ⊆ POSITION ⊆ PARTICIPANTS ⊆ ALL (assigned citizens are event
- * participants: the scraper drops assignments when a participant leaves),
+ * participants: a cancelled participation drops the assignments),
  * and one POSITION is contained in another exactly when its position sits
  * in the other's subtree. Callers resolve INHERIT to the effective ancestor
  * scope first; a leftover INHERIT counts as MANAGERS (fail closed), and a

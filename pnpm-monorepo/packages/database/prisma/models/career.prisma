@@ -10,7 +10,7 @@ model Flow {
   /// Manual ordering in the career navigation and the management list.
   /// Deliberately not unique: a reorder renumbers all affected rows inside
   /// one transaction and would otherwise need placeholder values. Assigned
-  /// explicitly by the create, duplicate and reorder actions.
+  /// explicitly by the create, duplicate, restore and reorder actions.
   position Int        @default(0)
 
   /// Per-role access to this flow. A tier of UPDATE implies READ, so one

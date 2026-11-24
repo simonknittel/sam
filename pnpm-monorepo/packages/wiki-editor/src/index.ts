@@ -1,8 +1,9 @@
 /**
  * The wiki's Tiptap editor schema and content utilities, shared between the
- * Next.js app (editor, static rendering, server-side validation) and the
- * collab server (apps/collab, Yjs ⇄ ProseMirror conversion) so all
- * consumers always agree on the same schema.
+ * Next.js app (editor, static rendering), the application package
+ * (server-side validation, Markdown) and the collab server (apps/collab,
+ * Yjs ⇄ ProseMirror conversion) so all consumers always agree on the same
+ * schema.
  *
  * Importing this entry loads Tiptap, ProseMirror and lowlight. Client code
  * that only renders content imports `@sam-monorepo/wiki-editor/helpers`

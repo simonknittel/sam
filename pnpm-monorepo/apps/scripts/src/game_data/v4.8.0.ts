@@ -8,10 +8,10 @@ function parseArgs(): { version: string; channel: string; dataFolder: string } {
 
   if (!args[0] || !args[1] || !args[2]) {
     console.error(
-      "Usage: tsx index.ts <game-version> <channel> <data-folder-path>",
+      "Usage: tsx src/game_data/v4.8.0.ts <game-version> <channel> <data-folder-path>",
     );
     console.error(
-      "Example: tsx index.ts 4.8.0 LIVE /mnt/f/installed/Roberts\\ Space\\ Industries/StarCitizen/LIVE/Data",
+      "Example: tsx src/game_data/v4.8.0.ts 4.8.0 LIVE /mnt/f/installed/Roberts\\ Space\\ Industries/StarCitizen/LIVE/Data",
     );
     process.exit(1);
   }

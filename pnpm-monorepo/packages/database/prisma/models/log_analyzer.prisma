@@ -19,8 +19,9 @@ model LogAnalyzerEntry {
   /// The full log line the regex matched. Contains data of other players
   /// (nicknames, IP addresses), thus it must never be written to the logs.
   rawLine    String
-  /// Time of the event, parsed from `rawLine` by the upload action. Stored as
-  /// a column because the fetch query windows and sorts on it.
+  /// Time of the event, parsed from `rawLine` by the upload (or sent by the
+  /// client, for a type with `takesTimeOfPrecedingLine`). Stored as a column
+  /// because the fetch queries window and sort on it.
   eventAt    DateTime @db.Timestamptz(3)
   /// The number of the line in its log file. The first line has the number
   /// 1. It orders the lines of one instant, because the game can write two
@@ -33,8 +34,7 @@ model LogAnalyzerEntry {
   hash       String
   createdAt  DateTime @default(now()) @db.Timestamptz(3)
 
-  /// The uploading citizen. A deleted citizen leaves the entry in place
-  /// without an uploader.
+  /// The uploading citizen, also after a (soft) delete of the citizen
   createdById String?
   createdBy   Citizen? @relation("createdLogAnalyzerEntries", fields: [createdById], references: [id], onDelete: SetNull)
 

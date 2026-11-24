@@ -12,9 +12,10 @@ export const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 /**
  * The app's shared slug rules: German transliteration, lowercase, words
- * joined by single dashes, capped at `SLUG_MAX_LENGTH`. Returns an empty
- * string for input without a single mappable character — callers decide
- * whether that is a fallback case or something to reject.
+ * joined by single dashes, capped at `SLUG_MAX_LENGTH`. Input without a
+ * single mappable character gives a base64-derived slug (the fallback of the
+ * slug package). Returns an empty string only for empty input — callers
+ * decide whether that is a fallback case or something to reject.
  */
 export const slugify = (value: string) =>
   slug(value, { locale: "de" })

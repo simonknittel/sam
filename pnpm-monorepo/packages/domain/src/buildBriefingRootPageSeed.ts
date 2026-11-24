@@ -11,8 +11,9 @@ import {
  * and gate (events without one have no Briefing tab). Title and slug are
  * constants because the root page can never be renamed. MANAGERS scopes keep
  * the tab hidden until the organizer deliberately publishes it. The owner id
- * is passed in by the caller: the app uses the creating citizen, the sync
- * Lambda resolves the Discord creator (null if no citizen matches).
+ * is passed in by the caller: a new event or template uses the creating
+ * citizen, the Discord sync resolves the Discord creator (null if no citizen
+ * matches).
  */
 export const buildBriefingRootPageSeed = (ownerId: string | null) => ({
   namespace: WikiPageNamespace.EVENT,

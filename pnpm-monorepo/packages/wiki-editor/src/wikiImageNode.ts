@@ -179,7 +179,7 @@ export const renderWikiImageHTML = (
  * for the other nodes rendering as anchors.
  *
  * Unlike the other blocks the width defaults to NULL — natural image size
- * — because the wide-preset default would upscale small images.
+ * — because a width preset as the default would upscale small images.
  */
 export const WikiImage = Image.extend({
   addAttributes() {

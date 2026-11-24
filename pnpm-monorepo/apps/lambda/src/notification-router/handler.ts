@@ -278,9 +278,8 @@ export const bodySchema = z.discriminatedUnion("type", [
     payload: z.object({
       eventId: z.cuid(),
       /**
-       * The citizen who caused the notification gets none. Null when no
-       * citizen caused it, for example the Discord sync. An older app does
-       * not send it.
+       * The citizen who caused the notification gets none. Null when the
+       * actor has no citizen. An older app does not send it.
        */
       actorCitizenId: z.cuid().nullable().optional(),
     }),
@@ -425,14 +424,12 @@ export const bodySchema = z.discriminatedUnion("type", [
 
   z.object({
     type: z.literal("EventBriefingPublished"),
-    // The router reads the current read scope from the database, thus the
-    // schema drops a read scope in the payload
+    // The router reads the current read scope from the database
     payload: z.object({
       eventId: z.cuid(),
       /**
-       * The citizen who caused the notification gets none. Null when no
-       * citizen caused it, for example the Discord sync. An older app does
-       * not send it.
+       * The citizen who caused the notification gets none. Null when the
+       * actor has no citizen. An older app does not send it.
        */
       actorCitizenId: z.cuid().nullable().optional(),
     }),

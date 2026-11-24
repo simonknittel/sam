@@ -4,9 +4,9 @@ import type { ReadAuditEventType } from "./readAuditEventTypes.js";
 import type { ReadMarkerSubject } from "./readMarkers/ReadMarkerSubject.js";
 
 /**
- * The audit-event vocabulary of the system log, shared between the Next.js
- * app (which writes most events and renders the log) and the Lambdas (whose
- * automations write events too). The system log is immutable: event type
+ * The audit-event vocabulary of the system log, shared between the writers
+ * (most of them are the use cases of the application package) and the app,
+ * which renders the log. The system log is immutable: event type
  * definitions are only ever added — never modified — with newer payload
  * shapes introduced as V2/V3 types. The message rendering stays in the app.
  */
@@ -111,7 +111,8 @@ export enum AuditEventType {
   EVENT_LINEUP_STATUS_CHANGED = "EVENT_LINEUP_STATUS_CHANGED",
   /**
    * The participation switch of an app event. The switch to false cancels
-   * the sign-ups and clears the assignments and applications of the lineup.
+   * the sign-ups, withdraws the open invitations and applications (with their
+   * own events) and clears the assignments and applications of the lineup.
    */
   EVENT_PARTICIPATION_STATUS_CHANGED = "EVENT_PARTICIPATION_STATUS_CHANGED",
   /** A manager told the readers of the published briefing about a change */
@@ -362,7 +363,8 @@ type ReadAuditEventData = {
 /**
  * Wiki page audit payloads carry the owning event's id so event wiki rows
  * stay attributable after the event (and its pages) are cascade-deleted.
- * Absent for global wiki pages and on events from before the event wikis.
+ * Absent for the pages of the global wiki and of the event templates, and on
+ * events from before the event wikis.
  *
  * A type alias, not an interface: Prisma accepts a payload as a JSON value
  * only if its type has an implicit index signature, and an interface has none.

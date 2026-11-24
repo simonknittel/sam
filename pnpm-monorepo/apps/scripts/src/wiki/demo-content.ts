@@ -11,12 +11,13 @@ import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 
 /**
- * Generates the Tiptap JSON for a "live demo page" exercising every
- * formatting option and embed the wiki editor supports.
+ * Generates the Tiptap JSON for a "live demo page" exercising most
+ * formatting options and embeds the wiki editor supports (not the floated
+ * image, the ship link and the role members).
  * Import the output file via the wiki's JSON import (page menu, requires
  * `wiki;manage`) to author/refresh help pages — e.g. a
  * "Formatierungsoptionen" page that documents the editor for users and
- * doubles as a manual regression check: one page rendering every node type
+ * doubles as a manual regression check: one page rendering these node types
  * in both the editor and the static renderer.
  *
  * The document is validated against the shared editor schema before it is
@@ -209,9 +210,9 @@ const details = (summary: string, ...content: DemoNode[]): DemoNode => ({
 
 /**
  * Runs a human-facing URL through the same normalization the editor applies
- * on paste, so the stored src always matches what the render-time embed
- * validation expects — and the script fails loudly when the normalization
- * rules change.
+ * to an entered URL, so the stored src always matches what the render-time
+ * embed validation expects — and the script fails loudly when the
+ * normalization rules change.
  */
 const embed = (provider: string, url: string): DemoNode => {
   const normalized = normalizeWikiEmbedUrl(url);

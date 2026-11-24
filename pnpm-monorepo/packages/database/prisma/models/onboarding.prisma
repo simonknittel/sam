@@ -8,9 +8,9 @@ enum OnboardingTaskCompletionMethod {
 
 /// A completed onboarding task of a citizen. The existence of a row means the
 /// task is done; the absence of a row means the task is open. Task keys come
-/// from the static task config in the app and are not backed by a foreign
-/// key. Rows with keys that no longer resolve to a task are ignored when
-/// reading but kept, in case the task returns.
+/// from `OnboardingTaskKey` of the domain package and are not backed by a
+/// foreign key. Rows with keys that no longer resolve to a task are ignored
+/// when reading but kept, in case the task returns.
 model OnboardingTaskProgress {
   id               String                         @id @default(cuid(2))
   citizenId        String
@@ -26,8 +26,8 @@ model OnboardingTaskProgress {
 
 /// A completed step of an onboarding task. Step rows exist for the resume
 /// position and for per-step timestamps only; OnboardingTaskProgress is the
-/// single source of truth for "task done". Keys come from the static task
-/// config in the app (see OnboardingTaskProgress on unresolvable keys).
+/// single source of truth for "task done". Keys come from the task rules of
+/// the domain package (see OnboardingTaskProgress on unresolvable keys).
 /// Replays move completedAt forward; createdAt keeps the first completion.
 model OnboardingStepProgress {
   id          String   @id @default(cuid(2))
