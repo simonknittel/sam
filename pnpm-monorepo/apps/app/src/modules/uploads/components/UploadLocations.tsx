@@ -18,7 +18,8 @@ export const UploadLocations = ({ usages }: Props) => {
         </span>
 
         <span className="text-xs text-white/40">
-          Wird bei der nächtlichen Bereinigung gelöscht.
+          Wird frühestens 24 Stunden nach dem Hochladen bei der nächtlichen
+          Bereinigung gelöscht.
         </span>
       </div>
     );

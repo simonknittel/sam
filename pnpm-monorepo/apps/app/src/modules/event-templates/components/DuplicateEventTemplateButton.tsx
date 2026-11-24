@@ -83,7 +83,7 @@ const DuplicateEventTemplateForm = ({
       <input type="hidden" name="sourceTemplateId" value={templateId} />
 
       <p className="mb-4 text-sm text-neutral-400">
-        {`Die Kopie übernimmt Beschreibung, Titelbild, Sichtbarkeit, Aufstellung und Briefing von „${name}“, aber keine Freigaben. Sie gehört dir und ist damit zunächst nur für dich sichtbar.`}
+        {`Die Kopie übernimmt Beschreibung, Titelbild, Sichtbarkeit, Teilnahme- und Discord-Einstellungen, Aufstellung und Briefing von „${name}“, aber keine Freigaben. Sie gehört dir und ist damit zunächst nur für dich sichtbar.`}
       </p>
 
       <TextInput

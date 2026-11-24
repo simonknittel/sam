@@ -33,6 +33,7 @@ export default async function Page({
 
   return (
     <IframeLayout
+      title={app.name}
       src={await resolveEmbedUrl(
         app.defaultPage.iframeUrl,
         session,

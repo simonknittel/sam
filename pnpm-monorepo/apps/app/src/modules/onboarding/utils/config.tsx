@@ -129,7 +129,8 @@ const ONBOARDING_STEP_CONTENT: Record<
         <p className="mt-2">
           Auf der Übersichtsseite eines Events findest du „Meine Teilnahme“. Bei
           SAM-Events meldest du dich direkt dort über „Anmelden“ mit einem
-          optionalen Kommentar an.
+          optionalen Kommentar an. Bei manchen SAM-Events schickst du
+          stattdessen über „Teilnahme anfragen“ eine Anfrage.
         </p>
 
         <OnboardingStepScreenshot
@@ -204,7 +205,7 @@ const ONBOARDING_STEP_CONTENT: Record<
 
         <p className="mt-2">
           Welche Schiffe du besitzt, sehen nur ausgewählte Rollen. Alle anderen
-          sehen nur, wie viele Schiffe eines Modells es in der Org gibt.
+          sehen höchstens, wie viele Schiffe eines Modells es in der Org gibt.
         </p>
       </>
     ),

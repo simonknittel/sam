@@ -40,6 +40,7 @@ export default async function Page({
   return (
     <IframeLayout
       src={document.href}
+      title={document.name}
       iframeProps={{
         sandbox: "allow-scripts allow-same-origin allow-forms allow-downloads",
       }}

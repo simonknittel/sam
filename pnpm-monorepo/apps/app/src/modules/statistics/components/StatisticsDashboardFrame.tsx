@@ -125,8 +125,8 @@ export const StatisticsDashboardFrame = ({
     <div className="relative isolate">
       <IframeLayout
         src={shownFrame.src}
+        title="Statistiken"
         iframeProps={{
-          title: "Statistiken",
           inert: isExpired,
           sandbox: SANDBOX,
         }}

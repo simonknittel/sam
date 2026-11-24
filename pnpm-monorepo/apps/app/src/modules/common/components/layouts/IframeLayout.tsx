@@ -6,10 +6,11 @@ import type { ComponentProps } from "react";
 
 interface Props {
   readonly src: string;
-  readonly iframeProps?: ComponentProps<"iframe">;
+  readonly title: string;
+  readonly iframeProps?: Omit<ComponentProps<"iframe">, "src" | "title">;
 }
 
-export const IframeLayout = ({ src, iframeProps }: Props) => {
+export const IframeLayout = ({ src, title, iframeProps }: Props) => {
   /**
    * On a full page load, the page streams in after the shell (the Suspense
    * boundary of `app/loading.tsx`). React then moves the streamed content
@@ -29,7 +30,7 @@ export const IframeLayout = ({ src, iframeProps }: Props) => {
         <iframe
           src={src}
           className="relative z-10 block size-full scheme-normal"
-          title="Formular für eine SILO-Anfrage"
+          title={title}
           {...iframeProps}
         />
       )}
