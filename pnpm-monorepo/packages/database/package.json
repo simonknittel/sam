@@ -13,7 +13,7 @@
   "scripts": {
     "postinstall": "prisma generate && tsc",
     "build": "prisma generate && tsc",
-    "migrate:dev": "prisma migrate dev && tsc",
+    "migrate:dev": "prisma migrate dev && prisma generate && tsc",
     "format": "prisma format"
   },
   "dependencies": {
