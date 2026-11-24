@@ -28,7 +28,8 @@ export const cursorSchema = z
 /**
  * The id of a row: `cuid()` (25 characters) or `cuid(2)` (at most 32
  * characters). Both have only lowercase letters and digits, thus one pattern
- * accepts both.
+ * accepts both. Rows that a migration made with `gen_random_uuid()` have a
+ * UUID, which this pattern refuses (see `flowIdSchema`).
  */
 export const idSchema = z
   .string()
