@@ -23,7 +23,6 @@ beforeEach(async () => {
   await truncateAllTables();
 });
 
-/** A flow, a role with the access tier on it, and an actor with the role */
 const createFlowWithAccess = async (
   type: FlowRoleAccessType,
   { flowId }: { readonly flowId?: string } = {},

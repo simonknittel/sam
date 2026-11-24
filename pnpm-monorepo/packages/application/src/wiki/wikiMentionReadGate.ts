@@ -11,7 +11,6 @@ import { loadEffectivePermissionsOfCitizens } from "../auth/effectivePermissions
 import type { ApplicationContext } from "../context.js";
 import { resolveEventVisibility } from "../events/eventVisibility.js";
 
-/** The fields of a pending mention that the gate and the job read */
 export const PENDING_WIKI_MENTION_SELECT = {
   id: true,
   pageId: true,
@@ -172,7 +171,6 @@ export const createWikiMentionReadGate = async (
   const eventHasEnded = (event: MentionEvent) =>
     getEventEndTime(event) <= context.now();
 
-  /** One resolver per citizen covers every page of the WIKI namespace */
   const wikiResolvers = new Map<
     string,
     ReturnType<typeof createWikiPagePermissionResolver>

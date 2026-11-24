@@ -13,7 +13,6 @@ export const listCitizenShipsInputSchema = z.object({
   ...ownerShipsInputShape,
 });
 
-/** The ships of a citizen, for the fleet page of the citizen */
 export const listCitizenShips = async (
   context: ApplicationContext,
   actor: Actor,

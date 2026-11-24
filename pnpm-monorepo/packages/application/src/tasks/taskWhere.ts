@@ -2,11 +2,6 @@ import { TaskVisibility } from "@sam-monorepo/database/browser";
 import type { Prisma } from "@sam-monorepo/database/client";
 import { requireCitizen, type Actor } from "../actor.js";
 
-/**
- * Tasks which are open at `now`: not cancelled, deleted, completed or
- * expired. The visibility is a separate fragment (see
- * `getVisibleTasksWhere`).
- */
 export const getOpenTasksWhere = (now: Date): Prisma.TaskWhereInput => ({
   cancelledAt: null,
   deletedAt: null,

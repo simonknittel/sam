@@ -26,14 +26,8 @@ export interface UpdateWikiPageSidebarModeOutput {
 }
 
 /**
- * Changes how a page shows in the sidebar tree (see WikiPageSidebarMode).
  * Only cosmetic, never a permission, but it changes the navigation of all
- * users, thus it takes the management of the page like a move or a rename.
- *
- * @throws NotFoundError when the page does not exist for the actor
- * @throws ForbiddenError when the actor does not manage the page
- * @throws ConflictError when the event of the briefing is over
- * @throws ValidationError for the root page of a briefing
+ * users, thus it takes the management of the page like a move or a rename
  */
 export const updateWikiPageSidebarMode = (
   context: ApplicationContext,

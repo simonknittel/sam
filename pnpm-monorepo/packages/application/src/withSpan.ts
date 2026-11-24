@@ -1,10 +1,6 @@
 import { SpanStatusCode, type Span } from "@opentelemetry/api";
 import type { ApplicationContext } from "./context.js";
 
-/**
- * Runs the callback in an active span. A thrown error sets the error status
- * of the span and goes to the caller.
- */
 export const withSpan = <Result>(
   context: Pick<ApplicationContext, "tracer">,
   name: string,

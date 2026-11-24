@@ -14,18 +14,11 @@ export const deleteRoleInputSchema = z.object({
 
 export type DeleteRoleInput = z.infer<typeof deleteRoleInputSchema>;
 
-/** The role before the delete */
 export interface DeleteRoleOutput {
   readonly id: string;
   readonly name: string;
 }
 
-/**
- * Deletes a role, and the permission strings of the other roles that refer
- * to it. Requires `role;manage`.
- *
- * @throws NotFoundError when the role does not exist
- */
 export const deleteRole = (
   context: ApplicationContext,
   actor: Actor,

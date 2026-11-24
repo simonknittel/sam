@@ -1,4 +1,3 @@
-/** The use cases of the MCP settings of a user: the connected clients and their tools */
 export { listOwnGrants, type OwnGrant } from "./listOwnGrants.js";
 export { mcpToolNameSchema } from "./mcpToolNameSchema.js";
 export {

@@ -33,7 +33,6 @@ import {
  * each use case checks the container first.
  */
 
-/** What the use cases read of a position before they change or copy it */
 export const LINEUP_POSITION_SELECT = {
   id: true,
   name: true,
@@ -47,12 +46,6 @@ export const LINEUP_POSITION_SELECT = {
   textColor: true,
 } as const satisfies Prisma.EventPositionSelect;
 
-/**
- * A position of a lineup with its container. Carries no permission check:
- * the caller checks the container.
- *
- * @throws NotFoundError when the position does not exist
- */
 export const findLineupPosition = async (
   context: ApplicationContext,
   positionId: string,
@@ -69,11 +62,7 @@ export const findLineupPosition = async (
   return { position, container };
 };
 
-/**
- * The database permits each variant one time for each position, thus the
- * repeated variants are removed. A variant that does not exist is an error
- * of the input.
- */
+/** The database permits each variant one time for each position */
 const requireVariants = async (
   context: ApplicationContext,
   variantIds: readonly string[],
@@ -93,10 +82,6 @@ const requireVariants = async (
 const toRequiredVariantRows = (variantIds: readonly string[]) =>
   variantIds.map((variantId, index) => ({ variantId, order: index }));
 
-/**
- * The actor can require only the roles of the role picker: the roles that
- * exist and that the actor can see
- */
 const requireNewRequiredRoles = async (
   context: ApplicationContext,
   actor: Actor,
@@ -270,14 +255,9 @@ export interface UpdatedLineupPosition {
   readonly newTextColor: string | null;
 }
 
-/** A field of the change that is not given keeps the current value */
 const changedValue = <Value>(change: Value | undefined, current: Value) =>
   change === undefined ? current : change;
 
-/**
- * @throws NotFoundError when a different request deleted the position after
- * the guard read it
- */
 export const writeLineupPositionChange = async (
   context: ApplicationContext,
   actor: Actor,
@@ -357,12 +337,7 @@ export const writeLineupPositionChange = async (
   };
 };
 
-/**
- * Deletes the position. Its children go with it (a cascade of the database).
- *
- * @throws NotFoundError when a different request deleted the position after
- * the guard read it
- */
+/** Its children go with it (a cascade of the database) */
 export const removeLineupPosition = async (
   context: ApplicationContext,
   positionId: string,

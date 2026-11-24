@@ -42,13 +42,6 @@ export interface CreateSilcTransactionOutput {
   readonly transaction_ids: string[];
 }
 
-/**
- * Books one SILC transaction for each receiver and notifies the receivers.
- * Requires `silcTransactionOfOtherCitizen;create` and a citizen, who becomes
- * the creator of the transactions.
- *
- * @throws ConflictError when a receiver does not exist or is deleted
- */
 export const createSilcTransaction = (
   context: ApplicationContext,
   actor: Actor,

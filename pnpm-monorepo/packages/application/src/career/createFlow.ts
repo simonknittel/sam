@@ -19,7 +19,6 @@ export const createFlowInputSchema = z.object({
 
 export type CreateFlowInput = z.infer<typeof createFlowInputSchema>;
 
-/** A flow after a write */
 export interface FlowOutput {
   readonly id: string;
   readonly name: string;
@@ -32,12 +31,7 @@ export const FLOW_OUTPUT_SELECT = {
   slug: true,
 } as const satisfies Prisma.FlowSelect;
 
-/**
- * Creates an empty flow at the end of the list. Only the managers can read
- * it, until a manager gives roles access. Requires `career;manage`.
- *
- * @throws ValidationError when the flow cannot use the slug
- */
+/** Only the managers can read the flow, until a manager gives roles access */
 export const createFlow = (
   context: ApplicationContext,
   actor: Actor,

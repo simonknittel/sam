@@ -38,21 +38,10 @@ export interface UpdateWikiPagePositionOutput {
 }
 
 /**
- * Puts the page at a new place in the sidebar tree: before or after the
- * reference page (with the parent of the reference page), or as the first
- * child of the reference page. The siblings below the parent get new
- * consecutive sort orders, thus pages with the same sort order (for example
- * after a move) get different ones. A new order below the same parent writes
- * no audit event (a cosmetic change). A new parent writes the audit events of
- * `moveWikiPage()`.
- *
- * @throws NotFoundError when the page does not exist for the actor
- * @throws ForbiddenError when the actor does not manage the page or the new
- * parent, or cannot create a page at the top level
- * @throws ConflictError when the event of the briefing is over, or when a
- * different user or tab changed the tree before
- * @throws ValidationError for the root page of a briefing, for the page
- * itself as the reference and for the top level of a briefing
+ * The siblings below the parent get new consecutive sort orders, thus pages
+ * with the same sort order get different ones. A new order below the same
+ * parent writes no audit event (a cosmetic change). A new parent writes the
+ * audit events of `moveWikiPage()`.
  */
 export const updateWikiPagePosition = (
   context: ApplicationContext,

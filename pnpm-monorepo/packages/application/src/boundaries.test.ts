@@ -16,10 +16,7 @@ const FORBIDDEN_IMPORT =
 const IMPORT_SPECIFIER =
   /(?:\bfrom\s*|\bimport\s*\(?\s*|\brequire\s*\(\s*)["']([^"']+)["']/g;
 
-/**
- * The packages of the monorepo that the `package.json` of this package may
- * list. They are the dependency directions of `docs/architecture.md`.
- */
+/** The dependency directions of `docs/architecture.md` */
 const ALLOWED_PACKAGES = [
   "@sam-monorepo/database",
   "@sam-monorepo/domain",

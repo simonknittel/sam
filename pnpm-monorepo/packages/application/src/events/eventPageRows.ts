@@ -13,18 +13,12 @@ import { buildVisibleEventsWhere, toEventViewer } from "./eventVisibility.js";
 import { requireVisibleEvent } from "./findVisibleEvent.js";
 import { buildParticipantCitizenWhere } from "./participantCitizenWhere.js";
 
-/** An event as the event picker lists, searches and submits it */
 export interface EventOption {
   readonly id: string;
   readonly name: string;
   readonly startTime: Date;
 }
 
-/**
- * All events that the actor can see, by name, for the event picker
- *
- * @throws ForbiddenError without `event;read`
- */
 export const findEventOptions = (
   context: ApplicationContext,
   actor: Actor,
@@ -38,7 +32,6 @@ export const findEventOptions = (
   });
 };
 
-/** The active participations of an event page */
 const ACTIVE_PARTICIPANTS_SELECT = {
   participants: EVENT_PAGE_RELATIONS_SELECT.participants,
 } as const satisfies Prisma.EventSelect;
@@ -47,26 +40,17 @@ export type EventParticipantRow = Prisma.EventParticipantGetPayload<{
   select: (typeof EVENT_PAGE_RELATIONS_SELECT)["participants"]["select"];
 }>;
 
-/** A participating citizen as the participants page and its tiles show it */
 export interface ResolvedEventParticipantCitizen extends CitizenReferenceRow {
   readonly discordId: string | null;
   readonly roleAssignments: Pick<RoleAssignment, "roleId" | "currentLevel">[];
 }
 
 export interface ResolvedEventParticipant {
-  /** The active participation of the citizen */
   readonly participant: EventParticipantRow | undefined;
   readonly citizen: ResolvedEventParticipantCitizen;
 }
 
-/**
- * Resolves the citizens behind the active participations of an event that
- * the actor can see, see `buildParticipantCitizenWhere()`. A sign-up of a
- * deleted citizen stays in the list.
- *
- * @throws ForbiddenError without `event;read`, NotFoundError when the actor
- * cannot see the event
- */
+/** A sign-up of a deleted citizen stays in the list */
 export const findResolvedEventParticipants = async (
   context: ApplicationContext,
   actor: Actor,
@@ -109,13 +93,6 @@ export interface EventFleetEntry {
   readonly count: number;
 }
 
-/**
- * The flight-ready ships of the participants of an event that the actor can
- * see, counted per variant
- *
- * @throws ForbiddenError without `event;read`, NotFoundError when the actor
- * cannot see the event
- */
 export const findEventFleet = async (
   context: ApplicationContext,
   actor: Actor,

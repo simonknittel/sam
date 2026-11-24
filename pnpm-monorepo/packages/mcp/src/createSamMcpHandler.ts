@@ -9,23 +9,20 @@ import { getInstructions } from "./instructions.js";
 import { registerTools } from "./registry.js";
 import { registerSkills, SKILLS_EXTENSION_ID } from "./skillRegistry.js";
 
-/** The `name` of `serverInfo` */
 export const SERVER_NAME = "sam";
 
 const SERVER_TITLE = "SAM";
 
 /**
- * The principal of a request. The host authenticates the request and gives
- * the principal to `handler.fetch()` in `authInfo.extra`.
+ * The host authenticates the request and gives the principal to
+ * `handler.fetch()` in `authInfo.extra`
  */
 export interface McpPrincipalExtra {
   readonly context: ApplicationContext;
   readonly actor: Actor;
-  /** The tools that the user disabled for the client of the request */
   readonly disabledToolNames: readonly string[];
 }
 
-/** Gives the value of `authInfo.extra` for `handler.fetch()` */
 export const toAuthInfoExtra = (
   principal: McpPrincipalExtra,
 ): Record<string, unknown> => ({ ...principal });
@@ -41,7 +38,6 @@ const principalExtraSchema = z.object({
 });
 
 export interface CreateSamMcpHandlerOptions {
-  /** The release of the app, for `serverInfo` */
   readonly serverVersion: string;
   /**
    * Gets the errors that do not go to the client and the rejected requests,
@@ -51,9 +47,8 @@ export interface CreateSamMcpHandlerOptions {
 }
 
 /**
- * Creates the handler of the MCP endpoint. Create it one time and give each
- * authenticated request to `handler.fetch(request, { authInfo })`. Each
- * request gets a new server with the tools of its principal.
+ * Create it one time. Each request gets a new server with the tools of its
+ * principal.
  */
 export const createSamMcpHandler = ({
   serverVersion,

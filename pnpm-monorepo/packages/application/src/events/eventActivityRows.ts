@@ -14,13 +14,11 @@ import {
 import type { ApplicationContext } from "../context.js";
 import { requireVisibleEvent } from "./findVisibleEvent.js";
 
-/** A citizen as the activity table links it */
 export type EventActivityCitizen = CitizenReferenceRow;
 
-/** One page request of the activity source of an event */
 export interface EventActivityRowsInput extends ActivitySourceInput {
   readonly eventId: string;
-  /** Only these types. Null: all types. */
+  /** Null: all types */
   readonly types: readonly EventActivityType[] | null;
 }
 
@@ -28,24 +26,16 @@ export interface EventActivityRow {
   readonly id: string;
   readonly type: EventActivityType;
   readonly createdAt: Date;
-  /** The stored payload. The renderer parses it for each type. */
+  /** The renderer parses it for each type */
   readonly payload: Prisma.JsonValue;
-  /** Who caused the entry */
   readonly actor: EventActivityCitizen | null;
   /**
-   * The citizen that the entry is about: the payload's citizen for the types
-   * of `TYPES_WITH_AFFECTED_CITIZEN_IN_PAYLOAD`, the actor for the types of
-   * `SELF_APPLIED_TYPES`. Null for all other types, or when the citizen does
-   * not exist (anymore).
+   * Null for a type without an affected citizen, or when the citizen does not
+   * exist (anymore)
    */
   readonly affectedCitizen: EventActivityCitizen | null;
 }
 
-/**
- * The types whose payload names the affected citizen: the row's citizen
- * column holds the actor (a manager, or the applicant who withdrew the own
- * application)
- */
 const TYPES_WITH_AFFECTED_CITIZEN_IN_PAYLOAD: ReadonlySet<EventActivityType> =
   new Set([
     EventActivityType.PARTICIPATION_ADDED_BY_MANAGER,
@@ -59,7 +49,6 @@ const TYPES_WITH_AFFECTED_CITIZEN_IN_PAYLOAD: ReadonlySet<EventActivityType> =
     EventActivityType.APPLICATION_WITHDRAWN,
   ]);
 
-/** The types where the actor changes their own participation */
 const SELF_APPLIED_TYPES: ReadonlySet<EventActivityType> = new Set([
   EventActivityType.PARTICIPATION_SIGNED_UP,
   EventActivityType.PARTICIPATION_COMMENT_UPDATED,
@@ -80,13 +69,6 @@ const getAffectedCitizenId = (activity: {
         ?.citizenId ?? null)
     : null;
 
-/**
- * One page of the stored activity of an event that the actor can see. The
- * activity is visible to everyone who can see the event.
- *
- * @throws ForbiddenError without `event;read`, NotFoundError when the actor
- * cannot see the event
- */
 export const findEventActivityRows = async (
   context: ApplicationContext,
   actor: Actor,
@@ -152,13 +134,6 @@ export const findEventActivityRows = async (
   }));
 };
 
-/**
- * Everyone who caused activity on an event that the actor can see, for the
- * actor filter
- *
- * @throws ForbiddenError without `event;read`, NotFoundError when the actor
- * cannot see the event
- */
 export const findEventActivityActors = async (
   context: ApplicationContext,
   actor: Actor,

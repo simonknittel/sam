@@ -28,14 +28,7 @@ export interface CompleteOnboardingTaskOutput {
   readonly completion_method: OnboardingTaskCompletionMethod;
 }
 
-/**
- * Marks an onboarding task as done: the citizen finished the tour or skipped
- * the task. A replay updates the timestamp and the completion method of the
- * existing row, so the progress always reflects the most recent pass.
- *
- * @throws ForbiddenError for a user without a citizen, or without the
- * permission of the task
- */
+/** A replay updates the existing row, like in `completeOnboardingStep()` */
 export const completeOnboardingTask = async (
   context: ApplicationContext,
   actor: Actor,

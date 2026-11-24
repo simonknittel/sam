@@ -9,13 +9,6 @@ import { getPublicUploadUrl, type ApplicationContext } from "../context.js";
 import { VARIANT_LINK_SELECT } from "../fleet/catalogRows.js";
 
 /**
- * Resolvers for the references that the content of a page can carry
- * (mentions, ship links). They do not depend on the wiki scope: the static
- * content of a page (`findWikiPageContent()`) and the MCP read
- * (`getWikiPage()`) share them.
- */
-
-/**
  * Current handles of the citizens mentioned in the content, so mentions
  * follow handle changes. Mentions inserted after this render fall back to
  * the handle stored in the document. Viewers without the citizen read

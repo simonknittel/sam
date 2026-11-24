@@ -28,11 +28,6 @@ type StringPayloadKey<Type extends OnSiteNotificationType> = {
 }[keyof OnSiteNotificationPayload<Type>] &
   string;
 
-/**
- * The on-site notification which announces a new item of a subject type. The
- * read of the notification and the read of its item are one read state (see
- * `announcements.ts`).
- */
 interface ReadMarkerAnnouncement {
   readonly notificationType: OnSiteNotificationType;
   /** The key of the payload which holds the id of the item */
@@ -45,33 +40,28 @@ const announcedBy = <Type extends OnSiteNotificationType>(
   subjectIdKey: StringPayloadKey<Type>,
 ): ReadMarkerAnnouncement => ({ notificationType, subjectIdKey });
 
-/** The column of `ReadMarker` which points at the item */
 type ReadMarkerSubjectColumn = keyof Pick<
   ReadMarker,
   "taskId" | "eventId" | "changelogEntryKey"
 >;
 
 interface ReadMarkerSubjectRule {
-  /** Whether the actor may read the items of the subject type at all */
   readonly canReadSubject: (actor: Actor) => boolean;
   readonly markerColumn: ReadMarkerSubjectColumn;
-  /** Of the given items, the ones which exist and which the actor can see */
   readonly findReadableIds: (
     context: ApplicationContext,
     actor: Actor,
     subjectIds: readonly string[],
   ) => Promise<string[]>;
   /**
-   * Of the given items, the ones which are new for the actor. The visibility
-   * is not checked again: the ids come from queries which already applied
-   * it. Empty for an actor without a citizen.
+   * The visibility is not checked again: the ids come from queries which
+   * already applied it
    */
   readonly findNewIds: (
     context: ApplicationContext,
     actor: Actor,
     subjectIds: readonly string[],
   ) => Promise<string[]>;
-  /** How many of the items which the actor can see are new */
   readonly countNew: (
     context: ApplicationContext,
     actor: Actor,

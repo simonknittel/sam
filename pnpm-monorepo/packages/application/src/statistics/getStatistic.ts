@@ -28,7 +28,6 @@ import {
   type StatisticValueRow,
 } from "./statisticViewRows.js";
 
-/** The range without `from` and `to`: the last 30 days until yesterday */
 export const DEFAULT_STATISTIC_DAY_COUNT = 30;
 
 /** One year, also a leap year. It keeps the answer small. */
@@ -83,22 +82,19 @@ export type GetStatisticInput = z.output<typeof getStatisticInputSchema>;
 export interface StatisticSeriesOutput {
   readonly id: string;
   readonly name: string;
-  /** One value for each day of `days`, null for a day without a value */
+  /** Null for a day without a value */
   readonly values: (number | null)[];
 }
 
 export interface GetStatisticOutput {
   readonly key: StatisticKey;
   readonly unit: StatisticUnit;
-  /** The first day of the range after the corrections, `YYYY-MM-DD` */
+  /** After the corrections, `YYYY-MM-DD` */
   readonly from: string;
-  /** The last day of the range after the corrections, `YYYY-MM-DD` */
+  /** After the corrections, `YYYY-MM-DD` */
   readonly to: string;
-  /** Each day from `from` to `to` */
   readonly days: string[];
-  /** The highest last value first, then by the name */
   readonly series: StatisticSeriesOutput[];
-  /** The number of series before `series_limit` */
   readonly total_series: number;
 }
 
@@ -108,8 +104,8 @@ interface RankedSeries extends StatisticSeriesOutput {
 }
 
 /**
- * Reads a day of the input. The schema accepts only the days of the
- * calendar, thus the error is a defense in depth.
+ * The schema accepts only the days of the calendar, thus the error is a defense
+ * in depth
  */
 const parseDay = (day: string): LocalDate => {
   const date = parseLocalDateKey(day);
@@ -124,21 +120,13 @@ const earlierOf = (first: LocalDate, second: LocalDate) =>
 const laterOf = (first: LocalDate, second: LocalDate) =>
   compareLocalDates(first, second) >= 0 ? first : second;
 
-/** The range of the answer, `YYYY-MM-DD` */
+/** `YYYY-MM-DD` */
 interface StatisticRange {
   readonly from: string;
   readonly to: string;
-  /** Each day from `from` to `to` */
   readonly days: string[];
 }
 
-/**
- * The range of the answer: `to` is at most yesterday, `from` is at least the
- * first day of the statistics
- *
- * @throws ValidationError when the range has no day, or more than
- * `MAXIMUM_STATISTIC_DAY_COUNT` days
- */
 const resolveRange = (
   context: Pick<ApplicationContext, "now">,
   input: Pick<GetStatisticInput, "from" | "to">,
@@ -172,7 +160,6 @@ const resolveRange = (
   };
 };
 
-/** The rows grouped by series, with one value for each day */
 const toSeries = (
   rows: readonly StatisticValueRow[],
   days: readonly string[],
@@ -205,9 +192,8 @@ const toSeries = (
 const seriesCollator = new Intl.Collator("en");
 
 /**
- * The order of the panels of the dashboard (`ORDER BY value DESC, name
- * COLLATE "und-x-icu", id COLLATE "und-x-icu"`). The name and the id break
- * the ties, thus each call gives the same order.
+ * The order of the panels of the dashboard (`ORDER BY value DESC, name COLLATE
+ * "und-x-icu", id COLLATE "und-x-icu"`)
  */
 const compareSeries = (first: RankedSeries, second: RankedSeries) =>
   second.lastValue - first.lastValue ||
@@ -215,15 +201,8 @@ const compareSeries = (first: RankedSeries, second: RankedSeries) =>
   seriesCollator.compare(first.id, second.id);
 
 /**
- * The daily values of one statistic of the dashboard of the app Statistiken
- * (see `STATISTIC_CATALOG`), from the views of the schema `statistics`. A day
- * is a day in the time zone of the organization. The role statistic gives
- * only the roles that the actor can see (see `isRoleVisible()`), also with
- * the filter by ids. An id without a row in the range gives no series.
- *
- * @throws ForbiddenError without `globalStatistics;read`
- * @throws ValidationError for ids of a statistic without a filter by ids, and
- * for a range without a day or with too many days
+ * The role statistic gives only the roles that the actor can see, also with the
+ * filter by ids. An id without a row in the range gives no series.
  */
 export const getStatistic = (
   context: ApplicationContext,

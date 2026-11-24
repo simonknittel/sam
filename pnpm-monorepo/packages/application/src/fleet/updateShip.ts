@@ -24,10 +24,7 @@ export const updateShipInputSchema = z.object({
     ),
 });
 
-/**
- * Changes the name, the acquisition source or the note of a ship of the own
- * citizen. An absent field stays.
- */
+/** An absent field stays */
 export const updateShip = (
   context: ApplicationContext,
   actor: Actor,

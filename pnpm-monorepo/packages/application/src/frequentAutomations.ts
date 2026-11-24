@@ -19,16 +19,14 @@ const MILLISECONDS_PER_MINUTE = 60 * 1000;
 export const FREQUENT_AUTOMATIONS_INTERVAL_MILLISECONDS =
   FREQUENT_AUTOMATIONS_INTERVAL_MINUTES * MILLISECONDS_PER_MINUTE;
 
-/** A half-open interval of instants, as a filter of Prisma */
 export interface RunWindow {
   readonly gte: Date;
   readonly lt: Date;
 }
 
 /**
- * The window of the run at `now`: one run interval from `now` plus the
- * offset, the end not included. The windows of two runs one interval apart
- * touch, thus each instant is in the window of exactly one run.
+ * The windows of two runs one interval apart touch, thus each instant is in
+ * the window of exactly one run
  */
 export const getRunWindow = (
   now: Date,
@@ -56,9 +54,8 @@ export const getOrganizationInstant = (
   );
 
 /**
- * True only for the first run at or after the wall time ("HH:mm") of today
- * in the time zone of the organization. A daily job that works only in this
- * run works one time each day.
+ * True only for the first run at or after the wall time ("HH:mm") of today in
+ * the time zone of the organization
  */
 export const isFirstRunAfterWallTime = (
   now: Date,

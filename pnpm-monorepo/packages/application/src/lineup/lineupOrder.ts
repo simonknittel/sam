@@ -15,7 +15,6 @@ import { LineupErrorMessage } from "./lineupErrors.js";
 /** The largest value of the integer column of the database */
 const MAXIMUM_ORDER_VALUE = 2_147_483_647;
 
-/** A position of a new order of the lineup, with its children */
 export interface LineupOrderNode {
   readonly id: string;
   readonly order?: number | undefined;
@@ -59,8 +58,8 @@ const flattenOrder = (
   ]);
 
 /**
- * The positions of the lineup as a tree. The nesting sets the parents; the
- * positions that the tree does not name keep their place.
+ * The nesting sets the parents; the positions that the tree does not name keep
+ * their place
  */
 export const lineupOrderSchema = orderLevelSchema(
   createOrderNodeSchema(
@@ -101,15 +100,14 @@ const toOrderUpdates = (
   ]);
 
 /**
- * Writes the order and the parents of the tree in one transaction. Each
- * position of the tree must be in the container: the parents come from the
- * tree, thus no parent goes into a different lineup.
+ * Each position of the tree must be in the container: the parents come from
+ * the tree, thus no parent goes into a different lineup.
  *
  * @throws ConflictError when a position is not in the container, usually a
  * position that a different tab deleted
  * @throws ValidationError when the new order puts a position below the last
- * level: the positions that the tree does not name keep their parent, thus
- * a moved position takes its children with it
+ * level: the positions that the tree does not name keep their parent, thus a
+ * moved position takes its children with it
  */
 export const writeLineupOrder = async (
   context: ApplicationContext,

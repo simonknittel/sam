@@ -8,14 +8,11 @@ import { satisfiesAnyPermissionString, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 
 /**
- * A task the citizen is allowed to see, reduced to the keys of the task and
- * of its permitted steps. The client components resolve titles and contents
- * from the static config; only these keys and the progress rows cross the
- * server/client boundary.
+ * The client components resolve titles and contents from the static config;
+ * only these keys and the progress rows cross the server/client boundary
  */
 export interface EligibleOnboardingTask {
   readonly key: OnboardingTaskKey;
-  /** Keys of the permitted steps, in the order of the rules */
   readonly stepKeys: readonly OnboardingStepKey[];
 }
 
@@ -24,17 +21,12 @@ export interface OnboardingState {
   /** Keys of the tasks the citizen completed or skipped */
   readonly completedTaskKeys: readonly string[];
   /**
-   * Completed steps, encoded with `encodeOnboardingStepProgressKey()` so the
-   * client can hold them in a flat set.
+   * Encoded with `encodeOnboardingStepProgressKey()` so the client can hold
+   * them in a flat set
    */
   readonly completedStepProgressKeys: readonly string[];
 }
 
-/**
- * The onboarding tasks the actor is allowed to see, together with the
- * progress of the citizen of the actor. A task without a permitted step is
- * left out.
- */
 export const loadOnboardingState = async (
   context: ApplicationContext,
   actor: Actor,
@@ -76,10 +68,7 @@ export const loadOnboardingState = async (
   };
 };
 
-/**
- * `loadOnboardingState()`, or null for an actor without a citizen: such an
- * actor never sees the onboarding
- */
+/** An actor without a citizen never sees the onboarding */
 export const findOnboardingState = async (
   context: ApplicationContext,
   actor: Actor,

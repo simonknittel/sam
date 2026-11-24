@@ -26,19 +26,15 @@ import {
 
 export const updateVariantInputSchema = z.object({
   variant_id: idSchema.describe("The variant from search_ship_variants."),
-  /** An absent name stays */
   name: catalogNameSchema.optional(),
   ...variantFieldsInputShape,
 });
 
 /**
- * Changes a variant. The given tags and the given external links replace all
- * tags or all links of the variant.
- *
  * @throws NotFoundError when the variant does not exist
  * @throws ValidationError when a different variant of the series has the name
- * already, when two links have the same service or when the actor cannot read
- * a new wiki page
+ * already, when two links have the same service or when the actor cannot read a
+ * new wiki page
  */
 export const updateVariant = (
   context: ApplicationContext,

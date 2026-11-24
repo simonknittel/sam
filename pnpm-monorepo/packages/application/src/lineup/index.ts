@@ -1,4 +1,3 @@
-/** The use cases of the lineups of the events and of the event templates */
 export {
   applyForEventPosition,
   applyForEventPositionInputSchema,

@@ -11,10 +11,7 @@ import type { ApplicationContext } from "../context.js";
 export interface FindSeasonalThemeInput {
   /** Null for a viewer without a citizen, for example the login page */
   readonly citizenId: string | null;
-  /**
-   * The date that the date override of the app names. Null without an
-   * override.
-   */
+  /** Null without an override */
   readonly overrideDate: LocalDate | null;
 }
 
@@ -22,27 +19,22 @@ export interface SeasonalThemeResult {
   readonly event: SeasonalEventKey;
   /** The date the theme was resolved for, in the time zone of the viewer */
   readonly localDate: LocalDate;
-  /** Whether the event shows its greeting banner on that date */
   readonly isGreetingDay: boolean;
 }
 
-/** The values of a citizen which the resolution needs */
 interface ViewerCitizen {
   readonly timezone: string | null;
   readonly switchedOffEventKeys: readonly string[];
 }
 
-/** A viewer without a citizen, for example the login page */
 const VIEWER_WITHOUT_CITIZEN: ViewerCitizen = {
   timezone: null,
   switchedOffEventKeys: [],
 };
 
 /**
- * The time zone and the opt-outs of the citizen. No page must fail because
- * of a decoration, and this read is the only one the resolution makes, thus
- * a failed read — a release which arrives before its migration, for example
- * — yields no citizen and therefore no theme.
+ * A failed read, for example in a release that arrives before its migration,
+ * gives null
  */
 const readViewerCitizen = async (
   context: ApplicationContext,
@@ -79,11 +71,7 @@ const readViewerCitizen = async (
   }
 };
 
-/**
- * The date of the viewer, in their own time zone. The shared rule throws for
- * a time zone the runtime does not know, and no page must fail because of a
- * decoration; such a viewer gets no theme.
- */
+/** The shared rule throws for a time zone that the runtime does not know */
 const getViewerLocalDate = (
   context: ApplicationContext,
   timezone: string | null,
@@ -105,14 +93,12 @@ const getViewerLocalDate = (
 };
 
 /**
- * The seasonal theme of a viewer, or null outside every theme range. Takes no
- * actor and checks no permission: the theme is a decoration, and the login
- * page asks for it too. A viewer without a citizen resolves with the time
- * zone of the organization and without opt-outs.
+ * Null outside every theme range. No permission check: the theme is a
+ * decoration, and the login page asks for it too. A viewer without a citizen
+ * resolves with the time zone of the organization and without opt-outs.
  *
- * No page must fail because of a decoration. Thus the function never throws:
- * a failed read or a time zone which the runtime does not know gives no
- * theme.
+ * No page must fail because of a decoration. Thus the function never throws: a
+ * failed read or a time zone which the runtime does not know gives no theme.
  */
 export const findSeasonalTheme = async (
   context: ApplicationContext,

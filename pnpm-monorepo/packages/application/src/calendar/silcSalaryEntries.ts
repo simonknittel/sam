@@ -18,7 +18,6 @@ import type {
   SilcSalaryCalendarEntry,
 } from "./calendarEntry.js";
 
-/** The salaries of one day */
 interface SalaryDay {
   readonly date: LocalDate;
   value: number;
@@ -31,9 +30,8 @@ interface SalaryRole {
 }
 
 /**
- * The name of a role is only for the actors who can see the role (see
- * `isRoleVisible`). The app hides the own hidden roles too, thus a salary of
- * such a role adds its value without its name.
+ * The app hides the own hidden roles too, thus a salary of such a role adds its
+ * value without its name
  */
 const getVisibleRoleName = (actor: Actor, role: SalaryRole | null) =>
   role && isRoleVisible(actor, role.id) ? role.name : null;
@@ -56,11 +54,6 @@ const addToSalaryDay = (
   salaryDays.set(key, salaryDay);
 };
 
-/**
- * The roles that pay a salary to the citizen, with the rule of the salary
- * job (see `getPaidAssignments`): the assignments are only the ones of the
- * citizen
- */
 const findPaidSalaryRoles = async (
   context: ApplicationContext,
   citizenId: string,
@@ -100,10 +93,10 @@ const toEntries = (
   }));
 
 /**
- * The salaries of the citizen of the actor, one entry for each day. The days
- * before today (in the time zone of the organization) show the bookings of
- * the salary job. From today on, a day shows its bookings when it has some,
- * and else the salaries that the current roles of the citizen will pay.
+ * The days before today (in the time zone of the organization) show the
+ * bookings of the salary job. From today on, a day shows its bookings when it
+ * has some, and else the salaries that the current roles of the citizen will
+ * pay.
  */
 export const silcSalaryEntryCollector: CalendarEntryCollector<SilcSalaryCalendarEntry> =
   {

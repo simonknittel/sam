@@ -15,7 +15,6 @@ import {
 import { idSchema } from "../pagination.js";
 import { TaskRewardKind, TaskVisibilityKind } from "./taskOutput.js";
 
-/** The schemas of the task fields that the create and the update share */
 export const taskFieldSchemas = {
   title: z.string().trim().min(1).max(TASK_TITLE_MAX_LENGTH),
   description: z

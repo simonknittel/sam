@@ -3,12 +3,6 @@ import type { Prisma } from "@sam-monorepo/database/client";
 import { TEST_NOW } from "./applicationContext.js";
 
 /**
- * Test fixtures for citizens with permissions, also for the two parts of the
- * effective-role rule (see `findCitizensWithPermissions()`): the inherited
- * roles and the level gate.
- */
-
-/**
  * The `data` of a citizen with a linked user who passes the clearance page
  * (see `findClearedCitizens()`)
  */
@@ -23,10 +17,6 @@ const createPermissionStrings = (permissionStrings: readonly string[]) => ({
   create: permissionStrings.map((permissionString) => ({ permissionString })),
 });
 
-/**
- * The citizen has one role that grants the permission strings directly, and
- * in addition the given roles. `data` gives the other fields of the citizen.
- */
 export const createCitizenWithPermissions = async (
   handle: string,
   permissionStrings: readonly string[],
@@ -55,10 +45,6 @@ export const createCitizenWithPermissions = async (
     },
   });
 
-/**
- * The citizen has one role without permissions. This role inherits a second
- * role that grants the permission strings.
- */
 export const createCitizenWithInheritedPermissions = async (
   handle: string,
   permissionStrings: readonly string[],
@@ -87,10 +73,7 @@ export const createCitizenWithInheritedPermissions = async (
   });
 };
 
-/**
- * The citizen has one role with levels that grants the permission strings
- * directly. The role counts only at `MAXIMUM_LEVEL`.
- */
+/** The role counts only at `MAXIMUM_LEVEL` */
 export const createCitizenWithLeveledRole = async (
   handle: string,
   permissionStrings: readonly string[],

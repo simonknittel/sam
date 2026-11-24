@@ -6,19 +6,14 @@ import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { CALENDAR_ENTRY_COLLECTORS } from "./calendarEntryCollectors.js";
 
-/** An entry type, as the type filter of the calendar offers it */
 export interface CalendarEntryTypeSetting {
   readonly type: CalendarEntryType;
-  /** False when the citizen of the actor switched the type off */
   readonly enabled: boolean;
 }
 
 /**
- * The entry types that the actor can read, in the order of the type filter,
- * each with the switch of the citizen of the actor. A row means the citizen
- * switched the type off; a type without a row is switched on. An actor
- * without a citizen has no rows and cannot create any, thus each type is
- * switched on.
+ * An actor without a citizen has no rows and cannot create any, thus each type
+ * is switched on
  */
 export const findOwnCalendarEntryTypeSettings = async (
   context: ApplicationContext,

@@ -24,7 +24,6 @@ export const collectVisibleWikiPageAncestors = (
     })
     .toReversed();
 
-/** The titles of `collectVisibleWikiPageAncestors()` */
 export const buildVisibleWikiBreadcrumb = (
   scope: WikiScope,
   page: WikiSharedContextPage,

@@ -42,7 +42,6 @@ export const listOrgFleetInputSchema = z.object({
 
 export interface OrgFleetEntryOutput {
   readonly variant: ShipVariantOutput;
-  /** The ships of this variant that the members own */
   readonly count: number;
 }
 
@@ -50,9 +49,7 @@ export interface ListOrgFleetOutput {
   readonly fleet: OrgFleetEntryOutput[];
   /** The members that own at least one ship that agrees with the filters */
   readonly total_citizens: number;
-  /** The ships that agree with the filters */
   readonly total_ships: number;
-  /** The value of the ships that agree with the filters */
   readonly value: FleetValueOutput;
   readonly next_cursor: string | null;
   readonly previous_cursor: string | null;
@@ -80,14 +77,9 @@ const compareFleetEntries =
   };
 
 /**
- * The ships of the members of the organization, counted per variant. The
- * list has all variants that agree with the filters, also the variants
- * without ships (count 0). The members are the members that the member list
- * of the organization page shows to the actor. The cursor is the id of a
- * variant.
- *
- * @throws ValidationError when no variant has the cursor (see
- * `PageOptions.unknownCursor`)
+ * The list has all variants that agree with the filters, also the variants
+ * without ships. The members are the members that the member list of the
+ * organization page shows to the actor.
  */
 export const listOrgFleet = (
   context: ApplicationContext,

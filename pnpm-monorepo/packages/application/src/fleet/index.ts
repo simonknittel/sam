@@ -1,4 +1,3 @@
-/** The use cases of the fleet group */
 export {
   findManagedManufacturer,
   findManagedSeriesWithManufacturer,

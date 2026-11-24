@@ -11,10 +11,6 @@ export const deleteShipInputSchema = z.object({
   ship_id: idSchema.describe("An own ship from list_my_ships."),
 });
 
-/**
- * Deletes a ship of the own citizen. The ship stays in the database with
- * `deleted_at`, thus the list of the deleted ships still shows it.
- */
 export const deleteShip = (
   context: ApplicationContext,
   actor: Actor,

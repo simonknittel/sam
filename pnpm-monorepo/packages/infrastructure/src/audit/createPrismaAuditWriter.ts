@@ -10,18 +10,16 @@ export interface PrismaAuditWriterOptions {
    */
   readonly triggeredViaMcp?: boolean;
   /**
-   * Runs the write at a later time, for example after the response of the
-   * request (`after()` of Next.js). Without it, `create()` waits for the
-   * write.
+   * For example after the response of the request (`after()` of Next.js).
+   * Without it, `create()` waits for the write.
    */
   readonly defer?: (write: () => Promise<void>) => void;
 }
 
 /**
- * Writes the audit events to the system log. A failed write is logged and
- * swallowed: the mutation that the events describe has happened. A failure
- * after the save must not make the user save again, and must not make an
- * automation do the mutation again on its next run.
+ * A failed write is logged and swallowed: the mutation that the events describe
+ * has happened. A failure after the save must not make the user save again, and
+ * must not make an automation do the mutation again on its next run.
  */
 export const createPrismaAuditWriter = ({
   prisma,

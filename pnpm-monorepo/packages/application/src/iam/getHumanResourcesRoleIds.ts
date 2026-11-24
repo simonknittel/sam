@@ -4,10 +4,8 @@ import { withSpan } from "../withSpan.js";
 import { parseHumanResourcesRoleIds } from "./humanResourcesRoles.js";
 
 /**
- * The ids of the roles that count as Human Resources, in the stored order.
- * Ids of roles that were deleted since stay in the setting and are dropped
- * here. No actor and no permission check: `listHumanResourcesContacts()`
- * calls it for the clearance page of a user without permissions.
+ * The ids of deleted roles stay in the setting and are dropped here. No
+ * permission check, see the README.
  */
 export const getHumanResourcesRoleIds = (
   context: ApplicationContext,

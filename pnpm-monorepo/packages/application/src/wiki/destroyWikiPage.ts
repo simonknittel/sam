@@ -19,19 +19,9 @@ export type DestroyWikiPageInput = z.infer<typeof destroyWikiPageInputSchema>;
 
 export interface DestroyWikiPageOutput {
   readonly page_id: string;
-  /** The page and its descendants */
   readonly destroyed_page_ids: string[];
 }
 
-/**
- * Deletes a page in the trash and its subtree permanently
- *
- * @throws NotFoundError when the page does not exist for the actor or is
- * not in the trash, or when a different user or tab restored or deleted a
- * page of the subtree in the meantime
- * @throws ForbiddenError when the actor does not manage the page
- * @throws ConflictError when the event of the briefing is over
- */
 export const destroyWikiPage = (
   context: ApplicationContext,
   actor: Actor,

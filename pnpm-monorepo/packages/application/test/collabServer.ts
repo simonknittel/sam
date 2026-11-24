@@ -5,17 +5,10 @@ import type {
 } from "../src/context.js";
 
 interface TestCollabServerOptions {
-  /** Each replacement fails like a collab server that cannot be reached */
   readonly failsReplace?: boolean;
-  /** Each disconnect fails like a collab server that cannot be reached */
   readonly failsDisconnect?: boolean;
 }
 
-/**
- * The collab server of the tests. It records the replacements that it takes,
- * the sessions and the disconnected users, in the sequence of the calls. A
- * session token holds the page and the user, thus a test can compare it.
- */
 export const createTestCollabServer = ({
   failsReplace = false,
   failsDisconnect = false,

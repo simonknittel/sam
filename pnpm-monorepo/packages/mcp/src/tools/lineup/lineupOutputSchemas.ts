@@ -51,7 +51,6 @@ const fourthLevelPositionSchema = z.strictObject({
   children: z.tuple([]),
 });
 
-/** A position with its children, as the lineup tools give it */
 export const lineupPositionSchema = createPositionSchema(
   createPositionSchema(createPositionSchema(fourthLevelPositionSchema)),
 );

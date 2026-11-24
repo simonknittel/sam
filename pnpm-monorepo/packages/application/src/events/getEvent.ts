@@ -44,9 +44,7 @@ export interface EventParticipantEntry {
 }
 
 export interface EventInvitationEntry {
-  /** Null when the citizen is deleted */
   readonly citizen: CitizenReference | null;
-  /** Only open and declined invitations, see `loadEventInvitationRows()` */
   readonly status: EventInvitationStatus;
   readonly message: string | null;
   readonly decline_comment: string | null;
@@ -55,9 +53,7 @@ export interface EventInvitationEntry {
 }
 
 export interface EventApplicationEntry {
-  /** Null when the citizen is deleted */
   readonly citizen: CitizenReference | null;
-  /** Only open and declined applications, see `loadEventApplicationRows()` */
   readonly status: EventApplicationStatus;
   readonly comment: string | null;
   readonly decline_reason: string | null;
@@ -81,38 +77,23 @@ export interface GetEventOutput {
   readonly visibility_role_ids: string[];
   readonly source: EventSourceType;
   readonly lineup_enabled: boolean;
-  /**
-   * False when a manager turned off the participation: nobody can sign up
-   * or be added, and the lineup is hidden. Always true for a Discord event.
-   */
+  /** Always true for a Discord event */
   readonly participation_enabled: boolean;
-  /**
-   * True when a citizen cannot sign up without an invitation, but applies,
-   * and a manager approves or declines the application. Always false for a
-   * Discord event.
-   */
+  /** Always false for a Discord event */
   readonly application_required: boolean;
   readonly created_by: CitizenReference | null;
   readonly managers: CitizenReference[];
   /**
-   * The active participations, in the order of the sign-up. Like the
-   * participants page, a Discord sign-up shows only after a citizen has its
-   * Discord id.
+   * Like the participants page, a Discord sign-up shows only after a citizen
+   * has its Discord id
    */
   readonly participants: EventParticipantEntry[];
-  /**
-   * The open invitations, and the declined invitations of citizens who did
-   * not sign up later. The newest first.
-   */
+  /** See `loadEventInvitationRows()` */
   readonly invitations: EventInvitationEntry[];
-  /**
-   * The open applications, and the declined applications of citizens who
-   * were not signed up later. The newest first.
-   */
+  /** See `loadEventApplicationRows()` */
   readonly applications: EventApplicationEntry[];
   readonly can_manage: boolean;
   readonly can_manage_positions: boolean;
-  /** False when the event has ended: then nothing can change */
   readonly is_updatable: boolean;
   readonly is_participating: boolean;
 }
@@ -152,9 +133,8 @@ const getParticipantEntries = async (
 };
 
 /**
- * Maps an event to the output of `getEvent()`. It checks nothing: the caller
- * checked that the actor can see the event, or that the actor just changed
- * it.
+ * It checks nothing: the caller checked that the actor can see the event, or
+ * that the actor just changed it
  */
 const toEventOutput = async (
   context: ApplicationContext,
@@ -218,10 +198,9 @@ const toEventOutput = async (
 };
 
 /**
- * The output of an event that a write use case changed. Without a visibility
- * check: the use case checked its operation, and the operation can take the
- * visibility away, for example from a manager who removes themselves from a
- * restricted event.
+ * No visibility check: the use case checked its operation, and the operation
+ * can take the visibility away, for example from a manager who removes
+ * themselves from a restricted event.
  */
 export const loadEventOutput = async (
   context: ApplicationContext,
@@ -237,10 +216,6 @@ export const loadEventOutput = async (
     }),
   );
 
-/**
- * One event that the actor can see, with its participants and managers and
- * what the actor can do with it
- */
 export const getEvent = (
   context: ApplicationContext,
   actor: Actor,

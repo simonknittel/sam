@@ -19,11 +19,6 @@ const isInNoticePeriod = (event: Pick<Event, "startTime">, now: Date) =>
   event.startTime.getTime() -
     PARTICIPATION_CHANGE_NOTICE_PERIOD_IN_MILLISECONDS;
 
-/**
- * The notifications of the organizers about new sign-ups (see
- * `findEventOrganizerRecipients()`). The use case calls it after the save,
- * with the time of the save.
- */
 export const buildSignUpNotifications = (
   event: Pick<Event, "id" | "startTime">,
   now: Date,
@@ -40,10 +35,6 @@ export const buildSignUpNotifications = (
       }))
     : [];
 
-/**
- * The notifications of the organizers about an own sign-up: about the
- * accepted invitation at each time, else like `buildSignUpNotifications()`
- */
 export const buildOwnSignUpNotifications = (
   event: Pick<Event, "id" | "startTime">,
   now: Date,
@@ -63,15 +54,12 @@ export const buildOwnSignUpNotifications = (
 /** The cancellation of a participant, not the removal by a manager */
 export interface OwnCancellation {
   readonly citizenId: string;
-  /** The names of the lineup positions that the citizen held before */
   readonly vacatedPositionNames: readonly string[];
 }
 
 /**
- * The notifications of the organizers about cancellations (see
- * `findEventOrganizerRecipients()`). A cancellation that vacated positions
- * notifies at each time, because the organizers must fill the positions
- * again. The use case calls it after the save, with the time of the save.
+ * A cancellation that vacated positions notifies at each time, because the
+ * organizers must fill the positions again
  */
 export const buildCancellationNotifications = (
   event: Pick<Event, "id" | "startTime">,

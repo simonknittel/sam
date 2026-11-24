@@ -36,7 +36,6 @@ export interface ListOwnSessionsOptions {
 
 export interface OwnSession {
   readonly id: string;
-  /** Null when it is unknown */
   readonly createdAt: Date | null;
   readonly userAgent: string | null;
   readonly expires: Date;
@@ -66,7 +65,6 @@ const getExpiresFilter = (status: SessionStatus, now: Date) => {
   }
 };
 
-/** The sessions of the actor. Nobody sees the sessions of other users. */
 export const listOwnSessions = async (
   context: ApplicationContext,
   actor: Actor,

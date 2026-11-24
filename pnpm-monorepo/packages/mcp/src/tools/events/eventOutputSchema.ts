@@ -10,7 +10,6 @@ import {
 import * as z from "zod";
 import { citizenReferenceSchema, dateTimeOutputSchema } from "../../schemas.js";
 
-/** One event as `get_event` gives it. The write tools give the same shape. */
 export const eventOutputSchema = z.strictObject({
   id: z.string(),
   name: z.string(),

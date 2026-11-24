@@ -47,13 +47,7 @@ export type WithdrawEventApplicationInput = z.infer<
   typeof withdrawEventApplicationInputSchema
 >;
 
-/**
- * The checks of a new application in its transaction, after the lock of the
- * event: a sign-up, an open invitation or an open or declined application of
- * the citizen refuses it
- *
- * @throws ConflictError
- */
+/** Call it in the transaction, after the lock of the event */
 const requireNewApplicant = async (
   transaction: Prisma.TransactionClient,
   eventId: string,
@@ -97,12 +91,9 @@ const requireNewApplicant = async (
 };
 
 /**
- * The user applies for an app event whose sign-up needs the approval of a
- * manager. The organizers get a notification. A manager approves the
- * application, which signs the user up, or declines it.
- *
  * @throws ConflictError `EventErrorMessage.ApplicationNotRequired` when the
- * user can sign up directly (see `mustApplyForEvent()`), `EventErrorMessage.AlreadySignedUp`,
+ * user can sign up directly (see `mustApplyForEvent()`),
+ * `EventErrorMessage.AlreadySignedUp`,
  * `EventErrorMessage.InvitedInsteadOfApplication`,
  * `EventErrorMessage.AlreadyApplied` and
  * `EventErrorMessage.ApplicationDeclined`
@@ -177,8 +168,7 @@ export const applyForEvent = (
   });
 
 /**
- * The user withdraws the own open application for an app event. The
- * organizers get no notification. The user can apply again.
+ * The organizers get no notification. The user can apply again.
  *
  * @throws ConflictError `EventErrorMessage.NoOpenApplication` without an open
  * application, for example when a manager answered it

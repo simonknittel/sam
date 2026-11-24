@@ -1,4 +1,3 @@
-/** The use cases of the penalty points */
 export {
   createPenaltyEntry,
   createPenaltyEntryInputSchema,

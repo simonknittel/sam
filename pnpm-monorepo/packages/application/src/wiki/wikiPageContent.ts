@@ -47,7 +47,6 @@ export interface WikiImageDimensions {
  * nodes.
  */
 export interface WikiPageStaticContent {
-  /** Tiptap JSON of the page */
   readonly content: unknown;
   readonly iframeAllowlist: string[];
   /**
@@ -60,7 +59,6 @@ export interface WikiPageStaticContent {
   readonly linkedVariants: Readonly<Record<string, WikiLinkedVariant>>;
   /** The pages of each page-index node, by the key of its config */
   readonly pageIndexes: Readonly<Record<string, WikiPageIndexEntry[]>>;
-  /** The citizens of each role-members node, by role */
   readonly roleCitizens: Readonly<Record<string, WikiCitizen[]>>;
   /**
    * The sizes of the uploaded images of the content, by upload. An upload
@@ -70,7 +68,6 @@ export interface WikiPageStaticContent {
   readonly imageDimensions: Readonly<Record<string, WikiImageDimensions>>;
 }
 
-/** A page that a link can point to, with its route */
 interface WikiLinkablePage extends WikiPageLinkedPage {
   href: string;
 }
@@ -152,7 +149,6 @@ export const findWikiLinkablePages = async (
   return Object.fromEntries(await loadWikiLinkablePages(context, actor, scope));
 };
 
-/** The sizes of the uploaded images of the content that have a known size */
 const loadWikiImageDimensions = async (
   context: ApplicationContext,
   content: unknown,
@@ -183,13 +179,8 @@ const loadWikiImageDimensions = async (
 };
 
 /**
- * The content of a page and all that its static render needs for the
- * actor. A scope helper: the scope comes from a scope builder of this
- * package for the same actor. The page-index nodes resolve in the scope
- * only, thus they never list pages of a different scope.
- *
- * @throws NotFoundError when the page is not in the scope, is in the trash
- * or the actor cannot read it
+ * The page-index nodes resolve in the scope only, thus they never list pages
+ * of a different scope
  */
 export const findWikiPageContent = (
   context: ApplicationContext,

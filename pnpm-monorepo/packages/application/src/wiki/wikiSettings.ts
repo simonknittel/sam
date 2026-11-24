@@ -24,14 +24,12 @@ export const WIKI_SETTING_DASHBOARD_PAGE = "dashboardPage";
 
 const featuredPagesSchema = z.array(idSchema).max(MAXIMUM_WIKI_FEATURED_PAGES);
 
-/** The stored id of a page, or null when it is not set or not valid */
 const parsePageIdSetting = (value: unknown): string | null => {
   const parsed = idSchema.safeParse(value);
   return parsed.success ? parsed.data : null;
 };
 
 export interface WikiSettings {
-  /** The hostnames that the generic iframes can embed */
   readonly iframeAllowlist: string[];
   /**
    * The pages on the landing page of the wiki, in the sequence of the wiki
@@ -39,10 +37,7 @@ export interface WikiSettings {
    * until the next save: `resolveWikiFeaturedPages()` of the app removes it.
    */
   readonly featuredPageIds: string[];
-  /**
-   * The page that the dashboard of the app shows. The dashboard tile checks
-   * the read permission of the viewer itself.
-   */
+  /** The dashboard tile checks the read permission of the viewer itself */
   readonly dashboardPageId: string | null;
   /**
    * The page of each page link. The consumers of the links use
@@ -51,10 +46,6 @@ export interface WikiSettings {
   readonly pageLinkPageIds: Record<WikiPageLinkKey, string | null>;
 }
 
-/**
- * The stored values of the wiki settings. Takes no actor: the values are
- * raw, and the consumers check the permissions of the pages.
- */
 export const findWikiSettings = async (
   context: Pick<ApplicationContext, "prisma">,
 ): Promise<WikiSettings> => {
@@ -104,10 +95,8 @@ export interface WikiPageLinkTarget {
 }
 
 /**
- * The page of the page link, or null when the link is not set or the page
- * is in the trash. Takes no actor and resolves no page permissions: the top
- * bar of each page uses it, and the page checks the permissions when the
- * user opens it.
+ * The top bar of each page uses it, and the page checks the permissions when
+ * the user opens it
  */
 export const findWikiPageLinkTarget = async (
   context: Pick<ApplicationContext, "prisma">,
@@ -130,12 +119,8 @@ export const findWikiPageLinkTarget = async (
 };
 
 /**
- * Makes sure that each page is a page of the global wiki that is not in the
- * trash. The settings are global curation by `wiki;manage`, thus the page
- * permissions do not apply.
- *
- * @throws NotFoundError otherwise, for example when a different user deleted
- * a selected page after the form showed it
+ * The settings are global curation by `wiki;manage`, thus the page permissions
+ * do not apply
  */
 export const requireLiveWikiPages = async (
   context: Pick<ApplicationContext, "prisma">,
@@ -155,8 +140,8 @@ export const requireLiveWikiPages = async (
 };
 
 /**
- * Writes a wiki setting and its audit event. Null deletes the setting: the
- * audit event then has an empty string as its value.
+ * Null deletes the setting: the audit event then has an empty string as its
+ * value
  */
 export const writeWikiSetting = async (
   context: ApplicationContext,

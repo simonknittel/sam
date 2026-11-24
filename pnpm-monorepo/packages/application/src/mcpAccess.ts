@@ -9,7 +9,6 @@ import { requirePermission, type Actor } from "./actor.js";
 export const canUseMcp = (actor: Actor): boolean =>
   actor.authorize("mcp", "use");
 
-/** @throws ForbiddenError when the actor cannot use the MCP server */
 export const requireMcpAccess = (actor: Actor): void => {
   requirePermission(actor, "mcp", "use");
 };

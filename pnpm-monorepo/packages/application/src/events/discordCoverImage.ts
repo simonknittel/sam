@@ -22,13 +22,9 @@ interface CoverImage {
 }
 
 /**
- * The `data:` URI Discord wants for a scheduled event's cover — it does not
- * accept image URLs, so the object is read from the bucket and re-encoded.
- *
- * Gives undefined whenever the cover cannot be delivered (unsupported
- * format, too large, empty, bucket unreachable or not configured). Callers
- * pass that on unchanged, so the publish continues without touching
- * Discord's copy of the image.
+ * Discord does not accept image URLs for the cover. Undefined when the cover
+ * cannot be delivered: callers pass that on unchanged, so the publish continues
+ * without touching Discord's copy of the image.
  */
 export const readDiscordCoverImage = async (
   context: Pick<ApplicationContext, "storage" | "log">,

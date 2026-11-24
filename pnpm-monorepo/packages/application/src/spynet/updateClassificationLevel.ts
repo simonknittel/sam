@@ -21,11 +21,6 @@ export type UpdateClassificationLevelInput = z.infer<
   typeof updateClassificationLevelInputSchema
 >;
 
-/**
- * Renames a classification level. Requires `classificationLevel;manage`.
- *
- * @throws NotFoundError when the classification level does not exist
- */
 export const updateClassificationLevel = (
   context: ApplicationContext,
   actor: Actor,

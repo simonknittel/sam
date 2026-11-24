@@ -19,11 +19,7 @@ export interface DeleteTaskOutput {
   readonly task_id: string;
 }
 
-/**
- * Soft-deletes a task and notifies its assignees. Requires `task;delete`,
- * `task;read` and a citizen, and that the actor created the task or has
- * `task;manage`. A closed task can be deleted too.
- */
+/** A closed task can be deleted too */
 export const deleteTask = (
   context: ApplicationContext,
   actor: Actor,

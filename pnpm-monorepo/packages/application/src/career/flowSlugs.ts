@@ -10,10 +10,8 @@ import { CareerErrorMessage } from "./careerErrors.js";
 const RESERVED_FLOW_SLUGS: readonly string[] = ["settings"];
 
 /**
- * Throws a `ValidationError` when a flow cannot use the slug: the format of
- * `slugify()`, a reserved segment, or a different live flow that uses it.
- * The partial unique index on the rows that are not deleted is the last
- * guard: the writes map its error to `CareerErrorMessage.SlugTaken` too.
+ * The partial unique index on the rows that are not deleted is the last guard:
+ * the writes map its error to `CareerErrorMessage.SlugTaken` too
  */
 export const requireUsableFlowSlug = async (
   client: Pick<PrismaClientType, "flow">,
@@ -36,7 +34,6 @@ export const requireUsableFlowSlug = async (
   if (takenSlug) throw new ValidationError(CareerErrorMessage.SlugTaken);
 };
 
-/** The position after the last live flow, 1 when no flow exists */
 export const getNextFlowPosition = async (
   client: Pick<PrismaClientType, "flow">,
 ) => {

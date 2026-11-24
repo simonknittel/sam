@@ -43,10 +43,6 @@ const toMembershipVisibility = (
   }
 };
 
-/**
- * A redacted membership needs `organizationMembership;read` with the
- * attribute `alsoVisibilityRedacted`
- */
 const getReadableVisibilities = (actor: Actor) =>
   actor.authorize("organizationMembership", "read", [
     { key: "alsoVisibilityRedacted", value: true },
@@ -57,10 +53,6 @@ const getReadableVisibilities = (actor: Actor) =>
       ]
     : [OrganizationMembershipVisibility.PUBLIC];
 
-/**
- * The current members of the organization that the actor can see, sorted by
- * their handle. Deleted citizens are not members.
- */
 export const listActiveOrganizationMemberships = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,
@@ -93,10 +85,6 @@ export const listActiveOrganizationMemberships = async (
     );
 };
 
-/**
- * The current organizations of the citizen that the actor can see, sorted
- * by their name
- */
 export const listOrganizationMembershipsOfCitizen = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,

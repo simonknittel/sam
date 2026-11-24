@@ -74,14 +74,6 @@ const buildWhere = (
     : {}),
 });
 
-/**
- * The sent manual notifications, the newest first. The cursor is the id of a
- * notification.
- *
- * @throws ForbiddenError when the actor does not have `manualNotification;manage`
- * @throws ValidationError when no notification has the cursor (see
- * `PageOptions.unknownCursor`)
- */
 export const listManualNotifications = async (
   context: ApplicationContext,
   actor: Actor,
@@ -102,8 +94,6 @@ export const listManualNotifications = async (
     (cursorArguments) =>
       context.prisma.manualNotification.findMany({
         where,
-        // Two notifications can have the same `createdAt`, thus `id` makes
-        // the order total
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         select: MANUAL_NOTIFICATION_SELECT,
         ...cursorArguments,

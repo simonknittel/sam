@@ -6,14 +6,11 @@ import {
 } from "../citizenReference.js";
 import type { ApplicationContext } from "../context.js";
 
-/** A citizen as the pickers of the app offer it */
 export type PickableCitizen = CitizenReferenceRow;
 
 /**
- * Each active citizen as the pickers offer them: the combobox searches the
- * handle and submits the id, and the mention suggestions of the wiki do the
- * same. The list has no limit and goes to the browser, thus it carries
- * nothing else. Requires `citizen;read`.
+ * The list has no limit and goes to the browser, thus it carries only what the
+ * pickers need
  */
 export const listAllCitizens = async (
   context: ApplicationContext,

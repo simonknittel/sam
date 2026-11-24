@@ -7,10 +7,7 @@ import type { ApplicationContext } from "../context.js";
 const toComparableResource = (resource: string) =>
   resource.replace(/#.*$/, "").replace(/\/$/, "");
 
-/**
- * Whether a resource indicator (RFC 8707) names the MCP server of this app.
- * A resource with a fragment is not valid (RFC 8707 section 2).
- */
+/** A resource with a fragment is not valid (RFC 8707 section 2) */
 export const isMcpResource = (
   context: Pick<ApplicationContext, "urls">,
   resource: string,

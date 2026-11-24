@@ -27,11 +27,8 @@ import { EVENT_PAGE_RELATIONS_SELECT } from "./eventSelects.js";
 import { buildVisibleEventsWhere, toEventViewer } from "./eventVisibility.js";
 import { findNewEventIds, getOpenEventsWhere } from "./openEvents.js";
 
-/** The status filter of the events list */
 export enum EventListStatus {
-  /** See `getOpenEventsWhere()` */
   Open = "open",
-  /** The open events which are new for the viewer (see the read markers) */
   New = "new",
   /** Events which have started */
   Closed = "closed",
@@ -40,7 +37,6 @@ export enum EventListStatus {
 
 export enum EventParticipationFilter {
   All = "all",
-  /** Only the events with an active participation of the actor */
   Me = "me",
 }
 
@@ -80,28 +76,21 @@ export interface EventListEntry {
   readonly location: string | null;
   readonly source: EventSourceType;
   readonly visibility: EventVisibilityType;
-  /** The active participations */
   readonly participant_count: number;
-  /** False when a manager turned off the participation (see `get_event`) */
   readonly participation_enabled: boolean;
-  /** True when the sign-up needs an application (see `get_event`) */
   readonly application_required: boolean;
   readonly is_participating: boolean;
-  /** Open and unread for the actor (see the read markers) */
   readonly is_new: boolean;
 }
 
 export interface ListEventsOutput {
   readonly events: EventListEntry[];
-  /** Null on the last page */
   readonly next_cursor: string | null;
 }
 
 /**
- * An event card shows how many citizens take part and whether the viewer is
- * one of them. Thus the query counts the participants and loads only the
- * participation rows, the open invitation and the latest application of the
- * viewer, not a row for each participant.
+ * Not a row for each participant: the query counts the participants and loads
+ * only the rows of the viewer
  */
 const eventListSelect = (
   viewerParticipationWhere: Prisma.EventParticipantWhereInput,
@@ -118,11 +107,8 @@ const eventListSelect = (
     discordId: true,
     discordGuildId: true,
     discordImage: true,
-    // For the lineup and briefing checks
     lineupEnabled: true,
-    // Also hides the sign-up and the participant count of the event card
     participationEnabled: true,
-    // With the invitation and the application of the viewer, for the sign-up of the event card
     applicationRequired: true,
     invitations: {
       where: { ...viewerCitizenWhere, ...OPEN_INVITATION_WHERE },
@@ -165,25 +151,19 @@ export type EventListRow = Prisma.EventGetPayload<{
   select: ReturnType<typeof eventListSelect>;
 }>;
 
-/** The where of the invitations and the applications of the viewer */
 type ViewerCitizenWhere =
   { readonly citizenId: string } | { readonly id: { readonly in: string[] } };
 
-/**
- * The rows of the citizen of the actor. An actor without a citizen has none:
- * an empty where would match the rows of all citizens.
- */
+/** An empty where would match the rows of all citizens */
 const buildViewerCitizenWhere = (actor: Actor): ViewerCitizenWhere => {
   const citizenId = actor.citizen?.id ?? null;
 
   return citizenId === null ? { id: { in: [] } } : { citizenId };
 };
 
-/** The rows of the event cards of a list */
 export interface EventCardRows {
-  /** The participations of each event are the active ones of the actor */
+  /** Their participations are only the active ones of the actor */
   readonly events: EventListRow[];
-  /** The listed events with a cancelled participation of the actor */
   readonly cancelledParticipationEventIds: string[];
   readonly newEventIds: ReadonlySet<string>;
 }
@@ -201,10 +181,7 @@ const EMPTY_EVENT_LIST_PAGE: EventListPage = {
   prevCursor: null,
 };
 
-/**
- * The where fragment of the status filter. `null` when no event can match,
- * because nothing can be new for the actor.
- */
+/** `null` when nothing can be new for the actor */
 const getStatusWhere = (
   status: EventListStatus,
   now: Date,
@@ -246,12 +223,7 @@ const getSourceWhere = (type: EventTypeFilter): Prisma.EventWhereInput => {
   }
 };
 
-/**
- * Of the listed events, the ones the actor has cancelled their
- * participation for. Batched into a single query on purpose: every event
- * preview needs the flag, and asking per event would turn the lists into
- * N+1 queries.
- */
+/** One query for the whole list: each event preview needs the flag */
 const getCancelledParticipationEventIds = async (
   context: ApplicationContext,
   eventIds: string[],
@@ -272,7 +244,6 @@ const getCancelledParticipationEventIds = async (
   return rows.map((row) => row.eventId);
 };
 
-/** The active participations of the actor, by Discord account or citizen */
 const buildViewerParticipationWhere = (
   actor: Actor,
 ): Prisma.EventParticipantWhereInput => {
@@ -293,20 +264,10 @@ const buildViewerParticipationWhere = (
 };
 
 interface EventCardRowsOptions {
-  /** The moment of the read */
   readonly now: Date;
-  /**
-   * True for a list that holds only new events: each event is new without a
-   * read of the read markers
-   */
   readonly areAllNew?: boolean;
 }
 
-/**
- * The listed events with the flags of their cards: the events with a
- * cancelled participation of the actor and the events that are new for the
- * actor
- */
 const toEventCardRows = async (
   context: ApplicationContext,
   actor: Actor,
@@ -339,14 +300,6 @@ const toEventCardRows = async (
   };
 };
 
-/**
- * One page of the events that the actor can see, with the rows that the
- * event cards of the app render. The app pages in both directions, the
- * `listEvents` use case only forward.
- *
- * @throws ValidationError for a cursor of no event, unless the options give
- * `UnknownCursorBehavior.FirstPage`
- */
 export const findEventListPage = (
   context: ApplicationContext,
   actor: Actor,
@@ -393,7 +346,6 @@ export const findEventListPage = (
             viewerParticipationWhere,
             buildViewerCitizenWhere(actor),
           ),
-          // Events with the same start keep one order on all pages
           orderBy: [{ startTime: orderDirection }, { id: orderDirection }],
           ...cursorArguments,
         }),
@@ -403,7 +355,6 @@ export const findEventListPage = (
     return {
       ...(await toEventCardRows(context, actor, page.items, {
         now,
-        // The "new" status lists only new events
         areAllNew: input.status === EventListStatus.New,
       })),
       nextCursor: page.nextCursor,
@@ -412,12 +363,8 @@ export const findEventListPage = (
   });
 
 /**
- * All events of the where fragment that the actor can see, with the rows
- * that the event cards of the app render, sorted by the start. For the lists
- * outside of the events page, for example the calendar. The caller limits
- * the number of the events with the fragment (for example a date range).
- *
- * @throws ForbiddenError without `event;read`
+ * The caller limits the number of the events with the fragment (for example a
+ * date range)
  */
 export const findEventCardRows = (
   context: ApplicationContext,
@@ -441,11 +388,6 @@ export const findEventCardRows = (
     return toEventCardRows(context, actor, events, { now: context.now() });
   });
 
-/**
- * The events that the actor can see, filtered like the events page of the
- * app, in pages. Open and new events are sorted by the start ascending, the
- * others descending.
- */
 export const listEvents = async (
   context: ApplicationContext,
   actor: Actor,

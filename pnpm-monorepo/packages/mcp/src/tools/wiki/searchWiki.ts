@@ -28,7 +28,6 @@ export const searchWikiTool = defineTool({
     ),
     tags: z.array(z.strictObject({ id: z.string(), name: z.string() })),
   }),
-  // Each signed-in user can read the public pages. The use case checks each page.
   isVisible: () => true,
   handler: searchWiki,
 });

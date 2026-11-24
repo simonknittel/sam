@@ -41,7 +41,6 @@ export const roleTagDescriptionSchema = z
   .trim()
   .max(ROLE_TAG_DESCRIPTION_MAXIMUM_LENGTH);
 
-/** An add or remove list of the links between roles and tags */
 export const roleTagAssignmentIdsSchema = z
   .array(idSchema)
   .max(ROLE_TAG_ASSIGNMENT_CHANGES_MAXIMUM)

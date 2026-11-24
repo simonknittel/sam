@@ -1,6 +1,5 @@
 import * as z from "zod";
 
-/** A tag in `list_role_tags` and after a write of a tag */
 export const roleTagOutputSchema = z.strictObject({
   id: z.string(),
   name: z.string(),

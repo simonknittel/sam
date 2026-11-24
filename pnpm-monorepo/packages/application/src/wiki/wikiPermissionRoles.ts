@@ -49,9 +49,8 @@ export const findWikiPermissionRoles = async (
 };
 
 /**
- * The wiki viewer of a different citizen, for example to check that a new
- * owner can reach the page. The same viewer as the one of the actor in
- * `buildWikiContext()`, without the admin mode.
+ * The same viewer as the one of the actor in `buildWikiContext()`, without the
+ * admin mode
  */
 export const toWikiPageViewerOfCitizen = async (
   context: Pick<ApplicationContext, "prisma">,

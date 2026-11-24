@@ -9,9 +9,8 @@ const LOCK_WAIT_TIMEOUT_MILLISECONDS = 3_000;
 const POLL_INTERVAL_MILLISECONDS = 10;
 
 /**
- * Waits until a session of the test database waits for a lock. The test
- * files run one after the other, thus no other test takes locks at the same
- * time.
+ * The test files run one after the other, thus no other test takes locks at
+ * the same time
  */
 const waitForLockWait = () =>
   vi.waitFor(

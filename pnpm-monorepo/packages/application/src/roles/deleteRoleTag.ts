@@ -13,19 +13,11 @@ export const deleteRoleTagInputSchema = z.object({
 
 export type DeleteRoleTagInput = z.output<typeof deleteRoleTagInputSchema>;
 
-/** The tag before the delete */
 export interface DeleteRoleTagOutput {
   readonly id: string;
   readonly name: string;
 }
 
-/**
- * Deletes a tag permanently. The roles lose the tag, and the roles stay.
- * Requires `role;manage`. The audit event keeps the name and all roles of
- * the tag.
- *
- * @throws NotFoundError when the tag does not exist
- */
 export const deleteRoleTag = (
   context: ApplicationContext,
   actor: Actor,

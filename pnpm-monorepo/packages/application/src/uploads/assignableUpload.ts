@@ -27,7 +27,6 @@ interface OwnedUpload {
   readonly mimeType: string;
 }
 
-/** Whether the stored MIME type is the type of an image */
 export const isImageUpload = (upload: Pick<OwnedUpload, "mimeType">) =>
   upload.mimeType.startsWith("image/");
 
@@ -42,12 +41,6 @@ const isOwnUpload = (upload: OwnedUpload, citizenId: string) =>
 export const isOwnImageUpload = (upload: OwnedUpload, citizenId: string) =>
   isOwnUpload(upload, citizenId) && isImageUpload(upload);
 
-/**
- * `isOwnImageUpload()` with an error for each failed part
- *
- * @throws ForbiddenError `UploadErrorMessage.NotOwnUpload`
- * @throws ValidationError `UploadErrorMessage.NotAnImage`
- */
 export const requireOwnImageUpload = (
   upload: OwnedUpload,
   citizen: ActorCitizen,

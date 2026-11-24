@@ -19,11 +19,7 @@ import { findOwnNotificationSettings } from "./ownNotificationReads.js";
 const MAXIMUM_SETTING_INPUT_NAME_LENGTH = 100;
 
 export const updateNotificationSettingsInputSchema = z.object({
-  /**
-   * The names of the inputs that are switched on (see
-   * `getNotificationSettingInputName()`). A type that is not in the list is
-   * switched off for the channel.
-   */
+  /** A type that is not in the list is switched off for the channel */
   enabled_input_names: z
     .array(z.string().max(MAXIMUM_SETTING_INPUT_NAME_LENGTH))
     .max(MAXIMUM_NOTIFICATION_SETTING_INPUTS),
@@ -39,9 +35,7 @@ export interface NotificationSettingChange {
 }
 
 export interface UpdateNotificationSettingsOutput {
-  /** The settings that the save switched on */
   readonly enabled: NotificationSettingChange[];
-  /** The settings that the save switched off */
   readonly disabled: NotificationSettingChange[];
 }
 
@@ -50,7 +44,6 @@ interface NotificationSettingKey {
   readonly channel: NotificationChannel;
 }
 
-/** Each notification type for each channel, in the order of the settings page */
 const ALL_NOTIFICATION_SETTINGS: readonly NotificationSettingKey[] =
   Object.values(NotificationChannel).flatMap((channel) =>
     NOTIFICATION_SETTING_TYPES.map((notificationType) => ({
@@ -59,13 +52,6 @@ const ALL_NOTIFICATION_SETTINGS: readonly NotificationSettingKey[] =
     })),
   );
 
-/**
- * Saves the notification settings of the citizen of the actor. The input
- * holds all settings that are switched on. The save writes only the
- * settings that changed.
- *
- * @throws ForbiddenError for a user without a citizen
- */
 export const updateNotificationSettings = (
   context: ApplicationContext,
   actor: Actor,

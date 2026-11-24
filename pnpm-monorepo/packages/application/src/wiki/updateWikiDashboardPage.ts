@@ -22,15 +22,6 @@ export interface UpdateWikiDashboardPageOutput {
   readonly page_id: string | null;
 }
 
-/**
- * Sets the page that the dashboard of the app shows. The dashboard is global
- * curation, thus it needs `wiki;manage`: the managers of a page manage their
- * pages, not what the dashboard shows.
- *
- * @throws ForbiddenError without `wiki;manage`
- * @throws NotFoundError when the page is not a page of the global wiki or
- * is in the trash
- */
 export const updateWikiDashboardPage = (
   context: ApplicationContext,
   actor: Actor,

@@ -10,12 +10,11 @@ import { withSpan } from "../withSpan.js";
 import { getHumanResourcesRoleIds } from "./getHumanResourcesRoleIds.js";
 
 /**
- * The handles of the Human Resources contacts, sorted by handle. No actor and
- * no permission check: the clearance page calls it for a user without
- * permissions. The where-fragment matches a superset, because Prisma cannot
- * compare `currentLevel` with `Role.maxLevel`. The rule of the session
- * callback (level gate, inheritance, `login;negate`) applies in memory.
- * Banned users cannot sign in, thus their citizens are not listed.
+ * The where-fragment matches a superset, because Prisma cannot compare
+ * `currentLevel` with `Role.maxLevel`. The rule of the session callback (level
+ * gate, inheritance, `login;negate`) applies in memory. Banned users cannot
+ * sign in, thus their citizens are not listed. No permission check, see the
+ * README.
  */
 export const listHumanResourcesContacts = (
   context: ApplicationContext,

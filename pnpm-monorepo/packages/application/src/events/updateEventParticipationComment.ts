@@ -11,10 +11,7 @@ import {
 } from "./ownParticipation.js";
 import { requireOpenParticipatableAppEvent } from "./participatableAppEvent.js";
 
-/**
- * Replaces the comment of the own sign-up. An empty or missing comment
- * removes it.
- */
+/** An empty or missing comment removes the comment */
 export const updateEventParticipationComment = (
   context: ApplicationContext,
   actor: Actor,

@@ -8,9 +8,8 @@ import { VISIBLE_EVENT_MANAGE_GUARD_SELECT } from "./eventManageGuard.js";
 import { canActorSeeEvent } from "./eventVisibility.js";
 
 /**
- * Loads an app event for a participation write. Gives null when the event
- * does not exist, is not an app event, is soft-deleted or is not visible to
- * the actor — deliberately indistinguishable cases.
+ * Null also when the event is soft-deleted or not visible to the actor:
+ * deliberately indistinguishable cases
  */
 export const findParticipatableAppEvent = async (
   context: ApplicationContext,
@@ -35,10 +34,7 @@ export const findParticipatableAppEvent = async (
 };
 
 /**
- * The guard of each write of a participation or of the lineup of an event:
- * while a manager turned the participation off, nobody can sign up or be
- * added, and the lineup is hidden. The positions stay for a later switch to
- * true.
+ * The guard of each write of a participation or of the lineup of an event.
  *
  * @throws ConflictError
  */
@@ -65,17 +61,14 @@ interface LockParticipationEnabledEventOptions {
 }
 
 /**
- * The check of `requireParticipationEnabled()` again, in the transaction of
- * a write that adds a participant, an invitation, an application or an
- * assignment. The shared lock on the row of the event waits for a switch
- * that changed the row first, and a switch that comes later waits for this
- * transaction. Thus the switch of the participation to false cannot clear
- * the participation before the write adds a row that it then keeps, and the
- * switch of the applications to false cannot approve the open applications
- * before a new one. Call it first in the transaction. Gives the switches of
- * the locked row.
- *
- * PostgreSQL releases the lock at the commit or the rollback.
+ * The check of `requireParticipationEnabled()` again, in the transaction of a
+ * write that adds a participant, an invitation, an application or an
+ * assignment. The shared lock on the row of the event waits for a switch that
+ * changed the row first, and a switch that comes later waits for this
+ * transaction. Thus the switch of the participation to false cannot clear the
+ * participation before the write adds a row that it then keeps, and the switch
+ * of the applications to false cannot approve the open applications before a
+ * new one. Call it first in the transaction.
  *
  * @throws NotFoundError or ConflictError
  */
@@ -100,12 +93,6 @@ export const lockParticipationEnabledEvent = async (
   return event;
 };
 
-/**
- * Like `findParticipatableAppEvent()`, but throws instead of giving null, and
- * when the participation of the event is turned off
- *
- * @throws NotFoundError or ConflictError
- */
 export const requireParticipatableAppEvent = async (
   context: ApplicationContext,
   actor: Actor,
@@ -129,10 +116,6 @@ export const isParticipationOpen = (
   now: Date,
 ): boolean => event.endTime !== null && event.endTime > now;
 
-/**
- * The app event of an own participation write: visible to the actor, and
- * the participation is still open
- */
 export const requireOpenParticipatableAppEvent = async (
   context: ApplicationContext,
   actor: Actor,

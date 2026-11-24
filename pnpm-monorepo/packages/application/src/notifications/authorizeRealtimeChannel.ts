@@ -47,14 +47,6 @@ const requireVisibleEvent = async (
     throw new ForbiddenError(NotificationErrorMessage.RealtimeChannelForbidden);
 };
 
-/**
- * Checks that the actor may subscribe to a private realtime channel. The
- * host signs the subscription after the check. A citizen may subscribe only
- * to the channel of their own on-site notifications.
- *
- * @throws ForbiddenError when the actor may not subscribe to the channel
- * @throws ValidationError when the name has no prefix of a realtime channel
- */
 export const authorizeRealtimeChannel = async (
   context: ApplicationContext,
   actor: Actor,

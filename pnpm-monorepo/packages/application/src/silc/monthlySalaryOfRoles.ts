@@ -4,10 +4,8 @@ import type { ApplicationContext } from "../context.js";
 import { withSpan } from "../withSpan.js";
 
 /**
- * The SILC a citizen with these role assignments receives each month. The
- * same rule as the salary job: only the direct assignments count, and a role
- * with levels pays only at its maximum level. The caller does the
- * authorization, because the necessary permission is different for the own
+ * The same rule as the salary job (see `getPaidAssignments()`). The caller does
+ * the authorization, because the necessary permission is different for the own
  * citizen and for other citizens.
  */
 export const getMonthlySalaryOfRoles = (

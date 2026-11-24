@@ -21,10 +21,6 @@ export interface ReorderLineupOutput {
   readonly container_id: string;
 }
 
-/**
- * Sets the order and the parents of the positions of the lineup of an event
- * or of an event template that the actor can change
- */
 export const reorderLineup = (
   context: ApplicationContext,
   actor: Actor,

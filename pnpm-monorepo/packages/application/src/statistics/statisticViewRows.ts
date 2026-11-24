@@ -3,7 +3,6 @@ import * as z from "zod";
 import type { ApplicationContext } from "../context.js";
 import { getStatisticDefinition, StatisticKey } from "./statisticCatalog.js";
 
-/** One value of one series on one day */
 export interface StatisticValueRow {
   /** `YYYY-MM-DD` */
   readonly day: string;
@@ -59,7 +58,6 @@ const acquisitionSourceRowsSchema = z.array(
   }),
 );
 
-/** The ids and the names of the series of the fleet values */
 enum AcquisitionSourceSeries {
   Total = "total",
   Store = "store",
@@ -80,12 +78,7 @@ const ACQUISITION_SOURCE_SERIES_NAMES: Readonly<
 const dayFilter = ({ from, to }: StatisticRowQuery) =>
   Prisma.sql`"day" BETWEEN ${from}::date AND ${to}::date`;
 
-/**
- * The one series of a statistic: the series id is the key of the statistic,
- * the name is its title
- *
- * @param source A query with the columns `day` and `value`
- */
+/** @param source A query with the columns `day` and `value` */
 const readSingleSeries = async (
   context: Pick<ApplicationContext, "prisma">,
   query: StatisticRowQuery,
@@ -109,8 +102,6 @@ const readSingleSeries = async (
 };
 
 /**
- * The total and the three acquisition sources of the fleet value
- *
  * @param columns The columns `store`, `inGame` and `unknown` of
  * `statistics.daily_fleet_values` in one currency
  */
@@ -194,11 +185,8 @@ const readRoleSeries = async (
 };
 
 /**
- * The rows of the view of the statistic for the days of the range, in no
- * order. The views give only complete days (until yesterday in the time zone
- * of the organization), thus a day without a row has no value. The view
- * names, the column names and the filters are fixed SQL; the days and the
- * ids are bound parameters.
+ * In no order. The view names, the column names and the filters are fixed SQL;
+ * the days and the ids are bound parameters.
  */
 export const readStatisticRows = (
   context: Pick<ApplicationContext, "prisma">,

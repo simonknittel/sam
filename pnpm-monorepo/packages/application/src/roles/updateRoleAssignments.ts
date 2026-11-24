@@ -29,22 +29,17 @@ export type UpdateRoleAssignmentsInput = z.infer<
 
 export interface RoleAssignmentUpdate {
   readonly role_id: string;
-  /** True: the citizen got the role. False: the citizen lost it. */
   readonly enabled: boolean;
 }
 
 export interface UpdateRoleAssignmentsOutput {
   readonly citizen_id: string;
-  /** Empty when nothing changed */
   readonly changes: RoleAssignmentUpdate[];
 }
 
 /**
- * Gives the roles of the list to a citizen and removes all other roles.
- * Requires a citizen. A change that the actor may not make (see
- * `canAssignRole()` and `canDismissRole()`) is left out without an error.
- * The citizen gets a notification for each added role, except when the
- * citizen is the actor.
+ * A change that the actor may not make (see `canAssignRole()` and
+ * `canDismissRole()`) is left out without an error.
  *
  * @throws NotFoundError when the citizen does not exist
  * @throws ConflictError when the citizen is deleted
@@ -89,10 +84,6 @@ export const updateRoleAssignments = (
     });
 
     if (changes.length > 0) {
-      /**
-       * The history rows are in the same transaction, thus a failed change
-       * writes no history
-       */
       await context.prisma.$transaction([
         ...changes.map((change) =>
           change.enabled
@@ -138,8 +129,6 @@ export const updateRoleAssignments = (
       ]);
     }
 
-    // The actor gets no notification about a role that the actor gave to
-    // the own citizen
     const notifications =
       input.citizen_id === actorCitizen.id
         ? []

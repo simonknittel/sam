@@ -10,7 +10,6 @@ import { truncateAllTables } from "../../test/database.js";
 import { sendBirthdayGreetings } from "./sendBirthdayGreetings.js";
 import { sendNewYearGreetings } from "./sendNewYearGreetings.js";
 
-/** The interval of the schedule of the greeting automations */
 const RUN_INTERVAL_IN_MILLISECONDS = 15 * 60 * 1000;
 
 beforeEach(async () => {
@@ -72,7 +71,6 @@ test("greets a citizen once on the birthday in their own time zone", async () =>
     prisma.citizen.findUniqueOrThrow({ where: { id: sameDayInBerlin.id } }),
   ).resolves.toMatchObject({ birthdayGreetingSentAt: null });
 
-  // The next run greets nobody
   const secondRun = createTestApplicationContext({
     now: new Date(now.getTime() + RUN_INTERVAL_IN_MILLISECONDS),
   });

@@ -44,14 +44,6 @@ export interface CreateCitizenLogOutput {
   readonly type: string;
 }
 
-/**
- * Adds an identity log or a note to an active citizen. An identity log
- * needs the create permission of its type, a note `note;create` for its note
- * type and classification level.
- *
- * @throws NotFoundError when the citizen, the note type or the
- * classification level does not exist or is deleted
- */
 export const createCitizenLog = (
   context: ApplicationContext,
   actor: Actor,

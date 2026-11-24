@@ -18,7 +18,6 @@ import {
 } from "./resolveClientMetadata.js";
 import { isMcpResource } from "./resource.js";
 
-/** The query of an authorization request, as the framework gives it */
 export type AuthorizationRequestParameters = Readonly<
   Record<string, string | string[] | undefined>
 >;
@@ -51,7 +50,6 @@ export enum AuthorizationErrorCode {
   InvalidTarget = "invalid_target",
 }
 
-/** Each consent gives exactly this scope, see `MCP_SCOPE` */
 const GRANTED_SCOPE = MCP_SCOPE;
 
 const MAX_STATE_LENGTH = 512;
@@ -59,9 +57,8 @@ const MAX_STATE_LENGTH = 512;
 const urlParameterSchema = z.string().min(1).max(MAX_URL_LENGTH);
 
 /**
- * The parameters of an authorization request after the client and the
- * redirect URI are valid. A parameter that the request repeats is an array,
- * thus it is not valid (RFC 6749 section 3.1).
+ * A parameter that the request repeats is an array, thus it is not valid (RFC
+ * 6749 section 3.1)
  */
 export const authorizationRequestSchema = z.object({
   code_challenge: z.string().regex(PKCE_VALUE),
@@ -74,13 +71,11 @@ export type AuthorizationRequestValidation =
   | {
       readonly kind: AuthorizationRequestValidationKind.Valid;
       readonly client: ClientMetadata;
-      /** The redirect URI of the request, with its port for a loopback URI */
+      /** With the port of the request for a loopback URI */
       readonly redirectUri: string;
       readonly codeChallenge: string;
       readonly state: string | undefined;
-      /** The scope that the consent gives */
       readonly scope: string;
-      /** The canonical URL of the MCP server */
       readonly resource: string;
     }
   | {
@@ -111,9 +106,8 @@ const toClientErrorReason = (reason: ClientMetadataErrorReason) => {
 };
 
 /**
- * Validates an authorization request (RFC 6749 section 4.1.1 with PKCE and
- * RFC 8707). The consent page calls it before it shows the consent, and the
- * approve and deny actions call it again with the parameters of the form.
+ * The consent page calls it before it shows the consent, and the approve and
+ * deny actions call it again with the parameters of the form
  */
 export const validateAuthorizationRequest = async (
   context: ApplicationContext,
@@ -238,10 +232,8 @@ export const validateAuthorizationRequest = async (
 };
 
 /**
- * Builds the URL of an authorization response (RFC 6749 section 4.1.2) or
- * an error response (section 4.1.2.1). `iss` tells the client which server
- * answers (RFC 9207). Call it only with a redirect URI that
- * `validateAuthorizationRequest()` accepted.
+ * Call it only with a redirect URI that `validateAuthorizationRequest()`
+ * accepted. `iss` tells the client which server answers (RFC 9207).
  */
 export const buildAuthorizationResponseUrl = (
   context: Pick<ApplicationContext, "urls">,

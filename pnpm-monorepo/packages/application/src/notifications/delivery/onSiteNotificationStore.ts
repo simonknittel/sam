@@ -7,12 +7,10 @@ import {
 import { findClearedCitizens } from "../../auth/clearedCitizens.js";
 import type { ApplicationContext } from "../../context.js";
 
-/** One on-site notification for one receiver, before the store writes it */
 export type OnSiteNotificationDraft = {
   readonly receiverId: string;
 } & ParsedOnSiteNotificationPayload;
 
-/** A written on-site notification, with the fields of the realtime event */
 export interface StoredOnSiteNotification {
   readonly id: string;
   readonly citizenId: string;
@@ -23,16 +21,13 @@ export interface StoredOnSiteNotification {
 }
 
 /**
- * Writes one on-site notification for each draft of a cleared receiver (see
- * `findClearedCitizens()`). A receiver that is deleted, that has no user, a
- * banned user or an unconfirmed email, or that does not have the effective
- * `login;manage` gets no notification on any channel. This is the only
- * place that must check this clearance rule: a recipient rule checks the
- * rules of its feature, and the other channels send only to the receivers of
- * the written rows. The one exception is the confirmation of a new web push
- * subscription, which has no row and no clearance check. On-site is always
- * on, thus the settings of the citizen do not filter the rows (they filter
- * only web push).
+ * Only the cleared receivers (see `findClearedCitizens()`) get a notification,
+ * on any channel. This is the only place that must check this clearance rule: a
+ * recipient rule checks the rules of its feature, and the other channels send
+ * only to the receivers of the written rows. The one exception is the
+ * confirmation of a new web push subscription, which has no row and no
+ * clearance check. On-site is always on, thus the settings of the citizen do
+ * not filter the rows (they filter only web push).
  */
 export const storeOnSiteNotifications = async (
   context: ApplicationContext,

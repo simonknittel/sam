@@ -12,12 +12,7 @@ export const stopAssumingUserInputSchema = z.object({
 
 export type StopAssumingUserInput = z.infer<typeof stopAssumingUserInputSchema>;
 
-/**
- * Writes the end of an assume to the audit log. The admin is the creator of
- * the event. The caller checks that an admin is behind the session: the
- * actor during an assume is the assumed user, thus the use case has no
- * actor. See the exceptions in the README of the package.
- */
+/** No permission check, see the README */
 export const stopAssumingUser = (
   context: ApplicationContext,
   input: StopAssumingUserInput,

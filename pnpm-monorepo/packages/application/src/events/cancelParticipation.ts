@@ -15,17 +15,14 @@ interface Input {
 }
 
 interface CancelParticipationOutput {
-  /** The names of the lineup positions that the citizen held before */
   readonly vacatedPositionNames: string[];
 }
 
 /**
- * Soft-cancels one participation and drops everything it granted. The
- * cancelled row stays as history; the unique rule for active sign-ups
- * ignores it, thus the citizen can sign up again. Like the Discord sync on
- * an RSVP withdrawal, the citizen's position applications and lineup
- * assignments go with it. Takes the transaction client so the activity entry
- * the caller writes commits together with all of it.
+ * Soft-cancels one participation and drops everything it granted, like the
+ * Discord sync on an RSVP withdrawal. The cancelled row stays as history; the
+ * unique rule for active sign-ups ignores it, thus the citizen can sign up
+ * again.
  *
  * @returns null if the participation was cancelled before, for example by a
  * parallel request. Then nothing changed.

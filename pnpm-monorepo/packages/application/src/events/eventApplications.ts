@@ -38,11 +38,6 @@ const buildOpenApplicationsWhere = ({
   ...OPEN_APPLICATION_WHERE,
 });
 
-/**
- * Withdraws the open applications of the citizens at the event and writes an
- * activity entry for each of them. Takes the transaction client, thus the
- * entries commit together with the change that withdrew the applications.
- */
 export const withdrawOpenApplications = async (
   transaction: Prisma.TransactionClient,
   input: CloseOpenApplicationsInput,
@@ -67,11 +62,7 @@ export const withdrawOpenApplications = async (
   return withdrawn;
 };
 
-/**
- * Approves the open applications of the citizens at the event and writes an
- * activity entry for each of them. The caller signs the citizens up, see
- * `admitApplicants()`. Gives the comments of the applications.
- */
+/** The caller signs the citizens up, see `admitApplicants()` */
 export const approveOpenApplications = async (
   transaction: Prisma.TransactionClient,
   input: CloseOpenApplicationsInput,
@@ -98,7 +89,6 @@ export const approveOpenApplications = async (
 
 export interface AdmittedApplicants {
   readonly approvedApplications: ApplicationOfCitizen[];
-  /** The open invitations of the applicants, which the sign-ups replace */
   readonly withdrawnInvitations: InvitationOfCitizen[];
 }
 
@@ -108,10 +98,8 @@ export const NO_ADMITTED_APPLICANTS: AdmittedApplicants = {
 };
 
 /**
- * Approves the open applications of the citizens at the event and signs the
- * applicants up with the comments of their applications. Like the direct
- * sign-up of a manager, it withdraws the open invitations of the applicants.
- * Takes the transaction client of a write that locked the event first (see
+ * Like the direct sign-up of a manager, it withdraws the open invitations of
+ * the applicants. The transaction locked the event first (see
  * `lockParticipationEnabledEvent()`).
  */
 export const admitApplicants = async (
@@ -159,11 +147,9 @@ export interface ClosedApplications extends AdmittedApplicants {
 
 /**
  * The switch of the applications to false: approves the open applications of
- * the citizens who can still see the event, log in and get its
- * notifications (see `admitApplicants()` and `findAddableParticipantIds()`),
- * and withdraws the others. The event has the values of the update, for
- * example a new visibility. Takes the transaction client of the update that
- * locked the event.
+ * the citizens who can still see the event (see `findAddableParticipantIds()`),
+ * and withdraws the others. The event has the values of the update, for example
+ * a new visibility. The transaction locked the event.
  */
 export const closeOpenApplications = async (
   transaction: Prisma.TransactionClient,
@@ -223,11 +209,6 @@ export const buildApplicationAuditEvents = (
     createdById,
   }));
 
-/**
- * The notifications of the applicants about the answer of a manager (see
- * `findEventCitizenRecipient()`). The actor gets no notification about the
- * own application.
- */
 export const buildApplicationAnsweredNotifications = (
   eventId: Event["id"],
   applications: readonly ApplicationOfCitizen[],

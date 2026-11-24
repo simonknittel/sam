@@ -4,11 +4,6 @@ import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { requireCitizenReadAccess } from "./citizenAccess.js";
 
-/**
- * The identity columns hold the content of the latest confirmed log entry of
- * their type. The overview shows them; their history stays behind the
- * history modal, which reads the logs with its own query.
- */
 const SPYNET_CITIZEN_SELECT = {
   id: true,
   handle: true,
@@ -29,11 +24,8 @@ export type SpynetCitizen = Prisma.CitizenGetPayload<{
 }>;
 
 /**
- * The active citizen of the Spynet pages, or null. The pages hide the values
- * that the actor cannot read; the MCP server reads a citizen with the
- * `getCitizen` use case.
- *
- * @throws ForbiddenError without `citizen;read`, except for the own citizen
+ * The pages hide the values that the actor cannot read; the MCP server reads a
+ * citizen with the `getCitizen` use case
  */
 export const findSpynetCitizen = async (
   context: Pick<ApplicationContext, "prisma">,

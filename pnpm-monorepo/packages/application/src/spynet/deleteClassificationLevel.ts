@@ -19,12 +19,6 @@ export type DeleteClassificationLevelInput = z.infer<
   typeof deleteClassificationLevelInputSchema
 >;
 
-/**
- * Deletes a classification level, and the permission strings that refer to
- * it. Requires `classificationLevel;manage`.
- *
- * @throws NotFoundError when the classification level does not exist
- */
 export const deleteClassificationLevel = async (
   context: ApplicationContext,
   actor: Actor,
@@ -32,10 +26,6 @@ export const deleteClassificationLevel = async (
 ): Promise<NoteClassificationRow> => {
   requirePermission(actor, "classificationLevel", "manage");
 
-  /**
-   * The delete fails with a missing record when a different user or tab
-   * deleted the classification level before.
-   */
   const [classificationLevel] = await rethrowRecordNotFound(
     () =>
       context.prisma.$transaction([

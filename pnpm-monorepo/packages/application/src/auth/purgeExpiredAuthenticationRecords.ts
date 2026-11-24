@@ -20,14 +20,9 @@ export interface PurgeExpiredAuthenticationRecordsOutput {
 }
 
 /**
- * Deletes the authentication records that outlived their `expires`
- * timestamp. None of them grants anything anymore: the sign-in treats an
- * expired session as signed out, and both token lookups filter on `expires`.
- * Without this run they stay in their tables forever.
- *
- * An expired session stays for 30 more days for the session list of the
- * account. The tokens are never shown, thus they are deleted as soon as they
- * expire.
+ * None of the records grants anything: the sign-in treats an expired session as
+ * signed out, and both token lookups filter on `expires`. The tokens are never
+ * shown, thus they are deleted as soon as they expire.
  */
 export const purgeExpiredAuthenticationRecords = (
   context: ApplicationContext,

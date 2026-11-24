@@ -44,11 +44,9 @@ const findLastFleetChange = async (
 };
 
 /**
- * Requests the fleet update reminder for the citizen when the citizen did not
- * change their own ships for `FLEET_UPDATE_REMINDER_UNCHANGED_MONTHS` or
- * more. The citizen gets one reminder for each such time: the next reminder
- * comes only after a new change and the same time again. The app calls it on
- * the first visit of the day of the citizen.
+ * The citizen gets one reminder for each such time: the next reminder comes
+ * only after a new change and the same time again. The app calls it on the
+ * first visit of the day of the citizen.
  */
 export const sendDueFleetUpdateReminder = (
   context: ApplicationContext,

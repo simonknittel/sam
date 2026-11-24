@@ -1,11 +1,5 @@
-/**
- * The typed errors of the use cases. Each app maps them to its own response:
- * the Next.js app to a translated text, the MCP server to a tool error. The
- * messages are short English texts for the logs and for the MCP clients.
- */
 import { isPrismaError, PrismaErrorCode } from "@sam-monorepo/database/client";
 
-/** The actor does not have the permission for the operation */
 export class ForbiddenError extends Error {
   override readonly name = "ForbiddenError";
 
@@ -44,12 +38,7 @@ export class ValidationError extends Error {
   }
 }
 
-/**
- * Runs a write of Prisma. A write fails with P2025 when its record, or a
- * record that it connects, is gone, for example after a delete between the
- * read and the write: then the function throws a `NotFoundError` with the
- * message. It throws all other errors again.
- */
+/** P2025 also comes when a record that the write connects is gone */
 export const rethrowRecordNotFound = async <Result>(
   write: () => Promise<Result>,
   message: string,
@@ -64,12 +53,6 @@ export const rethrowRecordNotFound = async <Result>(
   }
 };
 
-/**
- * Runs a write of Prisma. A write fails with P2002 when a different record
- * already has the value of a unique column, for example a name that must be
- * unique: then the function throws a `ValidationError` with the message. It
- * throws all other errors again.
- */
 export const rethrowUniqueConstraintFailed = async <Result>(
   write: () => Promise<Result>,
   message: string,

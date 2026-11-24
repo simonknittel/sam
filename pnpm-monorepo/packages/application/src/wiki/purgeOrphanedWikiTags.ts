@@ -7,10 +7,9 @@ export interface PurgeOrphanedWikiTagsOutput {
 }
 
 /**
- * Deletes the wiki tags that no page uses anymore. A page that loses its
- * last use of a tag normally deletes the tag in the same request. This
- * sweep deletes the orphans that a permanent page deletion leaves behind:
- * the assignments cascade with the page, but the tag stays.
+ * A page that loses its last use of a tag normally deletes the tag in the same
+ * request. This sweep deletes the orphans that a permanent page deletion
+ * leaves behind: the assignments cascade with the page, but the tag stays.
  */
 export const purgeOrphanedWikiTags = (
   context: ApplicationContext,

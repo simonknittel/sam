@@ -23,12 +23,9 @@ export interface DeleteCitizenOutput {
 
 /**
  * Soft delete: the citizen and all its entries stay in the database and are
- * hidden (see `Citizen.deletedAt`). The link to the login goes, thus the
- * login continues as a login without a citizen. The log tables and the
- * system log name the author by `User.name`, thus the login gets the label
- * of a deleted citizen. Requires `citizen;delete`.
- *
- * @throws NotFoundError when the citizen does not exist or is deleted already
+ * hidden (see `Citizen.deletedAt`). The login continues as a login without a
+ * citizen. The log tables and the system log name the author by `User.name`,
+ * thus the login gets the label of a deleted citizen.
  */
 export const deleteCitizen = (
   context: ApplicationContext,

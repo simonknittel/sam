@@ -29,9 +29,6 @@ export const createVariantInputSchema = z.object({
 });
 
 /**
- * Adds a variant to a series, with its tags, its external links and the wiki
- * page that the variant page embeds.
- *
  * @throws NotFoundError when the series does not exist
  * @throws ValidationError when a variant of the series has the name already,
  * when two links have the same service or when the actor cannot read the wiki

@@ -7,11 +7,7 @@ export interface FindFleetUpdateReminderRecipientInput {
   readonly citizenId: string;
 }
 
-/**
- * The citizen of a fleet update reminder, when the citizen can log in and
- * manage their own ships on the page that the reminder links to. Null for a
- * citizen without these permissions.
- */
+/** The page that the reminder links to needs these permissions */
 export const findFleetUpdateReminderRecipient = async (
   context: ApplicationContext,
   input: FindFleetUpdateReminderRecipientInput,

@@ -15,9 +15,7 @@ export enum MyNotificationReadFilter {
 }
 
 export enum MyNotificationArchivedFilter {
-  /** The inbox of the notification center */
   No = "no",
-  /** The archive of the notification center */
   Yes = "yes",
   All = "all",
 }
@@ -95,14 +93,6 @@ const buildArchivedWhere = (
   }
 };
 
-/**
- * The notifications of the citizen of the actor, filtered by the read state
- * and by the archive, the newest first. The notification center uses
- * `listOwnOnSiteNotifications()` instead, which pages through one tab.
- *
- * @throws ForbiddenError for a user without a citizen
- * @throws ValidationError when no own notification has the cursor
- */
 export const listMyNotifications = async (
   context: ApplicationContext,
   actor: Actor,
@@ -122,8 +112,6 @@ export const listMyNotifications = async (
       (cursorArguments) =>
         context.prisma.onSiteNotification.findMany({
           where,
-          // Two notifications can have the same `createdAt`, thus `id` makes
-          // the order total
           orderBy: [{ createdAt: "desc" }, { id: "desc" }],
           select: {
             id: true,

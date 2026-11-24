@@ -17,13 +17,11 @@ import { buildVariantWikiContext } from "./variantWikiContext.js";
 import { buildWikiContext } from "./wikiContext.js";
 import { requireAccessibleWikiPage, type WikiScope } from "./wikiScope.js";
 
-/** A page in the list of a page-index node, with its subpages */
 export interface WikiPageIndexEntry {
   readonly id: string;
   readonly title: string;
   readonly slug: string;
   readonly iconId: string | null;
-  /** The route of the page in the scope of the list */
   readonly href: string;
   readonly children: readonly WikiPageIndexEntry[];
 }
@@ -54,13 +52,11 @@ const trimToDepth = (
 };
 
 /**
- * The pages of a page-index node that the actor can see, with the routes of
- * the scope. Only pages of the scope that are not in the trash. The
- * sidebar mode has no effect: an index on a "dataset" page shows the
+ * The sidebar mode has no effect: an index on a "dataset" page shows the
  * subpages that the sidebar hides.
  *
- * @param currentPageId The page that holds the node: the root of the tree
- * when the config has no root
+ * @param currentPageId The page that holds the node: the root of the tree when
+ * the config has no root
  */
 export const resolveWikiPageIndex = (
   context: Pick<ApplicationContext, "prisma" | "tracer">,
@@ -140,7 +136,6 @@ export const resolveWikiPageIndex = (
   });
 
 export interface FindWikiPageIndexInput extends WikiPageIndexConfig {
-  /** The page that holds the node */
   readonly pageId: string;
   /**
    * Resolves in the embed of the variant, with its routes. An unknown
@@ -150,12 +145,9 @@ export interface FindWikiPageIndexInput extends WikiPageIndexConfig {
 }
 
 /**
- * The pages of a page-index node of a page of the global wiki, for the node
- * view of the editor. The view loads them again after a change of the
+ * The node view of the editor loads the pages again after a change of the
  * config. The static render resolves the same config in
  * `findWikiPageContent()`.
- *
- * @throws NotFoundError when the actor cannot read the page
  */
 export const findWikiPageIndex = async (
   context: ApplicationContext,

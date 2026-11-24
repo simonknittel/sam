@@ -17,10 +17,6 @@ export const cancelTaskInputSchema = z.object({
 
 export type CancelTaskInput = z.infer<typeof cancelTaskInputSchema>;
 
-/**
- * Cancels an open task and notifies its assignees. Requires `task;read`, a
- * citizen, and that the actor created the task or has `task;manage`.
- */
 export const cancelTask = (
   context: ApplicationContext,
   actor: Actor,

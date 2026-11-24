@@ -5,10 +5,6 @@ import {
   type DiscordResult,
 } from "../context.js";
 
-/**
- * Calls the Discord gateway of the context. A host without a bot token has
- * no gateway: then the result is Failed, as when Discord cannot be reached.
- */
 export const callDiscord = async <Data>(
   context: ApplicationContext,
   call: (gateway: DiscordGateway) => Promise<DiscordResult<Data>>,

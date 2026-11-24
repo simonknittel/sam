@@ -12,11 +12,6 @@ export interface TaskDeletedRecipients {
   readonly recipients: Recipient[];
 }
 
-/**
- * The assignees of the deleted task who can log in and open tasks, except
- * the citizen who deleted the task. Null when the task does not exist, is not
- * deleted or was closed before the deletion.
- */
 export const findTaskDeletedRecipients = async (
   context: ApplicationContext,
   input: FindTaskDeletedRecipientsInput,

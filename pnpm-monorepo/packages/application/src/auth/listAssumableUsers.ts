@@ -26,11 +26,8 @@ export const ASSUMABLE_USER_SELECT = {
 } as const;
 
 /**
- * The users that an admin can assume, sorted by name. It leaves out the own
- * account of the admin, which the session ignores. The caller checks that an
- * admin is behind the session: the actor during an assume is the assumed
- * user, thus the use case has no actor. See the exceptions in the README of
- * the package.
+ * Leaves out the own account of the admin, which the session ignores. No
+ * permission check, see the README.
  */
 export const listAssumableUsers = (
   context: ApplicationContext,

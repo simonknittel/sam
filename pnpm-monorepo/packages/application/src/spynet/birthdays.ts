@@ -10,11 +10,9 @@ import {
 import type { ApplicationContext } from "../context.js";
 
 /**
- * The citizens whose birthday the lists show: the ones who filled in the
- * birthday. Citizens who can no longer sign in are left out, but only
- * approximately (see `CAN_LOGIN_CITIZEN_WHERE`): the greeting job applies the
- * exact rule (`findClearedCitizens()`). The list of the upcoming birthdays
- * and the calendar use it.
+ * Citizens who can no longer sign in are left out, but only approximately (see
+ * `CAN_LOGIN_CITIZEN_WHERE`): the greeting job applies the exact rule
+ * (`findClearedCitizens()`)
  */
 export const LISTED_BIRTHDAY_CITIZEN_WHERE: Prisma.CitizenWhereInput = {
   /** `AND` composes the imported fragment without a key collision */
@@ -30,10 +28,9 @@ type BirthdayCitizen = Pick<
 >;
 
 /**
- * The same rule the greeting job of the Lambda applies, made safe for the
- * surfaces which only draw a party hat with it: the shared rule throws for a
- * time zone the runtime does not know, and neither a profile nor a session
- * must fail because of a decoration. Such a citizen gets no hat.
+ * The shared rule throws for a time zone the runtime does not know, and neither
+ * a profile nor a session must fail because of a party hat. Such a citizen gets
+ * no hat.
  */
 export const hasBirthdayTodaySafely = (
   { log }: Pick<ApplicationContext, "log">,
@@ -89,15 +86,9 @@ const getDateInListTimezone = (moment: Date) =>
 export interface NextBirthday {
   /** Midnight UTC of the day the birthday is celebrated next */
   readonly date: Date;
-  /** Whole days from today, thus 0 while the birthday is today */
   readonly daysUntil: number;
 }
 
-/**
- * The next time a birthday is celebrated, today included. Each citizen
- * therefore appears exactly once in the list, with the occurrence which is
- * still ahead.
- */
 export const getNextBirthday = (
   birthdayDay: number,
   birthdayMonth: number,

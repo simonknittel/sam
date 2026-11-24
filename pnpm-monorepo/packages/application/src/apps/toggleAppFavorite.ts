@@ -22,31 +22,18 @@ export type ToggleAppFavoriteInput = z.output<
   typeof toggleAppFavoriteInputSchema
 >;
 
-/**
- * The app catalog is host data: the host knows which apps the actor can see.
- */
 export interface ToggleAppFavoriteOptions {
   /**
-   * The keys of the apps that the actor can see. Resolving the key against
-   * these keeps unknown and redacted apps from creating rows: a redacted app
-   * has no key, so it never matches.
+   * A redacted app has no key, thus an unknown or redacted app creates no row
    */
   readonly visibleAppKeys: ReadonlySet<string>;
 }
 
 export interface ToggleAppFavoriteOutput {
   readonly app_key: string;
-  /** The state after the toggle */
   readonly is_favorite: boolean;
 }
 
-/**
- * Adds the app to the favorites of the actor, or removes it when it is a
- * favorite already.
- *
- * @throws ForbiddenError for a user without a citizen
- * @throws NotFoundError when the actor cannot see the app
- */
 export const toggleAppFavorite = (
   context: ApplicationContext,
   actor: Actor,

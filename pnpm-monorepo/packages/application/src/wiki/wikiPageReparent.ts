@@ -132,10 +132,6 @@ export const runWikiPageTreeBatch = (
     }
   }, WikiErrorMessage.PageNotFound);
 
-/**
- * The move audit event plus one permission-reset event per page in the
- * moved subtree
- */
 export const buildWikiPageReparentAuditEvents = (
   page: {
     readonly id: string;

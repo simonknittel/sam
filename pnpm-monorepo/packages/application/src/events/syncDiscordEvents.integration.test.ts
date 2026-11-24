@@ -28,7 +28,6 @@ const createScheduledEvent = (): DiscordScheduledEvent => ({
   location: null,
 });
 
-/** Runs the sync with the given event and the given RSVPs on Discord */
 const runSync = async (
   scheduledEvent: DiscordScheduledEvent,
   discordUserIds: readonly string[],
@@ -191,10 +190,6 @@ describe("syncDiscordEvents", () => {
     ]);
   });
 
-  /**
-   * The sync cancels each sign-up whose user is not in the user list. Thus a
-   * failed read must not count as an empty list.
-   */
   test("a failed user list changes nothing", async () => {
     const scheduledEvent = createScheduledEvent();
     await prisma.event.create({
@@ -264,7 +259,6 @@ describe("syncDiscordEvents", () => {
 
     const { output, discord } = await runSync(publishedScheduledEvent, []);
 
-    // No import of the published event, and no delete of an app event
     expect(
       await prisma.event.findMany({
         select: { id: true },
@@ -345,7 +339,6 @@ describe("syncDiscordEvents", () => {
       },
     ]);
     expect(output.notificationsSent).toBe(true);
-    // The withdrawal of the gunner gave the position free
     expect(notifications).toHaveLength(3);
     expect(notifications).toEqual(
       expect.arrayContaining([
@@ -377,10 +370,6 @@ describe("syncDiscordEvents", () => {
     );
   });
 
-  /**
-   * The first read of the users after the import failed. Thus the next run
-   * stores the first rows, and these are no changes of the participation.
-   */
   test("the RSVPs after a failed first read of the users notify nobody", async () => {
     await createCitizen("attendee-discord-id");
     const scheduledEvent = createScheduledEvent();

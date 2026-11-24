@@ -25,7 +25,6 @@ import {
 import { toTaskListItem, type TaskListItem } from "./taskOutput.js";
 import { getOpenTasksWhere, getVisibleTasksWhere } from "./taskWhere.js";
 
-/** The status filter of the tasks list */
 export enum TaskListStatus {
   Open = "open",
   /** The open tasks which are new for the viewer (see the read markers) */
@@ -36,13 +35,11 @@ export enum TaskListStatus {
 
 export enum TaskAcceptedFilter {
   All = "all",
-  /** Only the tasks that the citizen of the actor accepted */
   Yes = "yes",
 }
 
 export enum TaskCreatorFilter {
   All = "all",
-  /** Only the tasks that the citizen of the actor created */
   Me = "me",
 }
 
@@ -82,7 +79,6 @@ export interface TaskListPageOptions extends PageOptions {
 
 export interface TaskListPage {
   readonly rows: TaskListItemRow[];
-  /** The listed tasks which are new for the actor */
   readonly newTaskIds: ReadonlySet<string>;
   readonly nextCursor: string | null;
   readonly prevCursor: string | null;
@@ -97,10 +93,6 @@ enum TaskSourceKey {
 
 type TaskDateField = "createdAt" | "completedAt" | "cancelledAt" | "expiresAt";
 
-/**
- * One source of the merged cursor pagination: the tasks of the source, in
- * the order of its date field
- */
 interface TaskSource {
   readonly sourceKey: TaskSourceKey;
   readonly dateField: TaskDateField;
@@ -233,12 +225,6 @@ const EMPTY_PAGE: TaskListPage = {
   prevCursor: null,
 };
 
-/**
- * The rows of one page of the tasks list, with the filters, the visibility
- * and the order of the tasks list of the app. `listTasks` maps the rows to
- * its output. The app wrapper of the list keeps the rows, because the list
- * component renders them.
- */
 export const findTaskListPage = async (
   context: ApplicationContext,
   actor: Actor,
@@ -328,10 +314,6 @@ export const findTaskListPage = async (
   }
 };
 
-/**
- * The tasks that the actor can see, one page. Requires `task;read` and a
- * citizen.
- */
 export const listTasks = (
   context: ApplicationContext,
   actor: Actor,

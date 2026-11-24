@@ -18,19 +18,14 @@ export type ExportWikiPageContentInput = z.output<
 >;
 
 export interface ExportWikiPageContentOutput {
-  /** For the name of the file */
   readonly slug: string;
   /** Tiptap JSON: the file that `importWikiPageContent` takes */
   readonly content: unknown;
 }
 
 /**
- * The content of a page as Tiptap JSON, for a download. A read without an
- * audit event. The briefing of an event that is over gives its content too.
- *
- * @throws NotFoundError when the page does not exist, is in the trash or the
- * actor cannot export it: a missing permission does not show that the page
- * exists
+ * A read without an audit event. The briefing of an event that is over gives
+ * its content too.
  */
 export const exportWikiPageContent = (
   context: ApplicationContext,

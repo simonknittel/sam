@@ -21,6 +21,5 @@ export const deleteEventTool = defineTool({
     event_id: z.string(),
   }),
   isVisible: isEventWriteToolVisible,
-  // Without the Discord option: only the web app syncs an event with Discord
   handler: (context, actor, input) => deleteEvent(context, actor, input),
 });

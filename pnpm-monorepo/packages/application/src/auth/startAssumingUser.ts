@@ -28,20 +28,12 @@ export interface StartAssumingUserOutput {
   readonly name: string | null;
 }
 
-/**
- * Writes the start of an assume to the audit log, after the end of the
- * previous assume. The caller sets the cookie. The caller checks that an
- * admin is behind the session: the actor during an assume is the assumed
- * user, thus the use case has no actor. See the exceptions in the README of
- * the package.
- */
+/** The caller sets the cookie. No permission check, see the README. */
 export const startAssumingUser = (
   context: ApplicationContext,
   input: StartAssumingUserInput,
 ): Promise<StartAssumingUserOutput> =>
   withSpan(context, "startAssumingUser", async () => {
-    // The session ignores the cookie for the own account, thus the audit
-    // log would record an assume without effect
     if (input.target_user_id === input.admin_user_id)
       throw new ValidationError(AuthErrorMessage.OwnAccount);
 

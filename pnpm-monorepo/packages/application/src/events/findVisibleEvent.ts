@@ -8,9 +8,7 @@ import { EVENT_DETAILS_SELECT, type EventDetails } from "./eventSelects.js";
 import { canActorSeeEvent } from "./eventVisibility.js";
 
 /**
- * One event that the actor can see, with everything that its pages share.
- * An event that the actor cannot see is indistinguishable from a missing
- * one: both throw a `NotFoundError`.
+ * An event that the actor cannot see is indistinguishable from a missing one
  */
 export const findVisibleEvent = async (
   context: ApplicationContext,
@@ -34,11 +32,7 @@ type VisibleEventGuardFields = Prisma.EventGetPayload<{
   select: typeof VISIBLE_EVENT_MANAGE_GUARD_SELECT;
 }>;
 
-/**
- * The event with the fields of the select of the caller and the fields of
- * the visibility and manage rules. The select of the caller cannot change
- * the fields of the rules.
- */
+/** The select of the caller cannot change the fields of the rules */
 type VisibleEvent<Select extends Prisma.EventSelect> = Omit<
   Prisma.EventGetPayload<{ select: Select }>,
   keyof VisibleEventGuardFields
@@ -46,9 +40,9 @@ type VisibleEvent<Select extends Prisma.EventSelect> = Omit<
   VisibleEventGuardFields;
 
 /**
- * The guard of the row helpers of the event pages: `event;read`, and an
- * event that the actor can see. The pages check the same before, thus the
- * guard only keeps a different caller from reading a restricted event.
+ * The guard of the row helpers of the event pages. The pages check the same
+ * before, thus the guard only keeps a different caller from reading a
+ * restricted event.
  *
  * @throws ForbiddenError without `event;read`, NotFoundError when the actor
  * cannot see the event

@@ -4,16 +4,16 @@ import type { ApplicationContext } from "../context.js";
 interface RevokeGrantInput {
   readonly grantId: string;
   readonly clientId: string;
-  /** The user who revoked the grant, or null for a revocation by the app */
+  /** Null for a revocation by the app */
   readonly revokedById: string | null;
-  /** The author of the audit event, or null for the app */
+  /** Null for the app */
   readonly auditCreatedById: string | null;
 }
 
 /**
- * Revokes a grant and deletes its refresh tokens. The access tokens of the
- * grant stop at the next request, because the MCP endpoint loads the grant.
- * Only the call that revokes the grant writes the audit event.
+ * The access tokens of the grant stop at the next request, because the MCP
+ * endpoint loads the grant. Only the call that revokes the grant writes the
+ * audit event.
  *
  * @returns Whether this call revoked the grant
  */

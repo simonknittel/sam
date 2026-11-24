@@ -19,10 +19,8 @@ const isAlreadySignedUp = (error: unknown) =>
   error.message === String(EventErrorMessage.AlreadySignedUp);
 
 /**
- * Signs the user up for an app event, or updates the comment of the existing
- * sign-up. A second call with the same input changes nothing. Without a
- * comment, an existing sign-up keeps its comment. Only a new sign-up notifies
- * the organizers. A new sign-up accepts an open invitation of the user.
+ * A second call with the same input changes nothing. Without a comment, an
+ * existing sign-up keeps its comment.
  */
 export const signUpForEvent = (
   context: ApplicationContext,

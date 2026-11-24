@@ -17,12 +17,6 @@ export const deleteNoteTypeInputSchema = z.object({
 
 export type DeleteNoteTypeInput = z.infer<typeof deleteNoteTypeInputSchema>;
 
-/**
- * Deletes a note type, and the permission strings that refer to it. Requires
- * `noteType;manage`.
- *
- * @throws NotFoundError when the note type does not exist
- */
 export const deleteNoteType = async (
   context: ApplicationContext,
   actor: Actor,
@@ -30,10 +24,6 @@ export const deleteNoteType = async (
 ): Promise<NoteClassificationRow> => {
   requirePermission(actor, "noteType", "manage");
 
-  /**
-   * The delete fails with a missing record when a different user or tab
-   * deleted the note type before.
-   */
   const [noteType] = await rethrowRecordNotFound(
     () =>
       context.prisma.$transaction([

@@ -1,16 +1,13 @@
 import { S3Client } from "@aws-sdk/client-s3";
 
-/** The maximum time to open a connection to the bucket */
 const CONNECTION_TIMEOUT_MILLISECONDS = 5_000;
 
 /**
- * The maximum time of one request with its response. It is the longest
- * timeout of a single storage operation (a copy or a delete). A caller that
- * needs a shorter time passes an `abortSignal` to `send()`.
+ * The longest timeout of a single storage operation (a copy or a delete). A
+ * caller that needs a shorter time passes an `abortSignal` to `send()`.
  */
 const REQUEST_TIMEOUT_MILLISECONDS = 30_000;
 
-/** The domain of the S3 endpoints of Cloudflare R2 */
 const R2_ENDPOINT_DOMAIN = "r2.cloudflarestorage.com";
 
 interface S3Credentials {
@@ -53,8 +50,7 @@ export const createS3Client = (options: S3ClientOptions): S3Client =>
     requestHandler: {
       connectionTimeout: CONNECTION_TIMEOUT_MILLISECONDS,
       requestTimeout: REQUEST_TIMEOUT_MILLISECONDS,
-      // Without this option, the SDK only logs a warning when the request
-      // timeout is over, and the request continues
+      // See `createEventBridgeClient()`
       throwOnRequestTimeout: true,
     },
   });

@@ -8,7 +8,6 @@ import type { Logger } from "@sam-monorepo/application";
 /** `PutEvents` accepts at most ten entries per call */
 const BATCH_SIZE = 10;
 
-/** An entry without the event bus: the emitter sets it */
 export type EventBridgeEntry = Omit<PutEventsRequestEntry, "EventBusName">;
 
 export type EmitEvents = (entries: EventBridgeEntry[]) => Promise<void>;
@@ -24,20 +23,17 @@ export interface EventBridgeEmitterOptions {
   readonly log: Logger;
 }
 
-/** EventBridge did not take one or more entries */
 export class EventBridgeFailedEntriesError extends Error {
   override readonly name = "EventBridgeFailedEntriesError";
 
-  /** @param failedResponses The responses of the batches with failed entries */
   constructor(failedResponses: PutEventsCommandOutput[]) {
     super("Failed to send events to EventBridge", { cause: failedResponses });
   }
 }
 
 /**
- * Sends the entries to the event bus, in batches of ten entries. Without a
- * client or an event bus, EventBridge is not configured (for example in
- * local development): then the emitter logs this and sends nothing.
+ * Without a client or an event bus, EventBridge is not configured (for example
+ * in local development): then the emitter sends nothing.
  *
  * @throws EventBridgeFailedEntriesError when EventBridge does not take an
  * entry. The emitter throws after it sent all batches.

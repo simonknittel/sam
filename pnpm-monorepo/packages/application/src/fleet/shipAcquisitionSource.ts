@@ -2,19 +2,16 @@ import { ShipAcquisitionSource } from "@sam-monorepo/database/browser";
 import type { Prisma } from "@sam-monorepo/database/client";
 import * as z from "zod";
 
-/** Where the owner got a ship */
 export enum AcquisitionSource {
   /** The Star Citizen store, for real money */
   Store = "store",
   InGame = "in_game",
 }
 
-/** The filter of the ship lists by the acquisition source */
 export enum AcquisitionSourceFilter {
   All = "all",
   Store = "store",
   InGame = "in_game",
-  /** Only the ships without an acquisition source */
   Unknown = "unknown",
 }
 
@@ -22,7 +19,6 @@ export const acquisitionSourceSchema = z
   .enum(AcquisitionSource)
   .describe("Where the owner got the ship: in the store or in the game.");
 
-/** The acquisition source filter of the input schema of a ship list */
 export const acquisitionSourceFilterInputShape = {
   acquisition_source: z
     .enum(AcquisitionSourceFilter)
@@ -49,7 +45,6 @@ export const toAcquisitionSource = (
   }
 };
 
-/** The acquisition source of the database for a value of the use cases */
 export const toShipAcquisitionSource = (
   source: AcquisitionSource,
 ): ShipAcquisitionSource => {
@@ -88,7 +83,6 @@ export const buildAcquisitionSourceWhere = (
   }
 };
 
-/** The value of ships for each acquisition source */
 export interface AcquisitionSourceValues {
   readonly store: number;
   readonly in_game: number;
@@ -97,8 +91,7 @@ export interface AcquisitionSourceValues {
 }
 
 /**
- * The value of ships in both currencies: the sums of the prices of their
- * variants. A variant without a price counts 0.
+ * The sums of the prices of the variants. A variant without a price counts 0.
  */
 export interface FleetValueOutput {
   /** The store prices, in USD cents */

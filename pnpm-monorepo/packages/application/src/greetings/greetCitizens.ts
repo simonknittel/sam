@@ -3,14 +3,12 @@ import { findClearedCitizens } from "../auth/clearedCitizens.js";
 import type { ApplicationContext, Notification } from "../context.js";
 import { triggerNotificationsAfterSave } from "../notifications.js";
 
-/** The column of a citizen that records the last greeting of one kind */
 export enum GreetingMarkerField {
   Birthday = "birthdayGreetingSentAt",
   NewYear = "newYearGreetingSentAt",
 }
 
 export interface GreetingRunOutput {
-  /** The citizens that the rule of the greeting checked */
   readonly candidateCount: number;
   readonly greetedCount: number;
   readonly notificationsSent: boolean;
@@ -34,18 +32,15 @@ interface GreetingRun<Candidate extends { readonly id: string }> {
 }
 
 /**
- * Greets the candidates that the rule selects right now and that are cleared
- * (see `findClearedCitizens()`). The clearance is checked only for the
- * candidates that the rule selects, because the rule is cheap and selects
- * few. The run happens
- * every 15 minutes, thus a greeting arrives at most 15 minutes after the
- * local midnight of the citizen.
+ * The clearance is checked only for the candidates that the rule selects,
+ * because the rule is cheap and selects few. A greeting arrives at most one run
+ * interval (15 minutes) after the local midnight of the citizen.
  *
  * The citizens get their marker before the notifications go out: a crash
  * between the two steps drops a greeting, which is better than a second
  * greeting. For the same reason, a failed request of the notifications keeps
- * the markers. Then the log has the failure, and the run writes no audit
- * event, because no greeting went out.
+ * the markers. Then the log has the failure, and the run writes no audit event,
+ * because no greeting went out.
  */
 export const greetCitizens = async <Candidate extends { readonly id: string }>(
   context: ApplicationContext,

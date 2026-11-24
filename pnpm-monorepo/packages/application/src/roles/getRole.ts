@@ -18,28 +18,14 @@ export const getRoleInputSchema = z.object({
 export type GetRoleInput = z.output<typeof getRoleInputSchema>;
 
 export interface GetRoleOutput extends RoleOutput {
-  /**
-   * The number of days of inactivity after which a citizen loses the role,
-   * or null. Null without `role;manage`.
-   */
+  /** Null also without `role;manage` */
   readonly max_age_days: number | null;
-  /**
-   * The number of days of inactivity after which a citizen gets the role, or
-   * null. Null without `role;manage`.
-   */
+  /** Null also without `role;manage` */
   readonly assign_after_inactive_days: number | null;
-  /** Sorted. Null without `role;manage`. */
+  /** Null without `role;manage` */
   readonly permission_strings: string[] | null;
 }
 
-/**
- * One role that the actor can see (see `isRoleVisible()`), with its
- * inactivity rules and its permission strings for an actor with
- * `role;manage`, like the role page of the app
- *
- * @throws NotFoundError when the role does not exist or the actor cannot see
- * it
- */
 export const getRole = async (
   context: ApplicationContext,
   actor: Actor,

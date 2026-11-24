@@ -11,14 +11,12 @@ import type {
 } from "./wikiContext.js";
 import type { WikiScope } from "./wikiScope.js";
 
-/** The permission tiers of a wiki page */
 export enum WikiPageAccessTier {
   Read = "read",
   Edit = "edit",
   Admin = "admin",
 }
 
-/** Whether the permissions of a page give the tier */
 export const hasWikiPageTier = (
   permissions: WikiPageTierPermissions | undefined,
   tier: WikiPageAccessTier,

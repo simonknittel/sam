@@ -16,8 +16,8 @@ export interface TokenResponse {
 }
 
 /**
- * Creates a refresh token. The caller stores `data` in the same transaction
- * as the other changes of the grant.
+ * The caller stores `data` in the same transaction as the other changes of the
+ * grant
  */
 export const createRefreshToken = (
   context: Pick<ApplicationContext, "now">,

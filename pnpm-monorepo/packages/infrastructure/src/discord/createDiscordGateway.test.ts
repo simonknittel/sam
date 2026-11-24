@@ -104,7 +104,6 @@ const getLogCalls = (log: TestLog) =>
     (logFunction) => logFunction.mock.calls,
   );
 
-/** The text of all log calls, with the message and the cause of each error */
 const getLoggedText = (log: TestLog) =>
   JSON.stringify(getLogCalls(log), (key, value: unknown) =>
     value instanceof Error
@@ -244,10 +243,6 @@ describe("the request", () => {
 
   test.each<FailureCase>([
     {
-      /**
-       * The self-heal is destructive, so it must not fire on a 404 that
-       * means the bot lost the guild rather than the event being gone.
-       */
       name: "a 404 with a different error code",
       stubFetch: () =>
         // 10004 = Unknown Guild

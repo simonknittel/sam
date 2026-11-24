@@ -42,11 +42,8 @@ export type ChangeRolePermissionsInput = z.output<
 
 export interface ChangeRolePermissionsOutput {
   readonly role_id: string;
-  /** All permission strings of the role after the change, sorted */
   readonly permission_strings: string[];
-  /** Sorted. Only the strings that the role did not have before. */
   readonly added: string[];
-  /** Sorted. Only the strings that the role had before. */
   readonly removed: string[];
 }
 
@@ -65,18 +62,11 @@ const toPermissionStrings = (role: {
   );
 
 /**
- * Adds permission strings to a role and removes permission strings from it.
- * The other permission strings of the role stay. Requires `role;manage`.
  * Each string that changes gets its own audit event, like a cell of the
  * permission matrix.
  *
- * Only the strings that the role page can give can be added: the strings of
- * `PERMISSION_CATALOG` and the rules of `isPermissionRule()`. Each string can
- * be removed, also a string that the catalog does not have any more.
- *
- * @throws ValidationError when a permission string is in `add` and in
- * `remove`, or when the role page cannot give a string of `add`
- * @throws NotFoundError when the role does not exist
+ * Only the strings that the role page can give can be added. Each string can be
+ * removed, also a string that is not in the catalog.
  */
 export const changeRolePermissions = (
   context: ApplicationContext,

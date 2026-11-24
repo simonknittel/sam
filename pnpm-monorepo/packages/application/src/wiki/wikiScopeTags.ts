@@ -13,10 +13,7 @@ export interface WikiScopeTag {
   readonly name: string;
 }
 
-/**
- * The container whose tags the target shows. A variant embeds the global
- * wiki, thus it shows the global tags.
- */
+/** A variant embeds the global wiki, thus it shows the global tags */
 const getTagContainer = async (
   context: ApplicationContext,
   actor: Actor,
@@ -40,14 +37,11 @@ const getTagContainer = async (
 };
 
 /**
- * The tags of one scope, by name, for the autocomplete of the tag input. A
- * tag is not filtered by the visibility of its pages: one naming for the tags
- * of a scope is more important than hiding the name of a tag that only
- * invisible pages use. The tag pages filter their pages themselves. The
- * global wiki has no gate and needs no scope. A briefing uses the gate of the
+ * A tag is not filtered by the visibility of its pages: one naming for the
+ * tags of a scope is more important than hiding the name of a tag that only
+ * invisible pages use. The tag pages filter their pages themselves. The global
+ * wiki has no gate and needs no scope. A briefing uses the gate of the
  * briefing layout.
- *
- * @throws ForbiddenError when the actor cannot read the briefing
  */
 export const findWikiScopeTags = async (
   context: ApplicationContext,

@@ -25,10 +25,7 @@ interface PositionAssignment {
   readonly positionName: string;
 }
 
-/**
- * The assigned citizens of the position and of its children, one item for
- * each position. A deleted citizen is not in the output (see `assignee`).
- */
+/** A deleted citizen is not in the output (see `assignee`) */
 const collectAssignments = (position: LineupPosition): PositionAssignment[] => [
   ...(position.assignee
     ? [{ citizenId: position.assignee.id, positionName: position.name }]
@@ -36,12 +33,7 @@ const collectAssignments = (position: LineupPosition): PositionAssignment[] => [
   ...position.children.flatMap(collectAssignments),
 ];
 
-/**
- * Deletes a position and its children from the lineup of an event that the
- * actor manages. Gives the deleted position as it was before the deletion.
- * Each assigned citizen of the deleted positions gets a notification, but
- * not the actor.
- */
+/** Gives the deleted position as it was before the deletion */
 export const deleteEventPosition = (
   context: ApplicationContext,
   actor: Actor,

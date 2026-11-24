@@ -14,16 +14,10 @@ export interface RoleLevelIncreasedRecipients {
     readonly name: string;
     readonly maxLevel: number;
   };
-  /** The current level of the citizen in the role */
   readonly level: number;
   readonly recipients: Recipient[];
 }
 
-/**
- * The citizen whose level in the role rose, with the rule of
- * `findRoleAddedRecipient()`. Null when the citizen does not have the role
- * or a level in it any more, or the role has no levels.
- */
 export const findRoleLevelIncreasedRecipient = async (
   context: ApplicationContext,
   input: FindRoleLevelIncreasedRecipientInput,

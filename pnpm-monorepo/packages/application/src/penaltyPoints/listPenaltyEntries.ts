@@ -18,11 +18,8 @@ import {
 } from "./penaltyEntryOutput.js";
 
 export enum PenaltyEntryStatus {
-  /** Not deleted and not expired */
   Active = "active",
-  /** Expired, but not deleted */
   Inactive = "inactive",
-  /** Active and inactive */
   NotDeleted = "not_deleted",
   Deleted = "deleted",
 }
@@ -70,9 +67,9 @@ const buildStatusWhere = (
 };
 
 /**
- * Without `penaltyEntry;read`, a citizen can read only the own entries that
- * are not deleted (`ownPenaltyEntry;read`). The app shows them on the
- * penalty points tab of the citizen, which also needs `citizen;read`.
+ * Without `penaltyEntry;read`, a citizen can read only the own entries that are
+ * not deleted: the app shows them on the penalty points tab of the citizen,
+ * which also needs `citizen;read`
  */
 const authorizeList = (
   actor: Actor,
@@ -92,12 +89,6 @@ const authorizeList = (
     throw new ForbiddenError("The permission penaltyEntry;read is missing");
 };
 
-/**
- * The penalty entries, the newest first. The cursor is the id of an entry.
- *
- * @throws ValidationError when no entry has the cursor (see
- * `PageOptions.unknownCursor`)
- */
 export const listPenaltyEntries = async (
   context: ApplicationContext,
   actor: Actor,

@@ -5,11 +5,10 @@ interface DiscordEventReference {
 }
 
 /**
- * Removes the guild scheduled events that the app published itself. Without
- * this filter, each published app event comes back as a duplicate
+ * Without this filter, each published app event comes back as a duplicate
  * `source: DISCORD` row on the next run. The app records its publications in
- * `Event.discordPublishedId`, not in the `discordId` on which this sync
- * matches the rows.
+ * `Event.discordPublishedId`, not in the `discordId` on which this sync matches
+ * the rows.
  */
 export const excludeAppPublishedEvents = <
   ScheduledEvent extends DiscordEventReference,
@@ -27,10 +26,8 @@ interface SyncableEvent {
 }
 
 /**
- * The events that were cancelled on Discord: the rows from Discord whose
- * Discord id is not in the response of Discord. Never select an app event:
- * an app event has no Discord counterpart, thus a simple "not in the
- * response" check would delete each app event.
+ * Never select an app event: an app event has no Discord counterpart, thus a
+ * simple "not in the response" check would delete each app event.
  */
 export const selectCancelledDiscordEvents = <EventRow extends SyncableEvent>(
   eventsFromDatabase: readonly EventRow[],
@@ -48,9 +45,8 @@ interface ActiveParticipantRow {
 }
 
 /**
- * Compares the users that Discord gives with the active participation rows.
  * The input has no cancelled rows: thus a new RSVP after a withdrawal is in
- * `added` again and becomes a new participation row.
+ * `added` again and becomes a new participation row
  */
 export const diffParticipants = (
   discordUserIdsFromDiscord: readonly string[],

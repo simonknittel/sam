@@ -1,4 +1,3 @@
-/** The use cases of the event templates and the rows of the template pages */
 export {
   createEventTemplate,
   createEventTemplateInputSchema,

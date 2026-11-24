@@ -34,7 +34,6 @@ import {
  */
 export interface VariantWikiContext {
   readonly kind: WikiScopeKind.Variant;
-  /** The routes of the pages */
   readonly hrefBase: WikiPageHrefBase;
   variant: Pick<Variant, "id" | "name">;
   /** The global wiki that the subtree comes from, for the content of a page */
@@ -57,12 +56,9 @@ export interface VariantWikiContext {
 }
 
 /**
- * The one gate of the embedded wiki of a variant. Returns null when the actor
- * does not pass the fleet gate of the variant page, when the variant is
- * unknown or has no linked page, or when the linked page is in the trash or
- * the actor cannot read it. A scope exists only when the embed exists, thus
- * the callers hide the section or answer 404 on null, and the reason does
- * not leak.
+ * The one gate of the embedded wiki of a variant. A scope exists only when the
+ * embed exists, thus the callers hide the section or answer 404 on null, and
+ * the reason does not leak.
  */
 export const buildVariantWikiContext = (
   context: ApplicationContext,

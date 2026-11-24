@@ -18,11 +18,8 @@ import { buildEventChangeNotifications } from "./eventChangeNotifications.js";
 import { syncDiscordParticipants } from "./syncDiscordParticipants.js";
 
 export interface SyncDiscordEventsOutput {
-  /** The scheduled events that Discord gave */
   readonly fetchedEventCount: number;
-  /** The scheduled events that the app published itself */
   readonly skippedPublishedEventCount: number;
-  /** The future events that are no longer on Discord */
   readonly deletedEventCount: number;
   readonly createdEventCount: number;
   readonly updatedEventCount: number;
@@ -50,7 +47,6 @@ interface ReconcileDiscordEventOutput {
   readonly notificationsSent: boolean;
 }
 
-/** The guild scheduled event ids that the app owns at the time of the read */
 const findAppPublishedDiscordIds = async (context: ApplicationContext) => {
   const events = await context.prisma.event.findMany({
     where: { discordPublishedId: { not: null } },
@@ -62,10 +58,6 @@ const findAppPublishedDiscordIds = async (context: ApplicationContext) => {
   );
 };
 
-/**
- * Gives the id of the active citizen of a Discord user (for example of the
- * creator of a scheduled event), or null.
- */
 const findCitizenIdByDiscordId = async (
   context: ApplicationContext,
   discordId: string | null,
@@ -85,7 +77,7 @@ const findCitizenIdByDiscordId = async (
   return citizen?.id ?? null;
 };
 
-/** A copy of the items in a random order (the Fisher–Yates shuffle) */
+/** The Fisher–Yates shuffle */
 const shuffle = <Item>(items: readonly Item[]): Item[] => {
   const shuffled = [...items];
 
@@ -157,10 +149,6 @@ const importDiscordEvent = async (
   };
 };
 
-/**
- * Creates the event of a new scheduled event, or copies the changes of
- * Discord into the existing event.
- */
 const reconcileDiscordEvent = async (
   context: ApplicationContext,
   scheduledEvent: DiscordScheduledEvent,
@@ -295,12 +283,6 @@ const reconcileDiscordEvent = async (
   };
 };
 
-/**
- * Copies the scheduled events of the guild into the events from Discord:
- * it deletes the cancelled events, creates the new events, updates the
- * changed events and syncs their participants. A failed read from Discord
- * stops the run.
- */
 export const syncDiscordEvents = (
   context: ApplicationContext,
 ): Promise<SyncDiscordEventsOutput> =>

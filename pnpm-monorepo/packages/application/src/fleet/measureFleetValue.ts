@@ -14,7 +14,6 @@ import { sumFleetValue } from "./shipAcquisitionSource.js";
 export interface MeasureFleetValueOutput {
   /** The measured day as "YYYY-MM-DD" */
   readonly date: string;
-  /** The members of the organization whose ships the run counted */
   readonly memberCount: number;
   readonly storeValueUsdCents: number;
   readonly inGameValueUsdCents: number;
@@ -30,11 +29,8 @@ export interface MeasureFleetValueOutput {
 }
 
 /**
- * Saves the value of the ships of the members of the organization for each
- * acquisition source, for the day that just ended: the day before the time
- * of the run in the time zone of the organization. A ship counts with the
- * current prices of its variant. The members are the same as the members of
- * `countShips()`. Without members the run saves nothing.
+ * The counted day and the members are the same as in `countShips()`. A ship
+ * counts with the current prices of its variant.
  */
 export const measureFleetValue = (
   context: ApplicationContext,
@@ -91,10 +87,6 @@ export const measureFleetValue = (
       unknownValueAuec: value.auec.unknown,
     };
 
-    /**
-     * A run that repeats in the same night (for example after an error in a
-     * later job) keeps the values of the first run, like `countShips()`.
-     */
     const created = await context.prisma.dailyFleetValue.createMany({
       data: [
         {

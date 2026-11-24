@@ -28,12 +28,6 @@ export interface SetRolePermissionOutput {
   readonly enabled: boolean;
 }
 
-/**
- * Adds one permission string to a role or removes it. Requires
- * `role;manage`.
- *
- * @throws NotFoundError when the role does not exist
- */
 export const setRolePermission = (
   context: ApplicationContext,
   actor: Actor,

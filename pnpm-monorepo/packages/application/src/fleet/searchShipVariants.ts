@@ -38,10 +38,6 @@ export const canSearchShipVariants = (actor: Actor) =>
   actor.authorize("event", "read") ||
   actor.authorize("manufacturersSeriesAndVariants", "manage");
 
-/**
- * @throws ForbiddenError when the actor cannot use the catalog, see
- * `canSearchShipVariants()`
- */
 export const requireShipCatalogAccess = (actor: Actor) => {
   if (!canSearchShipVariants(actor))
     throw new ForbiddenError(
@@ -49,7 +45,6 @@ export const requireShipCatalogAccess = (actor: Actor) => {
     );
 };
 
-/** The variants of the catalog that agree with the query, sorted by name */
 export const searchShipVariants = async (
   context: ApplicationContext,
   actor: Actor,

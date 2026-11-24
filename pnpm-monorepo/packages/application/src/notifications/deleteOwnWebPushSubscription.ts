@@ -19,14 +19,7 @@ export interface DeleteOwnWebPushSubscriptionOutput {
   readonly subscription_id: string;
 }
 
-/**
- * Deletes one web push subscription of the citizen of the actor. The browser
- * of the subscription gets no push notifications anymore. The use case cannot
- * take back the permission of the browser.
- *
- * @throws ForbiddenError for a user without a citizen
- * @throws NotFoundError when the citizen has no subscription with the id
- */
+/** The use case cannot take back the permission of the browser */
 export const deleteOwnWebPushSubscription = (
   context: ApplicationContext,
   actor: Actor,

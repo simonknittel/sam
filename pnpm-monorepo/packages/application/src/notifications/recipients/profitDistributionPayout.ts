@@ -38,10 +38,6 @@ export interface PayoutStartedRecipients {
   readonly recipients: Recipient[];
 }
 
-/**
- * All participants of the cycle who can open the cycle. Null when the cycle
- * does not exist or has no participant.
- */
 export const findPayoutStartedRecipients = async (
   context: ApplicationContext,
   input: FindPayoutStartedRecipientsInput,
@@ -79,17 +75,11 @@ export interface FindPayoutReminderRecipientsInput {
 
 export interface PayoutReminderRecipients {
   readonly cycle: PayoutCycleReference & {
-    /** The planned end of the payout phase */
     readonly payoutEndsAt: Date;
   };
   readonly recipients: Recipient[];
 }
 
-/**
- * The participants of the cycle who must accept their payout now (see
- * `getPayoutState()`) and can open the cycle. Null when the cycle does not
- * exist or has no planned end of the payout phase.
- */
 export const findPayoutReminderRecipients = async (
   context: ApplicationContext,
   input: FindPayoutReminderRecipientsInput,
@@ -137,7 +127,6 @@ export const findPayoutReminderRecipients = async (
   };
 };
 
-/** One change of the attributes of a participant in the payout phase */
 export interface PayoutParticipantChange {
   readonly citizenId: string;
   readonly attribute: string;
@@ -150,7 +139,6 @@ export interface FindPayoutDisbursedRecipientsInput {
 }
 
 export interface PayoutDisbursedRecipient extends Recipient {
-  /** The share of the participant in the profit of the cycle */
   readonly auecAmount: number;
 }
 
@@ -159,11 +147,6 @@ export interface PayoutDisbursedRecipients {
   readonly recipients: PayoutDisbursedRecipient[];
 }
 
-/**
- * The participants whose `disbursed` attribute the changes enabled, and who
- * can open the cycle. Null when the cycle does not exist or has no
- * participant.
- */
 export const findPayoutDisbursedRecipients = async (
   context: ApplicationContext,
   input: FindPayoutDisbursedRecipientsInput,

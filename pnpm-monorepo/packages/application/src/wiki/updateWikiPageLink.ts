@@ -24,13 +24,7 @@ export interface UpdateWikiPageLinkOutput {
   readonly page_id: string | null;
 }
 
-/**
- * Sets the page of a page link, for example the support link of the top bar
- *
- * @throws ForbiddenError without `wiki;manage`
- * @throws NotFoundError when the page is not a page of the global wiki or
- * is in the trash
- */
+/** A page link is for example the support link of the top bar */
 export const updateWikiPageLink = (
   context: ApplicationContext,
   actor: Actor,

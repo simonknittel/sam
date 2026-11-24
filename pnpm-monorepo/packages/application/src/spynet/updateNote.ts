@@ -28,14 +28,8 @@ export interface UpdateNoteOutput {
 }
 
 /**
- * Moves a note of an active citizen to a different note type or
- * classification level. The actor needs `note;update` for the current
- * classification of the note and `note;create` for the new one.
- *
- * @throws NotFoundError when the note does not exist, its citizen is
- * deleted, a different user changed the note after the check, or the new
- * note type or classification level does not exist
- * @throws ValidationError when the log is not a note
+ * @throws NotFoundError also when a different user changed the note after the
+ * check
  */
 export const updateNote = (
   context: ApplicationContext,

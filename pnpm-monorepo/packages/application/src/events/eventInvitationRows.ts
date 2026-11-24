@@ -30,13 +30,10 @@ type EventInvitationSelectRow = Prisma.EventInvitationGetPayload<{
   select: typeof EVENT_INVITATION_SELECT;
 }>;
 
-/** An invitation as the event pages show it */
 export interface EventInvitationDetails {
   readonly id: string;
   readonly status: EventInvitationStatus;
-  /** The note of the manager */
   readonly message: string | null;
-  /** The note of the citizen to the managers when they declined */
   readonly declineComment: string | null;
   readonly createdAt: Date;
   readonly declinedAt: Date | null;
@@ -56,7 +53,7 @@ const toEventInvitationDetails = (
   invitedBy: invitation.createdBy,
 });
 
-/** An invited citizen with the roles for the role filter of the page */
+/** The roles are for the role filter of the page */
 export interface EventInvitationCitizen extends CitizenReferenceRow {
   readonly roleAssignments: Pick<RoleAssignment, "roleId" | "currentLevel">[];
 }
@@ -67,9 +64,9 @@ export interface EventInvitationRow extends EventInvitationDetails {
 
 /**
  * The invitations that still say something about an event: the latest
- * invitation of each citizen when it is open, or when the citizen declined
- * it and did not sign up later. The newest first. The caller checked that
- * the actor can see the event.
+ * invitation of each citizen when it is open, or when the citizen declined it
+ * and did not sign up later. The caller checked that the actor can see the
+ * event.
  */
 export const loadEventInvitationRows = async (
   prisma: ApplicationContext["prisma"],
@@ -116,13 +113,6 @@ export const loadEventInvitationRows = async (
     );
 };
 
-/**
- * The invitations of an event that the actor can see, for the participants
- * page (see `loadEventInvitationRows()`)
- *
- * @throws ForbiddenError without `event;read`, NotFoundError when the actor
- * cannot see the event
- */
 export const findEventInvitationRows = async (
   context: ApplicationContext,
   actor: Actor,
@@ -133,7 +123,6 @@ export const findEventInvitationRows = async (
   return loadEventInvitationRows(context.prisma, event.id);
 };
 
-/** The latest invitation of the citizen to the event, or null */
 export const loadOwnEventInvitation = async (
   prisma: ApplicationContext["prisma"],
   eventId: string,
@@ -151,9 +140,7 @@ export const loadOwnEventInvitation = async (
 export interface OwnEventInvitationState {
   readonly eventId: string;
   readonly status: EventInvitationStatus;
-  /** The note of the manager */
   readonly message: string | null;
-  /** Null when the manager has no citizen or the citizen was deleted */
   readonly invitedBy: CitizenReferenceRow | null;
   /**
    * False when the invitation is not open, or when the event ended, is
@@ -163,14 +150,6 @@ export interface OwnEventInvitationState {
   readonly isAnswerable: boolean;
 }
 
-/**
- * The current state of an invitation of the actor, for the buttons of its
- * notification
- *
- * @throws ForbiddenError without a citizen or without `event;read`,
- * NotFoundError `EventErrorMessage.InvitationNotFound` when the invitation
- * does not exist or is for a different citizen
- */
 export const findOwnEventInvitationState = async (
   context: ApplicationContext,
   actor: Actor,

@@ -11,9 +11,8 @@ export interface NewRoleAssignmentChange {
 }
 
 /**
- * Writes one row of the role-assignment history for each change. Write the
- * rows in the transaction of the assignments, thus a failed assignment
- * writes no history.
+ * Write the rows in the transaction of the assignments, thus a failed
+ * assignment writes no history.
  *
  * `createdById` is the citizen of the actor, or null for an automation.
  *

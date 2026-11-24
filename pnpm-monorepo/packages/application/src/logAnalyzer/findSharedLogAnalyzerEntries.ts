@@ -28,7 +28,7 @@ export const SHARED_ENTRY_SELECT = {
 } as const;
 
 export interface FindSharedLogAnalyzerEntriesInput {
-  /** 0 loads without a time limit, as the local parsing does. */
+  /** 0 loads without a time limit */
   readonly daysToLoad: number;
   /** The newest entry the client holds. Absent for the first request. */
   readonly cursorId?: string | undefined;
@@ -37,18 +37,15 @@ export interface FindSharedLogAnalyzerEntriesInput {
 export interface SharedLogAnalyzerEntry {
   readonly id: string;
   /**
-   * The database keeps the type as text: a value can lack a pattern after a
-   * pattern was removed. See `toLogAnalyzerEntryType`.
+   * The database keeps the type as text: a value can have no pattern. See
+   * `toLogAnalyzerEntryType`.
    */
   readonly type: string;
   readonly rawLine: string;
   readonly eventAt: Date;
-  /** Null for an entry which was shared before the upload sent the number */
+  /** Null when the client did not send it */
   readonly lineNumber: number | null;
-  /**
-   * Null only when the row of the citizen is gone. A soft-deleted citizen
-   * stays, with `deletedAt`.
-   */
+  /** A soft-deleted citizen stays, with `deletedAt` */
   readonly createdBy: CitizenReferenceRow | null;
 }
 
@@ -59,10 +56,9 @@ export interface SharedLogAnalyzerEntries {
 }
 
 /**
- * The log entries which the citizens shared, also the own entries of the
- * actor. The cursor moves along the creation time and not along the event
- * time, because a citizen who shares their history for the first time adds
- * old events with a new creation time.
+ * Also the own entries of the actor. The cursor moves along the creation time
+ * and not along the event time, because a citizen who shares their history for
+ * the first time adds old events with a new creation time.
  */
 export const findSharedLogAnalyzerEntries = async (
   context: ApplicationContext,
@@ -89,10 +85,6 @@ export const findSharedLogAnalyzerEntries = async (
     select: SHARED_ENTRY_SELECT,
   });
 
-  /**
-   * The newest entry of this response, which the next request continues from.
-   * Null keeps the cursor the client already has.
-   */
   const cursorId =
     (isIncremental ? entries.at(-1)?.id : entries.at(0)?.id) ?? null;
 

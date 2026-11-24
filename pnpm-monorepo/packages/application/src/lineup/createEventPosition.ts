@@ -18,7 +18,6 @@ export type CreateEventPositionInput = z.infer<
   typeof createEventPositionInputSchema
 >;
 
-/** Adds a position to the lineup of an event that the actor manages */
 export const createEventPosition = (
   context: ApplicationContext,
   actor: Actor,

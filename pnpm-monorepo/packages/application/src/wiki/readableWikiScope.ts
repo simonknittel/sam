@@ -11,12 +11,8 @@ import {
 
 /**
  * The scope of the MCP tools: the global wiki, or the briefing of an event
- * with the gate of the briefing layout. An event without a briefing, or with
- * a briefing that the actor cannot read, does not exist for the actor. The
- * briefings of the event templates are not available.
- *
- * @throws ForbiddenError when the actor does not have `event;read`
- * @throws NotFoundError when the event or its briefing is not visible
+ * with the gate of the briefing layout. The briefings of the event templates
+ * are not available.
  */
 export const loadReadableWikiScope = async (
   context: ApplicationContext,

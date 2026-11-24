@@ -34,9 +34,6 @@ export type AnswerEventInvitationInput = z.infer<
 >;
 
 /**
- * Accepts the open invitation of the user to an app event: signs the user
- * up with the comment. The organizers get a notification.
- *
  * @throws ConflictError `EventErrorMessage.NoOpenInvitation` without an open
  * invitation, `EventErrorMessage.AlreadySignedUp` and the errors of an own
  * sign-up
@@ -77,9 +74,7 @@ export const acceptEventInvitation = (
   });
 
 /**
- * Declines the open invitation of the user to an app event, with an optional
- * comment. The organizers get a notification. The user can still sign up
- * later.
+ * The user can still sign up later.
  *
  * @throws ConflictError `EventErrorMessage.NoOpenInvitation` without an open
  * invitation, for example when a manager withdrew it

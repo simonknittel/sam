@@ -5,20 +5,14 @@ import type { ApplicationContext } from "../context.js";
 import { markAnnouncedItemsAsRead } from "../readMarkers/announcements.js";
 
 interface MarkedOwnNotifications {
-  /** The number of notifications that were unread before */
   readonly count: number;
-  /** Whether a notification announced an item which was new for the actor */
   readonly newItemRead: boolean;
 }
 
 /**
- * Marks the unread notifications of the actor which match the filter as
- * read, and also the items which they announce (see
- * `markAnnouncedItemsAsRead()`). Each read that starts from notifications
- * goes through here, thus no read can forget the items. For the read of an
- * item, see `markAnnouncementsAsRead()`.
- *
- * @param createAuditEvent the event of the read, only called for a change
+ * Also marks the items which the notifications announce. Each read that starts
+ * from notifications goes through here, thus no read can forget the items. For
+ * the read of an item, see `markAnnouncementsAsRead()`.
  */
 export const markOwnNotificationsAsRead = async (
   context: ApplicationContext,

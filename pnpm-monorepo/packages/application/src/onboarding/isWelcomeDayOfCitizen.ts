@@ -6,15 +6,8 @@ export interface IsWelcomeDayOfCitizenInput {
 }
 
 /**
- * Whether today is the welcome day of the citizen: the local day of
- * `welcomedAt` in the time zone of the citizen, with the time zone of the
- * organization as the fallback. A citizen who was not welcomed yet has no
- * welcome day. Takes no actor and checks no permission: the caller passes
- * the citizen of the session.
- *
- * No page must fail because of a greeting. Thus the function never throws: a
- * failed read or a time zone which the runtime does not know gives no
- * welcome day.
+ * Never throws: no page must fail because of a greeting. No permission check,
+ * see the README.
  */
 export const isWelcomeDayOfCitizen = async (
   context: ApplicationContext,

@@ -13,12 +13,6 @@ export interface EventInvitationRecipient extends EventNotificationRecipients {
   };
 }
 
-/**
- * The invited citizen, when the citizen can see the event now (see
- * `findEventCitizenRecipient()`). Null when the invitation does not exist or
- * is not open anymore: a citizen who answered it or whose invitation a
- * manager withdrew needs no notification.
- */
 export const findEventInvitationRecipient = async (
   context: ApplicationContext,
   { invitationId }: { readonly invitationId: string },

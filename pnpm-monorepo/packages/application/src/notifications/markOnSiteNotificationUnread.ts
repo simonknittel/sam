@@ -21,11 +21,6 @@ export interface MarkOnSiteNotificationUnreadOutput {
   readonly changed: boolean;
 }
 
-/**
- * Marks an own notification as unread
- *
- * @throws ForbiddenError for a user without a citizen
- */
 export const markOnSiteNotificationUnread = async (
   context: ApplicationContext,
   actor: Actor,

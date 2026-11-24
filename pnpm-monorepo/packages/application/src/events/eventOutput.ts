@@ -1,20 +1,13 @@
 import { EventSource, EventVisibility } from "@sam-monorepo/database/browser";
 
-/** Where an event comes from */
 export enum EventSourceType {
-  /** Created and managed in the app */
   App = "app",
   /** Mirrored from Discord. Its core data is read-only in the app. */
   Discord = "discord",
 }
 
 export enum EventVisibilityType {
-  /** Visible to everyone with `event;read` */
   Public = "public",
-  /**
-   * Visible only to the holders of the selected roles, the creator, the
-   * managers and `event;manage`
-   */
   Restricted = "restricted",
 }
 

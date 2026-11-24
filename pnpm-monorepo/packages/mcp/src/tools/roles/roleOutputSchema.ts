@@ -1,6 +1,5 @@
 import * as z from "zod";
 
-/** The fields of a role in `list_roles` and in `get_role` */
 export const roleOutputShape = {
   id: z.string(),
   name: z.string(),

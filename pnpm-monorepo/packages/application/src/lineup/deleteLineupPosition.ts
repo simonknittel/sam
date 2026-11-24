@@ -10,11 +10,6 @@ import {
 import type { LineupPositionWriteOutput } from "./lineupOutput.js";
 import { findLineupPosition, removeLineupPosition } from "./lineupWrites.js";
 
-/**
- * Deletes a position and its children from the lineup of an event or of an
- * event template that the actor can change. The input is the input of
- * `deleteEventPosition()`.
- */
 export const deleteLineupPosition = (
   context: ApplicationContext,
   actor: Actor,

@@ -37,16 +37,10 @@ export type RemoveEventParticipantsInput = z.infer<
 >;
 
 export interface RemoveEventParticipantsOutput {
-  /** The event after the write, like `getEvent()` */
   readonly event: GetEventOutput;
   readonly removed_citizen_ids: string[];
 }
 
-/**
- * A manager cancels the sign-ups of citizens for an app event. The position
- * applications and the lineup assignments of the citizens at the event go
- * with them, and each citizen gets a notification, except the actor.
- */
 export const removeEventParticipants = (
   context: ApplicationContext,
   actor: Actor,
@@ -55,9 +49,6 @@ export const removeEventParticipants = (
   withSpan(context, "removeEventParticipants", async () => {
     requirePermission(actor, "event", "read");
 
-    /**
-     * Authorize the request
-     */
     const event = await requireParticipatableAppEvent(
       context,
       actor,
@@ -135,7 +126,6 @@ export const removeEventParticipants = (
       })),
     );
 
-    // The actor gets no notification about the own removal
     await triggerNotificationsAfterSave(
       context,
       citizenIds

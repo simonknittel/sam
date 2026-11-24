@@ -26,15 +26,6 @@ export interface UpdateWikiFeaturedPagesOutput {
   readonly page_ids: string[];
 }
 
-/**
- * Replaces the pages on the landing page of the wiki. The landing page is
- * global curation, thus it needs `wiki;manage`: the managers of a page
- * manage their pages, not what the landing page shows.
- *
- * @throws ForbiddenError without `wiki;manage`
- * @throws NotFoundError when a page is not a page of the global wiki or is
- * in the trash
- */
 export const updateWikiFeaturedPages = (
   context: ApplicationContext,
   actor: Actor,

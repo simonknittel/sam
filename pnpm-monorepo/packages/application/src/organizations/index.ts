@@ -1,4 +1,3 @@
-/** The use cases of the organizations and their memberships */
 export {
   confirmOrganizationMembership,
   confirmOrganizationMembershipInputSchema,

@@ -17,8 +17,8 @@ const compareWikiRoleCitizens = (first: WikiCitizen, second: WikiCitizen) => {
 };
 
 /**
- * The citizens that hold the role. A role that the actor cannot see gives
- * no citizens, thus neither the role nor its members leak.
+ * A role that the actor cannot see gives no citizens, thus neither the role
+ * nor its members leak
  */
 const resolveWikiRoleCitizens = async (
   context: Pick<ApplicationContext, "prisma">,
@@ -54,9 +54,7 @@ const resolveWikiRoleCitizens = async (
 };
 
 /**
- * The citizens of the role of a role-members node, for the node view of the
- * editor. The view loads them again after a change of the role. The ids are
- * content of the document, thus an unknown role gives no citizens.
+ * The ids are content of the document, thus an unknown role gives no citizens
  */
 export const findWikiRoleCitizens = async (
   context: Pick<ApplicationContext, "prisma">,
@@ -69,11 +67,6 @@ export const findWikiRoleCitizens = async (
     roleId,
   );
 
-/**
- * The citizens of each role-members node of the content, by role, for the
- * static render and as the first data of the node views. The visible roles
- * load one time for all nodes.
- */
 export const loadWikiRoleCitizensByRole = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Pick<Actor, "authorize">,

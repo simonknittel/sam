@@ -14,7 +14,6 @@ import { WikiErrorMessage } from "./wikiErrors.js";
 import { isWikiScopeFrozen, loadWikiScopeOfPage } from "./wikiScope.js";
 import { setWikiPageTags } from "./wikiTags.js";
 
-/** The name of a tag: trimmed, with one space for each run of white space */
 const wikiTagNameSchema = z
   .string()
   .trim()
@@ -40,17 +39,8 @@ export interface UpdateWikiPageTagsOutput {
 }
 
 /**
- * Replaces the tags of a page with the set of the input (see
- * `setWikiPageTags()`). A name that differs only in letter case from an
- * existing tag uses the existing tag. Without a change, the output has empty
- * lists and there is no audit event: a different user or tab can have set
- * the same tags before.
- *
- * @throws NotFoundError when a different user or tab deleted the page, or
- * when the actor cannot hold the scope of the page (the same answer as for a
- * page that is missing from the scope)
- * @throws ConflictError when the briefing of the page is over
- * @throws ForbiddenError when the actor cannot edit the page
+ * Without a change, the output has empty lists and there is no audit event: a
+ * different user or tab can have set the same tags before
  */
 export const updateWikiPageTags = (
   context: ApplicationContext,

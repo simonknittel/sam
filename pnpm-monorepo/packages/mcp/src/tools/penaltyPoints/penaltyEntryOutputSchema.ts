@@ -7,7 +7,6 @@ const penaltyEntryCitizenSchema = z.strictObject({
   deleted_at: dateTimeOutputSchema.nullable(),
 });
 
-/** A penalty entry as the penalty points tools give it */
 export const penaltyEntryOutputSchema = z.strictObject({
   id: z.string(),
   citizen: penaltyEntryCitizenSchema,

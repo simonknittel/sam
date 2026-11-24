@@ -47,18 +47,8 @@ export const isEventBriefingPublished = ({
   );
 
 /**
- * Tells the readers of the published briefing of an event and its organizers
- * that it changed. The pages save each edit at once, thus a manager decides
- * when a change is ready, and the edits send no notifications themselves.
- * The manager who announces gets no notification (see
- * `findEventBriefingUpdatedRecipients()`).
- *
- * @throws NotFoundError when the event does not exist or the actor cannot
- * see it
- * @throws ForbiddenError when the actor cannot manage the event or has no
- * citizen
- * @throws ConflictError when the event is over or the briefing is not
- * published
+ * The pages save each edit at once, thus a manager decides when a change is
+ * ready, and the edits send no notifications themselves
  */
 export const announceEventBriefingUpdate = (
   context: ApplicationContext,
@@ -66,9 +56,6 @@ export const announceEventBriefingUpdate = (
   input: AnnounceEventBriefingUpdateInput,
 ): Promise<void> =>
   withSpan(context, "announceEventBriefingUpdate", async () => {
-    /**
-     * Authorize the request
-     */
     const scope = await buildEventWikiContext(context, actor, input);
     if (!scope?.event) throw new NotFoundError(EventErrorMessage.NotFound);
     if (!scope.viewer.isEventManager)
@@ -76,9 +63,6 @@ export const announceEventBriefingUpdate = (
     // The router leaves out the citizen who announced, thus it needs the id
     const citizen = requireCitizen(actor);
 
-    /**
-     * Validate the request
-     */
     if (scope.frozen) throw new ConflictError(WikiErrorMessage.BriefingFrozen);
     if (!isEventBriefingPublished(scope))
       throw new ConflictError(WikiErrorMessage.BriefingNotPublished);

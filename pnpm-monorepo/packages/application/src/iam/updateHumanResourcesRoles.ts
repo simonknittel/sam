@@ -22,13 +22,6 @@ export interface UpdateHumanResourcesRolesOutput {
   readonly role_ids: string[];
 }
 
-/**
- * Replaces the whole list of the roles that count as Human Resources.
- * Requires `role;manage`.
- *
- * @throws ConflictError when a role does not exist (usually because a
- * different user deleted it)
- */
 export const updateHumanResourcesRoles = (
   context: ApplicationContext,
   actor: Actor,

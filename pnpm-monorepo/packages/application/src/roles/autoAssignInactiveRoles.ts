@@ -19,11 +19,7 @@ interface Candidate {
   readonly roleName: string;
 }
 
-/**
- * Assigns a role to the citizens who did not visit the app for the inactive
- * days of the role. The inactive days count back from the time of the run.
- * A citizen without a login or without a known visit is skipped.
- */
+/** A citizen without a login or without a known visit is skipped */
 export const autoAssignInactiveRoles = (
   context: ApplicationContext,
 ): Promise<AutoAssignInactiveRolesOutput> =>

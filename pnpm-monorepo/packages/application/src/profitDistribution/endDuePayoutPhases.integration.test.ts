@@ -13,7 +13,6 @@ const YESTERDAY = new Date(NOW.getTime() - ONE_DAY_IN_MILLISECONDS);
 const TOMORROW = new Date(NOW.getTime() + ONE_DAY_IN_MILLISECONDS);
 const LAST_WEEK = new Date(NOW.getTime() - 7 * ONE_DAY_IN_MILLISECONDS);
 
-/** A cycle whose payout started last week */
 const createStartedCycle = (payoutEndsAt: Date) =>
   prisma.profitDistributionCycle.create({
     data: {

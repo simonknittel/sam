@@ -35,7 +35,6 @@ export interface DeleteUploadOutput {
   readonly object_deleted: boolean;
 }
 
-/** "<usage type>: <label>" for each location, at most the limit and a rest */
 const toAuditedLocations = (
   usages: readonly UploadUsageLocation[],
 ): string[] => {
@@ -49,8 +48,8 @@ const toAuditedLocations = (
 };
 
 /**
- * Deletes the object from the bucket. A failure leaves the object for the
- * nightly sweep, thus it gives false and does not throw.
+ * A failure leaves the object for the nightly sweep, thus it gives false and
+ * does not throw
  */
 const deleteObject = async (
   context: ApplicationContext,
@@ -83,13 +82,8 @@ const deleteObject = async (
 };
 
 /**
- * Deletes an upload, also when it is still in use. The content of a wiki
- * page keeps its reference, which shows nothing after the delete. The audit
- * event names the places that used the upload.
- *
- * @throws ForbiddenError when the actor does not have `upload;manage`
- * @throws NotFoundError `UploadErrorMessage.UploadNotFound`, also when a
- * different user deleted the upload first
+ * Deletes an upload also when it is in use. The content of a wiki page keeps
+ * its reference, which shows nothing after the delete.
  */
 export const deleteUpload = (
   context: ApplicationContext,
@@ -115,9 +109,7 @@ export const deleteUpload = (
 
     /**
      * The row goes first: its foreign keys are `SetNull` and its join rows go
-     * with it, thus the references are gone in all cases. When the delete of
-     * the object fails, the nightly sweep of the bucket deletes the object
-     * without a row. Thus the failure is only logged.
+     * with it, thus the references are gone in all cases
      */
     await rethrowRecordNotFound(
       () =>
@@ -138,9 +130,8 @@ export const deleteUpload = (
           fileName: decodeUploadFileName(upload.fileName),
           mimeType: upload.mimeType,
           /**
-           * The payload of this version holds the user of the author. The
-           * author of an upload is a citizen now, thus the user comes
-           * through the citizen.
+           * The payload of this version holds the user of the author, thus the
+           * user comes through the citizen
            */
           uploadedById: upload.createdBy?.userId ?? null,
           locations,

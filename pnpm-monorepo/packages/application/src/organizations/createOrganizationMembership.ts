@@ -41,17 +41,15 @@ export interface CreateOrganizationMembershipOutput {
   readonly citizen_id: string;
   readonly type: CreateOrganizationMembershipInput["type"];
   /**
-   * Whether the entry is confirmed. The actor can confirm the entry only with
-   * `organizationMembership;confirm`.
+   * False also for a request to confirm without
+   * `organizationMembership;confirm`
    */
   readonly confirmed: boolean;
 }
 
 /**
- * Reports the membership of a citizen in an organization. A report without
- * confirmation waits for the decision of a user who can confirm it. Requires
- * a citizen and `organizationMembership;create`. A request to confirm
- * without `organizationMembership;confirm` creates an entry that waits.
+ * A request to confirm without `organizationMembership;confirm` creates an
+ * entry that waits for the decision of a user who can confirm it.
  *
  * @throws ValidationError when the organization does not exist
  * @throws NotFoundError when the citizen does not exist or is deleted
@@ -69,10 +67,6 @@ export const createOrganizationMembership = (
       input.confirmed === ConfirmationStatus.CONFIRMED &&
       actor.authorize("organizationMembership", "confirm");
 
-    /**
-     * On the page of a citizen, the user enters the id of the organization
-     * (see `OrganizationErrorMessage.OrganizationNotFound`)
-     */
     const organization = await context.prisma.organization.findUnique({
       where: { id: input.organization_id },
       select: { id: true },
@@ -80,10 +74,6 @@ export const createOrganizationMembership = (
     if (!organization)
       throw new ValidationError(OrganizationErrorMessage.OrganizationNotFound);
 
-    /**
-     * Create the history entry. The active memberships come from the
-     * confirmed history entries, see `changeMembershipHistory()`.
-     */
     await changeMembershipHistory(
       context,
       input.citizen_id,

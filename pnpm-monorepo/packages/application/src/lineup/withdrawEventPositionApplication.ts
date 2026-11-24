@@ -21,7 +21,6 @@ export type WithdrawEventPositionApplicationInput = z.infer<
   typeof withdrawEventPositionApplicationInputSchema
 >;
 
-/** Withdraws the own application for a position of an event */
 export const withdrawEventPositionApplication = (
   context: ApplicationContext,
   actor: Actor,

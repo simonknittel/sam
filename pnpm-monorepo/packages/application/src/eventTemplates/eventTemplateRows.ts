@@ -28,8 +28,8 @@ import {
 } from "./eventTemplateFilters.js";
 
 /*
- * The rows of the template pages. The pages serialize them into the
- * browser, thus a citizen is only what a `CitizenLink` needs.
+ * The pages serialize the rows into the browser, thus a citizen is only what a
+ * `CitizenLink` needs
  */
 
 const DETAIL_SELECT = {
@@ -64,14 +64,6 @@ export interface EventTemplateDetailsEntry {
   readonly permissions: ResolvedEventTemplatePermissions;
 }
 
-/**
- * One template with the permissions of the actor, for the template pages and
- * the template briefing. A deleted template is in the result for the actors
- * who can restore it.
- *
- * @throws NotFoundError when the template does not exist or the actor cannot
- *   read it: the two are deliberately indistinguishable
- */
 export const findEventTemplateDetails = (
   context: ApplicationContext,
   actor: Actor,
@@ -83,10 +75,8 @@ export const findEventTemplateDetails = (
   });
 
 /**
- * Everything the list table renders about one template. The list searches
- * the description but never shows it, so it stays out of the rows that
- * reach the browser; the picker's own select keeps it, because it prefills a
- * new event from it.
+ * The list searches the description but never shows it, so it stays out of the
+ * rows that reach the browser
  */
 const LIST_SELECT = {
   id: true,
@@ -120,15 +110,8 @@ export interface EventTemplateListFilters {
   readonly query: string | null;
 }
 
-/** The bound of the search term of the list, which comes from the URL */
 export const EVENT_TEMPLATE_LIST_QUERY_MAXIMUM_LENGTH = 255;
 
-/**
- * The templates the actor may see, newest change first, with their resolved
- * permissions. The visibility fragment is ANDed in so no filter can widen
- * the result — the owner filter in particular is only honored for
- * `event;manage` holders, who see everything anyway.
- */
 export const findEventTemplateListRows = async (
   context: ApplicationContext,
   actor: Actor,
@@ -173,11 +156,6 @@ export const findEventTemplateListRows = async (
 
 export type EventTemplateOwner = CitizenReferenceRow;
 
-/**
- * The distinct owners of the templates, for the owner filter of the list.
- * Only `event;manage` holders get the filter, thus everybody else gets an
- * empty list.
- */
 export const findEventTemplateOwners = async (
   context: ApplicationContext,
   actor: Actor,
@@ -191,7 +169,6 @@ export const findEventTemplateOwners = async (
   });
 };
 
-/** Everything the create-event form prefills from a template */
 const PICKER_SELECT = {
   id: true,
   name: true,
@@ -209,7 +186,6 @@ const PICKER_SELECT = {
   visibilityRoles: { select: { roleId: true } },
 } as const satisfies Prisma.EventTemplateSelect;
 
-/** A template in the picker of the create-event form */
 export interface UsableEventTemplateRow {
   readonly id: string;
   readonly name: string;
@@ -225,9 +201,8 @@ export interface UsableEventTemplateRow {
 }
 
 /**
- * The templates that are not deleted and that the actor may use when they
- * create an event. Deliberately not filtered by `canEdit` — using a template
- * is what a read share is for.
+ * Deliberately not filtered by `canEdit`: using a template is what a read share
+ * is for
  */
 export const findUsableEventTemplates = async (
   context: ApplicationContext,
@@ -264,11 +239,7 @@ export const findUsableEventTemplates = async (
     }));
 };
 
-/**
- * Whether the templates section has anything to offer the actor: they may
- * create one, they manage all of them, or at least one template is visible
- * to them — which covers a role-shared editor without `event;create`.
- */
+/** A visible template covers a role-shared editor without `event;create` */
 export const canAccessEventTemplates = async (
   context: ApplicationContext,
   actor: Actor,
@@ -292,11 +263,7 @@ export type EventTemplatePosition = Prisma.EventPositionGetPayload<{
 }>;
 
 /**
- * The lineup blueprint of a template, in the same nested shape the event
- * lineup renders. Also for a deleted template, which the actors who can
- * restore it still see.
- *
- * @throws NotFoundError when the actor cannot read the template
+ * Also for a deleted template, which the actors who can restore it still see
  */
 export const findEventTemplatePositionTree = async (
   context: ApplicationContext,

@@ -26,16 +26,13 @@ const WIKI_PAGE_REPORT_SELECT = {
   },
 } as const satisfies Prisma.WikiPageReportSelect;
 
-/** A report in the table of the reports and on the page of a report */
 export type WikiPageReportRow = Prisma.WikiPageReportGetPayload<{
   select: typeof WIKI_PAGE_REPORT_SELECT;
 }>;
 
 /**
- * All reports, the newest first, for the table of the reports. The table
- * filters them in memory, and there is no limit (a known defect).
- *
- * @throws ForbiddenError without `wiki;manage`
+ * The table filters the reports in memory, and there is no limit (a known
+ * defect)
  */
 export const findWikiPageReportRows = (
   context: Pick<ApplicationContext, "prisma">,
@@ -49,11 +46,6 @@ export const findWikiPageReportRows = (
   });
 };
 
-/**
- * The report, or null when it does not exist
- *
- * @throws ForbiddenError without `wiki;manage`
- */
 export const findWikiPageReport = (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,
@@ -67,11 +59,6 @@ export const findWikiPageReport = (
   });
 };
 
-/**
- * The number of the reports that are not resolved, for the badge of the
- * wiki tile and the navigation entry of the reports. 0 without
- * `wiki;manage`.
- */
 export const countOpenWikiReports = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,

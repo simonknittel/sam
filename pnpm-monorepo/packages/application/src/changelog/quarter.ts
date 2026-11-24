@@ -6,15 +6,12 @@ export enum Quarter {
 }
 
 export interface ChangelogQuarter {
-  /**
-   * The identifier of the quarter in the URL, for example `2026-q3`.
-   */
+  /** For example `2026-q3` */
   readonly slug: string;
   readonly year: string;
   readonly quarter: Quarter;
 }
 
-/** The format of `ChangelogQuarter.slug` */
 export const CHANGELOG_QUARTER_SLUG_PATTERN = /^\d{4}-q[1-4]$/;
 
 const QUARTERS_IN_ORDER = [
@@ -26,9 +23,7 @@ const QUARTERS_IN_ORDER = [
 
 const MONTHS_PER_QUARTER = 12 / QUARTERS_IN_ORDER.length;
 
-/**
- * @param date A date in the `YYYY-MM-DD` format.
- */
+/** @param date `YYYY-MM-DD` */
 export const getQuarterOfDate = (date: string): ChangelogQuarter => {
   const year = date.slice(0, 4);
   const month = Number(date.slice(5, 7));

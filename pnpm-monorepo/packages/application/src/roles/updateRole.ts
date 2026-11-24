@@ -93,18 +93,13 @@ const ROLE_FIELDS_SELECT = {
 } as const satisfies Prisma.RoleSelect;
 
 /**
- * Changes the given fields of a role (the name, the description, the
- * inactivity rules and the levels), and adds tags to the role or removes tags
- * from it, in one transaction. Requires `role;manage`.
- *
  * A call with a field writes `ROLE_UPDATED_V4`, also when the values stay. A
- * call without a field (for example only with tags) does not write it. Only
- * a real change of the tags writes `ROLE_TAG_ASSIGNMENTS_UPDATED`.
+ * call without a field (for example only with tags) does not write it. Only a
+ * real change of the tags writes `ROLE_TAG_ASSIGNMENTS_UPDATED`.
  *
- * @throws NotFoundError when the role or a tag of `add_tag_ids` does not
- * exist
- * @throws ValidationError when a different role has the name, or when a tag
- * is in `add_tag_ids` and in `remove_tag_ids`
+ * @throws NotFoundError when the role or a tag of `add_tag_ids` does not exist
+ * @throws ValidationError when a different role has the name, or when a tag is
+ * in `add_tag_ids` and in `remove_tag_ids`
  */
 export const updateRole = (
   context: ApplicationContext,

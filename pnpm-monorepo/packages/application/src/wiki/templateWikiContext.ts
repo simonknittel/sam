@@ -19,13 +19,12 @@ import {
 } from "./eventWikiContext.js";
 
 /**
- * The briefing of an event template. The template is a blueprint: the event
- * scopes of its pages are stored values that have an effect only after a
- * copy into an event. The access control list of the template gives the
- * access: a reader of the template reads all pages of its briefing, an
- * editor of the template edits and manages them. The source ids of the
- * scopes come from the real hierarchy, thus the scope editor shows where a
- * value comes from. Returns null when the actor cannot read the template.
+ * The template is a blueprint: the event scopes of its pages are stored values
+ * that have an effect only after a copy into an event. The access control list
+ * of the template gives the access: a reader of the template reads all pages
+ * of its briefing, an editor of the template edits and manages them. The
+ * source ids of the scopes come from the real hierarchy, thus the scope editor
+ * shows where a value comes from.
  */
 export const buildTemplateWikiContext = (
   context: ApplicationContext,

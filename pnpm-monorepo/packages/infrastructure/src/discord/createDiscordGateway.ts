@@ -52,14 +52,11 @@ export interface DiscordGatewayOptions {
    * https://discord.com/developers/docs/reference#user-agent
    */
   readonly userAgent?: string;
-  /** The maximum time of one request, also of a retry */
+  /** Also of a retry */
   readonly requestTimeoutMilliseconds: number;
   /**
-   * Discord answers a rate limit with the seconds to wait. The gateway waits
-   * and sends the request again, when the wait is not longer than
-   * `maximumWaitSeconds` and the request has not been retried
-   * `maximumRetryCount` times. Otherwise the result is Failed. A rate limit
-   * without a wait value is never retried.
+   * Discord answers a rate limit with the seconds to wait. A rate limit without
+   * a wait value is never retried.
    */
   readonly rateLimitRetry: {
     readonly maximumRetryCount: number;
@@ -93,10 +90,6 @@ interface DiscordRequest<Schema extends z.ZodType | undefined> {
 type ResponseData<Schema extends z.ZodType | undefined> =
   Schema extends z.ZodType ? z.infer<Schema> : null;
 
-/**
- * Seconds that Discord asks to wait, from the error body or from the header,
- * or null when it names neither.
- */
 const getRetryAfterSeconds = (
   response: Response,
   retryAfterFromBody: number | undefined,
@@ -110,10 +103,7 @@ const getRetryAfterSeconds = (
   return Number.isFinite(seconds) ? seconds : null;
 };
 
-/**
- * The problem of the options that prevents every request, or null. The text
- * never contains the token, because the log line shows it.
- */
+/** The text never contains the token, because the log line shows it */
 const findOptionsProblem = ({
   apiBaseUrl,
   botToken,
@@ -234,10 +224,9 @@ export const createDiscordGateway = (
         const errorBody = await readErrorBody(response);
 
         /**
-         * Keyed on the error code of Discord rather than on the status: a 404
-         * alone can just as well mean that the bot lost the guild, and
-         * callers act destructively on this outcome. Discord gives this code
-         * only for a request that addresses one scheduled event.
+         * Not keyed on the status, see
+         * `DISCORD_ERROR_UNKNOWN_GUILD_SCHEDULED_EVENT`. Discord gives this
+         * code only for a request that addresses one scheduled event.
          */
         if (errorBody?.code === DISCORD_ERROR_UNKNOWN_GUILD_SCHEDULED_EVENT) {
           log.warn("Discord API reported the resource as gone", {

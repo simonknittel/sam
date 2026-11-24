@@ -10,12 +10,10 @@ import { SKILL_CATALOG } from "./skillCatalog.js";
  * and a Claude plugin with its marketplace. The host serves them.
  */
 
-/** The name of the Claude plugin and of its MCP server */
 const CLAUDE_PLUGIN_NAME = "sam";
 
 export const CLAUDE_MARKETPLACE_NAME = "sam";
 
-/** `<plugin>@<marketplace>`, for example for `claude plugin install` */
 export const CLAUDE_PLUGIN_ID = `${CLAUDE_PLUGIN_NAME}@${CLAUDE_MARKETPLACE_NAME}`;
 
 /** The name that Claude Code shows for the MCP server of the plugin */
@@ -111,7 +109,6 @@ export const createClaudeMarketplace = (
   ],
 });
 
-/** The index of the Agent Skills Discovery RFC, version 0.2.0 */
 export const createSkillDiscoveryIndex = (
   getSkillArchiveUrl: (skillName: string) => URL,
 ) => ({

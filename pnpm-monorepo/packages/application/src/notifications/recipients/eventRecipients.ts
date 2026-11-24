@@ -12,13 +12,11 @@ import {
 } from "../../events/eventVisibility.js";
 import type { Recipient } from "./recipient.js";
 
-/** The recipients of a notification about an event */
 export interface EventNotificationRecipients {
   readonly event: { readonly id: string; readonly name: string };
   readonly recipients: Recipient[];
 }
 
-/** The fields of an event that `findEventRecipients()` reads */
 export const EVENT_RECIPIENT_SELECT = {
   visibility: true,
   createdById: true,
@@ -48,11 +46,7 @@ export interface EventRecipientOptions {
   readonly additionalPermissionSets?: readonly PermissionSet[];
 }
 
-/**
- * The citizens of `where` who can see the event now: the effective
- * `login;manage` and `event;read`, and `resolveEventVisibility()` with the
- * effective roles. This is the same rule as the event page of the app.
- */
+/** The same rule as the event page of the app */
 export const findEventRecipients = async (
   context: ApplicationContext,
   event: EventVisibilityInput,

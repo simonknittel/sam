@@ -8,16 +8,10 @@ export interface FindTaskCompletedRecipientsInput {
 
 export interface TaskCompletedRecipients {
   readonly task: { readonly id: string; readonly title: string };
-  /** The handle of the citizen who completed the task */
   readonly citizenHandle: string | null;
   readonly recipients: Recipient[];
 }
 
-/**
- * The creator of the task when the creator can log in and open tasks, except
- * when the creator completed the task. Null when the task does not exist, is
- * deleted or is not completed.
- */
 export const findTaskCompletedRecipients = async (
   context: ApplicationContext,
   input: FindTaskCompletedRecipientsInput,

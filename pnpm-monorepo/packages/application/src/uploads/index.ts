@@ -1,4 +1,3 @@
-/** The use cases of the uploads, with the find helpers of the upload manager */
 export {
   assignEventCoverImage,
   assignEventCoverImageInputSchema,

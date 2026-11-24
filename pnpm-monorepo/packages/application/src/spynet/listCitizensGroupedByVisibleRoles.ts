@@ -7,13 +7,12 @@ import { withSpan } from "../withSpan.js";
 import type { PickableCitizen } from "./listAllCitizens.js";
 
 export interface CitizensGroupedByVisibleRoles {
-  /** Each citizen who has at least one of the visible roles, by handle */
   readonly citizens: PickableCitizen[];
   /**
-   * One group for each visible role that has citizens, in the order of the
-   * visible roles (by name). The groups refer to the citizens by id, because
-   * superjson (tRPC) sends a citizen again for each group that refers to it.
-   * The client gets the role itself from the roles context.
+   * In the order of the visible roles (by name). The groups refer to the
+   * citizens by id, because superjson (tRPC) sends a citizen again for each
+   * group that refers to it. The client gets the role itself from the roles
+   * context.
    */
   readonly roleGroups: {
     readonly roleId: string;
@@ -21,11 +20,7 @@ export interface CitizensGroupedByVisibleRoles {
   }[];
 }
 
-/**
- * The active citizens of each role that the actor can see, for the citizen
- * picker and the career flows. Only the visibility of the roles limits the
- * list.
- */
+/** Only the visibility of the roles limits the list */
 export const listCitizensGroupedByVisibleRoles = (
   context: ApplicationContext,
   actor: Actor,

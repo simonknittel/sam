@@ -17,10 +17,8 @@ import {
 import { INHERITED_WIKI_PAGE_PERMISSIONS } from "./wikiPageDefaults.js";
 
 /**
- * The briefing of a container that a copy reads: the pages that are not
- * soft-deleted, and the root page. A container whose root was trashed has
- * pages but nothing to copy. No permission check: the caller checks the
- * container.
+ * A container whose root was trashed has pages but nothing to copy. No
+ * permission check: the caller checks the container.
  */
 export const findBriefingCopySource = async (
   context: Pick<ApplicationContext, "prisma">,
@@ -62,7 +60,6 @@ const orderDepthFirst = (
 };
 
 interface CopyBriefingTreeParams {
-  /** The source container's non-deleted pages, root included */
   readonly sourcePages: readonly EventWikiContextPage[];
   readonly targetContainer: EventContainer;
   readonly createdByEntityId: string;

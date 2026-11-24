@@ -53,21 +53,15 @@ export interface ReadableCitizenNote {
    */
   readonly classification_level: NamedReference | null;
   readonly confirmed: CitizenNoteConfirmation;
-  /** Null without `spynetNotes;read`, like the notes tab of a citizen */
+  /** Null without `spynetNotes;read` */
   readonly confirmed_at: string | null;
   readonly created_at: string;
-  /**
-   * The citizen who wrote the note. Null when it is unknown or deleted, and
-   * without `spynetNotes;read`, like the notes tab of a citizen.
-   */
+  /** Null when it is unknown or deleted, and without `spynetNotes;read` */
   readonly created_by: CitizenReference | null;
   readonly content: string | null;
 }
 
-/**
- * The actor can see that the note exists, but not its content. The notes
- * page shows only the note type of such a note.
- */
+/** The notes page shows only the note type of such a note */
 export interface RedactedCitizenNote {
   readonly redacted: true;
   readonly id: string;
@@ -78,7 +72,6 @@ export type CitizenNoteOutput = ReadableCitizenNote | RedactedCitizenNote;
 
 export interface ListCitizenNotesOutput {
   readonly notes: CitizenNoteOutput[];
-  /** Null on the last page */
   readonly next_cursor: string | null;
 }
 
@@ -101,16 +94,7 @@ const toConfirmation = (confirmed: ConfirmationStatus | null) => {
   }
 };
 
-/**
- * The notes of a citizen that the actor can read or see redacted, from the
- * newest to the oldest, like on the notes page. A note needs the permission
- * for its note type and its classification level, and `alsoUnconfirmed` when
- * it is not confirmed. Notes of a deleted note type or classification level
- * do not show. A deleted citizen has no notes page, thus it gives a
- * `NotFoundError`.
- *
- * @throws ValidationError when the cursor is not a cursor of this list
- */
+/** Notes of a deleted note type or classification level do not show */
 export const listCitizenNotes = async (
   context: ApplicationContext,
   actor: Actor,
@@ -160,7 +144,6 @@ export const listCitizenNotes = async (
           {
             citizenId: input.citizen_id,
             type: "note",
-            /** An empty OR matches no note */
             OR: visibleClassifications,
           },
           ...buildCursorConditions(
@@ -172,7 +155,6 @@ export const listCitizenNotes = async (
         ],
       },
       orderBy: cursorOrderBy(CursorDirection.Next, "createdAt"),
-      // One more note than the page tells whether a next page exists
       take: input.limit + 1,
       select: {
         id: true,

@@ -15,13 +15,8 @@ export const setOwnGrantToolEnabledInputSchema = z.object({
 });
 
 /**
- * Enables or disables an MCP tool for a connected client of the actor. A row
- * disables the tool (see the `McpToolSetting` model). The caller makes sure
- * that the tool exists (see `mcpToolNameSchema`).
- *
- * @throws ForbiddenError when the actor cannot use the MCP server
- * @throws NotFoundError when the grant does not belong to the actor or is
- * revoked
+ * A row disables the tool (see the `McpToolSetting` model). The caller makes
+ * sure that the tool exists (see `mcpToolNameSchema`).
  */
 export const setOwnGrantToolEnabled = (
   context: ApplicationContext,
@@ -52,7 +47,6 @@ export const setOwnGrantToolEnabled = (
           skipDuplicates: true,
         });
 
-    // The tool already had the requested state
     if (count === 0) return;
 
     await context.audit.create([

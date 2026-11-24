@@ -18,12 +18,6 @@ export interface DeleteEventTemplateOutput {
   readonly template_id: string;
 }
 
-/**
- * Soft-deletes a template: it disappears from every list and from the
- * create-event picker, and grants nothing to the roles it was shared with —
- * only its owner and `event;manage` holders can still find and restore it
- * through the status filter.
- */
 export const deleteEventTemplate = (
   context: ApplicationContext,
   actor: Actor,

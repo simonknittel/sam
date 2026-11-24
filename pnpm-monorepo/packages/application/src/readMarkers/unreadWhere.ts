@@ -1,7 +1,6 @@
 import { ReadMarkerSubject } from "@sam-monorepo/domain";
 import type { Actor } from "../actor.js";
 
-/** See `READ_MARKER_TRACKED_SINCE` */
 const TASKS_AND_EVENTS_TRACKED_SINCE = new Date("2026-09-27T00:00:00Z");
 
 /**

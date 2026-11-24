@@ -7,12 +7,8 @@ import {
 } from "./birthdays.js";
 
 /**
- * Each citizen who has the birthday today, in the own time zone. The app
- * shell loads this one time for each request and gives it to the browser,
- * thus a citizen link can wear the party hat without its own query.
- *
- * Only the ids go out. The audience is the one of the birthday list: an
- * actor without `citizen;read` gets nothing.
+ * Only the ids go out. The app shell loads them one time for each request, like
+ * `listCitizenAvatarUrls()`.
  */
 export const listCitizenIdsWithBirthdayToday = async (
   context: ApplicationContext,

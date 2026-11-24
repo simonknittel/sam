@@ -35,13 +35,11 @@ export interface ArchiveIrrelevantOnSiteNotificationsOutput {
 }
 
 /**
- * Archives the on-site notifications after their time of relevance. They
- * leave the inbox and the unread count, but their read state does not
- * change: the citizen can find them in the archive and restore them.
+ * Their read state does not change: the citizen can find them in the archive
+ * and restore them.
  *
- * The job runs one time each day, thus a notification can stay in the inbox
- * up to one day too long. Such a notification is old, but it causes no
- * problem. A browser that shows it keeps it until its next read.
+ * The job runs one time each day, thus a notification can stay in the inbox up
+ * to one day too long. A browser that shows it keeps it until its next read.
  */
 export const archiveIrrelevantOnSiteNotifications = (
   context: ApplicationContext,

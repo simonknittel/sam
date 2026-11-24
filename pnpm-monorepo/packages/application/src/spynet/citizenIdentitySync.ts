@@ -54,12 +54,7 @@ const updateCitizenCaches = async (
   });
 };
 
-/**
- * Updates all data that depends on the confirmed identity logs of a citizen,
- * after a user confirms or deletes one of these logs: the cached attribute
- * columns of the citizen, the link to the login and the display name of the
- * login. Call it in the transaction of the change, after `lockCitizen`.
- */
+/** Call it in the transaction of the change, after `lockCitizen` */
 export const syncCitizenIdentityAfterLogChange = async (
   client: Prisma.TransactionClient,
   log: ChangedLog,

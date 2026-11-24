@@ -28,20 +28,12 @@ export type MarkItemsAsReadInput = z.output<typeof markItemsAsReadInputSchema>;
 export interface MarkItemsAsReadOutput {
   /** The number of the items which were new for the actor before this call */
   readonly new_count: number;
-  /**
-   * The number of the unread notifications which announced the items and
-   * which are read now
-   */
   readonly notifications_read: number;
 }
 
 /**
- * Marks a batch of items of one subject type as read by the actor, for
- * example the changelog entries that dwelled in view. Also marks the
- * notifications which announced the items as read. Skips the items which do
- * not exist or which the actor cannot see. Repeated calls change nothing.
- *
- * @throws ForbiddenError for a user without a citizen
+ * Skips the items which do not exist or which the actor cannot see. Repeated
+ * calls change nothing.
  */
 export const markItemsAsRead = (
   context: ApplicationContext,

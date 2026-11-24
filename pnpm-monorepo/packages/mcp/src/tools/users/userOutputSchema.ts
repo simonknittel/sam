@@ -2,7 +2,6 @@ import { UserRoleOutput } from "@sam-monorepo/application";
 import * as z from "zod";
 import { citizenReferenceSchema, dateTimeOutputSchema } from "../../schemas.js";
 
-/** The fields of a user in `list_users` and in `get_user` */
 export const userOutputShape = {
   id: z.string(),
   name: z

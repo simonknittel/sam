@@ -2,11 +2,6 @@ import type { NotificationChannel } from "@sam-monorepo/database/browser";
 import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 
-/**
- * The number of unread notifications in the inbox of the citizen of the
- * actor, or 0 for a user without a citizen. An archived notification does
- * not count, also when it is unread.
- */
 export const countOwnUnreadOnSiteNotifications = async (
   context: ApplicationContext,
   actor: Actor,
@@ -28,10 +23,6 @@ export interface OwnNotificationSetting {
   readonly channel: NotificationChannel;
 }
 
-/**
- * The notification types that the citizen of the actor switched off, or
- * null for a user without a citizen
- */
 export const findOwnNotificationSettings = async (
   context: ApplicationContext,
   actor: Actor,
@@ -49,7 +40,6 @@ export const findOwnNotificationSettings = async (
   });
 };
 
-/** A browser that gets the web push notifications of the citizen */
 export interface OwnWebPushSubscription {
   readonly id: string;
   readonly createdAt: Date;
@@ -58,11 +48,6 @@ export interface OwnWebPushSubscription {
   readonly endpoint: string;
 }
 
-/**
- * The web push subscriptions of the citizen of the actor, the newest first,
- * or an empty list for a user without a citizen. The keys of the
- * subscriptions are not in the result.
- */
 export const listOwnWebPushSubscriptions = async (
   context: ApplicationContext,
   actor: Actor,

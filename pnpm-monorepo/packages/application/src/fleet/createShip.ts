@@ -22,7 +22,6 @@ export const createShipInputSchema = z.object({
     .describe("A short note of the owner about the ship."),
 });
 
-/** Adds a ship of a variant to the fleet of the own citizen */
 export const createShip = (
   context: ApplicationContext,
   actor: Actor,

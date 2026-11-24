@@ -8,14 +8,9 @@ const isLoopbackRedirectUrl = (url: URL) =>
   !url.hash;
 
 /**
- * Finds the registered redirect URI that permits the requested redirect URI.
- * The comparison is exact, character for character. The only exception is
- * a loopback redirect URI (`http` on `localhost`, `127.0.0.1` or `[::1]`): a
- * native app gets a random port from the operating system, thus the port is
- * ignored (RFC 8252 section 7.3).
- *
- * @returns The registered redirect URI, or null when no URI permits the
- * requested one
+ * The comparison is exact, character for character. The only exception is a
+ * loopback redirect URI: a native app gets a random port from the operating
+ * system, thus the port is ignored (RFC 8252 section 7.3).
  */
 export const matchRedirectUri = (
   registeredUris: readonly string[],
@@ -45,11 +40,9 @@ export const matchRedirectUri = (
 const PRIVATE_USE_SCHEME = /^[a-z][a-z0-9+-]*(?:\.[a-z0-9+-]+)+:$/;
 
 /**
- * Whether the app can send the browser to a redirect URI: `https`, `http`
- * on a loopback host, or a private-use scheme of a native app. All other
- * schemes are refused, for example `javascript:`, `data:` and `http` on a
- * different host. A redirect to such a URI could run code on the origin of
- * the app or send the code without encryption.
+ * All other schemes are refused, for example `javascript:`, `data:` and `http`
+ * on a different host: a redirect to such a URI could run code on the origin of
+ * the app or send the code without encryption
  */
 export const isPermittedRedirectUri = (redirectUri: string) => {
   const url = URL.parse(redirectUri);

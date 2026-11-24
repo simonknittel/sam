@@ -18,11 +18,8 @@ export const CLEARANCE_USER_WHERE = {
 } as const satisfies Prisma.CitizenWhereInput;
 
 /**
- * The citizens of `where` who pass the clearance page: active, with
- * `CLEARANCE_USER_WHERE` and the effective permission `login;manage`
- * (inheritance, level gate, negation, see `findCitizensWithPermissions()`).
- * No permission check: the notification router uses it to filter the
- * receivers (see `storeOnSiteNotifications()`).
+ * The citizens of `where` who pass the clearance page. No permission check: the
+ * callers filter the receivers of notifications.
  */
 export const findClearedCitizens = (
   context: Pick<ApplicationContext, "prisma">,

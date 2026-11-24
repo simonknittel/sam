@@ -16,11 +16,9 @@ export const deleteVariantInputSchema = z.object({
 });
 
 /**
- * Deletes a variant. The database deletes the ships of all owners of the
- * variant with it. Gives the variant before the delete, thus its ship count
- * is the number of the deleted ships of the active citizens.
- *
- * @throws NotFoundError when the variant does not exist
+ * The database deletes the ships of all owners of the variant with it. Gives
+ * the variant before the delete, thus its ship count is the number of the
+ * deleted ships of the active citizens.
  */
 export const deleteVariant = async (
   context: ApplicationContext,

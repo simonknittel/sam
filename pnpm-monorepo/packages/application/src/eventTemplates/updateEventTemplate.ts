@@ -27,16 +27,14 @@ export const updateEventTemplateInputSchema = z.object({
   name: eventNameSchema.optional(),
   description: eventDescriptionSchema.optional(),
   /**
-   * The visibility of the events that the template creates. Without it, the
-   * visibility roles also stay.
+   * Of the events that the template creates, not of the template: the role
+   * shares decide who sees the template. Without it, the visibility roles also
+   * stay.
    */
   visibility: eventVisibilitySchema.optional(),
   visibility_role_ids: visibilityRoleIdsSchema.optional(),
-  /** The participation switch of the events that the template creates */
   participation_enabled: z.boolean().optional(),
-  /** The application switch of the events that the template creates */
   application_required: z.boolean().optional(),
-  /** The Discord publishing an event created from this template starts with */
   ...discordPublishFieldsShape,
   /**
    * Null for no publishing. Without it, the channel and the location also
@@ -52,27 +50,17 @@ export type UpdateEventTemplateInput = z.infer<
   typeof updateEventTemplateInputSchema
 >;
 
-/** The parts of a template change that only the app gives: the uploads */
 export interface UpdateEventTemplateOptions {
-  /**
-   * The cover image: an image that the actor uploaded (the use case checks a
-   * new one), null for no cover. Absent keeps the current cover.
-   */
+  /** Null for no cover. Absent keeps the current cover. */
   readonly coverImageId?: string | null;
 }
 
 export interface UpdateEventTemplateOutput {
   readonly id: string;
   readonly name: string;
-  /** True when the write changed or removed the cover image */
   readonly cover_image_changed: boolean;
 }
 
-/**
- * Changes the template's own data and everything it prefills into a new
- * event. The visibility here describes the future event, not who may see the
- * template: the role shares decide that.
- */
 export const updateEventTemplate = (
   context: ApplicationContext,
   actor: Actor,
@@ -80,9 +68,6 @@ export const updateEventTemplate = (
   options: UpdateEventTemplateOptions = {},
 ): Promise<UpdateEventTemplateOutput> =>
   withSpan(context, "updateEventTemplate", async () => {
-    /**
-     * Authorize the request
-     */
     const { template } = await requireEditableEventTemplate(
       context,
       actor,
@@ -99,9 +84,6 @@ export const updateEventTemplate = (
 
     requireDescriptionFitsDiscord(context, input.description);
 
-    /**
-     * Validate the request
-     */
     const visibility = input.visibility
       ? toEventVisibility(input.visibility)
       : undefined;
@@ -118,8 +100,8 @@ export const updateEventTemplate = (
       : undefined;
 
     /**
-     * A newly picked cover must be the actor's own image so nobody can
-     * attach someone else's upload; keeping the current one needs no check.
+     * Nobody can attach someone else's upload; keeping the current cover needs
+     * no check
      */
     const coverImageId =
       options.coverImageId === undefined
@@ -165,7 +147,6 @@ export const updateEventTemplate = (
       () =>
         context.prisma.eventTemplate.update({
           where: { id: template.id, deletedAt: null },
-          /** Prisma writes no field that is undefined */
           data: {
             name: input.name,
             description:

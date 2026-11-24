@@ -2,10 +2,8 @@ import type { Prisma } from "@sam-monorepo/database/client";
 import { CITIZEN_LOG_GUARD_SELECT } from "./citizenLogGuard.js";
 
 /**
- * One note on the notes page of a citizen: the columns of the guard and the
- * time of the creation. Neither the page nor its permission helpers read the
- * author of the note or of its confirmation, thus these `User` joins are
- * absent.
+ * Neither the notes page nor its permission helpers read the author of the note
+ * or of its confirmation, thus these `User` joins are absent
  */
 export const CITIZEN_NOTE_SELECT = {
   ...CITIZEN_LOG_GUARD_SELECT,

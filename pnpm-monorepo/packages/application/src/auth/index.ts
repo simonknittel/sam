@@ -1,7 +1,3 @@
-/**
- * The effective roles of a citizen and the use cases of the sign-in, the
- * sessions, the email confirmation and the admin toolbar
- */
 export { AuthErrorMessage } from "./authErrors.js";
 export {
   confirmEmailWithToken,

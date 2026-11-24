@@ -37,7 +37,6 @@ export const completeTaskInputSchema = z.object({
 
 export type CompleteTaskInput = z.infer<typeof completeTaskInputSchema>;
 
-/** The columns of the claimed task that the completion copies or pays */
 const CLAIMED_TASK_SELECT = {
   id: true,
   title: true,
@@ -60,10 +59,6 @@ type TaskToComplete = Prisma.TaskGetPayload<{
   select: typeof CLAIMED_TASK_SELECT;
 }>;
 
-/**
- * Each completionist gets the new SILC of the reward. A reward of the type
- * TEXT has no SILC transactions.
- */
 const getRewardTransactions = (
   task: TaskToComplete,
   completionistIds: readonly string[],
@@ -85,8 +80,7 @@ const getRewardTransactions = (
 };
 
 /**
- * Creates the next repetition of a task that can be completed again. The
- * repetition keeps the creator of the task: the creator manages it. The
+ * The repetition keeps the creator of the task: the creator manages it. The
  * completer is only the author of the copied assignments.
  */
 const createRepetition = async (
@@ -175,13 +169,6 @@ const createRepetition = async (
   }
 };
 
-/**
- * Completes an open task: pays the reward to the completionists, creates the
- * next repetition and notifies the receivers of the SILC and the creator of
- * the task. Requires `task;read`, a citizen, and that the actor created the
- * task or has `task;manage`. An assignee of a task that the assignees can
- * complete themselves can complete it for the assignees.
- */
 export const completeTask = (
   context: ApplicationContext,
   actor: Actor,
@@ -224,10 +211,6 @@ export const completeTask = (
     if (!(await areActiveReceivers(context.prisma, completionistIds)))
       throw new ConflictError(TaskErrorMessage.InactiveCompletionist);
 
-    /**
-     * Complete the task, pay the reward and create the next repetition in
-     * one transaction
-     */
     const completedAt = context.now();
     const silcTransactionIds = await context.prisma.$transaction(
       async (transaction) => {

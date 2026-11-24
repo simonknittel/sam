@@ -18,10 +18,8 @@ export const deleteSeriesInputSchema = z.object({
 });
 
 /**
- * Deletes a series. The database deletes its variants and the ships of all
- * owners of these variants with it.
- *
- * @throws NotFoundError when the series does not exist
+ * The database deletes its variants and the ships of all owners of these
+ * variants with it
  */
 export const deleteSeries = async (
   context: ApplicationContext,

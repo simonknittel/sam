@@ -79,7 +79,6 @@ interface TaskChange {
   readonly notification?: Notification;
 }
 
-/** The assignments that the new list of assignees adds and removes */
 const getAssignmentWrites = (
   task: VisibleTask,
   assigneeIds: readonly string[],
@@ -306,12 +305,6 @@ const requireAllowedChanges = async (
   }
 };
 
-/**
- * Changes the given fields of an open task. Requires `task;read`, a citizen,
- * and that the actor created the task or has `task;manage`. Each changed
- * field group writes its audit event; a change of the assignments notifies
- * the assignees.
- */
 export const updateTask = (
   context: ApplicationContext,
   actor: Actor,

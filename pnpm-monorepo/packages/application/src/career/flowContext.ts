@@ -31,10 +31,6 @@ const FLOW_CONTEXT_SELECT = {
   roleAccess: { select: { roleId: true, type: true } },
 } as const satisfies Prisma.FlowSelect;
 
-/**
- * All about a flow except its diagram: the page that shows a flow loads its
- * nodes and edges (see `findReadableFlowDiagram()`).
- */
 export type FlowContextFlow = Prisma.FlowGetPayload<{
   select: typeof FLOW_CONTEXT_SELECT;
 }>;
@@ -48,33 +44,20 @@ export interface FlowContext {
    * ones.
    */
   flowsBySlug: Map<string, FlowContextFlow>;
-  /** The effective permissions of the actor for each flow */
   permissions: Map<string, ResolvedFlowPermissions>;
 }
 
-/** The viewer of the flow permission rules of the domain package */
 const toFlowViewer = (actor: Actor): FlowViewer => ({
   roleIds: actor.roleIds,
-  /**
-   * The admin mode is part of `authorize()`, thus it also gives
-   * `hasCareerManage`, which grants read and edit on each flow in the
-   * resolver.
-   */
   hasCareerManage: actor.authorize("career", "manage"),
 });
 
-/** The effective permissions of the actor for one flow */
 export const resolveFlowPermissionsOfActor = (
   actor: Actor,
   flow: FlowPermissionSource,
 ) => createFlowPermissionResolver([flow], toFlowViewer(actor)).get(flow.id);
 
-/**
- * Loads all career flows and resolves the effective permissions of the
- * actor. The navigation, the flow page and the entry points of the app derive
- * from this context. The management pages have their own reads (see
- * `findManageableFlows()`).
- */
+/** The management pages have their own reads (see `findManageableFlows()`) */
 export const loadFlowContext = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,
@@ -93,10 +76,6 @@ export const loadFlowContext = async (
   };
 };
 
-/**
- * The flows that are not deleted and that the actor can read, in display
- * order
- */
 export const listReadableFlows = (
   flowContext: FlowContext,
 ): FlowContextFlow[] =>

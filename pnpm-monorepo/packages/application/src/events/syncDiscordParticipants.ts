@@ -15,11 +15,8 @@ import {
 } from "./participationChangeNotifications.js";
 
 export interface SyncDiscordParticipantsOutput {
-  /** The new RSVPs on Discord, as in `EVENT_PARTICIPANTS_SYNCED` */
   readonly addedCount: number;
-  /** The withdrawn RSVPs on Discord, as in `EVENT_PARTICIPANTS_SYNCED` */
   readonly removedCount: number;
-  /** The rows that got the citizen of their Discord user in this run */
   readonly linkedCount: number;
   readonly notificationsSent: boolean;
 }
@@ -41,12 +38,6 @@ const findActiveCitizensByDiscordId = (
     },
   });
 
-/**
- * Makes the participants of the event from Discord agree with the users that
- * are interested in the scheduled event on Discord, and notifies the
- * organizers about the new RSVPs and the withdrawals of citizens. Gives null
- * when the database has no active row from Discord for the scheduled event.
- */
 export const syncDiscordParticipants = async (
   context: ApplicationContext,
   scheduledEvent: DiscordScheduledEvent,
@@ -105,12 +96,9 @@ export const syncDiscordParticipants = async (
   );
 
   /**
-   * A withdrawal soft-cancels the participation row (the unique rule for
-   * the active sign-ups ignores the cancelled rows, thus a later RSVP gets a
-   * new row). It also deletes the position applications of the citizen and
-   * removes the citizen from the lineup positions. All in one transaction.
-   * The first read gives the positions for the notifications before the
-   * clearing.
+   * The unique rule for the active sign-ups ignores the cancelled rows, thus a
+   * later RSVP gets a new row. The first read gives the positions for the
+   * notifications before the clearing.
    */
   let cancellations: OwnCancellation[] = [];
   if (removed.length > 0) {
@@ -185,9 +173,8 @@ export const syncDiscordParticipants = async (
   }
 
   /**
-   * Each RSVP becomes a new row, with its citizen when one exists. A citizen
-   * with two Discord accounts can have an active row already: then the
-   * unique rule for the active sign-ups skips the second row, thus one
+   * A citizen with two Discord accounts can have an active row already: then
+   * the unique rule for the active sign-ups skips the second row, thus one
    * conflict does not stop the run.
    */
   let signedUpCitizenIds: string[] = [];
@@ -216,9 +203,9 @@ export const syncDiscordParticipants = async (
   }
 
   /**
-   * The citizen of a Discord user can come after the RSVP. Thus each run
-   * looks for the citizens of all rows without a citizen again, also of the
-   * cancelled rows, thus each row gets its citizen when one exists.
+   * The citizen of a Discord user can come after the RSVP. Thus each run looks
+   * for the citizens of all rows without a citizen again, also of the cancelled
+   * rows.
    */
   const unresolvedParticipants = await context.prisma.eventParticipant.findMany(
     {

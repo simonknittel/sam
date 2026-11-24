@@ -20,14 +20,10 @@ export interface GetOrganizationOutput {
   readonly name: string;
   readonly spectrum_id: string;
   readonly logo_url: string | null;
-  /**
-   * The current members that the actor can see, sorted by their handle.
-   * Empty without `organizationMembership;read`.
-   */
+  /** Empty without `organizationMembership;read` */
   readonly memberships: OrganizationMemberOutput[];
 }
 
-/** An organization with its current members */
 export const getOrganization = async (
   context: ApplicationContext,
   actor: Actor,

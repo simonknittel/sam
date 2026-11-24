@@ -12,7 +12,6 @@ export const SUPPORTED_SCOPES: readonly string[] = [
   OFFLINE_ACCESS_SCOPE,
 ];
 
-/** 1 hour */
 export const ACCESS_TOKEN_LIFETIME_IN_SECONDS = 60 * 60;
 
 /** 31 days after the issue of each token, thus the lifetime slides */
@@ -28,7 +27,6 @@ export const AUTHORIZATION_CODE_LIFETIME_IN_MILLISECONDS = 10 * 60 * 1000;
  */
 export const MAX_URL_LENGTH = 2048;
 
-/** The maximum length of an opaque token or a code in a request */
 export const MAX_OPAQUE_TOKEN_LENGTH = 512;
 
 /**

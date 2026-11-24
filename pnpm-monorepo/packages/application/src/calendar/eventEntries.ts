@@ -11,10 +11,6 @@ import type {
   EventCalendarEntry,
 } from "./calendarEntry.js";
 
-/**
- * The events that the actor can see (see `findEventCardRows`), on the day of
- * their start
- */
 export const eventEntryCollector: CalendarEntryCollector<EventCalendarEntry> = {
   canRead: (actor) => actor.authorize("event", "read"),
   collect: async (context, actor, { from, until, includeRunningEvents }) => {

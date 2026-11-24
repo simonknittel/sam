@@ -50,10 +50,8 @@ const createWikiPageSafetySnapshot = async (
 };
 
 /**
- * The collab server. The content of a page changes only through the collab
- * server, thus the open editors get the new content.
- *
- * @throws ConflictError when the collab server is not configured
+ * The content of a page changes only through the collab server, thus the open
+ * editors get the new content
  */
 export const requireCollab = (
   context: Pick<ApplicationContext, "collab">,
@@ -66,24 +64,14 @@ export const requireCollab = (
 
 interface WikiPageContentReplacementWithSafetySnapshot {
   readonly pageId: string;
-  /** Tiptap JSON that agrees with the schema of the editor */
   readonly content: object;
-  /** The citizen that the collab server records as the last editor */
   readonly updatedByEntityId: string | null;
-  /** Tells in the snapshot list which write replaced the content */
   readonly safetySnapshotName: string;
   /** The message of the `ConflictError` when the collab server fails */
   readonly failureMessage: WikiErrorMessage;
 }
 
-/**
- * Replaces the content of a page through the collab server after a safety
- * snapshot of the current content (see `createWikiPageSafetySnapshot()`).
- * When the collab server fails, the safety snapshot stays.
- *
- * @throws ConflictError when the collab server is not configured, or with
- * the failure message when it does not take the content
- */
+/** When the collab server fails, the safety snapshot stays */
 export const replaceWikiPageContentWithSafetySnapshot = async (
   context: Pick<ApplicationContext, "prisma" | "collab" | "log">,
   {

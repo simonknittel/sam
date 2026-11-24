@@ -1,4 +1,3 @@
-/** The use cases of the changelog, with the quarter helpers that the app shares */
 export { ChangelogErrorMessage } from "./changelogErrors.js";
 export {
   listChangelogEntries,

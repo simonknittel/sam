@@ -133,7 +133,6 @@ describe("shouldGreetForNewYear", () => {
       ),
     ).toBe(false);
 
-    // The next turn of the year is a year away and is greeted again
     expect(
       shouldGreetForNewYear(
         { ...greeted, timezone: "Europe/Berlin" },
@@ -170,11 +169,6 @@ describe("shouldGreetForNewYear", () => {
   });
 });
 
-/**
- * The run of the job walks around the globe: every 15 minutes it greets the
- * citizens whose local January 1 has just started, over the 25 hours the
- * time zones of the app span.
- */
 describe("the runs around the turn of the year", () => {
   const inZone = (timezone: string | null) => candidate({ timezone });
 

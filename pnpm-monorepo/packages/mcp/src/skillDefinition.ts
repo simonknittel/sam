@@ -1,4 +1,3 @@
-/** A supporting file of a skill, for example a reference */
 export interface SkillFile {
   /**
    * Relative to the root of the skill, with `/` as the separator. The
@@ -7,7 +6,6 @@ export interface SkillFile {
   readonly path: string;
   /** English. Tells the model what the file explains. */
   readonly description: string;
-  /** Markdown */
   readonly content: string;
 }
 
@@ -22,8 +20,8 @@ export interface SkillDefinition {
    */
   readonly name: string;
   /**
-   * English, at most 1024 characters. Tells the model what the skill
-   * explains and when to load it.
+   * English, at most 200 characters (see `skillCatalog.test.ts`). Tells the
+   * model what the skill explains and when to load it.
    */
   readonly description: string;
   /** The Markdown of `SKILL.md` after the frontmatter */

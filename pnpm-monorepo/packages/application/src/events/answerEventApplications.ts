@@ -56,22 +56,15 @@ export type DeclineEventApplicationsInput = z.infer<
 >;
 
 export interface ApproveEventApplicationsOutput {
-  /** The event after the write, like `getEvent()` */
   readonly event: GetEventOutput;
   readonly approved_citizen_ids: string[];
 }
 
 export interface DeclineEventApplicationsOutput {
-  /** The event after the write, like `getEvent()` */
   readonly event: GetEventOutput;
   readonly declined_citizen_ids: string[];
 }
 
-/**
- * The event and the citizens of a manager's answer to applications
- *
- * @throws NotFoundError, ConflictError, ForbiddenError or ValidationError
- */
 const requireAnswerableApplications = async (
   context: ApplicationContext,
   actor: Actor,
@@ -94,11 +87,8 @@ const requireAnswerableApplications = async (
 };
 
 /**
- * A manager approves the open applications of citizens for an app event:
- * each citizen is signed up with the comment of the application and gets a
- * notification, except the actor. The sign-up replaces an open invitation of
- * the citizen, thus the use case withdraws it. Like a direct add, it needs
- * citizens who can see the event, log in and get its notifications.
+ * Like a direct add, it needs citizens who can see the event, log in and get
+ * its notifications.
  *
  * @throws ConflictError `EventErrorMessage.CitizenNotApplied` when a citizen
  * has no open application, ValidationError
@@ -176,9 +166,7 @@ export const approveEventApplications = (
   });
 
 /**
- * A manager declines the open applications of citizens for an app event,
- * with an optional reason. Each citizen gets a notification, except the
- * actor, and cannot apply again. A manager can still add or invite the
+ * A declined citizen cannot apply again. A manager can still add or invite the
  * citizen.
  *
  * @throws ConflictError `EventErrorMessage.CitizenNotApplied` when a citizen
@@ -212,7 +200,6 @@ export const declineEventApplications = (
           },
         );
 
-        // See `approveEventApplications()`
         if (declined.length < citizenIds.length)
           throw new ConflictError(EventErrorMessage.CitizenNotApplied);
 

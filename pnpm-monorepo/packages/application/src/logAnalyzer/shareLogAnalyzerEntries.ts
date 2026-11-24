@@ -22,9 +22,8 @@ export const shareLogAnalyzerEntriesInputSchema = z.object({
       z.object({
         type: z.enum(LogAnalyzerEntryType),
         /**
-         * The whole text a pattern matched, which spans two log lines for
-         * some patterns. `shareLogAnalyzerEntries` makes sure that the
-         * pattern covers the whole text.
+         * The whole text a pattern matched, which spans two log lines for some
+         * patterns
          */
         raw_line: z.string().min(1).max(MAXIMUM_LOG_ANALYZER_RAW_LINE_LENGTH),
         /**
@@ -32,10 +31,6 @@ export const shareLogAnalyzerEntriesInputSchema = z.object({
          * of their own. See `takesTimeOfPrecedingLine`.
          */
         event_at: z.iso.datetime().optional(),
-        /**
-         * The number of the line in its log file. A client of an older
-         * release does not send it.
-         */
         line_number: z.int32().min(1).optional(),
       }),
     )
@@ -45,18 +40,15 @@ export const shareLogAnalyzerEntriesInputSchema = z.object({
 
 export interface ShareLogAnalyzerEntriesOutput {
   readonly entry_count: number;
-  /** The entries that the citizen did not share before */
   readonly new_entry_count: number;
 }
 
 /**
- * Stores the matched log lines a citizen shares with the other citizens. The
- * unique index on the citizen and the hash absorbs the entries the client
- * sends a second time, for example after a page reload or from a second
- * device.
+ * The unique index on the citizen and the hash absorbs the entries the client
+ * sends a second time, for example after a page reload or from a second device.
  *
- * The raw lines hold data of other players, thus neither they nor their
- * hashes are ever written to the logs.
+ * The raw lines hold data of other players, thus neither they nor their hashes
+ * are ever written to the logs.
  */
 export const shareLogAnalyzerEntries = (
   context: ApplicationContext,

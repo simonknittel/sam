@@ -13,10 +13,6 @@ import {
   findEventPositionUnassignedRecipient,
 } from "./eventLineup.js";
 
-/**
- * The lineup notifications reach the citizens who can log in and open the
- * lineup page
- */
 const NOTIFIABLE_PERMISSION_STRINGS = [
   "login;manage",
   "event;read",

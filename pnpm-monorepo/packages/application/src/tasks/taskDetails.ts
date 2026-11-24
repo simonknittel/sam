@@ -21,14 +21,10 @@ export interface TaskRoleReference {
   readonly name: string;
 }
 
-/** The output of `getTask` and the task in the output of the task writes */
 export interface GetTaskOutput extends TaskListItem {
-  /** The citizens that completed the task, without the deleted citizens */
+  /** Without the deleted citizens */
   readonly completionists: CitizenReference[];
-  /**
-   * The roles that a citizen must have to accept the task. Only the roles
-   * that the user can see.
-   */
+  /** Only the roles that the user can see */
   readonly required_roles: TaskRoleReference[];
   /** Whether the user has one of the required roles, or no role is required */
   readonly has_required_role: boolean;
@@ -36,11 +32,9 @@ export interface GetTaskOutput extends TaskListItem {
   readonly can_manage: boolean;
   /** Whether the task is still open, thus it can change */
   readonly is_updatable: boolean;
-  /** How often the task can be completed */
   readonly repeatable: number;
   /** See `getVisibleTasksWhere()` */
   readonly hidden_for_other_roles: boolean;
-  /** The maximum number of citizens that can accept the task */
   readonly assignment_limit: number | null;
 }
 
@@ -63,10 +57,7 @@ export const toVisibleTask = (
   ),
 });
 
-/**
- * Loads the names of the required roles that the actor can see. The app
- * shows only these roles (see the role badges).
- */
+/** The app shows only these roles (see the role badges) */
 const findReadableRoles = async (
   context: ApplicationContext,
   actor: Actor,
@@ -84,10 +75,6 @@ const findReadableRoles = async (
   });
 };
 
-/**
- * Maps the tasks to the output of `getTask`. The lookups of all tasks share
- * one query each.
- */
 export const toTaskOutputs = async (
   context: ApplicationContext,
   actor: Actor,
@@ -132,8 +119,8 @@ export const toTaskOutputs = async (
 };
 
 /**
- * The output of a task after a write. The write checked the access before,
- * thus this function does not check it again.
+ * The write checked the access before, thus this function does not check it
+ * again
  */
 export const findTaskOutput = async (
   context: ApplicationContext,

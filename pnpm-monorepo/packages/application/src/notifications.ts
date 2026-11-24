@@ -1,15 +1,10 @@
 import type { ApplicationContext, Notification } from "./context.js";
 
 /**
- * Sends the notifications about data that a use case already saved. A
- * failure must not make the result an error: the caller would save the same
- * data again (an MCP client would call a write tool again). Thus the
- * function logs the failure and returns `false`. An empty list sends nothing
- * and gives `true`.
- *
- * The Next.js app sends the notifications after its response, thus the
- * outputs of the use cases do not report the result. Only the automations
- * use it: for their outputs, or to try again after a failure.
+ * Logs a failure and gives `false`: an error would make the caller save the
+ * same data again (an MCP client would call a write tool again). Only the
+ * automations use the result: for their outputs, or to try again after a
+ * failure.
  */
 export const triggerNotificationsAfterSave = async (
   context: ApplicationContext,

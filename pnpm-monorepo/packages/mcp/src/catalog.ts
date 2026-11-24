@@ -25,7 +25,6 @@ const compareTools = (first: CatalogTool, second: CatalogTool) =>
     TOOL_GROUP_ORDER.indexOf(second.group) ||
   first.name.localeCompare(second.name, "en");
 
-/** All tools, sorted by the order of the groups and then by the name */
 export const TOOL_CATALOG: readonly CatalogTool[] = [
   ...usersTools,
   ...notificationTools,
@@ -51,21 +50,16 @@ export const toToolCatalogEntry = (tool: CatalogTool): ToolCatalogEntry => ({
   kind: tool.annotations.readOnlyHint ? ToolKind.Read : ToolKind.Write,
 });
 
-/** All tools in the order of `tools/list` */
 export const listToolCatalog = (): ToolCatalogEntry[] =>
   TOOL_CATALOG.map(toToolCatalogEntry);
 
-/** The tools of one group of the catalog */
 export interface ToolCatalogGroup {
   readonly group: ToolGroup;
   readonly title: string;
   readonly tools: ToolCatalogEntry[];
 }
 
-/**
- * The groups of the catalog with the tools that are visible for the actor, in
- * the order of `tools/list`. The app KI-Agenten and the consent page show them.
- */
+/** The app KI-Agenten and the consent page show them */
 export const listToolCatalogGroups = (actor: Actor): ToolCatalogGroup[] => {
   const catalog = TOOL_CATALOG.filter((tool) => tool.isVisible(actor)).map(
     toToolCatalogEntry,
@@ -83,8 +77,7 @@ const TOOL_NAMES: ReadonlySet<string> = new Set(
 );
 
 /**
- * Whether the catalog has a tool of this name. The application package
- * cannot check the names of the tool settings, because the catalog is in
- * this package. Thus the host checks them with this function.
+ * The host checks the names of the tool settings with it, see
+ * `mcpToolNameSchema` of the application package
  */
 export const isCatalogToolName = (toolName: string) => TOOL_NAMES.has(toolName);

@@ -9,10 +9,7 @@ export type EventManageInput = Pick<
   readonly managers: readonly Pick<Citizen, "id">[];
 };
 
-/**
- * The organizers of an event manage it without a permission: the Discord
- * creator, the creator and the managers.
- */
+/** The organizers of an event manage it without a permission */
 const isEventOrganizer = (actor: Actor, event: EventManageInput) => {
   /**
    * The Discord creator of a Discord event keeps manage rights even when no
@@ -42,11 +39,7 @@ export const isAllowedToManageEvent = (actor: Actor, event: EventManageInput) =>
 export type EventApplicationRequirementInput = EventManageInput &
   Pick<Event, "applicationRequired">;
 
-/**
- * Whether the actor must apply to take part in the event instead of a direct
- * sign-up: the event requires applications, and the actor cannot manage the
- * event. An open invitation also signs the actor up without an application.
- */
+/** An open invitation also signs the actor up without an application */
 export const mustApplyForEvent = (
   actor: Actor,
   event: EventApplicationRequirementInput,
@@ -60,20 +53,13 @@ export const isAllowedToManagePositions = (
   actor.authorize("othersEventPosition", "manage");
 
 /**
- * Whether a manager published the lineup and the participants see it: the
- * lineup is enabled and the participation is not turned off (see
- * `isLineupVisible()`). A change of a lineup that is not published notifies
- * nobody: the publication tells each participant the own positions.
+ * A change of a lineup that is not published notifies nobody: the publication
+ * tells each participant the own positions
  */
 export const isLineupPublished = (
   event: Pick<Event, "lineupEnabled" | "participationEnabled">,
 ) => event.lineupEnabled && event.participationEnabled;
 
-/**
- * The lineup shows to everybody when it is enabled, and to the managers of
- * the positions always. While the participation of the event is turned off,
- * the lineup shows to nobody.
- */
 export const isLineupVisible = (
   actor: Actor,
   event: EventManageInput &
@@ -82,7 +68,6 @@ export const isLineupVisible = (
   event.participationEnabled &&
   (event.lineupEnabled || isAllowedToManagePositions(actor, event));
 
-/** An event that has not ended yet can change */
 export const isEventUpdatable = (
   event: Pick<Event, "startTime" | "endTime">,
   now: Date,

@@ -10,14 +10,11 @@ const ACTOR_SELECT = {
   createdBy: { select: CITIZEN_REFERENCE_SELECT },
 } as const;
 
-/** The citizen who caused an entry of the Spynet activity */
 export type SpynetActivityActor = CitizenReferenceRow;
 
 /**
- * The citizens who caused at least one entry that the actor can read, sorted
- * by their handle, for the actor filter. A source that the actor cannot read
- * gives no citizen, thus the filter never shows a name without entries in
- * the table. Requires `spynetActivity;read`.
+ * A source that the actor cannot read gives no citizen, thus the filter never
+ * shows a name without entries in the table
  */
 export const findSpynetActivityActors = (
   context: Pick<ApplicationContext, "prisma" | "tracer">,

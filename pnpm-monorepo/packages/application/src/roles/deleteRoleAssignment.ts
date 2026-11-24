@@ -23,12 +23,6 @@ export interface DeleteRoleAssignmentOutput {
   readonly role_id: string;
 }
 
-/**
- * Removes one role from a citizen. Requires a citizen and
- * `otherRole;dismiss` for the role.
- *
- * @throws NotFoundError when the citizen does not have the role
- */
 export const deleteRoleAssignment = (
   context: ApplicationContext,
   actor: Actor,
@@ -40,10 +34,6 @@ export const deleteRoleAssignment = (
       { key: "roleId", value: input.role_id },
     ]);
 
-    /**
-     * The history row is in the same transaction, thus it is not written
-     * when the delete fails
-     */
     await rethrowRecordNotFound(
       () =>
         context.prisma.$transaction([

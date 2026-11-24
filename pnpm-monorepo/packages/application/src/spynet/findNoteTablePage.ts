@@ -11,19 +11,14 @@ import {
 import { getReadableCitizenLogWhere } from "./readableCitizenLogWhere.js";
 
 export interface NoteTablePageInput extends CitizenLogTablePageRequest {
-  /** The ids and the values of the URL filters. Empty for no filter. */
   readonly filters: {
     readonly noteTypeIds: readonly string[];
     readonly classificationLevelIds: readonly string[];
-    /**
-     * The raw values (`ConfirmationValue`): an unknown value adds no
-     * condition, thus only unknown values match no note
-     */
+    /** The raw values of the URL, see `getConfirmationFilterWhere()` */
     readonly confirmationValues: readonly string[];
   };
 }
 
-/** The values that at least one visible note has: the filters offer them */
 export interface NoteTableFilterOptions {
   readonly noteTypeIds: string[];
   readonly classificationLevelIds: string[];
@@ -39,11 +34,6 @@ const requireNoteTablePermissions = (actor: Actor) => {
   requirePermission(actor, "spynetNotes", "read");
 };
 
-/**
- * One page of the notes table of the Spynet. Only the notes with a note type
- * and a classification level that the actor can read match. Requires
- * `citizen;read` and `spynetNotes;read`, like the page.
- */
 export const findNoteTablePage = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,
@@ -75,10 +65,7 @@ export const findNoteTablePage = async (
   );
 };
 
-/**
- * The filter values of the notes table, independent of the selected
- * filters. Requires `citizen;read` and `spynetNotes;read`, like the page.
- */
+/** Independent of the selected filters */
 export const findNoteTableFilterOptions = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,

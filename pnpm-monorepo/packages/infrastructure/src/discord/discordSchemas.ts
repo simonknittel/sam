@@ -66,8 +66,6 @@ export const scheduledEventsResponseSchema = z
   .max(MAXIMUM_DISCORD_ITEM_COUNT);
 
 /**
- * One page of the users that are interested in an event, as the IDs of the
- * users.
  * https://discord.com/developers/docs/resources/guild-scheduled-event#get-guild-scheduled-event-users
  */
 export const scheduledEventUserIdsResponseSchema = z

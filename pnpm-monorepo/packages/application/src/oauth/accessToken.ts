@@ -30,11 +30,7 @@ export interface AccessTokenGrant {
   readonly scope: string;
 }
 
-/**
- * Signs an access token (RFC 9068) for a grant. The token is valid for
- * `ACCESS_TOKEN_LIFETIME_IN_SECONDS` and only for the MCP server of this
- * app. Never log the token.
- */
+/** Never log the token */
 export const issueAccessToken = async (
   context: Pick<ApplicationContext, "signingKey" | "urls" | "now">,
   grant: AccessTokenGrant,
@@ -77,14 +73,11 @@ export interface VerifiedAccessToken {
   readonly scopes: string[];
   /** Seconds since the epoch, like `exp` and the `AuthInfo` of the MCP SDK */
   readonly expiresAt: number;
-  /** The audience of the token: the canonical URL of the MCP server */
   readonly resource: URL;
 }
 
 /**
- * Verifies the signature, the type, the issuer, the audience and the expiry
- * of an access token. It does not load the grant: `resolvePrincipal()`
- * checks the revocation.
+ * Does not load the grant: `resolvePrincipal()` checks the revocation.
  *
  * @throws InvalidTokenError when the token is not valid
  * @throws SigningKeyUnavailableError when the app has no signing key

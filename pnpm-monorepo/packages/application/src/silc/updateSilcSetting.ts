@@ -20,10 +20,6 @@ export interface UpdateSilcSettingOutput {
   readonly value: number;
 }
 
-/**
- * Stores a SILC setting. Requires `silcSetting;update` and a citizen, who
- * becomes the last editor of the setting.
- */
 export const updateSilcSetting = (
   context: ApplicationContext,
   actor: Actor,

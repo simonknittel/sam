@@ -19,11 +19,6 @@ import { requireParticipationEnabled } from "../events/participatableAppEvent.js
 import { LineupErrorMessage } from "./lineupErrors.js";
 import { LINEUP_POSITION_SELECT } from "./lineupWrites.js";
 
-/**
- * What the guards of the lineup decide on (the visibility, the freeze, the
- * manage rule, the participation switch and whether the lineup is enabled),
- * and the name for the outputs
- */
 export const LINEUP_EVENT_SELECT = {
   ...VISIBLE_EVENT_MANAGE_GUARD_SELECT,
   name: true,
@@ -42,20 +37,11 @@ export const LINEUP_PERMISSION_SETS = [
   { resource: "ship", operation: "read" },
 ] as const satisfies readonly PermissionSet[];
 
-/** @throws ForbiddenError */
 export const requireLineupPermissions = (actor: Actor) => {
   for (const { resource, operation } of LINEUP_PERMISSION_SETS)
     requirePermission(actor, resource, operation);
 };
 
-/**
- * The guard of each change of the lineup of an event: the actor has the
- * permissions of the lineup, the event exists, is not deleted and is visible
- * for the actor, it has not ended, the actor manages its positions, and the
- * participation of the event is not turned off.
- *
- * @throws NotFoundError, ConflictError or ForbiddenError
- */
 export const requireManageableEventLineup = async (
   context: ApplicationContext,
   actor: Actor,
@@ -83,11 +69,8 @@ export const requireManageableEventLineup = async (
 };
 
 /**
- * A position of the lineup of an event that is not deleted and that the
- * actor can see, with its event. A position of an event template does not
- * exist for the use cases: they change only the lineups of events.
- *
- * @throws ForbiddenError or NotFoundError
+ * A position of an event template does not exist for the use cases: they
+ * change only the lineups of events
  */
 const findVisibleEventPosition = async (
   context: ApplicationContext,
@@ -109,12 +92,6 @@ const findVisibleEventPosition = async (
   return { ...position, event: position.event };
 };
 
-/**
- * A position of the lineup of an event that the actor manages (see
- * `requireManageableEventLineup()`), with its event
- *
- * @throws NotFoundError, ConflictError or ForbiddenError
- */
 export const requireManageableEventPosition = async (
   context: ApplicationContext,
   actor: Actor,
@@ -131,14 +108,7 @@ export const requireManageableEventPosition = async (
   return { position, event };
 };
 
-/**
- * A position of an event that has not ended and whose participation is not
- * turned off, in a lineup that the actor can see, with the event: the guard
- * of the own applications. The lineup is visible when it is enabled or when
- * the actor manages the positions (see `getEventLineup()`).
- *
- * @throws NotFoundError, ConflictError or ForbiddenError
- */
+/** The guard of the own applications */
 export const requireApplicableEventPosition = async (
   context: ApplicationContext,
   actor: Actor,

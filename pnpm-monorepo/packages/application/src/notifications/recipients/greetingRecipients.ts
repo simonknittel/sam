@@ -8,16 +8,13 @@ export interface FindGreetingRecipientInput {
 }
 
 /**
- * The citizen of a birthday, New Year or welcome greeting. Nobody else is
- * told about it, thus the only condition is that the citizen can open the
- * app and read the greeting. Time can pass between the request and the
- * delivery, thus the permission is checked again here.
+ * Time can pass between the request and the delivery, thus the permission is
+ * checked again here.
  *
- * The check uses the effective roles of the citizen (inherited roles, level
- * gate and negation), the same rule as the greeting jobs and as the session
- * of the app that sets the marker of the welcome (`Citizen.welcomedAt`). A
- * different rule could set the marker without a notification, and the
- * citizen gets no second welcome. Null when the citizen cannot log in.
+ * The check uses the effective roles of the citizen, the same rule as the
+ * greeting jobs and as the session of the app that sets the marker of the
+ * welcome (`Citizen.welcomedAt`). A different rule could set the marker without
+ * a notification, and the citizen gets no second welcome.
  */
 export const findGreetingRecipient = async (
   context: ApplicationContext,

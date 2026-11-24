@@ -13,10 +13,9 @@ export interface EndDuePayoutPhasesOutput {
 }
 
 /**
- * The instant at which `endDuePayoutPhases()` ends a payout phase. The
- * planned end is the last day of the phase (see `toDateColumnValue()`), and
- * the midnight job ends the phase at the start of the next day in the time
- * zone of the organization.
+ * The planned end is the last day of the phase (see `toDateColumnValue()`), and
+ * the midnight job ends the phase at the start of the next day in the time zone
+ * of the organization
  */
 export const getPayoutPhaseEnd = (payoutEndsAt: Date): Date =>
   getStartOfLocalDay(
@@ -24,7 +23,6 @@ export const getPayoutPhaseEnd = (payoutEndsAt: Date): Date =>
     ORGANIZATION_TIMEZONE,
   );
 
-/** Ends the payout phases whose planned end is due */
 export const endDuePayoutPhases = (
   context: ApplicationContext,
 ): Promise<EndDuePayoutPhasesOutput> =>

@@ -23,11 +23,8 @@ export type ApplyForEventPositionInput = z.infer<
 >;
 
 /**
- * The own active participation in the event: an application needs it. A
- * participation from Discord matches the Discord account of the user.
- *
- * @throws ConflictError without a participation, usually a participation
- * that a different tab or a manager cancelled
+ * An application needs it. A participation from Discord matches the Discord
+ * account of the user.
  */
 const requireOwnParticipation = async (
   context: ApplicationContext,
@@ -57,10 +54,9 @@ const requireOwnParticipation = async (
 };
 
 /**
- * Applies the own citizen for a position of an event in which the citizen
- * participates. A manager of the positions confirms the application with the
- * assignment. A new application notifies the organizers. A repeated
- * application changes nothing and gives the position like the first one.
+ * A manager of the positions confirms the application with the assignment. A
+ * repeated application changes nothing and gives the position like the first
+ * one.
  */
 export const applyForEventPosition = (
   context: ApplicationContext,

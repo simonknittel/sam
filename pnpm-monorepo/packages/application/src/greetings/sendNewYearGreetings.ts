@@ -20,11 +20,6 @@ import { shouldGreetForNewYear } from "./newYearGreetingRule.js";
  */
 const MAXIMUM_NEW_YEAR_GREETINGS_PER_RUN = 500;
 
-/**
- * Greets each cleared citizen (see `findClearedCitizens()`) when January 1
- * starts in their own time zone (see `greetCitizens()` for the run and the
- * markers).
- */
 export const sendNewYearGreetings = (
   context: ApplicationContext,
 ): Promise<GreetingRunOutput> =>

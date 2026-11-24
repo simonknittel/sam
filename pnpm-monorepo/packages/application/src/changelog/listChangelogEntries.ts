@@ -43,7 +43,6 @@ export interface ListChangelogEntriesOutput {
   readonly next_cursor: string | null;
 }
 
-/** The newest first; the entries of one day in the order of their keys */
 const compareChangelogEntries = (
   first: ChangelogEntrySource,
   second: ChangelogEntrySource,
@@ -51,15 +50,7 @@ const compareChangelogEntries = (
   second.date.localeCompare(first.date, "en") ||
   first.key.localeCompare(second.key, "en");
 
-/**
- * The changelog entries that the actor can read, one page. Without the
- * permission of an entry with `requiresAuth`, the entry is not in the list.
- * Reading does not mark the entries as seen. The cursor is the key of an
- * entry.
- *
- * @throws ConflictError when the host has no changelog
- * @throws ValidationError when no entry of the list has the cursor
- */
+/** Reading does not mark the entries as seen */
 export const listChangelogEntries = async (
   context: ApplicationContext,
   actor: Actor,

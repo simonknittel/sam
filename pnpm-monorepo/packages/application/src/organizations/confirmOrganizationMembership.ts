@@ -29,12 +29,10 @@ export interface ConfirmOrganizationMembershipOutput {
 }
 
 /**
- * Decides about a reported membership: the entry is confirmed, or it is a
- * false report. The replay of the membership history adds or removes the
- * active membership. Requires a citizen and `organizationMembership;confirm`.
+ * The replay of the membership history adds or removes the active membership.
  *
- * @throws NotFoundError when the entry does not exist for the organization
- * and the citizen, or when the citizen is deleted
+ * @throws NotFoundError when the entry does not exist for the organization and
+ * the citizen, or when the citizen is deleted
  * @throws ConflictError when somebody decided about the entry already
  */
 export const confirmOrganizationMembership = (

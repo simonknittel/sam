@@ -21,14 +21,6 @@ export interface EndCollectionPhaseOutput {
   readonly booking_count: number;
 }
 
-/**
- * Ends the collection phase of a cycle before its planned end, books the
- * balances away and notifies the citizens of the bookings. Requires a
- * citizen and `profitDistributionCycle;update`.
- *
- * @throws ConflictError when the cycle does not exist or is not in its
- * collection phase, for example because the midnight job ended it before
- */
 export const endCollectionPhase = (
   context: ApplicationContext,
   actor: Actor,

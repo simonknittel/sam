@@ -70,23 +70,17 @@ export interface UserListInput {
   readonly sort: UserSort;
   readonly banStatus: UserBanStatus;
   readonly twoFactorStatus: UserTwoFactorStatus;
-  /**
-   * A part of the handle, of the Discord ID or of the TeamSpeak ID. At most
-   * `USER_LIST_SEARCH_QUERY_MAXIMUM_LENGTH` characters.
-   */
+  /** At most `USER_LIST_SEARCH_QUERY_MAXIMUM_LENGTH` characters */
   readonly searchQuery: string | null;
-  /** The `nextCursor` or the `prevCursor` of a page */
   readonly cursor: string | null;
 }
 
 export interface UserListPageOptions {
-  /** The number of users on one page */
   readonly pageSize: number;
 }
 
 export interface UserListEntry {
   readonly user: Omit<UserListRow, "accounts" | "citizen" | "email">;
-  /** See `redactEmailAddress()` */
   readonly redactedEmail: string | null;
   readonly discordId: string | null;
   readonly entity: { readonly id: string } | undefined;
@@ -168,9 +162,8 @@ const getTwoFactorStatusWhere = (
 };
 
 /**
- * The handle and the TeamSpeak ID belong to the citizen of the user, the
- * Discord ID to the Discord login of the user. A search by a TeamSpeak ID
- * would show which citizen has this ID, thus it requires `teamspeak-id;read`.
+ * A search by a TeamSpeak ID would show which citizen has this ID, thus it
+ * requires `teamspeak-id;read`
  */
 const getSearchWhere = (
   actor: Actor,
@@ -207,11 +200,10 @@ export const getUserListWhere = (
 });
 
 /**
- * The cursor of the user list is the offset of the first row of the page.
- * Unlike a keyset cursor, an offset works with each sort order without
- * additional conditions for the null values of the nullable sort columns.
- * The list is small, thus the database skips the rows before the offset
- * quickly.
+ * The cursor is the offset of the first row of the page. Unlike a keyset
+ * cursor, an offset works with each sort order without additional conditions
+ * for the null values of the nullable sort columns. The list is small, thus the
+ * database skips the rows before the offset quickly.
  *
  * @returns null for a malformed cursor
  */
@@ -222,10 +214,6 @@ export const parseUserListOffset = (cursor: string) => {
     : null;
 };
 
-/**
- * The rows of one page of the user list of the app, with the filters, the
- * order and the offset cursor. Requires `user;read`.
- */
 export const findUserListPage = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,

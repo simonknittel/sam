@@ -1,7 +1,3 @@
-/**
- * The use cases of the users: the user list, the reads of a user, the bans and
- * the logins
- */
 export {
   banUser,
   banUserInputSchema,

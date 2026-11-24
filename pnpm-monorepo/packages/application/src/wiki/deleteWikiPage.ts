@@ -16,7 +16,6 @@ export const deleteWikiPageInputSchema = z.object({
 
 export type DeleteWikiPageInput = z.infer<typeof deleteWikiPageInputSchema>;
 
-/** Options of the use case for the app, not fields of the input schema */
 export interface DeleteWikiPageOptions {
   /**
    * The fleet variant whose embed of the global wiki shows the page, for the
@@ -30,7 +29,6 @@ export interface DeleteWikiPageOutput {
   /** The briefing of the page, or null for the global wiki */
   readonly event_id: string | null;
   readonly template_id: string | null;
-  /** The page and its descendants */
   readonly deleted_page_ids: string[];
   /**
    * Only with the option `variantId`: the linked page of the variant when
@@ -39,15 +37,6 @@ export interface DeleteWikiPageOutput {
   readonly variant_wiki_page_id?: string | null;
 }
 
-/**
- * Moves the page with its subtree into the trash (like the deletion of a
- * directory). The trash keeps the pages for 30 days.
- *
- * @throws NotFoundError when the page does not exist for the actor
- * @throws ForbiddenError when the actor does not manage the page
- * @throws ConflictError when the event of the briefing is over
- * @throws ValidationError for the root page of a briefing
- */
 export const deleteWikiPage = (
   context: ApplicationContext,
   actor: Actor,

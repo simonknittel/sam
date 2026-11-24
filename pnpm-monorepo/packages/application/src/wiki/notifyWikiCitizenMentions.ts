@@ -16,7 +16,6 @@ import {
 const MAXIMUM_MENTIONS_PER_RUN = 200;
 
 export interface NotifyWikiCitizenMentionsOutput {
-  /** The mentions that the run read */
   readonly pendingMentionCount: number;
   /**
    * The mentions that passed the gate. They stay pending when

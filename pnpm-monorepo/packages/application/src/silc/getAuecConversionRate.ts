@@ -5,10 +5,7 @@ import {
   DEFAULT_AUEC_CONVERSION_RATE,
 } from "./auecConversionRate.js";
 
-/**
- * The aUEC value of one SILC. It has no permission check: the value is not
- * personal, and the pages that show it check their own permissions.
- */
+/** No permission check, see the README */
 export const getAuecConversionRate = async (
   context: Pick<ApplicationContext, "prisma">,
 ): Promise<number> => {

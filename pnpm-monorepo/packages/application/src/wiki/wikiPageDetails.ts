@@ -6,14 +6,7 @@ import { type WikiCitizen } from "./wikiCitizen.js";
 import { buildWikiContext, type WikiContext } from "./wikiContext.js";
 import { requireAccessibleWikiPage } from "./wikiScope.js";
 
-/**
- * The effective owner of the page: its own owner or the owner that it
- * inherits. A scope helper: the scope comes from a scope builder of this
- * package for the same actor.
- *
- * @throws NotFoundError when the page is not in the scope, is in the trash
- * or the actor cannot read it
- */
+/** Its own owner or the owner that it inherits */
 export const findWikiPageOwner = async (
   context: Pick<ApplicationContext, "prisma">,
   scope: WikiContext,
@@ -46,12 +39,8 @@ export interface WikiPageDetails {
 }
 
 /**
- * The details of a page of the global wiki for the popover in the header of
- * the page. The popover loads them when it opens: the creator and the last
- * editor are not in the wiki scope, whose read runs for all pages.
- *
- * @throws NotFoundError when the page does not exist, is in the trash or
- * the actor cannot read it
+ * The popover in the header of the page loads them when it opens: the creator
+ * and the last editor are not in the wiki scope, whose read runs for all pages
  */
 export const findWikiPageDetails = async (
   context: ApplicationContext,

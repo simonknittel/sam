@@ -7,7 +7,6 @@ const wikiPageReferenceSchema = z.strictObject({
   path: z.string(),
 });
 
-/** A wiki page with its content as Markdown, as get_wiki_page gives it */
 export const wikiPageOutputSchema = z.strictObject({
   id: z.string(),
   title: z.string(),

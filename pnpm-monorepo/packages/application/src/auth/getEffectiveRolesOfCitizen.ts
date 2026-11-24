@@ -25,9 +25,8 @@ export interface EffectiveRoles {
 }
 
 /**
- * Loads the role assignments of a citizen and resolves the roles and the
- * permissions that they give. The session of the app and the principal of
- * the MCP server use it, thus both give the same permissions.
+ * The session of the app and the principal of the MCP server use it, thus both
+ * give the same permissions
  */
 export const getEffectiveRolesOfCitizen = async (
   prisma: ApplicationContext["prisma"],

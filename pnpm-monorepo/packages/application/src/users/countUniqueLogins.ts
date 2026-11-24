@@ -17,10 +17,8 @@ export interface CountUniqueLoginsOutput {
 }
 
 /**
- * Saves the number of users who visited the app on the day that just ended:
- * the day before the time of the run. The day starts and ends at midnight in
- * the time zone of the organization. The time zone of the process does not
- * change the result.
+ * Counts the day that just ended: the day before the run in the time zone of
+ * the organization. The time zone of the process does not change the result.
  */
 export const countUniqueLogins = (
   context: ApplicationContext,
@@ -46,11 +44,9 @@ export const countUniqueLogins = (
     });
 
     /**
-     * A run that repeats later in the night (for example after an error in a
-     * later job) keeps the count of the first run, see
-     * `DailyLoginCount_date_key`. A user who visits again after midnight gets
-     * a new `lastSeenAt` and is then not in the counted day anymore, thus the
-     * first count is the most correct.
+     * A user who visits again after midnight gets a new `lastSeenAt` and is
+     * then not in the counted day anymore, thus the count of the first run is
+     * the most correct
      */
     const created = await context.prisma.dailyLoginCount.createMany({
       data: [{ date: countedDay, count }],

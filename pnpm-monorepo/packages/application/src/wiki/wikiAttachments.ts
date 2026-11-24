@@ -16,19 +16,13 @@ import { loadWikiScopeOfPage } from "./wikiScope.js";
 const ATTACHMENT_DOWNLOAD_URL_EXPIRY_SECONDS = 5 * 60;
 
 /**
- * The upload of an attachment that the actor may download. An image is
- * public (nobody can guess its URL), but an attachment is only for an actor
- * who can read a page with the upload.
+ * An image is public (nobody can guess its URL), but an attachment is only for
+ * an actor who can read a page with the upload.
  *
- * An upload can have links to more than one page (`Upload.wikiPageLinks`,
- * for example after a duplication of a page or a copy between pages). Each
- * linked page that the actor can read gives the download. A link of each
- * kind counts, also the link of an image.
- *
- * @throws NotFoundError when the upload does not exist, when no wiki page
- * links it, or when the actor cannot read any of its pages. A page that the
- * actor cannot see and an upload outside the wiki give the same answer, thus
- * the answer does not show that they exist.
+ * An upload can have links to more than one page (`Upload.wikiPageLinks`, for
+ * example after a duplication of a page or a copy between pages). Each linked
+ * page that the actor can read gives the download. A link of each kind counts,
+ * also the link of an image.
  */
 const findDownloadableAttachment = async (
   context: ApplicationContext,
@@ -71,18 +65,9 @@ export type CreateWikiAttachmentDownloadUrlInput = z.infer<
 >;
 
 export interface CreateWikiAttachmentDownloadUrlOutput {
-  /** A short-lived presigned URL that downloads the file */
   readonly url: string;
 }
 
-/**
- * The download URL of an attachment that the actor may download (see
- * `findDownloadableAttachment()`). The response of the URL makes the browser
- * save the file with its name and does not show it inline.
- *
- * @throws NotFoundError `WikiErrorMessage.AttachmentNotFound`
- * @throws ConflictError `UploadErrorMessage.StorageNotConfigured`
- */
 export const createWikiAttachmentDownloadUrl = (
   context: ApplicationContext,
   actor: Actor,

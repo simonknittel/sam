@@ -52,10 +52,8 @@ export const resolveEventVisibility = (
 };
 
 /**
- * Prisma where fragment matching exactly the events
- * `resolveEventVisibility()` allows for the viewer. Every event list query
- * must AND this in so no call site can forget the soft-delete or visibility
- * exclusion.
+ * Every event list query must AND this in so no call site can forget the
+ * soft-delete or visibility exclusion
  */
 export const buildVisibleEventsWhere = (
   viewer: EventViewer,
@@ -84,7 +82,6 @@ export const buildVisibleEventsWhere = (
   };
 };
 
-/** The viewer of the visibility rules */
 export const toEventViewer = (actor: Actor): EventViewer => ({
   citizenId: actor.citizen?.id ?? null,
   roleIds: actor.roleIds,
@@ -92,8 +89,8 @@ export const toEventViewer = (actor: Actor): EventViewer => ({
 });
 
 /**
- * Single-event visibility check for the actor. Callers treat a `false` as
- * "does not exist" so restricted events stay fully invisible.
+ * Callers treat a `false` as "does not exist" so restricted events stay fully
+ * invisible
  */
 export const canActorSeeEvent = (
   actor: Actor,

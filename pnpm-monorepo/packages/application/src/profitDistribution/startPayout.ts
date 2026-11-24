@@ -29,14 +29,6 @@ export interface StartPayoutOutput {
   readonly cycle_id: string;
 }
 
-/**
- * Starts the payout phase of a cycle with the aUEC profit to distribute, and
- * notifies the participants. Requires a citizen and
- * `profitDistributionCycle;update`.
- *
- * @throws ConflictError when the cycle does not exist or is not in its
- * payout preparation phase
- */
 export const startPayout = (
   context: ApplicationContext,
   actor: Actor,

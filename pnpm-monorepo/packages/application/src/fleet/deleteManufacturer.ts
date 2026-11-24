@@ -14,10 +14,8 @@ export const deleteManufacturerInputSchema = z.object({
 });
 
 /**
- * Deletes a manufacturer. The database deletes its series, their variants
- * and the ships of all owners of these variants with it.
- *
- * @throws NotFoundError when the manufacturer does not exist
+ * The database deletes its series, their variants and the ships of all owners
+ * of these variants with it
  */
 export const deleteManufacturer = async (
   context: ApplicationContext,

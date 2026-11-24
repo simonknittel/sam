@@ -6,7 +6,6 @@ import {
 import * as z from "zod";
 import { idSchema } from "../pagination.js";
 
-/** The text size of the name of a position in the lineup */
 export enum PositionFontSize {
   Normal = "normal",
   Large = "large",
@@ -90,10 +89,6 @@ const positionFormatSchemas = {
     .describe("A color as #rrggbb, or null for the default color."),
 };
 
-/**
- * The fields of a new position. The use cases add the event or the event
- * template.
- */
 export const newPositionFieldsSchema = z.object({
   parent_position_id: idSchema
     .optional()
@@ -112,7 +107,6 @@ export const newPositionFieldsSchema = z.object({
 
 export type NewPositionFields = z.infer<typeof newPositionFieldsSchema>;
 
-/** The fields of a position that an update changes. A missing field stays. */
 export const positionChangeSchema = z.object({
   name: positionNameSchema.optional(),
   description: positionDescriptionSchema.optional(),

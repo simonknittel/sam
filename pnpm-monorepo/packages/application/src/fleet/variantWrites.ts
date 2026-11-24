@@ -14,10 +14,7 @@ import { buildWikiContext } from "../wiki/wikiContext.js";
 import { FleetCatalogErrorMessage } from "./fleetCatalogErrors.js";
 import { VARIANT_TAG_SELECT } from "./shipVariant.js";
 
-/**
- * The tags or the links of one variant. A variant has few tags, and one link
- * for each external service.
- */
+/** A variant has few tags, and one link for each external service */
 const MAXIMUM_VARIANT_ROWS = 50;
 
 /**
@@ -50,10 +47,7 @@ const tagTextSchema = z
   .min(1)
   .max(MAXIMUM_VARIANT_TAG_TEXT_LENGTH);
 
-/**
- * The fields of the variant that the create and the update share. An absent
- * field stays at an update.
- */
+/** An absent field stays at an update */
 export const variantFieldsInputShape = {
   status: z
     .enum([VariantStatus.FLIGHT_READY, VariantStatus.NOT_FLIGHT_READY])
@@ -111,7 +105,7 @@ type VariantTagInput = NonNullable<VariantFieldsInput["tags"]>[number];
 
 type VariantLinkInput = NonNullable<VariantFieldsInput["links"]>[number];
 
-/** An external link of a variant, also in the audit events */
+/** Also in the audit events */
 export interface VariantLink {
   readonly serviceName: string;
   readonly url: string;
@@ -120,10 +114,7 @@ export interface VariantLink {
 const isSameTag = (first: VariantTagInput, second: VariantTagInput) =>
   first.key === second.key && first.value === second.value;
 
-/**
- * The ids of the tags, for the tags of the variant. Creates the tags that do
- * not exist yet. The same tag two times in the input is one tag.
- */
+/** The same tag two times in the input is one tag */
 export const findOrCreateVariantTagIds = async (
   transaction: Prisma.TransactionClient,
   tags: readonly VariantTagInput[],
@@ -157,11 +148,6 @@ export const findOrCreateVariantTagIds = async (
   ];
 };
 
-/**
- * The links of the input in the format of the audit events
- *
- * @throws ValidationError when two links have the same service
- */
 export const toVariantLinks = (
   links: readonly VariantLinkInput[],
 ): VariantLink[] => {
@@ -171,10 +157,7 @@ export const toVariantLinks = (
   return links.map((link) => ({ serviceName: link.service, url: link.url }));
 };
 
-/**
- * Makes the external links of the variant the given links: one link for each
- * service. Keeps the row of a service that stays, thus its creator stays.
- */
+/** Keeps the row of a service that stays, thus its creator stays */
 export const syncVariantExternalLinks = async (
   transaction: Prisma.TransactionClient,
   variantId: string,
@@ -224,14 +207,6 @@ export const syncVariantExternalLinks = async (
   }
 };
 
-/**
- * The check before a first link of a wiki page to a variant: the actor
- * manages the ship catalog, and the variant has no linked page
- *
- * @throws NotFoundError when the variant does not exist
- * @throws ConflictError when the variant has a linked page already, for
- * example from a different user
- */
 export const requireVariantWithoutWikiPage = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,
@@ -250,13 +225,6 @@ export const requireVariantWithoutWikiPage = async (
     throw new ConflictError(FleetCatalogErrorMessage.VariantWikiPageLinked);
 };
 
-/**
- * The linked page of a variant must be a page of the global wiki that the
- * actor can read.
- *
- * @throws ValidationError for an unknown page, a page in the trash and a page
- * that the actor cannot read alike, thus the existence of a page never leaks
- */
 export const requireReadableGlobalWikiPage = async (
   context: ApplicationContext,
   actor: Actor,

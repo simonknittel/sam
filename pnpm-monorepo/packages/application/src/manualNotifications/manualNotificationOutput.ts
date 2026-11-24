@@ -11,7 +11,6 @@ export interface ManualNotificationRoleOutput {
   readonly name: string;
 }
 
-/** A manual notification in the outputs of the list and of the create use case */
 export interface ManualNotificationOutput {
   readonly id: string;
   readonly created_at: string;
@@ -24,7 +23,6 @@ export interface ManualNotificationOutput {
   readonly receiver_roles: ManualNotificationRoleOutput[];
 }
 
-/** The columns of a manual notification for `toManualNotificationOutput()` */
 export const MANUAL_NOTIFICATION_SELECT = {
   id: true,
   createdAt: true,

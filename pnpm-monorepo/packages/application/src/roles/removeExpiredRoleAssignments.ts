@@ -19,13 +19,11 @@ interface RemovedAssignment {
 }
 
 /**
- * Removes the role assignments that outlived the maximum age of their role.
- * An assignment expires when the assignment and the last visit are both
- * older than the maximum age. An assignment after the last visit counts as
- * activity too, otherwise the next run would remove a role assigned
- * yesterday. Only citizens with a login can be active, thus a citizen
- * without one keeps the role (the join with "User"). The maximum age counts
- * back from the time of the run.
+ * An assignment expires when the assignment and the last visit are both older
+ * than the maximum age. An assignment after the last visit counts as activity
+ * too, otherwise the next run would remove a role assigned yesterday. Only
+ * citizens with a login can be active, thus a citizen without one keeps the
+ * role (the join with "User").
  */
 export const removeExpiredRoleAssignments = (
   context: ApplicationContext,

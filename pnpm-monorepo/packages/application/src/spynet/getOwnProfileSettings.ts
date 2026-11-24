@@ -3,17 +3,12 @@ import type { ApplicationContext } from "../context.js";
 import { NotFoundError } from "../errors.js";
 import { CitizenErrorMessage } from "./citizenErrors.js";
 
-/** The values of the profile form. Only the app uses it, thus camelCase. */
 export interface OwnProfileSettings {
   readonly timezone: string | null;
   readonly birthdayDay: number | null;
   readonly birthdayMonth: number | null;
 }
 
-/**
- * The time zone and the birthday of the citizen of the actor, for the
- * profile form. Requires a citizen.
- */
 export const getOwnProfileSettings = async (
   context: ApplicationContext,
   actor: Actor,

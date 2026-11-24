@@ -7,9 +7,8 @@ import { withSpan } from "../withSpan.js";
 import { findOwnSeasonalThemeSettings } from "./findOwnSeasonalThemeSettings.js";
 
 /**
- * The form sends one key per switched-on event, thus a request never needs
- * more keys than the calendar has events. The limit keeps the loops of the
- * use case bounded even if the schema becomes more permissive later.
+ * The form sends one key per switched-on event. The limit keeps the loops of
+ * the use case bounded even if the schema becomes more permissive later.
  */
 const MAXIMUM_SEASONAL_THEME_SETTING_INPUTS = 20;
 
@@ -27,19 +26,10 @@ export type UpdateSeasonalThemeSettingsInput = z.output<
 >;
 
 export interface UpdateSeasonalThemeSettingsOutput {
-  /** The events that show their theme again */
   readonly enabled: SeasonalEventKey[];
-  /** The events that the citizen switched off */
   readonly disabled: SeasonalEventKey[];
 }
 
-/**
- * Sets which seasonal events show their theme for the actor. A checked
- * switch names its event, a cleared switch is absent. Only the events that
- * the request really changes are written and logged.
- *
- * @throws ForbiddenError for a user without a citizen
- */
 export const updateSeasonalThemeSettings = (
   context: ApplicationContext,
   actor: Actor,
@@ -62,8 +52,7 @@ export const updateSeasonalThemeSettings = (
 
       await context.prisma.$transaction([
         ...enabled.map((eventKey) =>
-          // deleteMany instead of delete: two overlapping saves must not
-          // throw when the row is already gone
+          // Not `delete`, see `updateNotificationSettings()`
           context.prisma.seasonalThemeSetting.deleteMany({
             where: { citizenId, eventKey },
           }),

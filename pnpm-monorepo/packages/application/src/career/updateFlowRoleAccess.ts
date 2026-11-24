@@ -16,9 +16,7 @@ const roleIdsSchema = z.array(idSchema).max(MAXIMUM_FLOW_ACCESS_ROLES);
 
 export const updateFlowRoleAccessInputSchema = z.object({
   flow_id: flowIdSchema,
-  /** The roles that can read the flow */
   read_role_ids: roleIdsSchema,
-  /** The roles that can read and edit the flow */
   update_role_ids: roleIdsSchema,
 });
 
@@ -33,12 +31,6 @@ export interface UpdateFlowRoleAccessOutput {
   readonly update_role_ids: readonly string[];
 }
 
-/**
- * Replaces the role access of a live flow. Requires `career;manage`.
- *
- * @throws NotFoundError when the flow does not exist or is deleted
- * @throws ValidationError when a role does not exist
- */
 export const updateFlowRoleAccess = (
   context: ApplicationContext,
   actor: Actor,

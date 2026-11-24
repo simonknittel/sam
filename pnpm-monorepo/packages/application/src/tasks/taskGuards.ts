@@ -7,11 +7,6 @@ import type { VisibleTask } from "./taskDetails.js";
 import { TaskErrorMessage } from "./taskErrors.js";
 import { isAllowedToManageTask, isTaskUpdatable } from "./taskRules.js";
 
-/**
- * The guard of the task writes against a task that is gone or not open
- * anymore, for example because a different user deleted or completed it.
- * Requires `task;read` and a citizen.
- */
 export const requireOpenTask = async (
   context: ApplicationContext,
   actor: Actor,
@@ -24,10 +19,6 @@ export const requireOpenTask = async (
   return task;
 };
 
-/**
- * The guard of the management writes: an open task (see `requireOpenTask()`)
- * that the actor can manage
- */
 export const requireManageableTask = async (
   context: ApplicationContext,
   actor: Actor,
@@ -42,10 +33,7 @@ export const requireManageableTask = async (
   return task;
 };
 
-/**
- * The guard of the own assignment: an open public task. The creator assigns
- * the citizens of a group or personalized task.
- */
+/** The creator assigns the citizens of a group or personalized task */
 export const requireSelfAssignableTask = async (
   context: ApplicationContext,
   actor: Actor,

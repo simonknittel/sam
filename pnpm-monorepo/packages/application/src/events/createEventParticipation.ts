@@ -11,10 +11,8 @@ import { requireOpenParticipatableAppEvent } from "./participatableAppEvent.js";
 import { buildOwnSignUpNotifications } from "./participationChangeNotifications.js";
 
 /**
- * Signs the user up for an app event. Refuses a second sign-up, thus a
- * different tab cannot overwrite the comment unnoticed. See
- * `signUpForEvent()` for the variant that also updates the comment. The
- * sign-up accepts an open invitation of the user.
+ * Refuses a second sign-up, thus a different tab cannot overwrite the comment
+ * unnoticed. `signUpForEvent()` is the variant that also updates the comment.
  */
 export const createEventParticipation = (
   context: ApplicationContext,

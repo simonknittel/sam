@@ -3,7 +3,6 @@ import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { resolveFlowPermissionsOfActor } from "./flowContext.js";
 
-/** The diagram gives each column of an edge to React Flow */
 const FLOW_DIAGRAM_EDGE_SELECT = {
   id: true,
   sourceId: true,
@@ -43,10 +42,8 @@ export interface FlowDiagram {
 }
 
 /**
- * The diagram of one flow, or null when the flow does not exist, is deleted
- * or the actor cannot read it. The flow context, which each career page
- * loads, does not hold the diagrams: only the page that shows a flow needs
- * its nodes and edges.
+ * The flow context, which each career page loads, does not hold the diagrams:
+ * only the page that shows a flow needs its nodes and edges
  */
 export const findReadableFlowDiagram = async (
   context: Pick<ApplicationContext, "prisma">,

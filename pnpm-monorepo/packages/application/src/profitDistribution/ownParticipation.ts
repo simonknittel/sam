@@ -43,12 +43,7 @@ interface Configuration {
     | AuditEventType.PROFIT_DISTRIBUTION_MY_CEDED_TOGGLED;
 }
 
-/**
- * Sets or removes one state of the own participation in a cycle. The two
- * use cases below differ only in the phase, the attribute and the audit
- * event.
- * Requires only a citizen: each member decides about their own share.
- */
+/** Requires only a citizen: each member decides about their own share */
 const setOwnParticipation = async (
   context: ApplicationContext,
   actor: Actor,
@@ -98,13 +93,6 @@ const setOwnParticipation = async (
   };
 };
 
-/**
- * Accepts the own payout of a cycle, or takes the acceptance back. Requires
- * a citizen.
- *
- * @throws NotFoundError when the cycle does not exist
- * @throws ConflictError when the cycle is not in its payout phase
- */
 export const setOwnPayoutAccepted = (
   context: ApplicationContext,
   actor: Actor,
@@ -118,13 +106,7 @@ export const setOwnPayoutAccepted = (
     }),
   );
 
-/**
- * Cedes the own share of a cycle to the other participants, or takes the
- * cession back. Requires a citizen.
- *
- * @throws NotFoundError when the cycle does not exist
- * @throws ConflictError when the cycle is not in its collection phase
- */
+/** The share goes to the other participants */
 export const setOwnShareCeded = (
   context: ApplicationContext,
   actor: Actor,

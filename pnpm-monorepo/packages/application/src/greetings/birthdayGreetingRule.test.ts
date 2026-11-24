@@ -50,7 +50,6 @@ describe("shouldGreetOnBirthday", () => {
       ),
     ).toBe(false);
 
-    // The next birthday is a year away and is greeted again
     expect(
       shouldGreetOnBirthday(
         { ...greeted, timezone: "Europe/Berlin" },

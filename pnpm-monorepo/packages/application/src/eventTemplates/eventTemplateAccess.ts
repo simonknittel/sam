@@ -10,9 +10,9 @@ import { ConflictError, ForbiddenError, NotFoundError } from "../errors.js";
 import { EventTemplateErrorMessage } from "./eventTemplateErrors.js";
 
 /**
- * The actor as the template permission resolver needs it. The admin mode is
- * part of `authorize()` and therefore flows into `hasEventManage`, which
- * grants every capability on every template in the resolver.
+ * The admin mode is part of `authorize()` and therefore flows into
+ * `hasEventManage`, which grants every capability on every template in the
+ * resolver
  */
 export const toEventTemplateViewer = (actor: Actor): EventTemplateViewer => ({
   citizenId: actor.citizen?.id ?? null,
@@ -22,15 +22,10 @@ export const toEventTemplateViewer = (actor: Actor): EventTemplateViewer => ({
 });
 
 /**
- * The `where` fragment matching exactly the templates a viewer may see —
- * including their own soft-deleted ones, which they can restore. It mirrors
- * `resolveEventTemplatePermissions()` and exists so no call site (list,
- * detail, picker, duplicate source) can forget the soft-delete or visibility
- * exclusion. Combine it with an `AND` rather than spreading it, so a caller's
- * own `OR` cannot overwrite it.
- *
- * The resolver stays the authority on what a viewer may *do* with a template;
- * this only narrows the rows.
+ * Matches exactly the templates that `resolveEventTemplatePermissions()` lets
+ * the viewer see, also their own soft-deleted ones, which they can restore.
+ * Combine it with an `AND` rather than spreading it, so a caller's own `OR`
+ * cannot overwrite it.
  */
 export const buildVisibleEventTemplatesWhere = (
   viewer: EventTemplateViewer,
@@ -51,7 +46,6 @@ export const buildVisibleEventTemplatesWhere = (
   return { OR: alternatives };
 };
 
-/** The fields of the template that the permission resolver reads */
 const EVENT_TEMPLATE_ACCESS_SELECT = {
   id: true,
   ownedById: true,
@@ -64,9 +58,7 @@ type EventTemplateAccessFields = Prisma.EventTemplateGetPayload<{
 }>;
 
 /**
- * The template with the fields of the select of the caller and the fields of
- * the permission resolver. The select of the caller cannot change the fields
- * of the permission resolver.
+ * The select of the caller cannot change the fields of the permission resolver
  */
 export type EventTemplateWithAccess<Select extends Prisma.EventTemplateSelect> =
   Omit<
@@ -83,10 +75,9 @@ export interface EventTemplateAccess<
 }
 
 /**
- * One template with the permissions of the actor, or null when the template
- * does not exist or the actor may not read it — the two are deliberately
- * indistinguishable. A soft-deleted template is in the result for the
- * actors who can restore it.
+ * Null also when the actor may not read the template: deliberately
+ * indistinguishable. A soft-deleted template is in the result for the actors
+ * who can restore it.
  */
 export const findEventTemplateAccess = async <
   const Select extends Prisma.EventTemplateSelect = Record<never, never>,
@@ -120,7 +111,6 @@ export const findEventTemplateAccess = async <
 };
 
 interface EventTemplateGuardOptions<Select extends Prisma.EventTemplateSelect> {
-  /** The fields that the caller reads from the template */
   readonly select?: Select;
 }
 
@@ -131,13 +121,6 @@ interface EventTemplateRequirement {
   readonly forbiddenMessage: string;
 }
 
-/**
- * The guard of the four template guards
- *
- * @throws NotFoundError when the actor cannot read the template,
- *   ConflictError when it is deleted (except with `allowDeleted`),
- *   ForbiddenError when the actor does not have the permission
- */
 const requireEventTemplateAccess = async <
   const Select extends Prisma.EventTemplateSelect,
 >(
@@ -165,12 +148,6 @@ const requireEventTemplateAccess = async <
   return access;
 };
 
-/**
- * A template that the actor can read and use.
- *
- * @throws NotFoundError when the actor cannot read the template, and when
- *   the template is deleted (except with `allowDeleted`)
- */
 export const requireReadableEventTemplate = async <
   const Select extends Prisma.EventTemplateSelect = Record<never, never>,
 >(
@@ -181,7 +158,7 @@ export const requireReadableEventTemplate = async <
     allowDeleted = false,
     select,
   }: EventTemplateGuardOptions<Select> & {
-    /** Gives a deleted template too, for example for the lineup page */
+    /** For example for the lineup page */
     readonly allowDeleted?: boolean;
   } = {},
 ): Promise<EventTemplateAccess<Select>> => {
@@ -204,14 +181,7 @@ export const requireReadableEventTemplate = async <
   return access;
 };
 
-/**
- * A template that the actor can edit. Templates never freeze, because they
- * have no schedule to be over.
- *
- * @throws NotFoundError when the actor cannot read the template,
- *   ConflictError when it is deleted, ForbiddenError when the actor cannot
- *   edit it
- */
+/** Templates never freeze, because they have no schedule to be over */
 export const requireEditableEventTemplate = <
   const Select extends Prisma.EventTemplateSelect = Record<never, never>,
 >(
@@ -226,13 +196,7 @@ export const requireEditableEventTemplate = <
     forbiddenMessage: "The user cannot edit the event template",
   });
 
-/**
- * A template that the actor can delete and restore. A deleted template is in
- * the result: the restore needs it.
- *
- * @throws NotFoundError when the actor cannot read the template,
- *   ForbiddenError when the actor cannot manage it
- */
+/** A deleted template is in the result: the restore needs it */
 export const requireManageableEventTemplate = <
   const Select extends Prisma.EventTemplateSelect = Record<never, never>,
 >(
@@ -247,13 +211,6 @@ export const requireManageableEventTemplate = <
     forbiddenMessage: "The user cannot manage the event template",
   });
 
-/**
- * A template whose role shares and owner the actor can change.
- *
- * @throws NotFoundError when the actor cannot read the template,
- *   ConflictError when it is deleted, ForbiddenError when the actor cannot
- *   change its shares
- */
 export const requireShareableEventTemplate = <
   const Select extends Prisma.EventTemplateSelect = Record<never, never>,
 >(

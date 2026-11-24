@@ -48,30 +48,20 @@ export type UpdateEventWikiPagePermissionsInput = z.infer<
 
 export interface UpdateEventWikiPagePermissionsOutput {
   readonly page_id: string;
-  /** True when this update published the briefing of the event */
   readonly published_briefing: boolean;
 }
 
 /**
- * Updates the read and edit scopes of a page of a briefing. A change of the
- * scopes needs no cascade: the gate of the resolver on the parent limits the
- * children dynamically, other than the prunes of the role model. Thus a
- * narrower ancestor can leave the explicit edit scope of a descendant wider
- * than its effective read scope. No access leaks (the gate of the parent
- * refuses first), but the dialog of the descendant shows a combination that
- * this use case does not accept.
+ * A change of the scopes needs no cascade: the gate of the resolver on the
+ * parent limits the children dynamically, other than the prunes of the role
+ * model. Thus a narrower ancestor can leave the explicit edit scope of a
+ * descendant wider than its effective read scope. No access leaks (the gate of
+ * the parent refuses first), but the dialog of the descendant shows a
+ * combination that this use case does not accept.
  *
- * The first read scope of the root page wider than the managers publishes
- * the briefing: the tab appears for the new audience, which gets a
- * notification one time (the guard is `Event.briefingPublishedAt`).
- *
- * @throws NotFoundError when the page is not a page of a briefing that the
- * actor can hold, is in the trash, or the position does not exist
- * @throws ForbiddenError when the actor cannot manage the page
- * @throws ConflictError when the event of the briefing is over
- * @throws ValidationError for a combination that the page cannot have, or
- * for a scope of the participation while the participation of the event is
- * turned off
+ * The first read scope of the root page wider than the managers publishes the
+ * briefing: the tab appears for the new audience, which gets a notification
+ * one time (the guard is `Event.briefingPublishedAt`).
  */
 export const updateEventWikiPagePermissions = (
   context: ApplicationContext,
@@ -123,10 +113,6 @@ export const updateEventWikiPagePermissions = (
     )
       throw new ValidationError(WikiErrorMessage.ParticipationScopeUnavailable);
 
-    /**
-     * A POSITION scope must refer to a position of the lineup. The other
-     * scopes have no position.
-     */
     let readScopePositionId: string | null = null;
     if (input.read_scope === WikiPageEventScope.POSITION) {
       if (!input.read_scope_position_id)

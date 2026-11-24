@@ -17,14 +17,6 @@ export interface UnbanUserOutput {
   readonly user_id: string;
 }
 
-/**
- * Lifts the ban of a user. Requires the admin role.
- *
- * @throws ForbiddenError when the actor is not an admin
- * @throws NotFoundError when the user does not exist
- * @throws ConflictError when the user is not banned (usually because a
- * different user unbanned them before)
- */
 export const unbanUser = (
   context: ApplicationContext,
   actor: Actor,

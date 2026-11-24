@@ -6,7 +6,6 @@ export interface FindManualNotificationRecipientsInput {
   readonly manualNotificationId: string;
 }
 
-/** The recipients of one manual notification with its wording */
 export interface ManualNotificationRecipients {
   readonly notification: {
     readonly id: string;
@@ -17,11 +16,9 @@ export interface ManualNotificationRecipients {
 }
 
 /**
- * The cleared citizens (see `findClearedCitizens()`) that the sender
- * selected, or who have a selected role as an effective role (inheritance
- * and level gate, the same as the session). Each citizen once. The sender is
- * not excluded: a sender who selects a role that includes them gets the
- * notification too. Null when the notification does not exist.
+ * The sender is not excluded: a sender who selects a role that includes them
+ * gets the notification too. The roles are the effective roles, the same as in
+ * the session.
  */
 export const findManualNotificationRecipients = async (
   context: ApplicationContext,

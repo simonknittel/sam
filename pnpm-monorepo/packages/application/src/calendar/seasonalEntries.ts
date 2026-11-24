@@ -8,10 +8,7 @@ import type {
   SeasonalCalendarEntry,
 } from "./calendarEntry.js";
 
-/**
- * The greeting days of the seasonal events. Each actor sees them, also with
- * the theme of the event switched off.
- */
+/** Each actor sees them, also with the theme of the event switched off */
 export const seasonalEntryCollector: CalendarEntryCollector<SeasonalCalendarEntry> =
   {
     canRead: () => true,

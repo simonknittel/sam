@@ -23,10 +23,6 @@ export type CancelEventParticipationInput = z.infer<
   typeof cancelEventParticipationInputSchema
 >;
 
-/**
- * Cancels the own sign-up for an app event. The position applications and
- * the lineup assignments of the user at the event go with it.
- */
 export const cancelEventParticipation = (
   context: ApplicationContext,
   actor: Actor,

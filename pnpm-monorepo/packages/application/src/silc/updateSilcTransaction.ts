@@ -37,13 +37,6 @@ export type UpdateSilcTransactionInput = z.infer<
   typeof updateSilcTransactionInputSchema
 >;
 
-/**
- * Changes the value and the description of a SILC transaction and the
- * balance of its receiver. Requires `silcTransactionOfOtherCitizen;update`
- * and a citizen, who becomes the last editor of the transaction.
- *
- * @throws NotFoundError when the transaction does not exist or is deleted
- */
 export const updateSilcTransaction = (
   context: ApplicationContext,
   actor: Actor,

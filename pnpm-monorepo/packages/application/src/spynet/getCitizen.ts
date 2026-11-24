@@ -43,22 +43,19 @@ interface SpynetProfileValues {
 
 export interface GetCitizenOutput extends SpynetProfileValues {
   readonly id: string;
-  /** Display text. It can change and it does not identify the citizen. */
   readonly handle: string | null;
   /** IANA time zone name, for example "Europe/Berlin" */
   readonly timezone: string | null;
-  /** The assigned roles that the actor can see, sorted by name */
   readonly roles: { readonly id: string; readonly name: string }[];
-  /** The current penalty points, or null without the permission */
+  /** Null without the permission */
   readonly penalty_points: number | null;
-  /** The number of ships, or null without the permission */
+  /** Null without the permission */
   readonly ship_count: number | null;
 }
 
 /**
- * The profile of a citizen with the values that the actor can read. Other
- * profiles need `citizen;read`. Without it, the actor reads the own profile
- * only with the values of the profile tile on the dashboard.
+ * Without `citizen;read`, the actor reads the own profile only with the values
+ * of the profile tile on the dashboard
  */
 export const getCitizen = async (
   context: ApplicationContext,

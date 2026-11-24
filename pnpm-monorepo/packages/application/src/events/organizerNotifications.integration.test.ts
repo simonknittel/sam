@@ -33,7 +33,6 @@ const createMember = async (handle: string) => {
   };
 };
 
-/** An app event with a published lineup and the given participants */
 const createAppEvent = (
   startsInHours: number,
   participantIds: readonly string[] = [],

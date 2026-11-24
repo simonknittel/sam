@@ -5,9 +5,8 @@ import type { ApplicationContext } from "../../context.js";
 import type { Recipient } from "./recipient.js";
 
 /**
- * The receiver of a task notification must be able to log in and to open
- * tasks. The admin flag of a user does not count: the recipient rules read
- * only the roles.
+ * The admin flag of a user does not count: the recipient rules read only the
+ * roles
  */
 export const TASK_RECEIVER_PERMISSION_SETS = [
   LOGIN_MANAGE_PERMISSION_SET,
@@ -15,10 +14,8 @@ export const TASK_RECEIVER_PERMISSION_SETS = [
 ] as const satisfies readonly PermissionSet[];
 
 /**
- * The citizens of the list who can receive a task notification (see
- * `TASK_RECEIVER_PERMISSION_SETS`), except the excluded citizen: usually the
- * citizen who caused the change. A null in the list is a deleted citizen,
- * for example the deleted creator of a task.
+ * A null in the list is a deleted citizen, for example the deleted creator of a
+ * task
  */
 export const findTaskReceivers = async (
   context: ApplicationContext,

@@ -12,7 +12,6 @@ import { idSchema } from "../pagination.js";
 /** The limit against a crafted payload. A flow of the editor has far fewer. */
 export const MAXIMUM_FLOW_NODES = 250;
 
-/** The limit against a crafted payload. A flow of the editor has far fewer. */
 export const MAXIMUM_FLOW_EDGES = 250;
 
 /**
@@ -21,7 +20,6 @@ export const MAXIMUM_FLOW_EDGES = 250;
  */
 const MAXIMUM_FLOW_EDGE_ID_LENGTH = 255;
 
-/** The fields of the box of each node type */
 const flowNodeBoxShape = {
   id: idSchema,
   position: z.object({
@@ -32,7 +30,6 @@ const flowNodeBoxShape = {
   height: z.number(),
 };
 
-/** The background fields in the `data` of each node type */
 const flowNodeBackgroundShape = {
   backgroundColor: z.string().optional(),
   backgroundTransparency: z.number().min(0).max(1).optional(),
@@ -87,11 +84,6 @@ export const flowNodeSchema = z.discriminatedUnion("type", [
 
 export type FlowNodeInput = z.infer<typeof flowNodeSchema>;
 
-/**
- * The editor sends the React Flow edges, which also carry display fields
- * such as `type` and `markerEnd`. The database stores only the connection,
- * thus the object schema removes all other fields.
- */
 export const flowEdgeSchema = z.object({
   id: z.string().min(1).max(MAXIMUM_FLOW_EDGE_ID_LENGTH),
   source: idSchema,
@@ -100,7 +92,6 @@ export const flowEdgeSchema = z.object({
   targetHandle: z.string(),
 });
 
-/** The row of a node of the editor in the flow */
 export const toFlowNodeCreateData = (
   node: FlowNodeInput,
   flowId: string,

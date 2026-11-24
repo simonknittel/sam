@@ -27,12 +27,6 @@ export interface UpdateRoleInheritanceOutput {
   readonly inherited_role_ids: string[];
 }
 
-/**
- * Replaces the roles that a role inherits. Requires `role;manage`.
- *
- * @throws ValidationError when the role inherits itself
- * @throws NotFoundError when the role or an inherited role does not exist
- */
 export const updateRoleInheritance = (
   context: ApplicationContext,
   actor: Actor,

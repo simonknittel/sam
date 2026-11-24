@@ -12,10 +12,6 @@ export interface ActorCitizen {
   readonly handle: string | null;
 }
 
-/**
- * The user for whom a use case runs. The Next.js app builds the actor from
- * the session, the MCP server from the access token.
- */
 export interface Actor {
   readonly userId: string;
   readonly userRole: UserRole | null;
@@ -27,7 +23,6 @@ export interface Actor {
    * Empty for a user without a citizen.
    */
   readonly roleIds: ReadonlySet<string>;
-  /** The id of the Discord account of the user, or null without one */
   readonly discordUserId: string | null;
   /**
    * The two-factor authentication of the Discord account of the person
@@ -59,9 +54,9 @@ export type ActorFields = Omit<
 >;
 
 /**
- * Builds the actor. `adminMode` applies only to an admin. The caller resolves
- * the admin mode before (for example from the cookie of the admin toolbar),
- * thus `authorize()` is synchronous.
+ * `adminMode` applies only to an admin. The caller resolves the admin mode
+ * before (for example from the cookie of the admin toolbar), thus
+ * `authorize()` is synchronous.
  */
 export const createActor = (fields: ActorFields): Actor => {
   const adminMode = fields.adminMode && fields.userRole === UserRole.ADMIN;
@@ -105,7 +100,6 @@ export const createActor = (fields: ActorFields): Actor => {
   };
 };
 
-/** Throws a `ForbiddenError` when the actor does not have the permission */
 export const requirePermission = (
   actor: Actor,
   resource: PermissionSet["resource"],
@@ -119,19 +113,14 @@ export const requirePermission = (
 };
 
 /**
- * Throws a `ForbiddenError` when the actor does not have the admin role.
- * Admin mode is not necessary, and no role permission replaces the admin role.
+ * Admin mode is not necessary, and no role permission replaces the admin role
  */
 export const requireAdmin = (actor: Actor) => {
   if (actor.userRole !== UserRole.ADMIN)
     throw new ForbiddenError("The user is not an admin");
 };
 
-/**
- * Whether the actor has at least one of the permission strings. An absent or
- * empty list means that no permission is necessary. The app catalog and the
- * onboarding read their required permissions as permission strings.
- */
+/** An absent or empty list means that no permission is necessary */
 export const satisfiesAnyPermissionString = (
   actor: Actor,
   permissionStrings: readonly string[] | undefined,
@@ -150,10 +139,6 @@ export const satisfiesAnyPermissionString = (
   });
 };
 
-/**
- * Throws a `ForbiddenError` when the user has no citizen. The features that
- * show the own participations, assignments or applications need one.
- */
 export const requireCitizen = (actor: Actor): ActorCitizen => {
   if (!actor.citizen) throw new ForbiddenError("The user has no citizen");
 

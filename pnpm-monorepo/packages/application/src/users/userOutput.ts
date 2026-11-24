@@ -12,7 +12,6 @@ export enum UserRoleOutput {
   User = "user",
 }
 
-/** The fields of a user in the output of the user use cases */
 export const USER_OUTPUT_SELECT = {
   id: true,
   name: true,

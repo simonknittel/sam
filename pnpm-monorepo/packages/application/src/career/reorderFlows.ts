@@ -21,11 +21,6 @@ export interface ReorderFlowsOutput {
   readonly flow_ids: readonly string[];
 }
 
-/**
- * Gives the live flows the order of the input. Requires `career;manage`.
- *
- * @throws ConflictError when the input does not hold exactly the live flows
- */
 export const reorderFlows = (
   context: ApplicationContext,
   actor: Actor,

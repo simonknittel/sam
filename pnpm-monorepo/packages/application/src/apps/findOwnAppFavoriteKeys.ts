@@ -2,11 +2,9 @@ import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 
 /**
- * The namespaced keys of the apps that the actor marked as a favorite. The
- * keys are not filtered: the callers resolve them against the apps that the
- * actor can see, so the key of an app that disappeared or became redacted
- * drops out of the lists while the row stays, in case the app returns. An
- * actor without a citizen has no favorites.
+ * The keys are not filtered: the callers resolve them against the apps that the
+ * actor can see. Thus the row of an app that disappeared or became redacted
+ * stays, in case the app returns.
  */
 export const findOwnAppFavoriteKeys = async (
   context: ApplicationContext,

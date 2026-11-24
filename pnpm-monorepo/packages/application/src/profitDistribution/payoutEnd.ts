@@ -7,7 +7,7 @@ import {
 import type { ApplicationContext } from "../context.js";
 
 interface Options {
-  /** Selects the cycles. The function adds the filter of the payout phase. */
+  /** The function adds the filter of the payout phase */
   readonly where: Prisma.ProfitDistributionCycleWhereInput;
   /** The citizen who ends the payout, null for the midnight job */
   readonly endedById: string | null;
@@ -16,12 +16,8 @@ interface Options {
 }
 
 /**
- * Ends the payout of the selected cycles that are in their payout phase.
- * The app and the midnight job use the same rule. The guarded update
- * selects and claims the cycles in one statement, thus a payout that a
- * manager or an earlier run ended stays as it is.
- *
- * @returns The ids of the cycles whose payout ended
+ * The guarded update selects and claims the cycles in one statement, thus a
+ * payout that a manager or an earlier run ended stays as it is
  */
 export const endPayoutOfCycles = async (
   context: ApplicationContext,

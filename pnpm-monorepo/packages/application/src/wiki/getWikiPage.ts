@@ -53,20 +53,13 @@ export interface GetWikiPageOutput extends WikiPageReference {
   readonly tags: { readonly id: string; readonly name: string }[];
   /** The readable pages that the content links to */
   readonly linked_pages: WikiPageReference[];
-  /** ISO 8601 */
   readonly created_at: string;
-  /** ISO 8601 */
   readonly updated_at: string;
-  /** The content as Markdown */
   readonly markdown: string;
-  /** Whether the user can add a page below this page (`create_wiki_page`) */
   readonly can_add_children: boolean;
 }
 
-/**
- * The scope of the page with the gate of the briefing layout. The
- * briefings of the event templates are not available to the MCP tools.
- */
+/** The briefings of the event templates are not available to the MCP tools */
 const loadReadableScopeOfPage = async (
   context: ApplicationContext,
   actor: Actor,
@@ -83,11 +76,6 @@ const loadReadableScopeOfPage = async (
   return scope;
 };
 
-/**
- * A page of the global wiki or of the briefing of an event, with its content
- * as Markdown. A page that the actor cannot read does not exist for the
- * actor.
- */
 export const getWikiPage = (
   context: ApplicationContext,
   actor: Actor,

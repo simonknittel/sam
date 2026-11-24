@@ -1,12 +1,7 @@
-/**
- * The messages of the typed errors of the fleet catalog: the manufacturers,
- * the series and the variants. They are the members of an enum, thus the app
- * can show its own text for each of them.
- */
 export enum FleetCatalogErrorMessage {
   /** A `NotFoundError` */
   ManufacturerNotFound = "The manufacturer does not exist",
-  /** A `ValidationError`: the name of a manufacturer is unique */
+  /** A `ValidationError` */
   ManufacturerNameTaken = "A manufacturer with this name exists already",
   /** A `NotFoundError` */
   SeriesNotFound = "The series does not exist",
@@ -17,9 +12,9 @@ export enum FleetCatalogErrorMessage {
   SeriesNameTaken = "A series with this name exists already",
   /** A `NotFoundError` */
   VariantNotFound = "The variant does not exist",
-  /** A `ValidationError`: the name of a variant is unique in its series */
+  /** A `ValidationError` */
   VariantNameTaken = "A variant of the series with this name exists already",
-  /** A `ValidationError`: a variant has at most one link for each service */
+  /** A `ValidationError` */
   DuplicateLinkService = "Two links have the same service",
   /**
    * A `ValidationError`: one answer for an unknown page, a page in the trash

@@ -12,20 +12,16 @@ import type { ApplicationContext } from "../context.js";
  * this one list.
  */
 
-/** The first day of the statistics. The views have no earlier day. */
+/** The views have no earlier day */
 export const FIRST_STATISTICS_DATE: LocalDate = {
   year: 2025,
   month: 12,
   day: 2,
 };
 
-/** `FIRST_STATISTICS_DATE` as `YYYY-MM-DD`, for descriptions and output */
 export const FIRST_STATISTICS_DAY = toLocalDateKey(FIRST_STATISTICS_DATE);
 
-/**
- * The last day of the statistics: yesterday in the time zone of the
- * organization. The views give only complete days.
- */
+/** The views give only complete days */
 export const getLastStatisticsDate = (
   context: Pick<ApplicationContext, "now">,
 ): LocalDate => fromDateColumnValue(getYesterdayDateColumnValue(context.now()));
@@ -61,7 +57,6 @@ export enum StatisticValueKind {
   AmountOfDay = "amount_of_day",
 }
 
-/** The ids of the series of a statistic with one series for each item */
 export enum StatisticIdsFilter {
   ShipVariants = "ship_variants",
   Roles = "roles",
@@ -80,7 +75,6 @@ export interface StatisticDefinition {
    * fleet values have four fixed series, the others one series for each item.
    */
   readonly hasMultipleSeries: boolean;
-  /** The items of the series, or null for the other statistics */
   readonly idsFilter: StatisticIdsFilter | null;
 }
 
@@ -196,7 +190,6 @@ export const getStatisticDefinition = (
   key: StatisticKey,
 ): StatisticDefinition => ({ key, ...STATISTIC_DEFINITIONS[key] });
 
-/** In the order of the charts of the dashboard */
 export const STATISTIC_CATALOG: readonly StatisticDefinition[] = Object.values(
   StatisticKey,
 ).map(getStatisticDefinition);

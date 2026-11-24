@@ -26,7 +26,6 @@ export enum EventParticipantsAction {
   DeclineApplication = "decline_application",
 }
 
-/** The text input of each action. The other actions refuse it. */
 const TEXT_INPUT_BY_ACTION = {
   [EventParticipantsAction.Add]: "comment",
   [EventParticipantsAction.Remove]: "reason",

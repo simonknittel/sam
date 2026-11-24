@@ -9,18 +9,10 @@ import {
 
 export interface EventApplicationRecipients extends EventOrganizerRecipients {
   readonly application: {
-    /** The note of the applicant */
     readonly comment: string | null;
   };
 }
 
-/**
- * The organizers of the event who hear about a new application to take part
- * in it (see `findEventOrganizers()`), without the applicant. Null when the
- * application does not exist or is not open anymore: the managers need no
- * notification about an application that a manager answered or that the
- * applicant withdrew.
- */
 export const findEventApplicationRecipients = async (
   context: ApplicationContext,
   { applicationId }: { readonly applicationId: string },

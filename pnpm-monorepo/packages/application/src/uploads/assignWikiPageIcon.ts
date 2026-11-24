@@ -28,26 +28,12 @@ export type AssignWikiPageIconInput = z.infer<
 
 export interface AssignWikiPageIconOutput {
   readonly page_id: string;
-  /**
-   * The new icon (null when the input removes the icon). The host probes
-   * its dimensions after the response.
-   */
   readonly probe_upload_id: string | null;
 }
 
 /**
- * Sets or removes the icon of a wiki page. A change of the icon needs the
- * admin tier of the page, as a change of the title, and does not depend on
- * the upload settings of the page. The icon must be an image of the citizen
- * of the actor. The nightly cleanup deletes the upload of a replaced or
- * removed icon.
- *
- * @throws ForbiddenError when the user has no citizen, when the actor does
- * not manage the page, when the event of the briefing is over, or when the
- * upload belongs to a different citizen
- * @throws NotFoundError when the page or the upload does not exist for the
- * actor
- * @throws ValidationError when the upload is not an image
+ * A change of the icon needs the admin tier of the page, as a change of the
+ * title, and does not depend on the upload settings of the page
  */
 export const assignWikiPageIcon = (
   context: ApplicationContext,

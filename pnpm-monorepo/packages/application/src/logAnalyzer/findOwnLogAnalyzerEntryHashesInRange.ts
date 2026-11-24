@@ -7,15 +7,12 @@ export interface FindOwnLogAnalyzerEntryHashesInRangeInput {
   readonly from?: Date | undefined;
   /** Exclusive */
   readonly to?: Date | undefined;
-  /** The last hash of the previous page. Absent for the first request. */
   readonly cursorHash?: string | undefined;
 }
 
 /**
- * The hashes of the entries of a date range which the citizen of the actor
- * already shared. The rolling window of `findOwnLogAnalyzerEntryHashes` does
- * not reach older entries, thus the sharing of older entries asks here which
- * of them the server already holds.
+ * The rolling window of `findOwnLogAnalyzerEntryHashes` does not reach older
+ * entries, thus the sharing of older entries asks here
  */
 export const findOwnLogAnalyzerEntryHashesInRange = (
   context: ApplicationContext,

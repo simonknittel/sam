@@ -12,10 +12,8 @@ export interface TaskAssignmentRecipients {
 }
 
 /**
- * The assignees of the task who can log in and open tasks, except the
- * assignees who made their assignment themselves: an actor who assigns the
- * own citizen, or a citizen who accepted the task. Null when the task does
- * not exist.
+ * Without the assignees who made their assignment themselves: an actor who
+ * assigns the own citizen, or a citizen who accepted the task
  */
 export const findTaskAssignmentRecipients = async (
   context: ApplicationContext,

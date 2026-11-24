@@ -21,10 +21,6 @@ export type NotePermissionSubject = Pick<
  */
 const DELETED_CLASSIFICATION_ATTRIBUTE_VALUE = "(deleted)";
 
-/**
- * The classification of a note as the note permissions (for example
- * `note;delete;noteTypeId=…;classificationLevelId=…`) compare with it
- */
 const getNoteClassificationAttributes = (
   note: Pick<CitizenLog, "noteTypeId" | "classificationLevelId">,
 ): PermissionAttributes => [
@@ -38,10 +34,6 @@ const getNoteClassificationAttributes = (
   },
 ];
 
-/**
- * The attributes that the note permissions compare an existing note with:
- * the classification, and `alsoUnconfirmed` for a note that is not confirmed
- */
 export const getNotePermissionAttributes = (
   note: NotePermissionSubject,
 ): PermissionAttributes => [
@@ -51,7 +43,6 @@ export const getNotePermissionAttributes = (
     : []),
 ];
 
-/** The actor can read the content of the note */
 export const canReadNote = (
   actor: Pick<Actor, "authorize">,
   note: NotePermissionSubject,

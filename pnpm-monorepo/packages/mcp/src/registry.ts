@@ -13,15 +13,10 @@ import { TOOL_CATALOG, toToolCatalogEntry } from "./catalog.js";
 import type { CatalogTool, ToolRequestScope } from "./toolDefinition.js";
 
 export interface RegisterToolsOptions {
-  /** The tools that the user disabled for the client of the request */
   readonly disabledToolNames: readonly string[];
 }
 
-/**
- * Registers the tools that the actor can use: the tools that are visible for
- * the actor and that the user did not disable. The order of the registration
- * is the order of `tools/list`.
- */
+/** The order of the registration is the order of `tools/list` */
 export const registerTools = (
   server: McpServer,
   context: ApplicationContext,

@@ -19,17 +19,12 @@ const iframeAllowlistSchema = z
   .array(z.string())
   .max(MAXIMUM_WIKI_IFRAME_ALLOWLIST_ENTRIES);
 
-/** The stored value of the setting. An invalid value allows no hostname. */
+/** An invalid value allows no hostname */
 export const parseWikiIframeAllowlist = (value: unknown): string[] => {
   const parsed = iframeAllowlistSchema.safeParse(value);
   return parsed.success ? parsed.data : [];
 };
 
-/**
- * The hostnames that generic iframes can embed. The check when a user adds
- * an iframe uses them, and the renders get them for the check on each
- * render.
- */
 export const loadWikiIframeAllowlist = async (
   prisma: ApplicationContext["prisma"],
 ): Promise<string[]> => {
@@ -40,10 +35,9 @@ export const loadWikiIframeAllowlist = async (
 };
 
 /**
- * The sources of the generic iframes of the content whose hosts are not on
- * the allowlist. Content that does not come from the editor (an import, a
- * Markdown text) bypasses the insertion-time validation, thus its writes
- * check it with this function.
+ * Content that does not come from the editor (an import, a Markdown text)
+ * bypasses the insertion-time validation, thus its writes check it with this
+ * function
  */
 export const findDisallowedWikiIframeSources = async (
   prisma: ApplicationContext["prisma"],

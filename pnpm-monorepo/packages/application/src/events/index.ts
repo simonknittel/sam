@@ -1,4 +1,3 @@
-/** The use cases of the events, with the event rules that the app and the other groups share */
 export {
   findAddableEventParticipants,
   type AddableEventParticipants,

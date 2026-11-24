@@ -25,12 +25,8 @@ export interface DeleteCitizenLogOutput {
 }
 
 /**
- * Deletes a log of an active citizen. An identity log needs the delete
- * permission of its type, a note `note;delete` for its classification.
- *
- * @throws NotFoundError when the log does not exist, its citizen is deleted,
- * or a different user changed the log after the check
- * @throws ValidationError for a log type that nobody deletes
+ * @throws NotFoundError also when a different user changed the log after the
+ * check
  */
 export const deleteCitizenLog = (
   context: ApplicationContext,
@@ -52,7 +48,6 @@ export const deleteCitizenLog = (
       });
       if (count === 0) return false;
 
-      /** The copies of the confirmed values change in the same transaction */
       await syncCitizenIdentityAfterLogChange(transaction, citizenLog);
       return true;
     });

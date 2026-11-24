@@ -25,18 +25,9 @@ const SILENT_LOGGER: ApplicationContext["log"] = {
 type TestApplicationContextOptions = Partial<
   Omit<ApplicationContext, "now">
 > & {
-  /** The time that `context.now()` gives */
   readonly now?: Date;
 };
 
-/**
- * The context of the integration tests. It uses the database of the
- * testcontainer (`test/databaseUrl.ts` sets the URL before the test files
- * load). The audit writer, the notification trigger, the email requester and
- * the realtime server only record, thus a test can examine `auditEvents`,
- * `notifications`, `emailRequests` and `terminatedRealtimeUserIds`. An
- * override replaces the port of the same name.
- */
 export const createTestApplicationContext = ({
   now = TEST_NOW,
   ...overrides
@@ -101,7 +92,6 @@ interface TestActorOptions {
   /** The citizen must exist in the database when a use case writes its id */
   readonly citizen?: ActorCitizen | null;
   readonly permissionStrings?: readonly string[];
-  /** The ids of the effective roles of the actor */
   readonly roleIds?: readonly string[];
   /** Gives the actor the admin role without admin mode */
   readonly admin?: boolean;
@@ -109,10 +99,6 @@ interface TestActorOptions {
   readonly adminMode?: boolean;
 }
 
-/**
- * An actor with a confirmed email address, the two-factor authentication of
- * Discord, the given permission strings and the given effective roles
- */
 export const createTestActor = ({
   userId,
   citizen = null,

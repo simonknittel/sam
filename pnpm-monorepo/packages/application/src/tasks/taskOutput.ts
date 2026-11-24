@@ -9,9 +9,7 @@ import {
 import { getTaskStatus, type TaskStatus } from "./taskRules.js";
 
 export enum TaskRewardKind {
-  /** New SILC */
   NewSilc = "new_silc",
-  /** A reward that is no SILC, described in a text */
   Text = "text",
 }
 

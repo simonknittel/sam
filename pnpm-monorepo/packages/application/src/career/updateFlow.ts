@@ -29,14 +29,8 @@ export interface UpdateFlowOutput {
 }
 
 /**
- * Replaces the diagram of a flow: its nodes and its edges. The roles with
- * the edit tier on the flow and the holders of `career;manage` can save.
- *
- * @throws NotFoundError when the flow does not exist, is deleted, or the
- * actor cannot read it
- * @throws ForbiddenError when the actor can only read the flow
- * @throws ValidationError when an edge connects a node that is not in the
- * input
+ * The roles with the edit tier on the flow and the holders of `career;manage`
+ * can save
  */
 export const updateFlow = (
   context: ApplicationContext,

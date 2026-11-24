@@ -23,10 +23,9 @@ import {
   type PageOptions,
 } from "../pagination.js";
 
-/** The maximum number of values of a filter. It keeps the query small. */
 const MAXIMUM_FILTER_VALUES = 50;
 
-/** The kind of access of the events, see `READ_AUDIT_EVENT_TYPES` */
+/** See `READ_AUDIT_EVENT_TYPES` */
 export enum AuditEventAccess {
   Write = "write",
   Read = "read",
@@ -105,7 +104,6 @@ export interface AuditEventOutput {
   readonly created_at: string;
   /** Null for an event without a user (for example an automation run) */
   readonly created_by: AuditEventCreatorOutput | null;
-  /** True for an event of an action through the MCP server */
   readonly triggered_via_mcp: boolean;
   /**
    * The payload as the app stored it. Some rows store it JSON-encoded as a
@@ -200,14 +198,6 @@ const toAuditEventOutput = (
   data: event.data,
 });
 
-/**
- * The audit events of the system log, the newest first. The cursor is the id
- * of an event.
- *
- * @throws ForbiddenError when the actor does not have `systemLog;read`
- * @throws ValidationError when no event has the cursor (see
- * `PageOptions.unknownCursor`)
- */
 export const listAuditEvents = async (
   context: ApplicationContext,
   actor: Actor,

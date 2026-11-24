@@ -1,4 +1,3 @@
-/** The reads of the calendar and the type filter of its entries */
 export {
   ProfitDistributionPhaseEnd,
   type BirthdayCalendarEntry,

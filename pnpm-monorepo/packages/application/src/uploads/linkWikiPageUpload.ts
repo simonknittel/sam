@@ -42,32 +42,19 @@ export type LinkWikiPageUploadInput = z.infer<
 
 export interface LinkWikiPageUploadOutput {
   readonly page_id: string;
-  /**
-   * The linked upload. The host probes its dimensions after the response
-   * (the probe skips an upload that is not an image).
-   */
+  /** The probe skips an upload that is not an image */
   readonly probe_upload_id: string;
 }
 
 /**
- * Links a new upload (an image or an attachment) to the wiki page that
- * embeds it, thus the download of an attachment can check the visibility of
- * the page before the editor stores the content. After that, the collab
- * server makes the links of each page agree with its stored content (see
- * `replaceWikiPageUploadLinks()`). The actor needs the upload permission of
- * the page for the kind of the upload, and the stored MIME type must be
- * allowed for this kind. The upload must belong to the citizen of the actor
- * and must not be linked to a different page.
+ * Links a new upload (an image or an attachment) to the wiki page that embeds
+ * it, thus the download of an attachment can check the visibility of the page
+ * before the editor stores the content. After that, the collab server makes
+ * the links of each page agree with its stored content (see
+ * `replaceWikiPageUploadLinks()`).
  *
- * No audit event: `UPLOAD_CREATED` records the upload and
- * `WIKI_PAGE_UPDATED` records the editing session.
- *
- * @throws ForbiddenError when the user has no citizen, when the actor cannot
- * upload this kind of file to the page, when the upload belongs to a
- * different citizen, or when it is linked to a different page
- * @throws NotFoundError when the page or the upload does not exist for the
- * actor
- * @throws ValidationError `UploadErrorMessage.MimeTypeNotOfKind`
+ * No audit event: `UPLOAD_CREATED` records the upload and `WIKI_PAGE_UPDATED`
+ * records the editing session.
  */
 export const linkWikiPageUpload = (
   context: ApplicationContext,

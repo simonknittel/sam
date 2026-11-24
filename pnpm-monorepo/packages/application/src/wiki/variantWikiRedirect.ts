@@ -3,10 +3,7 @@ import type { ApplicationContext } from "../context.js";
 import type { WikiPageScope } from "./wikiScope.js";
 
 /**
- * The linked page of the fleet variant when the page lies in the embed of
- * the variant, for the redirect of a write from inside the embed. Null when
- * the page is not in the global wiki, the variant is unknown or has no
- * linked page, or the page is outside the linked subtree: the caller then
+ * For the redirect of a write from inside the embed. With null, the caller
  * uses the usual route of the page. The answer comes only from stored ids,
  * thus no user input reaches the redirect.
  *

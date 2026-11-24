@@ -44,11 +44,6 @@ export interface UpdateWikiIframeAllowlistOutput {
   readonly domains: string[];
 }
 
-/**
- * Replaces the hostnames that the generic iframes of the wiki can embed
- *
- * @throws ForbiddenError without `wiki;manage`
- */
 export const updateWikiIframeAllowlist = (
   context: ApplicationContext,
   actor: Actor,

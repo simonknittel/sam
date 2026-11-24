@@ -8,7 +8,6 @@ import {
 
 export interface FindEventParticipantRecipientsInput {
   readonly eventId: string;
-  /** The citizen who caused the notification gets none */
   readonly excludedCitizenId?: string | null;
 }
 
@@ -71,17 +70,9 @@ const findParticipantRecipients = async (
   };
 };
 
-/**
- * The active participants of the event (app sign-ups by citizen id, Discord
- * RSVPs by Discord id) who can see the event now (see
- * `findEventRecipients()`), without the excluded citizen. Thus a deleted
- * event has no recipients. Null when the event does not exist or has no
- * active participant.
- */
 export const findEventParticipantRecipients = (
   context: ApplicationContext,
   input: FindEventParticipantRecipientsInput,
-  /** See `EventRecipientOptions` */
   additionalPermissionSets: readonly PermissionSet[] = [],
 ): Promise<EventParticipantRecipients | null> =>
   findParticipantRecipients(context, input, {
@@ -89,11 +80,6 @@ export const findEventParticipantRecipients = (
     additionalPermissionSets,
   });
 
-/**
- * The active participants of the deleted event who could see the event
- * before the deletion, without the excluded citizen. Null when the event
- * does not exist or has no active participant.
- */
 export const findEventDeletedRecipients = (
   context: ApplicationContext,
   input: FindEventParticipantRecipientsInput,

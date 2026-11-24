@@ -21,12 +21,6 @@ export interface ListRoleTagsOutput {
   readonly next_cursor: string | null;
 }
 
-/**
- * The tags that the actor can see (see `findVisibleRoleTagBadges()`), sorted
- * by name, one page. The cursor is the id of a tag.
- *
- * @throws ValidationError when no tag of the list has the cursor
- */
 export const listRoleTags = async (
   context: ApplicationContext,
   actor: Actor,

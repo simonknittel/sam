@@ -8,12 +8,6 @@ export interface FindNewItemIdsInput {
   readonly subjectIds: readonly string[];
 }
 
-/**
- * Of the listed items, the ones which are new for the actor. Batched into a
- * single query, thus a list does not ask once for each row. Checks no
- * permission: the caller has already applied the visibility and the read
- * permission to the ids. Empty for an actor without a citizen.
- */
 export const findNewItemIds = async (
   context: ApplicationContext,
   actor: Actor,

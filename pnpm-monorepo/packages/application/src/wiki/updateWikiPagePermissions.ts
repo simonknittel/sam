@@ -34,15 +34,13 @@ import {
 } from "./wikiPermissionRoles.js";
 import { requireWikiPageOfScope } from "./wikiScope.js";
 
-/** Where the owner of a page comes from */
 export enum WikiPageOwnerMode {
   /** The owner of the nearest ancestor with an owner */
   Inherit = "inherit",
-  /** An own owner */
   Explicit = "explicit",
 }
 
-/** The most roles of one access type on one page: a limit for the request */
+/** A limit for the request */
 const MAXIMUM_WIKI_PAGE_ACCESS_ROLES = 50;
 
 const accessRoleIdsSchema = z
@@ -88,17 +86,6 @@ export interface UpdateWikiPagePermissionsOutput {
   readonly pruned_page_count: number;
 }
 
-/**
- * Updates the permissions and the owner of a page of the global wiki, and
- * optionally of all its descendants
- *
- * @throws NotFoundError when the page is not a page of the global wiki or
- * is in the trash
- * @throws ForbiddenError when the actor cannot manage the page
- * @throws ValidationError for a combination that the page cannot have
- * @throws WikiRolesCannotReadParentError when a selected role cannot read
- * the parent page
- */
 export const updateWikiPagePermissions = (
   context: ApplicationContext,
   actor: Actor,

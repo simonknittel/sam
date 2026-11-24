@@ -16,7 +16,6 @@ import { getOpenAuecPayout, getPaidAuec } from "./cycleAmounts.js";
 import { CYCLE_DETAILS_SELECT, type CycleDetailsRow } from "./cycleSelects.js";
 import { getOwnCycleView } from "./ownCycleView.js";
 
-/** A cycle with the numbers of its page, from the view of the actor */
 export interface ProfitDistributionCycleDetails {
   readonly cycle: CycleDetailsRow;
   readonly currentPhase: CyclePhase;
@@ -27,8 +26,8 @@ export interface ProfitDistributionCycleDetails {
   readonly myShare: number | null;
   readonly myPayoutState: PayoutState;
   /**
-   * The citizens with a positive balance, only for a manager. The other
-   * actors get an empty list.
+   * Only the positive balances, and only for a manager. The other actors get an
+   * empty list.
    */
   readonly allSilcBalances: SilcBalanceRow[];
   readonly totalSilc: number;
@@ -41,13 +40,9 @@ export interface ProfitDistributionCycleDetails {
 }
 
 /**
- * The cycle of the page and of the management page. Requires
- * `profitDistributionCycle;read`. In the collection phase it also requires
- * `silcBalanceOfCurrentCitizen;read`. For a manager
- * (`profitDistributionCycle;manage`), it requires
+ * In the collection phase it also requires `silcBalanceOfCurrentCitizen;read`.
+ * For a manager (`profitDistributionCycle;manage`), it requires
  * `silcBalanceOfOtherCitizen;read` in each phase.
- *
- * @returns null when the cycle does not exist
  */
 export const findProfitDistributionCycleDetails = (
   context: ApplicationContext,

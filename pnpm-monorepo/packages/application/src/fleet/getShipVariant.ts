@@ -16,7 +16,6 @@ export const getShipVariantInputSchema = z.object({
   variant_id: idSchema.describe("The variant from search_ship_variants."),
 });
 
-/** A variant in the shape of `getShipVariant()`, also for its writes */
 export const SHIP_VARIANT_DETAIL_SELECT = {
   ...SHIP_VARIANT_SELECT,
   wikiPageId: true,
@@ -35,7 +34,6 @@ export interface ShipVariantDetailOutput extends ShipVariantOutput {
   }[];
   /** The page of the global wiki that the variant page embeds */
   readonly wiki_page_id: string | null;
-  /** The ships of the active citizens that are not deleted */
   readonly ship_count: number;
 }
 
@@ -54,11 +52,8 @@ export const toShipVariantDetailOutput = (
 });
 
 /**
- * A variant of the catalog with the fields that its update can change. The
- * permission keeps the linked wiki page from the other users, like
- * `findManagedVariant()`.
- *
- * @throws NotFoundError when the variant does not exist
+ * The permission keeps the linked wiki page from the other users, like
+ * `findManagedVariant()`
  */
 export const getShipVariant = async (
   context: Pick<ApplicationContext, "prisma">,

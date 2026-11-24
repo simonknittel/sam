@@ -43,7 +43,6 @@ interface CopyWikiPagesParams {
   readonly entries: readonly WikiPageCopyEntry[];
   /** NULL copies into the global wiki */
   readonly targetContainer: EventContainer | null;
-  /** Parent of the entries without a `parentSourceId` */
   readonly rootParentId: string | null;
   /**
    * Source id → already existing target id, for entries whose parent is not
@@ -67,7 +66,6 @@ interface CopyWikiPagesParams {
 interface CopyWikiPagesResult {
   readonly copiedPages: CopiedWikiPage[];
   readonly newIdBySourceId: Map<string, string>;
-  /** Slug of each copy, keyed by source id */
   readonly slugBySourceId: Map<string, string>;
 }
 
@@ -152,7 +150,6 @@ export const copyWikiPagesIntoContainer = async (
     (assignment) => assignment.pageId,
   );
 
-  /** Copies land in the target's scope, wherever the source came from */
   const scopeColumns = params.targetContainer
     ? {
         namespace: WikiPageNamespace.EVENT,

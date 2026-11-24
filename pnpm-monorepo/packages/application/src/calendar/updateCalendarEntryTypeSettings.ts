@@ -25,20 +25,13 @@ export type UpdateCalendarEntryTypeSettingsInput = z.output<
 >;
 
 export interface UpdateCalendarEntryTypeSettingsOutput {
-  /** The types that the calendar shows again */
   readonly enabled: CalendarEntryType[];
-  /** The types that the citizen switched off */
   readonly disabled: CalendarEntryType[];
 }
 
 /**
- * Sets which entry types the calendar and its dashboard tile show for the
- * actor. A checked type is in the input, a cleared type is absent. Only the
- * types that the actor can read change: the filter does not offer the other
- * types, thus their rows stay. Only the types that the request really
- * changes are written and logged.
- *
- * @throws ForbiddenError for a user without a citizen
+ * Only the types that the actor can read change: the filter does not offer the
+ * other types, thus their rows stay
  */
 export const updateCalendarEntryTypeSettings = (
   context: ApplicationContext,
@@ -65,8 +58,7 @@ export const updateCalendarEntryTypeSettings = (
 
       await context.prisma.$transaction([
         ...enabled.map((entryType) =>
-          // deleteMany instead of delete: two overlapping saves must not
-          // throw when the row is already gone
+          // Not `delete`, see `updateNotificationSettings()`
           context.prisma.calendarEntryTypeSetting.deleteMany({
             where: { citizenId, entryType },
           }),

@@ -28,11 +28,8 @@ export interface DuplicateEventTemplateOutput {
 }
 
 /**
- * Copies a template the actor may read into a personal template of their
- * own: fields, visibility prefill, participation switch, application switch,
- * Discord target, cover, lineup and briefing carry over, the role shares
- * deliberately do not. Handing a copy out again is the duplicator's
- * decision, not an inherited one.
+ * The role shares deliberately do not carry over: handing a copy out again is
+ * the duplicator's decision, not an inherited one
  */
 export const duplicateEventTemplate = (
   context: ApplicationContext,
@@ -41,8 +38,8 @@ export const duplicateEventTemplate = (
 ): Promise<DuplicateEventTemplateOutput> =>
   withSpan(context, "duplicateEventTemplate", async () => {
     /**
-     * Authorize the request. Reading a template is enough to duplicate it —
-     * the copy is a new personal template, not a change to the source.
+     * Reading a template is enough to duplicate it: the copy is a new personal
+     * template, not a change to the source
      */
     const citizenId = requireCitizen(actor).id;
 
@@ -67,8 +64,8 @@ export const duplicateEventTemplate = (
     );
 
     /**
-     * A source whose root page is trashed gives a duplicate without a
-     * briefing: the copy has no root fallback (a known defect).
+     * A source without a briefing root page gives a duplicate without a
+     * briefing: the copy has no root fallback (a known defect)
      */
     const { template, positionCount, pageCount } =
       await createEventTemplateCopy(

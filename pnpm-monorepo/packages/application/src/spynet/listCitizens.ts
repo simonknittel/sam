@@ -15,8 +15,8 @@ import { isRoleVisible } from "../roles/roleVisibility.js";
 import { withSpan } from "../withSpan.js";
 
 /**
- * The roles of a citizen that the actor can see. The level of an assignment
- * does not matter, like on the role badges of the app.
+ * The level of an assignment does not matter, like on the role badges of the
+ * app
  */
 const getVisibleRoleIds = (
   actor: Actor,
@@ -64,7 +64,6 @@ export const listCitizensInputSchema = z.object({
 
 export interface CitizenListItem {
   readonly id: string;
-  /** Display text. It can change and it does not identify the citizen. */
   readonly handle: string | null;
   readonly spectrum_id: string | null;
   /** Null also without `discord-id;read` */
@@ -74,23 +73,20 @@ export interface CitizenListItem {
   readonly created_at: string;
   /** Null also without `lastSeen;read` */
   readonly last_seen_at: string | null;
-  /** The assigned roles that the actor can see */
   readonly role_ids: string[];
 }
 
 export interface ListCitizensOutput {
   readonly citizens: CitizenListItem[];
-  /** The number of citizens with these filters, on all pages */
+  /** On all pages */
   readonly total: number;
-  /** Null on the last page */
   readonly next_cursor: string | null;
-  /** Null on the first page */
   readonly previous_cursor: string | null;
 }
 
 type SortValue = string | number | null;
 
-/** Compares ascending and puts null values last */
+/** Puts null values last */
 const compareAscending = (first: SortValue, second: SortValue): number => {
   if (first === null) return second === null ? 0 : 1;
   if (second === null) return -1;
@@ -103,7 +99,7 @@ const compareAscending = (first: SortValue, second: SortValue): number => {
   return 0;
 };
 
-/** Compares descending and also puts null values last */
+/** Also puts null values last */
 const compareDescending = (first: SortValue, second: SortValue) =>
   first === null || second === null
     ? compareAscending(first, second)
@@ -188,14 +184,8 @@ const hasUnknownAttribute = (
   });
 
 /**
- * One page of the citizens table of the Spynet: the citizens that are not
- * deleted, filtered by their visible roles and by missing values, and
- * sorted. The filters and the sort run in memory, because the role filter
- * depends on the permissions of the actor. The cursor is the id of a
- * citizen.
- *
- * @throws ValidationError when no citizen of the list has the cursor (see
- * `PageOptions.unknownCursor`)
+ * The filters and the sort run in memory, because the role filter depends on
+ * the permissions of the actor
  */
 export const listCitizens = async (
   context: ApplicationContext,
@@ -220,7 +210,6 @@ export const listCitizens = async (
       (attribute !== CitizenUnknownAttribute.TeamspeakId || canReadTeamspeakId),
   );
 
-  /** Without the permission, the time of the last visit is no sort option */
   const sort =
     !canReadLastSeen && isLastSeenSort(input.sort)
       ? CITIZEN_LIST_DEFAULT_SORT

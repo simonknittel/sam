@@ -24,14 +24,6 @@ export const getTaskInputSchema = z.object({
 
 export type GetTaskInput = z.output<typeof getTaskInputSchema>;
 
-/**
- * Loads a task that the actor can see, with the relations of the task page.
- * Requires `task;read` and a citizen. `getTask` maps the row to its output.
- * The app wrapper of the task page keeps the row, because the page uses it.
- *
- * @throws NotFoundError when the task does not exist, is deleted, or is not
- * visible for the actor
- */
 export const findVisibleTask = async (
   context: ApplicationContext,
   actor: Actor,
@@ -50,11 +42,6 @@ export const findVisibleTask = async (
   return toVisibleTask(actor, task);
 };
 
-/**
- * One task that the actor can see, with its details. Requires `task;read`
- * and a citizen. Throws a `NotFoundError` when the task does not exist or the
- * actor cannot see it.
- */
 export const getTask = (
   context: ApplicationContext,
   actor: Actor,

@@ -7,16 +7,13 @@ import { triggerNotificationsAfterSave } from "../notifications.js";
 import { withSpan } from "../withSpan.js";
 
 export interface NotifyExpiredPenaltyEntriesOutput {
-  /** The entries that expired since the last run */
   readonly penaltyEntryCount: number;
   readonly notificationsSent: boolean;
 }
 
 /**
- * Requests the `PenaltyEntryExpired` notification of each entry that is not
- * deleted and expired since the last run. An entry still counts at the time
- * of its expiry (see `buildActivePenaltyEntryWhere()`), thus the window does
- * not include now.
+ * An entry still counts at the time of its expiry (see
+ * `buildActivePenaltyEntryWhere()`), thus the window does not include now
  */
 export const notifyExpiredPenaltyEntries = (
   context: ApplicationContext,

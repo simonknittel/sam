@@ -30,7 +30,6 @@ const signingKey: SigningKey = {
   algorithm: "ES256",
 };
 
-/** The columns of the grant and its user that `resolvePrincipal()` selects */
 const createGrantRow = () => ({
   id: "grant",
   userId: "user",
@@ -58,7 +57,6 @@ const log = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
 /** `withSpan()` uses only `startActiveSpan()`, `setStatus()` and `end()` */
 const span = { setStatus: () => span, end: () => undefined };
 
-/** The queries of the principal and the user query of `get_user` */
 const prisma = {
   user: {
     findUnique: ({ where }: { where: { id: string } }) =>
@@ -130,7 +128,6 @@ const issueToken = () =>
     scope: "mcp",
   });
 
-/** A `tools/call` of `get_user` in the 2026-07-28 revision */
 const callGetUser = (headers: Record<string, string>) =>
   handleRequest(
     context,

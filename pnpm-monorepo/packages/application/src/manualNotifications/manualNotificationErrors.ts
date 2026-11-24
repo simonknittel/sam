@@ -1,7 +1,3 @@
-/**
- * The messages of the typed errors of the manual notifications that the app
- * shows with its own text
- */
 export enum ManualNotificationErrorMessage {
   /** A `ValidationError` */
   NoReceivers = "Give at least one citizen or one role as a receiver",
