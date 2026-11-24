@@ -12,8 +12,8 @@ import { protectedProcedure, toTrpcError } from "../../trpc";
 /**
  * The hashes of the entries the signed-in citizen already shared. The client
  * hashes what it parsed from the local log files and sends only what is
- * missing here, so a page load no longer offers the whole window to the
- * server again. The kill switch closes the read path of the sharing.
+ * missing here, so a page load does not send the whole window again. The kill
+ * switch closes the read path of the sharing.
  */
 export const getOwnEntryHashes = protectedProcedure
   .input(

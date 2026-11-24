@@ -363,8 +363,7 @@ type ReadAuditEventData = {
 /**
  * Wiki page audit payloads carry the owning event's id so event wiki rows
  * stay attributable after the event (and its pages) are cascade-deleted.
- * Absent for the pages of the global wiki and of the event templates, and on
- * events from before the event wikis.
+ * Absent for the pages of the global wiki and of the event templates.
  *
  * A type alias, not an interface: Prisma accepts a payload as a JSON value
  * only if its type has an implicit index signature, and an interface has none.
@@ -1310,14 +1309,13 @@ export interface AuditEventDataByType {
     /** All created pages, the copied root first */
     duplicatedPageIds: string[];
     mirroredChildren: boolean;
-    /** Only on events from before permission mirroring was removed */
+    /** @deprecated No code writes it */
     mirroredPermissions?: boolean;
   };
 
   /**
    * One event per page created by copy'n'paste or the create form's
-   * "copy from" — the successor of WIKI_PAGE_DUPLICATED, which only
-   * occurs on historical events.
+   * "copy from"
    */
   [AuditEventType.WIKI_PAGE_COPIED]: WikiPageAuditScope & {
     /** The newly created page — or the replaced one, see below */
@@ -1356,10 +1354,6 @@ export interface AuditEventDataByType {
     readScopePositionId: string | null;
     editScope: string;
     editScopePositionId: string | null;
-    /**
-     * Absent only on dev rows written mid-branch, before the feedback round
-     * added the uploadability tiers to event pages
-     */
     imageUploadability?: string;
     attachmentUploadability?: string;
   };
@@ -1384,7 +1378,7 @@ export interface AuditEventDataByType {
   [AuditEventType.WIKI_PAGE_ROLE_ACCESS_PRUNED]: {
     pageId: string;
     removedRoleIds: string[];
-    /** DUPLICATED only occurs on events from before mirroring was removed */
+    /** No code writes DUPLICATED */
     trigger: "PERMISSIONS_UPDATED" | "DUPLICATED";
   };
 

@@ -36,7 +36,7 @@ export interface ListOwnSessionsOptions {
 
 export interface OwnSession {
   readonly id: string;
-  /** Null for a session that predates the column */
+  /** Null when it is unknown */
   readonly createdAt: Date | null;
   readonly userAgent: string | null;
   readonly expires: Date;
@@ -81,9 +81,8 @@ export const listOwnSessions = async (
       ...getExpiresFilter(input.status, now),
     },
     /**
-     * Sessions predating the `createdAt` column sort last regardless of the
-     * direction: an unknown creation date cannot be ordered against a known
-     * one. `id` breaks the ties they have among each other.
+     * Sessions without `createdAt` sort last regardless of the direction: an
+     * unknown creation date cannot be ordered against a known one. `id` breaks the ties they have among each other.
      */
     orderBy: [
       {

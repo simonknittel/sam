@@ -29,7 +29,7 @@ test("the log renders its events and the filters narrow the table", async ({
     data: [
       /**
        * An older event by another user, to give the filters something to
-       * drop. Old events hold their data as a JSON string.
+       * drop. Some stored events hold their data as a JSON string.
        */
       {
         type: "MANUFACTURER_CREATED",

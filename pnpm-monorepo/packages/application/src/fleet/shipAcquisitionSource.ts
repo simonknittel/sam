@@ -14,7 +14,7 @@ export enum AcquisitionSourceFilter {
   All = "all",
   Store = "store",
   InGame = "in_game",
-  /** Only the ships from before the app recorded the acquisition source */
+  /** Only the ships without an acquisition source */
   Unknown = "unknown",
 }
 

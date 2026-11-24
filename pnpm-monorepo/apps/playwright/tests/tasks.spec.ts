@@ -649,8 +649,7 @@ test("the dashboard shows its task tiles exactly to those with task permission",
   await signIn(outsider.user);
   await page.goto("/app/dashboard");
 
-  // Regression test for the ungated tiles that called forbidden(): the page
-  // must render with the task tiles hidden instead of being redacted
+  // The page must render with the task tiles hidden, not as a 403
   await expect(page.getByRole("heading", { name: "Spynet" })).toBeVisible();
   await expect(page.getByText(FORBIDDEN_TEXT)).not.toBeVisible();
   await expect(page.getByText("Meine Tasks")).toHaveCount(0);

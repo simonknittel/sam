@@ -747,8 +747,8 @@ test.describe("the event write tools of the MCP server", () => {
       (await authorizeMcpClient(organizer.user)).accessToken,
     );
 
-    // The MCP server cannot reach Discord, thus the Discord event would keep
-    // the old data
+    // Only the web app syncs an event with Discord, thus the Discord event
+    // would keep the old data
     expect(
       await callForError(client, "delete_event", {
         event_id: publishedEvent.id,

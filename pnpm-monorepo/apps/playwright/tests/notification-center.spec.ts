@@ -107,7 +107,7 @@ test("a birthday greeting reads its wording", async ({
       body: "Zum Geburtstag wünschen wir dir nur das Beste und immer volle Tanks.",
     },
   });
-  /** A greeting from before the greeting picked a wording at random */
+  /** A greeting without a wording */
   await createOnSiteNotification(prisma, {
     citizenId: citizen.entity.id,
     notificationType: "birthday",

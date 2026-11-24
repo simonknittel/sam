@@ -108,7 +108,7 @@ export interface AuditEventOutput {
   /** True for an event of an action through the MCP server */
   readonly triggered_via_mcp: boolean;
   /**
-   * The payload as the app stored it. Older rows store it JSON-encoded as a
+   * The payload as the app stored it. Some rows store it JSON-encoded as a
    * string.
    */
   readonly data: unknown;

@@ -63,13 +63,13 @@ model Event {
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  /// The creating citizen of app events; backfilled for Discord events
-  /// whose Discord creator matches a citizen's Discord id.
+  /// The creating citizen of app events, and of Discord events whose Discord
+  /// creator matches a citizen's Discord id.
   createdById String?
   createdBy   Citizen? @relation("createdEvents", fields: [createdById], references: [id], onDelete: SetNull)
 
   /// Soft delete for app events. Discord events cancelled on Discord are
-  /// hard-deleted by the sync, like before the unification.
+  /// hard-deleted by the sync.
   deletedAt   DateTime? @db.Timestamptz(3)
   deletedById String?
   deletedBy   Citizen?  @relation("deletedEvents", fields: [deletedById], references: [id], onDelete: SetNull)

@@ -76,9 +76,8 @@ const getUsageWhere = (usage: UploadUsageType): Prisma.UploadWhereInput =>
 
 /**
  * The file names are stored URI-encoded, thus a search for "Mein Bild" must
- * also find "Mein%20Bild". The condition matches both forms: the encoded
- * form for the stored convention, the raw form for the older rows and for a
- * search without a character that the encoding changes.
+ * also find "Mein%20Bild". The condition matches both forms: some rows hold
+ * the raw form.
  */
 const getFileNameWhere = (query: string): Prisma.UploadWhereInput => ({
   OR: [

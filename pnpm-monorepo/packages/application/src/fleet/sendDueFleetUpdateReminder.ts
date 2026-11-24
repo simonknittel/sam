@@ -13,10 +13,10 @@ export interface SendDueFleetUpdateReminderInput {
 
 /**
  * The last change of the citizen to their own ships. Each write of a ship
- * sets `updatedAt`, also the delete. The ships from before these columns
- * have only `createdAt`. The first login (`welcomedAt`) counts as a change,
- * thus the time of a citizen without ships starts with it. Null for a
- * citizen without ships and without a login.
+ * sets `updatedAt`, also the delete. Some ships have only `createdAt`. The
+ * first login (`welcomedAt`) counts as a change, thus the time of a citizen
+ * without ships starts with it. Null for a citizen without ships and without
+ * a login.
  */
 const findLastFleetChange = async (
   context: ApplicationContext,

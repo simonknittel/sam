@@ -44,8 +44,8 @@ const permissionsFor = (
   );
 
 /**
- * The sidebar's default view as the server built it before: the tree of
- * the pages that the sidebar mode keeps — and as the client derives it now.
+ * The sidebar's default view: the tree of the pages that the sidebar mode
+ * keeps, and the tree that the client derives
  */
 const expectSameDefaultTree = (
   pages: readonly TestPage[],

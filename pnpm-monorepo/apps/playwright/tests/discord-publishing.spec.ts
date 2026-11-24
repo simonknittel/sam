@@ -575,8 +575,8 @@ test("the owner switches a template's publishing on and picks its channel", asyn
 
   /**
    * The form keeps showing what was just saved. React puts a form back to
-   * its default values after the action, which used to leave the checkbox,
-   * the target and the channel saying something else than the database.
+   * its default values after the action, but the checkbox, the target and the
+   * channel must agree with the database.
    */
   await expect(
     page.getByLabel("Auf Discord veröffentlichen", { exact: true }),

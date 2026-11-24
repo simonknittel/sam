@@ -5,5 +5,5 @@ export const ACQUISITION_SOURCE_LABEL = {
   [ShipAcquisitionSource.IN_GAME]: "In-game",
 } as const satisfies Record<ShipAcquisitionSource, string>;
 
-/** The label of the ships from before the app recorded the acquisition source */
+/** The label of the ships without an acquisition source */
 export const UNKNOWN_ACQUISITION_SOURCE_LABEL = "Nicht angegeben";

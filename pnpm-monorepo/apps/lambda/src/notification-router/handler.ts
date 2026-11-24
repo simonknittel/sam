@@ -217,6 +217,10 @@ export const notificationRouterHandler = async (
  */
 const MAXIMUM_EVENT_ITEM_COUNT = 10_000;
 
+/**
+ * The app and this function deploy independently (see docs/releasing.md),
+ * thus a field that one side adds must be optional here.
+ */
 export const bodySchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("EventCreated"),
@@ -224,8 +228,7 @@ export const bodySchema = z.discriminatedUnion("type", [
       eventId: z.cuid(),
       /**
        * The citizen who caused the notification gets none. Null when no
-       * citizen caused it, for example the Discord sync. An older app does
-       * not send it.
+       * citizen caused it, for example the Discord sync.
        */
       actorCitizenId: z.cuid().nullable().optional(),
     }),
@@ -238,8 +241,7 @@ export const bodySchema = z.discriminatedUnion("type", [
       eventId: z.cuid(),
       /**
        * The citizen who caused the notification gets none. Null when no
-       * citizen caused it, for example the Discord sync. An older app does
-       * not send it.
+       * citizen caused it, for example the Discord sync.
        */
       actorCitizenId: z.cuid().nullable().optional(),
     }),
@@ -265,8 +267,7 @@ export const bodySchema = z.discriminatedUnion("type", [
       eventId: z.cuid(),
       /**
        * The citizen who caused the notification gets none. Null when no
-       * citizen caused it, for example the Discord sync. An older app does
-       * not send it.
+       * citizen caused it, for example the Discord sync.
        */
       actorCitizenId: z.cuid().nullable().optional(),
     }),
@@ -279,7 +280,7 @@ export const bodySchema = z.discriminatedUnion("type", [
       eventId: z.cuid(),
       /**
        * The citizen who caused the notification gets none. Null when the
-       * actor has no citizen. An older app does not send it.
+       * actor has no citizen.
        */
       actorCitizenId: z.cuid().nullable().optional(),
     }),
@@ -429,7 +430,7 @@ export const bodySchema = z.discriminatedUnion("type", [
       eventId: z.cuid(),
       /**
        * The citizen who caused the notification gets none. Null when the
-       * actor has no citizen. An older app does not send it.
+       * actor has no citizen.
        */
       actorCitizenId: z.cuid().nullable().optional(),
     }),

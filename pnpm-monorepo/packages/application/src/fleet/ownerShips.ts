@@ -50,12 +50,12 @@ export interface ShipOutput {
   readonly id: string;
   /** The name that the owner gave the ship */
   readonly name: string | null;
-  /** Null for the ships from before the app recorded the acquisition source */
+  /** Null when the acquisition source is unknown */
   readonly acquisition_source: AcquisitionSource | null;
   /** The note of the owner about the ship */
   readonly note: string | null;
   readonly variant: ShipVariantOutput;
-  /** Null for the ships from before the app recorded the time */
+  /** Null when the time is unknown */
   readonly created_at: string | null;
   readonly deleted_at: string | null;
 }

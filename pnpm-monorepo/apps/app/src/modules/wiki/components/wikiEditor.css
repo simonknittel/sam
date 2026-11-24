@@ -913,7 +913,7 @@
    Same for the mark inside a small block. WikiTextOnlyBlockGuard strips
    that combination, but only in editable sessions — read-only editors and
    the static renderer never dispatch its fix-up, so content that acquired
-   it elsewhere (import, an older app version) would compound here. */
+   it elsewhere (for example through an import) would compound here. */
 .prose [data-text-size="small"] [data-text-size="small"],
 .prose [data-text-size="small"] small {
   font-size: 1em;

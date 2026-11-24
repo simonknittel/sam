@@ -6,15 +6,14 @@ services:
   # PostgreSQL with TimescaleDB, like the servers (see
   # docs/setup-local-machine.md). The Playwright stack and the integration
   # tests of the application package use the same image and options.
-  # Exception to the rule of 7 days (decision of the owner, 2026-11-21): this
-  # version has PostgreSQL 18.7. The earlier version has 18.6, without the
-  # security fixes of 18.7, and 18.6 refuses column options that 18.7 writes.
+  # Do not use a version below PostgreSQL 18.7: 18.6 refuses column options
+  # that 18.7 writes.
   psql:
     image: timescale/timescaledb:2.32.1-pg18@sha256:70e6526ad8e31e3f4833f2c5863b50b92d7a6bee4d432ad1f660e2c6dd956d94
     restart: no
     # The image writes shared_preload_libraries into postgresql.conf only when
-    # it makes a new data folder. The command line also loads TimescaleDB for
-    # a data folder of the earlier postgres image.
+    # it makes a new data folder. The command line loads TimescaleDB for each
+    # data folder.
     command:
       - postgres
       - -c
@@ -25,8 +24,8 @@ services:
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: db
       # Without this, the image tunes a new data folder for all the memory of
-      # the host (for example shared_buffers). The PostgreSQL defaults stay,
-      # like for an earlier data folder.
+      # the host (for example shared_buffers). With it, the PostgreSQL defaults
+      # stay.
       NO_TS_TUNE: "true"
     ports:
       - ${SAM_PSQL_PORT:-5432}:5432
@@ -245,8 +244,7 @@ services:
   # must run as a superuser (locally postgres, which also applies the
   # migrations, thus it owns the views). Safe to re-run.
   # It runs before the migrations. Thus it makes the schema and the extension
-  # timescaledb itself (the migrations then find them): a data folder of the
-  # earlier postgres image does not have the extension yet.
+  # timescaledb itself (the migrations then find them).
   grafana-bootstrap:
     image: postgres:18.7-alpine3.23@sha256:f3ee138d5fce80ffaeb315b8bea7610f0c4f2304fb2aceb4ec8e457b92fc41a0
     restart: no

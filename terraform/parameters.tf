@@ -7,11 +7,10 @@
 # mirrors the current values into its (S3) state on refresh — that is
 # inherent to aws_ssm_parameter.
 #
-# The import blocks adopt the parameters which already existed before this
-# file; they are no-ops once the resources are in the state. The `type` of
-# each imported parameter mirrors what the account showed at import time —
-# a plan proposing a REPLACE for one of them means the type diverges and
-# must be corrected here first (a replace would wipe the value).
+# The import blocks are no-ops while the resources are in the state. When a
+# plan proposes a REPLACE of a parameter, its `type` here is different from the
+# type in the account: correct it here first, because a replace wipes the
+# value.
 
 import {
   to = aws_ssm_parameter.database_connection_string
@@ -34,10 +33,7 @@ import {
 }
 
 resource "aws_ssm_parameter" "discord_bot_token" {
-  name = "/discord/bot_token"
-  # Deliberately diverges from the pre-import state (String): the token is a
-  # secret and gets re-encrypted on first apply — an in-place update that
-  # rewrites the imported (real) value, not the placeholder.
+  name  = "/discord/bot_token"
   type  = "SecureString"
   value = "PLACEHOLDER"
 
@@ -151,9 +147,9 @@ resource "aws_ssm_parameter" "web_push_private_vapid_key" {
   }
 }
 
-# Soketi connection for realtime on-site notifications. New parameters (no
-# import) and optional for the notification-router Lambda: placeholder
-# values are treated as unset and realtime publishing is skipped.
+# Soketi connection for realtime on-site notifications. Optional for the
+# notification-router Lambda: placeholder values are treated as unset and
+# realtime publishing is skipped.
 
 resource "aws_ssm_parameter" "soketi_app_id" {
   name  = "/soketi/app_id"

@@ -82,8 +82,8 @@ export const findOwnLogAnalyzerEntryHashPage = async (
 /**
  * The hashes of the entries of the rolling window which the citizen of the
  * actor already shared. The client hashes what it parsed from the local log
- * files and sends only what is missing here, so a page load no longer offers
- * the whole window to the server again.
+ * files and sends only what is missing here, so a page load does not send the
+ * whole window again.
  */
 export const findOwnLogAnalyzerEntryHashes = (
   context: ApplicationContext,

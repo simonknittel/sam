@@ -3,8 +3,7 @@ import { ACTIVE_CITIZEN_WHERE, hasReachedMaxLevel } from "@sam-monorepo/domain";
 
 /**
  * The role assignments that can get a salary: only the direct assignments
- * of citizens that are not deleted, not the inherited roles (decision of
- * 2026-09-27)
+ * of citizens that are not deleted, not the inherited roles
  */
 const SALARY_ASSIGNMENTS_ARGS = {
   where: { citizen: ACTIVE_CITIZEN_WHERE },

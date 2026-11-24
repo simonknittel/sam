@@ -43,12 +43,9 @@ export const createS3Client = (options: S3ClientOptions): S3Client =>
         : options.endpoint,
     forcePathStyle: "endpoint" in options,
     /*
-     * Since the data integrity protections of the SDK (3.729.0), presigned
-     * PUT URLs embed a CRC32 checksum of the empty command body. R2 ignores
-     * it, but stricter S3-compatible providers reject the actual upload body
-     * of the browser with BadDigest. WHEN_REQUIRED restores the previous
-     * behavior — the recommended setting for S3-compatible providers,
-     * including R2.
+     * With the default of the SDK, presigned PUT URLs embed a CRC32 checksum
+     * of the empty command body. R2 ignores it, but stricter S3-compatible
+     * providers reject the actual upload body of the browser with BadDigest.
      */
     requestChecksumCalculation: "WHEN_REQUIRED",
     responseChecksumValidation: "WHEN_REQUIRED",

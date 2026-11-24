@@ -2,7 +2,7 @@ model Upload {
   id                    String                   @id @default(cuid())
   fileName              String
   mimeType              String
-  /// File size in bytes. NULL for uploads created before this column existed.
+  /// File size in bytes. NULL when it is unknown.
   size                  Int?
   /// Intrinsic image width in pixels, after EXIF orientation. Probed
   /// server-side after upload. NULL for non-images and for uploads whose

@@ -98,7 +98,7 @@ model Ship {
   variantId         String
   variant           Variant                @relation(fields: [variantId], references: [id], onDelete: Cascade)
   name              String?
-  /// NULL for the ships from before the app recorded the acquisition source
+  /// NULL when it is unknown. The app requires it for a new ship.
   acquisitionSource ShipAcquisitionSource?
   note              String?
 

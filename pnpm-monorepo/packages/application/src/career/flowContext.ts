@@ -12,9 +12,8 @@ import type { ApplicationContext } from "../context.js";
 import { idSchema } from "../pagination.js";
 
 /**
- * The id of a flow. The flows before the migration of 2026-08-21
- * (`20260821100000_career_flow_management`) keep the UUID that the migration
- * gave them. The flows after it have a cuid2.
+ * The id of a flow: a cuid2, but some flows of the production database have a
+ * UUID
  */
 export const flowIdSchema = z.union([idSchema, z.uuid()]);
 

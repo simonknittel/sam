@@ -45,7 +45,7 @@ Four modules are adapters of the packages, not features:
 
 Each feature module has a thin wrapper per query or action: it builds the actor from the session, calls the use case, and does the app-specific parts (React `cache()`, `FormData` parsing, translations, `refresh()`, `forbidden()`). The standard action wrapper is `createUseCaseAction()` of the composition root.
 
-**The Prisma rule.** Only the composition root (`modules/application`) and the auth zone (`modules/auth/server`: the next-auth adapter and the session callback) use the Prisma client. The ESLint configuration object `use-cases-only` in `apps/app/eslint.config.mjs` enforces this in all of `src/**`: it forbids the `prisma` client and the `PrismaClient` class of `@sam-monorepo/database` and the package `@prisma/client`. Types from `@sam-monorepo/database/client` and enums from `@sam-monorepo/database/browser` are permitted. The tRPC context has no Prisma client (the procedures call use cases), and the path alias `@/db` has no file. The typecheck of the app fails on `ctx.prisma` and on an import of `@/db`.
+**The Prisma rule.** Only the composition root (`modules/application`) and the auth zone (`modules/auth/server`: the next-auth adapter and the session callback) use the Prisma client. The ESLint configuration object `use-cases-only` in `apps/app/eslint.config.mjs` enforces this in all of `src/**`: it forbids the `prisma` client and the `PrismaClient` class of `@sam-monorepo/database` and the package `@prisma/client`. Types from `@sam-monorepo/database/client` and enums from `@sam-monorepo/database/browser` are permitted.
 
 ### Inside the Lambda functions
 

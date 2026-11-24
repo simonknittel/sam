@@ -58,8 +58,7 @@ model OAuthGrant {
   /// The host of the redirect URI at the time of the consent.
   redirectHost         String
   /// The user agent of the browser that gave the consent. It helps the user
-  /// to identify two grants of the same client. NULL for the grants from
-  /// before this column.
+  /// to identify two grants of the same client. NULL when it is unknown.
   userAgent            String?
   scope                String
   resource             String

@@ -10,7 +10,7 @@ export enum UploadCategory {
  * as an image. Everyone can read an upload directly from the bucket, and the
  * bucket serves the stored type as the `Content-Type`.
  *
- * SVG is in the list on purpose (accepted risk, 2026-11-03): an SVG that a
+ * SVG is in the list on purpose (accepted risk): an SVG that a
  * user opens directly from the bucket can execute scripts on the origin of
  * the bucket, not on the origin of the app. The app shows an SVG only in an
  * `<img>` or through the image optimizer with a sandbox policy, where it

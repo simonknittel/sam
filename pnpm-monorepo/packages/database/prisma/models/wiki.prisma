@@ -380,8 +380,8 @@ model WikiPageCitizenMention {
 
   createdAt   DateTime @default(now()) @db.Timestamptz(3)
   /// The editor whose save introduced the mention (the storing connection's
-  /// editor, so best-effort within one debounced save). NULL for backfilled
-  /// rows.
+  /// editor, so best-effort within one debounced save). NULL when it is
+  /// unknown.
   createdById String?
   createdBy   Citizen? @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
 
@@ -389,9 +389,8 @@ model WikiPageCitizenMention {
   notifiedAt   DateTime? @db.Timestamptz(3)
   /// Set when the row was consumed without sending a notification:
   /// programmatic /replace writes (snapshot restores, imports, paste
-  /// transplants), self-mentions, the backfill of pre-existing mentions, and
-  /// mentions that fail the read-permission gate or are on a trashed page at
-  /// send time.
+  /// transplants), self-mentions, and mentions that fail the read-permission
+  /// gate or are on a trashed page at send time.
   suppressedAt DateTime? @db.Timestamptz(3)
 
   @@unique([pageId, citizenId])

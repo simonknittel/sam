@@ -556,9 +556,8 @@ const server = new Server<ConnectionContext>({
       Y.applyUpdate(data.document, new Uint8Array(page.ydoc));
     } else if (page.content) {
       /**
-       * First collab session of a page that predates collaboration: seed
-       * the Yjs document from the stored content JSON. Persisted by the
-       * next onStoreDocument.
+       * First collab session of a page without a Yjs document: seed it from
+       * the stored content JSON. Persisted by the next onStoreDocument.
        */
       const seeded = prosemirrorJSONToYDoc(
         editorSchema,

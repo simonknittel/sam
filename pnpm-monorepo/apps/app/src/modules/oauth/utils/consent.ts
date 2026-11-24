@@ -120,8 +120,7 @@ const MAXIMUM_DISABLED_TOOL_NAMES = 200;
 
 /**
  * The fields of the approve form: the fields of the request and the settings
- * of the new grant. A form of a page from before these settings has no
- * name.
+ * of the new grant
  */
 export const approveFormSchema = consentFormSchema.extend({
   custom_name: grantCustomNameSchema.optional(),

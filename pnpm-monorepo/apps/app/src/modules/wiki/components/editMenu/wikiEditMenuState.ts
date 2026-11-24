@@ -207,7 +207,7 @@ const isTopLevel = (editor: Editor, position: number): boolean =>
 
 /**
  * The menu's width value: a pixel number, or NULL for full width (both
- * the explicit WIKI_FULL_WIDTH marker and the stripped/legacy NULL).
+ * the explicit WIKI_FULL_WIDTH marker and a stripped NULL).
  */
 const menuWidthPx = (node: ProseMirrorNode): number | null => {
   const value: unknown = node.attrs.widthPx;

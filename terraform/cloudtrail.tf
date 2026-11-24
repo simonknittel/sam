@@ -117,8 +117,7 @@ resource "aws_s3_bucket_policy" "cloudtrail" {
   policy = data.aws_iam_policy_document.cloudtrail_bucket.json
 }
 
-# The statement IDs match the ones the AWS console generated when the trail was
-# created so the imported policy produces no diff.
+# The AWS console generated the statement IDs
 data "aws_iam_policy_document" "cloudtrail_bucket" {
   statement {
     sid    = "AWSCloudTrailAclCheck20150319-1d417618-5896-4bb9-bb05-f486c4ac2061"

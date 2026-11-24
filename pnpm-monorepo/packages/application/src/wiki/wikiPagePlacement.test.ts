@@ -30,8 +30,7 @@ describe("resolveWikiPagePlacement", () => {
   });
 
   test("rejects a page the viewer only reads or edits", () => {
-    // Edit and read both resolve to canAdmin false — the tier that used to
-    // be enough here and is exactly what this check closes off.
+    // Edit and read both resolve to canAdmin false
     expect(
       resolveWikiPagePlacement(
         context([{ id: "target", canAdmin: false }]),

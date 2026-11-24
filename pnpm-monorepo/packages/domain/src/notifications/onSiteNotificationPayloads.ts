@@ -37,9 +37,8 @@ const positionNamesSchema = z
   .check(z.maxLength(LINEUP_MAX_POSITIONS));
 
 /**
- * `positionNames` are the positions of the receiver at the publication. The
- * field is optional and the version stays 1, because the addition does not
- * break the older rows (see the birthday greeting).
+ * `positionNames` are the positions of the receiver at the publication. Some
+ * stored rows do not have the field.
  */
 export const eventLineupEnabledPayloadSchema = z.object({
   eventId: z.string(),
@@ -315,9 +314,8 @@ const BIRTHDAY_BODY_MAX_LENGTH = 200;
  * picked for this citizen, so that the on-site row shows the same text as
  * the web push notification.
  *
- * Both fields are optional and the version stays 1, because the addition
- * does not break the older rows: their empty payload still parses, and the
- * app falls back to `BIRTHDAY_FALLBACK_WORDING`.
+ * Some stored rows do not have the two fields. The app then shows
+ * `BIRTHDAY_FALLBACK_WORDING`.
  */
 export const birthdayPayloadSchema = z.object({
   title: z.optional(z.string().check(z.maxLength(BIRTHDAY_TITLE_MAX_LENGTH))),

@@ -27,7 +27,7 @@ export enum AcquisitionSourceParameter {
   All = "all",
   Store = "store",
   InGame = "in_game",
-  /** The ships from before the app recorded the acquisition source */
+  /** The ships without an acquisition source */
   Unknown = "unknown",
 }
 

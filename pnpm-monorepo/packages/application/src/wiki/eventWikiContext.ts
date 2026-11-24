@@ -85,7 +85,7 @@ export interface EventWikiContext {
   pagesById: Map<string, EventWikiContextPage>;
   /**
    * The single top-level "Briefing" page: the briefing's homepage and the
-   * gate — events without one (created before the feature) have no wiki.
+   * gate — events without one have no wiki.
    */
   rootPage: EventWikiContextPage | null;
   /** Effective permissions of the current viewer for every page */

@@ -27,7 +27,7 @@ export const EventLineupEnabledHandler = async (
       const notificationPayload = {
         eventId: result.event.id,
         eventName: result.event.name,
-        // Without positions, the field is missing like in the older rows
+        // Without positions, the field is missing (it is optional)
         ...(recipient.positionNames.length > 0
           ? { positionNames: recipient.positionNames }
           : {}),
