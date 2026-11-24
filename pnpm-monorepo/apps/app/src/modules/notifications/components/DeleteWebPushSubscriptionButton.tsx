@@ -19,7 +19,6 @@ export const DeleteWebPushSubscriptionButton = ({
     useWebPushBrowser();
   const isCurrentBrowser = subscriptionId === currentSubscriptionId;
 
-  /** This browser also removes its own push subscription */
   const action = async (formData: FormData) => {
     const response = await deleteWebPushSubscription(formData);
     if (isCurrentBrowser && !("error" in response))

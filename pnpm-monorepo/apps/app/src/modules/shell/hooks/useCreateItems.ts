@@ -28,10 +28,6 @@ interface ModalCreateItemCandidate extends Omit<ModalCreateItem, "type"> {
   readonly isAllowed: boolean;
 }
 
-/**
- * The items of the "Neu" menu that the user is allowed to use. The top bar,
- * the mobile flyout and the CmdK menu show these items.
- */
 export const useCreateItems = (): CreateItem[] => {
   const authentication = useAuthentication();
   const { apps } = useAppsContext();

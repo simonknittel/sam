@@ -21,10 +21,7 @@ import * as z from "zod";
 /** The empty marker the cover field submits when no image is selected */
 const NO_COVER = "";
 
-/**
- * The use case takes the details. The cover image is only in the app: without
- * it, the cover stays.
- */
+/** Without the cover image, the cover stays */
 const schema = updateEventTemplateInputSchema.extend({
   coverImageId: z.union([idSchema, z.literal(NO_COVER)]).optional(),
 });

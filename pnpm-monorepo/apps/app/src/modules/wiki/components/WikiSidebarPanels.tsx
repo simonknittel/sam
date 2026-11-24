@@ -16,20 +16,12 @@ import { WikiSidebarFavorites } from "./WikiSidebarFavorites";
 import { WikiSidebarTree } from "./WikiSidebarTree";
 
 interface Props {
-  /** The scope's not-deleted pages — favourites are intersected with them */
   readonly pages: readonly WikiSharedContextPage[];
   readonly permissions: ReadonlyMap<string, WikiPageTierPermissions>;
-  /** Determines the page links and which scope's cookies persist the state */
   readonly hrefMode: WikiPageHrefMode;
-  /** Extra panel below the tree, e.g. the event wiki's trash link */
   readonly footer?: ReactNode;
 }
 
-/**
- * The search, favourites and page tree panels every wiki sidebar consists
- * of: the global wiki's, the event briefings' and the variant embeds' — the
- * scope only decides which pages, links and cookies feed them.
- */
 export const WikiSidebarPanels = async ({
   pages,
   permissions,
@@ -53,7 +45,6 @@ export const WikiSidebarPanels = async ({
     filterWikiPagesBySidebarMode(pages).map((page) => page.id),
   );
   const tree = buildVisibleWikiTree(pages, permissions);
-  /** Readable pages the sidebar mode hides — revealable via the tree's toggle */
   const sidebarHiddenPageIds = pages
     .filter(
       (page) =>

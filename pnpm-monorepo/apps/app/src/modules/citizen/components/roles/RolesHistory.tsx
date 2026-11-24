@@ -26,7 +26,6 @@ export const RolesHistory = async ({
   entity,
   searchParams,
 }: Props) => {
-  /** Nothing this section could ever show, so it stays away entirely */
   const visibleRoles = await getVisibleRoles();
   if (visibleRoles.length === 0) return null;
 

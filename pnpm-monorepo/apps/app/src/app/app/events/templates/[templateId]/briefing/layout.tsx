@@ -13,10 +13,6 @@ import { createEventWikiHrefMode } from "@/modules/wiki/utils/wikiPageHref";
 import { notFound } from "next/navigation";
 import { FaSitemap } from "react-icons/fa";
 
-/**
- * Shell of a template's briefing blueprint — the same wiki-style sidebar
- * layout the event briefing uses, pointed at the template routes.
- */
 export default async function Layout({
   children,
   params,
@@ -30,8 +26,7 @@ export default async function Layout({
   const context = await getEventWikiContext(container);
 
   /**
-   * Unlike an event briefing this gate never hides anything from someone who
-   * may read the template — the ACL already decided that — it only catches
+   * The ACL of the template already decided the access: this only catches
    * templates whose root page is missing.
    */
   if (!context || !hasReadableEventWikiRoot(context)) notFound();

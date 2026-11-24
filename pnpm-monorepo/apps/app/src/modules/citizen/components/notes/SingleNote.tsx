@@ -42,7 +42,6 @@ export const SingleNote = async ({ note }: Props) => {
   const isUnconfirmed = note.confirmed === null;
   const isFalseReport = note.confirmed === ConfirmationStatus.FALSE_REPORT;
   const authorizationAttributes = getNotePermissionAttributes(note);
-  /** The client components get only the fields that they read */
   const log = { id: note.id, citizenId: note.citizenId };
 
   let content: ReactNode = note.content;

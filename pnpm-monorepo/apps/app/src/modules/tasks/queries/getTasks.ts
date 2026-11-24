@@ -20,16 +20,11 @@ const CLOSED_TASKS_PAGE_SIZE = 20;
 
 interface TasksPage {
   readonly tasks: TaskListRow[];
-  /** The listed tasks which are new for the viewer */
   readonly newTaskIds: ReadonlySet<string>;
   readonly nextCursor: string | null;
   readonly prevCursor: string | null;
 }
 
-/**
- * The tasks list of the app: all open tasks on one page, the closed tasks
- * in pages (see `findTaskListPage`)
- */
 export const getTasks = cache(
   withTrace(
     "getTasks",

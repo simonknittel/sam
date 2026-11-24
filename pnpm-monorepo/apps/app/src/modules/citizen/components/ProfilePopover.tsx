@@ -25,11 +25,6 @@ const ProfileContent = dynamic(loadProfileContent, {
   loading: () => <ProfileLoading />,
 });
 
-/**
- * The state of a popover with the profile of a citizen: the data and the
- * code of the profile load only when the popover opens. Give `isOpen` and
- * `handleOpenChange` to the popover, and `query` to `ProfilePopoverContent`.
- */
 export const useProfilePopover = (citizenId: Citizen["id"]) => {
   const [isOpen, setIsOpen] = useState(false);
   const query = api.citizens.getCitizenById.useQuery(
@@ -42,7 +37,6 @@ export const useProfilePopover = (citizenId: Citizen["id"]) => {
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
 
-    // Load the code of the profile at the same time as its data
     if (open) void loadProfileContent();
   };
 

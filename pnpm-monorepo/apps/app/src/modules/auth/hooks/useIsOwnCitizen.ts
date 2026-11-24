@@ -2,7 +2,6 @@
 
 import { useAuthentication } from "./useAuthentication";
 
-/** Whether the citizen is the citizen of the signed-in user */
 export const useIsOwnCitizen = (citizenId: string | undefined) => {
   const authentication = useAuthentication();
 

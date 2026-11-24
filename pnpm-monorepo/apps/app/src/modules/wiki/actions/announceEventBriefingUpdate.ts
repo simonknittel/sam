@@ -7,7 +7,6 @@ import {
 } from "@sam-monorepo/application";
 import { WIKI_ERROR_TEXTS } from "../utils/wikiErrorTexts";
 
-/** See `announceEventBriefingUpdate()` of the application */
 export const announceEventBriefingUpdate = createUseCaseAction({
   name: "announceEventBriefingUpdate",
   schema: announceEventBriefingUpdateInputSchema,

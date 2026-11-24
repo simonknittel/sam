@@ -16,7 +16,6 @@ import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 const isEmptyParagraph = (node: JSONContent | undefined): boolean =>
   node?.type === "paragraph" && !node.content?.length;
 
-/** The document without its trailing empty paragraph, for the static render */
 export const withoutWikiTrailingEmptyParagraph = (
   content: JSONContent,
 ): JSONContent => {

@@ -26,13 +26,8 @@ import {
 import { EVENT_ERROR_TEXTS } from "../utils/eventErrorTexts";
 import { parseEventDetailsFormData } from "../utils/eventFormData";
 
-/**
- * The use case takes the details. The cover image, the template and the
- * Discord publication are only in the app.
- */
 const schema = createEventInputSchema.extend({
   coverImageId: idSchema.optional(),
-  /** Set when the form was prefilled from a template (see the picker) */
   templateId: idSchema.optional(),
   /**
    * The prefilled cover comes from the template and is not an upload of the
@@ -40,9 +35,8 @@ const schema = createEventInputSchema.extend({
    */
   keepTemplateCover: z.boolean().optional(),
   /**
-   * Publishes the new event to Discord right after creation. Absent means
-   * "do not publish"; a template's preference reaches the action by
-   * prefilling these fields, so clearing them in the form still wins.
+   * Absent means "do not publish". A template's preference reaches the action
+   * by prefilling these fields, so clearing them in the form still wins.
    */
   ...discordPublishFieldsShape,
 });
@@ -113,7 +107,6 @@ export const createEvent = createAuthenticatedAction(
   {
     parseFormData: (formData) => ({
       ...parseEventDetailsFormData(formData),
-      // The checkbox sends a value only while it is checked
       participation_enabled: formData.get("participationEnabled") === "true",
       application_required: formData.get("applicationRequired") === "true",
       coverImageId: formData.get("coverImageId") || undefined,

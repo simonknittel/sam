@@ -19,11 +19,10 @@ interface QuickLook {
 }
 
 /**
- * The types of the quick look, which shows only these types in the table.
  * Not stored: a reload shows the types of the settings again.
  *
- * A context of its own, because each row of the table reads it: a change of
- * the other settings must not render the memoized rows again.
+ * A context of its own, because each row of the table reads it: a change of the
+ * other settings must not render the memoized rows again.
  */
 export const QuickLookContext = createContext<QuickLook | undefined>(undefined);
 

@@ -12,8 +12,8 @@ export interface UploadEntry {
   readonly type: LogAnalyzerEntryType;
   readonly rawLine: string;
   /**
-   * The time of the event, only for a type whose lines carry no time of
-   * their own. See `takesTimeOfPrecedingLine` of the domain package.
+   * Only for a type whose lines carry no time of their own. See
+   * `takesTimeOfPrecedingLine` of the domain package.
    */
   readonly eventAt?: string;
   readonly lineNumber: number;

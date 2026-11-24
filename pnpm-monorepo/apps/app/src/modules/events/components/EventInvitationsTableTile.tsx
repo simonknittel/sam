@@ -122,7 +122,6 @@ interface Props {
   readonly searchParams: Promise<SearchParams>;
 }
 
-/** The open invitations, and the declined ones of citizens who did not sign up */
 export const EventInvitationsTableTile = async ({
   className,
   event,

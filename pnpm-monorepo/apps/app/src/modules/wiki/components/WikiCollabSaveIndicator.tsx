@@ -22,11 +22,9 @@ interface Props {
 }
 
 /**
- * Save state of the collaborative editor. The collab server is the
- * authority — it broadcasts dirty/saving/saved around its debounced
- * database store (see apps/collab) — with local changes the server hasn't
- * received layered on top. Clicking asks the server to persist pending
- * changes immediately.
+ * The collab server is the authority — it broadcasts dirty/saving/saved around
+ * its debounced database store (see apps/collab) — with local changes the
+ * server hasn't received layered on top.
  */
 export const WikiCollabSaveIndicator = ({
   className,

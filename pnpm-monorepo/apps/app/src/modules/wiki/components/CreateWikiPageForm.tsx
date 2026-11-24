@@ -19,7 +19,6 @@ import { WikiPageSelect } from "./WikiPageSelect";
 import { useReloadWikiPageTargetsAfterError } from "./WikiPageTargetsLoader";
 
 interface Props {
-  /** Visible pages the viewer manages */
   readonly targets: WikiPageTargetOption[];
   readonly allowTopLevel: boolean;
   readonly defaultParentId?: string;
@@ -28,11 +27,6 @@ interface Props {
   readonly onSuccess?: () => void;
 }
 
-/**
- * Form for creating a new page with a parent select representing the page
- * hierarchy, optionally starting as a copy of a readable page. On success
- * the action redirects to the new page.
- */
 export const CreateWikiPageForm = ({
   targets,
   allowTopLevel,
@@ -40,7 +34,6 @@ export const CreateWikiPageForm = ({
   container,
   onSuccess,
 }: Props) => {
-  /** Inside a variant embed the action redirects back into the embed */
   const { variantId } = useWikiPageHrefMode();
   const [chosenParentId, setParentId] = useState(() =>
     chooseWikiParentId(targets, allowTopLevel, defaultParentId),
@@ -52,18 +45,15 @@ export const CreateWikiPageForm = ({
   const copySourceSelectId = useId();
   const [copyChildren, setCopyChildren] = useState(true);
 
-  /**
-   * Options of the "copy from" select. Fetched lazily: the form only mounts
-   * while the modal is open.
-   */
+  /** Fetched lazily: the form only mounts while the modal is open */
   const { data: copySourceTargets } = api.wiki.getPageTargets.useQuery({
     permission: "read",
     container,
   });
 
   /**
-   * A successful creation redirects to the new page; onSuccess closes the
-   * modal so it isn't still open after the navigation.
+   * A successful creation redirects: without `onSuccess` the modal would still
+   * be open after the navigation.
    */
   const { state, formAction } = useAction(
     useReloadWikiPageTargetsAfterError(createWikiPage),

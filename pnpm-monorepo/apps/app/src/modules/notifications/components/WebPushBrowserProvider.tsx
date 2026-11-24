@@ -13,16 +13,13 @@ import toast from "react-hot-toast";
 import { deleteWebPushSubscription } from "../actions/deleteWebPushSubscription";
 import { subscribeWebPush } from "../actions/subscribeWebPush";
 
-/** The state of web push in the browser that shows the page */
 export enum WebPushBrowserStatus {
   Checking = "checking",
-  /** The browser has no push API, e.g. Safari on iOS outside a web app */
+  /** For example Safari on iOS outside of a web app */
   Unsupported = "unsupported",
   /** The app has no VAPID key */
   Unavailable = "unavailable",
-  /** The user blocked the notifications in the browser */
   Blocked = "blocked",
-  /** The browser did not ask the user for the permission yet */
   PermissionRequired = "permission_required",
   /** The permission is given, but the citizen has no subscription of the browser */
   Inactive = "inactive",
@@ -32,7 +29,6 @@ export enum WebPushBrowserStatus {
 interface BrowserState {
   readonly isSupported: boolean;
   readonly permission: NotificationPermission;
-  /** The endpoint of the push subscription of the browser, or null */
   readonly endpoint: string | null;
 }
 
@@ -77,10 +73,6 @@ const removeBrowserPushSubscription = async () => {
   }
 };
 
-/**
- * Asks for the permission, subscribes the browser and stores the
- * subscription. Gives the new state of the browser.
- */
 const activateWebPush = async (vapidKey: string): Promise<BrowserState> => {
   const permission = await Notification.requestPermission();
   if (permission !== "granted") {
@@ -122,10 +114,6 @@ const activateWebPush = async (vapidKey: string): Promise<BrowserState> => {
   return { isSupported: true, permission, endpoint: subscription.endpoint };
 };
 
-/**
- * Deletes the stored subscription of this browser and then its push
- * subscription. Gives true when the stored subscription is deleted.
- */
 const deactivateWebPush = async (subscriptionId: string) => {
   const formData = new FormData();
   formData.append("id", subscriptionId);
@@ -155,15 +143,11 @@ const getStatus = (
 
 interface WebPushBrowserContext {
   readonly status: WebPushBrowserStatus;
-  /** The id of the subscription of this browser, or null */
   readonly currentSubscriptionId: string | null;
-  /** True while the subscription of this browser changes */
   readonly isPending: boolean;
-  /** Asks for the permission if necessary and subscribes this browser */
   readonly subscribe: () => Promise<void>;
-  /** Deletes the subscription of this browser */
   readonly unsubscribe: () => Promise<void>;
-  /** Removes the push subscription of this browser, but not the stored one */
+  /** But not the stored subscription */
   readonly removeBrowserSubscription: () => Promise<void>;
 }
 
@@ -175,7 +159,6 @@ interface StoredSubscription {
 }
 
 interface Props {
-  /** The stored subscriptions of the citizen */
   readonly subscriptions: readonly StoredSubscription[];
   readonly children: ReactNode;
 }

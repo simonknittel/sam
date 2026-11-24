@@ -4,7 +4,6 @@ interface Props {
   readonly className?: string;
 }
 
-/** The placeholder of the dashboard tile while its entries load */
 export const CalendarTileSkeleton = ({ className }: Props) => {
   return (
     <section className={clsx(className, "flex flex-col items-center gap-4")}>

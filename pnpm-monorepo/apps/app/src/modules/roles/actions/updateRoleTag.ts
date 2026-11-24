@@ -7,11 +7,6 @@ import {
 } from "@sam-monorepo/application";
 import { ROLE_TAG_ERROR_TEXTS } from "../utils/roleErrorTexts";
 
-/**
- * Saves the name, the description and the changes of the roles of a tag. The
- * form gives the add and remove lists against the roles that the page
- * loaded, thus a role that a different user added after the load stays.
- */
 export const updateRoleTag = createUseCaseAction({
   name: "updateRoleTag",
   schema: updateRoleTagInputSchema,

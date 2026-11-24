@@ -1,7 +1,4 @@
-/**
- * The states of a reporter which the Live-Status shows next to the session.
- * The order of the values is the order of the panel.
- */
+/** The order of the values is the order of the panel */
 export enum LiveStatusKind {
   Jurisdiction = "jurisdiction",
   ArmisticeZone = "armisticeZone",
@@ -19,10 +16,6 @@ export enum LiveStatusSignalType {
   StateEnd = "stateEnd",
 }
 
-/**
- * What one entry tells the Live-Status. A pattern derives it from the capture
- * groups of its line (see `Pattern.liveStatusSignal`).
- */
 export type LiveStatusSignal =
   | {
       readonly type: LiveStatusSignalType.SessionStart;

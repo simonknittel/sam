@@ -18,10 +18,7 @@ self.addEventListener("push", (event) => {
   );
 });
 
-/**
- * Accepts only a URL of the app's own origin, so that a push payload cannot
- * open a different site. A relative URL resolves against the origin.
- */
+/** A push payload must not open a different site */
 const toSameOriginUrl = (value) => {
   if (typeof value !== "string") return null;
 
@@ -34,10 +31,8 @@ const toSameOriginUrl = (value) => {
 };
 
 /**
- * Focuses the app window that shows the URL. Without such a window, shows the
- * URL in the most recently focused app window, or opens a new window if no
- * app window is open. Only a window that this worker controls can navigate,
- * thus matchAll() leaves out the other windows.
+ * Only a window that this worker controls can navigate, thus matchAll() leaves
+ * out the other windows.
  */
 const showUrl = async (url) => {
   const windowClients = await self.clients.matchAll({ type: "window" });

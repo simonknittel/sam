@@ -10,7 +10,6 @@ import { RoleTagRoleLink } from "./RoleTagRoleLink";
 
 interface Props {
   readonly tag: ManagedRoleTag;
-  /** The roles of the tag, sorted by name */
   readonly roles: readonly RolePickerRole[];
 }
 

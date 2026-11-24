@@ -4,10 +4,7 @@ import { useLayoutEffect, useRef, type ReactNode } from "react";
 interface Props {
   readonly className?: string;
   readonly name: string;
-  /**
-   * The accessible name of the group. If the group has a visible heading,
-   * use the text of the heading.
-   */
+  /** If the group has a visible heading, use the text of the heading. */
   readonly label: string;
   readonly items: {
     value: string;
@@ -17,10 +14,6 @@ interface Props {
   }[];
   readonly value: string;
   readonly onChange: (value: string) => void;
-  /**
-   * Spreads the items evenly over the full width instead of sizing each one
-   * by its label. Keeps groups of short, icon-led options tidy.
-   */
   readonly equalWidth?: boolean;
 }
 

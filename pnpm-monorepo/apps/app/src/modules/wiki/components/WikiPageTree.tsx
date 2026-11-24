@@ -22,7 +22,6 @@ import {
 interface Props {
   readonly className?: string;
   readonly nodes: WikiTreeNode[];
-  /** Pages rendered dimmed, e.g. sidebar-hidden ones shown via the toggle */
   readonly dimmedPageIds?: readonly string[];
 }
 
@@ -160,9 +159,8 @@ const ExpandButton = ({ pageId, subtreeId, isExpanded }: ExpandButtonProps) => {
 interface CreateSubpageButtonProps {
   readonly pageId: string;
   /**
-   * Shown disabled to those who may edit the page but not manage it — they
-   * had this button before subpages became a manager's decision, so it
-   * explains itself instead of silently disappearing.
+   * Shown disabled to those who may edit the page but not manage it, so that
+   * it explains itself
    */
   readonly canCreate: boolean;
 }
@@ -197,7 +195,6 @@ const CreateSubpageButton = ({
 interface TreeItemProps {
   readonly node: WikiTreeNode;
   readonly depth: number;
-  /** Ids of the node's ancestors in the visible tree */
   readonly ancestorIds: readonly string[];
   readonly previousSiblingId?: string;
   readonly nextSiblingId?: string;
@@ -230,7 +227,6 @@ const TreeItem = ({
   return (
     <li
       className={clsx({
-        // Mute the dragged page including its whole subtree
         "opacity-25": draggedPageId === node.id,
       })}
     >
@@ -275,7 +271,6 @@ const TreeItem = ({
               {
                 "text-neutral-50": isActive,
                 "text-neutral-300": !isActive,
-                // Root pages act as section headings
                 "font-bold": depth === 0,
               },
             )}

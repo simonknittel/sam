@@ -19,18 +19,11 @@ import { WikiPageSelect } from "./WikiPageSelect";
 
 interface Props {
   readonly editor: Editor;
-  /** Document position of the node being configured */
   readonly position: number;
   readonly attrs: Readonly<Record<string, unknown>>;
   readonly onRequestClose: () => void;
 }
 
-/**
- * Configuration dialog for a page-index node ("Seitenverzeichnis"), opened
- * from the edit menu: page tree (root page + depth) or tag query (tag set +
- * AND/OR). Saving writes the node's attributes — the rendered list follows
- * via the node view's server fetch.
- */
 export const WikiPageIndexConfigModal = ({
   editor,
   position,
@@ -58,10 +51,6 @@ export const WikiPageIndexConfigModal = ({
     container: container ?? undefined,
   });
 
-  /**
-   * Readable pages in tree order for the root picker — permission-filtered
-   * server-side, so invisible titles can never leak.
-   */
   const { data: pageTargets } = api.wiki.getPageTargets.useQuery({
     permission: "read",
     container: container ?? undefined,

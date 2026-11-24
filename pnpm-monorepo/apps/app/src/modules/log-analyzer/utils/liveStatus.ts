@@ -154,7 +154,7 @@ interface TrackedState {
   readonly lastSeenAt: Date;
 }
 
-/** The states of a reporter after the last entry, before any timeout. */
+/** Before any timeout */
 export interface TrackedReporter {
   readonly key: string;
   readonly citizen: IEntry["citizen"];
@@ -473,10 +473,7 @@ const compareReporters = (
   second.lastActivityAt.getTime() - first.lastActivityAt.getTime();
 
 /**
- * The Live-Status at the given time: the reporters who are online, and the
- * offline reporters with a contract, which continues after a session. Online
- * reporters come first, then the uncertain ones, then the offline ones; the
- * most recent activity first in each group.
+ * Offline reporters show only with a contract, which continues after a session
  */
 export const evaluateLiveStatus = (
   reporters: readonly TrackedReporter[],

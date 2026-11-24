@@ -15,12 +15,10 @@ interface Props {
 }
 
 /**
- * Loads the pages the viewer manages in the current scope (global wiki,
- * briefing or variant embed) for the create and move dialogs, and renders
- * the dialog content with them. Mounted only while a dialog is open, so the
- * pages do not send the list with every navigation. Nothing stays cached
- * after the dialog closes: the dialogs select their default from the list
- * once, so it must include the pages created or moved in the meantime.
+ * Mounted only while a dialog is open, so the pages do not send the list with
+ * every navigation. Nothing stays cached after the dialog closes: the dialogs
+ * select their default from the list once, so it must include the pages
+ * created or moved in the meantime.
  */
 export const WikiPageTargetsLoader = ({
   excludeSubtreeOf,
@@ -56,9 +54,8 @@ export const WikiPageTargetsLoader = ({
 };
 
 /**
- * Wraps the action of a dialog with the pages of WikiPageTargetsLoader: after
- * an error, the dialog loads the pages again. A different user can have
- * changed the tree, and `refresh()` of the action does not load them again.
+ * A different user can have changed the tree, and `refresh()` of the action
+ * does not load the pages of WikiPageTargetsLoader again
  */
 export const useReloadWikiPageTargetsAfterError = (
   action: (formData: FormData) => Promise<ActionResponse>,

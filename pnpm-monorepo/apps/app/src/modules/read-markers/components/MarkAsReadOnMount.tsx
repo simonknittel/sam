@@ -11,11 +11,8 @@ interface Props {
 }
 
 /**
- * Marks the item as read once its details actually mounted in the browser.
- * Deliberately not during the server render: hover-triggered prefetching
- * (see the common `<Link>`) renders details the user never opens. The read
- * also marks the notifications which announced the item, thus the bell
- * fetches its count again. Renders nothing.
+ * Not during the server render: hover-triggered prefetching (see the common
+ * `<Link>`) renders details the user never opens.
  */
 export const MarkAsReadOnMount = ({ subject, subjectId }: Props) => {
   const markedItemRef = useRef<string | null>(null);

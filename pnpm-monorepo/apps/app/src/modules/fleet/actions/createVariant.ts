@@ -8,7 +8,6 @@ import {
 import { FLEET_ERROR_TEXTS } from "../utils/fleetErrorTexts";
 import { parseVariantFieldsFormData } from "../utils/parseVariantFieldsFormData";
 
-/** The hidden field `manufacturerId` of the form is not an input */
 export const createVariant = createUseCaseAction({
   name: "createVariant",
   schema: createVariantInputSchema,

@@ -22,10 +22,7 @@ export const Navigation = ({ pages }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigationId = useId();
 
-  /**
-   * The navigation lives in a layout and survives navigations. Thus the
-   * mobile navigation must close itself after a link was followed.
-   */
+  /** See `SidebarContainer` */
   const pathname = usePathname();
   const [closedForPathname, setClosedForPathname] = useState(pathname);
   if (pathname !== closedForPathname) {

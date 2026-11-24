@@ -17,16 +17,13 @@ export enum StatisticsDashboardStatus {
    * key (`EMBED_JWT_PRIVATE_KEY`)
    */
   NotConfigured = "notConfigured",
-  /** The user has no linked citizen, thus there is no token */
   NoCitizen = "noCitizen",
 }
 
 export type StatisticsDashboardState =
   | {
       readonly status: StatisticsDashboardStatus.Ready;
-      /** The frame URL with the token */
       readonly src: string;
-      /** The lifetime of the token that was left at the render */
       readonly remainingLifetimeInMilliseconds: number;
     }
   | {

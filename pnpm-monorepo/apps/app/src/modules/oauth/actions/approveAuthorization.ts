@@ -25,11 +25,7 @@ import {
   parseApproveFormData,
 } from "../utils/consent";
 
-/**
- * Records the consent with the settings of the new grant and sends the
- * browser back to the client with the authorization code. The action
- * validates the request again: the form fields come from the browser.
- */
+/** Validates the request again: the form fields come from the browser */
 export const approveAuthorization = createAuthenticatedAction(
   "approveAuthorization",
   approveFormSchema,

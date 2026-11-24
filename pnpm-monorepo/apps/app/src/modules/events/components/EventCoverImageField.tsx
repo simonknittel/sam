@@ -12,9 +12,7 @@ import { FaTrash } from "react-icons/fa";
 
 interface Props {
   readonly className?: string;
-  /** Name of the hidden input carrying the uploaded image's id */
   readonly name: string;
-  /** The cover the form starts with, for editing an existing record */
   readonly defaultUploadId?: string | null;
   /**
    * Submitted when the field is empty, so an update action can tell "no
@@ -25,11 +23,8 @@ interface Props {
 }
 
 /**
- * Cover image picker: uploads the chosen file right away and submits the
- * resulting upload id through a hidden input, so the record can reference it
- * when the form is saved. Existing events replace their cover through
- * `ImageUpload` on the overview instead; event templates use this field with
- * a `defaultUploadId`.
+ * Existing events replace their cover through `ImageUpload` on the overview
+ * instead.
  */
 export const EventCoverImageField = ({
   className,

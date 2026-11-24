@@ -4,13 +4,9 @@ interface DateRangePreset {
   readonly to: string;
 }
 
-/** The lengths of the presets which end today */
 const LAST_DAYS_PRESETS = [7, 30, 90];
 
-/**
- * `YYYY-MM-DD`. `Date.UTC` moves a day or a month outside its range into the
- * month or the year next to it: day 0 is the last day of the month before.
- */
+/** `YYYY-MM-DD`. Day 0 is the last day of the month before. */
 const toDay = (year: number, monthIndex: number, day: number) =>
   new Date(Date.UTC(year, monthIndex, day)).toISOString().slice(0, 10);
 

@@ -4,11 +4,6 @@ import { env } from "@/env";
 import { log } from "@/modules/logging";
 import { createMcpRequestHandler } from "@sam-monorepo/mcp";
 
-/**
- * One handler serves all requests of the process. For each request, it
- * authenticates the token and creates an MCP server with the tools of the
- * principal.
- */
 export const handleMcpRequest = createMcpRequestHandler({
   serverVersion: String(env.NEXT_PUBLIC_RELEASE_NUMBER ?? "development"),
   onerror: (error) => {

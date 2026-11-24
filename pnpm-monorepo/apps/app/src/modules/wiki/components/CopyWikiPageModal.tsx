@@ -17,11 +17,9 @@ interface Props {
 }
 
 /**
- * Puts the page into the clipboard cookie — the first half of copy'n'paste.
  * Available to everyone who can read the page: copying only reads, and
- * inserting takes manage access on the target. The insert is offered by the
- * create-page modal ("Neue Seite" or the sidebar plus), also in another
- * wiki — the copies take on the target's scope and permissions there.
+ * inserting takes manage access on the target. The insert is also offered in
+ * another wiki — the copies take on the target's scope and permissions there.
  */
 export const CopyWikiPageModal = ({
   className,

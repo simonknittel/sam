@@ -2,22 +2,17 @@ import type { LocalDate } from "@sam-monorepo/domain";
 import * as z from "zod";
 
 /**
- * Names the calendar date the seasonal themes resolve for, as `YYYY-MM-DD`.
- * The cookie bypasses the time zone of the viewer. The server honours it for
- * every viewer, because it changes nothing but the decorations of their own
- * view.
+ * The format is `YYYY-MM-DD`. The cookie bypasses the time zone of the viewer.
+ * The server honours it for every viewer, because it changes nothing but the
+ * decorations of their own view.
  */
 export const SEASONAL_DATE_COOKIE = "seasonal-date";
 
-export const SEASONAL_DATE_COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
+export const SEASONAL_DATE_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
 
-/**
- * Decides what a valid override is: a day the calendar has, as
- * `YYYY-MM-DD`. February 30 does not pass.
- */
+/** February 30 does not pass */
 export const seasonalDateSchema = z.iso.date();
 
-/** The date the cookie names, or nothing */
 export const parseSeasonalDateOverrideCookie = (
   cookieValue: string | undefined,
 ): LocalDate | null => {
@@ -31,7 +26,6 @@ export const parseSeasonalDateOverrideCookie = (
   };
 };
 
-/** The cookie value which names the date */
 export const formatSeasonalDateOverrideCookie = ({
   year,
   month,

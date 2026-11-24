@@ -1,9 +1,7 @@
 "use client";
 
 interface Props {
-  /** The selected item, or an empty string */
   readonly value: string;
-  /** A submit found no selected item */
   readonly onInvalid: () => void;
 }
 

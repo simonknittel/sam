@@ -42,15 +42,10 @@ export default async function Page(
   );
 
   const { variantId } = await props.params;
-  /** Without access to the variant pages, the read answers with a 403 */
   const variant = await getVariantDetail(variantId);
   if (!variant) notFound();
 
   const result = await getAdministrablePage(props.params);
-  /**
-   * Pages the viewer can't administrate 404 instead of 403 to avoid
-   * leaking their existence.
-   */
   if (!result) notFound();
 
   return (

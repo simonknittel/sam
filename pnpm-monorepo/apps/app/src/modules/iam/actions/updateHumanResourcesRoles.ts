@@ -12,7 +12,6 @@ export const updateHumanResourcesRoles = createUseCaseAction({
   name: "updateHumanResourcesRoles",
   schema: updateHumanResourcesRolesInputSchema,
   useCase: updateHumanResourcesRolesUseCase,
-  // One `roleId` form field per role
   parseFormData: (formData) => ({ role_ids: formData.getAll("roleId") }),
   texts: getIamErrorTexts,
   success: (t) => t("Common.successfullySaved"),

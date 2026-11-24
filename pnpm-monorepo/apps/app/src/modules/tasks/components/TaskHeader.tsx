@@ -15,7 +15,6 @@ interface StatusPresentation {
   readonly label: string;
   readonly icon: ReactNode;
   readonly textClassName?: string;
-  /** The surface of the header: a closed task tints it in its status colour */
   readonly surfaceClassName: string;
 }
 
@@ -60,7 +59,6 @@ type HeaderTask = Pick<
   | "expiresAt"
 >;
 
-/** The text with the date at which the task closed, for a closed task */
 const getClosingText = (task: HeaderTask, status: TaskStatus) => {
   switch (status) {
     case TaskStatus.Open:
@@ -84,11 +82,9 @@ interface Props {
   readonly className?: string;
   readonly task: HeaderTask;
   readonly status: TaskStatus;
-  /** Shows the title as an inline editor */
   readonly isEditable: boolean;
 }
 
-/** The head of the task page: the status, the title and the creation */
 export const TaskHeader = ({ className, task, status, isEditable }: Props) => {
   const presentation = STATUS_PRESENTATIONS[status];
   const closingText = getClosingText(task, status);

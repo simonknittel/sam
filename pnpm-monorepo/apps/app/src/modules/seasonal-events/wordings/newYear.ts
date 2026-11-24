@@ -1,12 +1,11 @@
 import type { SeasonalWordingFactory } from "../utils/types";
 
 /**
- * The greetings of the banner on the first day of the year. Every wording
- * names the in-game year and never the calendar year.
+ * Every wording names the in-game year and never the calendar year.
  *
- * The pool is a different one than the pool of the New Year notification of
- * the Lambda: a citizen can receive that notification and open the dashboard
- * on the same day, and two identical greetings would read like a mistake.
+ * The pool is a different one than the pool of the New Year notification of the
+ * Lambda: a citizen can receive that notification and open the dashboard on the
+ * same day, and two identical greetings would read like a mistake.
  */
 export const NEW_YEAR_WORDINGS: readonly SeasonalWordingFactory[] = [
   ({ inGameYear }) => ({

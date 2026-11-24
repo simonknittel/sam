@@ -4,7 +4,6 @@ import { LogAnalyzerContext } from "./LogAnalyzerContext";
 import { OverlayProvider } from "./OverlayContext";
 
 interface Props extends ComponentProps<typeof LogAnalyzer> {
-  /** False when the kill switch flag turned the sharing off. */
   readonly isSharingAvailable: boolean;
 }
 

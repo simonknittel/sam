@@ -1,10 +1,6 @@
 import type { SeasonalWordingFactory } from "../utils/types";
 
-/**
- * The greetings of the banner on the Luminalia days, the winter festival of
- * lights of the Star Citizen universe. The banner picks one of them at random
- * on each render.
- */
+/** Luminalia is the winter festival of lights of the Star Citizen universe. */
 export const CHRISTMAS_WORDINGS: readonly SeasonalWordingFactory[] = [
   () => ({
     title: "Frohe Luminalia!",

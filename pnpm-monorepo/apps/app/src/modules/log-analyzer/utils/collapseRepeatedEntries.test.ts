@@ -15,7 +15,6 @@ interface EntryOptions {
   readonly liveStatusSignal?: LiveStatusSignal | null;
 }
 
-/** An entry with the given key, at the given second of the timeline */
 const entry = (
   second: number,
   {
@@ -39,7 +38,6 @@ const entry = (
   lineNumber: null,
 });
 
-/** The entries from the newest to the oldest, as the table shows them */
 const newestFirst = (...entries: IEntry[]) =>
   entries.toSorted(
     (first, second) => second.isoDate.getTime() - first.isoDate.getTime(),

@@ -1,6 +1,5 @@
 import { Fragment } from "react";
 
-/** A part of a text which shows in a weaker color */
 interface MutedText {
   readonly muted: string;
 }
@@ -13,11 +12,9 @@ const toPlainText = (part: TextPart) =>
   typeof part === "string" ? part : part.muted;
 
 interface Props {
-  /** The text, or its parts, which show with a space between them */
   readonly children: string | readonly TextPart[];
 }
 
-/** A single line of text. The full text shows on hover when the line cuts it. */
 export const TruncatedText = ({ children }: Props) => {
   const parts = typeof children === "string" ? [children] : children;
 

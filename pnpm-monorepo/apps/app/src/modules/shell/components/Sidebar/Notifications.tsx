@@ -8,7 +8,6 @@ import { useState } from "react";
 import { FaBell } from "react-icons/fa";
 import { BarItemContent, barItemClassName } from "./BarItemContent";
 
-/** The notification center in a bottom sheet. A swipe down closes it. */
 export const Notifications = () => {
   const { unreadCount } = useOnSiteNotifications();
   const [isOpen, setIsOpen] = useState(false);
@@ -28,7 +27,6 @@ export const Notifications = () => {
 
         <Drawer.Viewport className="fixed inset-0 z-50 flex items-end">
           <Drawer.Popup className="max-h-[80dvh] w-full [transform:translateY(var(--drawer-swipe-movement-y))] overflow-y-auto overscroll-contain rounded-t-primary bg-neutral-800 px-4 pt-2 pb-4 outline-hidden transition-transform duration-200 ease-out data-ending-style:[transform:translateY(100%)] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*200ms)] data-starting-style:[transform:translateY(100%)] data-swiping:duration-0 data-swiping:select-none">
-            {/* The handle shows that a swipe moves the sheet */}
             <div className="mx-auto mb-2 h-1 w-12 rounded-full bg-neutral-600" />
 
             <Drawer.Content>

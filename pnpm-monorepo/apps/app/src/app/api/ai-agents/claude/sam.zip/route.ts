@@ -3,10 +3,7 @@ import { CLAUDE_PLUGIN_ARCHIVE_FILE_NAME } from "@/modules/mcp-settings/utils/ag
 import { archiveResponse } from "@/modules/mcp-settings/utils/archiveResponse";
 import { createClaudePluginArchive } from "@sam-monorepo/mcp";
 
-/**
- * The archive of the Claude plugin, for the marketplace and for the upload in
- * Claude. Public and static, see `docs/mcp-server.md#files-for-ai-agents`.
- */
+/** Public and static, see `docs/mcp-server.md#files-for-ai-agents` */
 export const dynamic = "force-static";
 
 export const GET = () =>

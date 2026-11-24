@@ -7,16 +7,10 @@ import * as z from "zod";
 import { protectedProcedure, toTrpcError } from "../../trpc";
 import { dateRangeInputSchema } from "./dateRangeInputSchema";
 
-/**
- * The hashes of the entries of a date range which the signed-in citizen
- * already shared. The sharing of older entries sends only what is missing
- * here. The kill switch closes the read path of the sharing.
- */
 export const getOwnEntryHashesInRange = protectedProcedure
   .input(
     dateRangeInputSchema.and(
       z.object({
-        /** The last hash of the previous page. Absent for the first request. */
         cursorHash: z
           .string()
           .regex(LOG_ANALYZER_ENTRY_HASH_PATTERN)

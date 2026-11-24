@@ -10,29 +10,21 @@ import { WikiGutter } from "./WikiGutter";
 interface Props {
   readonly className?: string;
   readonly pageId: string;
-  /** Whether the editing chrome (toolbar, overlays, gutter) is shown */
   readonly isEditing: boolean;
-  /** Whether the viewer may upload images to the page */
   readonly canUploadImages: boolean;
-  /** Whether the viewer may upload file attachments to the page */
   readonly canUploadAttachments: boolean;
   /** NULL until the editor is ready — the static fallback renders instead */
   readonly editor: Editor | null;
-  /** Right end of the toolbar row: save state and collab status dot */
   readonly statusSlot: ReactNode;
   readonly staticFallback: ReactNode;
-  /** Opens the embed URL dialog (gutter palette entry "Einbetten") */
   readonly onRequestEmbed: () => void;
-  /** Opens the link dialog (gutter palette entry "Link", selection menu) */
   readonly onRequestLink: () => void;
-  /** Opens the ship picker (gutter palette entry "Schiff") */
   readonly onRequestVariantLink: () => void;
 }
 
 /**
- * Layout of the collaborative editor: toolbar row, content area with the
- * editing overlays, and the statically rendered fallback filling the same
- * space until the editor is ready — so mounting doesn't shift the page.
+ * The statically rendered fallback fills the same space until the editor is
+ * ready, so mounting does not shift the page.
  */
 export const WikiEditorLayout = ({
   className,
@@ -50,7 +42,6 @@ export const WikiEditorLayout = ({
   return (
     <div className={clsx(className)}>
       {isEditing && (
-        /* data-wiki-editor-chrome: clicks here keep the focused block */
         <div
           data-wiki-editor-chrome
           className="sticky top-0 z-10 flex flex-wrap items-center gap-1 rounded-secondary border border-neutral-800 bg-neutral-900 p-1"

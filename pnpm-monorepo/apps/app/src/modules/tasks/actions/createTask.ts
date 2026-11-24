@@ -34,7 +34,6 @@ const parseCreateTaskForm = (formData: FormData) => {
           ? formData.get("rewardTypeTextValue")
           : Number(formData.get("rewardSilcValue")),
     },
-    // The wall time of the form, in the time zone of the organization
     expires_at: formData.get("expiresAt") || undefined,
     repeatable: Number(formData.get("repeatable")),
     assignment_limit: assignmentLimit ? Number(assignmentLimit) : null,

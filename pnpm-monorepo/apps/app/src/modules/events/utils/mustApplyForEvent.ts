@@ -4,7 +4,6 @@ import {
   type EventApplicationRequirementInput,
 } from "@sam-monorepo/application";
 
-/** See `mustApplyForEvent()` of the application package */
 export const mustApplyForEvent = async (
   event: EventApplicationRequirementInput,
 ) => mustActorApplyForEvent(await getRequestActor(), event);

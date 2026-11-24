@@ -14,18 +14,12 @@ import {
 import { useEffect, useState, useTransition } from "react";
 
 interface Props {
-  /** The search param that holds the ids of the selected roles */
   readonly name: string;
   readonly resetCursorPagination?: boolean;
-  /** The maximum number of selected roles */
   readonly max?: number;
 }
 
-/**
- * Filters a table of a sidebar layout by roles. A change in the open popover
- * applies when the popover closes. The removal of a selected role applies at
- * once.
- */
+/** A change in the open popover applies when the popover closes */
 export const RoleFilter = ({ name, resetCursorPagination, max }: Props) => {
   const [isLoading, startTransition] = useTransition();
   const [roleIds, setRoleIds] = useQueryState(
@@ -50,7 +44,7 @@ export const RoleFilter = ({ name, resetCursorPagination, max }: Props) => {
 
   const appliedRoleIds = [...new Set(roleIds)];
 
-  /** The selection in the open popover, or null while the popover is closed */
+  /** Null while the popover is closed */
   const [draftRoleIds, setDraftRoleIds] = useState<BadgeRole["id"][] | null>(
     null,
   );

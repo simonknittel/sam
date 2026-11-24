@@ -6,9 +6,8 @@ export const metadata: Metadata = {
 };
 
 /**
- * Keeps the template heading and the tab navigation around a subpage that does
- * not exist. If the layout rejects the request, for example for an unknown or
- * an invisible template, the app shows the full-page 404.
+ * Keeps the template heading and the tabs around the 404. When the layout
+ * rejects the request, the app shows the full-page 404.
  */
 export default function NotFound() {
   return <NotFoundCard />;

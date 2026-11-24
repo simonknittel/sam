@@ -13,7 +13,6 @@ import { getAllNoteTypes } from "@/modules/spynet/queries/getAllNoteTypes";
 import { findNoteTableFilterOptions } from "@sam-monorepo/application";
 import { CitizenLogTableFilters } from "./CitizenLogTableFilters";
 
-/** Only the values that at least one visible note has */
 const toItems = (
   entries: readonly { readonly id: string; readonly name: string }[],
   visibleIds: readonly string[],

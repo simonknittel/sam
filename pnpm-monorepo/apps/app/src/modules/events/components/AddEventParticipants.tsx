@@ -35,7 +35,6 @@ export const AddEventParticipants = ({ className, eventId }: Props) => {
   const utils = api.useUtils();
 
   /**
-   * Only the citizens who can see the event and are not participating yet.
    * Resolved server-side while the modal is open so a sign-up between two
    * openings does not leave a stale option behind.
    */

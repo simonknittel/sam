@@ -14,9 +14,8 @@ interface Props {
 }
 
 /**
- * Each citizen link shows the Discord avatar of its citizen. The avatars
- * travel one time with the app shell instead of one time for each link: a
- * link knows only the id of its citizen — see `listCitizenAvatarUrls`.
+ * The avatars travel one time with the app shell: a link knows only the id of
+ * its citizen.
  */
 export const CitizenAvatarsProvider = ({ children, avatarUrls }: Props) => {
   return (

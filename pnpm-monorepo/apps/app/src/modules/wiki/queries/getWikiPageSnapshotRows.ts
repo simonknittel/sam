@@ -9,11 +9,6 @@ import {
 } from "@sam-monorepo/application";
 import { cache } from "react";
 
-/**
- * The snapshots of a page, the newest first. Only for its administrators.
- * The scope comes from the context wrapper of the page, thus it belongs to
- * the actor of the request.
- */
 export const getWikiPageSnapshotRows = cache(
   withTrace(
     "getWikiPageSnapshotRows",

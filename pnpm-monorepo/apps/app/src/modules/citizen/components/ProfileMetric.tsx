@@ -9,24 +9,18 @@ export enum ProfileMetricTone {
   Negative = "negative",
 }
 
-/** The characters the value scrambles through while it appears */
 const NUMERIC_CHARACTERS = "1234567890.";
 
 interface Props {
   readonly label: string;
   readonly icon: ReactNode;
   readonly value: number;
-  /** Second line below the value, for example the monthly SILC salary */
   readonly hint?: string;
   readonly tone?: ProfileMetricTone;
-  /** The Spynet page of the metric. Null when the viewer cannot open it. */
+  /** Null when the viewer cannot open the page */
   readonly href: string | null;
 }
 
-/**
- * One number of a citizen profile, shown identically in the popovers, the
- * dashboard tile and the Spynet overview.
- */
 export const ProfileMetric = ({
   label,
   icon,

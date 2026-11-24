@@ -9,15 +9,10 @@ import * as z from "zod";
 import { protectedProcedure, toTrpcError } from "../../trpc";
 import { dateRangeInputSchema } from "./dateRangeInputSchema";
 
-/**
- * The log entries of a date range. The kill switch closes the read path of
- * the sharing.
- */
 export const getSharedEntriesInRange = protectedProcedure
   .input(
     dateRangeInputSchema.and(
       z.object({
-        /** The last entry of the previous page. Absent for the first page. */
         cursorId: idSchema.optional(),
       }),
     ),

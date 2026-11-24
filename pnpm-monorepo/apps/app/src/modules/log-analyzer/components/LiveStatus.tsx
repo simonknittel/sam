@@ -12,11 +12,6 @@ interface Props {
   readonly className?: string;
 }
 
-/**
- * The current states of the reporters which the filters show. The states use
- * all entries in memory, of all types, so that a hidden type does not keep a
- * state open (see `trackLiveStatus`).
- */
 export const LiveStatus = ({ className }: Props) => {
   const { entries, isLivePaused } = useLogAnalyzerContext();
   const headingId = useId();

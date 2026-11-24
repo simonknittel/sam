@@ -9,7 +9,6 @@ import { WikiPageLinkKey } from "@sam-monorepo/domain";
  */
 interface WikiPageLink {
   readonly label: string;
-  /** Shown in the settings UI to explain where the link appears */
   readonly description: string;
 }
 

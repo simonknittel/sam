@@ -17,8 +17,8 @@ interface Props {
 }
 
 /**
- * Asks the user to connect a client. The host of the client id is the only
- * trusted identity of the client: the client gives its name itself.
+ * The host of the client id is the only trusted identity of the client: the
+ * client gives its name itself.
  */
 export const AuthorizationConsent = ({ validation, actor }: Props) => {
   return (

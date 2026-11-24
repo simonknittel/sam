@@ -54,10 +54,6 @@ export const NotesTableRow = ({ note }: Props) => {
   );
 };
 
-/**
- * The confirmation state of the note, with the decision buttons only for a
- * viewer who may decide about the note
- */
 const NoteConfirmationState = async ({ note }: Props) => {
   const authentication = await requireAuthenticationPage();
   const canDecide = await authentication.authorize(
@@ -79,12 +75,7 @@ const NoteConfirmationState = async ({ note }: Props) => {
   );
 };
 
-/**
- * The buttons that change or delete the note, with the permission checks of
- * the notes page of the citizen
- */
 const NotesTableActions = async ({ note }: Props) => {
-  /** The logs of a deleted citizen are read only */
   if (note.citizen.deletedAt) return null;
 
   const authentication = await requireAuthenticationPage();

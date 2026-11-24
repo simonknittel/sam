@@ -12,13 +12,12 @@ import {
 import { cache } from "react";
 
 /**
- * One event with everything its layout and its subpages share. The position
- * tree is deliberately not part of it: only the lineup page renders it, and
- * this query sits behind the layout of all seven subpages — see
- * `getEventPositions()`.
+ * The position tree is deliberately not part of it: only the lineup page
+ * renders it (see `getEventPositions()`), and this query sits behind the layout
+ * of all seven subpages.
  *
- * Not visible is indistinguishable from nonexistent: callers translate the
- * null into a 404.
+ * Not visible is indistinguishable from nonexistent: callers translate the null
+ * into a 404.
  */
 export const getEventById = cache(
   withTrace("getEventById", async (id: EventDetails["id"]) => {

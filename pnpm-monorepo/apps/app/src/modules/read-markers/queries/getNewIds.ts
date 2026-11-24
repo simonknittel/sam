@@ -7,9 +7,8 @@ import { findNewItemIds } from "@sam-monorepo/application";
 import type { ReadMarkerSubject } from "@sam-monorepo/domain";
 
 /**
- * Of the listed items, the ones which are new for the viewer. Batched into a
- * single query, thus a list does not ask once for each row. The caller has
- * already applied the visibility and the read permission to the ids.
+ * The caller has already applied the visibility and the read permission to the
+ * ids.
  */
 export const getNewIds = withTrace(
   "getNewIds",

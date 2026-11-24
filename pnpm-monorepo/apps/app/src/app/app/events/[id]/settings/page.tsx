@@ -51,10 +51,7 @@ export default async function Page({
   if (event.source !== EventSource.APP) notFound();
   if (!(await isAllowedToManageEvent(event))) forbidden();
 
-  /**
-   * Also offered for events that are over — "that one went well, save it as
-   * a template" is the main reason to reach for it.
-   */
+  /** Also for events that are over: to save a good event as a template */
   const actionsTile = (await authentication.authorize("event", "create")) ? (
     <Tile
       id={SETTINGS_SECTIONS.actions.id}
@@ -131,9 +128,8 @@ export default async function Page({
             />
           }
           /**
-           * Its own boundary: the channel list is a live Discord call, so the
-           * rest of the settings must neither wait for it nor disappear with
-           * it when Discord misbehaves.
+           * The channel list is a live Discord call: the rest of the settings
+           * must not wait for it or fail with it.
            */
           discordPublishing={
             <ErrorBoundary>

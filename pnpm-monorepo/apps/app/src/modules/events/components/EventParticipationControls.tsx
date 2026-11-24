@@ -39,18 +39,12 @@ export interface EventParticipationControlsProps {
   readonly hasCancelled: boolean;
   readonly comment: string | null;
   readonly participationOpen: boolean;
-  /** The open invitation of the viewer, which replaces the sign-up form */
+  /** Replaces the sign-up form */
   readonly openInvitation?: OpenEventInvitation | null;
-  /** True when the latest invitation of the viewer is declined */
   readonly hasDeclinedInvitation?: boolean;
-  /** Called after the viewer accepted or declined the open invitation */
   readonly onInvitationAnswered?: () => void;
-  /**
-   * True when the viewer cannot sign up without an invitation, but applies
-   * (see `mustApplyForEvent()`)
-   */
+  /** See `mustApplyForEvent()` */
   readonly applicationRequired?: boolean;
-  /** The latest application of the viewer */
   readonly ownApplication?: OwnEventApplication | null;
   /**
    * Only the sign-up dialog sets this. On the event page, the focus would
@@ -73,10 +67,6 @@ export const EventParticipationControls = ({
   ownApplication = null,
   autoFocusComment,
 }: EventParticipationControlsProps) => {
-  /**
-   * The errors show as toasts, not in the forms: an error such as "already
-   * signed up" refreshes the page, which then shows the other form.
-   */
   const signUp = useAction(signUpForEvent);
   const updateComment = useAction(updateEventParticipationComment);
 
@@ -90,12 +80,9 @@ export const EventParticipationControls = ({
   const [commentDraft, setCommentDraft] = useState(comment ?? "");
 
   /**
-   * Adopt the stored comment when it changes (e.g. a fresh sign-up after a
-   * cancellation) — adjusted during render, not in an effect.
-   *
-   * Only while the draft is untouched, though: those same background
-   * refreshes arrive whenever an action refreshes the page, and adopting
-   * unconditionally would discard whatever the user had typed by then.
+   * Adopts the stored comment when it changes (e.g. a fresh sign-up after a
+   * cancellation), but only while the draft is untouched: a background refresh
+   * would discard what the user had typed.
    */
   const [previousComment, setPreviousComment] = useState(comment);
   if (comment !== previousComment) {

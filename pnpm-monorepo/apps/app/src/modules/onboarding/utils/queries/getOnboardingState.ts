@@ -10,9 +10,8 @@ import {
 import { cache } from "react";
 
 /**
- * Resolves the onboarding tasks the citizen is allowed to see, together with
- * their progress. Returns null for sessions without a citizen — those never
- * see the onboarding feature — and without a session or clearance.
+ * Null for sessions without a citizen — those never see the onboarding feature
+ * — and without a session or clearance
  */
 export const getOnboardingState = cache(
   withTrace("getOnboardingState", async (): Promise<OnboardingState | null> => {

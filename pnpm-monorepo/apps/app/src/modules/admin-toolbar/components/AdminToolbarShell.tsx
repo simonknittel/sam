@@ -6,7 +6,6 @@ import type { ReactNode } from "react";
 import { FaTools } from "react-icons/fa";
 
 interface Props {
-  /** Labels of the active overrides, which the collapsed toolbar shows */
   readonly activeOverrides: readonly string[];
   readonly children: ReactNode;
 }

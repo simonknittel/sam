@@ -16,13 +16,10 @@ interface Props {
 }
 
 export function OverlayProvider({ children }: Props) {
-  // Detect if the feature is available.
   const isSupported = "documentPictureInPicture" in window;
 
-  // Expose pipWindow that is currently active
   const [pipWindow, setPipWindow] = useState<Window | null>(null);
 
-  // Close pipWindow programmatically
   const closePipWindow = () => {
     if (pipWindow != null) {
       pipWindow.close();
@@ -30,9 +27,7 @@ export function OverlayProvider({ children }: Props) {
     }
   };
 
-  // Open new pipWindow
   const requestPipWindow = async () => {
-    // We don't want to allow multiple requests.
     if (pipWindow != null) return;
 
     // @ts-expect-error documentPictureInPicture is not yet part of TypeScript's DOM types
@@ -43,7 +38,6 @@ export function OverlayProvider({ children }: Props) {
       height: 256,
     })) as Window;
 
-    // Detect when window is closed by user
     pip.addEventListener("pagehide", () => {
       setPipWindow(null);
     });

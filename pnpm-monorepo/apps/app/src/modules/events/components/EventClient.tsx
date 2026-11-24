@@ -33,14 +33,6 @@ import type { OpenEventInvitation } from "./EventInvitationAnswerForm";
 import { EventParticipationButton } from "./EventParticipationButton";
 
 /**
- * Image size:
- * Discord recommends 800x320px.
- * Our maximum height should be 160px. Therefore, we calculate the width based
- * on the aspect ratio.
- * 800 / 320 * 160 = 400
- */
-
-/**
  * The event as the card shows it. The server component `Event` builds this
  * object field by field, thus the other columns of the event do not go to
  * the browser.
@@ -71,11 +63,8 @@ interface EventCard extends Readonly<
 interface Props {
   readonly className?: string;
   readonly event: EventCard;
-  /** The active participation of the viewer, if there is one */
   readonly ownParticipation: Pick<EventParticipantRow, "comment"> | null;
-  /** The open invitation of the viewer, if there is one */
   readonly openInvitation: OpenEventInvitation | null;
-  /** The latest application of the viewer, if there is one */
   readonly ownApplication: OwnEventApplication | null;
   readonly index: number;
   readonly showLineupButton?: boolean;
@@ -178,6 +167,7 @@ export const EventClient = ({
                   : `https://cdn.discordapp.com/guild-events/${event.discordId}/${event.discordImage}.webp?size=1024`
               }
               alt=""
+              // 800x320 px (the recommendation of Discord) at 160 px height
               width={400}
               height={160}
               priority={index < 3}

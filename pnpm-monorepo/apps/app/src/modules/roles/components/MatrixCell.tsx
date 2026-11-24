@@ -5,11 +5,8 @@ interface Props {
 }
 
 /**
- * One checkbox of a role matrix. Deliberately minimal: each matrix renders
- * more than ten thousand of these cells, so every element and every
- * attribute byte counts. The styles and the states live in the matrix-cell
- * utility, and the label and the title name the cell, which the matrix
- * cannot do visually.
+ * Deliberately minimal: each matrix renders more than ten thousand of these
+ * cells, so every element and every attribute byte counts.
  */
 export const MatrixCell = ({ name, label, defaultChecked }: Props) => {
   return (

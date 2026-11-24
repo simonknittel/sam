@@ -19,15 +19,13 @@ import type { WikiTextSelectionMenuState } from "./wikiEditMenuState";
 interface Props {
   readonly editor: Editor;
   readonly menu: WikiTextSelectionMenuState;
-  /** Opens the link dialog (mounted by WikiCollabEditor) */
   readonly onRequestLink: () => void;
 }
 
 /**
- * Actions of the formatting menu (marks, text color, highlight). The menu
- * only exists while the selection is inside its block, so the commands run
- * on the live selection: they hit exactly the selected text, and keeping
- * the selection keeps the menu alive after a click.
+ * The menu only exists while the selection is inside its block, so the
+ * commands run on the live selection: they hit exactly the selected text, and
+ * keeping the selection keeps the menu alive after a click.
  */
 export const WikiTextSelectionMenuActions = ({
   editor,
@@ -56,7 +54,6 @@ export const WikiTextSelectionMenuActions = ({
           title={title}
           isActive={menu.activeMarks.includes(name)}
           isToggle
-          // Inside a small block the mark would only compound
           disabled={name === "wikiSmallText" && menu.smallTextUnavailable}
           onClick={() => toggleTextMark(name)}
         >

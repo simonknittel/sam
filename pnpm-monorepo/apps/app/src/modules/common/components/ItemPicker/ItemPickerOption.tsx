@@ -7,15 +7,9 @@ import type { ItemPickerItemGroup } from "./ItemPickerGroup";
 
 export interface ItemPickerItem {
   readonly id: string;
-  /** The full name. The row truncates long names, thus it is also the title. */
   readonly name: string;
-  /**
-   * Replaces the name in the row, for example with the underlined characters
-   * of a search match
-   */
   readonly nameContent?: ReactNode;
   readonly icon?: ReactNode;
-  /** Disables the item. The title of the row gives this reason. */
   readonly disabledReason?: string;
   /**
    * The group of the item. The list shows a heading above each run of items
@@ -26,11 +20,9 @@ export interface ItemPickerItem {
 
 interface Props {
   readonly item: ItemPickerItem;
-  /** The id of the element, for `aria-activedescendant` of the search field */
   readonly elementId: string;
   readonly isActive: boolean;
   readonly isSelected: boolean;
-  /** Replaces the checkmark of a selected item, for example with a checkbox */
   readonly trailing?: ReactNode;
   readonly onActivate: (itemId: ItemPickerItem["id"]) => void;
   readonly onSelect: (itemId: ItemPickerItem["id"]) => void;

@@ -11,12 +11,6 @@ interface Props {
   readonly container: EventContainer;
 }
 
-/**
- * The briefing sidebar: favourites and the page tree, limited to this
- * container's pages. Rendered inside the briefing layout's
- * WikiPageHrefModeProvider, which points the shared tree components at the
- * container's routes.
- */
 export const EventWikiSidebar = async ({ container }: Props) => {
   const context = await getEventWikiContext(container);
   if (!context?.rootPage) return null;

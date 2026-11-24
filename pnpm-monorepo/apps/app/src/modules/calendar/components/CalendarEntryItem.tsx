@@ -11,7 +11,6 @@ interface Props {
   readonly index: number;
 }
 
-/** An event shows the card of the events list, each other entry a row */
 export const CalendarEntryItem = ({ entry, index }: Props) => {
   if (entry.type === CalendarEntryType.Event)
     return (

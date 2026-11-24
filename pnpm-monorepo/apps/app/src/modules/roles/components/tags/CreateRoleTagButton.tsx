@@ -10,7 +10,6 @@ import { FaPlus, FaSave } from "react-icons/fa";
 import { createRoleTag } from "../../actions/createRoleTag";
 import { RoleTagFields } from "./RoleTagFields";
 
-/** The action opens the page of the new tag */
 export const CreateRoleTagButton = () => {
   const [isOpen, setIsOpen] = useState(false);
 

@@ -17,9 +17,6 @@ interface Props {
   readonly currentPageId: string | null;
 }
 
-/**
- * Picks the wiki page one of the `WIKI_PAGE_LINKS` entries points to.
- */
 export const WikiPageLinkSetting = ({
   linkKey,
   options,

@@ -54,10 +54,6 @@ interface FormProps {
 }
 
 const SaveEventAsTemplateForm = ({ eventId, name, onSuccess }: FormProps) => {
-  /**
-   * The errors show as toasts: the refresh after a conflict, for example an
-   * event that a different manager deleted, can remove this form.
-   */
   const { formAction } = useAction(createEventTemplateFromEvent, {
     onSuccess,
   });

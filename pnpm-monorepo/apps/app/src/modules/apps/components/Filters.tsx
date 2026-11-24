@@ -28,11 +28,7 @@ export const Filters = ({
     }
   }
 
-  /**
-   * "Alle" is not a tag but the reset, so it stays ahead of the alphabetically
-   * sorted ones. `localeCompare` sorts the mixed-case tags by letter rather
-   * than by case, which is what the uppercased labels look like.
-   */
+  /** "Alle" is not a tag but the reset, so it stays ahead of the sorted tags */
   const filters: { key: string; label: string }[] = [
     { key: "all", label: "Alle" },
     ...Array.from(tags)

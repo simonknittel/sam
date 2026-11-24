@@ -21,7 +21,6 @@ interface Props {
   readonly trackedReporters: readonly TrackedReporter[];
 }
 
-/** The reporters at the current time, see `evaluateLiveStatus` */
 export const LiveStatusReporterList = ({
   className,
   trackedReporters,

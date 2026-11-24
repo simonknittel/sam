@@ -14,12 +14,6 @@ interface Props {
   readonly event: EventDetails;
 }
 
-/**
- * The viewer's personal view of an event on its overview: own sign-up state
- * (with the sign-up/comment/cancel controls on app events whose
- * participation is on) and the lineup positions assigned to them, including
- * the required ship variants.
- */
 export const PersonalBriefing = async ({ className, event }: Props) => {
   const authentication = await requireAuthenticationPage();
   const citizenId = authentication.session.entity?.id ?? null;

@@ -1,25 +1,15 @@
 import { WikiScopeKind } from "@sam-monorepo/domain";
 
-/**
- * Persists the sidebar's "show sidebar-hidden pages" toggle. Read on the
- * server so SSR already renders the remembered state — a client-only store
- * would render the default first and flash on hydration.
- *
- * Purely cosmetic: the toggle only reveals pages the viewer may read anyway,
- * so a tampered cookie can't widen access.
- */
+/** Read on the server and purely cosmetic, see `WIKI_EXPANDED_PAGES_COOKIE` */
 export const WIKI_SHOW_HIDDEN_PAGES_COOKIE = "wiki_show_hidden_pages";
 
-/** Only the wiki reads this cookie — no need to send it with every request */
 const WIKI_SHOW_HIDDEN_PAGES_COOKIE_PATH = "/app/wiki";
 
-/** One shared cookie for all event wikis, like the expanded-pages one */
 export const EVENT_WIKI_SHOW_HIDDEN_PAGES_COOKIE =
   "event_wiki_show_hidden_pages";
 
 const EVENT_WIKI_SHOW_HIDDEN_PAGES_COOKIE_PATH = "/app/events";
 
-/** One shared cookie for all variant embeds, like the expanded-pages one */
 export const VARIANT_WIKI_SHOW_HIDDEN_PAGES_COOKIE =
   "variant_wiki_show_hidden_pages";
 

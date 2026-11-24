@@ -1,7 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
 import { markdownToPlainText } from "./markdownToPlainText";
 
-/** The module is server-side only; the marker package has no meaning here. */
 vi.mock("server-only", () => ({}));
 
 describe("markdownToPlainText", () => {

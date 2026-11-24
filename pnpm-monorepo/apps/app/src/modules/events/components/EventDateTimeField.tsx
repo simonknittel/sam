@@ -26,12 +26,6 @@ interface Props {
   readonly required?: boolean;
 }
 
-/**
- * datetime-local input interpreted as wall time in the time zone of the
- * organization, with a hint showing the equivalent in the viewer's local
- * timezone for travelling users. The hint disappears when the viewer already
- * is in the time zone of the organization.
- */
 export const EventDateTimeField = ({
   className,
   name,

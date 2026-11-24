@@ -18,11 +18,7 @@ const readDisplayedDimensions = async (
   return metadata.autoOrient;
 };
 
-/**
- * Reads the shown dimensions from the first bytes of an image. When sharp
- * cannot read them from these bytes, it reads them from all bytes. Without
- * `readAllBytes`, the first bytes must be the full image.
- */
+/** Without `readAllBytes`, the first bytes must be the full image. */
 export const readImageDimensions = async (
   firstBytes: Uint8Array,
   readAllBytes?: () => Promise<Uint8Array | null>,
@@ -38,7 +34,6 @@ export const readImageDimensions = async (
   }
 };
 
-/** The image reader of the application context, with sharp */
 export const sharpImageReader: NonNullable<ApplicationContext["images"]> = {
   readDimensions: readImageDimensions,
 };

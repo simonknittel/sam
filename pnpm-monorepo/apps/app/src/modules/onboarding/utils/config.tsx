@@ -57,7 +57,6 @@ export interface OnboardingStep {
 export interface OnboardingTask {
   readonly key: OnboardingTaskKey;
   readonly title: string;
-  /** Short summary shown in the task list of the popover */
   readonly description: string;
   readonly steps: readonly OnboardingStep[];
 }

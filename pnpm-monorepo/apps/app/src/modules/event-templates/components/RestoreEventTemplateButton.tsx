@@ -9,7 +9,6 @@ import { restoreEventTemplate } from "../actions/restoreEventTemplate";
 interface Props {
   readonly templateId: string;
   readonly name: string;
-  /** Renders a labelled button instead of the table's icon-only one */
   readonly withLabel?: boolean;
 }
 

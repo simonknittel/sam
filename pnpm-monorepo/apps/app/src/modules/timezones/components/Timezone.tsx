@@ -39,7 +39,6 @@ export const Timezone = ({
       <h3 className={clsx("text-xl", headingClassName)}>{heading}</h3>
       {subheading && <h4 className="text-xs text-white/40">{subheading}</h4>}
 
-      {/* Time */}
       <p className="mt-4 font-mono text-4xl font-bold uppercase">
         <ScrambleIn
           text={date.toLocaleString("de-DE", {
@@ -52,7 +51,6 @@ export const Timezone = ({
         />
       </p>
 
-      {/* Date */}
       <p className="font-mono text-white/40 uppercase">
         <ScrambleIn
           text={date.toLocaleDateString("de-DE", {
@@ -66,7 +64,6 @@ export const Timezone = ({
         />
       </p>
 
-      {/* Timezone name */}
       {timeZoneName && timezonePopoverChildren && (
         <Popover
           trigger={

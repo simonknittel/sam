@@ -39,7 +39,6 @@ interface BaseProps {
 }
 
 interface CreateProps {
-  /** The event or template the new position is added to */
   readonly container: EventContainer;
   readonly parentPositionId?: PositionType["id"] | null;
 }

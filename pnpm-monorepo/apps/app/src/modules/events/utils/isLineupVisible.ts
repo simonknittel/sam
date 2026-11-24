@@ -5,7 +5,6 @@ import {
   type EventManageInput,
 } from "@sam-monorepo/application";
 
-/** See `isLineupVisible()` of the application package */
 export const isLineupVisible = async (
   event: EventManageInput &
     Pick<EventDetails, "lineupEnabled" | "participationEnabled">,

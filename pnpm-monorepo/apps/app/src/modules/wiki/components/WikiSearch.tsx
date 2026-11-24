@@ -27,14 +27,6 @@ interface Props {
   readonly compact?: boolean;
 }
 
-/**
- * Search-as-you-type over all visible wiki pages and all tags, used in the
- * wiki sidebar and on the landing page. Tag results come first and lead to
- * the tag's list page. Page results are permission-filtered server-side and
- * shown in a popup beneath the input, so the surrounding content never
- * shifts. Base UI always highlights a result, by default the first one,
- * thus Enter opens the highlighted result.
- */
 export const WikiSearch = ({ className, compact }: Props) => {
   const hrefMode = useWikiPageHrefMode();
   const [query, setQuery] = useState("");

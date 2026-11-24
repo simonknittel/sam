@@ -9,12 +9,11 @@ import { FaCheck, FaPen } from "react-icons/fa";
 
 interface Props {
   readonly customName: string;
-  /** The name that the client gives itself */
   readonly clientName: string;
   readonly onChange: (customName: string) => void;
 }
 
-/** Changes the own name of the new grant. Only the approval saves it. */
+/** Only the approval saves the name */
 export const ConsentCustomNameButton = ({
   customName,
   clientName,

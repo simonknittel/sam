@@ -23,7 +23,6 @@ interface Props {
       })
     | null;
   readonly page?: string;
-  /** The Discord avatar in front of the name */
   readonly avatarSize?: CitizenAvatarSize;
 }
 

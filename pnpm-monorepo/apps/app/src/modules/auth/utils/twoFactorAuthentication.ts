@@ -5,9 +5,8 @@ import { type Session } from "next-auth";
 import { redirect } from "next/navigation";
 
 /**
- * Whether the session stops at the gate of the two-factor authentication.
- * During an assume, the session has the status of the admin, who always has
- * it (see `getAssumedUser()`).
+ * During an assume, the session has the status of the admin, who always has it
+ * (see `getAssumedUser()`).
  */
 export const isMissingTwoFactorAuthenticationOfSession = (session: Session) =>
   isMissingTwoFactorAuthentication({

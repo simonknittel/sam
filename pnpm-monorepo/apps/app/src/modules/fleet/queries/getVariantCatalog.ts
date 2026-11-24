@@ -20,7 +20,6 @@ export const EMPTY_VARIANT_CATALOG: VariantCatalog = {
   tags: [],
 };
 
-/** See `findVariantCatalog()` */
 export const getVariantCatalog = cache(
   withTrace("getVariantCatalog", async () =>
     findVariantCatalog(getApplicationContext()),

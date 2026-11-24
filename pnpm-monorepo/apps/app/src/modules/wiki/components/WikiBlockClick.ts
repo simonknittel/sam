@@ -9,10 +9,9 @@ type WikiBlockClickListener = (event: MouseEvent) => void;
 const listenersByEditor = new WeakMap<Editor, Set<WikiBlockClickListener>>();
 
 /**
- * Subscribes to the clicks WikiBlockClick reports; returns the
- * unsubscribe function. A registry instead of an extension option: the
- * consumer (useWikiFocusedElement) lives far below the component creating
- * the editor, and re-configuring an extension recreates its plugins.
+ * A registry instead of an extension option: the consumer
+ * (useWikiFocusedElement) lives far below the component creating the editor,
+ * and re-configuring an extension recreates its plugins.
  */
 export const onWikiBlockClick = (
   editor: Editor,

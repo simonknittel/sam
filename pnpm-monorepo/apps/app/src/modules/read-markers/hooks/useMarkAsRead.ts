@@ -7,12 +7,8 @@ import { useOptimistic, useRef, useState, useTransition } from "react";
 import { markAsRead } from "../actions/markAsRead";
 
 /**
- * The "new" state of an item for its row or card, plus the click handler of
- * its `<NewMarkerButton>`. The highlight disappears at once; the action
- * refreshes the app, thus the server state (lists, tiles, dot badges)
- * follows in the same transition, and the bell fetches its count again when
- * the read marked the notifications of the item. A failure restores the
- * highlight.
+ * The highlight disappears at once. The action refreshes the app, thus the
+ * server state follows in the same transition.
  */
 export const useMarkAsRead = (
   subject: ReadMarkerSubject,

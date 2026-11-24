@@ -10,9 +10,8 @@ interface Props {
 }
 
 /**
- * A role of a tag in the tag list, with the look of the role badge. The tag
- * list shows all roles, also the roles that the roles context does not have,
- * thus it does not use the role badge.
+ * Not the role badge: the tag list also shows roles that the roles context does
+ * not have.
  */
 export const RoleTagRoleLink = ({ role }: Props) => {
   return (

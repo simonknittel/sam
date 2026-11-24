@@ -1,19 +1,9 @@
 import clsx from "clsx";
 
 interface Props {
-  /** Gives the gift its place, its size and the colour of the paper */
   readonly className?: string;
 }
 
-/**
- * One gift below the Christmas tree.
- *
- * The paper of the box and of the lid takes `currentColor`, which the class
- * of the caller sets; the lid keeps the same colour at a lower opacity, thus
- * it stays a part of the box. The band and the bow are the one fixed fill,
- * `#fbbf24` (gold), because every gift below the tree wears the same gold
- * band whatever the colour of its paper is.
- */
 export const ChristmasGift = ({ className }: Props) => (
   <svg
     aria-hidden

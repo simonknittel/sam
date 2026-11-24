@@ -1,8 +1,7 @@
 import type { TableOfContentsItem } from "@/modules/common/components/layouts/SidebarLayout/TableOfContents";
 
 /**
- * The tiles of the settings page of an event and of the "Stammdaten" page of
- * a template: the heading of a tile and its entry in the table of contents.
+ * For the settings page of an event and the "Stammdaten" page of a template.
  * The id is the fragment of the link.
  */
 export const SETTINGS_SECTIONS = {

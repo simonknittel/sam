@@ -15,15 +15,9 @@ export type VariantDetail = NonNullable<
 
 interface Props {
   readonly variant: VariantDetail;
-  /** For the managers of the ship catalog: the link to the settings */
   readonly showSettingsLink: boolean;
 }
 
-/**
- * The metadata head of the variant detail page: logo, flight-ready status,
- * external links, ship count and tags. Shared by the plain variant page and
- * its embedded wiki routes.
- */
 export const VariantDetailHeader = ({ variant, showSettingsLink }: Props) => {
   return (
     <>

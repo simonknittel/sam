@@ -46,7 +46,6 @@ const TARGET_SELECTOR = [
 
 interface Props {
   readonly editor: Editor | null;
-  /** Opens the link dialog (selection menu's link button) */
   readonly onRequestLink: () => void;
 }
 
@@ -73,7 +72,6 @@ export const WikiEditorOverlays = ({ editor, onRequestLink }: Props) => {
   };
 
   return (
-    /* data-wiki-editor-chrome: clicks here keep the focused block */
     <div
       ref={overlayRef}
       data-wiki-editor-chrome

@@ -1,8 +1,7 @@
 import clsx from "clsx";
 
 /**
- * The two strips of clouds. The upper clouds flow to the left and the lower
- * clouds flow to the right, thus the colours swirl like a slow current. Each
+ * The upper clouds flow to the left and the lower clouds to the right. Each
  * strip switches off the pair of clouds of the other strip, see the two
  * strengths of `cloud-surface` in `globals.css`.
  */
@@ -14,18 +13,16 @@ const STRIP_CLASS_NAMES = [
 interface Props {
   /** The utility of the occasion which paints the colour clouds */
   readonly surfaceClassName: string;
-  /** Places the clouds in the stacking order of the caller */
   readonly className?: string;
 }
 
 /**
- * The colour clouds of a greeting banner, which swirl slowly. The caller
- * clips them at its round corners.
+ * The caller clips the clouds at its round corners.
  *
- * Only the strips move, and the browser moves them without painting the
- * clouds again. Without motion, both strips rest with their first copy over
- * the banner, and the two pairs of clouds together show the still surface of
- * the occasion.
+ * Only the strips move, and the browser moves them without painting the clouds
+ * again. Without motion, both strips rest with their first copy over the
+ * banner, and the two pairs of clouds together show the still surface of the
+ * occasion.
  */
 export const BannerClouds = ({ surfaceClassName, className }: Props) => (
   <div className={clsx("absolute inset-0", className)}>
@@ -41,7 +38,6 @@ export const BannerClouds = ({ surfaceClassName, className }: Props) => (
 
 interface CloudStripProps {
   readonly surfaceClassName: string;
-  /** Selects the pair of clouds and the direction of the strip */
   readonly className: string;
 }
 

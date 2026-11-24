@@ -2536,7 +2536,6 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     ),
   },
 
-  // 2025 entries
   {
     key: "2025-12-06-neue-statistiken",
     date: "2025-12-06",

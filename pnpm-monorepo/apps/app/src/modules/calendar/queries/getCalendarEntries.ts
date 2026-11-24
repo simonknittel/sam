@@ -14,10 +14,9 @@ import {
 import { cache } from "react";
 
 /**
- * The entries of the calendar of the viewer between the two days
- * ("YYYY-MM-DD", both included). The days are keys, not objects, thus
- * `cache()` gives one read for each render. The caller checks the range
- * first (see `findCalendarRangeProblem`).
+ * Both days are included. They are keys ("YYYY-MM-DD"), not objects, thus
+ * `cache()` gives one read for each render. The caller checks the range first
+ * (see `findCalendarRangeProblem`).
  */
 export const getCalendarEntries = cache(
   withTrace(

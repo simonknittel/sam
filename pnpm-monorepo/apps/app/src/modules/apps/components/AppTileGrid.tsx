@@ -17,10 +17,6 @@ interface Props {
   readonly variant?: "default" | "compact";
 }
 
-/**
- * A list of apps, so every tile is addressable as one item — the tiles are
- * containers rather than single links (see AppTile).
- */
 export const AppTileGrid = ({
   className,
   children,

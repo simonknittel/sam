@@ -14,11 +14,9 @@ import { useOnSiteNotifications } from "../components/OnSiteNotificationsProvide
 import type { OnSiteNotificationRow } from "../utils/types";
 
 /**
- * The state-changing operations of the notification center. Each runs its
- * server action and mirrors the result into the TanStack cache, so the lists
+ * Each operation mirrors its result into the TanStack cache, so the lists
  * update without refetching. Lists the row moved into (other tab) are
- * invalidated instead and refetch on their next use. The unread count
- * changes at once and is then fetched from the server.
+ * invalidated instead and refetch on their next use.
  */
 export const useOnSiteNotificationMutations = () => {
   const utils = api.useUtils();
@@ -44,10 +42,6 @@ export const useOnSiteNotificationMutations = () => {
     });
   };
 
-  /**
-   * Marks an unread notification as read: from its toggle, or silently from
-   * a click on its target
-   */
   const markRead = async (
     notification: OnSiteNotificationRow,
     options?: { readonly successToast?: boolean },

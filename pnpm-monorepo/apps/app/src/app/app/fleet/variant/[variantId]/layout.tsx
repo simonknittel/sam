@@ -3,13 +3,8 @@ import { WikiPageHrefModeProvider } from "@/modules/wiki/components/WikiPageHref
 import { getVariantWikiContext } from "@/modules/wiki/queries/getVariantWikiContext";
 
 /**
- * Mounts the embedded wiki's providers around the variant detail routes:
- * the href mode pointing the shared wiki components at the embed routes,
- * and the create-page modal, whose targets the href mode limits to the
- * linked subtree.
- * Unlike the briefing layout this must NOT 404 on a missing context — the
- * plain variant page works without an embedded wiki; the wiki subroutes
- * 404 themselves.
+ * Unlike the briefing layout, no 404 without a context: the plain variant page
+ * works without an embedded wiki, and the wiki subroutes give the 404.
  */
 export default async function Layout({
   children,

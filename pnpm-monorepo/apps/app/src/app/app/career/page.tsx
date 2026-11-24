@@ -4,10 +4,8 @@ import { log } from "@/modules/logging";
 import { forbidden, redirect } from "next/navigation";
 
 /**
- * The career app has no landing page of its own: it sends visitors to the
- * first flow they may read. Managers without a single readable flow — which
- * cannot happen while `career;manage` grants read on every flow, but does
- * once no flow exists at all — land in the management UI instead.
+ * Without a readable flow, a manager goes to the settings. That occurs only
+ * while no flow exists, because `career;manage` gives read on each flow.
  */
 export default async function Page() {
   const authentication = await requireAuthenticationPage("/app/career");

@@ -6,18 +6,16 @@ interface Props {
   readonly className?: string;
   readonly heading: string;
   /**
-   * The current values of the fields of the section in a few words. The
-   * summary also shows while the section is closed, thus a closed section
-   * hides no value, for example a value of a template.
+   * Also shows while the section is closed, thus a closed section hides no
+   * value, for example a value of a template.
    */
   readonly summary: string;
   readonly children: ReactNode;
 }
 
 /**
- * A group of fields of a long form that the user opens when necessary. The
- * section starts closed. The fields stay in the form while it is closed, thus
- * the form sends their values.
+ * The fields stay in the form while the section is closed, thus the form sends
+ * their values.
  */
 export const FormSection = ({
   className,

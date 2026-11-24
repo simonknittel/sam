@@ -1,11 +1,7 @@
 import { getEventDescriptionMaxLength } from "@sam-monorepo/domain";
 import { getEventUrl } from "./eventConstraints";
 
-/**
- * The longest description of an event on this deployment (see
- * `getEventDescriptionMaxLength()`). The use cases of the events check the
- * same limit.
- */
+/** The use cases of the events check the same limit */
 export const EVENT_DESCRIPTION_MAX_LENGTH =
   getEventDescriptionMaxLength(getEventUrl);
 
@@ -18,10 +14,8 @@ export const EVENT_DESCRIPTION_MAX_LENGTH =
 export const PLACEHOLDER_EVENT_URL = `${getEventUrl("")}…`;
 
 /**
- * The text for a description that is too long. A description that was
- * stored before the limit became smaller reaches the actions untouched — the
- * browser keeps a field inside `maxLength` only while somebody types in it —
- * thus the text must say which field is at fault. Without this the manager
- * cannot save a changed title either, and reads only "bad request".
+ * A description that was stored before the limit became smaller reaches the
+ * actions untouched — the browser keeps a field inside `maxLength` only while
+ * somebody types in it — thus the text must say which field is at fault.
  */
 export const DESCRIPTION_TOO_LONG_TEXT = `Die Kurzbeschreibung ist länger als die ${EVENT_DESCRIPTION_MAX_LENGTH.toLocaleString("de-DE")} Zeichen, die zusammen mit dem Hinweis zur Anmeldung auf Discord passen. Kürze sie, um zu speichern.`;

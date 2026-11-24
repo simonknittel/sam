@@ -12,10 +12,6 @@ interface Props {
   readonly errorResponseUrl?: string;
 }
 
-/**
- * The consent page cannot ask for the consent, for example because the
- * request of the client is not valid.
- */
 export const AuthorizationNotice = ({ message, errorResponseUrl }: Props) => (
   <Tile heading="Zugriff erlauben" childrenClassName="flex flex-col gap-4">
     <Note type="error" message={message} />

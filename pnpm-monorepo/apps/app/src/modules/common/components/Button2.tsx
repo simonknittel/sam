@@ -21,15 +21,9 @@ type Props<E extends ElementType = "button"> = {
   readonly children?: ReactNode;
   readonly variant?: Button2Variant;
   readonly colorSchema?: Button2ColorSchema | null;
-  /**
-   * Label shown as a tooltip above the button on hover/focus. Also serves as
-   * the accessible name, so icon-only buttons don't need a `title` attribute.
-   */
+  /** Also the accessible name, so icon-only buttons don't need a `title` */
   readonly tooltip?: string;
-  /**
-   * Key that triggers the button, shown as a badge inside the tooltip. Left
-   * out of the accessible name — use `aria-keyshortcuts` for that.
-   */
+  /** Left out of the accessible name — use `aria-keyshortcuts` for that */
   readonly tooltipHotkey?: string;
 } & Omit<ComponentProps<E>, "as" | "className" | "children">;
 
@@ -84,14 +78,9 @@ export const Button2 = <E extends ElementType = "button">({
 
   if (!tooltip) return button;
 
-  /*
-    The shared tooltip rather than an absolutely positioned span: that span
-    stayed inside the button's containing block, so a button near the right
-    edge of the page — the last cell of a row, say — widened the document and
-    gave the whole page a horizontal scrollbar while hovered. This one is
-    fixed-positioned and collision-aware, so it never grows the page and
-    shifts or flips instead of leaving the viewport.
-  */
+  /* The shared tooltip is fixed-positioned and collision-aware. An absolutely
+     positioned span would widen the document of a button near the right edge,
+     for example in the last cell of a row. */
   return (
     <Tooltip
       asChild

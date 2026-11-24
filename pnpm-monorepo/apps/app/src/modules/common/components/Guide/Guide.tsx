@@ -5,16 +5,11 @@ import { FaBookOpen } from "react-icons/fa6";
 
 interface Props {
   readonly className?: string;
-  /** One line below the heading, for example what the app can do */
   readonly subtitle: string;
   readonly children: ReactNode;
 }
 
-/**
- * The guide of an app above its main content: what the app is, what it can
- * do and how to use it. The guide starts closed, so that the app stays at the
- * top of the page. Its parts are the other components of this folder.
- */
+/** Starts closed, so that the app stays at the top of the page */
 export const Guide = ({ className, subtitle, children }: Props) => {
   return (
     <details className={clsx("group rounded-primary bg-secondary", className)}>

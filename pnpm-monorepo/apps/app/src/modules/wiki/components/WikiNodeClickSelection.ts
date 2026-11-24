@@ -20,9 +20,8 @@ const ANCHOR_NODE_TYPES = [
 /**
  * The atom nodes in ANCHOR_NODE_TYPES render as anchors or contain them —
  * while editing, a plain click would navigate away. This selects the node
- * instead (showing the edit menu, which offers download/open); read-only
- * views keep the anchors' native navigation. Editor-only behavior, the
- * extension adds no schema.
+ * instead (showing the edit menu, which offers download/open); read-only views
+ * keep the anchors' native navigation.
  */
 export const WikiNodeClickSelection = Extension.create({
   name: "wikiNodeClickSelection",

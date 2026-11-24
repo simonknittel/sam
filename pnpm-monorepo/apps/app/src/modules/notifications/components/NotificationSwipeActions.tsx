@@ -7,11 +7,6 @@ interface Props {
   readonly isUnread: boolean;
 }
 
-/**
- * The actions behind a notification row that a swipe uncovers: the read
- * toggle on the left, archive on the right. Each fills exactly the area that
- * the row leaves free. It is grey until a release starts the action.
- */
 export const NotificationSwipeActions = ({ swipe, isUnread }: Props) => {
   /** Without padding: a strip without width must be invisible */
   const stripClassName = clsx(

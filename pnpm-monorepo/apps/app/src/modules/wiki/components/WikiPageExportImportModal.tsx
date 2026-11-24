@@ -16,18 +16,10 @@ interface Props {
   readonly className?: string;
   readonly pageId: string;
   readonly title: string;
-  /** Import is a mutation — frozen event pages offer export only */
   readonly canImport: boolean;
 }
 
-/**
- * JSON export and import for wiki admins (in a briefing: for the admins of
- * the page) behind a single toolbar button.
- * The export downloads the page's content as Tiptap
- * JSON; the import replaces it with an uploaded file. The file is read
- * client-side and sent as text — the server action validates it against
- * the editor schema and the iframe allowlist.
- */
+/** For wiki admins (in a briefing: for the admins of the page) */
 export const WikiPageExportImportModal = ({
   className,
   pageId,

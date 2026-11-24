@@ -76,18 +76,14 @@ const useMinimumSavingDisplay = (state: WikiSaveState): WikiSaveState => {
 interface Props {
   readonly className?: string;
   readonly state: WikiSaveState;
-  /** Blocks the force save, e.g. while the collab connection is down */
   readonly disabled?: boolean;
   readonly onForceSave: () => void;
 }
 
 /**
- * Save state icon in the editor toolbar (amber save icon: unsaved changes,
- * spinner: saving, check: saved) with a hover popover explaining the
- * state. Clicking the save icon saves immediately instead of waiting for
- * the autosave. The button is never `disabled` — a disabled element gets
- * no pointer events, and the popover must open in every state — so
- * non-actionable states drop the click handler and set aria-disabled.
+ * The button is never `disabled` — a disabled element gets no pointer events,
+ * and the popover must open in every state — so non-actionable states drop the
+ * click handler and set aria-disabled.
  */
 export const WikiSaveStateIndicator = ({
   className,

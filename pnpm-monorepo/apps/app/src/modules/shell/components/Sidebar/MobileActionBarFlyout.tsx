@@ -39,10 +39,6 @@ const MobileActionBarFlyoutContext = createContext<
   MobileActionBarFlyoutContext | undefined
 >(undefined);
 
-/**
- * Check for undefined since the defaultValue of the context is undefined. If
- * it's still undefined, the provider component is missing.
- */
 export function useMobileActionBarFlyout() {
   const context = useContext(MobileActionBarFlyoutContext);
   if (!context)
@@ -52,15 +48,9 @@ export function useMobileActionBarFlyout() {
 
 interface Props {
   readonly children?: ReactNode;
-  /** Whether an app in the flyout has new items */
   readonly hasUnreadDot: boolean;
 }
 
-/**
- * The toggle of the action bar and the flyout with the navigation. Also a
- * swipe from the left edge opens the flyout, and a swipe to the left closes
- * it (see `useDrawerSwipe`).
- */
 export const MobileActionBarFlyout = ({ children, hasUnreadDot }: Props) => {
   const pathname = usePathname();
   const [isVisible, setIsVisible] = useState(false);

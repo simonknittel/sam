@@ -26,10 +26,6 @@ export const FlowProvider = ({
   return <FlowContext value={value}>{children}</FlowContext>;
 };
 
-/**
- * Check for undefined since the defaultValue of the context is undefined. If
- * it's still undefined, the provider component is missing.
- */
 export function useFlowContext() {
   const context = useContext(FlowContext);
   if (!context) throw new Error("Provider missing!");

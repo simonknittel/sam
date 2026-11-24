@@ -9,17 +9,13 @@ interface Props {
   readonly className?: string;
   readonly description: string;
   /**
-   * The event the note links to. Absent while the event does not exist yet —
-   * the creation of an event, and both template forms — where the preview
-   * shows the address without an identifier.
+   * Absent while the event does not exist yet — the creation of an event, and
+   * both template forms — where the preview shows the address without an
+   * identifier.
    */
   readonly eventId?: string;
 }
 
-/**
- * The description of an event as Discord shows it, with the sign-up note
- * that the app appends and that the manager cannot change
- */
 export const EventDescriptionPreview = ({
   className,
   description,

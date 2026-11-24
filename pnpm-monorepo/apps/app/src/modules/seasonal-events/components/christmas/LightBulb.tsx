@@ -1,24 +1,14 @@
 import clsx from "clsx";
 
 interface Props {
-  /** Gives the lamp its place on the wire, its colour and its delay */
   readonly className?: string;
 }
 
 /**
- * One lamp of the string of lights of the top bar.
- *
- * The lamp hangs on a low point of the wire and stays inside the free band
- * above the controls: the socket starts three pixels below the top edge of
- * the viewport, and the glass ends one pixel above the top edge of the
- * buttons, of the search field and of the picture of the account. The caller
- * gives it its horizontal place, its colour and the delay of its pulse, thus
- * no two lamps pulse together.
- *
- * The halo, the socket and the glass all come from `currentColor`, which the
- * class of the caller sets; the halo and the socket use the same colour at a
- * lower opacity. The gleam on the glass is the one fixed fill, because a lamp
- * of every colour gets the same white reflection.
+ * The lamp stays inside the free band above the controls of the top bar: the
+ * socket starts three pixels below the top edge of the viewport, and the glass
+ * ends one pixel above the top edge of the buttons, of the search field and of
+ * the picture of the account.
  */
 export const ChristmasLightBulb = ({ className }: Props) => (
   <svg

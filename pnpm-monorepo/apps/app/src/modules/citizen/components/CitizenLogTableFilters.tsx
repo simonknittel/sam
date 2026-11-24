@@ -26,14 +26,9 @@ const SORT_ITEMS = [
 ];
 
 interface Props {
-  /** The confirmations that at least one visible log has */
   readonly confirmationStates: readonly (ConfirmationStatus | null)[];
 }
 
-/**
- * The filters that the notes table and the table of the other logs share,
- * below the filters of each table
- */
 export const CitizenLogTableFilters = ({ confirmationStates }: Props) => {
   const confirmationValues = new Set(
     confirmationStates.map(toConfirmationValue),

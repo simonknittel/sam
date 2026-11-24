@@ -4,8 +4,8 @@ import { createContext, useContext } from "react";
 import { TruncatedText } from "./TruncatedText";
 
 /**
- * The names of the accepted contracts by their mission id. This file imports
- * nothing from `PATTERNS`, because `PATTERNS` renders the component below.
+ * By mission id. This file imports nothing from `PATTERNS`, because `PATTERNS`
+ * renders the component below.
  */
 export const ContractNamesContext = createContext<ReadonlyMap<string, string>>(
   new Map(),

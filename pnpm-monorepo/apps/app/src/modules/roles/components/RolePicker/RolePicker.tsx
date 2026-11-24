@@ -20,34 +20,20 @@ import { RolePickerValue } from "./RolePickerValue";
 
 interface CommonProps {
   readonly className?: string;
-  /**
-   * The form field name of the hidden input of each selected role. Without
-   * it, the picker renders no hidden inputs.
-   */
+  /** Without it, the picker renders no hidden inputs */
   readonly name?: string;
   readonly label?: ReactNode;
   readonly helpText?: ReactNode;
-  /**
-   * Replaces the roles of the roles context, which are the roles that the
-   * viewer can see. Example: all roles for a user with `role;manage`. The
-   * offered roles, the selected roles and the search use this list. The tags
-   * still come from the context.
-   */
+  /** See `RolePanel` */
   readonly roles?: readonly RolePickerRole[];
-  /**
-   * Limits the offered roles, for example to the read roles of the parent
-   * wiki page. Selected roles outside of this list stay selected.
-   */
+  /** Selected roles outside of this list stay selected */
   readonly offeredRoleIds?: readonly BadgeRole["id"][];
-  /** Reports each open and close of the popover */
   readonly onOpenChange?: (open: boolean) => void;
 }
 
 interface SingleProps extends CommonProps {
   readonly mode: ItemPickerMode.Single;
-  /** The initial selection of an uncontrolled picker */
   readonly defaultValue?: BadgeRole["id"] | null;
-  /** The selection of a controlled picker, together with `onChange` */
   readonly value?: BadgeRole["id"] | null;
   readonly onChange?: (roleId: BadgeRole["id"] | null) => void;
   /**
@@ -55,23 +41,15 @@ interface SingleProps extends CommonProps {
    * form without a selected role
    */
   readonly required?: boolean;
-  /** Entries above the roles, for example "Alle" with the id `*` */
   readonly extraEntries?: readonly RolePickerExtraEntry[];
 }
 
 interface MultipleProps extends CommonProps {
   readonly mode: ItemPickerMode.Multiple;
-  /** The initial selection of an uncontrolled picker */
   readonly defaultValue?: readonly BadgeRole["id"][];
-  /** The selection of a controlled picker, together with `onChange` */
   readonly value?: readonly BadgeRole["id"][];
   readonly onChange?: (roleIds: BadgeRole["id"][]) => void;
-  /** The maximum number of selected roles */
   readonly max?: number;
-  /**
-   * Hides the selected roles under the trigger, for an owner that shows the
-   * selection in its own rows
-   */
   readonly hideChips?: boolean;
 }
 
@@ -86,10 +64,7 @@ const toRoleIds = (
 };
 
 /**
- * Offers the roles that the viewer can see (or the roles of `roles`) in a
- * popover. In single mode, the trigger shows the selected role. In multiple
- * mode, the selected roles show under the trigger. A selected role that is
- * not in these roles stays selected and is submitted.
+ * A selected role that the viewer cannot see stays selected and is submitted
  */
 export const RolePicker = (props: Props) => {
   const {
@@ -116,7 +91,6 @@ export const RolePicker = (props: Props) => {
 
   const triggerRef = useRef<HTMLButtonElement>(null);
   const errorId = useId();
-  /** Single mode with `required`: whether a submit found no selected role */
   const [isInvalid, setIsInvalid] = useState(false);
   const showsRequiredError = isInvalid && selectedRoleIds.length === 0;
 

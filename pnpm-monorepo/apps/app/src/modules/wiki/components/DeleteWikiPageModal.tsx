@@ -23,14 +23,11 @@ export const DeleteWikiPageModal = ({
   title,
   descendantCount,
 }: Props) => {
-  /** Inside a variant embed the action redirects back to the variant page */
   const { variantId } = useWikiPageHrefMode();
   const [isOpen, setIsOpen] = useState(false);
   /**
-   * On success the action redirects to the wiki root, so there is no
-   * success toast and no need to close the modal. An error shows as a toast:
-   * when a different user deleted the page before, the refreshed page has no
-   * modal anymore.
+   * An error shows as a toast: when a different user deleted the page before,
+   * the refreshed page has no modal anymore.
    */
   const { formAction } = useAction(deleteWikiPage);
 

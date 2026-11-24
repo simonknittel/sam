@@ -26,7 +26,6 @@ interface OnboardingContext {
   readonly openTaskCount: number;
   readonly activeTour: ActiveOnboardingTour | null;
   readonly startTour: (taskKey: OnboardingTaskKey) => void;
-  /** Stamps the current step and moves to the next one or finishes the task */
   readonly advanceTour: () => void;
   readonly retreatTour: () => void;
   readonly exitTour: () => void;
@@ -64,11 +63,10 @@ export const OnboardingProvider = ({ initialState, children }: Props) => {
     initialState?.completedStepProgressKeys ?? [];
 
   /**
-   * Completing or skipping deliberately calls no `refresh()`, which would
-   * re-render the whole shell underneath an open popover. The
-   * optimistic state lives here instead (same pattern as the apps context).
-   * Progress rows only ever get added, so whenever the server sends a new
-   * set, it is merged into the local one instead of replacing it.
+   * The actions call no `refresh()` (see `completeOnboardingTask`), thus the
+   * optimistic state lives here. Progress rows only ever get added, so
+   * whenever the server sends a new set, it is merged into the local one
+   * instead of replacing it.
    */
   const [completedTaskKeys, setCompletedTaskKeys] = useState(
     () => new Set(serverCompletedTaskKeys),
@@ -116,7 +114,6 @@ export const OnboardingProvider = ({ initialState, children }: Props) => {
     );
     if (!task) return;
 
-    /** A replay of a completed task starts from the beginning */
     const isReplay = completedTaskKeys.has(taskKey);
 
     const firstIncompleteIndex = task.stepKeys.findIndex(
@@ -242,10 +239,6 @@ export const OnboardingProvider = ({ initialState, children }: Props) => {
   return <OnboardingContext value={value}>{children}</OnboardingContext>;
 };
 
-/**
- * Check for undefined since the defaultValue of the context is undefined. If
- * it's still undefined, the provider component is missing.
- */
 export function useOnboarding() {
   const context = useContext(OnboardingContext);
   if (!context) throw new Error("[OnboardingContext] Provider is missing!");

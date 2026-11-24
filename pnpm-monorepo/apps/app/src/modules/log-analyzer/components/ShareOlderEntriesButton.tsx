@@ -29,9 +29,8 @@ interface Props {
 }
 
 /**
- * Shares the own entries of the date range which are older than the rolling
- * window, after a confirmation. A shared entry cannot be withdrawn. The count
- * goes down while the requests go out.
+ * A shared entry cannot be withdrawn. The count goes down while the requests go
+ * out.
  */
 export const ShareOlderEntriesButton = ({ entries, onShare }: Props) => {
   const { daysToLoad } = useLogAnalyzerContext();

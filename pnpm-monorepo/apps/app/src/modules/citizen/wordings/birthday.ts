@@ -4,13 +4,8 @@ import {
 } from "@/modules/dashboard/utils/greetingWordings";
 
 /**
- * The greetings of the banner on the birthday of the viewer. The banner
- * picks one of them on every render.
- *
- * The pool is a different one than the pool of the birthday notification of
- * the Lambda: a citizen can receive that notification and open the
- * dashboard on the same day, and two identical greetings would read like a
- * mistake.
+ * A different pool than the birthday notification of the Lambda: a citizen can
+ * receive that notification and open the dashboard on the same day.
  */
 export const BIRTHDAY_WORDINGS: readonly ViewerWordingFactory[] = [
   (context) => ({

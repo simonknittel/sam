@@ -50,12 +50,6 @@ import { ASSUME_USER_COOKIE } from "../utils/adminCookies";
 import { getLoginErrorPath, LoginError } from "../utils/loginError";
 import { getEffectiveRoles, type EffectiveRoles } from "./getEffectiveRoles";
 
-/**
- * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
- * object and keep type safety.
- *
- * @see https://next-auth.js.org/getting-started/typescript#module-augmentation
- */
 declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
@@ -95,9 +89,7 @@ declare module "next-auth" {
         })
       | null;
     /**
-     * The id of the admin behind the session token when this session was
-     * built for another user which the admin assumes via the `assume_user`
-     * cookie. Null for a session of the own user.
+     * The admin behind the session token while they assume this user, else null
      */
     assumedByAdminId: string | null;
   }
@@ -114,9 +106,8 @@ const adapter = PrismaAdapter(prisma);
 export const SESSION_MAX_AGE = 60 * 60 * 24 * 31; // 31 days, in seconds
 
 /**
- * Replaces the adapter's own `createSession` so the session gets the two
- * columns the account's session list shows. The adapter writes only the
- * fields NextAuth knows about, so there is nothing to delegate to.
+ * Replaces the adapter's own `createSession`, which writes only the fields
+ * NextAuth knows about.
  */
 export const createSession = async (
   session: AdapterSession,
@@ -272,10 +263,6 @@ const recordFirstVisitOfTheDay = async (
   }
 };
 
-/**
- * The `signIn` callback of NextAuth. It allows the login with `true`, or
- * refuses it with the path of the login page and the error code.
- */
 const signInWithDiscord = async ({
   user,
   account,
@@ -284,12 +271,8 @@ const signInWithDiscord = async ({
   if (!profile) throw new Error("Missing profile");
 
   /**
-   * Update account and user on login
-   *
-   * This callback doesn't tell us if the user already exists in the
-   * database. Also, this callback gets called before a new user gets
-   * created in the database. Therefore, we have to figure out ourselves
-   * if we can update an existing user or not.
+   * NextAuth calls this callback before it creates a new user, and it does not
+   * tell whether the user exists.
    */
 
   log.info("Login attempt", {
@@ -298,10 +281,6 @@ const signInWithDiscord = async ({
     profileEmail: profile.email,
   });
 
-  /**
-   * The sign-in callback checks whether the user exists and is banned,
-   * and compares the status of the two-factor authentication
-   */
   const existingUser = await prisma.user.findUnique({
     where: { id: user.id },
     select: { id: true, bannedAt: true, discordTwoFactorEnabled: true },
@@ -415,7 +394,6 @@ const signInWithDiscord = async ({
     return true;
   }
 
-  // New user
   user.email = email;
   user.image = avatar;
   user.discordTwoFactorEnabled = discordTwoFactorEnabled;
@@ -435,11 +413,6 @@ const signInWithDiscord = async ({
   return true;
 };
 
-/**
- * Options for NextAuth.js used to configure adapters, providers, callbacks, etc.
- *
- * @see https://next-auth.js.org/configuration/options
- */
 export const authOptions: NextAuthOptions = {
   callbacks: {
     session: async ({ session, user }) => {
@@ -487,8 +460,7 @@ export const authOptions: NextAuthOptions = {
         };
       }
 
-      // Only update lastSeenAt once a day. Skipped while assuming another
-      // user so their presence data doesn't get falsified.
+      // Not while assuming another user: their presence data must stay correct
       if (
         !assumedUser &&
         (!user.lastSeenAt ||
@@ -594,7 +566,9 @@ export const authOptions: NextAuthOptions = {
 
   session: {
     maxAge: SESSION_MAX_AGE,
-    updateAge: SESSION_MAX_AGE * 2, // Make sure `updateAge` is bigger than `maxAge` so that the session actually expires at some point and then a refreshed authentication with the identity provider is forced
+    // Larger than `maxAge`, so that the session expires and forces a new
+    // authentication with the identity provider
+    updateAge: SESSION_MAX_AGE * 2,
   },
 
   cookies: DEVELOPMENT_SESSION_TOKEN_COOKIE
@@ -663,9 +637,8 @@ export const authOptions: NextAuthOptions = {
 
     signOut: async (message) => {
       /**
-       * `id` and `userId` DO exist on the session here. However, the types
-       * won't be fixed for anything auth-related due to the pending migration
-       * off of NextAuth.js.
+       * `id` and `userId` exist on the session here, but the types of NextAuth
+       * do not have them.
        */
       const session = message.session as unknown as {
         id: string;
@@ -686,9 +659,4 @@ export const authOptions: NextAuthOptions = {
   },
 };
 
-/**
- * Wrapper for `getServerSession` so that you don't need to import the `authOptions` in every file.
- *
- * @see https://next-auth.js.org/configuration/nextjs
- */
 export const getServerAuthSession = () => getServerSession(authOptions);

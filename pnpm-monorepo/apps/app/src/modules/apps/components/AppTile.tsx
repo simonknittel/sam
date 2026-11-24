@@ -15,10 +15,6 @@ interface Props {
   readonly variant?: "default" | "compact";
   readonly onClick?: () => void;
   readonly dotBadgeCount?: number;
-  /**
-   * The screenshot of a tile which is likely above the fold loads at once.
-   * All other screenshots load only when they come near the viewport.
-   */
   readonly isAboveTheFold?: boolean;
 }
 

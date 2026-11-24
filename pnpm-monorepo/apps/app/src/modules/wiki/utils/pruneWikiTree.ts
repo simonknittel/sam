@@ -1,11 +1,10 @@
 import type { WikiTreeNode } from "@sam-monorepo/wiki-editor/helpers";
 
 /**
- * The tree without the given pages and their whole subtrees. The sidebar
- * derives its default view from the full tree with this, so the server
- * sends the pages only once: the sidebar-hidden pages of
- * `filterWikiPagesBySidebarMode` always take their subtrees with them, so
- * the result is the same as building the tree from the filtered pages.
+ * The sidebar derives its default view from the full tree with this, so the
+ * server sends the pages only once: the sidebar-hidden pages of
+ * `filterWikiPagesBySidebarMode` always take their subtrees with them, so the
+ * result is the same as building the tree from the filtered pages.
  */
 export const pruneWikiTree = (
   nodes: readonly WikiTreeNode[],

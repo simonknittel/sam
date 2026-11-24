@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 import { FaTrash } from "react-icons/fa";
 
 interface Props {
-  /** The title of the button, for example "Rolle entfernen" */
   readonly title: string;
   readonly onRemove: () => void;
   /**
@@ -14,10 +13,6 @@ interface Props {
   readonly children: ReactNode;
 }
 
-/**
- * A selected item under the trigger of a picker in multiple mode. A click
- * removes it.
- */
 export const ItemPickerChip = ({ title, onRemove, children }: Props) => {
   return (
     <button

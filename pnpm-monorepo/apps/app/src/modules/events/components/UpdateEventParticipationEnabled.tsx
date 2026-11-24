@@ -21,9 +21,8 @@ const getCancellationText = (activeParticipantCount: number) => {
 };
 
 /**
- * The participation switch of an app event. The switch to false asks for a
- * confirmation first: it cancels all sign-ups and clears the lineup
- * assignments and applications, and the switch to true restores nothing.
+ * The switch to false cancels all sign-ups and clears the lineup assignments
+ * and applications, and the switch to true restores nothing.
  */
 export const UpdateEventParticipationEnabled = ({
   className,

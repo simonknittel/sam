@@ -9,7 +9,6 @@ export {
   type EventContainer,
 } from "@sam-monorepo/domain";
 
-/** Where the container's lineup is rendered */
 export const getLineupPath = (container: EventContainer) => {
   switch (container.kind) {
     case EventContainerKind.Event:
@@ -25,7 +24,6 @@ export const getLineupPath = (container: EventContainer) => {
   }
 };
 
-/** The form fields the client sends to name a container */
 export const EVENT_CONTAINER_KIND_FIELD = "containerKind";
 export const EVENT_CONTAINER_ID_FIELD = "containerId";
 

@@ -67,11 +67,8 @@ const toEntry = (row: SharedEntry, isNew: boolean): IEntry | null => {
  * One request goes out for each cycle. A response which is full leaves the
  * remaining entries for the next cycle.
  *
- * A date range reaches events which that polling does not reach, thus it
- * loads its own entries, one page after the other.
- *
- * Returns the function of the refresh button, and whether the entries of the
- * date range are on their way.
+ * A date range reaches events which that polling does not reach, thus it loads
+ * its own entries, one page after the other.
  */
 export const useSharedEntries = () => {
   const {
@@ -141,7 +138,7 @@ export const useSharedEntries = () => {
     fetchingGenerationRef.current = generation;
 
     try {
-      /** The vanilla client keeps no copy of the response in the query cache */
+      /** See `useEntryUpload` */
       const data = await utils.client.logAnalyzer.getSharedEntries.query({
         daysToLoad: clampLogAnalyzerDaysToLoad(daysToLoad),
         cursorId: cursorRef.current,
@@ -172,7 +169,7 @@ export const useSharedEntries = () => {
 
     try {
       do {
-        /** The vanilla client keeps no copy of the pages in the query cache */
+        /** See `useEntryUpload` */
         const page =
           await utils.client.logAnalyzer.getSharedEntriesInRange.query({
             from: gte,

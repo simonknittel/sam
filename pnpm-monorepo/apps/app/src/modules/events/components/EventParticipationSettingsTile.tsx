@@ -10,17 +10,12 @@ interface Props {
     readonly id: string;
     readonly participationEnabled: boolean;
     readonly applicationRequired: boolean;
-    /** The active sign-ups that the switch to false cancels */
     readonly activeParticipantCount: number;
   };
   /** The rule of the participation switch in `updateEvent()` */
   readonly canSwitchParticipation: boolean;
 }
 
-/**
- * The participation and the application switch of the settings page of an
- * event. Each switch saves at each change.
- */
 export const EventParticipationSettingsTile = ({
   className,
   event,

@@ -7,7 +7,6 @@ import {
 } from "@sam-monorepo/application";
 import { EVENT_ERROR_TEXTS } from "../utils/eventErrorTexts";
 
-/** The lineup editor also changes the positions of an event template */
 export const updateEventPosition = createUseCaseAction({
   name: "updateEventPosition",
   schema: updateEventPositionInputSchema,

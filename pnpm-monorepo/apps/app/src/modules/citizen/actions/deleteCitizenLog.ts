@@ -7,7 +7,6 @@ import {
 } from "@sam-monorepo/application";
 import { CITIZEN_ERROR_TEXTS } from "../utils/citizenErrorTexts";
 
-/** The logs of a deleted citizen are read only */
 export const deleteCitizenLog = createUseCaseAction({
   name: "deleteCitizenLog",
   schema: deleteCitizenLogInputSchema,

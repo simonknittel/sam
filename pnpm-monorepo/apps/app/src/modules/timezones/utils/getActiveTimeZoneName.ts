@@ -1,9 +1,4 @@
-/**
- * The name of the time zone at the given date. The name changes with daylight
- * saving time.
- *
- * @returns Example: "Central European Summer Time (CEST)"
- */
+/** Example: "Central European Summer Time (CEST)" */
 export const getActiveTimeZoneName = (timeZone: string, date: Date) => {
   const getShortTimeZoneName = (locale: string) =>
     new Intl.DateTimeFormat(locale, {

@@ -7,7 +7,6 @@ import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { findOwnFleetVariantTags } from "@sam-monorepo/application";
 import { cache } from "react";
 
-/** See `findOwnFleetVariantTags()` */
 export const getMyFleetVariantTags = cache(
   withTrace("getMyFleetVariantTags", async () => {
     try {

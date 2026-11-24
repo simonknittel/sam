@@ -26,14 +26,12 @@ export const ContainerCalculator = ({ className }: Props) => {
     const formData = new FormData(containerFormRef.current);
 
     const totalScu = parseInt(formData.get("totalScu") as string, 10) || 0;
-    // Parse exact values for each container size
     const exacts: Record<number, number | null> = {};
     CONTAINER_SIZES.forEach((size) => {
       const val = parseInt(formData.get(`exact${size}`) as string, 10);
       exacts[size] = Number.isNaN(val) ? null : val;
     });
 
-    // Calculate results
     const results: Record<number, number> = {};
     CONTAINER_SIZES.forEach((size) => {
       results[size] = exacts[size] || 0;

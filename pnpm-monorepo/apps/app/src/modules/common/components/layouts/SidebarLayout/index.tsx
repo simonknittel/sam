@@ -7,16 +7,9 @@ interface Props {
   readonly sidebar: ReactElement;
   readonly childrenContainerClassName?: string;
   readonly children: ReactNode;
-  /** Label of the toggle button shown on mobile. Defaults to "Filter". */
   readonly mobileToggleLabel?: string;
-  /** Icon of the toggle button shown on mobile. Defaults to a filter icon. */
   readonly mobileToggleIcon?: ReactNode;
-  /** Sidebar width class(es). Defaults to "md:w-64". */
   readonly sidebarWidthClassName?: string;
-  /**
-   * The sidebar stays in view while the page scrolls, below the fixed bar of
-   * the shell. A sidebar that is higher than the window scrolls on its own.
-   */
   readonly isSticky?: boolean;
 }
 

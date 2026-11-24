@@ -19,9 +19,6 @@ const PALETTE = [
   "#d9267f",
 ];
 
-/**
- * Deterministic presence caret color per user, derived from their id.
- */
 export const getWikiCollabColor = (seed: string) => {
   let hash = 0;
   for (const character of seed)

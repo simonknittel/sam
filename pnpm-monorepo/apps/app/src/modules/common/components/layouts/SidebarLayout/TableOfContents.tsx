@@ -1,7 +1,6 @@
 import clsx from "clsx";
 
 export interface TableOfContentsItem {
-  /** The `id` of the target on the page, for example of a `Tile` */
   readonly id: string;
   readonly label: string;
 }
@@ -11,7 +10,6 @@ interface Props {
   readonly items: readonly TableOfContentsItem[];
 }
 
-/** Links to the parts of a long page, for the sidebar of `SidebarLayout` */
 export const TableOfContents = ({ className, items }: Props) => {
   return (
     <nav

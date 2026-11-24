@@ -26,17 +26,13 @@
     hsl(0 69% 30% / 1)
   );
   --background-color-secondary: hsla(0, 0%, 15%, 0.5);
-  /* The secondary surface of a clickable tile under the pointer or the focus:
-     the same colour, less transparent */
+  /* For a clickable tile under the pointer or the focus */
   --background-color-secondary-hover: hsla(0, 0%, 15%, 0.8);
   --background-color-secondary-opaque: hsla(0, 0%, 8%, 1);
   --background-color-tertiary: hsla(0, 0%, 25%, 0.5);
 
   --breakpoint-3xl: 1920px;
 
-  /* The party hat of a citizen who has their birthday rocks on its base.
-     The base tilt of the hat stays in the `rotate` property of its utility
-     class, thus the two compose. */
   --animate-birthday-hat-wiggle: birthday-hat-wiggle 2.5s ease-in-out infinite;
 
   @keyframes birthday-hat-wiggle {
@@ -50,13 +46,11 @@
     }
   }
 
-  /* The motions of the seasonal decorations. A token names a motion, not an
-     event, thus a later event can reuse it. Every motion touches `transform`
-     and `opacity` only, and the reduced-motion block below switches all of
-     them off at once. */
+  /* A token names a motion, not an event, thus a later event can reuse it.
+     Every motion touches `transform` and `opacity` only, and the
+     reduced-motion block below switches all of them off at once. */
 
-  /* A decoration which hangs on a thread swings around the point it hangs
-     on. The element sets that point with its own `transform-origin`. */
+  /* The element sets the point it hangs on with its own `transform-origin`. */
   --animate-seasonal-sway: seasonal-sway 5s ease-in-out infinite;
 
   @keyframes seasonal-sway {
@@ -70,11 +64,10 @@
     }
   }
 
-  /* A decoration which crosses the viewport from left to right and then
-     waits out of sight. The element is invisible for most of the cycle, thus
-     it appears now and then instead of all the time. It starts and ends
-     outside the viewport, thus a viewer who keeps every motion off sees no
-     decoration which stands on the page. */
+  /* The element is invisible for most of the cycle, thus it appears now and
+     then instead of all the time. It starts and ends outside the viewport,
+     thus a viewer who keeps every motion off sees no decoration which stands
+     on the page. */
   --animate-seasonal-drift: seasonal-drift 60s linear infinite;
 
   @keyframes seasonal-drift {
@@ -132,9 +125,8 @@
     }
   }
 
-  /* A decoration which falls from above the viewport to below it and drifts
-     sideways on the way. The element starts at the top edge of its layer;
-     several elements share the motion through their own animation delay. */
+  /* The element starts at the top edge of its layer; several elements share
+     the motion through their own animation delay. */
   --animate-seasonal-snowfall: seasonal-snowfall 16s linear infinite;
 
   @keyframes seasonal-snowfall {
@@ -161,7 +153,6 @@
     }
   }
 
-  /* A decoration which pulses, for example a lamp of a string of lights. */
   --animate-seasonal-twinkle: seasonal-twinkle 2.5s ease-in-out infinite;
 
   @keyframes seasonal-twinkle {
@@ -175,9 +166,8 @@
     }
   }
 
-  /* A decoration which grows out of its centre and fades away, for example a
-     firework burst. The element sets its own animation delay if several
-     bursts must not fire at the same moment. */
+  /* The element sets its own animation delay if several bursts must not fire
+     at the same moment. */
   --animate-seasonal-burst: seasonal-burst 3s ease-out infinite;
 
   @keyframes seasonal-burst {
@@ -200,12 +190,9 @@
     }
   }
 
-  /* A decoration which forms at an edge, falls a short distance and fades
-     away, for example a drop of blood. The element stretches out of the point
-     it forms at and sets that point with its own `transform-origin`. It waits
-     out of sight for most of the cycle, thus it falls now and then instead of
-     all the time, and a viewer who keeps every motion off sees nothing which
-     hangs in the air. */
+  /* The element sets the point it forms at with its own `transform-origin`. It
+     waits out of sight for most of the cycle, thus a viewer who keeps every
+     motion off sees nothing which hangs in the air. */
   --animate-seasonal-drip: seasonal-drip 6s ease-in infinite;
 
   @keyframes seasonal-drip {
@@ -231,9 +218,8 @@
     }
   }
 
-  /* A light which flickers like the flame of a candle: the brightness falls
-     and comes back at irregular steps, and never goes out. The element holds
-     the flame or the glow only, thus the rest of the drawing stays still. */
+  /* The element holds the flame or the glow only, thus the rest of the drawing
+     stays still. */
   --animate-seasonal-flicker: seasonal-flicker 3s linear infinite;
 
   @keyframes seasonal-flicker {
@@ -466,7 +452,6 @@
   overflow: hidden;
 }
 
-/* Dark scrollbars to match the theme (thin thumb on a transparent track). */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--color-neutral-700) transparent;
@@ -611,9 +596,8 @@
 }
 
 /**
- * The handle of a citizen who has their birthday today. The gradient
- * replaces the colour of the text, thus the underline of a link needs its
- * own colour.
+ * The gradient replaces the colour of the text, thus the underline of a link
+ * needs its own colour.
  */
 @utility text-birthday {
   background-image: linear-gradient(
@@ -683,7 +667,6 @@
     );
 }
 
-/** The surface of a birthday greeting */
 @utility background-birthday {
   @apply cloud-surface;
   --cloud-1: hsl(275 70% 45% / 0.3);
@@ -692,8 +675,6 @@
   --cloud-4: hsl(40 90% 50% / 0.22);
 }
 
-/* The welcome of a new member: the teal and blue of a clear sky at launch,
-with a warm accent */
 @utility background-welcome {
   @apply cloud-surface;
   --cloud-1: hsl(175 75% 42% / 0.3);
@@ -702,7 +683,6 @@ with a warm accent */
   --cloud-4: hsl(35 90% 55% / 0.2);
 }
 
-/** The surface of a New Year greeting, in gold, orange and yellow only */
 @utility background-new-year {
   @apply cloud-surface;
   --cloud-1: hsl(38 95% 50% / 0.3);
@@ -711,10 +691,6 @@ with a warm accent */
   --cloud-4: hsl(45 90% 50% / 0.22);
 }
 
-/**
- * The surface of the greeting banner on the Day of the Vara, in orange,
- * violet and green
- */
 @utility background-halloween {
   @apply cloud-surface;
   --cloud-1: hsl(25 95% 48% / 0.3);
@@ -723,10 +699,6 @@ with a warm accent */
   --cloud-4: hsl(35 95% 50% / 0.24);
 }
 
-/**
- * The surface of the greeting banner on the Luminalia days, in red, green
- * and gold
- */
 @utility background-christmas {
   @apply cloud-surface;
   --cloud-1: hsl(0 75% 45% / 0.3);
@@ -736,9 +708,8 @@ with a warm accent */
 }
 
 /**
- * A border which fades out from the top to the bottom, in a colour of the
- * theme, for example `border-fade-blue-500`. The element sets the width of
- * the border. `border-image` ignores the border radius.
+ * The element sets the width of the border. `border-image` ignores the border
+ * radius.
  */
 @utility border-fade-* {
   border-image: linear-gradient(to bottom, --value(--color-*), transparent) 1;
@@ -756,11 +727,6 @@ with a warm accent */
     var(--radius-primary);
 }
 
-/**
- * Surface tinted with the accent colour from `--tile-accent-color`, fading
- * top-to-bottom into the regular surface colour, framed by a 1px border that
- * fades out along with it. The event lineup positions use it too.
- */
 @utility tile-accent-surface {
   position: relative;
   background: linear-gradient(
@@ -844,10 +810,8 @@ with a warm accent */
 }
 
 /**
- * A cell which carries no control, for a combination the matrix forbids
- * (a role inheriting itself). It repeats the box of matrix-cell so the two
- * always agree on the size of a cell, and only the darker fill sets it
- * apart as unavailable.
+ * It repeats the box of matrix-cell so the two always agree on the size of a
+ * cell.
  */
 @utility matrix-cell-blocked {
   width: --spacing(8);

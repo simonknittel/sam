@@ -16,12 +16,10 @@ import { FaPaperPlane, FaTimes } from "react-icons/fa";
 import { applyForEvent } from "../actions/applyForEvent";
 import { withdrawEventApplication } from "../actions/withdrawEventApplication";
 
-/** The latest application of the viewer, with only the fields that the controls show */
 export interface OwnEventApplication {
   readonly status: EventApplicationStatus;
   /** The note of the viewer to the managers */
   readonly comment: string | null;
-  /** The note of the manager to the viewer when they declined */
   readonly declineReason: string | null;
 }
 
@@ -33,12 +31,7 @@ interface Props {
   readonly autoFocusComment?: boolean;
 }
 
-/**
- * The controls of a viewer who is not signed up for an event that requires
- * applications: the application form, the open application with its
- * withdrawal, or the declined application. A declined viewer cannot apply
- * again.
- */
+/** A declined viewer cannot apply again */
 export const EventApplicationControls = ({
   className,
   eventId,
@@ -124,7 +117,6 @@ const EventApplicationForm = ({
   eventId,
   autoFocusComment,
 }: EventApplicationFormProps) => {
-  /** The errors show as toasts, see `EventParticipationControls` */
   const apply = useAction(applyForEvent);
 
   /** Controlled, see the sign-up form of `EventParticipationControls` */

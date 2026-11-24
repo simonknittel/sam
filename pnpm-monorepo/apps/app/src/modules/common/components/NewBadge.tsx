@@ -4,10 +4,6 @@ interface Props {
   readonly className?: string;
 }
 
-/**
- * Amber "Neu" label of an item which the user has not seen yet. Used
- * together with `UnreadEdge`.
- */
 export const NewBadge = ({ className }: Props) => {
   return (
     <span

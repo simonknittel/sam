@@ -14,20 +14,17 @@ import { ToolbarDivider } from "../toolbar/ToolbarDivider";
 
 interface Props {
   readonly editor: Editor;
-  /** Document position of the block */
   readonly position: number;
   readonly widthPx: number | null;
   readonly align: WikiNodeAlignment;
 }
 
 /**
- * Width presets and block position of a top-level block, shared by all
- * block menus (the callers gate on the menu's topLevel flag). The presets
- * set the same `widthPx` attribute as the drag handles, so a preset is
- * active when the current width matches it exactly — "Schmal" is the
- * schema default, "Volle Breite" stores the explicit full-width marker
- * (surfaced as NULL in the menu state), and a hand-dragged width matches
- * none.
+ * The callers gate on the topLevel flag of the menu. The presets set the same
+ * `widthPx` attribute as the drag handles, so a preset is active when the
+ * current width matches it exactly — "Schmal" is the schema default, "Volle
+ * Breite" stores the explicit full-width marker (surfaced as NULL in the menu
+ * state), and a hand-dragged width matches none.
  */
 export const WikiBlockLayoutActions = ({
   editor,

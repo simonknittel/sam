@@ -10,11 +10,7 @@ import {
   ValidationError,
 } from "@sam-monorepo/application";
 
-/**
- * The texts of the app for the messages of the typed errors, by message. The
- * use cases write the messages in English and take them from an enum of
- * their group (for example `EventErrorMessage`).
- */
+/** The keys are the messages of the errors, for example `EventErrorMessage` */
 export type ApplicationErrorTexts = Readonly<Partial<Record<string, string>>>;
 
 interface Options {
@@ -28,7 +24,6 @@ interface Options {
   readonly texts?: ApplicationErrorTexts;
 }
 
-/** Whether the error is one of the typed errors of the use cases */
 export const isApplicationError = (error: unknown) =>
   error instanceof ForbiddenError ||
   error instanceof NotFoundError ||
@@ -36,11 +31,9 @@ export const isApplicationError = (error: unknown) =>
   error instanceof ValidationError;
 
 /**
- * Maps a typed error of a use case to the response of a server action. Use it
- * only in a server action: a conflict and a missing target refresh the page,
- * like the other guards of the actions. Rethrows all other errors, thus
- * `createAuthenticatedAction` logs them and responds with its internal server
- * error.
+ * Use it only in a server action: a conflict and a missing target refresh the
+ * page. Rethrows all other errors, thus `createAuthenticatedAction` logs them
+ * and responds with its internal server error.
  */
 export const mapApplicationErrorToActionResponse = (
   error: unknown,

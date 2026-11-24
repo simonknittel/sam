@@ -21,7 +21,6 @@ import {
   WikiPageTreeCollapseProvider,
 } from "./WikiPageTreeCollapseProvider";
 
-/** Shared by the two header buttons so they read as one control group */
 const HEADER_BUTTON_CLASS_NAME =
   "rounded-secondary p-1 cursor-pointer text-white/40 hover:text-interaction-500 hover:bg-neutral-800 focus-visible:text-interaction-500 focus-visible:bg-neutral-800 active:bg-neutral-700";
 
@@ -33,24 +32,18 @@ interface Props {
    * (except the path to an opened one), dimmed when shown
    */
   readonly hiddenPageIds: readonly string[];
-  /** The toggle's remembered state, read from the cookie during SSR */
   readonly initialShowHidden: boolean;
-  /** Raw value of the expanded-pages cookie, also read during SSR */
   readonly expandedPagesCookie: string | undefined;
 }
 
 /**
- * The sidebar's "Inhaltsverzeichnis" section: the page tree plus a toggle
- * revealing pages that a sidebar mode hides (shown dimmed). The button only
- * appears when hidden pages exist for this viewer.
- *
- * The server sends the full tree only once, and the default view is
- * derived from it here, so toggling needs no refetch — the cookie write
- * only carries the choice into the next server render.
+ * The server sends the full tree only once, and the default view is derived
+ * from it here, so toggling needs no refetch — the cookie write only carries
+ * the choice into the next server render.
  *
  * An opened hidden page also shows in the default view, together with its
- * hidden ancestors, so that the sidebar shows where the viewer is. Their
- * other subpages stay hidden.
+ * hidden ancestors, so that the sidebar shows where the viewer is. Their other
+ * subpages stay hidden.
  */
 export const WikiSidebarTree = ({
   tree,

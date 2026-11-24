@@ -19,9 +19,8 @@ const CLIPBOARD_MAX_AGE_SECONDS = 60 * 60 * 24;
 const schema = z.object({
   pageId: z.cuid2(),
   includeChildren: z.boolean(),
-  /** Display only — the source is re-resolved at insert time */
   title: z.string().check(z.minLength(1), z.maxLength(128)),
-  /** Display only — readable descendants at copy time, 0 without children */
+  /** Readable descendants at copy time, 0 without children */
   childCount: z.int().check(z.gte(0), z.lte(100_000)),
 });
 
@@ -33,7 +32,7 @@ export const serializeWikiClipboardCookie = (entry: WikiClipboardEntry) =>
 export const serializeWikiClipboardClearCookie = () =>
   `${WIKI_CLIPBOARD_COOKIE}=; path=${WIKI_CLIPBOARD_COOKIE_PATH}; samesite=lax; max-age=0;`;
 
-/** Parses `document.cookie`; a malformed value counts as an empty clipboard */
+/** A malformed value counts as an empty clipboard */
 export const parseWikiClipboardCookie = (
   cookieString: string,
 ): WikiClipboardEntry | null => {

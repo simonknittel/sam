@@ -6,17 +6,14 @@ import type { ActionError, ActionSuccess } from "./createAction";
 import { toastWarning } from "./toastWarning";
 
 /**
- * Runs a server action outside a <form> (click handlers, drag'n'drop,
- * editor commands): toasts the outcome and gives the response of a success,
- * or null after a failure. The form-bound counterpart is useAction().
+ * For an action outside of a <form> (click handlers, drag'n'drop, editor
+ * commands). The form-bound counterpart is `useAction()`.
  */
 export const runAction = async <Success extends ActionSuccess>(
   action: (formData: FormData) => Promise<ActionError | Success>,
   formData: FormData,
   options?: {
-    /** Success stays silent when false (e.g. drag'n'drop reordering) */
     successToast?: boolean;
-    /** Overrides the generic message for unexpected (thrown) errors */
     unknownErrorMessage?: string;
   },
 ): Promise<Success | null> => {

@@ -12,7 +12,7 @@ interface Props {
   readonly children: ReactNode;
 }
 
-/** One note of `GuideNoteList`, in the colors of the `Note` component */
+/** In the colors of the `Note` component */
 export const GuideNote = ({
   variant = GuideNoteVariant.Info,
   children,

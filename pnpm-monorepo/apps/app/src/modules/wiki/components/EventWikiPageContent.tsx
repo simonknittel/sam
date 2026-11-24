@@ -48,11 +48,7 @@ interface Props {
   readonly permissions: ResolvedEventWikiPagePermissions;
 }
 
-/**
- * An event wiki page: header, actions and content. Shared by the briefing
- * root route (which serves the locked root page) and the child page route.
- * Callers must have checked the viewer's read permission.
- */
+/** The callers must check the viewer's read permission first */
 export const EventWikiPageContent = async ({
   context,
   page,
@@ -94,14 +90,12 @@ export const EventWikiPageContent = async ({
   );
 
   const descendantIds = collectWikiPageDescendants(context.pages, page.id);
-  /** What the copy dialog's "Unterseiten mitkopieren" would copy */
   const visibleDescendantCount = collectVisibleWikiSubtree(
     context.pages,
     page.id,
     (id) => context.permissions.get(id)?.canRead === true,
   ).length;
 
-  /** Title of the page an inherited scope comes from, for the dialog */
   const sourceTitle = (sourceId: string | undefined) =>
     !sourceId || sourceId === page.id
       ? undefined
@@ -220,17 +214,9 @@ export const EventWikiPageContent = async ({
   );
 
   return (
-    /**
-     * Keyed by page so navigating to another page always starts back in
-     * view mode.
-     */
     <WikiEditModeProvider key={page.id}>
       <TrackWikiPageVisit pageId={page.id} />
 
-      {/**
-       * A frozen event takes the dialog away from its managers too, which
-       * leaves the visibility badge as plain text for everybody.
-       */}
       {canManagePermissions ? (
         <EventWikiPagePermissionsProvider
           pageId={page.id}

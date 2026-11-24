@@ -53,12 +53,8 @@ const processor = remark()
   });
 
 /**
- * Removes the formats of Discord from a description and keeps its text. The
- * calendar exports use it, so that no format character reaches the calendar
- * entry of the user.
- *
- * The function uses the same format set as the renderer of the app: a
- * construct that Discord does not know keeps the characters of the input.
+ * The function uses the same format set as the renderer of the app: a construct
+ * that Discord does not know keeps the characters of the input.
  *
  * Server-side only. `remark` must stay out of the bundle of the browser.
  */

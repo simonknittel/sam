@@ -8,7 +8,6 @@ import {
 import * as z from "zod";
 import { getRoleErrorTexts } from "../utils/roleErrorTexts";
 
-/** The checkbox of the matrix sends its state as text */
 const schema = setRolePermissionInputSchema.extend({
   enabled: z.stringbool(),
 });

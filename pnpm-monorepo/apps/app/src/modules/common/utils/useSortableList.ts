@@ -74,14 +74,9 @@ const createAccessibility = (
 };
 
 /**
- * The sensors and the German screen reader texts for a `DndContext` with one
- * sortable list. The handle of each entry takes the pointer, the touch and
- * the keyboard: the space bar picks the entry up, the arrow keys move it, and
- * the space bar drops it.
- *
- * Keep `getName` stable. A component that the React Compiler compiles does
- * this by itself. A new function makes a new configuration, which forgets
- * the state of a running drag.
+ * Keep `getName` stable. A component that the React Compiler compiles does this
+ * by itself. A new function makes a new configuration, which forgets the state
+ * of a running drag.
  */
 export const useSortableList = (getName: (id: UniqueIdentifier) => string) => {
   const sensors = useSensors(

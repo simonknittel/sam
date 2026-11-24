@@ -5,11 +5,7 @@ import {
   type EventBriefingGateEvent,
 } from "@sam-monorepo/application";
 
-/**
- * Whether the current viewer may read an event's briefing (see
- * `canReadEventBriefing()` of the application package). Callers must have
- * checked `event;read`, like every event list does.
- */
+/** The callers must check `event;read` first, like each list of events */
 export const canReadEventBriefing = withTrace(
   "canReadEventBriefing",
   async (event: EventBriefingGateEvent) =>

@@ -11,7 +11,6 @@ export const updateWikiIframeAllowlist = createUseCaseAction({
   name: "updateWikiIframeAllowlist",
   schema: updateWikiIframeAllowlistInputSchema,
   useCase: updateWikiIframeAllowlistUseCase,
-  /** One `domain` field for each hostname */
   parseFormData: (formData) => ({ domains: formData.getAll("domain") }),
   texts: WIKI_ERROR_TEXTS,
   success: (t) => t("Common.successfullySaved"),

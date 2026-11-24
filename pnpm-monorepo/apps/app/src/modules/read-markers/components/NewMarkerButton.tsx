@@ -9,11 +9,8 @@ interface Props {
 }
 
 /**
- * The "Neu" badge of a new item as a button which marks the item as read
- * without opening it. It keeps the look of the badge; only the tooltip and
- * small hover, focus and active states show that it is clickable. Its name
- * adds the action to the visible "Neu", because the top bar has a "Neu"
- * button too. Get the click handler from `useMarkAsRead()`.
+ * Its name adds the action to the visible "Neu", because the top bar has a
+ * "Neu" button too.
  */
 export const NewMarkerButton = ({ className, onClick }: Props) => {
   return (

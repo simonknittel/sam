@@ -22,16 +22,9 @@ const HEADING = "Briefing";
 interface Props {
   readonly className?: string;
   readonly task: Pick<VisibleTask, "id" | "description">;
-  /** Shows the button in the head of the tile that opens the editor */
   readonly isEditable: boolean;
 }
 
-/**
- * The tile with the description of a task, the briefing. The edit button
- * switches it into a plain textarea. Unlike the inline editors of the other
- * task fields, the description is long enough that it needs the room of the
- * whole tile.
- */
 export const TaskBriefing = ({ className, task, isEditable }: Props) => {
   const [isEditing, setIsEditing] = useState(false);
   const { formAction, isPending, getDefaultValueWithFallback } = useAction(

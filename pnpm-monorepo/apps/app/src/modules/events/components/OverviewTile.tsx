@@ -15,10 +15,6 @@ import { DownloadEventButton } from "./DownloadEventButton";
 interface Props {
   readonly className?: string;
   readonly event: EventDetails;
-  /**
-   * Renders the cover as a click-to-replace upload area (managers of app
-   * events while the event is still updatable).
-   */
   readonly showCoverUpload?: boolean;
 }
 

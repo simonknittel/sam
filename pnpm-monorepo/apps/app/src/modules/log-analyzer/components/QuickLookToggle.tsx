@@ -16,8 +16,8 @@ interface Props {
 }
 
 /**
- * Adds the type to the quick look or removes it. The tooltip is the same on
- * each button, thus the label carries the title of the type.
+ * The tooltip is the same on each button, thus the label carries the title of
+ * the type.
  */
 export const QuickLookToggle = ({ type, className }: Props) => {
   const { quickLookTypes, setQuickLookTypes } = useQuickLook();

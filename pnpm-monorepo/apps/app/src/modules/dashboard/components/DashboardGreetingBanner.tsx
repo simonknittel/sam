@@ -7,17 +7,9 @@ import { getGreetingBannerPreview } from "../queries/getGreetingBannerPreview";
 import { GreetingBannerPreview } from "../utils/GreetingBannerPreview";
 
 /**
- * The one greeting banner of the dashboard. The occasions share one place,
- * thus only the first one of this order shows: the welcome on the first day
- * of a new member, the birthday of the viewer, the greeting day of the
- * active seasonal event. The seasonal banner renders nothing outside the
- * greeting days of its event, thus the dashboard usually has no banner.
- *
- * A preview of the admin toolbar replaces the order and shows the occasion
- * it names, also on a day without that occasion.
- *
- * A welcome or a birthday banner replaces only the seasonal banner: the
- * other seasonal decorations stay.
+ * The occasions share one place, thus only the first one of the order below
+ * shows. The other seasonal decorations stay also when a welcome or a birthday
+ * banner replaces the seasonal banner.
  */
 export const DashboardGreetingBanner = async () => {
   const [authentication, preview] = await Promise.all([

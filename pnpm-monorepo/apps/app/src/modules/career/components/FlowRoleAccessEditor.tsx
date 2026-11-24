@@ -131,9 +131,8 @@ export const FlowRoleAccessEditor = ({
   );
 
   /**
-   * The picker gives the full selection. A new role gets the lowest tier, a
-   * deselected role loses its row. A row of a role that this user cannot see
-   * stays, because the picker keeps it selected.
+   * A row of a role that this user cannot see stays, because the picker keeps
+   * it selected
    */
   const handleRolesChange = (roleIds: readonly string[]) =>
     setEntries((previous) => [

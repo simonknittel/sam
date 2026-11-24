@@ -10,10 +10,6 @@ import {
 } from "@sam-monorepo/application";
 import { cache } from "react";
 
-/**
- * All tags with all of their roles, for the tag list of the IAM app.
- * Requires `role;manage`.
- */
 export const getManagedRoleTags = cache(
   withTrace("getManagedRoleTags", async () => {
     try {
@@ -27,10 +23,6 @@ export const getManagedRoleTags = cache(
   }),
 );
 
-/**
- * The tag of the tag page, or null when it does not exist. Requires
- * `role;manage`.
- */
 export const getManagedRoleTag = cache(
   withTrace("getManagedRoleTag", async (id: string) => {
     try {

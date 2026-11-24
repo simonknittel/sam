@@ -37,7 +37,6 @@ export const Navigation = async ({ className, event }: Props) => {
     eventWikiContext.permissions.get(eventWikiContext.rootPage.id)?.canRead,
   );
 
-  /** The pages of the participants exist only while the participation is on */
   const showParticipants = event.participationEnabled;
   const showFleetLink = canReadFleet && event.participationEnabled;
 

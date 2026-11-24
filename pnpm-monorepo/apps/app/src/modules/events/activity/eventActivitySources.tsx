@@ -160,10 +160,7 @@ const isWithinRange = (date: Date, filters?: ActivityFilters) => {
   return true;
 };
 
-/**
- * The stored activity types the type filter selects, or `null` when it is not
- * narrowing the stored ones down at all.
- */
+/** `null` when the filter does not narrow the stored types */
 const getSelectedStoredTypes = (filters?: ActivityFilters) => {
   if (!filters?.types) return null;
 
@@ -181,10 +178,7 @@ const buildActivityEntry = (activity: EventActivityRow): ActivityEntry => {
     actor: activity.actor,
   };
 
-  /**
-   * The target column of the types that affect a citizen. A citizen that the
-   * row does not resolve renders as "Unbekannt".
-   */
+  /** A citizen that the row does not resolve renders as "Unbekannt" */
   const affectedCitizenTarget = (
     <CitizenLink
       citizen={activity.affectedCitizen}

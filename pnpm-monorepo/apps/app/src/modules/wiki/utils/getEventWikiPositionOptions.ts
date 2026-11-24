@@ -8,11 +8,6 @@ interface PositionInput {
   readonly name: string;
 }
 
-/**
- * The event's lineup positions in depth-first tree order, for the POSITION
- * scope picker — same option shape as the page target selects so
- * `wikiPageOptionLabel` renders the hierarchy.
- */
 export const getEventWikiPositionOptions = (
   positions: readonly EventWikiContextPosition[],
 ): WikiPageTargetOption[] => {

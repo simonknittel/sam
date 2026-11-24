@@ -21,10 +21,8 @@ export interface ActionSuccess {
 export interface ActionError {
   error: string;
   /**
-   * Since React resets a form after submission, we include the original
-   * request payload in the response for the respective client component
-   * being able to repopulate the form with the previous values. See
-   * `useAction()` for more details.
+   * React resets a form after its action. `useAction()` fills the fields with
+   * this payload.
    */
   requestPayload: FormData;
 }
@@ -35,7 +33,6 @@ type Authentication = Exclude<Awaited<ReturnType<typeof authenticate>>, false>;
 
 export type Translations = Awaited<ReturnType<typeof getTranslations>>;
 
-/** The check an action runs on the session before it validates the request */
 export enum ActionGate {
   /**
    * The same confirmed-email, clearance (`login`/`manage`) and two-factor
@@ -107,11 +104,9 @@ const passesGate = async (
 };
 
 /**
- * The `Success` generic replaces the success response for actions that
- * respond with more than a text (e.g. a flag for the client component, which
- * `runAction()` gives back) — the wrapper's own responses are errors. Pass it
- * explicitly (it is NoInfer, so plain actions keep their exact
- * ActionResponse type).
+ * `Success` is for actions that respond with more than a text. Pass it
+ * explicitly: it is NoInfer, so plain actions keep their exact ActionResponse
+ * type.
  */
 export const createAuthenticatedAction = <
   T extends z.ZodTypeAny,
@@ -127,12 +122,10 @@ export const createAuthenticatedAction = <
   ) => Promise<ActionError | NoInfer<Success>>,
   options?: {
     /**
-     * Maps the FormData to the schema input. The default keeps only the
-     * last value of a repeated field — actions with array fields
-     * (formData.getAll) or per-field normalization pass their own mapping.
+     * The default keeps only the last value of a repeated field. Actions with
+     * array fields (`formData.getAll`) pass their own mapping.
      */
     parseFormData?: (formData: FormData) => unknown;
-    /** `ActionGate.Clearance` by default */
     gate?: ActionGate;
   },
 ): ((formData: FormData) => Promise<ActionError | Success>) => {
@@ -146,9 +139,6 @@ export const createAuthenticatedAction = <
       formData: FormData,
       t: Translations,
     ): Promise<ActionError | Success> => {
-      /**
-       * Authenticate the request
-       */
       const authentication = await authenticate();
       if (!authentication)
         return {
@@ -168,9 +158,6 @@ export const createAuthenticatedAction = <
           requestPayload: formData,
         };
 
-      /**
-       * Validate the request
-       */
       let input: unknown;
       try {
         input = parseFormData(formData);

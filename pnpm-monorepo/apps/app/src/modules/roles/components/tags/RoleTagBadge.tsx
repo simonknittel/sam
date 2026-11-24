@@ -10,10 +10,6 @@ interface Props {
   readonly tag: Pick<BadgeRoleTag, "name" | "description" | "icon">;
 }
 
-/**
- * A tag as a label, with the look of the tags of the role picker. The title
- * gives the full name and the description.
- */
 export const RoleTagBadge = ({ className, tag }: Props) => {
   return (
     <span

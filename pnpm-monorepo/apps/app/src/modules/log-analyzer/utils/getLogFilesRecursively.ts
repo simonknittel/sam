@@ -2,9 +2,8 @@ import { getSessionStartFromFileName } from "./selectLogFiles";
 import type { LogFile } from "./types";
 
 /**
- * Finds the log files below the given entry. A backup with a date in its name
- * no longer changes, thus `knownFiles` saves the call of `getFile()` for it.
- * Live mode walks the folder every few seconds.
+ * A backup with a date in its name no longer changes, thus `knownFiles` saves
+ * the call of `getFile()` for it. Live mode walks the folder every few seconds.
  */
 export async function* getLogFilesRecursively(
   entry: FileSystemFileHandle | FileSystemDirectoryHandle,

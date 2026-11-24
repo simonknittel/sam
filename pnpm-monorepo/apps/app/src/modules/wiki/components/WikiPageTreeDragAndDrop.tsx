@@ -100,10 +100,6 @@ export const WikiPageDndProvider = ({ children }: ProviderProps) => {
   return <WikiPageDndContext value={value}>{children}</WikiPageDndContext>;
 };
 
-/**
- * Check for undefined since the defaultValue of the context is undefined. If
- * it's still undefined, the provider component is missing.
- */
 export const useWikiPageDnd = () => {
   const context = useContext(WikiPageDndContext);
   if (!context) throw new Error("Provider missing!");
@@ -112,9 +108,7 @@ export const useWikiPageDnd = () => {
 
 interface DragHandleProps {
   readonly pageId: string;
-  /** Previous sibling in the visible tree, target of ArrowUp */
   readonly previousSiblingId?: string;
-  /** Next sibling in the visible tree, target of ArrowDown */
   readonly nextSiblingId?: string;
 }
 
@@ -125,7 +119,6 @@ export const WikiPageDragHandle = ({
 }: DragHandleProps) => {
   const { handleDragStart, submitPosition, isPending } = useWikiPageDnd();
 
-  // Keyboard replacement for the drag gesture
   const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
     if (event.key === "ArrowUp" && previousSiblingId) {
       event.preventDefault();
@@ -152,29 +145,21 @@ export const WikiPageDragHandle = ({
 
 interface DropTargetsProps {
   readonly pageId: string;
-  /** Ids of the row's ancestors in the visible tree */
   readonly ancestorIds: readonly string[];
-  /** Whether the viewer may create subpages, i.e. drop other pages inside */
   readonly canDropInside: boolean;
-  /** Whether the row currently shows its children */
   readonly showsChildren: boolean;
-  /** Whether the row has children but keeps them collapsed */
   readonly hasCollapsedChildren: boolean;
-  /** Expands the row, so a page dropped inside it is visible afterwards */
   readonly onRequestExpand: () => void;
   /** Root rows are separated by a flex gap; their zones extend into it */
   readonly isRootLevel: boolean;
 }
 
-/** How long the pointer has to rest on a collapsed row to open it */
 const SPRING_OPEN_DELAY_IN_MILLISECONDS = 700;
 
 interface DropIndicatorLineProps {
-  /** Position within the surrounding `group/band`, e.g. `-top-1 -translate-y-1/2` */
   readonly className: string;
 }
 
-/** Line shown while the pointer is over the band containing it */
 const DropIndicatorLine = ({ className }: DropIndicatorLineProps) => (
   <span
     className={clsx(
@@ -301,7 +286,6 @@ export const WikiPageDropTargets = ({
 };
 
 interface TreeEndDropTargetProps {
-  /** Last root page of the visible tree */
   readonly lastRootPageId: string;
 }
 

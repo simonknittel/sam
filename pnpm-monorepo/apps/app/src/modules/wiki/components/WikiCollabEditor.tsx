@@ -42,38 +42,17 @@ interface Props {
   readonly pageId: string;
   readonly collabUrl: string;
   readonly canEdit: boolean;
-  /** Whether the viewer may upload images to the page */
   readonly canUploadImages: boolean;
-  /** Whether the viewer may upload file attachments to the page */
   readonly canUploadAttachments: boolean;
   readonly userName: string;
   readonly userColor: string;
-  /** Hostnames generic iframes may embed (WikiSetting.iframeAllowlist) */
   readonly iframeAllowlist: readonly string[];
   readonly linkedPages: WikiLinkedPages;
-  /** Current handles of the citizens mentioned on the page, by id */
   readonly mentionedCitizens: Readonly<Record<string, WikiMentionedCitizen>>;
-  /** Current names and manufacturer logos of the variants linked on the page, by id */
   readonly linkedVariants: Readonly<Record<string, WikiLinkedVariant>>;
-  /**
-   * Server-resolved page lists of the page-index nodes, keyed by
-   * `wikiPageIndexConfigKey` — the node views' initial data
-   */
   readonly pageIndexes: Readonly<Record<string, WikiPageIndexEntry[]>>;
-  /**
-   * Server-resolved members of the role-member nodes, keyed by role id —
-   * the node views' initial data
-   */
   readonly roleCitizens: Readonly<Record<string, WikiCitizen[]>>;
-  /**
-   * Intrinsic dimensions of the page's uploaded images, by upload id —
-   * lets the image node view serve optimized images
-   */
   readonly imageDimensions: Readonly<Record<string, WikiImageDimensions>>;
-  /**
-   * Server-rendered static content shown until the collab provider has
-   * synced, so readers get a fast first paint.
-   */
   readonly staticFallback: ReactNode;
 }
 
@@ -95,7 +74,6 @@ const collabTokenResponseSchema = z.object({
   canEdit: z.boolean(),
 });
 
-/** A token request that the collab token route did not answer with a token */
 class CollabTokenRequestError extends Error {
   constructor(readonly status: number) {
     super(`The token request failed with status ${status}`);
@@ -111,13 +89,7 @@ const isAccessLost = (error: unknown) =>
   error instanceof CollabTokenRequestError &&
   [401, 403, 404].includes(error.status);
 
-/**
- * A token of the collab token route (`/api/wiki/[pageId]/collab-token`). A
- * route handler and not a server action: an editor that is open during a
- * deploy continues to get tokens.
- *
- * @throws CollabTokenRequestError when the route does not give a token
- */
+/** @throws CollabTokenRequestError when the route does not give a token */
 const fetchCollabToken = async (pageId: string) => {
   const response = await fetch(
     new URL(
@@ -185,15 +157,9 @@ const getAwarenessUsers = (provider: HocuspocusProvider): WikiCollabUser[] => {
 };
 
 /**
- * Collaborative editor backed by the Hocuspocus server (apps/collab).
  * Everyone who can see the page connects — users with edit permission
  * read-write, everyone else via a read-only connection with live updates.
- * Editors additionally start in the read-only view and only get the
- * editing chrome while they have toggled edit mode on (WikiEditModeToggle).
- * The provider fetches a fresh short-lived JWT from the app on every
- * (re)connect, and sends a fresh one on an interval while it is
- * authenticated. Mounted with key={pageId} so every page gets its own
- * provider.
+ * Mounted with key={pageId} so every page gets its own provider.
  */
 export const WikiCollabEditor = ({
   className,
@@ -346,9 +312,7 @@ interface ConnectedEditorProps {
   readonly className?: string;
   readonly pageId: string;
   readonly provider: HocuspocusProvider;
-  /** Whether the viewer may upload images to the page */
   readonly canUploadImages: boolean;
-  /** Whether the viewer may upload file attachments to the page */
   readonly canUploadAttachments: boolean;
   /** Whether the viewer can edit AND has toggled edit mode on */
   readonly isEditing: boolean;
@@ -454,10 +418,8 @@ const ConnectedEditor = ({
     : websocketStatus;
 
   /**
-   * Connected users from the provider's awareness states (the caret
-   * extension publishes each user's name/color there). The snapshot is
-   * cached by value so unrelated awareness updates (caret moves) don't
-   * re-render.
+   * The snapshot is cached by value so unrelated awareness updates (caret
+   * moves) do not re-render
    */
   const usersCache = useRef<{ key: string; users: WikiCollabUser[] }>({
     key: "[]",

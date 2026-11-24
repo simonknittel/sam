@@ -11,7 +11,6 @@ interface Props {
   readonly citizenLog: Pick<CitizenLog, "id" | "citizenId" | "confirmed"> & {
     readonly citizen: Pick<Citizen, "deletedAt">;
   };
-  /** The viewer may confirm the log or mark it as a false report */
   readonly canDecide: boolean;
 }
 

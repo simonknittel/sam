@@ -11,10 +11,7 @@ import {
 } from "@sam-monorepo/application";
 import { cache } from "react";
 
-/**
- * The task with the relations of the task page, or null when the viewer
- * cannot see it. The deletion of a task uses the same row.
- */
+/** Null when the viewer cannot see the task */
 export const getTaskById = cache(
   withTrace("getTaskById", async (id: VisibleTask["id"]) => {
     try {

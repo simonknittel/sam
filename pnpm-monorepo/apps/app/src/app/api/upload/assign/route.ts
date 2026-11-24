@@ -58,10 +58,7 @@ const bodySchema = z.discriminatedUnion("resourceType", [
     resourceAttribute: z.literal("imageId"),
     imageId: idSchema,
   }),
-  /**
-   * Sets or removes (`imageId: null`) the cover image of an app event.
-   * `resourceId` is the id of the event.
-   */
+  /** `imageId: null` removes the cover image */
   z.object({
     resourceType: z.literal(UploadTargetType.Event),
     resourceAttribute: z.literal("coverImageId"),
@@ -74,7 +71,6 @@ const bodySchema = z.discriminatedUnion("resourceType", [
     resourceId: idSchema,
     imageId: idSchema,
   }),
-  /** Sets the icon of a role tag. `resourceId` is the id of the tag. */
   z.object({
     resourceType: z.literal(UploadTargetType.RoleTag),
     resourceAttribute: z.literal("iconId"),
@@ -82,10 +78,7 @@ const bodySchema = z.discriminatedUnion("resourceType", [
     imageId: idSchema,
   }),
   z.discriminatedUnion("resourceAttribute", [
-    /**
-     * Links an upload (an image or an attachment) to the wiki page that
-     * embeds it. `resourceId` is the id of the page.
-     */
+    /** Links an upload to the wiki page that embeds it */
     z.object({
       resourceType: z.literal(UploadTargetType.WikiPage),
       resourceAttribute: z.literal(WikiPageUploadAttribute.Uploads),
@@ -93,10 +86,7 @@ const bodySchema = z.discriminatedUnion("resourceType", [
       uploadId: idSchema,
       kind: z.enum(UploadCategory),
     }),
-    /**
-     * Sets or removes (`imageId: null`) the icon of a wiki page.
-     * `resourceId` is the id of the page.
-     */
+    /** `imageId: null` removes the icon */
     z.object({
       resourceType: z.literal(UploadTargetType.WikiPage),
       resourceAttribute: z.literal(WikiPageUploadAttribute.Icon),
@@ -219,10 +209,6 @@ const assignUpload = async (
   }
 };
 
-/**
- * Assigns an upload to its target. The probe of the image dimensions runs
- * after the response.
- */
 export async function PATCH(request: Request) {
   try {
     const authentication = await requireAuthenticationApi(

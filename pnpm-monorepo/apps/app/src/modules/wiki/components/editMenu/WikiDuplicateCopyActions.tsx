@@ -14,12 +14,6 @@ interface Props {
   readonly typeNames: readonly string[];
 }
 
-/**
- * Duplicate and copy buttons shared by every block menu. Duplicate
- * inserts an identical sibling right below the block; copy fills the
- * app-wide clipboard slot the insert palettes (gutter plus button, slash
- * command) offer for insertion (wikiBlockClipboard).
- */
 export const WikiDuplicateCopyActions = ({
   editor,
   position,

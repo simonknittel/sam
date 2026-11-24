@@ -10,18 +10,14 @@ import { FaSave } from "react-icons/fa";
 
 interface Props {
   readonly editor: Editor;
-  /** Document position of the node being configured */
   readonly position: number;
   readonly attrs: Readonly<Record<string, unknown>>;
   readonly onRequestClose: () => void;
 }
 
 /**
- * Configuration dialog for a role-members node ("Rollenmitglieder"), opened
- * from the edit menu: picks the role whose members the block lists. Saving
- * writes the node's attribute — the rendered list follows via the node
- * view's server fetch. Removing the role again is allowed; the block then
- * falls back to its unconfigured state.
+ * Removing the role again is allowed; the block then falls back to its
+ * unconfigured state.
  */
 export const WikiRoleCitizensConfigModal = ({
   editor,
@@ -32,10 +28,6 @@ export const WikiRoleCitizensConfigModal = ({
   const initial = normalizeWikiRoleCitizensConfig(attrs);
 
   const save = (formData: FormData) => {
-    /**
-     * Guard against stale positions after collab edits — the node must
-     * still be a role member list.
-     */
     const node = editor.state.doc.nodeAt(position);
     if (node?.type.name === "wikiRoleCitizens") {
       const config = normalizeWikiRoleCitizensConfig({

@@ -21,9 +21,7 @@ import {
 interface Props {
   readonly variantTags: readonly VariantTagBadgeItem[];
   readonly manufacturers: Manufacturer[];
-  /** Ship lists offer filtering by deleted ships; the org's variant list has none */
   readonly showDeletedFilter?: boolean;
-  /** The org's variant list can additionally sort by ship count */
   readonly withCountSort?: boolean;
 }
 

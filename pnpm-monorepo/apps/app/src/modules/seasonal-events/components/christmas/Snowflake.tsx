@@ -1,26 +1,14 @@
 import clsx from "clsx";
 
 interface Props {
-  /** Gives the flake its place, its size, its colour and its delay */
   readonly className?: string;
 }
 
 /**
- * One falling flake of snow: a crystal with six arms and a branch pair on
- * every arm.
- *
- * The flake starts at the top edge of the layer above the page; the motion
- * carries it from above the viewport to below it. The caller gives it its
- * horizontal place, its size, its colour and the delay of its fall.
- *
- * At rest the flake is invisible, thus a viewer who prefers reduced motion
- * sees no row of flakes which stands along the top edge of the page for ever.
- * The fall starts and ends at that same opacity, thus the motion looks the
- * same as before.
- *
- * The colour comes from `currentColor`, which the class of the caller sets.
- * The caller lowers the colour itself instead of the opacity of the element,
- * because the motion writes the opacity.
+ * At rest the flake is invisible, thus a viewer who prefers reduced motion sees
+ * no row of flakes along the top edge of the page. The caller lowers the colour
+ * itself instead of the opacity of the element, because the motion writes the
+ * opacity.
  */
 export const ChristmasSnowflake = ({ className }: Props) => (
   <svg

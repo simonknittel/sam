@@ -10,11 +10,7 @@ import {
 } from "@sam-monorepo/application";
 import { cache } from "react";
 
-/**
- * See `findResolvedEventParticipants()`. The pages give the event that
- * `getEventById()` cached, thus `cache` dedupes the calls of one render by
- * its reference.
- */
+/** For `cache`, see `getEventFleet()` */
 export const getParticipants = cache(
   withTrace("getParticipants", async (event: Pick<EventDetails, "id">) => {
     try {

@@ -11,17 +11,11 @@ import type { BadgeRoleTag } from "@/modules/roles/queries/getRoles";
 import { useState } from "react";
 
 interface Props {
-  /** Sorted by name */
   readonly tags: readonly BadgeRoleTag[];
   readonly selectedTagIds: readonly BadgeRoleTag["id"][];
   readonly onTagClick: (tagId: BadgeRoleTag["id"]) => void;
 }
 
-/**
- * The content of the tag picker: a search over the tag names and one tag per
- * row. Like the role picker, but without the tag row. The owner holds the
- * selection.
- */
 export const RoleTagPanel = ({ tags, selectedTagIds, onTagClick }: Props) => {
   const [query, setQuery] = useState("");
 

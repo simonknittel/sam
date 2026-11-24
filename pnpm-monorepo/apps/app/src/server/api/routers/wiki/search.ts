@@ -7,13 +7,6 @@ import {
 import * as z from "zod";
 import { protectedProcedure, toTrpcError } from "../../trpc";
 
-/**
- * Full-text search over wiki pages (permission-filtered) and tags, for
- * search-as-you-type in the wiki sidebar and on the landing page. With a
- * container the search is limited to that event's or template's briefing
- * (the briefing sidebar), with a variantId to the subtree embedded on that
- * variant's page; the use case gates on the scope itself.
- */
 export const search = protectedProcedure
   .input(
     wikiScopeInputSchema.safeExtend({

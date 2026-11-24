@@ -12,10 +12,8 @@ interface Props {
 }
 
 /**
- * Hides the shared entries of single citizens. The list holds the citizens
- * of the loaded shared entries, thus it needs no permission to read citizens
- * and no request of its own. Everybody starts checked — like the type
- * settings, an unchecked box hides its entries.
+ * The list holds the citizens of the loaded shared entries, thus it needs no
+ * permission to read citizens and no request of its own.
  */
 export const CitizenFilters = ({ className }: Props) => {
   const { entries, hiddenCitizenIds, setHiddenCitizenIds } =

@@ -105,7 +105,6 @@ export const LogAnalyzer = ({ className }: Props) => {
   const [logSelection, setLogSelection] = useState<LogSelection | null>(null);
   const [readProgress, setReadProgress] = useState<ReadProgress | null>(null);
 
-  /** The files of the last walk through the folder, by their path. */
   const knownLogFilesRef = useRef<ReadonlyMap<string, LogFile>>(new Map());
 
   /**
@@ -223,9 +222,8 @@ export const LogAnalyzer = ({ className }: Props) => {
         }
 
         /**
-         * Map raw matches to `IEntry` on the main thread (needed for JSX
-         * rendering). A cycle without a match keeps the map, so that the
-         * table does not sort all entries again every few seconds.
+         * A cycle without a match keeps the map, so that the table does not
+         * sort all entries again every few seconds.
          */
         if (rawMatches.length > 0) {
           setEntries((previousEntries) => {
@@ -458,9 +456,10 @@ export const LogAnalyzer = ({ className }: Props) => {
       <QuickLookBar className="mt-0.5" />
 
       {entries.size > 0 ? (
-        /* Below `2xl`, three quarters of the width are less than the minimum
-           width of the table, thus the Live-Status moves above the table.
-           Without the Live-Status, the table takes the full width. */
+        /*
+         * Below `2xl`, three quarters of the width are less than the minimum
+         * width of the table, thus the Live-Status moves above the table.
+         */
         <div
           className={clsx("mt-0.5 flex flex-col gap-0.5", {
             "2xl:grid 2xl:grid-cols-[3fr_1fr] 2xl:items-start":

@@ -35,7 +35,6 @@ export const RadioFilter = ({
   });
 
   const setValueAndResetPagination = (newValue: string) => {
-    /** In the same tick, nuqs gives both changes one URL update */
     void setValue(newValue);
     if (resetCursorPagination)
       void setPagination({ cursor: null, direction: null });

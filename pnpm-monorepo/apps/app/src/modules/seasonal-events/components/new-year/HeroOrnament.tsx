@@ -1,20 +1,8 @@
 import type { SeasonalDecorationProps } from "../../utils/types";
 
 /**
- * The bottle and the two glasses of the turn of the year, next to the
- * greeting of the banner.
- *
- * The drawing needs more than one tone, thus it carries three fixed fills
- * instead of `currentColor`:
- * - `#15803d` (green 700) for the glass of the bottle, because a bottle of
- *   sparkling wine is green;
- * - `#fbbf24` (amber 400) for the foil of the neck and for the wine in the
- *   glasses, the gold of the surface of the greeting banner;
- * - `#fef3c7` (amber 100) for the label and for the stems, which stay light
- *   on the dark shell of the app.
- *
- * The shapes are large and few, because the banner gives the ornament a box
- * of 112 pixels. The ornament does not move.
+ * The shapes are large and few, because the banner gives the ornament a box of
+ * 112 pixels.
  */
 export const NewYearHeroOrnament = ({ className }: SeasonalDecorationProps) => (
   <svg viewBox="0 0 24 24" aria-hidden className={className}>

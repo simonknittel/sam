@@ -7,7 +7,6 @@ interface Props {
   readonly link: Pick<VariantExternalLinkRow, "serviceName" | "url">;
 }
 
-/** A link of a variant to an external service. It opens in a new tab. */
 export const VariantExternalLink = ({ link }: Props) => {
   return (
     <Link

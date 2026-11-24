@@ -29,11 +29,6 @@ interface Props {
   readonly value: FleetValue;
 }
 
-/**
- * The value of the filtered ships for each acquisition source, in USD and in
- * aUEC. The ships without an acquisition source get a tile only when they
- * have a value.
- */
 export const FleetValueTiles = ({ value }: Props) => (
   <>
     <ValueTile

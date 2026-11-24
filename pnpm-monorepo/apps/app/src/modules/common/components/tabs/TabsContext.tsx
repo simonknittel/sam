@@ -38,10 +38,6 @@ export const TabsProvider = ({
   );
 };
 
-/**
- * Check for undefined since the defaultValue of the context is undefined. If
- * it's still undefined, the provider component is missing.
- */
 export function useTabsContext() {
   const context = useContext(TabsContext);
   if (!context) throw new Error("Provider missing!");

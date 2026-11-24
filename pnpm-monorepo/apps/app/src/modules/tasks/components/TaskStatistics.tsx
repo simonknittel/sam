@@ -28,11 +28,9 @@ interface Props {
     | "rewardTypeTextValue"
   >;
   readonly status: TaskStatus;
-  /** Shows the inline editors of the values */
   readonly isEditable: boolean;
 }
 
-/** The key figures of a task in one row of tiles */
 export const TaskStatistics = ({
   className,
   task,

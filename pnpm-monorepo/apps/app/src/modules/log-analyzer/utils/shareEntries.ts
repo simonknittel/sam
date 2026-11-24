@@ -9,12 +9,9 @@ import type { IEntry } from "./PATTERNS";
 import type { RawMatch } from "./types";
 import { createUploadFormData, type UploadEntry } from "./uploadEntries";
 
-/** The helpers of the two uploads: the rolling window and the older entries */
-
 export interface PendingEntry extends UploadEntry {
   readonly key: string;
   readonly hash: string;
-  /** The time of the match, see `RawMatch.isoDate` */
   readonly isoDate: string;
 }
 
@@ -48,7 +45,6 @@ interface HashPage {
   readonly cursorHash: string | null;
 }
 
-/** The hashes of all pages of a query of the hashes the server holds */
 export const loadStoredHashes = async (
   loadPage: (cursorHash: string | undefined) => Promise<HashPage>,
 ) => {
@@ -66,12 +62,8 @@ export const loadStoredHashes = async (
 };
 
 /**
- * Sends the entries in requests of the allowed size. `onChunkUploaded` runs
- * after each request which succeeded.
- *
- * The upload stops at the first request which fails, and returns false. The
- * entries of that request and of the requests after it stay unsent. Stopping
- * there keeps a broken upload down to one message for the user.
+ * Returns false and stops at the first request which fails: a broken upload
+ * gives only one message to the user.
  */
 export const uploadInChunks = async (
   entries: readonly PendingEntry[],
@@ -100,10 +92,7 @@ export const uploadInChunks = async (
   return true;
 };
 
-/**
- * Gives the badge of the upload to the entries of the keys. Keys the table
- * does not hold leave it untouched, and so does a call without a change.
- */
+/** Without a change, the map stays the same */
 export const markEntriesUploaded = (
   previousEntries: Map<string, IEntry>,
   keys: readonly string[],

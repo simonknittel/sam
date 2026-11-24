@@ -8,7 +8,6 @@ import { OnboardingTaskListItem } from "./OnboardingTaskListItem";
 export const OnboardingPopoverContent = () => {
   const { eligibleTasks, completedTaskKeys, openTaskCount } = useOnboarding();
 
-  /** Open tasks first, completed tasks at the end, config order in between */
   const orderedTasks = [
     ...eligibleTasks.filter((task) => !completedTaskKeys.has(task.key)),
     ...eligibleTasks.filter((task) => completedTaskKeys.has(task.key)),

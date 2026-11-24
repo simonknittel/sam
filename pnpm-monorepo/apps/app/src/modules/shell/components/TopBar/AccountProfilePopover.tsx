@@ -17,10 +17,6 @@ interface Props {
   readonly triggerClassName: string;
 }
 
-/**
- * The account popover of a user with a citizen: the profile of the own
- * citizen, the same as the dashboard tile, and the controls of the account.
- */
 export const AccountProfilePopover = ({
   citizenId,
   trigger,

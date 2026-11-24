@@ -51,24 +51,10 @@ const setViewDragging = (
 
 interface Props {
   readonly editor: Editor | null;
-  /** Shared focused-block state, see WikiEditorOverlays */
   readonly focusedElement: HTMLElement | null;
-  /** Opens the link dialog (selection menu's link button) */
   readonly onRequestLink: () => void;
 }
 
-/**
- * Contextual edit menu centered above its target. Clicking a block
- * focuses it and raises the menu — for embeds, media, links, callouts,
- * container blocks and text blocks, where it is the block menu
- * (headings, alignment). Text selected inside a single block raises the
- * formatting menu (marks, text color, highlight) centered over the
- * selection instead — exclusively: while the selection exists, no block
- * menu shows. Every block type gets at least a delete button, and all but
- * the formatting and the link menu the drag handle; the per-kind actions
- * live in editMenu/. Companion of WikiResizeHandles inside the shared overlay
- * root.
- */
 export const WikiEditMenu = ({
   editor,
   focusedElement,
@@ -100,10 +86,6 @@ export const WikiEditMenu = ({
     floatingStyles,
     placement: resolvedPlacement,
   } = useFloating({
-    /**
-     * Block-level menus align with the block's left edge; the selection
-     * and link menus center over their inline target.
-     */
     placement:
       menu?.kind === "textSelection" || menu?.kind === "link"
         ? "top"
@@ -117,7 +99,6 @@ export const WikiEditMenu = ({
     ],
     whileElementsMounted: autoUpdate,
   });
-  /** The flip middleware moved the menu below its target */
   const flippedBelow = resolvedPlacement.startsWith("bottom");
 
   useEffect(() => {

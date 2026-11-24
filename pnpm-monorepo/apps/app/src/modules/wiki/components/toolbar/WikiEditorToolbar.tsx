@@ -36,17 +36,11 @@ interface Props {
    * the ready editor), buttons just don't do anything yet.
    */
   readonly editor: Editor | null;
-  /** Id of the page being edited — target for file uploads */
   readonly pageId: string;
-  /** Whether the viewer may upload images to the page */
   readonly canUploadImages: boolean;
-  /** Whether the viewer may upload file attachments to the page */
   readonly canUploadAttachments: boolean;
 }
 
-/**
- * Toolbar of the wiki editor.
- */
 export const WikiEditorToolbar = ({
   editor,
   pageId,

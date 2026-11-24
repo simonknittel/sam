@@ -40,8 +40,7 @@ interface Props {
   readonly roleId: Role["id"];
   readonly showPlaceholder?: boolean;
   /**
-   * The title of the placeholder "Verborgene Rolle" for a role that the
-   * viewer cannot see. Without it, the badge of such a role renders nothing.
+   * Without it, the badge of a role that the viewer cannot see renders nothing
    */
   readonly hiddenRoleTitle?: string;
   readonly citizenId?: string;

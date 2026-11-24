@@ -13,10 +13,6 @@ interface Props {
   readonly context: ViewerWordingContext;
 }
 
-/**
- * The birthday greeting of the viewer. `DashboardGreetingBanner` decides
- * when it shows.
- */
 export const BirthdayGreetingBanner = ({ context }: Props) => {
   const wording = pickRandomWording(BIRTHDAY_WORDINGS, context);
   if (!wording) return null;

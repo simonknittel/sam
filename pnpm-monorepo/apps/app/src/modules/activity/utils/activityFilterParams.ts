@@ -7,8 +7,7 @@ export const ACTIVITY_FROM_PARAM = "from";
 export const ACTIVITY_TO_PARAM = "to";
 
 /**
- * How many values one multi-select filter may contribute to a query. The
- * lists come from the URL, so without a ceiling anyone could hand the
+ * The lists come from the URL, so without a ceiling anyone could hand the
  * database an arbitrarily long `IN`.
  */
 const MAX_FILTER_VALUES = 100;
@@ -24,7 +23,7 @@ const limitFilterValues = (values?: string[] | null) =>
   values && values.length > 0 ? values.slice(0, MAX_FILTER_VALUES) : null;
 
 export interface ActivityFilters {
-  /** Which activity types to show, or `null` for all of them. */
+  /** `null` for all types */
   readonly types: string[] | null;
   readonly actorIds: string[] | null;
   readonly createdAt: { gte?: Date; lt?: Date };

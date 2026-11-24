@@ -19,10 +19,6 @@ import { NewYearDecoration } from "./NewYearDecoration";
 import { NotificationSwipeActions } from "./NotificationSwipeActions";
 import { WelcomeDecoration } from "./WelcomeDecoration";
 
-/**
- * What a decorated row draws behind its text. The record is total, thus a
- * new decoration cannot stay without a component.
- */
 const decorationComponents: Record<NotificationDecoration, ComponentType> = {
   [NotificationDecoration.Birthday]: BirthdayDecoration,
   [NotificationDecoration.NewYear]: NewYearDecoration,

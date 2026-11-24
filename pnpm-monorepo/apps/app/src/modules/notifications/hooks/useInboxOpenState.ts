@@ -5,12 +5,8 @@ import { useEffect, useState } from "react";
 import { useOnSiteNotifications } from "../components/OnSiteNotificationsProvider";
 
 /**
- * The open state of one inbox surface. While a request of the provider is
- * pending and the surface can act, the inbox opens and the request settles.
- * An inbox which is open already stays open. After the user closes the
- * inbox, it stays closed until the next request.
- *
- * Only one surface at a time can act, otherwise two inboxes open.
+ * Only one surface at a time can act on the request, otherwise two inboxes
+ * open.
  */
 export const useInboxOpenState = (canActOnRequest: boolean) => {
   const { isInboxOpenRequested, settleInboxOpenRequest } =

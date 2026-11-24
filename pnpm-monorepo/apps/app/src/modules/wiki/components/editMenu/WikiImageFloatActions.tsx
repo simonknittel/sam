@@ -8,7 +8,6 @@ import { floatWikiImage, unfloatWikiImage } from "../wikiImageFloat";
 
 interface Props {
   readonly editor: Editor;
-  /** Document position of the image (block or floated) */
   readonly position: number;
   /** Current float side, NULL for the (unfloated) block image */
   readonly floatSide: WikiFloatImageSide | null;
@@ -23,11 +22,6 @@ const FLOAT_SIDE_OPTIONS: readonly {
   { side: "right", title: "Vom Text umflossen (rechts)", icon: TbFloatRight },
 ];
 
-/**
- * Float actions of the image menus: floating a block image moves it into
- * the neighboring paragraph, unfloating moves it back out
- * (wikiImageFloat.ts).
- */
 export const WikiImageFloatActions = ({
   editor,
   position,

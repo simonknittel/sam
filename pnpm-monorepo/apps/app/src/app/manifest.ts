@@ -16,7 +16,7 @@ export default function manifest(): MetadataRoute.Manifest {
     description:
       "Sinister Administration Module (SAM) of our Star Citizen organization",
     categories: ["entertainment", "games"], // https://github.com/w3c/manifest/wiki/Categories
-    scope: env.NEXT_PUBLIC_BASE_URL, // Will open links outside the app in the browser
+    scope: env.NEXT_PUBLIC_BASE_URL,
     start_url: `${env.NEXT_PUBLIC_BASE_URL}/app`,
     shortcuts: [
       // Can't be individualized based on permissions
@@ -42,7 +42,6 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: "any",
         type: "image/svg+xml",
       },
-      // Android uses maskable icons to fill the full launcher shape
       {
         src: svgToStaticImageData(iconMaskableSrc).src,
         sizes: "any",

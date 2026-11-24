@@ -14,7 +14,6 @@ interface Props {
    * inside a table) is no toggle.
    */
   readonly isToggle?: boolean;
-  /** Optional for type="submit" buttons inside forms */
   readonly onClick?: () => void;
   readonly type?: "button" | "submit";
   readonly disabled?: boolean;

@@ -11,10 +11,9 @@ import { getEmbedSigningKey } from "@/modules/embed-authentication/utils/getEmbe
 const CACHE_MAX_AGE_IN_SECONDS = 5 * 60;
 
 /**
- * Publishes the public key embedded apps verify their identity tokens with
- * (see docs/embedded-app-authentication.md). The MCP access tokens use the
- * same key. Public by design: a verifier has no session, and the key set
- * holds only public keys.
+ * The MCP access tokens use the same key as the embeds (see
+ * docs/embedded-app-authentication.md). Public by design: the key set holds
+ * only public keys.
  */
 export const GET = async () => {
   const jsonWebKeySet: EmbedJsonWebKeySet = createEmbedJsonWebKeySet(
@@ -25,7 +24,6 @@ export const GET = async () => {
     headers: {
       // RFC 7517 registers this type for a key set
       "Content-Type": "application/jwk-set+json",
-      // s-maxage lets the CDN answer repeat fetches without a function invocation
       "Cache-Control": `public, max-age=${CACHE_MAX_AGE_IN_SECONDS}, s-maxage=${CACHE_MAX_AGE_IN_SECONDS}`,
       // Verification may happen in the browser of an embedded app
       "Access-Control-Allow-Origin": "*",

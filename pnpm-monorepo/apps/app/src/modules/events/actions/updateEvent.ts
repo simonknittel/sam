@@ -54,9 +54,6 @@ export const updateEvent = createAuthenticatedAction(
         ? "Das Event bleibt auf Discord für alle Mitglieder des Servers sichtbar. Entferne es dort, wenn das nicht gewollt ist."
         : null);
 
-    /**
-     * Respond with the result
-     */
     return {
       success: t("Common.successfullySaved"),
       ...(warning ? { warning } : {}),

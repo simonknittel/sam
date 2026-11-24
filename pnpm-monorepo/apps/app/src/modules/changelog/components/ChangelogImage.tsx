@@ -1,6 +1,5 @@
 import Image, { type StaticImageData } from "next/image";
 
-/** Where the image shows in its entry */
 export enum ChangelogImageWidth {
   Column = "column",
   /** One cell of a two-column grid with a gap of 8 px */

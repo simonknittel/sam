@@ -14,12 +14,7 @@ export function proxy(request: NextRequest) {
   );
 
   /**
-   * This is only an early return. Actual verification of the session is done
-   * on the individual pages. Use `requireAuthenticationPage()` in order to
-   * fully authenticate the user.
-   *
-   * The `redirect-to` search param preserves the deep link, so that the login
-   * page can send the user back to it after the login.
+   * Only an early return: `requireAuthenticationPage()` verifies the session
    */
   if (pathname.startsWith("/app") && !hasSessionCookie) {
     const loginUrl = new URL(`/`, request.url);

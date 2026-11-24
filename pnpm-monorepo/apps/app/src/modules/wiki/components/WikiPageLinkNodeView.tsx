@@ -80,23 +80,12 @@ const WikiPageLinkNodeView = ({ node, extension }: NodeViewProps) => {
   );
 };
 
-/**
- * The shared package's page link node plus an editor-only React node view
- * that also resolves links to pages outside the map the page rendered
- * with. Same name, attributes and schema — only the in-editor rendering
- * differs, so save validation, the collab server and the static renderer
- * stay untouched by this variant.
- */
 const WikiPageLinkWithNodeView = WikiPageLink.extend({
   addNodeView() {
     return ReactNodeViewRenderer(WikiPageLinkNodeView);
   },
 });
 
-/**
- * Swaps the plain page link node in an extension list for the node-view
- * variant, keeping its position in the list and its configured options.
- */
 export const withWikiPageLinkNodeView = (
   extensions: AnyExtension[],
 ): AnyExtension[] =>

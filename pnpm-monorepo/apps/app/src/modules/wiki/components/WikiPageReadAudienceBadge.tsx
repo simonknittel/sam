@@ -15,11 +15,6 @@ interface Props {
 const BADGE_CLASSES =
   "rounded-secondary bg-white/5 px-1.5 py-0.5 text-white/60";
 
-/**
- * Who may read this page, in the metadata line of the page header. Every
- * reader sees it; whoever may change the setting opens the permissions
- * dialog from here, next to the lock button they already know.
- */
 export const WikiPageReadAudienceBadge = ({ label }: Props) => {
   const openPermissions = useWikiPagePermissionsOpener();
 

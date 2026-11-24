@@ -7,7 +7,6 @@ import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { findUploadAuthorOptions } from "@sam-monorepo/application";
 import { cache } from "react";
 
-/** See `findUploadAuthorOptions()` */
 export const getUploadAuthors = cache(
   withTrace("getUploadAuthors", async () => {
     try {

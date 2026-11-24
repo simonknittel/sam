@@ -33,17 +33,13 @@ interface Props {
     readonly discordPublishedLocation: string | null;
   };
   readonly channels: readonly PublishableGuildChannel[] | null;
-  /** The placeholder of the location field, i.e. what an empty field means */
   readonly defaultLocation: string;
-  /** Server-side env, needed to link to the event on Discord */
   readonly discordGuildId: string;
 }
 
 /**
- * Publishing the event to the Discord guild as a guild scheduled event.
- * While it is published, the app keeps title, description, times and cover
- * image in sync; participants stay separate on both sides. The content of the
- * Discord tile of the settings page (see `EventSettings`).
+ * While the event is published, the app keeps title, description, times and
+ * cover image in sync; participants stay separate on both sides.
  */
 export const EventDiscordSettings = ({
   className,
@@ -88,10 +84,7 @@ const PublishedState = ({
   discordPublishedId,
   discordGuildId,
 }: PublishedStateProps) => {
-  /**
-   * The channel list is only there to turn the stored id into a name; a
-   * channel the bot can no longer see falls back to the raw id.
-   */
+  /** A channel the bot can no longer see falls back to the raw id */
   const location = event.discordPublishedChannelId
     ? `Sprachkanal: ${
         channels?.find(
@@ -168,10 +161,6 @@ const UnpublishedState = ({
   channels,
   defaultLocation,
 }: UnpublishedStateProps) => {
-  /**
-   * The errors show as toasts, not in the form: the error "already
-   * published" refreshes the page, which then shows the published state.
-   */
   const { formAction } = useAction(publishEventToDiscord);
   const restrictedConfirmation = useSubmitConfirmation(
     event.visibility === EventVisibility.RESTRICTED,

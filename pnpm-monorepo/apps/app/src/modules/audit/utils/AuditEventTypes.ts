@@ -12,9 +12,8 @@ import {
 } from "@sam-monorepo/domain";
 
 /**
- * The app of a type: the groups of the type filter of the system log. The
- * values are the names of the apps. `Other` holds the types that belong to no
- * app.
+ * The values are the names of the apps. `Other` holds the types that belong to
+ * no app.
  */
 export enum SystemLogApp {
   Account = "Account",
@@ -59,7 +58,6 @@ const formatPrunedWebPushSubscription = (
   return `${subscription.subscriptionId} of citizen ${subscription.citizenId} (${details.join(", ")})`;
 };
 
-/** A read access gives the query parameters of the read */
 const toReadMessage = (subject: string, data: { arguments: object }) =>
   `${subject}: ${JSON.stringify(data.arguments)}`;
 

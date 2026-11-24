@@ -13,7 +13,6 @@ const MAXIMUM_LOGO_PAGE_BYTES = 1_048_576;
 /** A logo path of the website has approximately 50 characters */
 const MAXIMUM_LOGO_PATH_LENGTH = 512;
 
-/** The `src` attribute of the logo: a file of the media server of the website */
 const LOGO_ATTRIBUTE_PATTERN = /"(\/media\/[^"]+\/logo\/[^"]+)"/;
 
 /**
@@ -23,7 +22,7 @@ const LOGO_ATTRIBUTE_PATTERN = /"(\/media\/[^"]+\/logo\/[^"]+)"/;
  */
 const LOGO_PATH_PATTERN = /^\/media\/[\w.~%/-]+$/;
 
-/** The text of the answer, or null when it is larger than the cap */
+/** Null when the answer is larger than the cap */
 const readCappedText = async (response: Response) => {
   if (!response.body) return null;
 
@@ -48,9 +47,8 @@ const readCappedText = async (response: Response) => {
 };
 
 /**
- * The path of the logo on the page of the organization on the website, or
- * undefined when the page has no logo, is not the page of an organization or
- * is too large
+ * Undefined when the page has no logo, is not the page of an organization or is
+ * too large.
  */
 export const scrapeOrganizationLogo = async (
   organizationId: Organization["spectrumId"],

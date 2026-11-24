@@ -15,7 +15,6 @@ interface VariantShipsOptions {
   readonly direction?: CursorDirection;
 }
 
-/** See `findVariantShipPage()` */
 export const getVariantShips = cache(
   async (
     variantId: string,

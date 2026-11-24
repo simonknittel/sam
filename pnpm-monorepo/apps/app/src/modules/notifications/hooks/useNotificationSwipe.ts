@@ -17,7 +17,6 @@ interface Gesture {
 export interface NotificationSwipe {
   /** The horizontal translation of the row (px), negative to the left */
   readonly offset: number;
-  /** True while the row follows the finger, thus without a transition */
   readonly isDragging: boolean;
   /** True when the release of the finger starts the action of the swipe */
   readonly isArmed: boolean;
@@ -42,10 +41,8 @@ interface Options {
 }
 
 /**
- * Swipes of a finger on a notification row. During the swipe, the row
- * follows the finger. A release after a sufficient distance starts the action
- * of the direction. A vertical movement stays a scroll of the list: the row
- * must have `touch-action: pan-y`.
+ * A vertical movement stays a scroll of the list: the row must have
+ * `touch-action: pan-y`.
  */
 export const useNotificationSwipe = ({
   isEnabled,

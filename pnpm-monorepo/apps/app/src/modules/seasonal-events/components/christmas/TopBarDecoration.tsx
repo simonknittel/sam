@@ -1,12 +1,10 @@
 import { ChristmasLightBulb } from "./LightBulb";
 
 /**
- * The lamps of the string of lights. A lamp sits on a low point of the wire:
- * the wire has one low point every twentieth of its width, thus the
- * horizontal place of a lamp holds at every width of the bar. The four
- * colours repeat, and every lamp has a delay of its own, thus the string
- * does not pulse as one lamp. The delays are negative, thus the string
- * already pulses when the page arrives.
+ * A lamp sits on a low point of the wire: the wire has one low point every
+ * twentieth of its width, thus the horizontal place of a lamp holds at every
+ * width of the bar. The delays are negative, thus the string already pulses
+ * when the page arrives.
  */
 const LIGHT_BULB_CLASS_NAMES = [
   "left-[2.5%] text-red-400 [animation-delay:-0.2s]",
@@ -32,24 +30,15 @@ const LIGHT_BULB_CLASS_NAMES = [
 ];
 
 /**
- * The string of lights along the top bar.
+ * The wire and the lamps hang in the sixteen pixels above the controls of the
+ * bar: eight pixels of the black band above the bar, and eight pixels of the
+ * bar which hold no button, no label and no icon.
  *
- * The box of the slot is the bar itself, thus every part positions itself
- * with a negative offset from the top of that box. The wire and the lamps
- * hang in the sixteen pixels above the controls of the bar: eight pixels of
- * the black band above the bar, and eight pixels of the bar which hold no
- * button, no label and no icon. The lowest point of a lamp therefore stays
- * one pixel above the top edge of the "Neu" button, of the search field and
- * of the picture of the account, at every width of the bar.
- *
- * The wire follows the width of the bar and gets
- * `preserveAspectRatio="none"`: a wire may become longer or shorter and does
- * not show the stretch. It needs `w-full` next to its offsets, because an
- * SVG which is positioned absolutely otherwise keeps the width of its own
- * `viewBox` and stops in the middle of a wide bar. A lamp must stay round
- * and is therefore an element of its own with a fixed size.
- *
- * All colours come from `currentColor`, which the class of each part sets.
+ * The wire stretches with the width of the bar (`preserveAspectRatio="none"`).
+ * It needs `w-full` next to its offsets, because an SVG which is positioned
+ * absolutely otherwise keeps the width of its own `viewBox` and stops in the
+ * middle of a wide bar. A lamp must stay round and is therefore an element of
+ * its own with a fixed size.
  */
 export const ChristmasTopBarDecoration = () => (
   <>

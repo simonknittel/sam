@@ -16,15 +16,14 @@ import { FaGlobe, FaMicrophone } from "react-icons/fa";
 interface Props {
   readonly className?: string;
   /**
-   * The guild's voice and stage channels, or null when Discord could not be
-   * asked — the picker then says so instead of pretending the guild has
-   * none.
+   * null when Discord could not be asked: the picker then says so instead of
+   * pretending the guild has none
    */
   readonly channels: readonly PublishableGuildChannel[] | null;
   readonly defaultTarget?: EventDiscordPublishTarget;
   readonly defaultChannelId?: string | null;
   readonly defaultLocation?: string | null;
-  /** Shown as the location's placeholder, i.e. what an empty field means */
+  /** What an empty field means */
   readonly locationPlaceholder: string;
 }
 

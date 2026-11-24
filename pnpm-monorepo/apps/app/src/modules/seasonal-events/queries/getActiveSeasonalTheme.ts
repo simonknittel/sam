@@ -12,13 +12,11 @@ import type { SeasonalThemeResolution } from "../utils/types";
 import { getSeasonalDateOverride } from "./getSeasonalDateOverride";
 
 /**
- * The seasonal theme of this request, or nothing outside every theme range.
- * Every surface which draws something seasonal calls this query itself: it
- * is scoped to the request, thus the session, the citizen and the calendar
- * are read once, and no surface needs a prop or a context.
+ * Every surface which draws something seasonal calls this query itself: it is
+ * scoped to the request, thus no surface needs a prop or a context.
  *
- * A viewer without a citizen — the login page, for example — resolves with
- * the time zone of the organization and without opt-outs.
+ * A viewer without a citizen — the login page, for example — resolves with the
+ * time zone of the organization and without opt-outs.
  */
 export const getActiveSeasonalTheme = cache(
   withTrace(

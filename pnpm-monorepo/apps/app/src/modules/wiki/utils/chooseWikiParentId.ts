@@ -1,10 +1,6 @@
 import type { WikiPageTargetOption } from "./getWikiPageTargets";
 
-/**
- * The parent that the create form and the paste form select: the preferred
- * page while the pages still include it, else the top level (an empty
- * string) when it is allowed, else the first page.
- */
+/** An empty string is the top level */
 export const chooseWikiParentId = (
   targets: readonly WikiPageTargetOption[],
   allowTopLevel: boolean,

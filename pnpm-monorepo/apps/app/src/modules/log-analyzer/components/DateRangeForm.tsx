@@ -13,7 +13,7 @@ import {
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 
 interface Props {
-  /** In milliseconds. Null when no file name has a date. */
+  /** See `LogSelection` */
   readonly oldestSessionStart: number | null;
   readonly onClose: () => void;
 }

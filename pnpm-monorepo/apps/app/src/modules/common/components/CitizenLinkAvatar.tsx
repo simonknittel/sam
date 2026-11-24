@@ -23,11 +23,9 @@ interface Props {
 }
 
 /**
- * The Discord avatar in front of the name of a citizen link. An inline box
- * in the line of the name, thus an ellipsis of the link or of its parent
- * still cuts a long name. The name is the accessible name of the link, thus
- * the image has no alt text. A citizen without an avatar, or with an avatar
- * that does not load, gets a neutral placeholder.
+ * An inline box in the line of the name, thus an ellipsis of the link or of its
+ * parent still cuts a long name. The name is the accessible name of the link,
+ * thus the image has no alt text.
  */
 export const CitizenLinkAvatar = ({ citizenId, size }: Props) => {
   const avatarUrl = useCitizenAvatarUrl(citizenId);

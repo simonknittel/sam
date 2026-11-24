@@ -23,7 +23,6 @@ interface Props {
   readonly type: CalendarEntryType;
 }
 
-/** Decorative: the text next to the icon names the entry */
 export const CalendarEntryTypeIcon = ({ className, type }: Props) => {
   const Icon = ICONS[type];
 

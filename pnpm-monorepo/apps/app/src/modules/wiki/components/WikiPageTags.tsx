@@ -32,11 +32,6 @@ interface Props {
   readonly canEdit: boolean;
 }
 
-/**
- * Tag chips in the page header, each linking to the tag's list page. Editors
- * additionally get a modal replacing the page's tag set; existing tag names
- * are suggested while typing so duplicates don't come into existence.
- */
 export const WikiPageTags = ({ className, pageId, tags, canEdit }: Props) => {
   const hrefMode = useWikiPageHrefMode();
   const [isOpen, setIsOpen] = useState(false);

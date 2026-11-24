@@ -17,19 +17,11 @@ interface Props {
   readonly mode: ItemPickerMode;
   readonly catalog: VariantCatalog;
   readonly selectedVariantIds: readonly VariantCatalogVariant["id"][];
-  /** A click or Enter on a variant */
   readonly onVariantClick: (variantId: VariantCatalogVariant["id"]) => void;
   readonly listHeight?: ItemPickerListHeight;
 }
 
-/**
- * The content of the variant picker: a search over the names of the
- * variants, of their manufacturers and the values of their tags, the tags,
- * and one variant per row, grouped by manufacturer. A click on a tag filters
- * the list to the variants of the tag and selects nothing. It works in a
- * popover and also embedded, for example in a modal. The owner holds the
- * selection.
- */
+/** A click on a tag filters the list and selects nothing */
 export const VariantPanel = ({
   mode,
   catalog,
@@ -38,7 +30,6 @@ export const VariantPanel = ({
   listHeight,
 }: Props) => {
   const [query, setQuery] = useState("");
-  /** The tag that filters the list */
   const [filterTagId, setFilterTagId] = useState<
     VariantCatalogTag["id"] | null
   >(null);
@@ -51,7 +42,6 @@ export const VariantPanel = ({
   );
   const tagById = new Map(catalog.tags.map((tag) => [tag.id, tag]));
 
-  /** A second click on the filtering tag clears the filter */
   const toggleFilterTag = (tag: VariantCatalogTag) => {
     setFilterTagId((previous) => (previous === tag.id ? null : tag.id));
   };

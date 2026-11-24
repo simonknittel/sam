@@ -7,18 +7,13 @@ import { FaTools } from "react-icons/fa";
 
 interface Props {
   readonly className?: string;
-  /** The text of the button */
   readonly label: string;
-  /** The accessible name of the button, when the text alone is not clear */
   readonly ariaLabel?: string;
   readonly heading: string;
-  /** The text above the list of the tools */
   readonly description: ReactNode;
-  /** The list of the tools with their switches */
   readonly children: ReactNode;
 }
 
-/** A button that opens the tools of a client in a modal */
 export const McpToolsModalButton = ({
   className,
   label,

@@ -13,11 +13,8 @@ import {
 import { NextResponse } from "next/server";
 
 /**
- * A short-lived token for the connection of the editor to the collab server.
- * The editor gets a token for each connection and on an interval during the
- * connection. A route handler and not a server action: its URL stays the
- * same after a deploy, thus an editor that is open during a deploy continues
- * to get tokens.
+ * A route handler and not a server action: its URL stays the same after a
+ * deploy, thus an editor that is open during a deploy continues to get tokens.
  */
 export async function GET(
   _request: Request,

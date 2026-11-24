@@ -13,7 +13,6 @@ import { CitizenLinkAvatar } from "./CitizenLinkAvatar";
 import { Link } from "./Link";
 
 interface Props {
-  /** For the link and for the text without a link, for example the height */
   readonly className?: string;
   /**
    * NULL shows "Unbekannt". A deleted citizen shows "Gelöschter Citizen"
@@ -22,7 +21,6 @@ interface Props {
   readonly citizen: Pick<Citizen, "id" | "handle" | "deletedAt"> | null;
   /** A sub page of the citizen, for example "/notes" */
   readonly page?: string;
-  /** The Discord avatar in front of the name */
   readonly avatarSize?: CitizenAvatarSize;
 }
 

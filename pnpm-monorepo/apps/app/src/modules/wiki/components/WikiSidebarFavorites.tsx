@@ -13,7 +13,6 @@ interface Props {
   readonly pages: WikiSidebarFavoritePage[];
 }
 
-/** The sidebar's "Favoriten" section, shared by all wiki scopes */
 export const WikiSidebarFavorites = ({ pages }: Props) => {
   return (
     <div>
@@ -27,8 +26,7 @@ export const WikiSidebarFavorites = ({ pages }: Props) => {
             <li key={page.id}>
               <Link
                 href={page.href}
-                // Like the tree's links, deliberately not prefetched — every
-                // prefetch is a full server render of the target page
+                // Not prefetched, like the links of the tree
                 prefetch={false}
                 className="flex items-center gap-2 rounded-secondary px-2 py-1 text-neutral-300 hover:text-interaction-300"
                 title={page.title}

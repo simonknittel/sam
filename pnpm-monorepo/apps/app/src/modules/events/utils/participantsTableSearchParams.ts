@@ -15,7 +15,6 @@ export enum ParticipantsTableSort {
 export const PARTICIPANTS_TABLE_DEFAULT_SORT =
   ParticipantsTableSort.CitizenAscending;
 
-/** The search param of the role filter in the sidebar of the participants tab */
 export const PARTICIPANTS_TABLE_ROLE_PARAM = "role";
 
 export const loadParticipantsTableSearchParams = createLoader({

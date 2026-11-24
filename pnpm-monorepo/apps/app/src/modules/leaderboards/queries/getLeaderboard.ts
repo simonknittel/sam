@@ -46,7 +46,6 @@ const schema = z.object({
   }),
 });
 
-/** The fields of a rank that the leaderboard page shows */
 interface CachedRank {
   readonly nickname: string;
   readonly displayname: string;
@@ -54,9 +53,8 @@ interface CachedRank {
 }
 
 /**
- * The ranks of all players, not only of the members: the cache must not read
- * the session, thus the filter for the members runs after the cache (see
- * `getLeaderboard`). The cache keeps only the fields that the page shows.
+ * The cache must not read the session, thus the filter for the members runs
+ * after it (see `getLeaderboard`).
  */
 const getRanks = (mode: "SB", season: string, pages: number) => {
   return unstable_cache(
@@ -104,7 +102,6 @@ const getRanks = (mode: "SB", season: string, pages: number) => {
   )(mode, season);
 };
 
-/** The ranks of the members of the organization, the best rank first */
 export const getLeaderboard = async (
   mode: "SB",
   season: string,

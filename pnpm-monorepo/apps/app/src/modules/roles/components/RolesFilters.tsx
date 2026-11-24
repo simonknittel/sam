@@ -4,7 +4,6 @@ import { TextSearchFilter } from "@/modules/common/components/layouts/SidebarLay
 import type { ManagedRoleTag } from "@sam-monorepo/application";
 
 interface Props {
-  /** All tags */
   readonly tags: readonly Pick<ManagedRoleTag, "id" | "name">[];
 }
 

@@ -16,10 +16,7 @@ interface Props {
   readonly initialDomains: readonly string[];
 }
 
-/**
- * Editable domain allowlist for generic iframes. Entries match their exact
- * hostname and all subdomains.
- */
+/** Entries match their exact hostname and all subdomains */
 export const WikiIframeAllowlistSettings = ({ initialDomains }: Props) => {
   const [domains, setDomains] = useState<string[]>([...initialDomains]);
   const [newDomain, setNewDomain] = useState("");

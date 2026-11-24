@@ -12,7 +12,6 @@ import {
 } from "../utils/eventContainer";
 import { EVENT_ERROR_TEXTS } from "../utils/eventErrorTexts";
 
-/** The tree that the lineup editor sends */
 export interface MappedPosition {
   id: string;
   order: number;
@@ -32,7 +31,6 @@ const toLineupOrder = (positions: MappedPosition[]): LineupOrderNode[] =>
       : {}),
   }));
 
-/** The lineup editor also reorders the lineup of an event template */
 export const updateEventLineupOrder = createUseCaseAction({
   name: "updateEventLineupOrder",
   schema: reorderLineupInputSchema,

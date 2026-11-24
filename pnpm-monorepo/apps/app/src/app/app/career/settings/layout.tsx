@@ -1,9 +1,7 @@
 import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthContent";
 
 /**
- * The career layout leaves its content unpadded because the flow pages fill
- * the viewport themselves. The settings pages are ordinary content and get
- * the usual page frame here.
+ * The career layout has no padding, because the flow pages fill the viewport
  */
 export default function Layout({
   children,

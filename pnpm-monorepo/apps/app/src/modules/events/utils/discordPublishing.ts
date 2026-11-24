@@ -38,10 +38,6 @@ const getProblemMessage = (problem: GuildScheduledEventContentProblem) => {
   }
 };
 
-/**
- * The message shown next to a successful app-side save whose Discord side
- * did not go through, or null when there is nothing to report.
- */
 export const getDiscordSyncWarning = (result: DiscordSyncResult) => {
   switch (result.outcome) {
     case DiscordSyncOutcome.Skipped:
@@ -73,7 +69,6 @@ export const getDiscordCoverImageWarning = (result: DiscordSyncResult) =>
     ? "Das Titelbild konnte nicht an Discord übertragen werden. Discord akzeptiert nur JPEG, PNG und GIF, und das Bild darf nicht zu groß sein."
     : null;
 
-/** The error a failed publish is reported with, since nothing was saved. */
 export const getDiscordPublishError = (result: DiscordSyncResult) => {
   switch (result.outcome) {
     case DiscordSyncOutcome.Skipped:

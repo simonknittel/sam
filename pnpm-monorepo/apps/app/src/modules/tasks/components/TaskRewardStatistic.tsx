@@ -16,14 +16,9 @@ interface Props {
     VisibleTask,
     "id" | "rewardType" | "rewardSilcValue" | "rewardTypeTextValue"
   >;
-  /** Shows the value as an inline editor */
   readonly isEditable: boolean;
 }
 
-/**
- * The reward of a task in the row of key figures: a SILC reward as a big
- * number, a text reward as text
- */
 export const TaskRewardStatistic = ({ className, task, isEditable }: Props) => {
   switch (task.rewardType) {
     case TaskRewardType.NEW_SILC:

@@ -15,14 +15,12 @@ import * as z from "zod";
 
 /** The wire contract of the clients (`useUpload`, `uploadWikiPageFile`) */
 const postBodySchema = z.object({
-  /** The callers that upload images send no category */
   category: z.string().optional(),
   fileName: z.string(),
   mimeType: z.string(),
   size: z.number(),
 });
 
-/** Creates the row of an upload and gives the presigned URL of the file */
 export async function POST(request: Request) {
   try {
     const authentication = await requireAuthenticationApi(

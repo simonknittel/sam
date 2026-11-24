@@ -12,29 +12,18 @@ interface HiddenField {
 
 interface Props {
   readonly className?: string;
-  /** A server action, or a client function that wraps one */
   readonly action: (formData: FormData) => Promise<ActionResponse>;
   readonly hiddenFields?: readonly HiddenField[];
-  /**
-   * Renders the submit button of the form (`type="submit"`). Its click opens
-   * the dialog, and the action runs only after the confirmation. While the
-   * action runs, `isPending` is true: the button can disable itself and show
-   * a spinner.
-   */
+  /** Renders the submit button of the form (`type="submit"`) */
   readonly trigger: (isPending: boolean) => ReactElement;
   readonly title: string;
   readonly description: ReactNode;
   readonly confirmLabel: string;
   readonly confirmDisabled?: boolean;
-  /** Dialog content between description and buttons, for example fields */
   readonly children?: ReactNode;
   readonly onSuccess?: () => void;
 }
 
-/**
- * A button that runs a server action only after the user confirmed it in a
- * dialog. Results surface through the app-wide toasts of `useAction`.
- */
 export const ConfirmActionButton = ({
   className,
   action,

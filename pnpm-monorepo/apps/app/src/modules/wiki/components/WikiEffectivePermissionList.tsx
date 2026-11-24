@@ -8,13 +8,12 @@ interface Props {
   readonly className?: string;
   readonly heading: string;
   readonly entries: readonly WikiEffectivePermissionEntry[];
-  /** Shown instead of the list when nobody holds the permission */
   readonly emptyLabel: string;
 }
 
 /**
- * Who holds a permission on the page, as roles rather than citizens. Shows
- * the saved state — selections in this dialog only take effect once saved.
+ * Shows the saved state — selections in this dialog only take effect once
+ * saved
  */
 export const WikiEffectivePermissionList = ({
   className,

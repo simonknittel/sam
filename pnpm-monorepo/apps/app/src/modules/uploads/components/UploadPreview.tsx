@@ -19,10 +19,7 @@ interface Props {
   readonly mimeType: string;
 }
 
-/**
- * A thumbnail for image uploads, a generic file icon for everything else.
- * Decorative on purpose — the row's file name column names the upload.
- */
+/** Decorative on purpose — the row's file name column names the upload */
 export const UploadPreview = ({ uploadId, mimeType }: Props) => {
   if (!mimeType.startsWith("image/"))
     return (

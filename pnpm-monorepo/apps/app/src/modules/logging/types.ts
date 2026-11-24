@@ -5,7 +5,7 @@ export enum LogLevel {
 }
 
 export interface LogEntry {
-  /** ISO string of the date (e.g. `new Date().toISOString()`) */
+  /** ISO string */
   timestamp: string;
   level: LogLevel;
   message: string;

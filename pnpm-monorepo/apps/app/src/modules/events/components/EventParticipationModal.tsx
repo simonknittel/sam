@@ -15,10 +15,8 @@ interface Props extends Omit<
 }
 
 /**
- * The controls of the own participation in a modal, for the sign-up of an
- * event preview and for the answer to an invitation in its notification. The
- * caller mounts it only while it is open, thus the comment gets the focus at
- * each opening. The caller shows it only while the participation is open.
+ * The caller mounts it only while it is open, thus the comment gets the focus
+ * at each opening. The caller shows it only while the participation is open.
  */
 export const EventParticipationModal = ({
   eventName,

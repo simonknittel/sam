@@ -6,9 +6,9 @@ import { Tile } from "./Tile";
 export interface TableColumn {
   readonly key: string;
   readonly label: ReactNode;
-  /** Grid track for this column, e.g. `"150px"` or `"minmax(280px,1fr)"`. */
+  /** For example `"150px"` or `"minmax(280px,1fr)"` */
   readonly track: string;
-  /** Width in pixels this column never falls below; the table scrolls instead. */
+  /** Pixels */
   readonly minWidth: number;
   readonly headerClassName?: string;
 }
@@ -24,17 +24,10 @@ interface Props {
   readonly isEmpty: boolean;
   readonly emptyMessage: ReactNode;
   readonly bodyClassName?: string;
-  /** Rendered below the tile, e.g. pagination controls or a footnote. */
   readonly footer?: ReactNode;
-  /** The `TRow`s of the table. */
   readonly children: ReactNode;
 }
 
-/**
- * The content half of a table page: tile chrome, the column definition, the
- * empty state and room for pagination below. Hosts both a `SidebarLayout`'s
- * content column and a table sitting among other tiles on a page.
- */
 export const TableTile = ({
   className,
   heading,

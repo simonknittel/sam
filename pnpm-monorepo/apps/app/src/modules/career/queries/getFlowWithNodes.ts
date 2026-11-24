@@ -3,10 +3,6 @@ import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { findReadableFlowDiagram } from "@sam-monorepo/application";
 import { cache } from "react";
 
-/**
- * The diagram of one flow, or null when the flow does not exist, is deleted
- * or the user cannot read it (see `findReadableFlowDiagram()`)
- */
 export const getFlowWithNodes = cache(
   withTrace("getFlowWithNodes", async (flowId: string) =>
     findReadableFlowDiagram(getApplicationContext(), await getRequestActor(), {

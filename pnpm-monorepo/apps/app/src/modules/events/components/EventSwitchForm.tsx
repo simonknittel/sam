@@ -25,10 +25,6 @@ interface Props {
   readonly switchOffConfirmation: SwitchOffConfirmation;
 }
 
-/**
- * A switch of an event setting that saves at each change. The switch to
- * false asks for a confirmation first.
- */
 export const EventSwitchForm = ({
   className,
   action,
@@ -53,7 +49,6 @@ export const EventSwitchForm = ({
   const isConfirmedRef = useRef(false);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    // Only the switch to false asks for a confirmation
     if (new FormData(event.currentTarget).has("value")) return;
 
     confirmation.onSubmit(event);
@@ -63,7 +58,6 @@ export const EventSwitchForm = ({
 
   const handleClose = () => {
     confirmation.close();
-    // "Abbrechen" or Escape: the setting stays on
     if (!isConfirmedRef.current) setSwitchKey((key) => key + 1);
   };
 

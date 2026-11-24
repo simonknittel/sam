@@ -18,10 +18,8 @@ import {
 } from "../utils/consent";
 
 /**
- * Sends the browser back to the client with `access_denied`. The action
- * validates the request again, thus a form with a different redirect URI
- * cannot make an open redirect. No check of `mcp;use`: a denial gives no
- * access.
+ * Validates the request again, thus a form with a different redirect URI cannot
+ * make an open redirect. No check of `mcp;use`: a denial gives no access.
  */
 export const denyAuthorization = createAuthenticatedAction(
   "denyAuthorization",

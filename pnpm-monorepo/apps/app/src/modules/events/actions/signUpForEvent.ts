@@ -7,7 +7,6 @@ import {
 } from "@sam-monorepo/application";
 import { EVENT_ERROR_TEXTS } from "../utils/eventErrorTexts";
 
-/** Refuses a second sign-up, for example from a different tab */
 export const signUpForEvent = createUseCaseAction({
   name: "signUpForEvent",
   schema: eventParticipationInputSchema,

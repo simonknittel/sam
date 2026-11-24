@@ -7,10 +7,6 @@ import {
 } from "@sam-monorepo/application";
 import { CITIZEN_ERROR_TEXTS } from "../utils/citizenErrorTexts";
 
-/**
- * Moves a note to a different note type or classification level. The notes
- * of a deleted citizen are read only.
- */
 export const updateNote = createUseCaseAction({
   name: "updateNote",
   schema: updateNoteInputSchema,

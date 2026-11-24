@@ -11,8 +11,8 @@ export const metadata: Metadata = {
 };
 
 /**
- * The blueprint's trash. Only viewers who may edit the template hold
- * canAdmin, so the table stays empty for everyone else.
+ * Only viewers who may edit the template hold canAdmin, thus the table is empty
+ * for everyone else.
  */
 export default async function Page({
   params,

@@ -12,7 +12,6 @@ import { useWikiPageHrefMode } from "./WikiPageHrefModeProvider";
  */
 export const WIKI_LINKABLE_PAGES_STALE_TIME_MS = 60 * 1000;
 
-/** The input of `wiki.getLinkablePages` for the current wiki scope */
 export const useWikiLinkablePagesInput = () => {
   const { container, variantId } = useWikiPageHrefMode();
 

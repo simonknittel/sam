@@ -28,7 +28,6 @@ export const BirthdayCitizensProvider = ({ children, citizenIds }: Props) => {
   );
 };
 
-/** False without the provider, thus a link outside the app shell stays plain */
 export const useHasBirthdayToday = (citizenId: string | undefined) => {
   const citizenIds = useContext(BirthdayCitizensContext);
 

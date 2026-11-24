@@ -46,19 +46,13 @@ interface Props {
   readonly className?: string;
   readonly heading?: ReactNode;
   readonly entries: readonly ActivityEntry[];
-  /** Which optional columns this context shows, in any order. */
   readonly columns: readonly ActivityColumn[];
-  /** Header of the target column, e.g. "Betroffen" or "Citizen". */
   readonly targetLabel?: string;
   readonly emptyMessage: string;
   readonly nextCursor: string | null;
   readonly prevCursor: string | null;
 }
 
-/**
- * The one table of the activity and history tiles. Which columns a context
- * adds is all that varies.
- */
 export const ActivityTable = ({
   className,
   heading,

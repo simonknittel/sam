@@ -1,4 +1,3 @@
-/** The values of the `sort` search parameter of the SILC balances table */
 export enum SilcBalanceSort {
   BalanceDescending = "balance-desc",
   BalanceAscending = "balance-asc",

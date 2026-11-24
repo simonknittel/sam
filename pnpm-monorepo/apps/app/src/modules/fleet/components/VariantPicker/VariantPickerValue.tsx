@@ -11,11 +11,7 @@ interface Props {
   readonly catalog: VariantCatalog;
 }
 
-/**
- * A selected variant with the logo of its manufacturer. A variant that is
- * not in the catalog (a different user deleted it after the page loaded)
- * shows as a placeholder.
- */
+/** A different user can delete the variant after the page loaded */
 export const VariantPickerValue = ({ variantId, catalog }: Props) => {
   const variant = catalog.variants.find((variant) => variant.id === variantId);
   const manufacturer = catalog.manufacturers.find(

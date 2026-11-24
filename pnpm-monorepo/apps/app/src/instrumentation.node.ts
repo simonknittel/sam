@@ -22,8 +22,6 @@ import { ATTR_URL_PATH } from "@opentelemetry/semantic-conventions";
 import { PrismaInstrumentation } from "@prisma/instrumentation";
 import { FlushOnRootSpanEndProcessor } from "./modules/tracing/utils/FlushOnRootSpanEndProcessor";
 
-// API reference: https://open-telemetry.github.io/opentelemetry-js/
-
 // The SDK reports a rejected export and a full queue only through this
 // channel. Without a logger, telemetry disappears without any evidence.
 diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.WARN);

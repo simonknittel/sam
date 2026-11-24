@@ -6,7 +6,7 @@ import { FaCheck } from "react-icons/fa";
 import { CompleteTask } from "./CompleteTask";
 import { ToggleAssignmentForCurrentUser } from "./ToggleAssignmentForCurrentUser";
 
-/** The text of the own state, which also tells why a closed task has no actions */
+/** Also tells why a closed task has no actions */
 const getParticipationText = (
   status: TaskStatus,
   isAssigned: boolean,
@@ -53,7 +53,6 @@ interface Props {
   readonly isAllowedToManageTask: boolean;
 }
 
-/** The task from the view of the user: the own state and the own actions */
 export const MyTaskParticipation = ({
   className,
   task,

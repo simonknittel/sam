@@ -7,7 +7,6 @@ import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { findVariantDetail } from "@sam-monorepo/application";
 import { cache } from "react";
 
-/** See `findVariantDetail()` */
 export const getVariantDetail = cache(
   withTrace("getVariantDetail", async (variantId: string) => {
     try {

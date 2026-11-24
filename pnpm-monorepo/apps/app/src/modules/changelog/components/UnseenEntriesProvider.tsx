@@ -39,13 +39,10 @@ interface Props {
 }
 
 /**
- * Marks a tracked changelog entry as read once it has dwelled in the
- * viewport. The router then refreshes the page, thus the dot badge of the
- * app drops. The entries stay highlighted for as long as this provider is
- * mounted, so the user doesn't lose track of what is new while they are still
- * reading — leaving the changelog unmounts it and the next visit renders them
- * without a highlight. A click on the "Neu" marker of an entry removes its
- * highlight at once.
+ * The entries stay highlighted for as long as this provider is mounted, so the
+ * user does not lose track of what is new while they are still reading —
+ * leaving the changelog unmounts it and the next visit renders them without a
+ * highlight.
  */
 export const UnseenEntriesProvider = ({ children }: Props) => {
   const [retainedHighlightKeys, setRetainedHighlightKeys] = useState<
@@ -97,10 +94,6 @@ export const UnseenEntriesProvider = ({ children }: Props) => {
   return <UnseenEntriesContext value={value}>{children}</UnseenEntriesContext>;
 };
 
-/**
- * Check for undefined since the defaultValue of the context is undefined. If
- * it's still undefined, the provider component is missing.
- */
 export function useUnseenEntries() {
   const context = useContext(UnseenEntriesContext);
   if (!context) throw new Error("[UnseenEntriesContext] Provider is missing!");

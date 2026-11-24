@@ -12,12 +12,6 @@ interface Props {
   readonly appKey: string;
 }
 
-/**
- * The star flips immediately and the context keeps the optimistic state, so
- * the surrounding popover neither closes nor re-renders from the server. A
- * failed toggle reverts and reports itself through the action's error toast —
- * success stays silent, since the star already says it.
- */
 export const AppFavoriteButton = ({ className, appKey }: Props) => {
   const { favoriteAppKeys, setAppFavorite } = useAppsContext();
   const [isPending, startTransition] = useTransition();

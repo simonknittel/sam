@@ -1,7 +1,7 @@
 import { ConfettiCanvas } from "@/modules/common/components/ConfettiCanvas";
 import { getActiveSeasonalTheme } from "../queries/getActiveSeasonalTheme";
 
-/** Milliseconds between two bursts while the page is in view */
+/** Milliseconds */
 const CONFETTI_INTERVAL = 1600;
 
 /**
@@ -20,22 +20,17 @@ const LOGIN_PAGE_SHOT = {
   ticks: 280,
 };
 
-/** One shot from each lower corner, both towards the middle of the page */
 const LOGIN_PAGE_SHOTS = [
   { ...LOGIN_PAGE_SHOT, angle: 60, origin: { x: 0, y: 1 } },
   { ...LOGIN_PAGE_SHOT, angle: 120, origin: { x: 1, y: 1 } },
 ];
 
 /**
- * The confetti of the active seasonal event on the login page, for the
- * events which celebrate with it. It renders nothing outside the greeting
- * days of the event and nothing for an event without confetti.
  * The greeting banner of the dashboard brings its own confetti, see
  * `GreetingBanner`.
  *
- * The canvas covers the element which carries it and paints below the
- * content of that element, thus the element has to be positioned and
- * `isolate`.
+ * The canvas paints below the content of the element which carries it, thus the
+ * element has to be positioned and `isolate`.
  */
 export const SeasonalConfetti = async () => {
   const resolution = await getActiveSeasonalTheme();

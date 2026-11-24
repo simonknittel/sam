@@ -50,9 +50,8 @@ const handleTokenRequest = (fields: Record<string, string>) => {
 };
 
 /**
- * The token endpoint of the MCP OAuth server (RFC 6749 section 3.2). It is
- * public: the clients are public clients, PKCE and the single-use codes and
- * refresh tokens protect it.
+ * RFC 6749 section 3.2. Public by design: the clients are public clients, PKCE
+ * and the single-use codes and refresh tokens protect it.
  */
 export const POST = async (request: Request) => {
   if (await isMcpServerDisabled()) return temporarilyUnavailableResponse();
@@ -66,6 +65,5 @@ export const POST = async (request: Request) => {
   }
 };
 
-/** Browser-based clients call the endpoint from a different origin */
 export const OPTIONS = () =>
   corsPreflightResponse("POST, OPTIONS", "Content-Type");

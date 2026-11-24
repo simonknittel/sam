@@ -122,11 +122,7 @@ interface TourDialogProps {
   readonly children: ReactNode;
 }
 
-/**
- * A modal dialog over the full viewport. It is in the top layer, above
- * everything else (including the mobile flyout). The browser makes the page
- * inert also for the keyboard, and closes the dialog on Escape.
- */
+/** In the top layer, thus also above the mobile flyout */
 const TourDialog = ({ label, onClose, children }: TourDialogProps) => {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -150,7 +146,6 @@ const TourDialog = ({ label, onClose, children }: TourDialogProps) => {
   );
 };
 
-/** Dims the page while a navigation or the target lookup is in flight */
 const TourWaitingOverlay = () => {
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-neutral-900/70">
@@ -159,7 +154,6 @@ const TourWaitingOverlay = () => {
   );
 };
 
-/** Space between the highlighted element and the edge of the cutout */
 const CUTOUT_PADDING_PIXELS = 8;
 
 /**
@@ -181,12 +175,6 @@ interface OnboardingStepCardProps {
   readonly children: ReactNode;
 }
 
-/**
- * A tour step in the tour dialog: the page is dimmed. With a target element,
- * a cutout frame highlights it and the step card floats next to it; without
- * one, the card is centered. On small viewports the card docks to the
- * bottom of the screen instead.
- */
 const OnboardingStepCard = ({
   step,
   targetElement,

@@ -80,8 +80,7 @@ const flattenTaskListItem = (item: ListItem, source: string) => {
 };
 
 /**
- * Rewrites the node tree so that it shows the same formats as Discord. The
- * plugin reads the characters of the input from the file, thus a construct
+ * The plugin reads the characters of the input from the file, thus a construct
  * that Discord does not know keeps its original characters.
  */
 export const remarkDiscordFormatting =

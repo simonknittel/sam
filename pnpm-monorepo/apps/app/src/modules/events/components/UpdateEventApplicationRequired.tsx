@@ -10,9 +10,8 @@ interface Props {
 }
 
 /**
- * The application switch of an app event. The switch to false asks for a
- * confirmation first: it approves the open applications. The text names no
- * count, because a citizen can apply after the page loaded.
+ * The switch to false approves the open applications. The text names no count,
+ * because a citizen can apply after the page loaded.
  */
 export const UpdateEventApplicationRequired = ({
   className,

@@ -16,18 +16,15 @@ import type { ReactNode } from "react";
 import { formatCalendarTime } from "../utils/formatCalendarDate";
 import { CalendarEntryTypeIcon } from "./CalendarEntryTypeIcon";
 
-/** The event entries render the event card instead of a row */
 type RowEntry = Exclude<CalendarEntry, EventCalendarEntry>;
 
 interface RowContent {
-  /** The name of the link of the row */
   readonly title: string;
   /**
    * The part of the title after the link of the row, for example a citizen
    * with a link of its own
    */
   readonly titleSuffix?: ReactNode;
-  /** More facts of the entry, for example the roles of a salary */
   readonly details: string | null;
   readonly badge: string | null;
 }
@@ -114,9 +111,8 @@ interface Props {
 }
 
 /**
- * A compact row for each entry that is not an event. With a link, the whole
- * row is clickable: the link stretches over the row, but its name stays the
- * title. A link in the title suffix must be positioned to be above it.
+ * The link stretches over the row, but its name stays the title. A link in the
+ * title suffix must be positioned to be above it.
  */
 export const CalendarEntryRow = ({ className, entry }: Props) => {
   const { title, titleSuffix, details, badge } = getRowContent(entry);

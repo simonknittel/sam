@@ -25,17 +25,13 @@ interface TableControlsTarget {
 
 interface Props {
   readonly editor: Editor | null;
-  /** The overlay root — reference frame for the button positions */
   readonly overlayRef: RefObject<HTMLDivElement | null>;
 }
 
 /**
- * Row/column controls for the table the cursor is in: plus buttons on the
- * column boundaries along the top edge and the row boundaries along the
- * left edge insert a column/row there; trash buttons on the column/row
- * centers delete that column/row. They follow the selection rather than
- * the focused block, because clicking a cell focuses the paragraph inside
- * it — the deepest block, as everywhere else.
+ * The controls follow the selection rather than the focused block, because
+ * clicking a cell focuses the paragraph inside it — the deepest block, as
+ * everywhere else.
  */
 export const WikiTableControls = ({ editor, overlayRef }: Props) => {
   const [target, setTarget] = useState<TableControlsTarget | null>(null);
@@ -114,7 +110,6 @@ export const WikiTableControls = ({ editor, overlayRef }: Props) => {
         });
       };
 
-      /** Keeps the positions fresh on scroll, resize and layout shifts */
       stopMeasuring = autoUpdate(table, overlay, measure);
     };
 

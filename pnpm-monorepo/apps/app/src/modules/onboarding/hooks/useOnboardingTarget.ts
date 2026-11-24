@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import type { OnboardingTargetId } from "../utils/targets";
 
-/** How long the tour waits for a target element before it falls back */
 const TARGET_WAIT_TIMEOUT_MILLISECONDS = 4000;
 const TARGET_POLL_INTERVAL_MILLISECONDS = 100;
 

@@ -46,14 +46,12 @@ export const useOlderEntrySharing = () => {
       ? getOlderEntryWindow(dateRange, daysToLoad)
       : null;
 
-  /** The matches older than the rolling window of all reads, by key */
   const olderMatchesRef = useRef(new Map<string, RawMatch>());
   /** The keys of the server and the keys of `pendingEntries` */
   const checkedKeysRef = useRef(new Set<string>());
   /** One check after the other, so that each check sees the keys of the last */
   const checkQueueRef = useRef(Promise.resolve());
 
-  /** The older entries which the server does not hold, by key */
   const [pendingEntries, setPendingEntries] = useState<
     ReadonlyMap<string, PendingEntry>
   >(new Map());
@@ -77,7 +75,7 @@ export const useOlderEntrySharing = () => {
     if (newMatchesByKey.size <= 0) return;
 
     const storedHashes = await loadStoredHashes((cursorHash) =>
-      /** The vanilla client keeps no copy of the pages in the query cache */
+      /** See `useEntryUpload` */
       utils.client.logAnalyzer.getOwnEntryHashesInRange.query({
         from: olderWindow.start ?? undefined,
         to: olderWindow.end ?? undefined,

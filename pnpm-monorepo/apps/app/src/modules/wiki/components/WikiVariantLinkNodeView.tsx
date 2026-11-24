@@ -66,23 +66,12 @@ const WikiVariantLinkNodeView = ({ node, extension }: NodeViewProps) => {
   );
 };
 
-/**
- * The shared package's variant link node plus an editor-only React node
- * view, so editors and live collab readers get the same chip as the static
- * render. Same name, attributes and schema — only the in-editor rendering
- * differs, so save validation, the collab server and the static renderer
- * stay untouched by this variant.
- */
 const WikiVariantLinkWithNodeView = WikiVariantLink.extend({
   addNodeView() {
     return ReactNodeViewRenderer(WikiVariantLinkNodeView);
   },
 });
 
-/**
- * Swaps the plain variant link node in an extension list for the node-view
- * variant, keeping its position in the list and its configured options.
- */
 export const withWikiVariantLinkNodeView = (
   extensions: AnyExtension[],
 ): AnyExtension[] =>

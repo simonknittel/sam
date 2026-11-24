@@ -8,7 +8,7 @@ interface Props {
   readonly canSaveSettings: boolean;
 }
 
-/** The status stays in the URL only. The type selection is saved for the citizen. */
+/** The status stays in the URL only, the type selection is saved */
 export const CalendarFilters = ({ settings, canSaveSettings }: Props) => (
   <>
     <RadioFilter

@@ -14,23 +14,21 @@ const DECODER_AT_FILE_START = new TextDecoder();
 const DECODER = new TextDecoder("utf-8", { ignoreBOM: true });
 
 interface ReadPosition {
-  /** The byte where the read starts. It is always the start of a line. */
+  /** Always the start of a line */
   readonly offset: number;
   /**
    * The bytes at `offset` when the last read saw them. Other bytes at this
    * position show that the file was replaced.
    */
   readonly anchor: Uint8Array;
-  /** The time of the last timestamped line before `offset` */
   readonly isoDateBeforeOffset: string | null;
-  /** The number of the line at `offset`. The first line has the number 1. */
+  /** The first line has the number 1 */
   readonly lineNumberAtOffset: number;
 }
 
 interface FileState extends ReadPosition {
   readonly size: number;
   readonly lastModified: number;
-  /** The time of the last timestamped line of the file */
   readonly newestIsoDate: string | null;
 }
 
@@ -50,10 +48,7 @@ const FILE_START: ReadPosition = {
 const copyValue = <Value>(value: Value) =>
   JSON.parse(JSON.stringify(value)) as Value;
 
-/**
- * The start and the end of the last line which ends with a line feed. Both
- * are 0 when no line ends yet.
- */
+/** Both are 0 when no line ends yet */
 const findLastCompleteLine = <Element>(
   content: {
     lastIndexOf: (searchElement: Element, fromIndex?: number) => number;
@@ -74,9 +69,8 @@ const startsWith = (bytes: Uint8Array, prefix: Uint8Array) =>
   prefix.every((byte, index) => bytes[index] === byte);
 
 /**
- * Continues where the last read stopped when the file only grew since then.
  * A file which shrank, or which holds other bytes at that position, was
- * replaced, for example by the log of a new session. It is read in full.
+ * replaced, for example by the log of a new session.
  */
 const readNewBytes = async (
   file: File,
@@ -90,11 +84,6 @@ const readNewBytes = async (
   return { position: FILE_START, bytes: await readBytes(file, 0) };
 };
 
-/**
- * The expression of each type. The sticky flag makes the expression try one
- * position only, and the multiline flag makes `^` and `$` work on the lines
- * of the whole text.
- */
 const LINE_REGEXES = Object.fromEntries(
   Object.values(LogAnalyzerEntryType).map((type) => [
     type,
@@ -102,7 +91,6 @@ const LINE_REGEXES = Object.fromEntries(
   ]),
 ) as Record<LogAnalyzerEntryType, RegExp>;
 
-/** The patterns of each marker */
 const PATTERNS_BY_MARKER = Map.groupBy(
   Object.values(LogAnalyzerEntryType).map((type) => {
     const { marker, takesTimeOfPrecedingLine } =
@@ -119,8 +107,7 @@ const PATTERNS_BY_MARKER = Map.groupBy(
 );
 
 /**
- * True when a newer version of the type matches the line at `lineStart`.
- * Then only the newer version gives an entry for the line (see
+ * Only the newest version gives an entry for a line (see
  * `LogAnalyzerEntryPattern.supersedes`).
  */
 const hasNewerVersionMatch = (
@@ -135,9 +122,8 @@ const hasNewerVersionMatch = (
   });
 
 /**
- * Gives the number of the line which holds an index of the text. The scan
- * finds the matches marker by marker and not line by line, thus a binary
- * search over the line feeds of the text gives the numbers.
+ * The scan finds the matches marker by marker and not line by line, thus a
+ * binary search gives the numbers.
  */
 const createLineNumbering = (text: string, firstLineNumber: number) => {
   const lineFeedIndexes: number[] = [];
@@ -150,7 +136,6 @@ const createLineNumbering = (text: string, firstLineNumber: number) => {
   }
 
   return (textIndex: number) => {
-    /** The count of the line feeds before the index */
     let low = 0;
     let high = lineFeedIndexes.length;
     while (low < high) {
@@ -296,9 +281,7 @@ const findNewestIsoDate = (states: Iterable<FileState>) => {
 };
 
 interface ReadOptions {
-  /** Runs after each file which the read took from the disk. */
   readonly onProgress?: (progress: ReadProgress) => void;
-  /** Asked before each file. True stops the read. */
   readonly shouldStop?: () => boolean;
 }
 

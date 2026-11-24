@@ -1,5 +1,4 @@
 interface Props {
-  /** Sizes the drawing, which fills the box */
   readonly className?: string;
 }
 
@@ -26,8 +25,6 @@ export const WelcomeOrnament = ({ className }: Props) => (
       <circle cx="9" cy="2.5" r="0.45" />
     </g>
 
-    {/* The ship is drawn upright and turned by 45 degrees around the
-    middle of the box */}
     <g transform="rotate(45 12 12)">
       <path d="M10 17.4h4l-2 5.1Z" fill="#fbbf24" />
       <path d="M11 17.4h2l-1 3Z" fill="#fef3c7" />

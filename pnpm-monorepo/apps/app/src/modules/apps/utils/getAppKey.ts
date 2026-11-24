@@ -2,9 +2,8 @@ import { AppKeyNamespace } from "@sam-monorepo/domain";
 import type { App } from "./types";
 
 /**
- * Stable identifier of an app, e.g. `integrated:dashboard`. Redacted apps carry
- * no slug and therefore no key, which is what keeps them out of the favorites
- * throughout the UI without any extra checks.
+ * For example `integrated:dashboard`. Redacted apps carry no slug and therefore
+ * no key, which is what keeps them out of the favorites.
  */
 export const getAppKey = (app: App): string | undefined => {
   if ("href" in app) return `${AppKeyNamespace.Integrated}:${app.slug}`;

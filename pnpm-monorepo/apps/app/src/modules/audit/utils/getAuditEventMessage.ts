@@ -1,12 +1,8 @@
 import { AuditEventDefinitions, type AuditEventType } from "./AuditEventTypes";
 
 /**
- * Every definition's `message` accepts only its own payload, so indexing the
- * lookup with a runtime string yields a union of functions TypeScript can't
- * call. Rows are read back from a `Json` column and are only as trustworthy
- * as whatever wrote them — including releases whose payload shape has since
- * changed — so the parameter is widened to `unknown` here and the call is
- * guarded below instead.
+ * Indexing the lookup with a runtime string yields a union of functions
+ * TypeScript can't call, thus the parameter is widened to `unknown`.
  */
 const definitionsByType = AuditEventDefinitions as Record<
   string,
@@ -14,11 +10,9 @@ const definitionsByType = AuditEventDefinitions as Record<
 >;
 
 /**
- * Renders one audit event for the system log.
- *
- * The system log is the place you go when something has gone wrong, so it
- * must survive its own data: a type that is not in `AuditEventType`, a payload
- * with a different shape, or a `data` column that doesn't parse. Any of those
+ * The system log is the place you go when something has gone wrong, so it must
+ * survive its own data: a type that is not in `AuditEventType`, a payload with
+ * a different shape, or a `data` column that doesn't parse. Any of those
  * degrades to the raw payload for that single row rather than throwing and
  * taking the whole page down.
  */

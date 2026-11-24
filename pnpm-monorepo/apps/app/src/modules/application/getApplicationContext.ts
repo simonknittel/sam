@@ -33,9 +33,8 @@ import { after } from "next/server";
 import { sharpImageReader } from "./sharpImageReader";
 
 /**
- * An explicit S3_ENDPOINT (for example the local RustFS container) takes
- * precedence over the account of Cloudflare R2. Without one of the two, the
- * app has no bucket.
+ * `S3_ENDPOINT` is for example the local RustFS container, `S3_ACCOUNT_ID` is
+ * an account of Cloudflare R2.
  */
 const createStorage = (): ApplicationContext["storage"] => {
   const credentials = {
@@ -56,8 +55,8 @@ const createStorage = (): ApplicationContext["storage"] => {
 };
 
 /**
- * The URLs of the context. A static route handler that needs only the URLs
- * uses this function, thus the build does not make the other ports.
+ * A static route handler that needs only the URLs uses this function, thus the
+ * build does not make the other ports.
  */
 export const getApplicationUrls = (): ApplicationContext["urls"] =>
   createApplicationUrls({
@@ -134,16 +133,11 @@ const createApplicationContext = (): ApplicationContext => ({
 let context: ApplicationContext | undefined;
 let mcpContext: ApplicationContext | undefined;
 
-/**
- * The only place in the app that knows how the application context is
- * built. Server actions, pages and route handlers get the context from here.
- */
 export const getApplicationContext = () =>
   (context ??= createApplicationContext());
 
 /**
- * The context of the MCP endpoint. Its audit writer marks each event as an
- * action through the MCP server. The OAuth endpoints and the consent page use
+ * Only for the MCP endpoint. The OAuth endpoints and the consent page use
  * `getApplicationContext()`.
  */
 export const getMcpApplicationContext = () =>

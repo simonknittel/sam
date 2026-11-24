@@ -15,11 +15,7 @@ interface Props {
   readonly initialTags?: TagFields[];
 }
 
-/**
- * The editable tag rows shared by the create and update variant modals.
- * Submits through the surrounding form via the `tagKeys[]`/`tagValues[]`
- * fields.
- */
+/** `parseVariantFieldsFormData()` reads the fields */
 export const VariantTagFields = ({ initialTags }: Props) => {
   const [tags, setTags] = useState<TagFields[]>(initialTags ?? []);
 

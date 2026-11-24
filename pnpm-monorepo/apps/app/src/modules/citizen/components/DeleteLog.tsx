@@ -15,11 +15,7 @@ interface Props {
 export const DeleteLog = ({ log }: Props) => {
   const utils = api.useUtils();
 
-  /**
-   * The history modal shows a client query, which the refresh of the action
-   * skips. Also after an error: then a different user possibly deleted the
-   * log.
-   */
+  /** See `ConfirmLog` */
   const deleteLogAndReloadHistory = async (formData: FormData) => {
     const response = await deleteCitizenLog(formData);
     await utils.citizenLog.getHistory.invalidate({ citizenId: log.citizenId });

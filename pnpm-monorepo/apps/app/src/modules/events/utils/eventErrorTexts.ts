@@ -15,11 +15,10 @@ import { PASTE_TOO_DEEP_TEXT } from "./lineupTexts";
 const EVENT_NOT_FOUND_TEXT = "Event nicht gefunden";
 
 /**
- * The texts of the event and lineup actions for the errors of the event, the
- * lineup and the template use cases. The lineup editor also changes the
- * lineups of the event templates, and an event can come from a template,
- * thus the template texts are part of it. The other validation errors need a
- * request that bypassed the forms: they get the text of a bad request.
+ * The lineup editor also changes the lineups of the event templates, and an
+ * event can come from a template, thus the template texts are part of it. The
+ * other validation errors need a request that bypassed the forms: they get the
+ * text of a bad request.
  */
 export const EVENT_ERROR_TEXTS = {
   ...EVENT_TEMPLATE_ERROR_TEXTS,

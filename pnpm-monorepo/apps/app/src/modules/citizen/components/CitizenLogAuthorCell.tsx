@@ -22,14 +22,9 @@ const getAuthorName = (author: Author) => {
 interface Props {
   /** The login that submitted or confirmed the log */
   readonly author: Author;
-  /** For a log without this author */
   readonly fallback?: string;
 }
 
-/**
- * The author of a log in a Spynet log table: a link to its citizen, or the
- * name of a login without a citizen
- */
 export const CitizenLogAuthorCell = ({ author, fallback }: Props) => {
   const name = getAuthorName(author) ?? fallback;
 

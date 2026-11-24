@@ -2,10 +2,6 @@
 const DISCORD_FORMATTING_HELP_URL =
   "https://support.discord.com/hc/de/articles/210298617";
 
-/**
- * The hint below a field whose text goes to Discord as well. It links to the
- * formats of Discord, which the app shows too.
- */
 export const DiscordFormattingHint = () => {
   return (
     <>

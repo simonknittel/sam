@@ -36,7 +36,6 @@ export const Task = ({ className, task, isNew: isNewOnServer }: Props) => {
     task.id,
     isNewOnServer,
   );
-  /** Only a task with an end date needs a clock that keeps ticking */
   const now = useNow({
     updateInterval: task.expiresAt ? EXPIRY_CHECK_INTERVAL_MS : undefined,
   });
@@ -130,10 +129,10 @@ export const Task = ({ className, task, isNew: isNewOnServer }: Props) => {
   );
 
   /**
-   * The title link covers the whole row, thus the row opens the details like
-   * before. Positioned elements later in the document paint above it: the
-   * marker, the badges (their tooltips show the full values) and the strip.
-   * The strip comes last for this reason; `order-first` keeps it on the left.
+   * The title link covers the whole row. Positioned elements later in the
+   * document paint above it: the marker, the badges (their tooltips show the
+   * full values) and the strip. The strip comes last for this reason;
+   * `order-first` keeps it on the left.
    */
   return (
     <article

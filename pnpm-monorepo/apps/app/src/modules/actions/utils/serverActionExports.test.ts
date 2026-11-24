@@ -58,10 +58,8 @@ const getCalleeName = (expression: ts.Expression | undefined) =>
     ? expression.expression.text
     : null;
 
-/** The exports of a `"use server"` module that no factory gates */
 const findUngatedExports = (path: string, sourceFile: ts.SourceFile) =>
   sourceFile.statements.flatMap((statement): string[] => {
-    // Types do not exist at runtime
     if (
       ts.isInterfaceDeclaration(statement) ||
       ts.isTypeAliasDeclaration(statement)

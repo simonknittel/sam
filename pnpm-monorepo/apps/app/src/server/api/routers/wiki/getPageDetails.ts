@@ -8,10 +8,6 @@ import { TRPCError } from "@trpc/server";
 import * as z from "zod";
 import { protectedProcedure, toTrpcError } from "../../trpc";
 
-/**
- * The details for the popover in the header of a page, loaded when the
- * popover opens (see `findWikiPageDetails()`)
- */
 export const getPageDetails = protectedProcedure
   .input(z.object({ pageId: idSchema }))
   .query(async ({ ctx, input }) => {

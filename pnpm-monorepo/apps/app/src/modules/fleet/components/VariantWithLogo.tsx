@@ -13,9 +13,8 @@ interface Props {
   readonly variant: Pick<Variant, "id" | "name">;
   readonly manufacturer: ManufacturerLogoManufacturer;
   /**
-   * Logo of an already-resolved URL, for callers that don't hold the
-   * manufacturer's upload row (the wiki resolves it when rendering a
-   * variant link). Takes precedence over `manufacturer.image`.
+   * For callers without the upload row of the manufacturer (the wiki). Takes
+   * precedence over `manufacturer.image`.
    */
   readonly logo?: { readonly src: string; readonly mimeType: string } | null;
   /**
@@ -30,9 +29,7 @@ interface Props {
    * when the pointer moves to the popover.
    */
   readonly disablePopover?: boolean;
-  /** The individual ship of a citizen, for the popover */
   readonly ship?: Pick<Ship, "name" | "acquisitionSource" | "note">;
-  /** The link fills the width of its container, for example a table cell */
   readonly fullWidth?: boolean;
 }
 
@@ -99,8 +96,7 @@ export const VariantWithLogo = ({
   if (disablePopover) return link;
 
   /**
-   * The popover is a Client Component: only the fields that it reads go to
-   * the browser, not the full rows of the callers
+   * Only the fields that the popover reads go to the browser, not the full rows
    */
   return (
     <VariantPopover

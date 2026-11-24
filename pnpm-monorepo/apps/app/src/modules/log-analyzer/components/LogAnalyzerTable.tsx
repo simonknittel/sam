@@ -10,7 +10,6 @@ import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 
 const COLUMNS = "120px 140px 100px 200px 1fr";
 
-/** The rows the table shows first, and the rows each click on "more" adds */
 const ROWS_PER_PAGE = 200;
 
 interface Props {

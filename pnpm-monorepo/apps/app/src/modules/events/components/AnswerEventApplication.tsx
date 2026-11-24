@@ -27,7 +27,6 @@ interface Props {
 const ICON_BUTTON_CLASS_NAME =
   "relative flex size-8 items-center justify-center rounded-secondary enabled:cursor-pointer disabled:opacity-50";
 
-/** The approval and the decline of an open application, for a manager */
 export const AnswerEventApplication = ({
   className,
   eventId,

@@ -13,7 +13,6 @@ import { RolePicker } from "./RolePicker/RolePicker";
 interface Props {
   readonly className?: string;
   readonly currentRole: Pick<ManagedRole, "id" | "inherits">;
-  /** All roles that the current role can inherit from */
   readonly roles: readonly RolePickerRole[];
 }
 

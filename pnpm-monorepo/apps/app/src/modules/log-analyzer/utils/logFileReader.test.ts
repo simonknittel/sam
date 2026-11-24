@@ -25,11 +25,6 @@ const LOG_CONTENT = [
   SAMPLE_CRASH_FILE_END,
 ].join("\r\n");
 
-/**
- * True when a newer version of the type matches at the given position. Then
- * only the newer version gives an entry (see
- * `LogAnalyzerEntryPattern.supersedes`).
- */
 const hasNewerVersionMatch = (
   type: LogAnalyzerEntryType,
   text: string,
@@ -44,7 +39,7 @@ const hasNewerVersionMatch = (
     return regex.test(text);
   });
 
-/** The parse before the reader: one match run over the whole text */
+/** One match run over the whole text, for the comparison with the reader */
 const matchWholeText = (text: string) => {
   const matches: RawMatch[] = [];
 

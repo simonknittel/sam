@@ -15,10 +15,9 @@ import {
 } from "@sam-monorepo/domain";
 import { parseAsStringEnum, type SearchParams } from "nuqs/server";
 
-/** The number of days of one page of the calendar app */
 export const CALENDAR_PAGE_DAY_COUNT = 14;
 
-/** The number of calendar days of the dashboard tile, today included */
+/** Today included */
 export const DASHBOARD_CALENDAR_DAY_COUNT = 7;
 
 const getToday = () => getLocalDate(new Date(), ORGANIZATION_TIMEZONE);
@@ -40,7 +39,6 @@ const addMonthsToLocalDate = (date: LocalDate, months: number) =>
 
 export interface CalendarPage {
   readonly status: CalendarListStatus;
-  /** The days of the page in the order of the list */
   readonly days: LocalDate[];
   readonly range: LocalDateRange;
   /** The first day of the next page ("YYYY-MM-DD"), null on the last page */
@@ -126,8 +124,7 @@ const loadCalendarSearchParams = createCursorPaginationLoader({
 });
 
 /**
- * The page of the calendar app from the search parameters of the page. The
- * cursor names the page itself, thus the direction of the pagination does
+ * The cursor names the page itself, thus the direction of the pagination does
  * not matter.
  */
 export const loadCalendarPage = async (

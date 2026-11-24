@@ -6,12 +6,9 @@ export const metadata: Metadata = {
 };
 
 /**
- * Keeps the template heading and the tab navigation around a subpage that the
- * reader must not see.
- *
- * No page below this segment sends a 403 at this time. The template routes
- * hide a rejection behind a 404. This boundary makes sure that a new 403
- * keeps the chrome, as it does in the event routes.
+ * No page below this segment sends a 403 at this time: the template routes hide
+ * a rejection behind a 404. The boundary keeps the template heading and the
+ * tabs around a new 403.
  */
 export default function Forbidden() {
   return <ForbiddenCard />;

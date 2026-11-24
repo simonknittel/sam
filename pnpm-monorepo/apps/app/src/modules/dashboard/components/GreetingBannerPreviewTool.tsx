@@ -8,17 +8,12 @@ import {
   GreetingBannerPreview,
 } from "../utils/GreetingBannerPreview";
 
-/** The value of the select which removes the preview */
 const AUTO_VALUE = "";
 
 interface Props {
   readonly preview: GreetingBannerPreview | null;
 }
 
-/**
- * Shows the welcome or the birthday banner on the dashboard of the admin,
- * also on a day without that occasion. "Auto" shows the banner of the day.
- */
 export const GreetingBannerPreviewTool = ({ preview }: Props) => {
   const [isPending, startTransition] = useTransition();
 

@@ -34,9 +34,9 @@ import { ToggleEventPositionApplicationForCurrentUser } from "./ToggleEventPosit
 import { UpdateEventPositionCitizenId } from "./UpdateEventPositionCitizenId";
 
 /**
- * One rendered position. `applications` and `citizen` are optional because
- * a template blueprint's positions can never have either — its query omits
- * both joins rather than always resolving them to nothing.
+ * `applications` and `citizen` are optional because a template blueprint's
+ * positions can never have either — its query omits both joins rather than
+ * always resolving them to nothing.
  */
 export type PositionType = Omit<EventTemplatePosition, "childPositions"> &
   Partial<Pick<EventPositionTreeRow, "applications" | "citizen">> & {

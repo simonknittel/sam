@@ -20,14 +20,12 @@ const getSignalOrder = (entry: IEntry) =>
 const getLineNumber = (entry: IEntry) => entry.lineNumber ?? 0;
 
 /**
- * Orders the entries from the oldest to the newest. The game can write two
- * lines of one change in the same millisecond, for example "Entering
- * Armistice Zone" and then "Leaving Armistice Zone" at the spawn. Thus the
- * lines of one instant keep their order in the log file.
+ * The game can write two lines of one change in the same millisecond, for
+ * example "Entering Armistice Zone" and then "Leaving Armistice Zone" at the
+ * spawn. Thus the lines of one instant keep their order in the log file.
  *
- * An entry which was shared before the upload sent the line number has no
- * number. The signal and then the key give the order of such lines, thus the
- * order is the same on each run.
+ * A shared entry can have no line number. The signal and then the key give the
+ * order of such lines, thus the order is the same on each run.
  */
 export const compareEntries = (first: IEntry, second: IEntry) =>
   first.isoDate.getTime() - second.isoDate.getTime() ||
@@ -35,6 +33,5 @@ export const compareEntries = (first: IEntry, second: IEntry) =>
   getSignalOrder(first) - getSignalOrder(second) ||
   first.key.localeCompare(second.key);
 
-/** Orders the entries from the newest to the oldest, as the table shows them */
 export const compareEntriesNewestFirst = (first: IEntry, second: IEntry) =>
   compareEntries(second, first);

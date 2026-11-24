@@ -28,10 +28,7 @@ interface BaseProps {
   readonly name: string;
   readonly disabled?: boolean;
   readonly autoFocus?: boolean;
-  /**
-   * Narrows the offered citizens to this set, including the role shortcuts.
-   * Omit to offer every citizen.
-   */
+  /** Also narrows the role shortcuts. Omit to offer every citizen. */
   readonly selectableCitizenIds?: readonly Citizen["id"][];
 }
 
@@ -245,7 +242,6 @@ const Multiple = ({
 
   const [isRolePickerOpen, setIsRolePickerOpen] = useState(false);
 
-  /** Replaces the selected citizens with the citizens of the role */
   const selectCitizensOfRole = (roleId: BadgeRole["id"]) => {
     if (!dataCitizensGroupedByVisibleRoles) return;
 

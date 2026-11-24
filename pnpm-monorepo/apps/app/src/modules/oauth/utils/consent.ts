@@ -11,9 +11,7 @@ import { isMcpServerDisabled } from "./isMcpServerDisabled";
 
 export enum ConsentAvailability {
   Available = "available",
-  /** The kill switch is on */
   Disabled = "disabled",
-  /** The app cannot sign access tokens */
   NoSigningKey = "noSigningKey",
 }
 
@@ -52,11 +50,7 @@ export const getClientErrorMessage = (
   }
 };
 
-/**
- * The request of the client has an error, but its client and its redirect
- * URI are valid. The description is a short English text without internal
- * data.
- */
+/** The description is a short English text without internal data */
 export const getRedirectErrorMessage = (description: string) =>
   `Die Anfrage der Anwendung ist ungültig: ${description}`;
 
@@ -67,10 +61,6 @@ export const getRedirectTarget = (redirectUri: string) => {
   return url.host || url.protocol;
 };
 
-/**
- * The hidden fields of the approve and deny forms: the validated parameters
- * of the authorization request. The actions validate them again.
- */
 export const toConsentFormParameters = (
   validation: Extract<
     AuthorizationRequestValidation,
@@ -96,10 +86,8 @@ const MAX_FORM_FIELD_LENGTH = 2048;
 const consentFormFieldSchema = z.string().max(MAX_FORM_FIELD_LENGTH).optional();
 
 /**
- * The fields of the approve and deny forms (see `toConsentFormParameters()`).
- * A field can be missing or not valid: the use case validates them. The
- * schema removes other fields, and the limit keeps large values out of the
- * use case.
+ * A field can be missing or not valid: the use case validates them. The limit
+ * keeps large values out of the use case.
  */
 export const consentFormSchema = z.object({
   response_type: consentFormFieldSchema,
@@ -118,10 +106,6 @@ export const consentFormSchema = z.object({
  */
 const MAXIMUM_DISABLED_TOOL_NAMES = 200;
 
-/**
- * The fields of the approve form: the fields of the request and the settings
- * of the new grant
- */
 export const approveFormSchema = consentFormSchema.extend({
   custom_name: grantCustomNameSchema.optional(),
   disabled_tool_names: z

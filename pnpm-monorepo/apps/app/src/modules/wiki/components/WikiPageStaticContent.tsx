@@ -138,9 +138,8 @@ const renderWikiPageContent = (
         tableHeader: ({ node, children }) =>
           createElement("th", tableCellProps(node), children as ReactNode),
         /**
-         * Unlike the node's renderHTML, uploads with probed dimensions
-         * render through the Next.js image optimizer; the rest keep the
-         * plain img.
+         * The mappings from here on give the same output as the node views of
+         * the editor
          */
         image: ({ node }) => {
           const eager = isFirstImage;
@@ -165,11 +164,6 @@ const renderWikiPageContent = (
             />
           );
         },
-        /**
-         * Unlike the node's renderHTML, the card adds the report button
-         * next to the download link — same as the read-only editor's node
-         * view.
-         */
         wikiAttachment: ({ node }) => (
           <WikiAttachmentCard
             uploadId={String(node.attrs.uploadId ?? "")}
@@ -180,39 +174,22 @@ const renderWikiPageContent = (
             style={wikiBlockLayoutStyle(node.attrs)}
           />
         ),
-        /**
-         * Unlike the node's renderHTML, the chip adds the citizen hover
-         * popover around the mention link — same as the editor node view.
-         */
         wikiCitizenMention: ({ node }) => (
           <WikiCitizenMentionChip
             resolved={resolveWikiCitizenMention(mentionedCitizens, node.attrs)}
           />
         ),
-        /**
-         * Unlike the node's renderHTML, the chip renders the fleet app's
-         * variant component — same as the editor node view.
-         */
         wikiVariantLink: ({ node }) => (
           <WikiVariantLinkChip
             resolved={resolveWikiVariantLink(linkedVariants, node.attrs)}
           />
         ),
-        /**
-         * Renders the page list pre-resolved by the server for this viewer
-         * (see resolveWikiPageIndex) instead of the node's placeholder.
-         */
         wikiPageIndex: ({ node }) => (
           <WikiPageIndexList
             entries={pageIndexes[wikiPageIndexConfigKey(node.attrs)] ?? []}
             style={wikiBlockLayoutStyle(node.attrs)}
           />
         ),
-        /**
-         * Renders the members pre-resolved by the server for this viewer (see
-         * `loadWikiRoleCitizensByRole()` of the application package) instead
-         * of the node's placeholder.
-         */
         wikiRoleCitizens: ({ node }) => {
           const { roleId } = normalizeWikiRoleCitizensConfig(node.attrs);
           return (
@@ -233,35 +210,17 @@ interface Props {
   readonly content: unknown;
   /** Page the content belongs to — without it the attachment report buttons are omitted */
   readonly pageId?: string;
-  /** Hostnames generic iframes may embed (WikiSetting.iframeAllowlist) */
   readonly iframeAllowlist: readonly string[];
   readonly linkedPages: WikiLinkedPages;
-  /** Current handles of the citizens mentioned on the page, by id */
   readonly mentionedCitizens: Readonly<Record<string, WikiMentionedCitizen>>;
-  /** Current names and manufacturer logos of the variants linked on the page, by id */
   readonly linkedVariants: Readonly<Record<string, WikiLinkedVariant>>;
-  /**
-   * Resolved page lists of the page-index nodes on this page, keyed by
-   * `wikiPageIndexConfigKey`
-   */
   readonly pageIndexes?: Readonly<
     Record<string, readonly WikiPageIndexEntry[]>
   >;
-  /**
-   * Resolved members of the role-member nodes on this page, keyed by role
-   * id
-   */
   readonly roleCitizens?: Readonly<Record<string, readonly WikiCitizen[]>>;
-  /**
-   * Intrinsic dimensions of the content's uploaded images, keyed by upload
-   * id — images without an entry render as a plain img
-   */
   readonly imageDimensions?: Readonly<Record<string, WikiImageDimensions>>;
 }
 
-/**
- * Static render of a page's Tiptap JSON.
- */
 export const WikiPageStaticContent = ({
   className,
   content,

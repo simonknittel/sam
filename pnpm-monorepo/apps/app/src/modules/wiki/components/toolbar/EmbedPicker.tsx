@@ -13,12 +13,6 @@ interface Props {
   readonly editor: Editor | null;
 }
 
-/**
- * URL input for embeds. YouTube, Twitch, Spotify and Google
- * Docs/Sheets/Slides/Drive URLs get their dedicated player; any other URL
- * becomes a generic iframe, validated against the domain allowlist through
- * a server action.
- */
 export const EmbedPicker = ({ editor }: Props) => {
   const { closePopover } = usePopoverBaseUI();
   const [url, setUrl] = useState("");

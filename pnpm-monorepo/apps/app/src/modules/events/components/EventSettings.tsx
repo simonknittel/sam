@@ -31,35 +31,29 @@ interface Props {
     readonly description: string | null;
     /** Europe/Berlin wall time in datetime-local format */
     readonly startTime: string;
-    /** Europe/Berlin wall time in datetime-local format */
     readonly endTime: string;
     readonly visibility: EventVisibility;
     readonly visibilityRoleIds: string[];
   };
   /**
-   * The tile of the participation and the application switches, rendered by
-   * the page: it needs the count of the active sign-ups and the rules of the
-   * positions
+   * Rendered by the page: it needs the count of the active sign-ups and the
+   * rules of the positions
    */
   readonly participationTile: ReactNode;
   /**
-   * The Discord publishing, rendered by the page: it needs a live channel
-   * list from Discord and therefore stays a Server Component. The Discord
-   * tile shows it above the preview of the description.
+   * Rendered by the page: it needs a live channel list from Discord and
+   * therefore stays a Server Component.
    */
   readonly discordPublishing: ReactNode;
   /**
-   * The "Aktionen" tile, rendered by the page: its contents are permission
-   * gated, and the page shows the same tile on events that are over — where
-   * the settings form itself is gone.
+   * Rendered by the page: its contents are permission gated, and the page shows
+   * the same tile on events that are over — where the settings form itself is
+   * gone.
    */
   readonly actionsTile?: ReactNode;
 }
 
-/**
- * The tiles of the settings page of an event. Each tile saves only its own
- * fields.
- */
+/** Each tile saves only its own fields */
 export const EventSettings = ({
   className,
   event,
@@ -68,13 +62,8 @@ export const EventSettings = ({
   actionsTile,
 }: Props) => {
   const router = useRouter();
-  /**
-   * The errors show as toasts: the refresh after a conflict, for example an
-   * event that a different manager deleted, can remove this form.
-   */
   const { formAction, getDefaultValueWithFallback } = useAction(updateEvent);
 
-  /** The preview of the description is only for Discord, thus it is in the Discord tile */
   const defaultDescription = getDefaultValueWithFallback(
     "description",
     event.description ?? "",

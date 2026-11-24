@@ -6,10 +6,6 @@ import { externalApps } from "../externalApps";
 import { INTEGRATED_APPS } from "../INTEGRATED_APPS";
 import type { App, RedactedApp } from "../types";
 
-/**
- * Retrieves all apps from static configuration. Marks the integrated apps as
- * redacted when the user lacks the permissions to access them.
- */
 export const getAppLinks = cache(
   withTrace("getAppLinks", async () => {
     const actor = await getOptionalRequestActor();

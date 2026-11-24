@@ -47,7 +47,6 @@ import { LogAnalyzerGuideEntryCategory } from "./LogAnalyzerGuideEntryCategory";
 
 interface Props {
   readonly className?: string;
-  /** False when the kill switch flag turned the sharing off */
   readonly isSharingAvailable: boolean;
 }
 
@@ -215,7 +214,6 @@ export const LogAnalyzerGuide = ({ className, isSharingAvailable }: Props) => {
         </ul>
       </GuideSection>
 
-      {/* The kill switch removes the sharing which this section explains */}
       {isSharingAvailable && (
         <GuideSection heading="Was geteilt wird">
           <GuideNoteList>

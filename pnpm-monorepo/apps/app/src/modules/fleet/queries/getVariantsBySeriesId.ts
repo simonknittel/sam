@@ -7,7 +7,6 @@ import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { findSeriesVariantRows } from "@sam-monorepo/application";
 import { cache } from "react";
 
-/** See `findSeriesVariantRows()` */
 export const getVariantsBySeriesId = cache(
   withTrace("getVariantsBySeriesId", async (seriesId: string) => {
     try {

@@ -15,8 +15,8 @@ interface Props {
 }
 
 /**
- * Shows the set of formats of Discord. Use it for text that a user writes for
- * both the app and Discord, for example the description of an event.
+ * For text that a user writes for both the app and Discord, for example the
+ * description of an event.
  */
 export const DiscordMarkdown = ({ className, children }: Props) => {
   return (

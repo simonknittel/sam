@@ -8,7 +8,6 @@ import {
 } from "@sam-monorepo/application";
 import { cache } from "react";
 
-/** The templates the current viewer may see, newest change first */
 export const getEventTemplates = cache(
   withTrace("getEventTemplates", async (filters: EventTemplateListFilters) =>
     findEventTemplateListRows(
@@ -25,7 +24,7 @@ export const getEventTemplates = cache(
   ),
 );
 
-/** The owners for the owner filter of the list, for `event;manage` holders */
+/** For `event;manage` holders */
 export const getEventTemplateOwners = cache(
   withTrace("getEventTemplateOwners", async () =>
     findEventTemplateOwners(getApplicationContext(), await getRequestActor()),

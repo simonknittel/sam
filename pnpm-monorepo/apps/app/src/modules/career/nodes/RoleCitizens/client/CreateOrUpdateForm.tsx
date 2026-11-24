@@ -19,7 +19,6 @@ import type { RoleNode } from "./Node";
 import { schema } from "./schema";
 
 interface Props {
-  /** Without it, the form adds a new node */
   readonly initialData?: {
     id: string;
     backgroundColor: string;

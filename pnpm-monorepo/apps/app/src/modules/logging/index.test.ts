@@ -38,7 +38,6 @@ logs.setGlobalLoggerProvider(
   }),
 );
 
-/** `after()` runs its callbacks after the response. */
 const runDeferredCallbacks = async () => {
   await Promise.all(deferredCallbacks.splice(0).map((callback) => callback()));
 };

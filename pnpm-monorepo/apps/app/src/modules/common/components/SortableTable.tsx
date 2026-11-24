@@ -17,18 +17,15 @@ interface Props<Row> {
   readonly className?: string;
   readonly data: TableOptions<Row>["data"];
   readonly columns: TableOptions<Row>["columns"];
-  /** Applies only when the table mounts. A click on a header changes it. */
   readonly initialSorting: SortingState;
-  /** The shared grid template of the header and body rows */
   readonly gridColsClassName: string;
   readonly rowClassName?: string;
   readonly cellClassName?: string;
 }
 
 /**
- * The `aria-sort` value of a header. Only one header can have the attribute,
- * thus a table sorted by more than one column gives it to the first column of
- * the sort.
+ * Only one header can have the attribute, thus a table sorted by more than one
+ * column gives it to the first column of the sort.
  */
 const getAriaSort = <Row,>(header: Header<Row, unknown>) => {
   if (header.isPlaceholder || header.column.getSortIndex() !== 0)
@@ -50,10 +47,6 @@ const getAriaSort = <Row,>(header: Header<Row, unknown>) => {
   }
 };
 
-/**
- * A CSS-grid table whose headers toggle client-side sorting. The callers give
- * the rows and the column definitions.
- */
 export const SortableTable = <Row,>({
   className,
   data,

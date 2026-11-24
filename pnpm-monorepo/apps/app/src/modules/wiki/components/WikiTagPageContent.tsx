@@ -14,11 +14,6 @@ interface Props {
   readonly pages: readonly TagPageEntry[];
 }
 
-/**
- * Shared render body of the tag routes: the global wiki's and the event
- * briefing's tag pages differ only in how they gate and link their pages,
- * so both compute the visible page list and hand it here.
- */
 export const WikiTagPageContent = ({ tagName, pages }: Props) => {
   return (
     <section className="rounded-primary bg-secondary p-4">

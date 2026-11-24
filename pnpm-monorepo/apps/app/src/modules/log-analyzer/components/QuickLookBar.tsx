@@ -42,11 +42,6 @@ interface Props {
   readonly className?: string;
 }
 
-/**
- * The types of the active quick look (see `QuickLookContext`). The quick look
- * hides entries which the settings show, thus its types stay in view between
- * the toolbar and the table. A click on a type removes it.
- */
 export const QuickLookBar = ({ className }: Props) => {
   const { quickLookTypes, setQuickLookTypes } = useQuickLook();
   const headingId = useId();

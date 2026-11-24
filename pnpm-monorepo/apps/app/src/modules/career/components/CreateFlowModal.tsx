@@ -5,14 +5,12 @@ import { CreateFlowForm, type DuplicationSource } from "./CreateFlowForm";
 
 interface Props {
   readonly onRequestClose: () => void;
-  /** Set when duplicating an existing flow, see CreateFlowForm */
   readonly source?: DuplicationSource | null;
 }
 
 /**
- * The management table's own modal chrome around `CreateFlowForm`. The top
- * bar's "Neu" menu reaches the same form through `CreateContext`, which
- * brings its own modal.
+ * The "Neu" menu of the top bar shows `CreateFlowForm` in the modal of
+ * `CreateContext` instead
  */
 export const CreateFlowModal = ({ onRequestClose, source }: Props) => {
   return (

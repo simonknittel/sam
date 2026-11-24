@@ -1,17 +1,12 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 
 interface EventDescriptionState {
-  /** The text of the field, for the counter and the preview */
   readonly description: string;
   readonly setDescription: (description: string) => void;
-  /** For the textarea of the field */
   readonly textareaRef: RefObject<HTMLTextAreaElement | null>;
 }
 
 /**
- * The text of the uncontrolled description field of an event or a template,
- * for its counter and its preview (see `EventDescriptionField`)
- *
  * @param defaultValue Accepts the union returned by
  * `getDefaultValueWithFallback`
  */
@@ -44,8 +39,8 @@ export const useEventDescription = (
   }, []);
 
   /**
-   * And second a new default value, which a saved event brings a moment
-   * after the reset. Adjusting during the render is how React documents it.
+   * And second a new default value, which a saved event brings a moment after
+   * the reset.
    */
   const [previousDefaultText, setPreviousDefaultText] = useState(defaultText);
   if (defaultText !== previousDefaultText) {

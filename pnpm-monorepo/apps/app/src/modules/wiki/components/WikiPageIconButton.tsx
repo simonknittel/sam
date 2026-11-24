@@ -17,11 +17,6 @@ interface Props {
   readonly canAdmin: boolean;
 }
 
-/**
- * The page icon next to the title. Page admins get a button opening a modal
- * to upload, replace or remove the icon; everyone else just sees the image
- * (or nothing).
- */
 export const WikiPageIconButton = ({ pageId, iconId, canAdmin }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);

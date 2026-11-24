@@ -15,7 +15,6 @@ export const generateMetadata = async (
   return getBriefingTagPageMetadata(toEventContainer(id), tagId);
 };
 
-/** The pages of one tag of the briefing of an event */
 export default async function Page(
   props: PageProps<"/app/events/[id]/briefing/tags/[tagId]">,
 ) {

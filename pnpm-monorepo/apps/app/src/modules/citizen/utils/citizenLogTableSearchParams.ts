@@ -6,8 +6,7 @@ export const CITIZEN_LOG_TABLE_DEFAULT_SORT =
   CitizenLogTableSort.CreatedAtDescending;
 
 /**
- * The search params of the filter sidebars of the Spynet log tables. The
- * notes table uses the note type and the classification level, the table of
+ * The notes table uses the note type and the classification level, the table of
  * the other logs uses the type.
  */
 export const CITIZEN_LOG_TABLE_NOTE_TYPE_PARAM = "note_type";

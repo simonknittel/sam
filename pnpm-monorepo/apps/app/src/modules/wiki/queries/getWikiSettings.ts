@@ -10,38 +10,27 @@ import {
 import type { WikiPageLinkKey } from "@sam-monorepo/domain";
 import { cache } from "react";
 
-/**
- * The stored values of the wiki settings, one read for each request (see
- * `findWikiSettings()`)
- */
 export const getWikiSettings = cache(
   withTrace("getWikiSettings", () => findWikiSettings(getApplicationContext())),
 );
 
-/** The hostnames that the generic iframes can embed */
 export const getWikiIframeAllowlist = async () =>
   (await getWikiSettings()).iframeAllowlist;
 
-/**
- * The ids of the pages on the landing page of the wiki. The pages that a
- * user deleted after the save stay in the list: `resolveWikiFeaturedPages()`
- * removes them.
- */
+/** Can hold deleted pages: see `resolveWikiFeaturedPages()` */
 export const getWikiFeaturedPageIds = async () =>
   (await getWikiSettings()).featuredPageIds;
 
 /**
- * The id of the page that the dashboard shows, or null. The raw value
- * without a permission check: the dashboard tile checks the read permission
- * of the viewer.
+ * The raw value without a permission check: the dashboard tile checks the read
+ * permission of the viewer.
  */
 export const getWikiDashboardPageId = async () =>
   (await getWikiSettings()).dashboardPageId;
 
 /**
- * The id of the page of a page link, or null. The raw value without a
- * permission check, for the settings: the consumers of the link use
- * `getWikiPageLinkTarget()`.
+ * The raw value without a permission check, for the settings: the consumers of
+ * the link use `getWikiPageLinkTarget()`.
  */
 export const getWikiPageLinkPageId = async (key: WikiPageLinkKey) =>
   (await getWikiSettings()).pageLinkPageIds[key];

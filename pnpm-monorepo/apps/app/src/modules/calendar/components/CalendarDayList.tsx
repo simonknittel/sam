@@ -12,7 +12,6 @@ interface Props {
   readonly page: CalendarPage;
 }
 
-/** Each day of the page with its entries, and the pagination */
 export const CalendarDayList = async ({ className, page }: Props) => {
   const entries = await getCalendarEntries(
     toLocalDateKey(page.range.start),

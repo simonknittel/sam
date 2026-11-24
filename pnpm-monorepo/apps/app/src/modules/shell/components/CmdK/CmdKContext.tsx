@@ -19,9 +19,8 @@ const CmdKContext = createContext<CmdKContext | undefined>(undefined);
 interface Props {
   readonly children: ReactNode;
   /**
-   * Whether the viewer may read at least one career flow. Resolved on the
-   * server because per-flow access lives in a table, not in the session's
-   * permission sets.
+   * Resolved on the server because per-flow access lives in a table, not in the
+   * session's permission sets.
    */
   readonly canReadCareer?: boolean;
 }
@@ -62,10 +61,6 @@ export const CmdKProvider = ({ children, canReadCareer }: Props) => {
   return <CmdKContext value={value}>{children}</CmdKContext>;
 };
 
-/**
- * Check for undefined since the defaultValue of the context is undefined. If
- * it's still undefined, the provider component is missing.
- */
 export function useCmdKContext() {
   const context = useContext(CmdKContext);
   if (!context) throw new Error("Provider missing!");

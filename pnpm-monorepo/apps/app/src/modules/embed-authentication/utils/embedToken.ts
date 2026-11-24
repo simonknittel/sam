@@ -11,11 +11,7 @@ import {
 } from "./constants";
 import type { EmbedSigningKey } from "./embedSigningKey";
 
-/**
- * The permission strings an app declaring `resources` is allowed to see.
- * Deduplicated (roles overlap) and sorted, so the same session always
- * produces the same claim and otherwise identical tokens stay comparable.
- */
+/** Sorted, so the same session always produces the same claim */
 export const collectEmbedPermissionStrings = (
   givenPermissionSets: readonly PermissionSet[],
   resources: readonly PermissionSet["resource"][],
@@ -34,16 +30,11 @@ interface SignEmbedTokenParameters {
   readonly signingKey: EmbedSigningKey;
   readonly issuer: string;
   readonly audience: string;
-  /** `Citizen.id`, the only stable identifier the embedded app should key on. */
+  /** `Citizen.id` */
   readonly subject: string;
-  /**
-   * The Star Citizen handle, or null for an entity without a confirmed one.
-   * Display text, not a key: it changes when someone renames themselves in
-   * RSI.
-   */
+  /** Null for an entity without a confirmed handle */
   readonly handle: string | null;
   readonly permissionStrings: readonly string[];
-  /** Default: `DEFAULT_EMBED_TOKEN_LIFETIME_IN_SECONDS` */
   readonly lifetimeInSeconds?: number;
 }
 
@@ -68,9 +59,7 @@ export const signEmbedToken = async ({
   const expiresAtInSeconds = issuedAtInSeconds + lifetimeInSeconds;
 
   const token = await new SignJWT({
-    // OIDC's name for "the shorthand name the user wishes to be referred
-    // to by" — omitted rather than null so consumers write an absence
-    // check instead of rendering the string "null"
+    // Omitted rather than null, so that consumers write an absence check
     ...(handle && { preferred_username: handle }),
     /**
      * Not `scope`: that belongs to OAuth 2.0 access tokens and denotes
@@ -86,9 +75,8 @@ export const signEmbedToken = async ({
     .setAudience(audience)
     .setSubject(subject)
     /**
-     * Nothing on our side depends on it. It exists so a verifier can
-     * enforce at-most-once exchange by recording seen ids with a TTL
-     * matching the token lifetime.
+     * Nothing on our side depends on it (see "Replay protection" in
+     * docs/embedded-app-authentication.md)
      */
     .setJti(createId())
     .setIssuedAt(issuedAtInSeconds)

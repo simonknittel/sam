@@ -17,11 +17,6 @@ interface Props {
   readonly onSuccess?: () => void;
 }
 
-/**
- * Creates a template with the fields an event starts from. Lineup, briefing
- * and the visibility prefill are edited on the template's own pages, where
- * the action redirects to.
- */
 export const CreateEventTemplateForm = ({ className, onSuccess }: Props) => {
   const { state, formAction, getDefaultValueWithFallback } = useAction(
     createEventTemplate,

@@ -36,11 +36,7 @@ export const CreateVariantButton = ({
       </Button2>
 
       {isOpen && (
-        /**
-         * The `dynamic()` triggers the closest `Suspense` to show the fallback. This
-         * leads to much bigger parts of the page or even the whole page showing the
-         * fallback instead of only the button.
-         */
+        /** See `CreateManufacturerButton` */
         <Suspense>
           <CreateVariantModal
             onRequestClose={() => setIsOpen(false)}

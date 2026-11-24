@@ -5,10 +5,8 @@ const COLLAB_UNREACHABLE_TEXT =
   "der Collaboration-Server ist nicht erreichbar. Bitte versuche es später erneut.";
 
 /**
- * The texts of the wiki actions for the errors of the wiki use cases. The
- * not-found messages without an own text get the common not-found text. The
- * permissions action builds the text of `RolesCannotReadParent` with the
- * names of the roles (see `WikiRolesCannotReadParentError`).
+ * The permissions action builds the text of `RolesCannotReadParent` with the
+ * names of the roles (see `WikiRolesCannotReadParentError`)
  */
 export const WIKI_ERROR_TEXTS = {
   [WikiErrorMessage.SourcePageNotFound]:

@@ -5,12 +5,11 @@ import clsx from "clsx";
 
 interface Props {
   readonly tag: VariantCatalogTag;
-  /** Whether the tag filters the list */
   readonly isPressed: boolean;
   readonly onClick: (tag: VariantCatalogTag) => void;
 }
 
-/** Looks like `RoleTagChip`, with the key of the tag before its value */
+/** Looks like `RoleTagChip` */
 export const VariantTagChip = ({ tag, isPressed, onClick }: Props) => {
   return (
     <button

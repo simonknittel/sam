@@ -13,12 +13,6 @@ interface Props {
   readonly href: ComponentProps<typeof Link>["href"];
 }
 
-/**
- * The first cell of a matrix row: the role the row belongs to, linking to
- * the page which edits the same data one role at a time. The cell stays put
- * while the matrix scrolls sideways, so the row keeps its name whichever
- * column is in view.
- */
 export const MatrixRoleCell = ({ role, href }: Props) => {
   return (
     <td className="sticky -left-2 z-10 h-8 overflow-hidden rounded-secondary bg-secondary">

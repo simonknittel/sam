@@ -4,9 +4,8 @@ export const TIMESTAMP_AT_LINE_START = /^<([\d\-T:.Z]+)>/;
 const TIMESTAMP_PREFIX_LENGTH = 40;
 
 /**
- * The time of the last timestamped line before the given position of the
- * file. Null when no such line exists. See `takesTimeOfPrecedingLine` of the
- * domain package.
+ * Null when no timestamped line exists before the position. See
+ * `takesTimeOfPrecedingLine` of the domain package.
  */
 export const findPrecedingIsoDate = (
   fileContent: string,
@@ -31,9 +30,8 @@ export const findPrecedingIsoDate = (
 };
 
 /**
- * The time of the last timestamped line of the file, also of a last line
- * which has no line end yet. The game writes the timestamp first, thus the
- * timestamp of a line which it still writes is complete.
+ * Also of a last line which has no line end yet: the game writes the timestamp
+ * first, thus the timestamp of a line which it still writes is complete.
  */
 export const findLastIsoDate = (fileContent: string): string | null => {
   const lastLineStart = fileContent.lastIndexOf("\n") + 1;

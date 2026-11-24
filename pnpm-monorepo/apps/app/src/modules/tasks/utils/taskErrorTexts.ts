@@ -4,11 +4,7 @@ import { TaskErrorMessage } from "@sam-monorepo/application";
 
 const TASK_NOT_FOUND_ERROR = "Task nicht gefunden";
 
-/**
- * The texts of the task actions for the errors of the task use cases. The
- * other validation errors need a request that bypassed the forms: they get
- * the text of a bad request.
- */
+/** The other validation errors need a request that bypassed the forms */
 export const TASK_ERROR_TEXTS: ApplicationErrorTexts = {
   [TaskErrorMessage.NotFound]: TASK_NOT_FOUND_ERROR,
   [TaskErrorMessage.NotOpen]: "Der Task ist bereits abgeschlossen.",

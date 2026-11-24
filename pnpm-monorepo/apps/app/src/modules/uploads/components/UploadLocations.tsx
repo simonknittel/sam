@@ -9,11 +9,6 @@ interface Props {
   readonly usages: readonly UploadUsage[];
 }
 
-/**
- * Every place an upload is embedded, as links to the pages owning them. The
- * links are not permission-checked — each target page enforces its own
- * access.
- */
 export const UploadLocations = ({ usages }: Props) => {
   if (usages.length === 0)
     return (

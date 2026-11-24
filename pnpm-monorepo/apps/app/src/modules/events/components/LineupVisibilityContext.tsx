@@ -79,10 +79,6 @@ export const LineupVisibilityProvider = ({ children, items }: Props) => {
   );
 };
 
-/**
- * Check for undefined since the defaultValue of the context is undefined. If
- * it's still undefined, the provider component is missing.
- */
 export function useLineupVisibility() {
   const context = useContext(LineupVisibilityContext);
   if (!context) throw new Error("Provider missing!");

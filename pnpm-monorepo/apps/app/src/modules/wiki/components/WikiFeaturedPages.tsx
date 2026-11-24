@@ -10,10 +10,6 @@ interface Props {
   readonly pages: readonly WikiContextPage[];
 }
 
-/**
- * The pages the wiki admins highlight on the landing page, in the order
- * they arranged them in the wiki settings.
- */
 export const WikiFeaturedPages = ({ pages }: Props) => {
   return (
     <section className="rounded-primary bg-secondary p-4">

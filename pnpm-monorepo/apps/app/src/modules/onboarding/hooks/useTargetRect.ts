@@ -10,10 +10,6 @@ const rectsAreEqual = (firstRect: DOMRect, secondRect: DOMRect) =>
   firstRect.width === secondRect.width &&
   firstRect.height === secondRect.height;
 
-/**
- * Tracks the viewport rectangle of the highlighted element, following
- * scrolling, window resizes and size changes of the element itself.
- */
 export const useTargetRect = (element: HTMLElement | null) => {
   /**
    * `useSyncExternalStore` subscribes again each time this function changes:

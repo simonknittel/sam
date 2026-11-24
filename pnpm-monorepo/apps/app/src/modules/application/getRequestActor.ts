@@ -3,10 +3,9 @@ import { cache } from "react";
 import { toActor } from "./toActor";
 
 /**
- * The actor of the current request, one time for each render. It runs the
- * gate of the pages (see `requireAuthenticationPage()`), thus a layout, a
- * slot or `generateMetadata` that reads through it is gated too. A server
- * action builds the actor with `toActor()` from the session that
+ * Runs the gate of the pages (see `requireAuthenticationPage()`), thus a
+ * layout, a slot or `generateMetadata` that reads through it is gated too. A
+ * server action builds the actor with `toActor()` from the session that
  * `createAuthenticatedAction` gives it.
  */
 export const getRequestActor = cache(async () =>

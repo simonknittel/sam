@@ -1,6 +1,5 @@
 import { useState } from "react";
 
-/** The same ids in a different order give the same signature */
 const toSignature = (ids: readonly string[]) => ids.toSorted().join(",");
 
 /**

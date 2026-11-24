@@ -11,13 +11,12 @@ import clsx from "clsx";
 import { formatCalendarDay } from "../utils/formatCalendarDate";
 import { CalendarEntryItem } from "./CalendarEntryItem";
 
-/** The level of the day headings below the heading of the page or the tile */
 export enum CalendarDayHeadingLevel {
   Page = "h2",
   Tile = "h3",
 }
 
-/** An entry with its position in the whole list */
+/** The index is the position in the whole list */
 interface PositionedEntry {
   readonly entry: CalendarEntry;
   readonly index: number;
@@ -69,10 +68,6 @@ interface Props {
   readonly headingLevel: CalendarDayHeadingLevel;
 }
 
-/**
- * The entries under a heading for each day (in the time zone of the
- * organization).
- */
 export const CalendarDays = ({
   className,
   entries,

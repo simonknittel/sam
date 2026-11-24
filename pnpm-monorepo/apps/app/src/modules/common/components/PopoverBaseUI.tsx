@@ -16,8 +16,8 @@ import { IoMdArrowDropup } from "react-icons/io";
 interface PopoverBaseUIContext {
   closePopover: () => void;
   /**
-   * Keeps the popover open, for example while a dialog of its content is
-   * open. Returns the function that ends this hold.
+   * For example while a dialog of its content is open. Returns the function
+   * that ends this hold.
    */
   keepOpen: () => () => void;
 }
@@ -51,7 +51,6 @@ const useKeepOpen = () => {
 interface PopoverChromeProps {
   readonly children: ReactNode;
   readonly childrenClassName?: string;
-  /** Accessible name of the popup, see PopoverBaseUI's `title` */
   readonly title: string;
   /**
    * Invisible strips bridging the sideOffset gap so the pointer can
@@ -61,7 +60,6 @@ interface PopoverChromeProps {
   readonly hoverBridges?: boolean;
 }
 
-/** Popup content shared by the trigger-based and the detached popover */
 const PopoverChrome = ({
   children,
   childrenClassName,
@@ -105,42 +103,27 @@ const PopoverChrome = ({
 
 interface PopoverBaseUIContextProviderProps {
   /**
-   * Accessible name of the popup. Base UI renders the popup with
-   * `role="dialog"`, which is announced as an unnamed dialog without one.
-   * Required so a new popover can't silently ship without a name.
+   * Base UI renders the popup with `role="dialog"`, which is announced as an
+   * unnamed dialog without a name.
    */
   readonly title: string;
   readonly trigger: ReactNode;
-  /** Applied to the button element Base UI renders around `trigger` */
   readonly triggerClassName?: string;
-  /**
-   * Element to render the trigger as (Base UI `render` prop), e.g. a
-   * `Button2` — used instead of the default unstyled button.
-   */
   readonly triggerRender?: ComponentProps<typeof Popover.Trigger>["render"];
-  /** Tooltip and accessible name of the trigger button (for icon-only triggers) */
   readonly triggerTitle?: string;
   readonly children: ReactNode;
   readonly childrenClassName?: string;
   /**
-   * When set, the owner holds the open state and the popover reports each
-   * change through `onOpenChange`. A popover which the owner opens ignores
-   * the hover close, as after an open through a press.
+   * A popover which the owner opens ignores the hover close, as after an open
+   * through a press.
    */
   readonly open?: boolean;
-  /** Reports each open and close, also a close through `closePopover` */
+  /** Also reports a close through `closePopover` */
   readonly onOpenChange?: (open: boolean) => void;
-  /**
-   * When true, the popover only opens on mouse hover.
-   * Click and touch interactions are ignored.
-   */
   readonly hoverOnly?: boolean;
-  /** When false, hovering the trigger doesn't open the popover (click only) */
   readonly openOnHover?: boolean;
-  /** When true, the trigger is inert and the popover cannot open */
   readonly disabled?: boolean;
   readonly side?: "top" | "bottom" | "left" | "right";
-  /** Where the popup sits along the trigger's edge */
   readonly align?: "start" | "center" | "end";
   /**
    * Replaces the positioner's default `z-30` — for popovers which must
@@ -275,15 +258,13 @@ export const PopoverBaseUI = ({
 };
 
 interface PopoverBaseUIDetachedProps {
-  /** Accessible name of the popup, see PopoverBaseUI's `title` */
   readonly title: string;
   readonly open: boolean;
   /**
-   * Reports Base UI's own dismissals (outside press, Escape). `open` is
-   * fully controlled — the owner decides whether to actually close.
+   * `open` is fully controlled: the owner decides whether to actually close on
+   * a dismissal of Base UI (outside press, Escape).
    */
   readonly onOpenChange?: (open: boolean) => void;
-  /** Element or virtual element (e.g. a caret rect) the popup anchors to */
   readonly anchor: ComponentProps<typeof Popover.Positioner>["anchor"];
   readonly children: ReactNode;
   readonly childrenClassName?: string;
@@ -360,17 +341,12 @@ export const PopoverBaseUIDetached = ({
   );
 };
 
-/**
- * Check for undefined since the defaultValue of the context is undefined. If
- * it's still undefined, the provider component is missing.
- */
 export function usePopoverBaseUI() {
   const context = useContext(PopoverBaseUIContext);
   if (!context) throw new Error("[PopoverContext] Provider is missing!");
   return context;
 }
 
-/** The popover around the component, or undefined outside of a popover */
 export const useOptionalPopoverBaseUI = () => useContext(PopoverBaseUIContext);
 
 interface WithoutPopoverBaseUIProps {

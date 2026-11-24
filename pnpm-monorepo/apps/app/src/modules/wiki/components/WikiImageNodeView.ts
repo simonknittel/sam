@@ -11,7 +11,6 @@ import {
 } from "../utils/wikiImageRendering";
 
 interface WikiImageNodeViewOptions extends WikiImageOptions {
-  /** Intrinsic dimensions of the page's uploaded images, by upload id */
   imageDimensions: Readonly<Record<string, WikiImageDimensions>>;
 }
 
@@ -153,13 +152,6 @@ const WikiFloatImageWithOptimizedView =
     },
   });
 
-/**
- * Swaps the plain image nodes (block and floated) in an extension list for
- * the node-view variants serving optimized images, keeping their position
- * in the list. Same names, attributes and schema — only the in-editor
- * rendering differs, so save validation, the collab server and the static
- * renderer stay untouched by these variants.
- */
 export const withWikiImageOptimization = (
   extensions: AnyExtension[],
   imageDimensions: Readonly<Record<string, WikiImageDimensions>>,

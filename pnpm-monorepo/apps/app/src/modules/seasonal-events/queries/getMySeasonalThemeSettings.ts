@@ -5,12 +5,7 @@ import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { findOwnSeasonalThemeSettings } from "@sam-monorepo/application";
 import { cache } from "react";
 
-/**
- * The opt-out rows of the viewer. A row means the citizen switched the
- * event off; an event without a row is switched on. A viewer without a
- * citizen has no rows and cannot create any, thus the query answers with
- * nothing.
- */
+/** Null for a viewer without a citizen: such a viewer cannot create any row */
 export const getMySeasonalThemeSettings = cache(
   withTrace("getMySeasonalThemeSettings", async () =>
     findOwnSeasonalThemeSettings(

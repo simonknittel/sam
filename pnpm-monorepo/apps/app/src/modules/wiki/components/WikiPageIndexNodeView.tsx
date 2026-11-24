@@ -61,14 +61,6 @@ const WikiPageIndexNodeView = ({ node, extension }: NodeViewProps) => {
   );
 };
 
-/**
- * The shared package's page-index node plus an editor-only React node view
- * fetching the resolved page list from the server, so editors and live
- * collab readers see the actual list instead of the placeholder. Same name,
- * attributes and schema — only the in-editor rendering differs, so save
- * validation, the collab server and the static renderer stay untouched by
- * this variant.
- */
 const WikiPageIndexWithNodeView =
   WikiPageIndex.extend<WikiPageIndexNodeViewOptions>({
     addOptions() {
@@ -82,10 +74,6 @@ const WikiPageIndexWithNodeView =
     },
   });
 
-/**
- * Swaps the plain page-index node in an extension list for the node-view
- * variant, keeping its position in the list.
- */
 export const withWikiPageIndexNodeView = (
   extensions: AnyExtension[],
   currentPageId: string,

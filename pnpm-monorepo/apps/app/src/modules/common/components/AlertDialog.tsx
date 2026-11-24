@@ -12,17 +12,13 @@ import {
 import { useFormStatus } from "react-dom";
 
 /**
- * Asks for the confirmation in an `AlertDialog` before a form submits. Give
- * `onSubmit` to the form, and `isOpen` and `close` to the `AlertDialog` in
- * the form. The submit buttons of the form open the dialog, and the confirm
- * button of the dialog submits the form.
+ * Give `onSubmit` to the form, and `isOpen` and `close` to the `AlertDialog` in
+ * the form.
  *
- * The dialog opens in the `submit` event. Thus the browser validates the
- * fields before the dialog opens, and Enter in a field also opens the
- * dialog. When `onSubmit` prevents the default action, React does not run
- * the action of the form.
- *
- * @param isRequired False submits the form without the dialog.
+ * The dialog opens in the `submit` event. Thus the browser validates the fields
+ * before the dialog opens, and Enter in a field also opens the dialog. When
+ * `onSubmit` prevents the default action, React does not run the action of the
+ * form.
  */
 export const useSubmitConfirmation = (isRequired = true) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -59,15 +55,13 @@ interface Props {
   readonly description: ReactNode;
   readonly confirmLabel: string;
   readonly confirmDisabled?: boolean;
-  /** Content between the description and the buttons, for example fields */
   readonly children?: ReactNode;
 }
 
 /**
- * A modal confirmation before a form submits (see `useSubmitConfirmation`).
- * Render it inside the form: the confirm button is a submit button of that
- * form, and the fields in `children` are fields of that form. The content
- * exists only while the dialog is open, as with a dialog in a portal.
+ * Render it inside the form (see `useSubmitConfirmation`): the confirm button
+ * is a submit button of that form, and the fields in `children` are fields of
+ * that form. The content exists only while the dialog is open.
  */
 export const AlertDialog = ({ isOpen, ...props }: Props) => {
   if (!isOpen) return null;

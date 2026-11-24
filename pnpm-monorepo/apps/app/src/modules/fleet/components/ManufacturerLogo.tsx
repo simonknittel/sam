@@ -14,7 +14,6 @@ interface Props {
   readonly manufacturer: ManufacturerLogoManufacturer;
   /** See VariantWithLogo's `logo` */
   readonly logo?: { readonly src: string; readonly mimeType: string } | null;
-  /** See VariantWithLogo's `size` */
   readonly size: 24 | 32 | 48 | 80 | "inline";
 }
 

@@ -22,16 +22,11 @@ interface WikiCitizenMentionSuggestionOptions {
 }
 
 interface CitizenMentionSuggestionItem {
-  /** Citizen id — also the menu key, since handles are not guaranteed unique */
   readonly id: string;
   readonly handle: string;
   readonly title: string;
 }
 
-/**
- * Typing "@" opens a search over all citizens and inserts a citizen
- * mention. Editor-only — the extension adds no schema.
- */
 export const WikiCitizenMentionSuggestion =
   Extension.create<WikiCitizenMentionSuggestionOptions>({
     name: "wikiCitizenMentionSuggestion",

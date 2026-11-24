@@ -50,24 +50,15 @@ interface Template {
 
 interface Props {
   readonly template: Template;
-  /**
-   * The guild's voice and stage channels, loaded by the page — null when
-   * Discord could not be asked.
-   */
+  /** null when Discord could not be asked */
   readonly channels: readonly PublishableGuildChannel[] | null;
 }
 
 /**
- * The tiles of the template's own data and of everything it prefills into a
- * new event. Each tile saves only its own fields.
- *
- * The errors of the forms show as toasts: the refresh after a conflict, for
- * example a template that a different user deleted, can remove the forms.
- * The forms are controlled, thus they send with `submitWithoutReset`: React
- * puts a form with an `action` back to its default values after the action.
+ * Each tile saves only its own fields. The forms are controlled, thus they send
+ * with `submitWithoutReset`.
  */
 export const EventTemplateSettings = ({ template, channels }: Props) => {
-  /** The preview of the description is only for Discord, thus it is in the Discord tile */
   const { description, setDescription, textareaRef } = useEventDescription(
     template.description ?? "",
   );
@@ -269,11 +260,9 @@ interface SettingsFormTileProps {
   readonly isPending: boolean;
   readonly onSubmit: FormEventHandler<HTMLFormElement>;
   readonly children: ReactNode;
-  /** Below the form, for example a preview */
   readonly footer?: ReactNode;
 }
 
-/** A tile with a form that saves the fields of the tile */
 const SettingsFormTile = ({
   section,
   templateId,

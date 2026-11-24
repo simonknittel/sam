@@ -8,7 +8,6 @@ import { AdminModeContext } from "../hooks/AdminModeContext";
 interface Props {
   readonly children?: ReactNode;
   readonly session: Session;
-  /** The result of `isAdminModeActive` for this session */
   readonly adminModeActive: boolean;
 }
 

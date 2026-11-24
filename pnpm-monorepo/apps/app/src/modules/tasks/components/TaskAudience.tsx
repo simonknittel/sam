@@ -23,11 +23,9 @@ interface Props {
     | "hiddenForOtherRoles"
     | "canSelfComplete"
   >;
-  /** Shows the editor of the required roles */
   readonly isEditable: boolean;
 }
 
-/** Who can see and accept the task */
 export const TaskAudience = ({ className, task, isEditable }: Props) => {
   const isPublic = task.visibility === TaskVisibility.PUBLIC;
 

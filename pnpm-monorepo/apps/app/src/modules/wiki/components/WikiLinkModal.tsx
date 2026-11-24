@@ -29,13 +29,6 @@ interface Props {
   readonly onRequestClose: () => void;
 }
 
-/**
- * Link dialog behind the selection menu's link button and the palettes'
- * "Link" entry: picking a wiki page replaces the selection with the
- * auto-updating page link node, a URL turns the selection into an
- * external link — with no selection, an editable text field provides the
- * link text.
- */
 export const WikiLinkModal = ({ editor, onRequestClose }: Props) => {
   /**
    * The blurred editor keeps its selection while the dialog is open (the
@@ -57,10 +50,6 @@ export const WikiLinkModal = ({ editor, onRequestClose }: Props) => {
   /** NULL until edited — the field mirrors the URL input until then */
   const [linkText, setLinkText] = useState<string | null>(null);
 
-  /**
-   * Readable pages in tree order — permission-filtered server-side, so
-   * invisible titles can never leak.
-   */
   const { data: pageTargets } = api.wiki.getPageTargets.useQuery(
     { permission: "read" },
     {
@@ -69,7 +58,6 @@ export const WikiLinkModal = ({ editor, onRequestClose }: Props) => {
   );
 
   const trimmed = url.trim();
-  /** A typed/pasted wiki page URL counts as picking that page */
   const urlPageId = pageLinksAllowed
     ? (WIKI_PAGE_URL_PATTERN.exec(trimmed)?.[1] ?? null)
     : null;

@@ -8,7 +8,6 @@ type RoleRequirement = Pick<
   "requiredRoles" | "requiredRoleMatch"
 >;
 
-/** The options of the role match in the position form */
 export const getRoleMatchLabel = (match: EventPositionRoleMatch) => {
   switch (match) {
     case EventPositionRoleMatch.ALL:
@@ -35,7 +34,6 @@ const getRoleMatchSuffix = (match: EventPositionRoleMatch) => {
   }
 };
 
-/** The match is only a choice for two roles or more */
 export const getRequiredRolesHeading = (position: RoleRequirement) =>
   position.requiredRoles.length > 1
     ? `Erforderliche Rolle (${getRoleMatchSuffix(position.requiredRoleMatch)})`

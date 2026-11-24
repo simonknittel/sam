@@ -1,18 +1,12 @@
 import type { ReactNode } from "react";
 
 interface Props {
-  /** Shown in front of the name, for example the Discord logo */
   readonly icon?: ReactNode;
   readonly name: string;
   readonly children: ReactNode;
 }
 
-/**
- * One name/value pair of a citizen, shown identically on each surface which
- * describes a citizen: the popover, the dashboard tile and the Spynet
- * overview. The variant popover uses it too, thus both popovers look the
- * same. The name stays on the left, the value follows on the right.
- */
+/** The variant popover uses it too, thus both popovers look the same */
 export const ProfileAttribute = ({ icon, name, children }: Props) => {
   return (
     <div className="flex min-w-0 items-baseline justify-between gap-4">

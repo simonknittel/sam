@@ -1,11 +1,6 @@
 import clsx from "clsx";
 
-/**
- * A random angle per render makes the server and the client disagree, which
- * mismatches on hydration for every redacted tile — so the angle is derived
- * from the app's name instead. Each tile still gets its own tilt, and it stays
- * the same across renders.
- */
+/** Derived from the name: a random angle would mismatch on hydration */
 const getRotationInDegrees = (name: string, maximumDegrees: number) => {
   let hash = 0;
   for (let index = 0; index < name.length; index++) {
@@ -18,10 +13,7 @@ const getRotationInDegrees = (name: string, maximumDegrees: number) => {
 
 interface Props {
   readonly className?: string;
-  /**
-   * The app's name. Only ever used to derive the rotation — a redacted tile
-   * never renders it.
-   */
+  /** Only for the rotation: a redacted tile never renders it */
   readonly name: string;
   readonly variant?: "default" | "compact";
 }

@@ -10,10 +10,6 @@ interface Props {
   readonly canRename: boolean;
 }
 
-/**
- * The icon and the title of a wiki page. The title stays in one line and
- * ends with an ellipsis when it is too long.
- */
 export const WikiPageHeading = ({
   pageId,
   iconId,

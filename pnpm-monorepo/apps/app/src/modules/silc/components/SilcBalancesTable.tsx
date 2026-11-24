@@ -37,7 +37,6 @@ const loadSearchParams = createLoader({
   ),
 });
 
-/** Rows with the same amount keep the order of their handles */
 const compareHandles = (a: SilcBalanceRow, b: SilcBalanceRow) =>
   sortAscWithAndNullLast(a.handle, b.handle);
 

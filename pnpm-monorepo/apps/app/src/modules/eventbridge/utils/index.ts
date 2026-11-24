@@ -16,11 +16,7 @@ const client =
       })
     : null;
 
-/**
- * The EventBridge emitter of the app. Only the composition root
- * (`modules/application`) uses it: the use cases send their events through
- * the ports of the application context.
- */
+/** Only the composition root (`modules/application`) uses it */
 export const emitEvents = withTrace(
   "emitEvents",
   createEventBridgeEmitter({

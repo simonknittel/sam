@@ -11,9 +11,8 @@ import {
 import { cache } from "react";
 
 /**
- * One template with the current viewer's effective permissions, or null when
- * the template does not exist or the viewer may not see it — the two are
- * deliberately indistinguishable, so every caller turns null into a 404.
+ * Null when the template does not exist or the viewer may not see it — the two
+ * are deliberately indistinguishable, so every caller turns null into a 404.
  */
 export const getEventTemplateById = cache(
   withTrace("getEventTemplateById", async (templateId: string) => {

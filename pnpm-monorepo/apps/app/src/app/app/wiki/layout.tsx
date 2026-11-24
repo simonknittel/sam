@@ -26,8 +26,7 @@ export default async function Layout({ children }: LayoutProps<"/app/wiki">) {
     authentication.authorize("wiki", "manage"),
   ]);
   /**
-   * Only whether targets exist matters here — the modal loads them itself
-   * when it opens (WikiPageTargetsLoader)
+   * The modal loads the targets itself when it opens (WikiPageTargetsLoader)
    */
   const hasTargets = context
     ? getManageableWikiPageTargets(context).length > 0

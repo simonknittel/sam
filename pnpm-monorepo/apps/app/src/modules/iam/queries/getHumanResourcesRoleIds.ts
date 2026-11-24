@@ -3,8 +3,7 @@ import { getHumanResourcesRoleIds as getHumanResourcesRoleIdsUseCase } from "@sa
 import { cache } from "react";
 
 /**
- * The ids of the roles that count as Human Resources. No permission check:
- * the settings page of the IAM app checks `role;manage`.
+ * No permission check: the settings page of the IAM app checks `role;manage`
  */
 export const getHumanResourcesRoleIds = cache(() =>
   getHumanResourcesRoleIdsUseCase(getApplicationContext()),

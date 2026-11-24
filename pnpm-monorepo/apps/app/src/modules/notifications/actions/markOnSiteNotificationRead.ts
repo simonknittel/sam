@@ -6,10 +6,6 @@ import {
   markOnSiteNotificationRead as markOnSiteNotificationReadUseCase,
 } from "@sam-monorepo/application";
 
-/**
- * Marks an own notification as read: from its toggle, or from a click on its
- * target. The notification center mirrors the read state into its cache.
- */
 export const markOnSiteNotificationRead = createUseCaseAction({
   name: "markOnSiteNotificationRead",
   schema: markOnSiteNotificationReadInputSchema,

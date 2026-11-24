@@ -6,7 +6,6 @@ interface Props {
   readonly subscriptionId: string;
 }
 
-/** Marks the subscription of the browser that shows the page */
 export const CurrentBrowserBadge = ({ subscriptionId }: Props) => {
   const { currentSubscriptionId } = useWebPushBrowser();
   if (subscriptionId !== currentSubscriptionId) return null;

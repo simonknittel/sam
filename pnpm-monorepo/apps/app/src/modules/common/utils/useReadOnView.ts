@@ -17,29 +17,20 @@ const READ_ON_VIEW_BAND_ROOT_MARGIN = "-25% 0px -25% 0px";
 
 const READ_ON_VIEW_DWELL_MILLISECONDS = 500;
 
-/**
- * Viewed items are collected and reported in batches to avoid one server
- * action per item while scrolling.
- */
 const READ_ON_VIEW_FLUSH_DEBOUNCE_MILLISECONDS = 1_000;
 
 /**
- * Ref callback which registers an element for read-on-view tracking. The id
- * the element reports is read from its `data-read-on-view-id` attribute.
+ * The id the element reports is read from its `data-read-on-view-id` attribute.
  */
 export type ReadOnViewRef = (element: Element | null) => (() => void) | void;
 
 interface Options {
-  /** Receives the ids of the elements which have been viewed, in batches. */
   readonly onRead: (ids: string[]) => void;
 }
 
 /**
- * Read-on-view tracking: reports the id of every registered element which
- * stays sufficiently visible in the viewport for the dwell time, batched over
- * a short debounce. Register an element with the returned ref callback and
- * put its id into `data-read-on-view-id`. Dropping the ref stops the tracking
- * of that element, which is how an item opts out once it has been reported.
+ * Dropping the ref stops the tracking of the element, which is how an item opts
+ * out once it has been reported.
  */
 export const useReadOnView = ({ onRead }: Options) => {
   const registeredElements = useRef(new Set<Element>());
@@ -68,7 +59,6 @@ export const useReadOnView = ({ onRead }: Options) => {
     const pendingIds = new Set<string>();
     let flushTimer: number | null = null;
 
-    /** The ids each of the two criteria currently considers visible */
     const visibleByShare = new Set<string>();
     const visibleByBand = new Set<string>();
 

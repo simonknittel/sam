@@ -9,7 +9,6 @@ interface Props {
   readonly citizen: VisibleTask["completionists"][number];
 }
 
-/** One citizen in the participant lists of the task page */
 export const TaskCitizenListItem = ({ className, citizen }: Props) => {
   return (
     <li

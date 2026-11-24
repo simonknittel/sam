@@ -32,7 +32,6 @@ const COLUMNS: TableColumn[] = [
   ...CITIZEN_LOG_TABLE_COLUMNS.end,
 ];
 
-/** The number of rows on one page of the table */
 const PAGE_SIZE = 50;
 
 interface Props {

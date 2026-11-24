@@ -4,7 +4,6 @@ import { TRPCError } from "@trpc/server";
 import * as z from "zod";
 import { protectedProcedure, toTrpcError } from "../../trpc";
 
-/** For the variant popover, see `findVariantPopoverDetail()` */
 export const getDetailById = protectedProcedure
   .input(z.object({ id: idSchema }))
   .query(async ({ ctx, input }) => {

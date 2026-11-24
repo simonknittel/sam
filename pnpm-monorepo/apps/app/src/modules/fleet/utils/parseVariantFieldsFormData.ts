@@ -16,16 +16,14 @@ const parsePrice = (
 };
 
 /**
- * The fields of the variant forms that the create and the update share. The
- * forms send all tag rows and all link rows, thus a form without rows removes
- * the tags or the links. A tag row with an empty field is left out.
+ * The forms send all tag rows and all link rows, thus a form without rows
+ * removes the tags or the links.
  */
 export const parseVariantFieldsFormData = (formData: FormData) => {
   const tagValues = formData.getAll("tagValues[]");
   const linkUrls = formData.getAll("linkUrls[]");
 
   return {
-    // The form takes USD with cents
     store_price_usd_cents: parsePrice(
       formData.get("storePriceUsd"),
       (dollars) => Math.round(dollars * 100),

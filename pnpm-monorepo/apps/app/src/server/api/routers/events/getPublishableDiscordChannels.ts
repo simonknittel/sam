@@ -5,15 +5,11 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure } from "../../trpc";
 
 /**
- * The guild's voice and stage channels a new event can be published into.
- * Loaded lazily by the create-event form, which only mounts while the modal
- * is open. Null means Discord could not be asked — the form says so rather
- * than showing an empty picker.
+ * Null means that Discord could not be asked.
  *
- * Gated on `event;create`, the permission the form itself needs: the bot
- * sees channels the caller may not, and every call is an uncached request
- * against the bot's shared Discord rate limit. The use case has no check of
- * its own (see `findPublishableDiscordChannels()`).
+ * Gated on `event;create`, the permission of the create form: the bot sees
+ * channels the caller may not, and every call is an uncached request against
+ * the bot's shared Discord rate limit. The use case has no check of its own.
  */
 export const getPublishableDiscordChannels = protectedProcedure.query(
   async ({ ctx }) => {

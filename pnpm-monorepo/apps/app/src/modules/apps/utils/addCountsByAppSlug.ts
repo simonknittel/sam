@@ -1,7 +1,3 @@
-/**
- * Merges the dot badge counts of several sources. The counts of sources for
- * the same app add up.
- */
 export const addCountsByAppSlug = (
   ...countsByAppSlug: readonly Readonly<Record<string, number>>[]
 ) => {

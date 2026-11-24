@@ -43,16 +43,12 @@ export default async function Page(
   );
 
   const result = await getVisiblePage(props.params);
-  /**
-   * Invisible pages 404 instead of 403 to avoid leaking their existence.
-   */
   if (!result) notFound();
 
   const { context, page, permissions } = result;
   const { templateId, slug } = await props.params;
   const basePath = getBriefingPath(toTemplateContainer(templateId));
 
-  /** The root page's canonical URL is the bare briefing path */
   if (page.id === context.rootPage?.id) redirect(basePath);
   if (slug?.[0] !== page.slug) redirect(`${basePath}/${page.id}/${page.slug}`);
 

@@ -23,7 +23,6 @@ import {
   wikiTargetKey,
 } from "../wikiEditorTargets";
 
-/** Node types with an editable src URL */
 export const URL_NODE_TYPES = ["wikiEmbed"];
 const MENU_NODE_TYPES = [
   ...URL_NODE_TYPES,
@@ -37,7 +36,6 @@ const MENU_NODE_TYPES = [
   "wikiRoleCitizens",
 ];
 
-/** Nodes whose menu offers a config dialog (mounted by WikiEditMenu) */
 export const CONFIGURABLE_NODE_TYPES = ["wikiPageIndex", "wikiRoleCitizens"];
 
 /**
@@ -101,7 +99,6 @@ const selectionAnchor = (
 });
 
 interface WikiMenuTarget {
-  /** Element or virtual element the menu is anchored to (floating-ui reference) */
   readonly reference: HTMLElement | VirtualElement;
   /** Remounts the menu (e.g. its URL input) when the target changes */
   readonly key: string;
@@ -119,9 +116,7 @@ export type WikiNodeMenuState = {
   readonly variantId: string;
   readonly align: WikiNodeAlignment;
   readonly widthPx: number | null;
-  /** Width/position only apply to direct children of the document */
   readonly topLevel: boolean;
-  /** Raw attributes, e.g. for the page-index config dialog */
   readonly attrs: Readonly<Record<string, unknown>>;
 } & WikiMenuTarget;
 
@@ -137,7 +132,6 @@ export type WikiCalloutMenuState = {
   readonly color: WikiCalloutColor;
   readonly align: WikiNodeAlignment;
   readonly widthPx: number | null;
-  /** Width/position only apply to direct children of the document */
   readonly topLevel: boolean;
 } & WikiMenuTarget;
 
@@ -152,7 +146,6 @@ export type WikiBlockMenuState = {
   readonly textSize: WikiTextSize | null;
   readonly align: WikiNodeAlignment;
   readonly widthPx: number | null;
-  /** Width/position only apply to direct children of the document */
   readonly topLevel: boolean;
 } & WikiMenuTarget;
 
@@ -168,7 +161,6 @@ export type WikiTextSelectionMenuState = {
    * compound — its button is shown disabled
    */
   readonly smallTextUnavailable: boolean;
-  /** Whether the selection carries a link mark (the link button prefills) */
   readonly hasLink: boolean;
 } & WikiMenuTarget;
 
@@ -183,7 +175,6 @@ export type WikiTextNodeMenuState = {
   readonly textAlign: WikiNodeAlignment;
   readonly align: WikiNodeAlignment;
   readonly widthPx: number | null;
-  /** Width/position only apply to direct children of the document */
   readonly topLevel: boolean;
   /**
    * Paragraph inside a text-only container (quote, table cell, list
@@ -452,7 +443,6 @@ export const wikiMenuFromSelection = (
   return null;
 };
 
-/** Badge label naming the menu's target, e.g. "Tabelle" or "Überschrift 2" */
 export const wikiMenuLabel = (menu: NonNullable<WikiEditMenuState>): string => {
   switch (menu.kind) {
     case "link":

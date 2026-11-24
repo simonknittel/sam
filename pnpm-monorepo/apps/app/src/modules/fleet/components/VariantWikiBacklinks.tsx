@@ -10,11 +10,8 @@ interface Props {
 }
 
 /**
- * Chips on a wiki page that is embedded on variant detail pages, linking
- * back to those variants. Only rendered on the linked root page itself
- * (the query matches the exact page id, never descendants) and only for
- * viewers passing the variant pages' fleet gate — everyone else sees
- * nothing, like the section they could not open.
+ * The query matches the exact page id, never descendants. A viewer without the
+ * fleet gate of the variant pages sees nothing.
  */
 export const VariantWikiBacklinks = async ({ pageId }: Props) => {
   const actor = await getOptionalRequestActor();

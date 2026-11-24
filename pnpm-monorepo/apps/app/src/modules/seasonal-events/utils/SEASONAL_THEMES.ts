@@ -20,12 +20,8 @@ import { CHRISTMAS_FONT, HALLOWEEN_FONT, NEW_YEAR_FONT } from "./fonts";
 import type { SeasonalTheme } from "./types";
 
 /**
- * Everything the app draws for a seasonal event. The record is exhaustive
- * over the event keys of the calendar, thus a new event of the calendar
- * without a theme is a compile error.
- *
- * A further event needs one entry here with its own assets and one entry in
- * the calendar of the domain package. Nothing else changes.
+ * A further event needs one entry here with its own assets and one entry in the
+ * calendar of the domain package.
  *
  * Server-only: the entries hold server components and the fonts of
  * `next/font/google`, and none of them belongs into the payload of a page.

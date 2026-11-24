@@ -41,13 +41,11 @@ const toCitizenListSort = (sort: CitizenTableSort) => {
   }
 };
 
-/** Other values of the "Unbekannt" filter select nothing */
 const isCitizenUnknownAttribute = (
   value: string,
 ): value is CitizenUnknownAttribute =>
   Object.values<string>(CitizenUnknownAttribute).includes(value);
 
-/** The number of rows on one page of the table */
 const PAGE_SIZE = 50;
 
 const DATE_COLUMN_WIDTH = 140;

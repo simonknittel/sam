@@ -10,20 +10,16 @@ import { EventDescriptionPreview } from "./EventDescriptionPreview";
 
 interface TextareaProps {
   readonly className?: string;
-  /** What this description is used for, said after the shared hint. */
   readonly hint: ReactNode;
-  /** Accepts the union returned by `getDefaultValueWithFallback` */
   readonly defaultValue?: string | number | readonly string[];
-  /** The text and its setter and ref from `useEventDescription()` */
   readonly description: string;
   readonly onDescriptionChange: (description: string) => void;
   readonly ref: Ref<HTMLTextAreaElement>;
 }
 
 /**
- * The field of the description of an event or of a template, with a counter.
- * Without the preview, for a form that shows the preview elsewhere (see
- * `EventDescriptionPreview`).
+ * Without the preview, which is only for Discord: a form with a Discord part
+ * shows it there (see `EventDescriptionPreview`).
  */
 export const EventDescriptionTextarea = ({
   className,
@@ -77,21 +73,16 @@ export const EventDescriptionTextarea = ({
 
 interface Props {
   readonly className?: string;
-  /** What this description is used for, said after the shared hint. */
   readonly hint: ReactNode;
-  /** Accepts the union returned by `getDefaultValueWithFallback` */
   readonly defaultValue?: string | number | readonly string[];
   /** See `EventDescriptionPreview` */
   readonly eventId?: string;
 }
 
 /**
- * The description of an event or of a template, with a preview of the text as
- * Discord shows it.
- *
  * The preview goes beside the field where there is room for two columns and
- * below it where there is not. A container query decides that, because a
- * modal stays narrow however wide the window is.
+ * below it where there is not. A container query decides that, because a modal
+ * stays narrow however wide the window is.
  */
 export const EventDescriptionField = ({
   className,

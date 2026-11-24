@@ -11,7 +11,6 @@ import {
 } from "@sam-monorepo/application";
 import { cache } from "react";
 
-/** The flows of the management list (`career;manage`) */
 export const getManageableFlows = cache(
   withTrace(
     "getManageableFlows",
@@ -29,10 +28,6 @@ export const getManageableFlows = cache(
   ),
 );
 
-/**
- * One flow for the management detail page, or null when it does not exist
- * (`career;manage`)
- */
 export const getManageableFlow = cache(
   withTrace("getManageableFlow", async (flowId: string) => {
     try {

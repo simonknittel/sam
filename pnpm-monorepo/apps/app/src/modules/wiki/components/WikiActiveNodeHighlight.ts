@@ -12,10 +12,8 @@ export interface WikiHighlightRange {
 }
 
 /**
- * Writers of the highlight: the gutter while it is in use, the pointer
- * (wash of the block under it) and the focused block (the one whose
- * contextual edit menu is open). They write independently and may target
- * different blocks at the same time.
+ * The owners write independently and may target different blocks at the same
+ * time.
  */
 export enum WikiHighlightOwner {
   Gutter = "gutter",
@@ -23,7 +21,6 @@ export enum WikiHighlightOwner {
   Focus = "focus",
 }
 
-/** Class per owner — the focused block gets the stronger marker */
 const OWNER_CLASS_NAMES: Readonly<Record<WikiHighlightOwner, string>> = {
   [WikiHighlightOwner.Gutter]: "wiki-active-node-highlight",
   [WikiHighlightOwner.Hover]: "wiki-active-node-highlight",
@@ -41,7 +38,6 @@ interface WikiHighlightMeta {
 
 const key = new PluginKey<WikiHighlightState>("wikiActiveNodeHighlight");
 
-/** The range after `mapping` moved it, or NULL when it collapsed */
 const mapRange = (
   range: WikiHighlightRange,
   mapping: Mapping,
@@ -52,11 +48,9 @@ const mapRange = (
 };
 
 /**
- * Highlights the blocks the gutter, the pointer and the contextual edit
- * menu currently target (wikiEditor.css) with a background wash. Node
- * decorations instead of direct classList mutations: ProseMirror re-creates
- * node DOM on redraws, which would drop a mutated class, while decorations
- * survive and map through (remote) edits.
+ * Node decorations instead of direct classList mutations: ProseMirror
+ * re-creates node DOM on redraws, which would drop a mutated class, while
+ * decorations survive and map through (remote) edits.
  */
 export const WikiActiveNodeHighlight = Extension.create({
   name: "wikiActiveNodeHighlight",

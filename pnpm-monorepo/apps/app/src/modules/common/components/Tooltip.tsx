@@ -6,10 +6,6 @@ interface TooltipProviderProps {
   readonly children: ReactNode;
 }
 
-/**
- * App-wide tooltip context, rendered once in the root layout so each
- * Tooltip instance doesn't have to carry its own provider.
- */
 export const TooltipProvider = ({ children }: TooltipProviderProps) => {
   return (
     <RadixUiTooltip.Provider delayDuration={0}>
@@ -25,19 +21,10 @@ interface Props extends Omit<
   readonly contentClassName?: string;
   readonly triggerChildren: ReactNode;
   readonly children: ReactNode;
-  /**
-   * Turns `triggerChildren` itself into the trigger instead of wrapping it in
-   * another button. Required whenever the trigger already is an interactive
-   * element.
-   */
+  /** Required whenever the trigger already is an interactive element */
   readonly asChild?: boolean;
   readonly side?: ComponentProps<typeof RadixUiTooltip.Content>["side"];
   readonly sideOffset?: number;
-  /**
-   * Controls the tooltip programmatically instead of by hover/focus — for
-   * confirmation bubbles like CopyToClipboard. Leave undefined for the
-   * regular hover behavior.
-   */
   readonly open?: boolean;
 }
 

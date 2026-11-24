@@ -8,7 +8,6 @@ interface Props {
   readonly onSave: (url: string) => void;
 }
 
-/** Inline URL input of the embed and link menus */
 export const WikiEditMenuUrlForm = ({ defaultValue, onSave }: Props) => (
   <form
     className="flex items-center gap-1"

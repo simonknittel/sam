@@ -8,11 +8,10 @@ interface Props {
 }
 
 /**
- * Reports the page as visited once it actually mounted in the browser.
  * Deliberately not tracked during the server render: hover-triggered
  * prefetching (see the common `<Link>`) renders wiki pages the user never
- * opens, while a navigation served from the prefetch cache triggers no
- * server render at all. Renders nothing.
+ * opens, while a navigation served from the prefetch cache triggers no server
+ * render at all.
  */
 export const TrackWikiPageVisit = ({ pageId }: Props) => {
   const trackedPageIdRef = useRef<string | null>(null);

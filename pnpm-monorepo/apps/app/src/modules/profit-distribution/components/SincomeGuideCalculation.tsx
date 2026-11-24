@@ -5,7 +5,6 @@ enum Operator {
   Multiply = "×",
 }
 
-/** What a screen reader says for the sign */
 const OPERATOR_WORDS: Record<Operator, string> = {
   [Operator.Divide]: "geteilt durch",
   [Operator.Multiply]: "mal",
@@ -26,9 +25,8 @@ const Sign = ({ sign, words }: SignProps) => {
 };
 
 /**
- * The example uses the numbers of the screenshot of the payout in the guide:
- * the surplus of the cycle, the SILC of all participants who did not cede
- * their share, and the SILC of the user.
+ * The surplus and the share agree with the screenshot of the payout in the
+ * guide
  */
 const EXAMPLE_AUEC_PROFIT = 42_000_000;
 const EXAMPLE_SILC_OF_ALL_PARTICIPANTS = 600;
@@ -81,7 +79,6 @@ const Row = ({ left, operator, right, result }: RowProps) => {
   );
 };
 
-/** How SINcome calculates a share, with an example */
 export const SincomeGuideCalculation = () => {
   return (
     <ol className="flex flex-col gap-8 md:gap-4">

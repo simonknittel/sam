@@ -30,7 +30,6 @@ const DARK_RADIUS = 0.75;
  */
 const FULL_DARKNESS = 0.6;
 
-/** The number of linear parts of the curve from the pool to the dark radius */
 const CURVE_PART_COUNT = 8;
 
 /**
@@ -48,8 +47,7 @@ const DIP_BRIGHTNESS = 1 - FULL_DARKNESS;
 const FLAT_SHEET_OPACITY = 0.4;
 
 /**
- * The stops of the light from the edge of the pool to the dark radius. The
- * darkness follows a smooth curve (smoothstep), thus the pool and the dark
+ * The darkness follows a smooth curve (smoothstep), thus the pool and the dark
  * part have no visible edge.
  */
 const LIGHT_STOPS = Array.from(
@@ -65,9 +63,8 @@ const LIGHT_STOPS = Array.from(
 );
 
 /**
- * A circle of black around the bulb, whose last stop keeps its colour to the
- * farthest corner of the viewport. The callback gives the opacity of the
- * black at a stop from the darkness of the vignette at that stop.
+ * The last stop of the gradient keeps its colour to the farthest corner of the
+ * viewport.
  */
 const getLightGradient = (getOpacity: (darkness: number) => number) => {
   const stops = LIGHT_STOPS.map(
@@ -79,14 +76,12 @@ const getLightGradient = (getOpacity: (darkness: number) => number) => {
 };
 
 /**
- * The opacity of the dark sheet above a point of the vignette.
- *
- * A black layer with the opacity `a` lets `1 - a` of the brightness of the
- * page through, and two black layers multiply. The vignette lets
- * `1 - darkness` through. The sheet at full opacity lets
- * `DIP_BRIGHTNESS / (1 - darkness)` through, thus the two layers together
- * let `DIP_BRIGHTNESS` through at every point. The sheet is thus darkest in
- * the pool and invisible in the dark part of the page.
+ * A black layer with the opacity `a` lets `1 - a` of the brightness of the page
+ * through, and two black layers multiply. The vignette lets `1 - darkness`
+ * through. The sheet at full opacity lets `DIP_BRIGHTNESS / (1 - darkness)`
+ * through, thus the two layers together let `DIP_BRIGHTNESS` through at every
+ * point. The sheet is thus darkest in the pool and invisible in the dark part
+ * of the page.
  */
 const getSheetOpacity = (darkness: number) =>
   1 - DIP_BRIGHTNESS / (1 - darkness);
@@ -103,35 +98,21 @@ const LIGHT_LAYERS = {
 } satisfies CSSProperties;
 
 /**
- * The bare bulb is the only light of the page, and now and then it fails.
+ * The motion token sets the times of the dips and proves that they are safe for
+ * photosensitive viewers. The unlit bulb uses the same token, thus the page
+ * goes dark in the same frame as the bulb.
  *
- * The light: on the pages which the bulb lights (see `useIsLitPage`), a
- * vignette makes the page darker with the distance from the bulb, thus a
- * pool of light stays around the bulb and the part of the page far from the
- * bulb is dark. The vignette does not move. Every other page keeps its full
- * brightness at rest.
+ * Both layers are pure black. A layer of another colour adds its colour to the
+ * page, and no black sheet can remove that colour again, thus a warm glow would
+ * stay visible in a dip.
  *
- * The failure: a dark sheet above the page makes the page darker two or
- * three times in less than one second, on every page. The motion token sets
- * the times of the dips and proves that they are safe for photosensitive
- * viewers. Above the vignette, the sheet has the shape of the inverse of the
- * vignette, thus at full opacity the page is equally dark everywhere and the
- * pool of light is gone. Without the vignette the sheet is flat and less
- * dark. The unlit bulb uses the same token, thus the page goes dark in the
- * same frame as the bulb.
- *
- * Both layers are pure black. A layer of another colour adds its colour to
- * the page, and no black sheet can remove that colour again, thus a warm
- * glow would stay visible in a dip.
- *
- * The browser paints the gradients one time. Only the opacity of the sheet
- * moves, thus a dip does not make the browser paint the page again. A viewer
- * who prefers reduced motion keeps the vignette, and the sheet stays
- * invisible. A viewer who prefers more contrast gets no vignette and the
- * flat sheet, thus the page is equally dark everywhere in a dip and never
- * darker at rest. The layers are custom properties, because a variant class
- * cannot change an inline background. The light shows only where the bulb
- * shows, thus the page never flickers without the bulb that explains it.
+ * Only the opacity of the sheet moves, thus a dip does not make the browser
+ * paint the gradients again. A viewer who prefers more contrast gets no
+ * vignette and the flat sheet, thus the page is equally dark everywhere in a
+ * dip and never darker at rest. The layers are custom properties, because a
+ * variant class cannot change an inline background. The light shows only where
+ * the bulb shows, thus the page never flickers without the bulb that explains
+ * it.
  */
 export const BrokenLight = () => {
   const isLitPage = useIsLitPage();

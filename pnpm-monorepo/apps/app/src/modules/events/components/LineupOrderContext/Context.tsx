@@ -19,9 +19,8 @@ import { Position, type PositionType } from "../Position";
 
 interface LineupOrderContext {
   /**
-   * The event or template the rendered lineup belongs to. A position row
-   * carries only one of the two container columns, so the container comes
-   * from the page rather than from a row.
+   * A position row carries only one of the two container columns, so the
+   * container comes from the page rather than from a row.
    */
   container: EventContainer;
   positions: PositionType[];
@@ -48,7 +47,7 @@ interface Props {
   readonly showManage?: boolean;
   readonly variantCatalog: VariantCatalog;
   readonly myShips: readonly Pick<Ship, "variantId">[];
-  /** The roles of the signed-in citizen that the lineup requires */
+  /** Only the roles that the lineup requires */
   readonly myRoleIds: readonly string[];
   readonly allEventCitizens: EventLineupCitizen[];
   readonly showActions?: boolean;
@@ -97,7 +96,6 @@ export const LineupOrderProvider = ({
       const clonedDraggedPosition = structuredClone(isDragging);
       const clonedPositions = structuredClone(positions);
 
-      // Remove dragged position from old order
       const removeLoop = (positions: PositionType[]) => {
         for (const [index, position] of positions.entries()) {
           if (position.id === clonedDraggedPosition.id) {
@@ -112,7 +110,6 @@ export const LineupOrderProvider = ({
       };
       removeLoop(clonedPositions);
 
-      // Insert dragged position into new order
       if (order === "before") {
         const beforeLoop = (positions: PositionType[]) => {
           for (const [index, position] of positions.entries()) {
@@ -163,9 +160,6 @@ export const LineupOrderProvider = ({
         insertLoop(clonedPositions);
       }
 
-      /**
-       * Save to database
-       */
       const formData = new FormData();
       for (const [name, value] of Object.entries(
         eventContainerFormValues(container),
@@ -222,10 +216,6 @@ export const LineupOrderProvider = ({
   );
 };
 
-/**
- * Check for undefined since the defaultValue of the context is undefined. If
- * it's still undefined, the provider component is missing.
- */
 export function useLineupOrder() {
   const context = useContext(LineupOrderContext);
   if (!context) throw new Error("Provider missing!");
