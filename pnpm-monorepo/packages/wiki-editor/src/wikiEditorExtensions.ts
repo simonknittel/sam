@@ -61,35 +61,11 @@ import { WikiVariantLink } from "./wikiVariantLinkNode.js";
 export interface WikiEditorExtensionsOptions {
   /** Undo/redo comes from Yjs in the collab editor instead of StarterKit */
   collaboration?: boolean;
-  /**
-   * Hostname of the app (without scheme/port), required by Twitch's player
-   * as its `parent` query parameter. Only affects rendering, not the
-   * schema.
-   */
+  /** See `WikiEmbedOptions` */
   twitchParentHost?: string;
-  /**
-   * Hostnames generic iframes may embed (from the wiki settings). Only
-   * affects rendering, not the schema — unlisted hosts render a blocked
-   * placeholder.
-   */
   iframeAllowlist?: readonly string[];
-  /**
-   * Pages the current viewer can see, by id — resolves internal page
-   * links' labels and hrefs at render time. Only affects rendering, not
-   * the schema.
-   */
   pages?: WikiLinkedPages;
-  /**
-   * Current handles of the citizens mentioned on the page, by id — resolves
-   * citizen mentions' labels at render time. Only affects rendering, not
-   * the schema.
-   */
   citizens?: Readonly<Record<string, WikiMentionedCitizen>>;
-  /**
-   * Current names and manufacturer logos of the variants linked on the
-   * page, by id — resolves variant links' labels at render time. Only
-   * affects rendering, not the schema.
-   */
   variants?: Readonly<Record<string, WikiLinkedVariant>>;
 }
 
@@ -100,11 +76,6 @@ export interface WikiEditorExtensionsOptions {
  */
 const lowlight = createLowlight({ json, markdown, plaintext, xml, yaml });
 
-/**
- * The containers that hold grids next to regular blocks — grids live
- * outside the `block` group so grid cells cannot nest them (see
- * WIKI_GRID_HOST_CONTENT).
- */
 const WikiDocument = Document.extend({ content: WIKI_GRID_HOST_CONTENT });
 
 const WikiDetailsContent = DetailsContent.extend({
@@ -209,15 +180,11 @@ export const getWikiEditorExtensions = (
 ) => {
   return [
     StarterKit.configure({
-      // Replaced with the lowlight-highlighted variant below
       codeBlock: false,
-      // Replaced with the grid-hosting variant below
       document: false,
-      // Replaced with the text-only variants below
       blockquote: false,
       heading: false,
       listItem: false,
-      // Replaced with the resizable variants below
       paragraph: false,
       bulletList: false,
       orderedList: false,
@@ -242,9 +209,7 @@ export const getWikiEditorExtensions = (
     WikiHeading,
     WikiListItem,
     TableKit.configure({
-      // Replaced with the resizable variant below
       table: false,
-      // Replaced with the text-only variants below
       tableCell: false,
       tableHeader: false,
     }),
@@ -302,11 +267,6 @@ export const getWikiEditorExtensions = (
   ];
 };
 
-/**
- * The ProseMirror schema derived from the wiki's extensions, e.g. for
- * validating content server-side or converting between Yjs and ProseMirror
- * documents.
- */
 export const getWikiEditorSchema = (): Schema =>
   getSchema(getWikiEditorExtensions());
 

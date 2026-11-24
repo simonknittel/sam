@@ -84,7 +84,6 @@ enum VariantStatus {
   NOT_FLIGHT_READY
 }
 
-/// Where the owner got the ship
 enum ShipAcquisitionSource {
   /// The Star Citizen store, for real money
   STORE

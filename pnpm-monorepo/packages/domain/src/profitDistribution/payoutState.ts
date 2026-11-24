@@ -4,7 +4,6 @@ import type {
 } from "@sam-monorepo/database/client";
 import { CyclePhase, getCurrentPhase } from "./cyclePhase.js";
 
-/** The payout state of one participant of a profit distribution cycle */
 export enum PayoutState {
   NotParticipating,
   PayoutNotYetStarted,
@@ -16,10 +15,6 @@ export enum PayoutState {
   Ceded,
 }
 
-/**
- * The payout state of a participant in the current phase of the cycle. A
- * citizen without a participant row does not participate.
- */
 export const getPayoutState = (
   cycle: Pick<
     ProfitDistributionCycle,

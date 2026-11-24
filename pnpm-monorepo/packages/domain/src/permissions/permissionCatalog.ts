@@ -1,11 +1,8 @@
 import { TaskRewardType, TaskVisibility } from "@sam-monorepo/database/browser";
 
-/** A permission that the role page offers as a checkbox */
 export interface CatalogPermission {
   readonly permissionString: string;
-  /** The group in the permission matrix */
   readonly section: string;
-  /** The German name in the permission matrix */
   readonly title: string;
   /** German. The role page shows it next to the checkbox. */
   readonly description?: string;
@@ -19,7 +16,6 @@ export interface CatalogPermission {
  * is granted under Karriere → Einstellungen.
  */
 export const PERMISSION_CATALOG = [
-  // Citizen
   {
     section: "Citizen",
     title: "Notizarten verwalten",
@@ -136,7 +132,6 @@ export const PERMISSION_CATALOG = [
     permissionString: "lastSeen;read",
   },
 
-  // Documents
   {
     section: "Documents",
     title: "Onboarding",
@@ -278,7 +273,6 @@ export const PERMISSION_CATALOG = [
     permissionString: "documentPolaris;read",
   },
 
-  // Events
   {
     section: "Events",
     title: "Events lesen",
@@ -317,7 +311,6 @@ export const PERMISSION_CATALOG = [
       "Citizen mit dieser Berechtigung können die Posten der Eventaufstellung bearbeiten, selbst wenn sie nicht Organisator des Events sind.",
   },
 
-  // Fleet
   {
     section: "Fleet",
     title: "Gesamte Flotte einsehen",
@@ -339,7 +332,6 @@ export const PERMISSION_CATALOG = [
     permissionString: "manufacturersSeriesAndVariants;manage",
   },
 
-  // Career
   {
     section: "Karriere",
     title: "Karrierebäume verwalten",
@@ -348,7 +340,6 @@ export const PERMISSION_CATALOG = [
       "Nutzer mit dieser Berechtigung können unter Karriere → Einstellungen Karrierebäume anlegen, duplizieren, umbenennen, sortieren und löschen sowie deren Berechtigungen vergeben. Zusätzlich können sie jeden Karrierebaum lesen und bearbeiten.",
   },
 
-  // Organizations
   {
     section: "Organisationen",
     title: "Organisation lesen",
@@ -400,7 +391,6 @@ export const PERMISSION_CATALOG = [
       "Nutzer mit dieser Berechtigung können die Mitgliedschaft eines Citizen in einer Organisation bestätigen.",
   },
 
-  // SILC
   {
     section: "SILC",
     title: "Eigenen Kontostand lesen",
@@ -464,7 +454,6 @@ export const PERMISSION_CATALOG = [
       "Citizen mit dieser Berechtigung können SILC-Einstellungen bearbeiten.",
   },
 
-  // Spynet
   {
     section: "Spynet",
     title: "Aktivität-Seite öffnen",
@@ -490,7 +479,6 @@ export const PERMISSION_CATALOG = [
     description: "Ermöglicht das Aufrufen der Sonstige-Seite im Spynet.",
   },
 
-  // Penalty Points
   {
     section: "Strafpunkte",
     title: "Alle Strafpunkte lesen",
@@ -520,7 +508,6 @@ export const PERMISSION_CATALOG = [
       "Citizen mit dieser Berechtigung können ihre eigenen Strafpunkte lesen.",
   },
 
-  // Tasks
   {
     section: "Tasks",
     title: "Lesen - Öffentliche, personalisierte oder Gruppe",
@@ -564,7 +551,6 @@ export const PERMISSION_CATALOG = [
       "Citizen mit dieser Berechtigung können alle Arten von Tasks einsehen, erstellen und bearbeiten.",
   },
 
-  // Wiki
   {
     section: "Wiki",
     title: "Seiten auf oberster Ebene erstellen",
@@ -580,7 +566,6 @@ export const PERMISSION_CATALOG = [
       "Citizen mit dieser Berechtigung können die Wiki-Einstellungen bearbeiten und alle Seiten unabhängig von deren Berechtigungen lesen, bearbeiten und verwalten.",
   },
 
-  // Other
   {
     section: "Sonstiges",
     title: "Anmelden",
@@ -668,7 +653,6 @@ export const getPermissionDescription = (
   permissionString: CatalogPermissionString,
 ) => CATALOG_PERMISSIONS_BY_STRING.get(permissionString)?.description;
 
-/** The operations of the role rules of the role page */
 export const ROLE_RULE_OPERATIONS = [
   "manage",
   "read",
@@ -676,7 +660,6 @@ export const ROLE_RULE_OPERATIONS = [
   "dismiss",
 ] as const;
 
-/** The operations of the note rules of the role page */
 export const NOTE_RULE_OPERATIONS = [
   "manage",
   "create",
@@ -687,7 +670,6 @@ export const NOTE_RULE_OPERATIONS = [
   "confirm",
 ] as const;
 
-/** An id, or `*` for all */
 const RULE_TARGET = String.raw`(?:\*|[\w-]+)`;
 
 const ROLE_RULE_PATTERN = new RegExp(

@@ -16,7 +16,6 @@ type Payload = {
   comment: string | null;
 };
 
-/** An invited citizen accepted or declined the invitation */
 export const EventInvitationAnsweredHandler = async (
   context: ApplicationContext,
   payload: Payload,

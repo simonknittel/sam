@@ -24,18 +24,10 @@ import { getWikiEditorExtensions } from "./wikiEditorExtensions.js";
 import { isAllowedWikiEmbedSrc } from "./wikiEmbedNode.js";
 
 export interface WikiMarkdownOptions {
-  /** The base URL of the app. Links to pages, ships and attachments use it. */
   readonly baseUrl: string | URL;
-  /**
-   * The pages that the reader can see, by id (see `WikiLinkedPages`). A link
-   * to a page that is missing or null becomes a placeholder.
-   */
   readonly pages?: WikiLinkedPages;
-  /** The current handles of the mentioned citizens, by id */
   readonly citizens?: Readonly<Record<string, WikiMentionedCitizen>>;
-  /** The current names of the linked variants, by id */
   readonly variants?: Readonly<Record<string, WikiLinkedVariant>>;
-  /** The hostnames that generic iframes can embed (from the wiki settings) */
   readonly iframeAllowlist?: readonly string[];
 }
 
@@ -73,7 +65,6 @@ const joinInline = (children: Children) => toList(children).join("");
 
 const trimNewlines = (block: string) => block.replace(/^\n+|\n+$/g, "");
 
-/** Block children, separated by one empty line. Empty blocks are dropped. */
 const joinBlocks = (children: Children) =>
   toList(children)
     .map(trimNewlines)
@@ -92,10 +83,6 @@ const escapeLinkText = (text: string) =>
     .replace(/[\\[\]]/g, "\\$&")
     .trim();
 
-/**
- * An absolute http, https or mailto URL, or null for all other values (for
- * example `javascript:`). A relative URL resolves against the base URL.
- */
 const toSafeUrl = (value: unknown, baseUrl: string | URL): string | null => {
   if (typeof value !== "string" || value === "") return null;
 
@@ -156,9 +143,8 @@ const toEmbedPageUrl = (provider: string, src: string): string => {
 };
 
 /**
- * A list item: the marker in front of the first line, the other lines
- * indented by the width of the marker. A nested list follows its paragraph
- * without an empty line, thus the list stays tight.
+ * A nested list follows its paragraph without an empty line, thus the list
+ * stays tight.
  */
 const formatListItem = (
   marker: string,
@@ -369,13 +355,8 @@ const createMarkMapping = ({ baseUrl }: WikiMarkdownOptions) => ({
 });
 
 /**
- * Renders the Tiptap JSON of a wiki page as Markdown, for readers outside
- * the app (for example the MCP server). The nodes of the wiki that Markdown
- * does not have get a readable fallback: a callout becomes a block quote
- * with a label, a mention becomes `@handle`, page links, ship links,
- * attachments and embeds become links to the app or to the provider, a grid
- * becomes its columns in sequence. The page index, the role members, blocked
- * embeds and unknown nodes become a short placeholder in square brackets.
+ * For readers outside the app (for example the MCP server). The nodes of the
+ * wiki that Markdown does not have get a readable fallback.
  */
 export const renderWikiContentToMarkdown = (
   content: unknown,

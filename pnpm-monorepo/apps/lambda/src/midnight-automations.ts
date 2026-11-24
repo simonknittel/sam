@@ -24,10 +24,6 @@ import { createApplicationContext } from "./common/createApplicationContext";
 import { createJobFactory } from "./common/createJob";
 import { runJobsInIsolation } from "./common/runJobsInIsolation";
 
-/**
- * The S3 parameters are optional: without them, the context has no storage
- * and `deleteUnusedUploads` skips itself.
- */
 const createStorage = () => {
   const {
     S3_ACCOUNT_ID: accountId,

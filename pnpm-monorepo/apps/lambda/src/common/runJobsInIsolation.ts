@@ -1,13 +1,11 @@
 import { log } from "./logger";
 
 /**
- * Runs the jobs one after the other. A failed job does not stop the jobs
- * after it. The invocation still fails at the end, so that the failure is
- * visible in the Lambda metrics.
+ * A failed job does not stop the jobs after it. The invocation still fails at
+ * the end, so that the failure is visible in the Lambda metrics.
  *
- * The object keys name the jobs in the logs. They are string literals, thus
- * a minifier cannot change them like a function name. Each job gets its key,
- * for example as the name of its span.
+ * The object keys name the jobs in the logs. They are string literals, thus a
+ * minifier cannot change them like a function name.
  */
 export const runJobsInIsolation = async (
   jobs: Readonly<Record<string, (name: string) => Promise<void>>>,

@@ -47,7 +47,6 @@ model OAuthGrant {
   id                   String                   @id @default(cuid(2))
   userId               String
   user                 User                     @relation("oauthGrants", fields: [userId], references: [id], onDelete: Cascade)
-  /// The URL of the Client ID Metadata Document.
   clientId             String
   /// The name of the client at the time of the consent. The client gives
   /// this name itself, thus the name is not trusted.
@@ -96,7 +95,6 @@ model OAuthRefreshToken {
   createdAt    DateTime           @default(now()) @db.Timestamptz(3)
   expiresAt    DateTime           @db.Timestamptz(3)
   usedAt       DateTime?          @db.Timestamptz(3)
-  /// The token that replaced this token.
   replacedById String?            @unique
   replacedBy   OAuthRefreshToken? @relation("replacement", fields: [replacedById], references: [id], onDelete: SetNull)
   replaces     OAuthRefreshToken? @relation("replacement")

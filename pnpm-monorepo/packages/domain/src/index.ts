@@ -1,9 +1,3 @@
-/**
- * Domain vocabulary and pure domain logic shared between the hosts and the
- * other packages. The package creates no database client and reads no
- * environment: a function that reads or writes the database takes the
- * client or the transaction of its caller.
- */
 export * from "./apps/appKeys.js";
 export {
   AuditEventType,

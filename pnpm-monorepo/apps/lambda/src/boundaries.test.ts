@@ -3,13 +3,8 @@ import { join } from "node:path";
 import { expect, test } from "vitest";
 
 /**
- * Only the composition root of the Lambda functions uses the Prisma client.
- * All other files call the use cases of `@sam-monorepo/application`. This is
- * the rule `use-cases-only` of the ESLint configuration of the Next.js app.
- * The Lambda functions have no ESLint configuration, thus this test checks the
- * rule: a file other than the composition root must not mention the client
- * `prisma`, the class `PrismaClient` or the package `@prisma/client`. A type
- * import of a model from `@sam-monorepo/database` is permitted.
+ * "The Prisma rule" of docs/architecture.md, as a test because the Lambda
+ * functions have no ESLint configuration
  */
 const COMPOSITION_ROOT = join("common", "createApplicationContext.ts");
 
@@ -43,7 +38,6 @@ test("only the composition root uses the Prisma client", async () => {
 });
 
 test("the Lambda functions have no integration tests", async () => {
-  // The integration tests of the automations are in `packages/application`
   expect(
     (await listFileNames()).filter((fileName) =>
       fileName.endsWith(".integration.test.ts"),

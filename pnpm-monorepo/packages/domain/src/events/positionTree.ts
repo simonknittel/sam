@@ -1,7 +1,6 @@
 import type { EventPosition } from "@sam-monorepo/database/client";
 import { LINEUP_MAX_DEPTH } from "./lineupLimits.js";
 
-/** Where a paste puts the copy, relative to the target position */
 export enum PastePlacement {
   /** Below the target, on the same level */
   After = "after",
@@ -13,10 +12,6 @@ interface PositionNode {
   childPositions?: PositionNode[];
 }
 
-/**
- * Number of levels a position occupies including its descendants. A position
- * without child positions has a depth of 1.
- */
 export const getSubtreeDepth = (position: PositionNode): number => {
   if (!position.childPositions || position.childPositions.length <= 0) return 1;
 
@@ -26,9 +21,6 @@ export const getSubtreeDepth = (position: PositionNode): number => {
   );
 };
 
-/**
- * Number of positions a position consists of including its descendants.
- */
 export const getSubtreeSize = (position: PositionNode): number => {
   if (!position.childPositions) return 1;
 
@@ -39,9 +31,8 @@ export const getSubtreeSize = (position: PositionNode): number => {
 };
 
 /**
- * @param parentLevel Level of the position the subtree gets pasted into. `0`
- * when pasting on the top level, `1` when pasting into a top level position,
- * ...
+ * `parentLevel` is 0 on the top level, 1 in a position on the top level, and so
+ * on.
  */
 export const canPasteSubtree = (parentLevel: number, subtreeDepth: number) =>
   parentLevel + subtreeDepth <= LINEUP_MAX_DEPTH;
@@ -73,10 +64,7 @@ const buildNodesById = <TPosition extends FlatPosition>(
   return nodesById;
 };
 
-/**
- * Turns a flat list of positions into the nested structure the lineup is
- * rendered and stored as. Child positions keep the order of the given list.
- */
+/** Child positions keep the order of the given list. */
 export const buildPositionTree = <TPosition extends FlatPosition>(
   positions: TPosition[],
 ): PositionSubtree<TPosition>[] => {
@@ -88,10 +76,6 @@ export const buildPositionTree = <TPosition extends FlatPosition>(
     .filter((node) => node !== undefined);
 };
 
-/**
- * @returns The given position including all of its descendants or `null` if
- * the position isn't part of the given list.
- */
 export const getPositionSubtree = <TPosition extends FlatPosition>(
   positions: TPosition[],
   positionId: EventPosition["id"],
@@ -99,9 +83,8 @@ export const getPositionSubtree = <TPosition extends FlatPosition>(
   buildNodesById(positions).get(positionId) ?? null;
 
 /**
- * The level of each position: 1 for a position on the top level, 2 for its
- * children and so on. A position in a cycle gets `Infinity`, thus it is
- * deeper than each limit.
+ * 1 for a position on the top level. A position in a cycle gets `Infinity`,
+ * thus it is deeper than each limit.
  */
 export const getPositionLevels = (
   positions: readonly FlatPosition[],

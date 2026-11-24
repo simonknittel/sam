@@ -46,7 +46,6 @@ const buildWikiHeadingIdDecorations = (doc: ProseMirrorNode): DecorationSet => {
       decorations.push(
         Decoration.node(position, position + node.nodeSize, { id }),
       );
-    // Headings only contain inline content — no need to descend
     return false;
   });
 

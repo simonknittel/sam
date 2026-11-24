@@ -4,13 +4,8 @@
  * shows a mention as a link to the citizen or the organization.
  */
 
-/** A mention of a citizen. The group is the Spectrum ID of the citizen. */
 export const CITIZEN_MENTION_PATTERN = /@citizen:(\d+)/;
 
-/**
- * A mention of an organization. The group is the Spectrum ID of the
- * organization.
- */
 export const ORGANIZATION_MENTION_PATTERN = /@org:([a-zA-Z0-9_]+)/;
 
 /**
@@ -25,7 +20,6 @@ interface NoteMentionSpectrumIds {
   readonly organizationSpectrumIds: string[];
 }
 
-/** The Spectrum IDs of the mentions in a content, each ID one time */
 export const getNoteMentionSpectrumIds = (
   content: string,
 ): NoteMentionSpectrumIds => {

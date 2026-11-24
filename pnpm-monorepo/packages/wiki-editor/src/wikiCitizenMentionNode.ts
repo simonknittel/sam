@@ -8,7 +8,6 @@ import { walkWikiContent } from "./walkWikiContent.js";
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     wikiCitizenMention: {
-      /** Inserts a citizen mention at the current position */
       setWikiCitizenMention: (attributes: {
         citizenId: string;
         handle: string | null;
@@ -28,10 +27,9 @@ export interface WikiCitizenMentionOptions {
 }
 
 /**
- * An inline mention of a citizen (spynet entity), rendered as a link to the
- * citizen's spynet page (a deleted citizen gets no link). Stores the citizen
- * id plus the handle at insertion time — the id is the reference, the handle
- * only a denormalized label fallback (and the searchable text).
+ * A deleted citizen gets no link. The id is the reference, the handle at
+ * insertion time is only a denormalized label fallback (and the searchable
+ * text).
  */
 export const WikiCitizenMention = Node.create<WikiCitizenMentionOptions>({
   name: "wikiCitizenMention",
@@ -118,10 +116,6 @@ export const WikiCitizenMention = Node.create<WikiCitizenMentionOptions>({
   },
 });
 
-/**
- * Collects the ids of all citizens mentioned in a Tiptap JSON document, so
- * their current handles can be resolved before rendering.
- */
 export const collectWikiMentionedCitizenIds = (content: unknown): string[] => {
   const ids = new Set<string>();
 

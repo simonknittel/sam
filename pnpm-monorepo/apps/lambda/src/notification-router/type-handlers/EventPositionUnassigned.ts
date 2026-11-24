@@ -13,7 +13,6 @@ import { publishNotifications } from "../publish.js";
 interface Payload {
   eventId: Event["id"];
   citizenId: Citizen["id"];
-  /** Null when the change deleted the position */
   positionId: EventPosition["id"] | null;
   positionName: string;
 }

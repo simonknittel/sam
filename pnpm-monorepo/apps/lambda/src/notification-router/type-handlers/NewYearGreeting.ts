@@ -11,10 +11,6 @@ interface Payload {
   year: number;
 }
 
-/**
- * A personal greeting to the citizen who enters the new year (see
- * `findGreetingRecipient()` for the condition).
- */
 export const NewYearGreetingHandler = async (
   context: ApplicationContext,
   payload: Payload,

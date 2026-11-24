@@ -12,7 +12,7 @@ const MILLISECONDS_PER_SECOND = 1000;
 
 /**
  * The web push TTL (in seconds) of a notification that has no use after the
- * deadline: the push service drops it when it cannot deliver it before
+ * deadline
  */
 export const getTimeToLiveUntil = (
   context: ApplicationContext,
@@ -25,12 +25,6 @@ export const getTimeToLiveUntil = (
     ),
   );
 
-/**
- * Sends the notifications on all channels. It writes the on-site
- * notifications of the cleared receivers (`storeOnSiteNotifications()` leaves
- * out the other receivers) and announces them through Soketi. Then it sends
- * web push to the same receivers, if their notification settings allow it.
- */
 export const publishNotifications = async (
   context: ApplicationContext,
   notifications: Notification[],

@@ -12,10 +12,6 @@ const MASK = "***";
 const EMAIL_ADDRESS_PATTERN =
   /[\p{L}\p{N}._%+-]+@[\p{L}\p{N}-]+(?:\.[\p{L}\p{N}-]+)+/gu;
 
-/**
- * Keeps the first and the last character. A part of one or two characters
- * keeps only its first character.
- */
 const redactPart = (part: string) => {
   const characters = Array.from(part);
   if (characters.length === 0) return part;
@@ -46,10 +42,7 @@ export const redactEmailAddress = (emailAddress: string) => {
   return `${redactPart(localPart)}@${redactedDomain}`;
 };
 
-/**
- * Redacts each email address in each string of a JSON value (see
- * `redactEmailAddress()`), also in a JSON-encoded string.
- */
+/** Also in a JSON-encoded string */
 export const redactEmailAddressesInJson = (value: unknown): unknown => {
   if (typeof value === "string")
     return value.replaceAll(EMAIL_ADDRESS_PATTERN, redactEmailAddress);

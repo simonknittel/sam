@@ -1,13 +1,9 @@
-/**
- * Realtime channel/event vocabulary, shared between the notification-router
- * Lambda (publisher) and the app (subscriber + channel authorization).
- */
 export const CITIZEN_CHANNEL_PREFIX = "private-citizen-";
 
 export const getCitizenChannelName = (citizenId: string) =>
   `${CITIZEN_CHANNEL_PREFIX}${citizenId}`;
 
-/** The channel of one event. The app has no subscriber for it at the moment. */
+/** The app has no subscriber for it at the moment. */
 export const EVENT_CHANNEL_PREFIX = "private-event-";
 
 /** The limit of Pusher Channels for the name of a channel */

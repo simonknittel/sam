@@ -205,14 +205,9 @@ export const notificationRouterHandler = async (
 };
 
 /**
- * Not a limit of the transport: EventBridge and SQS accept events of up to
- * 1 MB, which is space for more IDs than this limit. One event of the app or
- * of the salary payout has far fewer items: for example, the salary payout
- * sends one ID for each paid booking of the day, thus at most one ID for each
- * citizen and role with a salary on that day. The limit only stops the loops
- * over a malformed event.
- * An event with more items fails the validation: SQS delivers it again, then
- * it moves the event to the dead-letter queue, and nobody gets its
+ * The limit only stops the loops over a malformed event: one event of the app
+ * or of the salary payout has far fewer items. An event with more items fails
+ * the validation, SQS moves it to the dead-letter queue, and nobody gets its
  * notifications.
  */
 const MAXIMUM_EVENT_ITEM_COUNT = 10_000;
@@ -227,8 +222,9 @@ export const bodySchema = z.discriminatedUnion("type", [
     payload: z.object({
       eventId: z.cuid(),
       /**
-       * The citizen who caused the notification gets none. Null when no
-       * citizen caused it, for example the Discord sync.
+       * The citizen who caused the notification gets none. Null when no citizen
+       * caused it (for example the Discord sync), or when the actor has no
+       * citizen.
        */
       actorCitizenId: z.cuid().nullable().optional(),
     }),
@@ -239,10 +235,6 @@ export const bodySchema = z.discriminatedUnion("type", [
     type: z.literal("EventUpdated"),
     payload: z.object({
       eventId: z.cuid(),
-      /**
-       * The citizen who caused the notification gets none. Null when no
-       * citizen caused it, for example the Discord sync.
-       */
       actorCitizenId: z.cuid().nullable().optional(),
     }),
     requestId: z.cuid2(),
@@ -252,10 +244,6 @@ export const bodySchema = z.discriminatedUnion("type", [
     type: z.literal("EventRescheduled"),
     payload: z.object({
       eventId: z.cuid(),
-      /**
-       * The citizen who caused the notification gets none. Null when no
-       * citizen caused it, for example the Discord sync.
-       */
       actorCitizenId: z.cuid().nullable(),
     }),
     requestId: z.cuid2(),
@@ -265,10 +253,6 @@ export const bodySchema = z.discriminatedUnion("type", [
     type: z.literal("EventDeleted"),
     payload: z.object({
       eventId: z.cuid(),
-      /**
-       * The citizen who caused the notification gets none. Null when no
-       * citizen caused it, for example the Discord sync.
-       */
       actorCitizenId: z.cuid().nullable().optional(),
     }),
     requestId: z.cuid2(),
@@ -278,10 +262,6 @@ export const bodySchema = z.discriminatedUnion("type", [
     type: z.literal("EventLineupEnabled"),
     payload: z.object({
       eventId: z.cuid(),
-      /**
-       * The citizen who caused the notification gets none. Null when the
-       * actor has no citizen.
-       */
       actorCitizenId: z.cuid().nullable().optional(),
     }),
     requestId: z.cuid2(),
@@ -425,13 +405,8 @@ export const bodySchema = z.discriminatedUnion("type", [
 
   z.object({
     type: z.literal("EventBriefingPublished"),
-    // The router reads the current read scope from the database
     payload: z.object({
       eventId: z.cuid(),
-      /**
-       * The citizen who caused the notification gets none. Null when the
-       * actor has no citizen.
-       */
       actorCitizenId: z.cuid().nullable().optional(),
     }),
     requestId: z.cuid2(),
@@ -441,7 +416,6 @@ export const bodySchema = z.discriminatedUnion("type", [
     type: z.literal("EventBriefingUpdated"),
     payload: z.object({
       eventId: z.cuid(),
-      /** The citizen who caused the notification gets none */
       actorCitizenId: z.cuid().nullable(),
     }),
     requestId: z.cuid2(),

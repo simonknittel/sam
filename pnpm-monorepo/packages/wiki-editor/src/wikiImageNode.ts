@@ -56,10 +56,6 @@ const parseImageSource = (element: HTMLElement): string | null =>
     ? element.getAttribute("src")
     : element.getAttribute("href");
 
-/**
- * The inherited image attributes with src/alt/title re-pointed at the
- * anchor markup above, shared by the block image and its floated variant.
- */
 export const withWikiImageElementParsing = (
   inherited: Record<string, unknown>,
 ): Record<string, unknown> => {
@@ -102,10 +98,6 @@ export const wikiImageAnchorParseRule = (
   },
 });
 
-/**
- * The image wrapped in a link to the file it displays, shared by the block
- * image and its floated variant — only the marker attribute differs.
- */
 export const renderWikiImageHTML = (
   markerAttribute: string,
   optionsHTMLAttributes: Record<string, unknown>,

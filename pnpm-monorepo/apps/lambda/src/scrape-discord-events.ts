@@ -21,8 +21,7 @@ const context = createApplicationContext({
     guildId: env.DISCORD_GUILD_ID,
     // Shorter than in the app: one run sends many requests in its 180 seconds
     requestTimeoutMilliseconds: 5_000,
-    // Five attempts for each request. The wait limit protects the timeout of
-    // the function (180 seconds).
+    // The wait limit protects the timeout of the function (180 seconds)
     rateLimitRetry: { maximumRetryCount: 4, maximumWaitSeconds: 30 },
     log,
     tracer,

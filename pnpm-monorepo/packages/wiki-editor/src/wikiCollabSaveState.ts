@@ -12,13 +12,11 @@ export enum WikiSaveState {
   Saved = "saved",
 }
 
-/** Server → clients: the page's current save state */
 export interface WikiCollabSaveStateMessage {
   readonly type: "saveState";
   readonly state: WikiSaveState;
 }
 
-/** Client → server: persist a pending debounced store immediately */
 export interface WikiCollabForceSaveMessage {
   readonly type: "forceSave";
 }
@@ -32,10 +30,7 @@ export const serializeWikiCollabStatelessMessage = (
 
 const SAVE_STATES = new Set<string>(Object.values(WikiSaveState));
 
-/**
- * Parses an incoming stateless payload; NULL for anything that is not a
- * well-formed message (on the server the payload crosses a trust boundary).
- */
+/** On the server the payload crosses a trust boundary. */
 export const parseWikiCollabStatelessMessage = (
   payload: string,
 ): WikiCollabStatelessMessage | null => {

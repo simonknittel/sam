@@ -44,7 +44,7 @@ export const WebPushSubscribedHandler = async (
       { endpoint: subscription.endpoint, keys: subscription.keys },
       notificationPayload,
       {
-        TTL: 60 * 60 * 24, // 1 day
+        TTL: 60 * 60 * 24,
         urgency: "high",
         timeout: WEB_PUSH_TIMEOUT_MILLISECONDS,
       },

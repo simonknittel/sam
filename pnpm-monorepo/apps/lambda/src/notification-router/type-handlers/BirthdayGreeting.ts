@@ -100,11 +100,8 @@ const pickWording = () =>
   BIRTHDAY_FALLBACK_WORDING;
 
 /**
- * A personal greeting to the citizen who has their birthday (see
- * `findGreetingRecipient()` for the condition).
- *
  * The picked wording travels in the payload as well, so that the on-site row
- * carries the same text as the web push notification.
+ * carries the same text as the web push notification
  */
 export const BirthdayGreetingHandler = async (
   context: ApplicationContext,

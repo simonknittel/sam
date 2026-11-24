@@ -37,11 +37,6 @@ const environmentSchema = z.object({
   ...applicationContextEnvironmentShape,
   PUBLIC_VAPID_KEY: z.string(),
   PRIVATE_VAPID_KEY: z.string(),
-  /**
-   * Soketi connection for realtime on-site notifications. Optional: without
-   * them realtime events are skipped and clients read new notifications from
-   * the database on their next page load.
-   */
   PUSHER_CHANNELS_APP_ID: z.string().optional(),
   PUSHER_CHANNELS_APP_KEY: z.string().optional(),
   PUSHER_CHANNELS_APP_SECRET: z.string().optional(),
@@ -62,8 +57,8 @@ const setup = async () => {
     ),
   );
 
-  // Also mutated into process.env because the database package and the AWS
-  // SDKs read their configuration from there.
+  // The database package and the AWS SDKs read their configuration from
+  // `process.env`
   process.env = {
     ...process.env,
     ...parameters,
@@ -73,8 +68,4 @@ const setup = async () => {
   return environmentSchema.parse(process.env);
 };
 
-/**
- * Validated environment. Importing it guarantees the SSM parameters were
- * fetched and validated first (top-level await).
- */
 export const env = await setup();

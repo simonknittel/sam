@@ -1,8 +1,3 @@
-/**
- * The limits of the events. The forms of the app, the use cases and the MCP
- * tools use the same values.
- */
-
 export const EVENT_NAME_MAX_LENGTH = 128;
 
 /**

@@ -42,7 +42,6 @@ async function main() {
     }),
   ]);
 
-  // Map user IDs to citizen IDs
   const userIdToCitizenId = new Map<string, string>();
   for (const citizen of citizens) {
     if (!citizen.discordId) continue;

@@ -54,7 +54,6 @@ export const createWikiPageRoleResolvers = (
   }));
 };
 
-/** Ids of the roles that may read the given page on their own */
 export const resolveWikiPageReadRoleIds = (
   pages: readonly WikiPagePermissionSource[],
   roles: readonly WikiPermissionRole[],

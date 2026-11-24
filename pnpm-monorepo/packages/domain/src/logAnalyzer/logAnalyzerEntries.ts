@@ -177,10 +177,6 @@ export const LOG_ANALYZER_ENTRY_PATTERNS: Record<
 
   [LogAnalyzerEntryType.ContractFailedNotificationV2]: {
     marker: NOTIFICATION_MARKER,
-    /**
-     * The mission id connects the end of a contract to its start, see
-     * `contractAcceptedNotification`.
-     */
     // <2026-05-18T06:34:31.016Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Failed: Defend InterSec Operative: " [21] to queue. New queue size: 22, MissionId: [2d9c9ff5-cf3a-43cd-95b0-c89e4c7eac56], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "(?:(?!Contract Failed: ).)*Contract Failed: (?<contract>.+): "(?:(?:(?!MissionId: \[).)*MissionId: \[(?<missionId>[0-9a-f-]+)\])?.*$/gm,
@@ -203,11 +199,7 @@ export const LOG_ANALYZER_ENTRY_PATTERNS: Record<
 
   [LogAnalyzerEntryType.ContractWithdrawnNotificationV2]: {
     marker: NOTIFICATION_MARKER,
-    /**
-     * The mission id connects the end of a contract to its start, see
-     * `contractAcceptedNotification`. Some lines give only zeros as the
-     * mission id.
-     */
+    /** Some lines give only zeros as the mission id. */
     // <2026-05-22T09:09:53.391Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Withdrawn:  A Call to Arms: " [73] to queue. New queue size: 1, MissionId: [95fc3b2f-8cb6-4bce-aa4b-bae5771e7f6b], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification "(?:(?!Contract Withdrawn: ).)*Contract Withdrawn: (?<contract>.+): "(?:(?:(?!MissionId: \[).)*MissionId: \[(?<missionId>[0-9a-f-]+)\])?.*$/gm,
@@ -556,7 +548,6 @@ export const LOG_ANALYZER_ENTRY_PATTERNS: Record<
   },
 };
 
-/** See `LogAnalyzerEntryPattern.takesTimeOfPrecedingLine` */
 export const takesTimeOfPrecedingLine = (type: LogAnalyzerEntryType) =>
   LOG_ANALYZER_ENTRY_PATTERNS[type].takesTimeOfPrecedingLine === true;
 
@@ -616,15 +607,12 @@ export const collectLogAnalyzerEntryVersions = <Type extends string>(
 
 const VERSIONS = collectLogAnalyzerEntryVersions(LOG_ANALYZER_ENTRY_PATTERNS);
 
-/** See `LogAnalyzerEntryPattern.supersedes` */
 export const getNewerLogAnalyzerEntryVersions = (type: LogAnalyzerEntryType) =>
   VERSIONS.newerVersionsByType[type];
 
 /**
- * The first version of the given type. It is the given type itself when the
- * type supersedes no other type. The settings of the Log Analyzer keep one
- * value for all versions, under the oldest version, so that a new version
- * keeps the settings of the user.
+ * The settings of the Log Analyzer keep one value for all versions, under the
+ * oldest version, so that a new version keeps the settings of the user.
  */
 export const getOldestLogAnalyzerEntryVersion = (type: LogAnalyzerEntryType) =>
   VERSIONS.oldestVersionByType[type];
@@ -634,9 +622,8 @@ const ENTRY_TYPES_BY_VALUE = new Map<string, LogAnalyzerEntryType>(
 );
 
 /**
- * Reads a type back which the database keeps as text. Returns undefined for a
- * value which no longer belongs to a pattern, thus a removed pattern leaves
- * its shared entries in place without breaking the table.
+ * Undefined for a value which no longer belongs to a pattern, thus a removed
+ * pattern leaves its shared entries in place without breaking the table.
  */
 export const toLogAnalyzerEntryType = (value: string) =>
   ENTRY_TYPES_BY_VALUE.get(value);
@@ -660,20 +647,11 @@ const SINGLE_LINE_REGEXES = Object.fromEntries(
   }),
 ) as Record<LogAnalyzerEntryType, RegExp>;
 
-/**
- * Matches one raw line against the pattern of the given type. Returns null
- * when the line is not of that type.
- */
 export const matchLogAnalyzerEntryLine = (
   type: LogAnalyzerEntryType,
   rawLine: string,
 ) => SINGLE_LINE_REGEXES[type].exec(rawLine);
 
-/**
- * Matches one raw line against the newest version of the given type that
- * matches it (see `LogAnalyzerEntryPattern.supersedes`). Returns null when no
- * version matches.
- */
 export const matchNewestLogAnalyzerEntryVersion = (
   type: LogAnalyzerEntryType,
   rawLine: string,
@@ -688,10 +666,9 @@ export const matchNewestLogAnalyzerEntryVersion = (
 };
 
 /**
- * The value of `LogAnalyzerEntry.hash`. Together with the uploading citizen
- * it stops the same line from being stored twice. No type holds a line break,
- * thus the first line break is always the separator and two different entries
- * cannot collide, even though a raw line can span two log lines.
+ * No type holds a line break, thus the first line break is always the separator
+ * and two different entries cannot collide, even though a raw line can span two
+ * log lines.
  *
  * The Web Crypto API serves the server and the browser alike, so that the
  * client compares against the very hashes the server stores.
@@ -710,13 +687,8 @@ export const createLogAnalyzerEntryHash = async (
   ).join("");
 };
 
-/** The shape of `createLogAnalyzerEntryHash`, for the input of the dedup query. */
 export const LOG_ANALYZER_ENTRY_HASH_PATTERN = /^[0-9a-f]{64}$/;
 
-/**
- * How many entries one upload request carries. The client splits a larger
- * backfill into more requests.
- */
 export const MAXIMUM_LOG_ANALYZER_UPLOAD_ENTRIES = 100;
 
 /**
@@ -727,13 +699,10 @@ export const MAXIMUM_LOG_ANALYZER_UPLOAD_ENTRIES = 100;
 export const MAXIMUM_LOG_ANALYZER_RAW_LINE_LENGTH = 1_000;
 
 /**
- * The longest rolling window the shared entries query accepts, well above the
- * 14 days the Log Analyzer reads by default. The client keeps its own
- * `daysToLoad` setting inside this limit. A date range uses its own query,
- * which has no such limit.
+ * Well above the 14 days the Log Analyzer reads by default. A date range uses
+ * its own query, which has no such limit.
  */
 export const MAXIMUM_LOG_ANALYZER_DAYS_TO_LOAD = 365;
 
-/** The `daysToLoad` setting of the client, kept inside the accepted range. */
 export const clampLogAnalyzerDaysToLoad = (daysToLoad: number) =>
   Math.min(Math.max(daysToLoad, 0), MAXIMUM_LOG_ANALYZER_DAYS_TO_LOAD);

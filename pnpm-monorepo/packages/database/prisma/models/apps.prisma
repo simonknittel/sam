@@ -1,5 +1,4 @@
-/// An app a citizen marked as a favorite. Unfavoriting hard-deletes the row —
-/// the system log records both directions.
+/// Unfavoriting hard-deletes the row — the system log records both directions.
 model CitizenAppFavorite {
   id        String   @id @default(cuid(2))
   citizenId String

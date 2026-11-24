@@ -7,21 +7,13 @@ export type WikiTextColor = WikiColorToken;
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     wikiTextColor: {
-      /** Colors the selected text */
       setWikiTextColor: (color: WikiTextColor) => ReturnType;
-      /** Colors the selected text, or removes the color if already set */
       toggleWikiTextColor: (color: WikiTextColor) => ReturnType;
-      /** Removes the text color from the selection */
       unsetWikiTextColor: () => ReturnType;
     };
   }
 }
 
-/**
- * Inline text color, stored as a named token and mapped to concrete colors
- * in CSS (wikiEditor.css) — same approach as the callout node's color, so
- * documents stay independent of the theme's color values.
- */
 export const WikiTextColorMark = Mark.create({
   name: "wikiTextColor",
 

@@ -9,10 +9,6 @@ type Payload = {
   applicationId: string;
 };
 
-/**
- * A citizen applied to take part in an event. The message links to the
- * participants page, where a manager approves or declines the application.
- */
 export const EventApplicationCreatedHandler = async (
   context: ApplicationContext,
   payload: Payload,

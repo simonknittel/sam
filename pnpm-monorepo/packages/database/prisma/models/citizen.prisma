@@ -65,13 +65,9 @@ model Citizen {
   onSiteNotifications                          OnSiteNotification[]
   webPushSubscriptions                         WebPushSubscription[]
   roleAssignments                              RoleAssignment[]                     @relation("citizen")
-  /// Changes made by others to the roles of this citizen
   roleAssignmentChanges                        RoleAssignmentChange[]               @relation("citizen")
-  /// Changes made by this citizen to the roles of other citizens
   createdRoleAssignmentChanges                 RoleAssignmentChange[]               @relation("createdBy")
-  /// Changes made by others to the role level of this citizen
   roleAssignmentLevelChanges                   RoleAssignmentLevelChange[]          @relation("citizen")
-  /// Changes made by this citizen to the role level of other citizens
   createdRoleAssignmentLevelChanges            RoleAssignmentLevelChange[]          @relation("createdBy")
   createdVariantExternalLinks                  VariantExternalLink[]                @relation("createdBy")
   updatedVariantExternalLinks                  VariantExternalLink[]                @relation("updatedBy")
@@ -136,8 +132,8 @@ model Citizen {
   silcBalance               Int                        @default(0)
   totalEarnedSilc           Int                        @default(0)
 
-  /// IANA time zone name of the citizen, for example "Europe/Berlin". The
-  /// citizen sets it themselves. NULL if the citizen did not set it.
+  /// IANA time zone name, for example "Europe/Berlin". NULL if the citizen did
+  /// not set it.
   timezone               String?
   /// Day of the birthday, 1 to 31. The year is not stored, thus the app
   /// cannot show an age. Set together with `birthdayMonth`, or both are NULL
@@ -148,14 +144,12 @@ model Citizen {
   /// Time of the last birthday greeting. The greeting job uses it to send
   /// only one greeting for each year.
   birthdayGreetingSentAt DateTime? @db.Timestamptz(3)
-  /// Time of the last New Year greeting. The greeting job uses it to send
-  /// only one greeting for each year.
+  /// See `birthdayGreetingSentAt`
   newYearGreetingSentAt  DateTime? @db.Timestamptz(3)
   /// Time of the first request with the permission to open the app. The
   /// dashboard shows the welcome banner on that local day, and the welcome
-  /// notification goes out at that time. The migration set it for every
-  /// citizen who had a login before the welcome existed. NULL for a citizen
-  /// who never opened the app.
+  /// notification goes out at that time. NULL for a citizen who never opened
+  /// the app.
   welcomedAt             DateTime? @db.Timestamptz(3)
 
   /// A person whose citizen was deleted can be added again, thus the IDs are
@@ -197,11 +191,8 @@ model CitizenLog {
   @@index([citizenId, type, createdAt(sort: Desc)])
 }
 
-/// Materialized/denormalized view of currently assigned roles to citizens.
-/// This model is derived from the change history in `RoleAssignmentChange` and
-/// `RoleAssignmentLevelChange`. Fields like `currentLevel` and
-/// `currentLevelUpdatedAt` require aggregation logic. Synchronization of this
-/// table with change history is handled by application logic.
+/// Derived from the change history in `RoleAssignmentChange` and
+/// `RoleAssignmentLevelChange`. The use cases keep it in sync.
 model RoleAssignment {
   id                    String    @id @default(cuid(2))
   citizenId             String
@@ -209,13 +200,11 @@ model RoleAssignment {
   roleId                String
   role                  Role      @relation("role", fields: [roleId], references: [id], onDelete: Cascade)
   createdAt             DateTime  @default(now()) @db.Timestamptz(3)
-  /// The current level of the citizen for this role. NULL if the role does not
-  /// have levels. The citizen receives the permissions of this role only when
-  /// their currentLevel equals the maximum level defined in Role.maxLevel.
-  /// This be handled by application logic.
+  /// NULL if the role does not have levels. The citizen receives the
+  /// permissions of this role only when their currentLevel equals the maximum
+  /// level defined in Role.maxLevel.
   currentLevel          Int?
-  /// Last time the current level was updated. NULL if the role does not have
-  /// levels. This is used to determine the inactivity.
+  /// NULL if the role does not have levels. Used to determine the inactivity.
   currentLevelUpdatedAt DateTime? @db.Timestamptz(3)
 
   @@unique([citizenId, roleId])
@@ -227,7 +216,6 @@ enum RoleAssignmentChangeType {
   REMOVE
 }
 
-/// History of changes to a citizen's roles
 model RoleAssignmentChange {
   id          String                   @id @default(cuid(2))
   citizenId   String
@@ -249,7 +237,6 @@ enum RoleAssignmentLevelChangeType {
   DOWN
 }
 
-/// History of changes to a citizen's role levels
 model RoleAssignmentLevelChange {
   id          String                        @id @default(cuid(2))
   citizenId   String
@@ -266,11 +253,9 @@ model RoleAssignmentLevelChange {
   @@index([createdAt, id])
 }
 
-/// Opt-out model for the seasonal themes: the existence of a row means the
-/// seasonal event is switched off for the citizen. The absence of a row means
-/// the event is switched on. Seasonal events introduced in the future are
-/// therefore switched on by default for everyone. The event key is a string,
-/// thus a new event needs no migration.
+/// Opt-out model: a row switches the seasonal event off for the citizen, see
+/// NotificationSetting. The event key is a string, thus a new event needs no
+/// migration.
 model SeasonalThemeSetting {
   id         String   @id @default(cuid(2))
   citizenId  String

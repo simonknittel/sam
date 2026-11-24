@@ -1,11 +1,7 @@
-/**
- * The limits of the tag forms of the app. The use cases use the same values.
- */
-
 /** The tag row of the role picker shows the full name */
 export const ROLE_TAG_NAME_MAXIMUM_LENGTH = 32;
 
-/** The longest plain-text description of a tag. It is a tooltip. */
+/** A tooltip shows it */
 export const ROLE_TAG_DESCRIPTION_MAXIMUM_LENGTH = 500;
 
 /**

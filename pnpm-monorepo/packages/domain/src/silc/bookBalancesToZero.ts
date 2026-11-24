@@ -17,16 +17,11 @@ interface BookedBalance {
 }
 
 /**
- * Books the SILC balance of each citizen that is not deleted to 0: one
- * booking of the opposite value for each citizen, then the balance update. A
- * positive booking of a negative balance has `resetsNegativeBalance`, thus
- * it does not count as earned SILC.
+ * A positive booking of a negative balance has `resetsNegativeBalance`, thus it
+ * does not count as earned SILC.
  *
- * The balances come from the ledger in the transaction of the caller, not
- * from the cached copy on the citizen. The ledger lock makes sure that no
- * other ledger write can come between the read and the booking. Thus two
- * parallel calls cannot book the same balance two times: the second call
- * waits and then reads a balance of 0.
+ * The balances come from the ledger, not from the cached copy on the citizen,
+ * and the ledger lock protects them (see `lockSilcLedger()`).
  */
 export const bookBalancesToZero = async (
   transaction: Prisma.TransactionClient,

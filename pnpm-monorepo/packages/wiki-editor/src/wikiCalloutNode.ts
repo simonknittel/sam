@@ -17,18 +17,12 @@ export type WikiCalloutColor = (typeof WIKI_CALLOUT_COLORS)[number];
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     wikiCallout: {
-      /** Wraps the selection in a callout (or unwraps it if already inside) */
       toggleWikiCallout: (color: WikiCalloutColor) => ReturnType;
-      /** Changes the color of the surrounding callout */
       setWikiCalloutColor: (color: WikiCalloutColor) => ReturnType;
     };
   }
 }
 
-/**
- * A block highlighted with a colored background and border, e.g. for
- * notes, warnings or emphasized sections.
- */
 export const WikiCallout = Node.create({
   name: "wikiCallout",
   group: "block",

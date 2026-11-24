@@ -14,10 +14,10 @@ model SilcTransaction {
   deletedById String?
   deletedBy   Citizen?  @relation("deletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
 
-  /// The source of an automatic booking. NULL for manual bookings and for
-  /// bookings created before these columns existed. The partial unique
-  /// indexes below make the automatic payouts idempotent: a job that runs a
-  /// second time cannot book the same salary or the same collection again.
+  /// The source of an automatic booking. NULL for manual bookings and when it
+  /// is unknown. The partial unique indexes below make the automatic payouts
+  /// idempotent: a job that runs a second time cannot book the same salary or
+  /// the same collection again.
   taskId                    String?
   task                      Task?                    @relation(fields: [taskId], references: [id], onDelete: SetNull)
   profitDistributionCycleId String?

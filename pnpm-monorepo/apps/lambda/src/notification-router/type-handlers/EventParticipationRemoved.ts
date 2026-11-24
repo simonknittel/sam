@@ -12,10 +12,6 @@ type Payload = {
   reason: string | null;
 };
 
-/**
- * The message links to the event page, thus only a citizen who can see the
- * event now gets it (see `findEventCitizenRecipient()`)
- */
 export const EventParticipationRemovedHandler = async (
   context: ApplicationContext,
   payload: Payload,

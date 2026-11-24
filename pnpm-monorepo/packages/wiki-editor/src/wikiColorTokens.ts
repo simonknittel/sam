@@ -13,7 +13,6 @@ export const WIKI_COLOR_TOKENS = [
 ] as const;
 export type WikiColorToken = (typeof WIKI_COLOR_TOKENS)[number];
 
-/** German labels shown wherever the tokens are offered */
 export const WIKI_COLOR_LABELS: Record<WikiColorToken, string> = {
   yellow: "Gelb",
   green: "Grün",

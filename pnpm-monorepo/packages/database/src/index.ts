@@ -17,10 +17,7 @@ const createPrismaClient = () =>
     log: env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
     /**
      * Secrets and large columns that must never reach a query result by
-     * accident. Fields listed here are stripped from every query in every app unless a single query
-     * opts back in with `select` or `omit: { field: false }`. This keeps a
-     * whole-row read (a bare query or an `include`) from leaking a token into
-     * a server component, a client prop or a log.
+     * accident, for example through a whole-row read.
      *
      * Deliberately not listed:
      * - `Session.sessionToken`: the NextAuth adapter must return it from its
@@ -29,10 +26,8 @@ const createPrismaClient = () =>
      *   by a `where` clause and never read back into a result that leaves the
      *   server; the confirmation token is also a primary key.
      *
-     * The only reader that needs a listed secret is the Web Push send path,
-     * which selects the keys explicitly. Discord OAuth tokens are written on
-     * sign-in but never read back from the database (the sign-in flow uses the
-     * access token straight from the OAuth response).
+     * The only reader that needs a listed secret is the Web Push send path.
+     * Nothing reads the Discord OAuth tokens back from the database.
      */
     omit: {
       account: {
@@ -45,11 +40,7 @@ const createPrismaClient = () =>
         p256dh: true,
         auth: true,
       },
-      /**
-       * Large columns: the Yjs state, the content JSON and the search text of
-       * a page, and the content of a snapshot. A write without `select`
-       * would return them. The readers that need them select them.
-       */
+      /** Large columns. A write without `select` would return them too. */
       wikiPage: {
         ydoc: true,
         content: true,

@@ -1,15 +1,9 @@
 import type { Prisma } from "@sam-monorepo/database/client";
 
 /**
- * Role assignments as `resolveEffectiveRoles()` and
- * `getPermissionSetsByRoles()` need them: the level gate (`currentLevel`
- * against `Role.maxLevel`), the inherited roles and the permission strings
- * of both. Used by the application package: `getEffectiveRolesOfCitizen()`,
- * `loadEffectivePermissionsOfCitizens()` and `listHumanResourcesContacts()`.
- *
- * Roles carry a markdown description and a full icon/thumbnail relation, so
- * an `include` here drags kilobytes per assignment through the hottest
- * permission paths in the app.
+ * Roles carry a markdown description and a full icon/thumbnail relation, so an
+ * `include` here drags kilobytes per assignment through the hottest permission
+ * paths in the app.
  *
  * Inherited roles are not level-gated, so they need no `maxLevel`.
  */

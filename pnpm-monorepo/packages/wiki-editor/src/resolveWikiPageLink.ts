@@ -29,10 +29,9 @@ export type WikiLinkedPages = Readonly<
 >;
 
 /**
- * Resolves an internal page link's label and route from its attributes and
- * the pages map. Null for pages that are null in or missing from the map
- * (invisible or deleted), which render as an unavailable placeholder
- * without leaking their title.
+ * Null for pages that are null in or missing from the map (invisible or
+ * deleted), which render as an unavailable placeholder without leaking their
+ * title.
  */
 export const resolveWikiPageLink = (
   pages: WikiLinkedPages,

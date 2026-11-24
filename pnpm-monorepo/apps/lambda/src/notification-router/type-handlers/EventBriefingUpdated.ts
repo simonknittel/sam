@@ -11,11 +11,6 @@ type Payload = {
   actorCitizenId: Citizen["id"] | null;
 };
 
-/**
- * A manager announced a change of the briefing. The current audience of the
- * briefing and the organizers get it, except the manager who announced it
- * (see `findEventBriefingUpdatedRecipients()`).
- */
 export const EventBriefingUpdatedHandler = async (
   context: ApplicationContext,
   payload: Payload,

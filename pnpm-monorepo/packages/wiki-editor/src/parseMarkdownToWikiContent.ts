@@ -97,7 +97,6 @@ const createMarkdownManager = () => {
   return manager;
 };
 
-/** An absolute URL with an allowed protocol, or null */
 const resolveUrl = (
   value: unknown,
   baseUrl: string | URL,
@@ -116,10 +115,9 @@ const resolveUrl = (
 };
 
 /**
- * Converts the Tiptap JSON of the Markdown parser into nodes of the wiki
- * schema. The parser can give a structure that the schema does not permit,
- * for example a heading in a list item or an image in a paragraph: such
- * content becomes plain paragraphs with the same text.
+ * The parser can give a structure that the schema does not permit, for example
+ * a heading in a list item or an image in a paragraph: such content becomes
+ * plain paragraphs with the same text.
  */
 const createConverter = (
   schema: Schema,
@@ -153,7 +151,6 @@ const createConverter = (
     return [schema.text(label, [linkType.create({ href: source })])];
   };
 
-  /** The inline content of a text block as the content of a paragraph */
   const toParagraphContent = (block: ProseMirrorNode): ProseMirrorNode[] => {
     if (block.type.spec.code)
       return block.textContent
@@ -180,7 +177,6 @@ const createConverter = (
     );
   };
 
-  /** The text of a node as paragraphs, without its structure */
   const toPlainParagraphs = (node: ProseMirrorNode): ProseMirrorNode[] => {
     if (node.type.name === "image")
       return [paragraphType.create(null, toImageLink(node))];
@@ -301,11 +297,7 @@ const NESTED_LAYOUT = Object.fromEntries(
   WIKI_BLOCK_LAYOUT_ATTRIBUTES.map((attribute) => [attribute, null]),
 );
 
-/**
- * The block with its descendants without the layout attributes: like in the
- * editor, the layout applies only to the blocks at the top (see
- * `stripWikiNestedBlockLayout`)
- */
+/** See `stripWikiNestedBlockLayout` */
 const withoutNestedLayout = (
   block: ProseMirrorNode,
   isNested = false,
@@ -325,16 +317,13 @@ const withoutNestedLayout = (
 };
 
 /**
- * Parses Markdown (CommonMark with the tables and the task lists of GitHub)
- * into the Tiptap JSON of a wiki page. Headings, paragraphs, lists, task
- * lists, tables, code blocks, block quotes, horizontal rules, images, links
- * and the inline marks keep their structure. Content that the wiki cannot
- * hold in that place (for example a heading in a list item) becomes plain
- * paragraphs with the same text. HTML stays literal text. Links keep only
+ * CommonMark with the tables and the task lists of GitHub. Content that the
+ * wiki cannot hold in that place (for example a heading in a list item) becomes
+ * plain paragraphs with the same text. HTML stays literal text. Links keep only
  * http, https and mailto URLs, images only http and https URLs.
  *
- * @throws Error when the result does not agree with the schema of the
- * editor, or when the nesting of the Markdown is too deep to parse
+ * @throws Error when the result does not agree with the schema of the editor,
+ * or when the nesting of the Markdown is too deep to parse
  */
 export const parseMarkdownToWikiContent = (
   markdown: string,

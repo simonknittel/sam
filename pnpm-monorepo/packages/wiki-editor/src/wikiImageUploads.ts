@@ -15,10 +15,8 @@ const parsePublicUrlBase = (publicUrl: string): URL | null => {
 };
 
 /**
- * Extracts the upload id from a wiki image src, or NULL when the src does
- * not point at an uploaded object (external images pasted as HTML). Uploads
- * are served from the public bucket base with the upload id as the last
- * path segment.
+ * NULL when the src does not point at an uploaded object (external images
+ * pasted as HTML).
  */
 export const getWikiImageUploadId = (
   src: unknown,
@@ -37,10 +35,6 @@ export const getWikiImageUploadId = (
   return uploadId;
 };
 
-/**
- * Collects the upload ids of all uploaded images in a Tiptap JSON document.
- * Images with external srcs are skipped.
- */
 export const collectWikiImageUploadIds = (
   content: unknown,
   publicUrl: string,

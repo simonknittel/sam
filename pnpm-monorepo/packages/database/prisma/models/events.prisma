@@ -107,7 +107,7 @@ model Event {
   @@index([endTime])
 }
 
-/// The roles a RESTRICTED event is visible to. Ignored for PUBLIC events.
+/// Ignored for PUBLIC events.
 model EventVisibilityRole {
   id        String   @id @default(cuid())
   eventId   String
@@ -153,12 +153,11 @@ model EventParticipant {
   @@index([discordUserId])
 }
 
-/// The invitation of a manager to a citizen to sign up for an app event. The
-/// citizen accepts it with a sign-up or declines it. A manager can withdraw
-/// it. An invitation is open while `acceptedAt`, `declinedAt` and
-/// `withdrawnAt` are NULL; a CHECK constraint permits at most one of them
-/// (see the migration event_invitations). Like the participations, the rows
-/// stay as history, and a new invitation creates a new row.
+/// The citizen accepts an invitation with a sign-up. An invitation is open
+/// while `acceptedAt`, `declinedAt` and `withdrawnAt` are NULL; a CHECK
+/// constraint permits at most one of them (see the migration
+/// event_invitations). Like the participations, the rows stay as history, and a
+/// new invitation creates a new row.
 model EventInvitation {
   id        String  @id @default(cuid(2))
   eventId   String
@@ -166,17 +165,14 @@ model EventInvitation {
   citizenId String
   citizen   Citizen @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
 
-  /// The note of the manager to the citizen
   message String?
 
   createdAt      DateTime  @default(now()) @db.Timestamptz(3)
   createdById    String?
   createdBy      Citizen?  @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
   updatedAt      DateTime  @updatedAt @db.Timestamptz(3)
-  /// The sign-up of the citizen accepted the invitation
   acceptedAt     DateTime? @db.Timestamptz(3)
   declinedAt     DateTime? @db.Timestamptz(3)
-  /// The note of the citizen to the managers when they decline
   declineComment String?
   /// A manager withdrew the invitation, added the citizen directly, approved
   /// the application of the citizen or turned off the participation of the
@@ -185,20 +181,17 @@ model EventInvitation {
   withdrawnById  String?
   withdrawnBy    Citizen?  @relation("withdrawnBy", fields: [withdrawnById], references: [id], onDelete: SetNull)
 
-  /// At most one open invitation for each citizen and event
   @@unique([eventId, citizenId], map: "EventInvitation_open_key", where: { acceptedAt: null, declinedAt: null, withdrawnAt: null })
   @@index([eventId])
   @@index([citizenId])
 }
 
-/// The application of a citizen to take part in an app event whose sign-up
-/// needs the approval of a manager (see `Event.applicationRequired`). A
-/// manager approves it, which signs the citizen up, or declines it. A
-/// citizen cannot apply again after a decline. An application is open while
-/// `approvedAt`, `declinedAt` and `withdrawnAt` are NULL; a CHECK constraint
-/// permits at most one of them (see the migration event_applications). Like
-/// the invitations, the rows stay as history, and a new application creates
-/// a new row.
+/// A manager approves an application, which signs the citizen up, or declines
+/// it (see `Event.applicationRequired`). A citizen cannot apply again after a
+/// decline. An application is open while `approvedAt`, `declinedAt` and
+/// `withdrawnAt` are NULL; a CHECK constraint permits at most one of them (see
+/// the migration event_applications). Like the invitations, the rows stay as
+/// history, and a new application creates a new row.
 model EventApplication {
   id        String  @id @default(cuid(2))
   eventId   String
@@ -206,8 +199,7 @@ model EventApplication {
   citizenId String
   citizen   Citizen @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
 
-  /// The note of the citizen to the managers. The approval makes it the
-  /// comment of the sign-up.
+  /// The approval makes it the comment of the sign-up.
   comment String?
 
   createdAt     DateTime  @default(now()) @db.Timestamptz(3)
@@ -220,7 +212,6 @@ model EventApplication {
   declinedAt    DateTime? @db.Timestamptz(3)
   declinedById  String?
   declinedBy    Citizen?  @relation("declinedBy", fields: [declinedById], references: [id], onDelete: SetNull)
-  /// The note of the manager to the citizen when they decline
   declineReason String?
   /// The citizen withdrew the application or signed up with an invitation,
   /// or a manager turned off the participation of the event, or turned off
@@ -229,7 +220,6 @@ model EventApplication {
   withdrawnById String?
   withdrawnBy   Citizen?  @relation("withdrawnBy", fields: [withdrawnById], references: [id], onDelete: SetNull)
 
-  /// At most one open application for each citizen and event
   @@unique([eventId, citizenId], map: "EventApplication_open_key", where: { approvedAt: null, declinedAt: null, withdrawnAt: null })
   @@index([eventId])
   @@index([citizenId])
@@ -294,41 +284,30 @@ model EventTemplate {
   /// title, which the organizer then adjusts — one field, because a template
   /// is recognized by the kind of event it produces.
   name        String
-  /// Prefills the created event's description
   description String?
 
-  /// Prefills the created event's cover image. Creating an event from the
-  /// template copies the S3 object into a fresh Upload owned by the event
-  /// creator, so the template keeps its own cover.
+  /// Creating an event from the template copies the S3 object into a fresh
+  /// Upload owned by the event creator, so the template keeps its own cover.
   coverImageId String?
   coverImage   Upload? @relation("eventTemplateCoverImage", fields: [coverImageId], references: [id], onDelete: SetNull)
 
-  /// Prefills the created event's visibility and — for RESTRICTED — its
-  /// visibility roles. Unrelated to who may see the template itself.
+  /// Prefills the created event. Unrelated to who may see the template itself.
   visibility      EventVisibility               @default(PUBLIC)
   visibilityRoles EventTemplateVisibilityRole[]
 
-  /// Publishes the created event to Discord. NULL means "do not publish".
-  /// EXTERNAL without a location falls back to the created event's URL in
-  /// the app, which the template cannot know upfront. A CHECK constraint
-  /// keeps the three columns consistent (see migration
+  /// NULL means "do not publish". EXTERNAL without a location falls back to the
+  /// created event's URL in the app, which the template cannot know upfront. A
+  /// CHECK constraint keeps the three columns consistent (see migration
   /// publish_events_to_discord).
   discordPublishTarget    EventDiscordPublishTarget?
   discordPublishChannelId String?
   discordPublishLocation  String?
 
-  /// Prefills the created event's participation switch (see
-  /// Event.participationEnabled)
   participationEnabled Boolean @default(true)
-  /// Prefills the created event's application switch (see
-  /// Event.applicationRequired)
   applicationRequired  Boolean @default(false)
 
-  /// Who may use and edit the template (see EventTemplateAccessType)
   roleAccess EventTemplateRoleAccess[]
 
-  /// The lineup and briefing blueprints, generalized to the event-or-template
-  /// container (see EventPosition.templateId and WikiPage.templateId)
   positions EventPosition[]
   wikiPages WikiPage[]
   wikiTags  WikiTag[]
@@ -352,8 +331,7 @@ model EventTemplate {
   @@index([deletedAt])
 }
 
-/// The roles prefilled into a RESTRICTED event created from the template.
-/// Mirrors EventVisibilityRole and says nothing about template access.
+/// Says nothing about the access to the template
 model EventTemplateVisibilityRole {
   id         String        @id @default(cuid(2))
   templateId String
@@ -366,9 +344,9 @@ model EventTemplateVisibilityRole {
   @@index([roleId])
 }
 
-/// EDIT implies READ (see EventTemplate.roleAccess), so one role never needs
-/// a second row. READ is "read and use", EDIT adds content editing —
-/// sharing, ownership transfer and deletion stay with the owner.
+/// EDIT implies READ, so one role never needs a second row. READ is "read and
+/// use", EDIT adds content editing — sharing, ownership transfer and deletion
+/// stay with the owner.
 enum EventTemplateAccessType {
   READ
   EDIT
@@ -386,8 +364,6 @@ model EventTemplateRoleAccess {
   @@index([roleId])
 }
 
-/// Whether the citizen of a position must have each required role of the
-/// position (ALL), or one of them (ANY)
 enum EventPositionRoleMatch {
   ANY
   ALL
@@ -408,9 +384,8 @@ model EventPosition {
   name              String
   description       String?
   requiredVariants  EventPositionRequiredVariant[]
-  /// The roles that the citizen of the position must have, as effective roles
-  /// (with the inherited roles and the level gate). `requiredRoleMatch` tells
-  /// if the citizen needs all of them or one of them.
+  /// Checked against the effective roles of the citizen (with the inherited
+  /// roles and the level gate)
   requiredRoles     EventPositionRequiredRole[]
   requiredRoleMatch EventPositionRoleMatch         @default(ANY)
   applications      EventPositionApplication[]     @relation("applications")
@@ -424,8 +399,6 @@ model EventPosition {
   backgroundColor   String?
   textColor         String?
 
-  /// Event wiki pages whose read/edit scope references this position's
-  /// subtree (see WikiPage.eventReadScopePosition)
   wikiReadScopePages WikiPage[] @relation("wikiReadScopePages")
   wikiEditScopePages WikiPage[] @relation("wikiEditScopePages")
 

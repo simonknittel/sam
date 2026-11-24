@@ -21,7 +21,5 @@ export const emailFunctionHandler = async (
     requestId: body.requestId,
   });
 
-  // body.template is a size-1 z.enum; reintroduce a switch when a second
-  // template exists.
   await emailConfirmation(mailgunClient, body.messages);
 };

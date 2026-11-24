@@ -1,12 +1,9 @@
 import type { Prisma } from "@sam-monorepo/database/client";
 
 /**
- * Where an upload is referenced. `Unused` is not a usage: it is the absence
- * of all usages. `listUploadUsages` never gives it. Only the usage filter and
- * the badge of an upload without a reference use it.
- *
- * Each other type is one usage relation of the `Upload` model, see
- * `UPLOAD_USAGE_RELATION_BY_TYPE`.
+ * `Unused` is not a usage: it is the absence of all usages. `listUploadUsages`
+ * never gives it. Only the usage filter and the badge of an upload without a
+ * reference use it.
  */
 export enum UploadUsageType {
   RoleIcon = "roleIcon",
@@ -22,21 +19,15 @@ export enum UploadUsageType {
 }
 
 /**
- * The rule of upload usage: an upload is in use while one of these
- * relations of the `Upload` model references it. The nightly cleanup
- * deletes each other upload (`UNUSED_UPLOAD_WHERE`), and the upload manager
- * of the app shows the usage type of each relation.
- *
- * The wiki relations are link tables that follow the content: the collab
- * server replaces the links of a page at each store, and each new snapshot
- * links the uploads of its content. Thus no check searches the content.
+ * An upload is in use while one of these relations references it. The nightly
+ * cleanup deletes each other upload.
  *
  * `wikiReports` is the one deliberate omission: report evidence is meant to
  * expire with its upload, and the report keeps a `uploadFileName` snapshot.
  *
  * A relation that is in the model but not in this record silently deletes
- * uploads that are in use (as happened to `eventCovers`). Thus add each new
- * relation of the model here, with a usage type.
+ * uploads that are in use. Thus add each new relation of the model here, with a
+ * usage type.
  */
 export const UPLOAD_USAGE_RELATION_BY_TYPE = {
   [UploadUsageType.RoleIcon]: "roleIcons",
@@ -78,7 +69,6 @@ interface UploadUsageNamedResource {
   readonly name: string;
 }
 
-/** A wiki page with the fields of its route */
 export interface UploadUsageWikiPage {
   readonly id: string;
   readonly title: string;
@@ -87,7 +77,6 @@ export interface UploadUsageWikiPage {
   readonly templateId: string | null;
 }
 
-/** The usage relations of an upload */
 export interface UploadUsageSource {
   readonly roleIcons: readonly UploadUsageNamedResource[];
   readonly roleThumbnails: readonly UploadUsageNamedResource[];
@@ -106,11 +95,9 @@ export interface UploadUsageSource {
 interface UploadUsageLocationFields {
   /** Unique in the usages of one upload, for the React keys */
   readonly key: string;
-  /** The name of the resource, for example the name of the role */
   readonly label: string;
 }
 
-/** One place where an upload is referenced */
 export type UploadUsageLocation = UploadUsageLocationFields &
   (
     | {
@@ -132,7 +119,6 @@ export type UploadUsageLocation = UploadUsageLocationFields &
       }
   );
 
-/** The usage types whose relation gives a resource with a name */
 const NAMED_RESOURCE_USAGE_TYPES = [
   UploadUsageType.RoleIcon,
   UploadUsageType.RoleThumbnail,
@@ -154,11 +140,7 @@ const getSnapshotPages = (
   ).values(),
 ];
 
-/**
- * All places where an upload is referenced, in the sequence of the upload
- * manager. An empty result means that the upload is unused, and the nightly
- * cleanup deletes it.
- */
+/** In the sequence of the upload manager */
 export const listUploadUsages = (
   upload: UploadUsageSource,
 ): UploadUsageLocation[] => [

@@ -69,24 +69,18 @@ export const WikiHeading = withWikiBlockLayout(
  * actions that cannot apply.
  */
 export interface WikiTextRestrictions {
-  /** Block-level actions (headings, quote, table, media, …) unavailable */
   readonly blocks: boolean;
-  /** Grid insertion unavailable (grids never nest inside grids) */
   readonly grids: boolean;
   /** List toggles unavailable (inside lists they still switch the type) */
   readonly lists: boolean;
-  /** Inline nodes (page links, mentions) unavailable */
   readonly inlineNodes: boolean;
-  /** Formatting marks unavailable (code blocks allow no marks) */
   readonly marks: boolean;
   /**
    * The inline small-text mark is unavailable — the block or one of its
    * ancestors is already small, where the mark would compound
    */
   readonly smallText: boolean;
-  /** Text alignment unavailable */
   readonly alignment: boolean;
-  /** Which slash-command entries apply at the caret */
   readonly slashItems: "all" | "noInline" | "textOnly" | "none";
 }
 
@@ -166,10 +160,9 @@ const mergeRestrictions = (
 });
 
 /**
- * The restrictions applying to the current selection. Selections spanning
- * restricted and unrestricted blocks count as unrestricted — the commands
- * then apply to the unrestricted part while schema and guard keep the
- * restricted part intact.
+ * Selections spanning restricted and unrestricted blocks count as unrestricted
+ * — the commands then apply to the unrestricted part while schema and guard
+ * keep the restricted part intact.
  */
 export const getWikiSelectionRestrictions = (
   state: EditorState,
@@ -190,11 +183,8 @@ export const getWikiSelectionRestrictions = (
 };
 
 /**
- * The restrictions inherited from the ancestors of a document position,
- * e.g. for inserting next to the block at `position` (gutter palette) or
- * for a hovered block (edit menu). Leaf-based restrictions (code block,
- * summary, heading) are not derived — pass the position BEFORE a node,
- * not inside it.
+ * Leaf-based restrictions (code block, summary, heading) are not derived — pass
+ * the position BEFORE a node, not inside it.
  */
 export const getWikiPositionRestrictions = (
   doc: ProseMirrorNode,
@@ -230,10 +220,6 @@ export const WikiTextAlign = TextAlign.extend({
   },
 });
 
-/**
- * A transaction resetting the `textAlign` attribute of every paragraph
- * inside a text-only container, or NULL when there is nothing to fix.
- */
 export const stripWikiTextOnlyAlignment = (
   state: EditorState,
 ): Transaction | null => {
@@ -257,12 +243,10 @@ export const stripWikiTextOnlyAlignment = (
 };
 
 /**
- * A transaction removing the inline small-text mark from the content of
- * every small block, appended to `transaction` (or NULL when there is
- * nothing to fix). The two sizes would otherwise compound. The mark's
- * button is disabled inside small blocks (see the `smallText` restriction
- * above), so this covers the paths that bypass it: switching a block to
- * small, paste, drag'n'drop and remote collaborators.
+ * The two sizes would otherwise compound. The mark's button is disabled inside
+ * small blocks (see the `smallText` restriction above), so this covers the
+ * paths that bypass it: switching a block to small, paste, drag'n'drop and
+ * remote collaborators.
  */
 export const stripWikiSmallTextInSmallBlocks = (
   state: EditorState,

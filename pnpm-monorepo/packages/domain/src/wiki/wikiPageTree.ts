@@ -5,10 +5,7 @@ interface WikiTreePage {
   readonly parentId: string | null;
 }
 
-/**
- * Collects all descendant ids of a page (excluding the page itself) from a
- * flat page list. Cycle-safe.
- */
+/** Without the page itself. Cycle-safe. */
 export const collectWikiPageDescendants = (
   pages: readonly WikiTreePage[],
   rootId: string,
@@ -31,9 +28,8 @@ export const collectWikiPageDescendants = (
 };
 
 /**
- * Collects the ancestor ids of a page, the direct parent first, up to the
- * top of the tree. The map gives the parents: an ancestor that is not in the
- * map ends the walk. Cycle-safe.
+ * The direct parent first. An ancestor that is not in the map ends the walk.
+ * Cycle-safe.
  */
 export const collectWikiPageAncestors = (
   pagesById: ReadonlyMap<string, WikiTreePage>,
@@ -61,10 +57,8 @@ export interface VisibleWikiSubtreeEntry<Page extends WikiTreePage> {
 }
 
 /**
- * Collects the readable descendants of a page in depth-first order. An
- * unreadable page takes its whole subtree with it: nothing below it can be
- * readable, because a page grants nothing to someone who cannot read the
- * page above it. The root itself is not included. Cycle-safe.
+ * In depth-first order, without the root. An unreadable page takes its whole
+ * subtree with it. Cycle-safe.
  */
 export const collectVisibleWikiSubtree = <Page extends WikiTreePage>(
   pages: readonly Page[],

@@ -10,10 +10,6 @@ interface Payload {
   mentionId: WikiPageCitizenMention["id"];
 }
 
-/**
- * Sends the notification for one pending mention link (see
- * `findWikiCitizenMentionedRecipient()` for the recipient)
- */
 export const WikiCitizenMentionedHandler = async (
   context: ApplicationContext,
   payload: Payload,

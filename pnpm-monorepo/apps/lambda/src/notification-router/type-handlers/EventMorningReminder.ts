@@ -36,7 +36,6 @@ export const EventMorningReminderHandler = async (
       url: `/app/events/${result.event.id}`,
     })),
     {
-      // A reminder that arrives after the start of the event has no use
       TTL: getTimeToLiveUntil(context, result.event.startTime),
     },
   );

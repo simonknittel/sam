@@ -9,7 +9,6 @@ import { walkWikiContent } from "./walkWikiContent.js";
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     wikiVariantLink: {
-      /** Inserts a link to a fleet variant at the current position */
       setWikiVariantLink: (attributes: {
         variantId: string;
         name: string | null;
@@ -36,11 +35,8 @@ const PASTE_PATTERN =
   /https?:\/\/\S+\/app\/fleet\/variant\/([a-z0-9]{10,40})(?:\/\S*)?/g;
 
 /**
- * An inline link to a ship variant of the fleet app, rendered as the
- * variant's name next to its manufacturer's logo. Stores the variant id
- * plus its name at insertion time — the id is the reference (so links
- * follow renames), the name only a denormalized label fallback (and the
- * searchable text).
+ * The id is the reference (so links follow renames), the name at insertion time
+ * only a denormalized label fallback (and the searchable text).
  */
 export const WikiVariantLink = Node.create<WikiVariantLinkOptions>({
   name: "wikiVariantLink",
@@ -145,10 +141,6 @@ export const WikiVariantLink = Node.create<WikiVariantLinkOptions>({
   },
 });
 
-/**
- * Collects the ids of all variants linked in a Tiptap JSON document, so
- * their current names and logos can be resolved before rendering.
- */
 export const collectWikiVariantLinkIds = (content: unknown): string[] => {
   const ids = new Set<string>();
 

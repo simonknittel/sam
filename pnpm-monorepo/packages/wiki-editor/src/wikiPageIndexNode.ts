@@ -15,27 +15,20 @@ export type WikiPageIndexMatchMode =
 export const WIKI_PAGE_INDEX_MAX_TAGS = 20;
 export const WIKI_PAGE_INDEX_MAX_DEPTH = 99;
 
-/**
- * The node's configuration. The document only ever stores this config —
- * the listed pages are resolved per viewer at render time (editor node view
- * and static renderer alike) and never become part of the content.
- */
 export interface WikiPageIndexConfig {
   readonly mode: WikiPageIndexMode;
   /** Root page for tree mode; null = the page containing the node */
   readonly rootPageId: string | null;
   /** Tree depth to render; null = unlimited */
   readonly maxDepth: number | null;
-  /** Tags for tag mode */
   readonly tagIds: readonly string[];
   /** "all" = page must carry every tag (AND), "any" = at least one (OR) */
   readonly matchMode: WikiPageIndexMatchMode;
 }
 
 /**
- * Clamps arbitrary (user-controlled) attribute input into a valid config.
- * Shared by the node's attribute parsing, the server-side resolution and
- * the render-time config key so all of them agree.
+ * Shared by the node's attribute parsing, the server-side resolution and the
+ * render-time config key so all of them agree.
  */
 export const normalizeWikiPageIndexConfig = (
   attrs: Readonly<Record<string, unknown>> | undefined,
@@ -73,10 +66,7 @@ export const normalizeWikiPageIndexConfig = (
   return { mode, rootPageId, maxDepth, tagIds, matchMode };
 };
 
-/**
- * Stable key for a node's config, e.g. to look up the pre-resolved page
- * list during static rendering. Tag order does not matter.
- */
+/** Tag order does not matter. */
 export const wikiPageIndexConfigKey = (
   attrs: Readonly<Record<string, unknown>> | undefined,
 ): string => {
@@ -90,11 +80,6 @@ export const wikiPageIndexConfigKey = (
   ]);
 };
 
-/**
- * All distinct page-index configs of a Tiptap JSON document, keyed for
- * `wikiPageIndexConfigKey` lookups — so the server can resolve every index
- * on a page before rendering it statically.
- */
 export const collectWikiPageIndexConfigs = (
   content: unknown,
 ): { key: string; config: WikiPageIndexConfig }[] => {
@@ -112,7 +97,6 @@ export const collectWikiPageIndexConfigs = (
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     wikiPageIndex: {
-      /** Inserts a page index ("Seitenverzeichnis") at the current position */
       setWikiPageIndex: (
         attributes?: Partial<WikiPageIndexConfig>,
       ) => ReturnType;
@@ -121,12 +105,11 @@ declare module "@tiptap/core" {
 }
 
 /**
- * A block listing wiki pages — either the subtree below a root page or all
- * pages carrying certain tags. The node stores configuration only; the page
- * list is resolved per viewer at render time (and is permission-filtered
- * server-side), so it never leaks into the document, `searchText` or the
- * clipboard. It deliberately ignores the pages' sidebar mode — an index on
- * a "dataset" page is how sidebar-hidden child pages get surfaced.
+ * The node stores configuration only; the page list is resolved per viewer at
+ * render time (and is permission-filtered server-side), so it never leaks into
+ * the document, `searchText` or the clipboard. It deliberately ignores the
+ * pages' sidebar mode — an index on a "dataset" page is how sidebar-hidden
+ * child pages get surfaced.
  */
 export const WikiPageIndex = Node.create({
   name: "wikiPageIndex",

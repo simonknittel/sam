@@ -1,7 +1,5 @@
-/// A notification with its own title and body that a member sent to chosen
-/// citizens and roles. A sent notification is immutable: nobody edits or
-/// deletes a message that was already delivered, thus the model has no
-/// `updated*` and no `deleted*` columns.
+/// A sent notification is immutable, thus the model has no `updated*` and no
+/// `deleted*` columns.
 model ManualNotification {
   id          String   @id @default(cuid(2))
   createdAt   DateTime @default(now()) @db.Timestamptz(3)
@@ -17,7 +15,6 @@ model ManualNotification {
   @@index([createdAt(sort: Desc), id(sort: Desc)])
 }
 
-/// A citizen that the sender selected as a receiver
 model ManualNotificationCitizen {
   id                   String             @id @default(cuid(2))
   manualNotification   ManualNotification @relation(fields: [manualNotificationId], references: [id], onDelete: Cascade)
@@ -29,8 +26,7 @@ model ManualNotificationCitizen {
   @@index([citizenId])
 }
 
-/// A role that the sender selected as a receiver. The members of the role
-/// with their effective roles receive the notification.
+/// The members of the role with their effective roles receive the notification.
 model ManualNotificationRole {
   id                   String             @id @default(cuid(2))
   manualNotification   ManualNotification @relation(fields: [manualNotificationId], references: [id], onDelete: Cascade)

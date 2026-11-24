@@ -1,14 +1,8 @@
 /**
- * The wiki's Tiptap editor schema and content utilities, shared between the
- * Next.js app (editor, static rendering), the application package
- * (server-side validation, Markdown) and the collab server (apps/collab,
- * Yjs ⇄ ProseMirror conversion) so all consumers always agree on the same
- * schema.
- *
- * Importing this entry loads Tiptap, ProseMirror and lowlight. Client code
- * that only renders content imports `@sam-monorepo/wiki-editor/helpers`
- * instead (see helpers.ts). The Markdown renderer and the Markdown parser are
- * the entry `@sam-monorepo/wiki-editor/markdown`.
+ * Importing this entry loads Tiptap, ProseMirror and lowlight. Client code that
+ * only renders content imports `@sam-monorepo/wiki-editor/helpers` instead (see
+ * helpers.ts). The Markdown renderer and the Markdown parser are the entry
+ * `@sam-monorepo/wiki-editor/markdown`.
  */
 export { extractWikiPageText } from "./extractWikiPageText.js";
 export * from "./helpers.js";

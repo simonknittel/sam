@@ -116,7 +116,6 @@ const mark = (type: string, attrs?: Record<string, unknown>): DemoMark => ({
   ...(attrs ? { attrs } : {}),
 });
 
-/** Bare strings become plain text nodes */
 const inline = (content: (DemoNode | string)[]): DemoNode[] =>
   content.map((entry) => (typeof entry === "string" ? text(entry) : entry));
 

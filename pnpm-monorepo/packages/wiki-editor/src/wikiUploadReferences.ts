@@ -11,18 +11,15 @@ export enum WikiUploadReferenceKind {
   Attachment = "ATTACHMENT",
 }
 
-/** An upload that the content possibly uses */
 export interface WikiUploadReference {
   readonly uploadId: string;
   readonly kind: WikiUploadReferenceKind;
 }
 
 /**
- * The possible upload id of an image source: the last path segment of an
- * http(s) URL. The collab server does not know the public bucket URL, thus
- * the host is not checked here. The caller keeps only the ids of uploads
- * that exist, thus an external image gives no link. The migration that
- * filled the link tables uses the same rule.
+ * The last path segment of an http(s) URL. The collab server does not know the
+ * public bucket URL, thus the host is not checked here. The caller keeps only
+ * the ids of uploads that exist, thus an external image gives no link.
  */
 const getWikiImageSourceUploadId = (source: unknown): string | null => {
   if (typeof source !== "string") return null;
@@ -33,11 +30,7 @@ const getWikiImageSourceUploadId = (source: unknown): string | null => {
   return url.pathname.split("/").at(-1) || null;
 };
 
-/**
- * Collects the uploads that a Tiptap JSON document possibly uses: the upload
- * id of each attachment card and the upload id in the source of each image.
- * Each pair of upload id and kind occurs one time, in document order.
- */
+/** Each pair of upload id and kind occurs one time, in document order. */
 export const collectWikiUploadReferences = (
   content: unknown,
 ): WikiUploadReference[] => {

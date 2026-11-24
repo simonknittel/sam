@@ -5,14 +5,6 @@
  */
 import { getInGameYear } from "@sam-monorepo/domain";
 
-/**
- * The greeting picks one of these for each citizen, so that a citizen does
- * not read the same sentence every year. The greeting keeps no memory of the
- * previous year, thus the same wording can occur twice in sequence.
- *
- * Every wording is a function of the in-game year, and the picked wording
- * travels in the payload as the finished strings.
- */
 export const NEW_YEAR_WORDINGS = [
   (inGameYear: number) => ({
     title: "Frohes neues Jahr, Citizen!",
@@ -96,10 +88,8 @@ export const NEW_YEAR_WORDINGS = [
   }),
 ] as const;
 
-/** The wording of one citizen, with the in-game year filled in */
 export const buildWording = (realYear: number, index: number) =>
   (NEW_YEAR_WORDINGS[index] ?? NEW_YEAR_WORDINGS[0])(getInGameYear(realYear));
 
-/** The wording for one citizen, picked at random */
 export const pickWording = (realYear: number) =>
   buildWording(realYear, Math.floor(Math.random() * NEW_YEAR_WORDINGS.length));

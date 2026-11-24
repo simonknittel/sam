@@ -36,7 +36,6 @@ export const TaskDeadlineReminderHandler = async (
       url: `/app/tasks/${result.task.id}`,
     })),
     {
-      // A reminder that arrives after the expiry of the task has no use
       TTL: getTimeToLiveUntil(context, result.task.expiresAt),
     },
   );

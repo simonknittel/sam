@@ -12,7 +12,6 @@ type Payload = {
   positionNames: string[];
 };
 
-/** A participant cancelled and gave free the own positions */
 export const EventPositionVacatedHandler = async (
   context: ApplicationContext,
   payload: Payload,

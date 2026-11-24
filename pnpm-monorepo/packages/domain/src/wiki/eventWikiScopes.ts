@@ -25,7 +25,6 @@ export const isEventWikiScopeAvailable = (
   (scope !== WikiPageEventScope.PARTICIPANTS &&
     scope !== WikiPageEventScope.POSITION);
 
-/** The two scopes of a briefing page */
 export enum EventWikiScopeTier {
   Read = "read",
   Edit = "edit",
@@ -88,7 +87,6 @@ export const isEventWikiScopeSubset = (
   return false;
 };
 
-/** The parts of a briefing that the effective scope of a page needs */
 interface EventWikiScopeContext {
   readonly permissions: ReadonlyMap<
     string,

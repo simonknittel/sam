@@ -95,11 +95,6 @@ describe("the link to an image's original", () => {
     expect(html).toMatch(/<img [^>]*data-width-px="720"/);
   });
 
-  /**
-   * The link mark claims every `a[href]`; without a higher priority its
-   * rule would win, the anchor would parse as a plain link and the image
-   * inside it would lose the width and alignment stored on the anchor.
-   */
   test("is parsed before the link mark when the markup is pasted back", () => {
     const { rules } = DOMParser.fromSchema(schema);
     const imageRule = rules.findIndex(
@@ -133,12 +128,6 @@ describe("the link to an image's original", () => {
     });
   });
 
-  /**
-   * Renderers may swap the displayed img's src for an optimized variant
-   * (WikiContentImage) while the anchor's href keeps the original —
-   * parsing must recover the original, or a copy from the read view would
-   * store the optimizer URL.
-   */
   test("takes the source from the link, not from the displayed image", () => {
     const attrs = parseRenderedAnchor(
       renderedAnchor(

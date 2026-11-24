@@ -1,9 +1,6 @@
 import { NotificationChannel } from "@sam-monorepo/database/browser";
 
-/**
- * The notification types that a citizen can switch off for a channel. The
- * values are the `notificationType` of the settings rows.
- */
+/** The values are the `notificationType` of the settings rows. */
 export enum NotificationSettingType {
   EventCreated = "event_created",
   EventUpdated = "event_updated",
@@ -50,21 +47,17 @@ export enum NotificationSettingType {
   ManualNotification = "manual_notification",
 }
 
-/** All notification types of the settings */
 export const NOTIFICATION_SETTING_TYPES: readonly NotificationSettingType[] =
   Object.values(NotificationSettingType);
 
-/** The name of the form input that switches a type on for a channel */
 export const getNotificationSettingInputName = (
   channel: NotificationChannel,
   notificationType: NotificationSettingType,
 ) => `${channel}_${notificationType}`;
 
 /**
- * The form sends one input for each setting that is switched on, thus a
- * request never has more inputs than there are combinations of a
- * notification type and a channel. The limit keeps the loops of the save
- * bounded.
+ * The form sends one input for each setting that is switched on. The limit
+ * keeps the loops of the save bounded.
  */
 export const MAXIMUM_NOTIFICATION_SETTING_INPUTS =
   NOTIFICATION_SETTING_TYPES.length * Object.values(NotificationChannel).length;

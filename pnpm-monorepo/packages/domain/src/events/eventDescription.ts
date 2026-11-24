@@ -7,17 +7,14 @@ import { DISCORD_EVENT_DESCRIPTION_MAX_LENGTH } from "../discord/guildScheduledE
  */
 const FOOTER_TEXT = "Anmeldung nur über SAM, nicht über Discord:";
 
-/** The empty line between the manager's own text and the note. */
 const FOOTER_SEPARATOR = "\n\n";
 
-/** The note as Discord receives it, with the event's own address below it. */
 export const getDiscordEventDescriptionFooter = (eventUrl: string) =>
   `${FOOTER_TEXT}\n${eventUrl}`;
 
 /**
- * The description of a guild scheduled event: the manager's text with the
- * note below it. An event without a description gets the note alone — a
- * reader who has no other information needs it most.
+ * An event without a description gets the note alone — a reader who has no
+ * other information needs it most.
  */
 export const buildDiscordEventDescription = (
   description: string | null,
@@ -48,24 +45,15 @@ const LIMIT_ROUNDING = 10;
 const MINIMUM_LIMIT = 100;
 
 /**
- * The longest description of an event: Discord's cap minus the note, rounded
- * down. The note defines the limit, because the text of the manager and the
- * note together must stay inside Discord's cap. The forms of the app and the
- * use cases of the events use this rule.
+ * Discord's cap minus the note, rounded down.
  *
  * The value depends on the deployment, because the note contains the base
- * address. A preview deployment on Vercel has a longer address than
- * production and therefore a smaller limit.
- *
- * @param getEventUrl Gives the absolute address of the page of an event
+ * address. A preview deployment on Vercel has a longer address than production
+ * and therefore a smaller limit.
  */
 export const getEventDescriptionMaxLength = (
   getEventUrl: (eventId: string) => string,
 ) => {
-  /**
-   * How many characters the note takes away from the manager. Measured, not
-   * counted by hand, so a different wording keeps the number correct.
-   */
   const footerReservedLength =
     FOOTER_SEPARATOR.length +
     getDiscordEventDescriptionFooter(getEventUrl("x".repeat(EVENT_ID_LENGTH)))
