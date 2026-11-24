@@ -8,7 +8,6 @@ import { findOwnEventParticipation } from "@sam-monorepo/application";
 import type { Event } from "@sam-monorepo/database/client";
 import { cache } from "react";
 
-/** See `findOwnEventParticipation()` */
 export const getOwnEventParticipation = cache(
   withTrace("getOwnEventParticipation", async (eventId: Event["id"]) => {
     try {

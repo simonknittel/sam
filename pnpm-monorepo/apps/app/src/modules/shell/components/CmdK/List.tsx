@@ -507,7 +507,6 @@ const CreatePage = ({ items }: CreatePageProps) => {
   const handleSelect = (item: CreateItem) => {
     setOpen(false);
     setSearch("");
-    /** The menu starts on its first page the next time */
     setPages([]);
 
     switch (item.type) {

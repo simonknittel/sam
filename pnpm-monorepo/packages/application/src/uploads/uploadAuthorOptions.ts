@@ -8,12 +8,9 @@ export interface UploadAuthorOption {
 }
 
 /**
- * The citizens with at least one upload, for the author filter of the upload
- * table, sorted by handle. Only the managers have the filter: without the
- * permission, the table shows only one author. A deleted citizen is not an
- * option, as in all other pickers.
- *
- * @throws ForbiddenError when the actor does not have `upload;manage`
+ * Only the managers have the filter: without the permission, the table shows
+ * only one author. A deleted citizen is not an option, as in all other
+ * pickers.
  */
 export const findUploadAuthorOptions = async (
   context: Pick<ApplicationContext, "prisma">,

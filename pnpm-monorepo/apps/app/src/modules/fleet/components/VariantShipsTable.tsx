@@ -22,12 +22,11 @@ const COLUMNS = "160px 256px";
 interface Props {
   readonly className?: string;
   readonly ships: VariantShipRow[];
-  /** The variant of all ships */
   readonly variant: VariantDetail;
 }
 
 export const VariantShipsTable = ({ className, ships, variant }: Props) => {
-  /** The popover is a Client Component: it gets only the fields it reads */
+  /** See `VariantWithLogo` */
   const popoverVariant = { id: variant.id, name: variant.name };
   const popoverManufacturer = {
     name: variant.series.manufacturer.name,

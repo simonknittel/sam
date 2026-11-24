@@ -15,9 +15,8 @@ export const eventNameSchema = z
   .max(EVENT_NAME_MAX_LENGTH);
 
 /**
- * Discord's cap is the upper bound of the schema. The use cases also check the
- * smaller limit that leaves room for the sign-up note of the Discord event
- * (see `requireDescriptionFitsDiscord()`).
+ * The use cases also check the smaller limit that leaves room for the sign-up
+ * note of the Discord event (see `requireDescriptionFitsDiscord()`)
  */
 export const eventDescriptionSchema = z
   .string()

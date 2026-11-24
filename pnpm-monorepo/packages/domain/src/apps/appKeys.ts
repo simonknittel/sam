@@ -1,6 +1,7 @@
 /**
  * Integrated and external apps have separate slug namespaces which can
- * collide, so a key is only unique together with its namespace.
+ * collide, so a key is only unique together with its namespace. The database
+ * stores the key of a favorite: a changed slug loses the favorites.
  */
 export enum AppKeyNamespace {
   Integrated = "integrated",

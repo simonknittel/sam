@@ -48,7 +48,6 @@ test("the spynet activity table paginates and filters", async ({
     },
   });
 
-  /** One entry more than a page holds, so the second page is never empty */
   const MEMBERSHIP_ENTRIES = ACTIVITY_PAGE_SIZE + 1;
   await prisma.organizationMembershipHistoryEntry.createMany({
     data: Array.from({ length: MEMBERSHIP_ENTRIES }, (unused, index) => ({
@@ -62,7 +61,6 @@ test("the spynet activity table paginates and filters", async ({
     })),
   });
 
-  // The newest entry of all, so it has to head the first page
   await prisma.roleAssignmentChange.create({
     data: {
       citizenId: target.entity.id,
@@ -79,7 +77,6 @@ test("the spynet activity table paginates and filters", async ({
   await expect(page.locator("tbody tr").first()).toContainText("Rolle");
   await expect(page.getByRole("button", { name: "Zurück" })).toBeDisabled();
 
-  // The remaining membership entries plus the organization's creation
   await clickUntilUrl(
     page,
     page.getByRole("button", { name: "Weiter" }),
@@ -90,7 +87,6 @@ test("the spynet activity table paginates and filters", async ({
   );
   await expect(page.getByText("Erstellt unter dem Namen")).toBeVisible();
 
-  // Walking back lands on the first page again
   await clickUntilUrl(
     page,
     page.getByRole("button", { name: "Zurück" }),
@@ -99,20 +95,17 @@ test("the spynet activity table paginates and filters", async ({
   await expect(page.locator("tbody tr")).toHaveCount(ACTIVITY_PAGE_SIZE);
   await expect(page.getByText("Erstellt unter dem Namen")).toHaveCount(0);
 
-  // The type filter queries only the source it names
   await page.goto("/app/spynet/activity?type=role-assignment");
   await expect(page.locator("tbody tr")).toHaveCount(1);
   await expect(page.locator("tbody tr").first()).toContainText(
     "Rollen-Zuweisung",
   );
 
-  // The actor filter keeps only that actor's entries
   await page.goto(`/app/spynet/activity?actor=${target.entity.id}`);
   await expect(
     page.getByText("Keine Aktivität für diese Filter."),
   ).toBeVisible();
 
-  // The date range drops everything recorded before it
   await page.goto("/app/spynet/activity");
   const fromDate = dateParam(new Date(Date.now() - 5 * ONE_DAY_MS));
   await fillUntilUrl(

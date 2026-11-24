@@ -38,7 +38,6 @@ test("a new start sends rescheduled, the other changes send updated", async () =
     },
   });
 
-  /** The types of the notifications of one update */
   const update = async (input: Omit<UpdateEventInput, "event_id">) => {
     const { context, notifications } = createTestApplicationContext();
     await updateEvent(context, actor, { event_id: event.id, ...input });
@@ -46,7 +45,6 @@ test("a new start sends rescheduled, the other changes send updated", async () =
     return notifications.map((notification) => notification.type);
   };
 
-  // The start and the end move together
   expect(
     await update({ start_time: hoursFromNow(2), end_time: hoursFromNow(4) }),
   ).toEqual(["EventRescheduled"]);

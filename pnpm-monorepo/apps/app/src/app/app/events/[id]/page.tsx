@@ -30,10 +30,8 @@ export default async function Page({
   if (!event) notFound();
 
   /**
-   * The create action redirects here with this flag when the publication on
-   * Discord failed — its own response has no room for a warning (see
-   * DISCORD_PUBLISH_FAILED_PARAM). Only managers see it. The permission is
-   * asked only when the flag is set: most visits have none.
+   * The response of the create action has no room for a warning, thus the
+   * action redirects here with this flag (see DISCORD_PUBLISH_FAILED_PARAM).
    */
   const hasPublishFailedFlag =
     (await searchParams)[DISCORD_PUBLISH_FAILED_PARAM] === "1";

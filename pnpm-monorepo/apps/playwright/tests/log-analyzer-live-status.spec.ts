@@ -69,7 +69,6 @@ test("the live status shows the open states and closes them with their end lines
   });
 
   await signIn(citizen.user);
-  /** The test moves the time of the page forward instead of waiting */
   await page.clock.install();
   await stubDirectoryPicker(page, [
     joinPuLine(minutesAgo(30)),
@@ -91,7 +90,6 @@ test("the live status shows the open states and closes them with their end lines
   await expect(panel.getByText("online", { exact: true })).toBeVisible();
   await expect(panel.getByText("Shard: EU 100")).toBeVisible();
   await expect(panel.getByText("Armistice Zone: Betreten")).toBeVisible();
-  /** A player can have more than one contract at the same time */
   await expect(
     panel.getByText("Contract: Wikelo Arrive to System"),
   ).toBeVisible();
@@ -101,7 +99,6 @@ test("the live status shows the open states and closes them with their end lines
   await enableLiveMode(page);
   await expect(panel.getByText(/Für einen genauen Status/)).toHaveCount(0);
 
-  /** The end of one contract leaves the other contract open */
   await appendLogLines(page, [
     contractCompleteLine(
       minutesAgo(0),
@@ -115,11 +112,9 @@ test("the live status shows the open states and closes them with their end lines
   await expect(
     panel.getByText("Contract: Wikelo Arrive to System"),
   ).toHaveCount(0);
-  /** The armistice zone shows also outside of it */
   await expect(panel.getByText("Armistice Zone: Verlassen")).toBeVisible();
   await expect(panel.getByText("Contract: Bounty Hunt")).toBeVisible();
 
-  /** A contract continues after the end of the session, a zone does not */
   await appendLogLines(page, [gameQuitLine(minutesAgo(0))]);
   await page.clock.fastForward(LIVE_MODE_PARSE_INTERVAL);
 
@@ -198,7 +193,6 @@ test("the live status of another citizen ignores the type filters, and follows t
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto(LOG_ANALYZER_PAGE_PATH);
 
-  /** The table shows only the shard, the Live-Status also the contract */
   await openSettings(page);
   await settingToggle(
     page,
@@ -235,7 +229,6 @@ test("the live status of another citizen ignores the type filters, and follows t
 
   await toggleLabel(page, "Live-Status").click();
   await expect(panel).toHaveCount(0);
-  /** Without the panel, the table takes the full width */
   await expect
     .poll(tableWidth)
     .toBeGreaterThan(tableWidthNextToPanel * TABLE_WIDTH_GROWTH_WITHOUT_PANEL);
@@ -321,7 +314,6 @@ test("the table and the live status show the lines of one instant in the order o
   await expect(
     reporter("log-live-instant-teiler").getByText("Armistice Zone: Betreten"),
   ).toBeVisible();
-  /** The first row holds the column headings, then the newest line follows */
   await expect(tableRows(page).nth(1)).toContainText("Verlassen");
   await expect(tableRows(page).nth(2)).toContainText("Betreten");
 

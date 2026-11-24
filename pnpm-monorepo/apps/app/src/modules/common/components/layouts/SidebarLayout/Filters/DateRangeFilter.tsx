@@ -23,10 +23,8 @@ interface Props {
 }
 
 /**
- * Two `<input type="date">` bounds, both optional, kept in the URL as plain
- * `YYYY-MM-DD` strings. Which instants those days start and end at is a
- * question for whoever reads them — the browser has no business deciding it
- * from its own time zone.
+ * Which instants the days of the URL start and end at is a question for whoever
+ * reads them — the browser has no business deciding it from its own time zone.
  */
 export const DateRangeFilter = ({
   fromName,
@@ -58,7 +56,6 @@ export const DateRangeFilter = ({
    * keeps the value that the user saw
    */
   const setBound = (name: string, value: string) => {
-    /** In the same tick, nuqs gives both changes one URL update */
     void setRange({
       [fromName]: from,
       [toName]: to,

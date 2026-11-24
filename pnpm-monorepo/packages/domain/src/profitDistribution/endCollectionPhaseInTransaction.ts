@@ -11,24 +11,21 @@ interface Options {
 }
 
 /**
- * Ends the collection phase of a cycle. It books the SILC balance of each
- * citizen that is not deleted to 0, also a negative one. A positive balance
- * becomes the snapshot of the participant.
+ * Books the SILC balance of each citizen that is not deleted to 0, also a
+ * negative one. A positive balance becomes the snapshot of the participant.
  *
  * Call it in one interactive transaction:
- * - It takes the ledger lock first (see `lockSilcLedger()`), before the
- *   claim. Thus a parallel ledger write, also "expire all" or the end of a
- *   different cycle, cannot book the same balance a second time.
- * - The guarded update then claims the cycle. Thus a second call for the
- *   same cycle, also a parallel call, changes nothing.
- * - The balances come from the ledger in the same transaction, not from the
- *   cached copy on the citizen (see `bookBalancesToZero()`).
+ * - It takes the ledger lock first (see `lockSilcLedger()`), before the claim.
+ *   Thus a parallel ledger write, also "expire all" or the end of a different
+ *   cycle, cannot book the same balance a second time.
+ * - The guarded update then claims the cycle. Thus a second call for the same
+ *   cycle, also a parallel call, changes nothing.
  * - If a booking of the cycle exists already, the unique index
- *   `SilcTransaction_profitDistributionCycle_key` makes the whole
- *   transaction fail.
+ *   `SilcTransaction_profitDistributionCycle_key` makes the whole transaction
+ *   fail.
  *
- * @returns The ids of the new SILC transactions, or null if the cycle is not
- * in its collection phase
+ * @returns The ids of the new SILC transactions, or null if the cycle is not in
+ * its collection phase
  */
 export const endCollectionPhaseInTransaction = async (
   transaction: Prisma.TransactionClient,

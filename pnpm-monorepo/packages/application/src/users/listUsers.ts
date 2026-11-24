@@ -49,13 +49,7 @@ export interface ListUsersOutput {
   readonly next_cursor: string | null;
 }
 
-/**
- * The users, the newest first, one page. The cursor is an offset, like the
- * cursor of the user list of the app (see `parseUserListOffset()`).
- * Requires `user;read`.
- *
- * @throws ValidationError for a malformed cursor
- */
+/** The cursor is an offset (see `parseUserListOffset()`) */
 export const listUsers = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,

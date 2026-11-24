@@ -16,8 +16,7 @@ export enum ClientMetadataErrorReason {
 }
 
 /**
- * The client id or its document is not valid. The message tells the reason
- * without data of the response, thus the consent page can show the reason.
+ * The message has no data of the response, thus the consent page can show it
  */
 export class ClientMetadataError extends ValidationError {
   constructor(
@@ -41,11 +40,6 @@ export interface ClientMetadata {
   readonly redirectUris: readonly string[];
 }
 
-/**
- * Gives the metadata of an OAuth client from its Client ID Metadata
- * Document. The document stays in the database until the end of its cache
- * lifetime; after that, the next call fetches it again.
- */
 export const resolveClientMetadata = (
   context: ApplicationContext,
   { clientId }: z.infer<typeof resolveClientMetadataInputSchema>,

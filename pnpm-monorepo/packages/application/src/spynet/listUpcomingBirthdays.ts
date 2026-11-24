@@ -15,7 +15,7 @@ import type { PickableCitizen } from "./listAllCitizens.js";
 export const UPCOMING_BIRTHDAYS_HANDLE_QUERY_MAXIMUM_LENGTH = 100;
 
 export const listUpcomingBirthdaysInputSchema = z.object({
-  /** A part of the handle. Null or empty for all citizens. */
+  /** Null or empty for all citizens */
   handle_query: z
     .string()
     .max(UPCOMING_BIRTHDAYS_HANDLE_QUERY_MAXIMUM_LENGTH)
@@ -26,19 +26,13 @@ export type ListUpcomingBirthdaysInput = z.infer<
   typeof listUpcomingBirthdaysInputSchema
 >;
 
-/** Only the app uses it, thus the keys are camelCase */
 export interface UpcomingBirthday extends NextBirthday {
   readonly citizen: PickableCitizen;
 }
 
 /**
- * Each citizen who filled in the birthday (see
- * `LISTED_BIRTHDAY_CITIZEN_WHERE`), with the next time it is celebrated. A
- * citizen appears exactly once: only the next birthday is in the list, never
- * the one of the year after.
- *
- * The birthday needs no permission of its own beyond `citizen;read`, the
- * same rule the citizen popover follows.
+ * The birthday needs no permission of its own beyond `citizen;read`, the same
+ * rule the citizen popover follows
  */
 export const listUpcomingBirthdays = (
   context: ApplicationContext,

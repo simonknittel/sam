@@ -198,7 +198,6 @@ describe("resolve wiki page permissions", () => {
       viewer({ citizenId: "owner-b", roleIds: new Set(["role-b"]) }),
     );
 
-    // owner-b owns the child subtree, including inheriting descendants
     expect(asB.get("child")).toMatchObject({
       canRead: true,
       canEdit: true,
@@ -209,7 +208,6 @@ describe("resolve wiki page permissions", () => {
       canRead: true,
       effectiveOwnerId: "owner-b",
     });
-    // ...but only reads the root, they don't own it
     expect(asB.get("root")).toMatchObject({
       canRead: true,
       canAdmin: false,
@@ -263,10 +261,6 @@ describe("resolve wiki page permissions", () => {
   });
 
   test("creators have no implicit access without ownership", () => {
-    // The resolver deliberately doesn't know who created a page: ownership
-    // starts with the creator but is transferable, so a former owner (e.g.
-    // after leaving the org or switching departments) loses all implicit
-    // access once ownership is reassigned.
     const pages = [
       page({
         id: "1",
@@ -358,11 +352,9 @@ describe("resolve wiki page permissions", () => {
 
     expect(asStranger.get("public-child")).toMatchObject({ canRead: false });
     expect(withParentRole.get("public-child")).toMatchObject({ canRead: true });
-    // The child narrows the parent's audience down to role-b...
     expect(withParentRole.get("restricted-child")).toMatchObject({
       canRead: false,
     });
-    // ...but cannot hand access to a role the parent locks out
     expect(withChildRole.get("restricted-child")).toMatchObject({
       canRead: false,
     });
@@ -418,8 +410,6 @@ describe("resolve wiki page permissions", () => {
       });
     }
 
-    // ...while a manager role that cannot even read the root gets nothing,
-    // not even on the page listing it
     expect(asChildAdminRole.get("root")).toMatchObject({
       canRead: false,
       canAdmin: false,

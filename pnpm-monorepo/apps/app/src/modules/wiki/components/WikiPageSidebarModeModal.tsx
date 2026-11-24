@@ -24,10 +24,6 @@ export const WikiPageSidebarModeModal = ({
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedMode, setSelectedMode] = useState<string>(sidebarMode);
-  /**
-   * An error shows as a toast: when a different user deleted the page before,
-   * the refreshed page has no modal anymore
-   */
   const { formAction } = useAction(updateWikiPageSidebarMode, {
     onSuccess: () => setIsOpen(false),
   });

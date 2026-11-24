@@ -24,13 +24,6 @@ export type DeleteSilcTransactionInput = z.infer<
   typeof deleteSilcTransactionInputSchema
 >;
 
-/**
- * Soft-deletes a SILC transaction and changes the balance of its receiver.
- * Requires `silcTransactionOfOtherCitizen;delete` and a citizen, who is
- * recorded as the deleter.
- *
- * @throws NotFoundError when the transaction does not exist or is deleted
- */
 export const deleteSilcTransaction = (
   context: ApplicationContext,
   actor: Actor,

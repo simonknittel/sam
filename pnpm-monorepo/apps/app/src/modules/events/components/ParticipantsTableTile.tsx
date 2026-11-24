@@ -99,7 +99,6 @@ const compareParticipants = (
   }
 };
 
-/** Without a match for the filters, the event still can have participants */
 const getEmptyMessage = (isAppEvent: boolean, hasParticipants: boolean) => {
   if (hasParticipants) return "Keine Teilnehmer für diese Filter.";
 

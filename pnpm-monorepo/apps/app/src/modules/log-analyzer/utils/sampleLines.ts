@@ -1,9 +1,6 @@
 import { LogAnalyzerEntryType } from "@sam-monorepo/domain";
 
-/**
- * One real log line for each type the Log Analyzer recognizes, with the
- * handles, ids and addresses replaced. The tests use them.
- */
+/** Real log lines with the handles, ids and addresses replaced */
 export const SAMPLE_LINES: Record<LogAnalyzerEntryType, string> = {
   [LogAnalyzerEntryType.JoinPu]:
     "<2025-06-22T09:59:12.293Z> [Notice] <Join PU> address[35.187.166.216] port[64336] shard[pub_euw1b_9873572_100] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]",

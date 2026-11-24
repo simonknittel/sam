@@ -5,11 +5,7 @@ import { getEventWikiContext } from "../queries/getEventWikiContext";
 import { getWikiTagPages } from "../queries/getWikiTagPages";
 import { WikiTagPageContent } from "./WikiTagPageContent";
 
-/**
- * The name of the tag and its pages that the viewer can read, or null. The
- * wrapper of the tag pages applies the gate of the briefing (see
- * `findWikiTagPages()`).
- */
+/** Null for a hidden briefing, see `findWikiTagPages()` */
 const getBriefingTagPages = async (
   container: EventContainer,
   tagId: string,
@@ -40,10 +36,6 @@ interface Props {
   readonly tagId: string;
 }
 
-/**
- * The pages of one tag of a briefing: the counterpart of the tag page of
- * the global wiki, with only the tags of the briefing
- */
 export const BriefingTagPage = async ({ container, tagId }: Props) => {
   const tagPages = await getBriefingTagPages(container, tagId);
   if (!tagPages) notFound();

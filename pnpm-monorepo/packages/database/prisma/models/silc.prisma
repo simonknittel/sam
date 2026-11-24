@@ -14,10 +14,10 @@ model SilcTransaction {
   deletedById String?
   deletedBy   Citizen?  @relation("deletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
 
-  /// The source of an automatic booking. NULL for manual bookings and for
-  /// bookings created before these columns existed. The partial unique
-  /// indexes below make the automatic payouts idempotent: a job that runs a
-  /// second time cannot book the same salary or the same collection again.
+  /// The source of an automatic booking. NULL for manual bookings and when it
+  /// is unknown. The partial unique indexes below make the automatic payouts
+  /// idempotent: a job that runs a second time cannot book the same salary or
+  /// the same collection again.
   taskId                    String?
   task                      Task?                    @relation(fields: [taskId], references: [id], onDelete: SetNull)
   profitDistributionCycleId String?
@@ -41,6 +41,8 @@ model SilcTransaction {
 
 model SilcSetting {
   key         SilcSettingKey @id
+  /// The conversion rate is a positive whole number (CHECK
+  /// `SilcSetting_value_check`)
   value       String
   updatedAt   DateTime?      @updatedAt @db.Timestamptz(3)
   updatedBy   Citizen?       @relation("updatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
@@ -56,7 +58,8 @@ model SilcRoleSalary {
   roleId     String
   role       Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
   value      Int
-  /// 1 to 31. In a shorter month, a day after its end pays on its last day.
+  /// 1 to 31 (CHECK `SilcRoleSalary_dayOfMonth_check`). In a shorter month, a
+  /// day after its end pays on its last day.
   dayOfMonth Int
 
   @@unique([roleId, dayOfMonth])

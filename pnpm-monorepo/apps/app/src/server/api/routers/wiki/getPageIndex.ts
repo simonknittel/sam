@@ -16,11 +16,9 @@ import * as z from "zod";
 import { protectedProcedure, toTrpcError } from "../../trpc";
 
 /**
- * The pages of the config of a page-index node, for the node view of the
- * editor. The static render resolves the same config on the server without
- * this request. The attributes of a node are content of the document that a
- * user controls, thus the check of the ids is loose: an unknown id gives no
- * pages.
+ * For the node view of the editor; the static render needs no request. The
+ * attributes of a node are content that a user controls, thus the check of the
+ * ids is loose: an unknown id gives no pages.
  */
 export const getPageIndex = protectedProcedure
   .input(

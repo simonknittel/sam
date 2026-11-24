@@ -1,6 +1,3 @@
-/**
- * Sorts strings, numbers and dates ascending and puts null values last.
- */
 export function sortAscWithAndNullLast(
   a?: string | number | Date | null,
   b?: string | number | Date | null,
@@ -25,9 +22,8 @@ export function sortAscWithAndNullLast(
 }
 
 /**
- * Sorts strings, numbers and dates descending and puts null values last.
- * The null handling runs before the arguments are swapped so nulls stay
- * last in both directions.
+ * The null handling runs before the arguments are swapped so nulls stay last in
+ * both directions.
  */
 export function sortDescAndNullLast(
   a?: string | number | Date | null,

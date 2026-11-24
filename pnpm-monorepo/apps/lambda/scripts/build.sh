@@ -1,12 +1,9 @@
 #!/bin/sh
 
-# Exit if any command fails without the need of using `&&` everywhere
 set -e
 
-# Global variables
 OUTPUT_DIRECTORY="build"
 
-# Check if required Node.js version is installed
 REQUIRED_NODE_VERSION=$(cat ../../.nvmrc)
 INSTALLED_NODE_VERSION=$(node -v | sed 's/v//')
 if [ "$INSTALLED_NODE_VERSION" != "$REQUIRED_NODE_VERSION" ]; then
@@ -14,12 +11,9 @@ if [ "$INSTALLED_NODE_VERSION" != "$REQUIRED_NODE_VERSION" ]; then
 	exit 1
 fi
 
-# Clean up old build
 echo "Cleaning up old build..."
 rm -rf "$OUTPUT_DIRECTORY"
 
-# Create one bundle for each function
-#
 # - Each file in `src` is the entry point of one function. The output of `src/<function>.ts` is `build/<function>/index.mjs`.
 # - Without `--splitting`, each bundle contains all of its code, as with one call for each function.
 # - The meta file contains all bundles and can be analyzed using: https://esbuild.github.io/analyze/
@@ -45,7 +39,6 @@ esbuild src/*.ts \
 for file in src/*.ts; do
 	FUNCTION_NAME=$(basename "$file" .ts)
 
-	# Create ZIP file for upload to AWS Lambda
 	echo "Creating ZIP file for $FUNCTION_NAME..."
 	(cd $OUTPUT_DIRECTORY/$FUNCTION_NAME/ && zip --recurse-paths ../$FUNCTION_NAME.zip .)
 done

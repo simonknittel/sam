@@ -37,7 +37,6 @@ const imagePath = path.join(
 /** Deleting the object in the bucket happens after the action responded. */
 const BUCKET_TIMEOUT = 15_000;
 
-/** While the page streams, a hidden copy of the text can also exist */
 const mainContentText = (page: Page, text: string) =>
   page.locator("#main-content").getByText(text);
 
@@ -46,11 +45,6 @@ const objectUrl = (uploadId: string) => {
   return `http://localhost:${s3Port}/${s3BucketName}/${uploadId}`;
 };
 
-/**
- * A role icon without the S3 round trip. The bucket only matters where the
- * object itself is under test (see the delete test below); everything else
- * cares about the row and the usage it renders.
- */
 const seedRoleIcon = async (
   prisma: Parameters<typeof createUpload>[0],
   author: Parameters<typeof createUpload>[1],
@@ -86,28 +80,20 @@ test("a user's own uploads are listed with the place they are used", async ({
   await expect(row).toBeVisible();
   await expect(row.getByText("Rollen-Icon")).toBeVisible();
 
-  // The file name opens the object in the bucket
   await expect(row.getByRole("link", { name: "upload.png" })).toHaveAttribute(
     "href",
     objectUrl(upload.id),
   );
 
-  // The location links to the role the icon sits on
   const roleLink = row.getByRole("link", { name: "Bildrolle" });
   await expect(roleLink).toHaveAttribute("href", `/app/roles/${role.id}`);
 
-  // Without upload;manage there is neither an author nor anything to act on
   await expect(
     page.getByRole("columnheader", { name: "Hochgeladen von" }),
   ).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Löschen" })).toHaveCount(0);
 });
 
-/**
- * Event covers were the relation the nightly cleanup forgot, which deleted
- * them a day after upload — so the manager listing them is worth pinning
- * down explicitly.
- */
 test("an event cover shows up as a usage of its upload", async ({
   page,
   prisma,
@@ -197,7 +183,6 @@ test("a manager sees every upload with its author and can filter them", async ({
   await signIn(manager.user);
   await page.goto("/app/uploads");
 
-  // Both foreign uploads show up, attributed to their author
   const usedRow = page
     .getByRole("row")
     .filter({ hasText: "Fremdes Dokument.pdf" });
@@ -212,7 +197,6 @@ test("a manager sees every upload with its author and can filter them", async ({
     .filter({ hasText: "Verwaiste Notiz.txt" });
   await expect(unusedRow.getByText("Unbenutzt", { exact: true })).toBeVisible();
 
-  // The usage filter keeps only the upload nothing references
   await page.goto("/app/uploads?usage=unused");
   await expect(
     page.getByRole("row").filter({ hasText: "Verwaiste Notiz.txt" }),
@@ -221,7 +205,6 @@ test("a manager sees every upload with its author and can filter them", async ({
     page.getByRole("row").filter({ hasText: "Fremdes Dokument.pdf" }),
   ).toHaveCount(0);
 
-  // The file name search matches the URI-encoded name transparently
   await page.goto("/app/uploads?q=Fremdes+Dokument");
   await expect(
     page.getByRole("row").filter({ hasText: "Fremdes Dokument.pdf" }),
@@ -230,7 +213,6 @@ test("a manager sees every upload with its author and can filter them", async ({
     page.getByRole("row").filter({ hasText: "Verwaiste Notiz.txt" }),
   ).toHaveCount(0);
 
-  // The author filter keeps only that author's uploads
   await page.goto(`/app/uploads?createdById=${manager.entity.id}`);
   await expect(
     mainContentText(page, "Keine Uploads für diese Filter."),
@@ -278,7 +260,6 @@ test("an image removed from a page stays in use through the snapshot of the old 
   await enterEditMode(page);
   await focusEditor(page);
 
-  // A store that keeps the image keeps its link
   await page.keyboard.press("End");
   await page.keyboard.type(" Neu.");
   await expectPersisted(prisma, wikiPage.id, "searchText").toContain(
@@ -297,7 +278,6 @@ test("an image removed from a page stays in use through the snapshot of the old 
   await expectPersisted(prisma, wikiPage.id, "content").not.toContain(image.id);
   expect(await getPageLinks()).toEqual([]);
 
-  // The automatic snapshot of the content before the first edit has the image
   expect(
     await prisma.wikiPageSnapshotUpload.count({
       where: { uploadId: image.id, snapshot: { pageId: wikiPage.id } },
@@ -360,7 +340,6 @@ test("a manager deletes an upload from the database and the bucket", async ({
     page.getByRole("alertdialog"),
   );
 
-  // The dialog names the place the upload is still embedded in
   const dialog = page.getByRole("alertdialog");
   await expect(dialog.getByText("Rollen-Icon:")).toBeVisible();
   await expect(dialog.getByText("Bildrolle")).toBeVisible();
@@ -373,13 +352,11 @@ test("a manager deletes an upload from the database and the bucket", async ({
     .poll(() => prisma.upload.count({ where: { id: upload.id } }))
     .toBe(0);
 
-  // The role keeps existing, only its icon reference is nulled
   const storedRole = await prisma.role.findUniqueOrThrow({
     where: { id: role.id },
   });
   expect(storedRole.iconId).toBeNull();
 
-  // The object is gone from the bucket too
   await expect
     .poll(
       async () =>
@@ -419,7 +396,6 @@ test("deleting is forbidden without the permission", async ({
     page.getByRole("row").filter({ hasText: "upload.png" }),
   ).toBeVisible();
 
-  // No actions column is rendered at all — the row survives regardless
   await expect(page.getByRole("button", { name: "Löschen" })).toHaveCount(0);
   expect(await prisma.upload.count({ where: { id: upload.id } })).toBe(1);
 });

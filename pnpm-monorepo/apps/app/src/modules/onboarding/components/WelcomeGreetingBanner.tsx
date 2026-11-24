@@ -14,10 +14,6 @@ interface Props {
   readonly context: ViewerWordingContext;
 }
 
-/**
- * The welcome of a new member on their first day, with a way into the
- * onboarding tasks. `DashboardGreetingBanner` decides when it shows.
- */
 export const WelcomeGreetingBanner = ({ context }: Props) => {
   const wording = pickRandomWording(WELCOME_WORDINGS, context);
   if (!wording) return null;

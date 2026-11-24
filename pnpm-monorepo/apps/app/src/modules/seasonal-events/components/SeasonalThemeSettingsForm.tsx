@@ -9,19 +9,13 @@ import { debounce } from "lodash";
 import { startTransition, useEffect, useId, type FormEvent } from "react";
 import { updateMySeasonalThemeSettings } from "../actions/updateMySeasonalThemeSettings";
 
-/**
- * Milliseconds the form waits for further switches before it saves, thus a
- * citizen who switches several events keeps one request. Same duration as
- * the notification settings.
- */
+/** Milliseconds. The same duration as in the notification settings. */
 const SAVE_DEBOUNCE_DURATION = 1000;
 
-/** One seasonal event, as the account page offers it to the citizen */
 export interface SeasonalThemeSettingRow {
   readonly eventKey: SeasonalEventKey;
   readonly title: string;
   readonly dateRangeLabel: string;
-  /** Whether the citizen sees the theme of the event */
   readonly enabled: boolean;
 }
 
@@ -86,8 +80,8 @@ const SeasonalThemeSettingField = ({ row }: SeasonalThemeSettingFieldProps) => {
       <YesNoCheckbox
         /**
          * The key carries the stored state: a render with new data from the
-         * server mounts the switch again, thus the stored state wins over
-         * the state the browser holds for the element.
+         * server mounts the switch again, thus the stored state wins over the
+         * state the browser holds for the element.
          */
         key={`${row.eventKey}:${String(row.enabled)}`}
         id={inputId}

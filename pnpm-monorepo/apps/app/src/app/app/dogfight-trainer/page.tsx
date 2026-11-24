@@ -4,5 +4,5 @@ import { IframeLayout } from "@/modules/common/components/layouts/IframeLayout";
 export default async function Page() {
   await requireAuthenticationPage("/app/dogfight-trainer");
 
-  return <IframeLayout src="/dogfight-trainer" />;
+  return <IframeLayout src="/dogfight-trainer" title="Dogfight Trainer" />;
 }

@@ -6,9 +6,9 @@ injectWorkspacePackages: true
 
 linkWorkspacePackages: true
 
-# Refresh injected workspace copies after these scripts run (belt-and-braces;
-# in practice the packages resolve as symlinks and dist freshness comes from
-# packages/database's postinstall/build running tsc).
+# Refresh injected workspace copies after these scripts run. The importers with
+# a `file:` entry in pnpm-lock.yaml (apps/app) have such copies, the other
+# importers have symlinks.
 syncInjectedDepsAfterScripts:
   - build
   - postinstall
@@ -18,7 +18,6 @@ overrides:
   bn.js@<4.12.3: ">=4.12.3"
   fast-xml-parser@>=5.0.0 <5.3.8: ">=5.12.0"
   jws@=4.0.0: ">=4.0.1"
-  # Migrated from apps/app's former npm `overrides`.
   "@auth/core": 0.41.3
   "@types/react": 19.3.0
   "@types/react-dom": 19.3.0
@@ -34,16 +33,15 @@ overrides:
 
 preferFrozenLockfile: true
 saveExact: true
-# Equivalent of the former `min-release-age=7` (days) in apps/app's .npmrc;
-# pnpm measures in minutes. Renovate mirrors this with `minimumReleaseAge`.
+# 7 days, in minutes. Renovate mirrors this with `minimumReleaseAge`.
 # Non-strict: like npm, existing lockfile entries install fine; immature
 # versions are auto-collected into minimumReleaseAgeExclude and show up in
 # diffs instead of hard-failing CI.
 minimumReleaseAge: 10080
 minimumReleaseAgeStrict: false
 allowBuilds:
-  # Since Prisma 7 the client no longer has a postinstall script (generation
-  # happens explicitly via `prisma generate` in packages/database).
+  # The client has no postinstall script (`prisma generate` in
+  # packages/database generates it).
   "@prisma/client": false
   "@prisma/engines": true
   "@parcel/watcher": true
@@ -53,7 +51,7 @@ allowBuilds:
   protobufjs: true
   sharp: true
   unrs-resolver: true
-  # The database package's postinstall (generate + patch + tsc) already runs as
+  # The database package's postinstall (generate + tsc) already runs as
   # a workspace project lifecycle; no need to run it again as a dependency
   # build of apps/app.
   "@sam-monorepo/database@file:packages/database": false

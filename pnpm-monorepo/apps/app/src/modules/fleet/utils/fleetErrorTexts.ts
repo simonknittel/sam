@@ -1,10 +1,6 @@
 import type { ApplicationErrorTexts } from "@/modules/application";
 import { FleetCatalogErrorMessage } from "@sam-monorepo/application";
 
-/**
- * The texts of the create and the update actions of the catalog for the
- * names that exist already, and for the links and the wiki page of a variant
- */
 export const FLEET_ERROR_TEXTS = {
   [FleetCatalogErrorMessage.ManufacturerNameTaken]:
     "Ein Hersteller mit diesem Namen existiert bereits.",
@@ -20,10 +16,7 @@ export const FLEET_ERROR_TEXTS = {
     "Die Variante hat bereits eine Wiki-Seite. Die Seite ist jetzt aktuell.",
 } satisfies ApplicationErrorTexts;
 
-/**
- * The texts of the delete actions of the catalog when a different user
- * deleted the item first
- */
+/** When a different user deleted the item first */
 export const FLEET_DELETE_ERROR_TEXTS = {
   [FleetCatalogErrorMessage.ManufacturerNotFound]:
     "Der Hersteller ist bereits gelöscht.",

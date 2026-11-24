@@ -55,7 +55,6 @@ export interface UpdateCycleParticipantsOutput {
   readonly changes: CycleParticipantChange[];
 }
 
-/** The attributes that a manager can change in the phase */
 const getChangeableAttributes = (phase: CyclePhase) => {
   switch (phase) {
     case CyclePhase.Collection:
@@ -74,16 +73,10 @@ const getChangeableAttributes = (phase: CyclePhase) => {
 };
 
 /**
- * Sets the states of the participants of a cycle that a manager can change
- * in the current phase: ceded in the collection and payout preparation
- * phases, accepted and disbursed in the payout phase. Only the existing
- * participant rows change. Requires a citizen and
- * `profitDistributionCycle;update`.
+ * Only the existing participant rows change.
  *
  * It always sends the notification about the disbursements, also without
  * changes: the notification router filters them.
- *
- * @throws NotFoundError when the cycle does not exist
  */
 export const updateCycleParticipants = (
   context: ApplicationContext,

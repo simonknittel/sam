@@ -32,8 +32,8 @@ export const Suggestions = ({ className, onClick }: Props) => {
               contentClassName="max-w-160"
             >
               <p>
-                Diese Vorschläge wurden mit Hilfe von GPT-4 basierend auf
-                folgenden Prompts generiert:
+                Diese Vorschläge wurden mit Hilfe von KI basierend auf folgenden
+                Prompts generiert:
               </p>
 
               <p className="mt-2">

@@ -4,12 +4,9 @@ import * as z from "zod";
 import { idSchema } from "../pagination.js";
 import { UPLOAD_IMAGE_SELECT } from "./catalogRows.js";
 
-/** The filter of the fleet lists by the status of the variant */
 export enum FlightReadyFilter {
   All = "all",
-  /** Only the variants that are flight ready */
   Yes = "yes",
-  /** Only the variants that are marked as not flight ready */
   No = "no",
 }
 
@@ -21,14 +18,12 @@ const MAXIMUM_QUERY_LENGTH = 100;
 
 const filterIdsSchema = z.array(idSchema).max(MAXIMUM_FILTER_IDS);
 
-/** A part of a name, without regard to the case */
 export const nameQuerySchema = z
   .string()
   .trim()
   .min(1)
   .max(MAXIMUM_QUERY_LENGTH);
 
-/** The variant filter fields of the input schema of a fleet list */
 export const variantFilterInputShape = {
   flight_ready: z
     .enum(FlightReadyFilter)
@@ -51,7 +46,6 @@ interface VariantFilter {
   readonly flightReady: FlightReadyFilter;
   readonly variantTagIds?: string[];
   readonly manufacturerIds?: string[];
-  /** A part of the variant name, without regard to the case */
   readonly query?: string | null;
 }
 
@@ -75,7 +69,6 @@ const toStatusWhere = (
   }
 };
 
-/** The variant filter of the fleet lists and of the fleet filters of the app */
 export const buildVariantFilterWhere = ({
   flightReady,
   variantTagIds = [],
@@ -95,23 +88,20 @@ export const buildVariantFilterWhere = ({
   return where;
 };
 
-/** A variant tag as the badges and the fleet filters show it */
 export const VARIANT_TAG_SELECT = {
   id: true,
   key: true,
   value: true,
 } as const satisfies Prisma.VariantTagSelect;
 
-/** The order of the tags in the badges and in the fleet filters */
 export const VARIANT_TAG_ORDER = [
   { key: "asc" },
   { value: "asc" },
 ] satisfies Prisma.VariantTagOrderByWithRelationInput[];
 
 /**
- * A variant as the fleet lists show it. The fleet lists read every ship or
- * variant and paginate in memory, thus each column here is multiplied by the
- * whole table.
+ * The fleet lists read every ship or variant and paginate in memory, thus each
+ * column here is multiplied by the whole table
  */
 export const SHIP_VARIANT_SELECT = {
   id: true,
@@ -139,7 +129,6 @@ type ShipVariantRow = Prisma.VariantGetPayload<{
   select: typeof SHIP_VARIANT_SELECT;
 }>;
 
-/** The status of a variant in the catalog */
 export enum ShipVariantStatus {
   FlightReady = "flight_ready",
   NotFlightReady = "not_flight_ready",
@@ -158,7 +147,6 @@ const toShipVariantStatus = (status: VariantStatus): ShipVariantStatus => {
   }
 };
 
-/** The status of the database for a status of the catalog */
 export const toVariantStatus = (status: ShipVariantStatus): VariantStatus => {
   switch (status) {
     case ShipVariantStatus.FlightReady:
@@ -172,7 +160,6 @@ export const toVariantStatus = (status: ShipVariantStatus): VariantStatus => {
   }
 };
 
-/** The uploaded logo of a manufacturer */
 export interface ManufacturerLogoOutput {
   readonly upload_id: string;
   readonly mime_type: string;
@@ -197,12 +184,8 @@ export interface ShipVariantOutput {
   readonly name: string;
   /** Null when nobody set the status of the variant */
   readonly status: ShipVariantStatus | null;
-  /**
-   * The current price of the variant in the Star Citizen store, in USD cents.
-   * Null when nobody entered a price.
-   */
+  /** Null when nobody entered a price */
   readonly store_price_usd_cents: number | null;
-  /** The current price of the variant in the game, in aUEC */
   readonly in_game_price_auec: number | null;
   readonly series: {
     readonly id: string;

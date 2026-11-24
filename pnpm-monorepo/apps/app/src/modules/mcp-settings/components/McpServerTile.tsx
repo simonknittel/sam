@@ -4,7 +4,6 @@ import { CopyableCode } from "./CopyableCode";
 
 interface Props {
   readonly className?: string;
-  /** The canonical URL of the MCP endpoint */
   readonly mcpUrl: string;
 }
 

@@ -8,10 +8,7 @@ import {
 } from "@sam-monorepo/application";
 import { NextResponse } from "next/server";
 
-/**
- * The raw Tiptap JSON of a page as a download: the counterpart of the JSON
- * import. A missing permission gives a 404, like an unknown page.
- */
+/** A missing permission gives a 404, like an unknown page */
 export async function GET(
   _request: Request,
   context: RouteContext<"/api/wiki/[pageId]/export">,

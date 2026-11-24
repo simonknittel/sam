@@ -11,9 +11,8 @@ const WEB_PUSH_SERVICES = [
 ] as const;
 
 /**
- * The name of the push service of a web push endpoint, or its host name for
- * a different push service. The push service is a hint at the browser for a
- * subscription without a user agent.
+ * The push service is a hint at the browser for a subscription without a user
+ * agent.
  */
 export const formatWebPushService = (endpoint: string) => {
   let hostname;

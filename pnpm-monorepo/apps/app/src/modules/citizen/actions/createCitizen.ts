@@ -8,14 +8,13 @@ import {
 import { CITIZEN_ERROR_TEXTS } from "../utils/citizenErrorTexts";
 
 /**
- * Creates a citizen and opens its page. A known Spectrum ID opens its
- * citizen and creates no duplicate.
+ * A known Spectrum ID opens its citizen and creates no duplicate.
  *
- * In the browser, each redirect rejects the action with a redirect error
- * that Next.js handled already: the router opens the page, and the nearest
+ * In the browser, each redirect rejects the action with a redirect error that
+ * Next.js handled already: the router opens the page, and the nearest
  * `RedirectBoundary` mounts its subtree again. This closes the create modal,
- * because its state is in that subtree. The success hook of the form does
- * not run.
+ * because its state is in that subtree. The success hook of the form does not
+ * run.
  */
 export const createCitizen = createUseCaseAction({
   name: "createCitizen",

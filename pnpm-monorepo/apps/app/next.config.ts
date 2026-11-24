@@ -3,11 +3,10 @@ import createNextIntlPlugin from "next-intl/plugin";
 import { env } from "./src/env";
 
 /**
- * S3_PUBLIC_URL is either a bare host (https implied) or a full base URL
- * incl. scheme, port and bucket path — see its doc comment in src/env.ts.
- * The variable can be undefined despite its type when the env validation is
- * skipped (SKIP_VALIDATION=1, e.g. `next typegen` in CI) — the placeholder
- * keeps the config loadable.
+ * See the doc comment in src/env.ts for the two forms. The variable can be
+ * undefined despite its type when the env validation is skipped
+ * (SKIP_VALIDATION=1, e.g. `next typegen` in CI): the placeholder keeps the
+ * config loadable.
  */
 const s3PublicUrlRaw =
   (env.S3_PUBLIC_URL as string | undefined) || "uploads.invalid";
@@ -37,9 +36,8 @@ const nextConfig: NextConfig = {
       },
     ],
     /**
-     * The optimizer refuses loopback IPs by default (SSRF protection).
-     * Only enabled when the uploads bucket itself is local (dev stack,
-     * Playwright) — never the case in deployments.
+     * Only when the uploads bucket itself is local (dev stack, Playwright) —
+     * never the case in deployments.
      */
     dangerouslyAllowLocalIP: ["localhost", "127.0.0.1", "[::1]"].includes(
       s3PublicUrl.hostname,

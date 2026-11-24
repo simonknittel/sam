@@ -28,7 +28,6 @@ const State = ({ title, description, tone }: StateProps) => {
   );
 };
 
-/** The states of a task: an open task ends in one of three end states */
 export const TasksGuideStateFlow = () => {
   return (
     <div className="grid items-center gap-4 md:grid-cols-[1fr_auto_2fr]">

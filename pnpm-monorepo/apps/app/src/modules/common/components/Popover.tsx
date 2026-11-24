@@ -113,12 +113,7 @@ export const Popover = ({
   );
 };
 
-/**
- * Check for undefined since the defaultValue of the context is undefined. If
- * it's still undefined, the provider component is missing.
- *
- * @deprecated Use `usePopoverBaseUI` (with `PopoverBaseUI`) instead.
- */
+/** @deprecated Use `usePopoverBaseUI` (with `PopoverBaseUI`) instead. */
 export function usePopover() {
   const context = useContext(PopoverContext);
   if (!context) throw new Error("[PopoverContext] Provider is missing!");

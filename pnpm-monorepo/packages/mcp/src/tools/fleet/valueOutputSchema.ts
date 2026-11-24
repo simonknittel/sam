@@ -8,7 +8,6 @@ const valuesBySourceSchema = z.strictObject({
   unknown: amountSchema.describe("The ships without an acquisition source."),
 });
 
-/** The value of the ships of a fleet list for each acquisition source */
 export const valueOutputSchema = z
   .strictObject({
     usd_cents: valuesBySourceSchema.describe(

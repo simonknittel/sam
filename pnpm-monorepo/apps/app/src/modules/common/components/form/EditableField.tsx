@@ -37,7 +37,6 @@ interface Props<Value> {
       }
     | { error: string }
   >;
-  /** Derives the new display value from the submitted form value */
   readonly parseSubmittedValue: (
     submittedValue: FormDataEntryValue | null,
   ) => Value;
@@ -45,11 +44,6 @@ interface Props<Value> {
   readonly renderDisplay: (value: Value) => ReactNode;
 }
 
-/**
- * The shell shared by the Editable* inline-edit fields: a display button
- * that flips into a small form on click, saving through the given action
- * and closing on outside click.
- */
 export const EditableField = <Value,>({
   className,
   displayButtonClassName,
@@ -73,8 +67,6 @@ export const EditableField = <Value,>({
     setIsEditing(false);
   });
 
-  /** Only ever passed as the input element's `ref`, so the write happens
-   * during commit, not during render. */
   const setInputElement = useCallback((element: HTMLElement | null) => {
     inputElementRef.current = element;
   }, []);

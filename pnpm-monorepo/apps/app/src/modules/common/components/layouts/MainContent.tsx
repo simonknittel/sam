@@ -9,12 +9,11 @@ interface Props {
 }
 
 /**
- * The page's main landmark and the target of the skip link. Since it carries a
- * fixed id, a page must never render more than one of these.
+ * A page must never render more than one of these, because of the fixed id.
  *
- * `tabIndex` turns it into a valid focus target so that following the skip link
- * moves focus here instead of only scrolling. The focus outline is suppressed
- * because the element is only ever reached that way, never by tabbing.
+ * With `tabIndex`, following the skip link moves the focus here instead of only
+ * scrolling. The focus outline is suppressed because the element is only ever
+ * reached that way, never by tabbing.
  */
 export const MainContent = ({ className, children }: Props) => {
   return (

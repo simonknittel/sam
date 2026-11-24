@@ -8,11 +8,11 @@ import { toastWarning } from "./toastWarning";
 export const useAction = (
   action: (formData: FormData) => Promise<ActionResponse>,
   options?: {
-    /** Receives the submitted FormData, e.g. to branch on the clicked submit button */
     onSuccess?: (formData: FormData) => void;
     /**
-     * Disable the error toast where the form renders the error inline
-     * (see ActionErrorNote) — errors should surface once, not twice.
+     * False for a form that renders the error inline (see `ActionErrorNote`).
+     * Keep the toast when the refresh after a conflict, for example a target
+     * that a different user deleted, can remove the form.
      */
     errorToast?: boolean;
   },
@@ -41,7 +41,6 @@ export const useAction = (
         return response;
       } catch (error) {
         unstable_rethrow(error);
-        // A toast and the state are plain text: the support link becomes text
         const message = t.markup("Common.internalServerError", {
           link: (chunks) => chunks,
         });
@@ -56,16 +55,6 @@ export const useAction = (
     null,
   );
 
-  /**
-   * Since Next.js resets a form after submission, we include the original
-   * request payload in the response for the respective client component
-   * being able to repopulate the form with the previous values. See
-   * `createAuthenticatedAction()` for more details.
-   *
-   * This helper function simplifies retrieving the previous value for a
-   * given form field, falling back to a specified default value if the
-   * form field is not present in the payload or if there is no payload.
-   */
   const getDefaultValueWithFallback = (
     formFieldName: string,
     fallback: string | number | readonly string[] | undefined,
@@ -82,11 +71,10 @@ export const useAction = (
 
   /**
    * The `onSubmit` handler for a form that must keep its values after the
-   * action. React resets a `<form action>` form after each action, also
-   * after an error, and a select then falls back to its first option. The
-   * clicked submit button goes into the FormData, as with a native submit.
-   * `useFormStatus` (for example in `SubmitButton`) sees no submit of such a
-   * form: show the pending state with `isPending`.
+   * action. React resets a `<form action>` form after each action, also after
+   * an error, and a select then falls back to its first option. `useFormStatus`
+   * (for example in `SubmitButton`) sees no submit of such a form: show the
+   * pending state with `isPending`.
    */
   const submitWithoutReset: FormEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();

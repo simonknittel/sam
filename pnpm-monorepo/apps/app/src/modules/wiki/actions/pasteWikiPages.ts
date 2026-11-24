@@ -28,15 +28,10 @@ import {
   getWikiPageRouteHref,
 } from "../utils/wikiPageHref";
 
-/**
- * The use case takes the paste. The variant is only for the redirect into
- * the embed of the variant.
- */
 const schema = pasteWikiPagesInputSchema.extend({
   variant_id: idSchema.optional(),
 });
 
-/** The page that the paste created or replaced */
 const getPastedPageHref = (
   result: PasteWikiPagesOutput,
   variantId: string | undefined,
@@ -63,10 +58,6 @@ const getPastedPageHref = (
   });
 };
 
-/**
- * Inserts the copied page of the clipboard: the second half of copy and
- * paste (see the use case)
- */
 export const pasteWikiPages = createAuthenticatedAction(
   "pasteWikiPages",
   schema,

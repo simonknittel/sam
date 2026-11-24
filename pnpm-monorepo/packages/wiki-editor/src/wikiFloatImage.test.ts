@@ -69,11 +69,6 @@ describe("the floated image", () => {
     expect(html).not.toMatch(/<a [^>]*style="[^"]*margin/);
   });
 
-  /**
-   * The link mark claims every `a[href]`; without a higher priority its
-   * rule would win and the float side and width stored on the anchor would
-   * be lost when the markup is pasted back.
-   */
   test("is parsed before the link mark when the markup is pasted back", () => {
     const { rules } = DOMParser.fromSchema(schema);
     const floatImageRule = rules.findIndex(
@@ -86,10 +81,6 @@ describe("the floated image", () => {
     expect(floatImageRule).toBeLessThan(linkRule);
   });
 
-  /**
-   * Foreign img markup and the block image's own anchor markup must keep
-   * parsing as block images — only the float node's marker may float.
-   */
   test("claims no markup beyond its own marker", () => {
     const floatImageRules = schema.nodes.wikiFloatImage?.spec.parseDOM ?? [];
 

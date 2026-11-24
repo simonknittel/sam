@@ -12,16 +12,6 @@ export const setOwnGrantAdminModeInputSchema = z.object({
   enabled: z.boolean(),
 });
 
-/**
- * Enables or disables admin mode for a connected client of the actor. Admin
- * mode gives the requests of the client all permissions, like admin mode in
- * the app. It applies only while the user is an admin.
- *
- * @throws ForbiddenError when the actor is not an admin or cannot use the
- * MCP server
- * @throws NotFoundError when the grant does not belong to the actor or is
- * revoked
- */
 export const setOwnGrantAdminMode = (
   context: ApplicationContext,
   actor: Actor,

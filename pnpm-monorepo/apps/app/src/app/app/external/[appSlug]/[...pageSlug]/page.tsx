@@ -60,6 +60,7 @@ export default async function Page({
 
   return (
     <IframeLayout
+      title={`${page.title} - ${app.name}`}
       src={await resolveEmbedUrl(
         page.iframeUrl,
         session,

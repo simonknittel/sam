@@ -39,8 +39,7 @@ const auditEventOutputSchema = z.strictObject({
     .describe(
       "True when the user did the action through the MCP server. False for all other events, for example the actions in the web app, the OAuth endpoints and the automation runs.",
     ),
-  // `z.json()` would need a cast: the use case gives the JSON column as
-  // `unknown`. The column holds only JSON, thus `z.unknown()` is sufficient.
+  // See `payload` of `list_my_notifications`
   data: z
     .unknown()
     .describe(

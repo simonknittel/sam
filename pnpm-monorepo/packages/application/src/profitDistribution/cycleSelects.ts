@@ -1,7 +1,6 @@
 import type { Prisma } from "@sam-monorepo/database/client";
 import { CITIZEN_REFERENCE_SELECT } from "../citizenReference.js";
 
-/** The columns of a cycle that `getCurrentPhase()` reads */
 export const CYCLE_PHASE_SELECT = {
   collectionEndedAt: true,
   payoutStartedAt: true,
@@ -9,8 +8,8 @@ export const CYCLE_PHASE_SELECT = {
 } as const satisfies Prisma.ProfitDistributionCycleSelect;
 
 /**
- * The columns of a cycle that the pages show. `auecProfit` stays a BigInt:
- * the page calls `toLocaleString()` on it, and React serializes a BigInt.
+ * `auecProfit` stays a BigInt: the page calls `toLocaleString()` on it, and
+ * React serializes a BigInt
  */
 const CYCLE_COLUMNS_SELECT = {
   ...CYCLE_PHASE_SELECT,
@@ -29,7 +28,6 @@ const PARTICIPANT_STATE_SELECT = {
   disbursedAt: true,
 } as const satisfies Prisma.ProfitDistributionCycleParticipantSelect;
 
-/** A cycle in the list of the cycles */
 export const CYCLE_EXCERPT_SELECT = {
   ...CYCLE_COLUMNS_SELECT,
   participants: { select: PARTICIPANT_STATE_SELECT },
@@ -39,7 +37,6 @@ export type CycleExcerptRow = Prisma.ProfitDistributionCycleGetPayload<{
   select: typeof CYCLE_EXCERPT_SELECT;
 }>;
 
-/** A cycle on its page and on its management page */
 export const CYCLE_DETAILS_SELECT = {
   ...CYCLE_COLUMNS_SELECT,
   participants: {

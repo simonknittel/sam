@@ -54,14 +54,7 @@ interface Options {
   readonly onOpenChange: (isOpen: boolean) => void;
 }
 
-/**
- * Opens and closes a drawer on the left edge with swipes: a swipe to the
- * right from the left edge pulls the closed drawer in, a swipe to the left
- * pushes the open drawer out. During the swipe, the panel follows the finger.
- * On release, the distance and the speed of the flick decide.
- *
- * Returns the live position while a swipe moves the panel, else null.
- */
+/** Returns the live position while a swipe moves the panel, else null. */
 export const useDrawerSwipe = ({
   panelRef,
   backdropRef,
@@ -133,7 +126,6 @@ export const useDrawerSwipe = ({
         gesture.isLocked = true;
       }
 
-      /** The swipe moves the panel, not the page */
       event.preventDefault();
 
       if (event.timeStamp > gesture.lastTimeStamp)

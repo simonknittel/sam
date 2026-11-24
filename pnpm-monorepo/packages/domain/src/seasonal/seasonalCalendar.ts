@@ -48,19 +48,13 @@ const OCTOBER = 10;
 const DECEMBER = 12;
 
 /**
- * The definitions of the seasonal events. All ranges include both ends:
- *
- * - Halloween: theme October 1 to 31, greeting on October 31.
- * - Christmas: theme December 1 to 26, greeting December 24 to 26.
- * - New Year: theme December 27 to January 1, greeting on January 1.
- *
- * New Year starts on December 27, because it follows Christmas without a
- * gap: Christmas ends with the last holiday, and from the next day on the
- * app looks ahead to the turn of the year.
+ * New Year starts on December 27, because it follows Christmas without a gap:
+ * Christmas ends with the last holiday, and from the next day on the app looks
+ * ahead to the turn of the year.
  *
  * The greeting range of an event is inside its theme range, and two theme
- * ranges never overlap. Unit tests assert both, so the app never has to
- * rank two active events.
+ * ranges never overlap. Unit tests assert both, so the app never has to rank
+ * two active events.
  */
 export const SEASONAL_EVENT_DEFINITIONS: Record<
   SeasonalEventKey,
@@ -121,7 +115,6 @@ const isInRange = (range: SeasonalDateRange, date: MonthDay) => {
   return value >= start && value <= end;
 };
 
-/** The event whose theme range holds the local date, or nothing */
 export const getActiveSeasonalEvent = (
   localDate: LocalDate,
 ): SeasonalEventKey | null => {
@@ -132,7 +125,6 @@ export const getActiveSeasonalEvent = (
   return activeDefinition?.key ?? null;
 };
 
-/** True while the local date is a day the event shows its greeting on */
 export const isSeasonalGreetingDay = (
   event: SeasonalEventKey,
   localDate: LocalDate,
@@ -152,14 +144,12 @@ const getNextOccurrence = (monthDay: MonthDay, from: LocalDate): LocalDate => ({
   day: monthDay.day,
 });
 
-/** The next first day of the theme range of the event, `from` included */
 export const getNextSeasonalThemeStart = (
   event: SeasonalEventKey,
   from: LocalDate,
 ): LocalDate =>
   getNextOccurrence(SEASONAL_EVENT_DEFINITIONS[event].themeRange.start, from);
 
-/** The next first day of the greeting range of the event, `from` included */
 export const getNextSeasonalGreetingStart = (
   event: SeasonalEventKey,
   from: LocalDate,
@@ -172,7 +162,6 @@ export const getNextSeasonalGreetingStart = (
 /** One year holds every month/day pair */
 const DAYS_TO_SEARCH = 366;
 
-/** The next day which no theme range holds, `from` included */
 export const getNextDayWithoutSeasonalEvent = (from: LocalDate): LocalDate => {
   for (let offset = 0; offset < DAYS_TO_SEARCH; offset += 1) {
     const date = addDaysToLocalDate(from, offset);
@@ -187,12 +176,10 @@ export interface SeasonalEventOverlap extends MonthDay {
   readonly events: readonly SeasonalEventKey[];
 }
 
-/** The number of days of each month in a leap year, January first */
 const DAYS_PER_MONTH_IN_LEAP_YEAR = [
   31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31,
 ];
 
-/** Every day a range can hold, February 29 included */
 const everyDayOfAYear = (): readonly MonthDay[] =>
   DAYS_PER_MONTH_IN_LEAP_YEAR.flatMap((dayCount, monthIndex) =>
     Array.from({ length: dayCount }, (unused, dayIndex) => ({

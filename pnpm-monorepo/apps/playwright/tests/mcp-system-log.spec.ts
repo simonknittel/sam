@@ -9,13 +9,11 @@ const minutesAgo = (minutes: number) =>
   new Date(Date.now() - minutes * ONE_MINUTE_MS);
 
 /**
- * Creates five events with distinct times, from the oldest to the newest:
- * a task by the viewer, a ship without a creator, a read by a colleague
- * through the MCP server, a task by the colleague (done through the MCP
- * server) and a high-volume wiki visit by the viewer.
- * The returned window contains only these events. The stack writes events of
- * its own at the current time (the login and the OAuth grant of the viewer),
- * and the window ends before them.
+ * From the oldest to the newest: a task by the viewer, a ship without a
+ * creator, a read by a colleague through the MCP server, a task by the
+ * colleague (done through the MCP server) and a high-volume wiki visit by the
+ * viewer. The window ends before the events that the stack writes at the
+ * current time (the login and the OAuth grant of the viewer).
  */
 const seedAuditEvents = async (
   prisma: PrismaClient,
@@ -85,7 +83,6 @@ const seedAuditEvents = async (
   };
 };
 
-/** Matches the events with these ids in this order, and no other event */
 const eventsWithIds = (...auditEvents: readonly AuditEvent[]) => ({
   events: auditEvents.map((auditEvent) => ({ id: auditEvent.id })),
 });
@@ -121,7 +118,6 @@ test.describe("the list_audit_events tool of the MCP server", () => {
 
     expect(await client.listToolNames()).toContain(TOOL_NAME);
 
-    // Without a filter for the types, the wiki visit and the read are hidden
     expect(await callForContent(client, TOOL_NAME, window)).toEqual({
       events: [
         {
@@ -186,8 +182,6 @@ test.describe("the list_audit_events tool of the MCP server", () => {
     ).toMatchObject(
       eventsWithIds(wikiVisit, taskOfColleague, ship, taskOfViewer),
     );
-    // A filter for the types shows the named types, also the high-volume ones
-    // and the reads
     expect(
       await callForContent(client, TOOL_NAME, {
         ...window,
@@ -201,7 +195,6 @@ test.describe("the list_audit_events tool of the MCP server", () => {
       }),
     ).toMatchObject(eventsWithIds(readOfColleague));
 
-    // The access filter gives only the reads, or the reads and the writes
     expect(
       await callForContent(client, TOOL_NAME, { ...window, access: "read" }),
     ).toMatchObject(eventsWithIds(readOfColleague));
@@ -224,7 +217,6 @@ test.describe("the list_audit_events tool of the MCP server", () => {
       }),
     ).toMatchObject(eventsWithIds(taskOfViewer));
 
-    // The filter for the MCP server keeps its events, or drops them
     expect(
       await callForContent(client, TOOL_NAME, {
         ...window,
@@ -238,7 +230,6 @@ test.describe("the list_audit_events tool of the MCP server", () => {
       }),
     ).toMatchObject(eventsWithIds(ship, taskOfViewer));
 
-    // The start of the time range is inclusive, the end is exclusive
     expect(
       await callForContent(client, TOOL_NAME, {
         from: ship.createdAt.toISOString(),
@@ -269,8 +260,6 @@ test.describe("the list_audit_events tool of the MCP server", () => {
       }),
     ).toMatchObject({ ...eventsWithIds(taskOfViewer), next_cursor: null });
 
-    // Each successful call of the tool wrote its read through the MCP server
-    // with the parsed arguments, but not with the result
     const where = {
       type: "AUDIT_EVENTS_LISTED",
       createdById: viewer.user.id,

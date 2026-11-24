@@ -27,7 +27,6 @@ export const EVENT_WIKI_EXPANDED_PAGES_COOKIE = "event_wiki_expanded_pages";
 
 const EVENT_WIKI_EXPANDED_PAGES_COOKIE_PATH = "/app/events";
 
-/** One shared cookie for all variant embeds, like the event one above */
 export const VARIANT_WIKI_EXPANDED_PAGES_COOKIE = "variant_wiki_expanded_pages";
 
 const VARIANT_WIKI_EXPANDED_PAGES_COOKIE_PATH = "/app/fleet/variant";
@@ -126,9 +125,8 @@ export const isWikiPageExpanded = (state: WikiExpansionState, pageId: string) =>
   state.has(getWikiPageKey(pageId));
 
 /**
- * All mutations return the given state unchanged when nothing moves. The
- * sidebar reapplies the active page's path on every render, and only a stable
- * reference stops that from looping through its cookie effect.
+ * All mutations return the given state unchanged when nothing moves, thus
+ * the cookie effect of the sidebar does not run again.
  */
 const withKeys = (
   state: WikiExpansionState,

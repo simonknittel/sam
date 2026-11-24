@@ -3,14 +3,14 @@
 import { useMediaQuery } from "@base-ui/react/unstable-use-media-query";
 import { useEffect, useState } from "react";
 
-/** How often (in ms) the scrambled letters refresh */
+/** Milliseconds */
 const SCRAMBLE_INTERVAL = 75;
 
 const DEFAULT_CHARACTERS = "abcdefghijklmnopqrstuvwxyz!@#$%^&*()_+";
 
 interface Props {
   readonly text: string;
-  /** Total animation duration in milliseconds */
+  /** Milliseconds */
   readonly duration?: number;
   /** Automatically retrigger the scramble effect every N milliseconds after completion */
   readonly repeatInterval?: number;

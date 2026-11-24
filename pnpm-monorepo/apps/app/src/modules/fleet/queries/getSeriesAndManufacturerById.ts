@@ -6,7 +6,6 @@ import {
 import { findManagedSeriesWithManufacturer } from "@sam-monorepo/application";
 import { cache } from "react";
 
-/** See `findManagedSeriesWithManufacturer()` */
 export const getSeriesAndManufacturerById = cache(
   async (seriesId: string, manufacturerId: string) => {
     try {

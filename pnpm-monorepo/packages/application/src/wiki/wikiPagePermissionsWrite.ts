@@ -15,16 +15,11 @@ import type { WikiPageRolePrune } from "./wikiPageRolePrunes.js";
 /** The audit value of a tier that a cascade does not change */
 const UNCHANGED_TIER = "unchanged";
 
-/**
- * The new permissions of one page of the global wiki and of its
- * descendants, as `updateWikiPagePermissions()` decided them
- */
 export interface WikiPagePermissionsWrite {
   readonly input: UpdateWikiPagePermissionsInput;
   readonly pageId: string;
   /** The pages of the global wiki before the write, for the previous owners */
   readonly pagesById: ReadonlyMap<string, WikiContextPage>;
-  /** The read roles of the input without duplicates */
   readonly readRoleIds: string[];
   readonly roleAccess: {
     readonly pageId: string;
@@ -34,16 +29,10 @@ export interface WikiPagePermissionsWrite {
   readonly newOwnerId: string | null;
   /** The descendants that are not in the trash */
   readonly descendantIds: string[];
-  /** The descendants whose own owner the cascade of the owner removes */
   readonly ownerCascadeIds: string[];
   readonly prunes: WikiPageRolePrune[];
 }
 
-/**
- * Writes the permissions in one batch
- *
- * @throws NotFoundError when a different user deleted the page permanently
- */
 export const runWikiPagePermissionsBatch = async (
   { prisma }: Pick<ApplicationContext, "prisma">,
   {
@@ -158,10 +147,6 @@ export const runWikiPagePermissionsBatch = async (
   );
 };
 
-/**
- * The audit events of the write: one for the page, one for each descendant
- * of a cascade, one for each prune and one for each change of an owner
- */
 export const buildWikiPagePermissionsAuditEvents = (
   {
     input,

@@ -19,9 +19,9 @@ interface Props {
 }
 
 /**
- * Actions of the paragraph/heading block menu. Heading, paragraph and
- * alignment commands move the cursor into the menu's block first, so they
- * apply to it and not to wherever inside it the caret happens to sit.
+ * Heading, paragraph and alignment commands move the cursor into the menu's
+ * block first, so they apply to it and not to wherever inside it the caret
+ * happens to sit.
  */
 export const WikiTextNodeMenuActions = ({ editor, menu }: Props) => {
   const toggleTextHeading = (level: 1 | 2 | 3) => {
@@ -33,11 +33,7 @@ export const WikiTextNodeMenuActions = ({ editor, menu }: Props) => {
       .run();
   };
 
-  /**
-   * setNode copies the block's attributes and merges the given ones on
-   * top, so the size has to be passed in BOTH directions — a bare
-   * setParagraph() would leave a small paragraph small.
-   */
+  /** Pass the size in both directions, see HeadingPicker */
   const setTextParagraph = (textSize: WikiTextSize | null) => {
     editor
       .chain()
@@ -56,11 +52,6 @@ export const WikiTextNodeMenuActions = ({ editor, menu }: Props) => {
       .run();
   };
 
-  /**
-   * Focus at the deletion point — a bare focus() scrolls the stale
-   * selection (wherever the cursor last was) into view, jumping the
-   * viewport away from the deleted block (see WikiDuplicateCopyActions).
-   */
   const deleteTextBlock = () => {
     editor
       .chain()
@@ -93,8 +84,6 @@ export const WikiTextNodeMenuActions = ({ editor, menu }: Props) => {
             <FaParagraph />
           </ToolbarButton>
 
-          {/* The same glyph as "Text" at a smaller size — the contrast
-              between the two next to each other tells them apart */}
           <ToolbarButton
             title="Kleiner Text"
             isActive={menu.textSize === "small"}

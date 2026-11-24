@@ -9,10 +9,6 @@ interface Props {
   readonly hit: SpynetSearchHit;
 }
 
-/**
- * The content of one hit of the Spynet search. The tile and the Cmd+K search
- * put it into their own interactive element.
- */
 export const SpynetSearchHitContent = ({ hit }: Props) => {
   switch (hit.type) {
     case SpynetSearchHitType.Citizen:

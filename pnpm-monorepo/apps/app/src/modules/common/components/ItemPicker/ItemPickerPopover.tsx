@@ -6,20 +6,14 @@ import type { ComponentProps, ReactNode } from "react";
 type PopoverBaseUIProps = ComponentProps<typeof PopoverBaseUI>;
 
 interface Props {
-  /** The accessible name of the popup */
   readonly title: string;
   readonly trigger: ReactNode;
   readonly triggerRender: PopoverBaseUIProps["triggerRender"];
   readonly open?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
-  /** Usually an `ItemPickerPanel`, which takes the focus */
   readonly children: ReactNode;
 }
 
-/**
- * The popover of a picker. It opens on a click below its trigger. Escape and
- * a click outside close it, and the focus then goes back to the trigger.
- */
 export const ItemPickerPopover = ({
   title,
   trigger,

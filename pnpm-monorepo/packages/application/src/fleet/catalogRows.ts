@@ -2,18 +2,14 @@ import type { Prisma, Variant } from "@sam-monorepo/database/client";
 import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import type { ApplicationContext } from "../context.js";
 
-// The catalog of the fleet is not secret, and its callers have different
-// gates (the fleet pages, the lineups of the events and the templates, the
-// wiki editor). Thus the helpers of this file take no actor and check no
-// permission: the callers check it.
+// No permission checks in this file: the catalog of the fleet is not secret, and
+// the callers have different gates
 
-/** An uploaded image, for example the logo of a manufacturer */
 export const UPLOAD_IMAGE_SELECT = {
   id: true,
   mimeType: true,
 } as const satisfies Prisma.UploadSelect;
 
-/** The name and the logo of the manufacturer of a variant */
 export const VARIANT_MANUFACTURER_SELECT = {
   series: {
     select: {
@@ -30,10 +26,6 @@ export const VARIANT_EXTERNAL_LINK_SELECT = {
   url: true,
 } as const satisfies Prisma.VariantExternalLinkSelect;
 
-/**
- * The ships that the counts of a variant include: the ships of the active
- * citizens that are not deleted
- */
 export const ACTIVE_OWNER_SHIP_WHERE = {
   deletedAt: null,
   owner: ACTIVE_CITIZEN_WHERE,
@@ -47,12 +39,10 @@ const MANUFACTURER_ROW_SELECT = {
   series: { select: { id: true, name: true }, orderBy: { name: "asc" } },
 } as const satisfies Prisma.ManufacturerSelect;
 
-/** A manufacturer with its series, for the settings and the fleet filters */
 export type ManufacturerRow = Prisma.ManufacturerGetPayload<{
   select: typeof MANUFACTURER_ROW_SELECT;
 }>;
 
-/** All manufacturers with their series, sorted by name */
 export const findManufacturerRows = (
   context: Pick<ApplicationContext, "prisma">,
 ): Promise<ManufacturerRow[]> =>
@@ -87,26 +77,19 @@ export interface VariantCatalogVariant extends Pick<Variant, "id" | "name"> {
 }
 
 /**
- * The catalog of the variant pickers. A variant refers to its manufacturer
- * and its tags by id: the catalog has no limit and goes into a client
- * component on each page that uses it, thus each manufacturer and each tag
- * is in it only one time.
+ * A variant refers to its manufacturer and its tags by id: the catalog has no
+ * limit and goes into a client component on each page that uses it, thus each
+ * manufacturer and each tag is in it only one time
  */
 export interface VariantCatalog {
   readonly manufacturers: readonly VariantCatalogManufacturer[];
-  /** Sorted by name */
   readonly variants: readonly VariantCatalogVariant[];
-  /** The tags of at least one variant, sorted by key and value */
   readonly tags: readonly VariantCatalogTag[];
 }
 
 /**
- * All variants with their manufacturers and tags, for the pickers of the
- * ships, of the required variants and of the variant links of the wiki, and
- * for the variant links that a different user inserted after the wiki page
- * loaded. Variant links render for every authenticated user (only the
- * variant page itself has the fleet gate), thus the catalog has no fleet
- * gate.
+ * No fleet gate: the variant links render for every authenticated user, and
+ * only the variant page has the gate
  */
 export const findVariantCatalog = async (
   context: Pick<ApplicationContext, "prisma">,
@@ -143,7 +126,6 @@ export const findVariantCatalog = async (
   };
 };
 
-/** The name of a variant and the name and the logo of its manufacturer */
 export const VARIANT_LINK_SELECT = {
   id: true,
   name: true,

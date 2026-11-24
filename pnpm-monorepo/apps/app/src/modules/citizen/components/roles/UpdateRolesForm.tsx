@@ -29,19 +29,11 @@ const toFormData = (
 
 interface Props {
   readonly citizenId: Citizen["id"];
-  /** The saved roles of the citizen */
   readonly assignedRoleIds: readonly Role["id"][];
-  /** The roles that the viewer can give to the citizen or take away */
   readonly assignableRoles: readonly RolePickerRole[];
-  /** Runs after each successful save */
   readonly onSaved?: () => void;
 }
 
-/**
- * The roles of a citizen with a checkbox each. A change saves itself after
- * the debounce. A role that the viewer may not give (or take away, if the
- * citizen has it) is disabled.
- */
 export const UpdateRolesForm = ({
   citizenId,
   assignedRoleIds,

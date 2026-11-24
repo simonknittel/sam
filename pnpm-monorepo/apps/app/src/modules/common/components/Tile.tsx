@@ -3,17 +3,13 @@ import type { ReactNode } from "react";
 
 export enum TileVariant {
   Default = "default",
-  /** Destructive actions, e.g. a danger zone */
   Danger = "danger",
-  /** Content which is specific to the viewer */
   Me = "me",
 }
 
 interface Props {
   readonly className?: string;
-  /** The target of a link to the tile, for example from a table of contents */
   readonly id?: string;
-  /** Omitted on tiles whose page already names their content, e.g. the system log */
   readonly heading?: ReactNode;
   readonly subheading?: ReactNode;
   readonly cta?: ReactNode;

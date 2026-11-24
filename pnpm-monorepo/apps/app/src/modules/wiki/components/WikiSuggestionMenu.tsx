@@ -20,14 +20,8 @@ export interface WikiSuggestionMenuHandle {
   readonly onKeyDown: (props: Pick<SuggestionKeyDownProps, "event">) => boolean;
 }
 
-/** Maximum number of entries a suggestion popup shows */
 const MAX_SUGGESTIONS = 10;
 
-/**
- * Shared ranking of the wiki suggestion popups (page links, citizen
- * mentions): case-insensitive substring filter on the title, sorted
- * alphabetically with German collation, capped at MAX_SUGGESTIONS.
- */
 export const rankWikiSuggestionItems = <Item extends { title: string }>(
   items: readonly Item[],
   query: string,
@@ -48,7 +42,6 @@ interface WikiSuggestionMenuItem {
   readonly id?: string;
   readonly title: string;
   readonly icon?: ReactNode;
-  /** Secondary line under the title (e.g. node type of the copied block) */
   readonly subtitle?: string;
   /**
    * Renders a divider below the entry — separates pinned entries from
@@ -70,12 +63,8 @@ interface WikiSuggestionMenuProps<Item extends WikiSuggestionMenuItem> {
 }
 
 /**
- * Keyboard-navigable list shared by the wiki editor's suggestion popups
- * (slash commands, internal page links, citizen mentions) and the gutter
- * plus button's insert palette. Renders only the list — the popover
- * chrome around it comes from PopoverBaseUI(Detached). Keys arrive from
- * outside (the Suggestion plugin or the palette's filter input) via the
- * imperative handle; focus never moves into the list.
+ * Keys arrive from outside (the Suggestion plugin or the palette's filter
+ * input) via the imperative handle; focus never moves into the list.
  */
 export const WikiSuggestionMenu = <Item extends WikiSuggestionMenuItem>({
   items,
@@ -85,10 +74,6 @@ export const WikiSuggestionMenu = <Item extends WikiSuggestionMenuItem>({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  /**
-   * Reset the selection when the filtered items change — adjusted during
-   * render instead of in an effect. Starts on the first enabled item.
-   */
   const [previousItems, setPreviousItems] = useState(items);
   if (previousItems !== items) {
     setPreviousItems(items);
@@ -105,7 +90,6 @@ export const WikiSuggestionMenu = <Item extends WikiSuggestionMenuItem>({
     if (item instanceof HTMLElement) item.scrollIntoView({ block: "nearest" });
   };
 
-  /** Next index in the given direction, skipping disabled items (wraps) */
   const moveSelection = (direction: 1 | -1) => {
     let index = selectedIndex;
     let remainingSteps = items.length;
@@ -205,18 +189,12 @@ export const WikiSuggestionMenu = <Item extends WikiSuggestionMenuItem>({
 interface WikiSuggestionPopoverProps<Item extends WikiSuggestionMenuItem> {
   readonly items: readonly Item[];
   readonly command: (item: Item) => void;
-  /** Viewport rect of the caret the popup anchors to */
   readonly anchorRect: DOMRect | null;
   readonly open: boolean;
-  /** Base UI dismissed the popup (outside press, Escape) */
   readonly onDismiss: () => void;
   readonly ref?: Ref<WikiSuggestionMenuHandle>;
 }
 
-/**
- * Caret-anchored popover around WikiSuggestionMenu: flips above the
- * caret when the viewport bottom is too close.
- */
 const WikiSuggestionPopover = <Item extends WikiSuggestionMenuItem>({
   items,
   command,
@@ -244,11 +222,6 @@ const WikiSuggestionPopover = <Item extends WikiSuggestionMenuItem>({
   );
 };
 
-/**
- * The Tiptap `Suggestion` render plumbing around WikiSuggestionMenu:
- * feeds the caret rect and the filtered items into the popover and
- * routes the plugin's key events into the menu.
- */
 export const createWikiSuggestionRender = <
   Item extends WikiSuggestionMenuItem,
 >(): {

@@ -3,15 +3,9 @@ import { requireCitizen, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 
 export interface ArchiveReadOnSiteNotificationsOutput {
-  /** The number of notifications that moved to the archive */
   readonly count: number;
 }
 
-/**
- * Moves all read notifications of the inbox to the archive
- *
- * @throws ForbiddenError for a user without a citizen
- */
 export const archiveReadOnSiteNotifications = async (
   context: ApplicationContext,
   actor: Actor,

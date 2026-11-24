@@ -7,10 +7,6 @@ import {
 import * as z from "zod";
 import { protectedProcedure, toTrpcError } from "../../trpc";
 
-/**
- * The tags of one scope — the global wiki by default, a briefing with a
- * container — for the tag input's autocomplete (see `findWikiScopeTags()`).
- */
 export const getTags = protectedProcedure
   .input(z.object({ container: eventContainerSchema.optional() }).optional())
   .query(async ({ ctx, input }) => {

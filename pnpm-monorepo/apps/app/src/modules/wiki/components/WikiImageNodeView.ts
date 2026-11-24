@@ -11,18 +11,9 @@ import {
 } from "../utils/wikiImageRendering";
 
 interface WikiImageNodeViewOptions extends WikiImageOptions {
-  /** Intrinsic dimensions of the page's uploaded images, by upload id */
   imageDimensions: Readonly<Record<string, WikiImageDimensions>>;
 }
 
-/**
- * Renders the image node exactly as its renderHTML does (anchor to the
- * original file around the image), then swaps the img's src for the Next.js
- * image optimizer's srcset when the upload's dimensions are known. Not a
- * React node view on purpose: the DOM stays identical to the schema
- * rendering, so the resize handles (which size the anchor), the edit menu
- * and the static read view all see the same structure.
- */
 const findImageElement = (element: HTMLElement): HTMLElement | null =>
   element.tagName === "IMG" ? element : element.querySelector("img");
 
@@ -46,6 +37,14 @@ const syncManagedAttributes = (
   }
 };
 
+/**
+ * Renders the image node exactly as its renderHTML does (anchor to the
+ * original file around the image), then swaps the img's src for the Next.js
+ * image optimizer's srcset when the upload's dimensions are known. Not a
+ * React node view on purpose: the DOM stays identical to the schema
+ * rendering, so the resize handles (which size the anchor), the edit menu
+ * and the static read view all see the same structure.
+ */
 const createWikiImageNodeView =
   (
     getImageDimensions: () => Readonly<Record<string, WikiImageDimensions>>,
@@ -153,13 +152,6 @@ const WikiFloatImageWithOptimizedView =
     },
   });
 
-/**
- * Swaps the plain image nodes (block and floated) in an extension list for
- * the node-view variants serving optimized images, keeping their position
- * in the list. Same names, attributes and schema — only the in-editor
- * rendering differs, so save validation, the collab server and the static
- * renderer stay untouched by these variants.
- */
 export const withWikiImageOptimization = (
   extensions: AnyExtension[],
   imageDimensions: Readonly<Record<string, WikiImageDimensions>>,

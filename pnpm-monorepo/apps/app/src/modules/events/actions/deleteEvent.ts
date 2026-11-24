@@ -38,8 +38,8 @@ export const deleteEvent = createAuthenticatedAction(
     refresh();
 
     /**
-     * Respond with the result. A failed removal from Discord cannot undo the
-     * deletion, thus the manager deletes the Discord event by hand.
+     * A failed removal from Discord cannot undo the deletion, thus the manager
+     * deletes the Discord event by hand.
      */
     return {
       success: "Das Event wurde gelöscht.",

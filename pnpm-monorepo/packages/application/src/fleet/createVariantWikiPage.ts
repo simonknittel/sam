@@ -20,14 +20,11 @@ export const createVariantWikiPageInputSchema = z.object({
 });
 
 /**
- * Creates an empty page in the global wiki and links it to a variant that
- * has no linked page. The variant page then embeds the new page.
- *
- * @throws NotFoundError when the variant does not exist, or when the parent
- * is not a page of the global wiki that the actor can see
+ * @throws NotFoundError when the variant does not exist, or when the parent is
+ * not a page of the global wiki that the actor can see
  * @throws ConflictError when the variant has a linked page already
- * @throws ForbiddenError when the actor does not manage the parent, or
- * cannot create a page at the top level
+ * @throws ForbiddenError when the actor does not manage the parent, or cannot
+ * create a page at the top level
  */
 export const createVariantWikiPage = (
   context: ApplicationContext,

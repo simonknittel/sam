@@ -7,7 +7,6 @@ import {
 } from "@sam-monorepo/application";
 import { WIKI_ERROR_TEXTS } from "../utils/wikiErrorTexts";
 
-/** Takes the page out of the trash (see the use case) */
 export const restoreWikiPage = createUseCaseAction({
   name: "restoreWikiPage",
   schema: restoreWikiPageInputSchema,

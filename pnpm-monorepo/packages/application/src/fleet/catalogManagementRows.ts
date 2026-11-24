@@ -9,9 +9,6 @@ import {
 } from "./catalogRows.js";
 import { VARIANT_TAG_SELECT } from "./shipVariant.js";
 
-// The rows of the settings pages of the catalog and of the modals of these
-// pages. Each helper requires `manufacturersSeriesAndVariants;manage`.
-
 const MANAGED_MANUFACTURER_SELECT = {
   id: true,
   name: true,
@@ -23,7 +20,6 @@ export type ManagedManufacturer = Prisma.ManufacturerGetPayload<{
   select: typeof MANAGED_MANUFACTURER_SELECT;
 }>;
 
-/** The manufacturer of the settings page, or null when it does not exist */
 export const findManagedManufacturer = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,
@@ -49,11 +45,7 @@ export interface ManagedSeriesManufacturer {
   readonly imageId: string | null;
 }
 
-/**
- * The series and the manufacturer of the settings page of a series, each
- * null when it does not exist. The helper does not check that the series
- * belongs to the manufacturer.
- */
+/** Does not check that the series belongs to the manufacturer */
 export const findManagedSeriesWithManufacturer = (
   context: Pick<ApplicationContext, "prisma" | "tracer">,
   actor: Actor,
@@ -88,7 +80,6 @@ export type ManufacturerSeriesRow = Prisma.SeriesGetPayload<{
   select: typeof MANUFACTURER_SERIES_ROW_SELECT;
 }>;
 
-/** The series of a manufacturer with the names of their variants, by name */
 export const findManufacturerSeriesRows = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,
@@ -114,15 +105,10 @@ const SERIES_VARIANT_ROW_SELECT = {
   _count: { select: { ships: { where: ACTIVE_OWNER_SHIP_WHERE } } },
 } as const satisfies Prisma.VariantSelect;
 
-/**
- * A variant of the settings page of a series. The count has the ships of the
- * active citizens that are not deleted.
- */
 export type SeriesVariantRow = Prisma.VariantGetPayload<{
   select: typeof SERIES_VARIANT_ROW_SELECT;
 }>;
 
-/** The variants of a series, by name */
 export const findSeriesVariantRows = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,
@@ -153,9 +139,8 @@ export type ManagedVariant = Prisma.VariantGetPayload<{
 }>;
 
 /**
- * The variant for the update modal, or null when it does not exist. The
- * permission keeps the internal fields (for example the linked wiki page)
- * from the other users.
+ * The permission keeps the internal fields (for example the linked wiki page)
+ * from the other users
  */
 export const findManagedVariant = async (
   context: Pick<ApplicationContext, "prisma">,

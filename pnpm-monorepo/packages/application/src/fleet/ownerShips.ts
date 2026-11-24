@@ -29,7 +29,6 @@ export enum ShipSort {
   NameDescending = "name_desc",
 }
 
-/** The input fields of the ship list of one citizen */
 export const ownerShipsInputShape = {
   ...variantFilterInputShape,
   ...acquisitionSourceFilterInputShape,
@@ -48,29 +47,22 @@ const ownerShipsInputSchema = z.object(ownerShipsInputShape);
 
 export interface ShipOutput {
   readonly id: string;
-  /** The name that the owner gave the ship */
   readonly name: string | null;
-  /** Null for the ships from before the app recorded the acquisition source */
   readonly acquisition_source: AcquisitionSource | null;
-  /** The note of the owner about the ship */
   readonly note: string | null;
   readonly variant: ShipVariantOutput;
-  /** Null for the ships from before the app recorded the time */
   readonly created_at: string | null;
   readonly deleted_at: string | null;
 }
 
 export interface ListShipsOutput {
   readonly ships: ShipOutput[];
-  /** The ships that agree with the filters */
   readonly total: number;
-  /** The value of the ships that agree with the filters */
   readonly value: FleetValueOutput;
   readonly next_cursor: string | null;
   readonly previous_cursor: string | null;
 }
 
-/** The columns of a ship for `toShipOutput()` */
 export const SHIP_SELECT = {
   id: true,
   name: true,
@@ -81,7 +73,6 @@ export const SHIP_SELECT = {
   variant: { select: SHIP_VARIANT_SELECT },
 } as const satisfies Prisma.ShipSelect;
 
-/** A ship in the outputs of the ship lists and of the ship writes */
 export const toShipOutput = (
   ship: Prisma.ShipGetPayload<{ select: typeof SHIP_SELECT }>,
 ): ShipOutput => ({
@@ -110,13 +101,8 @@ const compareShips =
   };
 
 /**
- * The ship list of one citizen. The own ships and the fleet of a different
- * citizen show the same list; only the permission is different. Thus the
- * use cases check the permission and share this list. The cursor is the id
- * of a ship.
- *
- * @throws ValidationError when no ship has the cursor (see
- * `PageOptions.unknownCursor`)
+ * No permission check: the use cases for the own ships and for the ships of a
+ * different citizen have different permissions
  */
 export const listOwnerShips = async (
   context: ApplicationContext,

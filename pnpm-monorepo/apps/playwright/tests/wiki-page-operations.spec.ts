@@ -37,10 +37,6 @@ test("a page is renamed, which moves it to a new URL, and moved to a new parent"
   await signIn(manager.user);
   await page.goto(`/app/wiki/${wikiPage.id}/${wikiPage.slug}`);
 
-  /**
-   * Rename — the slug follows the title, and the old URL redirects to the
-   * new one because a page is resolved by its id.
-   */
   const titleInput = page.locator('input[name="title"]');
   await clickUntilVisible(
     inlineEditorTrigger(page.getByRole("heading", { level: 1 })),
@@ -62,9 +58,6 @@ test("a page is renamed, which moves it to a new URL, and moved to a new parent"
   await expect(page).toHaveURL(`/app/wiki/${wikiPage.id}/neuer-titel`);
   await expect(page.getByText("Bleibt beim Umzug erhalten.")).toBeVisible();
 
-  /**
-   * Move it under another page
-   */
   const moveDialog = modal(page, "Seite verschieben");
   /** exact — the sidebar tree's drag handles carry a longer variant */
   await clickUntilVisible(
@@ -86,7 +79,6 @@ test("a page is renamed, which moves it to a new URL, and moved to a new parent"
     )
     .toEqual({ parentId: target.id, visibility: WikiPageVisibility.INHERIT });
 
-  // The sidebar tree now reaches it through its new parent
   await page.goto(`/app/wiki/${target.id}/${target.slug}`);
   await expect(page.getByRole("link", { name: "Neuer Titel" })).toBeVisible();
 });
@@ -121,8 +113,8 @@ test("a new subpage shows up in the sidebar tree", async ({
     page.getByRole("heading", { level: 1, name: "Unterseite" }),
   ).toBeVisible();
   /**
-   * The sidebar tree is in a layout that the old and the new page share.
-   * Thus it shows the new page only when the action refreshes the layout.
+   * The sidebar tree is in a layout that the old and the new page share. Thus
+   * it shows the new page only when the action refreshes the layout.
    */
   await expect(
     page.getByRole("link", { name: "Unterseite", exact: true }),
@@ -157,7 +149,6 @@ test("two moves at the same time cannot put a page below itself", async ({
   await page.goto(`/app/wiki/${first.id}/${first.slug}`);
 
   const moveDialog = modal(page, "Seite verschieben");
-  /** exact — the sidebar tree's drag handles carry a longer variant */
   await clickUntilVisible(
     page.getByRole("button", { name: "Seite verschieben", exact: true }),
     moveDialog,
@@ -193,18 +184,10 @@ test("two moves at the same time cannot put a page below itself", async ({
       "Die Seitenstruktur war veraltet. Sie ist jetzt aktuell, bitte versuche es erneut.",
     ),
   ).toBeVisible();
-  /**
-   * The dialog loads its pages again: the second page is now below the first
-   * page, thus no new place for it
-   */
   await expect(
     moveDialog.locator("option").filter({ hasText: "Zweite Seite" }),
   ).toHaveCount(0);
-  /**
-   * The error also refreshes the page: the sidebar tree shows the second
-   * page below the first page, where the parallel move put it. The open
-   * dialog hides the tree from the accessibility tree, thus close it first.
-   */
+  /** The open dialog hides the tree from the accessibility tree. */
   await moveDialog.getByRole("button", { name: "Schließen" }).click();
   await expect(moveDialog).toHaveCount(0);
   const firstPageTreeItem = page.getByRole("listitem").filter({
@@ -214,7 +197,6 @@ test("two moves at the same time cannot put a page below itself", async ({
     firstPageTreeItem.getByRole("link", { name: "Zweite Seite", exact: true }),
   ).toBeVisible();
 
-  /** Only the parallel move is done: the tree has no cycle */
   expect(
     await prisma.wikiPage.findMany({
       where: { id: { in: [first.id, second.id] } },
@@ -253,7 +235,6 @@ test("a move waits for the tree lock before it changes a row", async ({
   await page.goto(`/app/wiki/${first.id}/${first.slug}`);
 
   const moveDialog = modal(page, "Seite verschieben");
-  /** exact — the sidebar tree's drag handles carry a longer variant */
   await clickUntilVisible(
     page.getByRole("button", { name: "Seite verschieben", exact: true }),
     moveDialog,
@@ -290,7 +271,6 @@ test("a move waits for the tree lock before it changes a row", async ({
     await parallelMove.commit();
   }
 
-  /** Both moves are done */
   await expect
     .poll(() =>
       prisma.wikiPage.findMany({
@@ -333,16 +313,12 @@ test("a favorited page shows up in the sidebar's favorites", async ({
     )
     .toBe(1);
 
-  /**
-   * The sidebar now links the page twice: once in the tree, once under the
-   * favourites panel that replaced its empty state.
-   */
+  /** Once in the tree, once in the favourites panel */
   await expect(page.getByText("Du hast bisher keine Favoriten.")).toHaveCount(
     0,
   );
   await expect(page.getByRole("link", { name: "Merkzettel" })).toHaveCount(2);
 
-  /** Un-favoriting empties the panel again */
   await page.getByRole("button", { name: "Favorit entfernen" }).click();
   await expect(page.getByText("Du hast bisher keine Favoriten.")).toBeVisible();
   await expect
@@ -369,14 +345,13 @@ test("a page that a different tab saved as a favorite stays a favorite", async (
   /** Before hydration, the form would submit with a full page load */
   await waitForAppShellHydration(page);
 
-  /** A different tab saves the page as a favorite in the meantime */
   await prisma.wikiPageFavorite.create({
     data: { citizenId: citizen.entity.id, pageId: wikiPage.id },
   });
 
   /**
    * The button sets the state that it shows, not the opposite of the stored
-   * state. The page shows the favorite without a navigation.
+   * state.
    */
   await page.getByRole("button", { name: "Als Favorit speichern" }).click();
   await expect(page.getByText("Als Favorit gespeichert.")).toBeVisible();
@@ -390,7 +365,6 @@ test("a page that a different tab saved as a favorite stays a favorite", async (
   expect(
     await prisma.wikiPageFavorite.count({ where: { pageId: wikiPage.id } }),
   ).toBe(1);
-  /** No audit event for a change that did not happen */
   expect(
     await prisma.auditEvent.count({
       where: { type: "WIKI_PAGE_FAVORITE_ADDED" },

@@ -11,13 +11,11 @@ import type {
  * freezes after the response and the spans of the request wait in the buffer
  * until the function operates again.
  *
- * The send starts before the freeze, but nothing keeps the function alive
- * until it is complete: `after()` of Next.js does that, and it refuses a call
- * from here, because `onEnd` runs outside the scope of the request. Spans
- * which end after the root span thus stay on hold — see the note about
+ * The send starts before the freeze, but nothing keeps the function alive until
+ * it is complete: `after()` of Next.js does that, and it refuses a call from
+ * here, because `onEnd` runs outside the scope of the request. Spans which end
+ * after the root span thus stay on hold — see the note about
  * `scheduledDelayMillis` in instrumentation.node.ts.
- *
- * All calls go to the wrapped span processor without a change.
  */
 export class FlushOnRootSpanEndProcessor implements SpanProcessor {
   constructor(private readonly spanProcessor: SpanProcessor) {}

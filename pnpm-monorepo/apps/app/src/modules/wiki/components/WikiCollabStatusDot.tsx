@@ -48,25 +48,15 @@ const STATUS_CONFIG: Record<
 export interface WikiCollabUser {
   readonly name: string;
   readonly color: string;
-  /** Whether they have edit mode toggled on — everyone else is just reading */
   readonly isEditing: boolean;
 }
 
 interface Props {
   readonly className?: string;
   readonly status: WikiCollabStatus;
-  /** Connected users (from the provider's awareness states) */
   readonly users: readonly WikiCollabUser[];
 }
 
-/**
- * Pinging connection indicator of the collaborative editor (green:
- * connected, blue: connecting, red: disconnected, amber: authentication
- * failed), like the dot badge on the app tiles, plus the number of
- * connected users. The popover explains the state and lists the users by
- * name, split into the ones who are editing right now and the ones who
- * are only reading along.
- */
 export const WikiCollabStatusDot = ({ className, status, users }: Props) => {
   const config = STATUS_CONFIG[status];
   const showUsers = status === WebSocketStatus.Connected && users.length > 0;
@@ -130,10 +120,6 @@ interface UserSectionProps {
   readonly users: readonly WikiCollabUser[];
 }
 
-/**
- * One group of the popover's user list. Renders nothing when the group is
- * empty, so a heading never stands without users under it.
- */
 const UserSection = ({ label, users }: UserSectionProps) => {
   if (users.length <= 0) return null;
 

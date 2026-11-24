@@ -61,7 +61,6 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
       read_role_ids: formData.getAll("readRole[]"),
       edit_role_ids: formData.getAll("editRole[]"),
       admin_role_ids: formData.getAll("adminRole[]"),
-      /** A checkbox sends its field only when it is checked */
       cascade_visibility: formData.get("cascadeVisibility") !== null,
       cascade_editability: formData.get("cascadeEditability") !== null,
       cascade_admin_roles: formData.get("cascadeAdminRoles") !== null,

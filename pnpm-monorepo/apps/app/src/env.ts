@@ -3,10 +3,7 @@ import * as z from "zod/mini";
 
 const LOOPBACK_HOSTNAMES: readonly string[] = ["localhost", "127.0.0.1", "::1"];
 
-/**
- * Whether a URL either encrypts its traffic or never leaves the machine.
- * Used for endpoints the app sends credentials to.
- */
+/** For endpoints that the app sends credentials to */
 const isEncryptedOrLoopbackUrl = (value: string) => {
   const { protocol, hostname } = new URL(value);
   return (
@@ -15,20 +12,12 @@ const isEncryptedOrLoopbackUrl = (value: string) => {
   );
 };
 
-/**
- * Whether a URL is an origin only: without user information, a path, a
- * query and a fragment
- */
 const isOriginUrl = (value: string) => {
   const { username, password, pathname, search, hash } = new URL(value);
   return !username && !password && pathname === "/" && !search && !hash;
 };
 
 export const env = createEnv({
-  /*
-   * Serverside Environment variables, not available on the client.
-   * Will throw if you access these variables on the client.
-   */
   server: {
     DATABASE_URL: z._default(
       z.url(),
@@ -41,7 +30,6 @@ export const env = createEnv({
         : z.optional(z.string().check(z.minLength(1))),
     NEXTAUTH_URL: z._default(
       z.pipe(
-        // Uses VERCEL_URL if NEXTAUTH_URL is not set, e.g. on Vercel's preview deployments
         z.transform((str) => str || `https://${process.env.VERCEL_URL}`),
         z.url(),
       ),
@@ -51,25 +39,21 @@ export const env = createEnv({
     DISCORD_CLIENT_SECRET: z.string(),
     DISCORD_GUILD_ID: z.string(),
     /**
-     * Bot token of the app's Discord bot, sent as `Authorization: Bot …`.
-     * Publishing events to Discord needs the bot to hold CREATE_EVENTS and
-     * MANAGE_EVENTS in the guild — no OAuth2 scope lets a user token manage
-     * guild scheduled events, so this always acts as the bot.
+     * Publishing events to Discord needs specific guild permissions of the bot
+     * (see docs/setup-local-machine.md). No OAuth2 scope lets a user token
+     * manage guild scheduled events, so this always acts as the bot.
      */
     DISCORD_TOKEN: z.string(),
     /**
-     * Base URL of the Star Citizen website the organization logos are
-     * scraped from, without a trailing slash. Only overridden by the
-     * Playwright stack, which points it at a dead port so creating an
-     * organization never leaves the machine.
+     * Without a trailing slash. Only overridden by the Playwright stack, which
+     * points it at a dead port so creating an organization never leaves the
+     * machine.
      */
     RSI_BASE_URL: z._default(z.url(), "https://robertsspaceindustries.com"),
     /**
-     * Base URL of the Discord REST API, without a trailing slash. Only
-     * overridden by the Playwright stack, which points the app at its own
-     * mock server instead of talking to Discord. Plain HTTP is refused
-     * unless it points at the local machine: every request carries the bot
-     * token, and a misconfigured host would ship it in cleartext.
+     * Without a trailing slash. Only overridden by the Playwright stack (mock
+     * server). Plain HTTP is refused unless it points at the local machine:
+     * every request carries the bot token.
      */
     DISCORD_API_BASE_URL: z._default(
       z
@@ -82,10 +66,7 @@ export const env = createEnv({
         ),
       "https://discord.com/api/v10",
     ),
-    /**
-     * Cloudflare R2 account id, used to derive the bucket endpoint when
-     * S3_ENDPOINT is unset
-     */
+    /** Cloudflare R2, only when S3_ENDPOINT is unset */
     S3_ACCOUNT_ID: z.optional(z.string()),
     /**
      * Explicit endpoint of any S3-compatible provider (e.g. the local
@@ -93,33 +74,26 @@ export const env = createEnv({
      * addressing when set. Takes precedence over S3_ACCOUNT_ID.
      */
     S3_ENDPOINT: z.optional(z.url()),
-    /** Amazon S3 (or any other S3-compatible provider like Cloudflare R2) */
     S3_ACCESS_KEY_ID: z.string(),
-    /** Amazon S3 (or any other S3-compatible provider like Cloudflare R2) */
     S3_SECRET_ACCESS_KEY: z.string(),
-    /** Amazon S3 (or any other S3-compatible provider like Cloudflare R2) */
     S3_BUCKET_NAME: z.string(),
-    /** Unleash (or any other Unleash-compatible feature flag provider like GitLab) */
     UNLEASH_SERVER_API_URL: z.optional(z.url()),
-    /** Unleash (or any other Unleash-compatible feature flag provider like GitLab) */
     UNLEASH_SERVER_API_TOKEN: z.optional(z.string()),
     /**
-     * Seconds the fetched flag definitions are cached for. Lets the
-     * Playwright stack pick up a toggled flag without waiting out the
-     * production window.
+     * Only overridden by the Playwright stack, to pick up a toggled flag
+     * without waiting out the production window.
      */
     UNLEASH_REVALIDATE_SECONDS: z._default(
       z.coerce.number().check(z.int(), z.positive()),
       30,
     ),
     COMMIT_SHA: z.pipe(
-      // Uses VERCEL_GIT_COMMIT_SHA if COMMIT_SHA is not set
       z.transform((str) => str || process.env.VERCEL_GIT_COMMIT_SHA),
       z.optional(z.string()),
     ),
     /** AWS_PROFILE=sam-test terraform output access_key_app_vercel */
     AWS_ACCESS_KEY_ID: z.optional(z.string()),
-    /** AWS_PROFILE=sam-test terraform output secret_key_app_vercel */
+    /** AWS_PROFILE=sam-test terraform output secret_access_key_app_vercel */
     AWS_SECRET_ACCESS_KEY: z.optional(z.string()),
     /** AWS_PROFILE=sam-test terraform output event_bus_arn */
     AWS_EVENT_BUS_ARN: z.optional(z.string()),
@@ -149,41 +123,30 @@ export const env = createEnv({
      */
     S3_PUBLIC_URL: z.string(),
     /**
-     * Shared secret with the wiki collab server (apps/collab). Realtime
-     * collaboration is disabled if unset.
+     * Shared secret with the wiki collab server (apps/collab). The wiki is
+     * read-only if unset.
      */
     COLLAB_JWT_SECRET: z.optional(z.string()),
     /**
-     * WebSocket URL of the wiki collab server (apps/collab), e.g.
-     * wss://sam-collab.example.com. Realtime collaboration is disabled if
-     * unset. Server-only on purpose: the client receives the URL as a prop,
-     * and a runtime variable — unlike a build-inlined NEXT_PUBLIC_ one —
-     * lets several instances of one build talk to different collab servers
-     * (used by the Playwright test stack).
+     * WebSocket URL of the wiki collab server (apps/collab). The wiki is
+     * read-only if unset. Server-only for the reason of S3_PUBLIC_URL.
      */
     COLLAB_URL: z.optional(z.url({ protocol: /^wss?$/ })),
     /**
-     * Base64-encoded PKCS#8 PEM of the ES256 (P-256) private key the app
-     * signs the identity tokens of authenticated iframe embeds with (see
-     * docs/embedded-app-authentication.md). Embed authentication is
-     * disabled if unset: no token is appended to an embed URL and
-     * /.well-known/jwks.json publishes an empty key set. Every environment
-     * needs its own key, otherwise a token minted by a preview deployment
-     * verifies as a production one. Generate one with:
-     * `openssl ecparam -name prime256v1 -genkey -noout | openssl pkcs8 -topk8 -nocrypt | base64 -w0`
+     * Base64-encoded PKCS#8 PEM of an ES256 (P-256) private key. It signs the
+     * embed tokens and the MCP access tokens, and both are disabled if unset.
+     * For the generation and the reason for one key per environment, see
+     * docs/setup-local-machine.md.
      */
     EMBED_JWT_PRIVATE_KEY: z.optional(z.string()),
     /**
-     * Origin of the Grafana that shows the statistics dashboard in a frame on
-     * /app/statistics, for example http://127.0.0.1:3100 for the Grafana of
-     * compose.yml. The page also needs EMBED_JWT_PRIVATE_KEY: the Grafana
-     * examines a token of the app (see docs/embedded-app-authentication.md).
-     * The page shows a note instead of the dashboard if unset.
+     * Origin of the Grafana of /app/statistics (see
+     * docs/setup-local-machine.md). The page shows a note if unset.
      *
      * The frame URL carries the token, thus plain HTTP is refused unless it
-     * points at the local machine. A path is refused, because the page
-     * replaces it with the path of the dashboard. User information is
-     * refused, because each viewer would see it in the frame URL.
+     * points at the local machine. A path is refused, because the page replaces
+     * it with the path of the dashboard. User information is refused, because
+     * each viewer would see it in the frame URL.
      */
     STATISTICS_GRAFANA_URL: z.optional(
       z
@@ -200,34 +163,20 @@ export const env = createEnv({
         ),
     ),
     /**
-     * Set to "1" to permit OAuth client ids (Client ID Metadata Document
-     * URLs) with plain HTTP on a loopback host, and the fetch of these
-     * documents from the loopback interface. Only the Playwright stack sets
-     * it, because its test client serves its document on the local machine.
-     * Never set it in a deployment: it weakens the SSRF protection of the
-     * document fetch.
+     * Only for the Playwright stack. Never set it in a deployment: it weakens
+     * the SSRF protection of the document fetch (see docs/mcp-server.md).
      */
     OAUTH_ALLOW_INSECURE_LOOPBACK_CLIENT_IDS: z.optional(z.enum(["1"])),
   },
 
-  /*
-   * Environment variables available on the client (and server).
-   *
-   * 💡 You'll get type errors if these are not prefixed with NEXT_PUBLIC_.
-   */
   client: {
     NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL: z.optional(z.url()),
     NEXT_PUBLIC_DOWNLOADS_BASE_URL: z.optional(z.url()),
     NEXT_PUBLIC_DOWNLOADS_BASE_URL_2: z.optional(z.url()),
-    /** Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
     NEXT_PUBLIC_PUSHER_CHANNELS_APP_ID: z._default(z.string(), "app-id"),
-    /** Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
     NEXT_PUBLIC_PUSHER_CHANNELS_APP_KEY: z._default(z.string(), "app-key"),
-    /** Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
     NEXT_PUBLIC_PUSHER_CHANNELS_HOST: z._default(z.string(), "localhost"),
-    /** Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
     NEXT_PUBLIC_PUSHER_CHANNELS_PORT: z._default(z.coerce.number(), 6001),
-    /** Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
     NEXT_PUBLIC_PUSHER_CHANNELS_SECURE_PORT: z.optional(z.coerce.number()),
     /** npx web-push generate-vapid-keys */
     NEXT_PUBLIC_VAPID_KEY: z.optional(z.string()),
@@ -240,7 +189,6 @@ export const env = createEnv({
       z.coerce.number().check(z.int(), z.positive()),
     ),
     NEXT_PUBLIC_HOST: z.pipe(
-      // Uses VERCEL_URL if HOST and BASE_URL are not set, e.g. on Vercel's preview deployments
       z.transform((str) => {
         if (str) {
           return str;
@@ -255,7 +203,6 @@ export const env = createEnv({
       z.string(),
     ),
     NEXT_PUBLIC_BASE_URL: z.pipe(
-      // Uses VERCEL_URL if BASE_URL is not set, e.g. on Vercel's preview deployments
       z.transform((str) => {
         if (str) {
           return str;
@@ -269,11 +216,6 @@ export const env = createEnv({
     ),
   },
 
-  /*
-   * Next.js inlines only the client variables at build time, and only when
-   * the code reads them by their full name. The server variables come from
-   * process.env at runtime.
-   */
   experimental__runtimeEnv: {
     NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL:
       process.env.NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL,

@@ -16,7 +16,7 @@ import { withSpan } from "../withSpan.js";
 import { CitizenErrorMessage } from "./citizenErrors.js";
 
 export const updateOwnProfileInputSchema = z.object({
-  /** An IANA time zone name, or null to remove the time zone */
+  /** Null removes the time zone */
   timezone: z
     .string()
     .max(TIMEZONE_MAX_LENGTH)
@@ -39,13 +39,6 @@ export interface UpdateOwnProfileOutput {
   readonly birthday_month: number | null;
 }
 
-/**
- * Changes the time zone and the birthday of the citizen of the actor.
- * Requires a citizen.
- *
- * @throws ValidationError when only one of the day and the month is given,
- * or when the month does not have the day
- */
 export const updateOwnProfile = (
   context: ApplicationContext,
   actor: Actor,

@@ -7,10 +7,6 @@ import {
 } from "@sam-monorepo/application";
 import { CITIZEN_ERROR_TEXTS } from "../utils/citizenErrorTexts";
 
-/**
- * Confirms a log or marks it as a false report. The logs of a deleted
- * citizen are read only.
- */
 export const confirmCitizenLog = createUseCaseAction({
   name: "confirmCitizenLog",
   schema: confirmCitizenLogInputSchema,

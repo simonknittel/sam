@@ -7,13 +7,11 @@ import { rethrowRecordNotFound } from "../errors.js";
 import { WikiErrorMessage } from "./wikiErrors.js";
 
 /**
- * Finds the tags of the given names in one scope and creates the missing
- * ones in one insert. The tag name is `citext`, thus names that differ only
- * in letter case are one tag: the letter case of an existing tag wins, and
- * of new names that differ only in letter case the first name wins. The
- * insert skips a name that exists, also when a parallel request created it.
- * Runs on the transaction of the caller, so a failed surrounding operation
- * leaves no orphaned tags. Returns each tag one time.
+ * The tag name is `citext`, thus names that differ only in letter case are one
+ * tag: the letter case of an existing tag wins, and of new names that differ
+ * only in letter case the first name wins. The insert skips a name that
+ * exists, also when a parallel request created it. Runs on the transaction of
+ * the caller, so a failed surrounding operation leaves no orphaned tags.
  *
  * @param container Null for the global wiki
  */
@@ -65,19 +63,12 @@ interface WikiPageTags {
   readonly names: readonly string[];
   /** The scope of the tags: the container of the page, or null */
   readonly container: EventContainer | null;
-  /** The citizen that creates the tags and the assignments */
   readonly createdById: string | null;
 }
 
 /**
- * Replaces the tags of a page with the tags of the names, on the transaction
- * of the caller. The tags are found or created in the scope of the page
- * (see `findOrCreateWikiTags()`). A tag whose last assignment goes away here
- * is deleted at once, thus the autocomplete stays clean. The page gets the
- * new `tagsText`. Without a change, nothing is written.
- *
- * @returns the names of the added and of the removed tags
- * @throws NotFoundError when the page is gone or in the trash
+ * A tag whose last assignment goes away here is deleted at once, thus the
+ * autocomplete stays clean
  */
 export const setWikiPageTags = async (
   transaction: Prisma.TransactionClient,

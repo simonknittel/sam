@@ -32,19 +32,12 @@ export const addEventManagersInputSchema = z.object({
 
 export type AddEventManagersInput = z.infer<typeof addEventManagersInputSchema>;
 
-/**
- * Makes citizens managers of an event. Each new manager gets a
- * notification, except the actor.
- */
 export const addEventManagers = (
   context: ApplicationContext,
   actor: Actor,
   input: AddEventManagersInput,
 ): Promise<GetEventOutput> =>
   withSpan(context, "addEventManagers", async () => {
-    /**
-     * Authorize the request
-     */
     const event = await context.prisma.event.findUnique({
       where: {
         id: input.event_id,
@@ -69,8 +62,8 @@ export const addEventManagers = (
     );
 
     /**
-     * Create managers. One transaction, so the activity entries cannot get
-     * lost while the assignment goes through.
+     * One transaction, so the activity entries cannot get lost while the
+     * assignment goes through.
      */
     try {
       await context.prisma.$transaction(async (transaction) => {

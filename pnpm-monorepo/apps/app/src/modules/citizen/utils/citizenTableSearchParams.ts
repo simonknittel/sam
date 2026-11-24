@@ -17,7 +17,6 @@ export enum CitizenTableSort {
 
 export const CITIZEN_TABLE_DEFAULT_SORT = CitizenTableSort.CreatedAtDescending;
 
-/** The search params of the filter sidebar of the citizen table */
 export const CITIZEN_TABLE_UNKNOWN_PARAM = "unknown";
 export const CITIZEN_TABLE_ROLE_PARAM = "role";
 

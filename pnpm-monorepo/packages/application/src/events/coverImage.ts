@@ -6,12 +6,7 @@ import {
 } from "../uploads/assignableUpload.js";
 import { EventErrorMessage } from "./eventErrors.js";
 
-/**
- * The form uploads the cover image before the submit. The cover image must
- * be an own image (`isOwnImageUpload()`).
- *
- * @throws ValidationError when the upload is not an own image
- */
+/** The form uploads the cover image before the submit */
 export const requireOwnCoverImage = async (
   context: ApplicationContext,
   citizenId: string,

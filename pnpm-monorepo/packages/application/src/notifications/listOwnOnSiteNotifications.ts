@@ -5,7 +5,6 @@ import { requireCitizen, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { idSchema, paginateByDatabaseCursor } from "../pagination.js";
 
-/** The notifications of one page of the notification center */
 const ON_SITE_NOTIFICATION_PAGE_SIZE = 25;
 
 export const listOwnOnSiteNotificationsInputSchema = z.object({
@@ -29,8 +28,8 @@ const ON_SITE_NOTIFICATION_LIST_ITEM_SELECT = {
 } satisfies Prisma.OnSiteNotificationSelect;
 
 /**
- * A stored notification. The client validates the payload against the
- * schema of its type and version, the same as for a realtime event.
+ * The client validates the payload against the schema of its type and version,
+ * the same as for a realtime event
  */
 export interface OnSiteNotificationListItem {
   readonly id: string;
@@ -65,13 +64,6 @@ const getArchivedAtFilter = (
   }
 };
 
-/**
- * One page of the notifications of the citizen of the actor in a tab of the
- * notification center, the newest first
- *
- * @throws ForbiddenError for a user without a citizen
- * @throws ValidationError when no own notification has the cursor
- */
 export const listOwnOnSiteNotifications = async (
   context: ApplicationContext,
   actor: Actor,

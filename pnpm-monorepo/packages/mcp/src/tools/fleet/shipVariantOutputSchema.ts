@@ -1,12 +1,10 @@
 import { ShipVariantStatus } from "@sam-monorepo/application";
 import * as z from "zod";
 
-/** The uploaded logo of a manufacturer */
 export const manufacturerLogoOutputSchema = z
   .strictObject({ upload_id: z.string(), mime_type: z.string() })
   .nullable();
 
-/** A variant of the ship catalog as the fleet tools give it */
 export const shipVariantOutputSchema = z.strictObject({
   id: z.string(),
   name: z.string(),

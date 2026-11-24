@@ -11,11 +11,6 @@ import {
 /** See `maximumPerRun` of `greetCitizens()` */
 const MAXIMUM_BIRTHDAY_GREETINGS_PER_RUN = 100;
 
-/**
- * Greets each cleared citizen (see `findClearedCitizens()`) whose birthday
- * starts in their own time zone (see `greetCitizens()` for the run and the
- * markers).
- */
 export const sendBirthdayGreetings = (
   context: ApplicationContext,
 ): Promise<GreetingRunOutput> =>

@@ -56,10 +56,6 @@ const parseImageSource = (element: HTMLElement): string | null =>
     ? element.getAttribute("src")
     : element.getAttribute("href");
 
-/**
- * The inherited image attributes with src/alt/title re-pointed at the
- * anchor markup above, shared by the block image and its floated variant.
- */
 export const withWikiImageElementParsing = (
   inherited: Record<string, unknown>,
 ): Record<string, unknown> => {
@@ -102,10 +98,6 @@ export const wikiImageAnchorParseRule = (
   },
 });
 
-/**
- * The image wrapped in a link to the file it displays, shared by the block
- * image and its floated variant — only the marker attribute differs.
- */
 export const renderWikiImageHTML = (
   markerAttribute: string,
   optionsHTMLAttributes: Record<string, unknown>,
@@ -179,7 +171,7 @@ export const renderWikiImageHTML = (
  * for the other nodes rendering as anchors.
  *
  * Unlike the other blocks the width defaults to NULL — natural image size
- * — because the wide-preset default would upscale small images.
+ * — because a width preset as the default would upscale small images.
  */
 export const WikiImage = Image.extend({
   addAttributes() {

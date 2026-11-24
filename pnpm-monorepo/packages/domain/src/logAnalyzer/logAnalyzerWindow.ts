@@ -5,9 +5,7 @@ import {
 } from "../timeZone.js";
 
 /**
- * The start of the rolling window of the Log Analyzer: the start of the day
- * `daysToLoad` calendar days before the day of `now`, in the time zone of
- * the organization. Null when the window has no time limit (0).
+ * Null when the window has no time limit (0).
  *
  * The client and the server both use it. Thus the table, the upload and the
  * queries of the sharing see the same window, and the hash query covers each

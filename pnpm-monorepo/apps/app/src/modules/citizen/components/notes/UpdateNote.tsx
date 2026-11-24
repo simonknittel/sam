@@ -5,10 +5,8 @@ import type { CitizenNoteRow } from "@sam-monorepo/application";
 import { UpdateNoteModal } from "./UpdateNoteModal";
 
 /**
- * The options of a select: the values in which the user may create a note,
- * and the current value of the note. Without the current value, the select
- * shows a different value, and a save moves the note without a choice of the
- * user.
+ * With the current value of the note: without it, the select shows a different
+ * value, and a save moves the note without a choice of the user.
  */
 const getOptions = <Option extends { readonly id: string }>(
   allOptions: readonly Option[],
@@ -29,11 +27,7 @@ interface Props {
 }
 
 export const UpdateNote = async ({ note, withBullet = false }: Props) => {
-  /**
-   * Only the fields that the dialog reads go to the browser: a row of the
-   * notes table also has the content, the citizen and the names of the
-   * authors
-   */
+  /** Only these fields go to the browser, not the content and the authors */
   const { id, noteTypeId, classificationLevelId } = note;
 
   const [allNoteTypes, allClassificationLevels] = await Promise.all([

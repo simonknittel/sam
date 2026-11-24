@@ -49,11 +49,6 @@ export const readTokenEndpointForm = async (request: Request) => {
   return Object.fromEntries(fields);
 };
 
-/**
- * Parses the form fields with the schema of a use case
- *
- * @throws OAuthTokenError with `invalid_request`
- */
 export const parseTokenEndpointInput = <Schema extends z.ZodType>(
   schema: Schema,
   fields: Record<string, string>,
@@ -67,10 +62,7 @@ export const parseTokenEndpointInput = <Schema extends z.ZodType>(
   return result.data;
 };
 
-/**
- * The JSON error response of RFC 6749 section 5.2. Logs an unexpected
- * error, but never the request body: it contains tokens.
- */
+/** Never logs the request body: it contains tokens */
 export const toTokenEndpointErrorResponse = (
   error: unknown,
   endpoint: string,

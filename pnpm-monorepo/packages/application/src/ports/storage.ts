@@ -1,10 +1,8 @@
-/** One object of the bucket */
 export interface StoredObject {
   readonly key: string;
   readonly lastModified: Date;
 }
 
-/** A key that a delete did not remove, with the error code of the storage */
 export interface StorageDeleteFailure {
   readonly key: string;
   readonly code: string | null;

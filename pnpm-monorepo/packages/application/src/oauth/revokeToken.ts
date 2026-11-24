@@ -18,7 +18,6 @@ export const revokeTokenInputSchema = z.object({
   client_id: z.string().min(1).max(MAX_URL_LENGTH).optional(),
 });
 
-/** Finds the grant of a refresh token, or of an access token that is valid */
 const findGrantOfToken = async (
   context: ApplicationContext,
   token: string,

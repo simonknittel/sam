@@ -19,8 +19,8 @@ export interface RestoreEventTemplateOutput {
 }
 
 /**
- * Brings a soft-deleted template back, with its role shares intact — unlike
- * a career flow it holds no unique slug, so nothing can block the restore.
+ * Unlike a career flow, a template holds no unique slug, so nothing can block
+ * the restore
  */
 export const restoreEventTemplate = (
   context: ApplicationContext,

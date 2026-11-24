@@ -8,9 +8,8 @@ import {
 } from "@sam-monorepo/domain";
 
 /*
- * The system log is immutable, thus a change of the lineup of an event
- * writes the entry that it always wrote, and a change of the lineup of a
- * template writes one of the template types.
+ * The system log is immutable, thus the lineup of an event and the lineup of a
+ * template have their own types
  */
 
 export const buildPositionNameUpdatedAuditEvent = (
@@ -45,10 +44,6 @@ interface CopiedPosition {
   readonly positionId: string;
 }
 
-/**
- * A paste between two events writes the entry that it always wrote. When a
- * template is the source or the target, the template type is written.
- */
 export const buildPositionCopiedAuditEvent = (
   source: CopiedPosition,
   target: CopiedPosition,

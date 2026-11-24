@@ -18,7 +18,6 @@ import {
   type ReadMarkerItem,
 } from "./writeReadMarkers.js";
 
-/** The fields of a stored on-site notification which name its item */
 interface NotificationContent {
   readonly notificationType: string;
   readonly payload: unknown;
@@ -44,8 +43,7 @@ const findAnnouncedItem = (
 };
 
 /**
- * Marks the items which the notifications announce as read by the actor. The
- * caller has marked the notifications as read.
+ * The caller has marked the notifications as read.
  *
  * @returns whether an announced item was new for the actor
  */
@@ -64,8 +62,7 @@ export const markAnnouncedItemsAsRead = async (
 };
 
 /**
- * Marks the unread notifications of the actor which announce the items as
- * read, also the archived ones. The caller has marked the items as read.
+ * Also the archived notifications. The caller has marked the items as read.
  *
  * @returns the number of notifications which were unread
  */

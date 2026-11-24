@@ -9,10 +9,8 @@ import { MatrixCell } from "./MatrixCell";
 import { MatrixRoleCell } from "./MatrixRoleCell";
 
 /**
- * Sorted once at module scope, so the columns and every row agree on the
- * order without mutating the shared constant. The locale is pinned because
- * this module renders on the server and in the browser, and the two must
- * not disagree on the order (a hydration mismatch).
+ * The locale is pinned because this module renders on the server and in the
+ * browser, and a different order is a hydration mismatch.
  */
 const permissions = PERMISSION_CATALOG.toSorted((first, second) =>
   first.section.localeCompare(second.section, "de"),
@@ -98,11 +96,7 @@ const MatrixRow = ({ role }: MatrixRowProps) => {
 
   return (
     <tr
-      /**
-       * content-visibility lets the browser skip layout and paint for the
-       * rows outside the viewport; the intrinsic height keeps the scrollbar
-       * stable and must agree with the h-8 cells.
-       */
+      /** The intrinsic height must agree with the h-8 cells */
       className="-mx-2 grid grid-cols-(--table-columns) items-center gap-2 [contain-intrinsic-height:2rem] [content-visibility:auto]"
     >
       <MatrixRoleCell role={role} href={`/app/roles/${role.id}`} />

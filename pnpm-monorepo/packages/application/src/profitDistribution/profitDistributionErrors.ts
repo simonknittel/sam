@@ -1,8 +1,3 @@
-/**
- * The messages of the errors that the profit distribution use cases throw
- * for a rule of the cycles. They are the members of an enum, thus an app can
- * map them to its own texts.
- */
 export enum ProfitDistributionErrorMessage {
   /** A `NotFoundError` */
   CycleNotFound = "The profit distribution cycle does not exist",

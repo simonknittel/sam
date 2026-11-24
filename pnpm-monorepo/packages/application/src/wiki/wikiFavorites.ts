@@ -1,15 +1,13 @@
 import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 
-/** The list of recent pages shows at most this number of visits */
 const MAXIMUM_RECENT_WIKI_VISITS = 20;
 
 /**
- * The ids of the favorite pages of the actor. The ids are not filtered: the
- * callers apply the permissions of their wiki scope, thus a page that became
- * invisible drops out of the lists, and the favorite stays in case the access
- * returns. Needs no scope, thus the sidebar of a briefing can call it without
- * a load of the global wiki. An actor without a citizen has no favorites.
+ * The ids are not filtered: the callers apply the permissions of their wiki
+ * scope, thus a page that became invisible drops out of the lists, and the
+ * favorite stays in case the access returns. Needs no scope, thus the sidebar
+ * of a briefing can call it without a load of the global wiki.
  */
 export const findOwnWikiFavoritePageIds = async (
   context: ApplicationContext,
@@ -26,10 +24,7 @@ export const findOwnWikiFavoritePageIds = async (
   return favorites.map((favorite) => favorite.pageId);
 };
 
-/**
- * The ids of the pages that the actor visited most recently, newest first.
- * The ids are not filtered, like the favorites above.
- */
+/** The ids are not filtered, like the favorites above */
 export const findOwnRecentWikiPageIds = async (
   context: ApplicationContext,
   actor: Actor,

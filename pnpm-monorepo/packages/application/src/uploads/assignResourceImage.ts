@@ -47,7 +47,6 @@ export type AssignRoleTagImageInput = z.infer<
 >;
 
 export interface AssignResourceImageOutput {
-  /** The image whose dimensions the host probes after the response */
   readonly probe_upload_id: string;
 }
 
@@ -69,14 +68,7 @@ const toRoleImageData = (
   }
 };
 
-/**
- * Sets the image of a manufacturer. The author of an upload is a citizen,
- * thus the actor needs one.
- *
- * @throws ForbiddenError when the user has no citizen or when the actor does
- * not have `manufacturersSeriesAndVariants;manage`
- * @throws NotFoundError `UploadErrorMessage.TargetNotFound`
- */
+/** The author of an upload is a citizen, thus the actor needs one */
 export const assignManufacturerImage = async (
   context: ApplicationContext,
   actor: Actor,
@@ -111,14 +103,6 @@ export const assignManufacturerImage = async (
   return { probe_upload_id: input.upload_id };
 };
 
-/**
- * Sets the icon or the thumbnail of a role. The author of an upload is a
- * citizen, thus the actor needs one.
- *
- * @throws ForbiddenError when the user has no citizen or when the actor does
- * not have `role;manage`
- * @throws NotFoundError `UploadErrorMessage.TargetNotFound`
- */
 export const assignRoleImage = async (
   context: ApplicationContext,
   actor: Actor,
@@ -153,16 +137,6 @@ export const assignRoleImage = async (
   return { probe_upload_id: input.upload_id };
 };
 
-/**
- * Sets the icon of a role tag. The icon must be an image of the citizen of
- * the actor. The nightly cleanup deletes the upload of a replaced icon.
- *
- * @throws ForbiddenError when the user has no citizen, when the actor does
- * not have `role;manage`, or when the upload belongs to a different citizen
- * @throws NotFoundError `UploadErrorMessage.TargetNotFound` or
- * `UploadErrorMessage.UploadNotFound`
- * @throws ValidationError when the upload is not an image
- */
 export const assignRoleTagImage = async (
   context: ApplicationContext,
   actor: Actor,

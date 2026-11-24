@@ -1,7 +1,3 @@
-/**
- * The use cases of the Spynet: citizens, their notes, the settings of the
- * note types and the classification levels, and the search
- */
 export { hasBirthdayTodaySafely } from "./birthdays.js";
 export {
   CitizenErrorMessage,

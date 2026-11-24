@@ -32,11 +32,7 @@ const findActiveCitizenIdBySpectrumId = async (
     })
   )?.id ?? null;
 
-/**
- * Creates a citizen with its Spectrum ID log. A known Spectrum ID gives its
- * citizen and creates no duplicate. Requires `citizen;create` and a citizen:
- * the creator of a citizen is a citizen, not a login.
- */
+/** The creator of a citizen is a citizen, not a login */
 export const createCitizen = (
   context: ApplicationContext,
   actor: Actor,

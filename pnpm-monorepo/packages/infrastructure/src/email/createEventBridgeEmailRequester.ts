@@ -7,17 +7,13 @@ const EMAIL_REQUESTED_DETAIL_TYPE = "EmailRequested";
 
 export interface EventBridgeEmailRequesterOptions {
   readonly emitEvents: EmitEvents;
-  /**
-   * The `Source` of the events: the host that requests the emails, for
-   * example "App" or the name of a Lambda function
-   */
+  /** For example "App" or the name of a Lambda function */
   readonly source: string;
 }
 
 /**
- * Sends each request as one `EmailRequested` event to the email function.
- * The detail is the contract with the request schema of the email function.
- * The function processes each `requestId` only once.
+ * The detail is the contract with the request schema of the email function. The
+ * function processes each `requestId` only once.
  */
 export const createEventBridgeEmailRequester = ({
   emitEvents,

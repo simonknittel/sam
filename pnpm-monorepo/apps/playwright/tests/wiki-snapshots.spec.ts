@@ -49,10 +49,6 @@ test("editing a page snapshots its previous state, which can be restored again",
   await expect(snapshotRow).toBeVisible();
   await expect(snapshotRow).toContainText("Automatisch");
 
-  /**
-   * Restoring writes the snapshot back through the collab server, so live
-   * editing sessions converge on it.
-   */
   const restoreDialog = modal(page, "Snapshot wiederherstellen");
   await clickUntilVisible(
     snapshotRow.getByRole("button", { name: "Wiederherstellen" }),
@@ -69,7 +65,6 @@ test("editing a page snapshots its previous state, which can be restored again",
     "Erste Fassung.",
   );
 
-  // The state it replaced is kept as the undo path
   await expect
     .poll(() =>
       prisma.wikiPageSnapshot.count({

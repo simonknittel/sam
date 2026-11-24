@@ -10,7 +10,6 @@ import {
 
 interface Props {
   readonly attrs: Readonly<Record<string, unknown>>;
-  /** Intrinsic dimensions of the content's uploaded images, by upload id */
   readonly imageDimensions: Readonly<Record<string, WikiImageDimensions>>;
   /**
    * Load immediately and with priority instead of lazily — for the page's
@@ -18,20 +17,18 @@ interface Props {
    */
   readonly eager?: boolean;
   /**
-   * Render as the floated inline image (wikiFloatImage node) instead of
-   * the block image: its own marker, the float side instead of the
-   * block-position margins
+   * Render as the floated inline image (wikiFloatImage node) instead of the
+   * block image
    */
   readonly floating?: boolean;
 }
 
 /**
- * An image in the static read view, mirroring the node's renderHTML: an
- * anchor to the original file as the node's outer element carrying the
- * layout attributes, the image inside it. Uploads with probed dimensions
- * render through the Next.js image optimizer with their aspect-ratio box
- * reserved from SSR; everything else (external srcs, SVG, GIF, uploads
- * without dimensions) keeps the original src.
+ * Mirrors the node's renderHTML: an anchor to the original file as the node's
+ * outer element carrying the layout attributes, the image inside it. Uploads
+ * with probed dimensions render through the Next.js image optimizer with their
+ * aspect-ratio box reserved from SSR; everything else (external srcs, SVG,
+ * GIF, uploads without dimensions) keeps the original src.
  */
 export const WikiContentImage = ({
   attrs,

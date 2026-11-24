@@ -572,7 +572,6 @@ describe("the reader role", () => {
     return rows.map((row) => row.value);
   };
 
-  /** Runs the SQL in a new session, without a result */
   const execute = (connection: string, sql: string) =>
     prisma.$queryRaw`
       SELECT reader_session.dblink_exec(${connection}, ${sql})

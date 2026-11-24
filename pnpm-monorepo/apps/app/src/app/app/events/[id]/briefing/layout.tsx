@@ -12,11 +12,6 @@ import { createEventWikiHrefMode } from "@/modules/wiki/utils/wikiPageHref";
 import { notFound } from "next/navigation";
 import { FaSitemap } from "react-icons/fa";
 
-/**
- * Shell of the briefing tab: the wiki-style sidebar layout pointed at the
- * event routes. Like the wiki's sidebar layout it survives navigations
- * between briefing pages, carrying the sidebar's scroll position over.
- */
 export default async function Layout({
   children,
   params,
@@ -26,9 +21,8 @@ export default async function Layout({
   const context = await getEventWikiContext(container);
 
   /**
-   * The gate: events without a root page (created before the briefing
-   * feature) or with an unreadable one have no briefing — 404 instead of
-   * 403, matching the wiki's existence-hiding.
+   * An event can have no root page. A root page that the viewer cannot read
+   * also gives 404 and not 403: its existence must not leak.
    */
   if (!context || !hasReadableEventWikiRoot(context)) notFound();
 

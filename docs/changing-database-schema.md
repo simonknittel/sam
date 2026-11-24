@@ -3,7 +3,7 @@
 1. Update the schema in `pnpm-monorepo/packages/database/prisma/models/` (one `.prisma` file for each domain; `schema.prisma` only holds the datasource and the generator)
 2. Go to the database package: `cd pnpm-monorepo/packages/database`
 3. Run `pnpm exec prisma db push`
-4. Create the migration: `pnpm run migrate:dev` (this script runs `prisma migrate dev` and then builds the package again, so that all consumers get the new client)
+4. Create the migration: `pnpm run migrate:dev`. The script also generates the client, because `prisma migrate dev` does not do this.
    - `prisma migrate dev` asks to reset the local database. This is the expected behavior: `db push` (step 3) made the local schema different from the migration history. The reset applies all migrations again, together with the new one.
 5. Commit
 6. Apply the migration to the other developer databases: `pnpm run migrate:dev`
@@ -19,7 +19,11 @@ Step 4 resets the local database. To keep the data, use one of these options:
 - Create an empty database in the `psql` container (`CREATE DATABASE <name>`), set `DATABASE_URL` to it, and run step 4 there. Skip step 3.
 - Do step 3. Then create the SQL with `pnpm exec prisma migrate diff --from-migrations prisma/migrations --to-schema prisma --script -o <temporary file>`. This command requires a shadow database in the Prisma config. Move the file to `prisma/migrations/<name>/migration.sql`. Then mark the migration as applied: `pnpm exec prisma migrate resolve --applied <name>`.
 
-Do not change a migration that a database already applied. `prisma migrate deploy` compares the checksums and fails.
+Do not change a migration that a database already applied. `prisma migrate deploy` does not examine the checksums: it succeeds, and the database does not get the change. `prisma migrate dev` asks to reset the local database.
+
+## Database rules outside of the Prisma models
+
+CHECK constraints, triggers and expression indexes are only in the migrations. `prisma db push` does not create them, and a write that breaks a CHECK fails only at runtime. Name a new CHECK in a comment at its model. To find them: `grep -rE "CHECK \(|CREATE TRIGGER|USING GIN" prisma/migrations`.
 
 ## Views of the schema `statistics`
 

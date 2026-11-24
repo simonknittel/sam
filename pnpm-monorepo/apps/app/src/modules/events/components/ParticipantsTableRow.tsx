@@ -14,7 +14,6 @@ interface Props {
   readonly showRemoveButton: boolean;
 }
 
-/** The roles wrap, thus a row grows until it shows all roles */
 export const ParticipantsTableRow = ({
   eventId,
   resolvedParticipant,

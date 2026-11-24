@@ -24,11 +24,8 @@ import {
 } from "./organizationActivityTypes";
 
 interface Input {
-  /** Restricts the source to one organization's history. */
   readonly organizationId?: Organization["id"];
-  /** Restricts the membership source to one citizen's history. */
   readonly citizenId?: Citizen["id"];
-  /** Whether the entry's subject gets its own column. */
   readonly withTarget?: boolean;
   /** See `OrganizationMembershipActivityInput.withConfirmation` */
   readonly withConfirmation?: boolean;

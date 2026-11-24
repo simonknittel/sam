@@ -16,7 +16,6 @@ import { useSelectionChanges } from "./useSelectionChanges";
 
 interface Props {
   readonly tag: Pick<ManagedRoleTag, "id" | "name" | "description" | "roleIds">;
-  /** All roles: `role;manage` manages the tags of all roles */
   readonly roles: readonly RolePickerRole[];
 }
 

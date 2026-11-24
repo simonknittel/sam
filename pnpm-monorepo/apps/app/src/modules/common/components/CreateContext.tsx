@@ -153,9 +153,8 @@ export const createForms = {
 };
 
 /**
- * Per-open input for the form behind a modal id, e.g. the template a
- * create-event modal starts from. Every form ignores what it does not
- * declare, so the payload stays a plain optional prop bag.
+ * Every form ignores what it does not declare, so the payload stays a plain
+ * optional prop bag.
  */
 export interface CreateFormPayload {
   readonly templateId?: string;
@@ -235,10 +234,6 @@ const ModalWithFormComponent = ({
   );
 };
 
-/**
- * Check for undefined since the defaultValue of the context is undefined. If
- * it's still undefined, the provider component is missing.
- */
 export function useCreateContext() {
   const context = useContext(CreateContext);
   if (!context) throw new Error("[CreateContext] Provider is missing!");

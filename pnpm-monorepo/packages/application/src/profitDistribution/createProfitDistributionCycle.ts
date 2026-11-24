@@ -34,13 +34,6 @@ export interface CreateProfitDistributionCycleOutput {
   readonly collection_ends_at: Date;
 }
 
-/**
- * Creates a cycle in its collection phase. Requires a citizen and
- * `profitDistributionCycle;create`.
- *
- * @throws ValidationError when the planned end is before today in the time
- * zone of the organization
- */
 export const createProfitDistributionCycle = (
   context: ApplicationContext,
   actor: Actor,

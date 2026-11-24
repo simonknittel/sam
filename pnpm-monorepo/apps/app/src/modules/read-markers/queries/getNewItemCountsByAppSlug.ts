@@ -9,10 +9,7 @@ import { ReadMarkerSubject } from "@sam-monorepo/domain";
 import { cache } from "react";
 import { READ_MARKER_APP_SLUGS } from "../utils/readMarkerSubjects";
 
-/**
- * The number of new items of each subject type, keyed by the app whose dot
- * badge shows it. A subject type which the viewer may not read counts 0.
- */
+/** A subject type which the viewer may not read counts 0 */
 export const getNewItemCountsByAppSlug = cache(
   withTrace(
     "getNewItemCountsByAppSlug",
@@ -25,7 +22,6 @@ export const getNewItemCountsByAppSlug = cache(
         actor,
       );
 
-      // Subjects of the same app share its dot badge
       return addCountsByAppSlug(
         ...Object.values(ReadMarkerSubject).map((subject) => ({
           [READ_MARKER_APP_SLUGS[subject]]: counts[subject],

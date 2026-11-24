@@ -21,6 +21,10 @@ import timezonesScreenshot from "@/modules/timezones/assets/screenshot.png";
 import wikiScreenshot from "@/modules/wiki/assets/screenshot.png";
 import type { IntegratedApp } from "./types";
 
+/**
+ * Do not change a slug: see `AppKeyNamespace`. `READ_MARKER_APP_SLUGS` and the
+ * layout of `/app` repeat some slugs for the dot badges.
+ */
 export const INTEGRATED_APPS: IntegratedApp[] = [
   {
     name: "Account",

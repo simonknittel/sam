@@ -7,11 +7,7 @@ export interface RefreshSilcBalancesOutput {
   readonly citizen_count: number;
 }
 
-/**
- * Rebuilds the cached SILC balance and the lifetime earnings of all
- * citizens, also of the deleted ones, from the ledger. Requires
- * `silcBalanceOfOtherCitizen;manage`.
- */
+/** Also for the deleted citizens */
 export const refreshSilcBalances = (
   context: ApplicationContext,
   actor: Actor,

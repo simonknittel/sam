@@ -40,8 +40,6 @@ const EventTemplateLineup = async ({ templateId }: Props) => {
 
   const [positions, variantCatalog] = await Promise.all([
     getEventTemplateLineup(templateId),
-    // Only the position forms use the catalog. It is large, thus a viewer
-    // who cannot edit the template does not get it.
     canEdit ? getVariantCatalog() : EMPTY_VARIANT_CATALOG,
   ]);
 

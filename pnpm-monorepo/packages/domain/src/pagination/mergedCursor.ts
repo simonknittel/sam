@@ -13,7 +13,6 @@ export interface CursorPosition {
   readonly id: string;
 }
 
-/** The part of an entry the merging needs to order it. */
 export interface MergedCursorEntry {
   readonly sourceKey: string;
   readonly id: string;
@@ -21,10 +20,8 @@ export interface MergedCursorEntry {
 }
 
 /**
- * Fetches up to `take` entries of one source, starting right after
- * `position` in the direction being walked. Sources are expected to push the
- * position into their query (see `buildCursorConditions`) rather than to
- * filter afterwards.
+ * Sources are expected to push the position into their query (see
+ * `buildCursorConditions`) rather than to filter afterwards.
  */
 export interface MergedCursorSourceInput {
   readonly position: CursorPosition | null;
@@ -42,8 +39,8 @@ export const encodeCursor = (entry: MergedCursorEntry) =>
   [entry.date.toISOString(), entry.sourceKey, entry.id].join(CURSOR_SEPARATOR);
 
 /**
- * Cursors come from the URL, so anything malformed resolves to "no position"
- * — the first page — instead of throwing.
+ * Cursors come from the URL or from an MCP client, so anything malformed
+ * resolves to "no position" — the first page — instead of throwing.
  */
 export const decodeCursor = (cursor?: string | null): CursorPosition | null => {
   if (!cursor) return null;
@@ -83,7 +80,6 @@ export const compareMergedCursorEntries = (
   return first.id < second.id ? 1 : -1;
 };
 
-/** Whether the entry sits beyond the position in the direction being walked. */
 export const isBeyondCursorPosition = (
   entry: MergedCursorEntry,
   position: CursorPosition | null,
@@ -108,8 +104,7 @@ interface DateFieldCondition {
 
 /**
  * Deliberately mutable and structural so it drops straight into a Prisma
- * `where`'s `AND` without a cast. `DateField` is the column the source
- * orders by.
+ * `where`'s `AND` without a cast.
  */
 export type CursorCondition<DateField extends string> = Partial<
   Record<DateField, Date | DateFieldCondition>
@@ -124,14 +119,13 @@ const onDateField = <DateField extends string>(
 ) => ({ [dateField]: condition }) as CursorCondition<DateField>;
 
 /**
- * The `where` conditions selecting the rows of one source that sit beyond
- * `position`. Returned as an array so callers can drop it into their own
- * `AND` without colliding with the other filters' conditions.
+ * Returned as an array so callers can drop it into their own `AND` without
+ * colliding with the other filters' conditions.
  *
- * When the position was produced by a different source, whether this
- * source's rows with the very same timestamp sit before or after it is
- * decided by the source keys alone — that is what makes them comparable
- * without reading the other source's rows.
+ * When the position was produced by a different source, whether this source's
+ * rows with the very same timestamp sit before or after it is decided by the
+ * source keys alone — that is what makes them comparable without reading the
+ * other source's rows.
  */
 export const buildCursorConditions = <DateField extends string>(
   position: CursorPosition | null,
@@ -202,9 +196,9 @@ interface PaginateMergedSourcesInput<Entry extends MergedCursorEntry> {
 }
 
 /**
- * Cuts one page out of several independently queried sources. Each source is
- * asked for one entry more than the page holds, which is what tells a page
- * that ends exactly on a source boundary apart from one that has run out.
+ * Each source is asked for one entry more than the page holds, which is what
+ * tells a page that ends exactly on a source boundary apart from one that has
+ * run out.
  */
 export const paginateMergedSources = async <Entry extends MergedCursorEntry>({
   sources,

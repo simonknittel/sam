@@ -7,7 +7,6 @@ export interface WikiPageIndexEntry {
   readonly title: string;
   readonly slug: string;
   readonly iconId: string | null;
-  /** Scope-aware link from resolveWikiPageIndex; absent in legacy data */
   readonly href?: string;
   readonly children: readonly WikiPageIndexEntry[];
 }
@@ -15,16 +14,13 @@ export interface WikiPageIndexEntry {
 interface Props {
   readonly entries: readonly WikiPageIndexEntry[];
   readonly isLoading?: boolean;
-  /** The node's width/position styles in the static render (wikiBlockLayoutStyle) */
   readonly style?: CSSProperties;
 }
 
 /**
- * The rendered page index ("Seitenverzeichnis"): a nested list of page
- * links. Shared between the static render for readers and the editor node
- * view so both look the same. The entries are resolved and
- * permission-filtered server-side — different viewers may see different
- * lists.
+ * Shared between the static render for readers and the editor node view so
+ * both look the same. The entries are resolved and permission-filtered
+ * server-side — different viewers may see different lists.
  */
 export const WikiPageIndexList = ({
   entries,

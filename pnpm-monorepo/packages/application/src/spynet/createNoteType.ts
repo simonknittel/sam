@@ -14,7 +14,6 @@ export const createNoteTypeInputSchema = z.object({
 
 export type CreateNoteTypeInput = z.infer<typeof createNoteTypeInputSchema>;
 
-/** Creates a note type. Requires `noteType;manage`. */
 export const createNoteType = async (
   context: ApplicationContext,
   actor: Actor,

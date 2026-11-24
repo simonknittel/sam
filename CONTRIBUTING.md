@@ -49,7 +49,7 @@ pnpm test
 
 ## Format the code
 
-Prettier formats the `pnpm-monorepo` directory. Run `pnpm run format` from `pnpm-monorepo` before you commit — CI fails on files that are not formatted.
+Prettier formats the `pnpm-monorepo` directory. Run `pnpm run format` from `pnpm-monorepo` before you commit. CI checks only `apps/app`.
 
 ## Commit messages
 
@@ -57,7 +57,7 @@ Commit messages must follow [Conventional Commits](https://www.conventionalcommi
 
 ## CI workflows
 
-- **Validate app**: lint, Prettier check, unit tests (app, Lambda functions and packages) and typecheck (app, packages and scripts). Runs on pull requests and pushes that change the monorepo. All jobs are blocking.
+- **Validate app**: lint, Prettier check, unit tests (app, Lambda functions and packages) and typecheck (app, Lambda functions, packages and scripts). Runs on pull requests and on pushes to `main` that change the monorepo.
 - **Playwright tests**: the full end-to-end suite against a self-contained stack. Runs on changes to the app, the collab server, the workspace packages or the workspace plumbing.
 - **Validate commit messages**: enforces Conventional Commits on pull request commits (currently disabled)
 - **CodeQL**: static security analysis

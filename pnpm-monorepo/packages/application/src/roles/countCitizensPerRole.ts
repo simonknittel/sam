@@ -7,16 +7,14 @@ import type { ApplicationContext } from "../context.js";
 import { withSpan } from "../withSpan.js";
 
 export interface CountCitizensPerRoleOutput {
-  /** The number of roles that the run counted */
   readonly roleCount: number;
-  /** The number of counts that the run saved. Zero for a repeated run. */
+  /** Zero for a repeated run */
   readonly savedCount: number;
 }
 
 /**
- * Saves the number of active citizens of each role for the day that just
- * ended: the day before the time of the run in the time zone of the
- * organization.
+ * Counts the day that just ended: the day before the run in the time zone of
+ * the organization
  */
 export const countCitizensPerRole = (
   context: ApplicationContext,
@@ -56,12 +54,6 @@ export const countCitizensPerRole = (
       count: citizenCountByRoleId.get(role.id) ?? 0,
     }));
 
-    /**
-     * A run that repeats in the same night (for example after an error in a
-     * later job) keeps the counts of the first run, see
-     * `RoleCitizenCount_roleId_day_key`. The first run is the nearest to the
-     * end of the counted day.
-     */
     const created = await context.prisma.roleCitizenCount.createMany({
       data,
       skipDuplicates: true,

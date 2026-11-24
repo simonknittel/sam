@@ -21,19 +21,11 @@ import { withSpan } from "../withSpan.js";
 const REMINDER_WALL_TIME = "07:30";
 
 export interface SendEventMorningRemindersOutput {
-  /** True only for the run of the day that sends the reminders */
   readonly isReminderRun: boolean;
-  /** The events (from the app and from Discord) of the reminders */
   readonly eventCount: number;
   readonly notificationsSent: boolean;
 }
 
-/**
- * Requests the `EventMorningReminder` notification of each event with an
- * active participant that starts in the window of today (see
- * `REMINDER_WALL_TIME`). Only the first run after the reminder time sends
- * them, the other runs of the day do nothing.
- */
 export const sendEventMorningReminders = (
   context: ApplicationContext,
 ): Promise<SendEventMorningRemindersOutput> =>

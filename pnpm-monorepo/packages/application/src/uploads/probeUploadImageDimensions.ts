@@ -25,12 +25,8 @@ const isPlausibleDimension = (value: number | undefined): value is number =>
   value <= MAXIMUM_IMAGE_DIMENSION;
 
 /**
- * Reads the dimensions of an image upload from the bucket and saves them on
- * the row of the upload. It also replaces the size of the row with the size
- * of the object: the declared size is only a statement of the client. The
- * host runs it after the response. It never throws: a failure is logged and
- * the row stays as it is. The renderers then show the image without
- * dimensions.
+ * Never throws: a failure is logged and the row stays as it is. The renderers
+ * then show the image without dimensions.
  */
 export const probeUploadImageDimensions = (
   context: ApplicationContext,

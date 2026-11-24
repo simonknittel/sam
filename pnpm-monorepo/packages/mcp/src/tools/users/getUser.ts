@@ -18,7 +18,7 @@ export const getUserTool = defineTool({
   group: ToolGroup.Users,
   title: "Get a user",
   description:
-    "Gives one user of SAM: the id, the Discord name, the redacted email address, the role, the Discord id, the two-factor status, the citizen and the ban. Without user_id: the signed-in user, also with this client (admin mode, the number of permissions, the tool groups that this client can use, and the URL of the page where the user selects the tools). A different user requires the permission to read the users.",
+    "Gives one user of SAM: the id, the display name, the redacted email address, the role, the Discord id, the two-factor status, the citizen and the ban. Without user_id: the signed-in user, also with this client (admin mode, the number of permissions, the tool groups that this client can use, and the URL of the page where the user selects the tools). A different user requires the permission to read the users.",
   annotations: READ_ONLY_TOOL_ANNOTATIONS,
   readAuditEventType: AuditEventType.USER_READ,
   inputSchema: getUserInputSchema,

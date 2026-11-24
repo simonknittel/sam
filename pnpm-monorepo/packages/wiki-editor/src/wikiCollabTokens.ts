@@ -6,7 +6,6 @@
  * the token kinds from ever being interchangeable.
  */
 
-/** Authorizes one editor connection to one page */
 export interface WikiCollabSessionTokenPayload {
   readonly scope: "session";
   /** User id (JWT subject) — attributed as the audit event author */
@@ -16,14 +15,12 @@ export interface WikiCollabSessionTokenPayload {
   readonly canEdit: boolean;
 }
 
-/** Authorizes one internal replace request for one page */
 export interface WikiCollabReplaceTokenPayload {
   readonly scope: "replace";
   readonly pageId: string;
   readonly entityId: string | null;
 }
 
-/** Authorizes one internal request that closes all connections of one user */
 export interface WikiCollabDisconnectTokenPayload {
   readonly scope: "disconnect";
   /** The user (JWT subject) whose connections the collab server closes */
@@ -31,8 +28,8 @@ export interface WikiCollabDisconnectTokenPayload {
 }
 
 /**
- * Parses a verified JWT's payload into a session token; NULL for anything
- * that is not one (the payload crosses a trust boundary on the server).
+ * NULL for anything that is not a session token (the payload crosses a trust
+ * boundary on the server).
  */
 export const parseWikiCollabSessionTokenPayload = (
   payload: unknown,
@@ -57,9 +54,8 @@ export const parseWikiCollabSessionTokenPayload = (
 };
 
 /**
- * Parses a verified JWT's payload into a replace token; NULL for anything
- * that is not one — including session tokens, which must never authorize
- * a replace.
+ * NULL for anything that is not a replace token — including session tokens,
+ * which must never authorize a replace.
  */
 export const parseWikiCollabReplaceTokenPayload = (
   payload: unknown,
@@ -80,8 +76,8 @@ export const parseWikiCollabReplaceTokenPayload = (
 };
 
 /**
- * Parses a verified JWT's payload into a disconnect token; NULL for anything
- * that is not one — including session tokens, which have a user too.
+ * NULL for anything that is not a disconnect token — including session tokens,
+ * which have a user too.
  */
 export const parseWikiCollabDisconnectTokenPayload = (
   payload: unknown,

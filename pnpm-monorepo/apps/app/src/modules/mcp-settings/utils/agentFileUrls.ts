@@ -1,7 +1,4 @@
-/**
- * The public URLs and file names of the files for AI agents (see
- * `docs/mcp-server.md`). The paths are the paths of the route handlers.
- */
+/** The paths are the paths of the route handlers */
 
 export const CLAUDE_PLUGIN_ARCHIVE_FILE_NAME = "sam.zip";
 

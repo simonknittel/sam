@@ -37,7 +37,6 @@ export type AssignEventCoverImageInput = z.infer<
 
 export interface AssignEventCoverImageOutput {
   readonly event_id: string;
-  /** The image whose dimensions the host probes after the response */
   readonly probe_upload_id: string | null;
   /**
    * The sync of a published event. The cover image is saved before the
@@ -46,20 +45,7 @@ export interface AssignEventCoverImageOutput {
   readonly discord: DiscordSyncResult;
 }
 
-/**
- * Sets or removes the cover image of an app event. Only app events have a
- * cover. The change needs the manage rule of the other event settings, and
- * it is not possible after the end of the event. The cover must be an image
- * of the citizen of the actor. The nightly cleanup deletes the upload of a
- * replaced or removed cover. A published event gets the cover on Discord
- * too.
- *
- * @throws ForbiddenError when the user has no citizen, when the actor cannot
- * manage the event, when the event is over, or when the upload belongs to a
- * different citizen
- * @throws NotFoundError when the event or the upload does not exist
- * @throws ValidationError when the upload is not an image
- */
+/** Only app events have a cover image */
 export const assignEventCoverImage = (
   context: ApplicationContext,
   actor: Actor,

@@ -34,7 +34,6 @@ vi.mock("next-intl/server", async () => {
   };
 });
 
-/** The support link of the message becomes plain text */
 const INTERNAL_SERVER_ERROR_TEXT =
   "Ein unerwarteter Fehler ist aufgetreten. Bitte probiere es später erneut. Wenn der Fehler weiterhin auftritt, wende dich an den Support.";
 const BAD_REQUEST_TEXT = "Ungültige Anfrage";

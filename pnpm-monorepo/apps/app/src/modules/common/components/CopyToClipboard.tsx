@@ -5,7 +5,7 @@ import { useEffect, useState, type MouseEventHandler } from "react";
 import { FaCheck, FaCopy, FaTimes } from "react-icons/fa";
 import { Tooltip } from "./Tooltip";
 
-/** How long (in ms) the result of the copy stays visible */
+/** Milliseconds */
 const FEEDBACK_DURATION = 2000;
 
 enum CopyResult {

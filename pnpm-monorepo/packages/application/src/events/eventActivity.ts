@@ -6,9 +6,8 @@ import type {
 } from "@sam-monorepo/database/client";
 
 /**
- * Payload shapes of the stored activity types. "Event start"/"event end"
- * entries have no stored type — they are rendered synthetically from the
- * event's startTime/endTime.
+ * The "event start" and "event end" entries have no stored type: the app
+ * renders them from the startTime and the endTime of the event
  */
 export interface EventActivityPayloadByType {
   [EventActivityType.CREATED]: null;
@@ -31,8 +30,9 @@ export interface EventActivityPayloadByType {
   };
   [EventActivityType.PARTICIPATION_CANCELLED]: null;
   /**
-   * Manager-driven participation changes: the row's own citizen column holds
-   * the acting manager, so the affected citizen goes into the payload.
+   * The changes by a manager: the row's citizen column holds the acting
+   * manager, so the affected citizen goes into the payload. The managers, the
+   * invitations and the applications follow the same convention.
    */
   [EventActivityType.PARTICIPATION_ADDED_BY_MANAGER]: {
     citizenId: string;
@@ -42,11 +42,6 @@ export interface EventActivityPayloadByType {
     citizenId: string;
     reason: string | null;
   };
-  /**
-   * Manager assignments follow the same convention: the row's citizen column
-   * holds the acting manager, the payload the manager who was added or
-   * removed.
-   */
   [EventActivityType.MANAGER_ADDED]: {
     citizenId: string;
   };
@@ -56,21 +51,14 @@ export interface EventActivityPayloadByType {
   [EventActivityType.LINEUP_TOGGLED]: {
     enabled: boolean;
   };
-  /** The count of the sign-ups that the switch to false cancelled */
   [EventActivityType.PARTICIPATION_TOGGLED]: {
     enabled: boolean;
     cancelledParticipantCount: number;
   };
-  /**
-   * The invitations follow the convention of the manager-driven changes: the
-   * row's citizen column holds the acting manager, the payload the invited
-   * citizen. The answers are the own changes of the invited citizen.
-   */
   [EventActivityType.INVITATION_CREATED]: {
     citizenId: string;
     message: string | null;
   };
-  /** The comment of the sign-up that accepted the invitation */
   [EventActivityType.INVITATION_ACCEPTED]: {
     comment: string | null;
   };
@@ -80,15 +68,12 @@ export interface EventActivityPayloadByType {
   [EventActivityType.INVITATION_WITHDRAWN]: {
     citizenId: string;
   };
-  /** An own change of the applicant: the comment of the application */
   [EventActivityType.APPLICATION_CREATED]: {
     comment: string | null;
   };
   /**
-   * The answers and the withdrawals follow the convention of the
-   * manager-driven changes: the row's citizen column holds the actor (the
-   * manager, or the applicant who withdrew the own application), the payload
-   * the applicant.
+   * The row's citizen column holds the manager, or the applicant who withdrew
+   * the own application
    */
   [EventActivityType.APPLICATION_APPROVED]: {
     citizenId: string;
@@ -100,7 +85,6 @@ export interface EventActivityPayloadByType {
   [EventActivityType.APPLICATION_WITHDRAWN]: {
     citizenId: string;
   };
-  /** The count of the open applications that the switch to false approved */
   [EventActivityType.APPLICATION_REQUIREMENT_TOGGLED]: {
     enabled: boolean;
     approvedApplicationCount: number;
@@ -108,8 +92,8 @@ export interface EventActivityPayloadByType {
 }
 
 /**
- * Writes one activity entry, typed per activity type. Takes the transaction
- * client so the entry commits atomically with the mutation it records.
+ * Takes the transaction client so the entry commits atomically with the
+ * mutation it records
  */
 export const createEventActivity = <Type extends EventActivityType>(
   client: Prisma.TransactionClient,

@@ -31,7 +31,6 @@ import { WikiEffectivePermissionList } from "./WikiEffectivePermissionList";
 import { WikiPagePermissionsOpenerProvider } from "./WikiPagePermissionsOpener";
 
 interface Props {
-  /** The page view the dialog's triggers live in */
   readonly children: ReactNode;
   readonly page: {
     readonly id: string;
@@ -65,12 +64,6 @@ const CASCADE_LABEL = "Auch auf alle Unterseiten anwenden";
 const EFFECTIVE_HEADING = "Effektiv (gespeicherter Stand):";
 const NOBODY_LABEL = "Niemand außer den Wiki-Managern.";
 
-/**
- * The role-model permissions dialog together with its open state. Rendered
- * only for viewers who may change the permissions — its role ids must not
- * reach anybody else — so its absence is what turns the visibility badge
- * into plain text.
- */
 export const WikiPagePermissionsProvider = ({
   children,
   page,

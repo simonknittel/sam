@@ -11,7 +11,6 @@ import { withSpan } from "../withSpan.js";
 import { CYCLE_EXCERPT_SELECT, type CycleExcerptRow } from "./cycleSelects.js";
 import { getOwnCycleView } from "./ownCycleView.js";
 
-/** The filter of the list of the cycles */
 export enum ProfitDistributionCycleListStatus {
   /** The cycles before the end of their payout */
   Open = "open",
@@ -22,7 +21,6 @@ interface Input {
   readonly status: ProfitDistributionCycleListStatus;
 }
 
-/** A cycle in the list, from the view of the actor */
 export interface ProfitDistributionCycleExcerpt {
   // TODO: Remove cycle.participants if the user doesn't have the manage permission
   readonly cycle: CycleExcerptRow;
@@ -59,11 +57,9 @@ const isVisibleOpenCycle = (
 };
 
 /**
- * Of the open cycles, a member who is not a manager sees only the first
- * cycle in the collection phase, and the cycles in the payout preparation and
- * payout phases. `openCycles` are the cycles that are not completed, the
- * latest planned end of the collection phase first. The list of the cycles
- * and the calendar use this rule.
+ * `openCycles` are the cycles that are not completed, the latest planned end of
+ * the collection phase first. The list of the cycles and the calendar use this
+ * rule.
  */
 export const filterVisibleOpenCycles = <Cycle extends CyclePhaseRow>(
   openCycles: readonly Cycle[],
@@ -81,10 +77,8 @@ export const filterVisibleOpenCycles = <Cycle extends CyclePhaseRow>(
 };
 
 /**
- * The cycles of the list, the latest planned end of the collection phase
- * first. Requires `profitDistributionCycle;read`, and
- * `silcBalanceOfCurrentCitizen;read` when the list has a cycle in the
- * collection phase.
+ * Also requires `silcBalanceOfCurrentCitizen;read` when the list has a cycle in
+ * the collection phase
  */
 export const findProfitDistributionCycleExcerpts = (
   context: ApplicationContext,
@@ -110,7 +104,6 @@ export const findProfitDistributionCycleExcerpts = (
         ? filterVisibleOpenCycles(cycles, isManager)
         : cycles;
 
-    /** One read of the own balance for all cycles in the collection phase */
     const ownSilcBalance = visibleCycles.some(
       (cycle) => getCurrentPhase(cycle) === CyclePhase.Collection,
     )

@@ -10,11 +10,6 @@ interface Payload {
   citizenId: Citizen["id"];
 }
 
-/**
- * The welcome picks one of these for each citizen. Each citizen gets only
- * one welcome, thus the pool gives variety among the members of the
- * organization.
- */
 const WORDINGS = [
   {
     title: "Willkommen an Bord!",
@@ -61,15 +56,6 @@ const WORDINGS = [
 const pickWording = () =>
   WORDINGS[Math.floor(Math.random() * WORDINGS.length)] ?? WORDINGS[0];
 
-/**
- * A personal welcome to the citizen on the first day they can open the app
- * (see `findGreetingRecipient()` for the condition). The app sends the
- * request once for each citizen (see `Citizen.welcomedAt`).
- *
- * The picked wording travels in the payload as well, so that the on-site row
- * carries the same text as the web push notification. Both link to the
- * dashboard, where the "Erste Schritte" popover opens.
- */
 export const WelcomeGreetingHandler = async (
   context: ApplicationContext,
   payload: Payload,

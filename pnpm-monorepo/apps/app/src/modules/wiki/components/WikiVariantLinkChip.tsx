@@ -10,14 +10,11 @@ interface Props {
 }
 
 /**
- * The rendered variant link: the fleet app's variant component scaled to
- * the surrounding text, inside a link to the variant's page, with the
- * variant hover popover around it. Shared between the static render for
- * readers and the editor node view (WikiVariantLinkNodeView) so both look
- * and behave the same. The anchor mirrors the
- * node's renderHTML (data attribute included) so copying it back into the
- * editor still parses as the node — and so the edit menu recognizes it as
- * this node instead of a plain link. Loads no editor code.
+ * Shared between the static render for readers and the editor node view
+ * (WikiVariantLinkNodeView) so both look and behave the same. The anchor
+ * mirrors the node's renderHTML (data attribute included) so copying it back
+ * into the editor still parses as the node — and so the edit menu recognizes
+ * it as this node instead of a plain link. Loads no editor code.
  */
 export const WikiVariantLinkChip = ({ resolved }: Props) => {
   if (!resolved)

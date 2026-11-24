@@ -15,7 +15,6 @@ type Payload = {
   change: EventParticipationChange;
 };
 
-/** A participant signed up or cancelled shortly before the start */
 export const EventParticipationChangedHandler = async (
   context: ApplicationContext,
   payload: Payload,

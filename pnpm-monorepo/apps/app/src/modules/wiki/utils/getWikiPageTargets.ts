@@ -8,18 +8,13 @@ export interface WikiPageTargetOption {
   readonly depth: number;
 }
 
-/**
- * Label for an `<option>` representing the page hierarchy: non-breaking
- * spaces indent by depth (HTML would collapse regular spaces) plus a branch
- * marker.
- */
+/** Non-breaking spaces, because HTML collapses regular spaces */
 export const wikiPageOptionLabel = (target: WikiPageTargetOption) =>
   `${"\u00A0".repeat(target.depth * 4)}${target.depth > 0 ? "└ " : ""}${target.title}`;
 
 /**
- * Depth-first walk over the page tree collecting the pages `isIncluded`
- * accepts. `depth` is relative to the nearest included ancestor, so
- * subtrees whose parents are not included still indent sensibly.
+ * `depth` is relative to the nearest included ancestor, so subtrees whose
+ * parents are not included still indent sensibly.
  */
 const collectWikiPageTargets = (
   context: WikiSharedContext,
@@ -78,11 +73,9 @@ const collectWikiPageTargets = (
 };
 
 /**
- * Pages the viewer may create/move/duplicate pages into: visible + managed,
- * in depth-first tree order so selects can represent the hierarchy. Pass
- * excludeSubtreeOf to drop a page and its descendants (a page can't be
- * moved into itself). Mirrors `resolveWikiPagePlacement()`, which is what
- * the server actions enforce.
+ * Pass excludeSubtreeOf to drop a page and its descendants (a page cannot be
+ * moved into itself). Mirrors `resolveWikiPagePlacement()`, which the use
+ * cases enforce.
  */
 export const getManageableWikiPageTargets = (
   context: WikiSharedContext,
@@ -96,10 +89,7 @@ export const getManageableWikiPageTargets = (
     withinSubtreeOf,
   );
 
-/**
- * All pages the viewer can read, in depth-first tree order — e.g. the root
- * candidates of a page-index node. Ignores the sidebar mode on purpose.
- */
+/** Ignores the sidebar mode on purpose */
 export const getReadableWikiPageTargets = (
   context: WikiSharedContext,
   withinSubtreeOf?: string,

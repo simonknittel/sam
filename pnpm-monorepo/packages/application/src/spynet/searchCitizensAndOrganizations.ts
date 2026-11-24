@@ -74,9 +74,8 @@ const TYPO_SIMILARITY_THRESHOLD = 0.5;
 const TYPO_MINIMUM_TERM_LENGTH = 4;
 
 /**
- * Exact matches rank highest, then prefix, then substring matches. A typo
- * match scores its similarity, which is 1 or less, thus it always ranks
- * below a substring match. A column without a match scores 0.
+ * A typo match scores its similarity, which is 1 or less, thus it always ranks
+ * below a substring match
  */
 const scoreColumn = (column: Prisma.Sql, tolerateTypos: boolean) => Prisma.sql`
   CASE
@@ -92,7 +91,6 @@ const scoreColumn = (column: Prisma.Sql, tolerateTypos: boolean) => Prisma.sql`
   END
 `;
 
-/** The escaped term matches literally, also when it contains `%` or `_` */
 const escapeLikePattern = (term: string) => term.replace(/[\\%_]/g, "\\$&");
 
 const includesCitizens = (include: SpynetSearchInclude) => {
@@ -124,12 +122,10 @@ const includesOrganizations = (include: SpynetSearchInclude) => {
 };
 
 /**
- * Searches citizens and organizations by their latest confirmed values. Each
- * result type needs its own read permission: the search leaves out the
- * types that the actor cannot read, and refuses when no requested type is
- * left. Only names tolerate typos: a fuzzy match on an ID gives mostly
- * noise. The tables are small, thus the query reads them without a trigram
- * index. Deleted citizens never match.
+ * The search leaves out the types that the actor cannot read, and refuses when
+ * no requested type is left. Only names tolerate typos: a fuzzy match on an ID
+ * gives mostly noise. The tables are small, thus the query reads them without a
+ * trigram index.
  */
 export const searchCitizensAndOrganizations = async (
   context: ApplicationContext,

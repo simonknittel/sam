@@ -13,7 +13,6 @@ const sumAuec = (
     0,
   );
 
-/** The aUEC of the participants that did not cede and are not paid yet */
 export const getOpenAuecPayout = (
   participants: readonly Pick<
     ProfitDistributionCycleParticipant,
@@ -28,7 +27,6 @@ export const getOpenAuecPayout = (
     auecPerSilc,
   );
 
-/** The aUEC of the participants that are paid */
 export const getPaidAuec = (
   participants: readonly Pick<
     ProfitDistributionCycleParticipant,

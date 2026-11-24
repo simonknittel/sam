@@ -15,7 +15,6 @@ export interface FindSharedLogAnalyzerEntriesInRangeInput {
   readonly from?: Date | undefined;
   /** Exclusive */
   readonly to?: Date | undefined;
-  /** The last entry of the previous page. Absent for the first request. */
   readonly cursorId?: string | undefined;
 }
 
@@ -26,10 +25,9 @@ export interface SharedLogAnalyzerEntriesInRange {
 }
 
 /**
- * The log entries of a date range, one page after the other. The polling of
- * `findSharedLogAnalyzerEntries` follows the creation time and gives only the
- * entries which were shared last. A range has to reach old events, thus the
- * cursor here moves along the time of the event.
+ * The polling of `findSharedLogAnalyzerEntries` follows the creation time and
+ * gives only the entries which were shared last. A range has to reach old
+ * events, thus the cursor here moves along the time of the event.
  */
 export const findSharedLogAnalyzerEntriesInRange = async (
   context: ApplicationContext,
@@ -47,7 +45,6 @@ export const findSharedLogAnalyzerEntriesInRange = async (
     (cursorArguments) =>
       context.prisma.logAnalyzerEntry.findMany({
         where: { eventAt: { gte: input.from, lt: input.to } },
-        /** The id breaks the tie of two entries of the same moment */
         orderBy: [{ eventAt: "desc" }, { id: "desc" }],
         select: SHARED_ENTRY_SELECT,
         ...cursorArguments,

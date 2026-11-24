@@ -40,10 +40,7 @@ export const linkCitizenOfSignedInUser = async (
   ]);
 };
 
-/**
- * After the Discord ID of a citizen changed, links the matching user. Call
- * it in the transaction of the change, after `lockCitizen`.
- */
+/** Call it in the transaction of the change, after `lockCitizen` */
 export const relinkCitizenUser = async (
   client: Prisma.TransactionClient,
   citizenId: Citizen["id"],

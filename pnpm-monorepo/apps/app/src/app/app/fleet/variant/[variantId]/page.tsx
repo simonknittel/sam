@@ -30,11 +30,7 @@ export default async function Page({
   const variant = await getVariantDetail(variantId);
   if (!variant) notFound();
 
-  /**
-   * The linked wiki page renders as the embed's start page right here;
-   * without a readable embed the section simply stays away (decision:
-   * never a placeholder, existence never leaks).
-   */
+  /** No placeholder without a readable embed: its existence must not leak */
   const wikiContext = await getVariantWikiContext(variantId);
 
   return (

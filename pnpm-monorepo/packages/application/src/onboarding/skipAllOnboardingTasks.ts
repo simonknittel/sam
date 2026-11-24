@@ -6,16 +6,12 @@ import { withSpan } from "../withSpan.js";
 import { loadOnboardingState } from "./findOnboardingState.js";
 
 export interface SkipAllOnboardingTasksOutput {
-  /** The tasks that were open before, in the order of the rules */
   readonly skipped_task_keys: OnboardingTaskKey[];
 }
 
 /**
- * Marks all open onboarding tasks of the actor as skipped. The tasks that the
- * actor is allowed to see are the only ones that count, thus no further
- * permission check is necessary.
- *
- * @throws ForbiddenError for a user without a citizen
+ * The tasks that the actor is allowed to see are the only ones that count, thus
+ * no further permission check is necessary
  */
 export const skipAllOnboardingTasks = (
   context: ApplicationContext,

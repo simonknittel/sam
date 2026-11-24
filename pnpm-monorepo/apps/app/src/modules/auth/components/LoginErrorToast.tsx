@@ -103,10 +103,6 @@ interface Props {
   readonly error: string;
 }
 
-/**
- * Shows the login error one time: the error leaves the URL, thus a reload
- * does not show it again.
- */
 export const LoginErrorToast = ({ error }: Props) => {
   useEffect(() => {
     showToast(getContent(error));

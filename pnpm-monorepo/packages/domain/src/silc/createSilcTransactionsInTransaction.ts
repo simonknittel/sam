@@ -12,16 +12,11 @@ export interface NewSilcTransaction {
 }
 
 /**
- * Creates SILC transactions and rebuilds the balances of their receivers in
- * the transaction of the caller, so that the cached balances can never
- * differ from the ledger. After the commit, send the notification
- * `SilcTransactionsCreated` with the returned ids.
+ * After the commit, send the notification `SilcTransactionsCreated` with the
+ * returned ids.
  *
- * It takes the ledger lock (see `lockSilcLedger()`). A caller that does more
- * in the same transaction takes the lock first itself, before its other
- * statements.
- *
- * @returns The ids of the created transactions
+ * A caller that does more in the same transaction takes the ledger lock first
+ * itself, before its other statements.
  */
 export const createSilcTransactionsInTransaction = async (
   transaction: Prisma.TransactionClient,

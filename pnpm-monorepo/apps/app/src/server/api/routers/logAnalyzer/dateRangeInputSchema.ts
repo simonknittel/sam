@@ -1,10 +1,6 @@
 import * as z from "zod";
 
-/**
- * The bounds of a query of a date range of the Log Analyzer: at least one
- * bound, and the start before the end. Combine it with the other fields of
- * the query through `.and()`.
- */
+/** Combine it with the other fields of the query through `.and()` */
 export const dateRangeInputSchema = z
   .object({
     from: z.date().optional(),

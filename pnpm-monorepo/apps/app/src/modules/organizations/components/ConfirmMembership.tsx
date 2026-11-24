@@ -44,14 +44,12 @@ export const ConfirmMembership = ({ entry }: Props) => {
 
 interface DecisionButtonProps {
   readonly decision: ConfirmationStatus;
-  /** The button shows only the icon, thus the label is its title */
   readonly label: string;
   readonly icon: ReactNode;
 }
 
 const DecisionButton = ({ decision, label, icon }: DecisionButtonProps) => {
   const { pending, data } = useFormStatus();
-  /** The spinner shows on the button of the decision that the form sends */
   const isSent = pending && data.get("confirmed") === decision;
 
   return (

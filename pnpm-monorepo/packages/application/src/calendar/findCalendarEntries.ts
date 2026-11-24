@@ -51,11 +51,6 @@ const TYPE_ORDER = new Map(
   CALENDAR_ENTRY_TYPES.map((type, index) => [type, index]),
 );
 
-/**
- * By the day. In a day, the entries of the whole day come first, then the
- * entries with a time by the time. Entries with the same day and time keep
- * the order of the type filter.
- */
 const compareCalendarEntries = (first: CalendarEntry, second: CalendarEntry) =>
   compareLocalDates(first.date, second.date) ||
   Number(first.time !== null) - Number(second.time !== null) ||
@@ -63,10 +58,6 @@ const compareCalendarEntries = (first: CalendarEntry, second: CalendarEntry) =>
   (TYPE_ORDER.get(first.type) ?? 0) - (TYPE_ORDER.get(second.type) ?? 0) ||
   first.key.localeCompare(second.key);
 
-/**
- * An entry of the whole day finishes at the end of its day, an event at its
- * end (see `getEventEndTime`). Each other entry is a point in time.
- */
 const hasEntryFinished = (entry: CalendarEntry, now: Date) => {
   if (!entry.time)
     return (
@@ -82,15 +73,6 @@ const hasEntryFinished = (entry: CalendarEntry, now: Date) => {
   return endTime <= now;
 };
 
-/**
- * The entries of the calendar in the range that the actor can see, sorted
- * (see `compareCalendarEntries`). Only the collectors of the types that the
- * actor can read and did not switch off run (see
- * `findOwnCalendarEntryTypeSettings`).
- *
- * @throws ValidationError for a range that ends before its start or that is
- * longer than 12 months (see `findCalendarRangeProblem`)
- */
 export const findCalendarEntries = (
   context: ApplicationContext,
   actor: Actor,

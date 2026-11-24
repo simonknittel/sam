@@ -25,9 +25,7 @@ const ROLE_ASSIGNMENT_CHANGE_SELECT = {
   createdBy: { select: CITIZEN_REFERENCE_SELECT },
 } as const satisfies Prisma.RoleAssignmentChangeSelect;
 
-/** One page request of an activity source of the role history */
 export interface RoleAssignmentHistoryInput extends ActivitySourceInput {
-  /** Only the history of this citizen */
   readonly citizenId?: string;
 }
 
@@ -49,9 +47,8 @@ export type RoleAssignmentLevelChangeRow =
   RoleAssignmentHistoryRow<RoleAssignmentLevelChangeType>;
 
 /**
- * The conditions that both role sources share. The roles that the actor can
- * see are the whole permission check. They are a part of the query, thus a
- * page never has fewer entries than it can show.
+ * The roles that the actor can see are the whole permission check. They are a
+ * part of the query, thus a page never has fewer entries than it can show.
  */
 const buildWhere = (
   visibleRoleIds: string[],
@@ -72,10 +69,6 @@ const buildWhere = (
   ],
 });
 
-/**
- * One page of the role assignments and removals of the roles that the actor
- * can see (see `isRoleVisible()`). Empty when the actor cannot see a role.
- */
 export const findRoleAssignmentChanges = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Pick<Actor, "authorize">,
@@ -92,10 +85,6 @@ export const findRoleAssignmentChanges = async (
   });
 };
 
-/**
- * One page of the level changes of the roles that the actor can see (see
- * `isRoleVisible()`). Empty when the actor cannot see a role.
- */
 export const findRoleAssignmentLevelChanges = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Pick<Actor, "authorize">,

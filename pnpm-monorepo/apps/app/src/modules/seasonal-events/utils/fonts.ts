@@ -2,16 +2,13 @@ import { Creepster, Monoton, Mountains_of_Christmas } from "next/font/google";
 import type { SeasonalFont } from "./types";
 
 /**
- * The hero fonts of the seasonal events. All three are loaded with
- * `preload: false` on purpose: a preload hint travels in the head of every
- * page all year, while each of these fonts is used during one month. The
- * browser requests such a font only when the hero of a themed page resolves
- * to it.
+ * All three fonts are loaded with `preload: false` on purpose: a preload hint
+ * travels in the head of every page all year, while each of these fonts is used
+ * during one month. The browser requests such a font only when the hero of a
+ * themed page resolves to it.
  *
- * All three fonts have one weight, 400.
- *
- * The loader of `next/font` accepts literal values only, thus the name of a
- * CSS variable stands in the call and again in the entry below it.
+ * The loader of `next/font` accepts literal values only, thus the name of a CSS
+ * variable stands in the call and again in the entry below it.
  */
 
 const creepster = Creepster({

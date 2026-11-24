@@ -9,17 +9,12 @@ import { FaGlobe, FaLock } from "react-icons/fa";
 
 interface Props {
   readonly className?: string;
-  /** The accessible name of the radio group */
   readonly label: string;
   readonly visibility: string;
   readonly onVisibilityChange: (visibility: string) => void;
   readonly defaultRoleIds: readonly string[];
 }
 
-/**
- * The visibility of an event and its roles, in the forms of an event and of
- * a template. The roles show only for a restricted event.
- */
 export const EventVisibilityFields = ({
   className,
   label,

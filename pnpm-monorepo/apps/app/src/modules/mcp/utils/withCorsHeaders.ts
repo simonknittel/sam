@@ -1,9 +1,5 @@
 import { CORS_HEADERS } from "@/modules/oauth/utils/responses";
 
-/**
- * Adds the CORS headers to a response of the MCP endpoint. The endpoint uses
- * no cookies, and browser-based MCP clients call it from a different origin.
- */
 export const withCorsHeaders = (response: Response) => {
   const headers = new Headers(response.headers);
   for (const [name, value] of Object.entries(CORS_HEADERS))

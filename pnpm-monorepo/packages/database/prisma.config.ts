@@ -1,8 +1,7 @@
 import { existsSync } from "node:fs";
 import { defineConfig } from "prisma/config";
 
-// process.loadEnvFile() throws an error when the file does not exist (for
-// example in CI and in Docker). It does not replace variables that are set.
+// CI and Docker have no .env file
 if (existsSync(".env")) process.loadEnvFile();
 
 export default defineConfig({

@@ -26,13 +26,9 @@ export interface UpdateWikiPageFavoriteOutput {
 }
 
 /**
- * Sets the state that the button showed as the new state, not the opposite
- * of the stored state: a different tab can have changed the state before.
- * Works in a briefing that is over, because a favorite is personal data.
- *
- * @throws ForbiddenError for a user without a citizen
- * @throws NotFoundError when a different user deleted the page or took the
- * read access away
+ * Sets the state that the button showed as the new state, not the opposite of
+ * the stored state: a different tab can have changed the state before. Works
+ * in a briefing that is over, because a favorite is personal data.
  */
 export const updateWikiPageFavorite = (
   context: ApplicationContext,

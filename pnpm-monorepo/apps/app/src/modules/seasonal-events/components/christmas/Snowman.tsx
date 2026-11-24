@@ -1,27 +1,12 @@
 import clsx from "clsx";
 
 interface Props {
-  /** Gives the snowman its place, its size and the colour of the snow */
   readonly className?: string;
 }
 
 /**
- * The snowman which stands in the bottom left corner of the viewport.
- *
- * The three balls of snow and the pompom of the hat take `currentColor`,
- * which the class of the caller sets. The other parts need a colour of their
- * own, because a snowman without a red hat, a green scarf, an orange nose
- * and black coal is only three white circles:
- *
- * - `#dc2626` (red) for the hat,
- * - `#059669` (green) for the scarf,
- * - `#f97316` (orange) for the nose,
- * - `#a16207` (brown) for the arms,
- * - `#1c1917` (black) for the coal of the eyes, the mouth and the buttons.
- *
- * The arms come after the balls of snow and start inside them, like two
- * sticks which somebody pushed into the snow. Behind the balls they would
- * shine through, because the colour of the snow is not fully opaque.
+ * The arms come after the balls of snow. Behind the balls they would shine
+ * through, because the colour of the snow is not fully opaque.
  */
 export const ChristmasSnowman = ({ className }: Props) => (
   <svg

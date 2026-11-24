@@ -1,9 +1,6 @@
 import { walkWikiContent } from "./walkWikiContent.js";
 
-/**
- * Extracts the plain text of a Tiptap JSON document, used for full-text
- * search. Block boundaries become spaces so words don't get glued together.
- */
+/** Block boundaries become spaces so words don't get glued together. */
 export const extractWikiPageText = (content: unknown): string => {
   const parts: string[] = [];
 

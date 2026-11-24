@@ -2,13 +2,8 @@ import { expect } from "@playwright/test";
 import type { PrismaClient } from "@sam-monorepo/database/client";
 
 /**
- * Asserts that every one of the given audit-event types was written. The
- * query filters by type instead of reading the whole table, so a test that
- * produces a lot of unrelated events stays cheap — and a failure names
- * exactly which expected type is missing.
- *
- * The assertion polls: an action writes its audit event after its change,
- * thus a test that waited for the change can be faster than the event.
+ * The assertion polls: an action writes its audit event after its change, thus
+ * a test that waited for the change can be faster than the event.
  */
 export const expectAuditEvents = async (
   prisma: PrismaClient,

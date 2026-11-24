@@ -1,9 +1,3 @@
-/**
- * The limits of the tasks. The forms of the app, the use cases and the MCP
- * tools use the same values.
- */
-
-/** The length of the title field of the task forms */
 export const TASK_TITLE_MAX_LENGTH = 64;
 
 /**
@@ -20,7 +14,6 @@ export const TASK_MAX_REQUIRED_ROLES = 50;
 
 /**
  * Arbitrary (untested) cap of the assignees and of the completionists of one
- * task, to prevent a denial of service. The largest SILC booking of a task
- * depends on it (see `SILC_VALUE_MAXIMUM`).
+ * task, to prevent a denial of service
  */
 export const TASK_MAX_CITIZENS = 250;

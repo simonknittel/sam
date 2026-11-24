@@ -33,7 +33,6 @@ const CONFETTI_SHOT = {
   ticks: 220,
 };
 
-/** One shot from each lower corner, both towards the middle of the profile */
 const CONFETTI_SHOTS = [
   { ...CONFETTI_SHOT, angle: 55, origin: { x: 0, y: 1 } },
   { ...CONFETTI_SHOT, angle: 125, origin: { x: 1, y: 1 } },
@@ -51,19 +50,16 @@ const formatMonthlySalary = (monthlySalary: number) =>
 interface Props {
   readonly profile: CitizenProfile;
   /**
-   * Called after a role assignment changed. The popover refetches its query
-   * with it; the server-rendered tile does not need it, because the role
-   * actions refresh the page.
+   * The popover refetches its query with it; the server-rendered tile does not
+   * need it, because the role actions refresh the page.
    */
   readonly onRoleAssignmentsChanged?: () => void;
   readonly hideSpynetLink?: boolean;
 }
 
 /**
- * The profile of a citizen. All surfaces which show a profile — the citizen
- * popover, the account popover of the top bar, the dashboard tile and the
- * Spynet overview — render this component, so that they cannot drift apart.
- * Each surface adds its own chrome around it.
+ * All surfaces which show a profile render this component, so that they cannot
+ * drift apart.
  */
 export const ProfileContent = ({
   profile,

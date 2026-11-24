@@ -7,25 +7,18 @@ const NOTIFICATION_REQUESTED_DETAIL_TYPE = "NotificationRequested";
 
 export interface EventBridgeNotificationTriggerOptions {
   readonly emitEvents: EmitEvents;
-  /**
-   * The `Source` of the events: the host that requests the notifications,
-   * for example "App" or the name of a Lambda function
-   */
+  /** For example "App" or the name of a Lambda function */
   readonly source: string;
   readonly log: Logger;
   /**
-   * Sends at a later time, for example after the response of the request
-   * (`after()` of Next.js). Then `trigger()` cannot give a failure to the
-   * caller, thus it logs the failure. Without it, `trigger()` waits for the
-   * send and throws a failure.
+   * For example after the response of the request (`after()` of Next.js). Then
+   * `trigger()` cannot give a failure to the caller, thus it logs the failure.
+   * Without it, `trigger()` waits for the send and throws a failure.
    */
   readonly defer?: (send: () => Promise<void>) => void;
 }
 
-/**
- * Sends each notification as one `NotificationRequested` event to the
- * notification router. The router processes each `requestId` only once.
- */
+/** The router processes each `requestId` only once */
 export const createEventBridgeNotificationTrigger = ({
   emitEvents,
   source,

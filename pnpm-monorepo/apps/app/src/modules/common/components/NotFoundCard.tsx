@@ -1,9 +1,9 @@
 import { Hero } from "./Hero";
 
 /**
- * Inline "404" card for a `not-found.tsx` boundary. The layout of the segment
- * keeps its chrome around this card, for example a sidebar, a heading or a tab
- * navigation. Routes without such chrome use the full-page boundary at `/app`.
+ * For a `not-found.tsx` boundary of a segment whose layout has its own chrome,
+ * for example a sidebar. Routes without such chrome use the full-page boundary
+ * at `/app`.
  */
 export const NotFoundCard = () => {
   return (

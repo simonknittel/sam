@@ -40,11 +40,7 @@ const WIKI_ATTACHMENT_ACCEPT = [
   ".env",
 ].join(",");
 
-/**
- * The viewer's effective upload permissions on the page being edited
- * (ResolvedWikiPagePermissions), resolved server-side per upload kind.
- * Display/UX gating only — /api/upload/assign enforces them regardless.
- */
+/** Display/UX gating only — /api/upload/assign enforces them regardless */
 export interface WikiUploadPermissions {
   readonly canUploadImages: boolean;
   readonly canUploadAttachments: boolean;
@@ -68,14 +64,9 @@ const UPLOAD_BLOCKED_MESSAGES: Record<UploadCategory, string> = {
 interface InsertWikiFileOptions {
   /** Where a drop inserts the file. Without it, the file goes to the selection. */
   readonly position?: number;
-  /** The kind of the file picker (see `getWikiUploadKind()`) */
   readonly pickedKind?: UploadCategory;
 }
 
-/**
- * Uploads a file and inserts the matching node (image or attachment card)
- * into the editor.
- */
 export const insertWikiFile = async (
   editor: Editor,
   pageId: string,
@@ -152,10 +143,6 @@ const WIKI_ACCEPT_BY_KIND: Record<UploadCategory, string> = {
   [UploadCategory.Attachment]: WIKI_ATTACHMENT_ACCEPT,
 };
 
-/**
- * Opens the browser's file picker for the kind and inserts the picked files
- * as this kind, if their type allows it (see `getWikiUploadKind()`).
- */
 export const pickAndInsertWikiFiles = (
   editor: Editor,
   pageId: string,
@@ -177,10 +164,8 @@ export const pickAndInsertWikiFiles = (
 };
 
 /**
- * Paste/drop handling for images and file attachments. Editor-only
- * behavior — the extension adds no schema. Files of a blocked kind are
- * dropped with one notice per kind; allowed kinds of a mixed drop still
- * upload.
+ * Files of a blocked kind are dropped with one notice per kind; allowed kinds
+ * of a mixed drop still upload.
  */
 export const createWikiFileHandler = (
   pageId: string,

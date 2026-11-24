@@ -28,14 +28,9 @@ export interface CompleteOnboardingStepOutput {
 }
 
 /**
- * Stamps one step of an onboarding task as completed. A replay updates the
- * timestamp of the existing row, so the progress always reflects the most
- * recent pass through the tour. Writes no audit event: the audit event of
- * the task marks the end of the tour.
- *
- * @throws ForbiddenError for a user without a citizen, or without the
- * permission of the task or of the step
- * @throws NotFoundError when the step does not belong to the task
+ * A replay updates the timestamp of the existing row, so the progress always
+ * reflects the most recent pass through the tour. Writes no audit event: the
+ * audit event of the task marks the end of the tour.
  */
 export const completeOnboardingStep = async (
   context: ApplicationContext,

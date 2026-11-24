@@ -3,11 +3,7 @@ import { getVariantWikiContext } from "@/modules/wiki/queries/getVariantWikiCont
 import { getVariantWikiRootPath } from "@sam-monorepo/domain";
 import { notFound, redirect } from "next/navigation";
 
-/**
- * The embed's start page is the plain variant URL — this bare path only
- * redirects there (or 404s like every embed route when there is no
- * readable embed).
- */
+/** The start page of the embed is the plain variant URL */
 export default async function Page({
   params,
 }: PageProps<"/app/fleet/variant/[variantId]/wiki">) {

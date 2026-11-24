@@ -14,11 +14,6 @@ interface Props {
   readonly onRequestClose: () => void;
 }
 
-/**
- * URL dialog behind the palettes' "Einbetten" entry — same routing as the
- * toolbar's EmbedPicker: YouTube/Twitch/Spotify/Google get their dedicated
- * player, any other URL becomes a generic allowlist-validated iframe.
- */
 export const WikiEmbedUrlModal = ({ editor, onRequestClose }: Props) => {
   const [url, setUrl] = useState("");
   const [isPending, startTransition] = useTransition();

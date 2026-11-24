@@ -7,11 +7,6 @@ import {
   type OnSiteNotificationPayload,
 } from "./onSiteNotificationPayloads.js";
 
-/**
- * The title and the body of a notification. The notification-router Lambda
- * (web push) and the app (on-site row) use the same functions, thus the two
- * texts cannot drift.
- */
 export interface NotificationText {
   readonly title: string;
   readonly body: string;
@@ -30,10 +25,7 @@ const TIME_FORMAT = new Intl.DateTimeFormat("de-DE", {
   minute: "2-digit",
 });
 
-/**
- * A point in time in the time zone of the organization, like the pages of
- * the app show it. Example: "Di., 04.11. um 20:00 Uhr".
- */
+/** Example: "Di., 04.11. um 20:00 Uhr" */
 const formatDateTime = (isoDateTime: string) => {
   const date = new Date(isoDateTime);
 
@@ -454,7 +446,6 @@ export const getWikiCitizenMentionedText = ({
     : `Du wurdest auf der Seite "${pageTitle}" erwähnt`,
 });
 
-/** The text is the same for each citizen, thus the payload is empty */
 export const getFleetUpdateReminderText = (): NotificationText => ({
   title: "Ist deine Flotte noch aktuell?",
   body: `Du hast deine Schiffe seit mindestens ${FLEET_UPDATE_REMINDER_UNCHANGED_MONTHS} Monaten nicht geändert. Prüfe sie unter „Meine Schiffe“.`,

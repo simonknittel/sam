@@ -5,14 +5,11 @@ import { isLoopbackHostname, MAX_URL_LENGTH } from "./constants.js";
 const MAX_REDIRECT_URIS = 10;
 const MAX_TYPES = 10;
 
-/** The only token endpoint authentication method of the server */
 const PUBLIC_CLIENT_AUTH_METHOD = "none";
 
 /**
- * The Client ID Metadata Document of an OAuth client
- * (draft-ietf-oauth-client-id-metadata-document). Unknown fields are
- * removed. `client_id` must be the URL of the document, character for
- * character.
+ * draft-ietf-oauth-client-id-metadata-document. `client_id` must be the URL of
+ * the document, character for character.
  */
 export const createClientMetadataDocumentSchema = (clientId: string) =>
   z
@@ -89,11 +86,8 @@ export const parseClientId = (
   return null;
 };
 
-/** 1 minute */
 const MIN_CACHE_LIFETIME_IN_SECONDS = 60;
-/** 24 hours */
 const MAX_CACHE_LIFETIME_IN_SECONDS = 24 * 60 * 60;
-/** 1 hour */
 const DEFAULT_CACHE_LIFETIME_IN_SECONDS = 60 * 60;
 
 /**
@@ -102,11 +96,6 @@ const DEFAULT_CACHE_LIFETIME_IN_SECONDS = 60 * 60;
  */
 const NO_REUSE_DIRECTIVE = /(?:^|,)\s*(?:no-store|no-cache)\s*(?:[=,]|$)/i;
 
-/**
- * How long the server keeps a document: the minimum for `no-store` and
- * `no-cache`, else `max-age` of the `Cache-Control` header within the limits,
- * or the default without `max-age`
- */
 export const getCacheLifetimeInSeconds = (cacheControl: string | undefined) => {
   if (NO_REUSE_DIRECTIVE.test(cacheControl ?? ""))
     return MIN_CACHE_LIFETIME_IN_SECONDS;

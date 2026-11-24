@@ -14,13 +14,11 @@ import { useState, type ReactNode } from "react";
 import { useRolesContext } from "../RolesContext";
 import { RoleTagChip } from "./RoleTagChip";
 
-/** An entry above the roles, for example "Alle" with the id `*` */
 export interface RolePickerExtraEntry {
   readonly id: string;
   readonly name: string;
 }
 
-/** A role that the picker offers or shows as selected */
 export type RolePickerRole = Pick<BadgeRole, "id" | "name" | "icon">;
 
 export const compareNames = (
@@ -37,30 +35,18 @@ interface Props {
    * tags still come from the context.
    */
   readonly roles?: readonly RolePickerRole[];
-  /** Limits the offered roles to these roles */
   readonly offeredRoleIds?: readonly BadgeRole["id"][];
-  /** Offered roles that the viewer cannot select, each with the reason */
+  /** The value is the reason */
   readonly disabledRoles?: ReadonlyMap<BadgeRole["id"], string>;
   readonly extraEntries?: readonly RolePickerExtraEntry[];
-  /**
-   * Multiple mode: the maximum number of selected roles. At the maximum, the
-   * roles that are not selected are disabled.
-   */
+  /** At the maximum, the roles that are not selected are disabled */
   readonly max?: number;
-  /** A click or Enter on a role or an extra entry that is not disabled */
   readonly onRoleClick: (roleId: BadgeRole["id"]) => void;
-  /** See `renderTrailing` of `ItemPickerPanel` */
   readonly renderTrailing?: (isSelected: boolean) => ReactNode;
   readonly listHeight?: ItemPickerListHeight;
 }
 
-/**
- * The content of the role picker: a search over the role names and the tag
- * names, the tags of the offered roles, and one offered role per row. A click
- * on a tag filters the list to the roles of the tag and selects nothing. It
- * works in the popover of `RolePicker` and also embedded, for example in a
- * modal. The owner holds the selection.
- */
+/** A click on a tag filters the list and selects nothing */
 export const RolePanel = ({
   mode,
   selectedRoleIds,
@@ -75,7 +61,6 @@ export const RolePanel = ({
 }: Props) => {
   const { roles: visibleRoles, tags, tagsByRoleId } = useRolesContext();
   const [query, setQuery] = useState("");
-  /** The tag that filters the list */
   const [filterTagId, setFilterTagId] = useState<BadgeRoleTag["id"] | null>(
     null,
   );
@@ -108,7 +93,6 @@ export const RolePanel = ({
     return undefined;
   };
 
-  /** A second click on the filtering tag clears the filter */
   const toggleFilterTag = (tag: BadgeRoleTag) => {
     setFilterTagId((previous) => (previous === tag.id ? null : tag.id));
   };

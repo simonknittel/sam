@@ -8,10 +8,7 @@ const UPLOAD_USAGE_WIKI_PAGE_SELECT = {
   templateId: true,
 } satisfies Prisma.WikiPageSelect;
 
-/**
- * The usage relations of an upload, with the names and the ids that the
- * locations need (see `listUploadUsages()` of the domain package)
- */
+/** The fields that `listUploadUsages()` of the domain package needs */
 export const UPLOAD_USAGE_SELECT = {
   roleIcons: { select: { id: true, name: true } },
   roleThumbnails: { select: { id: true, name: true } },

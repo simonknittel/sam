@@ -47,11 +47,6 @@ describe("getEntityTypeForChannelType", () => {
 });
 
 describe("toGuildScheduledEventChange", () => {
-  /**
-   * Sending only the end would have Discord validate it against the start
-   * it still holds, which can reject the whole change — and with it the
-   * title and description edits in the same save.
-   */
   it("leaves out the whole schedule of an event that already began", () => {
     const change = toGuildScheduledEventChange(
       content({

@@ -23,9 +23,7 @@ export const ProfileTile = async ({
       className={clsx(
         "w-full corners-primary bg-secondary p-4",
         {
-          /** The whole tile celebrates with the citizen: the colour clouds
-          of the surface, and an isolated box for the confetti behind the
-          profile. */
+          /** See `useProfilePopover` */
           "relative isolate background-birthday":
             profile.citizen.hasBirthdayToday,
         },

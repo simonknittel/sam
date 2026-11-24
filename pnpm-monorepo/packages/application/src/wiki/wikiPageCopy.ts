@@ -43,7 +43,6 @@ interface CopyWikiPagesParams {
   readonly entries: readonly WikiPageCopyEntry[];
   /** NULL copies into the global wiki */
   readonly targetContainer: EventContainer | null;
-  /** Parent of the entries without a `parentSourceId` */
   readonly rootParentId: string | null;
   /**
    * Source id → already existing target id, for entries whose parent is not
@@ -54,7 +53,7 @@ interface CopyWikiPagesParams {
   /**
    * Carries the source pages' briefing scopes and upload tiers over instead
    * of resetting them to INHERIT, remapping POSITION references through this
-   * map. Used when an event is seeded from a template, where those scopes
+   * map. Used by the briefing copy (`copyBriefingTree`), where those scopes
    * are the point of the blueprint; a reference that is not in the map
    * degrades to managers-only, which is how a dangling POSITION scope
    * behaves anyway.
@@ -67,7 +66,6 @@ interface CopyWikiPagesParams {
 interface CopyWikiPagesResult {
   readonly copiedPages: CopiedWikiPage[];
   readonly newIdBySourceId: Map<string, string>;
-  /** Slug of each copy, keyed by source id */
   readonly slugBySourceId: Map<string, string>;
 }
 
@@ -152,7 +150,6 @@ export const copyWikiPagesIntoContainer = async (
     (assignment) => assignment.pageId,
   );
 
-  /** Copies land in the target's scope, wherever the source came from */
   const scopeColumns = params.targetContainer
     ? {
         namespace: WikiPageNamespace.EVENT,

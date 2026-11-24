@@ -13,7 +13,6 @@ export const updateEventTemplateParticipation = createUseCaseAction({
   useCase: updateEventTemplateUseCase,
   parseFormData: (formData) => ({
     template_id: formData.get("templateId"),
-    // The checkbox sends a value only while it is checked
     participation_enabled: formData.get("participationEnabled") === "true",
     application_required: formData.get("applicationRequired") === "true",
   }),

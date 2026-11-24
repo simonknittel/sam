@@ -43,14 +43,11 @@ export type CreateManualNotificationInput = z.output<
 >;
 
 /**
- * Sends a notification with its own title and body to the selected citizens
- * and to the members of the selected roles. Only the citizens who can log in
- * receive it (see `findManualNotificationRecipients()`). Also needs
- * `citizen;read` when citizens are selected, like the citizen picker of the
- * form.
+ * Also needs `citizen;read` when citizens are selected, like the citizen picker
+ * of the form.
  *
- * @throws ValidationError when no receiver is selected, when a citizen does
- * not exist or is deleted, or when a role does not exist or is not visible
+ * @throws ValidationError when no receiver is selected, when a citizen does not
+ * exist or is deleted, or when a role does not exist or is not visible
  * @throws NotFoundError when a role goes away between the check and the write
  */
 export const createManualNotification = (

@@ -20,10 +20,8 @@ interface Props {
 }
 
 /**
- * Ship picker behind the palettes' "Schiff" entry and the edit menu's
- * "Schiff ändern" button: picking a ship inserts (or retargets) the inline
- * variant link. The document stores the id plus the name at insertion time
- * — the name only serves as the label fallback and the searchable text.
+ * The document stores the id plus the name at insertion time — the name only
+ * serves as the label fallback and the searchable text.
  */
 export const WikiVariantLinkModal = ({
   editor,
@@ -63,10 +61,6 @@ export const WikiVariantLinkModal = ({
     variant: VariantCatalogVariant,
     nodePosition: number,
   ) => {
-    /**
-     * Guard against stale positions after collab edits — the node must
-     * still be a variant link.
-     */
     const node = editor.state.doc.nodeAt(nodePosition);
     if (node?.type.name !== "wikiVariantLink") return;
 

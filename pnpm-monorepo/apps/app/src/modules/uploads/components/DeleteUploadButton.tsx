@@ -11,7 +11,7 @@ interface Props {
   readonly className?: string;
   readonly uploadId: string;
   readonly fileName: string;
-  /** Where the upload is currently embedded; empty means it is unused. */
+  /** Empty for an unused upload */
   readonly usages: readonly UploadUsage[];
 }
 

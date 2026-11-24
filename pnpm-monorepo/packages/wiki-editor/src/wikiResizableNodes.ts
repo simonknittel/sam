@@ -43,7 +43,7 @@ export const WIKI_WIDE_WIDTH_PX = 1080;
 /**
  *`widthPx` value for explicitly full column width. A distinct marker
  * (not NULL) because Tiptap ignores NULL returned from an attribute's
- * parseHTML — the schema default (the wide preset) would win and pasted
+ * parseHTML — the schema default (a width preset) would win and pasted
  * full-width blocks would silently narrow.
  */
 export const WIKI_FULL_WIDTH = "full";
@@ -175,10 +175,7 @@ export const wikiHeightPxAttribute = () => ({
   },
 });
 
-/**
- * A node plus the resizable width and block-position attributes. The
- * inline styles land on the node's outer rendered element.
- */
+/** The inline styles land on the node's outer rendered element. */
 export const withWikiBlockLayout = <Options, Storage>(
   node: Node<Options, Storage>,
   defaultWidthPx: number | null = WIKI_NARROW_WIDTH_PX,
@@ -193,17 +190,14 @@ export const withWikiBlockLayout = <Options, Storage>(
     },
   });
 
-/** The attributes of the block layout, which apply only at the top level */
 export const WIKI_BLOCK_LAYOUT_ATTRIBUTES = ["widthPx", "align"] as const;
 
 /**
- * A transaction clearing `widthPx`/`align` on every block that is not a
- * direct child of the document, appended to `transaction` (or NULL when
- * there is nothing to fix). Width and block position only apply at the
- * top level; the attributes survive schema fitting when a block lands
- * inside a grid cell, callout or collapsible (paste, drag'n'drop, remote
- * collab edits), so they are stripped here. `heightPx` stays — the iframe
- * height does not depend on the surrounding column.
+ * Appended to `transaction` (NULL when there is nothing to fix). Width and
+ * block position only apply at the top level; the attributes survive schema
+ * fitting when a block lands inside a grid cell, callout or collapsible (paste,
+ * drag'n'drop, remote collab edits), so they are stripped here. `heightPx`
+ * stays — the iframe height does not depend on the surrounding column.
  */
 export const stripWikiNestedBlockLayout = (
   state: EditorState,

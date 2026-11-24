@@ -9,11 +9,6 @@ import type {
   CalendarEntryCollector,
 } from "./calendarEntry.js";
 
-/**
- * The birthdays of the citizens of the lists (see
- * `LISTED_BIRTHDAY_CITIZEN_WHERE`), each time they are celebrated in the
- * range. The birthday needs no permission of its own beyond `citizen;read`.
- */
 export const birthdayEntryCollector: CalendarEntryCollector<BirthdayCalendarEntry> =
   {
     canRead: (actor) => actor.authorize("citizen", "read"),

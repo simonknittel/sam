@@ -10,7 +10,6 @@ export const updateEventParticipationEnabled = createUseCaseAction({
   useCase: updateEvent,
   parseFormData: (formData) => ({
     event_id: formData.get("eventId"),
-    // The checkbox sends a value only while it is checked
     participation_enabled: Boolean(formData.get("value")),
   }),
   texts: EVENT_ERROR_TEXTS,

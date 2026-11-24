@@ -13,11 +13,6 @@ export interface RoleAddedRecipients {
   readonly recipients: Recipient[];
 }
 
-/**
- * The citizen who got the role, when the citizen can log in and read the
- * added role (see `getRoleReceiverPermissionSets()`). Null when the role does
- * not exist.
- */
 export const findRoleAddedRecipient = async (
   context: ApplicationContext,
   input: FindRoleAddedRecipientInput,

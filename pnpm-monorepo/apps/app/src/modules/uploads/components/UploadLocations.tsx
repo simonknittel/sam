@@ -9,11 +9,6 @@ interface Props {
   readonly usages: readonly UploadUsage[];
 }
 
-/**
- * Every place an upload is embedded, as links to the pages owning them. The
- * links are not permission-checked — each target page enforces its own
- * access.
- */
 export const UploadLocations = ({ usages }: Props) => {
   if (usages.length === 0)
     return (
@@ -23,7 +18,8 @@ export const UploadLocations = ({ usages }: Props) => {
         </span>
 
         <span className="text-xs text-white/40">
-          Wird bei der nächtlichen Bereinigung gelöscht.
+          Wird frühestens 24 Stunden nach dem Hochladen bei der nächtlichen
+          Bereinigung gelöscht.
         </span>
       </div>
     );

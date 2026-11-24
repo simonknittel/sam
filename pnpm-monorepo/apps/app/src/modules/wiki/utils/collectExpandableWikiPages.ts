@@ -1,7 +1,6 @@
 import type { WikiTreeNode } from "@sam-monorepo/wiki-editor/helpers";
 
 /**
- * Ids of every page with subpages, i.e. the ones "Alle ausklappen" expands.
  * Childless pages are left out: expanding them would show nothing and only
  * fill up the state they are stored in.
  */

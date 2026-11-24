@@ -30,6 +30,5 @@ export const updateEventTool = defineTool({
     changes: z.array(z.enum(EventChange)),
   }),
   isVisible: isEventWriteToolVisible,
-  // Without the Discord option: the MCP server cannot reach Discord
   handler: (context, actor, input) => updateEvent(context, actor, input),
 });

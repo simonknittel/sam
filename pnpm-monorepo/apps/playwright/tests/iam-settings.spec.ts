@@ -55,7 +55,6 @@ test("the Human Resources roles are selected on the IAM settings page and their 
   await assignRole(prisma, deletedMember.entity, humanResourcesRole, {
     currentLevel: 2,
   });
-  /** A deletion also removes the link to the login */
   await prisma.citizen.update({
     where: { id: deletedMember.entity.id },
     data: { deletedAt: new Date(), userId: null },
@@ -63,9 +62,6 @@ test("the Human Resources roles are selected on the IAM settings page and their 
   const leader = await createCitizen(prisma, { handle: "hr-leitung" });
   await assignRole(prisma, leader.entity, leadershipRole);
 
-  /**
-   * The setting
-   */
   await signIn(admin.user);
   await page.goto("/app/iam/settings");
   await waitForAppShellHydration(page);
@@ -95,8 +91,8 @@ test("the Human Resources roles are selected on the IAM settings page and their 
   await expect(selectedRoles).toHaveText(["Human Resources"]);
 
   /**
-   * The contacts on the clearance page. Not listed: below the maximum level,
-   * without the login, deleted, and without the role.
+   * Not listed: below the maximum level, without the login, deleted, and
+   * without the role.
    */
   const newcomer = await createCitizen(prisma, {
     handle: "neuling",
@@ -124,7 +120,6 @@ test("without Human Resources roles the clearance page shows plain text", async 
   prisma,
   signIn,
 }) => {
-  /** Only the setting makes a role count, not the name of the role */
   const humanResourcesRole = await createRole(prisma, {
     name: "Human Resources",
   });

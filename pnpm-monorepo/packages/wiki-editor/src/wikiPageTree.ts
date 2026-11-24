@@ -20,7 +20,6 @@ interface WikiTreePageInput {
   readonly sortOrder: number;
 }
 
-/** The access tiers of the viewer for one page */
 interface WikiTreePagePermissions {
   readonly canRead: boolean;
   readonly canEdit: boolean;
@@ -33,19 +32,14 @@ export interface WikiTreeNode {
   readonly slug: string;
   readonly iconId: string | null;
   readonly sortOrder: number;
-  /** Whether the viewer may edit the page (e.g. create subpages) */
   readonly canEdit: boolean;
-  /** Whether the viewer may administrate the page (e.g. reorder it) */
   readonly canAdmin: boolean;
   readonly children: WikiTreeNode[];
 }
 
 /**
- * Builds the tree shown in the wiki sidebar: the pages the viewer can read,
- * in their real hierarchy. Readable pages always have readable ancestors — a
- * page grants nothing to someone who cannot read the page above it — so only
- * pages whose parent is missing from the list (e.g. deleted) hang at the top
- * level instead.
+ * Readable pages always have readable ancestors, so only pages whose parent is
+ * missing from the list (e.g. deleted) hang at the top level.
  */
 export const buildVisibleWikiTree = (
   pages: readonly WikiTreePageInput[],
@@ -83,10 +77,6 @@ export const buildVisibleWikiTree = (
   return toNodes(null, new Set());
 };
 
-/**
- * The part of a wiki scope that decides the URL of a page: the route prefix
- * of the pages, and the page that the scope serves at its home
- */
 export interface WikiPageHrefBase {
   /** Route prefix all page URLs live under */
   readonly basePath: string;
@@ -96,7 +86,6 @@ export interface WikiPageHrefBase {
   readonly rootHref: string | null;
 }
 
-/** The app route of a page, relative to the base URL of the app */
 export const buildWikiPageHref = (
   mode: WikiPageHrefBase,
   page: { readonly id: string; readonly slug: string },

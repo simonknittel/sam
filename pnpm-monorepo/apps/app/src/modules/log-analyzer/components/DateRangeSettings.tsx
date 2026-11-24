@@ -10,7 +10,6 @@ import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 
 const formatDay = (day: string) => day.split("-").toReversed().join(".");
 
-/** Null without a date range */
 const formatDateRange = ({ from, to }: DateRange) => {
   if (from && to) return `${formatDay(from)} – ${formatDay(to)}`;
   if (from) return `Ab ${formatDay(from)}`;
@@ -19,15 +18,13 @@ const formatDateRange = ({ from, to }: DateRange) => {
 };
 
 interface Props {
-  /** In milliseconds. Null when no file name has a date. */
+  /** See `LogSelection` */
   readonly oldestSessionStart: number | null;
   readonly className?: string;
 }
 
 /**
- * The button and the dialog of the date range. The button shows the active
- * range, because the range hides entries while the dialog is closed. Only the
- * dates of the range show, so that the status stays next to the button.
+ * Only the dates of the range show, so that the status stays next to the button
  */
 export const DateRangeSettings = ({ oldestSessionStart, className }: Props) => {
   const { dateRange } = useLogAnalyzerContext();

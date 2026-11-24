@@ -34,8 +34,7 @@ export default async function Page() {
       cannot change their layout. */}
       <div className="@container/main flex flex-row flex-wrap justify-center gap-6">
         <div className="flex w-100 flex-none flex-col gap-6 @7xl/main:max-w-none @7xl/main:flex-1">
-          {/* For everybody: the seasonal entries need no permission. An error
-          of the tile leaves the rest of the dashboard. */}
+          {/* For everybody: the seasonal entries need no permission */}
           <ErrorBoundary>
             <Suspense fallback={<CalendarTileSkeleton />}>
               <CalendarTile className="@container/events" />

@@ -17,7 +17,6 @@ import {
   findEventParticipantRecipients,
 } from "./eventParticipants.js";
 
-/** The event notifications reach the citizens who can log in and read events */
 const NOTIFIABLE_PERMISSION_STRINGS = ["login;manage", "event;read"];
 
 const createRestrictedEvent = async () => {

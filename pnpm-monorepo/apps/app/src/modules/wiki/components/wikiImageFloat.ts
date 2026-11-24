@@ -18,7 +18,6 @@ import type { Editor } from "@tiptap/react";
  * the independently sized text column next to it.
  */
 
-/** The image attributes surviving the conversion in both directions */
 const copiedImageAttributes = (node: ProseMirrorNode) => ({
   src: node.attrs.src as string | null,
   alt: node.attrs.alt as string | null,

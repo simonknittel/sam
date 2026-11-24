@@ -22,6 +22,7 @@ import {
 import * as z from "zod/mini";
 import type { OnSiteNotificationRow } from "../utils/types";
 
+/** The event data of `soketi.ts` of the notification router */
 const realtimeNotificationSchema = z.object({
   id: z.cuid2(),
   notificationType: z.string(),
@@ -32,7 +33,6 @@ const realtimeNotificationSchema = z.object({
   archivedAt: z.null(),
 });
 
-/** Sets the count at once, then fetches it from the server */
 const updateUnreadCount = (
   utils: ReturnType<typeof api.useUtils>,
   updateCount: (count: number) => number,
@@ -51,7 +51,6 @@ interface OnSiteNotificationsContext {
    * not drift.
    */
   readonly setUnreadCount: (count: number) => void;
-  /** Like `setUnreadCount()`, relative to the current count */
   readonly adjustUnreadCount: (delta: number) => void;
   /**
    * Whether the inbox must open by itself: on the page load with unread
@@ -69,16 +68,12 @@ const OnSiteNotificationsContext = createContext<
 
 interface Props {
   readonly children: ReactNode;
-  /** The count of the server render, until the first fetch of the count */
   readonly initialUnreadCount: number;
 }
 
 /**
- * Holds the unread count of on-site notifications in the TanStack cache,
- * next to the notification lists, mirrors it into the document title, and
- * subscribes to the citizen's soketi channel to receive new notifications in
- * realtime. Without a connected websocket client the count changes only with
- * the own changes of the read state.
+ * Without a connected websocket client the count changes only with the own
+ * changes of the read state.
  */
 export const OnSiteNotificationsProvider = ({
   children,
@@ -116,9 +111,9 @@ export const OnSiteNotificationsProvider = ({
   };
 
   /**
-   * Mirror the unread count into the document title. The MutationObserver
-   * re-applies it after Next.js rewrites the title on navigation. It observes
-   * the head, because a `refresh()` replaces the title element.
+   * The MutationObserver re-applies the count after Next.js rewrites the title
+   * on navigation. It observes the head, because a `refresh()` replaces the
+   * title element.
    */
   useEffect(() => {
     setDocumentTitleUnreadCount(unreadCount);
@@ -209,10 +204,6 @@ export const OnSiteNotificationsProvider = ({
   );
 };
 
-/**
- * Check for undefined since the defaultValue of the context is undefined. If
- * it's still undefined, the provider component is missing.
- */
 export function useOnSiteNotifications() {
   const context = useContext(OnSiteNotificationsContext);
   if (!context)

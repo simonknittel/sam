@@ -18,10 +18,8 @@ export interface SeasonalDatePreset {
 }
 
 /**
- * The dates the admin toolbar offers for the seasonal override: the first
- * theme day and the first greeting day of each event, and a day without a
- * theme. Each date is the next one from today on, thus the year a greeting
- * shows is the year of the next occurrence.
+ * Each date is the next one from today on, thus the year a greeting shows is
+ * the year of the next occurrence.
  */
 export const getSeasonalDatePresets = (): readonly SeasonalDatePreset[] => {
   const today = getLocalDate(new Date(), ORGANIZATION_TIMEZONE);

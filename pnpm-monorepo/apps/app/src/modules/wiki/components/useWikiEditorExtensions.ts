@@ -36,48 +36,27 @@ import { withWikiVariantLinkNodeView } from "./WikiVariantLinkNodeView";
 interface Options {
   readonly pageId: string;
   readonly iframeAllowlist: readonly string[];
-  /**
-   * The pages the content linked to when the page rendered, by id — the
-   * node views and the "[[" suggestion load the others on demand
-   */
   readonly linkedPages: WikiLinkedPages;
   readonly mentionedCitizens: Readonly<Record<string, WikiMentionedCitizen>>;
-  /** Current names and manufacturer logos of the variants linked on the page, by id */
   readonly linkedVariants: Readonly<Record<string, WikiLinkedVariant>>;
-  /**
-   * Server-resolved page lists of the page-index nodes, keyed by
-   * `wikiPageIndexConfigKey` — the node views' initial data
-   */
   readonly pageIndexes: Readonly<Record<string, WikiPageIndexEntry[]>>;
-  /**
-   * Server-resolved members of the role-member nodes, keyed by role id —
-   * the node views' initial data
-   */
   readonly roleCitizens: Readonly<Record<string, WikiCitizen[]>>;
-  /**
-   * Intrinsic dimensions of the page's uploaded images, by upload id —
-   * lets the image node view serve optimized images
-   */
   readonly imageDimensions: Readonly<Record<string, WikiImageDimensions>>;
   readonly collaboration?: boolean;
   /** Include the editing helpers (slash menu, suggestions, uploads)? */
   readonly interactive: boolean;
-  /** Whether the viewer may upload images to the page */
   readonly canUploadImages: boolean;
-  /** Whether the viewer may upload file attachments to the page */
   readonly canUploadAttachments: boolean;
-  /** Opens the embed URL dialog (palette entry "Einbetten") */
   readonly onRequestEmbed: () => void;
-  /** Opens the link dialog (palette entry "Link") */
   readonly onRequestLink: () => void;
-  /** Opens the ship picker (palette entry "Schiff") */
   readonly onRequestVariantLink: () => void;
 }
 
 /**
- * Extension list of the collaborative editor: the schema extensions from
- * the shared package plus the app-side editing helpers for users who can
- * edit.
+ * The schema extensions come from the shared package. The `with…` variants
+ * change only the rendering in the editor: the same name, attributes and
+ * schema, so save validation, the collab server and the static renderer stay
+ * untouched. The editing helpers add no schema.
  */
 export const useWikiEditorExtensions = ({
   pageId,

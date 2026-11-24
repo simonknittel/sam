@@ -7,9 +7,8 @@ import { CitizenLogErrorMessage } from "./citizenErrors.js";
 import { getNotePermissionAttributes } from "./notePermissions.js";
 
 /**
- * One log as the citizen log use cases guard on it: the identity of the log,
- * the columns their permission checks read and the decision, which the
- * write checks again. The content is for the check of the own Discord ID.
+ * The write checks the decision again. The content is for the check of the own
+ * Discord ID.
  */
 export const CITIZEN_LOG_GUARD_SELECT = {
   id: true,
@@ -25,11 +24,7 @@ export type CitizenLogGuardRow = Prisma.CitizenLogGetPayload<{
   select: typeof CITIZEN_LOG_GUARD_SELECT;
 }>;
 
-/**
- * The log of an active citizen. The logs of a deleted citizen are read only.
- *
- * @throws NotFoundError when the log does not exist or its citizen is deleted
- */
+/** The logs of a deleted citizen are read only */
 export const requireActiveCitizenLog = async (
   context: Pick<ApplicationContext, "prisma">,
   logId: string,
@@ -59,15 +54,6 @@ export const getCheckedLogWhere = (
     citizen: ACTIVE_CITIZEN_WHERE,
   }) satisfies Prisma.CitizenLogWhereInput;
 
-/**
- * Throws when the actor cannot confirm or delete the log: an identity log
- * needs the permission of its type, a note the note permission for its
- * classification.
- *
- * @throws ValidationError for the other types, for example the Spectrum ID:
- * nobody confirms or deletes them
- * @throws ForbiddenError without the permission
- */
 export const authorizeCitizenLogOperation = (
   actor: Actor,
   log: CitizenLogGuardRow,

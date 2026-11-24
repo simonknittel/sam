@@ -11,7 +11,6 @@ import { cache } from "react";
 
 export type { UpcomingBirthday } from "@sam-monorepo/application";
 
-/** The birthday list of the Spynet (see `listUpcomingBirthdays`) */
 export const getUpcomingBirthdays = cache(
   async (handleQuery: string | null = null) => {
     try {

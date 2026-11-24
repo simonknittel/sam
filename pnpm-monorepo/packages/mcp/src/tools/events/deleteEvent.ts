@@ -21,6 +21,5 @@ export const deleteEventTool = defineTool({
     event_id: z.string(),
   }),
   isVisible: isEventWriteToolVisible,
-  // Without the Discord option: the MCP server cannot reach Discord
   handler: (context, actor, input) => deleteEvent(context, actor, input),
 });

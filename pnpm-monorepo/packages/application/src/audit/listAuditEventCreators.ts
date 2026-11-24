@@ -6,12 +6,6 @@ export interface AuditEventCreator {
   readonly name: string | null;
 }
 
-/**
- * The users who created at least one audit event, sorted by name. The
- * creator filter of the system log in the app shows them.
- *
- * @throws ForbiddenError when the actor does not have `systemLog;read`
- */
 export const listAuditEventCreators = async (
   context: ApplicationContext,
   actor: Actor,

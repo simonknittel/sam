@@ -13,11 +13,6 @@ import { env } from "./setup";
  */
 const TRIGGER_BATCH_MAX_EVENTS = 10;
 
-/**
- * Realtime publishing is optional: without the environment variables the
- * client stays `null` and events are skipped — recipients then see new
- * notifications on their next page load.
- */
 let channelsClient: Pusher | null = null;
 
 if (
@@ -40,9 +35,8 @@ if (
 }
 
 /**
- * Announces freshly created on-site notifications on the private channel of
- * each recipient. Each event carries the full row so connected clients can
- * prepend it without a refetch.
+ * Each event carries the full row so connected clients can prepend it without a
+ * refetch
  */
 export const publishOnSiteNotificationEvents = async (
   rows: readonly StoredOnSiteNotification[],
@@ -56,6 +50,7 @@ export const publishOnSiteNotificationEvents = async (
   const events = rows.map((row) => ({
     channel: getCitizenChannelName(row.citizenId),
     name: ON_SITE_NOTIFICATION_CREATED_EVENT,
+    // `realtimeNotificationSchema` of the app drops a mismatch without an error
     data: JSON.stringify({
       id: row.id,
       notificationType: row.notificationType,
@@ -80,10 +75,7 @@ export const publishOnSiteNotificationEvents = async (
     try {
       await channelsClient.triggerBatch(batch);
     } catch (error) {
-      /**
-       * Realtime delivery is best-effort: the rows are already persisted and
-       * recipients will see them on their next page load.
-       */
+      /** Realtime delivery is best-effort: the rows are already persisted */
       log.error("Error publishing on-site notification events", {
         error,
         count: batch.length,

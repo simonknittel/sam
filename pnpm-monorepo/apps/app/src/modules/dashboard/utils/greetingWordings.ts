@@ -1,4 +1,3 @@
-/** What a wording of the welcome or the birthday banner can name */
 export interface ViewerWordingContext {
   /** The handle of the viewer, or null when the viewer has none */
   readonly handle: string | null;
@@ -10,9 +9,8 @@ interface GreetingWording {
 }
 
 /**
- * One wording of a greeting banner. A wording is a function, because a
- * wording may name a value of the moment, for example the in-game year or
- * the handle of the viewer. Each pool sets its own context.
+ * A function, because a wording may name a value of the moment, for example the
+ * in-game year
  */
 export type GreetingWordingFactory<Context> = (
   context: Context,
@@ -20,15 +18,12 @@ export type GreetingWordingFactory<Context> = (
 
 export type ViewerWordingFactory = GreetingWordingFactory<ViewerWordingContext>;
 
-/** How a wording addresses the viewer: by the handle, else as "Citizen" */
 export const getGreetingName = ({ handle }: ViewerWordingContext) =>
   handle || "Citizen";
 
 /**
- * One wording of the pool, picked at random on each render of the banner. A
- * citizen thus reads a different greeting on each visit. The pick keeps no
- * memory of the previous visit, thus the same wording can occur two times in
- * sequence. An empty pool has no wording to pick.
+ * At random on each render, thus the same wording can occur two times in
+ * sequence
  */
 export const pickRandomWording = <Context>(
   wordings: readonly GreetingWordingFactory<Context>[],

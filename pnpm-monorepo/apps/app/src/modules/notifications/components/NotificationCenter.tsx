@@ -17,11 +17,6 @@ import { NotificationList } from "./NotificationList";
 import { useOnSiteNotifications } from "./OnSiteNotificationsProvider";
 
 interface Props {
-  /**
-   * Called when the user navigates away through a link of the notification
-   * center (settings, notification target) so the surrounding popover can
-   * close itself.
-   */
   readonly onNavigate?: () => void;
 }
 
@@ -103,9 +98,8 @@ interface HeaderActionButtonProps {
 }
 
 /**
- * While its action runs, the button is disabled and shows a spinner. The
- * fixed size keeps the other buttons in place when the spinner replaces the
- * icon.
+ * The fixed size keeps the other buttons in place when the spinner replaces the
+ * icon
  */
 const HeaderActionButton = ({
   label,

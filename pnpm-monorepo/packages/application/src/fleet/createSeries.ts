@@ -38,13 +38,6 @@ export const toSeriesOutput = (
   manufacturer_id: series.manufacturerId,
 });
 
-/**
- * Adds a series to a manufacturer
- *
- * @throws NotFoundError when the manufacturer does not exist
- * @throws ValidationError when a series of any manufacturer has the name
- * already
- */
 export const createSeries = async (
   context: ApplicationContext,
   actor: Actor,

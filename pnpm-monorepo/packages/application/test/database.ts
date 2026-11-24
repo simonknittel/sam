@@ -1,6 +1,5 @@
 import { prisma } from "@sam-monorepo/database";
 
-/** Gives each test an empty database */
 export const truncateAllTables = async () => {
   const tables = await prisma.$queryRaw<{ tablename: string }[]>`
     SELECT tablename FROM pg_tables

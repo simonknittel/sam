@@ -13,7 +13,6 @@ import {
 import type { UploadUsageType } from "@sam-monorepo/domain";
 import { cache } from "react";
 
-/** See `findUploadTablePage()` */
 export const getUploads = cache(
   withTrace(
     "getUploads",

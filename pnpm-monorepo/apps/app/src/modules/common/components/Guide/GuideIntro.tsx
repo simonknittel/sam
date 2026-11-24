@@ -4,9 +4,8 @@ import type { ReactNode } from "react";
 import { GuideScreenshot } from "./GuideScreenshot";
 
 export enum GuideIntroLayout {
-  /** The screenshot is next to the text from the `xl` breakpoint */
   Side = "side",
-  /** The screenshot is below the text, for a very wide picture */
+  /** For a very wide picture */
   Below = "below",
 }
 
@@ -30,7 +29,6 @@ interface Props {
   readonly layout?: GuideIntroLayout;
 }
 
-/** The first part of a guide: what the app is, with its main screenshot */
 export const GuideIntro = ({
   heading,
   lead,

@@ -54,10 +54,6 @@ interface FormProps {
 }
 
 const SaveEventAsTemplateForm = ({ eventId, name, onSuccess }: FormProps) => {
-  /**
-   * The errors show as toasts: the refresh after a conflict, for example an
-   * event that a different manager deleted, can remove this form.
-   */
   const { formAction } = useAction(createEventTemplateFromEvent, {
     onSuccess,
   });
@@ -67,7 +63,7 @@ const SaveEventAsTemplateForm = ({ eventId, name, onSuccess }: FormProps) => {
       <input type="hidden" name="sourceEventId" value={eventId} />
 
       <p className="mb-4 text-sm text-neutral-400">
-        {`Die Vorlage übernimmt Beschreibung, Titelbild, Sichtbarkeit, Discord-Einstellungen, Aufstellung und Briefing von „${name}“, aber weder Teilnehmer noch Besetzung der Aufstellung. Sie gehört dir und ist damit zunächst nur für dich sichtbar.`}
+        {`Die Vorlage übernimmt Beschreibung, Titelbild, Sichtbarkeit, Teilnahme- und Discord-Einstellungen, Aufstellung und Briefing von „${name}“, aber weder Teilnehmer noch Besetzung der Aufstellung. Sie gehört dir und ist damit zunächst nur für dich sichtbar.`}
       </p>
 
       <TextInput

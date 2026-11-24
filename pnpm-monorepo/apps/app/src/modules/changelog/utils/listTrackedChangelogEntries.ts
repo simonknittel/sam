@@ -8,8 +8,5 @@ const TRACKED_CHANGELOG_ENTRIES: readonly TrackedChangelogEntry[] =
     date,
   }));
 
-/**
- * The tracked entries for the changelog port of the application context.
- * All tracked entries, without the cutoff of the viewer.
- */
+/** All tracked entries, without the cutoff of the viewer */
 export const listTrackedChangelogEntries = () => TRACKED_CHANGELOG_ENTRIES;

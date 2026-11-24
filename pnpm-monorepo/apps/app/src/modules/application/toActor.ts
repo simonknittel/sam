@@ -4,11 +4,10 @@ import { createActor, type Actor } from "@sam-monorepo/application";
 import type { Session } from "next-auth";
 
 /**
- * Maps the session to the actor of the use cases. The session already holds
- * the citizen, the Discord id and the permissions of an assumed user, and
- * `isAdminModeActive()` reads the cookie of the admin toolbar. The effective
- * roles come from the cache of the request, which the session callback
- * filled.
+ * The session already holds the citizen, the Discord id and the permissions of
+ * an assumed user, and `isAdminModeActive()` reads the cookie of the admin
+ * toolbar. The effective roles come from the cache of the request, which the
+ * session callback filled.
  */
 export const toActor = async (session: Session): Promise<Actor> => {
   const [adminMode, effectiveRoles] = await Promise.all([

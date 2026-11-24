@@ -8,12 +8,7 @@ import {
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, toTrpcError } from "../../trpc";
 
-/**
- * Pages through the current citizen's on-site notifications, newest first.
- * The inbox tab lists unarchived notifications, the archive tab archived
- * ones. Loaded lazily on first popover open; payload validation happens
- * client-side via the shared schemas (same code path as realtime events).
- */
+/** The client validates the payloads, as it does for the realtime events */
 export const list = protectedProcedure
   .input(listOwnOnSiteNotificationsInputSchema)
   .query(async ({ ctx, input }) => {

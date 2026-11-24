@@ -10,11 +10,8 @@ import {
 } from "../utils/wikiPageHref";
 
 /**
- * The single gate of a variant's embedded wiki: routes, sidebar, section
- * and the scoped tRPC branches all resolve through this. Returns null when
- * the embed does not exist for the viewer (see `buildVariantWikiContext()`),
- * so callers hide the section or 404 on null without leaking why. The href
- * mode is the one of the shared wiki components.
+ * Null when the embed does not exist for the viewer (see
+ * `buildVariantWikiContext()`)
  */
 export const getVariantWikiContext = cache(
   async (

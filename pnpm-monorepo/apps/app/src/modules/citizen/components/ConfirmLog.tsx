@@ -13,7 +13,6 @@ import { confirmCitizenLog } from "../actions/confirmCitizenLog";
 
 interface Props {
   readonly log: Pick<CitizenLog, "id" | "citizenId">;
-  /** The buttons show only their icons */
   readonly compact?: boolean;
 }
 
@@ -63,7 +62,6 @@ interface DecisionButtonProps {
   readonly decision: ConfirmationValue;
   readonly label: string;
   readonly icon: ReactNode;
-  /** The button shows only the icon, thus the label is its title */
   readonly compact: boolean;
 }
 
@@ -74,7 +72,6 @@ const DecisionButton = ({
   compact,
 }: DecisionButtonProps) => {
   const { pending, data } = useFormStatus();
-  /** The spinner shows on the button of the decision that the form sends */
   const isSent = pending && data.get("confirmed") === decision;
 
   return (

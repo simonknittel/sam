@@ -16,7 +16,6 @@ export type CreateWikiCollabTokenInput = z.output<
 >;
 
 export interface CreateWikiCollabTokenOutput {
-  /** A short-lived token for one connection to the collab server */
   readonly token: string;
   /**
    * Whether the token allows edits. The editor reloads the page when the
@@ -26,17 +25,9 @@ export interface CreateWikiCollabTokenOutput {
 }
 
 /**
- * A token for one connection of the editor to the collab server. The editor
- * asks for a new token on each connection and on an interval during the
- * connection.
- * Serves the global wiki and the briefings. The briefing of an event that
- * is over gives no edit permission, thus its token is read-only.
- *
- * @throws ConflictError when the collab server is not configured
- * @throws NotFoundError when the page does not exist or is in the trash: a
- * different user or tab deleted the page while the editor was open, and the
- * page must show it
- * @throws ForbiddenError when the actor cannot read the page
+ * The editor asks for a new token on each connection and on an interval during
+ * the connection. The briefing of an event that is over gives no edit
+ * permission, thus its token is read-only.
  */
 export const createWikiCollabToken = (
   context: ApplicationContext,

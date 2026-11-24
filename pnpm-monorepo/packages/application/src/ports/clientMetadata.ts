@@ -1,7 +1,5 @@
-/** The response of a Client ID Metadata Document */
 export interface ClientMetadataDocumentResponse {
   readonly body: string;
-  /** The `Cache-Control` header of the response */
   readonly cacheControl: string | undefined;
 }
 
@@ -12,8 +10,8 @@ export interface ClientMetadataDocumentResponse {
  */
 export interface ClientMetadataFetcher {
   /**
-   * Fetches the document of the URL. Only a public address is permitted, and
-   * with `allowLoopback` also the loopback interface.
+   * Only a public address is permitted, and with `allowLoopback` also the
+   * loopback interface.
    *
    * Throws an `Error` with an English message for each failure. The message
    * can contain the hostname, but no data of the response.

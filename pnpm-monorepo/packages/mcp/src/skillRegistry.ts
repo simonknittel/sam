@@ -7,7 +7,6 @@ import {
 import * as z from "zod";
 import { SKILL_CATALOG, type ServedSkill } from "./skillCatalog.js";
 
-/** The identifier of the Skills extension in the server capabilities */
 export const SKILLS_EXTENSION_ID = "io.modelcontextprotocol/skills";
 
 /**
@@ -21,7 +20,6 @@ const SKILL_CACHE_HINT = {
 
 const MARKDOWN_MIME_TYPE = "text/markdown";
 
-/** The entry of a skill in `skills/list` and `skills/get` */
 const toSkillEntry = (skill: ServedSkill) => ({
   uri: skill.uri,
   frontmatter: skill.frontmatter,

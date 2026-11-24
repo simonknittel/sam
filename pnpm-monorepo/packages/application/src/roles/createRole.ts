@@ -20,11 +20,6 @@ export interface CreateRoleOutput {
   readonly name: string;
 }
 
-/**
- * Creates a role without permissions. Requires `role;manage`.
- *
- * @throws ValidationError when a role with the name exists already
- */
 export const createRole = (
   context: ApplicationContext,
   actor: Actor,

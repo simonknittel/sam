@@ -33,8 +33,6 @@ describe("collectVisibleWikiSubtree", () => {
   });
 
   test("an unreadable page takes its whole subtree with it", () => {
-    // Nothing below an unreadable page can be readable, so the predicate
-    // below is a contradiction the collector is allowed to ignore.
     const pages = [
       page("root", null),
       page("a", "root"),

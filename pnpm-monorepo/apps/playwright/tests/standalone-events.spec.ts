@@ -60,7 +60,6 @@ test("an authorized user creates a public event via the modal", async ({
   await toggleLabel(page, /^Auf Discord veröffentlichen$/).click();
   await page.getByRole("button", { name: "Speichern" }).click();
 
-  // Creating redirects straight to the new event's overview
   await expect(page).toHaveURL(/\/app\/events\/[a-z0-9]+$/);
   await expect(
     page.getByRole("heading", { name: "Operation Nachtwache" }).first(),
@@ -75,17 +74,13 @@ test("an authorized user creates a public event via the modal", async ({
   expect(event!.createdById).toBe(creator.entity.id);
   expect(event!.startTime.toISOString()).toBe("2027-03-05T19:00:00.000Z");
   expect(event!.endTime!.toISOString()).toBe("2027-03-05T21:00:00.000Z");
-  // The briefing root page is seeded like the Discord sync does
   expect(event!.wikiPages).toHaveLength(1);
   expect(event!.wikiPages[0]!.title).toBe("BRIEFING");
 
   await expect(page).toHaveURL(`/app/events/${event!.id}`);
-  // Times render in Europe/Berlin
   await expect(page.getByText("20:00").first()).toBeVisible();
   await expect(page.getByText("Wir treffen uns am Sammelpunkt.")).toBeVisible();
-  // No Discord affordances on an app event that is not published
   await expect(page.getByRole("link", { name: "Discord" })).toHaveCount(0);
-  // The creator gets the manager-scoped briefing tab and the settings tab
   await expect(page.getByRole("link", { name: "Briefing" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Einstellungen" })).toBeVisible();
 });
@@ -111,26 +106,19 @@ test("the description field previews the text and the sign-up note", async ({
   const description = "**Sammelpunkt** um 20 Uhr";
   await fillUntilValue(page.getByLabel("Beschreibung"), description);
 
-  /** The dialog shows the preview in its Discord section */
   await openFormSection(page, "Discord");
   const preview = page.getByRole("region", { name: "Vorschau" });
-  // The formats of Discord are rendered, not shown as characters
   await expect(preview.getByText("Sammelpunkt")).toHaveJSProperty(
     "tagName",
     "STRONG",
   );
   await expect(preview).toContainText("um 20 Uhr");
 
-  /**
-   * The note is not editable and the event does not exist yet, thus its
-   * address stands in the preview without an identifier.
-   */
   await expect(preview).toContainText(
     "Anmeldung nur über SAM, nicht über Discord:",
   );
   await expect(preview).toContainText("/app/events/…");
 
-  // The counter measures what the organizer wrote, not what Discord receives
   await expect(
     page.getByText(new RegExp(`^${description.length} / [\\d.]+$`)),
   ).toBeVisible();
@@ -166,7 +154,6 @@ test("a user without event;create sees no create button and cannot open foreign 
     0,
   );
 
-  // Without the lineup and fleet permissions those tabs do not exist either
   await expect(page.getByRole("link", { name: "Übersicht" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Teilnehmer" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Aufstellung" })).toHaveCount(0);
@@ -178,7 +165,6 @@ test("a user without event;create sees no create button and cannot open foreign 
     0,
   );
 
-  // Only the tab content is rejected — the event stays navigable
   await expect(page.getByRole("link", { name: "Übersicht" })).toBeVisible();
 });
 
@@ -201,16 +187,11 @@ test("a dead briefing link keeps the event chrome, an unknown event does not", a
   await page.goto(`/app/events/${event.id}/briefing/gibt-es-nicht`);
 
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
-  // Both layers of chrome survive: the event tabs and the briefing sidebar
   await expect(page.getByRole("link", { name: "Übersicht" })).toBeVisible();
   await expect(
     page.getByRole("combobox", { name: "Seiten durchsuchen" }),
   ).toBeVisible();
 
-  /**
-   * An unknown event is rejected by the layout that renders those tabs, so
-   * there is no event name to keep — this one stays a full-page 404.
-   */
   await page.goto("/app/events/gibt-es-nicht");
 
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
@@ -238,7 +219,6 @@ test("the organizer edits the event via the settings tab", async ({
 
   await page.getByLabel("Titel").fill("Operation Neuer Name");
   await page.getByLabel("Beschreibung").fill("Jetzt mit Beschreibung.");
-  /** The preview of the description is in the Discord tile */
   await expect(
     sectionByHeading(page, "Discord").getByRole("region", { name: "Vorschau" }),
   ).toContainText("Jetzt mit Beschreibung.");
@@ -273,7 +253,6 @@ test("the organizer edits the event via the settings tab", async ({
     )
     .toBe(1);
 
-  // The feed renders the changes
   await page.goto(`/app/events/${event.id}/activity`);
   await expect(
     page.getByText("Titel von Operation Alter Name zu Operation"),
@@ -380,9 +359,9 @@ test("saving an event that a different manager deleted shows the error and the m
     ...futureEvent(),
   });
   /**
-   * Each visit marks the event as read. The action of a new event refreshes
-   * the page, and the action after the deletion refreshes it too. Thus the
-   * event is read, and the action of the visit ends before the deletion.
+   * The refresh of the first visit and the refresh of the visit action after
+   * the deletion (see the README) must not occur. Thus the event is read, and
+   * the action of the visit ends before the deletion.
    */
   await prisma.readMarker.create({
     data: { citizenId: creator.entity.id, eventId: event.id },
@@ -396,7 +375,6 @@ test("saving an event that a different manager deleted shows the error and the m
   await markAsReadResponse;
   await waitForAppShellHydration(page);
 
-  /** A different manager deletes the event after the page loaded */
   await prisma.event.update({
     where: { id: event.id },
     data: { deletedAt: new Date(), deletedById: otherManager.entity.id },
@@ -410,7 +388,6 @@ test("saving an event that a different manager deleted shows the error and the m
   await expect(
     page.getByText("Event nicht gefunden", { exact: true }),
   ).toBeVisible();
-  /** The page shows the current state without a reload */
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
 
   const unchangedEvent = await prisma.event.findUniqueOrThrow({
@@ -492,7 +469,6 @@ test("the sign-up lifecycle: sign up with comment, edit, cancel, re-sign-up", as
   await page.goto(`/app/events/${event.id}`);
   await waitForAppShellHydration(page);
 
-  /** A hidden copy of the streamed participation state can match too */
   const participationState = (text: string) =>
     page.getByText(text, { exact: true }).filter({ visible: true });
 
@@ -508,7 +484,6 @@ test("the sign-up lifecycle: sign up with comment, edit, cancel, re-sign-up", as
     page.getByRole("link", { name: "anmelder", exact: true }),
   ).toBeVisible();
   await expect(page.getByText("Bringe Snacks mit")).toBeVisible();
-  // Organizer resolves from createdBy
   await expect(
     page.getByRole("link", { name: "anmelde-orga", exact: true }),
   ).toBeVisible();
@@ -527,7 +502,6 @@ test("the sign-up lifecycle: sign up with comment, edit, cancel, re-sign-up", as
   await page.getByRole("button", { name: "Kommentar speichern" }).click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
-  // A manager assigns the participant to a position; cancelling must clear it
   const position = await prisma.eventPosition.create({
     data: {
       eventId: event.id,
@@ -553,7 +527,6 @@ test("the sign-up lifecycle: sign up with comment, edit, cancel, re-sign-up", as
   });
   expect(clearedPosition!.citizenId).toBeNull();
 
-  // Re-sign-up creates a fresh row; the cancelled row stays as history
   await page.getByRole("button", { name: "Anmelden", exact: true }).click();
   await expect(page.getByText("Du bist angemeldet.")).toBeVisible();
 
@@ -567,7 +540,6 @@ test("the sign-up lifecycle: sign up with comment, edit, cancel, re-sign-up", as
   expect(rows[1]!.cancelledAt).toBeNull();
   expect(rows[1]!.comment).toBeNull();
 
-  // The activity feed recorded the whole lifecycle
   await page.goto(`/app/events/${event.id}/activity`);
   await expect(
     page.getByText("Angemeldet", { exact: true }).first(),
@@ -578,7 +550,6 @@ test("the sign-up lifecycle: sign up with comment, edit, cancel, re-sign-up", as
   await expect(page.getByText("Kommentar aktualisiert")).toBeVisible();
   await expect(page.getByText("Abgemeldet", { exact: true })).toBeVisible();
 
-  // The participant is also the affected citizen of their own entries
   const affectedCell = page
     .getByRole("row")
     .filter({ hasText: "Abgemeldet" })
@@ -608,7 +579,6 @@ test("sign-up closes at the event's end and past events show synthetic activity"
 
   await signIn(viewer.user);
   await page.goto(`/app/events/${event.id}`);
-  // The note streams in, thus React can also keep a hidden copy of it
   await expect(
     page.getByText("Die Anmeldung ist geschlossen.").filter({ visible: true }),
   ).toBeVisible();
@@ -774,7 +744,6 @@ test("the description renders the formats of Discord and exports plain text", as
     page.getByRole("heading", { name: "Neues Event" }),
   ).toBeVisible();
 
-  // The hint links to the formats instead of denying them
   await expect(
     page.getByRole("link", { name: "Formatierungen wie auf Discord" }),
   ).toBeVisible();
@@ -787,7 +756,6 @@ test("the description renders the formats of Discord and exports plain text", as
 
   await expect(page).toHaveURL(/\/app\/events\/[a-z0-9]+$/);
 
-  // Bold text and the list become elements, not characters
   await expect(
     page.locator("strong", { hasText: "Sammelpunkt" }),
   ).toBeVisible();
@@ -796,11 +764,9 @@ test("the description renders the formats of Discord and exports plain text", as
     page.getByRole("listitem").filter({ hasText: "Erster Punkt" }),
   ).toBeVisible();
 
-  // Discord does not know tables, thus the characters stay
   await expect(page.getByRole("cell", { name: "Carrack" })).toHaveCount(0);
   await expect(page.getByText("| Schiff | Rolle |")).toBeVisible();
 
-  // The calendar export gets the same text without the format characters
   await page
     .getByRole("button", { name: "Zum eigenen Kalender hinzufügen" })
     .click();
@@ -817,9 +783,9 @@ test("the description renders the formats of Discord and exports plain text", as
 });
 
 /**
- * Sync safety ("a sync cycle leaves app events untouched") is covered at
- * the unit level in the lambda's reconciliation tests — the sync itself
- * needs Discord credentials and cannot run against the local stack.
+ * Sync safety ("a sync cycle leaves app events untouched") is covered in
+ * syncDiscordEvents.integration.test.ts of the application package — this
+ * stack does not run the Lambda function that starts the sync.
  */
 
 test("the events list preview manages participation without leaving the list", async ({
@@ -837,7 +803,6 @@ test("the events list preview manages participation without leaving the list", a
     createdById: creator.entity.id,
     ...futureEvent(),
   });
-  // Discord events keep managing their participation in Discord
   await createEvent(prisma, {
     name: "Operation Discord-Only",
     discordCreatorId: "some-discord-organizer",
@@ -871,7 +836,6 @@ test("the events list preview manages participation without leaving the list", a
   await dialog.getByRole("button", { name: "Anmelden", exact: true }).click();
   await expect(page.getByText("Du bist angemeldet.")).toBeVisible();
 
-  // The modal stays open and re-renders into the signed-up state
   await expect(dialog.getByText("Zugesagt")).toBeVisible();
   await expect(dialog.getByLabel("Kommentar")).toHaveValue("Bin dabei");
 
@@ -881,7 +845,6 @@ test("the events list preview manages participation without leaving the list", a
     .getByRole("button", { name: "Abmelden" })
     .click();
   await expect(page.getByText("Du hast dich abgemeldet.")).toBeVisible();
-  // The batched cancelled-participation query reaches the preview
   await expect(dialog.getByText("Abgemeldet", { exact: true })).toBeVisible();
 
   await dialog.getByRole("button", { name: "Schließen" }).click();

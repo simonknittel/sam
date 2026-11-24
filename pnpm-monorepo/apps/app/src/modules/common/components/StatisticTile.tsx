@@ -6,7 +6,6 @@ interface Props {
   readonly children: ReactNode;
   readonly label: ReactNode;
   readonly preLabel?: ReactNode;
-  /** A smaller value below the main value, for example in a second unit */
   readonly secondaryValue?: ReactNode;
 }
 

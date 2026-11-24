@@ -16,7 +16,6 @@ import { RestoreFlowButton } from "./RestoreFlowButton";
 
 interface Props {
   readonly flow: ManageableFlowRow;
-  /** Renders the drag handle and makes the row sortable */
   readonly isSortable: boolean;
   readonly onDuplicate: (flow: ManageableFlowRow) => void;
 }

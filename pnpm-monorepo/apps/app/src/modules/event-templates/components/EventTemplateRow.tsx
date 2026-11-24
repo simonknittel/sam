@@ -13,7 +13,6 @@ import { UseEventTemplateButton } from "./UseEventTemplateButton";
 
 interface Props {
   readonly entry: EventTemplateListEntry;
-  /** The owner column only exists for viewers who see foreign templates */
   readonly showOwner: boolean;
   /** Using and duplicating both end in a create the viewer may not do */
   readonly canCreate: boolean;
@@ -30,7 +29,6 @@ export const EventTemplateRow = ({ entry, showOwner, canCreate }: Props) => {
         <Link
           href={getEventTemplatePath(template.id)}
           title={template.name}
-          /* `after` turns the whole cell — deletion note and padding included — into the hit target */
           className="block truncate text-interaction-500 after:absolute after:inset-0 hover:underline focus-visible:underline active:text-interaction-300"
         >
           {template.name}

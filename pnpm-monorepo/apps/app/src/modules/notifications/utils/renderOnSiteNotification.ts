@@ -47,11 +47,6 @@ import {
 import { NOTIFICATIONS_APPS } from "./NotificationTypes";
 import type { OnSiteNotificationRow } from "./types";
 
-/**
- * A decoration which the notification list draws into the row. The switch
- * below is the single place which knows the notification types, thus it
- * names the decoration as well and the list only maps it to a component.
- */
 export enum NotificationDecoration {
   Birthday = "birthday",
   NewYear = "new_year",
@@ -64,7 +59,6 @@ interface OnSiteNotificationRendering {
   readonly url: string | null;
   readonly appTitle: string | null;
   readonly decoration: NotificationDecoration | null;
-  /** The invitation which the row lets the citizen answer */
   readonly eventInvitation?: {
     readonly eventId: string;
     readonly eventName: string;
@@ -82,10 +76,8 @@ const appTitleByNotificationTypeId = new Map<string, string>(
 );
 
 /**
- * Maps a stored notification to its display content. The texts come from the
- * same functions as the texts of the web push notifications. Unknown types,
- * unknown payload versions and invalid payloads (rows outlive schema changes)
- * fall back to a generic rendering.
+ * Unknown types, unknown payload versions and invalid payloads (rows outlive
+ * schema changes) fall back to a generic rendering.
  */
 export const renderOnSiteNotification = (
   notification: Pick<

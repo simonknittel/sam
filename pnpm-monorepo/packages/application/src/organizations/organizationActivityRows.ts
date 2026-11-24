@@ -21,7 +21,6 @@ const ORGANIZATION_REFERENCE_SELECT = {
   logo: true,
 } as const satisfies Prisma.OrganizationSelect;
 
-/** The organization that an activity entry is about */
 export type OrganizationActivityOrganization = Prisma.OrganizationGetPayload<{
   select: typeof ORGANIZATION_REFERENCE_SELECT;
 }>;
@@ -60,14 +59,11 @@ const ORGANIZATION_MEMBERSHIP_SELECT = {
   createdBy: { select: CITIZEN_REFERENCE_SELECT },
 } as const satisfies Prisma.OrganizationMembershipHistoryEntrySelect;
 
-/** One page request of an activity source of the organizations */
 export interface OrganizationActivityInput extends ActivitySourceInput {
-  /** Only the history of this organization */
   readonly organizationId?: string;
 }
 
 export interface OrganizationMembershipActivityInput extends OrganizationActivityInput {
-  /** Only the history of this citizen */
   readonly citizenId?: string;
   /**
    * Whether the table runs the confirmation workflow (the page of an
@@ -79,9 +75,7 @@ export interface OrganizationMembershipActivityInput extends OrganizationActivit
 
 export interface OrganizationCreatedRow extends OrganizationActivityOrganization {
   readonly createdAt: Date;
-  /** Null for an organization without a known creator */
   readonly createdBy: CitizenReferenceRow | null;
-  /** The name the organization was created under, or null when unknown */
   readonly initialName: string | null;
 }
 
@@ -95,10 +89,6 @@ export type OrganizationMembershipRow =
     select: typeof ORGANIZATION_MEMBERSHIP_SELECT;
   }>;
 
-/**
- * The confirmation states that the table shows. A table without the
- * confirmation workflow shows only the confirmed entries.
- */
 const getConfirmationFilter = (
   actor: Pick<Actor, "authorize">,
   withConfirmation?: boolean,
@@ -110,10 +100,6 @@ const getConfirmationFilter = (
     : { confirmed: ConfirmationStatus.CONFIRMED };
 };
 
-/**
- * One page of the creations of organizations. Empty without
- * `organization;read`.
- */
 export const findOrganizationCreatedRows = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Pick<Actor, "authorize">,
@@ -148,9 +134,8 @@ export const findOrganizationCreatedRows = async (
 };
 
 /**
- * One page of the renames of organizations. Renames never go through the
- * confirmation workflow, because nothing writes an unconfirmed one. Empty
- * without `organization;read`.
+ * Renames never go through the confirmation workflow, because nothing writes an
+ * unconfirmed one
  */
 export const findOrganizationRenamedRows = async (
   context: Pick<ApplicationContext, "prisma">,
@@ -187,12 +172,7 @@ export const findOrganizationRenamedRows = async (
   });
 };
 
-/**
- * One page of the membership entries of the citizens. A redacted entry needs
- * `organizationMembership;read` with the attribute `alsoVisibilityRedacted`.
- * Empty without `organization;read`: this permission gates the source, not
- * `organizationMembership;read`.
- */
+/** `organization;read` gates the source, not `organizationMembership;read` */
 export const findOrganizationMembershipRows = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Pick<Actor, "authorize">,

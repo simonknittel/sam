@@ -10,10 +10,8 @@ type Payload = {
 };
 
 /**
- * The message links to the event page, where the citizen answers the
- * invitation. The on-site notification carries the invitation, thus the
- * notification center asks for its state and shows the buttons while it is
- * open.
+ * The on-site notification carries the invitation, thus the notification center
+ * asks for its state and shows the buttons while it is open
  */
 export const EventInvitationCreatedHandler = async (
   context: ApplicationContext,

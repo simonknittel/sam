@@ -1,25 +1,9 @@
 import clsx from "clsx";
 
 interface Props {
-  /** Gives the tree its place, its size and the colour of the needles */
   readonly className?: string;
 }
 
-/**
- * The Christmas tree which stands in the bottom right corner of the
- * viewport.
- *
- * The three tiers of needles take `currentColor`, which the class of the
- * caller sets. The other parts need a colour of their own, because a tree of
- * one colour is only a green triangle:
- *
- * - `#92400e` (brown) for the trunk,
- * - `#fbbf24` (gold) for the star,
- * - `#ef4444` (red), `#fbbf24` (gold) and `#38bdf8` (blue) for the balls.
- *
- * The star is the only part of the tree which moves. It holds the one
- * motion the corner may have, and it is far away from every text.
- */
 export const ChristmasTree = ({ className }: Props) => (
   <svg
     aria-hidden

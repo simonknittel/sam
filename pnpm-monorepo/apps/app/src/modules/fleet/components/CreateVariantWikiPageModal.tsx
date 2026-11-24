@@ -17,15 +17,10 @@ import { createVariantWikiPage } from "../actions/createVariantWikiPage";
 
 interface Props {
   readonly variant: Pick<Variant, "id" | "name">;
-  /** Whether the user can create a page at the top of the global wiki */
   readonly allowTopLevel: boolean;
   readonly onRequestClose: () => void;
 }
 
-/**
- * Creates an empty page in the global wiki and links it to the variant. The
- * parents are the pages that the user manages.
- */
 export const CreateVariantWikiPageModal = ({
   variant,
   allowTopLevel,

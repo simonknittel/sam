@@ -1,4 +1,3 @@
-/** The use cases of the statistics. */
 export {
   DEFAULT_STATISTIC_DAY_COUNT,
   MAXIMUM_STATISTIC_DAY_COUNT,

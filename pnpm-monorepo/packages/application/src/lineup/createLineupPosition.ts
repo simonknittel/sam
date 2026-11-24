@@ -19,10 +19,6 @@ export type CreateLineupPositionInput = z.infer<
   typeof createLineupPositionInputSchema
 >;
 
-/**
- * Adds a position to the lineup of an event or of an event template that the
- * actor can change
- */
 export const createLineupPosition = (
   context: ApplicationContext,
   actor: Actor,

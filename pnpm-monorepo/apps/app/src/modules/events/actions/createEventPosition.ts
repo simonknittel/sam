@@ -11,7 +11,6 @@ import {
 } from "../utils/eventContainer";
 import { EVENT_ERROR_TEXTS } from "../utils/eventErrorTexts";
 
-/** The lineup editor also adds the positions of an event template */
 export const createEventPosition = createUseCaseAction({
   name: "createEventPosition",
   schema: createLineupPositionInputSchema,

@@ -14,7 +14,6 @@ interface Props {
   readonly heading: string;
   readonly description: ReactNode;
   readonly emptyLabel: string;
-  /** The record type's own CRUD actions — see NoteTypesTile for an example */
   readonly actions: {
     readonly create: SettingsRecordAction;
     readonly update: SettingsRecordAction;

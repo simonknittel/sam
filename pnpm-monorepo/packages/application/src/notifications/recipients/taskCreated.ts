@@ -6,13 +6,10 @@ import type { Recipient } from "./recipient.js";
 import { TASK_RECEIVER_PERMISSION_SETS } from "./taskRecipients.js";
 
 export enum TaskCreatedRecipientKind {
-  /** A citizen who can take on the public task */
   PublicTask = "public_task",
-  /** An assignee of a personalized or group task */
   Assignee = "assignee",
 }
 
-/** The recipients of one new task */
 export interface TaskCreatedRecipientGroup {
   readonly task: { readonly id: string; readonly title: string };
   readonly kind: TaskCreatedRecipientKind;
@@ -24,12 +21,9 @@ export interface FindTaskCreatedRecipientsInput {
 }
 
 /**
- * One group for each new task that is not deleted. The creator of the task
- * gets no notification. A personalized or group task notifies its assignees.
- * A public task has no assignees yet: it notifies each citizen who can take
- * it on: the citizen must have a required role (`hasRequiredRole()`), also
- * when the task is visible for other roles. `task;manage` shows all tasks,
- * but it gives no notification.
+ * A public task has no assignees yet: it notifies each citizen who can take it
+ * on, also when the task is visible for other roles. `task;manage` shows all
+ * tasks, but it gives no notification.
  */
 export const findTaskCreatedRecipients = async (
   context: ApplicationContext,

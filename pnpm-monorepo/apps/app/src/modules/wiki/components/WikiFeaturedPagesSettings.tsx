@@ -42,15 +42,9 @@ interface WikiFeaturedPage {
 
 interface Props {
   readonly initialPages: readonly WikiFeaturedPage[];
-  /** Selectable pages in tree order, e.g. from getManageableWikiPageTargets */
   readonly targets: readonly WikiPageTargetOption[];
 }
 
-/**
- * Curates the ordered list of pages the wiki landing page highlights.
- * Adding, removing and reordering only change local state — the whole list
- * is stored when the form is submitted.
- */
 export const WikiFeaturedPagesSettings = ({ initialPages, targets }: Props) => {
   const selectId = useId();
   const [pages, setPages] = useState<WikiFeaturedPage[]>([...initialPages]);
@@ -187,10 +181,7 @@ interface RowProps {
   readonly onRemove: () => void;
 }
 
-/**
- * The row and its handle look like the rows of the sidebar tree. The handle
- * moves the row (see `useSortableList`).
- */
+/** The row and its handle look like the rows of the sidebar tree */
 const WikiFeaturedPageRow = ({ page, onRemove }: RowProps) => {
   const {
     attributes,

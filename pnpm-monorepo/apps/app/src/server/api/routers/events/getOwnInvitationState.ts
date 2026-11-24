@@ -8,11 +8,6 @@ import { TRPCError } from "@trpc/server";
 import * as z from "zod";
 import { protectedProcedure, toTrpcError } from "../../trpc";
 
-/**
- * The current state of an invitation of the viewer. The notification center
- * shows the buttons of an invitation notification only while the invitation
- * can be answered.
- */
 export const getOwnInvitationState = protectedProcedure
   .input(z.object({ invitationId: idSchema }))
   .query(async ({ ctx, input }) => {

@@ -24,7 +24,6 @@ const LINEUP_EVENT_RECIPIENT_SELECT = {
   ...EVENT_RECIPIENT_SELECT,
 } as const satisfies Prisma.EventSelect;
 
-/** One level of the tree of `findEventPositionTree()` */
 interface PositionTreeNode {
   readonly name: string;
   readonly citizen: { readonly id: string } | null;
@@ -32,10 +31,7 @@ interface PositionTreeNode {
   readonly childPositions?: readonly PositionTreeNode[];
 }
 
-/**
- * The positions in the order of the lineup page: each position before its
- * children
- */
+/** In the order of the lineup page: each position before its children */
 const flattenPositionTree = (
   positions: readonly PositionTreeNode[],
 ): PositionTreeNode[] =>
@@ -45,10 +41,6 @@ const flattenPositionTree = (
   ]);
 
 export interface EventLineupRecipient extends Recipient {
-  /**
-   * The positions of the recipient in the order of the lineup page. Empty
-   * when the recipient holds no position.
-   */
   readonly positionNames: string[];
 }
 
@@ -57,18 +49,10 @@ export interface EventLineupEnabledRecipients {
   readonly recipients: EventLineupRecipient[];
 }
 
-/**
- * The participants of the event who can see its lineup now (see
- * `findEventParticipantRecipients()` and `LINEUP_PERMISSION_SETS`), without
- * the excluded citizen, each with the own positions. Null when the event
- * does not exist, has no active participant, or when the participants do
- * not see the lineup anymore (see `isLineupPublished()`).
- */
 export const findEventLineupEnabledRecipients = async (
   context: ApplicationContext,
   input: {
     readonly eventId: string;
-    /** The citizen who caused the notification gets none */
     readonly excludedCitizenId?: string | null;
   },
 ): Promise<EventLineupEnabledRecipients | null> => {
@@ -111,12 +95,8 @@ export interface EventPositionRecipients extends EventNotificationRecipients {
 }
 
 /**
- * The citizen of a new assignment, when the citizen still holds the position,
- * the participants see the lineup (see `isLineupPublished()`) and the citizen
- * can see the lineup now (see `findEventRecipients()` and
- * `LINEUP_PERMISSION_SETS`). Null when the position does not exist anymore,
- * a later change gave it to a different citizen (that change notifies on its
- * own), or when the participants do not see the lineup.
+ * A later change that gave the position to a different citizen notifies on its
+ * own
  */
 export const findEventPositionAssignedRecipient = async (
   context: ApplicationContext,
@@ -149,13 +129,7 @@ export const findEventPositionAssignedRecipient = async (
   };
 };
 
-/**
- * The citizen who lost a position, when the participants see the lineup
- * (see `isLineupPublished()`) and the citizen can see the lineup now (see
- * `findEventRecipients()` and `LINEUP_PERMISSION_SETS`). Null when the event
- * does not exist, when the participants do not see the lineup, or when the
- * citizen holds the position again: then the loss is not true anymore.
- */
+/** When the citizen holds the position again, the loss is not true anymore */
 export const findEventPositionUnassignedRecipient = async (
   context: ApplicationContext,
   input: {
@@ -195,11 +169,6 @@ export const findEventPositionUnassignedRecipient = async (
   };
 };
 
-/**
- * The organizers who hear that a participant cancelled and so vacated
- * positions (see `findEventOrganizerRecipients()`), when they can see the
- * lineup now (see `LINEUP_PERMISSION_SETS`)
- */
 export const findEventPositionVacatedRecipients = (
   context: ApplicationContext,
   input: FindEventOrganizerRecipientsInput,

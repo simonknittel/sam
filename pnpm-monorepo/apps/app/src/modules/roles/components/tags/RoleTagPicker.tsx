@@ -14,12 +14,6 @@ interface Props {
   readonly onChange: (tagIds: BadgeRoleTag["id"][]) => void;
 }
 
-/**
- * Offers the tags of the roles context in a popover, with the look of the
- * role picker in multiple mode: a click on a tag selects or deselects it,
- * and the selected tags show under the trigger. A selected tag that is not
- * in the roles context shows as a placeholder.
- */
 export const RoleTagPicker = ({ className, value, onChange }: Props) => {
   const { tags } = useRolesContext();
 

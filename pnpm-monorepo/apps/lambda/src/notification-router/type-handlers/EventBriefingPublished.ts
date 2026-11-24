@@ -12,9 +12,8 @@ type Payload = {
 };
 
 /**
- * The app sends this notification one time for each event: when the read
- * scope of the briefing first opens it to more citizens than the managers.
- * See `findEventBriefingAudienceRecipients()` for the recipients.
+ * The app sends this notification one time for each event: when the read scope
+ * of the briefing first opens it to more citizens than the managers
  */
 export const EventBriefingPublishedHandler = async (
   context: ApplicationContext,

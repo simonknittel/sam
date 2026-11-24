@@ -6,7 +6,6 @@ import {
   type VariantTagOutput,
 } from "./shipVariant.js";
 
-/** All variant tags, for the filter of the fleet of the organization */
 export const findOrgFleetVariantTags = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,
@@ -19,7 +18,6 @@ export const findOrgFleetVariantTags = async (
   });
 };
 
-/** The tags of every variant that the citizen owns a ship of */
 const findOwnerFleetVariantTags = (
   context: Pick<ApplicationContext, "prisma">,
   ownerId: string,
@@ -32,10 +30,6 @@ const findOwnerFleetVariantTags = (
     select: VARIANT_TAG_SELECT,
   });
 
-/**
- * The tags of the variants of the own ships, for the filter of the own
- * fleet. A user without a citizen has no ships.
- */
 export const findOwnFleetVariantTags = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,
@@ -47,7 +41,6 @@ export const findOwnFleetVariantTags = async (
   return findOwnerFleetVariantTags(context, actor.citizen.id);
 };
 
-/** The tags of the variants of the ships of a citizen, for its fleet page */
 export const findCitizenFleetVariantTags = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,

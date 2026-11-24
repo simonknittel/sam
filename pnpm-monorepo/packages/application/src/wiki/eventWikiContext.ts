@@ -46,17 +46,10 @@ export interface EventWikiContextPosition {
   readonly order: number;
 }
 
-/**
- * The briefing of an event or of an event template: one of the wiki scopes
- * (see `wikiScope.ts`)
- */
 export interface EventWikiContext {
   readonly kind: WikiScopeKind.Briefing;
-  /** The event or the event template that the briefing belongs to */
   readonly container: EventContainer;
-  /** The routes of the pages */
   readonly hrefBase: WikiPageHrefBase;
-  /** Name of the container, for headings and page titles */
   name: string;
   /**
    * The owning event, NULL inside a template blueprint. Everything that only
@@ -73,7 +66,6 @@ export interface EventWikiContext {
     | "briefingPublishedAt"
     | "participationEnabled"
   > | null;
-  /** Flat lineup positions, e.g. for the POSITION scope picker */
   positions: EventWikiContextPosition[];
   viewer: EventWikiViewer;
   /** The event is over — every mutation is rejected, reading stays */
@@ -85,10 +77,9 @@ export interface EventWikiContext {
   pagesById: Map<string, EventWikiContextPage>;
   /**
    * The single top-level "Briefing" page: the briefing's homepage and the
-   * gate — events without one (created before the feature) have no wiki.
+   * gate — events without one have no wiki.
    */
   rootPage: EventWikiContextPage | null;
-  /** Effective permissions of the current viewer for every page */
   permissions: Map<string, ResolvedEventWikiPagePermissions>;
 }
 
@@ -156,12 +147,7 @@ export interface BuildEventWikiContextInput {
   readonly event_id: string;
 }
 
-/**
- * Loads the briefing pages of an event and resolves the effective
- * permissions of the actor — the event counterpart of `buildWikiContext()`.
- * Returns null if the actor may not hold it: no `event;read`, an unknown
- * event or an event that the actor cannot see.
- */
+/** `createWikiMentionReadGate()` has its own implementation of this gate */
 export const buildEventWikiContext = (
   context: ApplicationContext,
   actor: Actor,

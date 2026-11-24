@@ -13,12 +13,8 @@ export type FindSessionIdByTokenInput = z.infer<
 >;
 
 /**
- * Resolves the session token to the id of its session, or to null when no
- * session has the token. The token is a secret: the use case gives the id
- * only, thus the token stays out of everything downstream, and it never goes
- * into a log or into an error. The use case has no actor, because the caller
- * needs the session to build the actor. See the exceptions in the README of
- * the package.
+ * The token is a secret: only the id leaves the use case, and the token never
+ * goes into a log or into an error. No permission check, see the README.
  */
 export const findSessionIdByToken = async (
   context: ApplicationContext,

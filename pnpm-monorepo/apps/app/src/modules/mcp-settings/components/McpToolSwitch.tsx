@@ -13,7 +13,6 @@ interface Props {
   readonly isEnabled: boolean;
 }
 
-/** Saves each change at once for the connected client */
 export const McpToolSwitch = ({
   className,
   grantId,
@@ -21,10 +20,6 @@ export const McpToolSwitch = ({
   toolTitle,
   isEnabled,
 }: Props) => {
-  /**
-   * Shows the new state at once. After the action, the state of the server
-   * replaces it: the new state after a save, the old state after an error.
-   */
   const [optimisticIsEnabled, setOptimisticIsEnabled] =
     useOptimistic(isEnabled);
 

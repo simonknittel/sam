@@ -15,9 +15,9 @@ export const completeOnboardingStep = createUseCaseAction({
     step_key: formData.get("stepKey"),
   }),
   /**
-   * Deliberately no `refresh()` on success, see `completeOnboardingTask`.
-   * A not-found answer refreshes (the error mapper): only a crafted request
-   * names a task or a step that does not exist.
+   * No `refresh()` on success, see `completeOnboardingTask`. A not-found
+   * answer refreshes (the error mapper): only a crafted request names a task
+   * or a step that does not exist.
    */
   refresh: ActionRefresh.Never,
   success: () => "Fortschritt gespeichert.",

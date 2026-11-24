@@ -15,7 +15,6 @@ import { useId, useState } from "react";
 import { FaPen, FaSave } from "react-icons/fa";
 import { updateNote } from "../../actions/updateNote";
 
-/** The classification levels that the dialog offers for each note type */
 type ClassificationLevelsByNoteType = Readonly<
   Partial<Record<NoteType["id"], readonly ClassificationLevel[]>>
 >;
@@ -77,9 +76,8 @@ interface UpdateNoteFormProps {
 }
 
 /**
- * The value of a controlled select. A value that the select does not offer,
- * for example after a refresh or after a change of the note type, changes to
- * the first option, as the browser shows it.
+ * A value that the select does not offer (for example after a change of the
+ * note type) becomes the first option, as the browser shows it.
  */
 const getOfferedValue = (
   options: readonly { readonly id: string }[],

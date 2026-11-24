@@ -16,7 +16,6 @@ import { VariantPickerValue } from "./VariantPickerValue";
 interface Props {
   readonly className?: string;
   readonly catalog: VariantCatalog;
-  /** The form field name of the hidden input of the selected variant */
   readonly name: string;
   readonly label: ReactNode;
   /**
@@ -27,10 +26,6 @@ interface Props {
   readonly autoFocus?: boolean;
 }
 
-/**
- * Offers the variants of the catalog in a popover, like `RolePicker` in
- * single mode. The trigger shows the selected variant.
- */
 export const VariantPicker = ({
   className,
   catalog,
@@ -48,7 +43,6 @@ export const VariantPicker = ({
   const labelId = useId();
   const valueId = useId();
   const errorId = useId();
-  /** Whether a submit found no selected variant */
   const [isInvalid, setIsInvalid] = useState(false);
   const showsRequiredError = isInvalid && selectedVariantId === null;
 

@@ -83,7 +83,6 @@ const eslintConfig = defineConfig([
       "@typescript-eslint/ban-ts-comment": [
         "warn",
         {
-          // Suppressions must carry a justification; bare ones are flagged.
           "ts-expect-error": "allow-with-description",
           "ts-ignore": true,
           "ts-nocheck": "allow-with-description",
@@ -94,7 +93,6 @@ const eslintConfig = defineConfig([
       // Some JSX attributes get handlers that return a promise: the URL state
       // setters of nuqs, the `refetch()` of tRPC, the notification mutations
       // and the async items of the command menu. React ignores the promise.
-      // In October 2026, 9 attributes in 7 files need this option.
       "@typescript-eslint/no-misused-promises": [
         2,
         {
@@ -139,7 +137,7 @@ const eslintConfig = defineConfig([
       "@typescript-eslint/restrict-template-expressions": [
         "error",
         {
-          // This needs to be set to true to make use of the `satisfies never` type guard for `switch` statements exhaustive checks.
+          // For the `satisfies never` check of exhaustive `switch` statements
           allowNever: true,
         },
       ],
@@ -148,8 +146,6 @@ const eslintConfig = defineConfig([
 
   {
     name: "use-cases-only",
-    // Only the composition root and the auth zone (the next-auth adapter and
-    // the session callback) use the Prisma client
     files: ["src/**"],
     ignores: ["src/modules/application/**", "src/modules/auth/server/**"],
     rules: {

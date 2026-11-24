@@ -8,7 +8,6 @@ interface Props {
     path: string;
     name: string;
     icon?: ReactNode;
-    /** Also count nested routes below `path` as active, e.g. for tabs with subpages */
     matchesSubpaths?: boolean;
   }[];
 }

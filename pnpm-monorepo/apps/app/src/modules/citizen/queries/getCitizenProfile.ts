@@ -12,11 +12,7 @@ import { cache } from "react";
 
 export type { CitizenProfile } from "@sam-monorepo/application";
 
-/**
- * The profile of the dashboard tile (see `getCitizenProfile` of the
- * application package), or null when the citizen does not exist. The
- * popovers read it through tRPC.
- */
+/** Null when the citizen does not exist */
 export const getCitizenProfile = cache(async (id: Citizen["id"]) => {
   try {
     return await getCitizenProfileUseCase(

@@ -18,10 +18,8 @@ export const acceptTaskInputSchema = z.object({
 export type AcceptTaskInput = z.infer<typeof acceptTaskInputSchema>;
 
 /**
- * Assigns the citizen of the actor to an open public task and notifies the
- * creator of the task. Requires `task;read`, a citizen, a free place and one
- * of the required roles. A repeated call changes nothing, sends nothing and
- * gives the task like the first one.
+ * A repeated call changes nothing, sends nothing and gives the task like the
+ * first one
  */
 export const acceptTask = (
   context: ApplicationContext,

@@ -7,7 +7,6 @@ import * as z from "zod";
  */
 const MAXIMUM_CATALOG_NAME_LENGTH = 255;
 
-/** The name of a manufacturer, a series or a variant */
 export const catalogNameSchema = z
   .string()
   .trim()

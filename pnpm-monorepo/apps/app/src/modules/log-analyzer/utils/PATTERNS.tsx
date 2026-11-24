@@ -94,31 +94,26 @@ export interface IEntry {
   readonly isoDate: Date;
   readonly isNew?: boolean;
   readonly message: ReactNode;
-  /** See `Pattern.collapseKey`. Null when the type has no such key. */
+  /** Null when the type has no such key */
   readonly collapseKey: string | null;
-  /** The mission of a contract. Null when the line names no mission. */
+  /** Null when the line names no mission */
   readonly missionId: string | null;
-  /** The name of a contract. Null when the line names no contract. */
+  /** Null when the line names no contract */
   readonly contractName: string | null;
   /**
    * The citizen the entry belongs to: the citizen who shared it, or the
    * current user for a local one. Null when the user has no linked citizen.
    */
   readonly citizen: Pick<Citizen, "id" | "handle" | "deletedAt"> | null;
-  /** True when another citizen shared the entry instead of the local parser. */
+  /** True when the entry came from the server and not from the local parser. */
   readonly isShared: boolean;
-  /**
-   * True once the entry reached the server, whether this visit shared it or
-   * an earlier one did. The upload learns the difference from the hashes the
-   * server already holds.
-   */
+  /** Also true when an earlier visit shared the entry */
   readonly isUploaded: boolean;
-  /** See `Pattern.liveStatusSignal`. Null when the type tells nothing. */
+  /** Null when the type tells nothing */
   readonly liveStatusSignal: LiveStatusSignal | null;
   /**
-   * The number of the line in its log file. It orders the lines of one
-   * instant (see `compareEntries`). Null for an entry which was shared before
-   * the upload sent the number.
+   * Orders the lines of one instant (see `compareEntries`). Can be null for a
+   * shared entry.
    */
   readonly lineNumber: number | null;
 }
@@ -174,7 +169,6 @@ const renderDirection = (groups: Record<string, string>) => (
 const SECONDS_PER_MINUTE = 60;
 const MINUTES_PER_HOUR = 60;
 
-/** A duration in whole minutes, for example `1 h 5 min` */
 export const formatDuration = (seconds: number) => {
   const totalMinutes = Math.round(seconds / SECONDS_PER_MINUTE);
   const hours = Math.floor(totalMinutes / MINUTES_PER_HOUR);
@@ -205,7 +199,6 @@ const CENTI_SCU_PER_SCU = 100;
 /** The shops of the game are all named `SCShop_<location>` */
 const toShopName = (shop: string) => shop.replace(/^SCShop_/, "");
 
-/** The price and the shop of a purchase or a rental, after its goods */
 const formatShopPrice = (groups: Record<string, string>) => [
   muted("für"),
   `${priceFormat.format(Number(groups.price))} aUEC`,
@@ -254,7 +247,6 @@ const toVehicleKiller = (groups: Record<string, string>) => {
     : groups.killer;
 };
 
-/** The reason of a vehicle destruction, with its killer if there is one */
 export const formatVehicleDestructionCause = (
   groups: Record<string, string>,
 ) => {
@@ -281,7 +273,6 @@ interface Pattern {
    * end a repeat of that type. By default, each type has its own repeats.
    */
   collapseSequenceOf?: LogAnalyzerEntryType;
-  /** What the entry tells the Live-Status about its reporter */
   liveStatusSignal?: (groups: Record<string, string>) => LiveStatusSignal;
 }
 
@@ -295,7 +286,6 @@ const createContractEndSignal = (
   label: groups.contract ? stripMarkup(groups.contract) : null,
 });
 
-/** The end lines of a contract differ only in their title and icon */
 const createContractEndPattern = (title: string, icon: IconType): Pattern => ({
   title,
   icon,
@@ -320,7 +310,6 @@ const CONTRACT_WITHDRAWN_PATTERN = createContractEndPattern(
   FaFileCircleMinus,
 );
 
-/** All versions of the type, see `LogAnalyzerEntryPattern.supersedes` */
 const EARNED_PATTERN: Pattern = {
   title: "Belohnung erhalten",
   icon: FaTrophy,
@@ -797,7 +786,6 @@ export const SORTED_ENTRY_TYPES = Object.values(LogAnalyzerEntryType)
     PATTERNS[first].title.localeCompare(PATTERNS[second].title),
   );
 
-/** The entry types of each category, in the order of `SORTED_ENTRY_TYPES`. */
 export const ENTRY_TYPES_BY_CATEGORY = Object.fromEntries(
   Object.values(EntryCategory).map((category) => [
     category,
@@ -805,7 +793,6 @@ export const ENTRY_TYPES_BY_CATEGORY = Object.fromEntries(
   ]),
 ) as Record<EntryCategory, LogAnalyzerEntryType[]>;
 
-/** A record with the given value for every entry type, for the settings. */
 export const createEntryTypeRecord = (value: boolean) =>
   Object.fromEntries(
     Object.values(LogAnalyzerEntryType).map((type) => [type, value]),
@@ -826,7 +813,6 @@ export const shareValueAcrossVersions = (
     ]),
   ) as Record<LogAnalyzerEntryType, boolean>;
 
-/** The parts of an entry which its pattern derives from the capture groups. */
 export const deriveEntryFields = (
   type: LogAnalyzerEntryType,
   groups: Record<string, string>,
@@ -839,9 +825,8 @@ export const deriveEntryFields = (
 });
 
 /**
- * Identifies one entry in the entries map. The same line of the same type is
- * one entry, no matter whether the local parser or another citizen delivered
- * it.
+ * The same line of the same type is one entry, also when the local parser and
+ * the server deliver it.
  *
  * No value of `LogAnalyzerEntryType` holds an underscore, thus the separator
  * cannot make two different entries collide.

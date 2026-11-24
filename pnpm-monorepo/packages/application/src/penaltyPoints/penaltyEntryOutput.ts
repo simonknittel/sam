@@ -17,14 +17,12 @@ export interface PenaltyEntryOutput {
   readonly points: number;
   readonly reason: string | null;
   readonly created_at: string;
-  /** Null when the author is not known */
   readonly created_by: PenaltyEntryCitizenOutput | null;
   /** Null for an entry that never expires */
   readonly expires_at: string | null;
   readonly deleted_at: string | null;
 }
 
-/** The columns of a penalty entry for `toPenaltyEntryOutput()` */
 export const PENALTY_ENTRY_SELECT = {
   id: true,
   points: true,
@@ -44,7 +42,6 @@ const toCitizenOutput = (
   deleted_at: citizen.deletedAt?.toISOString() ?? null,
 });
 
-/** A penalty entry in the outputs of the list and of the create use case */
 export const toPenaltyEntryOutput = (
   entry: Prisma.PenaltyEntryGetPayload<{ select: typeof PENALTY_ENTRY_SELECT }>,
 ): PenaltyEntryOutput => ({

@@ -8,7 +8,7 @@ import {
 
 /**
  * Defaults to the global wiki so its routes need no provider — only the
- * event wiki (briefing) layouts mount one.
+ * briefing layouts and the variant layout mount one.
  */
 const WikiPageHrefModeContext = createContext<WikiPageHrefMode>(
   GLOBAL_WIKI_HREF_MODE,

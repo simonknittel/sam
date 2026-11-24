@@ -2,14 +2,8 @@ import { type Metadata } from "next";
 import { notFound } from "next/navigation";
 
 /**
- * From Next.js documentation:
- * > In addition to catching expected `notFound()` errors, the root
- * `app/not-found.js` file also handles any unmatched URLs for your whole
- * application
- *
- * That means, that we can't have nested `not-found.tsx` files. Instead we need
- * to use a workaround by leveraging a catch-all router
- * (`[[...not-found]]/page.tsx`)
+ * A nested `not-found.tsx` does not handle unmatched URLs. This catch-all route
+ * shows it for them.
  */
 
 export const metadata: Metadata = {

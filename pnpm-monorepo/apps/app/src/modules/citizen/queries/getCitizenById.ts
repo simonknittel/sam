@@ -8,7 +8,7 @@ import { findSpynetCitizen } from "@sam-monorepo/application";
 import type { Citizen } from "@sam-monorepo/database/client";
 import { cache } from "react";
 
-/** The active citizen of the Spynet pages, or null (see `findSpynetCitizen`) */
+/** The active citizen, or null */
 export const getCitizenById = cache(
   withTrace("getCitizenById", async (id: Citizen["id"]) => {
     try {

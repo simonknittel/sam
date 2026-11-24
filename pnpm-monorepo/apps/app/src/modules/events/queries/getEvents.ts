@@ -16,9 +16,8 @@ import { cache } from "react";
 const EVENTS_PAGE_SIZE = 10;
 
 /**
- * One page of the events list. A stale cursor in the URL (its event is gone
- * or not visible anymore) shows the first page, or the last page for the
- * previous direction.
+ * A stale cursor in the URL (its event is gone or not visible anymore) shows
+ * the first page, or the last page for the previous direction.
  */
 export const getEvents = cache(
   async (

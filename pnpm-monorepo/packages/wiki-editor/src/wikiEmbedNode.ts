@@ -10,10 +10,7 @@ import {
   type WikiNodeAlignment,
 } from "./wikiResizableNodes.js";
 
-/**
- * "iframe" is the generic, allowlist-validated website embed; the other
- * providers have fixed, hardcoded host patterns.
- */
+/** "iframe" is the generic, allowlist-validated website embed. */
 const WIKI_EMBED_PROVIDERS = [
   "youtube",
   "twitch",
@@ -27,9 +24,8 @@ declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     wikiEmbed: {
       /**
-       * Inserts an embed at the current position. The src is validated
-       * against the provider's fixed host patterns — or, for provider
-       * "iframe", against the domain allowlist. The size/alignment
+       * The src is validated against the provider's fixed host patterns — or,
+       * for provider "iframe", against the domain allowlist. The size/alignment
        * attributes carry a previous node's layout through a URL update.
        */
       setWikiEmbed: (attributes: {
@@ -142,7 +138,6 @@ const normalizeYoutubeUrl = (url: URL): string | null => {
 const TWITCH_PLAYER_URL = "https://player.twitch.tv/";
 const TWITCH_CLIP_EMBED_URL = "https://clips.twitch.tv/embed";
 
-/** An embed URL of Twitch with the given parameters and without autoplay */
 const buildTwitchEmbedUrl = (
   embedUrl: string,
   parameters: Record<string, string>,
@@ -159,10 +154,6 @@ const normalizeTwitchUrl = (url: URL): string | null => {
   const segments = url.pathname.split("/").filter(Boolean);
   const [first, second, third] = segments;
 
-  /**
-   * Already-normalized embed URLs pass through (round-trip when editing an
-   * existing embed).
-   */
   if (url.hostname === "player.twitch.tv") {
     const video = url.searchParams.get("video");
     if (video && /^\d+$/.test(video))
@@ -268,10 +259,8 @@ const normalizeGoogleUrl = (url: URL): string | null => {
 };
 
 /**
- * Turns a URL pasted/entered by a user into the matching embed URL, or null
- * if it is not a recognized YouTube/Twitch/Spotify/Google URL. Generic
- * websites (provider "iframe") are not covered here — they are the
- * caller's allowlist-validated fallback.
+ * Null for an unrecognized URL. Generic websites (provider "iframe") are not
+ * covered here — they are the caller's allowlist-validated fallback.
  */
 export const normalizeWikiEmbedUrl = (
   input: string,
@@ -294,10 +283,6 @@ export const normalizeWikiEmbedUrl = (
   return null;
 };
 
-/**
- * Checks a generic iframe src against the allowlist: https-only, hostname
- * must equal an entry or be a subdomain of one.
- */
 export const isWikiIframeSrcAllowed = (
   src: unknown,
   allowlist: readonly string[],
@@ -314,11 +299,7 @@ export const isWikiIframeSrcAllowed = (
   });
 };
 
-/**
- * All generic-iframe src values of a Tiptap JSON document, e.g. for
- * re-validating imported content against the allowlist (imports bypass the
- * insertion-time check).
- */
+/** Imports bypass the insertion-time check. */
 export const collectWikiIframeSrcs = (content: unknown): string[] => {
   const srcs = new Set<string>();
 
@@ -409,11 +390,8 @@ export const isAllowedWikiEmbedSrc = (
 };
 
 /**
- * The wiki's single embed node: YouTube, Twitch, Spotify and Google
- * Docs/Sheets/Slides/Drive with fixed, hardcoded host patterns, plus
- * generic websites (provider "iframe") validated against the domain
- * allowlist from the wiki settings. Deliberately no paste rules — pasted
- * URLs stay links; embedding is an explicit action.
+ * Deliberately no paste rules — pasted URLs stay links; embedding is an
+ * explicit action.
  */
 export const WikiEmbed = Node.create<WikiEmbedOptions>({
   name: "wikiEmbed",
@@ -444,7 +422,6 @@ export const WikiEmbed = Node.create<WikiEmbedOptions>({
         renderHTML: (attributes) =>
           attributes.src === null ? {} : { "data-src": String(attributes.src) },
       },
-      // Embeds are space-hungry — they default to the wide preset
       ...wikiWidthPxAttribute(WIKI_WIDE_WIDTH_PX),
       /**
        * Only offered by the resize UI for provider "iframe" (see

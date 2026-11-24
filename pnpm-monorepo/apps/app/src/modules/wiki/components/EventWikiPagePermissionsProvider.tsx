@@ -35,7 +35,6 @@ interface FlatPosition {
 }
 
 interface Props {
-  /** The page view the dialog's triggers live in */
   readonly children: ReactNode;
   readonly pageId: string;
   readonly isRootPage: boolean;
@@ -49,9 +48,7 @@ interface Props {
   readonly editScope: WikiPageEventScope;
   readonly imageUploadability: WikiPageUploadability;
   readonly attachmentUploadability: WikiPageUploadability;
-  /** Lineup positions in depth-first tree order, for the POSITION scope */
   readonly positionOptions: WikiPageTargetOption[];
-  /** Flat parent relations, for the subset checks */
   readonly positions: FlatPosition[];
   /** Titles of the pages an INHERIT setting currently takes its value from */
   readonly inheritedFrom: {
@@ -71,15 +68,12 @@ const MANAGERS_ONLY: EventWikiScopeSelection = {
 };
 
 /**
- * The event-mode permissions dialog together with its open state: read and
- * edit scopes plus the upload tiers, instead of the global wiki's role
- * lists. Styled like the role-model dialog so both read as one, and like it
- * rendered only where the viewer may change the scopes — a frozen event has
- * no dialog, so the visibility badge stays plain text there. The manage tier
- * is not configurable — the organizer, the event managers and
- * `event;manage` always manage every page. The edit scope only offers
- * subsets of the read scope (and resets to the managers when narrowing the
- * read scope invalidates it), mirroring the server-side validation.
+ * Rendered only where the viewer may change the scopes: a frozen event has no
+ * dialog, so the visibility badge stays plain text there. The manage tier is
+ * not configurable — the organizer, the event managers and `event;manage`
+ * always manage every page. The edit scope only offers subsets of the read
+ * scope (and resets to the managers when narrowing the read scope invalidates
+ * it), mirroring the server-side validation.
  */
 export const EventWikiPagePermissionsProvider = ({
   children,
@@ -117,10 +111,9 @@ export const EventWikiPagePermissionsProvider = ({
     initialScope(initialEditScope),
   );
   /**
-   * A stored INHERIT on a root page (the schema default; the seed writes
-   * RESTRICTED explicitly since the uploadability tiers reached event
-   * pages) cannot be offered — the root has nothing to inherit from — so
-   * show its effective meaning instead: managers only.
+   * A stored INHERIT on a root page (the schema default) cannot be offered —
+   * the root has nothing to inherit from — so show its effective meaning
+   * instead: managers only.
    */
   const initialUploadability = (value: WikiPageUploadability) =>
     isRootPage && value === WikiPageUploadability.INHERIT
@@ -169,7 +162,6 @@ export const EventWikiPagePermissionsProvider = ({
     );
   };
 
-  /** Narrowing the read scope resets an edit choice it no longer contains */
   const handleReadChange = (
     nextScope: WikiPageEventScope,
     nextPositionId: string,
@@ -422,7 +414,6 @@ const UploadabilityRadioGroup = ({
       className="mt-2"
       equalWidth
       value={value}
-      /** RadioGroup is string-typed; the items only carry enum values */
       onChange={(next) => onChange(next as WikiPageUploadability)}
       items={[
         ...(allowInherit

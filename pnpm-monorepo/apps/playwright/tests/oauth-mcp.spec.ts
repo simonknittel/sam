@@ -31,7 +31,6 @@ import {
   UNLEASH_FLAG,
 } from "../fixtures/unleash";
 
-/** 1 hour, the lifetime of an access token */
 const ACCESS_TOKEN_LIFETIME_IN_SECONDS = 60 * 60;
 
 const PROTECTED_RESOURCE_METADATA_PATH =
@@ -127,7 +126,6 @@ test.describe("the OAuth server and the MCP endpoint", () => {
       authorization_response_iss_parameter_supported: true,
     });
 
-    // The challenge tells a client where it finds the authorization server
     const response = await postMcpEndpoint(
       request,
       modernMcpRequest("server/discover"),
@@ -149,7 +147,6 @@ test.describe("the OAuth server and the MCP endpoint", () => {
     const authorization = await authorizeMcpClient(citizen.user);
     const { issuer } = authorization.metadata;
 
-    // RFC 9207: the authorization response names its server
     expect(authorization.authorizationResponse.get("iss")).toBe(issuer);
     expect(authorization.tokenResponse.tokenType).toBe("Bearer");
     expect(authorization.tokenResponse.scope).toBe("mcp");
@@ -172,7 +169,6 @@ test.describe("the OAuth server and the MCP endpoint", () => {
       client: { admin_mode: false },
     });
 
-    // The server serves only the 2026-07-28 revision
     const legacyResponse = await postMcpEndpoint(
       request,
       LEGACY_INITIALIZE_REQUEST,
@@ -246,7 +242,6 @@ test.describe("the OAuth server and the MCP endpoint", () => {
           consentPage.getByRole("button", { name: "Tools auswählen" }),
           toolsDialog,
         );
-        // The citizen has no permission for the tool
         await expect(
           toolsDialog.getByRole("checkbox", { name: "List the audit events" }),
         ).toHaveCount(0);
@@ -267,7 +262,6 @@ test.describe("the OAuth server and the MCP endpoint", () => {
       .getByRole("row")
       .filter({ hasText: cimdServer.host });
     await expect(clientRow.getByText("Laptop", { exact: true })).toBeVisible();
-    // The browser of the consent identifies the client
     await expect(clientRow).toContainText("Chrome");
 
     await expectAuditEvents(prisma, ["OAUTH_GRANT_CREATED_V2"]);
@@ -297,12 +291,10 @@ test.describe("the OAuth server and the MCP endpoint", () => {
     );
     expect(rotatedCall.status()).toBe(200);
 
-    // A used refresh token that comes again was possibly stolen
     const reuse = await authorization.refresh(authorization.refreshToken);
     expect(reuse.status).toBe(400);
     expect(reuse.error).toBe("invalid_grant");
 
-    // The reuse revoked the grant, thus also its newest tokens
     const successorRefresh = await authorization.refresh(
       rotatedTokens.refreshToken,
     );
@@ -400,7 +392,6 @@ test.describe("the OAuth server and the MCP endpoint", () => {
     // No challenge: a new token does not help the user
     expect(callAfter.headers()["www-authenticate"]).toBeUndefined();
 
-    // The token endpoint gives no new token either
     const refresh = await authorization.refresh(authorization.refreshToken);
     expect(refresh.status).toBe(400);
     expect(refresh.error).toBe("invalid_grant");

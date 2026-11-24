@@ -14,10 +14,7 @@ export enum DiscordAvatarMotion {
   Still = "still",
 }
 
-/**
- * The URL of a Discord avatar (see `getDiscordAvatar`) for a box of
- * `cssSize` pixels. Null for a value that is not a URL.
- */
+/** Null for a value that is not a URL */
 export const getDiscordAvatarSource = (
   avatarUrl: string,
   cssSize: number,

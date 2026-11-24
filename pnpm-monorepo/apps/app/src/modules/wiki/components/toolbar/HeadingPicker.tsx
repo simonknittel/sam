@@ -58,10 +58,10 @@ export const HeadingPicker = ({ editor }: Props) => {
   });
 
   /**
-   * setNode copies the current block's attributes and merges the given
-   * ones on top, so the size has to be passed in BOTH directions — a bare
-   * setParagraph() would leave a small paragraph small. Width, position
-   * and text alignment carry over as before.
+   * setNode copies the current block's attributes and merges the given ones on
+   * top, so the size has to be passed in BOTH directions — a bare
+   * setParagraph() would leave a small paragraph small. Width, position and
+   * text alignment carry over.
    */
   const setParagraphSize = (textSize: WikiTextSize | null) => {
     editor?.chain().focus().setNode("paragraph", { textSize }).run();

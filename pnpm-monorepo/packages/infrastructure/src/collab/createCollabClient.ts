@@ -19,7 +19,7 @@ import { SignJWT, type JWTPayload } from "jose";
  */
 const SESSION_TOKEN_LIFETIME = "120s";
 
-/** The lifetime of a replace token and of a disconnect token: used at once */
+/** Used at once */
 const REQUEST_TOKEN_LIFETIME = "60s";
 
 const TOKEN_ALGORITHM = "HS256";
@@ -31,19 +31,15 @@ const TOKEN_ALGORITHM = "HS256";
 const DISCONNECT_TIMEOUT_MILLISECONDS = 5_000;
 
 export interface CollabClientOptions {
-  /** The WebSocket URL of the collab server (`ws:` or `wss:`) */
+  /** `ws:` or `wss:` */
   readonly url: string;
-  /** The HS256 secret that the host shares with the collab server */
   readonly jwtSecret: string;
-  /** The maximum time of one replace request */
   readonly replaceTimeoutMilliseconds: number;
 }
 
 /**
- * The collab server of the wiki editor (`apps/collab`). The client signs the
- * tokens that the server verifies. The explicit `scope` claim keeps the
- * token kinds apart: for example, a session token never authorizes a
- * replace.
+ * The explicit `scope` claim keeps the token kinds apart: for example, a
+ * session token never authorizes a replace
  */
 export const createCollabClient = ({
   url,
@@ -66,11 +62,7 @@ export const createCollabClient = ({
     return token.sign(key);
   };
 
-  /**
-   * Sends a request to an HTTP endpoint of the collab server, which has the
-   * host of the WebSocket URL. Throws when the server does not accept the
-   * request.
-   */
+  /** The HTTP endpoints have the host of the WebSocket URL */
   const post = async (
     path: string,
     token: string,

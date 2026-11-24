@@ -7,7 +7,6 @@ export interface RoleIcon {
   readonly mimeType: string;
 }
 
-/** A row of the permission matrix */
 export interface PermissionMatrixRole {
   readonly id: string;
   readonly name: string;
@@ -15,7 +14,6 @@ export interface PermissionMatrixRole {
   readonly permissionStrings: string[];
 }
 
-/** A row and a column of the inheritance matrix */
 export interface InheritanceMatrixRole {
   readonly id: string;
   readonly name: string;
@@ -23,7 +21,6 @@ export interface InheritanceMatrixRole {
   readonly inheritedRoleIds: string[];
 }
 
-/** A row of the role administration table */
 export interface RoleTableRow {
   readonly id: string;
   readonly name: string;
@@ -39,10 +36,6 @@ export interface RoleTableRow {
 
 const ICON_SELECT = { select: { id: true, mimeType: true } } as const;
 
-/**
- * All roles with their permission strings, sorted by name. Requires
- * `role;manage`.
- */
 export const findPermissionMatrixRoles = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,
@@ -70,9 +63,7 @@ export const findPermissionMatrixRoles = async (
 };
 
 /**
- * All roles with the ids of the roles that they inherit, sorted by name.
- * One list gives the rows and the columns, thus both axes have the same
- * order. Requires `role;manage`.
+ * One list gives the rows and the columns, thus both axes have the same order
  */
 export const findInheritanceMatrixRoles = async (
   context: Pick<ApplicationContext, "prisma">,
@@ -98,11 +89,7 @@ export const findInheritanceMatrixRoles = async (
   }));
 };
 
-/**
- * All roles with the two counts that the table filters and sorts by,
- * sorted by name. The database counts, thus the assignment rows stay out of
- * the page. Requires `role;manage`.
- */
+/** The database counts, thus the assignment rows stay out of the page */
 export const findRoleTableRows = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,

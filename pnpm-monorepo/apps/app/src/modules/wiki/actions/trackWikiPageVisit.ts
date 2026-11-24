@@ -7,12 +7,6 @@ import {
 } from "@sam-monorepo/application";
 import { WIKI_ERROR_TEXTS } from "../utils/wikiErrorTexts";
 
-/**
- * Triggered from the client after the page mounted (see
- * `<TrackWikiPageVisit>`), because hover-triggered prefetching renders pages
- * that the user never visits — while a navigation served from the prefetch
- * cache produces no server render at all.
- */
 export const trackWikiPageVisit = createUseCaseAction({
   name: "trackWikiPageVisit",
   schema: trackWikiPageVisitInputSchema,

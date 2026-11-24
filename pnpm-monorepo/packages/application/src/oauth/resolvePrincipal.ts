@@ -8,18 +8,18 @@ import { InvalidTokenError } from "./errors.js";
 import { createGrantActor, GRANT_ACTOR_SELECT } from "./grantActor.js";
 import { resetStaleGrantAdminModes } from "./resetStaleGrantAdminModes.js";
 
-/** The app updates `lastUsedAt` of a grant at most one time in this interval */
+/**
+ * The MCP requests update `lastUsedAt` of a grant at most one time in this
+ * interval
+ */
 const LAST_USED_AT_INTERVAL_IN_MILLISECONDS = 60 * 60 * 1000;
 
 export interface PrincipalGrant {
   readonly id: string;
   readonly clientId: string;
-  /** The client gives its name itself, thus the name is not trusted */
   readonly clientName: string;
   readonly createdAt: Date;
-  /** Admin mode applies only when this is set and the user is an admin */
   readonly adminModeEnabledAt: Date | null;
-  /** The tools that the user disabled for this client */
   readonly disabledToolNames: string[];
 }
 
@@ -29,10 +29,6 @@ export interface Principal {
 }
 
 /**
- * Builds the actor of an MCP request from a verified access token. The
- * permissions are the own roles of the user, like in the session of the app.
- * Admin mode applies when the grant has it and the user is an admin.
- *
  * @throws InvalidTokenError when the grant is revoked or the user is banned
  * @throws ForbiddenError when the user does not have the clearance of the app
  * or the permission to use the MCP server

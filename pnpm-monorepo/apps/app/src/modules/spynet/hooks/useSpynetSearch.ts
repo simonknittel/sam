@@ -8,18 +8,15 @@ import {
 const DEBOUNCE_MILLISECONDS = 300;
 
 export enum SpynetSearchStatus {
-  /** The query is too short for a request */
   Idle = "idle",
-  /** The hits of the current query are not available yet */
   Loading = "loading",
   Error = "error",
   Success = "success",
 }
 
 /**
- * Search-as-you-type for the Spynet search tile and the Cmd+K search. The
- * hits always belong to the current query. While the user types or a request
- * runs, no hits show, thus Enter cannot open a hit of an earlier query.
+ * The hits always belong to the current query, thus Enter cannot open a hit of
+ * an earlier query.
  */
 export const useSpynetSearch = (query: string, limit?: number) => {
   // The procedure refuses a longer query, thus only its start is sent

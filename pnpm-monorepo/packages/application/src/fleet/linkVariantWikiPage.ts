@@ -13,9 +13,7 @@ export const linkVariantWikiPageInputSchema = z.object({
 });
 
 /**
- * Links a page of the global wiki that the actor can read to a variant that
- * has no linked page. Only the link changes. To replace or remove a link, use
- * `updateVariant()`.
+ * To replace or remove a link, use `updateVariant()`.
  *
  * @throws NotFoundError when the variant does not exist
  * @throws ConflictError when the variant has a linked page already

@@ -1,6 +1,7 @@
 /**
  * Labels match the slash command's block titles (WikiSlashCommand) where a
- * block exists there, so the same block reads the same everywhere.
+ * block exists there, so the same block reads the same everywhere. For a new
+ * node, see `getWikiEditorExtensions()`.
  */
 const NODE_TYPE_LABELS: Readonly<Record<string, string>> = {
   paragraph: "Text",

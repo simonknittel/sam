@@ -36,10 +36,6 @@ export default async function Page(
   await requireAuthenticationPage("/app/wiki");
 
   const result = await getAdministrablePage(props.params);
-  /**
-   * Pages the viewer can't administrate 404 instead of 403 to avoid
-   * leaking their existence.
-   */
   if (!result) notFound();
 
   return (

@@ -72,10 +72,6 @@ export const ChannelsProvider = ({ children, userId }: Props) => {
   return <ChannelsContext value={value}>{children}</ChannelsContext>;
 };
 
-/**
- * Check for undefined since the defaultValue of the context is undefined. If
- * it's still undefined, the provider component is missing.
- */
 export function useChannelsContext() {
   const context = useContext(ChannelsContext);
   if (!context) throw new Error("Provider missing!");

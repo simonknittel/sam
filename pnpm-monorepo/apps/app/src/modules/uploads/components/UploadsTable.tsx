@@ -44,7 +44,6 @@ const COLUMNS: TableColumn[] = [
   },
 ];
 
-/** Only the manager scope has an author and something to act on. */
 const MANAGER_COLUMNS: TableColumn[] = [
   {
     key: "createdBy",

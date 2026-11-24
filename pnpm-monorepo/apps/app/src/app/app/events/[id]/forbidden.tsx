@@ -5,10 +5,7 @@ export const metadata: Metadata = {
   title: "Forbidden",
 };
 
-/**
- * Keeps the event heading and the tab navigation around a subpage that the
- * reader must not see. The reader stays in the event.
- */
+/** Keeps the event heading and the tabs around the 403 */
 export default function Forbidden() {
   return <ForbiddenCard />;
 }

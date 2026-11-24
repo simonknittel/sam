@@ -14,7 +14,6 @@ interface Props {
   readonly onRequestClose: () => void;
 }
 
-/** Links a page of the global wiki that the user can read to the variant */
 export const LinkVariantWikiPageModal = ({
   variantId,
   onRequestClose,

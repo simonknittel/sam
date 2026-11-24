@@ -10,15 +10,7 @@ import { requireEditableEventTemplate } from "../eventTemplates/eventTemplateAcc
 import type { ManageableEventOptions } from "../events/eventManageGuard.js";
 import { requireManageableEventLineup } from "./lineupGuards.js";
 
-/**
- * The guard of a change of a lineup of an event or of an event template.
- * An event uses the guard of the event lineup (the visibility, the freeze
- * unless `ignoreFreeze`, and the manage rule of the positions). A template
- * uses the rules of the templates: edit access on a template that is not
- * deleted. Templates never freeze.
- *
- * @throws NotFoundError, ConflictError or ForbiddenError
- */
+/** Templates never freeze */
 export const requireEditableLineupContainer = async (
   context: ApplicationContext,
   actor: Actor,

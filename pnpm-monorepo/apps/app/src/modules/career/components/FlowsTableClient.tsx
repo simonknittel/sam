@@ -29,11 +29,6 @@ import { reorderFlows } from "../actions/reorderFlows";
 import { CreateFlowModal, type DuplicationSource } from "./CreateFlowModal";
 import { FlowRow } from "./FlowRow";
 
-/**
- * The drag handle only exists while the table shows the complete, unfiltered
- * list of live flows — a reorder derived from a filtered subset would not
- * describe the real order.
- */
 const HANDLE_COLUMN: TableColumn = {
   key: "handle",
   label: <span className="sr-only">Reihenfolge</span>,
@@ -119,11 +114,11 @@ export const FlowsTableClient = ({
         The `id` is required, not cosmetic: without it dnd-kit derives its
         `aria-describedby` from a module-level counter that keeps climbing for
         the lifetime of the server process, while the browser's copy always
-        restarts at 0 — so every server render disagreed with hydration.
+        restarts at 0 — so every server render would disagree with hydration.
 
-        Without the modifiers the dragged row follows the pointer on both
-        axes and past the table's edges, which grows the scroll container and
-        pops its scrollbars up mid-drag.
+        Without the modifiers the dragged row follows the pointer on both axes
+        and past the table's edges, which grows the scroll container and pops
+        its scrollbars up mid-drag.
       */}
       <DndContext
         id="career-flows"

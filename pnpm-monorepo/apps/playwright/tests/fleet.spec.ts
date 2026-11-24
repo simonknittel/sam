@@ -78,15 +78,12 @@ test("the org fleet filters narrow the server-rendered table", async ({
     carrackRow.getByRole("cell", { name: "1", exact: true }),
   ).toBeVisible();
 
-  // Default sort is count-desc, so Polaris (2 ships) leads
   await expect(page.locator("tbody tr").first()).toContainText("Polaris");
 
-  // The name filter feeds the nuqs URL contract (?q=…)
   await fillUntilUrl(page, page.getByLabel("Name"), "Polaris", /q=Polaris/);
   await expect(carrackRow).not.toBeVisible();
   await expect(polarisRow).toBeVisible();
 
-  // The flight-ready flag filter drops the not-flight-ready variant
   await page.goto("/app/fleet/org");
   await expect(carrackRow).toBeVisible();
   await clickUntilUrl(
@@ -97,7 +94,6 @@ test("the org fleet filters narrow the server-rendered table", async ({
   await expect(carrackRow).not.toBeVisible();
   await expect(polarisRow).toBeVisible();
 
-  // Sorting by name flips the order
   await page.goto("/app/fleet/org?sort=name-asc");
   await expect(page.locator("tbody tr").first()).toContainText("Carrack");
 });
@@ -136,7 +132,6 @@ test("my ships can be added, edited and deleted with consistent org counts and v
   });
   await prisma.variant.update({
     where: { id: variant.id },
-    // USD 975
     data: { storePriceUsdCents: 97_500, inGamePriceAuec: 26_400_000 },
   });
 
@@ -144,7 +139,6 @@ test("my ships can be added, edited and deleted with consistent org counts and v
   await page.goto("/app/fleet/my-ships");
   await expect(page.getByText("Keine Schiffe gefunden")).toBeVisible();
 
-  // Add: the ship is a required field, and a tag or the search filters the ships
   const addModal = modal(page, "Schiff hinzufügen");
   await clickUntilVisible(
     page.getByRole("button", { name: "Hinzufügen" }).first(),
@@ -195,7 +189,6 @@ test("my ships can be added, edited and deleted with consistent org counts and v
     "26.400.000 aUEC",
   );
 
-  // The org fleet counts the new ship and its value
   await page.goto("/app/fleet/org");
   await expect(statisticTile(page, "Schiffe")).toContainText("1");
   await expect(statisticTile(page, "Citizen")).toContainText("1");
@@ -212,7 +205,6 @@ test("my ships can be added, edited and deleted with consistent org counts and v
       .getByRole("cell", { name: "1", exact: true }),
   ).toBeVisible();
 
-  // Rename
   await page.goto("/app/fleet/my-ships");
   const nameInput = page.locator('input[name="name"]');
   await clickUntilVisible(
@@ -223,7 +215,6 @@ test("my ships can be added, edited and deleted with consistent org counts and v
   await saveInlineEditor(page);
   await expect(shipRow).toContainText("Sternenhammer");
 
-  // Change the Herkunft
   const acquisitionSourceSelect = page.locator(
     'select[name="acquisitionSource"]',
   );
@@ -245,7 +236,6 @@ test("my ships can be added, edited and deleted with consistent org counts and v
     note: "Mit Snub-Fighter",
   });
 
-  // The Herkunft filter
   await pickFilterOption(page, "Herkunft", "Store");
   await expect(page).toHaveURL(/acquisition_source=store/);
   await expect(shipRow).not.toBeVisible();
@@ -253,7 +243,6 @@ test("my ships can be added, edited and deleted with consistent org counts and v
   await expect(page).toHaveURL(/acquisition_source=in_game/);
   await expect(shipRow).toBeVisible();
 
-  // Delete (soft) — the list empties and the org count follows
   await clickUntilVisible(
     shipRow.getByTitle("Löschen"),
     page.getByRole("alertdialog"),
@@ -327,7 +316,6 @@ test("the Neu menu of the top bar adds a ship to my fleet only with the ship per
   const createMenu = page.getByRole("dialog", { name: "Neu erstellen" });
   const openCreateMenu = () =>
     clickUntilVisible(
-      /** Only the trigger of the menu has an expanded state */
       page.getByRole("button", { name: "Neu", exact: true, expanded: false }),
       createMenu,
     );
@@ -409,7 +397,6 @@ test("the variant popover shows the name, the Herkunft and the Notiz only for an
     `/app/fleet/variant/${variant.id}`,
   );
 
-  // The org fleet counts the variant, not a ship of a citizen
   await page.goto("/app/fleet/org");
   await hoverUntilVisible(
     page
@@ -610,7 +597,6 @@ test("a variant tag records the creating citizen as its author", async ({
       createdById: manager.entity.id,
     });
 
-  /** … and the series lists the new variant with the tag on it */
   const stalkerRow = page
     .getByRole("row")
     .filter({ hasText: "Avenger Stalker" });
@@ -664,7 +650,6 @@ test("the update of a variant without tag and link rows removes the tags and the
     "Avenger Titan",
   );
 
-  // The tag row and the link row
   const deleteRowButtons = updateModal.getByRole("button", { name: "Löschen" });
   await expect(deleteRowButtons).toHaveCount(2);
   await deleteRowButtons.first().click();
@@ -709,7 +694,6 @@ test("a variant link that is not an http or https URL is a bad request", async (
   );
   await createModal.getByLabel("Name", { exact: true }).fill("Avenger Stalker");
 
-  // The tag rows and the external-link rows share the "Hinzufügen" label
   const linkUrlInput = createModal.getByPlaceholder("https://...");
   await clickUntilVisible(
     createModal.getByRole("button", { name: "Hinzufügen" }).last(),
@@ -742,7 +726,6 @@ test("manufacturers and series can be created and renamed in the settings", asyn
   await signIn(admin.user);
   await page.goto("/app/fleet/settings/manufacturer");
 
-  // Create a manufacturer
   const manufacturerModal = modal(page, "Hersteller anlegen");
   // The top bar has its own "Neu" (create menu) — scope to the page content
   await clickUntilVisible(
@@ -762,7 +745,6 @@ test("manufacturers and series can be created and renamed in the settings", asyn
   /** The next saves show the same text, thus this toast must go first */
   await expect(page.getByText(SAVED_TEXT)).toHaveCount(0);
 
-  // Rename it through the inline editor
   await page.getByRole("link", { name: "Aegis Dynamics" }).click();
   await expect(page).toHaveURL(
     `/app/fleet/settings/manufacturer/${manufacturer!.id}`,
@@ -777,13 +759,11 @@ test("manufacturers and series can be created and renamed in the settings", asyn
     .toBe("Aegis Dynamics GmbH");
   await expect(page.getByText(SAVED_TEXT)).toHaveCount(0);
 
-  // Create a series under it
   const seriesModal = modal(page, "Serie anlegen");
   await clickUntilVisible(
     page.getByRole("button", { name: "Anlegen" }),
     seriesModal,
   );
-  /** The modal shows the manufacturer with the name of the rename above */
   await expect(seriesModal.getByRole("definition")).toHaveText(
     "Aegis Dynamics GmbH",
   );
@@ -862,7 +842,6 @@ test("a series of a manufacturer that a different user deleted shows the error a
   );
   await seriesModal.getByLabel("Name").fill("Avenger");
 
-  /** A different user deletes the manufacturer after the modal opened */
   await prisma.manufacturer.delete({ where: { id: manufacturer.id } });
 
   /** The refresh removes the modal, thus the error shows as a toast */

@@ -7,7 +7,6 @@ import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { findManufacturerSeriesRows } from "@sam-monorepo/application";
 import { cache } from "react";
 
-/** See `findManufacturerSeriesRows()` */
 export const getSeriesByManufacturerId = cache(
   withTrace("getSeriesByManufacturerId", async (manufacturerId: string) => {
     try {

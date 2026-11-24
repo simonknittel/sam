@@ -1,10 +1,8 @@
 import { UAParser } from "ua-parser-js";
 
 /**
- * Condenses a raw user agent into something a person can recognize their own
- * device by, e.g. "Chrome 141 · Windows 10". Returns null when nothing could
- * be identified, so callers can fall back to the raw string instead of
- * showing an empty cell.
+ * For example "Chrome 141 · Windows 10". Null when nothing could be identified,
+ * so callers can fall back to the raw string.
  */
 export const formatUserAgent = (userAgent: string | null): string | null => {
   if (!userAgent) return null;

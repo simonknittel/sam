@@ -12,16 +12,13 @@ interface BaseApp {
 export interface IntegratedApp extends BaseApp {
   href: string;
   slug: string;
-  /**
-   * Either of these permission strings must be permitted in order to access the app.
-   */
+  /** One of these permission strings is sufficient */
   permissionStrings?: string[];
   /**
    * Access check for apps whose permission is not expressible as a permission
-   * string, e.g. the career app, whose per-flow access lives in a table and is
-   * answered by a resolver. Evaluated in addition to `permissionStrings`, so
-   * an app declaring both needs both. Server-only: `getAppLinks` strips it
-   * before the app reaches a client component.
+   * string, e.g. the career app, whose per-flow access lives in a table.
+   * Evaluated in addition to `permissionStrings`, so an app declaring both
+   * needs both.
    */
   hasAccess?: () => Promise<boolean>;
 }

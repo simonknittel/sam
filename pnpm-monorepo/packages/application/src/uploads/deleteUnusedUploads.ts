@@ -19,23 +19,22 @@ export interface DeleteUnusedUploadsOutput {
   /** False when the host has no bucket: then the sweep did nothing */
   readonly storageConfigured: boolean;
   readonly databaseCount: number;
-  /** The objects that the bucket deleted */
   readonly bucketCount: number;
 }
 
 /**
  * Deletes the uploads that nothing uses, from the database and from the
- * bucket. A new upload (for example a new role icon) only changes the
- * foreign key, and the delete of a resource only sets it to null. Without
- * the sweep, the previous upload would stay forever.
- *
- * The rule of the upload usage is `UPLOAD_USAGE_RELATION_BY_TYPE` of the
- * domain package.
+ * bucket. A new upload (for example a new role icon) only changes the foreign
+ * key, and the delete of a resource does not delete its uploads. Without the
+ * sweep, the previous upload would stay forever.
  *
  * Then the sweep deletes the objects of the bucket without a row, which the
  * database cannot find: for example the object of an upload whose delete in
  * the upload manager failed at the bucket. This also deletes the objects of
  * the rows that the first step deleted.
+ *
+ * The bucket must belong to this database alone: the sweep deletes each older
+ * object whose key is not the id of an upload.
  *
  * A failure of the bucket fails the run after the audit event of the deleted
  * rows and objects.

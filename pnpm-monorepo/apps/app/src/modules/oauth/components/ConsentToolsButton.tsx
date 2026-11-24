@@ -11,7 +11,7 @@ interface Props {
   readonly onChange: (disabledToolNames: ReadonlySet<string>) => void;
 }
 
-/** Selects the tools of the new grant. Only the approval saves them. */
+/** Only the approval saves the selection */
 export const ConsentToolsButton = ({
   toolGroups,
   disabledToolNames,

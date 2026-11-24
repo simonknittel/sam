@@ -20,8 +20,8 @@ describe("get upload usages", () => {
   });
 
   /**
-   * A usage relation missing here reads as "unused" and the nightly cleanup
-   * then deletes the upload — which is how event covers were lost once.
+   * A usage relation missing here reads as "unused", and the nightly cleanup
+   * then deletes the upload.
    */
   test("an event template cover counts as a usage", () => {
     expect(

@@ -17,11 +17,7 @@ interface Props {
   readonly initialLinks?: ExternalLinkFields[];
 }
 
-/**
- * The editable external-link rows shared by the create and update variant
- * modals. Submits through the surrounding form via the
- * `linkServiceNames[]`/`linkUrls[]` fields.
- */
+/** `parseVariantFieldsFormData()` reads the fields */
 export const VariantExternalLinkFields = ({ initialLinks }: Props) => {
   const [externalLinks, setExternalLinks] = useState<ExternalLinkFields[]>(
     initialLinks ?? [],

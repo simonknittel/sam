@@ -8,7 +8,6 @@ test("a login that the user cancels at Discord shows its message on the login pa
   await expect(
     page.getByText("Du hast die Anmeldung bei Discord abgebrochen."),
   ).toBeVisible();
-  // The error leaves the URL, thus a reload does not show it again
   await expect(page).toHaveURL("/");
 });
 

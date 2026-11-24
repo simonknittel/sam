@@ -1,7 +1,6 @@
-/// WIKI is the global wiki app. EVENT pages belong to exactly one event
-/// (see WikiPage.eventId) and are fully isolated from the global wiki: they
-/// never appear in its sidebar, search, settings or link suggestions. A
-/// TASK namespace is expected to follow the same pattern later.
+/// EVENT pages belong to exactly one event or event template (see
+/// WikiPage.eventId) and are fully isolated from the global wiki: they never
+/// appear in its sidebar, search, settings or link suggestions.
 enum WikiPageNamespace {
   WIKI
   EVENT
@@ -10,15 +9,15 @@ enum WikiPageNamespace {
 /// Permission scopes for pages in the EVENT namespace, where the role-based
 /// tiers (visibility/editability/roleAccess) are unused. Read and edit are
 /// configured independently and edit never exceeds read; the uploadability
-/// tiers above apply to event pages too. Manage access is not configurable:
+/// tiers below apply to event pages too. Manage access is not configurable:
 /// the event's organizer, its managers and holders of `event;manage` always
 /// manage every page.
 /// MANAGERS grants only to that fixed manage set. PARTICIPANTS grants to the
-/// event's Discord participants. POSITION grants to citizens assigned to a
+/// event's active participants. POSITION grants to citizens assigned to a
 /// position inside the referenced lineup subtree; a dangling reference
-/// degrades to MANAGERS (fail closed). ALL grants to everyone with
-/// `event;read`. INHERIT takes the nearest ancestor's explicit scope and is
-/// not allowed on top-level pages.
+/// degrades to MANAGERS (fail closed). ALL grants to everyone who can see the
+/// event. INHERIT takes the nearest ancestor's explicit scope and is not
+/// allowed on top-level pages.
 enum WikiPageEventScope {
   INHERIT
   MANAGERS
@@ -27,23 +26,21 @@ enum WikiPageEventScope {
   ALL
 }
 
-/// A page never hands out more than the page above it: whoever cannot read
-/// the parent gets no permission at all here, whatever this page defines.
-/// RESTRICTED therefore grants read to the intersection of its role list and
-/// the parent's readers, and INHERIT grants exactly the parent's readers.
-/// PUBLIC is only meaningful — and only allowed — on top-level pages. A
-/// "private" page is RESTRICTED with an empty role list.
+/// A page never hands out more than the page above it (see
+/// `createWikiPagePermissionResolver()`). RESTRICTED therefore grants read to
+/// the intersection of its role list and the parent's readers, and INHERIT
+/// grants exactly the parent's readers. A "private" page is RESTRICTED with an
+/// empty role list.
 enum WikiPageVisibility {
   INHERIT
   PUBLIC
   RESTRICTED
 }
 
-/// Bounded by the parent's read access like every tier (see
-/// WikiPageVisibility). ALL grants edit to everyone who may read the page,
-/// which on a restricted page is less than "everyone with wiki access".
-/// RESTRICTED always implicitly includes the owner of the page defining the
-/// setting. An "owner only" page is RESTRICTED with an empty role list.
+/// ALL grants edit to everyone who may read the page, which on a restricted
+/// page is less than "everyone with wiki access". RESTRICTED always implicitly
+/// includes the owner of the page defining the setting. An "owner only" page is
+/// RESTRICTED with an empty role list.
 enum WikiPageEditability {
   INHERIT
   ALL
@@ -82,14 +79,12 @@ model WikiPage {
   parentId  String?
   parent    WikiPage?         @relation("hierarchy", fields: [parentId], references: [id], onDelete: Restrict)
   children  WikiPage[]        @relation("hierarchy")
-  /// Manual ordering among siblings
   sortOrder Int               @default(0)
 
   sidebarMode WikiPageSidebarMode @default(VISIBLE)
 
   title  String
-  /// Derived from the title. Only used for human-readable URLs. Only the id
-  /// is used to resolve a page.
+  /// Cosmetic. Only the id resolves a page.
   slug   String
   iconId String?
   icon   Upload? @relation("icon", fields: [iconId], references: [id], onDelete: SetNull)
@@ -97,13 +92,14 @@ model WikiPage {
   /// Yjs document state. Source of truth for the page content. `content` and
   /// `searchText` are derived from it.
   ydoc       Bytes?
-  /// Tiptap JSON derived from `ydoc`. Used for static rendering and snapshots.
+  /// Tiptap JSON
   content    Json?
-  /// Plain text extracted from `content`. Used for full-text search.
   searchText String @default("")
   /// Space-joined names of the page's tags. Denormalized because the FTS
   /// GIN index is an expression index on this table and cannot span the tag
-  /// tables. Kept in sync by updateWikiPageTags.
+  /// tables. Kept in sync by setWikiPageTags and the page copies. The index
+  /// `WikiPage_fts_idx` is only in the migrations, and its expression must be
+  /// the same as in `wikiSearchQuery.ts`.
   tagsText   String @default("")
 
   /// PUBLIC only on a top-level page (CHECK constraint)
@@ -151,9 +147,9 @@ model WikiPage {
   /// tiers, implicit inclusion in RESTRICTED). NULL means the owner is
   /// inherited from the nearest ancestor with an explicit owner ("nearest
   /// setting wins", like visibility and editability); NULL at the root means
-  /// no owner (only `wiki;manage` retains access). An own owner does not cut
-  /// the ancestors' owners off — they keep managing the page either way — and
-  /// only holds their rights while they may read the page's parent.
+  /// no owner. An own owner does not cut the ancestors' owners off — they
+  /// keep managing the page either way — and only holds their rights while
+  /// they may read the page's parent.
   /// Top-level pages start with their creator as explicit owner, child pages
   /// start inheriting.
   /// Transferable by page admins, e.g. when the owner leaves the org or
@@ -178,10 +174,7 @@ model WikiPage {
   reports         WikiPageReport[]
   tags            WikiPageTag[]
   citizenMentions WikiPageCitizenMention[]
-  /// Uploads embedded in this page as images or attachments
   uploads         WikiPageUpload[]
-  /// Fleet variants embedding this page's subtree on their detail page (see
-  /// Variant.wikiPageId)
   linkedVariants  Variant[]                @relation("variantWikiPage")
 
   @@index([parentId])
@@ -218,9 +211,9 @@ model WikiPageSnapshot {
   pageId      String
   page        WikiPage                 @relation(fields: [pageId], references: [id], onDelete: Cascade)
   kind        WikiPageSnapshotKind
-  /// Optional name for MANUAL snapshots
+  /// Only for MANUAL snapshots
   name        String?
-  /// Tiptap JSON at snapshot time
+  /// Tiptap JSON
   content     Json
   createdAt   DateTime                 @default(now()) @db.Timestamptz(3)
   createdById String?
@@ -235,9 +228,8 @@ enum WikiPageUploadKind {
   ATTACHMENT
 }
 
-/// An upload that the content of a wiki page uses. The collab server
-/// replaces the links of a page at each store, thus the links follow the
-/// content. The nightly upload cleanup and the permission check of
+/// The collab server replaces the links of a page at each store, thus the links
+/// follow the content. The nightly upload cleanup and the permission check of
 /// attachment downloads read these links.
 model WikiPageUpload {
   id        String             @id @default(cuid(2))
@@ -252,8 +244,8 @@ model WikiPageUpload {
   @@index([uploadId])
 }
 
-/// An upload that the content of a wiki snapshot uses. Written with the
-/// snapshot, so that the cleanup keeps the uploads of each restore point.
+/// Written with the snapshot, so that the cleanup keeps the uploads of each
+/// restore point.
 model WikiPageSnapshotUpload {
   id         String           @id @default(cuid(2))
   snapshotId String
@@ -363,14 +355,12 @@ model WikiPageTag {
   @@index([tagId])
 }
 
-/// One row per (page, citizen) pair the page's saved content currently
-/// mentions via an @citizen mention. The collab server keeps the table in
-/// lockstep with the content on every store: a new mention inserts a
-/// pending row, a removed mention deletes its row — which cancels a pending
-/// notification, and makes a later re-mention notify again. The 15-minute
-/// notification sweep turns pending rows (both timestamps NULL) into
-/// notifications. The partial index on the pending predicate serves that
-/// sweep.
+/// One row per (page, citizen) pair that the saved content mentions. The collab
+/// server keeps the table in lockstep with the content on every store: a new
+/// mention inserts a pending row, a removed mention deletes its row — which
+/// cancels a pending notification, and makes a later re-mention notify again.
+/// The 15-minute notification sweep turns pending rows (both timestamps NULL)
+/// into notifications.
 model WikiPageCitizenMention {
   id        String   @id @default(cuid(2))
   pageId    String
@@ -380,17 +370,16 @@ model WikiPageCitizenMention {
 
   createdAt   DateTime @default(now()) @db.Timestamptz(3)
   /// The editor whose save introduced the mention (the storing connection's
-  /// editor, so best-effort within one debounced save). NULL for backfilled
-  /// rows.
+  /// editor, so best-effort within one debounced save). NULL when it is
+  /// unknown.
   createdById String?
   createdBy   Citizen? @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
 
-  /// Set when the notification for this mention was sent.
   notifiedAt   DateTime? @db.Timestamptz(3)
   /// Set when the row was consumed without sending a notification:
-  /// programmatic /replace writes (snapshot restores, paste transplants,
-  /// briefing seeding), self-mentions, the backfill of pre-existing
-  /// mentions, and mentions failing the read-permission gate at send time.
+  /// programmatic /replace writes (snapshot restores, imports, paste
+  /// transplants), self-mentions, and mentions that fail the read-permission
+  /// gate or are on a trashed page at send time.
   suppressedAt DateTime? @db.Timestamptz(3)
 
   @@unique([pageId, citizenId])

@@ -6,9 +6,7 @@ import {
 } from "../src/context.js";
 
 interface TestStorageOptions {
-  /** The objects of the bucket */
   readonly objects?: readonly StoredObject[];
-  /** The keys that each delete gives back as failures */
   readonly failingDeleteKeys?: readonly string[];
   /**
    * The delete requests from this index (zero-based) on reject, like a bucket
@@ -21,11 +19,7 @@ const notInTheTests = async (): Promise<never> => {
   throw new Error("The test storage can only list and delete objects");
 };
 
-/**
- * The object storage of the tests. It lists the objects and records the keys
- * of each delete request (also of a rejected request), in the sequence of
- * the calls. A delete does not remove an object.
- */
+/** Also records a rejected request. A delete does not remove an object. */
 export const createTestStorage = ({
   objects = [],
   failingDeleteKeys = [],

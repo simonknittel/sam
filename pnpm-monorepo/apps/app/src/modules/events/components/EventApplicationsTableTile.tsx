@@ -69,10 +69,6 @@ interface Props {
   readonly canManageParticipants: boolean;
 }
 
-/**
- * The open applications, and the declined ones of citizens who were not
- * signed up later, the newest first
- */
 export const EventApplicationsTableTile = ({
   className,
   event,

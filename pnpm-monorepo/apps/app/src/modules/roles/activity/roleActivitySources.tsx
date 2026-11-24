@@ -22,9 +22,7 @@ import {
 } from "./roleActivityTypes";
 
 interface Input {
-  /** Restricts the source to one citizen's history. */
   readonly citizenId?: Citizen["id"];
-  /** Whether the citizen the entry is about gets its own column. */
   readonly withTarget?: boolean;
   readonly filters?: ActivityFilters;
 }

@@ -6,12 +6,8 @@ import { isRoleVisible } from "../roles/roleVisibility.js";
 import { EventErrorMessage } from "./eventErrors.js";
 
 /**
- * The visibility roles that an event write stores: the roles of a restricted
- * event (at least one, and each must exist), none for a public event. A role
- * that the event does not have yet must be visible for the actor, like in the
- * role picker of the form.
- *
- * @param previousRoleIds The visibility roles that the event has now
+ * A role that the event does not have yet must be visible for the actor, like
+ * in the role picker of the form
  */
 export const resolveVisibilityRoleIds = async (
   context: ApplicationContext,

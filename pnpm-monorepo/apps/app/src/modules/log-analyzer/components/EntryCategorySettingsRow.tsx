@@ -21,7 +21,6 @@ interface CheckboxCellProps {
   ) => void;
 }
 
-/** A click on a section with only some enabled types enables all of them. */
 const CheckboxCell = ({
   label,
   types,
@@ -50,11 +49,9 @@ const CheckboxCell = ({
 interface Props {
   readonly category: EntryCategory;
   readonly showSharingColumns: boolean;
-  /** False while the user cannot share, for example without a citizen */
   readonly canShare: boolean;
 }
 
-/** The heading of a section. Its checkboxes set all types of the section. */
 export const EntryCategorySettingsRow = ({
   category,
   showSharingColumns,

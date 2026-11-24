@@ -15,22 +15,16 @@ export interface EventWikiPagePermissionSource {
   readonly eventReadScopePositionId: string | null;
   readonly eventEditScope: WikiPageEventScope;
   readonly eventEditScopePositionId: string | null;
-  /** The same upload tiers the role-based wiki uses (see WikiPage) */
   readonly imageUploadability: WikiPageUploadability;
   readonly attachmentUploadability: WikiPageUploadability;
 }
 
 export interface EventWikiViewer {
-  /** Has a Discord RSVP on the event */
+  /** Has an active participation (a Discord RSVP or an in-app sign-up) */
   readonly isParticipant: boolean;
   /** Organizer, event manager or `event;manage` — the fixed manage tier */
   readonly isEventManager: boolean;
-  /**
-   * Ids of every position whose subtree contains a position the viewer is
-   * assigned to (each assigned position plus all of its ancestors). A page
-   * scoped to POSITION grants exactly when its referenced position id is in
-   * this set. See `collectPositionScopeIdsForCitizen`.
-   */
+  /** See `collectPositionScopeIdsForCitizen` */
   readonly positionScopeIds: ReadonlySet<string>;
 }
 
@@ -44,11 +38,6 @@ export interface ResolvedEventWikiPagePermissions {
    * additionally checks the freeze itself.
    */
   readonly canAdmin: boolean;
-  /**
-   * Same semantics as the role-based wiki: EDITORS extends uploading to
-   * everyone with edit permission, RESTRICTED (and the INHERIT fallback)
-   * keeps it at the managers. Nobody uploads once the event is over.
-   */
   readonly canUploadImages: boolean;
   readonly canUploadAttachments: boolean;
   /**
@@ -66,10 +55,7 @@ export interface ResolvedEventWikiPagePermissions {
 export interface EventWikiResolverOptions {
   /** The event is over: nobody edits or uploads anymore */
   readonly frozen: boolean;
-  /**
-   * False while the participation of the event is turned off: then the
-   * scopes PARTICIPANTS and POSITION grant nothing beyond the managers
-   */
+  /** See `isEventWikiScopeAvailable()` */
   readonly participationEnabled: boolean;
 }
 
@@ -80,9 +66,8 @@ interface FlatPositionAssignment {
 }
 
 /**
- * Precomputes the POSITION scope membership of one citizen: every position
- * the citizen is assigned to plus all of its ancestors. A scope referencing
- * position P covers assignments anywhere in P's subtree, which is
+ * The positions the citizen is assigned to plus all of their ancestors. A scope
+ * referencing position P covers assignments anywhere in P's subtree, which is
  * equivalent to P being an ancestor-or-self of an assigned position. The
  * visited set keeps a corrupted lineup from looping forever.
  */
@@ -132,10 +117,8 @@ const hasExplicitSetting = (
 };
 
 /**
- * Nearest page with an explicit scope for the given tier, via the shared
- * hierarchy walk. Used for the sourceId display and the upload tiers — the
- * read/edit grant checks resolve INHERIT recursively through the parent
- * gate instead.
+ * Only for the sourceId display and the upload tiers — the read/edit grant
+ * checks resolve INHERIT recursively through the parent gate instead.
  */
 const findScopeSource = (
   page: EventWikiPagePermissionSource,
@@ -148,32 +131,26 @@ const findScopeSource = (
   );
 
 /**
- * Resolves the permissions of one viewer against the pages of one event
- * wiki, memoized per page. Pass all pages of the event including
- * soft-deleted ones (trash restore/destroy need permissions on them).
+ * Resolves the permissions of one viewer against the pages of one event wiki,
+ * memoized per page. Pass all pages of the event including soft-deleted ones
+ * (trash restore/destroy need permissions on them).
  *
- * The hierarchy semantics mirror `createWikiPagePermissionResolver` — only
- * the membership checks differ (event scopes instead of roles):
+ * The hierarchy semantics mirror `createWikiPagePermissionResolver` — only the
+ * membership checks differ (event scopes instead of roles):
  * - The manage tier is fixed: event managers hold all tiers on every page.
  *   There is no owner concept and no per-page admin configuration.
- * - A page grants nothing to someone who cannot read its parent.
- * - PARTICIPANTS and POSITION are absolute memberships; ALL means everyone
- *   who reaches the event (the context loader only builds a context for
- *   viewers with `event;read`). Edit scope ALL means "everyone who may read
- *   this page", like editability ALL in the role-based resolver, so an open
- *   edit scope below a restricted read scope stays as narrow as the page.
- * - Tiers imply the lower ones: manage ⇒ edit ⇒ read. The read implication
- *   uses the unfrozen edit grant, so viewers whose read access comes from
- *   an edit scope keep reading after the event is over.
- * - INHERIT without a reachable parent (top-level page, broken chain,
- *   cycle) is the most restrictive value: managers only. Root pages are
+ * - PARTICIPANTS and POSITION are absolute memberships; ALL means everyone who
+ *   reaches the event (the context loader only builds a context for viewers
+ *   with `event;read`). Edit scope ALL means "everyone who may read this page",
+ *   like editability ALL in the role-based resolver.
+ * - The read implication of edit uses the unfrozen edit grant, so viewers whose
+ *   read access comes from an edit scope keep reading after the event is over.
+ * - INHERIT without a reachable parent is managers only. Root pages are
  *   validated to always carry explicit scopes; this is the safety net.
- * - MANAGERS as an explicit scope grants nothing beyond the fixed manage
- *   tier — it is the "private" value.
- * - While the participation of the event is turned off, PARTICIPANTS and
- *   POSITION grant like MANAGERS (see `isEventWikiScopeAvailable()`).
- * - After the event is over (`frozen`) canEdit is false for everyone;
- *   reading and the managers' canAdmin stay.
+ * - MANAGERS as an explicit scope grants nothing beyond the fixed manage tier —
+ *   it is the "private" value.
+ * - After the event is over (`frozen`) canEdit is false for everyone; reading
+ *   and the managers' canAdmin stay.
  */
 export const createEventWikiPagePermissionResolver = (
   pages: readonly EventWikiPagePermissionSource[],
@@ -195,11 +172,6 @@ export const createEventWikiPagePermissionResolver = (
   const editGrantCache = new Map<string, boolean>();
   const readGrantCache = new Map<string, boolean>();
   const readCache = new Map<string, boolean>();
-  /**
-   * Pages currently on the recursion stack, one set per tier: read depends
-   * on the edit grant of the same page, so a shared set would mistake that
-   * for a cycle.
-   */
   const editGrantPending = new Set<string>();
   const readGrantPending = new Set<string>();
   const readPending = new Set<string>();
@@ -230,23 +202,11 @@ export const createEventWikiPagePermissionResolver = (
     }
   };
 
-  /**
-   * The gate every tier passes through: a page hands out nothing to someone
-   * who cannot read the page above it. Top-level pages have nothing to be
-   * gated by; a page whose parent is missing from the data counts as
-   * top-level.
-   */
   const isAccessible = (page: EventWikiPagePermissionSource) => {
     const parent = parentOf(page);
     return parent ? canReadOf(parent) : true;
   };
 
-  /**
-   * What the page's own read scope grants, without the "may edit ⇒ may
-   * read" implication and without the parent gate. Edit scope ALL is
-   * defined on top of it, so the two must not be expressed through each
-   * other.
-   */
   const hasReadGrant = (page: EventWikiPagePermissionSource): boolean =>
     resolveWikiPageTier(page, readGrantCache, readGrantPending, () => {
       /** No own restriction; a top-level page has nothing to inherit */
@@ -283,10 +243,8 @@ export const createEventWikiPagePermissionResolver = (
     });
 
   /**
-   * EDITORS extends uploading to everyone with edit permission, RESTRICTED
-   * keeps it at the managers, and the fallback source of a fully-INHERIT
-   * chain behaves like RESTRICTED — mirroring `isGrantedUpload` of the
-   * role-based resolver. The freeze stops all uploading.
+   * See `isGrantedUpload` of the role-based resolver. The freeze stops all
+   * uploading.
    */
   const isGrantedUpload = (
     uploadability: WikiPageUploadability,
@@ -360,10 +318,6 @@ export const createEventWikiPagePermissionResolver = (
   return { get };
 };
 
-/**
- * Resolves the effective permissions of the given viewer for every given
- * page — see `createEventWikiPagePermissionResolver()` for the grant rules.
- */
 export const resolveEventWikiPagePermissions = (
   pages: readonly EventWikiPagePermissionSource[],
   viewer: EventWikiViewer,

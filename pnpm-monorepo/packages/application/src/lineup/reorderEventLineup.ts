@@ -20,10 +20,6 @@ export type ReorderEventLineupInput = z.infer<
   typeof reorderEventLineupInputSchema
 >;
 
-/**
- * Sets the order and the parents of the positions of the lineup of an event
- * that the actor manages. Gives the lineup after the change.
- */
 export const reorderEventLineup = (
   context: ApplicationContext,
   actor: Actor,

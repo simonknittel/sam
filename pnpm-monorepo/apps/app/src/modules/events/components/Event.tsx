@@ -7,14 +7,6 @@ import { isLineupVisible } from "../utils/isLineupVisible";
 import { mustApplyForEvent } from "../utils/mustApplyForEvent";
 import { EventClient } from "./EventClient";
 
-/**
- * Image size:
- * Discord recommends 800x320px.
- * Our maximum height should be 160px. Therefore, we calculate the width based
- * on the aspect ratio.
- * 800 / 320 * 160 = 400
- */
-
 interface Props {
   readonly className?: string;
   readonly event: EventListRow;

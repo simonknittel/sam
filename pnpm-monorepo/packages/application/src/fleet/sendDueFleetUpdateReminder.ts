@@ -13,10 +13,10 @@ export interface SendDueFleetUpdateReminderInput {
 
 /**
  * The last change of the citizen to their own ships. Each write of a ship
- * sets `updatedAt`, also the delete. The ships from before these columns
- * have only `createdAt`. The first login (`welcomedAt`) counts as a change,
- * thus the time of a citizen without ships starts with it. Null for a
- * citizen without ships and without a login.
+ * sets `updatedAt`, also the delete. Some ships have only `createdAt`. The
+ * first login (`welcomedAt`) counts as a change, thus the time of a citizen
+ * without ships starts with it. Null for a citizen without ships and without
+ * a login.
  */
 const findLastFleetChange = async (
   context: ApplicationContext,
@@ -44,11 +44,9 @@ const findLastFleetChange = async (
 };
 
 /**
- * Requests the fleet update reminder for the citizen when the citizen did not
- * change their own ships for `FLEET_UPDATE_REMINDER_UNCHANGED_MONTHS` or
- * more. The citizen gets one reminder for each such time: the next reminder
- * comes only after a new change and the same time again. The app calls it on
- * the first visit of the day of the citizen.
+ * The citizen gets one reminder for each such time: the next reminder comes
+ * only after a new change and the same time again. The app calls it on the
+ * first visit of the day of the citizen.
  */
 export const sendDueFleetUpdateReminder = (
   context: ApplicationContext,

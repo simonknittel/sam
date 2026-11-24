@@ -11,8 +11,7 @@ export const metadata: Metadata = {
 };
 
 /**
- * The event wiki's trash. Only event managers hold canAdmin, so the table
- * stays empty for everyone else; restoring stops once the event is over.
+ * Only event managers hold canAdmin, thus the table is empty for everyone else
  */
 export default async function Page({
   params,

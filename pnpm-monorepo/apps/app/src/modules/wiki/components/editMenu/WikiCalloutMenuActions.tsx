@@ -15,7 +15,6 @@ interface Props {
   readonly menu: WikiCalloutMenuState;
 }
 
-/** Actions of the callout menu (color, unwrap, delete) */
 export const WikiCalloutMenuActions = ({ editor, menu }: Props) => {
   const setCalloutColor = (color: WikiCalloutColor) => {
     editor
@@ -38,11 +37,7 @@ export const WikiCalloutMenuActions = ({ editor, menu }: Props) => {
 
   /**
    * The callout menu state carries no nodeSize — read it fresh from the
-   * document (which also guards against stale positions after collab
-   * edits). Focus at the deletion point — a bare focus() scrolls the
-   * stale selection (wherever the cursor last was) into view, jumping
-   * the viewport away from the deleted block (see
-   * WikiDuplicateCopyActions).
+   * document (which also guards against stale positions after collab edits).
    */
   const deleteCallout = () => {
     const node = editor.state.doc.nodeAt(menu.position);

@@ -7,7 +7,6 @@ interface Props {
   readonly children: ReactNode;
 }
 
-/** One option or one term of a list, without a screenshot, see `GuideCardList` */
 export const GuideCard = ({ icon: Icon, title, children }: Props) => {
   return (
     <li className="rounded-secondary border border-white/5 bg-white/5 p-4">

@@ -30,7 +30,6 @@ interface EntryOptions {
   readonly lineNumber?: number | null;
 }
 
-/** An entry with the given signal, at the given minute after `START` */
 const entry = (
   minute: number,
   liveStatusSignal: LiveStatusSignal | null,
@@ -93,7 +92,6 @@ const evaluate = (
     ...options,
   });
 
-/** The kinds and labels of the states of the first reporter */
 const statesOf = (reporters: ReturnType<typeof evaluate>) =>
   reporters[0]?.states.map(({ kind, label, isUncertain }) => ({
     kind,

@@ -15,6 +15,7 @@ export default async function Page() {
   const authentication = await requireAuthenticationPage("/app/leaderboards");
   await authentication.authorizePage("leaderboards", "read");
 
+  // Season 47 and the first 1500 ranks. A new season needs a change here.
   const leaderboard = await getLeaderboard("SB", "47", 15);
 
   return (

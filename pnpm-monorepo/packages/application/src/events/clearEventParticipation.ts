@@ -10,23 +10,20 @@ import {
 } from "./eventInvitations.js";
 
 /**
- * The reason of the "removed from the event" notification of each citizen
- * whose sign-up the switch to false cancelled. The notification shows it as
- * it is, thus it is German like the reasons of the managers.
+ * The notification shows it as it is, thus it is German like the reasons of the
+ * managers
  */
 export const PARTICIPATION_DISABLED_REASON =
   "Der Organisator hat die Teilnahme an diesem Event abgeschaltet.";
 
 interface Input {
   readonly eventId: Event["id"];
-  /** The acting manager, like on a removal by a manager */
   readonly cancelledById: Citizen["id"] | null;
   readonly cancelledAt: Date;
 }
 
 export interface ClearedEventParticipation {
   readonly cancelledParticipantCount: number;
-  /** The citizens of the cancelled sign-ups */
   readonly cancelledCitizenIds: string[];
   readonly clearedPositionCount: number;
   readonly deletedApplicationCount: number;
@@ -44,13 +41,8 @@ export const NO_CLEARED_EVENT_PARTICIPATION: ClearedEventParticipation = {
 };
 
 /**
- * The switch of the participation of an app event to false: soft-cancels
- * all active sign-ups (like a removal by a manager, the rows stay as
- * history), withdraws all open invitations and event applications, removes
- * the assigned citizens of all positions and deletes all position
- * applications. The positions stay. Takes the transaction client, thus the
- * change of the switch and the activity entry commit together with all of
- * it.
+ * The switch of the participation of an app event to false. Like a removal by a
+ * manager, the sign-ups stay as cancelled rows. The positions stay.
  */
 export const clearEventParticipation = async (
   transaction: Prisma.TransactionClient,

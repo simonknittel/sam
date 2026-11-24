@@ -47,15 +47,11 @@ export type UpdateRoleTagInput = z.output<typeof updateRoleTagInputSchema>;
 export type UpdateRoleTagOutput = RoleTagOutput;
 
 /**
- * Changes the given fields of a tag (the name and the description) and adds
- * roles to it or removes roles from it. Requires `role;manage`. Only a real
- * change writes an audit event: a change of the name or of the description
- * `ROLE_TAG_UPDATED`, a change of the roles `ROLE_TAG_ASSIGNMENTS_UPDATED`.
+ * Only a real change writes an audit event.
  *
- * @throws NotFoundError when the tag or a role of `add_role_ids` does not
- * exist
- * @throws ValidationError when a different tag has the name, or when a role
- * is in `add_role_ids` and in `remove_role_ids`
+ * @throws NotFoundError when the tag or a role of `add_role_ids` does not exist
+ * @throws ValidationError when a different tag has the name, or when a role is
+ * in `add_role_ids` and in `remove_role_ids`
  */
 export const updateRoleTag = (
   context: ApplicationContext,

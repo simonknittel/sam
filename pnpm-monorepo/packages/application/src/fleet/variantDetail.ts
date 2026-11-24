@@ -31,8 +31,7 @@ const VARIANT_DETAIL_SELECT = {
 } as const satisfies Prisma.VariantSelect;
 
 /**
- * The head of the variant page and the details of the variant popover. The
- * count has the ships of all active citizens that are not deleted, also of
+ * The count has the ships of all active citizens that are not deleted, also of
  * the citizens that are not members. The ids of the series and of the
  * manufacturer give the link to the settings of the variant.
  */
@@ -40,12 +39,6 @@ export type VariantDetailRow = Prisma.VariantGetPayload<{
   select: typeof VARIANT_DETAIL_SELECT;
 }>;
 
-/**
- * The variant of the variant page and of its embedded wiki, or null when it
- * does not exist
- *
- * @throws ForbiddenError when the actor cannot see the variant pages
- */
 export const findVariantDetail = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,
@@ -68,11 +61,8 @@ export interface VariantPopoverDetail extends VariantDetailRow {
 }
 
 /**
- * The details of the variant popover, or null when the variant does not
- * exist. Like the variant page, the popover never tells about a linked page
- * that the actor cannot read.
- *
- * @throws ForbiddenError when the actor cannot see the variant pages
+ * Like the variant page, the popover never tells about a linked page that the
+ * actor cannot read
  */
 export const findVariantPopoverDetail = async (
   context: ApplicationContext,
@@ -89,11 +79,9 @@ export const findVariantPopoverDetail = async (
 };
 
 /**
- * Whether the actor can link a wiki page to the variant now: the actor
- * manages the ship catalog and the variant has no linked page. A link to a
- * page that the actor cannot read or that is in the trash also gives false,
- * thus the variant page never asks the actor to replace a link that the
- * actor cannot see.
+ * A link to a page that the actor cannot read or that is in the trash also
+ * gives false, thus the variant page never asks the actor to replace a link
+ * that the actor cannot see
  */
 export const canLinkVariantWikiPage = async (
   context: Pick<ApplicationContext, "prisma">,
@@ -113,15 +101,12 @@ export const canLinkVariantWikiPage = async (
   return variant?.wikiPageId === null;
 };
 
-/** A variant that embeds a wiki page */
 export type VariantBacklinkRow = Prisma.VariantGetPayload<{
   select: typeof VARIANT_LINK_SELECT;
 }>;
 
 /**
- * The variants that embed the wiki page as their root page (not as an
- * ancestor), by name. Empty when the actor cannot see the variant pages,
- * like the embed that the actor cannot open.
+ * Only the variants that embed the page as their root page, not as an ancestor
  */
 export const findVariantBacklinks = async (
   context: Pick<ApplicationContext, "prisma">,

@@ -84,9 +84,8 @@ const buildApp = (templateDatabaseUrl: string, s3Port: number) =>
 const BUCKET_BOOTSTRAP_ATTEMPTS = 5;
 
 /**
- * Buckets are not auto-created on the first PUT — same one-shot setup as
- * the rustfs-bootstrap service of the dev stack (compose.yml): create the
- * bucket, allow anonymous reads and configure CORS.
+ * The same setup as the rustfs-bootstrap service of the dev stack
+ * (compose.yml), because buckets are not auto-created on the first PUT.
  */
 const bootstrapUploadsBucket = async (s3Port: number) => {
   const client = new S3Client({

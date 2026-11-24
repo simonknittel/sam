@@ -6,11 +6,6 @@ import {
   markItemsAsRead as markItemsAsReadUseCase,
 } from "@sam-monorepo/application";
 
-/**
- * Marks a batch of items of one subject type as read by the viewer. The
- * read-on-view tracking of the changelog page calls it, hence the batch
- * input. Repeated calls change nothing.
- */
 export const markItemsAsRead = createUseCaseAction({
   name: "markItemsAsRead",
   schema: markItemsAsReadInputSchema,

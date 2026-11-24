@@ -14,9 +14,6 @@ interface Props {
   readonly currentPageId: string | null;
 }
 
-/**
- * Picks the wiki page whose content is shown on the app dashboard.
- */
 export const WikiDashboardPageSetting = ({ options, currentPageId }: Props) => {
   const selectId = useId();
   const { state, formAction } = useAction(updateWikiDashboardPage, {

@@ -2,11 +2,6 @@ import type { TableColumn } from "@/modules/common/components/TableTile";
 
 const DATE_COLUMN_WIDTH = 140;
 
-/**
- * The columns that the notes table and the table of the other logs share:
- * the citizen at the start, the confirmation, the authors and the actions at
- * the end
- */
 export const CITIZEN_LOG_TABLE_COLUMNS = {
   citizen: {
     key: "citizen",

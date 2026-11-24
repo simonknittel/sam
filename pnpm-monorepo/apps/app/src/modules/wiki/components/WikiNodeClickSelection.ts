@@ -3,6 +3,7 @@
 import { Extension } from "@tiptap/core";
 import { NodeSelection, Plugin, PluginKey } from "@tiptap/pm/state";
 
+/** For a new node, see `getWikiEditorExtensions()` */
 const ANCHOR_NODE_TYPES = [
   // Linked to the original file it displays
   "image",
@@ -18,12 +19,10 @@ const ANCHOR_NODE_TYPES = [
 ];
 
 /**
- * The atom nodes in ANCHOR_NODE_TYPES (images, attachment cards, internal
- * page links, citizen mentions, variant links) render as anchors — while
- * editing, a plain click would navigate away. This selects the node
- * instead (showing the edit menu, which offers download/open); read-only
- * views keep the anchors' native navigation. Editor-only behavior, the
- * extension adds no schema.
+ * The atom nodes in ANCHOR_NODE_TYPES render as anchors or contain them —
+ * while editing, a plain click would navigate away. This selects the node
+ * instead (showing the edit menu, which offers download/open); read-only views
+ * keep the anchors' native navigation.
  */
 export const WikiNodeClickSelection = Extension.create({
   name: "wikiNodeClickSelection",

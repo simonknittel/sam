@@ -5,10 +5,7 @@ export const metadata: Metadata = {
   title: "404 Not Found",
 };
 
-/**
- * Keeps the wiki chrome — above all the sidebar's table of contents — around a
- * missing page, so a dead link does not throw the reader out of the wiki.
- */
+/** Keeps the sidebar around the 404 */
 export default function NotFound() {
   return <NotFoundCard />;
 }

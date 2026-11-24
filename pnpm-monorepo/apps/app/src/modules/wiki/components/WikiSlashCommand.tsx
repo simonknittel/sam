@@ -41,17 +41,11 @@ import {
 import { createWikiSuggestionRender } from "./WikiSuggestionMenu";
 
 interface WikiSlashCommandOptions {
-  /** Id of the page being edited — target for file uploads */
   pageId: string;
-  /** Whether the viewer may upload images to the page */
   canUploadImages: boolean;
-  /** Whether the viewer may upload file attachments to the page */
   canUploadAttachments: boolean;
-  /** Opens the embed URL dialog (mounted by WikiCollabEditor) */
   onRequestEmbed: () => void;
-  /** Opens the link dialog (mounted by WikiCollabEditor) */
   onRequestLink: () => void;
-  /** Opens the ship picker (mounted by WikiCollabEditor) */
   onRequestVariantLink: () => void;
 }
 
@@ -67,7 +61,7 @@ export interface WikiSlashCommandItem {
    */
   readonly allowedInTextOnlyBlock?: boolean;
   /**
-   * Whether the entry inserts inline nodes (page link, mention) — hidden
+   * Whether the entry inserts inline nodes (ship link, mention) — hidden
    * where those are schema-invalid (headings hold plain text only).
    */
   readonly insertsInline?: boolean;
@@ -81,11 +75,8 @@ export interface WikiSlashCommandItem {
    * not upload are shown disabled (applyWikiUploadRestrictions).
    */
   readonly uploadKind?: UploadCategory;
-  /** Shown muted and inert; run is never called (WikiSuggestionMenu) */
   readonly disabled?: boolean;
-  /** Secondary line under the title (the disabled entries' hint) */
   readonly subtitle?: string;
-  /** Renders a divider below the entry (the pinned copied-block entry) */
   readonly dividerAfter?: boolean;
   readonly run: (
     editor: Editor,
@@ -94,7 +85,6 @@ export interface WikiSlashCommandItem {
   ) => void;
 }
 
-/** Shared with the gutter plus button (WikiGutter), which offers the same palette */
 export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
   {
     title: "Text",
@@ -102,11 +92,9 @@ export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
     keywords: ["text", "paragraph", "absatz", "p"],
     allowedInTextOnlyBlock: true,
     /**
-     * setNode copies the block's attributes and merges the given ones on
-     * top, so the size has to be passed in BOTH directions — a bare
-     * setParagraph() would leave a small paragraph small. This entry is
-     * therefore also the way back out of "Kleiner Text" inside quotes,
-     * table cells and list items, where the type row is unavailable.
+     * Pass the size in both directions, see HeadingPicker. This entry is also
+     * the way back out of "Kleiner Text" inside quotes, table cells and list
+     * items, where the type row is unavailable.
      */
     run: (editor, range) =>
       editor
@@ -118,7 +106,6 @@ export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
   },
   {
     title: "Kleiner Text",
-    /** The same glyph as "Text" at a smaller size, like the type picker */
     icon: <FaParagraph className="text-[0.6rem]" />,
     keywords: ["klein", "small", "fein", "kleingedrucktes"],
     allowedInTextOnlyBlock: true,
@@ -132,7 +119,6 @@ export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
   },
   ...([1, 2, 3] as const).map((level) => ({
     title: `Überschrift ${level}`,
-    /** Text badge like the toolbar's heading picker (has no svg icons) */
     icon: <span className="text-xs font-bold">H{level}</span>,
     keywords: [`h${level}`, `heading${level}`, `überschrift${level}`],
     run: (editor: Editor, range: Range) =>
@@ -369,12 +355,6 @@ const COPIED_BLOCK_KEYWORDS = [
   "clipboard",
 ];
 
-/**
- * Whether the copied block may be placed where the given restrictions
- * apply: leaves (code block, summary) take no nodes at all, text-only
- * containers (quote, table cell, list item) take paragraphs and inline
- * nodes, headings take no inline nodes, and grids never nest.
- */
 const copiedBlockFitsRestrictions = (
   block: WikiCopiedBlock,
   restrictions: WikiTextRestrictions,
@@ -385,13 +365,6 @@ const copiedBlockFitsRestrictions = (
   return !restrictions.blocks || block.typeName === "paragraph";
 };
 
-/**
- * The entry pasting the block captured by the edit menus' copy button
- * (wikiBlockClipboard), pinned above the regular entries in both palettes
- * (slash command, gutter plus button). NULL when nothing was copied, when
- * it may not be placed where the restrictions apply, or when it doesn't
- * match the query.
- */
 export const getWikiCopiedBlockItem = (
   restrictions: WikiTextRestrictions,
   query: string,
@@ -426,7 +399,6 @@ export const getWikiCopiedBlockItem = (
   return matchesWikiSlashCommandQuery(item, query) ? item : null;
 };
 
-/** The palette entries applying where the restrictions apply, see WikiTextRestrictions */
 const availableSlashCommandItems = (restrictions: WikiTextRestrictions) => {
   const items = WIKI_SLASH_COMMAND_ITEMS.filter(
     (item) => !(restrictions.grids && item.insertsGrid),
@@ -443,10 +415,6 @@ const availableSlashCommandItems = (restrictions: WikiTextRestrictions) => {
   }
 };
 
-/**
- * Palette query matching shared with the gutter's insert palette:
- * case-insensitive substring on the title, prefix on the keywords.
- */
 export const matchesWikiSlashCommandQuery = (
   item: WikiSlashCommandItem,
   query: string,
@@ -495,12 +463,6 @@ const filterSlashCommandItems = (
   return copiedBlockItem ? [copiedBlockItem, ...items] : items;
 };
 
-/**
- * Notion-like slash commands: typing "/" opens a filterable menu (e.g.
- * "/h1") that formats the current line or inserts blocks. Editor-only —
- * the extension adds no schema, so validation and static rendering are
- * unaffected.
- */
 export const WikiSlashCommand = Extension.create<WikiSlashCommandOptions>({
   name: "wikiSlashCommand",
 

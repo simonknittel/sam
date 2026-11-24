@@ -4,12 +4,9 @@ import {
 } from "@/modules/dashboard/utils/greetingWordings";
 
 /**
- * The greetings of the banner on the first day of a new member. The banner
- * picks one of them on every render.
- *
- * The pool is a different one than the pool of the welcome notification of
- * the Lambda: a new member reads both on the same day, and two identical
- * greetings would read like a mistake.
+ * The pool is a different one than the pool of the welcome notification of the
+ * Lambda: a new member reads both on the same day, and two identical greetings
+ * would read like a mistake.
  */
 export const WELCOME_WORDINGS: readonly ViewerWordingFactory[] = [
   (context) => ({

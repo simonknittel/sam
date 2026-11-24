@@ -10,7 +10,6 @@ export const updateEventApplicationRequired = createUseCaseAction({
   useCase: updateEvent,
   parseFormData: (formData) => ({
     event_id: formData.get("eventId"),
-    // The checkbox sends a value only while it is checked
     application_required: Boolean(formData.get("value")),
   }),
   texts: EVENT_ERROR_TEXTS,

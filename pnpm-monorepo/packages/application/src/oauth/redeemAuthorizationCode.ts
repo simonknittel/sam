@@ -19,7 +19,6 @@ import {
   type TokenResponse,
 } from "./tokenResponse.js";
 
-/** The form fields of a token request with an authorization code */
 export const redeemAuthorizationCodeInputSchema = z.object({
   grant_type: z.literal("authorization_code"),
   code: z.string().min(1).max(MAX_OPAQUE_TOKEN_LENGTH),

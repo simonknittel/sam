@@ -2,9 +2,7 @@ import { EventTemplateAccessType } from "@sam-monorepo/database/browser";
 
 export interface EventTemplatePermissionSource {
   readonly id: string;
-  /** The live permission-bearing owner; `createdById` carries no rights */
   readonly ownedById: string | null;
-  /** Soft-deleted templates grant nothing (see the grant rules below) */
   readonly deletedAt: Date | null;
   readonly roleAccess: readonly {
     readonly roleId: string;
@@ -111,10 +109,6 @@ export const createEventTemplatePermissionResolver = (
   return { get };
 };
 
-/**
- * Resolves the effective permissions of the given viewer for every given
- * template — see `createEventTemplatePermissionResolver()` for the rules.
- */
 export const resolveEventTemplatePermissions = (
   templates: readonly EventTemplatePermissionSource[],
   viewer: EventTemplateViewer,

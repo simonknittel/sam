@@ -35,7 +35,6 @@ interface Section {
   readonly items: ItemPickerItem[];
 }
 
-/** Divides the items into runs of items with the same group */
 const toSections = (items: readonly ItemPickerItem[]) =>
   items.reduce<Section[]>((sections, item) => {
     const lastSection = sections.at(-1);
@@ -51,20 +50,14 @@ const toSections = (items: readonly ItemPickerItem[]) =>
 
 interface Props {
   readonly mode: ItemPickerMode;
-  /** The accessible name of the list */
   readonly label: string;
-  /** Also the accessible name of the search field */
   readonly searchPlaceholder: string;
   readonly query: string;
   readonly onQueryChange: (query: string) => void;
-  /** A row between the search field and the list, for example filter chips */
   readonly toolbar?: ReactNode;
-  /**
-   * Items above the other items, for example "Alle". The owner filters them
-   * with the query.
-   */
+  /** Items above the other items. The owner filters them with the query. */
   readonly extraItems?: readonly ItemPickerItem[];
-  /** The items in the order of the list. The owner filters them with the query. */
+  /** The owner filters them with the query */
   readonly items: readonly ItemPickerItem[];
   /**
    * The best match of the search. During a search, it is active until the
@@ -73,14 +66,9 @@ interface Props {
    */
   readonly bestMatchId?: ItemPickerItem["id"];
   readonly selectedIds: readonly ItemPickerItem["id"][];
-  /** A click or Enter on an item that is not disabled */
   readonly onSelect: (itemId: ItemPickerItem["id"]) => void;
   readonly emptyText: string;
-  /**
-   * Replaces the checkmark of a selected item at the end of each row, for
-   * example with a checkbox. The row stays the control: a click on the row
-   * calls `onSelect`.
-   */
+  /** The row stays the control: a click on the row calls `onSelect`. */
   readonly renderTrailing?: (isSelected: boolean) => ReactNode;
   readonly listHeight?: ItemPickerListHeight;
 }
@@ -91,11 +79,8 @@ const LIST_HEIGHT_CLASS_NAMES: Record<ItemPickerListHeight, string> = {
 };
 
 /**
- * The content of a picker: a search field, an optional toolbar and a list
- * box. It works in a popover (see `ItemPickerPopover`) and also embedded in
- * a page or a modal. The search field takes the focus when the panel opens
- * and keeps it: ArrowUp, ArrowDown, Home and End move the active item, and
- * Enter selects it.
+ * Works in a popover (see `ItemPickerPopover`) and also embedded in a page or a
+ * modal.
  */
 export const ItemPickerPanel = ({
   mode,
@@ -120,7 +105,6 @@ export const ItemPickerPanel = ({
   const selectedIdSet = new Set(selectedIds);
   const allItems = [...extraItems, ...items];
 
-  /** In single mode, the selected item is active when the panel opens */
   const [activeId, setActiveId] = useState<ItemPickerItem["id"] | null>(() =>
     mode === ItemPickerMode.Single
       ? (allItems.find((item) => selectedIdSet.has(item.id))?.id ?? null)
@@ -135,7 +119,6 @@ export const ItemPickerPanel = ({
     if (list && activeOption) scrollIntoList(list, activeOption);
   }, []);
 
-  /** During a search, Enter selects the best match */
   const enabledItems = allItems.filter(
     (item) => item.disabledReason === undefined,
   );

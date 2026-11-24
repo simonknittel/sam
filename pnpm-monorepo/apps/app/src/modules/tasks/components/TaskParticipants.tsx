@@ -10,13 +10,10 @@ interface Props {
     VisibleTask,
     "id" | "visibility" | "assignmentLimit" | "assignments" | "completionists"
   >;
-  /** Whether the task is still open */
   readonly isTaskUpdatable: boolean;
-  /** Shows the editor of the assignments */
   readonly isEditable: boolean;
 }
 
-/** The citizens who accepted the task, its free places and its completionists */
 export const TaskParticipants = ({
   className,
   task,

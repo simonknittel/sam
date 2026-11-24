@@ -9,16 +9,13 @@ import type { RolePickerExtraEntry, RolePickerRole } from "./RolePanel";
 
 interface Props {
   readonly roleId: BadgeRole["id"];
-  /** The roles of the picker */
   readonly roles: readonly RolePickerRole[];
   readonly extraEntries?: readonly RolePickerExtraEntry[];
 }
 
 /**
- * A selected role or extra entry, with the look of the role badge. A selected
- * role that is not in the roles of the picker (the viewer cannot see it)
- * shows as a placeholder, because the picker still submits it: a save
- * without it would remove it from the record.
+ * A selected role that the viewer cannot see shows as a placeholder: the picker
+ * still submits it, else a save would remove it from the record.
  */
 export const RolePickerValue = ({
   roleId,

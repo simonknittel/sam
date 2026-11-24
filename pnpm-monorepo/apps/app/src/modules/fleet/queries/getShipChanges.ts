@@ -19,7 +19,6 @@ interface ShipChangesOptions {
   readonly direction?: CursorDirection;
 }
 
-/** See `findShipChangePage()` */
 export const getShipChanges = cache(
   async ({
     changeType = ShipChangeFilter.Both,

@@ -8,7 +8,6 @@ interface Props {
   readonly now: Date;
 }
 
-/** How long a state of the Live-Status lasts, for example "seit 12 min" */
 export const LiveStatusSince = ({ since, now }: Props) => {
   const seconds = Math.max(
     0,

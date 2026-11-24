@@ -14,12 +14,10 @@ import {
   type UploadUsageWikiPage,
 } from "@sam-monorepo/domain";
 
-/** A place where an upload is referenced, as one row of the usage cell */
 export interface UploadUsage {
   readonly type: UploadUsageType;
   /** Unique in the usages of one upload, for the React keys */
   readonly key: string;
-  /** The name of the resource, for example the name of the role */
   readonly label: string;
   readonly href: string;
 }
@@ -66,12 +64,9 @@ const getUsageHref = (usage: UploadUsageLocation) => {
 };
 
 /**
- * All places where an upload is referenced (see `listUploadUsages()`), as
- * links to the pages of the referencing resources.
- *
- * The links have no permission check: the target pages check their own
- * access, and the locations of an upload are no secret for a user who can
- * see the upload.
+ * The links have no permission check: the target pages check their own access,
+ * and the locations of an upload are no secret for a user who can see the
+ * upload.
  */
 export const getUploadUsages = (upload: UploadUsageSource): UploadUsage[] =>
   listUploadUsages(upload).map((usage) => ({

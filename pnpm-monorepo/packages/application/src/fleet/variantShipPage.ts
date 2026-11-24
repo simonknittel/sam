@@ -7,8 +7,7 @@ import { paginateByCursor, type PageOptions } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
 
 /**
- * The page size of the ship table of the variant page. It is the same as the
- * page size of the fleet tables of the app (`FLEET_PAGE_SIZE`).
+ * The same as the page size of the fleet tables of the app (`FLEET_PAGE_SIZE`)
  */
 const VARIANT_SHIPS_PAGE_SIZE = 100;
 
@@ -26,7 +25,6 @@ export interface VariantShipRow {
 
 export interface VariantShipPage {
   readonly ships: VariantShipRow[];
-  /** All ships of the members of this variant */
   readonly total: number;
   readonly nextCursor: string | null;
   readonly prevCursor: string | null;
@@ -34,11 +32,6 @@ export interface VariantShipPage {
   readonly variantName: string | null;
 }
 
-/**
- * One page of the ships of a variant that the members of the organization
- * own, sorted by the handle of the owner. The members are the members that
- * the member list of the organization page shows to the actor.
- */
 export const findVariantShipPage = (
   context: Pick<ApplicationContext, "prisma" | "tracer">,
   actor: Actor,
@@ -47,7 +40,6 @@ export const findVariantShipPage = (
     cursor,
   }: {
     readonly variantId: string;
-    /** The id of a ship */
     readonly cursor?: string | null;
   },
   { direction, unknownCursor }: PageOptions = {},

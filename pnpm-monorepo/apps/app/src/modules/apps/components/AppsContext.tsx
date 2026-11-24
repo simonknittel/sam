@@ -63,10 +63,6 @@ export const AppsContextProvider = ({
   return <AppsContext value={value}>{children}</AppsContext>;
 };
 
-/**
- * Check for undefined since the defaultValue of the context is undefined. If
- * it's still undefined, the provider component is missing.
- */
 export function useAppsContext() {
   const context = useContext(AppsContext);
   if (!context) throw new Error("[AppsContext] Provider is missing!");

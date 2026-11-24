@@ -1,6 +1,6 @@
 /**
  * Presence colors, evenly spaced hues at 70% saturation and 50% lightness.
- * They must be 6-digit hex: y-prosemirror's defaultSelectionBuilder styles
+ * They must be 6-digit hex: y-tiptap's defaultSelectionBuilder styles
  * selections with `background-color: ${color}70`, appending a hex alpha
  * channel to the raw color string.
  */
@@ -19,9 +19,6 @@ const PALETTE = [
   "#d9267f",
 ];
 
-/**
- * Deterministic presence caret color per user, derived from their id.
- */
 export const getWikiCollabColor = (seed: string) => {
   let hash = 0;
   for (const character of seed)

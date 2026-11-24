@@ -18,10 +18,7 @@ interface Props {
   readonly showConfirm?: boolean;
 }
 
-/**
- * A citizen carries one history per log type, and several of them sit next
- * to each other — so each names itself after what it is a history of.
- */
+/** Several histories sit next to each other, so each names itself */
 const LOG_TYPE_LABELS: Record<GenericCitizenLogType, string> = {
   handle: "Handle",
   "discord-id": "Discord ID",

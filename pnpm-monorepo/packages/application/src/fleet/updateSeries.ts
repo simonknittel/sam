@@ -24,13 +24,6 @@ export const updateSeriesInputSchema = z.object({
   name: catalogNameSchema,
 });
 
-/**
- * Changes the name of a series
- *
- * @throws NotFoundError when the series does not exist
- * @throws ValidationError when a different series of any manufacturer has the
- * name already
- */
 export const updateSeries = (
   context: ApplicationContext,
   actor: Actor,

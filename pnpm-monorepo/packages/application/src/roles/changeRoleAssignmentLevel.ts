@@ -42,11 +42,6 @@ interface LevelChange {
   ) => Prisma.RoleAssignmentUpdateInput["currentLevel"];
 }
 
-/**
- * The increase and the decrease are mirrored: they differ only in the
- * permission, the level arithmetic and the types of the history row and of
- * the audit event
- */
 const changeRoleAssignmentLevel = (
   context: ApplicationContext,
   actor: Actor,
@@ -134,10 +129,6 @@ const changeRoleAssignmentLevel = (
   });
 
 /**
- * Increases the level of a citizen in a role with levels by one, up to the
- * maximum level, and notifies the citizen when the level rose. Requires a
- * citizen and `otherRole;assign` for the role.
- *
  * @throws NotFoundError when the citizen does not have the role
  * @throws ConflictError when the role has no levels
  */
@@ -160,9 +151,6 @@ export const increaseRoleAssignmentLevel = (
   });
 
 /**
- * Decreases the level of a citizen in a role with levels by one, down to 0.
- * Requires a citizen and `otherRole;dismiss` for the role.
- *
  * @throws NotFoundError when the citizen does not have the role
  * @throws ConflictError when the role has no levels
  */

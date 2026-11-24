@@ -20,7 +20,6 @@ import { useReloadWikiPageTargetsAfterError } from "./WikiPageTargetsLoader";
 interface Props {
   readonly className?: string;
   readonly clipboard: WikiClipboardEntry;
-  /** Visible pages the viewer manages */
   readonly targets: readonly WikiPageTargetOption[];
   readonly allowTopLevel: boolean;
   readonly defaultParentId?: string;
@@ -29,11 +28,8 @@ interface Props {
 }
 
 /**
- * The insert half of copy'n'paste, shown by the create-page modal while the
- * clipboard cookie holds a copied page. Inserts either as a new subpage of
- * the selected page or — replace mode — onto the selected page itself,
- * which is how a whole briefing lands on another event's locked root. The
- * clipboard's title and child count are display-only: the insert
+ * The replace mode is how a whole briefing lands on another event's locked
+ * root. The clipboard's title and child count are display-only: the insert
  * re-resolves the source, so the error here is where a meanwhile deleted or
  * hidden source surfaces.
  */
@@ -46,7 +42,6 @@ export const PasteWikiPagesSection = ({
   onDiscard,
   onSuccess,
 }: Props) => {
-  /** Inside a variant embed the action redirects back into the embed */
   const { variantId } = useWikiPageHrefMode();
   const [mode, setMode] = useState(WikiPasteMode.Child);
   const [chosenParentId, setParentId] = useState(() =>
@@ -62,10 +57,6 @@ export const PasteWikiPagesSection = ({
     chosenParentId,
   );
 
-  /**
-   * A successful insert redirects to the pasted page; onSuccess closes the
-   * modal so it isn't still open after the navigation.
-   */
   const { state, formAction } = useAction(
     useReloadWikiPageTargetsAfterError(pasteWikiPages),
     { errorToast: false, onSuccess },

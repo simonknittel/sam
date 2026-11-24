@@ -15,11 +15,6 @@ export interface ManufacturerOutput {
   readonly name: string;
 }
 
-/**
- * Adds a manufacturer to the catalog of the fleet
- *
- * @throws ValidationError when a manufacturer has the name already
- */
 export const createManufacturer = async (
   context: ApplicationContext,
   actor: Actor,

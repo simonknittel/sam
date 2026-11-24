@@ -19,8 +19,8 @@ import {
 import { expect, test } from "../fixtures/test";
 
 /**
- * Managing the settings also means paying every role — so the manager needs
- * to see the roles and the balances the tiles compute their totals from.
+ * The tiles compute their totals from the roles and the balances, so the
+ * manager needs to see them.
  */
 const SETTINGS_ADMIN_PERMISSIONS = [
   "silcSetting;manage",
@@ -45,9 +45,6 @@ test("the aUEC conversion rate and the role salaries are edited through the sett
   await page.goto("/app/silc/settings");
   await waitForAppShellHydration(page);
 
-  /**
-   * The conversion rate
-   */
   const rateTile = sectionByHeading(page, "aUEC Umrechnungskurs");
   await rateTile.getByLabel("Wie viel aUEC entspricht ein SILC?").fill("2500");
   await rateTile.getByRole("button", { name: "Speichern" }).click();
@@ -61,11 +58,7 @@ test("the aUEC conversion rate and the role salaries are edited through the sett
     )
     .toMatchObject({ value: "2500" });
 
-  /**
-   * A salary for a role, which the tile prices with the rate above
-   */
   const salaryTile = sectionByHeading(page, "Gehälter");
-  /** The rows only render once the roles came back through tRPC */
   const addSalaryRow = salaryTile.getByRole("button", { name: "Neu" });
   await expect(addSalaryRow).toBeVisible();
   await addSalaryRow.click();
@@ -75,16 +68,11 @@ test("the aUEC conversion rate and the role salaries are edited through the sett
     "Bezahlte Rolle",
   );
 
-  /**
-   * The pick closes the popover and gives the focus back to the trigger,
-   * which now has the name of the selected role
-   */
   const selectedRoleTrigger = salaryTile.getByRole("button", {
     name: "Bezahlte Rolle",
   });
   await expect(selectedRoleTrigger).toBeFocused();
 
-  /** A salary row needs a role, thus a click on the selected role keeps it */
   await pickRole(selectedRoleTrigger, "Bezahlte Rolle");
   await expect(selectedRoleTrigger).toBeVisible();
 
@@ -133,7 +121,6 @@ test("a tag in the salary role picker filters the list to its roles, and a secon
   const tag = rolePickerTag(popover, "Gehaltsgruppe");
   await expect(rolePickerOption(popover, "Andere Rolle")).toBeVisible();
 
-  /** A tag only filters the list. It selects nothing. */
   await tag.click();
   await expect(tag).toHaveAttribute("aria-pressed", "true");
   await expect(rolePickerOption(popover, "Getaggte Rolle")).toBeVisible();
@@ -145,7 +132,6 @@ test("a tag in the salary role picker filters the list to its roles, and a secon
   await expect(rolePickerOption(popover, "Getaggte Rolle")).toBeVisible();
   await expect(rolePickerOption(popover, "Andere Rolle")).toBeVisible();
 
-  /** Nothing was selected, so the trigger still has its placeholder */
   await closeRolePicker(popover);
   await expect(trigger).toHaveText("Rolle auswählen");
 });
@@ -159,7 +145,6 @@ test("a saved salary of a role that the viewer cannot see stays listed, and a sa
   const hiddenRole = await createRole(prisma, { name: "Verdeckte Rolle" });
   const admin = await createCitizen(prisma, {
     handle: "silc-einsteller",
-    /** Like the permissions above, but the viewer sees only one role */
     permissionStrings: [
       ...SETTINGS_ADMIN_PERMISSIONS.filter(
         (permission) => !permission.startsWith("otherRole;read"),
@@ -176,7 +161,6 @@ test("a saved salary of a role that the viewer cannot see stays listed, and a sa
   await waitForAppShellHydration(page);
 
   const salaryTile = sectionByHeading(page, "Gehälter");
-  /** The rows only render once the roles came back through tRPC */
   const addSalaryRow = salaryTile.getByRole("button", { name: "Neu" });
   await expect(addSalaryRow).toBeVisible();
   await expect(
@@ -191,7 +175,6 @@ test("a saved salary of a role that the viewer cannot see stays listed, and a sa
   await rolePickerOption(popover, "Sichtbare Rolle").click();
   await expect(popover).not.toBeVisible();
 
-  /** The new row is the last one */
   await salaryTile.getByLabel("SILC").last().fill("40");
   await salaryTile.getByLabel("Tag im Monat").last().fill("15");
   await salaryTile.getByRole("button", { name: "Speichern" }).click();
@@ -240,7 +223,6 @@ test("expiring all SILC zeroes every balance, and the refresh recomputes them", 
   await page.goto("/app/silc/settings");
   await waitForAppShellHydration(page);
 
-  /** The rate tile shows the label and the sum of all balances */
   const silcSum = sectionByHeading(page, "aUEC Umrechnungskurs")
     .getByText("SILC", { exact: true })
     .locator("..");
@@ -251,7 +233,6 @@ test("expiring all SILC zeroes every balance, and the refresh recomputes them", 
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   await expect(silcSum).toHaveText("SILC0");
 
-  // Every balance is booked to 0, a balance of 0 stays as it is
   await expect
     .poll(() =>
       prisma.citizen.findUniqueOrThrow({
@@ -269,7 +250,6 @@ test("expiring all SILC zeroes every balance, and the refresh recomputes them", 
       where: { receiverId: poor.entity.id },
     }),
   ).toBe(0);
-  /** The reset of a negative balance is not earned SILC */
   const reset = await prisma.silcTransaction.findFirstOrThrow({
     where: { receiverId: debtor.entity.id, value: { gt: 0 } },
   });
@@ -285,10 +265,6 @@ test("expiring all SILC zeroes every balance, and the refresh recomputes them", 
     }),
   ).toEqual({ silcBalance: 0, totalEarnedSilc: 0 });
 
-  /**
-   * The refresh recomputes the denormalized balances from the transactions,
-   * so a balance tampered with behind the app's back is corrected.
-   */
   await prisma.citizen.update({
     where: { id: rich.entity.id },
     data: { silcBalance: 999 },
@@ -312,7 +288,6 @@ test("expiring all SILC zeroes every balance, and the refresh recomputes them", 
     )
     .toMatchObject({ silcBalance: 0 });
 
-  /** The expiry of the positive balance and the reset of the negative one */
   await page.goto("/app/silc/transactions");
   await expect(
     page.getByRole("row").filter({ hasText: "Verfallen" }),

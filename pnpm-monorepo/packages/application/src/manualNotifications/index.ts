@@ -1,4 +1,3 @@
-/** The use cases of the manual notifications */
 export {
   createManualNotification,
   createManualNotificationInputSchema,

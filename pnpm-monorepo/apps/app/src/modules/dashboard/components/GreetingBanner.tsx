@@ -2,20 +2,16 @@ import { BannerClouds } from "@/modules/common/components/BannerClouds";
 import { ConfettiCanvas } from "@/modules/common/components/ConfettiCanvas";
 import type { ReactNode } from "react";
 
-/**
- * The attribute which tells the occasion of a banner, for the end-to-end
- * tests
- */
+/** For the end-to-end tests */
 export enum GreetingBannerMarker {
   Welcome = "data-welcome-banner",
   Birthday = "data-birthday-banner",
   Seasonal = "data-seasonal-banner",
 }
 
-/** Connects the surface with its heading, so that the banner has a name */
 const TITLE_ELEMENT_ID = "greeting-banner-title";
 
-/** Milliseconds between two bursts while the banner is in view */
+/** Milliseconds */
 const CONFETTI_INTERVAL = 1600;
 
 /**
@@ -33,7 +29,6 @@ const CONFETTI_SHOT = {
   ticks: 150,
 };
 
-/** One shot from each lower corner, both towards the middle of the banner */
 const CONFETTI_SHOTS = [
   { ...CONFETTI_SHOT, angle: 60, origin: { x: 0, y: 1 } },
   { ...CONFETTI_SHOT, angle: 120, origin: { x: 1, y: 1 } },
@@ -41,34 +36,26 @@ const CONFETTI_SHOTS = [
 
 interface Props {
   readonly marker: GreetingBannerMarker;
-  /** The utility of the occasion which paints the colour clouds */
   readonly surfaceClassName: string;
-  /** Whether the occasion celebrates with confetti behind the greeting */
   readonly hasConfetti: boolean;
-  /** The drawing next to the greeting. It fills the box the banner gives it. */
+  /** Fills the box that the banner gives it */
   readonly ornament: ReactNode;
   readonly title: string;
   readonly body: string;
-  /** Shown below the body, for example a button */
   readonly callToAction?: ReactNode;
 }
 
 /**
- * A greeting above the tiles of the dashboard. The occasion supplies the
- * surface, the ornament and the wording; see `DashboardGreetingBanner` for
- * the occasion which wins. A greeting is content and not a message of the
- * moment, thus it is no live region.
+ * A greeting is content and not a message of the moment, thus it is no live
+ * region.
  *
- * The ornament is larger than the banner is high at its top and rises above
- * its upper edge. The surface is thus a layer of its own below the ornament:
- * the surface clips the confetti and the colour clouds at its round corners,
- * and the ornament stays outside of that clip. The text column starts to the
- * right of the ornament. On a small viewport the ornament would squeeze the
- * text into a narrow column, thus the banner shows no ornament there and the
- * text takes the full width.
+ * The ornament rises above the upper edge of the banner. The surface is thus a
+ * layer of its own: it clips the confetti and the colour clouds at its round
+ * corners, but not the ornament. On a small viewport the ornament would squeeze
+ * the text into a narrow column, thus it does not show.
  *
- * The ornament lets every pointer through: a click or a drag of text over
- * the drawing must reach what lies beneath it.
+ * The ornament lets every pointer through: a click or a drag of text over the
+ * drawing must reach what lies beneath it.
  */
 export const GreetingBanner = ({
   marker,

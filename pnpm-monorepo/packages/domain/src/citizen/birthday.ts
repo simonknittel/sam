@@ -1,8 +1,6 @@
 /**
- * A citizen's birthday is stored as a day and a month without a year, see
- * the `Citizen` model. Thus February 29 is always a valid day and no age can
- * be calculated. Both the greeting job of the Lambda and the surfaces of the
- * app must agree on the day a birthday falls on, thus the rule lives here.
+ * The rules are here, because the greeting job and the app must agree on the
+ * day a birthday falls on.
  */
 
 import { getLocalDate, ORGANIZATION_TIMEZONE } from "../timeZone.js";
@@ -33,8 +31,7 @@ interface CelebrationDate {
 }
 
 /**
- * The day on which a birthday is celebrated in the given year. A birthday on
- * February 29 moves to March 1 in a year without a February 29.
+ * A birthday on February 29 moves to March 1 in a year without a February 29.
  */
 export const getCelebrationDate = (
   birthdayDay: number,
@@ -57,12 +54,7 @@ interface BirthdayCitizen {
   readonly birthdayMonth: number | null;
 }
 
-/**
- * True while the local day of the citizen is the day their birthday is
- * celebrated on. This is the rule behind the greeting of the Lambda and
- * behind the party hat which the app draws on the avatar, thus the two
- * cannot drift. Throws for a time zone the runtime does not know.
- */
+/** Throws for a time zone the runtime does not know. */
 export const isBirthdayToday = (
   citizen: BirthdayCitizen,
   now: Date,

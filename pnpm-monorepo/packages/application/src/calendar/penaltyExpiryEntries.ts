@@ -10,9 +10,8 @@ import type {
 } from "./calendarEntry.js";
 
 /**
- * The expiry of the penalty entries of the citizen of the actor that are not
- * deleted, the same entries that `ownPenaltyEntry;read` opens in the list of
- * the penalty entries
+ * The same entries that `ownPenaltyEntry;read` opens in the list of the penalty
+ * entries
  */
 export const penaltyExpiryEntryCollector: CalendarEntryCollector<PenaltyExpiryCalendarEntry> =
   {

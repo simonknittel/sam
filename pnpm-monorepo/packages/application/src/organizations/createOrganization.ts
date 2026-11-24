@@ -22,22 +22,14 @@ export interface CreateOrganizationOutput {
   readonly name: string;
 }
 
-/** The options that only the app can give */
 export interface CreateOrganizationOptions {
   /**
-   * Finds the path of the logo of the organization on the website of
-   * Roberts Space Industries. An error or no logo creates the organization
-   * without a logo.
+   * The path of the logo on the website of Roberts Space Industries. An error
+   * or no logo creates the organization without a logo.
    */
   readonly findLogo?: (spectrumId: string) => Promise<string | undefined>;
 }
 
-/**
- * Creates an organization. Requires a citizen and `organization;create`.
- *
- * @throws ValidationError when an organization with the Spectrum ID exists
- * already
- */
 export const createOrganization = (
   context: ApplicationContext,
   actor: Actor,

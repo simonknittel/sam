@@ -1,6 +1,4 @@
-/**
- * Formats a byte count for the attachment card, e.g. "1,2 MB".
- */
+/** For example "1,2 MB" */
 export const formatWikiAttachmentSize = (size: number | null): string => {
   if (size === null || Number.isNaN(size)) return "";
   const units = ["B", "KB", "MB", "GB"];

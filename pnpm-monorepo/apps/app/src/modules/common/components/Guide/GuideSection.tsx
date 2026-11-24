@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 interface Props {
   readonly className?: string;
   readonly heading: string;
-  /** One sentence below the heading */
   readonly lead?: ReactNode;
   readonly children: ReactNode;
 }

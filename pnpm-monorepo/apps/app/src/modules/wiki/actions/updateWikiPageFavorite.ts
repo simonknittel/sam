@@ -13,7 +13,6 @@ export const updateWikiPageFavorite = createUseCaseAction({
   useCase: updateWikiPageFavoriteUseCase,
   parseFormData: (formData) => ({
     page_id: formData.get("pageId"),
-    /** Absent removes the page from the favorites */
     is_favorite: formData.get("isFavorite") === "1",
   }),
   texts: WIKI_ERROR_TEXTS,

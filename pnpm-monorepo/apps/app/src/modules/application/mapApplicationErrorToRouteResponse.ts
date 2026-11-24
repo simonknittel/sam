@@ -10,10 +10,8 @@ const respond = (error: string, status: number) =>
   NextResponse.json({ error }, { status });
 
 /**
- * Maps a typed error of a use case to the response of a route handler, with
- * the status codes and the `{ error }` bodies of the routes. Rethrows all
- * other errors, thus the route gives them to `apiErrorHandler()`. Use it only
- * in a route handler.
+ * Rethrows all other errors, thus the route gives them to `apiErrorHandler()`.
+ * Use it only in a route handler.
  */
 export const mapApplicationErrorToRouteResponse = (error: unknown) => {
   if (error instanceof ForbiddenError) return respond("Forbidden", 403);

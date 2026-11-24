@@ -5,10 +5,9 @@ import {
 } from "@sam-monorepo/application";
 
 /**
- * The texts of the template actions for the errors of the template use
- * cases. `UnknownRole` needs a request that bypassed the form: it gets the
- * text of a bad request. `EVENT_ERROR_TEXTS` spreads this record, thus it
- * must not import the event texts.
+ * `UnknownRole` needs a request that bypassed the form: it gets the text of a
+ * bad request. `EVENT_ERROR_TEXTS` spreads this record, thus it must not import
+ * the event texts.
  */
 export const EVENT_TEMPLATE_ERROR_TEXTS: ApplicationErrorTexts = {
   [EventTemplateErrorMessage.NotFound]: "Vorlage nicht gefunden",

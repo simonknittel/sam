@@ -13,7 +13,6 @@ import {
 } from "../fixtures/mcp-client";
 import { expect, test } from "../fixtures/test";
 
-/** The citizen picker of the form needs citizen;read, thus the tool too */
 const KEEPER_PERMISSIONS = ["penaltyEntry;create", "citizen;read"];
 
 test.describe("the penalty points and fleet write tools of the MCP server", () => {
@@ -35,7 +34,6 @@ test.describe("the penalty points and fleet write tools of the MCP server", () =
       citizen_id: offender.entity.id,
       points: 3,
       reason: "Beschuss eines Members",
-      // Summer time: Berlin is two hours ahead of UTC
       expires_at: "2099-07-15T08:15:00+02:00",
     });
     expect(result).toMatchObject({
@@ -86,7 +84,6 @@ test.describe("the penalty points and fleet write tools of the MCP server", () =
       handle: "mcp-strafpunkt-leser",
       permissionStrings: ["penaltyEntry;read", "penaltyEntry;create"],
     });
-    // A deleted citizen has no login
     const deletedCitizen = await prisma.citizen.create({
       data: { handle: "mcp-geloescht", deletedAt: new Date() },
     });
@@ -151,7 +148,6 @@ test.describe("the penalty points and fleet write tools of the MCP server", () =
       deleted_at: null,
     });
 
-    // An absent field stays, an empty note removes the note
     expect(
       await callForContent(client, "update_ship", {
         ship_id: ship.id,
@@ -263,7 +259,6 @@ test.describe("the penalty points and fleet write tools of the MCP server", () =
       destructiveHint: true,
     });
 
-    // A tool that the user disabled for the client does not exist
     const grant = await prisma.oAuthGrant.findFirstOrThrow({
       where: { userId: owner.user.id },
       select: { id: true },
@@ -276,7 +271,6 @@ test.describe("the penalty points and fleet write tools of the MCP server", () =
     ).rejects.toMatchObject({ code: UNKNOWN_TOOL_ERROR_CODE });
     await prisma.mcpToolSetting.delete({ where: { id: toolSetting.id } });
 
-    // A ship of a different citizen does not exist for the user
     expect(
       await callForError(client, "delete_ship", { ship_id: neighbourShip.id }),
     ).toMatch(NOT_FOUND_RESULT);

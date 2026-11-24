@@ -92,7 +92,6 @@ interface HistoryCellProps {
   readonly citizen: Pick<Citizen, "id">;
 }
 
-/** A value of the citizen with the button that opens its history */
 const HistoryCell = ({ value, type, citizen }: HistoryCellProps) => {
   return (
     <td className="flex min-w-0 items-center justify-between gap-2 pr-3">

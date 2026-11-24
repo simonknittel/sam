@@ -28,13 +28,10 @@ export type AssignEventPositionInput = z.infer<
 >;
 
 /**
- * The citizen of an assignment: an active participant of the event or an
- * applicant for the position, like the choices of the lineup page. A
- * participation from Discord without a citizen matches the Discord id of
- * the citizen (see `buildParticipantCitizenWhere()`).
- *
- * @throws ValidationError when the citizen does not exist or is deleted
- * @throws ConflictError when the citizen neither participates nor applied
+ * An active participant of the event or an applicant for the position, like
+ * the choices of the lineup page. A participation from Discord without a
+ * citizen matches the Discord id of the citizen (see
+ * `buildParticipantCitizenWhere()`).
  */
 const requireAssignableCitizen = async (
   context: ApplicationContext,
@@ -84,9 +81,8 @@ interface AssignmentChange {
 }
 
 /**
- * The new citizen gets the position, the previous citizen loses it. The
- * actor gets no notification about the own change. The router sends them
- * only while the participants see the lineup.
+ * The router sends the notifications only while the participants see the
+ * lineup
  */
 const buildAssignmentNotifications = (
   actor: Actor,
@@ -117,12 +113,6 @@ const buildAssignmentNotifications = (
   return notifications;
 };
 
-/**
- * Assigns a citizen to a position of the lineup of an event that the actor
- * manages, or removes the assigned citizen. The citizen must participate in
- * the event or apply for the position. The new and the previous citizen get
- * a notification.
- */
 export const assignEventPosition = (
   context: ApplicationContext,
   actor: Actor,
@@ -164,9 +154,8 @@ export const assignEventPosition = (
         ]);
     } else {
       /**
-       * The lock keeps a switch of the participation to false from clearing
-       * the assignments before this one. A removal needs no lock: the
-       * switch removes the citizen too.
+       * The same lock as in `applyForEventPosition()`. A removal needs no
+       * lock: the switch removes the citizen too.
        */
       await context.prisma.$transaction(async (transaction) => {
         await lockParticipationEnabledEvent(transaction, event.id);

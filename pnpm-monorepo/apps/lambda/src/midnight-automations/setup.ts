@@ -44,8 +44,7 @@ const setup = async () => {
     );
   }
 
-  // Also mutated into process.env because the database package reads its
-  // configuration from there.
+  // The database package reads its configuration from `process.env`
   process.env = {
     ...process.env,
     ...parameters,
@@ -55,8 +54,4 @@ const setup = async () => {
   return environmentSchema.parse(process.env);
 };
 
-/**
- * Validated environment. Importing it guarantees the SSM parameters were
- * fetched and validated first (top-level await).
- */
 export const env = await setup();

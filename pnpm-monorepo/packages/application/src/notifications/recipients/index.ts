@@ -1,9 +1,3 @@
-/**
- * The recipient rules of the notification router: for each notification
- * type, the citizens who get it. No actor and no permission check of a
- * caller: the rule is the check of the receivers for its feature.
- * `storeOnSiteNotifications()` adds the clearance.
- */
 export {
   findEventApplicationRecipients,
   type EventApplicationRecipients,

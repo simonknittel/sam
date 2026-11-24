@@ -84,7 +84,6 @@ enum VariantStatus {
   NOT_FLIGHT_READY
 }
 
-/// Where the owner got the ship
 enum ShipAcquisitionSource {
   /// The Star Citizen store, for real money
   STORE
@@ -98,7 +97,7 @@ model Ship {
   variantId         String
   variant           Variant                @relation(fields: [variantId], references: [id], onDelete: Cascade)
   name              String?
-  /// NULL for the ships from before the app recorded the acquisition source
+  /// NULL when it is unknown. The app requires it for a new ship.
   acquisitionSource ShipAcquisitionSource?
   note              String?
 

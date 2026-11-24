@@ -18,8 +18,8 @@ interface Props {
 }
 
 /**
- * What the Log Analyzer reads, also while the dialogs are closed. The lines
- * are items of the toolbar, thus the short ones stay next to the buttons.
+ * The lines are items of the toolbar, thus the short ones stay next to the
+ * buttons.
  */
 export const ReadStatus = ({
   logSelection,

@@ -25,10 +25,8 @@ interface Props {
 }
 
 /**
- * The lineup blueprint of a template — the event lineup minus everything
- * about people: no sign-ups, no assignments, no publishing. Read-only for
- * viewers who may only use the template; they still need to see what they
- * would be creating.
+ * Read-only for viewers who may only use the template; they still need to see
+ * what they would be creating.
  */
 export const EventTemplateLineupTab = ({
   className,

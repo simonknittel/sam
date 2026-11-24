@@ -77,51 +77,31 @@ export const createEventInputSchema = z.object({
 
 export type CreateEventInput = z.infer<typeof createEventInputSchema>;
 
-/**
- * The parts of a new event that only the app gives, not fields of the input
- * schema: the MCP server has no uploads, no templates and no Discord
- */
 export interface CreateEventOptions {
-  /** An image that the actor uploaded. The use case checks it. */
   readonly coverImageId?: string;
-  /**
-   * The template that the form was prefilled from. The new event gets a copy
-   * of its lineup and its briefing.
-   */
+  /** The new event gets a copy of its lineup and its briefing */
   readonly template?: {
     readonly templateId: string;
     /**
-     * True when the new event gets a copy of the cover image of the
-     * template. The template's cover is not an upload of the actor, thus it
-     * cannot come as `coverImageId`.
+     * The template's cover is not an upload of the actor, thus it cannot come
+     * as `coverImageId`
      */
     readonly copiesCover: boolean;
   };
-  /**
-   * Publishes the new event to Discord after the creation. A failed
-   * publication does not undo the creation.
-   */
   readonly discordPublication?: EventDiscordPublishRequest;
 }
 
 export interface CreateEventOutput {
-  /** The event after the write, like `getEvent()` */
   readonly event: GetEventOutput;
-  /**
-   * Only with the option `discordPublication`. The MCP tools parse the
-   * output with a strict schema, thus the key must not exist without the
-   * option.
-   */
   readonly discord?: DiscordSyncResult;
 }
 
 /**
- * The template and everything that the new event copies from it. A
- * template whose root page was trashed has pages but no briefing to copy.
+ * A template without a root page has no briefing to copy.
  *
  * @throws NotFoundError when the actor cannot read the template or it is
- * deleted: it can be deleted or unshared after the form loaded, and the id
- * is client input
+ * deleted: it can be deleted or unshared after the form loaded, and the id is
+ * client input
  */
 const loadTemplateCopySource = async (
   context: ApplicationContext,
@@ -196,10 +176,6 @@ const publishCreatedEvent = async (
   }
 };
 
-/**
- * Creates an app event with its briefing root page (or the briefing of the
- * template) and notifies about it. The creator becomes its organizer.
- */
 export const createEvent = (
   context: ApplicationContext,
   actor: Actor,
@@ -231,9 +207,6 @@ export const createEvent = (
       ? await loadTemplateCopySource(context, actor, template)
       : null;
 
-    /**
-     * Create the event with its briefing and activity entry
-     */
     const createdEvent = await context.prisma.$transaction(
       async (transaction) => {
         /**
@@ -342,10 +315,6 @@ export const createEvent = (
       },
     ]);
 
-    /**
-     * Outside the transaction: a Discord problem never undoes the created
-     * event
-     */
     const discord = discordPublication
       ? await publishCreatedEvent(
           context,

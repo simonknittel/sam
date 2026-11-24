@@ -2,11 +2,9 @@ import type { ApplicationContext } from "../context.js";
 import { DEVELOPMENT_LOGIN_USER_WHERE } from "./developmentLoginUser.js";
 
 /**
- * The development login has no Discord profile. It stands in for the
- * two-factor authentication of Discord, thus the admin passes the gate of
- * the two-factor authentication (see `isMissingTwoFactorAuthentication()`).
- * The next Discord login writes the real status again. The host checks that
- * it runs in development.
+ * The development login has no Discord profile, thus it sets the status that
+ * the gate of the two-factor authentication needs. The next Discord login
+ * writes the real status again. No permission check, see the README.
  */
 export const enableDevelopmentLoginTwoFactor = async (
   context: ApplicationContext,

@@ -27,10 +27,7 @@ const OnboardingPopover = () => {
     isSmallViewport && flyout.isSlideInComplete,
   );
 
-  /**
-   * The flyout can close below the open popover (for example through the
-   * back navigation of the browser). Then the popover closes with it.
-   */
+  /** See `Create` */
   if (!flyout.isVisible && isOpen) setIsOpen(false);
 
   const mustShowFlyout =

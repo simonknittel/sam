@@ -1,10 +1,10 @@
 import { AuditEventType } from "./AuditEventTypes.js";
 
 /**
- * The app writes these types per page view, per opened notification or per
- * automation run. They would hide all other events. The system log and the
- * MCP tool show them only with an explicit type filter, with the volume
- * setting "all" or with `include_high_volume`.
+ * These types are frequent, for example one per login, per page view, per
+ * opened notification or per upload. They would hide all other events. The
+ * system log and the MCP tool show them only with an explicit type filter,
+ * with the volume setting "all" or with `include_high_volume`.
  */
 export const HIGH_VOLUME_AUDIT_EVENT_TYPES: ReadonlySet<AuditEventType> =
   new Set([

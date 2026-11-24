@@ -3,9 +3,7 @@ import { EventVisibility } from "@sam-monorepo/database/client";
 import * as z from "zod";
 
 /**
- * The details of the create and the settings forms in the input of
- * `createEvent()`, `updateEvent()` and `updateEventTemplate()`. An empty
- * description removes it. The times are the wall times of the
+ * An empty description removes it. The times are the wall times of the
  * `datetime-local` fields: the use cases read them in the time zone of the
  * organization.
  *

@@ -1,7 +1,3 @@
-/**
- * The use cases of the wiki, and the wiki scopes and helpers that the app
- * shares with them
- */
 export {
   announceEventBriefingUpdate,
   announceEventBriefingUpdateInputSchema,

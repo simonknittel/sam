@@ -1,11 +1,10 @@
 import { expect, test } from "../fixtures/test";
 
 /**
- * The counterpart of this endpoint — an iframe `src` carrying a token —
- * cannot be asserted yet: no external app opts into embed authentication,
- * and none of the three Google-hosted ones may (see
- * docs/embedded-app-authentication.md). That assertion belongs to the
- * change that onboards the first consumer.
+ * The counterpart of this endpoint — an iframe `src` carrying a token — is
+ * asserted in statistics.spec.ts. It cannot be asserted for an external app
+ * yet: none of them opts into embed authentication (see
+ * docs/embedded-app-authentication.md).
  */
 test("JWKS is publicly readable without a session", async ({ request }) => {
   const response = await request.get("/.well-known/jwks.json");

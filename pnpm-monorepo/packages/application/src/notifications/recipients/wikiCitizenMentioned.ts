@@ -23,11 +23,8 @@ export interface WikiCitizenMentionedRecipients {
 }
 
 /**
- * The mentioned citizen of one pending mention link, when the citizen can
- * read the page now. The wiki mention automation did the same read check
- * (`createWikiMentionReadGate()`), but the page and the roles can change
- * before the delivery. Null when the mention was removed in the meantime or
- * its page is in the trash.
+ * The wiki mention automation did the same read check, but the page and the
+ * roles can change before the delivery
  */
 export const findWikiCitizenMentionedRecipient = async (
   context: ApplicationContext,

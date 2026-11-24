@@ -63,10 +63,6 @@ interface FormProps {
 }
 
 const TransferForm = ({ templateId, currentOwnerId, onSuccess }: FormProps) => {
-  /**
-   * The errors show as toasts: the refresh after a conflict, for example a
-   * template that a different user deleted, can remove this form.
-   */
   const { formAction } = useAction(transferEventTemplateOwnership, {
     onSuccess,
   });

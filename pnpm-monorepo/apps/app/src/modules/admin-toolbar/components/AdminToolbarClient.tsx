@@ -13,7 +13,6 @@ import { AdminToolbarSection } from "./AdminToolbarSection";
 import { AdminToolbarShell } from "./AdminToolbarShell";
 
 interface Props {
-  /** Only set while the admin assumes a different user */
   readonly assumedUserLabel: string | null;
   readonly adminModeActive: boolean;
   readonly seasonalPresets: readonly SeasonalDatePreset[];
@@ -21,10 +20,7 @@ interface Props {
   readonly greetingBannerPreview: GreetingBannerPreview | null;
 }
 
-/**
- * The client part of the admin toolbar. Load it only through
- * AdminToolbarLoader. A new tool is one more section here.
- */
+/** Load it only through AdminToolbarLoader */
 export const AdminToolbarClient = ({
   assumedUserLabel,
   adminModeActive,

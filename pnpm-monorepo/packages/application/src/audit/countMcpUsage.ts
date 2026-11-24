@@ -17,11 +17,8 @@ export interface CountMcpUsageOutput {
 }
 
 /**
- * Saves the number of the audit events through the MCP server of the day
- * that just ended: the day before the time of the run. The day starts and
- * ends at midnight in the time zone of the organization. The migration
- * `20261025120000_daily_mcp_usage_count` counts the days before the first run
- * with the same rule.
+ * Counts the day that just ended: the day before the run in the time zone of
+ * the organization
  */
 export const countMcpUsage = (
   context: ApplicationContext,
@@ -47,11 +44,6 @@ export const countMcpUsage = (
       },
     });
 
-    /**
-     * A run that repeats later in the night (for example after an error in a
-     * later job) keeps the count of the first run, see
-     * `DailyMcpUsageCount_day_key`.
-     */
     const created = await context.prisma.dailyMcpUsageCount.createMany({
       data: [{ day: countedDay, count }],
       skipDuplicates: true,

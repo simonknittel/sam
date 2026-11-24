@@ -27,13 +27,6 @@ export interface ArchiveOnSiteNotificationOutput {
   readonly new_item_read: boolean;
 }
 
-/**
- * Moves an own notification from the inbox to the archive and marks it as
- * read. A notification which announces a new item also marks its item as
- * read.
- *
- * @throws ForbiddenError for a user without a citizen
- */
 export const archiveOnSiteNotification = async (
   context: ApplicationContext,
   actor: Actor,

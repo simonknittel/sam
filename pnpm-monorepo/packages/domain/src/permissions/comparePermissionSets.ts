@@ -22,45 +22,36 @@ export function comparePermissionSets(
 
   if (
     givenPermissionSetsForResource.some((givenPermissionSet) => {
-      // Check if we have the required operation or manage for this resource
       if (
         requiredPermissionSet.operation === givenPermissionSet.operation ||
         givenPermissionSet.operation === "manage"
       ) {
-        // Check if any attributes are required and we have some
         if (requiredPermissionSet.attributes && givenPermissionSet.attributes) {
           const result = hasMatchingAttributes(
             requiredPermissionSet.attributes,
             givenPermissionSet.attributes,
           );
-          // Check if the required attributes match the given ones
           if (!result) return false;
         } else if (
           !requiredPermissionSet.attributes &&
           givenPermissionSet.attributes
         ) {
-          // When no attributes for this resource and operation are required, but we have some, it means that our given permissions are too specific. Therefore, we should return false.
           return false;
         } else if (
           requiredPermissionSet.attributes &&
           !givenPermissionSet.attributes
         ) {
-          // When attributes are required, but we don't have any, we should return false
           return false;
         }
 
-        // If we have the required operation and attributes, we can return true
         return true;
       }
 
-      // If we don't have the required operation, we should return false
       return false;
     })
   )
-    // Some of our given permissions match the required ones
     return true;
 
-  // None of our given permissions match the required ones
   return false;
 }
 

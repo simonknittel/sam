@@ -2,11 +2,7 @@ import { getSkillArchiveFileName } from "@/modules/mcp-settings/utils/agentFileU
 import { archiveResponse } from "@/modules/mcp-settings/utils/archiveResponse";
 import { createSkillArchive, listSkillNames } from "@sam-monorepo/mcp";
 
-/**
- * The archive of one skill. Public and static, see
- * `docs/mcp-server.md#files-for-ai-agents`. A different file name gives a
- * 404.
- */
+/** Public and static, see `docs/mcp-server.md#files-for-ai-agents` */
 export const dynamic = "force-static";
 export const dynamicParams = false;
 

@@ -14,7 +14,7 @@ import { WikiTableControls } from "./WikiTableControls";
  * Everything a click can focus; the hover wash uses the same list.
  * closest() picks the deepest match, so container blocks (lists, tables,
  * grids, …) only take the focus on their own chrome — their children keep
- * their more specific menus.
+ * their more specific menus. For a new node, see `getWikiEditorExtensions()`.
  */
 const TARGET_SELECTOR = [
   "img",
@@ -46,7 +46,6 @@ const TARGET_SELECTOR = [
 
 interface Props {
   readonly editor: Editor | null;
-  /** Opens the link dialog (selection menu's link button) */
   readonly onRequestLink: () => void;
 }
 
@@ -73,7 +72,6 @@ export const WikiEditorOverlays = ({ editor, onRequestLink }: Props) => {
   };
 
   return (
-    /* data-wiki-editor-chrome: clicks here keep the focused block */
     <div
       ref={overlayRef}
       data-wiki-editor-chrome

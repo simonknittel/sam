@@ -11,17 +11,11 @@ import { ConsentDecisionForm } from "./ConsentDecisionForm";
 import { ConsentToolsButton } from "./ConsentToolsButton";
 
 interface Props {
-  /** The validated parameters of the authorization request */
   readonly parameters: Readonly<Record<string, string>>;
-  /** The name that the client gives itself */
   readonly clientName: string;
   readonly toolGroups: readonly ToolCatalogGroup[];
 }
 
-/**
- * The settings of the new grant and the two decisions. The approval saves
- * the settings with the grant.
- */
 export const ConsentDecision = ({
   parameters,
   clientName,

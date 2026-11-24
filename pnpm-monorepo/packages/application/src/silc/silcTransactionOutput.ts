@@ -7,7 +7,6 @@ export const SILC_TRANSACTION_OUTPUT_SELECT = {
   description: true,
 } as const satisfies Prisma.SilcTransactionSelect;
 
-/** A SILC transaction after a write */
 export interface SilcTransactionOutput {
   readonly id: string;
   readonly receiver_id: string;

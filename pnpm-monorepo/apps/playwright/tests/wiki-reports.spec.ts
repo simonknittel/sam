@@ -59,9 +59,6 @@ test("a reader reports a page and its attachment, an admin resolves both", async
   await signIn(reader.user);
   await page.goto(`/app/wiki/${wikiPage.id}/${wikiPage.slug}`);
 
-  /**
-   * The page itself
-   */
   const pageReportDialog = modal(page, "Seite melden");
   await clickUntilVisible(
     page.getByRole("button", { name: "Seite melden" }),
@@ -71,9 +68,6 @@ test("a reader reports a page and its attachment, an admin resolves both", async
   await pageReportDialog.getByRole("button", { name: "Melden" }).click();
   await expect(pageReportDialog).toHaveCount(0);
 
-  /**
-   * … and its attachment, which carries its own report button
-   */
   const attachmentReportDialog = modal(page, "Dateianhang melden");
   await clickUntilVisible(
     page.getByRole("button", { name: "Dateianhang melden" }),
@@ -103,9 +97,6 @@ test("a reader reports a page and its attachment, an admin resolves both", async
     resolvedAt: null,
   });
 
-  /**
-   * The moderation queue lists both and closes them one by one
-   */
   await switchUser(admin.user);
   await page.goto("/app/wiki/reports");
 
@@ -139,7 +130,6 @@ test("a reader reports a page and its attachment, an admin resolves both", async
     expect(report.resolutionComment).toBe(`Erledigt: ${report.message}`);
   }
 
-  // The open queue is empty, the resolved filter still finds them
   await page.goto("/app/wiki/reports");
   await expect(page.getByText("Keine Meldungen vorhanden")).toBeVisible();
   await page.goto("/app/wiki/reports?status=resolved");
@@ -185,16 +175,11 @@ test("a report that a different manager resolved first shows the resolution", as
   /** Before hydration, the form would submit with a full page load */
   await waitForAppShellHydration(page);
 
-  /** A different manager resolves the report in the meantime */
   await prisma.wikiPageReport.update({
     where: { id: report.id },
     data: { resolvedAt: new Date(), resolvedById: otherAdmin.entity.id },
   });
 
-  /**
-   * The error refreshes the page: it shows the resolution of the other
-   * manager, without a navigation. The error stays visible as a toast.
-   */
   await page.getByRole("button", { name: "Als bearbeitet markieren" }).click();
   await expect(
     page.getByText("Diese Meldung wurde bereits bearbeitet."),

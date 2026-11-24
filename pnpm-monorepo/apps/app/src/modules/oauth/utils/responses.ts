@@ -12,17 +12,14 @@ const METADATA_CACHE_MAX_AGE_IN_SECONDS = 5 * 60;
  */
 export const CORS_HEADERS = { "Access-Control-Allow-Origin": "*" };
 
-/** A metadata document (RFC 8414, RFC 9728) for the CDN and the clients */
 export const metadataResponse = (document: object) =>
   Response.json(document, {
     headers: {
       ...CORS_HEADERS,
-      // s-maxage lets the CDN answer repeat fetches without a function invocation
       "Cache-Control": `public, max-age=${METADATA_CACHE_MAX_AGE_IN_SECONDS}, s-maxage=${METADATA_CACHE_MAX_AGE_IN_SECONDS}`,
     },
   });
 
-/** The answer to a CORS preflight request */
 export const corsPreflightResponse = (
   allowedMethods: string,
   allowedHeaders: string,
@@ -36,10 +33,7 @@ export const corsPreflightResponse = (
     },
   });
 
-/**
- * A response of the token or the revocation endpoint. Tokens must not go
- * into a cache (RFC 6749 section 5.1).
- */
+/** Tokens must not go into a cache (RFC 6749 section 5.1) */
 export const tokenEndpointResponse = (body: object | null, status = 200) => {
   const init = {
     status,

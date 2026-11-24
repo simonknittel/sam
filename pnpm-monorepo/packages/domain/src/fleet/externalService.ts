@@ -1,6 +1,6 @@
 /**
- * The external websites that a ship variant can link to. The database stores
- * the value in `serviceName` of the external link of a variant.
+ * The database stores the value in `serviceName` of the external link of a
+ * variant, thus a value must never change.
  */
 export enum ExternalService {
   SPVIEWER = "SPVIEWER",

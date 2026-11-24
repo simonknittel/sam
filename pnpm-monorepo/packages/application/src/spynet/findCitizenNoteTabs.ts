@@ -7,7 +7,6 @@ export interface CitizenNoteTabsInput {
   readonly citizenId: string;
 }
 
-/** The actor can see that the note exists, but not its content */
 export interface RedactedCitizenNoteRow {
   readonly id: string;
   readonly redacted: true;
@@ -15,7 +14,6 @@ export interface RedactedCitizenNoteRow {
 
 export type CitizenNoteTabEntry = CitizenNoteRow | RedactedCitizenNoteRow;
 
-/** One note type with the notes of the citizen, from the newest */
 export interface CitizenNoteTab {
   readonly id: string;
   readonly name: string;
@@ -23,10 +21,8 @@ export interface CitizenNoteTab {
 }
 
 /**
- * The tabs of the notes page of a citizen: each note type for which the
- * actor can read notes, see notes redacted or create notes. Each note shows
- * in the tab of its note type, thus a note of a deleted note type does not
- * show. Requires `citizen;read`.
+ * Each note shows in the tab of its note type, thus a note of a deleted note
+ * type does not show
  */
 export const findCitizenNoteTabs = async (
   context: Pick<ApplicationContext, "prisma">,

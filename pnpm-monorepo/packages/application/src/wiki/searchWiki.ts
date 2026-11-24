@@ -26,21 +26,14 @@ export interface SearchWikiOutput {
   readonly pages: {
     readonly id: string;
     readonly title: string;
-    /** The route of the page, relative to the base URL of the app */
     readonly path: string;
     /** Plain text around the matches, with the matches in `**` */
     readonly snippet: string;
-    /** The names of the tags of the page that match the query */
     readonly matched_tags: string[];
   }[];
-  /** The tags of the scope that match the query */
   readonly tags: { readonly id: string; readonly name: string }[];
 }
 
-/**
- * Full-text search over the pages that the actor can read and over the tags
- * of the global wiki or of the briefing of an event
- */
 export const searchWiki = (
   context: ApplicationContext,
   actor: Actor,

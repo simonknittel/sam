@@ -28,7 +28,6 @@ export const updateEventManagersTool = defineTool({
     idempotentHint: false,
     openWorldHint: false,
   },
-  // The two use cases have the same input
   inputSchema: addEventManagersInputSchema.extend({
     action: z.enum(EventManagersAction),
     citizen_ids: addEventManagersInputSchema.shape.citizen_ids.describe(

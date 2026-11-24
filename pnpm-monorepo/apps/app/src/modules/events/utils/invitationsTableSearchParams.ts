@@ -21,10 +21,7 @@ export enum InvitationsTableSort {
 export const INVITATIONS_TABLE_DEFAULT_SORT =
   InvitationsTableSort.InvitedAtDescending;
 
-/**
- * The search params of the sidebar of the invitations. They differ from the
- * params of the participants table on the same page.
- */
+/** They differ from the params of the participants table on the same page */
 export const INVITATIONS_TABLE_STATUS_PARAM = "invitation_status";
 export const INVITATIONS_TABLE_ROLE_PARAM = "invitation_role";
 export const INVITATIONS_TABLE_SORT_PARAM = "invitation_sort";

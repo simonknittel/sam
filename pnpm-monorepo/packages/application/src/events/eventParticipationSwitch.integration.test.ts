@@ -41,7 +41,6 @@ const createActorOf = (citizen: { id: string; handle: string | null }) =>
     permissionStrings: MEMBER_PERMISSION_STRINGS,
   });
 
-/** An app event of the organizer that starts in one hour */
 const createAppEvent = (organizerId: string, participationEnabled = true) =>
   prisma.event.create({
     data: {
@@ -115,7 +114,6 @@ test("the switch to false cancels the sign-ups, clears the lineup and notifies e
         cancelledAt: TEST_NOW,
         cancelledById: organizer!.id,
       },
-      // An earlier cancellation stays as it was
       {
         citizenId: formerParticipant!.id,
         cancelledAt: cancelledBefore,
@@ -124,7 +122,6 @@ test("the switch to false cancels the sign-ups, clears the lineup and notifies e
     ]),
   );
 
-  // The positions stay, without assignments and applications
   expect(
     await prisma.eventPosition.findMany({
       where: { eventId: event.id },
@@ -180,7 +177,6 @@ test("the switch to false cancels the sign-ups, clears the lineup and notifies e
     ),
   );
 
-  // The "Event beginnt in 15 Minuten" reminder reaches nobody now
   expect(
     await findEventParticipantRecipients(context, { eventId: event.id }),
   ).toBeNull();
@@ -192,7 +188,6 @@ test("the switch to false cancels the sign-ups, clears the lineup and notifies e
     ),
   ).rejects.toThrow(PARTICIPATION_DISABLED);
 
-  // The switch to true restores nothing and notifies nobody
   const { context: secondContext, notifications: secondNotifications } =
     createTestApplicationContext();
   const enabledOutput = await updateEvent(
@@ -237,7 +232,6 @@ test("while the participation is off, nobody signs up, is added, applies or is a
       citizen_id: member!.id,
     }),
   ).rejects.toThrow(PARTICIPATION_DISABLED);
-  // The lineup is hidden, thus its switch keeps the stored value
   await expect(
     updateEvent(context, organizerActor, {
       event_id: event.id,

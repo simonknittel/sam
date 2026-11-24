@@ -1,7 +1,6 @@
 import { NumberInput } from "@/modules/common/components/form/NumberInput";
 
 interface Props {
-  /** The current prices of the variant, for the update */
   readonly storePriceUsdCents?: number | null;
   readonly inGamePriceAuec?: number | null;
   readonly loading?: boolean;
@@ -18,8 +17,8 @@ const PriceFieldSkeleton = ({ label }: { readonly label: string }) => (
 );
 
 /**
- * The store price in USD with cents and the in-game price in aUEC.
- * `parseVariantFieldsFormData()` converts them; an empty field is no price.
+ * `parseVariantFieldsFormData()` converts the fields; an empty field is no
+ * price
  */
 export const VariantPriceFields = ({
   storePriceUsdCents,

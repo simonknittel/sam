@@ -53,10 +53,6 @@ const applyMigrations = async (databaseUrl: string) => {
     throw new Error(`prisma migrate deploy exited with code ${code}`);
 };
 
-/**
- * Starts one PostgreSQL container for the integration tests and applies all
- * migrations to it.
- */
 export default async function setup(project: TestProject) {
   const container = await new PostgreSqlContainer(POSTGRES_IMAGE)
     .withCommand(POSTGRES_COMMAND)

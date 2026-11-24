@@ -18,7 +18,6 @@ interface EntryDateProps {
   readonly date: Date;
 }
 
-/** The age of an entry of the last 24 hours, the date of an older one */
 const EntryDate = ({ date }: EntryDateProps) => {
   const now = useEntryClock();
 
@@ -44,10 +43,6 @@ interface Props {
 export const Entry = memo(function Entry({ entry }: Props) {
   const { title, icon: Icon } = PATTERNS[entry.type];
 
-  /**
-   * An entry is either one the user received or one they sent, never both.
-   * One which is neither stays on this computer.
-   */
   const sharingLabel = entry.isShared
     ? "Geteilt"
     : entry.isUploaded

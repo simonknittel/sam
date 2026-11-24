@@ -16,10 +16,6 @@ export default async function Page({
 }: PageProps<"/app/events/templates">) {
   await requireAuthenticationPage("/app/events/templates");
 
-  /**
-   * The section is reachable for everyone who may create events, manages
-   * them, or has at least one template shared with them.
-   */
   if (!(await hasEventTemplatesAccess())) forbidden();
 
   return (

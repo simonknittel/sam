@@ -11,13 +11,10 @@ import type { WikiSharedContextPage } from "./wikiContext.js";
 import type { WikiScope } from "./wikiScope.js";
 
 interface WikiSearchScopeFilters {
-  /** The part of the WHERE clause that limits the WikiTag rows to the scope */
   readonly tagsFilter: Prisma.Sql;
-  /** The part of the WHERE clause that limits the WikiPage rows to the scope */
   readonly pagesFilter: Prisma.Sql;
 }
 
-/** The global wiki, without the briefings of the events and the templates */
 const GLOBAL_WIKI_SEARCH_FILTERS: WikiSearchScopeFilters = {
   tagsFilter: Prisma.sql`"eventId" IS NULL AND "templateId" IS NULL`,
   /**
@@ -44,7 +41,6 @@ const buildContainerColumnFilter = (container: EventContainer): Prisma.Sql => {
   }
 };
 
-/** The briefing of one event or of one event template */
 const buildContainerWikiSearchFilters = (
   container: EventContainer,
 ): WikiSearchScopeFilters => {
@@ -57,13 +53,11 @@ const buildContainerWikiSearchFilters = (
 };
 
 /**
- * The subtree of the global wiki that a fleet variant embeds. The limit to
- * the subtree is part of the SQL (before the limit of the candidates), thus
- * the global matches do not push the matches of the subtree out of the
- * result. The additional `AND` does not change the indexed tsvector
- * expression. The tag results are only the tags that the pages of the
- * subtree use: they link to the global wiki, whose tag pages show all
- * readable pages.
+ * The limit to the subtree is part of the SQL (before the limit of the
+ * candidates), thus the global matches do not push the matches of the subtree
+ * out of the result. The additional `AND` does not change the indexed tsvector
+ * expression. The tag results are only the tags that the pages of the subtree
+ * use: they link to the global wiki, whose tag pages show all readable pages.
  *
  * @param subtreePageIds Never empty: the subtree always contains the root
  * page. Each id is one parameter of the SQL statement.
@@ -75,7 +69,6 @@ const buildVariantWikiSearchFilters = (
   pagesFilter: Prisma.sql`"namespace" = 'WIKI' AND "eventId" IS NULL AND "templateId" IS NULL AND "id" IN (${Prisma.join(subtreePageIds)})`,
 });
 
-/** The filters that limit the search to the pages and the tags of the scope */
 const toWikiSearchFilters = (scope: WikiScope): WikiSearchScopeFilters => {
   switch (scope.kind) {
     case WikiScopeKind.Wiki:
@@ -113,12 +106,10 @@ const buildTsquery = (query: string): Prisma.Sql => {
   return Prisma.sql`(websearch_to_tsquery('german', ${head}) && ${prefix})`;
 };
 
-/** The search returns at most this number of tags */
 const MAXIMUM_WIKI_SEARCH_TAGS = 5;
 
 export interface WikiSearchQueryOptions {
   readonly query: string;
-  /** The search returns only the pages of the scope that the actor can read */
   readonly scope: WikiScope;
   readonly pageLimit: number;
 }
@@ -133,7 +124,6 @@ export interface WikiSearchQueryResult {
      * `WIKI_SEARCH_MARK_START` and `WIKI_SEARCH_MARK_END`
      */
     readonly snippet: string;
-    /** The names of the tags of the page that match the query */
     readonly matchedTags: string[];
   }[];
 }

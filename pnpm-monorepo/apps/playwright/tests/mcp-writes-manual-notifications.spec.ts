@@ -12,7 +12,6 @@ import {
 } from "../fixtures/mcp-client";
 import { expect, test } from "../fixtures/test";
 
-/** The citizen picker of the form needs citizen;read, thus the tool too */
 const SENDER_PERMISSIONS = ["manualNotification;manage", "citizen;read"];
 
 test.describe("the manual notification write tool of the MCP server", () => {
@@ -24,7 +23,6 @@ test.describe("the manual notification write tool of the MCP server", () => {
     const escort = await createRole(prisma, { name: "Geleitschutz" });
     const sender = await createMcpCitizen(prisma, {
       handle: "mcp-absenderin",
-      // The role picker of the form offers only the roles that the user can see
       permissionStrings: [
         ...SENDER_PERMISSIONS,
         `otherRole;read;roleId=${escort.id}`,
@@ -112,7 +110,6 @@ test.describe("the manual notification write tool of the MCP server", () => {
       handle: "mcp-absenderin",
       permissionStrings: SENDER_PERMISSIONS,
     });
-    // Without manualNotification;manage
     const reader = await createMcpCitizen(prisma, {
       handle: "mcp-leserin",
       permissionStrings: ["citizen;read", "otherRole;read;roleId=*"],

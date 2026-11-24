@@ -6,9 +6,8 @@ export interface OwnSeasonalThemeSetting {
 }
 
 /**
- * The opt-out rows of the actor. A row means the citizen switched the event
- * off; an event without a row is switched on. Null for an actor without a
- * citizen: such an actor has no rows and cannot create any.
+ * Null for an actor without a citizen: such an actor has no rows and cannot
+ * create any
  */
 export const findOwnSeasonalThemeSettings = async (
   context: ApplicationContext,

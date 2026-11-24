@@ -7,6 +7,5 @@
  */
 const IN_GAME_YEAR_OFFSET = 930;
 
-/** The in-game year of a calendar year */
 export const getInGameYear = (calendarYear: number) =>
   calendarYear + IN_GAME_YEAR_OFFSET;

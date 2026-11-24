@@ -9,9 +9,8 @@ import { cookies } from "next/headers";
 import { cache } from "react";
 
 /**
- * Resolves the session behind the current request to its id. Going through
- * the id keeps the session token itself out of everything downstream, which
- * must never be rendered or compared against.
+ * Everything downstream uses the id: the session token must never be rendered
+ * or compared against.
  */
 export const getCurrentSessionId = cache(
   withTrace("getCurrentSessionId", async () => {

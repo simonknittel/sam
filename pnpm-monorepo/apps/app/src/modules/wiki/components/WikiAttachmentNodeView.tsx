@@ -29,12 +29,6 @@ const WikiAttachmentNodeView = ({ node, extension }: NodeViewProps) => {
   );
 };
 
-/**
- * The shared package's attachment node plus a React node view adding the
- * report button. Same name, attributes and schema — only the in-editor
- * rendering differs. Used for the read-only live collab view; while
- * editing, the plain node keeps its native drag/selection behavior.
- */
 const WikiAttachmentWithReportButton = WikiAttachment.extend<{
   pageId: string;
 }>({
@@ -47,10 +41,6 @@ const WikiAttachmentWithReportButton = WikiAttachment.extend<{
   },
 });
 
-/**
- * Swaps the plain attachment node in an extension list for the
- * report-button variant, keeping its position in the list.
- */
 export const withWikiAttachmentReportButton = (
   extensions: AnyExtension[],
   pageId: string,

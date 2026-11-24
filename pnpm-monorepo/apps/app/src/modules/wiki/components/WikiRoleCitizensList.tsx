@@ -10,16 +10,13 @@ interface Props {
   readonly roleId: string | null;
   readonly citizens: readonly WikiCitizen[];
   readonly isLoading?: boolean;
-  /** The node's width/position styles in the static render (wikiBlockLayoutStyle) */
   readonly style?: CSSProperties;
 }
 
 /**
- * The rendered role member list ("Rollenmitglieder"): the role badge above
- * the citizens it is assigned to. Shared between the static render for
- * readers and the editor node view so both look the same. The citizens are
- * resolved and permission-filtered server-side — different viewers may see
- * different lists.
+ * Shared between the static render for readers and the editor node view so
+ * both look the same. The citizens are resolved and permission-filtered
+ * server-side — different viewers may see different lists.
  */
 export const WikiRoleCitizensList = ({
   roleId,

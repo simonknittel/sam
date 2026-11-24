@@ -2,7 +2,6 @@ import { createId } from "@paralleldrive/cuid2";
 import { EmailTemplate, type ApplicationContext } from "../context.js";
 import { withSpan } from "../withSpan.js";
 
-/** The link in the email is valid for one day */
 const EMAIL_CONFIRMATION_TOKEN_LIFETIME_MILLISECONDS = 24 * 60 * 60 * 1000;
 
 export interface SendEmailConfirmationInput {
@@ -17,10 +16,8 @@ export interface SendEmailConfirmationOutput {
 }
 
 /**
- * Saves a new confirmation token and requests the email with the link. It
- * needs no actor: the sign-in also calls it for a user that it just
- * created, before the first session. It writes no audit event and never
- * throws, thus it cannot stop the sign-in. The token never goes into a log.
+ * Never throws, thus it cannot stop the sign-in. The token never goes into a
+ * log. No permission check, see the README.
  */
 export const sendEmailConfirmation = (
   context: ApplicationContext,

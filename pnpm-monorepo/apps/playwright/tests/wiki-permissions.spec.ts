@@ -33,15 +33,10 @@ import {
 import { expect, test } from "../fixtures/test";
 
 /**
- * The read-audience badge in the metadata line of the page header. The
- * trailing space keeps the caption span inside the badge out of the match.
+ * The trailing space keeps the caption span inside the badge out of the match.
  */
 const audienceBadge = (page: Page) => page.getByText(/^Sichtbar für: /);
 
-/**
- * The badge as its clickable form. A plain reader gets the text above but
- * never this.
- */
 const audienceBadgeButton = (page: Page) =>
   page.getByRole("button", { name: /^Sichtbar für: / });
 
@@ -73,7 +68,6 @@ test("a RESTRICTED page is readable for its role members and invisible to the re
   await page.goto(`/app/wiki/${restrictedPage.id}/${restrictedPage.slug}`);
   await expect(page.getByText("Streng vertraulicher Inhalt.")).toBeVisible();
 
-  // For everyone else the page 404s and stays out of the sidebar tree
   await switchUser(outsider.user);
 
   await page.goto(`/app/wiki/${restrictedPage.id}/${restrictedPage.slug}`);
@@ -196,7 +190,6 @@ test("the header badge names who may read the page", async ({
     visibility: WikiPageVisibility.RESTRICTED,
     roleAccess: [{ roleId: readerRole.id, type: WikiPageAccessType.READ }],
   });
-  /** Editing implies reading, so an editor role alone is an audience too */
   const editablePage = await createWikiPage(prisma, {
     title: "Einsatzjournal",
     visibility: WikiPageVisibility.RESTRICTED,
@@ -252,7 +245,6 @@ test("only page managers open the permissions from the badge", async ({
   });
   const href = `/app/wiki/${wikiPage.id}/${wikiPage.slug}`;
 
-  // A reader sees how wide the audience is, but cannot change it
   await signIn(reader.user);
   await page.goto(href);
   await expect(audienceBadge(page)).toHaveText(
@@ -292,7 +284,6 @@ test("a role reading only through wiki;manage is no audience of its own", async 
     "Sichtbar für: nur Besitzer & Manager",
   );
 
-  // The very same role is an audience once it reads the page in its own right
   await prisma.wikiPageRoleAccess.create({
     data: {
       pageId: wikiPage.id,
@@ -358,7 +349,6 @@ test("the briefing badge names the event scope of the page", async ({
     "Sichtbar für: Eventteilnehmer",
   );
 
-  /** An inheriting page reports what it inherits, not "Manager" */
   await page.goto(
     `/app/events/${event.id}/briefing/${inheritingPage.id}/${inheritingPage.slug}`,
   );
@@ -393,7 +383,6 @@ test("a finished event leaves its managers the badge without the dialog", async 
   await signIn(manager.user);
   await page.goto(`/app/events/${event.id}/briefing`);
 
-  // The freeze takes the dialog away, so both of its triggers go with it
   await expect(audienceBadge(page)).toHaveText("Sichtbar für: Event-Manager");
   await expect(audienceBadgeButton(page)).toHaveCount(0);
   await expect(permissionsButton(page)).toHaveCount(0);

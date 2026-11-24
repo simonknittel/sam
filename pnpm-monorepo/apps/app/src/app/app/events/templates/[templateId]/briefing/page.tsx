@@ -14,10 +14,6 @@ export const metadata: Metadata = {
   title: "Briefing",
 };
 
-/**
- * The blueprint's homepage: serves the locked root page at the bare briefing
- * path, like the event briefing does.
- */
 export default async function Page({
   params,
 }: PageProps<"/app/events/templates/[templateId]/briefing">) {

@@ -13,18 +13,12 @@ import {
 import type { RoleAssignment } from "@sam-monorepo/database/client";
 import { cache } from "react";
 
-/** The badges of the roles that the viewer can see, sorted by name */
 export const getVisibleRoles = cache(
   withTrace("getVisibleRoles", async () =>
     findVisibleRoleBadges(getApplicationContext(), await getRequestActor()),
   ),
 );
 
-/**
- * The tags that the viewer can see, sorted by name, for the roles context.
- * Each tag has the ids of its visible roles, or of all its roles for a
- * viewer with `role;manage` (see `findPickerRoleTagBadges()`).
- */
 export const getVisibleRoleTags = cache(
   withTrace("getVisibleRoleTags", async () =>
     findPickerRoleTagBadges(getApplicationContext(), await getRequestActor()),
@@ -32,9 +26,8 @@ export const getVisibleRoleTags = cache(
 );
 
 /**
- * The visible roles of one citizen, each with the level of that citizen.
  * The level comes from the assignments of the citizen, thus the roles never
- * have to carry an assignment row for each citizen.
+ * carry an assignment row for each citizen.
  */
 export const getAssignedRoles = cache(
   async (entity: {
@@ -56,10 +49,7 @@ export const getAssignedRoles = cache(
   },
 );
 
-/**
- * The visible roles of the viewer, each with the ids of the roles that it
- * inherits. Only the career flows need the inheritance.
- */
+/** Only the career flows need the inheritance */
 export const getMyAssignedRolesWithInheritance = cache(
   withTrace("getMyAssignedRolesWithInheritance", async () => {
     try {
@@ -73,7 +63,6 @@ export const getMyAssignedRolesWithInheritance = cache(
   }),
 );
 
-/** The visible roles that the viewer can give to a citizen or take away */
 export const getAssignableRoles = cache(
   withTrace("getAssignableRoles", async () =>
     findAssignableRoleBadges(getApplicationContext(), await getRequestActor()),

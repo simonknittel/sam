@@ -5,15 +5,11 @@ interface Props {
 }
 
 /**
- * The party hat of a citizen who has their birthday today. The hat is drawn
- * inline instead of loaded as an icon, so that it can follow the size of the
- * avatar which carries it.
+ * Drawn inline, so that it can follow the size of the avatar which carries it.
  *
- * The hat rocks on its base. A caller which tilts the hat keeps its tilt,
- * because the animation writes the `transform` property and the utility
- * class of the caller writes the `rotate` property. The animation stops for
- * a viewer who prefers reduced motion, wherever the hat is drawn — see
- * `--animate-birthday-hat-wiggle` in the stylesheet.
+ * A caller which tilts the hat keeps its tilt, because the animation writes the
+ * `transform` property and the utility class of the caller writes the `rotate`
+ * property.
  */
 export const BirthdayHat = ({ className }: Props) => (
   <svg

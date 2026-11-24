@@ -3,11 +3,8 @@ import type { Ship } from "@sam-monorepo/database/client";
 import { getMissingRequiredRoleIds } from "@sam-monorepo/domain";
 import type { PositionType } from "../components/Position";
 
-/** The requirements of a position that a citizen does not meet */
 export interface UnmetRequirements {
-  /** The citizen has none of the required ships */
   readonly isShipMissing: boolean;
-  /** See `getMissingRequiredRoleIds()` */
   readonly missingRoleIds: readonly string[];
 }
 

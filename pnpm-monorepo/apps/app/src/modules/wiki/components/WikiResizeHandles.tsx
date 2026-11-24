@@ -28,14 +28,11 @@ interface DragState {
   value: number;
   /** Value already written to the document, NULL until the first write */
   writtenValue: number | null;
-  /** Pending animation frame of the write, see writeDraggedValue */
   frame: number | null;
 }
 
 interface ResizeTarget {
-  /** Document position of the node */
   readonly position: number;
-  /** Whether the node gets the bottom height handle (generic iframe) */
   readonly heightResizable: boolean;
   /** Rect of the node's element, relative to the overlay */
   readonly left: number;
@@ -48,7 +45,6 @@ interface ResizeTarget {
 const HANDLE_WIDTH = 6;
 /** Invisible hit-area padding around the bar (px-2/py-2) */
 const HANDLE_HIT_PADDING = 8;
-/** Gap between the element edge and the bar */
 const HANDLE_GAP = 2;
 
 /**
@@ -72,25 +68,18 @@ const resizableNodeAt = (editor: Editor, position: number) => {
 
 interface Props {
   readonly editor: Editor | null;
-  /** Shared focused-block state, see WikiEditorOverlays */
   readonly focusedElement: HTMLElement | null;
-  /** The overlay root — reference frame for the handle positions */
   readonly overlayRef: RefObject<HTMLDivElement | null>;
-  /** Freezes the hover wash while a resize drag is running */
   readonly setDragLock: (locked: boolean) => void;
 }
 
 /**
- * Drag handles on the edges of the focused resizable node: left/right for
- * the width on all resizable nodes, bottom for the height on the generic
- * iframe.
- *
- * Dragging writes `widthPx`/`heightPx` to the document instead of
- * previewing the size on the DOM: ProseMirror owns the editor's DOM and
- * re-renders any node whose markup changed behind its back, which detached
- * the previewed element mid-drag and left the block at its old size until
- * the drag ended. Driven by the document, the block, the handles and the
- * focus highlight resize together — and remote editors see the drag live.
+ * Dragging writes `widthPx`/`heightPx` to the document instead of previewing
+ * the size on the DOM: ProseMirror owns the editor's DOM and re-renders any
+ * node whose markup changed behind its back, which would detach the previewed
+ * element mid-drag and leave the block at its old size until the drag ends.
+ * Driven by the document, the block, the handles and the focus highlight
+ * resize together — and remote editors see the drag live.
  */
 export const WikiResizeHandles = ({
   editor,
@@ -150,12 +139,7 @@ export const WikiResizeHandles = ({
         return;
       }
 
-      /**
-       * A transaction that redraws the focused node detaches the element;
-       * the focus hook re-anchors (or clears) it right after — skip the
-       * tick instead of flashing the handles away, the prop change re-runs
-       * the update.
-       */
+      /** A redraw detaches the element: skip the tick like WikiEditMenu */
       if (focusedElement && !focusedElement.isConnected) return;
 
       stopMeasuring?.();
@@ -181,7 +165,6 @@ export const WikiResizeHandles = ({
         return;
       }
 
-      /** Keeps the measured rect fresh on scroll, resize and layout shifts */
       stopMeasuring = autoUpdate(element, overlay, () => {
         if (dragStateRef.current) return;
         measure(position, element);
@@ -308,7 +291,6 @@ export const WikiResizeHandles = ({
       window.removeEventListener("pointercancel", endDrag);
       if (dragState.frame !== null)
         window.cancelAnimationFrame(dragState.frame);
-      /** Never moved: nothing was written, so there is nothing to commit */
       if (dragState.writtenValue === null || isNodeGone()) return;
 
       /**

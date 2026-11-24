@@ -8,18 +8,12 @@ import { walkWikiContent } from "./walkWikiContent.js";
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     wikiPageLink: {
-      /** Inserts an internal page link at the current position */
       setWikiPageLink: (attributes: { pageId: string }) => ReturnType;
     };
   }
 }
 
 export interface WikiPageLinkOptions {
-  /**
-   * Pages the current viewer can see, by id. Pages missing from the map
-   * or null in it (invisible or deleted) render as an unavailable
-   * placeholder without leaking their title.
-   */
   pages: WikiLinkedPages;
 }
 
@@ -40,8 +34,8 @@ const EVENT_PASTE_PATTERN =
   /https?:\/\/\S+\/app\/events\/[a-z0-9]{10,40}\/briefing\/([a-z0-9]{10,40})(?:\/\S*)?/g;
 
 /**
- * An internal link to another wiki page. Only the page id is stored — the
- * title is looked up when rendering, so links follow renames and moves.
+ * Only the page id is stored — the title is looked up when rendering, so links
+ * follow renames and moves.
  */
 export const WikiPageLink = Node.create<WikiPageLinkOptions>({
   name: "wikiPageLink",
@@ -119,10 +113,6 @@ export const WikiPageLink = Node.create<WikiPageLinkOptions>({
   },
 });
 
-/**
- * Collects the ids of all pages linked in a Tiptap JSON document, so only
- * their labels and routes have to be resolved before rendering.
- */
 export const collectWikiPageLinkIds = (content: unknown): string[] => {
   const ids = new Set<string>();
 

@@ -8,16 +8,13 @@ interface Props {
   readonly label: string;
   /** Null when the label alone tells the state, for example a zone */
   readonly value?: string | null;
-  /** The full text on hover, when it holds more than the row */
   readonly title?: string;
   readonly since: Date | null;
   readonly now: Date;
   readonly isUncertain?: boolean;
-  /** Details below the row */
   readonly children?: ReactNode;
 }
 
-/** One line of a reporter in the Live-Status, for example "Shard: EU 100" */
 export const LiveStatusRow = ({
   icon: Icon,
   label,

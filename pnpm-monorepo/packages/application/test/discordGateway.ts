@@ -6,16 +6,11 @@ import {
 } from "../src/context.js";
 
 interface TestDiscordGatewayOptions {
-  /** The scheduled events that `listScheduledEvents` gives */
   readonly scheduledEvents?: readonly DiscordScheduledEvent[];
-  /**
-   * The users of each scheduled event. A scheduled event without an entry
-   * has no users.
-   */
+  /** A scheduled event without an entry has no users */
   readonly userIdsByScheduledEventId?: Readonly<
     Record<string, readonly string[]>
   >;
-  /** The scheduled events whose user list gives Failed */
   readonly failsUserListFor?: readonly string[];
 }
 
@@ -26,11 +21,6 @@ const succeed = <Data>(data: Data): DiscordResult<Data> => ({
   data,
 });
 
-/**
- * The Discord gateway of the tests. The reads give the fixtures, and the
- * operations without a fixture (the channels and the writes) give Failed.
- * `calls` records the operation of each call in the sequence of the calls.
- */
 export const createTestDiscordGateway = ({
   scheduledEvents = [],
   userIdsByScheduledEventId = {},

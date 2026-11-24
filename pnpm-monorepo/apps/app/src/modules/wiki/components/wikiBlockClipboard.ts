@@ -1,12 +1,10 @@
 import type { JSONContent } from "@tiptap/core";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 
-/** A block captured by the edit menus' copy button (WikiDuplicateCopyActions) */
 export interface WikiCopiedBlock {
   /** Node JSON — schema-independent, so it survives editor remounts */
   readonly content: JSONContent;
   readonly typeName: string;
-  /** For the insert palette's label on copied headings */
   readonly headingLevel: number | null;
   /** Inline nodes (page links, mentions) get wrapped in a paragraph on insert */
   readonly isInline: boolean;

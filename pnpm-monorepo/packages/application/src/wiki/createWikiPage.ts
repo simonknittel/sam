@@ -59,7 +59,6 @@ export const createWikiPageInputSchema = z.object({
 
 export type CreateWikiPageInput = z.output<typeof createWikiPageInputSchema>;
 
-/** The new page, as the app needs it for its redirect */
 export interface CreatedWikiPage {
   readonly id: string;
   readonly slug: string;
@@ -69,13 +68,12 @@ export interface CreatedWikiPage {
 
 interface PreparedContent {
   readonly collab: NonNullable<ApplicationContext["collab"]>;
-  /** Tiptap JSON that agrees with the schema of the editor */
   readonly content: object;
 }
 
 /**
- * The Markdown as the content of a wiki page. The checks run before the page
- * exists, thus a refusal leaves no empty page behind.
+ * The checks run before the page exists, thus a refusal leaves no empty page
+ * behind
  */
 const prepareContent = (
   context: ApplicationContext,
@@ -98,7 +96,6 @@ const prepareContent = (
     if (JSON.stringify(content).length > WIKI_PAGE_CONTENT_JSON_MAXIMUM_LENGTH)
       throw new ValidationError("The content is too large");
 
-    // Like the content import of the app
     const disallowedSources = await findDisallowedWikiIframeSources(
       context.prisma,
       content,
@@ -213,9 +210,8 @@ export const createWikiPageInScope = (
   });
 
 /**
- * The event of the parent page, or undefined for a page of the global wiki.
  * The briefings of the event templates are not available, like for
- * `getWikiPage()`.
+ * `getWikiPage()`
  */
 const loadEventIdOfParent = async (
   context: ApplicationContext,
@@ -237,11 +233,8 @@ const loadEventIdOfParent = async (
 };
 
 /**
- * Creates a page in the global wiki or in the briefing of an event, with its
- * content from Markdown, and gives the new page like `getWikiPage()`.
- *
  * @throws ConflictError when the collab server is not configured (only with
- * Markdown) or when the event of the briefing is over
+ * Markdown)
  */
 export const createWikiPage = (
   context: ApplicationContext,

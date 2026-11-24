@@ -11,11 +11,8 @@ export interface FindEventCitizenRecipientInput {
 }
 
 /**
- * The citizen whom the notification is about (for example a citizen whom a
- * manager added to the event, removed from it or made a manager of it), when
- * the citizen can see the event now (see `findEventRecipients()`). The roles
- * of the citizen and the visibility of the event can change after the
- * request. Null when the event does not exist.
+ * The roles of the citizen and the visibility of the event can change after the
+ * request
  */
 export const findEventCitizenRecipient = async (
   context: ApplicationContext,

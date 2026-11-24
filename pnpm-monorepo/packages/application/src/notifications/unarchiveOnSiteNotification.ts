@@ -21,12 +21,6 @@ export interface UnarchiveOnSiteNotificationOutput {
   readonly changed: boolean;
 }
 
-/**
- * Moves an own notification from the archive back to the inbox. The read
- * state does not change.
- *
- * @throws ForbiddenError for a user without a citizen
- */
 export const unarchiveOnSiteNotification = async (
   context: ApplicationContext,
   actor: Actor,

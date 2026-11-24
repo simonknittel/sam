@@ -39,17 +39,10 @@ export type InviteEventParticipantsInput = z.infer<
 >;
 
 export interface InviteEventParticipantsOutput {
-  /** The event after the write, like `getEvent()` */
   readonly event: GetEventOutput;
-  /** Empty when all citizens were already signed up or invited */
   readonly invited_citizen_ids: string[];
 }
 
-/**
- * A manager invites citizens to sign up for an app event. Each invited
- * citizen gets a notification, except the actor, and accepts the invitation
- * with a sign-up or declines it.
- */
 export const inviteEventParticipants = (
   context: ApplicationContext,
   actor: Actor,
@@ -75,8 +68,7 @@ export const inviteEventParticipants = (
 
     /**
      * `skipDuplicates` skips the citizens with an open invitation: the unique
-     * index of the open invitations refuses a second one. The returned rows
-     * say who was actually invited.
+     * index of the open invitations refuses a second one
      */
     const message = input.message || null;
 
@@ -119,7 +111,6 @@ export const inviteEventParticipants = (
         ),
       );
 
-      // The actor gets no notification about the own invitation
       await triggerNotificationsAfterSave(
         context,
         invitations

@@ -26,16 +26,12 @@ export const WIKI_GRID_HOST_CONTENT = "(block | wikiGrid)+";
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     wikiGrid: {
-      /** Inserts a grid with the given number of columns */
       insertWikiGrid: (columns: WikiGridColumnCount) => ReturnType;
     };
   }
 }
 
-/**
- * A simple grid layout placing content side-by-side. Rendered as a CSS grid
- * that collapses to a single column on small screens (see wikiEditor.css).
- */
+/** Collapses to a single column on small screens (see wikiEditor.css). */
 export const WikiGrid = Node.create({
   name: "wikiGrid",
   content: "wikiGridCell+",
@@ -43,7 +39,6 @@ export const WikiGrid = Node.create({
 
   addAttributes() {
     return {
-      // Grids place blocks side by side — they default to the wide preset
       ...wikiWidthPxAttribute(WIKI_WIDE_WIDTH_PX),
       ...wikiAlignAttribute(),
       columns: {

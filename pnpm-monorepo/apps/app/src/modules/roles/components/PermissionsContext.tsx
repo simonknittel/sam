@@ -47,10 +47,6 @@ export const PermissionsProvider = ({ children, role }: Props) => {
   return <PermissionsContext value={value}>{children}</PermissionsContext>;
 };
 
-/**
- * Check for undefined since the defaultValue of the context is undefined. If
- * it's still undefined, the provider component is missing.
- */
 export function usePermissionsContext() {
   const context = useContext(PermissionsContext);
   if (!context) throw new Error("Provider missing!");

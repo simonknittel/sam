@@ -6,7 +6,8 @@ import slug from "slug";
 
 /**
  * Same slug rules as the page slugs (`slugifyWikiPageTitle()` of the domain
- * package), so heading anchors look consistent with page URLs.
+ * package), so heading anchors look consistent with page URLs: 64 is
+ * `SLUG_MAX_LENGTH`. Here, a cut slug can end with a dash.
  */
 const slugifyWikiHeading = (text: string): string => {
   const result = slug(text, { locale: "de" }).slice(0, 64);
@@ -45,7 +46,6 @@ const buildWikiHeadingIdDecorations = (doc: ProseMirrorNode): DecorationSet => {
       decorations.push(
         Decoration.node(position, position + node.nodeSize, { id }),
       );
-    // Headings only contain inline content — no need to descend
     return false;
   });
 

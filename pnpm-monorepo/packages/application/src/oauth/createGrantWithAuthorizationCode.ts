@@ -11,9 +11,8 @@ import type { ClientMetadata } from "./resolveClientMetadata.js";
 import { createOpaqueToken, hashOpaqueToken } from "./secrets.js";
 
 /**
- * The fields of a valid authorization request and the settings of the
- * consent. Give only the result of `validateAuthorizationRequest()` for the
- * fields of the request.
+ * Give only the result of `validateAuthorizationRequest()` for the fields of
+ * the request
  */
 export interface CreateGrantWithAuthorizationCodeInput {
   readonly client: Pick<ClientMetadata, "clientId" | "clientName">;
@@ -21,14 +20,10 @@ export interface CreateGrantWithAuthorizationCodeInput {
   readonly codeChallenge: string;
   readonly scope: string;
   readonly resource: string;
-  /** The name that the user gave the client, see `grantCustomNameSchema` */
+  /** See `grantCustomNameSchema` */
   readonly customName: string | null;
-  /**
-   * The tools that the user disabled for the client. The caller makes sure
-   * that the tools exist (see `mcpToolNameSchema`).
-   */
+  /** The caller makes sure that the tools exist (see `mcpToolNameSchema`) */
   readonly disabledToolNames: readonly string[];
-  /** The user agent of the browser that gives the consent */
   readonly userAgent: string | null;
 }
 
@@ -39,9 +34,8 @@ export interface CreateGrantWithAuthorizationCodeOutput {
 }
 
 /**
- * The host of the redirect URI for the list of the connected clients. A
- * private-use scheme of a native app has no host, thus the list shows the
- * scheme.
+ * A private-use scheme of a native app has no host, thus the list of the
+ * connected clients shows the scheme
  */
 const getRedirectHost = (redirectUri: string) => {
   const url = new URL(redirectUri);
@@ -50,9 +44,8 @@ const getRedirectHost = (redirectUri: string) => {
 };
 
 /**
- * Records the consent of the user: a new grant (the connected client) and
- * its authorization code. Each consent gives a new grant, also for a client
- * that the user connected before.
+ * Each consent gives a new grant, also for a client that the user connected
+ * before
  */
 export const createGrantWithAuthorizationCode = (
   context: ApplicationContext,

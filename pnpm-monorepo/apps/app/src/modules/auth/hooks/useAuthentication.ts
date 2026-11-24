@@ -12,14 +12,8 @@ export const useAuthentication = () => {
   const { data: session } = useSession();
   const adminModeActive = useContext(AdminModeContext);
 
-  /**
-   * Authenticate
-   */
   if (!session) return false;
 
-  /**
-   * Authorize
-   */
   function authorize(
     resource: PermissionSet["resource"],
     operation: PermissionSet["operation"],

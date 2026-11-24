@@ -11,10 +11,9 @@ interface Props {
 }
 
 /**
- * The rendered mention: the citizen hover popover (roles, Spynet link)
- * around a link to the citizen's spynet page. Shared between the static
- * render for readers and the editor node view (WikiCitizenMentionNodeView)
- * so both look and behave the same. Loads no editor code.
+ * Shared between the static render for readers and the editor node view
+ * (WikiCitizenMentionNodeView) so both look and behave the same. Loads no
+ * editor code.
  */
 export const WikiCitizenMentionChip = ({ resolved }: Props) => {
   const isOwnCitizen = useIsOwnCitizen(

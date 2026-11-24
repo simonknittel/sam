@@ -24,12 +24,6 @@ export interface MarkOnSiteNotificationReadOutput {
   readonly new_item_read: boolean;
 }
 
-/**
- * Marks an own notification as read. A notification which announces a new
- * item also marks its item as read.
- *
- * @throws ForbiddenError for a user without a citizen
- */
 export const markOnSiteNotificationRead = async (
   context: ApplicationContext,
   actor: Actor,

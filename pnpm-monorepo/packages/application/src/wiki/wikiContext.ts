@@ -54,14 +54,11 @@ export interface WikiSharedContext {
   /** Pages that are not soft-deleted */
   pages: WikiSharedContextPage[];
   pagesById: Map<string, WikiSharedContextPage>;
-  /** Effective permissions of the current viewer for every page */
   permissions: Map<string, WikiPageTierPermissions>;
 }
 
-/** The global wiki: one of the wiki scopes (see `wikiScope.ts`) */
 export interface WikiContext {
   readonly kind: WikiScopeKind.Wiki;
-  /** The routes of the pages */
   readonly hrefBase: WikiPageHrefBase;
   viewer: WikiPageViewer;
   /** All pages of the WIKI namespace, including soft-deleted ones */
@@ -69,15 +66,9 @@ export interface WikiContext {
   /** Pages that are not soft-deleted */
   pages: WikiContextPage[];
   pagesById: Map<string, WikiContextPage>;
-  /** Effective permissions of the current viewer for every page */
   permissions: Map<string, ResolvedWikiPagePermissions>;
 }
 
-/**
- * Loads all wiki pages and resolves the effective permissions of the actor.
- * Everything wiki-related (tree, breadcrumbs, page views, actions) derives
- * from this context.
- */
 export const buildWikiContext = (
   context: ApplicationContext,
   actor: Actor,
@@ -111,11 +102,6 @@ export const buildWikiContext = (
     const viewer: WikiPageViewer = {
       citizenId: actor.citizen?.id ?? null,
       roleIds: actor.roleIds,
-      /**
-       * Admin mode is part of `authorize()` and thus flows into
-       * `hasWikiManage`, which grants all tiers on every page in the
-       * resolver.
-       */
       hasWikiManage: actor.authorize("wiki", "manage"),
     };
 

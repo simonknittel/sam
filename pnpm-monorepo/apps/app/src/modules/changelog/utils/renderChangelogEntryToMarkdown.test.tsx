@@ -36,7 +36,6 @@ interface ScreenshotProps {
   readonly alt: string;
 }
 
-/** A server component like `ChangelogImage` */
 const Screenshot = ({ src, alt }: ScreenshotProps) => (
   <Image src={src} alt={alt} />
 );

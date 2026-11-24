@@ -32,11 +32,6 @@ export interface UpdateEventTemplateRoleAccessOutput {
   readonly edit_role_ids: string[];
 }
 
-/**
- * Replaces the template's role shares with the given set. Reading a
- * template also means being allowed to create an event from it; editing adds
- * content changes but never sharing, ownership or deletion.
- */
 export const updateEventTemplateRoleAccess = (
   context: ApplicationContext,
   actor: Actor,
@@ -69,9 +64,8 @@ export const updateEventTemplateRoleAccess = (
       throw new ValidationError(EventTemplateErrorMessage.UnknownRole);
 
     /**
-     * The condition on `deletedAt` keeps a different request from deleting
-     * the template between the check and the write unnoticed. Its error
-     * rolls back the whole batch.
+     * The error of the condition on `deletedAt` (see `updateEventTemplate()`)
+     * rolls back the whole batch
      */
     await rethrowRecordNotFound(
       () =>

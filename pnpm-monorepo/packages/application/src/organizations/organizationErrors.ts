@@ -1,8 +1,3 @@
-/**
- * The messages of the errors that the organization use cases throw for a
- * rule of the organizations. They are the members of an enum, thus an app
- * can map them to its own texts.
- */
 export enum OrganizationErrorMessage {
   /** A `ValidationError` */
   SpectrumIdTaken = "An organization with this Spectrum ID exists already",

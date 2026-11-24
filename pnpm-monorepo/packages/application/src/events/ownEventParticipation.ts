@@ -23,7 +23,6 @@ interface AssignedPositionVariant {
   };
 }
 
-/** A lineup position that is assigned to the actor */
 export interface AssignedEventPosition {
   readonly id: string;
   readonly name: string;
@@ -43,9 +42,7 @@ export interface OwnEventParticipation {
   readonly hasCancelledParticipation: boolean;
   /** Empty when the actor cannot see the lineup */
   readonly assignedPositions: AssignedEventPosition[];
-  /** The latest invitation of the citizen of the actor to the event, or null */
   readonly invitation: EventInvitationDetails | null;
-  /** The latest application of the citizen of the actor for the event, or null */
   readonly application: EventApplicationDetails | null;
 }
 
@@ -56,14 +53,6 @@ const NO_PARTICIPATION: OwnEventParticipation = {
   application: null,
 };
 
-/**
- * The own state of the actor at an event that the actor can see, for the
- * personal briefing of the event overview. An actor without a citizen has
- * no participation and no positions.
- *
- * @throws ForbiddenError without `event;read`, NotFoundError when the actor
- * cannot see the event
- */
 export const findOwnEventParticipation = async (
   context: ApplicationContext,
   actor: Actor,

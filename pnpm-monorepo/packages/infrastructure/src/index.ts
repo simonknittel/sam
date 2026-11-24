@@ -1,7 +1,3 @@
-/**
- * The shared implementations of the ports of `@sam-monorepo/application`.
- * Each host composes them in its composition root. See the README.
- */
 export {
   createPrismaAuditWriter,
   type PrismaAuditWriterOptions,

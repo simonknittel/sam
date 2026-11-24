@@ -23,15 +23,9 @@ export interface RestoreWikiPageOutput {
 }
 
 /**
- * Takes the page out of the trash together with its subtree and its
- * ancestors in the trash. Trade-off: the management of the page is enough to
- * restore its ancestors, thus the manager of a child page can undo the
- * deletion of a parent page by its manager. The tree needs it.
- *
- * @throws NotFoundError when the page does not exist for the actor or is
- * not in the trash
- * @throws ForbiddenError when the actor does not manage the page
- * @throws ConflictError when the event of the briefing is over
+ * Trade-off: the management of the page is enough to restore its ancestors,
+ * thus the manager of a child page can undo the deletion of a parent page by
+ * its manager. The tree needs it.
  */
 export const restoreWikiPage = (
   context: ApplicationContext,

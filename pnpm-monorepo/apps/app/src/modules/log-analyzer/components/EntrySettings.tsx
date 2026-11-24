@@ -16,17 +16,11 @@ interface Props {
   readonly className?: string;
 }
 
-/**
- * The button and the dialog with every setting of what the table shows and
- * what the upload sends: for each type the own entries, the sharing and the
- * entries of the other citizens, and below that the citizens themselves.
- */
 export const EntrySettings = ({ className }: Props) => {
   const { isSharingAvailable } = useLogAnalyzerContext();
   const hasLinkedCitizen = useHasLinkedCitizen();
   const [isOpen, setIsOpen] = useState(false);
 
-  /** The kill switch removes the two columns and the citizens of the sharing */
   const title = isSharingAvailable ? "Filter & Teilen" : "Filter";
   const columns = isSharingAvailable ? "1fr 8rem 8rem 8rem" : "1fr 8rem";
 

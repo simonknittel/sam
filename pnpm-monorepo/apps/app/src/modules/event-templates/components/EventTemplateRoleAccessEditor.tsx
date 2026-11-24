@@ -44,7 +44,6 @@ const toEntries = (roleAccess: StoredAccess): Entry[] =>
         : AccessChoice.Read,
   }));
 
-/** Identifies the stored shares regardless of the order they arrive in */
 const signatureOf = (roleAccess: StoredAccess) =>
   roleAccess
     .map((access) => `${access.roleId}:${access.type}`)
@@ -90,10 +89,8 @@ export const EventTemplateRoleAccessEditor = ({
   const [isPending, startTransition] = useTransition();
 
   /**
-   * Submitted by hand rather than through `<form action>`: React resets a
-   * form once its action resolves, which snaps every select back to the
-   * option the server rendered as selected while the component's state stays
-   * put — leaving the selects showing the tiers from before the save.
+   * Not through `<form action>`: React would reset the selects (see
+   * `useAction`)
    */
   const handleSubmit: FormEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
@@ -218,7 +215,6 @@ const AccessRow = ({
         {isRoleVisible ? (
           <SingleRoleBadge roleId={entry.roleId} showPlaceholder />
         ) : (
-          /* A share with a role this user may not see — kept so saving cannot drop it */
           <span
             className="inline-flex h-8 items-center rounded-secondary bg-neutral-700/50 px-2 font-mono text-sm text-neutral-400"
             title={entry.roleId}

@@ -22,14 +22,6 @@ export const renameOwnGrantInputSchema = z.object({
   custom_name: grantCustomNameSchema,
 });
 
-/**
- * Gives a connected client of the actor an own name, for example to tell two
- * grants of the same client apart.
- *
- * @throws ForbiddenError when the actor cannot use the MCP server
- * @throws NotFoundError when the grant does not belong to the actor or is
- * revoked
- */
 export const renameOwnGrant = (
   context: ApplicationContext,
   actor: Actor,

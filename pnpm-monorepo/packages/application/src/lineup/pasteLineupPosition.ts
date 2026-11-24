@@ -33,12 +33,6 @@ export type PasteLineupPositionInput = z.infer<
 const isSameContainer = (first: EventContainer, second: EventContainer) =>
   first.kind === second.kind && first.id === second.id;
 
-/**
- * Copies a position with its children to a place relative to a target
- * position. The source and the target can be in the lineups of two events,
- * of two templates, or of an event and a template. The copy has no assigned
- * citizens and no applications.
- */
 export const pasteLineupPosition = (
   context: ApplicationContext,
   actor: Actor,

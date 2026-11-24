@@ -71,10 +71,8 @@ export const getWikiImageUrl = (uploadId: string) =>
   getPublicUploadUrl(uploadId);
 
 /**
- * Uploads a file dropped/pasted/picked in the wiki editor: creates the
- * Upload record, PUTs the file to the presigned URL and assigns the upload
- * to the page so attachment downloads can be permission-checked. Throws
- * with a German message suitable for a toast.
+ * Assigns the upload to the page so that attachment downloads can be
+ * permission-checked. Throws with a German message suitable for a toast.
  */
 export const uploadWikiPageFile = async (
   file: File,

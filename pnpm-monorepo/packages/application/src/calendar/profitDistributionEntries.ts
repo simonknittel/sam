@@ -40,11 +40,7 @@ const toEntry = (
   ];
 };
 
-/**
- * The planned ends of the collection phase and of the payout phase of the
- * cycles that the actor sees in the lists of the cycles: all completed
- * cycles, and of the open cycles the ones of `filterVisibleOpenCycles`
- */
+/** The same cycles as the lists of the cycles */
 export const profitDistributionEntryCollector: CalendarEntryCollector<ProfitDistributionCalendarEntry> =
   {
     canRead: (actor) => actor.authorize("profitDistributionCycle", "read"),

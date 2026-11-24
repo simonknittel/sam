@@ -13,8 +13,7 @@ export type { WikiImageDimensions };
 
 /**
  * Formats without a meaningful raster to optimize: SVG is resolution
- * independent, GIF would lose its animation. Same opt-out as ImageUpload
- * and WikiPageIcon.
+ * independent, GIF would lose its animation. Same opt-out as ImageUpload.
  */
 const UNOPTIMIZED_MIME_TYPES: readonly string[] = [
   "image/svg+xml",

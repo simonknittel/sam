@@ -8,7 +8,6 @@ import {
 import * as z from "zod";
 import { getProfitDistributionErrorTexts } from "../utils/profitDistributionErrorTexts";
 
-/** The button sends the new state as text */
 const schema = setOwnParticipationInputSchema.extend({
   enabled: z.stringbool(),
 });

@@ -46,18 +46,10 @@ export type AddEventParticipantsInput = z.infer<
 >;
 
 export interface AddEventParticipantsOutput {
-  /** The event after the write, like `getEvent()` */
   readonly event: GetEventOutput;
-  /** Empty when all citizens were already signed up */
   readonly added_citizen_ids: string[];
 }
 
-/**
- * A manager signs citizens up for an app event. Each added citizen gets a
- * notification, except the actor. The direct sign-up replaces an open
- * invitation of the citizen, thus the use case withdraws it, and it answers
- * an open application of the citizen, thus the use case approves it.
- */
 export const addEventParticipants = (
   context: ApplicationContext,
   actor: Actor,
@@ -66,9 +58,6 @@ export const addEventParticipants = (
   withSpan(context, "addEventParticipants", async () => {
     requirePermission(actor, "event", "read");
 
-    /**
-     * Authorize the request
-     */
     const event = await requireParticipatableAppEvent(
       context,
       actor,
@@ -85,11 +74,10 @@ export const addEventParticipants = (
     );
 
     /**
-     * Add the participants. One transaction, so a failure part-way through
-     * cannot leave participations behind that never reach the audit log or
-     * the affected citizens. `skipDuplicates` absorbs the one race the
-     * pre-check cannot close — a citizen signing themselves up in between —
-     * and the returned rows say who was actually added.
+     * One transaction, so a failure part-way through cannot leave
+     * participations behind that never reach the audit log or the affected
+     * citizens. `skipDuplicates` absorbs the one race the pre-check cannot
+     * close: a citizen signing themselves up in between.
      */
     const comment = input.comment || null;
 
@@ -180,7 +168,6 @@ export const addEventParticipants = (
       ),
     ]);
 
-    // The actor gets no notification about the own sign-up
     await triggerNotificationsAfterSave(
       context,
       addedCitizenIds

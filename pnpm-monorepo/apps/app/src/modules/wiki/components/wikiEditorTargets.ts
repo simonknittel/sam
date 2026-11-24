@@ -214,10 +214,6 @@ const selectionLeftElement = (
   return selection.from < range.from || selection.to > range.to;
 };
 
-/**
- * The element a pointer event points at, or NULL when it points outside
- * the editor content or at nothing the overlays can target.
- */
 const wikiTargetFromEvent = (
   editor: Editor,
   selector: string,
@@ -289,13 +285,11 @@ const createWikiTargetTracker = (
     try {
       base = editor.view.posAtDOM(target, 0);
     } catch {
-      // posAtDOM throws on out-of-range positions
       return null;
     }
     return findRenderedNode(editor, target, [base, base - 1])?.position ?? null;
   };
 
-  /** The element matching `selector` that renders the node at `candidate` */
   const elementAt = (candidate: number): HTMLElement | null => {
     const dom = editor.view.nodeDOM(candidate);
     const outer = dom instanceof HTMLElement ? dom : null;

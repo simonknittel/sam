@@ -5,7 +5,6 @@ interface Props {
   readonly actualEnd: Date | null;
 }
 
-/** Shows the actual end of a phase after it ended, else its planned end */
 export const PhaseEndDate = ({ plannedEnd, actualEnd }: Props) => {
   return (
     <div className="flex flex-col items-center justify-center text-sm">

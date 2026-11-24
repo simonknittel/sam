@@ -67,23 +67,19 @@ interface Props {
    * the context above is always global, but an embed stops at its root page
    */
   readonly ancestors: readonly WikiSharedContextPage[];
-  /** The view scope the page renders under; the global wiki by default */
   readonly hrefMode?: WikiPageHrefMode;
   /**
    * Variant embeds pass their scoped static content (embed-internal links);
    * defaults to the global resolution
    */
   readonly staticContent?: WikiPageStaticContent;
-  /** Extra header content, e.g. the variant backlinks on the global route */
   readonly headerExtra?: ReactNode;
 }
 
 /**
- * The role-model page view shared by the global wiki route and the variant
- * embeds (the event wiki has its own, differently-permissioned component).
  * Inside an embed the linked root page is locked: rename, move and delete
- * disappear — the same page stays fully editable under /app/wiki, so this
- * is a UX guard against accidentally dismantling the embed, not a security
+ * disappear — the same page stays fully editable under /app/wiki, so this is a
+ * UX guard against accidentally dismantling the embed, not a security
  * boundary.
  */
 export const WikiPageContent = async ({
@@ -118,7 +114,6 @@ export const WikiPageContent = async ({
   ]);
 
   const descendantIds = collectWikiPageDescendants(context.pages, page.id);
-  /** What the copy dialog's "Unterseiten mitkopieren" would copy */
   const visibleDescendantCount = collectVisibleWikiSubtree(
     context.pages,
     page.id,
@@ -151,7 +146,6 @@ export const WikiPageContent = async ({
     page.id,
   );
 
-  /** The dialog's own input — only page managers ever receive it */
   const effectivePermissions = permissions.canAdmin
     ? resolveWikiPageEffectivePermissions(
         context.allPages,
@@ -310,18 +304,13 @@ export const WikiPageContent = async ({
   );
 
   return (
-    /**
-     * Keyed by page so navigating to another page always starts back in
-     * view mode.
-     */
     <WikiEditModeProvider key={page.id}>
       <TrackWikiPageVisit pageId={page.id} />
 
-      {/**
-       * Only page managers get the dialog — its role ids must not reach
-       * anybody else — so for every other reader the visibility badge
-       * stays plain text.
-       */}
+      {/*
+        Only page managers get the dialog: its role ids must not reach anybody
+        else
+      */}
       {permissions.canAdmin ? (
         <WikiPagePermissionsProvider
           page={{

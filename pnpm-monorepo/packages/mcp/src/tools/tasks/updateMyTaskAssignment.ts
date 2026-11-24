@@ -28,7 +28,6 @@ export const updateMyTaskAssignmentTool = defineTool({
     idempotentHint: false,
     openWorldHint: false,
   },
-  // The two use cases have the same input
   inputSchema: acceptTaskInputSchema.extend({
     action: z.enum(MyTaskAssignmentAction),
   }),

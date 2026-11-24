@@ -72,7 +72,6 @@ test.describe("the lineup write tools of the MCP server", () => {
     });
     const escortId = String(escort.id);
 
-    // A field that the update does not give keeps its value
     expect(
       await callForContent(client, "update_event_position", {
         position_id: pilotId,
@@ -299,7 +298,6 @@ test.describe("the lineup write tools of the MCP server", () => {
         },
       ),
     ).toMatchObject({ id: position.id, applications: [] });
-    // A repeated application changes nothing
     expect(
       await callForContent(
         participantClient,
@@ -319,7 +317,6 @@ test.describe("the lineup write tools of the MCP server", () => {
       )
       .toBe(1);
 
-    // Only a participant or an applicant gets the position, like in the form
     expect(
       await callForError(organizerClient, "assign_event_position", {
         position_id: position.id,
@@ -520,14 +517,12 @@ test.describe("the lineup write tools of the MCP server", () => {
         citizen_id: reader.entity.id,
       }),
     ).toMatch(FORBIDDEN_RESULT);
-    // Without a participation, an application is a conflict
     expect(
       await callForError(readerClient, "update_my_event_position_application", {
         position_id: position.id,
         action: "apply",
       }),
     ).toMatch(CONFLICT_RESULT);
-    // A lineup that is not enabled is visible only for its managers
     expect(
       await callForError(readerClient, "update_my_event_position_application", {
         position_id: hiddenLineupPosition.id,
@@ -535,10 +530,6 @@ test.describe("the lineup write tools of the MCP server", () => {
       }),
     ).toMatch(FORBIDDEN_RESULT);
 
-    /**
-     * The permission for the positions of other events does not show a
-     * restricted event
-     */
     const lineupManagerClient = await connectMcpClient(
       (await authorizeMcpClient(lineupManager.user)).accessToken,
     );
@@ -564,7 +555,6 @@ test.describe("the lineup write tools of the MCP server", () => {
         name: "Zu spät",
       }),
     ).toMatch(CONFLICT_RESULT);
-    // The tools change only the lineups of events, not of templates
     expect(
       await callForError(organizerClient, "update_event_position", {
         position_id: templatePosition!.id,

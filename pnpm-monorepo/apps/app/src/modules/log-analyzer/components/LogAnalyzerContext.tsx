@@ -52,7 +52,6 @@ interface Context {
   readonly setIsLiveModeEnabled: Dispatch<SetStateAction<boolean>>;
   /** True while the end of the date range keeps new lines out of the table. */
   readonly isLivePaused: boolean;
-  /** The setting of the user, unless the date range pauses it. */
   readonly isLiveModeActive: boolean;
   readonly isAutostartEnabled: boolean;
   readonly setIsAutostartEnabled: Dispatch<SetStateAction<boolean>>;
@@ -64,40 +63,27 @@ interface Context {
   /** Not stored: a reload shows the rolling window again. */
   readonly dateRange: DateRange;
   readonly setDateRange: Dispatch<SetStateAction<DateRange>>;
-  /** The types whose own entries the table shows. */
   readonly ownEntryTypes: EntryTypeRecord;
   readonly setOwnEntryTypes: SetEntryTypes;
-  /** The types whose own entries the upload sends to the server. */
   readonly sharingEntryTypes: EntryTypeRecord;
   readonly setSharingEntryTypes: SetEntryTypes;
-  /** True while the upload sends at least one type. */
   readonly isSharingEnabled: boolean;
-  /** The types whose entries of the other citizens the table shows. */
   readonly othersEntryTypes: EntryTypeRecord;
   readonly setOthersEntryTypes: SetEntryTypes;
-  /** True while the table shows at least one type of the other citizens. */
   readonly isSharedViewEnabled: boolean;
-  /** The citizens whose shared entries the table hides. Empty shows all. */
   readonly hiddenCitizenIds: string[];
   readonly setHiddenCitizenIds: Dispatch<SetStateAction<string[]>>;
   /**
-   * The filter of the date range alone. The repeats collapse after it and
-   * before the other filters (see `collapseRepeatedEntries`).
+   * The date range alone. The repeats collapse after it and before the other
+   * filters (see `collapseRepeatedEntries`).
    */
   readonly entryWindowFilterFn: (entry: IEntry) => boolean;
-  /** The filter of the settings. The overlay uses it. */
   readonly entryFilterFn: (entry: IEntry) => boolean;
-  /**
-   * The filter of the table: the quick look (see `QuickLookContext`)
-   * replaces the type settings.
-   */
+  /** The quick look (see `QuickLookContext`) replaces the type settings */
   readonly tableEntryFilterFn: (entry: IEntry) => boolean;
   readonly entries: Map<string, IEntry>;
   readonly setEntries: Dispatch<SetStateAction<Map<string, IEntry>>>;
-  /**
-   * The newest line of the own log files (see `ReadResult.newestIsoDate`).
-   * Null before the first read of a folder.
-   */
+  /** Null before the first read of a folder */
   readonly ownLogLineAt: Date | null;
   readonly setOwnLogLineAt: Dispatch<SetStateAction<Date | null>>;
 }
@@ -329,10 +315,6 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
   );
 };
 
-/**
- * Check for undefined since the defaultValue of the context is undefined. If
- * it's still undefined, the provider component is missing.
- */
 export function useLogAnalyzerContext() {
   const context = useContext(Context);
   if (!context)

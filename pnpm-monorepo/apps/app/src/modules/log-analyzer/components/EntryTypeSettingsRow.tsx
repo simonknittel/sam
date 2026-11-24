@@ -10,14 +10,12 @@ import { QuickLookToggle } from "./QuickLookToggle";
 interface Props {
   readonly type: LogAnalyzerEntryType;
   readonly showSharingColumns: boolean;
-  /** False while the user cannot share, for example without a citizen */
   readonly canShare: boolean;
 }
 
 /**
- * One row of the settings table. The checkboxes carry the title of the type
- * in their name, because their Ja/Nein text is their state and not their
- * name.
+ * The checkboxes carry the title of the type in their name, because their
+ * Ja/Nein text is their state.
  */
 export const EntryTypeSettingsRow = ({
   type,

@@ -1,7 +1,3 @@
-/**
- * The messages of the typed errors of the user use cases. They are the
- * members of an enum, thus an app can map them to its own texts.
- */
 export enum UserErrorMessage {
   /** A `NotFoundError` */
   NotFound = "The user does not exist",

@@ -4,17 +4,15 @@ import { withSpan } from "../withSpan.js";
 import { endCollectionPhaseOfCycle } from "./collectionEnd.js";
 
 export interface EndDueCollectionPhasesOutput {
-  /** The cycles whose planned end of the collection phase is due */
   readonly dueCycleCount: number;
-  /** The due cycles that this run ended. A parallel end can take the rest. */
+  /** A parallel end can take the rest of the due cycles */
   readonly endedCycleCount: number;
   readonly bookingCount: number;
 }
 
 /**
- * Ends the collection phases whose planned end is due, and books the
- * balances away. It sends no notification for the bookings; the manual end
- * sends one (an open decision).
+ * It sends no notification for the bookings; the manual end sends one (an open
+ * decision)
  */
 export const endDueCollectionPhases = (
   context: ApplicationContext,

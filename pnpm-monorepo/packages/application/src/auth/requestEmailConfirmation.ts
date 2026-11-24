@@ -5,15 +5,12 @@ import { withSpan } from "../withSpan.js";
 import { sendEmailConfirmation } from "./emailConfirmationRequest.js";
 
 export interface RequestEmailConfirmationOutput {
-  /** False when the user has no email address or the email did not go out */
   readonly email_sent: boolean;
 }
 
 /**
- * Sends the email with the confirmation link to the email address of the
- * actor. The gate of the app lets an actor without a confirmed email call
- * it, because this is how the actor gets the email confirmed. The caller
- * checks that the email is not confirmed yet.
+ * The gate of the app lets an actor without a confirmed email call it. The
+ * caller checks that the email is not confirmed yet.
  */
 export const requestEmailConfirmation = (
   context: ApplicationContext,

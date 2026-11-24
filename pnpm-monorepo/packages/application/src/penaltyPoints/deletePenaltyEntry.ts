@@ -17,12 +17,6 @@ export const deletePenaltyEntryInputSchema = z.object({
   penalty_entry_id: idSchema.describe("The id of the penalty entry."),
 });
 
-/**
- * Soft-deletes a penalty entry. When the entry still counted, it notifies
- * the citizen of the entry. Requires `penaltyEntry;delete` and a citizen.
- *
- * @throws NotFoundError when the entry does not exist or is deleted already
- */
 export const deletePenaltyEntry = (
   context: ApplicationContext,
   actor: Actor,

@@ -39,9 +39,9 @@ const BACKUP_FILE_NAME =
   /(?<day>\d{2}) (?<month>[A-Z][a-z]{2}) (?<year>\d{2}) \((?<hour>\d{2}) (?<minute>\d{2}) (?<second>\d{2})\)\.log$/;
 
 /**
- * The start of the session of a backup in milliseconds. The game names the
- * file after the local time of the computer at the start of the session. Null
- * when the name has no such date, for example `Game.log`.
+ * In milliseconds. The game names the file after the local time of the computer
+ * at the start of the session. Null when the name has no such date, for example
+ * `Game.log`.
  */
 export const getSessionStartFromFileName = (fileName: string) => {
   const groups = BACKUP_FILE_NAME.exec(fileName)?.groups;
@@ -76,9 +76,8 @@ const readSessionStartFromContent = async (file: File) => {
 };
 
 /**
- * True when the session of the file can overlap the window. The end of the
- * window needs the start of the session: a session which begins before the
- * end of the window can stop after it.
+ * The end of the window needs the start of the session: a session which begins
+ * before the end of the window can stop after it.
  */
 const canOverlapWindow = async (
   { file }: LogFile,
@@ -97,7 +96,6 @@ const canOverlapWindow = async (
   );
 };
 
-/** What the listing of the folder alone tells about a selection. */
 export interface LogSelection {
   readonly fileCount: number;
   readonly selectedFileCount: number;
@@ -127,8 +125,8 @@ export const summarizeLogSelection = (
 };
 
 /**
- * Selects the log files of the window. Only a file without a date in its name
- * needs a read, and that read takes only the first line.
+ * Only a file without a date in its name needs a read, and that read takes only
+ * the first line.
  */
 export const selectLogFiles = async (
   logFiles: readonly LogFile[],

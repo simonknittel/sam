@@ -32,12 +32,6 @@ docker compose up --detach psql
 docker compose exec psql psql -X -U postgres -d db -c "ALTER EXTENSION timescaledb UPDATE"
 ```
 
-If the migration `add_timescaledb_extension` fails with `extension "timescaledb" is not available`, the container still has the earlier image (`docker start` keeps the image). Run `docker compose up --detach psql` and this command, then do step 10 again:
-
-```sh
-pnpm --filter @sam-monorepo/database exec prisma migrate resolve --rolled-back 20261121120000_add_timescaledb_extension
-```
-
 ### Development login
 
 In development, the "Dev login" control at the top of the login page signs in as an admin without Discord. It lists only admins with a Discord account, so log in with Discord once on a new database (step 13). To test as a different user, use "Assume user" in the admin toolbar.

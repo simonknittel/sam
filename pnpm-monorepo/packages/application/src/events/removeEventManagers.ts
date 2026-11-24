@@ -30,19 +30,13 @@ export type RemoveEventManagersInput = z.infer<
   typeof removeEventManagersInputSchema
 >;
 
-/**
- * Takes the manager role of the event from citizens. The creator of the
- * event stays its organizer.
- */
+/** The creator of the event stays its organizer */
 export const removeEventManagers = (
   context: ApplicationContext,
   actor: Actor,
   input: RemoveEventManagersInput,
 ): Promise<GetEventOutput> =>
   withSpan(context, "removeEventManagers", async () => {
-    /**
-     * Authorize the request
-     */
     const event = await context.prisma.event.findUnique({
       where: {
         id: input.event_id,
@@ -73,8 +67,8 @@ export const removeEventManagers = (
       throw new ConflictError(EventErrorMessage.CitizenNotManager);
 
     /**
-     * Delete managers. One transaction, so the activity entries cannot get
-     * lost while the removal goes through.
+     * One transaction, so the activity entries cannot get lost while the
+     * removal goes through.
      */
     await context.prisma.$transaction(async (transaction) => {
       await transaction.event.update({

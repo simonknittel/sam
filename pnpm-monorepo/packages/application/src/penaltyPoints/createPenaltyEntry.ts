@@ -38,11 +38,7 @@ export const createPenaltyEntryInputSchema = z.object({
     ),
 });
 
-/**
- * Gives penalty points to a citizen and notifies the citizen about the new
- * entry, except when the citizen is the actor. Also needs `citizen;read`,
- * like the citizen picker of the form.
- */
+/** Also needs `citizen;read`, like the citizen picker of the form */
 export const createPenaltyEntry = (
   context: ApplicationContext,
   actor: Actor,
@@ -88,7 +84,6 @@ export const createPenaltyEntry = (
       },
     ]);
 
-    // The actor gets no notification about points for the own citizen
     if (entry.citizen.id !== author.id)
       await triggerNotificationsAfterSave(context, [
         { type: "PenaltyEntryCreated", payload: { penaltyEntryId: entry.id } },

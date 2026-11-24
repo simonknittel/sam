@@ -43,7 +43,6 @@ export type WikiScope = WikiContext | EventWikiContext | VariantWikiContext;
 /** The scope that a page belongs to: variants are views of the global wiki */
 export type WikiPageScope = WikiContext | EventWikiContext;
 
-/** Names the scope that `loadWikiScope()` loads */
 export type WikiScopeTarget =
   | { readonly kind: WikiScopeKind.Wiki }
   | {
@@ -52,11 +51,6 @@ export type WikiScopeTarget =
     }
   | { readonly kind: WikiScopeKind.Variant; readonly variantId: string };
 
-/**
- * The briefing of an event or of an event template. Returns null when the
- * actor cannot hold it (see `buildEventWikiContext()` and
- * `buildTemplateWikiContext()`).
- */
 export const buildBriefingWikiContext = (
   context: ApplicationContext,
   actor: Actor,
@@ -192,7 +186,6 @@ export const wikiScopeInputSchema = z
     message: "container and variantId are mutually exclusive",
   });
 
-/** The target of the scope input of the tRPC procedures */
 export const toWikiScopeTarget = ({
   container,
   variantId,
@@ -203,7 +196,6 @@ export const toWikiScopeTarget = ({
   return { kind: WikiScopeKind.Wiki };
 };
 
-/** The container of the briefing, or null for the global wiki and a variant */
 export const getWikiPageScopeContainer = (
   scope: WikiScope,
 ): EventContainer | null =>
@@ -217,13 +209,6 @@ export const getWikiPageScopeContainer = (
 export const isWikiScopeFrozen = (scope: WikiScope) =>
   scope.kind === WikiScopeKind.Briefing && scope.frozen;
 
-/**
- * The page if it exists, is not in the trash and the actor holds the tier
- * in the scope
- *
- * @throws NotFoundError otherwise, without a difference between the cases,
- * thus the existence of a page never leaks
- */
 export const requireAccessibleWikiPage = (
   scope: WikiScope,
   pageId: string,
@@ -236,16 +221,10 @@ export const requireAccessibleWikiPage = (
 };
 
 interface WikiPageOfScopeOptions {
-  /** The message of the `NotFoundError` */
   readonly notFoundMessage?: WikiErrorMessage;
-  /** Restore and destroy work on a page in the trash, not on a live page */
   readonly expectDeleted?: boolean;
 }
 
-/**
- * A page that the actor cannot read does not exist for the actor. The edit
- * and the admin tier give a `ForbiddenError`.
- */
 const throwMissingWikiPageTier = (
   tier: WikiPageAccessTier,
   notFoundMessage: WikiErrorMessage,

@@ -22,7 +22,6 @@ interface Props {
 const toDate = (value: string | null) =>
   value === null ? null : new Date(value);
 
-/** The citizen in the form that `CitizenCellLink` uses */
 const toCellCitizen = (citizen: PenaltyEntryCitizenOutput | null) =>
   citizen && {
     id: citizen.id,

@@ -35,8 +35,7 @@ export const generateMetadata = generateMetadataWithTryCatch(
 );
 
 /**
- * Gets the items of one item type. Returns null if Cornerstone does not
- * respond in time or sends data that is not valid.
+ * Null if Cornerstone does not respond in time or sends data that is not valid
  */
 const getItems = async (dataUrl: string) => {
   try {

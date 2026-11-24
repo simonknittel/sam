@@ -12,7 +12,7 @@ import {
 } from "@sam-monorepo/application";
 import { type Citizen } from "@sam-monorepo/database/client";
 
-/** All entries of the citizen: the tab of the citizen has no pagination */
+/** All pages: the tab of the citizen has no pagination */
 export const getEntriesOfCitizen = withTrace(
   "getEntriesOfCitizen",
   async (citizenId: Citizen["id"], expired: "active" | "all" = "active") => {

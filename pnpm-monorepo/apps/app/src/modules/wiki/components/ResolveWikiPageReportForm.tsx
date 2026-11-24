@@ -12,12 +12,7 @@ interface Props {
   readonly reportId: string;
 }
 
-/** Inline resolve form on the report detail page. */
 export const ResolveWikiPageReportForm = ({ className, reportId }: Props) => {
-  /**
-   * An error shows as a toast: when a different manager resolved the report
-   * before, the refreshed page has no form anymore
-   */
   const { formAction } = useAction(resolveWikiPageReport);
 
   return (

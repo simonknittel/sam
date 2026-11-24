@@ -45,19 +45,14 @@ const findRecipientOfPenaltyEntry = async (
   };
 };
 
-/**
- * The citizen of the penalty entry, when the citizen can log in and read the
- * own penalty entries. Null when the penalty entry does not exist.
- */
 export const findPenaltyEntryRecipient = (
   context: ApplicationContext,
   input: FindPenaltyEntryRecipientInput,
 ) => findRecipientOfPenaltyEntry(context, { id: input.penaltyEntryId });
 
 /**
- * The recipient of `findPenaltyEntryRecipient()` for an expired entry. Null
- * also when the entry is deleted: the citizen gets no notification about an
- * entry that does not exist for the citizen any more.
+ * A deleted entry does not exist for the citizen any more, thus it gives no
+ * notification
  */
 export const findPenaltyEntryExpiredRecipient = (
   context: ApplicationContext,

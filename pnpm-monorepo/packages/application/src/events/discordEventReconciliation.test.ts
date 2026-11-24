@@ -28,11 +28,6 @@ describe("excludeAppPublishedEvents", () => {
     expect(remaining.map((event) => event.id)).toEqual(["discord-1"]);
   });
 
-  /**
-   * The whole point of the filter: a published app event that also survives
-   * the "missing from Discord" check would be imported once and deleted the
-   * next run, over and over.
-   */
   test("leaves a published app event out of the cancellation check", () => {
     const remaining = excludeAppPublishedEvents(
       [{ id: "published-by-app" }],

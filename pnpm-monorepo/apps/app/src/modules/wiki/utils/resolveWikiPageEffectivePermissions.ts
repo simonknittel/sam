@@ -88,11 +88,6 @@ export const resolveWikiPageReadAudience = (
   };
 };
 
-/**
- * Walks up from the page to the nearest ancestor granting the role manage
- * permission, which is where the role's manage permission on this page comes
- * from. Returns undefined if no ancestor does.
- */
 const findInheritedAdminSource = (
   page: WikiPagePermissionSource,
   role: WikiPermissionRole,

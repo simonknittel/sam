@@ -22,11 +22,6 @@ interface WithdrawOpenInvitationsInput {
   readonly withdrawnAt: Date;
 }
 
-/**
- * Withdraws the open invitations of the citizens at the event and writes an
- * activity entry for each of them. Takes the transaction client, thus the
- * entries commit together with the change that withdrew the invitations.
- */
 export const withdrawOpenInvitations = async (
   transaction: Prisma.TransactionClient,
   {
@@ -81,9 +76,8 @@ export const buildInvitationAuditEvents = (
   }));
 
 /**
- * The notification of the organizers about the answer of an invited citizen
- * (see `findEventOrganizerRecipients()`). Unlike a sign-up, an answer
- * notifies at each time: the organizers asked for it.
+ * Unlike a sign-up, an answer notifies at each time: the organizers asked for
+ * it
  */
 export const buildInvitationAnsweredNotification = (
   eventId: Event["id"],

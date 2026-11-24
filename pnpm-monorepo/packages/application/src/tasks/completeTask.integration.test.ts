@@ -13,7 +13,6 @@ beforeEach(async () => {
   await truncateAllTables();
 });
 
-/** A group task with new SILC that its assignee can complete */
 const createNewSilcTask = async () => {
   const creator = await prisma.citizen.create({
     data: { handle: "auftraggeber" },

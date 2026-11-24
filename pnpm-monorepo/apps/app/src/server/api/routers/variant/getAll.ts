@@ -2,7 +2,6 @@ import { getApplicationContext } from "@/modules/application";
 import { findVariantCatalog } from "@sam-monorepo/application";
 import { protectedProcedure, toTrpcError } from "../../trpc";
 
-/** See `findVariantCatalog()` */
 export const getAll = protectedProcedure.query(async () => {
   try {
     return await findVariantCatalog(getApplicationContext());

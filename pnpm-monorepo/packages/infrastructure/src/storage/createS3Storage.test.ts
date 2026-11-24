@@ -274,8 +274,7 @@ describe("presigned URLs", () => {
     expect(url.searchParams.get("X-Amz-SignedHeaders")?.split(";")).toContain(
       "content-type",
     );
-    // A checksum of the empty command body makes strict providers refuse the
-    // upload of the browser (see `createS3Client()`)
+    // See `createS3Client()`
     expect(
       [...url.searchParams.keys()].filter((name) =>
         name.toLowerCase().includes("checksum"),

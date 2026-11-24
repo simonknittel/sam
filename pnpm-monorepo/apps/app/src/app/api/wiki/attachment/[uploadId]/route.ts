@@ -13,10 +13,8 @@ import * as z from "zod";
 const paramsSchema = z.object({ uploadId: idSchema });
 
 /**
- * Downloads an attachment of a wiki page. An image is public (nobody can
- * guess its URL), but an attachment goes only to a user who can see a page
- * with the upload. The route redirects to a presigned URL with a short
- * lifetime (see `createWikiAttachmentDownloadUrl()`).
+ * The check does not protect the object itself: the bucket is public, and only
+ * the id of the upload is hard to guess.
  */
 export async function GET(
   _request: Request,

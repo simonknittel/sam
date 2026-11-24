@@ -1,7 +1,6 @@
 import * as z from "zod";
 import { citizenReferenceSchema, dateTimeOutputSchema } from "../../schemas.js";
 
-/** A manual notification as send_manual_notification gives it */
 export const manualNotificationOutputSchema = z.strictObject({
   id: z.string(),
   created_at: dateTimeOutputSchema,

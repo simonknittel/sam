@@ -25,13 +25,7 @@ export const renameFlowInputSchema = z.object({
 
 export type RenameFlowInput = z.infer<typeof renameFlowInputSchema>;
 
-/**
- * Gives a live flow a new name and a new slug. The links to the old slug
- * stop to work. Requires `career;manage`.
- *
- * @throws NotFoundError when the flow does not exist or is deleted
- * @throws ValidationError when the flow cannot use the slug
- */
+/** The links to the old slug stop to work */
 export const renameFlow = (
   context: ApplicationContext,
   actor: Actor,

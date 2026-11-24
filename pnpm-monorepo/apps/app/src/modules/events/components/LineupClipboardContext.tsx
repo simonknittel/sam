@@ -8,10 +8,6 @@ import type { EventContainer } from "../utils/eventContainer";
 export interface LineupClipboardEntry {
   positionId: EventPosition["id"];
   positionName: EventPosition["name"];
-  /**
-   * Used to point out that the position originates from another event or
-   * template.
-   */
   container: EventContainer;
   /**
    * Used to hide paste targets which would nest the position too deeply.
@@ -35,10 +31,6 @@ interface Props {
   readonly children: ReactNode;
 }
 
-/**
- * Keeps a copied position around in the local storage so it can be pasted into
- * the lineup of another event or template.
- */
 export const LineupClipboardProvider = ({ children }: Props) => {
   const [clipboard, setClipboard] = useStoredValue<LineupClipboardEntry | null>(
     "lineup_clipboard",
@@ -55,9 +47,8 @@ export const LineupClipboardProvider = ({ children }: Props) => {
 
   const value = {
     /**
-     * Entries copied before the clipboard learned about containers name
-     * their event in a since-removed field, so they are dropped instead of
-     * rendering a paste menu that cannot work.
+     * The local storage can hold an entry without a container, which the paste
+     * menu cannot use.
      */
     clipboard: clipboard?.container ? clipboard : null,
     copy,
@@ -69,10 +60,6 @@ export const LineupClipboardProvider = ({ children }: Props) => {
   );
 };
 
-/**
- * Check for undefined since the defaultValue of the context is undefined. If
- * it's still undefined, the provider component is missing.
- */
 export function useLineupClipboard() {
   const context = useContext(LineupClipboardContext);
   if (!context) throw new Error("Provider missing!");

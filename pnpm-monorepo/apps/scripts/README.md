@@ -13,11 +13,11 @@ DATABASE_URL="postgresql://postgres:admin@localhost:5432/db" pnpm exec tsx src/m
 
 ## Game data import
 
-The scripts in `src/game_data/` import ship and vehicle data that you extracted from the Star Citizen game files. See [docs/game-files-data-extraction.md](../../../docs/game-files-data-extraction.md) for the full extraction and import procedure.
+The scripts in `src/game_data/` import the crafting blueprints and their items that you extracted from the Star Citizen game files. See [docs/game-files-data-extraction.md](../../../docs/game-files-data-extraction.md) for the full extraction and import procedure.
 
 ## Wiki demo page
 
-The script generates the Tiptap JSON for the "live demo page" of the wiki. The page uses each formatting option and embed. Import the output file through the JSON import of the wiki (page menu; it requires `wiki;manage` for global wiki pages, while event wiki pages check the page's admin access instead).
+The script generates the Tiptap JSON for the "live demo page" of the wiki. The page uses most formatting options and embeds. Import the output file through the JSON import of the wiki (page menu; it requires `wiki;manage` for global wiki pages, while event wiki pages check the page's admin access instead).
 
 ```sh
 pnpm run build:scripts

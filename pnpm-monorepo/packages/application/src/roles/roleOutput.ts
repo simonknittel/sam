@@ -8,7 +8,6 @@ import {
 } from "./roleTagOutput.js";
 import { isRoleVisible } from "./roleVisibility.js";
 
-/** The fields of a role in the role list */
 export const ROLE_OUTPUT_SELECT = {
   id: true,
   name: true,
@@ -29,14 +28,10 @@ export interface RoleOutput {
   /** Markdown */
   readonly description: string | null;
   readonly icon_url: string | null;
-  /** The number of levels, or null for a role without levels */
+  /** Null for a role without levels */
   readonly max_level: number | null;
-  /**
-   * The roles whose permissions this role also gives, sorted by name. Only
-   * the roles that the actor can see.
-   */
+  /** Only the roles that the actor can see */
   readonly inherited_role_ids: string[];
-  /** Sorted by name */
   readonly tags: RoleTagReference[];
 }
 

@@ -10,27 +10,20 @@ import { FORBIDDEN_TEXT } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 /**
- * Every route of /app that is closed to a citizen holding nothing but the
- * login permission, taken from the pages' own guards (`authorizePage` and
- * the hand-rolled `forbidden()` calls). One sign-in walks all of them, so
- * adding a gated route costs one row here instead of a spec of its own.
- *
- * Routes whose gate needs an id (an event, a template, a citizen) stay with
- * the spec that owns that entity — the gate there is about the entity, not
- * about the route.
+ * The routes that are closed to a citizen with only the login permission, taken
+ * from the pages' own guards. Routes whose gate needs an id (an event, a
+ * template, a citizen) stay with the spec that owns that entity: the gate there
+ * is about the entity, not about the route.
  */
 const GATED_ROUTES = [
   "/app/account/analytics",
-  /** `mcp;use` */
   "/app/ai-agents",
   "/app/ai-agents/claude-plugin",
   "/app/ai-agents/clients",
   "/app/ai-agents/manual",
-  /** No readable flow and no `career;manage` */
   "/app/career",
   "/app/career/settings",
   "/app/events",
-  /** Neither `event;create` nor `event;manage` nor a shared template */
   "/app/events/templates",
   "/app/fleet/changes",
   "/app/fleet/my-ships",
@@ -43,7 +36,6 @@ const GATED_ROUTES = [
   "/app/iam/tags",
   "/app/iam/users",
   "/app/leaderboards",
-  /** `manualNotification;manage` */
   "/app/manual-notifications",
   "/app/penalty-points",
   "/app/silc/dashboard",
@@ -64,9 +56,8 @@ const GATED_ROUTES = [
 ] as const;
 
 /**
- * Routes that stay open to everyone, each with something only its rendered
- * page shows — so a gate accidentally added to one of them fails here
- * instead of silently locking people out. `/app/uploads` is among them on
+ * Each route has something that only its rendered page shows, so a gate that
+ * closes one of them by mistake fails here. `/app/uploads` is among them on
  * purpose: everyone manages their own files, and `upload;manage` widens the
  * query instead of opening the route.
  */
@@ -79,7 +70,6 @@ const OPEN_ROUTES: readonly [route: string, marker: (page: Page) => Locator][] =
       "/app/calendar",
       (page) => page.getByText("Saisonale Events", { exact: true }),
     ],
-    /** Every citizen switches the seasonal events off for themselves */
     [
       "/app/account/appearance",
       (page) => page.getByRole("heading", { name: "Saisonale Events" }),

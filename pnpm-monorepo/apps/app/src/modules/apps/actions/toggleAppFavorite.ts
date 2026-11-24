@@ -18,10 +18,7 @@ export const toggleAppFavorite = createAuthenticatedAction(
   "toggleAppFavorite",
   toggleAppFavoriteInputSchema,
   async (formData, authentication, data, t) => {
-    /**
-     * The apps the caller can actually see. Redacted apps carry no key, so
-     * they never match.
-     */
+    /** Redacted apps carry no key, so they never match */
     const apps = await getAppLinks();
     const visibleAppKeys = new Set(
       apps?.flatMap((app) => getAppKey(app) ?? []),
@@ -39,11 +36,7 @@ export const toggleAppFavorite = createAuthenticatedAction(
       return mapApplicationErrorToActionResponse(error, { formData, t });
     }
 
-    /**
-     * Deliberately no `refresh()` on success: apps are resolved in the `/app`
-     * layout, so a refresh would re-render the whole shell underneath the
-     * open popover. The apps context holds the optimistic state instead.
-     */
+    /** Deliberately no `refresh()` on success, see `AppsContextProvider` */
     return {
       success: result.is_favorite
         ? "Als Favorit gespeichert."

@@ -12,23 +12,15 @@ export const REDIRECT_TO_SEARCH_PARAM = "redirect-to";
  */
 export const REQUEST_PATH_HEADER = "x-sam-request-path";
 
-/**
- * This dummy origin makes it possible to parse and build a relative path with
- * `URL`. No request goes to this origin.
- */
+/** Only to parse a relative path with `URL`: no request goes to this origin */
 const DUMMY_ORIGIN = "http://redirect-to-validation.internal";
 
 /**
- * Validates the value of the `redirect-to` search param.
- *
- * To prevent an open redirect, the function only accepts a relative path that
- * stays on the same origin and points into `/app`. `URL.parse()` normalizes
- * traversal segments (`..`) and backslashes, and the checks operate on the
- * normalized result. `URL.parse()` is not yet Baseline "widely available",
- * but only server code calls this function.
- *
- * @returns The normalized path together with its search params, or `null` if
- * the value is not a safe target.
+ * Accepts only a relative path that stays on the same origin and points into
+ * `/app`, to prevent an open redirect. `URL.parse()` normalizes traversal
+ * segments (`..`) and backslashes, and the checks operate on the normalized
+ * result. It is not yet Baseline "widely available", but only server code calls
+ * this function.
  */
 export const validateRedirectTo = (value: string | null): string | null => {
   if (!value?.startsWith("/")) return null;
@@ -43,10 +35,7 @@ export const validateRedirectTo = (value: string | null): string | null => {
   return url.pathname + url.search;
 };
 
-/**
- * The path of the login page. After the login, the login page sends the user
- * to `redirectTo`. Give only a value that `validateRedirectTo()` accepted.
- */
+/** Give only a value that `validateRedirectTo()` accepted */
 export const getLoginPath = (redirectTo: string | null) => {
   const loginUrl = new URL("/", DUMMY_ORIGIN);
   if (redirectTo)

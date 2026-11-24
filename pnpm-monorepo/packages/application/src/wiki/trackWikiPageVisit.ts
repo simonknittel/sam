@@ -7,7 +7,6 @@ import { withSpan } from "../withSpan.js";
 import { WikiPageAccessTier } from "./getAccessibleWikiPage.js";
 import { requireWikiPageOfScope } from "./wikiScope.js";
 
-/** One hour: a page records at most one visit in this time */
 const WIKI_VISIT_THROTTLE_MILLISECONDS = 60 * 60 * 1000;
 
 export const trackWikiPageVisitInputSchema = z.object({
@@ -25,18 +24,11 @@ export interface TrackWikiPageVisitOutput {
 }
 
 /**
- * Records a visit of a page for the list of the recent pages. The app calls
- * it from the browser after the page shows, not during the render on the
- * server: a prefetch renders pages that the user never opens, and a
- * navigation from the prefetch cache renders nothing. The throttle writes
- * one time for each page and hour. The audit event has the same throttle,
- * thus it counts sessions, not requests. The use case also works in a
- * briefing that is over, because a visit is personal data.
- *
- * @throws ForbiddenError for a user without a citizen
- * @throws NotFoundError when a different user deleted the page or took the
- * read access away after the browser got the page, for example from the
- * cache of the browser for the back and forward buttons
+ * The app calls it from the browser after the page shows, not during the
+ * render on the server: a prefetch renders pages that the user never opens,
+ * and a navigation from the prefetch cache renders nothing. The audit event
+ * has the same throttle, thus it counts sessions, not requests. The use case
+ * also works in a briefing that is over, because a visit is personal data.
  */
 export const trackWikiPageVisit = (
   context: ApplicationContext,

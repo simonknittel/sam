@@ -9,10 +9,8 @@ export interface FindNewItemIdsInput {
 }
 
 /**
- * Of the listed items, the ones which are new for the actor. Batched into a
- * single query, thus a list does not ask once for each row. Checks no
- * permission: the caller has already applied the visibility and the read
- * permission to the ids. Empty for an actor without a citizen.
+ * No permission check: the caller has applied the visibility and the read
+ * permission to the ids
  */
 export const findNewItemIds = async (
   context: ApplicationContext,

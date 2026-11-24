@@ -1,4 +1,3 @@
-/** The use cases of the SILC: the ledger, the balances and the salaries */
 export {
   createSilcTransaction,
   createSilcTransactionInputSchema,

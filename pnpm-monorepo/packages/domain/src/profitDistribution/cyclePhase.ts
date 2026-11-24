@@ -3,7 +3,6 @@ import type {
   ProfitDistributionCycle,
 } from "@sam-monorepo/database/client";
 
-/** The phases of a profit distribution cycle, in their order */
 export enum CyclePhase {
   Collection,
   PayoutPreparation,
@@ -12,10 +11,9 @@ export enum CyclePhase {
 }
 
 /**
- * Gets the phase of a cycle from its actual dates only: each phase lasts
- * until its actual end is set. The planned ends (`collectionEndsAt`,
- * `payoutEndsAt`) are only for display and for the midnight jobs, which set
- * the actual ends when they are due.
+ * The planned ends (`collectionEndsAt`, `payoutEndsAt`) are only for display,
+ * for the payout reminder (`sendSincomePayoutReminders()`) and for the midnight
+ * jobs, which set the actual ends when they are due.
  */
 export const getCurrentPhase = (
   cycle: Pick<

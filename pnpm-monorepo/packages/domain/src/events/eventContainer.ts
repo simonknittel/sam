@@ -15,10 +15,6 @@ export interface EventContainer {
   readonly id: string;
 }
 
-/**
- * The container columns of a position row: an event or an event template.
- * Exactly one of the two columns is set (a CHECK constraint of the database).
- */
 export type EventContainerColumns =
   | { readonly eventId: string; readonly templateId: null }
   | { readonly eventId: null; readonly templateId: string };
@@ -34,10 +30,8 @@ export const toTemplateContainer = (templateId: string): EventContainer => ({
 });
 
 /**
- * The container of a stored position, wiki page or tag, or null for a row
- * with neither column set. A wiki page or tag without them belongs to the
- * global wiki. The CHECK constraint of a position rules it out: callers treat
- * it like a missing position.
+ * Null for a wiki page or tag of the global wiki. The CHECK constraint of a
+ * position rules null out: callers treat it like a missing position.
  */
 export const getEventContainerOfRow = (row: {
   readonly eventId: string | null;
@@ -49,8 +43,8 @@ export const getEventContainerOfRow = (row: {
 };
 
 /**
- * The container columns of a position row — usable both as a `where` filter
- * that can never match the other container and as `create` data.
+ * Usable both as a `where` filter that can never match the other container and
+ * as `create` data.
  */
 export const eventContainerColumns = (
   container: EventContainer,
@@ -69,10 +63,7 @@ export const eventContainerColumns = (
   }
 };
 
-/**
- * The container columns of a wiki page or tag, where "no container" is a
- * valid state: the global wiki.
- */
+/** Null: the global wiki */
 export const wikiContainerColumns = (container: EventContainer | null) =>
   container
     ? eventContainerColumns(container)

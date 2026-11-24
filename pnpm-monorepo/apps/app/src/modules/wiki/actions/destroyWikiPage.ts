@@ -7,7 +7,6 @@ import {
 } from "@sam-monorepo/application";
 import { WIKI_ERROR_TEXTS } from "../utils/wikiErrorTexts";
 
-/** Deletes a page in the trash permanently (see the use case) */
 export const destroyWikiPage = createUseCaseAction({
   name: "destroyWikiPage",
   schema: destroyWikiPageInputSchema,

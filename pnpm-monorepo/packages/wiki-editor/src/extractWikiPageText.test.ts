@@ -185,12 +185,6 @@ describe("collect mentioned citizen ids", () => {
 });
 
 describe("wiki heading id assigner", () => {
-  /**
-   * The static renderer and the live editor walk EVERY heading and ask the
-   * shared assigner for an id — slugified, deduplicated with a numeric
-   * suffix, and empty/whitespace-only headings get null (no id attribute)
-   * without shifting later ids, so both renderers stay aligned.
-   */
   test("slugifies, deduplicates and skips empty headings", () => {
     const nextHeadingId = createWikiHeadingIdAssigner();
     expect(

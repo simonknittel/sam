@@ -5,7 +5,6 @@ import { samPermissionsSkill } from "./skills/samPermissions/index.js";
 
 export const SKILL_FILE_NAME = "SKILL.md";
 
-/** A file of a skill with the text that `resources/read` gives */
 export interface ServedSkillFile {
   readonly uri: string;
   /** Relative to the root of the skill, for example `SKILL.md` */
@@ -20,23 +19,20 @@ export interface ServedSkillFile {
   readonly size: number;
 }
 
-/** A skill as the Skills extension of MCP serves it */
 export interface ServedSkill {
   /** The URI of `SKILL.md` */
   readonly uri: string;
-  /** The YAML frontmatter of `SKILL.md` as an object */
   readonly frontmatter: {
     readonly name: string;
     readonly description: string;
   };
-  /** All files of the skill, `SKILL.md` first */
+  /** `SKILL.md` first */
   readonly files: readonly ServedSkillFile[];
 }
 
 /**
- * The frontmatter and the instructions. A JSON string is also a valid YAML
- * string. Thus the description can contain all characters, and YAML reads a
- * name such as `true` or `123` as a string.
+ * A JSON string is also a valid YAML string. Thus the description can contain
+ * all characters, and YAML reads a name such as `true` or `123` as a string.
  */
 const renderSkillFile = ({
   name,
@@ -90,9 +86,6 @@ export const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
   samPermissionsSkill,
 ];
 
-/**
- * All skills of the server. They change only with a release, thus the
- * digests are calculated one time.
- */
+/** They change only with a release, thus the digests are calculated one time */
 export const SKILL_CATALOG: readonly ServedSkill[] =
   SKILL_DEFINITIONS.map(toServedSkill);

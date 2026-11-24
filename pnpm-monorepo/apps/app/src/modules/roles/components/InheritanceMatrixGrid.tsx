@@ -14,14 +14,9 @@ interface Props {
 }
 
 /**
- * The matrix is a single client component on purpose: one hydration island
- * that receives the roles as a compact prop. One client-component reference
- * per checkbox dominated the RSC payload and the hydration time of the
- * permission matrix, which this one mirrors.
+ * One client component for the reason in `PermissionMatrixGrid`.
  *
- * Rows and columns come from the same array, so both axes always agree on
- * the order. A checked cell means: the role of the row inherits the role of
- * the column.
+ * A checked cell means: the role of the row inherits the role of the column.
  */
 export const InheritanceMatrixGrid = ({ roles }: Props) => {
   const tableStyle = {
@@ -30,11 +25,7 @@ export const InheritanceMatrixGrid = ({ roles }: Props) => {
 
   const handleChange: ChangeEventHandler<HTMLFormElement> = (event) => {
     const input = event.target as unknown as HTMLInputElement;
-    /**
-     * Split at the first underscore only: role ids are cuids and contain no
-     * underscore. The rule matches the permission matrix, whose permission
-     * strings do (example: `taskRewardType=NEW_SILC`).
-     */
+    /** See `PermissionMatrixGrid` */
     const separatorIndex = input.name.indexOf("_");
     const roleId = input.name.slice(0, separatorIndex);
     const inheritedRoleId = input.name.slice(separatorIndex + 1);
@@ -97,11 +88,7 @@ const MatrixRow = ({ role, roles }: MatrixRowProps) => {
 
   return (
     <tr
-      /**
-       * content-visibility lets the browser skip layout and paint for the
-       * rows outside the viewport; the intrinsic height keeps the scrollbar
-       * stable and must agree with the h-8 cells.
-       */
+      /** See `PermissionMatrixGrid` */
       className="-mx-2 grid grid-cols-(--table-columns) items-center gap-2 [contain-intrinsic-height:2rem] [content-visibility:auto]"
     >
       <MatrixRoleCell role={role} href={`/app/roles/${role.id}/inheritance`} />
@@ -127,11 +114,9 @@ interface SelfInheritanceCellProps {
 }
 
 /**
- * The cell on the diagonal. It carries no control at all, so neither the
- * keyboard nor a screen reader lands on something that cannot be switched.
- * The title says why the cell is dead for a mouse; the hidden text does the
- * same for a screen reader, which does not announce a title on a plain
- * element. One extra span per row is negligible, unlike one per cell.
+ * No control, so neither the keyboard nor a screen reader lands on something
+ * that cannot be switched. The hidden text is for a screen reader, which does
+ * not announce a title on a plain element.
  */
 const SelfInheritanceCell = ({ roleName }: SelfInheritanceCellProps) => {
   return (

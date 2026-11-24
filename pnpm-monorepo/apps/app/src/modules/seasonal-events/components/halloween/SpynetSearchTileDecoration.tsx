@@ -5,20 +5,11 @@ import waxDrips from "../../assets/halloween/wax-drips.svg";
 import { SeasonalImage } from "../SeasonalImage";
 
 /**
- * Two lit candles which stand on the upper edge of the SpyNet search tile,
- * near its right end. Their wax pools on the edge and runs down the face of
- * the tile.
- *
- * The three drawings share one box: it starts 56 pixels above the edge of
- * the tile and goes 48 pixels down into the tile, thus the edge lies at
- * y 56 in each drawing. The long drips run down only where the search field
- * never shows text or an icon: between the end of the input and the clear
- * button, and to the right of the clear button. The other drips end above
- * the text.
- *
- * The flames are a separate drawing on top, thus only the flames and their
- * light on the tile flicker. A viewer who prefers reduced motion sees the
- * flames fully lit.
+ * The three drawings share one box: it starts 56 pixels above the edge of the
+ * tile and goes 48 pixels down into the tile, thus the edge lies at y 56 in
+ * each drawing. The long drips run down only where the search field never shows
+ * text or an icon: between the end of the input and the clear button, and to
+ * the right of the clear button. The other drips end above the text.
  */
 export const HalloweenSpynetSearchTileDecoration = () => (
   <div className="absolute -top-14 right-0 h-26 w-16">

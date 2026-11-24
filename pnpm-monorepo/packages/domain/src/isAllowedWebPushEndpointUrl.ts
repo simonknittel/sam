@@ -8,7 +8,7 @@
  * defensively before sending.
  *
  * `URL.parse()` is not yet Baseline "widely available", but only server code
- * (the server action and the Lambda) calls this function.
+ * (the use cases of the application package) calls this function.
  */
 export const isAllowedWebPushEndpointUrl = (value: string) => {
   const url = URL.parse(value);

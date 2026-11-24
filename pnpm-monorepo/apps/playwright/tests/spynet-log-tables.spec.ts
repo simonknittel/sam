@@ -18,7 +18,7 @@ import {
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
-/** The page size of the tables, see `PER_PAGE` of the app */
+/** Mirrors `PAGE_SIZE` of the app's OtherTableTile and NotesTableTile */
 const PER_PAGE = 50;
 
 const OTHER_TABLE_PERMISSIONS = ["citizen;read", "spynetOther;read"];
@@ -82,10 +82,6 @@ const createLogs = async (prisma: PrismaClient) => {
   });
 };
 
-/**
- * Only the visible rows: while the page streams, React keeps a hidden copy of
- * the table next to the visible one
- */
 const tableRows = (page: Page) =>
   page.locator("tbody tr").filter({ visible: true });
 
@@ -168,7 +164,6 @@ const EDITOR_PERMISSIONS = [
 const rowOf = (page: Page, content: string) =>
   tableRows(page).filter({ has: page.getByText(content, { exact: true }) });
 
-/** Opens the row menu of the log and confirms the delete dialog */
 const deleteLogInTable = async (page: Page, content: string) => {
   const deleteButton = page
     .getByRole("dialog", { name: "Aktionen" })
@@ -228,7 +223,6 @@ test("a log is confirmed and deleted in the log table", async ({
   await expect(
     rowOf(page, "bestaetigter-handle").getByText("Unbestätigt"),
   ).toHaveCount(0);
-  /** "Bestätigt von" links to the citizen of the editor */
   await expect(
     rowOf(page, "bestaetigter-handle").getByRole("link", {
       name: "log-bearbeiter",
@@ -375,16 +369,13 @@ test("the log table shows the delete button only with the delete permission of t
   await expect(actionsButton(page, "nur-lesbarer-handle")).toHaveCount(0);
 });
 
-/** Reads the confirmed notes of each note type and classification level */
 const READ_CONFIRMED_NOTES = "note;read;noteTypeId=*;classificationLevelId=*";
 
-/** The names of the buttons that decide about a log without a decision */
 const DECISION_BUTTONS = ["Bestätigen", "Falschmeldung"];
 
 /**
- * Opens the menu of a note in the notes table, checks its delete button and
- * opens the change modal. An open modal hides the page from the
- * accessibility tree, thus the check of the menu comes first.
+ * An open modal hides the page from the accessibility tree, thus the check of
+ * the menu comes first.
  */
 const openUpdateModal = async (
   page: Page,
@@ -480,7 +471,6 @@ test("the notes table shows the change and delete buttons only with the permissi
     0,
   );
 
-  /** Only the values in which the editor may create a note */
   let updateDialog = await openUpdateModal(page, "Beobachtung über aktiver", 1);
   await expect(
     updateDialog.getByLabel("Notizart").locator("option"),
@@ -490,13 +480,11 @@ test("the notes table shows the change and delete buttons only with the permissi
   ).toHaveText(["Geheim"]);
   await page.keyboard.press("Escape");
   await expect(updateDialog).not.toBeVisible();
-  /** The close of the modal also closes the menu of its row */
   await expect(
     page.getByRole("dialog", { name: "Aktionen" }),
   ).not.toBeVisible();
   await expect(actionsButton(page, "Beobachtung über aktiver")).toBeFocused();
 
-  /** Also the current values of the note */
   updateDialog = await openUpdateModal(page, "Gerücht über aktiver", 0);
   await expect(
     updateDialog.getByLabel("Notizart").locator("option"),
@@ -673,7 +661,6 @@ test("the notes table shows only the notes that the read permissions allow, and 
     await expect(logContent(page, content)).toBeVisible();
   await expect(tableRows(page)).toHaveCount(readableContents.length);
   await expect(nextPageButton(page)).toHaveCount(0);
-  /** The viewer may read the rumour without a decision, but not decide it */
   await expect(
     rowOf(page, "Unbestätigtes Gerücht").getByText("Unbestätigt", {
       exact: true,
@@ -684,7 +671,6 @@ test("the notes table shows only the notes that the read permissions allow, and 
       tableRows(page).getByRole("button", { name: decision }),
     ).toHaveCount(0);
 
-  /** The filter offers only the classification levels of these notes */
   const options = page.getByRole("option");
   await clickUntilVisible(
     page.getByRole("combobox", { name: "Geheimhaltungsstufe" }),
@@ -705,7 +691,6 @@ test("the notes table shows the decision buttons only with the permission to con
   const secret = await prisma.classificationLevel.create({
     data: { name: "Geheim" },
   });
-  /** The reviewer may read all notes, but decide only about the rumours */
   const reviewer = await createCitizen(prisma, {
     handle: "notiz-pruefer",
     permissionStrings: [
@@ -784,10 +769,6 @@ test("the log table sorts by the confirmation time and keeps the sort and the fi
   await expect(page).toHaveURL(/sort=created-at-asc/);
   await expect(tableRows(page).first()).toContainText(OLDEST_CONFIRMED_HANDLE);
 
-  /**
-   * The newest confirmation first, and the log without a decision last: on
-   * the second page after the three oldest confirmed logs
-   */
   await pickFilterOption(page, "Sortierung", "Bestätigt am ↓");
   await expect(page).toHaveURL(/sort=confirmed-at-desc/);
   await expect(logContent(page, CONFIRMED_DISCORD_ID)).toBeVisible();
@@ -806,7 +787,6 @@ test("the log table sorts by the confirmation time and keeps the sort and the fi
   await expect(tableRows(page)).toHaveCount(PER_PAGE);
   await expect(logContent(page, CONFIRMED_DISCORD_ID)).toBeVisible();
 
-  /** 51 confirmed handle logs and the confirmed Discord ID: two pages */
   await page.goto("/app/spynet/other");
   await pickFilterOption(page, "Bestätigungsstatus", "Bestätigt");
   await expect(page).toHaveURL(/\?confirmation=confirmed$/);
@@ -843,7 +823,6 @@ test("the notes table filters by note types and keeps the filter when it sorts",
     data: { handle: "beobachteter" },
   });
 
-  /** The note of the first note type is the newest */
   const now = Date.now();
   await prisma.citizenLog.createMany({
     data: [observation, rumour, sighting].map((noteType, index) => {

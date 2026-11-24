@@ -73,7 +73,6 @@ interface PasteMenuProps {
   readonly groupLevel: number;
 }
 
-/** Names where a copied position came from when that isn't the lineup at hand */
 const getOriginHint = (
   source: LineupClipboardEntry["container"],
   target: LineupClipboardEntry["container"],

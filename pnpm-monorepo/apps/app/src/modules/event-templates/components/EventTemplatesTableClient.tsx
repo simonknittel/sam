@@ -44,7 +44,6 @@ const COLUMNS: TableColumn[] = [
 
 interface Props {
   readonly entries: readonly EventTemplateListEntry[];
-  /** Only viewers who see foreign templates get the owner column */
   readonly showOwner: boolean;
   /**
    * `event;create` — which not every viewer of the list holds, and which

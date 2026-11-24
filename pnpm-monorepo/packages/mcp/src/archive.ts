@@ -9,7 +9,6 @@ import { createHash } from "node:crypto";
  */
 const FILE_MODIFICATION_TIME = new Date(1980, 0, 1);
 
-/** The best compression of deflate */
 const COMPRESSION_LEVEL = 9;
 
 export interface ArchiveFile {
@@ -20,14 +19,12 @@ export interface ArchiveFile {
 
 export interface Archive {
   readonly bytes: Uint8Array<ArrayBuffer>;
-  /** The SHA-256 digest of the bytes in lowercase hexadecimal */
   readonly sha256: string;
 }
 
 /**
- * A zip file of the files in the given order. The same files always give the
- * same bytes: the version of a Claude plugin and the digests of the skill
- * index are the SHA-256 digests of the bytes.
+ * The same files always give the same bytes: the version of a Claude plugin and
+ * the digests of the skill index are the SHA-256 digests of the bytes
  */
 export const createArchive = (files: readonly ArchiveFile[]): Archive => {
   const entries: Zippable = Object.fromEntries(

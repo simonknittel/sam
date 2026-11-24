@@ -47,7 +47,6 @@ const getDeadline = (src: string, remainingLifetimeInMilliseconds: number) => {
 
 interface Props {
   readonly src: string;
-  /** The lifetime of the token in `src` that was left at the render */
   readonly remainingLifetimeInMilliseconds: number;
 }
 
@@ -126,8 +125,8 @@ export const StatisticsDashboardFrame = ({
     <div className="relative isolate">
       <IframeLayout
         src={shownFrame.src}
+        title="Statistiken"
         iframeProps={{
-          title: "Statistiken",
           inert: isExpired,
           sandbox: SANDBOX,
         }}

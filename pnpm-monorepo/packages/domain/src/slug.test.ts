@@ -7,8 +7,6 @@ describe("slugify wiki page title", () => {
   });
 
   test("never returns an empty slug", () => {
-    // The slug package falls back to a base64-derived slug for input
-    // without any mappable characters
     expect(slugifyWikiPageTitle("🚀🚀🚀")).not.toBe("");
     expect(slugifyWikiPageTitle("")).toBe("-");
   });

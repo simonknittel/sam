@@ -62,7 +62,6 @@ const ACTIONS_COLUMN: TableColumn = {
 
 interface Props {
   readonly className?: string;
-  /** True while the admin mode of the admin toolbar is active */
   readonly canManageAdminMode: boolean;
 }
 
@@ -167,7 +166,6 @@ interface GrantNameCellProps {
   readonly displayName: string;
 }
 
-/** The own name of the user shows the name of the client below it */
 const GrantNameCell = ({ grant, displayName }: GrantNameCellProps) => {
   return (
     <td className="flex min-w-0 items-center gap-2">

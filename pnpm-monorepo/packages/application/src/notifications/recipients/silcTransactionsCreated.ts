@@ -7,17 +7,12 @@ export interface FindSilcTransactionRecipientsInput {
   readonly transactionIds: readonly string[];
 }
 
-/** The receiver of one transaction */
 export interface SilcTransactionRecipient extends Recipient {
   readonly transactionId: string;
   readonly value: number;
   readonly description: string | null;
 }
 
-/**
- * One recipient for each transaction whose receiver can log in and read the
- * own transactions
- */
 export const findSilcTransactionRecipients = async (
   context: ApplicationContext,
   input: FindSilcTransactionRecipientsInput,

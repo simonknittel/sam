@@ -16,13 +16,8 @@ import {
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
-/**
- * The picker resolves its options through the citizen list, so a manager
- * needs `citizen;read` on top of the event permissions.
- */
 const MANAGER_PERMISSIONS = ["event;read", "citizen;read"];
 
-/** The tile of the participants tab that lists and edits the managers */
 const managerTile = (page: Page) => sectionByHeading(page, "Manager");
 
 const activityRows = (page: Page, message: string) =>
@@ -71,7 +66,6 @@ test("adding managers writes one feed entry for each of them", async ({
     createdById: organizer.entity.id,
     ...futureEvent(),
   });
-  /** An entry of a different type, so the type filter has something to drop */
   await prisma.eventActivity.create({
     data: {
       eventId: event.id,
@@ -111,7 +105,6 @@ test("adding managers writes one feed entry for each of them", async ({
     [first.entity.id, second.entity.id].toSorted(),
   );
 
-  /** The acting manager is the actor, the added manager the payload's subject */
   const activities = await prisma.eventActivity.findMany({
     where: { eventId: event.id, type: EventActivityType.MANAGER_ADDED },
   });
@@ -132,7 +125,6 @@ test("adding managers writes one feed entry for each of them", async ({
   await expect(addedRow).toContainText("manager-orga");
   await expect(activityRows(page, "Manager hinzugefügt")).toHaveCount(2);
 
-  /** The type filter knows the new types and narrows down to them */
   await page.goto(
     `/app/events/${event.id}/activity?type=${EventActivityType.MANAGER_ADDED}`,
   );
@@ -166,7 +158,6 @@ test("removing a manager writes a feed entry", async ({
     where: { id: event.id },
     data: { managers: { connect: { id: manager.entity.id } } },
   });
-  /** An entry by someone else, so the actor filter has something to drop */
   await prisma.eventActivity.create({
     data: {
       eventId: event.id,
@@ -211,14 +202,12 @@ test("removing a manager writes a feed entry", async ({
   await expect(removedRow).toContainText("alter-manager");
   await expect(removedRow).toContainText("abberufungs-orga");
 
-  /** The actor of the entry is the acting manager, not the removed one */
   await page.goto(
     `/app/events/${event.id}/activity?actor=${organizer.entity.id}`,
   );
   await expect(activityRows(page, "Manager entfernt")).toHaveCount(1);
   await expect(activityRows(page, "Angemeldet")).toHaveCount(0);
 
-  /** The removed manager only owns the entry they caused themselves */
   await page.goto(
     `/app/events/${event.id}/activity?actor=${manager.entity.id}`,
   );

@@ -30,7 +30,6 @@ import { EventSwitchField } from "../EventSwitchField";
 import { EventVisibilityFields } from "../EventVisibilityFields";
 import { RestrictedDiscordPublishDialog } from "../RestrictedDiscordPublishDialog";
 
-/** The "no template" option of the picker */
 const NO_TEMPLATE = "";
 
 /**
@@ -48,7 +47,6 @@ const isPublishingByDefault = (
 interface Props {
   readonly className?: string;
   readonly onSuccess?: () => void;
-  /** Preselects a template, e.g. from a template's "Verwenden" button */
   readonly templateId?: string;
 }
 
@@ -69,10 +67,6 @@ export const CreateEventForm = ({
     templateId ?? NO_TEMPLATE,
   );
 
-  /**
-   * Fetched lazily: the form only mounts while the modal is open. Templates
-   * are the viewer's own plus those shared with them for reading.
-   */
   const { data: templates } =
     api.events.getUsableEventTemplates.useQuery(undefined);
 
@@ -80,20 +74,15 @@ export const CreateEventForm = ({
     templates?.find((template) => template.id === selectedTemplateId) ?? null;
 
   /**
-   * The prefilled fields are uncontrolled, so switching templates has to
-   * remount them for the new defaults to land (React only reads
-   * `defaultValue` on mount). Keying the block by the template id does that;
-   * anything the user already typed is deliberately replaced, since picking
-   * a template is an explicit "start from this" action.
+   * React reads `defaultValue` only on mount, thus the key remounts the
+   * prefilled fields. Anything the user already typed is deliberately replaced,
+   * since picking a template is an explicit "start from this" action.
    */
   const prefillKey = selectedTemplate?.id ?? NO_TEMPLATE;
 
   /**
-   * Visibility and publishing are read by the submission (a restricted
-   * event published to Discord takes a confirmation), so unlike the other
-   * prefilled fields they live here rather than in their own section. The
-   * template switch resets them the way React documents it — adjusting
-   * state during render instead of an effect.
+   * Here and not in their own section, because the submission reads them: a
+   * restricted event published to Discord takes a confirmation.
    */
   const [visibility, setVisibility] = useState<string>(
     selectedTemplate?.visibility ?? EventVisibility.PUBLIC,
@@ -129,7 +118,6 @@ export const CreateEventForm = ({
     visibility === EventVisibility.RESTRICTED && isPublishing,
   );
 
-  /** The preview of the description is only for Discord, thus it is in the Discord section */
   const defaultDescription = getDefaultValueWithFallback(
     "description",
     selectedTemplate?.description ?? "",
@@ -194,7 +182,6 @@ export const CreateEventForm = ({
         )}
       </div>
 
-      {/* A phone has no room for two date fields side by side */}
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <EventDateTimeField
           name="startTime"
@@ -306,10 +293,8 @@ interface TemplateCoverFieldProps {
 }
 
 /**
- * The template's cover is not an upload of the submitter's own, so it cannot
- * travel as an upload id — the action copies it into a fresh upload when
- * this flag is set. Replacing it means uploading a cover, which submits an
- * id and wins over the flag.
+ * The flag copies the cover of the template (see `createEvent`). An uploaded
+ * cover submits an id, which wins over the flag.
  */
 const TemplateCoverField = ({ uploadId }: TemplateCoverFieldProps) => {
   const [keepTemplateCover, setKeepTemplateCover] = useState(true);
@@ -346,11 +331,6 @@ interface DiscordPublishFieldsProps {
   readonly defaultLocation: string | null;
 }
 
-/**
- * Publishing the new event to Discord right after creation (see
- * `isPublishingByDefault()`). A template with a publish preference prefills
- * the target.
- */
 const DiscordPublishFields = ({
   isPublishing,
   onIsPublishingChange,
@@ -361,8 +341,8 @@ const DiscordPublishFields = ({
   const checkboxId = useId();
 
   /**
-   * Fetched lazily like the templates above, and only while publishing is
-   * on — a manager who switches it off never waits on Discord.
+   * Only while publishing is on: a manager who switches it off never waits on
+   * Discord
    */
   const { data: channels, isPending } =
     api.events.getPublishableDiscordChannels.useQuery(undefined, {

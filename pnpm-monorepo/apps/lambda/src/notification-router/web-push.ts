@@ -69,6 +69,7 @@ export const publishWebPushNotifications = async (
 
   const subscriptionsToRemove: RejectedWebPushSubscription[] = [];
   for (const { draft, subscription } of deliveries) {
+    // The keys of `public/service-worker.js` of the app
     const payload = JSON.stringify({
       title: `${draft.title} | SAM`,
       body: draft.body,
@@ -81,7 +82,7 @@ export const publishWebPushNotifications = async (
           { endpoint: subscription.endpoint, keys: subscription.keys },
           payload,
           {
-            TTL: options?.TTL ?? 60 * 60 * 24, // 1 day
+            TTL: options?.TTL ?? 60 * 60 * 24,
             urgency: options?.urgency,
             timeout: WEB_PUSH_TIMEOUT_MILLISECONDS,
           },

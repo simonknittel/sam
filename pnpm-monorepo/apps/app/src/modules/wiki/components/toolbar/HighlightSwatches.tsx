@@ -17,16 +17,13 @@ const COLOR_CLASSES: Record<WikiHighlightColor, string> = {
 };
 
 interface Props {
-  /** Highlights the given color; omit when no highlight is active */
   readonly activeColor?: WikiHighlightColor | null;
   readonly onSelect: (color: WikiHighlightColor) => void;
 }
 
 /**
- * The highlight swatch row of the contextual edit menu. Swatches preview
- * the mark itself — an "A" in regular text color on the highlight
- * background — which also tells them apart from the text color swatches
- * (colored "A", see TextColorSwatches).
+ * The "A" in regular text color on the highlight background tells these
+ * swatches apart from the text color swatches (colored "A").
  */
 export const HighlightSwatches = ({ activeColor = null, onSelect }: Props) => {
   return (

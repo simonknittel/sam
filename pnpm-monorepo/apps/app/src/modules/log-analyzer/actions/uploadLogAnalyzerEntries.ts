@@ -14,10 +14,6 @@ import {
 } from "@sam-monorepo/application";
 import { parseUploadFormData } from "../utils/uploadEntries";
 
-/**
- * Stores the matched log lines a citizen shares with the other citizens. The
- * kill switch stops the uploads of every client.
- */
 export const uploadLogAnalyzerEntries = createAuthenticatedAction(
   "uploadLogAnalyzerEntries",
   shareLogAnalyzerEntriesInputSchema,

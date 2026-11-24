@@ -16,10 +16,6 @@ export interface TaskDeadlineReminderRecipients {
   readonly recipients: Recipient[];
 }
 
-/**
- * The assignees of the task who can log in and open tasks. Null when the
- * task does not exist, has no expiry date or is not open anymore.
- */
 export const findTaskDeadlineReminderRecipients = async (
   context: ApplicationContext,
   input: FindTaskDeadlineReminderRecipientsInput,

@@ -11,14 +11,12 @@ interface Props {
   readonly label: string;
   readonly hint: string;
   readonly defaultChecked: boolean;
-  /** Gets each change of the user, for example for a summary of the form */
   readonly onCheckedChange?: (checked: boolean) => void;
 }
 
 /**
- * A switch of the create form of an event and of the form of a template, for
- * example the participation. Uncontrolled, thus a reset of the form after an
- * action shows the value that the form sends next.
+ * Uncontrolled, thus a reset of the form after an action shows the value that
+ * the form sends next.
  */
 export const EventSwitchField = ({
   className,

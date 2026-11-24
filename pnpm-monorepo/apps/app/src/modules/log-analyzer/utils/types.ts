@@ -5,13 +5,12 @@ export interface RawMatch {
   readonly isoDate: string;
   readonly fullMatch: string;
   readonly groups: Record<string, string>;
-  /** See `IEntry.lineNumber` */
   readonly lineNumber: number;
 }
 
 /**
- * A log file and its path inside the selected folder. Two folders can hold
- * files of the same name, thus the path identifies the file.
+ * Two folders can hold files of the same name, thus the path identifies the
+ * file.
  */
 export interface LogFile {
   readonly path: string;

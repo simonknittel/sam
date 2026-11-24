@@ -12,7 +12,6 @@ import { cache } from "react";
 
 export type { WikiPageReportRow } from "@sam-monorepo/application";
 
-/** All reports for the table of the reports (`wiki;manage`) */
 export const getWikiPageReports = cache(
   withTrace("getWikiPageReports", async () => {
     try {
@@ -26,7 +25,6 @@ export const getWikiPageReports = cache(
   }),
 );
 
-/** The report, or null when it does not exist (`wiki;manage`) */
 export const getWikiPageReportById = cache(
   withTrace("getWikiPageReportById", async (reportId: string) => {
     try {

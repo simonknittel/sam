@@ -13,10 +13,8 @@ interface Props {
 }
 
 /**
- * A subtree page rendered inside a variant embed: the shared role-model
- * page view with embed hrefs and embed-scoped static content. The move
- * dialog limits its targets to the subtree through the variant layout's
- * href mode. Renders nothing when the embed or the page is gone — the
+ * The move dialog limits its targets to the subtree through the href mode of
+ * the variant layout. Renders nothing when the embed or the page is gone — the
  * calling routes 404 beforehand; this only covers races.
  */
 export const VariantWikiPageContent = async ({ variantId, pageId }: Props) => {

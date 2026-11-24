@@ -148,11 +148,6 @@ describe("resolve flow permissions", () => {
     expect(permissions.get("does-not-exist")).toBeUndefined();
   });
 
-  /**
-   * The viewer is built from `resolveEffectiveRoles()` everywhere, so the
-   * level gate and role inheritance reach the flow resolver the same way they
-   * reach the wiki one.
-   */
   test("an inherited role grants what it was granted", () => {
     const permissions = resolveFlowPermissions(
       [

@@ -15,7 +15,6 @@ import {
 } from "./mapApplicationErrorToActionResponse";
 import { toActor } from "./toActor";
 
-/** Whether the page shows the new state after a successful use case */
 export enum ActionRefresh {
   Always = "always",
   Never = "never",
@@ -26,7 +25,6 @@ const EMPTY_INPUT_SCHEMA = z.object({});
 interface UseCaseActionOptions<Schema extends z.ZodTypeAny, Output> {
   /** The name of the action in the traces and in the logs */
   readonly name: string;
-  /** `z.object({})` by default, for a use case that takes no input */
   readonly schema?: Schema;
   readonly useCase: (
     context: ApplicationContext,
@@ -37,30 +35,22 @@ interface UseCaseActionOptions<Schema extends z.ZodTypeAny, Output> {
   readonly parseFormData?: (formData: FormData) => unknown;
   /** `ActionGate.Clearance` by default */
   readonly gate?: ActionGate;
-  /** A record, or a function of `t` for the texts that use a common text */
   readonly texts?:
     ApplicationErrorTexts | ((t: Translations) => ApplicationErrorTexts);
-  /**
-   * `ActionRefresh.Always` by default. A function refreshes only when it
-   * gives true, for example only when the use case changed something.
-   */
   readonly refresh?: ActionRefresh | ((output: Output) => boolean);
 }
 
-/** The answer after a successful use case: a text, or a different page */
 type UseCaseActionResult<Output, Fields> =
   | {
       readonly success: (t: Translations, output: Output) => string;
       /**
-       * More fields of the success response, for the client component, which
-       * gets them from `runAction()`. For example a flag that tells the
-       * client to fetch its cache again.
+       * The client component gets these fields from `runAction()`, for example
+       * a flag that tells the client to fetch its cache again.
        */
       readonly responseFields?: (output: Output) => Fields;
       readonly redirect?: never;
     }
   | {
-      /** The path of the page that the action opens */
       readonly redirect: (output: Output) => string;
       readonly success?: never;
       readonly responseFields?: never;
@@ -81,13 +71,8 @@ const shouldRefresh = <Output>(
     : option !== ActionRefresh.Never;
 
 /**
- * A server action that runs one use case for the user of the session: the
- * standard shape of the thin action wrappers. After the use case, the action
- * refreshes the page (see `refresh`) and answers with the text of `success`
- * and the `responseFields`, or opens the page of `redirect`.
- * The redirect is outside of the error mapping, because `redirect()` throws.
- * An action that does more (a cookie, an app-only option, its own `catch`)
- * calls `createAuthenticatedAction()` itself.
+ * The standard shape of the thin action wrappers. The redirect is outside of
+ * the error mapping, because `redirect()` throws.
  */
 export const createUseCaseAction = <
   Schema extends z.ZodTypeAny = typeof EMPTY_INPUT_SCHEMA,

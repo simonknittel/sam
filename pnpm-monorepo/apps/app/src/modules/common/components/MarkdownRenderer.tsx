@@ -8,10 +8,6 @@ interface Props {
   readonly remarkPlugins: Options["remarkPlugins"];
 }
 
-/**
- * The shared body of the Markdown components. The set of remark plugins
- * decides which formats the output shows.
- */
 export const MarkdownRenderer = ({
   className,
   children,

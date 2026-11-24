@@ -16,13 +16,12 @@ export const listStatisticsInputSchema = z.strictObject({});
 
 export interface StatisticOutput {
   readonly key: StatisticKey;
-  /** German: the title of the chart in the app */
+  /** German */
   readonly title: string;
   readonly description: string;
   readonly unit: StatisticUnit;
   readonly value_kind: StatisticValueKind;
   readonly has_multiple_series: boolean;
-  /** The items of the series that `get_statistic` can filter by id, or null */
   readonly ids_filter: StatisticIdsFilter | null;
 }
 
@@ -34,12 +33,6 @@ export interface ListStatisticsOutput {
   readonly last_day: string;
 }
 
-/**
- * The statistics of the dashboard of the app Statistiken, in the order of the
- * charts, with the first and the last day of the statistics
- *
- * @throws ForbiddenError without `globalStatistics;read`
- */
 export const listStatistics = async (
   context: ApplicationContext,
   actor: Actor,

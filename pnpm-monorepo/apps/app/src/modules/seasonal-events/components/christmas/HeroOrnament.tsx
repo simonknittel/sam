@@ -2,18 +2,8 @@ import clsx from "clsx";
 import type { SeasonalDecorationProps } from "../../utils/types";
 
 /**
- * The star next to the greeting of the banner.
- *
- * The star has four long rays and four short rays between them, and the
- * edges bend inwards, thus it stays a star and not a cross when it is small.
- * The short rays are the same shape, turned by 45 degrees, smaller and
- * dimmer.
- *
- * The star holds still. It stands next to the greeting, where a pulse would
- * draw the eye away from that text all the time.
- *
- * All colours come from `currentColor`: the star takes the gold of its own
- * class, and the core of the star raises that gold with a class of its own.
+ * The star holds still: next to the greeting, a pulse would draw the eye away
+ * from that text all the time.
  */
 export const ChristmasHeroOrnament = ({
   className,

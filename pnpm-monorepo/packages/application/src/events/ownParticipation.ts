@@ -23,11 +23,6 @@ import {
 } from "./eventManageRules.js";
 import { lockParticipationEnabledEvent } from "./participatableAppEvent.js";
 
-/**
- * The input of the writes of the own participation:
- * `createEventParticipation()`, `updateEventParticipationComment()` and
- * `signUpForEvent()`
- */
 export const eventParticipationInputSchema = z.object({
   event_id: idSchema,
   comment: participationTextSchema
@@ -48,19 +43,13 @@ interface OwnParticipation {
 }
 
 export interface OwnSignUp extends OwnParticipation {
-  /** The open invitation that the sign-up accepted, or null */
   readonly acceptedInvitationId: string | null;
 }
 
 interface InsertOwnParticipationOptions {
-  /**
-   * Refuses the sign-up without an open invitation, for example when a
-   * manager withdrew it in the meantime
-   */
   readonly requireOpenInvitation?: boolean;
 }
 
-/** The active participation of the citizen at the event, or null */
 export const findActiveParticipation = (
   context: ApplicationContext,
   eventId: string,
@@ -79,20 +68,15 @@ export const findActiveParticipation = (
   });
 
 /**
- * Creates a fresh participation row. The unique index for active sign-ups
- * rejects a second active sign-up. The sign-up is the answer to an open
- * invitation of the citizen, thus it accepts the invitation. While the event
- * requires applications, only the answer to an invitation can sign the
- * citizen up, unless the citizen manages the event (see
- * `mustApplyForEvent()`). The sign-up withdraws an open application of the
- * citizen.
+ * The sign-up is the answer to an open invitation of the citizen, thus it
+ * accepts the invitation. While the event requires applications, only the
+ * answer to an invitation can sign the citizen up, unless the citizen manages
+ * the event (see `mustApplyForEvent()`).
  *
- * @throws ConflictError `EventErrorMessage.AlreadySignedUp` when the citizen has an active
- * participation, for example from a different tab,
- * `EventErrorMessage.ParticipationDisabled` when a manager turned the
- * participation off in the meantime, `EventErrorMessage.NoOpenInvitation`
- * (see `requireOpenInvitation`) or `EventErrorMessage.ApplicationRequired`
- * when the citizen must apply for the event and has no open invitation
+ * @throws ConflictError `EventErrorMessage.AlreadySignedUp`,
+ * `EventErrorMessage.ParticipationDisabled`,
+ * `EventErrorMessage.NoOpenInvitation` (see `requireOpenInvitation`) or
+ * `EventErrorMessage.ApplicationRequired`
  */
 export const insertOwnParticipation = async (
   context: ApplicationContext,
@@ -113,10 +97,7 @@ export const insertOwnParticipation = async (
           eventId,
         );
 
-        /**
-         * Before the sign-up: each write that closes an application locks the
-         * application first, thus two writes cannot wait for each other
-         */
+        /** Before the sign-up, see `addEventParticipants()` */
         const withdrawn = await withdrawOpenApplications(transaction, {
           eventId,
           citizenIds: [citizenId],
@@ -192,7 +173,6 @@ export const insertOwnParticipation = async (
   return { ...participation, acceptedInvitationId };
 };
 
-/** Replaces the comment of an active participation */
 export const writeOwnParticipationComment = async (
   context: ApplicationContext,
   actor: Actor,

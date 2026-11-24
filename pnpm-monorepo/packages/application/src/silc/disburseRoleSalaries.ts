@@ -14,19 +14,12 @@ import { getPaidAssignments, SALARY_ROLE_SELECT } from "./salaryRules.js";
 import { announceSilcTransactions } from "./silcLedger.js";
 
 export interface DisburseRoleSalariesOutput {
-  /** The roles with a salary on the day of the run */
   readonly dueRoleCount: number;
-  /** The new bookings. A repeated run on the same day books nothing. */
   readonly transactionCount: number;
   readonly disbursedValue: number;
   readonly notificationsSent: boolean;
 }
 
-/**
- * Pays the salaries of the roles that are due on the day of the run (in the
- * time zone of the organization) to the citizens who get them (see
- * `getPaidAssignments()`), and notifies the receivers.
- */
 export const disburseRoleSalaries = (
   context: ApplicationContext,
 ): Promise<DisburseRoleSalariesOutput> =>
@@ -84,8 +77,8 @@ export const disburseRoleSalaries = (
         await lockSilcLedger(transaction);
 
         /**
-         * A run that repeats (for example after an error in a later job)
-         * skips the bookings that exist already, see
+         * A run that repeats (for example a manual second run on the same
+         * day) skips the bookings that exist already, see
          * `SilcTransaction_salary_key`.
          */
         const created = await transaction.silcTransaction.createManyAndReturn({

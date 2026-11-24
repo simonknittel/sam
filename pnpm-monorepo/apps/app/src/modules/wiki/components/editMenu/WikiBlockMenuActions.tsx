@@ -18,10 +18,6 @@ interface Props {
   readonly menu: WikiBlockMenuState;
 }
 
-/**
- * Actions of the generic container/leaf block menu (lists, quotes, code,
- * tables, rulers, collapsibles, grids).
- */
 export const WikiBlockMenuActions = ({ editor, menu }: Props) => {
   const toggleGridVerticalAlign = (
     value: Exclude<WikiGridVerticalAlign, null>,
@@ -53,11 +49,6 @@ export const WikiBlockMenuActions = ({ editor, menu }: Props) => {
       .run();
   };
 
-  /**
-   * Focus at the deletion point — a bare focus() scrolls the stale
-   * selection (wherever the cursor last was) into view, jumping the
-   * viewport away from the deleted block (see WikiDuplicateCopyActions).
-   */
   const deleteBlock = () => {
     editor
       .chain()

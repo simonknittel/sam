@@ -16,14 +16,9 @@ enum PromptModal {
 interface Props {
   readonly className?: string;
   readonly variant: Pick<Variant, "id" | "name">;
-  /** Whether the actor can create a page at the top of the global wiki */
   readonly allowTopLevel: boolean;
 }
 
-/**
- * Asks a manager of the ship catalog to link a wiki page to a variant that
- * has none: an existing page, or a new page
- */
 export const VariantWikiPagePrompt = ({
   className,
   variant,

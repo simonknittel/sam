@@ -9,7 +9,6 @@ import {
 } from "./eventRecipients.js";
 import type { Recipient } from "./recipient.js";
 
-/** The fields of an event that `findEventOrganizers()` reads */
 export const EVENT_ORGANIZER_SELECT = {
   ...EVENT_RECIPIENT_SELECT,
   discordCreatorId: true,
@@ -20,10 +19,7 @@ type EventOrganizerInput = Prisma.EventGetPayload<{
 }>;
 
 /**
- * The organizers of the event who can see it now (see
- * `findEventRecipients()`), without the excluded citizen. The organizers are
- * the creator, the managers and the citizen of the Discord creator, like in
- * `isEventOrganizer()`. The holders of `event;manage` and
+ * Like in `isEventOrganizer()`. The holders of `event;manage` and
  * `othersEventPosition;manage` are not organizers: they are too many.
  */
 export const findEventOrganizers = (
@@ -51,24 +47,16 @@ export const findEventOrganizers = (
 
 export interface FindEventOrganizerRecipientsInput {
   readonly eventId: string;
-  /** The citizen who changed the own participation */
   readonly citizenId: string;
 }
 
 export interface EventOrganizerRecipients extends EventNotificationRecipients {
-  /** The citizen whom the notification is about */
   readonly citizen: { readonly handle: string | null };
 }
 
-/**
- * The organizers who hear about a change of the participation of a citizen
- * (see `findEventOrganizers()`), without this citizen. Null when the event
- * does not exist.
- */
 export const findEventOrganizerRecipients = async (
   context: ApplicationContext,
   input: FindEventOrganizerRecipientsInput,
-  /** See `EventRecipientOptions` */
   additionalPermissionSets: readonly PermissionSet[] = [],
 ): Promise<EventOrganizerRecipients | null> => {
   const [event, citizen] = await Promise.all([

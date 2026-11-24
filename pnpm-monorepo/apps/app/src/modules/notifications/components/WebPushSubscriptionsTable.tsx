@@ -34,7 +34,6 @@ interface Props {
   readonly subscriptions: readonly OwnWebPushSubscription[];
 }
 
-/** The browsers that get the notifications of the citizen */
 export const WebPushSubscriptionsTable = ({
   className,
   subscriptions,

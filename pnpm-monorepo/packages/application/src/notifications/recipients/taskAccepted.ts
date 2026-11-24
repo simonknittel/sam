@@ -4,22 +4,15 @@ import { findTaskReceivers } from "./taskRecipients.js";
 
 export interface FindTaskAcceptedRecipientsInput {
   readonly taskId: string;
-  /** The citizen who accepted the task */
   readonly citizenId: string;
 }
 
 export interface TaskAcceptedRecipients {
   readonly task: { readonly id: string; readonly title: string };
-  /** The handle of the citizen who accepted the task */
   readonly citizenHandle: string | null;
   readonly recipients: Recipient[];
 }
 
-/**
- * The creator of the task when the creator can log in and open tasks, except
- * when the creator accepted the task. Null when the task is deleted or the
- * citizen does not have the assignment anymore.
- */
 export const findTaskAcceptedRecipients = async (
   context: ApplicationContext,
   input: FindTaskAcceptedRecipientsInput,

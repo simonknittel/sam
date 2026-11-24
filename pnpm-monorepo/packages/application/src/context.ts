@@ -20,6 +20,13 @@ export * from "./ports/email.js";
 export * from "./ports/images.js";
 export * from "./ports/storage.js";
 
+/**
+ * The compiler does not check the type and the payload: they must agree with
+ * `bodySchema` of the notification router. Else the event goes to the
+ * dead-letter queue, and nobody gets the notification. An id in the payload
+ * needs `z.cuid()` or `z.cuid2()` there, like `@default(cuid())` or
+ * `@default(cuid(2))` of its model.
+ */
 export interface Notification {
   readonly type: string;
   readonly payload: unknown;
@@ -52,7 +59,6 @@ export interface WikiCollabSession {
   readonly pageId: string;
   /** The citizen that the collab server records as the editor */
   readonly entityId: string | null;
-  /** False gives a read-only connection */
   readonly canEdit: boolean;
 }
 
@@ -102,7 +108,7 @@ export interface DiscordScheduledEvent {
   readonly location: string | null;
 }
 
-/** A channel of the guild. `type` is the channel type of Discord. */
+/** `type` is the channel type of Discord */
 export interface DiscordGuildChannel {
   readonly id: string;
   readonly name: string;
@@ -136,10 +142,6 @@ export interface DiscordGateway {
   ) => Promise<DiscordResult<null>>;
 }
 
-/**
- * The services that the use cases get from the app that runs them. Each app
- * builds its contexts in its composition root.
- */
 export interface ApplicationContext {
   readonly prisma: PrismaClientType;
   /**
@@ -186,20 +188,19 @@ export interface ApplicationContext {
   } | null;
   /**
    * Null when the host has no client of the realtime server (the Lambda
-   * functions, or an app without the configuration of Pusher)
+   * functions, or an app without the configuration of Pusher). Then `banUser`
+   * does not close the connections.
    */
   readonly realtime: RealtimeServer | null;
   /**
-   * Null when the host has no bot token. Then a use case behaves as if
-   * Discord cannot be reached.
+   * Null when the host has no bot token. Then a use case behaves as if Discord
+   * cannot be reached.
    */
   readonly discord: DiscordGateway | null;
   /**
-   * Null when the host has no access to the bucket of the uploads. Then a
-   * use case that must copy, presign or list throws a `ConflictError`
-   * (`UploadErrorMessage.StorageNotConfigured`), and the background steps
-   * (the image probe, the nightly sweep, the object delete of
-   * `deleteUpload`) skip with a warning.
+   * Null when the host has no access to the bucket of the uploads. Then a copy,
+   * a presigned URL and a list throw a `ConflictError`, and the background
+   * steps skip with a warning.
    */
   readonly storage: FileStorage | null;
   /** Null when the host cannot decode images (the Lambda functions) */
@@ -220,7 +221,8 @@ export interface ApplicationContext {
   readonly signingKey: () => Promise<SigningKey | null>;
   /**
    * Null when the host does not run the OAuth authorization server (the
-   * Lambda functions)
+   * Lambda functions). Then only the clients whose cached document is not
+   * expired are accepted.
    */
   readonly clientMetadata: ClientMetadataFetcher | null;
   /** Permits client ids with plain HTTP on a loopback host (tests only) */
@@ -228,13 +230,10 @@ export interface ApplicationContext {
 }
 
 interface ApplicationUrlsOptions {
-  /** The base URL of the app */
   readonly baseUrl: string | URL;
-  /** The public base URL of the uploads bucket */
   readonly publicUploadBaseUrl: string;
 }
 
-/** Each host derives the URLs of its context with this function */
 export const createApplicationUrls = ({
   baseUrl: baseUrlValue,
   publicUploadBaseUrl,
@@ -249,10 +248,7 @@ export const createApplicationUrls = ({
   };
 };
 
-/**
- * The public URL of an upload in the uploads bucket. The app has the same
- * URL in `getPublicUploadUrl()` of its common module.
- */
+/** The app has the same URL in `getPublicUploadUrl()` of its common module */
 export const getPublicUploadUrl = (
   urls: Pick<ApplicationContext["urls"], "publicUploadBaseUrl">,
   uploadId: string,

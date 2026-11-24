@@ -19,7 +19,6 @@ type Upload = Awaited<ReturnType<typeof getUploads>>["uploads"][number];
 
 interface Props {
   readonly upload: Upload;
-  /** Renders the author and actions columns, which only managers have. */
   readonly canManage: boolean;
 }
 

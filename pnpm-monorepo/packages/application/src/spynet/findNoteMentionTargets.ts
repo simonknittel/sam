@@ -34,10 +34,6 @@ export interface NoteMentionTargets {
   }>[];
 }
 
-/**
- * The citizens and the organizations that the content of a note mentions by
- * their Spectrum ID (see `NOTE_MENTION_PATTERN`). Requires `citizen;read`.
- */
 export const findNoteMentionTargets = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,

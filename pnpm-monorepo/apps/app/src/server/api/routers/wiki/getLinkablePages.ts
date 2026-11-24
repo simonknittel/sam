@@ -7,12 +7,8 @@ import {
 import { protectedProcedure, toTrpcError } from "../../trpc";
 
 /**
- * All pages that a page of the scope can link to, by id, with the label,
- * the icon and the route of the link: for the "[[" suggestion of the editor
- * and for the page links that the editor adds after the render. The render
- * of a page sends only the pages that its content links to, thus the full
- * list loads only when an editor needs it. The scope and the gate are the
- * same as for `getPageTargets`.
+ * The render of a page sends only the pages that its content links to, thus the
+ * full list loads only when an editor needs it.
  */
 export const getLinkablePages = protectedProcedure
   .input(wikiScopeInputSchema.optional())

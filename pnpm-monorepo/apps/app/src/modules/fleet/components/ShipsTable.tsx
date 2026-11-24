@@ -28,7 +28,6 @@ const READONLY_COLUMNS =
 interface Props {
   readonly className?: string;
   readonly ships: ShipsTableRow[];
-  /** Own ships get an editable name and a delete action */
   readonly editable?: boolean;
 }
 

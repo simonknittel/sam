@@ -41,13 +41,7 @@ export interface ListRolesOutput {
   readonly next_cursor: string | null;
 }
 
-/**
- * The roles that the actor can see (see `isRoleVisible()`), sorted by name,
- * one page. The cursor is the id of a role. A tag that does not exist gives
- * an empty list.
- *
- * @throws ValidationError when no role of the list has the cursor
- */
+/** A tag that does not exist gives an empty list */
 export const listRoles = async (
   context: ApplicationContext,
   actor: Actor,

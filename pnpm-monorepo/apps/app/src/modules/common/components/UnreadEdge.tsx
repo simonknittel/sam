@@ -10,10 +10,7 @@ interface Props {
   readonly title?: string;
 }
 
-/**
- * Amber edge along the left side of an unread or new item, fading downwards.
- * The item must be positioned. Used together with `NewBadge`.
- */
+/** The item must be positioned */
 export const UnreadEdge = ({
   width = UnreadEdgeWidth.Regular,
   title,

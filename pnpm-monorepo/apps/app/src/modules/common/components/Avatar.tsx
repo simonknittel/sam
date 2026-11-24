@@ -19,17 +19,16 @@ function stringToColor(str: string) {
   return `hsl(${hash % 360}, 100%, 25%)`;
 }
 
-/** A mark on the corner of the avatar, outside of the clipped image */
 export enum AvatarDecoration {
   BirthdayHat = "birthday-hat",
 }
 
-/** Milliseconds between two bursts while the avatar is in view */
+/** Milliseconds */
 const CONFETTI_INTERVAL = 1000;
 
 /**
  * An avatar is small, thus the particles are small as well and they travel
- * slowly. The smallest avatar the app shows is 32 pixels wide, which the
+ * slowly. The smallest `Avatar` of the app is 32 pixels wide, which the
  * values below still fill.
  */
 const CONFETTI_SHOT = {
@@ -42,7 +41,6 @@ const CONFETTI_SHOT = {
   ticks: 110,
 };
 
-/** One shot from each lower corner, both towards the middle of the avatar */
 const CONFETTI_SHOTS = [
   { ...CONFETTI_SHOT, angle: 60, origin: { x: 0, y: 1 } },
   { ...CONFETTI_SHOT, angle: 120, origin: { x: 1, y: 1 } },

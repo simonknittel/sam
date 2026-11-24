@@ -7,7 +7,6 @@ import {
 import * as z from "zod";
 import { citizenReferenceSchema, dateTimeOutputSchema } from "../../schemas.js";
 
-/** The fields of a task in `list_tasks`, and the base of `get_task` */
 export const taskListItemOutputShape = {
   id: z.string(),
   title: z.string(),
@@ -31,7 +30,6 @@ export const taskListItemOutputShape = {
   is_new: z.boolean(),
 };
 
-/** One task with its details: the output of `get_task` and of the writes */
 export const taskOutputSchema = z.strictObject({
   ...taskListItemOutputShape,
   completionists: z.array(citizenReferenceSchema),

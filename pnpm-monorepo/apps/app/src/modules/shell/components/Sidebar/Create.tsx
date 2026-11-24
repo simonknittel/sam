@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Create as TopBarCreate } from "../TopBar/Create";
 import { useMobileActionBarFlyout } from "./MobileActionBarFlyout";
 
-/** The "Neu" button of the top bar, in the flyout */
 export const Create = () => {
   const flyout = useMobileActionBarFlyout();
   const [isOpen, setIsOpen] = useState(false);

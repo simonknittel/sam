@@ -6,15 +6,12 @@ import {
 } from "../manualNotifications/manualNotificationLimits.js";
 
 /**
- * Payload schemas for on-site notifications, shared between the
- * notification-router Lambda (writer) and the app (reader/renderer) so the
- * two sides cannot drift. Keyed by the user-facing notification type ids from
- * the app's `NotificationTypes.ts`.
+ * Keyed by the values of `NotificationSettingType`, and `welcome`, which has no
+ * setting.
  *
  * Rows live forever, so payload shapes must stay parseable: never change a
  * schema in a breaking way — add a new version instead and bump the type's
- * entry in `ON_SITE_NOTIFICATION_PAYLOAD_VERSIONS`. The app falls back to a
- * generic renderer for unknown types, unknown versions and invalid payloads.
+ * entry in `ON_SITE_NOTIFICATION_PAYLOAD_VERSIONS`.
  */
 
 export const eventCreatedPayloadSchema = z.object({
@@ -37,9 +34,8 @@ const positionNamesSchema = z
   .check(z.maxLength(LINEUP_MAX_POSITIONS));
 
 /**
- * `positionNames` are the positions of the receiver at the publication. The
- * field is optional and the version stays 1, because the addition does not
- * break the older rows (see the birthday greeting).
+ * `positionNames` are the positions of the receiver at the publication. Some
+ * stored rows do not have the field.
  */
 export const eventLineupEnabledPayloadSchema = z.object({
   eventId: z.string(),
@@ -47,7 +43,7 @@ export const eventLineupEnabledPayloadSchema = z.object({
   positionNames: z.optional(positionNamesSchema),
 });
 
-/** The new start of an event, the old start is not of interest */
+/** `startTime` is the new start */
 export const eventRescheduledPayloadSchema = z.object({
   eventId: z.string(),
   eventName: z.string(),
@@ -85,7 +81,6 @@ export const eventManagerAddedPayloadSchema = z.object({
   eventName: z.string(),
 });
 
-/** The change of a participation that the managers of an event hear about */
 export enum EventParticipationChange {
   SignedUp = "signed_up",
   Cancelled = "cancelled",
@@ -133,7 +128,6 @@ export const eventParticipationAddedPayloadSchema = z.object({
 export const eventParticipationRemovedPayloadSchema = z.object({
   eventId: z.string(),
   eventName: z.string(),
-  /** The manager's optional reason, shown to the removed citizen */
   reason: z.nullable(z.string()),
 });
 
@@ -148,20 +142,17 @@ export const eventInvitationCreatedPayloadSchema = z.object({
   eventName: z.string(),
   invitationId: z.string(),
   invitedByHandle: z.nullable(z.string()),
-  /** The optional message of the manager */
   message: z.nullable(z.string()),
 });
 
-/** The answer of a citizen to an invitation, which the organizers hear about */
 export enum EventInvitationAnswer {
   Accepted = "accepted",
   Declined = "declined",
 }
 
 /**
- * `citizenHandle` is null for a citizen without a handle. `comment` is the
- * comment of the sign-up for an accepted invitation and the comment of the
- * decline for a declined one.
+ * `comment` is the comment of the sign-up for an accepted invitation and the
+ * comment of the decline for a declined one.
  */
 export const eventInvitationAnsweredPayloadSchema = z.object({
   eventId: z.string(),
@@ -171,17 +162,11 @@ export const eventInvitationAnsweredPayloadSchema = z.object({
   comment: z.nullable(z.string()),
 });
 
-/** The answer of a manager to an application, which the applicant hears about */
 export enum EventApplicationAnswer {
   Approved = "approved",
   Declined = "declined",
 }
 
-/**
- * The new application of a citizen, which the organizers hear about.
- * `citizenHandle` is null for a citizen without a handle. `comment` is the
- * note of the citizen.
- */
 export const eventApplicationCreatedPayloadSchema = z.object({
   eventId: z.string(),
   eventName: z.string(),
@@ -189,7 +174,6 @@ export const eventApplicationCreatedPayloadSchema = z.object({
   comment: z.nullable(z.string()),
 });
 
-/** `reason` is the optional note of the manager to a declined application */
 export const eventApplicationAnsweredPayloadSchema = z.object({
   eventId: z.string(),
   eventName: z.string(),
@@ -202,7 +186,6 @@ export const roleAddedPayloadSchema = z.object({
   roleName: z.string(),
 });
 
-/** The level that the citizen reached in the role, of `maxLevel` */
 export const roleLevelIncreasedPayloadSchema = z.object({
   roleId: z.string(),
   roleName: z.string(),
@@ -273,14 +256,12 @@ export const taskDeadlineReminderPayloadSchema = z.object({
   expiresAt: z.iso.datetime(),
 });
 
-/** `citizenHandle` is null for a citizen without a handle */
 export const taskAcceptedPayloadSchema = z.object({
   taskId: z.string(),
   taskTitle: z.string(),
   citizenHandle: z.nullable(z.string()),
 });
 
-/** `citizenHandle` is the citizen who completed the task */
 export const taskCompletedPayloadSchema = z.object({
   taskId: z.string(),
   taskTitle: z.string(),
@@ -294,12 +275,7 @@ export const wikiPageReportedPayloadSchema = z.object({
   reportedByHandle: z.nullable(z.string()),
 });
 
-/**
- * The wording of the greeting a citizen received before the greeting picked
- * a wording at random. Rows from that time hold an empty payload, and the
- * app shows this wording for them. The list of wordings in the
- * notification-router Lambda starts with the same entry.
- */
+/** The app shows this wording for a stored row with an empty payload. */
 export const BIRTHDAY_FALLBACK_WORDING = {
   title: "Alles Gute zum Geburtstag!",
   body: "Wir wünschen dir einen schönen Tag.",
@@ -310,79 +286,50 @@ const BIRTHDAY_TITLE_MAX_LENGTH = 100;
 const BIRTHDAY_BODY_MAX_LENGTH = 200;
 
 /**
- * A birthday greeting is addressed to the citizen themselves and points at
- * nothing, thus it carries no target — only the wording which the greeting
- * picked for this citizen, so that the on-site row shows the same text as
- * the web push notification.
+ * The payload carries the wording which the greeting picked, so that the
+ * on-site row shows the same text as the web push notification.
  *
- * Both fields are optional and the version stays 1, because the addition
- * does not break the older rows: their empty payload still parses, and the
- * app falls back to `BIRTHDAY_FALLBACK_WORDING`.
+ * Some stored rows do not have the two fields. The app then shows
+ * `BIRTHDAY_FALLBACK_WORDING`.
  */
 export const birthdayPayloadSchema = z.object({
   title: z.optional(z.string().check(z.maxLength(BIRTHDAY_TITLE_MAX_LENGTH))),
   body: z.optional(z.string().check(z.maxLength(BIRTHDAY_BODY_MAX_LENGTH))),
 });
 
-/** Room for a wording well above the length of the drafted ones */
 const NEW_YEAR_TITLE_MAX_LENGTH = 100;
 const NEW_YEAR_BODY_MAX_LENGTH = 200;
 
-/**
- * A New Year greeting is addressed to the citizen themselves and points at
- * nothing, thus it carries no target — only the wording which the greeting
- * picked for this citizen, so that the on-site row shows the same text as
- * the web push notification.
- *
- * Both fields are required: no row of this type is older than the wording in
- * the payload, thus the app needs no fallback.
- */
 export const newYearPayloadSchema = z.object({
   title: z.string().check(z.maxLength(NEW_YEAR_TITLE_MAX_LENGTH)),
   body: z.string().check(z.maxLength(NEW_YEAR_BODY_MAX_LENGTH)),
 });
 
-/** Room for a wording well above the length of the drafted ones */
 const WELCOME_TITLE_MAX_LENGTH = 100;
 const WELCOME_BODY_MAX_LENGTH = 200;
 
 /**
- * The welcome of a citizen on the first day they can open the app. It
- * carries the wording which the greeting picked for this citizen, so that
- * the on-site row shows the same text as the web push notification. Its
- * target is the "Erste Schritte" popover, see `ONBOARDING_POPOVER_SEARCH_PARAM`.
+ * Its target is the "Erste Schritte" popover, see
+ * `ONBOARDING_POPOVER_SEARCH_PARAM`.
  */
 export const welcomePayloadSchema = z.object({
   title: z.string().check(z.maxLength(WELCOME_TITLE_MAX_LENGTH)),
   body: z.string().check(z.maxLength(WELCOME_BODY_MAX_LENGTH)),
 });
 
-/**
- * The query parameter of the dashboard which opens the "Erste Schritte"
- * popover. The welcome notification links to it, thus the Lambda (web push
- * URL) and the app (on-site row, opener) share the name here.
- */
+/** Opens the "Erste Schritte" popover of the dashboard */
 export const ONBOARDING_POPOVER_SEARCH_PARAM = "erste-schritte";
 
-/** The path of the dashboard with the parameter which opens the popover */
 export const ONBOARDING_POPOVER_PATH = `/app/dashboard?${ONBOARDING_POPOVER_SEARCH_PARAM}=1`;
 
 /**
- * The time without a change to the own ships after which the first visit of
- * a citizen brings the fleet update reminder: after a long time without a
- * change, it is likely that the ships of the citizen in the game and in the
- * SAM are different
+ * After a long time without a change, it is likely that the ships of the
+ * citizen in the game and in the SAM are different.
  */
 export const FLEET_UPDATE_REMINDER_UNCHANGED_MONTHS = 4;
 
-/** The page of the own ships, which the fleet update reminder links to */
 export const MY_SHIPS_PATH = "/app/fleet/my-ships";
 
-/**
- * The reminder to check the own ships after
- * `FLEET_UPDATE_REMINDER_UNCHANGED_MONTHS` without a change to them. It
- * carries nothing, see `getFleetUpdateReminderText()`.
- */
 export const fleetUpdateReminderPayloadSchema = z.object({});
 
 export const wikiCitizenMentionedPayloadSchema = z.object({
@@ -393,11 +340,6 @@ export const wikiCitizenMentionedPayloadSchema = z.object({
   eventId: z.nullable(z.string()),
 });
 
-/**
- * A notification that a member sent by hand to chosen citizens and roles. It
- * carries the title and the body that the sender wrote, thus the on-site row
- * shows the same text as the web push notification. It points at nothing.
- */
 export const manualNotificationPayloadSchema = z.object({
   title: z.string().check(z.maxLength(MANUAL_NOTIFICATION_TITLE_MAX_LENGTH)),
   body: z.string().check(z.maxLength(MANUAL_NOTIFICATION_BODY_MAX_LENGTH)),
@@ -520,7 +462,6 @@ export const isOnSiteNotificationType = (
   notificationType in onSiteNotificationPayloadSchemas;
 
 /**
- * Validates a stored notification against the schema of its type and version.
  * Returns `null` for unknown types, unknown versions and invalid payloads so
  * callers can fall back to a generic rendering.
  */

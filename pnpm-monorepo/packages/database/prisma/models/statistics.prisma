@@ -17,8 +17,7 @@ model VariantShipCount {
   variantId String
   variant   Variant  @relation(fields: [variantId], references: [id], onDelete: Cascade)
   count     Int
-  /// The calendar day (Europe/Berlin) that the count is for, see
-  /// RoleCitizenCount.day
+  /// See RoleCitizenCount.day
   day       DateTime @db.Date
   createdAt DateTime @default(now()) @db.Timestamptz(3)
 
@@ -27,12 +26,12 @@ model VariantShipCount {
 }
 
 /// The value of the ships of the members of the organization at the end of a
-/// day, for each acquisition source. A ship counts with the store price of its
-/// variant at the time of the measurement.
+/// day, for each acquisition source. A ship counts with the prices of its
+/// variant at the time of the measurement: the store price (USD) and the
+/// in-game price (aUEC).
 model DailyFleetValue {
   id                   String   @id @default(cuid())
-  /// The calendar day (Europe/Berlin) that the values are for, see
-  /// RoleCitizenCount.day
+  /// See RoleCitizenCount.day
   day                  DateTime @unique @db.Date
   storeValueUsdCents   BigInt
   inGameValueUsdCents  BigInt
@@ -40,7 +39,6 @@ model DailyFleetValue {
   unknownValueUsdCents BigInt
   storeValueAuec       BigInt
   inGameValueAuec      BigInt
-  /// The ships without an acquisition source
   unknownValueAuec     BigInt
   createdAt            DateTime @default(now()) @db.Timestamptz(3)
 }
@@ -56,8 +54,7 @@ model DailyLoginCount {
 
 model DailyMcpUsageCount {
   id        String   @id @default(cuid())
-  /// The calendar day (Europe/Berlin) that the count is for, see
-  /// RoleCitizenCount.day
+  /// See RoleCitizenCount.day
   day       DateTime @db.Date
   /// The number of the audit events of the day with `triggeredViaMcp`
   count     Int

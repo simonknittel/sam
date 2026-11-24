@@ -10,9 +10,8 @@ interface Props {
 }
 
 /**
- * Self-sufficient variant of the create-page form for the global create
- * menu (top bar "Neu"): loads the eligible parent pages itself. The menu is
- * outside of each wiki scope, thus the loader uses the global wiki.
+ * The create menu of the top bar is outside of each wiki scope, thus the
+ * loader uses the global wiki.
  */
 export const CreateWikiPageGlobalForm = ({ onSuccess }: Props) => {
   const pathname = usePathname();

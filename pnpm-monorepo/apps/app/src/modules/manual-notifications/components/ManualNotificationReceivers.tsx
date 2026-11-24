@@ -9,10 +9,7 @@ interface Props {
   >;
 }
 
-/**
- * The selected citizens and roles of a manual notification. A role that the
- * viewer cannot see shows as a placeholder, like in the role picker.
- */
+/** A role that the viewer cannot see shows as a placeholder */
 export const ManualNotificationReceivers = ({ notification }: Props) => {
   if (
     notification.receiver_citizens.length <= 0 &&

@@ -25,7 +25,6 @@ import { expect, test } from "../fixtures/test";
 
 const editButtons = (scope: Locator | Page) => inlineEditorTrigger(scope);
 
-/** The error of each task action for a task that is not open anymore */
 const CLOSED_TASK_TEXT = "Der Task ist bereits abgeschlossen.";
 
 const createNewSilcTask = (
@@ -73,9 +72,7 @@ test("a task can be created and three of its fields edited inline", async ({
 
   await createModal.getByLabel("Titel").fill("Erztransport eskortieren");
   await createModal.getByRole("button", { name: "Weiter" }).click();
-  // Step 2 keeps the default visibility (Öffentlich)
   await createModal.getByRole("button", { name: "Weiter" }).click();
-  // Step 3 keeps the default reward type (Freitext)
   await createModal.getByLabel("Text", { exact: true }).fill("Ruhm und Ehre");
   await createModal.getByRole("button", { name: "Weiter" }).click();
   await createModal.getByRole("button", { name: "Speichern" }).click();
@@ -86,7 +83,6 @@ test("a task can be created and three of its fields edited inline", async ({
     page.getByRole("link", { name: /Erztransport eskortieren/ }),
   ).toBeVisible();
 
-  // Two different fields of the shared field-update factory: title …
   await page.getByRole("link", { name: /Erztransport eskortieren/ }).click();
   const titleInput = page.locator('input[name="title"]');
   await clickUntilVisible(editButtons(page).first(), titleInput);
@@ -96,7 +92,6 @@ test("a task can be created and three of its fields edited inline", async ({
     "Titan-Erz eskortieren",
   );
 
-  // … and description, which is edited through its own toggled textarea
   const descriptionSection = sectionByHeading(page, "Briefing");
   const descriptionInput = descriptionSection.locator(
     'textarea[name="description"]',
@@ -112,14 +107,12 @@ test("a task can be created and three of its fields edited inline", async ({
   );
   await expect(descriptionInput).not.toBeVisible();
 
-  // … and the reward text, in a textarea that grows with its text
   const rewardSection = sectionByHeading(page, "Belohnung");
   const rewardInput = rewardSection.locator(
     'textarea[name="rewardTypeTextValue"]',
   );
   await clickUntilVisible(editButtons(rewardSection), rewardInput);
   await rewardInput.fill("");
-  /** An empty textarea keeps the width of the tile, not of its text */
   const [rewardInputBox, rewardSectionBox] = await Promise.all([
     rewardInput.boundingBox(),
     rewardSection.boundingBox(),
@@ -144,11 +137,6 @@ test("a task can be created and three of its fields edited inline", async ({
 });
 
 test.describe("in a browser outside the time zone of the organization", () => {
-  /**
-   * The app reads and shows each wall time in the time zone of the
-   * organization (Europe/Berlin). A browser in a different zone makes sure
-   * that no code reads a wall time in the zone of the browser.
-   */
   test.use({ timezoneId: "America/Los_Angeles" });
 
   test("the expiry time of a task keeps the entered wall time, also through inline edits", async ({
@@ -195,9 +183,6 @@ test.describe("in a browser outside the time zone of the organization", () => {
     const expiresAtEditButton = (shownValue: string) =>
       editButtons(page).filter({ hasText: shownValue });
 
-    /**
-     * A save of the unchanged value keeps the time
-     */
     await clickUntilVisible(
       expiresAtEditButton("15.01.2099, 20:30"),
       expiresAtInput,
@@ -208,10 +193,6 @@ test.describe("in a browser outside the time zone of the organization", () => {
     await expect(expiresAtEditButton("15.01.2099, 20:30")).toBeVisible();
     expect(await readStoredExpiresAt()).toBe("2099-01-15T19:30:00.000Z");
 
-    /**
-     * A new value keeps the entered time. Summer time: Berlin is two hours
-     * ahead of UTC.
-     */
     await clickUntilVisible(
       expiresAtEditButton("15.01.2099, 20:30"),
       expiresAtInput,
@@ -254,9 +235,7 @@ test("a citizen without management permission cannot edit a task", async ({
   await expect(
     page.getByText("Fracht ausliefern", { exact: true }),
   ).toBeVisible();
-  // The own actions of the "Meine Teilnahme" tile are there …
   await expect(page.getByRole("button", { name: "Aufgeben" })).toBeVisible();
-  // … but no editors and no management actions are rendered
   await expect(editButtons(page)).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Bearbeiten" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Abschließen" })).toHaveCount(
@@ -331,7 +310,6 @@ test("the participants show the Discord avatars, also for a viewer without citiz
     citizenLink("avatar-fluegelmann").locator("img"),
   ).toHaveAttribute("src", `${avatarUrl(wingman)}?size=64`);
 
-  // A citizen without an avatar gets the placeholder
   await expect(citizenLink("avatar-ohne-bild")).toBeVisible();
   await expect(citizenLink("avatar-ohne-bild").locator("img")).toHaveCount(0);
 });
@@ -343,8 +321,6 @@ test("completing a task with a new SILC reward pays the completionists", async (
 }) => {
   const manager = await createCitizen(prisma, {
     handle: "task-verwalter",
-    // The completion modal's citizen picker loads the roster, which
-    // requires the citizen read permission
     permissionStrings: ["task;read", "citizen;read"],
   });
   const worker = await createCitizen(prisma, { handle: "silc-arbeiter" });
@@ -363,12 +339,10 @@ test("completing a task with a new SILC reward pays the completionists", async (
     page.getByRole("button", { name: "Abschließen" }),
     completeModal,
   );
-  // The completionists are pre-filled with the assigned citizens
   await expect(completeModal.getByText("silc-arbeiter")).toBeVisible();
   await completeModal.getByRole("button", { name: "Speichern" }).click();
 
   await expect(page.getByText("Erfolgreich abgeschlossen.")).toBeVisible();
-  // The status badge in the head of the page
   await expect(page.getByText("Erfüllt", { exact: true })).toBeVisible();
 
   const completedTask = await prisma.task.findUnique({
@@ -376,7 +350,6 @@ test("completing a task with a new SILC reward pays the completionists", async (
   });
   expect(completedTask?.completedAt).not.toBeNull();
 
-  // The worker gets the new SILC, the creator pays nothing
   const workerEntity = await prisma.citizen.findUnique({
     where: { id: worker.entity.id },
   });
@@ -459,16 +432,10 @@ test("a completion that waits for a parallel completion pays no reward", async (
     await parallelCompletion.commit();
   }
 
-  /**
-   * The conflict refreshes the page: it shows the task that the parallel
-   * completion closed, and the modal of the open task is gone. The error
-   * stays visible as a toast.
-   */
   await expect(page.getByText("Erfüllt durch")).toBeVisible();
   await expect(completeModal).not.toBeVisible();
   await expect(page.getByText(CLOSED_TASK_TEXT)).toBeVisible();
 
-  // The waiting completion paid no reward and created no repetition
   expect(
     await prisma.silcTransaction.count({ where: { taskId: task.id } }),
   ).toBe(0);
@@ -523,7 +490,6 @@ test("a completion of a task that a different user completed shows the completed
   });
   await completeModal.getByRole("button", { name: "Speichern" }).click();
 
-  // The refresh shows the completed task, and the modal of the open task is gone
   await expect(page.getByText("Erfüllt durch")).toBeVisible();
   await expect(completeModal).not.toBeVisible();
   await expect(page.getByText(CLOSED_TASK_TEXT)).toBeVisible();
@@ -567,7 +533,6 @@ test("an edit of a task that a different user completed shows the message and th
   });
   await assignmentsModal.getByRole("button", { name: "Speichern" }).click();
 
-  // The refresh shows the completed task, and the modal of the open task is gone
   await expect(page.getByText("Erfüllt durch")).toBeVisible();
   await expect(assignmentsModal).not.toBeVisible();
   await expect(page.getByText(CLOSED_TASK_TEXT)).toBeVisible();
@@ -593,9 +558,8 @@ test("taking on a task whose last place a different citizen took shows the messa
     assignmentLimit: 1,
   });
   /**
-   * The first visit of a new task marks it as read, which refreshes the page
-   * at an unknown time. A read task keeps the refresh of the action the only
-   * one.
+   * Stops the refresh of the first visit (see the README), thus the refresh of
+   * the action is the only one.
    */
   await prisma.readMarker.create({
     data: { citizenId: viewer.entity.id, taskId: task.id },
@@ -620,7 +584,6 @@ test("taking on a task whose last place a different citizen took shows the messa
     page.getByText("Dieser Task kann nicht von Weiteren angenommen werden."),
   ).toBeVisible();
 
-  // The refresh shows the citizen who took the last place
   await expect(
     page.getByRole("main").getByText("schnellere-annehmerin"),
   ).toBeVisible();
@@ -649,8 +612,7 @@ test("the dashboard shows its task tiles exactly to those with task permission",
   await signIn(outsider.user);
   await page.goto("/app/dashboard");
 
-  // Regression test for the ungated tiles that called forbidden(): the page
-  // must render with the task tiles hidden instead of being redacted
+  // The task tiles are hidden, the page is no 403.
   await expect(page.getByRole("heading", { name: "Spynet" })).toBeVisible();
   await expect(page.getByText(FORBIDDEN_TEXT)).not.toBeVisible();
   await expect(page.getByText("Meine Tasks")).toHaveCount(0);
@@ -688,9 +650,6 @@ test("a citizen takes a task on, gives it up, and a manager cancels and deletes 
     },
   });
 
-  /**
-   * Taking it on and giving it up again
-   */
   await signIn(worker.user);
   await page.goto(`/app/tasks/${task.id}`);
 
@@ -712,9 +671,6 @@ test("a citizen takes a task on, gives it up, and a manager cancels and deletes 
     .poll(() => prisma.taskAssignment.count({ where: { taskId: task.id } }))
     .toBe(0);
 
-  /**
-   * A cancelled task leaves the open list for the closed one
-   */
   await switchUser(manager.user);
   await page.goto(`/app/tasks/${task.id}`);
 
@@ -736,9 +692,6 @@ test("a citizen takes a task on, gives it up, and a manager cancels and deletes 
     page.getByRole("link", { name: /Frachter eskortieren/ }),
   ).toBeVisible();
 
-  /**
-   * Deleting takes it out of both
-   */
   await page.goto(`/app/tasks/${task.id}`);
   const deleteDialog = page.getByRole("alertdialog");
   await clickUntilVisible(
@@ -860,7 +813,6 @@ test("taking on a task that a different user deleted shows the message and that 
   await page.getByRole("button", { name: "Annehmen" }).click();
 
   await expect(page.getByText("Task nicht gefunden")).toBeVisible();
-  // The refresh shows that the task is gone
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
   expect(
     await prisma.taskAssignment.count({ where: { taskId: task.id } }),
@@ -876,7 +828,6 @@ test("taking on a task that a different tab took on shows the assignment", async
     isTakenOn: false,
   });
 
-  /** A repeated assignment changes nothing */
   await prisma.taskAssignment.create({
     data: {
       taskId: task.id,
@@ -886,7 +837,6 @@ test("taking on a task that a different tab took on shows the assignment", async
   });
   await page.getByRole("button", { name: "Annehmen" }).click();
 
-  // The refresh shows the assignment of the other tab
   await expect(page.getByRole("button", { name: "Aufgeben" })).toBeEnabled();
   expect(
     await prisma.taskAssignment.count({ where: { taskId: task.id } }),
@@ -913,7 +863,6 @@ test("giving up a task that a different tab gave up shows the message and the op
   await expect(
     page.getByText("Du hast diesen Task nicht angenommen."),
   ).toBeVisible();
-  // The refresh shows that the task is not taken on
   await expect(page.getByRole("button", { name: "Annehmen" })).toBeEnabled();
   expect(
     await prisma.auditEvent.count({
@@ -1112,9 +1061,6 @@ test("a task that requires a role with levels is hidden and cannot be taken on b
     requiredRoles: { connect: { id: leveledRole.id } },
   });
 
-  /**
-   * Level 1 of 3: the direct assignment does not count
-   */
   await signIn(trainee.user);
   await page.goto("/app/tasks");
   await expect(
@@ -1130,9 +1076,6 @@ test("a task that requires a role with levels is hidden and cannot be taken on b
   await page.goto(`/app/tasks/${openTask.id}`);
   await expect(page.getByRole("button", { name: "Annehmen" })).toBeDisabled();
 
-  /**
-   * Level 3 of 3: the role counts
-   */
   await prisma.roleAssignment.update({
     where: { id: assignment.id },
     data: { currentLevel: 3 },
@@ -1157,13 +1100,15 @@ test("a task in an open list shows that it expired", async ({
   const task = await createTextTask(prisma, viewer, "Kurzer Auftrag", {
     expiresAt: new Date(Date.now() + 2 * ONE_MINUTE_MS),
   });
-  /** A read task does not refresh the page, which would render it again */
+  /**
+   * Stops the refresh of the first visit (see the README), which would render
+   * the page again.
+   */
   await prisma.readMarker.create({
     data: { citizenId: viewer.entity.id, taskId: task.id },
   });
 
   await signIn(viewer.user);
-  /** The test moves the time of the page forward instead of waiting */
   await page.clock.install();
   await page.goto("/app/tasks");
 

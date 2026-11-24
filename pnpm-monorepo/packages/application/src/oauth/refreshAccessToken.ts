@@ -19,7 +19,6 @@ import {
   type TokenResponse,
 } from "./tokenResponse.js";
 
-/** The form fields of a token request with a refresh token */
 export const refreshAccessTokenInputSchema = z.object({
   grant_type: z.literal("refresh_token"),
   refresh_token: z.string().min(1).max(MAX_OPAQUE_TOKEN_LENGTH),

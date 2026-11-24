@@ -1,16 +1,11 @@
 import Image, { type StaticImageData } from "next/image";
 
 interface Props {
-  /** The import of a static SVG file, typed through `svgToStaticImageData` */
   readonly src: StaticImageData;
-  /** Sizes and places the image */
   readonly className?: string;
 }
 
 /**
- * A seasonal drawing which is a static SVG file. The drawing is decoration
- * only, thus it has no text alternative and assistive technology ignores it.
- *
  * Two rules apply to the image:
  *
  * - It must stay `unoptimized`. `next.config.ts` sets

@@ -5,7 +5,7 @@ import sharp from "sharp";
  * Backfills `Upload.width`/`Upload.height` for image uploads created before
  * the dimension probe existed. Fetches each object via the public bucket
  * URL (no S3 credentials needed) and probes it exactly like
- * `probeUploadImageDimensions` in the app.
+ * `probeUploadImageDimensions` of the application package.
  *
  * Usage:
  *   S3_PUBLIC_URL=<public bucket host> \

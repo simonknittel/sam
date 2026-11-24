@@ -4,20 +4,19 @@ import type { CSSProperties, ReactNode, Ref } from "react";
 interface TableProps {
   readonly className?: string;
   /**
-   * Class(es) for the `<table>` itself. Mainly an escape hatch for
-   * breakpoint-specific column sets: redefining the columns custom property
-   * here sits closer to the cells than the wrapper below and therefore wins.
+   * Mainly an escape hatch for breakpoint-specific column sets: redefining the
+   * columns custom property here sits closer to the cells than the wrapper
+   * below and therefore wins.
    */
   readonly tableClassName?: string;
   /**
-   * The `grid-template-columns` value shared by the head and every row, e.g.
-   * `"150px 250px minmax(280px,1fr)"`. It travels as a custom property rather
-   * than a class so it is declared once here instead of being threaded into
+   * The `grid-template-columns`, e.g. `"150px 250px minmax(280px,1fr)"`. A
+   * custom property so it is declared once here instead of being threaded into
    * the head and every row — a React context would not do, since most tables
    * are built in server components.
    */
   readonly columns: string;
-  /** Width in pixels the table never falls below; the wrapper scrolls instead. */
+  /** Pixels */
   readonly minWidth?: number;
   readonly children: ReactNode;
 }
@@ -75,14 +74,12 @@ export const TBody = ({ className, children }: TBodyProps) => {
 
 export enum TableRowAlignment {
   Center = "center",
-  /** For tables whose rows differ in height, e.g. because a cell wraps */
   Top = "top",
 }
 
 interface TRowProps {
   readonly className?: string;
   readonly alignment?: TableRowAlignment;
-  /** For rows a library positions itself, e.g. while being dragged */
   readonly style?: CSSProperties;
   readonly ref?: Ref<HTMLTableRowElement>;
   readonly children: ReactNode;

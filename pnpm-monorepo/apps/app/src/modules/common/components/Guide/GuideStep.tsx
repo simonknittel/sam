@@ -8,7 +8,6 @@ interface Props {
   readonly children: ReactNode;
 }
 
-/** One step of `GuideStepList` */
 export const GuideStep = ({ number, icon: Icon, title, children }: Props) => {
   return (
     <li className="relative overflow-hidden rounded-secondary border border-white/5 bg-white/5 p-4">

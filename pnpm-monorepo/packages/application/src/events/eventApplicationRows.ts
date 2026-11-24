@@ -24,13 +24,10 @@ type EventApplicationSelectRow = Prisma.EventApplicationGetPayload<{
   select: typeof EVENT_APPLICATION_SELECT;
 }>;
 
-/** An application as the event pages show it */
 export interface EventApplicationDetails {
   readonly id: string;
   readonly status: EventApplicationStatus;
-  /** The note of the citizen */
   readonly comment: string | null;
-  /** The note of the manager to the citizen when they declined */
   readonly declineReason: string | null;
   readonly createdAt: Date;
   readonly declinedAt: Date | null;
@@ -57,8 +54,8 @@ export interface EventApplicationRow extends EventApplicationDetails {
 /**
  * The applications that still say something about an event: the latest
  * application of each citizen when it is open, or when a manager declined it
- * and did not sign the citizen up later. The newest first. The caller
- * checked that the actor can see the event.
+ * and did not sign the citizen up later. The caller checked that the actor can
+ * see the event.
  */
 export const loadEventApplicationRows = async (
   prisma: ApplicationContext["prisma"],
@@ -100,13 +97,6 @@ export const loadEventApplicationRows = async (
     );
 };
 
-/**
- * The applications of an event that the actor can see, for the participants
- * page (see `loadEventApplicationRows()`)
- *
- * @throws ForbiddenError without `event;read`, NotFoundError when the actor
- * cannot see the event
- */
 export const findEventApplicationRows = async (
   context: ApplicationContext,
   actor: Actor,
@@ -117,7 +107,6 @@ export const findEventApplicationRows = async (
   return loadEventApplicationRows(context.prisma, event.id);
 };
 
-/** The latest application of the citizen for the event, or null */
 export const loadOwnEventApplication = async (
   prisma: ApplicationContext["prisma"],
   eventId: string,

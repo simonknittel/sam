@@ -12,16 +12,14 @@ import { CalendarEntryTypeIcon } from "./CalendarEntryTypeIcon";
 
 interface Props {
   readonly className?: string;
-  /** The types that the viewer can read */
   readonly settings: readonly CalendarEntryTypeSetting[];
   /** False for a viewer without a citizen: such a viewer has no settings */
   readonly canSave: boolean;
 }
 
 /**
- * One checkbox for each entry type that the viewer can read. Each change is
- * saved at once for the citizen, thus the selection also applies to the
- * dashboard tile and to the other devices.
+ * Each change is saved at once for the citizen, thus the selection also applies
+ * to the dashboard tile and to the other devices.
  */
 export const CalendarTypeFilter = ({ className, settings, canSave }: Props) => {
   const { state, formAction } = useAction(updateMyCalendarEntryTypeSettings, {
@@ -91,11 +89,7 @@ const CalendarTypeField = ({ setting, disabled }: CalendarTypeFieldProps) => {
       </label>
 
       <YesNoCheckbox
-        /**
-         * The key carries the stored state: a render with new data from the
-         * server mounts the box again, thus the stored state wins over the
-         * state the browser holds for the element.
-         */
+        /** See `SeasonalThemeSettingsForm` */
         key={`${setting.type}:${String(setting.enabled)}`}
         id={inputId}
         name={setting.type}

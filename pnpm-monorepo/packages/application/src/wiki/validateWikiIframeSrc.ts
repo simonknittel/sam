@@ -22,14 +22,8 @@ export interface ValidateWikiIframeSrcOutput {
 }
 
 /**
- * Checks the URL of a generic iframe against the current allowlist when the
- * user adds the iframe. The static render and the editor check the URL
- * again on each render, thus this check only gives the user a clear message
- * early. It is not the only check. The use case needs no permission other
- * than the clearance that the caller checks.
- *
- * @throws ValidationError when the URL is not one of the dedicated providers
- * and its host is not on the allowlist
+ * The static render and the editor check the URL again on each render, thus
+ * this check only gives the user a clear message early
  */
 export const validateWikiIframeSrc = async (
   context: ApplicationContext,

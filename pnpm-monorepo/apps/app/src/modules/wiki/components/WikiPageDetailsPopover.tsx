@@ -30,9 +30,8 @@ interface Props {
 }
 
 /**
- * Details of the page shown in the header, next to the condensed metadata
- * line. Everything is fetched on open so the wiki context — which loads all
- * pages for the tree — doesn't have to carry it.
+ * Everything is fetched on open so the wiki context — which loads all pages
+ * for the tree — does not have to carry it
  */
 export const WikiPageDetailsPopover = ({ pageId }: Props) => {
   const [isEnabled, setIsEnabled] = useState(false);

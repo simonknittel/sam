@@ -23,8 +23,8 @@ import {
   wikiTargetKey,
 } from "../wikiEditorTargets";
 
-/** Node types with an editable src URL */
 export const URL_NODE_TYPES = ["wikiEmbed"];
+/** For a new node, see `getWikiEditorExtensions()` */
 const MENU_NODE_TYPES = [
   ...URL_NODE_TYPES,
   "image",
@@ -37,13 +37,12 @@ const MENU_NODE_TYPES = [
   "wikiRoleCitizens",
 ];
 
-/** Nodes whose menu offers a config dialog (mounted by WikiEditMenu) */
 export const CONFIGURABLE_NODE_TYPES = ["wikiPageIndex", "wikiRoleCitizens"];
 
 /**
- * Container and leaf blocks without node-specific actions — their menu
- * offers the shared drag handle and delete only, so every node type has
- * at least those two.
+ * Container and leaf blocks with the generic block menu
+ * (WikiBlockMenuActions), so every node type has at least the drag handle
+ * and delete.
  */
 const BLOCK_MENU_SELECTOR =
   'ul, ol, blockquote, pre, table, hr, details, [data-type="details"], [data-wiki-grid]';
@@ -101,7 +100,6 @@ const selectionAnchor = (
 });
 
 interface WikiMenuTarget {
-  /** Element or virtual element the menu is anchored to (floating-ui reference) */
   readonly reference: HTMLElement | VirtualElement;
   /** Remounts the menu (e.g. its URL input) when the target changes */
   readonly key: string;
@@ -119,9 +117,7 @@ export type WikiNodeMenuState = {
   readonly variantId: string;
   readonly align: WikiNodeAlignment;
   readonly widthPx: number | null;
-  /** Width/position only apply to direct children of the document */
   readonly topLevel: boolean;
-  /** Raw attributes, e.g. for the page-index config dialog */
   readonly attrs: Readonly<Record<string, unknown>>;
 } & WikiMenuTarget;
 
@@ -137,7 +133,6 @@ export type WikiCalloutMenuState = {
   readonly color: WikiCalloutColor;
   readonly align: WikiNodeAlignment;
   readonly widthPx: number | null;
-  /** Width/position only apply to direct children of the document */
   readonly topLevel: boolean;
 } & WikiMenuTarget;
 
@@ -152,7 +147,6 @@ export type WikiBlockMenuState = {
   readonly textSize: WikiTextSize | null;
   readonly align: WikiNodeAlignment;
   readonly widthPx: number | null;
-  /** Width/position only apply to direct children of the document */
   readonly topLevel: boolean;
 } & WikiMenuTarget;
 
@@ -168,7 +162,6 @@ export type WikiTextSelectionMenuState = {
    * compound — its button is shown disabled
    */
   readonly smallTextUnavailable: boolean;
-  /** Whether the selection carries a link mark (the link button prefills) */
   readonly hasLink: boolean;
 } & WikiMenuTarget;
 
@@ -183,7 +176,6 @@ export type WikiTextNodeMenuState = {
   readonly textAlign: WikiNodeAlignment;
   readonly align: WikiNodeAlignment;
   readonly widthPx: number | null;
-  /** Width/position only apply to direct children of the document */
   readonly topLevel: boolean;
   /**
    * Paragraph inside a text-only container (quote, table cell, list
@@ -207,7 +199,7 @@ const isTopLevel = (editor: Editor, position: number): boolean =>
 
 /**
  * The menu's width value: a pixel number, or NULL for full width (both
- * the explicit WIKI_FULL_WIDTH marker and the stripped/legacy NULL).
+ * the explicit WIKI_FULL_WIDTH marker and a stripped NULL).
  */
 const menuWidthPx = (node: ProseMirrorNode): number | null => {
   const value: unknown = node.attrs.widthPx;
@@ -452,7 +444,6 @@ export const wikiMenuFromSelection = (
   return null;
 };
 
-/** Badge label naming the menu's target, e.g. "Tabelle" or "Überschrift 2" */
 export const wikiMenuLabel = (menu: NonNullable<WikiEditMenuState>): string => {
   switch (menu.kind) {
     case "link":

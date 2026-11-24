@@ -3,19 +3,17 @@ import { AuditEventType, type AuditEventInput } from "@sam-monorepo/domain";
 import { NotFoundError, ValidationError } from "../errors.js";
 import { RoleErrorMessage, RoleTagErrorMessage } from "./roleErrors.js";
 
-/** One link between a role and a tag */
 export interface RoleTagPair {
   readonly roleId: string;
   readonly tagId: string;
 }
 
-/** The links that a write really added and removed */
 export interface RoleTagAssignmentChanges {
   readonly added: RoleTagPair[];
   readonly removed: RoleTagPair[];
 }
 
-/** The add and remove lists of a write, see `toUniqueAssignmentIds()` */
+/** See `toUniqueAssignmentIds()` */
 interface UniqueAssignmentIds {
   readonly add: string[];
   readonly remove: string[];
@@ -23,12 +21,6 @@ interface UniqueAssignmentIds {
 
 const toPairKey = (pair: RoleTagPair) => `${pair.roleId}:${pair.tagId}`;
 
-/**
- * The add and remove lists of a write without duplicates, in the order of
- * the input
- *
- * @throws ValidationError when an id is in both lists
- */
 export const toUniqueAssignmentIds = (
   add: readonly string[],
   remove: readonly string[],
@@ -43,7 +35,6 @@ export const toUniqueAssignmentIds = (
   return { add: uniqueAdd, remove: uniqueRemove };
 };
 
-/** @throws NotFoundError when a role does not exist */
 const requireRolesExist = async (
   transaction: Prisma.TransactionClient,
   roleIds: readonly string[],
@@ -57,7 +48,6 @@ const requireRolesExist = async (
     throw new NotFoundError(RoleErrorMessage.NotFound);
 };
 
-/** @throws NotFoundError when a tag does not exist */
 const requireRoleTagsExist = async (
   transaction: Prisma.TransactionClient,
   tagIds: readonly string[],
@@ -72,10 +62,8 @@ const requireRoleTagsExist = async (
 };
 
 /**
- * Adds and removes links between roles and tags on the transaction of the
- * caller. The roles and the tags of `add` must exist. A link that exists
- * already stays, and a link that does not exist cannot be removed: thus the
- * result has only the links that really changed, in the order of the input.
+ * The roles and the tags of `add` must exist. The result has only the links
+ * that really changed, in the order of the input.
  */
 const writeRoleTagAssignments = async (
   transaction: Prisma.TransactionClient,
@@ -133,12 +121,6 @@ const writeRoleTagAssignments = async (
   };
 };
 
-/**
- * Adds tags to one role and removes tags from it on the transaction of the
- * caller (see `writeRoleTagAssignments()`)
- *
- * @throws NotFoundError when a tag to add does not exist
- */
 export const writeTagsOfRole = async (
   transaction: Prisma.TransactionClient,
   {
@@ -161,12 +143,6 @@ export const writeTagsOfRole = async (
   });
 };
 
-/**
- * Adds roles to one tag and removes roles from it on the transaction of the
- * caller (see `writeRoleTagAssignments()`)
- *
- * @throws NotFoundError when a role to add does not exist
- */
 export const writeRolesOfTag = async (
   transaction: Prisma.TransactionClient,
   {
@@ -189,7 +165,6 @@ export const writeRolesOfTag = async (
   });
 };
 
-/** The audit event of the changes, or nothing when no link changed */
 export const toRoleTagAssignmentAuditEvents = (
   changes: RoleTagAssignmentChanges,
   userId: string,

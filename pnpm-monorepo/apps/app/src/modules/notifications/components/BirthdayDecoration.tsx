@@ -6,10 +6,8 @@ import {
   NotificationRowDecoration,
 } from "./NotificationRowDecoration";
 
-/** The greeting keeps the colours and shapes of the library */
 const SHOTS = buildConfettiShots();
 
-/** The row of a birthday greeting, see `NotificationRowDecoration` */
 export const BirthdayDecoration = () => (
   <NotificationRowDecoration
     surfaceClassName="background-birthday"

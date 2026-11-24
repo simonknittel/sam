@@ -27,17 +27,12 @@ import { VariantExternalLink } from "./VariantExternalLink";
 import { VariantTagBadge } from "./VariantTagBadge";
 
 interface Props {
-  /** The trigger */
   readonly children: ReactNode;
   readonly triggerClassName?: string;
   readonly variant: Pick<Variant, "id" | "name">;
   readonly manufacturer: ManufacturerLogoManufacturer;
   /** See VariantWithLogo's `logo` */
   readonly logo?: { readonly src: string; readonly mimeType: string } | null;
-  /**
-   * The individual ship of a citizen. Without it, the popover shows only the
-   * variant.
-   */
   readonly ship?: Pick<Ship, "name" | "acquisitionSource" | "note">;
   /**
    * For a trigger that is a link itself: a click follows the link, only a
@@ -46,11 +41,6 @@ interface Props {
   readonly hoverOnly?: boolean;
 }
 
-/**
- * The places that show a variant have its name and its manufacturer, thus
- * the head of the popover shows immediately. The other details of the
- * variant load only when the popover opens.
- */
 export const VariantPopover = ({
   children,
   triggerClassName,

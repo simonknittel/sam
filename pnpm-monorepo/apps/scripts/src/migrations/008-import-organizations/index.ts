@@ -196,7 +196,6 @@ const getOrg = async (spectrumId: string) => {
   });
 
   if (!existingOrg) {
-    // Get org name
     let name = cleanedSpectrumId;
     let logo = null;
 
@@ -223,7 +222,6 @@ const getOrg = async (spectrumId: string) => {
       console.warn(`Failed to fetch org from CIG. spectrumId: ${spectrumId}`);
     }
 
-    // Create org
     const newOrg = await prisma.organization.create({
       data: {
         spectrumId,
@@ -250,9 +248,6 @@ const getOrg = async (spectrumId: string) => {
 };
 
 export const updateActiveMembership = async (citizenId: Citizen["id"]) => {
-  /**
-   * Figure out currently active memberships
-   */
   const confirmedHistoryEntries =
     await prisma.organizationMembershipHistoryEntry.findMany({
       where: {
@@ -285,9 +280,6 @@ export const updateActiveMembership = async (citizenId: Citizen["id"]) => {
     }
   }
 
-  /**
-   * Update database
-   */
   await prisma.$transaction([
     prisma.activeOrganizationMembership.deleteMany({
       where: {

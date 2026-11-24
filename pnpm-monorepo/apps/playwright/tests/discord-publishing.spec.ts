@@ -27,31 +27,21 @@ import {
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
-/**
- * The note the app appends to every description it hands to Discord, so that
- * a reader signs up in the app instead of pressing Discord's own button.
- */
 const SIGN_UP_NOTE = "Anmeldung nur über SAM, nicht über Discord:";
 
 /**
- * The description Discord receives: the text of the organizer, if there is
- * one, and the note below it. The origin comes from NEXT_PUBLIC_BASE_URL,
- * which Next.js inlines at build time, so only the path is asserted.
+ * Only the path is asserted, because the origin comes from NEXT_PUBLIC_BASE_URL
+ * (see setup/stack.ts).
  */
 const signUpNotePattern = (eventId: string, text?: string) =>
   new RegExp(
     `^${text ? `${text}\n\n` : ""}${SIGN_UP_NOTE}\nhttps?://[^/]+/app/events/${eventId}$`,
   );
 
-/** Discord's guild scheduled event entity types */
 const VOICE_ENTITY_TYPE = 2;
 const STAGE_ENTITY_TYPE = 1;
 const EXTERNAL_ENTITY_TYPE = 3;
 
-/**
- * The two channel kinds Discord can host an event in. They differ only in
- * the entity type the app derives from the picked channel.
- */
 const CHANNEL_KINDS = [
   { channel: MOCK_VOICE_CHANNEL, entityType: VOICE_ENTITY_TYPE },
   { channel: MOCK_STAGE_CHANNEL, entityType: STAGE_ENTITY_TYPE },
@@ -79,7 +69,6 @@ for (const { channel, entityType } of CHANNEL_KINDS) {
     await page.goto(`/app/events/${event.id}/settings`);
     await waitForAppShellHydration(page);
 
-    // Only voice and stage channels are offered — text channels cannot host an event
     await toggleLabel(page, /^Sprachkanal$/).click();
     const channelSelect = page.getByLabel("Kanal", { exact: true });
     await expect(channelSelect).toBeVisible();
@@ -108,7 +97,6 @@ for (const { channel, entityType } of CHANNEL_KINDS) {
     );
     expect(scheduledEvent).toMatchObject({
       name: "Operation Kanalfunk",
-      // The sign-up note follows the description of the organizer
       description: expect.stringMatching(
         signUpNotePattern(event.id, "Wir treffen uns im Einsatzraum."),
       ),
@@ -118,7 +106,6 @@ for (const { channel, entityType } of CHANNEL_KINDS) {
     });
     expect(scheduledEvent).not.toHaveProperty("entity_metadata");
 
-    // The published state replaces the form and links to the Discord event
     await expect(page.getByText(`Sprachkanal: ${channel.name}`)).toBeVisible();
     // Exact: the description field's hint links to "Formatierungen wie auf Discord"
     await expect(
@@ -131,7 +118,6 @@ for (const { channel, entityType } of CHANNEL_KINDS) {
       new RegExp(`/events/.+/${published!.discordPublishedId}$`),
     );
 
-    // The system log records the publication
     await expect
       .poll(() =>
         prisma.auditEvent.count({
@@ -195,11 +181,6 @@ test("publishing to an external location defaults to the event's own URL", async
 
   const published = await prisma.event.findUnique({ where: { id: event.id } });
   expect(published!.discordPublishedChannelId).toBeNull();
-  /**
-   * The origin comes from NEXT_PUBLIC_BASE_URL, which Next.js inlines at
-   * build time — the worker's own random port is not part of it, so only
-   * the path is asserted.
-   */
   expect(published!.discordPublishedLocation).toMatch(
     new RegExp(`^https?://.+/app/events/${event.id}$`),
   );
@@ -244,7 +225,6 @@ test("editing a published event updates it on Discord, deleting it removes it", 
   const published = await prisma.event.findUnique({ where: { id: event.id } });
   const scheduledEventId = published!.discordPublishedId!;
 
-  // An event without a description of its own carries the note alone
   expect(discordMock.scheduledEvents.get(scheduledEventId)).toMatchObject({
     description: expect.stringMatching(signUpNotePattern(event.id)),
   });
@@ -334,7 +314,6 @@ test("an event deleted on Discord's side is marked as unpublished again", async 
     )
     .toBe(1);
 
-  // The card offers publishing again
   await page.reload();
   await expect(
     page.getByRole("button", { name: "Auf Discord veröffentlichen" }),
@@ -351,7 +330,7 @@ test("a legacy description longer than Discord allows blocks publishing", async 
     handle: "langtext-orga",
     permissionStrings: ["event;read"],
   });
-  // Written before the app-wide limit dropped to Discord's 1000 characters
+  // Longer than the app-wide limit, which is below Discord's 1000 characters
   const event = await createAppEvent(prisma, {
     name: "Operation Wortreich",
     description: "a".repeat(1400),
@@ -458,7 +437,6 @@ test("publishing a restricted event needs an explicit confirmation", async ({
     dialog.getByText("Auf Discord sehen es alle Mitglieder des Servers"),
   ).toBeVisible();
 
-  // Cancelling publishes nothing
   await dialog.getByRole("button", { name: "Abbrechen" }).click();
   expect(discordMock.scheduledEvents.size).toBe(0);
 
@@ -504,7 +482,6 @@ test("a template's publish preference prefills the create form and publishes the
     .getByLabel("Vorlage (optional)")
     .selectOption({ label: "Standard-Patrouille" });
 
-  // The template switched publishing on and preselected its channel
   await expect(page.getByLabel("Kanal", { exact: true })).toHaveValue(
     MOCK_VOICE_CHANNEL.id,
   );
@@ -529,10 +506,6 @@ test("a template's publish preference prefills the create form and publishes the
   });
 });
 
-/**
- * The publish preference the test above reads is edited in the Discord tile
- * of the template's Stammdaten page — the only place it is written by hand.
- */
 test("the owner switches a template's publishing on and picks its channel", async ({
   page,
   prisma,
@@ -574,9 +547,8 @@ test("the owner switches a template's publishing on and picks its channel", asyn
     });
 
   /**
-   * The form keeps showing what was just saved. React puts a form back to
-   * its default values after the action, which used to leave the checkbox,
-   * the target and the channel saying something else than the database.
+   * React puts a form back to its default values after the action, but the
+   * checkbox, the target and the channel must agree with the database.
    */
   await expect(
     page.getByLabel("Auf Discord veröffentlichen", { exact: true }),
@@ -586,17 +558,12 @@ test("the owner switches a template's publishing on and picks its channel", asyn
     MOCK_STAGE_CHANNEL.id,
   );
 
-  /** And brings it back on the next visit */
   await page.reload();
   await expect(page.getByLabel("Kanal", { exact: true })).toHaveValue(
     MOCK_STAGE_CHANNEL.id,
   );
 });
 
-/**
- * A template that already carries a preference brings it back into the form,
- * where it survives an unrelated edit, can be switched and can be cleared.
- */
 test("a template's saved publish preference is edited, switched and cleared", async ({
   page,
   prisma,
@@ -618,10 +585,8 @@ test("a template's saved publish preference is edited, switched and cleared", as
   await page.goto(`/app/events/templates/${template.id}`);
   await waitForAppShellHydration(page);
 
-  /** The preference comes back switched on, with its target preselected */
   await expect(page.getByRole("textbox", { name: "Ort" })).toBeVisible();
 
-  /** An edit that does not touch publishing leaves the preference alone */
   await fillUntilValue(page.getByLabel("Name"), "Patrouille Bravo");
   await sectionByHeading(page, "Stammdaten")
     .getByRole("button", { name: "Speichern" })
@@ -632,7 +597,6 @@ test("a template's saved publish preference is edited, switched and cleared", as
     discordPublishTarget: EventDiscordPublishTarget.EXTERNAL,
   });
 
-  /** Switching the target to a channel */
   await toggleLabel(page, /^Sprachkanal$/).click();
   await page
     .getByLabel("Kanal", { exact: true })
@@ -646,7 +610,6 @@ test("a template's saved publish preference is edited, switched and cleared", as
     discordPublishLocation: null,
   });
 
-  /** Switching publishing off clears all three columns */
   await page.reload();
   await waitForAppShellHydration(page);
   await toggleLabel(page, /^Auf Discord veröffentlichen$/).click();
@@ -707,9 +670,8 @@ test("a restricted template keeps its roles while publishing is switched on", as
 });
 
 /**
- * The create form widens the audience the same way the settings card does,
- * so it asks the same question. That the confirmation's own button submits
- * is covered by the settings-card test above — they share the dialog.
+ * That the confirmation's own button submits is covered by the settings-card
+ * test above: they share the dialog.
  */
 test("creating a restricted event with publishing needs the same confirmation", async ({
   page,
@@ -733,14 +695,12 @@ test("creating a restricted event with publishing needs the same confirmation", 
   await fillUntilValue(page.getByLabel("Start"), "2027-06-01T20:00");
   await fillUntilValue(page.getByLabel("Ende"), "2027-06-01T22:00");
 
-  // The new event goes to Discord by default
   await openFormSection(page, "Discord");
   await expect(
     page.getByLabel("Auf Discord veröffentlichen", { exact: true }),
   ).toBeChecked();
   await expect(page.getByRole("textbox", { name: "Ort" })).toBeVisible();
 
-  // Publishing a public event still saves in one click
   await expect(page.getByRole("alertdialog")).toHaveCount(0);
 
   await openFormSection(page, "Sichtbarkeit");
@@ -756,7 +716,6 @@ test("creating a restricted event with publishing needs the same confirmation", 
   expect(await prisma.event.count()).toBe(0);
   expect(discordMock.scheduledEvents.size).toBe(0);
 
-  // Back to public: the plain submit button is back and creates the event
   await toggleLabel(page, /^Öffentlich$/).click();
   await page.getByRole("button", { name: "Speichern" }).click();
 
@@ -782,8 +741,6 @@ test("a Discord-sourced event offers no publishing at all", async ({
   await signIn(manager.user);
   await page.goto(`/app/events/${event.id}/settings`);
 
-  // Discord events have no settings tab at all
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
-  // The event around the missing tab stays navigable
   await expect(page.getByRole("link", { name: "Übersicht" })).toBeVisible();
 });

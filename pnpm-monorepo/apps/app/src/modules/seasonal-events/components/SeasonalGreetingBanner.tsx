@@ -6,10 +6,6 @@ import { pickRandomWording } from "@/modules/dashboard/utils/greetingWordings";
 import { getInGameYear } from "@sam-monorepo/domain";
 import { getActiveSeasonalTheme } from "../queries/getActiveSeasonalTheme";
 
-/**
- * The greeting of the active seasonal event. It appears on the greeting days
- * of the event only and it disappears by itself.
- */
 export const SeasonalGreetingBanner = async () => {
   const resolution = await getActiveSeasonalTheme();
 

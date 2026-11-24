@@ -13,11 +13,6 @@ import {
   type UpdateEventPositionInput,
 } from "./updateEventPosition.js";
 
-/**
- * Changes the given fields of a position of the lineup of an event or of an
- * event template that the actor can change. The input is the input of
- * `updateEventPosition()`.
- */
 export const updateLineupPosition = (
   context: ApplicationContext,
   actor: Actor,

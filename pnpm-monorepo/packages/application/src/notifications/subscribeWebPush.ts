@@ -41,7 +41,6 @@ export type SubscribeWebPushInput = z.output<
 >;
 
 export interface SubscribeWebPushOptions {
-  /** The `User-Agent` header of the request, or null */
   readonly userAgent: string | null;
 }
 
@@ -57,10 +56,6 @@ interface SubscriptionData {
   readonly userAgent: string | null;
 }
 
-/**
- * Changes the keys and the user agent of the subscription of the endpoint of
- * the own citizen
- */
 const updateOwnSubscription = async (
   context: ApplicationContext,
   { citizenId, endpoint, p256dh, auth, userAgent }: SubscriptionData,
@@ -76,9 +71,9 @@ const updateOwnSubscription = async (
 };
 
 /**
- * Saves the subscription and gives its id. The unique constraint of the
- * endpoint refuses the endpoint of a different citizen. A parallel save of
- * the same citizen can create the row first; then the keys change.
+ * The unique constraint of the endpoint refuses the endpoint of a different
+ * citizen. A parallel save of the same citizen can create the row first; then
+ * the keys change.
  */
 const saveSubscription = async (
   context: ApplicationContext,
@@ -108,13 +103,7 @@ const saveSubscription = async (
 };
 
 /**
- * Saves the web push subscription of a browser for the citizen of the actor.
- * The endpoint identifies the subscription: a second save of the same
- * endpoint changes only its keys and its user agent. A test notification
- * confirms the subscription on the device.
- *
- * @throws ForbiddenError for a user without a citizen, or when the endpoint
- * is the subscription of a different citizen
+ * A second save of the same endpoint changes only its keys and its user agent
  */
 export const subscribeWebPush = (
   context: ApplicationContext,

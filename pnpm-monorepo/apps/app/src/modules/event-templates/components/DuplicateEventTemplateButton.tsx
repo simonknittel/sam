@@ -13,7 +13,6 @@ import { EVENT_TEMPLATE_NAME_MAX_LENGTH } from "../utils/eventTemplateConstraint
 interface Props {
   readonly templateId: string;
   readonly name: string;
-  /** Renders a labelled button instead of the table's icon-only one */
   readonly withLabel?: boolean;
 }
 
@@ -75,10 +74,6 @@ const DuplicateEventTemplateForm = ({
   name,
   onSuccess,
 }: FormProps) => {
-  /**
-   * The errors show as toasts: the refresh after a conflict, for example a
-   * template that a different user deleted, can remove this form.
-   */
   const { formAction } = useAction(duplicateEventTemplate, {
     onSuccess,
   });
@@ -88,7 +83,7 @@ const DuplicateEventTemplateForm = ({
       <input type="hidden" name="sourceTemplateId" value={templateId} />
 
       <p className="mb-4 text-sm text-neutral-400">
-        {`Die Kopie übernimmt Beschreibung, Titelbild, Sichtbarkeit, Aufstellung und Briefing von „${name}“, aber keine Freigaben. Sie gehört dir und ist damit zunächst nur für dich sichtbar.`}
+        {`Die Kopie übernimmt Beschreibung, Titelbild, Sichtbarkeit, Teilnahme- und Discord-Einstellungen, Aufstellung und Briefing von „${name}“, aber keine Freigaben. Sie gehört dir und ist damit zunächst nur für dich sichtbar.`}
       </p>
 
       <TextInput

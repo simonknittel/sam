@@ -47,13 +47,11 @@ export const toAcquisitionSourceFilter = (
   }
 };
 
-/** The value of the filtered ships of one acquisition source */
 export interface SourceValue {
   readonly usdCents: number;
   readonly auec: number;
 }
 
-/** The value of the filtered ships for each acquisition source */
 export interface FleetValue {
   readonly store: SourceValue;
   readonly inGame: SourceValue;
@@ -66,7 +64,6 @@ export const toFleetValue = (value: FleetValueOutput): FleetValue => ({
   unknown: { usdCents: value.usd_cents.unknown, auec: value.auec.unknown },
 });
 
-/** Gives the variant of a use case the form that the fleet tables use */
 export const toShipVariant = (variant: ShipVariantOutput): ShipVariant => ({
   id: variant.id,
   name: variant.name,
@@ -88,7 +85,6 @@ export const toShipVariant = (variant: ShipVariantOutput): ShipVariant => ({
   tags: variant.tags,
 });
 
-/** The search parameters of the ship list of one citizen */
 export interface OwnerFleetOptions {
   readonly flightReady?: FlightReadyParameter;
   readonly acquisitionSource?: AcquisitionSourceParameter;
@@ -126,7 +122,6 @@ export const toOwnerShipsInput = ({
   cursor: cursor ?? undefined,
 });
 
-/** Gives a ship list of a use case the form that the ships table uses */
 export const toShipsPage = (output: ListShipsOutput) => ({
   ships: output.ships.map((ship) => ({
     id: ship.id,

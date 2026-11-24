@@ -14,14 +14,10 @@ export type VerifyEmailInput = z.infer<typeof verifyEmailInputSchema>;
 
 export interface VerifyEmailOutput {
   readonly user_id: string;
-  /** ISO 8601 */
   readonly email_verified_at: string;
 }
 
-/**
- * Confirms the email address of a user without the confirmation link, for
- * example when the email does not reach the user. A user manager does it.
- */
+/** For example when the confirmation email does not reach the user */
 export const verifyEmail = (
   context: ApplicationContext,
   actor: Actor,

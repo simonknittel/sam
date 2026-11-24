@@ -4,18 +4,13 @@ import { requirePermission, type Actor } from "../actor.js";
 import { CITIZEN_REFERENCE_SELECT } from "../citizenReference.js";
 import type { ApplicationContext } from "../context.js";
 
-/**
- * Deleted flows stay in the database, thus a manager can restore them. The
- * management list shows the live flows by default. The deleted filter is
- * also the way to find a flow to restore.
- */
+/** The deleted filter is also the way to find a flow to restore */
 export enum FlowStatus {
   Active = "active",
   Deleted = "deleted",
   All = "all",
 }
 
-/** All that the management list and the management detail page show */
 const MANAGEABLE_FLOW_SELECT = {
   id: true,
   name: true,
@@ -61,10 +56,8 @@ export interface FindManageableFlowsInput {
 }
 
 /**
- * The flows of the management list, in display order. `career;manage`
- * grants read on each flow, thus the list has no filter by role access.
- *
- * @throws ForbiddenError without `career;manage`
+ * `career;manage` grants read on each flow, thus the list has no filter by
+ * role access
  */
 export const findManageableFlows = async (
   context: Pick<ApplicationContext, "prisma">,
@@ -92,12 +85,7 @@ export const findManageableFlows = async (
   });
 };
 
-/**
- * One flow for the management detail page, also a deleted one, or null when
- * it does not exist
- *
- * @throws ForbiddenError without `career;manage`
- */
+/** Also gives a deleted flow */
 export const findManageableFlow = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,

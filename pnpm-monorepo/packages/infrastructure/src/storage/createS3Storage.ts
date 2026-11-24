@@ -22,12 +22,11 @@ import * as z from "zod";
  */
 const READ_TIMEOUT_MILLISECONDS = 10_000;
 
+/** See `copyUploadInTransaction()` of the application package */
 const COPY_TIMEOUT_MILLISECONDS = 30_000;
 
-/** A head request has no body, thus it is as short as a read */
 const HEAD_TIMEOUT_MILLISECONDS = 10_000;
 
-/** One page of the list (at most 1 000 keys) */
 const LIST_PAGE_TIMEOUT_MILLISECONDS = 10_000;
 
 /**
@@ -37,18 +36,14 @@ const LIST_PAGE_TIMEOUT_MILLISECONDS = 10_000;
  */
 const MAXIMUM_STORAGE_LIST_PAGES = 10_000;
 
-/**
- * One delete request. A request with 1 000 keys takes longer than a usual
- * request.
- */
+/** A request with 1 000 keys takes longer than a usual request */
 const DELETE_TIMEOUT_MILLISECONDS = 30_000;
 
 /** For example "bytes 0-65535/1234567", or "bytes 0-65535/*" */
 const CONTENT_RANGE_PATTERN = /^bytes \d+-\d+\/(?:\d+|\*)$/;
 
 /**
- * The size of the whole object from the `Content-Range` header of a range
- * request, or undefined when the storage does not know it ("*")
+ * Undefined when the storage does not know the size of the whole object ("*")
  */
 const contentRangeSchema = z
   .string()
@@ -90,18 +85,14 @@ const loadGetSignedUrl = async () =>
   (await import("@aws-sdk/s3-request-presigner")).getSignedUrl;
 
 export interface S3StorageOptions {
-  /**
-   * The client of the bucket (`createS3Client()`). The presigned URLs need
-   * the configured client, not only its `send()`.
-   */
+  /** The presigned URLs need the configured client, not only its `send()` */
   readonly client: S3Client;
   readonly bucketName: string;
 }
 
 /**
- * The object storage of the uploads, on an S3-compatible bucket. The key of an
- * object is the ID of its upload. Every method throws on a storage error.
- * The presigned URLs send no request: the client signs them locally.
+ * The key of an object is the ID of its upload. Every method throws on a
+ * storage error.
  */
 export const createS3Storage = ({
   client,
@@ -221,7 +212,6 @@ export const createS3Storage = ({
         Bucket: bucketName,
         Delete: {
           Objects: keys.map((key) => ({ Key: key })),
-          // The response holds only the keys that the storage did not delete
           Quiet: true,
         },
       }),

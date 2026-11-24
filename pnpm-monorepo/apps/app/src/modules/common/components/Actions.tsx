@@ -14,8 +14,8 @@ export const Actions = ({ children }: Readonly<Props>) => {
     <PopoverBaseUI
       title="Aktionen"
       /**
-       * Base UI sets `data-popup-open` on the trigger while the menu is open.
-       * The icon follows this attribute, thus the menu needs no own state.
+       * The icon follows `data-popup-open` of Base UI, thus the menu needs no
+       * own state.
        */
       trigger={
         <>

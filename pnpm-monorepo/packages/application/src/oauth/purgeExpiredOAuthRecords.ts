@@ -4,7 +4,6 @@ import { withSpan } from "../withSpan.js";
 import { AUTHORIZATION_CODE_LIFETIME_IN_MILLISECONDS } from "./constants.js";
 import { resetStaleGrantAdminModes } from "./resetStaleGrantAdminModes.js";
 
-/** 24 hours after its expiry, a cached client metadata document is deleted */
 const CLIENT_METADATA_RETENTION_IN_MILLISECONDS = 24 * 60 * 60 * 1000;
 
 export interface PurgeExpiredOAuthRecordsOutput {
@@ -12,27 +11,15 @@ export interface PurgeExpiredOAuthRecordsOutput {
   readonly refreshTokenCount: number;
   readonly grantCount: number;
   readonly clientMetadataCount: number;
-  /** See `resetStaleGrantAdminModes()`, with its own audit events */
+  /** With its own audit events */
   readonly adminModeResetCount: number;
 }
 
 /**
- * Deletes the OAuth records of the MCP server that grant nothing anymore at
- * the time of the run:
- *
- * - Expired authorization codes that the client did not redeem. A used code
- *   stays with its grant, thus its reuse still revokes the grant.
- * - Expired refresh tokens. A used refresh token expires 31 days after its
- *   issue, like an unused one. Until then, its reuse revokes the grant.
- * - Grants without a refresh token and without an unexpired code: grants of
- *   an abandoned or failed authorization, revoked grants and grants whose
- *   tokens all expired. Their codes are deleted with them.
- * - Cached client metadata documents that expired more than 24 hours ago.
- *   The app does not use an expired document: the next consent of the
- *   client fetches the document again.
- *
- * It also turns off the admin mode of the grants of users who are not
- * admins anymore (see `resetStaleGrantAdminModes()`).
+ * A used code stays with its grant, and a used refresh token stays until its
+ * expiry, thus their reuse still revokes the grant. A grant goes when it has no
+ * refresh token and no unexpired code: an abandoned or failed authorization, a
+ * revoked grant, or a grant whose tokens all expired.
  */
 export const purgeExpiredOAuthRecords = (
   context: ApplicationContext,

@@ -9,8 +9,8 @@ import { silcSalaryEntryCollector } from "./silcSalaryEntries.js";
 import { taskDeadlineEntryCollector } from "./taskDeadlineEntries.js";
 
 /**
- * The collector of each entry type. Each type keeps the read rule of its
- * source, thus the calendar needs no permission of its own.
+ * Each type keeps the read rule of its source, thus the calendar needs no
+ * permission of its own
  */
 export const CALENDAR_ENTRY_COLLECTORS: Record<
   CalendarEntryType,

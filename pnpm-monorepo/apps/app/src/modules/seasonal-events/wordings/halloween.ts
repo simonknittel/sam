@@ -1,10 +1,6 @@
 import type { SeasonalWordingFactory } from "../utils/types";
 
-/**
- * The greetings of the banner on the Day of the Vara, the Halloween of the
- * Star Citizen universe. The banner picks one of them per citizen and day,
- * thus two citizens of the same day usually read a different one.
- */
+/** The Day of the Vara is the Halloween of the Star Citizen universe. */
 export const HALLOWEEN_WORDINGS: readonly SeasonalWordingFactory[] = [
   () => ({
     title: "Tag der Vara!",

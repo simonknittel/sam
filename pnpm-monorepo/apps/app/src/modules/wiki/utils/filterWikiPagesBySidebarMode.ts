@@ -7,15 +7,11 @@ interface SidebarModePage {
 }
 
 /**
- * Removes pages from the sidebar tree input based on their sidebar mode:
- * HIDDEN pages disappear together with their whole subtree, CHILDREN_HIDDEN
- * pages stay visible themselves but their whole subtree disappears.
- *
  * Membership in a sidebar-hidden subtree wins over the flatten-up rule of
- * `buildVisibleWikiTree` — permission-visible descendants are deliberately
- * NOT flattened under a visible ancestor, so "dataset" subtrees stay out of
- * the sidebar entirely. The ancestor walk therefore ignores read
- * permissions on purpose.
+ * `buildVisibleWikiTree` — permission-visible descendants are deliberately NOT
+ * flattened under a visible ancestor, so "dataset" subtrees stay out of the
+ * sidebar entirely. The ancestor walk therefore ignores read permissions on
+ * purpose.
  *
  * Purely cosmetic: only the sidebar applies this filter. Search, favorites,
  * recents, tag pages and page-index nodes ignore it.

@@ -35,7 +35,6 @@ interface Props {
   readonly features: readonly GuideFeatureItem[];
 }
 
-/** The features of an app as cards with a screenshot each */
 export const GuideFeatureList = ({ columns, features }: Props) => {
   return (
     <ul

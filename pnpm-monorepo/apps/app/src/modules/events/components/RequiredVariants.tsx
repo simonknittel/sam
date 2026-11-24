@@ -29,9 +29,8 @@ interface Props {
 }
 
 /**
- * The required variants of a position, in the order of preference: the
- * lineup shows the first variant and the others as alternatives. The picker
- * adds a variant at the end, and the rows change the order.
+ * In the order of preference: the lineup shows the first variant and the others
+ * as alternatives.
  */
 export const RequiredVariants = ({
   className,
@@ -54,9 +53,8 @@ export const RequiredVariants = ({
   };
 
   /**
-   * Swaps the variant at the index with the variant before it. The first
-   * row cannot move up and the last row cannot move down (the buttons are
-   * disabled), thus both indexes are always in the list.
+   * The buttons at the ends of the list are disabled, thus both indexes are
+   * always in the list.
    */
   const swapWithPrevious = (index: number) => {
     setVariantIds((previous) =>

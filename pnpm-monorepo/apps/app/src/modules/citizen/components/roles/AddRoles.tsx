@@ -18,8 +18,7 @@ interface Props {
   readonly assignedRoleIds: Role["id"][];
   readonly iconOnly?: boolean;
   /**
-   * Runs after each save of the role assignments. The save refreshes the
-   * page, but not the data that the client loaded itself.
+   * The save refreshes the page, but not the data that the client loaded itself
    */
   readonly onSaved?: () => void;
 }

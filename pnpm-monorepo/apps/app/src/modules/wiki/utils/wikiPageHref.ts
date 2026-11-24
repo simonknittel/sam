@@ -28,7 +28,6 @@ export interface WikiPageHrefMode {
    * `container` above; null for the other scopes
    */
   readonly variantId: string | null;
-  /** Route prefix all page URLs live under */
   readonly basePath: string;
   /**
    * Page served at the "home" of the scope: the event wiki's locked root
@@ -76,10 +75,8 @@ export const createVariantWikiHrefMode = (
 export { buildWikiPageHref } from "@sam-monorepo/wiki-editor/helpers";
 
 /**
- * Page id a pathname points at, e.g. for highlighting the active tree row.
  * Non-page routes under the base path (tags, trash, ...) yield their first
- * segment, which never matches a page id — same behavior the global wiki
- * always had.
+ * segment, which never matches a page id.
  */
 export const getActiveWikiPageId = (
   mode: WikiPageHrefMode,
@@ -122,13 +119,10 @@ export const buildWikiPageSnapshotsHref = (
 ) => `${mode.basePath}/${pageId}/snapshots`;
 
 /**
- * Route of a page identified only by its row, without a loaded context:
- * briefing pages live under their event or template, everything else under
- * the global wiki. A briefing root page's id-URL redirects to the bare
- * briefing path, so no root lookup is needed. Used by cross-scope surfaces
- * like the reports queue, and by the variant embed's "open in full wiki"
- * link — pages of a variant subtree are ordinary global wiki pages, so their
- * cross-scope home deliberately stays `/app/wiki`.
+ * Route of a page identified only by its row, without a loaded context. A
+ * briefing root page's id-URL redirects to the bare briefing path, so no root
+ * lookup is needed. Pages of a variant subtree are ordinary global wiki pages,
+ * so their cross-scope home deliberately stays `/app/wiki`.
  */
 export const getWikiPageRouteHref = (page: {
   readonly id: string;

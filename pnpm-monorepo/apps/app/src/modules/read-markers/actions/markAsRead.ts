@@ -6,11 +6,6 @@ import {
   markItemAsRead as markItemAsReadUseCase,
 } from "@sam-monorepo/application";
 
-/**
- * Marks one item as read by the viewer: from its details once they mounted
- * in the browser (see `<MarkAsReadOnMount>`), or from a click on its "Neu"
- * marker. Repeated calls change nothing.
- */
 export const markAsRead = createUseCaseAction({
   name: "markAsRead",
   schema: markItemAsReadInputSchema,
@@ -29,8 +24,8 @@ export const markAsRead = createUseCaseAction({
   refresh: (output) => output.was_new,
   success: () => "Als gelesen markiert",
   /**
-   * The read also marked the notifications which announced the item. The
-   * client then fetches the unread count of the bell again, see
+   * The read also marked the notifications which announced the item. The client
+   * then fetches the unread count of the bell again, see
    * `useRefetchOnSiteNotifications()`.
    */
   responseFields: (output) => ({

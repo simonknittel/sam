@@ -9,19 +9,14 @@ export interface DeleteCancelledDiscordEventsOutput {
   readonly notificationsSent: boolean;
 }
 
-/**
- * Deletes the future events from Discord that are no longer on Discord. The
- * delete is a hard delete: a soft delete is only for app events.
- */
+/** A hard delete: a soft delete is only for app events */
 export const deleteCancelledDiscordEvents = async (
   context: ApplicationContext,
   scheduledEvents: readonly DiscordScheduledEvent[],
 ): Promise<DeleteCancelledDiscordEventsOutput> => {
   /**
-   * Only the rows from Discord: the app events are in the same table, but
-   * they have no Discord counterpart. Without this filter, each future app
-   * event would be cancelled and deleted. `selectCancelledDiscordEvents`
-   * does the source check again as a defense in depth.
+   * Only the rows from Discord. `selectCancelledDiscordEvents` does the source
+   * check again as a defense in depth.
    */
   const futureEventsFromDatabase = await context.prisma.event.findMany({
     where: {

@@ -11,11 +11,9 @@ import type {
 } from "./calendarEntry.js";
 
 /**
- * The expiry of the tasks that the citizen of the actor accepted or was
- * assigned to: both give a task assignment. The visibility of the tasks is
+ * An accepted task also gives a task assignment. The visibility of the tasks is
  * not checked, because an assignee always sees the task (see
- * `getVisibleTasksWhere`). Deleted and cancelled tasks are left out. The task
- * features need a citizen.
+ * `getVisibleTasksWhere`).
  */
 export const taskDeadlineEntryCollector: CalendarEntryCollector<TaskDeadlineCalendarEntry> =
   {

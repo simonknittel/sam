@@ -31,13 +31,11 @@ import * as z from "zod";
 import { env } from "./env.js";
 
 /**
- * The Yjs collaboration backend for the wiki. The Next.js app remains the
- * single permission authority: it mints short-lived
- * JWTs per page and viewer, this server only verifies them and persists
- * documents. An open editor sends a new token before its token expires,
- * and the server closes a connection without a valid token. The editor
- * schema is shared with the app through @sam-monorepo/wiki-editor. Deployed
- * next to Soketi via the core-services repository.
+ * The Next.js app is the single permission authority: it mints short-lived JWTs
+ * per page and viewer, this server only verifies them and persists documents.
+ * An open editor sends a new token before its token expires, and the server
+ * closes a connection without a valid token. The production deployment is in
+ * docs/releasing.md.
  */
 
 const replaceBodySchema = z.object({
@@ -89,10 +87,7 @@ const UNAUTHORIZED_CLOSE_CODE = 4401;
 const verifyToken = (token: string) =>
   jwtVerify(token, secret, { algorithms: ["HS256"], requiredClaims: ["exp"] });
 
-/**
- * Verifies a session token for the document. Gives the claims and the expiry
- * in milliseconds since the epoch.
- */
+/** `expiresAt` is in milliseconds since the epoch. */
 const verifySessionToken = async (rawToken: string, documentName: string) => {
   const { payload } = await verifyToken(rawToken);
   const token = parseWikiCollabSessionTokenPayload(payload);
@@ -105,8 +100,7 @@ const verifySessionToken = async (rawToken: string, documentName: string) => {
 };
 
 /**
- * Verifies the bearer token of an internal request. Gives null when the
- * request has no valid token of the kind that `parse` accepts.
+ * Null when the request has no valid token of the kind that `parse` accepts.
  */
 const verifyBearerToken = async <Payload>(
   request: IncomingMessage,
@@ -145,11 +139,7 @@ const getEditorConnections = (): Connection<ConnectionContext>[] =>
     document.getConnections(),
   );
 
-/**
- * Closes each connection whose last session token expired more than the
- * grace period ago. A periodic check also finds a reader that sends no
- * messages.
- */
+/** A periodic check also finds a reader that sends no messages. */
 const closeConnectionsWithExpiredTokens = () => {
   const now = Date.now();
 
@@ -186,10 +176,7 @@ const broadcastSaveState = (
   );
 };
 
-/**
- * Create an AUTO snapshot when the newest snapshot of the page is older
- * than this and the content changed since.
- */
+/** The minimum age of the newest snapshot */
 const AUTO_SNAPSHOT_MIN_INTERVAL_MS = 5 * 60 * 1000;
 /** AUTO snapshots kept per page (MANUAL ones are kept forever) */
 const AUTO_SNAPSHOT_RETENTION = 50;
@@ -232,10 +219,8 @@ const respondJson = (
 };
 
 /**
- * Preserves the page's stored content as an automatic snapshot before it
- * is overwritten, at most every 5 minutes: any state is snapshotted right
- * before edits replace it, so there is always a restore point at most 5
- * minutes behind — without a manual "save" step.
+ * Any state is snapshotted right before edits replace it, so there is always a
+ * restore point at most 5 minutes behind — without a manual "save" step.
  *
  * The common case (a recent snapshot exists) costs one indexed query; the
  * content comparison only runs when the cadence has passed.
@@ -301,13 +286,9 @@ const maybeCreateAutoSnapshot = async (pageId: string) => {
 const MAX_SYNCED_MENTIONS = 1_000;
 
 /**
- * Keeps WikiPageCitizenMention in lockstep with the persisted content: one
- * row per citizen the content currently mentions. A new mention inserts a
- * pending row which the 15-minute notification sweep turns into a
- * notification; a removed mention deletes its row — cancelling a pending
- * notification and letting a future re-mention notify again. Rows from
- * internal writes (/replace: snapshot restores, imports, transplants) and
- * self-mentions are created already suppressed, so they never notify.
+ * See `WikiPageCitizenMention`. Rows from internal writes (/replace: snapshot
+ * restores, imports, transplants) and self-mentions are created already
+ * suppressed, so they never notify.
  */
 const syncCitizenMentionLinks = async (
   pageId: string,
@@ -363,10 +344,11 @@ const syncCitizenMentionLinks = async (
 
 /**
  * Internal "replace document content" command from the Next.js app
- * (snapshot restore, JSON import). Goes through a direct connection so a
- * live editing session converges on the new content; without one the
- * document is loaded, replaced and persisted the same way. Authenticated
- * with a short-lived JWT signed with the shared secret.
+ * (snapshot restore, JSON import, paste over a page, content of a new page).
+ * Goes through a direct connection so a live editing session converges on
+ * the new content; without one the document is loaded, replaced and
+ * persisted the same way. Authenticated with a short-lived JWT signed with
+ * the shared secret.
  */
 const handleReplaceRequest = async (
   request: IncomingMessage,
@@ -433,11 +415,7 @@ const handleReplaceRequest = async (
   respondJson(response, 200, { ok: true });
 };
 
-/**
- * Internal "close all connections of one user" command from the Next.js app
- * (a ban). Authenticated with a short-lived JWT signed with the shared
- * secret.
- */
+/** For a ban */
 const handleDisconnectRequest = async (
   request: IncomingMessage,
   response: ServerResponse,
@@ -555,9 +533,8 @@ const server = new Server<ConnectionContext>({
       Y.applyUpdate(data.document, new Uint8Array(page.ydoc));
     } else if (page.content) {
       /**
-       * First collab session of a page that predates collaboration: seed
-       * the Yjs document from the stored content JSON. Persisted by the
-       * next onStoreDocument.
+       * First collab session of a page without a Yjs document: seed it from
+       * the stored content JSON. Persisted by the next onStoreDocument.
        */
       const seeded = prosemirrorJSONToYDoc(
         editorSchema,
@@ -639,11 +616,7 @@ const server = new Server<ConnectionContext>({
     // Uint8Array.from copies into an ArrayBuffer-backed array
     const ydoc = Uint8Array.from(Y.encodeStateAsUpdate(data.document));
 
-    /**
-     * Before overwriting, preserve the stored state as an automatic
-     * snapshot when the 30-minute cadence has passed. Never lets a failed
-     * snapshot block the store itself.
-     */
+    /** Never lets a failed snapshot block the store itself */
     try {
       await maybeCreateAutoSnapshot(data.documentName);
     } catch (error) {
@@ -652,12 +625,9 @@ const server = new Server<ConnectionContext>({
 
     try {
       /**
-       * The upload links follow the content in the same transaction: the
-       * nightly upload cleanup and the permission check of attachment
-       * downloads read them. They are not gated by the upload settings of
-       * the page: these settings gate new uploads (the assign route of the
-       * app), but each editor may move or copy an uploaded file between
-       * pages.
+       * The upload links are not gated by the upload settings of the page:
+       * these settings gate new uploads (the assign route of the app), but each
+       * editor may move or copy an uploaded file between pages.
        */
       await prisma.$transaction(
         async (transaction) => {
@@ -670,6 +640,8 @@ const server = new Server<ConnectionContext>({
             data: {
               ydoc,
               content,
+              // The index `WikiPage_fts_idx` refuses a tsvector of 1 MB, and
+              // then each store of the page fails
               searchText: extractWikiPageText(content).slice(0, 200_000),
               ...(lastEditorEntityId
                 ? { updatedById: lastEditorEntityId }
@@ -694,9 +666,6 @@ const server = new Server<ConnectionContext>({
       throw error;
     }
 
-    /**
-     * Never lets a failed mention sync block the store itself.
-     */
     try {
       await syncCitizenMentionLinks(
         data.documentName,
@@ -729,8 +698,8 @@ const server = new Server<ConnectionContext>({
   async onDisconnect(data) {
     /**
      * One audit event per editing session, mirroring the app's
-     * AuditEventType.WIKI_PAGE_UPDATED (the enum lives in the app; the
-     * database column is a plain string). Internal connections (replace
+     * AuditEventType.WIKI_PAGE_UPDATED (the enum lives in the domain package;
+     * the database column is a plain string). Internal connections (replace
      * endpoint) skip this — the app writes its own, more specific event.
      */
     if (!data.context?.state?.didEdit || data.context.isInternal) return;
@@ -744,6 +713,7 @@ const server = new Server<ConnectionContext>({
     try {
       await prisma.auditEvent.create({
         data: {
+          // A plain string: no compiler check against `AuditEventDataByType`
           type: "WIKI_PAGE_UPDATED",
           data: { pageId: data.documentName },
           createdById: data.context.userId,

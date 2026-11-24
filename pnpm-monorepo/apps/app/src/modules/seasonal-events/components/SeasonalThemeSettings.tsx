@@ -10,10 +10,6 @@ interface Props {
   readonly className?: string;
 }
 
-/**
- * The switches of the seasonal events. The list comes from the registry of
- * the themes, thus a new event appears here without a change.
- */
 export const SeasonalThemeSettings = async ({ className }: Props) => {
   const settings = await getMySeasonalThemeSettings();
 

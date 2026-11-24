@@ -29,9 +29,8 @@ const SHOT = {
 };
 
 /**
- * One shot from each lower corner, both towards the middle of the row, in
- * the look of the given decoration. Call this outside of a component: a new
- * array on every render would start the animation again.
+ * Call this outside of a component: a new array on every render would start the
+ * animation again.
  */
 export const buildConfettiShots = (
   appearance: Pick<Options, "colors" | "shapes"> = {},
@@ -41,21 +40,15 @@ export const buildConfettiShots = (
 ];
 
 interface Props {
-  /** The utility which paints the colour clouds of the surface */
   readonly surfaceClassName: string;
   readonly shots: readonly Options[];
-  /** Replaces the confetti for a viewer who prefers reduced motion */
   readonly staticIcon: ReactNode;
 }
 
 /**
- * What makes a decorated row different from every other row: a surface of
- * overlapping colour clouds and confetti above it. Both stay behind the text
- * of the row — see the `isolate` of the list item.
- *
- * The surface carries no motion, thus every viewer sees it. A viewer who
- * prefers reduced motion gets a static mark instead of the confetti:
- * `ConfettiCanvas` renders nothing for this viewer.
+ * The surface and the confetti stay behind the text of the row, see the
+ * `isolate` of the list item. `ConfettiCanvas` renders nothing for a viewer who
+ * prefers reduced motion, thus this viewer gets the static icon.
  */
 export const NotificationRowDecoration = ({
   surfaceClassName,

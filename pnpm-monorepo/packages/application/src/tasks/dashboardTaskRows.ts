@@ -6,10 +6,8 @@ import { TASK_LIST_SELECT, type TaskListRow } from "./taskListSelect.js";
 import { getOpenTasksWhere, getVisibleTasksWhere } from "./taskWhere.js";
 
 /**
- * The open tasks that the citizen of the actor accepted, for the tile "Meine
- * Tasks" of the dashboard. The visibility is not checked, because an assignee
- * always sees the task (see `getVisibleTasksWhere`). The rows have no order.
- * Requires `task;read` and a citizen.
+ * The visibility is not checked, because an assignee always sees the task (see
+ * `getVisibleTasksWhere`). The rows have no order.
  */
 export const findOwnOpenTaskRows = async (
   context: ApplicationContext,
@@ -34,10 +32,8 @@ interface NewTaskRowsOptions {
 }
 
 /**
- * The newest open tasks that are new for the actor and visible to the actor,
- * for the tile "Neue Tasks" of the dashboard. Tasks that the citizen of the
- * actor accepted are left out: the tile "Meine Tasks" shows them. Requires
- * `task;read` and a citizen.
+ * The tasks that the citizen of the actor accepted are left out: the tile
+ * "Meine Tasks" shows them
  */
 export const findNewTaskRows = async (
   context: ApplicationContext,

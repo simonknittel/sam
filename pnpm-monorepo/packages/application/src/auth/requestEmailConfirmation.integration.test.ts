@@ -11,7 +11,6 @@ import { truncateAllTables } from "../../test/database.js";
 import { EmailTemplate } from "../context.js";
 import { requestEmailConfirmation } from "./requestEmailConfirmation.js";
 
-/** The link in the email is valid for one day */
 const TOKEN_LIFETIME_MILLISECONDS = 24 * 60 * 60 * 1000;
 
 const EMAIL = "pilot@example.com";

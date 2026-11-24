@@ -17,10 +17,8 @@ import {
 import { INHERITED_WIKI_PAGE_PERMISSIONS } from "./wikiPageDefaults.js";
 
 /**
- * The briefing of a container that a copy reads: the pages that are not
- * soft-deleted, and the root page. A container whose root was trashed has
- * pages but nothing to copy. No permission check: the caller checks the
- * container.
+ * A container whose root was trashed has pages but nothing to copy. No
+ * permission check: the caller checks the container.
  */
 export const findBriefingCopySource = async (
   context: Pick<ApplicationContext, "prisma">,
@@ -62,7 +60,6 @@ const orderDepthFirst = (
 };
 
 interface CopyBriefingTreeParams {
-  /** The source container's non-deleted pages, root included */
   readonly sourcePages: readonly EventWikiContextPage[];
   readonly targetContainer: EventContainer;
   readonly createdByEntityId: string;
@@ -75,9 +72,10 @@ interface CopyBriefingTreeParams {
 
 /**
  * Copies a whole briefing — the blueprint of an event template into a new
- * event, or one template's briefing into its duplicate. Unlike the
- * subtree copy this carries the pages' scopes over: reproducing who will be
- * able to read which page is the entire point of a briefing blueprint.
+ * event, an event's briefing into a new template, or one template's briefing
+ * into its duplicate. Unlike the subtree copy this carries the pages' scopes
+ * over: reproducing who will be able to read which page is the entire point
+ * of a briefing blueprint.
  *
  * Runs on the caller's transaction, so the copied briefing commits together
  * with whatever it belongs to.

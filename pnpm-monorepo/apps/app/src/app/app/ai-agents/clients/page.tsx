@@ -19,9 +19,6 @@ export default async function Page() {
     <div className="flex flex-col gap-4">
       <McpServerDisabledNote />
       <SuspenseWithErrorBoundaryTile>
-        {/* The admin mode of a client is only managed while the admin mode
-            of the toolbar is active, which is never the case while an admin
-            assumes a user */}
         <ConnectedClientsTile
           canManageAdminMode={await isAdminModeActive(session)}
         />

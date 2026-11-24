@@ -9,18 +9,16 @@ import {
 import { getTaskStatus, type TaskStatus } from "./taskRules.js";
 
 export enum TaskRewardKind {
-  /** New SILC */
   NewSilc = "new_silc",
-  /** A reward that is no SILC, described in a text */
   Text = "text",
 }
 
 export enum TaskVisibilityKind {
-  /** All citizens can accept and complete the task */
+  /** The citizens who pass `hasRequiredRole()` can accept the task */
   Public = "public",
-  /** Only the one addressed citizen can see and complete the task */
+  /** One task for one assignee, whom the creator selects */
   Personalized = "personalized",
-  /** Only the addressed group can see the task, and it completes the task */
+  /** One task for all assignees, whom the creator selects */
   Group = "group",
 }
 

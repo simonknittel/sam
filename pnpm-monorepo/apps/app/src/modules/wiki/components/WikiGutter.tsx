@@ -92,26 +92,14 @@ const COMPUTE_POSITION_CONFIG: ComputePositionConfig = {
 
 interface Props {
   readonly editor: Editor;
-  /** Target for file uploads started from the insert palette */
   readonly pageId: string;
-  /** Whether the viewer may upload images to the page */
   readonly canUploadImages: boolean;
-  /** Whether the viewer may upload file attachments to the page */
   readonly canUploadAttachments: boolean;
-  /** Opens the embed URL dialog (palette entry "Einbetten") */
   readonly onRequestEmbed: () => void;
-  /** Opens the link dialog (palette entry "Link") */
   readonly onRequestLink: () => void;
-  /** Opens the ship picker (palette entry "Schiff") */
   readonly onRequestVariantLink: () => void;
 }
 
-/**
- * Gutter controls left of the hovered top-level block: a plus button
- * opening the insert palette (new block below, Alt: above) and a grip
- * that only drags the block — all block actions live in the contextual
- * edit menu (WikiEditMenu).
- */
 export const WikiGutter = ({
   editor,
   pageId,
@@ -160,11 +148,8 @@ export const WikiGutter = ({
   };
 
   /**
-   * Highlights the gutter's block while the gutter is in use (pointer
-   * over its controls or the insert palette open), so it's clear which
-   * node it affects. Merely hovering block content washes the hovered
-   * block instead — for nested content that is the inner block, not this
-   * top-level one.
+   * Merely hovering block content washes the hovered block instead — for
+   * nested content that is the inner block, not this top-level one.
    */
   const gutterInUse = controlsHovered || paletteOpen;
   const highlightFrom = gutterInUse ? (block?.pos ?? null) : null;
@@ -192,7 +177,6 @@ export const WikiGutter = ({
       computePositionConfig={COMPUTE_POSITION_CONFIG}
       onNodeChange={handleNodeChange}
     >
-      {/* data-wiki-editor-chrome: clicks here keep the focused block */}
       <div
         data-wiki-editor-chrome
         className="flex items-center"
@@ -254,13 +238,10 @@ interface InsertBlockActionsProps {
 }
 
 /**
- * Dropdown content of the gutter plus button: the slash-command palette
- * with a filter input and keyboard navigation (shared WikiSuggestionMenu).
  * The document stays untouched until an entry is picked — only then a
- * paragraph is inserted next to the hovered block and the palette action
- * runs against it (the actions' leading deleteRange is a no-op on the
- * collapsed range), so dismissing the popover never leaves an empty node
- * behind.
+ * paragraph is inserted next to the hovered block and the palette action runs
+ * against it (the actions' leading deleteRange is a no-op on the collapsed
+ * range), so dismissing the popover never leaves an empty node behind.
  */
 const InsertBlockActions = ({
   editor,
@@ -346,7 +327,6 @@ const InsertBlockActions = ({
     );
   };
 
-  /** Arrow/Enter go to the list; everything else stays in the input */
   const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (menuRef.current?.onKeyDown({ event: event.nativeEvent }) === true)
       event.preventDefault();

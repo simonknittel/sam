@@ -7,27 +7,17 @@ import { useEffect, useRef } from "react";
 
 interface Props {
   /**
-   * The shots of one burst. Every shot is one call of the library, thus a
-   * burst can come from more than one origin. Keep the array outside of the
-   * component which renders this one: a new array on every render would
-   * start the animation again.
+   * Keep the array outside of the component which renders this one: a new array
+   * on every render would start the animation again.
    */
   readonly shots: readonly Options[];
-  /** Milliseconds between two bursts while the canvas is in view */
   readonly intervalMilliseconds: number;
-  /** Places and sizes the canvas over the element which positions it */
   readonly className?: string;
 }
 
 /** The React Compiler does not compile a component with an `import()` */
 const loadCanvasConfetti = () => import("canvas-confetti");
 
-/**
- * A canvas which repeats a burst of confetti while it is in view. The caller
- * places the canvas and describes the shots, thus the same animation works
- * over a row of a list and over an avatar. Nothing renders for a viewer who
- * prefers reduced motion.
- */
 export const ConfettiCanvas = ({
   shots,
   intervalMilliseconds,
@@ -96,10 +86,8 @@ export const ConfettiCanvas = ({
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     /**
-     * The library is loaded only for the elements which need it, and it
-     * draws into this canvas instead of a page-wide one. The worker mode is
-     * off, so that the animation behaves the same in the browser and in the
-     * Playwright suite.
+     * The worker mode is off, so that the animation behaves the same in the
+     * browser and in the Playwright suite.
      */
     void loadCanvasConfetti()
       .then((module) => {

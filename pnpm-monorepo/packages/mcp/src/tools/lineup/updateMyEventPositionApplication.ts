@@ -28,7 +28,6 @@ export const updateMyEventPositionApplicationTool = defineTool({
     idempotentHint: false,
     openWorldHint: false,
   },
-  // The two use cases have the same input
   inputSchema: applyForEventPositionInputSchema.extend({
     action: z.enum(MyEventPositionApplicationAction),
   }),

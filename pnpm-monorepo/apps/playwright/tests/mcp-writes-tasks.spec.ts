@@ -121,7 +121,6 @@ test.describe("the task write tools of the MCP server", () => {
     const dispatcherClient = await connectMcpClient(
       (await authorizeMcpClient(dispatcher.user)).accessToken,
     );
-    // An assignee must be a citizen that is not deleted, like in the picker
     expect(
       await callForError(dispatcherClient, "create_task", {
         ...personalizedTask,
@@ -130,7 +129,6 @@ test.describe("the task write tools of the MCP server", () => {
     ).toMatch(VALIDATION_RESULT);
     expect(await prisma.task.count()).toBe(0);
 
-    // The output has the first task and the ids of all tasks
     const result = await callForContent(
       dispatcherClient,
       "create_task",
@@ -188,19 +186,16 @@ test.describe("the task write tools of the MCP server", () => {
       }),
     ).toMatchObject({
       title: "Konvoi eskortieren",
-      // A field that is not given stays
       description: "Von Lorville nach Area18.",
       reward: { type: "text", value: "Ruhm und Ehre" },
       assignees: [{ id: worker.entity.id, handle: "mcp-auftragnehmer" }],
     });
-    // The reward of a text task has no SILC value
     expect(
       await callForError(creatorClient, "update_task", {
         task_id: task.id,
         reward_silc_value: 10,
       }),
     ).toMatch(VALIDATION_RESULT);
-    // The assignment limit and the assignees change only for a public task
     const groupTask = await prisma.task.create({
       data: {
         title: "Gruppenauftrag",
@@ -243,7 +238,6 @@ test.describe("the task write tools of the MCP server", () => {
         action: "accept",
       }),
     ).toMatchObject({ task: { is_assigned_to_me: true } });
-    // A repeated accept changes nothing and gives the same task
     expect(
       await callForContent(workerClient, "update_my_task_assignment", {
         task_id: task.id,
@@ -261,7 +255,6 @@ test.describe("the task write tools of the MCP server", () => {
       "TASK_SELF_ASSIGNMENT_DELETED",
       "TASK_SELF_ASSIGNMENT_CREATED",
     ]);
-    // Only the given field groups write an audit event
     expect(
       await prisma.auditEvent.count({
         where: { type: "TASK_DESCRIPTION_UPDATED" },
@@ -314,7 +307,6 @@ test.describe("the task write tools of the MCP server", () => {
       completionists: [{ id: worker.entity.id, handle: "mcp-arbeiter" }],
       is_updatable: false,
     });
-    // A completed task cannot be completed again
     expect(
       await callForError(client, "complete_task", {
         task_id: task.id,

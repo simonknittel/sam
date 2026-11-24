@@ -16,7 +16,6 @@ type Payload = {
   reason: string | null;
 };
 
-/** A manager approved or declined the application of the citizen */
 export const EventApplicationAnsweredHandler = async (
   context: ApplicationContext,
   payload: Payload,

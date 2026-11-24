@@ -13,10 +13,6 @@ import {
 import { refresh } from "next/cache";
 import { WIKI_ERROR_TEXTS } from "../utils/wikiErrorTexts";
 
-/**
- * Makes a snapshot the current content of its page. A failed replace keeps
- * the safety snapshot, thus the refresh of the error shows it in the list.
- */
 export const restoreWikiPageSnapshot = createAuthenticatedAction(
   "restoreWikiPageSnapshot",
   restoreWikiPageSnapshotInputSchema,

@@ -25,7 +25,7 @@ export const createTaskInputSchema = z.object({
   visibility: z
     .enum(TaskVisibilityKind)
     .describe(
-      "public: each citizen who can see the task can accept it. group: one task for the citizens of assignee_ids. personalized: one separate task for each citizen of assignee_ids. group and personalized need an extra permission.",
+      "public: each citizen who can see the task and has one of required_role_ids (if any) can accept it. group: one task for the citizens of assignee_ids. personalized: one separate task for each citizen of assignee_ids. group and personalized need an extra permission.",
     ),
   reward: z
     .discriminatedUnion("type", [
@@ -72,7 +72,6 @@ export interface CreateTaskOutput {
    * this is the first of them.
    */
   readonly task: GetTaskOutput;
-  /** The ids of all new tasks */
   readonly task_ids: string[];
 }
 
@@ -90,7 +89,6 @@ const getRewardColumns = (reward: CreateTaskInput["reward"]) =>
         rewardSilcValue: reward.value,
       };
 
-/** @returns The ids of the created tasks */
 const createTaskRows = async (
   context: ApplicationContext,
   input: CreateTaskInput,
@@ -167,12 +165,6 @@ const createTaskRows = async (
   }
 };
 
-/**
- * Creates a task and notifies about it. A personalized task becomes one task
- * for each assignee. Requires `task;create` and a citizen; a group or a
- * personalized task and a reward of new SILC need the permission with the
- * attribute of the visibility or of the reward type.
- */
 export const createTask = (
   context: ApplicationContext,
   actor: Actor,

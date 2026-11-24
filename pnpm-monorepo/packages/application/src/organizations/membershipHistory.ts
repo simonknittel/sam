@@ -7,13 +7,9 @@ import { lockCitizen } from "@sam-monorepo/domain";
 import type { ApplicationContext } from "../context.js";
 
 /**
- * Writes a change to the membership history of a citizen. The active
- * memberships come from the confirmed history entries, thus the same
- * transaction replays them. Use this function for each write to the
- * membership history.
- *
- * A typed error that `change` throws rolls the transaction back, thus a
- * rejected change writes nothing and the replay does not run.
+ * The active memberships come from the confirmed history entries, thus the same
+ * transaction replays them. Use this function for each write to the membership
+ * history.
  */
 export const changeMembershipHistory = (
   context: Pick<ApplicationContext, "prisma">,

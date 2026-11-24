@@ -1,7 +1,4 @@
-/**
- * The size of the Discord avatar of a citizen link. Not in the client
- * component, thus a server component can read the values.
- */
+/** Not in the client component, thus a server component can read the values. */
 export enum CitizenAvatarSize {
   /**
    * 1.25 em: it follows the size of the text and stays inside its line

@@ -1,13 +1,11 @@
 import type { Prisma } from "@sam-monorepo/database/client";
 
-/** A citizen in the output of a use case */
 export interface CitizenReference {
   readonly id: string;
   /** Display text. It can change and it does not identify the citizen. */
   readonly handle: string | null;
 }
 
-/** The fields of a citizen that `toCitizenReference()` needs */
 export const CITIZEN_REFERENCE_SELECT = {
   id: true,
   handle: true,
@@ -29,7 +27,6 @@ export const toCitizenReference = (
     ? { id: citizen.id, handle: citizen.handle }
     : null;
 
-/** The citizens that are not deleted, as references */
 export const toCitizenReferences = (
   citizens: readonly CitizenReferenceRow[],
 ): CitizenReference[] =>

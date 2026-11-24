@@ -4,9 +4,8 @@ import { waitForAppShellHydration } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 /**
- * The indicator of a new entry, independent of the classes drawing it. The
- * entries themselves come from the source (`entries.tsx`), so the cases below
- * compare counts instead of naming single entries.
+ * The entries come from the source (`entries.tsx`), so the cases below compare
+ * counts instead of naming single entries.
  */
 const newEntryIndicators = (page: Page) => page.locator("[data-new-badge]");
 
@@ -50,25 +49,22 @@ test("entries are marked as seen in view and keep their indicator", async ({
     });
 
   /**
-   * The newest entry needs a permission this citizen does not have, thus it
-   * is redacted and marked without ever carrying an indicator. Scrolling to
-   * an entry further down makes sure that indicators are marked as well —
-   * more than one seen entry can then only mean an entry with an indicator.
+   * One entry between the first indicators needs a permission this citizen
+   * does not have, thus it is redacted and marked without ever carrying an
+   * indicator. Scrolling to an entry further down makes sure that indicators
+   * are marked as well — more than one seen entry can then only mean an entry
+   * with an indicator.
    */
   await newEntryIndicators(page).nth(3).scrollIntoViewIfNeeded();
   await expect
     .poll(seenCount, { timeout: READ_ON_VIEW_TIMEOUT })
     .toBeGreaterThan(1);
 
-  // The entries which are already marked keep their indicator until the page
-  // is left, so nothing disappears under the user while they read.
   await expect(newEntryIndicators(page)).toHaveCount(indicatorCount);
 
   /**
-   * The next visit renders the marked entries without their indicator, while
-   * the entries further down the page - which were never in view - keep
-   * theirs. The two counts do not subtract to each other: a redacted entry is
-   * marked as well, but never carries an indicator.
+   * The two counts do not subtract to each other: a redacted entry is marked as
+   * well, but never carries an indicator.
    */
   await page.reload();
   await expect(newEntryIndicators(page).first()).toBeVisible();

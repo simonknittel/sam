@@ -12,22 +12,16 @@ const isRepeatBoundary = (entry: IEntry) =>
   entry.liveStatusSignal?.type === LiveStatusSignalType.SessionEnd;
 
 /**
- * Hides the repeats of an entry: an entry whose type and collapse key equal
- * those of the entry before it in its sequence. A sequence holds the entries
- * of one citizen and one type (see `Pattern.collapseSequenceOf`), and a
- * boundary (see `isRepeatBoundary`) ends it. An entry without a collapse key
- * always stays. See `Pattern.collapseKey`.
+ * A sequence holds the entries of one citizen and one type (see
+ * `Pattern.collapseSequenceOf`), and a boundary (see `isRepeatBoundary`) ends
+ * it.
  *
- * The boundaries are entries of other types, thus the filters of the types
- * must run after this function.
- *
- * Takes and returns the entries from the newest to the oldest, as the table
- * shows them.
+ * The boundaries are entries of other types, thus the filters of the types must
+ * run after this function.
  */
 export const collapseRepeatedEntries = (
   entriesNewestFirst: readonly IEntry[],
 ): IEntry[] => {
-  /** The type and the collapse key of the last entry, per citizen and sequence */
   const lastRepeatKeys = new Map<string, Map<LogAnalyzerEntryType, string>>();
   const keptEntriesOldestFirst: IEntry[] = [];
 

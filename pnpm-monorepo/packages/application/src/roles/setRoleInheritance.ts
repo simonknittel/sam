@@ -31,12 +31,6 @@ export interface SetRoleInheritanceOutput {
   readonly enabled: boolean;
 }
 
-/**
- * Adds one inherited role to a role or removes it. Requires `role;manage`.
- *
- * @throws ValidationError when the role inherits itself
- * @throws NotFoundError when the role or the inherited role does not exist
- */
 export const setRoleInheritance = (
   context: ApplicationContext,
   actor: Actor,

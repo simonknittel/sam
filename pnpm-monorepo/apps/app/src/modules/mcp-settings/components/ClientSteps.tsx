@@ -4,7 +4,6 @@ interface Props {
   readonly title: string;
   /** The `<li>` elements of the steps */
   readonly children: ReactNode;
-  /** Shown below the steps */
   readonly note?: ReactNode;
 }
 

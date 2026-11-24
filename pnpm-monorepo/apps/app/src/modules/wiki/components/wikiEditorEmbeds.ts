@@ -55,13 +55,7 @@ const withPreviousLayout = <T extends { readonly provider: string }>(
   };
 };
 
-/**
- * Inserts an embed for the given URL at the current selection (replacing a
- * selected node). YouTube/Twitch/Spotify/Google URLs are recognized by
- * their fixed patterns and get their dedicated player; any other URL falls
- * back to a generic iframe, validated against the domain allowlist through
- * a server action. Shows a toast and returns false when rejected.
- */
+/** Replaces a selected node. Shows a toast and returns false when rejected. */
 export const insertWikiEmbedFromUrl = async (
   editor: Editor,
   url: string,

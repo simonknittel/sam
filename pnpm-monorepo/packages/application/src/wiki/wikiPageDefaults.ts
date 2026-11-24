@@ -5,7 +5,6 @@ import {
 } from "@sam-monorepo/database/client";
 import type { WikiSharedContextPage } from "./wikiContext.js";
 
-/** The permission columns of a new page: the tiers and the own owner */
 export interface WikiPagePermissionColumns {
   readonly visibility: WikiPageVisibility;
   readonly editability: WikiPageEditability;
@@ -41,7 +40,6 @@ export const getTopLevelWikiPagePermissions = (
   ownerId,
 });
 
-/** The sort order that puts a new page after the existing children */
 export const getNextWikiPageSortOrder = (
   pages: readonly Pick<WikiSharedContextPage, "parentId" | "sortOrder">[],
   parentId: string | null,

@@ -33,6 +33,5 @@ const renderEntries = () => {
  */
 let entries: Promise<ChangelogEntrySource[]> | undefined;
 
-/** The changelog reader of the application context */
 export const listChangelogEntriesAsMarkdown = () =>
   (entries ??= renderEntries());

@@ -23,13 +23,8 @@ export const copyEventLineupInputSchema = z.object({
 export type CopyEventLineupInput = z.infer<typeof copyEventLineupInputSchema>;
 
 /**
- * Adds all positions of the lineup of a source event after the top-level
- * positions of a target event that the actor manages. The actor must be able
- * to see the lineup of the source, as on the lineup page. The copy has no
- * assigned citizens and no applications.
- *
- * @throws ValidationError `LineupErrorMessage.SourceEventNotFound` when the
- * source does not exist or the actor cannot see it
+ * The actor must be able to see the lineup of the source, as on the lineup
+ * page
  */
 export const copyEventLineup = (
   context: ApplicationContext,

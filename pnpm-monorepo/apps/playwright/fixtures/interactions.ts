@@ -18,10 +18,8 @@ export const COLLAB_PERSISTENCE_TIMEOUT = 20_000;
 /** Text of both 403 boundaries: app/app/forbidden.tsx and ForbiddenCard. */
 export const FORBIDDEN_TEXT = "Du bist nicht berechtigt dies zu sehen.";
 
-/** Next.js' notFound() boundary. */
 export const NOT_FOUND_TEXT = "Page not found";
 
-/** Success feedback of the shared action helpers. */
 export const SAVED_TEXT = "Erfolgreich gespeichert";
 export const DELETED_TEXT = "Erfolgreich gelöscht";
 /** The `Common.notFound` message of an action, not the 404 page */
@@ -33,11 +31,6 @@ export const FORBIDDEN_ACTION_TEXT =
 /** The `Common.badRequest` message of an action */
 export const BAD_REQUEST_TEXT = "Ungültige Anfrage";
 
-/**
- * Scopes a lookup to the tile/section carrying the given heading. Tiles and
- * statistic tiles both render as a `section` named by their heading, so one
- * helper covers both.
- */
 export const sectionByHeading = (page: Page, heading: string | RegExp) =>
   page.locator("section").filter({
     has: page.getByRole("heading", {
@@ -47,26 +40,20 @@ export const sectionByHeading = (page: Page, heading: string | RegExp) =>
   });
 
 /**
- * Scopes a lookup to a StatisticTile, which carries no heading — its label
- * is a plain paragraph next to the value, so the tile is that label's
- * parent. The value animates through random digits (ScrambleIn), but an
- * sr-only span holds the real one from the start, which toContainText reads.
+ * A StatisticTile has no heading, so the tile is the parent of its label. The
+ * value animates through random digits (ScrambleIn), but an sr-only span holds
+ * the real one from the start, which toContainText reads.
  */
 export const statisticTile = (page: Page, label: string) =>
   page.getByText(label, { exact: true }).locator("..");
 
 /**
- * The app's Modal (Base UI dialog) renders in a portal with role="dialog"
- * and takes its accessible name from the heading it is given. Popovers use
- * the same role but carry their own name, so this never matches one.
+ * The dialog takes its name from its heading. Popovers have the same role, but
+ * their own name.
  */
 export const modal = (page: Page, heading: string | RegExp) =>
   page.getByRole("dialog", { name: heading });
 
-/**
- * Opens the modal of a lineup position that assigns its citizen. The button
- * shows the assigned citizen, and its name starts with the position.
- */
 export const openPositionCitizenModal = async (
   page: Page,
   positionName: string,
@@ -79,10 +66,7 @@ export const openPositionCitizenModal = async (
   return dialog;
 };
 
-/**
- * The row of a citizen in a section of the citizen modal of a position, for
- * example "Alle Teilnehmer - Voraussetzungen erfüllt"
- */
+/** A section is for example "Alle Teilnehmer - Voraussetzungen erfüllt". */
 export const positionCitizenChoice = (
   dialog: Locator,
   sectionTitle: string,
@@ -93,22 +77,17 @@ export const positionCitizenChoice = (
     .getByRole("listitem")
     .filter({ hasText: citizenName });
 
-/** The element which wears the theme of the active seasonal event. */
 export const themeRoot = (page: Page) => page.locator("[data-seasonal-event]");
 
 /**
- * Interactions landing before React hydrates are swallowed: clicks fall on
- * dead DOM and fill() never reaches a controlled input's state. These
- * helpers retry the interaction until its expected reaction shows up. The
- * underlying hydration race is a product issue (tracked in the maintenance
- * backlog) — new tests should prefer these helpers over hand-rolled
- * `toPass` loops so the workaround stays in one place.
+ * The helpers below retry the interaction until its reaction shows up (see the
+ * README). Prefer them over hand-rolled `toPass` loops, so that the workaround
+ * stays in one place.
  */
 
 const REACTION_TIMEOUT = 2_000;
 const HYDRATION_TIMEOUT = 15_000;
 
-/** Retries the click until the reaction becomes visible. */
 export const clickUntilVisible = (target: Locator, reaction: Locator) =>
   expect(async () => {
     await target.click({ timeout: REACTION_TIMEOUT });
@@ -116,8 +95,8 @@ export const clickUntilVisible = (target: Locator, reaction: Locator) =>
   }).toPass({ timeout: HYDRATION_TIMEOUT });
 
 /**
- * Retries the hover until the reaction becomes visible. For the popovers
- * which only open on hover (`hoverOnly`), where a click would do nothing.
+ * For the popovers which only open on hover (`hoverOnly`), where a click would
+ * do nothing.
  */
 export const hoverUntilVisible = (target: Locator, reaction: Locator) =>
   expect(async () => {
@@ -131,7 +110,6 @@ export const hoverUntilVisible = (target: Locator, reaction: Locator) =>
     await expect(reaction).toBeVisible({ timeout: REACTION_TIMEOUT });
   }).toPass({ timeout: HYDRATION_TIMEOUT });
 
-/** Retries the click until the navigation actually happens. */
 export const clickUntilUrl = (
   page: Page,
   target: Locator,
@@ -157,7 +135,6 @@ const refill = async (input: Locator, value: string) => {
   await input.fill(value);
 };
 
-/** Retries the fill until the reaction becomes visible. */
 export const fillUntilVisible = (
   input: Locator,
   value: string,
@@ -169,10 +146,9 @@ export const fillUntilVisible = (
   }).toPass({ timeout: HYDRATION_TIMEOUT });
 
 /**
- * Retries the fill until the field actually holds the value. Forms whose
- * other controls re-render while they load — the citizen pickers above a
- * value field, say — drop a fill that lands in that window, and the form
- * then submits its default instead.
+ * Forms whose other controls re-render while they load — the citizen pickers
+ * above a value field, say — drop a fill that lands in that window, and the
+ * form then submits its default instead.
  */
 export const fillUntilValue = (input: Locator, value: string) =>
   expect(async () => {
@@ -180,12 +156,7 @@ export const fillUntilValue = (input: Locator, value: string) =>
     await expect(input).toHaveValue(value, { timeout: REACTION_TIMEOUT });
   }).toPass({ timeout: HYDRATION_TIMEOUT });
 
-/**
- * Picks an option of a combobox filter in a filter sidebar
- * (`MultiSelectComboboxFilter`, `SingleSelectComboboxFilter`): types the
- * name of the option into the filter and clicks the option. The list of a
- * multi-select filter stays open after the click.
- */
+/** The list of a multi-select filter stays open after the click. */
 export const pickFilterOption = async (
   page: Page,
   filterLabel: string,
@@ -200,7 +171,6 @@ export const pickFilterOption = async (
   await option.click();
 };
 
-/** Retries the fill until the URL reflects it (nuqs-managed filters). */
 export const fillUntilUrl = (
   page: Page,
   input: Locator,
@@ -226,27 +196,21 @@ export const tabUntilFocused = (page: Page, target: Locator) =>
     await expect(target).toBeFocused({ timeout: REACTION_TIMEOUT });
   }).toPass({ timeout: HYDRATION_TIMEOUT });
 
-/**
- * Opens an inline editor (EditableField). The whole field is the trigger and
- * carries the hint as its title, which is also its accessible name.
- */
 export const inlineEditorTrigger = (scope: Page | Locator) =>
   scope.getByTitle("Klicken, um zu bearbeiten");
 
 /**
- * Submits the open inline editor (EditableField). Only one can be open at a
- * time, so the icon-only save button is unambiguous without scoping.
+ * Only one EditableField can be open at a time, thus the save button needs no
+ * scope.
  */
 export const saveInlineEditor = (page: Page) =>
   page.getByTitle("Speichern").click();
 
 /**
- * The label of a switch or checkbox, addressed either by its own text or —
- * for the ones whose label holds nothing but the control — by the input
- * inside it. Clicking the label is what toggles such a control: the inputs
- * are `sr-only`, so a click on one is blocked by the styled span drawn in
- * front of it. Only the visible label: while a page streams, React keeps a
- * hidden copy of the content next to the visible one.
+ * The label of a switch or checkbox, found by its text or by the input inside
+ * it. The inputs are `sr-only`, so a click on one is blocked by the styled span
+ * drawn in front of it. Only the visible label, because of the copies of a
+ * streaming page (see the README).
  */
 export const toggleLabel = (
   scope: Page | Locator,
@@ -261,10 +225,6 @@ export const toggleLabel = (
     )
     .filter({ visible: true });
 
-/**
- * A collapsible section of a form (`FormSection`), found by its heading. Its
- * summary shows the current values also while it is closed.
- */
 export const formSection = (scope: Page | Locator, heading: string) => {
   /** The inner locator of `has` starts at the root, not at the scope */
   const page = "goto" in scope ? scope : scope.page();
@@ -275,7 +235,6 @@ export const formSection = (scope: Page | Locator, heading: string) => {
 };
 
 /**
- * Opens a collapsible section of a form. A closed section hides its fields.
  * The section is a native `details` element, thus it opens also before the
  * hydration.
  */
@@ -289,17 +248,17 @@ export const openFormSection = async (
 };
 
 /**
- * Picks an entry from one of the app's search pickers (citizens, users).
- * Their options render in a portal outside the picker and carry the entry's
- * id next to its handle, so they are looked up on the page and matched by
- * substring — as a plain string, which Playwright never reads as a pattern.
+ * Picks an entry from one of the app's search pickers (citizens, users). The
+ * list of the citizens needs `citizen;read`. The options of the citizen picker
+ * are in a portal, and an option also has the id or the email of its entry,
+ * thus the lookup is on the page and by substring.
  */
 export const pickFromSearch = async (
   page: Page,
   combobox: Locator,
   handle: string,
 ) => {
-  /** The list loads through tRPC before the picker becomes searchable */
+  /** The citizen picker shows its input after its list loaded through tRPC */
   await expect(combobox).toBeVisible();
   await combobox.fill(handle);
 
@@ -317,24 +276,17 @@ export const pickFromSearch = async (
   );
 };
 
-/**
- * The popover of the role picker (`RolePicker`): a search field, the tags of
- * the offered roles and one role per row. Only one popover is open at a
- * time, thus it needs no scope.
- */
+/** Only one popover is open at a time, thus it needs no scope. */
 export const rolePickerPopover = (page: Page) =>
   page.getByRole("dialog", { name: "Rolle auswählen" });
 
-/**
- * A role in the list of an open role picker. The match is exact, because a
- * role name can be a part of a different role name.
- */
+/** Exact, because a role name can be a part of a different role name. */
 export const rolePickerOption = (popover: Locator, roleName: string) =>
   popover.getByRole("option", { name: roleName, exact: true });
 
 /**
- * A tag in the tag row of an open role picker. A click filters the list to
- * the roles of the tag (`aria-pressed`), and a second click clears the filter.
+ * A click filters the list to the roles of the tag, and a second click clears
+ * the filter.
  */
 export const rolePickerTag = (popover: Locator, tagName: string) =>
   popover.getByRole("button", { name: tagName, exact: true });
@@ -344,9 +296,8 @@ export const rolePickerChips = (scope: Page | Locator) =>
   scope.getByTitle("Rolle entfernen");
 
 /**
- * Opens a role picker and gives its popover. The trigger is the button
- * "Rolle auswählen". In single mode with a selection, the trigger has the
- * name of the selected role.
+ * In single mode with a selection, the trigger has the name of the selected
+ * role.
  */
 export const openRolePicker = async (trigger: Locator) => {
   const popover = rolePickerPopover(trigger.page());
@@ -354,38 +305,27 @@ export const openRolePicker = async (trigger: Locator) => {
   return popover;
 };
 
-/**
- * The search field of a role picker or of a role panel. The scope is the
- * popover or the dialog that holds the panel.
- */
+/** The scope is the popover or the dialog that holds the panel. */
 export const rolePickerSearchField = (scope: Locator) =>
   scope.getByRole("combobox", { name: "Rolle oder Tag suchen …" });
 
-/** Searches the role names and the tag names in an open role picker */
 export const searchRolePicker = (popover: Locator, query: string) =>
   rolePickerSearchField(popover).fill(query);
 
-/** The popover of a variant picker */
 export const variantPickerPopover = (page: Page) =>
   page.getByRole("dialog", { name: "Schiff auswählen" });
 
-/**
- * The search field of a variant picker or of a variant panel. The scope is
- * the popover or the dialog that holds the panel.
- */
 export const variantPickerSearchField = (scope: Locator) =>
   scope.getByRole("combobox", { name: "Schiff, Hersteller oder Tag suchen …" });
 
-/** Closes an open role picker with Escape */
 export const closeRolePicker = async (popover: Locator) => {
   await popover.page().keyboard.press("Escape");
   await expect(popover).not.toBeVisible();
 };
 
 /**
- * Selects roles in a role picker in multiple mode: opens it, clicks each
- * role and closes it. Each role must not be selected yet, because a click on
- * a selected role deselects it.
+ * Each role must not be selected yet, because a click on a selected role
+ * deselects it.
  */
 export const pickRoles = async (
   trigger: Locator,
@@ -402,10 +342,6 @@ export const pickRoles = async (
   await closeRolePicker(popover);
 };
 
-/**
- * Selects a role in a role picker in single mode. The pick closes the
- * popover.
- */
 export const pickRole = async (trigger: Locator, roleName: string) => {
   const popover = await openRolePicker(trigger);
   await rolePickerOption(popover, roleName).click();
@@ -413,10 +349,9 @@ export const pickRole = async (trigger: Locator, roleName: string) => {
 };
 
 /**
- * The roles and names of the nodes in the accessibility tree of Chromium,
- * that is, what screen readers get. The role selectors of Playwright ignore
- * `inert` and the inert page behind a modal dialog, thus this reads the tree
- * of the browser itself.
+ * The role selectors of Playwright ignore `inert` and the inert page behind a
+ * modal dialog, thus this reads the accessibility tree of Chromium itself,
+ * which screen readers get.
  */
 export const accessibilityTree = async (page: Page) => {
   const session = await page.context().newCDPSession(page);
@@ -443,8 +378,8 @@ interface Point {
 }
 
 /**
- * A swipe with a finger. Playwright has no touch swipe, thus the gesture
- * goes through the Chrome DevTools Protocol (as `sortByTouch`).
+ * Playwright has no touch swipe, thus the gesture goes through the Chrome
+ * DevTools Protocol.
  */
 export const swipe = async (page: Page, from: Point, to: Point) => {
   const session = await page.context().newCDPSession(page);
@@ -477,15 +412,13 @@ export const swipe = async (page: Page, from: Point, to: Point) => {
   }
 };
 
-/** The date format every filter and date input of the app expects. */
 export const dateParam = (date: Date) => date.toISOString().slice(0, 10);
 
 /**
- * Proves the page has hydrated by opening and closing the notification
- * center popover, which sits in the top bar of every /app page and shares
- * the page's React root. Use this before single-shot interactions whose
- * only reaction is a server-action round trip — the retry helpers above
- * would fire such a mutation more than once.
+ * The notification center sits in the top bar of every /app page and shares the
+ * page's React root. Use this before single-shot interactions whose only
+ * reaction is a server-action round trip — the retry helpers above would fire
+ * such a mutation more than once.
  */
 export const waitForAppShellHydration = async (page: Page) => {
   const bellButton = page.getByRole("button", { name: "Benachrichtigungen" });
@@ -503,9 +436,9 @@ const isHydrationError = (message: string) =>
   /hydrat|react\.dev\/errors\/(418|423|425)\b/i.test(message);
 
 /**
- * Collects the hydration errors of the page from now on. React writes them
- * to the console or reports them as uncaught errors. Start the collection
- * before the navigation, and examine the list after the hydration.
+ * React writes hydration errors to the console or reports them as uncaught
+ * errors. Start the collection before the navigation, and examine the list
+ * after the hydration.
  */
 export const collectHydrationErrors = (page: Page) => {
   const hydrationErrors: string[] = [];

@@ -24,16 +24,14 @@ export type GetCitizenProfileInput = z.infer<
   typeof getCitizenProfileInputSchema
 >;
 
-/** A metric of the profile with the Spynet page behind it */
 interface ProfileMetricLink {
-  /** A path of the app. Null when the actor cannot open the page. */
+  /** Null when the actor cannot open the page */
   readonly href: string | null;
 }
 
 /**
  * Everything the profile surfaces of the app show: the citizen popover, the
- * account popover and the profile tile of the dashboard. Only the app uses
- * it, thus the keys are camelCase.
+ * account popover and the profile tile of the dashboard
  */
 export interface CitizenProfile {
   readonly citizen: {
@@ -48,14 +46,12 @@ export interface CitizenProfile {
     }[];
   };
   /**
-   * The avatar of a citizen is the Discord avatar of its login, which the
-   * app refreshes at each sign-in
+   * The Discord avatar of the login, which the app refreshes at each sign-in
    */
   readonly avatarUrl: string | null;
   readonly isCurrentCitizen: boolean;
-  /** A path of the app. Null when the actor cannot open the Spynet. */
+  /** Null when the actor cannot open the Spynet */
   readonly spynetHref: string | null;
-  /** The actor can give or take away at least one visible role */
   readonly canUpdateAnyRoleAssignment: boolean;
   /**
    * A metric that the actor must not see is null instead of a number, thus
@@ -75,18 +71,12 @@ export interface CitizenProfile {
 }
 
 /**
- * The profile of a citizen for the popovers and the dashboard tile. The
- * permission for each metric depends on whether the actor looks at the own
- * citizen or at a different one. The own profile needs no `citizen;read`,
- * because the dashboard tile and the account popover show it to each
- * citizen.
+ * The own profile needs no `citizen;read`, because the dashboard tile and the
+ * account popover show it to each citizen.
  *
- * A metric also carries the Spynet page behind it, but only when the actor
- * can open that page. Each of these pages asks for its own permission, which
- * is not always the one that shows the metric: a link that the actor cannot
- * follow is worse than no link.
- *
- * @throws NotFoundError when the citizen does not exist or is deleted
+ * Each Spynet page behind a metric asks for its own permission, which is not
+ * always the one that shows the metric: a link that the actor cannot follow is
+ * worse than no link.
  */
 export const getCitizenProfile = (
   context: ApplicationContext,

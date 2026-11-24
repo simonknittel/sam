@@ -24,10 +24,6 @@ export interface DropTaskOutput {
   readonly task: GetTaskOutput | null;
 }
 
-/**
- * Removes the assignment of the citizen of the actor from an open public
- * task. Requires `task;read` and a citizen.
- */
 export const dropTask = (
   context: ApplicationContext,
   actor: Actor,

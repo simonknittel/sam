@@ -20,9 +20,6 @@ export const TEXT_FORMAT_OPTIONS = [
   { name: "code", title: "Code", icon: FaCode },
 ] as const;
 
-/**
- * Runs the toggle command for a text format on a prepared chain.
- */
 export const toggleWikiTextFormat = (
   chain: ChainedCommands,
   name: (typeof TEXT_FORMAT_OPTIONS)[number]["name"],

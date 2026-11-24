@@ -10,10 +10,8 @@ import { truncateAllTables } from "../../../test/database.js";
 import { findEventOrganizerRecipients } from "./eventOrganizers.js";
 import { findEventPositionApplicationRecipients } from "./eventPositionApplicationCreated.js";
 
-/** The event notifications reach the citizens who can log in and read events */
 const NOTIFIABLE_PERMISSION_STRINGS = ["login;manage", "event;read"];
 
-/** The lineup notifications also need the permission of the lineup page */
 const LINEUP_NOTIFIABLE_PERMISSION_STRINGS = [
   ...NOTIFIABLE_PERMISSION_STRINGS,
   "ship;read",
@@ -88,7 +86,6 @@ const createOrganizedEvent = async () => {
   return {
     event,
     actingManager,
-    /** The organizers who get a notification about the lineup */
     lineupRecipientIds: [creator.id, manager.id, discordCreator.id],
     managerWithoutShipRead,
   };

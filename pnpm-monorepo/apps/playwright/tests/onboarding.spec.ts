@@ -6,14 +6,12 @@ import { expect, test } from "../fixtures/test";
 const onboardingButton = (page: Page) =>
   page.getByRole("button", { name: "Erste Schritte" });
 
-/** The unread indicator of the trigger, independent of the classes drawing it */
 const onboardingDot = (page: Page) =>
   onboardingButton(page).locator("[data-unread-dot]");
 
 /**
  * The task list is mounted twice (top bar popover and the hidden mobile
- * flyout), so assertions are scoped to the open popover — Base UI renders
- * its popup with `role="dialog"`, named after its trigger.
+ * flyout), so the assertions are scoped to the open popover.
  */
 const popover = (page: Page) =>
   page.getByRole("dialog", { name: "Erste Schritte" });
@@ -27,21 +25,19 @@ const openOnboardingPopover = (page: Page) =>
 const taskItem = (page: Page, title: string) =>
   popover(page).getByRole("listitem").filter({ hasText: title });
 
-/** Every tour step is a dialog named after the step's title */
 const stepDialog = (page: Page, title: string) =>
   page.getByRole("dialog", { name: title });
 
 /**
- * The dashboard with the query parameter which opens the popover, the link
- * of the welcome notification (`ONBOARDING_POPOVER_PATH` of the
- * domain package)
+ * Mirrors `ONBOARDING_POPOVER_PATH` of the domain package, the link of the
+ * welcome notification.
  */
 const POPOVER_OPENER_PATH = "/app/dashboard?erste-schritte=1";
 
 /**
- * Proves that the page has hydrated, without a press: a press outside of an
- * open popover closes it, and then hides a popover which opened by mistake.
- * The notification center also opens on hover.
+ * Proves the hydration without a press: a press outside of an open popover
+ * closes it, and then hides a popover which opened by mistake. The notification
+ * center also opens on hover.
  */
 const waitForHydrationWithoutPress = (page: Page) =>
   hoverUntilVisible(
@@ -81,7 +77,6 @@ test("the popover lists only the permitted tasks with their step counts", async 
     taskItem(page, "Lerne unser Flottenmanagement kennen"),
   ).toContainText("0 von 3 Schritten");
 
-  // The events task is permission-gated too, and sorted first
   const eventsTask = taskItem(page, "Lerne unsere Events kennen");
   await expect(eventsTask).toContainText("0 von 4 Schritten");
   await expect(popover(page).getByRole("listitem").first()).toContainText(
@@ -177,7 +172,6 @@ test("the events tour highlights the dashboard calendar and shows screenshot ste
 
   await calendarStep.getByRole("button", { name: "Weiter" }).click();
 
-  // The sign-up step has no live event — it explains with a screenshot
   const signUpStep = stepDialog(page, "Für Events anmelden");
   await expect(signUpStep).toBeVisible();
   await expect(
@@ -378,7 +372,6 @@ test.describe("mobile", () => {
     await expect(flyout).not.toHaveAttribute("inert");
 
     await expect(popover(page).getByText("Lerne das SAM kennen")).toBeVisible();
-    /** Only the popover of the flyout opens, not also the one of the top bar */
     await expect(popover(page)).toHaveCount(1);
     await expect(
       flyout.getByRole("button", { name: "Erste Schritte", expanded: true }),

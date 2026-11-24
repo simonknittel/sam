@@ -3,16 +3,11 @@ import { createPrivateKey, createPublicKey, type KeyObject } from "node:crypto";
 import { EMBED_TOKEN_ALGORITHM } from "./constants";
 
 export interface EmbedSigningKey {
-  /** Signs the tokens; never leaves the server. */
   readonly privateKey: KeyObject;
-  /** Published via /.well-known/jwks.json so embedded apps can verify. */
   readonly publicJwk: JWK;
   /**
-   * RFC 7638 thumbprint of the public JWK. Computing it from the key
-   * material rather than configuring it separately is what keeps the `kid`
-   * of a token and the `kid` in the JWKS from drifting apart: the
-   * thumbprint covers only the public members (`crv`, `kty`, `x`, `y`), so
-   * both sides derive the same value from the same key by construction.
+   * RFC 7638 thumbprint of the public JWK, derived from the key material so
+   * that the `kid` of a token and the `kid` in the JWKS cannot drift apart.
    */
   readonly keyId: string;
 }
@@ -22,11 +17,9 @@ export interface EmbedJsonWebKeySet {
 }
 
 /**
- * Imports the configured signing key. The base64 wrapper around the PKCS#8
- * PEM exists so the value survives single-line environment variable
- * editors. Throws on anything that isn't an EC P-256 private key — a
- * malformed key must fail loudly instead of silently disabling embed
- * authentication, which is what an unset variable already means.
+ * The base64 wrapper around the PKCS#8 PEM exists so the value survives
+ * single-line environment variable editors. A malformed key must fail loudly:
+ * an unset variable already means that embed authentication is off.
  */
 export const createEmbedSigningKey = async (
   base64EncodedPrivateKeyPem: string,
@@ -53,9 +46,8 @@ export const createEmbedSigningKey = async (
 };
 
 /**
- * The document served at /.well-known/jwks.json. Without a configured key
- * it is empty but structurally valid — "this issuer currently publishes no
- * keys" is more useful to a verifier than an error.
+ * Empty but structurally valid without a key: "this issuer currently publishes
+ * no keys" is more useful to a verifier than an error.
  */
 export const createEmbedJsonWebKeySet = (
   signingKey: EmbedSigningKey | null,

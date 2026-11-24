@@ -8,24 +8,21 @@
 /// (see `AGENTS.md`), so that the old rows stay readable.
 model LogAnalyzerEntry {
   id         String   @id @default(cuid(2))
-  /// A value of the `LogAnalyzerEntryType` enum of the domain package
-  /// (`packages/domain/src/logAnalyzer/logAnalyzerEntries.ts`), for example
-  /// "joinPu". The types come from the static pattern config of the Log
-  /// Analyzer and are not an enum of the database, so that a new pattern
-  /// needs no migration. A pattern is removed only on an explicit request
-  /// (see `AGENTS.md`). A value without a pattern is then ignored when read,
-  /// but kept, in case the pattern returns.
+  /// A value of the `LogAnalyzerEntryType` enum of the domain package, for
+  /// example "joinPu". Not an enum of the database, so that a new pattern needs
+  /// no migration. A value without a pattern is ignored when read, but kept, in
+  /// case the pattern returns.
   type       String
-  /// The full log line the regex matched. Contains data of other players
-  /// (nicknames, IP addresses), thus it must never be written to the logs.
+  /// Contains data of other players (nicknames, IP addresses), thus it must
+  /// never be written to the logs.
   rawLine    String
-  /// Time of the event, parsed from `rawLine` by the upload action. Stored as
-  /// a column because the fetch query windows and sorts on it.
+  /// Time of the event, parsed from `rawLine` by the upload (or sent by the
+  /// client, for a type with `takesTimeOfPrecedingLine`). Stored as a column
+  /// because the fetch queries window and sort on it.
   eventAt    DateTime @db.Timestamptz(3)
-  /// The number of the line in its log file. The first line has the number
-  /// 1. It orders the lines of one instant, because the game can write two
-  /// lines in the same millisecond. Null for an entry which was shared before
-  /// the upload sent the number.
+  /// The number of the line in its log file. The first line has the number 1.
+  /// It orders the lines of one instant, because the game can write two lines
+  /// in the same millisecond. NULL when it is unknown.
   lineNumber Int?
   /// SHA-256 of `type + "\n" + rawLine`, hex encoded. Together with
   /// `createdById` it prevents duplicates. The scope is one uploader, because
@@ -33,8 +30,7 @@ model LogAnalyzerEntry {
   hash       String
   createdAt  DateTime @default(now()) @db.Timestamptz(3)
 
-  /// The uploading citizen. A deleted citizen leaves the entry in place
-  /// without an uploader.
+  /// The uploading citizen, also after a (soft) delete of the citizen
   createdById String?
   createdBy   Citizen? @relation("createdLogAnalyzerEntries", fields: [createdById], references: [id], onDelete: SetNull)
 

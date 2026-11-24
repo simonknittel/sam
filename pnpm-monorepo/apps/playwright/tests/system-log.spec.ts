@@ -27,10 +27,7 @@ test("the log renders its events and the filters narrow the table", async ({
 
   await prisma.auditEvent.createMany({
     data: [
-      /**
-       * An older event by another user, to give the filters something to
-       * drop. Old events hold their data as a JSON string.
-       */
+      /** Some stored events hold their data as a JSON string. */
       {
         type: "MANUFACTURER_CREATED",
         data: JSON.stringify({
@@ -40,13 +37,11 @@ test("the log renders its events and the filters narrow the table", async ({
         createdById: otherUser.user.id,
         createdAt: new Date(Date.now() - 10 * ONE_DAY_MS),
       },
-      // New events hold their data as an object
       {
         type: "ROLE_CREATED",
         data: { roleId: role.role.id, name: "Aufklärer" },
         createdById: admin.user.id,
       },
-      // An action through the MCP server
       {
         type: "TASK_CREATED",
         data: {
@@ -57,7 +52,6 @@ test("the log renders its events and the filters narrow the table", async ({
         createdById: admin.user.id,
         triggeredViaMcp: true,
       },
-      // A read through the MCP server
       {
         type: "TASK_READ",
         data: { arguments: { task_id: "aufgabe-1" } },
@@ -73,23 +67,19 @@ test("the log renders its events and the filters narrow the table", async ({
   await signIn(admin.user);
   await page.goto("/app/system-log");
 
-  // The events render with their type and their human-readable message
   await expect(page.getByText('Role created: "Aufklärer"')).toBeVisible();
   await expect(
     page.getByText("Manufacturer Drake created (hersteller-1)"),
   ).toBeVisible();
   await expect(page.getByText("MANUFACTURER_CREATED")).toBeVisible();
-  // The access filter hides the reads by default
   await expect(rowOfType("TASK_READ")).toHaveCount(0);
 
-  // Only the row of the action through the MCP server has the mark
   const mcpMark = (type: string) =>
     rowOfType(type).getByRole("cell", { name: "Ja", exact: true });
   await expect(mcpMark("TASK_CREATED")).toHaveCount(1);
   await expect(mcpMark("ROLE_CREATED")).toHaveCount(0);
   await expect(mcpMark("MANUFACTURER_CREATED")).toHaveCount(0);
 
-  // The time-range filter drops the old event
   const fromDate = dateParam(new Date(Date.now() - 5 * ONE_DAY_MS));
   await fillUntilUrl(
     page,
@@ -102,7 +92,6 @@ test("the log renders its events and the filters narrow the table", async ({
   ).not.toBeVisible();
   await expect(page.getByText('Role created: "Aufklärer"')).toBeVisible();
 
-  // The type filter keeps only the selected type
   await page.goto("/app/system-log?type=MANUFACTURER_CREATED");
   await expect(
     page.getByText("Manufacturer Drake created (hersteller-1)"),
@@ -130,20 +119,17 @@ test("the log renders its events and the filters narrow the table", async ({
       },
     });
 
-  // The user filter keeps only the selected creator's events
   await page.goto(`/app/system-log?createdById=${otherUser.user.id}`);
   await expect(
     page.getByText("Manufacturer Drake created (hersteller-1)"),
   ).toBeVisible();
   await expect(page.getByText('Role created: "Aufklärer"')).toHaveCount(0);
 
-  // The origin filter keeps only the events of actions through the MCP server
   await page.goto("/app/system-log?origin=mcp");
   await expect(rowOfType("TASK_CREATED")).toBeVisible();
   await expect(rowOfType("ROLE_CREATED")).toHaveCount(0);
   await expect(rowOfType("MANUFACTURER_CREATED")).toHaveCount(0);
 
-  // The radio of the sidebar sets the same filter
   await page.goto("/app/system-log");
   await clickUntilUrl(
     page,
@@ -153,8 +139,6 @@ test("the log renders its events and the filters narrow the table", async ({
   await expect(rowOfType("TASK_CREATED")).toBeVisible();
   await expect(rowOfType("ROLE_CREATED")).toHaveCount(0);
 
-  // The access filter keeps only the reads. The other MCP specs write reads
-  // at the same time, thus the page shows only the reads of this user.
   await page.goto(`/app/system-log?createdById=${admin.user.id}`);
   await clickUntilUrl(
     page,
@@ -167,8 +151,6 @@ test("the log renders its events and the filters narrow the table", async ({
   await expect(rowOfType("TASK_CREATED")).toHaveCount(0);
   await expect(rowOfType("ROLE_CREATED")).toHaveCount(0);
 
-  // The type filter searches the types, groups them by app and shows a read
-  // type also without the access filter
   await page.goto(`/app/system-log?createdById=${admin.user.id}`);
   const typeOption = page
     .getByRole("group", { name: "Tasks" })

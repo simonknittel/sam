@@ -1,9 +1,4 @@
 /**
- * The texts of a birthday. A birthday has a day and a month without a year
- * (see `getCelebrationDate` of the domain package for the rule).
- */
-
-/**
  * A leap year, so that February 29 can be formatted. The year is never
  * shown, and UTC keeps the date from moving across a day boundary.
  */

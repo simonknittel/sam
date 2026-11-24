@@ -2,13 +2,11 @@ import type { Prisma } from "@sam-monorepo/database/client";
 import { lockSilcLedger } from "./lockSilcLedger.js";
 
 /**
- * Rebuilds the cached SILC balance and lifetime earnings of the given
- * citizens from the ledger in one statement: the balance sums all
- * transactions that are not deleted, the lifetime earnings sum the positive
- * ones. A positive booking with `resetsNegativeBalance` is not earned: it
- * books a negative balance to 0 (see `bookBalancesToZero()`). Call it with the
- * client of the transaction that changes the ledger (after
- * `lockSilcLedger()`), so that the copy can never differ from the ledger.
+ * A positive booking with `resetsNegativeBalance` is not earned: it books a
+ * negative balance to 0 (see `bookBalancesToZero()`).
+ *
+ * Call it with the client of the transaction that changes the ledger, so that
+ * the copy can never differ from the ledger.
  */
 export const updateSilcBalances = async (
   client: Prisma.TransactionClient,
@@ -19,11 +17,9 @@ export const updateSilcBalances = async (
   const ids = [...new Set(citizenIds)];
 
   /**
-   * The callers take the ledger lock as their first statement already, thus
-   * this call does not wait for them. It keeps the balances correct also for
-   * a caller that forgets the lock: a parallel ledger write waits here until
-   * the other transaction commits, and the next statement then reads the
-   * ledger again with its rows.
+   * Keeps the balances correct also for a caller that forgets the lock: a
+   * parallel ledger write waits here until the other transaction commits, and
+   * the next statement then reads the ledger again with its rows.
    */
   await lockSilcLedger(client);
 

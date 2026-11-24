@@ -19,11 +19,6 @@ export const updateNoteTypeInputSchema = z.object({
 
 export type UpdateNoteTypeInput = z.infer<typeof updateNoteTypeInputSchema>;
 
-/**
- * Renames a note type. Requires `noteType;manage`.
- *
- * @throws NotFoundError when the note type does not exist
- */
 export const updateNoteType = (
   context: ApplicationContext,
   actor: Actor,

@@ -1,5 +1,4 @@
-/* Placeholder for the empty editor (Tiptap Placeholder extension).
-   height: 0 keeps the caret on the same line as the centered text. */
+/* height: 0 keeps the caret on the same line as the centered text */
 .tiptap p.is-editor-empty:first-child::before {
   color: var(--color-neutral-500);
   content: attr(data-placeholder);
@@ -91,8 +90,8 @@
 
 /*
  * The typography plugin zeroes the top margin of anything directly following
- * an h2/h3/h4 (or hr) but has no such rule for h1, so an h2 right below an
- * h1 kept its 2em top margin — matched here for h1.
+ * an h2/h3/h4 (or hr) but has no such rule for h1, so an h2 right below an h1
+ * would keep its 2em top margin — matched here for h1.
  */
 .prose h1 + * {
   margin-top: 0;
@@ -114,7 +113,6 @@
   margin-bottom: 0;
 }
 
-/* Task lists (editor and static render) */
 .prose ul[data-type="taskList"] {
   list-style: none;
   padding-left: 0;
@@ -176,7 +174,6 @@
   overflow-wrap: anywhere;
 }
 
-/* Tables: make cells recognizable while editing */
 .tiptap table .selectedCell {
   background-color: color-mix(
     in srgb,
@@ -370,7 +367,6 @@
   display: none !important;
 }
 
-/* Grid layouts: side-by-side on larger screens, stacked on mobile */
 .prose [data-wiki-grid] {
   display: grid;
   grid-template-columns: 1fr;
@@ -457,7 +453,6 @@
   margin-bottom: 0;
 }
 
-/* Callouts: blocks highlighted with a colored background and border */
 .prose [data-wiki-callout] {
   --wiki-callout-color: var(--color-blue-500);
   border: 1px solid var(--wiki-callout-color);
@@ -581,10 +576,6 @@
   display: flow-root;
 }
 
-/*
- * Embeds (wikiEmbed node): YouTube/Twitch/Spotify/Google players and
- * allowlisted generic iframes (provider "iframe")
- */
 .prose [data-wiki-embed] {
   margin-block: 1.25em;
 }
@@ -633,10 +624,6 @@
   margin-block: 1.25em;
 }
 
-/*
- * Light wash over the block under the pointer, and over the one the
- * gutter targets while it is in use.
- */
 .tiptap .wiki-active-node-highlight {
   background-color: rgb(255 255 255 / 0.06);
   border-radius: var(--radius-secondary);
@@ -665,7 +652,6 @@
   pointer-events: none;
 }
 
-/* File attachments: downloadable card with icon, name and size */
 .prose a[data-wiki-attachment] {
   position: relative;
   display: flex;
@@ -746,10 +732,6 @@
   padding-right: 3.5rem;
 }
 
-/*
- * Unlayered on purpose: the button's own `relative` (Button2 tooltip)
- * would win against an `absolute` utility passed via className.
- */
 .prose [data-wiki-attachment-card] > button {
   position: absolute;
   right: 0.75rem;
@@ -757,7 +739,6 @@
   translate: 0 -50%;
 }
 
-/* Internal page links, citizen mentions and links to fleet variants */
 .prose a[data-wiki-page-link],
 .prose a[data-wiki-citizen-mention],
 .prose a[data-wiki-variant-link] {
@@ -789,7 +770,6 @@
   text-decoration: line-through;
 }
 
-/* Page icon inside a page link — inline, scaled to the surrounding text */
 .prose a[data-wiki-page-link] img {
   display: inline-block;
   width: 1em;
@@ -818,7 +798,6 @@
   vertical-align: -0.15em;
 }
 
-/* Focus ring of the interactive blocks and of the inline links */
 .prose summary:focus-visible,
 .tiptap [data-type="details"] > button:focus-visible,
 .prose :is(a[data-wiki-image], a[data-wiki-float-image]):focus-visible,
@@ -836,7 +815,6 @@
   border-radius: 0.125rem;
 }
 
-/* Inline text highlights keep the surrounding text color */
 .prose mark {
   color: inherit;
   border-radius: 0.125rem;
@@ -874,8 +852,6 @@
   );
 }
 
-/* Inline text colors (wikiTextColor mark): named tokens resolve to theme
-   colors only here, keeping the stored documents theme-independent */
 .prose [data-text-color="yellow"] {
   color: var(--color-yellow-400);
 }
@@ -917,7 +893,7 @@
    Same for the mark inside a small block. WikiTextOnlyBlockGuard strips
    that combination, but only in editable sessions — read-only editors and
    the static renderer never dispatch its fix-up, so content that acquired
-   it elsewhere (import, an older app version) would compound here. */
+   it elsewhere (for example through an import) would compound here. */
 .prose [data-text-size="small"] [data-text-size="small"],
 .prose [data-text-size="small"] small {
   font-size: 1em;
@@ -967,9 +943,6 @@
   white-space: nowrap;
 }
 
-/* ---------- Page index ("Seitenverzeichnis") and role members ("Rollenmitglieder") ---------- */
-
-/* The same card for both server-resolved list blocks */
 .prose [data-wiki-page-index],
 .prose [data-wiki-role-citizens] {
   border: 1px solid var(--color-neutral-700);
@@ -995,7 +968,6 @@
   position: relative;
 }
 
-/* Hierarchy line marking a nesting level of the index */
 .prose [data-wiki-page-index] ul ul::before {
   background-color: var(--color-neutral-700);
   bottom: 0;

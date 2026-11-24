@@ -10,7 +10,6 @@ import {
 } from "@sam-monorepo/application";
 import { cache } from "react";
 
-/** See `findEventApplicationRows()` */
 export const getEventApplications = cache(
   withTrace("getEventApplications", async (event: Pick<EventDetails, "id">) => {
     try {

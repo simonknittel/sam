@@ -4,17 +4,14 @@ import { env } from "@/env";
 const resolveBaseUrl = (raw: string) =>
   raw.includes("://") ? raw.replace(/\/+$/, "") : `https://${raw}`;
 
-/** Rendered by the root layout on <body>, read by getPublicUploadBaseUrl in the browser. */
 export const PUBLIC_UPLOAD_BASE_URL_ATTRIBUTE = "data-public-upload-base-url";
 
 /**
- * Resolved public base URL of the uploads bucket, usable in Server and
- * Client Components alike. S3_PUBLIC_URL is server-only and read at
- * runtime; the browser gets the resolved value from an attribute the root
- * layout renders on <body>. An attribute instead of a React context on
- * purpose: upload URLs are also built by plain utilities and by components
- * which render in both server and client trees, where hooks are not an
- * option.
+ * S3_PUBLIC_URL is server-only and read at runtime; the browser gets the
+ * resolved value from an attribute the root layout renders on <body>. An
+ * attribute instead of a React context on purpose: upload URLs are also built
+ * by plain utilities and by components which render in both server and client
+ * trees, where hooks are not an option.
  */
 export const getPublicUploadBaseUrl = () => {
   if (typeof window === "undefined") return resolveBaseUrl(env.S3_PUBLIC_URL);
@@ -29,6 +26,5 @@ export const getPublicUploadBaseUrl = () => {
   return baseUrl;
 };
 
-/** Public URL of an uploaded object. */
 export const getPublicUploadUrl = (uploadId: string) =>
   `${getPublicUploadBaseUrl()}/${uploadId}`;

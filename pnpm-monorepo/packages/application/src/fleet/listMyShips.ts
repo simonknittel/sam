@@ -11,10 +11,7 @@ import { EMPTY_FLEET_VALUE } from "./shipAcquisitionSource.js";
 
 export const listMyShipsInputSchema = z.object(ownerShipsInputShape);
 
-/**
- * The ships of the own citizen. A user without a citizen has no ships. The
- * permission is `ship;manage`, like the page of the own ships.
- */
+/** The permission is `ship;manage`, like for the page of the own ships */
 export const listMyShips = async (
   context: ApplicationContext,
   actor: Actor,

@@ -40,9 +40,6 @@ export default async function Page(
   await requireAuthenticationPage("/app/wiki");
 
   const result = await getVisiblePage(props.params);
-  /**
-   * Invisible pages 404 instead of 403 to avoid leaking their existence.
-   */
   if (!result) notFound();
 
   const { context, page, permissions } = result;

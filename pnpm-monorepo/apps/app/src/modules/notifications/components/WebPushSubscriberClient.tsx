@@ -68,7 +68,6 @@ interface Props {
   readonly className?: string;
 }
 
-/** The state of the notifications in the browser that shows the page */
 export const WebPushSubscriberClient = ({ className }: Props) => {
   const { status } = useWebPushBrowser();
   const presentation = STATUS_PRESENTATIONS[status];
@@ -101,7 +100,6 @@ interface StatusActionProps {
   readonly status: WebPushBrowserStatus;
 }
 
-/** The action that fits the state of the browser */
 const StatusAction = ({ status }: StatusActionProps) => {
   const { isPending, subscribe, unsubscribe } = useWebPushBrowser();
 

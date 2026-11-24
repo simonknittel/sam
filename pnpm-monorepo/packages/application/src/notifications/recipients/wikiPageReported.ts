@@ -20,9 +20,8 @@ export interface WikiPageReportedRecipients {
 }
 
 /**
- * Everyone with the effective `wiki;manage`. The store of the on-site
- * notifications adds `login;manage` and the conditions of the user (see
- * `storeOnSiteNotifications()`). Null when the report does not exist.
+ * The store of the on-site notifications adds `login;manage` (see
+ * `storeOnSiteNotifications()`)
  */
 export const findWikiPageReportedRecipients = async (
   context: ApplicationContext,

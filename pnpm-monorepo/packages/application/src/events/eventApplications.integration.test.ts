@@ -32,8 +32,8 @@ import { EventChange, updateEvent } from "./updateEvent.js";
 const HOUR_IN_MILLISECONDS = 60 * 60 * 1000;
 
 /**
- * A member who can log in and see the public events. An approval, like a
- * direct add, needs such a citizen.
+ * An approval, like a direct add, needs a citizen who can log in and see the
+ * event
  */
 const createCitizen = async (handle: string) => {
   const citizen = await createCitizenWithPermissions(handle, [
@@ -51,7 +51,6 @@ const createActorOf = (citizen: { id: string; handle: string | null }) =>
     permissionStrings: ["event;read"],
   });
 
-/** An app event of the organizer that starts in one hour and requires applications */
 const createAppEvent = (organizerId: string) =>
   prisma.event.create({
     data: {
@@ -95,7 +94,6 @@ test("an applicant cannot sign up, and the approval signs the applicant up with 
     }),
   ]);
 
-  // The organizers hear about the open application
   expect(notifications).toEqual([
     {
       type: "EventApplicationCreated",
@@ -143,7 +141,6 @@ test("an applicant cannot sign up, and the approval signs the applicant up with 
     },
   ]);
 
-  // An answered application needs no notification of the organizers anymore
   expect(
     await findEventApplicationRecipients(context, { applicationId }),
   ).toBeNull();
@@ -220,7 +217,6 @@ test("a declined applicant cannot apply again, but an applicant who withdrew can
     }),
   ).rejects.toThrow(new ConflictError(EventErrorMessage.ApplicationDeclined));
 
-  // A second answer to the same application changes nothing
   await expect(
     approveEventApplications(context, createActorOf(organizer!), {
       event_id: event.id,
@@ -282,7 +278,6 @@ test("the switch of the applications to false approves the open applications", a
     },
   ]);
 
-  // Without the requirement, nobody applies
   const [latecomer] = await Promise.all(["latecomer"].map(createCitizen));
   await expect(
     applyForEvent(context, createActorOf(latecomer!), { event_id: event.id }),
@@ -304,13 +299,11 @@ test("an add, an accepted invitation and the switch of the participation close a
       event_id: event.id,
     });
 
-  // A direct add approves the application
   await addEventParticipants(context, organizerActor, {
     event_id: event.id,
     citizen_ids: [addedApplicant!.id],
   });
 
-  // An accepted invitation withdraws the application
   await inviteEventParticipants(context, organizerActor, {
     event_id: event.id,
     citizen_ids: [invitedApplicant!.id, guest!.id],
@@ -319,14 +312,12 @@ test("an add, an accepted invitation and the switch of the participation close a
     event_id: event.id,
   });
 
-  // An invited citizen answers the invitation instead of an application
   await expect(
     applyForEvent(context, createActorOf(guest!), { event_id: event.id }),
   ).rejects.toThrow(
     new ConflictError(EventErrorMessage.InvitedInsteadOfApplication),
   );
 
-  // The switch of the participation to false withdraws the open application
   await updateEvent(context, organizerActor, {
     event_id: event.id,
     participation_enabled: false,
@@ -388,7 +379,6 @@ test("a citizen who cannot see the event anymore is not approved", async () => {
     new ValidationError(EventErrorMessage.CitizenCannotSeeEvent),
   );
 
-  // The switch to false withdraws the application instead of an approval
   await updateEvent(context, createActorOf(organizer!), {
     event_id: event.id,
     application_required: false,

@@ -27,7 +27,6 @@ export const getRoles = cache(
   withTrace("getRoles", () => findAllRoleBadges(getApplicationContext())),
 );
 
-/** The roles of the permission matrix. Requires `role;manage`. */
 export const getRolesWithPermissionStrings = cache(
   withTrace("getRolesWithPermissionStrings", async () => {
     try {
@@ -41,7 +40,6 @@ export const getRolesWithPermissionStrings = cache(
   }),
 );
 
-/** The roles of the inheritance matrix. Requires `role;manage`. */
 export const getRolesWithInheritance = cache(
   withTrace("getRolesWithInheritance", async () => {
     try {
@@ -55,7 +53,6 @@ export const getRolesWithInheritance = cache(
   }),
 );
 
-/** The rows of the role administration table. Requires `role;manage`. */
 export const getRolesForTable = cache(
   withTrace("getRolesForTable", async () => {
     try {

@@ -5,21 +5,8 @@ interface Props {
 }
 
 /**
- * One burst of a firework, drawn as twelve rays which fly out of a bright
- * core. The rays are long and short in turn, and a spark flies in front of
- * every long ray, so that the burst does not look like a machine-made star.
- *
- * The drawing has no fixed colour: it uses `currentColor` only, thus the
- * caller sets the tone and the transparency of a burst with a text utility.
- * The caller also gives the burst its place, its size and its animation
- * delay, because several bursts share this component and must not fire at
- * the same moment.
- *
- * The burst grows out of its centre and fades away — see
- * `--animate-seasonal-burst` in the stylesheet, which stops the motion for a
- * viewer who prefers reduced motion. At rest the burst is invisible, thus
- * that viewer sees no burst instead of a frozen one at full size, which
- * would cover the greeting banner.
+ * At rest the burst is invisible: for a viewer who prefers reduced motion, a
+ * frozen one at full size would cover the greeting banner.
  */
 export const FireworkBurst = ({ className }: Props) => (
   <svg

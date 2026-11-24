@@ -7,9 +7,8 @@ import {
 import { parseAsString, parseAsStringEnum } from "nuqs/server";
 
 /**
- * Only server components import this file. The barrel of the package
- * `application` is server code, thus a client module must not import a value
- * from it.
+ * Only server components import this file: a client module must not import a
+ * value from the package `application`.
  */
 export { UserBanStatus, UserSort, UserTwoFactorStatus };
 

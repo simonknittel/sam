@@ -1,9 +1,3 @@
-/**
- * The permission-set vocabulary of the permission model. The permission
- * logic in this directory has no session and no side effects: the callers
- * load the data (the session, the role assignments, the flows, the
- * templates, the pages) and give it to the resolvers.
- */
 import type { GenericCitizenLogType } from "../spynet/citizenLogType.js";
 
 export interface PermissionSet {

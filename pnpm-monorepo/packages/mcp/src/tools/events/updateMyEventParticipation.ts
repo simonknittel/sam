@@ -24,7 +24,6 @@ export enum MyEventParticipationAction {
   WithdrawApplication = "withdraw_application",
 }
 
-/** The actions that take no comment */
 const ACTIONS_WITHOUT_COMMENT: ReadonlySet<MyEventParticipationAction> =
   new Set([
     MyEventParticipationAction.Cancel,

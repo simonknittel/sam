@@ -3,9 +3,8 @@ import type { EventContainerColumns } from "@sam-monorepo/domain";
 import type { ApplicationContext } from "../context.js";
 
 /**
- * Loads exactly the columns a clone carries over, plus the id and parent the
- * caller needs to rebuild the tree. It lives next to `ClonablePosition` so a
- * new clonable column is added in one place instead of once per copy.
+ * It lives next to `ClonablePosition` so a new clonable column is added in one
+ * place instead of once per copy
  */
 export const CLONABLE_POSITION_SELECT = {
   id: true,
@@ -23,10 +22,6 @@ export const CLONABLE_POSITION_SELECT = {
   requiredRoleMatch: true,
 } as const satisfies Prisma.EventPositionSelect;
 
-/**
- * The positions of a container that a clone copies, in the order of the
- * lineup. `buildPositionTree()` of the domain makes the tree of them.
- */
 export const findClonablePositions = (
   context: Pick<ApplicationContext, "prisma">,
   columns: EventContainerColumns,
@@ -56,10 +51,6 @@ interface ClonablePosition {
 interface CloneTarget {
   readonly columns: EventContainerColumns;
   readonly parentPositionId: EventPosition["parentPositionId"];
-  /**
-   * `order` of the first cloned position. The following positions of the same
-   * level continue from there.
-   */
   readonly startOrder: number;
 }
 

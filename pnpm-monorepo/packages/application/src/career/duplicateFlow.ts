@@ -29,13 +29,6 @@ export interface DuplicateFlowOutput {
   readonly source_flow_id: string;
 }
 
-/**
- * Copies the nodes and the edges of a live flow into a new flow directly
- * after it. The copy gets no role access. Requires `career;manage`.
- *
- * @throws NotFoundError when the source flow does not exist or is deleted
- * @throws ValidationError when the copy cannot use the slug
- */
 export const duplicateFlow = (
   context: ApplicationContext,
   actor: Actor,
@@ -44,7 +37,6 @@ export const duplicateFlow = (
   withSpan(context, "duplicateFlow", async () => {
     requirePermission(actor, "career", "manage");
 
-    /** A deleted flow is never a source */
     const source = await context.prisma.flow.findFirst({
       where: { id: input.source_flow_id, deletedAt: null },
       select: { id: true, position: true },
@@ -105,7 +97,6 @@ export const duplicateFlow = (
     const flow = await rethrowUniqueConstraintFailed(
       () =>
         context.prisma.$transaction(async (transaction) => {
-          /** Make room directly after the source */
           await transaction.flow.updateMany({
             where: { deletedAt: null, position: { gt: source.position } },
             data: { position: { increment: 1 } },

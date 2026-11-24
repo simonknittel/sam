@@ -1,10 +1,3 @@
-/**
- * The MCP server of SAM: the tools and the request handler that verifies the
- * bearer token and builds the principal, and the files for AI agents (the
- * skill archives and the Claude plugin). The package does not depend on a
- * host. A host (for example a Next.js route) applies its kill switch, builds
- * the application context and calls the request handler.
- */
 export {
   CLAUDE_MARKETPLACE_NAME,
   CLAUDE_PLUGIN_ID,

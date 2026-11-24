@@ -15,10 +15,7 @@ import { useWikiPageHrefMode } from "./WikiPageHrefModeProvider";
 import { WikiPageTargetsLoader } from "./WikiPageTargetsLoader";
 
 interface CreateWikiPageContext {
-  /**
-   * Opens the "Neue Seite" modal. Without a parentId the currently open
-   * page is preselected as parent.
-   */
+  /** Without a parentId the currently open page is preselected as parent */
   readonly openCreateWikiPageModal: (parentId?: string) => void;
 }
 
@@ -28,7 +25,7 @@ const CreateWikiPageContext = createContext<CreateWikiPageContext | undefined>(
 
 interface OpenState {
   readonly parentId?: string;
-  /** Clipboard cookie at open time; null renders the plain create form */
+  /** Null renders the plain create form */
   readonly clipboard: WikiClipboardEntry | null;
 }
 
@@ -37,11 +34,6 @@ interface Props {
   readonly allowTopLevel: boolean;
 }
 
-/**
- * The "Neue Seite" modal of a wiki scope. The scope (and with it the parent
- * candidates and the "copy from" options) comes from the surrounding
- * WikiPageHrefModeProvider.
- */
 export const CreateWikiPageProvider = ({ children, allowTopLevel }: Props) => {
   const pathname = usePathname();
   const hrefMode = useWikiPageHrefMode();
@@ -140,10 +132,6 @@ const CreateWikiPageModalContent = ({
   );
 };
 
-/**
- * Check for undefined since the defaultValue of the context is undefined. If
- * it's still undefined, the provider component is missing.
- */
 export const useCreateWikiPage = () => {
   const context = useContext(CreateWikiPageContext);
   if (!context) throw new Error("[CreateWikiPageContext] Provider is missing!");

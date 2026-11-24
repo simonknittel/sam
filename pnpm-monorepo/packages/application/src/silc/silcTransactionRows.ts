@@ -6,8 +6,8 @@ import { ForbiddenError } from "../errors.js";
 import { paginateByDatabaseCursor, type PageOptions } from "../pagination.js";
 
 /**
- * The columns that the SILC transaction table renders. A page sends 100 rows
- * to the browser, thus the audit columns behind the shown values stay out.
+ * A page sends 100 rows to the browser, thus the audit columns behind the shown
+ * values stay out
  */
 const SILC_TRANSACTION_TABLE_SELECT = {
   id: true,
@@ -21,16 +21,10 @@ const SILC_TRANSACTION_TABLE_SELECT = {
   updatedBy: { select: CITIZEN_REFERENCE_SELECT },
 } as const satisfies Prisma.SilcTransactionSelect;
 
-/** A row of the SILC transaction table */
 export type SilcTransactionTableRow = Prisma.SilcTransactionGetPayload<{
   select: typeof SILC_TRANSACTION_TABLE_SELECT;
 }>;
 
-/**
- * The SILC transactions of a citizen that are not deleted, the newest
- * first. Requires a citizen and `silcTransactionOfOtherCitizen;read`, or
- * `silcTransactionOfCurrentCitizen;read` for the own citizen.
- */
 export const findCitizenSilcTransactionRows = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,
@@ -56,9 +50,7 @@ export const findCitizenSilcTransactionRows = async (
 };
 
 export interface SilcTransactionTablePageInput {
-  /** Only the deleted transactions, otherwise only the others */
   readonly deleted: boolean;
-  /** The id of the row next to the page, see `PageOptions.direction` */
   readonly cursor: string | null;
 }
 
@@ -72,13 +64,6 @@ export interface SilcTransactionTablePage {
   readonly prevCursor: string | null;
 }
 
-/**
- * One page of the SILC transactions of all citizens, the newest first.
- * Requires `silcTransactionOfOtherCitizen;read`.
- *
- * @throws ValidationError when no transaction has the cursor and
- * `unknownCursor` is `UnknownCursorBehavior.Reject` (the default)
- */
 export const findSilcTransactionTablePage = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,

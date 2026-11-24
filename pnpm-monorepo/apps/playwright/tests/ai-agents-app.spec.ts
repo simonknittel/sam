@@ -133,7 +133,6 @@ test.describe("the app KI-Agenten", () => {
     const laptopRow = clientRows.filter({ hasText: "Laptop" });
     await expect(laptopRow).toBeVisible();
 
-    // One click for each change, because each click saves
     const toolsDialog = page.getByRole("dialog", { name: "Tools bearbeiten" });
     await clickUntilVisible(
       laptopRow.getByRole("button", { name: "Tools von Laptop bearbeiten" }),
@@ -143,7 +142,6 @@ test.describe("the app KI-Agenten", () => {
       name: "Get a user",
     });
     await expect(toolSwitch).toBeChecked();
-    // The citizen has no permission for the tool
     await expect(
       toolsDialog.getByRole("checkbox", { name: "List the audit events" }),
     ).toHaveCount(0);
@@ -196,12 +194,10 @@ test.describe("the app KI-Agenten", () => {
 
     const authorization = await authorizeMcpClient(admin.user);
     const client = await connectMcpClient(authorization.accessToken);
-    // Admin mode is off for a new client, also for an admin
     expect((await client.callTool("get_user")).structuredContent).toMatchObject(
       { role: "admin", client: { admin_mode: false } },
     );
 
-    // The switch shows only while the admin mode of the toolbar is active
     await page.goto(CLIENTS_PAGE);
     await expect(clientRow).toBeVisible();
     await expect(adminModeSwitch).toHaveCount(0);
@@ -212,8 +208,6 @@ test.describe("the app KI-Agenten", () => {
     await waitForAppShellHydration(page);
     await expect(adminModeSwitch).not.toBeChecked();
 
-    // The tools of the client follow the admin mode of the client, not the
-    // admin mode of the toolbar
     const toolsButton = clientRow.getByRole("button", {
       name: `Tools von ${CIMD_CLIENT_NAME} bearbeiten`,
     });

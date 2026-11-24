@@ -42,10 +42,8 @@ test("an admin's pages stay redacted until admin mode is enabled", async ({
   await signIn(admin.user);
   await page.goto("/app/statistics");
 
-  // Without the cookie the admin is an ordinary user
   await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible();
 
-  // Only the exact value counts — a truthy-looking one changes nothing
   await page
     .context()
     .addCookies([
@@ -54,8 +52,6 @@ test("an admin's pages stay redacted until admin mode is enabled", async ({
   await page.reload();
   await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible();
 
-  // The tool fully reloads the page so the forbidden() boundary re-renders
-  // with the new cookie
   await openToolbar(page);
   await toolbarPanel(page)
     .getByRole("button", { name: "Enable admin" })
@@ -64,7 +60,6 @@ test("an admin's pages stay redacted until admin mode is enabled", async ({
   await expect(page.getByText(FORBIDDEN_TEXT)).not.toBeVisible();
   await expect(toolbarButton(page)).toContainText("Admin mode");
 
-  // Disabling restores the redaction
   await openToolbar(page);
   await toolbarPanel(page)
     .getByRole("button", { name: "Disable admin" })
@@ -100,16 +95,12 @@ test("assuming users switches the effective citizen and names the admin in the s
   );
 
   await expect(page.getByText("Assuming zielnutzer")).toBeVisible();
-  // The dashboard profile now belongs to the assumed citizen
   await expect(page.getByRole("heading", { name: "zielnutzer" })).toBeVisible();
 
-  // Assuming clears admin mode, so the assumed user's permissions rule
   await page.goto("/app/statistics");
   await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible();
   await expect(toolbarButton(page)).not.toContainText("Admin mode");
 
-  // A switch to a user without clearance: the list still loads, and the
-  // gate page of that user still offers the tools
   await openToolbar(page);
   await pickFromSearch(
     page,
@@ -122,8 +113,8 @@ test("assuming users switches the effective citizen and names the admin in the s
   ).toBeVisible();
   await expect(page).toHaveURL("/clearance");
 
-  // Exit returns to the admin's own (non-admin-mode) session. The toolbar
-  // opens only after hydration, thus it proves that the exit can react.
+  // The toolbar opens only after hydration, thus it proves that the exit can
+  // react.
   await openToolbar(page);
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Exit" }).click();
@@ -242,7 +233,6 @@ test("the seasonal theme tool works while the admin assumes a user who switched 
   await setSeasonalDate("2026-10-15");
   await page.goto("/app/account/profile");
 
-  // The opt-out of the assumed user applies also to an override date
   await expect(page.getByText("Assuming themenmuffel")).toBeVisible();
   await expect(themeRoot(page)).toHaveCount(0);
 
@@ -268,7 +258,6 @@ test("the toolbar works on the clearance page", async ({
   prisma,
   signIn,
 }) => {
-  // Without a citizen, only admin mode gets the admin past the gate
   const admin = await createUserWithoutCitizen(prisma, {
     name: "gateadmin",
     admin: true,
@@ -285,7 +274,6 @@ test("the toolbar works on the clearance page", async ({
   await openToolbar(page);
   const panel = toolbarPanel(page);
 
-  // The list of users loads without clearance
   await panel.getByRole("combobox", { name: "User" }).fill("zielnutzer");
   await expect(page.getByRole("option", { name: "zielnutzer" })).toBeVisible();
 
@@ -303,7 +291,6 @@ test("only an admin gets the toolbar and the list of users", async ({
   const otherCitizen = await createCitizen(prisma, { handle: "anderer" });
 
   await signIn(citizen.user);
-  // Only the session of an admin follows the cookie
   await page.context().addCookies([
     {
       name: "assume_user",

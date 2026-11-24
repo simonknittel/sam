@@ -57,11 +57,7 @@ const getFamily = (address: string) => {
   }
 };
 
-/**
- * Whether an IP address is on the public internet. The SSRF protection
- * refuses all other addresses, thus a client id cannot make the server send
- * a request into a private network.
- */
+/** The SSRF protection refuses all other addresses */
 export const isPublicAddress = (address: string) => {
   const family = getFamily(address);
   if (!family) return false;

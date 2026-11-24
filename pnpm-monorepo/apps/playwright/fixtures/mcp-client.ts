@@ -20,10 +20,8 @@ export const MCP_ENDPOINT_PATH = "/api/mcp";
 
 const CLIENT_INFO = { name: "sam-playwright", version: "1.0.0" };
 
-/** The error of the protocol for a tool that `tools/list` does not have */
 export const UNKNOWN_TOOL_ERROR_CODE = -32602;
 
-/** The error of the protocol for a request of a revision that the server does not serve */
 export const UNSUPPORTED_PROTOCOL_VERSION_ERROR_CODE = -32022;
 
 export interface McpTestClient {
@@ -31,24 +29,22 @@ export interface McpTestClient {
   readonly listTools: () => Promise<Tool[]>;
   readonly listToolNames: () => Promise<string[]>;
   /**
-   * Calls a tool. A tool error (`isError`) is a result, an unknown tool
-   * rejects with a `ProtocolError`.
+   * A tool error (`isError`) is a result, an unknown tool rejects with a
+   * `ProtocolError`.
    */
   readonly callTool: (
     name: string,
     toolArguments?: Record<string, unknown>,
   ) => Promise<CallToolResult>;
-  /** The text of a resource, for example a file of a skill */
   readonly readResourceText: (uri: string) => Promise<string>;
   readonly close: () => Promise<void>;
 }
 
 /**
- * Connects the client SDK to the MCP endpoint with a bearer token. The client
- * negotiates only the 2026-07-28 revision, thus it sends the `_meta`
- * envelope and the `Mcp-*` headers with each request. After a `tools/list`,
- * the SDK also validates the structured content of each tool result with the
- * output schema of the tool.
+ * The pinned revision makes the client send the `_meta` envelope and the
+ * `Mcp-*` headers with each request. After a `tools/list`, the SDK also
+ * validates the structured content of each tool result with the output schema
+ * of the tool.
  */
 export const createMcpClient = async ({
   baseUrl,
@@ -83,10 +79,7 @@ export const createMcpClient = async ({
   };
 };
 
-/**
- * The output of a tool as an object, or an empty object for a tool error.
- * The SDK types `structuredContent` as each JSON value.
- */
+/** The SDK types `structuredContent` as each JSON value. */
 export const structuredContentOf = (
   result: CallToolResult,
 ): Record<string, unknown> => {
@@ -96,7 +89,6 @@ export const structuredContentOf = (
   return Object.fromEntries(Object.entries(content));
 };
 
-/** The text of a tool result: the JSON of the output, or the error message */
 export const toolResultText = (result: CallToolResult) =>
   result.content
     .flatMap((content) => (content.type === "text" ? [content.text] : []))
@@ -108,7 +100,6 @@ export const FORBIDDEN_RESULT = /^ForbiddenError: /;
 export const NOT_FOUND_RESULT = /^NotFoundError: /;
 export const VALIDATION_RESULT = /^ValidationError: /;
 
-/** The structured content of a tool result that must not be an error */
 export const callForContent = async (
   client: McpTestClient,
   name: string,
@@ -120,7 +111,6 @@ export const callForContent = async (
   return structuredContentOf(result);
 };
 
-/** The message of a tool result that must be an error */
 export const callForError = async (
   client: McpTestClient,
   name: string,
@@ -138,9 +128,8 @@ interface McpHttpRequest {
 }
 
 /**
- * A request of the 2026-07-28 revision, with the `_meta` envelope and the
- * headers that the client SDK sends. For the requests whose HTTP response a
- * test examines, for example the status code of a refused token.
+ * For the requests whose HTTP response a test examines, for example the status
+ * code of a refused token.
  */
 export const modernMcpRequest = (
   method: string,
@@ -165,7 +154,6 @@ export const modernMcpRequest = (
   },
 });
 
-/** The first request of the legacy `initialize` handshake (revision 2025-11-25) */
 export const LEGACY_INITIALIZE_REQUEST: McpHttpRequest = {
   body: {
     jsonrpc: "2.0",
@@ -180,7 +168,6 @@ export const LEGACY_INITIALIZE_REQUEST: McpHttpRequest = {
   headers: {},
 };
 
-/** Sends one request to the MCP endpoint, with a bearer token if given */
 export const postMcpEndpoint = (
   request: APIRequestContext,
   { body, headers }: McpHttpRequest,

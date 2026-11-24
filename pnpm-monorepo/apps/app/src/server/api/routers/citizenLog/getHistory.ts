@@ -7,7 +7,6 @@ import {
 import * as z from "zod";
 import { protectedProcedure, toTrpcError } from "../../trpc";
 
-/** The history modal of an identity attribute of a citizen */
 export const getHistory = protectedProcedure
   .input(
     z.object({

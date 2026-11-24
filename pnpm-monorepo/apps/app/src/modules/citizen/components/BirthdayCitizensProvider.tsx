@@ -15,7 +15,7 @@ interface Props {
 }
 
 /**
- * Every citizen link asks whether the citizen behind it celebrates today.
+ * Every `CitizenLink` asks whether the citizen behind it celebrates today.
  * The answer travels once with the app shell instead of once for each link:
  * a link knows only the id of its citizen, and the birthday of a citizen
  * never reaches the browser — see `getCitizenIdsWithBirthdayToday`.
@@ -28,7 +28,6 @@ export const BirthdayCitizensProvider = ({ children, citizenIds }: Props) => {
   );
 };
 
-/** False without the provider, thus a link outside the app shell stays plain */
 export const useHasBirthdayToday = (citizenId: string | undefined) => {
   const citizenIds = useContext(BirthdayCitizensContext);
 

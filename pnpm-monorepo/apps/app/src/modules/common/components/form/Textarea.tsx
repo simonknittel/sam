@@ -6,9 +6,7 @@ interface Props extends ComponentProps<"textarea"> {
   readonly hint?: ReactNode;
   readonly classNameTextarea?: string;
   /**
-   * Let the browser size the height to the content (`field-sizing: content`)
-   * instead of keeping the fixed default height. The caller supplies the
-   * floor it wants through `classNameTextarea`, e.g. `min-h-32`.
+   * The caller supplies the floor through `classNameTextarea`, e.g. `min-h-32`.
    */
   readonly sizeToContent?: boolean;
 }

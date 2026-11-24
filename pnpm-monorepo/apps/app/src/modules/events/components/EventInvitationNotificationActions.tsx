@@ -18,14 +18,11 @@ interface Props {
   readonly eventId: string;
   readonly eventName: string;
   readonly invitationId: string;
-  /** Called after an answer, for example to mark the notification as read */
   readonly onAnswered: () => void;
 }
 
 /**
- * The answer to an invitation from its notification. The buttons show only
- * while the invitation can be answered, else the row shows the result. Both
- * buttons open the participation modal of the event, where the citizen can
+ * Both buttons open the participation modal of the event, where the citizen can
  * write a comment before the answer.
  */
 export const EventInvitationNotificationActions = ({

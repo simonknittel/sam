@@ -2,7 +2,6 @@ import { FlowRoleAccessType } from "@sam-monorepo/database/browser";
 
 export interface FlowPermissionSource {
   readonly id: string;
-  /** Soft-deleted flows grant nothing to anyone (see the grant rules below) */
   readonly deletedAt: Date | null;
   readonly roleAccess: readonly {
     readonly roleId: string;
@@ -65,10 +64,6 @@ export const createFlowPermissionResolver = (
   return { get };
 };
 
-/**
- * Resolves the effective permissions of the given viewer for every given
- * flow — see `createFlowPermissionResolver()` for the grant rules.
- */
 export const resolveFlowPermissions = (
   flows: readonly FlowPermissionSource[],
   viewer: FlowViewer,

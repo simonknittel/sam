@@ -26,31 +26,20 @@ import { WikiImageFloatActions } from "./WikiImageFloatActions";
 interface Props {
   readonly editor: Editor;
   readonly menu: WikiNodeMenuState;
-  /** Opens the node's config dialog (mounted by the menu shell) */
   readonly onOpenNodeConfig: (config: {
     readonly typeName: string;
     readonly position: number;
     readonly attrs: Readonly<Record<string, unknown>>;
   }) => void;
-  /** Opens the ship picker for an existing link (mounted by the menu shell) */
   readonly onOpenVariantLink: (config: { readonly position: number }) => void;
 }
 
-/**
- * Actions of the atom-node menu (embeds, images, attachments, page links,
- * mentions, variant links, page indexes, role member lists).
- */
 export const WikiNodeMenuActions = ({
   editor,
   menu,
   onOpenNodeConfig,
   onOpenVariantLink,
 }: Props) => {
-  /**
-   * Focus at the deletion point — a bare focus() scrolls the stale
-   * selection (wherever the cursor last was) into view, jumping the
-   * viewport away from the deleted block (see WikiDuplicateCopyActions).
-   */
   const deleteNode = () => {
     editor
       .chain()

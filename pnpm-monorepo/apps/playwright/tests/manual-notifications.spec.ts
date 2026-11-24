@@ -17,19 +17,16 @@ import {
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
-/** The citizen picker of the create form loads the roster through tRPC */
 const SENDER_PERMISSIONS = ["manualNotification;manage", "citizen;read"];
 
 const MANUAL_NOTIFICATIONS_PAGE = "/app/manual-notifications";
 const EMPTY_TEXT = "Keine Benachrichtigungen gefunden.";
-/** The success text of the create action */
 const SENT_TEXT = "Die Benachrichtigung wurde gesendet.";
 /** The text of `ManualNotificationErrorMessage.NoReceivers` */
 const NO_RECEIVERS_TEXT = "Wähle mindestens einen Citizen oder eine Rolle aus.";
 
 const createDialog = (page: Page) => modal(page, "Neue Benachrichtigung");
 
-/** Opens the "Neu" menu of the top bar */
 const openCreateMenu = async (page: Page) => {
   const createMenu = page.getByRole("dialog", { name: "Neu erstellen" });
   await clickUntilVisible(
@@ -51,7 +48,6 @@ test("a notification from the create menu goes to a citizen and a role, and list
   const escort = await createRole(prisma, { name: "Geleitschutz" });
   const sender = await createCitizen(prisma, {
     handle: "absenderin",
-    /** The role picker offers only the roles that the sender can see */
     permissionStrings: [
       ...SENDER_PERMISSIONS,
       `otherRole;read;roleId=${escort.id}`,
@@ -70,8 +66,6 @@ test("a notification from the create menu goes to a citizen and a role, and list
   const dialog = createDialog(page);
   await expect(dialog).toBeVisible();
 
-  // The citizen picker re-renders while its citizens load, which swallows a
-  // fill that lands in that window — so both text fields insist on their value
   await fillUntilValue(
     dialog.getByLabel("Titel", { exact: true }),
     "Treffen am Samstag",
@@ -86,7 +80,6 @@ test("a notification from the create menu goes to a citizen and a role, and list
     dialog.getByRole("combobox", { name: "Citizens" }),
     "empfaenger",
   );
-  /** The picked citizen becomes a chip linking to their profile */
   await expect(dialog.getByRole("link", { name: "empfaenger" })).toBeVisible();
 
   /**
@@ -102,7 +95,6 @@ test("a notification from the create menu goes to a citizen and a role, and list
   await option.click();
   await expect(option).toHaveAttribute("aria-selected", "true");
 
-  /** A click outside of the popover closes only the popover, not the dialog */
   await dialog.getByRole("heading", { name: "Neue Benachrichtigung" }).click();
   await expect(popover).not.toBeVisible();
   await expect(dialog).toBeVisible();
@@ -132,7 +124,6 @@ test("a notification from the create menu goes to a citizen and a role, and list
     }),
   ).toEqual([{ manualNotificationId: notification.id, roleId: escort.id }]);
 
-  // The table lists the new row with its sender and its receivers
   const row = rowWithTitle(page, "Treffen am Samstag");
   await expect(row).toBeVisible();
   await expect(row.getByRole("link", { name: "absenderin" })).toBeVisible();
@@ -173,7 +164,6 @@ test("the form refuses a notification without receivers", async ({
   await signIn(sender.user);
   await page.goto(MANUAL_NOTIFICATIONS_PAGE);
 
-  /** The create button of the app opens the same modal as the create menu */
   const dialog = createDialog(page);
   await clickUntilVisible(
     page.getByRole("button", { name: "Neue Benachrichtigung" }),
@@ -240,7 +230,6 @@ test("the search filter narrows the list to the matching title or text", async (
   const exerciseRow = rowWithTitle(page, "Flottenübung");
   await expect(maintenanceRow).toBeVisible();
   await expect(exerciseRow).toBeVisible();
-  // The newest notification first
   await expect(
     page.getByRole("row").filter({ hasText: /Wartung am Montag|Flottenübung/ }),
   ).toHaveText([/Flottenübung/, /Wartung am Montag/]);
@@ -248,7 +237,6 @@ test("the search filter narrows the list to the matching title or text", async (
     maintenanceRow.getByRole("link", { name: "empfaenger" }),
   ).toBeVisible();
 
-  // The search filter feeds the nuqs URL contract (?search=…)
   await fillUntilUrl(
     page,
     page.getByLabel("Titel oder Text"),
@@ -258,7 +246,6 @@ test("the search filter narrows the list to the matching title or text", async (
   await expect(exerciseRow).toHaveCount(0);
   await expect(maintenanceRow).toBeVisible();
 
-  // The search also matches the text of a notification
   await page.goto(`${MANUAL_NOTIFICATIONS_PAGE}?search=Verbandsflug`);
   await expect(exerciseRow).toBeVisible();
   await expect(maintenanceRow).toHaveCount(0);
@@ -307,11 +294,7 @@ test("the notification center shows a manual notification with its title and tex
   await signIn(citizen.user);
 
   await page.goto("/app");
-  /**
-   * Base UI renders the popover with `role="dialog"`, named after its
-   * trigger. The assertions are scoped to the open popover. The unread
-   * notification opens the popover by itself.
-   */
+  /** The unread notification opens the popover by itself. */
   const popover = page.getByRole("dialog", { name: "Benachrichtigungen" });
   await expect(popover.getByRole("tab", { name: "Inbox" })).toBeVisible();
 

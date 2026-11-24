@@ -14,12 +14,7 @@ export const deleteFlowInputSchema = z.object({
 
 export type DeleteFlowInput = z.infer<typeof deleteFlowInputSchema>;
 
-/**
- * Deletes a flow softly: it releases its slug, and nobody can read it until a
- * manager restores it. Requires `career;manage`.
- *
- * @throws NotFoundError when the flow does not exist or is deleted already
- */
+/** The flow releases its slug */
 export const deleteFlow = (
   context: ApplicationContext,
   actor: Actor,

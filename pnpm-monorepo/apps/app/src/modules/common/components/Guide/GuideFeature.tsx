@@ -9,12 +9,10 @@ interface Props {
   readonly screenshot: StaticImageData;
   readonly screenshotAlt: string;
   readonly screenshotFit?: GuideScreenshotFit;
-  /** The `sizes` of the screenshot, see `GuideFeatureList` */
   readonly screenshotSizes: string;
   readonly children: ReactNode;
 }
 
-/** One card of `GuideFeatureList` */
 export const GuideFeature = ({
   icon: Icon,
   title,

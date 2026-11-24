@@ -15,7 +15,6 @@ import {
 import { idSchema } from "../pagination.js";
 import { TaskRewardKind, TaskVisibilityKind } from "./taskOutput.js";
 
-/** The schemas of the task fields that the create and the update share */
 export const taskFieldSchemas = {
   title: z.string().trim().min(1).max(TASK_TITLE_MAX_LENGTH),
   description: z
@@ -52,7 +51,7 @@ export const taskFieldSchemas = {
   hidden_for_other_roles: z
     .boolean()
     .describe(
-      "Whether only the citizens with a required role can see the public task.",
+      "Whether the public task is hidden from the citizens without a required role. Its creator, its assignees, its completionists and task;manage still see it.",
     ),
   assignment_limit: z
     .int32()

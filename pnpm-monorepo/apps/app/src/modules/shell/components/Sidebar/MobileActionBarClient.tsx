@@ -139,7 +139,6 @@ interface AppLinkProps {
   readonly app: LinkedApp;
   readonly isCurrent: boolean;
   readonly pathname: string;
-  /** Whether the app has new items */
   readonly hasUnreadDot: boolean;
 }
 

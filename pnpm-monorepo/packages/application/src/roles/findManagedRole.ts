@@ -19,15 +19,10 @@ const MANAGED_ROLE_SELECT = {
   tags: { select: { tagId: true } },
 } as const satisfies Prisma.RoleSelect;
 
-/** A role with the fields that the role pages edit */
 export type ManagedRole = Prisma.RoleGetPayload<{
   select: typeof MANAGED_ROLE_SELECT;
 }>;
 
-/**
- * The role for the role pages, or null when it does not exist. Requires
- * `role;manage`.
- */
 export const findManagedRole = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,
@@ -41,7 +36,6 @@ export const findManagedRole = async (
   });
 };
 
-/** A tag with the fields that the tag pages of the IAM app edit */
 export interface ManagedRoleTag {
   readonly id: string;
   readonly name: string;
@@ -49,9 +43,8 @@ export interface ManagedRoleTag {
   readonly description: string | null;
   readonly icon: RoleIcon | null;
   /**
-   * All roles of the tag, sorted by name. The tag outputs give only the roles
-   * that the actor can see, but the tag page shows and changes all roles of
-   * the tag.
+   * All roles of the tag: the tag outputs give only the roles that the actor
+   * can see, but the tag page shows and changes all of them
    */
   readonly roleIds: string[];
 }
@@ -67,10 +60,6 @@ const toManagedRoleTag = (tag: RoleTagBadgeRow): ManagedRoleTag => ({
     .map((role) => role.id),
 });
 
-/**
- * The tag for the tag page, or null when it does not exist. Requires
- * `role;manage`.
- */
 export const findManagedRoleTag = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,
@@ -86,10 +75,6 @@ export const findManagedRoleTag = async (
   return tag ? toManagedRoleTag(tag) : null;
 };
 
-/**
- * All tags with all of their roles (see `ManagedRoleTag`), sorted by name
- * like the tag row of the role picker. Requires `role;manage`.
- */
 export const findManagedRoleTags = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,

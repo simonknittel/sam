@@ -9,7 +9,6 @@ import { paginateByCursor, type PageOptions } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
 import { VARIANT_MANUFACTURER_SELECT } from "./catalogRows.js";
 
-/** The page size of the table of the ship changes */
 const SHIP_CHANGES_PAGE_SIZE = 100;
 
 export enum ShipChangeType {
@@ -17,14 +16,12 @@ export enum ShipChangeType {
   Deletion = "deletion",
 }
 
-/** The filter of the table of the ship changes */
 export enum ShipChangeFilter {
   Both = "both",
   Creation = "creation",
   Deletion = "deletion",
 }
 
-/** What one row of the changes table renders */
 const CHANGED_SHIP_SELECT = {
   id: true,
   name: true,
@@ -46,7 +43,6 @@ export interface ShipChangeRow {
   readonly changeDate: Date;
   readonly changeType: ShipChangeType;
   readonly ship: Prisma.ShipGetPayload<{ select: typeof CHANGED_SHIP_SELECT }>;
-  /** The citizen who created or deleted the ship */
   readonly actor: CitizenReferenceRow | null;
 }
 
@@ -59,10 +55,6 @@ export interface ShipChangePage {
 const getChangeCursor = (change: ShipChangeRow) =>
   `${change.ship.id}:${change.changeType}`;
 
-/**
- * One page of the creations and the deletions of the ships of all owners,
- * the newest first
- */
 export const findShipChangePage = (
   context: Pick<ApplicationContext, "prisma" | "tracer">,
   actor: Actor,
@@ -71,7 +63,7 @@ export const findShipChangePage = (
     cursor,
   }: {
     readonly changeType: ShipChangeFilter;
-    /** The id of a ship and the type of its change, see `getChangeCursor()` */
+    /** See `getChangeCursor()` */
     readonly cursor?: string | null;
   },
   { direction, unknownCursor }: PageOptions = {},
@@ -95,10 +87,7 @@ export const findShipChangePage = (
         : context.prisma.ship.findMany({
             where: {
               deletedAt: null,
-              /**
-               * Old ships have no known creation date. The log cannot put
-               * their creation in the timeline, thus it does not show it.
-               */
+              /** A ship without a creation date has no place in the timeline */
               createdAt: { not: null },
             },
             orderBy: { createdAt: "desc" },

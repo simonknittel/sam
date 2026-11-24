@@ -5,12 +5,10 @@ import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
 
 /**
- * Public by design: these routes are the sign-in and the sign-out. The
- * callbacks of `authOptions` refuse banned users and users who are not
- * members of the Discord guild.
+ * Public by design: the callbacks of `authOptions` refuse banned users and
+ * users who are not members of the Discord guild.
  *
- * NextAuth's App Router handler is typed `any`; give it the route-handler
- * shape Next.js expects.
+ * The App Router handler of NextAuth has the type `any`.
  */
 const handler = NextAuth(authOptions) as (
   request: Request,

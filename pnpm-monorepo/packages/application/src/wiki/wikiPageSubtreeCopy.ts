@@ -28,7 +28,6 @@ import {
 } from "./wikiScope.js";
 
 export enum WikiPageCopyDestinationKind {
-  /** The copied root becomes a new page below the parent */
   NewPage = "newPage",
   /**
    * Only the copied children are created, after the existing children of
@@ -73,12 +72,7 @@ interface CopyWikiPageSubtreeResult {
   readonly copiedPages: CopiedWikiPage[];
 }
 
-/**
- * The page that a copy reads, in its own scope: a copy needs only the read
- * tier of its source
- *
- * @throws NotFoundError when the page does not exist for the actor
- */
+/** A copy needs only the read tier of its source */
 export const requireWikiPageCopySource = async (
   context: ApplicationContext,
   actor: Actor,
@@ -98,13 +92,11 @@ export const requireWikiPageCopySource = async (
   return { sourceScope: scope, sourcePage: page };
 };
 
-/** Where the copies go */
 interface WikiPageCopyPlacement {
   /** The parent of the copied root, or of the copied children */
   readonly rootParentId: string | null;
   /** The copy of the source page itself, or null for a copy into a page */
   readonly rootEntry: WikiPageCopyEntry | null;
-  /** The existing page that takes the copied children */
   readonly existingPage: WikiSharedContextPage | null;
   /**
    * The sort order of the first copied child below the existing page. Null:
@@ -132,7 +124,6 @@ const resolveWikiPageCopyPlacement = ({
           title: destination.rootTitle,
           slug: slugifyWikiPageTitle(destination.rootTitle),
           parentSourceId: null,
-          /** The new page goes after the existing children of the parent */
           sortOrder: getNextWikiPageSortOrder(targetScope.pages, parentId),
           permissions:
             parentId === null
@@ -153,7 +144,6 @@ const resolveWikiPageCopyPlacement = ({
         rootParentId: existingPage.id,
         rootEntry: null,
         existingPage,
-        /** The copied children go after the existing children of the page */
         firstChildSortOrder: getNextWikiPageSortOrder(
           targetScope.pages,
           existingPage.id,
@@ -250,9 +240,6 @@ export const copyWikiPageSubtree = async (
 };
 
 /**
- * One audit event for each page that a copy created, and for the page that
- * took over the content of the copied root
- *
  * @param eventId The event of the target briefing, or null
  * @param replacedPageId The existing page that took over the content of the
  * copied root (the paste that replaces a page)

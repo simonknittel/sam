@@ -58,7 +58,6 @@ const createVariant = async (name: string) => {
   return prisma.variant.create({ data: { name, seriesId: series.id } });
 };
 
-/** The rows of the snapshot tables and of the live tables for the range */
 const seedStatistics = async () => {
   const carrack = await createVariant("Carrack");
   const polaris = await createVariant("Polaris");

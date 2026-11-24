@@ -21,7 +21,6 @@ type AddableParticipantsEvent = EventVisibilityInput & {
   readonly id: string;
 };
 
-/** The permissions a citizen needs before an event can mean anything to them */
 const REQUIRED_PERMISSION_STRINGS = [
   "login;manage",
   "event;read",
@@ -30,21 +29,17 @@ const REQUIRED_PERMISSION_STRINGS = [
 
 /**
  * The citizens a manager may add to an event: everyone who can see it and is
- * reachable for its notifications, minus everyone already participating.
- * Both the picker of the app and `addEventParticipants()` resolve through
- * this, so what the modal offers and what the use case accepts cannot drift
- * apart.
+ * reachable for its notifications, minus everyone already participating. The
+ * picker of the app, the adds, the invitations and the approvals of
+ * applications all resolve through this, so what the modal offers and what the
+ * use cases accept cannot drift apart.
  *
- * The two shared where-fragments only narrow the scan — they cannot express
- * the role-level gate (comparing `RoleAssignment.currentLevel` against
- * `Role.maxLevel` across the relation), so they match a superset. The
- * decision is made in memory by `resolveEventVisibility()`, the same
- * predicate the event page itself uses. Anything looser would let a manager
- * enroll someone the event 404s for — who then cannot even cancel, since
- * cancelling needs to see the event too.
- *
- * Pass `citizenIds` to answer the question for a known set instead of for
- * every citizen.
+ * The two shared where-fragments only narrow the scan: they cannot express the
+ * role-level gate (comparing `RoleAssignment.currentLevel` against
+ * `Role.maxLevel` across the relation), so they match a superset. The decision
+ * is made in memory by `resolveEventVisibility()`, the same predicate the event
+ * page itself uses. Anything looser would let a manager enroll someone the
+ * event 404s for, who then cannot even cancel.
  */
 export const findAddableParticipantIds = async (
   prisma: ApplicationContext["prisma"],
@@ -110,7 +105,6 @@ export const findAddableParticipantIds = async (
 
   return candidates
     .filter((candidate) => {
-      /** Same semantics as the session callback: levels and inheritance */
       const roleIds = new Set(
         resolveEffectiveRoles(candidate.roleAssignments).map((role) => role.id),
       );
@@ -128,10 +122,9 @@ export const findAddableParticipantIds = async (
 };
 
 /**
- * The requested citizens of an add or an invitation without the active
- * participants. The picker offers exactly the addable set, so anything
- * outside it either raced with a sign-up or bypassed the UI: citizens who
- * signed up in the meantime are skipped, the rest fails the whole batch.
+ * The picker offers exactly the addable set, so anything outside it either
+ * raced with a sign-up or bypassed the UI: citizens who signed up in the
+ * meantime are skipped, the rest fails the whole batch.
  *
  * @throws ValidationError
  */
@@ -173,7 +166,6 @@ export const selectNewParticipantIds = async (
 };
 
 export interface AddableEventParticipants {
-  /** The citizens who can see the event and are not participating */
   readonly citizenIds: string[];
   /**
    * The citizens of `citizenIds` with an open invitation. An invitation
@@ -183,13 +175,11 @@ export interface AddableEventParticipants {
 }
 
 /**
- * The citizens that the actor may add as participants to an app event, for
- * the picker of the app. The checks are the checks of
- * `addEventParticipants()`, thus the picker cannot list a set that the use
- * case refuses.
+ * The checks are the checks of `addEventParticipants()`, thus the picker cannot
+ * list a set that the use case refuses.
  *
- * @throws ForbiddenError without `event;read` or when the actor cannot
- * manage the event, NotFoundError when the actor cannot see the app event,
+ * @throws ForbiddenError without `event;read` or when the actor cannot manage
+ * the event, NotFoundError when the actor cannot see the app event,
  * ConflictError `EventErrorMessage.EventEnded` or
  * `EventErrorMessage.ParticipationDisabled`
  */

@@ -1,8 +1,4 @@
 export interface WikiVariantLogo {
-  /**
-   * Absolute URL of the manufacturer's logo. Resolved by the app so this
-   * package needs no knowledge of the upload storage.
-   */
   src: string;
   /** Consumers skip image optimization for SVG/GIF */
   mimeType: string;
@@ -21,12 +17,7 @@ export interface ResolvedWikiVariantLink {
   logo: WikiVariantLogo | null;
 }
 
-/**
- * Resolves a variant link's label from its attributes and the variants
- * map — the current name wins, the name stored in the document is the
- * fallback (a link pasted as a URL has neither until the map catches up).
- * Null when neither is available.
- */
+/** A link pasted as a URL has no name until the map catches up. */
 export const resolveWikiVariantLink = (
   variants: Readonly<Record<string, WikiLinkedVariant>>,
   attributes: Readonly<Record<string, unknown>>,
@@ -52,6 +43,6 @@ export const resolveWikiVariantLink = (
   };
 };
 
-/** Where a variant link points — shared with the app's rendering */
+/** Like `getVariantWikiRootPath()` of the domain package */
 export const wikiVariantLinkHref = (variantId: string) =>
   `/app/fleet/variant/${encodeURIComponent(variantId)}`;

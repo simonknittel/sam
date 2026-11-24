@@ -24,13 +24,6 @@ export const restoreFlowInputSchema = z.object({
 
 export type RestoreFlowInput = z.infer<typeof restoreFlowInputSchema>;
 
-/**
- * Restores a deleted flow with its nodes and its role access at the end of
- * the list. Requires `career;manage`.
- *
- * @throws NotFoundError when the flow does not exist or is not deleted
- * @throws ValidationError when the flow cannot use the slug
- */
 export const restoreFlow = (
   context: ApplicationContext,
   actor: Actor,

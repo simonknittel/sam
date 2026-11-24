@@ -3,10 +3,7 @@ import type { RealtimeServer } from "@sam-monorepo/application";
 import * as Pusher from "pusher";
 import * as z from "zod";
 
-/**
- * The maximum time of one request to the HTTP API of the realtime server. A
- * ban waits for the termination of the connections of the user.
- */
+/** A ban waits for the termination of the connections of the user */
 const REQUEST_TIMEOUT_MILLISECONDS = 5_000;
 
 /**
@@ -40,8 +37,8 @@ if (
 }
 
 /**
- * The realtime port of the application context. The tabs sign in with the
- * id of their user (see the route `/api/pusher/user-auth`).
+ * The tabs sign in with the id of their user (see the route
+ * `/api/pusher/user-auth`).
  */
 export const createChannelsRealtimeServer = (
   client: Pusher,

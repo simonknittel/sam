@@ -6,15 +6,12 @@ import { DiscordOutcome, type ApplicationContext } from "../context.js";
 import { callDiscord } from "./callDiscord.js";
 
 /**
- * The voice and stage channels of the guild — the only ones Discord accepts
- * as the location of a guild scheduled event. Deliberately unfiltered by the
- * viewer's own Discord permissions: the app would have to mirror Discord's
- * permission model to do that, and the bot only ever sees channels it may
- * see itself.
+ * The only channels that Discord accepts as the location of a guild scheduled
+ * event. Deliberately unfiltered by the viewer's own Discord permissions: the
+ * app would have to mirror Discord's permission model to do that, and the bot
+ * only ever sees channels it may see itself.
  *
- * Gives null when Discord could not be reached, which the UI shows as
- * "channel picking unavailable" rather than as an empty guild. No permission
- * check: the callers check the permission.
+ * No permission check, see the README.
  */
 export const findPublishableDiscordChannels = async (
   context: ApplicationContext,

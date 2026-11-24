@@ -47,16 +47,13 @@ export enum DiscordSyncOutcome {
   Failed = "FAILED",
 }
 
-/** The result of a Discord step. Only the app reads it (camelCase keys). */
 export type DiscordSyncResult =
   | { readonly outcome: DiscordSyncOutcome.Skipped }
   | {
       readonly outcome: DiscordSyncOutcome.Done;
       /**
-       * The event has a cover the app could not hand to Discord (an
-       * unsupported format, an oversized object, an unreachable bucket).
-       * Everything else went through; Discord simply keeps whatever cover it
-       * already had.
+       * The event has a cover that the app could not hand to Discord. Discord
+       * keeps whatever cover it already had.
        */
       readonly isCoverImageSkipped?: boolean;
     }
@@ -68,13 +65,10 @@ export type DiscordSyncResult =
   | { readonly outcome: DiscordSyncOutcome.Failed };
 
 /**
- * The Discord target fields of the inputs that carry them: the publish, the
- * template and the form of a new event. An absent target means "do not
- * publish"; the publish narrows it to required.
+ * An absent target means "do not publish"; the publish narrows it to required
  */
 export const discordPublishFieldsShape = {
   discord_publish_target: z.enum(EventDiscordPublishTarget).optional(),
-  /** The use case finds it in the channels of the guild */
   discord_publish_channel_id: z
     .string()
     .max(DISCORD_CHANNEL_ID_MAX_LENGTH)
@@ -86,15 +80,11 @@ export const discordPublishFieldsShape = {
     .optional(),
 };
 
-/** Where the manager wants the Discord event, as the forms of the app give it */
 export interface EventDiscordPublishRequest {
   readonly target: EventDiscordPublishTarget;
-  /**
-   * The channel of a CHANNEL target. It comes from the client, thus the use
-   * case finds it in the channels of the guild.
-   */
+  /** Of a CHANNEL target */
   readonly channelId?: string;
-  /** The location of an EXTERNAL target. Without it, the page of the event. */
+  /** Of an EXTERNAL target. Without it, the page of the event. */
   readonly location?: string;
 }
 
@@ -117,10 +107,8 @@ export type UnpublishEventFromDiscordInput = z.infer<
 >;
 
 /**
- * Read fresh for every Discord call instead of taken from the caller's own
- * query: the payload is built from more columns than any one mutation
- * touches (the cover in particular), and the app's row is the source of
- * truth for what Discord should show.
+ * Read fresh for every Discord call: the payload is built from more columns
+ * than any one mutation touches (the cover in particular)
  */
 const getPublishState = (context: ApplicationContext, eventId: string) =>
   context.prisma.event.findUnique({
@@ -169,8 +157,9 @@ const buildContent = async (
 };
 
 /**
- * All five publish columns at once — the CHECK constraint rejects any
- * partial reset, so the two places that unpublish write the same set.
+ * All five publish columns at once — the CHECK constraint rejects a reset of
+ * the id without the channel and the location, so the two places that
+ * unpublish write the same set.
  */
 const NO_PUBLICATION = {
   discordPublishedId: null,
@@ -181,9 +170,8 @@ const NO_PUBLICATION = {
 } as const;
 
 /**
- * Drops the publish state after Discord reported the guild scheduled event
- * as gone, so the event can be published again. Nobody caused it, thus the
- * audit event has no creator.
+ * Discord reported the guild scheduled event as gone. Nobody caused it, thus
+ * the audit event has no creator.
  */
 const clearPublishState = async (
   context: ApplicationContext,
@@ -205,11 +193,10 @@ const clearPublishState = async (
 };
 
 /**
- * Turns the manager's choice into the shape Discord expects. A picked
- * channel is matched against the guild's own voice and stage channels —
- * the id arrives from the client, and Discord's entity type depends on the
- * channel's type — so an unknown or unusable channel resolves to null, and
- * so does a channel target when Discord cannot be reached.
+ * The channel id arrives from the client, and Discord's entity type depends on
+ * the channel's type, so the channel is matched against the channels of the
+ * guild. Null for an unknown or unusable channel, also when Discord cannot be
+ * reached.
  */
 export const resolveDiscordPublishTarget = async (
   context: ApplicationContext,
@@ -240,10 +227,7 @@ export const resolveDiscordPublishTarget = async (
   }
 };
 
-/**
- * Creates the guild scheduled event and records it on the app's event. The
- * caller has already authorized the request and validated the target.
- */
+/** The caller has already authorized the request and validated the target */
 export const createDiscordEventPublication = async (
   context: ApplicationContext,
   eventId: string,
@@ -321,12 +305,11 @@ export const createDiscordEventPublication = async (
 };
 
 /**
- * Re-asserts the app's title, description, schedule and cover on an already
- * published event. A no-op for events that were never published, so every
- * mutation path can call it unconditionally.
+ * A no-op for events that were never published, so every mutation path can call
+ * it unconditionally.
  *
- * No permission check: the callers (`updateEvent` and
- * `assignEventCoverImage`) check that the actor can manage the event.
+ * No permission check: the callers (`updateEvent` and `assignEventCoverImage`)
+ * check that the actor can manage the event.
  */
 export const syncEventDiscordPublication = (
   context: ApplicationContext,
@@ -374,10 +357,6 @@ export const syncEventDiscordPublication = (
     }
   });
 
-/**
- * Removes the guild scheduled event from Discord and clears the app's
- * publish state. An event Discord no longer knows counts as unpublished.
- */
 export const removeEventDiscordPublication = async (
   context: ApplicationContext,
   eventId: string,
@@ -420,11 +399,7 @@ export const removeEventDiscordPublication = async (
 };
 
 /**
- * The app event of a publish or an unpublish. Publishing is part of
- * managing an event, so it needs no permission of its own.
- *
- * @throws NotFoundError, ConflictError or ForbiddenError (see
- * `requireManageableEvent()`)
+ * Publishing is part of managing an event, so it needs no permission of its own
  */
 const requirePublishableEvent = async (
   context: ApplicationContext,
@@ -449,10 +424,6 @@ const requirePublishableEvent = async (
 };
 
 /**
- * Publishes an app event as a guild scheduled event on Discord. Only the
- * app calls it: the result tells which Discord step failed, and a rejected
- * or failed publish changes nothing.
- *
  * @throws ConflictError `EventErrorMessage.AlreadyPublishedOnDiscord`, and
  * ValidationError `EventErrorMessage.DiscordChannelUnavailable`
  */
@@ -481,11 +452,6 @@ export const publishEventToDiscord = (
     return createDiscordEventPublication(context, event.id, target, actor);
   });
 
-/**
- * Removes the guild scheduled event of an app event from Discord. Only the
- * app calls it. A failed removal keeps the publish state, thus the manager
- * can try again.
- */
 export const unpublishEventFromDiscord = (
   context: ApplicationContext,
   actor: Actor,

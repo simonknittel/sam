@@ -341,7 +341,6 @@ test("createRoleTag links its first roles in the same transaction", async () => 
     ),
   ]);
 
-  // An unknown role creates nothing
   await expect(
     createRoleTag(
       context,
@@ -417,7 +416,6 @@ test("updateRoleTag writes the audit events only for real changes", async () => 
     assignmentsEvent([], [{ roleId: pilot.id, tagId: flight.id }]),
   ]);
 
-  // The same write again changes nothing
   expect(await updateRoleTag(context, actor, renameInput)).toMatchObject({
     name: "Flug",
     description: null,
@@ -471,12 +469,10 @@ test("updateRole changes the tags in the same transaction as the fields, and onl
     assignmentsEvent([{ roleId: pilot.id, tagId: crew.id }], []),
   ]);
 
-  // The same write again changes nothing
   await updateRole(context, actor, tagsInput);
   expect(auditEvents).toEqual([]);
   expect(await readLinks()).toEqual(["Pilot:Crew", "Pilot:Flight"]);
 
-  // An unknown tag undoes the change of the name
   await expect(
     updateRole(
       context,
@@ -608,7 +604,6 @@ test("a delete of a role or of a tag removes its links", async () => {
   });
   expect(await readLinks()).toEqual(["Pilot:Crew"]);
   expect(await prisma.role.count()).toBe(2);
-  // The audit event keeps the roles of the tag
   expect(auditEvents).toEqual([
     {
       type: AuditEventType.ROLE_TAG_DELETED,

@@ -7,12 +7,10 @@ import {
 } from "@sam-monorepo/domain";
 
 interface Props {
-  /** The saved values. Without it, the fields start empty. */
   readonly tag?: Pick<ManagedRoleTag, "name" | "description">;
   readonly autoFocus?: boolean;
 }
 
-/** The name and the description of a tag, for the create and edit forms */
 export const RoleTagFields = ({ tag, autoFocus }: Props) => {
   return (
     <>

@@ -3,11 +3,6 @@ import { comparePermissionSets } from "../permissions/comparePermissionSets.js";
 import type { PermissionSet } from "../permissions/PermissionSet.js";
 import { transformPermissionStringToPermissionSet } from "../permissions/transformPermissionStringToPermissionSet.js";
 
-/**
- * The permissions that require the two-factor authentication of the Discord
- * account. `manage` includes the other operations of the resource, thus
- * `user;manage` includes `user;read`.
- */
 export const TWO_FACTOR_AUTHENTICATION_PERMISSION_SETS = [
   { resource: "role", operation: "manage" },
   { resource: "user", operation: "read" },
@@ -34,16 +29,11 @@ const isTwoFactorAuthenticationRoleRule = ({
   resource === "otherRole" &&
   TWO_FACTOR_AUTHENTICATION_ROLE_RULE_OPERATIONS.includes(operation);
 
-/**
- * Whether one of the permission sets requires the two-factor authentication
- * of the Discord account
- */
 const requiresTwoFactorAuthentication = (permissionSets: PermissionSet[]) =>
   TWO_FACTOR_AUTHENTICATION_PERMISSION_SETS.some((permissionSet) =>
     comparePermissionSets(permissionSet, permissionSets),
   ) || permissionSets.some(isTwoFactorAuthenticationRoleRule);
 
-/** Whether a holder of the permission string requires it */
 export const permissionStringRequiresTwoFactorAuthentication = (
   permissionString: string,
 ) =>

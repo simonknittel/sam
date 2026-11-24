@@ -21,16 +21,11 @@ interface WikiPageLinkSuggestionOptions {
 }
 
 interface PageLinkSuggestionItem {
-  /** Page id — also the menu key, since page titles are not unique */
   readonly id: string;
   readonly title: string;
   readonly icon?: ReactNode;
 }
 
-/**
- * Typing "[[" opens a search over all visible pages and inserts an
- * internal page link. Editor-only — the extension adds no schema.
- */
 export const WikiPageLinkSuggestion =
   Extension.create<WikiPageLinkSuggestionOptions>({
     name: "wikiPageLinkSuggestion",

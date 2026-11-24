@@ -16,7 +16,7 @@ interface Props extends InputHTMLAttributes<HTMLInputElement> {
   noLabel?: ReactNode;
   labelClassName?: string;
   id?: string;
-  /** Shows that only a part of a group is checked. `checked` stays false. */
+  /** `checked` stays false */
   isIndeterminate?: boolean;
 }
 

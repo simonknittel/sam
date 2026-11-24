@@ -12,18 +12,11 @@ export interface WebPushSubscriptionTarget {
   readonly keys: { readonly p256dh: string; readonly auth: string };
 }
 
-/** One push message: one draft to one subscription of its receiver */
 export interface WebPushDelivery<Draft> {
   readonly draft: Draft;
   readonly subscription: WebPushSubscriptionTarget;
 }
 
-/**
- * The subscriptions that get the drafts. A draft gets no delivery when its
- * receiver disabled its notification type for web push or has no
- * subscription. A subscription with an endpoint that is not allowed gets no
- * delivery.
- */
 export const findWebPushDeliveries = async <
   Draft extends {
     readonly receiverId: string;
@@ -69,8 +62,6 @@ export const findWebPushDeliveries = async <
     const citizen = citizensById.get(draft.receiverId);
     if (!citizen) return [];
 
-    // Opt-out model: a NotificationSetting row means the citizen disabled
-    // this notification type for web push.
     const disabledSetting = citizen.notificationSettings.find(
       (setting) => setting.notificationType === draft.notificationType,
     );
@@ -95,7 +86,6 @@ export interface FindWebPushSubscriptionInput {
   readonly subscriptionId: string;
 }
 
-/** The subscription with its keys, or null when it does not exist */
 export const findWebPushSubscription = async (
   context: ApplicationContext,
   input: FindWebPushSubscriptionInput,
@@ -126,7 +116,6 @@ export const findWebPushSubscription = async (
 
 export interface RejectedWebPushSubscription {
   readonly subscriptionId: string;
-  /** The HTTP status of the answer of the push service */
   readonly statusCode: number;
 }
 
@@ -135,18 +124,12 @@ export interface PruneWebPushSubscriptionsInput {
   readonly reason: WebPushPruneReason;
 }
 
-/** The columns of a deleted subscription that its audit event needs */
 export interface DeletedWebPushSubscription {
   readonly id: string;
   readonly citizenId: string;
   readonly userAgent: string | null;
 }
 
-/**
- * Deletes the subscriptions, and writes one audit event with each deleted
- * subscription, its citizen and its user agent. When no subscription was
- * deleted (all rows were gone), the function writes no audit event.
- */
 export const pruneWebPushSubscriptions = async (
   context: ApplicationContext,
   input: PruneWebPushSubscriptionsInput,

@@ -41,7 +41,6 @@ const NEXT_SEVEN_DAYS: LocalDateRange = {
   end: { year: 2026, month: 6, day: 21 },
 };
 
-/** The permissions of all entry types */
 const ALL_TYPE_PERMISSIONS = [
   "event;read",
   "citizen;read",
@@ -374,7 +373,6 @@ describe("findCalendarEntries", () => {
       `event:${endedToday.id}`,
       `task_deadline:${expiredTask.id}`,
     ]);
-    // A later page must not show the running and the earlier entries again
     expect(
       await findCalendarEntries(context, actor, {
         range: {

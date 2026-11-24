@@ -10,11 +10,6 @@ export interface ResolvedWikiCitizenMention {
   deleted: boolean;
 }
 
-/**
- * Resolves a mention's target and label from its attributes and the
- * citizens map — the current handle wins, the handle stored in the document
- * is the fallback. Null when neither is available.
- */
 export const resolveWikiCitizenMention = (
   citizens: Readonly<Record<string, WikiMentionedCitizen>>,
   attributes: Readonly<Record<string, unknown>>,

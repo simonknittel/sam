@@ -13,11 +13,9 @@ interface Options {
 }
 
 /**
- * Ends the collection phase of one cycle and books the balances away. The
- * app and the midnight job use the same rule. One interactive transaction
- * for each cycle: a later cycle must read the ledger after the bookings of
- * an earlier cycle (see `endCollectionPhaseInTransaction()`). The audit
- * event comes after the commit.
+ * One interactive transaction for each cycle: a later cycle must read the
+ * ledger after the bookings of an earlier cycle (see
+ * `endCollectionPhaseInTransaction()`).
  *
  * @returns The ids of the new SILC transactions, or null when the cycle does
  * not exist or is not in its collection phase

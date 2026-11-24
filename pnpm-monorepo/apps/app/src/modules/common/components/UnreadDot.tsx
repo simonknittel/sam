@@ -4,11 +4,6 @@ interface Props {
   readonly className?: string;
 }
 
-/**
- * Amber dot signalling unread content, with a ping halo that respects
- * `prefers-reduced-motion`. Used in the top bar (Apps button, notification
- * bell), app tiles and the mobile action bar.
- */
 export const UnreadDot = ({ className }: Props) => {
   return (
     <span

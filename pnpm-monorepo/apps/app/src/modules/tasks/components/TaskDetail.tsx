@@ -22,12 +22,7 @@ interface Props {
   readonly isTaskUpdatable: boolean;
 }
 
-/**
- * The task page: the head with the key figures, the own participation, the
- * participants and the audience, then the description as the briefing. The
- * briefing tile takes the full width, thus a wiki can replace it later, like
- * on the variant pages.
- */
+/** The briefing tile takes the full width, thus a wiki can replace it later */
 export const TaskDetail = ({
   className,
   task,
@@ -39,7 +34,6 @@ export const TaskDetail = ({
 }: Props) => {
   const isEditable = isTaskUpdatable && isAllowedToManageTask;
   const isManagementShown = isEditable || isAllowedToDeleteTask;
-  /** The client components get only their fields, not the description */
   const taskIdAndTitle = { id: task.id, title: task.title };
 
   return (

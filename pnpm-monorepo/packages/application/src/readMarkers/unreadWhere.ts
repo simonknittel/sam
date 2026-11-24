@@ -1,11 +1,6 @@
 import { ReadMarkerSubject } from "@sam-monorepo/domain";
 import type { Actor } from "../actor.js";
 
-/**
- * The start of the read markers for tasks and events. Set to the merge date
- * of the feature, thus only the few items created between the merge and the
- * release show as new at the rollout.
- */
 const TASKS_AND_EVENTS_TRACKED_SINCE = new Date("2026-09-27T00:00:00Z");
 
 /**
@@ -15,9 +10,8 @@ const TASKS_AND_EVENTS_TRACKED_SINCE = new Date("2026-09-27T00:00:00Z");
 type RowReadMarkerSubject = ReadMarkerSubject.Task | ReadMarkerSubject.Event;
 
 /**
- * Items created before this date are never new. It is the start of the read
- * markers for the subject type, thus its existing items do not suddenly show
- * as new for everybody.
+ * Items created before this date are never new. A new subject type needs the
+ * date of its release here, or all its items show as new for everybody.
  */
 export const READ_MARKER_TRACKED_SINCE: Readonly<
   Record<RowReadMarkerSubject, Date>

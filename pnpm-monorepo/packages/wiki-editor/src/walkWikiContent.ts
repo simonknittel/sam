@@ -1,7 +1,4 @@
-/**
- * Minimal structural type for Tiptap JSON documents. Stored content is user
- * input, so every field is optional.
- */
+/** Stored content is user input, so every field is optional. */
 export interface WikiJsonContentNode {
   readonly type?: string;
   readonly text?: string;
@@ -9,10 +6,7 @@ export interface WikiJsonContentNode {
   readonly content?: readonly WikiJsonContentNode[];
 }
 
-/**
- * Depth-first, document-order walk over a Tiptap JSON document, calling
- * visit for every node. Non-object input is ignored.
- */
+/** Depth-first, in document order. Non-object input is ignored. */
 export const walkWikiContent = (
   content: unknown,
   visit: (node: WikiJsonContentNode) => void,

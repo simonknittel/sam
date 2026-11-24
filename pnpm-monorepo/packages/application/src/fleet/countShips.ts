@@ -8,19 +8,16 @@ import type { ApplicationContext } from "../context.js";
 import { withSpan } from "../withSpan.js";
 
 export interface CountShipsOutput {
-  /** The members of the organization whose ships the run counted */
   readonly memberCount: number;
-  /** The number of variants that the run counted */
   readonly variantCount: number;
-  /** The number of counts that the run saved. Zero for a repeated run. */
+  /** Zero for a repeated run */
   readonly savedCount: number;
 }
 
 /**
- * Saves the number of the ships of the members of the organization for each
- * variant, for the day that just ended: the day before the time of the run
- * in the time zone of the organization. All members count, also the members
- * with a redacted membership. Without members the run saves nothing.
+ * Counts the day that just ended: the day before the run in the time zone of
+ * the organization. All members count, also the members with a redacted
+ * membership.
  */
 export const countShips = (
   context: ApplicationContext,
@@ -60,12 +57,6 @@ export const countShips = (
       count: shipCountByVariantId.get(variant.id) ?? 0,
     }));
 
-    /**
-     * A run that repeats in the same night (for example after an error in a
-     * later job) keeps the counts of the first run, like
-     * `countCitizensPerRole()`. The first run is the nearest to the end of the
-     * counted day.
-     */
     const created = await context.prisma.variantShipCount.createMany({
       data,
       skipDuplicates: true,

@@ -16,18 +16,14 @@ import {
 } from "../wiki/briefingCopy.js";
 
 /**
- * The timeout of an interactive transaction that writes many rows one after
- * the other: the copy of a lineup with its briefing, the copy of a wiki page
- * subtree (`wikiPageSubtreeCopy.ts`), or a new order of a lineup. The default
- * of Prisma (5 seconds) is possibly too short for this (an assumption, not
- * measured).
+ * For an interactive transaction that writes many rows one after the other. The
+ * default of Prisma (5 seconds) is possibly too short for this (an assumption,
+ * not measured). The transaction can include a copy of an upload (see
+ * `copyUploadInTransaction()`).
  */
 export const LONG_TRANSACTION_TIMEOUT_IN_MILLISECONDS = 30_000;
 
-/**
- * The lineup and the briefing of an event or of an event template that a copy
- * takes. No permission check: the caller checks the container.
- */
+/** No permission check: the caller checks the container */
 export const loadContainerCopySource = async (
   context: Pick<ApplicationContext, "prisma">,
   columns: EventContainerColumns,
@@ -40,7 +36,7 @@ export const loadContainerCopySource = async (
   return {
     positionTree: buildPositionTree(positions),
     briefingPages: briefing.pages,
-    /** Null when the root page was trashed: then there is no briefing */
+    /** Null without a root page: then there is no briefing */
     rootPage: briefing.rootPage,
   };
 };
@@ -48,10 +44,8 @@ export const loadContainerCopySource = async (
 type ContainerCopySource = Awaited<ReturnType<typeof loadContainerCopySource>>;
 
 /**
- * Copies the lineup and the briefing pages of the source into the target
- * container, on the transaction of the caller. The lineup goes first, so that
- * the POSITION scopes of the pages can be remapped onto the new positions.
- * Without briefing pages, only the lineup is copied.
+ * The lineup goes first, so that the POSITION scopes of the pages can be
+ * remapped onto the new positions
  */
 export const copyContainerContent = async (
   transaction: Prisma.TransactionClient,

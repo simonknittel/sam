@@ -30,25 +30,13 @@ export interface MarkItemAsReadOutput {
   readonly was_new: boolean;
   /** False when the actor had a marker for the item already */
   readonly created: boolean;
-  /**
-   * The number of the unread notifications which announced the item and
-   * which are read now
-   */
   readonly notifications_read: number;
 }
 
 /**
- * Marks one item as read by the actor: from its details once they mounted in
- * the browser, or from a click on its "Neu" marker. Also marks the
- * notifications which announced the item as read, also when the marker
- * existed already: a notification can arrive after the read. Repeated calls
- * change nothing.
- *
- * @throws ForbiddenError for a user without a citizen, or without the
- * permission to read the items of the subject type
- * @throws NotFoundError when the item does not exist or the actor cannot see
- * it: a different user can have deleted the item or taken the read access
- * away after the page showed it
+ * Also marks the notifications which announced the item as read, also when the
+ * marker existed already: a notification can arrive after the read. Repeated
+ * calls change nothing.
  */
 export const markItemAsRead = (
   context: ApplicationContext,

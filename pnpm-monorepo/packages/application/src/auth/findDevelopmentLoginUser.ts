@@ -15,12 +15,7 @@ export interface FindDevelopmentLoginUserOutput {
   readonly id: string;
 }
 
-/**
- * The user for the development login, or null when the user is not an admin
- * with a login account. The host checks that it runs in development and
- * creates the session: the use case has no actor, because the visitor has no
- * session yet. See the exceptions in the README of the package.
- */
+/** No permission check, see the README */
 export const findDevelopmentLoginUser = (
   context: ApplicationContext,
   input: FindDevelopmentLoginUserInput,

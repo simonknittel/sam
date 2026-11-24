@@ -4,15 +4,11 @@ import { triggerNotificationsAfterSave } from "../notifications.js";
 import { withSpan } from "../withSpan.js";
 
 export interface NotifyEventsStartingSoonOutput {
-  /** The events (from the app and from Discord) that start soon */
   readonly eventCount: number;
   readonly notificationsSent: boolean;
 }
 
-/**
- * Requests the `EventStarting` notification of each event that starts soon:
- * from now until one run interval after now, thus before the next run
- */
+/** From now until one run interval after now, thus before the next run */
 export const notifyEventsStartingSoon = (
   context: ApplicationContext,
 ): Promise<NotifyEventsStartingSoonOutput> =>

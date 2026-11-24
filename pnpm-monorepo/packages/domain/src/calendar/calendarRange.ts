@@ -6,22 +6,18 @@ import {
 import type { LocalDate } from "../timeZone.js";
 
 /**
- * A range of calendar days. Both ends belong to the range. The functions
- * here calculate on the date parts, thus the time zone of the system and the
- * length of a day around a daylight saving change do not affect them.
+ * Both ends belong to the range. The functions here calculate on the date
+ * parts, thus the time zone of the system and the length of a day around a
+ * daylight saving change do not affect them.
  */
 export interface LocalDateRange {
   readonly start: LocalDate;
   readonly end: LocalDate;
 }
 
-/**
- * The longest range that one view of the calendar shows. The limit keeps the
- * queries and the loops over the days of a range bounded.
- */
+/** Keeps the queries and the loops over the days of a range bounded */
 export const MAXIMUM_CALENDAR_RANGE_MONTHS = 12;
 
-/** Which entries of the calendar a list shows */
 export enum CalendarListStatus {
   /** The entries that did not finish yet, the earliest day first */
   Upcoming = "upcoming",
@@ -29,7 +25,6 @@ export enum CalendarListStatus {
   Past = "past",
 }
 
-/** Why the calendar refuses a range */
 export enum CalendarRangeProblem {
   EndBeforeStart = "end_before_start",
   TooLong = "too_long",
@@ -42,9 +37,8 @@ const normalizeLocalDate = (date: LocalDate): LocalDate =>
   fromDateColumnValue(toDateColumnValue(date));
 
 /**
- * Reads a "YYYY-MM-DD" value, for example a bound of the date filter in the
- * URL. Null for a value that names no day, for example February 30. The
- * inverse of `toLocalDateKey`.
+ * Null for a value that names no day, for example February 30. The inverse of
+ * `toLocalDateKey`.
  */
 export const parseLocalDateKey = (value: string): LocalDate | null => {
   const match = LOCAL_DATE_KEY_PATTERN.exec(value);
@@ -68,7 +62,6 @@ export const parseLocalDateKey = (value: string): LocalDate | null => {
   return date;
 };
 
-/** Negative when `first` is before `second`, 0 for the same day */
 export const compareLocalDates = (first: LocalDate, second: LocalDate) =>
   toDateColumnValue(first).getTime() - toDateColumnValue(second).getTime();
 
@@ -77,8 +70,7 @@ export const isLocalDateInRange = (date: LocalDate, range: LocalDateRange) =>
   compareLocalDates(date, range.end) <= 0;
 
 /**
- * Each day of the range, the first day first. The caller limits the length of
- * the range (see `findCalendarRangeProblem`).
+ * The caller limits the length of the range (see `findCalendarRangeProblem`).
  */
 export const getLocalDatesOfRange = (range: LocalDateRange): LocalDate[] => {
   const dates: LocalDate[] = [];
@@ -94,10 +86,8 @@ export const getLocalDatesOfRange = (range: LocalDateRange): LocalDate[] => {
 };
 
 /**
- * Why the calendar cannot show the range, or null. A range can start and end
- * at any distance from today, but it can hold at most
- * `MAXIMUM_CALENDAR_RANGE_MONTHS` months: the end can be the same day of the
- * month 12 months after the start, but not a later day.
+ * The end can be the same day of the month 12 months after the start, but not a
+ * later day.
  */
 export const findCalendarRangeProblem = (
   range: LocalDateRange,

@@ -17,20 +17,12 @@ const COLUMNS = "minmax(200px,1fr) 120px 160px 160px 180px";
 
 interface Props {
   readonly className?: string;
-  /** The scope that the page loaded for the viewer */
   readonly scope: WikiScope;
   readonly page: WikiSharedContextPage;
-  /** Route of the page, e.g. its event root route; defaults to the id-URL */
   readonly pageHref?: string;
-  /** Restoring is a mutation — frozen event pages only view their history */
   readonly canRestore: boolean;
 }
 
-/**
- * Snapshot list of a page (page admins only): automatic snapshots created
- * while the page is edited plus safety snapshots taken before restores and
- * imports, newest first, each with a restore action.
- */
 export const WikiSnapshotsTable = async ({
   className,
   scope,

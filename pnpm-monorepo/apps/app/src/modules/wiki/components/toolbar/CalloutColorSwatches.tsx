@@ -23,15 +23,10 @@ const COLOR_LABELS: Record<WikiCalloutColor, string> = {
 };
 
 interface Props {
-  /** Highlights the given color; omit when no callout is active */
   readonly activeColor?: WikiCalloutColor | null;
   readonly onSelect: (color: WikiCalloutColor) => void;
 }
 
-/**
- * The callout color swatch row shared by the toolbar's CalloutPicker and
- * the contextual edit menu.
- */
 export const CalloutColorSwatches = ({
   activeColor = null,
   onSelect,

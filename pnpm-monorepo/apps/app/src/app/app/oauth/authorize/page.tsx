@@ -8,10 +8,7 @@ export const metadata: Metadata = {
   title: "Zugriff erlauben",
 };
 
-/**
- * The authorization endpoint of the OAuth server (RFC 6749 section 3.1): an
- * MCP client sends the user here to ask for the consent
- */
+/** The authorization endpoint of the OAuth server (RFC 6749 section 3.1) */
 export default async function Page({
   searchParams,
 }: PageProps<"/app/oauth/authorize">) {

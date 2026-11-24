@@ -28,10 +28,6 @@ export interface RenameLineupPositionOutput {
   readonly name: string;
 }
 
-/**
- * Changes the name of a position of the lineup of an event or of an event
- * template that the actor can change
- */
 export const renameLineupPosition = (
   context: ApplicationContext,
   actor: Actor,

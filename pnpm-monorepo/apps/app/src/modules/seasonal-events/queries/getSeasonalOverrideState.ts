@@ -9,7 +9,7 @@ import { getSeasonalDateOverride } from "./getSeasonalDateOverride";
 export interface SeasonalOverrideState {
   /** The value of the date override cookie */
   readonly date: string;
-  /** The event of the override date and the date, for example "Halloween 2026-10-31" */
+  /** For example "Halloween 2026-10-31" */
   readonly label: string;
   /**
    * The override date has an event, but the viewer sees no theme. Usually
@@ -18,7 +18,6 @@ export interface SeasonalOverrideState {
   readonly isEventHidden: boolean;
 }
 
-/** The seasonal date override of this request, or nothing without one */
 export const getSeasonalOverrideState =
   async (): Promise<SeasonalOverrideState | null> => {
     const [overrideDate, resolution] = await Promise.all([

@@ -33,6 +33,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang={locale}
       className="scheme-dark"
+      // More than the height of the bars of the shell (112 pixels, `lg:pt-28` in
+      // `app/app/layout.tsx`), so that they do not cover the target of an anchor
       style={{ scrollPaddingTop: "122px" }}
     >
       <body

@@ -1,8 +1,6 @@
 /**
- * The days on which the entries without a time of their own fall in a range
- * of the calendar. The rules are the ones of the birthday greeting, the
- * salary job and the seasonal greetings, thus the calendar and these jobs
- * agree on the day.
+ * The rules are the ones of the birthday greeting, the salary job and the
+ * seasonal greetings, thus the calendar and these jobs agree on the day.
  */
 import { getCelebrationDate } from "../citizen/birthday.js";
 import {
@@ -17,12 +15,7 @@ import {
   type LocalDateRange,
 } from "./calendarRange.js";
 
-/**
- * The days in the range on which the birthday is celebrated. A range across
- * the turn of the year can hold one birthday two times. A birthday on
- * February 29 is celebrated on March 1 in a year without that day (see
- * `getCelebrationDate`).
- */
+/** A range across the turn of the year can hold one birthday two times. */
 export const getBirthdayOccurrencesInRange = (
   birthdayDay: number,
   birthdayMonth: number,
@@ -40,10 +33,6 @@ export const getBirthdayOccurrencesInRange = (
   return occurrences;
 };
 
-/**
- * The days in the range on which a salary with the day of the month is due,
- * with the rule of the salary job (see `isSalaryDue`)
- */
 export const getSalaryDueDaysInRange = (
   dayOfMonth: number,
   range: LocalDateRange,
@@ -55,10 +44,7 @@ interface SeasonalGreetingDay {
   readonly event: SeasonalEventKey;
 }
 
-/**
- * The greeting days of the seasonal events in the range, the first day
- * first. The switches of the themes do not change them.
- */
+/** The switches of the themes do not change these days. */
 export const getSeasonalGreetingDaysInRange = (
   range: LocalDateRange,
 ): SeasonalGreetingDay[] =>

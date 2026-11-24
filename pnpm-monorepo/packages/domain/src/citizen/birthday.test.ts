@@ -6,10 +6,6 @@
 import { describe, expect, test } from "vitest";
 import { isBirthdayToday } from "./birthday.js";
 
-/**
- * The shared rule behind both the birthday greeting and the party hat of the
- * app.
- */
 describe("isBirthdayToday", () => {
   test("celebrates the birthday on the local day of the citizen", () => {
     expect(

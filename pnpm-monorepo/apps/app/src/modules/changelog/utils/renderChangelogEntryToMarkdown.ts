@@ -47,7 +47,6 @@ const createElement = (
   return { type: "element", tagName, properties, children };
 };
 
-/** A static image import of Next.js gives an object with the path of the file */
 const getImageSource = (src: unknown) => {
   if (typeof src === "string") return src;
 

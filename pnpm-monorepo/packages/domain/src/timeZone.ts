@@ -1,7 +1,6 @@
 /**
- * Conversions between an instant and the wall time of an IANA time zone.
- * They use only `Intl`, thus the result does not depend on the time zone of
- * the system, and the server and the browser get the same result.
+ * They use only `Intl`, thus the result does not depend on the time zone of the
+ * system, and the server and the browser get the same result.
  */
 
 /**
@@ -103,12 +102,9 @@ enum OverlapInstant {
 }
 
 /**
- * The instant of a wall time in the given IANA time zone. `wallTimeAsUtc` is
- * the wall time as if the zone were UTC, thus the value of `Date.UTC` for the
- * parts of the wall time.
- *
- * A wall time in the spring-forward gap does not occur. It moves forward by
- * the length of the gap.
+ * `wallTimeAsUtc` is the wall time as if the zone were UTC, thus the value of
+ * `Date.UTC` for the parts of the wall time. See `wallTimeToInstant()` for the
+ * daylight saving changes.
  */
 const resolveWallTime = (
   wallTimeAsUtc: number,
@@ -156,14 +152,9 @@ export interface LocalDate {
   readonly day: number;
 }
 
-/** The "YYYY-MM-DD" value of a calendar date */
 export const toLocalDateKey = ({ year, month, day }: LocalDate) =>
   `${padNumber(year, 4)}-${padNumber(month, 2)}-${padNumber(day, 2)}`;
 
-/**
- * The calendar date a moment falls on in the given IANA time zone. Throws
- * for a time zone the runtime does not know.
- */
 export const getLocalDate = (moment: Date, timeZone: string): LocalDate => {
   const { year, month, day } = getZonedDateTimeParts(moment, timeZone);
 
@@ -171,26 +162,20 @@ export const getLocalDate = (moment: Date, timeZone: string): LocalDate => {
 };
 
 /**
- * The calendar date ("YYYY-MM-DD") of an instant in the given IANA time zone.
- * Two instants are on the same day in the zone if their keys are equal, and
- * the order of the keys is the order of the days. Throws for a time zone the
- * runtime does not know.
+ * Two instants are on the same day in the zone if their keys are equal, and the
+ * order of the keys is the order of the days.
  */
 export const getLocalDateKey = (instant: Date, timeZone: string): string =>
   toLocalDateKey(getZonedDateTimeParts(instant, timeZone));
 
 /**
- * Reads a `datetime-local` value ("YYYY-MM-DDTHH:mm") as a wall time in the
- * given IANA time zone and returns the instant. Throws for a value that is
- * not a valid date and time, and for a time zone the runtime does not know.
- * Also throws for the years 0000 to 0099, because `Date.UTC` reads them as
- * the years 1900 to 1999.
+ * Throws for a value that is not a valid date and time. Also throws for the
+ * years 0000 to 0099, because `Date.UTC` reads them as the years 1900 to 1999.
  *
- * Daylight saving time gives a deterministic result, independent of the
- * time zone of the system:
- * - A wall time in the spring-forward gap does not occur. It moves forward
- *   by the length of the gap. Example: 02:30 on 2026-03-29 in Europe/Berlin
- *   gives the instant of 03:30 summer time.
+ * Daylight saving time gives a deterministic result:
+ * - A wall time in the spring-forward gap does not occur. It moves forward by
+ *   the length of the gap. Example: 02:30 on 2026-03-29 in Europe/Berlin gives
+ *   the instant of 03:30 summer time.
  * - A wall time in the fall-back overlap occurs two times. It gives the later
  *   instant, which is in standard time. Example: 02:30 on 2026-10-25 in
  *   Europe/Berlin gives the instant of 02:30 winter time.
@@ -214,11 +199,7 @@ export const wallTimeToInstant = (wallTime: string, timeZone: string): Date => {
   return resolveWallTime(wallTimeAsUtc, timeZone, OverlapInstant.Later);
 };
 
-/**
- * The `datetime-local` value ("YYYY-MM-DDTHH:mm") of the wall time of an
- * instant in the given IANA time zone. This is the inverse of
- * `wallTimeToInstant`, for example to fill in an edit form.
- */
+/** The inverse of `wallTimeToInstant` */
 export const instantToWallTime = (instant: Date, timeZone: string): string => {
   const parts = getZonedDateTimeParts(instant, timeZone);
 
@@ -226,11 +207,9 @@ export const instantToWallTime = (instant: Date, timeZone: string): string => {
 };
 
 /**
- * The first instant of a calendar date in the given IANA time zone. Usually
- * this is midnight. If midnight is in the spring-forward gap, it is the end
- * of the gap. If midnight occurs two times, it is the earlier instant. A day
- * outside the month rolls over, like in `toDateColumnValue`. Throws for a
- * time zone the runtime does not know.
+ * Usually this is midnight. If midnight is in the spring-forward gap, it is the
+ * end of the gap. If midnight occurs two times, it is the earlier instant. A
+ * day outside the month rolls over, like in `toDateColumnValue`.
  */
 export const getStartOfLocalDay = (
   { year, month, day }: LocalDate,
@@ -243,16 +222,10 @@ export const getStartOfLocalDay = (
   );
 
 /**
- * The instant the given number of calendar days before an instant, with the
- * same wall time in the given IANA time zone. The result is the same as the
- * result of `Date#setDate(getDate() - days)` in a process that runs in this
- * zone, but it does not depend on the time zone of the process. Thus a
- * calendar day with a daylight-saving change has 23 or 25 hours:
- * - A wall time in the spring-forward gap moves forward by the length of the
- *   gap.
- * - A wall time in the fall-back overlap gives the earlier instant.
- *
- * Throws for a time zone the runtime does not know.
+ * The same wall time the given number of calendar days before, like
+ * `Date#setDate(getDate() - days)` in a process that runs in this zone. Thus a
+ * calendar day with a daylight-saving change has 23 or 25 hours. A wall time in
+ * the fall-back overlap gives the earlier instant.
  */
 export const subtractCalendarDays = (
   instant: Date,

@@ -110,6 +110,13 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
                                 <MobileActionBarLoader />
                               </CmdKProvider>
 
+                              {/*
+                               * The heights of the bars of the shell repeat in
+                               * the DefaultLayout and its Navigation, the
+                               * IframeLayout, the SidebarLayout, the Tile, the
+                               * scroll padding of the root layout and the
+                               * drawings of Halloween.
+                               */}
                               <div className="min-h-dvh pt-12 pb-16 lg:pt-28 lg:pb-0">
                                 {children}
                               </div>

@@ -43,14 +43,14 @@ const getCategoryRule = (category: UploadCategory) => {
 
 export const createUploadInputSchema = z
   .object({
-    /** The callers that upload images send no category */
+    /** The image uploads outside the wiki editor send no category */
     category: z.enum(UploadCategory).default(UploadCategory.Image),
     file_name: z.string().trim().min(1).max(MAXIMUM_UPLOAD_FILE_NAME_LENGTH),
     mime_type: z.string().trim().max(MAXIMUM_MIME_TYPE_LENGTH),
     /**
-     * The size in bytes. It is a statement of the client: the presigned PUT
-     * URL cannot enforce it. The client checks the limit before the upload
-     * starts, and the image probe replaces the size with the real size.
+     * In bytes, a statement of the client (see
+     * `MAXIMUM_ATTACHMENT_SIZE_BYTES`). The image probe replaces it with the
+     * real size.
      */
     size: z.int().min(0),
   })
@@ -81,18 +81,10 @@ export interface CreateUploadOutput {
     readonly mime_type: string;
     readonly size: number;
   };
-  /** The client sends the file to this URL with `PUT` */
   readonly presigned_upload_url: string;
 }
 
-/**
- * Creates the row of an upload that the acting citizen is the author of, and
- * gives the URL that takes the file. The key of the object is the id of the
- * row. The client assigns the upload to its target after the upload.
- *
- * @throws ForbiddenError when the user has no citizen
- * @throws ConflictError `UploadErrorMessage.StorageNotConfigured`
- */
+/** The client assigns the upload to its target after the upload */
 export const createUpload = (
   context: ApplicationContext,
   actor: Actor,
@@ -127,11 +119,6 @@ export const createUpload = (
       },
     ]);
 
-    /**
-     * The content type is part of the signature, thus the PUT must send
-     * exactly the MIME type that the schema accepted. The stored (and later
-     * served) `Content-Type` cannot be different from it.
-     */
     const presignedUploadUrl = await storage.createUploadUrl({
       key: upload.id,
       contentType: upload.mimeType,

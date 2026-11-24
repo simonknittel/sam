@@ -31,15 +31,13 @@ export type WithdrawEventInvitationsInput = z.infer<
 >;
 
 export interface WithdrawEventInvitationsOutput {
-  /** The event after the write, like `getEvent()` */
   readonly event: GetEventOutput;
   readonly withdrawn_citizen_ids: string[];
 }
 
 /**
- * A manager withdraws the open invitations of citizens to an app event. The
- * citizens get no notification: their invitation notification shows that the
- * invitation is withdrawn.
+ * The citizens get no notification: their invitation notification shows that
+ * the invitation is withdrawn
  */
 export const withdrawEventInvitations = (
   context: ApplicationContext,

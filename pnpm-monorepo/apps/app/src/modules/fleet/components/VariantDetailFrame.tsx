@@ -12,21 +12,14 @@ import { VariantWikiPagePrompt } from "./VariantWikiPagePrompt";
 
 interface Props {
   readonly variant: VariantDetail;
-  /**
-   * The embedded wiki node (start page, subpage or snapshots), rendered
-   * between the metadata and the ships table; nothing renders when absent
-   * (no linked page, or the viewer cannot read it)
-   */
+  /** Absent without a linked page that the viewer can read */
   readonly wikiContent?: ReactNode;
   readonly searchParams: Promise<SearchParams>;
 }
 
 /**
- * The variant detail frame shared by the plain variant page and its
- * embedded wiki routes: metadata head, the wiki section (sidebar + page,
- * natural height with a sticky sidebar) and the cursor-paginated ships
- * table below. Per-page rather than a layout because layouts cannot read
- * the searchParams the ships cursor lives in.
+ * Per page and not a layout, because layouts cannot read the searchParams of
+ * the ships cursor.
  */
 export const VariantDetailFrame = async ({
   variant,

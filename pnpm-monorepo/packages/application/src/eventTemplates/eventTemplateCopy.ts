@@ -18,7 +18,6 @@ import {
   LONG_TRANSACTION_TIMEOUT_IN_MILLISECONDS,
 } from "./containerContentCopy.js";
 
-/** The fields of the new template */
 export interface EventTemplateCopyFields {
   readonly name: string;
   readonly description: string | null;
@@ -32,14 +31,11 @@ export interface EventTemplateCopyFields {
 }
 
 export interface EventTemplateCopySource {
-  /** The event or the template whose lineup, briefing and cover the copy takes */
   readonly columns: EventContainerColumns;
-  /** Selected with `COPYABLE_UPLOAD_SELECT` */
   readonly coverImage: CopyableUpload | null;
   /**
-   * True when the copy of a source without a briefing root page gets the
-   * empty root page, like a new template. False copies the pages of the
-   * source without a root (see the known defect of the duplicate).
+   * False copies the pages of the source without a root (see the known defect
+   * of `duplicateEventTemplate()`)
    */
   readonly seedsMissingBriefingRoot: boolean;
 }
@@ -50,11 +46,7 @@ export interface EventTemplateCopyResult {
   readonly pageCount: number;
 }
 
-/**
- * Creates a personal template of the citizen from an event or from a
- * template: the fields, the cover, the lineup and the briefing carry over.
- * No permission check: the caller checks the source.
- */
+/** No permission check: the caller checks the source */
 export const createEventTemplateCopy = async (
   context: ApplicationContext,
   citizenId: string,
@@ -64,19 +56,14 @@ export const createEventTemplateCopy = async (
   const content = await loadContainerCopySource(context, source.columns);
 
   /**
-   * Keyed on the root page, like the creation of an event: an event
-   * predating the briefing feature has pages to copy but no root, and a
-   * template without a root page has no briefing and no way back to one.
+   * Keyed on the root page, like the creation of an event: a template
+   * without a root page has no briefing and no way back to one.
    */
   const copiesBriefing =
     !source.seedsMissingBriefingRoot || content.rootPage !== null;
 
   return context.prisma.$transaction(
     async (transaction) => {
-      /**
-       * The template gets its own cover object, so editing or deleting one
-       * never touches the other.
-       */
       const coverImage = source.coverImage
         ? await copyUploadInTransaction(
             context,

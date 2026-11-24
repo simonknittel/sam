@@ -15,7 +15,6 @@ interface Props {
   readonly className?: string;
 }
 
-/** Next.js gives the errors of Server Components a digest for the server logs */
 const getDigest = (error: unknown) =>
   typeof error === "object" &&
   error !== null &&

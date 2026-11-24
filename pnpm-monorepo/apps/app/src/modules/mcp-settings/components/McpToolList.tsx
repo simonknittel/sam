@@ -3,14 +3,9 @@ import type { ReactNode } from "react";
 
 interface Props {
   readonly groups: readonly ToolCatalogGroup[];
-  /** The switch of a tool, for example a checkbox */
   readonly renderSwitch: (tool: ToolCatalogEntry) => ReactNode;
 }
 
-/**
- * The tools of the catalog with a switch for each tool. The app KI-Agenten and the
- * consent page use it in a modal.
- */
 export const McpToolList = ({ groups, renderSwitch }: Props) => {
   return (
     <div className="flex flex-col gap-6">
@@ -53,7 +48,6 @@ const McpToolGroupSection = ({
 
 interface McpToolRowProps {
   readonly tool: ToolCatalogEntry;
-  /** The switch of the tool */
   readonly children: ReactNode;
 }
 

@@ -30,19 +30,6 @@ export interface MoveWikiPageOutput {
   readonly reset_page_count: number;
 }
 
-/**
- * Moves a page with its subtree below a different parent, after the
- * existing children of the parent. The moved pages take the permissions of
- * their new place (see `buildWikiPageReparentReset()`).
- *
- * @throws NotFoundError when the page does not exist for the actor
- * @throws ForbiddenError when the actor does not manage the page or the new
- * parent, or cannot create a page at the top level
- * @throws ConflictError when the event of the briefing is over, or when a
- * different user or tab changed the tree before
- * @throws ValidationError for the root page of a briefing, for the page
- * itself as the parent and for the top level of a briefing
- */
 export const moveWikiPage = (
   context: ApplicationContext,
   actor: Actor,

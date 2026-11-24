@@ -34,16 +34,12 @@ import {
 } from "../fixtures/sortable-list";
 import { expect, test } from "../fixtures/test";
 
-/**
- * Managing flows also means granting access to arbitrary roles, so the
- * manager needs to see all of them for the access editor to offer any.
- */
+/** The access editor offers only the roles that the manager can see. */
 const MANAGER_PERMISSIONS = ["career;manage", "otherRole;read;roleId=*"];
 
 const createManager = (prisma: PrismaClient, handle = "manager") =>
   createCitizen(prisma, { handle, permissionStrings: MANAGER_PERMISSIONS });
 
-/** The detail page carries two forms, each with a "Speichern" button. */
 const renameForm = (page: Page) =>
   page.locator("form").filter({ has: page.getByLabel("Slug") });
 
@@ -53,8 +49,8 @@ const accessForm = (page: Page) =>
     .filter({ has: page.getByRole("button", { name: "Rolle auswählen" }) });
 
 /**
- * Whether the page as a whole scrolls sideways. Wide content is supposed to
- * scroll inside its own container, never to drag the document with it.
+ * Wide content must scroll inside its own container, never drag the document
+ * with it.
  */
 const hasHorizontalPageOverflow = (page: Page) =>
   page.evaluate(
@@ -63,13 +59,9 @@ const hasHorizontalPageOverflow = (page: Page) =>
       document.documentElement.clientWidth,
   );
 
-/** The notice of the flow editor until a save succeeds */
 const UNSAVED_TEXT = "Ungespeicherte Änderungen";
 
-/**
- * React Flow marks its nodes and edges with these role descriptions. Nodes
- * have no accessible name, thus a test finds a node by its text.
- */
+/** Nodes have no accessible name, thus a test finds a node by its text. */
 const flowNodes = (page: Page) => page.locator('[aria-roledescription="node"]');
 const flowEdges = (page: Page) => page.locator('[aria-roledescription="edge"]');
 
@@ -80,10 +72,9 @@ const enterEditMode = (page: Page) =>
   );
 
 /**
- * Selects a node the way a keyboard user does. Only the selected node shows
- * its toolbar with the edit and the delete button. The toolbar of the node
- * that was selected before can still show until React Flow marks the new
- * node, thus the test waits for that mark.
+ * Only the selected node shows its toolbar. The toolbar of the node that was
+ * selected before can still show until React Flow marks the new node, thus the
+ * test waits for that mark.
  */
 const selectNode = async (page: Page, node: Locator) => {
   await node.focus();
@@ -112,9 +103,6 @@ test("a manager creates a flow, renames it, deletes it and restores it", async (
 
   await page.goto("/app/career/settings");
 
-  /**
-   * Create
-   */
   await clickUntilVisible(
     page.getByRole("button", { name: "Anlegen" }),
     modal(page, "Karrierebaum anlegen"),
@@ -122,7 +110,6 @@ test("a manager creates a flow, renames it, deletes it and restores it", async (
 
   const createDialog = modal(page, "Karrierebaum anlegen");
   await createDialog.getByLabel("Name").fill("Flotten-Übersicht");
-  /** The slug follows the name, transliterated and lowercased */
   await expect(createDialog.getByLabel("Slug")).toHaveValue(
     "flotten-uebersicht",
   );
@@ -138,9 +125,6 @@ test("a manager creates a flow, renames it, deletes it and restores it", async (
     page.getByRole("link", { name: "Flotten-Übersicht" }).first(),
   ).toBeVisible();
 
-  /**
-   * Rename, including the slug
-   */
   const flow = await prisma.flow.findFirstOrThrow({
     where: { slug: "flotten-uebersicht" },
   });
@@ -162,9 +146,6 @@ test("a manager creates a flow, renames it, deletes it and restores it", async (
   await page.goto("/app/career/flotten-uebersicht");
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
 
-  /**
-   * Delete
-   */
   await page.goto(`/app/career/settings/${flow.id}`);
   const deleteDialog = page.getByRole("alertdialog", {
     name: "Karrierebaum löschen?",
@@ -183,9 +164,6 @@ test("a manager creates a flow, renames it, deletes it and restores it", async (
   await page.goto("/app/career/flotte");
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
 
-  /**
-   * Restore
-   */
   await page.goto("/app/career/settings?status=deleted");
   const restoreDialog = page.getByRole("alertdialog", {
     name: "Karrierebaum wiederherstellen?",
@@ -242,7 +220,6 @@ test("the top bar's Neu menu creates a flow for managers only", async ({
     .poll(() => prisma.flow.count({ where: { slug: "aus-der-kopfleiste" } }))
     .toBe(1);
 
-  /** Without the permission the entry is not offered */
   const outsider = await createCitizen(prisma, { handle: "aussenstehender" });
   await switchUser(outsider.user);
   await page.goto("/app/apps");
@@ -265,7 +242,6 @@ test("the Cmd+K menu opens the create modal of a flow with the focus in it", asy
   await signIn(manager.user);
 
   await page.goto("/app/apps");
-  /** The shortcut listener is only available after the hydration */
   await waitForAppShellHydration(page);
 
   const cmdK = page.getByRole("dialog", { name: "Navigation" });
@@ -283,7 +259,6 @@ test("the Cmd+K menu opens the create modal of a flow with the focus in it", asy
   const dialog = modal(page, "Neuer Karrierebaum");
   await expect(dialog).toBeVisible();
   await expect(cmdK).toBeHidden();
-  /** The closed menu must not take the focus from the modal */
   await expect(dialog.getByLabel("Name")).toBeFocused();
   await page.keyboard.type("Aus der Suche");
   await expect(dialog.getByLabel("Slug")).toHaveValue("aus-der-suche");
@@ -319,7 +294,7 @@ test("the settings pages hydrate cleanly and never scroll the page sideways", as
   expect(hydrationErrors).toEqual([]);
   expect(await hasHorizontalPageOverflow(page)).toBe(false);
 
-  /** Again, because the mismatch only showed from the second render on */
+  /** Again, because the mismatch shows only from the second render on */
   await page.goto("/app/career/settings");
   await waitForAppShellHydration(page);
   expect(hydrationErrors).toEqual([]);
@@ -394,7 +369,6 @@ test("duplicating copies the diagram but grants nobody access", async ({
   await dialog.getByRole("button", { name: "Speichern" }).click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
-  /** The copy sits directly after its source */
   const flows = await prisma.flow.findMany({
     where: { deletedAt: null },
     orderBy: { position: "asc" },
@@ -417,7 +391,6 @@ test("duplicating copies the diagram but grants nobody access", async ({
   await expect(page.getByText("Erster Knoten")).toBeVisible();
   await expect(page.getByText("Zweiter Knoten")).toBeVisible();
 
-  /** The source flow is untouched */
   const source = await prisma.flow.findFirstOrThrow({
     where: { slug: "academy" },
     include: { nodes: true, roleAccess: true },
@@ -425,10 +398,6 @@ test("duplicating copies the diagram but grants nobody access", async ({
   expect(source.nodes).toHaveLength(2);
   expect(source.roleAccess).toHaveLength(1);
 
-  /**
-   * The reader sees the source but never the copy — neither in the
-   * navigation nor through a direct URL.
-   */
   await switchUser(reader.user);
 
   await page.goto("/app/career/academy");
@@ -448,14 +417,12 @@ test("duplicating copies the diagram but grants nobody access", async ({
 const flowHandle = (page: Page, name: string) =>
   page.getByRole("button", { name: `${name} verschieben` });
 
-/** The rows of the flows table, without its header row */
 const flowRows = (page: Page) =>
   page
     .getByRole("main")
     .getByRole("row")
     .filter({ has: page.getByRole("button", { name: /verschieben$/ }) });
 
-/** Each row starts with the name of its flow */
 const expectFlowOrder = (page: Page, names: readonly string[]) =>
   expect(flowRows(page)).toHaveText(
     names.map((name) => new RegExp(`^${name}`)),
@@ -469,7 +436,6 @@ const flowSlugsByPosition = async (prisma: PrismaClient) => {
   return flows.map((flow) => flow.slug);
 };
 
-/** Each gesture moves "Erster" below "Zweiter" */
 const REORDER_GESTURES = [
   {
     name: "keyboard",
@@ -482,7 +448,6 @@ const REORDER_GESTURES = [
         flowHandle(page, "Erster"),
         flowHandle(page, "Zweiter"),
         async () => {
-          /** The dragged row is pinned to its column and its container */
           expect(await hasHorizontalPageOverflow(page)).toBe(false);
         },
       ),
@@ -508,7 +473,6 @@ for (const { name, drag } of REORDER_GESTURES) {
     await page.goto("/app/career/settings");
     await waitForAppShellHydration(page);
 
-    /** Screen readers get German texts with the name, not with the id */
     await expect(flowHandle(page, "Erster")).toHaveAccessibleDescription(
       /Leertaste/,
     );
@@ -517,7 +481,6 @@ for (const { name, drag } of REORDER_GESTURES) {
       .poll(() => dragNarration(page))
       .toContain('"Erster" auf Position 2 von 2 abgelegt.');
 
-    /** The new order shows at once after the drop … */
     await expectFlowOrder(page, ["Zweiter", "Erster"]);
 
     await expect(page.getByText(SAVED_TEXT)).toBeVisible();
@@ -526,16 +489,14 @@ for (const { name, drag } of REORDER_GESTURES) {
       .toEqual(["zweiter", "erster"]);
 
     /**
-     * … and stays after the save. Then the order comes from the server render
-     * that the save refreshed, not from the drop.
+     * The order now comes from the server render that the save refreshed, not
+     * from the drop.
      */
     await expectFlowOrder(page, ["Zweiter", "Erster"]);
 
-    /** The new order survives a reload of the settings page … */
     await page.reload();
     await expectFlowOrder(page, ["Zweiter", "Erster"]);
 
-    /** … and reaches the career navigation */
     await page.goto("/app/career/erster");
     await expect(
       page.getByRole("navigation").getByRole("link").first(),
@@ -569,7 +530,6 @@ test("a reorder of a stale list fails and shows the current list", async ({
       "Die Reihenfolge war veraltet. Die Liste ist jetzt aktuell, bitte versuche es erneut.",
     ),
   ).toBeVisible();
-  // The refresh shows the flow that made the order stale
   await expectFlowOrder(page, ["Erster", "Zweiter", "Dritter"]);
   expect(await flowSlugsByPosition(prisma)).toEqual([
     "erster",
@@ -629,14 +589,11 @@ test("read access opens a flow without an edit affordance, edit access saves it"
   );
   await page.getByRole("button", { name: "Speichern" }).click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
-  /** The write went through as the member, not just as a toast */
   await expect
     .poll(() => prisma.flow.findUniqueOrThrow({ where: { id: flow.id } }))
     .toMatchObject({ updatedById: member.entity.id });
-  /** The save writes all edges again, only with their connection */
   expect(await savedEdges()).toEqual(edgesBeforeSave);
 
-  /** Revoking hides the flow again, direct URL included */
   await prisma.flowRoleAccess.deleteMany({ where: { flowId: flow.id } });
 
   await page.goto("/app/career/academy");
@@ -673,9 +630,6 @@ test("the editor edits, deletes and adds a node, and each save keeps the change"
   await enterEditMode(page);
   await expect(flowEdges(page)).toHaveCount(1);
 
-  /**
-   * Edit
-   */
   await selectNode(page, flowNodes(page).filter({ hasText: "Erster Knoten" }));
   const editDialog = modal(page, "Element bearbeiten");
   await page.getByRole("button", { name: "Bearbeiten", exact: true }).click();
@@ -694,9 +648,6 @@ test("the editor edits, deletes and adds a node, and each save keeps the change"
     .toEqual(["Bearbeiteter Knoten", "Zweiter Knoten"]);
   expect(await savedEdgeCount()).toBe(1);
 
-  /**
-   * Delete
-   */
   await selectNode(page, flowNodes(page).filter({ hasText: "Zweiter Knoten" }));
   await page.getByRole("button", { name: "Löschen", exact: true }).click();
 
@@ -707,9 +658,6 @@ test("the editor edits, deletes and adds a node, and each save keeps the change"
   await expect.poll(savedMarkdown).toEqual(["Bearbeiteter Knoten"]);
   expect(await savedEdgeCount()).toBe(0);
 
-  /**
-   * Add
-   */
   const addDialog = modal(page, "Element hinzufügen");
   await page.getByRole("button", { name: "Element hinzufügen" }).click();
   await toggleLabel(
@@ -730,7 +678,6 @@ test("the editor edits, deletes and adds a node, and each save keeps the change"
     .poll(savedMarkdown)
     .toEqual(["Bearbeiteter Knoten", "Neuer Knoten"]);
 
-  /** A reload shows what the database has */
   await page.reload();
   await expect(flowNodes(page)).toHaveCount(2);
   await expect(page.getByText("Bearbeiteter Knoten")).toBeVisible();
@@ -754,10 +701,6 @@ test("Backspace deletes the selected node only in edit mode and never from the n
   await page.goto("/app/career/academy");
   await waitForAppShellHydration(page);
 
-  /**
-   * View mode: a click selects the node, but the node shows no resize
-   * handles and Backspace does not delete it
-   */
   await node.click();
   await expect(node).toHaveClass(/\bselected\b/);
   await expect(page.locator(".react-flow__resize-control")).toHaveCount(0);
@@ -768,9 +711,6 @@ test("Backspace deletes the selected node only in edit mode and never from the n
   await expect(flowNodes(page)).toHaveCount(1);
   await expect(page.getByText(UNSAVED_TEXT)).toHaveCount(0);
 
-  /**
-   * Edit mode: Backspace in the node dialog does not delete the node
-   */
   await selectNode(page, node);
   const editDialog = modal(page, "Element bearbeiten");
   await page.getByRole("button", { name: "Bearbeiten", exact: true }).click();
@@ -781,7 +721,6 @@ test("Backspace deletes the selected node only in edit mode and never from the n
   await editDialog.getByRole("button", { name: "Schließen" }).click();
   await expect(editDialog).toBeHidden();
 
-  /** Outside of the dialog, Backspace deletes the selected node */
   await selectNode(page, node);
   await page.keyboard.press("Backspace");
   await expect(flowNodes(page)).toHaveCount(0);
@@ -789,8 +728,8 @@ test("Backspace deletes the selected node only in edit mode and never from the n
 });
 
 /**
- * The role node types have their own forms and node components. "Rolle" is
- * also a part of "Citizen einer Rolle", thus a pattern matches the full label.
+ * "Rolle" is also a part of "Citizen einer Rolle", thus a pattern matches the
+ * full label.
  */
 const ROLE_NODE_TYPES = [
   { label: /^Rolle$/, type: FlowNodeType.ROLE },
@@ -819,9 +758,6 @@ for (const { label, type } of ROLE_NODE_TYPES) {
     await page.goto("/app/career/academy");
     await enterEditMode(page);
 
-    /**
-     * Add
-     */
     const addDialog = modal(page, "Element hinzufügen");
     await page.getByRole("button", { name: "Element hinzufügen" }).click();
     await toggleLabel(
@@ -840,13 +776,9 @@ for (const { label, type } of ROLE_NODE_TYPES) {
       .poll(savedNodes)
       .toEqual([{ type, roleId: manager.role.id, showUnlocked: false }]);
 
-    /**
-     * Edit
-     */
     await selectNode(page, flowNodes(page));
     const editDialog = modal(page, "Element bearbeiten");
     await page.getByRole("button", { name: "Bearbeiten", exact: true }).click();
-    /** The node gets a different role */
     await pickRole(
       editDialog.getByRole("button", { name: manager.role.name }),
       otherRole.name,
@@ -865,9 +797,6 @@ for (const { label, type } of ROLE_NODE_TYPES) {
       .poll(savedNodes)
       .toEqual([{ type, roleId: otherRole.id, showUnlocked: true }]);
 
-    /**
-     * Delete
-     */
     await selectNode(page, flowNodes(page));
     await page.getByRole("button", { name: "Löschen", exact: true }).click();
 
@@ -901,7 +830,6 @@ test("granting access in the management UI lets a role read the flow", async ({
     "academy-zugriff",
   ]);
 
-  /** A new row has the lowest tier */
   await expect(page.getByRole("combobox", { name: "Zugriff" })).toHaveValue(
     "read",
   );
@@ -930,7 +858,6 @@ test("a tag in the access picker filters the roles that the manager sees, a role
     name: "Stufen",
     roles: [alpha, beta, hidden],
   });
-  /** This manager sees only the first two roles */
   const manager = await createCitizen(prisma, {
     handle: "manager",
     permissionStrings: [
@@ -961,7 +888,6 @@ test("a tag in the access picker filters the roles that the manager sees, a role
     1,
   );
 
-  /** The tag shows the roles that the manager sees and adds no row */
   const popover = await openRolePicker(
     page.getByRole("button", { name: "Rolle auswählen" }),
   );
@@ -972,7 +898,6 @@ test("a tag in the access picker filters the roles that the manager sees, a role
   ]);
   await expect(rows).toHaveCount(1);
 
-  /** A role adds a row with the lowest tier */
   await rolePickerOption(popover, "alpha-stufe").click();
   const betaOption = rolePickerOption(popover, "beta-stufe");
   await betaOption.click();
@@ -980,7 +905,6 @@ test("a tag in the access picker filters the roles that the manager sees, a role
   await expect(tierOf("alpha-stufe")).toHaveValue("read");
   await expect(tierOf("beta-stufe")).toHaveValue("read");
 
-  /** A listed role has a checkmark, and a click on it removes its row */
   await expect(betaOption).toHaveAttribute("aria-selected", "true");
   await betaOption.click();
   await expect(betaOption).toHaveAttribute("aria-selected", "false");
@@ -990,7 +914,6 @@ test("a tag in the access picker filters the roles that the manager sees, a role
   await accessForm(page).getByRole("button", { name: "Speichern" }).click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
-  /** The row of the hidden role stays as it was */
   const savedAccess = async () => {
     const roleAccess = await prisma.flowRoleAccess.findMany({
       where: { flowId: flow.id },
@@ -1035,7 +958,6 @@ test("saving access keeps every role's tier on its own row", async ({
 
   await signIn(manager.user);
   await page.goto(`/app/career/settings/${flow.id}`);
-  /** The select is controlled, so a change before hydration is discarded */
   await waitForAppShellHydration(page);
 
   const rows = page.getByRole("listitem").filter({
@@ -1051,7 +973,6 @@ test("saving access keeps every role's tier on its own row", async ({
   await expect(tierOf("beta-liest")).toHaveValue("read");
   await expect(tierOf("gamma-bearbeitet")).toHaveValue("update");
 
-  /** Flip one role, save, and confirm nothing else moved or changed */
   await tierOf("beta-liest").selectOption("update");
   await accessForm(page).getByRole("button", { name: "Speichern" }).click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
@@ -1061,7 +982,6 @@ test("saving access keeps every role's tier on its own row", async ({
   await expect(tierOf("beta-liest")).toHaveValue("update");
   await expect(tierOf("gamma-bearbeitet")).toHaveValue("update");
 
-  /** And a reload agrees with what the editor showed */
   await page.reload();
   await expect(tierOf("alpha-bearbeitet")).toHaveValue("update");
   await expect(tierOf("beta-liest")).toHaveValue("update");
@@ -1106,7 +1026,6 @@ test("career;manage alone grants access to every flow, nothing grants none", asy
     page.getByRole("button", { name: "Bearbeiten de-/aktivieren" }),
   ).toBeVisible();
 
-  /** Without any access the app hides career and refuses its URLs */
   await switchUser(outsider.user);
 
   await page.goto("/app/apps");

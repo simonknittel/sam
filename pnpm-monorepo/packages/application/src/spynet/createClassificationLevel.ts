@@ -16,7 +16,6 @@ export type CreateClassificationLevelInput = z.infer<
   typeof createClassificationLevelInputSchema
 >;
 
-/** Creates a classification level. Requires `classificationLevel;manage`. */
 export const createClassificationLevel = async (
   context: ApplicationContext,
   actor: Actor,

@@ -46,20 +46,13 @@ export default async function Page(
   );
 
   const { variantId, slug } = await props.params;
-  /** Without access to the variant pages, the read answers with a 403 */
   const variant = await getVariantDetail(variantId);
   if (!variant) notFound();
 
   const result = await getVisiblePage(props.params);
-  /**
-   * Invisible pages 404 instead of 403 to avoid leaking their existence —
-   * an unlinked variant, a trashed root and an unreadable page all look
-   * the same.
-   */
   if (!result) notFound();
   const { context, page } = result;
 
-  /** The root page's canonical URL is the plain variant page */
   if (page.id === context.rootPage.id)
     redirect(getVariantWikiRootPath(variantId));
   if (slug?.[0] !== page.slug)

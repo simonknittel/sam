@@ -14,7 +14,6 @@ interface Props {
   readonly menu: WikiLinkMenuState;
 }
 
-/** Actions of the plain-link menu (edit, open, remove) */
 export const WikiLinkMenuActions = ({ editor, menu }: Props) => {
   const saveLink = (href: string) => {
     const trimmed = href.trim();

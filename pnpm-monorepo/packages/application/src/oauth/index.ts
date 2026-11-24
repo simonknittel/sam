@@ -1,4 +1,3 @@
-/** The use cases of the OAuth authorization server of the MCP server */
 export {
   issueAccessToken,
   verifyAccessToken,

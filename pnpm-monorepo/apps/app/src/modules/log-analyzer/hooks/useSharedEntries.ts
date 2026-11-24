@@ -58,19 +58,17 @@ const toEntry = (row: SharedEntry, isNew: boolean): IEntry | null => {
 };
 
 /**
- * Loads the entries other citizens shared and mixes them into the entries of
- * the local parsing. The first request brings the entries which were shared
- * last, every following request continues from the cursor of the response —
- * on the interval of live mode and on the refresh button.
+ * Loads the entries all citizens shared (also the own ones, for example from
+ * another computer) and mixes them into the entries of the local parsing. The
+ * first request brings the entries which were shared last, every following
+ * request continues from the cursor of the response — on the interval of live
+ * mode and on the refresh button.
  *
  * One request goes out for each cycle. A response which is full leaves the
  * remaining entries for the next cycle.
  *
- * A date range reaches events which that polling does not reach, thus it
- * loads its own entries, one page after the other.
- *
- * Returns the function of the refresh button, and whether the entries of the
- * date range are on their way.
+ * A date range reaches events which that polling does not reach, thus it loads
+ * its own entries, one page after the other.
  */
 export const useSharedEntries = () => {
   const {
@@ -140,7 +138,7 @@ export const useSharedEntries = () => {
     fetchingGenerationRef.current = generation;
 
     try {
-      /** The vanilla client keeps no copy of the response in the query cache */
+      /** See `useEntryUpload` */
       const data = await utils.client.logAnalyzer.getSharedEntries.query({
         daysToLoad: clampLogAnalyzerDaysToLoad(daysToLoad),
         cursorId: cursorRef.current,
@@ -171,7 +169,7 @@ export const useSharedEntries = () => {
 
     try {
       do {
-        /** The vanilla client keeps no copy of the pages in the query cache */
+        /** See `useEntryUpload` */
         const page =
           await utils.client.logAnalyzer.getSharedEntriesInRange.query({
             from: gte,

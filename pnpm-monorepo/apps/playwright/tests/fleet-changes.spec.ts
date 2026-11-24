@@ -8,12 +8,6 @@ import {
 import { clickUntilVisible } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
-/**
- * Every level of the fleet settings hides its delete behind the row's action
- * menu, and asks again in a dialog of its own.
- *
- * @returns The open dialog
- */
 const openDeleteDialog = async (
   page: Page,
   rowText: string,
@@ -69,7 +63,7 @@ test("the ship change log lists creations and deletions and filters between them
       deletedAt: new Date(Date.now() - ONE_DAY_MS),
     },
   });
-  /** Old ships have no known creation date, thus the log has no row for them */
+  /** A ship without a known creation date has no row in the log */
   await prisma.ship.create({
     data: {
       ownerId: owner.entity.id,
@@ -195,7 +189,6 @@ test("a delete of a variant that a different user deleted shows the message and 
   await expect(
     page.getByText("Die Variante ist bereits gelöscht."),
   ).toBeVisible();
-  // The refresh shows the list without the variant
   await expect(
     page.getByRole("row").filter({ hasText: variant.name }),
   ).toHaveCount(0);

@@ -11,11 +11,10 @@ import type { ApplicationContext } from "../context.js";
 import type { EffectiveRoles } from "./getEffectiveRolesOfCitizen.js";
 
 /**
- * Effective role ids and permission sets per citizen, with the same rule as
- * the session of the app: the level gate and the inherited roles (see
- * `resolveEffectiveRoles()`). The result has only the citizens that match
- * `where`, are not deleted and have role assignments. No permission check:
- * the automations and the notification router use it to find the receivers.
+ * The same rule as the session of the app (see `resolveEffectiveRoles()`). The
+ * result leaves out deleted citizens and citizens without role assignments. No
+ * permission check: the callers find receivers or check the access of a
+ * citizen.
  */
 export const loadEffectivePermissionsOfCitizens = async (
   context: Pick<ApplicationContext, "prisma">,
@@ -47,11 +46,8 @@ export const loadEffectivePermissionsOfCitizens = async (
 };
 
 /**
- * The effective permissions of the citizens that match `where`, are not
- * deleted and have each of the required permission sets through their
- * effective roles (see `loadEffectivePermissionsOfCitizens()`). No permission
- * check: the recipient rules of the notification router use it to find the
- * receivers.
+ * Only the citizens who have each of the required permission sets. No
+ * permission check, like `loadEffectivePermissionsOfCitizens()`.
  */
 export const findCitizensWithPermissions = async (
   context: Pick<ApplicationContext, "prisma">,
@@ -72,7 +68,6 @@ export const findCitizensWithPermissions = async (
   );
 };
 
-/** The ids of the citizens of `findCitizensWithPermissions()` */
 export const findCitizenIdsWithPermissions = async (
   context: Pick<ApplicationContext, "prisma">,
   where: Prisma.CitizenWhereInput,
@@ -84,10 +79,6 @@ export const findCitizenIdsWithPermissions = async (
     ).keys(),
   );
 
-/**
- * Whether the citizen is not deleted and has each of the required permission
- * sets (see `findCitizensWithPermissions()`)
- */
 export const isCitizenWithPermissions = async (
   context: Pick<ApplicationContext, "prisma">,
   citizenId: string,

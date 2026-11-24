@@ -11,11 +11,9 @@ import { expect, test } from "../fixtures/test";
 
 test.use({ viewport: { width: 390, height: 844 } });
 
-/** The texts that screen readers get */
 const textsForScreenReaders = async (page: Page) =>
   (await accessibilityTree(page)).map((node) => node.name);
 
-/** Whether the focus is inside the element that the toggle controls */
 const isFocusInControlledElement = (toggle: Locator) =>
   toggle.evaluate((button) => {
     const controlledElement = document.getElementById(
@@ -25,7 +23,6 @@ const isFocusInControlledElement = (toggle: Locator) =>
     return controlledElement.contains(document.activeElement);
   });
 
-/** The element that a toggle button shows and hides (its aria-controls) */
 const controlledElement = async (toggle: Locator) => {
   const id = await toggle.getAttribute("aria-controls");
   expect(id).toBeTruthy();
@@ -46,7 +43,6 @@ test("the closed flyout is out of reach and Escape closes the open one", async (
   const toggle = actionBar.getByRole("button", { name: "Apps" });
   const isFocusInFlyout = () => isFocusInControlledElement(toggle);
 
-  /** Closed: neither the keyboard nor a screen reader reaches the content */
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
   await expect
     .poll(() => textsForScreenReaders(page))
@@ -55,7 +51,6 @@ test("the closed flyout is out of reach and Escape closes the open one", async (
   await page.keyboard.press("Tab");
   await expect.poll(isFocusInFlyout).toBe(false);
 
-  /** Open: the content is the next stop of the tab order */
   await clickUntilVisible(
     toggle,
     actionBar.getByRole("button", { name: "Apps", expanded: true }),
@@ -65,7 +60,6 @@ test("the closed flyout is out of reach and Escape closes the open one", async (
   await page.keyboard.press("Tab");
   await expect.poll(isFocusInFlyout).toBe(true);
 
-  /** Escape closes the flyout and moves the focus back to its toggle */
   await page.keyboard.press("Escape");
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
   await expect(toggle).toBeFocused();
@@ -83,7 +77,6 @@ test("the navigation and the filter toggles tell their state", async ({
   await signIn(citizen.user);
   await page.goto("/app/account/profile");
 
-  /** On a narrow screen the toggle shows only its icon, but keeps its name */
   const navigationToggle = page.getByRole("button", {
     name: "Navigation",
     exact: true,
@@ -95,7 +88,6 @@ test("the navigation and the filter toggles tell their state", async ({
   await clickUntilVisible(navigationToggle, navigation);
   await expect(navigationToggle).toHaveAttribute("aria-expanded", "true");
 
-  /** The navigation lives in the layout, but closes after a followed link */
   await clickUntilUrl(
     page,
     navigation.getByRole("link", { name: "Sitzungen" }),
@@ -128,7 +120,6 @@ test("swipes open and close the flyout, but not from the outer edge", async ({
   const actionBar = page.locator("nav");
   const toggle = actionBar.getByRole("button", { name: "Apps" });
 
-  /** The swipe works only after the action bar hydrated */
   await expect(async () => {
     await swipe(page, { x: 50, y: 400 }, { x: 320, y: 420 });
     await expect(toggle).toHaveAttribute("aria-expanded", "true", {
@@ -136,7 +127,6 @@ test("swipes open and close the flyout, but not from the outer edge", async ({
     });
   }).toPass();
 
-  /** The avatar and the name replace the account button */
   await expect(
     actionBar.getByRole("link", { name: "wisch-nutzer", exact: true }),
   ).toHaveAttribute("href", "/app/account");
@@ -155,7 +145,6 @@ test("admin mode shows the Events and Tasks links of an admin without a hydratio
   signIn,
   enableAdminMode,
 }) => {
-  /** Only admin mode gives this admin the permissions for the two links */
   const admin = await createCitizen(prisma, {
     handle: "mobil-admin",
     admin: true,

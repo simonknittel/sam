@@ -14,13 +14,6 @@ export interface EventPositionApplicationRecipients extends EventOrganizerRecipi
   readonly position: { readonly name: string };
 }
 
-/**
- * The organizers of the event who hear about a new application (see
- * `findEventOrganizers()`), without the applicant, when they can see the
- * lineup now (see `LINEUP_PERMISSION_SETS`). Null when the application does
- * not exist: the applicant withdrew it, or the end of the participation
- * removed it.
- */
 export const findEventPositionApplicationRecipients = async (
   context: ApplicationContext,
   input: FindEventPositionApplicationRecipientsInput,

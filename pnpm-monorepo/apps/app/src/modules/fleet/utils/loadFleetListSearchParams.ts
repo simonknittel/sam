@@ -8,7 +8,6 @@ import {
   ShowDeletedParameter,
 } from "./fleetSearchParameters";
 
-/** The URL filter contract shared by the my-ships and citizen fleet lists */
 export const loadFleetListSearchParams = createCursorPaginationLoader({
   flight_ready: parseAsStringEnum(
     Object.values(FlightReadyParameter),

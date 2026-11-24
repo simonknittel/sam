@@ -1,8 +1,3 @@
-/**
- * The on-site notifications, the web push subscriptions, the notification
- * settings and the realtime channels of the app, and the recipient rules and
- * the delivery store of the notification router
- */
 export {
   archiveIrrelevantOnSiteNotifications,
   type ArchiveIrrelevantOnSiteNotificationsOutput,

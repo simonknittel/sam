@@ -1,10 +1,7 @@
 import { getAppKey } from "./getAppKey";
 import type { App } from "./types";
 
-/**
- * The favorites group is an additional view on the same apps — `featured` and
- * `other` stay complete, so a favorited app shows up twice.
- */
+/** `featured` and `other` stay complete, so a favorited app shows up twice */
 export const groupByFeatured = (
   apps: App[] | null,
   favoriteAppKeys: ReadonlySet<string> = new Set(),

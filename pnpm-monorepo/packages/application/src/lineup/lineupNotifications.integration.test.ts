@@ -18,10 +18,6 @@ const createCitizen = (handle: string) =>
     select: { id: true, handle: true },
   });
 
-/**
- * An app event of the organizer that starts in one hour, with a published
- * lineup or a draft
- */
 const createAppEvent = (organizerId: string, lineupEnabled = true) =>
   prisma.event.create({
     data: {

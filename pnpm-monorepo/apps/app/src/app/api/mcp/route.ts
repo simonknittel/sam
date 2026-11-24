@@ -7,10 +7,6 @@ import {
   temporarilyUnavailableResponse,
 } from "@/modules/oauth/utils/responses";
 
-/**
- * The MCP endpoint (revision 2026-07-28, stateless). Next.js answers `405`
- * for the other methods.
- */
 export const POST = async (request: Request) => {
   if (await isMcpServerDisabled()) return temporarilyUnavailableResponse();
 
@@ -19,7 +15,6 @@ export const POST = async (request: Request) => {
   );
 };
 
-/** Browser-based clients call the endpoint from a different origin */
 export const OPTIONS = () =>
   corsPreflightResponse(
     "POST, OPTIONS",

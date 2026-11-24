@@ -28,24 +28,12 @@ const WikiCitizenMentionNodeView = ({ node, extension }: NodeViewProps) => {
   );
 };
 
-/**
- * The shared package's mention node plus an editor-only React node view, so
- * the citizen popover also shows while editing and in the live collab view
- * for readers. Same name, attributes and schema — only the in-editor
- * rendering differs, so save validation, the collab server and the static
- * renderer stay untouched by this variant.
- */
 const WikiCitizenMentionWithPopover = WikiCitizenMention.extend({
   addNodeView() {
     return ReactNodeViewRenderer(WikiCitizenMentionNodeView);
   },
 });
 
-/**
- * Swaps the plain citizen mention node in an extension list for the
- * popover-enhanced variant, keeping its position in the list and its
- * configured options.
- */
 export const withWikiCitizenMentionPopover = (
   extensions: AnyExtension[],
 ): AnyExtension[] =>

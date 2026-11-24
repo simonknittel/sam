@@ -20,13 +20,7 @@ export const updateManufacturerInputSchema = z.object({
   name: catalogNameSchema,
 });
 
-/**
- * Changes the name of a manufacturer. `assignManufacturerImage()` changes the
- * logo.
- *
- * @throws NotFoundError when the manufacturer does not exist
- * @throws ValidationError when a different manufacturer has the name already
- */
+/** `assignManufacturerImage()` changes the logo */
 export const updateManufacturer = (
   context: ApplicationContext,
   actor: Actor,

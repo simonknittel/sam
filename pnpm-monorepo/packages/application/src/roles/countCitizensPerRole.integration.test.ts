@@ -4,11 +4,7 @@ import { createTestApplicationContext } from "../../test/applicationContext.js";
 import { truncateAllTables } from "../../test/database.js";
 import { countCitizensPerRole } from "./countCitizensPerRole.js";
 
-/**
- * The scheduler starts the function at midnight in Europe/Berlin. The first
- * day of a month makes sure that the counted day rolls back into the month
- * before.
- */
+/** See `fleet/countShips.integration.test.ts` */
 const MIDNIGHT = new Date("2026-10-01T00:00:05+02:00");
 const REPEATED_RUN = new Date("2026-10-01T00:30:00+02:00");
 const COUNTED_DAY = "2026-09-30";

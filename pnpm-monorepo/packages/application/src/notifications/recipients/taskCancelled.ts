@@ -11,11 +11,6 @@ export interface TaskCancelledRecipients {
   readonly recipients: Recipient[];
 }
 
-/**
- * The assignees of the cancelled task who can log in and open tasks, except
- * the citizen who cancelled the task. Null when the task does not exist, is
- * deleted or is not cancelled.
- */
 export const findTaskCancelledRecipients = async (
   context: ApplicationContext,
   input: FindTaskCancelledRecipientsInput,

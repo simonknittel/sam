@@ -42,7 +42,6 @@ const loadSearchParams = createLoader({
     "citizen-asc",
   ]).withDefault("name-asc"),
   q: parseAsString,
-  /** The ids of the tags. A role with one of these tags passes. */
   tags: parseAsArrayOf(parseAsString),
 });
 
@@ -59,7 +58,6 @@ export const RolesTable = async ({ className, searchParams }: Props) => {
     getManagedRoleTags(),
   ]);
 
-  /** The tags of each role, sorted by name like `allTags` */
   const tagsByRoleId = new Map<string, ManagedRoleTag[]>();
   for (const tag of allTags) {
     for (const roleId of tag.roleIds) {
@@ -222,7 +220,6 @@ export const RolesTable = async ({ className, searchParams }: Props) => {
 };
 
 interface RoleTagsCellProps {
-  /** Sorted by name */
   readonly tags: readonly Pick<
     ManagedRoleTag,
     "id" | "name" | "description" | "icon"

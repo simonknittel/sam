@@ -9,9 +9,7 @@ import { Button2, Button2Variant } from "../../Button2";
 interface Props {
   readonly className?: string;
   readonly children: ReactNode;
-  /** Label of the toggle button shown on mobile. Defaults to "Filter". */
   readonly mobileToggleLabel?: string;
-  /** Icon of the toggle button shown on mobile. Defaults to a filter icon. */
   readonly mobileToggleIcon?: ReactNode;
 }
 

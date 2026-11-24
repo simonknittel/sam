@@ -9,15 +9,13 @@ import type { BadgeRoleTag } from "@/modules/roles/queries/getRoles";
 
 interface Props {
   readonly tagId: BadgeRoleTag["id"];
-  /** Undefined when the roles context does not have the tag */
   readonly tag: BadgeRoleTag | undefined;
   readonly onRemove: (tagId: BadgeRoleTag["id"]) => void;
 }
 
 /**
- * A selected tag under the trigger of the tag picker, with the look of a
- * selected role of the role picker. A selected tag that is not in the roles
- * context (for example, a different user deleted it) shows as a placeholder.
+ * A tag that is not in the roles context (for example, a different user deleted
+ * it) shows as a placeholder.
  */
 export const RoleTagPickerChip = ({ tagId, tag, onRemove }: Props) => {
   return (

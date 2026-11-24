@@ -23,11 +23,8 @@ export interface TransferEventTemplateOwnershipOutput {
 }
 
 /**
- * Hands the template on. Only the owner changes — the role shares stay, so
- * everyone who could use or edit the template still can. The previous owner
- * keeps nothing beyond what those shares grant them, which for a personal
- * template means they lose access entirely; the UI says so before
- * confirming.
+ * The role shares stay. The previous owner keeps nothing beyond what those
+ * shares grant them; the UI says so before confirming.
  */
 export const transferEventTemplateOwnership = (
   context: ApplicationContext,
@@ -58,10 +55,7 @@ export const transferEventTemplateOwnership = (
     if (!newOwner)
       throw new ValidationError(EventTemplateErrorMessage.OwnerNotFound);
 
-    /**
-     * The condition on `deletedAt` keeps a different request from deleting
-     * the template between the check and the write unnoticed
-     */
+    /** The condition on `deletedAt`: see `updateEventTemplate()` */
     await rethrowRecordNotFound(
       () =>
         context.prisma.eventTemplate.update({

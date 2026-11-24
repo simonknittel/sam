@@ -1,9 +1,5 @@
 import type { WikiTreeNode } from "@sam-monorepo/wiki-editor/helpers";
 
-/**
- * The nodes from the root down to the page, the page included. Empty when
- * the page is not part of the tree.
- */
 export const findWikiTreePath = (
   nodes: readonly WikiTreeNode[],
   pageId: string | undefined,

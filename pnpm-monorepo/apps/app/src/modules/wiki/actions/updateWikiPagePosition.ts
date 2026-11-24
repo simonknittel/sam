@@ -7,7 +7,6 @@ import {
 } from "@sam-monorepo/application";
 import { WIKI_ERROR_TEXTS } from "../utils/wikiErrorTexts";
 
-/** Drops the page at a new place in the sidebar tree (see the use case) */
 export const updateWikiPagePosition = createUseCaseAction({
   name: "updateWikiPagePosition",
   schema: updateWikiPagePositionInputSchema,

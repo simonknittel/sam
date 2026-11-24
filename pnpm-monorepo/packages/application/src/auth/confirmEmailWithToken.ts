@@ -18,9 +18,8 @@ export interface ConfirmEmailWithTokenOutput {
 }
 
 /**
- * Confirms the email address of the user that owns the token. The link in
- * the email carries the token, thus the use case is public: the token is the
- * proof, and it never goes into a log or into an error.
+ * No permission check: the token is the proof. It never goes into a log or into
+ * an error.
  */
 export const confirmEmailWithToken = (
   context: ApplicationContext,

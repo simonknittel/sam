@@ -66,33 +66,28 @@ test("the list shows every session of the citizen and the filters narrow it", as
 
   await page.goto("/app/account/sessions");
 
-  // The current session is marked, its user agent is unknown because the
-  // fixture writes the row without going through the NextAuth adapter
+  // The user agent is unknown, because the fixture writes the row without the
+  // NextAuth adapter
   const currentRow = page
     .getByRole("row")
     .filter({ hasText: currentSession.id });
   await expect(currentRow).toBeVisible();
   await expect(currentRow.getByText("Aktuell")).toBeVisible();
   await expect(currentRow.getByText("Unbekannt").first()).toBeVisible();
-  // … and it is the one session that cannot be revoked from here
   await expect(
     currentRow.getByRole("button", { name: "Sitzung löschen" }),
   ).toBeDisabled();
 
-  // The other device shows its parsed user agent
   const otherRow = page.getByRole("row").filter({ hasText: otherDevice.id });
   await expect(otherRow).toBeVisible();
   await expect(otherRow.getByText("Chrome 141 · Windows 10")).toBeVisible();
 
-  // The session token is never rendered
   await expect(page.getByText(otherDevice.sessionToken)).toHaveCount(0);
 
-  // Another citizen's sessions are none of this list's business
   await expect(
     page.getByRole("row").filter({ hasText: strangerDevice.id }),
   ).toHaveCount(0);
 
-  // The status filter defaults to active, so the expired session is hidden
   await expect(
     page.getByRole("row").filter({ hasText: expiredDevice.id }),
   ).toHaveCount(0);

@@ -35,8 +35,6 @@ export type CreateRoleTagInput = z.output<typeof createRoleTagInputSchema>;
 export type CreateRoleTagOutput = RoleTagOutput;
 
 /**
- * Creates a tag, optionally with its first roles. Requires `role;manage`.
- *
  * @throws ValidationError when a tag with the name exists already
  * @throws NotFoundError when a role does not exist
  */

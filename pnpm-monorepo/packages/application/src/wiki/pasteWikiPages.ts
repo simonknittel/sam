@@ -48,14 +48,8 @@ export const pasteWikiPagesInputSchema = z.object({
 
 export type PasteWikiPagesInput = z.infer<typeof pasteWikiPagesInputSchema>;
 
-/** Options of the use case for the app, not fields of the input schema */
 export interface PasteWikiPagesOptions {
-  /** Added to the title of the copy in the mode Child */
   readonly copyTitleSuffix: string;
-  /**
-   * The name of the snapshot that keeps the content of the page that the
-   * mode Replace replaces
-   */
   readonly safetySnapshotName: string;
   /**
    * The fleet variant whose embed of the global wiki shows the form, for the
@@ -70,7 +64,6 @@ export interface PasteWikiPagesOutput {
   readonly slug: string;
   readonly event_id: string | null;
   readonly template_id: string | null;
-  /** True when the mode Replace replaced the root page of a briefing */
   readonly is_briefing_root: boolean;
   /** The new pages, and the replaced page in the mode Replace */
   readonly copied_page_count: number;
@@ -190,27 +183,16 @@ const replaceWikiPageWithCopy = async (
 };
 
 /**
- * Inserts the copied page of the clipboard — optionally with its readable
- * subtree — as new pages: the second half of copy and paste. The clipboard
- * holds only a reference, thus the source is read again with the current
- * permissions of the actor and the last saved content. A copy from the
- * briefing of an event that is over is possible (it is a read), a paste
- * into it is not. See `copyWikiPageSubtree()` for the rules of a copy across
+ * The clipboard holds only a reference, thus the source is read again with the
+ * current permissions of the actor and the last saved content. A copy from the
+ * briefing of an event that is over is possible (it is a read), a paste into
+ * it is not. See `copyWikiPageSubtree()` for the rules of a copy across
  * scopes.
  *
  * The mode Child puts the copy below the target page. The mode Replace puts
- * the copy onto the target page itself (see `replaceWikiPageWithCopy()`):
- * the only way to move a whole briefing onto the locked root page of a
- * different briefing.
- *
- * @throws NotFoundError when the source or the target does not exist for
- * the actor
- * @throws ForbiddenError when the actor does not manage the target, or
- * cannot create a page at the top level
- * @throws ConflictError when the event of the briefing is over, or the
- * collab server is not configured or did not take the content
- * @throws ValidationError for the mode Replace without a target or with the
- * source as the target
+ * the copy onto the target page itself (see `replaceWikiPageWithCopy()`): the
+ * only way to move a whole briefing onto the locked root page of a different
+ * briefing.
  */
 export const pasteWikiPages = (
   context: ApplicationContext,

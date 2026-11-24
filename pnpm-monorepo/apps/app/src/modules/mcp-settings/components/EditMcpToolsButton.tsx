@@ -11,14 +11,13 @@ interface Props {
   readonly displayName: string;
   readonly clientHost: string;
   /**
-   * The tools that the client can see. The rows share one object for each
-   * admin mode, thus the page sends each list once.
+   * The rows share one object for each admin mode, thus the page sends each
+   * list once.
    */
   readonly toolGroups: readonly ToolCatalogGroup[];
   readonly disabledToolNames: readonly string[];
 }
 
-/** The tools of a connected client. Each change saves at once. */
 export const EditMcpToolsButton = ({
   className,
   grantId,

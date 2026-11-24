@@ -20,7 +20,6 @@ export interface LineupPosition {
   readonly id: string;
   readonly name: string;
   readonly description: string | null;
-  /** The ship variants of the position, in their order */
   readonly required_variants: { readonly id: string; readonly name: string }[];
   /**
    * The required roles that the actor can see, sorted by name. The app shows
@@ -50,11 +49,7 @@ export type EventPositionTreeRow = Prisma.EventPositionGetPayload<{
   select: typeof POSITION_TREE_SELECT;
 }>;
 
-/**
- * The root positions of the lineup of an event, with their children four
- * levels deep. Carries no permission check: the caller resolves the event
- * first.
- */
+/** No permission check: the caller resolves the event first */
 export const findEventPositionTree = (
   context: ApplicationContext,
   eventId: string,
@@ -72,7 +67,6 @@ interface RoleReference {
   readonly name: string;
 }
 
-/** One level of the position tree, as `POSITION_TREE_SELECT` loads it */
 interface PositionTreeRow {
   readonly id: string;
   readonly name: string;
@@ -96,7 +90,6 @@ const collectRequiredRoleIds = (
     ...collectRequiredRoleIds(position.childPositions ?? []),
   ]);
 
-/** The required roles of the positions that the actor can see, by id */
 const findVisibleRequiredRoles = async (
   context: ApplicationContext,
   actor: Actor,
@@ -144,10 +137,7 @@ const toLineupPosition = (
   ),
 });
 
-/**
- * The lineup of an event as the output of the use cases. Carries no
- * permission check: the caller checks the event first.
- */
+/** No permission check: the caller checks the event first */
 export const toEventLineupOutput = async (
   context: ApplicationContext,
   actor: Actor,
@@ -171,10 +161,7 @@ export const toEventLineupOutput = async (
   };
 };
 
-/**
- * One position with its children, as the output of the use cases. Carries
- * no permission check: the caller checks the position first.
- */
+/** No permission check: the caller checks the position first */
 export const toLineupPositionOutput = async (
   context: ApplicationContext,
   actor: Actor,
@@ -193,15 +180,10 @@ export const toLineupPositionOutput = async (
   );
 };
 
-/**
- * The output of a write of one position that serves the lineups of the
- * events and of the event templates
- */
 export interface LineupPositionWriteOutput {
   readonly position_id: string;
 }
 
-/** The output of a copy of positions into a lineup */
 export interface LineupCopyOutput {
   /** The number of new positions, with the children */
   readonly position_count: number;

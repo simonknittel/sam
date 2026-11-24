@@ -9,16 +9,10 @@ import { MAXIMUM_LOG_ANALYZER_DAYS_TO_LOAD } from "@sam-monorepo/domain";
 import * as z from "zod";
 import { protectedProcedure, toTrpcError } from "../../trpc";
 
-/**
- * The log entries other citizens shared. The kill switch closes the read
- * path of the sharing.
- */
 export const getSharedEntries = protectedProcedure
   .input(
     z.object({
-      /** 0 loads without a time limit, as the local parsing does. */
       daysToLoad: z.int().min(0).max(MAXIMUM_LOG_ANALYZER_DAYS_TO_LOAD),
-      /** The newest entry the client holds. Absent for the first request. */
       cursorId: idSchema.optional(),
     }),
   )

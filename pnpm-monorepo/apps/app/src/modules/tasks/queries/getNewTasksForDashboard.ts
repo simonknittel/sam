@@ -10,7 +10,6 @@ import { cache } from "react";
 /** Keeps the tile short; the tasks list shows all new tasks */
 const MAXIMUM_NEW_TASKS = 5;
 
-/** See `findNewTaskRows` */
 export const getNewTasksForDashboard = cache(
   withTrace("getNewTasksForDashboard", async () => {
     try {

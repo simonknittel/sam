@@ -63,7 +63,6 @@ import { canActorSeeEvent } from "./eventVisibility.js";
 import { resolveVisibilityRoleIds } from "./eventVisibilityRoles.js";
 import { loadEventOutput, type GetEventOutput } from "./getEvent.js";
 
-/** What an update changed */
 export enum EventChange {
   Name = "name",
   Description = "description",
@@ -77,10 +76,8 @@ export enum EventChange {
 }
 
 /**
- * Only the fields of the input change. The fields of an event that comes
- * from Discord stay as Discord gives them: only `lineup_enabled` can change.
- * The participation of a Discord event is always on and needs no
- * application: its sign-ups come from Discord.
+ * Only the fields of the input change. The participation of a Discord event is
+ * always on and needs no application: its sign-ups come from Discord.
  */
 export const updateEventInputSchema = z.object({
   event_id: idSchema,
@@ -106,7 +103,7 @@ export const updateEventInputSchema = z.object({
     .boolean()
     .optional()
     .describe(
-      "Only for an event of SAM (source app). False cancels all sign-ups (each participant gets a notification), withdraws the open invitations and applications, removes the assigned citizens and the applications of all positions (the positions stay) and hides the lineup; while it is false, nobody can sign up, apply or be added. True opens the sign-up again, but restores nothing. Needs can_manage_positions.",
+      "Only for an event of SAM (source app). False cancels all sign-ups (each participant gets a notification), withdraws the open invitations and applications, removes the assigned citizens and the applications of all positions (the positions stay) and hides the lineup; while it is false, nobody can sign up, apply or be added. True opens the sign-up again, but restores nothing. Needs can_manage and can_manage_positions.",
     ),
   application_required: z
     .boolean()
@@ -118,20 +115,17 @@ export const updateEventInputSchema = z.object({
 
 export type UpdateEventInput = z.infer<typeof updateEventInputSchema>;
 
-/** Options of the use case for the app, not fields of the input schema */
 export interface UpdateEventOptions {
   /**
-   * True when the use case carries a changed name, description or schedule
-   * over to the Discord event after the save, and the caller tells the user
-   * that a restricted event stays visible on Discord (only the app can show
-   * the result). Without it, such a change of an event that is published on
-   * Discord is refused: else the Discord event would show outdated data, or
-   * the user would not know that the guild still sees the event.
+   * The caller tells the user that a restricted event stays visible on Discord.
+   * Without it, a changed name, description or schedule and a restriction of an
+   * event that is published on Discord are refused: else the Discord event
+   * would show outdated data, or the user would not know that the guild still
+   * sees the event.
    */
   readonly syncsDiscordPublication?: boolean;
 }
 
-/** The Discord step of an update. Only the app reads it (camelCase keys). */
 export interface UpdateEventDiscordResult {
   /** Null when the name, the description and the schedule did not change */
   readonly sync: DiscordSyncResult | null;
@@ -143,15 +137,8 @@ export interface UpdateEventDiscordResult {
 }
 
 export interface UpdateEventOutput {
-  /** The event after the write, like `getEvent()` */
   readonly event: GetEventOutput;
-  /** Empty when the event already had the given values */
   readonly changes: EventChange[];
-  /**
-   * Only with the option `syncsDiscordPublication`. The MCP tools parse the
-   * output with a strict schema, thus the key must not exist without the
-   * option.
-   */
   readonly discord?: UpdateEventDiscordResult;
 }
 
@@ -176,7 +163,7 @@ const CONTENT_CHANGES: ReadonlySet<EventChange> = new Set([
   EventChange.Schedule,
 ]);
 
-/** The changes of the switches: they write no detail field */
+/** They write no detail field */
 const SWITCH_CHANGES: ReadonlySet<EventChange> = new Set([
   EventChange.LineupEnabled,
   EventChange.ParticipationEnabled,
@@ -186,20 +173,6 @@ const SWITCH_CHANGES: ReadonlySet<EventChange> = new Set([
 const toSortedKey = (roleIds: readonly string[]) =>
   roleIds.toSorted().join(",");
 
-/**
- * Changes the details of an app event (name, description, schedule,
- * visibility), whether its lineup is visible, whether its participation is
- * on and whether the sign-up needs an application. Writes nothing when the
- * values are the same.
- *
- * The switch of the participation to false cancels all sign-ups and clears
- * the lineup assignments and applications in the same transaction (see
- * `clearEventParticipation()`), and each cancelled participant gets the
- * "removed from the event" notification. The switch of the applications to
- * false approves the open applications in the same transaction (see
- * `closeOpenApplications()`), and each approved applicant gets the
- * "approved" notification.
- */
 export const updateEvent = (
   context: ApplicationContext,
   actor: Actor,
@@ -214,9 +187,6 @@ export const updateEvent = (
     const changesParticipation = input.participation_enabled !== undefined;
     const changesApplication = input.application_required !== undefined;
 
-    /**
-     * Authorize the request
-     */
     const event = await context.prisma.event.findUnique({
       where: {
         id: input.event_id,
@@ -268,9 +238,6 @@ export const updateEvent = (
       throw new ForbiddenError("The user cannot manage the participation");
     const citizenId = actor.citizen?.id ?? null;
 
-    /**
-     * Validate the request
-     */
     const startTime = input.start_time ?? event.startTime;
     const endTime = input.end_time ?? event.endTime;
     if (changesDetails && (endTime === null || endTime <= startTime))
@@ -293,9 +260,6 @@ export const updateEvent = (
         )
       : previousRoleIds;
 
-    /**
-     * Diff the fields
-     */
     const name = input.name ?? event.name;
     const description =
       input.description === undefined
@@ -354,10 +318,6 @@ export const updateEvent = (
         ...(syncsDiscordPublication ? { discord: NO_DISCORD_CHANGE } : {}),
       };
 
-    /**
-     * The guild keeps seeing a published event, thus a restricted event
-     * stays visible on Discord
-     */
     const restrictsVisibility =
       changes.includes(EventChange.Visibility) &&
       visibility === EventVisibility.RESTRICTED;
@@ -368,9 +328,6 @@ export const updateEvent = (
     )
       throw new ConflictError(EventErrorMessage.PublishedOnDiscord);
 
-    /**
-     * Update the event and record the activity entries atomically
-     */
     const { clearedParticipation, closedApplications } =
       await context.prisma.$transaction(async (transaction) => {
         await transaction.event.update({
@@ -595,7 +552,6 @@ export const updateEvent = (
         type: "EventLineupEnabled",
         payload: { eventId: event.id, actorCitizenId: citizenId },
       });
-    // The actor gets no notification about the own removal
     for (const cancelledCitizenId of clearedParticipation.cancelledCitizenIds)
       if (cancelledCitizenId !== citizenId)
         notifications.push({
@@ -616,11 +572,6 @@ export const updateEvent = (
     );
     await triggerNotificationsAfterSave(context, notifications);
 
-    /**
-     * Carry the change over to Discord if the event is published there. A
-     * no-op otherwise, and never able to undo the save above — a Discord
-     * problem only comes back as a warning next to the success message.
-     */
     const discord = syncsDiscordPublication
       ? await syncDiscordAfterUpdate(context, event.id, {
           changesContent,
@@ -636,13 +587,13 @@ export const updateEvent = (
   });
 
 /**
- * Narrowing a published event's visibility does not narrow it on Discord —
- * the guild keeps seeing it. The caller says it out loud rather than
- * silently unpublishing, which would be a surprise of its own. The publish
- * state is read after the sync, because a sync can clear it.
+ * The guild keeps seeing a published event that becomes restricted. The caller
+ * says it out loud rather than silently unpublishing, which would be a surprise
+ * of its own. The publish state is read after the sync, because a sync can
+ * clear it.
  *
- * A failure cannot undo the save, thus a thrown error becomes Failed: else
- * the user would save the change again.
+ * A failure cannot undo the save, thus a thrown error becomes Failed: else the
+ * user would save the change again.
  */
 const syncDiscordAfterUpdate = async (
   context: ApplicationContext,

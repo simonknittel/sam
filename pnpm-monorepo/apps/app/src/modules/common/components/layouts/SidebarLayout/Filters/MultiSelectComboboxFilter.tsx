@@ -19,7 +19,6 @@ interface Item {
   readonly group?: string;
 }
 
-/** Combobox detects the groups by their `items` and filters inside them */
 interface ItemGroup {
   readonly value: string;
   readonly items: Item[];

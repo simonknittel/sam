@@ -22,15 +22,11 @@ import { redirect } from "next/navigation";
 import { WIKI_ERROR_TEXTS } from "../utils/wikiErrorTexts";
 import { GLOBAL_WIKI_HREF_MODE } from "../utils/wikiPageHref";
 
-/**
- * The use case takes the page. The variant is only for the redirect back to
- * the variant.
- */
 const schema = deleteWikiPageInputSchema.extend({
   variant_id: idSchema.optional(),
 });
 
-/** Moves the page with its subtree into the trash (see the use case) */
+/** Moves the page with its subtree into the trash */
 export const deleteWikiPage = createAuthenticatedAction(
   "deleteWikiPage",
   schema,

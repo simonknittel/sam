@@ -13,11 +13,6 @@ interface Props {
   readonly staticContent: WikiPageStaticContent;
 }
 
-/**
- * A page's content area, shared by the global wiki page and the event wiki
- * page: the collab editor when the collab server is configured, the static
- * rendering otherwise (and as the editor's fallback while connecting).
- */
 export const WikiPageEditorSection = async ({
   pageId,
   canEdit,

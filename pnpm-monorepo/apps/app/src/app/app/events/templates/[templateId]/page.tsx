@@ -61,10 +61,7 @@ const EventTemplateDetails = async ({ templateId }: DetailsProps) => {
   /** Both actions end in a create the viewer may not be allowed */
   const showsActions = !isDeleted && canCreate;
 
-  /**
-   * A live Discord call, so it only runs for the viewers who actually get
-   * the form it feeds — everyone else would wait on it for nothing.
-   */
+  /** A live Discord call: only for the viewers who get the form */
   const discordChannels = isEditable
     ? await getPublishableGuildChannels()
     : null;

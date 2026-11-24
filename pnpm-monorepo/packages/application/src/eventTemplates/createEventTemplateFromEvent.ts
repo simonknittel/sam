@@ -43,11 +43,9 @@ export interface CreateEventTemplateFromEventOutput {
 }
 
 /**
- * What the template stores so that an event created from it publishes itself
- * the same way the source event was published. Both columns NULL means the
- * source was never published, which prefills "do not publish". Keeping the
- * three fields in one object satisfies the CHECK constraint by construction
- * (see migration publish_events_to_discord).
+ * Both columns NULL means the source is not published, which prefills "do not
+ * publish". Keeping the three fields in one object satisfies the CHECK
+ * constraint by construction (see migration publish_events_to_discord).
  */
 const toDiscordPublishPrefill = (
   context: Pick<ApplicationContext, "urls">,
@@ -92,13 +90,9 @@ const toDiscordPublishPrefill = (
 };
 
 /**
- * Turns a past or upcoming app event into a personal template of the acting
- * manager: core data, cover, visibility prefill, participation switch,
- * lineup and briefing carry over — the reverse direction of the template in `createEvent`.
- *
  * Managing the event is the gate, not merely seeing it: the briefing's
- * MANAGERS-scoped pages and a disabled lineup are readable inside the
- * resulting template, so anything less would hand them to every viewer with
+ * MANAGERS-scoped pages and a disabled lineup are readable inside the resulting
+ * template, so anything less would hand them to every viewer with
  * `event;create`. An event that is over is a source too.
  */
 export const createEventTemplateFromEvent = (
@@ -107,16 +101,13 @@ export const createEventTemplateFromEvent = (
   input: CreateEventTemplateFromEventInput,
 ): Promise<CreateEventTemplateFromEventOutput> =>
   withSpan(context, "createEventTemplateFromEvent", async () => {
-    /**
-     * Authorize the request
-     */
     requirePermission(actor, "event", "read");
     requirePermission(actor, "event", "create");
     const citizenId = requireCitizen(actor).id;
 
     /**
      * Only app events: a Discord event has its cover on Discord's CDN
-     * without an `Upload` row of its own and carries no app briefing.
+     * without an `Upload` row of its own.
      */
     const sourceEvent = await context.prisma.event.findUnique({
       where: {

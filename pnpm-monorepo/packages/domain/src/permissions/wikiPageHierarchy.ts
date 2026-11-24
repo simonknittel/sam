@@ -47,7 +47,6 @@ export const findWikiPageSettingSource = <TPage extends WikiHierarchyPage>(
       ? pagesById.get(current.parentId)
       : undefined;
     if (!parent || visited.has(parent.id)) {
-      // Root reached while inheriting, broken chain or cycle
       source = current;
       break;
     }

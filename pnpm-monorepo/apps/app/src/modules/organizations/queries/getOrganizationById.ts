@@ -12,7 +12,6 @@ import type { Organization } from "@sam-monorepo/database/client";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 
-/** The organization with its members, or the not-found page */
 export const getOrganizationById = cache(
   withTrace("getOrganizationById", async (id: Organization["id"]) => {
     // The id comes from the URL: an id that is not valid names no organization

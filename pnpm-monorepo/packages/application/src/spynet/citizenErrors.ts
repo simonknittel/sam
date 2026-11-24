@@ -1,9 +1,3 @@
-/**
- * The messages of the errors that the citizen use cases throw for a rule of
- * the Spynet. They are the members of an enum, thus an app can map them to
- * its own texts, for example the citizen actions of the Next.js app to the
- * German texts of the Spynet.
- */
 export enum CitizenErrorMessage {
   /** A `NotFoundError` */
   NotFound = "The citizen does not exist or is deleted",
@@ -13,7 +7,6 @@ export enum CitizenErrorMessage {
   BirthdayDayNotInMonth = "The month of the birthday does not have this day",
 }
 
-/** The messages of the errors of the use cases that change a citizen log */
 export enum CitizenLogErrorMessage {
   /** A `NotFoundError` */
   NotFound = "The log does not exist, or its citizen is deleted",

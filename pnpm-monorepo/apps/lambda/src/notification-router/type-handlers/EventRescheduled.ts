@@ -12,8 +12,8 @@ type Payload = {
 };
 
 /**
- * The start of the event moved. The text shows the start at the delivery,
- * thus a second move before the delivery shows the newest start.
+ * The text shows the start at the delivery, thus a second move before the
+ * delivery shows the newest start
  */
 export const EventRescheduledHandler = async (
   context: ApplicationContext,

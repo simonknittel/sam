@@ -1,15 +1,9 @@
-/**
- * The messages of the errors that the role use cases throw for a rule of the
- * roles. They are the members of an enum, thus an app can map them to its
- * own texts, for example the role actions of the Next.js app to the German
- * texts of the role pages.
- */
 export enum RoleErrorMessage {
   /** A `NotFoundError` */
   NotFound = "The role does not exist",
   /** A `ValidationError` */
   NameTaken = "A role with this name exists already",
-  /** A `ValidationError`: a role that inherits itself adds nothing */
+  /** A `ValidationError` */
   SelfInheritance = "A role cannot inherit itself",
   /** A `ValidationError` */
   PermissionStringAddedAndRemoved = "A permission string cannot be in add and in remove",
@@ -20,7 +14,6 @@ export enum RoleErrorMessage {
   UnknownPermissionString = "A permission string of add is not in the permission catalog and is not a rule",
 }
 
-/** The messages of the errors that the role tag use cases throw */
 export enum RoleTagErrorMessage {
   /** A `NotFoundError` */
   NotFound = "The role tag does not exist",
@@ -30,10 +23,6 @@ export enum RoleTagErrorMessage {
   AddedAndRemoved = "An id cannot be in add and in remove",
 }
 
-/**
- * The messages of the errors that the role-assignment use cases throw for a
- * rule of the role assignments
- */
 export enum RoleAssignmentErrorMessage {
   /** A `ConflictError` */
   CitizenDeleted = "The citizen is deleted",

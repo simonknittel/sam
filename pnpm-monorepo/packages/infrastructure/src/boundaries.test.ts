@@ -3,11 +3,8 @@ import { join } from "node:path";
 import { expect, test } from "vitest";
 
 /**
- * The hosts compose the implementations of this package. Thus the package
- * must not import Next.js, React, the modules of the app (`@/…`),
- * `server-only` (a marker of Next.js) or a host. The package `mcp` is in the
- * layer above this package: `mcp` imports this package, thus this package
- * must not import `mcp`.
+ * See the rules in the README. This package and the package `mcp` do not import
+ * each other: the host gives the application context to `mcp`.
  */
 const FORBIDDEN_IMPORT =
   /^(?:next|next\/.*|react|react\/.*|react-dom|react-dom\/.*|server-only|@\/.*|@sam-monorepo\/(?:app|lambda|collab|scripts|playwright|mcp)(?:\/.*)?)$/;
@@ -16,10 +13,7 @@ const FORBIDDEN_IMPORT =
 const IMPORT_SPECIFIER =
   /(?:\bfrom\s*|\bimport\s*\(?\s*|\brequire\s*\(\s*)["']([^"']+)["']/g;
 
-/**
- * The packages of the monorepo that the `package.json` of this package may
- * list. They are the dependency directions of `docs/architecture.md`.
- */
+/** The dependency directions of `docs/architecture.md` */
 const ALLOWED_PACKAGES = [
   "@sam-monorepo/application",
   "@sam-monorepo/database",

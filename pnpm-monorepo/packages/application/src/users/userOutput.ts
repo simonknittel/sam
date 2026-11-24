@@ -12,7 +12,6 @@ export enum UserRoleOutput {
   User = "user",
 }
 
-/** The fields of a user in the output of the user use cases */
 export const USER_OUTPUT_SELECT = {
   id: true,
   name: true,
@@ -45,7 +44,7 @@ export interface UserBanOutput {
 
 export interface UserOutput {
   readonly id: string;
-  /** The name from Discord */
+  /** Display text: the handle of the citizen, not the name from Discord */
   readonly name: string | null;
   /** Redacted, see `redactEmailAddress()` */
   readonly email: string | null;

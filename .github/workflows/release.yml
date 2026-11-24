@@ -7,8 +7,7 @@
 #
 # Requirements:
 # - The Vercel project's Production Branch must be set to `production-gate`, a
-#   frozen branch whose ruleset blocks all pushes, so pushes to main only
-#   create preview deployments. See docs/releasing.md
+#   frozen branch whose ruleset blocks all pushes. See docs/releasing.md
 # - The `Production` environment must provide the VERCEL_TOKEN, VERCEL_ORG_ID
 #   and VERCEL_PROJECT_ID secrets
 
@@ -50,10 +49,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GIT_REF: ${{ inputs.git_ref || github.sha }}
-          # The release numbers continue the count of the production
-          # deployments before them: 1294 through the Git integration of
-          # Vercel (its GitHub deployment records up to 2026-07-30) and 104
-          # runs of this workflow.
+          # The release numbers continue from this number when the repository
+          # has no release tag
           LAST_NUMBER_BEFORE_TAGS: 1398
         shell: bash
         run: |

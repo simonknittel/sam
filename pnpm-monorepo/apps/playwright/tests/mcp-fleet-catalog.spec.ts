@@ -65,7 +65,6 @@ test.describe("the ship catalog tools of the MCP server", () => {
       next_cursor: null,
     });
 
-    // The same tag two times is one tag
     const variant = await callForContent(client, "create_ship_variant", {
       series_id: series.id,
       name: "Cutlass Black",
@@ -91,7 +90,6 @@ test.describe("the ship catalog tools of the MCP server", () => {
       ship_count: 0,
     });
 
-    // The tags and the links that the update does not give stay
     expect(
       await callForContent(client, "update_ship_variant", {
         variant_id: variant.id,
@@ -165,7 +163,6 @@ test.describe("the ship catalog tools of the MCP server", () => {
     });
     expect(await prisma.ship.count()).toBe(0);
 
-    // The series and the manufacturer cascade to their variants and ships
     const { variant: secondVariant } = await createVariant(prisma, {
       manufacturerName: "Aegis Dynamics",
       seriesName: "Avenger",
@@ -203,7 +200,6 @@ test.describe("the ship catalog tools of the MCP server", () => {
       "SHIP_MANUFACTURERS_LISTED",
       "SHIP_VARIANT_READ",
     ]);
-    // The first update keeps the links, the last one removes them
     const rsiAuditLinks = [{ serviceName: "RSI", url: RSI_LINK.url }];
     expect(
       await prisma.auditEvent.findMany({
@@ -301,7 +297,6 @@ test.describe("the ship catalog tools of the MCP server", () => {
       }),
     ).toMatch(VALIDATION_RESULT);
 
-    // One answer for an unknown page and for a page that the manager cannot read
     const restrictedPage = await createWikiPage(prisma, {
       title: "Geheimes Handbuch",
       visibility: WikiPageVisibility.RESTRICTED,
@@ -345,7 +340,6 @@ test.describe("the ship catalog tools of the MCP server", () => {
     expect(await prisma.variant.count()).toBe(2);
     expect(await prisma.variantExternalLink.count()).toBe(0);
 
-    // ship;read can read the catalog, but not change it
     const pilotClient = await connectMcpClient(
       (await authorizeMcpClient(pilot.user)).accessToken,
     );

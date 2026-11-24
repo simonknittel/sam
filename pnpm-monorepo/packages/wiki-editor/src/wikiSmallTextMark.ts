@@ -3,11 +3,8 @@ import { Mark, mergeAttributes } from "@tiptap/core";
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     wikiSmallText: {
-      /** Renders the selected text smaller */
       setWikiSmallText: () => ReturnType;
-      /** Renders the selected text smaller, or restores the normal size */
       toggleWikiSmallText: () => ReturnType;
-      /** Restores the normal size for the selected text */
       unsetWikiSmallText: () => ReturnType;
     };
   }

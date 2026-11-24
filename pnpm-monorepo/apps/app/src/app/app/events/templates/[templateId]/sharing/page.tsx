@@ -37,9 +37,8 @@ const EventTemplateSharing = async ({ templateId }: Props) => {
   if (!context) notFound();
 
   /**
-   * Everyone else gets the owner and the Persönlich/Geteilt badge on
-   * Stammdaten instead — 404 rather than 403 so the tab's absence and its
-   * inaccessibility look the same.
+   * 404 and not 403: the absence of the tab and its inaccessibility must look
+   * the same
    */
   if (!context.permissions.canManageShares) notFound();
 

@@ -9,21 +9,15 @@ export const compareRoleNames = (
 ) => first.name.localeCompare(second.name);
 
 /**
- * Whether the actor can see the role: `otherRole;read` with the id of the
- * role. The role badges, the role picker and the role tools of the MCP server
- * use this rule.
+ * The role badges, the role picker and the role tools of the MCP server use
+ * this rule
  */
 export const isRoleVisible = (
   actor: Pick<Actor, "authorize">,
   roleId: string,
 ) => actor.authorize("otherRole", "read", [{ key: "roleId", value: roleId }]);
 
-/**
- * Whether the actor can see at least one role: in admin mode, or with an
- * `otherRole` permission for a role id (or for all roles) that passes
- * `isRoleVisible()`. Only the permissions count, thus the result does not
- * need a query.
- */
+/** Only the permissions count, thus the result does not need a query */
 export const canSeeAnyRole = (
   actor: Pick<Actor, "adminMode" | "authorize" | "permissionSets">,
 ) =>
@@ -39,10 +33,6 @@ export const canSeeAnyRole = (
       ),
   );
 
-/**
- * The ids of the roles that the actor can see (see `isRoleVisible()`),
- * sorted by the name of the role like the role picker
- */
 export const loadVisibleRoleIds = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Pick<Actor, "authorize">,
@@ -57,14 +47,7 @@ export const loadVisibleRoleIds = async (
     .map((role) => role.id);
 };
 
-/**
- * The roles that a write adds must exist and be visible for the actor (see
- * `isRoleVisible()`), like the choices of the role picker of the forms
- *
- * @param roleIds The roles that the write adds
- * @param errorMessage The message of the feature for the `ValidationError`
- * @throws ValidationError when a role does not exist or is not visible
- */
+/** The same rule as the role picker of the forms */
 export const requireVisibleRoles = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Pick<Actor, "authorize">,

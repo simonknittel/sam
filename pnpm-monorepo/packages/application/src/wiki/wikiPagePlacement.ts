@@ -46,10 +46,6 @@ export const resolveWikiPagePlacement = (
   return WikiPagePlacement.Allowed;
 };
 
-/**
- * Whether the actor can add a page below the page: the rule of
- * `requireWikiPagePlacement()` for a parent
- */
 export const canAddWikiChildren = (scope: WikiScope, pageId: string) =>
   !isWikiScopeFrozen(scope) &&
   resolveWikiPagePlacement(scope, pageId) === WikiPagePlacement.Allowed;

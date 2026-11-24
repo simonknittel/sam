@@ -12,7 +12,6 @@ import { getEventTemplatePath } from "../utils/eventTemplateConstraints";
 interface Props {
   readonly className?: string;
   readonly templateId: string;
-  /** The Freigabe tab only exists for those who may change the shares */
   readonly canManageShares: boolean;
 }
 

@@ -8,7 +8,7 @@ import {
   UNLEASH_FLAG,
 } from "../fixtures/unleash";
 
-/** Two polled flag states plus navigations per test */
+/** Up to four polls for a flag state plus their navigations per test */
 const FLAG_TEST_TIMEOUT = 120_000;
 
 /**
@@ -21,10 +21,9 @@ const RETRY_CLICK_TIMEOUT = 2_000;
 const RETRY_RENDER_TIMEOUT = 5_000;
 
 /**
- * Navigates and reports whether the element shows up. The wait covers
- * client-side-only components (next/dynamic with ssr: false) and server
- * redirects, which Next.js streams as a client-side navigation after the
- * document shell — both render shortly after the navigation.
+ * The wait covers client-side-only components (next/dynamic with ssr: false)
+ * and server redirects, which Next.js streams as a client-side navigation after
+ * the document shell.
  */
 const pageShows = async (
   page: Page,
@@ -55,7 +54,6 @@ test("the care bear shooter is released by its feature flag", async ({
       ),
     )
     .toBe(true);
-  // The heading belongs to the landing page the disabled flag redirects to
   await expect(page).toHaveURL("/");
 
   await setUnleashFlag(UNLEASH_FLAG.EnableCareBearShooter, true);
@@ -72,9 +70,8 @@ test("the care bear shooter is released by its feature flag", async ({
 });
 
 /**
- * Holds each `router.refresh()` of the page until `release()`. Next.js asks
- * for the new server render with the RSC header, a prefetch also carries the
- * prefetch header.
+ * Next.js asks for the new server render with the RSC header, a prefetch also
+ * carries the prefetch header.
  */
 const holdPageRefresh = async (page: Page, path: string) => {
   let release = () => {};
@@ -112,7 +109,6 @@ test("the kill switch flag takes the log analyzer offline, and the retry of the 
     permissionStrings: ["logAnalyzer;read"],
   });
   await signIn(citizen.user);
-  /** Tests on other workers open the log analyzer at the same time */
   const userScope = { userId: citizen.user.id };
 
   /** The guide stays outside of the error tile, thus the button is the mark */
@@ -145,10 +141,6 @@ test("the kill switch flag takes the log analyzer offline, and the retry of the 
   await expect(tileError).toBeVisible();
   await heldRefresh.stop();
 
-  /**
-   * The retry loads the tile again from the server without a reload of the
-   * page.
-   */
   await setUnleashFlag(UNLEASH_FLAG.CrashLogAnalyzer, false, userScope);
   await expect(async () => {
     if (!(await folderButton.isVisible()))
@@ -167,10 +159,8 @@ enum SharingToolbarState {
 }
 
 /**
- * Navigates and reports which label the settings button of the log analyzer
- * toolbar shows: "Filter & Teilen" with the sharing, "Filter" without it.
- * The toolbar itself has to appear first — its absence stays a state of its
- * own, so a page which did not render cannot pass for the removed sharing.
+ * The toolbar itself has to appear first: a page which did not render cannot
+ * pass for the removed sharing.
  */
 const sharingToolbarState = async (page: Page) => {
   await page.goto("/app/tools/log-analyzer");
@@ -195,7 +185,6 @@ const sharingToolbarState = async (page: Page) => {
     : SharingToolbarState.WithoutSharing;
 };
 
-/** A shared entries query as the app would send it (superjson envelope) */
 const sharedEntriesUrl = () => {
   const queryParameters = new URLSearchParams({
     input: JSON.stringify({ json: { daysToLoad: 14 } }),
@@ -216,7 +205,6 @@ test("the kill switch flag removes the sharing of the log analyzer", async ({
     permissionStrings: ["logAnalyzer;read"],
   });
   await signIn(citizen.user);
-  /** Tests on other workers need the sharing at the same time */
   const userScope = { userId: citizen.user.id };
 
   await setUnleashFlag(
@@ -246,10 +234,6 @@ test("the kill switch flag removes the sharing of the log analyzer", async ({
     .poll(() => sharingToolbarState(page))
     .toBe(SharingToolbarState.WithoutSharing);
 
-  /**
-   * The server refuses on its own, thus a client with a cached page or a
-   * handmade request cannot read shared entries either.
-   */
   await expectFlagPropagation
     .poll(async () => {
       const response = await page.request.get(sharedEntriesUrl());

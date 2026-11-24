@@ -20,8 +20,7 @@ import { expect, test } from "../fixtures/test";
 const DELETED_CITIZEN_LABEL = "Gelöschter Citizen";
 
 /**
- * Each search starts with a new page load, because the tile keeps the hits
- * of the previous query while a request runs
+ * A new page load for each search, see searchInTile in spynet-search.spec.ts
  */
 const searchInTile = async (page: Page, query: string, reaction: Locator) => {
   await page.goto("/app/dashboard");
@@ -32,7 +31,6 @@ const searchInTile = async (page: Page, query: string, reaction: Locator) => {
   );
 };
 
-/** The popup of the search tile is in a portal, thus it is not in the tile */
 const searchHitOf = (page: Page, citizenId: string) =>
   page
     .getByRole("listbox")
@@ -67,7 +65,6 @@ test("a deleted citizen leaves the lists and its records name it as deleted", as
     citizen: target,
     source: EventSource.APP,
   });
-  /** A penalty that the deleted citizen gave to an active citizen */
   await prisma.penaltyEntry.create({
     data: {
       citizenId: admin.entity.id,
@@ -85,7 +82,6 @@ test("a deleted citizen leaves the lists and its records name it as deleted", as
 
   await signIn(admin.user);
 
-  /** Before the delete, the search finds the citizen */
   await searchInTile(page, "verschwinder", searchHitOf(page, target.entity.id));
 
   await page.goto(`/app/spynet/citizen/${target.entity.id}`);
@@ -98,7 +94,6 @@ test("a deleted citizen leaves the lists and its records name it as deleted", as
   await deleteDialog.getByRole("button", { name: "Löschen" }).click();
   await expect(page.getByText(DELETED_TEXT)).toBeVisible();
 
-  /** Nothing is deleted: the citizen stays, without its login */
   await expect
     .poll(async () =>
       prisma.citizen.findUniqueOrThrow({
@@ -112,7 +107,6 @@ test("a deleted citizen leaves the lists and its records name it as deleted", as
       where: { citizenId: target.entity.id },
     }),
   ).toBe(1);
-  /** The log tables and the system log name an author by the login name */
   expect(
     await prisma.user.findUniqueOrThrow({
       where: { id: target.user.id },
@@ -140,7 +134,6 @@ test("a deleted citizen leaves the lists and its records name it as deleted", as
     .getByRole("row")
     .filter({ hasText: "Strafe für Drängeln" });
   await expect(penaltyRow).toBeVisible();
-  /** The penalized citizen is active, thus a link */
   await expect(
     penaltyRow.getByRole("link", { name: "spynet-admin" }),
   ).toBeVisible();
@@ -155,7 +148,6 @@ test("a deleted citizen leaves the lists and its records name it as deleted", as
     .getByRole("row")
     .filter({ hasText: "Sold für den Probeflug" });
   await expect(transactionRow).toBeVisible();
-  /** The author is active, thus a link */
   await expect(
     transactionRow.getByRole("link", { name: "spynet-admin" }),
   ).toBeVisible();
@@ -165,7 +157,6 @@ test("a deleted citizen leaves the lists and its records name it as deleted", as
   ).toHaveCount(0);
   await expect(transactionRow.getByText("verschwinder")).toHaveCount(0);
 
-  /** The login of the deleted citizen continues as a login without a citizen */
   await switchUser(target.user);
   await page.goto("/app/dashboard");
   await expect(page).toHaveURL("/clearance");

@@ -6,10 +6,6 @@ import { getSeasonalDatePresets } from "@/modules/seasonal-events/queries/getSea
 import { getSeasonalOverrideState } from "@/modules/seasonal-events/queries/getSeasonalOverrideState";
 import { AdminToolbarLoader } from "./AdminToolbarLoader";
 
-/**
- * The tools of an admin, also while they assume a different user. Renders
- * nothing for every other user. The tools are in AdminToolbarClient.
- */
 export const AdminToolbar = async () => {
   const authentication = await authenticate();
   if (!authentication || !isAdminBehindSession(authentication.session))

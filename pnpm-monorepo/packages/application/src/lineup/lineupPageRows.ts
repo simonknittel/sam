@@ -39,9 +39,8 @@ interface LineupPageRowsInput {
 }
 
 /**
- * The roles that a position of the event requires. The requirement check of
- * the lineup needs only these roles of a citizen, thus the page gets no
- * other roles.
+ * The requirement check of the lineup needs only these roles of a citizen,
+ * thus the page gets no other roles
  */
 const findRequiredRoleIdsOfEvent = async (
   context: ApplicationContext,
@@ -58,11 +57,6 @@ const findRequiredRoleIdsOfEvent = async (
   return new Set(requiredRoles.map(({ roleId }) => roleId));
 };
 
-/**
- * The effective roles of the actor (see `Actor.roleIds`) that a position of
- * the event requires, for the requirement check of the lineup. Requires
- * `event;read`. Empty for a user without a citizen.
- */
 export const findOwnRequiredRoleIds = async (
   context: ApplicationContext,
   actor: Actor,
@@ -79,10 +73,6 @@ export const findOwnRequiredRoleIds = async (
 
 type RequiredVariantShip = Pick<Ship, "variantId">;
 
-/**
- * The ships of the actor for the requirement check of the lineup of an
- * event. Requires `ship;read`. Empty for a user without a citizen.
- */
 export const findOwnShipsOfRequiredVariants = async (
   context: ApplicationContext,
   actor: Actor,
@@ -101,10 +91,8 @@ export const findOwnShipsOfRequiredVariants = async (
   });
 };
 
-/** An active participant of an event, as the lineup offers it */
 export interface EventLineupCitizen {
   readonly citizen: Pick<Citizen, "id" | "handle" | "deletedAt">;
-  /** The ships of the citizen of the variants that the lineup requires */
   readonly ships: RequiredVariantShip[];
   /**
    * The effective roles of the citizen that the lineup requires and that the
@@ -116,10 +104,9 @@ export interface EventLineupCitizen {
 }
 
 /**
- * The required roles of the citizens that the actor can see, by citizen id.
- * Thus a citizen with a required role that the actor cannot see does not meet
- * the requirement for the actor. Without such a role in the lineup, the query
- * of the roles is not necessary.
+ * A citizen with a required role that the actor cannot see does not meet the
+ * requirement for the actor. Without such a role in the lineup, the query of
+ * the roles is not necessary.
  */
 const findVisibleRequiredRoleIdsOfCitizens = async (
   context: ApplicationContext,
@@ -148,14 +135,8 @@ const findVisibleRequiredRoleIdsOfCitizens = async (
 };
 
 /**
- * The citizens of the active participants of an event, with their ships of
- * the required variants and, for a manager of the positions, their visible
- * required roles. The lineup offers these citizens for its positions,
- * thus a deleted citizen is not one of them. The same checks as the lineup
- * page: `event;read`, the visibility of the event, and a lineup that is
- * enabled or that the actor can manage.
- *
- * @throws NotFoundError or ForbiddenError
+ * The lineup offers these citizens for its positions, thus a deleted citizen
+ * is not one of them
  */
 export const findEventLineupCitizens = async (
   context: ApplicationContext,

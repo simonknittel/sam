@@ -38,10 +38,6 @@ export const EventInvitationAnswerForm = ({
   onAnswered,
   autoFocusComment,
 }: Props) => {
-  /**
-   * The errors show as toasts: an error such as "no open invitation"
-   * refreshes the page, which then shows the current state
-   */
   const accept = useAction(acceptEventInvitation, { onSuccess: onAnswered });
   const decline = useAction(declineEventInvitation, { onSuccess: onAnswered });
   const isPending = accept.isPending || decline.isPending;

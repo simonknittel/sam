@@ -16,17 +16,10 @@ interface Props {
     | { error: string }
   >;
   readonly type?: Exclude<ComponentProps<"input">["type"], "datetime-local">;
-  /** Shows the value in one line, with an ellipsis when it is too long */
   readonly truncate?: boolean;
-  /** Shows the value in at most two lines, with an ellipsis after them */
   readonly twoLines?: boolean;
-  /** False permits an empty value, for example to remove an optional text */
   readonly required?: boolean;
   readonly maxLength?: number;
-  /**
-   * The input fills the width of the field while it is open, instead of its
-   * default width of about 20 characters
-   */
   readonly fillWidth?: boolean;
 }
 

@@ -1,18 +1,10 @@
 import { Prisma } from "./generated/prisma/client.js";
 
-/**
- * Error codes of the Prisma query engine. The full list is in the Prisma
- * error reference: https://www.prisma.io/docs/orm/reference/error-reference
- */
+/** https://www.prisma.io/docs/orm/reference/error-reference */
 export enum PrismaErrorCode {
-  /** A unique constraint failed, for example a row that exists already */
   UniqueConstraintFailed = "P2002",
-  /**
-   * A foreign key constraint failed: a write sets an id of a row that does
-   * not exist (anymore). A nested `connect` gives `RecordNotFound` instead.
-   */
+  /** A nested `connect` gives `RecordNotFound` instead */
   ForeignKeyConstraintFailed = "P2003",
-  /** A record that the operation needs does not exist (anymore) */
   RecordNotFound = "P2025",
 }
 

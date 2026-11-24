@@ -3,14 +3,7 @@
 import { useEffect, useState } from "react";
 import { useOnboarding } from "../components/OnboardingProvider";
 
-/**
- * The open state of one surface of the "Erste Schritte" popover. While a
- * request of `requestPopoverOpen()` is pending and the surface can act, the
- * popover opens and the request settles. A popover which is open already
- * stays open.
- *
- * Only one surface at a time can act, otherwise two popovers open.
- */
+/** Only one surface at a time can act, otherwise two popovers open */
 export const useOnboardingPopoverOpenState = (canActOnRequest: boolean) => {
   const { isPopoverOpenRequested, settlePopoverOpenRequest } = useOnboarding();
   const [isOpen, setIsOpen] = useState(false);

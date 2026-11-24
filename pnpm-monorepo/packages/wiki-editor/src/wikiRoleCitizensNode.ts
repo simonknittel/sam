@@ -5,20 +5,14 @@ import {
   wikiWidthPxAttribute,
 } from "./wikiResizableNodes.js";
 
-/**
- * The node's configuration. The document only ever stores the role — its
- * members are resolved per viewer at render time (editor node view and
- * static renderer alike) and never become part of the content.
- */
 export interface WikiRoleCitizensConfig {
   /** Role whose members are listed; null until one is picked */
   readonly roleId: string | null;
 }
 
 /**
- * Clamps arbitrary (user-controlled) attribute input into a valid config.
- * Shared by the node's attribute parsing and the server-side resolution so
- * both agree.
+ * Shared by the node's attribute parsing and the server-side resolution so both
+ * agree.
  */
 export const normalizeWikiRoleCitizensConfig = (
   attrs: Readonly<Record<string, unknown>> | undefined,
@@ -30,10 +24,7 @@ export const normalizeWikiRoleCitizensConfig = (
 });
 
 /**
- * The distinct roles referenced by the role-member nodes of a Tiptap JSON
- * document — so the server can resolve every one of them before rendering
- * the page statically. The role id doubles as the lookup key; unlike the
- * page index there is nothing else to configure.
+ * So the server can resolve every role before rendering the page statically.
  */
 export const collectWikiRoleCitizensRoleIds = (content: unknown): string[] => {
   const roleIds = new Set<string>();
@@ -50,7 +41,6 @@ export const collectWikiRoleCitizensRoleIds = (content: unknown): string[] => {
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     wikiRoleCitizens: {
-      /** Inserts a role member list ("Rollenmitglieder") at the current position */
       setWikiRoleCitizens: (
         attributes?: Partial<WikiRoleCitizensConfig>,
       ) => ReturnType;
@@ -59,10 +49,9 @@ declare module "@tiptap/core" {
 }
 
 /**
- * A block listing the citizens a role is assigned to. The node stores the
- * role id only; the member list is resolved per viewer at render time (and
- * is permission-filtered server-side by role visibility), so it never leaks
- * into the document, `searchText` or the clipboard.
+ * The node stores the role id only; the member list is resolved per viewer at
+ * render time (and is permission-filtered server-side by role visibility), so
+ * it never leaks into the document, `searchText` or the clipboard.
  */
 export const WikiRoleCitizens = Node.create({
   name: "wikiRoleCitizens",
@@ -92,10 +81,6 @@ export const WikiRoleCitizens = Node.create({
     return [{ tag: "div[data-wiki-role-citizens]" }];
   },
 
-  /**
-   * Fallback rendering (e.g. clipboard serialization) — the app overrides
-   * this with a resolved member list via node view and static node mapping.
-   */
   renderHTML({ HTMLAttributes }) {
     return [
       "div",

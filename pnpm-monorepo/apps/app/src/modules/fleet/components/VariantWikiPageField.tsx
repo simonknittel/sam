@@ -6,15 +6,9 @@ import { useId } from "react";
 
 interface Props {
   readonly currentWikiPageId?: string | null;
-  /** Keeps the skeleton while the caller still loads the current value */
   readonly loading?: boolean;
 }
 
-/**
- * Wiki page selector of the create/update variant modals. Offers every page
- * the configuring user can read; the selected page and its subtree get
- * embedded on the variant's detail page.
- */
 export const VariantWikiPageField = ({ currentWikiPageId, loading }: Props) => {
   const selectId = useId();
   const targets = api.wiki.getPageTargets.useQuery({ permission: "read" });

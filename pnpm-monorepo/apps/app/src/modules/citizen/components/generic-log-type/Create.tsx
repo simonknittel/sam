@@ -19,7 +19,7 @@ export const Create = ({ type, entity }: Props) => {
   const { formAction, isPending, getDefaultValueWithFallback } = useAction(
     createCitizenLog,
     {
-      /** The history in the modal is a client query, which the refresh skips */
+      /** See `ConfirmLog` */
       onSuccess: () =>
         void utils.citizenLog.getHistory.invalidate({
           type,

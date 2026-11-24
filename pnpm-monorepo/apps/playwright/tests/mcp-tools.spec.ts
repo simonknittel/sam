@@ -31,9 +31,8 @@ import {
 import { expect, test } from "../fixtures/test";
 
 /**
- * The tools that each user with a citizen sees: they need no permission, or
- * they check each item (the wiki pages, the own citizen). In the order of
- * `tools/list`: by group, then by name.
+ * These tools need no permission, or they check each item (the wiki pages, the
+ * own citizen). In the order of `tools/list`: by group, then by name.
  */
 const TOOLS_WITHOUT_PERMISSION = [
   "get_user",
@@ -94,7 +93,6 @@ test.describe("the read tools of the MCP server", () => {
       handle: "mcp-analyst",
       permissionStrings: [
         "citizen;read",
-        // The citizens table of the Spynet
         "spynetCitizen;read",
         "organization;read",
         "organizationMembership;read",
@@ -286,7 +284,6 @@ test.describe("the read tools of the MCP server", () => {
     await prisma.ship.createMany({
       data: [
         { ownerId: owner.entity.id, variantId: variant.id, name: "Nachtfalke" },
-        // Neither the own ship nor a ship of the organization
         { ownerId: neighbour.entity.id, variantId: otherVariant.id },
       ],
     });
@@ -379,7 +376,6 @@ test.describe("the read tools of the MCP server", () => {
       "Der Sprungpunkt liegt im Stanton-System.",
     );
 
-    // A page that the user cannot read does not exist for the user
     expect(
       await callForError(client, "get_wiki_page", { page_id: secretPage.id }),
     ).toMatch(NOT_FOUND_RESULT);
@@ -464,7 +460,6 @@ test.describe("the read tools of the MCP server", () => {
         createdById: creator.entity.id,
       },
     });
-    // Only for the citizens with the role
     const hiddenTask = await prisma.task.create({
       data: {
         title: "Geheimer Auftrag",

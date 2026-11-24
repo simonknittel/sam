@@ -6,7 +6,6 @@ import {
 import * as z from "zod";
 import { shipVariantOutputSchema } from "./shipVariantOutputSchema.js";
 
-/** The permission of all write tools of the ship catalog */
 export const canManageShipCatalog = (actor: Actor) =>
   actor.authorize("manufacturersSeriesAndVariants", "manage");
 
@@ -21,7 +20,6 @@ export const shipSeriesOutputSchema = z.strictObject({
   manufacturer_id: z.string(),
 });
 
-/** A variant with the fields that update_ship_variant can change */
 export const shipVariantDetailOutputSchema = shipVariantOutputSchema.extend({
   links: z.array(z.strictObject({ service: z.string(), url: z.string() })),
   wiki_page_id: z

@@ -14,13 +14,8 @@ import * as z from "zod";
 import { protectedProcedure, toTrpcError } from "../../trpc";
 
 /**
- * Pages in depth-first tree order for hierarchy selects: managed ones for
- * the "Neue Seite" and "Seite verschieben" dialogs (default), readable ones
- * e.g. for the page-index config. A container scopes the tree to that
- * event's or template's briefing, gated like the other briefing surfaces; a
- * variantId to the subtree embedded on that variant's page, gated like its
- * routes — this is what keeps the embed's create/move targets inside the
- * subtree.
+ * In depth-first tree order. A container limits the pages to its briefing, a
+ * variant to the subtree that its page embeds.
  */
 export const getPageTargets = protectedProcedure
   .input(

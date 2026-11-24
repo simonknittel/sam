@@ -24,7 +24,6 @@ type MoveResetClient = Pick<
 interface WikiPageMoveReset {
   /** The moved page and its descendants, also the descendants in the trash */
   readonly subtreeIds: string[];
-  /** For the batch of the move */
   readonly statements: Prisma.PrismaPromise<unknown>[];
 }
 

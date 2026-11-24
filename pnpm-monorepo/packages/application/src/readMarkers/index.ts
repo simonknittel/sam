@@ -1,4 +1,3 @@
-/** The read markers: which tasks, events and changelog entries are new for an actor */
 export { countNewItemsBySubject } from "./countNewItemsBySubject.js";
 export { findNewItemIds, type FindNewItemIdsInput } from "./findNewItemIds.js";
 export {

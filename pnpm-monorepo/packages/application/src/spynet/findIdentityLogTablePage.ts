@@ -15,18 +15,13 @@ import {
 import { getReadableCitizenLogWhere } from "./readableCitizenLogWhere.js";
 
 export interface IdentityLogTablePageInput extends CitizenLogTablePageRequest {
-  /** The values of the URL filters. Empty for no filter. */
   readonly filters: {
     readonly types: readonly string[];
-    /**
-     * The raw values (`ConfirmationValue`): an unknown value adds no
-     * condition, thus only unknown values match no log
-     */
+    /** The raw values of the URL, see `getConfirmationFilterWhere()` */
     readonly confirmationValues: readonly string[];
   };
 }
 
-/** The values that at least one visible log has: the filters offer them */
 export interface IdentityLogTableFilterOptions {
   readonly types: GenericCitizenLogType[];
   readonly confirmationStates: (ConfirmationStatus | null)[];
@@ -37,10 +32,6 @@ const requireIdentityLogTablePermissions = (actor: Actor) => {
   requirePermission(actor, "spynetOther", "read");
 };
 
-/**
- * One page of the table of the identity logs (handles, IDs, …) of the
- * Spynet. Requires `citizen;read` and `spynetOther;read`, like the page.
- */
 export const findIdentityLogTablePage = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,
@@ -63,10 +54,7 @@ export const findIdentityLogTablePage = async (
   );
 };
 
-/**
- * The filter values of the identity log table, independent of the selected
- * filters. Requires `citizen;read` and `spynetOther;read`, like the page.
- */
+/** Independent of the selected filters */
 export const findIdentityLogTableFilterOptions = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,

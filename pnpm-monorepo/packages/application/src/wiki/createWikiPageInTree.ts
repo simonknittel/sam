@@ -33,7 +33,6 @@ export type CreateWikiPageInTreeInput = z.infer<
   typeof createWikiPageInTreeInputSchema
 >;
 
-/** Options of the use case for the app, not fields of the input schema */
 export interface CreateWikiPageInTreeOptions {
   /**
    * The fleet variant whose embed of the global wiki shows the form, for the
@@ -56,15 +55,7 @@ export interface CreateWikiPageInTreeOutput {
 
 /**
  * Creates a page in the page tree of the app: in the global wiki, in the
- * briefing of an event or in the briefing of an event template. The page is
- * empty, or a copy of a page that the actor can read (optionally with its
- * readable subtree, see `copyWikiPageSubtree()`).
- *
- * @throws NotFoundError when the parent or the copied page does not exist
- * for the actor
- * @throws ForbiddenError when the actor does not manage the parent, or
- * cannot create a page at the top level
- * @throws ConflictError when the event of the briefing is over
+ * briefing of an event or in the briefing of an event template
  */
 export const createWikiPageInTree = (
   context: ApplicationContext,

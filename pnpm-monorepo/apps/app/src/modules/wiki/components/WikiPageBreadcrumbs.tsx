@@ -15,11 +15,6 @@ interface Props {
   readonly ancestors: readonly Ancestor[];
 }
 
-/**
- * The links to the ancestors of a page, above its heading. A page without
- * an ancestor in the scope (a top-level page, the root page of a briefing
- * or of a variant embed) shows nothing.
- */
 export const WikiPageBreadcrumbs = ({ hrefMode, ancestors }: Props) => {
   if (ancestors.length === 0) return null;
 

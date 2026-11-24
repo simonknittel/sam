@@ -44,13 +44,6 @@ export interface ListShipManufacturersOutput {
   readonly next_cursor: string | null;
 }
 
-/**
- * The manufacturers of the catalog with their series, sorted by name, one
- * page. The cursor is the id of a manufacturer.
- *
- * @throws ForbiddenError when the actor cannot use the catalog
- * @throws ValidationError when no manufacturer has the cursor
- */
 export const listShipManufacturers = async (
   context: ApplicationContext,
   actor: Actor,

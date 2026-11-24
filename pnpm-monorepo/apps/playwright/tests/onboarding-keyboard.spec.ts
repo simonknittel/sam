@@ -10,10 +10,9 @@ const onboardingButton = (page: Page) =>
 const TAB_PRESS_COUNT = 8;
 
 /**
- * Presses Tab and returns the name of each focused element. Fails when the
- * focus gets to an element of the page behind the tour. At the end of the
- * dialog, the browser can move the focus out of the document (then the body
- * is the active element) before it wraps to the start of the dialog.
+ * Fails when the focus gets to an element of the page behind the tour. At the
+ * end of the dialog, the browser can move the focus out of the document (then
+ * the body is the active element) before it wraps to the start of the dialog.
  */
 const tabThroughTour = async (page: Page) => {
   const focusedNames = new Set<string>();
@@ -61,7 +60,6 @@ test("the tour keeps the keyboard focus, closes on Escape and returns the focus 
     .getByRole("button", { name: "Starten" })
     .click();
 
-  // A centered step without a target
   const introductionStep = page.getByRole("dialog", {
     name: "Benachrichtigungen des SAM",
   });
@@ -74,7 +72,6 @@ test("the tour keeps the keyboard focus, closes on Escape and returns the focus 
 
   await introductionStep.getByRole("button", { name: "Weiter" }).click();
 
-  // An anchored step on a different page
   await expect(page).toHaveURL(/\/app\/account\/notifications/);
   const enableStep = page.getByRole("dialog", {
     name: "Aktiviere die Benachrichtigungen",

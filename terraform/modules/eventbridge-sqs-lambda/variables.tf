@@ -21,6 +21,8 @@ variable "provisioned_concurrent_executions" {
   default = 0
 }
 
+# The SSM parameters that the function can read: the names of the parameter
+# maps in apps/lambda/src/*/setup.ts
 variable "parameters" {
   type    = list(string)
   default = []

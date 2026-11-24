@@ -31,7 +31,8 @@ database for each test case.
   `createCitizen()`, which creates the User, the Discord account, the
   Citizen, the role and the permissions in the form that the session
   callback expects. The MCP tests connect a client with the real OAuth flow
-  (`authorizeMcpClient()` and `connectMcpClient()`, see `fixtures/oauth.ts`).
+  (`authorizeMcpClient()` and `connectMcpClient()`, see `fixtures/oauth.ts` and
+  `fixtures/mcp-client.ts`).
   Their users come from `createMcpCitizen()`, which adds the permission
   `mcp;use` that the MCP server requires.
   Their assertions never print a token: compare the status and the error of
@@ -64,22 +65,22 @@ can have no effect.
 
 - Add each permission check as a row in `tests/gated-routes.spec.ts`, not as
   a new spec.
-- Assert the page content, then the URL. The app sends 404, 403 and
-  redirects with HTTP status 200.
+- Assert the page content, then the URL. The pages send 404, 403 and
+  redirects with HTTP status 200. Only the proxy and the route handlers send
+  the real status.
 - Assert the saved values immediately after the save, before
   `page.reload()`. A reload can hide a form error.
 - Make sure that a filter test can fail: also seed rows of a different type
   and of a different user.
 - `page.goto()` always loads the page again from the server. Thus it cannot
   test `refresh()` or the client router cache.
-- Some components call an action when the page loads, and the action calls
-  `refresh()` by itself: `MarkAsReadOnMount` on the first visit of a new
-  item, the read-on-view of new changelog entries and `trackWikiPageVisit`.
-  The read of a notification about a new item refreshes the router too. The
-  collab editor refreshes the page when
-  its token request gives a 404 (the page is gone). A test that changes the
-  target right after a load can pass because of this refresh. Wait for these actions (for example the visit row or the
-  editor), or seed the read marker.
+- Some components refresh the page by themselves: `MarkAsReadOnMount` on the
+  first visit of a new item, the read-on-view of new changelog entries, the
+  read of a notification about a new item, `trackWikiPageVisit` when the page
+  is gone, and the collab editor when its token request gives a 401, 403 or
+  404 or a changed edit right. A test that changes the target right after a
+  load can pass because of this refresh. Wait for these actions (for example
+  the visit row or the editor), or seed the read marker.
 - While a page streams, React keeps a hidden copy of the content next to the
   visible copy. A strict locator then finds two elements ("strict mode
   violation"). Scope the locator of a text that streams in (for example an
@@ -104,12 +105,11 @@ can have no effect.
   worker most frequently loses a fill before hydration.
 - Do not trust a full run while the dev stack or a Docker build also runs,
   or while `pnpm install` runs in the same checkout.
-- Two tests fail from time to time for a known reason. Run them again, and
+- Two tests fail from time to time. Run them again, and
   do not search for the cause in your change: the keyboard tests of
   `wiki-block-menu.spec.ts` (ProseMirror reads a selection change too slowly
   in the collab editor) and the "replace mode" test of
-  `wiki-copy-paste.spec.ts` (the count in the database races the debounce of
-  the collab store).
+  `wiki-copy-paste.spec.ts` (cause unknown).
 - To reproduce a hydration problem, make the CPU slower in a temporary spec:
 
   ```ts

@@ -20,9 +20,7 @@ const ARROW_ICONS: SortIcons = {
 
 export interface SortableColumnHeaderProps<Sort extends string> {
   readonly className?: string;
-  /** The label of the column */
   readonly children: ReactNode;
-  /** The current sort of the table */
   readonly sort: Sort;
   readonly ascending: Sort;
   readonly descending: Sort;
@@ -31,16 +29,9 @@ export interface SortableColumnHeaderProps<Sort extends string> {
   /** The link to the table with the given sort and its other search parameters */
   readonly getHref: (searchParams: { readonly sort: Sort }) => string;
   readonly icons?: SortIcons;
-  /** Shown in the header cell after the link, for example a tooltip */
   readonly addition?: ReactNode;
 }
 
-/**
- * The header cell of a table column that a link sorts. A click on the
- * sorted column changes the direction. Only the sorted column shows the
- * icon of its direction, and `aria-sort` gives the direction to screen
- * readers.
- */
 export const SortableColumnHeader = <Sort extends string>({
   className,
   children,

@@ -25,8 +25,9 @@ test("the fleet tab counts the ships of both participation kinds", async ({
   const organizer = await createCitizen(prisma, { handle: "organisator" });
   /**
    * The two ways a participation row identifies its citizen: an app sign-up
-   * carries the citizen id, a Discord RSVP only the Discord id. The fleet
-   * has to find the owner through either one.
+   * carries the citizen id, a Discord RSVP that the Discord sync has not
+   * matched to a citizen only the Discord id. The fleet has to find the owner
+   * through either one.
    */
   const appSignUp = await createCitizen(prisma, { handle: "app-anmeldung" });
   const discordRsvp = await createCitizen(prisma, { handle: "discord-zusage" });
@@ -41,7 +42,6 @@ test("the fleet tab counts the ships of both participation kinds", async ({
     variantName: "Polaris",
     status: VariantStatus.FLIGHT_READY,
   });
-  // Not flight ready, thus the fleet must leave it out
   const carrack = await createVariant(prisma, {
     manufacturerName: "Anvil Aerospace",
     seriesName: "Carrack",
@@ -114,8 +114,8 @@ test("a position application travels from the participant to the manager's assig
   await signIn(applicant.user);
   await page.goto(`/app/events/${event.id}/lineup`);
 
-  // The positions list renders client-side only — once the accordion toggle
-  // is there, the page is interactive
+  // The positions list renders client-side only: once the accordion toggle is
+  // there, the page is interactive
   await expect(page.getByText("Navigator")).toBeVisible();
   await clickUntilVisible(
     page.getByTitle("Details öffnen"),
@@ -137,7 +137,6 @@ test("a position application travels from the participant to the manager's assig
     )
     .toBe(1);
 
-  // The mirror action takes the application back …
   await page.getByRole("button", { name: "Abmelden" }).click();
   await expect(
     page.getByRole("button", { name: "Interesse anmelden" }),
@@ -150,7 +149,6 @@ test("a position application travels from the participant to the manager's assig
     )
     .toBe(0);
 
-  // … so the manager only gets to see it once it is back
   await page.getByRole("button", { name: "Interesse anmelden" }).click();
   await expect
     .poll(() =>
@@ -171,7 +169,6 @@ test("a position application travels from the participant to the manager's assig
   const unassignedNote = page.getByText("Keinem Posten zugeordnet");
   await expect(unassignedNote).toBeVisible();
 
-  // The application shows up in the applicants section
   const dialog = await openPositionCitizenModal(page, "Navigator");
   const applicantChoice = positionCitizenChoice(
     dialog,
@@ -225,9 +222,8 @@ test("a position application that a different tab changed shows the current stat
     data: { eventId: event.id, name: "Navigator" },
   });
   /**
-   * The first visit of a new event marks it as read, which refreshes the
-   * page at an unknown time. A read event keeps the refresh of the action
-   * the only one.
+   * Stops the refresh of the first visit (see the README), thus the refresh of
+   * the action is the only one.
    */
   await prisma.readMarker.create({
     data: { citizenId: applicant.entity.id, eventId: event.id },
@@ -241,19 +237,13 @@ test("a position application that a different tab changed shows the current stat
   await expect(page.getByText("Navigator")).toBeVisible();
   await clickUntilVisible(page.getByTitle("Details öffnen"), applyButton);
 
-  /** A different tab applies after the page loaded */
   await prisma.eventPositionApplication.create({
     data: { positionId: position.id, citizenId: applicant.entity.id },
   });
 
-  /**
-   * A repeated application changes nothing, and the page shows the current
-   * state without a reload
-   */
   await applyButton.click();
   await expect(withdrawButton).toBeVisible();
 
-  /** A different tab withdraws the application after the page showed it */
   await prisma.eventPositionApplication.deleteMany({
     where: { positionId: position.id },
   });
@@ -264,10 +254,6 @@ test("a position application that a different tab changed shows the current stat
   ).toBeVisible();
   await expect(applyButton).toBeVisible();
 
-  /**
-   * The repeated application and the conflict changed nothing, thus they
-   * wrote no audit records
-   */
   const auditCount = await prisma.auditEvent.count({
     where: {
       type: {

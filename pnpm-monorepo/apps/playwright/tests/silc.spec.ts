@@ -17,14 +17,11 @@ import { expect, test } from "../fixtures/test";
 const SILC_ADMIN_PERMISSIONS = [
   "silcBalanceOfOtherCitizen;read",
   "silcTransactionOfOtherCitizen;manage",
-  // The transaction modal's citizen picker loads the roster, which
-  // requires the citizen read permission
   "citizen;read",
 ];
 
 const balancesTile = (page: Page) => sectionByHeading(page, "Übersicht");
 
-/** The handles in the balances table, from the top to the bottom */
 const balanceTableHandles = (page: Page) =>
   balancesTile(page).getByRole("table").getByRole("link");
 
@@ -48,8 +45,6 @@ test("a transaction created through the UI updates balances and the system log",
     createModal,
   );
 
-  // The picker below re-renders while its citizens load, which swallows a
-  // fill that lands in that window — so both fields insist on their value
   await fillUntilValue(createModal.getByLabel("Wert"), "42");
   await fillUntilValue(
     createModal.getByLabel("Beschreibung"),
@@ -72,7 +67,6 @@ test("a transaction created through the UI updates balances and the system log",
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   await expect(createModal).not.toBeVisible();
 
-  // The citizen shows up in the balances overview with the new balance
   const balanceRow = page
     .getByRole("row")
     .filter({ hasText: "silc-empfaenger" });
@@ -99,7 +93,6 @@ test("a transaction created through the UI updates balances and the system log",
   await expect(transactionRow).toBeVisible();
   await expect(transactionRow).toContainText("silc-empfaenger");
 
-  // The audit event renders with its human-readable message
   await expectAuditEvents(prisma, ["SILC_TRANSACTION_CREATED"]);
   await page.goto("/app/system-log");
   await expect(
@@ -229,7 +222,6 @@ test("deleting a transaction soft deletes it and reverts the balance", async ({
     )
     .not.toBeNull();
 
-  // The soft-deleted entry stays reachable through the "Gelöscht" filter
   await clickUntilUrl(
     page,
     page.getByText("Gelöscht", { exact: true }),
@@ -273,7 +265,6 @@ test("the sort in the sidebar orders the balances table", async ({
     await option.click();
   };
 
-  // The highest balance comes first
   await expect(sort).toHaveValue("Kontostand ↓");
   await expect(handles).toHaveText([
     "silc-bravo",
@@ -344,7 +335,6 @@ test("a transaction updates the balances table that already shows rows", async (
     .click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
-  // Without a reload, the table shows the new balance and sorts again
   await expect(handles).toHaveText(["silc-verfolger", "silc-spitze"]);
   await expect(
     balancesTile(page).getByRole("row").filter({ hasText: "silc-verfolger" }),

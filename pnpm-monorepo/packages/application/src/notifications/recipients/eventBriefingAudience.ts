@@ -19,7 +19,6 @@ import {
 
 export interface FindEventBriefingAudienceRecipientsInput {
   readonly eventId: string;
-  /** The citizen who caused the notification gets none */
   readonly excludedCitizenId?: string | null;
 }
 
@@ -71,10 +70,7 @@ const findPositionScopeRecipients = async (
   };
 };
 
-/**
- * The root page of the briefing: the same root page as
- * `canReadEventBriefing()`
- */
+/** The same root page as `canReadEventBriefing()` */
 const findBriefingRootPage = (context: ApplicationContext, eventId: string) =>
   context.prisma.wikiPage.findFirst({
     where: {
@@ -122,12 +118,8 @@ const findAudience = async (
 };
 
 /**
- * The audience of the current read scope of the root page of the briefing
- * (see `findBriefingRootPage()`), without the excluded citizen. Thus nobody
- * hears about a briefing that they cannot open. The scope can change after
- * the request, thus the rule reads it again. Null when the event, the root
- * page, the position or the audience does not exist, or when only the
- * managers can read the briefing.
+ * Nobody hears about a briefing that they cannot open. The scope can change
+ * after the request, thus the rule reads it again.
  */
 export const findEventBriefingAudienceRecipients = async (
   context: ApplicationContext,
@@ -140,11 +132,8 @@ export const findEventBriefingAudienceRecipients = async (
 };
 
 /**
- * The audience of the read scope (see
- * `findEventBriefingAudienceRecipients()`) and the organizers of the event
- * (see `findEventOrganizers()`): the organizers can read the briefing at
- * each scope (see `canReadEventBriefing()`). Without the excluded citizen.
- * Null when the event or the root page does not exist.
+ * The organizers can read the briefing at each scope (see
+ * `canReadEventBriefing()`)
  */
 export const findEventBriefingUpdatedRecipients = async (
   context: ApplicationContext,

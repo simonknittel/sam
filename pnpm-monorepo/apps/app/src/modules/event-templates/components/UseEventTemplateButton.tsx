@@ -6,14 +6,9 @@ import { FaCalendarPlus } from "react-icons/fa";
 
 interface Props {
   readonly templateId: string;
-  /** Renders a labelled button instead of the table's icon-only one */
   readonly withLabel?: boolean;
 }
 
-/**
- * Opens the app-wide create-event modal with this template preselected — the
- * same form and the same action the top bar's "Neu" menu reaches.
- */
 export const UseEventTemplateButton = ({ templateId, withLabel }: Props) => {
   const { openCreateModal } = useCreateContext();
   const open = () => openCreateModal("event", { templateId });

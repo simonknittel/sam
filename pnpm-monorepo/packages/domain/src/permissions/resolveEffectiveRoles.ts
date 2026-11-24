@@ -10,11 +10,9 @@ export const hasReachedMaxLevel = (roleAssignment: {
   (roleAssignment.currentLevel ?? 0) >= roleAssignment.role.maxLevel;
 
 /**
- * Resolves the effective roles of a citizen from their role assignments:
- * leveled roles only count once the max level is reached, and inherited
- * roles are included. Security-critical and shared by the app's per-request
- * loader `getEffectiveRoles()` (the session and every viewer) and the
- * Lambda's permission checks, so none of them can drift apart.
+ * The inheritance has one level. Security-critical: the session, every viewer,
+ * the MCP server and the checks of other citizens (for example the recipients
+ * of notifications) use this one rule.
  */
 export const resolveEffectiveRoles = <
   AssignedRole extends { maxLevel: number | null },

@@ -20,16 +20,9 @@ export const getUserInputSchema = z.object({
 
 export type GetUserInput = z.output<typeof getUserInputSchema>;
 
-/** Whether the input asks for the actor's own user */
 export const isOwnUser = (actor: Pick<Actor, "userId">, input: GetUserInput) =>
   input.user_id === undefined || input.user_id === actor.userId;
 
-/**
- * One user. Each actor can read the own user, a different user requires
- * `user;read`.
- *
- * @throws NotFoundError when the user does not exist
- */
 export const getUser = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,

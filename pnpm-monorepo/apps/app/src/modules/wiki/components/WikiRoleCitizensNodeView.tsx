@@ -17,10 +17,8 @@ import { WikiRoleCitizensList } from "./WikiRoleCitizensList";
 
 interface WikiRoleCitizensNodeViewOptions {
   /**
-   * Members resolved during the server render, keyed by role id — shown
-   * until the node view's own fetch lands, so swapping in the editor
-   * doesn't flash a loading state over the static fallback's list. Roles
-   * selected after the render miss here and get the loading state.
+   * Members resolved during the server render, keyed by role id (see
+   * `initialEntries` of WikiPageIndexNodeView)
    */
   initialCitizens: Readonly<Record<string, WikiCitizen[]>>;
 }
@@ -50,14 +48,6 @@ const WikiRoleCitizensNodeView = ({ node, extension }: NodeViewProps) => {
   );
 };
 
-/**
- * The shared package's role-members node plus an editor-only React node view
- * fetching the resolved citizens from the server, so editors and live collab
- * readers see the actual members instead of the placeholder. Same name,
- * attributes and schema — only the in-editor rendering differs, so save
- * validation, the collab server and the static renderer stay untouched by
- * this variant.
- */
 const WikiRoleCitizensWithNodeView =
   WikiRoleCitizens.extend<WikiRoleCitizensNodeViewOptions>({
     addOptions() {
@@ -71,10 +61,6 @@ const WikiRoleCitizensWithNodeView =
     },
   });
 
-/**
- * Swaps the plain role-members node in an extension list for the node-view
- * variant, keeping its position in the list.
- */
 export const withWikiRoleCitizensNodeView = (
   extensions: AnyExtension[],
   initialCitizens: Readonly<Record<string, WikiCitizen[]>>,

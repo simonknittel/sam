@@ -29,14 +29,6 @@ export interface ResolveWikiPageReportOutput {
   readonly report_id: string;
 }
 
-/**
- * Marks the report as resolved
- *
- * @throws ForbiddenError without `wiki;manage` or without a citizen
- * @throws NotFoundError when the report does not exist, for example after
- * the permanent delete of its page
- * @throws ConflictError when a different manager resolved the report first
- */
 export const resolveWikiPageReport = (
   context: ApplicationContext,
   actor: Actor,

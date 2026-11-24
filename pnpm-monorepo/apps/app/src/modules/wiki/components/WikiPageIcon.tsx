@@ -6,14 +6,10 @@ interface Props {
   /** Must contain a size-* class matching the `size` prop */
   readonly className?: string;
   readonly iconId: string;
-  /** Rendered size in px */
   readonly size?: number;
 }
 
-/**
- * A wiki page's icon, rendered next to its title. Icon uploads are public
- * by URL like all wiki images.
- */
+/** Icon uploads are public by URL like all wiki images */
 export const WikiPageIcon = ({
   className = "size-4",
   iconId,

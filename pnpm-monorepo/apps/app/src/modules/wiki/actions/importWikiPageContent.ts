@@ -15,9 +15,8 @@ import { refresh } from "next/cache";
 import { WIKI_ERROR_TEXTS } from "../utils/wikiErrorTexts";
 
 /**
- * Replaces the content of a page with an uploaded Tiptap JSON file. A failed
- * replace keeps the safety snapshot, thus the refresh of the error shows it
- * in the snapshot list.
+ * A failed replace keeps the safety snapshot, thus the refresh of the error
+ * shows it in the snapshot list.
  */
 export const importWikiPageContent = createAuthenticatedAction(
   "importWikiPageContent",

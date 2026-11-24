@@ -26,9 +26,8 @@ export const CreateManufacturereButton = () => {
 
       {isOpen && (
         /**
-         * The `dynamic()` triggers the closest `Suspense` to show the fallback. This
-         * leads to much bigger parts of the page or even the whole page showing the
-         * fallback instead of only the button.
+         * Without this boundary, the `dynamic()` shows the fallback of the
+         * closest `Suspense`, possibly for the whole page.
          */
         <Suspense>
           <CreateManufacturerModal onRequestClose={() => setIsOpen(false)} />

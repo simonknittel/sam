@@ -15,17 +15,13 @@ import {
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
-/**
- * The application switch on the settings page. Its tile also has the switch
- * of the participation.
- */
+/** The tile also has the switch of the participation. */
 const applicationSwitch = (page: Page) =>
   toggleLabel(
     page,
     page.getByRole("checkbox", { name: "Teilnahmeanfragen", exact: true }),
   );
 
-/** The row of a citizen in the applications tile of the participants page */
 const applicationRow = (page: Page, handle: string) =>
   sectionByHeading(page, /^Teilnahmeanfragen/)
     .getByRole("row")
@@ -65,7 +61,6 @@ test("a manager requires applications, a citizen applies with a comment, and the
     )
     .toEqual({ applicationRequired: true });
 
-  /** A manager signs up directly */
   await page.goto(`/app/events/${event.id}`);
   await waitForAppShellHydration(page);
   await expect(
@@ -111,7 +106,6 @@ test("a manager requires applications, a citizen applies with a comment, and the
 
   await expect(page.getByText("Teilnahmeanfrage angenommen.")).toBeVisible();
   await expect(page.getByText("Teilnehmer (1)")).toBeVisible();
-  // An approved application leaves the tile, and the tile without rows goes
   await expect(sectionByHeading(page, /^Teilnahmeanfragen/)).toHaveCount(0);
 
   expect(
@@ -196,7 +190,6 @@ test("a manager declines an application with a reason, and the citizen cannot ap
   await expect(row).toContainText("Abgelehnt");
   await expect(row).toContainText("absage-orga");
   await expect(row).toContainText("Alle Plätze sind vergeben.");
-  /** A declined application has nothing to answer */
   await expect(row.getByTitle("Teilnahmeanfrage annehmen")).toHaveCount(0);
 
   await switchUser(applicant.user);
@@ -313,7 +306,6 @@ test("on the events list, an invited citizen accepts the invitation of an event 
   const preview = page
     .getByRole("article")
     .filter({ hasText: "Operation Gästeliste" });
-  /** The invitation, not an application, signs the citizen up */
   const dialog = page.getByRole("dialog");
   await clickUntilVisible(
     preview.getByRole("button", { name: "Eingeladen" }),

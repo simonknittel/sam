@@ -42,7 +42,6 @@ const UPLOAD_TABLE_SELECT = {
   ...UPLOAD_USAGE_SELECT,
 } satisfies Prisma.UploadSelect;
 
-/** A row of the upload table */
 export type UploadTableRow = Prisma.UploadGetPayload<{
   select: typeof UPLOAD_TABLE_SELECT;
 }>;
@@ -55,15 +54,13 @@ export interface UploadTablePageInput {
   readonly to?: Date;
   /** A part of the file name */
   readonly query?: string | null;
-  /** The citizens of the uploads. Only the managers can filter by them. */
+  /** Only the managers can filter by them */
   readonly createdByIds?: readonly string[] | null;
-  /** The id of the row next to the page, see `PageOptions.direction` */
   readonly cursor?: string | null;
 }
 
 export interface UploadTablePage {
   readonly uploads: UploadTableRow[];
-  /** Whether the actor has `upload;manage` */
   readonly canManage: boolean;
   readonly nextCursor: string | null;
   readonly prevCursor: string | null;
@@ -76,9 +73,8 @@ const getUsageWhere = (usage: UploadUsageType): Prisma.UploadWhereInput =>
 
 /**
  * The file names are stored URI-encoded, thus a search for "Mein Bild" must
- * also find "Mein%20Bild". The condition matches both forms: the encoded
- * form for the stored convention, the raw form for the older rows and for a
- * search without a character that the encoding changes.
+ * also find "Mein%20Bild". The condition matches both forms: some rows hold
+ * the raw form.
  */
 const getFileNameWhere = (query: string): Prisma.UploadWhereInput => ({
   OR: [
@@ -148,13 +144,9 @@ const buildWhere = (
 };
 
 /**
- * One page of the upload table, the newest first. Each actor sees the own
- * uploads. `upload;manage` shows the uploads of all citizens with their
- * authors: the permission changes the content of the page, not the access
- * to it.
- *
- * @throws ValidationError when no upload has the cursor and `unknownCursor`
- * is `UnknownCursorBehavior.Reject` (the default)
+ * Each actor sees the own uploads. `upload;manage` shows the uploads of all
+ * citizens with their authors: the permission changes the content of the page,
+ * not the access to it.
  */
 export const findUploadTablePage = async (
   context: Pick<ApplicationContext, "prisma">,

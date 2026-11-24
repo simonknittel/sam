@@ -31,7 +31,6 @@ export type ImportWikiPageContentInput = z.output<
 >;
 
 export interface ImportWikiPageContentOptions {
-  /** The name of the safety snapshot in the snapshot list */
   readonly safetySnapshotName: string;
 }
 
@@ -39,20 +38,7 @@ export interface ImportWikiPageContentOutput {
   readonly page_id: string;
 }
 
-/**
- * Replaces the content of a page with the content of a file (Tiptap JSON).
- * The file does not go through the checks of the editor, thus only the
- * administrators can import (see `canTransferWikiPageContent()`). An import
- * does not merge. A safety snapshot of the current content comes first: it
- * is the undo path.
- *
- * @throws NotFoundError when the page does not exist or is in the trash
- * @throws ValidationError when the schema of the editor cannot hold the
- * file, and a `DisallowedWikiIframesError` when the file embeds iframes of
- * hosts that the allowlist of the wiki does not have
- * @throws ConflictError when the briefing is frozen, the collab server is
- * not configured or does not take the content. The safety snapshot stays.
- */
+/** An import does not merge */
 export const importWikiPageContent = (
   context: ApplicationContext,
   actor: Actor,
@@ -69,11 +55,6 @@ export const importWikiPageContent = (
     if (isWikiScopeFrozen(scope))
       throw new ConflictError(WikiErrorMessage.BriefingFrozen);
 
-    /**
-     * The file can come from an older version of the editor or from a
-     * different source: unknown nodes, unknown marks and invalid structures
-     * fail
-     */
     let content: object;
     try {
       content = normalizeWikiContent(JSON.parse(input.content));

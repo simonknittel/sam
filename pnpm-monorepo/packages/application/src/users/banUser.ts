@@ -28,15 +28,12 @@ export type BanUserInput = z.infer<typeof banUserInputSchema>;
 
 export interface BanUserOutput {
   readonly user_id: string;
-  /** ISO 8601 instant */
   readonly banned_at: string;
 }
 
 /**
- * Ends the open connections of a banned user: the realtime connections of
- * the on-site notifications and the connections of the wiki editor. The
- * sessions of the user are deleted already, thus a reconnect fails. A
- * failure does not undo the ban: the function logs it and continues.
+ * The sessions of the user are deleted already, thus a reconnect fails. A
+ * failure does not undo the ban.
  */
 const endLiveConnections = async (
   context: ApplicationContext,
@@ -59,18 +56,6 @@ const endLiveConnections = async (
     );
 };
 
-/**
- * Bans a user, revokes their sessions, deletes the web push subscriptions of
- * their citizen and ends their open connections. Requires the admin role and
- * a citizen of the actor, who is the person that banned the user.
- *
- * @throws ForbiddenError when the actor is not an admin or has no citizen
- * @throws ValidationError when the actor bans themselves, or when the user is
- * an admin
- * @throws NotFoundError when the user does not exist
- * @throws ConflictError when the user is already banned (usually because a
- * different user banned them before)
- */
 export const banUser = (
   context: ApplicationContext,
   actor: Actor,
@@ -89,7 +74,6 @@ export const banUser = (
     });
     if (!user) throw new NotFoundError(UserErrorMessage.NotFound);
 
-    // Admins bypass the permission checks and could unban themselves anyway
     if (user.role === UserRole.ADMIN)
       throw new ValidationError(UserErrorMessage.CannotBanAdmin);
 

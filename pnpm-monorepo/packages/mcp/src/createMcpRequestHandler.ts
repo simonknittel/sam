@@ -24,7 +24,6 @@ import {
   type McpPrincipalExtra,
 } from "./createSamMcpHandler.js";
 
-/** Handles one HTTP request to the MCP endpoint */
 export type McpRequestHandler = (
   context: ApplicationContext,
   request: Request,
@@ -38,10 +37,6 @@ const toAuthInfo = (token: string, verifiedToken: VerifiedAccessToken) => ({
   resource: verifiedToken.resource,
 });
 
-/**
- * Verifies the bearer token of the request. Gives the verified token, or the
- * `401` or `403` response with the `WWW-Authenticate` challenge.
- */
 const authenticate = async (
   context: ApplicationContext,
   request: Request,
@@ -82,11 +77,6 @@ const authenticate = async (
   return { authInfo, verifiedToken };
 };
 
-/**
- * Loads the actor and the disabled tools of the grant of a verified token.
- * Gives the principal, or the response for a revoked grant, a banned user or
- * a user without the clearance of the app.
- */
 const loadPrincipal = async (
   context: ApplicationContext,
   verifiedToken: VerifiedAccessToken,
@@ -128,12 +118,9 @@ const loadPrincipal = async (
 };
 
 /**
- * Creates the handler of the MCP endpoint for a host, for example a Next.js
- * route. Create it one time. For each request, the handler checks the
- * `Host` header (protection against DNS rebinding), verifies the bearer
- * token, loads the principal and gives the request to the MCP server of the
- * principal. The host adds only its own concerns, for example the kill
- * switch and CORS.
+ * Create it one time. The check of the `Host` header protects against DNS
+ * rebinding. The host adds only its own concerns, for example the kill switch
+ * and CORS.
  */
 export const createMcpRequestHandler = (
   options: CreateSamMcpHandlerOptions,

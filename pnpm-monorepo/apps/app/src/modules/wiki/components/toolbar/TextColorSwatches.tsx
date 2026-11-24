@@ -17,17 +17,10 @@ const COLOR_CLASSES: Record<WikiTextColor, string> = {
 };
 
 interface Props {
-  /** Highlights the given color; omit when no text color is active */
   readonly activeColor?: WikiTextColor | null;
   readonly onSelect: (color: WikiTextColor) => void;
 }
 
-/**
- * The text color swatch row of the contextual edit menu. Swatches preview
- * the mark itself — a colored "A" on the popover background — which also
- * tells them apart from the marker swatches (colored background, see
- * HighlightSwatches).
- */
 export const TextColorSwatches = ({ activeColor = null, onSelect }: Props) => {
   return (
     <>

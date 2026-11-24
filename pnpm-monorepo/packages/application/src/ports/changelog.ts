@@ -1,6 +1,5 @@
 import type { PermissionSet } from "@sam-monorepo/domain";
 
-/** One changelog entry with its body as Markdown */
 export interface ChangelogEntrySource {
   readonly key: string;
   /** ISO date (`YYYY-MM-DD`) */
@@ -8,7 +7,7 @@ export interface ChangelogEntrySource {
   readonly title: string;
   readonly tags: string[];
   readonly isTracked: boolean;
-  /** The permission that a reader must have, or null for all readers */
+  /** Null for all readers */
   readonly requiresAuth: {
     readonly resource: PermissionSet["resource"];
     readonly operation: PermissionSet["operation"];

@@ -4,7 +4,10 @@ import { FaBirthdayCake, FaCoins, FaPiggyBank } from "react-icons/fa";
 import { FaScaleBalanced } from "react-icons/fa6";
 import { MdCelebration, MdEvent, MdTaskAlt } from "react-icons/md";
 
-/** The icons of the other apps, where the type has an app of its own */
+/**
+ * The icons of the other apps (except SILC), where the type has an app of its
+ * own
+ */
 const ICONS: Record<CalendarEntryType, IconType> = {
   [CalendarEntryType.Event]: MdEvent,
   [CalendarEntryType.Birthday]: FaBirthdayCake,
@@ -20,7 +23,6 @@ interface Props {
   readonly type: CalendarEntryType;
 }
 
-/** Decorative: the text next to the icon names the entry */
 export const CalendarEntryTypeIcon = ({ className, type }: Props) => {
   const Icon = ICONS[type];
 

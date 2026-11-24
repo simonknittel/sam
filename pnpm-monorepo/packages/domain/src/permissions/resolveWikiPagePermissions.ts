@@ -12,10 +12,6 @@ import {
 export interface WikiPagePermissionSource {
   readonly id: string;
   readonly parentId: string | null;
-  /**
-   * NULL means the owner is inherited from the nearest ancestor with an
-   * explicit owner; NULL at the root means the page has no owner.
-   */
   readonly ownerId: string | null;
   readonly visibility: WikiPageVisibility;
   readonly editability: WikiPageEditability;
@@ -102,12 +98,6 @@ const hasExplicitSetting = (
   }
 };
 
-/**
- * Nearest page with an explicit setting for the given tier, via the shared
- * hierarchy walk. The effective value of a fallback source (fully-INHERIT
- * chain, broken chain, cycle) stays INHERIT (or a null owner) and is
- * treated as most restrictive by the grant checks below.
- */
 const findSource = (
   page: WikiPagePermissionSource,
   tier: InheritedTier,
@@ -216,11 +206,6 @@ export const createWikiPagePermissionResolver = (
   const editCache = new Map<string, boolean>();
   const readGrantCache = new Map<string, boolean>();
   const readCache = new Map<string, boolean>();
-  /**
-   * Pages currently on the recursion stack, one set per tier: a tier depends
-   * on the lower tiers of the same page (read on edit on admin), so a shared
-   * set would mistake that for a cycle.
-   */
   const adminPending = new Set<string>();
   const editPending = new Set<string>();
   const readGrantPending = new Set<string>();
@@ -238,10 +223,8 @@ export const createWikiPagePermissionResolver = (
   };
 
   /**
-   * The gate every tier passes through: a page hands out nothing to someone
-   * who cannot read the page above it. Top-level pages have nothing to be
-   * gated by. A page whose parent is missing from the data counts as
-   * top-level, matching how the inherited tiers treat a broken chain.
+   * A page whose parent is missing from the data counts as top-level, matching
+   * how the inherited tiers treat a broken chain.
    */
   const isAccessible = (page: WikiPagePermissionSource) => {
     const parent = parentOf(page);
@@ -374,10 +357,6 @@ export const createWikiPagePermissionResolver = (
   return { get };
 };
 
-/**
- * Resolves the effective permissions of the given viewer for every given
- * page — see `createWikiPagePermissionResolver()` for the grant rules.
- */
 export const resolveWikiPagePermissions = (
   pages: readonly WikiPagePermissionSource[],
   viewer: WikiPageViewer,

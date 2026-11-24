@@ -10,7 +10,6 @@ import {
 } from "@sam-monorepo/application";
 import { cache } from "react";
 
-/** See `findEventInvitationRows()` */
 export const getEventInvitations = cache(
   withTrace("getEventInvitations", async (event: Pick<EventDetails, "id">) => {
     try {

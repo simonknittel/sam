@@ -17,13 +17,6 @@ export interface EndPayoutOutput {
   readonly cycle_id: string;
 }
 
-/**
- * Ends the payout phase of a cycle, which closes the cycle. Requires a
- * citizen and `profitDistributionCycle;update`.
- *
- * @throws ConflictError when the cycle does not exist or is not in its
- * payout phase, for example because the midnight job ended it before
- */
 export const endPayout = (
   context: ApplicationContext,
   actor: Actor,

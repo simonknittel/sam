@@ -33,7 +33,6 @@ export interface WikiPageListItem {
   readonly id: string;
   readonly title: string;
   readonly slug: string;
-  /** The route of the page, relative to the base URL of the app */
   readonly path: string;
   readonly icon_id: string | null;
   /** The parent page in the tree, or null for a page at the top of the tree */
@@ -42,14 +41,12 @@ export interface WikiPageListItem {
   readonly depth: number;
   /** The number of readable subpages */
   readonly child_count: number;
-  /** Whether the user can add a page below this page (`create_wiki_page`) */
   readonly can_add_children: boolean;
 }
 
 export interface ListWikiPagesOutput {
   /** The readable pages in the order of the page tree (depth first) */
   readonly pages: WikiPageListItem[];
-  /** Null when there are no more pages */
   readonly next_cursor: string | null;
 }
 
@@ -83,13 +80,6 @@ const findWikiTreeNode = (
   return null;
 };
 
-/**
- * The pages that the actor can read in the global wiki or in the briefing of
- * an event, in the order and the hierarchy of the sidebar. The cursor is the
- * id of a page.
- *
- * @throws ValidationError when no page of the list has the cursor
- */
 export const listWikiPages = (
   context: ApplicationContext,
   actor: Actor,

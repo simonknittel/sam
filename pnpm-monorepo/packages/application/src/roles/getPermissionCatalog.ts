@@ -17,22 +17,17 @@ export interface CatalogPermissionOutput {
   readonly title: string;
   /** German, or null */
   readonly description: string | null;
-  /**
-   * Whether a holder can use SAM only with the two-factor authentication of
-   * their Discord account (see `isMissingTwoFactorAuthentication()`)
-   */
+  /** See `isMissingTwoFactorAuthentication()` */
   readonly requires_two_factor_authentication: boolean;
 }
 
 export interface GetPermissionCatalogOutput {
-  /** In the order of the sections */
   readonly permissions: CatalogPermissionOutput[];
 }
 
 /**
- * The permissions that the role page offers as a checkbox, with the texts of
- * the role page (see `PERMISSION_CATALOG`). Each user can read them: the
- * catalog is static and contains no data of the organization.
+ * Each user can read them: the catalog is static and contains no data of the
+ * organization
  */
 export const getPermissionCatalog = async (
   _context: ApplicationContext,

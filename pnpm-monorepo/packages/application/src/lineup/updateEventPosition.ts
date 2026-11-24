@@ -20,10 +20,6 @@ export type UpdateEventPositionInput = z.infer<
   typeof updateEventPositionInputSchema
 >;
 
-/**
- * Changes the given fields of a position of the lineup of an event that the
- * actor manages
- */
 export const updateEventPosition = (
   context: ApplicationContext,
   actor: Actor,

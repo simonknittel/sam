@@ -15,7 +15,6 @@ interface Props {
 }
 
 export const Calculator = ({ className }: Props) => {
-  /** The time when the calculator opens. It does not keep ticking. */
   const openedAt = useNow();
   const [date, setDate] = useQueryState(
     "dt",
@@ -56,7 +55,6 @@ export const Calculator = ({ className }: Props) => {
         <h3 className="text-center font-mono text-xl uppercase">Rechner</h3>
 
         <div className="mt-2 flex flex-col md:flex-row">
-          {/* Input */}
           <div className="flex flex-1 flex-col gap-4 pb-4 md:pr-4 md:pb-0">
             <div>
               <DateTimeInput
@@ -96,7 +94,6 @@ export const Calculator = ({ className }: Props) => {
             </div>
           </div>
 
-          {/* Output */}
           <div className="flex flex-1 flex-col gap-2 border-t border-white/10 pt-4 md:border-t-0 md:border-l md:pt-0 md:pl-4">
             <TimezoneCompact
               date={date}

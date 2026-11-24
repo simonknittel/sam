@@ -308,7 +308,6 @@ describe("resolve event wiki page permissions", () => {
       canUploadImages: true,
       canUploadAttachments: true,
     });
-    /** EDITORS on "open" is inherited by "inheriting" (nearest setting wins) */
     expect(asParticipant.get("open")).toMatchObject({
       canUploadImages: true,
       canUploadAttachments: false,

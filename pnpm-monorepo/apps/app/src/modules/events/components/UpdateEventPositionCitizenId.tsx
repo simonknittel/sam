@@ -26,7 +26,6 @@ import { RequiredRoleBadges } from "./PositionRequiredRoles";
 
 type DisplayedCitizen = Pick<Citizen, "id" | "handle" | "deletedAt">;
 
-/** One citizen that the manager can assign */
 interface Choice {
   readonly citizen: DisplayedCitizen;
   readonly unmetRequirements: UnmetRequirements;
@@ -182,7 +181,6 @@ export const UpdateEventPositionCitizenId = ({
 
 interface ChoiceSectionProps {
   readonly title: string;
-  /** Whether the citizens of the section meet the requirements */
   readonly meetsRequirements: boolean;
   readonly position: PositionType;
   readonly choices: readonly Choice[];

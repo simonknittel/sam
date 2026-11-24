@@ -4,11 +4,8 @@ import type { ReadAuditEventType } from "./readAuditEventTypes.js";
 import type { ReadMarkerSubject } from "./readMarkers/ReadMarkerSubject.js";
 
 /**
- * The audit-event vocabulary of the system log, shared between the Next.js
- * app (which writes most events and renders the log) and the Lambdas (whose
- * automations write events too). The system log is immutable: event type
- * definitions are only ever added — never modified — with newer payload
- * shapes introduced as V2/V3 types. The message rendering stays in the app.
+ * The system log is immutable: event type definitions are only ever added —
+ * never modified — with newer payload shapes introduced as V2/V3 types.
  */
 export enum AuditEventType {
   USER_LOGIN = "USER_LOGIN",
@@ -109,12 +106,7 @@ export enum AuditEventType {
   EVENT_MANAGERS_ASSIGNED = "EVENT_MANAGERS_ASSIGNED",
   EVENT_MANAGER_REMOVED = "EVENT_MANAGER_REMOVED",
   EVENT_LINEUP_STATUS_CHANGED = "EVENT_LINEUP_STATUS_CHANGED",
-  /**
-   * The participation switch of an app event. The switch to false cancels
-   * the sign-ups and clears the assignments and applications of the lineup.
-   */
   EVENT_PARTICIPATION_STATUS_CHANGED = "EVENT_PARTICIPATION_STATUS_CHANGED",
-  /** A manager told the readers of the published briefing about a change */
   EVENT_BRIEFING_UPDATE_ANNOUNCED = "EVENT_BRIEFING_UPDATE_ANNOUNCED",
   EVENT_LINEUP_ORDER_CHANGED = "EVENT_LINEUP_ORDER_CHANGED",
   EVENT_POSITION_CITIZEN_ASSIGNED = "EVENT_POSITION_CITIZEN_ASSIGNED",
@@ -143,10 +135,6 @@ export enum AuditEventType {
   EVENT_TEMPLATE_UPDATED_V2 = "EVENT_TEMPLATE_UPDATED_V2",
   EVENT_TEMPLATE_UPDATED_V3 = "EVENT_TEMPLATE_UPDATED_V3",
   EVENT_TEMPLATE_DUPLICATED = "EVENT_TEMPLATE_DUPLICATED",
-  /**
-   * The reverse direction of EVENT_CREATED_FROM_TEMPLATE: a manager turned
-   * one of their events back into a template.
-   */
   EVENT_TEMPLATE_CREATED_FROM_EVENT = "EVENT_TEMPLATE_CREATED_FROM_EVENT",
   EVENT_TEMPLATE_DELETED = "EVENT_TEMPLATE_DELETED",
   EVENT_TEMPLATE_RESTORED = "EVENT_TEMPLATE_RESTORED",
@@ -184,11 +172,6 @@ export enum AuditEventType {
   WIKI_PAGE_COPIED = "WIKI_PAGE_COPIED",
   WIKI_PAGE_PERMISSIONS_UPDATED = "WIKI_PAGE_PERMISSIONS_UPDATED",
   WIKI_PAGE_EVENT_SCOPES_UPDATED = "WIKI_PAGE_EVENT_SCOPES_UPDATED",
-  /**
-   * The same edit on a page of an event template's briefing blueprint, where
-   * the scopes are stored metadata for the future event (see
-   * WikiPage.templateId).
-   */
   WIKI_PAGE_TEMPLATE_SCOPES_UPDATED = "WIKI_PAGE_TEMPLATE_SCOPES_UPDATED",
   WIKI_PAGE_ROLE_ACCESS_PRUNED = "WIKI_PAGE_ROLE_ACCESS_PRUNED",
   WIKI_PAGE_PERMISSIONS_RESET_BY_MOVE = "WIKI_PAGE_PERMISSIONS_RESET_BY_MOVE",
@@ -362,7 +345,7 @@ type ReadAuditEventData = {
 /**
  * Wiki page audit payloads carry the owning event's id so event wiki rows
  * stay attributable after the event (and its pages) are cascade-deleted.
- * Absent for global wiki pages and on events from before the event wikis.
+ * Absent for the pages of the global wiki and of the event templates.
  *
  * A type alias, not an interface: Prisma accepts a payload as a JSON value
  * only if its type has an implicit index signature, and an interface has none.
@@ -1119,7 +1102,6 @@ export interface AuditEventDataByType {
     templateId: string;
     name: string;
     sourceEventId: string;
-    /** The event's name at creation time, a historical fact */
     sourceEventName: string;
     positionCount: number;
     pageCount: number;
@@ -1151,7 +1133,6 @@ export interface AuditEventDataByType {
   [AuditEventType.EVENT_CREATED_FROM_TEMPLATE]: {
     eventId: string;
     templateId: string;
-    /** The template's name at creation time, a historical fact */
     templateName: string;
   };
 
@@ -1300,7 +1281,6 @@ export interface AuditEventDataByType {
   };
 
   [AuditEventType.WIKI_PAGE_DUPLICATED]: WikiPageAuditScope & {
-    /** The newly created page */
     pageId: string;
     sourcePageId: string;
     title: string;
@@ -1308,14 +1288,13 @@ export interface AuditEventDataByType {
     /** All created pages, the copied root first */
     duplicatedPageIds: string[];
     mirroredChildren: boolean;
-    /** Only on events from before permission mirroring was removed */
+    /** @deprecated No code writes it */
     mirroredPermissions?: boolean;
   };
 
   /**
    * One event per page created by copy'n'paste or the create form's
-   * "copy from" — the successor of WIKI_PAGE_DUPLICATED, which only
-   * occurs on historical events.
+   * "copy from"
    */
   [AuditEventType.WIKI_PAGE_COPIED]: WikiPageAuditScope & {
     /** The newly created page — or the replaced one, see below */
@@ -1346,7 +1325,6 @@ export interface AuditEventDataByType {
     cascaded: boolean;
   };
 
-  /** The event-mode counterpart of WIKI_PAGE_PERMISSIONS_UPDATED */
   [AuditEventType.WIKI_PAGE_EVENT_SCOPES_UPDATED]: {
     pageId: string;
     eventId: string;
@@ -1354,10 +1332,6 @@ export interface AuditEventDataByType {
     readScopePositionId: string | null;
     editScope: string;
     editScopePositionId: string | null;
-    /**
-     * Absent only on dev rows written mid-branch, before the feedback round
-     * added the uploadability tiers to event pages
-     */
     imageUploadability?: string;
     attachmentUploadability?: string;
   };
@@ -1374,15 +1348,13 @@ export interface AuditEventDataByType {
   };
 
   /**
-   * Role access of a descendant page that stopped granting anything because
-   * the role can no longer read the page above it — a page never hands out
-   * more than its parent, so those entries are dropped instead of being kept
-   * as dead data.
+   * Entries that grant nothing, because the role can no longer read the page
+   * above it
    */
   [AuditEventType.WIKI_PAGE_ROLE_ACCESS_PRUNED]: {
     pageId: string;
     removedRoleIds: string[];
-    /** DUPLICATED only occurs on events from before mirroring was removed */
+    /** No code writes DUPLICATED */
     trigger: "PERMISSIONS_UPDATED" | "DUPLICATED";
   };
 
@@ -1426,7 +1398,6 @@ export interface AuditEventDataByType {
   [AuditEventType.WIKI_SETTINGS_UPDATED]: {
     /** WikiSetting key, e.g. "iframeAllowlist" or "pageLink:support" */
     setting: string;
-    /** The new value as stored in WikiSetting.value */
     value: string | string[] | null;
   };
 
@@ -1651,7 +1622,6 @@ export interface AuditEventDataByType {
 
   [AuditEventType.WEB_PUSH_SUBSCRIPTIONS_PRUNED]: {
     count: number;
-    /** Why the endpoints were dropped by their push service */
     reason: "expired" | "invalid";
   };
 
@@ -1698,10 +1668,7 @@ export interface AuditEventDataByType {
     uploadId: string;
     fileName: string;
     mimeType: string;
-    /**
-     * User id of who uploaded the file, which is rarely who deleted it. NULL
-     * when that user was deleted, unlike the V1 type.
-     */
+    /** User id. NULL when that user was deleted, unlike the V1 type. */
     uploadedById: string | null;
     /** See UPLOAD_DELETED */
     locations: string[];
@@ -1752,7 +1719,6 @@ export interface AuditEventDataByType {
 
   [AuditEventType.EVENT_PUBLISHED_TO_DISCORD]: {
     eventId: string;
-    /** The guild scheduled event Discord created */
     discordScheduledEventId: string;
     /** The Discord channel it points at, or null for an external location */
     discordChannelId: string | null;
@@ -1789,50 +1755,37 @@ export interface AuditEventDataByType {
   };
 
   /**
-   * One event per added citizen. The manager's optional comment stays out of
-   * the immutable log — it lives on the participation row and in the event's
-   * activity feed.
+   * The texts of the managers and of the citizens stay out of the immutable
+   * log, here and in the events of the invitations and the applications.
    */
   [AuditEventType.EVENT_PARTICIPANT_ADDED_BY_MANAGER]: {
     eventId: string;
     citizenId: string;
   };
 
-  /** The manager's optional reason stays out of the immutable log. */
   [AuditEventType.EVENT_PARTICIPANT_REMOVED_BY_MANAGER]: {
     eventId: string;
     citizenId: string;
   };
 
-  /**
-   * One event per invited citizen. The message of the manager stays out of
-   * the immutable log, like the comment of an added participant.
-   */
   [AuditEventType.EVENT_PARTICIPANT_INVITED]: {
     eventId: string;
     citizenId: string;
     invitationId: string;
   };
 
-  /** The sign-up of the citizen accepted the invitation */
   [AuditEventType.EVENT_INVITATION_ACCEPTED]: {
     eventId: string;
     citizenId: string;
     invitationId: string;
   };
 
-  /** The comment of the citizen stays out of the immutable log */
   [AuditEventType.EVENT_INVITATION_DECLINED]: {
     eventId: string;
     citizenId: string;
     invitationId: string;
   };
 
-  /**
-   * A manager withdrew the invitation, added the citizen directly, approved
-   * the application of the citizen or turned off the participation of the
-   * event
-   */
   [AuditEventType.EVENT_INVITATION_WITHDRAWN]: {
     eventId: string;
     citizenId: string;
@@ -1840,43 +1793,32 @@ export interface AuditEventDataByType {
   };
 
   /**
-   * The switch of the applications of an event. The switch to false approves
-   * the open applications, which have their own events.
+   * The switch to false approves the open applications, which have their own
+   * events.
    */
   [AuditEventType.EVENT_APPLICATION_REQUIREMENT_CHANGED]: {
     eventId: string;
     enabled: boolean;
   };
 
-  /** The comment of the citizen stays out of the immutable log */
   [AuditEventType.EVENT_APPLICATION_CREATED]: {
     eventId: string;
     citizenId: string;
     applicationId: string;
   };
 
-  /**
-   * A manager approved the application or added the citizen directly, or the
-   * switch of the requirement to false approved it
-   */
   [AuditEventType.EVENT_APPLICATION_APPROVED]: {
     eventId: string;
     citizenId: string;
     applicationId: string;
   };
 
-  /** The reason of the manager stays out of the immutable log */
   [AuditEventType.EVENT_APPLICATION_DECLINED]: {
     eventId: string;
     citizenId: string;
     applicationId: string;
   };
 
-  /**
-   * The citizen withdrew the application or signed up with an invitation, or
-   * a manager turned off the participation of the event, or turned off the
-   * applications while the citizen could not see the event
-   */
   [AuditEventType.EVENT_APPLICATION_WITHDRAWN]: {
     eventId: string;
     citizenId: string;
@@ -1899,7 +1841,6 @@ export interface AuditEventDataByType {
   [AuditEventType.MCP_USAGE_COUNTED]: {
     /** The start of the counted day */
     date: string;
-    /** The number of the audit events of the day through the MCP server */
     count: number;
   };
 
@@ -1912,7 +1853,6 @@ export interface AuditEventDataByType {
     unknownValueUsdCents: number;
     storeValueAuec: number;
     inGameValueAuec: number;
-    /** The ships without an acquisition source */
     unknownValueAuec: number;
   };
 
@@ -1963,22 +1903,14 @@ export interface AuditEventDataByType {
     newEntryCount: number;
   };
 
-  /**
-   * Both lists hold keys of seasonal events, and both hold only the events
-   * the citizen really changed. `enabled` names the events which show their
-   * theme again, `disabled` the events the citizen switched off.
-   */
+  /** Only the events the citizen really changed */
   [AuditEventType.SEASONAL_THEME_SETTINGS_UPDATED]: {
     citizenId: string;
     enabled: string[];
     disabled: string[];
   };
 
-  /**
-   * Both lists hold calendar entry types, and both hold only the types the
-   * citizen really changed. `enabled` names the types which the calendar
-   * shows again, `disabled` the types the citizen switched off.
-   */
+  /** Only the types the citizen really changed */
   [AuditEventType.CALENDAR_ENTRY_TYPE_SETTINGS_UPDATED]: {
     citizenId: string;
     enabled: string[];
@@ -2011,7 +1943,6 @@ export interface AuditEventDataByType {
     subjectId: string;
   };
 
-  /** The first visit of a citizen who can open the app, see `Citizen.welcomedAt` */
   [AuditEventType.CITIZEN_WELCOMED]: {
     citizenId: string;
   };
@@ -2058,10 +1989,9 @@ export interface AuditEventDataByType {
   };
 
   /**
-   * `clientId` is the URL of the Client ID Metadata Document. The client
-   * gives `clientName` itself, thus the name is not trusted. `customName` and
-   * `disabledToolNames` are the settings that the user selected on the
-   * consent page.
+   * `customName` and `disabledToolNames` are the settings that the user
+   * selected on the consent page. The name is not trusted, see
+   * OAUTH_GRANT_CREATED.
    */
   [AuditEventType.OAUTH_GRANT_CREATED_V2]: {
     grantId: string;
@@ -2121,11 +2051,7 @@ export interface AuditEventDataByType {
     roleIds: string[];
   };
 
-  /**
-   * The links between roles and tags that one write added or removed: on the
-   * page of a tag, on the page of a role or through the MCP server. Only the
-   * links that really changed are in the lists.
-   */
+  /** Only the links that really changed */
   [AuditEventType.ROLE_TAG_ASSIGNMENTS_UPDATED]: {
     added: {
       roleId: string;
@@ -2172,13 +2098,8 @@ export interface AuditEventDataByType {
 }
 
 /**
- * One creatable audit event: the payload type is tied to the event type so
- * writers can't emit a payload the system log doesn't know how to render.
- *
- * The second member accepts the same read events. It lets a writer give any
- * read type in one value (the MCP server writes the type of its tool):
- * TypeScript matches such a value against the members of the first union
- * only for at most 25 types.
+ * The payload type is tied to the event type so writers can't emit a payload
+ * the system log doesn't know how to render.
  */
 export type AuditEventInput =
   | {

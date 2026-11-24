@@ -9,7 +9,6 @@ import clsx from "clsx";
 
 interface Props {
   readonly tag: BadgeRoleTag;
-  /** Whether the tag filters the list */
   readonly isPressed: boolean;
   readonly onClick: (tag: BadgeRoleTag) => void;
 }

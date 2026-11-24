@@ -51,7 +51,6 @@ export const useEntryUpload = () => {
   const storedHashesRef = useRef<Set<string> | null>(null);
   /** The load on its way, so two cycles never fetch the same pages twice. */
   const loadingRef = useRef<Promise<Set<string> | null> | null>(null);
-  /** The keys of the entries the server verifiably holds. */
   const settledKeysRef = useRef(new Set<string>());
 
   const loadStoredHashesOnce = () => {
@@ -82,7 +81,6 @@ export const useEntryUpload = () => {
           return null;
         })
         .finally(() => {
-          /** A failed load starts again on the next cycle */
           loadingRef.current = null;
         });
     }
@@ -128,7 +126,6 @@ export const useEntryUpload = () => {
       }
     }
 
-    /** The badge of an entry of an earlier visit needs no request */
     markKeysUploaded(storedKeys);
 
     /**

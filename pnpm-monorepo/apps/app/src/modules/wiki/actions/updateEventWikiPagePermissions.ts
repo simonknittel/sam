@@ -7,7 +7,6 @@ import {
 } from "@sam-monorepo/application";
 import { WIKI_ERROR_TEXTS } from "../utils/wikiErrorTexts";
 
-/** See `updateEventWikiPagePermissions()` of the application */
 export const updateEventWikiPagePermissions = createUseCaseAction({
   name: "updateEventWikiPagePermissions",
   schema: updateEventWikiPagePermissionsInputSchema,

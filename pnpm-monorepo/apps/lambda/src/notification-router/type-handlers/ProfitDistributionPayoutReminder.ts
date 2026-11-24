@@ -36,7 +36,6 @@ export const ProfitDistributionPayoutReminderHandler = async (
       url: `/app/sincome/${result.cycle.id}`,
     })),
     {
-      // A reminder that arrives after the end of the payout phase has no use
       TTL: getTimeToLiveUntil(
         context,
         getPayoutPhaseEnd(result.cycle.payoutEndsAt),

@@ -8,10 +8,6 @@ import { findOwnRequiredRoleIds } from "@sam-monorepo/application";
 import type { Event } from "@sam-monorepo/database/client";
 import { cache } from "react";
 
-/**
- * The roles of the signed-in citizen that the requirement check of the lineup
- * needs
- */
 export const getMyRequiredRoleIds = cache(
   withTrace("getMyRequiredRoleIds", async (eventId: Event["id"]) => {
     try {

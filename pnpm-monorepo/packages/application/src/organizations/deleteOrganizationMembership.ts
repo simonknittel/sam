@@ -27,10 +27,7 @@ export interface DeleteOrganizationMembershipOutput {
 }
 
 /**
- * Ends the membership of a citizen in an organization. The history entry
- * LEFT ends the membership, and the replay of the membership history removes
- * it from the active memberships. Requires a citizen and
- * `organizationMembership;delete`.
+ * The history entry LEFT ends the membership (see `changeMembershipHistory()`).
  *
  * @throws NotFoundError when the citizen is not a member, or is deleted
  */

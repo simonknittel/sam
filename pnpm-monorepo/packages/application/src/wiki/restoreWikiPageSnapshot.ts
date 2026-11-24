@@ -19,7 +19,6 @@ export type RestoreWikiPageSnapshotInput = z.output<
 >;
 
 export interface RestoreWikiPageSnapshotOptions {
-  /** The name of the safety snapshot in the snapshot list */
   readonly safetySnapshotName: string;
 }
 
@@ -29,19 +28,8 @@ export interface RestoreWikiPageSnapshotOutput {
 }
 
 /**
- * Makes a snapshot the current content of its page. Only for the
- * administrators of the page. A safety snapshot of the current content comes
- * first: it is the undo path. The content goes through the collab server,
- * thus the open editors get the restored content.
- *
- * @throws NotFoundError when the snapshot or its page does not exist, or the
- * page is in the trash: the retention of the automatic snapshots, a
- * permanent delete or a different tab removed it before
- * @throws ForbiddenError when the actor does not manage the page
- * @throws ValidationError when the current schema of the editor cannot hold
- * the snapshot
- * @throws ConflictError when the briefing is frozen, the collab server is
- * not configured or does not take the content. The safety snapshot stays.
+ * The retention of the automatic snapshots can remove the snapshot before the
+ * restore
  */
 export const restoreWikiPageSnapshot = (
   context: ApplicationContext,
@@ -62,7 +50,6 @@ export const restoreWikiPageSnapshot = (
       snapshot.pageId,
     );
 
-    /** A snapshot can be older than a change of the schema of the editor */
     let content: object;
     try {
       content = normalizeWikiContent(snapshot.content);

@@ -86,14 +86,12 @@ const isOwnDiscordId = async (
   })) > 0;
 
 /**
- * Confirms a log or marks it as a false report. Only a log without a
- * decision gets one: the UI never offers a change of a decision. An identity
- * log needs the confirm permission of its type, a note `note;confirm` for its
- * classification.
+ * Only a log without a decision gets one: the UI never offers a change of a
+ * decision.
  *
  * @throws NotFoundError when the log does not exist or its citizen is deleted
- * @throws ValidationError for a log type that nobody decides about, for the
- * own Discord ID, and for a Discord ID that a different citizen has
+ * @throws ValidationError for a log type that nobody decides about, for the own
+ * Discord ID, and for a Discord ID that a different citizen has
  * @throws ConflictError when somebody decided about the log in the meantime
  */
 export const confirmCitizenLog = (
@@ -130,7 +128,6 @@ export const confirmCitizenLog = (
         });
         if (count === 0) return false;
 
-        /** The copies of the confirmed values change in the same transaction */
         await syncCitizenIdentityAfterLogChange(transaction, citizenLog);
         return true;
       });

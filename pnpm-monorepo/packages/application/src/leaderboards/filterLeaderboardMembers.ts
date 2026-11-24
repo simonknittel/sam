@@ -2,22 +2,14 @@ import { requirePermission, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { withSpan } from "../withSpan.js";
 
-/**
- * A rank of a leaderboard of the game. The host reads the ranks from the
- * website of the game and validates them, thus this interface is not a
- * schema.
- */
+/** Not a schema: the host reads the ranks from a website and validates them */
 export interface LeaderboardRank {
   /** The handle of the player */
   readonly nickname: string;
   readonly rank: number;
 }
 
-/**
- * Keeps the ranks of the members of the organization, the best rank first.
- * The members are the citizens with a login. A rank belongs to a member when
- * its nickname is the handle of the citizen. Requires `leaderboards;read`.
- */
+/** The members are the citizens with a login */
 export const filterLeaderboardMembers = <Rank extends LeaderboardRank>(
   context: ApplicationContext,
   actor: Actor,

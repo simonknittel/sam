@@ -22,10 +22,6 @@ import {
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
-/**
- * A variant with a linked wiki subtree (root → child) plus one readable
- * page outside the subtree, the shared setup of most embed tests.
- */
 const seedLinkedVariant = async (
   prisma: PrismaClient,
   { owner }: { readonly owner?: TestCitizen } = {},
@@ -60,11 +56,10 @@ const seedLinkedVariant = async (
   return { rootPage, childPage, outsidePage, manufacturer, series, variant };
 };
 
-/** The wiki sidebar's search box, i.e. the marker of a rendered embed */
+/** The marker of a rendered embed */
 const sidebarSearch = (page: Page) =>
   page.getByRole("combobox", { name: "Seiten durchsuchen" });
 
-/** The heading of the prompt for the managers of the ship catalog */
 const WIKI_PAGE_PROMPT_TEXT = "Diese Variante hat noch keine Wiki-Seite";
 
 test("the linked subtree renders on the variant page, limited to the subtree", async ({
@@ -112,9 +107,7 @@ test("tree navigation opens subpages under the variant URL, keeping the metadata
   );
 
   await expect(page.getByText("Torpedos richtig nachladen.")).toBeVisible();
-  // The variant metadata stays above the embedded page
   await expect(page.getByTitle(variant.name, { exact: true })).toBeVisible();
-  // The breadcrumb of the root page leads to the variant, not to the wiki
   await expect(
     page
       .getByRole("navigation", { name: "Übergeordnete Seiten" })
@@ -171,10 +164,8 @@ test("a variant without a linked page shows no wiki section", async ({
 
   await expect(page.getByTitle(variant.name, { exact: true })).toBeVisible();
   await expect(sidebarSearch(page)).toHaveCount(0);
-  // Only the managers of the ship catalog get the prompt
   await expect(page.getByText(WIKI_PAGE_PROMPT_TEXT)).toHaveCount(0);
 
-  // A readable page outside any linked subtree stays out of the embed routes
   await page.goto(
     `/app/fleet/variant/${variant.id}/wiki/${outsidePage.id}/${outsidePage.slug}`,
   );
@@ -450,7 +441,6 @@ test("the prompt on the variant page creates and links a new page", async ({
     page.getByRole("button", { name: "Neue Seite" }),
     createModal,
   );
-  // The title starts as the name of the variant, the page at the top level
   await expect(createModal.getByLabel("Titel")).toHaveValue(variant.name);
   await createModal.getByRole("button", { name: "Erstellen" }).click();
   await expect(createModal).toHaveCount(0);
@@ -488,11 +478,9 @@ test("linked root pages show fleet-gated backlink chips in the global wiki", asy
     page.getByRole("link", { name: variant.name, exact: true }),
   ).toHaveAttribute("href", `/app/fleet/variant/${variant.id}`);
 
-  // Root only — descendants stay chip-free
   await page.goto(`/app/wiki/${childPage.id}/${childPage.slug}`);
   await expect(page.getByText("Eingebunden bei:")).toHaveCount(0);
 
-  // Without the fleet permissions the chip is gone from the root as well
   await switchUser(plainReader.user);
   await page.goto(`/app/wiki/${rootPage.id}/${rootPage.slug}`);
   await expect(

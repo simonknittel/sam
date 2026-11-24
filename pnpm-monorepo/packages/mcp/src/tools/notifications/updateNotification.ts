@@ -28,7 +28,6 @@ export const updateNotificationTool = defineTool({
     idempotentHint: true,
     openWorldHint: false,
   },
-  // The four use cases have the same input
   inputSchema: markOnSiteNotificationReadInputSchema.extend({
     action: z.enum(NotificationAction),
   }),

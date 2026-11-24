@@ -31,7 +31,6 @@ export const buildCreateGuildScheduledEventPayload = (
     : { image: content.imageDataUri }),
   privacy_level: DiscordScheduledEventPrivacyLevel.GuildOnly,
   entity_type: target.entityType,
-  // Only the external target has a location, only the channel targets a channel
   ...("location" in target
     ? { entity_metadata: { location: target.location } }
     : { channel_id: target.channelId }),

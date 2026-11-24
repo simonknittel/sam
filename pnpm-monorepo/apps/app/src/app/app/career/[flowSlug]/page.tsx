@@ -37,7 +37,6 @@ export default async function Page({
   const authentication = await requireAuthenticationPage(requestPath);
 
   const context = await getFlowContext();
-  /** Unknown and soft-deleted slugs alike have no flow to show */
   const flowMetadata = context?.flowsBySlug.get(flowSlug);
   if (!flowMetadata) notFound();
 

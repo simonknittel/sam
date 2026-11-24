@@ -40,7 +40,6 @@ const span = { setStatus: () => span, end: () => undefined };
 
 const baseUrl = new URL("http://localhost");
 
-/** The columns of the user that `get_user` selects */
 const USER_ROW = {
   id: "user",
   name: "Name",
@@ -56,10 +55,7 @@ const USER_ROW = {
   citizen: { id: "citizen", handle: "Handle", deletedAt: null },
 };
 
-/**
- * The tool of these tests uses only the user query, the logger, the tracer
- * and the URLs. The registry writes the audit event of a read tool.
- */
+/** The registry writes the audit event of a read tool */
 const context = {
   prisma: { user: { findUnique: () => Promise.resolve(USER_ROW) } },
   log,
@@ -102,7 +98,6 @@ const handler = createSamMcpHandler({
   onerror: () => undefined,
 });
 
-/** A JSON-RPC response has a result or an error */
 interface JsonRpcResponseBody<Result> {
   readonly result?: Result;
   readonly error?: { readonly code: number; readonly message: string };
@@ -144,7 +139,6 @@ const send = async <Result>(
   };
 };
 
-/** A request of the 2026-07-28 revision with its envelope and its headers */
 const sendModernRequest = <Result>(
   method: string,
   params: Record<string, unknown> = {},
@@ -320,7 +314,6 @@ describe("tools/call", () => {
       ],
     });
     expect(log.error).not.toHaveBeenCalled();
-    // A failed read writes no audit event, like a failed write
     expect(audit.create).not.toHaveBeenCalled();
   });
 
@@ -379,7 +372,6 @@ describe("tools/call", () => {
   });
 });
 
-/** The fields of a cacheable result of the 2026-07-28 revision */
 interface CacheableResult {
   readonly resultType: string;
   readonly ttlMs: number;

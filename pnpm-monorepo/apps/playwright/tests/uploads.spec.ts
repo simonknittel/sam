@@ -51,7 +51,6 @@ test("a role icon uploaded through the UI is stored and displayed", async ({
   await page.locator('input[type="file"]').first().setInputFiles(imagePath);
   await expect(page.getByText("Erfolgreich hochgeladen")).toBeVisible();
 
-  // The upload lands in the bucket and the probe reads it back from there
   await expect
     .poll(
       async () => {
@@ -72,8 +71,6 @@ test("a role icon uploaded through the UI is stored and displayed", async ({
     include: { icon: true },
   });
 
-  // The refreshed page renders the icon from the bucket (via the image
-  // optimizer, which fetches it server-side)
   const iconImage = page.locator(`img[src*="${icon!.id}"]`).first();
   await expect(iconImage).toBeVisible();
   // The natural width stays 0 until the browser has loaded the image
@@ -96,7 +93,6 @@ test("an image uploaded to a wiki page is stored, displayed and persisted", asyn
   await enterEditMode(page);
   await focusEditor(page);
 
-  // The toolbar's image button opens a native file picker
   const fileChooserPromise = page.waitForEvent("filechooser");
   await page
     .getByRole("button", { name: "Bild einfügen", exact: true })
@@ -106,7 +102,6 @@ test("an image uploaded to a wiki page is stored, displayed and persisted", asyn
 
   await expect(page.getByText('"upload.png" wurde eingefügt.')).toBeVisible();
 
-  // The author is the citizen, and the assign route links the page at once
   const upload = await prisma.upload.findFirstOrThrow({
     select: {
       id: true,
@@ -119,14 +114,12 @@ test("an image uploaded to a wiki page is stored, displayed and persisted", asyn
     { pageId: wikiPage.id, kind: WikiPageUploadKind.IMAGE },
   ]);
 
-  // The editor loads the image straight from the bucket (anonymous read)
   const editorImage = page.locator(
     `.tiptap[contenteditable="true"] img[src*="${upload.id}"]`,
   );
   await expect(editorImage).toBeVisible();
   await expect(editorImage).not.toHaveJSProperty("naturalWidth", 0);
 
-  // The probe persists the dimensions read back from the bucket
   await expect
     .poll(
       async () => {
@@ -142,7 +135,6 @@ test("an image uploaded to a wiki page is stored, displayed and persisted", asyn
 
   await expectPersisted(prisma, wikiPage.id, "content").toContain(upload.id);
 
-  // The read view renders the persisted image
   await page.reload();
   const readViewImage = page.locator(`article img[src*="${upload.id}"]`);
   await expect(readViewImage).toBeVisible();
@@ -208,10 +200,6 @@ test("an SVG uploaded to a wiki page becomes an image or an attachment, as the p
   ]);
 });
 
-/**
- * The author of an upload is a citizen. Admin mode gives all permissions,
- * thus only the missing citizen refuses the upload here.
- */
 test("a user without a citizen cannot upload, also in admin mode", async ({
   page,
   prisma,

@@ -14,10 +14,6 @@ export const metadata: Metadata = {
   title: "Briefing",
 };
 
-/**
- * The briefing's homepage: serves the event wiki's locked root page at the
- * bare briefing path. Child pages live under their id like in the wiki.
- */
 export default async function Page({
   params,
 }: PageProps<"/app/events/[id]/briefing">) {

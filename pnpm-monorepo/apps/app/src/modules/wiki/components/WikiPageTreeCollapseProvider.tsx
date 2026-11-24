@@ -29,7 +29,6 @@ interface WikiPageTreeCollapseContextValue {
   expand: (pageId: string) => void;
   expandAll: () => void;
   collapseAll: () => void;
-  /** Whether the tree currently shows any subpages at all */
   hasAnyExpanded: boolean;
 }
 
@@ -54,17 +53,12 @@ let previousMountState: WikiExpansionState | undefined;
 
 interface Props {
   readonly children: ReactNode;
-  /** The tree the sidebar renders, used to find the active page's ancestors */
   readonly nodes: WikiTreeNode[];
   /** Raw cookie value, parsed here so no Set has to cross the RSC boundary */
   readonly cookieValue: string | undefined;
 }
 
 /**
- * Holds which sidebar pages are expanded. The state starts from the cookie,
- * so the server already renders it and nothing flashes on hydration, and is
- * written back on every change.
- *
  * Opening a page expands its ancestors and the page itself: without the
  * ancestors, reaching a nested page through the search or a link would leave
  * the sidebar showing no trace of where the viewer is, and expanding the page
@@ -142,10 +136,6 @@ export const WikiPageTreeCollapseProvider = ({
   );
 };
 
-/**
- * Check for undefined since the defaultValue of the context is undefined. If
- * it's still undefined, the provider component is missing.
- */
 export const useWikiPageTreeCollapse = () => {
   const context = useContext(WikiPageTreeCollapseContext);
   if (!context) throw new Error("Provider missing!");

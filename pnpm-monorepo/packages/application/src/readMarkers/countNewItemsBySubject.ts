@@ -4,9 +4,8 @@ import type { ApplicationContext } from "../context.js";
 import { READ_MARKER_SUBJECT_RULES } from "./readMarkerSubjects.js";
 
 /**
- * The number of new items of each subject type. A subject type which the
- * actor may not read counts 0, and so does each subject type for an actor
- * without a citizen.
+ * A subject type which the actor may not read counts 0, and so does each
+ * subject type for an actor without a citizen
  */
 export const countNewItemsBySubject = async (
   context: ApplicationContext,

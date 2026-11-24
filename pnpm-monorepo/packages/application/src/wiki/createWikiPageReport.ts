@@ -32,15 +32,6 @@ export interface CreateWikiPageReportOutput {
   readonly report_id: string;
 }
 
-/**
- * Reports a page of the wiki or of a briefing, or an attachment of the page,
- * to the wiki managers
- *
- * @throws ForbiddenError for a user without a citizen
- * @throws NotFoundError when the actor cannot read the page, or the upload
- * is not an attachment of the page
- * @throws ValidationError when the citizen has too many open reports
- */
 export const createWikiPageReport = (
   context: ApplicationContext,
   actor: Actor,

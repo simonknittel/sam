@@ -3,7 +3,6 @@ import { createActor, type Actor } from "../actor.js";
 import { getEffectiveRolesOfCitizen } from "../auth/getEffectiveRolesOfCitizen.js";
 import type { ApplicationContext } from "../context.js";
 
-/** What a grant needs for the actor of its user */
 export const GRANT_ACTOR_SELECT = {
   userId: true,
   adminModeEnabledAt: true,
@@ -29,10 +28,9 @@ type GrantWithActorFields = Prisma.OAuthGrantGetPayload<{
 }>;
 
 /**
- * The actor of the user of a grant. The permissions are the own roles of
- * the user, like in the session of the app. Admin mode applies when the
- * grant has it and the user is an admin. The MCP requests and the token
- * endpoint use the same actor.
+ * The MCP requests and the token endpoint use the same actor. The permissions
+ * are the own roles of the user, like in the session of the app. Admin mode
+ * applies when the grant has it and the user is an admin.
  */
 export const createGrantActor = async (
   context: ApplicationContext,

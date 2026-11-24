@@ -13,11 +13,7 @@ interface Props {
   readonly className?: string;
 }
 
-/**
- * The upcoming and running entries of the next days (see
- * `DASHBOARD_CALENDAR_DAY_COUNT`), under a heading for each day, without a
- * limit. The type filter of the calendar app applies.
- */
+/** Without a limit. The type filter of the calendar app applies. */
 export const CalendarTile = async ({ className }: Props) => {
   const { start, end } = getDashboardCalendarRange();
   const entries = await getCalendarEntries(

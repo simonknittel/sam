@@ -2,8 +2,6 @@ import type { Locator, Page } from "@playwright/test";
 import { clickUntilVisible, toggleLabel } from "./interactions";
 import { expect } from "./test";
 
-/** Helpers for the specs of the Log Analyzer */
-
 export const LOG_ANALYZER_PERMISSIONS = ["logAnalyzer;read"];
 
 export const LOG_ANALYZER_PAGE_PATH = "/app/tools/log-analyzer";
@@ -18,7 +16,6 @@ const HOURS_PER_DAY = 24;
 
 export const daysAgo = (days: number) => hoursAgo(days * HOURS_PER_DAY);
 
-/** The value of a date input */
 const toDateValue = (date: Date) => date.toISOString().slice(0, 10);
 
 export interface BackupFile {
@@ -28,10 +25,7 @@ export interface BackupFile {
 }
 
 /**
- * Replaces the folder picker of the browser, which no test can answer. The
- * handle gives back one log file with the given lines, so a parse finds one
- * entry for each of them. `appendLogLines` adds lines to the file, as the
- * game does while it runs.
+ * Replaces the folder picker of the browser, which no test can answer.
  *
  * The app also stores the handle in IndexedDB, which fails for this object
  * because it carries functions. That happens after the parse started and the
@@ -120,7 +114,6 @@ export const closeSettings = async (page: Page) => {
   await expect(page.getByRole("dialog")).toHaveCount(0);
 };
 
-/** The columns of the settings table, as the checkboxes name them */
 export enum SettingsColumn {
   ShowOwn = "Eigene anzeigen",
   Share = "Teilen",
@@ -138,7 +131,6 @@ export const settingCheckbox = (
   });
 
 /**
- * The label around the checkbox, because the checkbox itself is `sr-only`.
  * The inner locator is queried inside each label, thus it must not carry the
  * dialog in its chain.
  */
@@ -161,9 +153,8 @@ export const rowOf = (page: Page, text: string): Locator =>
   tableRows(page).filter({ hasText: text });
 
 /**
- * A click which lands before React hydrates is swallowed, so it is retried
- * until the table shows the parsed entries. A repeated parse is harmless: it
- * finds the same entries and shares none of them a second time.
+ * A repeated parse (a retried click) is harmless: it finds the same entries and
+ * shares none of them a second time.
  */
 export const selectFolder = (page: Page) =>
   clickUntilVisible(
@@ -199,8 +190,5 @@ export const resetDateRange = async (page: Page) => {
     .click();
 };
 
-/**
- * Live mode reads the log files again at this interval
- * (LIVE_MODE_PARSE_INTERVAL_MS in the app)
- */
+/** Mirrors `LIVE_MODE_PARSE_INTERVAL_MS` of the app */
 export const LIVE_MODE_PARSE_INTERVAL = 10_000;

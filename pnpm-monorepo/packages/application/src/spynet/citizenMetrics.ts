@@ -5,11 +5,6 @@ import { buildActivePenaltyEntryWhere } from "../penaltyPoints/activePenaltyEntr
 const isOwnCitizen = (actor: Actor, citizenId: string) =>
   actor.citizen?.id === citizenId;
 
-/**
- * The penalty points that the citizen currently holds. Null when the actor
- * cannot read them: the own points need `ownPenaltyEntry;read`, the points
- * of others `penaltyEntry;read`.
- */
 export const getVisiblePenaltyPointSum = async (
   context: Pick<ApplicationContext, "prisma" | "now">,
   actor: Actor,
@@ -31,11 +26,6 @@ export const getVisiblePenaltyPointSum = async (
   return aggregation._sum.points ?? 0;
 };
 
-/**
- * The number of ships that the citizen owns, without the deleted ships. Null
- * when the actor cannot read them: the own ships need `ship;read`, the ships
- * of others `otherShips;read`.
- */
 export const getVisibleShipCount = async (
   context: Pick<ApplicationContext, "prisma">,
   actor: Actor,

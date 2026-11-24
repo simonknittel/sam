@@ -5,7 +5,7 @@ export enum EmailTemplate {
 
 export interface EmailMessage {
   readonly to: string;
-  /** The template replaces `%recipient.<name>%` with these values */
+  /** Mailgun replaces `%recipient.<name>%` of the template with these values */
   readonly templateProps: Readonly<Record<string, string>>;
 }
 

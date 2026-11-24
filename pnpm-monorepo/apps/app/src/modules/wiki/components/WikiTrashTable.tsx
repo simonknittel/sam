@@ -28,14 +28,9 @@ const loadSearchParams = createLoader({
 interface Props {
   readonly className?: string;
   readonly searchParams: Promise<SearchParams>;
-  /**
-   * Context whose trash to show, e.g. an event wiki's; defaults to the
-   * global wiki
-   */
   readonly context?: WikiSharedContext & {
     readonly allPages: WikiSharedContextPage[];
   };
-  /** Restore/destroy are mutations — frozen events only view their trash */
   readonly canRestore?: boolean;
 }
 
@@ -51,9 +46,8 @@ export const WikiTrashTable = async ({
   if (!context) forbidden();
 
   /**
-   * Only pages the viewer can administrate show up in their trash. Child
-   * pages of a deleted subtree are hidden — restoring/destroying the
-   * subtree root covers them.
+   * Child pages of a deleted subtree are hidden — restoring/destroying the
+   * subtree root covers them
    */
   const trashedPages = context.allPages.filter((page) => {
     if (page.deletedAt === null) return false;

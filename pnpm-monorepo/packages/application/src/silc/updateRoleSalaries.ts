@@ -46,13 +46,6 @@ export interface UpdateRoleSalariesOutput {
   }[];
 }
 
-/**
- * Replaces all salaries of the roles. Requires `silcSetting;update` and a
- * citizen.
- *
- * @throws ValidationError when a role has two salaries on one day of the
- * month
- */
 export const updateRoleSalaries = (
   context: ApplicationContext,
   actor: Actor,

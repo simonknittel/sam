@@ -33,7 +33,6 @@ interface Props {
   readonly searchParams: Promise<SearchParams>;
 }
 
-/** All tags with their roles. Requires `role;manage`. */
 export const RoleTagsTable = async ({ className, searchParams }: Props) => {
   const { q } = await loadSearchParams(searchParams);
 

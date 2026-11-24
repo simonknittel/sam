@@ -19,8 +19,7 @@ test("a deep link visit with a stale session cookie lands on the login page with
 }) => {
   const citizen = await createCitizen(prisma, { handle: "stale-cookie" });
   await signIn(citizen.user);
-  // The cookie stays in the browser, but the session is gone (for example
-  // after a sign-out on a different device)
+  // For example after a sign-out on a different device
   await prisma.session.deleteMany({ where: { userId: citizen.user.id } });
 
   await page.goto("/app/ai-agents?x=1");
@@ -42,11 +41,6 @@ test("the login page sends an authenticated user to the preserved deep link", as
   await expect(page).toHaveURL("/app/account");
 });
 
-/**
- * Every shape of "not a path on this origin" the guard has to catch. Each of
- * them would otherwise hand an attacker a login-flavoured redirect to a site
- * of their choosing. One sign-in walks all of them.
- */
 const OPEN_REDIRECT_VECTORS: readonly [name: string, target: string][] = [
   ["absolute URL", "https://evil.example.com/app"],
   ["protocol-relative URL", "//evil.example.com/app"],

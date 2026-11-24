@@ -7,7 +7,6 @@ import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { findCitizenFleetVariantTags } from "@sam-monorepo/application";
 import { cache } from "react";
 
-/** See `findCitizenFleetVariantTags()` */
 export const getCitizenFleetVariantTags = cache(
   withTrace("getCitizenFleetVariantTags", async (citizenId: string) => {
     try {

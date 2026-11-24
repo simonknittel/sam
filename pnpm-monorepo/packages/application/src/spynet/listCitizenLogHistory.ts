@@ -19,7 +19,6 @@ interface AuthorName {
   readonly name: string | null;
 }
 
-/** One entry of the history modal. Only the app uses it, thus camelCase. */
 export interface CitizenLogHistoryEntry {
   readonly id: string;
   readonly citizenId: string;
@@ -31,11 +30,7 @@ export interface CitizenLogHistoryEntry {
   readonly submittedBy: AuthorName | null;
 }
 
-/**
- * The logs of one identity type of a citizen, from the newest to the
- * oldest, with the same visibility as the Spynet log tables
- * (`getReadableCitizenLogWhere`). The history modal of the Spynet shows them.
- */
+/** The same visibility as the Spynet log tables */
 export const listCitizenLogHistory = async (
   context: ApplicationContext,
   actor: Actor,

@@ -52,15 +52,11 @@ const getLinkKey = ({ uploadId, kind }: WikiUploadLinkCandidate) =>
   `${kind}:${uploadId}`;
 
 /**
- * Makes the upload links of a wiki page agree with its content: it adds the
- * missing links and deletes the links that the content does not use
- * anymore. Candidates without an upload or after the cap
- * (`MAX_WIKI_UPLOAD_LINK_CANDIDATES`) get no link. Unchanged links stay,
- * thus a store without a change in the uploads writes nothing.
+ * Unchanged links stay, thus a store without a change in the uploads writes
+ * nothing.
  *
  * Call it with the transaction that writes the content, so that the links
- * always agree with the stored content. It takes the client from the
- * caller, thus this package still creates no database client itself.
+ * always agree with the stored content.
  */
 export const replaceWikiPageUploadLinks = async (
   transaction: Prisma.TransactionClient,
@@ -103,13 +99,8 @@ export const replaceWikiPageUploadLinks = async (
 };
 
 /**
- * Links a new snapshot to the uploads that its content uses, so that the
- * nightly upload cleanup keeps the uploads of each restore point.
- * Candidates without an upload or after the cap get no link.
- *
- * Call it with the transaction that creates the snapshot. It takes the
- * client from the caller, thus this package still creates no database
- * client itself.
+ * Call it with the transaction that creates the snapshot, so that the nightly
+ * upload cleanup keeps the uploads of each restore point.
  */
 export const createWikiPageSnapshotUploadLinks = async (
   transaction: Prisma.TransactionClient,

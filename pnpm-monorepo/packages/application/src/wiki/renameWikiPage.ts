@@ -19,18 +19,12 @@ export type RenameWikiPageInput = z.infer<typeof renameWikiPageInputSchema>;
 export interface RenameWikiPageOutput {
   readonly page_id: string;
   readonly title: string;
-  /** Follows the title */
   readonly slug: string;
 }
 
 /**
- * Gives the page a new title and a new slug. The old route of the page
- * stays usable, because a route finds a page by its id.
- *
- * @throws NotFoundError when the page does not exist for the actor
- * @throws ForbiddenError when the actor does not manage the page
- * @throws ConflictError when the event of the briefing is over
- * @throws ValidationError for the root page of a briefing
+ * The old route of the page stays usable, because a route finds a page by its
+ * id
  */
 export const renameWikiPage = (
   context: ApplicationContext,

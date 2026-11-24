@@ -1,7 +1,5 @@
-/** The two kinds of files that `POST /api/upload` accepts */
 export enum UploadCategory {
   Image = "image",
-  /** A file that is not an image, for example the attachment of a wiki page */
   Attachment = "attachment",
 }
 
@@ -10,7 +8,7 @@ export enum UploadCategory {
  * as an image. Everyone can read an upload directly from the bucket, and the
  * bucket serves the stored type as the `Content-Type`.
  *
- * SVG is in the list on purpose (accepted risk, 2026-11-03): an SVG that a
+ * SVG is in the list on purpose (accepted risk): an SVG that a
  * user opens directly from the bucket can execute scripts on the origin of
  * the bucket, not on the origin of the app. The app shows an SVG only in an
  * `<img>` or through the image optimizer with a sandbox policy, where it
@@ -62,18 +60,13 @@ export const ATTACHMENT_MIME_TYPES: readonly string[] = [
 ];
 
 /**
- * Whether a file with this MIME type can be an attachment. Only an exact
- * entry of `ATTACHMENT_MIME_TYPES` passes: a prefix or a denylist lets
- * through a scriptable type (for example `text/xsl`), a parameter, or a list
- * such as `text/plain,text/html`, of which browsers use the last type.
+ * Only an exact entry of `ATTACHMENT_MIME_TYPES` passes: a prefix or a denylist
+ * lets through a scriptable type (for example `text/xsl`), a parameter, or a
+ * list such as `text/plain,text/html`, of which browsers use the last type.
  */
 export const isAttachmentMimeType = (mimeType: string): boolean =>
   ATTACHMENT_MIME_TYPES.includes(mimeType);
 
-/**
- * Whether a file with this MIME type can be an image upload. Only an exact
- * entry of `IMAGE_MIME_TYPES` passes (see `isAttachmentMimeType`).
- */
 export const isAllowedImageMimeType = (mimeType: string): boolean =>
   IMAGE_MIME_TYPES.includes(mimeType);
 

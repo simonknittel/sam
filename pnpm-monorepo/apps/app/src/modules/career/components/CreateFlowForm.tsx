@@ -22,24 +22,15 @@ export interface DuplicationSource {
 interface Props {
   readonly className?: string;
   readonly onSuccess?: () => void;
-  /**
-   * Set when duplicating an existing flow: prefills name and slug and sends
-   * the form to the duplicate action instead of the create action.
-   */
+  /** Set when duplicating an existing flow */
   readonly source?: DuplicationSource | null;
 }
 
-/**
- * Creates a flow, or duplicates one — the two differ only in what the form
- * starts with and which action it posts to, so they share this form and with
- * it the identical name and slug validation.
- */
 export const CreateFlowForm = ({ className, onSuccess, source }: Props) => {
   const initialName = source ? `${source.name} (Kopie)` : "";
 
   const [name, setName] = useState(initialName);
   const [slug, setSlug] = useState(() => slugify(initialName));
-  /** The slug follows the name until the user takes it over */
   const [isSlugEdited, setIsSlugEdited] = useState(false);
 
   const nameInputId = useId();

@@ -7,12 +7,10 @@ export interface OptimizedImageProps {
 }
 
 /**
- * The src/srcset/sizes triple next/image would emit for a remote image,
- * for renderers that cannot use the component itself and must emit
- * identical markup (the wiki editor's image node view and the wiki static
- * renderer). Computed through next/image's own getImageProps, so the URLs
- * always match what the optimizer accepts — the width allowlist and
- * default quality follow the app's image config by construction.
+ * For renderers that cannot use next/image itself and must emit identical
+ * markup (the wiki editor's image node view and the wiki static renderer).
+ * Computed through getImageProps, so the URLs always match what the optimizer
+ * accepts.
  */
 export const getOptimizedImageProps = (
   sourceUrl: string,

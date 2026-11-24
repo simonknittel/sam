@@ -60,12 +60,7 @@ export const OtherTableRow = ({ log }: Props) => {
   );
 };
 
-/**
- * The delete button of the log, with the permission check of the delete
- * action
- */
 const OtherTableActions = async ({ log }: Props) => {
-  /** The logs of a deleted citizen are read only */
   if (log.citizen.deletedAt) return null;
 
   switch (log.type) {

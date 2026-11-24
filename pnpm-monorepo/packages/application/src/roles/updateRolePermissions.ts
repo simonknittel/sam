@@ -27,15 +27,9 @@ export type UpdateRolePermissionsInput = z.infer<
 
 export interface UpdateRolePermissionsOutput {
   readonly id: string;
-  /** Sorted */
   readonly permission_strings: string[];
 }
 
-/**
- * Replaces the permission strings of a role. Requires `role;manage`.
- *
- * @throws NotFoundError when the role does not exist
- */
 export const updateRolePermissions = (
   context: ApplicationContext,
   actor: Actor,

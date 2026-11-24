@@ -17,12 +17,9 @@ type ParticipantState = Pick<
 >;
 
 /**
- * The phase of a cycle and the participation of the actor in it.
- * `auecPerSilc` is null until the payout starts.
- *
- * `ownSilcBalance` is the current balance of the actor. Only a cycle in the
- * collection phase uses it: the later phases use the snapshot of the
- * participant.
+ * `auecPerSilc` is null until the payout starts. Only a cycle in the collection
+ * phase uses `ownSilcBalance`, the current balance of the actor: the later
+ * phases use the snapshot of the participant.
  */
 export const getOwnCycleView = <Participant extends ParticipantState>(
   cycle: Pick<

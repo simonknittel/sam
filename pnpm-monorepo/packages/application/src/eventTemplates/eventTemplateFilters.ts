@@ -1,10 +1,5 @@
 import type { Prisma } from "@sam-monorepo/database/client";
 
-/**
- * Deleted templates stay in the database so they can be restored, so the
- * list defaults to the live ones. The deleted filter doubles as the way to
- * find a template to restore (career flow precedent).
- */
 export enum EventTemplateStatus {
   Active = "active",
   Deleted = "deleted",

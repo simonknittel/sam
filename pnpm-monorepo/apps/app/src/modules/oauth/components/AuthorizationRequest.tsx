@@ -20,14 +20,12 @@ import { AuthorizationNotice } from "./AuthorizationNotice";
 
 interface Props {
   readonly parameters: AuthorizationRequestParameters;
-  /** The grant must belong to the user who gives the consent */
   readonly isAssumedUser: boolean;
 }
 
 /**
- * Validates the authorization request and asks for the consent. A request
- * with a valid client and redirect URI, but with other invalid parameters,
- * gets a link back to the client with the error (RFC 6749 section
+ * A request with a valid client and redirect URI, but with other invalid
+ * parameters, gets a link back to the client with the error (RFC 6749 section
  * 4.1.2.1). An automatic redirect would make the page an open redirector,
  * because each Client ID Metadata Document is a valid client.
  */

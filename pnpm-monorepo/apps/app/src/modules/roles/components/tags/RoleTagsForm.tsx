@@ -13,11 +13,9 @@ import { useSelectionChanges } from "./useSelectionChanges";
 
 interface Props {
   readonly roleId: string;
-  /** All tags of the role */
   readonly tagIds: readonly BadgeRoleTag["id"][];
 }
 
-/** The tags of a role on the role page. Requires `role;manage`. */
 export const RoleTagsForm = ({ roleId, tagIds }: Props) => {
   const { tags } = useRolesContext();
   const { formAction } = useAction(changeRoleTags);

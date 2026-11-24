@@ -13,12 +13,8 @@ import type { EmbedAuthentication } from "./types";
 
 export enum AuthenticatedEmbedUrlStatus {
   Signed = "signed",
-  /** The deployment has no signing key (`EMBED_JWT_PRIVATE_KEY`) */
   NoSigningKey = "noSigningKey",
-  /**
-   * Reachable for an admin who has no linked entity. There is no
-   * meaningful subject for them, thus there is no token.
-   */
+  /** An admin can have no linked entity */
   NoEntity = "noEntity",
 }
 
@@ -26,7 +22,6 @@ export type AuthenticatedEmbedUrl =
   | {
       readonly status: AuthenticatedEmbedUrlStatus.Signed;
       readonly url: string;
-      /** The `exp` claim of the token in the URL */
       readonly expiresAt: Date;
     }
   | {
@@ -36,13 +31,11 @@ export type AuthenticatedEmbedUrl =
     };
 
 /**
- * Appends a signed identity token to the embed URL, or tells why there is
- * no token. A page that cannot show its embed without a token (the
- * statistics page) uses this function and shows a note instead.
+ * A page that cannot show its embed without a token (the statistics page) uses
+ * this function and shows a note instead.
  *
- * The admin bypass of `authorize()` is deliberately not reflected: the
- * token only ever carries permission strings the user's roles actually
- * grant, so an admin sees the embed exactly as their roles allow.
+ * The token does not show the admin bypass of `authorize()` (see
+ * docs/embedded-app-authentication.md).
  */
 export const authenticateEmbedUrl = withTrace(
   "authenticateEmbedUrl",
@@ -83,11 +76,6 @@ export const authenticateEmbedUrl = withTrace(
   },
 );
 
-/**
- * Appends the identity token to the iframe URL of an external app that
- * opted into authenticated embedding. Apps without an embed configuration,
- * and deployments without a signing key, get their URL back untouched.
- */
 export const resolveEmbedUrl = withTrace(
   "resolveEmbedUrl",
   async (

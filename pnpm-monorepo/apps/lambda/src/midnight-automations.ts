@@ -24,10 +24,6 @@ import { createApplicationContext } from "./common/createApplicationContext";
 import { createJobFactory } from "./common/createJob";
 import { runJobsInIsolation } from "./common/runJobsInIsolation";
 
-/**
- * The S3 parameters are optional: without them, the context has no storage
- * and `deleteUnusedUploads` skips the bucket.
- */
 const createStorage = () => {
   const {
     S3_ACCOUNT_ID: accountId,
@@ -57,6 +53,11 @@ const context = createApplicationContext({
 
 const createJob = createJobFactory(context);
 
+/**
+ * The order matters: the end of a collection phase books all balances to 0
+ * before the salaries of the day, and the expired roles go away before the
+ * counts and the salaries.
+ */
 export const handler: ScheduledHandler = async () =>
   runJobsInIsolation({
     endCollectionPhases: createJob(endDueCollectionPhases),

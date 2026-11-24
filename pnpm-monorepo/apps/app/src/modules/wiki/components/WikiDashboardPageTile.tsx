@@ -21,14 +21,12 @@ import { WikiPageStaticContent } from "./WikiPageStaticContent";
 const MAX_CONTENT_HEIGHT = "max-h-120 sm:max-h-160";
 
 /**
- * Read-only render of the wiki page the wiki admins put on the dashboard
- * (the setting `WIKI_SETTING_DASHBOARD_PAGE` of the application package).
  * Deliberately without any collab connection, so the content can lag an
  * ongoing editing session by the collab server's persistence debounce.
  *
- * Renders nothing when no page is configured, the page is gone or the
- * viewer may not read it — all of which look the same, so neither the page
- * nor the setting leaks.
+ * Renders nothing when no page is configured, the page is gone or the viewer
+ * may not read it — all of which look the same, so neither the page nor the
+ * setting leaks.
  */
 export const WikiDashboardPageTile = async () => {
   const pageId = await getWikiDashboardPageId();
