@@ -640,6 +640,8 @@ const server = new Server<ConnectionContext>({
             data: {
               ydoc,
               content,
+              // The index `WikiPage_fts_idx` refuses a tsvector of 1 MB, and
+              // then each store of the page fails
               searchText: extractWikiPageText(content).slice(0, 200_000),
               ...(lastEditorEntityId
                 ? { updatedById: lastEditorEntityId }
