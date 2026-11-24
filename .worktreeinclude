@@ -8,7 +8,6 @@
 # Local environment files. Without the file of the app, it fails at startup on
 # the validation of the environment.
 pnpm-monorepo/apps/app/.env
-pnpm-monorepo/apps/lambda/.env
 pnpm-monorepo/packages/database/.env
 
 # Generated Prisma client. Required for typecheck and build to resolve until
