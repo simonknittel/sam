@@ -29,7 +29,7 @@ import { findNewEventIds, getOpenEventsWhere } from "./openEvents.js";
 
 /** The status filter of the events list */
 export enum EventListStatus {
-  /** Events which have not ended yet */
+  /** See `getOpenEventsWhere()` */
   Open = "open",
   /** The open events which are new for the viewer (see the read markers) */
   New = "new",
@@ -55,7 +55,7 @@ export const listEventsInputSchema = z.object({
     .enum(EventListStatus)
     .default(EventListStatus.Open)
     .describe(
-      "open: not ended yet. new: open and not read by the user yet. closed: already started. Open and new are sorted by the start ascending, closed and all descending.",
+      "open: not ended yet, or not started yet for an event without an end. new: open and not read by the user yet. closed: already started. Open and new are sorted by the start ascending, closed and all descending.",
     ),
   participating: z
     .enum(EventParticipationFilter)

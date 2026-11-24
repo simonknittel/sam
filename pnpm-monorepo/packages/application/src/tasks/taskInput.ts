@@ -52,7 +52,7 @@ export const taskFieldSchemas = {
   hidden_for_other_roles: z
     .boolean()
     .describe(
-      "Whether only the citizens with a required role can see the public task.",
+      "Whether the public task is hidden from the citizens without a required role. Its creator, its assignees, its completionists and task;manage still see it.",
     ),
   assignment_limit: z
     .int32()

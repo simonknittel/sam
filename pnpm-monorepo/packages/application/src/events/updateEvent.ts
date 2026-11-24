@@ -106,7 +106,7 @@ export const updateEventInputSchema = z.object({
     .boolean()
     .optional()
     .describe(
-      "Only for an event of SAM (source app). False cancels all sign-ups (each participant gets a notification), withdraws the open invitations and applications, removes the assigned citizens and the applications of all positions (the positions stay) and hides the lineup; while it is false, nobody can sign up, apply or be added. True opens the sign-up again, but restores nothing. Needs can_manage_positions.",
+      "Only for an event of SAM (source app). False cancels all sign-ups (each participant gets a notification), withdraws the open invitations and applications, removes the assigned citizens and the applications of all positions (the positions stay) and hides the lineup; while it is false, nobody can sign up, apply or be added. True opens the sign-up again, but restores nothing. Needs can_manage and can_manage_positions.",
     ),
   application_required: z
     .boolean()

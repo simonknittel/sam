@@ -25,7 +25,7 @@ SAM (Sinister Administration Module) is the internal tooling, ERP and CRM of our
 - **Access**: a user must be a member of the Discord server of the organization. A new user must confirm their email address and needs the clearance from Human Resources.
 - **SILC**: the internal currency of the organization. Members earn it, for example with tasks, and SINcome turns it into aUEC, the money of Star Citizen.
 - **Notifications**: SAM notifies members in the app and with web push, for example about new events, tasks or roles. The notification center of the app (the bell) has an inbox and an archive; \`list_my_notifications\` and \`update_notification\` read and change them. Each user can switch off web push per kind on \`/app/account/notifications\`.
-- **System log**: each change and each call of a read tool of this server writes an entry to the system log (audit log).
+- **System log**: the changes and each call of a read tool of this server write an entry to the system log (audit log).
 
 ## Apps
 
@@ -53,7 +53,7 @@ The paths are on the host of this MCP server. \`/app/apps\` lists all apps of th
 | Log Analyzer | \`/app/tools/log-analyzer\` | Finds events in the Game.log of Star Citizen; members can share them | – |
 | Account | \`/app/account\` | Profile (time zone, birthday), notification settings, seasonal themes and sessions | – |
 | KI-Agenten | \`/app/ai-agents\` | Connect AI clients via MCP, and download the Claude plugin and the skills of this server | – |
-| Uploads | \`/app/uploads\` | Overview of all file uploads | – |
+| Uploads | \`/app/uploads\` | The own file uploads, and all uploads with \`upload;manage\` | – |
 | Timezones, Avatar Creator, Dogfight Trainer, Cornerstone Image Browser | see \`/app/apps\` | Small tools and a game | – |
 | SILO-Anfrage, Scrapper's Codex, Projekte | see \`/app/apps\` | External apps: material requests and price lists, sale of loot on the black market of the organization, and the progress of the projects of the organization | – |
 `,

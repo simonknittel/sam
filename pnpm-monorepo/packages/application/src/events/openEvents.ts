@@ -2,7 +2,11 @@ import type { Prisma } from "@sam-monorepo/database/client";
 import type { ApplicationContext } from "../context.js";
 import type { UnreadWhere } from "../readMarkers/unreadWhere.js";
 
-/** Events that have not ended at `now` — the filter behind the "open" status */
+/**
+ * Events that have not ended at `now` — the filter behind the "open" status.
+ * An event without an end leaves the filter at its start, not at
+ * `getEventEndTime()`.
+ */
 export const getOpenEventsWhere = (now: Date): Prisma.EventWhereInput => ({
   OR: [{ startTime: { gte: now } }, { endTime: { gte: now } }],
 });

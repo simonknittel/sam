@@ -5,7 +5,12 @@ import { citizenReferenceSchema, dateTimeOutputSchema } from "../../schemas.js";
 /** The fields of a user in `list_users` and in `get_user` */
 export const userOutputShape = {
   id: z.string(),
-  name: z.string().nullable().describe("The name from Discord."),
+  name: z
+    .string()
+    .nullable()
+    .describe(
+      "The display name: the handle of the citizen, not the name from Discord.",
+    ),
   email: z
     .string()
     .nullable()

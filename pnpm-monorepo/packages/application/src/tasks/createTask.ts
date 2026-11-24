@@ -25,7 +25,7 @@ export const createTaskInputSchema = z.object({
   visibility: z
     .enum(TaskVisibilityKind)
     .describe(
-      "public: each citizen who can see the task can accept it. group: one task for the citizens of assignee_ids. personalized: one separate task for each citizen of assignee_ids. group and personalized need an extra permission.",
+      "public: each citizen who can see the task and has one of required_role_ids (if any) can accept it. group: one task for the citizens of assignee_ids. personalized: one separate task for each citizen of assignee_ids. group and personalized need an extra permission.",
     ),
   reward: z
     .discriminatedUnion("type", [

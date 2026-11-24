@@ -38,7 +38,7 @@ export interface GetTaskOutput extends TaskListItem {
   readonly is_updatable: boolean;
   /** How often the task can be completed */
   readonly repeatable: number;
-  /** Whether only the citizens with a required role can see the task */
+  /** See `getVisibleTasksWhere()` */
   readonly hidden_for_other_roles: boolean;
   /** The maximum number of citizens that can accept the task */
   readonly assignment_limit: number | null;

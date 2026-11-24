@@ -53,7 +53,7 @@ export const updateTaskInputSchema = z.object({
   hidden_for_other_roles: taskFieldSchemas.hidden_for_other_roles
     .optional()
     .describe(
-      "Only for a public task: whether only the citizens with a required role can see the task.",
+      "Only for a public task: whether the task is hidden from the citizens without a required role. Its creator, its assignees, its completionists and task;manage still see it.",
     ),
   assignment_limit: taskFieldSchemas.assignment_limit
     .optional()
