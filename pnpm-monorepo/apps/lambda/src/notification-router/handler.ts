@@ -320,7 +320,7 @@ export const bodySchema = z.discriminatedUnion("type", [
     payload: z.object({
       eventId: z.cuid(),
       citizenId: z.cuid(),
-      reason: z.string().max(500).nullable(),
+      reason: z.string().max(EVENT_PARTICIPATION_TEXT_MAX_LENGTH).nullable(),
     }),
     requestId: z.cuid2(),
   }),
