@@ -6,8 +6,7 @@ import { getEmbedSigningKey } from "@/modules/embed-authentication/utils/getEmbe
 
 /**
  * Long enough to spare verifiers a fetch per token, short enough that a key
- * rotation (deploy the new key, retire the old one in a second deploy)
- * propagates well within one deployment cycle.
+ * rotation (one deploy with the new key) propagates soon.
  */
 const CACHE_MAX_AGE_IN_SECONDS = 5 * 60;
 

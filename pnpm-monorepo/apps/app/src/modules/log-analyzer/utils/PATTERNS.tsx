@@ -105,7 +105,7 @@ export interface IEntry {
    * current user for a local one. Null when the user has no linked citizen.
    */
   readonly citizen: Pick<Citizen, "id" | "handle" | "deletedAt"> | null;
-  /** True when another citizen shared the entry instead of the local parser. */
+  /** True when the entry came from the server and not from the local parser. */
   readonly isShared: boolean;
   /**
    * True once the entry reached the server, whether this visit shared it or

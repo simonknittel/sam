@@ -54,8 +54,8 @@ interface WikiPageLinkTarget {
 
 /**
  * The page of a page link, or null when the link is not set or the page is
- * in the trash. Also null without a session or without clearance: the top bar
- * and the error pages call it. The page checks the permissions when the user
+ * in the trash. Also null without a session or without clearance: the shell
+ * calls it. The page checks the permissions when the user
  * opens it.
  */
 export const getWikiPageLinkTarget = cache(

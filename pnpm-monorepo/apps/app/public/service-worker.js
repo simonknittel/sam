@@ -34,9 +34,10 @@ const toSameOriginUrl = (value) => {
 };
 
 /**
- * Shows the URL in the most recently focused app window, or opens a new
- * window if no app window is open. Only a window that this worker controls
- * can navigate, thus matchAll() leaves out the other windows.
+ * Focuses the app window that shows the URL. Without such a window, shows the
+ * URL in the most recently focused app window, or opens a new window if no
+ * app window is open. Only a window that this worker controls can navigate,
+ * thus matchAll() leaves out the other windows.
  */
 const showUrl = async (url) => {
   const windowClients = await self.clients.matchAll({ type: "window" });

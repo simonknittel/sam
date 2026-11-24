@@ -107,8 +107,7 @@ const ButtonContent = ({
  * dashboard or the events list.
  *
  * The caller renders this only while participation is open and the viewer
- * has a citizen record — the two cases in which none of these actions can
- * succeed.
+ * has a citizen record — otherwise none of these actions can succeed.
  */
 export const EventParticipationButton = ({
   className,

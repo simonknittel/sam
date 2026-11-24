@@ -11,8 +11,8 @@ export type {
 
 /**
  * Loads all wiki pages and resolves the current viewer's effective
- * permissions once per request (see `buildWikiContext()`). Everything
- * wiki-related (tree, breadcrumbs, page views, actions) derives from this
+ * permissions once per request (see `buildWikiContext()`). The tree, the
+ * breadcrumbs and the page views of the global wiki derive from this
  * context.
  */
 export const getWikiContext = cache(async (): Promise<WikiContext | null> =>

@@ -15,9 +15,9 @@ import { FaPlus } from "react-icons/fa";
 import { WikiPageSelect } from "./WikiPageSelect";
 
 /**
- * A pasted wiki page URL counts as picking that page (mirrors the paste
- * rule in wikiPageLinkNode.ts); the host part is optional so a copied
- * pathname works too.
+ * A pasted page URL of the global wiki counts as picking that page (mirrors
+ * its paste rule in wikiPageLinkNode.ts); the host part is optional so a
+ * copied pathname works too.
  */
 const WIKI_PAGE_URL_PATTERN =
   /^(?:https?:\/\/\S+)?\/app\/wiki\/([a-z0-9]{10,40})(?:\/\S*)?$/;

@@ -13,7 +13,7 @@ interface Props {
   readonly pages: WikiSidebarFavoritePage[];
 }
 
-/** The sidebar's "Favoriten" section, shared by the global and event wikis */
+/** The sidebar's "Favoriten" section, shared by all wiki scopes */
 export const WikiSidebarFavorites = ({ pages }: Props) => {
   return (
     <div>

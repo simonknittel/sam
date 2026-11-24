@@ -11,7 +11,7 @@ import { SeasonalImage } from "../SeasonalImage";
  *
  * Along the top edge, the web runs above the label "Apps" and stops before
  * the dot of the button. Down the left edge, it hangs into the header of the
- * sub-app to the lower edge of the header, where the header is empty to the
+ * sub-app to 4 pixels above its lower edge, where the header is empty to the
  * left of the title. The web keeps 6 pixels clear of the label and 9 pixels
  * clear of the title. The icon of the button (x 32 to 52, y 22 to 42) lies
  * below the faint outer rows of the web.

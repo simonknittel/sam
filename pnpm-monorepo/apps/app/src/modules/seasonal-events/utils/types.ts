@@ -15,9 +15,8 @@ export interface SeasonalDecorationProps {
 }
 
 /**
- * A decoration of a seasonal event. Every decoration is a server component
- * and draws an inline SVG or shows a static SVG file; the caller sizes it
- * through the class name.
+ * A decoration of a seasonal event, a server component. The class name sizes
+ * the hero ornament; the other decorations get none and place themselves.
  */
 export type SeasonalDecorationComponent = (
   props: SeasonalDecorationProps,
@@ -43,8 +42,8 @@ export interface SeasonalTheme {
   readonly bannerSurfaceClassName: string;
   /**
    * Whether the event celebrates with the confetti canvas on its greeting
-   * days, behind the surface of the banner and behind the login page. Only
-   * the turn of the year gets it; the other events keep a still surface.
+   * days, behind the greeting of the banner and behind the content of the
+   * login page. Only the turn of the year gets it.
    */
   readonly hasConfetti: boolean;
   /** Drawn inside the top bar, on large viewports only */

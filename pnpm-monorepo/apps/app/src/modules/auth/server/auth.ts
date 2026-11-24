@@ -74,8 +74,9 @@ declare module "next-auth" {
     /**
      * Kept deliberately minimal: the session is serialized into the payload
      * of every page, so it carries only what its consumers read — the
-     * citizen id, the handle (embed tokens) and the raw role assignments
-     * (the level progress and the assigned roles of the career flows).
+     * citizen id, the handle (embed tokens, the greeting of the dashboard,
+     * the Log Analyzer) and the raw role assignments (the level progress and
+     * the assigned roles of the career flows).
      * Permission and role decisions use `givenPermissionSets` and
      * `getEffectiveRoles()`, never these assignments: they ignore
      * inheritance and the level gate.
@@ -85,8 +86,9 @@ declare module "next-auth" {
           /**
            * Whether the citizen has their birthday today, in their own time
            * zone. Only this answer travels; the day and the month of the
-           * birthday stay on the server. Both account avatars read it, thus
-           * it belongs on the session and not into a query of its own.
+           * birthday stay on the server. Both account avatars and the
+           * greeting of the dashboard read it, thus it belongs on the session
+           * and not into a query of its own.
            */
           hasBirthdayToday: boolean;
           roleAssignments: EffectiveRoles["roleAssignments"];

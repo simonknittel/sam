@@ -41,9 +41,9 @@ const MENU_NODE_TYPES = [
 export const CONFIGURABLE_NODE_TYPES = ["wikiPageIndex", "wikiRoleCitizens"];
 
 /**
- * Container and leaf blocks without node-specific actions — their menu
- * offers the shared drag handle and delete only, so every node type has
- * at least those two.
+ * Container and leaf blocks with the generic block menu
+ * (WikiBlockMenuActions), so every node type has at least the drag handle
+ * and delete.
  */
 const BLOCK_MENU_SELECTOR =
   'ul, ol, blockquote, pre, table, hr, details, [data-type="details"], [data-wiki-grid]';

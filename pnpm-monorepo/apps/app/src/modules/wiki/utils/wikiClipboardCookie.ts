@@ -11,7 +11,7 @@ import * as z from "zod/mini";
  */
 export const WIKI_CLIPBOARD_COOKIE = "wiki_clipboard";
 
-/** Readable in the global wiki and the event briefings */
+/** Readable in the global wiki, the briefings and the variant embeds */
 export const WIKI_CLIPBOARD_COOKIE_PATH = "/app";
 
 const CLIPBOARD_MAX_AGE_SECONDS = 60 * 60 * 24;

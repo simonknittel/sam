@@ -5,8 +5,8 @@ import { notFound, redirect } from "next/navigation";
 
 /**
  * Stable URL for the configurable page links (see `WikiPageLinkKey`), so
- * client components and i18n strings can link them without resolving the
- * setting themselves. Falls back to the wiki landing page when unset.
+ * client components can link them without resolving the setting themselves.
+ * Falls back to the wiki landing page when unset.
  */
 export default async function Page({
   params,

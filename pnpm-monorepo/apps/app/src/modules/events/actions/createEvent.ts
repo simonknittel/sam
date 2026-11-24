@@ -98,10 +98,9 @@ export const createEvent = createAuthenticatedAction(
     if (coverImageId) probeUploadImageDimensions(coverImageId);
 
     /**
-     * Redirect to the created event; the form's success hook closes the
-     * modal while the navigation is in flight (see useAction). A failed
-     * publication never undoes the created event — the event page tells the
-     * manager, who can retry from its settings.
+     * Redirect to the created event, which also closes the modal (see
+     * `createCitizen`). A failed publication never undoes the created event —
+     * the event page tells the manager, who can retry from its settings.
      */
     const searchParams = new URLSearchParams();
     if (result.discord && result.discord.outcome !== DiscordSyncOutcome.Done)

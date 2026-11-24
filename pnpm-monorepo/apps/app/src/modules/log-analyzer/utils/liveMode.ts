@@ -4,6 +4,6 @@
 export const LIVE_MODE_PARSE_INTERVAL_MS = 10_000;
 
 /**
- * How often live mode asks the server for the entries other citizens shared.
+ * How often live mode asks the server for the shared entries.
  */
 export const LIVE_MODE_DOWNLOAD_INTERVAL_MS = 60_000;

@@ -29,7 +29,7 @@ const LOGIN_PAGE_SHOTS = [
 /**
  * The confetti of the active seasonal event on the login page, for the
  * events which celebrate with it. It renders nothing outside the greeting
- * days of the event and nothing for an event which keeps a still surface.
+ * days of the event and nothing for an event without confetti.
  * The greeting banner of the dashboard brings its own confetti, see
  * `GreetingBanner`.
  *

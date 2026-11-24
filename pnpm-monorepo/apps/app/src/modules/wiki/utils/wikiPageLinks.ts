@@ -31,7 +31,7 @@ export const isWikiPageLinkKey = (key: string): key is WikiPageLinkKey =>
 /**
  * Stable URL redirecting to the configured page (or `/app/wiki` when
  * unset) — for places that cannot resolve the setting server-side, like
- * client components and i18n strings. Server components should prefer
+ * client components. Server components should prefer
  * `getWikiPageLinkTarget` to link the page directly.
  */
 export const wikiPageLinkHref = (key: WikiPageLinkKey) =>

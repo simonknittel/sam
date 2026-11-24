@@ -20,7 +20,7 @@ import Fuse, { type FuseResult } from "fuse.js";
 import { useState } from "react";
 import { FaCheck, FaTrash, FaUsers } from "react-icons/fa";
 
-/** What the picker offers: `getCitizens()` returns exactly this */
+/** What the picker offers: `listAllCitizens()` returns exactly this */
 type CitizenOption = Pick<Citizen, "id" | "handle" | "deletedAt">;
 
 interface BaseProps {

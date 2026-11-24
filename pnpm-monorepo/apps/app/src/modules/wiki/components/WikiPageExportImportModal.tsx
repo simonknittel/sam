@@ -21,7 +21,8 @@ interface Props {
 }
 
 /**
- * JSON export and import for wiki admins behind a single toolbar button.
+ * JSON export and import for wiki admins (in a briefing: for the admins of
+ * the page) behind a single toolbar button.
  * The export downloads the page's content as Tiptap
  * JSON; the import replaces it with an uploaded file. The file is read
  * client-side and sent as text — the server action validates it against

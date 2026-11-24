@@ -65,8 +65,8 @@ interface Props {
  * formatting menu (marks, text color, highlight) centered over the
  * selection instead — exclusively: while the selection exists, no block
  * menu shows. Every block type gets at least a delete button, and all but
- * the formatting menu the drag handle; the per-kind actions live in
- * editMenu/. Companion of WikiResizeHandles inside the shared overlay
+ * the formatting and the link menu the drag handle; the per-kind actions
+ * live in editMenu/. Companion of WikiResizeHandles inside the shared overlay
  * root.
  */
 export const WikiEditMenu = ({

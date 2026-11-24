@@ -33,7 +33,7 @@ interface Props {
     readonly discordPublishedLocation: string | null;
   };
   readonly channels: readonly PublishableGuildChannel[] | null;
-  /** Prefilled into the location field, i.e. what an empty field means */
+  /** The placeholder of the location field, i.e. what an empty field means */
   readonly defaultLocation: string;
   /** Server-side env, needed to link to the event on Discord */
   readonly discordGuildId: string;

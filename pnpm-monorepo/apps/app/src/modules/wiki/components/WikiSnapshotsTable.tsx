@@ -28,8 +28,9 @@ interface Props {
 
 /**
  * Snapshot list of a page (page admins only): automatic snapshots created
- * while the page is edited plus safety snapshots taken before restores and
- * imports, newest first, each with a restore action.
+ * while the page is edited plus safety snapshots taken before restores,
+ * imports and pastes that replace the page, newest first, each with a
+ * restore action.
  */
 export const WikiSnapshotsTable = async ({
   className,

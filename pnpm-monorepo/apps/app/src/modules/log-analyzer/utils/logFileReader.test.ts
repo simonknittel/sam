@@ -13,9 +13,8 @@ import type { RawMatch } from "./types";
 const PATH = "LIVE/Game.log";
 
 /**
- * The walk reads and parses the sample log once per byte (about 7,700
- * times). That takes about 2 s locally and more than the default of 5 s on
- * the CI runners.
+ * The walk reads and parses the sample log once per byte (about 15,000
+ * times). That takes more than the default of 5 s on the CI runners.
  */
 const WHOLE_FILE_WALK_TIMEOUT_MS = 30_000;
 

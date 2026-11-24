@@ -56,8 +56,8 @@ interface Props {
 }
 
 /**
- * The one table every activity and history surface renders through. Which
- * columns a context adds is all that varies.
+ * The one table of the activity and history tiles. Which columns a context
+ * adds is all that varies.
  */
 export const ActivityTable = ({
   className,

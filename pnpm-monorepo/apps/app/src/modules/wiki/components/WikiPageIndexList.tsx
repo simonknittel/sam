@@ -7,7 +7,7 @@ export interface WikiPageIndexEntry {
   readonly title: string;
   readonly slug: string;
   readonly iconId: string | null;
-  /** Scope-aware link from resolveWikiPageIndex; absent in legacy data */
+  /** Scope-aware link from resolveWikiPageIndex */
   readonly href?: string;
   readonly children: readonly WikiPageIndexEntry[];
 }

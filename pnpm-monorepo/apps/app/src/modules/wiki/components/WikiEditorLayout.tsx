@@ -18,7 +18,7 @@ interface Props {
   readonly canUploadAttachments: boolean;
   /** NULL until the editor is ready — the static fallback renders instead */
   readonly editor: Editor | null;
-  /** Right end of the toolbar row: save state or collab status dot */
+  /** Right end of the toolbar row: save state and collab status dot */
   readonly statusSlot: ReactNode;
   readonly staticFallback: ReactNode;
   /** Opens the embed URL dialog (gutter palette entry "Einbetten") */

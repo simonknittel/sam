@@ -49,8 +49,7 @@ export const createEventTemplate = createAuthenticatedAction(
 
     /**
      * Redirect to the new template, where lineup, briefing and prefill are
-     * edited; the form's success hook closes the modal while the navigation
-     * is in flight (see useAction).
+     * edited. The redirect also closes the modal (see `createCitizen`).
      */
     redirect(getEventTemplatePath(result.id));
   },

@@ -16,8 +16,8 @@ interface Props {
   /** For the link and for the text without a link, for example the height */
   readonly className?: string;
   /**
-   * NULL shows "Unbekannt". A deleted citizen shows "Deleted citizen" without
-   * a link.
+   * NULL shows "Unbekannt". A deleted citizen shows "Gelöschter Citizen"
+   * without a link.
    */
   readonly citizen: Pick<Citizen, "id" | "handle" | "deletedAt"> | null;
   /** A sub page of the citizen, for example "/notes" */

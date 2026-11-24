@@ -260,8 +260,7 @@ interface Props {
 }
 
 /**
- * Static render of a page's Tiptap JSON for readers without edit
- * permission.
+ * Static render of a page's Tiptap JSON.
  */
 export const WikiPageStaticContent = ({
   className,

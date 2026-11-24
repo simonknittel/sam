@@ -8,7 +8,7 @@ import type { SeasonalFont } from "./types";
  * browser requests such a font only when the hero of a themed page resolves
  * to it.
  *
- * All three fonts have one weight, 400.
+ * All three fonts are loaded in one weight, 400.
  *
  * The loader of `next/font` accepts literal values only, thus the name of a
  * CSS variable stands in the call and again in the entry below it.

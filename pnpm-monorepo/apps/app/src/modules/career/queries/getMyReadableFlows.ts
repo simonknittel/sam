@@ -17,8 +17,7 @@ export const getMyReadableFlows = cache(
 
 /**
  * Whether the career app has anything to show the current viewer. Drives the
- * entry points (navigation, command palette, mobile action bar, Apps tile),
- * which used to name the four hardcoded flow ids.
+ * entry points (the command palette and the apps).
  */
 export const hasAnyReadableFlow = cache(async () => {
   const flows = await getMyReadableFlows();

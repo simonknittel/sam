@@ -71,7 +71,8 @@ export const CreateEventForm = ({
 
   /**
    * Fetched lazily: the form only mounts while the modal is open. Templates
-   * are the viewer's own plus those shared with them for reading.
+   * are the viewer's own plus those shared with them for reading, and all
+   * templates for an `event;manage` holder.
    */
   const { data: templates } =
     api.events.getUsableEventTemplates.useQuery(undefined);

@@ -217,7 +217,10 @@ const TreeItem = ({
   const { draggedPageId } = useWikiPageDnd();
   const { isExpanded, expand } = useWikiPageTreeCollapse();
   const isActive = getActiveWikiPageId(hrefMode, pathname) === node.id;
-  /** The event wiki's root page can neither be moved nor get siblings */
+  /**
+   * The root page of a briefing or a variant embed can neither be moved nor
+   * get siblings
+   */
   const isLockedRoot = node.id === hrefMode.rootPageId;
 
   const hasChildren = node.children.length > 0;

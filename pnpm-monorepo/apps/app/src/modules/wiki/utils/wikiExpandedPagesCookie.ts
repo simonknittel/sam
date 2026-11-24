@@ -126,9 +126,8 @@ export const isWikiPageExpanded = (state: WikiExpansionState, pageId: string) =>
   state.has(getWikiPageKey(pageId));
 
 /**
- * All mutations return the given state unchanged when nothing moves. The
- * sidebar reapplies the active page's path on every render, and only a stable
- * reference stops that from looping through its cookie effect.
+ * All mutations return the given state unchanged when nothing moves, thus
+ * the cookie effect of the sidebar does not run again.
  */
 const withKeys = (
   state: WikiExpansionState,

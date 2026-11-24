@@ -47,7 +47,10 @@ enum WikiPageUploadAttribute {
   Icon = "iconId",
 }
 
-/** The wire contract of the clients (`ImageUpload`, the wiki editor) */
+/**
+ * The wire contract of the clients (`ImageUpload`, `uploadWikiPageFile`,
+ * `WikiPageIconButton`)
+ */
 const bodySchema = z.discriminatedUnion("resourceType", [
   z.object({
     resourceType: z.literal(UploadTargetType.Manufacturer),

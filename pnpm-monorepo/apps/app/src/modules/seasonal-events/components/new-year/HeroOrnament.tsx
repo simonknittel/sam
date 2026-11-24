@@ -14,8 +14,7 @@ import type { SeasonalDecorationProps } from "../../utils/types";
  *   on the dark shell of the app.
  *
  * The shapes are large and few, because the banner gives the ornament a box
- * of 64 pixels. The ornament does not move: on a small screen the banner is
- * the only decoration, and small screens keep every motion off.
+ * of 112 pixels. The ornament does not move.
  */
 export const NewYearHeroOrnament = ({ className }: SeasonalDecorationProps) => (
   <svg viewBox="0 0 24 24" aria-hidden className={className}>

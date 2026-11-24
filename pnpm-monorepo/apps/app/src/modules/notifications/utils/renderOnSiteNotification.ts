@@ -49,8 +49,8 @@ import type { OnSiteNotificationRow } from "./types";
 
 /**
  * A decoration which the notification list draws into the row. The switch
- * below is the single place which knows the notification types, thus it
- * names the decoration as well and the list only maps it to a component.
+ * below handles each notification type, thus it names the decoration as well
+ * and the list only maps it to a component.
  */
 export enum NotificationDecoration {
   Birthday = "birthday",

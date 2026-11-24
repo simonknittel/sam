@@ -12,7 +12,7 @@ interface Props {
 
 /**
  * Amber edge along the left side of an unread or new item, fading downwards.
- * The item must be positioned. Used together with `NewBadge`.
+ * The item must be positioned. A new item also has the `NewBadge`.
  */
 export const UnreadEdge = ({
   width = UnreadEdgeWidth.Regular,

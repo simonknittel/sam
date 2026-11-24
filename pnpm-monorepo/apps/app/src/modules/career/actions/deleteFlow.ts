@@ -11,6 +11,6 @@ export const deleteFlow = createUseCaseAction({
   schema: deleteFlowInputSchema,
   useCase: deleteFlowUseCase,
   parseFormData: (formData) => ({ flow_id: formData.get("flowId") }),
-  /** The detail page is gone with the flow; the list is where a restore starts */
+  /** The list is where a restore starts */
   redirect: () => "/app/career/settings",
 });

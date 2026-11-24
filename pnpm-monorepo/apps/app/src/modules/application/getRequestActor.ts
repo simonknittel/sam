@@ -15,9 +15,9 @@ export const getRequestActor = cache(async () =>
 
 /**
  * The actor of the current request, or null without a session or without
- * clearance. For the reads of the shell (the layout of `/app` and the login
- * page): they give an empty answer instead of a redirect, also when the
- * session expired.
+ * clearance. For reads that give an empty answer instead of a redirect, also
+ * when the session expired, for example the reads of the shell (the layout of
+ * `/app` and the login page).
  */
 export const getOptionalRequestActor = cache(async () => {
   const authentication = await authenticate();

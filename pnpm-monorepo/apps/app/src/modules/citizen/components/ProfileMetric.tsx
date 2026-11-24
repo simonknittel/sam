@@ -24,8 +24,8 @@ interface Props {
 }
 
 /**
- * One number of a citizen profile, shown identically in the popovers and in
- * the dashboard tile.
+ * One number of a citizen profile, shown identically in the popovers, the
+ * dashboard tile and the Spynet overview.
  */
 export const ProfileMetric = ({
   label,

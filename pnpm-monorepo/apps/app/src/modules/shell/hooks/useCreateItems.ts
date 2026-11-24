@@ -29,8 +29,8 @@ interface ModalCreateItemCandidate extends Omit<ModalCreateItem, "type"> {
 }
 
 /**
- * The items of the "Neu" menu that the user is allowed to use. The top bar
- * and the CmdK menu show these items.
+ * The items of the "Neu" menu that the user is allowed to use. The top bar,
+ * the mobile flyout and the CmdK menu show these items.
  */
 export const useCreateItems = (): CreateItem[] => {
   const authentication = useAuthentication();

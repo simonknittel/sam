@@ -10,8 +10,8 @@ import * as z from "zod";
 import { protectedProcedure, toTrpcError } from "../../trpc";
 
 /**
- * The log entries other citizens shared. The kill switch closes the read
- * path of the sharing.
+ * The log entries all citizens shared, also the own ones. The kill switch
+ * closes the read path of the sharing.
  */
 export const getSharedEntries = protectedProcedure
   .input(

@@ -67,7 +67,7 @@ export interface WikiSlashCommandItem {
    */
   readonly allowedInTextOnlyBlock?: boolean;
   /**
-   * Whether the entry inserts inline nodes (page link, mention) — hidden
+   * Whether the entry inserts inline nodes (ship link, mention) — hidden
    * where those are schema-invalid (headings hold plain text only).
    */
   readonly insertsInline?: boolean;

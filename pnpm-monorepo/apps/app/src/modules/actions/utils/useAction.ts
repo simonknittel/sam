@@ -57,7 +57,7 @@ export const useAction = (
   );
 
   /**
-   * Since Next.js resets a form after submission, we include the original
+   * Since React resets a form after submission, we include the original
    * request payload in the response for the respective client component
    * being able to repopulate the form with the previous values. See
    * `createAuthenticatedAction()` for more details.

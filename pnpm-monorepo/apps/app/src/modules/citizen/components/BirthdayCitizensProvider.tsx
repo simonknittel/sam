@@ -15,7 +15,7 @@ interface Props {
 }
 
 /**
- * Every citizen link asks whether the citizen behind it celebrates today.
+ * Every `CitizenLink` asks whether the citizen behind it celebrates today.
  * The answer travels once with the app shell instead of once for each link:
  * a link knows only the id of its citizen, and the birthday of a citizen
  * never reaches the browser — see `getCitizenIdsWithBirthdayToday`.

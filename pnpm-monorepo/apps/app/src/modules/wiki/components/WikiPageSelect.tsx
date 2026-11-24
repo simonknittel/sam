@@ -16,8 +16,8 @@ interface Props extends Omit<ComponentProps<typeof Select>, "children"> {
 
 /**
  * Page select whose options represent the page hierarchy (indentation +
- * branch marker). Shared by the create/move/duplicate dialogs, the wiki
- * settings and the page-index config so they all read the same.
+ * branch marker). Shared by the wiki dialogs, the wiki settings and the page
+ * pickers of the fleet variants so they all read the same.
  */
 export const WikiPageSelect = ({
   targets,

@@ -14,7 +14,7 @@ import { Link } from "./Link";
 interface Props {
   readonly className?: string;
   /**
-   * A deleted citizen shows as "Deleted citizen", without a link. Without
+   * A deleted citizen shows as "Gelöschter Citizen", without a link. Without
    * `deletedAt`, the citizen is not deleted.
    */
   readonly citizen?:

@@ -29,7 +29,7 @@ const CONFETTI_INTERVAL = 1000;
 
 /**
  * An avatar is small, thus the particles are small as well and they travel
- * slowly. The smallest avatar the app shows is 32 pixels wide, which the
+ * slowly. The smallest `Avatar` of the app is 32 pixels wide, which the
  * values below still fill.
  */
 const CONFETTI_SHOT = {

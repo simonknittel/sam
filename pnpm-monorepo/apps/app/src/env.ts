@@ -52,9 +52,10 @@ export const env = createEnv({
     DISCORD_GUILD_ID: z.string(),
     /**
      * Bot token of the app's Discord bot, sent as `Authorization: Bot …`.
-     * Publishing events to Discord needs the bot to hold CREATE_EVENTS and
-     * MANAGE_EVENTS in the guild — no OAuth2 scope lets a user token manage
-     * guild scheduled events, so this always acts as the bot.
+     * Publishing events to Discord needs the bot to hold specific guild
+     * permissions (see docs/setup-local-machine.md) — no OAuth2 scope lets a
+     * user token manage guild scheduled events, so this always acts as the
+     * bot.
      */
     DISCORD_TOKEN: z.string(),
     /**
@@ -119,7 +120,7 @@ export const env = createEnv({
     ),
     /** AWS_PROFILE=sam-test terraform output access_key_app_vercel */
     AWS_ACCESS_KEY_ID: z.optional(z.string()),
-    /** AWS_PROFILE=sam-test terraform output secret_key_app_vercel */
+    /** AWS_PROFILE=sam-test terraform output secret_access_key_app_vercel */
     AWS_SECRET_ACCESS_KEY: z.optional(z.string()),
     /** AWS_PROFILE=sam-test terraform output event_bus_arn */
     AWS_EVENT_BUS_ARN: z.optional(z.string()),
@@ -149,27 +150,29 @@ export const env = createEnv({
      */
     S3_PUBLIC_URL: z.string(),
     /**
-     * Shared secret with the wiki collab server (apps/collab). Realtime
-     * collaboration is disabled if unset.
+     * Shared secret with the wiki collab server (apps/collab). The wiki is
+     * read-only if unset.
      */
     COLLAB_JWT_SECRET: z.optional(z.string()),
     /**
      * WebSocket URL of the wiki collab server (apps/collab), e.g.
-     * wss://sam-collab.example.com. Realtime collaboration is disabled if
-     * unset. Server-only on purpose: the client receives the URL as a prop,
-     * and a runtime variable — unlike a build-inlined NEXT_PUBLIC_ one —
-     * lets several instances of one build talk to different collab servers
-     * (used by the Playwright test stack).
+     * wss://sam-collab.example.com. The wiki is read-only if unset.
+     * Server-only on purpose: the client receives the URL as a prop, and a
+     * runtime variable — unlike a build-inlined NEXT_PUBLIC_ one — lets
+     * several instances of one build talk to different collab servers (used
+     * by the Playwright test stack).
      */
     COLLAB_URL: z.optional(z.url({ protocol: /^wss?$/ })),
     /**
      * Base64-encoded PKCS#8 PEM of the ES256 (P-256) private key the app
-     * signs the identity tokens of authenticated iframe embeds with (see
-     * docs/embedded-app-authentication.md). Embed authentication is
-     * disabled if unset: no token is appended to an embed URL and
-     * /.well-known/jwks.json publishes an empty key set. Every environment
-     * needs its own key, otherwise a token minted by a preview deployment
-     * verifies as a production one. Generate one with:
+     * signs the identity tokens of authenticated iframe embeds and the
+     * access tokens of the MCP server with (see
+     * docs/embedded-app-authentication.md and docs/mcp-server.md). Both are
+     * disabled if unset: no token is appended to an embed URL, the consent
+     * page refuses the access and /.well-known/jwks.json publishes an empty
+     * key set. Every environment needs its own key, otherwise a token minted
+     * by a preview deployment verifies as a production one. Generate one
+     * with:
      * `openssl ecparam -name prime256v1 -genkey -noout | openssl pkcs8 -topk8 -nocrypt | base64 -w0`
      */
     EMBED_JWT_PRIVATE_KEY: z.optional(z.string()),

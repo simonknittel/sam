@@ -6,9 +6,9 @@ injectWorkspacePackages: true
 
 linkWorkspacePackages: true
 
-# Refresh injected workspace copies after these scripts run (belt-and-braces;
-# in practice the packages resolve as symlinks and dist freshness comes from
-# packages/database's postinstall/build running tsc).
+# Refresh injected workspace copies after these scripts run. The importers with
+# a `file:` entry in pnpm-lock.yaml (apps/app) have such copies, the other
+# importers have symlinks.
 syncInjectedDepsAfterScripts:
   - build
   - postinstall
@@ -53,7 +53,7 @@ allowBuilds:
   protobufjs: true
   sharp: true
   unrs-resolver: true
-  # The database package's postinstall (generate + patch + tsc) already runs as
+  # The database package's postinstall (generate + tsc) already runs as
   # a workspace project lifecycle; no need to run it again as a dependency
   # build of apps/app.
   "@sam-monorepo/database@file:packages/database": false

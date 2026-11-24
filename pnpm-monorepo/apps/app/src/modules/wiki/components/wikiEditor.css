@@ -746,10 +746,6 @@
   padding-right: 3.5rem;
 }
 
-/*
- * Unlayered on purpose: the button's own `relative` (Button2 tooltip)
- * would win against an `absolute` utility passed via className.
- */
 .prose [data-wiki-attachment-card] > button {
   position: absolute;
   right: 0.75rem;

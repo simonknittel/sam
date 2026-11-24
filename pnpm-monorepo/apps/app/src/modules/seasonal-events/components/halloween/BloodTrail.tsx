@@ -11,7 +11,7 @@ import { SeasonalImage } from "../SeasonalImage";
  * viewer sees the still trail only.
  *
  * The trail covers y 56 to 104 of the page, over the header of a sub-app,
- * which ends at y 105. The longest navigation of a sub-app (SpyNet in admin
+ * which ends at y 112. The longest navigation of a sub-app (SpyNet in admin
  * mode) ends at x 732, and the call-to-action button of a sub-app starts 121
  * pixels before the right edge of the viewport.
  *

@@ -15,14 +15,6 @@ interface WikiImageNodeViewOptions extends WikiImageOptions {
   imageDimensions: Readonly<Record<string, WikiImageDimensions>>;
 }
 
-/**
- * Renders the image node exactly as its renderHTML does (anchor to the
- * original file around the image), then swaps the img's src for the Next.js
- * image optimizer's srcset when the upload's dimensions are known. Not a
- * React node view on purpose: the DOM stays identical to the schema
- * rendering, so the resize handles (which size the anchor), the edit menu
- * and the static read view all see the same structure.
- */
 const findImageElement = (element: HTMLElement): HTMLElement | null =>
   element.tagName === "IMG" ? element : element.querySelector("img");
 
@@ -46,6 +38,14 @@ const syncManagedAttributes = (
   }
 };
 
+/**
+ * Renders the image node exactly as its renderHTML does (anchor to the
+ * original file around the image), then swaps the img's src for the Next.js
+ * image optimizer's srcset when the upload's dimensions are known. Not a
+ * React node view on purpose: the DOM stays identical to the schema
+ * rendering, so the resize handles (which size the anchor), the edit menu
+ * and the static read view all see the same structure.
+ */
 const createWikiImageNodeView =
   (
     getImageDimensions: () => Readonly<Record<string, WikiImageDimensions>>,

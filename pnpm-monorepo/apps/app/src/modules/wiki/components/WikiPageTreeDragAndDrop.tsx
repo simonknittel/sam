@@ -222,9 +222,9 @@ export const WikiPageDropTargets = ({
   if (ancestorIds.includes(draggedPageId)) return null;
 
   /**
-   * In an event wiki the top level belongs to the locked root page alone —
-   * before/after drops beside it would create siblings, so only the inside
-   * band remains there.
+   * In a briefing and a variant embed the top level belongs to the locked
+   * root page alone — before/after drops beside it would create siblings, so
+   * only the inside band remains there.
    */
   const suppressEdgeBands = isRootLevel && rootPageId !== null;
 
@@ -319,7 +319,7 @@ export const WikiPageTreeEndDropTarget = ({
   const { rootPageId } = useWikiPageHrefMode();
 
   if (!draggedPageId || draggedPageId === lastRootPageId) return null;
-  // No drops beside the event wiki's locked root page (see the edge bands)
+  // No drops beside a locked root page (see the edge bands)
   if (rootPageId !== null) return null;
 
   return (
