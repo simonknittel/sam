@@ -18,11 +18,11 @@ import {
 } from "../../runtime/types";
 import { BROWSER_RUNTIME_ERROR_TEXTS } from "./browserRuntimeTexts";
 import { CONNECTOR_LABELS } from "./catalogTexts";
-import { LogEntryTypeSettings } from "./LogEntryTypeSettings";
 import {
   countLogEntryTypesThatAreOn,
   formatLogEntryTypeCount,
 } from "./logEntryTypeRules";
+import { LogEntryTypeSettings } from "./LogEntryTypeSettings";
 import { SharingPopoverCollapsible } from "./SharingPopoverCollapsible";
 import { useRuntimeCommand } from "./useRuntimeCommand";
 
