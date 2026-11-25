@@ -8,6 +8,10 @@ import {
   SHARING_POPOVER_TAB_LABELS,
   SharingPopoverTab,
 } from "./SharingPopoverTab";
+import {
+  SharingPopoverTopic,
+  SharingPopoverTopicList,
+} from "./SharingPopoverTopic";
 
 interface Part {
   readonly name: string;
@@ -121,8 +125,8 @@ export const StartSection = ({ onOpenTab }: Props) => {
         </ol>
       </div>
 
-      <dl className="flex flex-col gap-3 text-sm">
-        <Topic title="Runtimes und Connectors">
+      <SharingPopoverTopicList>
+        <SharingPopoverTopic title="Runtimes und Connectors">
           <p>
             Eine Runtime liest auf deinem Rechner Daten aus Star Citizen und
             lädt sie zu SAM hoch. Connectors sind ihre Datenquellen. Was davon
@@ -130,14 +134,14 @@ export const StartSection = ({ onOpenTab }: Props) => {
             deinem Rechner.
           </p>
           <SupportMatrix onOpenTab={onOpenTab} />
-        </Topic>
+        </SharingPopoverTopic>
 
-        <Topic title="Consumer Apps">
+        <SharingPopoverTopic title="Consumer Apps">
           <p>Diese Apps zeigen die Daten an, die du und andere teilen.</p>
           <ConsumerList consumers={CONSUMERS} />
-        </Topic>
+        </SharingPopoverTopic>
 
-        <Topic title="Freigaben">
+        <SharingPopoverTopic title="Freigaben">
           <p>
             Eine Freigabe legt fest, wer deine Daten live sehen darf: ein
             bestimmter Citizen, alle mit bestimmten Rollen oder alle, die das
@@ -145,22 +149,22 @@ export const StartSection = ({ onOpenTab }: Props) => {
             {renderTabLink(SharingPopoverTab.Grants)} kannst du sie erstellen,
             zeitlich begrenzen und jederzeit widerrufen.
           </p>
-        </Topic>
+        </SharingPopoverTopic>
 
-        <Topic title="Ältere Daten">
+        <SharingPopoverTopic title="Ältere Daten">
           <p>
             {LOG_ENTRIES_HISTORY_TEXT} Dafür brauchen sie keine Freigabe von
             dir.
           </p>
-        </Topic>
+        </SharingPopoverTopic>
 
-        <Topic title="Status">
+        <SharingPopoverTopic title="Status">
           <p>
             Unter {renderTabLink(SharingPopoverTab.Status)} siehst du alle deine
             verbundenen Runtimes.
           </p>
-        </Topic>
-      </dl>
+        </SharingPopoverTopic>
+      </SharingPopoverTopicList>
     </SharingPopoverSection>
   );
 };
@@ -181,20 +185,6 @@ const TabLink = ({ tab, onOpenTab, children }: TabLinkProps) => {
     >
       {children ?? SHARING_POPOVER_TAB_LABELS[tab]}
     </button>
-  );
-};
-
-interface TopicProps {
-  readonly title: string;
-  readonly children: ReactNode;
-}
-
-const Topic = ({ title, children }: TopicProps) => {
-  return (
-    <div>
-      <dt className="font-bold">{title}</dt>
-      <dd className="flex flex-col gap-1 text-neutral-400">{children}</dd>
-    </div>
   );
 };
 

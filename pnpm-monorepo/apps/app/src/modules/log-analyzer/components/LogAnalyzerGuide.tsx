@@ -12,22 +12,14 @@ import {
 import { GuideNoteList } from "@/modules/common/components/Guide/GuideNoteList";
 import { GuideScreenshotFit } from "@/modules/common/components/Guide/GuideScreenshot";
 import { GuideSection } from "@/modules/common/components/Guide/GuideSection";
-import { GuideStep } from "@/modules/common/components/Guide/GuideStep";
-import { GuideStepList } from "@/modules/common/components/Guide/GuideStepList";
 import { UiLabel } from "@/modules/common/components/Guide/UiLabel";
-import {
-  LOG_ENTRIES_HISTORY_TEXT,
-  SUPPORTED_BROWSERS_TEXT,
-} from "@/modules/remote-control-program/utils/remoteControlProgramTexts";
-import { FaChrome } from "react-icons/fa";
+import { LOG_ENTRIES_HISTORY_TEXT } from "@/modules/remote-control-program/utils/remoteControlProgramTexts";
 import {
   FaBolt,
   FaCalendarDays,
   FaCloudArrowUp,
   FaEye,
   FaFilter,
-  FaFolderOpen,
-  FaHourglassHalf,
   FaLock,
   FaRotate,
   FaTowerBroadcast,
@@ -90,54 +82,15 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
         screenshotAlt="Der Log Analyzer mit der Tabelle der Einträge und dem Live-Status"
       />
 
-      <GuideSection
-        heading="So startest du"
-        lead="In vier Schritten zu deinen ersten Einträgen"
-      >
-        <GuideStepList>
-          <GuideStep number={1} icon={FaChrome} title="Browser wählen">
-            {SUPPORTED_BROWSERS_TEXT}
-          </GuideStep>
-
-          <GuideStep number={2} icon={FaFolderOpen} title="Ordner auswählen">
-            Öffne das{" "}
-            <UiLabel icon={FaTowerBroadcast}>Remote Control Program</UiLabel> in
-            der oberen Leiste, auf dem Handy unter <UiLabel>Apps</UiLabel>.
-            Wähle unter <UiLabel>Runtime: Browser</UiLabel> mit{" "}
-            <UiLabel icon={FaFolderOpen}>Ordner wählen</UiLabel> den Ordner
-            deiner Star Citizen-Installation, zum Beispiel{" "}
-            {/* A path wraps only after a backslash, not inside a name */}
-            <code className="font-mono text-white/90">
-              …\
-              <wbr />
-              Roberts Space Industries\
-              <wbr />
-              StarCitizen
-            </code>
-            . Er darf nicht unter{" "}
-            <code className="font-mono text-white/90">
-              C:\Program Files
-            </code>{" "}
-            liegen.
-          </GuideStep>
-
-          <GuideStep
-            number={3}
-            icon={FaHourglassHalf}
-            title="Auswertung abwarten"
-          >
-            Die Runtime liest zuerst die Logs der letzten 14 Tage und danach
-            jede neue Zeile. Sie läuft, solange ein Tab mit SAM geöffnet ist.
-            Über der Tabelle siehst du, wie viele Sessions sie gelesen hat.
-          </GuideStep>
-
-          <GuideStep number={4} icon={FaRotate} title="Live bleiben">
-            Mit <UiLabel>Automatisch starten, wenn du SAM öffnest</UiLabel>{" "}
-            startet die Runtime beim nächsten Besuch von selbst. Nach einem
-            Neustart des Browsers musst du einmal auf{" "}
-            <UiLabel>Zugriff erlauben</UiLabel> klicken.
-          </GuideStep>
-        </GuideStepList>
+      <GuideSection heading="So startest du">
+        <p className="ml-4 text-white/80">
+          Öffne das{" "}
+          <UiLabel icon={FaTowerBroadcast}>Remote Control Program</UiLabel> in
+          der oberen Leiste, auf dem Handy unter <UiLabel>Apps</UiLabel>. Unter{" "}
+          <UiLabel>Runtime: Browser</UiLabel> richtest du die{" "}
+          <UiLabel>Game Logs</UiLabel> ein. Dort findest du auch eine{" "}
+          <UiLabel>Anleitung</UiLabel> dazu.
+        </p>
       </GuideSection>
 
       <GuideSection
@@ -232,21 +185,6 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
         lead="Im Remote Control Program legst du fest, was hochgeladen wird und wer es live sehen darf."
       >
         <GuideNoteList>
-          <GuideNote>
-            Deine Log-Dateien selbst werden nie hochgeladen, sondern nur
-            Einträge der Typen, die du unter <UiLabel>Typen auswählen</UiLabel>{" "}
-            auswählst. Am Anfang ist keiner ausgewählt. IP-Adressen werden vor
-            dem Hochladen entfernt.
-          </GuideNote>
-
-          <GuideNote>
-            Automatisch hochgeladen werden nur neue Einträge, solange die
-            Runtime läuft. Was du ohne laufende Runtime erlebst, bleibt auf
-            deinem Computer. Ältere Einträge kannst du mit{" "}
-            <UiLabel icon={FaCloudArrowUp}>Ältere Game Logs hochladen</UiLabel>{" "}
-            nachträglich hochladen.
-          </GuideNote>
-
           <GuideNote>
             Wer deine Einträge live sehen darf, legst du unter{" "}
             <UiLabel>Freigaben</UiLabel> fest: einzelne Citizens, Rollen oder

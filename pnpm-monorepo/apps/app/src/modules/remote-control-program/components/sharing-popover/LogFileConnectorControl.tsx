@@ -23,6 +23,7 @@ import {
   formatLogEntryTypeCount,
 } from "./logEntryTypeRules";
 import { LogEntryTypeSettings } from "./LogEntryTypeSettings";
+import { LogFileConnectorGuide } from "./LogFileConnectorGuide";
 import { SharingPopoverCollapsible } from "./SharingPopoverCollapsible";
 import { useRuntimeCommand } from "./useRuntimeCommand";
 
@@ -92,6 +93,13 @@ export const LogFileConnectorControl = ({ runtime }: Props) => {
       isExpanded={isExpanded}
       onExpandedChange={setIsExpanded}
     >
+      <p className="text-sm text-neutral-400">
+        Dieser Connector liest die Log-Dateien von Star Citizen und lädt daraus
+        neue Einträge der ausgewählten Typen hoch.
+      </p>
+
+      <LogFileConnectorGuide />
+
       {state.folder.state === LogFolderState.PermissionNeeded && (
         <Note
           type="warning"
@@ -119,11 +127,6 @@ export const LogFileConnectorControl = ({ runtime }: Props) => {
       {state.error && (
         <Note type="error" message={BROWSER_RUNTIME_ERROR_TEXTS[state.error]} />
       )}
-
-      <p className="text-sm text-neutral-400">
-        Dieser Connector liest die Log-Dateien von Star Citizen und lädt daraus
-        neue Einträge der ausgewählten Typen hoch.
-      </p>
 
       <LogEntryTypeSettings
         logEntryTypes={state.localAccess.logEntryTypes}
