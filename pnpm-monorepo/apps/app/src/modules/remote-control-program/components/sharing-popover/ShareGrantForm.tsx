@@ -19,18 +19,37 @@ import { GranteeFields } from "./GranteeFields";
 import { useSharingPopoverAction } from "./useSharingPopoverQuery";
 import { ValidityFields } from "./ValidityFields";
 
+interface FormProblem {
+  readonly field: ShareGrantFormField;
+  readonly message: string;
+}
+
 /** The checks that the browser cannot do with the attributes of the fields */
-const findFormProblem = (formData: FormData) => {
+const findFormProblem = (formData: FormData): FormProblem | null => {
+  const granteeKind = formData.get(ShareGrantFormField.GranteeKind);
+
   if (
-    formData.get(ShareGrantFormField.GranteeKind) === GranteeKind.citizen &&
+    granteeKind === GranteeKind.citizen &&
     !formData.get(ShareGrantFormField.CitizenId)
   )
-    return { citizenError: "Wähle einen Citizen aus.", formError: null };
+    return {
+      field: ShareGrantFormField.CitizenId,
+      message: "Wähle einen Citizen aus.",
+    };
+
+  if (
+    granteeKind === GranteeKind.role &&
+    formData.getAll(ShareGrantFormField.RoleIds).length <= 0
+  )
+    return {
+      field: ShareGrantFormField.RoleIds,
+      message: "Wähle mindestens eine Rolle aus.",
+    };
 
   if (formData.getAll(ShareGrantFormField.CapabilityIds).length <= 0)
     return {
-      citizenError: null,
-      formError: "Wähle aus, welche Daten du teilst.",
+      field: ShareGrantFormField.CapabilityIds,
+      message: "Wähle aus, welche Daten du teilst.",
     };
 
   return null;
@@ -59,15 +78,18 @@ export const ShareGrantForm = ({
     errorToast: false,
     onSuccess: onClose,
   });
-  const [citizenError, setCitizenError] = useState<string | null>(null);
-  const [formError, setFormError] = useState<string | null>(null);
+  const [problem, setProblem] = useState<FormProblem | null>(null);
+  const getProblemMessage = (field: ShareGrantFormField) =>
+    problem?.field === field ? problem.message : null;
+  const capabilitiesError = getProblemMessage(
+    ShareGrantFormField.CapabilityIds,
+  );
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    const problem = findFormProblem(new FormData(event.currentTarget));
-    setCitizenError(problem?.citizenError ?? null);
-    setFormError(problem?.formError ?? null);
+    const newProblem = findFormProblem(new FormData(event.currentTarget));
+    setProblem(newProblem);
 
-    if (problem) {
+    if (newProblem) {
       event.preventDefault();
       return;
     }
@@ -85,16 +107,18 @@ export const ShareGrantForm = ({
       <GranteeFields
         canChooseCitizen={canChooseCitizen}
         canChooseRole={canChooseRole}
-        citizenError={citizenError}
+        citizenError={getProblemMessage(ShareGrantFormField.CitizenId)}
+        rolesError={getProblemMessage(ShareGrantFormField.RoleIds)}
+        onRolesChange={() => setProblem(null)}
       />
 
       <CapabilityFields />
 
       <ValidityFields />
 
-      {formError && (
+      {capabilitiesError && (
         <div role="alert">
-          <Note type="error" message={formError} />
+          <Note type="error" message={capabilitiesError} />
         </div>
       )}
 

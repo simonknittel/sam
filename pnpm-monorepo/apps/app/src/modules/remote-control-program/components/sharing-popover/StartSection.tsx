@@ -140,8 +140,8 @@ export const StartSection = ({ onOpenTab }: Props) => {
         <Topic title="Freigaben">
           <p>
             Eine Freigabe legt fest, wer deine Daten live sehen darf: ein
-            bestimmter Citizen, alle mit einer bestimmten Rolle oder alle, die
-            das Remote Control Program nutzen. Unter{" "}
+            bestimmter Citizen, alle mit bestimmten Rollen oder alle, die das
+            Remote Control Program nutzen. Unter{" "}
             {renderTabLink(SharingPopoverTab.Grants)} kannst du sie erstellen,
             zeitlich begrenzen und jederzeit widerrufen.
           </p>

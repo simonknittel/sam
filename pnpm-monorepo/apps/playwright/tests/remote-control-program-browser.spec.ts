@@ -2,9 +2,7 @@ import type { Locator, Page } from "@playwright/test";
 import { createCitizen, createRole } from "../fixtures/factories";
 import {
   clickUntilVisible,
-  openRolePicker,
-  pickRole,
-  rolePickerPopover,
+  pickRoles,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import {
@@ -348,12 +346,13 @@ test.describe("mobile", () => {
     prisma,
     signIn,
   }) => {
-    const role = await createRole(prisma, { name: "Pilot" });
+    await createRole(prisma, { name: "Medic" });
+    await createRole(prisma, { name: "Pilot" });
     const owner = await createCitizen(prisma, {
       handle: "rcp-mobil",
       permissionStrings: [
         ...LOG_ANALYZER_PERMISSIONS,
-        `otherRole;read;roleId=${role.id}`,
+        "otherRole;read;roleId=*",
       ],
     });
     await signIn(owner.user);
@@ -374,19 +373,21 @@ test.describe("mobile", () => {
       form,
     );
 
-    const picker = form.getByRole("button", { name: "Rolle auswählen" });
+    const submitButton = form.getByRole("button", { name: "Freigeben" });
+    const rolesError = form.getByText("Wähle mindestens eine Rolle aus.");
+    await submitButton.click();
+    await expect(rolesError).toBeVisible();
 
-    /** Escape closes only the picker */
-    await openRolePicker(picker);
-    await page.keyboard.press("Escape");
-    await expect(rolePickerPopover(page)).toHaveCount(0);
-    await expect(form).toBeVisible();
-
-    await pickRole(picker, "Pilot");
-    await form.getByRole("button", { name: "Freigeben" }).click();
+    /** `pickRoles()` closes the picker with Escape, which keeps the sheet open */
+    await pickRoles(form.getByRole("button", { name: "Rolle auswählen" }), [
+      "Pilot",
+      "Medic",
+    ]);
+    await expect(rolesError).toHaveCount(0);
+    await submitButton.click();
     await expect(form).toHaveCount(0);
     await expect(
-      grants.getByRole("listitem").filter({ hasText: "Pilot" }),
+      grants.getByRole("listitem").filter({ hasText: "Rollen Medic, Pilot" }),
     ).toBeVisible();
   });
 });

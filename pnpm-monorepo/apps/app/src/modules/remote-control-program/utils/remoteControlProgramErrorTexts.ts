@@ -29,7 +29,7 @@ export const SHARE_GRANT_ERROR_TEXTS: ApplicationErrorTexts = {
   [ShareGrantErrorMessage.GranteeCitizenNotFound]:
     "Diesen Citizen gibt es nicht mehr.",
   [ShareGrantErrorMessage.GranteeRoleNotFound]:
-    "Diese Rolle gibt es nicht, oder du kannst sie nicht sehen.",
+    "Eine der Rollen gibt es nicht, oder du kannst sie nicht sehen.",
   [ShareGrantErrorMessage.ValidityTimeNotValid]:
     "Der Start oder das Ende ist ungültig.",
   [ShareGrantErrorMessage.ValidityEndNotAfterStart]:

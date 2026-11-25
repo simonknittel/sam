@@ -17,7 +17,7 @@ const parseShareGrantFormData = (formData: FormData) => ({
   grantee: {
     kind: formData.get(ShareGrantFormField.GranteeKind),
     citizen_id: formData.get(ShareGrantFormField.CitizenId) ?? undefined,
-    role_id: formData.get(ShareGrantFormField.RoleId) ?? undefined,
+    role_ids: formData.getAll(ShareGrantFormField.RoleIds),
   },
   capability_ids: formData.getAll(ShareGrantFormField.CapabilityIds),
   validity:

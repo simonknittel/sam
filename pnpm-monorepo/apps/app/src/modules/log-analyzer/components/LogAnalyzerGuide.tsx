@@ -193,8 +193,8 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
                   <UiLabel icon={FaCloudArrowUp}>
                     Ältere Game Logs hochladen
                   </UiLabel>{" "}
-                  lädst du die Einträge des Zeitraums hoch, die nicht automatisch
-                  hochgeladen wurden.
+                  lädst du die Einträge des Zeitraums hoch, die nicht
+                  automatisch hochgeladen wurden.
                 </>
               ),
             },
@@ -249,9 +249,9 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
 
           <GuideNote>
             Wer deine Einträge live sehen darf, legst du unter{" "}
-            <UiLabel>Freigaben</UiLabel> fest: einzelne Citizens, eine Rolle
-            oder alle, auf Wunsch nur für eine bestimmte Zeit. Freigaben kannst
-            du jederzeit widerrufen.
+            <UiLabel>Freigaben</UiLabel> fest: einzelne Citizens, Rollen oder
+            alle, auf Wunsch nur für eine bestimmte Zeit. Freigaben kannst du
+            jederzeit widerrufen.
           </GuideNote>
 
           <GuideNote>

@@ -63,7 +63,11 @@ const GranteeLabel = ({ grantee }: GranteeLabelProps) => {
       );
 
     case GranteeKind.role: {
-      const label = `Rolle ${grantee.role.name}`;
+      const roleNames = grantee.roles.map((role) => role.name).join(", ");
+      const label =
+        grantee.roles.length === 1
+          ? `Rolle ${roleNames}`
+          : `Rollen ${roleNames}`;
 
       return (
         <span className="flex min-w-0 items-center gap-1.5">

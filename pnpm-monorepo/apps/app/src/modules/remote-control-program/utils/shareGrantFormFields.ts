@@ -8,7 +8,7 @@ import type { GrantValidityPreset } from "@sam-monorepo/domain";
 export enum ShareGrantFormField {
   GranteeKind = "grantee_kind",
   CitizenId = "citizen_id",
-  RoleId = "role_id",
+  RoleIds = "role_ids",
   CapabilityIds = "capability_ids",
   /** A `ShareGrantValidityChoice` */
   Validity = "validity",
