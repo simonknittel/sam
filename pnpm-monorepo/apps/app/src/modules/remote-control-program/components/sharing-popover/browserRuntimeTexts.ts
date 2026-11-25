@@ -30,6 +30,8 @@ export const BROWSER_RUNTIME_ERROR_TEXTS: Readonly<
     "Die Runtime läuft gerade nicht. Starte sie, um ältere Einträge hochzuladen.",
   [BrowserRuntimeErrorCode.RelayNotAvailable]:
     "Dieser Browser ist nicht mit dem Relay verbunden und kann nichts hochladen.",
+  [BrowserRuntimeErrorCode.TooManyEntries]:
+    "Der Zeitraum enthält zu viele Einträge. Lade die Seite neu und wähle einen kürzeren Zeitraum.",
   [BrowserRuntimeErrorCode.RelayCheckFailed]:
     "Es konnte nicht geprüft werden, welche Einträge schon hochgeladen sind. Versuche es erneut.",
   [BrowserRuntimeErrorCode.RequestExpired]:

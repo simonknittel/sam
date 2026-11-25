@@ -131,6 +131,13 @@ export interface BrowserRuntimeOptions {
   readonly random?: () => number;
 }
 
+enum ReadOutcome {
+  Completed = "completed",
+  /** A different read or the end of the run stopped it */
+  Stopped = "stopped",
+  Failed = "failed",
+}
+
 interface OlderEntriesRequest {
   readonly id: string;
   readonly range: OlderEntriesTimeRange;
@@ -234,7 +241,7 @@ export class BrowserRuntime {
   #requestedWindow: EntryWindow | null = null;
   /** The windows of the next read only, for a request for older entries */
   #oneTimeWindows: EntryWindow[] = [];
-  #readInFlight: Promise<void> | null = null;
+  #readInFlight: Promise<ReadOutcome> | null = null;
   #isReadRequested = false;
   #cancelReadTimer: (() => void) | null = null;
   #cancelPresenceTimer: (() => void) | null = null;
@@ -256,6 +263,7 @@ export class BrowserRuntime {
   readonly #outbox = new Outbox();
   #isFlushingOutbox = false;
   #olderEntriesRequest: OlderEntriesRequest | null = null;
+  #newestRequestNumber = 0;
 
   constructor(options: BrowserRuntimeOptions) {
     this.#options = options;
@@ -454,10 +462,32 @@ export class BrowserRuntime {
   ): Promise<PreparedOlderEntriesRequest> {
     this.#requireUploads();
     const generation = this.#runGeneration;
+    this.#newestRequestNumber += 1;
+    const requestNumber = this.#newestRequestNumber;
 
-    await this.#readNow([range]);
-    if (generation !== this.#runGeneration)
-      throw new BrowserRuntimeError(BrowserRuntimeErrorCode.NotRunning);
+    /** Only the newest request counts, and only in the run of its start */
+    const requireCurrentRequest = () => {
+      if (generation !== this.#runGeneration)
+        throw new BrowserRuntimeError(BrowserRuntimeErrorCode.NotRunning);
+      if (requestNumber !== this.#newestRequestNumber)
+        throw new BrowserRuntimeError(BrowserRuntimeErrorCode.RequestExpired);
+    };
+
+    // A new window of a control UI stops a read, thus the count would miss entries
+    let outcome: ReadOutcome;
+    do {
+      outcome = await this.#readNow([range]);
+      requireCurrentRequest();
+    } while (outcome === ReadOutcome.Stopped);
+    if (outcome === ReadOutcome.Failed)
+      throw new BrowserRuntimeError(BrowserRuntimeErrorCode.ReadFailed);
+
+    const { prunedUntil } = this.#entryStore;
+    if (
+      prunedUntil !== null &&
+      (range.start === null || range.start <= new Date(prunedUntil))
+    )
+      throw new BrowserRuntimeError(BrowserRuntimeErrorCode.TooManyEntries);
 
     let { entries } = this.#layer.prepareOlderEntriesRequest(
       this.#entryStore.values(),
@@ -478,8 +508,7 @@ export class BrowserRuntime {
           { cause: error },
         );
       }
-      if (generation !== this.#runGeneration)
-        throw new BrowserRuntimeError(BrowserRuntimeErrorCode.NotRunning);
+      requireCurrentRequest();
 
       entries = entries.filter((entry) => !relayKeys.has(entry.hash));
     }
@@ -685,18 +714,19 @@ export class BrowserRuntime {
    * two files, and the next read continues it.
    */
   async #readNow(oneTimeWindows: EntryWindow[] = []) {
-    if (this.#readInFlight !== null) {
+    // Two callers can wait for the same read: the second one must not take the read of the first one as its own
+    while (this.#readInFlight !== null) {
       this.#reader?.stopRead();
       await this.#readInFlight;
     }
 
     this.#oneTimeWindows = oneTimeWindows;
-    await this.#read();
+    return this.#read();
   }
 
-  async #readOnce(generation: number) {
+  async #readOnce(generation: number): Promise<ReadOutcome> {
     const reader = this.#reader;
-    if (!reader || !this.#state.isRunning) return;
+    if (!reader || !this.#state.isRunning) return ReadOutcome.Failed;
 
     const windows = this.#getReadWindows();
     this.#oneTimeWindows = [];
@@ -708,7 +738,7 @@ export class BrowserRuntime {
 
     try {
       const result = await reader.read(windows);
-      if (generation !== this.#runGeneration) return;
+      if (generation !== this.#runGeneration) return ReadOutcome.Stopped;
 
       this.#hasCompletedRead = true;
       const { entries: addedEntries } = this.#entryStore.apply({
@@ -734,8 +764,9 @@ export class BrowserRuntime {
       });
 
       this.#handleReadEntries(addedEntries);
+      return result.isStopped ? ReadOutcome.Stopped : ReadOutcome.Completed;
     } catch (error) {
-      if (generation !== this.#runGeneration) return;
+      if (generation !== this.#runGeneration) return ReadOutcome.Stopped;
 
       console.error(
         "[Remote Control Program] Error reading the log folder:",
@@ -745,6 +776,7 @@ export class BrowserRuntime {
         isReading: false,
         error: BrowserRuntimeErrorCode.ReadFailed,
       });
+      return ReadOutcome.Failed;
     } finally {
       cancelSlowReadTimer();
     }

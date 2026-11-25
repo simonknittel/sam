@@ -229,11 +229,13 @@ describe("createLogFileReader", () => {
       shouldStop,
     });
 
+    expect(stoppedRead.isStopped).toBe(true);
     expect(toMatchKeys(stoppedRead.matches)).toEqual(
       toMatchKeys(matchCompleteLines(LOG_CONTENT)),
     );
 
     const nextRead = await readLogFiles([firstFile, secondFile]);
+    expect(nextRead.isStopped).toBe(false);
     expect(toMatchKeys(nextRead.matches)).toEqual(
       toMatchKeys(matchCompleteLines(LOG_CONTENT)),
     );

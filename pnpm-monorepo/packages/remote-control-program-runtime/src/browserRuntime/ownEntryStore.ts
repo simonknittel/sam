@@ -56,10 +56,20 @@ export class OwnEntryStore {
   #entries = new Map<string, RawMatch>();
   #snapshot: ReadonlyMap<string, RawMatch> = new Map();
   #isSnapshotCurrent = true;
+  #prunedUntil: string | null = null;
   readonly #listeners = new Set<OwnEntriesListener>();
 
   get size() {
     return this.#entries.size;
+  }
+
+  /**
+   * The time (`RawMatch.isoDate`) of the newest entry that left the store
+   * above its limit. The store can miss entries up to this time, and the
+   * reader does not read them again. Null: no entry left the store.
+   */
+  get prunedUntil() {
+    return this.#prunedUntil;
   }
 
   get(key: string) {
@@ -93,6 +103,7 @@ export class OwnEntryStore {
     switch (change.mode) {
       case OwnEntriesChangeMode.Replace:
         removedKeys.push(...this.#entries.keys());
+        this.#prunedUntil = null;
         this.#entries = new Map(
           change.entries.map((entry) => [entry.hash, entry]),
         );
@@ -149,6 +160,12 @@ export class OwnEntryStore {
       .slice(0, this.#entries.size - keptCount);
 
     for (const entry of prunedEntries) this.#entries.delete(entry.hash);
+    const newestPrunedIsoDate = prunedEntries.at(-1)?.isoDate ?? null;
+    if (
+      newestPrunedIsoDate !== null &&
+      (this.#prunedUntil === null || newestPrunedIsoDate > this.#prunedUntil)
+    )
+      this.#prunedUntil = newestPrunedIsoDate;
     return prunedEntries.map((entry) => entry.hash);
   }
 }

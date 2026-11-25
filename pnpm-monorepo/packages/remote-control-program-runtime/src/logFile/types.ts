@@ -61,6 +61,8 @@ export interface ReadResult {
    * read so far. It moves forward while the game runs and writes its log.
    */
   readonly newestIsoDate: string | null;
+  /** A stop ended the read before its last file. The next read continues it. */
+  readonly isStopped: boolean;
 }
 
 export type ResultMessage =

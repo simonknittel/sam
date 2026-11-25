@@ -367,9 +367,13 @@ export const createLogFileReader = () => {
     });
 
     const matches: RawMatch[] = [];
+    let isStopped = false;
 
     for (const logFile of changedFiles) {
-      if (shouldStop?.()) break;
+      if (shouldStop?.()) {
+        isStopped = true;
+        break;
+      }
 
       const { path } = logFile;
 
@@ -384,6 +388,7 @@ export const createLogFileReader = () => {
     return {
       matches,
       newestIsoDate: findNewestIsoDate(states.values()),
+      isStopped,
     };
   };
 };

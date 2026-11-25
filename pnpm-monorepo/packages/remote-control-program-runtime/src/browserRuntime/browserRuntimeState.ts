@@ -35,6 +35,11 @@ export enum BrowserRuntimeErrorCode {
    * tab took the runtime (command)
    */
   RequestExpired = "request_expired",
+  /**
+   * The entries of the range are above the limit of the memory, thus a count
+   * would miss the oldest ones (command)
+   */
+  TooManyEntries = "too_many_entries",
 }
 
 export class BrowserRuntimeError extends Error {

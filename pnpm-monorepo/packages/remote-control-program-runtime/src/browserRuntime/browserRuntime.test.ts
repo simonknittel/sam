@@ -3,6 +3,7 @@ import {
   LogAnalyzerEntryType,
   UpMessageType,
   createDownMessage,
+  isInVisibleTimeRange,
 } from "@sam-monorepo/domain";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { createLocalAccessLayer } from "../localAccess/localAccessLayer.js";
@@ -18,7 +19,7 @@ import {
   BrowserRuntimeErrorCode,
 } from "./browserRuntimeState.js";
 import type { LogFolderReader } from "./logFolderReader.js";
-import { OwnEntryStore } from "./ownEntryStore.js";
+import { MAXIMUM_OWN_ENTRIES, OwnEntryStore } from "./ownEntryStore.js";
 import type { OwnEntryKeysPage, OwnEntryKeysQuery } from "./relayKeys.js";
 
 const CITIZEN_ID = "citizen";
@@ -34,7 +35,7 @@ const OTHER_FOLDER = {} as FileSystemDirectoryHandle;
 
 /**
  * A log folder of the game. Each tab has its own reader, and each read
- * gives the lines since the last read of that reader.
+ * gives the lines of its windows that this reader did not read before.
  */
 const createLogFolder = (name: string) => {
   const matches: RawMatch[] = [];
@@ -62,25 +63,37 @@ const createLogFolder = (name: string) => {
     findHash: (rawLine: string) =>
       matches.find((candidate) => candidate.rawLine === rawLine)?.hash,
     createReader: (): LogFolderReader => {
-      let readCount = 0;
+      const readHashes = new Set<string>();
+      let stopRead = () => {};
 
       return {
-        read: async () => {
-          if (readMilliseconds > 0)
-            await new Promise((resolve) => {
-              setTimeout(resolve, readMilliseconds);
-            });
+        read: async (windows) => {
+          const isStopped =
+            readMilliseconds > 0 &&
+            (await new Promise<boolean>((resolve) => {
+              setTimeout(() => resolve(false), readMilliseconds);
+              stopRead = () => resolve(true);
+            }));
 
-          const newMatches = matches.slice(readCount);
-          readCount = matches.length;
+          const newMatches = isStopped
+            ? []
+            : matches.filter(
+                ({ hash, isoDate }) =>
+                  !readHashes.has(hash) &&
+                  windows.some((window) =>
+                    isInVisibleTimeRange(window, new Date(isoDate)),
+                  ),
+              );
+          for (const { hash } of newMatches) readHashes.add(hash);
 
           return {
             matches: newMatches,
             newestIsoDate: matches.at(-1)?.isoDate ?? null,
+            isStopped,
             oldestSessionStart: null,
           };
         },
-        stopRead: () => {},
+        stopRead: () => stopRead(),
         dispose: () => {},
       };
     },
@@ -433,4 +446,78 @@ test("tells that a read takes long, but not for the short reads", async () => {
   expect(runtime.getState().isReading).toBe(true);
   runtime.stop();
   expect(runtime.getState().isReading).toBe(false);
+});
+
+const createBrowserWithOlderEntries = async () => {
+  const browser = createBrowser();
+  browser.turnOnLines();
+  browser.folder.write(START_TIME - 60 * DAY);
+  browser.folder.write(START_TIME - 40 * DAY);
+  const { runtime, start } = browser.openTab();
+  await start();
+
+  browser.folder.setReadMilliseconds(5 * SECOND);
+  // The scheduled read is in flight
+  await vi.advanceTimersByTimeAsync(11 * SECOND);
+
+  return {
+    runtime,
+    countSince: (days: number) =>
+      runtime.prepareOlderEntriesRequest({
+        start: new Date(START_TIME - days * DAY),
+        end: null,
+      }),
+  };
+};
+
+test("a newer count replaces an older one and reads its own range", async () => {
+  const { runtime, countSince } = await createBrowserWithOlderEntries();
+
+  const replacedCount = countSince(50);
+  const expectReplaced = expect(replacedCount).rejects.toThrow(
+    new BrowserRuntimeError(BrowserRuntimeErrorCode.RequestExpired),
+  );
+  const count = countSince(90);
+  await vi.advanceTimersByTimeAsync(30 * SECOND);
+
+  await expectReplaced;
+  const { id, entryCount } = await count;
+  expect(entryCount).toBe(2);
+  expect(runtime.confirmOlderEntriesRequest(id)).toBe(2);
+});
+
+test("a count reads its range completely when a control UI stops its read", async () => {
+  const { runtime, countSince } = await createBrowserWithOlderEntries();
+
+  const count = countSince(90);
+  await vi.advanceTimersByTimeAsync(2 * SECOND);
+  // The Log Analyzer of a different tab
+  runtime.setRequestedWindow({
+    start: new Date(START_TIME - 20 * DAY),
+    end: null,
+  });
+  await vi.advanceTimersByTimeAsync(30 * SECOND);
+
+  await expect(count).resolves.toMatchObject({ entryCount: 2 });
+});
+
+test("refuses a count whose oldest entries left the memory", async () => {
+  const browser = createBrowser();
+  browser.turnOnLines();
+  for (let index = 0; index <= MAXIMUM_OWN_ENTRIES; index += 1)
+    browser.folder.write(START_TIME - 60 * DAY + index);
+  const tab = browser.openTab();
+  await tab.start();
+
+  await expect(
+    tab.runtime.prepareOlderEntriesRequest({ start: null, end: null }),
+  ).rejects.toThrow(
+    new BrowserRuntimeError(BrowserRuntimeErrorCode.TooManyEntries),
+  );
+  await expect(
+    tab.runtime.prepareOlderEntriesRequest({
+      start: new Date(START_TIME - DAY),
+      end: null,
+    }),
+  ).resolves.toMatchObject({ entryCount: 0 });
 });

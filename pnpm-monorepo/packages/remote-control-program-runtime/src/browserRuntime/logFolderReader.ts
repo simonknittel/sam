@@ -14,6 +14,8 @@ export interface LogFolderRead {
   readonly matches: readonly RawMatch[];
   /** See `ReadResult.newestIsoDate` */
   readonly newestIsoDate: string | null;
+  /** See `ReadResult.isStopped` */
+  readonly isStopped: boolean;
   /** See `findOldestSessionStart()`. Of all log files of the folder. */
   readonly oldestSessionStart: number | null;
 }
@@ -59,11 +61,10 @@ export const createLogFolderReader = (
         selectedPaths.has(logFile.path),
       );
 
-      const { matches, newestIsoDate } = await parser.parse(selectedFiles);
+      const result = await parser.parse(selectedFiles);
 
       return {
-        matches,
-        newestIsoDate,
+        ...result,
         oldestSessionStart: findOldestSessionStart(logFiles),
       };
     },
