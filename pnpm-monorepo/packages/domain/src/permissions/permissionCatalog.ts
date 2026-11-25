@@ -392,6 +392,21 @@ export const PERMISSION_CATALOG = [
   },
 
   {
+    section: "Remote Control Program",
+    title: "Remote Control Program nutzen",
+    permissionString: "remoteControlProgram;use",
+    description:
+      "Die Runtime im Browser starten, eigene Daten für andere freigeben und freigegebene Daten lesen.",
+  },
+  {
+    section: "Remote Control Program",
+    title: "Log Analyzer",
+    permissionString: "logAnalyzer;read",
+    description:
+      "Das eigene Log, die Freigaben anderer und alle hochgeladenen Einträge lesen, die älter als 2 Stunden sind. Braucht zusätzlich „Remote Control Program nutzen“.",
+  },
+
+  {
     section: "SILC",
     title: "Eigenen Kontostand lesen",
     permissionString: "silcBalanceOfCurrentCitizen;read",
@@ -594,24 +609,10 @@ export const PERMISSION_CATALOG = [
   },
   {
     section: "Sonstiges",
-    title: "Log Analyzer",
-    permissionString: "logAnalyzer;read",
-    description:
-      "Das eigene Log, die Freigaben anderer und alle hochgeladenen Einträge lesen, die älter als 2 Stunden sind. Braucht zusätzlich „Remote Control Program nutzen“.",
-  },
-  {
-    section: "Sonstiges",
     title: "MCP-Server nutzen",
     permissionString: "mcp;use",
     description:
       "KI-Clients wie Claude mit SAM verbinden. Die Clients arbeiten mit den Berechtigungen des Benutzers.",
-  },
-  {
-    section: "Sonstiges",
-    title: "Remote Control Program nutzen",
-    permissionString: "remoteControlProgram;use",
-    description:
-      "Die Runtime im Browser starten, eigene Daten für andere freigeben und freigegebene Daten lesen.",
   },
   {
     section: "Sonstiges",

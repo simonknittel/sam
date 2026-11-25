@@ -54,17 +54,6 @@ const OtherTab = ({ roles }: Readonly<Props>) => {
 
       <div className="flex items-center justify-between py-2">
         <div>
-          <h4 className="font-bold">Log Analyzer</h4>
-          <p className="text-sm text-neutral-500">
-            {getPermissionDescription("logAnalyzer;read")}
-          </p>
-        </div>
-
-        <YesNoCheckbox {...register("logAnalyzer;read")} />
-      </div>
-
-      <div className="flex items-center justify-between py-2">
-        <div>
           <h4 className="font-bold">MCP-Server nutzen</h4>
           <p className="text-sm text-neutral-500">
             {getPermissionDescription("mcp;use")}
@@ -72,17 +61,6 @@ const OtherTab = ({ roles }: Readonly<Props>) => {
         </div>
 
         <YesNoCheckbox {...register("mcp;use")} />
-      </div>
-
-      <div className="flex items-center justify-between py-2">
-        <div>
-          <h4 className="font-bold">Remote Control Program nutzen</h4>
-          <p className="text-sm text-neutral-500">
-            {getPermissionDescription("remoteControlProgram;use")}
-          </p>
-        </div>
-
-        <YesNoCheckbox {...register("remoteControlProgram;use")} />
       </div>
 
       <div className="flex items-center justify-between py-2">
