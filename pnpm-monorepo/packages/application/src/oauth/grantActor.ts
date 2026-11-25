@@ -1,6 +1,7 @@
 import type { Prisma } from "@sam-monorepo/database/client";
-import { createActor, type Actor } from "../actor.js";
+import type { Actor } from "../actor.js";
 import { getEffectiveRolesOfCitizen } from "../auth/getEffectiveRolesOfCitizen.js";
+import { createUserActor, USER_ACTOR_SELECT } from "../auth/userActor.js";
 import type { ApplicationContext } from "../context.js";
 
 export const GRANT_ACTOR_SELECT = {
@@ -8,17 +9,9 @@ export const GRANT_ACTOR_SELECT = {
   adminModeEnabledAt: true,
   user: {
     select: {
-      role: true,
-      emailVerified: true,
+      ...USER_ACTOR_SELECT,
       bannedAt: true,
-      discordTwoFactorEnabled: true,
       citizen: { select: { id: true, handle: true } },
-      // The same account as the `discordId` of the session of the app
-      accounts: {
-        where: { provider: "discord" },
-        select: { providerAccountId: true },
-        take: 1,
-      },
     },
   },
 } as const satisfies Prisma.OAuthGrantSelect;
@@ -36,21 +29,15 @@ export const createGrantActor = async (
   context: ApplicationContext,
   grant: GrantWithActorFields,
 ): Promise<Actor> => {
-  const { user } = grant;
-  const effectiveRoles = user.citizen
-    ? await getEffectiveRolesOfCitizen(context.prisma, user.citizen.id)
-    : null;
+  const { userId, user } = grant;
 
-  return createActor({
-    userId: grant.userId,
-    userRole: user.role,
-    emailConfirmedAt: user.emailVerified,
+  return createUserActor({
+    userId,
+    user,
     citizen: user.citizen,
-    roleIds: effectiveRoles?.roleIds ?? new Set(),
-    discordUserId: user.accounts[0]?.providerAccountId ?? null,
-    discordTwoFactorEnabled: user.discordTwoFactorEnabled,
-    permissionSets: effectiveRoles?.permissionSets ?? [],
-    // `createActor()` applies admin mode only to an admin
+    effectiveRoles: user.citizen
+      ? await getEffectiveRolesOfCitizen(context.prisma, user.citizen.id)
+      : null,
     adminMode: grant.adminModeEnabledAt !== null,
   });
 };
