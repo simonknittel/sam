@@ -32,7 +32,8 @@ export const ItemPickerPopover = ({
       openOnHover={false}
       side="bottom"
       align="start"
-      positionerClassName="z-40"
+      // Above the mobile bottom sheet (`z-50`), which can hold a picker
+      positionerClassName="z-60"
       childrenClassName="w-80 max-w-[calc(100vw-1rem)]"
     >
       {children}
