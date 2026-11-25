@@ -1,7 +1,10 @@
 import type { Locator, Page } from "@playwright/test";
-import { createCitizen } from "../fixtures/factories";
+import { createCitizen, createRole } from "../fixtures/factories";
 import {
   clickUntilVisible,
+  openRolePicker,
+  pickRole,
+  rolePickerPopover,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import {
@@ -338,5 +341,52 @@ test.describe("mobile", () => {
     await expect(
       page.getByRole("button", { name: "Öffnen", exact: true }),
     ).toHaveCount(0);
+  });
+
+  test("the role picker of a new grant opens above the bottom sheet", async ({
+    page,
+    prisma,
+    signIn,
+  }) => {
+    const role = await createRole(prisma, { name: "Pilot" });
+    const owner = await createCitizen(prisma, {
+      handle: "rcp-mobil",
+      permissionStrings: [
+        ...LOG_ANALYZER_PERMISSIONS,
+        `otherRole;read;roleId=${role.id}`,
+      ],
+    });
+    await signIn(owner.user);
+    await page.goto("/app/dashboard");
+
+    await clickUntilVisible(
+      page.getByRole("button", { name: "Apps" }),
+      page.getByRole("button", { name: "Apps", expanded: true }),
+    );
+    await openSharingPopover(page);
+    const grants = await showSharingPopoverSection(
+      page,
+      SharingPopoverSection.Grants,
+    );
+    const form = grants.getByRole("form", { name: "Neue Freigabe" });
+    await clickUntilVisible(
+      grants.getByRole("button", { name: "Neue Freigabe" }),
+      form,
+    );
+
+    const picker = form.getByRole("button", { name: "Rolle auswählen" });
+
+    /** Escape closes only the picker */
+    await openRolePicker(picker);
+    await page.keyboard.press("Escape");
+    await expect(rolePickerPopover(page)).toHaveCount(0);
+    await expect(form).toBeVisible();
+
+    await pickRole(picker, "Pilot");
+    await form.getByRole("button", { name: "Freigeben" }).click();
+    await expect(form).toHaveCount(0);
+    await expect(
+      grants.getByRole("listitem").filter({ hasText: "Pilot" }),
+    ).toBeVisible();
   });
 });

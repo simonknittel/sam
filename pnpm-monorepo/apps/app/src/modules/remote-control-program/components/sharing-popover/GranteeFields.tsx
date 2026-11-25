@@ -2,10 +2,10 @@
 
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
-import { Select } from "@/modules/common/components/form/Select";
-import { useRolesContext } from "@/modules/roles/components/RolesContext";
+import { ItemPickerMode } from "@/modules/common/components/ItemPicker/ItemPickerMode";
+import { RolePicker } from "@/modules/roles/components/RolePicker/RolePicker";
 import { GranteeKind } from "@sam-monorepo/domain";
-import { useId, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { FaGlobe, FaUser, FaUsers } from "react-icons/fa";
 import { ShareGrantFormField } from "../../utils/shareGrantFormFields";
 
@@ -83,7 +83,14 @@ export const GranteeFields = ({
         <CitizenField error={citizenError} />
       )}
 
-      {granteeKind === GranteeKind.role && <RoleField />}
+      {granteeKind === GranteeKind.role && (
+        <RolePicker
+          mode={ItemPickerMode.Single}
+          name={ShareGrantFormField.RoleId}
+          label="Rolle"
+          required
+        />
+      )}
     </div>
   );
 };
@@ -102,45 +109,6 @@ const CitizenField = ({ error }: CitizenFieldProps) => {
           {error}
         </p>
       )}
-    </div>
-  );
-};
-
-/**
- * A native list of the roles that the owner can see. The role picker opens
- * its own popover with `z-40`, which the mobile bottom sheet (`z-50`) of the
- * sharing popover covers.
- */
-const RoleField = () => {
-  const { roles } = useRolesContext();
-  const id = useId();
-  const sortedRoles = roles.toSorted((first, second) =>
-    first.name.localeCompare(second.name),
-  );
-
-  return (
-    <div>
-      <label htmlFor={id} className="mb-1 block">
-        Rolle
-      </label>
-
-      <Select
-        id={id}
-        name={ShareGrantFormField.RoleId}
-        required
-        defaultValue=""
-        className="hover:border-neutral-600"
-      >
-        <option value="" disabled>
-          Rolle auswählen
-        </option>
-
-        {sortedRoles.map((role) => (
-          <option key={role.id} value={role.id}>
-            {role.name}
-          </option>
-        ))}
-      </Select>
     </div>
   );
 };
