@@ -16,7 +16,10 @@ interface RelayEntries {
   readonly entries: ReadonlyMap<string, LogFeedEntry>;
   /** See `RelayEntryStore` */
   readonly incompleteUntil: Date | null;
-  /** The consumer read the snapshot, and no request failed */
+  /**
+   * The consumer read the snapshot and all changes, the realtime delivery
+   * works, and no request failed
+   */
   readonly isUpToDate: boolean;
 }
 

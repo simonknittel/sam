@@ -186,6 +186,7 @@ export const useLogEntriesFeed = ({
       isUpToDate:
         state.relayAvailability === RelayFeedAvailability.Available &&
         !state.isLoading &&
+        !state.isCatchingUp &&
         state.problem === null,
     });
 

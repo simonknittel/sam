@@ -143,6 +143,11 @@ export interface LogEntriesFeedConsumerState {
    * of the scope or of the sharing owners
    */
   readonly isLoading: boolean;
+  /**
+   * The realtime delivery does not work, or a read of the changes since the
+   * last delivery is necessary or in progress: new entries can be missing
+   */
+  readonly isCatchingUp: boolean;
   readonly problem: LogEntriesFeedProblem | null;
   /** The other owners who share with the viewer now, sorted by the handle */
   readonly sharingOwners: readonly SharingOwner[];
@@ -304,6 +309,7 @@ export class LogEntriesFeedConsumer {
       relayEntries: EMPTY_RELAY_ENTRY_STORE,
       relayAvailability: RelayFeedAvailability.Checking,
       isLoading: true,
+      isCatchingUp: true,
       problem: null,
       sharingOwners: [],
       hasMoreSharingOwners: false,
@@ -334,6 +340,7 @@ export class LogEntriesFeedConsumer {
     },
     onUnsubscribed: () => {
       this.#isRealtimeSubscribed = false;
+      this.#setState({ isCatchingUp: true });
     },
   };
 
@@ -705,12 +712,13 @@ export class LogEntriesFeedConsumer {
   #requestSnapshot(session: Session) {
     session.isSnapshotRequested = true;
     session.readAbortController?.abort();
-    this.#setState({ isLoading: true });
+    this.#setState({ isLoading: true, isCatchingUp: true });
     void this.#sync(session);
   }
 
   #requestChanges(session: Session) {
     session.isChangesReadRequested = true;
+    this.#setState({ isCatchingUp: true });
     void this.#sync(session);
   }
 
@@ -748,6 +756,14 @@ export class LogEntriesFeedConsumer {
       } else {
         break;
       }
+
+      if (
+        outcome !== ReadOutcome.Failed &&
+        outcome !== ReadOutcome.Ended &&
+        !session.isSnapshotRequested &&
+        !session.isChangesReadRequested
+      )
+        this.#setState({ isCatchingUp: !this.#isRealtimeSubscribed });
     }
 
     session.isSyncRunning = false;
