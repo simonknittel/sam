@@ -236,7 +236,7 @@ The relay keeps all uploaded data permanently: the history of each state and all
 - Each row records the runtime, the connector with its version and the capability version (principle 13). Thus a statistic can tell which contract supplied a value.
 - The rows have no game version for now (see decision 17). When the gRPC interface supplies the game version, the gRPC connector adds it to its new rows. The older rows stay without a game version.
 - The grants do not apply to the history (principle 5). A grant that ended or that the owner revoked does not change the stored data.
-- Each consumer that shows the history of other citizens names the permission for it, and checks this permission at each read. It also decides the minimum age of the rows: without it, the newest rows are live data without a grant. A consumer without such a permission shows no history of other citizens. Admin mode does not replace the permission (the same reason as in decision 4).
+- Each consumer that shows the history of other citizens names the permission for it, and checks this permission at each read. It also decides the minimum age of the rows: without it, the newest rows are live data without a grant. A consumer without such a permission shows no history of other citizens. Admin mode replaces the permission (decision 4).
 - The local access layer decides which data the relay stores. The owner cannot withdraw or delete stored data (decision 12). The sharing popover tells the owner this before the first upload.
 
 ## Channels
@@ -256,7 +256,7 @@ A channel is the transport of a capability. The catalog gives the timing. The ru
 
 ### Delivery to the consumers
 
-- A control UI tells the relay (through the app) which owners and capabilities it watches, with a lease that it renews. The relay sends messages only to the viewers that watch. Thus a grant with the grantee kind "Everyone" or "Role" does not send a message to each citizen with access.
+- A control UI tells the relay (through the app) which owners and capabilities it watches, with a lease that it renews. The relay sends messages only to the viewers that watch. Thus a grant with the grantee kind "Everyone" or "Role" does not send a message to each citizen with access. The lease also tells the admin mode of the viewer at its last renewal. The relay checks the admin role at each delivery, and the end of admin mode applies at the latest when the lease expires.
 - When a control UI opens, it reads a snapshot of the current values with a cursor. Then it gets the changes through Soketi. After a reconnect of Soketi, it reads the changes since its cursor.
 - A batch for a viewer stays below the size limit of a Soketi message. A larger batch goes into more messages.
 - The active tab of the browser runtime gives its local data to the other tabs of the same browser through a BroadcastChannel.
@@ -319,6 +319,7 @@ The runtimes and the relay service use one protocol over the WebSocket connectio
 
 - A runtime connects with a short-lived connection token (for example 120 seconds), and renews it over the open connection, like the collab tokens of the wiki. The relay service closes a connection without a valid token.
 - The desktop companion gets the connection token with its OAuth access token. The browser runtime gets it from the app.
+- The token tells whether admin mode was on in the app. The relay service applies it only to an admin, and the end of admin mode applies at the next renewal.
 - When a runtime connects and at each renewal, the relay service checks the OAuth grant of the desktop companion and the ban of the user. Thus a revocation or a ban stops a connection within one renewal interval.
 - A ban also closes the connections of the relay service, next to the connections of Soketi and of the wiki editor.
 
@@ -361,7 +362,7 @@ A runtime that breaks a limit gets an error. Repeated errors close the connectio
 A consumer can read the live data of a capability of an owner only when all these conditions are true:
 
 1. The switches of the organization permit the Remote Control Program, the connector and the capability.
-2. The consumer has the permission to use the Remote Control Program (`remoteControlProgram;use`), and the permission of the control UI, if it has one (for example `logAnalyzer;read` for the Log Analyzer, see decision 24).
+2. The consumer has the permission to use the Remote Control Program (`remoteControlProgram;use`), and the permission of the control UI, if it has one (for example `logAnalyzer;read` for the Log Analyzer, see decision 24). Admin mode replaces both permissions (decision 4).
 3. The consumer is the owner, or a valid grant of the owner gives the operation `read` on the capability to the consumer.
 4. The local access layer of a runtime of the owner lets the capability leave the machine. Without this condition, there is no data.
 
@@ -542,7 +543,7 @@ Decisions 1 to 26 are of 2026-11-21. Decisions 27 to 29 are of 2026-11-22. Decis
 1. **Name.** The working title is "Remote Control Program". The code can use it, for example `remoteControlProgram` and `remote_control_program`.
 2. **Rust for the desktop companion.** It uses little memory and processor time while the game runs. It has a mature native gRPC client. It builds one executable file for each operating system, without a separate runtime. Result: the log file connector and the catalog need one definition for TypeScript and Rust (principle 11, decision 5).
 3. **Windows and Linux for the desktop companion.** Result: the releases, the updates and the tray icon must work on both operating systems.
-4. **Admin mode does not bypass the grants.** The data is personal, and admin mode is a concept of SAM, not of the owner (the same reason as in [Embedded App Authentication](../embedded-app-authentication.md#permissions)).
+4. **Admin mode does not bypass the grants.** The data is personal, and admin mode is a concept of SAM, not of the owner (the same reason as in [Embedded App Authentication](../embedded-app-authentication.md#permissions)). Admin mode replaces only the permissions of SAM (decision 24), like in the rest of SAM. Thus an admin in admin mode can use the Remote Control Program, can read the history (decision 31), and has the access of a grant to "Everyone". A grant to a role or a citizen needs the role or the citizen. An admin who assumes a user gets no access. (Changed on 2026-11-25.)
 5. **Shared definitions for Rust:**
    - Zod stays the source of the catalog. The build exports JSON Schema (`z.toJSONSchema()` of Zod 4), and the Rust project generates its types from it.
    - The build exports the source and the flags of each pattern of the log file. The values of the patterns do not change (see [AGENTS.md](../../AGENTS.md)).
