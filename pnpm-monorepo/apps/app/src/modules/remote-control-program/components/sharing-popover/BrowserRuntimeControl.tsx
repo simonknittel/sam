@@ -8,6 +8,7 @@ import {
 } from "@/modules/common/components/Button2";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import Note from "@/modules/common/components/Note";
+import { UnreadDot } from "@/modules/common/components/UnreadDot";
 import { RelayCloseReason } from "@sam-monorepo/domain";
 import {
   ChannelEndReason,
@@ -71,16 +72,7 @@ export const BrowserRuntimeControl = ({ runtime }: Props) => {
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm text-neutral-400">
         <dt className="text-neutral-500">Status</dt>
         <dd className="flex items-center gap-2">
-          <span
-            aria-hidden
-            className={clsx("size-2 flex-none rounded-full", {
-              "bg-green-500": runState === RunState.Running,
-              "bg-yellow-500": runState === RunState.WaitingForFolderPermission,
-              "bg-neutral-600":
-                runState === RunState.Stopped || runState === RunState.Checking,
-            })}
-          />
-
+          <RunStateDot runState={runState} />
           <span aria-live="polite">{RUN_STATE_TEXTS[runState]}</span>
         </dd>
 
@@ -95,6 +87,26 @@ export const BrowserRuntimeControl = ({ runtime }: Props) => {
         onChange={commands.setAutostartEnabled}
       />
     </SharingPopoverSubsection>
+  );
+};
+
+interface RunStateDotProps {
+  readonly runState: RunState;
+}
+
+const RunStateDot = ({ runState }: RunStateDotProps) => {
+  if (runState === RunState.WaitingForFolderPermission)
+    return <UnreadDot className="flex-none" />;
+
+  return (
+    <span
+      aria-hidden
+      className={clsx("size-2 flex-none rounded-full", {
+        "bg-green-500": runState === RunState.Running,
+        "bg-neutral-600":
+          runState === RunState.Stopped || runState === RunState.Checking,
+      })}
+    />
   );
 };
 

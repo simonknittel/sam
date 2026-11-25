@@ -2,6 +2,7 @@
 
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Note from "@/modules/common/components/Note";
+import { UnreadDot } from "@/modules/common/components/UnreadDot";
 import {
   BrowserRuntimeError,
   BrowserRuntimeErrorCode,
@@ -58,10 +59,7 @@ export const OlderEntriesRequestPanel = ({
       <div className="flex flex-col gap-0.5">
         <h4 id={headingId} className="flex items-center gap-2 font-bold">
           {/* The prompt waits for the owner, like the folder permission */}
-          <span
-            aria-hidden
-            className="size-2 flex-none rounded-full bg-yellow-500"
-          />
+          <UnreadDot className="flex-none" />
           Ältere Game Logs hochladen?
         </h4>
         <p className="text-sm text-neutral-400">
