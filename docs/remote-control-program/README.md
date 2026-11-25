@@ -29,7 +29,7 @@ Documents in this folder:
 
 - No control of the computer outside the game. The Remote Control Program applies only named game actions from a catalog. It never applies free-form keyboard input, mouse input or text from SAM.
 - No queue of actions for a machine that is offline.
-- No access for admins without a grant of the owner (see [Decisions](#decisions)).
+- No live access for admins without a grant of the owner (see [Decisions](#decisions)).
 - No other games.
 
 ## Terms
@@ -44,7 +44,8 @@ Documents in this folder:
 | Channel | The transport of a capability between a runtime and the relay, or between the relay and a consumer. It has a direction and a timing (realtime or periodic). |
 | Relay | The part of SAM that receives the data of the runtimes, stores it, applies the remote access layer, gives the data to the consumers and sends the action requests to the runtimes. |
 | Local access layer | The rules in a runtime: which capabilities leave the machine, and which actions the runtime applies. |
-| Remote access layer | The grants in SAM: who, other than the owner, can read a capability or request an action. |
+| Remote access layer | The grants in SAM: who, other than the owner, can read the live data of a capability or request an action. |
+| Live data | The current state, the realtime delivery, and the stored rows of the period of a grant while the grant is valid. |
 | Grant | One decision of the owner in the remote access layer: a grantee, capabilities, operations and a validity period. |
 | Consumer | A part of SAM that reads capabilities or requests actions: a control UI or an MCP tool. |
 | Control UI | A user interface (UI) in SAM that shows capabilities or requests actions. Examples: the Log Analyzer, the lineup status. |
@@ -101,10 +102,10 @@ The diagram shows the logical flow. The [Channels](#channels) section tells whic
 Each part of the Remote Control Program obeys these rules.
 
 1. **Capabilities decouple the parts.** A connector knows only the capabilities that it supplies. A consumer knows only the capabilities that it uses. A connector and a consumer never know each other.
-2. **All is off by default.** A capability leaves the machine only after the owner turns it on in the local access layer. A different citizen reads it only with a grant.
+2. **All is off by default.** A capability leaves the machine only after the owner turns it on in the local access layer. A different citizen reads it live only with a grant. For the stored data, see principle 5.
 3. **The local access layer is the upper limit.** SAM cannot change the rules of a local access layer. A grant cannot give access to data that does not leave the machine, or to an action that the runtime refuses.
 4. **The access is the intersection of all layers.** See [Effective access](#effective-access).
-5. **The remote access layer applies at each delivery and at each read.** A subscription does not keep an access. When a grant expires or the owner revokes it, the data stops within seconds. This includes the history.
+5. **The remote access layer applies to the live data, at each delivery and at each read.** A subscription does not keep an access. When a grant expires or the owner revokes it, the live data stops within seconds. The grants do not apply to the stored data: each consumer checks its own permission for the history (decision 30).
 6. **The use cases enforce the remote access layer.** The relay is a set of use cases in `application`, like the permission checks (see [Architecture](../architecture.md#the-layers)). Thus a new consumer cannot forget a check. Only the relay sends messages to the realtime service. A runtime never publishes to it directly.
 7. **Actions are named and typed.** An action is an entry in the catalog with a schema for its parameters. A connector never applies free-form input from SAM. A game action that the catalog does not contain cannot be requested.
 8. **Actions expire.** Each action request has an expiry time. A runtime does not apply an expired request (result `expired`). When no runtime of the owner can apply a request, the relay answers immediately (result `unavailable`).
@@ -234,7 +235,9 @@ The relay keeps all uploaded data permanently: the history of each state and all
 - The history tables are normal models in the Prisma schema, with the time in the primary key. The SQL migrations add only what Prisma does not know: `create_hypertable`, the compression and the continuous aggregates. A table outside of the Prisma schema is not safe, because `prisma db push` and `prisma migrate dev` compare the database with the schema and can drop the table. The shadow database of Prisma also needs the extension.
 - Each row records the runtime, the connector with its version and the capability version (principle 13). Thus a statistic can tell which contract supplied a value.
 - The rows have no game version for now (see decision 17). When the gRPC interface supplies the game version, the gRPC connector adds it to its new rows. The older rows stay without a game version.
-- The remote access layer also applies to the history (principle 5). A grant gives access only to the rows of its validity period.
+- The grants do not apply to the history (principle 5). A grant that ended or that the owner revoked does not change the stored data.
+- Each consumer that shows the history of other citizens names the permission for it, and checks this permission at each read. It also decides the minimum age of the rows: without it, the newest rows are live data without a grant. A consumer without such a permission shows no history of other citizens. Admin mode does not replace the permission (the same reason as in decision 4).
+- The local access layer decides which data the relay stores. The owner cannot withdraw or delete stored data (decision 12). The sharing popover tells the owner this before the first upload.
 
 ## Channels
 
@@ -355,12 +358,14 @@ A runtime that breaks a limit gets an error. Repeated errors close the connectio
 
 ### Effective access
 
-A consumer can read a capability of an owner only when all these conditions are true:
+A consumer can read the live data of a capability of an owner only when all these conditions are true:
 
 1. The switches of the organization permit the Remote Control Program, the connector and the capability.
 2. The consumer has the permission to use the Remote Control Program (`remoteControlProgram;use`), and the permission of the control UI, if it has one (for example `logAnalyzer;read` for the Log Analyzer, see decision 24).
 3. The consumer is the owner, or a valid grant of the owner gives the operation `read` on the capability to the consumer.
 4. The local access layer of a runtime of the owner lets the capability leave the machine. Without this condition, there is no data.
+
+A consumer can read the history of a capability only when the conditions 1 and 2 are true, and the viewer is the owner or has the permission of the consumer for the history (see [History](#history)).
 
 A consumer can request an action of an owner only when the conditions 1 and 2 are true, and:
 
@@ -386,8 +391,8 @@ A grant has these fields:
 | Grantee | See the grantee kinds below. |
 | Capabilities | One or more capabilities. |
 | Operations | `read` for a state or a feed, `request` for an action. |
-| Validity | A start time and an optional end time. The sharing popover gives presets: 1 hour, 2 hours, until the end of an event, no end. A grant gives access only to data from its validity period. The owner can set a start time in the past. |
-| Revocation | The owner can revoke a grant at all times. |
+| Validity | A start time and an optional end time. The sharing popover gives presets: 1 hour, 2 hours, until the end of an event, no end. While a grant is valid, it gives access to the data from its validity period. The owner can set a start time in the past. |
+| Revocation | The owner can revoke a grant at all times. It ends the live access, but not the access to the history through a consumer. |
 
 The grantee kinds:
 
@@ -430,7 +435,7 @@ The grantee kinds:
 
 - A control UI uses a consumer client of the app. The consumer client combines two sources: the browser runtime in the same browser, and the relay. A control UI does not know where a value comes from.
 - The own data of the browser runtime in the same browser needs no upload. Thus the Log Analyzer shows the own log without sharing. The data of the desktop companion reaches the browser only through the relay.
-- A control UI can show the current state, the history and statistics.
+- A control UI can show the current state. It can show the history and statistics of other citizens only with its own permission for them (see [History](#history)).
 - A control UI shows the age of each value, and marks a value as stale after the stale time.
 - A control UI tells why data is missing: no runtime is online, no connector supplies the capability, the local access layer blocks it, or there is no grant.
 
@@ -445,6 +450,7 @@ The Log Analyzer is the control UI of the feed `log_entries`. It needs `logAnaly
 - The hash for duplicates must not depend on the version of a pattern: it uses the oldest type of a pattern chain (`supersedes`) and the raw line. Thus two runtimes with different pattern versions do not store the same line twice.
 - The shared test data contains lines with `\r\n` and with `\n`, and partly written lines, because `Game.log` has mixed line ends, and `.` matches `\r` in Rust, but not in JavaScript.
 - The model `LogAnalyzerEntry` stores the feed.
+- Entries that are older than 2 hours are history: the Log Analyzer shows them to each citizen who can open it, without a grant (decision 31). It shows the newer entries of other citizens only with a valid grant. The Live-Status shows only the own entries and the entries of the valid grants.
 - The Log Analyzer derives the Live-Status from `log_entries` (principle 15).
 - The overlay (Document Picture-in-Picture) is a view of the Log Analyzer.
 
@@ -467,7 +473,7 @@ The lineup status shows the current status of the citizens in the lineup of a SA
 
 The MCP server is stateless and has no subscriptions (see [MCP Server](../mcp-server.md)). The MCP extensions Tasks and Events can improve this later (see [Ideas](#ideas)). Without these extensions:
 
-- Read tools give the current state, the history and the feed entries, with their age.
+- Read tools give the current state and the feed entries with a grant, and the history with the permission of the tool for it (see [History](#history)). Each value has its age.
 - An action tool sends a request and waits a short time for the result. When the result is not there yet, the tool gives the id of the request, and a read tool gives the result later.
 - An AI agent has the same access as the citizen who connected it. The action log and the audit events record that an AI agent sent the request.
 - Data from the game can contain text of other players (for example names in the log). This text goes into the model of the client. Thus a different person can try to inject instructions into an agent. This is one more reason why actions with high risk ask each time.
@@ -477,7 +483,8 @@ The MCP server is stateless and has no subscriptions (see [MCP Server](../mcp-se
 | Level | Who | What | How |
 | - | - | - | - |
 | Organization | Admins | The Remote Control Program, a connector, a capability | Unleash flags: one for the Remote Control Program, and one for each connector and each capability, with the name from the catalog. The relay refuses the data and the actions of a disabled part, and tells the runtimes. A permission for the use of the Remote Control Program. |
-| Owner in SAM | Owner | Who can read a capability, who can request an action | Grants |
+| Owner in SAM | Owner | Who can read the live data of a capability, who can request an action | Grants |
+| Consumer | Admins | Who can read the history in this consumer | Permission of the consumer |
 | Owner on the machine | Owner | What leaves the machine, which actions the runtime applies, the button "Stop all" of the runtime | Local access layer |
 | Code | Developers | Which connectors a runtime contains | Each connector is a separate module |
 
@@ -511,6 +518,7 @@ These ideas have no use case or no reliable source yet. They are not part of the
 - **Input connector:** simulated keyboard and mouse input in the desktop companion, for game actions that the gRPC interface does not supply.
 - **Screen connector:** screen capture with optical character recognition (OCR), for values that no other interface supplies.
 - **Grantee kind "In-game party":** the current members of the in-game party of the owner. The gRPC interface supplies no party state (see [TelemetryStream](./grpc-interface.md#telemetrystream)), and the party lines of `Game.log` are not reliable enough. A reliable source of the party state makes this idea possible.
+- **A separate permission for the history of the Log Analyzer**, for example `logAnalyzerHistorical;read` (decision 31).
 - **The location in the lineup status:** a separate feed for the location lines of the log file. Then the owner can share the location without the other log entries (decision 26).
 - **Required variants in the lineup status:** the lineup status shows if a citizen sits in one of the required variants of the position (`EventPosition.requiredVariants`). This needs a mapping from the class name of the vehicle in the gRPC interface to the variants of SAM.
 - **The MCP extensions Tasks and Events** (see [Extensions](https://modelcontextprotocol.io/extensions/overview), both in beta in 2026-11):
@@ -522,14 +530,14 @@ These ideas have no use case or no reliable source yet. They are not part of the
 
 - The gRPC interface is new in Star Citizen 5.0, only in the PTU, and CIG has not spoken openly about it (see [The gRPC interface of the game client](./grpc-interface.md)). CIG can change it or remove it with each build. Until version 5.0 comes to LIVE, the gRPC connector works only for players in the PTU.
 - When the gRPC server of the game client is on, each local program can trigger each listed game action, also `v_self_destruct` (see [TriggerGameAction](./grpc-interface.md#triggergameaction)). The Remote Control Program cannot prevent this. It must not make it larger: it accepts only actions from the catalog.
-- The history keeps personal data permanently, for example the location, the vitals and the wallet balance. The owner cannot delete it (see [Decisions](#decisions)). Thus the defaults, the sensitivity and the grants must keep this data under the control of the owner. A request for deletion under data protection law (for example Article 17 of the GDPR) is then a manual task.
+- The history keeps personal data permanently, for example the location, the vitals and the wallet balance. The owner cannot delete it (see [Decisions](#decisions)). After the upload, the owner has no control of it: the grants apply only to the live data (decision 30). Thus the defaults and the sensitivity must tell the owner before the upload, and a permission for the history must be narrow. A request for deletion under data protection law (for example Article 17 of the GDPR) is then a manual task.
 - The history can become large (see decision 7).
 - The relay service is one more service to operate. While it is not available, no runtime can upload data, and no action can reach a runtime. The runtimes must connect again automatically.
 - The connector ideas (simulated input, screen reading) can conflict with the terms of service of CIG and with the anti-cheat software. Do a check before a plan for one of them.
 
 ## Decisions
 
-Decisions 1 to 26 are of 2026-11-21. Decisions 27 to 29 are of 2026-11-22. The decisions that apply only to the migration are in [Migration](./migration.md#decisions-of-the-migration).
+Decisions 1 to 26 are of 2026-11-21. Decisions 27 to 29 are of 2026-11-22. Decisions 30 and 31 are of 2026-11-25. Decision 30 also changed decisions 8 and 12. The decisions that apply only to the migration are in [Migration](./migration.md#decisions-of-the-migration).
 
 1. **Name.** The working title is "Remote Control Program". The code can use it, for example `remoteControlProgram` and `remote_control_program`.
 2. **Rust for the desktop companion.** It uses little memory and processor time while the game runs. It has a mature native gRPC client. It builds one executable file for each operating system, without a separate runtime. Result: the log file connector and the catalog need one definition for TypeScript and Rust (principle 11, decision 5).
@@ -542,11 +550,11 @@ Decisions 1 to 26 are of 2026-11-21. Decisions 27 to 29 are of 2026-11-22. The d
    - The two engines differ in details. Example: in Rust, `\d` and `\w` also match Unicode characters, and in JavaScript only ASCII characters. The shared test data finds such differences.
 6. **The log file connector of the desktop companion only uploads.** It supplies `log_entries` when the local access layer permits it. The desktop companion has no UI that shows data of the game. Its UI controls the local access layer. Result: the Rust implementation contains all patterns of the log file (decision 5).
 7. **TimescaleDB for the history of the states.** The history is time-stamped rows that the relay only appends, and the queries select time ranges and calculate aggregates. TimescaleDB gives compression and continuous aggregates for this. Results: the rows are never changed, the history tables are Prisma models that SQL migrations make hypertables (see [History](#history)), and each environment needs the extension: the local Docker Compose stack, the Playwright stack, develop and production (see decision 13). The existing tables of SAM stay normal tables. In 2026-11, the largest table (`AuditEvent`) had approximately 40,000 rows and 25 MB. At this size, TimescaleDB gives no advantage.
-8. **Grants and history.** A grant gives access only to data from its validity period. The owner can set a start time in the past.
+8. **Validity period of a grant.** While a grant is valid, it gives access to the data from its validity period. The owner can set a start time in the past. For the history, see decision 30.
 9. **AI agents.** An AI agent acts as the citizen who connected it. A grant to a citizen also applies to the AI agents of this citizen, for `read` and for `request`. No layer has a separate setting for AI agents.
 10. **No finer grants for feeds.** A grant always covers a full capability. The filter of a feed exists only in the local access layer. When a finer split becomes necessary, the catalog splits the feed into more capabilities.
 11. **Identity in the game.** The connector reports the in-game handle. The consumers show a note when it is different from the handle of the owner in SAM. The Remote Control Program does not block the data.
-12. **No deletion of the history.** The owner cannot delete the own history and the own feed entries.
+12. **No deletion and no withdrawal of the history.** The owner cannot delete or withdraw the own history and the own feed entries.
 13. **PostgreSQL with TimescaleDB.** The databases of SAM run on a PostgreSQL server with the extension TimescaleDB (see [Test and Production](../setup-test-and-production.md#1-set-up-a-postgresql-database)). Thus SAM has one database and one Prisma data source. Results:
     - The image contains the community edition of TimescaleDB for PostgreSQL 18 (the Apache 2 edition has no compression and no continuous aggregates). `shared_preload_libraries` contains `timescaledb`.
     - A restore of a dump with hypertables uses `timescaledb_pre_restore()` and `timescaledb_post_restore()`. The mirror scripts of SAM leave out the extension from the dump while the databases have no hypertables. With the first hypertable, they also use these functions (see [Mirror the database](../mirror-database.md)).
@@ -579,6 +587,8 @@ Decisions 1 to 26 are of 2026-11-21. Decisions 27 to 29 are of 2026-11-22. The d
 27. **Only live feed entries leave the machine automatically.** A runtime uploads a feed entry automatically only when it reads the entry live: while it runs, the rule is on and the runtime is not stopped. Thus a closed SAM tab or "Stop all" also stops the upload of the entries of that time, also after the next start. Older entries leave only on an explicit request of the owner with a confirmation. Shared entries cannot be deleted (decision 12), thus the owner decides on each older entry.
 28. **Telemetry of the relay service.** OpenTelemetry metrics and traces. The logs go to the output of the container. The alerts are set up in Grafana, outside of this repository.
 29. **Environments of the relay service.** Production and the local stack (Docker Compose and the Playwright stack). The relay service must run fully with the rest of the local stack. The preview deployments have no relay service.
+30. **The grants apply only to the live data.** The end of a grant, its grantee and its revocation limit only the live data and the actions. The consumers control the access to the stored data with their own permissions and their own minimum age. Reason: historical statistics do not work when the stored data disappears with the end of a grant.
+31. **The history of the Log Analyzer.** The minimum age is 2 hours, from the time of the observation. The permission is `logAnalyzer;read` for now. A separate permission can come later (see [Ideas](#ideas)).
 
 ## Open questions
 

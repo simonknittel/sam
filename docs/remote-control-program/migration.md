@@ -3,7 +3,7 @@
 > [!NOTE]
 > This document describes the way from the state of SAM in 2026-11 to the architecture in [Remote Control Program](./README.md). Each step gets its own implementation plan. When all steps are done, remove this document. The architecture document stays.
 
-In this document, "decision 13 of the architecture" refers to the [decisions of the architecture](./README.md#decisions). "M1" to "M7" are the [decisions of the migration](#decisions-of-the-migration).
+In this document, "decision 13 of the architecture" refers to the [decisions of the architecture](./README.md#decisions). "M1" to "M8" are the [decisions of the migration](#decisions-of-the-migration).
 
 ## Order of the steps
 
@@ -34,7 +34,7 @@ The Log Analyzer moves completely into the Remote Control Program. No old path s
 | The toggle "Live-Modus": a parse each 10 seconds and a download each 60 seconds | Removed. The runtime reads the log while it runs, and the entries of other citizens arrive in realtime. |
 | The server action `uploadLogAnalyzerEntries` and the use case `shareLogAnalyzerEntries`: the check of the line against the pattern, the hash for duplicates | The relay use case "append feed entries", with the same check of the patterns and the new hash. |
 | The tRPC routes `getSharedEntries…` and `getOwnEntryHashes…`, the 60-second download | The consumer client, which reads through the relay. The unique keys and the acknowledgements of the [protocol](./README.md#protocol) prevent duplicates. Realtime through Soketi. |
-| All citizens with `logAnalyzer;read` see all shared entries | Grants. The sharing starts from zero (M1). The Log Analyzer needs `logAnalyzer;read` and `remoteControlProgram;use`, also for the own log (M7). |
+| All citizens with `logAnalyzer;read` see all shared entries | Grants for the live data, and the history after 2 hours without a grant (decision 31 of the architecture). The sharing starts from zero (M1). The Log Analyzer needs `logAnalyzer;read` and `remoteControlProgram;use`, also for the own log (M7). |
 | "Live-Status" from the shared entries | No change: the Log Analyzer derives the Live-Status from `log_entries`. |
 | The model `LogAnalyzerEntry` | No change of the purpose: the storage of the `log_entries` feed. The stored rows get the IP marker and the new hash (M3). |
 | The audit event `LOG_ANALYZER_ENTRIES_UPLOADED`, one event for each upload | Counts for each runtime connection or for each hour (see [Relay](./README.md#relay)), with a new audit event type (see [AGENTS.md](../../AGENTS.md)). |
@@ -58,15 +58,16 @@ Done on 2026-11-21:
 
 ## Decisions of the migration
 
-M1 to M4 are decisions of 2026-11-21. M5 to M7 are decisions of 2026-11-22.
+M1 to M4 are decisions of 2026-11-21. M5 to M7 are decisions of 2026-11-22. M8 is a decision of 2026-11-25.
 
-- **M1: The sharing starts from zero.** The deployment of step 2 resets all share settings of the Log Analyzer. The browser runtime ignores and removes the old browser storage `log_analyzer_share_types`. No grant comes from the old sharing. After the deployment, only the owner sees the own shared entries until the owner makes a grant. A grant with a start time in the past can share the old entries again (decision 8 of the architecture). The changelog of SAM announces the change.
+- **M1: The sharing starts from zero.** The deployment of step 2 resets all share settings of the Log Analyzer. The browser runtime ignores and removes the old browser storage `log_analyzer_share_types`. No grant comes from the old sharing. After the deployment, no citizen sees the live entries of an owner until the owner makes a grant. The entries from before are history: each citizen who can open the Log Analyzer sees them (decision 31 of the architecture). The changelog of SAM announces the change.
 - **M2: The new Log Analyzer replaces the old one in one deployment.** No version runs next to the old one, and no Unleash flag switches between them. The move of the databases is a separate step before it (step 1).
 - **M3: A migration removes the IP addresses from the stored log entries.** The rows of `LogAnalyzerEntry` from before decision 22 of the architecture contain IP addresses. The migration of step 2 replaces them once with the marker of decision 22, and calculates the new hash (see [Log Analyzer](./README.md#log-analyzer)). When two rows of the same owner then have the same hash, the migration keeps the oldest row. This is the only change of existing rows. It is a SQL migration, and a test compares its result with the TypeScript rule on the shared test data.
 - **M4: No migration of the permissions.** The existing permissions do not change, and no migration gives `remoteControlProgram;use` to roles. The admins assign it.
 - **M5: No states in step 2.** In step 2, no connector supplies a state: the browser runtime has only the log file connector, and `log_entries` is a feed. Thus the relay for states, the history in TimescaleDB and the estimate of the history rows are a part of step 3, together with the first state of the gRPC connector.
 - **M6: The access requests are a part of step 4.** In the Log Analyzer, a viewer sees only the owners that made a grant. The lineup status is the first control UI that knows whose data it wants. Until then, only the owner makes grants.
 - **M7: The Log Analyzer needs both permissions.** `logAnalyzer;read` and `remoteControlProgram;use`, also for the own log on the machine. Without them, the page is gated.
+- **M8: No withdrawal of stored data.** No step of the migration gives the owner a function to withdraw or delete stored data (decisions 12 and 30 of the architecture).
 
 ## Related follow-ups
 
