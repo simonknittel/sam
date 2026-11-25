@@ -100,6 +100,3 @@ export const CHANNEL_CLOSE_REASON_TEXTS: Readonly<
   [ChannelEndReason.CitizenChanged]:
     "In diesem Browser ist jetzt ein anderer Account angemeldet. Lade die Seite neu.",
 };
-
-export const formatEntryCount = (count: number) =>
-  count === 1 ? "1 Eintrag" : `${count.toLocaleString("de")} Einträge`;

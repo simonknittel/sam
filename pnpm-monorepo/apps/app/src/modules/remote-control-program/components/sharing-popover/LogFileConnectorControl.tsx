@@ -7,12 +7,7 @@ import {
   Button2Variant,
 } from "@/modules/common/components/Button2";
 import Note from "@/modules/common/components/Note";
-import { formatDate } from "@/modules/common/utils/formatDate";
 import { ConnectorId } from "@sam-monorepo/domain";
-import {
-  ChannelEndReason,
-  type BrowserRuntimeState,
-} from "@sam-monorepo/remote-control-program-runtime";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { FaFolderOpen, FaKey } from "react-icons/fa6";
@@ -21,11 +16,7 @@ import {
   type BrowserRuntimeHandle,
   type BrowserRuntimeSnapshot,
 } from "../../runtime/types";
-import { LOG_ENTRIES_HISTORY_TEXT } from "../../utils/remoteControlProgramTexts";
-import {
-  BROWSER_RUNTIME_ERROR_TEXTS,
-  formatEntryCount,
-} from "./browserRuntimeTexts";
+import { BROWSER_RUNTIME_ERROR_TEXTS } from "./browserRuntimeTexts";
 import { CONNECTOR_LABELS } from "./catalogTexts";
 import { LogEntryTypeSettings } from "./LogEntryTypeSettings";
 import {
@@ -108,7 +99,7 @@ export const LogFileConnectorControl = ({ runtime }: Props) => {
         />
       )}
 
-      <div className="flex flex-wrap items-start justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <dl className="grid min-w-0 grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm text-neutral-400">
           <dt className="text-neutral-500">Ordner</dt>
           <dd className="flex min-w-0 items-center gap-2">
@@ -120,22 +111,6 @@ export const LogFileConnectorControl = ({ runtime }: Props) => {
               <OtherFolderButton runtime={runtime} />
             )}
           </dd>
-
-          <dt className="text-neutral-500">Zuletzt gelesen</dt>
-          <dd>
-            {state.readProgress
-              ? `Liest ${state.readProgress.readFileCount} von ${state.readProgress.fileCount} Dateien …`
-              : (formatDate(state.lastReadAt) ?? "Noch nicht")}
-          </dd>
-
-          {state.channel.closeReason !== ChannelEndReason.NoRelay && (
-            <>
-              <dt className="text-neutral-500">Hochgeladen</dt>
-              <dd>
-                <UploadCountsText state={state} />
-              </dd>
-            </>
-          )}
         </dl>
 
         <FolderButton runtime={runtime} />
@@ -145,13 +120,10 @@ export const LogFileConnectorControl = ({ runtime }: Props) => {
         <Note type="error" message={BROWSER_RUNTIME_ERROR_TEXTS[state.error]} />
       )}
 
-      <div className="flex flex-col gap-2 text-sm text-neutral-400">
-        <p>
-          Solange die Runtime läuft, werden neue Einträge der ausgewählten Typen
-          automatisch hochgeladen. Alles andere bleibt auf deinem Rechner.
-        </p>
-        <p>{LOG_ENTRIES_HISTORY_TEXT}</p>
-      </div>
+      <p className="text-sm text-neutral-400">
+        Dieser Connector liest die Log-Dateien von Star Citizen und lädt daraus
+        neue Einträge der ausgewählten Typen hoch.
+      </p>
 
       <LogEntryTypeSettings
         logEntryTypes={state.localAccess.logEntryTypes}
@@ -242,23 +214,5 @@ const OtherFolderButton = ({ runtime }: Props) => {
     >
       Anderer Ordner
     </button>
-  );
-};
-
-interface UploadCountsTextProps {
-  readonly state: BrowserRuntimeState;
-}
-
-const UploadCountsText = ({ state }: UploadCountsTextProps) => {
-  const { acceptedEntryCount, newEntryCount, droppedEntryCount } =
-    state.uploadCounts;
-
-  return (
-    <>
-      {formatEntryCount(acceptedEntryCount)}
-      {newEntryCount > 0 && ` (${newEntryCount.toLocaleString("de")} neu)`}
-      {droppedEntryCount > 0 &&
-        `, ${droppedEntryCount.toLocaleString("de")} verworfen`}
-    </>
   );
 };
