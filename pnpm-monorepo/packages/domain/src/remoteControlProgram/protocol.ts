@@ -315,8 +315,6 @@ export const announceContentSchema = z.object({
     .max(MAXIMUM_ANNOUNCED_CONNECTORS),
   /** A summary of the local access layer, for the sharing popover and the control UIs */
   local_access_layer: z.object({
-    /** The "Stop all" of the runtime is active */
-    is_stopped: z.boolean(),
     capability_rules: z
       .array(
         z.object({
