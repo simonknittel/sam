@@ -10,8 +10,8 @@ import {
 } from "react";
 
 /**
- * A request for older entries from a control UI. The section "Dieser
- * Browser" counts its entries and uploads them only after the confirmation
+ * A request for older entries from a control UI. The section "Browser"
+ * counts its entries and uploads them only after the confirmation
  * of the owner.
  */
 export interface OlderEntriesRequestDraft {
@@ -83,8 +83,8 @@ export interface SharingPopoverOpener {
   readonly open: () => void;
   /**
    * Opens the sharing popover with a request for the older entries of the
-   * range (`end` is exclusive, null is no limit). The section "Dieser
-   * Browser" counts the entries of the types that are on and that the relay
+   * range (`end` is exclusive, null is no limit). The section "Browser"
+   * counts the entries of the types that are on and that the relay
    * does not have, and uploads them only after the confirmation of the
    * owner. A new request replaces an open request. Each open or close of the
    * popover by the user ends the request.

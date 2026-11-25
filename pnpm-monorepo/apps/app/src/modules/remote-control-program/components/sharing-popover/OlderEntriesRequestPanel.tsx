@@ -151,7 +151,7 @@ const RequestContent = ({ request, runtime, onEnd }: Props) => {
     return (
       <Note
         type="info"
-        message="Die Laufzeit läuft nicht. Starte sie unten, um die Einträge zu zählen."
+        message="Die Runtime läuft nicht. Starte sie unten, um die Einträge zu zählen."
       />
     );
 

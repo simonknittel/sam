@@ -31,7 +31,7 @@ export const StatusSection = ({ runtimes, stoppedAt }: Props) => {
         </ul>
       ) : (
         <p className="text-sm text-neutral-500">
-          Bisher war keine Laufzeit verbunden.
+          Bisher war keine Runtime verbunden.
         </p>
       )}
 

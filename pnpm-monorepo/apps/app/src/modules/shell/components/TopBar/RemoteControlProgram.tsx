@@ -48,7 +48,7 @@ const SharingPopover = () => {
       openOnHover={false}
       side="bottom"
       align="end"
-      childrenClassName="w-[26rem] max-w-[calc(100vw-1rem)] max-h-[calc(100dvh-5rem)] overflow-y-auto overscroll-contain"
+      childrenClassName="w-[42rem] max-w-[calc(100vw-1rem)] max-h-[calc(100dvh-5rem)] overflow-y-auto overscroll-contain"
       open={isOpen}
       onOpenChange={onOpenChange}
       moveFocusIntoPopup={isOpenedByControlUi}

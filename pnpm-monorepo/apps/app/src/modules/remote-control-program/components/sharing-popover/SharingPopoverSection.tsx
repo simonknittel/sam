@@ -10,7 +10,7 @@ interface Props {
   readonly children: ReactNode;
 }
 
-/** A section of the sharing popover with its heading */
+/** A section of the sharing popover. Its tab shows the name, thus the heading is only for screen readers. */
 export const SharingPopoverSection = ({
   heading,
   headingRef,
@@ -24,7 +24,7 @@ export const SharingPopoverSection = ({
         id={headingId}
         ref={headingRef}
         tabIndex={headingRef ? -1 : undefined}
-        className="flex items-center gap-2 font-mono text-sm text-neutral-500 uppercase focus:outline-none"
+        className="sr-only"
       >
         {heading}
       </h2>

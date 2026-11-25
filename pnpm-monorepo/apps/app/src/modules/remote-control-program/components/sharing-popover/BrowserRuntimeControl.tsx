@@ -119,7 +119,7 @@ export const BrowserRuntimeControl = ({ runtime }: Props) => {
         />
 
         <p aria-live="polite" className="flex-1 text-sm font-bold">
-          Laufzeit: {RUN_STATE_TEXTS[runState]}
+          Runtime: {RUN_STATE_TEXTS[runState]}
         </p>
 
         <PrimaryAction
@@ -134,15 +134,15 @@ export const BrowserRuntimeControl = ({ runtime }: Props) => {
           type="warning"
           message={
             state.isWaitingForFolderPermission
-              ? `Die Laufzeit soll laufen. Der Browser braucht aber deine Erlaubnis, um den Log-Ordner „${state.folder.name}“ wieder zu lesen.`
+              ? `Die Runtime soll laufen. Der Browser braucht aber deine Erlaubnis, um den Log-Ordner „${state.folder.name}“ wieder zu lesen.`
               : `Der Browser braucht deine Erlaubnis, um den Log-Ordner „${state.folder.name}“ wieder zu lesen.`
           }
         />
       )}
 
-      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm text-neutral-400">
+      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm text-neutral-400 sm:grid-cols-[auto_1fr_auto_1fr]">
         <dt className="text-neutral-500">Log-Ordner</dt>
-        <dd className="flex min-w-0 items-center gap-2">
+        <dd className="flex min-w-0 items-center gap-2 sm:col-span-3">
           <span className="min-w-0 truncate" title={folderText}>
             {folderText}
           </span>

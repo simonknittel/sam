@@ -14,7 +14,7 @@ import {
   SESSION_EXPIRED_TEXT,
 } from "../../utils/remoteControlProgramTexts";
 
-/** The texts of the section "Dieser Browser" for the states of the browser runtime */
+/** The texts of the section "Browser" for the states of the browser runtime */
 
 export const BROWSER_RUNTIME_ERROR_TEXTS: Readonly<
   Record<BrowserRuntimeErrorCode, string>
@@ -23,11 +23,11 @@ export const BROWSER_RUNTIME_ERROR_TEXTS: Readonly<
     "Der Log-Ordner konnte nicht gelesen werden.",
   [BrowserRuntimeErrorCode.NotSupported]: BROWSER_NOT_SUPPORTED_TEXT,
   [BrowserRuntimeErrorCode.NoAnswer]:
-    "Der Tab mit der Laufzeit hat nicht geantwortet. Versuche es erneut.",
+    "Der Tab mit der Runtime hat nicht geantwortet. Versuche es erneut.",
   [BrowserRuntimeErrorCode.FolderNotGranted]:
     "Wähle zuerst den Log-Ordner aus, oder erlaube den Zugriff.",
   [BrowserRuntimeErrorCode.NotRunning]:
-    "Die Laufzeit läuft nicht. Starte sie, um ältere Einträge hochzuladen.",
+    "Die Runtime läuft nicht. Starte sie, um ältere Einträge hochzuladen.",
   [BrowserRuntimeErrorCode.RelayNotAvailable]:
     "Dieser Browser ist nicht mit dem Relay verbunden und kann nichts hochladen.",
   [BrowserRuntimeErrorCode.RelayCheckFailed]:
@@ -90,7 +90,7 @@ export const CHANNEL_CLOSE_REASON_TEXTS: Readonly<
   [RelayCloseReason.TooManyErrors]:
     "Das Relay hat die Verbindung nach zu vielen Fehlern getrennt.",
   [RelayCloseReason.TooManyRuntimes]:
-    "Zu viele deiner Laufzeiten sind verbunden. Stoppe eine andere Laufzeit.",
+    "Zu viele deiner Runtimes sind verbunden. Stoppe eine andere Runtime.",
   [RelayCloseReason.AccessDenied]: ACCESS_DENIED_TEXT,
   [RelayCloseReason.ProgramTurnedOff]:
     "Die Organisation hat das Remote Control Program abgeschaltet.",

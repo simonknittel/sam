@@ -34,7 +34,7 @@ export const BrowserSettingsSection = () => {
   };
 
   return (
-    <SharingPopoverSection heading="Dieser Browser" headingRef={headingRef}>
+    <SharingPopoverSection heading="Browser" headingRef={headingRef}>
       {runtime.state.folder.state === LogFolderState.NotSupported ? (
         <Note type="info" message={BROWSER_NOT_SUPPORTED_TEXT} />
       ) : (

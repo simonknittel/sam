@@ -24,7 +24,9 @@ import {
   sharingPopover,
   sharingPopoverSection,
   SharingPopoverSection,
+  sharingPopoverTab,
   sharingPopoverTrigger,
+  showSharingPopoverSection,
   startBrowserRuntime,
   turnOnLogEntryTypes,
   uploadedLines,
@@ -212,14 +214,9 @@ test("the sharing popover and the request of the Log Analyzer work with the keyb
     page,
     SharingPopoverSection.ThisBrowser,
   );
-  const sharedWithOthers = sharingPopoverSection(
-    page,
-    SharingPopoverSection.SharedWithOthers,
-  );
+  const grants = sharingPopoverSection(page, SharingPopoverSection.Grants);
   await expect(thisBrowser).toBeVisible();
 
-  /** The focus moves through the sections in their order */
-  await tabTo(page, status.getByRole("button", { name: "Alles stoppen" }));
   await tabTo(
     page,
     thisBrowser.getByRole("button", { name: "Ordner wählen", exact: true }),
@@ -236,13 +233,19 @@ test("the sharing popover and the request of the Log Analyzer work with the keyb
   await page.keyboard.press("Space");
   await expect(blueprintType).toBeChecked();
 
-  await tabTo(
-    page,
-    sharedWithOthers.getByRole("button", { name: "Neue Freigabe" }),
-  );
+  /** The arrow keys move between the tabs */
+  await sharingPopoverTab(page, SharingPopoverSection.ThisBrowser).focus();
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("Enter");
+  await tabTo(page, status.getByRole("button", { name: "Alles stoppen" }));
+
+  await sharingPopoverTab(page, SharingPopoverSection.Status).focus();
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("Enter");
+  await tabTo(page, grants.getByRole("button", { name: "Neue Freigabe" }));
   await page.keyboard.press("Enter");
   await expect(
-    sharedWithOthers.getByRole("form", { name: "Neue Freigabe" }),
+    grants.getByRole("form", { name: "Neue Freigabe" }),
   ).toBeVisible();
 
   await page.keyboard.press("Escape");
@@ -265,13 +268,14 @@ test("the sharing popover and the request of the Log Analyzer work with the keyb
   ).toBeVisible();
 
   const cancelButton = request.getByRole("button", { name: "Abbrechen" });
-  await tabTo(page, cancelButton, 1);
+  /** The tabs and their panel come before it */
+  await tabTo(page, cancelButton, 3);
 
   /** The end of the request moves the focus to the heading of its section */
   await page.keyboard.press("Enter");
   await expect(request).toHaveCount(0);
   await expect(
-    thisBrowser.getByRole("heading", { name: "Dieser Browser", exact: true }),
+    thisBrowser.getByRole("heading", { name: "Browser", exact: true }),
   ).toBeFocused();
 
   await page.keyboard.press("Escape");
@@ -297,12 +301,8 @@ test.describe("mobile", () => {
     /** The top bar is hidden: the trigger is the item of the action bar */
     await expect(sharingPopoverTrigger(page)).toHaveCount(1);
     await openSharingPopover(page);
-    await expect(
-      sharingPopoverSection(page, SharingPopoverSection.Status),
-    ).toBeVisible();
-    await expect(
-      sharingPopoverSection(page, SharingPopoverSection.SharedWithOthers),
-    ).toBeVisible();
+    await showSharingPopoverSection(page, SharingPopoverSection.Status);
+    await showSharingPopoverSection(page, SharingPopoverSection.Grants);
     await closeSharingPopover(page);
 
     /** The Log Analyzer asks for the folder in the same sheet */

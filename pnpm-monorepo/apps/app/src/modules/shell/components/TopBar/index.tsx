@@ -31,8 +31,8 @@ export const TopBar = ({ className }: Props) => {
 
         <div className="flex flex-1 justify-end">
           <Support />
-          <Onboarding />
           <RemoteControlProgram />
+          <Onboarding />
           <Notifications />
           <Account />
         </div>

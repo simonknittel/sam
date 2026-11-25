@@ -5,6 +5,7 @@ import type { OwnShareGrant } from "@sam-monorepo/application";
 import { useNow } from "next-intl";
 import { useId, useRef, useState } from "react";
 import { FaPlus } from "react-icons/fa";
+import { LOG_ENTRIES_HISTORY_TEXT } from "../../utils/remoteControlProgramTexts";
 import { ShareGrantForm } from "./ShareGrantForm";
 import { ShareGrantListItem } from "./ShareGrantListItem";
 import { SharingPopoverSection } from "./SharingPopoverSection";
@@ -20,7 +21,7 @@ interface Props {
   readonly canChooseRole: boolean;
 }
 
-/** The section "Shared with others": the active grants and a new grant */
+/** The active grants and a new grant */
 export const SharedWithOthersSection = ({
   grants,
   maximumActiveGrantCount,
@@ -30,7 +31,11 @@ export const SharedWithOthersSection = ({
   const now = useNow({ updateInterval: CLOCK_INTERVAL_MILLISECONDS });
 
   return (
-    <SharingPopoverSection heading="Mit anderen geteilt">
+    <SharingPopoverSection heading="Freigaben">
+      <p className="text-sm text-neutral-400">
+        Eine Freigabe zeigt anderen deine Daten live. {LOG_ENTRIES_HISTORY_TEXT}
+      </p>
+
       {grants.length > 0 ? (
         <ul className="-my-2 divide-y divide-white/10">
           {grants.map((grant) => (
@@ -39,7 +44,7 @@ export const SharedWithOthersSection = ({
         </ul>
       ) : (
         <p className="text-sm text-neutral-500">
-          Du teilst nichts mit anderen.
+          Du hast keine aktive Freigabe.
         </p>
       )}
 

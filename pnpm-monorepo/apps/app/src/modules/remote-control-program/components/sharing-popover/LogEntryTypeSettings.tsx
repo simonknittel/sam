@@ -61,7 +61,7 @@ export const LogEntryTypeSettings = ({ logEntryTypes, onChange }: Props) => {
       </button>
 
       {isExpanded && (
-        <div id={listId} className="flex flex-col gap-4">
+        <div id={listId} className="gap-x-8 sm:columns-2">
           {Object.values(EntryCategory).map((category) => (
             <CategorySettings
               key={category}
@@ -94,7 +94,7 @@ const CategorySettings = ({
   const onCount = types.filter((type) => logEntryTypes[type]).length;
 
   return (
-    <fieldset className="flex flex-col gap-1">
+    <fieldset className="mb-4 flex break-inside-avoid flex-col gap-1">
       <legend className="mb-1 font-mono text-xs text-neutral-500 uppercase">
         {ENTRY_CATEGORY_TITLES[category]}
       </legend>

@@ -17,7 +17,7 @@ export const REMOTE_CONTROL_PROGRAM_ERROR_TEXTS: ApplicationErrorTexts = {
   [RemoteControlProgramErrorMessage.CitizenMissing]:
     "Dein Account ist mit keinem Citizen verknüpft.",
   [RemoteControlProgramErrorMessage.AssumedUser]:
-    "Als angenommener Benutzer kannst du das Remote Control Program nicht nutzen.",
+    "Mit „Assume user“ kannst du das Remote Control Program nicht nutzen.",
   [RemoteControlProgramErrorMessage.PermissionMissing]:
     "Dir fehlt die Berechtigung „Remote Control Program nutzen“.",
 };

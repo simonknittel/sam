@@ -76,7 +76,7 @@ const AnnouncementSummary = ({ announcement }: AnnouncementSummaryProps) => {
   if (!announcement)
     return (
       <p className="text-neutral-500">
-        Die Laufzeit hat noch keine Quellen gemeldet.
+        Die Runtime hat noch keine Connectors gemeldet.
       </p>
     );
 
@@ -86,7 +86,7 @@ const AnnouncementSummary = ({ announcement }: AnnouncementSummaryProps) => {
         (connector) =>
           `${CONNECTOR_LABELS[connector.id]} (${connector.capabilities.map((capability) => CAPABILITY_LABELS[capability.id]).join(", ")})`,
       )
-      .join(", ") || "Keine Quelle verfügbar";
+      .join(", ") || "Kein Connector verfügbar";
 
   const { local_access_layer: localAccessLayer } = announcement;
   const uploadText = localAccessLayer.is_stopped
@@ -100,7 +100,7 @@ const AnnouncementSummary = ({ announcement }: AnnouncementSummaryProps) => {
 
   return (
     <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-neutral-400">
-      <dt className="text-neutral-500">Quellen</dt>
+      <dt className="text-neutral-500">Connectors</dt>
       <dd>{connectorsText}</dd>
 
       <dt className="text-neutral-500">Hochladen</dt>

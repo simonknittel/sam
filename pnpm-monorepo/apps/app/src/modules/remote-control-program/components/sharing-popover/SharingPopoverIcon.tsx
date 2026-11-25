@@ -20,7 +20,7 @@ export const SharingPopoverIcon = ({
   isWaitingForFolderPermission,
 }: Props) => {
   return (
-    <span className="relative inline-flex" aria-hidden>
+    <span className="relative flex" aria-hidden>
       <FaTowerBroadcast />
 
       {(isStopped || isWaitingForFolderPermission) && (

@@ -418,7 +418,7 @@ The grantee kinds:
 ## Sharing popover
 
 - An item in the top bar (`apps/app/src/modules/shell/components/TopBar/`) and in the action bar for mobile devices. It follows the notifications popover.
-- It has these sections:
+- It has a tab for each of these sections. The tab of this browser is the first one. While the "Stop all" of the owner is active, the popover opens with the status.
   1. **Status:** the runtimes of the owner that are online and their connectors. A button "Stop all" for all runtimes of the owner: the relay tells each runtime to stop, and refuses their uploads and actions until the owner starts them again.
   2. **Settings of this browser:** the settings of the browser runtime in this browser: the autostart, the log folder, the local access layer and the button "Stop all" of this browser. A note when the browser runtime needs a click (for example to give the file access again). For the desktop companion: a read-only summary from its announcement, and a note that the owner changes these settings in the desktop companion.
   3. **Shared with others:** the grants with their remaining time, a form for a new grant, and the open access requests.

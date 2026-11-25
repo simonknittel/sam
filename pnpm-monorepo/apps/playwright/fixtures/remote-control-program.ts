@@ -54,8 +54,8 @@ const SHARING_POPOVER_TITLE = "Remote Control Program";
 
 export enum SharingPopoverSection {
   Status = "Status",
-  ThisBrowser = "Dieser Browser",
-  SharedWithOthers = "Mit anderen geteilt",
+  ThisBrowser = "Browser",
+  Grants = "Freigaben",
 }
 
 /**
@@ -73,24 +73,37 @@ export const sharingPopoverTrigger = (page: Page) =>
 export const sharingPopover = (page: Page) =>
   page.getByRole("dialog", { name: SHARING_POPOVER_TITLE, exact: true });
 
+/** Only the section of the active tab is visible */
 export const sharingPopoverSection = (
   page: Page,
   section: SharingPopoverSection,
 ) => sharingPopover(page).getByRole("region", { name: section, exact: true });
 
+/** The tab of the grants also has their count in its name */
+export const sharingPopoverTab = (page: Page, section: SharingPopoverSection) =>
+  sharingPopover(page).getByRole("tab", { name: new RegExp(`^${section}`) });
+
+/** Activates the tab of the section in the open popover */
+export const showSharingPopoverSection = async (
+  page: Page,
+  section: SharingPopoverSection,
+) => {
+  await sharingPopoverTab(page, section).click();
+  const region = sharingPopoverSection(page, section);
+  await expect(region).toBeVisible();
+  return region;
+};
+
 /**
- * Opens the popover, when it is not open. A click on the trigger of an open
- * popover closes it. The section of this browser shows at once, the other
- * sections show after the read of the server data.
+ * Opens the popover, when it is not open, and shows the section of this
+ * browser. A click on the trigger of an open popover closes it.
  */
 export const openSharingPopover = async (page: Page) => {
-  const thisBrowser = sharingPopoverSection(
-    page,
-    SharingPopoverSection.ThisBrowser,
-  );
-  if (await thisBrowser.isVisible()) return;
+  const tab = sharingPopoverTab(page, SharingPopoverSection.ThisBrowser);
+  if (!(await tab.isVisible()))
+    await clickUntilVisible(sharingPopoverTrigger(page), tab);
 
-  await clickUntilVisible(sharingPopoverTrigger(page), thisBrowser);
+  await showSharingPopoverSection(page, SharingPopoverSection.ThisBrowser);
 };
 
 export const closeSharingPopover = async (page: Page) => {
@@ -101,7 +114,7 @@ export const closeSharingPopover = async (page: Page) => {
 /** The state of the browser runtime, for example "läuft" or "gestoppt" */
 export const runtimeState = (page: Page, state: string) =>
   sharingPopoverSection(page, SharingPopoverSection.ThisBrowser).getByText(
-    `Laufzeit: ${state}`,
+    `Runtime: ${state}`,
     { exact: true },
   );
 
@@ -110,7 +123,11 @@ export const runtimeState = (page: Page, state: string) =>
  * runtime. The folder comes from `stubDirectoryPicker()`.
  */
 export const pickLogFolderInPopover = async (page: Page) => {
-  await sharingPopoverSection(page, SharingPopoverSection.ThisBrowser)
+  const section = await showSharingPopoverSection(
+    page,
+    SharingPopoverSection.ThisBrowser,
+  );
+  await section
     .getByRole("button", { name: "Ordner wählen", exact: true })
     .click();
   await expect(runtimeState(page, "läuft")).toBeVisible();
@@ -141,7 +158,7 @@ export const turnOnLogEntryTypes = async (
   page: Page,
   typeTitles: readonly string[],
 ) => {
-  const section = sharingPopoverSection(
+  const section = await showSharingPopoverSection(
     page,
     SharingPopoverSection.ThisBrowser,
   );
@@ -168,9 +185,9 @@ export const turnOnLogEntryTypes = async (
   }
 };
 
-/** A grant in the section "Mit anderen geteilt", by the handle of its citizen */
+/** A grant in the list, by the handle of its citizen */
 const shareGrantItem = (page: Page, granteeHandle: string) =>
-  sharingPopoverSection(page, SharingPopoverSection.SharedWithOthers)
+  sharingPopoverSection(page, SharingPopoverSection.Grants)
     .getByRole("listitem")
     .filter({
       has: page.getByRole("link", { name: granteeHandle, exact: true }),
@@ -181,9 +198,9 @@ const shareGrantItem = (page: Page, granteeHandle: string) =>
  * citizen. The citizen picker needs `citizen;read`.
  */
 export const openShareGrantForm = async (page: Page, granteeHandle: string) => {
-  const section = sharingPopoverSection(
+  const section = await showSharingPopoverSection(
     page,
-    SharingPopoverSection.SharedWithOthers,
+    SharingPopoverSection.Grants,
   );
   const form = section.getByRole("form", { name: "Neue Freigabe" });
   await clickUntilVisible(
@@ -224,6 +241,7 @@ export const revokeShareGrantInPopover = async (
   page: Page,
   granteeHandle: string,
 ) => {
+  await showSharingPopoverSection(page, SharingPopoverSection.Grants);
   await shareGrantItem(page, granteeHandle)
     .getByRole("button", { name: "Widerrufen" })
     .click();

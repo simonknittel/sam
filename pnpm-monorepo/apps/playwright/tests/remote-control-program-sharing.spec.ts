@@ -1,7 +1,6 @@
 import type { Page } from "@playwright/test";
-import { instantToWallTime, ORGANIZATION_TIMEZONE } from "@sam-monorepo/domain";
 import { createCitizen } from "../fixtures/factories";
-import { toggleLabel } from "../fixtures/interactions";
+import { clickUntilVisible } from "../fixtures/interactions";
 import {
   appendLogLines,
   applyDateRange,
@@ -21,17 +20,14 @@ import {
   createShareGrantInPopover,
   expectUploadedLines,
   LIVE_UPLOAD_TIMEOUT,
-  openShareGrantForm,
-  openSharingPopover,
   REALTIME_DELIVERY_GRACE,
   relayConnectionState,
   revokeShareGrantInPopover,
   sharingPopover,
-  sharingPopoverSection,
   SharingPopoverSection,
   sharingPopoverTrigger,
+  showSharingPopoverSection,
   startBrowserRuntime,
-  submitShareGrantForm,
   turnOnLogEntryTypes,
   uploadedLines,
 } from "../fixtures/remote-control-program";
@@ -217,7 +213,10 @@ test("after a stop of all runtimes, the lines of the stopped time stay on the ma
   await appendLogLines(page, [lineBeforeStop]);
   await expectUploadedLines(prisma, owner, [lineBeforeStop]);
 
-  const status = sharingPopoverSection(page, SharingPopoverSection.Status);
+  const status = await showSharingPopoverSection(
+    page,
+    SharingPopoverSection.Status,
+  );
   await status.getByRole("button", { name: "Alles stoppen" }).click();
   const confirmation = page.getByRole("alertdialog", {
     name: "Alles stoppen?",
@@ -228,6 +227,7 @@ test("after a stop of all runtimes, the lines of the stopped time stay on the ma
     status.getByRole("button", { name: "Alles starten" }),
   ).toBeVisible();
   /** The relay tells the runtime, and the trigger tells the stop */
+  await showSharingPopoverSection(page, SharingPopoverSection.ThisBrowser);
   await expect(
     relayConnectionState(page, "Verbunden, alles gestoppt"),
   ).toBeVisible();
@@ -242,8 +242,13 @@ test("after a stop of all runtimes, the lines of the stopped time stay on the ma
     timeout: LIVE_UPLOAD_TIMEOUT,
   });
 
-  await openSharingPopover(page);
+  /** While all is stopped, the popover opens with the status */
+  await clickUntilVisible(
+    sharingPopoverTrigger(page),
+    status.getByRole("button", { name: "Alles starten" }),
+  );
   await status.getByRole("button", { name: "Alles starten" }).click();
+  await showSharingPopoverSection(page, SharingPopoverSection.ThisBrowser);
   await expect(relayConnectionState(page, "Verbunden")).toBeVisible();
   await expect(sharingPopoverTrigger(page)).toHaveAccessibleName(
     "Remote Control Program",
@@ -255,7 +260,7 @@ test("after a stop of all runtimes, the lines of the stopped time stay on the ma
   await expectUploadedLines(prisma, owner, [lineBeforeStop, lineAfterStart]);
 });
 
-test("older entries go up only on a confirmed request, and only a grant that covers their time shows them", async ({
+test("older entries go up only on a confirmed request, and each viewer sees them without a grant", async ({
   page,
   prisma,
   signIn,
@@ -265,9 +270,9 @@ test("older entries go up only on a confirmed request, and only a grant that cov
 
   const owner = await createCitizen(prisma, {
     handle: "rcp-archivar",
-    permissionStrings: OWNER_PERMISSIONS,
+    permissionStrings: LOG_ANALYZER_PERMISSIONS,
   });
-  const grantee = await createCitizen(prisma, {
+  const viewer = await createCitizen(prisma, {
     handle: "rcp-leser",
     permissionStrings: LOG_ANALYZER_PERMISSIONS,
   });
@@ -287,8 +292,6 @@ test("older entries go up only on a confirmed request, and only a grant that cov
   await page.goto(LOG_ANALYZER_PAGE_PATH);
   await startBrowserRuntime(page);
   await turnOnLogEntryTypes(page, [BLUEPRINT_TYPE_TITLE]);
-  /** A grant from now on does not cover the older entries */
-  await createShareGrantInPopover(page, "rcp-leser");
   await closeSharingPopover(page);
 
   await applyDateRange(page, daysAgo(42), daysAgo(38));
@@ -304,7 +307,7 @@ test("older entries go up only on a confirmed request, and only a grant that cov
     new RegExp(`^${BLUEPRINT_TYPE_TITLE}\\s*1$`),
   ]);
   await expect(
-    request.getByText("Nur du: Keine deiner Freigaben deckt den Zeitraum ab."),
+    request.getByText("Alle, die den Log Analyzer nutzen dürfen."),
   ).toBeVisible();
   expect(await uploadedLines(prisma, owner)).toEqual([]);
 
@@ -312,27 +315,10 @@ test("older entries go up only on a confirmed request, and only a grant that cov
   await expect(request).toHaveCount(0);
   await expectUploadedLines(prisma, owner, [oldLine]);
 
-  /** The grant from now on does not show the older entry */
-  const granteePage = await openSignedInBrowser(grantee.user);
-  await granteePage.goto(LOG_ANALYZER_PAGE_PATH);
-  await applyDateRange(granteePage, daysAgo(42), daysAgo(38));
-  await waitForFeed(granteePage);
-  await expect(tableRows(granteePage)).toHaveCount(0);
-
-  /** A grant with a start in the past shows the entries from its start */
-  await openSharingPopover(page);
-  const form = await openShareGrantForm(page, "rcp-leser");
-  await toggleLabel(
-    form,
-    page.getByRole("radio", { name: "Zeitraum", exact: true }),
-  ).click();
-  await form
-    .getByLabel("Start", { exact: true })
-    .fill(instantToWallTime(daysAgo(41), ORGANIZATION_TIMEZONE));
-  await submitShareGrantForm(page, form, "rcp-leser");
-
-  await granteePage.reload();
-  await applyDateRange(granteePage, daysAgo(42), daysAgo(38));
-  await expect(rowOf(granteePage, "Alter Bauplan")).toBeVisible();
-  await expect(tableRows(granteePage)).toHaveCount(2);
+  /** The entry is history (decision 31) */
+  const viewerPage = await openSignedInBrowser(viewer.user);
+  await viewerPage.goto(LOG_ANALYZER_PAGE_PATH);
+  await applyDateRange(viewerPage, daysAgo(42), daysAgo(38));
+  await expect(rowOf(viewerPage, "Alter Bauplan")).toBeVisible();
+  await expect(tableRows(viewerPage)).toHaveCount(2);
 });
