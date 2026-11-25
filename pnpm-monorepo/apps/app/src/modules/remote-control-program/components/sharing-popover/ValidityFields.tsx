@@ -81,25 +81,27 @@ export const ValidityFields = () => {
 
       {choice === CustomValidityChoice.Custom && (
         <>
-          <div>
-            <DateTimeInput
-              label="Start"
-              name={ShareGrantFormField.StartsAt}
-              value={startsAt}
-              onChange={(event) => setStartsAt(event.target.value)}
-              required
-            />
-          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="min-w-0">
+              <DateTimeInput
+                label="Start"
+                name={ShareGrantFormField.StartsAt}
+                value={startsAt}
+                onChange={(event) => setStartsAt(event.target.value)}
+                required
+              />
+            </div>
 
-          <div>
-            <DateTimeInput
-              label="Ende"
-              name={ShareGrantFormField.EndsAt}
-              value={endsAt}
-              onChange={(event) => setEndsAt(event.target.value)}
-              min={startsAt || undefined}
-              hint="Leer lassen für kein Ende."
-            />
+            <div className="min-w-0">
+              <DateTimeInput
+                label="Ende"
+                name={ShareGrantFormField.EndsAt}
+                value={endsAt}
+                onChange={(event) => setEndsAt(event.target.value)}
+                min={startsAt || undefined}
+                hint="Leer lassen für kein Ende."
+              />
+            </div>
           </div>
 
           <p className="text-xs text-white/40">
