@@ -125,6 +125,9 @@ const isValidAt = (grant: ShareGrantSource, now: Date) =>
  * owner is not a part of this rule: it decides which entries exist. Admin
  * mode does not bypass the grants (decision 4).
  *
+ * The rule is for the live data. A consumer has its own rule for the history
+ * (decision 30).
+ *
  * The owner sees all own entries. A grant shows only the entries of its
  * validity period (decision 8): a start in the past shares older entries.
  * The grants that are valid now all contain the current time, thus their

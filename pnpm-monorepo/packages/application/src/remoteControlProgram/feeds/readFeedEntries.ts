@@ -1,5 +1,11 @@
 import type { Prisma } from "@sam-monorepo/database/client";
-import { CapabilityId, type EffectiveReadAccess } from "@sam-monorepo/domain";
+import {
+  ACTIVE_CITIZEN_WHERE,
+  CapabilityId,
+  getLogAnalyzerHistoryEnd,
+  type EffectiveReadAccess,
+  type VisibleTimeRange,
+} from "@sam-monorepo/domain";
 import * as z from "zod";
 import type { Actor } from "../../actor.js";
 import type { ApplicationContext } from "../../context.js";
@@ -125,31 +131,48 @@ const getEarlierEnd = (first: Date | null, second: Date | null) => {
   return first < second ? first : second;
 };
 
+/** Null when the range has no time in the window */
+const createEventAtFilter = (
+  range: VisibleTimeRange,
+  window: TimeWindow,
+): Prisma.DateTimeFilter | null => {
+  const start = getLaterStart(range.start, window.start ?? null);
+  const end = getEarlierEnd(range.end, window.end ?? null);
+  if (start !== null && end !== null && start >= end) return null;
+
+  return { gte: start ?? undefined, lt: end ?? undefined };
+};
+
 /**
- * One filter for each owner with access: the entries of the owner in the
- * intersection of the visible time range (decision 8) and the time window
+ * One filter for each owner with access (decision 8), and one filter for the
+ * history of all owners (decision 31)
  */
 const createVisibleEntryFilters = (
   accessByOwnerCitizenId: ReadonlyMap<string, EffectiveReadAccess>,
   window: TimeWindow,
-): Prisma.LogAnalyzerEntryWhereInput[] =>
-  Array.from(accessByOwnerCitizenId).flatMap(([ownerCitizenId, access]) => {
-    if (!access.isGranted) return [];
+  now: Date,
+): Prisma.LogAnalyzerEntryWhereInput[] => {
+  const ownerFilters = Array.from(accessByOwnerCitizenId).flatMap(
+    ([createdById, access]) => {
+      if (!access.isGranted) return [];
 
-    const start = getLaterStart(
-      access.visibleTimeRange.start,
-      window.start ?? null,
-    );
-    const end = getEarlierEnd(access.visibleTimeRange.end, window.end ?? null);
-    if (start !== null && end !== null && start >= end) return [];
+      const eventAt = createEventAtFilter(access.visibleTimeRange, window);
+      return eventAt ? [{ createdById, eventAt }] : [];
+    },
+  );
 
-    return [
-      {
-        createdById: ownerCitizenId,
-        eventAt: { gte: start ?? undefined, lt: end ?? undefined },
-      },
-    ];
-  });
+  const historyEventAt = createEventAtFilter(
+    { start: null, end: getLogAnalyzerHistoryEnd(now) },
+    window,
+  );
+
+  return historyEventAt
+    ? [
+        ...ownerFilters,
+        { createdBy: ACTIVE_CITIZEN_WHERE, eventAt: historyEventAt },
+      ]
+    : ownerFilters;
+};
 
 /** The rows of the owners always have an owner: the filters name the owners */
 const toFeedLogEntries = (rows: readonly FeedLogEntryWithOwnerRow[]) =>
@@ -291,17 +314,15 @@ const readChanges = async (
 };
 
 /**
- * Reads the entries of `log_entries` that the actor (the viewer) can read:
- * the own entries, and the entries of each owner with a valid grant for the
- * viewer, only in the visible time range of the grants (decision 8). The
- * access is loaded again for each read (principle 5). The Log Analyzer
- * reads a snapshot when it opens, and the changes since its cursor after a
- * reconnect of the realtime service. Each read gives a maximum of
- * `MAXIMUM_FEED_ENTRIES_PER_READ` entries and tells when there are more.
+ * Reads the entries of `log_entries` for the Log Analyzer: the own entries,
+ * the live entries of each owner with a valid grant for the viewer (decision
+ * 8), and the history of all owners (decision 31). The access is loaded again
+ * for each read (principle 5).
  *
  * A read of the changes can give an entry again (see
- * `CURSOR_SETTLE_MILLISECONDS`). A new grant does not add the older entries
- * of its owner to the changes: the control UI reads a new snapshot for them.
+ * `CURSOR_SETTLE_MILLISECONDS`). It gives neither the older entries of a new
+ * grant nor the entries that became history since the cursor: the control UI
+ * reads a snapshot of their time window.
  *
  * @throws ForbiddenError without a citizen, without `remoteControlProgram;use`
  * or `logAnalyzer;read`, for an admin who assumes the user, or when a switch
@@ -325,12 +346,14 @@ export const readFeedEntries = (
      * switch or a permission, which applies to all owners.
      */
     const ownAccess = accessByOwnerCitizenId.get(viewer.citizenId);
-    if (ownAccess) requireGrantedReadAccess(ownAccess);
+    if (!ownAccess) throw new Error("The access to the own data is missing");
+    requireGrantedReadAccess(ownAccess);
 
     const now = context.now();
     const visibleEntryFilters = createVisibleEntryFilters(
       accessByOwnerCitizenId,
       input,
+      now,
     );
 
     switch (input.mode) {

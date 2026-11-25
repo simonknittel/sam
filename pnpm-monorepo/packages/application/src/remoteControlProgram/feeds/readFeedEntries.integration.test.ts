@@ -84,59 +84,73 @@ const summarize = (entries: readonly FeedLogEntry[]) =>
         (first.owner ?? "").localeCompare(second.owner ?? ""),
     );
 
-test("gives the own entries and the entries of the valid grants in their time range", async () => {
+test("gives the own entries, the live entries of the valid grants and the history of all owners", async () => {
   const viewer = await createViewer();
   const viewerId = viewer.citizen!.id;
-  const [grantOwner, endedGrantOwner, revokedGrantOwner, ownerWithoutGrant] =
-    await Promise.all(
-      [
-        "grantOwner",
-        "endedGrantOwner",
-        "revokedGrantOwner",
-        "ownerWithoutGrant",
-      ].map((handle) => createClearedCitizen(handle)),
-    );
-  // A start in the past shares the older entries from the start (decision 8)
+  const [
+    grantOwner,
+    endedGrantOwner,
+    revokedGrantOwner,
+    ownerWithoutGrant,
+    deletedOwner,
+  ] = await Promise.all(
+    [
+      "grantOwner",
+      "endedGrantOwner",
+      "revokedGrantOwner",
+      "ownerWithoutGrant",
+      "deletedOwner",
+    ].map((handle) => createClearedCitizen(handle)),
+  );
+  await prisma.citizen.update({
+    where: { id: deletedOwner!.id },
+    data: { deletedAt: TEST_NOW, userId: null },
+  });
   await createCitizenGrant(grantOwner!.id, viewerId, {
-    startsAt: getTimeBeforeNow(2 * DAY_MILLISECONDS),
+    startsAt: getTimeBeforeNow(90 * MINUTE_MILLISECONDS),
   });
   await createCitizenGrant(endedGrantOwner!.id, viewerId, {
     startsAt: getTimeBeforeNow(3 * DAY_MILLISECONDS),
-    endsAt: getTimeBeforeNow(HOUR_MILLISECONDS),
+    endsAt: getTimeBeforeNow(MINUTE_MILLISECONDS),
   });
   await createCitizenGrant(revokedGrantOwner!.id, viewerId, {
     startsAt: getTimeBeforeNow(3 * DAY_MILLISECONDS),
-    revokedAt: getTimeBeforeNow(HOUR_MILLISECONDS),
+    revokedAt: getTimeBeforeNow(MINUTE_MILLISECONDS),
   });
 
   await createLogEntryRow(viewerId, getTimeBeforeNow(10 * DAY_MILLISECONDS));
   await createLogEntryRow(viewerId, getTimeBeforeNow(HOUR_MILLISECONDS));
-  await createLogEntryRow(
-    grantOwner!.id,
-    getTimeBeforeNow(3 * DAY_MILLISECONDS),
-  );
-  await createLogEntryRow(grantOwner!.id, getTimeBeforeNow(DAY_MILLISECONDS));
-  await createLogEntryRow(grantOwner!.id, getTimeBeforeNow(HOUR_MILLISECONDS));
-  await createLogEntryRow(
-    endedGrantOwner!.id,
-    getTimeBeforeNow(2 * DAY_MILLISECONDS),
-  );
-  await createLogEntryRow(
-    revokedGrantOwner!.id,
-    getTimeBeforeNow(2 * DAY_MILLISECONDS),
-  );
-  await createLogEntryRow(
-    ownerWithoutGrant!.id,
-    getTimeBeforeNow(HOUR_MILLISECONDS),
-  );
+  for (const owner of [
+    grantOwner,
+    endedGrantOwner,
+    revokedGrantOwner,
+    ownerWithoutGrant,
+    deletedOwner,
+  ]) {
+    await createLogEntryRow(owner!.id, getTimeBeforeNow(HOUR_MILLISECONDS));
+    await createLogEntryRow(
+      owner!.id,
+      getTimeBeforeNow(100 * MINUTE_MILLISECONDS),
+    );
+    await createLogEntryRow(owner!.id, getTimeBeforeNow(3 * HOUR_MILLISECONDS));
+  }
   const { context } = createTestApplicationContext();
 
   const snapshot = await readSnapshot(context, viewer);
 
+  const history = [
+    "endedGrantOwner",
+    "grantOwner",
+    "ownerWithoutGrant",
+    "revokedGrantOwner",
+  ].map((owner) => ({
+    owner,
+    eventAt: getTimeBeforeNow(3 * HOUR_MILLISECONDS),
+  }));
   expect(summarize(snapshot.entries)).toEqual([
     { owner: "grantOwner", eventAt: getTimeBeforeNow(HOUR_MILLISECONDS) },
     { owner: "viewer", eventAt: getTimeBeforeNow(HOUR_MILLISECONDS) },
-    { owner: "grantOwner", eventAt: getTimeBeforeNow(DAY_MILLISECONDS) },
+    ...history,
     { owner: "viewer", eventAt: getTimeBeforeNow(10 * DAY_MILLISECONDS) },
   ]);
   expect(snapshot).toMatchObject({ hasMore: false, nextPageCursor: null });
@@ -156,9 +170,7 @@ test("gives the own entries and the entries of the valid grants in their time ra
     start: getTimeBeforeNow(2 * DAY_MILLISECONDS),
     end: getTimeBeforeNow(HOUR_MILLISECONDS),
   });
-  expect(summarize(window.entries)).toEqual([
-    { owner: "grantOwner", eventAt: getTimeBeforeNow(DAY_MILLISECONDS) },
-  ]);
+  expect(summarize(window.entries)).toEqual(history);
 });
 
 test("gives no data to a viewer without one of the two permissions, and to an admin who assumes the viewer", async () => {
