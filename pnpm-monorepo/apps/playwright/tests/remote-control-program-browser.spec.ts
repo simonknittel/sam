@@ -270,7 +270,9 @@ test("the sharing popover and the request of the Log Analyzer work with the keyb
    * focus goes into the request, at the latest with the next Tab, and its
    * first button is not the upload.
    */
-  await page.getByRole("button", { name: "Ältere Einträge teilen" }).focus();
+  await page
+    .getByRole("button", { name: "Ältere Game Logs hochladen" })
+    .focus();
   await page.keyboard.press("Enter");
   const request = sharingPopover(page).getByRole("region", {
     name: "Ältere Game Logs hochladen?",

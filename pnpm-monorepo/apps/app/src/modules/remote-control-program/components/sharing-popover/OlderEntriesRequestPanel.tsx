@@ -2,12 +2,10 @@
 
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Note from "@/modules/common/components/Note";
-import { formatDate } from "@/modules/common/utils/formatDate";
 import {
   BrowserRuntimeError,
   BrowserRuntimeErrorCode,
   ChannelStatus,
-  type OlderEntriesTimeRange,
 } from "@sam-monorepo/remote-control-program-runtime";
 import { useQuery } from "@tanstack/react-query";
 import { useId, useState } from "react";
@@ -17,6 +15,7 @@ import {
   BROWSER_RUNTIME_ERROR_TEXTS,
   getBrowserRuntimeErrorText,
 } from "./browserRuntimeTexts";
+import { formatOlderEntriesRange } from "./formatOlderEntriesRange";
 import { OlderEntriesRequestFooter } from "./OlderEntriesRequestFooter";
 import {
   getRuleTypesThatAreOn,
@@ -25,9 +24,6 @@ import {
   type PreparedRequestResult,
 } from "./PreparedOlderEntriesRequest";
 import type { OlderEntriesRequestDraft } from "./SharingPopoverProvider";
-
-const formatRange = ({ start, end }: OlderEntriesTimeRange) =>
-  `${start ? formatDate(start) : "Anfang deiner Game Logs"} – ${end ? formatDate(end) : "jetzt"}`;
 
 const formatUploadText = (count: number) => {
   if (count === 0)
@@ -69,7 +65,7 @@ export const OlderEntriesRequestPanel = ({
           Ältere Game Logs hochladen?
         </h4>
         <p className="text-sm text-neutral-400">
-          Zeitraum: {formatRange(request.range)}
+          Zeitraum: {formatOlderEntriesRange(request.range)}
         </p>
       </div>
 

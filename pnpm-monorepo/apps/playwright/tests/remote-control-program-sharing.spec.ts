@@ -229,7 +229,9 @@ test("older entries go up only on a confirmed request, and each viewer sees them
   await expect(rowOf(page, "Alter Bauplan")).toBeVisible();
   await expect(rowOf(page, "Shard-Beitritt")).toBeVisible();
 
-  await page.getByRole("button", { name: "Ältere Einträge teilen" }).click();
+  await page
+    .getByRole("button", { name: "Ältere Game Logs hochladen" })
+    .click();
   const request = sharingPopover(page).getByRole("region", {
     name: "Ältere Game Logs hochladen?",
   });

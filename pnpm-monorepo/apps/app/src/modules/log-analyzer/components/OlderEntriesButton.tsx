@@ -34,7 +34,7 @@ export const OlderEntriesButton = () => {
       }
     >
       <FaCloudArrowUp />
-      Ältere Einträge teilen
+      Ältere Game Logs hochladen
     </Button2>
   );
 };

@@ -191,9 +191,9 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
                   Ohne Zeitraum siehst du die letzten 14 Tage. Wähle einen
                   Zeitraum, um ältere Logs auszuwerten. Mit{" "}
                   <UiLabel icon={FaCloudArrowUp}>
-                    Ältere Einträge teilen
+                    Ältere Game Logs hochladen
                   </UiLabel>{" "}
-                  teilst du die Einträge des Zeitraums, die nicht automatisch
+                  lädst du die Einträge des Zeitraums hoch, die nicht automatisch
                   hochgeladen wurden.
                 </>
               ),
@@ -243,7 +243,7 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
             Automatisch hochgeladen werden nur neue Einträge, solange die
             Runtime läuft. Was du ohne laufende Runtime erlebst, bleibt auf
             deinem Computer. Ältere Einträge kannst du mit{" "}
-            <UiLabel icon={FaCloudArrowUp}>Ältere Einträge teilen</UiLabel>{" "}
+            <UiLabel icon={FaCloudArrowUp}>Ältere Game Logs hochladen</UiLabel>{" "}
             nachträglich hochladen.
           </GuideNote>
 
