@@ -1,6 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { ONE_DAY_MS, ONE_HOUR_MS, ONE_MINUTE_MS } from "./factories";
-import { clickUntilVisible, toggleLabel } from "./interactions";
+import { clickUntilVisible, toDateValue, toggleLabel } from "./interactions";
 import {
   closeSharingPopover,
   REMOTE_CONTROL_PROGRAM_PERMISSION,
@@ -37,8 +37,6 @@ export const hoursAgo = (hours: number) =>
 
 export const daysAgo = (days: number) =>
   new Date(Date.now() - days * ONE_DAY_MS);
-
-const toDateValue = (date: Date) => date.toISOString().slice(0, 10);
 
 export interface BackupFile {
   readonly name: string;

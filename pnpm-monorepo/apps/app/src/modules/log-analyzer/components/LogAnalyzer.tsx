@@ -7,7 +7,6 @@ import { LiveStatus } from "./LiveStatus";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 import { LogAnalyzerTable } from "./LogAnalyzerTable";
 import { LogFolderNote } from "./LogFolderNote";
-import { OlderEntriesButton } from "./OlderEntriesButton";
 import { QuickLookBar } from "./QuickLookBar";
 import { ReadStatus } from "./ReadStatus";
 import { Toolbar } from "./Toolbar";
@@ -34,7 +33,6 @@ export const LogAnalyzer = ({ className }: Props) => {
 
       <Toolbar>
         <DateRangeSettings />
-        <OlderEntriesButton />
         <ReadStatus />
       </Toolbar>
 

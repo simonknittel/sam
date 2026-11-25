@@ -17,6 +17,11 @@ export const hasDateRange = ({ from, to }: DateRange) =>
   from !== null || to !== null;
 
 /** A selected day covers that whole day as it appears in the table */
+export const toEntryWindow = ({ from, to }: DateRange): EntryWindow => {
+  const { gte, lt } = getDateRangeFilter(from, to);
+  return { start: gte ?? null, end: lt ?? null };
+};
+
 export const getEntryWindow = (
   dateRange: DateRange,
   daysToLoad: number,
@@ -27,6 +32,5 @@ export const getEntryWindow = (
       end: null,
     };
 
-  const { gte, lt } = getDateRangeFilter(dateRange.from, dateRange.to);
-  return { start: gte ?? null, end: lt ?? null };
+  return toEntryWindow(dateRange);
 };

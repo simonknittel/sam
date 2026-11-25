@@ -24,6 +24,7 @@ import {
 } from "./logEntryTypeRules";
 import { LogEntryTypeSettings } from "./LogEntryTypeSettings";
 import { LogFileConnectorGuide } from "./LogFileConnectorGuide";
+import { OlderEntriesUpload } from "./OlderEntriesUpload";
 import { SharingPopoverCollapsible } from "./SharingPopoverCollapsible";
 import { useRuntimeCommand } from "./useRuntimeCommand";
 
@@ -132,6 +133,11 @@ export const LogFileConnectorControl = ({ runtime }: Props) => {
         logEntryTypes={state.localAccess.logEntryTypes}
         onChange={commands.setLogEntryTypes}
       />
+
+      {/* Only the log files of this browser have entries to upload */}
+      {state.folder.state === LogFolderState.Granted && (
+        <OlderEntriesUpload runtime={runtime} />
+      )}
     </SharingPopoverCollapsible>
   );
 };

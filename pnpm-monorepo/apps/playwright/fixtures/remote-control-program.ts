@@ -1,7 +1,12 @@
 import type { Locator, Page, WebSocket } from "@playwright/test";
 import type { PrismaClient } from "@sam-monorepo/database/client";
 import type { TestCitizen } from "./factories";
-import { clickUntilVisible, pickFromSearch, toggleLabel } from "./interactions";
+import {
+  clickUntilVisible,
+  pickFromSearch,
+  toDateValue,
+  toggleLabel,
+} from "./interactions";
 import { expect } from "./test";
 
 /** Helpers for the sharing popover and the browser runtime of the Remote Control Program */
@@ -197,6 +202,39 @@ export const turnOnLogEntryTypes = async (
     ).click();
     await expect(checkbox).toBeChecked();
   }
+};
+
+/**
+ * Opens the upload of the older entries in the settings of the log file
+ * connector. It needs the log folder and a running runtime.
+ */
+export const openOlderEntriesUpload = async (page: Page) => {
+  const section = await showSharingPopoverSection(
+    page,
+    SharingPopoverSection.ThisBrowser,
+  );
+  await openLogFileConnector(section);
+
+  const form = section.getByRole("form", {
+    name: "Ältere Game Logs hochladen",
+  });
+  await clickUntilVisible(
+    section.getByRole("button", { name: "Ältere Game Logs hochladen" }),
+    form,
+  );
+
+  return form;
+};
+
+/** Counts the older entries of the date range, without the upload */
+export const countOlderEntries = async (
+  form: Locator,
+  from: Date,
+  to: Date,
+) => {
+  await form.getByLabel("Von").fill(toDateValue(from));
+  await form.getByLabel("Bis").fill(toDateValue(to));
+  await form.getByRole("button", { name: "Einträge zählen" }).click();
 };
 
 /** A grant in the list, by the handle of its citizen */

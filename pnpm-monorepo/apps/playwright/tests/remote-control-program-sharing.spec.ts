@@ -17,13 +17,14 @@ import {
 } from "../fixtures/log-analyzer";
 import {
   closeSharingPopover,
+  countOlderEntries,
   createShareGrantInPopover,
   expectUploadedLines,
   LIVE_UPLOAD_TIMEOUT,
+  openOlderEntriesUpload,
   REALTIME_DELIVERY_GRACE,
   relayConnectionState,
   revokeShareGrantInPopover,
-  sharingPopover,
   startBrowserRuntime,
   turnOnLogEntryTypes,
   uploadedLines,
@@ -276,24 +277,28 @@ test("older entries go up only on a confirmed request, and each viewer sees them
   await page.goto(LOG_ANALYZER_PAGE_PATH);
   await startBrowserRuntime(page);
   await turnOnLogEntryTypes(page, [BLUEPRINT_TYPE_TITLE]);
-  await closeSharingPopover(page);
 
-  await applyDateRange(page, daysAgo(42), daysAgo(38));
-  await expect(rowOf(page, "Alter Bauplan")).toBeVisible();
-  await expect(rowOf(page, "Shard-Beitritt")).toBeVisible();
-
-  await page
-    .getByRole("button", { name: "Ältere Game Logs hochladen" })
-    .click();
-  const request = sharingPopover(page).getByRole("region", {
-    name: "Ältere Game Logs hochladen?",
+  const form = await openOlderEntriesUpload(page);
+  const uploadButton = form.getByRole("button", {
+    name: "Hochladen",
+    exact: true,
   });
+
+  /** A change of the range needs a new count */
+  await countOlderEntries(form, daysAgo(44), daysAgo(43));
+  await expect(
+    form.getByText(
+      "In diesem Zeitraum gibt es keine weiteren Einträge zum Hochladen.",
+    ),
+  ).toBeVisible();
+
   /** Only the types that are on */
-  await expect(request.getByText("Anzahl: 1", { exact: true })).toBeVisible();
+  await countOlderEntries(form, daysAgo(42), daysAgo(38));
+  await expect(form.getByText("Anzahl: 1", { exact: true })).toBeVisible();
   expect(await uploadedLines(prisma, owner)).toEqual([]);
 
-  await request.getByRole("button", { name: "Hochladen", exact: true }).click();
-  await expect(request).toHaveCount(0);
+  await uploadButton.click();
+  await expect(uploadButton).toHaveCount(0);
   await expectUploadedLines(prisma, owner, [oldLine]);
 
   /** The entry is history (decision 31) */

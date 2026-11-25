@@ -16,6 +16,7 @@ import {
 import {
   closeSharingPopover,
   expectUploadedLines,
+  openOlderEntriesUpload,
   openSharingPopover,
   pickLogFolderInPopover,
   recordRelayConnections,
@@ -191,7 +192,7 @@ test("a citizen who logs in after a different citizen in the same browser gets n
   ]);
 });
 
-test("the sharing popover and the request of the Log Analyzer work with the keyboard", async ({
+test("the sharing popover and the upload of older entries work with the keyboard", async ({
   page,
   prisma,
   signIn,
@@ -266,32 +267,22 @@ test("the sharing popover and the request of the Log Analyzer work with the keyb
   await expect(sharingPopover(page)).toHaveCount(0);
   await expect(trigger).toBeFocused();
 
-  /**
-   * The Log Analyzer opens the popover with a request for older entries. The
-   * focus goes into the request, at the latest with the next Tab, and its
-   * first button is not the upload.
-   */
-  await page
-    .getByRole("button", { name: "Ältere Game Logs hochladen" })
-    .focus();
+  /** The preset counts at once, and the end of the upload moves the focus */
   await page.keyboard.press("Enter");
-  const request = sharingPopover(page).getByRole("region", {
-    name: "Ältere Game Logs hochladen?",
+  await expect(thisBrowser).toBeVisible();
+  const form = await openOlderEntriesUpload(page);
+  await tabTo(page, form.getByRole("button", { name: "Letzte 7 Tage" }));
+  await page.keyboard.press("Enter");
+  const uploadButton = form.getByRole("button", {
+    name: "Hochladen",
+    exact: true,
   });
   /** The type of the entry is on since the last minute, thus the entry counts */
-  await expect(
-    request.getByRole("button", { name: "Hochladen", exact: true }),
-  ).toBeVisible();
-
-  const cancelButton = request.getByRole("button", { name: "Abbrechen" });
-  /** The tabs and their panel come before it */
-  await tabTo(page, cancelButton, 3);
-
-  /** The end of the request moves the focus to the heading of its section */
+  await tabTo(page, uploadButton);
   await page.keyboard.press("Enter");
-  await expect(request).toHaveCount(0);
+  await expect(uploadButton).toHaveCount(0);
   await expect(
-    thisBrowser.getByRole("heading", { name: "Runtime: Browser", exact: true }),
+    form.getByRole("button", { name: "Einträge zählen" }),
   ).toBeFocused();
 
   await page.keyboard.press("Escape");

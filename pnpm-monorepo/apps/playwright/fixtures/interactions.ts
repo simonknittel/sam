@@ -276,6 +276,9 @@ export const pickFromSearch = async (
   );
 };
 
+/** The value of a date input */
+export const toDateValue = (date: Date) => date.toISOString().slice(0, 10);
+
 /** Only one popover is open at a time, thus it needs no scope. */
 export const rolePickerPopover = (page: Page) =>
   page.getByRole("dialog", { name: "Rolle auswählen" });

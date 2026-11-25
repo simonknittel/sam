@@ -2,7 +2,6 @@
 
 import { UiLabel } from "@/modules/common/components/Guide/UiLabel";
 import { useState } from "react";
-import { FaCloudArrowUp } from "react-icons/fa6";
 import { SUPPORTED_BROWSERS_TEXT } from "../../utils/remoteControlProgramTexts";
 import { SharingPopoverCollapsible } from "./SharingPopoverCollapsible";
 import {
@@ -64,9 +63,9 @@ export const LogFileConnectorGuide = () => {
           <p>
             Automatisch hochgeladen werden nur neue Einträge, solange die
             Runtime läuft. Was du ohne laufende Runtime erlebst, bleibt auf
-            deinem Computer. Ältere Einträge kannst du im Log Analyzer mit{" "}
-            <UiLabel icon={FaCloudArrowUp}>Ältere Game Logs hochladen</UiLabel>{" "}
-            nachträglich hochladen.
+            deinem Computer. Ältere Einträge kannst du unter{" "}
+            <UiLabel>Ältere Game Logs hochladen</UiLabel> nachträglich
+            hochladen.
           </p>
         </SharingPopoverTopic>
       </SharingPopoverTopicList>

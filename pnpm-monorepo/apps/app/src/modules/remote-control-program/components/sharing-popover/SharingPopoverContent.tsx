@@ -9,14 +9,13 @@ import {
   TabsProvider,
   useTabsContext,
 } from "@/modules/common/components/tabs/TabsContext";
-import { useEffect, useRef, type RefObject } from "react";
+import { useRef, type RefObject } from "react";
 import { flushSync } from "react-dom";
 import { LogFolderState } from "../../runtime/types";
 import { useBrowserRuntime } from "../../runtime/useBrowserRuntime";
 import { SESSION_EXPIRED_TEXT } from "../../utils/remoteControlProgramTexts";
 import { BrowserSettingsSection } from "./BrowserSettingsSection";
 import { SharedWithOthersSection } from "./SharedWithOthersSection";
-import { useOlderEntriesRequest } from "./SharingPopoverProvider";
 import {
   SHARING_POPOVER_TAB_LABELS,
   SharingPopoverTab,
@@ -71,8 +70,6 @@ export const SharingPopoverContent = ({ isOpenedByControlUi }: Props) => {
 
   return (
     <TabsProvider initialActiveTab={getInitialActiveTab()}>
-      <OlderEntriesRequestTabOpener />
-
       <h2 className="mb-3 font-mono text-lg font-bold uppercase">
         {SHARING_POPOVER_TITLE}
       </h2>
@@ -153,19 +150,6 @@ const StartPanel = ({ tabListRef }: StartPanelProps) => {
   };
 
   return <StartSection onOpenTab={openTab} />;
-};
-
-/** A control UI can make a request while the popover is open */
-const OlderEntriesRequestTabOpener = () => {
-  const { request } = useOlderEntriesRequest();
-  const { setActiveTab } = useTabsContext();
-  const requestKey = request?.key ?? null;
-
-  useEffect(() => {
-    if (requestKey !== null) setActiveTab(SharingPopoverTab.Browser);
-  }, [requestKey, setActiveTab]);
-
-  return null;
 };
 
 interface ServerStateProps {

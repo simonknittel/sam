@@ -17,7 +17,6 @@ import { LOG_ENTRIES_HISTORY_TEXT } from "@/modules/remote-control-program/utils
 import {
   FaBolt,
   FaCalendarDays,
-  FaCloudArrowUp,
   FaEye,
   FaFilter,
   FaLock,
@@ -86,9 +85,8 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
         <p className="ml-4 text-white/80">
           Öffne das{" "}
           <UiLabel icon={FaTowerBroadcast}>Remote Control Program</UiLabel> in
-          der oberen Leiste, auf dem Handy unter <UiLabel>Apps</UiLabel>. Unter{" "}
-          <UiLabel>Runtime: Browser</UiLabel> richtest du die{" "}
-          <UiLabel>Game Logs</UiLabel> ein. Dort findest du auch eine{" "}
+          der oberen Leiste. Unter <UiLabel>Runtime: Browser</UiLabel> richtest
+          du die <UiLabel>Game Logs</UiLabel> ein. Dort findest du auch eine{" "}
           <UiLabel>Anleitung</UiLabel> dazu.
         </p>
       </GuideSection>
@@ -139,17 +137,8 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
               title: "Zeitraum",
               screenshot: dateRangeScreenshot,
               screenshotAlt: "Der Dialog für den Zeitraum mit den Vorlagen",
-              content: (
-                <>
-                  Ohne Zeitraum siehst du die letzten 14 Tage. Wähle einen
-                  Zeitraum, um ältere Logs auszuwerten. Mit{" "}
-                  <UiLabel icon={FaCloudArrowUp}>
-                    Ältere Game Logs hochladen
-                  </UiLabel>{" "}
-                  lädst du die Einträge des Zeitraums hoch, die nicht
-                  automatisch hochgeladen wurden.
-                </>
-              ),
+              content:
+                "Ohne Zeitraum siehst du die letzten 14 Tage. Wähle einen Zeitraum, um ältere Logs auszuwerten.",
             },
             {
               icon: FaWindowRestore,

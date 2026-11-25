@@ -1,6 +1,5 @@
 "use client";
 
-import type { OlderEntriesTimeRange } from "@sam-monorepo/remote-control-program-runtime";
 import {
   createContext,
   useContext,
@@ -8,17 +7,6 @@ import {
   useState,
   type ReactNode,
 } from "react";
-
-/**
- * A request for older entries from a control UI. The tab of this browser
- * counts its entries and uploads them only after the confirmation
- * of the owner.
- */
-export interface OlderEntriesRequestDraft {
-  /** Each request has a new key, also for the same range */
-  readonly key: string;
-  readonly range: OlderEntriesTimeRange;
-}
 
 interface SharingPopoverContext {
   /**
@@ -28,9 +16,6 @@ interface SharingPopoverContext {
   readonly isOpenRequested: boolean;
   readonly requestOpen: () => void;
   readonly settleOpenRequest: () => void;
-  readonly olderEntriesRequest: OlderEntriesRequestDraft | null;
-  readonly openWithOlderEntriesRequest: (range: OlderEntriesTimeRange) => void;
-  readonly endOlderEntriesRequest: () => void;
 }
 
 /** Null when the user cannot use the Remote Control Program */
@@ -48,22 +33,11 @@ interface Props {
  */
 export const SharingPopoverProvider = ({ isEnabled, children }: Props) => {
   const [isOpenRequested, setIsOpenRequested] = useState(false);
-  const [olderEntriesRequest, setOlderEntriesRequest] =
-    useState<OlderEntriesRequestDraft | null>(null);
 
   const value: SharingPopoverContext = {
     isOpenRequested,
-    requestOpen: () => {
-      setOlderEntriesRequest(null);
-      setIsOpenRequested(true);
-    },
+    requestOpen: () => setIsOpenRequested(true),
     settleOpenRequest: () => setIsOpenRequested(false),
-    olderEntriesRequest,
-    openWithOlderEntriesRequest: (range) => {
-      setOlderEntriesRequest({ key: crypto.randomUUID(), range });
-      setIsOpenRequested(true);
-    },
-    endOlderEntriesRequest: () => setOlderEntriesRequest(null),
   };
 
   return (
@@ -81,15 +55,6 @@ export interface SharingPopoverOpener {
    * Log Analyzer asks the owner to select the log folder.
    */
   readonly open: () => void;
-  /**
-   * Opens the sharing popover with a request for the older entries of the
-   * range (`end` is exclusive, null is no limit). The tab of this browser
-   * counts the entries of the types that are on and that the relay
-   * does not have, and uploads them only after the confirmation of the
-   * owner. A new request replaces an open request. Each open or close of the
-   * popover by the user ends the request.
-   */
-  readonly openWithOlderEntriesRequest: (range: OlderEntriesTimeRange) => void;
 }
 
 /**
@@ -102,10 +67,7 @@ export const useSharingPopoverOpener = (): SharingPopoverOpener | null => {
   const context = useContext(SharingPopoverContext);
   if (!context) return null;
 
-  return {
-    open: context.requestOpen,
-    openWithOlderEntriesRequest: context.openWithOlderEntriesRequest,
-  };
+  return { open: context.requestOpen };
 };
 
 const useSharingPopoverContext = () => {
@@ -118,14 +80,6 @@ const useSharingPopoverContext = () => {
   return context;
 };
 
-/** The request for older entries that the popover shows, or null */
-export const useOlderEntriesRequest = () => {
-  const { olderEntriesRequest, endOlderEntriesRequest } =
-    useSharingPopoverContext();
-
-  return { request: olderEntriesRequest, end: endOlderEntriesRequest };
-};
-
 /**
  * The open state of one surface of the sharing popover. While a request of a
  * control UI is pending and the surface can act, the popover opens and the
@@ -134,8 +88,7 @@ export const useOlderEntriesRequest = () => {
  * Only one surface at a time can act, otherwise two popovers open.
  */
 export const useSharingPopoverOpenState = (canActOnRequest: boolean) => {
-  const { isOpenRequested, settleOpenRequest, endOlderEntriesRequest } =
-    useSharingPopoverContext();
+  const { isOpenRequested, settleOpenRequest } = useSharingPopoverContext();
   const [isOpen, setIsOpen] = useState(false);
   /**
    * A control UI opened the popover, not its trigger. Then the focus must
@@ -154,15 +107,10 @@ export const useSharingPopoverOpenState = (canActOnRequest: boolean) => {
     if (isActingOnRequest) settleOpenRequest();
   }, [isActingOnRequest, settleOpenRequest]);
 
-  /**
-   * An open or a close by the user (the trigger, Escape, a click outside)
-   * ends the request for older entries: it belongs to the open by the
-   * control UI
-   */
+  /** An open or a close by the user: the trigger, Escape, a click outside */
   const changeOpenByUser = (nextIsOpen: boolean) => {
     setIsOpen(nextIsOpen);
     setIsOpenedByControlUi(false);
-    endOlderEntriesRequest();
   };
 
   return { isOpen, isOpenedByControlUi, setIsOpen, changeOpenByUser };

@@ -33,7 +33,7 @@ The browser runtime of the Remote Control Program runs on all SAM pages for a us
 - `useEndBrowserRuntimeSession()` gives the function for the logout.
 - Only `selectFolder()` and `restoreFolderPermission()` need a user gesture. Call them directly in the click handler.
 - A failed command rejects with `BrowserRuntimeError` and its `BrowserRuntimeErrorCode`.
-- A control UI does not call `prepareOlderEntriesRequest()` itself: it opens the sharing popover with `useSharingPopoverOpener().openWithOlderEntriesRequest(range)` (`../components/sharing-popover/SharingPopoverProvider.tsx`). The popover shows the counts and uploads the entries only after the confirmation of the owner.
+- Only the settings of the log file connector in the sharing popover call `prepareOlderEntriesRequest()` (`../components/sharing-popover/OlderEntriesUpload.tsx`). They show the count and upload the entries only after the confirmation of the owner.
 
 ## Browser storage
 
