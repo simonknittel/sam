@@ -1,11 +1,6 @@
 "use client";
 
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import {
-  Button2,
-  Button2ColorSchema,
-  Button2Variant,
-} from "@/modules/common/components/Button2";
 import Note from "@/modules/common/components/Note";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import {
@@ -22,6 +17,7 @@ import {
   BROWSER_RUNTIME_ERROR_TEXTS,
   getBrowserRuntimeErrorText,
 } from "./browserRuntimeTexts";
+import { OlderEntriesRequestFooter } from "./OlderEntriesRequestFooter";
 import {
   getRuleTypesThatAreOn,
   PreparedOlderEntriesRequest,
@@ -31,10 +27,11 @@ import {
 import type { OlderEntriesRequestDraft } from "./SharingPopoverProvider";
 
 const formatRange = ({ start, end }: OlderEntriesTimeRange) =>
-  `${start ? formatDate(start) : "Beginn deiner Logs"} bis ${end ? formatDate(end) : "jetzt"}`;
+  `${start ? formatDate(start) : "Anfang deiner Logs"} bis ${end ? formatDate(end) : "jetzt"}`;
 
 const formatUploadText = (count: number) => {
-  if (count === 0) return "Nichts hochgeladen: Die Typen sind nicht mehr an.";
+  if (count === 0)
+    return "Es wurde nichts hochgeladen, weil die Typen nicht mehr ausgewählt sind.";
   if (count === 1) return "1 Eintrag wird hochgeladen.";
   return `${count.toLocaleString("de")} Einträge werden hochgeladen.`;
 };
@@ -47,9 +44,8 @@ interface Props {
 }
 
 /**
- * The request for older entries of a control UI: the counts for each type,
- * what goes up, who can read it, and the confirmation of the owner. Only
- * the types that are on go up (decision 27).
+ * The request for older entries of a control UI: the count and the
+ * confirmation of the owner. Only the types that are on go up (decision 27).
  */
 export const OlderEntriesRequestPanel = ({
   request,
@@ -63,26 +59,11 @@ export const OlderEntriesRequestPanel = ({
       aria-labelledby={headingId}
       className="flex flex-col gap-3 rounded-secondary border border-interaction-500/50 p-3"
     >
-      <div className="flex items-start gap-2">
-        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <h3 id={headingId} className="text-sm font-bold">
-            Ältere Einträge hochladen?
-          </h3>
-          <p className="text-sm text-neutral-400">
-            {formatRange(request.range)}
-          </p>
-        </div>
-
-        {/* The first button of the popover, thus its first focus is not the upload */}
-        <Button2
-          type="button"
-          variant={Button2Variant.Secondary}
-          colorSchema={Button2ColorSchema.InteractionMuted}
-          onClick={onEnd}
-          className="flex-none"
-        >
-          Abbrechen
-        </Button2>
+      <div className="flex flex-col gap-0.5">
+        <h4 id={headingId} className="font-bold">
+          Ältere Einträge hochladen?
+        </h4>
+        <p className="text-sm text-neutral-400">{formatRange(request.range)}</p>
       </div>
 
       <RequestContent request={request} runtime={runtime} onEnd={onEnd} />
@@ -149,42 +130,57 @@ const RequestContent = ({ request, runtime, onEnd }: Props) => {
 
   if (!state.isRunning)
     return (
-      <Note
-        type="info"
-        message="Die Runtime läuft nicht. Starte sie unten, um die Einträge zu zählen."
-      />
+      <>
+        <Note
+          type="info"
+          message="Die Runtime läuft gerade nicht. Starte sie, damit die Einträge gezählt werden können."
+        />
+        <OlderEntriesRequestFooter onCancel={onEnd} />
+      </>
     );
 
   if (!canPrepare)
     return (
-      <Note
-        type="error"
-        message={
-          BROWSER_RUNTIME_ERROR_TEXTS[BrowserRuntimeErrorCode.RelayNotAvailable]
-        }
-      />
+      <>
+        <Note
+          type="error"
+          message={
+            BROWSER_RUNTIME_ERROR_TEXTS[
+              BrowserRuntimeErrorCode.RelayNotAvailable
+            ]
+          }
+        />
+        <OlderEntriesRequestFooter onCancel={onEnd} />
+      </>
     );
 
-  if (query.isFetching) return <LoadingText text="Zähle die Einträge …" />;
+  if (query.isFetching)
+    return (
+      <>
+        <LoadingText text="Einträge werden gezählt …" />
+        <OlderEntriesRequestFooter onCancel={onEnd} />
+      </>
+    );
 
   if (query.isError)
     return (
-      <div className="flex flex-col gap-2">
+      <>
         <Note type="error" message={getBrowserRuntimeErrorText(query.error)} />
         <RecountButton onClick={() => void query.refetch()} />
-      </div>
+        <OlderEntriesRequestFooter onCancel={onEnd} />
+      </>
     );
 
   if (!query.data) return null;
 
   return (
     <PreparedOlderEntriesRequest
-      request={request}
       state={state}
       result={query.data}
       isConfirming={isConfirming}
       confirmErrorText={confirmErrorText}
       onConfirm={() => void confirm(query.data.prepared.id)}
+      onCancel={onEnd}
       onRecount={() => void query.refetch()}
     />
   );

@@ -35,7 +35,7 @@ const StopAll = () => {
     <ConfirmActionButton
       action={stopAll}
       title="Alles stoppen?"
-      description="Alle deine Runtimes hören sofort auf, Daten hochzuladen, auch in anderen Browsern und auf anderen Geräten. Die Einträge aus der Zeit des Stopps bleiben auf deinem Rechner und werden auch nach dem Start nicht automatisch hochgeladen. Deine Freigaben bleiben bestehen: Was du schon hochgeladen hast, bleibt sichtbar."
+      description="Deine Runtimes laden dann nichts mehr hoch, auch nicht in anderen Browsern und auf anderen Geräten. Neue Einträge aus dieser Zeit werden auch später nicht automatisch nachgeholt. Deine Freigaben bleiben bestehen."
       confirmLabel="Alles stoppen"
       trigger={(isPending) => (
         <Button2
@@ -65,7 +65,7 @@ const StartAll = ({ stoppedAt }: StartAllProps) => {
     <div className="flex flex-col gap-2">
       <Note
         type="warning"
-        message={`Alles gestoppt seit ${formatDate(stoppedAt)}. Deine Runtimes laden nichts hoch.`}
+        message={`Seit ${formatDate(stoppedAt)} ist alles gestoppt. Deine Runtimes laden nichts hoch.`}
       />
 
       <form action={formAction}>
@@ -75,8 +75,7 @@ const StartAll = ({ stoppedAt }: StartAllProps) => {
       </form>
 
       <p className="text-xs text-neutral-500">
-        Nach dem Start laden deine Runtimes nur die Einträge hoch, die sie ab
-        dann live lesen.
+        Nach dem Start werden nur neue Einträge hochgeladen.
       </p>
     </div>
   );

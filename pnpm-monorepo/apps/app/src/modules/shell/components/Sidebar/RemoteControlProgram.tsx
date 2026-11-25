@@ -30,6 +30,7 @@ const SharingBottomSheet = () => {
   const isSmallViewport = !useIsLargeViewport();
   const {
     isOpen,
+    isOpenedByControlUi,
     onOpenChange,
     isStopped,
     isWaitingForFolderPermission,
@@ -54,7 +55,7 @@ const SharingBottomSheet = () => {
       open={isOpen}
       onOpenChange={onOpenChange}
     >
-      <LazySharingPopoverContent />
+      <LazySharingPopoverContent isOpenedByControlUi={isOpenedByControlUi} />
     </BottomSheet>
   );
 };

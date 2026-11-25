@@ -4,6 +4,10 @@ import type { OwnRuntime } from "@sam-monorepo/application";
 import { useBrowserRuntime } from "../../runtime/useBrowserRuntime";
 import { RuntimeListItem } from "./RuntimeListItem";
 import { SharingPopoverSection } from "./SharingPopoverSection";
+import {
+  SHARING_POPOVER_TAB_LABELS,
+  SharingPopoverTab,
+} from "./SharingPopoverTab";
 import { StopAllControl } from "./StopAllControl";
 
 interface Props {
@@ -18,7 +22,9 @@ export const StatusSection = ({ runtimes, stoppedAt }: Props) => {
   const ownRuntimeId = useBrowserRuntime()?.state.runtimeId ?? null;
 
   return (
-    <SharingPopoverSection heading="Status">
+    <SharingPopoverSection
+      heading={SHARING_POPOVER_TAB_LABELS[SharingPopoverTab.Status]}
+    >
       {runtimes.length > 0 ? (
         <ul className="flex flex-col gap-2">
           {runtimes.map((runtime) => (
@@ -31,7 +37,7 @@ export const StatusSection = ({ runtimes, stoppedAt }: Props) => {
         </ul>
       ) : (
         <p className="text-sm text-neutral-500">
-          Bisher war keine Runtime verbunden.
+          Bisher war noch keine Runtime verbunden.
         </p>
       )}
 

@@ -53,8 +53,9 @@ export const expectUploadedLines = (
 const SHARING_POPOVER_TITLE = "Remote Control Program";
 
 export enum SharingPopoverSection {
+  Start = "Start",
   Status = "Status",
-  ThisBrowser = "Browser",
+  ThisBrowser = "Runtime: Browser",
   Grants = "Freigaben",
 }
 
@@ -111,10 +112,10 @@ export const closeSharingPopover = async (page: Page) => {
   await expect(sharingPopover(page)).toHaveCount(0);
 };
 
-/** The state of the browser runtime, for example "läuft" or "gestoppt" */
+/** The state of the browser runtime, for example "Läuft" or "Gestoppt" */
 export const runtimeState = (page: Page, state: string) =>
   sharingPopoverSection(page, SharingPopoverSection.ThisBrowser).getByText(
-    `Runtime: ${state}`,
+    state,
     { exact: true },
   );
 
@@ -130,7 +131,7 @@ export const pickLogFolderInPopover = async (page: Page) => {
   await section
     .getByRole("button", { name: "Ordner wählen", exact: true })
     .click();
-  await expect(runtimeState(page, "läuft")).toBeVisible();
+  await expect(runtimeState(page, "Läuft")).toBeVisible();
 };
 
 /** Selects the log folder in the popover. The popover stays open. */
@@ -163,7 +164,7 @@ export const turnOnLogEntryTypes = async (
     SharingPopoverSection.ThisBrowser,
   );
   const listToggle = section.getByRole("button", {
-    name: /^Typen der Log-Einträge/,
+    name: /^Typen auswählen/,
   });
   if ((await listToggle.getAttribute("aria-expanded")) !== "true")
     await listToggle.click();

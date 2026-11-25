@@ -302,16 +302,11 @@ test("older entries go up only on a confirmed request, and each viewer sees them
   const request = sharingPopover(page).getByRole("region", {
     name: "Ältere Einträge hochladen?",
   });
-  /** The count of each type that is on */
-  await expect(request.getByRole("listitem")).toHaveText([
-    new RegExp(`^${BLUEPRINT_TYPE_TITLE}\\s*1$`),
-  ]);
-  await expect(
-    request.getByText("Alle, die den Log Analyzer nutzen dürfen."),
-  ).toBeVisible();
+  /** Only the types that are on */
+  await expect(request.getByText("1 Eintrag", { exact: true })).toBeVisible();
   expect(await uploadedLines(prisma, owner)).toEqual([]);
 
-  await request.getByRole("button", { name: "1 Eintrag hochladen" }).click();
+  await request.getByRole("button", { name: "Hochladen", exact: true }).click();
   await expect(request).toHaveCount(0);
   await expectUploadedLines(prisma, owner, [oldLine]);
 

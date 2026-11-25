@@ -9,13 +9,22 @@ import {
   TabsProvider,
   useTabsContext,
 } from "@/modules/common/components/tabs/TabsContext";
-import { useEffect } from "react";
+import { useEffect, useRef, type RefObject } from "react";
+import { flushSync } from "react-dom";
+import { LogFolderState } from "../../runtime/types";
+import { useBrowserRuntime } from "../../runtime/useBrowserRuntime";
 import { SESSION_EXPIRED_TEXT } from "../../utils/remoteControlProgramTexts";
 import { BrowserSettingsSection } from "./BrowserSettingsSection";
 import { SharedWithOthersSection } from "./SharedWithOthersSection";
 import { useOlderEntriesRequest } from "./SharingPopoverProvider";
+import {
+  SHARING_POPOVER_TAB_LABELS,
+  SharingPopoverTab,
+} from "./SharingPopoverTab";
+import { StartSection } from "./StartSection";
 import { StatusSection } from "./StatusSection";
 import { useSharingPopoverQuery } from "./useSharingPopoverQuery";
+import { SHARING_POPOVER_TITLE } from "./useSharingPopoverTrigger";
 
 type ReadError = NonNullable<
   ReturnType<typeof useSharingPopoverQuery>["error"]
@@ -29,10 +38,9 @@ const getReadErrorText = ({ data, message }: ReadError) => {
   return "Der Status konnte nicht geladen werden.";
 };
 
-enum SharingPopoverTab {
-  ThisBrowser = "this_browser",
-  Status = "status",
-  Grants = "grants",
+interface Props {
+  /** For example the Log Analyzer asks for the log folder */
+  readonly isOpenedByControlUi: boolean;
 }
 
 /**
@@ -40,10 +48,20 @@ enum SharingPopoverTab {
  * of the mobile action bar. The tab of this browser does not wait for the
  * data of the server.
  */
-export const SharingPopoverContent = () => {
+export const SharingPopoverContent = ({ isOpenedByControlUi }: Props) => {
   const query = useSharingPopoverQuery({ isPopoverOpen: true });
   const { data } = query;
-  const { request } = useOlderEntriesRequest();
+  const folderState = useBrowserRuntime()?.state.folder.state;
+  const tabListRef = useRef<HTMLDivElement>(null);
+
+  const getInitialActiveTab = () => {
+    if (isOpenedByControlUi) return SharingPopoverTab.Browser;
+    if (data?.stoppedAt) return SharingPopoverTab.Status;
+    return folderState === LogFolderState.NotSelected ||
+      folderState === LogFolderState.NotSupported
+      ? SharingPopoverTab.Start
+      : SharingPopoverTab.Browser;
+  };
 
   const serverState = (
     <ServerState
@@ -54,27 +72,42 @@ export const SharingPopoverContent = () => {
   );
 
   return (
-    <TabsProvider
-      initialActiveTab={
-        data?.stoppedAt && !request
-          ? SharingPopoverTab.Status
-          : SharingPopoverTab.ThisBrowser
-      }
-    >
+    <TabsProvider initialActiveTab={getInitialActiveTab()}>
       <OlderEntriesRequestTabOpener />
 
-      <TabList>
-        <Tab id={SharingPopoverTab.ThisBrowser}>Browser</Tab>
-        <Tab id={SharingPopoverTab.Status}>Status</Tab>
-        <Tab id={SharingPopoverTab.Grants}>
-          Freigaben
-          {data && data.grants.length > 0 && (
-            <span className="max-sm:hidden">({data.grants.length})</span>
-          )}
-        </Tab>
-      </TabList>
+      <h2 className="mb-3 font-mono text-lg font-bold uppercase">
+        {SHARING_POPOVER_TITLE}
+      </h2>
 
-      <TabPanel id={SharingPopoverTab.ThisBrowser}>
+      {/* On a phone, all tabs must fit into one row */}
+      <div
+        ref={tabListRef}
+        className="max-sm:[&_[role=tab]]:px-1.5 max-sm:[&_[role=tab]]:text-xs"
+      >
+        <TabList>
+          <Tab id={SharingPopoverTab.Start}>
+            {SHARING_POPOVER_TAB_LABELS[SharingPopoverTab.Start]}
+          </Tab>
+          <Tab id={SharingPopoverTab.Browser}>
+            {SHARING_POPOVER_TAB_LABELS[SharingPopoverTab.Browser]}
+          </Tab>
+          <Tab id={SharingPopoverTab.Status}>
+            {SHARING_POPOVER_TAB_LABELS[SharingPopoverTab.Status]}
+          </Tab>
+          <Tab id={SharingPopoverTab.Grants}>
+            {SHARING_POPOVER_TAB_LABELS[SharingPopoverTab.Grants]}
+            {data && data.grants.length > 0 && (
+              <span className="max-sm:hidden">({data.grants.length})</span>
+            )}
+          </Tab>
+        </TabList>
+      </div>
+
+      <TabPanel id={SharingPopoverTab.Start}>
+        <StartPanel tabListRef={tabListRef} />
+      </TabPanel>
+
+      <TabPanel id={SharingPopoverTab.Browser}>
         <BrowserSettingsSection />
       </TabPanel>
 
@@ -102,6 +135,24 @@ export const SharingPopoverContent = () => {
   );
 };
 
+interface StartPanelProps {
+  readonly tabListRef: RefObject<HTMLDivElement | null>;
+}
+
+const StartPanel = ({ tabListRef }: StartPanelProps) => {
+  const { setActiveTab } = useTabsContext();
+
+  /** The link disappears with its panel, thus the focus goes to the new tab */
+  const openTab = (tab: SharingPopoverTab) => {
+    flushSync(() => setActiveTab(tab));
+    tabListRef.current
+      ?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')
+      ?.focus();
+  };
+
+  return <StartSection onOpenTab={openTab} />;
+};
+
 /** A control UI can make a request while the popover is open */
 const OlderEntriesRequestTabOpener = () => {
   const { request } = useOlderEntriesRequest();
@@ -109,7 +160,7 @@ const OlderEntriesRequestTabOpener = () => {
   const requestKey = request?.key ?? null;
 
   useEffect(() => {
-    if (requestKey !== null) setActiveTab(SharingPopoverTab.ThisBrowser);
+    if (requestKey !== null) setActiveTab(SharingPopoverTab.Browser);
   }, [requestKey, setActiveTab]);
 
   return null;

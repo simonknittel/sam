@@ -97,7 +97,7 @@ test("a second tab uses the runtime of the first tab, and continues it when the 
 
   /** The second tab shows the state of the runtime of the first tab */
   await openSharingPopover(secondTab);
-  await expect(runtimeState(secondTab, "läuft")).toBeVisible();
+  await expect(runtimeState(secondTab, "Läuft")).toBeVisible();
   await expect(relayConnectionState(secondTab, "Verbunden")).toBeVisible();
   expect(firstTabConnections.openCount()).toBe(1);
   expect(secondTabConnections.openCount()).toBe(0);
@@ -109,7 +109,7 @@ test("a second tab uses the runtime of the first tab, and continues it when the 
   await page.close();
 
   await expect.poll(secondTabConnections.openCount).toBe(1);
-  await expect(runtimeState(secondTab, "läuft")).toBeVisible();
+  await expect(runtimeState(secondTab, "Läuft")).toBeVisible();
   await expect(relayConnectionState(secondTab, "Verbunden")).toBeVisible();
 
   const lineAfterTheChange = blueprintLine(new Date(), "Nach dem Tabwechsel");
@@ -172,11 +172,11 @@ test("a citizen who logs in after a different citizen in the same browser gets n
   await openSharingPopover(page);
   await expect(
     sharingPopoverSection(page, SharingPopoverSection.ThisBrowser).getByText(
-      "nicht ausgewählt",
+      "Nicht ausgewählt",
       { exact: true },
     ),
   ).toBeVisible();
-  await expect(runtimeState(page, "gestoppt")).toBeVisible();
+  await expect(runtimeState(page, "Gestoppt")).toBeVisible();
 
   /** With the same folder, only the new lines of the second citizen go up */
   await pickLogFolderInPopover(page);
@@ -215,14 +215,28 @@ test("the sharing popover and the request of the Log Analyzer work with the keyb
     SharingPopoverSection.ThisBrowser,
   );
   const grants = sharingPopoverSection(page, SharingPopoverSection.Grants);
+
+  /** Without a log folder, the popover opens with the explanation, whose links open the tabs */
+  const start = sharingPopoverSection(page, SharingPopoverSection.Start);
+  await expect(start).toBeVisible();
+  await tabTo(
+    page,
+    start
+      .getByRole("button", { name: "Runtime: Browser", exact: true })
+      .first(),
+  );
+  await page.keyboard.press("Enter");
   await expect(thisBrowser).toBeVisible();
+  await expect(
+    sharingPopoverTab(page, SharingPopoverSection.ThisBrowser),
+  ).toBeFocused();
 
   await tabTo(
     page,
     thisBrowser.getByRole("button", { name: "Ordner wählen", exact: true }),
   );
   await page.keyboard.press("Enter");
-  await expect(runtimeState(page, "läuft")).toBeVisible();
+  await expect(runtimeState(page, "Läuft")).toBeVisible();
 
   /** Without a type that is on, the list of the types is open */
   const blueprintType = thisBrowser.getByRole("checkbox", {
@@ -264,7 +278,7 @@ test("the sharing popover and the request of the Log Analyzer work with the keyb
   });
   /** The type of the entry is on since the last minute, thus the entry counts */
   await expect(
-    request.getByRole("button", { name: "1 Eintrag hochladen" }),
+    request.getByRole("button", { name: "Hochladen", exact: true }),
   ).toBeVisible();
 
   const cancelButton = request.getByRole("button", { name: "Abbrechen" });
@@ -275,7 +289,7 @@ test("the sharing popover and the request of the Log Analyzer work with the keyb
   await page.keyboard.press("Enter");
   await expect(request).toHaveCount(0);
   await expect(
-    thisBrowser.getByRole("heading", { name: "Browser", exact: true }),
+    thisBrowser.getByRole("heading", { name: "Runtime: Browser", exact: true }),
   ).toBeFocused();
 
   await page.keyboard.press("Escape");
@@ -306,13 +320,11 @@ test.describe("mobile", () => {
     await closeSharingPopover(page);
 
     /** The Log Analyzer asks for the folder in the same sheet */
-    await page
-      .getByRole("button", { name: "Remote Control Program öffnen" })
-      .click();
+    await page.getByRole("button", { name: "Öffnen", exact: true }).click();
     await pickLogFolderInPopover(page);
     await closeSharingPopover(page);
     await expect(
-      page.getByRole("button", { name: "Remote Control Program öffnen" }),
+      page.getByRole("button", { name: "Öffnen", exact: true }),
     ).toHaveCount(0);
   });
 });

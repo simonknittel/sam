@@ -16,8 +16,6 @@ interface Props {
 
 /** A runtime of the owner in the status section */
 export const RuntimeListItem = ({ runtime, isThisBrowser }: Props) => {
-  const versionText = `Version ${runtime.runtimeVersion}`;
-
   return (
     <li
       className={clsx(
@@ -44,13 +42,6 @@ export const RuntimeListItem = ({ runtime, isThisBrowser }: Props) => {
             dieser Browser
           </span>
         )}
-
-        <span
-          className="ml-auto min-w-0 truncate text-neutral-500"
-          title={versionText}
-        >
-          {versionText}
-        </span>
       </div>
 
       <p className="text-neutral-400">
@@ -71,7 +62,7 @@ interface AnnouncementSummaryProps {
   readonly announcement: AnnounceContent | null;
 }
 
-/** The connectors of the runtime and the summary of its local access layer */
+/** The connectors of the runtime */
 const AnnouncementSummary = ({ announcement }: AnnouncementSummaryProps) => {
   if (!announcement)
     return (
@@ -88,28 +79,10 @@ const AnnouncementSummary = ({ announcement }: AnnouncementSummaryProps) => {
       )
       .join(", ") || "Kein Connector verfügbar";
 
-  const { local_access_layer: localAccessLayer } = announcement;
-  const uploadText = localAccessLayer.is_stopped
-    ? "Auf dem Gerät gestoppt"
-    : localAccessLayer.capability_rules
-        .map(
-          (rule) =>
-            `${CAPABILITY_LABELS[rule.capability_id]}: ${getRuleText(rule.is_on, rule.is_filtered)}`,
-        )
-        .join(", ") || "Nichts";
-
   return (
     <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-neutral-400">
       <dt className="text-neutral-500">Connectors</dt>
       <dd>{connectorsText}</dd>
-
-      <dt className="text-neutral-500">Hochladen</dt>
-      <dd>{uploadText}</dd>
     </dl>
   );
-};
-
-const getRuleText = (isOn: boolean, isFiltered: boolean) => {
-  if (!isOn) return "aus";
-  return isFiltered ? "teilweise" : "an";
 };

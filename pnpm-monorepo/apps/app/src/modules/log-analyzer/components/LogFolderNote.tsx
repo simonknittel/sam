@@ -31,21 +31,21 @@ const getFolderNote = ({
     case LogFolderState.NotSupported:
       return {
         type: "warning",
-        text: `${BROWSER_NOT_SUPPORTED_TEXT} Du siehst nur die Einträge, die andere mit dir teilen, und deine Einträge von anderen Rechnern.`,
+        text: `${BROWSER_NOT_SUPPORTED_TEXT} Du siehst hier nur die Einträge anderer und deine Einträge von anderen Rechnern.`,
         canOpenPopover: false,
       };
 
     case LogFolderState.NotSelected:
       return {
         type: "info",
-        text: "Wähle im Remote Control Program den Ordner deiner Star Citizen-Installation aus. Dann zeigt der Log Analyzer auch deine eigenen Einträge.",
+        text: "Wähle im Remote Control Program den Ordner deiner Star-Citizen-Installation aus, damit der Log Analyzer auch deine eigenen Einträge anzeigt.",
         canOpenPopover: true,
       };
 
     case LogFolderState.PermissionNeeded:
       return {
         type: "warning",
-        text: `Der Browser braucht deine Erlaubnis, um ${folder.name ? `den Ordner „${folder.name}“` : "deinen Log-Ordner"} wieder zu lesen. Erlaube den Zugriff im Remote Control Program.`,
+        text: `Der Browser braucht erneut deine Erlaubnis, um ${folder.name ? `den Ordner „${folder.name}“` : "deinen Log-Ordner"} zu lesen. Du kannst sie im Remote Control Program erteilen.`,
         canOpenPopover: true,
       };
 
@@ -54,7 +54,7 @@ const getFolderNote = ({
         ? null
         : {
             type: "info",
-            text: "Die Runtime ist gestoppt und liest deinen Log-Ordner nicht. Starte sie im Remote Control Program.",
+            text: "Die Runtime ist gestoppt, deshalb werden deine Logs gerade nicht gelesen. Du kannst sie im Remote Control Program starten.",
             canOpenPopover: true,
           };
 
@@ -91,7 +91,7 @@ export const LogFolderNote = () => {
               onClick={opener.open}
             >
               <FaTowerBroadcast />
-              Remote Control Program öffnen
+              Öffnen
             </Button2>
           )}
         </div>

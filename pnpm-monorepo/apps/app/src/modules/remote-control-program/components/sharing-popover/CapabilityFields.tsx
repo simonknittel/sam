@@ -1,17 +1,16 @@
 "use client";
 
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
-import Note from "@/modules/common/components/Note";
 import { CapabilityId } from "@sam-monorepo/domain";
 import { useId, useState } from "react";
 import { ShareGrantFormField } from "../../utils/shareGrantFormFields";
-import { CAPABILITY_LABELS, getSensitivityWarning } from "./catalogTexts";
+import { CAPABILITY_LABELS } from "./catalogTexts";
 
 const CAPABILITY_IDS = Object.values(CapabilityId);
 
 /**
  * The capabilities of a new grant. A grant always covers a full capability
- * (decision 10). The capabilities with a high sensitivity show a warning.
+ * (decision 10).
  */
 export const CapabilityFields = () => {
   const [selectedCapabilityIds, setSelectedCapabilityIds] =
@@ -24,11 +23,6 @@ export const CapabilityFields = () => {
         : capabilityIds.filter((selectedId) => selectedId !== capabilityId),
     );
   };
-
-  const warnings = selectedCapabilityIds.flatMap((capabilityId) => {
-    const warning = getSensitivityWarning(capabilityId);
-    return warning ? [{ capabilityId, warning }] : [];
-  });
 
   return (
     <fieldset className="flex flex-col gap-2">
@@ -44,10 +38,6 @@ export const CapabilityFields = () => {
           />
         ))}
       </ul>
-
-      {warnings.map(({ capabilityId, warning }) => (
-        <Note key={capabilityId} type="warning" message={warning} />
-      ))}
     </fieldset>
   );
 };

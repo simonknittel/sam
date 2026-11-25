@@ -36,8 +36,8 @@ export const EntrySettings = ({ className }: Props) => {
         className="w-160"
       >
         <p className="mb-4 text-sm text-white/60">
-          Die Filter ändern nur, was die Tabelle zeigt. Was du teilst, stellst
-          du im Remote Control Program ein.
+          Die Filter wirken sich nur auf die Tabelle aus. Was du teilst, legst
+          du im Remote Control Program fest.
         </p>
 
         <Table columns="1fr 8rem 8rem">

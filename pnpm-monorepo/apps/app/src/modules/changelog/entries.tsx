@@ -73,34 +73,30 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
 
         <ul>
           <li>
-            Dort wählst du den Log-Ordner und den Start beim Öffnen von SAM. Die
-            Runtime liest dein Log auf jeder Seite von SAM, nicht nur im Log
-            Analyzer.
+            Dort wählst du deinen Log-Ordner aus. Deine Logs werden jetzt auf
+            jeder Seite von SAM gelesen, nicht nur im Log Analyzer.
           </li>
           <li>
-            Mit Freigaben entscheidest du, wer deine Einträge live sieht: ein
-            Citizen, eine Rolle oder alle, für 1 Stunde, für 2 Stunden, ohne
-            Ende oder für einen eigenen Zeitraum. Eine Freigabe kannst du
-            jederzeit widerrufen.
+            Mit Freigaben legst du fest, wer deine Einträge live sehen darf: ein
+            Citizen, eine Rolle oder alle. Freigaben können zeitlich begrenzt
+            sein, und du kannst sie jederzeit widerrufen.
           </li>
           <li>
-            Hochgeladene Einträge, die älter als 2 Stunden sind, sehen alle, die
-            den Log Analyzer nutzen dürfen, auch ohne Freigabe. Das gilt auch
-            für die Einträge, die du früher geteilt hast.
+            Einträge, die älter als 2 Stunden sind, können von allen gesehen
+            werden, die in den entsprechenden Apps die Berechtigung dazu haben.
+            Das gilt auch für Einträge, die du früher geteilt hast.
           </li>
           <li>
-            Automatisch hochgeladen werden nur die Zeilen, die die Runtime live
-            liest. Ältere Einträge lädst du nur auf Anfrage und nach einer
-            Bestätigung hoch.
+            Automatisch hochgeladen werden nur neue Einträge. Ältere Einträge
+            kannst du bei Bedarf nachträglich hochladen.
           </li>
-          <li>SAM entfernt die IP-Adressen vor dem Hochladen.</li>
+          <li>IP-Adressen werden vor dem Hochladen entfernt.</li>
         </ul>
 
         <p>
-          Die bisherigen Einstellungen zum Teilen gelten nicht mehr. Bis du
-          Typen einschaltest, lädt dein Browser nichts hoch. Für den Log
-          Analyzer brauchst du zusätzlich die Berechtigung &bdquo;Remote Control
-          Program nutzen&ldquo;.
+          Deine bisherigen Einstellungen zum Teilen gelten nicht mehr. Wähle neu
+          aus, was hochgeladen werden soll. Für den Log Analyzer brauchst du
+          außerdem die Berechtigung &bdquo;Remote Control Program nutzen&ldquo;.
         </p>
       </>
     ),

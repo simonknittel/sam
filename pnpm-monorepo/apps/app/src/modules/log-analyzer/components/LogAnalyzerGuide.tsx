@@ -81,8 +81,8 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
             </GuideHighlight>
 
             <GuideHighlight icon={FaUsers} title="Gemeinsam mit anderen">
-              Zeig anderen deine Einträge live, und sieh, was bei denen
-              passiert, die mit dir teilen. Ältere Einträge sehen alle.
+              Zeig anderen live, was bei dir passiert, und sieh, was bei ihnen
+              los ist.
             </GuideHighlight>
           </>
         }
@@ -103,7 +103,7 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
             Öffne das{" "}
             <UiLabel icon={FaTowerBroadcast}>Remote Control Program</UiLabel> in
             der oberen Leiste, auf dem Handy in der unteren. Wähle unter{" "}
-            <UiLabel>Browser</UiLabel> mit{" "}
+            <UiLabel>Runtime: Browser</UiLabel> mit{" "}
             <UiLabel icon={FaFolderOpen}>Ordner wählen</UiLabel> den Ordner
             deiner Star Citizen-Installation, zum Beispiel{" "}
             {/* A path wraps only after a backslash, not inside a name */}
@@ -126,17 +126,16 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
             icon={FaHourglassHalf}
             title="Auswertung abwarten"
           >
-            Die Runtime liest sofort die Logs der letzten 14 Tage und danach
-            jede neue Zeile. Sie läuft auf jeder Seite von SAM, solange ein Tab
-            offen ist. In der Leiste über der Tabelle siehst du, wie viele
-            Sessions sie liest.
+            Die Runtime liest zuerst die Logs der letzten 14 Tage und danach
+            jede neue Zeile. Sie läuft, solange ein Tab mit SAM geöffnet ist.
+            Über der Tabelle siehst du, wie viele Sessions sie gelesen hat.
           </GuideStep>
 
           <GuideStep number={4} icon={FaRotate} title="Live bleiben">
-            Mit <UiLabel>Beim Öffnen von SAM starten</UiLabel> startet die
-            Runtime beim nächsten Besuch selbst mit dem letzten Ordner. Nach
-            einem Neustart des Browsers fragt er einmal nach dem Zugriff:
-            Erlaube ihn mit <UiLabel>Zugriff erlauben</UiLabel>.
+            Mit <UiLabel>Automatisch starten, wenn du SAM öffnest</UiLabel>{" "}
+            startet die Runtime beim nächsten Besuch von selbst. Nach einem
+            Neustart des Browsers musst du einmal auf{" "}
+            <UiLabel>Zugriff erlauben</UiLabel> klicken.
           </GuideStep>
         </GuideStepList>
       </GuideSection>
@@ -230,42 +229,40 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
 
       <GuideSection
         heading="Was geteilt wird"
-        lead="Du entscheidest im Remote Control Program, was deinen Computer verlässt und wer es sieht."
+        lead="Im Remote Control Program legst du fest, was hochgeladen wird und wer es live sehen darf."
       >
         <GuideNoteList>
           <GuideNote>
-            Es werden nie Log-Dateien hochgeladen. Nur die Einträge der Typen,
-            die du unter <UiLabel>Was dieser Browser hochlädt</UiLabel>{" "}
-            einschaltest, gehen an SAM. Alle Typen sind zuerst aus. IP-Adressen
-            entfernt der Browser vorher aus den Einträgen.
+            Deine Log-Dateien selbst werden nie hochgeladen, sondern nur
+            Einträge der Typen, die du unter <UiLabel>Typen auswählen</UiLabel>{" "}
+            auswählst. Am Anfang ist keiner ausgewählt. IP-Adressen werden vor
+            dem Hochladen entfernt.
           </GuideNote>
 
           <GuideNote>
-            Automatisch geht nur hoch, was die Runtime live liest. Die Zeilen
-            aus einer Zeit, in der kein Tab von SAM offen war oder du alles
-            gestoppt hattest, bleiben auf deinem Computer. Ältere Einträge gehen
-            nur hoch, wenn du sie mit{" "}
+            Automatisch hochgeladen werden nur neue Einträge, solange die
+            Runtime läuft. Was du ohne geöffneten SAM-Tab oder nach &bdquo;Alles
+            stoppen&ldquo; erlebst, bleibt auf deinem Computer. Ältere Einträge
+            kannst du mit{" "}
             <UiLabel icon={FaCloudArrowUp}>Ältere Einträge teilen</UiLabel>{" "}
-            anforderst und bestätigst.
+            nachträglich hochladen.
           </GuideNote>
 
           <GuideNote>
-            Live sehen deine Einträge nur die, denen du unter{" "}
-            <UiLabel>Freigaben</UiLabel> Zugriff gibst: einzelne Citizens, eine
-            Rolle oder alle, auf Wunsch nur für eine bestimmte Zeit. Ebenso
-            siehst du die Einträge anderer nur dann live, wenn sie dir Zugriff
-            geben. Eine Freigabe kannst du jederzeit widerrufen.
+            Wer deine Einträge live sehen darf, legst du unter{" "}
+            <UiLabel>Freigaben</UiLabel> fest: einzelne Citizens, eine Rolle
+            oder alle, auf Wunsch nur für eine bestimmte Zeit. Freigaben kannst
+            du jederzeit widerrufen.
           </GuideNote>
 
           <GuideNote>
-            {LOG_ENTRIES_HISTORY_TEXT} Das gilt auch für Einträge, die du vor
-            dem Remote Control Program geteilt hast. Deine alten Einstellungen
-            zum Teilen gelten nicht mehr.
+            {LOG_ENTRIES_HISTORY_TEXT} Das gilt auch für Einträge, die du schon
+            vor dem Remote Control Program geteilt hast.
           </GuideNote>
 
           <GuideNote variant={GuideNoteVariant.Warning}>
-            Ein hochgeladener Eintrag kann nicht gelöscht werden. Wenn du einen
-            Typ ausschaltest oder alles stoppst, geht nichts Neues mehr hoch.
+            Hochgeladene Einträge können nicht gelöscht werden. Wenn du einen
+            Typ abwählst oder alles stoppst, kommt aber nichts Neues dazu.
           </GuideNote>
         </GuideNoteList>
       </GuideSection>

@@ -111,7 +111,7 @@ test("banning a user revokes their sessions and closes their runtimes, unbanning
       runtimePage,
       SharingPopoverSection.ThisBrowser,
     ).getByText(
-      "Das Relay lehnt diesen Browser ab: Dir fehlt die Berechtigung, oder dein Account ist gesperrt.",
+      "Das Relay hat die Verbindung abgelehnt. Entweder fehlt dir die Berechtigung, oder dein Account ist gesperrt.",
     ),
   ).toBeVisible();
 

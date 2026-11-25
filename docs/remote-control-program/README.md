@@ -147,7 +147,7 @@ Each part of the Remote Control Program obeys these rules.
   - The consent requires `remoteControlProgram;use`, not `mcp;use`.
   - The client id of the desktop companion is a Client ID Metadata Document on an HTTPS URL of SAM.
 - It contains the log file connector next to the gRPC connector. The log file connector supplies `log_entries`, and uploads them only when the local access layer permits it.
-- Its UI controls the local access layer and has the button "Stop all". It asks the questions of "ask each time". It shows no data of the game: the control UIs in SAM show the data.
+- Its UI controls the local access layer. It asks the questions of "ask each time". It shows no data of the game: the control UIs in SAM show the data.
 
 ### Announcement
 
@@ -196,7 +196,7 @@ All parts share one catalog of capabilities: the runtimes, the relay and the con
 | Timing | For a state or a feed: realtime or periodic, and the minimum interval between two updates. |
 | History interval | For a state: the minimum time between two rows of the history (see [History](#history)). |
 | Stale time | For a state: the age after which a consumer shows the value as stale. |
-| Sensitivity | Normal or high (for example the location or the wallet balance). The sharing popover shows a warning for a capability with high sensitivity. |
+| Sensitivity | Normal or high (for example the location or the wallet balance). It is a fact for the choice of the defaults. The sharing popover shows no warning for it. |
 | Risk | For an action: low or high. For an action with high risk, the default rule of the local access layer is "ask each time". |
 | Expiry | For an action: the time after which a runtime does not apply the request (result `expired`). |
 | Game actions | For an action of the gRPC connector: the names of the game actions that it uses. |
@@ -382,10 +382,10 @@ A consumer can request an action of an owner only when the conditions 1 and 2 ar
 - A rule for a state or a feed is "off" or "on". A rule for a feed can have a filter. Example: the log entry types that the owner shares. The filter exists only in the local access layer. A grant always covers a full capability (see [Decisions](#decisions)).
 - A feed entry leaves the machine automatically only when a running runtime reads it live, while the rule is on and the runtime is not stopped. The entries from a time without a running runtime or from a time of "Stop all" stay on the machine. Older entries leave only on an explicit request of the owner with a confirmation (decision 27). The details:
   - The runtime keeps the times in which it read live (the live periods) for 7 days. After a start, it uploads the entries of these periods that the relay does not have yet, for example the entries of a time without a connection to the relay.
-  - When the runtime learns of a "Stop all" (of the runtime, of the owner or of a switch), it removes all stored live periods. A change of the log folder also removes them. After the next start, only the entries that the runtime reads live from then on go up.
+  - When the runtime learns of a "Stop all" (of the owner or of a switch), it removes all stored live periods. A change of the log folder also removes them. After the next start, only the entries that the runtime reads live from then on go up.
   - The values and their reasons are in [livePeriods.ts](../../pnpm-monorepo/packages/remote-control-program-runtime/src/localAccess/livePeriods.ts). The continuation after a change of the tab is in [Browser runtime](#browser-runtime).
 - A rule for an action is "off", "ask each time" or "automatic". The rule also tells which requesters it accepts: only the owner, or also other citizens with a grant.
-- The button "Stop all" stops all uploads of the runtime and refuses all actions at the same time. A second button starts them again. The sharing popover also has a button "Stop all" for all runtimes of the owner (see [Sharing popover](#sharing-popover)).
+- A runtime has no own button "Stop all". The owner stops the runtime, turns off its rules, or uses the button "Stop all" of the sharing popover for all runtimes (see [Sharing popover](#sharing-popover)).
 - The runtime keeps its rules on the machine: in the browser storage, or in a file of the desktop companion. The relay never writes them.
 - "Ask each time" shows the request to the owner. The browser runtime shows it in the sharing popover. The desktop companion shows it in a small window of the program. When the owner gives no answer before the expiry time, the result is `expired`.
 
@@ -418,11 +418,12 @@ The grantee kinds:
 ## Sharing popover
 
 - An item in the top bar (`apps/app/src/modules/shell/components/TopBar/`) and in the action bar for mobile devices. It follows the notifications popover.
-- It has a tab for each of these sections. The tab of this browser is the first one. While the "Stop all" of the owner is active, the popover opens with the status.
-  1. **Status:** the runtimes of the owner that are online and their connectors. A button "Stop all" for all runtimes of the owner: the relay tells each runtime to stop, and refuses their uploads and actions until the owner starts them again.
-  2. **Settings of this browser:** the settings of the browser runtime in this browser: the autostart, the log folder, the local access layer and the button "Stop all" of this browser. A note when the browser runtime needs a click (for example to give the file access again). For the desktop companion: a read-only summary from its announcement, and a note that the owner changes these settings in the desktop companion.
-  3. **Shared with others:** the grants with their remaining time, a form for a new grant, and the open access requests.
-  4. **Action log:** the action requests to the runtimes of the owner, with their results (see [Action log](#action-log)). This includes the requests that the relay refused.
+- It has a tab for each of these sections. Without a log folder, the popover opens with the start. While the "Stop all" of the owner is active, it opens with the status. Else it opens with the browser. When a control UI opens the popover, it always shows the browser.
+  1. **Start:** what the Remote Control Program is, and what the runtimes, the connectors (the available and the planned ones), the grants and the stored data are, from the view of the owner. Links open the other tabs.
+  2. **Runtime: Browser:** the settings of the browser runtime in this browser (its state, the start and the stop, the autostart), and one part for each connector with its rules of the local access layer (for the log file: the log folder and the types). A note when the browser runtime needs a click (for example to give the file access again). For the desktop companion: a read-only summary from its announcement, and a note that the owner changes these settings in the desktop companion.
+  3. **Status:** the runtimes of the owner that are online and their connectors. A button "Stop all" for all runtimes of the owner: the relay tells each runtime to stop, and refuses their uploads and actions until the owner starts them again.
+  4. **Grants:** the grants with their remaining time, a form for a new grant, and the open access requests.
+  5. **Action log:** the action requests to the runtimes of the owner, with their results (see [Action log](#action-log)). This includes the requests that the relay refused.
 - The item of the popover has a mark when the "Stop all" of the owner is active, or when the browser runtime needs a click. Thus the owner sees it also while the popover is closed.
 - A control UI never has its own UI for access. When it needs an access, it opens the sharing popover with a prepared request. Examples:
   - The Log Analyzer asks the owner to select the log folder.
@@ -493,7 +494,7 @@ The MCP server is stateless and has no subscriptions (see [MCP Server](../mcp-se
 | Organization | Admins | The Remote Control Program, a connector, a capability | Unleash flags: one for the Remote Control Program, and one for each connector and each capability, with the name from the catalog. The relay refuses the data and the actions of a disabled part, and tells the runtimes. A permission for the use of the Remote Control Program. |
 | Owner in SAM | Owner | Who can read the live data of a capability, who can request an action | Grants |
 | Consumer | Admins | Who can read the history in this consumer | Permission of the consumer |
-| Owner on the machine | Owner | What leaves the machine, which actions the runtime applies, the button "Stop all" of the runtime | Local access layer |
+| Owner on the machine | Owner | What leaves the machine, which actions the runtime applies | Local access layer |
 | Code | Developers | Which connectors a runtime contains | Each connector is a separate module |
 
 ## Location in the repository
@@ -538,7 +539,7 @@ These ideas have no use case or no reliable source yet. They are not part of the
 
 - The gRPC interface is new in Star Citizen 5.0, only in the PTU, and CIG has not spoken openly about it (see [The gRPC interface of the game client](./grpc-interface.md)). CIG can change it or remove it with each build. Until version 5.0 comes to LIVE, the gRPC connector works only for players in the PTU.
 - When the gRPC server of the game client is on, each local program can trigger each listed game action, also `v_self_destruct` (see [TriggerGameAction](./grpc-interface.md#triggergameaction)). The Remote Control Program cannot prevent this. It must not make it larger: it accepts only actions from the catalog.
-- The history keeps personal data permanently, for example the location, the vitals and the wallet balance. The owner cannot delete it (see [Decisions](#decisions)). After the upload, the owner has no control of it: the grants apply only to the live data (decision 30). Thus the defaults and the sensitivity must tell the owner before the upload, and a permission for the history must be narrow. A request for deletion under data protection law (for example Article 17 of the GDPR) is then a manual task.
+- The history keeps personal data permanently, for example the location, the vitals and the wallet balance. The owner cannot delete it (see [Decisions](#decisions)). After the upload, the owner has no control of it: the grants apply only to the live data (decision 30). Thus the sharing popover must tell the owner before the upload, and a permission for the history must be narrow. A request for deletion under data protection law (for example Article 17 of the GDPR) is then a manual task.
 - The history can become large (see decision 7).
 - The relay service is one more service to operate. While it is not available, no runtime can upload data, and no action can reach a runtime. The runtimes must connect again automatically.
 - The connector ideas (simulated input, screen reading) can conflict with the terms of service of CIG and with the anti-cheat software. Do a check before a plan for one of them.
@@ -588,7 +589,7 @@ Decisions 1 to 26 are of 2026-11-21. Decisions 27 to 29 are of 2026-11-22. Decis
     "Ask each time" uses a small window of the program, not a notification of the operating system. On Windows, these notifications need a registered app identity (AppUserModelID), which an installation normally makes. Add an installer only when a need appears.
 21. **Consumers derive, connectors upload raw values** (principle 15). Derived values are specific to a consumer. Thus the connectors stay small, and the Rust connector needs no second implementation of a derivation. A derivation that more than one consumer needs goes into `domain` as a shared helper.
 22. **No IP addresses leave the machine.** The log file connector replaces each IP address in a raw line with a fixed marker before the upload. The marker keeps the server check of the patterns valid, because no pattern captures an IP address in a named group. The rule for the marker is a part of the shared definitions (decision 5), thus TypeScript and Rust give the same line and the same hash. The relay refuses a line that still contains an IP address.
-23. **"Stop all" instead of an emergency stop.** It is a normal button for comfort: on each machine for its runtime, and in the sharing popover for all runtimes of the owner. A second button starts all again.
+23. **"Stop all" instead of an emergency stop.** It is a normal button for comfort in the sharing popover, for all runtimes of the owner. A second button starts all again. No runtime has an own "Stop all", neither the browser runtime nor the desktop companion (decided on 2026-11-25).
 24. **Permissions.** One permission for the use of the Remote Control Program: `remoteControlProgram;use`. An owner needs it to connect a runtime, and a consumer needs it to read or to request. Each consumer can have its own permission for what it shows (for example `logAnalyzer;read` for the Log Analyzer). The Log Analyzer needs both permissions, also for the own log on the machine.
 25. **No code signing certificate for Windows.** The releases have no certificate for the code signing of Windows, thus Windows shows a warning at the first start. SAM tells the users how to start the program, and what the risks are.
 26. **No location in the lineup status for now.** The gRPC interface supplies no location, and a location from `log_entries` would need a grant for all uploaded log entries (decision 10). See [Ideas](#ideas).

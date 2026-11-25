@@ -190,7 +190,7 @@ test("the flag of the log entries stops their uploads, and the sharing popover t
     page,
     SharingPopoverSection.ThisBrowser,
   ).getByText(
-    "Die Organisation hat abgeschaltet: Log-Einträge. Dieser Browser lädt davon nichts hoch.",
+    "Derzeit zentral abgeschaltet: Log-Einträge. Davon wird nichts hochgeladen.",
   );
 
   /**

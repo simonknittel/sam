@@ -40,7 +40,7 @@ const VALIDITY_ITEMS: ValidityItem[] = [
   {
     value: CustomValidityChoice.Custom,
     label: "Zeitraum",
-    hint: "Ein eigener Start und ein eigenes Ende.",
+    hint: "Start und Ende selbst festlegen.",
   },
 ];
 
@@ -98,14 +98,14 @@ export const ValidityFields = () => {
               value={endsAt}
               onChange={(event) => setEndsAt(event.target.value)}
               min={startsAt || undefined}
-              hint="Leer: ohne Ende."
+              hint="Leer lassen für kein Ende."
             />
           </div>
 
           <p className="text-xs text-white/40">
             Zeitzone: {ORGANIZATION_TIMEZONE}. Liegt der Start in der
-            Vergangenheit, sieht die Freigabe auch deine hochgeladenen Einträge
-            ab diesem Zeitpunkt.
+            Vergangenheit, gilt die Freigabe auch für Einträge, die seitdem
+            hochgeladen wurden.
           </p>
         </>
       )}

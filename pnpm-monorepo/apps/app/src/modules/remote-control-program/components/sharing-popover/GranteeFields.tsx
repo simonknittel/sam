@@ -21,19 +21,19 @@ const GRANTEE_KIND_ITEMS: GranteeKindItem[] = [
     value: GranteeKind.citizen,
     label: "Citizen",
     icon: <FaUser aria-hidden />,
-    hint: "Ein Citizen.",
+    hint: "Nur ein bestimmter Citizen.",
   },
   {
     value: GranteeKind.role,
     label: "Rolle",
     icon: <FaUsers aria-hidden />,
-    hint: "Alle Citizens, die die Rolle beim Zugriff haben.",
+    hint: "Alle Citizens mit dieser Rolle.",
   },
   {
     value: GranteeKind.everyone,
     label: "Alle",
     icon: <FaGlobe aria-hidden />,
-    hint: "Alle Citizens, die das Remote Control Program nutzen dürfen.",
+    hint: "Alle, die das Remote Control Program nutzen dürfen.",
   },
 ];
 

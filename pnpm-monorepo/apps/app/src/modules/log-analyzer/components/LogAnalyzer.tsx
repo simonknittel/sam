@@ -56,9 +56,7 @@ export const LogAnalyzer = ({ className }: Props) => {
         </div>
       ) : (
         <p className="mt-1 rounded-primary border border-dashed border-white/10 p-8 text-center text-sm text-white/60">
-          Noch keine Einträge in diesem Zeitraum. Die Anleitung oben erklärt,
-          wie der Log Analyzer deine Einträge liest und wie andere sie mit dir
-          teilen.
+          Noch keine Einträge in diesem Zeitraum.
         </p>
       )}
     </div>

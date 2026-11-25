@@ -53,7 +53,7 @@ const SharingPopover = () => {
       onOpenChange={onOpenChange}
       moveFocusIntoPopup={isOpenedByControlUi}
     >
-      <LazySharingPopoverContent />
+      <LazySharingPopoverContent isOpenedByControlUi={isOpenedByControlUi} />
     </PopoverBaseUI>
   );
 };

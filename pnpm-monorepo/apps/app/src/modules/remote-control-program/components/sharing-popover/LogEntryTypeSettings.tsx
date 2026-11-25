@@ -47,10 +47,10 @@ export const LogEntryTypeSettings = ({ logEntryTypes, onChange }: Props) => {
         onClick={() => setIsExpanded((isOpen) => !isOpen)}
         className="flex cursor-pointer items-center gap-2 rounded-secondary border border-white/10 px-3 py-2 text-left text-sm hover:bg-white/5 focus-visible:bg-white/5 active:bg-white/10"
       >
-        <span className="flex-1">Typen der Log-Einträge</span>
+        <span className="flex-1">Typen auswählen</span>
 
         <span className="text-neutral-500">
-          {onCount} von {SORTED_ENTRY_TYPES.length} an
+          {onCount} von {SORTED_ENTRY_TYPES.length} ausgewählt
         </span>
 
         {isExpanded ? (

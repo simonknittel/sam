@@ -25,15 +25,15 @@ export const BROWSER_RUNTIME_ERROR_TEXTS: Readonly<
   [BrowserRuntimeErrorCode.NoAnswer]:
     "Der Tab mit der Runtime hat nicht geantwortet. Versuche es erneut.",
   [BrowserRuntimeErrorCode.FolderNotGranted]:
-    "Wähle zuerst den Log-Ordner aus, oder erlaube den Zugriff.",
+    "Wähle zuerst den Log-Ordner aus oder erlaube den Zugriff darauf.",
   [BrowserRuntimeErrorCode.NotRunning]:
-    "Die Runtime läuft nicht. Starte sie, um ältere Einträge hochzuladen.",
+    "Die Runtime läuft gerade nicht. Starte sie, um ältere Einträge hochzuladen.",
   [BrowserRuntimeErrorCode.RelayNotAvailable]:
     "Dieser Browser ist nicht mit dem Relay verbunden und kann nichts hochladen.",
   [BrowserRuntimeErrorCode.RelayCheckFailed]:
-    "SAM konnte nicht prüfen, welche Einträge schon hochgeladen sind. Versuche es erneut.",
+    "Es konnte nicht geprüft werden, welche Einträge schon hochgeladen sind. Versuche es erneut.",
   [BrowserRuntimeErrorCode.RequestExpired]:
-    "Die Zählung ist veraltet. Prüfe die neuen Zahlen und bestätige erneut.",
+    "Die Anzahl hat sich geändert. Prüfe sie und bestätige noch einmal.",
 };
 
 /** The text of a failed command of the browser runtime */
@@ -49,10 +49,10 @@ export const getRelayStatusText = ({
 }: BrowserRuntimeState) => {
   switch (channel.status) {
     case ChannelStatus.Idle:
-      return isRunning ? "Verbinde …" : "Nicht verbunden";
+      return isRunning ? "Wird verbunden …" : "Nicht verbunden";
 
     case ChannelStatus.Connecting:
-      return "Verbinde …";
+      return "Wird verbunden …";
 
     case ChannelStatus.Connected:
       return channel.isStoppedByOwner
@@ -60,7 +60,7 @@ export const getRelayStatusText = ({
         : "Verbunden";
 
     case ChannelStatus.WaitingForReconnect:
-      return "Verbinde gleich neu …";
+      return "Wird gleich neu verbunden …";
 
     // The note of the close reason tells why
     case ChannelStatus.Ended:
@@ -80,22 +80,22 @@ export const CHANNEL_CLOSE_REASON_TEXTS: Readonly<
   Record<ChannelCloseReason, string>
 > = {
   [RelayCloseReason.TokenNotValid]:
-    "Die Anmeldung beim Relay ist abgelaufen. Der Browser verbindet sich neu.",
+    "Die Anmeldung beim Relay ist abgelaufen. Die Verbindung wird neu aufgebaut.",
   [RelayCloseReason.UpdateNecessary]:
-    "SAM hat eine neue Version. Lade die Seite neu, damit dieser Browser wieder hochlädt.",
+    "Es gibt eine neue Version von SAM. Lade die Seite neu, um wieder hochzuladen.",
   [RelayCloseReason.ProtocolVersionTooNew]:
-    "Das Relay kennt diese Version von SAM noch nicht. Versuche es später erneut.",
+    "Das Relay unterstützt diese Version von SAM noch nicht. Versuche es später erneut.",
   [RelayCloseReason.RelayServiceRestart]:
-    "Das Relay startet neu. Der Browser verbindet sich gleich wieder.",
+    "Das Relay startet gerade neu. Die Verbindung wird gleich wieder aufgebaut.",
   [RelayCloseReason.TooManyErrors]:
-    "Das Relay hat die Verbindung nach zu vielen Fehlern getrennt.",
+    "Das Relay hat die Verbindung wegen zu vieler Fehler getrennt.",
   [RelayCloseReason.TooManyRuntimes]:
-    "Zu viele deiner Runtimes sind verbunden. Stoppe eine andere Runtime.",
+    "Es sind zu viele deiner Runtimes verbunden. Stoppe zuerst eine andere.",
   [RelayCloseReason.AccessDenied]: ACCESS_DENIED_TEXT,
   [RelayCloseReason.ProgramTurnedOff]:
-    "Die Organisation hat das Remote Control Program abgeschaltet.",
+    "Das Remote Control Program ist derzeit abgeschaltet.",
   [RelayCloseReason.Replaced]:
-    "Eine neuere Verbindung dieses Browsers hat übernommen.",
+    "Dieser Browser ist inzwischen über einen anderen Tab verbunden.",
   [RelayCloseReason.HeartbeatMissing]: "Die Verbindung war unterbrochen.",
   [ChannelEndReason.NoRelay]: NO_RELAY_TEXT,
   [ChannelEndReason.SessionExpired]: SESSION_EXPIRED_TEXT,

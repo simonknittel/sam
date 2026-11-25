@@ -10,7 +10,7 @@ import {
 } from "react";
 
 /**
- * A request for older entries from a control UI. The section "Browser"
+ * A request for older entries from a control UI. The tab of this browser
  * counts its entries and uploads them only after the confirmation
  * of the owner.
  */
@@ -83,7 +83,7 @@ export interface SharingPopoverOpener {
   readonly open: () => void;
   /**
    * Opens the sharing popover with a request for the older entries of the
-   * range (`end` is exclusive, null is no limit). The section "Browser"
+   * range (`end` is exclusive, null is no limit). The tab of this browser
    * counts the entries of the types that are on and that the relay
    * does not have, and uploads them only after the confirmation of the
    * owner. A new request replaces an open request. Each open or close of the
