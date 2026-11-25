@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
-import { createCitizen } from "../fixtures/factories";
+import { createCitizen, createShareGrant } from "../fixtures/factories";
+import { FORBIDDEN_TEXT } from "../fixtures/interactions";
 import {
   appendLogLines,
   applyDateRange,
@@ -189,6 +190,58 @@ test("a grant shows the new entries of the owner in realtime, and a revocation s
   await granteePage.reload();
   await waitForFeed(granteePage);
   await expect(tableRows(granteePage)).toHaveCount(0);
+});
+
+test("admin mode replaces the permissions of an admin, but not a grant", async ({
+  page,
+  prisma,
+  signIn,
+  enableAdminMode,
+  openSignedInBrowser,
+}) => {
+  test.setTimeout(SHARING_TEST_TIMEOUT);
+
+  const admin = await createCitizen(prisma, {
+    handle: "rcp-admin",
+    admin: true,
+  });
+  const owner = await createCitizen(prisma, {
+    handle: "rcp-eigentuemer",
+    permissionStrings: LOG_ANALYZER_PERMISSIONS,
+  });
+  await signIn(admin.user);
+  await page.goto(LOG_ANALYZER_PAGE_PATH);
+  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible();
+
+  /** The runtime of the admin connects and uploads, also without a role */
+  await enableAdminMode();
+  await startSharing(page, [], [BLUEPRINT_TYPE_TITLE]);
+  const lineOfAdmin = blueprintLine(new Date(), "Vom Admin");
+  await appendLogLines(page, [lineOfAdmin]);
+  await expectUploadedLines(prisma, admin, [lineOfAdmin]);
+  await closeSharingPopover(page);
+
+  const ownerPage = await openSignedInBrowser(owner.user);
+  await startSharing(ownerPage, [], [BLUEPRINT_TYPE_TITLE]);
+  const lineWithoutGrant = blueprintLine(new Date(), "Ohne Freigabe");
+  await appendLogLines(ownerPage, [lineWithoutGrant]);
+  await expectUploadedLines(prisma, owner, [lineWithoutGrant]);
+
+  /** The relay sends the accepted entries at once, thus a wait shows that none comes */
+  await page.waitForTimeout(REALTIME_DELIVERY_GRACE);
+  await expect(rowOf(page, "Vom Admin")).toBeVisible();
+  await expect(rowOf(page, "Ohne Freigabe")).toHaveCount(0);
+
+  await createShareGrant(prisma, {
+    ownerId: owner.entity.id,
+    granteeCitizenId: admin.entity.id,
+    startsAt: new Date(),
+  });
+  await appendLogLines(ownerPage, [blueprintLine(new Date(), "Mit Freigabe")]);
+  await expect(rowOf(page, "Mit Freigabe")).toBeVisible({
+    timeout: LIVE_UPLOAD_TIMEOUT,
+  });
+  await expect(rowOf(page, "Ohne Freigabe")).toHaveCount(0);
 });
 
 test("older entries go up only on a confirmed request, and each viewer sees them without a grant", async ({
