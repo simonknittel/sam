@@ -145,10 +145,9 @@ const countByRuleType = (entries: readonly RawMatch[]) => {
  * The state of the relay for the local access layer. Null: the channel state
  * does not tell it, for example during a reconnect.
  *
- * A part that the switches turned off stops the uploads like the "Stop all"
- * of the owner. Thus an automatic upload after the part is on again does not
- * send the entries of the time in which it was off (decision 27 of the
- * concept).
+ * A part that the switches turned off stops the uploads. An automatic upload
+ * after the part is on again does not send the entries of the time in which
+ * it was off (decision 27 of the concept).
  */
 const getRelayUploadState = (state: ChannelState): RelayUploadState | null => {
   if (isSourceTurnedOff(state, LOG_ENTRIES_SOURCE))
@@ -156,9 +155,7 @@ const getRelayUploadState = (state: ChannelState): RelayUploadState | null => {
 
   switch (state.status) {
     case ChannelStatus.Connected:
-      return state.isStoppedByOwner
-        ? RelayUploadState.Stopped
-        : RelayUploadState.Accepting;
+      return RelayUploadState.Accepting;
 
     // The newer connection of the same runtime continues
     case ChannelStatus.Ended:
@@ -767,7 +764,7 @@ export class BrowserRuntime {
    * The first upload of a run: the entries that were read before it. They
    * can be in the live periods of a previous runtime, thus the relay can
    * already have them. It needs a completed read and the `welcome`: before
-   * the `welcome`, the layer does not know the "Stop all" of the owner.
+   * the `welcome`, the layer does not know the switches.
    */
   async #runFirstUpload() {
     if (

@@ -23,7 +23,7 @@ The browser runtime of the Remote Control Program runs on all SAM pages for a us
 - The tabs of a citizen in one browser request the Web Lock of the citizen (`getBrowserRuntimeChannelName()` in `tabMessages.ts`). The tab that holds it (the leader) runs the runtime.
 - The leader sends its state and the own entries to the other tabs (the followers) through the BroadcastChannel with the same name. The followers send their commands to it (see `TabMessageType`). A command fails with `NoAnswer` when a different tab becomes the leader.
 - When the leader closes (`pagehide`), it ends its live period and writes its run record, and then releases the lock. The next tab gets the lock and continues: it starts when the previous runtime ran a short time before (`TAB_CHANGE_GAP_MILLISECONDS` of the package), else when the autostart is on. It also continues the live period, thus the change of the active tab makes no gap in the upload. A stopped runtime stays stopped.
-- A stop of the owner (`stop()`), a logout, or a lost access to the folder ends the live period without a continuation. Each "Stop all" and a different log folder remove all live periods. Thus the entries of the stopped time stay on the machine (decision 27 of the concept).
+- A stop of the owner (`stop()`), a logout, or a lost access to the folder ends the live period without a continuation. A switch that turned off the capability and a different log folder remove all live periods. Thus the entries of the stopped time stay on the machine (decision 27 of the concept).
 
 ## Hooks
 

@@ -190,7 +190,7 @@ test("the flag of the log entries stops their uploads, and the sharing popover t
     page,
     SharingPopoverSection.ThisBrowser,
   ).getByText(
-    "Derzeit zentral abgeschaltet: Log-Einträge. Davon wird nichts hochgeladen.",
+    "Derzeit zentral abgeschaltet: Game Logs. Davon wird nichts hochgeladen.",
   );
 
   /**

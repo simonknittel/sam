@@ -30,15 +30,14 @@ export const toCitizenKey = (key: string, citizenId: string) =>
 
 /**
  * The settings of the owner in this browser: the rules for each log entry
- * type and the "Stop all" of this browser. Each tab can write it (for example
- * the sharing popover).
+ * type. Each tab can write it (for example the sharing popover).
  */
 const LOCAL_ACCESS_LAYER_STORAGE_KEY =
   "remote_control_program_local_access_layer";
 
 /**
  * The live periods (see `livePeriods.ts`). Only the tab with the running
- * runtime extends them. A "Stop all" in a different tab removes them.
+ * runtime extends them.
  */
 const LIVE_PERIODS_STORAGE_KEY = "remote_control_program_live_periods";
 
@@ -72,7 +71,6 @@ const MAXIMUM_STORED_PERIODS = 1_000;
 
 const storedLocalAccessLayerSchema = z.object({
   version: z.literal(STORAGE_VERSION),
-  /** The time of the "Stop all" of this browser. Null when it is not active. */
   /** The types that are on. A type that is off has no item. */
   log_entry_types: z
     .array(

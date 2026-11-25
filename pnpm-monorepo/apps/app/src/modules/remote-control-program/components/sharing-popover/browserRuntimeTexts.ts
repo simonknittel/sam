@@ -55,9 +55,7 @@ export const getRelayStatusText = ({
       return "Wird verbunden …";
 
     case ChannelStatus.Connected:
-      return channel.isStoppedByOwner
-        ? "Verbunden, alles gestoppt"
-        : "Verbunden";
+      return "Verbunden";
 
     case ChannelStatus.WaitingForReconnect:
       return "Wird gleich neu verbunden …";

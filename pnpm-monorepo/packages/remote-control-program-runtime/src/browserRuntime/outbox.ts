@@ -69,8 +69,8 @@ export class Outbox {
   /**
    * Takes the oldest entries, and gives those that the local access layer
    * permits right before the send: an automatic entry must still go up
-   * automatically, and a confirmed entry needs a type that is on and no
-   * "Stop all"
+   * automatically, and a confirmed entry needs a type that is on and a
+   * capability that no switch turned off
    */
   takeSendableEntries(count: number, layer: LocalAccessLayer) {
     const outboxEntries = this.#entries.splice(0, count);

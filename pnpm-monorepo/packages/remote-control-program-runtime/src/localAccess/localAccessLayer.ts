@@ -67,14 +67,13 @@ export interface StopReadingOptions {
 export enum RelayUploadState {
   /**
    * The runtime did not get the `welcome` of this run yet: no period starts,
-   * because the relay can have a "Stop all" that the runtime does not know
+   * because the relay can have a switch that the runtime does not know
    */
   Unknown = "unknown",
   /** The relay accepts the uploads */
   Accepting = "accepting",
   /**
-   * The "Stop all" of the owner is active, or a switch turned off the
-   * capability. Like the "Stop all" of this browser, it removes all periods.
+   * A switch turned off the capability. It removes all periods.
    */
   Stopped = "stopped",
   /**
@@ -123,10 +122,10 @@ const isInRange = (time: number, range: OlderEntriesTimeRange) =>
  * - its time is in a live period (see `livePeriods.ts`),
  * - the relay told that it accepts the uploads.
  *
- * Each stop from the relay (the "Stop all" of the owner, or a switch that
- * turned off the capability) removes all live periods: after the start, only the
- * lines that a runtime reads live from then on go up automatically. Older
- * entries go up only through a request that the owner confirms
+ * A switch that turned off the capability removes all live periods: when it
+ * is on again, only the lines that a runtime reads live from then on go up
+ * automatically. Older entries go up only through a request that the owner
+ * confirms
  * (`prepareOlderEntriesRequest` and `confirmOlderEntriesRequest`).
  *
  * Each tab can make a layer on the same storage. The values in the storage
@@ -158,7 +157,7 @@ export const createLocalAccessLayer = ({
 
   const isStopped = () => relayState === RelayUploadState.Stopped;
 
-  /** False when a "Stop all" of a different tab removed the own period */
+  /** False when a switch removed the own period */
   const isLastPeriodOpen = (livePeriods: LivePeriods, time: number) => {
     const lastPeriod = livePeriods.periods.at(-1);
 
@@ -350,7 +349,7 @@ export const createLocalAccessLayer = ({
     /**
      * The entries that go up automatically now. Call it for the entries of
      * each read, and again for the waiting entries before each send: a
-     * "Stop all" or a type that turned off stops them.
+     * switch or a type that turned off stops them.
      */
     selectAutomaticUploads: <Entry extends LocalAccessEntry>(
       entries: Iterable<Entry>,
@@ -369,8 +368,8 @@ export const createLocalAccessLayer = ({
 
     /**
      * The entries that can go up now after a confirmation of the owner, or
-     * that wait for their send: their types are on, and no "Stop all" is
-     * active. It does not read the live periods.
+     * that wait for their send: their types are on, and no switch turned off the
+     * capability. It does not read the live periods.
      */
     selectPermittedUploads: <
       Entry extends { readonly type: LogAnalyzerEntryType },

@@ -4,7 +4,6 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useBrowserRuntime } from "../../runtime/useBrowserRuntime";
 import { useSharingPopoverOpenState } from "./SharingPopoverProvider";
-import { useSharingPopoverQuery } from "./useSharingPopoverQuery";
 
 /** The accessible name of the popover and of its triggers */
 export const SHARING_POPOVER_TITLE = "Remote Control Program";
@@ -17,7 +16,6 @@ export const SHARING_POPOVER_TITLE = "Remote Control Program";
  * opens the popover (see `useSharingPopoverOpenState()`)
  */
 export const useSharingPopoverTrigger = (canActOnRequest: boolean) => {
-  const { data } = useSharingPopoverQuery();
   const runtime = useBrowserRuntime();
   const { isOpen, isOpenedByControlUi, setIsOpen, changeOpenByUser } =
     useSharingPopoverOpenState(canActOnRequest);
@@ -34,24 +32,17 @@ export const useSharingPopoverTrigger = (canActOnRequest: boolean) => {
     setIsOpen(false);
   }
 
-  const isStopped = Boolean(data?.stoppedAt);
   /** The owner does not see the runtime, thus the trigger shows the note */
   const isWaitingForFolderPermission =
     runtime?.state.isWaitingForFolderPermission ?? false;
-  const notes = [
-    ...(isStopped ? ["alles gestoppt"] : []),
-    ...(isWaitingForFolderPermission ? ["Ordnerzugriff nötig"] : []),
-  ];
 
   return {
     isOpen,
     isOpenedByControlUi,
     onOpenChange: changeOpenByUser,
-    isStopped,
     isWaitingForFolderPermission,
-    triggerLabel:
-      notes.length > 0
-        ? `${SHARING_POPOVER_TITLE}: ${notes.join(", ")}`
-        : SHARING_POPOVER_TITLE,
+    triggerLabel: isWaitingForFolderPermission
+      ? `${SHARING_POPOVER_TITLE}: Ordnerzugriff nötig`
+      : SHARING_POPOVER_TITLE,
   };
 };

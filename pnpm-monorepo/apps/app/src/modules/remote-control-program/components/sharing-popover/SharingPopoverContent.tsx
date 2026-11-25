@@ -49,14 +49,13 @@ interface Props {
  * data of the server.
  */
 export const SharingPopoverContent = ({ isOpenedByControlUi }: Props) => {
-  const query = useSharingPopoverQuery({ isPopoverOpen: true });
+  const query = useSharingPopoverQuery();
   const { data } = query;
   const folderState = useBrowserRuntime()?.state.folder.state;
   const tabListRef = useRef<HTMLDivElement>(null);
 
   const getInitialActiveTab = () => {
     if (isOpenedByControlUi) return SharingPopoverTab.Browser;
-    if (data?.stoppedAt) return SharingPopoverTab.Status;
     return folderState === LogFolderState.NotSelected ||
       folderState === LogFolderState.NotSupported
       ? SharingPopoverTab.Start
@@ -85,21 +84,27 @@ export const SharingPopoverContent = ({ isOpenedByControlUi }: Props) => {
         className="max-sm:[&_[role=tab]]:px-1.5 max-sm:[&_[role=tab]]:text-xs"
       >
         <TabList>
-          <Tab id={SharingPopoverTab.Start}>
-            {SHARING_POPOVER_TAB_LABELS[SharingPopoverTab.Start]}
-          </Tab>
-          <Tab id={SharingPopoverTab.Browser}>
-            {SHARING_POPOVER_TAB_LABELS[SharingPopoverTab.Browser]}
-          </Tab>
-          <Tab id={SharingPopoverTab.Status}>
-            {SHARING_POPOVER_TAB_LABELS[SharingPopoverTab.Status]}
-          </Tab>
-          <Tab id={SharingPopoverTab.Grants}>
-            {SHARING_POPOVER_TAB_LABELS[SharingPopoverTab.Grants]}
-            {data && data.grants.length > 0 && (
-              <span className="max-sm:hidden">({data.grants.length})</span>
-            )}
-          </Tab>
+          <div className="flex">
+            <Tab id={SharingPopoverTab.Start}>
+              {SHARING_POPOVER_TAB_LABELS[SharingPopoverTab.Start]}
+            </Tab>
+            <Tab id={SharingPopoverTab.Status}>
+              {SHARING_POPOVER_TAB_LABELS[SharingPopoverTab.Status]}
+            </Tab>
+            <Tab id={SharingPopoverTab.Grants}>
+              {SHARING_POPOVER_TAB_LABELS[SharingPopoverTab.Grants]}
+              {data && data.grants.length > 0 && (
+                <span className="max-sm:hidden">({data.grants.length})</span>
+              )}
+            </Tab>
+          </div>
+
+          {/* One tab for each runtime whose settings are in SAM */}
+          <div className="ml-2 flex border-l border-white/20 pl-2 sm:ml-4 sm:pl-4">
+            <Tab id={SharingPopoverTab.Browser}>
+              {SHARING_POPOVER_TAB_LABELS[SharingPopoverTab.Browser]}
+            </Tab>
+          </div>
         </TabList>
       </div>
 
@@ -107,16 +112,10 @@ export const SharingPopoverContent = ({ isOpenedByControlUi }: Props) => {
         <StartPanel tabListRef={tabListRef} />
       </TabPanel>
 
-      <TabPanel id={SharingPopoverTab.Browser}>
-        <BrowserSettingsSection />
-      </TabPanel>
-
       <TabPanel id={SharingPopoverTab.Status}>
         {serverState}
 
-        {data && (
-          <StatusSection runtimes={data.runtimes} stoppedAt={data.stoppedAt} />
-        )}
+        {data && <StatusSection runtimes={data.runtimes} />}
       </TabPanel>
 
       <TabPanel id={SharingPopoverTab.Grants}>
@@ -130,6 +129,10 @@ export const SharingPopoverContent = ({ isOpenedByControlUi }: Props) => {
             canChooseRole={data.canChooseRole}
           />
         )}
+      </TabPanel>
+
+      <TabPanel id={SharingPopoverTab.Browser}>
+        <BrowserSettingsSection />
       </TabPanel>
     </TabsProvider>
   );

@@ -1,6 +1,5 @@
 import type { Page } from "@playwright/test";
 import { createCitizen } from "../fixtures/factories";
-import { clickUntilVisible } from "../fixtures/interactions";
 import {
   appendLogLines,
   applyDateRange,
@@ -24,9 +23,6 @@ import {
   relayConnectionState,
   revokeShareGrantInPopover,
   sharingPopover,
-  SharingPopoverSection,
-  sharingPopoverTrigger,
-  showSharingPopoverSection,
   startBrowserRuntime,
   turnOnLogEntryTypes,
   uploadedLines,
@@ -36,7 +32,7 @@ import { expect, test } from "../fixtures/test";
 /**
  * The end-to-end paths of the Remote Control Program with the Log Analyzer
  * as the control UI: the rule for the upload, the grants, the realtime
- * delivery, the "Stop all" and the request for older entries (see
+ * delivery and the request for older entries (see
  * docs/remote-control-program/README.md). The browser runtime reads the
  * folder of `stubDirectoryPicker()` every 10 seconds, thus each new line
  * takes some seconds.
@@ -195,71 +191,6 @@ test("a grant shows the new entries of the owner in realtime, and a revocation s
   await expect(tableRows(granteePage)).toHaveCount(0);
 });
 
-test("after a stop of all runtimes, the lines of the stopped time stay on the machine", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  test.setTimeout(SHARING_TEST_TIMEOUT);
-
-  const owner = await createCitizen(prisma, {
-    handle: "rcp-stopper",
-    permissionStrings: LOG_ANALYZER_PERMISSIONS,
-  });
-  await signIn(owner.user);
-  await startSharing(page, [], [BLUEPRINT_TYPE_TITLE]);
-
-  const lineBeforeStop = blueprintLine(new Date(), "Vor dem Stopp");
-  await appendLogLines(page, [lineBeforeStop]);
-  await expectUploadedLines(prisma, owner, [lineBeforeStop]);
-
-  const status = await showSharingPopoverSection(
-    page,
-    SharingPopoverSection.Status,
-  );
-  await status.getByRole("button", { name: "Alles stoppen" }).click();
-  const confirmation = page.getByRole("alertdialog", {
-    name: "Alles stoppen?",
-  });
-  await confirmation.getByRole("button", { name: "Alles stoppen" }).click();
-
-  await expect(
-    status.getByRole("button", { name: "Alles starten" }),
-  ).toBeVisible();
-  /** The relay tells the runtime, and the trigger tells the stop */
-  await showSharingPopoverSection(page, SharingPopoverSection.ThisBrowser);
-  await expect(
-    relayConnectionState(page, "Verbunden, alles gestoppt"),
-  ).toBeVisible();
-  await expect(sharingPopoverTrigger(page)).toHaveAccessibleName(
-    "Remote Control Program: alles gestoppt",
-  );
-  await closeSharingPopover(page);
-
-  /** The runtime reads on: the line shows on the machine */
-  await appendLogLines(page, [blueprintLine(new Date(), "Im Stopp")]);
-  await expect(rowOf(page, "Im Stopp")).toBeVisible({
-    timeout: LIVE_UPLOAD_TIMEOUT,
-  });
-
-  /** While all is stopped, the popover opens with the status */
-  await clickUntilVisible(
-    sharingPopoverTrigger(page),
-    status.getByRole("button", { name: "Alles starten" }),
-  );
-  await status.getByRole("button", { name: "Alles starten" }).click();
-  await showSharingPopoverSection(page, SharingPopoverSection.ThisBrowser);
-  await expect(relayConnectionState(page, "Verbunden")).toBeVisible();
-  await expect(sharingPopoverTrigger(page)).toHaveAccessibleName(
-    "Remote Control Program",
-  );
-
-  /** Only the new lines after the start go up */
-  const lineAfterStart = blueprintLine(new Date(), "Nach dem Start");
-  await appendLogLines(page, [lineAfterStart]);
-  await expectUploadedLines(prisma, owner, [lineBeforeStop, lineAfterStart]);
-});
-
 test("older entries go up only on a confirmed request, and each viewer sees them without a grant", async ({
   page,
   prisma,
@@ -300,10 +231,10 @@ test("older entries go up only on a confirmed request, and each viewer sees them
 
   await page.getByRole("button", { name: "Ältere Einträge teilen" }).click();
   const request = sharingPopover(page).getByRole("region", {
-    name: "Ältere Einträge hochladen?",
+    name: "Ältere Game Logs hochladen?",
   });
   /** Only the types that are on */
-  await expect(request.getByText("1 Eintrag", { exact: true })).toBeVisible();
+  await expect(request.getByText("Anzahl: 1", { exact: true })).toBeVisible();
   expect(await uploadedLines(prisma, owner)).toEqual([]);
 
   await request.getByRole("button", { name: "Hochladen", exact: true }).click();

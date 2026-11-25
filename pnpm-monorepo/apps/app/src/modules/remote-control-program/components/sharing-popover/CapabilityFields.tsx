@@ -26,7 +26,7 @@ export const CapabilityFields = () => {
 
   return (
     <fieldset className="flex flex-col gap-2">
-      <legend className="mb-1">Was teilst du?</legend>
+      <legend className="mb-1">Welche Daten möchtest du teilen?</legend>
 
       <ul className="flex flex-col gap-1">
         {CAPABILITY_IDS.map((capabilityId) => (

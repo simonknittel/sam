@@ -28,7 +28,6 @@ const SharingPopover = () => {
     isOpen,
     isOpenedByControlUi,
     onOpenChange,
-    isStopped,
     isWaitingForFolderPermission,
     triggerLabel,
   } = useSharingPopoverTrigger(isLargeViewport);
@@ -38,7 +37,6 @@ const SharingPopover = () => {
       title={SHARING_POPOVER_TITLE}
       trigger={
         <SharingPopoverIcon
-          isStopped={isStopped}
           isWaitingForFolderPermission={isWaitingForFolderPermission}
         />
       }

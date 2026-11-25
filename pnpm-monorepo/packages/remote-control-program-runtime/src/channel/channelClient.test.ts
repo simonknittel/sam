@@ -1,5 +1,4 @@
 import {
-  AcknowledgementErrorCode,
   CONNECTOR_CATALOG,
   CapabilityId,
   ConnectorId,
@@ -117,9 +116,7 @@ const setUp = (options: Partial<ChannelClientOptions> = {}) => {
 
   /** Answers the handshake and the announcement like the relay */
   const welcome = (socket: FakeWebSocket) => {
-    socket.receive(
-      createDownMessage(DownMessageType.Welcome, { is_stopped: false }),
-    );
+    socket.receive(createDownMessage(DownMessageType.Welcome, {}));
     const announcement = socket.getSent(UpMessageType.Announce).at(-1);
     if (announcement === undefined) throw new Error("No announce");
     socket.acknowledge(announcement);
@@ -170,14 +167,11 @@ test("sends the token in the hello, and the announcement after the welcome", asy
     }),
   ]);
 
-  socket.receive(
-    createDownMessage(DownMessageType.Welcome, { is_stopped: false }),
-  );
+  socket.receive(createDownMessage(DownMessageType.Welcome, {}));
 
   expect(client.getState()).toMatchObject({
     status: ChannelStatus.Connected,
     closeReason: null,
-    isStoppedByOwner: false,
   });
   expect(socket.sentMessages[1]).toMatchObject({
     type: UpMessageType.Announce,
@@ -420,41 +414,6 @@ test("removes the entries of a part that the switches turn off", async () => {
 
   const lastBatch = socket.getSent(UpMessageType.FeedEntries).at(-1);
   expect(lastBatch && getLineNumbers(lastBatch)[0]).toBe(611);
-});
-
-test("stop of the owner removes the waiting entries until the start", async () => {
-  const { client, droppedEntries, connect } = setUp();
-
-  const socket = await connect();
-  client.sendFeedEntries(createLogEntries(500));
-  const sentBatches = socket.getSent(UpMessageType.FeedEntries);
-  expect(sentBatches).toHaveLength(4);
-
-  socket.receive(createDownMessage(DownMessageType.Stop, {}));
-  expect(client.getState().isStoppedByOwner).toBe(true);
-
-  // The relay refuses a batch that it received after the stop
-  const lastSentBatch = sentBatches.at(-1);
-  if (lastSentBatch === undefined) throw new Error("No batch");
-  socket.refuse(lastSentBatch, AcknowledgementErrorCode.Stopped);
-  client.sendFeedEntries(createLogEntries(10, 501));
-
-  expect(droppedEntries).toEqual(
-    [100, 100, 10].map((entryCount) => ({
-      capabilityId: CapabilityId.LogEntries,
-      entryCount,
-      reason: ChannelDropReason.StoppedByOwner,
-    })),
-  );
-  expect(client.getState().queuedEntryCount).toBe(300);
-
-  socket.receive(createDownMessage(DownMessageType.Start, {}));
-  await vi.advanceTimersByTimeAsync(1_000);
-  client.sendFeedEntries(createLogEntries(10, 511));
-
-  expect(client.getState().isStoppedByOwner).toBe(false);
-  const lastBatch = socket.getSent(UpMessageType.FeedEntries).at(-1);
-  expect(lastBatch && getLineNumbers(lastBatch)[0]).toBe(511);
 });
 
 test("sends only the entries that the local access layer permits at the send, also at a resend", async () => {

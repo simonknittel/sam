@@ -37,7 +37,7 @@ const GRANTEE_KIND_ITEMS: GranteeKindItem[] = [
   },
 ];
 
-const GRANTEE_KIND_LABEL = "Mit wem teilst du?";
+const GRANTEE_KIND_LABEL = "Mit wem möchtest du deine Live-Daten teilen?";
 
 interface Props {
   /** The citizen picker reads all citizens, which needs `citizen;read` */

@@ -166,7 +166,7 @@ const RelayNotes = ({ state }: StateProps) => {
       {state.isRunning && turnedOffLabels.length > 0 && (
         <Note
           type="warning"
-          message={`Derzeit zentral abgeschaltet: ${turnedOffLabels.join(", ")}. Davon wird nichts hochgeladen.`}
+          message={`Derzeit zentral abgeschaltet: ${[...new Set(turnedOffLabels)].join(", ")}. Davon wird nichts hochgeladen.`}
         />
       )}
 

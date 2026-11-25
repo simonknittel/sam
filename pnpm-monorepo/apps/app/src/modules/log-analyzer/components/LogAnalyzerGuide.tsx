@@ -241,9 +241,8 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
 
           <GuideNote>
             Automatisch hochgeladen werden nur neue Einträge, solange die
-            Runtime läuft. Was du ohne geöffneten SAM-Tab oder nach &bdquo;Alles
-            stoppen&ldquo; erlebst, bleibt auf deinem Computer. Ältere Einträge
-            kannst du mit{" "}
+            Runtime läuft. Was du ohne laufende Runtime erlebst, bleibt auf
+            deinem Computer. Ältere Einträge kannst du mit{" "}
             <UiLabel icon={FaCloudArrowUp}>Ältere Einträge teilen</UiLabel>{" "}
             nachträglich hochladen.
           </GuideNote>
@@ -262,7 +261,7 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
 
           <GuideNote variant={GuideNoteVariant.Warning}>
             Hochgeladene Einträge können nicht gelöscht werden. Wenn du einen
-            Typ abwählst oder alles stoppst, kommt aber nichts Neues dazu.
+            Typ abwählst oder die Runtime stoppst, kommt aber nichts Neues dazu.
           </GuideNote>
         </GuideNoteList>
       </GuideSection>

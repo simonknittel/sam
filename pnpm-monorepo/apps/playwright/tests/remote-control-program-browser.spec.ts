@@ -248,12 +248,11 @@ test("the sharing popover and the request of the Log Analyzer work with the keyb
   await expect(blueprintType).toBeChecked();
 
   /** The arrow keys move between the tabs */
-  await sharingPopoverTab(page, SharingPopoverSection.ThisBrowser).focus();
+  await sharingPopoverTab(page, SharingPopoverSection.Start).focus();
   await page.keyboard.press("ArrowRight");
   await page.keyboard.press("Enter");
-  await tabTo(page, status.getByRole("button", { name: "Alles stoppen" }));
+  await expect(status.getByText("dieser Browser")).toBeVisible();
 
-  await sharingPopoverTab(page, SharingPopoverSection.Status).focus();
   await page.keyboard.press("ArrowRight");
   await page.keyboard.press("Enter");
   await tabTo(page, grants.getByRole("button", { name: "Neue Freigabe" }));
@@ -274,7 +273,7 @@ test("the sharing popover and the request of the Log Analyzer work with the keyb
   await page.getByRole("button", { name: "Ältere Einträge teilen" }).focus();
   await page.keyboard.press("Enter");
   const request = sharingPopover(page).getByRole("region", {
-    name: "Ältere Einträge hochladen?",
+    name: "Ältere Game Logs hochladen?",
   });
   /** The type of the entry is on since the last minute, thus the entry counts */
   await expect(

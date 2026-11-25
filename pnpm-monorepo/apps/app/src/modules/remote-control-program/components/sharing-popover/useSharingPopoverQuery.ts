@@ -8,24 +8,17 @@ import { useIsRemoteControlProgramAvailable } from "../../runtime/useBrowserRunt
  * The presence and the announcements of the runtimes change while the
  * popover is open, also through the settings of this browser
  */
-const OPEN_POPOVER_READ_INTERVAL_MILLISECONDS = 5_000;
-
-interface Options {
-  readonly isPopoverOpen?: boolean;
-}
+const READ_INTERVAL_MILLISECONDS = 5_000;
 
 /**
- * The items of the shell read the data for the mark of the "Stop all". The
- * content of the popover mounts at each open, and the data is stale at once,
- * thus each open fetches it again. The actions of the popover refresh no page
- * (see `useSharingPopoverAction()`).
+ * Only the content of the open popover reads the data. It mounts at each
+ * open, and the data is stale at once, thus each open fetches it again. The
+ * actions of the popover refresh no page (see `useSharingPopoverAction()`).
  */
-export const useSharingPopoverQuery = ({
-  isPopoverOpen = false,
-}: Options = {}) =>
+export const useSharingPopoverQuery = () =>
   api.remoteControlProgram.getSharingPopover.useQuery(undefined, {
     enabled: useIsRemoteControlProgramAvailable(),
-    refetchInterval: isPopoverOpen && OPEN_POPOVER_READ_INTERVAL_MILLISECONDS,
+    refetchInterval: READ_INTERVAL_MILLISECONDS,
     // The popover shows the error at once, with a button to try again
     retry: false,
   });

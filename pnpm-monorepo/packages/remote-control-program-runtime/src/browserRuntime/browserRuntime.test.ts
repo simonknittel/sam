@@ -131,14 +131,12 @@ const createBrowser = () => {
     });
 
     /** Answers the handshake of the last connection like the relay */
-    const handshake = async (isStopped = false) => {
+    const handshake = async () => {
       const socket = sockets.at(-1);
       if (!socket) throw new Error("No socket");
 
       socket.handlers.onOpen();
-      socket.receive(
-        createDownMessage(DownMessageType.Welcome, { is_stopped: isStopped }),
-      );
+      socket.receive(createDownMessage(DownMessageType.Welcome, {}));
       const announcement = socket.getSent(UpMessageType.Announce).at(-1);
       if (!announcement) throw new Error("No announce");
       socket.acknowledge(announcement);
@@ -348,31 +346,6 @@ test("a request for older entries leaves out the entries that go up automaticall
   expect(() => tab.runtime.confirmOlderEntriesRequest(request.id)).toThrow(
     new BrowserRuntimeError(BrowserRuntimeErrorCode.RequestExpired),
   );
-});
-
-test("a Stop all of the owner that the runtime learns at a reconnect keeps the lines of the disconnect on the machine, also after the start and a change of the active tab", async () => {
-  const browser = createBrowser();
-  browser.turnOnLines();
-
-  const tab = browser.openTab();
-  const firstSocket = await tab.start();
-  firstSocket.handlers.onClose(1006);
-  await vi.advanceTimersByTimeAsync(5 * SECOND);
-  // The line of the disconnect
-  browser.folder.write(Date.now());
-  await vi.advanceTimersByTimeAsync(10 * SECOND);
-
-  // The owner stopped all during the disconnect, and starts again later
-  const secondSocket = await tab.handshake(true);
-  secondSocket.receive(createDownMessage(DownMessageType.Start, {}));
-  await vi.advanceTimersByTimeAsync(10 * SECOND);
-
-  tab.runtime.handOver();
-  const nextTab = browser.openTab();
-  await nextTab.start();
-  await vi.advanceTimersByTimeAsync(10 * SECOND);
-
-  expect([...tab.getSentRawLines(), ...nextTab.getSentRawLines()]).toEqual([]);
 });
 
 test("after a change of the log folder, no line of the new folder goes up from the live periods of the previous folder", async () => {

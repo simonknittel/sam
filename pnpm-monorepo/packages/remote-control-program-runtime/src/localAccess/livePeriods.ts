@@ -1,11 +1,11 @@
 /**
  * The live periods of the rule for the upload (decision 27 of
  * `docs/remote-control-program/README.md`): the times in which a running
- * runtime of this browser read the log live and no "Stop all" was active. A
+ * runtime of this browser read the log live and no switch was active. A
  * log entry goes up automatically only when its time is in a live period and
  * its type was on at that time. The types are not a part of the periods:
- * `turnedOnAt` of each rule limits the periods for its type. Each "Stop all"
- * (of this browser, of the owner, or a switch) removes all periods.
+ * `turnedOnAt` of each rule limits the periods for its type. A switch that
+ * turned off the capability removes all periods.
  *
  * The times are milliseconds since the epoch.
  */
@@ -53,7 +53,7 @@ export const LIVE_PERIOD_RETENTION_MILLISECONDS = 7 * 24 * 60 * 60 * 1_000;
 
 /**
  * Only a start without a continuation, a stop of the reading and the end of
- * a "Stop all" start a new period. 100 periods are approximately 14 periods
+ * a switch start a new period. 100 periods are approximately 14 periods
  * each day during the retention time, and approximately 8 KB in the storage,
  * which the runtime writes at each heartbeat. Above the limit, the oldest
  * periods go: their entries then go up only on an explicit request.
@@ -63,7 +63,7 @@ export const MAXIMUM_LIVE_PERIODS = 100;
 export interface LivePeriod {
   readonly startedAt: number;
   /**
-   * The end of the reading, the "Stop all", or the last heartbeat of an open
+   * The end of the reading, the switch, or the last heartbeat of an open
    * period
    */
   readonly endedAt: number;

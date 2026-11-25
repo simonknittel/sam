@@ -1,12 +1,6 @@
-import { formatDate } from "@/modules/common/utils/formatDate";
 import type { OwnRuntime } from "@sam-monorepo/application";
 import type { AnnounceContent } from "@sam-monorepo/domain";
-import clsx from "clsx";
-import {
-  CAPABILITY_LABELS,
-  CONNECTOR_LABELS,
-  RUNTIME_KIND_LABELS,
-} from "./catalogTexts";
+import { CONNECTOR_LABELS, RUNTIME_KIND_LABELS } from "./catalogTexts";
 
 interface Props {
   readonly runtime: OwnRuntime;
@@ -14,28 +8,17 @@ interface Props {
   readonly isThisBrowser: boolean;
 }
 
-/** A runtime of the owner in the status section */
+/** A connected runtime of the owner in the status section */
 export const RuntimeListItem = ({ runtime, isThisBrowser }: Props) => {
   return (
-    <li
-      className={clsx(
-        "flex flex-col gap-1 rounded-secondary border border-white/10 p-3 text-sm",
-        { "text-neutral-500": !runtime.isOnline },
-      )}
-    >
+    <li className="flex flex-col gap-1 rounded-secondary border border-white/10 p-3 text-sm">
       <div className="flex items-center gap-2">
         <span
           aria-hidden
-          className={clsx("size-2 flex-none rounded-full", {
-            "bg-green-500": runtime.isOnline,
-            "bg-neutral-600": !runtime.isOnline,
-          })}
+          className="size-2 flex-none rounded-full bg-green-500"
         />
 
-        <span className="font-bold">
-          {RUNTIME_KIND_LABELS[runtime.kind]}
-          {runtime.isOnline ? " (online)" : " (offline)"}
-        </span>
+        <span className="font-bold">{RUNTIME_KIND_LABELS[runtime.kind]}</span>
 
         {isThisBrowser && (
           <span className="flex-none rounded-secondary bg-white/10 px-1.5 text-xs text-neutral-300">
@@ -44,45 +27,32 @@ export const RuntimeListItem = ({ runtime, isThisBrowser }: Props) => {
         )}
       </div>
 
-      <p className="text-neutral-400">
-        {runtime.isOnline
-          ? `Verbunden seit ${formatDate(runtime.connectedAt)}`
-          : `Letzte Verbindung am ${formatDate(runtime.connectedAt)}`}
-      </p>
-
-      {/* The announcement of an offline runtime can be old */}
-      {runtime.isOnline && (
-        <AnnouncementSummary announcement={runtime.announcement} />
-      )}
+      <dl className="grid grid-cols-[auto_1fr] gap-x-3 text-neutral-400">
+        <dt className="text-neutral-500">Aktive Connectors</dt>
+        <dd>{getActiveConnectorsText(runtime.announcement)}</dd>
+      </dl>
     </li>
   );
 };
 
-interface AnnouncementSummaryProps {
-  readonly announcement: AnnounceContent | null;
-}
+/** A connector is active when at least one of its capabilities leaves the machine */
+const getActiveConnectorsText = (announcement: AnnounceContent | null) => {
+  if (!announcement) return "Wird geladen …";
 
-/** The connectors of the runtime */
-const AnnouncementSummary = ({ announcement }: AnnouncementSummaryProps) => {
-  if (!announcement)
-    return (
-      <p className="text-neutral-500">
-        Die Runtime hat noch keine Connectors gemeldet.
-      </p>
-    );
-
-  const connectorsText =
-    announcement.connectors
-      .map(
-        (connector) =>
-          `${CONNECTOR_LABELS[connector.id]} (${connector.capabilities.map((capability) => CAPABILITY_LABELS[capability.id]).join(", ")})`,
-      )
-      .join(", ") || "Kein Connector verfügbar";
+  const activeCapabilityIds = new Set(
+    announcement.local_access_layer.capability_rules
+      .filter((rule) => rule.is_on)
+      .map((rule) => rule.capability_id),
+  );
 
   return (
-    <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-neutral-400">
-      <dt className="text-neutral-500">Connectors</dt>
-      <dd>{connectorsText}</dd>
-    </dl>
+    announcement.connectors
+      .filter((connector) =>
+        connector.capabilities.some((capability) =>
+          activeCapabilityIds.has(capability.id),
+        ),
+      )
+      .map((connector) => CONNECTOR_LABELS[connector.id])
+      .join(", ") || "Keine"
   );
 };

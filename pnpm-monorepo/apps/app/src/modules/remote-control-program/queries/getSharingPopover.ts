@@ -15,8 +15,6 @@ import {
 export interface SharingPopover {
   /** The most recent connections first */
   readonly runtimes: OwnRuntime[];
-  /** The start of the "Stop all" of the owner. Null: the runtimes can upload. */
-  readonly stoppedAt: Date | null;
   /** The active grants, also the grants that start in the future. The newest first. */
   readonly grants: OwnShareGrant[];
   /** `createShareGrant()` refuses a new grant at this count of active grants */
@@ -37,14 +35,13 @@ export const getSharingPopover = async (
   context: ApplicationContext,
   actor: Actor,
 ): Promise<SharingPopover> => {
-  const [{ runtimes, stoppedAt }, { grants }] = await Promise.all([
+  const [{ runtimes }, { grants }] = await Promise.all([
     listOwnRuntimes(context, actor),
     listOwnShareGrants(context, actor),
   ]);
 
   return {
     runtimes,
-    stoppedAt,
     grants,
     maximumActiveGrantCount: MAXIMUM_ACTIVE_SHARE_GRANTS_PER_OWNER,
     canChooseCitizen: actor.authorize("citizen", "read"),

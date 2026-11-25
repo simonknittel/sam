@@ -61,8 +61,8 @@ export enum SharingPopoverSection {
 
 /**
  * The trigger of the popover in the top bar, or on a small viewport in the
- * mobile action bar. After a colon, its name tells a "Stop all" or a missing
- * access to the folder. The pattern must not match the permission
+ * mobile action bar. After a colon, its name tells a missing access to the
+ * folder. The pattern must not match the permission
  * "Remote Control Program nutzen" of the role editor.
  */
 export const sharingPopoverTrigger = (page: Page) =>

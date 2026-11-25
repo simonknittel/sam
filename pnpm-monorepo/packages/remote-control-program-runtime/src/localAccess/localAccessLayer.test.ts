@@ -44,7 +44,7 @@ const startRuntime = (browser: ReturnType<typeof createBrowser>) => {
 };
 
 describe("the rule for the upload", () => {
-  it("after a Stop all of the owner, only the lines read live from the start go up", () => {
+  it("after a switch turned off the capability, only the lines read live from its end go up", () => {
     const browser = createBrowser();
     const olderLine = createEntry(
       LogAnalyzerEntryType.JoinPu,

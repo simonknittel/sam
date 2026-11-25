@@ -32,7 +32,6 @@ const SharingBottomSheet = () => {
     isOpen,
     isOpenedByControlUi,
     onOpenChange,
-    isStopped,
     isWaitingForFolderPermission,
     triggerLabel,
   } = useSharingPopoverTrigger(isSmallViewport);
@@ -44,7 +43,6 @@ const SharingBottomSheet = () => {
         <BarItemContent
           icon={
             <SharingPopoverIcon
-              isStopped={isStopped}
               isWaitingForFolderPermission={isWaitingForFolderPermission}
             />
           }

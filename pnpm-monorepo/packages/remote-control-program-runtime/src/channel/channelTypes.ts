@@ -58,8 +58,6 @@ export interface ChannelState {
    * succeed within the grace time.
    */
   readonly closeReason: ChannelCloseReason | null;
-  /** The "Stop all" of the owner is active (`stop` of the relay) */
-  readonly isStoppedByOwner: boolean;
   /** The parts that the switches of the organization turned off */
   readonly turnedOffConnectorIds: readonly ConnectorId[];
   readonly turnedOffCapabilityIds: readonly CapabilityId[];
@@ -70,7 +68,6 @@ export interface ChannelState {
 export const INITIAL_CHANNEL_STATE: ChannelState = {
   status: ChannelStatus.Idle,
   closeReason: null,
-  isStoppedByOwner: false,
   turnedOffConnectorIds: [],
   turnedOffCapabilityIds: [],
   queuedEntryCount: 0,
@@ -104,12 +101,7 @@ export enum ChannelDropReason {
    * the full Remote Control Program
    */
   TurnedOff = "turned_off",
-  /** The "Stop all" of the owner is active */
-  StoppedByOwner = "stopped_by_owner",
-  /**
-   * The "Stop all" of the runtime is active, or the rule of the capability
-   * (or of the entry) is off
-   */
+  /** The rule of the capability (or of the entry) is off */
   LocalAccessLayer = "local_access_layer",
   /** The relay refused the entries, and the protocol says: do not send again */
   RefusedByRelay = "refused_by_relay",

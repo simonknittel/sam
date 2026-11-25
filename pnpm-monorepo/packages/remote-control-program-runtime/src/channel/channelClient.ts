@@ -107,8 +107,7 @@ interface Connection {
  * the relay service (see `protocol.ts` of the domain package). It does the
  * handshake and the announcement, sends the heartbeats, renews the token,
  * uploads the feed entries until their `ack`, connects again after a lost
- * connection, and obeys the switches, the "Stop all" of the owner and the
- * local access layer.
+ * connection, and obeys the switches and the local access layer.
  */
 export class ChannelClient {
   readonly #options: ChannelClientOptions;
@@ -241,8 +240,6 @@ export class ChannelClient {
   #getDropReason(source: FeedEntriesSource) {
     if (isSourceTurnedOff(this.#state, source))
       return ChannelDropReason.TurnedOff;
-
-    if (this.#state.isStoppedByOwner) return ChannelDropReason.StoppedByOwner;
 
     // All is off by default (principle 2): a capability without a rule does
     // not upload
@@ -488,7 +485,7 @@ export class ChannelClient {
     const { message } = result;
     switch (message.type) {
       case DownMessageType.Welcome:
-        this.#handleWelcome(connection, message);
+        this.#handleWelcome(connection);
         break;
 
       case DownMessageType.Refusal:
@@ -510,14 +507,6 @@ export class ChannelClient {
         this.#applyAccessChange();
         break;
 
-      case DownMessageType.Stop:
-        this.#setStoppedByOwner(true);
-        break;
-
-      case DownMessageType.Start:
-        this.#setStoppedByOwner(false);
-        break;
-
       default:
         throw new Error(
           `Unknown message type: ${JSON.stringify(message satisfies never)}`,
@@ -525,10 +514,7 @@ export class ChannelClient {
     }
   }
 
-  #handleWelcome(
-    connection: Connection,
-    message: DownMessageOfType<DownMessageType.Welcome>,
-  ) {
+  #handleWelcome(connection: Connection) {
     if (connection.isWelcomed) return;
 
     connection.isWelcomed = true;
@@ -540,15 +526,7 @@ export class ChannelClient {
     this.#setState({
       status: ChannelStatus.Connected,
       closeReason: null,
-      isStoppedByOwner: message.content.is_stopped,
     });
-    this.#applyAccessChange();
-  }
-
-  #setStoppedByOwner(isStoppedByOwner: boolean) {
-    if (this.#state.isStoppedByOwner === isStoppedByOwner) return;
-
-    this.#setState({ isStoppedByOwner });
     this.#applyAccessChange();
   }
 
@@ -755,11 +733,6 @@ export class ChannelClient {
             ],
           });
         this.#applyAccessChange();
-        break;
-
-      case AcknowledgementErrorCode.Stopped:
-        this.#reportDroppedBatch(batch, ChannelDropReason.StoppedByOwner);
-        this.#setStoppedByOwner(true);
         break;
 
       // The uploads wait for the `ack` of a new `announce`

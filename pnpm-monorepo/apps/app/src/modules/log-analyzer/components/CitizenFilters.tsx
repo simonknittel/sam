@@ -68,7 +68,7 @@ export const CitizenFilters = ({ className }: Props) => {
         })
       ) : (
         <p className="text-sm text-white/60">
-          Noch teilt niemand Log-Einträge mit dir.
+          Noch teilt niemand Game Logs mit dir.
         </p>
       )}
 

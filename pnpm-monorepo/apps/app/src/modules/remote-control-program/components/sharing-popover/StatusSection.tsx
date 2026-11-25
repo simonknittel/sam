@@ -8,17 +8,14 @@ import {
   SHARING_POPOVER_TAB_LABELS,
   SharingPopoverTab,
 } from "./SharingPopoverTab";
-import { StopAllControl } from "./StopAllControl";
 
 interface Props {
   /** The most recent connections first */
   readonly runtimes: readonly OwnRuntime[];
-  /** The start of the "Stop all" of the owner, or null */
-  readonly stoppedAt: Date | null;
 }
 
-/** The section "Status": the runtimes of the owner and the "Stop all" for all of them */
-export const StatusSection = ({ runtimes, stoppedAt }: Props) => {
+/** The connected runtimes of the owner */
+export const StatusSection = ({ runtimes }: Props) => {
   const ownRuntimeId = useBrowserRuntime()?.state.runtimeId ?? null;
 
   return (
@@ -37,11 +34,9 @@ export const StatusSection = ({ runtimes, stoppedAt }: Props) => {
         </ul>
       ) : (
         <p className="text-sm text-neutral-500">
-          Bisher war noch keine Runtime verbunden.
+          Gerade ist keine Runtime verbunden.
         </p>
       )}
-
-      <StopAllControl stoppedAt={stoppedAt} />
     </SharingPopoverSection>
   );
 };

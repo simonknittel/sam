@@ -27,7 +27,7 @@ import {
 import type { OlderEntriesRequestDraft } from "./SharingPopoverProvider";
 
 const formatRange = ({ start, end }: OlderEntriesTimeRange) =>
-  `${start ? formatDate(start) : "Anfang deiner Logs"} bis ${end ? formatDate(end) : "jetzt"}`;
+  `${start ? formatDate(start) : "Anfang deiner Game Logs"} – ${end ? formatDate(end) : "jetzt"}`;
 
 const formatUploadText = (count: number) => {
   if (count === 0)
@@ -61,9 +61,11 @@ export const OlderEntriesRequestPanel = ({
     >
       <div className="flex flex-col gap-0.5">
         <h4 id={headingId} className="font-bold">
-          Ältere Einträge hochladen?
+          Ältere Game Logs hochladen?
         </h4>
-        <p className="text-sm text-neutral-400">{formatRange(request.range)}</p>
+        <p className="text-sm text-neutral-400">
+          Zeitraum: {formatRange(request.range)}
+        </p>
       </div>
 
       <RequestContent request={request} runtime={runtime} onEnd={onEnd} />

@@ -10,7 +10,6 @@ import {
 import type { PreparedOlderEntriesRequest as PreparedRuntimeRequest } from "@sam-monorepo/remote-control-program-runtime";
 import { FaCloudArrowUp, FaRotateRight } from "react-icons/fa6";
 import type { BrowserRuntimeSnapshot } from "../../runtime/types";
-import { formatEntryCount } from "./browserRuntimeTexts";
 import { OlderEntriesRequestFooter } from "./OlderEntriesRequestFooter";
 
 export const getRuleTypesThatAreOn = (
@@ -61,11 +60,16 @@ export const PreparedOlderEntriesRequest = ({
   const hasNewTypes = Array.from(ruleTypesThatAreOn).some(
     (ruleType) => !result.ruleTypesThatWereOn.has(ruleType),
   );
-  // Nothing goes up during a "Stop all" (see `confirmOlderEntriesRequest`)
-  const isStopped = state.channel.isStoppedByOwner;
 
   return (
     <>
+      {/* Directly below the period of the panel, thus without the gap */}
+      <p className="-mt-2.5 text-sm text-neutral-400">
+        {entryCount > 0
+          ? `Anzahl: ${entryCount.toLocaleString("de")}`
+          : getEmptyText(ruleTypesThatAreOn.size)}
+      </p>
+
       {hasNewTypes && (
         <div className="flex flex-col gap-2">
           <Note
@@ -76,19 +80,6 @@ export const PreparedOlderEntriesRequest = ({
         </div>
       )}
 
-      <p className="text-sm">
-        {entryCount > 0
-          ? formatEntryCount(entryCount)
-          : getEmptyText(ruleTypesThatAreOn.size)}
-      </p>
-
-      {isStopped && entryCount > 0 && (
-        <Note
-          type="warning"
-          message="Gerade ist alles gestoppt. Starte zuerst wieder unter „Status“."
-        />
-      )}
-
       {confirmErrorText && (
         <div role="alert">
           <Note type="error" message={confirmErrorText} />
@@ -97,11 +88,7 @@ export const PreparedOlderEntriesRequest = ({
 
       <OlderEntriesRequestFooter onCancel={onCancel}>
         {entryCount > 0 && (
-          <Button2
-            type="button"
-            disabled={isConfirming || isStopped}
-            onClick={onConfirm}
-          >
+          <Button2 type="button" disabled={isConfirming} onClick={onConfirm}>
             {isConfirming ? <AsciiSpinner /> : <FaCloudArrowUp />}
             Hochladen
           </Button2>
