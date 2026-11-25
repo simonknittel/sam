@@ -30,7 +30,7 @@ const getReadErrorText = ({ data, message }: ReadError) => {
  * section of this browser is the first section.
  */
 export const SharingPopoverContent = () => {
-  const query = useSharingPopoverQuery();
+  const query = useSharingPopoverQuery({ isPopoverOpen: true });
   const { data } = query;
   const olderEntriesRequest = useOlderEntriesRequest();
 
@@ -59,11 +59,7 @@ export const SharingPopoverContent = () => {
       )}
 
       {data && (
-        <StatusSection
-          runtimes={data.runtimes}
-          stoppedAt={data.stoppedAt}
-          isRefreshing={query.isFetching}
-        />
+        <StatusSection runtimes={data.runtimes} stoppedAt={data.stoppedAt} />
       )}
     </Fragment>
   );

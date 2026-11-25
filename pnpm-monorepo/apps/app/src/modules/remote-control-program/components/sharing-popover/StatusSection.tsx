@@ -11,16 +11,14 @@ interface Props {
   readonly runtimes: readonly OwnRuntime[];
   /** The start of the "Stop all" of the owner, or null */
   readonly stoppedAt: Date | null;
-  /** The popover fetches the data again */
-  readonly isRefreshing: boolean;
 }
 
 /** The section "Status": the runtimes of the owner and the "Stop all" for all of them */
-export const StatusSection = ({ runtimes, stoppedAt, isRefreshing }: Props) => {
+export const StatusSection = ({ runtimes, stoppedAt }: Props) => {
   const ownRuntimeId = useBrowserRuntime()?.state.runtimeId ?? null;
 
   return (
-    <SharingPopoverSection heading="Status" isRefreshing={isRefreshing}>
+    <SharingPopoverSection heading="Status">
       {runtimes.length > 0 ? (
         <ul className="flex flex-col gap-2">
           {runtimes.map((runtime) => (
