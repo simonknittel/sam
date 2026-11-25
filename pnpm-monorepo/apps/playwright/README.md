@@ -137,6 +137,8 @@ can have no effect.
     selection change too slowly in the collab editor.
   - The "replace mode" test of `wiki-copy-paste.spec.ts`: cause unknown.
   - The pagination test of `activity.spec.ts`: only in full runs.
+  - The "my ships" test of `fleet.spec.ts`: the option of the filter or the
+    add dialog does not open, cause unknown.
   - `notification-center.spec.ts`: `ERR_NETWORK_CHANGED`.
   - The popover tests of `citizen-profile.spec.ts`: after a new build.
   - Under load, a dialog or the bell popover of `waitForAppShellHydration()`
