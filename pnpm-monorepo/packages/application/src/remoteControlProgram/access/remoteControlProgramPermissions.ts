@@ -7,9 +7,9 @@ import { RemoteControlProgramErrorMessage } from "./remoteControlProgramErrors.j
  * The permissions of the Remote Control Program (decision 24). Admin mode
  * replaces them, like all permissions of SAM, but it never replaces a grant
  * (decision 4). The relay service has no session: it gets the admin mode from
- * the connection token and from the watch lease. Thus the app and the relay
- * service give the same answer, for example for the snapshot of a feed and
- * for its realtime delivery.
+ * the connection token and from the watch leases. Thus it applies the same
+ * rule as the app, but the end of admin mode reaches it later (see
+ * `authenticateRuntimeConnection()` and `findWatchingViewers()`).
  */
 
 /**

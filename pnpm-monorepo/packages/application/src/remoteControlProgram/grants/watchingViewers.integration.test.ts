@@ -334,16 +334,22 @@ test("keeps the admin mode of the last renewal in the lease", async () => {
     [admin.id]: { start: ONE_HOUR_AGO, end: null },
   });
 
+  // A consumer in a different browser, without admin mode: the other lease still has it
+  const actorWithoutAdminMode = createTestActor({
+    userId: admin.userId!,
+    citizen: admin,
+    permissionStrings: VIEWER_PERMISSIONS,
+    admin: true,
+  });
+  await renewWatchLease(context, actorWithoutAdminMode, {
+    ...input,
+    consumer_id: crypto.randomUUID(),
+  });
+  await expect(findViewerRanges(context, owner.id)).resolves.toEqual({
+    [admin.id]: { start: ONE_HOUR_AGO, end: null },
+  });
+
   // Without admin mode, the delivery needs the permissions of the roles
-  await renewWatchLease(
-    context,
-    createTestActor({
-      userId: admin.userId!,
-      citizen: admin,
-      permissionStrings: VIEWER_PERMISSIONS,
-      admin: true,
-    }),
-    input,
-  );
+  await renewWatchLease(context, actorWithoutAdminMode, input);
   await expect(findViewerRanges(context, owner.id)).resolves.toEqual({});
 });

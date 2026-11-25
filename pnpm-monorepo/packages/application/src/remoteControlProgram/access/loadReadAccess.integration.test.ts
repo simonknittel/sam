@@ -214,6 +214,51 @@ test("gives the access of many viewers to one owner, with the current roles and 
   );
 });
 
+test("gives no access to a viewer who does not pass the clearance page", async () => {
+  const owner = await createClearedCitizen("owner");
+  await createShareGrantRow(owner.id, EVERYONE_GRANTEE);
+  const cleared = await createClearedCitizen("cleared");
+  const withoutClearance = await createClearedCitizen("withoutClearance", [
+    "remoteControlProgram;use",
+    "logAnalyzer;read",
+  ]);
+  const [banned, unconfirmed, withoutTwoFactor] = await Promise.all([
+    createClearedCitizen("banned"),
+    createClearedCitizen("unconfirmed"),
+    createClearedCitizen("withoutTwoFactor", [
+      ...VIEWER_PERMISSIONS,
+      "role;manage",
+    ]),
+  ]);
+  await prisma.user.update({
+    where: { id: banned!.userId! },
+    data: { bannedAt: TEST_NOW },
+  });
+  await prisma.user.update({
+    where: { id: unconfirmed!.userId! },
+    data: { emailVerified: null },
+  });
+  const { context } = createTestApplicationContext();
+
+  const access = await loadReadAccessToOwner(context, {
+    ownerCitizenId: owner.id,
+    capabilityId: CapabilityId.LogEntries,
+    viewers: [
+      cleared,
+      withoutClearance,
+      banned!,
+      unconfirmed!,
+      withoutTwoFactor!,
+    ].map(({ id }) => ({ citizenId: id, adminMode: false })),
+  });
+
+  expect(
+    Array.from(access).flatMap(([citizenId, { isGranted }]) =>
+      isGranted ? [citizenId] : [],
+    ),
+  ).toEqual([cleared.id]);
+});
+
 test("lets admin mode replace the permissions of an admin, but never a grant", async () => {
   const owner = await createClearedCitizen("owner");
   const everyoneGrantOwner = await createClearedCitizen("everyoneGrantOwner");

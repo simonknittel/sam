@@ -13,7 +13,7 @@ import { NotificationErrorMessage } from "./notificationErrors.js";
 
 const CITIZEN = { id: "citizen-1", handle: "citizen" };
 
-test("opens the Remote Control Program channel only to the own citizen with the permission, and not to an admin who assumes the citizen", async () => {
+test("opens the Remote Control Program channel only to the own citizen with the permission or in admin mode, and not to an admin who assumes the citizen", async () => {
   const { context } = createTestApplicationContext();
   const createActor = (
     permissionStrings: readonly string[],
@@ -26,6 +26,11 @@ test("opens the Remote Control Program channel only to the own citizen with the 
       assumedByAdminId,
     });
   const user = createActor(["remoteControlProgram;use"]);
+  const admin = createTestActor({
+    userId: "admin-user",
+    citizen: CITIZEN,
+    adminMode: true,
+  });
   const assumedUser = createActor(["remoteControlProgram;use"], "admin-user");
   const ownChannel = {
     channel_name: getRemoteControlProgramChannelName(CITIZEN.id),
@@ -38,10 +43,14 @@ test("opens the Remote Control Program channel only to the own citizen with the 
     authorizeRealtimeChannel(context, user, ownChannel),
   ).resolves.toBeUndefined();
   await expect(
-    authorizeRealtimeChannel(context, user, {
-      channel_name: getRemoteControlProgramChannelName("citizen-2"),
-    }),
-  ).rejects.toThrow(forbidden);
+    authorizeRealtimeChannel(context, admin, ownChannel),
+  ).resolves.toBeUndefined();
+  for (const actor of [user, admin])
+    await expect(
+      authorizeRealtimeChannel(context, actor, {
+        channel_name: getRemoteControlProgramChannelName("citizen-2"),
+      }),
+    ).rejects.toThrow(forbidden);
   await expect(
     authorizeRealtimeChannel(context, createActor([]), ownChannel),
   ).rejects.toThrow(forbidden);

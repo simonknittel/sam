@@ -24,8 +24,8 @@ export type AuthenticateRuntimeConnectionInput = z.output<
 export interface RuntimeConnection {
   /**
    * The actor of the use cases of the connection. Admin mode comes from the
-   * token, because the relay service has no session, and applies only while
-   * the user is an admin.
+   * token, because the relay service has no session. This use case applies it
+   * only to an admin.
    */
   readonly actor: Actor;
   readonly userId: string;
@@ -44,8 +44,10 @@ export interface RuntimeConnection {
  * `token_renewal`. It verifies the token, and then checks in the database
  * that the user is not banned, has the clearance of the app, still has the
  * citizen of the token and still has `remoteControlProgram;use` (or admin
- * mode). Thus a ban, a removed permission or the end of admin mode stops a
- * connection within one renewal interval.
+ * mode). The actor of the connection stays the same until the next renewal. A
+ * ban, a removed permission or the end of admin mode thus applies at the next
+ * renewal, and at the latest when the relay service closes the connection
+ * without a renewal.
  * The relay service has no session: the use case builds the actor of the
  * connection, like the MCP server builds it from an access token.
  *

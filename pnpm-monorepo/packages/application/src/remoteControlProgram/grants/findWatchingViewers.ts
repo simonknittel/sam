@@ -25,6 +25,10 @@ export interface WatchingViewer {
  * a valid grant). The owner is a viewer too, when the owner watches: the own entries
  * from a different runtime come through the relay.
  *
+ * Admin mode counts while one lease of the viewer has it, because all
+ * consumers of a viewer share one channel. Thus its end in one browser applies
+ * when the last lease with admin mode expires or a renewal clears it.
+ *
  * The relay service calls it for each accepted batch of an owner, without a
  * session. It keeps no cache (principle 5): one query for the leases, then
  * the queries of the access in parallel. Each viewer is in the result once.
@@ -55,7 +59,6 @@ export const findWatchingViewers = (
       capabilityId,
       viewers: Array.from(leasesByViewerId, ([citizenId, viewerLeases]) => ({
         citizenId,
-        // The consumers of a viewer share one channel
         adminMode: viewerLeases.some(
           (lease) => lease.renewedWithAdminModeAt !== null,
         ),
