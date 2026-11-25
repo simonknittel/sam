@@ -47,8 +47,9 @@ export const LogFileConnectorGuide = () => {
 
         <SharingPopoverTopic title="Auswertung">
           <p>
-            Die Runtime liest zuerst die Logs der letzten 14 Tage und danach
-            jede neue Zeile. Sie läuft, solange ein Tab mit SAM geöffnet ist.
+            Die Runtime liest auch ältere Logs, damit du sie im Log Analyzer
+            siehst. Hochgeladen werden sie dabei nicht. Danach liest sie jede
+            neue Zeile, solange ein Tab mit SAM geöffnet ist.
           </p>
         </SharingPopoverTopic>
 
