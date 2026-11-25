@@ -3,6 +3,7 @@
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Note from "@/modules/common/components/Note";
 import { useSharingPopoverOpener } from "@/modules/remote-control-program/components/sharing-popover/SharingPopoverProvider";
+import { SharingPopoverTab } from "@/modules/remote-control-program/components/sharing-popover/SharingPopoverTab";
 import {
   LogFolderState,
   type BrowserRuntimeSnapshot,
@@ -88,7 +89,7 @@ export const LogFolderNote = () => {
             <Button2
               type="button"
               variant={Button2Variant.Secondary}
-              onClick={opener.open}
+              onClick={() => opener.open(SharingPopoverTab.Browser)}
             >
               <FaTowerBroadcast />
               Öffnen

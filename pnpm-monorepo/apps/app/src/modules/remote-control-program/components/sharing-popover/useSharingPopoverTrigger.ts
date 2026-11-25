@@ -18,7 +18,7 @@ export const SHARING_POPOVER_TITLE = "Remote Control Program";
  */
 export const useSharingPopoverTrigger = (canActOnRequest: boolean) => {
   const runtime = useBrowserRuntime();
-  const { isOpen, isOpenedByControlUi, setIsOpen, changeOpenByUser } =
+  const { isOpen, tabOfControlUi, setIsOpen, changeOpenByUser } =
     useSharingPopoverOpenState(canActOnRequest);
 
   /**
@@ -39,7 +39,7 @@ export const useSharingPopoverTrigger = (canActOnRequest: boolean) => {
 
   return {
     isOpen,
-    isOpenedByControlUi,
+    tabOfControlUi,
     onOpenChange: changeOpenByUser,
     isWaitingForFolderPermission,
     triggerLabel: isWaitingForFolderPermission

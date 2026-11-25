@@ -7,14 +7,16 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import type { SharingPopoverTab } from "./SharingPopoverTab";
 
 interface SharingPopoverContext {
   /**
-   * A control UI opened the popover. The request stays pending until the
-   * surface of the current viewport opens, see `useSharingPopoverOpenState()`.
+   * A control UI opened the popover with this tab. The request stays pending
+   * until the surface of the current viewport opens, see
+   * `useSharingPopoverOpenState()`.
    */
-  readonly isOpenRequested: boolean;
-  readonly requestOpen: () => void;
+  readonly requestedTab: SharingPopoverTab | null;
+  readonly requestOpen: (tab: SharingPopoverTab) => void;
   readonly settleOpenRequest: () => void;
 }
 
@@ -32,12 +34,14 @@ interface Props {
  * the items of the shell. `BrowserRuntimeProvider` renders it.
  */
 export const SharingPopoverProvider = ({ isEnabled, children }: Props) => {
-  const [isOpenRequested, setIsOpenRequested] = useState(false);
+  const [requestedTab, setRequestedTab] = useState<SharingPopoverTab | null>(
+    null,
+  );
 
   const value: SharingPopoverContext = {
-    isOpenRequested,
-    requestOpen: () => setIsOpenRequested(true),
-    settleOpenRequest: () => setIsOpenRequested(false),
+    requestedTab,
+    requestOpen: setRequestedTab,
+    settleOpenRequest: () => setRequestedTab(null),
   };
 
   return (
@@ -50,11 +54,11 @@ export const SharingPopoverProvider = ({ isEnabled, children }: Props) => {
 /** The functions of the control UIs (see `useSharingPopoverOpener()`) */
 export interface SharingPopoverOpener {
   /**
-   * Opens the sharing popover: the popover of the top bar on a large
-   * viewport, else the bottom sheet. Example: the
-   * Log Analyzer asks the owner to select the log folder.
+   * Opens the sharing popover with the tab: the popover of the top bar on a
+   * large viewport, else the bottom sheet. Example: the Log Analyzer asks the
+   * owner to select the log folder.
    */
-  readonly open: () => void;
+  readonly open: (tab: SharingPopoverTab) => void;
 }
 
 /**
@@ -88,18 +92,20 @@ const useSharingPopoverContext = () => {
  * Only one surface at a time can act, otherwise two popovers open.
  */
 export const useSharingPopoverOpenState = (canActOnRequest: boolean) => {
-  const { isOpenRequested, settleOpenRequest } = useSharingPopoverContext();
+  const { requestedTab, settleOpenRequest } = useSharingPopoverContext();
   const [isOpen, setIsOpen] = useState(false);
   /**
-   * A control UI opened the popover, not its trigger. Then the focus must
-   * move into the popover, else a keyboard user cannot reach it.
+   * The tab of the control UI that opened the popover. Null: its trigger
+   * opened it. After a control UI, the focus must move into the popover, else
+   * a keyboard user cannot reach it.
    */
-  const [isOpenedByControlUi, setIsOpenedByControlUi] = useState(false);
+  const [tabOfControlUi, setTabOfControlUi] =
+    useState<SharingPopoverTab | null>(null);
 
-  const isActingOnRequest = isOpenRequested && canActOnRequest;
+  const isActingOnRequest = requestedTab !== null && canActOnRequest;
   if (isActingOnRequest && !isOpen) {
     setIsOpen(true);
-    setIsOpenedByControlUi(true);
+    setTabOfControlUi(requestedTab);
   }
 
   useEffect(() => {
@@ -110,8 +116,8 @@ export const useSharingPopoverOpenState = (canActOnRequest: boolean) => {
   /** An open or a close by the user: the trigger, Escape, a click outside */
   const changeOpenByUser = (nextIsOpen: boolean) => {
     setIsOpen(nextIsOpen);
-    setIsOpenedByControlUi(false);
+    setTabOfControlUi(null);
   };
 
-  return { isOpen, isOpenedByControlUi, setIsOpen, changeOpenByUser };
+  return { isOpen, tabOfControlUi, setIsOpen, changeOpenByUser };
 };

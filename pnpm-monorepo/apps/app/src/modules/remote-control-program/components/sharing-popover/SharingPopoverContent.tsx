@@ -38,22 +38,22 @@ const getReadErrorText = ({ data, message }: ReadError) => {
 };
 
 interface Props {
-  /** For example the Log Analyzer asks for the log folder */
-  readonly isOpenedByControlUi: boolean;
+  /** For example the Log Analyzer asks for the log folder. Null: the trigger opened the popover. */
+  readonly tabOfControlUi: SharingPopoverTab | null;
 }
 
 /**
  * The content of the sharing popover in the top bar and in the bottom sheet.
  * The tab of this browser does not wait for the data of the server.
  */
-export const SharingPopoverContent = ({ isOpenedByControlUi }: Props) => {
+export const SharingPopoverContent = ({ tabOfControlUi }: Props) => {
   const query = useSharingPopoverQuery();
   const { data } = query;
   const folderState = useBrowserRuntime()?.state.folder.state;
   const tabListRef = useRef<HTMLDivElement>(null);
 
   const getInitialActiveTab = () => {
-    if (isOpenedByControlUi) return SharingPopoverTab.Browser;
+    if (tabOfControlUi) return tabOfControlUi;
     return folderState === LogFolderState.NotSelected ||
       folderState === LogFolderState.NotSupported
       ? SharingPopoverTab.Start
