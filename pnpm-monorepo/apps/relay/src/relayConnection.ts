@@ -7,7 +7,6 @@ import {
   ConflictError,
   endRuntimeLease,
   ForbiddenError,
-  getRuntimeStopOfOwner,
   recordFeedEntryUploadCounts,
   RemoteControlProgramErrorMessage,
   renewRuntimeLease,
@@ -18,7 +17,6 @@ import {
   type Logger,
   type OwnRuntime,
   type RuntimeConnection,
-  type RuntimeHelloCheck,
 } from "@sam-monorepo/application";
 import {
   AcknowledgementErrorCode,
@@ -99,8 +97,6 @@ export interface ConnectionHub {
   readonly throttledLog: Logger;
   /** True after the request of the app to close the connections of the user */
   readonly isUserDisconnected: (userId: string) => boolean;
-  /** Increases with each request of the app about a changed stop of an owner */
-  readonly getOwnerStopChangeCount: () => number;
   /**
    * Registers the open connection of a runtime. Gives the previous open
    * connection of the same runtime of the same owner.
@@ -401,17 +397,6 @@ export class RelayConnection {
     );
   }
 
-  /** Sends `stop` or `start` (the "Stop all" of the owner) */
-  sendOwnerStop(isStopped: boolean) {
-    if (this.#phase !== ConnectionPhase.Open) return;
-
-    this.#send(
-      isStopped
-        ? createDownMessage(DownMessageType.Stop, {})
-        : createDownMessage(DownMessageType.Start, {}),
-    );
-  }
-
   #handleData(text: string | null) {
     switch (this.#phase) {
       case ConnectionPhase.AwaitingHello:
@@ -537,10 +522,8 @@ export class RelayConnection {
       return;
     }
 
-    const ownerStopChangeCount = this.#hub.getOwnerStopChangeCount();
-    let helloCheck: RuntimeHelloCheck;
     try {
-      helloCheck = await checkRuntimeHello(context, runtime.actor, {
+      await checkRuntimeHello(context, runtime.actor, {
         runtime_id: runtime.runtimeId,
       });
     } catch (error) {
@@ -566,15 +549,10 @@ export class RelayConnection {
     this.#connectedAt = presence.connectedAt;
     if (this.#isClosed()) return;
 
-    this.#open(hello, presence, helloCheck, ownerStopChangeCount);
+    this.#open(hello, presence);
   }
 
-  #open(
-    hello: UpMessageOfType<UpMessageType.Hello>,
-    presence: OwnRuntime,
-    helloCheck: RuntimeHelloCheck,
-    ownerStopChangeCount: number,
-  ) {
+  #open(hello: UpMessageOfType<UpMessageType.Hello>, presence: OwnRuntime) {
     const { context, metrics, switches } = this.#hub;
 
     this.#phase = ConnectionPhase.Open;
@@ -584,11 +562,7 @@ export class RelayConnection {
     this.#leaseRenewedAt = now;
     this.#uploadCounts = new UploadCounts(presence.connectedAt);
     this.#hub.registerOpenConnection(this)?.close(RelayCloseReason.Replaced);
-    this.#send(
-      createDownMessage(DownMessageType.Welcome, {
-        is_stopped: helloCheck.isOwnerStopped,
-      }),
-    );
+    this.#send(createDownMessage(DownMessageType.Welcome, {}));
     metrics.openConnections.add(1);
     context.log.info("Opened a runtime connection", {
       ...this.#getLogIds(),
@@ -598,12 +572,8 @@ export class RelayConnection {
     });
 
     // A change in the handshake: `checkRuntimeHello()` read the older values
-    if (switches.getSwitches().isProgramTurnedOff) {
+    if (switches.getSwitches().isProgramTurnedOff)
       this.close(RelayCloseReason.ProgramTurnedOff);
-      return;
-    }
-    if (this.#hub.getOwnerStopChangeCount() !== ownerStopChangeCount)
-      this.#controlLane.enqueue(() => this.#sendCurrentOwnerStop());
   }
 
   #closeAfterHandshakeError(error: unknown, runtimeId: string) {
@@ -622,22 +592,6 @@ export class RelayConnection {
     });
     trace.getActiveSpan()?.setStatus({ code: SpanStatusCode.ERROR });
     this.#closeWithInternalError();
-  }
-
-  async #sendCurrentOwnerStop() {
-    const runtime = this.#requireRuntime();
-
-    try {
-      const { stoppedAt } = await getRuntimeStopOfOwner(this.#hub.context, {
-        ownerCitizenId: runtime.citizenId,
-      });
-      this.sendOwnerStop(stoppedAt !== null);
-    } catch (error) {
-      this.#hub.context.log.error("Failed to read the stop of an owner", {
-        ...this.#getLogIds(),
-        error,
-      });
-    }
   }
 
   #handleMessage(text: string | null) {

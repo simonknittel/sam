@@ -117,13 +117,6 @@ export interface RelayService {
    * service refuses the request or cannot be reached.
    */
   readonly disconnectUser: (userId: string) => Promise<void>;
-  /**
-   * Tells the relay service that the "Stop all" of the owner changed. The
-   * relay service reads the stop again and sends `stop` or `start` to the
-   * runtimes of the owner. Throws when the relay service refuses the request
-   * or cannot be reached.
-   */
-  readonly notifyOwnerStopChanged: (ownerCitizenId: string) => Promise<void>;
 }
 
 /**

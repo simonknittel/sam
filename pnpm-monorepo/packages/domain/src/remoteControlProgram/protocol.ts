@@ -56,8 +56,6 @@ export enum DownMessageType {
   Refusal = "refusal",
   Acknowledgement = "ack",
   Switches = "switches",
-  Stop = "stop",
-  Start = "start",
   Close = "close",
 }
 
@@ -185,11 +183,6 @@ export enum AcknowledgementErrorCode {
   ConnectorTurnedOff = "connector_turned_off",
   /** A switch turned off the capability. Do not send again. */
   CapabilityTurnedOff = "capability_turned_off",
-  /**
-   * The "Stop all" of the owner is active. Do not send again: the entries of
-   * this time stay on the machine (decision 27).
-   */
-  Stopped = "stopped",
   /**
    * The runtime sent above the rate of the capability (see
    * `minimumUploadIntervalMilliseconds`). Send again after the interval.
@@ -401,16 +394,7 @@ export const upMessageSchema = z.discriminatedUnion("type", [
 ]);
 
 export const downMessageSchema = z.discriminatedUnion("type", [
-  createMessageSchema(
-    DownMessageType.Welcome,
-    z.object({
-      /**
-       * The "Stop all" of the owner is active: the relay refuses the uploads
-       * until a `start`
-       */
-      is_stopped: z.boolean(),
-    }),
-  ),
+  createMessageSchema(DownMessageType.Welcome, z.object({})),
   /** The relay closes the connection with the code of the reason after it */
   createMessageSchema(DownMessageType.Refusal, closeReasonContentSchema),
   createMessageSchema(
@@ -431,12 +415,6 @@ export const downMessageSchema = z.discriminatedUnion("type", [
   ),
   /** The parts that are off. Each new `switches` replaces the previous one. */
   createMessageSchema(DownMessageType.Switches, switchesContentSchema),
-  /**
-   * The "Stop all" of the owner. The runtime stops the uploads, and the time
-   * until the `start` counts like a local "Stop all".
-   */
-  createMessageSchema(DownMessageType.Stop, z.object({})),
-  createMessageSchema(DownMessageType.Start, z.object({})),
   /**
    * The relay sends it right before it closes the connection with the code
    * of the reason. A proxy can change the close code (for example to 1006),

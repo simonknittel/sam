@@ -86,10 +86,9 @@ test("claims the presence of a runtime at the open, stores its announcement, and
   }).context;
   await expect(
     checkRuntimeHello(reconnectContext, owner, { runtime_id: RUNTIME_ID }),
-  ).resolves.toEqual({ isOwnerStopped: false });
+  ).resolves.toBeUndefined();
   await expect(listOwnRuntimes(reconnectContext, owner)).resolves.toEqual({
     runtimes: [{ ...first, announcement: LOG_FILE_ANNOUNCEMENT }],
-    stoppedAt: null,
   });
 
   // The next open connection of the same runtime starts without the announcement
@@ -133,14 +132,7 @@ test("claims the presence of a runtime at the open, stores its announcement, and
   ).resolves.toEqual({ isEnded: true });
 
   await expect(listOwnRuntimes(heartbeatContext, owner)).resolves.toEqual({
-    runtimes: [
-      expect.objectContaining({
-        runtimeId: RUNTIME_ID,
-        isOnline: false,
-        leaseExpiresAt: heartbeatAt,
-      }),
-    ],
-    stoppedAt: null,
+    runtimes: [],
   });
 });
 

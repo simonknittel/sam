@@ -20,8 +20,8 @@ export interface RelayClientOptions {
   /** The issuer of the tokens: `urls.issuer` of the application context */
   readonly issuer: string;
   /**
-   * The maximum time of one request. A ban and a "Stop all" wait for it, and
-   * a failure does not undo them.
+   * The maximum time of one request. A ban waits for it, and a failure does
+   * not undo the ban.
    */
   readonly requestTimeoutMilliseconds: number;
 }
@@ -78,10 +78,5 @@ export const createRelayClient = ({
     webSocketUrl,
     disconnectUser: (userId) =>
       post({ operation: RelayInternalOperation.DisconnectUser, userId }),
-    notifyOwnerStopChanged: (ownerCitizenId) =>
-      post({
-        operation: RelayInternalOperation.OwnerStopChanged,
-        ownerCitizenId,
-      }),
   };
 };

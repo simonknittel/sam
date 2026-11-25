@@ -1,7 +1,4 @@
-import {
-  getRuntimeStopOfOwner,
-  type ApplicationContext,
-} from "@sam-monorepo/application";
+import { type ApplicationContext } from "@sam-monorepo/application";
 import {
   RELAY_LIMITS,
   RelayCloseReason,
@@ -147,7 +144,6 @@ export const createRelayServer = ({
   /** The time until which the relay service keeps the id of each disconnected user */
   const disconnectedUsers = new Map<string, number>();
   const rateLimits = new OwnerRateLimits();
-  let ownerStopChangeCount = 0;
   let isClosing = false;
   let checkInterval: ReturnType<typeof setInterval> | undefined;
   let unsubscribeFromSwitches: (() => void) | undefined;
@@ -167,7 +163,6 @@ export const createRelayServer = ({
     rateLimits,
     throttledLog,
     isUserDisconnected,
-    getOwnerStopChangeCount: () => ownerStopChangeCount,
     registerOpenConnection: (connection) => {
       unauthenticatedConnections.delete(connection);
       const key = getRuntimeKey(connection);
@@ -202,35 +197,6 @@ export const createRelayServer = ({
     log.info("Closed the runtime connections of a user for the app", {
       userId,
       connectionCount: userConnections.length,
-    });
-  };
-
-  const findOpenConnectionsOfOwner = (ownerCitizenId: string) =>
-    [...liveConnections].filter(
-      (connection) =>
-        connection.isOpen && connection.ownerCitizenId === ownerCitizenId,
-    );
-
-  /**
-   * Each connection of the owner gets the current stop. A connection in its
-   * handshake reads the stop again after its `welcome` (see
-   * `getOwnerStopChangeCount()`).
-   */
-  const applyOwnerStopChange = async (ownerCitizenId: string) => {
-    ownerStopChangeCount += 1;
-    if (findOpenConnectionsOfOwner(ownerCitizenId).length === 0) return;
-
-    const { stoppedAt } = await getRuntimeStopOfOwner(context, {
-      ownerCitizenId,
-    });
-    const ownerConnections = findOpenConnectionsOfOwner(ownerCitizenId);
-    for (const connection of ownerConnections)
-      connection.sendOwnerStop(stoppedAt !== null);
-
-    log.info("Sent the changed stop of an owner to the runtimes", {
-      ownerCitizenId,
-      isStopped: stoppedAt !== null,
-      connectionCount: ownerConnections.length,
     });
   };
 
@@ -277,7 +243,6 @@ export const createRelayServer = ({
       issuer: context.urls.issuer,
       isHealthy: async () => !isClosing && (await isDatabaseAvailableCached()),
       disconnectUser,
-      applyOwnerStopChange,
     }),
   );
 

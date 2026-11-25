@@ -1,7 +1,4 @@
-import {
-  RUNTIME_CONNECTION_TOKEN_AUDIENCE,
-  stopOwnRuntimes,
-} from "@sam-monorepo/application";
+import { RUNTIME_CONNECTION_TOKEN_AUDIENCE } from "@sam-monorepo/application";
 import {
   AcknowledgementErrorCode,
   AcknowledgementResult,
@@ -125,7 +122,7 @@ test("a runtime with a valid token connects, announces and uploads", async () =>
   const owner = await createOwner();
 
   const { client, welcome } = await connect(owner, RUNTIME_ID);
-  expect(welcome.content).toEqual({ is_stopped: false });
+  expect(welcome.content).toEqual({});
 
   await announce(client);
   // The runtime knows the parts that are off before its first upload
@@ -473,7 +470,7 @@ test("a part that is turned off refuses the uploads, and a change of a flag send
   await expectClose(client, RelayCloseReason.ProgramTurnedOff);
 });
 
-test("the stop of the owner reaches the runtime, and a ban closes the connections, also in their handshake", async () => {
+test("a ban closes the connections, also in their handshake", async () => {
   const {
     connect,
     openClient,
@@ -485,14 +482,6 @@ test("the stop of the owner reaches the runtime, and a ban closes the connection
   const owner = await createOwner();
   const { client } = await connect(owner, RUNTIME_ID);
   await announce(client);
-
-  // The app tells the relay service through its internal endpoint
-  await stopOwnRuntimes(createAppContext(), createOwnerActor(owner));
-  await client.waitForMessage(DownMessageType.Stop);
-  await expect(upload(client)).resolves.toMatchObject({
-    result: AcknowledgementResult.Refused,
-    error_code: AcknowledgementErrorCode.Stopped,
-  });
 
   // An internal request without a valid token changes nothing
   const disconnectUrl = getHttpUrl(DISCONNECT_USER_PATH);

@@ -18,7 +18,6 @@ import { ForbiddenError } from "../../errors.js";
 import { withSpan } from "../../withSpan.js";
 import { RemoteControlProgramErrorMessage } from "../access/remoteControlProgramErrors.js";
 import { requireRemoteControlProgramUse } from "../access/remoteControlProgramPermissions.js";
-import { findOwnerStoppedAt } from "../runtimes/ownerStop.js";
 import {
   FEED_LOG_ENTRY_SELECT,
   toFeedLogEntry,
@@ -46,7 +45,6 @@ export type FeedEntriesRefusal =
   | AcknowledgementErrorCode.MessageNotValid
   | AcknowledgementErrorCode.ConnectorTurnedOff
   | AcknowledgementErrorCode.CapabilityTurnedOff
-  | AcknowledgementErrorCode.Stopped
   | AcknowledgementErrorCode.EntriesNotValid;
 
 /** The counts of `recordFeedEntryUploadCounts()` */
@@ -157,8 +155,8 @@ const toRefusal = (
 /**
  * Stores one batch of a runtime of the actor (the owner): the relay service
  * calls it for each `feed_entries` message, with the actor of the
- * `RuntimeConnection`. It checks the permission, the catalog, the switches
- * and the "Stop all" of the owner, and then each entry. An entry that is not
+ * `RuntimeConnection`. It checks the permission, the catalog and the
+ * switches, and then each entry. An entry that is not
  * valid does not refuse the batch: the relay stores the valid entries and
  * counts the other entries as refused. Thus one defective line, for example
  * from a difference of the regular expression engines of the runtimes, does
@@ -203,10 +201,7 @@ export const appendFeedEntries = (
     const batchProblem = findBatchProblem(batch);
     if (batchProblem) return toRefusal(batchProblem, batch);
 
-    const [switches, ownerStoppedAt] = await Promise.all([
-      context.remoteControlProgramSwitches(),
-      findOwnerStoppedAt(context, citizen.id),
-    ]);
+    const switches = await context.remoteControlProgramSwitches();
     if (switches.isProgramTurnedOff)
       throw new ForbiddenError(
         RemoteControlProgramErrorMessage.ProgramTurnedOff,
@@ -215,8 +210,6 @@ export const appendFeedEntries = (
       return toRefusal(AcknowledgementErrorCode.ConnectorTurnedOff, batch);
     if (switches.turnedOffCapabilityIds.includes(batch.capability_id))
       return toRefusal(AcknowledgementErrorCode.CapabilityTurnedOff, batch);
-    if (ownerStoppedAt !== null)
-      return toRefusal(AcknowledgementErrorCode.Stopped, batch);
 
     const now = context.now();
     const checkedEntries = batch.entries.map((entry) => ({

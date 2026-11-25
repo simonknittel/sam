@@ -158,18 +158,3 @@ model RemoteControlProgramWatchLease {
   /// The valid leases of a capability, at each delivery
   @@index([capabilityId, expiresAt])
 }
-
-/// The "Stop all" of the sharing popover for all runtimes of an owner. A row
-/// means that the stop is active: the relay refuses the uploads of all
-/// runtimes of the owner, and tells them over their connections. "Start all"
-/// deletes the row. This is the same opt-out form as `McpToolSetting`: the
-/// table holds only the owners that stopped, and a check at each upload is
-/// one lookup of the unique key.
-model RemoteControlProgramOwnerStop {
-  id        String   @id @default(cuid(2))
-  ownerId   String   @unique
-  owner     Citizen  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  /// The start of the stop. The entries of the time of the stop stay on the
-  /// machine (decision 27).
-  stoppedAt DateTime @default(now()) @db.Timestamptz(3)
-}

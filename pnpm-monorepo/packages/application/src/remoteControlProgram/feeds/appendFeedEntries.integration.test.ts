@@ -322,12 +322,5 @@ test("refuses the batches of a turned-off part, of a stopped owner, of an unknow
     new ForbiddenError(RemoteControlProgramErrorMessage.PermissionMissing),
   );
 
-  await prisma.remoteControlProgramOwnerStop.create({
-    data: { ownerId: owner.citizen!.id, stoppedAt: ONE_HOUR_AGO },
-  });
-  await expect(appendFeedEntries(context, owner, input)).resolves.toEqual(
-    refusal(AcknowledgementErrorCode.Stopped),
-  );
-
   await expect(findStoredEntries()).resolves.toEqual([]);
 });

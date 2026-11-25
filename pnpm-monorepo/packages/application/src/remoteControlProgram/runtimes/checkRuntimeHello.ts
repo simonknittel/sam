@@ -6,7 +6,6 @@ import { ForbiddenError } from "../../errors.js";
 import { withSpan } from "../../withSpan.js";
 import { RemoteControlProgramErrorMessage } from "../access/remoteControlProgramErrors.js";
 import { requireRemoteControlProgramUse } from "../access/remoteControlProgramPermissions.js";
-import { findOwnerStoppedAt } from "./ownerStop.js";
 import { requireRuntimeBelowLimit } from "./runtimeLimit.js";
 
 export const checkRuntimeHelloInputSchema = z.object({
@@ -17,11 +16,6 @@ export const checkRuntimeHelloInputSchema = z.object({
 export type CheckRuntimeHelloInput = z.output<
   typeof checkRuntimeHelloInputSchema
 >;
-
-export interface RuntimeHelloCheck {
-  /** The "Stop all" of the owner is active: `is_stopped` of the `welcome` */
-  readonly isOwnerStopped: boolean;
-}
 
 /**
  * Checks the `hello` of a connection of a runtime of the actor, after
@@ -40,7 +34,7 @@ export const checkRuntimeHello = (
   context: ApplicationContext,
   actor: Actor,
   input: CheckRuntimeHelloInput,
-): Promise<RuntimeHelloCheck> =>
+): Promise<void> =>
   withSpan(context, "checkRuntimeHello", async () => {
     const citizen = requireRemoteControlProgramUse(actor);
 
@@ -50,14 +44,9 @@ export const checkRuntimeHello = (
         RemoteControlProgramErrorMessage.ProgramTurnedOff,
       );
 
-    const [ownerStoppedAt] = await Promise.all([
-      findOwnerStoppedAt(context, citizen.id),
-      requireRuntimeBelowLimit(context.prisma, {
-        ownerCitizenId: citizen.id,
-        runtimeId: input.runtime_id,
-        now: context.now(),
-      }),
-    ]);
-
-    return { isOwnerStopped: ownerStoppedAt !== null };
+    await requireRuntimeBelowLimit(context.prisma, {
+      ownerCitizenId: citizen.id,
+      runtimeId: input.runtime_id,
+      now: context.now(),
+    });
   });

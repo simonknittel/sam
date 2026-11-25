@@ -44,8 +44,6 @@ export interface HttpEndpointOptions {
   readonly isHealthy: () => Promise<boolean>;
   /** Closes the runtime connections of the user with `access_denied` */
   readonly disconnectUser: (userId: string) => void;
-  /** Reads the stop of the owner, and sends `stop` or `start` to the runtimes of the owner */
-  readonly applyOwnerStopChange: (ownerCitizenId: string) => Promise<void>;
 }
 
 const respond = (
@@ -97,7 +95,6 @@ export const createHttpRequestHandler = ({
   issuer,
   isHealthy,
   disconnectUser,
-  applyOwnerStopChange,
 }: HttpEndpointOptions) => {
   const handleInternalRequest = async (
     request: IncomingMessage,
@@ -152,13 +149,9 @@ export const createHttpRequestHandler = ({
         disconnectUser(internalRequest.userId);
         break;
 
-      case RelayInternalOperation.OwnerStopChanged:
-        await applyOwnerStopChange(internalRequest.ownerCitizenId);
-        break;
-
       default:
         throw new Error(
-          `Unknown relay operation: ${JSON.stringify(internalRequest satisfies never)}`,
+          `Unknown relay operation: ${internalRequest.operation satisfies never}`,
         );
     }
 

@@ -19,8 +19,8 @@ import * as z from "zod";
  *   the runtimes have a different audience
  *   (`RUNTIME_CONNECTION_TOKEN_AUDIENCE` of `application`), thus one token
  *   kind never works as the other one.
- * - `operation` and its target (`user_id` or `owner_citizen_id`): a token is
- *   valid only for one endpoint and one target. The requests have no body.
+ * - `operation` and its target (`user_id`): a token is valid only for one
+ *   endpoint and one target. The requests have no body.
  * - `iat` and `exp`: a lifetime of `TOKEN_LIFETIME_SECONDS`.
  */
 
@@ -29,46 +29,25 @@ const RELAY_INTERNAL_REQUEST_TOKEN_AUDIENCE = "sam_relay_internal";
 export enum RelayInternalOperation {
   /** Closes all runtime connections of a user, after a ban */
   DisconnectUser = "disconnect_user",
-  /** The relay service reads the stop of the owner again, and sends `stop` or `start` */
-  OwnerStopChanged = "owner_stop_changed",
 }
 
 /** The path of each internal endpoint of the relay service */
 export const RELAY_INTERNAL_PATHS = {
   [RelayInternalOperation.DisconnectUser]: "/internal/disconnect-user",
-  [RelayInternalOperation.OwnerStopChanged]: "/internal/owner-stop-changed",
 } as const satisfies Record<RelayInternalOperation, string>;
 
-export type RelayInternalRequest =
-  | {
-      readonly operation: RelayInternalOperation.DisconnectUser;
-      readonly userId: string;
-    }
-  | {
-      readonly operation: RelayInternalOperation.OwnerStopChanged;
-      readonly ownerCitizenId: string;
-    };
+export interface RelayInternalRequest {
+  readonly operation: RelayInternalOperation.DisconnectUser;
+  readonly userId: string;
+}
 
 /** The app sends the request at once after it signs the token */
 const TOKEN_LIFETIME_SECONDS = 60;
 
-const toClaims = (request: RelayInternalRequest) => {
-  switch (request.operation) {
-    case RelayInternalOperation.DisconnectUser:
-      return { operation: request.operation, user_id: request.userId };
-
-    case RelayInternalOperation.OwnerStopChanged:
-      return {
-        operation: request.operation,
-        owner_citizen_id: request.ownerCitizenId,
-      };
-
-    default:
-      throw new Error(
-        `Unknown relay operation: ${JSON.stringify(request satisfies never)}`,
-      );
-  }
-};
+const toClaims = ({ operation, userId }: RelayInternalRequest) => ({
+  operation,
+  user_id: userId,
+});
 
 /** Never log the token */
 export const signRelayInternalRequestToken = ({
@@ -88,16 +67,10 @@ export const signRelayInternalRequestToken = ({
     .setExpirationTime(`${TOKEN_LIFETIME_SECONDS}s`)
     .sign(signingKey.privateKey);
 
-const claimsSchema = z.discriminatedUnion("operation", [
-  z.object({
-    operation: z.literal(RelayInternalOperation.DisconnectUser),
-    user_id: z.string().min(1),
-  }),
-  z.object({
-    operation: z.literal(RelayInternalOperation.OwnerStopChanged),
-    owner_citizen_id: z.string().min(1),
-  }),
-]);
+const claimsSchema = z.object({
+  operation: z.enum(RelayInternalOperation),
+  user_id: z.string().min(1),
+});
 
 /** The token of an internal request is not valid. The endpoint answers 401. */
 export class RelayInternalRequestTokenError extends Error {
@@ -156,19 +129,5 @@ export const verifyRelayInternalRequestToken = async ({
   if (!claims.success || claims.data.operation !== operation)
     throw new RelayInternalRequestTokenError();
 
-  switch (claims.data.operation) {
-    case RelayInternalOperation.DisconnectUser:
-      return { operation: claims.data.operation, userId: claims.data.user_id };
-
-    case RelayInternalOperation.OwnerStopChanged:
-      return {
-        operation: claims.data.operation,
-        ownerCitizenId: claims.data.owner_citizen_id,
-      };
-
-    default:
-      throw new Error(
-        `Unknown relay operation: ${JSON.stringify(claims.data satisfies never)}`,
-      );
-  }
+  return { operation: claims.data.operation, userId: claims.data.user_id };
 };

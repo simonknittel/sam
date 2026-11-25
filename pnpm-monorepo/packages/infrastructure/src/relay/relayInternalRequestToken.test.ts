@@ -14,7 +14,7 @@ import {
 
 const ISSUER = "https://sam.example.com";
 
-test("a token is valid only for the endpoint of its operation, and a key set that cannot be read is an error of the host", async () => {
+test("a token is valid only with the key of the app, and a key set that cannot be read is an error of the host", async () => {
   const { privateKey, publicKey } = generateKeyPairSync("ec", {
     namedCurve: "P-256",
   });
@@ -41,9 +41,12 @@ test("a token is valid only for the endpoint of its operation, and a key set tha
     operation: RelayInternalOperation.DisconnectUser,
     userId: "user-1",
   });
-  await expect(verify(RelayInternalOperation.OwnerStopChanged)).rejects.toThrow(
-    RelayInternalRequestTokenError,
-  );
+  await expect(
+    verify(
+      RelayInternalOperation.DisconnectUser,
+      async () => generateKeyPairSync("ec", { namedCurve: "P-256" }).publicKey,
+    ),
+  ).rejects.toThrow(RelayInternalRequestTokenError);
 
   // Like the remote key set of `jose` after a timeout
   await expect(

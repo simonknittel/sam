@@ -135,8 +135,8 @@ const createApplicationContext = (): ApplicationContext => ({
         url: env.RELAY_URL,
         signingKey: getSigningKey,
         issuer: getApplicationUrls().issuer,
-        // A ban and a "Stop all" run in an interactive request, thus a
-        // hanging relay service must not hold the request open for long
+        // A ban runs in an interactive request, thus a hanging relay service
+        // must not hold the request open for long
         requestTimeoutMilliseconds: 5_000,
       })
     : null,

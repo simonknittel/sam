@@ -175,9 +175,9 @@ works only on the machine. The preview deployments have no relay service.
    `sam-relay.example.com`. The proxy in front of the container must pass
    the WebSocket upgrade of the path `/`, must keep an open WebSocket
    connection for longer than the heartbeat interval of the runtimes, and
-   must pass `GET /health`, `POST /internal/disconnect-user` and
-   `POST /internal/owner-stop-changed`. The app calls the internal
-   endpoints with a short-lived token that the relay service verifies. The
+   must pass `GET /health` and `POST /internal/disconnect-user`. The app
+   calls the internal endpoint with a short-lived token that the relay
+   service verifies. The
    relay service does not limit the connections for each IP address, thus
    the proxy must limit the open connections and the new connections for
    each address.

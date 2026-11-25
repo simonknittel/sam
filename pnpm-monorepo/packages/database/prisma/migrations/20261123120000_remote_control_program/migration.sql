@@ -64,15 +64,6 @@ CREATE TABLE "RemoteControlProgramWatchLease" (
     CONSTRAINT "RemoteControlProgramWatchLease_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "RemoteControlProgramOwnerStop" (
-    "id" TEXT NOT NULL,
-    "ownerId" TEXT NOT NULL,
-    "stoppedAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "RemoteControlProgramOwnerStop_pkey" PRIMARY KEY ("id")
-);
-
 -- CreateIndex
 CREATE INDEX "ShareGrant_ownerId_revokedAt_endsAt_idx" ON "ShareGrant"("ownerId", "revokedAt", "endsAt");
 
@@ -94,9 +85,6 @@ CREATE INDEX "RemoteControlProgramWatchLease_capabilityId_expiresAt_idx" ON "Rem
 -- CreateIndex
 CREATE UNIQUE INDEX "RemoteControlProgramWatchLease_viewerId_capabilityId_consum_key" ON "RemoteControlProgramWatchLease"("viewerId", "capabilityId", "consumerId");
 
--- CreateIndex
-CREATE UNIQUE INDEX "RemoteControlProgramOwnerStop_ownerId_key" ON "RemoteControlProgramOwnerStop"("ownerId");
-
 -- AddForeignKey
 ALTER TABLE "ShareGrant" ADD CONSTRAINT "ShareGrant_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "Citizen"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -114,9 +102,6 @@ ALTER TABLE "RemoteControlProgramRuntime" ADD CONSTRAINT "RemoteControlProgramRu
 
 -- AddForeignKey
 ALTER TABLE "RemoteControlProgramWatchLease" ADD CONSTRAINT "RemoteControlProgramWatchLease_viewerId_fkey" FOREIGN KEY ("viewerId") REFERENCES "Citizen"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "RemoteControlProgramOwnerStop" ADD CONSTRAINT "RemoteControlProgramOwnerStop_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "Citizen"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- The grantee kind decides which grantee column is set. Thus a grant to a
 -- citizen or a role cannot lose its grantee and give access to somebody

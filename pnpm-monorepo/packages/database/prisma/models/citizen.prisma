@@ -114,7 +114,6 @@ model Citizen {
   revokedShareGrants                           ShareGrant[]                         @relation("revokedShareGrants")
   remoteControlProgramRuntimes                 RemoteControlProgramRuntime[]
   remoteControlProgramWatchLeases              RemoteControlProgramWatchLease[]
-  remoteControlProgramOwnerStop                RemoteControlProgramOwnerStop?
 
   /// The login of the citizen: the user whose Discord account has the
   /// Discord ID of the citizen. Set at each sign-in and when the Discord ID

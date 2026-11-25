@@ -1,6 +1,6 @@
 /**
  * The runtimes of the Remote Control Program: the connection tokens, the
- * presence, the "Stop all" of the owner and the counts of the uploads
+ * presence and the counts of the uploads
  */
 export {
   authenticateRuntimeConnection,
@@ -12,7 +12,6 @@ export {
   checkRuntimeHello,
   checkRuntimeHelloInputSchema,
   type CheckRuntimeHelloInput,
-  type RuntimeHelloCheck,
 } from "./checkRuntimeHello.js";
 export {
   claimRuntimePresence,
@@ -27,10 +26,6 @@ export {
   type EndRuntimeLeaseOutput,
 } from "./endRuntimeLease.js";
 export {
-  getRuntimeStopOfOwner,
-  type RuntimeStopOfOwnerInput,
-} from "./getRuntimeStopOfOwner.js";
-export {
   issueRuntimeConnectionToken,
   issueRuntimeConnectionTokenInputSchema,
   type IssueRuntimeConnectionTokenInput,
@@ -38,7 +33,6 @@ export {
 } from "./issueRuntimeConnectionToken.js";
 export { KeySetUnavailableError, isKeySetFetchError } from "./keySetErrors.js";
 export { listOwnRuntimes, type OwnRuntimes } from "./listOwnRuntimes.js";
-export type { OwnRuntimeStop } from "./ownerStop.js";
 export type { OwnRuntime } from "./ownRuntime.js";
 export {
   recordFeedEntryUploadCounts,
@@ -51,8 +45,6 @@ export {
   renewRuntimeLeaseInputSchema,
   type RenewRuntimeLeaseInput,
 } from "./renewRuntimeLease.js";
-export { startOwnRuntimes } from "./startOwnRuntimes.js";
-export { stopOwnRuntimes } from "./stopOwnRuntimes.js";
 export {
   storeRuntimeAnnouncement,
   storeRuntimeAnnouncementInputSchema,
