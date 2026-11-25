@@ -30,8 +30,8 @@ export const TopBar = ({ className }: Props) => {
         <CmdKLoader className="w-96 flex-initial" />
 
         <div className="flex flex-1 justify-end">
-          <Support />
           <RemoteControlProgram />
+          <Support />
           <Onboarding />
           <Notifications />
           <Account />

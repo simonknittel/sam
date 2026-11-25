@@ -417,7 +417,7 @@ The grantee kinds:
 
 ## Sharing popover
 
-- An item in the top bar (`apps/app/src/modules/shell/components/TopBar/`) and, on a mobile device, next to the button of the onboarding in the flyout of the action bar. There it opens a bottom sheet. It follows the notifications popover.
+- An item in the top bar (`apps/app/src/modules/shell/components/TopBar/`) and, on a mobile device, in the flyout of the action bar, where it opens a bottom sheet. In both places, it is left of the support button. It follows the notifications popover.
 - It has a tab for each of these sections. Without a log folder, the popover opens with the start. Else it opens with the browser. When a control UI opens the popover, it shows the tab that the control UI names, for example the browser for the log folder. The tab of the browser is apart from the other tabs, because it contains the settings of one runtime.
   1. **Start:** what the Remote Control Program is, and what the runtimes, the connectors, the consumer apps (the available and the planned ones), the grants and the stored data are, from the view of the owner. A matrix shows which runtime supports which connector. Links open the other tabs.
   2. **Status:** the connected runtimes of the owner and their active connectors. A connector is active when at least one of its capabilities leaves the machine.
