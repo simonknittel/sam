@@ -15,11 +15,14 @@ const createEvents = (count: number) =>
     data: { index },
   }));
 
-test("sends the events in batches to the private channel of each event, and throws after all batches when one failed", async () => {
+test("sends the events in batches to the private channel of each event, and throws after all batches when the server refused one", async () => {
   const triggerBatch = vi
     .fn<PusherClient["triggerBatch"]>()
-    .mockRejectedValueOnce(new Error("The realtime server refused the batch"))
-    .mockResolvedValue(new Response(null) as never);
+    // Soketi refuses with the status 200
+    .mockResolvedValueOnce(
+      Response.json({ error: "Too large", code: 413 }) as never,
+    )
+    .mockResolvedValue(Response.json({ ok: true }) as never);
   const realtime = createPusherRealtimeServer({
     client: { triggerBatch } as unknown as PusherClient,
   });

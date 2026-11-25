@@ -14,11 +14,17 @@ const MAXIMUM_BATCH_EVENTS = 10;
 
 /**
  * Soketi answers a refused request also with the status 200, but with an
- * error in the body. Only this body confirms the termination.
+ * error in the body. Only this body confirms the request.
  */
-const terminateUserConnectionsResponseSchema = z.object({
-  ok: z.literal(true),
-});
+const confirmationSchema = z.object({ ok: z.literal(true) });
+
+const requireConfirmation = async (
+  response: { readonly json: () => Promise<unknown> },
+  message: string,
+) => {
+  if (!confirmationSchema.safeParse(await response.json()).success)
+    throw new Error(message);
+};
 
 export interface PusherRealtimeServerOptions {
   /** See `createPusherClient()`. Its timeout limits each request. */
@@ -43,13 +49,10 @@ export const createPusherRealtimeServer = ({
   client,
 }: PusherRealtimeServerOptions): RealtimeServer => ({
   terminateUserConnections: async (userId) => {
-    const response = await client.terminateUserConnections(userId);
-    const body: unknown = await response.json();
-
-    if (!terminateUserConnectionsResponseSchema.safeParse(body).success)
-      throw new Error(
-        "The realtime server did not confirm the termination of the user connections",
-      );
+    await requireConfirmation(
+      await client.terminateUserConnections(userId),
+      "The realtime server did not confirm the termination of the user connections",
+    );
   },
 
   publishToCitizens: async (events: readonly CitizenRealtimeEvent[]) => {
@@ -63,7 +66,12 @@ export const createPusherRealtimeServer = ({
 
     // The client throws a `RequestError` for a status other than 2xx
     const results = await Promise.allSettled(
-      batches.map((batch) => client.triggerBatch(batch)),
+      batches.map(async (batch) =>
+        requireConfirmation(
+          await client.triggerBatch(batch),
+          "The realtime server did not confirm the batch of events",
+        ),
+      ),
     );
     const failures = results.filter((result) => result.status === "rejected");
     if (failures.length > 0)
