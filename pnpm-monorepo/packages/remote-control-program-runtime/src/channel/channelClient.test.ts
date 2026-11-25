@@ -42,7 +42,6 @@ const ANNOUNCEMENT: AnnounceContent = {
     },
   ],
   local_access_layer: {
-    is_stopped: false,
     capability_rules: [
       {
         capability_id: CapabilityId.LogEntries,

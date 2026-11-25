@@ -436,17 +436,6 @@ export class BrowserRuntime {
     this.handleLocalAccessChange();
   }
 
-  /** The "Stop all" of this browser */
-  stopAll() {
-    this.#layer.stopAll();
-    this.handleLocalAccessChange();
-  }
-
-  startAll() {
-    this.#layer.startAll();
-    this.handleLocalAccessChange();
-  }
-
   /**
    * After a change of the settings of the local access layer, also in a
    * different tab (the `storage` event)

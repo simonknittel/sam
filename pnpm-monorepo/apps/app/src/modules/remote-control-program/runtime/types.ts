@@ -95,9 +95,6 @@ export interface BrowserRuntimeCommands {
     types: readonly LogAnalyzerEntryType[],
     isOn: boolean,
   ) => void;
-  /** The "Stop all" of this browser: no upload until `startAll()` */
-  readonly stopAll: () => void;
-  readonly startAll: () => void;
   /**
    * The window of the entries that a control UI shows. The runtime reads
    * also the log files of this window, in addition to the last 7 days. Null:

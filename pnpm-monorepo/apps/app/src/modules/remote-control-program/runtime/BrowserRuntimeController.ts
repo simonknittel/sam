@@ -61,7 +61,7 @@ const INITIAL_SNAPSHOT: BrowserRuntimeSnapshot = {
   isWaitingForFolderPermission: false,
   tabRole: BrowserRuntimeTabRole.Inactive,
   isAutostartEnabled: false,
-  localAccess: { logEntryTypes: ALL_TYPES_OFF, stoppedAt: null },
+  localAccess: { logEntryTypes: ALL_TYPES_OFF },
 };
 
 export interface BrowserRuntimeControllerOptions {
@@ -165,12 +165,6 @@ export class BrowserRuntimeController {
         this.#changeLocalAccess((target) =>
           target.setLogEntryTypes(types, isOn),
         );
-      },
-      stopAll: () => {
-        this.#changeLocalAccess((target) => target.stopAll());
-      },
-      startAll: () => {
-        this.#changeLocalAccess((target) => target.startAll());
       },
       setRequestedWindow: (window) =>
         this.#sendCommand({ type: TabCommandType.SetRequestedWindow, window }),
@@ -740,18 +734,12 @@ export class BrowserRuntimeController {
   }
 
   /**
-   * The tab of the runtime changes the rules through the runtime: it removes
-   * the live periods at the exact time of a "Stop all", and tells the relay
-   * at once. The other tabs change the storage, and the runtime gets the
-   * `storage` event.
+   * The tab of the runtime changes the rules through the runtime, which tells
+   * the relay at once. The other tabs change the storage, and the runtime gets
+   * the `storage` event.
    */
   #changeLocalAccess(
-    change: (
-      target: Pick<
-        LocalAccessLayer,
-        "setLogEntryTypes" | "stopAll" | "startAll"
-      >,
-    ) => void,
+    change: (target: Pick<LocalAccessLayer, "setLogEntryTypes">) => void,
   ) {
     const connection = this.#connection;
     if (connection === null) return;

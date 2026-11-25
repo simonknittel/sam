@@ -44,69 +44,53 @@ const startRuntime = (browser: ReturnType<typeof createBrowser>) => {
 };
 
 describe("the rule for the upload", () => {
-  it.each([
-    {
-      stop: "the Stop all of this browser",
-      stopAll: (layer: ReturnType<typeof startRuntime>) => layer.stopAll(),
-      startAll: (layer: ReturnType<typeof startRuntime>) => layer.startAll(),
-    },
-    {
-      stop: "the Stop all of the owner from the relay",
-      stopAll: (layer: ReturnType<typeof startRuntime>) =>
-        layer.setRelayState(RelayUploadState.Stopped),
-      startAll: (layer: ReturnType<typeof startRuntime>) =>
-        layer.setRelayState(RelayUploadState.Accepting),
-    },
-  ])(
-    "after $stop, only the lines read live from the start go up",
-    ({ stopAll, startAll }) => {
-      const browser = createBrowser();
-      const olderLine = createEntry(
-        LogAnalyzerEntryType.JoinPu,
-        browser.getTime(),
-      );
-      browser.advance(60 * SECOND);
+  it("after a Stop all of the owner, only the lines read live from the start go up", () => {
+    const browser = createBrowser();
+    const olderLine = createEntry(
+      LogAnalyzerEntryType.JoinPu,
+      browser.getTime(),
+    );
+    browser.advance(60 * SECOND);
 
-      const layer = startRuntime(browser);
-      layer.setLogEntryTypes([LogAnalyzerEntryType.JoinPu], true);
-      browser.advance(5 * SECOND);
-      const liveLine = createEntry(
-        LogAnalyzerEntryType.JoinPu,
-        browser.getTime(),
-      );
-      browser.advance(5 * SECOND);
-      layer.heartbeat();
-      expect(layer.selectAutomaticUploads([olderLine, liveLine])).toEqual([
+    const layer = startRuntime(browser);
+    layer.setLogEntryTypes([LogAnalyzerEntryType.JoinPu], true);
+    browser.advance(5 * SECOND);
+    const liveLine = createEntry(
+      LogAnalyzerEntryType.JoinPu,
+      browser.getTime(),
+    );
+    browser.advance(5 * SECOND);
+    layer.heartbeat();
+    expect(layer.selectAutomaticUploads([olderLine, liveLine])).toEqual([
+      liveLine,
+    ]);
+
+    // The live line did not go up before the stop, for example because the relay was not available
+    layer.setRelayState(RelayUploadState.Stopped);
+    browser.advance(5 * SECOND);
+    const stoppedLine = createEntry(
+      LogAnalyzerEntryType.JoinPu,
+      browser.getTime(),
+    );
+    expect(layer.selectAutomaticUploads([liveLine])).toEqual([]);
+
+    browser.advance(5 * SECOND);
+    layer.setRelayState(RelayUploadState.Accepting);
+    browser.advance(5 * SECOND);
+    const lineAfterStart = createEntry(
+      LogAnalyzerEntryType.JoinPu,
+      browser.getTime(),
+    );
+
+    expect(
+      layer.selectAutomaticUploads([
+        olderLine,
         liveLine,
-      ]);
-
-      // The live line did not go up before the stop, for example because the relay was not available
-      stopAll(layer);
-      browser.advance(5 * SECOND);
-      const stoppedLine = createEntry(
-        LogAnalyzerEntryType.JoinPu,
-        browser.getTime(),
-      );
-      expect(layer.selectAutomaticUploads([liveLine])).toEqual([]);
-
-      browser.advance(5 * SECOND);
-      startAll(layer);
-      browser.advance(5 * SECOND);
-      const lineAfterStart = createEntry(
-        LogAnalyzerEntryType.JoinPu,
-        browser.getTime(),
-      );
-
-      expect(
-        layer.selectAutomaticUploads([
-          olderLine,
-          liveLine,
-          stoppedLine,
-          lineAfterStart,
-        ]),
-      ).toEqual([lineAfterStart]);
-    },
-  );
+        stoppedLine,
+        lineAfterStart,
+      ]),
+    ).toEqual([lineAfterStart]);
+  });
 
   it.each([
     { gapSeconds: 20, isUploaded: true },
@@ -231,7 +215,7 @@ describe("the request for older entries", () => {
       secondOlderLine,
     ]);
 
-    layer.stopAll();
+    layer.setRelayState(RelayUploadState.Stopped);
     expect(layer.selectPermittedUploads(request.entries)).toEqual([]);
   });
 });

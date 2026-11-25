@@ -56,8 +56,6 @@ export interface OlderEntriesRequest<Entry extends LocalAccessEntry> {
 export interface LocalAccessSettings {
   /** Each version of a type has the value of the rule of its oldest version */
   readonly logEntryTypes: Readonly<Record<LogAnalyzerEntryType, boolean>>;
-  /** The time of the "Stop all" of this browser. Null when it is not active. */
-  readonly stoppedAt: Date | null;
 }
 
 export interface StopReadingOptions {
@@ -117,18 +115,16 @@ const isInRange = (time: number, range: OlderEntriesTimeRange) =>
 /**
  * The local access layer of the browser runtime (see "Local access layer" of
  * `docs/remote-control-program/README.md`): the rules of `log_entries` for
- * each log entry type, the "Stop all" of this browser, and the rule for the
- * upload (decision 27).
+ * each log entry type, and the rule for the upload (decision 27).
  *
  * All is off by default. A log entry goes up automatically only when:
  *
  * - its type is on, and was on at the time of the entry,
  * - its time is in a live period (see `livePeriods.ts`),
- * - the "Stop all" of this browser is not active, and the relay told that it
- *   accepts the uploads.
+ * - the relay told that it accepts the uploads.
  *
- * Each "Stop all" (of this browser, of the owner, or a switch that turned
- * off the capability) removes all live periods: after the start, only the
+ * Each stop from the relay (the "Stop all" of the owner, or a switch that
+ * turned off the capability) removes all live periods: after the start, only the
  * lines that a runtime reads live from then on go up automatically. Older
  * entries go up only through a request that the owner confirms
  * (`prepareOlderEntriesRequest` and `confirmOlderEntriesRequest`).
@@ -160,8 +156,7 @@ export const createLocalAccessLayer = ({
   const readPeriods = (time: number) =>
     pruneLivePeriods(readLivePeriods(storage, citizenId), time);
 
-  const isStopped = (rules: LocalAccessRules) =>
-    rules.stoppedAt !== null || relayState === RelayUploadState.Stopped;
+  const isStopped = () => relayState === RelayUploadState.Stopped;
 
   /** False when a "Stop all" of a different tab removed the own period */
   const isLastPeriodOpen = (livePeriods: LivePeriods, time: number) => {
@@ -201,7 +196,7 @@ export const createLocalAccessLayer = ({
     const time = getTime();
 
     // After the start, only the lines that a runtime reads live from then on go up automatically (decision 27)
-    if (isStopped(readRules())) {
+    if (isStopped()) {
       isOwnPeriodOpen = false;
       writeLivePeriods(storage, citizenId, NO_LIVE_PERIODS);
       return;
@@ -250,7 +245,6 @@ export const createLocalAccessLayer = ({
             rules.turnedOnAtByType.has(getOldestLogAnalyzerEntryVersion(type)),
           ]),
         ) as Record<LogAnalyzerEntryType, boolean>,
-        stoppedAt: rules.stoppedAt === null ? null : new Date(rules.stoppedAt),
       };
     },
 
@@ -278,31 +272,7 @@ export const createLocalAccessLayer = ({
         }
       }
 
-      writeLocalAccessRules(storage, citizenId, { ...rules, turnedOnAtByType });
-    },
-
-    /**
-     * The "Stop all" of this browser: no upload until `startAll`. It removes
-     * all live periods.
-     */
-    stopAll: () => {
-      const rules = readRules();
-      if (rules.stoppedAt !== null) return;
-
-      writeLocalAccessRules(storage, citizenId, {
-        ...rules,
-        stoppedAt: getTime(),
-      });
-      updatePeriods();
-    },
-
-    /** Ends the "Stop all" of this browser. A new live period starts. */
-    startAll: () => {
-      const rules = readRules();
-      if (rules.stoppedAt === null) return;
-
-      writeLocalAccessRules(storage, citizenId, { ...rules, stoppedAt: null });
-      updatePeriods();
+      writeLocalAccessRules(storage, citizenId, { turnedOnAtByType });
     },
 
     /**
@@ -323,7 +293,6 @@ export const createLocalAccessLayer = ({
       ).length;
 
       return {
-        is_stopped: rules.stoppedAt !== null,
         capability_rules: [
           {
             capability_id: CapabilityId.LogEntries,
@@ -345,9 +314,7 @@ export const createLocalAccessLayer = ({
 
     /**
      * Each `LIVE_PERIOD_HEARTBEAT_INTERVAL_MILLISECONDS` while the runtime of
-     * this tab reads. Also after a change of the settings in a different tab
-     * (the `storage` event), so that a `startAll` there starts the period
-     * immediately.
+     * this tab reads
      */
     heartbeat: () => {
       updatePeriods();
@@ -389,8 +356,7 @@ export const createLocalAccessLayer = ({
       entries: Iterable<Entry>,
     ): Entry[] => {
       const rules = readRules();
-      if (rules.stoppedAt !== null || relayState !== RelayUploadState.Accepting)
-        return [];
+      if (relayState !== RelayUploadState.Accepting) return [];
 
       const time = getTime();
       const livePeriods = readPeriods(time);
@@ -411,8 +377,9 @@ export const createLocalAccessLayer = ({
     >(
       entries: Iterable<Entry>,
     ): Entry[] => {
+      if (isStopped()) return [];
+
       const rules = readRules();
-      if (isStopped(rules)) return [];
 
       return Array.from(entries).filter((entry) =>
         rules.turnedOnAtByType.has(

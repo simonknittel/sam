@@ -246,14 +246,12 @@ export class ChannelClient {
 
     // All is off by default (principle 2): a capability without a rule does
     // not upload
-    const localAccessLayer = this.#announcement.local_access_layer;
-    const isCapabilityOn = localAccessLayer.capability_rules.some(
+    const { capability_rules: rules } = this.#announcement.local_access_layer;
+    const isCapabilityOn = rules.some(
       (rule) => rule.capability_id === source.capability_id && rule.is_on,
     );
-    if (localAccessLayer.is_stopped || !isCapabilityOn)
-      return ChannelDropReason.LocalAccessLayer;
 
-    return null;
+    return isCapabilityOn ? null : ChannelDropReason.LocalAccessLayer;
   }
 
   #reportDropped(

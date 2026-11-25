@@ -73,7 +73,6 @@ const MAXIMUM_STORED_PERIODS = 1_000;
 const storedLocalAccessLayerSchema = z.object({
   version: z.literal(STORAGE_VERSION),
   /** The time of the "Stop all" of this browser. Null when it is not active. */
-  stopped_at: z.iso.datetime().nullable(),
   /** The types that are on. A type that is off has no item. */
   log_entry_types: z
     .array(
@@ -101,8 +100,6 @@ const storedLivePeriodsSchema = z.object({
 });
 
 export interface LocalAccessRules {
-  /** The time of the "Stop all" of this browser. Null when it is not active. */
-  readonly stoppedAt: number | null;
   /**
    * The log entry types that are on, by their oldest version, with the time
    * when the owner turned them on. All versions of a type share one rule, so
@@ -111,11 +108,8 @@ export interface LocalAccessRules {
   readonly turnedOnAtByType: ReadonlyMap<LogAnalyzerEntryType, number>;
 }
 
-/** All types are off, and "Stop all" is not active */
-const DEFAULT_RULES: LocalAccessRules = {
-  stoppedAt: null,
-  turnedOnAtByType: new Map(),
-};
+/** All types are off */
+const DEFAULT_RULES: LocalAccessRules = { turnedOnAtByType: new Map() };
 
 /**
  * Null when there is no value, or the value is not valid JSON or does not
@@ -195,11 +189,7 @@ export const readLocalAccessRules = (
     );
   }
 
-  return {
-    stoppedAt:
-      storedValue.stopped_at === null ? null : toTime(storedValue.stopped_at),
-    turnedOnAtByType,
-  };
+  return { turnedOnAtByType };
 };
 
 export const writeLocalAccessRules = (
@@ -209,7 +199,6 @@ export const writeLocalAccessRules = (
 ) => {
   writeStoredValue(storage, getLocalAccessLayerStorageKey(citizenId), {
     version: STORAGE_VERSION,
-    stopped_at: rules.stoppedAt === null ? null : toIsoDate(rules.stoppedAt),
     log_entry_types: Array.from(
       rules.turnedOnAtByType,
       ([type, turnedOnAt]) => ({
