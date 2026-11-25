@@ -294,9 +294,11 @@ export enum AuditEventType {
   ROLE_TAG_UPDATED = "ROLE_TAG_UPDATED",
   ROLE_TAG_DELETED = "ROLE_TAG_DELETED",
   ROLE_TAG_ASSIGNMENTS_UPDATED = "ROLE_TAG_ASSIGNMENTS_UPDATED",
+  /** @deprecated Superseded by REMOTE_CONTROL_PROGRAM_SHARE_GRANT_CREATED_V2 (a grant can have more than one role) */
   REMOTE_CONTROL_PROGRAM_SHARE_GRANT_CREATED = "REMOTE_CONTROL_PROGRAM_SHARE_GRANT_CREATED",
   REMOTE_CONTROL_PROGRAM_SHARE_GRANT_REVOKED = "REMOTE_CONTROL_PROGRAM_SHARE_GRANT_REVOKED",
   REMOTE_CONTROL_PROGRAM_FEED_ENTRIES_UPLOADED = "REMOTE_CONTROL_PROGRAM_FEED_ENTRIES_UPLOADED",
+  REMOTE_CONTROL_PROGRAM_SHARE_GRANT_CREATED_V2 = "REMOTE_CONTROL_PROGRAM_SHARE_GRANT_CREATED_V2",
   // The read accesses, see `READ_AUDIT_EVENT_TYPES`
   /** @deprecated Superseded by USER_READ (the tool get_user replaced get_current_user) */
   CURRENT_USER_READ = "CURRENT_USER_READ",
@@ -2080,6 +2082,9 @@ export interface AuditEventDataByType {
    * The owner made a grant. The actor is the owner. The times are the times
    * of the relay. `granteeCitizenId` is set only for the grantee kind
    * "citizen", and `granteeRoleId` only for the grantee kind "role".
+   *
+   * Deprecated: `REMOTE_CONTROL_PROGRAM_SHARE_GRANT_CREATED_V2` holds all
+   * roles of the grant.
    */
   [AuditEventType.REMOTE_CONTROL_PROGRAM_SHARE_GRANT_CREATED]: {
     grantId: string;
@@ -2087,6 +2092,25 @@ export interface AuditEventDataByType {
     granteeKind: GranteeKind;
     granteeCitizenId: string | null;
     granteeRoleId: string | null;
+    capabilityIds: CapabilityId[];
+    operations: GrantOperation[];
+    startsAt: Date;
+    /** Null: no end */
+    endsAt: Date | null;
+  };
+
+  /**
+   * The owner made a grant. The actor is the owner. The times are the times
+   * of the relay. `granteeCitizenId` is set only for the grantee kind
+   * "citizen", and `granteeRoleIds` has values only for the grantee kind
+   * "role".
+   */
+  [AuditEventType.REMOTE_CONTROL_PROGRAM_SHARE_GRANT_CREATED_V2]: {
+    grantId: string;
+    ownerCitizenId: string;
+    granteeKind: GranteeKind;
+    granteeCitizenId: string | null;
+    granteeRoleIds: string[];
     capabilityIds: CapabilityId[];
     operations: GrantOperation[];
     startsAt: Date;

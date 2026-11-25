@@ -98,7 +98,9 @@ export const loadReadAccessOfViewer = (
                 },
                 {
                   granteeKind: GranteeKind.role,
-                  granteeRoleId: { in: [...viewer.roleIds] },
+                  granteeRoles: {
+                    some: { roleId: { in: [...viewer.roleIds] } },
+                  },
                 },
                 { granteeKind: GranteeKind.everyone },
               ],

@@ -32,7 +32,11 @@ export type ShareGrantGrantee =
       /** Null when the citizen was deleted: the grant gives no access */
       readonly citizen: CitizenReference | null;
     }
-  | { readonly kind: typeof GranteeKind.role; readonly role: ShareGrantRole }
+  | {
+      readonly kind: typeof GranteeKind.role;
+      /** By name, at least one */
+      readonly roles: ShareGrantRole[];
+    }
   | { readonly kind: typeof GranteeKind.everyone };
 
 /** A grant of the owner, for the section "Shared with others" */
@@ -52,7 +56,10 @@ export const OWN_SHARE_GRANT_SELECT = {
   id: true,
   granteeKind: true,
   granteeCitizen: { select: CITIZEN_REFERENCE_SELECT },
-  granteeRole: { select: { id: true, name: true } },
+  granteeRoles: {
+    select: { role: { select: { id: true, name: true } } },
+    orderBy: [{ role: { name: "asc" } }, { roleId: "asc" }],
+  },
   capabilityIds: true,
   operations: true,
   startsAt: true,
@@ -66,7 +73,8 @@ type OwnShareGrantRow = Prisma.ShareGrantGetPayload<{
 
 /**
  * The grants of the owner that are not revoked and did not end. This
- * includes the grants that start in the future.
+ * includes the grants that start in the future. A grant whose roles were all
+ * deleted gives no access, thus it is not active.
  */
 export const createActiveOwnShareGrantWhere = (
   ownerCitizenId: string,
@@ -75,9 +83,9 @@ export const createActiveOwnShareGrantWhere = (
   ownerId: ownerCitizenId,
   revokedAt: null,
   OR: [{ endsAt: null }, { endsAt: { gt: now } }],
+  NOT: { granteeKind: GranteeKind.role, granteeRoles: { none: {} } },
 });
 
-/** The CHECK constraint of the table makes sure that the grantee column of the kind is set */
 const toShareGrantGrantee = (row: OwnShareGrantRow): ShareGrantGrantee => {
   const kind = row.granteeKind;
 
@@ -86,13 +94,7 @@ const toShareGrantGrantee = (row: OwnShareGrantRow): ShareGrantGrantee => {
       return { kind, citizen: toCitizenReference(row.granteeCitizen) };
 
     case GranteeKind.role:
-      if (!row.granteeRole)
-        throw new Error(`The grant ${row.id} to a role has no role`);
-
-      return {
-        kind,
-        role: { id: row.granteeRole.id, name: row.granteeRole.name },
-      };
+      return { kind, roles: row.granteeRoles.map(({ role }) => role) };
 
     case GranteeKind.everyone:
       return { kind };

@@ -81,7 +81,7 @@ type ShareGrantRowGrantee =
     }
   | {
       readonly granteeKind: typeof GranteeKind.role;
-      readonly granteeRoleId: string;
+      readonly granteeRoleIds: readonly string[];
     }
   | { readonly granteeKind: typeof GranteeKind.everyone };
 
@@ -107,16 +107,25 @@ export const createShareGrantRow = (
   ownerId: string,
   grantee: ShareGrantRowGrantee,
   validity: ShareGrantRowValidity = { startsAt: ONE_HOUR_AGO },
-) =>
-  prisma.shareGrant.create({
+) => {
+  const granteeRoleIds =
+    grantee.granteeKind === GranteeKind.role ? grantee.granteeRoleIds : [];
+
+  return prisma.shareGrant.create({
     data: {
       ownerId,
-      ...grantee,
+      granteeKind: grantee.granteeKind,
+      granteeCitizenId:
+        grantee.granteeKind === GranteeKind.citizen
+          ? grantee.granteeCitizenId
+          : null,
+      granteeRoles: { create: granteeRoleIds.map((roleId) => ({ roleId })) },
       capabilityIds: [CapabilityId.LogEntries],
       operations: [GrantOperation.Read],
       ...validity,
     },
   });
+};
 
 /** A line of the pattern `JoinPu` at the time, with the IP marker */
 export const createJoinPuLine = (time: Date, address = IP_ADDRESS_MARKER) =>

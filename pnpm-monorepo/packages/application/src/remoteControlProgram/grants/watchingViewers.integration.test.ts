@@ -248,7 +248,7 @@ test("gives the viewers with a valid lease and a valid grant, with their time ra
   await createShareGrantRow(owner.id, toCitizenGrantee(citizenGrantViewer.id));
   await createShareGrantRow(
     owner.id,
-    { granteeKind: GranteeKind.role, granteeRoleId: role.id },
+    { granteeKind: GranteeKind.role, granteeRoleIds: [role.id] },
     { startsAt: ONE_HOUR_AGO, endsAt: IN_ONE_HOUR },
   );
   for (const viewer of [

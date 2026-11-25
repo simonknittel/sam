@@ -1,6 +1,7 @@
 import {
   ShareGrantGranteeKind as GranteeKind,
   type ShareGrant,
+  type ShareGrantGranteeRole,
 } from "@sam-monorepo/database/browser";
 import type { CapabilityId, RemoteControlProgramSwitches } from "./catalog.js";
 
@@ -13,11 +14,17 @@ import type { CapabilityId, RemoteControlProgramSwitches } from "./catalog.js";
 
 /**
  * Who a grant gives access to: the values of the Prisma enum of the grants.
- * `citizen`: one citizen. `role`: all citizens with the role, at the time of
- * each access. `everyone`: all citizens who can use the Remote Control
+ * `citizen`: one citizen. `role`: all citizens with at least one of the
+ * roles, at the time of each access. `everyone`: all citizens who can use the Remote Control
  * Program. "Event participants" comes in step 4.
  */
 export { GranteeKind };
+
+/**
+ * The roles of one grant. An owner usually shares with some roles. 50 is far
+ * above this, and bounds the rows of each delivery.
+ */
+export const MAXIMUM_GRANTEE_ROLES = 50;
 
 /** The operation "request" for actions comes in step 5 */
 export enum GrantOperation {
@@ -35,14 +42,15 @@ export type ShareGrantSource = Readonly<
     | "ownerId"
     | "granteeKind"
     | "granteeCitizenId"
-    | "granteeRoleId"
     | "capabilityIds"
     | "operations"
     | "startsAt"
     | "endsAt"
     | "revokedAt"
   >
->;
+> & {
+  readonly granteeRoles: readonly Pick<ShareGrantGranteeRole, "roleId">[];
+};
 
 export interface RemoteControlProgramViewer {
   readonly citizenId: string;
@@ -99,8 +107,8 @@ const isGrantee = (
       return grant.granteeCitizenId === viewer.citizenId;
 
     case GranteeKind.role:
-      return (
-        grant.granteeRoleId !== null && viewer.roleIds.has(grant.granteeRoleId)
+      return grant.granteeRoles.some(({ roleId }) =>
+        viewer.roleIds.has(roleId),
       );
 
     case GranteeKind.everyone:

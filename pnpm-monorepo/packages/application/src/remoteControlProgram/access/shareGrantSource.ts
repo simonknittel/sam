@@ -12,13 +12,13 @@ export const SHARE_GRANT_SOURCE_SELECT = {
   ownerId: true,
   granteeKind: true,
   granteeCitizenId: true,
-  granteeRoleId: true,
+  granteeRoles: { select: { roleId: true } },
   capabilityIds: true,
   operations: true,
   startsAt: true,
   endsAt: true,
   revokedAt: true,
-} as const satisfies Record<keyof ShareGrantSource, true> &
+} as const satisfies Record<keyof ShareGrantSource, unknown> &
   Prisma.ShareGrantSelect;
 
 /**

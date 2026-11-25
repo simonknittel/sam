@@ -30,7 +30,7 @@ const createGrant = (
   ownerId: "owner",
   granteeKind: GranteeKind.citizen,
   granteeCitizenId: "viewer",
-  granteeRoleId: null,
+  granteeRoles: [],
   capabilityIds: [CapabilityId.LogEntries],
   operations: [GrantOperation.Read],
   startsAt: ONE_HOUR_AGO,
@@ -107,11 +107,11 @@ describe("getEffectiveReadAccess", () => {
   test.each([
     ["a citizen grant", createGrant()],
     [
-      "a role grant",
+      "a grant to one of the roles of the viewer",
       createGrant({
         granteeKind: GranteeKind.role,
         granteeCitizenId: null,
-        granteeRoleId: "pilot",
+        granteeRoles: [{ roleId: "medic" }, { roleId: "pilot" }],
       }),
     ],
     [
@@ -135,14 +135,18 @@ describe("getEffectiveReadAccess", () => {
       [createGrant({ granteeCitizenId: "x" })],
     ],
     [
-      "a grant to a role of a different citizen",
+      "a grant to roles of different citizens",
       [
         createGrant({
           granteeKind: GranteeKind.role,
           granteeCitizenId: null,
-          granteeRoleId: "medic",
+          granteeRoles: [{ roleId: "medic" }, { roleId: "officer" }],
         }),
       ],
+    ],
+    [
+      "a grant whose roles were deleted",
+      [createGrant({ granteeKind: GranteeKind.role, granteeCitizenId: null })],
     ],
     ["a grant of a different owner", [createGrant({ ownerId: "other" })]],
     ["a revoked grant", [createGrant({ revokedAt: ONE_HOUR_AGO })]],

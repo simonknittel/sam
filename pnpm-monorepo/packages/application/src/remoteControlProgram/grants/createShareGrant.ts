@@ -9,6 +9,7 @@ import {
   GrantValidityPreset,
   GrantValidityProblem,
   lockCitizen,
+  MAXIMUM_GRANTEE_ROLES,
   type GrantValidity,
 } from "@sam-monorepo/domain";
 import * as z from "zod";
@@ -44,11 +45,14 @@ export const createShareGrantInputSchema = z.object({
   grantee: z
     .discriminatedUnion("kind", [
       z.object({ kind: z.literal(GranteeKind.citizen), citizen_id: idSchema }),
-      z.object({ kind: z.literal(GranteeKind.role), role_id: idSchema }),
+      z.object({
+        kind: z.literal(GranteeKind.role),
+        role_ids: z.array(idSchema).min(1).max(MAXIMUM_GRANTEE_ROLES),
+      }),
       z.object({ kind: z.literal(GranteeKind.everyone) }),
     ])
     .describe(
-      "citizen: one citizen. role: all citizens with the role at the time of each access. everyone: all citizens who can use the Remote Control Program.",
+      "citizen: one citizen. role: all citizens with at least one of the roles at the time of each access. everyone: all citizens who can use the Remote Control Program.",
     ),
   capability_ids: z
     .array(z.enum(CapabilityId))
@@ -118,13 +122,19 @@ const toGrantValidity = (
   }
 };
 
-/** The grantee columns of the kind. The other grantee column stays NULL (see the CHECK constraint). */
-const toGranteeColumns = async (
+interface Grantee {
+  /** Null for the other grantee kinds (see the CHECK constraint) */
+  readonly granteeCitizenId: string | null;
+  /** Empty for the other grantee kinds */
+  readonly granteeRoleIds: string[];
+}
+
+const toGrantee = async (
   context: ApplicationContext,
   actor: Actor,
   ownerCitizenId: string,
   grantee: CreateShareGrantInput["grantee"],
-) => {
+): Promise<Grantee> => {
   switch (grantee.kind) {
     case GranteeKind.citizen:
       if (grantee.citizen_id === ownerCitizenId)
@@ -135,20 +145,23 @@ const toGranteeColumns = async (
         [grantee.citizen_id],
         ShareGrantErrorMessage.GranteeCitizenNotFound,
       );
-      return { granteeCitizenId: grantee.citizen_id, granteeRoleId: null };
+      return { granteeCitizenId: grantee.citizen_id, granteeRoleIds: [] };
 
     case GranteeKind.role:
       // The same choices as the role pickers of the other forms
       await requireVisibleRoles(
         context,
         actor,
-        [grantee.role_id],
+        grantee.role_ids,
         ShareGrantErrorMessage.GranteeRoleNotFound,
       );
-      return { granteeCitizenId: null, granteeRoleId: grantee.role_id };
+      return {
+        granteeCitizenId: null,
+        granteeRoleIds: [...new Set(grantee.role_ids)],
+      };
 
     case GranteeKind.everyone:
-      return { granteeCitizenId: null, granteeRoleId: null };
+      return { granteeCitizenId: null, granteeRoleIds: [] };
 
     default:
       throw new Error(`Unknown grantee kind: ${grantee satisfies never}`);
@@ -159,12 +172,12 @@ const toGranteeColumns = async (
  * The owner (the actor) shares capabilities with a grantee (see "Remote
  * access layer" of `docs/remote-control-program/README.md`). A preset starts
  * now. A custom validity can start in the past (decision 8). Writes
- * `REMOTE_CONTROL_PROGRAM_SHARE_GRANT_CREATED`.
+ * `REMOTE_CONTROL_PROGRAM_SHARE_GRANT_CREATED_V2`.
  *
  * @throws ForbiddenError without `remoteControlProgram;use` or a citizen, or
  * for an admin who assumes the user (`RemoteControlProgramErrorMessage`)
  * @throws ValidationError with a `ShareGrantErrorMessage`: the grantee is
- * the owner, the citizen does not exist or is deleted, the role does not
+ * the owner, the citizen does not exist or is deleted, a role does not
  * exist or the owner cannot see it, or the custom validity is not valid
  * @throws ConflictError when the owner has
  * `MAXIMUM_ACTIVE_SHARE_GRANTS_PER_OWNER` active grants
@@ -180,7 +193,7 @@ export const createShareGrant = (
     const now = context.now();
 
     const validity = toGrantValidity(input.validity, now);
-    const granteeColumns = await toGranteeColumns(
+    const { granteeCitizenId, granteeRoleIds } = await toGrantee(
       context,
       actor,
       citizen.id,
@@ -203,7 +216,10 @@ export const createShareGrant = (
         data: {
           ownerId: citizen.id,
           granteeKind: input.grantee.kind,
-          ...granteeColumns,
+          granteeCitizenId,
+          granteeRoles: {
+            create: granteeRoleIds.map((roleId) => ({ roleId })),
+          },
           capabilityIds,
           operations,
           startsAt: validity.startsAt,
@@ -215,12 +231,13 @@ export const createShareGrant = (
 
     await context.audit.create([
       {
-        type: AuditEventType.REMOTE_CONTROL_PROGRAM_SHARE_GRANT_CREATED,
+        type: AuditEventType.REMOTE_CONTROL_PROGRAM_SHARE_GRANT_CREATED_V2,
         data: {
           grantId: grant.id,
           ownerCitizenId: citizen.id,
           granteeKind: input.grantee.kind,
-          ...granteeColumns,
+          granteeCitizenId,
+          granteeRoleIds,
           capabilityIds,
           operations,
           startsAt: validity.startsAt,

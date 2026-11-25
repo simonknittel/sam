@@ -60,7 +60,7 @@ const createSharingCitizens = async () => {
   await createShareGrantRow(citizenGrantOwner!.id, toCitizenGrantee(viewer.id));
   await createShareGrantRow(
     roleGrantOwner!.id,
-    { granteeKind: GranteeKind.role, granteeRoleId: viewerRole.id },
+    { granteeKind: GranteeKind.role, granteeRoleIds: [viewerRole.id] },
     { startsAt: ONE_HOUR_AGO, endsAt: IN_ONE_HOUR },
   );
   await createShareGrantRow(everyoneGrantOwner!.id, EVERYONE_GRANTEE);

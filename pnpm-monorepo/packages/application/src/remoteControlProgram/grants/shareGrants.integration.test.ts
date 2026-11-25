@@ -48,10 +48,12 @@ beforeEach(async () => {
   await truncateAllTables();
 });
 
-test("creates a grant to a citizen, to a role and to everyone, and writes the audit events", async () => {
+test("creates a grant to a citizen, to roles and to everyone, and writes the audit events", async () => {
   const owner = await createCitizenActor("owner", OWNER_PERMISSIONS);
   const grantee = await createCitizenActor("grantee");
-  const role = await prisma.role.create({ data: { name: "Pilots" } });
+  const [pilotRole, medicRole] = await Promise.all(
+    ["Pilots", "Medics"].map((name) => prisma.role.create({ data: { name } })),
+  );
   const { context, auditEvents } = createTestApplicationContext();
   const capabilityIds = [CapabilityId.LogEntries];
 
@@ -65,7 +67,10 @@ test("creates a grant to a citizen, to a role and to everyone, and writes the au
     },
   });
   const roleGrant = await createShareGrant(context, owner, {
-    grantee: { kind: GranteeKind.role, role_id: role.id },
+    grantee: {
+      kind: GranteeKind.role,
+      role_ids: [pilotRole!.id, medicRole!.id, pilotRole!.id],
+    },
     capability_ids: capabilityIds,
     operations: [GrantOperation.Read],
     validity: {
@@ -103,7 +108,13 @@ test("creates a grant to a citizen, to a role and to everyone, and writes the au
   expect(roleGrant).toEqual({
     ...shared,
     id: expect.any(String),
-    grantee: { kind: GranteeKind.role, role: { id: role.id, name: "Pilots" } },
+    grantee: {
+      kind: GranteeKind.role,
+      roles: [
+        { id: medicRole!.id, name: "Medics" },
+        { id: pilotRole!.id, name: "Pilots" },
+      ],
+    },
     startsAt: TEST_NOW,
     endsAt: null,
   });
@@ -120,12 +131,12 @@ test("creates a grant to a citizen, to a role and to everyone, and writes the au
     grantee: {
       granteeKind: GranteeKind;
       granteeCitizenId: string | null;
-      granteeRoleId: string | null;
+      granteeRoleIds: string[];
     },
     startsAt: Date,
     endsAt: Date | null,
   ) => ({
-    type: AuditEventType.REMOTE_CONTROL_PROGRAM_SHARE_GRANT_CREATED,
+    type: AuditEventType.REMOTE_CONTROL_PROGRAM_SHARE_GRANT_CREATED_V2,
     data: {
       grantId,
       ownerCitizenId: owner.citizen!.id,
@@ -143,7 +154,7 @@ test("creates a grant to a citizen, to a role and to everyone, and writes the au
       {
         granteeKind: GranteeKind.citizen,
         granteeCitizenId: grantee.citizen!.id,
-        granteeRoleId: null,
+        granteeRoleIds: [],
       },
       TEST_NOW,
       IN_ONE_HOUR,
@@ -153,7 +164,7 @@ test("creates a grant to a citizen, to a role and to everyone, and writes the au
       {
         granteeKind: GranteeKind.role,
         granteeCitizenId: null,
-        granteeRoleId: role.id,
+        granteeRoleIds: [pilotRole!.id, medicRole!.id],
       },
       TEST_NOW,
       null,
@@ -163,7 +174,7 @@ test("creates a grant to a citizen, to a role and to everyone, and writes the au
       {
         granteeKind: GranteeKind.everyone,
         granteeCitizenId: null,
-        granteeRoleId: null,
+        granteeRoleIds: [],
       },
       TWO_HOURS_AGO,
       IN_ONE_HOUR,
@@ -324,6 +335,46 @@ test("lists the own grants that are not revoked and did not end, also without th
   );
 });
 
+test("keeps a grant until its last role is deleted", async () => {
+  const [pilotRole, medicRole] = await Promise.all(
+    ["Pilots", "Medics"].map((name) => prisma.role.create({ data: { name } })),
+  );
+  const owner = await createCitizenActor("owner", OWNER_PERMISSIONS);
+  const viewer = await createCitizenActor("viewer", VIEWER_PERMISSIONS, [
+    medicRole!.id,
+  ]);
+  await createShareGrantRow(owner.citizen!.id, {
+    granteeKind: GranteeKind.role,
+    granteeRoleIds: [pilotRole!.id, medicRole!.id],
+  });
+  const { context } = createTestApplicationContext();
+  const listOwners = async () =>
+    (
+      await listSharingOwners(context, viewer, {
+        capability_id: CapabilityId.LogEntries,
+      })
+    ).owners.map(({ citizen }) => citizen.handle);
+
+  await prisma.role.delete({ where: { id: pilotRole!.id } });
+  await expect(listOwners()).resolves.toEqual(["owner"]);
+  await expect(listOwnShareGrants(context, owner)).resolves.toMatchObject({
+    grants: [
+      {
+        grantee: {
+          kind: GranteeKind.role,
+          roles: [{ id: medicRole!.id, name: "Medics" }],
+        },
+      },
+    ],
+  });
+
+  await prisma.role.delete({ where: { id: medicRole!.id } });
+  await expect(listOwners()).resolves.toEqual([]);
+  await expect(listOwnShareGrants(context, owner)).resolves.toEqual({
+    grants: [],
+  });
+});
+
 test("lists the other owners that share with the viewer now, with their time ranges", async () => {
   const role = await prisma.role.create({ data: { name: "Pilots" } });
   const viewer = await createCitizenActor("viewer", VIEWER_PERMISSIONS, [
@@ -342,7 +393,7 @@ test("lists the other owners that share with the viewer now, with their time ran
   );
   await createShareGrantRow(
     roleOwner!.citizen!.id,
-    { granteeKind: GranteeKind.role, granteeRoleId: role.id },
+    { granteeKind: GranteeKind.role, granteeRoleIds: [role.id] },
     { startsAt: ONE_HOUR_AGO, endsAt: IN_ONE_HOUR },
   );
   await createShareGrantRow(everyoneOwner!.citizen!.id, EVERYONE_GRANTEE);

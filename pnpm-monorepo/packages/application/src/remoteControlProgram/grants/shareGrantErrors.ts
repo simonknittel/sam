@@ -9,10 +9,10 @@ export enum ShareGrantErrorMessage {
   /** A `ValidationError`: the citizen does not exist or is deleted */
   GranteeCitizenNotFound = "The citizen of the grant does not exist",
   /**
-   * A `ValidationError`: the role does not exist, or the owner cannot see it
+   * A `ValidationError`: a role does not exist, or the owner cannot see it
    * (`otherRole;read` with the id of the role)
    */
-  GranteeRoleNotFound = "The role of the grant does not exist",
+  GranteeRoleNotFound = "A role of the grant does not exist",
   /** A `ValidationError` */
   ValidityTimeNotValid = "A time of the validity is not valid",
   /** A `ValidationError` */

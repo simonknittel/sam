@@ -30,28 +30,27 @@ enum RemoteControlProgramRuntimeKind {
 /// A grant gives access only to the data of its validity period (decision
 /// 8). The rows are never deleted: a revocation sets `revokedAt`.
 ///
-/// `granteeKind` tells which grantee column is set. A hand-written CHECK
-/// constraint (see the migration remote_control_program) makes sure that a
-/// grant to a citizen has only `granteeCitizenId`, a grant to a role has
-/// only `granteeRoleId`, and a grant to everyone has neither. A second CHECK
-/// constraint makes sure that the end is after the start.
+/// `granteeKind` tells who the grantee is. A hand-written CHECK constraint
+/// (see the migration share_grant_grantee_roles) makes sure that a grant to a
+/// citizen has `granteeCitizenId`, and that no other grant has it. A second
+/// CHECK constraint (see the migration remote_control_program) makes sure
+/// that the end is after the start.
 model ShareGrant {
-  id               String                @id @default(cuid(2))
+  id               String                  @id @default(cuid(2))
   /// The deletion of the owner deletes the grants
   ownerId          String
-  owner            Citizen               @relation("ownedShareGrants", fields: [ownerId], references: [id], onDelete: Cascade)
+  owner            Citizen                 @relation("ownedShareGrants", fields: [ownerId], references: [id], onDelete: Cascade)
   granteeKind      ShareGrantGranteeKind
   /// Only for the grantee kind "citizen". The deletion of the citizen
   /// deletes the grant. NULL is not possible for this kind (see the CHECK
   /// constraint), thus a grant never changes into a grant for somebody else.
   granteeCitizenId String?
-  granteeCitizen   Citizen?              @relation("receivedShareGrants", fields: [granteeCitizenId], references: [id], onDelete: Cascade)
+  granteeCitizen   Citizen?                @relation("receivedShareGrants", fields: [granteeCitizenId], references: [id], onDelete: Cascade)
   /// Only for the grantee kind "role". The grant applies to all citizens
-  /// with the role (also through inheritance) at the time of each access.
-  /// The deletion of the role deletes the grant, for the same reason as for
-  /// `granteeCitizenId`.
-  granteeRoleId    String?
-  granteeRole      Role?                 @relation(fields: [granteeRoleId], references: [id], onDelete: Cascade)
+  /// with at least one of the roles (also through inheritance) at the time of
+  /// each access. A grant without a role gives no access: the roles were
+  /// deleted.
+  granteeRoles     ShareGrantGranteeRole[]
   /// Values of `CapabilityId` of the domain, for example "log_entries". Text,
   /// not an enum of the database, thus a new capability needs no migration.
   /// An unknown value gives no access.
@@ -61,24 +60,37 @@ model ShareGrant {
   /// unknown value gives no access.
   operations       String[]
   /// The time of the relay. Can be in the past (decision 8).
-  startsAt         DateTime              @db.Timestamptz(3)
+  startsAt         DateTime                @db.Timestamptz(3)
   /// The grant is valid until before this time. NULL: no end.
-  endsAt           DateTime?             @db.Timestamptz(3)
-  revokedAt        DateTime?             @db.Timestamptz(3)
+  endsAt           DateTime?               @db.Timestamptz(3)
+  revokedAt        DateTime?               @db.Timestamptz(3)
   /// The citizen who revoked the grant: the owner in step 2. NULL when the
   /// grant is not revoked, or when the citizen who revoked it was deleted.
   revokedById      String?
-  revokedBy        Citizen?              @relation("revokedShareGrants", fields: [revokedById], references: [id], onDelete: SetNull)
-  createdAt        DateTime              @default(now()) @db.Timestamptz(3)
-  updatedAt        DateTime              @updatedAt @db.Timestamptz(3)
+  revokedBy        Citizen?                @relation("revokedShareGrants", fields: [revokedById], references: [id], onDelete: SetNull)
+  createdAt        DateTime                @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime                @updatedAt @db.Timestamptz(3)
 
   /// The grants of an owner: the list in the sharing popover, and the
   /// viewers of new entries of an owner at the delivery
   @@index([ownerId, revokedAt, endsAt])
-  /// The grants that give a viewer access: one index for each grantee kind
+  /// The grants that give a viewer access (see also `ShareGrantGranteeRole`)
   @@index([granteeCitizenId, revokedAt, endsAt])
-  @@index([granteeRoleId, revokedAt, endsAt])
   @@index([granteeKind, revokedAt, endsAt])
+}
+
+/// A role of a grant of the grantee kind "role"
+model ShareGrantGranteeRole {
+  id        String     @id @default(cuid(2))
+  grantId   String
+  grant     ShareGrant @relation(fields: [grantId], references: [id], onDelete: Cascade)
+  roleId    String
+  role      Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now()) @db.Timestamptz(3)
+
+  @@unique([grantId, roleId])
+  /// The grants that give a viewer access through a role
+  @@index([roleId])
 }
 
 /// A runtime of an owner (see "Runtimes" and "Presence" of the concept): a

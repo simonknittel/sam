@@ -400,7 +400,7 @@ The grantee kinds:
 | Grantee kind | Who |
 | - | - |
 | Citizen | One citizen. |
-| Role | All citizens with a role, at the time of each access. |
+| Role | All citizens with at least one of the selected roles, at the time of each access. |
 | Everyone | All citizens who can use the Remote Control Program. |
 | Event participants | The participants and the managers of one SAM event, at the time of each access (see decision 16). The validity can follow the time of the event. |
 

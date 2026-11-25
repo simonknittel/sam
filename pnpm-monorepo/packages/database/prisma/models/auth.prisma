@@ -121,7 +121,7 @@ model Role {
   flowAccess                FlowRoleAccess[]
   manualNotifications       ManualNotificationRole[]
   tags                      RoleTagAssignment[]
-  shareGrants               ShareGrant[]
+  shareGrants               ShareGrantGranteeRole[]
 
   /// Markdown
   description            String?

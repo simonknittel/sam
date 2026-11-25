@@ -62,23 +62,29 @@ const formatPrunedWebPushSubscription = (
   return `${subscription.subscriptionId} of citizen ${subscription.citizenId} (${details.join(", ")})`;
 };
 
-const formatShareGrantGrantee = (
-  data: AuditEventDataByType[AuditEventType.REMOTE_CONTROL_PROGRAM_SHARE_GRANT_CREATED],
-) => {
-  switch (data.granteeKind) {
+interface ShareGrantGrantee {
+  readonly granteeKind: GranteeKind;
+  readonly granteeCitizenId: string | null;
+  readonly granteeRoleIds: readonly (string | null)[];
+}
+
+const formatShareGrantGrantee = ({
+  granteeKind,
+  granteeCitizenId,
+  granteeRoleIds,
+}: ShareGrantGrantee) => {
+  switch (granteeKind) {
     case GranteeKind.citizen:
-      return `citizen ${data.granteeCitizenId}`;
+      return `citizen ${granteeCitizenId}`;
 
     case GranteeKind.role:
-      return `role ${data.granteeRoleId}`;
+      return `role ${granteeRoleIds.join(", ")}`;
 
     case GranteeKind.everyone:
       return "everyone";
 
     default:
-      throw new Error(
-        `Unknown grantee kind: ${data.granteeKind satisfies never}`,
-      );
+      throw new Error(`Unknown grantee kind: ${granteeKind satisfies never}`);
   }
 };
 
@@ -3208,6 +3214,24 @@ export const AuditEventDefinitions: {
       granteeKind: GranteeKind.citizen,
       granteeCitizenId: "string",
       granteeRoleId: null,
+      capabilityIds: [CapabilityId.LogEntries],
+      operations: [GrantOperation.Read],
+      startsAt: new Date(),
+      endsAt: null,
+    },
+    message: (data) =>
+      `Citizen ${data.ownerCitizenId} shared ${data.capabilityIds.join(", ")} (${data.operations.join(", ")}) with ${formatShareGrantGrantee({ ...data, granteeRoleIds: [data.granteeRoleId] })} (grant ${data.grantId})`,
+  },
+
+  [AuditEventType.REMOTE_CONTROL_PROGRAM_SHARE_GRANT_CREATED_V2]: {
+    type: AuditEventType.REMOTE_CONTROL_PROGRAM_SHARE_GRANT_CREATED_V2,
+    app: SystemLogApp.RemoteControlProgram,
+    data: {
+      grantId: "string",
+      ownerCitizenId: "string",
+      granteeKind: GranteeKind.role,
+      granteeCitizenId: null,
+      granteeRoleIds: ["string"],
       capabilityIds: [CapabilityId.LogEntries],
       operations: [GrantOperation.Read],
       startsAt: new Date(),
