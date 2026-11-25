@@ -9,6 +9,7 @@ import {
   toCitizenReference,
   type CitizenReference,
 } from "../../citizenReference.js";
+import { GRANT_WITH_GRANTEE_WHERE } from "../access/shareGrantSource.js";
 
 /**
  * The active grants of one owner. The sharing popover shows all of them in
@@ -83,7 +84,7 @@ export const createActiveOwnShareGrantWhere = (
   ownerId: ownerCitizenId,
   revokedAt: null,
   OR: [{ endsAt: null }, { endsAt: { gt: now } }],
-  NOT: { granteeKind: GranteeKind.role, granteeRoles: { none: {} } },
+  ...GRANT_WITH_GRANTEE_WHERE,
 });
 
 const toShareGrantGrantee = (row: OwnShareGrantRow): ShareGrantGrantee => {

@@ -1,6 +1,7 @@
 import type { Prisma } from "@sam-monorepo/database/client";
 import {
   ACTIVE_CITIZEN_WHERE,
+  GranteeKind,
   GrantOperation,
   type CapabilityId,
   type ShareGrantSource,
@@ -22,6 +23,14 @@ export const SHARE_GRANT_SOURCE_SELECT = {
   Prisma.ShareGrantSelect;
 
 /**
+ * Leaves out the grants whose roles were all deleted. They give no access,
+ * and the owner does not see them.
+ */
+export const GRANT_WITH_GRANTEE_WHERE = {
+  NOT: { granteeKind: GranteeKind.role, granteeRoles: { none: {} } },
+} as const satisfies Prisma.ShareGrantWhereInput;
+
+/**
  * The grants of owners that are not deleted, which give `read` on the
  * capability and are valid at the time. The filter only makes the query
  * small: `getEffectiveReadAccess()` of the domain applies the full rule
@@ -37,4 +46,5 @@ export const createReadableGrantWhere = (
   revokedAt: null,
   startsAt: { lte: now },
   OR: [{ endsAt: null }, { endsAt: { gt: now } }],
+  ...GRANT_WITH_GRANTEE_WHERE,
 });
