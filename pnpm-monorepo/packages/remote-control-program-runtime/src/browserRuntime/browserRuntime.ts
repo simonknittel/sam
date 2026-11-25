@@ -42,7 +42,6 @@ import {
   type BrowserRuntimeState,
   type BrowserRuntimeStateListener,
   type PreparedOlderEntriesRequest,
-  type UploadCounts,
 } from "./browserRuntimeState.js";
 import {
   createLogFolderReader,
@@ -269,13 +268,6 @@ export class BrowserRuntime {
       createWebSocket: options.createWebSocket,
       timers: options.timers,
       random: options.random,
-      onEntriesAccepted: ({ entryCount, newEntryCount }) =>
-        this.#addUploadCounts({
-          acceptedEntryCount: entryCount,
-          newEntryCount: newEntryCount ?? 0,
-        }),
-      onEntriesDropped: ({ entryCount }) =>
-        this.#addUploadCounts({ droppedEntryCount: entryCount }),
     });
     this.#state = {
       ...INITIAL_BROWSER_RUNTIME_STATE,
@@ -721,7 +713,6 @@ export class BrowserRuntime {
       const previousNewestLogLineAt = this.#state.newestLogLineAt;
 
       this.#setState({
-        lastReadAt: this.#now(),
         newestLogLineAt:
           previousNewestLogLineAt !== null &&
           (newestLogLineAt === null ||
@@ -833,9 +824,7 @@ export class BrowserRuntime {
   #enqueue(entries: readonly RawMatch[], isConfirmed: boolean) {
     if (entries.length === 0) return;
 
-    const droppedEntryCount = this.#outbox.add(entries, isConfirmed);
-    if (droppedEntryCount > 0) this.#addUploadCounts({ droppedEntryCount });
-
+    this.#outbox.add(entries, isConfirmed);
     this.#flushOutbox();
   }
 
@@ -863,19 +852,6 @@ export class BrowserRuntime {
     } finally {
       this.#isFlushingOutbox = false;
     }
-  }
-
-  #addUploadCounts(counts: Partial<UploadCounts>) {
-    const { uploadCounts } = this.#state;
-    this.#setState({
-      uploadCounts: {
-        acceptedEntryCount:
-          uploadCounts.acceptedEntryCount + (counts.acceptedEntryCount ?? 0),
-        newEntryCount: uploadCounts.newEntryCount + (counts.newEntryCount ?? 0),
-        droppedEntryCount:
-          uploadCounts.droppedEntryCount + (counts.droppedEntryCount ?? 0),
-      },
-    });
   }
 
   #createAnnouncement(): AnnounceContent {

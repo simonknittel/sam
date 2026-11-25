@@ -49,16 +49,6 @@ export class BrowserRuntimeError extends Error {
   }
 }
 
-/** The uploads since this tab has the runtime */
-export interface UploadCounts {
-  /** The entries that the relay accepted */
-  readonly acceptedEntryCount: number;
-  /** The accepted entries that the relay did not have before */
-  readonly newEntryCount: number;
-  /** The entries that did not go up (see `ChannelDropReason`) */
-  readonly droppedEntryCount: number;
-}
-
 export interface BrowserRuntimeState {
   /** The runtime reads the log folder */
   readonly isRunning: boolean;
@@ -68,8 +58,6 @@ export interface BrowserRuntimeState {
    * `ChannelEndReason.NoRelay`: the runtime works only on this machine.
    */
   readonly channel: ChannelState;
-  /** The end of the last read of the log folder */
-  readonly lastReadAt: Date | null;
   /**
    * The newest line of the log files (see `ReadResult.newestIsoDate`). For
    * the Live-Status of the own session.
@@ -79,22 +67,15 @@ export interface BrowserRuntimeState {
   readonly logSelection: LogSelection | null;
   /** The progress of a read that takes files from the disk */
   readonly readProgress: ReadProgress | null;
-  readonly uploadCounts: UploadCounts;
   readonly error: BrowserRuntimeErrorCode | null;
 }
 
 export const INITIAL_BROWSER_RUNTIME_STATE: BrowserRuntimeState = {
   isRunning: false,
   channel: INITIAL_CHANNEL_STATE,
-  lastReadAt: null,
   newestLogLineAt: null,
   logSelection: null,
   readProgress: null,
-  uploadCounts: {
-    acceptedEntryCount: 0,
-    newEntryCount: 0,
-    droppedEntryCount: 0,
-  },
   error: null,
 };
 

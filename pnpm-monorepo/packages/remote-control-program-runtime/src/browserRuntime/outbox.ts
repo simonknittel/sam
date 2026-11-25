@@ -48,18 +48,12 @@ export class Outbox {
     return this.#entries.length;
   }
 
-  /**
-   * Returns the number of the oldest entries that left the outbox to stay in
-   * its limit
-   */
+  /** Above the limit of the outbox, the oldest entries leave it */
   add(entries: readonly RawMatch[], isConfirmed: boolean) {
     for (const entry of entries) this.#entries.push({ entry, isConfirmed });
 
     const excessCount = this.#entries.length - MAXIMUM_OUTBOX_ENTRIES;
-    if (excessCount <= 0) return 0;
-
-    this.#entries.splice(0, excessCount);
-    return excessCount;
+    if (excessCount > 0) this.#entries.splice(0, excessCount);
   }
 
   clear() {
