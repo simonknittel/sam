@@ -68,8 +68,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
       <>
         <p>
           Der Log Analyzer ist jetzt ein Teil des Remote Control Program. Das
-          neue Symbol in der oberen Leiste, auf dem Handy unter
-          &bdquo;Apps&ldquo;, öffnet seine Einstellungen.
+          neue Symbol in der oberen Leiste öffnet seine Einstellungen.
         </p>
 
         <ul>
@@ -79,8 +78,8 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
           </li>
           <li>
             Mit Freigaben legst du fest, wer deine Einträge live sehen darf: ein
-            Citizen, eine Rolle oder alle. Freigaben können zeitlich begrenzt
-            sein, und du kannst sie jederzeit widerrufen.
+            Citizen, bestimmte Rollen oder alle. Freigaben können zeitlich
+            begrenzt sein, und du kannst sie jederzeit widerrufen.
           </li>
           <li>
             Einträge, die älter als 2 Stunden sind, können von allen gesehen
