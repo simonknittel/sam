@@ -91,6 +91,7 @@ export const LogFileConnectorControl = ({ runtime }: Props) => {
           ? null
           : `${folderText}, ${formatLogEntryTypeCount(state.localAccess.logEntryTypes)} Typen`
       }
+      progressText={state.isReading ? "Logs werden gelesen …" : null}
       isExpanded={isExpanded}
       onExpandedChange={setIsExpanded}
     >

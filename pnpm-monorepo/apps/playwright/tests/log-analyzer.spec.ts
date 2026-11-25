@@ -217,7 +217,6 @@ test("a date range shows the entries of its files and a reset the rolling window
   await selectFolder(page);
   await expect(rowOf(page, "Verbindung getrennt")).toBeVisible();
   await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 1);
-  await expect(page.getByText("1 von 3 Sessions")).toBeVisible();
 
   await applyDateRange(page, daysAgo(42), daysAgo(38));
 

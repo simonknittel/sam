@@ -12,7 +12,7 @@ import {
   findPrecedingIsoDate,
 } from "./findPrecedingIsoDate.js";
 import { getSessionStartFromFileName } from "./selectLogFiles.js";
-import type { LogFile, RawMatch, ReadProgress, ReadResult } from "./types.js";
+import type { LogFile, RawMatch, ReadResult } from "./types.js";
 
 /** A match before its hash. The hash needs an asynchronous call. */
 type MatchWithoutHash = Omit<RawMatch, "hash">;
@@ -337,7 +337,6 @@ const findNewestIsoDate = (states: Iterable<FileState>) => {
 };
 
 interface ReadOptions {
-  readonly onProgress?: (progress: ReadProgress) => void;
   readonly shouldStop?: () => boolean;
 }
 
@@ -358,7 +357,7 @@ export const createLogFileReader = () => {
 
   return async (
     files: readonly LogFile[],
-    { onProgress, shouldStop }: ReadOptions = {},
+    { shouldStop }: ReadOptions = {},
   ): Promise<ReadResult> => {
     const changedFiles = files.filter(({ path, file }) => {
       const state = states.get(path);
@@ -366,19 +365,13 @@ export const createLogFileReader = () => {
         state?.size !== file.size || state.lastModified !== file.lastModified
       );
     });
-    const byteCount = changedFiles.reduce(
-      (sum, { file }) => sum + file.size,
-      0,
-    );
 
     const matches: RawMatch[] = [];
-    let readFileCount = 0;
-    let readByteCount = 0;
 
     for (const logFile of changedFiles) {
       if (shouldStop?.()) break;
 
-      const { path, file } = logFile;
+      const { path } = logFile;
 
       try {
         states.set(path, await readFile(logFile, states.get(path), matches));
@@ -386,15 +379,6 @@ export const createLogFileReader = () => {
         /** The state stays, thus the next read tries the same lines again */
         console.error("[Log Analyzer] Error reading %s:", path, error);
       }
-
-      readFileCount += 1;
-      readByteCount += file.size;
-      onProgress?.({
-        fileCount: changedFiles.length,
-        readFileCount,
-        byteCount,
-        readByteCount,
-      });
     }
 
     return {

@@ -49,7 +49,6 @@ export const LogFileConnectorGuide = () => {
           <p>
             Die Runtime liest zuerst die Logs der letzten 14 Tage und danach
             jede neue Zeile. Sie läuft, solange ein Tab mit SAM geöffnet ist.
-            Den Fortschritt siehst du im Log Analyzer über der Tabelle.
           </p>
         </SharingPopoverTopic>
 

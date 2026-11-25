@@ -70,9 +70,7 @@ export const OlderEntriesUploadForm = ({ runtime }: Props) => {
         onChange={changeDateRange}
         onPreset={count}
         today={today}
-        oldestSessionStart={
-          runtime.state.logSelection?.oldestSessionStart ?? null
-        }
+        oldestSessionStart={runtime.state.oldestSessionStart}
       />
 
       <Button2

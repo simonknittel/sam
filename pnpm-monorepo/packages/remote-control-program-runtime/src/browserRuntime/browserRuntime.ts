@@ -64,6 +64,13 @@ import { readRunRecord, removeRunRecord, writeRunRecord } from "./runRecord.js";
 export const LOG_FOLDER_READ_INTERVAL_MILLISECONDS = 10_000;
 
 /**
+ * A read that takes longer shows in `BrowserRuntimeState.isReading`. A read
+ * of the new lines of the game takes less, thus the state does not change
+ * each `LOG_FOLDER_READ_INTERVAL_MILLISECONDS`.
+ */
+const SLOW_READ_MILLISECONDS = 500;
+
+/**
  * The runtime always reads the log files of this time: the entries that can
  * go up automatically are not older than the stored live periods.
  */
@@ -562,7 +569,7 @@ export class BrowserRuntime {
         mode: OwnEntriesChangeMode.Replace,
         entries: [],
       });
-      this.#setState({ newestLogLineAt: null, logSelection: null });
+      this.#setState({ newestLogLineAt: null, oldestSessionStart: null });
     }
   }
 
@@ -589,7 +596,7 @@ export class BrowserRuntime {
 
     this.#channel.disconnect();
     this.#olderEntriesRequest = null;
-    this.#setState({ isRunning: false, readProgress: null });
+    this.#setState({ isRunning: false, isReading: false });
   }
 
   #dispose() {
@@ -694,11 +701,13 @@ export class BrowserRuntime {
     const windows = this.#getReadWindows();
     this.#oneTimeWindows = [];
 
+    const cancelSlowReadTimer = this.#timers.schedule(() => {
+      if (generation === this.#runGeneration)
+        this.#setState({ isReading: true });
+    }, SLOW_READ_MILLISECONDS);
+
     try {
-      const result = await reader.read(windows, (readProgress) => {
-        if (generation === this.#runGeneration)
-          this.#setState({ readProgress });
-      });
+      const result = await reader.read(windows);
       if (generation !== this.#runGeneration) return;
 
       this.#hasCompletedRead = true;
@@ -719,8 +728,8 @@ export class BrowserRuntime {
             previousNewestLogLineAt >= newestLogLineAt)
             ? previousNewestLogLineAt
             : newestLogLineAt,
-        logSelection: result.selection,
-        readProgress: null,
+        oldestSessionStart: result.oldestSessionStart,
+        isReading: false,
         error: null,
       });
 
@@ -733,9 +742,11 @@ export class BrowserRuntime {
         error,
       );
       this.#setState({
-        readProgress: null,
+        isReading: false,
         error: BrowserRuntimeErrorCode.ReadFailed,
       });
+    } finally {
+      cancelSlowReadTimer();
     }
   }
 

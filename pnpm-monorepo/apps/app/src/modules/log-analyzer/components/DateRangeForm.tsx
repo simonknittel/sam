@@ -11,7 +11,7 @@ import { DateRangeFields } from "./DateRangeFields";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 
 interface Props {
-  /** See `LogSelection` */
+  /** See `BrowserRuntimeState` */
   readonly oldestSessionStart: number | null;
   readonly onClose: () => void;
 }

@@ -53,14 +53,6 @@ export interface StopRequest {
   readonly stopBeforeId: number;
 }
 
-/** The files of a read which had to come from the disk. */
-export interface ReadProgress {
-  readonly fileCount: number;
-  readonly readFileCount: number;
-  readonly byteCount: number;
-  readonly readByteCount: number;
-}
-
 /** A stopped read holds the matches of the files which it completed. */
 export interface ReadResult {
   readonly matches: RawMatch[];
@@ -73,5 +65,4 @@ export interface ReadResult {
 
 export type ResultMessage =
   | ({ readonly id: number } & ReadResult)
-  | { readonly id: number; readonly progress: ReadProgress }
   | { readonly id: number; readonly error: string };

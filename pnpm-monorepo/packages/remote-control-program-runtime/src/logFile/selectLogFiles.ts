@@ -95,32 +95,15 @@ const canOverlapWindow = async (
   );
 };
 
-export interface LogSelection {
-  readonly fileCount: number;
-  readonly selectedFileCount: number;
-  readonly selectedByteCount: number;
-  /** In milliseconds. Null when no file name has a date. */
-  readonly oldestSessionStart: number | null;
-}
-
-export const summarizeLogSelection = (
+/** In milliseconds. Null when no file name has a date. */
+export const findOldestSessionStart = (
   logFiles: readonly LogFile[],
-  selectedFiles: readonly LogFile[],
-): LogSelection => {
+): number | null => {
   const sessionStarts = logFiles
     .map(({ file }) => getSessionStartFromFileName(file.name))
     .filter((sessionStart) => sessionStart !== null);
 
-  return {
-    fileCount: logFiles.length,
-    selectedFileCount: selectedFiles.length,
-    selectedByteCount: selectedFiles.reduce(
-      (sum, { file }) => sum + file.size,
-      0,
-    ),
-    oldestSessionStart:
-      sessionStarts.length > 0 ? Math.min(...sessionStarts) : null,
-  };
+  return sessionStarts.length > 0 ? Math.min(...sessionStarts) : null;
 };
 
 /**

@@ -2,7 +2,6 @@ import { createLogParserWorker } from "../logFile/createLogParserWorker.js";
 import type {
   LogFile,
   ParseRequest,
-  ReadProgress,
   ReadResult,
   ResultMessage,
   StopRequest,
@@ -11,7 +10,6 @@ import type {
 interface PendingRequest {
   readonly resolve: (result: ReadResult) => void;
   readonly reject: (error: Error) => void;
-  readonly onProgress: (progress: ReadProgress) => void;
 }
 
 /**
@@ -35,11 +33,6 @@ export class LogParserClient {
       (event: MessageEvent<ResultMessage>) => {
         const request = this.#pendingRequests.get(event.data.id);
         if (!request) return;
-
-        if ("progress" in event.data) {
-          request.onProgress(event.data.progress);
-          return;
-        }
 
         this.#pendingRequests.delete(event.data.id);
         if ("error" in event.data) {
@@ -69,10 +62,7 @@ export class LogParserClient {
   }
 
   /** Reads the lines of the files which were added since the last request */
-  parse(
-    files: readonly LogFile[],
-    onProgress: (progress: ReadProgress) => void,
-  ) {
+  parse(files: readonly LogFile[]) {
     return new Promise<ReadResult>((resolve, reject) => {
       if (this.#workerError) {
         reject(this.#workerError);
@@ -81,7 +71,7 @@ export class LogParserClient {
 
       const id = this.#nextRequestId;
       this.#nextRequestId += 1;
-      this.#pendingRequests.set(id, { resolve, reject, onProgress });
+      this.#pendingRequests.set(id, { resolve, reject });
 
       const request: ParseRequest = { id, files };
       this.#worker.postMessage(request);

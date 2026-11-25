@@ -4,8 +4,6 @@ import {
   type ChannelState,
 } from "../channel/channelTypes.js";
 import type { OlderEntriesTimeRange } from "../localAccess/localAccessLayer.js";
-import type { LogSelection } from "../logFile/selectLogFiles.js";
-import type { ReadProgress } from "../logFile/types.js";
 
 /**
  * The problems of the browser runtime: in `BrowserRuntimeState.error`, and
@@ -63,10 +61,13 @@ export interface BrowserRuntimeState {
    * the Live-Status of the own session.
    */
   readonly newestLogLineAt: Date | null;
-  /** What the listing of the folder told at the last read */
-  readonly logSelection: LogSelection | null;
-  /** The progress of a read that takes files from the disk */
-  readonly readProgress: ReadProgress | null;
+  /** See `LogFolderRead.oldestSessionStart`. Null before the first read. */
+  readonly oldestSessionStart: number | null;
+  /**
+   * A read of the log folder takes longer than `SLOW_READ_MILLISECONDS`, for
+   * example the first read. The short reads of the new lines do not change it.
+   */
+  readonly isReading: boolean;
   readonly error: BrowserRuntimeErrorCode | null;
 }
 
@@ -74,8 +75,8 @@ export const INITIAL_BROWSER_RUNTIME_STATE: BrowserRuntimeState = {
   isRunning: false,
   channel: INITIAL_CHANNEL_STATE,
   newestLogLineAt: null,
-  logSelection: null,
-  readProgress: null,
+  oldestSessionStart: null,
+  isReading: false,
   error: null,
 };
 

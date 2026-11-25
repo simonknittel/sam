@@ -208,13 +208,9 @@ describe("createLogFileReader", () => {
     await readLogFiles([backup]);
     await readLogFiles([otherBackup]);
 
-    const onProgress = vi.fn();
-    const { matches } = await readLogFiles([backup, otherBackup], {
-      onProgress,
-    });
+    const { matches } = await readLogFiles([backup, otherBackup]);
 
     expect(matches).toEqual([]);
-    expect(onProgress).not.toHaveBeenCalled();
   });
 
   test("a stopped read gives the matches of the files which it completed", async () => {
@@ -225,38 +221,22 @@ describe("createLogFileReader", () => {
       file: new File([LOG_CONTENT], "second.log", { lastModified: 1 }),
     };
 
-    let isStopped = false;
+    const shouldStop = vi
+      .fn<() => boolean>()
+      .mockReturnValueOnce(false)
+      .mockReturnValue(true);
     const stoppedRead = await readLogFiles([firstFile, secondFile], {
-      onProgress: () => {
-        isStopped = true;
-      },
-      shouldStop: () => isStopped,
+      shouldStop,
     });
 
     expect(toMatchKeys(stoppedRead.matches)).toEqual(
       toMatchKeys(matchCompleteLines(LOG_CONTENT)),
     );
 
-    const onProgress = vi.fn();
-    await readLogFiles([firstFile, secondFile], { onProgress });
-    expect(onProgress).toHaveBeenCalledExactlyOnceWith(
-      expect.objectContaining({ fileCount: 1, readFileCount: 1 }),
+    const nextRead = await readLogFiles([firstFile, secondFile]);
+    expect(toMatchKeys(nextRead.matches)).toEqual(
+      toMatchKeys(matchCompleteLines(LOG_CONTENT)),
     );
-  });
-
-  test("reports the files and the bytes of a read", async () => {
-    const readLogFiles = createLogFileReader();
-    const logFile = createLogFile(LOG_CONTENT, 1);
-    const onProgress = vi.fn();
-
-    await readLogFiles([logFile], { onProgress });
-
-    expect(onProgress).toHaveBeenCalledExactlyOnceWith({
-      fileCount: 1,
-      readFileCount: 1,
-      byteCount: logFile.file.size,
-      readByteCount: logFile.file.size,
-    });
   });
 
   test("skips a line with the IP marker above the length limit of the relay and counts it", async () => {

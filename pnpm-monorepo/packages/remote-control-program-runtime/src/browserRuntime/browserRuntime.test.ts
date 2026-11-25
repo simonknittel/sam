@@ -38,8 +38,12 @@ const OTHER_FOLDER = {} as FileSystemDirectoryHandle;
  */
 const createLogFolder = (name: string) => {
   const matches: RawMatch[] = [];
+  let readMilliseconds = 0;
 
   return {
+    setReadMilliseconds: (milliseconds: number) => {
+      readMilliseconds = milliseconds;
+    },
     write: (time: number) => {
       const lineNumber = matches.length + 1;
       const isoDate = new Date(time).toISOString();
@@ -62,18 +66,18 @@ const createLogFolder = (name: string) => {
 
       return {
         read: async () => {
+          if (readMilliseconds > 0)
+            await new Promise((resolve) => {
+              setTimeout(resolve, readMilliseconds);
+            });
+
           const newMatches = matches.slice(readCount);
           readCount = matches.length;
 
           return {
             matches: newMatches,
             newestIsoDate: matches.at(-1)?.isoDate ?? null,
-            selection: {
-              fileCount: 1,
-              selectedFileCount: 1,
-              selectedByteCount: 0,
-              oldestSessionStart: null,
-            },
+            oldestSessionStart: null,
           };
         },
         stopRead: () => {},
@@ -402,4 +406,31 @@ test("the citizens of one browser profile do not share the run record, the rules
   expect(nextTabOfFirstCitizen.getSentRawLines()).toEqual([
     lineOfFirstCitizen.rawLine,
   ]);
+});
+
+test("tells that a read takes long, but not for the short reads", async () => {
+  const browser = createBrowser();
+  const { runtime } = browser.openTab();
+  const isReadingStates: boolean[] = [];
+  runtime.subscribe((state) => isReadingStates.push(state.isReading));
+
+  browser.folder.setReadMilliseconds(3 * SECOND);
+  runtime.start(FOLDER);
+  await vi.advanceTimersByTimeAsync(SECOND);
+  expect(runtime.getState().isReading).toBe(true);
+  await vi.advanceTimersByTimeAsync(3 * SECOND);
+  expect(runtime.getState().isReading).toBe(false);
+
+  isReadingStates.length = 0;
+  browser.folder.setReadMilliseconds(100);
+  await vi.advanceTimersByTimeAsync(30 * SECOND);
+  expect(isReadingStates.length).toBeGreaterThan(0);
+  expect(isReadingStates).not.toContain(true);
+
+  // A stop ends the state also during a read
+  browser.folder.setReadMilliseconds(30 * SECOND);
+  await vi.advanceTimersByTimeAsync(15 * SECOND);
+  expect(runtime.getState().isReading).toBe(true);
+  runtime.stop();
+  expect(runtime.getState().isReading).toBe(false);
 });

@@ -12,7 +12,7 @@ interface Props {
   readonly onPreset: (value: DateRange) => void;
   /** `YYYY-MM-DD` */
   readonly today: string;
-  /** See `LogSelection` */
+  /** See `BrowserRuntimeState` */
   readonly oldestSessionStart: number | null;
 }
 

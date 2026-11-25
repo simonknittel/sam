@@ -3,12 +3,12 @@
 import clsx from "clsx";
 import { DateRangeSettings } from "./DateRangeSettings";
 import { FeedNotes } from "./FeedNotes";
+import { FeedStatus } from "./FeedStatus";
 import { LiveStatus } from "./LiveStatus";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 import { LogAnalyzerTable } from "./LogAnalyzerTable";
 import { LogFolderNote } from "./LogFolderNote";
 import { QuickLookBar } from "./QuickLookBar";
-import { ReadStatus } from "./ReadStatus";
 import { Toolbar } from "./Toolbar";
 
 interface Props {
@@ -33,7 +33,7 @@ export const LogAnalyzer = ({ className }: Props) => {
 
       <Toolbar>
         <DateRangeSettings />
-        <ReadStatus />
+        <FeedStatus />
       </Toolbar>
 
       <QuickLookBar className="mt-0.5" />

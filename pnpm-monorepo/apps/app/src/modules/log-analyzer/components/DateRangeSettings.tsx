@@ -28,8 +28,7 @@ interface Props {
 export const DateRangeSettings = ({ className }: Props) => {
   const { dateRange } = useLogAnalyzerContext();
   const runtime = useBrowserRuntime();
-  const oldestSessionStart =
-    runtime?.state.logSelection?.oldestSessionStart ?? null;
+  const oldestSessionStart = runtime?.state.oldestSessionStart ?? null;
   const [isOpen, setIsOpen] = useState(false);
 
   const activeRange = formatDateRange(dateRange);

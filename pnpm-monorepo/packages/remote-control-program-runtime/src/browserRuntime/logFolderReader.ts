@@ -1,15 +1,9 @@
 import { getLogFilesRecursively } from "../logFile/getLogFilesRecursively.js";
 import {
+  findOldestSessionStart,
   selectLogFiles,
-  summarizeLogSelection,
-  type LogSelection,
 } from "../logFile/selectLogFiles.js";
-import type {
-  EntryWindow,
-  LogFile,
-  RawMatch,
-  ReadProgress,
-} from "../logFile/types.js";
+import type { EntryWindow, LogFile, RawMatch } from "../logFile/types.js";
 import { LogParserClient } from "./logParserClient.js";
 
 export interface LogFolderRead {
@@ -20,16 +14,14 @@ export interface LogFolderRead {
   readonly matches: readonly RawMatch[];
   /** See `ReadResult.newestIsoDate` */
   readonly newestIsoDate: string | null;
-  readonly selection: LogSelection;
+  /** See `findOldestSessionStart()`. Of all log files of the folder. */
+  readonly oldestSessionStart: number | null;
 }
 
 /** The log file connector for one log folder */
 export interface LogFolderReader {
   /** Reads the log files which can overlap one of the windows */
-  read(
-    windows: readonly EntryWindow[],
-    onProgress: (progress: ReadProgress) => void,
-  ): Promise<LogFolderRead>;
+  read(windows: readonly EntryWindow[]): Promise<LogFolderRead>;
   /** Stops the read on its way between two files */
   stopRead(): void;
   dispose(): void;
@@ -48,7 +40,7 @@ export const createLogFolderReader = (
   let knownLogFiles: ReadonlyMap<string, LogFile> = new Map();
 
   return {
-    read: async (windows, onProgress) => {
+    read: async (windows) => {
       // `Array.fromAsync()` is not in the ES2024 library of this package
       const logFiles: LogFile[] = [];
       for await (const logFile of getLogFilesRecursively(folder, knownLogFiles))
@@ -67,15 +59,12 @@ export const createLogFolderReader = (
         selectedPaths.has(logFile.path),
       );
 
-      const { matches, newestIsoDate } = await parser.parse(
-        selectedFiles,
-        onProgress,
-      );
+      const { matches, newestIsoDate } = await parser.parse(selectedFiles);
 
       return {
         matches,
         newestIsoDate,
-        selection: summarizeLogSelection(logFiles, selectedFiles),
+        oldestSessionStart: findOldestSessionStart(logFiles),
       };
     },
     stopRead: () => parser.stopReads(),
