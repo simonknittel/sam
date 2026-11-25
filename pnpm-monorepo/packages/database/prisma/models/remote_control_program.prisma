@@ -136,23 +136,27 @@ model RemoteControlProgramRuntime {
 /// Log Analyzer), thus the tabs and the devices of one viewer do not
 /// overwrite or end the leases of each other. The renewal is an upsert.
 model RemoteControlProgramWatchLease {
-  id           String   @id @default(cuid(2))
-  viewerId     String
-  viewer       Citizen  @relation(fields: [viewerId], references: [id], onDelete: Cascade)
+  id                     String    @id @default(cuid(2))
+  viewerId               String
+  viewer                 Citizen   @relation(fields: [viewerId], references: [id], onDelete: Cascade)
   /// A value of `CapabilityId` of the domain. Text for the same reason as
   /// `ShareGrant.capabilityIds`.
-  capabilityId String
+  capabilityId           String
   /// A random id that the consumer keeps while it is open
-  consumerId   String   @db.Uuid
+  consumerId             String    @db.Uuid
   /// The citizen ids of the owners that the viewer watches. Empty: all
   /// owners that the viewer can read. No foreign key, because the column is
   /// a list. This list does not give access: the relay checks the access
   /// for each owner.
-  ownerIds     String[] @default([])
+  ownerIds               String[]  @default([])
   /// The relay sends nothing to the viewer after this time
-  expiresAt    DateTime @db.Timestamptz(3)
-  createdAt    DateTime @default(now()) @db.Timestamptz(3)
-  updatedAt    DateTime @updatedAt @db.Timestamptz(3)
+  expiresAt              DateTime  @db.Timestamptz(3)
+  /// The time of the last renewal when admin mode was on for the viewer at
+  /// that renewal, otherwise null. The relay has no session, thus the lease
+  /// tells the admin mode. The relay checks the admin role at each delivery.
+  renewedWithAdminModeAt DateTime? @db.Timestamptz(3)
+  createdAt              DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt              DateTime  @updatedAt @db.Timestamptz(3)
 
   @@unique([viewerId, capabilityId, consumerId])
   /// The valid leases of a capability, at each delivery
