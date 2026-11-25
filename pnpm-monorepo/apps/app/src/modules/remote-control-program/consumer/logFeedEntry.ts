@@ -15,8 +15,8 @@ export interface LogFeedEntryOwner {
 /**
  * One entry of the feed `log_entries` for a control UI, for example the Log
  * Analyzer. The entries of the browser runtime of this browser and the
- * entries of the relay have the same shape: a control UI does not know the
- * source (see "Control UIs" of `docs/remote-control-program/README.md`).
+ * entries of the relay have the same shape. `LogEntryUploadState` tells
+ * whether SAM has an entry.
  */
 export interface LogFeedEntry {
   /**

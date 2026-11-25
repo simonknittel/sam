@@ -121,6 +121,21 @@ test("only the lines that the runtime reads live leave the machine, and only of 
   ]);
   await expect(rowOf(page, "Shard-Beitritt")).toBeVisible();
 
+  /** The table tells which entries SAM has */
+  for (const uploadedText of ["Neuer Helm", "Neuer Auftrag"])
+    await expect(
+      rowOf(page, uploadedText).getByRole("img", {
+        name: "Hochgeladen",
+        exact: true,
+      }),
+    ).toBeVisible();
+  for (const localText of ["Alter Helm", "Alter Auftrag", "Shard-Beitritt"])
+    await expect(
+      rowOf(page, localText).getByRole("img", {
+        name: "Nur auf diesem Computer",
+      }),
+    ).toBeVisible();
+
   /** The relay keeps the context of each entry (principle 13) */
   expect(
     await prisma.logAnalyzerEntry.count({

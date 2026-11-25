@@ -1,3 +1,4 @@
+import { LogEntryUploadState } from "@/modules/remote-control-program/consumer/logEntryUploadState";
 import {
   LogAnalyzerEntryType,
   matchLogAnalyzerEntryLine,
@@ -48,6 +49,7 @@ const entry = (
   contractName: null,
   citizen: { id: citizenId, handle: citizenId, deletedAt: null },
   isShared,
+  uploadState: LogEntryUploadState.LocalOnly,
   liveStatusSignal,
   lineNumber,
 });

@@ -42,7 +42,10 @@ type SetEntryTypes = (
 const TODAY_UPDATE_INTERVAL_MS = 60_000;
 
 /** The state of the reads of the feed, without the entries */
-export type LogAnalyzerFeedState = Omit<LogEntriesFeed, "entries">;
+export type LogAnalyzerFeedState = Omit<
+  LogEntriesFeed,
+  "entries" | "getUploadState"
+>;
 
 interface Context {
   /** True while the end of the date range keeps new lines out of the table. */
@@ -176,7 +179,11 @@ export const LogAnalyzerContext = ({ children }: Props) => {
    * window can lag on a page which stays open for days. The table then shows
    * a little more, never less. The feed compares the window by its times.
    */
-  const { entries: feedEntries, ...feed } = useLogEntriesFeed({
+  const {
+    entries: feedEntries,
+    getUploadState,
+    ...feed
+  } = useLogEntriesFeed({
     entryWindow: getEntryWindow(dateRange, daysToLoad),
   });
   const isLivePaused = dateRange.to !== null && dateRange.to < today;
@@ -186,7 +193,11 @@ export const LogAnalyzerContext = ({ children }: Props) => {
     ownCitizenId === null
       ? []
       : feedEntries.map((feedEntry) =>
-          toEntry(feedEntry, { ownCitizenId, newSince: openedAt }),
+          toEntry(feedEntry, {
+            ownCitizenId,
+            newSince: openedAt,
+            uploadState: getUploadState(feedEntry),
+          }),
         );
 
   const isHiddenCitizen = (entry: IEntry) =>

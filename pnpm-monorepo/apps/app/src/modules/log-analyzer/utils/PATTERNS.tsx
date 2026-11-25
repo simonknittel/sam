@@ -1,3 +1,4 @@
+import type { LogEntryUploadState } from "@/modules/remote-control-program/consumer/logEntryUploadState";
 import type { Citizen } from "@sam-monorepo/database/browser";
 import {
   getNewerLogAnalyzerEntryVersions,
@@ -103,6 +104,7 @@ export interface IEntry {
   readonly citizen: Pick<Citizen, "id" | "handle" | "deletedAt">;
   /** True when a different citizen owns the entry and shares it */
   readonly isShared: boolean;
+  readonly uploadState: LogEntryUploadState;
   /** Null when the type tells nothing */
   readonly liveStatusSignal: LiveStatusSignal | null;
   /**

@@ -1,3 +1,4 @@
+import type { LogEntryUploadState } from "@/modules/remote-control-program/consumer/logEntryUploadState";
 import type { LogFeedEntry } from "@/modules/remote-control-program/consumer/logFeedEntry";
 import { deriveEntryFields, type IEntry } from "./PATTERNS";
 
@@ -13,18 +14,23 @@ interface Options {
   readonly ownCitizenId: string;
   /** The entries of an event at or after this time are new */
   readonly newSince: Date;
+  readonly uploadState: LogEntryUploadState;
 }
 
 /** An entry of the feed `log_entries` as the Log Analyzer shows it */
 export const toEntry = (
   feedEntry: LogFeedEntry,
-  { ownCitizenId, newSince }: Options,
+  { ownCitizenId, newSince, uploadState }: Options,
 ): IEntry => {
   const isShared = feedEntry.owner.id !== ownCitizenId;
   const isNew = feedEntry.eventAt >= newSince;
 
   const cachedEntry = entryCache.get(feedEntry);
-  if (cachedEntry?.isShared === isShared && cachedEntry.isNew === isNew)
+  if (
+    cachedEntry?.isShared === isShared &&
+    cachedEntry.isNew === isNew &&
+    cachedEntry.uploadState === uploadState
+  )
     return cachedEntry;
 
   const entry: IEntry = {
@@ -40,6 +46,7 @@ export const toEntry = (
       deletedAt: null,
     },
     isShared,
+    uploadState,
     lineNumber: feedEntry.lineNumber,
   };
   entryCache.set(feedEntry, entry);

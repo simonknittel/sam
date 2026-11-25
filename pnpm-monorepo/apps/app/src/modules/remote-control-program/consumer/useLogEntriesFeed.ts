@@ -19,8 +19,12 @@ import {
 import {
   LogEntriesFeedConsumer,
   LogEntriesFeedProblem,
-  type RelayFeedAvailability,
+  RelayFeedAvailability,
 } from "./LogEntriesFeedConsumer";
+import {
+  getLogEntryUploadState,
+  type LogEntryUploadState,
+} from "./logEntryUploadState";
 import type { LogFeedEntry } from "./logFeedEntry";
 import {
   mergeLogFeedEntries,
@@ -50,6 +54,7 @@ export interface LogEntriesFeed {
    * (`compareLogFeedEntries()`), one entry for each key
    */
   readonly entries: readonly LogFeedEntry[];
+  readonly getUploadState: (entry: LogFeedEntry) => LogEntryUploadState;
   /**
    * A snapshot of the relay is necessary or in progress. The entries of the
    * browser runtime and the first pages of the snapshot are in `entries`.
@@ -175,10 +180,20 @@ export const useLogEntriesFeed = ({
     scope: state.scope,
   });
 
+  const getUploadState = (entry: LogFeedEntry) =>
+    getLogEntryUploadState(entry, {
+      ...state.relayEntries,
+      isUpToDate:
+        state.relayAvailability === RelayFeedAvailability.Available &&
+        !state.isLoading &&
+        state.problem === null,
+    });
+
   // The use cases refuse each read without a citizen
   if (ownCitizenId === null)
     return {
       entries,
+      getUploadState,
       isLoading: false,
       relayAvailability: state.relayAvailability,
       problem: LogEntriesFeedProblem.Forbidden,
@@ -189,6 +204,7 @@ export const useLogEntriesFeed = ({
 
   return {
     entries,
+    getUploadState,
     isLoading: state.isLoading,
     relayAvailability: state.relayAvailability,
     problem: state.problem,

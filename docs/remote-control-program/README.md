@@ -442,7 +442,7 @@ The grantee kinds:
 
 ### Control UIs
 
-- A control UI uses a consumer client of the app. The consumer client combines two sources: the browser runtime in the same browser, and the relay. A control UI does not know where a value comes from.
+- A control UI uses a consumer client of the app. The consumer client combines two sources: the browser runtime in the same browser, and the relay. A control UI does not know where a value comes from. Exception: the Log Analyzer shows for each entry whether SAM has it or only this browser.
 - The own data of the browser runtime in the same browser needs no upload. Thus the Log Analyzer shows the own log without sharing. The data of the desktop companion reaches the browser only through the relay.
 - A control UI can show the current state. It can show the history and statistics of other citizens only with its own permission for them (see [History](#history)).
 - A control UI shows the age of each value, and marks a value as stale after the stale time.

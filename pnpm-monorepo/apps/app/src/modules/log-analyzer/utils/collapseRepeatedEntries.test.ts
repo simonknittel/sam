@@ -1,3 +1,4 @@
+import { LogEntryUploadState } from "@/modules/remote-control-program/consumer/logEntryUploadState";
 import { LogAnalyzerEntryType } from "@sam-monorepo/domain";
 import { describe, expect, test } from "vitest";
 import { collapseRepeatedEntries } from "./collapseRepeatedEntries";
@@ -33,6 +34,7 @@ const entry = (
   contractName: null,
   citizen: { id: citizenId, handle: citizenId, deletedAt: null },
   isShared: false,
+  uploadState: LogEntryUploadState.LocalOnly,
   liveStatusSignal,
   lineNumber: null,
 });

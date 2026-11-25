@@ -17,8 +17,10 @@ import { LOG_ENTRIES_HISTORY_TEXT } from "@/modules/remote-control-program/utils
 import {
   FaBolt,
   FaCalendarDays,
+  FaCloud,
   FaEye,
   FaFilter,
+  FaLaptop,
   FaLock,
   FaRotate,
   FaTowerBroadcast,
@@ -174,6 +176,22 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
         lead="Im Remote Control Program legst du fest, was hochgeladen wird und wer es live sehen darf."
       >
         <GuideNoteList>
+          <GuideNote>
+            In der Tabelle zeigt{" "}
+            <FaCloud
+              role="img"
+              aria-label="die Wolke"
+              className="inline-block align-[-0.125em]"
+            />{" "}
+            hochgeladene Einträge und{" "}
+            <FaLaptop
+              role="img"
+              aria-label="der Laptop"
+              className="inline-block align-[-0.125em]"
+            />{" "}
+            Einträge, die es nur auf deinem Computer gibt.
+          </GuideNote>
+
           <GuideNote>
             Wer deine Einträge live sehen darf, legst du unter{" "}
             <UiLabel>Freigaben</UiLabel> fest: einzelne Citizens, Rollen oder

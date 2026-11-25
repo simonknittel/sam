@@ -9,6 +9,7 @@ import { memo } from "react";
 import { PATTERNS, type IEntry } from "../utils/PATTERNS";
 import styles from "./Entry.module.css";
 import { useEntryClock } from "./EntryClock";
+import { EntryUploadState } from "./EntryUploadState";
 import { QuickLookToggle } from "./QuickLookToggle";
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -68,6 +69,10 @@ export const Entry = memo(function Entry({ entry }: Props) {
           citizen={entry.citizen}
           avatarSize={CitizenAvatarSize.Row}
         />
+      </td>
+
+      <td className="text-white/40">
+        <EntryUploadState uploadState={entry.uploadState} />
       </td>
 
       <td className="flex items-center gap-2 text-white/40">
