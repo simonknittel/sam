@@ -9,7 +9,10 @@ import { BrowserRuntimeControl } from "./BrowserRuntimeControl";
 import { LogFileConnectorControl } from "./LogFileConnectorControl";
 import { OlderEntriesRequestPanel } from "./OlderEntriesRequestPanel";
 import { useOlderEntriesRequest } from "./SharingPopoverProvider";
-import { SharingPopoverSection } from "./SharingPopoverSection";
+import {
+  SharingPopoverSection,
+  SharingPopoverSubsection,
+} from "./SharingPopoverSection";
 import {
   SHARING_POPOVER_TAB_LABELS,
   SharingPopoverTab,
@@ -54,7 +57,9 @@ export const BrowserSettingsSection = () => {
 
           <BrowserRuntimeControl runtime={runtime} />
 
-          <LogFileConnectorControl runtime={runtime} />
+          <SharingPopoverSubsection heading="Connectors">
+            <LogFileConnectorControl runtime={runtime} />
+          </SharingPopoverSubsection>
         </>
       )}
     </SharingPopoverSection>

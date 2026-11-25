@@ -6,13 +6,15 @@ import {
   ENTRY_TYPES_BY_CATEGORY,
   EntryCategory,
   PATTERNS,
-  SORTED_ENTRY_TYPES,
 } from "@/modules/log-analyzer/utils/PATTERNS";
 import type { LogAnalyzerEntryType } from "@sam-monorepo/domain";
 import { useId, useState, type ReactNode } from "react";
-import { FaChevronDown, FaChevronUp } from "react-icons/fa";
-
-type LogEntryTypeRules = Readonly<Record<LogAnalyzerEntryType, boolean>>;
+import {
+  countLogEntryTypesThatAreOn,
+  formatLogEntryTypeCount,
+  type LogEntryTypeRules,
+} from "./logEntryTypeRules";
+import { SharingPopoverCollapsible } from "./SharingPopoverCollapsible";
 
 type ChangeLogEntryTypes = (
   types: readonly LogAnalyzerEntryType[],
@@ -20,7 +22,6 @@ type ChangeLogEntryTypes = (
 ) => void;
 
 interface Props {
-  /** Each version of a type has the value of the rule of its oldest version */
   readonly logEntryTypes: LogEntryTypeRules;
   readonly onChange: ChangeLogEntryTypes;
 }
@@ -31,48 +32,28 @@ interface Props {
  * type: one rule applies to all versions of a type.
  */
 export const LogEntryTypeSettings = ({ logEntryTypes, onChange }: Props) => {
-  const onCount = SORTED_ENTRY_TYPES.filter(
-    (type) => logEntryTypes[type],
-  ).length;
+  const onCount = countLogEntryTypesThatAreOn(logEntryTypes);
   // Without a type that is on, the list is the next step of the owner
   const [isExpanded, setIsExpanded] = useState(onCount === 0);
-  const listId = useId();
 
   return (
-    <div className="flex flex-col gap-3">
-      <button
-        type="button"
-        aria-expanded={isExpanded}
-        aria-controls={listId}
-        onClick={() => setIsExpanded((isOpen) => !isOpen)}
-        className="flex cursor-pointer items-center gap-2 rounded-secondary border border-white/10 px-3 py-2 text-left text-sm hover:bg-white/5 focus-visible:bg-white/5 active:bg-white/10"
-      >
-        <span className="flex-1">Typen auswählen</span>
-
-        <span className="text-neutral-500">
-          {onCount} von {SORTED_ENTRY_TYPES.length} ausgewählt
-        </span>
-
-        {isExpanded ? (
-          <FaChevronUp aria-hidden className="text-neutral-500" />
-        ) : (
-          <FaChevronDown aria-hidden className="text-neutral-500" />
-        )}
-      </button>
-
-      {isExpanded && (
-        <div id={listId} className="gap-x-8 sm:columns-2">
-          {Object.values(EntryCategory).map((category) => (
-            <CategorySettings
-              key={category}
-              category={category}
-              logEntryTypes={logEntryTypes}
-              onChange={onChange}
-            />
-          ))}
-        </div>
-      )}
-    </div>
+    <SharingPopoverCollapsible
+      heading="Typen auswählen"
+      summary={`${formatLogEntryTypeCount(logEntryTypes)} ausgewählt`}
+      isExpanded={isExpanded}
+      onExpandedChange={setIsExpanded}
+    >
+      <div className="gap-x-8 sm:columns-2">
+        {Object.values(EntryCategory).map((category) => (
+          <CategorySettings
+            key={category}
+            category={category}
+            logEntryTypes={logEntryTypes}
+            onChange={onChange}
+          />
+        ))}
+      </div>
+    </SharingPopoverCollapsible>
   );
 };
 

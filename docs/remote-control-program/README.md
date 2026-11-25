@@ -417,14 +417,14 @@ The grantee kinds:
 
 ## Sharing popover
 
-- An item in the top bar (`apps/app/src/modules/shell/components/TopBar/`) and in the action bar for mobile devices. It follows the notifications popover.
+- An item in the top bar (`apps/app/src/modules/shell/components/TopBar/`) and, on a mobile device, next to the button of the onboarding in the flyout of the action bar. There it opens a bottom sheet. It follows the notifications popover.
 - It has a tab for each of these sections. Without a log folder, the popover opens with the start. Else it opens with the browser. When a control UI opens the popover, it always shows the browser. The tab of the browser is apart from the other tabs, because it contains the settings of one runtime.
   1. **Start:** what the Remote Control Program is, and what the runtimes, the connectors, the consumer apps (the available and the planned ones), the grants and the stored data are, from the view of the owner. A matrix shows which runtime supports which connector. Links open the other tabs.
   2. **Status:** the connected runtimes of the owner and their active connectors. A connector is active when at least one of its capabilities leaves the machine.
   3. **Grants:** the grants with their remaining time, a form for a new grant, and the open access requests.
-  4. **Runtime: Browser:** the settings of the browser runtime in this browser (its state, the start and the stop, the autostart), and one part for each connector with its rules of the local access layer (for the game logs: the log folder and the types). A note when the browser runtime needs a click (for example to give the file access again). SAM has no settings of the desktop companion: the owner changes them in the desktop companion (decision 23).
+  4. **Runtime: Browser:** the settings of the browser runtime in this browser (its state, the start and the stop, the autostart), and, below the heading "Connectors", one collapsible part for each connector with its rules of the local access layer (for the game logs: the log folder and the types). A part is open at first only when the owner must do something in it. A note when the browser runtime needs a click (for example to give the file access again). SAM has no settings of the desktop companion: the owner changes them in the desktop companion (decision 23).
   5. **Action log:** the action requests to the runtimes of the owner, with their results (see [Action log](#action-log)). This includes the requests that the relay refused.
-- The item of the popover has a mark when the browser runtime needs a click. Thus the owner sees it also while the popover is closed.
+- The item of the popover, and the item "Apps" of the action bar, have a mark when the browser runtime needs a click. Thus the owner sees it also while the popover is closed.
 - A control UI never has its own UI for access. When it needs an access, it opens the sharing popover with a prepared request. Examples:
   - The Log Analyzer asks the owner to select the log folder.
   - The lineup status sends an access request to a different citizen.

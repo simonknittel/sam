@@ -61,7 +61,7 @@ export enum SharingPopoverSection {
 
 /**
  * The trigger of the popover in the top bar, or on a small viewport in the
- * mobile action bar. After a colon, its name tells a missing access to the
+ * flyout of the mobile action bar. After a colon, its name tells a missing access to the
  * folder. The pattern must not match the permission
  * "Remote Control Program nutzen" of the role editor.
  */
@@ -120,6 +120,17 @@ export const runtimeState = (page: Page, state: string) =>
   );
 
 /**
+ * Opens the settings of the log file connector in the section. They are open
+ * already while the connector needs the owner, for example without a folder.
+ */
+export const openLogFileConnector = async (section: Locator) => {
+  const toggle = section.getByRole("button", { name: /^Game Logs/ });
+  await expect(toggle).toBeVisible();
+  if ((await toggle.getAttribute("aria-expanded")) !== "true")
+    await toggle.click();
+};
+
+/**
  * Selects the log folder in the open popover, which starts the browser
  * runtime. The folder comes from `stubDirectoryPicker()`.
  */
@@ -128,6 +139,7 @@ export const pickLogFolderInPopover = async (page: Page) => {
     page,
     SharingPopoverSection.ThisBrowser,
   );
+  await openLogFileConnector(section);
   await section
     .getByRole("button", { name: "Ordner wählen", exact: true })
     .click();
@@ -163,6 +175,7 @@ export const turnOnLogEntryTypes = async (
     page,
     SharingPopoverSection.ThisBrowser,
   );
+  await openLogFileConnector(section);
   const listToggle = section.getByRole("button", {
     name: /^Typen auswählen/,
   });

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { FaCheck, FaMinus } from "react-icons/fa6";
+import { FaCheck } from "react-icons/fa6";
 import { LOG_ENTRIES_HISTORY_TEXT } from "../../utils/remoteControlProgramTexts";
 import { SharingPopoverSection } from "./SharingPopoverSection";
 import {
@@ -33,7 +33,7 @@ interface RuntimePart extends Part {
 enum ConnectorSupport {
   Available = "available",
   Planned = "planned",
-  NotSupported = "not_supported",
+  NotPossible = "not_possible",
 }
 
 interface ConnectorPart extends Part {
@@ -67,7 +67,7 @@ const CONNECTORS: readonly ConnectorPart[] = [
     name: "gRPC",
     description: "Liest Live-Daten wie Health direkt aus dem laufenden Spiel",
     support: {
-      [RuntimeId.Browser]: ConnectorSupport.NotSupported,
+      [RuntimeId.Browser]: ConnectorSupport.NotPossible,
       [RuntimeId.DesktopCompanion]: ConnectorSupport.Planned,
     },
   },
@@ -76,7 +76,7 @@ const CONNECTORS: readonly ConnectorPart[] = [
 const CONSUMERS: readonly ConsumerPart[] = [
   {
     name: "Log Analyzer",
-    description: "zeigt die Game Logs und den Live-Status",
+    description: "zeigt die Game Logs",
     isAvailable: true,
   },
   {
@@ -276,13 +276,8 @@ const SupportLabel = ({ support }: SupportLabelProps) => {
     case ConnectorSupport.Planned:
       return <PlannedBadge />;
 
-    case ConnectorSupport.NotSupported:
-      return (
-        <>
-          <FaMinus aria-hidden className="text-neutral-600" />
-          <span className="sr-only">Nicht unterstützt</span>
-        </>
-      );
+    case ConnectorSupport.NotPossible:
+      return <span className="text-xs text-neutral-500">Nicht möglich</span>;
 
     default:
       throw new Error(`Unknown support: ${support satisfies never}`);

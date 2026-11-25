@@ -13,6 +13,7 @@ import {
   ChannelEndReason,
   type BrowserRuntimeState,
 } from "@sam-monorepo/remote-control-program-runtime";
+import { useState } from "react";
 import toast from "react-hot-toast";
 import { FaFolderOpen, FaKey } from "react-icons/fa6";
 import {
@@ -27,7 +28,11 @@ import {
 } from "./browserRuntimeTexts";
 import { CONNECTOR_LABELS } from "./catalogTexts";
 import { LogEntryTypeSettings } from "./LogEntryTypeSettings";
-import { SharingPopoverSubsection } from "./SharingPopoverSection";
+import {
+  countLogEntryTypesThatAreOn,
+  formatLogEntryTypeCount,
+} from "./logEntryTypeRules";
+import { SharingPopoverCollapsible } from "./SharingPopoverCollapsible";
 import { useRuntimeCommand } from "./useRuntimeCommand";
 
 const getFolderText = ({ folder }: BrowserRuntimeSnapshot) => {
@@ -56,15 +61,45 @@ interface Props {
   readonly runtime: BrowserRuntimeHandle;
 }
 
+/** The owner must do something in the settings of the connector */
+const needsOwner = ({ folder, localAccess, error }: BrowserRuntimeSnapshot) =>
+  folder.state === LogFolderState.NotSelected ||
+  folder.state === LogFolderState.PermissionNeeded ||
+  countLogEntryTypesThatAreOn(localAccess.logEntryTypes) === 0 ||
+  error !== null;
+
+/**
+ * Open while the connector needs the owner. It does not close by itself: the
+ * owner who does the next step is in the middle of the settings.
+ */
+const useIsExpanded = (isNeeded: boolean) => {
+  const [isExpanded, setIsExpanded] = useState(isNeeded);
+
+  const [wasNeeded, setWasNeeded] = useState(isNeeded);
+  if (isNeeded !== wasNeeded) {
+    setWasNeeded(isNeeded);
+    if (isNeeded) setIsExpanded(true);
+  }
+
+  return [isExpanded, setIsExpanded] as const;
+};
+
 /** The folder of the log file connector and its rules of the local access layer */
 export const LogFileConnectorControl = ({ runtime }: Props) => {
   const { state, commands } = runtime;
   const folderText = getFolderText(state);
+  const [isExpanded, setIsExpanded] = useIsExpanded(needsOwner(state));
 
   return (
-    <SharingPopoverSubsection
+    <SharingPopoverCollapsible
       heading={CONNECTOR_LABELS[ConnectorId.LogFile]}
-      action={<FolderButton runtime={runtime} />}
+      summary={
+        isExpanded
+          ? null
+          : `${folderText}, ${formatLogEntryTypeCount(state.localAccess.logEntryTypes)} Typen`
+      }
+      isExpanded={isExpanded}
+      onExpandedChange={setIsExpanded}
     >
       {state.folder.state === LogFolderState.PermissionNeeded && (
         <Note
@@ -73,34 +108,38 @@ export const LogFileConnectorControl = ({ runtime }: Props) => {
         />
       )}
 
-      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm text-neutral-400">
-        <dt className="text-neutral-500">Ordner</dt>
-        <dd className="flex min-w-0 items-center gap-2">
-          <span className="min-w-0 truncate" title={folderText}>
-            {folderText}
-          </span>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <dl className="grid min-w-0 grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm text-neutral-400">
+          <dt className="text-neutral-500">Ordner</dt>
+          <dd className="flex min-w-0 items-center gap-2">
+            <span className="min-w-0 truncate" title={folderText}>
+              {folderText}
+            </span>
 
-          {state.folder.state === LogFolderState.PermissionNeeded && (
-            <OtherFolderButton runtime={runtime} />
+            {state.folder.state === LogFolderState.PermissionNeeded && (
+              <OtherFolderButton runtime={runtime} />
+            )}
+          </dd>
+
+          <dt className="text-neutral-500">Zuletzt gelesen</dt>
+          <dd>
+            {state.readProgress
+              ? `Liest ${state.readProgress.readFileCount} von ${state.readProgress.fileCount} Dateien …`
+              : (formatDate(state.lastReadAt) ?? "Noch nicht")}
+          </dd>
+
+          {state.channel.closeReason !== ChannelEndReason.NoRelay && (
+            <>
+              <dt className="text-neutral-500">Hochgeladen</dt>
+              <dd>
+                <UploadCountsText state={state} />
+              </dd>
+            </>
           )}
-        </dd>
+        </dl>
 
-        <dt className="text-neutral-500">Zuletzt gelesen</dt>
-        <dd>
-          {state.readProgress
-            ? `Liest ${state.readProgress.readFileCount} von ${state.readProgress.fileCount} Dateien …`
-            : (formatDate(state.lastReadAt) ?? "Noch nicht")}
-        </dd>
-
-        {state.channel.closeReason !== ChannelEndReason.NoRelay && (
-          <>
-            <dt className="text-neutral-500">Hochgeladen</dt>
-            <dd>
-              <UploadCountsText state={state} />
-            </dd>
-          </>
-        )}
-      </dl>
+        <FolderButton runtime={runtime} />
+      </div>
 
       {state.error && (
         <Note type="error" message={BROWSER_RUNTIME_ERROR_TEXTS[state.error]} />
@@ -118,7 +157,7 @@ export const LogFileConnectorControl = ({ runtime }: Props) => {
         logEntryTypes={state.localAccess.logEntryTypes}
         onChange={commands.setLogEntryTypes}
       />
-    </SharingPopoverSubsection>
+    </SharingPopoverCollapsible>
   );
 };
 
