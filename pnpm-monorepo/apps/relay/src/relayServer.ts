@@ -116,8 +116,8 @@ const refuseUpgrade = (socket: Duplex, status: number) => {
 /**
  * The server of the relay service: the WebSocket endpoint of the runtimes at
  * `/`, the health check and the internal endpoints of the app on one port.
- * One instance: the connections are in memory, and the presence and the
- * stop are in the database.
+ * One instance: the connections are in memory, and the presence is in the
+ * database.
  */
 export const createRelayServer = ({
   context,

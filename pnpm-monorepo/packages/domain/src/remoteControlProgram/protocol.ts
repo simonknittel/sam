@@ -23,8 +23,8 @@ import {
  *    runtime sends a batch again until it gets the `ack`.
  * 4. The relay sends `switches` for each `announce` before its `ack` (thus
  *    the runtime knows the parts that are off before its first upload), and
- *    after each change of a flag. It sends `stop` and `start` for the "Stop
- *    all" of the owner, and `close` before it closes the connection.
+ *    after each change of a flag. It sends `close` before it closes the
+ *    connection.
  *
  * Compatibility: the relay accepts the protocol versions from
  * `MINIMUM_RELAY_PROTOCOL_VERSION` to `RELAY_PROTOCOL_VERSION`. The schemas

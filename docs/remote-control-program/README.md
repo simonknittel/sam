@@ -256,7 +256,7 @@ A channel is the transport of a capability. The catalog gives the timing. The ru
 
 ### Delivery to the consumers
 
-- A control UI tells the relay (through the app) which owners and capabilities it watches, with a lease that it renews. The relay sends messages only to the viewers that watch. Thus a grant with the grantee kind "Everyone" or "Role" does not send a message to each citizen with access. The lease also tells the admin mode of the viewer at its last renewal. The relay checks the admin role at each delivery, and the end of admin mode applies at the latest when the lease expires.
+- A control UI tells the relay (through the app) which owners and capabilities it watches, with a lease that it renews. The relay sends messages only to the viewers that watch. Thus a grant with the grantee kind "Everyone" or "Role" does not send a message to each citizen with access. The lease also tells the admin mode of the viewer at its last renewal. The relay checks the admin role at each delivery. Admin mode counts while one lease of the viewer has it, because all control UIs of a viewer share one channel. Thus its end in one browser applies when the last lease with admin mode expires.
 - When a control UI opens, it reads a snapshot of the current values with a cursor. Then it gets the changes through Soketi. After a reconnect of Soketi, it reads the changes since its cursor.
 - A batch for a viewer stays below the size limit of a Soketi message. A larger batch goes into more messages.
 - The active tab of the browser runtime gives its local data to the other tabs of the same browser through a BroadcastChannel.
@@ -319,8 +319,8 @@ The runtimes and the relay service use one protocol over the WebSocket connectio
 
 - A runtime connects with a short-lived connection token (for example 120 seconds), and renews it over the open connection, like the collab tokens of the wiki. The relay service closes a connection without a valid token.
 - The desktop companion gets the connection token with its OAuth access token. The browser runtime gets it from the app.
-- The token tells whether admin mode was on in the app. The relay service applies it only to an admin, and the end of admin mode applies at the next renewal.
-- When a runtime connects and at each renewal, the relay service checks the OAuth grant of the desktop companion and the ban of the user. Thus a revocation or a ban stops a connection within one renewal interval.
+- The token tells whether admin mode was on in the app. The relay service applies it only to an admin. The end of admin mode applies at the next renewal, and at the latest when the relay service closes the connection without a renewal.
+- When a runtime connects and at each renewal, the relay service checks the OAuth grant of the desktop companion and the ban of the user. Thus a revocation or a removed permission stops a connection at the next renewal, and at the latest when the token expires.
 - A ban also closes the connections of the relay service, next to the connections of Soketi and of the wiki editor.
 
 ### Presence
@@ -400,7 +400,7 @@ The grantee kinds:
 | Grantee kind | Who |
 | - | - |
 | Citizen | One citizen. |
-| Role | All citizens with at least one of the selected roles, at the time of each access. |
+| Role | All citizens with at least one of the selected roles, at the time of each access. A grant whose roles were all deleted gives no access. |
 | Everyone | All citizens who can use the Remote Control Program. |
 | Event participants | The participants and the managers of one SAM event, at the time of each access (see decision 16). The validity can follow the time of the event. |
 
