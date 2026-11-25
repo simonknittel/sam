@@ -6,10 +6,12 @@ import {
   createTestApplicationContext,
   TEST_NOW,
 } from "../../../test/applicationContext.js";
+import { CLEARED_ADMIN_USER } from "../../../test/citizensWithPermissions.js";
 import { truncateAllTables } from "../../../test/database.js";
 import {
   createClearedCitizen,
   createShareGrantRow,
+  EVERYONE_GRANTEE,
   IN_ONE_HOUR,
   ONE_HOUR_AGO,
   toCitizenGrantee,
@@ -304,4 +306,44 @@ test("gives the viewers with a valid lease and a valid grant, with their time ra
   await expect(findViewerRanges(context, owner.id)).resolves.toEqual({
     [owner.id]: { start: null, end: null },
   });
+});
+
+test("keeps the admin mode of the last renewal in the lease", async () => {
+  const owner = await createClearedCitizen("owner");
+  const admin = await prisma.citizen.create({
+    data: { handle: "admin", ...CLEARED_ADMIN_USER },
+  });
+  const adminActor = createTestActor({
+    userId: admin.userId!,
+    citizen: admin,
+    adminMode: true,
+  });
+  const { context } = createTestApplicationContext();
+  const input = {
+    consumer_id: crypto.randomUUID(),
+    capability_id: CapabilityId.LogEntries,
+    owner_citizen_ids: [],
+  };
+
+  await renewWatchLease(context, adminActor, input);
+  // Admin mode replaces the permissions, but not the grant
+  await expect(findViewerRanges(context, owner.id)).resolves.toEqual({});
+
+  await createShareGrantRow(owner.id, EVERYONE_GRANTEE);
+  await expect(findViewerRanges(context, owner.id)).resolves.toEqual({
+    [admin.id]: { start: ONE_HOUR_AGO, end: null },
+  });
+
+  // Without admin mode, the delivery needs the permissions of the roles
+  await renewWatchLease(
+    context,
+    createTestActor({
+      userId: admin.userId!,
+      citizen: admin,
+      permissionStrings: VIEWER_PERMISSIONS,
+      admin: true,
+    }),
+    input,
+  );
+  await expect(findViewerRanges(context, owner.id)).resolves.toEqual({});
 });

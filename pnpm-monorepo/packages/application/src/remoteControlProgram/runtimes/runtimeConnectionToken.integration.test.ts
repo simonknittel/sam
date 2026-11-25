@@ -8,6 +8,7 @@ import {
   TEST_NOW,
 } from "../../../test/applicationContext.js";
 import {
+  CLEARED_ADMIN_USER,
   CLEARED_USER,
   createCitizenWithPermissions,
 } from "../../../test/citizensWithPermissions.js";
@@ -131,6 +132,7 @@ test("refuses a token of a different audience, an expired token and a token of a
   const tokenOfDifferentAudience = await new SignJWT({
     citizen_id: owner.citizen.id,
     runtime_id: RUNTIME_ID,
+    admin_mode: false,
   })
     .setProtectedHeader({ alg: SIGNING_KEY_ALGORITHM, kid: signingKey.keyId })
     .setIssuer("https://sam.example.com")
@@ -182,6 +184,34 @@ test("refuses a token of a different audience, an expired token and a token of a
   ).rejects.toThrow(KeySetUnavailableError);
 });
 
+test("keeps the admin mode of the app in the token, and ends it with the admin role", async () => {
+  const admin = await prisma.citizen.create({
+    data: { handle: "admin", ...CLEARED_ADMIN_USER },
+  });
+  const { token } = await issueRuntimeConnectionToken(
+    createAppContext(),
+    createTestActor({
+      userId: admin.userId!,
+      citizen: admin,
+      adminMode: true,
+    }),
+    { runtime_id: RUNTIME_ID },
+  );
+  const authenticate = () =>
+    authenticateRuntimeConnection(createRelayContext(), {
+      token,
+      runtime_id: RUNTIME_ID,
+    });
+
+  expect((await authenticate()).actor.adminMode).toBe(true);
+
+  await prisma.user.update({
+    where: { id: admin.userId! },
+    data: { role: null },
+  });
+  await expect(authenticate()).rejects.toThrow(ForbiddenError);
+});
+
 test("refuses a user without the permission, an admin who assumes the user and a banned user, also at the renewal of a valid token", async () => {
   const owner = await createOwner();
   const { token } = await issueRuntimeConnectionToken(
@@ -193,8 +223,6 @@ test("refuses a user without the permission, an admin who assumes the user and a
     userId: owner.citizen.userId!,
     citizen: owner.citizen,
     permissionStrings: ["login;manage"],
-    // Admin mode does not give the permission (see `remoteControlProgramPermissions.ts`)
-    adminMode: true,
   });
 
   await expect(

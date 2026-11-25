@@ -8,10 +8,10 @@ export {
   type OwnerReadAccessInput,
   type ViewerReadAccess,
   type ViewerReadAccessInput,
+  type WatchingCitizen,
 } from "./loadReadAccess.js";
 export { RemoteControlProgramErrorMessage } from "./remoteControlProgramErrors.js";
 export {
-  REMOTE_CONTROL_PROGRAM_USE_PERMISSION_SET,
   canUseRemoteControlProgram,
   requireRemoteControlProgramUse,
 } from "./remoteControlProgramPermissions.js";

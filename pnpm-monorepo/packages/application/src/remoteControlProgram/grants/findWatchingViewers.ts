@@ -21,8 +21,8 @@ export interface WatchingViewer {
  * The viewers that get the new entries of one capability of one owner: at
  * least one valid watch lease of a consumer of the viewer for the capability
  * that watches all owners or this owner, and the effective access now (`loadReadAccessToOwner()`: the
- * switches, both permissions, the clearance, and the owner or a valid
- * grant). The owner is a viewer too, when the owner watches: the own entries
+ * switches, both permissions or admin mode, the clearance, and the owner or
+ * a valid grant). The owner is a viewer too, when the owner watches: the own entries
  * from a different runtime come through the relay.
  *
  * The relay service calls it for each accepted batch of an owner, without a
@@ -44,14 +44,22 @@ export const findWatchingViewers = (
             { ownerIds: { has: ownerCitizenId } },
           ],
         },
-        select: { viewerId: true },
+        select: { viewerId: true, renewedWithAdminModeAt: true },
       },
     );
+
+    const leasesByViewerId = Map.groupBy(leases, (lease) => lease.viewerId);
 
     const accessByViewerCitizenId = await loadReadAccessToOwner(context, {
       ownerCitizenId,
       capabilityId,
-      viewerCitizenIds: [...new Set(leases.map((lease) => lease.viewerId))],
+      viewers: Array.from(leasesByViewerId, ([citizenId, viewerLeases]) => ({
+        citizenId,
+        // The consumers of a viewer share one channel
+        adminMode: viewerLeases.some(
+          (lease) => lease.renewedWithAdminModeAt !== null,
+        ),
+      })),
     });
 
     return Array.from(accessByViewerCitizenId).flatMap(

@@ -62,6 +62,7 @@ export const issueRuntimeConnectionToken = (
       userId: actor.userId,
       citizenId: citizen.id,
       runtimeId: input.runtime_id,
+      adminMode: actor.adminMode,
     });
 
     return {

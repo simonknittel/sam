@@ -250,6 +250,7 @@ test("renews the token over the open connection, and closes the connection at th
   const shortToken = await new SignJWT({
     citizen_id: owner.citizenId,
     runtime_id: RUNTIME_ID,
+    admin_mode: false,
   })
     .setProtectedHeader({ alg: signingKey.algorithm, kid: signingKey.keyId })
     .setIssuer(APP_BASE_URL)

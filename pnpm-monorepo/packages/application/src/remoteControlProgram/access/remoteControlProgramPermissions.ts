@@ -1,23 +1,16 @@
-import {
-  CapabilityId,
-  comparePermissionSets,
-  type PermissionSet,
-} from "@sam-monorepo/domain";
+import { CapabilityId, type PermissionSet } from "@sam-monorepo/domain";
 import type { Actor, ActorCitizen } from "../../actor.js";
 import { ForbiddenError } from "../../errors.js";
 import { RemoteControlProgramErrorMessage } from "./remoteControlProgramErrors.js";
 
 /**
  * The permissions of the Remote Control Program (decision 24). Admin mode
- * does not apply to them: the relay service has no session and thus no
- * admin mode. Thus the app and the relay service give the same answer, for
- * example for the snapshot of a feed and for its realtime delivery.
+ * replaces them, like all permissions of SAM, but it never replaces a grant
+ * (decision 4). The relay service has no session: it gets the admin mode from
+ * the connection token and from the watch lease. Thus the app and the relay
+ * service give the same answer, for example for the snapshot of a feed and
+ * for its realtime delivery.
  */
-
-export const REMOTE_CONTROL_PROGRAM_USE_PERMISSION_SET = {
-  resource: "remoteControlProgram",
-  operation: "use",
-} as const satisfies PermissionSet;
 
 /**
  * The permission of the consumer of each capability. In step 2, each
@@ -29,18 +22,13 @@ const CONSUMER_PERMISSION_SETS: Readonly<
   [CapabilityId.LogEntries]: { resource: "logAnalyzer", operation: "read" },
 };
 
-/** Whether the effective permissions contain `remoteControlProgram;use` */
 export const hasRemoteControlProgramUse = (
-  permissionSets: PermissionSet[],
-): boolean =>
-  comparePermissionSets(
-    REMOTE_CONTROL_PROGRAM_USE_PERMISSION_SET,
-    permissionSets,
-  );
+  actor: Pick<Actor, "authorize">,
+): boolean => actor.authorize("remoteControlProgram", "use");
 
-/** Whether the effective permissions contain the permission of the consumer */
+/** Whether the actor has the permission of the consumer of the capability */
 export const hasConsumerPermission = (
-  permissionSets: PermissionSet[],
+  actor: Pick<Actor, "authorize">,
   capabilityId: CapabilityId,
 ): boolean => {
   // Null for a capability whose consumer has no permission of its own
@@ -48,20 +36,23 @@ export const hasConsumerPermission = (
 
   return (
     consumerPermissionSet === null ||
-    comparePermissionSets(consumerPermissionSet, permissionSets)
+    actor.authorize(
+      consumerPermissionSet.resource,
+      consumerPermissionSet.operation,
+    )
   );
 };
 
 /**
  * Whether the actor can use the Remote Control Program: a citizen and
- * `remoteControlProgram;use`, without admin mode, and not an admin who
- * assumes the user. The gates of the app (the browser runtime, the sharing
+ * `remoteControlProgram;use` (or admin mode), and not an admin who assumes
+ * the user. The gates of the app (the browser runtime, the sharing
  * popover) use it.
  */
 export const canUseRemoteControlProgram = (actor: Actor): boolean =>
   actor.assumedByAdminId === null &&
   actor.citizen !== null &&
-  hasRemoteControlProgramUse(actor.permissionSets);
+  hasRemoteControlProgramUse(actor);
 
 /**
  * Gives the citizen of the actor, for the use cases that the owner can use
@@ -96,7 +87,7 @@ export const requireRemoteControlProgramCitizen = (
 export const requireRemoteControlProgramUse = (actor: Actor): ActorCitizen => {
   const citizen = requireRemoteControlProgramCitizen(actor);
 
-  if (!hasRemoteControlProgramUse(actor.permissionSets))
+  if (!hasRemoteControlProgramUse(actor))
     throw new ForbiddenError(
       RemoteControlProgramErrorMessage.PermissionMissing,
     );

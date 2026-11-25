@@ -1,15 +1,16 @@
 import {
+  ACTIVE_CITIZEN_WHERE,
   getEffectiveReadAccess,
   GranteeKind,
   ReadAccessRefusal,
   type CapabilityId,
   type EffectiveReadAccess,
-  type PermissionSet,
   type RemoteControlProgramSwitches,
   type RemoteControlProgramViewer,
 } from "@sam-monorepo/domain";
 import type { Actor } from "../../actor.js";
-import { findClearedCitizens } from "../../auth/clearedCitizens.js";
+import { loadEffectivePermissionsOfCitizens } from "../../auth/effectivePermissionsOfCitizens.js";
+import { createUserActor, USER_ACTOR_SELECT } from "../../auth/userActor.js";
 import type { ApplicationContext } from "../../context.js";
 import { withSpan } from "../../withSpan.js";
 import {
@@ -33,14 +34,13 @@ import {
 
 const toViewer = (
   citizenId: string,
-  roleIds: ReadonlySet<string>,
-  permissionSets: PermissionSet[],
+  actor: Actor,
   capabilityId: CapabilityId,
 ): RemoteControlProgramViewer => ({
   citizenId,
-  roleIds,
-  hasRemoteControlProgramUse: hasRemoteControlProgramUse(permissionSets),
-  hasConsumerPermission: hasConsumerPermission(permissionSets, capabilityId),
+  roleIds: actor.roleIds,
+  hasRemoteControlProgramUse: hasRemoteControlProgramUse(actor),
+  hasConsumerPermission: hasConsumerPermission(actor, capabilityId),
 });
 
 export interface ViewerReadAccessInput {
@@ -65,10 +65,9 @@ export interface ViewerReadAccess {
 
 /**
  * The access of one viewer (the actor) to the entries of one capability of
- * many owners, for the reads of the feeds. The permissions are the effective
- * permissions of the actor without admin mode (see
- * `remoteControlProgramPermissions.ts`). The rows of deleted owners give no
- * grant.
+ * many owners, for the reads of the feeds. Admin mode replaces the
+ * permissions, but not a grant (see `remoteControlProgramPermissions.ts`). The
+ * rows of deleted owners give no grant.
  *
  * @throws ForbiddenError for the errors of
  * `requireRemoteControlProgramCitizen()`: no citizen, or an admin who assumes
@@ -81,12 +80,7 @@ export const loadReadAccessOfViewer = (
 ): Promise<ViewerReadAccess> =>
   withSpan(context, "loadReadAccessOfViewer", async () => {
     const citizen = requireRemoteControlProgramCitizen(actor);
-    const viewer = toViewer(
-      citizen.id,
-      actor.roleIds,
-      actor.permissionSets,
-      capabilityId,
-    );
+    const viewer = toViewer(citizen.id, actor, capabilityId);
     const now = context.now();
 
     const [switches, grantRows] = await Promise.all([
@@ -142,34 +136,89 @@ export const loadReadAccessOfViewer = (
     };
   });
 
+export interface WatchingCitizen {
+  readonly citizenId: string;
+  /** Applies only while the user of the citizen is an admin */
+  readonly adminMode: boolean;
+}
+
 export interface OwnerReadAccessInput {
   readonly ownerCitizenId: string;
   readonly capabilityId: CapabilityId;
-  /** For example the viewers with a valid watch lease */
-  readonly viewerCitizenIds: readonly string[];
+  /** For example the viewers with a valid watch lease. Each citizen once. */
+  readonly viewers: readonly WatchingCitizen[];
 }
 
 /**
+ * The actors of the viewers, without a session. A viewer who is deleted,
+ * banned or has no user has no actor.
+ */
+const loadActorsOfViewers = async (
+  context: ApplicationContext,
+  viewers: readonly WatchingCitizen[],
+): Promise<ReadonlyMap<string, Actor>> => {
+  const where = { id: { in: viewers.map((viewer) => viewer.citizenId) } };
+  const [citizens, permissionsByCitizenId] = await Promise.all([
+    context.prisma.citizen.findMany({
+      where: {
+        AND: [
+          where,
+          ACTIVE_CITIZEN_WHERE,
+          { user: { is: { bannedAt: null } } },
+        ],
+      },
+      select: {
+        id: true,
+        handle: true,
+        user: { select: { id: true, ...USER_ACTOR_SELECT } },
+      },
+    }),
+    loadEffectivePermissionsOfCitizens(context, where),
+  ]);
+  const adminModeByCitizenId = new Map(
+    viewers.map((viewer) => [viewer.citizenId, viewer.adminMode]),
+  );
+
+  return new Map(
+    citizens.flatMap(({ user, ...citizen }) =>
+      user
+        ? [
+            [
+              citizen.id,
+              createUserActor({
+                userId: user.id,
+                user,
+                citizen,
+                effectiveRoles: permissionsByCitizenId.get(citizen.id) ?? null,
+                adminMode: adminModeByCitizenId.get(citizen.id) ?? false,
+              }),
+            ] as const,
+          ]
+        : [],
+    ),
+  );
+};
+
+/**
  * The access of many viewers to the entries of one capability of one owner,
- * for the delivery of new entries. The relay service has no session, thus
- * the permissions are the effective permissions of the roles (without admin
- * mode), and a viewer must pass the clearance page (see
- * `findClearedCitizens()`): a banned or deleted viewer, or a viewer without
- * `login;manage`, gets `remote_control_program_permission_missing`. No
- * permission check of a caller: the relay service calls it for each
- * delivery.
+ * for the delivery of new entries. The relay service has no session, thus it
+ * builds the actor of each viewer: the current roles, and admin mode for an
+ * admin whose lease has it. A viewer must pass the clearance page: a banned
+ * or deleted viewer, or a viewer without `login;manage`, gets
+ * `remote_control_program_permission_missing`. No permission check of a
+ * caller: the relay service calls it for each delivery.
  *
  * @returns one access for each viewer
  */
 export const loadReadAccessToOwner = (
   context: ApplicationContext,
-  { ownerCitizenId, capabilityId, viewerCitizenIds }: OwnerReadAccessInput,
+  { ownerCitizenId, capabilityId, viewers }: OwnerReadAccessInput,
 ): Promise<ReadonlyMap<string, EffectiveReadAccess>> =>
   withSpan(context, "loadReadAccessToOwner", async () => {
-    if (viewerCitizenIds.length === 0) return new Map();
+    if (viewers.length === 0) return new Map();
 
     const now = context.now();
-    const [switches, grants, clearedViewers] = await Promise.all([
+    const [switches, grants, actorsByCitizenId] = await Promise.all([
       context.remoteControlProgramSwitches(),
       context.prisma.shareGrant.findMany({
         where: {
@@ -180,15 +229,15 @@ export const loadReadAccessToOwner = (
         },
         select: SHARE_GRANT_SOURCE_SELECT,
       }),
-      findClearedCitizens(context, { id: { in: [...viewerCitizenIds] } }),
+      loadActorsOfViewers(context, viewers),
     ]);
 
     return new Map(
-      viewerCitizenIds.map((viewerCitizenId) => {
-        const permissions = clearedViewers.get(viewerCitizenId);
-        if (!permissions)
+      viewers.map(({ citizenId }) => {
+        const actor = actorsByCitizenId.get(citizenId);
+        if (!actor?.hasClearance())
           return [
-            viewerCitizenId,
+            citizenId,
             {
               isGranted: false,
               refusal: ReadAccessRefusal.RemoteControlProgramPermissionMissing,
@@ -196,15 +245,10 @@ export const loadReadAccessToOwner = (
           ];
 
         return [
-          viewerCitizenId,
+          citizenId,
           getEffectiveReadAccess({
             switches,
-            viewer: toViewer(
-              viewerCitizenId,
-              permissions.roleIds,
-              permissions.permissionSets,
-              capabilityId,
-            ),
+            viewer: toViewer(citizenId, actor, capabilityId),
             ownerCitizenId,
             capabilityId,
             grants,

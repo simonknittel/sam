@@ -58,7 +58,8 @@ const coversOwners = (
  * the private channel of the viewer until `WatchLease.expiresAt`. Each
  * consumer has its own lease, thus the end of one consumer does not stop the
  * delivery to the others. The lease gives no access: the relay checks the
- * access at each delivery (`findWatchingViewers()`). Each renewal deletes the
+ * access at each delivery (`findWatchingViewers()`). The lease also records
+ * whether admin mode was on at the last renewal. Each renewal deletes the
  * expired leases of the viewer for the capability.
  *
  * Register the lease before the first read of the snapshot, thus no entry
@@ -78,7 +79,7 @@ export const renewWatchLease = (
 ): Promise<WatchLease> =>
   withSpan(context, "renewWatchLease", async () => {
     const citizen = requireRemoteControlProgramUse(actor);
-    if (!hasConsumerPermission(actor.permissionSets, input.capability_id))
+    if (!hasConsumerPermission(actor, input.capability_id))
       throw new ForbiddenError(
         RemoteControlProgramErrorMessage.ConsumerPermissionMissing,
       );
@@ -86,6 +87,11 @@ export const renewWatchLease = (
     const now = context.now();
     const ownerCitizenIds = [...new Set(input.owner_citizen_ids)];
     const expiresAt = new Date(now.getTime() + WATCH_LEASE_MILLISECONDS);
+    const renewedFields = {
+      ownerIds: ownerCitizenIds,
+      expiresAt,
+      renewedWithAdminModeAt: actor.adminMode ? now : null,
+    };
     const viewerLeasesWhere = {
       viewerId: citizen.id,
       capabilityId: input.capability_id,
@@ -126,10 +132,9 @@ export const renewWatchLease = (
           create: {
             ...viewerLeasesWhere,
             consumerId: input.consumer_id,
-            ownerIds: ownerCitizenIds,
-            expiresAt,
+            ...renewedFields,
           },
-          update: { ownerIds: ownerCitizenIds, expiresAt },
+          update: renewedFields,
           select: { id: true },
         });
 

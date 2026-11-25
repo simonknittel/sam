@@ -24,6 +24,8 @@ import { isKeySetFetchError, KeySetUnavailableError } from "./keySetErrors.js";
  * - `sub`: the id of the user.
  * - `citizen_id`: the citizen of the user, the owner of the runtime.
  * - `runtime_id`: the id that the runtime sends in its `hello`.
+ * - `admin_mode`: whether admin mode was on for the actor of the app. The
+ *   relay service checks the admin role again.
  * - `iat` and `exp`: the lifetime is
  *   `RELAY_LIMITS.connectionTokenLifetimeMilliseconds`.
  */
@@ -44,6 +46,7 @@ export interface RuntimeConnectionTokenClaims {
   readonly userId: string;
   readonly citizenId: string;
   readonly runtimeId: string;
+  readonly adminMode: boolean;
 }
 
 export interface SignedRuntimeConnectionToken {
@@ -59,7 +62,7 @@ export interface SignedRuntimeConnectionToken {
  */
 export const signRuntimeConnectionToken = async (
   context: Pick<ApplicationContext, "signingKey" | "urls" | "now">,
-  { userId, citizenId, runtimeId }: RuntimeConnectionTokenClaims,
+  { userId, citizenId, runtimeId, adminMode }: RuntimeConnectionTokenClaims,
 ): Promise<SignedRuntimeConnectionToken> => {
   const signingKey = await requireSigningKey(
     context,
@@ -76,6 +79,7 @@ export const signRuntimeConnectionToken = async (
   const token = await new SignJWT({
     citizen_id: citizenId,
     runtime_id: runtimeId,
+    admin_mode: adminMode,
   })
     .setProtectedHeader({ alg: signingKey.algorithm, kid: signingKey.keyId })
     .setIssuer(context.urls.issuer)
@@ -96,6 +100,7 @@ const connectionTokenClaimsSchema = z.object({
   sub: z.string().min(1),
   citizen_id: z.string().min(1),
   runtime_id: runtimeIdSchema,
+  admin_mode: z.boolean(),
   exp: z.number(),
 });
 
@@ -170,6 +175,7 @@ export const verifyRuntimeConnectionToken = async (
     userId: claims.data.sub,
     citizenId: claims.data.citizen_id,
     runtimeId: claims.data.runtime_id,
+    adminMode: claims.data.admin_mode,
     expiresAt: new Date(claims.data.exp * MILLISECONDS_PER_SECOND),
   };
 };

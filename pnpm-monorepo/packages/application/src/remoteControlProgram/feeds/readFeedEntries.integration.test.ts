@@ -171,6 +171,21 @@ test("gives the own entries, the live entries of the valid grants and the histor
     end: getTimeBeforeNow(HOUR_MILLISECONDS),
   });
   expect(summarize(window.entries)).toEqual(history);
+
+  // Admin mode replaces the permissions, but not the grants
+  const admin = await createClearedCitizen("admin", []);
+  const adminSnapshot = await readSnapshot(
+    context,
+    createTestActor({
+      userId: admin.userId!,
+      citizen: admin,
+      adminMode: true,
+    }),
+  );
+  expect(summarize(adminSnapshot.entries)).toEqual([
+    ...history,
+    { owner: "viewer", eventAt: getTimeBeforeNow(10 * DAY_MILLISECONDS) },
+  ]);
 });
 
 test("gives no data to a viewer without one of the two permissions, and to an admin who assumes the viewer", async () => {

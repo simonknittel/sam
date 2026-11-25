@@ -12,7 +12,10 @@ import {
   createTestApplicationContext,
   TEST_NOW,
 } from "../../../test/applicationContext.js";
-import { createCitizenWithPermissions } from "../../../test/citizensWithPermissions.js";
+import {
+  CLEARED_ADMIN_USER,
+  createCitizenWithPermissions,
+} from "../../../test/citizensWithPermissions.js";
 import { truncateAllTables } from "../../../test/database.js";
 import {
   createClearedCitizen,
@@ -152,12 +155,12 @@ test("gives the access of many viewers to one owner, with the current roles and 
   const input = {
     ownerCitizenId: citizens.roleGrantOwner.id,
     capabilityId: CapabilityId.LogEntries,
-    viewerCitizenIds: [
+    viewers: [
       citizens.viewer.id,
       otherViewer.id,
       viewerWithoutUser.id,
       citizens.roleGrantOwner.id,
-    ],
+    ].map((citizenId) => ({ citizenId, adminMode: false })),
   };
 
   const access = await loadReadAccessToOwner(context, input);
@@ -199,7 +202,7 @@ test("gives the access of many viewers to one owner, with the current roles and 
   await expect(
     loadReadAccessToOwner(turnedOff, {
       ...input,
-      viewerCitizenIds: [otherViewer.id],
+      viewers: [{ citizenId: otherViewer.id, adminMode: false }],
     }),
   ).resolves.toEqual(
     new Map([
@@ -209,4 +212,65 @@ test("gives the access of many viewers to one owner, with the current roles and 
       ],
     ]),
   );
+});
+
+test("lets admin mode replace the permissions of an admin, but never a grant", async () => {
+  const owner = await createClearedCitizen("owner");
+  const everyoneGrantOwner = await createClearedCitizen("everyoneGrantOwner");
+  await createShareGrantRow(everyoneGrantOwner.id, EVERYONE_GRANTEE);
+  // No role at all
+  const admin = await prisma.citizen.create({
+    data: { handle: "admin", ...CLEARED_ADMIN_USER },
+  });
+  // Admin mode of the lease, but no admin (for example not an admin anymore)
+  const member = await createClearedCitizen("member", ["login;manage"]);
+  const adminActor = createTestActor({
+    userId: admin.userId!,
+    citizen: admin,
+    adminMode: true,
+  });
+  const { context } = createTestApplicationContext();
+  const granted = {
+    isGranted: true,
+    visibleTimeRange: { start: ONE_HOUR_AGO, end: null },
+  };
+  const noGrant = { isGranted: false, refusal: ReadAccessRefusal.NoValidGrant };
+  const noPermission = {
+    isGranted: false,
+    refusal: ReadAccessRefusal.RemoteControlProgramPermissionMissing,
+  };
+  const loadAccessOfViewers = async (
+    ownerCitizenId: string,
+    adminMode: boolean,
+  ) =>
+    Object.fromEntries(
+      await loadReadAccessToOwner(context, {
+        ownerCitizenId,
+        capabilityId: CapabilityId.LogEntries,
+        viewers: [admin, member].map(({ id }) => ({
+          citizenId: id,
+          adminMode,
+        })),
+      }),
+    );
+
+  const accessOfAdmin = await loadReadAccessOfViewer(context, adminActor, {
+    capabilityId: CapabilityId.LogEntries,
+    ownerCitizenIds: [owner.id, everyoneGrantOwner.id],
+  });
+  expect(Object.fromEntries(accessOfAdmin.accessByOwnerCitizenId)).toEqual({
+    [owner.id]: noGrant,
+    [everyoneGrantOwner.id]: granted,
+  });
+
+  await expect(loadAccessOfViewers(owner.id, true)).resolves.toEqual({
+    [admin.id]: noGrant,
+    [member.id]: noPermission,
+  });
+  await expect(
+    loadAccessOfViewers(everyoneGrantOwner.id, true),
+  ).resolves.toEqual({ [admin.id]: granted, [member.id]: noPermission });
+  await expect(
+    loadAccessOfViewers(everyoneGrantOwner.id, false),
+  ).resolves.toEqual({ [admin.id]: noPermission, [member.id]: noPermission });
 });

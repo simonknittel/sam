@@ -1,7 +1,8 @@
 import { connectionTokenSchema, runtimeIdSchema } from "@sam-monorepo/domain";
 import * as z from "zod";
-import { createActor, type Actor } from "../../actor.js";
+import type { Actor } from "../../actor.js";
 import { getEffectiveRolesOfCitizen } from "../../auth/getEffectiveRolesOfCitizen.js";
+import { createUserActor, USER_ACTOR_SELECT } from "../../auth/userActor.js";
 import type { ApplicationContext } from "../../context.js";
 import { ForbiddenError } from "../../errors.js";
 import { withSpan } from "../../withSpan.js";
@@ -22,8 +23,9 @@ export type AuthenticateRuntimeConnectionInput = z.output<
 
 export interface RuntimeConnection {
   /**
-   * The actor of the use cases of the connection. Admin mode is off, because
-   * the relay service has no session.
+   * The actor of the use cases of the connection. Admin mode comes from the
+   * token, because the relay service has no session, and applies only while
+   * the user is an admin.
    */
   readonly actor: Actor;
   readonly userId: string;
@@ -41,8 +43,9 @@ export interface RuntimeConnection {
  * Checks the token of a runtime connection: at the `hello` and at each
  * `token_renewal`. It verifies the token, and then checks in the database
  * that the user is not banned, has the clearance of the app, still has the
- * citizen of the token and still has `remoteControlProgram;use`. Thus a ban
- * or a removed permission stops a connection within one renewal interval.
+ * citizen of the token and still has `remoteControlProgram;use` (or admin
+ * mode). Thus a ban, a removed permission or the end of admin mode stops a
+ * connection within one renewal interval.
  * The relay service has no session: the use case builds the actor of the
  * connection, like the MCP server builds it from an access token.
  *
@@ -70,17 +73,9 @@ export const authenticateRuntimeConnection = (
     const user = await context.prisma.user.findUnique({
       where: { id: token.userId },
       select: {
-        role: true,
-        emailVerified: true,
+        ...USER_ACTOR_SELECT,
         bannedAt: true,
-        discordTwoFactorEnabled: true,
         citizen: { select: { id: true, handle: true, deletedAt: true } },
-        // The same account as the `discordId` of the session of the app
-        accounts: {
-          where: { provider: "discord" },
-          select: { providerAccountId: true },
-          take: 1,
-        },
       },
     });
     if (!user)
@@ -98,20 +93,15 @@ export const authenticateRuntimeConnection = (
         RemoteControlProgramErrorMessage.ConnectionTokenNotValid,
       );
 
-    const effectiveRoles = await getEffectiveRolesOfCitizen(
-      context.prisma,
-      citizen.id,
-    );
-    const actor = createActor({
+    const actor = createUserActor({
       userId: token.userId,
-      userRole: user.role,
-      emailConfirmedAt: user.emailVerified,
-      citizen: { id: citizen.id, handle: citizen.handle },
-      roleIds: effectiveRoles.roleIds,
-      discordUserId: user.accounts[0]?.providerAccountId ?? null,
-      discordTwoFactorEnabled: user.discordTwoFactorEnabled,
-      permissionSets: effectiveRoles.permissionSets,
-      adminMode: false,
+      user,
+      citizen,
+      effectiveRoles: await getEffectiveRolesOfCitizen(
+        context.prisma,
+        citizen.id,
+      ),
+      adminMode: token.adminMode,
     });
 
     actor.requireClearance();
