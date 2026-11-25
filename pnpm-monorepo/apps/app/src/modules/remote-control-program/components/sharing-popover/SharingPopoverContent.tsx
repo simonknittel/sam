@@ -44,9 +44,8 @@ interface Props {
 }
 
 /**
- * The content of the sharing popover in the top bar and in the bottom sheet
- * of the mobile action bar. The tab of this browser does not wait for the
- * data of the server.
+ * The content of the sharing popover in the top bar and in the bottom sheet.
+ * The tab of this browser does not wait for the data of the server.
  */
 export const SharingPopoverContent = ({ isOpenedByControlUi }: Props) => {
   const query = useSharingPopoverQuery();

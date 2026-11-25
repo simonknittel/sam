@@ -77,7 +77,7 @@ export const SharingPopoverProvider = ({ isEnabled, children }: Props) => {
 export interface SharingPopoverOpener {
   /**
    * Opens the sharing popover: the popover of the top bar on a large
-   * viewport, else the bottom sheet of the mobile action bar. Example: the
+   * viewport, else the bottom sheet. Example: the
    * Log Analyzer asks the owner to select the log folder.
    */
   readonly open: () => void;

@@ -2,14 +2,16 @@
 
 import { Drawer } from "@base-ui/react/drawer";
 import clsx from "clsx";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { barItemClassName } from "./BarItemContent";
 
 interface Props {
   /** The accessible name of the sheet */
   readonly title: string;
-  /** The content of the trigger in the mobile action bar, usually a `BarItemContent` */
+  /** The content of the trigger, usually a `BarItemContent` */
   readonly trigger: ReactNode;
+  /** Replaces the item of the mobile action bar, for example with a button of the flyout */
+  readonly triggerRender?: ComponentProps<typeof Drawer.Trigger>["render"];
   /** The `title` and the accessible name of the trigger, when its text is shorter */
   readonly triggerLabel?: string;
   readonly open: boolean;
@@ -18,12 +20,13 @@ interface Props {
 }
 
 /**
- * A bottom sheet with a trigger of the mobile action bar, for example the
- * notification center. A swipe down closes it.
+ * A bottom sheet with a trigger of the mobile action bar or of its flyout, for
+ * example the notification center. A swipe down closes it.
  */
 export const BottomSheet = ({
   title,
   trigger,
+  triggerRender,
   triggerLabel,
   open,
   onOpenChange,
@@ -32,7 +35,10 @@ export const BottomSheet = ({
   return (
     <Drawer.Root open={open} onOpenChange={onOpenChange}>
       <Drawer.Trigger
-        className={clsx(barItemClassName, "cursor-pointer")}
+        render={triggerRender}
+        className={
+          triggerRender ? undefined : clsx(barItemClassName, "cursor-pointer")
+        }
         title={triggerLabel}
         aria-label={triggerLabel}
       >

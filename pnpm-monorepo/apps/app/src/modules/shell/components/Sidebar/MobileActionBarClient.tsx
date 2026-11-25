@@ -6,7 +6,7 @@ import type { App, RedactedApp } from "@/modules/apps/utils/types";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { Link } from "@/modules/common/components/Link";
 import { UnreadDot } from "@/modules/common/components/UnreadDot";
-import { useIsRemoteControlProgramAvailable } from "@/modules/remote-control-program/runtime/useBrowserRuntime";
+import { useBrowserRuntime } from "@/modules/remote-control-program/runtime/useBrowserRuntime";
 import clsx from "clsx";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
@@ -18,7 +18,6 @@ import { BarItemContent, barItemClassName } from "./BarItemContent";
 import { Create } from "./Create";
 import { MobileActionBarFlyout } from "./MobileActionBarFlyout";
 import { Notifications } from "./Notifications";
-import { RemoteControlProgram } from "./RemoteControlProgram";
 
 type LinkedApp = Exclude<App, RedactedApp>;
 
@@ -32,7 +31,9 @@ export const MobileActionBarClient = ({ supportHref }: Props) => {
 
   const { apps, appDotBadgeCounts } = useAppsContext();
   const pathname = usePathname();
-  const canUseRemoteControlProgram = useIsRemoteControlProgramAvailable();
+  /** The trigger of the sharing popover, which also shows it, is in the flyout */
+  const isWaitingForFolderPermission =
+    useBrowserRuntime()?.state.isWaitingForFolderPermission ?? false;
   if (!apps) return null;
   const { featured, other } = groupByFeatured(apps);
   const currentApp = findCurrentApp(apps.filter(isLinkedApp), pathname);
@@ -69,18 +70,14 @@ export const MobileActionBarClient = ({ supportHref }: Props) => {
 
       <BarLink href="/app/wiki" icon={<FaBookOpen />} label="Wiki" />
 
-      {canUseRemoteControlProgram && (
-        <li className="h-full min-w-fit flex-1 py-1">
-          <RemoteControlProgram />
-        </li>
-      )}
-
       <li className="h-full min-w-fit flex-1 py-1">
         <Notifications />
       </li>
 
       <li className="h-full min-w-fit flex-1 py-1">
-        <MobileActionBarFlyout hasUnreadDot={hasAppDotBadge}>
+        <MobileActionBarFlyout
+          hasUnreadDot={hasAppDotBadge || isWaitingForFolderPermission}
+        >
           <Account supportHref={supportHref} />
 
           <div className="p-4">

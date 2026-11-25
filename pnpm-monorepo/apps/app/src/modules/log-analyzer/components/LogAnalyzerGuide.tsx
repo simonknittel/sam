@@ -102,8 +102,8 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
           <GuideStep number={2} icon={FaFolderOpen} title="Ordner auswählen">
             Öffne das{" "}
             <UiLabel icon={FaTowerBroadcast}>Remote Control Program</UiLabel> in
-            der oberen Leiste, auf dem Handy in der unteren. Wähle unter{" "}
-            <UiLabel>Runtime: Browser</UiLabel> mit{" "}
+            der oberen Leiste, auf dem Handy unter <UiLabel>Apps</UiLabel>.
+            Wähle unter <UiLabel>Runtime: Browser</UiLabel> mit{" "}
             <UiLabel icon={FaFolderOpen}>Ordner wählen</UiLabel> den Ordner
             deiner Star Citizen-Installation, zum Beispiel{" "}
             {/* A path wraps only after a backslash, not inside a name */}

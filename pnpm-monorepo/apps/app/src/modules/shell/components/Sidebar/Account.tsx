@@ -5,6 +5,7 @@ import { Link } from "@/modules/common/components/Link";
 import { FaQuestionCircle } from "react-icons/fa";
 import { LogoutButton } from "../LogoutButton";
 import { Onboarding } from "./Onboarding";
+import { RemoteControlProgram } from "./RemoteControlProgram";
 
 interface Props {
   readonly supportHref: string | null;
@@ -54,6 +55,8 @@ export const Account = ({ supportHref }: Props) => {
             <FaQuestionCircle />
           </Button2>
         )}
+
+        <RemoteControlProgram />
 
         <Onboarding />
 

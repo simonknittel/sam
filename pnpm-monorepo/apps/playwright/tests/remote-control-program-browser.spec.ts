@@ -298,7 +298,7 @@ test("the sharing popover and the request of the Log Analyzer work with the keyb
 test.describe("mobile", () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  test("the action bar and the Log Analyzer open the sharing popover in a bottom sheet", async ({
+  test("the flyout and the Log Analyzer open the sharing popover in a bottom sheet", async ({
     page,
     prisma,
     signIn,
@@ -311,12 +311,23 @@ test.describe("mobile", () => {
     await stubDirectoryPicker(page, []);
     await page.goto(LOG_ANALYZER_PAGE_PATH);
 
-    /** The top bar is hidden: the trigger is the item of the action bar */
+    /** The top bar is hidden: the trigger is in the flyout of the action bar */
+    const flyoutToggle = page.getByRole("button", { name: "Apps" });
+    await clickUntilVisible(
+      flyoutToggle,
+      page.getByRole("button", { name: "Apps", expanded: true }),
+    );
     await expect(sharingPopoverTrigger(page)).toHaveCount(1);
     await openSharingPopover(page);
     await showSharingPopoverSection(page, SharingPopoverSection.Status);
     await showSharingPopoverSection(page, SharingPopoverSection.Grants);
+
+    /** The first Escape closes only the sheet, the second one the flyout */
     await closeSharingPopover(page);
+    await expect(flyoutToggle).toHaveAttribute("aria-expanded", "true");
+    await expect(sharingPopoverTrigger(page)).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(flyoutToggle).toHaveAttribute("aria-expanded", "false");
 
     /** The Log Analyzer asks for the folder in the same sheet */
     await page.getByRole("button", { name: "Öffnen", exact: true }).click();

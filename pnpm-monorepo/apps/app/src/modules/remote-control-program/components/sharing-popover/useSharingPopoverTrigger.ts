@@ -10,7 +10,8 @@ export const SHARING_POPOVER_TITLE = "Remote Control Program";
 
 /**
  * The open state of the sharing popover and the state of its trigger, for
- * the item of the top bar and the item of the mobile action bar
+ * the item of the top bar and the button in the flyout of the mobile action
+ * bar
  *
  * @param canActOnRequest The surface is visible: it opens when a control UI
  * opens the popover (see `useSharingPopoverOpenState()`)

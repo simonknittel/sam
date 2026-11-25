@@ -21,7 +21,7 @@ export const RemoteControlProgram = () => {
 const SharingPopover = () => {
   /**
    * The top bar, and thus the trigger, shows only on a large viewport. On a
-   * small viewport, the bottom sheet of the mobile action bar opens.
+   * small viewport, the bottom sheet opens.
    */
   const isLargeViewport = useIsLargeViewport();
   const {

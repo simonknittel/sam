@@ -68,7 +68,8 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
       <>
         <p>
           Der Log Analyzer ist jetzt ein Teil des Remote Control Program. Das
-          neue Symbol in der Leiste öffnet seine Einstellungen.
+          neue Symbol in der oberen Leiste, auf dem Handy unter
+          &bdquo;Apps&ldquo;, öffnet seine Einstellungen.
         </p>
 
         <ul>
