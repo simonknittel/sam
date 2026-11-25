@@ -299,6 +299,12 @@ test("older entries go up only on a confirmed request, and each viewer sees them
     exact: true,
   });
 
+  /** A day that gives no limit must not count all entries */
+  await form.getByLabel("Bis").fill("0026-06-30");
+  await form.getByRole("button", { name: "Einträge zählen" }).click();
+  await expect(form.getByText("Ein Datum ist ungültig.")).toBeVisible();
+  await expect(uploadButton).toHaveCount(0);
+
   /** A change of the range needs a new count */
   await countOlderEntries(form, daysAgo(44), daysAgo(43));
   await expect(

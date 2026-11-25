@@ -40,11 +40,17 @@ const getRuleTypesThatAreOn = (logEntryTypes: LogEntryTypeRules) =>
       .map(getOldestLogAnalyzerEntryVersion),
   );
 
-const formatUploadText = (count: number) => {
-  if (count === 0)
-    return "Es wurde nichts hochgeladen, weil die Typen nicht mehr ausgewählt sind.";
-  if (count === 1) return "1 Eintrag wird hochgeladen.";
-  return `${count.toLocaleString("de")} Einträge werden hochgeladen.`;
+const showUploadToast = (count: number) => {
+  if (count === 0) {
+    toast.error("Es wurde nichts hochgeladen.");
+    return;
+  }
+
+  toast.success(
+    count === 1
+      ? "1 Eintrag wird hochgeladen."
+      : `${count.toLocaleString("de")} Einträge werden hochgeladen.`,
+  );
 };
 
 const getEmptyText = (selectedTypeCount: number) =>
@@ -55,15 +61,22 @@ const getEmptyText = (selectedTypeCount: number) =>
 interface Props {
   readonly request: OlderEntriesRequestDraft;
   readonly runtime: BrowserRuntimeHandle;
-  /** After the upload */
-  readonly onEnd: () => void;
+  /** After the upload, also when the owner started a new count since */
+  readonly onEnd: (key: string) => void;
+  /** The runtime does not know the count any more */
+  readonly onExpired: (key: string) => void;
 }
 
 /**
  * The count of the runtime and the confirmation of the owner. Only the types
  * that are on go up (decision 27).
  */
-export const OlderEntriesRequest = ({ request, runtime, onEnd }: Props) => {
+export const OlderEntriesRequest = ({
+  request,
+  runtime,
+  onEnd,
+  onExpired,
+}: Props) => {
   const { state, commands } = runtime;
   const [isConfirming, setIsConfirming] = useState(false);
   const [confirmErrorText, setConfirmErrorText] = useState<string | null>(null);
@@ -89,31 +102,24 @@ export const OlderEntriesRequest = ({ request, runtime, onEnd }: Props) => {
 
     try {
       const count = await commands.confirmOlderEntriesRequest(requestId);
-      toast.success(formatUploadText(count));
-      onEnd();
+      showUploadToast(count);
+      onEnd(request.key);
       return;
     } catch (error) {
-      setConfirmErrorText(getBrowserRuntimeErrorText(error));
       if (
         error instanceof BrowserRuntimeError &&
         error.code === BrowserRuntimeErrorCode.RequestExpired
-      )
-        void query.refetch();
+      ) {
+        toast.error(getBrowserRuntimeErrorText(error));
+        onExpired(request.key);
+        return;
+      }
+
+      setConfirmErrorText(getBrowserRuntimeErrorText(error));
     }
 
     setIsConfirming(false);
   };
-
-  if (query.isFetching)
-    return (
-      <p
-        role="status"
-        className="flex items-center gap-2 text-sm text-neutral-500"
-      >
-        <AsciiSpinner />
-        Einträge werden gezählt …
-      </p>
-    );
 
   if (query.isError)
     return (
@@ -122,19 +128,28 @@ export const OlderEntriesRequest = ({ request, runtime, onEnd }: Props) => {
       </div>
     );
 
-  if (!query.data) return null;
-
-  const { prepared, ruleTypesThatWereOn } = query.data;
+  const result = query.isFetching ? null : (query.data ?? null);
   // A type that is off now does not go up (see `confirmOlderEntriesRequest`)
   const ruleTypesThatAreOn = getRuleTypesThatAreOn(
     state.localAccess.logEntryTypes,
   );
-  const entryCount = Array.from(prepared.countsByType)
-    .filter(([ruleType]) => ruleTypesThatAreOn.has(ruleType))
-    .reduce((sum, [, count]) => sum + count, 0);
-  const hasNewTypes = Array.from(ruleTypesThatAreOn).some(
-    (ruleType) => !ruleTypesThatWereOn.has(ruleType),
-  );
+  const entryCount = result
+    ? Array.from(result.prepared.countsByType)
+        .filter(([ruleType]) => ruleTypesThatAreOn.has(ruleType))
+        .reduce((sum, [, count]) => sum + count, 0)
+    : 0;
+  const hasNewTypes =
+    result !== null &&
+    Array.from(ruleTypesThatAreOn).some(
+      (ruleType) => !result.ruleTypesThatWereOn.has(ruleType),
+    );
+
+  const getStatusText = () => {
+    if (!result) return "Einträge werden gezählt …";
+    if (entryCount > 0) return `Anzahl: ${entryCount.toLocaleString("de")}`;
+    // The new types are not counted yet
+    return hasNewTypes ? null : getEmptyText(ruleTypesThatAreOn.size);
+  };
 
   return (
     <>
@@ -152,17 +167,20 @@ export const OlderEntriesRequest = ({ request, runtime, onEnd }: Props) => {
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3">
-        <p role="status" className="text-sm text-neutral-400">
-          {entryCount > 0
-            ? `Anzahl: ${entryCount.toLocaleString("de")}`
-            : getEmptyText(ruleTypesThatAreOn.size)}
+        {/* One element for the count and its result, thus a screen reader announces the result */}
+        <p
+          role="status"
+          className="flex items-center gap-2 text-sm text-neutral-400"
+        >
+          {!result && <AsciiSpinner />}
+          {getStatusText()}
         </p>
 
-        {entryCount > 0 && (
+        {result && entryCount > 0 && (
           <Button2
             type="button"
             disabled={isConfirming}
-            onClick={() => void confirm(prepared.id)}
+            onClick={() => void confirm(result.prepared.id)}
           >
             {isConfirming ? <AsciiSpinner /> : <FaCloudArrowUp />}
             Hochladen

@@ -1,17 +1,18 @@
 "use client";
 
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
+import Note from "@/modules/common/components/Note";
 import { DateRangeFields } from "@/modules/log-analyzer/components/DateRangeFields";
 import {
   hasDateRange,
   NO_DATE_RANGE,
-  toEntryWindow,
   type DateRange,
 } from "@/modules/log-analyzer/utils/entryWindow";
 import { getLocalDateKey, ORGANIZATION_TIMEZONE } from "@sam-monorepo/domain";
 import { useRef, useState, type SubmitEvent } from "react";
 import { FaMagnifyingGlass } from "react-icons/fa6";
 import type { BrowserRuntimeHandle } from "../../runtime/types";
+import { toOlderEntriesRange } from "./olderEntriesRange";
 import {
   OlderEntriesRequest,
   type OlderEntriesRequestDraft,
@@ -28,20 +29,22 @@ export const OlderEntriesUploadForm = ({ runtime }: Props) => {
   );
   const [dateRange, setDateRange] = useState(NO_DATE_RANGE);
   const [request, setRequest] = useState<OlderEntriesRequestDraft | null>(null);
+  const [isDateInvalid, setIsDateInvalid] = useState(false);
   const countButtonRef = useRef<HTMLButtonElement>(null);
 
   /** The count belongs to the date range that it counted */
   const changeDateRange = (nextDateRange: DateRange) => {
     setDateRange(nextDateRange);
     setRequest(null);
+    setIsDateInvalid(false);
   };
 
   const count = (countedDateRange: DateRange) => {
+    const range = toOlderEntriesRange(countedDateRange);
+
     setDateRange(countedDateRange);
-    setRequest({
-      key: crypto.randomUUID(),
-      range: toEntryWindow(countedDateRange),
-    });
+    setIsDateInvalid(range === null);
+    setRequest(range && { key: crypto.randomUUID(), range });
   };
 
   const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
@@ -49,9 +52,22 @@ export const OlderEntriesUploadForm = ({ runtime }: Props) => {
     count(dateRange);
   };
 
-  /** The focus was on the button of the upload, which disappears */
-  const endRequest = () => {
+  /**
+   * After an upload, which can end after the owner started a new count. The
+   * focus was on the button of the upload, which disappears.
+   */
+  const endRequest = (key: string) => {
+    if (request?.key !== key) return;
+
     setRequest(null);
+    countButtonRef.current?.focus();
+  };
+
+  /** The count is not valid any more, for example after a new start of the runtime */
+  const recount = (key: string) => {
+    if (request?.key !== key) return;
+
+    count(dateRange);
     countButtonRef.current?.focus();
   };
 
@@ -84,12 +100,19 @@ export const OlderEntriesUploadForm = ({ runtime }: Props) => {
         Einträge zählen
       </Button2>
 
+      {isDateInvalid && (
+        <div role="alert">
+          <Note type="error" message="Ein Datum ist ungültig." />
+        </div>
+      )}
+
       {request && (
         <OlderEntriesRequest
           key={request.key}
           request={request}
           runtime={runtime}
           onEnd={endRequest}
+          onExpired={recount}
         />
       )}
     </form>
