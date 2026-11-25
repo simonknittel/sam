@@ -1,3 +1,5 @@
+import { LOG_ANALYZER_HISTORY_MINIMUM_AGE_HOURS } from "@sam-monorepo/domain";
+
 /**
  * The texts of the Remote Control Program for the facts that the sharing
  * popover and the control UIs (for example the Log Analyzer) both tell. One
@@ -24,3 +26,5 @@ export const ACCESS_DENIED_TEXT =
 /** The session of the browser ended, for example after a logout in a different tab */
 export const SESSION_EXPIRED_TEXT =
   "Deine Anmeldung bei SAM ist abgelaufen. Melde dich neu an.";
+
+export const LOG_ENTRIES_HISTORY_TEXT = `Einträge, die älter als ${LOG_ANALYZER_HISTORY_MINIMUM_AGE_HOURS} Stunden sind, sehen alle, die den Log Analyzer nutzen dürfen, auch ohne Freigabe.`;

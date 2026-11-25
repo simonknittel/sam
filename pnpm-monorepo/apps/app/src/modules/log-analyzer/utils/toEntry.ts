@@ -36,7 +36,7 @@ export const toEntry = (
     citizen: {
       id: feedEntry.owner.id,
       handle: feedEntry.owner.handle,
-      // The grants of a deleted owner give no access, thus the feed has no entry of a deleted citizen
+      // The app gives no entry of a deleted citizen
       deletedAt: null,
     },
     isShared,

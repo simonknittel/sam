@@ -132,7 +132,7 @@ describe("mergeLogFeedEntries", () => {
 });
 
 describe("createRelayEntryFilter", () => {
-  test("keeps the own entries, the entries of a valid grant and of a confirmed owner", () => {
+  test("keeps the own entries, the history, and the entries of a valid grant and of a confirmed owner", () => {
     const isRetained = createRelayEntryFilter({
       scope: ALL_ENTRIES,
       ownCitizenId: OWN_CITIZEN.id,
@@ -144,6 +144,7 @@ describe("createRelayEntryFilter", () => {
       ],
       // An owner outside of a list that is not complete
       confirmedOwnerCitizenIds: new Set(["confirmed"]),
+      historyEnd: atSecond(5),
     });
 
     expect(
@@ -152,7 +153,11 @@ describe("createRelayEntryFilter", () => {
         relayEntry("b", { second: 10 }),
         relayEntry("c", { second: 20 }),
         relayEntry("d", { owner: { id: "revoked", handle: null }, second: 20 }),
-        relayEntry("e", { owner: { id: "confirmed", handle: null } }),
+        relayEntry("e", {
+          owner: { id: "confirmed", handle: null },
+          second: 20,
+        }),
+        relayEntry("f", { owner: { id: "revoked", handle: null }, second: 4 }),
       ]
         .filter(isRetained)
         .map((entry) => entry.key),
@@ -160,6 +165,7 @@ describe("createRelayEntryFilter", () => {
       `own:${hash("a")}`,
       `other:${hash("c")}`,
       `confirmed:${hash("e")}`,
+      `revoked:${hash("f")}`,
     ]);
   });
 });

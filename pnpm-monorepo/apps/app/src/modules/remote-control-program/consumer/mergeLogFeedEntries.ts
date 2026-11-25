@@ -206,20 +206,21 @@ interface RelayEntryFilterInput {
    * entries: the read gave only the entries that the viewer can read.
    */
   readonly confirmedOwnerCitizenIds?: ReadonlySet<string>;
+  /** The entries before this time need no grant (decision 31) */
+  readonly historyEnd: Date;
 }
 
 /**
- * The entries of the relay that the consumer can keep: in its scope, and
- * the own entries, the entries in the visible time range of a sharing
- * owner, or the entries of a confirmed owner. When a grant ends or the
- * owner revokes it, the entries of the owner leave the memory, also the
- * older ones (principle 5).
+ * The entries of the relay that the consumer can keep. When a grant ends or
+ * the owner revokes it, the live entries of the owner leave the memory
+ * (principle 5), and the history stays (decision 31).
  */
 export const createRelayEntryFilter = ({
   scope,
   ownCitizenId,
   sharingOwners,
   confirmedOwnerCitizenIds,
+  historyEnd,
 }: RelayEntryFilterInput) => {
   const isInScope = createScopeFilter(scope);
   const visibleTimeRangeByOwnerCitizenId =
@@ -236,6 +237,7 @@ export const createRelayEntryFilter = ({
     if (!isInScope(entry)) return false;
     if (
       entry.owner.id === ownCitizenId ||
+      entry.eventAt < historyEnd ||
       visibleTimeRangeByOwnerCitizenId === null
     )
       return true;

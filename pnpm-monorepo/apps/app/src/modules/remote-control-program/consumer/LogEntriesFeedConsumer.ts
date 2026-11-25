@@ -4,6 +4,7 @@ import type { SharingOwner, SharingOwners } from "@sam-monorepo/application";
 import {
   CapabilityId,
   feedDeliveryEventPayloadSchema,
+  getLogAnalyzerHistoryEnd,
   type FeedDeliveryEventPayload,
 } from "@sam-monorepo/domain";
 import { TRPCClientError } from "@trpc/client";
@@ -51,6 +52,19 @@ const DEFAULT_RENEWAL_INTERVAL_MILLISECONDS = 60_000;
  * the view within this time (principle 5)
  */
 const SHARING_OWNERS_READ_INTERVAL_MILLISECONDS = 15_000;
+
+/**
+ * An open view gets no event when an entry becomes history (decision 31),
+ * thus it reads the entries that crossed the limit at this interval
+ */
+const HISTORY_READ_INTERVAL_MILLISECONDS = 5 * 60_000;
+
+/**
+ * The read of the history starts this time before the end of the read before
+ * it: the app applies the limit with its own clock, and the clock of the
+ * browser can be wrong by some minutes
+ */
+const HISTORY_READ_OVERLAP_MILLISECONDS = 30 * 60_000;
 
 /** The renewal and the list of the owners need some small queries */
 const RENEWAL_TIMEOUT_MILLISECONDS = 10_000;
@@ -158,17 +172,21 @@ interface Session {
    * realtime event. Null before the first page of the first snapshot.
    */
   cursor: string | null;
+  historyTimeout: number | undefined;
+  /** The end of the last read of the history. Null before the first snapshot. */
+  historyReadUntil: Date | null;
   /** The owners and their visible time ranges. Null before the first list. */
   sharingOwnersSignature: string | null;
   /**
-   * The other owners of the entries of the last full snapshot. The snapshot
-   * gives only the entries that the viewer can read, thus it confirms the
-   * access of the owners that the list of the sharing owners does not
-   * contain (`hasMoreSharingOwners`).
+   * The other owners of the live entries of the last full snapshot. The
+   * snapshot gives only the entries that the viewer can read, thus it
+   * confirms the grants of the owners that the list of the sharing owners
+   * does not contain (`hasMoreSharingOwners`).
    */
   snapshotOwnerCitizenIds: ReadonlySet<string>;
   isSnapshotRequested: boolean;
   isChangesReadRequested: boolean;
+  isHistoryReadRequested: boolean;
   isSyncRunning: boolean;
   /** Aborts the current read when a new snapshot replaces it */
   readAbortController: AbortController | null;
@@ -336,10 +354,13 @@ export class LogEntriesFeedConsumer {
       sharingOwnersTimeout: undefined,
       isSharingOwnersReadRunning: false,
       cursor: null,
+      historyTimeout: undefined,
+      historyReadUntil: null,
       sharingOwnersSignature: null,
       snapshotOwnerCitizenIds: new Set(),
       isSnapshotRequested: false,
       isChangesReadRequested: false,
+      isHistoryReadRequested: false,
       isSyncRunning: false,
       readAbortController: null,
     };
@@ -363,6 +384,7 @@ export class LogEntriesFeedConsumer {
     session.abortController.abort();
     window.clearTimeout(session.renewalTimeout);
     window.clearTimeout(session.sharingOwnersTimeout);
+    window.clearTimeout(session.historyTimeout);
     window.removeEventListener("pagehide", this.#handlePageHide);
     window.removeEventListener("pageshow", this.#handlePageShow);
 
@@ -614,6 +636,7 @@ export class LogEntriesFeedConsumer {
       confirmedOwnerCitizenIds: hasMoreSharingOwners
         ? session.snapshotOwnerCitizenIds
         : undefined,
+      historyEnd: getLogAnalyzerHistoryEnd(new Date()),
     });
 
     this.#setState({ relayEntries: retainRelayEntries(relayEntries, filter) });
@@ -625,6 +648,7 @@ export class LogEntriesFeedConsumer {
       ownCitizenId: session.ownCitizenId,
       // A new grant can deliver entries before the next list of the owners
       sharingOwners: null,
+      historyEnd: getLogAnalyzerHistoryEnd(new Date()),
     });
     const feedEntries = entries.flatMap((entry) => {
       const feedEntry = toRelayLogFeedEntry(entry);
@@ -692,8 +716,8 @@ export class LogEntriesFeedConsumer {
 
   /**
    * Runs the requested reads one after the other. A snapshot comes first, and
-   * it covers the changes that were requested before it. A failed read waits
-   * for the next renewal.
+   * it covers the changes and the history that were requested before it. A
+   * failed read waits for the next renewal.
    */
   async #sync(session: Session) {
     if (session.isSyncRunning) return;
@@ -708,6 +732,7 @@ export class LogEntriesFeedConsumer {
       if (session.isSnapshotRequested) {
         session.isSnapshotRequested = false;
         session.isChangesReadRequested = false;
+        session.isHistoryReadRequested = false;
         outcome = await this.#readSnapshot(session);
         if (outcome === ReadOutcome.Failed) session.isSnapshotRequested = true;
       } else if (session.isChangesReadRequested && session.cursor !== null) {
@@ -715,6 +740,11 @@ export class LogEntriesFeedConsumer {
         outcome = await this.#readChanges(session, session.cursor);
         if (outcome === ReadOutcome.Failed)
           session.isChangesReadRequested = true;
+      } else if (session.isHistoryReadRequested && session.cursor !== null) {
+        session.isHistoryReadRequested = false;
+        outcome = await this.#readHistory(session);
+        if (outcome === ReadOutcome.Failed)
+          session.isHistoryReadRequested = true;
       } else {
         break;
       }
@@ -743,14 +773,21 @@ export class LogEntriesFeedConsumer {
   }
 
   /**
-   * Reads the pages of a snapshot or of the changes and adds their entries.
-   * A snapshot keeps the cursor of its first page, which covers all its
-   * pages. Each page of the changes moves the cursor.
+   * Reads the pages of a snapshot, of the changes or of the history and adds
+   * their entries. A snapshot keeps the cursor of its first page, which covers
+   * all its pages. Each page of the changes moves the cursor. The history
+   * covers no changes, thus it does not move the cursor.
    */
   async #readPages(
     session: Session,
     firstInput: FeedEntriesInput,
-    onPage?: (page: FeedEntriesPage) => void,
+    {
+      movesCursor = true,
+      onPage,
+    }: {
+      readonly movesCursor?: boolean;
+      readonly onPage?: (page: FeedEntriesPage) => void;
+    } = {},
   ): Promise<ReadOutcome> {
     const readAbortController = new AbortController();
     session.readAbortController = readAbortController;
@@ -781,7 +818,8 @@ export class LogEntriesFeedConsumer {
       if (!this.#isCurrent(session)) return ReadOutcome.Ended;
       if (readAbortController.signal.aborted) return ReadOutcome.Superseded;
 
-      if (pageIndex === 0 || "cursor" in input) session.cursor = page.cursor;
+      if (movesCursor && (pageIndex === 0 || "cursor" in input))
+        session.cursor = page.cursor;
       this.#addRelayEntries(session, page.entries);
       onPage?.(page);
 
@@ -803,6 +841,7 @@ export class LogEntriesFeedConsumer {
       },
     });
 
+    const historyEnd = getLogAnalyzerHistoryEnd(new Date());
     const progress: SnapshotProgress = {
       oldestEventAt: null,
       ownerCitizenIds: new Set(),
@@ -810,15 +849,21 @@ export class LogEntriesFeedConsumer {
     const outcome = await this.#readPages(
       session,
       this.#getEntryWindowInput(),
-      (page) => {
-        progress.oldestEventAt =
-          page.entries.at(-1)?.eventAt ?? progress.oldestEventAt;
-        for (const entry of page.entries)
-          progress.ownerCitizenIds.add(entry.owner.id);
+      {
+        onPage: (page) => {
+          progress.oldestEventAt =
+            page.entries.at(-1)?.eventAt ?? progress.oldestEventAt;
+          for (const entry of page.entries)
+            if (entry.eventAt >= historyEnd)
+              progress.ownerCitizenIds.add(entry.owner.id);
+        },
       },
     );
     if (outcome !== ReadOutcome.Completed && outcome !== ReadOutcome.Truncated)
       return outcome;
+
+    session.historyReadUntil = historyEnd;
+    this.#planHistoryRead(session);
 
     if (outcome === ReadOutcome.Truncated && progress.oldestEventAt !== null)
       this.#setState({
@@ -860,6 +905,48 @@ export class LogEntriesFeedConsumer {
       default:
         throw new Error(`Unknown read outcome: ${outcome satisfies never}`);
     }
+  }
+
+  #planHistoryRead(session: Session) {
+    window.clearTimeout(session.historyTimeout);
+    session.historyTimeout = window.setTimeout(() => {
+      session.isHistoryReadRequested = true;
+      void this.#sync(session);
+    }, HISTORY_READ_INTERVAL_MILLISECONDS);
+  }
+
+  /** Reads the entries that became history since the last read */
+  async #readHistory(session: Session): Promise<ReadOutcome> {
+    const { entryWindow } = this.#state.scope;
+    const historyEnd = getLogAnalyzerHistoryEnd(new Date());
+    const start = Math.max(
+      (session.historyReadUntil ?? historyEnd).getTime() -
+        HISTORY_READ_OVERLAP_MILLISECONDS,
+      entryWindow.start?.getTime() ?? Number.NEGATIVE_INFINITY,
+    );
+    const end = Math.min(
+      historyEnd.getTime() + HISTORY_READ_OVERLAP_MILLISECONDS,
+      entryWindow.end?.getTime() ?? Number.POSITIVE_INFINITY,
+    );
+
+    if (start < end) {
+      const outcome = await this.#readPages(
+        session,
+        { start: new Date(start), end: new Date(end) },
+        { movesCursor: false },
+      );
+      if (
+        outcome !== ReadOutcome.Completed &&
+        outcome !== ReadOutcome.Truncated
+      )
+        return outcome;
+
+      this.#completeRead();
+    }
+
+    session.historyReadUntil = historyEnd;
+    this.#planHistoryRead(session);
+    return ReadOutcome.Completed;
   }
 
   #completeRead() {

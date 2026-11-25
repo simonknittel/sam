@@ -68,23 +68,28 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
       <>
         <p>
           Der Log Analyzer ist jetzt ein Teil des Remote Control Program. Das
-          neue Symbol neben den Benachrichtigungen öffnet seine Einstellungen.
+          neue Symbol in der Leiste öffnet seine Einstellungen.
         </p>
 
         <ul>
           <li>
             Dort wählst du den Log-Ordner und den Start beim Öffnen von SAM. Die
-            Laufzeit liest dein Log auf jeder Seite von SAM, nicht nur im Log
+            Runtime liest dein Log auf jeder Seite von SAM, nicht nur im Log
             Analyzer.
           </li>
           <li>
-            Mit Freigaben entscheidest du, wer deine Einträge sieht: ein
+            Mit Freigaben entscheidest du, wer deine Einträge live sieht: ein
             Citizen, eine Rolle oder alle, für 1 Stunde, für 2 Stunden, ohne
             Ende oder für einen eigenen Zeitraum. Eine Freigabe kannst du
             jederzeit widerrufen.
           </li>
           <li>
-            Automatisch hochgeladen werden nur die Zeilen, die die Laufzeit live
+            Hochgeladene Einträge, die älter als 2 Stunden sind, sehen alle, die
+            den Log Analyzer nutzen dürfen, auch ohne Freigabe. Das gilt auch
+            für die Einträge, die du früher geteilt hast.
+          </li>
+          <li>
+            Automatisch hochgeladen werden nur die Zeilen, die die Runtime live
             liest. Ältere Einträge lädst du nur auf Anfrage und nach einer
             Bestätigung hoch.
           </li>
@@ -92,10 +97,10 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
         </ul>
 
         <p>
-          Die bisherigen Einstellungen zum Teilen gelten nicht mehr: Bis du eine
-          Freigabe erstellst, sieht niemand deine Einträge. Für den Log Analyzer
-          brauchst du zusätzlich die Berechtigung &bdquo;Remote Control Program
-          nutzen&ldquo;.
+          Die bisherigen Einstellungen zum Teilen gelten nicht mehr. Bis du
+          Typen einschaltest, lädt dein Browser nichts hoch. Für den Log
+          Analyzer brauchst du zusätzlich die Berechtigung &bdquo;Remote Control
+          Program nutzen&ldquo;.
         </p>
       </>
     ),

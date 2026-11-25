@@ -54,7 +54,7 @@ const getFolderNote = ({
         ? null
         : {
             type: "info",
-            text: "Die Laufzeit ist gestoppt und liest deinen Log-Ordner nicht. Starte sie im Remote Control Program.",
+            text: "Die Runtime ist gestoppt und liest deinen Log-Ordner nicht. Starte sie im Remote Control Program.",
             canOpenPopover: true,
           };
 

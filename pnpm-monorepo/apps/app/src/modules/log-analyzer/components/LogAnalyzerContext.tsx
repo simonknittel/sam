@@ -138,8 +138,7 @@ export const LogAnalyzerContext = ({ children }: Props) => {
   );
 
   /**
-   * On by default: only the citizens who share with the user through a grant
-   * deliver entries. A new key, because the key of the old Log Analyzer
+   * A new key, because the key of the old Log Analyzer
    * (`log_analyzer_show_others_types`) stored all types as off.
    */
   const [othersEntryTypes, setOthersEntryTypes] = useStoredEntryTypes(

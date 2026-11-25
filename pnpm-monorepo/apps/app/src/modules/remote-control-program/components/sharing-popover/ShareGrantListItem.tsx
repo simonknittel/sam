@@ -17,6 +17,7 @@ import type {
 import { DELETED_CITIZEN_LABEL, GranteeKind } from "@sam-monorepo/domain";
 import { FaBan, FaGlobe, FaUsers } from "react-icons/fa";
 import { revokeShareGrant } from "../../actions/revokeShareGrant";
+import { LOG_ENTRIES_HISTORY_TEXT } from "../../utils/remoteControlProgramTexts";
 import { formatCapabilityLabels } from "./catalogTexts";
 import { getGranteeText } from "./granteeTexts";
 import { useSharingPopoverAction } from "./useSharingPopoverQuery";
@@ -27,7 +28,7 @@ interface Props {
   readonly now: Date;
 }
 
-/** An active grant of the owner in the section "Shared with others" */
+/** An active grant of the owner */
 export const ShareGrantListItem = ({ grant, now }: Props) => {
   return (
     <li className="flex items-start gap-3 py-2">
@@ -126,7 +127,7 @@ const RevokeShareGrantButton = ({ grant }: RevokeShareGrantButtonProps) => {
       action={revoke}
       hiddenFields={[{ name: "grant_id", value: grant.id }]}
       title="Freigabe widerrufen?"
-      description={`Die Freigabe für ${getGranteeText(grant.grantee)} endet sofort. Was schon gelesen wurde, kann SAM nicht zurückholen.`}
+      description={`Die Freigabe für ${getGranteeText(grant.grantee)} endet sofort. Was schon gelesen wurde, kann SAM nicht zurückholen. ${LOG_ENTRIES_HISTORY_TEXT}`}
       confirmLabel="Widerrufen"
       trigger={(isPending) => (
         <Button2

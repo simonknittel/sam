@@ -15,7 +15,10 @@ import { GuideSection } from "@/modules/common/components/Guide/GuideSection";
 import { GuideStep } from "@/modules/common/components/Guide/GuideStep";
 import { GuideStepList } from "@/modules/common/components/Guide/GuideStepList";
 import { UiLabel } from "@/modules/common/components/Guide/UiLabel";
-import { SUPPORTED_BROWSERS_TEXT } from "@/modules/remote-control-program/utils/remoteControlProgramTexts";
+import {
+  LOG_ENTRIES_HISTORY_TEXT,
+  SUPPORTED_BROWSERS_TEXT,
+} from "@/modules/remote-control-program/utils/remoteControlProgramTexts";
 import { FaChrome } from "react-icons/fa";
 import {
   FaBolt,
@@ -67,18 +70,19 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
           <>
             <GuideHighlight icon={FaLock} title="Lokal ausgewertet">
               Deine Log-Dateien verlassen deinen Computer nie. Der Browser
-              wertet sie aus, und nur die Einträge, die du teilst, gehen an SAM.
+              wertet sie aus, und nur die Einträge der Typen, die du
+              einschaltest, gehen an SAM.
             </GuideHighlight>
 
             <GuideHighlight icon={FaBolt} title="Live während du spielst">
-              Solange die Laufzeit des Remote Control Programs läuft, erscheinen
+              Solange die Runtime des Remote Control Programs läuft, erscheinen
               neue Einträge von selbst, auf Wunsch auch in einem Overlay über
               dem Spiel.
             </GuideHighlight>
 
             <GuideHighlight icon={FaUsers} title="Gemeinsam mit anderen">
-              Gib anderen Zugriff auf deine Einträge, und sieh, was bei denen
-              passiert, die mit dir teilen.
+              Zeig anderen deine Einträge live, und sieh, was bei denen
+              passiert, die mit dir teilen. Ältere Einträge sehen alle.
             </GuideHighlight>
           </>
         }
@@ -99,7 +103,7 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
             Öffne das{" "}
             <UiLabel icon={FaTowerBroadcast}>Remote Control Program</UiLabel> in
             der oberen Leiste, auf dem Handy in der unteren. Wähle unter{" "}
-            <UiLabel>Dieser Browser</UiLabel> mit{" "}
+            <UiLabel>Browser</UiLabel> mit{" "}
             <UiLabel icon={FaFolderOpen}>Ordner wählen</UiLabel> den Ordner
             deiner Star Citizen-Installation, zum Beispiel{" "}
             {/* A path wraps only after a backslash, not inside a name */}
@@ -122,7 +126,7 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
             icon={FaHourglassHalf}
             title="Auswertung abwarten"
           >
-            Die Laufzeit liest sofort die Logs der letzten 14 Tage und danach
+            Die Runtime liest sofort die Logs der letzten 14 Tage und danach
             jede neue Zeile. Sie läuft auf jeder Seite von SAM, solange ein Tab
             offen ist. In der Leiste über der Tabelle siehst du, wie viele
             Sessions sie liest.
@@ -130,7 +134,7 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
 
           <GuideStep number={4} icon={FaRotate} title="Live bleiben">
             Mit <UiLabel>Beim Öffnen von SAM starten</UiLabel> startet die
-            Laufzeit beim nächsten Besuch selbst mit dem letzten Ordner. Nach
+            Runtime beim nächsten Besuch selbst mit dem letzten Ordner. Nach
             einem Neustart des Browsers fragt er einmal nach dem Zugriff:
             Erlaube ihn mit <UiLabel>Zugriff erlauben</UiLabel>.
           </GuideStep>
@@ -151,7 +155,7 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
               screenshotAlt:
                 "Neue Einträge mit der Markierung „Neu“ oben in der Tabelle",
               content:
-                "Die Laufzeit liest neue Zeilen sofort, und die Einträge der anderen kommen in Echtzeit. Neue Einträge bekommen für kurze Zeit eine Markierung, damit du sie sofort siehst.",
+                "Die Runtime liest neue Zeilen sofort, und die Einträge der anderen kommen in Echtzeit. Neue Einträge bekommen für kurze Zeit eine Markierung, damit du sie sofort siehst.",
             },
             {
               icon: FaFilter,
@@ -237,7 +241,7 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
           </GuideNote>
 
           <GuideNote>
-            Automatisch geht nur hoch, was die Laufzeit live liest. Die Zeilen
+            Automatisch geht nur hoch, was die Runtime live liest. Die Zeilen
             aus einer Zeit, in der kein Tab von SAM offen war oder du alles
             gestoppt hattest, bleiben auf deinem Computer. Ältere Einträge gehen
             nur hoch, wenn du sie mit{" "}
@@ -246,18 +250,17 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
           </GuideNote>
 
           <GuideNote>
-            Deine Einträge sehen nur die, denen du unter{" "}
-            <UiLabel>Mit anderen geteilt</UiLabel> Zugriff gibst: einzelne
-            Citizens, eine Rolle oder alle, auf Wunsch nur für eine bestimmte
-            Zeit. Ebenso siehst du die Einträge anderer nur, wenn sie dir
-            Zugriff geben. Einen Zugriff kannst du jederzeit beenden.
+            Live sehen deine Einträge nur die, denen du unter{" "}
+            <UiLabel>Freigaben</UiLabel> Zugriff gibst: einzelne Citizens, eine
+            Rolle oder alle, auf Wunsch nur für eine bestimmte Zeit. Ebenso
+            siehst du die Einträge anderer nur dann live, wenn sie dir Zugriff
+            geben. Eine Freigabe kannst du jederzeit widerrufen.
           </GuideNote>
 
           <GuideNote>
-            Mit dem Remote Control Program hat das Teilen neu begonnen. Deine
-            alten Einstellungen zum Teilen gelten nicht mehr, und deine früher
-            geteilten Einträge sehen andere erst wieder, wenn du ihnen Zugriff
-            gibst. Ein Zugriff kann auch in der Vergangenheit beginnen.
+            {LOG_ENTRIES_HISTORY_TEXT} Das gilt auch für Einträge, die du vor
+            dem Remote Control Program geteilt hast. Deine alten Einstellungen
+            zum Teilen gelten nicht mehr.
           </GuideNote>
 
           <GuideNote variant={GuideNoteVariant.Warning}>

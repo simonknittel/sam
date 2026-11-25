@@ -53,7 +53,12 @@ const OtherTab = ({ roles }: Readonly<Props>) => {
       </div>
 
       <div className="flex items-center justify-between py-2">
-        <h4 className="font-bold">Log Analyzer</h4>
+        <div>
+          <h4 className="font-bold">Log Analyzer</h4>
+          <p className="text-sm text-neutral-500">
+            {getPermissionDescription("logAnalyzer;read")}
+          </p>
+        </div>
 
         <YesNoCheckbox {...register("logAnalyzer;read")} />
       </div>

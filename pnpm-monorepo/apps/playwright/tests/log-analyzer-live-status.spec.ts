@@ -16,6 +16,7 @@ import {
   blueprintLine,
   closeSettings,
   daysAgo,
+  hoursAgo,
   joinPuLine,
   LOG_ANALYZER_PAGE_PATH,
   LOG_ANALYZER_PERMISSIONS,
@@ -254,6 +255,47 @@ test("the live status of another citizen ignores the type filters, and follows t
   await applyDateRange(page, daysAgo(3), daysAgo(2));
   await expect(
     panel.getByText(/für einen vergangenen Zeitraum ausgeblendet/),
+  ).toBeVisible();
+});
+
+test("the history of a citizen without a grant shows in the table, but not in the live status", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const viewer = await createCitizen(prisma, {
+    handle: "log-live-historie",
+    permissionStrings: LOG_ANALYZER_PERMISSIONS,
+  });
+  const owner = await createCitizen(prisma, { handle: "log-live-fremder" });
+
+  /** Recent enough for a session of the live status, and older than 2 hours */
+  const historyAt = hoursAgo(2.5);
+  await createLogAnalyzerEntry(prisma, {
+    type: LogAnalyzerEntryType.JoinPu,
+    rawLine: joinPuLine(historyAt),
+    eventAt: historyAt,
+    createdById: owner.entity.id,
+  });
+  const liveAt = hoursAgo(1);
+  await createLogAnalyzerEntry(prisma, {
+    type: LogAnalyzerEntryType.BlueprintReceivedNotification,
+    rawLine: blueprintLine(liveAt),
+    eventAt: liveAt,
+    createdById: owner.entity.id,
+  });
+
+  await signIn(viewer.user);
+  await page.goto(LOG_ANALYZER_PAGE_PATH);
+
+  await expect(
+    rowOf(page, "Shard-Beitritt").getByRole("link", {
+      name: "log-live-fremder",
+    }),
+  ).toBeVisible();
+  await expect(rowOf(page, "Blueprint erhalten")).toHaveCount(0);
+  await expect(
+    liveStatus(page).getByText("Gerade ist niemand aktiv."),
   ).toBeVisible();
 });
 

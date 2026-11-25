@@ -10,6 +10,7 @@ import { formatDate } from "@/modules/common/utils/formatDate";
 import { CapabilityId } from "@sam-monorepo/domain";
 import { FaCirclePlay, FaCircleStop } from "react-icons/fa6";
 import type { BrowserRuntimeHandle } from "../../runtime/types";
+import { LOG_ENTRIES_HISTORY_TEXT } from "../../utils/remoteControlProgramTexts";
 import { getSensitivityWarning } from "./catalogTexts";
 import { LogEntryTypeSettings } from "./LogEntryTypeSettings";
 
@@ -32,13 +33,22 @@ export const LocalAccessControl = ({ runtime }: Props) => {
       <h3 className="text-sm font-bold">Was dieser Browser hochlädt</h3>
 
       <p className="text-sm text-neutral-400">
-        Automatisch geht nur hoch, was die Laufzeit live liest, und nur von den
+        Automatisch geht nur hoch, was die Runtime live liest, und nur von den
         Typen, die an sind. Ein Typ, den du einschaltest, lädt erst ab dann
         hoch.
       </p>
 
       {sensitivityWarning && (
-        <Note type="warning" message={sensitivityWarning} />
+        <Note
+          type="warning"
+          message={
+            <div className="flex flex-col gap-2">
+              <p>{sensitivityWarning}</p>
+              <p>{LOG_ENTRIES_HISTORY_TEXT}</p>
+              <p>Du kannst hochgeladene Einträge nicht löschen.</p>
+            </div>
+          }
+        />
       )}
 
       {/* The button keeps its place, thus the focus stays on it after a click */}

@@ -95,7 +95,7 @@ export const LiveStatusReporter = ({
 
       {reporter.isOwn && !isOwnLogReadLive && !isOffline && (
         <p className="mt-1 text-xs text-white/40">
-          Für einen genauen Status die Laufzeit im Remote Control Program
+          Für einen genauen Status die Runtime im Remote Control Program
           starten.
         </p>
       )}

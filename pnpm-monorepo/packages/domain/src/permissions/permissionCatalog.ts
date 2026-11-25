@@ -596,6 +596,8 @@ export const PERMISSION_CATALOG = [
     section: "Sonstiges",
     title: "Log Analyzer",
     permissionString: "logAnalyzer;read",
+    description:
+      "Das eigene Log, die Freigaben anderer und alle hochgeladenen Einträge lesen, die älter als 2 Stunden sind. Braucht zusätzlich „Remote Control Program nutzen“.",
   },
   {
     section: "Sonstiges",
@@ -609,7 +611,7 @@ export const PERMISSION_CATALOG = [
     title: "Remote Control Program nutzen",
     permissionString: "remoteControlProgram;use",
     description:
-      "Die Laufzeit im Browser starten, eigene Daten für andere freigeben und freigegebene Daten lesen. Der Log Analyzer braucht diese Berechtigung zusätzlich zu „Log Analyzer“.",
+      "Die Runtime im Browser starten, eigene Daten für andere freigeben und freigegebene Daten lesen. Der Log Analyzer braucht diese Berechtigung zusätzlich zu „Log Analyzer“.",
   },
   {
     section: "Sonstiges",

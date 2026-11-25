@@ -10,6 +10,7 @@ import {
 import type { OwnShareGrant } from "@sam-monorepo/application";
 import {
   CapabilityId,
+  getLogAnalyzerHistoryEnd,
   getOldestLogAnalyzerEntryVersion,
   GranteeKind,
   LogAnalyzerEntryType,
@@ -20,6 +21,7 @@ import type {
 } from "@sam-monorepo/remote-control-program-runtime";
 import { FaCloudArrowUp, FaRotateRight } from "react-icons/fa6";
 import type { BrowserRuntimeSnapshot } from "../../runtime/types";
+import { LOG_ENTRIES_HISTORY_TEXT } from "../../utils/remoteControlProgramTexts";
 import { formatEntryCount } from "./browserRuntimeTexts";
 import { getGranteeText } from "./granteeTexts";
 import type { OlderEntriesRequestDraft } from "./SharingPopoverProvider";
@@ -51,23 +53,42 @@ const coversRange = (grant: OwnShareGrant, range: OlderEntriesTimeRange) =>
   (range.end === null || grant.startsAt < range.end) &&
   (range.start === null || grant.endsAt === null || grant.endsAt > range.start);
 
-/** Who can read the entries of the range after the upload */
-const getViewerText = (
+/** Who can read the live entries of the range after the upload */
+const getLiveViewerText = (
   grants: readonly OwnShareGrant[] | undefined,
   range: OlderEntriesTimeRange,
 ) => {
   if (!grants)
-    return "Du und alle, deren Freigabe den Zeitraum der Einträge abdeckt.";
+    return "du und alle, deren Freigabe den Zeitraum der Einträge abdeckt.";
 
   const coveringGrants = grants.filter((grant) => coversRange(grant, range));
   if (coveringGrants.length === 0)
-    return "Nur du: Keine deiner Freigaben deckt den Zeitraum ab.";
+    return "nur du, denn keine deiner Freigaben deckt den Zeitraum ab.";
   if (
     coveringGrants.some((grant) => grant.grantee.kind === GranteeKind.everyone)
   )
-    return "Alle, die das Remote Control Program nutzen: Eine deiner Freigaben gilt für alle.";
+    return "alle, die das Remote Control Program nutzen, denn eine deiner Freigaben gilt für alle.";
 
-  return `Du und ${coveringGrants.map((grant) => getGranteeText(grant.grantee)).join(", ")}.`;
+  return `du und ${coveringGrants.map((grant) => getGranteeText(grant.grantee)).join(", ")}.`;
+};
+
+/** The history needs no grant (decision 31) */
+const getViewerText = (
+  grants: readonly OwnShareGrant[] | undefined,
+  range: OlderEntriesTimeRange,
+) => {
+  const historyEnd = getLogAnalyzerHistoryEnd(new Date());
+  if (range.end !== null && range.end <= historyEnd)
+    return "Alle, die den Log Analyzer nutzen dürfen.";
+
+  const liveRange = {
+    start:
+      range.start !== null && range.start > historyEnd
+        ? range.start
+        : historyEnd,
+    end: range.end,
+  };
+  return `${LOG_ENTRIES_HISTORY_TEXT} Neuere Einträge: ${getLiveViewerText(grants, liveRange)}`;
 };
 
 /** Nothing goes up during a "Stop all" (see `confirmOlderEntriesRequest`) */
@@ -75,7 +96,7 @@ const getBlockingText = (state: BrowserRuntimeSnapshot) => {
   if (state.localAccess.stoppedAt)
     return "In diesem Browser ist alles gestoppt. Starte ihn zuerst.";
   if (state.channel.isStoppedByOwner)
-    return "Alles ist gestoppt. Starte zuerst alle Laufzeiten.";
+    return "Alles ist gestoppt. Starte zuerst alle Runtimes.";
   return null;
 };
 
@@ -157,9 +178,7 @@ export const PreparedOlderEntriesRequest = ({
             </p>
             <p>
               <span className="text-neutral-500">Wer sie sieht: </span>
-              {getViewerText(popoverData?.grants, request.range)} Auch eine
-              spätere Freigabe mit einem Start in der Vergangenheit kann sie
-              zeigen.
+              {getViewerText(popoverData?.grants, request.range)}
             </p>
             <p className="text-neutral-500">
               Hochgeladene Einträge kannst du nicht löschen.
