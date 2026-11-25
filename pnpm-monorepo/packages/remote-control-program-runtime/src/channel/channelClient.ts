@@ -289,7 +289,7 @@ export class ChannelClient {
     return permittedEntries.length > 0;
   }
 
-  /** After a change of the switches, of the stop or of the local access layer */
+  /** After a change of the switches or of the local access layer */
   #applyAccessChange() {
     const droppedBatches = this.#queue.removeWaiting(
       (batch) => this.#getDropReason(batch.source) !== null,
