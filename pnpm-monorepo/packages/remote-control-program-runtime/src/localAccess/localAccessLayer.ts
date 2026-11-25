@@ -185,7 +185,7 @@ export const createLocalAccessLayer = ({
   };
 
   /**
-   * Brings the stored periods in line with the reading, the stops and the
+   * Brings the stored periods in line with the reading, the switches and the
    * clock
    *
    * @param canContinue False when the end of the reading must not let a
@@ -194,7 +194,7 @@ export const createLocalAccessLayer = ({
   const updatePeriods = (canContinue = true) => {
     const time = getTime();
 
-    // After the start, only the lines that a runtime reads live from then on go up automatically (decision 27)
+    // When the capability is on again, only the lines that a runtime reads live from then on go up automatically (decision 27)
     if (isStopped()) {
       isOwnPeriodOpen = false;
       writeLivePeriods(storage, citizenId, NO_LIVE_PERIODS);
@@ -338,8 +338,8 @@ export const createLocalAccessLayer = ({
     },
 
     /**
-     * What the relay told: the `welcome` of each connection, the `stop` and
-     * the `start` of the owner, the switches, and the end of the connection
+     * What the relay told: the `welcome` of each connection, the switches, and
+     * the end of the connection
      */
     setRelayState: (state: RelayUploadState) => {
       relayState = state;
