@@ -7,12 +7,15 @@ import {
 import { protectedProcedure, toTrpcError } from "../../trpc";
 
 /**
- * The keys of the own log entries that the relay has, for the browser
- * runtime (see `findOwnFeedEntryKeys()` of the application package): after
- * a change of the active tab, it does not send these entries again, and a
- * request for older entries counts only the other entries. A procedure and
- * not a server action: the id of a server action changes with each deploy.
- * FORBIDDEN also for an admin who assumes a user.
+ * The keys of the own log entries that the relay has (see
+ * `findOwnFeedEntryKeys()` of the application package), only for the browser
+ * runtimes of protocol version 1 in the SAM tabs that were open during the
+ * release of version 2. The browser runtime of version 2 gets the keys
+ * through its connection to the relay (decision 34).
+ *
+ * @deprecated Remove it when `MINIMUM_RELAY_PROTOCOL_VERSION` becomes 2.
+ * Until then, a procedure and not a server action: the id of a server action
+ * changes with each deploy. FORBIDDEN also for an admin who assumes a user.
  */
 export const findOwnFeedEntryKeys = protectedProcedure
   .input(findOwnFeedEntryKeysInputSchema)
