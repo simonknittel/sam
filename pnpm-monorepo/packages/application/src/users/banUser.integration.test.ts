@@ -8,6 +8,7 @@ import {
 } from "../../test/applicationContext.js";
 import { createTestCollabServer } from "../../test/collabServer.js";
 import { truncateAllTables } from "../../test/database.js";
+import { createTestRelayService } from "../../test/relayService.js";
 import { ForbiddenError } from "../errors.js";
 import { banUser } from "./banUser.js";
 import { unbanUser } from "./unbanUser.js";
@@ -52,8 +53,9 @@ test("deletes the sessions and the web push subscriptions and ends the live conn
   const bannedUser = await createUserWithDevices("banned");
   const otherUser = await createUserWithDevices("other");
   const { collab, disconnectedUserIds } = createTestCollabServer();
+  const relayService = createTestRelayService();
   const { context, auditEvents, terminatedRealtimeUserIds } =
-    createTestApplicationContext({ collab });
+    createTestApplicationContext({ collab, relay: relayService.relay });
   const admin = await createAdmin();
 
   await banUser(context, admin, {
@@ -83,6 +85,7 @@ test("deletes the sessions and the web push subscriptions and ends the live conn
   });
   expect(terminatedRealtimeUserIds).toEqual([bannedUser.id]);
   expect(disconnectedUserIds).toEqual([bannedUser.id]);
+  expect(relayService.disconnectedUserIds).toEqual([bannedUser.id]);
 });
 
 test("keeps the ban when the live connections cannot be ended", async () => {
@@ -94,7 +97,9 @@ test("keeps the ban when the live connections cannot be ended", async () => {
       terminateUserConnections: async () => {
         throw new Error("The realtime server cannot be reached");
       },
+      publishToCitizens: async () => undefined,
     },
+    relay: createTestRelayService({ fails: true }).relay,
     log: {
       info: () => undefined,
       warn: () => undefined,
@@ -115,7 +120,7 @@ test("keeps the ban when the live connections cannot be ended", async () => {
       select: { bannedAt: true },
     }),
   ).resolves.toEqual({ bannedAt: TEST_NOW });
-  expect(loggedErrors).toHaveLength(2);
+  expect(loggedErrors).toHaveLength(3);
 });
 
 test("refuses a user without the admin role, also with every user permission of a role", async () => {

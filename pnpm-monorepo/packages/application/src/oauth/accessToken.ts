@@ -13,11 +13,20 @@ const ALGORITHM = "ES256";
 /** 128 random bits make each `jti` unique (RFC 7519 section 4.1.7) */
 const TOKEN_ID_BYTES = 16;
 
+/**
+ * Gives the signing key of the host
+ *
+ * @param createError Makes the error for a host without a key. The default
+ * is the error of the OAuth endpoints.
+ * @throws SigningKeyUnavailableError or the error of `createError` when the
+ * host has no signing key
+ */
 export const requireSigningKey = async (
   context: Pick<ApplicationContext, "signingKey">,
+  createError: () => Error = () => new SigningKeyUnavailableError(),
 ) => {
   const signingKey = await context.signingKey();
-  if (!signingKey) throw new SigningKeyUnavailableError();
+  if (!signingKey) throw createError();
 
   return signingKey;
 };

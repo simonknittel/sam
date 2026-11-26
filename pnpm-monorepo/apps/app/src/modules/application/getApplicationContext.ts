@@ -8,10 +8,7 @@ import { EMBED_TOKEN_ALGORITHM } from "@/modules/embed-authentication/utils/cons
 import { getEmbedSigningKey } from "@/modules/embed-authentication/utils/getEmbedSigningKey";
 import { emitEvents } from "@/modules/eventbridge/utils";
 import { log } from "@/modules/logging";
-import {
-  channelsClient,
-  createChannelsRealtimeServer,
-} from "@/modules/pusher/utils/channelsClient";
+import { channelsClient } from "@/modules/pusher/utils/channelsClient";
 import { getTracer } from "@/modules/tracing/utils/getTracer";
 import {
   createApplicationUrls,
@@ -25,11 +22,14 @@ import {
   createEventBridgeEmailRequester,
   createEventBridgeNotificationTrigger,
   createPrismaAuditWriter,
+  createPusherRealtimeServer,
+  createRelayClient,
   createS3Client,
   createS3Storage,
   type S3ClientOptions,
 } from "@sam-monorepo/infrastructure";
 import { after } from "next/server";
+import { readRemoteControlProgramSwitches } from "./readRemoteControlProgramSwitches";
 import { sharpImageReader } from "./sharpImageReader";
 
 /**
@@ -64,6 +64,17 @@ export const getApplicationUrls = (): ApplicationContext["urls"] =>
     publicUploadBaseUrl: getPublicUploadBaseUrl(),
   });
 
+/**
+ * The embed tokens, the access tokens, the connection tokens of the Remote
+ * Control Program and the requests to the relay service use the same key
+ */
+const getSigningKey: ApplicationContext["signingKey"] = async () => {
+  const signingKey = await getEmbedSigningKey();
+  if (!signingKey) return null;
+
+  return { ...signingKey, algorithm: EMBED_TOKEN_ALGORITHM };
+};
+
 // The emitter has its own span, thus the two ports need no span of their own
 const createApplicationContext = (): ApplicationContext => ({
   prisma,
@@ -95,7 +106,7 @@ const createApplicationContext = (): ApplicationContext => ({
         })
       : null,
   realtime: channelsClient
-    ? createChannelsRealtimeServer(channelsClient)
+    ? createPusherRealtimeServer({ client: channelsClient })
     : null,
   discord: createDiscordGateway({
     apiBaseUrl: env.DISCORD_API_BASE_URL,
@@ -114,16 +125,23 @@ const createApplicationContext = (): ApplicationContext => ({
   storage: createStorage(),
   images: sharpImageReader,
   urls: getApplicationUrls(),
-  // The embed tokens and the access tokens use the same key
-  signingKey: async () => {
-    const signingKey = await getEmbedSigningKey();
-    if (!signingKey) return null;
-
-    return { ...signingKey, algorithm: EMBED_TOKEN_ALGORITHM };
-  },
+  signingKey: getSigningKey,
   clientMetadata: createClientMetadataFetcher(),
   allowInsecureLoopbackClientIds:
     env.OAUTH_ALLOW_INSECURE_LOOPBACK_CLIENT_IDS === "1",
+  remoteControlProgramSwitches: readRemoteControlProgramSwitches,
+  relay: env.RELAY_URL
+    ? createRelayClient({
+        url: env.RELAY_URL,
+        signingKey: getSigningKey,
+        issuer: getApplicationUrls().issuer,
+        // A ban runs in an interactive request, thus a hanging relay service
+        // must not hold the request open for long
+        requestTimeoutMilliseconds: 5_000,
+      })
+    : null,
+  // The app verifies the connection tokens with its own signing key
+  connectionTokenVerificationKey: null,
 });
 
 /**

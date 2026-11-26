@@ -14,7 +14,11 @@ import {
   containerDatabaseUrl,
   hostDatabaseUrl,
   readStackState,
+  relayEnvironment,
+  relayImageTag,
+  relayPort,
   s3Environment,
+  soketiEnvironment,
   templateDatabase,
   unleashAppName,
   unleashEnvironment,
@@ -148,6 +152,19 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
       const discordMock = await startDiscordMock();
       const appName = unleashAppName(workerInfo.workerIndex);
 
+      const relayContainer = await new GenericContainer(relayImageTag)
+        .withNetworkMode(state.networkName)
+        .withEnvironment(
+          relayEnvironment({
+            databaseName,
+            appBaseUrl: baseURL,
+            unleashAppName: appName,
+          }),
+        )
+        .withExposedPorts(relayPort)
+        .withWaitStrategy(Wait.forHttp("/health", relayPort))
+        .start();
+
       const appProcess = spawn(
         "pnpm",
         ["exec", "next", "start", "--port", appPort.toString()],
@@ -160,10 +177,12 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
             // Also overrides any UNLEASH_* variables of the dev shell — the
             // suite must never talk to a live flag provider
             ...unleashEnvironment(state.unleashPort, appName),
+            ...soketiEnvironment,
             DATABASE_URL: workerDatabaseUrl,
             NEXTAUTH_URL: baseURL,
             COLLAB_URL: `ws://localhost:${collabContainer.getMappedPort(collabPort)}`,
             COLLAB_JWT_SECRET: collabJwtSecret,
+            RELAY_URL: `ws://localhost:${relayContainer.getMappedPort(relayPort)}`,
             DISCORD_API_BASE_URL: discordMock.baseUrl,
           },
           stdio: "inherit",
@@ -184,6 +203,7 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
         await prisma.$disconnect();
       } finally {
         await stopProcess(appProcess);
+        await relayContainer.stop();
         await collabContainer.stop();
         await discordMock.close();
       }

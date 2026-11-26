@@ -30,6 +30,21 @@ model LogAnalyzerEntry {
   hash       String
   createdAt  DateTime @default(now()) @db.Timestamptz(3)
 
+  /// The first column of the context of the entry (principle 13 of
+  /// `docs/remote-control-program/README.md`): the id of the runtime that
+  /// uploaded the entry, the `runtimeId` of a `RemoteControlProgramRuntime`
+  /// of `createdById`. No foreign key, because the entries are immutable and
+  /// stay when the row of the runtime goes. The relay sets all columns of the
+  /// context. They are NULL for the entries of the upload before the Remote
+  /// Control Program.
+  runtimeId         String? @db.Uuid
+  /// The version of the log file connector that read the entry
+  /// (`CONNECTOR_CATALOG` of the domain). NULL like `runtimeId`.
+  connectorVersion  Int?
+  /// The version of the capability `log_entries` of the batch. NULL like
+  /// `runtimeId`.
+  capabilityVersion Int?
+
   /// The uploading citizen, also after a (soft) delete of the citizen
   createdById String?
   createdBy   Citizen? @relation("createdLogAnalyzerEntries", fields: [createdById], references: [id], onDelete: SetNull)
@@ -39,4 +54,7 @@ model LogAnalyzerEntry {
   /// (`createdAt`).
   @@index([eventAt])
   @@index([createdAt])
+  /// Serves the reads of the Remote Control Program: the entries of the
+  /// owners that a viewer can read, in the time range of the grants.
+  @@index([createdById, eventAt])
 }

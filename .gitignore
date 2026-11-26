@@ -16,3 +16,6 @@
 
 # Claude
 .claude/worktrees/
+
+# Local overrides of the Docker Compose stack (see docs/setup-local-machine.md)
+/compose.override.yaml

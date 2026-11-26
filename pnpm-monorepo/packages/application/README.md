@@ -1,6 +1,6 @@
 # Application
 
-This package holds the use cases of SAM. A use case is one read or one write of a feature. The Next.js app, the MCP server and the Lambda functions call the same use cases. The package does not know Next.js, React or the MCP transport.
+This package holds the use cases of SAM. A use case is one read or one write of a feature. The Next.js app, the MCP server, the Lambda functions and the relay service call the same use cases. The package does not know Next.js, React or the MCP transport.
 
 ## Use cases
 
@@ -11,7 +11,7 @@ Each use case has this signature:
 ```
 
 - `context` gives the services of the app that runs the use case: the ports of [`src/context.ts`](src/context.ts) and [`src/ports/`](src/ports). Their doc comments describe the calls and the meaning of a null port. A use case that needs a null `changelog` or `collab` throws a `ConflictError`. The shared implementations of the ports are in [`packages/infrastructure`](../infrastructure/README.md).
-- `actor` is the user for whom the use case runs (`src/actor.ts`). The Next.js app builds it from the session, the MCP server from the access token.
+- `actor` is the user for whom the use case runs (`src/actor.ts`). The Next.js app builds it from the session, the MCP server from the access token, and the relay service from the connection token of a runtime.
 - A use case without a user, for example the public token endpoint of the OAuth server, takes `(context, input)`.
 - The use cases of a feature live in `src/<feature>/` with a barrel `index.ts` that the package index re-exports.
 
@@ -65,7 +65,7 @@ export const renameShip = async (
 - **Row helpers** (`find…` and `count…`) give rows only to the renderers of the app. They have no input schema and no output type, and no MCP tool calls them. When a row helper checks no permission, its doc comment says so, and the caller checks it.
 - **Scopes of the wiki and of the career flows.** A scope entry point (`build…WikiContext`, `findReadableWikiScope` and `loadFlowContext`) gives a scope or null, and the caller gives its own not-found answer. A scope helper takes a scope that the caller loaded for the same actor. Inside the package, the use cases load the scope of a page with `requireWikiPageOfScope()`, which throws the errors itself.
 - **Rules** (`is…`, `to…` and `can…`) are pure functions or boolean checks, not reads. The app applies them to rows, the MCP tools use them for the visibility of a tool.
-- **Use cases without an actor.** The admin toolbar, the development login, `findSessionIdByToken`, `confirmEmailWithToken`, `sendEmailConfirmation`, the Human Resources reads of the clearance page, `findSeasonalTheme`, `isWelcomeDayOfCitizen`, and the recipient rules and the delivery store of the notifications. They check no permission, or a token is the proof. A host must not call them without a check of its own. During an assume, the actor is the assumed user, thus the use cases of the admin toolbar take the id of the admin as input, and the host keeps the admin gate.
+- **Use cases without an actor.** The admin toolbar, the development login, `findSessionIdByToken`, `confirmEmailWithToken`, `sendEmailConfirmation`, the Human Resources reads of the clearance page, `findSeasonalTheme`, `isWelcomeDayOfCitizen`, the recipient rules and the delivery store of the notifications, and the use cases of the relay service that run before a runtime has an actor or for a delivery (`authenticateRuntimeConnection`, `loadReadAccessToOwner` and `findWatchingViewers`). They check no permission, or a token is the proof. A host must not call them without a check of its own. During an assume, the actor is the assumed user, thus the use cases of the admin toolbar take the id of the admin as input, and the host keeps the admin gate.
 
 ## Tests
 

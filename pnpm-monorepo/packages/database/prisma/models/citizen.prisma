@@ -109,6 +109,11 @@ model Citizen {
   createdRoleTags                              RoleTag[]                            @relation("createdRoleTags")
   updatedRoleTags                              RoleTag[]                            @relation("updatedRoleTags")
   createdRoleTagAssignments                    RoleTagAssignment[]                  @relation("createdRoleTagAssignments")
+  ownedShareGrants                             ShareGrant[]                         @relation("ownedShareGrants")
+  receivedShareGrants                          ShareGrant[]                         @relation("receivedShareGrants")
+  revokedShareGrants                           ShareGrant[]                         @relation("revokedShareGrants")
+  remoteControlProgramRuntimes                 RemoteControlProgramRuntime[]
+  remoteControlProgramWatchLeases              RemoteControlProgramWatchLease[]
 
   /// The login of the citizen: the user whose Discord account has the
   /// Discord ID of the citizen. Set at each sign-in and when the Discord ID

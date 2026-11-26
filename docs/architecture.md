@@ -15,6 +15,7 @@ A host is a deployable program. It owns its runtime, its configuration and its e
 | `apps/app` | Next.js on Vercel | The web app: pages, server actions, tRPC, route handlers, the login (next-auth), the OAuth authorization server and the MCP endpoint |
 | `apps/lambda` | AWS Lambda | Automations and the notification router: `email-function`, `frequent-automations`, `midnight-automations`, `notification-router`, `scrape-discord-events` |
 | `apps/collab` | Node.js container | The realtime backend of the wiki (Hocuspocus) |
+| `apps/relay` | Node.js container | The relay service of the [Remote Control Program](./remote-control-program/README.md#relay): the WebSocket connections of the runtimes, the uploads and the delivery to the viewers through Soketi |
 | `apps/scripts` | Node.js | One-off maintenance scripts |
 | `apps/playwright` | Node.js | The end-to-end test suite with its own stack |
 
@@ -26,11 +27,11 @@ A host is a deployable program. It owns its runtime, its configuration and its e
 | `domain` | domain | The rules and helpers that more than one host uses: the permission model (`src/permissions`), the notification vocabulary (`src/notifications`) and the rules of each feature (one folder in `src/` per feature) | `database` (types) |
 | `emails` | domain | The email templates | — |
 | `wiki-editor` | domain | The Tiptap schema of the wiki content, text extraction, the Markdown renderer and parser | — |
-| `application` | use cases | The use cases: one read or one write of a feature, with the permission checks, the audit events and the notifications inside. The actor, the application context and the typed errors. The OAuth use cases. See the [package README](../pnpm-monorepo/packages/application/README.md). | `database`, `domain`, `wiki-editor`. Never `infrastructure` or `mcp`. |
-| `infrastructure` | infrastructure | The shared implementations of the ports of `application`: the Prisma audit writer, the EventBridge client, emitter, notification trigger and email requester, the Discord gateway, the collab client of the wiki editor, the S3 storage (the port [`FileStorage`](../pnpm-monorepo/packages/application/src/ports/storage.ts)) and the fetcher of the OAuth client metadata documents (the port [`ClientMetadataFetcher`](../pnpm-monorepo/packages/application/src/ports/clientMetadata.ts)). See the [package README](../pnpm-monorepo/packages/infrastructure/README.md). | `application` (the port types), `domain` (types), `wiki-editor` (the types of the collab tokens), `database`, the AWS SDK |
+| `application` | use cases | The use cases: one read or one write of a feature, with the permission checks, the audit events and the notifications inside. The actor, the application context and the typed errors. The OAuth use cases. The use cases of the relay of the [Remote Control Program](./remote-control-program/README.md#relay) (`src/remoteControlProgram/`), which the app and the relay service call. See the [package README](../pnpm-monorepo/packages/application/README.md). | `database`, `domain`, `wiki-editor`. Never `infrastructure` or `mcp`. |
+| `infrastructure` | infrastructure | The shared implementations of the ports of `application`: the Prisma audit writer, the EventBridge client, emitter, notification trigger and email requester, the Discord gateway, the collab client of the wiki editor, the S3 storage (the port [`FileStorage`](../pnpm-monorepo/packages/application/src/ports/storage.ts)), the fetcher of the OAuth client metadata documents (the port [`ClientMetadataFetcher`](../pnpm-monorepo/packages/application/src/ports/clientMetadata.ts)), the Pusher client of the realtime server (the port `realtime`) and the client of the internal endpoints of the relay service (the port `relay`). See the [package README](../pnpm-monorepo/packages/infrastructure/README.md). | `application` (the port types), `domain` (types and the names of the realtime channels), `wiki-editor` (the types of the collab tokens), `database`, the AWS SDK, `pusher` |
 | `mcp` | interface adapter | The MCP server: the tool registry, the tools, the request handler with the bearer verification. The files for AI agents (see [Files for AI agents](./mcp-server.md#files-for-ai-agents)). See [mcp-server.md](./mcp-server.md). | `application`, `domain`, `database` |
 
-Three callers use the use cases of `application`: the Next.js app, the MCP server (`mcp`, which the app mounts at `/api/mcp`) and the Lambda functions. Each caller has a composition root that builds its `ApplicationContext`.
+Four callers use the use cases of `application`: the Next.js app, the MCP server (`mcp`, which the app mounts at `/api/mcp`), the Lambda functions and the relay service. Each caller has a composition root that builds its `ApplicationContext`.
 
 ### Inside the Next.js app
 
@@ -38,7 +39,7 @@ Three callers use the use cases of `application`: the Next.js app, the MCP serve
 
 Four modules are adapters of the packages, not features:
 
-- `modules/application`: the composition root. `getApplicationContext()` builds the one context of the app. `getMcpApplicationContext()` gives the same ports with an audit writer that marks the events of the MCP endpoint. The audit port comes from `infrastructure`. The ports `notifications`, `email`, `discord`, `collab`, `storage` and `clientMetadata` also come from `infrastructure` (the notification trigger and the email requester, which send their events through the EventBridge emitter of the app, the gateway with the bot token of the app, the client of the collab server, which is null without the URL and the secret of the collab server, the S3 storage of the uploads, which is null without an endpoint, and the fetcher of the OAuth client metadata documents). The port `images` is the `sharp` reader of the app. `sharp` is not in the packages or in the Lambda bundles, thus the Lambda functions give null. The port `prisma` is the client of `@sam-monorepo/database`. The other ports come from the modules of the app (logging, tracing, changelog, realtime, URLs, signing key). `toActor(session)` maps the next-auth session to the actor of the use cases, and `getRequestActor()` gives the actor of the current request to the pages and queries. Two helpers map the typed errors to action responses and to `forbidden()` / `notFound()`.
+- `modules/application`: the composition root. `getApplicationContext()` builds the one context of the app. `getMcpApplicationContext()` gives the same ports with an audit writer that marks the events of the MCP endpoint. The audit port comes from `infrastructure`. The ports `notifications`, `email`, `discord`, `collab`, `realtime`, `relay`, `storage` and `clientMetadata` also come from `infrastructure` (the notification trigger and the email requester, which send their events through the EventBridge emitter of the app, the gateway with the bot token of the app, the client of the collab server, which is null without the URL and the secret of the collab server, the Pusher client of the realtime server, which is null without the configuration of Pusher, the client of the relay service, which is null without `RELAY_URL`, the S3 storage of the uploads, which is null without an endpoint, and the fetcher of the OAuth client metadata documents). The port `remoteControlProgramSwitches` reads the Unleash flags of the app. The port `images` is the `sharp` reader of the app. `sharp` is not in the packages or in the Lambda bundles, thus the Lambda functions give null. The port `prisma` is the client of `@sam-monorepo/database`. The other ports come from the modules of the app (logging, tracing, changelog, realtime, URLs, signing key). `toActor(session)` maps the next-auth session to the actor of the use cases, and `getRequestActor()` gives the actor of the current request to the pages and queries. Two helpers map the typed errors to action responses and to `forbidden()` / `notFound()`.
 - `modules/oauth`: the consent page, the token and revocation endpoints and the metadata documents.
 - `modules/mcp`: the `/api/mcp` route.
 - `modules/mcp-settings`: the app KI-Agenten `/app/ai-agents` (the setup of the clients, the public files for AI agents, the connected clients with their names and their tools).
@@ -49,7 +50,7 @@ Each feature module has a thin wrapper per query or action: it builds the actor 
 
 ### Inside the Lambda functions
 
-The composition root is `apps/lambda/src/common/createApplicationContext.ts`. It uses the audit writer and the EventBridge adapters of `infrastructure` (the notification trigger and the email requester). The context has the no-op tracer of OpenTelemetry, because the functions register no tracer provider: X-Ray covers the handlers and the jobs, and the spans of the use cases are lost. The context has no changelog, no collab server, no realtime server, no image reader, no signing key and no fetcher of client metadata documents. Only `midnight-automations` gets file storage: it builds the S3 storage when the four S3 parameters exist, and without them the storage is null and the sweep of the uploads skips.
+The composition root is `apps/lambda/src/common/createApplicationContext.ts`. It uses the audit writer and the EventBridge adapters of `infrastructure` (the notification trigger and the email requester). The context has the no-op tracer of OpenTelemetry, because the functions register no tracer provider: X-Ray covers the handlers and the jobs, and the spans of the use cases are lost. The context has no changelog, no collab server, no realtime server, no image reader, no signing key, no fetcher of client metadata documents and no relay service, and all switches of the Remote Control Program are on. Only `midnight-automations` gets file storage: it builds the S3 storage when the four S3 parameters exist, and without them the storage is null and the sweep of the uploads skips.
 
 `midnight-automations`, `frequent-automations` and `scrape-discord-events` (with the Discord gateway) call the composition root. Each job is a use case of `application` that `createJobFactory` runs and keeps in its own X-Ray segment. `email-function` does not call the composition root.
 
@@ -58,6 +59,12 @@ The composition root is `apps/lambda/src/common/createApplicationContext.ts`. It
 The Lambda functions hold only host code: the composition root (`common/createApplicationContext.ts`, `common/applicationContextEnvironment.ts` and `common/createJob.ts`), the logger, X-Ray, the parameters, `runJobsInIsolation`, DynamoDB and the transports. Their unit tests cover only this host code (the logger, the job runner and the New Year wordings).
 
 **The Prisma rule.** Only the composition root uses the Prisma client. The Lambda functions have no ESLint configuration, thus the test `apps/lambda/src/boundaries.test.ts` enforces the rule: it fails when another file mentions `prisma`, `PrismaClient` or `@prisma/client`. Type imports of the models from `@sam-monorepo/database` are permitted. The same test fails on an integration test in the Lambda functions, because all integration tests of the automations are in `application`.
+
+### Inside the relay service
+
+The composition root is `apps/relay/src/applicationContext.ts`. It uses the audit writer and the Pusher client of the realtime server of `infrastructure`. The context has no session: the relay service builds the actor of each runtime connection from its connection token. It verifies the connection tokens and the tokens of its internal endpoints with the JSON Web Key Set of the app. The port `remoteControlProgramSwitches` reads the Unleash flags with the Unleash client of the relay service. The context has no changelog, no collab server, no Discord gateway, no file storage, no image reader, no signing key, no fetcher of client metadata documents and no relay service. The use cases of the relay send no notifications and no emails. The configuration is in `apps/relay/src/env.ts`.
+
+The other modules of the relay service hold only host code: the WebSocket server, the internal HTTP endpoints, the batches of the delivery to Soketi, the limits, the logger and the telemetry. They call the use cases of `application`, not Prisma. The test `apps/relay/src/boundaries.test.ts` enforces this rule, like in the Lambda functions.
 
 ### Tests
 
@@ -72,6 +79,7 @@ flowchart TB
   subgraph hosts [Hosts]
     app["apps/app (Next.js)"]
     lambda["apps/lambda"]
+    relay["apps/relay"]
     mcpService["MCP service (open item)"]
     backend["Backend (open item)"]
   end
@@ -79,6 +87,7 @@ flowchart TB
   subgraph adapters [Adapters]
     nextAdapters["Server actions, tRPC, route handlers"]
     lambdaHandlers["Lambda handlers"]
+    relayServer["WebSocket server and internal endpoints"]
     mcp["packages/mcp"]
     controllers["HTTP controllers"]
   end
@@ -99,14 +108,17 @@ flowchart TB
   app --> nextAdapters
   app --> mcp
   lambda --> lambdaHandlers
+  relay --> relayServer
   mcpService --> mcp
   backend --> controllers
   nextAdapters --> application
   lambdaHandlers --> application
+  relayServer --> application
   mcp --> application
   controllers --> application
   app --> infrastructurePackage
   lambda --> infrastructurePackage
+  relay --> infrastructurePackage
   infrastructurePackage -. port types .-> application
   infrastructurePackage -. types .-> domainPackages
   infrastructurePackage --> database
@@ -123,9 +135,9 @@ Each package except `database` and `emails` (they have no test runner) has the t
 
 - **Domain** (`domain`, `emails`, `wiki-editor`): the rules, without other I/O than the database. The packages create no database client and read no environment. A function that reads or writes the database takes the client or the transaction of its caller, for example a row lock or a transaction step. Prisma types and selects are permitted. `wiki-editor` is a separate domain-level package because it depends on Tiptap and has a browser entry (`helpers`): inside `domain` it would pull Tiptap into the Lambda functions and the collab server. `emails` is a separate package because email templates are presentation, not rules: a use case asks the context to send a notification, and the template renders it.
 - **Use cases** (`application`): `(context, actor, input) => output`, with the context and its ports as the [package README](../pnpm-monorepo/packages/application/README.md) describes them. The use cases check the permissions, thus a new host cannot forget a check. The use cases call Prisma directly; there are no repository ports. This is the one intentional break of the dependency rule.
-- **Adapters**: the server actions and tRPC procedures of the Next.js app, the MCP tools and request handler, the Lambda handlers. They parse the transport-specific input, call the use cases and map the typed errors.
+- **Adapters**: the server actions and tRPC procedures of the Next.js app, the MCP tools and request handler, the Lambda handlers, the WebSocket server and the internal endpoints of the relay service. They parse the transport-specific input, call the use cases and map the typed errors.
 - **Infrastructure** (`database`, `infrastructure`): the Prisma schema and client, and the shared implementations of the ports. Each host composes the implementations in its composition root.
-- **Hosts**: the deployables. Each host has one composition root that builds its context. The logger and the tracer are per host: the app logs in `after()`, and the Lambda functions log to the console.
+- **Hosts**: the deployables. Each host has one composition root that builds its context. The logger and the tracer are per host: the app logs in `after()`, and the Lambda functions and the relay service log to the console.
 
 The names of Clean Architecture and their locations in the code:
 
@@ -136,15 +148,15 @@ The names of Clean Architecture and their locations in the code:
 | Request model and response model (Data Transfer Object, DTO) | The Zod input schema and the output type of a use case |
 | Port | A field of `ApplicationContext` ([`context.ts`](../pnpm-monorepo/packages/application/src/context.ts)) |
 | Driven adapter | The implementations of the ports in `infrastructure` and in the composition roots |
-| Driving adapter | The server actions, the tRPC procedures and the route handlers of the Next.js app, the MCP tools, the Lambda handlers |
-| Composition root | `apps/app/src/modules/application` and `apps/lambda/src/common/createApplicationContext.ts` |
+| Driving adapter | The server actions, the tRPC procedures and the route handlers of the Next.js app, the MCP tools, the Lambda handlers, the WebSocket server and the internal endpoints of the relay service |
+| Composition root | `apps/app/src/modules/application`, `apps/lambda/src/common/createApplicationContext.ts` and `apps/relay/src/applicationContext.ts` |
 
 ## How to add a piece of logic
 
 1. Put the pure rules into `domain` (or the fitting domain package) if the Lambda functions or the collab server could use them.
 2. Write the use case in `application/src/<feature>/`: the Zod input schema next to it, an explicit plain output, the permission checks with `requirePermission`, the audit events and the notifications through the context.
 3. Write the app query or action as a thin wrapper: the actor from the session, the use case call, the app-specific response.
-4. Write no Prisma call in a host outside its composition root: the ESLint rule `use-cases-only` refuses it in the Next.js app, and the test `apps/lambda/src/boundaries.test.ts` refuses it in the Lambda functions.
+4. Write no Prisma call in a host outside its composition root: the ESLint rule `use-cases-only` refuses it in the Next.js app, and the tests `apps/lambda/src/boundaries.test.ts` and `apps/relay/src/boundaries.test.ts` refuse it in the Lambda functions and in the relay service.
 5. Test the behavior through the end-to-end tests. Add an integration test in `application` only for critical logic without one.
 
 ## Open items

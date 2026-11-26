@@ -23,6 +23,7 @@ import {
   postgresNetworkAlias,
   postgresPassword,
   postgresUser,
+  relayImageTag,
   rustfsImage,
   s3AccessKeyId,
   s3AnonymousReadPolicy,
@@ -31,20 +32,27 @@ import {
   s3CorsConfiguration,
   s3Environment,
   s3SecretAccessKey,
+  soketiContainerEnvironment,
+  soketiContainerPort,
+  soketiEnvironment,
+  soketiHostPort,
+  soketiImage,
+  soketiNetworkAlias,
   templateDatabase,
   unleashAdminToken,
   unleashBackendToken,
   unleashContainerPort,
   unleashDatabase,
   unleashImage,
+  unleashNetworkAlias,
   writeStackState,
 } from "./stack";
 
 const execFileAsync = promisify(execFile);
 
-const collabImageExists = async () => {
+const imageExists = async (imageTag: string) => {
   try {
-    await execFileAsync("docker", ["image", "inspect", collabImageTag]);
+    await execFileAsync("docker", ["image", "inspect", imageTag]);
     return true;
   } catch {
     return false;
@@ -53,21 +61,21 @@ const collabImageExists = async () => {
 
 /**
  * `docker build` (instead of testcontainers' image build) so the BuildKit
- * layer cache is shared with `docker compose build sam-collab` of the dev
- * stack.
+ * layer cache is shared with the builds of `sam-collab` and `sam-relay` of
+ * the dev stack.
  */
-const buildCollabImage = () =>
+const buildImage = (hostDirectory: string, imageTag: string) =>
   runCommand(
     "docker",
     [
       "build",
       "--file",
-      path.join("apps", "collab", "Dockerfile"),
+      path.join("apps", hostDirectory, "Dockerfile"),
       "--tag",
-      collabImageTag,
+      imageTag,
       ".",
     ],
-    { cwd: monorepoRoot, label: "collab image build" },
+    { cwd: monorepoRoot, label: `${hostDirectory} image build` },
   );
 
 const buildApp = (templateDatabaseUrl: string, s3Port: number) =>
@@ -76,6 +84,7 @@ const buildApp = (templateDatabaseUrl: string, s3Port: number) =>
     env: {
       ...appDummyEnvironment,
       ...s3Environment(s3Port),
+      ...soketiEnvironment,
       DATABASE_URL: templateDatabaseUrl,
     },
     label: "app build",
@@ -204,22 +213,30 @@ const globalSetup = async () => {
       throw new Error(
         "PLAYWRIGHT_SKIP_BUILD=1 but the app has never been built — run once without the flag",
       );
-    if (!(await collabImageExists()))
-      throw new Error(
-        "PLAYWRIGHT_SKIP_BUILD=1 but the collab image does not exist — run once without the flag",
-      );
+    for (const imageTag of [collabImageTag, relayImageTag])
+      if (!(await imageExists(imageTag)))
+        throw new Error(
+          `PLAYWRIGHT_SKIP_BUILD=1 but the image ${imageTag} does not exist — run once without the flag`,
+        );
     console.log(
-      "[stack] Skipping app and collab builds (PLAYWRIGHT_SKIP_BUILD=1)",
+      "[stack] Skipping the builds of the app and the images (PLAYWRIGHT_SKIP_BUILD=1)",
     );
   } else {
-    console.log("[stack] Building the app and the collab image…");
-    builds.push(buildApp(templateDatabaseUrl, s3Port), buildCollabImage());
+    console.log(
+      "[stack] Building the app, the collab image and the relay image…",
+    );
+    builds.push(
+      buildApp(templateDatabaseUrl, s3Port),
+      buildImage("collab", collabImageTag),
+      buildImage("relay", relayImageTag),
+    );
   }
 
   // Its startup migrations take a while, so it starts alongside the builds
   console.log("[stack] Starting Unleash…");
   const unleashStart = new GenericContainer(unleashImage)
     .withNetwork(network)
+    .withNetworkAliases(unleashNetworkAlias)
     .withEnvironment({
       DATABASE_URL: `postgres://${postgresUser}:${postgresPassword}@${postgresNetworkAlias}:5432/${unleashDatabase}`,
       DATABASE_SSL: "false",
@@ -231,7 +248,22 @@ const globalSetup = async () => {
     .withStartupTimeout(120_000)
     .start();
 
-  const [unleash] = await Promise.all([unleashStart, ...builds]);
+  // The browser connects to the host port that the build inlines (see
+  // soketiHostPort), and the relay containers to the network alias
+  console.log("[stack] Starting Soketi…");
+  const soketiStart = new GenericContainer(soketiImage)
+    .withNetwork(network)
+    .withNetworkAliases(soketiNetworkAlias)
+    .withEnvironment(soketiContainerEnvironment)
+    .withExposedPorts({ container: soketiContainerPort, host: soketiHostPort })
+    .withWaitStrategy(Wait.forHttp("/ready", soketiContainerPort))
+    .start();
+
+  const [unleash, soketi] = await Promise.all([
+    unleashStart,
+    soketiStart,
+    ...builds,
+  ]);
 
   writeStackState({
     postgresHost: postgres.getHost(),
@@ -244,6 +276,7 @@ const globalSetup = async () => {
   console.log("[stack] Ready");
 
   return async () => {
+    await soketi.stop();
     await unleash.stop();
     await postgres.stop();
     await rustfs.stop();

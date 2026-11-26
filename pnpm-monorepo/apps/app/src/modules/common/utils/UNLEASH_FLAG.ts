@@ -1,6 +1,8 @@
 /**
  * New flags should also be added to the unleash-bootstrap service in
- * compose.yml so the local Unleash container creates them on startup.
+ * compose.yml so the local Unleash container creates them on startup. The
+ * flags of the Remote Control Program are `RemoteControlProgramUnleashFlag`
+ * of the `domain` package (see `getRemoteControlProgramUnleashFlag()`).
  */
 export enum UNLEASH_FLAG {
   EnableCareBearShooter = "EnableCareBearShooter",

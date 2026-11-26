@@ -1,0 +1,9 @@
+/* IDE/typecheck config covering sources and tests; the emitting build
+   lives in tsconfig.build.json and excludes tests. */
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts"]
+}

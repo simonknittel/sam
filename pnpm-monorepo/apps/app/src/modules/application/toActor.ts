@@ -27,5 +27,6 @@ export const toActor = async (session: Session): Promise<Actor> => {
     discordTwoFactorEnabled: session.discordTwoFactorEnabled,
     permissionSets: session.givenPermissionSets,
     adminMode,
+    assumedByAdminId: session.assumedByAdminId,
   });
 };

@@ -1,0 +1,44 @@
+<2026-11-22T19:14:05.120Z> Log started on Sun Nov 22 20:14:05 2026
+<2026-11-22T19:14:46.497Z> FileVersion: 4.4.159.10512345
+<2026-11-22T19:15:27.803Z> Branch: sc-alpha-4.4.0
+<2026-11-22T19:16:09.028Z> [Notice] <Join PU> address[2001:db8:4006:812::200e] port[64300] shard[pub_euw1b_10512345_102] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]
+<2026-11-22T19:16:50.160Z> [Notice] <Channel Connection Complete> map="megamap" gamerules="SC_Default" remoteAddr=[2001:db8:4006:812::200e]:64300 localAddr=[::]:64090 connection={1, 0} session=cc47831e-36ce-e906-8355-3bba619e5182 [Team_Network][Network][Gateway]
+<2026-11-22T19:17:31.186Z> [Notice] <SHUDEvent_OnNotification> Added notification "Testinviter
+<2026-11-22T19:17:31.186Z> Party Invite Received: Accept Invitation?: " [2] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-22T19:18:13.088Z> [Notice] <SHUDEvent_OnNotification> Added notification "You have joined
+<2026-11-22T19:18:13.088Z> party: " [3] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-22T19:18:54.994Z> [Notice] <SHUDEvent_OnNotification> Added notification "New Member Joined
+<2026-11-22T19:18:54.994Z> Testmember has joined the party.: " [4] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-22T19:19:36.905Z> [Notice] <SHUDEvent_OnNotification> Added notification "New Party Leader
+<2026-11-22T19:19:36.905Z> Testleader is now party leader.: " [311] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-22T19:20:18.821Z> [Notice] <SHUDEvent_OnNotification> Added notification "Member Left
+<2026-11-22T19:20:18.821Z> Testmember has left the party.: " [285] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-22T19:21:00.743Z> [Notice] <SHUDEvent_OnNotification> Added notification "You have been kicked from the party.
+<2026-11-22T19:21:00.743Z> : " [74] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-22T19:21:42.672Z> [Notice] <SHUDEvent_OnNotification> Added notification "You have created
+<2026-11-22T19:21:42.672Z> party: " [3] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-22T19:22:24.609Z> [Notice] <SHUDEvent_OnNotification> Added notification "Party Disbanded
+<2026-11-22T19:22:24.609Z> The party has been disbanded.: " [3] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-22T19:23:06.555Z> [Notice] <SHUDEvent_OnNotification> Added notification "You have left the party.
+<2026-11-22T19:23:06.555Z> : " [12] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-22T19:23:48.511Z> [Notice] <SHUDEvent_OnNotification> Added notification "Friend Added
+<2026-11-22T19:23:48.511Z> Testfriend: " [59] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-22T19:24:30.479Z> [Notice] <SHUDEvent_OnNotification> Added notification "Alliance Aid Defense Rewards - Tier 1
+<2026-11-22T19:24:30.479Z> You have been awarded: Silverton Jacket AA Defense: " [177] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-22T19:25:12.460Z> [Notice] <SHUDEvent_OnNotification> Added notification "You've Earned: MG Scrip
+<2026-11-22T19:25:12.460Z> Access It at Your Primary Residence's Inventory
+<2026-11-22T19:25:54.456Z> [Notice] <SHUDEvent_OnNotification> Added notification "You've earned: Falston Jumpsuit "People's Alliance Edition"
+<2026-11-22T19:25:54.456Z>  Access it at a destination Freight Elevator
+<2026-11-22T19:26:35.473Z> [Notice] <SHUDEvent_OnNotification> Added notification "Awarded 500 aUEC: " [81] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-22T19:27:17.364Z> [Notice] <SHUDEvent_OnNotification> Added notification "Restricted Area - Vehicles Will Be Impounded: " [53] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-22T19:27:59.258Z> [Notice] <SHUDEvent_OnNotification> Added notification "Restricted Area
+<2026-11-22T19:27:59.258Z> For your safety, you've been relocated.: " [55] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-22T19:28:41.155Z> [Notice] <SHUDEvent_OnNotification> Added notification "Exited Monitored Space: " [15] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-22T19:29:23.055Z> [Notice] <SHUDEvent_OnNotification> Added notification "Entering Private Property: " [4] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-22T19:30:04.959Z> [Notice] <SHUDEvent_OnNotification> Added notification "<EM4>Received Blueprint: Arbor MH1 Mining Laser [BP]</EM4>: " [15] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-22T19:30:46.867Z> [Error] <Claim Failed> Claim failed with error: FAILED_PRECONDITION(9): 'Claim vehicle failed: ItemOnCooldown' [Team_GameServices][ASOP][Entitlement][Insurance]
+<2026-11-22T19:31:28.780Z> [Notice] <Vehicle Destroyed> Vehicle 'ANVL_Asgard_932957595142' [932957595142] class 'ANVL_Asgard' (owner player [200123456789], driver [0]) destroyed: reason [Collision] level [0] -> [2] flags [4066] killer 'Testpilot' [200123456789] authority [0] [Team_CGP4][Vehicle]
+<2026-11-22T19:32:10.698Z> [Notice] <Error Popup Opened> errorCode=30028 [Team_UI][Disconnection]
+<2026-11-22T19:32:52.623Z> [Notice] <Channel Disconnected> cause=30028 reason="Remote Disconnect - player inactive" frame=544285 isRemote=1 map="megamap" gamerules="SC_Default" hostType="Replicant" remoteAddr=::ffff:198.51.100.77:64300 localAddr=0.0.0.0:64090 connection={3, 0} session=cc47831e-36ce-e906-8355-3bba619e5182 node_id=cc47831e-36ce-e906-8355-3bba619e5182 nickname="Testpilot" playerGEID=200123456789 uptime_secs=6326.005371 [Team_Network][Network][Gateway][Disconnection]
+<2026-11-22T19:33:34.555Z> [Notice] <SystemQuit> CSystem::Quit invoked with - cause=30016, reason=Quit via console command, exitCode=0, thread id=2188, main thread id=2188 [Team_Unknown][System]
+<2026-11-22T19:34:16.451Z> [Notice] <Channel Disconnected> cause=30016 reason="Remote Disconnect - Player requested disconnect" frame=544301 isRemote=1 map="megamap" gamerules="SC_Default" hostType="Replicant" remoteAddr=ipv6:[2001:db8:4006:812::200e]:64300 localAddr=ipv6:[::]:64090 peer_addr:2001:db8:4006:812::1f connection={4, 0} session=cc47831e-36ce-e906-8355-3bba619e5182 node_id=cc47831e-36ce-e906-8355-3bba619e5182 nickname="Testpilot" playerGEID=200123456789 uptime_secs=6367.123047 [Team_Network][Network][Gateway][Disconnection]

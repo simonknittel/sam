@@ -1,6 +1,12 @@
 # Host ports are overridable so that multiple git worktrees can run their own
 # stack side by side (each worktree sets the SAM_*_PORT variables in a
 # gitignored .env next to this file, see .agents/skills/run-app/SKILL.md).
+
+# The largest event that Soketi accepts, in kilobytes, for the soketi service
+# and the relay service (see
+# docs/setup-test-and-production.md#10-set-up-the-relay-service-of-the-remote-control-program)
+x-soketi-maximum-event-payload-kilobytes: &soketi-maximum-event-payload-kilobytes "100"
+
 services:
 
   # PostgreSQL with TimescaleDB, like the servers (see
@@ -58,6 +64,7 @@ services:
     restart: no
     environment:
       SOKETI_DEFAULT_APP_USER_AUTHENTICATION: "true"
+      SOKETI_EVENT_MAX_SIZE_IN_KB: *soketi-maximum-event-payload-kilobytes
     ports:
       - ${SAM_SOKETI_PORT:-6001}:6001
       - ${SAM_SOKETI_METRICS_PORT:-9601}:9601
@@ -172,9 +179,50 @@ services:
     ports:
       - ${SAM_COLLAB_PORT:-5210}:5210
 
+  # Relay service of the Remote Control Program (see
+  # docs/setup-local-machine.md for the app-side environment variables).
+  # Rebuild after a change of pnpm-monorepo/apps/relay or of its workspace
+  # packages: `docker compose up -d --build sam-relay`. The run-app skill
+  # (up.sh) starts it after the migrations.
+  sam-relay:
+    build:
+      context: ./pnpm-monorepo
+      dockerfile: apps/relay/Dockerfile
+    restart: no
+    # Without the conditions, the relay service logs errors until the
+    # database and Unleash are ready
+    depends_on:
+      psql:
+        condition: service_healthy
+      soketi:
+        condition: service_started
+      unleash:
+        condition: service_healthy
+    # The run-app skill (up.sh) writes the SAM_APP_* variables into the .env
+    # next to this file (see the grafana service)
+    environment:
+      DATABASE_URL: postgresql://postgres:admin@psql:5432/db
+      APP_BASE_URL: ${SAM_APP_BASE_URL:-http://localhost:3000}
+      APP_ORIGIN: ${SAM_APP_ORIGIN:-http://localhost:3000}
+      # The key set inline, not from the URL of the app (see
+      # docs/setup-local-machine.md#remote-control-program-relay-service)
+      APP_JWKS_BASE64: ${SAM_APP_JWK_SET_VALUE:-eyJrZXlzIjpbXX0=}
+      # The default app of the soketi service
+      PUSHER_CHANNELS_APP_ID: app-id
+      PUSHER_CHANNELS_APP_KEY: app-key
+      PUSHER_CHANNELS_APP_SECRET: app-secret
+      PUSHER_CHANNELS_HOST: soketi
+      PUSHER_CHANNELS_PORT: "6001"
+      PUSHER_CHANNELS_MAXIMUM_EVENT_PAYLOAD_KILOBYTES: *soketi-maximum-event-payload-kilobytes
+      # The backend token of the unleash service
+      UNLEASH_SERVER_API_URL: http://unleash:4242/api
+      UNLEASH_SERVER_API_TOKEN: default:development.sam-insecure-api-token
+    ports:
+      - ${SAM_RELAY_PORT:-5220}:5220
+
   # Headless OpenTelemetry collector for local tracing work (see
-  # docs/setup-local-machine.md). Without the OTEL_* variables of the app, it
-  # receives nothing and idles.
+  # docs/setup-local-machine.md). Without the OTEL_* variables of the app and
+  # of the relay service, it receives nothing and idles.
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.165.0@sha256:e40d61f10c9a617cca1ffd1be4d7e2b3a4b0f0001798ff07e58cabe82e618cea
     restart: no
@@ -202,19 +250,21 @@ services:
     depends_on:
       grafana-bootstrap:
         condition: service_completed_successfully
-    # The `run-app` skill (up.sh) writes the SAM_GRAFANA_* variables into the
-    # .env next to this file
+    # The `run-app` skill (up.sh) writes the SAM_APP_* variables and
+    # SAM_GRAFANA_PORT into the .env next to this file. The sam-relay service
+    # uses the same SAM_APP_* variables.
     environment:
       SAM_GRAFANA_ROOT_URL: http://127.0.0.1:${SAM_GRAFANA_PORT:-3100}/
       # The issuer of the embed tokens: NEXT_PUBLIC_BASE_URL of the app
-      SAM_GRAFANA_APP_BASE_URL: ${SAM_GRAFANA_APP_BASE_URL:-http://localhost:3000}
+      SAM_GRAFANA_APP_BASE_URL: ${SAM_APP_BASE_URL:-http://localhost:3000}
       # The origin of the app in the browser, the only origin that can show
-      # Grafana in a frame
-      SAM_GRAFANA_APP_ORIGIN: ${SAM_GRAFANA_APP_ORIGIN:-http://localhost:3000}
+      # Grafana in a frame. It is different from the issuer in a worktree,
+      # because NEXT_PUBLIC_BASE_URL does not change with the port.
+      SAM_GRAFANA_APP_ORIGIN: ${SAM_APP_ORIGIN:-http://localhost:3000}
       # The base64 of the JSON Web Key Set of the EMBED_JWT_PRIVATE_KEY of
       # the app. The default is an empty key set: Grafana then refuses each
       # token.
-      SAM_GRAFANA_JWK_SET_VALUE: ${SAM_GRAFANA_JWK_SET_VALUE:-eyJrZXlzIjpbXX0=}
+      SAM_GRAFANA_JWK_SET_VALUE: ${SAM_APP_JWK_SET_VALUE:-eyJrZXlzIjpbXX0=}
       # Editor mode, off by default like in production. With a password,
       # Grafana makes the user `admin` and shows the login form, so that you
       # can change the dashboard and export it. Without a password, these
@@ -277,7 +327,9 @@ configs:
     content: |
       CREATE DATABASE unleash;
   # The flag names must match the UNLEASH_FLAG enum in
-  # pnpm-monorepo/apps/app/src/modules/common/utils/UNLEASH_FLAG.ts
+  # pnpm-monorepo/apps/app/src/modules/common/utils/UNLEASH_FLAG.ts and
+  # RemoteControlProgramUnleashFlag in
+  # pnpm-monorepo/packages/domain/src/remoteControlProgram/catalog.ts
   unleash-create-flags:
     content: |
       const flagNames = [
@@ -286,6 +338,9 @@ configs:
         "CrashLogAnalyzer",
         "DisableLogAnalyzerSharing",
         "DisableMcpServer",
+        "DisableRemoteControlProgram",
+        "DisableLogFileConnector",
+        "DisableLogEntriesCapability",
       ];
 
       const FLAG_ALREADY_EXISTS_STATUS = 409;
@@ -356,6 +411,8 @@ configs:
           path: /output/traces.jsonl
         file/logs:
           path: /output/logs.jsonl
+        file/metrics:
+          path: /output/metrics.jsonl
 
       service:
         pipelines:
@@ -365,6 +422,10 @@ configs:
           logs:
             receivers: [otlp]
             exporters: [file/logs]
+          # Only the relay service sends metrics
+          metrics:
+            receivers: [otlp]
+            exporters: [file/metrics]
 
   grafana-ini:
     file: ./grafana/grafana.ini

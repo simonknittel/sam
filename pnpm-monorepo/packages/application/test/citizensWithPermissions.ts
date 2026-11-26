@@ -1,4 +1,5 @@
 import { prisma } from "@sam-monorepo/database";
+import { UserRole } from "@sam-monorepo/database/browser";
 import type { Prisma } from "@sam-monorepo/database/client";
 import { TEST_NOW } from "./applicationContext.js";
 
@@ -8,6 +9,17 @@ import { TEST_NOW } from "./applicationContext.js";
  */
 export const CLEARED_USER = {
   user: { create: { emailVerified: TEST_NOW } },
+} as const satisfies Prisma.CitizenCreateInput;
+
+/** Like `CLEARED_USER`, for an admin, with the two-factor authentication */
+export const CLEARED_ADMIN_USER = {
+  user: {
+    create: {
+      emailVerified: TEST_NOW,
+      role: UserRole.ADMIN,
+      discordTwoFactorEnabled: true,
+    },
+  },
 } as const satisfies Prisma.CitizenCreateInput;
 
 /** Each value above 1 is possible. It keeps level 1 below the maximum. */

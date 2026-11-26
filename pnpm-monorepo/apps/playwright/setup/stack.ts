@@ -1,8 +1,18 @@
-import { createHash } from "node:crypto";
+import { createHash, createPrivateKey, createPublicKey } from "node:crypto";
 import path from "node:path";
 
 export const monorepoRoot = path.resolve(__dirname, "..", "..", "..");
 export const appDirectory = path.join(monorepoRoot, "apps", "app");
+
+/**
+ * Unique per checkout, thus parallel worktrees do not overwrite each other's
+ * images between the build and the start of the containers, and do not use
+ * the same host port.
+ */
+const checkoutId = createHash("sha256")
+  .update(monorepoRoot)
+  .digest("hex")
+  .slice(0, 12);
 
 /**
  * Same pinned image as compose.yml so tests run against the Postgres version
@@ -80,6 +90,8 @@ export const unleashImage =
   "unleashorg/unleash-server:8.3.1@sha256:025cd8b003a70cceb88427ca393c377ca6503a210d95fdee54d21610d51f7ed0";
 
 export const unleashContainerPort = 4242;
+/** Network alias of the Unleash container, resolvable by the relay containers. */
+export const unleashNetworkAlias = "unleash";
 export const unleashDatabase = "unleash";
 export const unleashBackendToken =
   "default:development.playwright-insecure-backend-token";
@@ -102,17 +114,72 @@ export const unleashEnvironment = (unleashPort: number, appName: string) =>
     UNLEASH_REVALIDATE_SECONDS: "1",
   }) as const;
 
-/**
- * The collab image tag is unique per checkout so parallel worktrees don't
- * overwrite each other's image between building and starting containers.
- */
-export const collabImageTag = `sam-collab-playwright:${createHash("sha256")
-  .update(monorepoRoot)
-  .digest("hex")
-  .slice(0, 12)}`;
+export const collabImageTag = `sam-collab-playwright:${checkoutId}`;
 
 export const collabJwtSecret = "playwright-insecure-collab-secret";
 export const collabPort = 5210;
+
+/** Same pinned image as compose.yml (realtime server, Pusher protocol). */
+export const soketiImage =
+  "quay.io/soketi/soketi:1.6.1-16-distroless@sha256:22486a3b4ac387a3c7ee97963cccf5189d38c0a54b0d75f10c0881d60437a77a";
+
+export const soketiContainerPort = 6001;
+/** Network alias of the Soketi container, resolvable by the relay containers. */
+export const soketiNetworkAlias = "soketi";
+
+/**
+ * The host port of Soketi. The build of the app inlines the port of the
+ * browser client (NEXT_PUBLIC_PUSHER_CHANNELS_PORT), thus a random port does
+ * not work with PLAYWRIGHT_SKIP_BUILD=1. The port is fixed for each checkout.
+ * The range 20000 to 29999 is below the ephemeral ports of Linux and macOS,
+ * and the dev stack (compose.yml) uses no port in it.
+ */
+export const soketiHostPort =
+  20_000 + (Number.parseInt(checkoutId.slice(0, 8), 16) % 10_000);
+
+/**
+ * The largest event that Soketi accepts, in kilobytes. The default of the
+ * Soketi version, set explicitly like in compose.yml. The relay containers
+ * get the same value.
+ */
+export const soketiMaximumEventPayloadKilobytes = 100;
+
+/**
+ * One Soketi app for all workers: the build of the app inlines the app key,
+ * and all workers use one build. The workers do not get the events of other
+ * workers, because the channel names contain the random ids of the rows of
+ * the worker database (for example `private-citizen-<citizen id>`).
+ */
+const soketiAppId = "playwright-app-id";
+const soketiAppKey = "playwright-app-key";
+const soketiAppSecret = "playwright-insecure-app-secret";
+
+export const soketiContainerEnvironment = {
+  SOKETI_DEFAULT_APP_ID: soketiAppId,
+  SOKETI_DEFAULT_APP_KEY: soketiAppKey,
+  SOKETI_DEFAULT_APP_SECRET: soketiAppSecret,
+  SOKETI_DEFAULT_APP_USER_AUTHENTICATION: "true",
+  SOKETI_EVENT_MAX_SIZE_IN_KB: soketiMaximumEventPayloadKilobytes.toString(),
+} as const;
+
+/**
+ * Pusher environment of the app, for the build and for each worker. The
+ * build inlines the NEXT_PUBLIC_ variables (also into the server code), thus
+ * the app must never take them from the developer `.env`: that file points
+ * at the Soketi of the dev stack. The empty secure port wins over a value of
+ * the file (see appDummyEnvironment).
+ */
+export const soketiEnvironment = {
+  NEXT_PUBLIC_PUSHER_CHANNELS_APP_ID: soketiAppId,
+  NEXT_PUBLIC_PUSHER_CHANNELS_APP_KEY: soketiAppKey,
+  NEXT_PUBLIC_PUSHER_CHANNELS_HOST: "localhost",
+  NEXT_PUBLIC_PUSHER_CHANNELS_PORT: soketiHostPort.toString(),
+  NEXT_PUBLIC_PUSHER_CHANNELS_SECURE_PORT: "",
+  PUSHER_CHANNELS_APP_SECRET: soketiAppSecret,
+} as const;
+
+export const relayImageTag = `sam-relay-playwright:${checkoutId}`;
+export const relayPort = 5220;
 
 export const postgresUser = "postgres";
 export const postgresPassword = "admin";
@@ -215,3 +282,71 @@ export const appDummyEnvironment = {
    */
   OAUTH_ALLOW_INSECURE_LOOPBACK_CLIENT_IDS: "1",
 } as const;
+
+/**
+ * The base64 of the JSON Web Key Set that the app publishes at
+ * /.well-known/jwks.json for EMBED_JWT_PRIVATE_KEY (see
+ * createEmbedJsonWebKeySet() of the app). The key id is the RFC 7638
+ * thumbprint: the required members in lexicographic order.
+ */
+const createJsonWebKeySetBase64 = (base64EncodedPrivateKeyPem: string) => {
+  const privateKey = createPrivateKey(
+    Buffer.from(base64EncodedPrivateKeyPem, "base64").toString("utf8"),
+  );
+  const { kty, crv, x, y } = createPublicKey(privateKey).export({
+    format: "jwk",
+  });
+  const keyId = createHash("sha256")
+    .update(JSON.stringify({ crv, kty, x, y }))
+    .digest("base64url");
+  const jsonWebKeySet = {
+    keys: [{ kty, crv, x, y, alg: "ES256", use: "sig", kid: keyId }],
+  };
+
+  return Buffer.from(JSON.stringify(jsonWebKeySet)).toString("base64");
+};
+
+interface RelayEnvironmentOptions {
+  readonly databaseName: string;
+  /** The base URL of the app of the worker, the origin of its pages */
+  readonly appBaseUrl: string;
+  /** The name that the app of the worker gives to Unleash as `appName` */
+  readonly unleashAppName: string;
+}
+
+/**
+ * Environment of the relay container of one worker (see
+ * apps/relay/src/env.ts). The relay service gets the key set of the app
+ * inline, not from the URL of the app (see
+ * docs/setup-local-machine.md#remote-control-program-relay-service). The
+ * relay service and the app of a worker have the same Unleash app name, thus
+ * a flag of the worker scope changes both.
+ */
+export const relayEnvironment = ({
+  databaseName,
+  appBaseUrl,
+  unleashAppName: appName,
+}: RelayEnvironmentOptions) =>
+  ({
+    DATABASE_URL: containerDatabaseUrl(databaseName),
+    APP_BASE_URL: appDummyEnvironment.NEXT_PUBLIC_BASE_URL,
+    APP_ORIGIN: new URL(appBaseUrl).origin,
+    APP_JWKS_BASE64: createJsonWebKeySetBase64(
+      appDummyEnvironment.EMBED_JWT_PRIVATE_KEY,
+    ),
+    PUSHER_CHANNELS_APP_ID: soketiAppId,
+    PUSHER_CHANNELS_APP_KEY: soketiAppKey,
+    PUSHER_CHANNELS_APP_SECRET: soketiAppSecret,
+    PUSHER_CHANNELS_HOST: soketiNetworkAlias,
+    PUSHER_CHANNELS_PORT: soketiContainerPort.toString(),
+    PUSHER_CHANNELS_MAXIMUM_EVENT_PAYLOAD_KILOBYTES:
+      soketiMaximumEventPayloadKilobytes.toString(),
+    UNLEASH_SERVER_API_URL: new URL(
+      "/api",
+      `http://${unleashNetworkAlias}:${unleashContainerPort}`,
+    ).href,
+    UNLEASH_SERVER_API_TOKEN: unleashBackendToken,
+    UNLEASH_APP_NAME: appName,
+    // Like the app (see unleashEnvironment)
+    UNLEASH_REVALIDATE_SECONDS: "1",
+  }) as const;

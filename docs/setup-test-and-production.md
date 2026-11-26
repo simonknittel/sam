@@ -159,3 +159,58 @@ is the origin of the Grafana (scheme, host and port, for example
 `https://statistics.example.com`), without a path and without a user name
 or password. The page also needs `EMBED_JWT_PRIVATE_KEY` (see
 [7. Set up Vercel](#7-set-up-vercel)).
+
+## 10. Set up the relay service of the Remote Control Program
+
+The browser runtime of the
+[Remote Control Program](./remote-control-program/README.md) uploads its
+data to the relay service. Without a relay service, the browser runtime
+works only on the machine. The preview deployments have no relay service.
+
+1. Run the image `ghcr.io/simonknittel/sam-relay` (see
+   [Releases](./releasing.md#relay-service)) as **one** container: the
+   relay service keeps its connections and batches in memory. Pin the tag
+   of a commit SHA, not `latest`. The container listens on port 5220.
+2. Give the container a public host name with TLS, for example
+   `sam-relay.example.com`. The proxy in front of the container must pass
+   the WebSocket upgrade of the path `/`, must keep an open WebSocket
+   connection for longer than the heartbeat interval of the runtimes, and
+   must pass `GET /health` and `POST /internal/disconnect-user`. The app
+   calls the internal endpoint with a short-lived token that the relay
+   service verifies. The
+   relay service does not limit the connections for each IP address, thus
+   the proxy must limit the open connections and the new connections for
+   each address.
+3. Set the environment variables of the container.
+   [env.ts](../pnpm-monorepo/apps/relay/src/env.ts) describes each variable
+   and its default. In production:
+   - `DATABASE_URL`: the database of the app. Apply each migration before
+     you deploy an image that needs it.
+   - `APP_BASE_URL`: the `NEXT_PUBLIC_BASE_URL` of the app, the issuer of
+     the tokens. The relay service reads the public key set at
+     `<APP_BASE_URL>/.well-known/jwks.json`. The key of the app is in
+     [7. Set up Vercel](#7-set-up-vercel).
+   - `PUSHER_CHANNELS_*`: the Soketi app of the app, thus the values of
+     `NEXT_PUBLIC_PUSHER_CHANNELS_*` and `PUSHER_CHANNELS_APP_SECRET` of the
+     app. `PUSHER_CHANNELS_HOST` is a host name without a scheme. For a
+     host with TLS, set `PUSHER_CHANNELS_USE_TLS=true` and the port with
+     TLS.
+   - `PUSHER_CHANNELS_MAXIMUM_EVENT_PAYLOAD_KILOBYTES`: the largest event
+     that the Soketi accepts. Set the limit explicitly on the Soketi too,
+     with the same value, so that a different default of a new Soketi
+     version does not change it. For the Soketi 1.x version of
+     [compose.yml](../compose.yml), the variable is
+     `SOKETI_EVENT_MAX_SIZE_IN_KB` (default: 100). A value
+     `max_event_payload_in_kb` of the app in the app store of the Soketi
+     (for example a database) has priority over this variable.
+   - `UNLEASH_*`: the Unleash of the app, with a backend token. The relay
+     service reads the flags of the Remote Control Program.
+   - `OTEL_EXPORTER_OTLP_ENDPOINT`: the OTLP endpoint for the metrics and
+     the spans of the relay service. The logs go to the output of the
+     container. Set up the alerts in Grafana (see
+     [Operations and tests](./remote-control-program/README.md#operations-and-tests)).
+4. Make sure that `/health` answers, and that the relay service closes a
+   WebSocket connection without a valid token.
+5. Set `RELAY_URL` (for example `wss://sam-relay.example.com`) in the
+   Production environment of Vercel, not in the Preview environment. The
+   app sends the internal requests to the same host with HTTPS.

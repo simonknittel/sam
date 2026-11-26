@@ -33,15 +33,17 @@ export interface BanUserOutput {
 
 /**
  * The sessions of the user are deleted already, thus a reconnect fails. A
- * failure does not undo the ban.
+ * failure does not undo the ban. The relay service also checks the ban at
+ * each renewal of a connection token.
  */
 const endLiveConnections = async (
   context: ApplicationContext,
   userId: string,
 ) => {
-  const [realtimeResult, collabResult] = await Promise.allSettled([
+  const [realtimeResult, collabResult, relayResult] = await Promise.allSettled([
     context.realtime?.terminateUserConnections(userId),
     context.collab?.disconnectUser(userId),
+    context.relay?.disconnectUser(userId),
   ]);
 
   if (realtimeResult.status === "rejected")
@@ -53,6 +55,11 @@ const endLiveConnections = async (
     context.log.error(
       "Failed to end the wiki editor connections of a banned user",
       { userId, error: collabResult.reason },
+    );
+  if (relayResult.status === "rejected")
+    context.log.error(
+      "Failed to end the runtime connections of a banned user",
+      { userId, error: relayResult.reason },
     );
 };
 

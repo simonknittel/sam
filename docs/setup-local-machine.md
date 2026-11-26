@@ -3,7 +3,7 @@
 ## Requirements
 
 - [nvm](https://github.com/nvm-sh/nvm)
-- [Docker](https://www.docker.com/), logged in to the registry of the [Docker Hardened Images](https://docs.docker.com/dhi/) with a Docker Hub account (`docker login dhi.io`). The wiki collaboration server uses its base images.
+- [Docker](https://www.docker.com/), logged in to the registry of the [Docker Hardened Images](https://docs.docker.com/dhi/) with a Docker Hub account (`docker login dhi.io`). The wiki collaboration server and the relay service use its base images.
 
 ## Setup
 
@@ -40,6 +40,17 @@ In development, the "Dev login" control at the top of the login page signs in as
 
 Wiki edits go through the `sam-collab` container. Keep the defaults of `COLLAB_JWT_SECRET` and `COLLAB_URL` from `.env.example`. Without these variables, the wiki is read-only, also in a deployment. After a change in `pnpm-monorepo/apps/collab`, run `docker compose build sam-collab`. Or run the server without Docker: `pnpm --filter @sam-monorepo/collab run dev` (with `pnpm-monorepo/apps/collab/.env`, see its [.env.example](../pnpm-monorepo/apps/collab/.env.example)).
 
+### Remote Control Program (relay service)
+
+The browser runtime of the [Remote Control Program](./remote-control-program/README.md) connects to the `sam-relay` container. The `RELAY_URL` default from `.env.example` matches its port. Without `RELAY_URL`, the browser runtime works only on the machine. Apply the migrations before you start the relay service, because it writes to the database of the `psql` container. [env.ts](../pnpm-monorepo/apps/relay/src/env.ts) describes all its variables, and `docker compose logs sam-relay` shows its logs.
+
+Set the key of the app first (see [Embedded app authentication](#embedded-app-authentication)). The container gets the public key set as a value (`APP_JWKS_BASE64`), not from the URL of the app, because a firewall of the host can block a connection from a container to the dev server. To start it:
+
+1. Put the lines of `node .agents/skills/run-app/scripts/app-env.mjs pnpm-monorepo/apps/app/.env` into the `.env` file next to [compose.yml](../compose.yml). Do this again after a change of the key.
+2. Run `docker compose up -d --build sam-relay`. Do this again after a change of `pnpm-monorepo/apps/relay` or of its workspace packages.
+
+The `up.sh` script of the [run-app skill](../.agents/skills/run-app/SKILL.md) does these steps. [compose.yml](../compose.yml) sets one maximum event size for Soketi and for the relay service (see [Set up the relay service](./setup-test-and-production.md#10-set-up-the-relay-service-of-the-remote-control-program)).
+
 ### Uploads
 
 Uploads go to the S3-compatible `rustfs` container. Keep the `S3_*` defaults from `.env.example`. `docker compose up` creates the bucket. You can also use a different S3-compatible provider, for example Cloudflare R2 (see the comments in `.env.example`).
@@ -58,6 +69,15 @@ node scripts/check-telemetry-export.mjs
 
 The script prints the spans of each trace and the log records. It fails when a span has a parent span that the collector did not receive (a problem of the export). `docker compose restart otel-collector` empties the files.
 
+The relay service sends metrics and spans only when `OTEL_EXPORTER_OTLP_ENDPOINT` is set, and [compose.yml](../compose.yml) does not set it. To send them to the `otel-collector` container (which writes the metrics to `/output/metrics.jsonl`), put this file next to [compose.yml](../compose.yml) as `compose.override.yaml` (it is gitignored), and run `docker compose up -d otel-collector sam-relay`:
+
+```yaml
+services:
+  sam-relay:
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+```
+
 ### Notifications (EventBridge)
 
 The app sends notification events to AWS EventBridge only when `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_EVENT_BUS_ARN` are set. Do not set them locally: the only event bus is the production bus, so a local action can send notifications to real users.
@@ -70,6 +90,8 @@ Apps embedded under `/app/external/…` can get a signed JWT of the current user
 openssl ecparam -name prime256v1 -genkey -noout | openssl pkcs8 -topk8 -nocrypt | base64 -w0
 ```
 
+The relay service of the Remote Control Program also needs the key: it verifies the connection tokens with the public key set of the app, and without the key it refuses each token.
+
 **Each environment must have its own key** (local, preview and production). Else a token of a preview deployment is also valid in production. For deployments, see [Test and Production](./setup-test-and-production.md#7-set-up-vercel).
 
 ### Statistics dashboard (Grafana)
@@ -78,7 +100,7 @@ The statistics page shows the dashboard of the `grafana` container in a frame. L
 
 1. Set `EMBED_JWT_PRIVATE_KEY` (see [Embedded app authentication](#embedded-app-authentication)).
 2. Set `STATISTICS_GRAFANA_URL="http://127.0.0.1:3100"` (an origin, without a path) in `pnpm-monorepo/apps/app/.env`. Use `127.0.0.1`, not `localhost`, so that the frame is on a different site, like in production.
-3. Put the two lines of `node .agents/skills/run-app/scripts/grafana-env.mjs pnpm-monorepo/apps/app/.env` into the `.env` file next to [compose.yml](../compose.yml). Do this again after a change of the key.
+3. Put the lines of `node .agents/skills/run-app/scripts/app-env.mjs pnpm-monorepo/apps/app/.env` into the `.env` file next to [compose.yml](../compose.yml). Do this again after a change of the key.
 4. Run `docker compose up -d grafana`.
 
 The `up.sh` script of the [run-app skill](../.agents/skills/run-app/SKILL.md) does steps 2 to 4. Grafana reads the database with the role of [statistics-reader-role.sql](../pnpm-monorepo/packages/database/prisma/statistics-reader-role.sql), like in production.
@@ -93,7 +115,7 @@ To change the dashboard:
 ### Optional environment settings
 
 - `SKIP_VALIDATION=1` skips the validation of the environment variables, for example for a build without a complete `.env`: `SKIP_VALIDATION=1 pnpm --filter @sam-monorepo/app run build`
-- To run the stacks of more than one checkout (for example git worktrees) at the same time, set other host ports in a gitignored `.env` file next to [compose.yml](../compose.yml): `SAM_PSQL_PORT`, `SAM_SOKETI_PORT`, `SAM_SOKETI_METRICS_PORT`, `SAM_COLLAB_PORT`, `SAM_RUSTFS_PORT`, `SAM_UNLEASH_PORT`, `SAM_OTEL_COLLECTOR_PORT` and `SAM_GRAFANA_PORT`. Set `NEXTAUTH_URL` to the URL of the dev server. Each port has its own login, because the name of the session cookie contains the port. For the [statistics dashboard](#statistics-dashboard-grafana), also change the port of `STATISTICS_GRAFANA_URL`, and set `SAM_GRAFANA_APP_ORIGIN` to the URL of the dev server (default: `http://localhost:3000`).
+- To run the stacks of more than one checkout (for example git worktrees) at the same time, set other host ports in a gitignored `.env` file next to [compose.yml](../compose.yml): `SAM_PSQL_PORT`, `SAM_SOKETI_PORT`, `SAM_SOKETI_METRICS_PORT`, `SAM_COLLAB_PORT`, `SAM_RELAY_PORT`, `SAM_RUSTFS_PORT`, `SAM_UNLEASH_PORT`, `SAM_OTEL_COLLECTOR_PORT` and `SAM_GRAFANA_PORT`. Set `NEXTAUTH_URL` to the URL of the dev server. Each port has its own login, because the name of the session cookie contains the port. For the [statistics dashboard](#statistics-dashboard-grafana) and the [relay service](#remote-control-program-relay-service), also change the ports of `STATISTICS_GRAFANA_URL` and `RELAY_URL`, and set `SAM_APP_ORIGIN` to the URL of the dev server (default: `http://localhost:3000`).
 
 ## Bot invite link with required scopes
 

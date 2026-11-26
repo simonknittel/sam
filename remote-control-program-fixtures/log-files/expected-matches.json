@@ -1,0 +1,486 @@
+{
+  "files": [
+    {
+      "path": "LIVE/Game.log",
+      "session_start_from_file_name": null,
+      "matches": [
+        {
+          "line_number": 5,
+          "type": "joinPu",
+          "iso_date": "2026-11-23T17:32:49.907Z",
+          "raw_line": "<2026-11-23T17:32:49.907Z> [Notice] <Join PU> address[198.51.100.23] port[64312] shard[pub_euw1b_10512345_101] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]",
+          "raw_line_with_marker": "<2026-11-23T17:32:49.907Z> [Notice] <Join PU> address[IP_REDACTED] port[64312] shard[pub_euw1b_10512345_101] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]",
+          "hash": "c8093f8e87d22581952d1c71c5c68c125fb99791c9d479b9f55e9ff0aaa7339b"
+        },
+        {
+          "line_number": 7,
+          "type": "partyInviteReceivedNotification",
+          "iso_date": "2026-11-23T17:34:13.655Z",
+          "raw_line": "<2026-11-23T17:34:13.655Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Testinviter\r\n<2026-11-23T17:34:13.655Z> Party Invite Received: Accept Invitation?: \" [2] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-23T17:34:13.655Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Testinviter\r\n<2026-11-23T17:34:13.655Z> Party Invite Received: Accept Invitation?: \" [2] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "1271309f7f3ae60c57ca142b0617b686730ebb7b6530a0254e8f122f8f29b0a3"
+        },
+        {
+          "line_number": 9,
+          "type": "armisticeZoneNotification",
+          "iso_date": "2026-11-23T17:34:55.529Z",
+          "raw_line": "<2026-11-23T17:34:55.529Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Leaving Armistice Zone - Caution Advised: \" [6] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-23T17:34:55.529Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Leaving Armistice Zone - Caution Advised: \" [6] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "1ce0d31a4cbe602a8bf9d651fa8e19de6e478427fd5643b91b2cc5ff1075f575"
+        },
+        {
+          "line_number": 10,
+          "type": "restrictedAreaNotification",
+          "iso_date": "2026-11-23T17:35:37.403Z",
+          "raw_line": "<2026-11-23T17:35:37.403Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Leaving Restricted Area: \" [54] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-23T17:35:37.403Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Leaving Restricted Area: \" [54] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "f49fad64909ac8a8d64933f346575ae40853f558380bf9473ea3a68e4bc4e34b"
+        },
+        {
+          "line_number": 11,
+          "type": "disconnection",
+          "iso_date": "2026-11-23T17:36:19.277Z",
+          "raw_line": "<2026-11-23T17:36:19.277Z> [Notice] <Channel Disconnected> cause=30016 reason=\"Remote Disconnect - Player requested disconnect\" frame=220001 isRemote=1 map=\"megamap\" gamerules=\"SC_Default\" hostType=\"Replicant\" remoteAddr=198.51.100.23:64312 localAddr=0.0.0.0:64090 connection={4, 0} session=f948a738-a221-5666-983e-234f5e500ebd node_id=bc4da5d3-3f05-e19e-4aa0-702432234095 nickname=\"Testpilot\" playerGEID=200123456789 uptime_secs=3636.990234 [Team_Network][Network][Gateway][Disconnection]",
+          "raw_line_with_marker": "<2026-11-23T17:36:19.277Z> [Notice] <Channel Disconnected> cause=30016 reason=\"Remote Disconnect - Player requested disconnect\" frame=220001 isRemote=1 map=\"megamap\" gamerules=\"SC_Default\" hostType=\"Replicant\" remoteAddr=IP_REDACTED localAddr=IP_REDACTED connection={4, 0} session=f948a738-a221-5666-983e-234f5e500ebd node_id=bc4da5d3-3f05-e19e-4aa0-702432234095 nickname=\"Testpilot\" playerGEID=200123456789 uptime_secs=3636.990234 [Team_Network][Network][Gateway][Disconnection]",
+          "hash": "2d2e8bbca961ec72f137a93404611448d1759670f0c82816e7e850916df59bc1"
+        },
+        {
+          "line_number": 12,
+          "type": "joinPu",
+          "iso_date": "2026-11-23T17:37:01.151Z",
+          "raw_line": "<2026-11-23T17:37:01.151Z> [Notice] <Join PU> address[203.0.113.77] port[64301] shard[pub_euw1b_10512345_101] locationId[-2814706",
+          "raw_line_with_marker": "<2026-11-23T17:37:01.151Z> [Notice] <Join PU> address[IP_REDACTED] port[64301] shard[pub_euw1b_10512345_101] locationId[-2814706",
+          "hash": "e859f8a263d23375c1bbb3ca3ef584eae12b634f6036776a7a0abbb5dab2bc50"
+        }
+      ]
+    },
+    {
+      "path": "LIVE/logbackups/Game Build(10498765) 21 Nov 26 (17 58 43).log",
+      "session_start_from_file_name": "2026-11-21T17:58:43",
+      "matches": [
+        {
+          "line_number": 9,
+          "type": "joinPu",
+          "iso_date": "2026-11-21T17:04:15.909Z",
+          "raw_line": "<2026-11-21T17:04:15.909Z> [Notice] <Join PU> address[192.0.2.44] port[64336] shard[pub_euw1b_10498765_100] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]",
+          "raw_line_with_marker": "<2026-11-21T17:04:15.909Z> [Notice] <Join PU> address[IP_REDACTED] port[64336] shard[pub_euw1b_10498765_100] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]",
+          "hash": "b95a5575ff8597c22b44fa270a1d24d9986f39a722457be32012f69b88eb71b3"
+        },
+        {
+          "line_number": 11,
+          "type": "jurisdictionNotification",
+          "iso_date": "2026-11-21T17:05:38.400Z",
+          "raw_line": "<2026-11-21T17:05:38.400Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Entered Crusader Industries Jurisdiction: \" [1] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-21T17:05:38.400Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Entered Crusader Industries Jurisdiction: \" [1] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "7c347940d6d47b1fc920a534324b88be8e9fbabb5df37fe2ee2dffba92397393"
+        },
+        {
+          "line_number": 12,
+          "type": "armisticeZoneNotification",
+          "iso_date": "2026-11-21T17:06:19.508Z",
+          "raw_line": "<2026-11-21T17:06:19.508Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Entering Armistice Zone - Combat Prohibited: \" [3] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-21T17:06:19.508Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Entering Armistice Zone - Combat Prohibited: \" [3] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "fd8ba12e7235c73029e2a55de43e95d86ceab4a446ccdccbee4be31e18d17c3d"
+        },
+        {
+          "line_number": 13,
+          "type": "contractAcceptedNotification",
+          "iso_date": "2026-11-21T17:07:01.503Z",
+          "raw_line": "<2026-11-21T17:07:01.503Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Contract Accepted:  Wikelo Arrive to System: \" [4] to queue. New queue size: 1, MissionId: [bf7d2465-cf1e-480b-ae5c-25040d716e5f], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-21T17:07:01.503Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Contract Accepted:  Wikelo Arrive to System: \" [4] to queue. New queue size: 1, MissionId: [bf7d2465-cf1e-480b-ae5c-25040d716e5f], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "2f865143ba461b48ae3e407984bdc7451e2a9ae0bf1a73abef9bfdee3848e352"
+        },
+        {
+          "line_number": 14,
+          "type": "instanceEntered",
+          "iso_date": "2026-11-21T17:07:42.519Z",
+          "raw_line": "<2026-11-21T17:07:42.519Z> [Notice] <[Instancing] Player entered instance> [Instancing][CEntityComponentBrokeredInstance::OnPlayerEnterInstance] Player Testpilot[200123456789] entered instance StreamingSOC_inst_dogleg_ht_a_siege_a[788400312747], which is NOT authoritative [Team_CGP5][Code][Instancing]",
+          "raw_line_with_marker": "<2026-11-21T17:07:42.519Z> [Notice] <[Instancing] Player entered instance> [Instancing][CEntityComponentBrokeredInstance::OnPlayerEnterInstance] Player Testpilot[200123456789] entered instance StreamingSOC_inst_dogleg_ht_a_siege_a[788400312747], which is NOT authoritative [Team_CGP5][Code][Instancing]",
+          "hash": "3f29fb7d53f2666a9c3be37f05b68046233ddf5dd2d35d6a88cc3cbd3a48c27c"
+        },
+        {
+          "line_number": 15,
+          "type": "instanceExited",
+          "iso_date": "2026-11-21T17:08:24.409Z",
+          "raw_line": "<2026-11-21T17:08:24.409Z> [Notice] <[Instancing] Player exited instance> [Instancing][CEntityComponentBrokeredInstance::OnPlayerExitInstance] Player Testpilot[200123456789] left instance StreamingSOC_inst_dogleg_ht_a_siege_a[788400312747], which is NOT authoritative [Team_CGP5][Code][Instancing]",
+          "raw_line_with_marker": "<2026-11-21T17:08:24.409Z> [Notice] <[Instancing] Player exited instance> [Instancing][CEntityComponentBrokeredInstance::OnPlayerExitInstance] Player Testpilot[200123456789] left instance StreamingSOC_inst_dogleg_ht_a_siege_a[788400312747], which is NOT authoritative [Team_CGP5][Code][Instancing]",
+          "hash": "ffba97793b5a0996b622715d696e997ff05bc40ae1bdfb65800e3a5cd088f6f0"
+        },
+        {
+          "line_number": 16,
+          "type": "ownDeath",
+          "iso_date": "2026-11-21T17:09:06.301Z",
+          "raw_line": "<2026-11-21T17:09:06.301Z> [Notice] <[ActorState] Dead> [ACTOR STATE][CSCActorControlStateDead::PrePhysicsUpdate] Actor 'Testpilot' [123] ejected from zone 'RSI_Zeus_CL_1' [456] to zone 'pyro4' [7610665712799] due to previous zone being in a destroyed vehicle with detached interior. [Team_ActorFeatures][Actor]",
+          "raw_line_with_marker": "<2026-11-21T17:09:06.301Z> [Notice] <[ActorState] Dead> [ACTOR STATE][CSCActorControlStateDead::PrePhysicsUpdate] Actor 'Testpilot' [123] ejected from zone 'RSI_Zeus_CL_1' [456] to zone 'pyro4' [7610665712799] due to previous zone being in a destroyed vehicle with detached interior. [Team_ActorFeatures][Actor]",
+          "hash": "8391b8bad2cafec2e153aa12600a66d090baeec7e35cbddaec122b2435911520"
+        },
+        {
+          "line_number": 17,
+          "type": "medBedHeal",
+          "iso_date": "2026-11-21T17:09:48.196Z",
+          "raw_line": "<2026-11-21T17:09:48.196Z> [Notice] <MED BED HEAL> Actor: Testpilot (Non-Authoritative CLIENT: Testpilot) | [CEntityComponentMedBed::HandleComponentEvent:1101] | -> Perform surgery event Success, med bed name: Bed_Single_Medical_Instance_Hospital_SOO003, vehicle name: none, head: true torso: false leftArm: true rightArm: false leftLeg: false rightLeg: false [Team_ActorFeatures][Actor]",
+          "raw_line_with_marker": "<2026-11-21T17:09:48.196Z> [Notice] <MED BED HEAL> Actor: Testpilot (Non-Authoritative CLIENT: Testpilot) | [CEntityComponentMedBed::HandleComponentEvent:1101] | -> Perform surgery event Success, med bed name: Bed_Single_Medical_Instance_Hospital_SOO003, vehicle name: none, head: true torso: false leftArm: true rightArm: false leftLeg: false rightLeg: false [Team_ActorFeatures][Actor]",
+          "hash": "fcd8b4655c230e51106c8ebf7689adc62cbe3973cdb2048d87cc36a69aa3df20"
+        },
+        {
+          "line_number": 18,
+          "type": "injuryDetectedNotification",
+          "iso_date": "2026-11-21T17:10:30.094Z",
+          "raw_line": "<2026-11-21T17:10:30.094Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Minor Injury Detected - Left arm - Tier 3 Treatment Required : \" [20] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-21T17:10:30.094Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Minor Injury Detected - Left arm - Tier 3 Treatment Required : \" [20] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "392d8786f353ac384197ad84a7afbf4faaa0a0cc8e5c5949e416d29cec61181f"
+        },
+        {
+          "line_number": 20,
+          "type": "shopPurchase",
+          "iso_date": "2026-11-21T17:11:53.900Z",
+          "raw_line": "<2026-11-21T17:11:53.900Z> [Notice] <CEntityComponentShopUIProvider::SendShopBuyRequest> Sending SShopBuyRequest - playerId[200123456789] shopId[783648035105] shopName[SCShop_Orison_KelTo] kioskId[783648035110] client_price[18117.000000] itemClassGUID[90adb28a-049e-4357-8000-a4bb75bb7f6f] itemName[behr_smg_ballistic_01_mag] quantity[61]  [Team_CoreGameplayFeatures][Shops][UI]",
+          "raw_line_with_marker": "<2026-11-21T17:11:53.900Z> [Notice] <CEntityComponentShopUIProvider::SendShopBuyRequest> Sending SShopBuyRequest - playerId[200123456789] shopId[783648035105] shopName[SCShop_Orison_KelTo] kioskId[783648035110] client_price[18117.000000] itemClassGUID[90adb28a-049e-4357-8000-a4bb75bb7f6f] itemName[behr_smg_ballistic_01_mag] quantity[61]  [Team_CoreGameplayFeatures][Shops][UI]",
+          "hash": "6483b78e2ee21e0aead002adc1465e831052594fbe60aa43e0ee154493b178ed"
+        },
+        {
+          "line_number": 21,
+          "type": "shopRental",
+          "iso_date": "2026-11-21T17:12:35.810Z",
+          "raw_line": "<2026-11-21T17:12:35.810Z> [Notice] <CEntityComponentShoppingProvider::SendRentalRequest> Sending SShopRentalRequest - playerId[200123456789] shopId[783648035105] shopName[SCShop_FW_Rentals] kioskId[783648035110] client_price[0.000000] itemClassGUID[40a1f83b-3623-49e6-8168-ab8223998aa2] itemName[RSI_Perseus] offering[0] currencyType[UEC] [Team_CoreGameplayFeatures][Shops][UI]",
+          "raw_line_with_marker": "<2026-11-21T17:12:35.810Z> [Notice] <CEntityComponentShoppingProvider::SendRentalRequest> Sending SShopRentalRequest - playerId[200123456789] shopId[783648035105] shopName[SCShop_FW_Rentals] kioskId[783648035110] client_price[0.000000] itemClassGUID[40a1f83b-3623-49e6-8168-ab8223998aa2] itemName[RSI_Perseus] offering[0] currencyType[UEC] [Team_CoreGameplayFeatures][Shops][UI]",
+          "hash": "975408422c17ee675c9cb35dc3f7e6ec68bd0d6c6f6fa24540c352f9662c91b2"
+        },
+        {
+          "line_number": 22,
+          "type": "commodityPurchase",
+          "iso_date": "2026-11-21T17:13:17.725Z",
+          "raw_line": "<2026-11-21T17:13:17.725Z> [Notice] <CEntityComponentCommodityUIProvider::SendCommodityBuyRequest> Sending SShopCommodityBuyRequest - playerId[200123456789] shopId[783648035105] shopName[SCShop_Pyro_RestStop_Rund_Admin] kioskId[783648035110] price[46284.000000] shopPricePerCentiSCU[28.927500] resourceGUID[a789f57a-e12b-4bcd-8132-e0c03d84fc89] autoLoading[1] quantity[1600.000000 cSCU] Cargo Box Data: boxSize[8.000000] | unitAmount[2] [Team_CoreGameplayFeatures][Shops][UI]",
+          "raw_line_with_marker": "<2026-11-21T17:13:17.725Z> [Notice] <CEntityComponentCommodityUIProvider::SendCommodityBuyRequest> Sending SShopCommodityBuyRequest - playerId[200123456789] shopId[783648035105] shopName[SCShop_Pyro_RestStop_Rund_Admin] kioskId[783648035110] price[46284.000000] shopPricePerCentiSCU[28.927500] resourceGUID[a789f57a-e12b-4bcd-8132-e0c03d84fc89] autoLoading[1] quantity[1600.000000 cSCU] Cargo Box Data: boxSize[8.000000] | unitAmount[2] [Team_CoreGameplayFeatures][Shops][UI]",
+          "hash": "80440263efd1a9c42cafc172b43929956862e26915f6e9bafafda777f2436ec5"
+        },
+        {
+          "line_number": 23,
+          "type": "contractCompleteNotificationV2",
+          "iso_date": "2026-11-21T17:13:59.646Z",
+          "raw_line": "<2026-11-21T17:13:59.646Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Contract Complete:  Wikelo Arrive to System: \" [5] to queue. New queue size: 2, MissionId: [bf7d2465-cf1e-480b-ae5c-25040d716e5f], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-21T17:13:59.646Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Contract Complete:  Wikelo Arrive to System: \" [5] to queue. New queue size: 2, MissionId: [bf7d2465-cf1e-480b-ae5c-25040d716e5f], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "b3155bfaf961d75757161db621b69c125e3f779de90c37af3b1ce3dc0e72ffc0"
+        },
+        {
+          "line_number": 24,
+          "type": "contractFailedNotificationV2",
+          "iso_date": "2026-11-21T17:14:41.573Z",
+          "raw_line": "<2026-11-21T17:14:41.573Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Contract Failed: CRITICAL REFUEL REQUEST: Crusader Ares Star Fighter Ion <EM4>[200 Rep] [BP]*</EM4>: \" [189] to queue. New queue size: 2, MissionId: [c54aa278-06e1-4c83-86d2-9e795f7691f3], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-21T17:14:41.573Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Contract Failed: CRITICAL REFUEL REQUEST: Crusader Ares Star Fighter Ion <EM4>[200 Rep] [BP]*</EM4>: \" [189] to queue. New queue size: 2, MissionId: [c54aa278-06e1-4c83-86d2-9e795f7691f3], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "db9348f706f21410be854cacbb54be590e0cecd6adef1f58aba742d56a43656b"
+        },
+        {
+          "line_number": 25,
+          "type": "contractFailedNotificationV2",
+          "iso_date": "2026-11-21T17:15:23.508Z",
+          "raw_line": "<2026-11-21T17:15:23.508Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Contract Failed: Defend InterSec Operative: \" [21] to queue. New queue size: 22, MissionId: [2d9c9ff5-cf3a-43cd-95b0-c89e4c7eac56], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-21T17:15:23.508Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Contract Failed: Defend InterSec Operative: \" [21] to queue. New queue size: 22, MissionId: [2d9c9ff5-cf3a-43cd-95b0-c89e4c7eac56], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "3bb5ccd3097ee9bb6e6bfd71a4d11dc2794ae11b574072506a261331fac9aed1"
+        },
+        {
+          "line_number": 26,
+          "type": "contractSharedNotification",
+          "iso_date": "2026-11-21T17:16:05.452Z",
+          "raw_line": "<2026-11-21T17:16:05.452Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Contract Shared: Tactical Strike Group Needed <EM4>[300 Rep] [BP]</EM4>: \" [109] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-21T17:16:05.452Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Contract Shared: Tactical Strike Group Needed <EM4>[300 Rep] [BP]</EM4>: \" [109] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "f103cf7ee56c1c6b731def9e97d8a445f146b247802be292f20eaf08c1fa0133"
+        },
+        {
+          "line_number": 27,
+          "type": "contractWithdrawnNotificationV2",
+          "iso_date": "2026-11-21T17:16:47.406Z",
+          "raw_line": "<2026-11-21T17:16:47.406Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Contract Withdrawn:  A Call to Arms: \" [231] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-21T17:16:47.406Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Contract Withdrawn:  A Call to Arms: \" [231] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "2735012b3b3c576d1ae207e4a96db45c6c6e2bf388979173739c29b507b5706a"
+        },
+        {
+          "line_number": 28,
+          "type": "contractWithdrawnNotificationV2",
+          "iso_date": "2026-11-21T17:17:29.371Z",
+          "raw_line": "<2026-11-21T17:17:29.371Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Contract Withdrawn:  A Call to Arms: \" [73] to queue. New queue size: 1, MissionId: [95fc3b2f-8cb6-4bce-aa4b-bae5771e7f6b], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-21T17:17:29.371Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Contract Withdrawn:  A Call to Arms: \" [73] to queue. New queue size: 1, MissionId: [95fc3b2f-8cb6-4bce-aa4b-bae5771e7f6b], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "867b708fb99f1c05f63c7ba932d50a85bf7cce0b6d919da64b566d79f58aea0a"
+        },
+        {
+          "line_number": 29,
+          "type": "crimeCommittedNotification",
+          "iso_date": "2026-11-21T17:18:11.349Z",
+          "raw_line": "<2026-11-21T17:18:11.349Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Crime Committed: Destruction of Vehicle\r\n<2026-11-21T17:18:11.349Z> against Testvictim: \" [387] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-21T17:18:11.349Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Crime Committed: Destruction of Vehicle\r\n<2026-11-21T17:18:11.349Z> against Testvictim: \" [387] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "799283a45dd41ca196ce41a7ffaca7bf26186e4c1f358333e12fd96ebaaf3c7c"
+        },
+        {
+          "line_number": 31,
+          "type": "crimeAgainstYouNotification",
+          "iso_date": "2026-11-21T17:18:53.342Z",
+          "raw_line": "<2026-11-21T17:18:53.342Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Testattacker committed Negligent Homicide against you\r\n<2026-11-21T17:18:53.342Z> Press 'Accept' to report or the crime will be forgiven: \" [60] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-21T17:18:53.342Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Testattacker committed Negligent Homicide against you\r\n<2026-11-21T17:18:53.342Z> Press 'Accept' to report or the crime will be forgiven: \" [60] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "86a9f7a276d1da7b83d3e6c1518af3eda02b6e8202b6bf32556e1922ccc9ffd0"
+        },
+        {
+          "line_number": 33,
+          "type": "crimeStatIncreasedNotification",
+          "iso_date": "2026-11-21T17:19:34.355Z",
+          "raw_line": "<2026-11-21T17:19:34.355Z> [Notice] <SHUDEvent_OnNotification> Added notification \"CrimeStat Rating Increased: \" [389] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-21T17:19:34.355Z> [Notice] <SHUDEvent_OnNotification> Added notification \"CrimeStat Rating Increased: \" [389] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "57b099a4f3c97e2a7bf08db04eeb5de86f0048f2db33442f1b13adb4da6df52c"
+        },
+        {
+          "line_number": 34,
+          "type": "fineNotification",
+          "iso_date": "2026-11-21T17:20:16.242Z",
+          "raw_line": "<2026-11-21T17:20:16.242Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Fined 80000 UEC: \" [4] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-21T17:20:16.242Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Fined 80000 UEC: \" [4] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "c82843e65bc32975b9cf948248def6dd4862f1c29f424c68add38cb5ab4e62f2"
+        },
+        {
+          "line_number": 35,
+          "type": "contractAbandoned",
+          "iso_date": "2026-11-21T17:20:58.131Z",
+          "raw_line": "<2026-11-21T17:20:58.131Z> [Notice] <EndMission> Ending mission for player. MissionId[bf7d2465-cf1e-480b-ae5c-25040d716e5f] Player[Testpilot] PlayerId[200123456789] CompletionType[Abandon] Reason[Player left] [Team_CoreGameplayFeatures][Missions]",
+          "raw_line_with_marker": "<2026-11-21T17:20:58.131Z> [Notice] <EndMission> Ending mission for player. MissionId[bf7d2465-cf1e-480b-ae5c-25040d716e5f] Player[Testpilot] PlayerId[200123456789] CompletionType[Abandon] Reason[Player left] [Team_CoreGameplayFeatures][Missions]",
+          "hash": "343038674a34b4b27eab1d038e4d2d14920fd71594c5418f44b41ebcfec96229"
+        },
+        {
+          "line_number": 36,
+          "type": "contractNotAcceptedNotification",
+          "iso_date": "2026-11-21T17:21:40.022Z",
+          "raw_line": "<2026-11-21T17:21:40.022Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Contract Not Accepted: Contract Limit Exceeded: \" [207] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-21T17:21:40.022Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Contract Not Accepted: Contract Limit Exceeded: \" [207] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "bf8e36e9ce88ffda4ecd377a0aaa8e5d179a2f8491b9a3b2c3200540a238346d"
+        },
+        {
+          "line_number": 37,
+          "type": "monitoredSpaceStatusNotification",
+          "iso_date": "2026-11-21T17:22:21.915Z",
+          "raw_line": "<2026-11-21T17:22:21.915Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Monitored Space Down: \" [430] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-21T17:22:21.915Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Monitored Space Down: \" [430] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "40114ab53b6fbee70b822807b03c2f29caade3b3860560dd8483f2d03dfb0f1b"
+        },
+        {
+          "line_number": 44,
+          "type": "gameCrash",
+          "iso_date": "2026-11-21T17:23:03.811Z",
+          "raw_line": "Exception STATUS_CRYENGINE_OUT_OF_SYSMEM(0x2BADFF61) addr=0x00007FFE2CE13CFA digest=114a1cfe538433f07c4a87c536ae0528",
+          "raw_line_with_marker": "Exception STATUS_CRYENGINE_OUT_OF_SYSMEM(0x2BADFF61) addr=0x00007FFE2CE13CFA digest=114a1cfe538433f07c4a87c536ae0528",
+          "hash": "976bca33c9c5585710825ed7566e999fff35ad32a30d2fcf8e81f088c05b3580"
+        }
+      ]
+    },
+    {
+      "path": "LIVE/logbackups/Game Build(10512345) 22 Nov 26 (20 14 05).log",
+      "session_start_from_file_name": "2026-11-22T20:14:05",
+      "matches": [
+        {
+          "line_number": 4,
+          "type": "joinPu",
+          "iso_date": "2026-11-22T19:16:09.028Z",
+          "raw_line": "<2026-11-22T19:16:09.028Z> [Notice] <Join PU> address[2001:db8:4006:812::200e] port[64300] shard[pub_euw1b_10512345_102] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]",
+          "raw_line_with_marker": "<2026-11-22T19:16:09.028Z> [Notice] <Join PU> address[IP_REDACTED] port[64300] shard[pub_euw1b_10512345_102] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]",
+          "hash": "027b4cb318689adc39a72516a57a59a443b19871b56fd4f6591c66c23540c9bd"
+        },
+        {
+          "line_number": 6,
+          "type": "partyInviteReceivedNotification",
+          "iso_date": "2026-11-22T19:17:31.186Z",
+          "raw_line": "<2026-11-22T19:17:31.186Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Testinviter\n<2026-11-22T19:17:31.186Z> Party Invite Received: Accept Invitation?: \" [2] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-22T19:17:31.186Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Testinviter\n<2026-11-22T19:17:31.186Z> Party Invite Received: Accept Invitation?: \" [2] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "ad085b0c790c18e08a735dbcf26b7d432a467b2aad6391d97b1e63ba4bf5ad44"
+        },
+        {
+          "line_number": 8,
+          "type": "partyJoinedNotification",
+          "iso_date": "2026-11-22T19:18:13.088Z",
+          "raw_line": "<2026-11-22T19:18:13.088Z> [Notice] <SHUDEvent_OnNotification> Added notification \"You have joined\n<2026-11-22T19:18:13.088Z> party: \" [3] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-22T19:18:13.088Z> [Notice] <SHUDEvent_OnNotification> Added notification \"You have joined\n<2026-11-22T19:18:13.088Z> party: \" [3] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "2f323f588bfe3df9c3aea8bf08fbd07e8cfaf5e0a915a6df17e9b7984a1193ae"
+        },
+        {
+          "line_number": 10,
+          "type": "partyMemberJoinedNotification",
+          "iso_date": "2026-11-22T19:18:54.994Z",
+          "raw_line": "<2026-11-22T19:18:54.994Z> [Notice] <SHUDEvent_OnNotification> Added notification \"New Member Joined\n<2026-11-22T19:18:54.994Z> Testmember has joined the party.: \" [4] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-22T19:18:54.994Z> [Notice] <SHUDEvent_OnNotification> Added notification \"New Member Joined\n<2026-11-22T19:18:54.994Z> Testmember has joined the party.: \" [4] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "a1264f46a9d9b6140da0bd96c7f952afc22abde35b38ea508840f6ec022cdc0d"
+        },
+        {
+          "line_number": 12,
+          "type": "partyLeaderChangedNotification",
+          "iso_date": "2026-11-22T19:19:36.905Z",
+          "raw_line": "<2026-11-22T19:19:36.905Z> [Notice] <SHUDEvent_OnNotification> Added notification \"New Party Leader\n<2026-11-22T19:19:36.905Z> Testleader is now party leader.: \" [311] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-22T19:19:36.905Z> [Notice] <SHUDEvent_OnNotification> Added notification \"New Party Leader\n<2026-11-22T19:19:36.905Z> Testleader is now party leader.: \" [311] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "d98392af7b41f130708161f8bb4680ef3faf25786f291219b101b432e3cf4f78"
+        },
+        {
+          "line_number": 14,
+          "type": "partyMemberLeftNotification",
+          "iso_date": "2026-11-22T19:20:18.821Z",
+          "raw_line": "<2026-11-22T19:20:18.821Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Member Left\n<2026-11-22T19:20:18.821Z> Testmember has left the party.: \" [285] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-22T19:20:18.821Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Member Left\n<2026-11-22T19:20:18.821Z> Testmember has left the party.: \" [285] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "5c2d437037157d01bef06575180e1be7a18acce93815ead32b04920840766541"
+        },
+        {
+          "line_number": 16,
+          "type": "partyKickedNotification",
+          "iso_date": "2026-11-22T19:21:00.743Z",
+          "raw_line": "<2026-11-22T19:21:00.743Z> [Notice] <SHUDEvent_OnNotification> Added notification \"You have been kicked from the party.\n<2026-11-22T19:21:00.743Z> : \" [74] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-22T19:21:00.743Z> [Notice] <SHUDEvent_OnNotification> Added notification \"You have been kicked from the party.\n<2026-11-22T19:21:00.743Z> : \" [74] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "1b932b5c978a7986cbf356d60f85929d48d2c993bd818bc91902b286835f8f17"
+        },
+        {
+          "line_number": 18,
+          "type": "partyCreatedNotification",
+          "iso_date": "2026-11-22T19:21:42.672Z",
+          "raw_line": "<2026-11-22T19:21:42.672Z> [Notice] <SHUDEvent_OnNotification> Added notification \"You have created\n<2026-11-22T19:21:42.672Z> party: \" [3] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-22T19:21:42.672Z> [Notice] <SHUDEvent_OnNotification> Added notification \"You have created\n<2026-11-22T19:21:42.672Z> party: \" [3] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "51a0d7daa2217dbcda7af03c83a562ad817cdad348d92a7ab115de37a63953aa"
+        },
+        {
+          "line_number": 20,
+          "type": "partyDisbandedNotification",
+          "iso_date": "2026-11-22T19:22:24.609Z",
+          "raw_line": "<2026-11-22T19:22:24.609Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Party Disbanded\n<2026-11-22T19:22:24.609Z> The party has been disbanded.: \" [3] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-22T19:22:24.609Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Party Disbanded\n<2026-11-22T19:22:24.609Z> The party has been disbanded.: \" [3] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "93579988f34bd48bcda1ba4566a455eee21d11848f7f9ab5a9697508ea4cbf7a"
+        },
+        {
+          "line_number": 22,
+          "type": "partyLeftNotification",
+          "iso_date": "2026-11-22T19:23:06.555Z",
+          "raw_line": "<2026-11-22T19:23:06.555Z> [Notice] <SHUDEvent_OnNotification> Added notification \"You have left the party.\n<2026-11-22T19:23:06.555Z> : \" [12] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-22T19:23:06.555Z> [Notice] <SHUDEvent_OnNotification> Added notification \"You have left the party.\n<2026-11-22T19:23:06.555Z> : \" [12] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "f06c9730a07a8f6de0da33b750150ca4af74e8c760f512df5043a80f83a73397"
+        },
+        {
+          "line_number": 24,
+          "type": "friendAddedNotification",
+          "iso_date": "2026-11-22T19:23:48.511Z",
+          "raw_line": "<2026-11-22T19:23:48.511Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Friend Added\n<2026-11-22T19:23:48.511Z> Testfriend: \" [59] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-22T19:23:48.511Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Friend Added\n<2026-11-22T19:23:48.511Z> Testfriend: \" [59] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "13f22b7c8740e8148545c4f761b0022413d221f9228f58df6506e6afb641fcc2"
+        },
+        {
+          "line_number": 26,
+          "type": "rewardNotification",
+          "iso_date": "2026-11-22T19:24:30.479Z",
+          "raw_line": "<2026-11-22T19:24:30.479Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Alliance Aid Defense Rewards - Tier 1\n<2026-11-22T19:24:30.479Z> You have been awarded: Silverton Jacket AA Defense: \" [177] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-22T19:24:30.479Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Alliance Aid Defense Rewards - Tier 1\n<2026-11-22T19:24:30.479Z> You have been awarded: Silverton Jacket AA Defense: \" [177] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "6968c295c30d216713db140cd58ca72dc9bec6007786d66edaf23485bbecb496"
+        },
+        {
+          "line_number": 28,
+          "type": "earnedNotificationV2",
+          "iso_date": "2026-11-22T19:25:12.460Z",
+          "raw_line": "<2026-11-22T19:25:12.460Z> [Notice] <SHUDEvent_OnNotification> Added notification \"You've Earned: MG Scrip\n<2026-11-22T19:25:12.460Z> Access It at Your Primary Residence's Inventory",
+          "raw_line_with_marker": "<2026-11-22T19:25:12.460Z> [Notice] <SHUDEvent_OnNotification> Added notification \"You've Earned: MG Scrip\n<2026-11-22T19:25:12.460Z> Access It at Your Primary Residence's Inventory",
+          "hash": "d579129b73dcc37e490d964525d173d33bfb1b42b2150325c6634c446ff07927"
+        },
+        {
+          "line_number": 30,
+          "type": "earnedNotificationV2",
+          "iso_date": "2026-11-22T19:25:54.456Z",
+          "raw_line": "<2026-11-22T19:25:54.456Z> [Notice] <SHUDEvent_OnNotification> Added notification \"You've earned: Falston Jumpsuit \"People's Alliance Edition\"\n<2026-11-22T19:25:54.456Z>  Access it at a destination Freight Elevator",
+          "raw_line_with_marker": "<2026-11-22T19:25:54.456Z> [Notice] <SHUDEvent_OnNotification> Added notification \"You've earned: Falston Jumpsuit \"People's Alliance Edition\"\n<2026-11-22T19:25:54.456Z>  Access it at a destination Freight Elevator",
+          "hash": "451d67f98c455968a35b3220ad2dec045b7c066477566709c33e972670fc748f"
+        },
+        {
+          "line_number": 32,
+          "type": "fundsAwardedNotification",
+          "iso_date": "2026-11-22T19:26:35.473Z",
+          "raw_line": "<2026-11-22T19:26:35.473Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Awarded 500 aUEC: \" [81] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-22T19:26:35.473Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Awarded 500 aUEC: \" [81] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "61482c3a4680122e846859176433237884f260a93f55ee32cfe2c221c1022b32"
+        },
+        {
+          "line_number": 33,
+          "type": "restrictedAreaNotification",
+          "iso_date": "2026-11-22T19:27:17.364Z",
+          "raw_line": "<2026-11-22T19:27:17.364Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Restricted Area - Vehicles Will Be Impounded: \" [53] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-22T19:27:17.364Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Restricted Area - Vehicles Will Be Impounded: \" [53] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "984648d204acb22bf4ddcb8bb1659e9ce00436bc0f0105f1e869c89d84daa21a"
+        },
+        {
+          "line_number": 34,
+          "type": "restrictedAreaNotification",
+          "iso_date": "2026-11-22T19:27:59.258Z",
+          "raw_line": "<2026-11-22T19:27:59.258Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Restricted Area\n<2026-11-22T19:27:59.258Z> For your safety, you've been relocated.: \" [55] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-22T19:27:59.258Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Restricted Area\n<2026-11-22T19:27:59.258Z> For your safety, you've been relocated.: \" [55] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "bf1c155c878f9082558c86420d1aee6b7f707585587411ac0e4b1bfd584027d3"
+        },
+        {
+          "line_number": 36,
+          "type": "monitoredSpaceNotification",
+          "iso_date": "2026-11-22T19:28:41.155Z",
+          "raw_line": "<2026-11-22T19:28:41.155Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Exited Monitored Space: \" [15] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-22T19:28:41.155Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Exited Monitored Space: \" [15] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "4475454cca5d4a5e16704db15c40a55c64ae131b086a9eb53557cb9c561a45d6"
+        },
+        {
+          "line_number": 37,
+          "type": "privatePropertyNotification",
+          "iso_date": "2026-11-22T19:29:23.055Z",
+          "raw_line": "<2026-11-22T19:29:23.055Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Entering Private Property: \" [4] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-22T19:29:23.055Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Entering Private Property: \" [4] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "e6f855dd80a6df3318c508a25f42541583dc2283868f262e520e72e8185b9fe4"
+        },
+        {
+          "line_number": 38,
+          "type": "blueprintReceivedNotification",
+          "iso_date": "2026-11-22T19:30:04.959Z",
+          "raw_line": "<2026-11-22T19:30:04.959Z> [Notice] <SHUDEvent_OnNotification> Added notification \"<EM4>Received Blueprint: Arbor MH1 Mining Laser [BP]</EM4>: \" [15] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-22T19:30:04.959Z> [Notice] <SHUDEvent_OnNotification> Added notification \"<EM4>Received Blueprint: Arbor MH1 Mining Laser [BP]</EM4>: \" [15] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "dafc7cbd51b2c6074b76ee516f8ffa7b3e232ff07cdbdb31a6efbd6fc57dfb9d"
+        },
+        {
+          "line_number": 39,
+          "type": "shipClaimFailed",
+          "iso_date": "2026-11-22T19:30:46.867Z",
+          "raw_line": "<2026-11-22T19:30:46.867Z> [Error] <Claim Failed> Claim failed with error: FAILED_PRECONDITION(9): 'Claim vehicle failed: ItemOnCooldown' [Team_GameServices][ASOP][Entitlement][Insurance]",
+          "raw_line_with_marker": "<2026-11-22T19:30:46.867Z> [Error] <Claim Failed> Claim failed with error: FAILED_PRECONDITION(9): 'Claim vehicle failed: ItemOnCooldown' [Team_GameServices][ASOP][Entitlement][Insurance]",
+          "hash": "d4e30ea7d01ca7bbe147171f6e5f0724b7365445d17229a9b1f318bdaa19dab6"
+        },
+        {
+          "line_number": 40,
+          "type": "vehicleDestroyed",
+          "iso_date": "2026-11-22T19:31:28.780Z",
+          "raw_line": "<2026-11-22T19:31:28.780Z> [Notice] <Vehicle Destroyed> Vehicle 'ANVL_Asgard_932957595142' [932957595142] class 'ANVL_Asgard' (owner player [200123456789], driver [0]) destroyed: reason [Collision] level [0] -> [2] flags [4066] killer 'Testpilot' [200123456789] authority [0] [Team_CGP4][Vehicle]",
+          "raw_line_with_marker": "<2026-11-22T19:31:28.780Z> [Notice] <Vehicle Destroyed> Vehicle 'ANVL_Asgard_932957595142' [932957595142] class 'ANVL_Asgard' (owner player [200123456789], driver [0]) destroyed: reason [Collision] level [0] -> [2] flags [4066] killer 'Testpilot' [200123456789] authority [0] [Team_CGP4][Vehicle]",
+          "hash": "8dd7f4e09b1af3db69623c5d1f87ec7e5e55c778761aff8adc25d9cc8e76bdcd"
+        },
+        {
+          "line_number": 41,
+          "type": "errorPopup",
+          "iso_date": "2026-11-22T19:32:10.698Z",
+          "raw_line": "<2026-11-22T19:32:10.698Z> [Notice] <Error Popup Opened> errorCode=30028 [Team_UI][Disconnection]",
+          "raw_line_with_marker": "<2026-11-22T19:32:10.698Z> [Notice] <Error Popup Opened> errorCode=30028 [Team_UI][Disconnection]",
+          "hash": "96096960f4036375e9cd54cdc8a7f5edd12c1acab6720e72e0b7b872eac19597"
+        },
+        {
+          "line_number": 42,
+          "type": "disconnection",
+          "iso_date": "2026-11-22T19:32:52.623Z",
+          "raw_line": "<2026-11-22T19:32:52.623Z> [Notice] <Channel Disconnected> cause=30028 reason=\"Remote Disconnect - player inactive\" frame=544285 isRemote=1 map=\"megamap\" gamerules=\"SC_Default\" hostType=\"Replicant\" remoteAddr=::ffff:198.51.100.77:64300 localAddr=0.0.0.0:64090 connection={3, 0} session=cc47831e-36ce-e906-8355-3bba619e5182 node_id=cc47831e-36ce-e906-8355-3bba619e5182 nickname=\"Testpilot\" playerGEID=200123456789 uptime_secs=6326.005371 [Team_Network][Network][Gateway][Disconnection]",
+          "raw_line_with_marker": "<2026-11-22T19:32:52.623Z> [Notice] <Channel Disconnected> cause=30028 reason=\"Remote Disconnect - player inactive\" frame=544285 isRemote=1 map=\"megamap\" gamerules=\"SC_Default\" hostType=\"Replicant\" remoteAddr=IP_REDACTED localAddr=IP_REDACTED connection={3, 0} session=cc47831e-36ce-e906-8355-3bba619e5182 node_id=cc47831e-36ce-e906-8355-3bba619e5182 nickname=\"Testpilot\" playerGEID=200123456789 uptime_secs=6326.005371 [Team_Network][Network][Gateway][Disconnection]",
+          "hash": "939bb92483f109ddffc04c28f2a1f4679feb9410b2b3efc089290daeec6699be"
+        },
+        {
+          "line_number": 43,
+          "type": "gameQuit",
+          "iso_date": "2026-11-22T19:33:34.555Z",
+          "raw_line": "<2026-11-22T19:33:34.555Z> [Notice] <SystemQuit> CSystem::Quit invoked with - cause=30016, reason=Quit via console command, exitCode=0, thread id=2188, main thread id=2188 [Team_Unknown][System]",
+          "raw_line_with_marker": "<2026-11-22T19:33:34.555Z> [Notice] <SystemQuit> CSystem::Quit invoked with - cause=30016, reason=Quit via console command, exitCode=0, thread id=2188, main thread id=2188 [Team_Unknown][System]",
+          "hash": "55060664e4846708765b55f0ff80827e90a4124956a713d71566470101a688b2"
+        },
+        {
+          "line_number": 44,
+          "type": "disconnection",
+          "iso_date": "2026-11-22T19:34:16.451Z",
+          "raw_line": "<2026-11-22T19:34:16.451Z> [Notice] <Channel Disconnected> cause=30016 reason=\"Remote Disconnect - Player requested disconnect\" frame=544301 isRemote=1 map=\"megamap\" gamerules=\"SC_Default\" hostType=\"Replicant\" remoteAddr=ipv6:[2001:db8:4006:812::200e]:64300 localAddr=ipv6:[::]:64090 peer_addr:2001:db8:4006:812::1f connection={4, 0} session=cc47831e-36ce-e906-8355-3bba619e5182 node_id=cc47831e-36ce-e906-8355-3bba619e5182 nickname=\"Testpilot\" playerGEID=200123456789 uptime_secs=6367.123047 [Team_Network][Network][Gateway][Disconnection]",
+          "raw_line_with_marker": "<2026-11-22T19:34:16.451Z> [Notice] <Channel Disconnected> cause=30016 reason=\"Remote Disconnect - Player requested disconnect\" frame=544301 isRemote=1 map=\"megamap\" gamerules=\"SC_Default\" hostType=\"Replicant\" remoteAddr=ipv6:IP_REDACTED localAddr=ipv6:[::]:64090 peer_addr:IP_REDACTED connection={4, 0} session=cc47831e-36ce-e906-8355-3bba619e5182 node_id=cc47831e-36ce-e906-8355-3bba619e5182 nickname=\"Testpilot\" playerGEID=200123456789 uptime_secs=6367.123047 [Team_Network][Network][Gateway][Disconnection]",
+          "hash": "0057ab7bcc18422ce2a21e5145c82b8413e50e3342baaa20df93db8d83f7e806"
+        }
+      ]
+    }
+  ]
+}

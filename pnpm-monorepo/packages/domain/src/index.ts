@@ -130,14 +130,19 @@ export { HIGH_VOLUME_AUDIT_EVENT_TYPES } from "./highVolumeAuditEventTypes.js";
 export { MAX_HUMAN_RESOURCES_ROLES } from "./iam/humanResourcesRoles.js";
 export { isAllowedWebPushEndpointUrl } from "./isAllowedWebPushEndpointUrl.js";
 export * from "./logAnalyzer/logAnalyzerEntries.js";
+export * from "./logAnalyzer/logAnalyzerHistory.js";
 export * from "./logAnalyzer/logAnalyzerWindow.js";
 export * from "./manualNotifications/index.js";
 export {
   CITIZEN_CHANNEL_PREFIX,
+  CitizenRealtimeChannel,
   EVENT_CHANNEL_PREFIX,
   MAXIMUM_REALTIME_CHANNEL_NAME_LENGTH,
   ON_SITE_NOTIFICATION_CREATED_EVENT,
+  REMOTE_CONTROL_PROGRAM_CHANNEL_PREFIX,
   getCitizenChannelName,
+  getCitizenRealtimeChannelName,
+  getRemoteControlProgramChannelName,
 } from "./notifications/channels.js";
 export * from "./notifications/notificationSettings.js";
 export * from "./notifications/notificationTexts.js";
@@ -295,6 +300,13 @@ export {
   type ReadAuditEventType,
 } from "./readAuditEventTypes.js";
 export { ReadMarkerSubject } from "./readMarkers/ReadMarkerSubject.js";
+export * from "./remoteControlProgram/catalog.js";
+export * from "./remoteControlProgram/feedDeliveryEvent.js";
+export * from "./remoteControlProgram/grantAccess.js";
+export * from "./remoteControlProgram/ipAddressMarker.js";
+export * from "./remoteControlProgram/logEntryHash.js";
+export * from "./remoteControlProgram/protocol.js";
+export * from "./remoteControlProgram/rateLimiter.js";
 export {
   ROLE_DESCRIPTION_MAXIMUM_LENGTH,
   ROLE_INACTIVITY_DAYS_MAXIMUM,

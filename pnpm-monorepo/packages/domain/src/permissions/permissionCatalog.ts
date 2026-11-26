@@ -606,6 +606,13 @@ export const PERMISSION_CATALOG = [
   },
   {
     section: "Sonstiges",
+    title: "Remote Control Program nutzen",
+    permissionString: "remoteControlProgram;use",
+    description:
+      "Die Laufzeit im Browser starten, eigene Daten für andere freigeben und freigegebene Daten lesen. Der Log Analyzer braucht diese Berechtigung zusätzlich zu „Log Analyzer“.",
+  },
+  {
+    section: "Sonstiges",
     title: "Globale Statistiken lesen",
     permissionString: "globalStatistics;read",
     description:

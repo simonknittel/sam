@@ -2,6 +2,7 @@ import { trace } from "@opentelemetry/api";
 import { prisma } from "@sam-monorepo/database";
 import { UserRole } from "@sam-monorepo/database/browser";
 import {
+  ALL_REMOTE_CONTROL_PROGRAM_PARTS_ON,
   transformPermissionStringToPermissionSet,
   type AuditEventInput,
 } from "@sam-monorepo/domain";
@@ -9,6 +10,7 @@ import { createActor, type Actor, type ActorCitizen } from "../src/actor.js";
 import {
   createApplicationUrls,
   type ApplicationContext,
+  type CitizenRealtimeEvent,
   type EmailRequest,
   type Notification,
 } from "../src/context.js";
@@ -36,6 +38,7 @@ export const createTestApplicationContext = ({
   const notifications: Notification[] = [];
   const emailRequests: EmailRequest[] = [];
   const terminatedRealtimeUserIds: string[] = [];
+  const publishedRealtimeEvents: CitizenRealtimeEvent[] = [];
 
   const context: ApplicationContext = {
     prisma,
@@ -64,6 +67,9 @@ export const createTestApplicationContext = ({
       terminateUserConnections: async (userId) => {
         terminatedRealtimeUserIds.push(userId);
       },
+      publishToCitizens: async (events) => {
+        publishedRealtimeEvents.push(...events);
+      },
     },
     discord: null,
     storage: null,
@@ -75,6 +81,10 @@ export const createTestApplicationContext = ({
     signingKey: async () => null,
     clientMetadata: null,
     allowInsecureLoopbackClientIds: false,
+    remoteControlProgramSwitches: async () =>
+      ALL_REMOTE_CONTROL_PROGRAM_PARTS_ON,
+    relay: null,
+    connectionTokenVerificationKey: null,
     ...overrides,
   };
 
@@ -84,6 +94,7 @@ export const createTestApplicationContext = ({
     notifications,
     emailRequests,
     terminatedRealtimeUserIds,
+    publishedRealtimeEvents,
   };
 };
 
@@ -97,6 +108,8 @@ interface TestActorOptions {
   readonly admin?: boolean;
   /** Gives the actor the admin role with admin mode */
   readonly adminMode?: boolean;
+  /** An admin with this user id assumes the actor */
+  readonly assumedByAdminId?: string | null;
 }
 
 export const createTestActor = ({
@@ -106,6 +119,7 @@ export const createTestActor = ({
   roleIds = [],
   admin = false,
   adminMode = false,
+  assumedByAdminId = null,
 }: TestActorOptions): Actor =>
   createActor({
     userId,
@@ -119,4 +133,5 @@ export const createTestActor = ({
       transformPermissionStringToPermissionSet,
     ),
     adminMode,
+    assumedByAdminId,
   });
