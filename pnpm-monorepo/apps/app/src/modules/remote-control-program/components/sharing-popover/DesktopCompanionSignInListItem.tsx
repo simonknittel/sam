@@ -36,8 +36,10 @@ export const DesktopCompanionSignInListItem = ({ signIn }: Props) => {
         </span>
 
         <p className="text-xs text-neutral-500">
-          Angemeldet am {formatDate(signIn.createdAt)} · zuletzt verwendet{" "}
-          {signIn.lastUsedAt ? `am ${formatDate(signIn.lastUsedAt)}` : "nie"}
+          Angemeldet am {formatDate(signIn.createdAt)} ·{" "}
+          {signIn.lastUsedAt
+            ? `zuletzt verwendet am ${formatDate(signIn.lastUsedAt)}`
+            : "noch nicht verwendet"}
         </p>
       </div>
 

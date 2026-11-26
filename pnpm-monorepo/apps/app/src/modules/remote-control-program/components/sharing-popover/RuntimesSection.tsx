@@ -53,7 +53,11 @@ export const RuntimesSection = ({
           if (isRuntimeTab(tab)) onRuntimeTabChange(tab);
         }}
       >
-        <div ref={tabListRef}>
+        {/* Like the tabs of the popover on a phone */}
+        <div
+          ref={tabListRef}
+          className="max-sm:[&_[role=tab]]:px-1.5 max-sm:[&_[role=tab]]:text-xs"
+        >
           <TabList>
             {RUNTIME_TABS.map((tab) => (
               <Tab key={tab} id={tab}>
