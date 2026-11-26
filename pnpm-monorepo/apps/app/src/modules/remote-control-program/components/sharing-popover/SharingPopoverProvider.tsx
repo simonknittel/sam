@@ -7,16 +7,16 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { SharingPopoverTab } from "./SharingPopoverTab";
+import type { SharingPopoverLocation } from "./SharingPopoverTab";
 
 interface SharingPopoverContext {
   /**
-   * A control UI opened the popover with this tab. The request stays pending
-   * until the surface of the current viewport opens, see
+   * A control UI opened the popover with this location. The request stays
+   * pending until the surface of the current viewport opens, see
    * `useSharingPopoverOpenState()`.
    */
-  readonly requestedTab: SharingPopoverTab | null;
-  readonly requestOpen: (tab: SharingPopoverTab) => void;
+  readonly requestedLocation: SharingPopoverLocation | null;
+  readonly requestOpen: (location: SharingPopoverLocation) => void;
   readonly settleOpenRequest: () => void;
 }
 
@@ -34,14 +34,13 @@ interface Props {
  * the items of the shell. `BrowserRuntimeProvider` renders it.
  */
 export const SharingPopoverProvider = ({ isEnabled, children }: Props) => {
-  const [requestedTab, setRequestedTab] = useState<SharingPopoverTab | null>(
-    null,
-  );
+  const [requestedLocation, setRequestedLocation] =
+    useState<SharingPopoverLocation | null>(null);
 
   const value: SharingPopoverContext = {
-    requestedTab,
-    requestOpen: setRequestedTab,
-    settleOpenRequest: () => setRequestedTab(null),
+    requestedLocation,
+    requestOpen: setRequestedLocation,
+    settleOpenRequest: () => setRequestedLocation(null),
   };
 
   return (
@@ -54,11 +53,12 @@ export const SharingPopoverProvider = ({ isEnabled, children }: Props) => {
 /** The functions of the control UIs (see `useSharingPopoverOpener()`) */
 export interface SharingPopoverOpener {
   /**
-   * Opens the sharing popover with the tab: the popover of the top bar on a
-   * large viewport, else the bottom sheet. Example: the Log Analyzer asks the
-   * owner to select the log folder.
+   * Opens the sharing popover with the tab and the sub-tab of the location:
+   * the popover of the top bar on a large viewport, else the bottom sheet.
+   * Example: the Log Analyzer asks the owner to select the log folder in the
+   * sub-tab of the browser.
    */
-  readonly open: (tab: SharingPopoverTab) => void;
+  readonly open: (location: SharingPopoverLocation) => void;
 }
 
 /**
@@ -92,20 +92,20 @@ const useSharingPopoverContext = () => {
  * Only one surface at a time can act, otherwise two popovers open.
  */
 export const useSharingPopoverOpenState = (canActOnRequest: boolean) => {
-  const { requestedTab, settleOpenRequest } = useSharingPopoverContext();
+  const { requestedLocation, settleOpenRequest } = useSharingPopoverContext();
   const [isOpen, setIsOpen] = useState(false);
   /**
-   * The tab of the control UI that opened the popover. Null: its trigger
-   * opened it. After a control UI, the focus must move into the popover, else
-   * a keyboard user cannot reach it.
+   * The location of the control UI that opened the popover. Null: its
+   * trigger opened it. After a control UI, the focus must move into the
+   * popover, else a keyboard user cannot reach it.
    */
-  const [tabOfControlUi, setTabOfControlUi] =
-    useState<SharingPopoverTab | null>(null);
+  const [locationOfControlUi, setLocationOfControlUi] =
+    useState<SharingPopoverLocation | null>(null);
 
-  const isActingOnRequest = requestedTab !== null && canActOnRequest;
+  const isActingOnRequest = requestedLocation !== null && canActOnRequest;
   if (isActingOnRequest && !isOpen) {
     setIsOpen(true);
-    setTabOfControlUi(requestedTab);
+    setLocationOfControlUi(requestedLocation);
   }
 
   useEffect(() => {
@@ -116,8 +116,8 @@ export const useSharingPopoverOpenState = (canActOnRequest: boolean) => {
   /** An open or a close by the user: the trigger, Escape, a click outside */
   const changeOpenByUser = (nextIsOpen: boolean) => {
     setIsOpen(nextIsOpen);
-    setTabOfControlUi(null);
+    setLocationOfControlUi(null);
   };
 
-  return { isOpen, tabOfControlUi, setIsOpen, changeOpenByUser };
+  return { isOpen, locationOfControlUi, setIsOpen, changeOpenByUser };
 };

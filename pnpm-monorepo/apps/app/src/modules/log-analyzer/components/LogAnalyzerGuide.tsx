@@ -87,9 +87,9 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
         <p className="ml-4 text-white/80">
           Öffne das{" "}
           <UiLabel icon={FaTowerBroadcast}>Remote Control Program</UiLabel> in
-          der oberen Leiste. Unter <UiLabel>Runtime: Browser</UiLabel> richtest
-          du die <UiLabel>Game Logs</UiLabel> ein. Dort findest du auch eine{" "}
-          <UiLabel>Anleitung</UiLabel> dazu.
+          der oberen Leiste. Im Tab <UiLabel>Runtimes</UiLabel> richtest du
+          unter <UiLabel>Browser</UiLabel> die <UiLabel>Game Logs</UiLabel> ein.
+          Dort findest du auch eine <UiLabel>Anleitung</UiLabel> dazu.
         </p>
       </GuideSection>
 
