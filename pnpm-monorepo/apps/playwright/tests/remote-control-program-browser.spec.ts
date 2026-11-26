@@ -224,7 +224,7 @@ test("the sharing popover and the upload of older entries work with the keyboard
   await tabTo(
     page,
     start
-      .getByRole("button", { name: "Runtime: Browser", exact: true })
+      .getByRole("button", { name: "Runtimes › Browser", exact: true })
       .first(),
   );
   await page.keyboard.press("Enter");

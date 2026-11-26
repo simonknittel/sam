@@ -9,6 +9,11 @@ import {
   stubDirectoryPicker,
 } from "../fixtures/log-analyzer";
 import {
+  getDesktopCompanionClientId,
+  postTokenEndpoint,
+  readMcpServerMetadata,
+} from "../fixtures/oauth";
+import {
   expectUploadedLines,
   LIVE_UPLOAD_TIMEOUT,
   sharingPopoverSection,
@@ -177,9 +182,10 @@ test("the kill switch flag takes the log analyzer offline, and the retry of the 
   await expect(retryButton).toHaveCount(0);
 });
 
-test("the flag of the Remote Control Program stops the uploads, and the sharing popover tells why", async ({
+test("the flag of the Remote Control Program stops the uploads and the token endpoint of the desktop companion, and the sharing popover tells why", async ({
   page,
   prisma,
+  request,
   signIn,
   stackFlagScope,
 }) => {
@@ -206,6 +212,17 @@ test("the flag of the Remote Control Program stops the uploads, and the sharing 
       false,
       stackFlagScope,
     );
+    // The metadata of the Remote Control Program can still have the flag of an earlier test
+    const { issuer } = await readMcpServerMetadata(request);
+    const readDesktopCompanionTokenStatus = async () =>
+      (
+        await postTokenEndpoint(request, {
+          grant_type: "refresh_token",
+          refresh_token: "unknown-refresh-token",
+          client_id: getDesktopCompanionClientId(issuer),
+        })
+      ).status;
+
     await stubDirectoryPicker(page, []);
     await page.goto(LOG_ANALYZER_PAGE_PATH);
     await startBrowserRuntime(page);
@@ -226,6 +243,7 @@ test("the flag of the Remote Control Program stops the uploads, and the sharing 
       stackFlagScope,
     );
     await expectFlagPropagation(turnedOffNote).toBeVisible();
+    await expectFlagPropagation.poll(readDesktopCompanionTokenStatus).toBe(503);
 
     /** The runtime reads on: the line shows on the machine */
     await appendLogLines(page, [
