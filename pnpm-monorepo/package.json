@@ -6,6 +6,7 @@
     "build:lambda": "pnpm run --filter \"@sam-monorepo/lambda...\" build",
     "build:scripts": "pnpm run --filter \"@sam-monorepo/scripts^...\" build",
     "dev:app": "pnpm run --filter \"@sam-monorepo/app^...\" build && pnpm run --filter \"@sam-monorepo/app\" dev",
+    "export:shared-definitions": "pnpm --filter \"@sam-monorepo/domain\" exec vitest run src/remoteControlProgram/sharedDefinitions.test.ts --update && pnpm --filter \"@sam-monorepo/app\" exec vitest run src/modules/remote-control-program/utils/sharedDefinitionLabels.test.ts --update",
     "format": "prettier --write . && pnpm run --filter \"*\" format"
   },
   "devDependencies": {

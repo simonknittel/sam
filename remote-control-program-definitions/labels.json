@@ -1,0 +1,288 @@
+{
+  "log_entry_categories": [
+    {
+      "id": "session",
+      "title": "Session",
+      "types": [
+        {
+          "type": "errorPopup",
+          "oldest_type": "errorPopup",
+          "title": "Fehlermeldung"
+        },
+        {
+          "type": "joinPu",
+          "oldest_type": "joinPu",
+          "title": "Shard-Beitritt"
+        },
+        {
+          "type": "gameCrash",
+          "oldest_type": "gameCrash",
+          "title": "Spiel abgestürzt"
+        },
+        {
+          "type": "gameQuit",
+          "oldest_type": "gameQuit",
+          "title": "Spiel beendet"
+        },
+        {
+          "type": "disconnection",
+          "oldest_type": "disconnection",
+          "title": "Verbindung getrennt"
+        }
+      ]
+    },
+    {
+      "id": "contracts",
+      "title": "Contracts",
+      "types": [
+        {
+          "type": "fundsAwardedNotification",
+          "oldest_type": "fundsAwardedNotification",
+          "title": "aUEC erhalten"
+        },
+        {
+          "type": "rewardNotification",
+          "oldest_type": "rewardNotification",
+          "title": "Belohnung"
+        },
+        {
+          "type": "earnedNotificationV2",
+          "oldest_type": "earnedNotification",
+          "title": "Belohnung erhalten"
+        },
+        {
+          "type": "blueprintReceivedNotification",
+          "oldest_type": "blueprintReceivedNotification",
+          "title": "Blueprint erhalten"
+        },
+        {
+          "type": "contractAbandoned",
+          "oldest_type": "contractAbandoned",
+          "title": "Contract abgebrochen"
+        },
+        {
+          "type": "contractCompleteNotificationV2",
+          "oldest_type": "contractCompleteNotification",
+          "title": "Contract abgeschlossen"
+        },
+        {
+          "type": "contractAcceptedNotification",
+          "oldest_type": "contractAcceptedNotification",
+          "title": "Contract angenommen"
+        },
+        {
+          "type": "contractFailedNotificationV2",
+          "oldest_type": "contractFailedNotification",
+          "title": "Contract fehlgeschlagen"
+        },
+        {
+          "type": "contractSharedNotification",
+          "oldest_type": "contractSharedNotification",
+          "title": "Contract geteilt"
+        },
+        {
+          "type": "contractNotAcceptedNotification",
+          "oldest_type": "contractNotAcceptedNotification",
+          "title": "Contract nicht angenommen"
+        },
+        {
+          "type": "contractWithdrawnNotificationV2",
+          "oldest_type": "contractWithdrawnNotification",
+          "title": "Contract zurückgezogen"
+        }
+      ]
+    },
+    {
+      "id": "character",
+      "title": "Charakter",
+      "types": [
+        {
+          "type": "medBedHeal",
+          "oldest_type": "medBedHeal",
+          "title": "Behandlung"
+        },
+        {
+          "type": "ownDeath",
+          "oldest_type": "ownDeath",
+          "title": "Gestorben"
+        },
+        {
+          "type": "injuryDetectedNotification",
+          "oldest_type": "injuryDetectedNotification",
+          "title": "Verletzung"
+        }
+      ]
+    },
+    {
+      "id": "vehicles",
+      "title": "Fahrzeuge",
+      "types": [
+        {
+          "type": "vehicleDestroyed",
+          "oldest_type": "vehicleDestroyed",
+          "title": "Fahrzeugzerstörung"
+        }
+      ]
+    },
+    {
+      "id": "crime",
+      "title": "Verbrechen",
+      "types": [
+        {
+          "type": "crimeStatIncreasedNotification",
+          "oldest_type": "crimeStatIncreasedNotification",
+          "title": "CrimeStat erhöht"
+        },
+        {
+          "type": "fineNotification",
+          "oldest_type": "fineNotification",
+          "title": "Strafe"
+        },
+        {
+          "type": "crimeCommittedNotification",
+          "oldest_type": "crimeCommittedNotification",
+          "title": "Verbrechen begangen"
+        },
+        {
+          "type": "crimeAgainstYouNotification",
+          "oldest_type": "crimeAgainstYouNotification",
+          "title": "Verbrechen gegen dich"
+        }
+      ]
+    },
+    {
+      "id": "zones",
+      "title": "Zonen",
+      "types": [
+        {
+          "type": "armisticeZoneNotification",
+          "oldest_type": "armisticeZoneNotification",
+          "title": "Armistice Zone"
+        },
+        {
+          "type": "instanceEntered",
+          "oldest_type": "instanceEntered",
+          "title": "Instanz betreten"
+        },
+        {
+          "type": "instanceExited",
+          "oldest_type": "instanceExited",
+          "title": "Instanz verlassen"
+        },
+        {
+          "type": "jurisdictionNotification",
+          "oldest_type": "jurisdictionNotification",
+          "title": "Jurisdiktion"
+        },
+        {
+          "type": "monitoredSpaceNotification",
+          "oldest_type": "monitoredSpaceNotification",
+          "title": "Monitored Space"
+        },
+        {
+          "type": "monitoredSpaceStatusNotification",
+          "oldest_type": "monitoredSpaceStatusNotification",
+          "title": "Monitored Space Status"
+        },
+        {
+          "type": "privatePropertyNotification",
+          "oldest_type": "privatePropertyNotification",
+          "title": "Private Property"
+        },
+        {
+          "type": "restrictedAreaNotification",
+          "oldest_type": "restrictedAreaNotification",
+          "title": "Sperrgebiet"
+        }
+      ]
+    },
+    {
+      "id": "party",
+      "title": "Party",
+      "types": [
+        {
+          "type": "partyKickedNotification",
+          "oldest_type": "partyKickedNotification",
+          "title": "Aus Party entfernt"
+        },
+        {
+          "type": "friendAddedNotification",
+          "oldest_type": "friendAddedNotification",
+          "title": "Freund hinzugefügt"
+        },
+        {
+          "type": "partyDisbandedNotification",
+          "oldest_type": "partyDisbandedNotification",
+          "title": "Party aufgelöst"
+        },
+        {
+          "type": "partyJoinedNotification",
+          "oldest_type": "partyJoinedNotification",
+          "title": "Party beigetreten"
+        },
+        {
+          "type": "partyCreatedNotification",
+          "oldest_type": "partyCreatedNotification",
+          "title": "Party erstellt"
+        },
+        {
+          "type": "partyLeftNotification",
+          "oldest_type": "partyLeftNotification",
+          "title": "Party verlassen"
+        },
+        {
+          "type": "partyInviteReceivedNotification",
+          "oldest_type": "partyInviteReceivedNotification",
+          "title": "Party-Einladung"
+        },
+        {
+          "type": "partyLeaderChangedNotification",
+          "oldest_type": "partyLeaderChangedNotification",
+          "title": "Party-Leader"
+        },
+        {
+          "type": "partyMemberJoinedNotification",
+          "oldest_type": "partyMemberJoinedNotification",
+          "title": "Party-Mitglied beigetreten"
+        },
+        {
+          "type": "partyMemberLeftNotification",
+          "oldest_type": "partyMemberLeftNotification",
+          "title": "Party-Mitglied gegangen"
+        }
+      ]
+    },
+    {
+      "id": "commerce",
+      "title": "Handel",
+      "types": [
+        {
+          "type": "commodityPurchase",
+          "oldest_type": "commodityPurchase",
+          "title": "Commodity-Einkauf"
+        },
+        {
+          "type": "shopPurchase",
+          "oldest_type": "shopPurchase",
+          "title": "Einkauf"
+        },
+        {
+          "type": "shopRental",
+          "oldest_type": "shopRental",
+          "title": "Miete"
+        },
+        {
+          "type": "shipClaimFailed",
+          "oldest_type": "shipClaimFailed",
+          "title": "Schiff-Claim fehlgeschlagen"
+        }
+      ]
+    }
+  ],
+  "capabilities": {
+    "log_entries": "Game Logs"
+  },
+  "connectors": {
+    "log_file": "Game Logs"
+  }
+}

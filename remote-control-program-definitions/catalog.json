@@ -1,0 +1,38 @@
+{
+  "capabilities": [
+    {
+      "id": "log_entries",
+      "version": 1,
+      "kind": "feed",
+      "timing": "realtime",
+      "minimum_upload_interval_milliseconds": 1000,
+      "sensitivity": "high",
+      "maximum_entries_per_batch": 100,
+      "maximum_raw_line_length": 1000
+    }
+  ],
+  "connectors": [
+    {
+      "id": "log_file",
+      "version": 1,
+      "capability_ids": [
+        "log_entries"
+      ]
+    }
+  ],
+  "runtime_kinds": [
+    "browser"
+  ],
+  "relay_limits": {
+    "maximum_message_bytes": 524288,
+    "maximum_runtimes_per_owner": 5,
+    "connection_token_lifetime_milliseconds": 120000,
+    "token_renewal_interval_milliseconds": 60000,
+    "token_renewal_grace_milliseconds": 30000,
+    "handshake_timeout_milliseconds": 10000,
+    "heartbeat_interval_milliseconds": 15000,
+    "presence_lease_milliseconds": 90000,
+    "upload_burst_batches": 5,
+    "maximum_errors_per_minute": 10
+  }
+}
