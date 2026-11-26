@@ -1,6 +1,5 @@
 export enum SharingPopoverTab {
   Start = "start",
-  Status = "status",
   Grants = "grants",
   /** One sub-tab for each runtime (`SharingPopoverRuntimeTab`) */
   Runtimes = "runtimes",
@@ -26,7 +25,6 @@ export const SHARING_POPOVER_TAB_LABELS: Readonly<
   Record<SharingPopoverTab, string>
 > = {
   [SharingPopoverTab.Start]: "Start",
-  [SharingPopoverTab.Status]: "Status",
   [SharingPopoverTab.Grants]: "Freigaben",
   [SharingPopoverTab.Runtimes]: "Runtimes",
 };

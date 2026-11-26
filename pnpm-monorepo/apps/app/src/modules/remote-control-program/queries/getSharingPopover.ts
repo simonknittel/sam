@@ -12,11 +12,15 @@ import {
   type OwnRuntime,
   type OwnShareGrant,
 } from "@sam-monorepo/application";
+import { RuntimeKind } from "@sam-monorepo/domain";
 
 /** The data of the server for the sections of the sharing popover */
 export interface SharingPopover {
-  /** The most recent connections first */
-  readonly runtimes: OwnRuntime[];
+  /**
+   * The connected desktop companions of the owner, the most recent
+   * connections first. The popover shows no other browser of the owner.
+   */
+  readonly desktopCompanions: OwnRuntime[];
   /** The active grants, also the grants that start in the future. The newest first. */
   readonly grants: OwnShareGrant[];
   /** `createShareGrant()` refuses a new grant at this count of active grants */
@@ -46,7 +50,9 @@ export const getSharingPopover = async (
   ]);
 
   return {
-    runtimes,
+    desktopCompanions: runtimes.filter(
+      (runtime) => runtime.kind === RuntimeKind.desktop_companion,
+    ),
     grants,
     desktopCompanionSignIns: signIns,
     maximumActiveGrantCount: MAXIMUM_ACTIVE_SHARE_GRANTS_PER_OWNER,

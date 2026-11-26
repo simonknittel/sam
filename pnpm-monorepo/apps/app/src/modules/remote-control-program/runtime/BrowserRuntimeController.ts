@@ -54,7 +54,6 @@ const ALL_TYPES_OFF = Object.fromEntries(
 
 const INITIAL_SNAPSHOT: BrowserRuntimeSnapshot = {
   ...INITIAL_BROWSER_RUNTIME_STATE,
-  runtimeId: null,
   folder: { state: LogFolderState.Checking, name: null },
   isWaitingForFolderPermission: false,
   tabRole: BrowserRuntimeTabRole.Inactive,
@@ -497,7 +496,6 @@ export class BrowserRuntimeController {
   #publishLeaderState(connection: TabConnection, leadership: Leadership) {
     const state: LeaderState = {
       ...leadership.runtime.getState(),
-      runtimeId: leadership.runtimeId,
       folder: leadership.folder,
       isWaitingForFolderPermission: leadership.isWaitingForFolderPermission,
     };

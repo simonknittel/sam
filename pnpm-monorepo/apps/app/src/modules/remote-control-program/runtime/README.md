@@ -28,7 +28,7 @@ The browser runtime of the Remote Control Program runs on all SAM pages for a us
 ## Hooks
 
 - `useIsRemoteControlProgramAvailable()` is the gate of the items of the shell: true when the layout enabled the provider.
-- `useBrowserRuntime()` gives `{ state, commands }`, or null when the user cannot use the Remote Control Program. See `BrowserRuntimeSnapshot` and `BrowserRuntimeCommands` in `types.ts`. `state.runtimeId` is the id of the runtime of this browser (the sharing popover marks it). `state.channel` tells the connection to the relay: the status `Ended` with its `closeReason` tells why this browser uploads nothing.
+- `useBrowserRuntime()` gives `{ state, commands }`, or null when the user cannot use the Remote Control Program. See `BrowserRuntimeSnapshot` and `BrowserRuntimeCommands` in `types.ts`. `state.channel` tells the connection to the relay: the status `Ended` with its `closeReason` tells why this browser uploads nothing.
 - `useLocalLogEntries()` gives the own entries of this browser by their key (`RawMatch.hash`). A follower keeps a copy of the entries only while a component uses the hook.
 - `useEndBrowserRuntimeSession()` gives the function for the logout.
 - Only `selectFolder()` and `restoreFolderPermission()` need a user gesture. Call them directly in the click handler.

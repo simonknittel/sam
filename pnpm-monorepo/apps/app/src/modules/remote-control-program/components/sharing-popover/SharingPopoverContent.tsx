@@ -24,7 +24,6 @@ import {
   type SharingPopoverLocation,
 } from "./SharingPopoverTab";
 import { StartSection } from "./StartSection";
-import { StatusSection } from "./StatusSection";
 import { useSharingPopoverQuery } from "./useSharingPopoverQuery";
 import { SHARING_POPOVER_TITLE } from "./useSharingPopoverTrigger";
 
@@ -94,9 +93,6 @@ export const SharingPopoverContent = ({ locationOfControlUi }: Props) => {
             <Tab id={SharingPopoverTab.Start}>
               {SHARING_POPOVER_TAB_LABELS[SharingPopoverTab.Start]}
             </Tab>
-            <Tab id={SharingPopoverTab.Status}>
-              {SHARING_POPOVER_TAB_LABELS[SharingPopoverTab.Status]}
-            </Tab>
             <Tab id={SharingPopoverTab.Grants}>
               {SHARING_POPOVER_TAB_LABELS[SharingPopoverTab.Grants]}
               {data && data.grants.length > 0 && (
@@ -122,12 +118,6 @@ export const SharingPopoverContent = ({ locationOfControlUi }: Props) => {
         />
       </TabPanel>
 
-      <TabPanel id={SharingPopoverTab.Status}>
-        {serverState}
-
-        {data && <StatusSection runtimes={data.runtimes} />}
-      </TabPanel>
-
       <TabPanel id={SharingPopoverTab.Grants}>
         {serverState}
 
@@ -147,6 +137,7 @@ export const SharingPopoverContent = ({ locationOfControlUi }: Props) => {
           onRuntimeTabChange={setRuntimeTab}
           tabListRef={runtimeTabListRef}
           serverState={serverState}
+          desktopCompanions={data?.desktopCompanions}
           desktopCompanionSignIns={data?.desktopCompanionSignIns}
         />
       </TabPanel>

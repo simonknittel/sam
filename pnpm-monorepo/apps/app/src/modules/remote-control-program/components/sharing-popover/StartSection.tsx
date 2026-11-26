@@ -165,13 +165,6 @@ export const StartSection = ({ onOpenLocation }: Props) => {
             dir.
           </p>
         </SharingPopoverTopic>
-
-        <SharingPopoverTopic title="Status">
-          <p>
-            Unter {renderTabLink({ tab: SharingPopoverTab.Status })} siehst du
-            alle deine verbundenen Runtimes.
-          </p>
-        </SharingPopoverTopic>
       </SharingPopoverTopicList>
     </SharingPopoverSection>
   );

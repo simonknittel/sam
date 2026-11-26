@@ -1,36 +1,28 @@
+import { formatDate } from "@/modules/common/utils/formatDate";
 import type { OwnRuntime } from "@sam-monorepo/application";
 import type { AnnounceContent } from "@sam-monorepo/domain";
-import { CONNECTOR_LABELS, RUNTIME_KIND_LABELS } from "./catalogTexts";
+import { CONNECTOR_LABELS } from "./catalogTexts";
 
 interface Props {
   readonly runtime: OwnRuntime;
-  /** The runtime of the browser that shows the popover */
-  readonly isThisBrowser: boolean;
 }
 
-/** A connected runtime of the owner in the status section */
-export const RuntimeListItem = ({ runtime, isThisBrowser }: Props) => {
+/** A connected desktop companion of the owner, from its presence */
+export const ConnectedDesktopCompanionListItem = ({ runtime }: Props) => {
   return (
-    <li className="flex flex-col gap-1 rounded-secondary border border-white/10 p-3 text-sm">
-      <div className="flex items-center gap-2">
+    <li className="flex flex-col gap-0.5 py-2 text-sm">
+      <span className="flex items-center gap-2">
         <span
           aria-hidden
           className="size-2 flex-none rounded-full bg-green-500"
         />
+        Online seit {formatDate(runtime.connectedAt)}
+      </span>
 
-        <span className="font-bold">{RUNTIME_KIND_LABELS[runtime.kind]}</span>
-
-        {isThisBrowser && (
-          <span className="flex-none rounded-secondary bg-white/10 px-1.5 text-xs text-neutral-300">
-            dieser Browser
-          </span>
-        )}
-      </div>
-
-      <dl className="grid grid-cols-[auto_1fr] gap-x-3 text-neutral-400">
-        <dt className="text-neutral-500">Aktive Connectors</dt>
-        <dd>{getActiveConnectorsText(runtime.announcement)}</dd>
-      </dl>
+      <p className="text-xs text-neutral-500">
+        Version {runtime.runtimeVersion} · Aktive Connectors:{" "}
+        {getActiveConnectorsText(runtime.announcement)}
+      </p>
     </li>
   );
 };

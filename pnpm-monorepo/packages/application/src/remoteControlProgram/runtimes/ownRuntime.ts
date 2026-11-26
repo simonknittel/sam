@@ -5,7 +5,10 @@ import {
   type RuntimeKind,
 } from "@sam-monorepo/domain";
 
-/** A runtime of the owner, for the status in the sharing popover and the relay */
+/**
+ * A runtime of the owner, for the sharing popover, the control UIs and the
+ * relay
+ */
 export interface OwnRuntime {
   readonly runtimeId: string;
   readonly kind: RuntimeKind;

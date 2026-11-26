@@ -4,7 +4,10 @@ import Tab from "@/modules/common/components/tabs/Tab";
 import TabList from "@/modules/common/components/tabs/TabList";
 import TabPanel from "@/modules/common/components/tabs/TabPanel";
 import { TabsProvider } from "@/modules/common/components/tabs/TabsContext";
-import type { DesktopCompanionSignIn } from "@sam-monorepo/application";
+import type {
+  DesktopCompanionSignIn,
+  OwnRuntime,
+} from "@sam-monorepo/application";
 import type { ReactNode, RefObject } from "react";
 import { BrowserSettingsSection } from "./BrowserSettingsSection";
 import { DesktopCompanionSection } from "./DesktopCompanionSection";
@@ -28,6 +31,7 @@ interface Props {
   readonly tabListRef: RefObject<HTMLDivElement | null>;
   /** See `DesktopCompanionSection` */
   readonly serverState: ReactNode;
+  readonly desktopCompanions: readonly OwnRuntime[] | undefined;
   readonly desktopCompanionSignIns:
     readonly DesktopCompanionSignIn[] | undefined;
 }
@@ -41,6 +45,7 @@ export const RuntimesSection = ({
   onRuntimeTabChange,
   tabListRef,
   serverState,
+  desktopCompanions,
   desktopCompanionSignIns,
 }: Props) => {
   return (
@@ -74,6 +79,7 @@ export const RuntimesSection = ({
         <TabPanel id={SharingPopoverRuntimeTab.DesktopCompanion}>
           <DesktopCompanionSection
             serverState={serverState}
+            runtimes={desktopCompanions}
             signIns={desktopCompanionSignIns}
           />
         </TabPanel>
