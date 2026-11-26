@@ -40,6 +40,21 @@ export const findOwnNotificationSettings = async (
   });
 };
 
+/** A user without a citizen has no inbox, thus the default applies */
+export const isOwnInboxAutoOpenEnabled = async (
+  context: ApplicationContext,
+  actor: Actor,
+): Promise<boolean> => {
+  if (!actor.citizen) return true;
+
+  const citizen = await context.prisma.citizen.findUnique({
+    where: { id: actor.citizen.id },
+    select: { inboxAutoOpenDisabledAt: true },
+  });
+
+  return !citizen?.inboxAutoOpenDisabledAt;
+};
+
 export interface OwnWebPushSubscription {
   readonly id: string;
   readonly createdAt: Date;
