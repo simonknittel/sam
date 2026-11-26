@@ -6,7 +6,6 @@ import type {
   GuildScheduledEventChange,
   GuildScheduledEventContent,
   GuildScheduledEventTarget,
-  RemoteControlProgramSwitches,
 } from "@sam-monorepo/domain";
 import type { JWK, JWTVerifyGetKey } from "jose";
 import type { KeyObject } from "node:crypto";
@@ -277,12 +276,10 @@ export interface ApplicationContext {
    */
   readonly clientMetadata: ClientMetadataFetcher | null;
   /**
-   * The switches of the organization for the Remote Control Program (the
-   * Unleash flags of `RemoteControlProgramUnleashFlag`). A host without
-   * Unleash gives all parts on: `ALL_REMOTE_CONTROL_PROGRAM_PARTS_ON` of the
-   * domain.
+   * The Unleash flag `DisableRemoteControlProgram` of the organization. A
+   * host without Unleash gives false.
    */
-  readonly remoteControlProgramSwitches: () => Promise<RemoteControlProgramSwitches>;
+  readonly isRemoteControlProgramTurnedOff: () => Promise<boolean>;
   /**
    * Null when the host has no relay service (no URL of the relay service, or
    * the relay service itself). Then the browser runtime works only on the

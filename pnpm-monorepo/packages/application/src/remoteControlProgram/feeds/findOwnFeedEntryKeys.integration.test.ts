@@ -1,7 +1,4 @@
-import {
-  getRemoteControlProgramSwitches,
-  RemoteControlProgramUnleashFlag,
-} from "@sam-monorepo/domain";
+import {} from "@sam-monorepo/domain";
 import { beforeEach, expect, test } from "vitest";
 import {
   createTestApplicationContext,
@@ -46,17 +43,12 @@ test("gives the keys of the own entries in the time window", async () => {
   await expect(
     findOwnFeedEntryKeys(
       createTestApplicationContext({
-        remoteControlProgramSwitches: async () =>
-          getRemoteControlProgramSwitches(
-            (flag) =>
-              flag ===
-              RemoteControlProgramUnleashFlag.DisableLogEntriesCapability,
-          ),
+        isRemoteControlProgramTurnedOff: async () => true,
       }).context,
       owner,
       { start: weekStart },
     ),
   ).rejects.toThrow(
-    new ForbiddenError(RemoteControlProgramErrorMessage.CapabilityTurnedOff),
+    new ForbiddenError(RemoteControlProgramErrorMessage.ProgramTurnedOff),
   );
 });

@@ -1,7 +1,4 @@
-import {
-  CapabilityId,
-  LOG_ANALYZER_ENTRY_HASH_PATTERN,
-} from "@sam-monorepo/domain";
+import { LOG_ANALYZER_ENTRY_HASH_PATTERN } from "@sam-monorepo/domain";
 import * as z from "zod";
 import type { Actor } from "../../actor.js";
 import type { ApplicationContext } from "../../context.js";
@@ -58,14 +55,9 @@ export const findOwnFeedEntryKeys = (
   withSpan(context, "findOwnFeedEntryKeys", async () => {
     const citizen = requireRemoteControlProgramUse(actor);
 
-    const switches = await context.remoteControlProgramSwitches();
-    if (switches.isProgramTurnedOff)
+    if (await context.isRemoteControlProgramTurnedOff())
       throw new ForbiddenError(
         RemoteControlProgramErrorMessage.ProgramTurnedOff,
-      );
-    if (switches.turnedOffCapabilityIds.includes(CapabilityId.LogEntries))
-      throw new ForbiddenError(
-        RemoteControlProgramErrorMessage.CapabilityTurnedOff,
       );
 
     const rows = await context.prisma.logAnalyzerEntry.findMany({

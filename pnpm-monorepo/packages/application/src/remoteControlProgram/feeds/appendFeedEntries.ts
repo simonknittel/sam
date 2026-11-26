@@ -43,8 +43,6 @@ export type AppendFeedEntriesInput = z.output<
  */
 export type FeedEntriesRefusal =
   | AcknowledgementErrorCode.MessageNotValid
-  | AcknowledgementErrorCode.ConnectorTurnedOff
-  | AcknowledgementErrorCode.CapabilityTurnedOff
   | AcknowledgementErrorCode.EntriesNotValid;
 
 /** The counts of `recordFeedEntryUploadCounts()` */
@@ -156,7 +154,7 @@ const toRefusal = (
  * Stores one batch of a runtime of the actor (the owner): the relay service
  * calls it for each `feed_entries` message, with the actor of the
  * `RuntimeConnection`. It checks the permission, the catalog and the
- * switches, and then each entry. An entry that is not
+ * Unleash flag, and then each entry. An entry that is not
  * valid does not refuse the batch: the relay stores the valid entries and
  * counts the other entries as refused. Thus one defective line, for example
  * from a difference of the regular expression engines of the runtimes, does
@@ -201,15 +199,10 @@ export const appendFeedEntries = (
     const batchProblem = findBatchProblem(batch);
     if (batchProblem) return toRefusal(batchProblem, batch);
 
-    const switches = await context.remoteControlProgramSwitches();
-    if (switches.isProgramTurnedOff)
+    if (await context.isRemoteControlProgramTurnedOff())
       throw new ForbiddenError(
         RemoteControlProgramErrorMessage.ProgramTurnedOff,
       );
-    if (switches.turnedOffConnectorIds.includes(batch.connector_id))
-      return toRefusal(AcknowledgementErrorCode.ConnectorTurnedOff, batch);
-    if (switches.turnedOffCapabilityIds.includes(batch.capability_id))
-      return toRefusal(AcknowledgementErrorCode.CapabilityTurnedOff, batch);
 
     const now = context.now();
     const checkedEntries = batch.entries.map((entry) => ({

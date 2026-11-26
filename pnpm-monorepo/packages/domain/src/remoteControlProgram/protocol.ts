@@ -21,10 +21,7 @@ import {
  *    change of its connectors or of its local access layer.
  * 3. The relay answers each later message of the runtime with an `ack`. The
  *    runtime sends a batch again until it gets the `ack`.
- * 4. The relay sends `switches` for each `announce` before its `ack` (thus
- *    the runtime knows the parts that are off before its first upload), and
- *    after each change of a flag. It sends `close` before it closes the
- *    connection.
+ * 4. The relay sends `close` before it closes the connection.
  *
  * Compatibility: the relay accepts the protocol versions from
  * `MINIMUM_RELAY_PROTOCOL_VERSION` to `RELAY_PROTOCOL_VERSION`. The schemas
@@ -32,8 +29,7 @@ import {
  * runtime of an older protocol version cannot read (a new message type, a new
  * required field, a new enum value in a message to the runtime) needs a new
  * protocol version, and the relay sends it only to the runtimes of that
- * version or newer. The relay lists in `switches` only the parts that the
- * runtime announced.
+ * version or newer.
  */
 
 export const RELAY_PROTOCOL_VERSION = 1;
@@ -55,7 +51,6 @@ export enum DownMessageType {
   Welcome = "welcome",
   Refusal = "refusal",
   Acknowledgement = "ack",
-  Switches = "switches",
   Close = "close",
 }
 
@@ -179,10 +174,6 @@ export enum AcknowledgementErrorCode {
    * batch. Send again after the `announce`.
    */
   CapabilityNotAnnounced = "capability_not_announced",
-  /** A switch turned off the connector. Do not send again. */
-  ConnectorTurnedOff = "connector_turned_off",
-  /** A switch turned off the capability. Do not send again. */
-  CapabilityTurnedOff = "capability_turned_off",
   /**
    * The runtime sent above the rate of the capability (see
    * `minimumUploadIntervalMilliseconds`). Send again after the interval.
@@ -391,15 +382,6 @@ export const isFeedSourceAnnounced = (
       ),
   );
 
-const switchesContentSchema = z.object({
-  turned_off_connectors: z
-    .array(z.enum(ConnectorId))
-    .max(MAXIMUM_ANNOUNCED_CONNECTORS),
-  turned_off_capabilities: z
-    .array(z.enum(CapabilityId))
-    .max(MAXIMUM_ANNOUNCED_CAPABILITIES),
-});
-
 const closeReasonContentSchema = z.object({
   reason: z.enum(RelayCloseReason),
 });
@@ -436,8 +418,6 @@ export const downMessageSchema = z.discriminatedUnion("type", [
       }),
     ]),
   ),
-  /** The parts that are off. Each new `switches` replaces the previous one. */
-  createMessageSchema(DownMessageType.Switches, switchesContentSchema),
   /**
    * The relay sends it right before it closes the connection with the code
    * of the reason. A proxy can change the close code (for example to 1006),

@@ -38,8 +38,7 @@ export const checkRuntimeHello = (
   withSpan(context, "checkRuntimeHello", async () => {
     const citizen = requireRemoteControlProgramUse(actor);
 
-    const switches = await context.remoteControlProgramSwitches();
-    if (switches.isProgramTurnedOff)
+    if (await context.isRemoteControlProgramTurnedOff())
       throw new ForbiddenError(
         RemoteControlProgramErrorMessage.ProgramTurnedOff,
       );

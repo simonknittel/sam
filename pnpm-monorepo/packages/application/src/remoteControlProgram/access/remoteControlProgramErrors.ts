@@ -20,10 +20,8 @@ export enum RemoteControlProgramErrorMessage {
    * permission, for example `logAnalyzer;read` for the Log Analyzer
    */
   ConsumerPermissionMissing = "The permission of the consumer is missing",
-  /** A `ForbiddenError`: the switch of the full Remote Control Program is off */
+  /** A `ForbiddenError`: the Unleash flag `DisableRemoteControlProgram` is on */
   ProgramTurnedOff = "The Remote Control Program is turned off",
-  /** A `ForbiddenError`: the switch of the capability is off */
-  CapabilityTurnedOff = "The capability is turned off",
   /**
    * A `ForbiddenError`: the viewer is not the owner, and no valid grant of
    * the owner gives the viewer access

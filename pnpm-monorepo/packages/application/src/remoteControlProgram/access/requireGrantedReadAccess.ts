@@ -15,8 +15,6 @@ const REFUSAL_MESSAGES: Readonly<
 > = {
   [ReadAccessRefusal.ProgramTurnedOff]:
     RemoteControlProgramErrorMessage.ProgramTurnedOff,
-  [ReadAccessRefusal.CapabilityTurnedOff]:
-    RemoteControlProgramErrorMessage.CapabilityTurnedOff,
   [ReadAccessRefusal.RemoteControlProgramPermissionMissing]:
     RemoteControlProgramErrorMessage.PermissionMissing,
   [ReadAccessRefusal.ConsumerPermissionMissing]:

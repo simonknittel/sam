@@ -1,10 +1,8 @@
 import { prisma } from "@sam-monorepo/database";
 import {
   CapabilityId,
-  getRemoteControlProgramSwitches,
   GranteeKind,
   ReadAccessRefusal,
-  RemoteControlProgramUnleashFlag,
 } from "@sam-monorepo/domain";
 import { beforeEach, expect, test } from "vitest";
 import {
@@ -189,11 +187,7 @@ test("gives the access of many viewers to one owner, with the current roles and 
     where: { citizenId: citizens.viewer.id, roleId: citizens.viewerRoleId },
   });
   const turnedOff = createTestApplicationContext({
-    remoteControlProgramSwitches: async () =>
-      getRemoteControlProgramSwitches(
-        (flag) =>
-          flag === RemoteControlProgramUnleashFlag.DisableLogEntriesCapability,
-      ),
+    isRemoteControlProgramTurnedOff: async () => true,
   }).context;
 
   expect(
@@ -208,7 +202,7 @@ test("gives the access of many viewers to one owner, with the current roles and 
     new Map([
       [
         otherViewer.id,
-        { isGranted: false, refusal: ReadAccessRefusal.CapabilityTurnedOff },
+        { isGranted: false, refusal: ReadAccessRefusal.ProgramTurnedOff },
       ],
     ]),
   );

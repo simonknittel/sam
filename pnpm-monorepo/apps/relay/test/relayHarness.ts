@@ -8,9 +8,7 @@ import {
 } from "@sam-monorepo/application";
 import {
   DownMessageType,
-  getRemoteControlProgramSwitches,
   transformPermissionStringToPermissionSet,
-  type RemoteControlProgramUnleashFlag,
 } from "@sam-monorepo/domain";
 import { createRelayClient } from "@sam-monorepo/infrastructure";
 import { once } from "node:events";
@@ -20,9 +18,9 @@ import { createTestSigningKey } from "../../../packages/application/test/signing
 import { createRelayApplicationContext } from "../src/applicationContext.js";
 import type { FeedEntryDelivery } from "../src/delivery/index.js";
 import { parseRelayEnvironment } from "../src/env.js";
+import { createProgramSwitch } from "../src/programSwitch.js";
 import type { RelayTiming } from "../src/relayConnection.js";
 import { createRelayServer } from "../src/relayServer.js";
-import { createSwitchesSource } from "../src/switches.js";
 import { OWNER_PERMISSION_STRINGS } from "./database.js";
 import { TestRuntimeClient } from "./runtimeClient.js";
 
@@ -105,7 +103,7 @@ interface TestRelayOptions {
 
 /**
  * Starts a relay service with its composition root, the database of the
- * testcontainer, a local key set of the app, switches that the test sets and
+ * testcontainer, a local key set of the app, a program switch that the test sets and
  * a recording delivery
  */
 export const startRelay = async ({
@@ -114,7 +112,7 @@ export const startRelay = async ({
 }: TestRelayOptions = {}) => {
   const signingKey = await createTestSigningKey();
   const keySet = await startKeySetServer(signingKey);
-  const switches = createSwitchesSource();
+  const programSwitch = createProgramSwitch();
   const { delivery, deliveries } = createTestDelivery();
   const logRecords: LogRecord[] = [];
   const log: Logger = {
@@ -133,13 +131,13 @@ export const startRelay = async ({
   const relayContext = createRelayApplicationContext({
     environment,
     log,
-    switches,
+    programSwitch,
   });
   const { context } = relayContext;
   const server = createRelayServer({
     context,
     delivery,
-    switches,
+    programSwitch,
     keySet: relayContext.keySet,
     isDatabaseAvailable: relayContext.isDatabaseAvailable,
     appOrigin: new URL(APP_BASE_URL).origin,
@@ -194,11 +192,9 @@ export const startRelay = async ({
     logRecords,
     context,
     deliveries,
-    /** Turns on the flags (kill switches) of Unleash, and turns off all other flags */
-    setEnabledFlags: (flags: readonly RemoteControlProgramUnleashFlag[]) => {
-      switches.set(
-        getRemoteControlProgramSwitches((flag) => flags.includes(flag)),
-      );
+    /** Sets the Unleash flag `DisableRemoteControlProgram` (the kill switch) */
+    setProgramTurnedOff: (isTurnedOff: boolean) => {
+      programSwitch.set(isTurnedOff);
     },
     /** False: the key set of the app answers with an error */
     setKeySetAvailable: keySet.setAvailable,

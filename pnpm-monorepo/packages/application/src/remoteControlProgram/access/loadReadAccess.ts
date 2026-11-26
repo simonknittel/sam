@@ -5,7 +5,6 @@ import {
   ReadAccessRefusal,
   type CapabilityId,
   type EffectiveReadAccess,
-  type RemoteControlProgramSwitches,
   type RemoteControlProgramViewer,
 } from "@sam-monorepo/domain";
 import type { Actor } from "../../actor.js";
@@ -25,7 +24,7 @@ import {
 
 /**
  * The loaders of the effective access (see "Effective access" of
- * `docs/remote-control-program/README.md`). They read the switches, the
+ * `docs/remote-control-program/README.md`). They read the Unleash flag, the
  * viewers and the grants, and apply `getEffectiveReadAccess()` of the domain.
  * They keep no cache: each read and each delivery loads the grants again,
  * thus a revocation or the end of a grant stops the data at once (principle
@@ -53,7 +52,7 @@ export interface ViewerReadAccessInput {
 }
 
 export interface ViewerReadAccess {
-  readonly switches: RemoteControlProgramSwitches;
+  readonly isProgramTurnedOff: boolean;
   readonly viewer: RemoteControlProgramViewer;
   /**
    * The access of the viewer to each owner: with `ownerCitizenIds`, one value
@@ -83,8 +82,8 @@ export const loadReadAccessOfViewer = (
     const viewer = toViewer(citizen.id, actor, capabilityId);
     const now = context.now();
 
-    const [switches, grantRows] = await Promise.all([
-      context.remoteControlProgramSwitches(),
+    const [isProgramTurnedOff, grantRows] = await Promise.all([
+      context.isRemoteControlProgramTurnedOff(),
       context.prisma.shareGrant.findMany({
         where: {
           AND: [
@@ -120,13 +119,13 @@ export const loadReadAccessOfViewer = (
     );
 
     return {
-      switches,
+      isProgramTurnedOff,
       viewer,
       accessByOwnerCitizenId: new Map(
         Array.from(owners, (ownerCitizenId) => [
           ownerCitizenId,
           getEffectiveReadAccess({
-            switches,
+            isProgramTurnedOff,
             viewer,
             ownerCitizenId,
             capabilityId,
@@ -220,8 +219,8 @@ export const loadReadAccessToOwner = (
     if (viewers.length === 0) return new Map();
 
     const now = context.now();
-    const [switches, grants, actorsByCitizenId] = await Promise.all([
-      context.remoteControlProgramSwitches(),
+    const [isProgramTurnedOff, grants, actorsByCitizenId] = await Promise.all([
+      context.isRemoteControlProgramTurnedOff(),
       context.prisma.shareGrant.findMany({
         where: {
           AND: [
@@ -249,7 +248,7 @@ export const loadReadAccessToOwner = (
         return [
           citizenId,
           getEffectiveReadAccess({
-            switches,
+            isProgramTurnedOff,
             viewer: toViewer(citizenId, actor, capabilityId),
             ownerCitizenId,
             capabilityId,
