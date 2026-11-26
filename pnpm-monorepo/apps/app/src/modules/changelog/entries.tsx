@@ -83,8 +83,8 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   },
 
   {
-    key: "2026-11-24-remote-control-program",
-    date: "2026-11-24",
+    key: "2026-11-26-remote-control-program",
+    date: "2026-11-26",
     title: "Remote Control Program",
     tags: ["Neu", "Remote Control Program", "Log Analyzer"],
     isTracked: true,
