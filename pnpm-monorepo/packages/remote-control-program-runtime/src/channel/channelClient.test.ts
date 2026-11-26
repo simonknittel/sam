@@ -148,7 +148,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-test("sends the token in the hello, and the announcement after the welcome", async () => {
+test("sends the token in the hello, and the announcement after the welcome, with protocol version 1", async () => {
   const { client, openSocket } = setUp();
 
   client.connect();
@@ -158,6 +158,8 @@ test("sends the token in the hello, and the announcement after the welcome", asy
   expect(socket.sentMessages).toEqual([
     expect.objectContaining({
       type: UpMessageType.Hello,
+      // The browser runtime gets the own entry keys from the app (decision 34)
+      protocol_version: 1,
       content: {
         token: "token-1",
         runtime_id: RUNTIME_ID,
@@ -175,6 +177,7 @@ test("sends the token in the hello, and the announcement after the welcome", asy
   });
   expect(socket.sentMessages[1]).toMatchObject({
     type: UpMessageType.Announce,
+    protocol_version: 1,
     content: ANNOUNCEMENT,
   });
 });
