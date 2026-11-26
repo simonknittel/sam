@@ -3,11 +3,12 @@ import {
   AuthorizationClientErrorReason,
   grantCustomNameSchema,
   mcpToolNameSchema,
+  OAuthResource,
   type AuthorizationRequestValidation,
   type AuthorizationRequestValidationKind,
 } from "@sam-monorepo/application";
 import * as z from "zod";
-import { isMcpServerDisabled } from "./isMcpServerDisabled";
+import { isOAuthResourceTurnedOff } from "./isOAuthResourceTurnedOff";
 
 export enum ConsentAvailability {
   Available = "available",
@@ -15,8 +16,10 @@ export enum ConsentAvailability {
   NoSigningKey = "noSigningKey",
 }
 
-export const getConsentAvailability = async () => {
-  if (await isMcpServerDisabled()) return ConsentAvailability.Disabled;
+/** The kill switch of the resource of the client stops the consent */
+export const getConsentAvailability = async (resource: OAuthResource) => {
+  if (await isOAuthResourceTurnedOff(resource))
+    return ConsentAvailability.Disabled;
 
   if (!(await getApplicationContext().signingKey()))
     return ConsentAvailability.NoSigningKey;
@@ -24,11 +27,26 @@ export const getConsentAvailability = async () => {
   return ConsentAvailability.Available;
 };
 
-export const CONSENT_UNAVAILABLE_MESSAGE =
-  "Die Verbindung von Anwendungen über MCP ist zurzeit nicht verfügbar.";
+const CONSENT_UNAVAILABLE_MESSAGES: Readonly<Record<OAuthResource, string>> = {
+  [OAuthResource.Mcp]:
+    "Die Verbindung von Anwendungen über MCP ist zurzeit nicht verfügbar.",
+  [OAuthResource.RemoteControlProgram]:
+    "Die Anmeldung des Desktop Companions ist zurzeit nicht verfügbar.",
+};
 
-export const MCP_ACCESS_MESSAGE =
-  "Du hast keine Berechtigung, den MCP-Server zu nutzen. Frage einen Admin nach der Berechtigung „MCP-Server nutzen“.";
+export const getConsentUnavailableMessage = (resource: OAuthResource) =>
+  CONSENT_UNAVAILABLE_MESSAGES[resource];
+
+const RESOURCE_ACCESS_MESSAGES: Readonly<Record<OAuthResource, string>> = {
+  [OAuthResource.Mcp]:
+    "Du hast keine Berechtigung, den MCP-Server zu nutzen. Frage einen Admin nach der Berechtigung „MCP-Server nutzen“.",
+  // Also for an admin: the desktop companion never has admin mode
+  [OAuthResource.RemoteControlProgram]:
+    "Du hast keine Berechtigung, das Remote Control Program zu nutzen, oder dein Account ist mit keinem Citizen verknüpft. Frage einen Admin nach der Berechtigung „Remote Control Program nutzen“.",
+};
+
+export const getResourceAccessMessage = (resource: OAuthResource) =>
+  RESOURCE_ACCESS_MESSAGES[resource];
 
 export const ASSUMED_USER_MESSAGE =
   "Du siehst SAM gerade als ein anderer Benutzer. Beende diese Ansicht, um eine Anwendung mit deinem Account zu verbinden.";
