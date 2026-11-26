@@ -21,7 +21,7 @@ On 2026-11-26, the old step 3 ("States, desktop companion and gRPC connector") b
    - The repository of the desktop companion (decision 32 of the architecture), the export of the shared definitions in SAM, and the sync of the definitions into the repository of the desktop companion.
    - The changes of the OAuth server (see [Changes of existing parts](#changes-of-existing-parts)), the connection token for the desktop companion, the runtime kind of the desktop companion, and the version 2 of the protocol with the read of the own entry keys (decision 34 of the architecture).
    - The Rust program with GPUI (decision 33 of the architecture) for Windows and Linux: the native OAuth client, the channel client, the log file connector (`log_entries`), the local access layer with the live periods and the upload of older entries, the tray icon and the start with the operating system.
-   - In the sharing popover, the tab "Runtimes" with one sub-tab for each runtime. The sub-tab of the desktop companion tells that the program comes soon, and lists the sign-ins of the desktop companion of the owner.
+   - In the sharing popover, the tab "Runtimes" with one sub-tab for each runtime, and no tab "Status" (see [Sharing popover](./README.md#sharing-popover)). The sub-tab of the desktop companion tells that the program comes soon, and shows the connected desktop companions and the sign-ins of the owner.
    - No distribution of the program (M9), and no entry in the changelog.
 4. **gRPC connector, states and lineup status:**
    - First, an estimate of the sizes: the connections, the messages and the rows of the history for each day.
