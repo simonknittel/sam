@@ -1,6 +1,6 @@
 # Shared test data of the Remote Control Program
 
-The implementations of the log file connector (TypeScript now, Rust in step 3), the relay and the M3 migration (SQL) use this data. They must give the same results (principle 11 and decision 22 of the [concept](../docs/remote-control-program/README.md)). The format is neutral: plain log files and JSON with snake_case keys.
+The implementations of the log file connector (TypeScript and Rust), the protocol, the relay and the M3 migration (SQL) use this data. The repository of the desktop companion gets a copy (decision 32 of the concept). They must give the same results (principle 11 and decision 22 of the [concept](../docs/remote-control-program/README.md)). The format is neutral: plain log files and JSON with snake_case keys.
 
 The expected values are immutable data, like the patterns of the Log Analyzer. Do not change an expected value to make a test pass. A different result needs a new version of the rule (see `pnpm-monorepo/packages/domain/src/remoteControlProgram/ipAddressMarker.ts`). You can add files and cases. Check a new expected value with a second implementation or by hand.
 
@@ -26,6 +26,15 @@ Tests that use this data:
 - `output`: the raw line after the rule.
 - `input_contains_ip_address`, `output_contains_ip_address`: the result of the check of the relay. The check is true when one of the expressions finds a match.
 
+## `protocol-messages/`
+
+`cases.json` contains `cases`: messages of the [protocol](../docs/remote-control-program/README.md#protocol) between a runtime and the relay service. Each case has:
+
+- `description`
+- `direction`: `up` (from the runtime to the relay service) or `down` (from the relay service to the runtime).
+- `valid`: the result of the schema of the protocol. An unknown field gives no error: the schemas remove it. An unknown message type or an unknown value of an enum is not valid.
+- `message`: the full message with its envelope.
+
 ## `log-entry-hash/`
 
 `cases.json` contains `cases`. Each case has `description`, `type`, `oldest_type` (the oldest type of the pattern chain, see `supersedes` of the patterns), `raw_line_with_marker` and `hash`. The hash is SHA-256 (hexadecimal, lowercase) of the UTF-8 text: `oldest_type`, a line feed (`\n`) and `raw_line_with_marker`.
@@ -39,6 +48,7 @@ Log files of the game in the folders of the game. The handles are invented. The 
 | `LIVE/Game.log` | The running session. CRLF line ends. The game still writes the last line: it has no line end. |
 | `LIVE/logbackups/Game Build(10498765) 21 Nov 26 (17 58 43).log` | A session that crashed. CRLF line ends. At the end, the crash report without timestamps. |
 | `LIVE/logbackups/Game Build(10512345) 22 Nov 26 (20 14 05).log` | A session that ended. LF line ends. IPv6 addresses, also after a key (`ipv6:`, `peer_addr:`). |
+| `LIVE/logbackups/Game Build(10523456) 23 Nov 26 (19 02 11).log` | The encoding and the character classes. LF line ends. Bytes that are not valid UTF-8: each invalid byte or incomplete sequence becomes one replacement character (U+FFFD), like the `TextDecoder` of a browser. A valid character outside of ASCII. Two lines that give no match, because `\w` and `\d` of JavaScript match only ASCII characters: a shard name with `ü`, and a timestamp with an Arabic-Indic digit. A Rust engine with Unicode classes would match them. |
 
 `expected-matches.json` contains `files`. Each file has:
 

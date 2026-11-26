@@ -14,6 +14,7 @@ import {
   replaceIpAddresses,
 } from "./ipAddressMarker.js";
 import { createLogEntryHash } from "./logEntryHash.js";
+import { downMessageSchema, upMessageSchema } from "./protocol.js";
 
 /**
  * The shared test data of the TypeScript and the Rust implementations, in the
@@ -68,6 +69,22 @@ const { cases: ipCases } = await readJson<{
 const { cases: hashCases } = await readJson<{
   readonly cases: readonly HashCase[];
 }>("log-entry-hash/cases.json");
+
+enum MessageDirection {
+  Up = "up",
+  Down = "down",
+}
+
+interface ProtocolMessageCase {
+  readonly description: string;
+  readonly direction: MessageDirection;
+  readonly valid: boolean;
+  readonly message: unknown;
+}
+
+const { cases: protocolMessageCases } = await readJson<{
+  readonly cases: readonly ProtocolMessageCase[];
+}>("protocol-messages/cases.json");
 
 /**
  * Applies `rule.json` like a different engine, as its `README.md` tells. Thus
@@ -127,6 +144,18 @@ describe("createLogEntryHash", () => {
       await expect(
         createLogEntryHash(entryType, raw_line_with_marker),
       ).resolves.toBe(hash);
+    },
+  );
+});
+
+describe("the protocol messages", () => {
+  test.each(protocolMessageCases)(
+    "$direction: $description",
+    ({ direction, valid, message }) => {
+      const schema =
+        direction === MessageDirection.Up ? upMessageSchema : downMessageSchema;
+
+      expect(schema.safeParse(message).success).toBe(valid);
     },
   );
 });

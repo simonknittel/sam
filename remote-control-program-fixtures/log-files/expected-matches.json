@@ -473,6 +473,44 @@
           "hash": "0057ab7bcc18422ce2a21e5145c82b8413e50e3342baaa20df93db8d83f7e806"
         }
       ]
+    },
+    {
+      "path": "LIVE/logbackups/Game Build(10523456) 23 Nov 26 (19 02 11).log",
+      "session_start_from_file_name": "2026-11-23T19:02:11",
+      "matches": [
+        {
+          "line_number": 3,
+          "type": "joinPu",
+          "iso_date": "2026-11-23T18:03:33.418Z",
+          "raw_line": "<2026-11-23T18:03:33.418Z> [Notice] <Join PU> address[192.0.2.44] port[64310] shard[pub_euw1b_10523456_104] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]",
+          "raw_line_with_marker": "<2026-11-23T18:03:33.418Z> [Notice] <Join PU> address[IP_REDACTED] port[64310] shard[pub_euw1b_10523456_104] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]",
+          "hash": "905478da155d15fb04b8dddacf979924a3b3826b662b7bca1f48d8b075b255f6"
+        },
+        {
+          "line_number": 4,
+          "type": "blueprintReceivedNotification",
+          "iso_date": "2026-11-23T18:04:14.520Z",
+          "raw_line": "<2026-11-23T18:04:14.520Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Received Blueprint: Arbor MH1 Mining Laser ��: \" [15] to queue. New queue size: 2, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-23T18:04:14.520Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Received Blueprint: Arbor MH1 Mining Laser ��: \" [15] to queue. New queue size: 2, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "299f5229d3966253e0ee2d5b9284251de2de878c536b2893b40b3a4cbcf92020"
+        },
+        {
+          "line_number": 5,
+          "type": "blueprintReceivedNotification",
+          "iso_date": "2026-11-23T18:04:55.631Z",
+          "raw_line": "<2026-11-23T18:04:55.631Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Received Blueprint: K�(nig Helmet: \" [16] to queue. New queue size: 3, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-23T18:04:55.631Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Received Blueprint: K�(nig Helmet: \" [16] to queue. New queue size: 3, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "3879fb26798b6c69c88f12429c90664b492d4bcd0f16e59cd140c255472769b1"
+        },
+        {
+          "line_number": 6,
+          "type": "blueprintReceivedNotification",
+          "iso_date": "2026-11-23T18:05:36.742Z",
+          "raw_line": "<2026-11-23T18:05:36.742Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Received Blueprint: Müller Ränge Helmet: \" [17] to queue. New queue size: 4, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "raw_line_with_marker": "<2026-11-23T18:05:36.742Z> [Notice] <SHUDEvent_OnNotification> Added notification \"Received Blueprint: Müller Ränge Helmet: \" [17] to queue. New queue size: 4, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]",
+          "hash": "fa5e689efa5a08e865b2abfe4fcd40cf62ff90b56f6a024547ba3a5420b46220"
+        }
+      ]
     }
   ]
 }
