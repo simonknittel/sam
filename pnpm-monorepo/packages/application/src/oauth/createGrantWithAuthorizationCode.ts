@@ -4,10 +4,18 @@ import {
 } from "@sam-monorepo/domain";
 import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
-import { requireMcpAccess } from "../mcpAccess.js";
+import { ValidationError } from "../errors.js";
 import { withSpan } from "../withSpan.js";
 import { AUTHORIZATION_CODE_LIFETIME_IN_MILLISECONDS } from "./constants.js";
 import type { ClientMetadata } from "./resolveClientMetadata.js";
+import {
+  getOAuthResourceOfClient,
+  getOAuthResourceScope,
+  getOAuthResourceUrl,
+  OAuthResource,
+  requireOAuthResourceUse,
+  toOAuthResourceActor,
+} from "./resources.js";
 import { createOpaqueToken, hashOpaqueToken } from "./secrets.js";
 
 /**
@@ -15,14 +23,16 @@ import { createOpaqueToken, hashOpaqueToken } from "./secrets.js";
  * the request
  */
 export interface CreateGrantWithAuthorizationCodeInput {
+  /** Selects the resource and the scope of the grant */
   readonly client: Pick<ClientMetadata, "clientId" | "clientName">;
   readonly redirectUri: string;
   readonly codeChallenge: string;
-  readonly scope: string;
-  readonly resource: string;
   /** See `grantCustomNameSchema` */
   readonly customName: string | null;
-  /** The caller makes sure that the tools exist (see `mcpToolNameSchema`) */
+  /**
+   * The caller makes sure that the tools exist (see `mcpToolNameSchema`).
+   * Only a grant of the MCP server has tools.
+   */
   readonly disabledToolNames: readonly string[];
   readonly userAgent: string | null;
 }
@@ -46,6 +56,11 @@ const getRedirectHost = (redirectUri: string) => {
 /**
  * Each consent gives a new grant, also for a client that the user connected
  * before
+ *
+ * @throws ForbiddenError without the clearance or the permission of the
+ * resource (see `requireOAuthResourceUse()`)
+ * @throws ValidationError for disabled tools of a grant of the desktop
+ * companion
  */
 export const createGrantWithAuthorizationCode = (
   context: ApplicationContext,
@@ -53,9 +68,22 @@ export const createGrantWithAuthorizationCode = (
   input: CreateGrantWithAuthorizationCodeInput,
 ): Promise<CreateGrantWithAuthorizationCodeOutput> =>
   withSpan(context, "createGrantWithAuthorizationCode", async () => {
-    actor.requireClearance();
-    requireMcpAccess(actor);
+    const oauthResource = getOAuthResourceOfClient(
+      context,
+      input.client.clientId,
+    );
+    const resourceActor = toOAuthResourceActor(actor, oauthResource);
+    resourceActor.requireClearance();
+    requireOAuthResourceUse(resourceActor, oauthResource);
 
+    if (
+      oauthResource !== OAuthResource.Mcp &&
+      input.disabledToolNames.length > 0
+    )
+      throw new ValidationError("Only a grant of the MCP server has tools");
+
+    const scope = getOAuthResourceScope(oauthResource);
+    const resource = getOAuthResourceUrl(context, oauthResource).href;
     const code = createOpaqueToken();
     const now = context.now();
     const disabledToolNames = [...new Set(input.disabledToolNames)].sort();
@@ -70,8 +98,8 @@ export const createGrantWithAuthorizationCode = (
           redirectHost: getRedirectHost(input.redirectUri),
           userAgent:
             input.userAgent?.slice(0, USER_AGENT_MAXIMUM_LENGTH) ?? null,
-          scope: input.scope,
-          resource: input.resource,
+          scope,
+          resource,
           toolSettings: {
             createMany: {
               data: disabledToolNames.map((toolName) => ({
@@ -90,8 +118,8 @@ export const createGrantWithAuthorizationCode = (
           clientId: input.client.clientId,
           redirectUri: input.redirectUri,
           codeChallenge: input.codeChallenge,
-          scope: input.scope,
-          resource: input.resource,
+          scope,
+          resource,
           userId: actor.userId,
           grantId: grant.id,
           expiresAt: new Date(

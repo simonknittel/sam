@@ -259,8 +259,17 @@ export interface ApplicationContext {
     readonly baseUrl: URL;
     /** The base URL without the trailing slash */
     readonly issuer: string;
-    /** The canonical URL of the MCP endpoint, the audience of the tokens */
+    /**
+     * The canonical URL of the MCP endpoint, the audience of the access
+     * tokens of the MCP clients
+     */
     readonly mcpResourceUrl: URL;
+    /**
+     * The resource of the Remote Control Program, the audience of the access
+     * tokens of the desktop companion. Only the connection token route
+     * accepts these tokens.
+     */
+    readonly remoteControlProgramResourceUrl: URL;
     readonly publicUploadBaseUrl: string;
   };
   /**
@@ -312,6 +321,10 @@ export const createApplicationUrls = ({
     baseUrl,
     issuer: baseUrl.href.replace(/\/$/, ""),
     mcpResourceUrl: new URL("/api/mcp", baseUrl),
+    remoteControlProgramResourceUrl: new URL(
+      "/api/remote-control-program",
+      baseUrl,
+    ),
     publicUploadBaseUrl: publicUploadBaseUrl.replace(/\/+$/, ""),
   };
 };

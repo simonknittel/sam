@@ -2,6 +2,12 @@
 export const MCP_SCOPE = "mcp";
 
 /**
+ * The only scope of the Remote Control Program: the desktop companion gets
+ * connection tokens for the runtime of the citizen of the user
+ */
+export const REMOTE_CONTROL_PROGRAM_SCOPE = "remote_control_program";
+
+/**
  * Accepted in an authorization request, but without an effect: the
  * authorization code grant always gives a refresh token
  */
@@ -9,6 +15,7 @@ export const OFFLINE_ACCESS_SCOPE = "offline_access";
 
 export const SUPPORTED_SCOPES: readonly string[] = [
   MCP_SCOPE,
+  REMOTE_CONTROL_PROGRAM_SCOPE,
   OFFLINE_ACCESS_SCOPE,
 ];
 

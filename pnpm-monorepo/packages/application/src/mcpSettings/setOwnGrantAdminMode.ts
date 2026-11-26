@@ -6,6 +6,7 @@ import { NotFoundError } from "../errors.js";
 import { requireMcpAccess } from "../mcpAccess.js";
 import { idSchema } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
+import { getOwnMcpGrantWhere } from "./ownMcpGrant.js";
 
 export const setOwnGrantAdminModeInputSchema = z.object({
   grant_id: idSchema,
@@ -24,7 +25,7 @@ export const setOwnGrantAdminMode = (
     requireMcpAccess(actor);
 
     const grant = await context.prisma.oAuthGrant.findFirst({
-      where: { id: input.grant_id, userId: actor.userId, revokedAt: null },
+      where: { id: input.grant_id, ...getOwnMcpGrantWhere(context, actor) },
       select: { id: true, clientId: true, adminModeEnabledAt: true },
     });
     if (!grant) throw new NotFoundError("The grant does not exist");

@@ -1,16 +1,19 @@
 import { UserRole } from "@sam-monorepo/database/browser";
 import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
-import { requireMcpAccess } from "../mcpAccess.js";
 import { withSpan } from "../withSpan.js";
 import type { VerifiedAccessToken } from "./accessToken.js";
 import { InvalidTokenError } from "./errors.js";
 import { createGrantActor, GRANT_ACTOR_SELECT } from "./grantActor.js";
 import { resetStaleGrantAdminModes } from "./resetStaleGrantAdminModes.js";
+import {
+  getOAuthResourceOfClient,
+  requireOAuthResourceUse,
+} from "./resources.js";
 
 /**
- * The MCP requests update `lastUsedAt` of a grant at most one time in this
- * interval
+ * The requests with an access token update `lastUsedAt` of a grant at most
+ * one time in this interval
  */
 const LAST_USED_AT_INTERVAL_IN_MILLISECONDS = 60 * 60 * 1000;
 
@@ -29,9 +32,12 @@ export interface Principal {
 }
 
 /**
+ * The principal of a request with an access token of `verifyAccessToken()`:
+ * the MCP endpoint, or the connection token route of the desktop companion
+ *
  * @throws InvalidTokenError when the grant is revoked or the user is banned
  * @throws ForbiddenError when the user does not have the clearance of the app
- * or the permission to use the MCP server
+ * or the permission of the resource (see `requireOAuthResourceUse()`)
  */
 export const resolvePrincipal = (
   context: ApplicationContext,
@@ -56,7 +62,8 @@ export const resolvePrincipal = (
       !grant ||
       grant.revokedAt ||
       grant.userId !== token.userId ||
-      grant.clientId !== token.clientId
+      grant.clientId !== token.clientId ||
+      getOAuthResourceOfClient(context, grant.clientId) !== token.oauthResource
     )
       throw new InvalidTokenError("The grant of the access token is revoked");
 
@@ -70,7 +77,7 @@ export const resolvePrincipal = (
     const actor = await createGrantActor(context, grant);
 
     actor.requireClearance();
-    requireMcpAccess(actor);
+    requireOAuthResourceUse(actor, token.oauthResource);
 
     const now = context.now();
     const lastUsedAtThreshold = new Date(

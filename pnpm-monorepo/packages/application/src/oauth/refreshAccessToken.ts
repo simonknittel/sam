@@ -1,16 +1,19 @@
 import * as z from "zod";
 import type { ApplicationContext } from "../context.js";
-import { canUseMcp } from "../mcpAccess.js";
 import { withSpan } from "../withSpan.js";
 import { requireSigningKey } from "./accessToken.js";
 import {
   MAX_OPAQUE_TOKEN_LENGTH,
   MAX_URL_LENGTH,
-  SUPPORTED_SCOPES,
+  OFFLINE_ACCESS_SCOPE,
 } from "./constants.js";
 import { OAuthTokenError, OAuthTokenErrorCode } from "./errors.js";
 import { createGrantActor, GRANT_ACTOR_SELECT } from "./grantActor.js";
-import { isMcpResource } from "./resource.js";
+import {
+  canUseOAuthResource,
+  findOAuthResource,
+  getOAuthResourceOfClient,
+} from "./resources.js";
 import { revokeGrant } from "./revokeGrant.js";
 import { hashOpaqueToken } from "./secrets.js";
 import {
@@ -97,19 +100,28 @@ export const refreshAccessToken = (
      * token stays unused: a role or the email confirmation can give the
      * access back.
      */
+    const oauthResource = getOAuthResourceOfClient(context, grant.clientId);
     const actor = await createGrantActor(context, grant);
-    if (!actor.hasClearance() || !canUseMcp(actor))
-      throw invalidGrant("The user cannot use the MCP server");
+    if (!actor.hasClearance() || !canUseOAuthResource(actor, oauthResource))
+      throw invalidGrant("The user cannot use the resource");
 
-    if (input.resource !== undefined && !isMcpResource(context, input.resource))
+    // A refresh keeps the resource of the grant
+    if (
+      input.resource !== undefined &&
+      findOAuthResource(context, input.resource) !== oauthResource
+    )
       throw new OAuthTokenError(
         OAuthTokenErrorCode.InvalidTarget,
-        "The resource is not the MCP server of this authorization server",
+        "The resource is not the resource of the grant",
       );
 
-    // The grant has the scope `mcp`; `offline_access` has no effect
+    // The grant has one scope; `offline_access` has no effect
     const requestedScopes = input.scope?.split(" ").filter(Boolean) ?? [];
-    if (requestedScopes.some((scope) => !SUPPORTED_SCOPES.includes(scope)))
+    if (
+      requestedScopes.some(
+        (scope) => scope !== grant.scope && scope !== OFFLINE_ACCESS_SCOPE,
+      )
+    )
       throw new OAuthTokenError(
         OAuthTokenErrorCode.InvalidScope,
         "The scope is larger than the scope of the grant",

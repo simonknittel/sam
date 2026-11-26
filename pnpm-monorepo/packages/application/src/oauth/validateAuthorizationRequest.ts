@@ -1,11 +1,6 @@
 import * as z from "zod";
 import type { ApplicationContext } from "../context.js";
-import {
-  MAX_URL_LENGTH,
-  MCP_SCOPE,
-  PKCE_VALUE,
-  SUPPORTED_SCOPES,
-} from "./constants.js";
+import { MAX_URL_LENGTH, PKCE_VALUE, SUPPORTED_SCOPES } from "./constants.js";
 import {
   isPermittedRedirectUri,
   matchRedirectUri,
@@ -16,7 +11,13 @@ import {
   resolveClientMetadata,
   type ClientMetadata,
 } from "./resolveClientMetadata.js";
-import { isMcpResource } from "./resource.js";
+import {
+  findOAuthResource,
+  getOAuthResourceOfClient,
+  getOAuthResourceScope,
+  getOAuthResourceUrl,
+  type OAuthResource,
+} from "./resources.js";
 
 export type AuthorizationRequestParameters = Readonly<
   Record<string, string | string[] | undefined>
@@ -50,8 +51,6 @@ export enum AuthorizationErrorCode {
   InvalidTarget = "invalid_target",
 }
 
-const GRANTED_SCOPE = MCP_SCOPE;
-
 const MAX_STATE_LENGTH = 512;
 
 const urlParameterSchema = z.string().min(1).max(MAX_URL_LENGTH);
@@ -75,8 +74,11 @@ export type AuthorizationRequestValidation =
       readonly redirectUri: string;
       readonly codeChallenge: string;
       readonly state: string | undefined;
+      /** The one scope of the resource */
       readonly scope: string;
+      /** The URL of the resource */
       readonly resource: string;
+      readonly oauthResource: OAuthResource;
     }
   | {
       readonly kind: AuthorizationRequestValidationKind.ClientError;
@@ -107,7 +109,9 @@ const toClientErrorReason = (reason: ClientMetadataErrorReason) => {
 
 /**
  * The consent page calls it before it shows the consent, and the approve and
- * deny actions call it again with the parameters of the form
+ * deny actions call it again with the parameters of the form. The client id
+ * selects the resource (see `OAuthResource`). A `resource` parameter must name
+ * this resource.
  */
 export const validateAuthorizationRequest = async (
   context: ApplicationContext,
@@ -202,6 +206,11 @@ export const validateAuthorizationRequest = async (
       state.data,
     );
 
+  /**
+   * The grant gets only the scope of the resource of the client. A scope of
+   * the other resource has no effect (RFC 6749 section 3.3), thus an MCP
+   * client that asks for all scopes of the metadata still connects.
+   */
   const requestedScopes = request.data.scope?.split(" ").filter(Boolean) ?? [];
   if (requestedScopes.some((scope) => !SUPPORTED_SCOPES.includes(scope)))
     return redirectError(
@@ -210,15 +219,23 @@ export const validateAuthorizationRequest = async (
       state.data,
     );
 
-  if (
-    request.data.resource !== undefined &&
-    !isMcpResource(context, request.data.resource)
-  )
-    return redirectError(
-      AuthorizationErrorCode.InvalidTarget,
-      "The resource is not the MCP server of this authorization server",
-      state.data,
-    );
+  const oauthResource = getOAuthResourceOfClient(context, client.clientId);
+  if (request.data.resource !== undefined) {
+    const requestedResource = findOAuthResource(context, request.data.resource);
+    if (requestedResource === null)
+      return redirectError(
+        AuthorizationErrorCode.InvalidTarget,
+        "The resource is not a resource of this authorization server",
+        state.data,
+      );
+
+    if (requestedResource !== oauthResource)
+      return redirectError(
+        AuthorizationErrorCode.InvalidTarget,
+        "The client cannot get tokens for this resource",
+        state.data,
+      );
+  }
 
   return {
     kind: AuthorizationRequestValidationKind.Valid,
@@ -226,8 +243,9 @@ export const validateAuthorizationRequest = async (
     redirectUri,
     codeChallenge: request.data.code_challenge,
     state: state.data,
-    scope: GRANTED_SCOPE,
-    resource: context.urls.mcpResourceUrl.href,
+    scope: getOAuthResourceScope(oauthResource),
+    resource: getOAuthResourceUrl(context, oauthResource).href,
+    oauthResource,
   };
 };
 

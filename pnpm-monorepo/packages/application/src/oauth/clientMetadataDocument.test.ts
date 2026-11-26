@@ -1,9 +1,11 @@
 import { describe, expect, test } from "vitest";
+import { createApplicationUrls } from "../context.js";
 import {
   createClientMetadataDocumentSchema,
   getCacheLifetimeInSeconds,
   parseClientId,
 } from "./clientMetadataDocument.js";
+import { getDesktopCompanionClientMetadataDocument } from "./desktopCompanionClient.js";
 
 const CLIENT_ID = "https://claude.ai/oauth/mcp-oauth-client-metadata";
 
@@ -25,6 +27,21 @@ describe("the client metadata document", () => {
 
     expect(result.success).toBe(true);
     expect(result.data).not.toHaveProperty("unknown_field");
+  });
+
+  test("accepts the document of the desktop companion, which the app knows without a fetch", () => {
+    const context = {
+      urls: createApplicationUrls({
+        baseUrl: "http://localhost:3000",
+        publicUploadBaseUrl: "",
+      }),
+    };
+    const document = getDesktopCompanionClientMetadataDocument(context);
+
+    expect(
+      createClientMetadataDocumentSchema(document.client_id).safeParse(document)
+        .success,
+    ).toBe(true);
   });
 
   test("refuses a client_id that is not the URL of the document", () => {
