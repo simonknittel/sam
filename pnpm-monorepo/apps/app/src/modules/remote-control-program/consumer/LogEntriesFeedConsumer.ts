@@ -97,7 +97,7 @@ export enum LogEntriesFeedProblem {
   TooManyConsumers = "too_many_consumers",
   /**
    * The viewer cannot read the feed: no citizen, no `remoteControlProgram;use`
-   * or `logAnalyzer;read`, a switch is off, or an admin assumes the user
+   * or `logAnalyzer;read`, the program is off, or an admin assumes the user
    */
   Forbidden = "forbidden",
   /** The session of the browser ended: the user must log in again */

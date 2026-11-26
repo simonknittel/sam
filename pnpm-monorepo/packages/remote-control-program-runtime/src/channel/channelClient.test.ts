@@ -365,55 +365,41 @@ test("sends a burst of 4 batches, then one batch each second", async () => {
   expect(client.getState().queuedEntryCount).toBe(600);
 });
 
-test("removes the entries of a part that the switches turn off", async () => {
-  const { client, droppedEntries, connect } = setUp();
+test("removes the entries while the Remote Control Program is turned off", async () => {
+  const { client, sockets, droppedEntries, openSocket, welcome, connect } =
+    setUp();
 
   const socket = await connect();
   client.sendFeedEntries(createLogEntries(600));
   expect(socket.getSent(UpMessageType.FeedEntries)).toHaveLength(4);
 
   socket.receive(
-    createDownMessage(DownMessageType.Switches, {
-      turned_off_connectors: [],
-      turned_off_capabilities: [CapabilityId.LogEntries],
-    }),
-  );
-  client.sendFeedEntries(createLogEntries(10, 601));
-
-  expect(client.getState().turnedOffCapabilityIds).toEqual([
-    CapabilityId.LogEntries,
-  ]);
-  expect(droppedEntries).toEqual([
-    {
-      capabilityId: CapabilityId.LogEntries,
-      entryCount: 100,
-      reason: ChannelDropReason.TurnedOff,
-    },
-    {
-      capabilityId: CapabilityId.LogEntries,
-      entryCount: 100,
-      reason: ChannelDropReason.TurnedOff,
-    },
-    {
-      capabilityId: CapabilityId.LogEntries,
-      entryCount: 10,
-      reason: ChannelDropReason.TurnedOff,
-    },
-  ]);
-
-  await vi.advanceTimersByTimeAsync(5_000);
-  expect(socket.getSent(UpMessageType.FeedEntries)).toHaveLength(4);
-
-  socket.receive(
-    createDownMessage(DownMessageType.Switches, {
-      turned_off_connectors: [],
-      turned_off_capabilities: [],
+    createDownMessage(DownMessageType.Close, {
+      reason: RelayCloseReason.ProgramTurnedOff,
     }),
   );
   client.sendFeedEntries(createLogEntries(10, 611));
 
-  const lastBatch = socket.getSent(UpMessageType.FeedEntries).at(-1);
-  expect(lastBatch && getLineNumbers(lastBatch)[0]).toBe(611);
+  expect(client.getState()).toMatchObject({
+    status: ChannelStatus.WaitingForReconnect,
+    queuedEntryCount: 0,
+  });
+  expect(
+    droppedEntries.map(({ entryCount, reason }) => ({ entryCount, reason })),
+  ).toEqual(
+    [100, 100, 100, 100, 100, 100, 10].map((entryCount) => ({
+      entryCount,
+      reason: ChannelDropReason.TurnedOff,
+    })),
+  );
+
+  // The program is on again: the next connection uploads the new entries
+  await vi.advanceTimersByTimeAsync(1_000);
+  welcome(await openSocket());
+  client.sendFeedEntries(createLogEntries(10, 621));
+
+  const batches = sockets.at(-1)?.getSent(UpMessageType.FeedEntries) ?? [];
+  expect(batches.map((batch) => getLineNumbers(batch)[0])).toEqual([621]);
 });
 
 test("sends only the entries that the local access layer permits at the send, also at a resend", async () => {

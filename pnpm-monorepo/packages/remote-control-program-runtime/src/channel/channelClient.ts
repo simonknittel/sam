@@ -27,7 +27,7 @@ import {
   ConnectionTokenRefusedError,
   DEFAULT_TIMERS,
   INITIAL_CHANNEL_STATE,
-  isSourceTurnedOff,
+  isProgramTurnedOff,
   type ChannelClientOptions,
   type ChannelCloseReason,
   type ChannelState,
@@ -231,15 +231,15 @@ export class ChannelClient {
   }
 
   /**
-   * A part that is off does not upload. The client removes its entries and
-   * does not keep them for later: an automatic upload after the part is on
-   * again would send entries of a time in which the part was off. The lines
-   * stay in the log file on the machine, and only an explicit request of the
-   * owner sends older entries (decision 27 and "Switches" of the concept).
+   * The client does not upload while the Remote Control Program is off. It
+   * removes the entries and does not keep them for later: an automatic upload
+   * after the program is on again would send entries of a time in which the
+   * program was off. The lines stay in the log file on the machine, and only
+   * an explicit request of the owner sends older entries (decision 27 and
+   * "Switches" of the concept).
    */
   #getDropReason(source: FeedEntriesSource) {
-    if (isSourceTurnedOff(this.#state, source))
-      return ChannelDropReason.TurnedOff;
+    if (isProgramTurnedOff(this.#state)) return ChannelDropReason.TurnedOff;
 
     // All is off by default (principle 2): a capability without a rule does
     // not upload
@@ -289,7 +289,7 @@ export class ChannelClient {
     return permittedEntries.length > 0;
   }
 
-  /** After a change of the switches or of the local access layer */
+  /** After a change of the connection or of the local access layer */
   #applyAccessChange() {
     const droppedBatches = this.#queue.removeWaiting(
       (batch) => this.#getDropReason(batch.source) !== null,
@@ -499,14 +499,6 @@ export class ChannelClient {
         this.#handleAcknowledgement(connection, message);
         break;
 
-      case DownMessageType.Switches:
-        this.#setState({
-          turnedOffConnectorIds: message.content.turned_off_connectors,
-          turnedOffCapabilityIds: message.content.turned_off_capabilities,
-        });
-        this.#applyAccessChange();
-        break;
-
       default:
         throw new Error(
           `Unknown message type: ${JSON.stringify(message satisfies never)}`,
@@ -708,31 +700,6 @@ export class ChannelClient {
       case AcknowledgementErrorCode.MessageNotValid:
       case AcknowledgementErrorCode.EntriesNotValid:
         this.#reportDroppedBatch(batch, ChannelDropReason.RefusedByRelay);
-        break;
-
-      // The `switches` that follow replace these lists
-      case AcknowledgementErrorCode.ConnectorTurnedOff:
-        this.#reportDroppedBatch(batch, ChannelDropReason.TurnedOff);
-        if (!this.#state.turnedOffConnectorIds.includes(source.connector_id))
-          this.#setState({
-            turnedOffConnectorIds: [
-              ...this.#state.turnedOffConnectorIds,
-              source.connector_id,
-            ],
-          });
-        this.#applyAccessChange();
-        break;
-
-      case AcknowledgementErrorCode.CapabilityTurnedOff:
-        this.#reportDroppedBatch(batch, ChannelDropReason.TurnedOff);
-        if (!this.#state.turnedOffCapabilityIds.includes(source.capability_id))
-          this.#setState({
-            turnedOffCapabilityIds: [
-              ...this.#state.turnedOffCapabilityIds,
-              source.capability_id,
-            ],
-          });
-        this.#applyAccessChange();
         break;
 
       // The uploads wait for the `ack` of a new `announce`

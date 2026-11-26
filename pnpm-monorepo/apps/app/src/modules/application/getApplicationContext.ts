@@ -29,7 +29,7 @@ import {
   type S3ClientOptions,
 } from "@sam-monorepo/infrastructure";
 import { after } from "next/server";
-import { readRemoteControlProgramSwitches } from "./readRemoteControlProgramSwitches";
+import { isRemoteControlProgramTurnedOff } from "./isRemoteControlProgramTurnedOff";
 import { sharpImageReader } from "./sharpImageReader";
 
 /**
@@ -129,7 +129,7 @@ const createApplicationContext = (): ApplicationContext => ({
   clientMetadata: createClientMetadataFetcher(),
   allowInsecureLoopbackClientIds:
     env.OAUTH_ALLOW_INSECURE_LOOPBACK_CLIENT_IDS === "1",
-  remoteControlProgramSwitches: readRemoteControlProgramSwitches,
+  isRemoteControlProgramTurnedOff,
   relay: env.RELAY_URL
     ? createRelayClient({
         url: env.RELAY_URL,

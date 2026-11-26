@@ -28,7 +28,6 @@ import {
   CHANNEL_CLOSE_REASON_TEXTS,
   getRelayStatusText,
 } from "./browserRuntimeTexts";
-import { CAPABILITY_LABELS, CONNECTOR_LABELS } from "./catalogTexts";
 import { SharingPopoverSubsection } from "./SharingPopoverSection";
 import { useRuntimeCommand } from "./useRuntimeCommand";
 
@@ -158,33 +157,12 @@ interface StateProps {
   readonly state: BrowserRuntimeState;
 }
 
-/** Why this browser uploads nothing: no relay, a refusal, a close or a switch */
+/** Why this browser uploads nothing: no relay, a refusal or a close */
 const RelayNotes = ({ state }: StateProps) => {
-  const { channel } = state;
-  const turnedOffLabels = [
-    ...channel.turnedOffConnectorIds.map(
-      (connectorId) => CONNECTOR_LABELS[connectorId],
-    ),
-    ...channel.turnedOffCapabilityIds.map(
-      (capabilityId) => CAPABILITY_LABELS[capabilityId],
-    ),
-  ];
-  const { closeReason } = channel;
-  const showsCloseReason =
-    closeReason !== null && channel.status !== ChannelStatus.Connected;
+  const { closeReason, status } = state.channel;
+  if (closeReason === null || status === ChannelStatus.Connected) return null;
 
-  return (
-    <>
-      {state.isRunning && turnedOffLabels.length > 0 && (
-        <Note
-          type="warning"
-          message={`Derzeit zentral abgeschaltet: ${[...new Set(turnedOffLabels)].join(", ")}. Davon wird nichts hochgeladen.`}
-        />
-      )}
-
-      {showsCloseReason && <CloseReasonNote closeReason={closeReason} />}
-    </>
-  );
+  return <CloseReasonNote closeReason={closeReason} />;
 };
 
 interface CloseReasonNoteProps {
