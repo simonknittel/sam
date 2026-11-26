@@ -102,6 +102,7 @@ test("issues a token that authenticates a connection of the runtime at the relay
       TEST_NOW.getTime() + RELAY_LIMITS.connectionTokenLifetimeMilliseconds,
     ),
     relayUrl: "wss://relay.example.com/",
+    citizenId: owner.citizen.id,
     handle: "owner",
   });
 

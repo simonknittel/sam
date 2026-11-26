@@ -175,6 +175,7 @@ test("the desktop companion signs in, connects as a runtime of the owner, and th
   );
   expect(issued).toMatchObject({
     relayUrl: "wss://relay.example.com/",
+    citizenId: owner.citizen?.id,
     handle: "owner",
   });
 

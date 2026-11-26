@@ -167,6 +167,7 @@ test.describe("the OAuth login of the desktop companion", () => {
     expect(connection.status).toBe(200);
     // Single fields, thus a failure does not print the token
     expect(connection.body?.handle).toBe("companion-nutzer");
+    expect(connection.body?.citizen_id).toEqual(expect.any(String));
     expect(connection.body?.relay_url).toMatch(/^wss?:\/\//);
 
     /** The app KI-Agenten lists only the clients of the MCP server */

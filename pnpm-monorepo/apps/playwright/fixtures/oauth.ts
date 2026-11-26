@@ -351,6 +351,7 @@ export interface ConnectionTokenResult {
     readonly token: string;
     readonly expires_at: string;
     readonly relay_url: string | null;
+    readonly citizen_id: string;
     readonly handle: string | null;
   } | null;
 }

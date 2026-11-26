@@ -34,6 +34,7 @@ const tokenResponse = ({
   token,
   expiresAt,
   relayUrl,
+  citizenId,
   handle,
 }: IssueRuntimeConnectionTokenOutput) =>
   NextResponse.json(
@@ -41,6 +42,7 @@ const tokenResponse = ({
       token,
       expires_at: expiresAt.toISOString(),
       relay_url: relayUrl,
+      citizen_id: citizenId,
       handle,
     },
     { headers: { "cache-control": "no-store" } },
@@ -113,7 +115,7 @@ const handleSessionRequest = async (request: Request) => {
 /**
  * A short-lived token for one connection of a runtime to the relay service
  * of the Remote Control Program, with the URL of the relay service and the
- * handle of the citizen. The runtime gets a token for each connection and
+ * id and the handle of the citizen. The runtime gets a token for each connection and
  * for each renewal. A route handler and not a server action: its URL stays
  * the same after a deploy, thus a runtime that is open during a deploy
  * continues to get tokens.
@@ -124,7 +126,7 @@ const handleSessionRequest = async (request: Request) => {
  * - Else the session of the browser runtime. 401 without a session.
  *
  * Body: `{ "runtime_id": "<uuid>" }`. Answer: `{ "token", "expires_at",
- * "relay_url", "handle" }`, with `relay_url` null when the app has no relay
+ * "relay_url", "citizen_id", "handle" }`, with `relay_url` null when the app has no relay
  * service. 403 also for an admin who assumes a user (see
  * `issueRuntimeConnectionToken()`).
  */

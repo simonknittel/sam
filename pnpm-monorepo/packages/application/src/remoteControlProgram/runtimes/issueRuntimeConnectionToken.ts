@@ -30,7 +30,11 @@ export interface IssueRuntimeConnectionTokenOutput {
    * service: then the browser runtime works only on the machine.
    */
   readonly relayUrl: string | null;
-  /** The handle of the citizen, the owner of the runtime */
+  /**
+   * The citizen, the owner of the runtime. The desktop companion keeps its
+   * local access layer for each citizen, and shows the handle.
+   */
+  readonly citizenId: string;
   readonly handle: string | null;
 }
 
@@ -63,6 +67,7 @@ const issueToken = async (
     token,
     expiresAt,
     relayUrl: context.relay?.webSocketUrl.href ?? null,
+    citizenId: citizen.id,
     handle: citizen.handle,
   };
 };
