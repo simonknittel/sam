@@ -127,9 +127,11 @@ Each part of the Remote Control Program obeys these rules.
 ### Browser runtime
 
 - The browser runtime runs on all pages of SAM, not only on the page of a control UI. Thus the sharing continues when the owner opens a different page.
-- One browser has one active browser runtime, also with more than one SAM tab. The tabs elect one runtime with the Web Locks API. The other tabs are only consumers.
+- One browser has one active browser runtime for each citizen, also with more than one SAM tab. The tabs of the citizen elect one runtime with the Web Locks API. The other tabs are only consumers.
+- A change of the active tab makes no gap in the upload. When the tab of the runtime closes or crashes, the next SAM tab of the same citizen continues the live period (see [Local access layer](#local-access-layer)), when the previous runtime read live not more than 30 seconds before.
+- The browser keeps the state of the browser runtime for each citizen: the settings, the live periods and the handle of the log folder. A citizen who logs in after a different citizen in the same browser does not get this state. Thus a runtime never uploads the entries of a different citizen as the own entries. A logout stops the runtime of the citizen in all tabs, without a continuation.
 - The settings of the browser runtime are in the sharing popover (see [Sharing popover](#sharing-popover)): the autostart, the log folder and the local access layer.
-- With the autostart, the browser runtime starts on each SAM page. When the browser needs a click to give the file access again, the sharing popover shows a note.
+- With the autostart, the browser runtime starts on each SAM page. When the browser needs a click to give the file access again, the sharing popover tells it (see [Sharing popover](#sharing-popover)).
 - SAM supplies the code of the browser runtime. Thus its local access layer protects against other citizens and against mistakes, but not against a compromised SAM deployment.
 
 ### Desktop companion
@@ -145,7 +147,7 @@ Each part of the Remote Control Program obeys these rules.
   - The consent requires `remoteControlProgram;use`, not `mcp;use`.
   - The client id of the desktop companion is a Client ID Metadata Document on an HTTPS URL of SAM.
 - It contains the log file connector next to the gRPC connector. The log file connector supplies `log_entries`, and uploads them only when the local access layer permits it.
-- Its UI controls the local access layer and has the button "Stop all". It asks the questions of "ask each time". It shows no data of the game: the control UIs in SAM show the data.
+- Its UI controls the local access layer. It asks the questions of "ask each time". It shows no data of the game: the control UIs in SAM show the data.
 
 ### Announcement
 
@@ -155,7 +157,7 @@ The owner can use more than one runtime at the same time. Each runtime has an id
 - its connectors, and the capabilities and versions that they can supply,
 - a summary of its local access layer.
 
-The relay keeps the announcement while the runtime is online (see [Presence](#presence)). The sharing popover and the control UIs use it to tell why data is missing (see [Control UIs](#control-uis)).
+The relay keeps the announcement while the runtime is online (see [Presence](#presence)). The sharing popover and the control UIs use it to tell why the own data is missing (see [Control UIs](#control-uis)).
 
 ## Connectors
 
@@ -194,7 +196,7 @@ All parts share one catalog of capabilities: the runtimes, the relay and the con
 | Timing | For a state or a feed: realtime or periodic, and the minimum interval between two updates. |
 | History interval | For a state: the minimum time between two rows of the history (see [History](#history)). |
 | Stale time | For a state: the age after which a consumer shows the value as stale. |
-| Sensitivity | Normal or high (for example the location or the wallet balance). The sharing popover shows a warning for a capability with high sensitivity. |
+| Sensitivity | Normal or high (for example the location or the wallet balance). It is a fact for the choice of the defaults. The sharing popover shows no warning for it. |
 | Risk | For an action: low or high. For an action with high risk, the default rule of the local access layer is "ask each time". |
 | Expiry | For an action: the time after which a runtime does not apply the request (result `expired`). |
 | Game actions | For an action of the gRPC connector: the names of the game actions that it uses. |
@@ -251,7 +253,8 @@ A channel is the transport of a capability. The catalog gives the timing. The ru
 
 - An action is a pair of messages: the request goes down, and the result goes up.
 - Up and down: each runtime keeps one WebSocket connection open to the relay service (see decision 14). The connection carries both directions, for the browser runtime and for the desktop companion.
-- Out: the relay service sends the messages to the consumers through Soketi with the Pusher protocol (`apps/app/src/modules/pusher`). Each viewer has a private channel (`private-citizen-<id>`). The relay checks the grants for each message and sends one copy to each viewer with access.
+- Out: the relay service sends the messages to the consumers through Soketi with the Pusher protocol (`apps/app/src/modules/pusher`). Each viewer has a private channel of the Remote Control Program (`private-remote-control-program-<citizen id>`). The relay checks the grants for each message and sends one copy to each viewer with access.
+- The channel of the Remote Control Program is separate from the channel of the notifications (`private-citizen-<citizen id>`). An admin who assumes a user gets the notifications of the user, but must not get the data of the Remote Control Program (decision 4). Thus the app refuses the subscription of the channel of the Remote Control Program in such a session.
 - Out: the relay collects the changes for each viewer and sends a maximum of one message to each viewer in a short interval (for example 2 seconds). Example: a lineup with 30 citizens, who all watch the lineup and send one update each second, gives 900 messages each second without this rule, and 15 messages each second with it.
 
 ### Delivery to the consumers
@@ -259,7 +262,7 @@ A channel is the transport of a capability. The catalog gives the timing. The ru
 - A control UI tells the relay (through the app) which owners and capabilities it watches, with a lease that it renews. The relay sends messages only to the viewers that watch. Thus a grant with the grantee kind "Everyone" or "Role" does not send a message to each citizen with access. The lease also tells the admin mode of the viewer at its last renewal. The relay checks the admin role at each delivery. Admin mode counts while one lease of the viewer has it, because all control UIs of a viewer share one channel. Thus its end in one browser applies when the last lease with admin mode expires.
 - When a control UI opens, it reads a snapshot of the current values with a cursor. Then it gets the changes through Soketi. After a reconnect of Soketi, it reads the changes since its cursor.
 - A batch for a viewer stays below the size limit of a Soketi message. A larger batch goes into more messages.
-- The active tab of the browser runtime gives its local data to the other tabs of the same browser through a BroadcastChannel.
+- The active tab of the browser runtime gives its local data to the other tabs of the same citizen in the same browser through a BroadcastChannel.
 
 ## Relay
 
@@ -377,9 +380,12 @@ A consumer can request an action of an owner only when the conditions 1 and 2 ar
 
 - Each runtime has one local access layer. The connectors do not have their own. Thus one rule applies to a capability, independent of the connector that supplies it.
 - A rule for a state or a feed is "off" or "on". A rule for a feed can have a filter. Example: the log entry types that the owner shares. The filter exists only in the local access layer. A grant always covers a full capability (see [Decisions](#decisions)).
-- A feed entry leaves the machine automatically only when a running runtime reads it live, while the rule is on and the runtime is not stopped. The entries from a time without a running runtime or from a time of "Stop all" stay on the machine. Older entries leave only on an explicit request of the owner with a confirmation (decision 27).
+- A feed entry leaves the machine automatically only when a running runtime reads it live, while the rule is on and the runtime is not stopped. The entries from a time without a running runtime stay on the machine. Older entries leave only on an explicit request of the owner with a confirmation (decision 27). The details:
+  - The runtime keeps the times in which it read live (the live periods) for 7 days. After a start, it uploads the entries of these periods that the relay does not have yet, for example the entries of a time without a connection to the relay.
+  - When the runtime learns that a switch turned off the capability, it removes all stored live periods. A change of the log folder also removes them. After the next start, only the entries that the runtime reads live from then on go up.
+  - The values and their reasons are in [livePeriods.ts](../../pnpm-monorepo/packages/remote-control-program-runtime/src/localAccess/livePeriods.ts). The continuation after a change of the tab is in [Browser runtime](#browser-runtime).
 - A rule for an action is "off", "ask each time" or "automatic". The rule also tells which requesters it accepts: only the owner, or also other citizens with a grant.
-- The button "Stop all" stops all uploads of the runtime and refuses all actions at the same time. A second button starts them again. The sharing popover also has a button "Stop all" for all runtimes of the owner (see [Sharing popover](#sharing-popover)).
+- The owner starts and stops a runtime only where it runs: the browser runtime in the sharing popover of this browser, and the desktop companion in its own UI. SAM does not start, stop or configure a runtime (decision 23).
 - The runtime keeps its rules on the machine: in the browser storage, or in a file of the desktop companion. The relay never writes them.
 - "Ask each time" shows the request to the owner. The browser runtime shows it in the sharing popover. The desktop companion shows it in a small window of the program. When the owner gives no answer before the expiry time, the result is `expired`.
 
@@ -411,12 +417,14 @@ The grantee kinds:
 
 ## Sharing popover
 
-- An item in the top bar (`apps/app/src/modules/shell/components/TopBar/`) and in the action bar for mobile devices. It follows the notifications popover.
-- It has these sections:
-  1. **Status:** the runtimes of the owner that are online and their connectors. A note when the browser runtime needs a click (for example to give the file access again). A button "Stop all" for all runtimes of the owner: the relay tells each runtime to stop, and refuses their uploads and actions until the owner starts them again.
-  2. **Settings of this browser:** the settings of the browser runtime in this browser: the autostart, the log folder, the local access layer and the button "Stop all" of this browser. For the desktop companion: a read-only summary from its announcement, and a note that the owner changes these settings in the desktop companion.
-  3. **Shared with others:** the grants with their remaining time, a form for a new grant, and the open access requests.
-  4. **Action log:** the action requests to the runtimes of the owner, with their results (see [Action log](#action-log)). This includes the requests that the relay refused.
+- An item in the top bar (`apps/app/src/modules/shell/components/TopBar/`) and, on a mobile device, in the flyout of the action bar, where it opens a bottom sheet. In both places, it is left of the support button. It follows the notifications popover.
+- It has a tab for each of these sections. Without a log folder, the popover opens with the start. Else it opens with the browser. When a control UI opens the popover, it shows the tab that the control UI names, for example the browser for the log folder. The tab of the browser is apart from the other tabs, because it contains the settings of one runtime.
+  1. **Start:** what the Remote Control Program is, and what the runtimes, the connectors, the consumer apps (the available and the planned ones), the grants and the stored data are, from the view of the owner. A matrix shows which runtime supports which connector. Links open the other tabs.
+  2. **Status:** the connected runtimes of the owner and their active connectors. A connector is active when at least one of its capabilities leaves the machine.
+  3. **Grants:** the grants with their remaining time, a form for a new grant, and the open access requests.
+  4. **Runtime: Browser:** the settings of the browser runtime in this browser (its state, the start and the stop, the autostart), and, below the heading "Connectors", one collapsible part for each connector with its rules of the local access layer (for the game logs: a closed part with the instructions, the log folder, the types, and a closed part for the upload of the older entries of a date range). A part is open at first only when the owner must do something in it. A note when the browser runtime needs a click (for example to give the file access again). SAM has no settings of the desktop companion: the owner changes them in the desktop companion (decision 23).
+  5. **Action log:** the action requests to the runtimes of the owner, with their results (see [Action log](#action-log)). This includes the requests that the relay refused.
+- The item of the popover, and the item "Apps" of the action bar, have a mark when the browser runtime needs a click. Thus the owner sees it also while the popover is closed.
 - A control UI never has its own UI for access. When it needs an access, it opens the sharing popover with a prepared request. Examples:
   - The Log Analyzer asks the owner to select the log folder.
   - The lineup status sends an access request to a different citizen.
@@ -434,11 +442,11 @@ The grantee kinds:
 
 ### Control UIs
 
-- A control UI uses a consumer client of the app. The consumer client combines two sources: the browser runtime in the same browser, and the relay. A control UI does not know where a value comes from.
+- A control UI uses a consumer client of the app. The consumer client combines two sources: the browser runtime in the same browser, and the relay. A control UI does not know where a value comes from. Exception: the Log Analyzer shows for each entry whether SAM has it or only this browser.
 - The own data of the browser runtime in the same browser needs no upload. Thus the Log Analyzer shows the own log without sharing. The data of the desktop companion reaches the browser only through the relay.
 - A control UI can show the current state. It can show the history and statistics of other citizens only with its own permission for them (see [History](#history)).
 - A control UI shows the age of each value, and marks a value as stale after the stale time.
-- A control UI tells why data is missing: no runtime is online, no connector supplies the capability, the local access layer blocks it, or there is no grant.
+- A control UI tells why the own data is missing: no runtime is online, no connector supplies the capability, or the local access layer blocks it. In step 2 of the [migration](./migration.md#order-of-the-steps), a viewer cannot read the announcements of other owners. Thus a control UI does not tell why the data of a different owner is missing.
 
 ### Log Analyzer
 
@@ -446,7 +454,7 @@ The Log Analyzer is the control UI of the feed `log_entries`. It needs `logAnaly
 
 - The log file connector reads `Game.log` and the old log files. In the browser runtime, it uses the File System Access API: the handle of the log folder is in IndexedDB, a Web Worker parses the files, and a reader reads only the new bytes of a file.
 - The local access layer tells which log entry types leave the machine. Older entries leave only on an explicit request (decision 27).
-- Before the upload, the connector replaces each IP address in a raw line with a fixed marker (decision 22).
+- When the connector reads a line, it replaces each IP address in the raw line with a fixed marker (decision 22). Thus the own entries on the machine (for example in the Log Analyzer) also show the marker, and an entry has the same key on the machine and in SAM.
 - The relay use case "append feed entries" checks each line against its pattern again. The patterns are `LOG_ANALYZER_ENTRY_PATTERNS` (`packages/domain/src/logAnalyzer/`). The connector and the relay share them, and the rules in [AGENTS.md](../../AGENTS.md) apply to them.
 - The hash for duplicates must not depend on the version of a pattern: it uses the oldest type of a pattern chain (`supersedes`) and the raw line. Thus two runtimes with different pattern versions do not store the same line twice.
 - The shared test data contains lines with `\r\n` and with `\n`, and partly written lines, because `Game.log` has mixed line ends, and `.` matches `\r` in Rust, but not in JavaScript.
@@ -486,7 +494,7 @@ The MCP server is stateless and has no subscriptions (see [MCP Server](../mcp-se
 | Organization | Admins | The Remote Control Program, a connector, a capability | Unleash flags: one for the Remote Control Program, and one for each connector and each capability, with the name from the catalog. The relay refuses the data and the actions of a disabled part, and tells the runtimes. A permission for the use of the Remote Control Program. |
 | Owner in SAM | Owner | Who can read the live data of a capability, who can request an action | Grants |
 | Consumer | Admins | Who can read the history in this consumer | Permission of the consumer |
-| Owner on the machine | Owner | What leaves the machine, which actions the runtime applies, the button "Stop all" of the runtime | Local access layer |
+| Owner on the machine | Owner | What leaves the machine, which actions the runtime applies | Local access layer |
 | Code | Developers | Which connectors a runtime contains | Each connector is a separate module |
 
 ## Location in the repository
@@ -497,8 +505,8 @@ The paths of the pnpm monorepo are relative to `pnpm-monorepo/`. The runtime pac
 | - | - |
 | `packages/domain/src/remoteControlProgram/` | The catalog of the capabilities, the protocol of the relay service, the pure rules of the grants, the rule for the IP addresses and the hash of the feed entries. Step 3 adds the export of the shared definitions for Rust. The patterns of the Log Analyzer stay in `packages/domain/src/logAnalyzer/`. |
 | `packages/application/src/remoteControlProgram/` | The use cases of the relay. |
-| `packages/remote-control-program-runtime` | The core of the browser runtime: the base types of the connectors, the TypeScript connectors, the local access layer and the channel client. No `next` and no `react`. |
-| `apps/app/src/modules/remote-control-program/` | The browser runtime, the consumer client and the sharing popover. |
+| `packages/remote-control-program-runtime` | The core of the browser runtime: the TypeScript connectors (in step 2 only the log file connector, thus no shared base types of the connectors), the local access layer, the channel client, and their orchestration (`BrowserRuntime`) with the store of the own entries. No `next` and no `react`. |
+| `apps/app/src/modules/remote-control-program/` | The parts of the browser runtime that need the browser or the app: the election of the tab with the Web Locks API, the BroadcastChannel between the tabs, the handle of the log folder and the token source. Also the consumer client and the sharing popover. |
 | `packages/mcp/src/tools/remoteControlProgram/` | The MCP tools. |
 | `apps/relay` | The relay service: a Node.js container, like `apps/collab`. |
 | A Rust project next to `pnpm-monorepo/`, for example `companion/` | The desktop companion. It is not a part of the pnpm monorepo. |
@@ -531,14 +539,14 @@ These ideas have no use case or no reliable source yet. They are not part of the
 
 - The gRPC interface is new in Star Citizen 5.0, only in the PTU, and CIG has not spoken openly about it (see [The gRPC interface of the game client](./grpc-interface.md)). CIG can change it or remove it with each build. Until version 5.0 comes to LIVE, the gRPC connector works only for players in the PTU.
 - When the gRPC server of the game client is on, each local program can trigger each listed game action, also `v_self_destruct` (see [TriggerGameAction](./grpc-interface.md#triggergameaction)). The Remote Control Program cannot prevent this. It must not make it larger: it accepts only actions from the catalog.
-- The history keeps personal data permanently, for example the location, the vitals and the wallet balance. The owner cannot delete it (see [Decisions](#decisions)). After the upload, the owner has no control of it: the grants apply only to the live data (decision 30). Thus the defaults and the sensitivity must tell the owner before the upload, and a permission for the history must be narrow. A request for deletion under data protection law (for example Article 17 of the GDPR) is then a manual task.
+- The history keeps personal data permanently, for example the location, the vitals and the wallet balance. The owner cannot delete it (see [Decisions](#decisions)). After the upload, the owner has no control of it: the grants apply only to the live data (decision 30). Thus the sharing popover must tell the owner before the upload, and a permission for the history must be narrow. A request for deletion under data protection law (for example Article 17 of the GDPR) is then a manual task.
 - The history can become large (see decision 7).
 - The relay service is one more service to operate. While it is not available, no runtime can upload data, and no action can reach a runtime. The runtimes must connect again automatically.
 - The connector ideas (simulated input, screen reading) can conflict with the terms of service of CIG and with the anti-cheat software. Do a check before a plan for one of them.
 
 ## Decisions
 
-Decisions 1 to 26 are of 2026-11-21. Decisions 27 to 29 are of 2026-11-22. Decisions 30 and 31 are of 2026-11-25. Decision 30 also changed decisions 8 and 12. The decisions that apply only to the migration are in [Migration](./migration.md#decisions-of-the-migration).
+Decisions 1 to 26 are of 2026-11-21, except decision 23. Decisions 27 to 29 are of 2026-11-22. Decisions 23, 30 and 31 are of 2026-11-25. Decision 30 also changed decisions 8 and 12. The decisions that apply only to the migration are in [Migration](./migration.md#decisions-of-the-migration).
 
 1. **Name.** The working title is "Remote Control Program". The code can use it, for example `remoteControlProgram` and `remote_control_program`.
 2. **Rust for the desktop companion.** It uses little memory and processor time while the game runs. It has a mature native gRPC client. It builds one executable file for each operating system, without a separate runtime. Result: the log file connector and the catalog need one definition for TypeScript and Rust (principle 11, decision 5).
@@ -581,11 +589,11 @@ Decisions 1 to 26 are of 2026-11-21. Decisions 27 to 29 are of 2026-11-22. Decis
     "Ask each time" uses a small window of the program, not a notification of the operating system. On Windows, these notifications need a registered app identity (AppUserModelID), which an installation normally makes. Add an installer only when a need appears.
 21. **Consumers derive, connectors upload raw values** (principle 15). Derived values are specific to a consumer. Thus the connectors stay small, and the Rust connector needs no second implementation of a derivation. A derivation that more than one consumer needs goes into `domain` as a shared helper.
 22. **No IP addresses leave the machine.** The log file connector replaces each IP address in a raw line with a fixed marker before the upload. The marker keeps the server check of the patterns valid, because no pattern captures an IP address in a named group. The rule for the marker is a part of the shared definitions (decision 5), thus TypeScript and Rust give the same line and the same hash. The relay refuses a line that still contains an IP address.
-23. **"Stop all" instead of an emergency stop.** It is a normal button for comfort: on each machine for its runtime, and in the sharing popover for all runtimes of the owner. A second button starts all again.
+23. **SAM does not control the runtimes.** No "Stop all" and no emergency stop: SAM does not start, stop or configure a runtime, and stores no stop. The owner does this where the runtime runs. From SAM, the owner can revoke a grant, which ends the live access at once, and can end the session of a different device in the account: its runtime then gets no new token. The switches of the organization (see [Switches](#switches)) are not a control of a single runtime: they turn off a connector or a capability for everyone. The action requests (step 5 of the [migration](./migration.md)) are not a control of the runtime: its local access layer decides on each request. (Changed on 2026-11-25.)
 24. **Permissions.** One permission for the use of the Remote Control Program: `remoteControlProgram;use`. An owner needs it to connect a runtime, and a consumer needs it to read or to request. Each consumer can have its own permission for what it shows (for example `logAnalyzer;read` for the Log Analyzer). The Log Analyzer needs both permissions, also for the own log on the machine.
 25. **No code signing certificate for Windows.** The releases have no certificate for the code signing of Windows, thus Windows shows a warning at the first start. SAM tells the users how to start the program, and what the risks are.
 26. **No location in the lineup status for now.** The gRPC interface supplies no location, and a location from `log_entries` would need a grant for all uploaded log entries (decision 10). See [Ideas](#ideas).
-27. **Only live feed entries leave the machine automatically.** A runtime uploads a feed entry automatically only when it reads the entry live: while it runs, the rule is on and the runtime is not stopped. Thus a closed SAM tab or "Stop all" also stops the upload of the entries of that time, also after the next start. Older entries leave only on an explicit request of the owner with a confirmation. Shared entries cannot be deleted (decision 12), thus the owner decides on each older entry.
+27. **Only live feed entries leave the machine automatically.** A runtime uploads a feed entry automatically only when it reads the entry live: while it runs, the rule is on and the runtime is not stopped. Thus a closed SAM tab or a stopped runtime also stops the upload of the entries of that time, also after the next start. Older entries leave only on an explicit request of the owner with a confirmation. Shared entries cannot be deleted (decision 12), thus the owner decides on each older entry. The details are in [Local access layer](#local-access-layer).
 28. **Telemetry of the relay service.** OpenTelemetry metrics and traces. The logs go to the output of the container. The alerts are set up in Grafana, outside of this repository.
 29. **Environments of the relay service.** Production and the local stack (Docker Compose and the Playwright stack). The relay service must run fully with the rest of the local stack. The preview deployments have no relay service.
 30. **The grants apply only to the live data.** The end of a grant, its grantee and its revocation limit only the live data and the actions. The consumers control the access to the stored data with their own permissions and their own minimum age. Reason: historical statistics do not work when the stored data disappears with the end of a grant.

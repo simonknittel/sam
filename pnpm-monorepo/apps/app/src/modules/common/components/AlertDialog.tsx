@@ -52,7 +52,7 @@ interface Props {
    */
   readonly onClose: () => void;
   readonly title: string;
-  readonly description: ReactNode;
+  readonly description?: ReactNode;
   readonly confirmLabel: string;
   readonly confirmDisabled?: boolean;
   readonly children?: ReactNode;
@@ -138,7 +138,7 @@ const OpenAlertDialog = ({
       ref={dialogRef}
       role="alertdialog"
       aria-labelledby={titleId}
-      aria-describedby={descriptionId}
+      aria-describedby={description ? descriptionId : undefined}
       onClose={onClose}
       onKeyDownCapture={closeOnEscape}
       /**
@@ -158,9 +158,11 @@ const OpenAlertDialog = ({
           {title}
         </h2>
 
-        <p id={descriptionId} className="text-sm">
-          {description}
-        </p>
+        {description && (
+          <p id={descriptionId} className="text-sm">
+            {description}
+          </p>
+        )}
       </div>
 
       {children}

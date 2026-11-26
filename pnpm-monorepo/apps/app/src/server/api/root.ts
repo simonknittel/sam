@@ -8,14 +8,16 @@ import { getAllEvents } from "./routers/events/getAllEvents";
 import { getOwnInvitationState } from "./routers/events/getOwnInvitationState";
 import { getPublishableDiscordChannels } from "./routers/events/getPublishableDiscordChannels";
 import { getUsableEventTemplates } from "./routers/events/getUsableEventTemplates";
-import { getOwnEntryHashes } from "./routers/logAnalyzer/getOwnEntryHashes";
-import { getOwnEntryHashesInRange } from "./routers/logAnalyzer/getOwnEntryHashesInRange";
-import { getSharedEntries } from "./routers/logAnalyzer/getSharedEntries";
-import { getSharedEntriesInRange } from "./routers/logAnalyzer/getSharedEntriesInRange";
 import { getManufacturerById } from "./routers/manufacturer/getById";
 import { getSeriesByManufacturerId } from "./routers/manufacturer/getSeriesByManufacturerId";
 import { list as listOnSiteNotifications } from "./routers/onSiteNotifications/list";
 import { unreadCount as countUnreadOnSiteNotifications } from "./routers/onSiteNotifications/unreadCount";
+import { endWatchLease } from "./routers/remoteControlProgram/endWatchLease";
+import { findOwnFeedEntryKeys } from "./routers/remoteControlProgram/findOwnFeedEntryKeys";
+import { getSharingPopover } from "./routers/remoteControlProgram/getSharingPopover";
+import { listSharingOwners } from "./routers/remoteControlProgram/listSharingOwners";
+import { readFeedEntries } from "./routers/remoteControlProgram/readFeedEntries";
+import { renewWatchLease } from "./routers/remoteControlProgram/renewWatchLease";
 import { getAssignableRoles } from "./routers/roles/getAssignableRoles";
 import { getRolesForSalaries } from "./routers/silc/getRolesForSalaries";
 import { search as searchSpynet } from "./routers/spynet/search";
@@ -51,12 +53,6 @@ export const appRouter = createTRPCRouter({
     getPublishableDiscordChannels,
     getUsableEventTemplates,
   }),
-  logAnalyzer: createTRPCRouter({
-    getOwnEntryHashes,
-    getOwnEntryHashesInRange,
-    getSharedEntries,
-    getSharedEntriesInRange,
-  }),
   manufacturer: createTRPCRouter({
     getById: getManufacturerById,
     getSeriesByManufacturerId,
@@ -64,6 +60,14 @@ export const appRouter = createTRPCRouter({
   onSiteNotifications: createTRPCRouter({
     list: listOnSiteNotifications,
     unreadCount: countUnreadOnSiteNotifications,
+  }),
+  remoteControlProgram: createTRPCRouter({
+    endWatchLease,
+    findOwnFeedEntryKeys,
+    getSharingPopover,
+    listSharingOwners,
+    readFeedEntries,
+    renewWatchLease,
   }),
   roles: createTRPCRouter({
     getAssignableRoles,

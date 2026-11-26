@@ -1,7 +1,6 @@
 import { CitizenAvatarSize } from "@/modules/common/components/CitizenAvatarSize";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { RelativeDate } from "@/modules/common/components/RelativeDate";
-import { SmallBadge } from "@/modules/common/components/SmallBadge";
 import { TRow } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { getCitizenDisplayName } from "@sam-monorepo/domain";
@@ -10,6 +9,7 @@ import { memo } from "react";
 import { PATTERNS, type IEntry } from "../utils/PATTERNS";
 import styles from "./Entry.module.css";
 import { useEntryClock } from "./EntryClock";
+import { EntryUploadState } from "./EntryUploadState";
 import { QuickLookToggle } from "./QuickLookToggle";
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -36,18 +36,11 @@ interface Props {
 }
 
 /**
- * The entries are immutable: every change replaces the entry object (an
- * upload flips `isUploaded`, a local entry replaces a shared one), thus the
- * default comparison of `memo` by identity is enough.
+ * The entries are immutable: every change replaces the entry object (see
+ * `toEntry`), thus the default comparison of `memo` by identity is enough.
  */
 export const Entry = memo(function Entry({ entry }: Props) {
   const { title, icon: Icon } = PATTERNS[entry.type];
-
-  const sharingLabel = entry.isShared
-    ? "Geteilt"
-    : entry.isUploaded
-      ? "Hochgeladen"
-      : "Lokal";
 
   return (
     <TRow
@@ -71,22 +64,15 @@ export const Entry = memo(function Entry({ entry }: Props) {
         )}
       </td>
 
-      <td
-        className="truncate"
-        title={entry.citizen ? getCitizenDisplayName(entry.citizen) : undefined}
-      >
-        {entry.citizen ? (
-          <CitizenLink
-            citizen={entry.citizen}
-            avatarSize={CitizenAvatarSize.Row}
-          />
-        ) : (
-          <span className="text-white/40">-</span>
-        )}
+      <td className="truncate" title={getCitizenDisplayName(entry.citizen)}>
+        <CitizenLink
+          citizen={entry.citizen}
+          avatarSize={CitizenAvatarSize.Row}
+        />
       </td>
 
-      <td>
-        <SmallBadge value={sharingLabel} className="text-white/40" />
+      <td className="text-white/40">
+        <EntryUploadState uploadState={entry.uploadState} />
       </td>
 
       <td className="flex items-center gap-2 text-white/40">

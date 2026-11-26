@@ -17,7 +17,7 @@ import {
   FaPiggyBank,
   FaSave,
 } from "react-icons/fa";
-import { FaScaleBalanced } from "react-icons/fa6";
+import { FaScaleBalanced, FaTowerBroadcast } from "react-icons/fa6";
 import { IoDocuments } from "react-icons/io5";
 import { MdTaskAlt, MdWorkspaces } from "react-icons/md";
 import { RiSpyFill } from "react-icons/ri";
@@ -30,6 +30,7 @@ import FleetTab from "./tabs/FleetTab";
 import { OrganizationsTab } from "./tabs/OrganizationsTab";
 import OtherTab from "./tabs/OtherTab";
 import { PenaltyPointsTab } from "./tabs/PenaltyPointsTab";
+import { RemoteControlProgramTab } from "./tabs/RemoteControlProgramTab";
 import { SilcTab } from "./tabs/SilcTab";
 import { TasksTab } from "./tabs/TasksTab";
 import { WikiTab } from "./tabs/WikiTab";
@@ -80,6 +81,10 @@ export const Permissions = ({
             <RiSpyFill /> Organisationen
           </Tab>
 
+          <Tab id="remote_control_program">
+            <FaTowerBroadcast /> Remote Control Program
+          </Tab>
+
           <Tab id="silc">
             <FaPiggyBank /> SILC
           </Tab>
@@ -109,6 +114,7 @@ export const Permissions = ({
         <FleetTab />
         <EventsTab />
         <DocumentsTab />
+        <RemoteControlProgramTab />
         <SilcTab />
         <PenaltyPointsTab />
         <TasksTab />

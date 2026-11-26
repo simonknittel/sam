@@ -3,15 +3,13 @@ import { LogAnalyzer } from "./LogAnalyzer";
 import { LogAnalyzerContext } from "./LogAnalyzerContext";
 import { OverlayProvider } from "./OverlayContext";
 
-interface Props extends ComponentProps<typeof LogAnalyzer> {
-  readonly isSharingAvailable: boolean;
-}
+type Props = ComponentProps<typeof LogAnalyzer>;
 
-export const Bundle = ({ isSharingAvailable, ...logAnalyzerProps }: Props) => {
+export const Bundle = (props: Props) => {
   return (
-    <LogAnalyzerContext isSharingAvailable={isSharingAvailable}>
+    <LogAnalyzerContext>
       <OverlayProvider>
-        <LogAnalyzer {...logAnalyzerProps} />
+        <LogAnalyzer {...props} />
       </OverlayProvider>
     </LogAnalyzerContext>
   );

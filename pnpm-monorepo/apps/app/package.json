@@ -43,6 +43,7 @@
     "@sam-monorepo/domain": "workspace:*",
     "@sam-monorepo/infrastructure": "workspace:*",
     "@sam-monorepo/mcp": "workspace:*",
+    "@sam-monorepo/remote-control-program-runtime": "workspace:*",
     "@sam-monorepo/wiki-editor": "workspace:*",
     "@t3-oss/env-nextjs": "0.13.11",
     "@tanstack/react-query": "5.107.1",

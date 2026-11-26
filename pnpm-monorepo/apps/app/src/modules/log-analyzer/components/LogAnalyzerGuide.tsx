@@ -12,18 +12,15 @@ import {
 import { GuideNoteList } from "@/modules/common/components/Guide/GuideNoteList";
 import { GuideScreenshotFit } from "@/modules/common/components/Guide/GuideScreenshot";
 import { GuideSection } from "@/modules/common/components/Guide/GuideSection";
-import { GuideStep } from "@/modules/common/components/Guide/GuideStep";
-import { GuideStepList } from "@/modules/common/components/Guide/GuideStepList";
 import { UiLabel } from "@/modules/common/components/Guide/UiLabel";
-import { FaChrome } from "react-icons/fa";
+import { LOG_ENTRIES_HISTORY_TEXT } from "@/modules/remote-control-program/utils/remoteControlProgramTexts";
 import {
   FaBolt,
   FaCalendarDays,
+  FaCloud,
   FaEye,
-  FaFileArrowUp,
   FaFilter,
-  FaFolderOpen,
-  FaHourglassHalf,
+  FaLaptop,
   FaLock,
   FaRotate,
   FaTowerBroadcast,
@@ -47,10 +44,13 @@ import { LogAnalyzerGuideEntryCategory } from "./LogAnalyzerGuideEntryCategory";
 
 interface Props {
   readonly className?: string;
-  readonly isSharingAvailable: boolean;
 }
 
-export const LogAnalyzerGuide = ({ className, isSharingAvailable }: Props) => {
+/**
+ * The rules of the sharing are the rules of the Remote Control Program (see
+ * "Log Analyzer" of `docs/remote-control-program/README.md`)
+ */
+export const LogAnalyzerGuide = ({ className }: Props) => {
   return (
     <Guide
       subtitle="Was der Log Analyzer kann und wie du ihn benutzt"
@@ -62,75 +62,35 @@ export const LogAnalyzerGuide = ({ className, isSharingAvailable }: Props) => {
         highlights={
           <>
             <GuideHighlight icon={FaLock} title="Lokal ausgewertet">
-              Deine Log-Dateien verlassen deinen Computer nicht. Der Browser
-              wertet sie aus.
+              Deine Log-Dateien verlassen deinen Computer nie. Der Browser
+              wertet sie aus, und nur die Einträge der Typen, die du
+              einschaltest, gehen an SAM.
             </GuideHighlight>
 
             <GuideHighlight icon={FaBolt} title="Live während du spielst">
-              Mit <UiLabel>Automatisch aktualisieren</UiLabel> erscheinen neue
-              Einträge alle 10 Sekunden, auf Wunsch auch in einem Overlay über
+              Solange die Runtime des Remote Control Programs läuft, erscheinen
+              neue Einträge von selbst, auf Wunsch auch in einem Overlay über
               dem Spiel.
             </GuideHighlight>
 
-            {isSharingAvailable && (
-              <GuideHighlight icon={FaUsers} title="Gemeinsam mit anderen">
-                Teile ausgewählte Einträge und sieh, was bei den anderen
-                passiert.
-              </GuideHighlight>
-            )}
+            <GuideHighlight icon={FaUsers} title="Gemeinsam mit anderen">
+              Zeig anderen live, was bei dir passiert, und sieh, was bei ihnen
+              los ist.
+            </GuideHighlight>
           </>
         }
         screenshot={overviewScreenshot}
         screenshotAlt="Der Log Analyzer mit der Tabelle der Einträge und dem Live-Status"
       />
 
-      <GuideSection
-        heading="So startest du"
-        lead="In vier Schritten zu deinen ersten Einträgen"
-      >
-        <GuideStepList>
-          <GuideStep number={1} icon={FaChrome} title="Browser wählen">
-            Der Log Analyzer funktioniert in Google Chrome, Microsoft Edge und
-            Opera GX. Mozilla Firefox, Safari und Brave werden nicht
-            unterstützt.
-          </GuideStep>
-
-          <GuideStep number={2} icon={FaFolderOpen} title="Ordner auswählen">
-            Wähle <UiLabel icon={FaFileArrowUp}>Ordner auswählen</UiLabel> und
-            dann den Ordner deiner Star Citizen-Installation, zum Beispiel{" "}
-            {/* A path wraps only after a backslash, not inside a name */}
-            <code className="font-mono text-white/90">
-              …\
-              <wbr />
-              Roberts Space Industries\
-              <wbr />
-              StarCitizen
-            </code>
-            . Er darf nicht unter{" "}
-            <code className="font-mono text-white/90">
-              C:\Program Files
-            </code>{" "}
-            liegen. Beim nächsten Mal genügt{" "}
-            <UiLabel>Letzten Ordner verwenden</UiLabel>.
-          </GuideStep>
-
-          <GuideStep
-            number={3}
-            icon={FaHourglassHalf}
-            title="Auswertung abwarten"
-          >
-            Die Auswertung beginnt sofort und liest die Logs der letzten 14
-            Tage. In der Leiste über der Tabelle siehst du, wie viele Sessions
-            der Log Analyzer liest.
-          </GuideStep>
-
-          <GuideStep number={4} icon={FaRotate} title="Live bleiben">
-            Schalte <UiLabel>Automatisch aktualisieren</UiLabel> ein, damit neue
-            Einträge während des Spiels erscheinen. Mit{" "}
-            <UiLabel>Autostart</UiLabel> startet der Log Analyzer beim nächsten
-            Besuch selbst mit dem letzten Ordner.
-          </GuideStep>
-        </GuideStepList>
+      <GuideSection heading="So startest du">
+        <p className="ml-4 text-white/80">
+          Öffne das{" "}
+          <UiLabel icon={FaTowerBroadcast}>Remote Control Program</UiLabel> in
+          der oberen Leiste. Unter <UiLabel>Runtime: Browser</UiLabel> richtest
+          du die <UiLabel>Game Logs</UiLabel> ein. Dort findest du auch eine{" "}
+          <UiLabel>Anleitung</UiLabel> dazu.
+        </p>
       </GuideSection>
 
       <GuideSection
@@ -142,21 +102,20 @@ export const LogAnalyzerGuide = ({ className, isSharingAvailable }: Props) => {
           features={[
             {
               icon: FaRotate,
-              title: "Automatisch aktualisieren",
+              title: "Neue Einträge",
               screenshot: liveModeScreenshot,
               screenshotAlt:
                 "Neue Einträge mit der Markierung „Neu“ oben in der Tabelle",
               content:
-                "Der Log Analyzer liest die Logs alle 10 Sekunden. Neue Einträge bekommen für kurze Zeit eine Markierung, damit du sie sofort siehst.",
+                "Die Runtime liest neue Zeilen sofort, und die Einträge der anderen kommen in Echtzeit. Neue Einträge bekommen für kurze Zeit eine Markierung, damit du sie sofort siehst.",
             },
             {
               icon: FaFilter,
-              title: isSharingAvailable ? "Filter & Teilen" : "Filter",
+              title: "Filter",
               screenshot: filterScreenshot,
-              screenshotAlt: "Der Dialog mit den Einstellungen für jeden Typ",
-              content: isSharingAvailable
-                ? "Lege für jeden Typ fest, ob die Tabelle deine Einträge zeigt, ob du sie teilst und ob du die Einträge anderer siehst. Einzelne Citizens kannst du ausblenden."
-                : "Lege für jeden Typ fest, ob die Tabelle seine Einträge zeigt.",
+              screenshotAlt: "Der Dialog mit den Filtern für jeden Typ",
+              content:
+                "Lege für jeden Typ fest, ob die Tabelle deine Einträge und die Einträge anderer zeigt. Einzelne Citizens kannst du ausblenden. Die Filter ändern nicht, was du teilst.",
             },
             {
               icon: FaEye,
@@ -172,18 +131,16 @@ export const LogAnalyzerGuide = ({ className, isSharingAvailable }: Props) => {
               title: "Live-Status",
               screenshot: liveStatusScreenshot,
               screenshotAlt: "Der Live-Status mit drei Citizens",
-              content: isSharingAvailable
-                ? "Zeigt für dich und jeden Citizen, dessen Einträge du siehst, was gerade aktiv ist: Shard, Zonen, Instanzen und laufende Contracts."
-                : "Zeigt, was bei dir gerade aktiv ist: Shard, Zonen, Instanzen und laufende Contracts.",
+              content:
+                "Zeigt für dich und jeden Citizen, der mit dir teilt, was gerade aktiv ist: Shard, Zonen, Instanzen und laufende Contracts.",
             },
             {
               icon: FaCalendarDays,
               title: "Zeitraum",
               screenshot: dateRangeScreenshot,
               screenshotAlt: "Der Dialog für den Zeitraum mit den Vorlagen",
-              content: isSharingAvailable
-                ? "Ohne Zeitraum siehst du die letzten 14 Tage. Wähle einen Zeitraum, um ältere Logs auszuwerten. Deine älteren Einträge kannst du danach mit einem Klick teilen."
-                : "Ohne Zeitraum siehst du die letzten 14 Tage. Wähle einen Zeitraum, um ältere Logs auszuwerten.",
+              content:
+                "Ohne Zeitraum siehst du die letzten 14 Tage. Wähle einen Zeitraum, um ältere Logs auszuwerten.",
             },
             {
               icon: FaWindowRestore,
@@ -214,29 +171,45 @@ export const LogAnalyzerGuide = ({ className, isSharingAvailable }: Props) => {
         </ul>
       </GuideSection>
 
-      {isSharingAvailable && (
-        <GuideSection heading="Was geteilt wird">
-          <GuideNoteList>
-            <GuideNote>
-              Es werden nie Log-Dateien hochgeladen. Nur die Einträge der Typen,
-              die du unter{" "}
-              <UiLabel icon={FaFilter}>Filter &amp; Teilen</UiLabel> teilst,
-              gehen an den Server.
-            </GuideNote>
+      <GuideSection
+        heading="Was geteilt wird"
+        lead="Im Remote Control Program legst du fest, was hochgeladen wird und wer es live sehen darf."
+      >
+        <GuideNoteList>
+          <GuideNote>
+            In der Tabelle zeigt{" "}
+            <FaCloud
+              role="img"
+              aria-label="die Wolke"
+              className="inline-block align-[-0.125em]"
+            />{" "}
+            hochgeladene Einträge und{" "}
+            <FaLaptop
+              role="img"
+              aria-label="der Laptop"
+              className="inline-block align-[-0.125em]"
+            />{" "}
+            Einträge, die es nur auf deinem Computer gibt.
+          </GuideNote>
 
-            <GuideNote>
-              Geteilte Einträge sind für alle mit Zugriff auf den Log Analyzer
-              sichtbar. Einträge, die älter als 14 Tage sind, teilt der Log
-              Analyzer nur, wenn du es selbst auslöst.
-            </GuideNote>
+          <GuideNote>
+            Wer deine Einträge live sehen darf, legst du unter{" "}
+            <UiLabel>Freigaben</UiLabel> fest: einzelne Citizens, Rollen oder
+            alle, auf Wunsch nur für eine bestimmte Zeit. Freigaben kannst du
+            jederzeit widerrufen.
+          </GuideNote>
 
-            <GuideNote variant={GuideNoteVariant.Warning}>
-              Ein geteilter Eintrag kann nicht zurückgezogen werden. Wenn du das
-              Teilen ausschaltest, werden keine weiteren Einträge hochgeladen.
-            </GuideNote>
-          </GuideNoteList>
-        </GuideSection>
-      )}
+          <GuideNote>
+            {LOG_ENTRIES_HISTORY_TEXT} Das gilt auch für Einträge, die du schon
+            vor dem Remote Control Program geteilt hast.
+          </GuideNote>
+
+          <GuideNote variant={GuideNoteVariant.Warning}>
+            Hochgeladene Einträge können nicht gelöscht werden. Wenn du einen
+            Typ abwählst oder die Runtime stoppst, kommt aber nichts Neues dazu.
+          </GuideNote>
+        </GuideNoteList>
+      </GuideSection>
     </Guide>
   );
 };

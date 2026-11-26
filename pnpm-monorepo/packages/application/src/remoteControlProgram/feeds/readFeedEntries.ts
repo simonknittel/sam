@@ -61,8 +61,8 @@ export enum FeedEntryReadMode {
 const timeWindowShape = {
   /**
    * Without it: no limit. The Log Analyzer gives
-   * `getLogAnalyzerWindowStart()` of its days to load (see
-   * `clampLogAnalyzerDaysToLoad()`), or the start of its date range.
+   * `getLogAnalyzerWindowStart()` of its days to load, or the start of its
+   * date range.
    */
   start: z.date().optional(),
   /** Exclusive. Without it: no limit. */

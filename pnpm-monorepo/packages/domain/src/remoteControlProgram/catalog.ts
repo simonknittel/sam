@@ -17,8 +17,8 @@ import {
  * The Unleash flags of the Remote Control Program (see "Switches" of the
  * concept). Each flag is a kill switch: when the flag is on, its part is off.
  * Without a value of the flag (no Unleash in the stack, or Unleash is not
- * available), all parts stay on. The flags `DisableLogAnalyzerSharing` and
- * `DisableMcpServer` of the app work the same way. The flags are switches of
+ * available), all parts stay on. The flag `DisableMcpServer` of the app
+ * works the same way. The flags are switches of
  * the organization: the app and the relay service read them without the
  * context of a user, thus a strategy can only select an app name (for example
  * the app of one Playwright worker).

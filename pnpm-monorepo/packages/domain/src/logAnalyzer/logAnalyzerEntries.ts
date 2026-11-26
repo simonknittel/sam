@@ -80,8 +80,8 @@ interface LogAnalyzerEntryPattern {
    * the event, unless `takesTimeOfPrecedingLine` is set.
    *
    * A match spans two lines at most, because a read of a file which grew
-   * starts one line before the new lines (see `createLogFileReader` in the
-   * app).
+   * starts one line before the new lines (see `createLogFileReader` in
+   * `packages/remote-control-program-runtime`).
    *
    * The server runs the expression on the raw lines that a client sends,
    * thus it must not backtrack without a limit. A gap up to the tag of the
@@ -689,6 +689,7 @@ export const createLogAnalyzerEntryHash = async (
 
 export const LOG_ANALYZER_ENTRY_HASH_PATTERN = /^[0-9a-f]{64}$/;
 
+/** The limit of one batch of the capability `log_entries` */
 export const MAXIMUM_LOG_ANALYZER_UPLOAD_ENTRIES = 100;
 
 /**
@@ -697,12 +698,3 @@ export const MAXIMUM_LOG_ANALYZER_UPLOAD_ENTRIES = 100;
  * line that a client sends.
  */
 export const MAXIMUM_LOG_ANALYZER_RAW_LINE_LENGTH = 1_000;
-
-/**
- * Well above the 14 days the Log Analyzer reads by default. A date range uses
- * its own query, which has no such limit.
- */
-export const MAXIMUM_LOG_ANALYZER_DAYS_TO_LOAD = 365;
-
-export const clampLogAnalyzerDaysToLoad = (daysToLoad: number) =>
-  Math.min(Math.max(daysToLoad, 0), MAXIMUM_LOG_ANALYZER_DAYS_TO_LOAD);

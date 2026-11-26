@@ -368,6 +368,29 @@ export const feedEntriesContentSchema = z.discriminatedUnion("capability_id", [
 
 export type FeedEntriesContent = z.infer<typeof feedEntriesContentSchema>;
 
+/** The capability and the connector of a batch, with their versions */
+export type FeedEntriesSource = Omit<FeedEntriesContent, "entries">;
+
+/**
+ * The connector, the capability and both versions of the source are in the
+ * announcement. The relay refuses a batch of a source that the runtime did
+ * not announce, thus the runtime sends only these batches.
+ */
+export const isFeedSourceAnnounced = (
+  announcement: AnnounceContent,
+  source: FeedEntriesSource,
+) =>
+  announcement.connectors.some(
+    (connector) =>
+      connector.id === source.connector_id &&
+      connector.version === source.connector_version &&
+      connector.capabilities.some(
+        (capability) =>
+          capability.id === source.capability_id &&
+          capability.version === source.capability_version,
+      ),
+  );
+
 const switchesContentSchema = z.object({
   turned_off_connectors: z
     .array(z.enum(ConnectorId))

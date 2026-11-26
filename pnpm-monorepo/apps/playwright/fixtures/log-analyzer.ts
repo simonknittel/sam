@@ -1,22 +1,42 @@
 import type { Locator, Page } from "@playwright/test";
-import { clickUntilVisible, toggleLabel } from "./interactions";
+import { ONE_DAY_MS, ONE_HOUR_MS, ONE_MINUTE_MS } from "./factories";
+import { clickUntilVisible, toDateValue, toggleLabel } from "./interactions";
+import {
+  closeSharingPopover,
+  REMOTE_CONTROL_PROGRAM_PERMISSION,
+  startBrowserRuntime,
+} from "./remote-control-program";
 import { expect } from "./test";
 
-export const LOG_ANALYZER_PERMISSIONS = ["logAnalyzer;read"];
+/**
+ * The Log Analyzer is a control UI of the Remote Control Program, thus it
+ * also needs the permission of the program (M7 of the migration)
+ */
+export const LOG_ANALYZER_PERMISSIONS = [
+  "logAnalyzer;read",
+  REMOTE_CONTROL_PROGRAM_PERMISSION,
+];
 
 export const LOG_ANALYZER_PAGE_PATH = "/app/tools/log-analyzer";
 
 export const joinPuLine = (at: Date) =>
   `<${at.toISOString()}> [Notice] <Join PU> address[35.187.166.216] port[64336] shard[pub_euw1b_9873572_100] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]`;
 
+/** The name of the blueprint is the message of the entry */
+export const blueprintLine = (
+  at: Date,
+  blueprint = "Morozov-SH Helmet Thule",
+) =>
+  `<${at.toISOString()}> [Notice] <SHUDEvent_OnNotification> Added notification "Received Blueprint: ${blueprint}: " [25] to queue. New queue size: 3, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]`;
+
+export const minutesAgo = (minutes: number) =>
+  new Date(Date.now() - minutes * ONE_MINUTE_MS);
+
 export const hoursAgo = (hours: number) =>
-  new Date(Date.now() - hours * 60 * 60 * 1000);
+  new Date(Date.now() - hours * ONE_HOUR_MS);
 
-const HOURS_PER_DAY = 24;
-
-export const daysAgo = (days: number) => hoursAgo(days * HOURS_PER_DAY);
-
-const toDateValue = (date: Date) => date.toISOString().slice(0, 10);
+export const daysAgo = (days: number) =>
+  new Date(Date.now() - days * ONE_DAY_MS);
 
 export interface BackupFile {
   readonly name: string;
@@ -24,88 +44,166 @@ export interface BackupFile {
   readonly lastModified: number;
 }
 
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+/** A log file which the game renamed at the start of the next session */
+export const createBackupFile = (at: Date, line: string): BackupFile => {
+  const pad = (value: number) => String(value).padStart(2, "0");
+  const date = `${pad(at.getDate())} ${MONTHS[at.getMonth()]} ${pad(at.getFullYear() % 100)}`;
+  const time = `${pad(at.getHours())} ${pad(at.getMinutes())} ${pad(at.getSeconds())}`;
+
+  return {
+    name: `Game Build(12913470) ${date} (${time}).log`,
+    lines: [line],
+    lastModified: at.getTime(),
+  };
+};
+
+/** The folder of the stub in the origin private file system of the page */
+const LOG_FOLDER_NAME = "StarCitizen";
+
+const LIVE_LOG_FILE_NAME = "Game.log";
+
 /**
- * Replaces the folder picker of the browser, which no test can answer.
+ * Replaces the folder picker of the browser, which no test can answer. The
+ * picker gives a real folder of the origin private file system, because the
+ * browser runtime keeps the handle in IndexedDB and asks it for the read
+ * permission. `appendLogLines()` adds lines to `Game.log`, as the game does
+ * while it runs.
  *
- * The app also stores the handle in IndexedDB, which fails for this object
- * because it carries functions. That happens after the parse started and the
- * app catches it, thus it only leaves a message in the console.
+ * The script applies to all pages of the browser context, thus also to a
+ * second tab.
  */
 export const stubDirectoryPicker = (
   page: Page,
   lines: readonly string[],
   backupFiles: readonly BackupFile[] = [],
 ) =>
-  page.addInitScript(
+  page.context().addInitScript(
     ({
+      folderName,
+      liveFileName,
       fileLines,
       backups,
     }: {
+      folderName: string;
+      liveFileName: string;
       fileLines: string[];
       backups: BackupFile[];
     }) => {
-      const createFile = () =>
-        new File([fileLines.join("\n")], "Game.log", {
-          type: "text/plain",
-          lastModified: Date.now(),
-        });
-      let file = createFile();
+      /** The runtime waits for the line end of the last line of `Game.log` */
+      const toContent = (contentLines: readonly string[]) =>
+        contentLines.map((line) => `${line}\n`).join("");
 
-      const fileHandle = {
-        kind: "file",
-        name: "Game.log",
-        getFile: () => Promise.resolve(file),
+      /**
+       * A file of the origin private file system has the time of its last
+       * write. The runtime also selects a backup by this time, thus a backup
+       * gets the time of its session.
+       */
+      const lastModifiedByName = new Map(
+        backups.map((backup) => [backup.name, backup.lastModified]),
+      );
+      const getFile = FileSystemFileHandle.prototype.getFile;
+      FileSystemFileHandle.prototype.getFile = async function (
+        this: FileSystemFileHandle,
+      ) {
+        const file = await getFile.call(this);
+        const lastModified = lastModifiedByName.get(this.name);
+        return lastModified === undefined
+          ? file
+          : new File([file], file.name, { type: file.type, lastModified });
       };
 
-      const directoryHandle = {
-        kind: "directory",
-        name: "StarCitizen",
-        requestPermission: () => Promise.resolve("granted"),
-        values: async function* () {
-          yield fileHandle;
-
-          for (const { name, lines: backupLines, lastModified } of backups) {
-            yield {
-              kind: "file",
-              name,
-              getFile: () =>
-                Promise.resolve(
-                  new File([backupLines.join("\n")], name, {
-                    type: "text/plain",
-                    lastModified,
-                  }),
-                ),
-            };
-          }
-        },
+      const writeFile = async (
+        folder: FileSystemDirectoryHandle,
+        name: string,
+        content: string,
+      ) => {
+        const fileHandle = await folder.getFileHandle(name, { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(content);
+        await writable.close();
       };
 
       Object.assign(window, {
-        showDirectoryPicker: () => Promise.resolve(directoryHandle),
-        appendLogLines: (newLines: string[]) => {
-          fileLines.push(...newLines);
-          file = createFile();
+        showDirectoryPicker: async () => {
+          const root = await navigator.storage.getDirectory();
+          const folder = await root.getDirectoryHandle(folderName, {
+            create: true,
+          });
+
+          // A second pick keeps the lines that the test added
+          const hasLiveFile = await folder.getFileHandle(liveFileName).then(
+            () => true,
+            () => false,
+          );
+          if (!hasLiveFile) {
+            for (const backup of backups)
+              await writeFile(folder, backup.name, toContent(backup.lines));
+            await writeFile(folder, liveFileName, toContent(fileLines));
+          }
+
+          return folder;
         },
       });
     },
-    { fileLines: [...lines], backups: [...backupFiles] },
+    {
+      folderName: LOG_FOLDER_NAME,
+      liveFileName: LIVE_LOG_FILE_NAME,
+      fileLines: [...lines],
+      backups: backupFiles.map((backup) => ({
+        ...backup,
+        lines: [...backup.lines],
+      })),
+    },
   );
 
+/**
+ * Adds lines to `Game.log` of the stub of `stubDirectoryPicker()`. The
+ * folder must be selected. All pages of the browser context share the
+ * folder.
+ */
 export const appendLogLines = (page: Page, lines: readonly string[]) =>
   page.evaluate(
-    (newLines) =>
-      (
-        window as unknown as { appendLogLines: (lines: string[]) => void }
-      ).appendLogLines(newLines),
-    [...lines],
+    async ({ folderName, liveFileName, newLines }) => {
+      const root = await navigator.storage.getDirectory();
+      const folder = await root.getDirectoryHandle(folderName);
+      const fileHandle = await folder.getFileHandle(liveFileName);
+      const { size } = await fileHandle.getFile();
+
+      const writable = await fileHandle.createWritable({
+        keepExistingData: true,
+      });
+      await writable.seek(size);
+      await writable.write(newLines.map((line) => `${line}\n`).join(""));
+      await writable.close();
+    },
+    {
+      folderName: LOG_FOLDER_NAME,
+      liveFileName: LIVE_LOG_FILE_NAME,
+      newLines: [...lines],
+    },
   );
 
 export const settingsDialog = (page: Page) =>
-  page.getByRole("dialog", { name: "Filter & Teilen", exact: true });
+  page.getByRole("dialog", { name: "Filter", exact: true });
 
 export const openSettings = (page: Page) =>
   clickUntilVisible(
-    page.getByRole("button", { name: "Filter & Teilen", exact: true }),
+    page.getByRole("button", { name: "Filter", exact: true }),
     settingsDialog(page),
   );
 
@@ -116,7 +214,6 @@ export const closeSettings = async (page: Page) => {
 
 export enum SettingsColumn {
   ShowOwn = "Eigene anzeigen",
-  Share = "Teilen",
   ShowOthers = "Andere anzeigen",
 }
 
@@ -147,20 +244,22 @@ export const settingToggle = (
     }),
   );
 
-export const tableRows = (page: Page) => page.getByRole("row");
+/** The rows of the table of the page, not of the settings dialog */
+export const tableRows = (page: Page) =>
+  page.locator("#main-content").getByRole("row");
 
 export const rowOf = (page: Page, text: string): Locator =>
   tableRows(page).filter({ hasText: text });
 
 /**
- * A repeated parse (a retried click) is harmless: it finds the same entries and
- * shares none of them a second time.
+ * Selects the log folder in the sharing popover, which starts the browser
+ * runtime, and waits for the own entries in the table
  */
-export const selectFolder = (page: Page) =>
-  clickUntilVisible(
-    page.getByRole("button", { name: "Ordner auswählen" }),
-    tableRows(page).first(),
-  );
+export const selectFolder = async (page: Page) => {
+  await startBrowserRuntime(page);
+  await closeSharingPopover(page);
+  await expect(tableRows(page).first()).toBeVisible();
+};
 
 export const dateRangeDialog = (page: Page) =>
   page.getByRole("dialog", { name: "Zeitraum", exact: true });
@@ -189,6 +288,3 @@ export const resetDateRange = async (page: Page) => {
     .getByRole("button", { name: "Zurücksetzen" })
     .click();
 };
-
-/** Mirrors `LIVE_MODE_PARSE_INTERVAL_MS` of the app */
-export const LIVE_MODE_PARSE_INTERVAL = 10_000;

@@ -142,9 +142,6 @@ const SESSION_TIMEOUT: Timeout = {
  */
 const OWN_LOG_SILENCE_THRESHOLD_MS = 10 * MILLISECONDS_PER_MINUTE;
 
-/** The own entries of a user without a linked citizen */
-const OWN_REPORTER_KEY = "own";
-
 interface TrackedState {
   readonly kind: LiveStatusKind;
   readonly key: string | null;
@@ -158,7 +155,7 @@ interface TrackedState {
 export interface TrackedReporter {
   readonly key: string;
   readonly citizen: IEntry["citizen"];
-  /** True when the local parser read entries of this reporter */
+  /** True when the reporter is the user */
   isOwn: boolean;
   lastActivityAt: Date;
   /**
@@ -172,12 +169,6 @@ export interface TrackedReporter {
   sessionEndedAt: Date | null;
   states: TrackedState[];
 }
-
-/** A shared entry of a deleted citizen belongs to nobody */
-const getReporterKey = (entry: IEntry) => {
-  if (entry.citizen) return entry.citizen.id;
-  return entry.isShared ? null : OWN_REPORTER_KEY;
-};
 
 const closeSessionBoundStates = (reporter: TrackedReporter) => {
   reporter.states = reporter.states.filter(
@@ -294,8 +285,7 @@ export const trackLiveStatus = (entries: Iterable<IEntry>) => {
   const reporters = new Map<string, TrackedReporter>();
 
   for (const entry of Array.from(entries).toSorted(compareEntries)) {
-    const key = getReporterKey(entry);
-    if (key === null) continue;
+    const key = entry.citizen.id;
 
     let reporter = reporters.get(key);
     if (!reporter) {
@@ -351,9 +341,13 @@ export interface LiveStatusReporter {
 
 export interface LiveStatusOptions {
   readonly now: Date;
-  /** The newest line which the local parser read. Null before a read. */
+  /**
+   * The newest line of the own log files of this browser. Null before the
+   * browser runtime read a folder.
+   */
   readonly ownLogLineAt: Date | null;
-  readonly isLiveModeActive: boolean;
+  /** The browser runtime reads the own log files live */
+  readonly isOwnLogReadLive: boolean;
 }
 
 enum TimeoutStage {
@@ -377,7 +371,7 @@ const PRESENCE_BY_STAGE: Record<TimeoutStage, LiveStatusPresence> = {
 
 const evaluateSession = (
   reporter: TrackedReporter,
-  { now, ownLogLineAt, isLiveModeActive }: LiveStatusOptions,
+  { now, ownLogLineAt, isOwnLogReadLive }: LiveStatusOptions,
 ) => {
   const { sessionEndedAt, lastActivityAt } = reporter;
 
@@ -412,13 +406,13 @@ const evaluateSession = (
     if (silence < OWN_LOG_SILENCE_THRESHOLD_MS)
       return { presence: LiveStatusPresence.Online, offlineSince: null };
 
-    if (isLiveModeActive)
+    if (isOwnLogReadLive)
       return {
         presence: LiveStatusPresence.Offline,
         offlineSince: ownLogLineAt,
       };
 
-    /** Without live mode, the game can have written lines since the read */
+    /** Without the runtime, the game can have written lines since the read */
     return { presence: LiveStatusPresence.Uncertain, offlineSince: null };
   }
 

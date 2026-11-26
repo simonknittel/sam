@@ -1,7 +1,9 @@
+import { LogEntryUploadState } from "@/modules/remote-control-program/consumer/logEntryUploadState";
 import {
   LogAnalyzerEntryType,
   matchLogAnalyzerEntryLine,
 } from "@sam-monorepo/domain";
+import { SAMPLE_LINES } from "@sam-monorepo/remote-control-program-runtime";
 import { describe, expect, test } from "vitest";
 import {
   evaluateLiveStatus,
@@ -16,7 +18,6 @@ import {
   type LiveStatusSignal,
 } from "./liveStatusSignals";
 import { deriveEntryFields, type IEntry } from "./PATTERNS";
-import { SAMPLE_LINES } from "./sampleLines";
 
 const MILLISECONDS_PER_MINUTE = 60_000;
 const START = new Date("2026-11-14T12:00:00.000Z");
@@ -48,7 +49,7 @@ const entry = (
   contractName: null,
   citizen: { id: citizenId, handle: citizenId, deletedAt: null },
   isShared,
-  isUploaded: false,
+  uploadState: LogEntryUploadState.LocalOnly,
   liveStatusSignal,
   lineNumber,
 });
@@ -88,7 +89,7 @@ const evaluate = (
   evaluateLiveStatus(trackLiveStatus(entries), {
     now: at(minute),
     ownLogLineAt: null,
-    isLiveModeActive: false,
+    isOwnLogReadLive: false,
     ...options,
   });
 
@@ -201,7 +202,7 @@ describe("Live-Status", () => {
     expect(evaluate(entries, 241)).toEqual([]);
   });
 
-  test("the silence of the own log ends the session in live mode", () => {
+  test("the silence of the own log ends the session while the runtime reads it", () => {
     const entries = [
       entry(0, sessionStart()),
       entry(1, stateStart(LiveStatusKind.ArmisticeZone)),
@@ -209,17 +210,17 @@ describe("Live-Status", () => {
 
     const running = evaluate(entries, 120, {
       ownLogLineAt: at(115),
-      isLiveModeActive: true,
+      isOwnLogReadLive: true,
     });
     expect(running[0].presence).toBe(LiveStatusPresence.Online);
     expect(running[0].states).toHaveLength(1);
 
     expect(
-      evaluate(entries, 20, { ownLogLineAt: at(10), isLiveModeActive: true }),
+      evaluate(entries, 20, { ownLogLineAt: at(10), isOwnLogReadLive: true }),
     ).toEqual([]);
 
-    const withoutLiveMode = evaluate(entries, 20, { ownLogLineAt: at(10) });
-    expect(withoutLiveMode[0].presence).toBe(LiveStatusPresence.Uncertain);
+    const withoutRuntime = evaluate(entries, 20, { ownLogLineAt: at(10) });
+    expect(withoutRuntime[0].presence).toBe(LiveStatusPresence.Uncertain);
   });
 
   test("the own log does not tell the session of another citizen", () => {
@@ -227,7 +228,7 @@ describe("Live-Status", () => {
 
     const [reporter] = evaluate(entries, 120, {
       ownLogLineAt: at(119),
-      isLiveModeActive: true,
+      isOwnLogReadLive: true,
     });
 
     expect(reporter.presence).toBe(LiveStatusPresence.Uncertain);
@@ -245,7 +246,7 @@ describe("Live-Status", () => {
 
     const [inMenu] = evaluate(entries, 6, {
       ownLogLineAt: at(6),
-      isLiveModeActive: true,
+      isOwnLogReadLive: true,
     });
     expect(inMenu.presence).toBe(LiveStatusPresence.Offline);
     expect(inMenu.offlineSince).toEqual(at(1));
@@ -262,7 +263,7 @@ describe("Live-Status", () => {
     ];
 
     expect(
-      evaluate(entries, 300, { ownLogLineAt: at(299), isLiveModeActive: true }),
+      evaluate(entries, 300, { ownLogLineAt: at(299), isOwnLogReadLive: true }),
     ).toEqual([]);
   });
 
@@ -274,7 +275,7 @@ describe("Live-Status", () => {
 
     const [reporter] = evaluate(entries, 31, {
       ownLogLineAt: at(0),
-      isLiveModeActive: true,
+      isOwnLogReadLive: true,
     });
 
     expect(reporter.presence).toBe(LiveStatusPresence.Online);

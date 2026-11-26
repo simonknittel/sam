@@ -5,6 +5,7 @@ import { Link } from "@/modules/common/components/Link";
 import { FaQuestionCircle } from "react-icons/fa";
 import { LogoutButton } from "../LogoutButton";
 import { Onboarding } from "./Onboarding";
+import { RemoteControlProgram } from "./RemoteControlProgram";
 
 interface Props {
   readonly supportHref: string | null;
@@ -28,6 +29,7 @@ export const Account = ({ supportHref }: Props) => {
         className="-m-2 flex min-w-0 items-center gap-4 rounded-secondary p-2 hover:bg-neutral-700 focus-visible:bg-neutral-700 active:bg-neutral-600"
       >
         <Avatar
+          className="flex-none"
           name={name}
           image={image}
           size={48}
@@ -44,6 +46,8 @@ export const Account = ({ supportHref }: Props) => {
       </Link>
 
       <div className="flex flex-none gap-1">
+        <RemoteControlProgram />
+
         {supportHref && (
           <Button2
             as={Link}

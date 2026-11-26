@@ -1,0 +1,28 @@
+{
+  "name": "@sam-monorepo/remote-control-program-runtime",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "./dist/*"
+  ],
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "postinstall": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@sam-monorepo/domain": "workspace:*",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "typescript": "7.0.2",
+    "vite": "8.3.8",
+    "vitest": "5.1.0"
+  }
+}

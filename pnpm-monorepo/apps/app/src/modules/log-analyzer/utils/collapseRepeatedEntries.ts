@@ -27,7 +27,7 @@ export const collapseRepeatedEntries = (
 
   for (let index = entriesNewestFirst.length - 1; index >= 0; index -= 1) {
     const entry = entriesNewestFirst[index];
-    const citizenKey = entry.citizen?.id ?? "";
+    const citizenKey = entry.citizen.id;
 
     if (isRepeatBoundary(entry)) lastRepeatKeys.delete(citizenKey);
 

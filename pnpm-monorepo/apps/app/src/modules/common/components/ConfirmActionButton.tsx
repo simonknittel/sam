@@ -17,7 +17,7 @@ interface Props {
   /** Renders the submit button of the form (`type="submit"`) */
   readonly trigger: (isPending: boolean) => ReactElement;
   readonly title: string;
-  readonly description: ReactNode;
+  readonly description?: ReactNode;
   readonly confirmLabel: string;
   readonly confirmDisabled?: boolean;
   readonly children?: ReactNode;

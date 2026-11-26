@@ -50,7 +50,7 @@ The paths are on the host of this MCP server. \`/app/apps\` lists all apps of th
 | Changelog | \`/app/changelog\` | The changes of SAM | ${ToolGroup.Changelog} |
 | System Log | \`/app/system-log\` | The audit log of all actions. It may show personal or sensitive data. | ${ToolGroup.SystemLog} |
 | Statistiken | \`/app/statistics\` | Daily statistics of the organization and of the use of SAM, for example the fleet, the roles and the logins | ${ToolGroup.Statistics} |
-| Log Analyzer | \`/app/tools/log-analyzer\` | Finds events in the Game.log of Star Citizen; members can share them | – |
+| Log Analyzer | \`/app/tools/log-analyzer\` | Finds events in the Game.log of Star Citizen. The browser runtime of the Remote Control Program reads the log, and the sharing popover in the top bar shares the entries live with other citizens, roles or everyone (grants). Each user of the Log Analyzer sees the uploaded entries that are older than 2 hours. Needs \`logAnalyzer;read\` and \`remoteControlProgram;use\`. | – |
 | Account | \`/app/account\` | Profile (time zone, birthday), notification settings, seasonal themes and sessions | – |
 | KI-Agenten | \`/app/ai-agents\` | Connect AI clients via MCP, and download the Claude plugin and the skills of this server | – |
 | Uploads | \`/app/uploads\` | The own file uploads, and all uploads with \`upload;manage\` | – |

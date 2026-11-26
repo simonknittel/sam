@@ -107,6 +107,21 @@ can have no effect.
   After `pickFilterOption()`, press Escape only while the list is open.
 - The suite sets `reducedMotion: "reduce"`. A test of an animation must call
   `page.emulateMedia({ reducedMotion: "no-preference" })`.
+- The browser runtime of the Remote Control Program reads a log folder in
+  the origin private file system of the browser (`stubDirectoryPicker()` in
+  `fixtures/log-analyzer.ts`). It reads the folder each 10 seconds, thus a
+  new line needs `LIVE_UPLOAD_TIMEOUT` or `page.clock.fastForward()`. The
+  tabs of one citizen in one browser share one runtime. Each citizen has its
+  own runtime, folder and settings in the browser, but a browser context has
+  only one session. Thus two citizens whose runtimes run at the same time
+  need a second browser (`openSignedInBrowser()`). Use the helpers of
+  `fixtures/remote-control-program.ts` for the sharing popover and for the
+  uploaded lines in the database. The name of the trigger of the popover is
+  also a part of the name of the permission "Remote Control Program nutzen".
+- A test that turns off a part of the Remote Control Program uses the scope
+  of the stack, because the relay service reads the flag without a user. The
+  test turns the part on again in a `finally` block, because the next tests
+  of the worker use the same relay service.
 - The stack runs no Lambda functions and sends no EventBridge events. Test
   the delivery of notifications with unit tests.
 
@@ -122,6 +137,8 @@ can have no effect.
     selection change too slowly in the collab editor.
   - The "replace mode" test of `wiki-copy-paste.spec.ts`: cause unknown.
   - The pagination test of `activity.spec.ts`: only in full runs.
+  - The "my ships" test of `fleet.spec.ts`: the option of the filter or the
+    add dialog does not open, cause unknown.
   - `notification-center.spec.ts`: `ERR_NETWORK_CHANGED`.
   - The popover tests of `citizen-profile.spec.ts`: after a new build.
   - Under load, a dialog or the bell popover of `waitForAppShellHydration()`

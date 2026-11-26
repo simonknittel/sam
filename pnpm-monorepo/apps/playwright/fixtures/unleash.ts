@@ -9,7 +9,6 @@ import { readStackState, unleashAdminToken } from "../setup/stack";
 export enum UNLEASH_FLAG {
   EnableCareBearShooter = "EnableCareBearShooter",
   CrashLogAnalyzer = "CrashLogAnalyzer",
-  DisableLogAnalyzerSharing = "DisableLogAnalyzerSharing",
   DisableMcpServer = "DisableMcpServer",
   DisableRemoteControlProgram = "DisableRemoteControlProgram",
   DisableLogFileConnector = "DisableLogFileConnector",

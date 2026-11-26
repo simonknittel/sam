@@ -6,6 +6,7 @@ import type { App, RedactedApp } from "@/modules/apps/utils/types";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { Link } from "@/modules/common/components/Link";
 import { UnreadDot } from "@/modules/common/components/UnreadDot";
+import { useBrowserRuntime } from "@/modules/remote-control-program/runtime/useBrowserRuntime";
 import clsx from "clsx";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
@@ -30,6 +31,9 @@ export const MobileActionBarClient = ({ supportHref }: Props) => {
 
   const { apps, appDotBadgeCounts } = useAppsContext();
   const pathname = usePathname();
+  /** The trigger of the sharing popover, which also shows it, is in the flyout */
+  const isWaitingForFolderPermission =
+    useBrowserRuntime()?.state.isWaitingForFolderPermission ?? false;
   if (!apps) return null;
   const { featured, other } = groupByFeatured(apps);
   const currentApp = findCurrentApp(apps.filter(isLinkedApp), pathname);
@@ -71,7 +75,9 @@ export const MobileActionBarClient = ({ supportHref }: Props) => {
       </li>
 
       <li className="h-full min-w-fit flex-1 py-1">
-        <MobileActionBarFlyout hasUnreadDot={hasAppDotBadge}>
+        <MobileActionBarFlyout
+          hasUnreadDot={hasAppDotBadge || isWaitingForFolderPermission}
+        >
           <Account supportHref={supportHref} />
 
           <div className="p-4">

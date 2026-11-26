@@ -63,7 +63,6 @@ export * from "./greetings/index.js";
 export * from "./iam/index.js";
 export * from "./leaderboards/index.js";
 export * from "./lineup/index.js";
-export * from "./logAnalyzer/index.js";
 export * from "./manualNotifications/index.js";
 export { canUseMcp, requireMcpAccess } from "./mcpAccess.js";
 export * from "./mcpSettings/index.js";

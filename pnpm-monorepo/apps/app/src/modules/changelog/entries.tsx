@@ -47,16 +47,91 @@ import image20261119EventApplicationRequest from "@/modules/changelog/assets/202
 import image20261119EventApplicationSettings from "@/modules/changelog/assets/2026-11-19-event-application-settings.png";
 import image20261119EventApplications from "@/modules/changelog/assets/2026-11-19-event-applications.png";
 import image20261122TaskDetail from "@/modules/changelog/assets/2026-11-22-task-detail.png";
+import image20261124Connector from "@/modules/changelog/assets/2026-11-24-connector.png";
+import image20261124Grants from "@/modules/changelog/assets/2026-11-24-grants.png";
+import image20261124LogAnalyzer from "@/modules/changelog/assets/2026-11-24-log-analyzer.png";
 import {
   ChangelogImage,
   ChangelogImageWidth,
 } from "@/modules/changelog/components/ChangelogImage";
 import type { ChangelogEntry } from "@/modules/changelog/types";
 import { Link } from "@/modules/common/components/Link";
+import { SharingPopoverLink } from "@/modules/remote-control-program/components/sharing-popover/SharingPopoverLink";
 import { AiFillAppstore } from "react-icons/ai";
 import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
+  {
+    key: "2026-11-24-remote-control-program",
+    date: "2026-11-24",
+    title: "Remote Control Program",
+    tags: ["Neu", "Remote Control Program", "Log Analyzer"],
+    isTracked: true,
+    requiresAuth: { resource: "logAnalyzer", action: "read" },
+    body: () => (
+      <>
+        <p>
+          Mit dem{" "}
+          <SharingPopoverLink>Remote Control Program</SharingPopoverLink> teilst
+          du Daten aus Star Citizen mit anderen. Du findest es in der oberen
+          Leiste.
+        </p>
+
+        <ul className="flex list-disc flex-col gap-1 pl-5">
+          <li>
+            <strong>Runtimes</strong> lesen auf deinem Rechner Daten aus Star
+            Citizen und laden sie zu SAM hoch. Den Anfang macht dein Browser,
+            ein Desktop Companion ist geplant.
+          </li>
+          <li>
+            <strong>Connectors</strong> sind die Datenquellen der Runtimes. Der
+            erste liest deine Game Logs. Was davon hochgeladen wird,
+            entscheidest du selbst. Alles andere bleibt auf deinem Rechner.
+          </li>
+          <li>
+            <strong>Consumer Apps</strong> zeigen die Daten an, die du und
+            andere teilen. Die erste ist der Log Analyzer.
+          </li>
+          <li>
+            <strong>Freigaben</strong> legen fest, wer deine Daten live sehen
+            darf: ein bestimmter Citizen, alle mit bestimmten Rollen oder alle,
+            die das Remote Control Program nutzen.
+          </li>
+        </ul>
+
+        <Link href={image20261124Connector.src}>
+          <ChangelogImage src={image20261124Connector} alt="" isAboveTheFold />
+        </Link>
+
+        <Link href={image20261124Grants.src}>
+          <ChangelogImage src={image20261124Grants} alt="" />
+        </Link>
+
+        <p>
+          Der{" "}
+          <Link
+            href="/app/tools/log-analyzer"
+            className="text-interaction-500 hover:underline focus-visible:underline active:text-interaction-300"
+          >
+            Log Analyzer
+          </Link>{" "}
+          ist in das Remote Control Program umgezogen. Deinen Log-Ordner und die
+          Typen, die du teilst, wählst du jetzt dort aus. Deine bisherigen
+          Einstellungen zum Teilen gelten nicht mehr.
+        </p>
+
+        <Link href={image20261124LogAnalyzer.src}>
+          <ChangelogImage src={image20261124LogAnalyzer} alt="" />
+        </Link>
+
+        <p>
+          Für den Log Analyzer brauchst du jetzt auch die Berechtigung
+          &bdquo;Remote Control Program nutzen&ldquo;.
+        </p>
+      </>
+    ),
+  },
+
   {
     key: "2026-11-22-task-detailseite-redesign",
     date: "2026-11-22",

@@ -4,6 +4,7 @@ import { Tooltip } from "@/modules/common/components/Tooltip";
 import clsx from "clsx";
 import { useId } from "react";
 import { FaInfoCircle } from "react-icons/fa";
+import { createLiveEntryFilter } from "../utils/createLiveEntryFilter";
 import { trackLiveStatus } from "../utils/liveStatus";
 import { LiveStatusReporterList } from "./LiveStatusReporterList";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
@@ -13,14 +14,16 @@ interface Props {
 }
 
 export const LiveStatus = ({ className }: Props) => {
-  const { entries, isLivePaused } = useLogAnalyzerContext();
+  const { entries, feed, isLivePaused } = useLogAnalyzerContext();
   const headingId = useId();
 
   /**
    * The clock of the list renders only the list again, thus this step runs
    * only when the entries change.
    */
-  const trackedReporters = trackLiveStatus(entries.values());
+  const trackedReporters = trackLiveStatus(
+    entries.filter(createLiveEntryFilter(feed.sharingOwners)),
+  );
 
   return (
     <section

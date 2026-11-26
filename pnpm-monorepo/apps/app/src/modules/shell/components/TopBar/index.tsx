@@ -6,6 +6,7 @@ import { Apps } from "./Apps";
 import { Create } from "./Create";
 import { Notifications } from "./Notifications";
 import { Onboarding } from "./Onboarding";
+import { RemoteControlProgram } from "./RemoteControlProgram";
 import { Support } from "./Support";
 
 interface Props {
@@ -29,6 +30,7 @@ export const TopBar = ({ className }: Props) => {
         <CmdKLoader className="w-96 flex-initial" />
 
         <div className="flex flex-1 justify-end">
+          <RemoteControlProgram />
           <Support />
           <Onboarding />
           <Notifications />

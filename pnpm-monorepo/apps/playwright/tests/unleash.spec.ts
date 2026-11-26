@@ -1,5 +1,22 @@
 import type { Locator, Page } from "@playwright/test";
 import { createCitizen } from "../fixtures/factories";
+import {
+  appendLogLines,
+  blueprintLine,
+  LOG_ANALYZER_PAGE_PATH,
+  LOG_ANALYZER_PERMISSIONS,
+  rowOf,
+  stubDirectoryPicker,
+} from "../fixtures/log-analyzer";
+import {
+  expectUploadedLines,
+  LIVE_UPLOAD_TIMEOUT,
+  sharingPopoverSection,
+  SharingPopoverSection,
+  startBrowserRuntime,
+  turnOnLogEntryTypes,
+  uploadedLines,
+} from "../fixtures/remote-control-program";
 import { expect, test } from "../fixtures/test";
 import {
   expectFlagPropagation,
@@ -106,23 +123,26 @@ test("the kill switch flag takes the log analyzer offline, and the retry of the 
 
   const citizen = await createCitizen(prisma, {
     handle: "loganalyst",
-    permissionStrings: ["logAnalyzer;read"],
+    permissionStrings: LOG_ANALYZER_PERMISSIONS,
   });
   await signIn(citizen.user);
   const userScope = { userId: citizen.user.id };
 
   /** The guide stays outside of the error tile, thus the button is the mark */
-  const folderButton = page.getByRole("button", { name: "Ordner auswählen" });
+  const filterButton = page.getByRole("button", {
+    name: "Filter",
+    exact: true,
+  });
   const tileError = page.getByText("Ein unerwarteter Fehler ist aufgetreten");
 
   await setUnleashFlag(UNLEASH_FLAG.CrashLogAnalyzer, false, userScope);
   await expectFlagPropagation
-    .poll(() => pageShows(page, "/app/tools/log-analyzer", () => folderButton))
+    .poll(() => pageShows(page, LOG_ANALYZER_PAGE_PATH, () => filterButton))
     .toBe(true);
 
   await setUnleashFlag(UNLEASH_FLAG.CrashLogAnalyzer, true, userScope);
   await expectFlagPropagation
-    .poll(() => pageShows(page, "/app/tools/log-analyzer", () => tileError))
+    .poll(() => pageShows(page, LOG_ANALYZER_PAGE_PATH, () => tileError))
     .toBe(true);
 
   /**
@@ -132,7 +152,7 @@ test("the kill switch flag takes the log analyzer offline, and the retry of the 
    * thus the tile fails again after the refresh.
    */
   const retryButton = page.getByRole("button", { name: "Erneut versuchen" });
-  const heldRefresh = await holdPageRefresh(page, "/app/tools/log-analyzer");
+  const heldRefresh = await holdPageRefresh(page, LOG_ANALYZER_PAGE_PATH);
   await retryButton.click();
   await expect.poll(heldRefresh.requestCount).toBeGreaterThan(0);
   await expect(retryButton).toBeDisabled();
@@ -143,101 +163,91 @@ test("the kill switch flag takes the log analyzer offline, and the retry of the 
 
   await setUnleashFlag(UNLEASH_FLAG.CrashLogAnalyzer, false, userScope);
   await expect(async () => {
-    if (!(await folderButton.isVisible()))
+    if (!(await filterButton.isVisible()))
       await retryButton.click({ timeout: RETRY_CLICK_TIMEOUT });
-    await expect(folderButton).toBeVisible({
+    await expect(filterButton).toBeVisible({
       timeout: RETRY_RENDER_TIMEOUT,
     });
   }).toPass({ timeout: FLAG_PROPAGATION_TIMEOUT });
   await expect(retryButton).toHaveCount(0);
 });
 
-enum SharingToolbarState {
-  NoToolbar = "no toolbar",
-  WithSharing = "with sharing",
-  WithoutSharing = "without sharing",
-}
-
-/**
- * The toolbar itself has to appear first: a page which did not render cannot
- * pass for the removed sharing.
- */
-const sharingToolbarState = async (page: Page) => {
-  await page.goto("/app/tools/log-analyzer");
-  const withSharing = page.getByRole("button", {
-    name: "Filter & Teilen",
-    exact: true,
-  });
-  const withoutSharing = page.getByRole("button", {
-    name: "Filter",
-    exact: true,
-  });
-  try {
-    await withSharing
-      .or(withoutSharing)
-      .waitFor({ state: "visible", timeout: 5_000 });
-  } catch {
-    return SharingToolbarState.NoToolbar;
-  }
-
-  return (await withSharing.isVisible())
-    ? SharingToolbarState.WithSharing
-    : SharingToolbarState.WithoutSharing;
-};
-
-const sharedEntriesUrl = () => {
-  const queryParameters = new URLSearchParams({
-    input: JSON.stringify({ json: { daysToLoad: 14 } }),
-  });
-
-  return `/api/trpc/logAnalyzer.getSharedEntries?${queryParameters.toString()}`;
-};
-
-test("the kill switch flag removes the sharing of the log analyzer", async ({
+test("the flag of the log entries stops their uploads, and the sharing popover tells why", async ({
   page,
   prisma,
   signIn,
+  stackFlagScope,
 }) => {
   test.setTimeout(FLAG_TEST_TIMEOUT);
 
-  const citizen = await createCitizen(prisma, {
-    handle: "sharing-flagged",
-    permissionStrings: ["logAnalyzer;read"],
+  const owner = await createCitizen(prisma, {
+    handle: "rcp-abgeschaltet",
+    permissionStrings: LOG_ANALYZER_PERMISSIONS,
   });
-  await signIn(citizen.user);
-  const userScope = { userId: citizen.user.id };
+  await signIn(owner.user);
 
-  await setUnleashFlag(
-    UNLEASH_FLAG.DisableLogAnalyzerSharing,
-    false,
-    userScope,
+  const turnedOffNote = sharingPopoverSection(
+    page,
+    SharingPopoverSection.ThisBrowser,
+  ).getByText(
+    "Derzeit zentral abgeschaltet: Game Logs. Davon wird nichts hochgeladen.",
   );
-  await expectFlagPropagation
-    .poll(() => sharingToolbarState(page))
-    .toBe(SharingToolbarState.WithSharing);
+
   /**
-   * The baseline of the request below: the query answers this session.
-   * The tRPC route holds its own cached copy of the flag definitions,
-   * separate from the one the pages above refreshed, and a request serves
-   * the stale copy while it starts the refresh — thus the two request
-   * assertions poll like the page assertions do.
+   * The relay service of the worker has the Unleash app name of the app of
+   * the worker, thus the scope of the stack turns off the part for both
    */
-  await expectFlagPropagation
-    .poll(async () => {
-      const response = await page.request.get(sharedEntriesUrl());
-      return response.status();
-    })
-    .toBe(200);
+  try {
+    await setUnleashFlag(
+      UNLEASH_FLAG.DisableLogEntriesCapability,
+      false,
+      stackFlagScope,
+    );
+    await stubDirectoryPicker(page, []);
+    await page.goto(LOG_ANALYZER_PAGE_PATH);
+    await startBrowserRuntime(page);
+    await turnOnLogEntryTypes(page, ["Blueprint erhalten"]);
 
-  await setUnleashFlag(UNLEASH_FLAG.DisableLogAnalyzerSharing, true, userScope);
-  await expectFlagPropagation
-    .poll(() => sharingToolbarState(page))
-    .toBe(SharingToolbarState.WithoutSharing);
+    /** The baseline: the upload works */
+    const lineBefore = blueprintLine(new Date(), "Vor der Abschaltung");
+    await appendLogLines(page, [lineBefore]);
+    await expectFlagPropagation
+      .poll(() => uploadedLines(prisma, owner), {
+        timeout: FLAG_PROPAGATION_TIMEOUT,
+      })
+      .toEqual([lineBefore]);
 
-  await expectFlagPropagation
-    .poll(async () => {
-      const response = await page.request.get(sharedEntriesUrl());
-      return response.status();
-    })
-    .toBe(403);
+    await setUnleashFlag(
+      UNLEASH_FLAG.DisableLogEntriesCapability,
+      true,
+      stackFlagScope,
+    );
+    await expectFlagPropagation(turnedOffNote).toBeVisible();
+
+    /** The runtime reads on: the line shows on the machine */
+    await appendLogLines(page, [
+      blueprintLine(new Date(), "Während der Abschaltung"),
+    ]);
+    await expect(rowOf(page, "Während der Abschaltung")).toBeVisible({
+      timeout: LIVE_UPLOAD_TIMEOUT,
+    });
+
+    await setUnleashFlag(
+      UNLEASH_FLAG.DisableLogEntriesCapability,
+      false,
+      stackFlagScope,
+    );
+    await expectFlagPropagation(turnedOffNote).toHaveCount(0);
+
+    /** The lines of the time in which the part was off stay on the machine */
+    const lineAfter = blueprintLine(new Date(), "Nach der Abschaltung");
+    await appendLogLines(page, [lineAfter]);
+    await expectUploadedLines(prisma, owner, [lineBefore, lineAfter]);
+  } finally {
+    await setUnleashFlag(
+      UNLEASH_FLAG.DisableLogEntriesCapability,
+      false,
+      stackFlagScope,
+    );
+  }
 });

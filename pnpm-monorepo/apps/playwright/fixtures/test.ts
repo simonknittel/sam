@@ -1,4 +1,9 @@
-import { test as base, expect } from "@playwright/test";
+import {
+  test as base,
+  expect,
+  type BrowserContext,
+  type Page,
+} from "@playwright/test";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, type User } from "@sam-monorepo/database/client";
 import { spawn } from "node:child_process";
@@ -40,6 +45,8 @@ interface WorkerStack {
   readonly collabHttpUrl: string;
   readonly discordMock: DiscordMock;
   readonly unleashAppName: string;
+  /** The WebSocket URL of the worker's relay container */
+  readonly relayUrl: string;
 }
 
 interface Fixtures {
@@ -52,6 +59,19 @@ interface Fixtures {
    * survive the switch.
    */
   readonly switchUser: (user: Pick<User, "id">) => Promise<void>;
+  /**
+   * Opens a page in a new browser context with a session of the user. A
+   * second browser has its own storage, thus it also runs its own browser
+   * runtime of the Remote Control Program. The fixture closes the context
+   * after the test.
+   */
+  readonly openSignedInBrowser: (user: Pick<User, "id">) => Promise<Page>;
+  /**
+   * The WebSocket URL of the worker's relay container (the relay service of
+   * the Remote Control Program), for example to find the connections of a
+   * browser runtime
+   */
+  readonly relayUrl: string;
   /** Only effective for users whose `User.role` is ADMIN. */
   readonly enableAdminMode: () => Promise<void>;
   /** Overrides the date (`YYYY-MM-DD`) that the seasonal themes resolve for. */
@@ -76,6 +96,34 @@ const SESSION_COOKIE_NAME = "next-auth.session-token";
 
 /** The date override of the seasonal themes (see setSeasonalDate). */
 const SEASONAL_DATE_COOKIE_NAME = "seasonal-date";
+
+/**
+ * Inserts a next-auth database session for the user and sets its cookie in
+ * the browser context
+ */
+const addSessionCookie = async (
+  prisma: PrismaClient,
+  browserContext: BrowserContext,
+  user: Pick<User, "id">,
+) => {
+  const sessionToken = randomBytes(32).toString("hex");
+  await prisma.session.create({
+    data: {
+      sessionToken,
+      userId: user.id,
+      expires: new Date(Date.now() + ONE_DAY_MS),
+    },
+  });
+
+  await browserContext.addCookies([
+    {
+      name: SESSION_COOKIE_NAME,
+      value: sessionToken,
+      domain: "localhost",
+      path: "/",
+    },
+  ]);
+};
 
 const createPrismaClient = (databaseUrl: string) =>
   new PrismaClient({
@@ -165,6 +213,8 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
         .withWaitStrategy(Wait.forHttp("/health", relayPort))
         .start();
 
+      const relayUrl = `ws://localhost:${relayContainer.getMappedPort(relayPort)}`;
+
       const appProcess = spawn(
         "pnpm",
         ["exec", "next", "start", "--port", appPort.toString()],
@@ -182,7 +232,7 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
             NEXTAUTH_URL: baseURL,
             COLLAB_URL: `ws://localhost:${collabContainer.getMappedPort(collabPort)}`,
             COLLAB_JWT_SECRET: collabJwtSecret,
-            RELAY_URL: `ws://localhost:${relayContainer.getMappedPort(relayPort)}`,
+            RELAY_URL: relayUrl,
             DISCORD_API_BASE_URL: discordMock.baseUrl,
           },
           stdio: "inherit",
@@ -199,6 +249,7 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
           collabHttpUrl,
           discordMock,
           unleashAppName: appName,
+          relayUrl,
         });
         await prisma.$disconnect();
       } finally {
@@ -248,26 +299,35 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
     { auto: true },
   ],
 
-  signIn: async ({ stack, context }, use) => {
-    await use(async (user) => {
-      const sessionToken = randomBytes(32).toString("hex");
-      await stack.prisma.session.create({
-        data: {
-          sessionToken,
-          userId: user.id,
-          expires: new Date(Date.now() + ONE_DAY_MS),
-        },
-      });
+  relayUrl: async ({ stack }, use) => {
+    await use(stack.relayUrl);
+  },
 
-      await context.addCookies([
-        {
-          name: SESSION_COOKIE_NAME,
-          value: sessionToken,
-          domain: "localhost",
-          path: "/",
-        },
-      ]);
+  signIn: async ({ stack, context }, use) => {
+    await use((user) => addSessionCookie(stack.prisma, context, user));
+  },
+
+  openSignedInBrowser: async (
+    { browser, stack, viewport, contextOptions },
+    use,
+  ) => {
+    const browserContexts: BrowserContext[] = [];
+
+    await use(async (user) => {
+      const browserContext = await browser.newContext({
+        ...contextOptions,
+        baseURL: stack.baseURL,
+        viewport,
+      });
+      browserContexts.push(browserContext);
+
+      await addSessionCookie(stack.prisma, browserContext, user);
+      return browserContext.newPage();
     });
+
+    await Promise.all(
+      browserContexts.map((browserContext) => browserContext.close()),
+    );
   },
 
   switchUser: async ({ context, signIn }, use) => {

@@ -7,25 +7,26 @@ import { getCitizenDisplayName } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 
+type FilterCitizen = Pick<Citizen, "id" | "handle" | "deletedAt">;
+
 interface Props {
   readonly className?: string;
 }
 
 /**
- * The list holds the citizens of the loaded shared entries, thus it needs no
- * permission to read citizens and no request of its own.
+ * The list holds the citizens who share with the user now and the citizens of
+ * the loaded shared entries, thus it needs no permission to read citizens and
+ * no request of its own.
  */
 export const CitizenFilters = ({ className }: Props) => {
-  const { entries, hiddenCitizenIds, setHiddenCitizenIds } =
+  const { entries, feed, hiddenCitizenIds, setHiddenCitizenIds } =
     useLogAnalyzerContext();
 
-  const citizens = new Map<
-    Citizen["id"],
-    Pick<Citizen, "id" | "handle" | "deletedAt">
-  >();
-  for (const entry of entries.values()) {
-    if (entry.isShared && entry.citizen)
-      citizens.set(entry.citizen.id, entry.citizen);
+  const citizens = new Map<Citizen["id"], FilterCitizen>();
+  for (const { citizen } of feed.sharingOwners)
+    citizens.set(citizen.id, { ...citizen, deletedAt: null });
+  for (const entry of entries) {
+    if (entry.isShared) citizens.set(entry.citizen.id, entry.citizen);
   }
 
   const sortedCitizens = Array.from(citizens.values()).toSorted(
@@ -67,12 +68,19 @@ export const CitizenFilters = ({ className }: Props) => {
         })
       ) : (
         <p className="text-sm text-white/60">
-          Noch keine Einträge anderer Citizens geladen.
+          Noch teilt niemand Game Logs mit dir.
         </p>
       )}
 
-      {/* A hidden citizen can disappear from the list, for example after a
-          reload. Without this their entries could not be shown again. */}
+      {feed.hasMoreSharingOwners && (
+        <p className="text-sm text-white/60">
+          Mehr Citizens teilen mit dir, als die Liste zeigt.
+        </p>
+      )}
+
+      {/* A hidden citizen can disappear from the list, for example after the
+          end of a grant. Without this their entries could not be shown
+          again. */}
       {hiddenCitizenIds.length > 0 && (
         <Button2
           type="button"

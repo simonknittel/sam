@@ -139,7 +139,7 @@ jobs:
         working-directory: pnpm-monorepo
 
       - name: Test packages
-        run: pnpm --filter @sam-monorepo/domain --filter @sam-monorepo/wiki-editor --filter @sam-monorepo/application --filter @sam-monorepo/infrastructure --filter @sam-monorepo/mcp run test
+        run: pnpm --filter @sam-monorepo/domain --filter @sam-monorepo/wiki-editor --filter @sam-monorepo/application --filter @sam-monorepo/infrastructure --filter @sam-monorepo/mcp --filter @sam-monorepo/remote-control-program-runtime run test
         working-directory: pnpm-monorepo
 
       - name: Test Lambda functions
@@ -155,8 +155,8 @@ jobs:
       # The production server runs in UTC, thus a date rule that works only
       # in UTC would pass the steps above. The date code must give the same
       # result in each time zone.
-      - name: Test app, domain, application and mcp packages in a different time zone
-        run: pnpm --filter @sam-monorepo/app --filter @sam-monorepo/domain --filter @sam-monorepo/application --filter @sam-monorepo/mcp run test
+      - name: Test app, domain, application, mcp and remote-control-program-runtime packages in a different time zone
+        run: pnpm --filter @sam-monorepo/app --filter @sam-monorepo/domain --filter @sam-monorepo/application --filter @sam-monorepo/mcp --filter @sam-monorepo/remote-control-program-runtime run test
         working-directory: pnpm-monorepo
         env:
           TZ: America/Los_Angeles
@@ -193,7 +193,7 @@ jobs:
         working-directory: pnpm-monorepo
 
       - name: Typecheck packages
-        run: pnpm --filter @sam-monorepo/domain --filter @sam-monorepo/wiki-editor --filter @sam-monorepo/application --filter @sam-monorepo/infrastructure --filter @sam-monorepo/mcp run typecheck
+        run: pnpm --filter @sam-monorepo/domain --filter @sam-monorepo/wiki-editor --filter @sam-monorepo/application --filter @sam-monorepo/infrastructure --filter @sam-monorepo/mcp --filter @sam-monorepo/remote-control-program-runtime run typecheck
         working-directory: pnpm-monorepo
 
       - name: Typecheck scripts

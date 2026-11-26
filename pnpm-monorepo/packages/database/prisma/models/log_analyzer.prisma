@@ -1,6 +1,8 @@
 /// One matched log line a citizen shared with the other citizens. Rows are
 /// immutable and are never deleted, thus there are no update or delete
 /// columns: an opt-out only stops new uploads.
+/// The only exception is the one-time migration `log_analyzer_entry_ip_marker`
+/// (M3 of `docs/remote-control-program/migration.md`).
 ///
 /// The capture groups and the rendered message are not stored. Every viewer
 /// runs the type's regex on `rawLine` again, so a change of the presentation
@@ -13,8 +15,9 @@ model LogAnalyzerEntry {
   /// no migration. A value without a pattern is ignored when read, but kept, in
   /// case the pattern returns.
   type       String
-  /// Contains data of other players (nicknames, IP addresses), thus it must
-  /// never be written to the logs.
+  /// The IP marker replaces each IP address (`replaceIpAddresses()` of the
+  /// domain). Contains data of other players (for example nicknames), thus it
+  /// must never be written to the logs.
   rawLine    String
   /// Time of the event, parsed from `rawLine` by the upload (or sent by the
   /// client, for a type with `takesTimeOfPrecedingLine`). Stored as a column
@@ -24,9 +27,14 @@ model LogAnalyzerEntry {
   /// It orders the lines of one instant, because the game can write two lines
   /// in the same millisecond. NULL when it is unknown.
   lineNumber Int?
-  /// SHA-256 of `type + "\n" + rawLine`, hex encoded. Together with
-  /// `createdById` it prevents duplicates. The scope is one uploader, because
-  /// two citizens can produce the same line at the same second.
+  /// SHA-256 of the oldest type of the pattern chain (`supersedes`), a line
+  /// feed and `rawLine`, hex encoded (`createLogEntryHash()` in
+  /// `packages/domain/src/remoteControlProgram/logEntryHash.ts`). Together
+  /// with `createdById` it prevents duplicates, also of two versions of one
+  /// pattern. The scope is one uploader, because two citizens can produce the
+  /// same line at the same second. The migration `log_analyzer_entry_ip_marker`
+  /// calculated the hash again for the rows from before, and kept only the
+  /// oldest row when two rows of one uploader then had the same hash.
   hash       String
   createdAt  DateTime @default(now()) @db.Timestamptz(3)
 
