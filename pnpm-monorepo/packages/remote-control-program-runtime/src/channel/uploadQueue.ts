@@ -33,10 +33,7 @@ const isSameSource = (first: FeedEntriesSource, second: FeedEntriesSource) =>
 const getEmptyBatchByteLength = (source: FeedEntriesSource) =>
   getByteLength(
     JSON.stringify(
-      createUpMessage(UpMessageType.FeedEntries, {
-        ...source,
-        entries: [],
-      }),
+      createUpMessage(UpMessageType.FeedEntries, { ...source, entries: [] }),
     ),
   );
 

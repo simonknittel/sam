@@ -517,21 +517,15 @@ export type DownMessageOfType<Type extends DownMessageType> = Extract<
   { readonly type: Type }
 >;
 
-/**
- * Wraps the content into an envelope with a new message id
- *
- * @param protocolVersion The version of the runtime, the same in each
- * message of the connection
- */
+/** Wraps the content into an envelope with a new message id */
 export const createUpMessage = <Type extends UpMessageType>(
   type: Type,
   content: UpMessageOfType<Type>["content"],
-  protocolVersion: number = RELAY_PROTOCOL_VERSION,
 ) =>
   ({
     type,
     id: crypto.randomUUID(),
-    protocol_version: protocolVersion,
+    protocol_version: RELAY_PROTOCOL_VERSION,
     content,
   }) as UpMessageOfType<Type>;
 

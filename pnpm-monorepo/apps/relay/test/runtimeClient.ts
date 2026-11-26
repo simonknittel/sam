@@ -65,18 +65,15 @@ export class TestRuntimeClient {
     runtimeId: string,
     protocolVersion = RELAY_PROTOCOL_VERSION,
   ) {
-    return this.send(
-      createUpMessage(
-        UpMessageType.Hello,
-        {
-          token,
-          runtime_id: runtimeId,
-          runtime_kind: RuntimeKind.browser,
-          runtime_version: "1.0.0",
-        },
-        protocolVersion,
-      ),
-    );
+    return this.send({
+      ...createUpMessage(UpMessageType.Hello, {
+        token,
+        runtime_id: runtimeId,
+        runtime_kind: RuntimeKind.browser,
+        runtime_version: "1.0.0",
+      }),
+      protocol_version: protocolVersion,
+    });
   }
 
   /** The first message of the type, also when it arrived before the call */
