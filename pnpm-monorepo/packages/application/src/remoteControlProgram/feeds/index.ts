@@ -13,7 +13,6 @@ export {
 } from "./appendFeedEntries.js";
 export type { FeedLogEntry } from "./feedLogEntry.js";
 export {
-  MAXIMUM_FEED_ENTRY_KEYS_PER_READ,
   findOwnFeedEntryKeys,
   findOwnFeedEntryKeysInputSchema,
   type FindOwnFeedEntryKeysInput,

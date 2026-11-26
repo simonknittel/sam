@@ -7,9 +7,12 @@ import {
   RELAY_LIMITS,
 } from "./catalog.js";
 import {
+  DownMessageType,
   RelayMessageParseProblem,
   UpMessageType,
+  createDownMessage,
   createUpMessage,
+  parseDownMessage,
   parseUpMessage,
 } from "./protocol.js";
 
@@ -63,6 +66,24 @@ test("a full batch of the longest log lines fits into one message", () => {
   const text = JSON.stringify(batch);
 
   expect(parseUpMessage(text).success).toBe(true);
+  expect(new TextEncoder().encode(text).byteLength).toBeLessThanOrEqual(
+    RELAY_LIMITS.maximumMessageBytes,
+  );
+});
+
+test("a full page of keys fits into one message", () => {
+  const key = "f".repeat(64);
+  const page = createDownMessage(DownMessageType.FeedEntryKeys, {
+    message_id: crypto.randomUUID(),
+    keys: Array.from(
+      { length: RELAY_LIMITS.maximumFeedEntryKeysPerPage },
+      () => key,
+    ),
+    next_page_cursor: key,
+  });
+  const text = JSON.stringify(page);
+
+  expect(parseDownMessage(text).success).toBe(true);
   expect(new TextEncoder().encode(text).byteLength).toBeLessThanOrEqual(
     RELAY_LIMITS.maximumMessageBytes,
   );

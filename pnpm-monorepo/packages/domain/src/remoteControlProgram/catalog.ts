@@ -196,6 +196,24 @@ export const RELAY_LIMITS = {
    */
   uploadBurstBatches: 5,
   /**
+   * The keys on one page of `feed_entry_keys`, also for the browser runtime,
+   * which reads the pages from the app. A full page (2,000 keys of 64
+   * characters, and the JSON) is approximately 134 KB, thus it stays below
+   * `maximumMessageBytes`.
+   */
+  maximumFeedEntryKeysPerPage: 2_000,
+  /**
+   * The `feed_entry_keys_request`s of one connection: one in each interval,
+   * and a burst of `feedEntryKeyRequestBurstSize` after a pause. A runtime
+   * requests the pages of one time window one after the other: after a
+   * start, and for the count of a request for older entries. The burst
+   * covers 100,000 keys at once. Each page is one query of the database,
+   * thus the limit bounds this work. A request above the rate gets
+   * `rate_limit_exceeded` and counts as an error.
+   */
+  feedEntryKeyRequestIntervalMilliseconds: 1_000,
+  feedEntryKeyRequestBurstSize: 50,
+  /**
    * A correct runtime almost never gets an error. More errors in one minute
    * show a defect or an attack, thus the relay closes the connection.
    */
