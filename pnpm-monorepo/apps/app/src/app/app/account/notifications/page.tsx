@@ -1,10 +1,12 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
+import { InboxAutoOpenSetting } from "@/modules/notifications/components/InboxAutoOpenSetting";
 import { NotificationSettings } from "@/modules/notifications/components/NotificationSettings";
 import { WebPushBrowserProvider } from "@/modules/notifications/components/WebPushBrowserProvider";
 import { WebPushSubscriberClient } from "@/modules/notifications/components/WebPushSubscriberClient";
 import { WebPushSubscriptionsTable } from "@/modules/notifications/components/WebPushSubscriptionsTable";
 import { getMyNotificationSettings } from "@/modules/notifications/utils/queries/getMyNotificationSettings";
 import { getMyWebPushSubscriptions } from "@/modules/notifications/utils/queries/getMyWebPushSubscriptions";
+import { isMyInboxAutoOpenEnabled } from "@/modules/notifications/utils/queries/isMyInboxAutoOpenEnabled";
 import { type Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -18,12 +20,16 @@ export default async function Page() {
   );
   if (!authentication.session.entity) notFound();
 
-  const [myNotificationSettings, myWebPushSubscriptions] = await Promise.all([
-    getMyNotificationSettings(),
-    getMyWebPushSubscriptions(),
-  ]);
+  const [myNotificationSettings, myWebPushSubscriptions, inboxAutoOpenEnabled] =
+    await Promise.all([
+      getMyNotificationSettings(),
+      getMyWebPushSubscriptions(),
+      isMyInboxAutoOpenEnabled(),
+    ]);
   return (
     <div className="flex flex-col gap-4">
+      <InboxAutoOpenSetting isEnabled={inboxAutoOpenEnabled} />
+
       <WebPushBrowserProvider
         subscriptions={myWebPushSubscriptions.map(({ id, endpoint }) => ({
           id,

@@ -7,6 +7,7 @@ import { NotificationChannel } from "@sam-monorepo/database/browser";
 import { getNotificationSettingInputName } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { FaDesktop, FaInfoCircle, FaMobile } from "react-icons/fa";
+import { updateMyNotificationSettings } from "../actions/updateMyNotificationSettings";
 import {
   NOTIFICATIONS_APPS,
   type NotificationType,
@@ -26,6 +27,7 @@ export const NotificationSettings = ({ className, settings }: Props) => {
   return (
     <NotificationSettingsForm
       className={clsx("flex flex-col gap-0.5", className)}
+      action={updateMyNotificationSettings}
     >
       <p className="max-w-prose px-4 text-sm text-neutral-500">
         Browser-Benachrichtigungen werden nur an Geräte zugestellt, auf denen du
