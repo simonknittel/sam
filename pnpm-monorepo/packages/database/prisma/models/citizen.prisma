@@ -139,23 +139,26 @@ model Citizen {
 
   /// IANA time zone name, for example "Europe/Berlin". NULL if the citizen did
   /// not set it.
-  timezone               String?
+  timezone                String?
   /// Day of the birthday, 1 to 31. The year is not stored, thus the app
   /// cannot show an age. Set together with `birthdayMonth`, or both are NULL
   /// (CHECK constraints, see the migration database_rules_and_indexes).
-  birthdayDay            Int?
+  birthdayDay             Int?
   /// Month of the birthday, 1 to 12. See `birthdayDay`.
-  birthdayMonth          Int?
+  birthdayMonth           Int?
   /// Time of the last birthday greeting. The greeting job uses it to send
   /// only one greeting for each year.
-  birthdayGreetingSentAt DateTime? @db.Timestamptz(3)
+  birthdayGreetingSentAt  DateTime? @db.Timestamptz(3)
   /// See `birthdayGreetingSentAt`
-  newYearGreetingSentAt  DateTime? @db.Timestamptz(3)
+  newYearGreetingSentAt   DateTime? @db.Timestamptz(3)
   /// Time of the first request with the permission to open the app. The
   /// dashboard shows the welcome banner on that local day, and the welcome
   /// notification goes out at that time. NULL for a citizen who never opened
   /// the app.
-  welcomedAt             DateTime? @db.Timestamptz(3)
+  welcomedAt              DateTime? @db.Timestamptz(3)
+  /// Time at which the citizen switched off the automatic opening of the
+  /// inbox. NULL: the inbox opens by itself (the default).
+  inboxAutoOpenDisabledAt DateTime? @db.Timestamptz(3)
 
   /// A person whose citizen was deleted can be added again, thus the IDs are
   /// unique only among the citizens that are not deleted
