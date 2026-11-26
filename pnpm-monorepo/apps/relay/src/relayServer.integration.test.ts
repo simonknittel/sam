@@ -533,7 +533,7 @@ test("a second connection of the same runtime replaces the older connection", as
   expect(health.status).toBe(200);
 });
 
-test("a runtime of protocol version 2 gets the keys of its own entries in the time window in pages", async () => {
+test("a runtime gets the keys of its own entries in the time window in pages", async () => {
   const { connect } = await start();
   const owner = await createOwner();
   const otherOwner = await createOwner("other");
@@ -553,7 +553,7 @@ test("a runtime of protocol version 2 gets the keys of its own entries in the ti
     windowEnd,
   ]);
   await createLogEntryRows(otherOwner.citizenId, [getTimeInWindow(3_000)]);
-  const { client } = await connect(owner, RUNTIME_ID, RELAY_PROTOCOL_VERSION);
+  const { client } = await connect(owner, RUNTIME_ID);
 
   const window = {
     start: windowStart.toISOString(),
@@ -578,30 +578,43 @@ test("a runtime of protocol version 2 gets the keys of its own entries in the ti
   expect(client.getMessages(DownMessageType.Acknowledgement)).toEqual([]);
 });
 
-test("refuses the key request of a runtime of protocol version 1, and limits the key requests of a connection", async () => {
+/**
+ * The SAM tabs that were open during the release of protocol version 2. Until
+ * `MINIMUM_RELAY_PROTOCOL_VERSION` is 2.
+ */
+test("a runtime of protocol version 1 connects and uploads, but cannot request the keys", async () => {
   const { connect } = await start();
   const owner = await createOwner();
 
-  const older = await connect(owner, RUNTIME_ID);
-  await expect(older.client.request(createKeysRequest())).resolves.toEqual({
+  const { client } = await connect(owner, RUNTIME_ID, 1);
+  await announce(client);
+  await expect(upload(client)).resolves.toMatchObject({
+    result: AcknowledgementResult.Accepted,
+    new_entry_count: 2,
+  });
+  await expect(client.request(createKeysRequest())).resolves.toEqual({
     message_id: expect.any(String),
     result: AcknowledgementResult.Refused,
     error_code: AcknowledgementErrorCode.MessageNotValid,
   });
-  expect(older.client.getMessages(DownMessageType.FeedEntryKeys)).toEqual([]);
+  expect(client.getMessages(DownMessageType.FeedEntryKeys)).toEqual([]);
+});
 
-  const newer = await connect(owner, OTHER_RUNTIME_ID, RELAY_PROTOCOL_VERSION);
+test("limits the key requests of a connection", async () => {
+  const { connect } = await start();
+  const owner = await createOwner();
+
+  const { client } = await connect(owner, RUNTIME_ID);
   // The burst of the limit, then one request above the rate
   const requests = Array.from(
     { length: RELAY_LIMITS.feedEntryKeyRequestBurstSize },
     () => createKeysRequest(),
   );
   const requestAboveRate = createKeysRequest();
-  for (const request of [...requests, requestAboveRate])
-    newer.client.send(request);
+  for (const request of [...requests, requestAboveRate]) client.send(request);
 
   await expect(
-    newer.client.waitForAcknowledgement(requestAboveRate),
+    client.waitForAcknowledgement(requestAboveRate),
   ).resolves.toMatchObject({
     content: {
       result: AcknowledgementResult.Refused,
@@ -610,7 +623,7 @@ test("refuses the key request of a runtime of protocol version 1, and limits the
   });
   // The other requests wait in the data lane, or get `internal_error` when it is full
   await expect(
-    newer.client.waitForMessage(
+    client.waitForMessage(
       DownMessageType.FeedEntryKeys,
       (answer) => answer.content.message_id === requests[0]?.id,
     ),

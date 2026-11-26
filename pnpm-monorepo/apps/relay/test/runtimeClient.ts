@@ -1,8 +1,8 @@
 import {
   createUpMessage,
   DownMessageType,
-  MINIMUM_RELAY_PROTOCOL_VERSION,
   parseDownMessage,
+  RELAY_PROTOCOL_VERSION,
   RuntimeKind,
   UpMessageType,
   type DownMessage,
@@ -59,11 +59,11 @@ export class TestRuntimeClient {
     return message;
   }
 
-  /** By default with the oldest protocol version that the relay accepts */
+  /** By default with the newest protocol version */
   sendHello(
     token: string,
     runtimeId: string,
-    protocolVersion = MINIMUM_RELAY_PROTOCOL_VERSION,
+    protocolVersion = RELAY_PROTOCOL_VERSION,
   ) {
     return this.send(
       createUpMessage(
