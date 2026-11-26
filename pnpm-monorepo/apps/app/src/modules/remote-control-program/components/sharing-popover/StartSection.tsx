@@ -155,8 +155,7 @@ export const StartSection = ({ onOpenLocation }: Props) => {
             bestimmter Citizen, alle mit bestimmten Rollen oder alle, die das
             Remote Control Program nutzen. Unter{" "}
             {renderTabLink({ tab: SharingPopoverTab.Grants })} kannst du sie
-            erstellen,
-            zeitlich begrenzen und jederzeit widerrufen.
+            erstellen, zeitlich begrenzen und jederzeit widerrufen.
           </p>
         </SharingPopoverTopic>
 

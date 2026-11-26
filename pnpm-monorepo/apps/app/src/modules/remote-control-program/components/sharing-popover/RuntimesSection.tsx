@@ -28,7 +28,8 @@ interface Props {
   readonly tabListRef: RefObject<HTMLDivElement | null>;
   /** See `DesktopCompanionSection` */
   readonly serverState: ReactNode;
-  readonly desktopCompanionSignIns: readonly DesktopCompanionSignIn[] | undefined;
+  readonly desktopCompanionSignIns:
+    readonly DesktopCompanionSignIn[] | undefined;
 }
 
 /**

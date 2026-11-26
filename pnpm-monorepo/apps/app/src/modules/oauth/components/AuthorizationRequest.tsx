@@ -40,7 +40,9 @@ export const AuthorizationRequest = async ({
   isAssumedUser,
 }: Props) => {
   const resource = getOAuthResourceOfClientParameter(parameters.client_id);
-  if ((await getConsentAvailability(resource)) !== ConsentAvailability.Available)
+  if (
+    (await getConsentAvailability(resource)) !== ConsentAvailability.Available
+  )
     return (
       <AuthorizationNotice message={getConsentUnavailableMessage(resource)} />
     );

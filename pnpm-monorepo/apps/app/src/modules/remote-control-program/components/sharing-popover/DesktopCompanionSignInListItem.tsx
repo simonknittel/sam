@@ -24,7 +24,9 @@ interface Props {
  */
 export const DesktopCompanionSignInListItem = ({ signIn }: Props) => {
   const device =
-    formatUserAgent(signIn.userAgent) ?? signIn.userAgent ?? "Unbekanntes Gerät";
+    formatUserAgent(signIn.userAgent) ??
+    signIn.userAgent ??
+    "Unbekanntes Gerät";
 
   return (
     <li className="flex items-start gap-3 py-2">
