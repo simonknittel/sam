@@ -44,4 +44,18 @@ export const CHANNEL_CLIENT_LIMITS = {
    * arrive closer together than the client sent them.
    */
   uploadBurstBatches: RELAY_LIMITS.uploadBurstBatches - 1,
+  /**
+   * The `feed_entry_keys_request`s that the client sends without the
+   * interval of the relay. One request less than the relay accepts, for the
+   * same reason as `uploadBurstBatches`.
+   */
+  feedEntryKeyRequestBurstSize: RELAY_LIMITS.feedEntryKeyRequestBurstSize - 1,
+  /**
+   * The time from the request for one page of the own entry keys to the
+   * answer. It covers the interval of the requests, one query of the
+   * database, and a reconnect after a short loss of the connection: the
+   * delay of the first attempt (1 second), the token request (5 seconds)
+   * and the handshake (10 seconds).
+   */
+  ownEntryKeysTimeoutMilliseconds: 30_000,
 } as const;

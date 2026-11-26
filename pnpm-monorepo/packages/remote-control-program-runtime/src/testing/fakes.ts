@@ -51,6 +51,11 @@ export class FakeWebSocket implements ChannelWebSocket {
   isClosed = false;
   /** Answers each heartbeat like a working relay */
   isAcknowledgingHeartbeats = true;
+  /**
+   * The keys of the own entries that the relay has, for the answer to each
+   * `feed_entry_keys_request` on one page. Null: no answer.
+   */
+  ownEntryKeys: (() => readonly string[]) | null = null;
 
   constructor(readonly handlers: ChannelWebSocketHandlers) {}
 
@@ -63,6 +68,27 @@ export class FakeWebSocket implements ChannelWebSocket {
       this.isAcknowledgingHeartbeats
     )
       queueMicrotask(() => this.acknowledge(message));
+
+    const { ownEntryKeys } = this;
+    if (
+      message.type === UpMessageType.FeedEntryKeysRequest &&
+      ownEntryKeys !== null
+    )
+      queueMicrotask(() => this.answerKeyRequest(message, ownEntryKeys()));
+  }
+
+  answerKeyRequest(
+    message: UpMessageOfType<UpMessageType.FeedEntryKeysRequest>,
+    keys: readonly string[],
+    nextPageCursor: string | null = null,
+  ) {
+    this.receive(
+      createDownMessage(DownMessageType.FeedEntryKeys, {
+        message_id: message.id,
+        keys: keys.toSorted(),
+        next_page_cursor: nextPageCursor,
+      }),
+    );
   }
 
   close() {

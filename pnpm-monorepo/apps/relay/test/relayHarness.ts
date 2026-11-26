@@ -206,7 +206,7 @@ export const startRelay = async ({
       TestRuntimeClient.open(relayUrl, headers),
     /**
      * Opens a connection with a new token, and waits for the `welcome`. By
-     * default with the oldest protocol version that the relay accepts.
+     * default with the newest protocol version.
      */
     connect: async (
       owner: Owner,

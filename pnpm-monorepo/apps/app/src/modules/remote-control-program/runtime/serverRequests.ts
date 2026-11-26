@@ -1,12 +1,9 @@
-import type { api } from "@/trpc/react";
 import { connectionTokenSchema, RelayCloseReason } from "@sam-monorepo/domain";
 import {
   CHANNEL_CLIENT_LIMITS,
   ChannelEndReason,
   ConnectionTokenRefusedError,
   type ConnectionTokenGrant,
-  type OwnEntryKeysPage,
-  type OwnEntryKeysQuery,
 } from "@sam-monorepo/remote-control-program-runtime";
 import { decodeJwt } from "jose";
 import * as z from "zod";
@@ -18,9 +15,6 @@ import * as z from "zod";
  * queue of the router.
  */
 const CONNECTION_TOKEN_PATH = "/api/remote-control-program/connection-token";
-
-/** One page of keys needs one query of the database */
-const OWN_FEED_ENTRY_KEYS_TIMEOUT_MILLISECONDS = 10_000;
 
 /** Longer than a `wss://` URL of a host */
 const MAXIMUM_RELAY_URL_LENGTH = 2_048;
@@ -43,8 +37,6 @@ const connectionTokenResponseSchema = z.object({
 const connectionTokenClaimsSchema = z.object({
   citizen_id: z.string().max(MAXIMUM_CITIZEN_ID_LENGTH),
 });
-
-type TrpcClient = ReturnType<typeof api.useUtils>["client"];
 
 /**
  * The token source of the channel client: a token for one connection of the
@@ -94,12 +86,3 @@ export const requestConnectionToken = async (
     relayUrl: body.relay_url === null ? null : new URL(body.relay_url),
   };
 };
-
-/** The keys of the own entries that the relay has */
-export const createOwnEntryKeysSource =
-  (client: TrpcClient) =>
-  ({ start, end, pageCursor }: OwnEntryKeysQuery): Promise<OwnEntryKeysPage> =>
-    client.remoteControlProgram.findOwnFeedEntryKeys.query(
-      { start, end, page_cursor: pageCursor ?? undefined },
-      { signal: AbortSignal.timeout(OWN_FEED_ENTRY_KEYS_TIMEOUT_MILLISECONDS) },
-    );

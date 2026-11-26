@@ -1,19 +1,8 @@
+import type {
+  OwnEntryKeysPage,
+  OwnEntryKeysQuery,
+} from "../channel/channelTypes.js";
 import type { RawMatch } from "../logFile/types.js";
-
-/** `end` is exclusive */
-export interface OwnEntryKeysQuery {
-  readonly start: Date;
-  readonly end: Date;
-  /** The `nextPageCursor` of the previous page. Null for the first page. */
-  readonly pageCursor: string | null;
-}
-
-export interface OwnEntryKeysPage {
-  /** The keys (`RawMatch.hash`) of the own entries that the relay has */
-  readonly keys: readonly string[];
-  /** Null on the last page */
-  readonly nextPageCursor: string | null;
-}
 
 export type FindOwnEntryKeys = (
   query: OwnEntryKeysQuery,
@@ -21,8 +10,9 @@ export type FindOwnEntryKeys = (
 
 /**
  * The pages of `findOwnEntryKeys` for one check: 2 times the entries of the
- * store with 2,000 keys on each page. Above it, the runtime sends the entries
- * without a check, and the relay removes the duplicates.
+ * store with `RELAY_LIMITS.maximumFeedEntryKeysPerPage` keys on each page.
+ * Above it, the runtime sends the entries without a check, and the relay
+ * removes the duplicates.
  */
 const MAXIMUM_KEY_PAGES = 50;
 

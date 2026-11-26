@@ -221,3 +221,18 @@ export interface ChannelClientOptions {
 }
 
 export type ChannelStateListener = (state: ChannelState) => void;
+
+/** A time window of the own entries of `log_entries`. `end` is exclusive. */
+export interface OwnEntryKeysQuery {
+  readonly start: Date;
+  readonly end: Date;
+  /** The `nextPageCursor` of the previous page. Null for the first page. */
+  readonly pageCursor: string | null;
+}
+
+export interface OwnEntryKeysPage {
+  /** The keys (`RawMatch.hash`) of the own entries that the relay has */
+  readonly keys: readonly string[];
+  /** Null on the last page */
+  readonly nextPageCursor: string | null;
+}

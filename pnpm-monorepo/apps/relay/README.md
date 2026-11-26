@@ -19,7 +19,7 @@ The relay service of the [Remote Control Program](../../../docs/remote-control-p
 
 ## Protocol versions
 
-The relay service accepts the protocol versions from `MINIMUM_RELAY_PROTOCOL_VERSION` to `RELAY_PROTOCOL_VERSION` of [protocol.ts](../../packages/domain/src/remoteControlProgram/protocol.ts). The browser runtime uses version 1. The desktop companion uses version 2: it has no session of the app, thus it gets the keys of its own entries from the relay service (decision 34 of the [concept](../../../docs/remote-control-program/README.md#decisions)).
+The relay service accepts the protocol versions from `MINIMUM_RELAY_PROTOCOL_VERSION` to `RELAY_PROTOCOL_VERSION` of [protocol.ts](../../packages/domain/src/remoteControlProgram/protocol.ts). Both runtimes use version 2: they get the keys of their own entries from the relay service (decision 34 of the [concept](../../../docs/remote-control-program/README.md#decisions)). The relay service accepts version 1 until `MINIMUM_RELAY_PROTOCOL_VERSION` is 2, for the SAM tabs that were open during the release of version 2.
 
 The answers to `feed_entry_keys_request`:
 

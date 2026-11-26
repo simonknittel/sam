@@ -196,8 +196,7 @@ export const RELAY_LIMITS = {
    */
   uploadBurstBatches: 5,
   /**
-   * The keys on one page of `feed_entry_keys`, also for the browser runtime,
-   * which reads the pages from the app. A full page (2,000 keys of 64
+   * The keys on one page of `feed_entry_keys`. A full page (2,000 keys of 64
    * characters, and the JSON) is approximately 134 KB, thus it stays below
    * `maximumMessageBytes`.
    */

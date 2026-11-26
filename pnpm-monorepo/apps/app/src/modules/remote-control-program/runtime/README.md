@@ -8,7 +8,7 @@ The browser runtime of the Remote Control Program runs on all SAM pages for a us
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | The orchestration of the log file connector, the local access layer and the channel client (`BrowserRuntime`), and the store of the own entries (`OwnEntryStore`) | `packages/remote-control-program-runtime/src/browserRuntime/`                                           |
 | The election of the tab with the Web Locks API, the messages and the commands between the tabs, the folder handle, the autostart                                  | `BrowserRuntimeController.ts`, `tabMessages.ts`, `tabCommands.ts`, `logFolder.ts`, `browserSettings.ts` |
-| The token route of the app and the tRPC query of the keys                                                                                                         | `serverRequests.ts`                                                                                     |
+| The token route of the app                                                                                                                                        | `serverRequests.ts`                                                                                     |
 | The hooks                                                                                                                                                         | `useBrowserRuntime.ts`, the types in `types.ts`                                                         |
 
 ## Citizens
@@ -33,7 +33,7 @@ The browser runtime of the Remote Control Program runs on all SAM pages for a us
 - `useEndBrowserRuntimeSession()` gives the function for the logout.
 - Only `selectFolder()` and `restoreFolderPermission()` need a user gesture. Call them directly in the click handler.
 - A failed command rejects with `BrowserRuntimeError` and its `BrowserRuntimeErrorCode`.
-- Only the settings of the log file connector in the sharing popover call `prepareOlderEntriesRequest()` (`../components/sharing-popover/OlderEntriesUpload.tsx`). They show the count and upload the entries only after the confirmation of the owner.
+- Only the settings of the log file connector in the sharing popover call `prepareOlderEntriesRequest()` (`../components/sharing-popover/OlderEntriesUpload.tsx`). They show the count and upload the entries only after the confirmation of the owner. The count needs the connection to the relay, which gives the keys of the entries that it has. After a lost connection, the count waits for a reconnect (`CHANNEL_CLIENT_LIMITS.ownEntryKeysTimeoutMilliseconds`), and then fails with `RelayCheckFailed`.
 
 ## Browser storage
 

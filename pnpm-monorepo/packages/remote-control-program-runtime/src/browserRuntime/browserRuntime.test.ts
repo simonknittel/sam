@@ -1,4 +1,5 @@
 import {
+  CapabilityId,
   DownMessageType,
   LogAnalyzerEntryType,
   UpMessageType,
@@ -20,7 +21,6 @@ import {
 } from "./browserRuntimeState.js";
 import type { LogFolderReader } from "./logFolderReader.js";
 import { MAXIMUM_OWN_ENTRIES, OwnEntryStore } from "./ownEntryStore.js";
-import type { OwnEntryKeysPage, OwnEntryKeysQuery } from "./relayKeys.js";
 
 const CITIZEN_ID = "citizen";
 const RUNTIME_ID = "0b9f8a52-6d3e-4c55-9b7a-2f1c4d8e6a10";
@@ -32,6 +32,14 @@ const DAY = 24 * 60 * MINUTE;
 /** The runtime only gives the handle to the reader */
 const FOLDER = {} as FileSystemDirectoryHandle;
 const OTHER_FOLDER = {} as FileSystemDirectoryHandle;
+
+/** A key in the format of the relay (`createLogEntryHash`) */
+const createKey = (name: string, lineNumber: number) =>
+  Array.from(new TextEncoder().encode(`${name}-${lineNumber}`), (byte) =>
+    byte.toString(16).padStart(2, "0"),
+  )
+    .join("")
+    .padEnd(64, "0");
 
 /**
  * A log folder of the game. Each tab has its own reader, and each read
@@ -52,7 +60,7 @@ const createLogFolder = (name: string) => {
         type: LogAnalyzerEntryType.JoinPu,
         isoDate,
         rawLine: `<${isoDate}> ${name} line ${lineNumber}`,
-        hash: `${name}-hash-${lineNumber}`,
+        hash: createKey(name, lineNumber),
         groups: {},
         lineNumber,
       };
@@ -107,12 +115,16 @@ const createBrowser = () => {
   const otherFolder = createLogFolder("ptu");
   /** The keys of the entries that the relay has */
   const relayKeys = new Set<string>();
-  const findOwnEntryKeys = vi.fn(
-    async (_query: OwnEntryKeysQuery): Promise<OwnEntryKeysPage> => ({
-      keys: Array.from(relayKeys),
-      nextPageCursor: null,
-    }),
-  );
+  /** The connections of all tabs */
+  const allSockets: FakeWebSocket[] = [];
+
+  /** The content of each `feed_entry_keys_request` of all tabs */
+  const getKeyRequests = () =>
+    allSockets.flatMap((socket) =>
+      socket
+        .getSent(UpMessageType.FeedEntryKeysRequest)
+        .map((message) => message.content),
+    );
 
   /** Turns on the type of the lines for the citizen */
   const turnOnLines = (citizenId = CITIZEN_ID) =>
@@ -135,12 +147,13 @@ const createBrowser = () => {
         token: "token",
         relayUrl: new URL("wss://relay.example.test/"),
       }),
-      findOwnEntryKeys,
       createLogFolderReader: (handle) =>
         (handle === OTHER_FOLDER ? otherFolder : folder).createReader(),
       createWebSocket: (_url, handlers) => {
         const socket = new FakeWebSocket(handlers);
+        socket.ownEntryKeys = () => Array.from(relayKeys);
         sockets.push(socket);
+        allSockets.push(socket);
         return socket;
       },
       timers: FAKE_TIMERS,
@@ -193,7 +206,7 @@ const createBrowser = () => {
     folder,
     otherFolder,
     relayKeys,
-    findOwnEntryKeys,
+    getKeyRequests,
     turnOnLines,
     openTab,
     acknowledgeUploads,
@@ -231,7 +244,7 @@ test("after a change of the active tab, the next runtime sends only the entries 
   ]);
   // The first tab did not check the relay: its first read had no entry
   // that can go up
-  expect(browser.findOwnEntryKeys).not.toHaveBeenCalled();
+  expect(browser.getKeyRequests()).toEqual([]);
 
   // The tab closes before the `ack` of the second entry
   firstTab.runtime.handOver();
@@ -241,11 +254,13 @@ test("after a change of the active tab, the next runtime sends only the entries 
   expect(secondTab.runtime.shouldRun(false)).toBe(true);
   const secondSocket = await secondTab.start();
 
-  expect(browser.findOwnEntryKeys).toHaveBeenCalledExactlyOnceWith({
-    start: new Date(acceptedEntry.isoDate),
-    end: new Date(Date.parse(unacknowledgedEntry.isoDate) + 1),
-    pageCursor: null,
-  });
+  expect(browser.getKeyRequests()).toEqual([
+    {
+      capability_id: CapabilityId.LogEntries,
+      start: acceptedEntry.isoDate,
+      end: new Date(Date.parse(unacknowledgedEntry.isoDate) + 1).toISOString(),
+    },
+  ]);
   expect(secondSocket.getSentRawLines()).toEqual([unacknowledgedEntry.rawLine]);
 
   // A new line goes up without a second check
@@ -255,7 +270,7 @@ test("after a change of the active tab, the next runtime sends only the entries 
     unacknowledgedEntry.rawLine,
     liveEntry.rawLine,
   ]);
-  expect(browser.findOwnEntryKeys).toHaveBeenCalledOnce();
+  expect(browser.getKeyRequests()).toHaveLength(1);
 
   // A stop of the owner stays after the next change of the active tab
   secondTab.runtime.stop();
@@ -347,10 +362,10 @@ test("a request for older entries leaves out the entries that go up automaticall
     entryCount: 1,
     countsByType: new Map([[LogAnalyzerEntryType.JoinPu, 1]]),
   });
-  expect(browser.findOwnEntryKeys).toHaveBeenLastCalledWith({
-    start: new Date(sharedEntry.isoDate),
-    end: new Date(Date.parse(olderEntry.isoDate) + 1),
-    pageCursor: null,
+  expect(browser.getKeyRequests().at(-1)).toEqual({
+    capability_id: CapabilityId.LogEntries,
+    start: sharedEntry.isoDate,
+    end: new Date(Date.parse(olderEntry.isoDate) + 1).toISOString(),
   });
 
   expect(tab.runtime.confirmOlderEntriesRequest(request.id)).toBe(1);

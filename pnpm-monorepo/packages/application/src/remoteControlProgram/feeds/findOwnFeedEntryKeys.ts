@@ -35,12 +35,12 @@ export interface OwnFeedEntryKeys {
  * time of the observation is in the time window. A runtime leaves out the
  * entries that the relay already has: after a start or a change of the
  * active tab (the runtime offers the entries of up to 7 days again), and for
- * the counts of a request for older entries. The browser runtime reads the
- * keys from the app, the desktop companion through the relay service
- * (`feed_entry_keys_request`, decision 34). Only the keys leave the server,
- * not the raw lines. The cursor is the last key: the unique index of the
- * owner and the hash orders the rows. A runtime with more entries in the
- * time window reads more pages, thus the answer stays complete.
+ * the counts of a request for older entries. The runtimes read the keys
+ * through the relay service (`feed_entry_keys_request`, decision 34). Only
+ * the keys leave the server, not the raw lines. The cursor is the last key:
+ * the unique index of the owner and the hash orders the rows. A runtime with
+ * more entries in the time window reads more pages, thus the answer stays
+ * complete.
  *
  * @throws ForbiddenError without `remoteControlProgram;use` or a citizen, for
  * an admin who assumes the user, or when a switch turned off the Remote

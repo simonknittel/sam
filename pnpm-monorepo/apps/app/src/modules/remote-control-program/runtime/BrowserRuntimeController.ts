@@ -10,8 +10,6 @@ import {
   OwnEntryStore,
   type AppliedOwnEntriesChange,
   type LocalAccessLayer,
-  type OwnEntryKeysPage,
-  type OwnEntryKeysQuery,
 } from "@sam-monorepo/remote-control-program-runtime";
 import {
   claimLegacyAutostart,
@@ -69,10 +67,6 @@ export interface BrowserRuntimeControllerOptions {
   readonly runtimeVersion: string;
   /** The user of the session. Each citizen has an own runtime. */
   readonly citizenId: string;
-  /** The keys of the own entries that the relay has */
-  readonly findOwnEntryKeys: (
-    query: OwnEntryKeysQuery,
-  ) => Promise<OwnEntryKeysPage>;
 }
 
 /** The runtime of this tab while it holds the Web Lock */
@@ -441,7 +435,7 @@ export class BrowserRuntimeController {
   };
 
   async #becomeLeader(connection: TabConnection) {
-    const { citizenId, runtimeVersion, findOwnEntryKeys } = this.#options;
+    const { citizenId, runtimeVersion } = this.#options;
     // The previous leader does not answer the commands of this tab any more
     connection.pendingCommands.setLeader(connection.tabId);
 
@@ -454,7 +448,6 @@ export class BrowserRuntimeController {
       entryStore: this.#entryStore,
       requestConnectionToken: (signal) =>
         requestConnectionToken(runtimeId, citizenId, signal),
-      findOwnEntryKeys,
     });
 
     let previousError = runtime.getState().error;
