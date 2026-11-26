@@ -4,6 +4,7 @@
  * app call them.
  */
 export * from "./access/index.js";
+export * from "./desktopCompanion/index.js";
 export * from "./feeds/index.js";
 export * from "./grants/index.js";
 export * from "./runtimes/index.js";

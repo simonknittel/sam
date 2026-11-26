@@ -1,5 +1,5 @@
 import { prisma } from "@sam-monorepo/database";
-import { RELAY_LIMITS } from "@sam-monorepo/domain";
+import { RELAY_LIMITS, RuntimeKind } from "@sam-monorepo/domain";
 import { createLocalJWKSet, errors, SignJWT } from "jose";
 import { beforeEach, expect, test } from "vitest";
 import {
@@ -102,11 +102,13 @@ test("issues a token that authenticates a connection of the runtime at the relay
       TEST_NOW.getTime() + RELAY_LIMITS.connectionTokenLifetimeMilliseconds,
     ),
     relayUrl: "wss://relay.example.com/",
+    handle: "owner",
   });
 
   const connection = await authenticateRuntimeConnection(createRelayContext(), {
     token: issued.token,
     runtime_id: RUNTIME_ID,
+    runtime_kind: RuntimeKind.browser,
   });
 
   expect(connection).toMatchObject({
@@ -132,6 +134,7 @@ test("refuses a token of a different audience, an expired token and a token of a
   const tokenOfDifferentAudience = await new SignJWT({
     citizen_id: owner.citizen.id,
     runtime_id: RUNTIME_ID,
+    runtime_kind: RuntimeKind.browser,
     admin_mode: false,
   })
     .setProtectedHeader({ alg: SIGNING_KEY_ALGORITHM, kid: signingKey.keyId })
@@ -149,6 +152,7 @@ test("refuses a token of a different audience, an expired token and a token of a
     authenticateRuntimeConnection(createRelayContext(), {
       token: tokenOfDifferentAudience,
       runtime_id: RUNTIME_ID,
+      runtime_kind: RuntimeKind.browser,
     }),
   ).rejects.toThrow(tokenNotValid);
   await expect(
@@ -158,13 +162,14 @@ test("refuses a token of a different audience, an expired token and a token of a
           TEST_NOW.getTime() + RELAY_LIMITS.connectionTokenLifetimeMilliseconds,
         ),
       ),
-      { token, runtime_id: RUNTIME_ID },
+      { token, runtime_id: RUNTIME_ID, runtime_kind: RuntimeKind.browser },
     ),
   ).rejects.toThrow(tokenNotValid);
   await expect(
     authenticateRuntimeConnection(createRelayContext(), {
       token,
       runtime_id: OTHER_RUNTIME_ID,
+      runtime_kind: RuntimeKind.browser,
     }),
   ).rejects.toThrow(tokenNotValid);
 
@@ -180,6 +185,7 @@ test("refuses a token of a different audience, an expired token and a token of a
     authenticateRuntimeConnection(contextWithoutKeySet, {
       token,
       runtime_id: RUNTIME_ID,
+      runtime_kind: RuntimeKind.browser,
     }),
   ).rejects.toThrow(KeySetUnavailableError);
 });
@@ -201,6 +207,7 @@ test("keeps the admin mode of the app in the token, and ends it with the admin r
     authenticateRuntimeConnection(createRelayContext(), {
       token,
       runtime_id: RUNTIME_ID,
+      runtime_kind: RuntimeKind.browser,
     });
 
   expect((await authenticate()).actor.adminMode).toBe(true);
@@ -255,6 +262,7 @@ test("refuses a user without the permission, an admin who assumes the user and a
     authenticateRuntimeConnection(createRelayContext(), {
       token,
       runtime_id: RUNTIME_ID,
+      runtime_kind: RuntimeKind.browser,
     }),
   ).rejects.toThrow(
     new ForbiddenError(RemoteControlProgramErrorMessage.PermissionMissing),
@@ -275,6 +283,7 @@ test("refuses a user without the permission, an admin who assumes the user and a
     authenticateRuntimeConnection(createRelayContext(), {
       token,
       runtime_id: RUNTIME_ID,
+      runtime_kind: RuntimeKind.browser,
     }),
   ).rejects.toThrow(
     new ForbiddenError(RemoteControlProgramErrorMessage.UserBanned),
