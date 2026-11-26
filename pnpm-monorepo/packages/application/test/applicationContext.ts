@@ -2,7 +2,6 @@ import { trace } from "@opentelemetry/api";
 import { prisma } from "@sam-monorepo/database";
 import { UserRole } from "@sam-monorepo/database/browser";
 import {
-  ALL_REMOTE_CONTROL_PROGRAM_PARTS_ON,
   transformPermissionStringToPermissionSet,
   type AuditEventInput,
 } from "@sam-monorepo/domain";
@@ -81,8 +80,7 @@ export const createTestApplicationContext = ({
     signingKey: async () => null,
     clientMetadata: null,
     allowInsecureLoopbackClientIds: false,
-    remoteControlProgramSwitches: async () =>
-      ALL_REMOTE_CONTROL_PROGRAM_PARTS_ON,
+    isRemoteControlProgramTurnedOff: async () => false,
     relay: null,
     connectionTokenVerificationKey: null,
     ...overrides,

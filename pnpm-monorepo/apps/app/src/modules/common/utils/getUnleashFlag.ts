@@ -62,8 +62,8 @@ export const getUnleashFlag = cache(
 );
 
 /**
- * Evaluates a flag of the Remote Control Program without the user: the flags
- * are switches of the organization, and the relay service has no user, thus
+ * Evaluates the flag of the Remote Control Program without the user: the flag
+ * is a switch of the organization, and the relay service has no user, thus
  * the app and the relay service give the same answer
  */
 export const getRemoteControlProgramUnleashFlag = cache(

@@ -4,8 +4,8 @@ import {
 } from "../logAnalyzer/logAnalyzerEntries.js";
 
 /**
- * The catalog of the Remote Control Program: the capabilities, the
- * connectors, the runtime kinds, the switches and the limits of the relay.
+ * The catalog of the Remote Control Program: the Unleash flag, the
+ * capabilities, the connectors, the runtime kinds and the limits of the relay.
  * The runtimes, the relay service and the consumers share it (see
  * `docs/remote-control-program/README.md#capabilities`).
  *
@@ -14,29 +14,25 @@ import {
  */
 
 /**
- * The Unleash flags of the Remote Control Program (see "Switches" of the
- * concept). Each flag is a kill switch: when the flag is on, its part is off.
- * Without a value of the flag (no Unleash in the stack, or Unleash is not
- * available), all parts stay on. The flag `DisableMcpServer` of the app
- * works the same way. The flags are switches of
- * the organization: the app and the relay service read them without the
- * context of a user, thus a strategy can only select an app name (for example
- * the app of one Playwright worker).
+ * The Unleash flag of the Remote Control Program (see "Switches" of the
+ * concept). It is a kill switch: when the flag is on, the full Remote Control
+ * Program is off. The connectors and the capabilities have no flags of their
+ * own. Without a value of the flag (no Unleash in the stack, or Unleash is
+ * not available), the program stays on. The flag `DisableMcpServer` of the
+ * app works the same way. The flag is a switch of the organization: the app
+ * and the relay service read it without the context of a user, thus a
+ * strategy can only select an app name (for example the app of one
+ * Playwright worker).
  *
- * Add each new flag also to the flag list of the Unleash bootstrap in
- * `compose.yml` and to `UNLEASH_FLAG` of `apps/playwright/fixtures/unleash.ts`.
- * The app and the relay service read the flags of this enum directly.
+ * The flag is also in the flag list of the Unleash bootstrap in
+ * `compose.yml` and in `UNLEASH_FLAG` of `apps/playwright/fixtures/unleash.ts`.
  */
 export enum RemoteControlProgramUnleashFlag {
   /**
-   * Turns off all parts: the relay refuses the connections of the runtimes,
-   * and the consumers read no data
+   * The relay refuses and closes the connections of the runtimes, and the
+   * consumers read no data
    */
   DisableRemoteControlProgram = "DisableRemoteControlProgram",
-  /** The relay refuses the uploads of the log file connector */
-  DisableLogFileConnector = "DisableLogFileConnector",
-  /** The relay refuses the uploads of `log_entries`, and the consumers read no log entries */
-  DisableLogEntriesCapability = "DisableLogEntriesCapability",
 }
 
 export enum CapabilityId {
@@ -87,7 +83,6 @@ export interface FeedCapabilityDefinition {
    */
   readonly minimumUploadIntervalMilliseconds: number;
   readonly sensitivity: CapabilitySensitivity;
-  readonly unleashFlag: RemoteControlProgramUnleashFlag;
   readonly maximumEntriesPerBatch: number;
 }
 
@@ -110,7 +105,6 @@ export const LOG_ENTRIES_CAPABILITY = {
    * location of the owner, and SAM keeps them permanently (decision 12)
    */
   sensitivity: CapabilitySensitivity.High,
-  unleashFlag: RemoteControlProgramUnleashFlag.DisableLogEntriesCapability,
   maximumEntriesPerBatch: MAXIMUM_LOG_ANALYZER_UPLOAD_ENTRIES,
   maximumRawLineLength: MAXIMUM_LOG_ANALYZER_RAW_LINE_LENGTH,
 } as const satisfies FeedCapabilityDefinition & {
@@ -132,7 +126,6 @@ export interface ConnectorDefinition {
    * with the same version give the same values for the shared test data.
    */
   readonly version: number;
-  readonly unleashFlag: RemoteControlProgramUnleashFlag;
   readonly capabilityIds: readonly CapabilityId[];
 }
 
@@ -142,46 +135,9 @@ export const CONNECTOR_CATALOG: Readonly<
   [ConnectorId.LogFile]: {
     id: ConnectorId.LogFile,
     version: 1,
-    unleashFlag: RemoteControlProgramUnleashFlag.DisableLogFileConnector,
     capabilityIds: [CapabilityId.LogEntries],
   },
 };
-
-/** The parts that the switches of the organization turn off */
-export interface RemoteControlProgramSwitches {
-  readonly isProgramTurnedOff: boolean;
-  readonly turnedOffConnectorIds: readonly ConnectorId[];
-  readonly turnedOffCapabilityIds: readonly CapabilityId[];
-}
-
-/**
- * Reads the switches from the values of the Unleash flags. The callback
- * gives true when the flag is on.
- */
-export const getRemoteControlProgramSwitches = (
-  isFlagEnabled: (flag: RemoteControlProgramUnleashFlag) => boolean,
-): RemoteControlProgramSwitches => ({
-  isProgramTurnedOff: isFlagEnabled(
-    RemoteControlProgramUnleashFlag.DisableRemoteControlProgram,
-  ),
-  turnedOffConnectorIds: Object.values(CONNECTOR_CATALOG)
-    .filter((connector) => isFlagEnabled(connector.unleashFlag))
-    .map((connector) => connector.id),
-  turnedOffCapabilityIds: Object.values(CAPABILITY_CATALOG)
-    .filter((capability) => isFlagEnabled(capability.unleashFlag))
-    .map((capability) => capability.id),
-});
-
-/**
- * All parts are on: the switches of a host without Unleash, and the switches
- * until the first answer of Unleash
- */
-export const ALL_REMOTE_CONTROL_PROGRAM_PARTS_ON: RemoteControlProgramSwitches =
-  {
-    isProgramTurnedOff: false,
-    turnedOffConnectorIds: [],
-    turnedOffCapabilityIds: [],
-  };
 
 /** The limits of the relay service, which the runtimes also obey */
 export const RELAY_LIMITS = {

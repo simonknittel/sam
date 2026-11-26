@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { CapabilityId, type RemoteControlProgramSwitches } from "./catalog.js";
+import { CapabilityId } from "./catalog.js";
 import {
   findGrantValidityProblem,
   getEffectiveReadAccess,
@@ -16,12 +16,6 @@ const ONE_HOUR_AGO = new Date("2026-11-23T19:00:00.000Z");
 const YESTERDAY = new Date("2026-11-22T20:00:00.000Z");
 const IN_ONE_HOUR = new Date("2026-11-23T21:00:00.000Z");
 const IN_TWO_HOURS = new Date("2026-11-23T22:00:00.000Z");
-
-const SWITCHES_ON: RemoteControlProgramSwitches = {
-  isProgramTurnedOff: false,
-  turnedOffConnectorIds: [],
-  turnedOffCapabilityIds: [],
-};
 
 const createGrant = (
   overrides: Partial<ShareGrantSource> = {},
@@ -42,7 +36,7 @@ const createGrant = (
 const createInput = (
   overrides: Partial<ReadAccessInput> = {},
 ): ReadAccessInput => ({
-  switches: SWITCHES_ON,
+  isProgramTurnedOff: false,
   viewer: {
     citizenId: "viewer",
     roleIds: new Set(["pilot"]),
@@ -73,18 +67,8 @@ describe("getEffectiveReadAccess", () => {
   test.each([
     [
       "the program is off",
-      { switches: { ...SWITCHES_ON, isProgramTurnedOff: true } },
+      { isProgramTurnedOff: true },
       ReadAccessRefusal.ProgramTurnedOff,
-    ],
-    [
-      "the capability is off",
-      {
-        switches: {
-          ...SWITCHES_ON,
-          turnedOffCapabilityIds: [CapabilityId.LogEntries],
-        },
-      },
-      ReadAccessRefusal.CapabilityTurnedOff,
     ],
     [
       "remoteControlProgram;use is missing",

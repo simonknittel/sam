@@ -1,9 +1,4 @@
-import {
-  getRemoteControlProgramSwitches,
-  RELAY_LIMITS,
-  RemoteControlProgramUnleashFlag,
-  RuntimeKind,
-} from "@sam-monorepo/domain";
+import { RELAY_LIMITS, RuntimeKind } from "@sam-monorepo/domain";
 import { beforeEach, expect, test } from "vitest";
 import {
   createTestApplicationContext,
@@ -176,11 +171,7 @@ test("refuses a runtime above the limit of the owner until a different runtime g
 test("refuses the hello when the switch of the Remote Control Program is off", async () => {
   const owner = await createOwner();
   const { context } = createTestApplicationContext({
-    remoteControlProgramSwitches: async () =>
-      getRemoteControlProgramSwitches(
-        (flag) =>
-          flag === RemoteControlProgramUnleashFlag.DisableRemoteControlProgram,
-      ),
+    isRemoteControlProgramTurnedOff: async () => true,
   });
 
   await expect(

@@ -14,7 +14,7 @@ import { ChannelClient } from "../channel/channelClient.js";
 import {
   ChannelStatus,
   DEFAULT_TIMERS,
-  isSourceTurnedOff,
+  isProgramTurnedOff,
   type ChannelState,
   type ChannelTimers,
   type ConnectionTokenGrant,
@@ -158,13 +158,12 @@ const countByRuleType = (entries: readonly RawMatch[]) => {
  * The state of the relay for the local access layer. Null: the channel state
  * does not tell it, for example during a reconnect.
  *
- * A part that the switches turned off stops the uploads. An automatic upload
- * after the part is on again does not send the entries of the time in which
- * it was off (decision 27 of the concept).
+ * The Unleash flag of the organization stops the uploads. An automatic upload
+ * after the program is on again does not send the entries of the time in
+ * which it was off (decision 27 of the concept).
  */
 const getRelayUploadState = (state: ChannelState): RelayUploadState | null => {
-  if (isSourceTurnedOff(state, LOG_ENTRIES_SOURCE))
-    return RelayUploadState.Stopped;
+  if (isProgramTurnedOff(state)) return RelayUploadState.Stopped;
 
   switch (state.status) {
     case ChannelStatus.Connected:
@@ -819,12 +818,9 @@ export class BrowserRuntime {
 
     let missingEntries = candidates;
     const timeRange = getTimeRange(candidates);
-    // The channel client removes the entries of a part that is off. The
+    // The channel client removes the entries while the program is off. The
     // relay refuses the check in this case.
-    if (
-      timeRange !== null &&
-      !isSourceTurnedOff(this.#channel.getState(), LOG_ENTRIES_SOURCE)
-    ) {
+    if (timeRange !== null && !isProgramTurnedOff(this.#channel.getState())) {
       this.#isFirstUploadRunning = true;
       let relayKeys: Set<string>;
       try {

@@ -338,7 +338,7 @@ export const createLocalAccessLayer = ({
     },
 
     /**
-     * What the relay told: the `welcome` of each connection, the switches, and
+     * What the relay told: the `welcome` of each connection, the Unleash flag, and
      * the end of the connection
      */
     setRelayState: (state: RelayUploadState) => {

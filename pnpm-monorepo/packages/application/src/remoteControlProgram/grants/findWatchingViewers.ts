@@ -21,7 +21,7 @@ export interface WatchingViewer {
  * The viewers that get the new entries of one capability of one owner: at
  * least one valid watch lease of a consumer of the viewer for the capability
  * that watches all owners or this owner, and the effective access now (`loadReadAccessToOwner()`: the
- * switches, both permissions or admin mode, the clearance, and the owner or
+ * Unleash flag, both permissions or admin mode, the clearance, and the owner or
  * a valid grant). The owner is a viewer too, when the owner watches: the own entries
  * from a different runtime come through the relay.
  *

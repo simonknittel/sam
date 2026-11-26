@@ -2,7 +2,6 @@ import {
   RelayCloseReason,
   type AnnounceContent,
   type CapabilityId,
-  type ConnectorId,
   type FeedEntriesContent,
   type FeedEntriesSource,
   type RuntimeKind,
@@ -58,9 +57,6 @@ export interface ChannelState {
    * succeed within the grace time.
    */
   readonly closeReason: ChannelCloseReason | null;
-  /** The parts that the switches of the organization turned off */
-  readonly turnedOffConnectorIds: readonly ConnectorId[];
-  readonly turnedOffCapabilityIds: readonly CapabilityId[];
   /** The entries that wait for the upload or for their `ack` */
   readonly queuedEntryCount: number;
 }
@@ -68,22 +64,12 @@ export interface ChannelState {
 export const INITIAL_CHANNEL_STATE: ChannelState = {
   status: ChannelStatus.Idle,
   closeReason: null,
-  turnedOffConnectorIds: [],
-  turnedOffCapabilityIds: [],
   queuedEntryCount: 0,
 };
 
-/**
- * A switch of the organization turned off the full Remote Control Program,
- * or the connector or the capability of the source
- */
-export const isSourceTurnedOff = (
-  state: ChannelState,
-  source: Pick<FeedEntriesSource, "connector_id" | "capability_id">,
-) =>
-  state.closeReason === RelayCloseReason.ProgramTurnedOff ||
-  state.turnedOffConnectorIds.includes(source.connector_id) ||
-  state.turnedOffCapabilityIds.includes(source.capability_id);
+/** The Unleash flag of the organization turned off the Remote Control Program */
+export const isProgramTurnedOff = (state: ChannelState) =>
+  state.closeReason === RelayCloseReason.ProgramTurnedOff;
 
 export enum ChannelDropReason {
   /**
@@ -96,10 +82,7 @@ export enum ChannelDropReason {
    * (`RELAY_LIMITS.maximumMessageBytes`)
    */
   MessageTooLarge = "message_too_large",
-  /**
-   * A switch of the organization turned off the connector, the capability or
-   * the full Remote Control Program
-   */
+  /** The Unleash flag of the organization turned off the Remote Control Program */
   TurnedOff = "turned_off",
   /** The rule of the capability (or of the entry) is off */
   LocalAccessLayer = "local_access_layer",

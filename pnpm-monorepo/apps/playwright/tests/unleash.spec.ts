@@ -36,6 +36,11 @@ const FLAG_TEST_TIMEOUT = 120_000;
  */
 const RETRY_CLICK_TIMEOUT = 2_000;
 const RETRY_RENDER_TIMEOUT = 5_000;
+/**
+ * The longest delay of the browser runtime before its next connection attempt
+ * (`maximumReconnectDelayMilliseconds` of the channel client)
+ */
+const MAXIMUM_RECONNECT_DELAY = 30_000;
 
 /**
  * The wait covers client-side-only components (next/dynamic with ssr: false)
@@ -172,13 +177,13 @@ test("the kill switch flag takes the log analyzer offline, and the retry of the 
   await expect(retryButton).toHaveCount(0);
 });
 
-test("the flag of the log entries stops their uploads, and the sharing popover tells why", async ({
+test("the flag of the Remote Control Program stops the uploads, and the sharing popover tells why", async ({
   page,
   prisma,
   signIn,
   stackFlagScope,
 }) => {
-  test.setTimeout(FLAG_TEST_TIMEOUT);
+  test.setTimeout(FLAG_TEST_TIMEOUT + MAXIMUM_RECONNECT_DELAY);
 
   const owner = await createCitizen(prisma, {
     handle: "rcp-abgeschaltet",
@@ -189,17 +194,15 @@ test("the flag of the log entries stops their uploads, and the sharing popover t
   const turnedOffNote = sharingPopoverSection(
     page,
     SharingPopoverSection.ThisBrowser,
-  ).getByText(
-    "Derzeit zentral abgeschaltet: Game Logs. Davon wird nichts hochgeladen.",
-  );
+  ).getByText("Das Remote Control Program ist derzeit abgeschaltet.");
 
   /**
    * The relay service of the worker has the Unleash app name of the app of
-   * the worker, thus the scope of the stack turns off the part for both
+   * the worker, thus the scope of the stack turns off the program for both
    */
   try {
     await setUnleashFlag(
-      UNLEASH_FLAG.DisableLogEntriesCapability,
+      UNLEASH_FLAG.DisableRemoteControlProgram,
       false,
       stackFlagScope,
     );
@@ -218,7 +221,7 @@ test("the flag of the log entries stops their uploads, and the sharing popover t
       .toEqual([lineBefore]);
 
     await setUnleashFlag(
-      UNLEASH_FLAG.DisableLogEntriesCapability,
+      UNLEASH_FLAG.DisableRemoteControlProgram,
       true,
       stackFlagScope,
     );
@@ -233,19 +236,22 @@ test("the flag of the log entries stops their uploads, and the sharing popover t
     });
 
     await setUnleashFlag(
-      UNLEASH_FLAG.DisableLogEntriesCapability,
+      UNLEASH_FLAG.DisableRemoteControlProgram,
       false,
       stackFlagScope,
     );
-    await expectFlagPropagation(turnedOffNote).toHaveCount(0);
+    /** The note stays until the next connection attempt of the runtime */
+    await expect(turnedOffNote).toHaveCount(0, {
+      timeout: FLAG_PROPAGATION_TIMEOUT + MAXIMUM_RECONNECT_DELAY,
+    });
 
-    /** The lines of the time in which the part was off stay on the machine */
+    /** The lines of the time in which the program was off stay on the machine */
     const lineAfter = blueprintLine(new Date(), "Nach der Abschaltung");
     await appendLogLines(page, [lineAfter]);
     await expectUploadedLines(prisma, owner, [lineBefore, lineAfter]);
   } finally {
     await setUnleashFlag(
-      UNLEASH_FLAG.DisableLogEntriesCapability,
+      UNLEASH_FLAG.DisableRemoteControlProgram,
       false,
       stackFlagScope,
     );

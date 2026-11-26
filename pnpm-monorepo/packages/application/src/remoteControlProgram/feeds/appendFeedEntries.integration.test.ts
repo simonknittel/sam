@@ -6,10 +6,8 @@ import {
   CONNECTOR_CATALOG,
   ConnectorId,
   createLogEntryHash,
-  getRemoteControlProgramSwitches,
   LOG_ENTRIES_CAPABILITY,
   LogAnalyzerEntryType,
-  RemoteControlProgramUnleashFlag,
 } from "@sam-monorepo/domain";
 import { beforeEach, expect, test } from "vitest";
 import {
@@ -255,7 +253,7 @@ test("refuses each line with an IP address, a different pattern or too much text
   );
 });
 
-test("refuses the batches of a turned-off part, of a stopped owner, of an unknown connector version and of a user without the permission", async () => {
+test("refuses the batches while the program is off, of a stopped owner, of an unknown connector version and of a user without the permission", async () => {
   const owner = await createOwner();
   const input = createInput([createJoinPuEntry(ONE_HOUR_AGO, 1)]);
   const refusal = (errorCode: AcknowledgementErrorCode) => ({
@@ -263,37 +261,11 @@ test("refuses the batches of a turned-off part, of a stopped owner, of an unknow
     errorCode,
     counts: { newEntryCount: 0, duplicateEntryCount: 0, refusedEntryCount: 1 },
   });
-  const createContextWithFlag = (
-    enabledFlag: RemoteControlProgramUnleashFlag,
-  ) =>
-    createTestApplicationContext({
-      remoteControlProgramSwitches: async () =>
-        getRemoteControlProgramSwitches((flag) => flag === enabledFlag),
-    }).context;
-
   await expect(
     appendFeedEntries(
-      createContextWithFlag(
-        RemoteControlProgramUnleashFlag.DisableLogFileConnector,
-      ),
-      owner,
-      input,
-    ),
-  ).resolves.toEqual(refusal(AcknowledgementErrorCode.ConnectorTurnedOff));
-  await expect(
-    appendFeedEntries(
-      createContextWithFlag(
-        RemoteControlProgramUnleashFlag.DisableLogEntriesCapability,
-      ),
-      owner,
-      input,
-    ),
-  ).resolves.toEqual(refusal(AcknowledgementErrorCode.CapabilityTurnedOff));
-  await expect(
-    appendFeedEntries(
-      createContextWithFlag(
-        RemoteControlProgramUnleashFlag.DisableRemoteControlProgram,
-      ),
+      createTestApplicationContext({
+        isRemoteControlProgramTurnedOff: async () => true,
+      }).context,
       owner,
       input,
     ),

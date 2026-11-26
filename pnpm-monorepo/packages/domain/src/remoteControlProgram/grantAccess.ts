@@ -3,7 +3,7 @@ import {
   type ShareGrant,
   type ShareGrantGranteeRole,
 } from "@sam-monorepo/database/browser";
-import type { CapabilityId, RemoteControlProgramSwitches } from "./catalog.js";
+import type { CapabilityId } from "./catalog.js";
 
 /**
  * The rules of the remote access layer (see "Access layers" of
@@ -76,7 +76,6 @@ export interface VisibleTimeRange {
 
 export enum ReadAccessRefusal {
   ProgramTurnedOff = "program_turned_off",
-  CapabilityTurnedOff = "capability_turned_off",
   RemoteControlProgramPermissionMissing = "remote_control_program_permission_missing",
   ConsumerPermissionMissing = "consumer_permission_missing",
   NoValidGrant = "no_valid_grant",
@@ -87,7 +86,8 @@ export type EffectiveReadAccess =
   | { readonly isGranted: false; readonly refusal: ReadAccessRefusal };
 
 export interface ReadAccessInput {
-  readonly switches: RemoteControlProgramSwitches;
+  /** The Unleash flag of the organization (`DisableRemoteControlProgram`) */
+  readonly isProgramTurnedOff: boolean;
   readonly viewer: RemoteControlProgramViewer;
   readonly ownerCitizenId: string;
   readonly capabilityId: CapabilityId;
@@ -142,17 +142,15 @@ const isValidAt = (grant: ShareGrantSource, now: Date) =>
  * periods together give one range, from the earliest start to the latest end.
  */
 export const getEffectiveReadAccess = ({
-  switches,
+  isProgramTurnedOff,
   viewer,
   ownerCitizenId,
   capabilityId,
   grants,
   now,
 }: ReadAccessInput): EffectiveReadAccess => {
-  if (switches.isProgramTurnedOff)
+  if (isProgramTurnedOff)
     return { isGranted: false, refusal: ReadAccessRefusal.ProgramTurnedOff };
-  if (switches.turnedOffCapabilityIds.includes(capabilityId))
-    return { isGranted: false, refusal: ReadAccessRefusal.CapabilityTurnedOff };
   if (!viewer.hasRemoteControlProgramUse)
     return {
       isGranted: false,

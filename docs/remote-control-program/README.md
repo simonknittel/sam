@@ -19,7 +19,7 @@ Documents in this folder:
 
 - One structure for all interfaces to the game client: the log files, the gRPC interface and interfaces that come later.
 - Independent parts. A new connector, a new capability or a new control UI does not change the other parts.
-- Each part can be turned off (see [Switches](#switches)).
+- One Unleash flag turns off the full Remote Control Program (see [Switches](#switches)).
 - The user decides at two levels: what leaves the machine, and who in SAM can read it or request actions.
 - Access can have a time limit.
 - SAM keeps the uploaded data permanently, so that control UIs can show the history and statistics (see [History](#history)).
@@ -200,7 +200,6 @@ All parts share one catalog of capabilities: the runtimes, the relay and the con
 | Risk | For an action: low or high. For an action with high risk, the default rule of the local access layer is "ask each time". |
 | Expiry | For an action: the time after which a runtime does not apply the request (result `expired`). |
 | Game actions | For an action of the gRPC connector: the names of the game actions that it uses. |
-| Switch | The name of the Unleash flag that turns off the capability (see [Switches](#switches)). |
 
 The kinds:
 
@@ -248,7 +247,7 @@ A channel is the transport of a capability. The catalog gives the timing. The ru
 | Direction | Realtime | Periodic |
 | - | - | - |
 | Up: runtime to relay | State and feed entries within seconds. The runtime sends a maximum of one update for each capability in the minimum interval. | A batch at a fixed interval, for example each minute. |
-| Down: relay to runtime | Action requests. Changes of the switches. | Not for actions: an action that waits for the next interval is stale. |
+| Down: relay to runtime | Action requests. | Not for actions: an action that waits for the next interval is stale. |
 | Out: relay to consumer | New values, new entries and action results within seconds. | Polling, for example each 60 seconds. |
 
 - An action is a pair of messages: the request goes down, and the result goes up.
@@ -270,7 +269,7 @@ A channel is the transport of a capability. The catalog gives the timing. The ru
 - The relay service is a separate host, outside of the Next.js app and Vercel (see decision 14). It keeps the WebSocket connections of the runtimes and calls the use cases. It builds its own application context, like each host (see [Architecture](../architecture.md#the-layers)).
 - The app and the MCP server call the read use cases and the grant use cases directly. They send an action request to the relay service through an internal HTTP endpoint. The endpoint answers immediately with the id of the request. The result arrives through Soketi in the private channel of the requester, and it is in the action log. The endpoint accepts only requests with a secret or a signed token of the app, like the collab server.
 - Each use case validates its input with the schema of the catalog.
-- Each use case applies the switches and the remote access layer.
+- Each use case applies the Unleash flag of the Remote Control Program and the remote access layer.
 - The relay stores the history and the feed entries (see [History](#history)).
 - The relay sends an action request to one runtime of the owner that is online and supplies the action. When more than one runtime supplies it, the priority of the connectors decides. The relay sends the request only through the connection of this runtime.
 - The relay applies limits (see [Limits](#limits)).
@@ -286,7 +285,7 @@ sequenceDiagram
   participant game as Game client
 
   requester->>relay: Request the action, with parameters
-  relay->>relay: Check the switches, the grant and the rate limit
+  relay->>relay: Check the Unleash flag, the grant and the rate limit
   relay->>runtime: Action request with its time to live
   runtime->>runtime: Check the expiry time and the local access layer
   opt Rule "ask each time"
@@ -303,7 +302,7 @@ The result of a request is one of these:
 | Result | Meaning |
 | - | - |
 | `applied` | The connector applied the action. |
-| `refused` | The relay or the runtime refused the request. The result gives the reason: a switch, the remote access layer, a rate limit, the local access layer or the owner. |
+| `refused` | The relay or the runtime refused the request. The result gives the reason: the Unleash flag, the remote access layer, a rate limit, the local access layer or the owner. |
 | `unavailable` | No runtime of the owner is online and supplies the action. |
 | `expired` | The expiry time passed before the runtime could apply the action. This includes "ask each time" without an answer. |
 | `failed` | The connector tried to apply the action, but the game client did not accept it. The result contains the reason of the game client. |
@@ -364,7 +363,7 @@ A runtime that breaks a limit gets an error. Repeated errors close the connectio
 
 A consumer can read the live data of a capability of an owner only when all these conditions are true:
 
-1. The switches of the organization permit the Remote Control Program, the connector and the capability.
+1. The Unleash flag of the organization permits the Remote Control Program.
 2. The consumer has the permission to use the Remote Control Program (`remoteControlProgram;use`), and the permission of the control UI, if it has one (for example `logAnalyzer;read` for the Log Analyzer, see decision 24). Admin mode replaces both permissions (decision 4).
 3. The consumer is the owner, or a valid grant of the owner gives the operation `read` on the capability to the consumer.
 4. The local access layer of a runtime of the owner lets the capability leave the machine. Without this condition, there is no data.
@@ -382,7 +381,7 @@ A consumer can request an action of an owner only when the conditions 1 and 2 ar
 - A rule for a state or a feed is "off" or "on". A rule for a feed can have a filter. Example: the log entry types that the owner shares. The filter exists only in the local access layer. A grant always covers a full capability (see [Decisions](#decisions)).
 - A feed entry leaves the machine automatically only when a running runtime reads it live, while the rule is on and the runtime is not stopped. The entries from a time without a running runtime stay on the machine. Older entries leave only on an explicit request of the owner with a confirmation (decision 27). The details:
   - The runtime keeps the times in which it read live (the live periods) for 7 days. After a start, it uploads the entries of these periods that the relay does not have yet, for example the entries of a time without a connection to the relay.
-  - When the runtime learns that a switch turned off the capability, it removes all stored live periods. A change of the log folder also removes them. After the next start, only the entries that the runtime reads live from then on go up.
+  - When the runtime learns that the Unleash flag turned off the Remote Control Program, it removes all stored live periods. A change of the log folder also removes them. After the next start, only the entries that the runtime reads live from then on go up.
   - The values and their reasons are in [livePeriods.ts](../../pnpm-monorepo/packages/remote-control-program-runtime/src/localAccess/livePeriods.ts). The continuation after a change of the tab is in [Browser runtime](#browser-runtime).
 - A rule for an action is "off", "ask each time" or "automatic". The rule also tells which requesters it accepts: only the owner, or also other citizens with a grant.
 - The owner starts and stops a runtime only where it runs: the browser runtime in the sharing popover of this browser, and the desktop companion in its own UI. SAM does not start, stop or configure a runtime (decision 23).
@@ -491,7 +490,7 @@ The MCP server is stateless and has no subscriptions (see [MCP Server](../mcp-se
 
 | Level | Who | What | How |
 | - | - | - | - |
-| Organization | Admins | The Remote Control Program, a connector, a capability | Unleash flags: one for the Remote Control Program, and one for each connector and each capability, with the name from the catalog. The relay refuses the data and the actions of a disabled part, and tells the runtimes. A permission for the use of the Remote Control Program. |
+| Organization | Admins | The Remote Control Program | One Unleash flag (`DisableRemoteControlProgram`) for the full Remote Control Program. The connectors and the capabilities have no flags of their own. The relay refuses and closes the connections of the runtimes, and the consumers read no data. A permission for the use of the Remote Control Program. |
 | Owner in SAM | Owner | Who can read the live data of a capability, who can request an action | Grants |
 | Consumer | Admins | Who can read the history in this consumer | Permission of the consumer |
 | Owner on the machine | Owner | What leaves the machine, which actions the runtime applies | Local access layer |
@@ -515,7 +514,7 @@ The paths of the pnpm monorepo are relative to `pnpm-monorepo/`. The runtime pac
 ## Operations and tests
 
 - The relay service sends metrics (the connections, the messages, the errors, the delays) and traces with OpenTelemetry. Its logs go to the output of the container. The alerts are in Grafana (decision 28).
-- The relay service reads the Unleash flags of the switches with its own Unleash client.
+- The relay service reads the Unleash flag with its own Unleash client.
 - The relay service runs in production and in the local stack. The preview deployments have no relay service. The browser runtime then works only on the machine (decision 29).
 - A fake gRPC server replays recorded frames. Thus the tests of the gRPC connector need no game.
 - The Playwright stack contains the relay service, Soketi and TimescaleDB.

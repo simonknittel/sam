@@ -1,9 +1,5 @@
 import { type ApplicationContext } from "@sam-monorepo/application";
-import {
-  RELAY_LIMITS,
-  RelayCloseReason,
-  type RemoteControlProgramSwitches,
-} from "@sam-monorepo/domain";
+import { RELAY_LIMITS, RelayCloseReason } from "@sam-monorepo/domain";
 import type { JWTVerifyGetKey } from "jose";
 import { once } from "node:events";
 import {
@@ -19,6 +15,7 @@ import type { FeedEntryDelivery } from "./delivery/index.js";
 import { createHttpRequestHandler, getRequestPath } from "./httpEndpoints.js";
 import { createThrottledLogger } from "./logger.js";
 import { createRelayMetrics } from "./metrics.js";
+import type { ProgramSwitch } from "./programSwitch.js";
 import { OwnerRateLimits, type Rate } from "./rateLimits.js";
 import {
   DEFAULT_RELAY_TIMING,
@@ -26,7 +23,6 @@ import {
   type ConnectionHub,
   type RelayTiming,
 } from "./relayConnection.js";
-import type { SwitchesSource } from "./switches.js";
 
 /** The path of the WebSocket endpoint of the runtimes */
 const WEB_SOCKET_PATH = "/";
@@ -81,7 +77,7 @@ const DISCONNECTED_USER_MEMORY_MILLISECONDS =
 export interface RelayServerOptions {
   readonly context: ApplicationContext;
   readonly delivery: FeedEntryDelivery;
-  readonly switches: SwitchesSource;
+  readonly programSwitch: ProgramSwitch;
   /** The JSON Web Key Set of the app, for the tokens of the internal requests */
   readonly keySet: JWTVerifyGetKey;
   readonly isDatabaseAvailable: () => Promise<boolean>;
@@ -122,7 +118,7 @@ const refuseUpgrade = (socket: Duplex, status: number) => {
 export const createRelayServer = ({
   context,
   delivery,
-  switches,
+  programSwitch,
   keySet,
   isDatabaseAvailable,
   appOrigin,
@@ -146,7 +142,7 @@ export const createRelayServer = ({
   const rateLimits = new OwnerRateLimits();
   let isClosing = false;
   let checkInterval: ReturnType<typeof setInterval> | undefined;
-  let unsubscribeFromSwitches: (() => void) | undefined;
+  let unsubscribeFromProgramSwitch: (() => void) | undefined;
 
   const getRuntimeKey = (connection: RelayConnection) =>
     JSON.stringify([connection.ownerCitizenId, connection.runtimeId]);
@@ -158,7 +154,7 @@ export const createRelayServer = ({
     context,
     metrics,
     delivery,
-    switches,
+    programSwitch,
     timing,
     rateLimits,
     throttledLog,
@@ -200,13 +196,11 @@ export const createRelayServer = ({
     });
   };
 
-  const handleSwitchesChange = (
-    changedSwitches: RemoteControlProgramSwitches,
-  ) => {
+  const handleProgramSwitchChange = (isProgramTurnedOff: boolean) => {
+    if (!isProgramTurnedOff) return;
+
     for (const connection of [...liveConnections])
-      if (changedSwitches.isProgramTurnedOff)
-        connection.close(RelayCloseReason.ProgramTurnedOff);
-      else connection.sendSwitches(changedSwitches);
+      connection.close(RelayCloseReason.ProgramTurnedOff);
   };
 
   const webSocketServer = new WebSocketServer({
@@ -308,7 +302,7 @@ export const createRelayServer = ({
   const closeServer = async () => {
     isClosing = true;
     clearInterval(checkInterval);
-    unsubscribeFromSwitches?.();
+    unsubscribeFromProgramSwitch?.();
 
     const httpServerClosed = httpServer.listening
       ? new Promise<void>((resolve) => httpServer.close(() => resolve()))
@@ -333,7 +327,9 @@ export const createRelayServer = ({
       httpServer.listen(port);
       await once(httpServer, "listening");
 
-      unsubscribeFromSwitches = switches.subscribe(handleSwitchesChange);
+      unsubscribeFromProgramSwitch = programSwitch.subscribe(
+        handleProgramSwitchChange,
+      );
       checkInterval = setInterval(() => {
         const now = Date.now();
         for (const connection of [...liveConnections]) connection.check(now);

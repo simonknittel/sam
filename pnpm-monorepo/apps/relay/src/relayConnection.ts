@@ -32,7 +32,6 @@ import {
   UpMessageType,
   type AnnounceContent,
   type DownMessage,
-  type RemoteControlProgramSwitches,
   type UpMessage,
   type UpMessageOfType,
 } from "@sam-monorepo/domain";
@@ -45,12 +44,12 @@ import {
   UploadResult,
   type RelayMetrics,
 } from "./metrics.js";
+import type { ProgramSwitch } from "./programSwitch.js";
 import {
   createRateLimiter,
   type OwnerRateLimits,
   type Rate,
 } from "./rateLimits.js";
-import type { SwitchesSource } from "./switches.js";
 import {
   MILLISECONDS_PER_SECOND,
   ONE_HOUR_MILLISECONDS,
@@ -86,7 +85,7 @@ export interface ConnectionHub {
   readonly context: ApplicationContext;
   readonly metrics: RelayMetrics;
   readonly delivery: FeedEntryDelivery;
-  readonly switches: SwitchesSource;
+  readonly programSwitch: ProgramSwitch;
   readonly timing: RelayTiming;
   /** The limits of the owners and the runtimes, for all connections */
   readonly rateLimits: OwnerRateLimits;
@@ -351,36 +350,6 @@ export class RelayConnection {
       this.#scheduleUploadCountRecord();
   }
 
-  /**
-   * Sends the switches, with only the parts that the runtime announced (see
-   * `protocol.ts`). Nothing before the first `announce`: the switches come
-   * before the `ack` of each `announce`.
-   */
-  sendSwitches(switches: RemoteControlProgramSwitches) {
-    const announcement = this.#announcement;
-    if (this.#phase !== ConnectionPhase.Open || announcement === null) return;
-
-    const announcedConnectorIds = new Set(
-      announcement.connectors.map((connector) => connector.id),
-    );
-    const announcedCapabilityIds = new Set(
-      announcement.connectors.flatMap((connector) =>
-        connector.capabilities.map((capability) => capability.id),
-      ),
-    );
-
-    this.#send(
-      createDownMessage(DownMessageType.Switches, {
-        turned_off_connectors: switches.turnedOffConnectorIds.filter(
-          (connectorId) => announcedConnectorIds.has(connectorId),
-        ),
-        turned_off_capabilities: switches.turnedOffCapabilityIds.filter(
-          (capabilityId) => announcedCapabilityIds.has(capabilityId),
-        ),
-      }),
-    );
-  }
-
   #handleData(text: string | null) {
     switch (this.#phase) {
       case ConnectionPhase.AwaitingHello:
@@ -537,7 +506,7 @@ export class RelayConnection {
   }
 
   #open(hello: UpMessageOfType<UpMessageType.Hello>, presence: OwnRuntime) {
-    const { context, metrics, switches } = this.#hub;
+    const { context, metrics, programSwitch } = this.#hub;
 
     this.#phase = ConnectionPhase.Open;
     clearTimeout(this.#handshakeTimer);
@@ -556,7 +525,7 @@ export class RelayConnection {
     });
 
     // A change in the handshake: `checkRuntimeHello()` read the older values
-    if (switches.getSwitches().isProgramTurnedOff)
+    if (programSwitch.isTurnedOff())
       this.close(RelayCloseReason.ProgramTurnedOff);
   }
 
@@ -778,9 +747,7 @@ export class RelayConnection {
       return;
     }
 
-    // The runtime starts its uploads after the `ack`, thus it knows the parts that are off before
     this.#announcement = message.content;
-    this.sendSwitches(this.#hub.switches.getSwitches());
     this.#acknowledge(message);
   }
 

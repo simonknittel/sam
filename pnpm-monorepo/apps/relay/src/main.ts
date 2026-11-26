@@ -2,12 +2,12 @@ import type { Logger } from "@sam-monorepo/application";
 import { createRelayApplicationContext } from "./applicationContext.js";
 import { createFeedEntryDelivery } from "./delivery/index.js";
 import type { RelayEnvironment } from "./env.js";
-import { createRelayServer } from "./relayServer.js";
 import {
-  createSwitchesSource,
-  createUnleashSwitchesSource,
-  type SwitchesSource,
-} from "./switches.js";
+  createProgramSwitch,
+  createUnleashProgramSwitch,
+  type ProgramSwitch,
+} from "./programSwitch.js";
+import { createRelayServer } from "./relayServer.js";
 import type { Telemetry } from "./telemetry.js";
 import { MILLISECONDS_PER_SECOND } from "./time.js";
 
@@ -17,7 +17,7 @@ const BYTES_PER_KILOBYTE = 1_024;
 /**
  * The relay service accepts connections after the first answer of Unleash,
  * thus a runtime cannot connect while the program is off. Without an answer
- * in this time, all parts are on until the first answer (the kill switches
+ * in this time, the program is on until the first answer (the kill switches
  * of the app also default to on).
  */
 const UNLEASH_READY_TIMEOUT_MILLISECONDS = 10_000;
@@ -46,9 +46,9 @@ export const runRelayService = async ({
     UNLEASH_SERVER_API_URL: unleashUrl,
     UNLEASH_SERVER_API_TOKEN: unleashToken,
   } = environment;
-  let switches: SwitchesSource;
+  let programSwitch: ProgramSwitch;
   if (unleashUrl && unleashToken) {
-    const unleashSwitches = createUnleashSwitchesSource({
+    const unleashProgramSwitch = createUnleashProgramSwitch({
       url: unleashUrl,
       token: unleashToken,
       appName: environment.UNLEASH_APP_NAME,
@@ -57,21 +57,21 @@ export const runRelayService = async ({
       log,
     });
     if (
-      !(await unleashSwitches.waitUntilReady(
+      !(await unleashProgramSwitch.waitUntilReady(
         UNLEASH_READY_TIMEOUT_MILLISECONDS,
       ))
     )
       log.warn(
-        "Unleash did not answer in time: all parts of the program are on until its first answer",
+        "Unleash did not answer in time: the program is on until its first answer",
       );
-    switches = unleashSwitches;
+    programSwitch = unleashProgramSwitch;
   } else {
-    log.warn("No Unleash is configured: all parts of the program are on");
-    switches = createSwitchesSource();
+    log.warn("No Unleash is configured: the program is on");
+    programSwitch = createProgramSwitch();
   }
 
   const { context, keySet, isDatabaseAvailable, disconnectDatabase } =
-    createRelayApplicationContext({ environment, log, switches });
+    createRelayApplicationContext({ environment, log, programSwitch });
 
   const delivery = createFeedEntryDelivery({
     context,
@@ -82,7 +82,7 @@ export const runRelayService = async ({
   const server = createRelayServer({
     context,
     delivery,
-    switches,
+    programSwitch,
     keySet,
     isDatabaseAvailable,
     appOrigin: new URL(environment.APP_ORIGIN ?? environment.APP_BASE_URL)
@@ -106,7 +106,7 @@ export const runRelayService = async ({
       // The uploads stop first, then the delivery sends the waiting entries
       await server.close();
       await delivery.close();
-      switches.close();
+      programSwitch.close();
       await telemetry.shutdown();
       await disconnectDatabase();
       log.info("The relay service stopped");

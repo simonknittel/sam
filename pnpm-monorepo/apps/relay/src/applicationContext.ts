@@ -17,7 +17,7 @@ import {
 } from "jose";
 import * as z from "zod";
 import type { RelayEnvironment } from "./env.js";
-import type { SwitchesSource } from "./switches.js";
+import type { ProgramSwitch } from "./programSwitch.js";
 import { ONE_MINUTE_MILLISECONDS, resolveWithin } from "./time.js";
 
 /** The maximum time of one request of the key set of the app */
@@ -68,7 +68,7 @@ const DATABASE_CHECK_TIMEOUT_MILLISECONDS = 2_000;
 interface RelayApplicationContextOptions {
   readonly environment: RelayEnvironment;
   readonly log: Logger;
-  readonly switches: SwitchesSource;
+  readonly programSwitch: ProgramSwitch;
 }
 
 export interface RelayApplicationContext {
@@ -157,7 +157,7 @@ const createRealtimeServer = (
 export const createRelayApplicationContext = ({
   environment,
   log,
-  switches,
+  programSwitch,
 }: RelayApplicationContextOptions): RelayApplicationContext => {
   const keySet = createKeySet(environment);
 
@@ -192,7 +192,7 @@ export const createRelayApplicationContext = ({
     signingKey: async () => null,
     clientMetadata: null,
     allowInsecureLoopbackClientIds: false,
-    remoteControlProgramSwitches: async () => switches.getSwitches(),
+    isRemoteControlProgramTurnedOff: async () => programSwitch.isTurnedOff(),
     // This host is the relay service
     relay: null,
     connectionTokenVerificationKey: keySet,

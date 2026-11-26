@@ -12,7 +12,6 @@ import {
   RELAY_LIMITS,
   RELAY_PROTOCOL_VERSION,
   RelayCloseReason,
-  RemoteControlProgramUnleashFlag,
   UpMessageType,
   type FeedEntriesContent,
 } from "@sam-monorepo/domain";
@@ -125,14 +124,9 @@ test("a runtime with a valid token connects, announces and uploads", async () =>
   expect(welcome.content).toEqual({});
 
   await announce(client);
-  // The runtime knows the parts that are off before its first upload
   expect(client.getMessages().map((message) => message.type)).toEqual([
     DownMessageType.Welcome,
-    DownMessageType.Switches,
     DownMessageType.Acknowledgement,
-  ]);
-  expect(client.getMessages(DownMessageType.Switches)).toMatchObject([
-    { content: { turned_off_connectors: [], turned_off_capabilities: [] } },
   ]);
   await expect(findRuntimeLease(owner.citizenId, RUNTIME_ID)).resolves.toEqual({
     leaseExpiresAt: expect.any(Date),
@@ -440,35 +434,19 @@ test("a key set of the app that cannot be read is an internal error, not a token
   logRecords.splice(0);
 });
 
-test("a part that is turned off refuses the uploads, and a change of a flag sends the switches", async () => {
-  const { connect, setEnabledFlags } = await start();
+test("the Unleash flag of the program closes the connections and refuses new ones", async () => {
+  const { connect, openClient, issueToken, setProgramTurnedOff } =
+    await start();
   const owner = await createOwner();
   const { client } = await connect(owner, RUNTIME_ID);
   await announce(client);
 
-  setEnabledFlags([
-    RemoteControlProgramUnleashFlag.DisableLogEntriesCapability,
-  ]);
-  await expect(
-    client.waitForMessage(
-      DownMessageType.Switches,
-      (switches) => switches.content.turned_off_capabilities.length > 0,
-    ),
-  ).resolves.toMatchObject({
-    content: {
-      turned_off_connectors: [],
-      turned_off_capabilities: [CapabilityId.LogEntries],
-    },
-  });
-  await expect(upload(client)).resolves.toMatchObject({
-    result: AcknowledgementResult.Refused,
-    error_code: AcknowledgementErrorCode.CapabilityTurnedOff,
-  });
-
-  setEnabledFlags([
-    RemoteControlProgramUnleashFlag.DisableRemoteControlProgram,
-  ]);
+  setProgramTurnedOff(true);
   await expectClose(client, RelayCloseReason.ProgramTurnedOff);
+
+  const nextClient = await openClient();
+  nextClient.sendHello(await issueToken(owner, RUNTIME_ID), RUNTIME_ID);
+  await expectRefusal(nextClient, RelayCloseReason.ProgramTurnedOff);
 });
 
 test("a ban closes the connections, also in their handshake", async () => {

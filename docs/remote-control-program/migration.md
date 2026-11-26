@@ -39,7 +39,7 @@ The Log Analyzer moves completely into the Remote Control Program. No old path s
 | The model `LogAnalyzerEntry` | No change of the purpose: the storage of the `log_entries` feed. The stored rows get the IP marker and the new hash (M3). |
 | The audit event `LOG_ANALYZER_ENTRIES_UPLOADED`, one event for each upload | Counts for each runtime connection or for each hour (see [Relay](./README.md#relay)), with a new audit event type (see [AGENTS.md](../../AGENTS.md)). |
 | The overlay (Document Picture-in-Picture) | No change. |
-| The Unleash flag `DisableLogAnalyzerSharing` | The new flags of the catalog (see [Switches](./README.md#switches)). The code stops reading the old flag. The rollout of step 2 uses it to stop the uploads of the old app before M3. Then it is archived. |
+| The Unleash flag `DisableLogAnalyzerSharing` | The Unleash flag `DisableRemoteControlProgram` (see [Switches](./README.md#switches)). The code stops reading the old flag. The rollout of step 2 uses it to stop the uploads of the old app before M3. Then it is archived. |
 | The patterns `LOG_ANALYZER_ENTRY_PATTERNS` | No change. |
 
 ## Changes of existing parts
