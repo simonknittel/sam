@@ -6,6 +6,7 @@ import {
   claimRuntimePresence,
   ConflictError,
   endRuntimeLease,
+  findOwnFeedEntryKeys,
   ForbiddenError,
   recordFeedEntryUploadCounts,
   RemoteControlProgramErrorMessage,
@@ -15,6 +16,7 @@ import {
   type AppendFeedEntriesOutput,
   type ApplicationContext,
   type Logger,
+  type OwnFeedEntryKeys,
   type OwnRuntime,
   type RuntimeConnection,
 } from "@sam-monorepo/application";
@@ -22,13 +24,16 @@ import {
   AcknowledgementErrorCode,
   AcknowledgementResult,
   createDownMessage,
+  DOWN_MESSAGE_PROTOCOL_VERSIONS,
   DownMessageType,
   getRefusalReasonOfProtocolVersion,
   isFeedSourceAnnounced,
+  MINIMUM_RELAY_PROTOCOL_VERSION,
   parseUpMessage,
   RELAY_CLOSE_CODES,
   RELAY_LIMITS,
   RelayCloseReason,
+  UP_MESSAGE_PROTOCOL_VERSIONS,
   UpMessageType,
   type AnnounceContent,
   type DownMessage,
@@ -150,10 +155,11 @@ const MINIMUM_LEASE_RENEWAL_INTERVAL_MILLISECONDS = 10_000;
 const RUNTIME_ID_SPAN_ATTRIBUTE = "remote_control_program.runtime_id";
 
 /**
- * A correct runtime has at most one `heartbeat`, one `token_renewal` and some
- * `announce`s waiting, and the rate limit lets through a burst of
- * `RELAY_LIMITS.uploadBurstBatches` batches. The limit bounds the memory of
- * one connection: 8 batches of the maximum size are 4 MB.
+ * A correct runtime has at most one `heartbeat`, one `token_renewal`, one
+ * `feed_entry_keys_request` and some `announce`s waiting, and the rate limit
+ * lets through a burst of `RELAY_LIMITS.uploadBurstBatches` batches. The
+ * limit bounds the memory of one connection: 8 batches of the maximum size
+ * are 4 MB.
  */
 const MAXIMUM_WAITING_MESSAGES_PER_LANE = 8;
 
@@ -219,10 +225,12 @@ const toText = (data: RawData) => {
  * - The control lane: `heartbeat` and `token_renewal`. Thus a slow upload
  *   never delays the `ack` of a `heartbeat`, which the runtime needs within
  *   `RELAY_LIMITS.heartbeatIntervalMilliseconds`.
- * - The data lane: `announce` and `feed_entries`, and the hourly upload
- *   counts. Thus the relay service checks each batch against the
- *   announcement that the runtime sent before the batch, and stores the
- *   batches in the sequence in which the runtime sent them.
+ * - The data lane: `announce`, `feed_entries` and
+ *   `feed_entry_keys_request`, and the hourly upload counts. Thus the relay
+ *   service checks each batch against the announcement that the runtime sent
+ *   before the batch, stores the batches in the sequence in which the
+ *   runtime sent them, and reads the keys after the batches before the
+ *   request.
  *
  * The rate limits apply at the arrival of a message: a message above its
  * rate gets its `ack` at once and does not go into a lane. The limits of the
@@ -239,6 +247,10 @@ export class RelayConnection {
     CONTROL_MESSAGE_RATES.tokenRenewal,
   );
   readonly #announceRate = createRateLimiter(CONTROL_MESSAGE_RATES.announce);
+  readonly #feedEntryKeyRequestRate = createRateLimiter({
+    intervalMilliseconds: RELAY_LIMITS.feedEntryKeyRequestIntervalMilliseconds,
+    burstSize: RELAY_LIMITS.feedEntryKeyRequestBurstSize,
+  });
   readonly #finished = Promise.withResolvers<void>();
   /** The end of the time for the `welcome` */
   readonly #handshakeTimer: ReturnType<typeof setTimeout>;
@@ -247,6 +259,11 @@ export class RelayConnection {
   #handshake: Promise<void> = Promise.resolve();
   /** The result of the last accepted token. Null before the authentication. */
   #runtime: RuntimeConnection | null = null;
+  /**
+   * The version of the `hello` after the `welcome`. The relay service reads
+   * and sends only the message types of this version or older.
+   */
+  #protocolVersion = MINIMUM_RELAY_PROTOCOL_VERSION;
   /** The `connectedAt` of `claimRuntimePresence()`: the lease of this connection */
   #connectedAt: Date | null = null;
   /** The last announcement that the relay service stored */
@@ -509,6 +526,7 @@ export class RelayConnection {
     const { context, metrics, programSwitch } = this.#hub;
 
     this.#phase = ConnectionPhase.Open;
+    this.#protocolVersion = hello.protocol_version;
     clearTimeout(this.#handshakeTimer);
     const now = Date.now();
     this.#lastHeartbeatAt = now;
@@ -566,6 +584,13 @@ export class RelayConnection {
     metrics.messages.add(1, { message_type: message.type });
     const now = Date.now();
 
+    // Like an unknown message type
+    if (UP_MESSAGE_PROTOCOL_VERSIONS[message.type] > this.#protocolVersion) {
+      this.#refuseMessage(message, AcknowledgementErrorCode.MessageNotValid);
+      this.#recordError();
+      return;
+    }
+
     switch (message.type) {
       case UpMessageType.Hello:
         this.#refuseMessage(message, AcknowledgementErrorCode.MessageNotValid);
@@ -606,6 +631,28 @@ export class RelayConnection {
                   this.#requireRuntime().runtimeId,
                 );
                 await this.#appendFeedEntries(message);
+              },
+            ),
+          );
+        break;
+
+      case UpMessageType.FeedEntryKeysRequest:
+        if (
+          this.#isWithinRate(
+            this.#feedEntryKeyRequestRate.tryTake(now),
+            message,
+          )
+        )
+          this.#enqueue(this.#dataLane, message, () =>
+            withSpan(
+              this.#hub.context,
+              "handleRuntimeFeedEntryKeysRequest",
+              async (span) => {
+                span.setAttribute(
+                  RUNTIME_ID_SPAN_ATTRIBUTE,
+                  this.#requireRuntime().runtimeId,
+                );
+                await this.#sendOwnFeedEntryKeys(message);
               },
             ),
           );
@@ -824,6 +871,37 @@ export class RelayConnection {
   }
 
   /**
+   * Answers with `feed_entry_keys` instead of an `ack`. The actor of the
+   * connection is the owner, thus the keys are only the own keys.
+   */
+  async #sendOwnFeedEntryKeys(
+    message: UpMessageOfType<UpMessageType.FeedEntryKeysRequest>,
+  ) {
+    const runtime = this.#requireRuntime();
+    const { start, end, page_cursor } = message.content;
+
+    let page: OwnFeedEntryKeys;
+    try {
+      page = await findOwnFeedEntryKeys(this.#hub.context, runtime.actor, {
+        start: start === undefined ? undefined : new Date(start),
+        end: end === undefined ? undefined : new Date(end),
+        page_cursor,
+      });
+    } catch (error) {
+      this.#handleUseCaseError(error, message);
+      return;
+    }
+
+    this.#send(
+      createDownMessage(DownMessageType.FeedEntryKeys, {
+        message_id: message.id,
+        keys: page.keys,
+        next_page_cursor: page.nextPageCursor,
+      }),
+    );
+  }
+
+  /**
    * A decision of a use case about the connection closes it, for example
    * `access_denied` after a lost permission. A different error is temporary:
    * the runtime sends the message again.
@@ -923,6 +1001,12 @@ export class RelayConnection {
   }
 
   #send(message: DownMessage) {
+    // A runtime of an older version cannot read the message
+    if (DOWN_MESSAGE_PROTOCOL_VERSIONS[message.type] > this.#protocolVersion)
+      throw new Error(
+        `The message type ${message.type} is newer than the protocol version of the connection`,
+      );
+
     if (this.#socket.readyState === WebSocket.OPEN)
       this.#socket.send(JSON.stringify(message));
   }

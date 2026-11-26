@@ -314,6 +314,7 @@ The runtimes and the relay service use one protocol over the WebSocket connectio
 
 - Each message has an envelope: the type of the message, an id, the version of the protocol and the content.
 - The handshake: the runtime sends the version of the protocol and its own version. The relay service refuses a version that is older than a minimum version. The runtime then tells the owner to update.
+- The version of the handshake applies to the full connection. The relay service accepts and sends a message type only on a connection of the version that added the type, or newer. Version 2 adds the request for the keys of the own feed entries (decision 34). The browser runtime uses version 1.
 - The relay service acknowledges each upload. The runtime sends an upload again until it gets the acknowledgement.
 - A resend is a new message with a new id. Thus the relay cannot remove duplicates with the id of a message. Each feed entry has a unique key (for `log_entries`, the hash of the entry, see [Log Analyzer](#log-analyzer)), and the relay stores an entry with a key that it already has only once. Each action request has a unique key too, and the relay ignores a second request with the same key. Thus a resend after a reconnect makes no duplicate.
 - The runtime keeps the results of its last action requests and sends them again after a reconnect. A late result replaces an `expired` in the action log. Thus an applied action does not stay `expired`.
@@ -349,7 +350,7 @@ The relay service limits:
 - the upload rate for each capability and runtime (the minimum interval of the catalog), also across reconnects,
 - the uploaded entries of each owner in each hour,
 - the `hello`s of each owner,
-- the `heartbeat`s, the token renewals and the `announce`s of each connection,
+- the `heartbeat`s, the token renewals, the `announce`s and the requests for the own entry keys of each connection,
 - the size of each message,
 - the number of runtimes for each owner,
 - the connections that wait for their `welcome` (the proxy limits the connections for each address),

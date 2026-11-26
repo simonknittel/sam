@@ -7,7 +7,6 @@ import {
   RateLimiter,
   RelayCloseReason,
   UpMessageType,
-  createUpMessage,
   getRelayCloseReasonOfCode,
   isFeedSourceAnnounced,
   parseDownMessage,
@@ -20,6 +19,7 @@ import {
   type UpMessage,
 } from "@sam-monorepo/domain";
 import { CHANNEL_CLIENT_LIMITS } from "./channelLimits.js";
+import { createChannelMessage } from "./channelProtocol.js";
 import {
   ChannelDropReason,
   ChannelEndReason,
@@ -350,7 +350,7 @@ export class ChannelClient {
 
           this.#send(
             connection,
-            createUpMessage(UpMessageType.Hello, {
+            createChannelMessage(UpMessageType.Hello, {
               token,
               runtime_id: this.#options.runtimeId,
               runtime_kind: this.#options.runtimeKind,
@@ -499,6 +499,11 @@ export class ChannelClient {
         this.#handleAcknowledgement(connection, message);
         break;
 
+      // A type of a newer protocol version than `CHANNEL_PROTOCOL_VERSION`,
+      // which the relay does not send to this client
+      case DownMessageType.FeedEntryKeys:
+        break;
+
       default:
         throw new Error(
           `Unknown message type: ${JSON.stringify(message satisfies never)}`,
@@ -536,7 +541,7 @@ export class ChannelClient {
           return;
         }
 
-        const heartbeat = createUpMessage(UpMessageType.Heartbeat, {});
+        const heartbeat = createChannelMessage(UpMessageType.Heartbeat, {});
         connection.outstandingHeartbeatId = heartbeat.id;
         this.#send(connection, heartbeat);
         this.#scheduleHeartbeat(connection);
@@ -596,7 +601,7 @@ export class ChannelClient {
     }
     if (this.#connection !== connection) return;
 
-    const message = createUpMessage(UpMessageType.TokenRenewal, { token });
+    const message = createChannelMessage(UpMessageType.TokenRenewal, { token });
     connection.renewal = { messageId: message.id, requestedAt };
     this.#send(connection, message);
   }
@@ -611,7 +616,10 @@ export class ChannelClient {
     if (connection.pendingAnnouncement !== null) return;
     this.#cancelConnectionTimer(connection, ConnectionTimer.AnnounceRetry);
 
-    const message = createUpMessage(UpMessageType.Announce, this.#announcement);
+    const message = createChannelMessage(
+      UpMessageType.Announce,
+      this.#announcement,
+    );
     connection.pendingAnnouncement = {
       messageId: message.id,
       content: message.content,
@@ -781,7 +789,7 @@ export class ChannelClient {
       if (!this.#keepPermittedEntries(batch)) continue;
 
       rateLimiter.record(now);
-      const message = createUpMessage(UpMessageType.FeedEntries, {
+      const message = createChannelMessage(UpMessageType.FeedEntries, {
         ...batch.source,
         entries: batch.entries,
       });

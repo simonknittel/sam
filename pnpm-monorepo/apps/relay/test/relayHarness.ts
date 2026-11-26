@@ -204,10 +204,21 @@ export const startRelay = async ({
     getHttpUrl: (path: string) => new URL(path, `http://127.0.0.1:${port}`),
     openClient: (headers?: Record<string, string>) =>
       TestRuntimeClient.open(relayUrl, headers),
-    /** Opens a connection with a new token, and waits for the `welcome` */
-    connect: async (owner: Owner, runtimeId: string) => {
+    /**
+     * Opens a connection with a new token, and waits for the `welcome`. By
+     * default with the oldest protocol version that the relay accepts.
+     */
+    connect: async (
+      owner: Owner,
+      runtimeId: string,
+      protocolVersion?: number,
+    ) => {
       const client = await TestRuntimeClient.open(relayUrl);
-      client.sendHello(await issueToken(owner, runtimeId), runtimeId);
+      client.sendHello(
+        await issueToken(owner, runtimeId),
+        runtimeId,
+        protocolVersion,
+      );
       const welcome = await client.waitForMessage(DownMessageType.Welcome);
       return { client, welcome };
     },
