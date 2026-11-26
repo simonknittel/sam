@@ -114,21 +114,17 @@ const handleSessionRequest = async (request: Request) => {
 
 /**
  * A short-lived token for one connection of a runtime to the relay service
- * of the Remote Control Program, with the URL of the relay service and the
- * id and the handle of the citizen. The runtime gets a token for each connection and
- * for each renewal. A route handler and not a server action: its URL stays
- * the same after a deploy, thus a runtime that is open during a deploy
- * continues to get tokens.
+ * of the Remote Control Program. The runtime gets a token for each
+ * connection and for each renewal. The body, the answer and the status codes
+ * are in "Connection and tokens" of `docs/remote-control-program/README.md`.
+ * A route handler and not a server action: its URL stays the same after a
+ * deploy, thus a runtime that is open during a deploy continues to get
+ * tokens.
  *
  * - With an `Authorization` header: only the Bearer access token of the
- *   desktop companion, never the session. 401 with a challenge for a token
- *   that is not valid or whose grant is revoked.
- * - Else the session of the browser runtime. 401 without a session.
- *
- * Body: `{ "runtime_id": "<uuid>" }`. Answer: `{ "token", "expires_at",
- * "relay_url", "citizen_id", "handle" }`, with `relay_url` null when the app has no relay
- * service. 403 also for an admin who assumes a user (see
- * `issueRuntimeConnectionToken()`).
+ *   desktop companion, never the session.
+ * - Else the session of the browser runtime. 403 also for an admin who
+ *   assumes a user (see `issueRuntimeConnectionToken()`).
  */
 export async function POST(request: Request) {
   try {

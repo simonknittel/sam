@@ -41,9 +41,9 @@ type OwnRuntimeRow = Prisma.RemoteControlProgramRuntimeGetPayload<{
 }>;
 
 /**
- * Protocol version 1 is the only version. A later version that changes the
- * announcement selects the schema with `protocolVersion`. A stored value
- * that the schema refuses gives null.
+ * All protocol versions have the same announcement. A later version that
+ * changes the announcement selects the schema with `protocolVersion`. A
+ * stored value that the schema refuses gives null.
  */
 const parseAnnouncement = (
   announcement: Prisma.JsonValue | null,

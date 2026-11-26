@@ -94,7 +94,7 @@ model ShareGrantGranteeRole {
 }
 
 /// A runtime of an owner (see "Runtimes" and "Presence" of the concept): a
-/// browser runtime now, the desktop companion in step 3. The relay service
+/// browser runtime or a desktop companion (`kind`). The relay service
 /// writes the row at the connection and renews the lease at each heartbeat.
 /// A runtime with an expired lease is offline. The row stays after the
 /// connection closes, thus the next connection of the same runtime updates
