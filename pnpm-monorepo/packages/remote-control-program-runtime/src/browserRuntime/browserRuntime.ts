@@ -49,11 +49,7 @@ import {
 } from "./logFolderReader.js";
 import { Outbox, OUTBOX_CHANNEL_ENTRY_LIMIT } from "./outbox.js";
 import { OwnEntriesChangeMode, type OwnEntryStore } from "./ownEntryStore.js";
-import {
-  findRelayKeys,
-  getTimeRange,
-  type FindOwnEntryKeys,
-} from "./relayKeys.js";
+import { findRelayKeys, getTimeRange } from "./relayKeys.js";
 import { readRunRecord, removeRunRecord, writeRunRecord } from "./runRecord.js";
 
 /**
@@ -112,11 +108,6 @@ export interface BrowserRuntimeOptions {
   readonly requestConnectionToken: (
     signal: AbortSignal,
   ) => Promise<ConnectionTokenGrant>;
-  /**
-   * Gives the keys of the own entries that the relay has. It must end in a
-   * short time (the app uses a timeout).
-   */
-  readonly findOwnEntryKeys: FindOwnEntryKeys;
   /** The Web Worker reader by default. The tests give a different reader. */
   readonly createLogFolderReader?: (
     folder: FileSystemDirectoryHandle,
@@ -200,7 +191,7 @@ const getRelayUploadState = (state: ChannelState): RelayUploadState | null => {
  *   it (decision 27), and only one time. After a start (also after a change
  *   of the active tab), the first read offers the entries of the stored live
  *   periods again. The runtime sends only the entries that the relay does not
- *   have (`findOwnEntryKeys`).
+ *   have (`ChannelClient.requestOwnEntryKeys()`).
  * - Older entries go up only through a request that the owner confirms.
  *
  * Make one runtime when the tab gets the Web Lock, and call `handOver()` when
@@ -497,10 +488,7 @@ export class BrowserRuntime {
     if (timeRange !== null) {
       let relayKeys: Set<string>;
       try {
-        relayKeys = await findRelayKeys(
-          this.#options.findOwnEntryKeys,
-          timeRange,
-        );
+        relayKeys = await this.#findRelayKeys(timeRange);
       } catch (error) {
         throw new BrowserRuntimeError(
           BrowserRuntimeErrorCode.RelayCheckFailed,
@@ -824,10 +812,7 @@ export class BrowserRuntime {
       this.#isFirstUploadRunning = true;
       let relayKeys: Set<string>;
       try {
-        relayKeys = await findRelayKeys(
-          this.#options.findOwnEntryKeys,
-          timeRange,
-        );
+        relayKeys = await this.#findRelayKeys(timeRange);
       } catch (error) {
         console.warn(
           "[Remote Control Program] Error checking the entries of the relay:",
@@ -852,6 +837,18 @@ export class BrowserRuntime {
     const laterEntries = this.#getStoredEntries(Array.from(this.#waitingKeys));
     this.#waitingKeys.clear();
     this.#enqueue(this.#layer.selectAutomaticUploads(laterEntries), false);
+  }
+
+  /**
+   * Through the connection to the relay. The check waits for a reconnect
+   * after a short loss of the connection, and fails without a connection:
+   * then no entry goes up either.
+   */
+  #findRelayKeys(range: { readonly start: Date; readonly end: Date }) {
+    return findRelayKeys(
+      (query) => this.#channel.requestOwnEntryKeys(query),
+      range,
+    );
   }
 
   #getStoredEntries(keys: readonly string[]) {

@@ -6,6 +6,8 @@ import {
   LOG_ENTRIES_CAPABILITY,
   LogAnalyzerEntryType,
   RELAY_CLOSE_CODES,
+  RELAY_LIMITS,
+  RELAY_PROTOCOL_VERSION,
   RelayCloseReason,
   RuntimeKind,
   UpMessageType,
@@ -17,6 +19,7 @@ import {
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { FakeWebSocket } from "../testing/fakes.js";
 import { ChannelClient } from "./channelClient.js";
+import { CHANNEL_CLIENT_LIMITS } from "./channelLimits.js";
 import {
   ChannelDropReason,
   ChannelStatus,
@@ -52,6 +55,14 @@ const ANNOUNCEMENT: AnnounceContent = {
 };
 
 const RELAY_URL = new URL("wss://relay.example.test/");
+
+const KEY = "a".repeat(64);
+
+const KEYS_QUERY = {
+  start: new Date("2026-11-22T00:00:00.000Z"),
+  end: new Date("2026-11-23T00:00:00.000Z"),
+  pageCursor: null,
+};
 
 const createLogEntries = (
   entryCount: number,
@@ -148,7 +159,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-test("sends the token in the hello, and the announcement after the welcome, with protocol version 1", async () => {
+test("sends the token in the hello, and the announcement after the welcome", async () => {
   const { client, openSocket } = setUp();
 
   client.connect();
@@ -158,8 +169,7 @@ test("sends the token in the hello, and the announcement after the welcome, with
   expect(socket.sentMessages).toEqual([
     expect.objectContaining({
       type: UpMessageType.Hello,
-      // The browser runtime gets the own entry keys from the app (decision 34)
-      protocol_version: 1,
+      protocol_version: RELAY_PROTOCOL_VERSION,
       content: {
         token: "token-1",
         runtime_id: RUNTIME_ID,
@@ -177,7 +187,6 @@ test("sends the token in the hello, and the announcement after the welcome, with
   });
   expect(socket.sentMessages[1]).toMatchObject({
     type: UpMessageType.Announce,
-    protocol_version: 1,
     content: ANNOUNCEMENT,
   });
 });
@@ -437,5 +446,77 @@ test("sends only the entries that the local access layer permits at the send, al
       entryCount: 100,
       reason: ChannelDropReason.LocalAccessLayer,
     })),
+  );
+});
+
+test("requests the own entry keys after the welcome and again after a lost connection, and rejects a request without an answer", async () => {
+  const { client, openSocket, welcome } = setUp();
+
+  client.connect();
+  const firstSocket = await openSocket();
+  const page = client.requestOwnEntryKeys({ ...KEYS_QUERY, pageCursor: KEY });
+  expect(firstSocket.getSent(UpMessageType.FeedEntryKeysRequest)).toEqual([]);
+
+  welcome(firstSocket);
+  expect(
+    firstSocket
+      .getSent(UpMessageType.FeedEntryKeysRequest)
+      .map((message) => message.content),
+  ).toEqual([
+    {
+      capability_id: CapabilityId.LogEntries,
+      start: KEYS_QUERY.start.toISOString(),
+      end: KEYS_QUERY.end.toISOString(),
+      page_cursor: KEY,
+    },
+  ]);
+
+  // The answer does not come on the lost connection
+  firstSocket.handlers.onClose(1006);
+  await vi.advanceTimersByTimeAsync(1_000);
+  const secondSocket = await openSocket();
+  welcome(secondSocket);
+  const [request] = secondSocket.getSent(UpMessageType.FeedEntryKeysRequest);
+  if (request === undefined) throw new Error("No request");
+  secondSocket.answerKeyRequest(request, [KEY], KEY);
+  await expect(page).resolves.toEqual({ keys: [KEY], nextPageCursor: KEY });
+
+  const unansweredPage = expect(
+    client.requestOwnEntryKeys(KEYS_QUERY),
+  ).rejects.toThrow("in time");
+  await vi.advanceTimersByTimeAsync(
+    CHANNEL_CLIENT_LIMITS.ownEntryKeysTimeoutMilliseconds,
+  );
+  await unansweredPage;
+});
+
+test("keeps one key request of the burst of the relay in reserve, and rejects the requests when the client ends", async () => {
+  const { client, connect } = setUp();
+
+  const socket = await connect();
+  const pages = Promise.allSettled(
+    Array.from({ length: RELAY_LIMITS.feedEntryKeyRequestBurstSize }, () =>
+      client.requestOwnEntryKeys(KEYS_QUERY),
+    ),
+  );
+  const getRequestCount = () =>
+    socket.getSent(UpMessageType.FeedEntryKeysRequest).length;
+
+  expect(getRequestCount()).toBe(RELAY_LIMITS.feedEntryKeyRequestBurstSize - 1);
+  await vi.advanceTimersByTimeAsync(
+    RELAY_LIMITS.feedEntryKeyRequestIntervalMilliseconds,
+  );
+  expect(getRequestCount()).toBe(RELAY_LIMITS.feedEntryKeyRequestBurstSize);
+
+  socket.receive(
+    createDownMessage(DownMessageType.Close, {
+      reason: RelayCloseReason.AccessDenied,
+    }),
+  );
+  expect(
+    (await pages).map((result) => result.status === "rejected"),
+  ).not.toContain(false);
+  await expect(client.requestOwnEntryKeys(KEYS_QUERY)).rejects.toThrow(
+    "does not connect",
   );
 });

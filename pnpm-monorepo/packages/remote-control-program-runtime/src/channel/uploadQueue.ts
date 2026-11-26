@@ -2,9 +2,9 @@ import {
   CAPABILITY_CATALOG,
   RELAY_LIMITS,
   UpMessageType,
+  createUpMessage,
   type FeedEntriesSource,
 } from "@sam-monorepo/domain";
-import { createChannelMessage } from "./channelProtocol.js";
 import type { FeedEntry } from "./channelTypes.js";
 
 export interface QueuedBatch {
@@ -33,7 +33,7 @@ const isSameSource = (first: FeedEntriesSource, second: FeedEntriesSource) =>
 const getEmptyBatchByteLength = (source: FeedEntriesSource) =>
   getByteLength(
     JSON.stringify(
-      createChannelMessage(UpMessageType.FeedEntries, {
+      createUpMessage(UpMessageType.FeedEntries, {
         ...source,
         entries: [],
       }),
