@@ -211,7 +211,6 @@ test("the sharing popover and the upload of older entries work with the keyboard
   await trigger.focus();
   await page.keyboard.press("Enter");
 
-  const status = sharingPopoverSection(page, SharingPopoverSection.Status);
   const thisBrowser = sharingPopoverSection(
     page,
     SharingPopoverSection.ThisBrowser,
@@ -251,10 +250,6 @@ test("the sharing popover and the upload of older entries work with the keyboard
 
   /** The arrow keys move between the tabs */
   await sharingPopoverTab(page, SharingPopoverSection.Start).focus();
-  await page.keyboard.press("ArrowRight");
-  await page.keyboard.press("Enter");
-  await expect(status.getByText("dieser Browser")).toBeVisible();
-
   await page.keyboard.press("ArrowRight");
   await page.keyboard.press("Enter");
   await tabTo(page, grants.getByRole("button", { name: "Neue Freigabe" }));
@@ -313,7 +308,10 @@ test.describe("mobile", () => {
     );
     await expect(sharingPopoverTrigger(page)).toHaveCount(1);
     await openSharingPopover(page);
-    await showSharingPopoverSection(page, SharingPopoverSection.Status);
+    await showSharingPopoverSection(
+      page,
+      SharingPopoverSection.DesktopCompanion,
+    );
     await showSharingPopoverSection(page, SharingPopoverSection.Grants);
 
     /** The first Escape closes only the sheet, the second one the flyout */

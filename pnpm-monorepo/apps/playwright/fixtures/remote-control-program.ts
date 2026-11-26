@@ -60,7 +60,6 @@ const SHARING_POPOVER_TITLE = "Remote Control Program";
 /** The name of each section is also the name of its tab or sub-tab */
 export enum SharingPopoverSection {
   Start = "Start",
-  Status = "Status",
   Grants = "Freigaben",
   /** The sub-tabs of the runtimes */
   Runtimes = "Runtimes",

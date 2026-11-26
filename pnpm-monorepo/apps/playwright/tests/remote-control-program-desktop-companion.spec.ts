@@ -60,19 +60,20 @@ const showDesktopCompanionSection = async (page: Page) => {
 };
 
 /**
- * The presence of a desktop companion whose local access layer lets
- * `log_entries` leave the machine. The relay service writes this row for a
- * connected runtime.
+ * The presence of a runtime whose local access layer lets `log_entries`
+ * leave the machine. The relay service writes this row for a connected
+ * runtime.
  */
-const createDesktopCompanionPresence = (
+const createRuntimePresence = (
   prisma: PrismaClient,
   ownerId: string,
+  kind: "browser" | "desktop_companion",
 ) =>
   prisma.remoteControlProgramRuntime.create({
     data: {
       runtimeId: randomUUID(),
       ownerId,
-      kind: "desktop_companion",
+      kind,
       runtimeVersion: "0.1.0",
       protocolVersion: 1,
       connectedAt: new Date(),
@@ -295,7 +296,7 @@ test.describe("the sub-tab of the desktop companion", () => {
     expect(connection.status).toBe(401);
   });
 
-  test("the status shows a desktop companion, and the Log Analyzer then asks for no log folder", async ({
+  test("shows a connected desktop companion and no other browser, and the Log Analyzer then asks for no log folder", async ({
     page,
     prisma,
     signIn,
@@ -312,7 +313,8 @@ test.describe("the sub-tab of the desktop companion", () => {
       ),
     ).toBeVisible();
 
-    await createDesktopCompanionPresence(prisma, owner.entity.id);
+    await createRuntimePresence(prisma, owner.entity.id, "desktop_companion");
+    await createRuntimePresence(prisma, owner.entity.id, "browser");
     await page.reload();
     await expect(
       page.getByText(
@@ -320,13 +322,16 @@ test.describe("the sub-tab of the desktop companion", () => {
       ),
     ).toBeVisible();
 
-    await clickUntilVisible(sharingPopoverTrigger(page), sharingPopover(page));
-    const status = await showSharingPopoverSection(
-      page,
-      SharingPopoverSection.Status,
+    const section = await showDesktopCompanionSection(page);
+    const connected = section.getByRole("region", { name: "Verbunden" });
+    const companions = connected.getByRole("listitem");
+    await expect(companions).toHaveCount(1);
+    await expect(companions).toContainText("Online seit");
+    await expect(companions).toContainText(
+      "Version 0.1.0 · Aktive Connectors: Game Logs",
     );
     await expect(
-      status.getByText("Desktop Companion", { exact: true }),
-    ).toBeVisible();
+      sharingPopover(page).getByRole("tab", { name: "Status" }),
+    ).toHaveCount(0);
   });
 });
