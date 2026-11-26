@@ -12,6 +12,7 @@ export const CONNECTOR_LABELS: Readonly<Record<ConnectorId, string>> = {
 
 export const RUNTIME_KIND_LABELS: Readonly<Record<RuntimeKind, string>> = {
   [RuntimeKind.browser]: "Browser",
+  [RuntimeKind.desktop_companion]: "Desktop Companion",
 };
 
 export const formatCapabilityLabels = (
