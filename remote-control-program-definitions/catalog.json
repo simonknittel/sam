@@ -21,7 +21,8 @@
     }
   ],
   "runtime_kinds": [
-    "browser"
+    "browser",
+    "desktop_companion"
   ],
   "relay_limits": {
     "maximum_message_bytes": 524288,

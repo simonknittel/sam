@@ -33,7 +33,8 @@
             "runtime_kind": {
               "type": "string",
               "enum": [
-                "browser"
+                "browser",
+                "desktop_companion"
               ]
             },
             "runtime_version": {
