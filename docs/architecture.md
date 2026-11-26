@@ -72,10 +72,10 @@ The other modules of the relay service hold only host code: the WebSocket server
 | Location | Content |
 | - | - |
 | The repository `sam-desktop-companion` | The desktop companion: a Rust program and a runtime of the [Remote Control Program](./remote-control-program/README.md#desktop-companion) (decision 32). It connects to the relay service and gets its tokens from the OAuth server of the app. It is private until step 5 of the [migration](./remote-control-program/migration.md#order-of-the-steps). |
-| `remote-control-program-definitions/` | The export of the shared definitions for the desktop companion. Tests of `domain` and of the app fail when it is not current (see its [README](../remote-control-program-definitions/README.md)). |
+| `remote-control-program-definitions/` | The export of the shared definitions for the desktop companion (see its [README](../remote-control-program-definitions/README.md)). |
 | `remote-control-program-fixtures/` | The shared test data of the TypeScript and the Rust implementations (see its [README](../remote-control-program-fixtures/README.md)). |
 
-A change of the protocol, the catalog, the patterns or the shared test data goes into SAM first. The desktop companion copies the export and the test data from the latest release tag of SAM.
+A change of the protocol, the catalog, the patterns or the shared test data goes into SAM first (decision 32 of the [Remote Control Program](./remote-control-program/README.md#decisions)).
 
 ### Tests
 
