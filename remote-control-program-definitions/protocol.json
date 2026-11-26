@@ -1,5 +1,5 @@
 {
-  "protocol_version": 1,
+  "protocol_version": 2,
   "minimum_protocol_version": 1,
   "close_reasons": [
     {
@@ -53,5 +53,20 @@
       "reconnect": true
     }
   ],
-  "reconnect_after_close_without_reason": true
+  "reconnect_after_close_without_reason": true,
+  "up_message_protocol_versions": {
+    "hello": 1,
+    "announce": 1,
+    "heartbeat": 1,
+    "token_renewal": 1,
+    "feed_entries": 1,
+    "feed_entry_keys_request": 2
+  },
+  "down_message_protocol_versions": {
+    "welcome": 1,
+    "refusal": 1,
+    "ack": 1,
+    "close": 1,
+    "feed_entry_keys": 2
+  }
 }
