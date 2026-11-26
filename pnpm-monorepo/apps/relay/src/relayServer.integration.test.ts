@@ -14,6 +14,7 @@ import {
   RelayCloseReason,
   UpMessageType,
   type FeedEntriesContent,
+  type FeedEntryKeysRequestContent,
 } from "@sam-monorepo/domain";
 import { SignJWT } from "jose";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
@@ -22,6 +23,7 @@ import {
   LOG_FILE_ANNOUNCEMENT,
 } from "../../../packages/application/test/remoteControlProgram.js";
 import {
+  createLogEntryRows,
   createOwner,
   findLogEntryRows,
   findRuntimeLease,
@@ -44,6 +46,8 @@ const MESSAGE_TOO_BIG_CLOSE_CODE = 1009;
 const INTERNAL_ERROR_CLOSE_CODE = 1011;
 
 const DISCONNECT_USER_PATH = "/internal/disconnect-user";
+
+const ONE_HOUR_MILLISECONDS = 60 * 60 * 1000;
 
 const createJoinPuEntry = (lineNumber: number) => {
   const time = new Date(Date.UTC(2026, 10, 1, 12, 0, lineNumber));
@@ -97,6 +101,28 @@ const upload = (client: TestClient, batch = BATCH) =>
 
 const sendHeartbeat = (client: TestClient) =>
   client.request(createUpMessage(UpMessageType.Heartbeat, {}));
+
+const createKeysRequest = (
+  content: Omit<FeedEntryKeysRequestContent, "capability_id"> = {},
+) =>
+  createUpMessage(UpMessageType.FeedEntryKeysRequest, {
+    capability_id: CapabilityId.LogEntries,
+    ...content,
+  });
+
+const requestKeys = async (
+  client: TestClient,
+  content: Omit<FeedEntryKeysRequestContent, "capability_id">,
+) => {
+  const request = createKeysRequest(content);
+  client.send(request);
+  return (
+    await client.waitForMessage(
+      DownMessageType.FeedEntryKeys,
+      (answer) => answer.content.message_id === request.id,
+    )
+  ).content;
+};
 
 const expectRefusal = async (client: TestClient, reason: RelayCloseReason) => {
   await expect(
@@ -505,4 +531,88 @@ test("a second connection of the same runtime replaces the older connection", as
     signal: AbortSignal.timeout(5_000),
   });
   expect(health.status).toBe(200);
+});
+
+test("a runtime of protocol version 2 gets the keys of its own entries in the time window in pages", async () => {
+  const { connect } = await start();
+  const owner = await createOwner();
+  const otherOwner = await createOwner("other");
+  const windowStart = new Date(Date.UTC(2026, 10, 1));
+  const windowEnd = new Date(windowStart.getTime() + ONE_HOUR_MILLISECONDS);
+  const getTimeInWindow = (seconds: number) =>
+    new Date(windowStart.getTime() + seconds * 1_000);
+  const ownKeys = await createLogEntryRows(
+    owner.citizenId,
+    Array.from(
+      { length: RELAY_LIMITS.maximumFeedEntryKeysPerPage + 1 },
+      (_, index) => getTimeInWindow(index),
+    ),
+  );
+  await createLogEntryRows(owner.citizenId, [
+    new Date(windowStart.getTime() - 1),
+    windowEnd,
+  ]);
+  await createLogEntryRows(otherOwner.citizenId, [getTimeInWindow(3_000)]);
+  const { client } = await connect(owner, RUNTIME_ID, RELAY_PROTOCOL_VERSION);
+
+  const window = {
+    start: windowStart.toISOString(),
+    end: windowEnd.toISOString(),
+  };
+  const firstPage = await requestKeys(client, window);
+  expect(firstPage.keys).toHaveLength(RELAY_LIMITS.maximumFeedEntryKeysPerPage);
+  expect(firstPage.next_page_cursor).toBe(firstPage.keys.at(-1));
+
+  const lastPage = await requestKeys(client, {
+    ...window,
+    page_cursor: firstPage.next_page_cursor ?? undefined,
+  });
+  expect(lastPage).toEqual({
+    message_id: expect.any(String),
+    keys: [expect.any(String)],
+    next_page_cursor: null,
+  });
+  // No key of a different owner and no key outside of the time window
+  expect([...firstPage.keys, ...lastPage.keys]).toEqual(ownKeys.toSorted());
+  // The answer replaces the `ack`
+  expect(client.getMessages(DownMessageType.Acknowledgement)).toEqual([]);
+});
+
+test("refuses the key request of a runtime of protocol version 1, and limits the key requests of a connection", async () => {
+  const { connect } = await start();
+  const owner = await createOwner();
+
+  const older = await connect(owner, RUNTIME_ID);
+  await expect(older.client.request(createKeysRequest())).resolves.toEqual({
+    message_id: expect.any(String),
+    result: AcknowledgementResult.Refused,
+    error_code: AcknowledgementErrorCode.MessageNotValid,
+  });
+  expect(older.client.getMessages(DownMessageType.FeedEntryKeys)).toEqual([]);
+
+  const newer = await connect(owner, OTHER_RUNTIME_ID, RELAY_PROTOCOL_VERSION);
+  // The burst of the limit, then one request above the rate
+  const requests = Array.from(
+    { length: RELAY_LIMITS.feedEntryKeyRequestBurstSize },
+    () => createKeysRequest(),
+  );
+  const requestAboveRate = createKeysRequest();
+  for (const request of [...requests, requestAboveRate])
+    newer.client.send(request);
+
+  await expect(
+    newer.client.waitForAcknowledgement(requestAboveRate),
+  ).resolves.toMatchObject({
+    content: {
+      result: AcknowledgementResult.Refused,
+      error_code: AcknowledgementErrorCode.RateLimitExceeded,
+    },
+  });
+  // The other requests wait in the data lane, or get `internal_error` when it is full
+  await expect(
+    newer.client.waitForMessage(
+      DownMessageType.FeedEntryKeys,
+      (answer) => answer.content.message_id === requests[0]?.id,
+    ),
+  ).resolves.toMatchObject({ content: { keys: [], next_page_cursor: null } });
 });

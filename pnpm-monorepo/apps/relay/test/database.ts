@@ -1,5 +1,6 @@
 import { prisma } from "@sam-monorepo/database";
 import { AuditEventType } from "@sam-monorepo/domain";
+import { createLogEntryRowData } from "../../../packages/application/test/remoteControlProgram.js";
 
 /**
  * The database steps of the tests. The relay service itself uses Prisma only
@@ -64,3 +65,18 @@ export const findUploadCountEvents = () =>
     },
     select: { data: true, createdById: true },
   });
+
+/**
+ * Stored entries of `log_entries` of the owner, without the relay service.
+ * Gives their keys.
+ */
+export const createLogEntryRows = async (
+  ownerCitizenId: string,
+  eventAts: readonly Date[],
+) => {
+  const rows = await Promise.all(
+    eventAts.map((eventAt) => createLogEntryRowData(ownerCitizenId, eventAt)),
+  );
+  await prisma.logAnalyzerEntry.createMany({ data: rows });
+  return rows.map((row) => row.hash);
+};
