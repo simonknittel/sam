@@ -19,7 +19,11 @@ import { listOwnGrants } from "../../mcpSettings/listOwnGrants.js";
 import { verifyAccessToken } from "../../oauth/accessToken.js";
 import { createGrantWithAuthorizationCode } from "../../oauth/createGrantWithAuthorizationCode.js";
 import { getDesktopCompanionClientId } from "../../oauth/desktopCompanionClient.js";
-import { InvalidTokenError, OAuthTokenError } from "../../oauth/errors.js";
+import {
+  InvalidTokenError,
+  OAuthTokenError,
+  OAuthTokenErrorCode,
+} from "../../oauth/errors.js";
 import { redeemAuthorizationCode } from "../../oauth/redeemAuthorizationCode.js";
 import { refreshAccessToken } from "../../oauth/refreshAccessToken.js";
 import { OAuthResource } from "../../oauth/resources.js";
@@ -307,4 +311,27 @@ test("the consent of the desktop companion needs remoteControlProgram;use, also 
     new ForbiddenError(RemoteControlProgramErrorMessage.PermissionMissing),
   );
   expect(await prisma.oAuthGrant.count()).toBe(0);
+});
+
+test("a refresh keeps the scope of the grant, and ignores the scope of the other resource", async () => {
+  const owner = await createOwner();
+  const { context } = createAppContext();
+  const { clientId, tokens } = await signInDesktopCompanion(owner);
+
+  const refreshed = await refreshAccessToken(context, {
+    grant_type: "refresh_token",
+    refresh_token: tokens.refresh_token,
+    client_id: clientId,
+    scope: "mcp remote_control_program offline_access",
+  });
+  expect(refreshed.scope).toBe("remote_control_program");
+
+  await expect(
+    refreshAccessToken(context, {
+      grant_type: "refresh_token",
+      refresh_token: refreshed.refresh_token,
+      client_id: clientId,
+      scope: "unknown",
+    }),
+  ).rejects.toMatchObject({ error: OAuthTokenErrorCode.InvalidScope });
 });

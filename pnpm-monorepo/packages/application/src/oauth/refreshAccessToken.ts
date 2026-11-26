@@ -5,7 +5,7 @@ import { requireSigningKey } from "./accessToken.js";
 import {
   MAX_OPAQUE_TOKEN_LENGTH,
   MAX_URL_LENGTH,
-  OFFLINE_ACCESS_SCOPE,
+  SUPPORTED_SCOPES,
 } from "./constants.js";
 import { OAuthTokenError, OAuthTokenErrorCode } from "./errors.js";
 import { createGrantActor, GRANT_ACTOR_SELECT } from "./grantActor.js";
@@ -115,16 +115,16 @@ export const refreshAccessToken = (
         "The resource is not the resource of the grant",
       );
 
-    // The grant has one scope; `offline_access` has no effect
+    /**
+     * The token keeps the one scope of the grant. Like at the authorization,
+     * the scope of the other resource and `offline_access` have no effect
+     * (RFC 6749 section 3.3).
+     */
     const requestedScopes = input.scope?.split(" ").filter(Boolean) ?? [];
-    if (
-      requestedScopes.some(
-        (scope) => scope !== grant.scope && scope !== OFFLINE_ACCESS_SCOPE,
-      )
-    )
+    if (requestedScopes.some((scope) => !SUPPORTED_SCOPES.includes(scope)))
       throw new OAuthTokenError(
         OAuthTokenErrorCode.InvalidScope,
-        "The scope is larger than the scope of the grant",
+        "The scope is not a scope of this authorization server",
       );
 
     const successor = createRefreshToken(context, grant.id);
