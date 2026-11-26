@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  Button2,
-  Button2Variant,
-} from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import type {
   DesktopCompanionSignIn,
   OwnRuntime,
