@@ -473,6 +473,7 @@ export class RelayConnection {
       runtime = await authenticateRuntimeConnection(context, {
         token: hello.content.token,
         runtime_id: hello.content.runtime_id,
+        runtime_kind: hello.content.runtime_kind,
       });
     } catch (error) {
       this.#closeAfterHandshakeError(error, hello.content.runtime_id);
@@ -757,6 +758,7 @@ export class RelayConnection {
       const renewed = await authenticateRuntimeConnection(this.#hub.context, {
         token: message.content.token,
         runtime_id: runtime.runtimeId,
+        runtime_kind: runtime.runtimeKind,
       });
       if (
         renewed.userId !== runtime.userId ||

@@ -1,0 +1,56 @@
+import { Button2Variant } from "@/modules/common/components/Button2";
+import { FaCheck, FaTimes } from "react-icons/fa";
+import { approveAuthorization } from "../actions/approveAuthorization";
+import { denyAuthorization } from "../actions/denyAuthorization";
+import { ConsentDecisionForm } from "./ConsentDecisionForm";
+
+interface Props {
+  readonly parameters: Readonly<Record<string, string>>;
+}
+
+/**
+ * The consent of the desktop companion: what the program can do. It has no
+ * name and no tools, unlike the consent of an MCP client.
+ */
+export const DesktopCompanionConsentDecision = ({ parameters }: Props) => (
+  <>
+    <div className="flex flex-col gap-2 rounded-secondary bg-neutral-800/50 p-3 text-sm">
+      <p>Mit deiner Erlaubnis kann der Desktop Companion:</p>
+
+      <ul className="flex list-disc flex-col gap-1 pl-5">
+        <li>
+          sich als Runtime deines Citizens mit dem Remote Control Program
+          verbinden
+        </li>
+        <li>
+          nur die Daten hochladen, die du im Programm einschaltest. Alles andere
+          bleibt auf deinem Rechner.
+        </li>
+      </ul>
+
+      <p className="text-neutral-500">
+        Die Anmeldung kannst du jederzeit im Remote Control Program unter
+        Runtimes › Desktop Companion beenden.
+      </p>
+    </div>
+
+    <div className="flex flex-wrap justify-end gap-2">
+      <ConsentDecisionForm
+        action={denyAuthorization}
+        fields={parameters}
+        variant={Button2Variant.Secondary}
+        icon={<FaTimes />}
+      >
+        Ablehnen
+      </ConsentDecisionForm>
+
+      <ConsentDecisionForm
+        action={approveAuthorization}
+        fields={parameters}
+        icon={<FaCheck />}
+      >
+        Erlauben
+      </ConsentDecisionForm>
+    </div>
+  </>
+);

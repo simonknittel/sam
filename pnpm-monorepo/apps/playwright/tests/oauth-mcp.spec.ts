@@ -17,6 +17,7 @@ import {
   buildAuthorizationUrl,
   createPkcePair,
   createState,
+  getDesktopCompanionClientId,
   interceptAuthorizationResponse,
   MCP_CALLBACK_URL,
   postTokenEndpoint,
@@ -117,7 +118,7 @@ test.describe("the OAuth server and the MCP endpoint", () => {
       authorization_endpoint: new URL("/app/oauth/authorize", issuer).href,
       token_endpoint: new URL("/api/oauth/token", issuer).href,
       revocation_endpoint: new URL("/api/oauth/revoke", issuer).href,
-      scopes_supported: ["mcp"],
+      scopes_supported: ["mcp", "remote_control_program"],
       response_types_supported: ["code"],
       grant_types_supported: ["authorization_code", "refresh_token"],
       token_endpoint_auth_methods_supported: ["none"],
@@ -528,7 +529,7 @@ test.describe("the OAuth server and the MCP endpoint", () => {
     expect(response.get("code")).toBeNull();
   });
 
-  test("the kill switch takes the MCP endpoint, the token endpoint and the consent page offline", async ({
+  test("the kill switch takes the MCP endpoint, the token endpoint and the consent page offline, but not the desktop companion", async ({
     page,
     prisma,
     request,
@@ -541,7 +542,7 @@ test.describe("the OAuth server and the MCP endpoint", () => {
 
     const citizen = await createMcpCitizen(prisma, { handle: "mcp-notaus" });
     await signIn(citizen.user);
-    const { resource } = await readMcpServerMetadata(request);
+    const { issuer, resource } = await readMcpServerMetadata(request);
     const consentUrl = buildAuthorizationUrl(stack.baseURL, {
       clientId: cimdServer.clientId,
       codeChallenge: createPkcePair().challenge,
@@ -559,16 +560,24 @@ test.describe("the OAuth server and the MCP endpoint", () => {
         refresh_token: "unknown-refresh-token",
         client_id: cimdServer.clientId,
       });
+      // The resource of the Remote Control Program has its own kill switch
+      const desktopCompanionTokenResult = await postTokenEndpoint(request, {
+        grant_type: "refresh_token",
+        refresh_token: "unknown-refresh-token",
+        client_id: getDesktopCompanionClientId(issuer),
+      });
 
       return {
         mcpEndpoint: mcpResponse.status(),
         tokenEndpoint: tokenResult.status,
+        desktopCompanionTokenEndpoint: desktopCompanionTokenResult.status,
         consentPage: await readConsentPageState(page, consentUrl),
       };
     };
     const available = {
       mcpEndpoint: 401,
       tokenEndpoint: 400,
+      desktopCompanionTokenEndpoint: 400,
       consentPage: ConsentPageState.Consent,
     };
 
@@ -579,6 +588,7 @@ test.describe("the OAuth server and the MCP endpoint", () => {
       await expectFlagPropagation.poll(readAvailability).toEqual({
         mcpEndpoint: 503,
         tokenEndpoint: 503,
+        desktopCompanionTokenEndpoint: 400,
         consentPage: ConsentPageState.Unavailable,
       });
     } finally {

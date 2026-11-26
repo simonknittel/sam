@@ -5,6 +5,7 @@ import { NotFoundError } from "../errors.js";
 import { revokeGrant } from "../oauth/revokeGrant.js";
 import { idSchema } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
+import { getOwnMcpGrantWhere } from "./ownMcpGrant.js";
 
 export const revokeOwnGrantInputSchema = z.object({
   grant_id: idSchema,
@@ -21,7 +22,7 @@ export const revokeOwnGrant = (
 ): Promise<void> =>
   withSpan(context, "revokeOwnGrant", async () => {
     const grant = await context.prisma.oAuthGrant.findFirst({
-      where: { id: input.grant_id, userId: actor.userId, revokedAt: null },
+      where: { id: input.grant_id, ...getOwnMcpGrantWhere(context, actor) },
       select: { id: true, clientId: true },
     });
     if (!grant) throw new NotFoundError("The grant does not exist");

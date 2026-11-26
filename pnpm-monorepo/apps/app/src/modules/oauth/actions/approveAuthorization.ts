@@ -18,12 +18,13 @@ import { redirect } from "next/navigation";
 import {
   approveFormSchema,
   ASSUMED_USER_MESSAGE,
-  CONSENT_UNAVAILABLE_MESSAGE,
   ConsentAvailability,
   getClientErrorMessage,
   getConsentAvailability,
+  getConsentUnavailableMessage,
   parseApproveFormData,
 } from "../utils/consent";
+import { getOAuthResourceOfClientParameter } from "../utils/isOAuthResourceTurnedOff";
 
 /** Validates the request again: the form fields come from the browser */
 export const approveAuthorization = createAuthenticatedAction(
@@ -34,14 +35,20 @@ export const approveAuthorization = createAuthenticatedAction(
     if (authentication.session.assumedByAdminId)
       return { error: ASSUMED_USER_MESSAGE, requestPayload: formData };
 
-    if ((await getConsentAvailability()) !== ConsentAvailability.Available)
-      return { error: CONSENT_UNAVAILABLE_MESSAGE, requestPayload: formData };
-
     const {
       custom_name: customName,
       disabled_tool_names: disabledToolNames,
       ...parameters
     } = data;
+    const resource = getOAuthResourceOfClientParameter(parameters.client_id);
+    if (
+      (await getConsentAvailability(resource)) !== ConsentAvailability.Available
+    )
+      return {
+        error: getConsentUnavailableMessage(resource),
+        requestPayload: formData,
+      };
+
     const context = getApplicationContext();
     const validation = await validateAuthorizationRequest(context, parameters);
 

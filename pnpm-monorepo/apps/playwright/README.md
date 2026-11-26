@@ -42,7 +42,8 @@ database for each test case.
   (`authorizeMcpClient()` and `connectMcpClient()`, see `fixtures/oauth.ts` and
   `fixtures/mcp-client.ts`).
   Their users come from `createMcpCitizen()`, which adds the permission
-  `mcp;use` that the MCP server requires.
+  `mcp;use` that the MCP server requires. The tests of the desktop
+  companion log in with `authorizeDesktopCompanion()` in the same way.
   Their assertions never print a token: compare the status and the error of
   a token response, not the response.
 

@@ -3,13 +3,15 @@
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Note from "@/modules/common/components/Note";
 import { useSharingPopoverOpener } from "@/modules/remote-control-program/components/sharing-popover/SharingPopoverProvider";
-import { SharingPopoverTab } from "@/modules/remote-control-program/components/sharing-popover/SharingPopoverTab";
+import { BROWSER_RUNTIME_LOCATION } from "@/modules/remote-control-program/components/sharing-popover/SharingPopoverTab";
+import { useIsUploadedByDesktopCompanion } from "@/modules/remote-control-program/consumer/useIsUploadedByDesktopCompanion";
 import {
   LogFolderState,
   type BrowserRuntimeSnapshot,
 } from "@/modules/remote-control-program/runtime/types";
 import { useBrowserRuntime } from "@/modules/remote-control-program/runtime/useBrowserRuntime";
 import { BROWSER_NOT_SUPPORTED_TEXT } from "@/modules/remote-control-program/utils/remoteControlProgramTexts";
+import { CapabilityId } from "@sam-monorepo/domain";
 import type { ComponentProps } from "react";
 import { FaTowerBroadcast } from "react-icons/fa6";
 
@@ -19,6 +21,16 @@ interface FolderNote {
   /** The owner changes the state in the sharing popover */
   readonly canOpenPopover: boolean;
 }
+
+/**
+ * The own entries come through the relay, thus the browser needs no folder.
+ * The note does not ask for the folder of the browser.
+ */
+const DESKTOP_COMPANION_NOTE: FolderNote = {
+  type: "info",
+  text: "Dein Desktop Companion lädt deine eigenen Einträge hoch. Dieser Browser braucht deshalb keinen Log-Ordner.",
+  canOpenPopover: false,
+};
 
 /** Null when the browser runtime reads the folder, or did not tell its state yet */
 const getFolderNote = ({
@@ -67,16 +79,23 @@ const getFolderNote = ({
 /**
  * Tells why the own entries are missing. The Log Analyzer has no own UI for
  * the folder: it opens the sharing popover (see "Sharing popover" of
- * `docs/remote-control-program/README.md`).
+ * `docs/remote-control-program/README.md`). While a desktop companion of the
+ * user uploads `log_entries`, the note asks for no folder.
  */
 export const LogFolderNote = () => {
   const runtime = useBrowserRuntime();
   const opener = useSharingPopoverOpener();
+  const folderNote = runtime ? getFolderNote(runtime.state) : null;
+  const isUploadedByDesktopCompanion = useIsUploadedByDesktopCompanion(
+    CapabilityId.LogEntries,
+    folderNote !== null,
+  );
 
-  if (!runtime) return null;
+  if (!folderNote) return null;
 
-  const note = getFolderNote(runtime.state);
-  if (!note) return null;
+  const note = isUploadedByDesktopCompanion
+    ? DESKTOP_COMPANION_NOTE
+    : folderNote;
 
   return (
     <Note
@@ -89,7 +108,7 @@ export const LogFolderNote = () => {
             <Button2
               type="button"
               variant={Button2Variant.Secondary}
-              onClick={() => opener.open(SharingPopoverTab.Browser)}
+              onClick={() => opener.open(BROWSER_RUNTIME_LOCATION)}
             >
               <FaTowerBroadcast />
               Öffnen

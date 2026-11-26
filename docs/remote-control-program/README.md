@@ -145,7 +145,7 @@ Each part of the Remote Control Program obeys these rules.
 - It signs in with OAuth 2.1 as a native client of the authorization server of SAM (see [OAuth design](../mcp-server.md#oauth-design)): the authorization code grant with PKCE and a loopback redirect.
   - The Remote Control Program is a resource of the authorization server, with its own audience (resource indicators, RFC 8707) and its own scope. With its access token, the desktop companion gets the connection tokens from the app. Only the desktop companion of SAM can get this resource (decision 35).
   - The consent requires `remoteControlProgram;use`, not `mcp;use`.
-  - The client id of the desktop companion is a Client ID Metadata Document on an HTTPS URL of SAM.
+  - The client id of the desktop companion is a Client ID Metadata Document on a URL of SAM (see [Resources](../mcp-server.md#resources)).
   - The refresh token is in the credential store of the operating system (decision 36).
 - It contains the log file connector next to the gRPC connector. The log file connector supplies `log_entries`, and uploads them only when the local access layer permits it.
 - Its UI controls the local access layer. It asks the questions of "ask each time". It shows no data of the game: the control UIs in SAM show the data.
@@ -322,9 +322,10 @@ The runtimes and the relay service use one protocol over the WebSocket connectio
 ### Connection and tokens
 
 - A runtime connects with a short-lived connection token (for example 120 seconds), and renews it over the open connection, like the collab tokens of the wiki. The relay service closes a connection without a valid token.
-- The desktop companion gets the connection token with its OAuth access token. The browser runtime gets it from the app.
+- The runtimes get the connection token from the route `POST /api/remote-control-program/connection-token` with the body `{ "runtime_id": "<uuid>" }`. The answer is `{ "token", "expires_at", "relay_url", "handle" }` (`relay_url` is null when the app has no relay service). The browser runtime uses the session of the app. The desktop companion sends its OAuth access token in the header `Authorization: Bearer <token>`, and never a session: then the connection token contains the id of the OAuth grant and no admin mode. Status codes: `400` for a body or an `Authorization` header that is not valid, `401` for an access token that is not valid or whose grant is revoked (with a `WWW-Authenticate` challenge), `403` without the clearance of the app, a citizen or `remoteControlProgram;use`, `503` when the app has no signing key.
+- The relay service accepts the runtime kind `desktop_companion` only with a connection token from an OAuth grant, and the kind `browser` only with a token from a session.
 - The token tells whether admin mode was on in the app. The relay service applies it only to an admin. The end of admin mode applies at the next renewal, and at the latest when the relay service closes the connection without a renewal.
-- When a runtime connects and at each renewal, the relay service checks the OAuth grant of the desktop companion and the ban of the user. Thus a revocation or a removed permission stops a connection at the next renewal, and at the latest when the token expires.
+- When a runtime connects and at each renewal, the relay service checks the OAuth grant of the desktop companion and the ban of the user. Thus a revocation or a removed permission stops a connection at the next renewal (the close reason `access_denied`), and at the latest when the token expires.
 - A ban also closes the connections of the relay service, next to the connections of Soketi and of the wiki editor.
 
 ### Presence
@@ -494,7 +495,7 @@ The MCP server is stateless and has no subscriptions (see [MCP Server](../mcp-se
 
 | Level | Who | What | How |
 | - | - | - | - |
-| Organization | Admins | The Remote Control Program | One Unleash flag (`DisableRemoteControlProgram`) for the full Remote Control Program. The connectors and the capabilities have no flags of their own. The relay refuses and closes the connections of the runtimes, and the consumers read no data. A permission for the use of the Remote Control Program. |
+| Organization | Admins | The Remote Control Program | One Unleash flag (`DisableRemoteControlProgram`) for the full Remote Control Program. The connectors and the capabilities have no flags of their own. The relay refuses and closes the connections of the runtimes, the consumers read no data, and the desktop companion gets no OAuth tokens (see [Resources](../mcp-server.md#resources)). A permission for the use of the Remote Control Program. |
 | Owner in SAM | Owner | Who can read the live data of a capability, who can request an action | Grants |
 | Consumer | Admins | Who can read the history in this consumer | Permission of the consumer |
 | Owner on the machine | Owner | What leaves the machine, which actions the runtime applies | Local access layer |

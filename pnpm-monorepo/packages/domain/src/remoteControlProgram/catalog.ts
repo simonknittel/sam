@@ -64,9 +64,11 @@ export enum ConnectorId {
 /**
  * The kinds of the runtimes: the values of the Prisma enum of the table of
  * the runtimes, which `runtime_kind` of the protocol also uses. The browser
- * runtime runs in a SAM tab of a Chromium browser. The desktop companion
- * comes in step 3. A new kind is a compatible change of the protocol: a
- * runtime of an older release never sends it.
+ * runtime runs in a SAM tab of a Chromium browser. The desktop companion is
+ * a program on the machine with an OAuth login. The relay service accepts a
+ * kind only with the source of its connection token (see
+ * `authenticateRuntimeConnection()`). A new kind is a compatible change of
+ * the protocol: a runtime of an older release never sends it.
  */
 export { RemoteControlProgramRuntimeKind as RuntimeKind } from "@sam-monorepo/database/browser";
 

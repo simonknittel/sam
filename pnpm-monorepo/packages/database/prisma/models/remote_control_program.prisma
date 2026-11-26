@@ -14,10 +14,10 @@ enum ShareGrantGranteeKind {
 
 /// The kind of a runtime, also `runtime_kind` of the protocol. The domain
 /// gives this enum to the code as `RuntimeKind`
-/// (`packages/domain/src/remoteControlProgram/catalog.ts`). The desktop
-/// companion comes in step 3 with a new value.
+/// (`packages/domain/src/remoteControlProgram/catalog.ts`).
 enum RemoteControlProgramRuntimeKind {
   browser
+  desktop_companion
 }
 
 /// A grant of the remote access layer: an owner shares capabilities with a

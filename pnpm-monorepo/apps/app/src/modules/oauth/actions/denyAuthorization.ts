@@ -10,23 +10,31 @@ import {
 } from "@sam-monorepo/application";
 import { redirect } from "next/navigation";
 import {
-  CONSENT_UNAVAILABLE_MESSAGE,
   ConsentAvailability,
   consentFormSchema,
   getClientErrorMessage,
   getConsentAvailability,
+  getConsentUnavailableMessage,
 } from "../utils/consent";
+import { getOAuthResourceOfClientParameter } from "../utils/isOAuthResourceTurnedOff";
 
 /**
  * Validates the request again, thus a form with a different redirect URI cannot
- * make an open redirect. No check of `mcp;use`: a denial gives no access.
+ * make an open redirect. No check of the permission of the resource: a denial
+ * gives no access.
  */
 export const denyAuthorization = createAuthenticatedAction(
   "denyAuthorization",
   consentFormSchema,
   async (formData, _authentication, data) => {
-    if ((await getConsentAvailability()) !== ConsentAvailability.Available)
-      return { error: CONSENT_UNAVAILABLE_MESSAGE, requestPayload: formData };
+    const resource = getOAuthResourceOfClientParameter(data.client_id);
+    if (
+      (await getConsentAvailability(resource)) !== ConsentAvailability.Available
+    )
+      return {
+        error: getConsentUnavailableMessage(resource),
+        requestPayload: formData,
+      };
 
     const context = getApplicationContext();
     const validation = await validateAuthorizationRequest(context, data);

@@ -1,5 +1,8 @@
 import { getApplicationContext } from "@/modules/application";
-import { isMcpServerDisabled } from "@/modules/oauth/utils/isMcpServerDisabled";
+import {
+  getOAuthResourceOfClientParameter,
+  isOAuthResourceTurnedOff,
+} from "@/modules/oauth/utils/isOAuthResourceTurnedOff";
 import {
   corsPreflightResponse,
   temporarilyUnavailableResponse,
@@ -51,15 +54,20 @@ const handleTokenRequest = (fields: Record<string, string>) => {
 
 /**
  * RFC 6749 section 3.2. Public by design: the clients are public clients, PKCE
- * and the single-use codes and refresh tokens protect it.
+ * and the single-use codes and refresh tokens protect it. The kill switch of
+ * the resource of the client stops it.
  */
 export const POST = async (request: Request) => {
-  if (await isMcpServerDisabled()) return temporarilyUnavailableResponse();
-
   try {
-    return tokenEndpointResponse(
-      await handleTokenRequest(await readTokenEndpointForm(request)),
-    );
+    const fields = await readTokenEndpointForm(request);
+    if (
+      await isOAuthResourceTurnedOff(
+        getOAuthResourceOfClientParameter(fields.client_id),
+      )
+    )
+      return temporarilyUnavailableResponse();
+
+    return tokenEndpointResponse(await handleTokenRequest(fields));
   } catch (error) {
     return toTokenEndpointErrorResponse(error, "token");
   }

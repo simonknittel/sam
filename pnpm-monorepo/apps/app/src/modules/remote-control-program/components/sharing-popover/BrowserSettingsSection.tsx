@@ -11,8 +11,8 @@ import {
   SharingPopoverSubsection,
 } from "./SharingPopoverSection";
 import {
-  SHARING_POPOVER_TAB_LABELS,
-  SharingPopoverTab,
+  SHARING_POPOVER_RUNTIME_TAB_LABELS,
+  SharingPopoverRuntimeTab,
 } from "./SharingPopoverTab";
 
 /**
@@ -27,7 +27,9 @@ export const BrowserSettingsSection = () => {
 
   return (
     <SharingPopoverSection
-      heading={SHARING_POPOVER_TAB_LABELS[SharingPopoverTab.Browser]}
+      heading={
+        SHARING_POPOVER_RUNTIME_TAB_LABELS[SharingPopoverRuntimeTab.Browser]
+      }
     >
       {runtime.state.folder.state === LogFolderState.NotSupported ? (
         <Note type="info" message={BROWSER_NOT_SUPPORTED_TEXT} />

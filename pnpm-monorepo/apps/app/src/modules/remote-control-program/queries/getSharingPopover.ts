@@ -2,16 +2,18 @@ import "server-only";
 
 import {
   canSeeAnyRole,
+  listOwnDesktopCompanionSignIns,
   listOwnRuntimes,
   listOwnShareGrants,
   MAXIMUM_ACTIVE_SHARE_GRANTS_PER_OWNER,
   type Actor,
   type ApplicationContext,
+  type DesktopCompanionSignIn,
   type OwnRuntime,
   type OwnShareGrant,
 } from "@sam-monorepo/application";
 
-/** The data of the sections "Status" and "Shared with others" of the sharing popover */
+/** The data of the server for the sections of the sharing popover */
 export interface SharingPopover {
   /** The most recent connections first */
   readonly runtimes: OwnRuntime[];
@@ -23,6 +25,8 @@ export interface SharingPopover {
   readonly canChooseCitizen: boolean;
   /** The form offers the grantee kind "role" only when the owner can see a role */
   readonly canChooseRole: boolean;
+  /** The newest first */
+  readonly desktopCompanionSignIns: DesktopCompanionSignIn[];
 }
 
 /**
@@ -35,14 +39,16 @@ export const getSharingPopover = async (
   context: ApplicationContext,
   actor: Actor,
 ): Promise<SharingPopover> => {
-  const [{ runtimes }, { grants }] = await Promise.all([
+  const [{ runtimes }, { grants }, { signIns }] = await Promise.all([
     listOwnRuntimes(context, actor),
     listOwnShareGrants(context, actor),
+    listOwnDesktopCompanionSignIns(context, actor),
   ]);
 
   return {
     runtimes,
     grants,
+    desktopCompanionSignIns: signIns,
     maximumActiveGrantCount: MAXIMUM_ACTIVE_SHARE_GRANTS_PER_OWNER,
     canChooseCitizen: actor.authorize("citizen", "read"),
     canChooseRole: canSeeAnyRole(actor),

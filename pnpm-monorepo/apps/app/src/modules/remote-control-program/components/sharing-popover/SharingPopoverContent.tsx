@@ -9,16 +9,19 @@ import {
   TabsProvider,
   useTabsContext,
 } from "@/modules/common/components/tabs/TabsContext";
-import { useRef, type RefObject } from "react";
+import { useRef, useState, type RefObject } from "react";
 import { flushSync } from "react-dom";
 import { LogFolderState } from "../../runtime/types";
 import { useBrowserRuntime } from "../../runtime/useBrowserRuntime";
 import { SESSION_EXPIRED_TEXT } from "../../utils/remoteControlProgramTexts";
-import { BrowserSettingsSection } from "./BrowserSettingsSection";
+import { RuntimesSection } from "./RuntimesSection";
 import { SharedWithOthersSection } from "./SharedWithOthersSection";
 import {
+  BROWSER_RUNTIME_LOCATION,
   SHARING_POPOVER_TAB_LABELS,
+  SharingPopoverRuntimeTab,
   SharingPopoverTab,
+  type SharingPopoverLocation,
 } from "./SharingPopoverTab";
 import { StartSection } from "./StartSection";
 import { StatusSection } from "./StatusSection";
@@ -39,26 +42,33 @@ const getReadErrorText = ({ data, message }: ReadError) => {
 
 interface Props {
   /** For example the Log Analyzer asks for the log folder. Null: the trigger opened the popover. */
-  readonly tabOfControlUi: SharingPopoverTab | null;
+  readonly locationOfControlUi: SharingPopoverLocation | null;
 }
 
 /**
  * The content of the sharing popover in the top bar and in the bottom sheet.
- * The tab of this browser does not wait for the data of the server.
+ * The sub-tab of this browser does not wait for the data of the server.
  */
-export const SharingPopoverContent = ({ tabOfControlUi }: Props) => {
+export const SharingPopoverContent = ({ locationOfControlUi }: Props) => {
   const query = useSharingPopoverQuery();
   const { data } = query;
   const folderState = useBrowserRuntime()?.state.folder.state;
   const tabListRef = useRef<HTMLDivElement>(null);
+  const runtimeTabListRef = useRef<HTMLDivElement>(null);
 
-  const getInitialActiveTab = () => {
-    if (tabOfControlUi) return tabOfControlUi;
+  // The content mounts at each open of the popover
+  const [initialLocation] = useState((): SharingPopoverLocation => {
+    if (locationOfControlUi) return locationOfControlUi;
     return folderState === LogFolderState.NotSelected ||
       folderState === LogFolderState.NotSupported
-      ? SharingPopoverTab.Start
-      : SharingPopoverTab.Browser;
-  };
+      ? { tab: SharingPopoverTab.Start }
+      : BROWSER_RUNTIME_LOCATION;
+  });
+  const [runtimeTab, setRuntimeTab] = useState(
+    initialLocation.tab === SharingPopoverTab.Runtimes
+      ? initialLocation.runtimeTab
+      : SharingPopoverRuntimeTab.Browser,
+  );
 
   const serverState = (
     <ServerState
@@ -69,7 +79,7 @@ export const SharingPopoverContent = ({ tabOfControlUi }: Props) => {
   );
 
   return (
-    <TabsProvider initialActiveTab={getInitialActiveTab()}>
+    <TabsProvider initialActiveTab={initialLocation.tab}>
       <h2 className="mb-3 font-mono text-lg font-bold uppercase">
         {SHARING_POPOVER_TITLE}
       </h2>
@@ -95,17 +105,21 @@ export const SharingPopoverContent = ({ tabOfControlUi }: Props) => {
             </Tab>
           </div>
 
-          {/* One tab for each runtime whose settings are in SAM */}
+          {/* The settings of the runtimes, apart from the other tabs */}
           <div className="ml-2 flex border-l border-white/20 pl-2 sm:ml-4 sm:pl-4">
-            <Tab id={SharingPopoverTab.Browser}>
-              {SHARING_POPOVER_TAB_LABELS[SharingPopoverTab.Browser]}
+            <Tab id={SharingPopoverTab.Runtimes}>
+              {SHARING_POPOVER_TAB_LABELS[SharingPopoverTab.Runtimes]}
             </Tab>
           </div>
         </TabList>
       </div>
 
       <TabPanel id={SharingPopoverTab.Start}>
-        <StartPanel tabListRef={tabListRef} />
+        <StartPanel
+          tabListRef={tabListRef}
+          runtimeTabListRef={runtimeTabListRef}
+          onRuntimeTabChange={setRuntimeTab}
+        />
       </TabPanel>
 
       <TabPanel id={SharingPopoverTab.Status}>
@@ -127,8 +141,14 @@ export const SharingPopoverContent = ({ tabOfControlUi }: Props) => {
         )}
       </TabPanel>
 
-      <TabPanel id={SharingPopoverTab.Browser}>
-        <BrowserSettingsSection />
+      <TabPanel id={SharingPopoverTab.Runtimes}>
+        <RuntimesSection
+          runtimeTab={runtimeTab}
+          onRuntimeTabChange={setRuntimeTab}
+          tabListRef={runtimeTabListRef}
+          serverState={serverState}
+          desktopCompanionSignIns={data?.desktopCompanionSignIns}
+        />
       </TabPanel>
     </TabsProvider>
   );
@@ -136,20 +156,37 @@ export const SharingPopoverContent = ({ tabOfControlUi }: Props) => {
 
 interface StartPanelProps {
   readonly tabListRef: RefObject<HTMLDivElement | null>;
+  readonly runtimeTabListRef: RefObject<HTMLDivElement | null>;
+  readonly onRuntimeTabChange: (runtimeTab: SharingPopoverRuntimeTab) => void;
 }
 
-const StartPanel = ({ tabListRef }: StartPanelProps) => {
+const StartPanel = ({
+  tabListRef,
+  runtimeTabListRef,
+  onRuntimeTabChange,
+}: StartPanelProps) => {
   const { setActiveTab } = useTabsContext();
 
-  /** The link disappears with its panel, thus the focus goes to the new tab */
-  const openTab = (tab: SharingPopoverTab) => {
-    flushSync(() => setActiveTab(tab));
-    tabListRef.current
+  /**
+   * The link disappears with its panel, thus the focus goes to the new tab,
+   * or to the new sub-tab
+   */
+  const openLocation = (location: SharingPopoverLocation) => {
+    flushSync(() => {
+      setActiveTab(location.tab);
+      if (location.tab === SharingPopoverTab.Runtimes)
+        onRuntimeTabChange(location.runtimeTab);
+    });
+    const activeTabList =
+      location.tab === SharingPopoverTab.Runtimes
+        ? runtimeTabListRef.current
+        : tabListRef.current;
+    activeTabList
       ?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')
       ?.focus();
   };
 
-  return <StartSection onOpenTab={openTab} />;
+  return <StartSection onOpenLocation={openLocation} />;
 };
 
 interface ServerStateProps {

@@ -9,6 +9,11 @@ export {
   type CreateGrantWithAuthorizationCodeOutput,
 } from "./createGrantWithAuthorizationCode.js";
 export {
+  DESKTOP_COMPANION_CLIENT_NAME,
+  getDesktopCompanionClientId,
+  getDesktopCompanionClientMetadataDocument,
+} from "./desktopCompanionClient.js";
+export {
   InvalidTokenError,
   OAuthTokenError,
   OAuthTokenErrorCode,
@@ -36,6 +41,12 @@ export {
   type Principal,
   type PrincipalGrant,
 } from "./resolvePrincipal.js";
+export {
+  OAuthResource,
+  canUseOAuthResource,
+  getOAuthResourceOfClient,
+  toOAuthResourceActor,
+} from "./resources.js";
 export { revokeToken, revokeTokenInputSchema } from "./revokeToken.js";
 export type { TokenResponse } from "./tokenResponse.js";
 export {

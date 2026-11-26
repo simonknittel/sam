@@ -21,7 +21,7 @@ export const SharingPopoverLink = ({ children }: Props) => {
   return (
     <button
       type="button"
-      onClick={() => opener.open(SharingPopoverTab.Start)}
+      onClick={() => opener.open({ tab: SharingPopoverTab.Start })}
       className="cursor-pointer text-interaction-500 hover:underline focus-visible:underline active:text-interaction-300"
     >
       {children}

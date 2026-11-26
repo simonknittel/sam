@@ -25,7 +25,11 @@ import { isKeySetFetchError, KeySetUnavailableError } from "./keySetErrors.js";
  * - `citizen_id`: the citizen of the user, the owner of the runtime.
  * - `runtime_id`: the id that the runtime sends in its `hello`.
  * - `admin_mode`: whether admin mode was on for the actor of the app. The
- *   relay service checks the admin role again.
+ *   relay service checks the admin role again. Always false for the desktop
+ *   companion.
+ * - `grant_id`: only in a token for the access token of the desktop
+ *   companion: the id of its OAuth grant. The relay service refuses the
+ *   token after the revocation of the grant.
  * - `iat` and `exp`: the lifetime is
  *   `RELAY_LIMITS.connectionTokenLifetimeMilliseconds`.
  */
@@ -47,6 +51,11 @@ export interface RuntimeConnectionTokenClaims {
   readonly citizenId: string;
   readonly runtimeId: string;
   readonly adminMode: boolean;
+  /**
+   * The OAuth grant of the desktop companion. Null for a token from a
+   * session of the app (the browser runtime).
+   */
+  readonly oauthGrantId: string | null;
 }
 
 export interface SignedRuntimeConnectionToken {
@@ -62,7 +71,13 @@ export interface SignedRuntimeConnectionToken {
  */
 export const signRuntimeConnectionToken = async (
   context: Pick<ApplicationContext, "signingKey" | "urls" | "now">,
-  { userId, citizenId, runtimeId, adminMode }: RuntimeConnectionTokenClaims,
+  {
+    userId,
+    citizenId,
+    runtimeId,
+    adminMode,
+    oauthGrantId,
+  }: RuntimeConnectionTokenClaims,
 ): Promise<SignedRuntimeConnectionToken> => {
   const signingKey = await requireSigningKey(
     context,
@@ -80,6 +95,7 @@ export const signRuntimeConnectionToken = async (
     citizen_id: citizenId,
     runtime_id: runtimeId,
     admin_mode: adminMode,
+    ...(oauthGrantId !== null && { grant_id: oauthGrantId }),
   })
     .setProtectedHeader({ alg: signingKey.algorithm, kid: signingKey.keyId })
     .setIssuer(context.urls.issuer)
@@ -101,6 +117,7 @@ const connectionTokenClaimsSchema = z.object({
   citizen_id: z.string().min(1),
   runtime_id: runtimeIdSchema,
   admin_mode: z.boolean(),
+  grant_id: z.string().min(1).optional(),
   exp: z.number(),
 });
 
@@ -176,6 +193,7 @@ export const verifyRuntimeConnectionToken = async (
     citizenId: claims.data.citizen_id,
     runtimeId: claims.data.runtime_id,
     adminMode: claims.data.admin_mode,
+    oauthGrantId: claims.data.grant_id ?? null,
     expiresAt: new Date(claims.data.exp * MILLISECONDS_PER_SECOND),
   };
 };

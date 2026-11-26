@@ -110,7 +110,7 @@ export enum RelayCloseReason {
   TooManyRuntimes = "too_many_runtimes",
   /**
    * The user is banned, or has no `remoteControlProgram;use` or no citizen
-   * any more
+   * any more, or the OAuth grant of the desktop companion is revoked
    */
   AccessDenied = "access_denied",
   /** The switch of the full Remote Control Program is off */

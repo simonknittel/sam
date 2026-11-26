@@ -4,6 +4,7 @@ import { withSpan } from "../withSpan.js";
 import { verifyAccessToken } from "./accessToken.js";
 import { MAX_URL_LENGTH } from "./constants.js";
 import { InvalidTokenError, SigningKeyUnavailableError } from "./errors.js";
+import { OAuthResource } from "./resources.js";
 import { revokeGrant } from "./revokeGrant.js";
 import { hashOpaqueToken } from "./secrets.js";
 
@@ -28,23 +29,21 @@ const findGrantOfToken = async (
   });
   if (refreshToken) return refreshToken.grant;
 
-  try {
-    const accessToken = await verifyAccessToken(context, token);
+  for (const resource of Object.values(OAuthResource))
+    try {
+      const accessToken = await verifyAccessToken(context, token, resource);
 
-    return {
-      id: accessToken.grantId,
-      userId: accessToken.userId,
-      clientId: accessToken.clientId,
-    };
-  } catch (error) {
-    if (
-      error instanceof InvalidTokenError ||
-      error instanceof SigningKeyUnavailableError
-    )
-      return null;
+      return {
+        id: accessToken.grantId,
+        userId: accessToken.userId,
+        clientId: accessToken.clientId,
+      };
+    } catch (error) {
+      if (error instanceof SigningKeyUnavailableError) return null;
+      if (!(error instanceof InvalidTokenError)) throw error;
+    }
 
-    throw error;
-  }
+  return null;
 };
 
 /**

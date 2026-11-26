@@ -5,8 +5,12 @@ import { FaCheck } from "react-icons/fa6";
 import { LOG_ENTRIES_HISTORY_TEXT } from "../../utils/remoteControlProgramTexts";
 import { SharingPopoverSection } from "./SharingPopoverSection";
 import {
+  BROWSER_RUNTIME_LOCATION,
+  getSharingPopoverLocationLabel,
   SHARING_POPOVER_TAB_LABELS,
+  SharingPopoverRuntimeTab,
   SharingPopoverTab,
+  type SharingPopoverLocation,
 } from "./SharingPopoverTab";
 import {
   SharingPopoverTopic,
@@ -30,8 +34,8 @@ enum RuntimeId {
 
 interface RuntimePart extends Part {
   readonly id: RuntimeId;
-  /** The tab with the settings of the runtime */
-  readonly tab?: SharingPopoverTab;
+  /** The sub-tab of the runtime */
+  readonly location: SharingPopoverLocation;
 }
 
 enum ConnectorSupport {
@@ -49,12 +53,16 @@ const RUNTIMES: readonly RuntimePart[] = [
     id: RuntimeId.Browser,
     name: "Browser",
     description: "Läuft, solange ein Tab mit SAM geöffnet ist",
-    tab: SharingPopoverTab.Browser,
+    location: BROWSER_RUNTIME_LOCATION,
   },
   {
     id: RuntimeId.DesktopCompanion,
     name: "Desktop Companion",
     description: "Ein Programm für Windows und Linux",
+    location: {
+      tab: SharingPopoverTab.Runtimes,
+      runtimeTab: SharingPopoverRuntimeTab.DesktopCompanion,
+    },
   },
 ];
 
@@ -91,13 +99,13 @@ const CONSUMERS: readonly ConsumerPart[] = [
 ];
 
 interface Props {
-  readonly onOpenTab: (tab: SharingPopoverTab) => void;
+  readonly onOpenLocation: (location: SharingPopoverLocation) => void;
 }
 
 /** What the Remote Control Program is, and what its parts do */
-export const StartSection = ({ onOpenTab }: Props) => {
-  const renderTabLink = (tab: SharingPopoverTab) => (
-    <TabLink tab={tab} onOpenTab={onOpenTab} />
+export const StartSection = ({ onOpenLocation }: Props) => {
+  const renderTabLink = (location: SharingPopoverLocation) => (
+    <TabLink location={location} onOpenLocation={onOpenLocation} />
   );
 
   return (
@@ -114,13 +122,13 @@ export const StartSection = ({ onOpenTab }: Props) => {
 
         <ol className="flex list-decimal flex-col gap-1 pl-5 text-sm text-neutral-400">
           <li>
-            Wähle unter {renderTabLink(SharingPopoverTab.Browser)} den Ordner
+            Wähle unter {renderTabLink(BROWSER_RUNTIME_LOCATION)} den Ordner
             deiner Star-Citizen-Installation aus.
           </li>
           <li>Wähle aus, welche Daten hochgeladen werden sollen.</li>
           <li>
-            Lege unter {renderTabLink(SharingPopoverTab.Grants)} fest, wer deine
-            Daten live sehen darf.
+            Lege unter {renderTabLink({ tab: SharingPopoverTab.Grants })} fest,
+            wer deine Daten live sehen darf.
           </li>
         </ol>
       </div>
@@ -133,7 +141,7 @@ export const StartSection = ({ onOpenTab }: Props) => {
             hochgeladen wird, entscheidest du selbst. Alles andere bleibt auf
             deinem Rechner.
           </p>
-          <SupportMatrix onOpenTab={onOpenTab} />
+          <SupportMatrix onOpenLocation={onOpenLocation} />
         </SharingPopoverTopic>
 
         <SharingPopoverTopic title="Consumer Apps">
@@ -146,8 +154,8 @@ export const StartSection = ({ onOpenTab }: Props) => {
             Eine Freigabe legt fest, wer deine Daten live sehen darf: ein
             bestimmter Citizen, alle mit bestimmten Rollen oder alle, die das
             Remote Control Program nutzen. Unter{" "}
-            {renderTabLink(SharingPopoverTab.Grants)} kannst du sie erstellen,
-            zeitlich begrenzen und jederzeit widerrufen.
+            {renderTabLink({ tab: SharingPopoverTab.Grants })} kannst du sie
+            erstellen, zeitlich begrenzen und jederzeit widerrufen.
           </p>
         </SharingPopoverTopic>
 
@@ -160,8 +168,8 @@ export const StartSection = ({ onOpenTab }: Props) => {
 
         <SharingPopoverTopic title="Status">
           <p>
-            Unter {renderTabLink(SharingPopoverTab.Status)} siehst du alle deine
-            verbundenen Runtimes.
+            Unter {renderTabLink({ tab: SharingPopoverTab.Status })} siehst du
+            alle deine verbundenen Runtimes.
           </p>
         </SharingPopoverTopic>
       </SharingPopoverTopicList>
@@ -170,30 +178,30 @@ export const StartSection = ({ onOpenTab }: Props) => {
 };
 
 interface TabLinkProps {
-  readonly tab: SharingPopoverTab;
-  readonly onOpenTab: (tab: SharingPopoverTab) => void;
-  /** The name of the tab by default */
+  readonly location: SharingPopoverLocation;
+  readonly onOpenLocation: (location: SharingPopoverLocation) => void;
+  /** The name of the tab and the sub-tab by default */
   readonly children?: ReactNode;
 }
 
-const TabLink = ({ tab, onOpenTab, children }: TabLinkProps) => {
+const TabLink = ({ location, onOpenLocation, children }: TabLinkProps) => {
   return (
     <button
       type="button"
-      onClick={() => onOpenTab(tab)}
+      onClick={() => onOpenLocation(location)}
       className="cursor-pointer text-interaction-500 hover:underline focus-visible:underline active:text-interaction-300"
     >
-      {children ?? SHARING_POPOVER_TAB_LABELS[tab]}
+      {children ?? getSharingPopoverLocationLabel(location)}
     </button>
   );
 };
 
 interface SupportMatrixProps {
-  readonly onOpenTab: (tab: SharingPopoverTab) => void;
+  readonly onOpenLocation: (location: SharingPopoverLocation) => void;
 }
 
 /** Which runtime supports which connector */
-const SupportMatrix = ({ onOpenTab }: SupportMatrixProps) => {
+const SupportMatrix = ({ onOpenLocation }: SupportMatrixProps) => {
   return (
     <table className="mt-1 w-full table-fixed border-collapse text-left">
       <caption className="sr-only">
@@ -206,13 +214,12 @@ const SupportMatrix = ({ onOpenTab }: SupportMatrixProps) => {
 
           {RUNTIMES.map((runtime) => (
             <th key={runtime.id} scope="col" className="px-2 pb-2 font-normal">
-              {runtime.tab ? (
-                <TabLink tab={runtime.tab} onOpenTab={onOpenTab}>
-                  {runtime.name}
-                </TabLink>
-              ) : (
-                <span className="text-neutral-200">{runtime.name}</span>
-              )}
+              <TabLink
+                location={runtime.location}
+                onOpenLocation={onOpenLocation}
+              >
+                {runtime.name}
+              </TabLink>
 
               <span className="block text-xs text-neutral-500">
                 {runtime.description}

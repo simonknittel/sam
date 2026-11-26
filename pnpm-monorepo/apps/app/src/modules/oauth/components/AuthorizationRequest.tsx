@@ -2,19 +2,21 @@ import { getApplicationContext, getRequestActor } from "@/modules/application";
 import {
   AuthorizationRequestValidationKind,
   buildAuthorizationResponseUrl,
-  canUseMcp,
+  canUseOAuthResource,
+  toOAuthResourceActor,
   validateAuthorizationRequest,
   type AuthorizationRequestParameters,
 } from "@sam-monorepo/application";
 import {
   ASSUMED_USER_MESSAGE,
-  CONSENT_UNAVAILABLE_MESSAGE,
   ConsentAvailability,
   getClientErrorMessage,
   getConsentAvailability,
+  getConsentUnavailableMessage,
   getRedirectErrorMessage,
-  MCP_ACCESS_MESSAGE,
+  getResourceAccessMessage,
 } from "../utils/consent";
+import { getOAuthResourceOfClientParameter } from "../utils/isOAuthResourceTurnedOff";
 import { AuthorizationConsent } from "./AuthorizationConsent";
 import { AuthorizationNotice } from "./AuthorizationNotice";
 
@@ -28,20 +30,29 @@ interface Props {
  * parameters, gets a link back to the client with the error (RFC 6749 section
  * 4.1.2.1). An automatic redirect would make the page an open redirector,
  * because each Client ID Metadata Document is a valid client.
+ *
+ * The client id selects the resource. The gates of the resource come before
+ * the validation, thus a user without the permission makes the app fetch no
+ * client document.
  */
 export const AuthorizationRequest = async ({
   parameters,
   isAssumedUser,
 }: Props) => {
-  if ((await getConsentAvailability()) !== ConsentAvailability.Available)
-    return <AuthorizationNotice message={CONSENT_UNAVAILABLE_MESSAGE} />;
+  const resource = getOAuthResourceOfClientParameter(parameters.client_id);
+  if (
+    (await getConsentAvailability(resource)) !== ConsentAvailability.Available
+  )
+    return (
+      <AuthorizationNotice message={getConsentUnavailableMessage(resource)} />
+    );
 
   if (isAssumedUser)
     return <AuthorizationNotice message={ASSUMED_USER_MESSAGE} />;
 
-  const actor = await getRequestActor();
-  if (!canUseMcp(actor))
-    return <AuthorizationNotice message={MCP_ACCESS_MESSAGE} />;
+  const actor = toOAuthResourceActor(await getRequestActor(), resource);
+  if (!canUseOAuthResource(actor, resource))
+    return <AuthorizationNotice message={getResourceAccessMessage(resource)} />;
 
   const context = getApplicationContext();
   const validation = await validateAuthorizationRequest(context, parameters);

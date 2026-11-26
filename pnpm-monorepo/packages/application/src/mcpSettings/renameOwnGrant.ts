@@ -9,6 +9,7 @@ import { NotFoundError } from "../errors.js";
 import { requireMcpAccess } from "../mcpAccess.js";
 import { idSchema } from "../pagination.js";
 import { withSpan } from "../withSpan.js";
+import { getOwnMcpGrantWhere } from "./ownMcpGrant.js";
 
 /** An empty name removes the own name: the list then shows the client name */
 export const grantCustomNameSchema = z
@@ -31,7 +32,7 @@ export const renameOwnGrant = (
     requireMcpAccess(actor);
 
     const grant = await context.prisma.oAuthGrant.findFirst({
-      where: { id: input.grant_id, userId: actor.userId, revokedAt: null },
+      where: { id: input.grant_id, ...getOwnMcpGrantWhere(context, actor) },
       select: { id: true, clientId: true, customName: true },
     });
     if (!grant) throw new NotFoundError("The grant does not exist");
