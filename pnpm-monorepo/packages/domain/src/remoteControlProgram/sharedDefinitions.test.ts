@@ -8,6 +8,8 @@ import {
 import {
   CAPABILITY_CATALOG,
   CONNECTOR_CATALOG,
+  DESKTOP_COMPANION_OPEN_URL,
+  DESKTOP_COMPANION_URL_SCHEME,
   RELAY_LIMITS,
   RuntimeKind,
 } from "./catalog.js";
@@ -86,6 +88,8 @@ describe("the export of the shared definitions", () => {
         connectors: Object.values(CONNECTOR_CATALOG).map(toSnakeCaseKeys),
         runtime_kinds: Object.values(RuntimeKind),
         relay_limits: toSnakeCaseKeys(RELAY_LIMITS),
+        desktop_companion_url_scheme: DESKTOP_COMPANION_URL_SCHEME,
+        desktop_companion_open_url: DESKTOP_COMPANION_OPEN_URL,
       }),
     ).toMatchFileSnapshot(`${DEFINITIONS}catalog.json`);
   });

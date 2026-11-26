@@ -1,10 +1,16 @@
 "use client";
 
+import {
+  Button2,
+  Button2Variant,
+} from "@/modules/common/components/Button2";
 import type {
   DesktopCompanionSignIn,
   OwnRuntime,
 } from "@sam-monorepo/application";
+import { DESKTOP_COMPANION_OPEN_URL } from "@sam-monorepo/domain";
 import type { ReactNode } from "react";
+import { FaUpRightFromSquare } from "react-icons/fa6";
 import { ConnectedDesktopCompanionListItem } from "./ConnectedDesktopCompanionListItem";
 import { DesktopCompanionSignInListItem } from "./DesktopCompanionSignInListItem";
 import {
@@ -32,7 +38,9 @@ interface Props {
  * The desktop companion comes later (step 5 of the migration). SAM has no
  * settings of it (decision 23), only the connected programs and the
  * sign-ins, for example of a test build. Each list shows only when it is not
- * empty.
+ * empty. A browser cannot tell whether the program is on this computer, thus
+ * the link that opens it (decision 37) shows only when the owner has a
+ * sign-in.
  */
 export const DesktopCompanionSection = ({
   serverState,
@@ -53,6 +61,8 @@ export const DesktopCompanionSection = ({
         Citizen und später auch Live-Daten über die gRPC-Schnittstelle des
         Spiels. Was es hochlädt, entscheidest du im Programm.
       </p>
+
+      {signIns && signIns.length > 0 && <OpenDesktopCompanionLink />}
 
       {serverState}
 
@@ -81,3 +91,22 @@ export const DesktopCompanionSection = ({
     </SharingPopoverSection>
   );
 };
+
+/** The program starts, or the copy that runs opens its window */
+const OpenDesktopCompanionLink = () => (
+  <div className="flex flex-col gap-1">
+    <Button2
+      as="a"
+      href={DESKTOP_COMPANION_OPEN_URL}
+      variant={Button2Variant.Secondary}
+      className="self-start"
+    >
+      <FaUpRightFromSquare aria-hidden />
+      Desktop Companion öffnen
+    </Button2>
+    <p className="text-xs text-neutral-500">
+      Öffnet das Programm auf diesem Rechner. Dein Browser fragt beim ersten
+      Mal, ob er es öffnen darf.
+    </p>
+  </div>
+);

@@ -131,6 +131,17 @@ export interface ConnectorDefinition {
   readonly capabilityIds: readonly CapabilityId[];
 }
 
+/**
+ * The URL scheme of the desktop companion (decision 37). The program
+ * registers it for the user of the operating system. A link to
+ * `DESKTOP_COMPANION_OPEN_URL` starts the program, or opens the window of
+ * the copy that runs. The program accepts only this URL: a different path or
+ * a parameter does nothing, because each website can open such a link.
+ */
+export const DESKTOP_COMPANION_URL_SCHEME = "sam-desktop-companion";
+
+export const DESKTOP_COMPANION_OPEN_URL = `${DESKTOP_COMPANION_URL_SCHEME}://open`;
+
 export const CONNECTOR_CATALOG: Readonly<
   Record<ConnectorId, ConnectorDefinition>
 > = {

@@ -270,6 +270,10 @@ test.describe("the sub-tab of the desktop companion", () => {
     await expect(
       section.getByRole("heading", { name: "Anmeldungen" }),
     ).toHaveCount(0);
+    const openLink = (container: typeof section) =>
+      container.getByRole("link", { name: "Desktop Companion öffnen" });
+    /** Without a sign-in, the owner has no program that the link could open */
+    await expect(openLink(section)).toHaveCount(0);
 
     const authorization = await authorizeDesktopCompanion(owner.user);
     await page.goto("/app/dashboard");
@@ -277,6 +281,10 @@ test.describe("the sub-tab of the desktop companion", () => {
     const signIns = signedInSection.getByRole("listitem");
     await expect(signIns).toHaveCount(1);
     await expect(signIns).toContainText("Chrome");
+    await expect(openLink(signedInSection)).toHaveAttribute(
+      "href",
+      "sam-desktop-companion://open",
+    );
 
     await signIns.getByRole("button", { name: "Abmelden" }).click();
     const confirmation = page.getByRole("alertdialog", {
