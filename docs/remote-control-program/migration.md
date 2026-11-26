@@ -3,25 +3,39 @@
 > [!NOTE]
 > This document describes the way from the state of SAM in 2026-11 to the architecture in [Remote Control Program](./README.md). Each step gets its own implementation plan. When all steps are done, remove this document. The architecture document stays.
 
-In this document, "decision 13 of the architecture" refers to the [decisions of the architecture](./README.md#decisions). "M1" to "M8" are the [decisions of the migration](#decisions-of-the-migration).
+In this document, "decision 13 of the architecture" refers to the [decisions of the architecture](./README.md#decisions). "M1" to "M11" are the [decisions of the migration](#decisions-of-the-migration).
 
 ## Order of the steps
 
 This is not a plan. Each step gets its own implementation plan. The order can change.
 
+On 2026-11-26, the old step 3 ("States, desktop companion and gRPC connector") became the steps 3 to 5, and the old step 4 (the lineup status) became a part of step 4 (M10). The old steps 5 and 6 are now the steps 6 and 7.
+
 1. **Database:** PostgreSQL with TimescaleDB (decision 13 of the architecture), and the move of the SAM databases to such a server (see [The move of the databases](#the-move-of-the-databases)). Done on 2026-11-21 ([#2252](https://github.com/simonknittel/sam/pull/2252)).
-2. **Foundation and Log Analyzer:**
+2. **Foundation and Log Analyzer:** done on 2026-11-26.
    - The relay service with the WebSocket connection of the runtimes (decision 14 of the architecture), the announcement, the catalog, feeds, grants, and the delivery to the consumers through Soketi. No states (M5).
    - The browser runtime with the log file connector, the local access layer and the sharing popover.
    - The Log Analyzer as a control UI (see [The Log Analyzer](#the-log-analyzer)), the reset of the sharing with an entry in the changelog (M1), and the migration of the stored log entries (M3).
    - The new Log Analyzer replaces the old one in one deployment (M2). The shared test data makes sure that the new log file connector finds the same entries as the old parser.
-3. **States, desktop companion and gRPC connector:**
+3. **Desktop companion with the log file connector:**
+   - The repository of the desktop companion (decision 32 of the architecture), the export of the shared definitions in SAM, and the sync of the definitions into the repository of the desktop companion.
+   - The changes of the OAuth server (see [Changes of existing parts](#changes-of-existing-parts)), the connection token for the desktop companion, the runtime kind of the desktop companion, and the version 2 of the protocol with the read of the own entry keys (decision 34 of the architecture).
+   - The Rust program with GPUI (decision 33 of the architecture) for Windows and Linux: the native OAuth client, the channel client, the log file connector (`log_entries`), the local access layer with the live periods and the upload of older entries, the tray icon and the start with the operating system.
+   - In the sharing popover, the tab "Runtimes" with one sub-tab for each runtime. The sub-tab of the desktop companion tells that the program comes soon, and lists the sign-ins of the desktop companion of the owner.
+   - No distribution of the program (M9), and no entry in the changelog.
+4. **gRPC connector, states and lineup status:**
    - First, an estimate of the sizes: the connections, the messages and the rows of the history for each day.
    - The relay for states, the current state and the history in TimescaleDB: the first hypertable, and the changes of the mirror scripts for hypertables (see [Mirror the database](../mirror-database.md)).
-   - The Rust program for Windows and Linux, the shared definitions and test data, the changes of the OAuth server (see [Changes of existing parts](#changes-of-existing-parts)), the native OAuth client, the first gRPC capabilities (for example `player_vitals`; `ship_status` and the death states need a test of the `vehicle` and `events` frames first), and the log file connector in the desktop companion (`log_entries`).
-4. **Lineup status:** the control UI in the lineup of an event (see [Lineup status](./README.md#lineup-status)), the grantee kind "Event participants", and the access requests with their notification (M6).
-5. **Actions:** the down channel, the action lifecycle, "ask each time", the action log, and the first action through the gRPC interface.
-6. **AI agents:** the MCP read tools first, the action tool later.
+   - The gRPC connector in the desktop companion and the first gRPC capabilities (for example `player_vitals`; `ship_status` and the death states need a test of the `vehicle` and `events` frames first).
+   - The lineup status as the first control UI of the states (see [Lineup status](./README.md#lineup-status), M10), the grantee kind "Event participants", and the access requests with their notification (M6).
+   - Still no distribution of the program (M9). Open question for the plan of this step: does the lineup status show before step 5, when no citizen can download the desktop companion? Recommendation: show the status of the positions, but show the suggestion to share the own status only from step 5.
+5. **Public distribution of the desktop companion:**
+   - The releases of the desktop companion: the versions, the GitHub releases, the signature of the updates with a key that only the release process holds, and the update function of the program (see [Desktop companion](./README.md#desktop-companion)).
+   - The repository of the desktop companion becomes public, with a license.
+   - Windows: the portable `.exe` without a code signing certificate (decision 25 of the architecture), and a guide for the warning of Windows at the first start. Linux: the AppImage, with a note that the project does not test it (M11).
+   - In SAM: the download in the sub-tab of the desktop companion, the matrix of the start tab, the guides and an entry in the changelog.
+6. **Actions:** the down channel, the action lifecycle, "ask each time", the action log, and the first action through the gRPC interface.
+7. **AI agents:** the MCP read tools first, the action tool later.
 
 ## The Log Analyzer
 
@@ -44,7 +58,8 @@ The Log Analyzer moves completely into the Remote Control Program. No old path s
 
 ## Changes of existing parts
 
-- **OAuth server:** today, it issues tokens only for the MCP server. The audience is the URL of the MCP server, `mcp` is the only scope, and the consent and the token endpoint require `mcp;use`. Step 3 adds the relay service as a resource with its own audience and scope, a consent with `remoteControlProgram;use`, and the Client ID Metadata Document of the desktop companion (see [Desktop companion](./README.md#desktop-companion)).
+- **OAuth server:** today, it issues tokens only for the MCP server. The audience is the URL of the MCP server, `mcp` is the only scope, and the consent and the token endpoint require `mcp;use`. Step 3 adds the Remote Control Program as a resource with its own audience and scope, a consent with `remoteControlProgram;use`, and the Client ID Metadata Document of the desktop companion (see [Desktop companion](./README.md#desktop-companion) and decision 35 of the architecture). The Unleash flag `DisableMcpServer` then stops only the MCP resource, and `DisableRemoteControlProgram` stops the resource of the Remote Control Program.
+- **The app KI-Agenten:** it lists the OAuth grants of the user. From step 3, it lists only the grants of the MCP server. The sub-tab of the desktop companion in the sharing popover lists the grants of the desktop companion.
 - **Ban:** today, a ban closes the connections of Soketi and of the wiki editor. Step 2 adds the connections of the relay service.
 - **Permissions:** the existing permissions do not change (M4).
 
@@ -58,16 +73,19 @@ Done on 2026-11-21:
 
 ## Decisions of the migration
 
-M1 to M4 are decisions of 2026-11-21. M5 to M7 are decisions of 2026-11-22. M8 is a decision of 2026-11-25.
+M1 to M4 are decisions of 2026-11-21. M5 to M7 are decisions of 2026-11-22. M8 is a decision of 2026-11-25. M9 to M11 are decisions of 2026-11-26.
 
 - **M1: The sharing starts from zero.** The deployment of step 2 resets all share settings of the Log Analyzer. The browser runtime ignores and removes the old browser storage `log_analyzer_share_types`. No grant comes from the old sharing. After the deployment, no citizen sees the live entries of an owner until the owner makes a grant. The entries from before are history: each citizen who can open the Log Analyzer sees them (decision 31 of the architecture). The changelog of SAM announces the change.
 - **M2: The new Log Analyzer replaces the old one in one deployment.** No version runs next to the old one, and no Unleash flag switches between them. The move of the databases is a separate step before it (step 1).
 - **M3: A migration removes the IP addresses from the stored log entries.** The rows of `LogAnalyzerEntry` from before decision 22 of the architecture contain IP addresses. The migration of step 2 replaces them once with the marker of decision 22, and calculates the new hash (see [Log Analyzer](./README.md#log-analyzer)). When two rows of the same owner then have the same hash, the migration keeps the oldest row. This is the only change of existing rows. It is a SQL migration, and a test compares its result with the TypeScript rule on the shared test data.
 - **M4: No migration of the permissions.** The existing permissions do not change, and no migration gives `remoteControlProgram;use` to roles. The admins assign it.
-- **M5: No states in step 2.** In step 2, no connector supplies a state: the browser runtime has only the log file connector, and `log_entries` is a feed. Thus the relay for states, the history in TimescaleDB and the estimate of the history rows are a part of step 3, together with the first state of the gRPC connector.
+- **M5: No states in step 2.** In step 2, no connector supplies a state: the browser runtime has only the log file connector, and `log_entries` is a feed. Thus the relay for states, the history in TimescaleDB and the estimate of the history rows are a part of step 4, together with the first state of the gRPC connector.
 - **M6: The access requests are a part of step 4.** In the Log Analyzer, a viewer sees only the owners that made a grant. The lineup status is the first control UI that knows whose data it wants. Until then, only the owner makes grants.
 - **M7: The Log Analyzer needs both permissions.** `logAnalyzer;read` and `remoteControlProgram;use`, also for the own log on the machine. Without them, the page is gated.
 - **M8: No withdrawal of stored data.** No step of the migration gives the owner a function to withdraw or delete stored data (decisions 12 and 30 of the architecture).
+- **M9: No distribution of the desktop companion before step 5.** From step 3, SAM and the relay service accept the desktop companion: the login, the connection, the upload and the display of the data. But only the owner of SAM uses the program, with builds from the private repository (decision 32 of the architecture). The releases, the update function and the download come in step 5.
+- **M10: The lineup status comes with the gRPC connector.** The first states need a control UI that shows them. Thus step 4 contains the lineup status, the grantee kind "Event participants" and the access requests. Before, the lineup status was a separate step after the gRPC connector.
+- **M11: The Linux version has no manual tests.** Nobody in the project can test the desktop companion on Linux. The continuous integration builds and tests the Linux version, and step 5 releases the AppImage with a note that the project does not test it. Decision 3 of the architecture does not change.
 
 ## Related follow-ups
 

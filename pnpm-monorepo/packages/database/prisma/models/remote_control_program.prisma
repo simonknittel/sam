@@ -56,7 +56,7 @@ model ShareGrant {
   /// An unknown value gives no access.
   capabilityIds    String[]
   /// Values of `GrantOperation` of the domain: "read" in step 2, "request"
-  /// for actions in step 5. Text for the same reason as `capabilityIds`. An
+  /// for actions in step 6. Text for the same reason as `capabilityIds`. An
   /// unknown value gives no access.
   operations       String[]
   /// The time of the relay. Can be in the past (decision 8).

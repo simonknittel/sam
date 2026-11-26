@@ -26,7 +26,7 @@ export { GranteeKind };
  */
 export const MAXIMUM_GRANTEE_ROLES = 50;
 
-/** The operation "request" for actions comes in step 5 */
+/** The operation "request" for actions comes in step 6 */
 export enum GrantOperation {
   Read = "read",
 }

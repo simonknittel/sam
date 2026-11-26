@@ -39,7 +39,7 @@ export enum CapabilityId {
   LogEntries = "log_entries",
 }
 
-/** The kinds "state" (step 3) and "action" (step 5) come later */
+/** The kinds "state" (step 4) and "action" (step 6) come later */
 export enum CapabilityKind {
   /** Entries that the relay appends. Each entry has a time and a unique key. */
   Feed = "feed",

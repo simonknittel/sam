@@ -1,7 +1,7 @@
 # Remote Control Program
 
 > [!NOTE]
-> This document describes the architecture of the Remote Control Program. In 2026-11, the implementation is in progress: step 2 of the [migration](./migration.md#order-of-the-steps) builds the relay service and the browser runtime. [Migration](./migration.md) describes the steps from the current state of SAM to this architecture. When a plan or the code changes a decision, update this document. "Remote Control Program" is a working title, and the code can use it (see [Decisions](#decisions)).
+> This document describes the architecture of the Remote Control Program. In 2026-11, the implementation is in progress: the steps 1 and 2 of the [migration](./migration.md#order-of-the-steps) are done, and step 3 builds the desktop companion with the log file connector. [Migration](./migration.md) describes the steps from the current state of SAM to this architecture. When a plan or the code changes a decision, update this document. "Remote Control Program" is a working title, and the code can use it (see [Decisions](#decisions)).
 
 The Remote Control Program connects the Star Citizen game client on the machine of a user with SAM. It moves the state of the game client (for example the health, the location or the log entries) to SAM. It moves actions from SAM to the game client (for example "open the doors of my ship"). The user decides what leaves the machine, who in SAM can read it, and which actions the game client applies.
 
@@ -136,16 +136,17 @@ Each part of the Remote Control Program obeys these rules.
 
 ### Desktop companion
 
-- A separate Rust program (see [Decisions](#decisions)). Its local access layer protects also against a compromised SAM deployment, because SAM cannot change the code or the rules on the machine. This is true only when SAM cannot deliver a changed program or changed rules:
+- A separate Rust program in a separate repository (decisions 2 and 32). Its UI uses GPUI (decision 33). Its local access layer protects also against a compromised SAM deployment, because SAM cannot change the code or the rules on the machine. This is true only when SAM cannot deliver a changed program or changed rules:
   - Each update has a signature with a key that only the release process holds, not the SAM deployment. The desktop companion verifies the signature before it installs an update. This signature is separate from a code signing certificate of Windows (decision 25).
   - The catalog of the actions is compiled into the program. SAM cannot change it at runtime.
 - Only one copy of the program runs for each folder of settings (a lock). Two copies would use the same refresh token, and the reuse of a refresh token revokes the OAuth grant (see [OAuth design](../mcp-server.md#oauth-design)).
 - It supports Windows and Linux. It is a portable program without an installation (see decision 20). The releases, the updates and the tray icon must work on both operating systems.
 - It connects directly to SAM, not through a browser tab. Thus it works without an open tab.
 - It signs in with OAuth 2.1 as a native client of the authorization server of SAM (see [OAuth design](../mcp-server.md#oauth-design)): the authorization code grant with PKCE and a loopback redirect.
-  - The relay service is a resource of the authorization server, with its own audience (resource indicators, RFC 8707) and its own scope.
+  - The Remote Control Program is a resource of the authorization server, with its own audience (resource indicators, RFC 8707) and its own scope. With its access token, the desktop companion gets the connection tokens from the app. Only the desktop companion of SAM can get this resource (decision 35).
   - The consent requires `remoteControlProgram;use`, not `mcp;use`.
   - The client id of the desktop companion is a Client ID Metadata Document on an HTTPS URL of SAM.
+  - The refresh token is in the credential store of the operating system (decision 36).
 - It contains the log file connector next to the gRPC connector. The log file connector supplies `log_entries`, and uploads them only when the local access layer permits it.
 - Its UI controls the local access layer. It asks the questions of "ask each time". It shows no data of the game: the control UIs in SAM show the data.
 
@@ -417,11 +418,13 @@ The grantee kinds:
 ## Sharing popover
 
 - An item in the top bar (`apps/app/src/modules/shell/components/TopBar/`) and, on a mobile device, in the flyout of the action bar, where it opens a bottom sheet. In both places, it is left of the support button. It follows the notifications popover.
-- It has a tab for each of these sections. Without a log folder, the popover opens with the start. Else it opens with the browser. When a control UI opens the popover, it shows the tab that the control UI names, for example the browser for the log folder. The tab of the browser is apart from the other tabs, because it contains the settings of one runtime.
+- It has a tab for each of these sections. Without a log folder, the popover opens with the start. Else it opens with the sub-tab of the browser. When a control UI opens the popover, it shows the tab that the control UI names, for example the sub-tab of the browser for the log folder. The tab of the runtimes is apart from the other tabs, because it contains the settings of the runtimes.
   1. **Start:** what the Remote Control Program is, and what the runtimes, the connectors, the consumer apps (the available and the planned ones), the grants and the stored data are, from the view of the owner. A matrix shows which runtime supports which connector. Links open the other tabs.
   2. **Status:** the connected runtimes of the owner and their active connectors. A connector is active when at least one of its capabilities leaves the machine.
   3. **Grants:** the grants with their remaining time, a form for a new grant, and the open access requests.
-  4. **Runtime: Browser:** the settings of the browser runtime in this browser (its state, the start and the stop, the autostart), and, below the heading "Connectors", one collapsible part for each connector with its rules of the local access layer (for the game logs: a closed part with the instructions, the log folder, the types, and a closed part for the upload of the older entries of a date range). A part is open at first only when the owner must do something in it. A note when the browser runtime needs a click (for example to give the file access again). SAM has no settings of the desktop companion: the owner changes them in the desktop companion (decision 23).
+  4. **Runtimes:** one sub-tab for each runtime.
+     - **Browser:** the settings of the browser runtime in this browser (its state, the start and the stop, the autostart), and, below the heading "Connectors", one collapsible part for each connector with its rules of the local access layer (for the game logs: a closed part with the instructions, the log folder, the types, and a closed part for the upload of the older entries of a date range). A part is open at first only when the owner must do something in it. A note when the browser runtime needs a click (for example to give the file access again).
+     - **Desktop Companion:** the sign-ins of the desktop companion of the owner, each with a sign-out, and from step 5 of the [migration](./migration.md#order-of-the-steps) the download. SAM has no settings of the desktop companion: the owner changes them in the desktop companion (decision 23).
   5. **Action log:** the action requests to the runtimes of the owner, with their results (see [Action log](#action-log)). This includes the requests that the relay refused.
 - The item of the popover, and the item "Apps" of the action bar, have a mark when the browser runtime needs a click. Thus the owner sees it also while the popover is closed.
 - A control UI never has its own UI for access. When it needs an access, it opens the sharing popover with a prepared request. Examples:
@@ -498,18 +501,19 @@ The MCP server is stateless and has no subscriptions (see [MCP Server](../mcp-se
 
 ## Location in the repository
 
-The paths of the pnpm monorepo are relative to `pnpm-monorepo/`. The runtime package and the app module come with the browser runtime in step 2, the Rust project comes in step 3, and the MCP tools come in step 6 (see the [order of the steps](./migration.md#order-of-the-steps)). Update this table and [Architecture](../architecture.md) when a location changes.
+The paths of the pnpm monorepo are relative to `pnpm-monorepo/`. The runtime package and the app module come with the browser runtime in step 2, the repository of the desktop companion and the export of the shared definitions come in step 3, and the MCP tools come in step 7 (see the [order of the steps](./migration.md#order-of-the-steps)). Update this table and [Architecture](../architecture.md) when a location changes.
 
 | Location | Content |
 | - | - |
-| `packages/domain/src/remoteControlProgram/` | The catalog of the capabilities, the protocol of the relay service, the pure rules of the grants, the rule for the IP addresses and the hash of the feed entries. Step 3 adds the export of the shared definitions for Rust. The patterns of the Log Analyzer stay in `packages/domain/src/logAnalyzer/`. |
+| `packages/domain/src/remoteControlProgram/` | The catalog of the capabilities, the protocol of the relay service, the pure rules of the grants, the rule for the IP addresses and the hash of the feed entries. The patterns of the Log Analyzer stay in `packages/domain/src/logAnalyzer/`. |
+| `remote-control-program-definitions/` next to `pnpm-monorepo/` | The export of the shared definitions for Rust (decision 5): the JSON Schema of the protocol and the catalog, the patterns of the log file, and the German labels of the log entry types for the UI of the desktop companion. A script of SAM makes it, and a test makes sure that it is current (decision 32). |
 | `packages/application/src/remoteControlProgram/` | The use cases of the relay. |
 | `packages/remote-control-program-runtime` | The core of the browser runtime: the TypeScript connectors (in step 2 only the log file connector, thus no shared base types of the connectors), the local access layer, the channel client, and their orchestration (`BrowserRuntime`) with the store of the own entries. No `next` and no `react`. |
 | `apps/app/src/modules/remote-control-program/` | The parts of the browser runtime that need the browser or the app: the election of the tab with the Web Locks API, the BroadcastChannel between the tabs, the handle of the log folder and the token source. Also the consumer client and the sharing popover. |
 | `packages/mcp/src/tools/remoteControlProgram/` | The MCP tools. |
 | `apps/relay` | The relay service: a Node.js container, like `apps/collab`. |
-| A Rust project next to `pnpm-monorepo/`, for example `companion/` | The desktop companion. It is not a part of the pnpm monorepo. |
-| `remote-control-program-fixtures/` next to `pnpm-monorepo/` | The shared test data for the TypeScript and the Rust implementations. |
+| The repository `sam-desktop-companion` | The desktop companion (decision 32). It is private until step 5 of the migration. |
+| `remote-control-program-fixtures/` next to `pnpm-monorepo/` | The shared test data for the TypeScript and the Rust implementations. The repository of the desktop companion gets a copy (decision 32). |
 
 ## Operations and tests
 
@@ -545,7 +549,7 @@ These ideas have no use case or no reliable source yet. They are not part of the
 
 ## Decisions
 
-Decisions 1 to 26 are of 2026-11-21, except decision 23. Decisions 27 to 29 are of 2026-11-22. Decisions 23, 30 and 31 are of 2026-11-25. Decision 30 also changed decisions 8 and 12. The decisions that apply only to the migration are in [Migration](./migration.md#decisions-of-the-migration).
+Decisions 1 to 26 are of 2026-11-21, except decision 23. Decisions 27 to 29 are of 2026-11-22. Decisions 23, 30 and 31 are of 2026-11-25. Decisions 32 to 36 are of 2026-11-26. Decision 30 also changed decisions 8 and 12. The decisions that apply only to the migration are in [Migration](./migration.md#decisions-of-the-migration).
 
 1. **Name.** The working title is "Remote Control Program". The code can use it, for example `remoteControlProgram` and `remote_control_program`.
 2. **Rust for the desktop companion.** It uses little memory and processor time while the game runs. It has a mature native gRPC client. It builds one executable file for each operating system, without a separate runtime. Result: the log file connector and the catalog need one definition for TypeScript and Rust (principle 11, decision 5).
@@ -588,7 +592,7 @@ Decisions 1 to 26 are of 2026-11-21, except decision 23. Decisions 27 to 29 are 
     "Ask each time" uses a small window of the program, not a notification of the operating system. On Windows, these notifications need a registered app identity (AppUserModelID), which an installation normally makes. Add an installer only when a need appears.
 21. **Consumers derive, connectors upload raw values** (principle 15). Derived values are specific to a consumer. Thus the connectors stay small, and the Rust connector needs no second implementation of a derivation. A derivation that more than one consumer needs goes into `domain` as a shared helper.
 22. **No IP addresses leave the machine.** The log file connector replaces each IP address in a raw line with a fixed marker before the upload. The marker keeps the server check of the patterns valid, because no pattern captures an IP address in a named group. The rule for the marker is a part of the shared definitions (decision 5), thus TypeScript and Rust give the same line and the same hash. The relay refuses a line that still contains an IP address.
-23. **SAM does not control the runtimes.** No "Stop all" and no emergency stop: SAM does not start, stop or configure a runtime, and stores no stop. The owner does this where the runtime runs. From SAM, the owner can revoke a grant, which ends the live access at once, and can end the session of a different device in the account: its runtime then gets no new token. The switches of the organization (see [Switches](#switches)) are not a control of a single runtime: they turn off a connector or a capability for everyone. The action requests (step 5 of the [migration](./migration.md)) are not a control of the runtime: its local access layer decides on each request. (Changed on 2026-11-25.)
+23. **SAM does not control the runtimes.** No "Stop all" and no emergency stop: SAM does not start, stop or configure a runtime, and stores no stop. The owner does this where the runtime runs. From SAM, the owner can revoke a grant, which ends the live access at once, and can end the session of a different device in the account: its runtime then gets no new token. The switches of the organization (see [Switches](#switches)) are not a control of a single runtime: they turn off a connector or a capability for everyone. The action requests (step 6 of the [migration](./migration.md)) are not a control of the runtime: its local access layer decides on each request. (Changed on 2026-11-25.)
 24. **Permissions.** One permission for the use of the Remote Control Program: `remoteControlProgram;use`. An owner needs it to connect a runtime, and a consumer needs it to read or to request. Each consumer can have its own permission for what it shows (for example `logAnalyzer;read` for the Log Analyzer). The Log Analyzer needs both permissions, also for the own log on the machine.
 25. **No code signing certificate for Windows.** The releases have no certificate for the code signing of Windows, thus Windows shows a warning at the first start. SAM tells the users how to start the program, and what the risks are.
 26. **No location in the lineup status for now.** The gRPC interface supplies no location, and a location from `log_entries` would need a grant for all uploaded log entries (decision 10). See [Ideas](#ideas).
@@ -597,6 +601,19 @@ Decisions 1 to 26 are of 2026-11-21, except decision 23. Decisions 27 to 29 are 
 29. **Environments of the relay service.** Production and the local stack (Docker Compose and the Playwright stack). The relay service must run fully with the rest of the local stack. The preview deployments have no relay service.
 30. **The grants apply only to the live data.** The end of a grant, its grantee and its revocation limit only the live data and the actions. The consumers control the access to the stored data with their own permissions and their own minimum age. Reason: historical statistics do not work when the stored data disappears with the end of a grant.
 31. **The history of the Log Analyzer.** The minimum age is 2 hours, from the time of the observation. The permission is `logAnalyzer;read` for now. A separate permission can come later (see [Ideas](#ideas)).
+32. **A separate repository for the desktop companion.** One repository for each ecosystem: Rust has its own tools, its own continuous integration and its own releases. The repository `sam-desktop-companion` is private until step 5 of the [migration](./migration.md#order-of-the-steps), and then public. SAM stays the source of the shared definitions and of the shared test data (principle 11):
+    - A script of SAM exports the shared definitions into `remote-control-program-definitions/`. A test makes sure that the export is current.
+    - A scheduled workflow of the repository of the desktop companion copies the export and the shared test data from the latest release tag of SAM. When they changed, it opens a pull request.
+    - Reason for the release tag: production runs these definitions already. The relay service accepts older protocol versions, and the patterns only get more, thus an older copy works. A copy that is newer than production does not work.
+    - Result: a change on both sides (for example a new protocol version) needs a pull request in SAM first, and one in the repository of the desktop companion after the release of SAM.
+33. **GPUI for the UI of the desktop companion,** with the components of GPUI Kit. Reasons: the repository contains only Rust (no web frontend), and the program uses little memory next to the game. Results:
+    - The API of GPUI changes often. The project pins exact versions and upgrades them on purpose.
+    - A Windows build needs Windows: the shaders of GPUI compile with `fxc.exe` of the Windows SDK. A build in WSL2 cannot make the Windows program.
+    - GPUI has no tray icon. A separate crate supplies it.
+    - While the program is only in the tray, it closes its window and stops rendering. An open window of GPUI uses processor time at each frame of the display.
+34. **The own entry keys through the protocol.** The desktop companion has no session of the app. Thus version 2 of the protocol adds a request for the keys of the own feed entries in a time window (see `findOwnFeedEntryKeys`). The runtime needs them for the upload after a start and for the count of older entries. The browser runtime continues to get the keys from the app, with version 1 of the protocol.
+35. **Only the desktop companion of SAM gets the resource of the Remote Control Program.** The authorization server issues tokens for this resource only to the client id of the desktop companion. Thus a different OAuth client (for example an MCP client) cannot act as a runtime. The authorization server knows the Client ID Metadata Document of the desktop companion and does not fetch it. Admin mode is always off for the desktop companion: an admin needs `remoteControlProgram;use`.
+36. **The refresh token of the desktop companion is in the credential store of the operating system:** the Windows Credential Manager, or the Secret Service on Linux. Without a credential store, the program keeps the token only in memory, and the owner logs in again at each start.
 
 ## Open questions
 
