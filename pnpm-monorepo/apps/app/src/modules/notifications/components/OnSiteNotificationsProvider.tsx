@@ -54,8 +54,9 @@ interface OnSiteNotificationsContext {
   readonly adjustUnreadCount: (delta: number) => void;
   /**
    * Whether the inbox must open by itself: on the page load with unread
-   * notifications, and when a new notification arrives. The request stays
-   * pending until the inbox surface of the current viewport opens, see
+   * notifications, and when a new notification arrives. Never while the
+   * citizen has switched off the automatic opening. The request stays pending
+   * until the inbox surface of the current viewport opens, see
    * `useInboxOpenState()`.
    */
   readonly isInboxOpenRequested: boolean;
@@ -69,6 +70,7 @@ const OnSiteNotificationsContext = createContext<
 interface Props {
   readonly children: ReactNode;
   readonly initialUnreadCount: number;
+  readonly isInboxAutoOpenEnabled: boolean;
 }
 
 /**
@@ -78,6 +80,7 @@ interface Props {
 export const OnSiteNotificationsProvider = ({
   children,
   initialUnreadCount,
+  isInboxAutoOpenEnabled,
 }: Props) => {
   const { data: unreadCount } = api.onSiteNotifications.unreadCount.useQuery(
     undefined,
@@ -105,6 +108,13 @@ export const OnSiteNotificationsProvider = ({
   const [isInboxOpenRequested, setIsInboxOpenRequested] = useState(
     initialUnreadCount > 0,
   );
+  /**
+   * While the setting is off, each request ends at once: the request of the
+   * page load, the request of a new notification, and a pending request when
+   * the citizen switches the setting off on the open page
+   */
+  if (isInboxOpenRequested && !isInboxAutoOpenEnabled)
+    setIsInboxOpenRequested(false);
 
   const settleInboxOpenRequest = () => {
     setIsInboxOpenRequested(false);

@@ -2368,6 +2368,17 @@ export const AuditEventDefinitions: {
       `Notification settings updated: ${data.enabled.length} enabled, ${data.disabled.length} disabled`,
   },
 
+  [AuditEventType.INBOX_AUTO_OPEN_SETTING_UPDATED]: {
+    type: AuditEventType.INBOX_AUTO_OPEN_SETTING_UPDATED,
+    app: SystemLogApp.Notifications,
+    data: {
+      citizenId: "string",
+      enabled: false,
+    },
+    message: (data) =>
+      `Citizen ${data.citizenId} switched the automatic opening of the inbox ${data.enabled ? "on" : "off"}`,
+  },
+
   [AuditEventType.ON_SITE_NOTIFICATIONS_CREATED]: {
     type: AuditEventType.ON_SITE_NOTIFICATIONS_CREATED,
     app: SystemLogApp.Notifications,

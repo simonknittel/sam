@@ -60,6 +60,7 @@ export { NotificationErrorMessage } from "./notificationErrors.js";
 export {
   countOwnUnreadOnSiteNotifications,
   findOwnNotificationSettings,
+  isOwnInboxAutoOpenEnabled,
   listOwnWebPushSubscriptions,
   type OwnNotificationSetting,
   type OwnWebPushSubscription,
@@ -78,6 +79,12 @@ export {
   type UnarchiveOnSiteNotificationInput,
   type UnarchiveOnSiteNotificationOutput,
 } from "./unarchiveOnSiteNotification.js";
+export {
+  updateInboxAutoOpenSetting,
+  updateInboxAutoOpenSettingInputSchema,
+  type UpdateInboxAutoOpenSettingInput,
+  type UpdateInboxAutoOpenSettingOutput,
+} from "./updateInboxAutoOpenSetting.js";
 export {
   updateNotificationSettings,
   updateNotificationSettingsInputSchema,

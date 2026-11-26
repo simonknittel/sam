@@ -1,21 +1,26 @@
 "use client";
 
+import type { ActionResponse } from "@/modules/actions/utils/createAction";
 import { runAction } from "@/modules/actions/utils/runAction";
 import clsx from "clsx";
 import { debounce } from "lodash";
 import { useEffect, type FormEvent, type ReactNode } from "react";
-import { updateMyNotificationSettings } from "../actions/updateMyNotificationSettings";
 
 interface Props {
   readonly children: ReactNode;
   readonly className?: string;
+  readonly action: (formData: FormData) => Promise<ActionResponse>;
 }
 
-export const NotificationSettingsForm = ({ children, className }: Props) => {
+export const NotificationSettingsForm = ({
+  children,
+  className,
+  action,
+}: Props) => {
   const submit = debounce((form: HTMLFormElement) => {
     const formData = new FormData(form);
 
-    void runAction(updateMyNotificationSettings, formData);
+    void runAction(action, formData);
   }, 1000);
 
   /**

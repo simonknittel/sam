@@ -299,6 +299,7 @@ export enum AuditEventType {
   REMOTE_CONTROL_PROGRAM_SHARE_GRANT_REVOKED = "REMOTE_CONTROL_PROGRAM_SHARE_GRANT_REVOKED",
   REMOTE_CONTROL_PROGRAM_FEED_ENTRIES_UPLOADED = "REMOTE_CONTROL_PROGRAM_FEED_ENTRIES_UPLOADED",
   REMOTE_CONTROL_PROGRAM_SHARE_GRANT_CREATED_V2 = "REMOTE_CONTROL_PROGRAM_SHARE_GRANT_CREATED_V2",
+  INBOX_AUTO_OPEN_SETTING_UPDATED = "INBOX_AUTO_OPEN_SETTING_UPDATED",
   // The read accesses, see `READ_AUDIT_EVENT_TYPES`
   /** @deprecated Superseded by USER_READ (the tool get_user replaced get_current_user) */
   CURRENT_USER_READ = "CURRENT_USER_READ",
@@ -1590,6 +1591,12 @@ export interface AuditEventDataByType {
     citizenId: string;
     enabled: { notificationType: string; channel: string }[];
     disabled: { notificationType: string; channel: string }[];
+  };
+
+  /** Only a real change of the setting */
+  [AuditEventType.INBOX_AUTO_OPEN_SETTING_UPDATED]: {
+    citizenId: string;
+    enabled: boolean;
   };
 
   [AuditEventType.ON_SITE_NOTIFICATIONS_CREATED]: {

@@ -16,6 +16,7 @@ import { CreateContextProvider } from "@/modules/common/components/CreateContext
 import { NewReleaseToast } from "@/modules/common/components/NewReleaseToast";
 import { OnSiteNotificationsProvider } from "@/modules/notifications/components/OnSiteNotificationsProvider";
 import { getUnreadOnSiteNotificationCount } from "@/modules/notifications/utils/queries/getUnreadOnSiteNotificationCount";
+import { isMyInboxAutoOpenEnabled } from "@/modules/notifications/utils/queries/isMyInboxAutoOpenEnabled";
 import { OnboardingPopoverOpener } from "@/modules/onboarding/components/OnboardingPopoverOpener";
 import { OnboardingProvider } from "@/modules/onboarding/components/OnboardingProvider";
 import { OnboardingTour } from "@/modules/onboarding/components/OnboardingTour";
@@ -51,6 +52,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     visibleRoleTags,
     openWikiReportCount,
     unreadOnSiteNotificationCount,
+    inboxAutoOpenEnabled,
     canReadCareer,
     onboardingState,
     birthdayCitizenIds,
@@ -66,6 +68,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     getVisibleRoleTags(),
     getOpenWikiReportCount(),
     getUnreadOnSiteNotificationCount(),
+    isMyInboxAutoOpenEnabled(),
     hasAnyReadableFlow(),
     getOnboardingState(),
     getCitizenIdsWithBirthdayToday(),
@@ -113,6 +116,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
                         >
                           <OnSiteNotificationsProvider
                             initialUnreadCount={unreadOnSiteNotificationCount}
+                            isInboxAutoOpenEnabled={inboxAutoOpenEnabled}
                           >
                             <OnboardingProvider initialState={onboardingState}>
                               <CreateContextProvider>

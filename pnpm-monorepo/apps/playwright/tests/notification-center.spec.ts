@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { TaskRewardType, TaskVisibility } from "@sam-monorepo/database/client";
+import { expectAuditEvents } from "../fixtures/audit";
 import {
   createAppEvent,
   createCitizen,
@@ -10,8 +11,11 @@ import {
 import {
   clickUntilUrl,
   clickUntilVisible,
+  SAVED_TEXT,
   sectionByHeading,
   swipe,
+  toggleLabel,
+  waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
@@ -617,6 +621,50 @@ test("after a close, the popover stays closed until the next page load", async (
 
   await page.reload();
   await waitForOpenedNotificationCenter(page);
+});
+
+test("with the automatic opening switched off, the popover stays closed", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, { handle: "ruhesucher" });
+  await signIn(citizen.user);
+
+  const autoOpenCheckbox = page.getByRole("checkbox", {
+    name: "Automatisch öffnen",
+  });
+  const inboxAutoOpenDisabledAt = () =>
+    prisma.citizen
+      .findUniqueOrThrow({
+        where: { id: citizen.entity.id },
+        select: { inboxAutoOpenDisabledAt: true },
+      })
+      .then((row) => row.inboxAutoOpenDisabledAt);
+
+  await page.goto("/app/account/notifications");
+  await waitForAppShellHydration(page);
+  await expect(autoOpenCheckbox).toBeChecked();
+  await toggleLabel(page, autoOpenCheckbox).click();
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+  await expect.poll(inboxAutoOpenDisabledAt).not.toBeNull();
+  await expectAuditEvents(prisma, ["INBOX_AUTO_OPEN_SETTING_UPDATED"]);
+
+  await createOnSiteNotification(prisma, { citizenId: citizen.entity.id });
+  await page.goto("/app");
+  /** The title shows the count after the hydration */
+  await expect(page).toHaveTitle(/^\(1\)/);
+  await expect(bellDot(page)).toBeVisible();
+  await expect(popover(page)).toHaveCount(0);
+  /** A popover that opened by itself would close with this press */
+  await bellButton(page).click();
+  await waitForOpenedNotificationCenter(page);
+
+  await page.goto("/app/account/notifications");
+  await waitForAppShellHydration(page);
+  await expect(autoOpenCheckbox).not.toBeChecked();
+  await toggleLabel(page, autoOpenCheckbox).click();
+  await expect.poll(inboxAutoOpenDisabledAt).toBeNull();
 });
 
 test.describe("mobile", () => {
