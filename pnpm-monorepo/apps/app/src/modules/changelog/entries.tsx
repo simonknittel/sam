@@ -62,6 +62,27 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-11-26-inbox-automatisch-oeffnen-abschaltbar",
+    date: "2026-11-26",
+    title: "Automatisches Öffnen der Inbox abschaltbar",
+    tags: ["Neu", "Benachrichtigungen"],
+    isTracked: true,
+    body: () => (
+      <p>
+        In den{" "}
+        <Link
+          href="/app/account/notifications"
+          className="text-interaction-500 hover:underline focus-visible:underline active:text-interaction-300"
+        >
+          Benachrichtigungseinstellungen
+        </Link>{" "}
+        deines Accounts kannst du jetzt abschalten, dass sich die Inbox von
+        selbst öffnet.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-11-24-remote-control-program",
     date: "2026-11-24",
     title: "Remote Control Program",
