@@ -3,7 +3,6 @@
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Note from "@/modules/common/components/Note";
 import Tab from "@/modules/common/components/tabs/Tab";
-import TabList from "@/modules/common/components/tabs/TabList";
 import TabPanel from "@/modules/common/components/tabs/TabPanel";
 import {
   TabsProvider,
@@ -26,6 +25,7 @@ import {
   type SharingPopoverLocation,
   type SharingPopoverRuntimeLocation,
 } from "./SharingPopoverTab";
+import { SharingPopoverTabList } from "./SharingPopoverTabList";
 import { StartSection } from "./StartSection";
 import { useSharingPopoverQuery } from "./useSharingPopoverQuery";
 import { SHARING_POPOVER_TITLE } from "./useSharingPopoverTrigger";
@@ -108,28 +108,23 @@ export const SharingPopoverContent = ({ locationOfControlUi }: Props) => {
         {SHARING_POPOVER_TITLE}
       </h2>
 
-      {/* On a phone, all tabs must fit into one row */}
-      <div
-        ref={tabListRef}
-        className="max-sm:[&_[role=tab]]:px-1.5 max-sm:[&_[role=tab]]:text-xs"
-      >
-        <TabList>
-          <div className="flex">
-            <Tab id={SharingPopoverTab.Start}>
-              {SHARING_POPOVER_TAB_LABELS[SharingPopoverTab.Start]}
-            </Tab>
-            <Tab id={SharingPopoverTab.Grants}>
-              {SHARING_POPOVER_TAB_LABELS[SharingPopoverTab.Grants]}
-              {data && data.grants.length > 0 && (
-                <span className="max-sm:hidden">({data.grants.length})</span>
-              )}
-            </Tab>
-            <Tab id={SharingPopoverTab.Runtimes}>
-              {SHARING_POPOVER_TAB_LABELS[SharingPopoverTab.Runtimes]}
-            </Tab>
-          </div>
-        </TabList>
-      </div>
+      <SharingPopoverTabList ref={tabListRef}>
+        {/* On a phone, all tabs must fit into one row */}
+        <div className="flex">
+          <Tab id={SharingPopoverTab.Start}>
+            {SHARING_POPOVER_TAB_LABELS[SharingPopoverTab.Start]}
+          </Tab>
+          <Tab id={SharingPopoverTab.Grants}>
+            {SHARING_POPOVER_TAB_LABELS[SharingPopoverTab.Grants]}
+            {data && data.grants.length > 0 && (
+              <span className="max-sm:hidden">({data.grants.length})</span>
+            )}
+          </Tab>
+          <Tab id={SharingPopoverTab.Runtimes}>
+            {SHARING_POPOVER_TAB_LABELS[SharingPopoverTab.Runtimes]}
+          </Tab>
+        </div>
+      </SharingPopoverTabList>
 
       <TabPanel id={SharingPopoverTab.Start}>
         <StartPanel

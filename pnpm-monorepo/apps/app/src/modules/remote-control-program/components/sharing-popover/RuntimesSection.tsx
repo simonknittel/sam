@@ -1,7 +1,6 @@
 "use client";
 
 import Tab from "@/modules/common/components/tabs/Tab";
-import TabList from "@/modules/common/components/tabs/TabList";
 import TabPanel from "@/modules/common/components/tabs/TabPanel";
 import { TabsProvider } from "@/modules/common/components/tabs/TabsContext";
 import type {
@@ -20,6 +19,7 @@ import {
   SharingPopoverTab,
   type ExpandedConnectors,
 } from "./SharingPopoverTab";
+import { SharingPopoverTabList } from "./SharingPopoverTabList";
 
 const RUNTIME_TABS = Object.values(SharingPopoverRuntimeTab);
 
@@ -68,19 +68,13 @@ export const RuntimesSection = ({
           if (isRuntimeTab(tab)) onRuntimeTabChange(tab);
         }}
       >
-        {/* Like the tabs of the popover on a phone */}
-        <div
-          ref={tabListRef}
-          className="max-sm:[&_[role=tab]]:px-1.5 max-sm:[&_[role=tab]]:text-xs"
-        >
-          <TabList>
-            {RUNTIME_TABS.map((tab) => (
-              <Tab key={tab} id={tab}>
-                {SHARING_POPOVER_RUNTIME_TAB_LABELS[tab]}
-              </Tab>
-            ))}
-          </TabList>
-        </div>
+        <SharingPopoverTabList ref={tabListRef}>
+          {RUNTIME_TABS.map((tab) => (
+            <Tab key={tab} id={tab}>
+              {SHARING_POPOVER_RUNTIME_TAB_LABELS[tab]}
+            </Tab>
+          ))}
+        </SharingPopoverTabList>
 
         <TabPanel id={SharingPopoverRuntimeTab.Browser}>
           <BrowserSettingsSection
