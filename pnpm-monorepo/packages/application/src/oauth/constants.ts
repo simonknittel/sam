@@ -20,6 +20,15 @@ export const ACCESS_TOKEN_LIFETIME_IN_SECONDS = 60 * 60;
 /** 31 days after the issue of each token, thus the lifetime slides */
 export const REFRESH_TOKEN_LIFETIME_IN_MILLISECONDS = 31 * 24 * 60 * 60 * 1000;
 
+/**
+ * After its replacement, a refresh token can be used once more within this
+ * time while its replacement is unused: the client did not get the answer,
+ * for example after a lost network connection or a quit (see
+ * `refreshAccessToken()`). Long enough for a retry of a client, short enough
+ * for the detection of a stolen token.
+ */
+export const REFRESH_TOKEN_GRACE_TIME_IN_MILLISECONDS = 60 * 1000;
+
 /** 10 minutes, the maximum that RFC 6749 section 4.1.2 recommends */
 export const AUTHORIZATION_CODE_LIFETIME_IN_MILLISECONDS = 10 * 60 * 1000;
 

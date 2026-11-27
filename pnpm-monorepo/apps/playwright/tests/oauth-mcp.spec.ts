@@ -268,7 +268,12 @@ test.describe("the OAuth server and the MCP endpoint", () => {
     await expectAuditEvents(prisma, ["OAUTH_GRANT_CREATED_V2"]);
   });
 
-  test("a refresh token works once, and its reuse disconnects the client", async ({
+  /**
+   * Within the grace time, the first refresh token works once more while its
+   * replacement is unused (see `refreshAccessToken()`). The use of the
+   * replacement ends this time.
+   */
+  test("a refresh token works once, and its reuse after the use of its replacement disconnects the client", async ({
     prisma,
     request,
     authorizeMcpClient,
@@ -292,12 +297,19 @@ test.describe("the OAuth server and the MCP endpoint", () => {
     );
     expect(rotatedCall.status()).toBe(200);
 
+    const secondRotation = await authorization.refresh(
+      rotatedTokens.refreshToken,
+    );
+    expect(secondRotation.status).toBe(200);
+    const secondRotatedTokens = secondRotation.tokens;
+    if (!secondRotatedTokens) throw new Error("The refresh gave no tokens");
+
     const reuse = await authorization.refresh(authorization.refreshToken);
     expect(reuse.status).toBe(400);
     expect(reuse.error).toBe("invalid_grant");
 
     const successorRefresh = await authorization.refresh(
-      rotatedTokens.refreshToken,
+      secondRotatedTokens.refreshToken,
     );
     expect(successorRefresh.status).toBe(400);
     expect(successorRefresh.error).toBe("invalid_grant");
@@ -305,7 +317,7 @@ test.describe("the OAuth server and the MCP endpoint", () => {
     const callAfterReuse = await postMcpEndpoint(
       request,
       modernMcpRequest("tools/list"),
-      rotatedTokens.accessToken,
+      secondRotatedTokens.accessToken,
     );
     expect(callAfterReuse.status()).toBe(401);
   });

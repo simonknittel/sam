@@ -55,7 +55,13 @@ app.
   thus a revoked grant stops its tokens at once.
 - **Refresh tokens:** opaque values. The database keeps only their SHA-256
   hashes. Each use replaces the token, and the new token is valid for 31
-  days. The reuse of an old token revokes the grant.
+  days. The reuse of an old token revokes the grant. Exception for a client
+  that did not get the answer of a refresh (for example after a lost
+  network connection): within 60 seconds after its replacement, the old
+  token works once more, but only while nobody used its replacement. This
+  use gives a new token pair, and the replacement that the client did not
+  get becomes invalid: its later use revokes the grant. Each other reuse
+  revokes the grant. This applies to all clients.
 - **Scope:** one scope for each resource (see [Resources](#resources)).
   A grant gets only the scope of its resource: a scope of the other
   resource has no effect, and an unknown scope gives `invalid_scope`.
