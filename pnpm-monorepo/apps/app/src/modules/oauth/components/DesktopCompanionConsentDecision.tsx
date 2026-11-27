@@ -18,14 +18,8 @@ export const DesktopCompanionConsentDecision = ({ parameters }: Props) => (
       <p>Mit deiner Erlaubnis kann der Desktop Companion:</p>
 
       <ul className="flex list-disc flex-col gap-1 pl-5">
-        <li>
-          sich als Runtime deines Citizens mit dem Remote Control Program
-          verbinden
-        </li>
-        <li>
-          nur die Daten hochladen, die du im Programm einschaltest. Alles andere
-          bleibt auf deinem Rechner.
-        </li>
+        <li>sich als Runtime mit dem Remote Control Program verbinden</li>
+        <li>Daten hochladen, die du im SAM Desktop Companion einschaltest</li>
       </ul>
 
       <p className="text-neutral-500">

@@ -140,7 +140,7 @@ test.describe("the OAuth login of the desktop companion", () => {
         ).toBeVisible();
         await expect(
           consentPage.getByText(
-            "sich als Runtime deines Citizens mit dem Remote Control Program verbinden",
+            "sich als Runtime mit dem Remote Control Program verbinden",
           ),
         ).toBeVisible();
         await expect(

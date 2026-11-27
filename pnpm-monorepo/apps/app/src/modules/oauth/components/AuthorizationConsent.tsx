@@ -31,7 +31,7 @@ export const AuthorizationConsent = ({ validation, actor }: Props) => {
       <div>
         <p className="text-sm text-neutral-500">
           {validation.oauthResource === OAuthResource.RemoteControlProgram
-            ? "Dieses Programm möchte sich mit deinem Account bei SAM anmelden:"
+            ? "Der SAM Desktop Companion möchte sich mit deinem Account bei SAM anmelden:"
             : "Diese Anwendung möchte in deinem Namen auf SAM zugreifen:"}
         </p>
         <p className="mt-1 text-2xl font-bold wrap-break-word">

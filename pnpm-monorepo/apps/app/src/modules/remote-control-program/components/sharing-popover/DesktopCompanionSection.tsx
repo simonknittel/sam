@@ -103,7 +103,7 @@ const OpenDesktopCompanionLink = () => (
       Desktop Companion öffnen
     </Button2>
     <p className="text-xs text-neutral-500">
-      Öffnet das Programm auf diesem Rechner. Dein Browser fragt beim ersten
+      Öffnet den SAM Desktop Companion auf diesem Rechner. Dein Browser fragt beim ersten
       Mal, ob er es öffnen darf.
     </p>
   </div>

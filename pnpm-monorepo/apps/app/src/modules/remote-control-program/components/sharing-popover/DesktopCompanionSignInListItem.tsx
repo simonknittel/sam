@@ -62,7 +62,7 @@ const SignOutButton = ({ signIn, device }: SignOutButtonProps) => {
       action={revoke}
       hiddenFields={[{ name: "grant_id", value: signIn.id }]}
       title="Desktop Companion abmelden?"
-      description={`Der Desktop Companion auf „${device}“ trennt seine Verbindung innerhalb von etwa zwei Minuten. Danach musst du dich im Programm neu anmelden.`}
+      description={`Der Desktop Companion auf „${device}“ trennt seine Verbindung innerhalb von etwa zwei Minuten. Danach musst du dich im SAM Desktop Companion neu anmelden.`}
       confirmLabel="Abmelden"
       trigger={(isPending) => (
         <Button2

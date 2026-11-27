@@ -42,7 +42,7 @@ const RESOURCE_ACCESS_MESSAGES: Readonly<Record<OAuthResource, string>> = {
     "Du hast keine Berechtigung, den MCP-Server zu nutzen. Frage einen Admin nach der Berechtigung „MCP-Server nutzen“.",
   // Also for an admin: the desktop companion never has admin mode
   [OAuthResource.RemoteControlProgram]:
-    "Du hast keine Berechtigung, das Remote Control Program zu nutzen, oder dein Account ist mit keinem Citizen verknüpft. Frage einen Admin nach der Berechtigung „Remote Control Program nutzen“.",
+    "Du hast keine Berechtigung, das Remote Control Program zu nutzen.",
 };
 
 export const getResourceAccessMessage = (resource: OAuthResource) =>
