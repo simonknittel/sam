@@ -53,10 +53,11 @@ export const DesktopCompanionSection = ({
       }
     >
       <p className="text-sm text-neutral-400">
-        Der Desktop Companion kommt bald: ein Programm für Windows, das ohne
-        einen Tab von SAM läuft. Es liest die Game Logs von Star
-        Citizen und später auch Live-Daten über die gRPC-Schnittstelle des
-        Spiels. Was es hochlädt, entscheidest du im Programm.
+        Geplant ist die Entwicklung einer Desktop App, die direkt auf deinem
+        Rechner läuft anstatt im Browser. Dies ist technisch notwendig um die
+        neue Schnittstelle vom Star Citizen Game Client mit dem SAM verbinden zu
+        können. Zudem wird hierüber nun ermöglicht die Game Logs auszuwerten für
+        jene, die die Funktion im SAM bisher nicht nutzen konnten.
       </p>
 
       {signIns && signIns.length > 0 && <OpenDesktopCompanionLink />}

@@ -272,7 +272,9 @@ test.describe("the sub-tab of the desktop companion", () => {
       page,
       SharingPopoverSection.DesktopCompanion,
     );
-    await expect(section.getByText(/kommt bald/)).toBeVisible();
+    await expect(
+      section.getByText(/Geplant ist die Entwicklung/),
+    ).toBeVisible();
     await expect(
       sharingPopoverTab(page, SharingPopoverSection.DesktopCompanion),
     ).toBeFocused();
