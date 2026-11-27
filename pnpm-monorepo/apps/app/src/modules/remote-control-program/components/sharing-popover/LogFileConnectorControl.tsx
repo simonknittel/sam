@@ -7,8 +7,6 @@ import {
   Button2Variant,
 } from "@/modules/common/components/Button2";
 import Note from "@/modules/common/components/Note";
-import { ConnectorId } from "@sam-monorepo/domain";
-import { useState } from "react";
 import toast from "react-hot-toast";
 import { FaFolderOpen, FaKey } from "react-icons/fa6";
 import {
@@ -17,13 +15,12 @@ import {
   type BrowserRuntimeSnapshot,
 } from "../../runtime/types";
 import { BROWSER_RUNTIME_ERROR_TEXTS } from "./browserRuntimeTexts";
-import { CONNECTOR_LABELS } from "./catalogTexts";
-import { formatLogEntryTypeCount } from "./logEntryTypeRules";
 import { LogEntryTypeSettings } from "./LogEntryTypeSettings";
 import { LogFileConnectorGuide } from "./LogFileConnectorGuide";
 import { OlderEntriesUpload } from "./OlderEntriesUpload";
-import { SharingPopoverCollapsible } from "./SharingPopoverCollapsible";
 import { useRuntimeCommand } from "./useRuntimeCommand";
+
+const READING_TEXT = "Logs werden gelesen …";
 
 const getFolderText = ({ folder }: BrowserRuntimeSnapshot) => {
   switch (folder.state) {
@@ -47,75 +44,35 @@ const getFolderText = ({ folder }: BrowserRuntimeSnapshot) => {
   }
 };
 
-/**
- * A problem that stops the connector and that the owner must solve: the
- * browser needs the permission for the folder again, or the runtime has an
- * error. A step of the setup (no folder, no type that is on) is not a
- * problem.
- */
-const hasProblem = ({ folder, error }: BrowserRuntimeSnapshot) =>
-  folder.state === LogFolderState.PermissionNeeded || error !== null;
-
-/**
- * The part is closed by default and a direct link opens it. It also opens
- * when a problem starts, because the problem is visible only inside the
- * part. It does not close by itself, and the owner can close it.
- */
-const useIsExpandedForProblem = (
-  isProblem: boolean,
-  isExpanded: boolean,
-  onExpandedChange: (isExpanded: boolean) => void,
-) => {
-  const [isOpenForProblem, setIsOpenForProblem] = useState(isProblem);
-  const [wasProblem, setWasProblem] = useState(isProblem);
-  if (isProblem !== wasProblem) {
-    setWasProblem(isProblem);
-    if (isProblem) setIsOpenForProblem(true);
-  }
-
-  const changeExpanded = (nextIsExpanded: boolean) => {
-    setIsOpenForProblem(false);
-    onExpandedChange(nextIsExpanded);
-  };
-
-  return [isOpenForProblem || isExpanded, changeExpanded] as const;
-};
-
 interface Props {
   readonly runtime: BrowserRuntimeHandle;
 }
 
-interface ControlProps extends Props {
-  readonly isExpanded: boolean;
-  readonly onExpandedChange: (isExpanded: boolean) => void;
-}
-
-/** The folder of the log file connector and its rules of the local access layer */
-export const LogFileConnectorControl = ({
-  runtime,
-  isExpanded,
-  onExpandedChange,
-}: ControlProps) => {
+/**
+ * The content of the sub-tab of the log file connector: its folder and its
+ * rules of the local access layer
+ */
+export const LogFileConnectorControl = ({ runtime }: Props) => {
   const { state, commands } = runtime;
   const folderText = getFolderText(state);
-  const [isPartExpanded, changePartExpanded] = useIsExpandedForProblem(
-    hasProblem(state),
-    isExpanded,
-    onExpandedChange,
-  );
 
   return (
-    <SharingPopoverCollapsible
-      heading={CONNECTOR_LABELS[ConnectorId.LogFile]}
-      summary={
-        isPartExpanded
-          ? null
-          : `${folderText}, ${formatLogEntryTypeCount(state.localAccess.logEntryTypes)} Typen`
-      }
-      progressText={state.isReading ? "Logs werden gelesen …" : null}
-      isExpanded={isPartExpanded}
-      onExpandedChange={changePartExpanded}
-    >
+    <div className="flex flex-col gap-3">
+      {/* Always in the page, else a screen reader does not announce its first text */}
+      <span role="status" className="sr-only">
+        {state.isReading ? READING_TEXT : null}
+      </span>
+
+      {state.isReading && (
+        <p
+          aria-hidden
+          className="flex items-center gap-2 text-sm text-neutral-500"
+        >
+          <AsciiSpinner />
+          {READING_TEXT}
+        </p>
+      )}
+
       <p className="text-sm text-neutral-400">
         Dieser Connector liest die Log-Dateien von Star Citizen und lädt daraus
         neue Einträge der ausgewählten Typen hoch.
@@ -160,7 +117,7 @@ export const LogFileConnectorControl = ({
       {state.folder.state === LogFolderState.Granted && (
         <OlderEntriesUpload runtime={runtime} />
       )}
-    </SharingPopoverCollapsible>
+    </div>
   );
 };
 

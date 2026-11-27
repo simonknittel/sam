@@ -35,7 +35,7 @@ enum RuntimeId {
 
 interface RuntimePart extends Part {
   readonly id: RuntimeId;
-  /** The sub-tab of the runtime, with its parts closed */
+  /** The sub-tab of the runtime */
   readonly location: SharingPopoverLocation;
 }
 

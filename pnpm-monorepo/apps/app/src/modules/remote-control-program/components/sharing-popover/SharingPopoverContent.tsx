@@ -17,11 +17,11 @@ import { SESSION_EXPIRED_TEXT } from "../../utils/remoteControlProgramTexts";
 import { RuntimesSection } from "./RuntimesSection";
 import { SharedWithOthersSection } from "./SharedWithOthersSection";
 import {
+  BROWSER_RUNTIME_CONNECTORS,
   BROWSER_RUNTIME_LOCATION,
   SHARING_POPOVER_TAB_LABELS,
   SharingPopoverRuntimeTab,
   SharingPopoverTab,
-  type ExpandedConnectors,
   type SharingPopoverLocation,
   type SharingPopoverRuntimeLocation,
 } from "./SharingPopoverTab";
@@ -41,14 +41,6 @@ const getReadErrorText = ({ data, message }: ReadError) => {
   if (data?.code === "FORBIDDEN") return message;
   return "Der Status konnte nicht geladen werden.";
 };
-
-/** Only the part of the connector of the location is open */
-const getExpandedConnectors = (
-  location: SharingPopoverLocation,
-): ExpandedConnectors =>
-  location.tab === SharingPopoverTab.Runtimes && location.connector
-    ? { [location.connector]: true }
-    : {};
 
 interface Props {
   /** For example the Log Analyzer asks for the log folder. Null: the trigger opened the popover. */
@@ -79,19 +71,15 @@ export const SharingPopoverContent = ({ locationOfControlUi }: Props) => {
       ? initialLocation.runtimeTab
       : SharingPopoverRuntimeTab.Browser,
   );
-  const [expandedConnectors, setExpandedConnectors] = useState(() =>
-    getExpandedConnectors(initialLocation),
+  const [connectorTab, setConnectorTab] = useState<ConnectorId>(
+    (initialLocation.tab === SharingPopoverTab.Runtimes
+      ? initialLocation.connector
+      : undefined) ?? BROWSER_RUNTIME_CONNECTORS[0],
   );
-
-  const setConnectorExpanded = (connector: ConnectorId, isExpanded: boolean) =>
-    setExpandedConnectors((current) => ({
-      ...current,
-      [connector]: isExpanded,
-    }));
 
   const showRuntimeLocation = (location: SharingPopoverRuntimeLocation) => {
     setRuntimeTab(location.runtimeTab);
-    if (location.connector) setConnectorExpanded(location.connector, true);
+    if (location.connector) setConnectorTab(location.connector);
   };
 
   const serverState = (
@@ -151,8 +139,8 @@ export const SharingPopoverContent = ({ locationOfControlUi }: Props) => {
         <RuntimesSection
           runtimeTab={runtimeTab}
           onRuntimeTabChange={setRuntimeTab}
-          expandedConnectors={expandedConnectors}
-          onConnectorExpandedChange={setConnectorExpanded}
+          connectorTab={connectorTab}
+          onConnectorTabChange={setConnectorTab}
           tabListRef={runtimeTabListRef}
           serverState={serverState}
           desktopCompanions={data?.desktopCompanions}
@@ -166,7 +154,7 @@ export const SharingPopoverContent = ({ locationOfControlUi }: Props) => {
 interface StartPanelProps {
   readonly tabListRef: RefObject<HTMLDivElement | null>;
   readonly runtimeTabListRef: RefObject<HTMLDivElement | null>;
-  /** Shows the sub-tab of the location and opens the part of its connector */
+  /** Shows the sub-tab of the location and the sub-tab of its connector */
   readonly onShowRuntimeLocation: (
     location: SharingPopoverRuntimeLocation,
   ) => void;

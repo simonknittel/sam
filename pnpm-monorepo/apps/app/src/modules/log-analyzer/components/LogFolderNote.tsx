@@ -72,7 +72,7 @@ const getFolderNote = ({
         : {
             type: "info",
             text: "Die Runtime ist gestoppt, deshalb werden deine Logs gerade nicht gelesen. Du kannst sie im Remote Control Program starten.",
-            // The start button is above the parts of the connectors
+            // The start button is above the sub-tabs of the connectors
             location: BROWSER_RUNTIME_LOCATION,
           };
 

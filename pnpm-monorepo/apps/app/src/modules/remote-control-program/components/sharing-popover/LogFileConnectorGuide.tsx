@@ -1,7 +1,6 @@
 "use client";
 
 import { UiLabel } from "@/modules/common/components/Guide/UiLabel";
-import { useState } from "react";
 import { SUPPORTED_BROWSERS_TEXT } from "../../utils/remoteControlProgramTexts";
 import { SharingPopoverCollapsible } from "./SharingPopoverCollapsible";
 import {
@@ -11,15 +10,8 @@ import {
 
 /** How the owner uses the log file connector */
 export const LogFileConnectorGuide = () => {
-  const [isExpanded, setIsExpanded] = useState(false);
-
   return (
-    <SharingPopoverCollapsible
-      heading="Anleitung"
-      summary={null}
-      isExpanded={isExpanded}
-      onExpandedChange={setIsExpanded}
-    >
+    <SharingPopoverCollapsible heading="Anleitung" summary={null}>
       <SharingPopoverTopicList>
         <SharingPopoverTopic title="Browser">
           <p>{SUPPORTED_BROWSERS_TEXT}</p>

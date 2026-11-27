@@ -17,7 +17,6 @@ import {
   SHARING_POPOVER_TAB_LABELS,
   SharingPopoverRuntimeTab,
   SharingPopoverTab,
-  type ExpandedConnectors,
 } from "./SharingPopoverTab";
 import { SharingPopoverTabList } from "./SharingPopoverTabList";
 
@@ -30,12 +29,9 @@ interface Props {
   /** The parent keeps it, thus a link of the start opens a sub-tab */
   readonly runtimeTab: SharingPopoverRuntimeTab;
   readonly onRuntimeTabChange: (runtimeTab: SharingPopoverRuntimeTab) => void;
-  /** The parent keeps it, thus a link of the start opens a part */
-  readonly expandedConnectors: ExpandedConnectors;
-  readonly onConnectorExpandedChange: (
-    connector: ConnectorId,
-    isExpanded: boolean,
-  ) => void;
+  /** The sub-tab of a connector in the sub-tab of the browser. The parent keeps it, thus a link of the start selects it. */
+  readonly connectorTab: ConnectorId;
+  readonly onConnectorTabChange: (connectorTab: ConnectorId) => void;
   readonly tabListRef: RefObject<HTMLDivElement | null>;
   /** See `DesktopCompanionSection` */
   readonly serverState: ReactNode;
@@ -51,8 +47,8 @@ interface Props {
 export const RuntimesSection = ({
   runtimeTab,
   onRuntimeTabChange,
-  expandedConnectors,
-  onConnectorExpandedChange,
+  connectorTab,
+  onConnectorTabChange,
   tabListRef,
   serverState,
   desktopCompanions,
@@ -78,8 +74,8 @@ export const RuntimesSection = ({
 
         <TabPanel id={SharingPopoverRuntimeTab.Browser}>
           <BrowserSettingsSection
-            expandedConnectors={expandedConnectors}
-            onConnectorExpandedChange={onConnectorExpandedChange}
+            connectorTab={connectorTab}
+            onConnectorTabChange={onConnectorTabChange}
           />
         </TabPanel>
 

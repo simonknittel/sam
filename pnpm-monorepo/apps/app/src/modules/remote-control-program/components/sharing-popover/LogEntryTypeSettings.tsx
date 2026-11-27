@@ -8,7 +8,7 @@ import {
   PATTERNS,
 } from "@/modules/log-analyzer/utils/PATTERNS";
 import type { LogAnalyzerEntryType } from "@sam-monorepo/domain";
-import { useId, useState, type ReactNode } from "react";
+import { useId, type ReactNode } from "react";
 import {
   formatLogEntryTypeCount,
   type LogEntryTypeRules,
@@ -31,14 +31,10 @@ interface Props {
  * type: one rule applies to all versions of a type.
  */
 export const LogEntryTypeSettings = ({ logEntryTypes, onChange }: Props) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-
   return (
     <SharingPopoverCollapsible
       heading="Typen auswählen"
       summary={`${formatLogEntryTypeCount(logEntryTypes)} ausgewählt`}
-      isExpanded={isExpanded}
-      onExpandedChange={setIsExpanded}
     >
       <div className="gap-x-8 sm:columns-2">
         {Object.values(EntryCategory).map((category) => (
