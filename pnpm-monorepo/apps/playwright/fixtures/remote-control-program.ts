@@ -136,23 +136,27 @@ export const runtimeState = (page: Page, state: string) =>
     { exact: true },
   );
 
-/**
- * The toggle of the part of the log file connector. Its name has the summary
- * of the closed part after the heading.
- */
-export const logFileConnectorToggle = (section: Locator) =>
-  section.getByRole("button", { name: /^Game Logs/ });
+/** The sub-tab of the log file connector in the section of this browser */
+export const logFileConnectorTab = (section: Locator) =>
+  section.getByRole("tab", { name: "Game Logs", exact: true });
+
+/** The row of the log folder in the sub-tab of the log file connector */
+export const logFolderRow = (section: Locator) =>
+  section.getByRole("term").filter({ hasText: /^Ordner$/ });
+
+/** The toggle of the list of the types in the sub-tab of the log file connector */
+export const logEntryTypesToggle = (section: Locator) =>
+  section.getByRole("button", { name: /^Typen auswählen/ });
 
 /**
- * Opens the settings of the log file connector in the section. They are
- * closed, except after a link to the log folder (for example the folder note
- * of the Log Analyzer).
+ * Selects the sub-tab of the log file connector in the section of this
+ * browser. With one connector, it is selected by default.
  */
-export const openLogFileConnector = async (section: Locator) => {
-  const toggle = logFileConnectorToggle(section);
-  await expect(toggle).toBeVisible();
-  if ((await toggle.getAttribute("aria-expanded")) !== "true")
-    await toggle.click();
+export const showLogFileConnector = async (section: Locator) => {
+  const tab = logFileConnectorTab(section);
+  await tab.click();
+  await expect(tab).toHaveAttribute("aria-selected", "true");
+  await expect(logFolderRow(section)).toBeVisible();
 };
 
 /**
@@ -164,7 +168,7 @@ export const pickLogFolderInPopover = async (page: Page) => {
     page,
     SharingPopoverSection.ThisBrowser,
   );
-  await openLogFileConnector(section);
+  await showLogFileConnector(section);
   await section
     .getByRole("button", { name: "Ordner wählen", exact: true })
     .click();
@@ -200,10 +204,8 @@ export const turnOnLogEntryTypes = async (
     page,
     SharingPopoverSection.ThisBrowser,
   );
-  await openLogFileConnector(section);
-  const listToggle = section.getByRole("button", {
-    name: /^Typen auswählen/,
-  });
+  await showLogFileConnector(section);
+  const listToggle = logEntryTypesToggle(section);
   if ((await listToggle.getAttribute("aria-expanded")) !== "true")
     await listToggle.click();
 
@@ -233,7 +235,7 @@ export const openOlderEntriesUpload = async (page: Page) => {
     page,
     SharingPopoverSection.ThisBrowser,
   );
-  await openLogFileConnector(section);
+  await showLogFileConnector(section);
 
   const form = section.getByRole("form", {
     name: "Ältere Game Logs hochladen",

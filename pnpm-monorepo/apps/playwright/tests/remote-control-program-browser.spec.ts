@@ -16,8 +16,9 @@ import {
 import {
   closeSharingPopover,
   expectUploadedLines,
-  logFileConnectorToggle,
-  openLogFileConnector,
+  logEntryTypesToggle,
+  logFileConnectorTab,
+  logFolderRow,
   openOlderEntriesUpload,
   openSharingPopover,
   pickLogFolderInPopover,
@@ -30,6 +31,7 @@ import {
   SharingPopoverSection,
   sharingPopoverTab,
   sharingPopoverTrigger,
+  showLogFileConnector,
   showSharingPopoverSection,
   startBrowserRuntime,
   turnOnLogEntryTypes,
@@ -53,6 +55,22 @@ const RUNTIME_TEST_TIMEOUT = 120_000;
 const MAXIMUM_TAB_PRESSES = 150;
 
 const BLUEPRINT_TYPE_TITLE = "Blueprint erhalten";
+
+/**
+ * The sub-tab of the game logs is selected and shows the log folder. The list
+ * of the types in it stays closed.
+ */
+const expectLogFileConnectorShown = async (section: Locator) => {
+  await expect(logFileConnectorTab(section)).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await expect(logFolderRow(section)).toBeVisible();
+  await expect(logEntryTypesToggle(section)).toHaveAttribute(
+    "aria-expanded",
+    "false",
+  );
+};
 
 /** Presses Tab until the target has the focus, at most the given times */
 const tabTo = async (
@@ -178,7 +196,7 @@ test("a citizen who logs in after a different citizen in the same browser gets n
     page,
     SharingPopoverSection.ThisBrowser,
   );
-  await openLogFileConnector(secondCitizenBrowser);
+  await showLogFileConnector(secondCitizenBrowser);
   await expect(
     secondCitizenBrowser.getByText("Nicht ausgewählt", { exact: true }),
   ).toBeVisible();
@@ -223,7 +241,8 @@ test("the sharing popover and the upload of older entries work with the keyboard
 
   /**
    * Without a log folder, the popover opens with the explanation, whose links
-   * open the tabs. The link of the folder also opens the part of the folder.
+   * open the tabs. The link of the folder also selects the sub-tab of the
+   * game logs.
    */
   const start = sharingPopoverSection(page, SharingPopoverSection.Start);
   await expect(start).toBeVisible();
@@ -238,10 +257,7 @@ test("the sharing popover and the upload of older entries work with the keyboard
   await expect(
     sharingPopoverTab(page, SharingPopoverSection.ThisBrowser),
   ).toBeFocused();
-  await expect(logFileConnectorToggle(thisBrowser)).toHaveAttribute(
-    "aria-expanded",
-    "true",
-  );
+  await expectLogFileConnectorShown(thisBrowser);
 
   await tabTo(
     page,
@@ -250,10 +266,7 @@ test("the sharing popover and the upload of older entries work with the keyboard
   await page.keyboard.press("Enter");
   await expect(runtimeState(page, "Läuft")).toBeVisible();
 
-  await tabTo(
-    page,
-    thisBrowser.getByRole("button", { name: /^Typen auswählen/ }),
-  );
+  await tabTo(page, logEntryTypesToggle(thisBrowser));
   await page.keyboard.press("Enter");
   const blueprintType = thisBrowser.getByRole("checkbox", {
     name: BLUEPRINT_TYPE_TITLE,
@@ -277,13 +290,13 @@ test("the sharing popover and the upload of older entries work with the keyboard
   await expect(sharingPopover(page)).toHaveCount(0);
   await expect(trigger).toBeFocused();
 
-  /** The trigger opens no part. The preset counts at once, and the end of the upload moves the focus. */
+  /**
+   * The trigger shows the game logs, with the parts closed again. The preset
+   * counts at once, and the end of the upload moves the focus.
+   */
   await page.keyboard.press("Enter");
   await expect(thisBrowser).toBeVisible();
-  await expect(logFileConnectorToggle(thisBrowser)).toHaveAttribute(
-    "aria-expanded",
-    "false",
-  );
+  await expectLogFileConnectorShown(thisBrowser);
   const form = await openOlderEntriesUpload(page);
   await tabTo(page, form.getByRole("button", { name: "Letzte 7 Tage" }));
   await page.keyboard.press("Enter");
@@ -331,11 +344,8 @@ test.describe("mobile", () => {
       page,
       SharingPopoverSection.ThisBrowser,
     );
-    /** Also without a folder, the trigger opens no part */
-    await expect(logFileConnectorToggle(thisBrowser)).toHaveAttribute(
-      "aria-expanded",
-      "false",
-    );
+    /** Also without a folder, the sub-tab of the game logs shows the folder without a click */
+    await expectLogFileConnectorShown(thisBrowser);
     await showSharingPopoverSection(
       page,
       SharingPopoverSection.DesktopCompanion,
@@ -349,12 +359,9 @@ test.describe("mobile", () => {
     await page.keyboard.press("Escape");
     await expect(flyoutToggle).toHaveAttribute("aria-expanded", "false");
 
-    /** The Log Analyzer asks for the folder in the same sheet, with the part of the folder open */
+    /** The Log Analyzer asks for the folder in the same sheet, with the sub-tab of the game logs */
     await page.getByRole("button", { name: "Öffnen", exact: true }).click();
-    await expect(logFileConnectorToggle(thisBrowser)).toHaveAttribute(
-      "aria-expanded",
-      "true",
-    );
+    await expectLogFileConnectorShown(thisBrowser);
     await pickLogFolderInPopover(page);
     await closeSharingPopover(page);
     await expect(
