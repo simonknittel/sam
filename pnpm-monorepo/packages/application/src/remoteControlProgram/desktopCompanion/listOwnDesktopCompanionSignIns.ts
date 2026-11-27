@@ -33,8 +33,11 @@ export interface OwnDesktopCompanionSignIns {
  * The sign-ins of the desktop companion of the actor, for the sharing
  * popover. Like the list of the app KI-Agenten, it has only the grants with a
  * refresh token: not an abandoned login, and not a grant whose tokens
- * expired. It needs no permission: a user who lost
- * `remoteControlProgram;use` can still end a sign-in.
+ * expired. It needs no permission of its own. The sharing popover shows the
+ * list only with `remoteControlProgram;use` (see `getSharingPopover()` of
+ * the app). Without this permission, a sign-in gives no token and no
+ * connection, and the midnight cleanup removes it when its refresh token
+ * expired.
  *
  * @throws ForbiddenError without a citizen, or for an admin who assumes the
  * user (`RemoteControlProgramErrorMessage`)

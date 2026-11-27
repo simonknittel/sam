@@ -27,7 +27,8 @@ export interface RevokeOwnDesktopCompanionSignInOutput {
  * OAuth grant (`OAUTH_GRANT_REVOKED`). The program then gets no new tokens,
  * and the relay service closes its connection at the next token renewal (see
  * `authenticateRuntimeConnection()`), at the latest when the connection token
- * expires. It needs no permission, like the list.
+ * expires. It needs no permission of its own, like the list (see
+ * `listOwnDesktopCompanionSignIns()`).
  *
  * @throws ForbiddenError without a citizen, or for an admin who assumes the
  * user (`RemoteControlProgramErrorMessage`)
