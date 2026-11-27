@@ -4,7 +4,10 @@ import type { Actor } from "../../actor.js";
 import type { ApplicationContext } from "../../context.js";
 import { ForbiddenError } from "../../errors.js";
 import { verifyAccessToken } from "../../oauth/accessToken.js";
-import { resolvePrincipal } from "../../oauth/resolvePrincipal.js";
+import {
+  resolvePrincipal,
+  type Principal,
+} from "../../oauth/resolvePrincipal.js";
 import { OAuthResource } from "../../oauth/resources.js";
 import { withSpan } from "../../withSpan.js";
 import { RemoteControlProgramErrorMessage } from "../access/remoteControlProgramErrors.js";
@@ -96,31 +99,47 @@ export const issueRuntimeConnectionToken = (
   );
 
 /**
- * The connection token of the desktop companion, for its OAuth access token
- * of the Remote Control Program. The token contains the id of the grant and
- * no admin mode (decision 35 of the Remote Control Program). The relay
- * service accepts it only for a desktop companion.
+ * The principal of an OAuth access token of the desktop companion, for
+ * `issueDesktopCompanionConnectionToken()`. A separate step: the route checks
+ * the token before it reads the body.
  *
  * @throws InvalidTokenError when the access token is not valid, is for a
  * different resource, or its grant is revoked, or the user is banned
  * @throws SigningKeyUnavailableError when the host has no signing key
- * @throws ForbiddenError without the clearance of the app, a citizen or
+ * @throws ForbiddenError without the clearance of the app or
  * `remoteControlProgram;use`
  */
-export const issueDesktopCompanionConnectionToken = (
+export const authenticateDesktopCompanion = (
   context: ApplicationContext,
   accessToken: string,
-  input: IssueRuntimeConnectionTokenInput,
-): Promise<IssueRuntimeConnectionTokenOutput> =>
-  withSpan(context, "issueDesktopCompanionConnectionToken", async () => {
-    const { actor, grant } = await resolvePrincipal(
+): Promise<Principal> =>
+  withSpan(context, "authenticateDesktopCompanion", async () =>
+    resolvePrincipal(
       context,
       await verifyAccessToken(
         context,
         accessToken,
         OAuthResource.RemoteControlProgram,
       ),
-    );
+    ),
+  );
 
-    return issueToken(context, actor, input, grant.id);
-  });
+/**
+ * The connection token of the desktop companion, for the principal of its
+ * OAuth access token (`authenticateDesktopCompanion()`). The token contains
+ * the id of the grant and no admin mode (decision 35 of the Remote Control
+ * Program). The relay service accepts it only for a desktop companion.
+ *
+ * @throws ForbiddenError without a citizen or `remoteControlProgram;use`, or
+ * for a banned user
+ * @throws ConflictError when the host has no signing key
+ * (`RemoteControlProgramErrorMessage.TokenKeyNotConfigured`)
+ */
+export const issueDesktopCompanionConnectionToken = (
+  context: ApplicationContext,
+  { actor, grant }: Principal,
+  input: IssueRuntimeConnectionTokenInput,
+): Promise<IssueRuntimeConnectionTokenOutput> =>
+  withSpan(context, "issueDesktopCompanionConnectionToken", () =>
+    issueToken(context, actor, input, grant.id),
+  );

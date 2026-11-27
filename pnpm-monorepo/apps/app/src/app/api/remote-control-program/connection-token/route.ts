@@ -7,6 +7,7 @@ import {
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import {
+  authenticateDesktopCompanion,
   InvalidTokenError,
   issueDesktopCompanionConnectionToken,
   issueRuntimeConnectionToken,
@@ -77,10 +78,14 @@ const handleAccessTokenRequest = async (
   if (!accessToken) return bearerChallengeResponse("invalid_request", 400);
 
   try {
+    const context = getApplicationContext();
+    // The token before the body: a request without a valid token gets 401
+    const principal = await authenticateDesktopCompanion(context, accessToken);
+
     return tokenResponse(
       await issueDesktopCompanionConnectionToken(
-        getApplicationContext(),
-        accessToken,
+        context,
+        principal,
         await readBody(request),
       ),
     );
@@ -91,7 +96,7 @@ const handleAccessTokenRequest = async (
     if (error instanceof SigningKeyUnavailableError)
       return NextResponse.json(
         { error: "temporarily_unavailable" },
-        { status: 503 },
+        { status: 503, headers: { "cache-control": "no-store" } },
       );
 
     throw error;

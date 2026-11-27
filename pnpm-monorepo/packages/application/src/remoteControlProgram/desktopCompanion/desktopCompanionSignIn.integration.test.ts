@@ -35,6 +35,7 @@ import {
 import { RemoteControlProgramErrorMessage } from "../access/remoteControlProgramErrors.js";
 import { authenticateRuntimeConnection } from "../runtimes/authenticateRuntimeConnection.js";
 import {
+  authenticateDesktopCompanion,
   issueDesktopCompanionConnectionToken,
   issueRuntimeConnectionToken,
 } from "../runtimes/issueRuntimeConnectionToken.js";
@@ -174,7 +175,7 @@ test("the desktop companion signs in, connects as a runtime of the owner, and th
 
   const issued = await issueDesktopCompanionConnectionToken(
     context,
-    tokens.access_token,
+    await authenticateDesktopCompanion(context, tokens.access_token),
     { runtime_id: RUNTIME_ID },
   );
   expect(issued).toMatchObject({
@@ -229,9 +230,7 @@ test("the desktop companion signs in, connects as a runtime of the owner, and th
     new ForbiddenError(RemoteControlProgramErrorMessage.OAuthGrantRevoked),
   );
   await expect(
-    issueDesktopCompanionConnectionToken(context, tokens.access_token, {
-      runtime_id: RUNTIME_ID,
-    }),
+    authenticateDesktopCompanion(context, tokens.access_token),
   ).rejects.toThrow(InvalidTokenError);
   await expect(
     refreshAccessToken(context, {

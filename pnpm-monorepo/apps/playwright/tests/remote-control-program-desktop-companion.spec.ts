@@ -188,6 +188,16 @@ test.describe("the OAuth login of the desktop companion", () => {
     expect(connectionAfterLogOut.wwwAuthenticate).toContain(
       'error="invalid_token"',
     );
+    // The route checks the token before the body
+    expect(
+      (
+        await requestConnectionTokenWithAccessToken(
+          request,
+          authorization.accessToken,
+          "not-a-runtime-id",
+        )
+      ).status,
+    ).toBe(401);
     const refresh = await authorization.refresh(authorization.refreshToken);
     expect(refresh.error).toBe("invalid_grant");
   });

@@ -324,7 +324,7 @@ The runtimes and the relay service use one protocol over the WebSocket connectio
 - A runtime connects with a short-lived connection token (for example 120 seconds), and renews it over the open connection, like the collab tokens of the wiki. The relay service closes a connection without a valid token.
 - The runtimes get the connection token from the route `POST /api/remote-control-program/connection-token` with the body `{ "runtime_id": "<uuid>" }`. The answer is `{ "token", "expires_at", "relay_url", "citizen_id", "handle" }` (`relay_url` is null when the app has no relay service). The browser runtime uses the session of the app. The desktop companion sends its OAuth access token in the header `Authorization: Bearer <token>`, and never a session: then the connection token contains the id of the OAuth grant and no admin mode. Status codes:
   - `400`: the body or the `Authorization` header is not valid.
-  - `401`: no session, or the access token is not valid, its grant is revoked or its user is banned (with a `WWW-Authenticate` challenge).
+  - `401`: no session, or the access token is not valid, its grant is revoked or its user is banned (with a `WWW-Authenticate` challenge). The route checks the access token before the body.
   - `403`: no clearance of the app, no citizen or no `remoteControlProgram;use`, or a banned user of a session.
   - `503` for an access token, `409` for a session: the app has no signing key.
 - The relay service accepts the runtime kind `desktop_companion` only with a connection token from an OAuth grant, and the kind `browser` only with a token from a session.
