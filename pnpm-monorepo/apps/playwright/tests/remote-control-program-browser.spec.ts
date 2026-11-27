@@ -16,6 +16,8 @@ import {
 import {
   closeSharingPopover,
   expectUploadedLines,
+  logFileConnectorToggle,
+  openLogFileConnector,
   openOlderEntriesUpload,
   openSharingPopover,
   pickLogFolderInPopover,
@@ -172,11 +174,13 @@ test("a citizen who logs in after a different citizen in the same browser gets n
 
   /** The runtime of the second citizen has no folder and does not run */
   await openSharingPopover(page);
+  const secondCitizenBrowser = sharingPopoverSection(
+    page,
+    SharingPopoverSection.ThisBrowser,
+  );
+  await openLogFileConnector(secondCitizenBrowser);
   await expect(
-    sharingPopoverSection(page, SharingPopoverSection.ThisBrowser).getByText(
-      "Nicht ausgewählt",
-      { exact: true },
-    ),
+    secondCitizenBrowser.getByText("Nicht ausgewählt", { exact: true }),
   ).toBeVisible();
   await expect(runtimeState(page, "Gestoppt")).toBeVisible();
 
@@ -217,7 +221,10 @@ test("the sharing popover and the upload of older entries work with the keyboard
   );
   const grants = sharingPopoverSection(page, SharingPopoverSection.Grants);
 
-  /** Without a log folder, the popover opens with the explanation, whose links open the tabs */
+  /**
+   * Without a log folder, the popover opens with the explanation, whose links
+   * open the tabs. The link of the folder also opens the part of the folder.
+   */
   const start = sharingPopoverSection(page, SharingPopoverSection.Start);
   await expect(start).toBeVisible();
   await tabTo(
@@ -231,6 +238,10 @@ test("the sharing popover and the upload of older entries work with the keyboard
   await expect(
     sharingPopoverTab(page, SharingPopoverSection.ThisBrowser),
   ).toBeFocused();
+  await expect(logFileConnectorToggle(thisBrowser)).toHaveAttribute(
+    "aria-expanded",
+    "true",
+  );
 
   await tabTo(
     page,
@@ -239,7 +250,11 @@ test("the sharing popover and the upload of older entries work with the keyboard
   await page.keyboard.press("Enter");
   await expect(runtimeState(page, "Läuft")).toBeVisible();
 
-  /** Without a type that is on, the list of the types is open */
+  await tabTo(
+    page,
+    thisBrowser.getByRole("button", { name: /^Typen auswählen/ }),
+  );
+  await page.keyboard.press("Enter");
   const blueprintType = thisBrowser.getByRole("checkbox", {
     name: BLUEPRINT_TYPE_TITLE,
     exact: true,
@@ -262,9 +277,13 @@ test("the sharing popover and the upload of older entries work with the keyboard
   await expect(sharingPopover(page)).toHaveCount(0);
   await expect(trigger).toBeFocused();
 
-  /** The preset counts at once, and the end of the upload moves the focus */
+  /** The trigger opens no part. The preset counts at once, and the end of the upload moves the focus. */
   await page.keyboard.press("Enter");
   await expect(thisBrowser).toBeVisible();
+  await expect(logFileConnectorToggle(thisBrowser)).toHaveAttribute(
+    "aria-expanded",
+    "false",
+  );
   const form = await openOlderEntriesUpload(page);
   await tabTo(page, form.getByRole("button", { name: "Letzte 7 Tage" }));
   await page.keyboard.press("Enter");
@@ -308,6 +327,15 @@ test.describe("mobile", () => {
     );
     await expect(sharingPopoverTrigger(page)).toHaveCount(1);
     await openSharingPopover(page);
+    const thisBrowser = sharingPopoverSection(
+      page,
+      SharingPopoverSection.ThisBrowser,
+    );
+    /** Also without a folder, the trigger opens no part */
+    await expect(logFileConnectorToggle(thisBrowser)).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
     await showSharingPopoverSection(
       page,
       SharingPopoverSection.DesktopCompanion,
@@ -321,8 +349,12 @@ test.describe("mobile", () => {
     await page.keyboard.press("Escape");
     await expect(flyoutToggle).toHaveAttribute("aria-expanded", "false");
 
-    /** The Log Analyzer asks for the folder in the same sheet */
+    /** The Log Analyzer asks for the folder in the same sheet, with the part of the folder open */
     await page.getByRole("button", { name: "Öffnen", exact: true }).click();
+    await expect(logFileConnectorToggle(thisBrowser)).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
     await pickLogFolderInPopover(page);
     await closeSharingPopover(page);
     await expect(

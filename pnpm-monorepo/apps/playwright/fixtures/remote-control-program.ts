@@ -137,11 +137,19 @@ export const runtimeState = (page: Page, state: string) =>
   );
 
 /**
- * Opens the settings of the log file connector in the section. They are open
- * already while the connector needs the owner, for example without a folder.
+ * The toggle of the part of the log file connector. Its name has the summary
+ * of the closed part after the heading.
+ */
+export const logFileConnectorToggle = (section: Locator) =>
+  section.getByRole("button", { name: /^Game Logs/ });
+
+/**
+ * Opens the settings of the log file connector in the section. They are
+ * closed, except after a link to the log folder (for example the folder note
+ * of the Log Analyzer).
  */
 export const openLogFileConnector = async (section: Locator) => {
-  const toggle = section.getByRole("button", { name: /^Game Logs/ });
+  const toggle = logFileConnectorToggle(section);
   await expect(toggle).toBeVisible();
   if ((await toggle.getAttribute("aria-expanded")) !== "true")
     await toggle.click();
