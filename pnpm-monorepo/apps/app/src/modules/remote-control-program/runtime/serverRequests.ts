@@ -1,4 +1,8 @@
-import { connectionTokenSchema, RelayCloseReason } from "@sam-monorepo/domain";
+import {
+  connectionTokenSchema,
+  RelayCloseReason,
+  RUNTIME_CONNECTION_TOKEN_PATH,
+} from "@sam-monorepo/domain";
 import {
   CHANNEL_CLIENT_LIMITS,
   ChannelEndReason,
@@ -7,14 +11,6 @@ import {
 } from "@sam-monorepo/remote-control-program-runtime";
 import { decodeJwt } from "jose";
 import * as z from "zod";
-
-/**
- * The token request uses a route handler and not a server action: the URL of
- * a route stays the same after a deploy, thus a tab that is open during a
- * deploy continues to work. A server action also goes through the action
- * queue of the router.
- */
-const CONNECTION_TOKEN_PATH = "/api/remote-control-program/connection-token";
 
 /** Longer than a `wss://` URL of a host */
 const MAXIMUM_RELAY_URL_LENGTH = 2_048;
@@ -44,6 +40,11 @@ const connectionTokenClaimsSchema = z.object({
  * for a 401 of the route (the session ended), for a 403 (for example without
  * `remoteControlProgram;use`, after a ban, or in an assumed session), and for
  * a token of a different citizen.
+ *
+ * The token request uses a route handler and not a server action: the URL of
+ * a route stays the same after a deploy, thus a tab that is open during a
+ * deploy continues to work. A server action also goes through the action
+ * queue of the router.
  */
 export const requestConnectionToken = async (
   runtimeId: string,
@@ -51,7 +52,7 @@ export const requestConnectionToken = async (
   signal: AbortSignal,
 ): Promise<ConnectionTokenGrant> => {
   const response = await fetch(
-    new URL(CONNECTION_TOKEN_PATH, window.location.origin),
+    new URL(RUNTIME_CONNECTION_TOKEN_PATH, window.location.origin),
     {
       method: "POST",
       headers: { "content-type": "application/json" },

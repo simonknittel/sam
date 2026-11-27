@@ -13,7 +13,7 @@ Tests that use this data:
 
 ## `ip-address-marker/`
 
-`rule.json` is the IP rule:
+`rule.json` is the IP rule. A program reads the rule from the [export of the shared definitions](../remote-control-program-definitions/README.md) (`ip-address-rule.json`). A test of SAM makes sure that both contain the same rule.
 
 - `marker`: the text that replaces each address.
 - `patterns`: the regular expressions (`name`, `source`) in the order of their application. Apply each expression `passes_per_pattern` times. Each time, replace all matches (`g` in JavaScript and PostgreSQL, `replace_all` in Rust). Use no other flag: no case-insensitive flag, no multiline flag.

@@ -9,7 +9,8 @@
  * of an entry contains the line with the marker (see `logEntryHash.ts`). Do
  * not change the marker, the expressions, their order, the replacement or the
  * number of passes. A different rule is a new version with new names, and the
- * old version stays. The shared test data in
+ * old version stays. The export of the shared definitions contains the rule
+ * for the desktop companion. The shared test data in
  * `remote-control-program-fixtures/ip-address-marker/` contains the same
  * values, and its cases show the decisions below.
  *
@@ -213,16 +214,23 @@ export const IPV6_ADDRESS_PATTERN_SOURCE = `(${IPV6_START})(?:\\[${IPV6}\\]${POR
 export const IPV4_ADDRESS_PATTERN_SOURCE = `(^|[^0-9A-Za-z_.])${IPV4}(?:${PORT})?([^0-9A-Za-z_.]|\\.[^0-9A-Za-z_]|\\.?$)`;
 
 /** The expressions in the order of their application */
-export const IP_ADDRESS_PATTERN_SOURCES = [
-  IPV6_ADDRESS_PATTERN_SOURCE,
-  IPV4_ADDRESS_PATTERN_SOURCE,
+export const IP_ADDRESS_PATTERNS = [
+  { name: "ipv6", source: IPV6_ADDRESS_PATTERN_SOURCE },
+  { name: "ipv4", source: IPV4_ADDRESS_PATTERN_SOURCE },
 ] as const;
+
+export const IP_ADDRESS_PATTERN_SOURCES = IP_ADDRESS_PATTERNS.map(
+  ({ source }) => source,
+);
 
 /**
  * The replacement for the two expressions, in the syntax of JavaScript (see
- * the top of this file for PostgreSQL and Rust)
+ * the top of this file for PostgreSQL)
  */
 export const IP_ADDRESS_REPLACEMENT = `$1${IP_ADDRESS_MARKER}$2`;
+
+/** The replacement in the syntax of the `regex` crate of Rust */
+export const IP_ADDRESS_REPLACEMENT_FOR_RUST = `\${1}${IP_ADDRESS_MARKER}\${2}`;
 
 /** The passes of each expression, see the top of this file */
 export const IP_ADDRESS_REPLACEMENT_PASSES = 2;

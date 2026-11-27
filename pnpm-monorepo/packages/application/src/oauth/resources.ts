@@ -1,3 +1,4 @@
+import { REMOTE_CONTROL_PROGRAM_SCOPE } from "@sam-monorepo/domain";
 import { createActor, type Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
 import { canUseMcp, requireMcpAccess } from "../mcpAccess.js";
@@ -5,7 +6,7 @@ import {
   canUseRemoteControlProgram,
   requireRemoteControlProgramUse,
 } from "../remoteControlProgram/access/remoteControlProgramPermissions.js";
-import { MCP_SCOPE, REMOTE_CONTROL_PROGRAM_SCOPE } from "./constants.js";
+import { MCP_SCOPE } from "./constants.js";
 import { isDesktopCompanionClientId } from "./desktopCompanionClient.js";
 
 type ResourceContext = Pick<ApplicationContext, "urls">;

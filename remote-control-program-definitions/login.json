@@ -1,0 +1,9 @@
+{
+  "authorization_server_metadata_path": "/.well-known/oauth-authorization-server",
+  "protected_resource_metadata_path": "/.well-known/oauth-protected-resource/api/remote-control-program",
+  "resource_path": "/api/remote-control-program",
+  "scope": "remote_control_program",
+  "client_id_path": "/api/remote-control-program/desktop-companion/client-metadata.json",
+  "redirect_uri": "http://127.0.0.1/callback",
+  "connection_token_path": "/api/remote-control-program/connection-token"
+}

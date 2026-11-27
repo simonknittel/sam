@@ -14,12 +14,11 @@ import {
   SigningKeyUnavailableError,
   type IssueRuntimeConnectionTokenOutput,
 } from "@sam-monorepo/application";
+import {
+  REMOTE_CONTROL_PROGRAM_PROTECTED_RESOURCE_METADATA_PATH,
+  RUNTIME_CONNECTION_TOKEN_PATH,
+} from "@sam-monorepo/domain";
 import { NextResponse } from "next/server";
-
-const ROUTE_PATH = "/api/remote-control-program/connection-token";
-
-const PROTECTED_RESOURCE_METADATA_PATH =
-  "/.well-known/oauth-protected-resource/api/remote-control-program";
 
 /** RFC 6750 section 2.1. The scheme is case-insensitive (RFC 9110). */
 const BEARER_TOKEN = /^Bearer ([A-Za-z0-9\-._~+/]+=*)$/i;
@@ -61,7 +60,7 @@ const bearerChallengeResponse = (
         "cache-control": "no-store",
         "www-authenticate": `Bearer error="${error}", resource_metadata="${
           new URL(
-            PROTECTED_RESOURCE_METADATA_PATH,
+            REMOTE_CONTROL_PROGRAM_PROTECTED_RESOURCE_METADATA_PATH,
             getApplicationContext().urls.baseUrl,
           ).href
         }"`,
@@ -101,7 +100,10 @@ const handleAccessTokenRequest = async (
 
 /** The browser runtime: the session of the app */
 const handleSessionRequest = async (request: Request) => {
-  const authentication = await requireAuthenticationApi(ROUTE_PATH, "POST");
+  const authentication = await requireAuthenticationApi(
+    RUNTIME_CONNECTION_TOKEN_PATH,
+    "POST",
+  );
 
   return tokenResponse(
     await issueRuntimeConnectionToken(

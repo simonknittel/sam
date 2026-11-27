@@ -1,3 +1,4 @@
+import { DESKTOP_COMPANION_REDIRECT_URI } from "@sam-monorepo/domain";
 import * as z from "zod";
 import type { ApplicationContext } from "../context.js";
 import { ValidationError } from "../errors.js";
@@ -10,7 +11,6 @@ import {
 import { isLoopbackHostname, MAX_URL_LENGTH } from "./constants.js";
 import {
   DESKTOP_COMPANION_CLIENT_NAME,
-  DESKTOP_COMPANION_REDIRECT_URI,
   isDesktopCompanionClientId,
 } from "./desktopCompanionClient.js";
 

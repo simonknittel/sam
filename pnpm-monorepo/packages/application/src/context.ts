@@ -1,11 +1,12 @@
 import type { Tracer } from "@opentelemetry/api";
 import type { PrismaClientType } from "@sam-monorepo/database";
-import type {
-  AuditEventInput,
-  CitizenRealtimeChannel,
-  GuildScheduledEventChange,
-  GuildScheduledEventContent,
-  GuildScheduledEventTarget,
+import {
+  REMOTE_CONTROL_PROGRAM_RESOURCE_PATH,
+  type AuditEventInput,
+  type CitizenRealtimeChannel,
+  type GuildScheduledEventChange,
+  type GuildScheduledEventContent,
+  type GuildScheduledEventTarget,
 } from "@sam-monorepo/domain";
 import type { JWK, JWTVerifyGetKey } from "jose";
 import type { KeyObject } from "node:crypto";
@@ -322,7 +323,7 @@ export const createApplicationUrls = ({
     issuer: baseUrl.href.replace(/\/$/, ""),
     mcpResourceUrl: new URL("/api/mcp", baseUrl),
     remoteControlProgramResourceUrl: new URL(
-      "/api/remote-control-program",
+      REMOTE_CONTROL_PROGRAM_RESOURCE_PATH,
       baseUrl,
     ),
     publicUploadBaseUrl: publicUploadBaseUrl.replace(/\/+$/, ""),

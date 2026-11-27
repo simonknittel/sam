@@ -301,6 +301,7 @@ export {
 } from "./readAuditEventTypes.js";
 export { ReadMarkerSubject } from "./readMarkers/ReadMarkerSubject.js";
 export * from "./remoteControlProgram/catalog.js";
+export * from "./remoteControlProgram/desktopCompanionLogin.js";
 export * from "./remoteControlProgram/feedDeliveryEvent.js";
 export * from "./remoteControlProgram/grantAccess.js";
 export * from "./remoteControlProgram/ipAddressMarker.js";

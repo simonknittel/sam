@@ -1,11 +1,7 @@
+import { REMOTE_CONTROL_PROGRAM_SCOPE } from "@sam-monorepo/domain";
+
 /** The only scope of the MCP server. It gives the permissions of the user. */
 export const MCP_SCOPE = "mcp";
-
-/**
- * The only scope of the Remote Control Program: the desktop companion gets
- * connection tokens for the runtime of the citizen of the user
- */
-export const REMOTE_CONTROL_PROGRAM_SCOPE = "remote_control_program";
 
 /**
  * Accepted in an authorization request, but without an effect: the

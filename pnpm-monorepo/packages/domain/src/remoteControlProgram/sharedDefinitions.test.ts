@@ -14,6 +14,21 @@ import {
   RuntimeKind,
 } from "./catalog.js";
 import {
+  AUTHORIZATION_SERVER_METADATA_PATH,
+  DESKTOP_COMPANION_CLIENT_ID_PATH,
+  DESKTOP_COMPANION_REDIRECT_URI,
+  REMOTE_CONTROL_PROGRAM_PROTECTED_RESOURCE_METADATA_PATH,
+  REMOTE_CONTROL_PROGRAM_RESOURCE_PATH,
+  REMOTE_CONTROL_PROGRAM_SCOPE,
+  RUNTIME_CONNECTION_TOKEN_PATH,
+} from "./desktopCompanionLogin.js";
+import {
+  IP_ADDRESS_MARKER,
+  IP_ADDRESS_PATTERNS,
+  IP_ADDRESS_REPLACEMENT_FOR_RUST,
+  IP_ADDRESS_REPLACEMENT_PASSES,
+} from "./ipAddressMarker.js";
+import {
   DOWN_MESSAGE_PROTOCOL_VERSIONS,
   downMessageSchema,
   MINIMUM_RELAY_PROTOCOL_VERSION,
@@ -113,5 +128,31 @@ describe("the export of the shared definitions", () => {
         }),
       }),
     ).toMatchFileSnapshot(`${DEFINITIONS}log-entry-patterns.json`);
+  });
+
+  test("of the login of the desktop companion", async () => {
+    await expect(
+      toJson({
+        authorization_server_metadata_path: AUTHORIZATION_SERVER_METADATA_PATH,
+        protected_resource_metadata_path:
+          REMOTE_CONTROL_PROGRAM_PROTECTED_RESOURCE_METADATA_PATH,
+        resource_path: REMOTE_CONTROL_PROGRAM_RESOURCE_PATH,
+        scope: REMOTE_CONTROL_PROGRAM_SCOPE,
+        client_id_path: DESKTOP_COMPANION_CLIENT_ID_PATH,
+        redirect_uri: DESKTOP_COMPANION_REDIRECT_URI,
+        connection_token_path: RUNTIME_CONNECTION_TOKEN_PATH,
+      }),
+    ).toMatchFileSnapshot(`${DEFINITIONS}login.json`);
+  });
+
+  test("of the IP rule", async () => {
+    await expect(
+      toJson({
+        marker: IP_ADDRESS_MARKER,
+        patterns: IP_ADDRESS_PATTERNS,
+        passes_per_pattern: IP_ADDRESS_REPLACEMENT_PASSES,
+        replacement: { rust: IP_ADDRESS_REPLACEMENT_FOR_RUST },
+      }),
+    ).toMatchFileSnapshot(`${DEFINITIONS}ip-address-rule.json`);
   });
 });

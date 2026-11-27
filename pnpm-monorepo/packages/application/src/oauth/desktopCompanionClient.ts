@@ -1,20 +1,14 @@
+import {
+  DESKTOP_COMPANION_CLIENT_ID_PATH,
+  DESKTOP_COMPANION_REDIRECT_URI,
+  REMOTE_CONTROL_PROGRAM_SCOPE,
+} from "@sam-monorepo/domain";
 import type { ApplicationContext } from "../context.js";
 import type { ClientMetadataDocument } from "./clientMetadataDocument.js";
-import { REMOTE_CONTROL_PROGRAM_SCOPE } from "./constants.js";
 
 type ClientContext = Pick<ApplicationContext, "urls">;
 
 export const DESKTOP_COMPANION_CLIENT_NAME = "SAM Desktop Companion";
-
-/**
- * The program listens on a random port of the loopback interface for one
- * redirect. `matchRedirectUri()` ignores the port of a loopback redirect URI
- * (RFC 8252 section 7.3).
- */
-export const DESKTOP_COMPANION_REDIRECT_URI = "http://127.0.0.1/callback";
-
-const CLIENT_ID_PATH =
-  "/api/remote-control-program/desktop-companion/client-metadata.json";
 
 /**
  * The client id of the desktop companion: the URL of its Client ID Metadata
@@ -22,7 +16,7 @@ const CLIENT_ID_PATH =
  * program builds it from its SAM address.
  */
 export const getDesktopCompanionClientId = ({ urls }: ClientContext) =>
-  new URL(CLIENT_ID_PATH, urls.baseUrl).href;
+  new URL(DESKTOP_COMPANION_CLIENT_ID_PATH, urls.baseUrl).href;
 
 export const isDesktopCompanionClientId = (
   context: ClientContext,

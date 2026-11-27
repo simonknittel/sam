@@ -8,8 +8,9 @@ import {
 import {
   containsIpAddress,
   IP_ADDRESS_MARKER,
-  IP_ADDRESS_PATTERN_SOURCES,
+  IP_ADDRESS_PATTERNS,
   IP_ADDRESS_REPLACEMENT,
+  IP_ADDRESS_REPLACEMENT_FOR_RUST,
   IP_ADDRESS_REPLACEMENT_PASSES,
   replaceIpAddresses,
 } from "./ipAddressMarker.js";
@@ -43,7 +44,10 @@ interface IpRule {
     readonly source: string;
   }[];
   readonly passes_per_pattern: number;
-  readonly replacement: { readonly javascript: string };
+  readonly replacement: {
+    readonly javascript: string;
+    readonly rust: string;
+  };
 }
 
 interface IpCase {
@@ -102,18 +106,23 @@ const applyIpRuleOfSharedTestData = (line: string) => {
 };
 
 describe("the IP rule", () => {
-  /** The rule is immutable data, see `ipAddressMarker.ts` */
+  /**
+   * The rule is immutable data, see `ipAddressMarker.ts`. The export of the
+   * shared definitions comes from the same values.
+   */
   test("is the rule of the shared test data", () => {
     expect({
       marker: IP_ADDRESS_MARKER,
-      sources: IP_ADDRESS_PATTERN_SOURCES,
+      patterns: IP_ADDRESS_PATTERNS,
       passes: IP_ADDRESS_REPLACEMENT_PASSES,
       replacement: IP_ADDRESS_REPLACEMENT,
+      replacementForRust: IP_ADDRESS_REPLACEMENT_FOR_RUST,
     }).toEqual({
       marker: ipRule.marker,
-      sources: ipRule.patterns.map(({ source }) => source),
+      patterns: ipRule.patterns,
       passes: ipRule.passes_per_pattern,
       replacement: ipRule.replacement.javascript,
+      replacementForRust: ipRule.replacement.rust,
     });
   });
 
