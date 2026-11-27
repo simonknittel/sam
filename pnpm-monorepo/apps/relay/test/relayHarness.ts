@@ -1,5 +1,9 @@
 import {
+  authenticateDesktopCompanion,
   createActor,
+  getDesktopCompanionClientId,
+  issueAccessToken,
+  issueDesktopCompanionConnectionToken,
   issueRuntimeConnectionToken,
   type ApplicationContext,
   type LogArguments,
@@ -8,6 +12,7 @@ import {
 } from "@sam-monorepo/application";
 import {
   DownMessageType,
+  REMOTE_CONTROL_PROGRAM_SCOPE,
   transformPermissionStringToPermissionSet,
 } from "@sam-monorepo/domain";
 import { createRelayClient } from "@sam-monorepo/infrastructure";
@@ -21,7 +26,7 @@ import { parseRelayEnvironment } from "../src/env.js";
 import { createProgramSwitch } from "../src/programSwitch.js";
 import type { RelayTiming } from "../src/relayConnection.js";
 import { createRelayServer } from "../src/relayServer.js";
-import { OWNER_PERMISSION_STRINGS } from "./database.js";
+import { createOAuthGrant, OWNER_PERMISSION_STRINGS } from "./database.js";
 import { TestRuntimeClient } from "./runtimeClient.js";
 
 /** The app of the tests: the issuer of the tokens and the permitted origin */
@@ -185,6 +190,40 @@ export const startRelay = async ({
       )
     ).token;
 
+  /**
+   * The login of a desktop companion without the consent page: an OAuth
+   * grant and an access token. It gives the connection tokens of the grant,
+   * like the route of the app.
+   */
+  const signInDesktopCompanion = async (owner: Owner) => {
+    const appContext = createAppContext();
+    const clientId = getDesktopCompanionClientId(appContext);
+    const grantId = await createOAuthGrant({
+      userId: owner.userId,
+      clientId,
+      scope: REMOTE_CONTROL_PROGRAM_SCOPE,
+      resource: appContext.urls.remoteControlProgramResourceUrl.href,
+    });
+    const accessToken = await issueAccessToken(appContext, {
+      id: grantId,
+      userId: owner.userId,
+      clientId,
+      scope: REMOTE_CONTROL_PROGRAM_SCOPE,
+    });
+
+    return {
+      grantId,
+      issueToken: async (runtimeId: string) =>
+        (
+          await issueDesktopCompanionConnectionToken(
+            appContext,
+            await authenticateDesktopCompanion(appContext, accessToken),
+            { runtime_id: runtimeId },
+          )
+        ).token,
+    };
+  };
+
   return {
     relayUrl,
     signingKey,
@@ -201,6 +240,7 @@ export const startRelay = async ({
     createAppContext,
     createOwnerActor,
     issueToken,
+    signInDesktopCompanion,
     getHttpUrl: (path: string) => new URL(path, `http://127.0.0.1:${port}`),
     openClient: (headers?: Record<string, string>) =>
       TestRuntimeClient.open(relayUrl, headers),

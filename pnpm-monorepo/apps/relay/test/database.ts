@@ -45,6 +45,32 @@ export const createOwner = async (handle = "owner") => {
   return { citizenId: citizen.id, handle, userId: citizen.userId };
 };
 
+/** An OAuth grant of the user, without the consent page */
+export const createOAuthGrant = async ({
+  userId,
+  clientId,
+  scope,
+  resource,
+}: {
+  readonly userId: string;
+  readonly clientId: string;
+  readonly scope: string;
+  readonly resource: string;
+}) =>
+  (
+    await prisma.oAuthGrant.create({
+      data: {
+        userId,
+        clientId,
+        clientName: "SAM Desktop Companion",
+        redirectHost: "127.0.0.1",
+        scope,
+        resource,
+      },
+      select: { id: true },
+    })
+  ).id;
+
 export const findLogEntryRows = (ownerCitizenId: string) =>
   prisma.logAnalyzerEntry.findMany({
     where: { createdById: ownerCitizenId },

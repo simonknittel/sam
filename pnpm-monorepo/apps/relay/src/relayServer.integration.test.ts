@@ -1,4 +1,7 @@
-import { RUNTIME_CONNECTION_TOKEN_AUDIENCE } from "@sam-monorepo/application";
+import {
+  revokeOwnDesktopCompanionSignIn,
+  RUNTIME_CONNECTION_TOKEN_AUDIENCE,
+} from "@sam-monorepo/application";
 import {
   AcknowledgementErrorCode,
   AcknowledgementResult,
@@ -12,6 +15,7 @@ import {
   RELAY_LIMITS,
   RELAY_PROTOCOL_VERSION,
   RelayCloseReason,
+  RuntimeKind,
   UpMessageType,
   type FeedEntriesContent,
   type FeedEntryKeysRequestContent,
@@ -286,6 +290,48 @@ test("renews the token over the open connection, and closes the connection at th
   ).resolves.toMatchObject({ result: AcknowledgementResult.Accepted });
 
   await expectClose(client, RelayCloseReason.TokenNotValid);
+});
+
+test("a desktop companion connects with a token of its OAuth grant, and its sign-out closes the connection at the next renewal", async () => {
+  const {
+    openClient,
+    signInDesktopCompanion,
+    createAppContext,
+    createOwnerActor,
+  } = await start();
+  const owner = await createOwner();
+  const { grantId, issueToken } = await signInDesktopCompanion(owner);
+  // The program got the token of the renewal before the sign-out
+  const helloToken = await issueToken(RUNTIME_ID);
+  const renewalToken = await issueToken(RUNTIME_ID);
+
+  const client = await openClient();
+  client.sendHello(helloToken, RUNTIME_ID, {
+    runtimeKind: RuntimeKind.desktop_companion,
+  });
+  await client.waitForMessage(DownMessageType.Welcome);
+  await announce(client);
+  await expect(upload(client)).resolves.toMatchObject({
+    result: AcknowledgementResult.Accepted,
+    new_entry_count: 2,
+  });
+
+  // The sign-out in the sharing popover
+  await expect(
+    revokeOwnDesktopCompanionSignIn(
+      createAppContext(),
+      createOwnerActor(owner),
+      { grant_id: grantId },
+    ),
+  ).resolves.toEqual({ isChanged: true });
+  await expect(sendHeartbeat(client)).resolves.toMatchObject({
+    result: AcknowledgementResult.Accepted,
+  });
+
+  client.send(
+    createUpMessage(UpMessageType.TokenRenewal, { token: renewalToken }),
+  );
+  await expectClose(client, RelayCloseReason.AccessDenied);
 });
 
 test("limits the uploads of a runtime also across a reconnect, and closes a connection with too many errors or with a message above the size limit", async () => {
@@ -583,7 +629,9 @@ test("refuses a hello of protocol version 1 with update_necessary", async () => 
   const owner = await createOwner();
 
   const client = await openClient();
-  client.sendHello(await issueToken(owner, RUNTIME_ID), RUNTIME_ID, 1);
+  client.sendHello(await issueToken(owner, RUNTIME_ID), RUNTIME_ID, {
+    protocolVersion: 1,
+  });
   await expectRefusal(client, RelayCloseReason.UpdateNecessary);
 });
 
