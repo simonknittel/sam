@@ -8,6 +8,7 @@ import {
 } from "@/modules/common/components/Button2";
 import Note from "@/modules/common/components/Note";
 import { ConnectorId } from "@sam-monorepo/domain";
+import { useState } from "react";
 import toast from "react-hot-toast";
 import { FaFolderOpen, FaKey } from "react-icons/fa6";
 import {
@@ -46,6 +47,40 @@ const getFolderText = ({ folder }: BrowserRuntimeSnapshot) => {
   }
 };
 
+/**
+ * A problem that stops the connector and that the owner must solve: the
+ * browser needs the permission for the folder again, or the runtime has an
+ * error. A step of the setup (no folder, no type that is on) is not a
+ * problem.
+ */
+const hasProblem = ({ folder, error }: BrowserRuntimeSnapshot) =>
+  folder.state === LogFolderState.PermissionNeeded || error !== null;
+
+/**
+ * The part is closed by default and a direct link opens it. It also opens
+ * when a problem starts, because the problem is visible only inside the
+ * part. It does not close by itself, and the owner can close it.
+ */
+const useIsExpandedForProblem = (
+  isProblem: boolean,
+  isExpanded: boolean,
+  onExpandedChange: (isExpanded: boolean) => void,
+) => {
+  const [isOpenForProblem, setIsOpenForProblem] = useState(isProblem);
+  const [wasProblem, setWasProblem] = useState(isProblem);
+  if (isProblem !== wasProblem) {
+    setWasProblem(isProblem);
+    if (isProblem) setIsOpenForProblem(true);
+  }
+
+  const changeExpanded = (nextIsExpanded: boolean) => {
+    setIsOpenForProblem(false);
+    onExpandedChange(nextIsExpanded);
+  };
+
+  return [isOpenForProblem || isExpanded, changeExpanded] as const;
+};
+
 interface Props {
   readonly runtime: BrowserRuntimeHandle;
 }
@@ -63,18 +98,23 @@ export const LogFileConnectorControl = ({
 }: ControlProps) => {
   const { state, commands } = runtime;
   const folderText = getFolderText(state);
+  const [isPartExpanded, changePartExpanded] = useIsExpandedForProblem(
+    hasProblem(state),
+    isExpanded,
+    onExpandedChange,
+  );
 
   return (
     <SharingPopoverCollapsible
       heading={CONNECTOR_LABELS[ConnectorId.LogFile]}
       summary={
-        isExpanded
+        isPartExpanded
           ? null
           : `${folderText}, ${formatLogEntryTypeCount(state.localAccess.logEntryTypes)} Typen`
       }
       progressText={state.isReading ? "Logs werden gelesen …" : null}
-      isExpanded={isExpanded}
-      onExpandedChange={onExpandedChange}
+      isExpanded={isPartExpanded}
+      onExpandedChange={changePartExpanded}
     >
       <p className="text-sm text-neutral-400">
         Dieser Connector liest die Log-Dateien von Star Citizen und lädt daraus
