@@ -9,7 +9,7 @@ import {
   SharingPopoverTopicList,
 } from "./SharingPopoverTopic";
 
-/** How the owner uses the log file connector. Closed at first. */
+/** How the owner uses the log file connector */
 export const LogFileConnectorGuide = () => {
   const [isExpanded, setIsExpanded] = useState(false);
 

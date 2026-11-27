@@ -13,7 +13,11 @@ interface Props {
   readonly children: ReactNode;
 }
 
-/** A part of a section of the sharing popover that the owner can close */
+/**
+ * A part of a section of the sharing popover that the owner can open and
+ * close. It is closed by default: only a link that names the part opens it
+ * (see `SharingPopoverRuntimeLocation`).
+ */
 export const SharingPopoverCollapsible = ({
   heading,
   summary,

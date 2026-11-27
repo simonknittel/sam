@@ -17,7 +17,7 @@ interface Props {
 
 /**
  * The upload of the entries of a date range that did not go up automatically
- * (decision 27). Closed at first.
+ * (decision 27)
  */
 export const OlderEntriesUpload = ({ runtime }: Props) => {
   const [isExpanded, setIsExpanded] = useState(false);

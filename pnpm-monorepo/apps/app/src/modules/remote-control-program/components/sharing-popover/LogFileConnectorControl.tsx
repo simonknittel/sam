@@ -8,7 +8,6 @@ import {
 } from "@/modules/common/components/Button2";
 import Note from "@/modules/common/components/Note";
 import { ConnectorId } from "@sam-monorepo/domain";
-import { useState } from "react";
 import toast from "react-hot-toast";
 import { FaFolderOpen, FaKey } from "react-icons/fa6";
 import {
@@ -18,10 +17,7 @@ import {
 } from "../../runtime/types";
 import { BROWSER_RUNTIME_ERROR_TEXTS } from "./browserRuntimeTexts";
 import { CONNECTOR_LABELS } from "./catalogTexts";
-import {
-  countLogEntryTypesThatAreOn,
-  formatLogEntryTypeCount,
-} from "./logEntryTypeRules";
+import { formatLogEntryTypeCount } from "./logEntryTypeRules";
 import { LogEntryTypeSettings } from "./LogEntryTypeSettings";
 import { LogFileConnectorGuide } from "./LogFileConnectorGuide";
 import { OlderEntriesUpload } from "./OlderEntriesUpload";
@@ -54,34 +50,19 @@ interface Props {
   readonly runtime: BrowserRuntimeHandle;
 }
 
-/** The owner must do something in the settings of the connector */
-const needsOwner = ({ folder, localAccess, error }: BrowserRuntimeSnapshot) =>
-  folder.state === LogFolderState.NotSelected ||
-  folder.state === LogFolderState.PermissionNeeded ||
-  countLogEntryTypesThatAreOn(localAccess.logEntryTypes) === 0 ||
-  error !== null;
-
-/**
- * Open while the connector needs the owner. It does not close by itself: the
- * owner who does the next step is in the middle of the settings.
- */
-const useIsExpanded = (isNeeded: boolean) => {
-  const [isExpanded, setIsExpanded] = useState(isNeeded);
-
-  const [wasNeeded, setWasNeeded] = useState(isNeeded);
-  if (isNeeded !== wasNeeded) {
-    setWasNeeded(isNeeded);
-    if (isNeeded) setIsExpanded(true);
-  }
-
-  return [isExpanded, setIsExpanded] as const;
-};
+interface ControlProps extends Props {
+  readonly isExpanded: boolean;
+  readonly onExpandedChange: (isExpanded: boolean) => void;
+}
 
 /** The folder of the log file connector and its rules of the local access layer */
-export const LogFileConnectorControl = ({ runtime }: Props) => {
+export const LogFileConnectorControl = ({
+  runtime,
+  isExpanded,
+  onExpandedChange,
+}: ControlProps) => {
   const { state, commands } = runtime;
   const folderText = getFolderText(state);
-  const [isExpanded, setIsExpanded] = useIsExpanded(needsOwner(state));
 
   return (
     <SharingPopoverCollapsible
@@ -93,7 +74,7 @@ export const LogFileConnectorControl = ({ runtime }: Props) => {
       }
       progressText={state.isReading ? "Logs werden gelesen …" : null}
       isExpanded={isExpanded}
-      onExpandedChange={setIsExpanded}
+      onExpandedChange={onExpandedChange}
     >
       <p className="text-sm text-neutral-400">
         Dieser Connector liest die Log-Dateien von Star Citizen und lädt daraus

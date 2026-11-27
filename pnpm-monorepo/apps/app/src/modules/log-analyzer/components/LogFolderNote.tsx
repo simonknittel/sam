@@ -3,7 +3,11 @@
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Note from "@/modules/common/components/Note";
 import { useSharingPopoverOpener } from "@/modules/remote-control-program/components/sharing-popover/SharingPopoverProvider";
-import { BROWSER_RUNTIME_LOCATION } from "@/modules/remote-control-program/components/sharing-popover/SharingPopoverTab";
+import {
+  BROWSER_RUNTIME_LOCATION,
+  LOG_FOLDER_LOCATION,
+  type SharingPopoverLocation,
+} from "@/modules/remote-control-program/components/sharing-popover/SharingPopoverTab";
 import { useIsUploadedByDesktopCompanion } from "@/modules/remote-control-program/consumer/useIsUploadedByDesktopCompanion";
 import {
   LogFolderState,
@@ -18,8 +22,8 @@ import { FaTowerBroadcast } from "react-icons/fa6";
 interface FolderNote {
   readonly type: NonNullable<ComponentProps<typeof Note>["type"]>;
   readonly text: string;
-  /** The owner changes the state in the sharing popover */
-  readonly canOpenPopover: boolean;
+  /** Where the owner changes the state in the sharing popover. Null: the owner cannot change it. */
+  readonly location: SharingPopoverLocation | null;
 }
 
 /**
@@ -29,7 +33,7 @@ interface FolderNote {
 const DESKTOP_COMPANION_NOTE: FolderNote = {
   type: "info",
   text: "Dein Desktop Companion lädt deine eigenen Einträge hoch. Dieser Browser braucht deshalb keinen Log-Ordner.",
-  canOpenPopover: false,
+  location: null,
 };
 
 /** Null when the browser runtime reads the folder, or did not tell its state yet */
@@ -45,21 +49,21 @@ const getFolderNote = ({
       return {
         type: "warning",
         text: `${BROWSER_NOT_SUPPORTED_TEXT} Du siehst hier nur die Einträge anderer und deine Einträge von anderen Rechnern.`,
-        canOpenPopover: false,
+        location: null,
       };
 
     case LogFolderState.NotSelected:
       return {
         type: "info",
         text: "Wähle im Remote Control Program den Ordner deiner Star-Citizen-Installation aus, damit der Log Analyzer auch deine eigenen Einträge anzeigt.",
-        canOpenPopover: true,
+        location: LOG_FOLDER_LOCATION,
       };
 
     case LogFolderState.PermissionNeeded:
       return {
         type: "warning",
         text: `Der Browser braucht erneut deine Erlaubnis, um ${folder.name ? `den Ordner „${folder.name}“` : "deinen Log-Ordner"} zu lesen. Du kannst sie im Remote Control Program erteilen.`,
-        canOpenPopover: true,
+        location: LOG_FOLDER_LOCATION,
       };
 
     case LogFolderState.Granted:
@@ -68,7 +72,8 @@ const getFolderNote = ({
         : {
             type: "info",
             text: "Die Runtime ist gestoppt, deshalb werden deine Logs gerade nicht gelesen. Du kannst sie im Remote Control Program starten.",
-            canOpenPopover: true,
+            // The start button is above the parts of the connectors
+            location: BROWSER_RUNTIME_LOCATION,
           };
 
     default:
@@ -96,6 +101,7 @@ export const LogFolderNote = () => {
   const note = isUploadedByDesktopCompanion
     ? DESKTOP_COMPANION_NOTE
     : folderNote;
+  const { location } = note;
 
   return (
     <Note
@@ -104,11 +110,11 @@ export const LogFolderNote = () => {
         <div className="flex flex-1 flex-wrap items-center justify-between gap-2">
           <p>{note.text}</p>
 
-          {note.canOpenPopover && opener && (
+          {location && opener && (
             <Button2
               type="button"
               variant={Button2Variant.Secondary}
-              onClick={() => opener.open(BROWSER_RUNTIME_LOCATION)}
+              onClick={() => opener.open(location)}
             >
               <FaTowerBroadcast />
               Öffnen

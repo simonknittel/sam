@@ -9,6 +9,7 @@ import {
   TabsProvider,
   useTabsContext,
 } from "@/modules/common/components/tabs/TabsContext";
+import type { ConnectorId } from "@sam-monorepo/domain";
 import { useRef, useState, type RefObject } from "react";
 import { flushSync } from "react-dom";
 import { LogFolderState } from "../../runtime/types";
@@ -21,7 +22,9 @@ import {
   SHARING_POPOVER_TAB_LABELS,
   SharingPopoverRuntimeTab,
   SharingPopoverTab,
+  type ExpandedConnectors,
   type SharingPopoverLocation,
+  type SharingPopoverRuntimeLocation,
 } from "./SharingPopoverTab";
 import { StartSection } from "./StartSection";
 import { useSharingPopoverQuery } from "./useSharingPopoverQuery";
@@ -38,6 +41,14 @@ const getReadErrorText = ({ data, message }: ReadError) => {
   if (data?.code === "FORBIDDEN") return message;
   return "Der Status konnte nicht geladen werden.";
 };
+
+/** Only the part of the connector of the location is open */
+const getExpandedConnectors = (
+  location: SharingPopoverLocation,
+): ExpandedConnectors =>
+  location.tab === SharingPopoverTab.Runtimes && location.connector
+    ? { [location.connector]: true }
+    : {};
 
 interface Props {
   /** For example the Log Analyzer asks for the log folder. Null: the trigger opened the popover. */
@@ -68,6 +79,20 @@ export const SharingPopoverContent = ({ locationOfControlUi }: Props) => {
       ? initialLocation.runtimeTab
       : SharingPopoverRuntimeTab.Browser,
   );
+  const [expandedConnectors, setExpandedConnectors] = useState(() =>
+    getExpandedConnectors(initialLocation),
+  );
+
+  const setConnectorExpanded = (connector: ConnectorId, isExpanded: boolean) =>
+    setExpandedConnectors((current) => ({
+      ...current,
+      [connector]: isExpanded,
+    }));
+
+  const showRuntimeLocation = (location: SharingPopoverRuntimeLocation) => {
+    setRuntimeTab(location.runtimeTab);
+    if (location.connector) setConnectorExpanded(location.connector, true);
+  };
 
   const serverState = (
     <ServerState
@@ -110,7 +135,7 @@ export const SharingPopoverContent = ({ locationOfControlUi }: Props) => {
         <StartPanel
           tabListRef={tabListRef}
           runtimeTabListRef={runtimeTabListRef}
-          onRuntimeTabChange={setRuntimeTab}
+          onShowRuntimeLocation={showRuntimeLocation}
         />
       </TabPanel>
 
@@ -131,6 +156,8 @@ export const SharingPopoverContent = ({ locationOfControlUi }: Props) => {
         <RuntimesSection
           runtimeTab={runtimeTab}
           onRuntimeTabChange={setRuntimeTab}
+          expandedConnectors={expandedConnectors}
+          onConnectorExpandedChange={setConnectorExpanded}
           tabListRef={runtimeTabListRef}
           serverState={serverState}
           desktopCompanions={data?.desktopCompanions}
@@ -144,13 +171,16 @@ export const SharingPopoverContent = ({ locationOfControlUi }: Props) => {
 interface StartPanelProps {
   readonly tabListRef: RefObject<HTMLDivElement | null>;
   readonly runtimeTabListRef: RefObject<HTMLDivElement | null>;
-  readonly onRuntimeTabChange: (runtimeTab: SharingPopoverRuntimeTab) => void;
+  /** Shows the sub-tab of the location and opens the part of its connector */
+  readonly onShowRuntimeLocation: (
+    location: SharingPopoverRuntimeLocation,
+  ) => void;
 }
 
 const StartPanel = ({
   tabListRef,
   runtimeTabListRef,
-  onRuntimeTabChange,
+  onShowRuntimeLocation,
 }: StartPanelProps) => {
   const { setActiveTab } = useTabsContext();
 
@@ -162,7 +192,7 @@ const StartPanel = ({
     flushSync(() => {
       setActiveTab(location.tab);
       if (location.tab === SharingPopoverTab.Runtimes)
-        onRuntimeTabChange(location.runtimeTab);
+        onShowRuntimeLocation(location);
     });
     const activeTabList =
       location.tab === SharingPopoverTab.Runtimes

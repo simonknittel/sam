@@ -10,7 +10,6 @@ import {
 import type { LogAnalyzerEntryType } from "@sam-monorepo/domain";
 import { useId, useState, type ReactNode } from "react";
 import {
-  countLogEntryTypesThatAreOn,
   formatLogEntryTypeCount,
   type LogEntryTypeRules,
 } from "./logEntryTypeRules";
@@ -32,9 +31,7 @@ interface Props {
  * type: one rule applies to all versions of a type.
  */
 export const LogEntryTypeSettings = ({ logEntryTypes, onChange }: Props) => {
-  const onCount = countLogEntryTypesThatAreOn(logEntryTypes);
-  // Without a type that is on, the list is the next step of the owner
-  const [isExpanded, setIsExpanded] = useState(onCount === 0);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <SharingPopoverCollapsible
