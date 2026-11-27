@@ -554,7 +554,7 @@ These ideas have no use case or no reliable source yet. They are not part of the
 
 ## Decisions
 
-Decisions 1 to 26 are of 2026-11-21, except decision 23. Decisions 27 to 29 are of 2026-11-22. Decisions 23, 30 and 31 are of 2026-11-25. Decisions 32 to 37 are of 2026-11-26. Decision 30 also changed decisions 8 and 12. The decisions that apply only to the migration are in [Migration](./migration.md#decisions-of-the-migration).
+Decisions 1 to 26 are of 2026-11-21, except decision 23. Decisions 27 to 29 are of 2026-11-22. Decisions 23, 30 and 31 are of 2026-11-25. Decisions 32 to 37 are of 2026-11-26. Decision 38 is of 2026-11-27. Decision 30 also changed decisions 8 and 12. The decisions that apply only to the migration are in [Migration](./migration.md#decisions-of-the-migration).
 
 1. **Name.** The working title is "Remote Control Program". The code can use it, for example `remoteControlProgram` and `remote_control_program`.
 2. **Rust for the desktop companion.** It uses little memory and processor time while the game runs. It has a mature native gRPC client. It builds one executable file for each operating system, without a separate runtime. Result: the log file connector and the catalog need one definition for TypeScript and Rust (principle 11, decision 5).
@@ -620,6 +620,11 @@ Decisions 1 to 26 are of 2026-11-21, except decision 23. Decisions 27 to 29 are 
 35. **Only the desktop companion of SAM gets the resource of the Remote Control Program.** The authorization server issues tokens for this resource only to the client id of the desktop companion. Thus a different OAuth client (for example an MCP client) cannot act as a runtime. The authorization server knows the Client ID Metadata Document of the desktop companion and does not fetch it. Admin mode is always off for the desktop companion: an admin needs `remoteControlProgram;use`.
 36. **The refresh token of the desktop companion is in the credential store of the operating system:** the Windows Credential Manager, or the Secret Service on Linux. Without a credential store, the program keeps the token only in memory, and the owner logs in again at each start.
 37. **A URL scheme opens the desktop companion.** The program registers the scheme `sam-desktop-companion` for the user of the operating system at each start, like its entry in the autostart, because a portable program can move. The scheme and the URL are a part of the catalog (principle 11). A link to `sam-desktop-companion://open` in the sharing popover starts the program, or the copy that runs opens its window: a second process gives the request to the running copy and ends. The program accepts only this URL and ignores each other path and each parameter, because each website can open such a link. Thus SAM cannot start, stop or configure a runtime through the link (decision 23). A browser cannot tell whether the program is on the computer, thus the link shows only when the owner has a sign-in of the desktop companion.
+38. **Reproducible builds of the desktop companion.** Each person with the code of the repository of the desktop companion and the value of `SAM_DEFAULT_BASE_URL` can build a byte-for-byte identical program, and the repository documents how. Reason: without a code signing certificate (decision 25), the owner can only trust the published program when other people can build the same file. Results:
+    - The versions of Rust, of the MSVC toolset and of the Windows SDK are pinned in the repository. A different version gives a different file.
+    - One build script sets the path remapping and the options of the linker that remove the paths and the times of the build machine. The continuous integration uses the same script.
+    - Each release publishes the SHA-256 of the program and a manifest with the versions and the SHA-256 of the address, not the address itself. A check of the continuous integration builds the program twice in different folders and compares the files.
+    - In step 3 of the migration, this applies to the Windows program. The Linux program and the AppImage follow in step 5.
 
 ## Open questions
 

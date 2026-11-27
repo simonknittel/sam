@@ -32,6 +32,7 @@ On 2026-11-26, the old step 3 ("States, desktop companion and gRPC connector") b
 5. **Public distribution of the desktop companion:**
    - The releases of the desktop companion: the versions, the GitHub releases, the signature of the updates with a key that only the release process holds, and the update function of the program (see [Desktop companion](./README.md#desktop-companion)).
    - The repository of the desktop companion becomes public, with a license.
+   - Reproducible builds also for Linux and the AppImage, and the hash and the manifest of each release (decision 38 of the architecture).
    - Windows: the portable `.exe` without a code signing certificate (decision 25 of the architecture), and a guide for the warning of Windows at the first start. Linux: the AppImage, with a note that the project does not test it (M11).
    - In SAM: the download in the sub-tab of the desktop companion, the matrix of the start tab, the guides and an entry in the changelog.
 6. **Actions:** the down channel, the action lifecycle, "ask each time", the action log, and the first action through the gRPC interface.
