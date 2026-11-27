@@ -490,32 +490,46 @@ test("requests the own entry keys after the welcome and again after a lost conne
   await unansweredPage;
 });
 
-test("keeps one key request of the burst of the relay in reserve, and rejects the requests when the client ends", async () => {
+/** The data lane of the relay keeps only a few messages */
+test("sends one key request at a time, keeps one request of the burst of the relay in reserve, and rejects the requests when the client ends", async () => {
   const { client, connect } = setUp();
+  const burstSize = RELAY_LIMITS.feedEntryKeyRequestBurstSize;
 
   const socket = await connect();
   const pages = Promise.allSettled(
-    Array.from({ length: RELAY_LIMITS.feedEntryKeyRequestBurstSize }, () =>
+    Array.from({ length: burstSize + 1 }, () =>
       client.requestOwnEntryKeys(KEYS_QUERY),
     ),
   );
-  const getRequestCount = () =>
-    socket.getSent(UpMessageType.FeedEntryKeysRequest).length;
+  const getRequests = () => socket.getSent(UpMessageType.FeedEntryKeysRequest);
+  const answerLastRequest = () => {
+    const request = getRequests().at(-1);
+    if (request === undefined) throw new Error("No request");
+    socket.answerKeyRequest(request, [KEY]);
+  };
 
-  expect(getRequestCount()).toBe(RELAY_LIMITS.feedEntryKeyRequestBurstSize - 1);
+  // Each answer sends the next request
+  for (let requestCount = 1; requestCount < burstSize; requestCount += 1) {
+    expect(getRequests()).toHaveLength(requestCount);
+    answerLastRequest();
+  }
+  expect(getRequests()).toHaveLength(burstSize - 1);
   await vi.advanceTimersByTimeAsync(
     RELAY_LIMITS.feedEntryKeyRequestIntervalMilliseconds,
   );
-  expect(getRequestCount()).toBe(RELAY_LIMITS.feedEntryKeyRequestBurstSize);
+  expect(getRequests()).toHaveLength(burstSize);
 
   socket.receive(
     createDownMessage(DownMessageType.Close, {
       reason: RelayCloseReason.AccessDenied,
     }),
   );
-  expect(
-    (await pages).map((result) => result.status === "rejected"),
-  ).not.toContain(false);
+  // The request without an answer and the waiting request
+  expect((await pages).map(({ status }) => status)).toEqual([
+    ...Array.from({ length: burstSize - 1 }, () => "fulfilled"),
+    "rejected",
+    "rejected",
+  ]);
   await expect(client.requestOwnEntryKeys(KEYS_QUERY)).rejects.toThrow(
     "does not connect",
   );

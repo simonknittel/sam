@@ -271,14 +271,13 @@ export class ChannelClient {
         },
         resolve,
         reject,
-        cancelTimeout: this.#timers.schedule(
-          () =>
-            this.#failKeyRequest(
-              request,
-              "The relay did not answer the request for the keys in time",
-            ),
-          CHANNEL_CLIENT_LIMITS.ownEntryKeysTimeoutMilliseconds,
-        ),
+        cancelTimeout: this.#timers.schedule(() => {
+          this.#failKeyRequest(
+            request,
+            "The relay did not answer the request for the keys in time",
+          );
+          this.#sendWaitingKeyRequests();
+        }, CHANNEL_CLIENT_LIMITS.ownEntryKeysTimeoutMilliseconds),
         messageId: null,
       };
       this.#keyRequests.add(request);
@@ -864,6 +863,7 @@ export class ChannelClient {
       keys: content.keys,
       nextPageCursor: content.next_page_cursor,
     });
+    this.#sendWaitingKeyRequests();
   }
 
   /** Follows the "send again" notes of `AcknowledgementErrorCode` */
@@ -879,6 +879,7 @@ export class ChannelClient {
           request,
           `The relay refused the request for the keys: ${errorCode}`,
         );
+        this.#sendWaitingKeyRequests();
         break;
 
       case AcknowledgementErrorCode.RateLimitExceeded:
@@ -906,8 +907,10 @@ export class ChannelClient {
   }
 
   /**
-   * Sends the waiting requests in their order on a connection with a
-   * `welcome`, as the rate permits, and schedules the next request
+   * Sends the next waiting request on a connection with a `welcome`, as the
+   * rate permits, or schedules it. Only one request at a time: the data lane
+   * of the relay keeps only a few messages, and the relay refuses a message
+   * when the lane is full.
    */
   #sendWaitingKeyRequests() {
     this.#cancelKeyRequestTimer?.();
@@ -916,27 +919,29 @@ export class ChannelClient {
     const connection = this.#connection;
     if (!connection?.isWelcomed) return;
 
+    const requests = [...this.#keyRequests];
+    if (requests.some((request) => request.messageId !== null)) return;
+
+    const [request] = requests;
+    if (request === undefined) return;
+
     const now = this.#timers.now();
-    for (const request of this.#keyRequests) {
-      if (request.messageId !== null) continue;
-
-      const requestAt = this.#keyRequestRate.getNextAllowedAt();
-      if (requestAt > now) {
-        this.#cancelKeyRequestTimer = this.#timers.schedule(() => {
-          this.#cancelKeyRequestTimer = null;
-          this.#sendWaitingKeyRequests();
-        }, requestAt - now);
-        return;
-      }
-
-      this.#keyRequestRate.record(now);
-      const message = createUpMessage(
-        UpMessageType.FeedEntryKeysRequest,
-        request.content,
-      );
-      request.messageId = message.id;
-      this.#send(connection, message);
+    const requestAt = this.#keyRequestRate.getNextAllowedAt();
+    if (requestAt > now) {
+      this.#cancelKeyRequestTimer = this.#timers.schedule(() => {
+        this.#cancelKeyRequestTimer = null;
+        this.#sendWaitingKeyRequests();
+      }, requestAt - now);
+      return;
     }
+
+    this.#keyRequestRate.record(now);
+    const message = createUpMessage(
+      UpMessageType.FeedEntryKeysRequest,
+      request.content,
+    );
+    request.messageId = message.id;
+    this.#send(connection, message);
   }
 
   #getRateLimiter(capabilityId: CapabilityId) {
