@@ -1,6 +1,6 @@
 {
   "protocol_version": 2,
-  "minimum_protocol_version": 1,
+  "minimum_protocol_version": 2,
   "close_reasons": [
     {
       "reason": "token_not_valid",

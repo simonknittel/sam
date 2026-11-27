@@ -46,7 +46,7 @@ import {
 export const RELAY_PROTOCOL_VERSION = 2;
 
 /** The relay refuses a `hello` of an older version with `update_necessary` */
-export const MINIMUM_RELAY_PROTOCOL_VERSION = 1;
+export const MINIMUM_RELAY_PROTOCOL_VERSION = 2;
 
 /** The messages from the runtime to the relay */
 export enum UpMessageType {

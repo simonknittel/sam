@@ -19,14 +19,14 @@ The relay service of the [Remote Control Program](../../../docs/remote-control-p
 
 ## Protocol versions
 
-The relay service accepts the protocol versions from `MINIMUM_RELAY_PROTOCOL_VERSION` to `RELAY_PROTOCOL_VERSION` of [protocol.ts](../../packages/domain/src/remoteControlProgram/protocol.ts). Version 2 adds the request for the keys of the own entries (decision 34 of the [concept](../../../docs/remote-control-program/README.md#decisions), which also tells why the relay service still accepts version 1).
+The relay service accepts the protocol versions from `MINIMUM_RELAY_PROTOCOL_VERSION` to `RELAY_PROTOCOL_VERSION` of [protocol.ts](../../packages/domain/src/remoteControlProgram/protocol.ts), and refuses a `hello` of an older version with `update_necessary`. Version 2 adds the request for the keys of the own entries (decision 34 of the [concept](../../../docs/remote-control-program/README.md#decisions)).
 
 The answers to `feed_entry_keys_request`:
 
 | Condition                                                                                                        | Answer                                                                                                                                 |
 | ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| The `hello` of the connection has version 2 or newer                                                             | `feed_entry_keys` with the id of the request and one page of the keys of the owner (the use case `findOwnFeedEntryKeys`), and no `ack` |
-| The `hello` of the connection has version 1, or the content is not valid                                         | `ack` with `message_not_valid`. Counts as an error.                                                                                    |
+| A valid request within the rate                                                                                  | `feed_entry_keys` with the id of the request and one page of the keys of the owner (the use case `findOwnFeedEntryKeys`), and no `ack` |
+| The content is not valid                                                                                         | `ack` with `message_not_valid`. Counts as an error.                                                                                    |
 | Above the rate of `feedEntryKeyRequestIntervalMilliseconds` and `feedEntryKeyRequestBurstSize` of `RELAY_LIMITS` | `ack` with `rate_limit_exceeded`. Counts as an error.                                                                                  |
 | The data lane is full, or a temporary error, for example of the database                                         | `ack` with `internal_error`. The runtime sends the request again.                                                                      |
 | The user has no access any more, or the switch turned off the program                                            | `close` with `access_denied` or `program_turned_off`, like for each message                                                            |

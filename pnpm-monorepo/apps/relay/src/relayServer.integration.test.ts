@@ -578,26 +578,13 @@ test("a runtime gets the keys of its own entries in the time window in pages", a
   expect(client.getMessages(DownMessageType.Acknowledgement)).toEqual([]);
 });
 
-/**
- * The SAM tabs that were open during the release of protocol version 2. Until
- * `MINIMUM_RELAY_PROTOCOL_VERSION` is 2.
- */
-test("a runtime of protocol version 1 connects and uploads, but cannot request the keys", async () => {
-  const { connect } = await start();
+test("refuses a hello of protocol version 1 with update_necessary", async () => {
+  const { openClient, issueToken } = await start();
   const owner = await createOwner();
 
-  const { client } = await connect(owner, RUNTIME_ID, 1);
-  await announce(client);
-  await expect(upload(client)).resolves.toMatchObject({
-    result: AcknowledgementResult.Accepted,
-    new_entry_count: 2,
-  });
-  await expect(client.request(createKeysRequest())).resolves.toEqual({
-    message_id: expect.any(String),
-    result: AcknowledgementResult.Refused,
-    error_code: AcknowledgementErrorCode.MessageNotValid,
-  });
-  expect(client.getMessages(DownMessageType.FeedEntryKeys)).toEqual([]);
+  const client = await openClient();
+  client.sendHello(await issueToken(owner, RUNTIME_ID), RUNTIME_ID, 1);
+  await expectRefusal(client, RelayCloseReason.UpdateNecessary);
 });
 
 test("limits the key requests of a connection", async () => {
