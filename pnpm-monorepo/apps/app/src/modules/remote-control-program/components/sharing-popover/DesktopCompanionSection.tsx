@@ -53,8 +53,8 @@ export const DesktopCompanionSection = ({
       }
     >
       <p className="text-sm text-neutral-400">
-        Der Desktop Companion kommt bald: ein Programm für Windows und Linux,
-        das ohne einen Tab von SAM läuft. Es liest die Game Logs von Star
+        Der Desktop Companion kommt bald: ein Programm für Windows, das ohne
+        einen Tab von SAM läuft. Es liest die Game Logs von Star
         Citizen und später auch Live-Daten über die gRPC-Schnittstelle des
         Spiels. Was es hochlädt, entscheidest du im Programm.
       </p>

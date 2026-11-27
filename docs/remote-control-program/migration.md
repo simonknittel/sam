@@ -33,7 +33,7 @@ On 2026-11-26, the old step 3 ("States, desktop companion and gRPC connector") b
    - The releases of the desktop companion: the versions, the GitHub releases, the signature of the updates with a key that only the release process holds, and the update function of the program (see [Desktop companion](./README.md#desktop-companion)).
    - The repository of the desktop companion becomes public, with a license.
    - Reproducible builds also for Linux and the AppImage, and the hash and the manifest of each release (decision 38 of the architecture).
-   - Windows: the portable `.exe` without a code signing certificate (decision 25 of the architecture), and a guide for the warning of Windows at the first start. Linux: the AppImage, with a note that the project does not test it (M11).
+   - Windows: the portable `.exe` without a code signing certificate (decision 25 of the architecture), and a guide for the warning of Windows at the first start. Linux: the AppImage as an experimental release, which the UI of SAM does not show or name (M11).
    - In SAM: the download in the sub-tab of the desktop companion, the matrix of the start tab, the guides and an entry in the changelog.
 6. **Actions:** the down channel, the action lifecycle, "ask each time", the action log, and the first action through the gRPC interface.
 7. **AI agents:** the MCP read tools first, the action tool later.
@@ -74,7 +74,7 @@ Done on 2026-11-21:
 
 ## Decisions of the migration
 
-M1 to M4 are decisions of 2026-11-21. M5 to M7 are decisions of 2026-11-22. M8 is a decision of 2026-11-25. M9 to M11 are decisions of 2026-11-26.
+M1 to M4 are decisions of 2026-11-21. M5 to M7 are decisions of 2026-11-22. M8 is a decision of 2026-11-25. M9 to M11 are decisions of 2026-11-26, M11 changed on 2026-11-27.
 
 - **M1: The sharing starts from zero.** The deployment of step 2 resets all share settings of the Log Analyzer. The browser runtime ignores and removes the old browser storage `log_analyzer_share_types`. No grant comes from the old sharing. After the deployment, no citizen sees the live entries of an owner until the owner makes a grant. The entries from before are history: each citizen who can open the Log Analyzer sees them (decision 31 of the architecture). The changelog of SAM announces the change.
 - **M2: The new Log Analyzer replaces the old one in one deployment.** No version runs next to the old one, and no Unleash flag switches between them. The move of the databases is a separate step before it (step 1).
@@ -86,7 +86,7 @@ M1 to M4 are decisions of 2026-11-21. M5 to M7 are decisions of 2026-11-22. M8 i
 - **M8: No withdrawal of stored data.** No step of the migration gives the owner a function to withdraw or delete stored data (decisions 12 and 30 of the architecture).
 - **M9: No distribution of the desktop companion before step 5.** From step 3, SAM and the relay service accept the desktop companion: the login, the connection, the upload and the display of the data. But only the owner of SAM uses the program, with builds from the private repository (decision 32 of the architecture). The releases, the update function and the download come in step 5.
 - **M10: The lineup status comes with the gRPC connector.** The first states need a control UI that shows them. Thus step 4 contains the lineup status, the grantee kind "Event participants" and the access requests. Before, the lineup status was a separate step after the gRPC connector.
-- **M11: The Linux version has no manual tests.** Nobody in the project can test the desktop companion on Linux. The continuous integration builds and tests the Linux version, and step 5 releases the AppImage with a note that the project does not test it. Decision 3 of the architecture does not change.
+- **M11: The Linux version is experimental and not promoted.** Nobody in the project can test the desktop companion on Linux. The continuous integration builds and tests the Linux version, and step 5 releases the AppImage with a note that the project does not test it. The UI of SAM names and offers only the Windows program: a citizen who asks for the Linux version gets the link of the download from the owner. Decision 3 of the architecture does not change. (Changed on 2026-11-27.)
 
 ## Related follow-ups
 

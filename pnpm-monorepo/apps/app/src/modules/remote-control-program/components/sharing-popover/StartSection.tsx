@@ -58,7 +58,7 @@ const RUNTIMES: readonly RuntimePart[] = [
   {
     id: RuntimeId.DesktopCompanion,
     name: "Desktop Companion",
-    description: "Ein Programm für Windows und Linux",
+    description: "Ein Programm für Windows",
     location: {
       tab: SharingPopoverTab.Runtimes,
       runtimeTab: SharingPopoverRuntimeTab.DesktopCompanion,

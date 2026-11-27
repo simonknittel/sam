@@ -99,10 +99,6 @@ export const SharingPopoverContent = ({ locationOfControlUi }: Props) => {
                 <span className="max-sm:hidden">({data.grants.length})</span>
               )}
             </Tab>
-          </div>
-
-          {/* The settings of the runtimes, apart from the other tabs */}
-          <div className="ml-2 flex border-l border-white/20 pl-2 sm:ml-4 sm:pl-4">
             <Tab id={SharingPopoverTab.Runtimes}>
               {SHARING_POPOVER_TAB_LABELS[SharingPopoverTab.Runtimes]}
             </Tab>
