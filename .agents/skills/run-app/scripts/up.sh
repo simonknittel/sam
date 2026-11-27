@@ -102,6 +102,7 @@ EOF
   PATCHED="$(sed -E \
     -e "s|^(DATABASE_URL=.*localhost:)[0-9]+|\1$PSQL_PORT|" \
     -e "s|^(NEXTAUTH_URL=.*localhost:)[0-9]+|\1$APP_PORT|" \
+    -e "s|^(NEXT_PUBLIC_BASE_URL=.*localhost:)[0-9]+|\1$APP_PORT|" \
     -e "s|^(S3_ENDPOINT=.*localhost:)[0-9]+|\1$RUSTFS_PORT|" \
     -e "s|^(S3_PUBLIC_URL=.*localhost:)[0-9]+|\1$RUSTFS_PORT|" \
     -e "s|^(UNLEASH_SERVER_API_URL=.*localhost:)[0-9]+|\1$UNLEASH_PORT|" \
@@ -116,6 +117,13 @@ EOF
   # Not present in the main checkout's .env; the app defaults to 6001.
   grep -q NEXT_PUBLIC_PUSHER_CHANNELS_PORT "$APP_ENV" \
     || printf '\nNEXT_PUBLIC_PUSHER_CHANNELS_PORT="%s"\n' "$SOKETI_PORT" >> "$APP_ENV"
+
+  # The issuer of the OAuth server and of the connection tokens of the relay
+  # service. Without it, the app defaults to port 3000, and an OAuth client
+  # (an MCP client, the desktop companion) refuses the metadata of a
+  # different slot, because its issuer is a different address.
+  grep -q '^NEXT_PUBLIC_BASE_URL=' "$APP_ENV" \
+    || printf '\nNEXT_PUBLIC_BASE_URL="http://localhost:%s"\n' "$APP_PORT" >> "$APP_ENV"
 
   grep -qE "^NEXTAUTH_URL=\"?http://localhost:$APP_PORT" "$APP_ENV" \
     || { echo "NEXTAUTH_URL in $APP_ENV is not http://localhost:$APP_PORT — auth callbacks would break; fix it by hand" >&2; exit 1; }
