@@ -21,17 +21,11 @@ import {
   type CreateChannelWebSocket,
 } from "../channel/channelTypes.js";
 import {
-  LIVE_PERIOD_HEARTBEAT_INTERVAL_MILLISECONDS,
-  LIVE_PERIOD_RETENTION_MILLISECONDS,
-  TAB_CHANGE_GAP_MILLISECONDS,
-} from "../localAccess/livePeriods.js";
-import {
   createLocalAccessLayer,
   RelayUploadState,
   type LocalAccessLayer,
   type LocalAccessSettings,
   type OlderEntriesTimeRange,
-  type StopReadingOptions,
 } from "../localAccess/localAccessLayer.js";
 import type { LocalAccessStorage } from "../localAccess/localAccessStorage.js";
 import type { EntryWindow, RawMatch } from "../logFile/types.js";
@@ -50,7 +44,13 @@ import {
 import { Outbox, OUTBOX_CHANNEL_ENTRY_LIMIT } from "./outbox.js";
 import { OwnEntriesChangeMode, type OwnEntryStore } from "./ownEntryStore.js";
 import { findRelayKeys, getTimeRange } from "./relayKeys.js";
-import { readRunRecord, removeRunRecord, writeRunRecord } from "./runRecord.js";
+import {
+  readRunRecord,
+  removeRunRecord,
+  RUN_RECORD_INTERVAL_MILLISECONDS,
+  RUN_RECORD_MAXIMUM_AGE_MILLISECONDS,
+  writeRunRecord,
+} from "./runRecord.js";
 
 /**
  * The interval of the reads of the log folder, the same as the live mode of
@@ -65,18 +65,6 @@ export const LOG_FOLDER_READ_INTERVAL_MILLISECONDS = 10_000;
  * each `LOG_FOLDER_READ_INTERVAL_MILLISECONDS`.
  */
 const SLOW_READ_MILLISECONDS = 500;
-
-/**
- * The runtime always reads the log files of this time: the entries that can
- * go up automatically are not older than the stored live periods.
- */
-const LIVE_WINDOW_MILLISECONDS = LIVE_PERIOD_RETENTION_MILLISECONDS;
-
-/**
- * The delay before the next try of the check of the relay after a failed
- * check. The runtime tries again after the next read after the delay.
- */
-const RELAY_CHECK_RETRY_DELAY_MILLISECONDS = 60_000;
 
 const LOG_FILE_CONNECTOR = CONNECTOR_CATALOG[ConnectorId.LogFile];
 
@@ -116,7 +104,7 @@ export interface BrowserRuntimeOptions {
   readonly createWebSocket?: CreateChannelWebSocket;
   /** `DEFAULT_TIMERS` by default */
   readonly timers?: ChannelTimers;
-  /** The clock of the entries and of the live periods */
+  /** The clock of the entries and of the reading */
   readonly now?: () => Date;
   /** `Math.random()` by default */
   readonly random?: () => number;
@@ -188,11 +176,13 @@ const getRelayUploadState = (state: ChannelState): RelayUploadState | null => {
  *   while it runs, and keeps the own entries in the entry store.
  * - It connects to the relay while it runs, when the app has a relay.
  * - An entry goes up automatically only when the local access layer permits
- *   it (decision 27), and only one time. After a start (also after a change
- *   of the active tab), the first read offers the entries of the stored live
- *   periods again. The runtime sends only the entries that the relay does not
- *   have (`ChannelClient.requestOwnEntryKeys()`).
- * - Older entries go up only through a request that the owner confirms.
+ *   it (decision 27): the runtime read it live, from the start of this run.
+ *   The entries that wait for the connection to the relay stay in the
+ *   outbox, only in memory, and go up after the reconnect. A stop, a
+ *   different log folder, a closed tab or an ended connection loses them.
+ * - Older entries go up only through a request that the owner confirms. The
+ *   runtime sends only the entries that the relay does not have
+ *   (`ChannelClient.requestOwnEntryKeys()`).
  *
  * Make one runtime when the tab gets the Web Lock, and call `handOver()` when
  * the tab loses it or closes, or `endSession()` when the user logs out.
@@ -210,7 +200,6 @@ export class BrowserRuntime {
    * before.
    */
   readonly #previousIsRunning: boolean | null;
-  readonly #unsubscribeEntryStore: () => void;
   readonly #unsubscribeChannel: () => void;
   #state: BrowserRuntimeState;
   /** A new layer at each start, thus each start waits for a new `welcome` */
@@ -234,22 +223,12 @@ export class BrowserRuntime {
   #readInFlight: Promise<ReadOutcome> | null = null;
   #isReadRequested = false;
   #cancelReadTimer: (() => void) | null = null;
-  #cancelPresenceTimer: (() => void) | null = null;
+  #cancelRunRecordTimer: (() => void) | null = null;
 
   /** The value that the layer got last */
   #relayState = RelayUploadState.Unknown;
   /** The relay sent the `welcome` in this run */
   #isRelayWelcomed = false;
-  #hasCompletedRead = false;
-  /**
-   * The check of the entries that were read before the first upload of this
-   * run (see `#runFirstUpload`) is done
-   */
-  #isFirstUploadDone = false;
-  #isFirstUploadRunning = false;
-  #nextRelayCheckAt = 0;
-  /** The keys of the entries that wait for the first upload of this run */
-  readonly #waitingKeys = new Set<string>();
   readonly #outbox = new Outbox();
   #isFlushingOutbox = false;
   #olderEntriesRequest: OlderEntriesRequest | null = null;
@@ -286,15 +265,11 @@ export class BrowserRuntime {
     this.#previousIsRunning =
       previousRecord !== null &&
       this.#now().getTime() - previousRecord.updatedAt <=
-        TAB_CHANGE_GAP_MILLISECONDS
+        RUN_RECORD_MAXIMUM_AGE_MILLISECONDS
         ? previousRecord.isRunning
         : null;
 
-    this.#unsubscribeEntryStore = this.#entryStore.subscribe((change) => {
-      for (const key of change.removedKeys) this.#waitingKeys.delete(key);
-    });
-
-    this.#schedulePresence();
+    this.#scheduleRunRecord();
   }
 
   getState() {
@@ -310,26 +285,27 @@ export class BrowserRuntime {
   }
 
   /**
-   * Whether this runtime starts after it took over: it continues the state
-   * of a runtime of the same citizen that ended a short time before (for
-   * example the closed tab of the previous runtime, or a reload): running or
-   * waiting for a start, or stopped. Else it obeys the autostart.
+   * Whether this runtime starts after it took over: it takes the state of a
+   * runtime of the same citizen that ended a short time before (for example
+   * the closed tab of the previous runtime, or a reload): running or waiting
+   * for a start, or stopped. Else it obeys the autostart. A start reads live
+   * from its own time, also after a change of the active tab.
    */
   shouldRun(isAutostartEnabled: boolean) {
     return this.#previousIsRunning ?? isAutostartEnabled;
   }
 
   /**
-   * Reads the folder. The tab must have the read permission for it. A
-   * different handle object counts as a different folder and replaces the
-   * entries: give the same object again for the same folder.
+   * Reads the folder, and reads live from now on. The tab must have the read
+   * permission for it. A different handle object counts as a different folder
+   * and replaces the entries: give the same object again for the same folder.
    */
   start(folder: FileSystemDirectoryHandle) {
     if (this.#isDisposed) return;
     if (this.#state.isRunning) {
       if (folder === this.#folder) return;
-      // The owner selected a different folder: no line of the new folder continues the period of the previous folder
-      this.#stopReading({ canContinue: false });
+      // The owner selected a different folder: the start with it reads live from its own time
+      this.#stopReading();
     }
 
     if (folder !== this.#folder) this.#useFolder(folder);
@@ -338,9 +314,6 @@ export class BrowserRuntime {
     this.#layer = this.#createLayer();
     this.#relayState = RelayUploadState.Unknown;
     this.#isRelayWelcomed = false;
-    this.#hasCompletedRead = false;
-    this.#isFirstUploadDone = false;
-    this.#nextRelayCheckAt = 0;
     this.#isWaitingForStart = false;
     this.#setState({ isRunning: true, error: null });
 
@@ -348,10 +321,6 @@ export class BrowserRuntime {
     this.#channel.updateAnnouncement(this.#createAnnouncement());
     // Also after a refused token or a missing relay: a new start tries again
     this.#channel.connect();
-    // The entries of the previous runtime or of the previous run can be in
-    // the live periods and wait for their upload
-    for (const entry of this.#entryStore.values())
-      this.#waitingKeys.add(entry.hash);
 
     this.#writeRunRecord();
     void this.#read();
@@ -359,16 +328,16 @@ export class BrowserRuntime {
 
   /**
    * The owner stops the runtime, or the tab lost the access to the folder.
-   * The live period ends without a continuation: a next start, also within
-   * `TAB_CHANGE_GAP_MILLISECONDS`, starts a new period, and the entries of
-   * the stopped time stay on the machine (decision 27 of the concept). The
-   * next runtime of the citizen in this browser stays stopped.
+   * The entries that wait for the connection are lost, and a next start reads
+   * live from its own time: the entries of the stopped time stay on the
+   * machine (decision 27 of the concept). The next runtime of the citizen in
+   * this browser stays stopped.
    */
   stop() {
     if (this.#isDisposed) return;
 
     this.#isWaitingForStart = false;
-    this.#endReading();
+    if (this.#state.isRunning) this.#stopReading();
     this.#writeRunRecord();
   }
 
@@ -385,29 +354,28 @@ export class BrowserRuntime {
   }
 
   /**
-   * The tab loses the runtime, for example when it closes. The next runtime
-   * continues the state of this runtime, and its live period within
-   * `TAB_CHANGE_GAP_MILLISECONDS`.
+   * The tab loses the runtime, for example when it closes. The entries that
+   * wait for the connection are lost. The next runtime takes the state of
+   * this runtime (see `shouldRun()`), and reads live from its own start.
    */
   handOver() {
     if (this.#isDisposed) return;
 
     const shouldRun = this.#state.isRunning || this.#isWaitingForStart;
-    if (this.#state.isRunning) this.#stopReading({ canContinue: true });
+    if (this.#state.isRunning) this.#stopReading();
     this.#writeRunRecord(shouldRun);
     this.#dispose();
   }
 
   /**
-   * The user logs out. The runtime stops like after `stop()`, without a
-   * continuation, but the next runtime of the citizen obeys the autostart
-   * again.
+   * The user logs out. The runtime stops like after `stop()`, but the next
+   * runtime of the citizen obeys the autostart again.
    */
   endSession() {
     if (this.#isDisposed) return;
 
     this.#isWaitingForStart = false;
-    this.#endReading();
+    if (this.#state.isRunning) this.#stopReading();
     removeRunRecord(this.#options.storage, this.#options.citizenId);
     this.#dispose();
   }
@@ -437,7 +405,6 @@ export class BrowserRuntime {
   handleLocalAccessChange() {
     if (this.#isDisposed) return;
 
-    if (this.#state.isRunning) this.#layer.heartbeat();
     this.#channel.updateAnnouncement(this.#createAnnouncement());
     this.#flushOutbox();
   }
@@ -578,9 +545,6 @@ export class BrowserRuntime {
     this.#olderEntriesRequest = null;
 
     if (isFolderChange) {
-      // The live periods are the times of the previous folder
-      this.#layer.removeLivePeriods();
-      this.#waitingKeys.clear();
       this.#entryStore.apply({
         mode: OwnEntriesChangeMode.Replace,
         entries: [],
@@ -589,26 +553,14 @@ export class BrowserRuntime {
     }
   }
 
-  /** Ends the reading without a continuation, also when it does not read */
-  #endReading() {
-    if (this.#state.isRunning) {
-      this.#stopReading({ canContinue: false });
-    } else {
-      // A runtime that did not read yet must not let a next start continue the period of the previous runtime
-      this.#layer.stopReading({ canContinue: false });
-    }
-  }
-
-  /**
-   * Only a hand-over lets a next runtime continue the live period (see
-   * `LocalAccessLayer.stopReading`)
-   */
-  #stopReading(options: StopReadingOptions) {
+  /** The entries that wait in the outbox are lost */
+  #stopReading() {
     this.#runGeneration += 1;
     this.#cancelReadTimer?.();
     this.#cancelReadTimer = null;
     this.#reader?.stopRead();
-    this.#layer.stopReading(options);
+    this.#layer.stopReading();
+    this.#outbox.clear();
 
     this.#channel.disconnect();
     this.#olderEntriesRequest = null;
@@ -617,42 +569,42 @@ export class BrowserRuntime {
 
   #dispose() {
     this.#isDisposed = true;
-    this.#cancelPresenceTimer?.();
-    this.#cancelPresenceTimer = null;
+    this.#cancelRunRecordTimer?.();
+    this.#cancelRunRecordTimer = null;
     this.#reader?.dispose();
     this.#reader = null;
     this.#unsubscribeChannel();
     this.#channel.disconnect();
-    this.#unsubscribeEntryStore();
     this.#listeners.clear();
   }
 
-  /**
-   * The heartbeat of the live periods while the runtime reads, and the run
-   * record also while it does not read
-   */
-  #schedulePresence() {
-    this.#cancelPresenceTimer = this.#timers.schedule(() => {
-      this.#cancelPresenceTimer = null;
+  #scheduleRunRecord() {
+    this.#cancelRunRecordTimer = this.#timers.schedule(() => {
+      this.#cancelRunRecordTimer = null;
       if (this.#isDisposed) return;
 
-      // A storage that the user blocked throws also at a read
+      // A storage that the user blocked throws
       try {
-        if (this.#state.isRunning) this.#layer.heartbeat();
         this.#writeRunRecord();
       } catch (error) {
         console.error(
-          "[Remote Control Program] Error in the heartbeat:",
+          "[Remote Control Program] Error writing the run record:",
           error,
         );
       }
-      this.#schedulePresence();
-    }, LIVE_PERIOD_HEARTBEAT_INTERVAL_MILLISECONDS);
+      this.#scheduleRunRecord();
+    }, RUN_RECORD_INTERVAL_MILLISECONDS);
   }
 
+  /**
+   * The live window starts at the time since which the runtime reads live:
+   * the entries that can go up automatically are not older. The selection of
+   * the log files by the window still reads the rest of a `Game.log` that the
+   * game moved into `logbackups/`.
+   */
   #getReadWindows(): EntryWindow[] {
     const liveWindow: EntryWindow = {
-      start: new Date(this.#now().getTime() - LIVE_WINDOW_MILLISECONDS),
+      start: this.#layer.getReadsLiveSince() ?? this.#now(),
       end: null,
     };
 
@@ -727,7 +679,6 @@ export class BrowserRuntime {
       const result = await reader.read(windows);
       if (generation !== this.#runGeneration) return ReadOutcome.Stopped;
 
-      this.#hasCompletedRead = true;
       const { entries: addedEntries } = this.#entryStore.apply({
         mode: OwnEntriesChangeMode.Append,
         entries: result.matches,
@@ -771,74 +722,14 @@ export class BrowserRuntime {
     }
   }
 
+  /**
+   * The new entries that go up automatically wait in the outbox until the
+   * channel has the `welcome` and space
+   */
   #handleReadEntries(addedEntries: readonly RawMatch[]) {
     if (!this.#canUpload()) return;
 
-    if (!this.#isFirstUploadDone) {
-      for (const entry of addedEntries) this.#waitingKeys.add(entry.hash);
-      void this.#runFirstUpload();
-      return;
-    }
-
     this.#enqueue(this.#layer.selectAutomaticUploads(addedEntries), false);
-  }
-
-  /**
-   * The first upload of a run: the entries that were read before it. They
-   * can be in the live periods of a previous runtime, thus the relay can
-   * already have them. It needs a completed read and the `welcome`: before
-   * the `welcome`, the layer does not know the switches.
-   */
-  async #runFirstUpload() {
-    if (
-      this.#isFirstUploadDone ||
-      this.#isFirstUploadRunning ||
-      !this.#state.isRunning ||
-      !this.#hasCompletedRead ||
-      !this.#isRelayWelcomed ||
-      this.#timers.now() < this.#nextRelayCheckAt
-    )
-      return;
-
-    const generation = this.#runGeneration;
-    const checkedKeys = Array.from(this.#waitingKeys);
-    const candidates = this.#layer.selectAutomaticUploads(
-      this.#getStoredEntries(checkedKeys),
-    );
-
-    let missingEntries = candidates;
-    const timeRange = getTimeRange(candidates);
-    // The channel client removes the entries while the program is off. The
-    // relay refuses the check in this case.
-    if (timeRange !== null && !isProgramTurnedOff(this.#channel.getState())) {
-      this.#isFirstUploadRunning = true;
-      let relayKeys: Set<string>;
-      try {
-        relayKeys = await this.#findRelayKeys(timeRange);
-      } catch (error) {
-        console.warn(
-          "[Remote Control Program] Error checking the entries of the relay:",
-          error,
-        );
-        this.#nextRelayCheckAt =
-          this.#timers.now() + RELAY_CHECK_RETRY_DELAY_MILLISECONDS;
-        return;
-      } finally {
-        this.#isFirstUploadRunning = false;
-      }
-      if (generation !== this.#runGeneration) return;
-
-      missingEntries = candidates.filter((entry) => !relayKeys.has(entry.hash));
-    }
-
-    for (const key of checkedKeys) this.#waitingKeys.delete(key);
-    this.#isFirstUploadDone = true;
-    this.#enqueue(missingEntries, false);
-
-    // The new lines of the reads during the check
-    const laterEntries = this.#getStoredEntries(Array.from(this.#waitingKeys));
-    this.#waitingKeys.clear();
-    this.#enqueue(this.#layer.selectAutomaticUploads(laterEntries), false);
   }
 
   /**
@@ -851,12 +742,6 @@ export class BrowserRuntime {
       (query) => this.#channel.requestOwnEntryKeys(query),
       range,
     );
-  }
-
-  #getStoredEntries(keys: readonly string[]) {
-    return keys
-      .map((key) => this.#entryStore.get(key))
-      .filter((entry) => entry !== undefined);
   }
 
   #enqueue(entries: readonly RawMatch[], isConfirmed: boolean) {
@@ -926,13 +811,9 @@ export class BrowserRuntime {
     }
 
     // No entry goes up: the runtime does not keep them for the upload
-    if (state.status === ChannelStatus.Ended) {
-      this.#waitingKeys.clear();
-      this.#outbox.clear();
-    }
+    if (state.status === ChannelStatus.Ended) this.#outbox.clear();
 
     this.#setState({ channel: state });
-    void this.#runFirstUpload();
     this.#flushOutbox();
   }
 }

@@ -17,7 +17,8 @@ export const OUTBOX_CHANNEL_ENTRY_LIMIT =
 /**
  * The entries that wait in the outbox, for example while the relay is not
  * available. The outbox holds the entries of the store, thus its limit is the
- * limit of the store. Above it, the oldest entries stay on the machine.
+ * limit of the store. Above it, the oldest entries stay on the machine, for
+ * example after a long time without a connection.
  */
 const MAXIMUM_OUTBOX_ENTRIES = MAXIMUM_OWN_ENTRIES;
 
@@ -42,9 +43,18 @@ const toFeedEntry = (entry: RawMatch): FeedEntry | null => {
   };
 };
 
-/** The entries of the runtime that wait for the channel client */
+/**
+ * The entries of the runtime that wait for the channel client, only in
+ * memory: also while there is no connection, until the `welcome` of the next
+ * connection. A closed tab or a crash loses them.
+ */
 export class Outbox {
   #entries: OutboxEntry[] = [];
+  /**
+   * The outbox dropped entries since it was last empty. Thus the console gets
+   * one warning, not one for each read.
+   */
+  #hasDroppedEntries = false;
 
   get size() {
     return this.#entries.length;
@@ -55,11 +65,20 @@ export class Outbox {
     for (const entry of entries) this.#entries.push({ entry, isConfirmed });
 
     const excessCount = this.#entries.length - MAXIMUM_OUTBOX_ENTRIES;
-    if (excessCount > 0) this.#entries.splice(0, excessCount);
+    if (excessCount <= 0) return;
+
+    this.#entries.splice(0, excessCount);
+    if (this.#hasDroppedEntries) return;
+
+    this.#hasDroppedEntries = true;
+    console.warn(
+      `[Remote Control Program] The outbox is full (${MAXIMUM_OUTBOX_ENTRIES} entries): the oldest entries stay on this computer.`,
+    );
   }
 
   clear() {
     this.#entries = [];
+    this.#hasDroppedEntries = false;
   }
 
   /**
@@ -70,6 +89,7 @@ export class Outbox {
    */
   takeSendableEntries(count: number, layer: LocalAccessLayer) {
     const outboxEntries = this.#entries.splice(0, count);
+    if (this.#entries.length === 0) this.#hasDroppedEntries = false;
 
     const automaticEntries = layer.selectAutomaticUploads(
       outboxEntries

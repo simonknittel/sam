@@ -2,6 +2,7 @@ import {
   CapabilityId,
   DownMessageType,
   LogAnalyzerEntryType,
+  RelayCloseReason,
   UpMessageType,
   createDownMessage,
   isInVisibleTimeRange,
@@ -168,10 +169,15 @@ const createBrowser = () => {
       random: () => 1,
     });
 
-    /** Answers the handshake of the last connection like the relay */
-    const handshake = async () => {
+    const getLastSocket = () => {
       const socket = sockets.at(-1);
       if (!socket) throw new Error("No socket");
+      return socket;
+    };
+
+    /** Answers the handshake of the last connection like the relay */
+    const handshake = async () => {
+      const socket = getLastSocket();
 
       socket.handlers.onOpen();
       socket.receive(createDownMessage(DownMessageType.Welcome, {}));
@@ -189,11 +195,30 @@ const createBrowser = () => {
       return handshake();
     };
 
+    /**
+     * Reads the folder now, like after a change of the window of a control
+     * UI. The window of the Log Analyzer also gives the older lines.
+     */
+    const readNow = async () => {
+      runtime.setRequestedWindow({
+        start: new Date(START_TIME - DAY),
+        end: null,
+      });
+      await vi.advanceTimersByTimeAsync(0);
+    };
+
     /** All lines that the connections of the runtime sent */
     const getSentRawLines = () =>
       sockets.flatMap((socket) => socket.getSentRawLines());
 
-    return { runtime, start, handshake, getSentRawLines };
+    return {
+      runtime,
+      start,
+      getLastSocket,
+      handshake,
+      readNow,
+      getSentRawLines,
+    };
   };
 
   /** The relay accepts the sent entries */
@@ -229,7 +254,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-test("after a change of the active tab, the next runtime sends only the entries that the relay does not have", async () => {
+test("after a change of the active tab, the next runtime uploads only the entries from its own start", async () => {
   const browser = createBrowser();
   browser.turnOnLines();
   // From a time without a running runtime: it stays on the machine
@@ -244,41 +269,28 @@ test("after a change of the active tab, the next runtime sends only the entries 
   expect(firstSocket.getSentRawLines()).toEqual([acceptedEntry.rawLine]);
   browser.acknowledgeUploads(firstSocket);
 
+  // The tab closes before the `ack` of the second entry: the entry is lost
   const unacknowledgedEntry = browser.folder.write(Date.now());
   await vi.advanceTimersByTimeAsync(10 * SECOND);
   expect(firstSocket.getSentRawLines()).toEqual([
     acceptedEntry.rawLine,
     unacknowledgedEntry.rawLine,
   ]);
-  // The first tab did not check the relay: its first read had no entry
-  // that can go up
-  expect(browser.getKeyRequests()).toEqual([]);
-
-  // The tab closes before the `ack` of the second entry
   firstTab.runtime.handOver();
-  await vi.advanceTimersByTimeAsync(2 * SECOND);
+  await vi.advanceTimersByTimeAsync(SECOND);
+  browser.folder.write(Date.now());
+  await vi.advanceTimersByTimeAsync(SECOND);
 
   const secondTab = browser.openTab();
   expect(secondTab.runtime.shouldRun(false)).toBe(true);
   const secondSocket = await secondTab.start();
-
-  expect(browser.getKeyRequests()).toEqual([
-    {
-      capability_id: CapabilityId.LogEntries,
-      start: acceptedEntry.isoDate,
-      end: new Date(Date.parse(unacknowledgedEntry.isoDate) + 1).toISOString(),
-    },
-  ]);
-  expect(secondSocket.getSentRawLines()).toEqual([unacknowledgedEntry.rawLine]);
-
-  // A new line goes up without a second check
+  await secondTab.readNow();
   const liveEntry = browser.folder.write(Date.now());
   await vi.advanceTimersByTimeAsync(10 * SECOND);
-  expect(secondSocket.getSentRawLines()).toEqual([
-    unacknowledgedEntry.rawLine,
-    liveEntry.rawLine,
-  ]);
-  expect(browser.getKeyRequests()).toHaveLength(1);
+
+  expect(secondSocket.getSentRawLines()).toEqual([liveEntry.rawLine]);
+  // No catch-up after the start, thus no check of the keys of the relay
+  expect(browser.getKeyRequests()).toEqual([]);
 
   // A stop of the owner stays after the next change of the active tab
   secondTab.runtime.stop();
@@ -286,68 +298,82 @@ test("after a change of the active tab, the next runtime sends only the entries 
   expect(browser.openTab().runtime.shouldRun(true)).toBe(false);
 });
 
-test.each([
-  {
-    end: "a stop of the owner",
-    isGapUploaded: false,
-    endAndStartAgain: async (
-      browser: ReturnType<typeof createBrowser>,
-      tab: ReturnType<ReturnType<typeof createBrowser>["openTab"]>,
-      writeGapLine: () => RawMatch,
-    ) => {
-      tab.runtime.stop();
-      await vi.advanceTimersByTimeAsync(5 * SECOND);
-      const gapLine = writeGapLine();
-      await vi.advanceTimersByTimeAsync(5 * SECOND);
+test("the entries that wait for the connection go up after the reconnect, but a stop loses them", async () => {
+  const browser = createBrowser();
+  browser.turnOnLines();
+  const tab = browser.openTab();
 
-      return { gapLine, socket: await tab.start() };
-    },
-  },
-  {
-    end: "a change of the active tab",
-    isGapUploaded: true,
-    endAndStartAgain: async (
-      browser: ReturnType<typeof createBrowser>,
-      tab: ReturnType<ReturnType<typeof createBrowser>["openTab"]>,
-      writeGapLine: () => RawMatch,
-    ) => {
-      tab.runtime.handOver();
-      await vi.advanceTimersByTimeAsync(5 * SECOND);
-      const gapLine = writeGapLine();
-      await vi.advanceTimersByTimeAsync(5 * SECOND);
+  // Before the `welcome` of the relay
+  tab.runtime.start(FOLDER);
+  await vi.advanceTimersByTimeAsync(0);
+  const entryBeforeWelcome = browser.folder.write(Date.now());
+  await tab.readNow();
+  const firstSocket = await tab.handshake();
+  expect(firstSocket.getSentRawLines()).toEqual([entryBeforeWelcome.rawLine]);
+  browser.acknowledgeUploads(firstSocket);
 
-      const nextTab = browser.openTab();
-      expect(nextTab.runtime.shouldRun(false)).toBe(true);
-      return { gapLine, socket: await nextTab.start() };
-    },
-  },
-])(
-  "after $end and a start within 30 seconds, the lines of the gap go up: $isGapUploaded",
-  async ({ isGapUploaded, endAndStartAgain }) => {
-    const browser = createBrowser();
-    browser.turnOnLines();
+  // A short loss of the connection
+  firstSocket.handlers.onClose(1006);
+  const entryWithoutConnection = browser.folder.write(Date.now());
+  await tab.readNow();
+  await vi.advanceTimersByTimeAsync(5 * SECOND);
+  const secondSocket = await tab.handshake();
+  expect(secondSocket.getSentRawLines()).toEqual([
+    entryWithoutConnection.rawLine,
+  ]);
+  browser.acknowledgeUploads(secondSocket);
 
-    const tab = browser.openTab();
-    const firstSocket = await tab.start();
-    await vi.advanceTimersByTimeAsync(5 * SECOND);
-    const liveLine = browser.folder.write(Date.now());
-    await vi.advanceTimersByTimeAsync(10 * SECOND);
-    expect(firstSocket.getSentRawLines()).toEqual([liveLine.rawLine]);
-    browser.acknowledgeUploads(firstSocket);
+  // The entry waits for the `welcome` of the next connection, when the owner stops the runtime
+  tab.runtime.stop();
+  tab.runtime.start(FOLDER);
+  await vi.advanceTimersByTimeAsync(0);
+  browser.folder.write(Date.now());
+  await tab.readNow();
+  tab.runtime.stop();
+  await vi.advanceTimersByTimeAsync(5 * SECOND);
+  browser.folder.write(Date.now());
+  await vi.advanceTimersByTimeAsync(5 * SECOND);
 
-    const { gapLine, socket } = await endAndStartAgain(browser, tab, () =>
-      browser.folder.write(Date.now()),
-    );
-    const lineAfterStart = browser.folder.write(Date.now());
-    await vi.advanceTimersByTimeAsync(10 * SECOND);
+  const thirdSocket = await tab.start();
+  const entryAfterStart = browser.folder.write(Date.now());
+  await vi.advanceTimersByTimeAsync(10 * SECOND);
+  expect(thirdSocket.getSentRawLines()).toEqual([entryAfterStart.rawLine]);
+  expect(tab.getSentRawLines()).toEqual([
+    entryBeforeWelcome.rawLine,
+    entryWithoutConnection.rawLine,
+    entryAfterStart.rawLine,
+  ]);
+});
 
-    expect(socket.getSentRawLines()).toEqual(
-      isGapUploaded
-        ? [gapLine.rawLine, lineAfterStart.rawLine]
-        : [lineAfterStart.rawLine],
-    );
-  },
-);
+test("after the end of a switch, only the entries from then on go up", async () => {
+  const browser = createBrowser();
+  browser.turnOnLines();
+  const tab = browser.openTab();
+
+  // The entry waits for the `welcome`, but the relay refuses the connection
+  tab.runtime.start(FOLDER);
+  await vi.advanceTimersByTimeAsync(0);
+  browser.folder.write(Date.now());
+  await tab.readNow();
+  const firstSocket = tab.getLastSocket();
+  firstSocket.handlers.onOpen();
+  firstSocket.receive(
+    createDownMessage(DownMessageType.Refusal, {
+      reason: RelayCloseReason.ProgramTurnedOff,
+    }),
+  );
+
+  await vi.advanceTimersByTimeAsync(5 * SECOND);
+  browser.folder.write(Date.now());
+  await tab.readNow();
+
+  // The switch ended: the next connection gets the `welcome`
+  await tab.handshake();
+  const entryAfterSwitch = browser.folder.write(Date.now());
+  await vi.advanceTimersByTimeAsync(10 * SECOND);
+
+  expect(tab.getSentRawLines()).toEqual([entryAfterSwitch.rawLine]);
+});
 
 test("a request for older entries leaves out the entries that go up automatically and the entries that the relay has", async () => {
   const browser = createBrowser();
@@ -388,7 +414,7 @@ test("a request for older entries leaves out the entries that go up automaticall
   );
 });
 
-test("after a change of the log folder, no line of the new folder goes up from the live periods of the previous folder", async () => {
+test("after a change of the log folder, only the lines from the change go up", async () => {
   const browser = createBrowser();
   browser.turnOnLines();
 
@@ -400,13 +426,14 @@ test("after a change of the log folder, no line of the new folder goes up from t
   await vi.advanceTimersByTimeAsync(10 * MINUTE);
 
   await tab.start(OTHER_FOLDER);
+  await tab.readNow();
   const lineAfterChange = browser.otherFolder.write(Date.now());
   await vi.advanceTimersByTimeAsync(10 * SECOND);
 
   expect(tab.getSentRawLines()).toEqual([lineAfterChange.rawLine]);
 });
 
-test("the citizens of one browser profile do not share the run record, the rules or the live periods", async () => {
+test("the citizens of one browser profile do not share the run record or the rules", async () => {
   const browser = createBrowser();
   browser.turnOnLines("first-citizen");
 
@@ -432,16 +459,12 @@ test("the citizens of one browser profile do not share the run record, the rules
 
   browser.turnOnLines("second-citizen");
   await secondTab.start();
+  await secondTab.readNow();
   await vi.advanceTimersByTimeAsync(10 * SECOND);
   expect(secondTab.getSentRawLines()).toEqual([]);
 
-  // The first citizen continues the own live period
-  const nextTabOfFirstCitizen = browser.openTab("first-citizen");
-  await nextTabOfFirstCitizen.start();
-  await vi.advanceTimersByTimeAsync(10 * SECOND);
-  expect(nextTabOfFirstCitizen.getSentRawLines()).toEqual([
-    lineOfFirstCitizen.rawLine,
-  ]);
+  // The run record of the first citizen stays
+  expect(browser.openTab("first-citizen").runtime.shouldRun(false)).toBe(true);
 });
 
 test("tells that a read takes long, but not for the short reads", async () => {
