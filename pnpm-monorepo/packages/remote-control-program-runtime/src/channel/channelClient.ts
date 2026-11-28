@@ -22,7 +22,6 @@ import {
 } from "@sam-monorepo/domain";
 import { CHANNEL_CLIENT_LIMITS } from "./channelLimits.js";
 import {
-  ChannelDropReason,
   ChannelEndReason,
   ChannelStatus,
   ConnectionTokenRefusedError,
@@ -196,8 +195,7 @@ export class ChannelClient {
     this.#cancelReconnect?.();
     this.#cancelReconnect = null;
     if (this.#connection !== null) this.#closeConnection(this.#connection);
-    for (const batch of this.#queue.clear())
-      this.#reportDroppedBatch(batch, ChannelDropReason.Disconnected);
+    this.#queue.clear();
     this.#setState({
       status: ChannelStatus.Idle,
       closeReason: null,
@@ -223,32 +221,13 @@ export class ChannelClient {
   /**
    * Queues the entries for the upload. The client sends them in batches when
    * the relay accepted an announcement that contains the connector and the
-   * capability, and keeps each batch until its `ack`. `onEntriesDropped`
-   * tells about the entries that do not go up.
+   * capability, and keeps each batch until its `ack`.
    */
   sendFeedEntries(content: FeedEntriesContent) {
     const { entries, ...source } = content;
-    if (entries.length === 0) return;
+    if (entries.length === 0 || !this.#canUpload(source)) return;
 
-    const dropReason = this.#getDropReason(source);
-    if (dropReason !== null) {
-      this.#reportDropped(source.capability_id, entries.length, dropReason);
-      return;
-    }
-
-    const { droppedBatches, tooLargeEntryCount } = this.#queue.add(
-      source,
-      entries,
-    );
-    if (tooLargeEntryCount > 0)
-      this.#reportDropped(
-        source.capability_id,
-        tooLargeEntryCount,
-        ChannelDropReason.MessageTooLarge,
-      );
-    for (const batch of droppedBatches)
-      this.#reportDroppedBatch(batch, ChannelDropReason.QueueFull);
-
+    this.#queue.add(source, entries);
     this.#updateQueuedEntryCount();
     this.#sendWaitingBatches();
   }
@@ -311,32 +290,14 @@ export class ChannelClient {
    * an explicit request of the owner sends older entries (decision 27 and
    * "Switches" of the concept).
    */
-  #getDropReason(source: FeedEntriesSource) {
-    if (isProgramTurnedOff(this.#state)) return ChannelDropReason.TurnedOff;
+  #canUpload(source: FeedEntriesSource) {
+    if (isProgramTurnedOff(this.#state)) return false;
 
     // All is off by default (principle 2): a capability without a rule does
     // not upload
     const { capability_rules: rules } = this.#announcement.local_access_layer;
-    const isCapabilityOn = rules.some(
+    return rules.some(
       (rule) => rule.capability_id === source.capability_id && rule.is_on,
-    );
-
-    return isCapabilityOn ? null : ChannelDropReason.LocalAccessLayer;
-  }
-
-  #reportDropped(
-    capabilityId: CapabilityId,
-    entryCount: number,
-    reason: ChannelDropReason,
-  ) {
-    this.#options.onEntriesDropped?.({ capabilityId, entryCount, reason });
-  }
-
-  #reportDroppedBatch(batch: QueuedBatch, reason: ChannelDropReason) {
-    this.#reportDropped(
-      batch.source.capability_id,
-      batch.entries.length,
-      reason,
     );
   }
 
@@ -349,28 +310,15 @@ export class ChannelClient {
       batch.source,
       batch.entries,
     );
-    const removedCount = batch.entries.length - permittedEntries.length;
-    if (removedCount > 0) {
+    if (permittedEntries.length < batch.entries.length)
       this.#queue.keepEntries(batch, permittedEntries);
-      this.#reportDropped(
-        batch.source.capability_id,
-        removedCount,
-        ChannelDropReason.LocalAccessLayer,
-      );
-    }
 
     return permittedEntries.length > 0;
   }
 
   /** After a change of the connection or of the local access layer */
   #applyAccessChange() {
-    const droppedBatches = this.#queue.removeWaiting(
-      (batch) => this.#getDropReason(batch.source) !== null,
-    );
-    for (const batch of droppedBatches) {
-      const reason = this.#getDropReason(batch.source);
-      if (reason !== null) this.#reportDroppedBatch(batch, reason);
-    }
+    this.#queue.removeWaiting((batch) => !this.#canUpload(batch.source));
     for (const batch of [...this.#queue.waitingBatches])
       this.#keepPermittedEntries(batch);
 
@@ -769,13 +717,8 @@ export class ChannelClient {
     const batch = this.#queue.takeSent(content.message_id);
     if (batch === null) return;
 
-    if (content.result === AcknowledgementResult.Accepted)
-      this.#options.onEntriesAccepted?.({
-        capabilityId: batch.source.capability_id,
-        entryCount: batch.entries.length,
-        newEntryCount: content.new_entry_count ?? null,
-      });
-    else this.#handleRefusedBatch(connection, batch, content.error_code);
+    if (content.result === AcknowledgementResult.Refused)
+      this.#handleRefusedBatch(connection, batch, content.error_code);
 
     this.#updateQueuedEntryCount();
   }
@@ -789,9 +732,9 @@ export class ChannelClient {
     const { source } = batch;
 
     switch (errorCode) {
+      // The protocol says: do not send again
       case AcknowledgementErrorCode.MessageNotValid:
       case AcknowledgementErrorCode.EntriesNotValid:
-        this.#reportDroppedBatch(batch, ChannelDropReason.RefusedByRelay);
         break;
 
       // The uploads wait for the `ack` of a new `announce`

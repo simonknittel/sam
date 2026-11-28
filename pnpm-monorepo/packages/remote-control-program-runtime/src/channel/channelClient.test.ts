@@ -20,13 +20,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { FakeWebSocket } from "../testing/fakes.js";
 import { ChannelClient } from "./channelClient.js";
 import { CHANNEL_CLIENT_LIMITS } from "./channelLimits.js";
-import {
-  ChannelDropReason,
-  ChannelStatus,
-  type ChannelAcceptedEntries,
-  type ChannelClientOptions,
-  type ChannelDroppedEntries,
-} from "./channelTypes.js";
+import { ChannelStatus, type ChannelClientOptions } from "./channelTypes.js";
 
 const RUNTIME_ID = "0b9f8a52-6d3e-4c55-9b7a-2f1c4d8e6a10";
 
@@ -87,8 +81,6 @@ const getLineNumbers = (message: UpMessageOfType<UpMessageType.FeedEntries>) =>
 
 const setUp = (options: Partial<ChannelClientOptions> = {}) => {
   const sockets: FakeWebSocket[] = [];
-  const acceptedEntries: ChannelAcceptedEntries[] = [];
-  const droppedEntries: ChannelDroppedEntries[] = [];
   let tokenCount = 0;
 
   const client = new ChannelClient({
@@ -107,8 +99,6 @@ const setUp = (options: Partial<ChannelClientOptions> = {}) => {
     },
     // The upper limit of each reconnect delay
     random: () => 1,
-    onEntriesAccepted: (entries) => acceptedEntries.push(entries),
-    onEntriesDropped: (entries) => droppedEntries.push(entries),
     ...options,
   });
 
@@ -145,8 +135,6 @@ const setUp = (options: Partial<ChannelClientOptions> = {}) => {
   return {
     client,
     sockets,
-    acceptedEntries,
-    droppedEntries,
     openSocket,
     welcome,
     connect,
@@ -238,8 +226,7 @@ test("the reason of a close message has priority over the close code of a proxy"
 });
 
 test("sends the batches without an ack again after a reconnect, each one time", async () => {
-  const { client, sockets, acceptedEntries, openSocket, welcome, connect } =
-    setUp();
+  const { client, sockets, openSocket, welcome, connect } = setUp();
 
   const firstSocket = await connect();
   client.sendFeedEntries(createLogEntries(150));
@@ -278,18 +265,6 @@ test("sends the batches without an ack again after a reconnect, each one time", 
 
   expect(secondSocket.getSent(UpMessageType.FeedEntries)).toHaveLength(1);
   expect(client.getState().queuedEntryCount).toBe(0);
-  expect(acceptedEntries).toEqual([
-    {
-      capabilityId: CapabilityId.LogEntries,
-      entryCount: 100,
-      newEntryCount: 100,
-    },
-    {
-      capabilityId: CapabilityId.LogEntries,
-      entryCount: 50,
-      newEntryCount: 50,
-    },
-  ]);
 });
 
 test("renews the token over the open connection", async () => {
@@ -380,8 +355,7 @@ test("sends a burst of 4 batches, then one batch each second", async () => {
 });
 
 test("removes the entries while the Remote Control Program is turned off", async () => {
-  const { client, sockets, droppedEntries, openSocket, welcome, connect } =
-    setUp();
+  const { client, sockets, openSocket, welcome, connect } = setUp();
 
   const socket = await connect();
   client.sendFeedEntries(createLogEntries(600));
@@ -398,14 +372,6 @@ test("removes the entries while the Remote Control Program is turned off", async
     status: ChannelStatus.WaitingForReconnect,
     queuedEntryCount: 0,
   });
-  expect(
-    droppedEntries.map(({ entryCount, reason }) => ({ entryCount, reason })),
-  ).toEqual(
-    [100, 100, 100, 100, 100, 100, 10].map((entryCount) => ({
-      entryCount,
-      reason: ChannelDropReason.TurnedOff,
-    })),
-  );
 
   // The program is on again: the next connection uploads the new entries
   await vi.advanceTimersByTimeAsync(1_000);
@@ -418,7 +384,7 @@ test("removes the entries while the Remote Control Program is turned off", async
 
 test("sends only the entries that the local access layer permits at the send, also at a resend", async () => {
   let isPermitted = true;
-  const { client, droppedEntries, openSocket, welcome, connect } = setUp({
+  const { client, openSocket, welcome, connect } = setUp({
     selectPermittedEntries: (_source, entries) => (isPermitted ? entries : []),
   });
 
@@ -442,13 +408,6 @@ test("sends only the entries that the local access layer permits at the send, al
 
   expect(secondSocket.getSent(UpMessageType.FeedEntries)).toEqual([]);
   expect(client.getState().queuedEntryCount).toBe(0);
-  expect(droppedEntries).toEqual(
-    Array.from({ length: 5 }, () => ({
-      capabilityId: CapabilityId.LogEntries,
-      entryCount: 100,
-      reason: ChannelDropReason.LocalAccessLayer,
-    })),
-  );
 });
 
 test("requests the own entry keys after the welcome and again after a lost connection, and rejects a request without an answer", async () => {

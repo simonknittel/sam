@@ -48,13 +48,6 @@ const getBatchByteLength = (
     getEmptyBatchByteLength(source),
   );
 
-export interface AddedEntries {
-  /** The oldest waiting batches that the queue removed to stay in its limit */
-  readonly droppedBatches: readonly QueuedBatch[];
-  /** The entries that do not fit into one message */
-  readonly tooLargeEntryCount: number;
-}
-
 /**
  * The feed entries that wait for the upload, and the batches that wait for
  * their `ack`. Each batch is in one of the two places only, thus a resend
@@ -83,14 +76,14 @@ export class UploadQueue {
 
   /**
    * Adds the entries in batches of the maximum of the capability, each below
-   * `RELAY_LIMITS.maximumMessageBytes`. When the queue is full, it removes
-   * the oldest waiting batches.
+   * `RELAY_LIMITS.maximumMessageBytes`. It leaves out an entry that does not
+   * fit into one message. When the queue is full, it removes the oldest
+   * waiting batches.
    */
-  add(source: FeedEntriesSource, entries: readonly FeedEntry[]): AddedEntries {
+  add(source: FeedEntriesSource, entries: readonly FeedEntry[]) {
     const maximumEntriesPerBatch =
       CAPABILITY_CATALOG[source.capability_id].maximumEntriesPerBatch;
     const emptyBatchByteLength = getEmptyBatchByteLength(source);
-    let tooLargeEntryCount = 0;
     let lastBatch = this.#waitingBatches.at(-1);
 
     for (const entry of entries) {
@@ -98,10 +91,8 @@ export class UploadQueue {
       if (
         emptyBatchByteLength + entryByteLength >
         RELAY_LIMITS.maximumMessageBytes
-      ) {
-        tooLargeEntryCount += 1;
+      )
         continue;
-      }
 
       if (
         lastBatch === undefined ||
@@ -124,16 +115,12 @@ export class UploadQueue {
       this.#entryCount += 1;
     }
 
-    const droppedBatches: QueuedBatch[] = [];
     while (this.#entryCount > this.#maximumEntryCount) {
       const oldestBatch = this.#waitingBatches.shift();
       if (oldestBatch === undefined) break;
 
       this.#entryCount -= oldestBatch.entries.length;
-      droppedBatches.push(oldestBatch);
     }
-
-    return { droppedBatches, tooLargeEntryCount };
   }
 
   markSent(batch: QueuedBatch, messageId: string) {
@@ -189,27 +176,21 @@ export class UploadQueue {
     batch.byteLength = getBatchByteLength(batch.source, entries);
   }
 
-  /** Removes the waiting and the sent batches, and returns them */
+  /** Removes the waiting and the sent batches */
   clear() {
-    const removedBatches = [
-      ...this.#sentBatches.values(),
-      ...this.#waitingBatches,
-    ];
     this.#waitingBatches = [];
     this.#sentBatches.clear();
     this.#entryCount = 0;
-    return removedBatches;
   }
 
   removeWaiting(shouldRemove: (batch: QueuedBatch) => boolean) {
     const removedBatches = this.#waitingBatches.filter(shouldRemove);
-    if (removedBatches.length === 0) return removedBatches;
+    if (removedBatches.length === 0) return;
 
     this.#waitingBatches = this.#waitingBatches.filter(
       (batch) => !removedBatches.includes(batch),
     );
     for (const batch of removedBatches)
       this.#entryCount -= batch.entries.length;
-    return removedBatches;
   }
 }

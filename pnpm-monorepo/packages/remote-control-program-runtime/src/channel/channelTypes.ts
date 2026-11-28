@@ -1,7 +1,6 @@
 import {
   RelayCloseReason,
   type AnnounceContent,
-  type CapabilityId,
   type FeedEntriesContent,
   type FeedEntriesSource,
   type RuntimeKind,
@@ -70,43 +69,6 @@ export const INITIAL_CHANNEL_STATE: ChannelState = {
 /** The Unleash flag of the organization turned off the Remote Control Program */
 export const isProgramTurnedOff = (state: ChannelState) =>
   state.closeReason === RelayCloseReason.ProgramTurnedOff;
-
-export enum ChannelDropReason {
-  /**
-   * The queue was full (`CHANNEL_CLIENT_LIMITS.maximumQueuedEntries`), thus
-   * the client removed the oldest waiting entries
-   */
-  QueueFull = "queue_full",
-  /**
-   * One entry does not fit into one message
-   * (`RELAY_LIMITS.maximumMessageBytes`)
-   */
-  MessageTooLarge = "message_too_large",
-  /** The Unleash flag of the organization turned off the Remote Control Program */
-  TurnedOff = "turned_off",
-  /** The rule of the capability (or of the entry) is off */
-  LocalAccessLayer = "local_access_layer",
-  /** The relay refused the entries, and the protocol says: do not send again */
-  RefusedByRelay = "refused_by_relay",
-  /** The runtime stopped the client (`disconnect()`) */
-  Disconnected = "disconnected",
-}
-
-export interface ChannelAcceptedEntries {
-  readonly capabilityId: CapabilityId;
-  readonly entryCount: number;
-  /**
-   * The entries that the relay did not have before. Null when the relay did
-   * not tell.
-   */
-  readonly newEntryCount: number | null;
-}
-
-export interface ChannelDroppedEntries {
-  readonly capabilityId: CapabilityId;
-  readonly entryCount: number;
-  readonly reason: ChannelDropReason;
-}
 
 /** The reasons of the token source for a refused token */
 export type ConnectionTokenRefusalReason =
@@ -218,8 +180,6 @@ export interface ChannelClientOptions {
   readonly timers?: ChannelTimers;
   /** `Math.random()` by default */
   readonly random?: () => number;
-  readonly onEntriesAccepted?: (entries: ChannelAcceptedEntries) => void;
-  readonly onEntriesDropped?: (entries: ChannelDroppedEntries) => void;
 }
 
 export type ChannelStateListener = (state: ChannelState) => void;
