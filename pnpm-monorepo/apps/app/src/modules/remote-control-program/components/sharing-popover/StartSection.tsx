@@ -43,7 +43,9 @@ enum ConnectorSupport {
 }
 
 interface ConnectorPart extends Part {
-  readonly support: Readonly<Record<SharingPopoverRuntimeTab, ConnectorSupport>>;
+  readonly support: Readonly<
+    Record<SharingPopoverRuntimeTab, ConnectorSupport>
+  >;
 }
 
 const RUNTIMES: readonly RuntimePart[] = [
@@ -197,11 +199,7 @@ const SupportMatrix = ({ onOpenLocation }: SupportMatrixProps) => {
           <td className="w-2/5" />
 
           {RUNTIMES.map((runtime) => (
-            <th
-              key={runtime.tab}
-              scope="col"
-              className="px-2 pb-2 font-normal"
-            >
+            <th key={runtime.tab} scope="col" className="px-2 pb-2 font-normal">
               <TabLink
                 location={{
                   tab: SharingPopoverTab.Runtimes,
