@@ -53,7 +53,10 @@ export enum CapabilityTiming {
 
 export enum CapabilitySensitivity {
   Normal = "normal",
-  /** The sharing popover shows a warning */
+  /**
+   * For example the location or the wallet balance. A fact for the choice of
+   * the defaults: the sharing popover shows no warning for it.
+   */
   High = "high",
 }
 
