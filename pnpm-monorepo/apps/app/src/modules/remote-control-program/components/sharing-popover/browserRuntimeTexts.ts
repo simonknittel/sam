@@ -10,7 +10,7 @@ import {
 import {
   ACCESS_DENIED_TEXT,
   BROWSER_NOT_SUPPORTED_TEXT,
-  NO_CHANNEL_FOLDER_TEXT,
+  NO_ENVIRONMENT_FOLDER_TEXT,
   NO_RELAY_TEXT,
   SESSION_EXPIRED_TEXT,
 } from "../../utils/remoteControlProgramTexts";
@@ -22,7 +22,7 @@ export const BROWSER_RUNTIME_ERROR_TEXTS: Readonly<
 > = {
   [BrowserRuntimeErrorCode.ReadFailed]:
     "Der Log-Ordner konnte nicht gelesen werden.",
-  [BrowserRuntimeErrorCode.NoChannelFolder]: NO_CHANNEL_FOLDER_TEXT,
+  [BrowserRuntimeErrorCode.NoEnvironmentFolder]: NO_ENVIRONMENT_FOLDER_TEXT,
   [BrowserRuntimeErrorCode.NotSupported]: BROWSER_NOT_SUPPORTED_TEXT,
   [BrowserRuntimeErrorCode.NoAnswer]:
     "Der Tab mit der Runtime hat nicht geantwortet. Versuche es erneut.",

@@ -16,7 +16,7 @@ import {
 import { useBrowserRuntime } from "@/modules/remote-control-program/runtime/useBrowserRuntime";
 import {
   BROWSER_NOT_SUPPORTED_TEXT,
-  NO_CHANNEL_FOLDER_TEXT,
+  NO_ENVIRONMENT_FOLDER_TEXT,
 } from "@/modules/remote-control-program/utils/remoteControlProgramTexts";
 import { CapabilityId } from "@sam-monorepo/domain";
 import { BrowserRuntimeErrorCode } from "@sam-monorepo/remote-control-program-runtime";
@@ -60,7 +60,7 @@ const getFolderNote = ({
     case LogFolderState.NotSelected:
       return {
         type: "info",
-        text: "Wähle im Remote Control Program den Ordner „StarCitizen“ oder einen Kanal wie „LIVE“ aus, damit der Log Analyzer auch deine eigenen Einträge anzeigt.",
+        text: "Wähle im Remote Control Program den Ordner „StarCitizen“ oder ein Environment wie „LIVE“ aus, damit der Log Analyzer auch deine eigenen Einträge anzeigt.",
         location: LOG_FOLDER_LOCATION,
       };
 
@@ -80,10 +80,10 @@ const getFolderNote = ({
           location: BROWSER_RUNTIME_LOCATION,
         };
 
-      return error === BrowserRuntimeErrorCode.NoChannelFolder
+      return error === BrowserRuntimeErrorCode.NoEnvironmentFolder
         ? {
             type: "warning",
-            text: NO_CHANNEL_FOLDER_TEXT,
+            text: NO_ENVIRONMENT_FOLDER_TEXT,
             location: LOG_FOLDER_LOCATION,
           }
         : null;
