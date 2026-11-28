@@ -33,9 +33,8 @@ export interface OwnFeedEntryKeys {
 /**
  * The keys of the entries of `log_entries` of the actor (the owner) whose
  * time of the observation is in the time window. A runtime leaves out the
- * entries that the relay already has: after a start or a change of the
- * active tab (the runtime offers the entries of up to 7 days again), and for
- * the counts of a request for older entries. The runtimes read the keys
+ * entries that the relay already has from the count of a request for older
+ * entries. The runtimes read the keys
  * through the relay service (`feed_entry_keys_request`, decision 34). Only
  * the keys leave the server, not the raw lines. The cursor is the last key:
  * the unique index of the owner and the hash orders the rows. A runtime with

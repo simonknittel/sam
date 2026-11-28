@@ -222,8 +222,8 @@ export const RELAY_LIMITS = {
   /**
    * The `feed_entry_keys_request`s of one connection: one in each interval,
    * and a burst of `feedEntryKeyRequestBurstSize` after a pause. A runtime
-   * requests the pages of one time window one after the other: after a
-   * start, and for the count of a request for older entries. The burst
+   * requests the pages of one time window one after the other for the count
+   * of a request for older entries. The burst
    * covers 100,000 keys at once. Each page is one query of the database,
    * thus the limit bounds this work. A request above the rate gets
    * `rate_limit_exceeded` and counts as an error.
