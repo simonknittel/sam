@@ -89,7 +89,7 @@ const tabTo = async (
   await expect(target).toBeFocused();
 };
 
-test("a second tab uses the runtime of the first tab, and continues it when the first tab closes", async ({
+test("a second tab uses the runtime of the first tab, and starts a new runtime when the first tab closes", async ({
   page,
   context,
   prisma,
@@ -182,8 +182,8 @@ test("a citizen who logs in after a different citizen in the same browser gets n
 
   /**
    * The game writes on. The second citizen logs in at once, thus within the
-   * time in which a runtime continues the run of a closed tab
-   * (`TAB_CHANGE_GAP_MILLISECONDS` of the runtime package).
+   * time in which the next runtime takes the run record of a closed tab
+   * (`RUN_RECORD_MAXIMUM_AGE_MILLISECONDS` of the runtime package).
    */
   const lineAfterLogout = blueprintLine(new Date(), "Nach dem Abmelden");
   await appendLogLines(page, [lineAfterLogout]);
