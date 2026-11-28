@@ -4,7 +4,6 @@ import {
   ConnectorId,
   getOldestLogAnalyzerEntryVersion,
   LOG_ENTRIES_CAPABILITY,
-  RelayCloseReason,
   RuntimeKind,
   type AnnounceContent,
   type FeedEntriesSource,
@@ -161,7 +160,9 @@ const countByRuleType = (entries: readonly RawMatch[]) => {
 
 /**
  * The state of the relay for the local access layer. Null: the channel state
- * does not tell it, for example during a reconnect.
+ * does not change it, for example during a reconnect. After the end of the
+ * channel, no entry goes up (`#canUpload()`), and only a new start connects
+ * again, with a new layer.
  *
  * The Unleash flag of the organization stops the uploads. An automatic upload
  * after the program is on again does not send the entries of the time in
@@ -169,27 +170,9 @@ const countByRuleType = (entries: readonly RawMatch[]) => {
  */
 const getRelayUploadState = (state: ChannelState): RelayUploadState | null => {
   if (isProgramTurnedOff(state)) return RelayUploadState.Stopped;
-
-  switch (state.status) {
-    case ChannelStatus.Connected:
-      return RelayUploadState.Accepting;
-
-    // The newer connection of the same runtime continues
-    case ChannelStatus.Ended:
-      return state.closeReason === RelayCloseReason.Replaced
-        ? null
-        : RelayUploadState.Ended;
-
-    case ChannelStatus.Idle:
-    case ChannelStatus.Connecting:
-    case ChannelStatus.WaitingForReconnect:
-      return null;
-
-    default:
-      throw new Error(
-        `Unknown channel status: ${state.status satisfies never}`,
-      );
-  }
+  return state.status === ChannelStatus.Connected
+    ? RelayUploadState.Accepting
+    : null;
 };
 
 /**
@@ -254,8 +237,6 @@ export class BrowserRuntime {
   #isReadRequested = false;
   #cancelReadTimer: (() => void) | null = null;
 
-  /** The value that the layer got last */
-  #relayState = RelayUploadState.Unknown;
   /** The relay sent the `welcome` in this run */
   #isRelayWelcomed = false;
   readonly #outbox = new Outbox();
@@ -339,7 +320,6 @@ export class BrowserRuntime {
 
     this.#runGeneration += 1;
     this.#layer = this.#createLayer();
-    this.#relayState = RelayUploadState.Unknown;
     this.#isRelayWelcomed = false;
     this.#isWaitingForStart = false;
     this.#setState({ isRunning: true, error: null });
@@ -839,10 +819,7 @@ export class BrowserRuntime {
         this.#isRelayWelcomed = true;
 
       const relayState = getRelayUploadState(state);
-      if (relayState !== null && relayState !== this.#relayState) {
-        this.#relayState = relayState;
-        this.#layer.setRelayState(relayState);
-      }
+      if (relayState !== null) this.#layer.setRelayState(relayState);
     }
 
     // No entry goes up: the runtime does not keep them for the upload

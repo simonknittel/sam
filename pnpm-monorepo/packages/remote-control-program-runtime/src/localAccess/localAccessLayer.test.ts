@@ -103,7 +103,7 @@ describe("the rule for the upload", () => {
     expect(nextRuntime.selectAutomaticUploads([lineOfNextRuntime])).toEqual([]);
   });
 
-  it("after a switch or an ended connection, only the lines read live from its end go up", () => {
+  it("after a switch, only the lines read live from its end go up", () => {
     const browser = createBrowser();
     const layer = startRuntime(browser);
     layer.setLogEntryTypes([LogAnalyzerEntryType.JoinPu], true);
@@ -132,19 +132,6 @@ describe("the rule for the upload", () => {
     expect(
       layer.selectAutomaticUploads([liveLine, stoppedLine, lineAfterSwitch]),
     ).toEqual([lineAfterSwitch]);
-
-    layer.setRelayState(RelayUploadState.Ended);
-    browser.advance(5 * SECOND);
-    const lineWithoutConnection = createEntry(
-      LogAnalyzerEntryType.JoinPu,
-      browser.getTime(),
-    );
-    expect(layer.selectAutomaticUploads([lineAfterSwitch])).toEqual([]);
-    browser.advance(5 * SECOND);
-    layer.setRelayState(RelayUploadState.Accepting);
-    expect(
-      layer.selectAutomaticUploads([lineAfterSwitch, lineWithoutConnection]),
-    ).toEqual([]);
   });
 
   it("uploads the lines of a type that turns on later only from that time, also of its newer versions", () => {

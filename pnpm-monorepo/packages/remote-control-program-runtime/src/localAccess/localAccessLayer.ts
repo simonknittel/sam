@@ -57,14 +57,9 @@ export enum RelayUploadState {
   Accepting = "accepting",
   /**
    * A switch turned off the capability (`program_turned_off`). No entry goes
-   * up automatically.
+   * up.
    */
   Stopped = "stopped",
-  /**
-   * The connection ended without a new attempt (for example a refused token
-   * or no relay). No entry goes up automatically.
-   */
-  Ended = "ended",
 }
 
 export interface LocalAccessLayerOptions {
@@ -95,10 +90,6 @@ const isInRange = (time: number, range: OlderEntriesTimeRange) =>
   (range.start === null || time >= range.start.getTime()) &&
   (range.end === null || time < range.end.getTime());
 
-const isUploadStopped = (relayState: RelayUploadState) =>
-  relayState === RelayUploadState.Stopped ||
-  relayState === RelayUploadState.Ended;
-
 /**
  * The local access layer of the browser runtime (see "Local access layer" of
  * `docs/remote-control-program/README.md`): the rules of `log_entries` for
@@ -110,13 +101,12 @@ const isUploadStopped = (relayState: RelayUploadState) =>
  *   before the time since which it reads live (`readsLiveSince`),
  * - its type is on, and its time is not before the time when the owner
  *   turned the type on,
- * - no switch turned off the capability, and the connection did not end.
+ * - no switch turned off the capability.
  *
  * The time since which the runtime reads live is only in memory: the start of
- * the reading sets it, and the end of a switch or of an ended connection sets
- * it again. Thus the entries of a time without a reading, with a switch or
- * with an ended connection never go up automatically, also not after the
- * next start. Older entries go up only through a request that the owner
+ * the reading sets it, and the end of a switch sets it again. Thus the
+ * entries of a time without a reading or with a switch never go up
+ * automatically, also not after the next start. Older entries go up only through a request that the owner
  * confirms (`prepareOlderEntriesRequest` and `confirmOlderEntriesRequest`).
  *
  * Each tab can make a layer on the same storage. The rules in the storage are
@@ -242,14 +232,14 @@ export const createLocalAccessLayer = ({
     },
 
     /**
-     * What the relay told: the `welcome` of each connection, the switch, and
-     * the end of the connection. When the uploads start again after a switch
-     * or after an ended connection, the runtime reads live from this time:
-     * the entries of the time before never go up automatically.
+     * What the relay told: the `welcome` of each connection and the switch.
+     * When the uploads start again after a switch, the runtime reads live
+     * from this time: the entries of the time before never go up
+     * automatically.
      */
     setRelayState: (state: RelayUploadState) => {
       if (
-        isUploadStopped(relayState) &&
+        relayState === RelayUploadState.Stopped &&
         state === RelayUploadState.Accepting &&
         readsLiveSince !== null
       )
@@ -267,7 +257,7 @@ export const createLocalAccessLayer = ({
     selectAutomaticUploads: <Entry extends LocalAccessEntry>(
       entries: Iterable<Entry>,
     ): Entry[] => {
-      if (isUploadStopped(relayState)) return [];
+      if (relayState === RelayUploadState.Stopped) return [];
 
       const rules = readRules();
 
