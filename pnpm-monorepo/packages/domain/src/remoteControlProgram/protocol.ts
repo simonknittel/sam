@@ -30,17 +30,15 @@ import { gameBuildSchema, gameEnvironmentSchema } from "./logFileHeader.js";
  *    `feed_entry_keys`, and a refused one with an `ack`.
  * 4. The relay sends `close` before it closes the connection.
  *
- * Compatibility: the relay accepts the protocol versions from
+ * Compatibility: the relay accepts a `hello` of the protocol versions from
  * `MINIMUM_RELAY_PROTOCOL_VERSION` to `RELAY_PROTOCOL_VERSION`. The schemas
  * refuse unknown message types and unknown enum values. Thus a change that a
  * runtime of an older protocol version cannot read (a new message type, a new
  * required field, a new enum value in a message to the runtime) needs a new
- * protocol version, and the relay sends it only to the runtimes of that
- * version or newer. The version of the `hello` is the version of the full
- * connection. `UP_MESSAGE_PROTOCOL_VERSIONS` and
- * `DOWN_MESSAGE_PROTOCOL_VERSIONS` give the version that added each message
- * type. The relay refuses a message type that is newer than the connection
- * like an unknown type (`message_not_valid`).
+ * protocol version. The two values are the same: the relay accepts only one
+ * version, thus a new version also raises the minimum version. A relay that
+ * accepts an older version next to a newer one must not read or send the
+ * message types of the newer version on a connection of the older version.
  */
 
 /** Version 2 adds `feed_entry_keys_request` and `feed_entry_keys` (decision 34) */
@@ -67,25 +65,6 @@ export enum DownMessageType {
   Close = "close",
   FeedEntryKeys = "feed_entry_keys",
 }
-
-/** The protocol version that added each message type */
-export const UP_MESSAGE_PROTOCOL_VERSIONS = {
-  [UpMessageType.Hello]: 1,
-  [UpMessageType.Announce]: 1,
-  [UpMessageType.Heartbeat]: 1,
-  [UpMessageType.TokenRenewal]: 1,
-  [UpMessageType.FeedEntries]: 1,
-  [UpMessageType.FeedEntryKeysRequest]: 2,
-} as const satisfies Record<UpMessageType, number>;
-
-/** The protocol version that added each message type */
-export const DOWN_MESSAGE_PROTOCOL_VERSIONS = {
-  [DownMessageType.Welcome]: 1,
-  [DownMessageType.Refusal]: 1,
-  [DownMessageType.Acknowledgement]: 1,
-  [DownMessageType.Close]: 1,
-  [DownMessageType.FeedEntryKeys]: 2,
-} as const satisfies Record<DownMessageType, number>;
 
 /**
  * Why the relay refuses a `hello` or closes a connection. Each reason has a

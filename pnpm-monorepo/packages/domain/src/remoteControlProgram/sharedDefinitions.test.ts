@@ -37,14 +37,12 @@ import {
   MAXIMUM_GAME_ENVIRONMENT_LENGTH,
 } from "./logFileHeader.js";
 import {
-  DOWN_MESSAGE_PROTOCOL_VERSIONS,
   downMessageSchema,
   MINIMUM_RELAY_PROTOCOL_VERSION,
   RELAY_CLOSE_CODES,
   RELAY_PROTOCOL_VERSION,
   RelayCloseReason,
   shouldReconnectAfterClose,
-  UP_MESSAGE_PROTOCOL_VERSIONS,
   upMessageSchema,
 } from "./protocol.js";
 
@@ -97,9 +95,6 @@ describe("the export of the shared definitions", () => {
           reconnect: shouldReconnectAfterClose(reason),
         })),
         reconnect_after_close_without_reason: shouldReconnectAfterClose(null),
-        /** The protocol version that added each message type */
-        up_message_protocol_versions: UP_MESSAGE_PROTOCOL_VERSIONS,
-        down_message_protocol_versions: DOWN_MESSAGE_PROTOCOL_VERSIONS,
       }),
     ).toMatchFileSnapshot(`${DEFINITIONS}protocol.json`);
   });

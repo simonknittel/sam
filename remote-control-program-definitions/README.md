@@ -10,7 +10,7 @@ The repository of the desktop companion copies this folder and the [shared test 
 | - | - | - |
 | `up-message.schema.json` | The JSON Schema of the messages from a runtime to the relay service | `upMessageSchema` of `protocol.ts` in `packages/domain/src/remoteControlProgram/` |
 | `down-message.schema.json` | The JSON Schema of the messages from the relay service to a runtime | `downMessageSchema` of `protocol.ts` |
-| `protocol.json` | The protocol versions that the relay service accepts, the close codes of the reasons, which reasons make a runtime connect again, and the protocol version that added each message type | `protocol.ts` |
+| `protocol.json` | The protocol versions that the relay service accepts, the close codes of the reasons, and which reasons make a runtime connect again | `protocol.ts` |
 | `catalog.json` | The capabilities, the connectors with their versions, the runtime kinds, the limits of the relay service, and the URL scheme of the desktop companion | `catalog.ts` |
 | `log-entry-patterns.json` | The patterns of the log file: the type, the oldest type of the pattern chain, the marker, the source and the flags of the JavaScript expression, and `takes_time_of_preceding_line` | `logAnalyzerEntries.ts` in `packages/domain/src/logAnalyzer/` |
 | `log-file-header.json` | The rule of the header of a log file (decision 17): the number of the header lines (`line_count`), and for each field of an entry (`game_environment`, `game_build`) the source and the flags of the JavaScript expression of its header line, and the check of its value (`value_source`, `maximum_value_length`). See below for how to apply the rule. | `logFileHeader.ts` |
